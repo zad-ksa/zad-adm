@@ -28,10 +28,13 @@ export async function POST(req: Request) {
     });
 
     return NextResponse.json({ success: true, response }, { status: 200 });
-  } catch (error) {
-    console.error("Submit Error:", error);
+  } catch (error: any) {
+    console.error("Error saving survey response:", error);
     return NextResponse.json(
-      { error: "Internal Server Error" },
+      { 
+        error: "حدث خطأ أثناء حفظ البيانات", 
+        details: error?.message || String(error)
+      },
       { status: 500 }
     );
   }

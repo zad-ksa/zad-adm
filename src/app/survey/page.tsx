@@ -68,12 +68,13 @@ export default function Home() {
         if (res.ok) {
           router.push("/results");
         } else {
-          alert("حدث خطأ أثناء إرسال البيانات. يرجى المحاولة مرة أخرى.");
+          const errData = await res.json().catch(() => ({}));
+          alert(`حدث خطأ أثناء إرسال البيانات:\n${errData.details || errData.error || "خطأ غير معروف"}`);
           setIsSubmitting(false);
         }
-      } catch (err) {
+      } catch (err: any) {
         console.error(err);
-        alert("حدث خطأ في الاتصال.");
+        alert(`حدث خطأ في الاتصال:\n${err.message || String(err)}`);
         setIsSubmitting(false);
       }
     } else {

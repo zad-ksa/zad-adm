@@ -10,6 +10,8 @@ const pool = new Pool({ connectionString });
 const adapter = new PrismaPg(pool);
 const prisma = new PrismaClient({ adapter });
 
+export const dynamic = "force-dynamic";
+
 export default async function Dashboard() {
   const responses = await prisma.surveyResponse.findMany({
     orderBy: {

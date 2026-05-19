@@ -9,18 +9,16 @@ export default async function CharityGroupedReport({ params }: { params: { name:
   const { name } = await params;
   const decodedName = decodeURIComponent(name);
 
-  // Fetch all responses for this charity
-  const responses = await prisma.surveyResponse.findMany({
-    where: {
-      charityName: {
-        equals: decodedName,
-        mode: "insensitive", // Case-insensitive matching
-      },
-    },
+  // Fetch all responses and filter in JS to prevent trailing space mismatches
+  const allResponses = await prisma.surveyResponse.findMany({
     orderBy: {
       createdAt: "desc",
     },
   });
+
+  const responses = allResponses.filter(
+    (res) => res.charityName.trim().toLowerCase() === decodedName.trim().toLowerCase()
+  );
 
   if (responses.length === 0) {
     return (

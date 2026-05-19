@@ -45,7 +45,7 @@ export default async function Dashboard() {
       <main className="max-w-7xl mx-auto px-4 py-12">
         <div className="mb-8 flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
           <div>
-            <h1 className="text-3xl font-bold text-slate-800 mb-2">لوحة تحكم شركة زاد</h1>
+            <h1 className="text-3xl font-bold text-slate-800 mb-2">لوحة تحكم زاد التنموية</h1>
             <p className="text-slate-600">قائمة بالجمعيات التي قامت بتعبئة استبيان الجاهزية</p>
           </div>
           <div className="flex items-center gap-4">

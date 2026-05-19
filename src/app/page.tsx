@@ -43,7 +43,7 @@ export default function AdminLogin() {
         <div className="bg-white p-8 rounded-3xl shadow-xl w-full max-w-md border border-slate-100">
           <div className="text-center mb-8">
             <h1 className="text-2xl font-bold text-slate-800 mb-2">تسجيل الدخول للإدارة</h1>
-            <p className="text-slate-500">خاص بفريق شركة زاد للجمعيات الخيرية</p>
+            <p className="text-slate-500">خاص بفريق زاد التنموية لأثر مستدام</p>
           </div>
 
           <form onSubmit={handleLogin} className="space-y-6">

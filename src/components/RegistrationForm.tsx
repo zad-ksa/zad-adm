@@ -39,7 +39,7 @@ export default function RegistrationForm({ onComplete }: RegistrationFormProps) 
 
       <form onSubmit={handleSubmit} className="space-y-6">
         <div>
-          <label className="block text-sm font-semibold text-slate-700 mb-2">اسم الجمعية</label>
+          <label className="block text-sm font-semibold text-slate-700 mb-2">اسم الجمعية بالكامل (حسب السجل)</label>
           <input
             required
             type="text"

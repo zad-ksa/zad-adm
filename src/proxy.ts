@@ -21,7 +21,7 @@ export function proxy(request: NextRequest) {
 
   return NextResponse.next();
 }
-
+//oo
 export const config = {
   matcher: ["/", "/dashboard/:path*"],
 };

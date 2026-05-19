@@ -28,10 +28,10 @@ export default function WelcomeScreen({ onStart }: WelcomeScreenProps) {
         <h1 className="text-3xl sm:text-4xl font-extrabold text-slate-800 mb-4 leading-tight">
           مقياس جاهزية الجمعيات للتخطيط الاستراتيجي
         </h1>
-        
+
         <p className="text-lg text-slate-600 leading-relaxed mb-8">
           أهلاً بكم في مقياس الجاهزية للتخطيط الاستراتيجي المقدّم من{" "}
-          <strong className="text-primary font-bold">زاد التنموية لأثر مستدام</strong>. 
+          <strong className="text-primary font-bold">زاد التنموية</strong>.
           يهدف هذا المقياس لمساعدتكم في تقييم مدى جاهزية جمعيتكم الموقرة للانطلاق في صياغة خطتكم الاستراتيجية.
         </p>
 
@@ -74,11 +74,11 @@ export default function WelcomeScreen({ onStart }: WelcomeScreenProps) {
       {/* Guide Image Lightbox/Modal */}
       {showGuide && (
         <div className="fixed inset-0 bg-slate-900/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div 
-            className="absolute inset-0 cursor-pointer" 
-            onClick={() => setShowGuide(false)} 
+          <div
+            className="absolute inset-0 cursor-pointer"
+            onClick={() => setShowGuide(false)}
           />
-          
+
           <div className="bg-white rounded-3xl shadow-2xl w-full max-w-4xl max-h-[92vh] overflow-hidden flex flex-col relative z-10 border border-slate-100 animate-in fade-in zoom-in duration-300">
             {/* Modal Header */}
             <div className="p-4 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">

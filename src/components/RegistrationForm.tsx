@@ -61,10 +61,10 @@ export default function RegistrationForm({ onComplete }: RegistrationFormProps) 
             className="w-full px-4 py-3 rounded-xl border border-slate-300 focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all outline-none bg-white text-slate-800"
           >
             <option value="" disabled>اختر الصفة...</option>
-            <option value="عضو مجلس إدارة">عضو مجلس إدارة</option>
             <option value="عضو جمعية عمومية">عضو جمعية عمومية</option>
-            <option value="عضو موظف بدوام كامل">عضو موظف بدوام كامل</option>
-            <option value="عضو بدوام جزئي">عضو بدوام جزئي</option>
+            <option value="عضو مجلس إدارة">عضو مجلس إدارة</option>
+            <option value="موظف بدوام كامل">موظف بدوام كامل</option>
+            <option value="موظف بدوام جزئي">موظف بدوام جزئي</option>
           </select>
         </div>
 

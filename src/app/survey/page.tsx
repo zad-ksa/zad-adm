@@ -6,10 +6,12 @@ import Header from "@/components/Header";
 import ProgressBar from "@/components/ProgressBar";
 import QuestionCard from "@/components/QuestionCard";
 import RegistrationForm, { RegistrationData } from "@/components/RegistrationForm";
+import WelcomeScreen from "@/components/WelcomeScreen";
 import { surveyData, Section, Question } from "@/data/surveyData";
 
 export default function Home() {
   const router = useRouter();
+  const [hasAcceptedWelcome, setHasAcceptedWelcome] = useState(false);
   const [registrationData, setRegistrationData] = useState<RegistrationData | null>(null);
   const [currentSectionIndex, setCurrentSectionIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<string, string>>({});
@@ -106,7 +108,9 @@ export default function Home() {
       <Header />
 
       <main className="flex-1 w-full max-w-4xl mx-auto px-4 py-8 sm:py-12 z-10 relative">
-        {!registrationData ? (
+        {!hasAcceptedWelcome ? (
+          <WelcomeScreen onStart={() => setHasAcceptedWelcome(true)} />
+        ) : !registrationData ? (
           <RegistrationForm onComplete={setRegistrationData} />
         ) : (
           <>

@@ -15,13 +15,13 @@ interface RegistrationFormProps {
 export default function RegistrationForm({ onComplete }: RegistrationFormProps) {
   const [formData, setFormData] = useState<RegistrationData>({
     charityName: "",
-    establishmentDate: "",
-    licenseNumber: "",
-    authorizedName: "",
+    establishmentDate: "-",
+    licenseNumber: "-",
+    authorizedName: "-",
     authorizedTitle: "",
   });
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
@@ -31,7 +31,7 @@ export default function RegistrationForm({ onComplete }: RegistrationFormProps) 
   };
 
   return (
-    <div className="glassmorphism rounded-3xl p-8 sm:p-12 w-full animate-in fade-in slide-in-from-bottom-4 duration-500 max-w-2xl mx-auto shadow-xl">
+    <div className="glassmorphism rounded-3xl p-8 sm:p-12 w-full animate-in fade-in slide-in-from-bottom-4 duration-500 max-w-xl mx-auto shadow-xl">
       <div className="mb-8 text-center">
         <h2 className="text-2xl sm:text-3xl font-bold text-slate-800 mb-2">بيانات الجمعية</h2>
         <p className="text-slate-500">يرجى تعبئة البيانات التالية للبدء في استبيان الجاهزية</p>
@@ -51,57 +51,21 @@ export default function RegistrationForm({ onComplete }: RegistrationFormProps) 
           />
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-          <div>
-            <label className="block text-sm font-semibold text-slate-700 mb-2">تاريخ التأسيس</label>
-            <input
-              required
-              type="date"
-              name="establishmentDate"
-              value={formData.establishmentDate}
-              onChange={handleChange}
-              className="w-full px-4 py-3 rounded-xl border border-slate-300 focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all outline-none"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-semibold text-slate-700 mb-2">رقم التصريح</label>
-            <input
-              required
-              type="text"
-              name="licenseNumber"
-              value={formData.licenseNumber}
-              onChange={handleChange}
-              className="w-full px-4 py-3 rounded-xl border border-slate-300 focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all outline-none"
-              placeholder="مثال: 1234"
-            />
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-          <div>
-            <label className="block text-sm font-semibold text-slate-700 mb-2">اسم المفوض بتعبئة الاستبيان</label>
-            <input
-              required
-              type="text"
-              name="authorizedName"
-              value={formData.authorizedName}
-              onChange={handleChange}
-              className="w-full px-4 py-3 rounded-xl border border-slate-300 focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all outline-none"
-              placeholder="الاسم الثلاثي"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-semibold text-slate-700 mb-2">منصب المفوض</label>
-            <input
-              required
-              type="text"
-              name="authorizedTitle"
-              value={formData.authorizedTitle}
-              onChange={handleChange}
-              className="w-full px-4 py-3 rounded-xl border border-slate-300 focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all outline-none"
-              placeholder="مثال: المدير التنفيذي"
-            />
-          </div>
+        <div>
+          <label className="block text-sm font-semibold text-slate-700 mb-2">صفة معبي الاستبيان</label>
+          <select
+            required
+            name="authorizedTitle"
+            value={formData.authorizedTitle}
+            onChange={handleChange}
+            className="w-full px-4 py-3 rounded-xl border border-slate-300 focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all outline-none bg-white text-slate-800"
+          >
+            <option value="" disabled>اختر الصفة...</option>
+            <option value="عضو مجلس إدارة">عضو مجلس إدارة</option>
+            <option value="عضو جمعية عمومية">عضو جمعية عمومية</option>
+            <option value="عضو موظف بدوام كامل">عضو موظف بدوام كامل</option>
+            <option value="عضو بدوام جزئي">عضو بدوام جزئي</option>
+          </select>
         </div>
 
         <div className="pt-4">

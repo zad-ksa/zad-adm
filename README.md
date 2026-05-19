@@ -1,36 +1,84 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 📊 استبيان الجاهزية للجمعيات الخيرية - شركة زاد
 
-## Getting Started
+![Next.js](https://img.shields.io/badge/Next.js-16.2-black?style=for-the-badge&logo=next.js)
+![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-v4-38B2AC?style=for-the-badge&logo=tailwind-css)
+![Prisma](https://img.shields.io/badge/Prisma-ORM-2D3748?style=for-the-badge&logo=prisma)
+![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript)
+![Supabase](https://img.shields.io/badge/Supabase-Database-3ECF8E?style=for-the-badge&logo=supabase)
 
-First, run the development server:
+منصة استبيان تفاعلية ومتطورة لتقييم مدى الجاهزية المؤسسية للجمعيات الخيرية، مصممة خصيصاً لمستشاري **شركة زاد**. تم بناء النظام ليفصل بين واجهة المستخدم العام (الجمعيات) ولوحة تحكم الإدارة الآمنة، مع حفظ البيانات سحابياً لضمان الموثوقية العالية.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+---
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## 🌟 الميزات الرئيسية
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+- 📝 **استبيان ديناميكي مقسّم لمحاور:** 10 محاور تقييم رئيسية و 64 سؤالاً يتم عرضها بشكل تدريجي مع مؤثرات انتقال سلسة (Transitions).
+- 🔒 **بوابة إدارة محميّة:** نظام دخول آمن (Authentication) عبر `Middleware` خاص بموظفي الإدارة.
+- 📊 **لوحة تحكم احترافية (Dashboard):** عرض شامل لجميع الجمعيات التي أتمت الاستبيان مع نتائج مفصلة لكل محور على حدة.
+- ☁️ **قاعدة بيانات سحابية:** ربط متكامل مع **Supabase** (PostgreSQL) باستخدام **Prisma ORM** لحفظ وعرض البيانات بشكل دائم وتلقائي.
+- 📱 **تصميم متجاوب وعصري:** واجهة مستخدم (UI/UX) مصممة بعناية باستخدام تقنية **Glassmorphism** مع التوافق التام مع شاشات الجوال والحاسوب.
+- 🌐 **دعم كامل للغة العربية:** واجهات منسقة باتجاه (RTL) مع خطوط **Noto Kufi Arabic**.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+---
 
-## Learn More
+## 🏗️ هيكلية المشروع (التوجيه السلس)
 
-To learn more about Next.js, take a look at the following resources:
+- **`/` (الصفحة الرئيسية):** بوابة تسجيل الدخول الآمنة لموظفي الإدارة.
+- **`/survey`:** رابط الاستبيان العام المفتوح للجمعيات (بدون الحاجة لتسجيل الدخول).
+- **`/dashboard`:** لوحة تحكم الإدارة (محمية) تعرض جدول الإحصائيات.
+- **`/dashboard/[id]`:** صفحة تقرير مفصلة لكل جمعية تظهر درجة كل محور وتفاصيل الإجابات بدقة.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+---
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## 🚀 التشغيل المحلي (للمطورين)
 
-## Deploy on Vercel
+### 1️⃣ المتطلبات المسبقة
+تأكد من وجود البرامج التالية على جهازك:
+- [Node.js](https://nodejs.org/en/) (الإصدار 18+)
+- [Git](https://git-scm.com/)
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### 2️⃣ خطوات التثبيت
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+1. قم بنسخ المستودع:
+   ```bash
+   git clone https://github.com/khaledsh18/zad_survey.git
+   cd zad_survey
+   ```
+
+2. قم بتثبيت الحزم:
+   ```bash
+   npm install
+   ```
+
+3. قم بإعداد متغيرات البيئة `.env`:
+   انسخ ملف `.env.example` (إن وجد) أو أنشئ ملف `.env` وضع فيه:
+   ```env
+   DATABASE_URL="postgresql://postgres:YOUR_PASSWORD@db.YOUR_SUPABASE_PROJECT.supabase.co:5432/postgres?pgbouncer=true&connection_limit=1"
+   DIRECT_URL="postgresql://postgres:YOUR_PASSWORD@db.YOUR_SUPABASE_PROJECT.supabase.co:5432/postgres"
+   ADMIN_PASSWORD="ZadAdmin2026"
+   ```
+
+4. مزامنة قاعدة البيانات (Prisma):
+   ```bash
+   npx prisma generate
+   ```
+
+5. تشغيل بيئة التطوير:
+   ```bash
+   npm run dev
+   ```
+
+> الموقع سيعمل الآن على الرابط: `http://localhost:3000`
+
+---
+
+## 💻 التقنيات المستخدمة
+- **إطار العمل:** Next.js (App Router)
+- **لغة البرمجة:** TypeScript
+- **تنسيق الواجهات:** Tailwind CSS v4
+- **قاعدة البيانات:** PostgreSQL (مستضافة على Supabase)
+- **مُدير البيانات (ORM):** Prisma
+- **الخطوط:** Google Fonts (`next/font/google`)
+
+---
+**تطوير:** تم البناء بأعلى معايير جودة الويب الحديثة، لضمان استقرار التطبيق وقابلية التوسع مستقبلاً.

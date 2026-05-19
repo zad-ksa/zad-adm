@@ -29,15 +29,6 @@ export default function Results() {
             <br />
             تم استلام بيانات جمعيتكم بنجاح، وسيقوم فريق المختصين في <strong>شركة زاد للجمعيات الخيرية</strong> بمراجعة وتقييم الإجابات بدقة والتواصل معكم قريباً لعرض النتيجة وتقديم التوصيات اللازمة.
           </p>
-
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link
-              href="/"
-              className="px-8 py-3 rounded-xl font-bold text-slate-700 bg-slate-100 border border-slate-200 hover:bg-slate-200 transition-all"
-            >
-              العودة للرئيسية
-            </Link>
-          </div>
         </div>
       </main>
     </div>

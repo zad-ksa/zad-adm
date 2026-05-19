@@ -12,6 +12,32 @@ export default async function Dashboard() {
     },
   });
 
+  // Group by charity name
+  const groupedCharities: Record<string, typeof responses> = {};
+  responses.forEach((res) => {
+    const key = res.charityName.trim();
+    if (!groupedCharities[key]) {
+      groupedCharities[key] = [];
+    }
+    groupedCharities[key].push(res);
+  });
+
+  const charityList = Object.keys(groupedCharities).map((name) => {
+    const subs = groupedCharities[name];
+    const totalPercentage = subs.reduce((acc, curr) => acc + curr.scorePercentage, 0);
+    const averagePercentage = Math.round(totalPercentage / subs.length);
+    const latestSub = subs[0];
+
+    return {
+      name,
+      submissionCount: subs.length,
+      averagePercentage,
+      licenseNumber: latestSub.licenseNumber,
+      establishmentDate: latestSub.establishmentDate,
+      latestDate: latestSub.createdAt,
+    };
+  });
+
   return (
     <div className="min-h-screen bg-slate-50">
       <Header />
@@ -25,8 +51,8 @@ export default async function Dashboard() {
           <div className="flex items-center gap-4">
             <CopyLinkButton />
             <div className="bg-white px-4 py-2 rounded-lg shadow-sm border border-slate-200">
-              <span className="font-semibold text-slate-700">إجمالي التقييمات: </span>
-              <span className="text-primary font-bold">{responses.length}</span>
+              <span className="font-semibold text-slate-700">إجمالي الجمعيات: </span>
+              <span className="text-primary font-bold">{charityList.length}</span>
             </div>
           </div>
         </div>
@@ -39,25 +65,24 @@ export default async function Dashboard() {
                   <th className="p-4 font-semibold">اسم الجمعية</th>
                   <th className="p-4 font-semibold">تاريخ التأسيس</th>
                   <th className="p-4 font-semibold">رقم التصريح</th>
-                  <th className="p-4 font-semibold">اسم المفوض</th>
-                  <th className="p-4 font-semibold">تاريخ التعبئة</th>
-                  <th className="p-4 font-semibold">النتيجة</th>
+                  <th className="p-4 font-semibold text-center">عدد المشاركين</th>
+                  <th className="p-4 font-semibold">آخر مشاركة</th>
+                  <th className="p-4 font-semibold">متوسط نسبة الجاهزية</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
-                {responses.map((res) => (
-                  <tr key={res.id} className="hover:bg-slate-50 transition-colors">
+                {charityList.map((charity) => (
+                  <tr key={charity.name} className="hover:bg-slate-50 transition-colors">
                     <td className="p-4 font-bold text-primary hover:underline">
-                      <Link href={`/dashboard/${res.id}`}>{res.charityName}</Link>
+                      <Link href={`/dashboard/charity/${encodeURIComponent(charity.name)}`}>
+                        {charity.name}
+                      </Link>
                     </td>
-                    <td className="p-4 text-slate-600">{res.establishmentDate}</td>
-                    <td className="p-4 text-slate-600">{res.licenseNumber}</td>
-                    <td className="p-4 text-slate-600">
-                      <div>{res.authorizedName}</div>
-                      <div className="text-xs text-slate-400">{res.authorizedTitle}</div>
-                    </td>
+                    <td className="p-4 text-slate-600">{charity.establishmentDate}</td>
+                    <td className="p-4 text-slate-600">{charity.licenseNumber}</td>
+                    <td className="p-4 text-slate-600 text-center font-bold">{charity.submissionCount}</td>
                     <td className="p-4 text-slate-600 text-sm">
-                      {new Date(res.createdAt).toLocaleDateString("ar-SA", {
+                      {new Date(charity.latestDate).toLocaleDateString("ar-SA", {
                         year: "numeric",
                         month: "long",
                         day: "numeric",
@@ -67,19 +92,19 @@ export default async function Dashboard() {
                       <div className="flex items-center gap-2">
                         <div className={`px-3 py-1 rounded-full text-sm font-bold flex items-center justify-center
                           ${
-                            res.scorePercentage >= 80 ? "bg-green-100 text-green-700" :
-                            res.scorePercentage >= 60 ? "bg-blue-100 text-blue-700" :
-                            res.scorePercentage >= 40 ? "bg-orange-100 text-orange-700" :
+                            charity.averagePercentage >= 80 ? "bg-green-100 text-green-700" :
+                            charity.averagePercentage >= 60 ? "bg-blue-100 text-blue-700" :
+                            charity.averagePercentage >= 40 ? "bg-orange-100 text-orange-700" :
                             "bg-red-100 text-red-700"
                           }
                         `}>
-                          {res.scorePercentage}%
+                          {charity.averagePercentage}%
                         </div>
                       </div>
                     </td>
                   </tr>
                 ))}
-                {responses.length === 0 && (
+                {charityList.length === 0 && (
                   <tr>
                     <td colSpan={6} className="p-8 text-center text-slate-500">
                       لا يوجد أي تقييمات حتى الآن.

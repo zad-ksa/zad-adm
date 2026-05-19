@@ -1,0 +1,18 @@
+@import "tailwindcss";
+
+@theme {
+  --color-primary: rgb(15 118 110);
+  --color-primary-foreground: rgb(255 255 255);
+  --color-secondary: rgb(202 138 4);
+  --color-secondary-foreground: rgb(255 255 255);
+}
+
+:root {
+  --background: 248 250 252;
+  --foreground: 30 41 59;
+}
+
+body {
+  background-color: rgb(var(--background));
+  color: rgb(var(--foreground));
+}

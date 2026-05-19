@@ -1,0 +1,181 @@
+"use client";
+
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import Header from "@/components/Header";
+import ProgressBar from "@/components/ProgressBar";
+import QuestionCard from "@/components/QuestionCard";
+import RegistrationForm, { RegistrationData } from "@/components/RegistrationForm";
+import { surveyData, Section, Question } from "@/data/surveyData";
+
+export default function Home() {
+  const router = useRouter();
+  const [registrationData, setRegistrationData] = useState<RegistrationData | null>(null);
+  const [currentSectionIndex, setCurrentSectionIndex] = useState(0);
+  const [answers, setAnswers] = useState<Record<string, string>>({});
+  const [isTransitioning, setIsTransitioning] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const currentSection = surveyData[currentSectionIndex];
+  const isLastSection = currentSectionIndex === surveyData.length - 1;
+
+  // Check if all questions in current section are answered
+  const allCurrentAnswered = currentSection.questions.every(
+    (q) => !!answers[q.id]
+  );
+
+  const handleSelectOption = (questionId: string, optionId: string) => {
+    setAnswers((prev) => ({
+      ...prev,
+      [questionId]: optionId,
+    }));
+  };
+
+  const handleNext = async () => {
+    if (!allCurrentAnswered) return;
+
+    if (isLastSection) {
+      if (!registrationData) return;
+      setIsSubmitting(true);
+
+      let totalScore = 0;
+      let maxScore = 0;
+
+      surveyData.forEach((sec) => {
+        sec.questions.forEach((q) => {
+          const selectedOptId = answers[q.id];
+          const option = q.options.find((o) => o.id === selectedOptId);
+          if (option) {
+            totalScore += option.score;
+          }
+          maxScore += Math.max(...q.options.map((o) => o.score));
+        });
+      });
+
+      const percentage = Math.round((totalScore / maxScore) * 100);
+
+      try {
+        const res = await fetch("/api/submit", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            ...registrationData,
+            scorePercentage: percentage,
+            answers,
+          }),
+        });
+
+        if (res.ok) {
+          router.push("/results");
+        } else {
+          alert("حدث خطأ أثناء إرسال البيانات. يرجى المحاولة مرة أخرى.");
+          setIsSubmitting(false);
+        }
+      } catch (err) {
+        console.error(err);
+        alert("حدث خطأ في الاتصال.");
+        setIsSubmitting(false);
+      }
+    } else {
+      setIsTransitioning(true);
+      setTimeout(() => {
+        setCurrentSectionIndex((prev) => prev + 1);
+        setIsTransitioning(false);
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      }, 800);
+    }
+  };
+
+  const handlePrev = () => {
+    if (currentSectionIndex > 0) {
+      setIsTransitioning(true);
+      setTimeout(() => {
+        setCurrentSectionIndex((prev) => prev - 1);
+        setIsTransitioning(false);
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      }, 500);
+    }
+  };
+
+  return (
+    <div className="min-h-screen flex flex-col relative overflow-hidden bg-slate-50">
+      <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-primary/20 rounded-full blur-[100px] pointer-events-none" />
+      <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-secondary/20 rounded-full blur-[100px] pointer-events-none" />
+
+      <Header />
+
+      <main className="flex-1 w-full max-w-4xl mx-auto px-4 py-8 sm:py-12 z-10 relative">
+        {!registrationData ? (
+          <RegistrationForm onComplete={setRegistrationData} />
+        ) : (
+          <>
+            <ProgressBar current={currentSectionIndex + 1} total={surveyData.length} />
+
+            {/* Transition Overlay */}
+            <div
+              className={`absolute inset-0 z-50 flex items-center justify-center bg-slate-50/90 backdrop-blur-sm transition-all duration-500 rounded-3xl ${
+                isTransitioning ? "opacity-100 visible" : "opacity-0 invisible"
+              }`}
+            >
+              <div className="text-center transform transition-transform duration-500 scale-110">
+                <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+                <h2 className="text-2xl font-bold text-slate-800">جاري الانتقال للمحور التالي...</h2>
+              </div>
+            </div>
+
+            <div className={`transition-opacity duration-500 ${isTransitioning ? 'opacity-0' : 'opacity-100'}`}>
+              <div className="mb-8 p-6 bg-primary text-white rounded-2xl shadow-lg relative overflow-hidden">
+                 <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-10 -mt-10 blur-xl pointer-events-none" />
+                 <h2 className="text-2xl sm:text-3xl font-bold mb-2">
+                  {currentSection.title}
+                 </h2>
+                 <p className="text-primary-foreground/80">
+                   يرجى الإجابة على جميع أسئلة هذا المحور للانتقال للتالي.
+                 </p>
+              </div>
+
+              <div className="space-y-6">
+                {currentSection.questions.map((question: Question, index: number) => (
+                  <QuestionCard
+                    key={question.id}
+                    question={question}
+                    index={index + 1}
+                    selectedOptionId={answers[question.id]}
+                    onSelectOption={(optionId) => handleSelectOption(question.id, optionId)}
+                  />
+                ))}
+              </div>
+
+              <div className="mt-10 flex justify-between items-center pb-12">
+                <button
+                  onClick={handlePrev}
+                  disabled={currentSectionIndex === 0 || isTransitioning || isSubmitting}
+                  className={`px-6 py-3 rounded-xl font-medium transition-all ${
+                    currentSectionIndex === 0
+                      ? "opacity-0 pointer-events-none"
+                      : "text-slate-600 bg-white border border-slate-200 hover:bg-slate-50 shadow-sm"
+                  }`}
+                >
+                  المحور السابق
+                </button>
+
+                <button
+                  onClick={handleNext}
+                  disabled={!allCurrentAnswered || isTransitioning || isSubmitting}
+                  className={`px-8 py-3 rounded-xl font-bold text-white transition-all shadow-lg flex items-center justify-center gap-2 ${
+                    allCurrentAnswered && !isSubmitting
+                      ? "bg-primary hover:bg-primary/90 hover:-translate-y-0.5 hover:shadow-primary/30"
+                      : "bg-slate-300 cursor-not-allowed shadow-none"
+                  }`}
+                >
+                  {isSubmitting && <div className="w-5 h-5 border-2 border-white/50 border-t-white rounded-full animate-spin" />}
+                  {isLastSection ? "إنهاء وإرسال التقييم" : "المحور التالي"}
+                </button>
+              </div>
+            </div>
+          </>
+        )}
+      </main>
+    </div>
+  );
+}

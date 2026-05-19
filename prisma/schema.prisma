@@ -1,0 +1,19 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+}
+
+model SurveyResponse {
+  id              String   @id @default(uuid())
+  charityName     String
+  establishmentDate String
+  licenseNumber   String
+  authorizedName  String
+  authorizedTitle String
+  scorePercentage Int
+  answers         Json
+  createdAt       DateTime @default(now())
+}

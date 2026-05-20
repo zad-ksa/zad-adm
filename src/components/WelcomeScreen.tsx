@@ -279,7 +279,7 @@ export default function WelcomeScreen({ onStart }: WelcomeScreenProps) {
                       "اعتمد على الواقع الفعلي الذي تعرفه أنت، لا على ما تتمنى أن يكون",
                       "تعبئة النموذج فردية — تنوّع الآراء بين أعضاء الفريق مهم ومقصود",
                       "إذا لم تعرف الإجابة عن بند ما، اختر (1) وهذا يساعد الجهة المحللة",
-                      "خصص 30 إلى 45 دقيقة هادئة للتعبئة دون انقطاع"
+                      "خصص 20 إلى 30 دقيقة هادئة للتعبئة دون انقطاع"
                     ].map((tip, idx) => (
                       <li key={idx} className="flex items-start gap-2.5 text-amber-950 text-sm md:text-base leading-relaxed">
                         <span className="text-amber-500 font-bold shrink-0 mt-0.5">•</span>

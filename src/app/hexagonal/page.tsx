@@ -109,7 +109,7 @@ export default function HexagonalSurvey() {
 
     if (isLastQuestion) {
       setIsSubmitting(true);
-      
+
       // Clean answers: remove trailing whitespace and empty strings from the lists
       const cleanedAnswers: Record<string, string[]> = {};
       Object.keys(answers).forEach((key) => {
@@ -267,7 +267,7 @@ export default function HexagonalSurvey() {
                     <div className="absolute bottom-0 left-0 w-32 h-32 bg-secondary/10 rounded-full -ml-10 -mb-10 blur-xl pointer-events-none" />
 
                     <span className="inline-block bg-secondary text-white text-xs font-bold px-3 py-1 rounded-full mb-3 uppercase tracking-wider">
-                      الملف التعريفي للتحليل السداسي
+                      الدليل التعريفي للتحليل السداسي
                     </span>
                     <h3 className="text-2xl md:text-3xl font-extrabold mb-2 leading-tight">
                       التحليل السداسي للجمعيات الخيرية
@@ -568,9 +568,8 @@ export default function HexagonalSurvey() {
 
             {/* Transition Overlay */}
             <div
-              className={`absolute inset-0 z-50 flex items-center justify-center bg-slate-50/90 backdrop-blur-sm transition-all duration-500 rounded-3xl ${
-                isTransitioning ? "opacity-100 visible" : "opacity-0 invisible"
-              }`}
+              className={`absolute inset-0 z-50 flex items-center justify-center bg-slate-50/90 backdrop-blur-sm transition-all duration-500 rounded-3xl ${isTransitioning ? "opacity-100 visible" : "opacity-0 invisible"
+                }`}
             >
               <div className="text-center transform transition-transform duration-500 scale-110">
                 <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4" />
@@ -611,11 +610,10 @@ export default function HexagonalSurvey() {
                       value={currentAnswers[index]}
                       onChange={(e) => handleInputChange(index, e.target.value)}
                       placeholder={index === 0 ? currentQuestion.placeholder : "إدخال اختياري إضافي..."}
-                      className={`w-full px-4 py-3 rounded-xl border transition-all outline-none text-slate-800 text-sm sm:text-base ${
-                        index === 0 && !currentAnswers[0].trim()
+                      className={`w-full px-4 py-3 rounded-xl border transition-all outline-none text-slate-800 text-sm sm:text-base ${index === 0 && !currentAnswers[0].trim()
                           ? "border-amber-300 focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 bg-amber-50/10"
                           : "border-slate-300 focus:border-primary focus:ring-2 focus:ring-primary/20 bg-white"
-                      }`}
+                        }`}
                     />
                   </div>
                 ))}
@@ -626,11 +624,10 @@ export default function HexagonalSurvey() {
                 <button
                   onClick={handlePrev}
                   disabled={currentQuestionIndex === 0 || isTransitioning || isSubmitting}
-                  className={`px-6 py-3 rounded-xl font-medium transition-all ${
-                    currentQuestionIndex === 0
+                  className={`px-6 py-3 rounded-xl font-medium transition-all ${currentQuestionIndex === 0
                       ? "opacity-0 pointer-events-none"
                       : "text-slate-600 bg-white border border-slate-200 hover:bg-slate-50 shadow-sm"
-                  }`}
+                    }`}
                 >
                   السؤال السابق
                 </button>
@@ -638,11 +635,10 @@ export default function HexagonalSurvey() {
                 <button
                   onClick={handleNext}
                   disabled={!isCurrentQuestionValid || isTransitioning || isSubmitting}
-                  className={`px-8 py-3 rounded-xl font-bold text-white transition-all shadow-lg flex items-center justify-center gap-2 ${
-                    isCurrentQuestionValid && !isSubmitting
+                  className={`px-8 py-3 rounded-xl font-bold text-white transition-all shadow-lg flex items-center justify-center gap-2 ${isCurrentQuestionValid && !isSubmitting
                       ? "bg-primary hover:bg-primary/90 hover:-translate-y-0.5 hover:shadow-primary/30"
                       : "bg-slate-300 cursor-not-allowed shadow-none"
-                  }`}
+                    }`}
                 >
                   {isSubmitting && <div className="w-5 h-5 border-2 border-white/50 border-t-white rounded-full animate-spin" />}
                   {isLastQuestion ? "إنهاء وإرسال التحليل" : "السؤال التالي"}

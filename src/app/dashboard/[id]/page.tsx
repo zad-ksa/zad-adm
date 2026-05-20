@@ -53,7 +53,7 @@ export default async function CharityDetails({ params }: { params: { id: string 
 
   return (
     <div className="min-h-screen bg-slate-50 pb-12">
-      <Header />
+      <Header title={response.charityName} />
       
       <main className="max-w-4xl mx-auto px-4 py-8">
         <Link href="/dashboard" className="inline-flex items-center text-primary hover:underline font-bold mb-8 transition-colors">

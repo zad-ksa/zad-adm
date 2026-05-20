@@ -98,7 +98,7 @@ export default async function CharityGroupedReport({ params }: { params: { name:
 
   return (
     <div className="min-h-screen bg-slate-50 pb-12 text-right" dir="rtl">
-      <Header />
+      <Header title={decodedName} />
       
       <main className="max-w-5xl mx-auto px-4 py-8">
         <Link href="/dashboard" className="inline-flex items-center text-primary hover:underline font-bold mb-8 transition-colors">

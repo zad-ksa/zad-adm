@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "التحليل السداسي للجمعيات الخيرية",
+  title: "التحليل السداسي | زاد التنموية",
   description: "التحليل السداسي للجمعيات الخيرية - إعداد زاد التنموية",
 };
 

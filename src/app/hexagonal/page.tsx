@@ -74,7 +74,7 @@ export default function HexagonalSurvey() {
   });
 
   useEffect(() => {
-    document.title = "التحليل السداسي للجمعيات الخيرية";
+    document.title = "التحليل السداسي | زاد التنموية";
   }, []);
 
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);

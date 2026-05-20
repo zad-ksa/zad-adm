@@ -100,7 +100,7 @@ export default function WelcomeScreen({ onStart }: WelcomeScreenProps) {
                 <div className="bg-gradient-to-r from-primary to-teal-800 text-white p-8 rounded-2xl mb-8 text-center relative overflow-hidden shadow-md">
                   <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full -mr-10 -mt-10 blur-xl pointer-events-none" />
                   <div className="absolute bottom-0 left-0 w-32 h-32 bg-secondary/10 rounded-full -ml-10 -mb-10 blur-xl pointer-events-none" />
-                  
+
                   <span className="inline-block bg-secondary text-white text-xs font-bold px-3 py-1 rounded-full mb-3 uppercase tracking-wider">
                     دليل الاستخدام
                   </span>
@@ -167,7 +167,7 @@ export default function WelcomeScreen({ onStart }: WelcomeScreenProps) {
                   <p className="text-slate-600 text-sm md:text-base mb-4">
                     يشتمل المقياس على 10 محاور رئيسية تغطي جوانب العمل المؤسسي كافة:
                   </p>
-                  
+
                   <div className="overflow-x-auto rounded-xl border border-slate-200">
                     <table className="w-full text-right border-collapse text-sm">
                       <thead>
@@ -220,7 +220,7 @@ export default function WelcomeScreen({ onStart }: WelcomeScreenProps) {
                   <p className="text-slate-600 text-sm md:text-base mb-6">
                     لكل بند من البنود الـ 64، اختر درجة واحدة فقط من القائمة التالية تعبّر عن الواقع الفعلي في جمعيتك:
                   </p>
-                  
+
                   <div className="grid grid-cols-1 md:grid-cols-5 gap-3">
                     {[
                       { score: 5, label: "متوفر بشكل كامل وممنهج", desc: "الجمعية تطبق هذا الجانب بصورة واضحة ومستمرة", bg: "bg-teal-50 border-teal-200 text-teal-800" },
@@ -248,13 +248,12 @@ export default function WelcomeScreen({ onStart }: WelcomeScreenProps) {
                     </div>
                     <h4 className="font-extrabold text-slate-800 text-lg">خامساً: كيف تُعبِّئ الاستبانة خطوة بخطوة؟</h4>
                   </div>
-                  
+
                   <div className="space-y-6">
                     {[
                       { step: "١", title: "أجب بشكل فردي ومستقل", desc: "يُعبَّأ النموذج بشكل فردي — لا تتشاور مع الآخرين أثناء التعبئة" },
                       { step: "٢", title: "اختر درجة لكل بند", desc: "لكل بند، اختر رقماً من 1 إلى 5 يعبّر عن الواقع الفعلي في جمعيتك" },
-                      { step: "٣", title: "أضف ملاحظاتك إن رأيت", desc: "في حال وجود خانة ملاحظات، يمكنك توضيح سبب اختيارك للدرجة" },
-                      { step: "٤", title: "أرسل النموذج", desc: "بعد الانتهاء، اضغط (إرسال) — ستصلك رسالة تأكيد باستلام إجابتك" },
+                      { step: "٣", title: "أرسل النموذج", desc: "بعد الانتهاء، اضغط (إرسال) — ستصلك رسالة تأكيد باستلام إجابتك" },
                     ].map((item, idx) => (
                       <div key={idx} className="flex gap-4 items-start">
                         <div className="w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center text-sm font-bold shrink-0 mt-0.5 shadow-sm">

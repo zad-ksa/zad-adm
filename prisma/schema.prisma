@@ -17,3 +17,11 @@ model SurveyResponse {
   answers         Json
   createdAt       DateTime @default(now())
 }
+
+model HexagonalResponse {
+  id              String   @id @default(uuid())
+  charityName     String
+  authorizedTitle String
+  answers         Json
+  createdAt       DateTime @default(now())
+}

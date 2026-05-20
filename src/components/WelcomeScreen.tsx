@@ -175,34 +175,31 @@ export default function WelcomeScreen({ onStart }: WelcomeScreenProps) {
                           <th className="p-3 font-bold text-slate-700 w-12 text-center">#</th>
                           <th className="p-3 font-bold text-slate-700">المحور</th>
                           <th className="p-3 font-bold text-slate-700 w-20 text-center">البنود</th>
-                          <th className="p-3 font-bold text-slate-700 w-28 text-center">الدرجة القصوى</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-slate-100">
                         {[
-                          { id: "١", name: "الامتثال القانوني والتنظيمي", items: 6, maxScore: 30 },
-                          { id: "٢", name: "الحوكمة والممارسات القيادية", items: 7, maxScore: 35 },
-                          { id: "٣", name: "البناء التنظيمي ورأس المال البشري", items: 7, maxScore: 35 },
-                          { id: "٤", name: "السلامة المالية والاستدامة", items: 8, maxScore: 40 },
-                          { id: "٥", name: "البرامج التنموية والتحول نحو الأثر", items: 7, maxScore: 35 },
-                          { id: "٦", name: "الموارد العينية والبنية الرقمية", items: 6, maxScore: 30 },
-                          { id: "٧", name: "الشراكات الاستراتيجية والاتصال المؤسسي", items: 5, maxScore: 25 },
-                          { id: "٨", name: "الجاهزية المؤسسية والثقافة التنظيمية", items: 6, maxScore: 30 },
-                          { id: "٩", name: "الشفافية والإفصاح وإدارة البيانات", items: 5, maxScore: 25 },
-                          { id: "١٠", name: "الجاهزية التنفيذية للتخطيط الاستراتيجي", items: 7, maxScore: 35 },
+                          { id: "١", name: "الامتثال القانوني والتنظيمي", items: 6 },
+                          { id: "٢", name: "الحوكمة والممارسات القيادية", items: 7 },
+                          { id: "٣", name: "البناء التنظيمي ورأس المال البشري", items: 7 },
+                          { id: "٤", name: "السلامة المالية والاستدامة", items: 8 },
+                          { id: "٥", name: "البرامج التنموية والتحول نحو الأثر", items: 7 },
+                          { id: "٦", name: "الموارد العينية والبنية الرقمية", items: 6 },
+                          { id: "٧", name: "الشراكات الاستراتيجية والاتصال المؤسسي", items: 5 },
+                          { id: "٨", name: "الجاهزية المؤسسية والثقافة التنظيمية", items: 6 },
+                          { id: "٩", name: "الشفافية والإفصاح وإدارة البيانات", items: 5 },
+                          { id: "١٠", name: "الجاهزية التنفيذية للتخطيط الاستراتيجي", items: 7 },
                         ].map((row, idx) => (
                           <tr key={idx} className="hover:bg-slate-50/50 transition-colors">
                             <td className="p-3 text-slate-500 text-center font-medium">{row.id}</td>
                             <td className="p-3 text-slate-800 font-medium">{row.name}</td>
                             <td className="p-3 text-slate-600 text-center">{row.items}</td>
-                            <td className="p-3 text-slate-600 text-center font-semibold">{row.maxScore}</td>
                           </tr>
                         ))}
                         <tr className="bg-primary/5 font-bold border-t border-slate-200">
                           <td className="p-3 text-primary text-center"></td>
                           <td className="p-3 text-primary">الإجمالي الكلي</td>
                           <td className="p-3 text-primary text-center">64</td>
-                          <td className="p-3 text-primary text-center">320</td>
                         </tr>
                       </tbody>
                     </table>

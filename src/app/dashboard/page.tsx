@@ -89,13 +89,6 @@ export default async function Dashboard() {
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
             <CopyLinkButton />
             <CopyLinkButton path="/hexagonal" label="نسخ رابط التحليل السداسي" />
-            <Link 
-              href="/hexagonal"
-              target="_blank"
-              className="flex items-center justify-center gap-2 bg-slate-100 hover:bg-slate-200 text-slate-700 px-4 py-2 rounded-xl font-bold transition-all text-sm"
-            >
-              🌐 فتح التحليل السداسي
-            </Link>
             <div className="bg-white px-4 py-2 rounded-xl shadow-sm border border-slate-200 flex items-center justify-center gap-2 text-sm">
               <span className="font-semibold text-slate-700">إجمالي الجمعيات: </span>
               <span className="text-primary font-extrabold text-base">{charityList.length}</span>

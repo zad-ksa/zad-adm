@@ -67,6 +67,7 @@ const QUESTIONS: QuestionConfig[] = [
 export default function HexagonalSurvey() {
   const router = useRouter();
   const [step, setStep] = useState<"welcome" | "register" | "survey">("welcome");
+  const [showGuide, setShowGuide] = useState(false);
   const [registrationData, setRegistrationData] = useState<RegistrationData>({
     charityName: "",
     authorizedTitle: "",
@@ -197,17 +198,311 @@ export default function HexagonalSurvey() {
                 يساعد هذا الاستبيان في رسم صورة تحليلية متكاملة لجمعيتكم من خلال رصد ستة أبعاد جوهرية تشمل نقاط القوة والضعف والفرص والمخاطر، بالإضافة لعوامل النجاح والميزة التنافسية.
               </p>
 
-              <button
-                onClick={() => setStep("register")}
-                className="w-full sm:w-auto px-8 py-4 bg-primary hover:bg-primary/95 text-white font-bold rounded-2xl transition-all shadow-lg shadow-primary/20 hover:shadow-primary/30 hover:-translate-y-0.5"
-              >
-                البدء بالاستبيان
-              </button>
+              {/* Action Options */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+                <button
+                  onClick={() => setShowGuide(true)}
+                  className="flex flex-col items-center justify-center p-6 bg-slate-50 hover:bg-slate-100 border border-slate-200 hover:border-secondary/30 rounded-2xl transition-all group"
+                >
+                  <div className="w-12 h-12 bg-secondary/10 rounded-full flex items-center justify-center text-secondary text-xl mb-3 group-hover:scale-110 transition-transform">
+                    📄
+                  </div>
+                  <span className="font-bold text-slate-800 mb-1">دليل الاستخدام</span>
+                  <span className="text-xs text-slate-500 text-center">
+                    اطّلع على مفهوم التحليل السداسي وأبعاد التقييم بالتفصيل
+                  </span>
+                </button>
 
-              <div className="mt-8 text-slate-400 text-xs flex justify-center items-center gap-2">
+                <button
+                  onClick={() => setStep("register")}
+                  className="flex flex-col items-center justify-center p-6 bg-primary hover:bg-primary/95 text-white rounded-2xl transition-all shadow-lg shadow-primary/20 hover:shadow-primary/30 hover:-translate-y-0.5"
+                >
+                  <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center text-white text-xl mb-3 animate-pulse">
+                    ⚡
+                  </div>
+                  <span className="font-bold mb-1 text-lg">البدء بالاستبيان</span>
+                  <span className="text-xs text-white/80 text-center">
+                    الانتقال مباشرة لتعبئة بيانات الجمعية وبدء التقييم
+                  </span>
+                </button>
+              </div>
+
+              <div className="text-slate-400 text-xs flex justify-center items-center gap-2">
                 <span>🕒 يستغرق التقييم حوالي 15-20 دقيقة</span>
                 <span>•</span>
                 <span>📝 يتكون من 6 أسئلة تحليلية رئيسية</span>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Guide Modal */}
+        {showGuide && (
+          <div className="fixed inset-0 bg-slate-900/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+            <div
+              className="absolute inset-0 cursor-pointer"
+              onClick={() => setShowGuide(false)}
+            />
+
+            <div className="bg-white rounded-3xl shadow-2xl w-full max-w-4xl max-h-[92vh] overflow-hidden flex flex-col relative z-10 border border-slate-100 animate-in fade-in zoom-in duration-300">
+              {/* Modal Header */}
+              <div className="p-4 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+                <h2 className="font-bold text-slate-800 text-lg flex items-center gap-2">
+                  <span>📋 دليل التحليل السداسي للجمعيات الخيرية</span>
+                </h2>
+                <button
+                  onClick={() => setShowGuide(false)}
+                  className="w-10 h-10 rounded-full bg-slate-200/50 hover:bg-slate-200 text-slate-600 hover:text-slate-800 transition-colors flex items-center justify-center text-xl font-bold"
+                >
+                  ✕
+                </button>
+              </div>
+
+              {/* Scrollable Content Container */}
+              <div className="flex-1 overflow-y-auto p-6 bg-slate-50 text-right font-sans" dir="rtl">
+                <div className="max-w-3xl mx-auto space-y-8">
+                  {/* Title banner */}
+                  <div className="bg-gradient-to-r from-primary to-teal-800 text-white p-8 rounded-2xl text-center relative overflow-hidden shadow-md">
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full -mr-10 -mt-10 blur-xl pointer-events-none" />
+                    <div className="absolute bottom-0 left-0 w-32 h-32 bg-secondary/10 rounded-full -ml-10 -mb-10 blur-xl pointer-events-none" />
+
+                    <span className="inline-block bg-secondary text-white text-xs font-bold px-3 py-1 rounded-full mb-3 uppercase tracking-wider">
+                      الملف التعريفي للتحليل السداسي
+                    </span>
+                    <h3 className="text-2xl md:text-3xl font-extrabold mb-2 leading-tight">
+                      التحليل السداسي للجمعيات الخيرية
+                    </h3>
+                    <p className="text-teal-100 text-sm md:text-base max-w-xl mx-auto font-medium">
+                      الجمعيات الخيرية والمنظمات غير الربحية
+                    </p>
+                  </div>
+
+                  {/* Intro text */}
+                  <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100">
+                    <h4 className="font-extrabold text-slate-800 text-lg mb-3 flex items-center gap-2">
+                      <span>❓</span> ما هو التحليل السداسي؟
+                    </h4>
+                    <p className="text-slate-600 leading-relaxed text-sm md:text-base">
+                      التحليل السداسي هو أداة تخطيط استراتيجي متكاملة تُوظَّف لفهم الوضع الراهن للجمعية الخيرية من ست زوايا مختلفة ومتكاملة. يجمع هذا التحليل بين البُعدين الداخلي والخارجي لرسم صورة شاملة تُساعد القيادة في اتخاذ قرارات مدروسة وصياغة خطط واقعية.
+                    </p>
+                    <p className="text-slate-600 leading-relaxed text-sm md:text-base mt-3">
+                      يشمل هذا التحليل ستة محاور أساسية: نقاط القوة، نقاط الضعف، الفرص، المخاطر، عوامل النجاح الحاسمة، والميزة التنافسية. وفيما يلي شرح موسّع لكل محور مع أمثلة تطبيقية من واقع العمل الخيري.
+                    </p>
+                  </div>
+
+                  {/* 1. Strengths */}
+                  <div className="bg-white rounded-2xl p-6 shadow-sm border border-emerald-100">
+                    <div className="flex items-center gap-3 mb-4 pb-3 border-b border-slate-100">
+                      <span className="text-2xl">💪</span>
+                      <div>
+                        <h4 className="font-extrabold text-emerald-800 text-lg">أولاً: نقاط القوة (Strengths)</h4>
+                        <span className="text-xs text-emerald-600 font-semibold">عوامل داخلية إيجابية</span>
+                      </div>
+                    </div>
+                    <div className="bg-emerald-50/30 p-4 rounded-xl mb-4 text-emerald-950 text-sm leading-relaxed border border-emerald-50">
+                      <strong>التعريف:</strong> هي العوامل الداخلية الإيجابية التي تتميز بها الجمعية الخيرية وتجعلها قادرة على تحقيق أهدافها بكفاءة. هذه العوامل تمثّل ما تتفوق فيه الجمعية مقارنةً بغيرها، وهي موجودة ومتاحة حالياً ويمكن الاستفادة منها مباشرةً في تنفيذ البرامج والخدمات.
+                    </div>
+                    <div className="space-y-3">
+                      <h5 className="font-bold text-slate-700 text-sm">💡 الأمثلة التطبيقية:</h5>
+                      <div className="space-y-3 pr-2">
+                        <div className="text-sm">
+                          <strong className="text-slate-800 block mb-1">1. شبكة متطوعين متفانين وذوي خبرة</strong>
+                          <p className="text-slate-600 leading-relaxed">تمتلك الجمعية أكثر من 200 متطوع نشط يعملون باحترافية في مجالات الصحة والتعليم والإغاثة، مما يخفّض التكاليف التشغيلية ويرفع جودة الخدمات المقدمة للمستفيدين.</p>
+                        </div>
+                        <div className="text-sm border-t border-slate-50 pt-2">
+                          <strong className="text-slate-800 block mb-1">2. ثقة مجتمعية وسمعة راسخة</strong>
+                          <p className="text-slate-600 leading-relaxed">تأسست الجمعية منذ أكثر من 15 عاماً وحققت سمعة طيبة لدى المستفيدين والجهات المانحة، مما يسهّل استقطاب الدعم المادي والشراكات الاستراتيجية.</p>
+                        </div>
+                        <div className="text-sm border-t border-slate-50 pt-2">
+                          <strong className="text-slate-800 block mb-1">3. بنية إدارية منظمة وحوكمة شفافة</strong>
+                          <p className="text-slate-600 leading-relaxed">تعمل الجمعية وفق هيكل تنظيمي واضح مع لجان رقابية فاعلة وتقارير مالية شفافة، مما يعزز ثقة الممولين والمستفيدين ويضمن الاستدامة.</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* 2. Weaknesses */}
+                  <div className="bg-white rounded-2xl p-6 shadow-sm border border-rose-100">
+                    <div className="flex items-center gap-3 mb-4 pb-3 border-b border-slate-100">
+                      <span className="text-2xl">⚠️</span>
+                      <div>
+                        <h4 className="font-extrabold text-rose-800 text-lg">ثانياً: نقاط الضعف (Weaknesses)</h4>
+                        <span className="text-xs text-rose-600 font-semibold">عوامل داخلية سلبية</span>
+                      </div>
+                    </div>
+                    <div className="bg-rose-50/30 p-4 rounded-xl mb-4 text-rose-950 text-sm leading-relaxed border border-rose-50">
+                      <strong>التعريف:</strong> هي العوامل الداخلية السلبية التي تُقيّد قدرة الجمعية على تحقيق أهدافها أو توسيع نطاق خدماتها. تنبع هذه النقاط من داخل المنظمة ذاتها، وتمثّل مجالات تحتاج إلى تطوير أو معالجة للارتقاء بمستوى الأداء المؤسسي.
+                    </div>
+                    <div className="space-y-3">
+                      <h5 className="font-bold text-slate-700 text-sm">💡 الأمثلة التطبيقية:</h5>
+                      <div className="space-y-3 pr-2">
+                        <div className="text-sm">
+                          <strong className="text-slate-800 block mb-1">1. الاعتماد المفرط على مصادر تمويل محدودة</strong>
+                          <p className="text-slate-600 leading-relaxed">تعتمد الجمعية على عدد قليل من المانحين الرئيسيين، مما يُعرّضها لخطر الانقطاع المالي المفاجئ في حال توقف أحدهم عن الدعم، ويضعف استدامتها على المدى البعيد.</p>
+                        </div>
+                        <div className="text-sm border-t border-slate-50 pt-2">
+                          <strong className="text-slate-800 block mb-1">2. محدودية القدرات التكنولوجية</strong>
+                          <p className="text-slate-600 leading-relaxed">تفتقر الجمعية إلى منظومة رقمية متكاملة لإدارة قواعد بيانات المستفيدين والمتطوعين والمتبرعين، مما يُبطئ العمليات ويزيد من احتمالية الأخطاء الإدارية.</p>
+                        </div>
+                        <div className="text-sm border-t border-slate-50 pt-2">
+                          <strong className="text-slate-800 block mb-1">3. ضعف الكوادر المتخصصة في جمع التبرعات</strong>
+                          <p className="text-slate-600 leading-relaxed">يغيب التخصص المهني في إدارة حملات التبرعات والتواصل مع الممولين المؤسسيين، مما يُقيّد قدرة الجمعية على تنويع مصادرها المالية وتوسيع قاعدة داعميها.</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* 3. Opportunities */}
+                  <div className="bg-white rounded-2xl p-6 shadow-sm border border-sky-100">
+                    <div className="flex items-center gap-3 mb-4 pb-3 border-b border-slate-100">
+                      <span className="text-2xl">🌟</span>
+                      <div>
+                        <h4 className="font-extrabold text-sky-800 text-lg">ثالثاً: الفرص (Opportunities)</h4>
+                        <span className="text-xs text-sky-600 font-semibold">عوامل خارجية إيجابية</span>
+                      </div>
+                    </div>
+                    <div className="bg-sky-50/30 p-4 rounded-xl mb-4 text-sky-950 text-sm leading-relaxed border border-sky-50">
+                      <strong>التعريف:</strong> هي العوامل الخارجية الإيجابية في البيئة المحيطة التي يمكن للجمعية توظيفها لصالحها لتحقيق النمو والتوسع. لا تنشأ الفرص من داخل المنظمة بل من المحيط الخارجي، والجمعية التي تتمتع بوعي استراتيجي هي التي تتلقّفها وتستثمرها قبل غيرها.
+                    </div>
+                    <div className="space-y-3">
+                      <h5 className="font-bold text-slate-700 text-sm">💡 الأمثلة التطبيقية:</h5>
+                      <div className="space-y-3 pr-2">
+                        <div className="text-sm">
+                          <strong className="text-slate-800 block mb-1">1. التحول الرقمي ومنصات التبرع الإلكتروني</strong>
+                          <p className="text-slate-600 leading-relaxed">يتيح انتشار منصات التبرع الرقمي والدفع الإلكتروني الوصول إلى شريحة واسعة من المتبرعين المحليين والدوليين بتكلفة منخفضة، خاصةً جيل الشباب التقني.</p>
+                        </div>
+                        <div className="text-sm border-t border-slate-50 pt-2">
+                          <strong className="text-slate-800 block mb-1">2. التوجهات الحكومية لدعم العمل الأهلي</strong>
+                          <p className="text-slate-600 leading-relaxed">تتجه كثير من الحكومات والمؤسسات الدولية نحو تعزيز الشراكة مع منظمات المجتمع المدني وتوفير تمويل مخصص لبرامج التنمية الاجتماعية، مما يفتح آفاقاً تمويلية جديدة.</p>
+                        </div>
+                        <div className="text-sm border-t border-slate-50 pt-2">
+                          <strong className="text-slate-800 block mb-1">3. الاهتمام المتزايد بالمسؤولية الاجتماعية للشركات</strong>
+                          <p className="text-slate-600 leading-relaxed">تلتزم الشركات المتوسطة والكبرى بتخصيص ميزانيات للمسؤولية الاجتماعية، مما يُتيح للجمعية بناء شراكات مؤسسية مستدامة توفر دعماً مالياً وعيناً وتقنياً.</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* 4. Threats */}
+                  <div className="bg-white rounded-2xl p-6 shadow-sm border border-amber-100">
+                    <div className="flex items-center gap-3 mb-4 pb-3 border-b border-slate-100">
+                      <span className="text-2xl">🔴</span>
+                      <div>
+                        <h4 className="font-extrabold text-amber-800 text-lg">رابعاً: المخاطر (Threats)</h4>
+                        <span className="text-xs text-amber-600 font-semibold">عوامل خارجية سلبية</span>
+                      </div>
+                    </div>
+                    <div className="bg-amber-50/30 p-4 rounded-xl mb-4 text-amber-950 text-sm leading-relaxed border border-amber-50">
+                      <strong>التعريف:</strong> هي العوامل الخارجية السلبية القادمة من البيئة المحيطة والتي قد تُعيق عمل الجمعية أو تُهدد استمراريتها. لا تملك الجمعية سيطرة مباشرة على هذه التهديدات، لكنها تستطيع التخطيط المسبق للحدّ من آثارها وتجاوزها باستراتيجيات مدروسة.
+                    </div>
+                    <div className="space-y-3">
+                      <h5 className="font-bold text-slate-700 text-sm">💡 الأمثلة التطبيقية:</h5>
+                      <div className="space-y-3 pr-2">
+                        <div className="text-sm">
+                          <strong className="text-slate-800 block mb-1">1. التنافسية المتزايدة في قطاع العمل الخيري</strong>
+                          <p className="text-slate-600 leading-relaxed">ارتفاع أعداد المنظمات غير الربحية الجديدة يُنافس الجمعية على نفس المتبرعين والمستفيدين والكوادر البشرية، مما يُضعف موقعها التنافسي إن لم تتجدد وتتميز.</p>
+                        </div>
+                        <div className="text-sm border-t border-slate-50 pt-2">
+                          <strong className="text-slate-800 block mb-1">2. التغيرات التشريعية والرقابية</strong>
+                          <p className="text-slate-600 leading-relaxed">التحولات في الأنظمة والقوانين المنظِّمة للعمل الخيري قد تُثقل الأعباء الإجرائية والرقابية على الجمعية، وقد تُقيّد بعض برامجها أو طرق جمع التبرعات.</p>
+                        </div>
+                        <div className="text-sm border-t border-slate-50 pt-2">
+                          <strong className="text-slate-800 block mb-1">3. الأزمات الاقتصادية وتراجع القدرة الشرائية</strong>
+                          <p className="text-slate-600 leading-relaxed">في أوقات الانكماش الاقتصادي أو ارتفاع معدلات التضخم، يتراجع إقبال الأفراد والشركات على التبرع، مما قد يُضعف الإيرادات ويُصعّب الالتزام بالبرامج الموعودة.</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* 5. Success Factors */}
+                  <div className="bg-white rounded-2xl p-6 shadow-sm border border-yellow-100">
+                    <div className="flex items-center gap-3 mb-4 pb-3 border-b border-slate-100">
+                      <span className="text-2xl">🏆</span>
+                      <div>
+                        <h4 className="font-extrabold text-yellow-800 text-lg">خامساً: عوامل النجاح الحاسمة (Critical Success Factors)</h4>
+                        <span className="text-xs text-yellow-600 font-semibold">مرتكزات جوهرية</span>
+                      </div>
+                    </div>
+                    <div className="bg-yellow-50/30 p-4 rounded-xl mb-4 text-yellow-950 text-sm leading-relaxed border border-yellow-50">
+                      <strong>التعريف:</strong> هي المرتكزات الجوهرية التي يجب أن تُتقنها الجمعية وتُحكم السيطرة عليها حتى تنجح في مهمتها وتستمر في تقديم أثرها. غيابها أو إهمالها قد يُهدد المنظمة بالفشل بغض النظر عن توفر الإمكانات المالية أو البشرية الأخرى.
+                    </div>
+                    <div className="space-y-3">
+                      <h5 className="font-bold text-slate-700 text-sm">💡 الأمثلة التطبيقية:</h5>
+                      <div className="space-y-3 pr-2">
+                        <div className="text-sm">
+                          <strong className="text-slate-800 block mb-1">1. توفر كفاءات بشرية مؤهلة</strong>
+                          <p className="text-slate-600 leading-relaxed">امتلاك فريق من الكوادر المتخصصة في مجالات العمل الخيري كالتخطيط الاجتماعي والإدارة المالية وإدارة المشاريع يُشكّل العمود الفقري للجمعية، إذ لا يُعوّض الكفاءة البشرية أي موارد مادية مهما بلغت.</p>
+                        </div>
+                        <div className="text-sm border-t border-slate-50 pt-2">
+                          <strong className="text-slate-800 block mb-1">2. بناء مؤسسي متين ومحكم</strong>
+                          <p className="text-slate-600 leading-relaxed">وجود هيكل تنظيمي واضح وأنظمة عمل موثّقة وسياسات إجرائية محكمة يضمن استمرارية الجمعية وقدرتها على العمل بانتظام بغض النظر عن التغيرات في القيادة أو الظروف الطارئة.</p>
+                        </div>
+                        <div className="text-sm border-t border-slate-50 pt-2">
+                          <strong className="text-slate-800 block mb-1">3. استقرار مالي</strong>
+                          <p className="text-slate-600 leading-relaxed">تنويع مصادر الدخل بين التبرعات الفردية والدعم المؤسسي والمنح الحكومية وعائدات الأنشطة يُحصّن الجمعية من الانهيار المالي المفاجئ ويُتيح لها التخطيط بعيد المدى وتنفيذ برامجها دون انقطاع.</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* 6. Competitive Advantage */}
+                  <div className="bg-white rounded-2xl p-6 shadow-sm border border-violet-100">
+                    <div className="flex items-center gap-3 mb-4 pb-3 border-b border-slate-100">
+                      <span className="text-2xl">🚀</span>
+                      <div>
+                        <h4 className="font-extrabold text-violet-800 text-lg">سادساً: الميزة التنافسية (Competitive Advantage)</h4>
+                        <span className="text-xs text-violet-600 font-semibold">خصائص فريدة مميزة</span>
+                      </div>
+                    </div>
+                    <div className="bg-violet-50/30 p-4 rounded-xl mb-4 text-violet-950 text-sm leading-relaxed border border-violet-50">
+                      <strong>التعريف:</strong> هي الخاصية أو المزيج من الخصائص الفريدة التي تجعل الجمعية متميزة ومختلفة بشكل واضح عن غيرها من المنظمات العاملة في المجال ذاته. الميزة التنافسية هي السبب الذي يجعل المتبرع يختار دعم هذه الجمعية بالذات، أو يجعل المستفيد يلجأ إليها دون سواها.
+                    </div>
+                    <div className="space-y-3">
+                      <h5 className="font-bold text-slate-700 text-sm">💡 الأمثلة التطبيقية:</h5>
+                      <div className="space-y-3 pr-2">
+                        <div className="text-sm">
+                          <strong className="text-slate-800 block mb-1">1. التخصص العميق في خدمة فئة مجتمعية محددة</strong>
+                          <p className="text-slate-600 leading-relaxed">تركيز الجمعية الكامل على فئة معينة كالأطفال ذوي الإعاقة أو المرأة الريفية يمنحها عمقاً معرفياً وعلائقياً يصعب تقليده، مما يجعلها المرجع الأول في هذه الفئة على مستوى المنطقة.</p>
+                        </div>
+                        <div className="text-sm border-t border-slate-50 pt-2">
+                          <strong className="text-slate-800 block mb-1">2. شبكة شراكات محلية متينة</strong>
+                          <p className="text-slate-600 leading-relaxed">امتلاك علاقات استراتيجية راسخة مع جامعات ومستشفيات وجهات حكومية ومنظمات محلية يُتيح للجمعية تقديم خدمات متكاملة بجودة وسرعة لا تستطيعها المنظمات الصغيرة المنعزلة.</p>
+                        </div>
+                        <div className="text-sm border-t border-slate-50 pt-2">
+                          <strong className="text-slate-800 block mb-1">3. نموذج تشغيلي مبتكر وموثوق النتائج</strong>
+                          <p className="text-slate-600 leading-relaxed">امتلاك منهجية عمل مُبتكرة وموثّقة النتائج، كبرنامج تدريبي حصري أو نظام دعم نفسي اجتماعي متكامل، يمنح الجمعية هوية مميزة ويُصعّب على المنافسين تكرار نموذجها.</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Conclusion */}
+                  <div className="bg-slate-100/80 rounded-2xl p-6 border border-slate-200">
+                    <h4 className="font-extrabold text-slate-800 text-lg mb-2">خلاصة واستنتاج</h4>
+                    <p className="text-slate-600 leading-relaxed text-sm">
+                      التحليل السداسي ليس مجرد وثيقة تُحفظ في الأدراج، بل هو بوصلة استراتيجية حية يجب أن تُراجَع وتُحدَّث بصفة دورية. الجمعية التي تُتقن هذا التحليل تمتلك وضوح الرؤية وجرأة القرار وقدرة التكيّف — وهذه الثلاثية هي سر النجاح المؤسسي المستدام في العمل الخيري.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Modal Footer */}
+              <div className="p-4 border-t border-slate-100 flex justify-end gap-3 bg-white">
+                <button
+                  onClick={() => {
+                    setShowGuide(false);
+                    setStep("register");
+                  }}
+                  className="px-6 py-3 bg-primary hover:bg-primary/95 text-white font-bold rounded-xl transition-all shadow-md hover:shadow-lg"
+                >
+                  البدء بالاستبيان الآن ←
+                </button>
+                <button
+                  onClick={() => setShowGuide(false)}
+                  className="px-5 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium rounded-xl transition-colors"
+                >
+                  إغلاق الدليل
+                </button>
               </div>
             </div>
           </div>

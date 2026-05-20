@@ -3,9 +3,10 @@ import Link from "next/link";
 
 interface HeaderProps {
   disableLink?: boolean;
+  title?: string;
 }
 
-export default function Header({ disableLink = false }: HeaderProps) {
+export default function Header({ disableLink = false, title = "استبيان الجاهزية" }: HeaderProps) {
   const logoContent = (
     <div className={`flex items-center gap-3 ${disableLink ? "" : "group"}`}>
       <div className={`relative w-16 h-16 sm:w-20 sm:h-20 transition-transform duration-300 ${disableLink ? "" : "group-hover:scale-105"}`}>
@@ -36,7 +37,7 @@ export default function Header({ disableLink = false }: HeaderProps) {
         )}
         <div className="flex items-center">
           <span className="bg-primary/10 text-primary px-4 py-1.5 rounded-full text-sm font-semibold border border-primary/20">
-            استبيان الجاهزية
+            {title}
           </span>
         </div>
       </div>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Header from "@/components/Header";
@@ -72,6 +72,10 @@ export default function HexagonalSurvey() {
     charityName: "",
     authorizedTitle: "",
   });
+
+  useEffect(() => {
+    document.title = "التحليل السداسي للجمعيات الخيرية";
+  }, []);
 
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<string, string[]>>({
@@ -168,7 +172,7 @@ export default function HexagonalSurvey() {
       <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-primary/20 rounded-full blur-[100px] pointer-events-none" />
       <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-secondary/20 rounded-full blur-[100px] pointer-events-none" />
 
-      <Header disableLink />
+      <Header disableLink title="التحليل السداسي" />
 
       <main className="flex-1 w-full max-w-4xl mx-auto px-4 py-8 sm:py-12 z-10 relative">
         {step === "welcome" && (

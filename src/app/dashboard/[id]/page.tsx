@@ -2,8 +2,13 @@ import { prisma } from "@/lib/db";
 import Header from "@/components/Header";
 import Link from "next/link";
 import { surveyData, Section, Question } from "@/data/surveyData";
+import type { Metadata } from "next";
 
 export const dynamic = "force-dynamic";
+
+export const metadata: Metadata = {
+  title: "تفاصيل استبيان الجاهزية | زاد التنموية",
+};
 
 export default async function CharityDetails({ params }: { params: { id: string } }) {
   const { id } = await params;

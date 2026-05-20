@@ -2,8 +2,17 @@ import { prisma } from "@/lib/db";
 import Header from "@/components/Header";
 import Link from "next/link";
 import { surveyData } from "@/data/surveyData";
+import type { Metadata } from "next";
 
 export const dynamic = "force-dynamic";
+
+export async function generateMetadata({ params }: { params: { name: string } }): Promise<Metadata> {
+  const { name } = await params;
+  const decodedName = decodeURIComponent(name);
+  return {
+    title: `${decodedName} | زاد التنموية`,
+  };
+}
 
 export default async function CharityGroupedReport({ params }: { params: { name: string } }) {
   const { name } = await params;

@@ -1,8 +1,13 @@
 import { prisma } from "@/lib/db";
 import Header from "@/components/Header";
 import Link from "next/link";
+import type { Metadata } from "next";
 
 export const dynamic = "force-dynamic";
+
+export const metadata: Metadata = {
+  title: "تفاصيل التحليل السداسي | زاد التنموية",
+};
 
 interface QuestionMeta {
   title: string;

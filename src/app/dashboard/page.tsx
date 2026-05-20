@@ -2,8 +2,14 @@ import { prisma } from "@/lib/db";
 import Header from "@/components/Header";
 import Link from "next/link";
 import CopyLinkButton from "@/components/CopyLinkButton";
+import type { Metadata } from "next";
 
 export const dynamic = "force-dynamic";
+
+export const metadata: Metadata = {
+  title: "لوحة التحكم | زاد التنموية",
+  description: "لوحة التحكم لاستبيانات زاد التنموية",
+};
 
 
 export default async function Dashboard() {

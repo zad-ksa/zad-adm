@@ -94,16 +94,201 @@ export default function WelcomeScreen({ onStart }: WelcomeScreenProps) {
             </div>
 
             {/* Scrollable Content Container */}
-            <div className="flex-1 overflow-y-auto p-4 md:p-6 bg-slate-100/50">
-              <div className="relative w-full aspect-[2/3] max-w-3xl mx-auto rounded-xl overflow-hidden shadow-md">
-                <Image
-                  src="/assets/guide.png"
-                  alt="دليل مقياس جاهزية الجمعيات للتخطيط الاستراتيجي"
-                  fill
-                  className="object-contain"
-                  sizes="(max-w-768px) 100vw, 800px"
-                  priority
-                />
+            <div className="flex-1 overflow-y-auto p-6 bg-slate-50 text-right" dir="rtl">
+              <div className="max-w-3xl mx-auto">
+                {/* Title Section */}
+                <div className="bg-gradient-to-r from-primary to-teal-800 text-white p-8 rounded-2xl mb-8 text-center relative overflow-hidden shadow-md">
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full -mr-10 -mt-10 blur-xl pointer-events-none" />
+                  <div className="absolute bottom-0 left-0 w-32 h-32 bg-secondary/10 rounded-full -ml-10 -mb-10 blur-xl pointer-events-none" />
+                  
+                  <span className="inline-block bg-secondary text-white text-xs font-bold px-3 py-1 rounded-full mb-3 uppercase tracking-wider">
+                    دليل الاستخدام
+                  </span>
+                  <h3 className="text-2xl md:text-3xl font-extrabold mb-2 leading-tight">
+                    مقياس جاهزية الجمعيات للتخطيط الاستراتيجي
+                  </h3>
+                  <p className="text-teal-100 text-sm md:text-base max-w-xl mx-auto font-medium">
+                    خاص بالجمعيات الناشئة | حديثة التأسيس
+                  </p>
+                  <div className="mt-4 pt-4 border-t border-white/10 text-teal-50 text-sm max-w-lg mx-auto leading-relaxed">
+                    هذا الدليل يساعدك على فهم المقياس وكيفية تعبئة استبانته بكل سهولة ويُسر.
+                    نتائجه ستحدد مستوى جاهزية جمعيتك وتوجهها نحو الخطوات الصحيحة.
+                  </div>
+                </div>
+
+                {/* Section 1: ما هذا المقياس؟ */}
+                <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 mb-6">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary text-xl font-bold">
+                      ١
+                    </div>
+                    <h4 className="font-extrabold text-slate-800 text-lg">أولاً: ما هذا المقياس؟</h4>
+                  </div>
+                  <p className="text-slate-600 leading-relaxed text-sm md:text-base">
+                    مقياس جاهزية الجمعيات للتخطيط الاستراتيجي هو أداة تقييم مُصمَّمة خصيصاً للجمعيات الأهلية حديثة التأسيس، يهدف إلى الإجابة عن سؤال واحد مهم: <strong className="text-primary font-bold">هل جمعيتنا جاهزة الآن للدخول في مشروع التخطيط الاستراتيجي؟</strong>
+                  </p>
+                  <p className="text-slate-600 leading-relaxed text-sm md:text-base mt-3">
+                    يقيس المقياس <strong className="text-slate-800 font-semibold">عشرة محاور جوهرية</strong> تشمل: الوضع القانوني، الحوكمة، فريق العمل، الوضع المالي، البرامج، المرافق، الشراكات، الثقافة المؤسسية، إدارة المعلومات، والجاهزية المباشرة للتخطيط.
+                  </p>
+                </div>
+
+                {/* Section 2: لماذا هو مهم لجمعيتك؟ */}
+                <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 mb-6">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary text-xl font-bold">
+                      ٢
+                    </div>
+                    <h4 className="font-extrabold text-slate-800 text-lg">ثانياً: لماذا هو مهم لجمعيتك؟</h4>
+                  </div>
+                  <ul className="space-y-3">
+                    {[
+                      "يحميك من الخوض في تخطيط استراتيجي قبل اكتمال أسسك المؤسسية",
+                      "يكشف الثغرات المخفية التي قد لا تلاحظها في خضم العمل اليومي",
+                      "يعطيك خارطة طريق واضحة: هل تبدأ التخطيط الآن أم تطور أولاً؟",
+                      "يبني ثقافة التقييم والمساءلة المؤسسية من مرحلة مبكرة",
+                      "نتائجه تساعد الجهات الداعمة على تقديم الدعم المناسب لكم"
+                    ].map((item, idx) => (
+                      <li key={idx} className="flex items-start gap-2.5 text-slate-600 text-sm md:text-base leading-relaxed">
+                        <span className="text-secondary font-bold shrink-0 mt-1">✓</span>
+                        <span>{item}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+
+                {/* Section 3: محاور المقياس العشرة */}
+                <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 mb-6">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary text-xl font-bold">
+                      ٣
+                    </div>
+                    <h4 className="font-extrabold text-slate-800 text-lg">ثالثاً: محاور المقياس العشرة</h4>
+                  </div>
+                  <p className="text-slate-600 text-sm md:text-base mb-4">
+                    يشتمل المقياس على 10 محاور رئيسية تغطي جوانب العمل المؤسسي كافة:
+                  </p>
+                  
+                  <div className="overflow-x-auto rounded-xl border border-slate-200">
+                    <table className="w-full text-right border-collapse text-sm">
+                      <thead>
+                        <tr className="bg-slate-50 border-b border-slate-200">
+                          <th className="p-3 font-bold text-slate-700 w-12 text-center">#</th>
+                          <th className="p-3 font-bold text-slate-700">المحور</th>
+                          <th className="p-3 font-bold text-slate-700 w-20 text-center">البنود</th>
+                          <th className="p-3 font-bold text-slate-700 w-28 text-center">الدرجة القصوى</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100">
+                        {[
+                          { id: "١", name: "الامتثال القانوني والتنظيمي", items: 6, maxScore: 30 },
+                          { id: "٢", name: "الحوكمة والممارسات القيادية", items: 7, maxScore: 35 },
+                          { id: "٣", name: "البناء التنظيمي ورأس المال البشري", items: 7, maxScore: 35 },
+                          { id: "٤", name: "السلامة المالية والاستدامة", items: 8, maxScore: 40 },
+                          { id: "٥", name: "البرامج التنموية والتحول نحو الأثر", items: 7, maxScore: 35 },
+                          { id: "٦", name: "الموارد العينية والبنية الرقمية", items: 6, maxScore: 30 },
+                          { id: "٧", name: "الشراكات الاستراتيجية والاتصال المؤسسي", items: 5, maxScore: 25 },
+                          { id: "٨", name: "الجاهزية المؤسسية والثقافة التنظيمية", items: 6, maxScore: 30 },
+                          { id: "٩", name: "الشفافية والإفصاح وإدارة البيانات", items: 5, maxScore: 25 },
+                          { id: "١٠", name: "الجاهزية التنفيذية للتخطيط الاستراتيجي", items: 7, maxScore: 35 },
+                        ].map((row, idx) => (
+                          <tr key={idx} className="hover:bg-slate-50/50 transition-colors">
+                            <td className="p-3 text-slate-500 text-center font-medium">{row.id}</td>
+                            <td className="p-3 text-slate-800 font-medium">{row.name}</td>
+                            <td className="p-3 text-slate-600 text-center">{row.items}</td>
+                            <td className="p-3 text-slate-600 text-center font-semibold">{row.maxScore}</td>
+                          </tr>
+                        ))}
+                        <tr className="bg-primary/5 font-bold border-t border-slate-200">
+                          <td className="p-3 text-primary text-center"></td>
+                          <td className="p-3 text-primary">الإجمالي الكلي</td>
+                          <td className="p-3 text-primary text-center">64</td>
+                          <td className="p-3 text-primary text-center">320</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+
+                {/* Section 4: مقياس التقييم الخماسي */}
+                <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 mb-6">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary text-xl font-bold">
+                      ٤
+                    </div>
+                    <h4 className="font-extrabold text-slate-800 text-lg">رابعاً: مقياس التقييم الخماسي</h4>
+                  </div>
+                  <p className="text-slate-600 text-sm md:text-base mb-6">
+                    لكل بند من البنود الـ 64، اختر درجة واحدة فقط من القائمة التالية تعبّر عن الواقع الفعلي في جمعيتك:
+                  </p>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-5 gap-3">
+                    {[
+                      { score: 5, label: "متوفر بشكل كامل وممنهج", desc: "الجمعية تطبق هذا الجانب بصورة واضحة ومستمرة", bg: "bg-teal-50 border-teal-200 text-teal-800" },
+                      { score: 4, label: "متوفر بشكل جيد", desc: "مع بعض الثغرات الصغيرة", bg: "bg-emerald-50 border-emerald-200 text-emerald-800" },
+                      { score: 3, label: "متوفر جزئياً", desc: "موجود لكن يحتاج تطوير", bg: "bg-amber-50 border-amber-200 text-amber-800" },
+                      { score: 2, label: "في طور البداية", desc: "موجود بشكل مبدئي أو ضعيف", bg: "bg-orange-50 border-orange-200 text-orange-800" },
+                      { score: 1, label: "غير متوفر حتى الآن", desc: "غير متوفر بالجمعية", bg: "bg-rose-50 border-rose-200 text-rose-800" },
+                    ].map((item, idx) => (
+                      <div key={idx} className={`p-4 rounded-xl border flex flex-col justify-between text-center transition-all hover:scale-[1.02] ${item.bg}`}>
+                        <div className="w-8 h-8 rounded-full bg-white/90 shadow-sm flex items-center justify-center text-sm font-bold mx-auto mb-2 border border-current/10 shrink-0">
+                          {item.score}
+                        </div>
+                        <div className="font-bold text-xs md:text-sm mb-1">{item.label}</div>
+                        <div className="text-[11px] opacity-80 leading-snug">{item.desc}</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Section 5: كيف تُعبِّئ الاستبانة خطوة بخطوة؟ */}
+                <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 mb-6">
+                  <div className="flex items-center gap-3 mb-6">
+                    <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary text-xl font-bold">
+                      ٥
+                    </div>
+                    <h4 className="font-extrabold text-slate-800 text-lg">خامساً: كيف تُعبِّئ الاستبانة خطوة بخطوة؟</h4>
+                  </div>
+                  
+                  <div className="space-y-6">
+                    {[
+                      { step: "١", title: "أجب بشكل فردي ومستقل", desc: "يُعبَّأ النموذج بشكل فردي — لا تتشاور مع الآخرين أثناء التعبئة" },
+                      { step: "٢", title: "اختر درجة لكل بند", desc: "لكل بند، اختر رقماً من 1 إلى 5 يعبّر عن الواقع الفعلي في جمعيتك" },
+                      { step: "٣", title: "أضف ملاحظاتك إن رأيت", desc: "في حال وجود خانة ملاحظات، يمكنك توضيح سبب اختيارك للدرجة" },
+                      { step: "٤", title: "أرسل النموذج", desc: "بعد الانتهاء، اضغط (إرسال) — ستصلك رسالة تأكيد باستلام إجابتك" },
+                    ].map((item, idx) => (
+                      <div key={idx} className="flex gap-4 items-start">
+                        <div className="w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center text-sm font-bold shrink-0 mt-0.5 shadow-sm">
+                          {item.step}
+                        </div>
+                        <div>
+                          <h5 className="font-bold text-slate-800 text-base mb-1">{item.title}</h5>
+                          <p className="text-slate-600 text-sm leading-relaxed">{item.desc}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Tips Section */}
+                <div className="bg-amber-50/60 rounded-2xl p-6 border border-amber-100 shadow-sm">
+                  <h4 className="font-extrabold text-amber-950 text-lg mb-4 flex items-center gap-2">
+                    <span className="shrink-0 text-xl">💡</span> نصائح للحصول على نتائج دقيقة:
+                  </h4>
+                  <ul className="space-y-3">
+                    {[
+                      "كن صادقاً في إجاباتك — النموذج ليس اختباراً بل أداة مساعدة للجمعية",
+                      "اعتمد على الواقع الفعلي الذي تعرفه أنت، لا على ما تتمنى أن يكون",
+                      "تعبئة النموذج فردية — تنوّع الآراء بين أعضاء الفريق مهم ومقصود",
+                      "إذا لم تعرف الإجابة عن بند ما، اختر (1) وهذا يساعد الجهة المحللة",
+                      "خصص 30 إلى 45 دقيقة هادئة للتعبئة دون انقطاع"
+                    ].map((tip, idx) => (
+                      <li key={idx} className="flex items-start gap-2.5 text-amber-950 text-sm md:text-base leading-relaxed">
+                        <span className="text-amber-500 font-bold shrink-0 mt-0.5">•</span>
+                        <span>{tip}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
               </div>
             </div>
 

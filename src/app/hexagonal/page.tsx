@@ -551,6 +551,7 @@ export default function HexagonalSurvey() {
                   <option value="عضو مجلس إدارة">عضو مجلس إدارة</option>
                   <option value="موظف بدوام كامل">موظف بدوام كامل</option>
                   <option value="موظف بدوام جزئي">موظف بدوام جزئي</option>
+                  <option value="متطوع">متطوع</option>
                 </select>
               </div>
 

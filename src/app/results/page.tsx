@@ -13,7 +13,7 @@ export default function Results() {
 
       <main className="flex-1 w-full max-w-2xl mx-auto px-4 py-12 flex flex-col items-center justify-center z-10 animate-in fade-in zoom-in-95 duration-700">
         <div className="bg-white/70 backdrop-blur-md border border-white/20 shadow-2xl w-full rounded-3xl p-8 sm:p-12 text-center relative overflow-hidden">
-          
+
           <div className="absolute top-0 inset-x-0 h-2 bg-gradient-to-r from-primary via-secondary to-primary" />
 
           <div className="w-24 h-24 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-6 shadow-sm border-4 border-white">
@@ -23,11 +23,11 @@ export default function Results() {
           </div>
 
           <h1 className="text-3xl font-bold text-slate-800 mb-4">تم إرسال التقييم بنجاح</h1>
-          
+
           <p className="text-slate-600 text-lg leading-relaxed mb-10 max-w-md mx-auto">
             شكراً لوقتكم في تعبئة استبيان جاهزية التخطيط الاستراتيجي.
             <br />
-            تم استلام بيانات جمعيتكم بنجاح، وسيقوم فريق المختصين في <strong>زاد التنموية لأثر مستدام</strong> بمراجعة وتقييم الإجابات بدقة والتواصل معكم قريباً لعرض النتيجة وتقديم التوصيات اللازمة.
+            تم استلام بيانات جمعيتكم بنجاح، وسيقوم فريق المختصين في <strong>زاد التنموية</strong> بمراجعة وتقييم الإجابات بدقة والتواصل معكم قريباً لعرض النتيجة وتقديم التوصيات اللازمة.
           </p>
         </div>
       </main>

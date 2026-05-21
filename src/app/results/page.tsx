@@ -1,20 +1,21 @@
-"use client";
-
-import Link from "next/link";
+import type { Metadata } from "next";
 import Header from "@/components/Header";
-import { useSearchParams } from "next/navigation";
-import { Suspense, useEffect } from "react";
 
-function ResultsContent() {
-  const searchParams = useSearchParams();
-  const type = searchParams.get("type");
-  const isHexagonal = type === "hexagonal";
+interface PageProps {
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+}
 
-  useEffect(() => {
-    document.title = isHexagonal
-      ? "التحليل السداسي | زاد التنموية"
-      : "استبيان الجاهزية | زاد التنموية";
-  }, [isHexagonal]);
+export async function generateMetadata({ searchParams }: PageProps): Promise<Metadata> {
+  const resolvedSearchParams = await searchParams;
+  const isHexagonal = resolvedSearchParams.type === "hexagonal";
+  return {
+    title: isHexagonal ? "التحليل السداسي | زاد التنموية" : "استبيان الجاهزية | زاد التنموية",
+  };
+}
+
+export default async function Results({ searchParams }: PageProps) {
+  const resolvedSearchParams = await searchParams;
+  const isHexagonal = resolvedSearchParams.type === "hexagonal";
 
   return (
     <div className="min-h-screen flex flex-col relative overflow-hidden bg-slate-50">
@@ -56,17 +57,5 @@ function ResultsContent() {
         </div>
       </main>
     </div>
-  );
-}
-
-export default function Results() {
-  return (
-    <Suspense fallback={
-      <div className="min-h-screen flex items-center justify-center bg-slate-50">
-        <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin" />
-      </div>
-    }>
-      <ResultsContent />
-    </Suspense>
   );
 }

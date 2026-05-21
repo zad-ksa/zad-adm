@@ -161,6 +161,7 @@ export default async function CharityGroupedReport({ params }: { params: { name:
                       year: "numeric",
                       month: "long",
                       day: "numeric",
+                      timeZone: "Asia/Riyadh",
                     })}
                   </div>
                 </div>
@@ -251,7 +252,8 @@ export default async function CharityGroupedReport({ params }: { params: { name:
                             month: "short",
                             day: "numeric",
                             hour: "2-digit",
-                            minute: "2-digit"
+                            minute: "2-digit",
+                            timeZone: "Asia/Riyadh"
                           })}
                         </span>
                         <span className="text-primary opacity-0 group-hover:opacity-100 transition-opacity font-bold">
@@ -307,7 +309,8 @@ export default async function CharityGroupedReport({ params }: { params: { name:
                             month: "short",
                             day: "numeric",
                             hour: "2-digit",
-                            minute: "2-digit"
+                            minute: "2-digit",
+                            timeZone: "Asia/Riyadh"
                           })}
                         </span>
                       </div>

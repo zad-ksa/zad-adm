@@ -102,7 +102,14 @@ export default async function CharityDetails({ params }: { params: { id: string 
                 <div>
                   <div className="text-sm text-slate-400 mb-1">تاريخ الإرسال</div>
                   <div className="font-semibold text-slate-700">
-                    {new Date(response.createdAt).toLocaleDateString("ar-SA")}
+                    {new Date(response.createdAt).toLocaleDateString("ar-SA", {
+                      year: "numeric",
+                      month: "long",
+                      day: "numeric",
+                      hour: "2-digit",
+                      minute: "2-digit",
+                      timeZone: "Asia/Riyadh",
+                    })}
                   </div>
                 </div>
              </div>

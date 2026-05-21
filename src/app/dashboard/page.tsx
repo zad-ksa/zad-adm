@@ -149,6 +149,7 @@ export default async function Dashboard() {
                         year: "numeric",
                         month: "long",
                         day: "numeric",
+                        timeZone: "Asia/Riyadh",
                       })}
                     </td>
                     <td className="p-4 text-center">

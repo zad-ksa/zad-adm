@@ -15,7 +15,7 @@ function ResultsContent() {
       <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-primary/20 rounded-full blur-[100px] pointer-events-none" />
       <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-secondary/20 rounded-full blur-[100px] pointer-events-none" />
 
-      <Header title={isHexagonal ? "التحليل السداسي" : "استبيان الجاهزية"} />
+      <Header disableLink={true} title={isHexagonal ? "التحليل السداسي" : "استبيان الجاهزية"} />
 
       <main className="flex-1 w-full max-w-2xl mx-auto px-4 py-12 flex flex-col items-center justify-center z-10 animate-in fade-in zoom-in-95 duration-700">
         <div className="bg-white/70 backdrop-blur-md border border-white/20 shadow-2xl w-full rounded-3xl p-8 sm:p-12 text-center relative overflow-hidden">

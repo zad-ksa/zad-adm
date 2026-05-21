@@ -3,12 +3,18 @@
 import Link from "next/link";
 import Header from "@/components/Header";
 import { useSearchParams } from "next/navigation";
-import { Suspense } from "react";
+import { Suspense, useEffect } from "react";
 
 function ResultsContent() {
   const searchParams = useSearchParams();
   const type = searchParams.get("type");
   const isHexagonal = type === "hexagonal";
+
+  useEffect(() => {
+    document.title = isHexagonal
+      ? "التحليل السداسي | زاد التنموية"
+      : "استبيان الجاهزية | زاد التنموية";
+  }, [isHexagonal]);
 
   return (
     <div className="min-h-screen flex flex-col relative overflow-hidden bg-slate-50">

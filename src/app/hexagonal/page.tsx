@@ -134,7 +134,7 @@ export default function HexagonalSurvey() {
         });
 
         if (res.ok) {
-          router.push("/results");
+          router.push("/results?type=hexagonal");
         } else {
           const errData = await res.json().catch(() => ({}));
           alert(`حدث خطأ أثناء إرسال البيانات:\n${errData.details || errData.error || "خطأ غير معروف"}`);

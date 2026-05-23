@@ -25,3 +25,14 @@ model HexagonalResponse {
   answers         Json
   createdAt       DateTime @default(now())
 }
+
+model PerformanceMetric {
+  id              String   @id @default(uuid())
+  charityName     String
+  year            Int
+  data            Json
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@unique([charityName, year])
+}

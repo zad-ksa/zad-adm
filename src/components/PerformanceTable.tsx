@@ -1,0 +1,476 @@
+"use client";
+
+import { useState, useTransition } from "react";
+import { savePerformanceMetric } from "@/app/actions/performance";
+import { useRouter } from "next/navigation";
+
+type Indicator = {
+  id: string;
+  code: string;
+  name: string;
+  status: string;
+  owner: string;
+  annualTarget: number;
+  annualAchieved: number;
+  q1Target: number; q1Achieved: number;
+  q2Target: number; q2Achieved: number;
+  q3Target: number; q3Achieved: number;
+  q4Target: number; q4Achieved: number;
+};
+
+type Goal = {
+  id: string;
+  code: string;
+  name: string;
+  indicators: Indicator[];
+};
+
+type Axis = {
+  id: string;
+  name: string;
+  goals: Goal[];
+};
+
+const DEFAULT_AXES: Axis[] = [
+  { id: "1", name: "محور المستفيدين", goals: [] },
+  { id: "2", name: "المحور المالي", goals: [] },
+  { id: "3", name: "محور العمليات الداخلية", goals: [] },
+  { id: "4", name: "محور التعلم والنمو", goals: [] },
+];
+
+export default function PerformanceTable({ 
+  charityName, 
+  year, 
+  quarter, 
+  initialData 
+}: { 
+  charityName: string; 
+  year: number; 
+  quarter: string; 
+  initialData: Axis[] | null;
+}) {
+  const router = useRouter();
+  const [isPending, startTransition] = useTransition();
+  const [isSaving, setIsSaving] = useState(false);
+  const [axes, setAxes] = useState<Axis[]>(initialData || DEFAULT_AXES);
+
+  // Helper to generate IDs
+  const generateId = () => Math.random().toString(36).substring(2, 9);
+
+  // Update URL params
+  const handlePeriodChange = (newYear: number, newQuarter: string) => {
+    startTransition(() => {
+      router.push(`/dashboard/charity/${encodeURIComponent(charityName)}/performance?year=${newYear}&quarter=${newQuarter}`);
+    });
+  };
+
+  // Add Goal
+  const addGoal = (axisId: string) => {
+    setAxes(prev => prev.map(axis => {
+      if (axis.id === axisId) {
+        return {
+          ...axis,
+          goals: [...axis.goals, { id: generateId(), code: "غ-١", name: "هدف جديد", indicators: [] }]
+        };
+      }
+      return axis;
+    }));
+  };
+
+  // Add Indicator
+  const addIndicator = (axisId: string, goalId: string) => {
+    setAxes(prev => prev.map(axis => {
+      if (axis.id === axisId) {
+        return {
+          ...axis,
+          goals: axis.goals.map(goal => {
+            if (goal.id === goalId) {
+              return {
+                ...goal,
+                indicators: [...goal.indicators, {
+                  id: generateId(),
+                  code: "م-١",
+                  name: "مؤشر جديد",
+                  status: "لا توجد بيانات",
+                  owner: "",
+                  annualTarget: 0,
+                  annualAchieved: 0,
+                  q1Target: 0, q1Achieved: 0,
+                  q2Target: 0, q2Achieved: 0,
+                  q3Target: 0, q3Achieved: 0,
+                  q4Target: 0, q4Achieved: 0,
+                }]
+              };
+            }
+            return goal;
+          })
+        };
+      }
+      return axis;
+    }));
+  };
+
+  // Update Field
+  const updateIndicator = (axisId: string, goalId: string, indId: string, field: keyof Indicator, value: any) => {
+    setAxes(prev => prev.map(axis => {
+      if (axis.id === axisId) {
+        return {
+          ...axis,
+          goals: axis.goals.map(goal => {
+            if (goal.id === goalId) {
+              return {
+                ...goal,
+                indicators: goal.indicators.map(ind => {
+                  if (ind.id === indId) {
+                    return { ...ind, [field]: value };
+                  }
+                  return ind;
+                })
+              };
+            }
+            return goal;
+          })
+        };
+      }
+      return axis;
+    }));
+  };
+  
+  const updateGoal = (axisId: string, goalId: string, field: keyof Goal, value: any) => {
+     setAxes(prev => prev.map(axis => {
+      if (axis.id === axisId) {
+        return {
+          ...axis,
+          goals: axis.goals.map(goal => {
+            if (goal.id === goalId) {
+              return { ...goal, [field]: value };
+            }
+            return goal;
+          })
+        };
+      }
+      return axis;
+    }));
+  }
+
+  const deleteIndicator = (axisId: string, goalId: string, indId: string) => {
+    setAxes(prev => prev.map(axis => {
+      if (axis.id === axisId) {
+        return {
+          ...axis,
+          goals: axis.goals.map(goal => {
+            if (goal.id === goalId) {
+              return { ...goal, indicators: goal.indicators.filter(i => i.id !== indId) };
+            }
+            return goal;
+          })
+        };
+      }
+      return axis;
+    }));
+  };
+
+  // Calculations
+  const getQuarterTarget = (ind: Indicator) => ind[`${quarter.toLowerCase()}Target` as keyof Indicator] as number;
+  const getQuarterAchieved = (ind: Indicator) => ind[`${quarter.toLowerCase()}Achieved` as keyof Indicator] as number;
+
+  const calcPercentage = (achieved: number, target: number) => {
+    if (target === 0) return 0;
+    const val = (achieved / target) * 100;
+    return Math.min(Math.round(val * 10) / 10, 100); // Max 100%
+  };
+
+  const calcIndicatorPerf = (ind: Indicator) => {
+    return calcPercentage(getQuarterAchieved(ind), getQuarterTarget(ind));
+  };
+
+  const calcGoalPerf = (goal: Goal) => {
+    if (goal.indicators.length === 0) return 0;
+    const total = goal.indicators.reduce((acc, ind) => acc + calcIndicatorPerf(ind), 0);
+    return Math.round((total / goal.indicators.length) * 10) / 10;
+  };
+
+  const calcAxisPerf = (axis: Axis) => {
+    const goalsWithIndicators = axis.goals.filter(g => g.indicators.length > 0);
+    if (goalsWithIndicators.length === 0) return 0;
+    const total = goalsWithIndicators.reduce((acc, goal) => acc + calcGoalPerf(goal), 0);
+    return Math.round((total / goalsWithIndicators.length) * 10) / 10;
+  };
+
+  const calcCharityPerf = () => {
+    const axesWithData = axes.filter(a => a.goals.some(g => g.indicators.length > 0));
+    if (axesWithData.length === 0) return 0;
+    const total = axesWithData.reduce((acc, axis) => acc + calcAxisPerf(axis), 0);
+    return Math.round((total / axesWithData.length) * 10) / 10;
+  };
+
+  // Color logic
+  const getPerfColor = (val: number) => {
+    if (val >= 90) return "bg-[#00b050] text-white"; // Excellent
+    if (val >= 70) return "bg-[#92d050] text-slate-800"; // Good
+    if (val >= 50) return "bg-[#ffc000] text-slate-800"; // Acceptable
+    return "bg-[#ff0000] text-white"; // Weak
+  };
+
+  const getClassification = (val: number) => {
+    if (val >= 90) return { text: "ممتاز", icon: "✅", color: "text-[#00b050]" };
+    if (val >= 70) return { text: "جيد", icon: "✓", color: "text-[#92d050]" };
+    if (val >= 50) return { text: "مقبول", icon: "⚠️", color: "text-[#ffc000]" };
+    return { text: "ضعيف", icon: "❌", color: "text-[#ff0000]" };
+  };
+
+  const handleSave = async () => {
+    setIsSaving(true);
+    try {
+      const res = await savePerformanceMetric(charityName, year, axes);
+      if (res.success) {
+        alert("تم الحفظ بنجاح");
+      } else {
+        alert("حدث خطأ أثناء الحفظ");
+      }
+    } catch (e) {
+      alert("حدث خطأ أثناء الحفظ");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const totalPerf = calcCharityPerf();
+
+  return (
+    <div className="space-y-6">
+      {/* Controls */}
+      <div className="flex flex-col md:flex-row gap-4 justify-between items-center bg-slate-100 p-4 rounded-xl border border-slate-200">
+        <div className="flex gap-4">
+          <select 
+            value={year} 
+            onChange={(e) => handlePeriodChange(parseInt(e.target.value), quarter)}
+            className="px-4 py-2 rounded-lg border border-slate-300 font-bold bg-white"
+          >
+            {[2023, 2024, 2025, 2026, 2027].map(y => (
+              <option key={y} value={y}>{y}</option>
+            ))}
+          </select>
+          <select 
+            value={quarter} 
+            onChange={(e) => handlePeriodChange(year, e.target.value)}
+            className="px-4 py-2 rounded-lg border border-slate-300 font-bold bg-white"
+          >
+            <option value="Q1">الربع الأول</option>
+            <option value="Q2">الربع الثاني</option>
+            <option value="Q3">الربع الثالث</option>
+            <option value="Q4">الربع الرابع</option>
+          </select>
+        </div>
+        
+        <div className="flex items-center gap-4">
+          <div className="text-sm font-bold bg-white px-4 py-2 rounded-lg border border-slate-200 shadow-sm flex items-center gap-2">
+            <span>أداء الجمعية:</span>
+            <span className={`px-2 py-0.5 rounded font-black ${getPerfColor(totalPerf)}`}>
+              {totalPerf}%
+            </span>
+          </div>
+          <button 
+            onClick={handleSave} 
+            disabled={isSaving}
+            className="bg-primary hover:bg-primary/90 text-primary-foreground px-6 py-2 rounded-lg font-bold transition-colors shadow-sm disabled:opacity-50"
+          >
+            {isSaving ? "جاري الحفظ..." : "حفظ التعديلات"}
+          </button>
+        </div>
+      </div>
+
+      {/* Table */}
+      <div className="overflow-x-auto w-full border border-slate-300 rounded-xl shadow-sm bg-white pb-[200px]">
+        <table className="w-full text-center border-collapse text-sm whitespace-nowrap">
+          <thead>
+            <tr className="bg-[#1f4e78] text-white font-bold text-xs">
+              <th className="border border-slate-400 p-2 min-w-[120px]">المحور</th>
+              <th className="border border-slate-400 p-2 w-[80px]">رمز الهدف</th>
+              <th className="border border-slate-400 p-2 min-w-[200px]">الهدف</th>
+              <th className="border border-slate-400 p-2 w-[80px]">رمز المؤشر</th>
+              <th className="border border-slate-400 p-2 min-w-[300px]">المؤشر</th>
+              <th className="border border-slate-400 p-2 min-w-[120px]">حالة المؤشر</th>
+              <th className="border border-slate-400 p-2 min-w-[120px]">مالك المؤشر</th>
+              <th className="border border-slate-400 p-2 min-w-[80px] bg-[#2f75b5]">المستهدف السنوي</th>
+              <th className="border border-slate-400 p-2 min-w-[80px] bg-[#2f75b5]">المحقق السنوي</th>
+              <th className="border border-slate-400 p-2 min-w-[80px] bg-[#2f75b5]">نسبة الإنجاز (سنوي)</th>
+              <th className="border border-slate-400 p-2 min-w-[100px] bg-[#2f75b5]">تصنيف المؤشر</th>
+              <th className="border border-slate-400 p-2 min-w-[80px] bg-[#00b0f0]">المستهدف ({quarter})</th>
+              <th className="border border-slate-400 p-2 min-w-[80px] bg-[#00b0f0]">المتحقق ({quarter})</th>
+              <th className="border border-slate-400 p-2 min-w-[80px] bg-[#00b0f0]">أداء المؤشر</th>
+              <th className="border border-slate-400 p-2 min-w-[80px]">أداء الهدف</th>
+              <th className="border border-slate-400 p-2 min-w-[80px]">أداء المحور</th>
+              <th className="border border-slate-400 p-2 min-w-[80px] bg-[#385723]">أداء الجمعية</th>
+              <th className="border border-slate-400 p-2 min-w-[80px]">إجراءات</th>
+            </tr>
+          </thead>
+          <tbody>
+            {axes.map((axis, axisIndex) => {
+              const axisRowSpan = Math.max(1, axis.goals.reduce((acc, g) => acc + Math.max(1, g.indicators.length), 0));
+              const aPerf = calcAxisPerf(axis);
+              
+              return (
+                <>
+                  {axis.goals.length === 0 ? (
+                    <tr key={axis.id} className="border-b border-slate-300 hover:bg-slate-50">
+                      <td className="border border-slate-300 p-2 bg-[#2f75b5] text-white font-bold align-middle" rowSpan={1}>
+                        <div className="flex flex-col items-center gap-2">
+                           <span className="writing-vertical text-center">{axis.name}</span>
+                           <button onClick={() => addGoal(axis.id)} className="bg-white/20 hover:bg-white/30 text-white text-xs px-2 py-1 rounded">+</button>
+                        </div>
+                      </td>
+                      <td colSpan={17} className="border border-slate-300 p-4 text-slate-400">
+                        لا توجد أهداف في هذا المحور. أضف هدفاً للبدء.
+                        <button onClick={() => addGoal(axis.id)} className="mr-4 text-primary underline font-bold">إضافة هدف</button>
+                      </td>
+                    </tr>
+                  ) : null}
+
+                  {axis.goals.map((goal, goalIndex) => {
+                    const goalRowSpan = Math.max(1, goal.indicators.length);
+                    const gPerf = calcGoalPerf(goal);
+
+                    return (
+                      <>
+                        {goal.indicators.length === 0 ? (
+                          <tr key={goal.id} className="border-b border-slate-300 hover:bg-slate-50 group">
+                            {goalIndex === 0 && (
+                              <td className="border border-slate-300 p-2 bg-[#2f75b5] text-white font-bold align-middle" rowSpan={axisRowSpan}>
+                                <div className="flex flex-col items-center justify-center gap-4 h-full min-h-[100px]">
+                                   <span className="text-center font-bold" style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}>{axis.name}</span>
+                                   <button onClick={() => addGoal(axis.id)} className="bg-white/20 hover:bg-white/30 text-white text-xs px-2 py-1 rounded mt-2">م. جديد</button>
+                                </div>
+                              </td>
+                            )}
+                            <td className="border border-slate-300 p-1">
+                               <input type="text" value={goal.code} onChange={e => updateGoal(axis.id, goal.id, "code", e.target.value)} className="w-full text-center bg-transparent focus:bg-white border-0 outline-none p-1" />
+                            </td>
+                            <td className="border border-slate-300 p-1 bg-[#d9e1f2] font-semibold text-right">
+                               <input type="text" value={goal.name} onChange={e => updateGoal(axis.id, goal.id, "name", e.target.value)} className="w-full bg-transparent focus:bg-white border-0 outline-none p-1" />
+                            </td>
+                            <td colSpan={15} className="border border-slate-300 p-2 text-slate-400">
+                               <button onClick={() => addIndicator(axis.id, goal.id)} className="text-primary underline font-bold">إضافة مؤشر</button>
+                            </td>
+                          </tr>
+                        ) : null}
+
+                        {goal.indicators.map((ind, indIndex) => {
+                          const isFirstInd = indIndex === 0;
+                          const isFirstGoal = goalIndex === 0 && isFirstInd;
+                          
+                          const annualPerf = calcPercentage(ind.annualAchieved, ind.annualTarget);
+                          const indPerf = calcIndicatorPerf(ind);
+                          const classification = getClassification(indPerf);
+
+                          const targetField = `${quarter.toLowerCase()}Target` as keyof Indicator;
+                          const achievedField = `${quarter.toLowerCase()}Achieved` as keyof Indicator;
+
+                          return (
+                            <tr key={ind.id} className="border-b border-slate-300 hover:bg-blue-50/50 transition-colors group">
+                              {isFirstGoal && (
+                                <td className="border border-slate-300 p-2 bg-[#1f4e78] text-white font-bold align-middle w-12" rowSpan={axisRowSpan}>
+                                  <div className="flex flex-col items-center justify-center gap-4 h-full">
+                                    <span className="text-center font-bold tracking-widest leading-loose" style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}>{axis.name}</span>
+                                    <button onClick={() => addGoal(axis.id)} title="إضافة هدف" className="bg-white/20 hover:bg-white/30 text-white text-xs px-2 py-1 rounded">+</button>
+                                  </div>
+                                </td>
+                              )}
+                              
+                              {isFirstInd && (
+                                <>
+                                  <td className="border border-slate-300 p-1 font-bold text-slate-700 bg-white" rowSpan={goalRowSpan}>
+                                    <input type="text" value={goal.code} onChange={e => updateGoal(axis.id, goal.id, "code", e.target.value)} className="w-full text-center bg-transparent focus:bg-slate-100 border-0 outline-none p-1 rounded" />
+                                  </td>
+                                  <td className="border border-slate-300 p-1 bg-[#d9e1f2] font-bold text-slate-800 text-right leading-tight max-w-[200px] whitespace-normal" rowSpan={goalRowSpan}>
+                                    <textarea value={goal.name} onChange={e => updateGoal(axis.id, goal.id, "name", e.target.value)} className="w-full h-full min-h-[60px] bg-transparent focus:bg-white border-0 outline-none p-1 resize-none rounded" />
+                                    <div className="mt-1">
+                                      <button onClick={() => addIndicator(axis.id, goal.id)} className="text-xs text-primary bg-primary/10 px-2 py-1 rounded hover:bg-primary/20">+ مؤشر</button>
+                                    </div>
+                                  </td>
+                                </>
+                              )}
+
+                              <td className="border border-slate-300 p-1">
+                                <input type="text" value={ind.code} onChange={e => updateIndicator(axis.id, goal.id, ind.id, "code", e.target.value)} className="w-full text-center bg-transparent focus:bg-white border-0 outline-none p-1 rounded" />
+                              </td>
+                              <td className="border border-slate-300 p-1 text-right whitespace-normal">
+                                <textarea value={ind.name} onChange={e => updateIndicator(axis.id, goal.id, ind.id, "name", e.target.value)} className="w-full h-full min-h-[40px] bg-transparent focus:bg-white border-0 outline-none p-1 resize-none rounded" />
+                              </td>
+                              <td className="border border-slate-300 p-1">
+                                <select value={ind.status} onChange={e => updateIndicator(axis.id, goal.id, ind.id, "status", e.target.value)} className="w-full bg-transparent border border-slate-200 rounded p-1 text-xs outline-none">
+                                  <option value="جاري">جاري</option>
+                                  <option value="مكتمل">مكتمل</option>
+                                  <option value="متأخر">متأخر</option>
+                                  <option value="لا توجد بيانات">لا توجد بيانات</option>
+                                </select>
+                              </td>
+                              <td className="border border-slate-300 p-1">
+                                <input type="text" value={ind.owner} onChange={e => updateIndicator(axis.id, goal.id, ind.id, "owner", e.target.value)} placeholder="اسم المالك" className="w-full text-center bg-transparent focus:bg-white border-0 outline-none p-1 rounded text-xs" />
+                              </td>
+                              
+                              {/* Annual Metrics */}
+                              <td className="border border-slate-300 p-1 bg-slate-50 font-semibold">
+                                <input type="number" value={ind.annualTarget || ""} onChange={e => updateIndicator(axis.id, goal.id, ind.id, "annualTarget", Number(e.target.value))} className="w-16 text-center bg-transparent focus:bg-white border-b border-transparent focus:border-primary outline-none" />
+                              </td>
+                              <td className="border border-slate-300 p-1 bg-slate-50 font-semibold">
+                                <input type="number" value={ind.annualAchieved || ""} onChange={e => updateIndicator(axis.id, goal.id, ind.id, "annualAchieved", Number(e.target.value))} className="w-16 text-center bg-transparent focus:bg-white border-b border-transparent focus:border-primary outline-none" />
+                              </td>
+                              <td className="border border-slate-300 p-2 font-bold text-slate-700 bg-slate-100">
+                                {annualPerf}%
+                              </td>
+                              
+                              {/* Quarter Metrics & Classification */}
+                              <td className={`border border-slate-300 p-2 font-bold text-sm ${classification.color} bg-slate-50`}>
+                                {classification.icon} {classification.text}
+                              </td>
+                              <td className="border border-slate-300 p-1 bg-blue-50/30 font-semibold">
+                                <input type="number" value={ind[targetField] || ""} onChange={e => updateIndicator(axis.id, goal.id, ind.id, targetField, Number(e.target.value))} className="w-16 text-center bg-transparent focus:bg-white border-b border-transparent focus:border-primary outline-none" />
+                              </td>
+                              <td className="border border-slate-300 p-1 bg-blue-50/30 font-semibold">
+                                <input type="number" value={ind[achievedField] || ""} onChange={e => updateIndicator(axis.id, goal.id, ind.id, achievedField, Number(e.target.value))} className="w-16 text-center bg-transparent focus:bg-white border-b border-transparent focus:border-primary outline-none" />
+                              </td>
+                              
+                              {/* Performances */}
+                              <td className={`border border-slate-300 p-2 font-bold ${getPerfColor(indPerf)}`}>
+                                {indPerf}%
+                              </td>
+
+                              {isFirstInd && (
+                                <td className={`border border-slate-300 p-2 font-bold ${getPerfColor(gPerf)}`} rowSpan={goalRowSpan}>
+                                  {gPerf}%
+                                </td>
+                              )}
+
+                              {isFirstGoal && (
+                                <td className={`border border-slate-300 p-2 font-bold ${getPerfColor(aPerf)}`} rowSpan={axisRowSpan}>
+                                  {aPerf}%
+                                </td>
+                              )}
+
+                              {isFirstGoal && axisIndex === 0 && (
+                                <td className={`border border-slate-300 p-2 font-black text-lg ${getPerfColor(totalPerf)}`} rowSpan={axes.reduce((acc, a) => acc + Math.max(1, a.goals.reduce((gacc, g) => gacc + Math.max(1, g.indicators.length), 0)), 0)}>
+                                  {totalPerf}%
+                                </td>
+                              )}
+
+                              <td className="border border-slate-300 p-2">
+                                <button onClick={() => deleteIndicator(axis.id, goal.id, ind.id)} className="text-red-500 hover:text-red-700 bg-red-50 hover:bg-red-100 p-1.5 rounded transition-colors" title="حذف المؤشر">
+                                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path></svg>
+                                </button>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </>
+                    );
+                  })}
+                </>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}

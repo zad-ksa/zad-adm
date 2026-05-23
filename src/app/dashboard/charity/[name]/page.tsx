@@ -141,6 +141,15 @@ export default async function CharityGroupedReport({ params }: { params: { name:
                 )}
              </div>
 
+             <div className="mb-6 flex justify-end">
+                <Link
+                  href={`/dashboard/charity/${encodeURIComponent(decodedName)}/performance`}
+                  className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-6 rounded-xl transition-colors shadow-sm flex items-center gap-2"
+                >
+                  <span>📊</span> مقياس الأداء
+                </Link>
+             </div>
+
              <div className="grid grid-cols-2 md:grid-cols-3 gap-4 border-t border-slate-100 pt-6">
                 <div>
                   <div className="text-sm text-slate-400 mb-1">تاريخ التأسيس</div>

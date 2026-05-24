@@ -305,6 +305,16 @@ export default function PerformanceTable({
             <option value="Q3">الربع الثالث</option>
             <option value="Q4">الربع الرابع</option>
           </select>
+          <div className="flex items-center gap-2 bg-white px-3 py-2 rounded-lg border border-slate-300">
+            <span className="text-xs font-bold text-slate-500">رمز الهدف:</span>
+            <input 
+              type="text" 
+              value={goalPrefix} 
+              onChange={(e) => setGoalPrefix(e.target.value.slice(0, 5))}
+              className="w-12 text-center font-bold border-b border-slate-200 focus:border-primary outline-none text-sm bg-transparent"
+              placeholder="غ"
+            />
+          </div>
         </div>
 
         <div className="flex items-center gap-4">
@@ -375,7 +385,7 @@ export default function PerformanceTable({
                     const goalRowSpan = Math.max(1, goal.indicators.length);
                     const gPerf = calcGoalPerf(goal);
                     const goalNum = goalNumbers[goal.id] || (goalIndex + 1);
-                    const goalCode = `غ-${goalNum}`;
+                    const goalCode = `${goalPrefix}-${goalNum}`;
 
                     return (
                       <>

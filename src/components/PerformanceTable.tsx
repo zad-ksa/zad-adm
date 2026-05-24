@@ -532,7 +532,13 @@ export default function PerformanceTable({
                     return (
                       <>
                         {goal.indicators.length === 0 ? (
-                          <tr key={goal.id} className="border-b border-slate-300 hover:bg-slate-50 group">
+                          <tr 
+                            key={goal.id} 
+                            className={`border-b border-slate-300 transition-colors group
+                              ${goalIndex > 0 ? "border-t-2 border-t-slate-400/80" : ""}
+                              ${goalIndex % 2 !== 0 ? "bg-slate-100/30 hover:bg-blue-50/50" : "bg-white hover:bg-blue-50/50"}
+                            `}
+                          >
                             {goalIndex === 0 && (
                               <td className="border border-slate-300 p-2 bg-[#2f75b5] text-white font-bold align-middle w-12" rowSpan={axisRowSpan}>
                                 <div className="flex flex-col items-center justify-center gap-3 h-full min-h-[100px]">
@@ -571,8 +577,23 @@ export default function PerformanceTable({
                           const targetField = `${quarter.toLowerCase()}Target` as keyof Indicator;
                           const achievedField = `${quarter.toLowerCase()}Achieved` as keyof Indicator;
 
+                          const isOddGoal = goalIndex % 2 !== 0;
+                          const isNewGoalRow = isFirstInd && !isFirstGoal;
+
                           return (
-                            <tr key={ind.id} className={`border-b border-slate-300 transition-colors group ${ind.postponed ? "bg-slate-50/80 text-slate-400 font-medium italic" : "hover:bg-blue-50/50"}`}>
+                            <tr 
+                              key={ind.id} 
+                              className={`border-b border-slate-300 transition-colors group
+                                ${isNewGoalRow ? "border-t-2 border-t-slate-400/80" : ""}
+                                ${
+                                  ind.postponed 
+                                    ? "bg-slate-50/80 text-slate-400 font-medium italic" 
+                                    : isOddGoal
+                                      ? "bg-slate-100/30 hover:bg-blue-50/50" 
+                                      : "bg-white hover:bg-blue-50/50"
+                                }
+                              `}
+                            >
                               {isFirstGoal && (
                                 <td className="border border-slate-300 p-2 bg-[#1f4e78] text-white font-bold align-middle w-12" rowSpan={axisRowSpan}>
                                   <div className="flex flex-col items-center justify-center gap-3 h-full">

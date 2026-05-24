@@ -93,14 +93,12 @@ export default function PerformanceTable({
     }));
   };
 
-  const handleAxisPrefixDoubleClick = (axisId: string, currentPrefix: string) => {
-    const newPrefix = prompt("أدخل رمز المحور الجديد:", currentPrefix);
-    if (newPrefix !== null) {
-      const trimmed = newPrefix.trim();
-      if (trimmed) {
-        updateAxisPrefix(axisId, trimmed);
-      }
-    }
+  const [editingAxis, setEditingAxis] = useState<{ id: string; name: string; prefix: string } | null>(null);
+  const [modalInput, setModalInput] = useState<string>("");
+
+  const handleAxisPrefixClick = (axisId: string, axisName: string, currentPrefix: string) => {
+    setEditingAxis({ id: axisId, name: axisName, prefix: currentPrefix });
+    setModalInput(currentPrefix);
   };
 
   // Helper to generate IDs
@@ -416,8 +414,8 @@ export default function PerformanceTable({
                               </td>
                             )}
                             <td 
-                              onDoubleClick={() => handleAxisPrefixDoubleClick(axis.id, aPrefix)}
-                              title="انقر مرتين لتعديل رمز المحور"
+                              onClick={() => handleAxisPrefixClick(axis.id, axis.name, aPrefix)}
+                              title="انقر لتعديل رمز المحور"
                               className="border border-slate-300 p-1 font-bold text-slate-600 bg-slate-50 w-[80px] cursor-pointer select-none hover:bg-slate-200 transition-colors text-center"
                             >
                               {goalCode}
@@ -457,8 +455,8 @@ export default function PerformanceTable({
                               {isFirstInd && (
                                 <>
                                   <td 
-                                    onDoubleClick={() => handleAxisPrefixDoubleClick(axis.id, aPrefix)}
-                                    title="انقر مرتين لتعديل رمز المحور"
+                                    onClick={() => handleAxisPrefixClick(axis.id, axis.name, aPrefix)}
+                                    title="انقر لتعديل رمز المحور"
                                     className="border border-slate-300 p-1 font-bold text-slate-700 bg-slate-50 text-center w-[80px] cursor-pointer select-none hover:bg-slate-200 transition-colors"
                                     rowSpan={goalRowSpan}
                                   >
@@ -553,6 +551,66 @@ export default function PerformanceTable({
           </tbody>
         </table>
       </div>
+
+      {/* Custom Modal for editing Axis Prefix */}
+      {editingAxis && (
+        <div className="fixed inset-0 bg-slate-950/60 backdrop-blur-sm flex items-center justify-center z-50 transition-all duration-300" dir="rtl">
+          <div className="bg-white rounded-2xl shadow-2xl border border-slate-100 max-w-md w-full mx-4 overflow-hidden transform scale-100 transition-all duration-300">
+            {/* Modal Header */}
+            <div className="bg-gradient-to-r from-blue-700 to-[#1f4e78] p-6 text-white text-right">
+              <h3 className="text-xl font-bold">تعديل رمز المحور</h3>
+              <p className="text-blue-100 text-xs mt-1">{editingAxis.name}</p>
+            </div>
+            
+            {/* Modal Body */}
+            <div className="p-6 space-y-4 text-right">
+              <label className="block text-sm font-bold text-slate-700">الرمز أو البادئة الجديدة للمحور:</label>
+              <input 
+                type="text" 
+                value={modalInput}
+                onChange={(e) => setModalInput(e.target.value.slice(0, 5))}
+                className="w-full px-4 py-2.5 rounded-xl border border-slate-300 focus:border-blue-600 focus:ring-2 focus:ring-blue-600/20 outline-none text-center font-bold text-lg transition-all"
+                placeholder="أدخل الرمز هنا (مثال: س)"
+                autoFocus
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    const trimmed = modalInput.trim();
+                    if (trimmed) {
+                      updateAxisPrefix(editingAxis.id, trimmed);
+                    }
+                    setEditingAxis(null);
+                  }
+                }}
+              />
+              <p className="text-[11px] text-slate-400 leading-relaxed">
+                سيتم استخدام هذا الرمز كأساس لترقيم جميع أهداف ومؤشرات هذا المحور تلقائياً (مثال: {modalInput || "غ"}-1، {modalInput || "غ"}-1-1).
+              </p>
+            </div>
+            
+            {/* Modal Footer */}
+            <div className="bg-slate-50 px-6 py-4 flex flex-row-reverse gap-3 border-t border-slate-100">
+              <button 
+                onClick={() => {
+                  const trimmed = modalInput.trim();
+                  if (trimmed) {
+                    updateAxisPrefix(editingAxis.id, trimmed);
+                  }
+                  setEditingAxis(null);
+                }}
+                className="bg-blue-600 hover:bg-blue-700 text-white font-bold px-6 py-2.5 rounded-xl text-sm transition-colors shadow-sm cursor-pointer"
+              >
+                تحديث الرمز
+              </button>
+              <button 
+                onClick={() => setEditingAxis(null)}
+                className="bg-white hover:bg-slate-50 text-slate-700 font-bold px-6 py-2.5 rounded-xl text-sm border border-slate-300 transition-colors cursor-pointer"
+              >
+                إلغاء
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

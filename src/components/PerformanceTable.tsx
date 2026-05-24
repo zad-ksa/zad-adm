@@ -34,21 +34,21 @@ type Axis = {
 
 const getAxisDefaultPrefix = (axisId: string) => {
   switch (axisId) {
-    case "1": return "أ";
-    case "2": return "ب";
-    case "3": return "ج";
-    case "4": return "د";
-    case "5": return "هـ";
+    case "1": return "س";
+    case "2": return "ص";
+    case "3": return "م";
+    case "4": return "ل";
+    case "5": return "ت";
     default: return "غ";
   }
 };
 
 const DEFAULT_AXES: Axis[] = [
-  { id: "1", name: "المستفيدين", goals: [], prefix: "أ" },
-  { id: "2", name: "أصحاب المصلحة", goals: [], prefix: "ب" },
-  { id: "3", name: "المالي", goals: [], prefix: "ج" },
-  { id: "4", name: "العمليات الداخلية", goals: [], prefix: "د" },
-  { id: "5", name: "التعلم والنمو", goals: [], prefix: "هـ" },
+  { id: "1", name: "المستفيدين", goals: [], prefix: "س" },
+  { id: "2", name: "أصحاب المصلحة", goals: [], prefix: "ص" },
+  { id: "3", name: "المالي", goals: [], prefix: "م" },
+  { id: "4", name: "العمليات الداخلية", goals: [], prefix: "ل" },
+  { id: "5", name: "التعلم والنمو", goals: [], prefix: "ت" },
 ];
 
 export default function PerformanceTable({ 
@@ -68,7 +68,6 @@ export default function PerformanceTable({
   const [axes, setAxes] = useState<Axis[]>(() => {
     if (!initialData) return DEFAULT_AXES;
     
-    // If initialData is the new object schema containing axes, unwrap it
     let loadedAxes: Axis[] = [];
     if (Array.isArray(initialData)) {
       loadedAxes = initialData;
@@ -78,7 +77,7 @@ export default function PerformanceTable({
       return DEFAULT_AXES;
     }
 
-    // Ensure all loaded axes have their prefixes initialized properly
+    // Initialize prefix, falling back to new defaults
     return loadedAxes.map(axis => ({
       ...axis,
       prefix: axis.prefix || getAxisDefaultPrefix(axis.id)
@@ -92,6 +91,16 @@ export default function PerformanceTable({
       }
       return axis;
     }));
+  };
+
+  const handleAxisPrefixDoubleClick = (axisId: string, currentPrefix: string) => {
+    const newPrefix = prompt("أدخل رمز المحور الجديد:", currentPrefix);
+    if (newPrefix !== null) {
+      const trimmed = newPrefix.trim();
+      if (trimmed) {
+        updateAxisPrefix(axisId, trimmed);
+      }
+    }
   };
 
   // Helper to generate IDs
@@ -377,15 +386,7 @@ export default function PerformanceTable({
                       <td className="border border-slate-300 p-2 bg-[#2f75b5] text-white font-bold align-middle w-12" rowSpan={1}>
                         <div className="flex flex-col items-center gap-2">
                           <span className="writing-vertical text-center">{axis.name}</span>
-                          <div className="flex flex-col items-center gap-1 mt-1 bg-white/10 p-1 rounded">
-                            <span className="text-[10px] text-white/80">الرمز:</span>
-                            <input 
-                              type="text" 
-                              value={axis.prefix || getAxisDefaultPrefix(axis.id)} 
-                              onChange={(e) => updateAxisPrefix(axis.id, e.target.value.slice(0, 3))}
-                              className="w-10 text-center font-bold text-slate-800 bg-white rounded border-0 outline-none text-xs p-0.5"
-                            />
-                          </div>
+                          <span className="text-[10px] text-white/80 font-bold bg-white/10 px-1.5 py-0.5 rounded mt-1">الرمز: {aPrefix}</span>
                           <button onClick={() => addGoal(axis.id)} className="bg-white/20 hover:bg-white/30 text-white text-xs px-2 py-1 rounded mt-1">+</button>
                         </div>
                       </td>
@@ -409,20 +410,16 @@ export default function PerformanceTable({
                               <td className="border border-slate-300 p-2 bg-[#2f75b5] text-white font-bold align-middle w-12" rowSpan={axisRowSpan}>
                                 <div className="flex flex-col items-center justify-center gap-3 h-full min-h-[100px]">
                                   <span className="text-center font-bold" style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}>{axis.name}</span>
-                                  <div className="flex flex-col items-center gap-1 mt-1 bg-white/10 p-1 rounded">
-                                    <span className="text-[10px] text-white/80">الرمز:</span>
-                                    <input 
-                                      type="text" 
-                                      value={axis.prefix || getAxisDefaultPrefix(axis.id)} 
-                                      onChange={(e) => updateAxisPrefix(axis.id, e.target.value.slice(0, 3))}
-                                      className="w-10 text-center font-bold text-slate-800 bg-white rounded border-0 outline-none text-xs p-0.5"
-                                    />
-                                  </div>
+                                  <span className="text-[10px] text-white/80 font-bold bg-white/10 px-1.5 py-0.5 rounded mt-1">الرمز: {aPrefix}</span>
                                   <button onClick={() => addGoal(axis.id)} className="bg-white/20 hover:bg-white/30 text-white text-xs px-2 py-1 rounded mt-2">م. جديد</button>
                                 </div>
                               </td>
                             )}
-                            <td className="border border-slate-300 p-1 font-bold text-slate-600 bg-slate-50 w-[80px]">
+                            <td 
+                              onDoubleClick={() => handleAxisPrefixDoubleClick(axis.id, aPrefix)}
+                              title="انقر مرتين لتعديل رمز المحور"
+                              className="border border-slate-300 p-1 font-bold text-slate-600 bg-slate-50 w-[80px] cursor-pointer select-none hover:bg-slate-200 transition-colors text-center"
+                            >
                               {goalCode}
                             </td>
                             <td className="border border-slate-300 p-1 bg-[#d9e1f2] font-semibold text-right">
@@ -451,15 +448,7 @@ export default function PerformanceTable({
                                 <td className="border border-slate-300 p-2 bg-[#1f4e78] text-white font-bold align-middle w-12" rowSpan={axisRowSpan}>
                                   <div className="flex flex-col items-center justify-center gap-3 h-full">
                                     <span className="text-center font-bold tracking-widest leading-loose" style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}>{axis.name}</span>
-                                    <div className="flex flex-col items-center gap-1 mt-1 bg-white/10 p-1 rounded">
-                                      <span className="text-[10px] text-white/80">الرمز:</span>
-                                      <input 
-                                        type="text" 
-                                        value={axis.prefix || getAxisDefaultPrefix(axis.id)} 
-                                        onChange={(e) => updateAxisPrefix(axis.id, e.target.value.slice(0, 3))}
-                                        className="w-10 text-center font-bold text-slate-800 bg-white rounded border-0 outline-none text-xs p-0.5"
-                                      />
-                                    </div>
+                                    <span className="text-[10px] text-white/80 font-bold bg-white/10 px-1.5 py-0.5 rounded mt-1">الرمز: {aPrefix}</span>
                                     <button onClick={() => addGoal(axis.id)} title="إضافة هدف" className="bg-white/20 hover:bg-white/30 text-white text-xs px-2 py-1 rounded">+</button>
                                   </div>
                                 </td>
@@ -467,7 +456,12 @@ export default function PerformanceTable({
 
                               {isFirstInd && (
                                 <>
-                                  <td className="border border-slate-300 p-1 font-bold text-slate-700 bg-slate-50 text-center w-[80px]" rowSpan={goalRowSpan}>
+                                  <td 
+                                    onDoubleClick={() => handleAxisPrefixDoubleClick(axis.id, aPrefix)}
+                                    title="انقر مرتين لتعديل رمز المحور"
+                                    className="border border-slate-300 p-1 font-bold text-slate-700 bg-slate-50 text-center w-[80px] cursor-pointer select-none hover:bg-slate-200 transition-colors"
+                                    rowSpan={goalRowSpan}
+                                  >
                                     {goalCode}
                                   </td>
                                   <td className="border border-slate-300 p-1 bg-[#d9e1f2] font-bold text-slate-800 text-right leading-tight max-w-[200px] whitespace-normal" rowSpan={goalRowSpan}>

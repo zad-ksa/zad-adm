@@ -52,15 +52,15 @@ const DEFAULT_AXES: Axis[] = [
   { id: "5", name: "التعلم والنمو", goals: [], prefix: "ت" },
 ];
 
-export default function PerformanceTable({ 
-  charityName, 
-  year, 
-  quarter, 
-  initialData 
-}: { 
-  charityName: string; 
-  year: number; 
-  quarter: string; 
+export default function PerformanceTable({
+  charityName,
+  year,
+  quarter,
+  initialData
+}: {
+  charityName: string;
+  year: number;
+  quarter: string;
   initialData: any;
 }) {
   const router = useRouter();
@@ -81,7 +81,7 @@ export default function PerformanceTable({
 
   const [axes, setAxes] = useState<Axis[]>(() => {
     if (!initialData) return DEFAULT_AXES;
-    
+
     let loadedAxes: Axis[] = [];
     if (Array.isArray(initialData)) {
       loadedAxes = initialData;
@@ -402,11 +402,10 @@ export default function PerformanceTable({
   const totalPerf = calcCharityPerf();
 
   return (
-    <div className={`space-y-6 transition-all duration-300 ${
-      isFullScreen 
-        ? "fixed inset-0 z-[9999] bg-slate-50 p-6 sm:p-8 flex flex-col w-screen h-screen overflow-hidden" 
+    <div className={`space-y-6 transition-all duration-300 ${isFullScreen
+        ? "fixed inset-0 z-[9999] bg-slate-50 p-6 sm:p-8 flex flex-col w-screen h-screen overflow-hidden"
         : ""
-    }`}>
+      }`}>
       {/* Controls */}
       <div className="flex flex-col md:flex-row gap-4 justify-between items-center bg-slate-100 p-4 rounded-xl border border-slate-200 shrink-0">
         <div className="flex gap-4">
@@ -472,11 +471,10 @@ export default function PerformanceTable({
       </div>
 
       {/* Table */}
-      <div className={`border border-slate-300 rounded-xl shadow-sm bg-white ${
-        isFullScreen 
-          ? "flex-1 overflow-auto w-full pb-[200px]" 
+      <div className={`border border-slate-300 rounded-xl shadow-sm bg-white ${isFullScreen
+          ? "flex-1 overflow-auto w-full pb-[200px]"
           : "overflow-x-auto w-full pb-[200px]"
-      }`}>
+        }`}>
         <table className="w-full text-center border-collapse text-sm whitespace-nowrap">
           <thead>
             <tr className="bg-[#1f4e78] text-white font-bold text-xs">
@@ -532,11 +530,11 @@ export default function PerformanceTable({
                     return (
                       <>
                         {goal.indicators.length === 0 ? (
-                          <tr 
-                            key={goal.id} 
+                          <tr
+                            key={goal.id}
                             className={`border-b border-slate-300 transition-colors group
                               ${goalIndex > 0 ? "border-t-2 border-t-slate-400/80" : ""}
-                              ${goalIndex % 2 !== 0 ? "bg-slate-100/30 hover:bg-blue-50/50" : "bg-white hover:bg-blue-50/50"}
+                              ${goalIndex % 2 !== 0 ? "bg-slate-100 hover:bg-blue-50/50" : "bg-white hover:bg-blue-50/50"}
                             `}
                           >
                             {goalIndex === 0 && (
@@ -548,7 +546,7 @@ export default function PerformanceTable({
                                 </div>
                               </td>
                             )}
-                            <td 
+                            <td
                               onClick={() => handleAxisPrefixClick(axis.id, axis.name, aPrefix)}
                               title="انقر لتعديل رمز المحور"
                               className="border border-slate-300 p-1 font-bold text-slate-600 bg-slate-50 w-[80px] cursor-pointer select-none hover:bg-slate-200 transition-colors text-center"
@@ -581,16 +579,15 @@ export default function PerformanceTable({
                           const isNewGoalRow = isFirstInd && !isFirstGoal;
 
                           return (
-                            <tr 
-                              key={ind.id} 
+                            <tr
+                              key={ind.id}
                               className={`border-b border-slate-300 transition-colors group
                                 ${isNewGoalRow ? "border-t-2 border-t-slate-400/80" : ""}
-                                ${
-                                  ind.postponed 
-                                    ? "bg-slate-50/80 text-slate-400 font-medium italic" 
-                                    : isOddGoal
-                                      ? "bg-slate-100/30 hover:bg-blue-50/50" 
-                                      : "bg-white hover:bg-blue-50/50"
+                                ${ind.postponed
+                                  ? "bg-slate-50/80 text-slate-400 font-medium italic"
+                                  : isOddGoal
+                                    ? "bg-slate-100/30 hover:bg-blue-50/50"
+                                    : "bg-white hover:bg-blue-50/50"
                                 }
                               `}
                             >
@@ -606,7 +603,7 @@ export default function PerformanceTable({
 
                               {isFirstInd && (
                                 <>
-                                  <td 
+                                  <td
                                     onClick={() => handleAxisPrefixClick(axis.id, axis.name, aPrefix)}
                                     title="انقر لتعديل رمز المحور"
                                     className="border border-slate-300 p-1 font-bold text-slate-700 bg-slate-50 text-center w-[80px] cursor-pointer select-none hover:bg-slate-200 transition-colors"
@@ -690,26 +687,25 @@ export default function PerformanceTable({
 
                               <td className="border border-slate-300 p-2">
                                 <div className="flex gap-1.5 justify-center items-center">
-                                  <button 
-                                    onClick={() => togglePostponeIndicator(axis.id, goal.id, ind.id)} 
-                                    className={`p-1.5 rounded transition-colors ${
-                                      ind.postponed 
-                                        ? "bg-amber-100 text-amber-700 hover:bg-amber-200" 
+                                  <button
+                                    onClick={() => togglePostponeIndicator(axis.id, goal.id, ind.id)}
+                                    className={`p-1.5 rounded transition-colors ${ind.postponed
+                                        ? "bg-amber-100 text-amber-700 hover:bg-amber-200"
                                         : "bg-slate-100 text-slate-600 hover:bg-slate-200"
-                                    }`} 
+                                      }`}
                                     title={ind.postponed ? "تنشيط المؤشر" : "تأجيل المؤشر"}
                                   >
                                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                       {ind.postponed ? (
                                         <>
                                           {/* Play / Activate icon */}
-                                          <polygon points="5 3 19 12 5 21 5 3" fill="currentColor"/>
+                                          <polygon points="5 3 19 12 5 21 5 3" fill="currentColor" />
                                         </>
                                       ) : (
                                         <>
                                           {/* Pause / Postpone icon */}
-                                          <rect x="6" y="4" width="4" height="16" fill="currentColor"/>
-                                          <rect x="14" y="4" width="4" height="16" fill="currentColor"/>
+                                          <rect x="6" y="4" width="4" height="16" fill="currentColor" />
+                                          <rect x="14" y="4" width="4" height="16" fill="currentColor" />
                                         </>
                                       )}
                                     </svg>
@@ -741,12 +737,12 @@ export default function PerformanceTable({
               <h3 className="text-xl font-bold">تعديل رمز المحور</h3>
               <p className="text-slate-100 text-xs mt-1">{editingAxis.name}</p>
             </div>
-            
+
             {/* Modal Body */}
             <div className="p-6 space-y-4 text-right">
               <label className="block text-sm font-bold text-slate-700">الرمز أو البادئة الجديدة للمحور:</label>
-              <input 
-                type="text" 
+              <input
+                type="text"
                 value={modalInput}
                 onChange={(e) => setModalInput(e.target.value.slice(0, 5))}
                 className="w-full px-4 py-2.5 rounded-xl border border-slate-300 focus:border-[#1f4e78] focus:ring-2 focus:ring-[#1f4e78]/20 outline-none text-center font-bold text-lg transition-all"
@@ -766,10 +762,10 @@ export default function PerformanceTable({
                 سيتم استخدام هذا الرمز كأساس لترقيم جميع أهداف ومؤشرات هذا المحور تلقائياً (مثال: {modalInput || "غ"}-1، {modalInput || "غ"}-1-1).
               </p>
             </div>
-            
+
             {/* Modal Footer */}
             <div className="bg-slate-50 px-6 py-4 flex flex-row-reverse gap-3 border-t border-slate-100">
-              <button 
+              <button
                 onClick={() => {
                   const trimmed = modalInput.trim();
                   if (trimmed) {
@@ -781,7 +777,7 @@ export default function PerformanceTable({
               >
                 تحديث الرمز
               </button>
-              <button 
+              <button
                 onClick={() => setEditingAxis(null)}
                 className="bg-white hover:bg-slate-50 text-slate-700 font-bold px-6 py-2.5 rounded-xl text-sm border border-slate-300 transition-colors cursor-pointer"
               >

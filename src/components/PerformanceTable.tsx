@@ -233,6 +233,17 @@ export default function PerformanceTable({
   // Helpers
   const hasData = (val: any) => val !== null && val !== undefined && val !== "";
 
+  const getAnnualTargetValue = (ind: Indicator) => {
+    return (ind.q1Target || 0) + (ind.q2Target || 0) + (ind.q3Target || 0) + (ind.q4Target || 0);
+  };
+
+  const getAnnualAchievedValue = (ind: Indicator) => {
+    if (ind.q1Achieved === null && ind.q2Achieved === null && ind.q3Achieved === null && ind.q4Achieved === null) {
+      return null;
+    }
+    return (ind.q1Achieved || 0) + (ind.q2Achieved || 0) + (ind.q3Achieved || 0) + (ind.q4Achieved || 0);
+  };
+
   const getIndicatorStatus = (ind: Indicator) => {
     if (ind.postponed) return "مؤجل";
     const achieved = getQuarterAchieved(ind);
@@ -353,7 +364,9 @@ export default function PerformanceTable({
               indicators: goal.indicators.map((ind, iIdx) => ({
                 ...ind,
                 code: `${gCode}-${iIdx + 1}`,
-                status: getIndicatorStatus(ind)
+                status: getIndicatorStatus(ind),
+                annualTarget: getAnnualTargetValue(ind),
+                annualAchieved: getAnnualAchievedValue(ind) ?? 0
               }))
             };
           })
@@ -505,7 +518,9 @@ export default function PerformanceTable({
                           const isFirstInd = indIndex === 0;
                           const isFirstGoal = goalIndex === 0 && isFirstInd;
 
-                          const annualPerf = calcPercentage(ind.annualAchieved, ind.annualTarget);
+                          const annualTarget = getAnnualTargetValue(ind);
+                          const annualAchieved = getAnnualAchievedValue(ind);
+                          const annualPerf = calcPercentage(annualAchieved, annualTarget);
                           const indPerf = calcIndicatorPerf(ind);
                           const classification = getClassification(indPerf, hasData(getQuarterAchieved(ind)), ind.postponed);
 
@@ -564,11 +579,11 @@ export default function PerformanceTable({
                               </td>
 
                               {/* Annual Metrics */}
-                              <td className="border border-slate-300 p-1 bg-slate-50 font-semibold">
-                                <input type="number" value={ind.annualTarget ?? ""} disabled={ind.postponed} onChange={e => updateIndicator(axis.id, goal.id, ind.id, "annualTarget", e.target.value === "" ? null : Number(e.target.value))} className="w-16 text-center bg-transparent focus:bg-white border-b border-transparent focus:border-primary outline-none disabled:text-slate-400 disabled:cursor-not-allowed" />
+                              <td className="border border-slate-300 p-2 font-semibold text-slate-700 bg-slate-50/50">
+                                {annualTarget}
                               </td>
-                              <td className="border border-slate-300 p-1 bg-slate-50 font-semibold">
-                                <input type="number" value={ind.annualAchieved ?? ""} disabled={ind.postponed} onChange={e => updateIndicator(axis.id, goal.id, ind.id, "annualAchieved", e.target.value === "" ? null : Number(e.target.value))} className="w-16 text-center bg-transparent focus:bg-white border-b border-transparent focus:border-primary outline-none disabled:text-slate-400 disabled:cursor-not-allowed" />
+                              <td className="border border-slate-300 p-2 font-semibold text-slate-700 bg-slate-50/50">
+                                {annualAchieved ?? "-"}
                               </td>
                               <td className="border border-slate-300 p-2 font-bold text-slate-700 bg-slate-100">
                                 {ind.postponed ? "مؤجل" : `${annualPerf}%`}

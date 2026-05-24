@@ -32,21 +32,22 @@ type Axis = {
 };
 
 const DEFAULT_AXES: Axis[] = [
-  { id: "1", name: "محور المستفيدين", goals: [] },
-  { id: "2", name: "المحور المالي", goals: [] },
-  { id: "3", name: "محور العمليات الداخلية", goals: [] },
-  { id: "4", name: "محور التعلم والنمو", goals: [] },
+  { id: "1", name: "المستفيدين", goals: [] },
+  { id: "2", name: "أصحاب المصلحة", goals: [] },
+  { id: "3", name: "المالي", goals: [] },
+  { id: "4", name: "العمليات الداخلية", goals: [] },
+  { id: "5", name: "التعلم والنمو", goals: [] },
 ];
 
-export default function PerformanceTable({ 
-  charityName, 
-  year, 
-  quarter, 
-  initialData 
-}: { 
-  charityName: string; 
-  year: number; 
-  quarter: string; 
+export default function PerformanceTable({
+  charityName,
+  year,
+  quarter,
+  initialData
+}: {
+  charityName: string;
+  year: number;
+  quarter: string;
   initialData: Axis[] | null;
 }) {
   const router = useRouter();
@@ -135,9 +136,9 @@ export default function PerformanceTable({
       return axis;
     }));
   };
-  
+
   const updateGoal = (axisId: string, goalId: string, field: keyof Goal, value: any) => {
-     setAxes(prev => prev.map(axis => {
+    setAxes(prev => prev.map(axis => {
       if (axis.id === axisId) {
         return {
           ...axis,
@@ -226,10 +227,10 @@ export default function PerformanceTable({
       if (res.success) {
         alert("تم الحفظ بنجاح");
       } else {
-        alert("حدث خطأ أثناء الحفظ");
+        alert(`حدث خطأ أثناء الحفظ: ${res.error}`);
       }
-    } catch (e) {
-      alert("حدث خطأ أثناء الحفظ");
+    } catch (e: any) {
+      alert(`حدث خطأ أثناء الحفظ: ${e?.message || String(e)}`);
     } finally {
       setIsSaving(false);
     }
@@ -242,8 +243,8 @@ export default function PerformanceTable({
       {/* Controls */}
       <div className="flex flex-col md:flex-row gap-4 justify-between items-center bg-slate-100 p-4 rounded-xl border border-slate-200">
         <div className="flex gap-4">
-          <select 
-            value={year} 
+          <select
+            value={year}
             onChange={(e) => handlePeriodChange(parseInt(e.target.value), quarter)}
             className="px-4 py-2 rounded-lg border border-slate-300 font-bold bg-white"
           >
@@ -251,8 +252,8 @@ export default function PerformanceTable({
               <option key={y} value={y}>{y}</option>
             ))}
           </select>
-          <select 
-            value={quarter} 
+          <select
+            value={quarter}
             onChange={(e) => handlePeriodChange(year, e.target.value)}
             className="px-4 py-2 rounded-lg border border-slate-300 font-bold bg-white"
           >
@@ -262,7 +263,7 @@ export default function PerformanceTable({
             <option value="Q4">الربع الرابع</option>
           </select>
         </div>
-        
+
         <div className="flex items-center gap-4">
           <div className="text-sm font-bold bg-white px-4 py-2 rounded-lg border border-slate-200 shadow-sm flex items-center gap-2">
             <span>أداء الجمعية:</span>
@@ -270,8 +271,8 @@ export default function PerformanceTable({
               {totalPerf}%
             </span>
           </div>
-          <button 
-            onClick={handleSave} 
+          <button
+            onClick={handleSave}
             disabled={isSaving}
             className="bg-primary hover:bg-primary/90 text-primary-foreground px-6 py-2 rounded-lg font-bold transition-colors shadow-sm disabled:opacity-50"
           >
@@ -309,15 +310,15 @@ export default function PerformanceTable({
             {axes.map((axis, axisIndex) => {
               const axisRowSpan = Math.max(1, axis.goals.reduce((acc, g) => acc + Math.max(1, g.indicators.length), 0));
               const aPerf = calcAxisPerf(axis);
-              
+
               return (
                 <>
                   {axis.goals.length === 0 ? (
                     <tr key={axis.id} className="border-b border-slate-300 hover:bg-slate-50">
                       <td className="border border-slate-300 p-2 bg-[#2f75b5] text-white font-bold align-middle" rowSpan={1}>
                         <div className="flex flex-col items-center gap-2">
-                           <span className="writing-vertical text-center">{axis.name}</span>
-                           <button onClick={() => addGoal(axis.id)} className="bg-white/20 hover:bg-white/30 text-white text-xs px-2 py-1 rounded">+</button>
+                          <span className="writing-vertical text-center">{axis.name}</span>
+                          <button onClick={() => addGoal(axis.id)} className="bg-white/20 hover:bg-white/30 text-white text-xs px-2 py-1 rounded">+</button>
                         </div>
                       </td>
                       <td colSpan={17} className="border border-slate-300 p-4 text-slate-400">
@@ -338,19 +339,19 @@ export default function PerformanceTable({
                             {goalIndex === 0 && (
                               <td className="border border-slate-300 p-2 bg-[#2f75b5] text-white font-bold align-middle" rowSpan={axisRowSpan}>
                                 <div className="flex flex-col items-center justify-center gap-4 h-full min-h-[100px]">
-                                   <span className="text-center font-bold" style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}>{axis.name}</span>
-                                   <button onClick={() => addGoal(axis.id)} className="bg-white/20 hover:bg-white/30 text-white text-xs px-2 py-1 rounded mt-2">م. جديد</button>
+                                  <span className="text-center font-bold" style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}>{axis.name}</span>
+                                  <button onClick={() => addGoal(axis.id)} className="bg-white/20 hover:bg-white/30 text-white text-xs px-2 py-1 rounded mt-2">م. جديد</button>
                                 </div>
                               </td>
                             )}
                             <td className="border border-slate-300 p-1">
-                               <input type="text" value={goal.code} onChange={e => updateGoal(axis.id, goal.id, "code", e.target.value)} className="w-full text-center bg-transparent focus:bg-white border-0 outline-none p-1" />
+                              <input type="text" value={goal.code} onChange={e => updateGoal(axis.id, goal.id, "code", e.target.value)} className="w-full text-center bg-transparent focus:bg-white border-0 outline-none p-1" />
                             </td>
                             <td className="border border-slate-300 p-1 bg-[#d9e1f2] font-semibold text-right">
-                               <input type="text" value={goal.name} onChange={e => updateGoal(axis.id, goal.id, "name", e.target.value)} className="w-full bg-transparent focus:bg-white border-0 outline-none p-1" />
+                              <input type="text" value={goal.name} onChange={e => updateGoal(axis.id, goal.id, "name", e.target.value)} className="w-full bg-transparent focus:bg-white border-0 outline-none p-1" />
                             </td>
                             <td colSpan={15} className="border border-slate-300 p-2 text-slate-400">
-                               <button onClick={() => addIndicator(axis.id, goal.id)} className="text-primary underline font-bold">إضافة مؤشر</button>
+                              <button onClick={() => addIndicator(axis.id, goal.id)} className="text-primary underline font-bold">إضافة مؤشر</button>
                             </td>
                           </tr>
                         ) : null}
@@ -358,7 +359,7 @@ export default function PerformanceTable({
                         {goal.indicators.map((ind, indIndex) => {
                           const isFirstInd = indIndex === 0;
                           const isFirstGoal = goalIndex === 0 && isFirstInd;
-                          
+
                           const annualPerf = calcPercentage(ind.annualAchieved, ind.annualTarget);
                           const indPerf = calcIndicatorPerf(ind);
                           const classification = getClassification(indPerf);
@@ -376,7 +377,7 @@ export default function PerformanceTable({
                                   </div>
                                 </td>
                               )}
-                              
+
                               {isFirstInd && (
                                 <>
                                   <td className="border border-slate-300 p-1 font-bold text-slate-700 bg-white" rowSpan={goalRowSpan}>
@@ -408,7 +409,7 @@ export default function PerformanceTable({
                               <td className="border border-slate-300 p-1">
                                 <input type="text" value={ind.owner} onChange={e => updateIndicator(axis.id, goal.id, ind.id, "owner", e.target.value)} placeholder="اسم المالك" className="w-full text-center bg-transparent focus:bg-white border-0 outline-none p-1 rounded text-xs" />
                               </td>
-                              
+
                               {/* Annual Metrics */}
                               <td className="border border-slate-300 p-1 bg-slate-50 font-semibold">
                                 <input type="number" value={ind.annualTarget || ""} onChange={e => updateIndicator(axis.id, goal.id, ind.id, "annualTarget", Number(e.target.value))} className="w-16 text-center bg-transparent focus:bg-white border-b border-transparent focus:border-primary outline-none" />
@@ -419,7 +420,7 @@ export default function PerformanceTable({
                               <td className="border border-slate-300 p-2 font-bold text-slate-700 bg-slate-100">
                                 {annualPerf}%
                               </td>
-                              
+
                               {/* Quarter Metrics & Classification */}
                               <td className={`border border-slate-300 p-2 font-bold text-sm ${classification.color} bg-slate-50`}>
                                 {classification.icon} {classification.text}
@@ -430,7 +431,7 @@ export default function PerformanceTable({
                               <td className="border border-slate-300 p-1 bg-blue-50/30 font-semibold">
                                 <input type="number" value={ind[achievedField] || ""} onChange={e => updateIndicator(axis.id, goal.id, ind.id, achievedField, Number(e.target.value))} className="w-16 text-center bg-transparent focus:bg-white border-b border-transparent focus:border-primary outline-none" />
                               </td>
-                              
+
                               {/* Performances */}
                               <td className={`border border-slate-300 p-2 font-bold ${getPerfColor(indPerf)}`}>
                                 {indPerf}%

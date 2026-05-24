@@ -5,6 +5,7 @@ import CopyLinkButton from "@/components/CopyLinkButton";
 import type { Metadata } from "next";
 import CompanySidebar from "./CompanySidebar";
 import { getCharities, bootstrapCharities } from "@/app/actions/charity";
+import ApproveCharityButton from "./ApproveCharityButton";
 
 export const dynamic = "force-dynamic";
 
@@ -29,6 +30,68 @@ export default async function Dashboard() {
   const hexagonalResponses = await prisma.hexagonalResponse.findMany({
     orderBy: { createdAt: "desc" },
   });
+
+  // Determine pending/unregistered charities
+  const registeredNames = new Set(charities.map(c => c.name.trim().toLowerCase()));
+  
+  const pendingResponses = responses.filter(r => !registeredNames.has(r.charityName.trim().toLowerCase()));
+  const pendingHexs = hexagonalResponses.filter(h => !registeredNames.has(h.charityName.trim().toLowerCase()));
+
+  const pendingCharitiesMap = new Map<string, {
+    name: string;
+    readinessCount: number;
+    hexagonalCount: number;
+    establishmentDate?: string;
+    licenseNumber?: string;
+    latestDate: Date;
+  }>();
+
+  pendingResponses.forEach(r => {
+    const name = r.charityName.trim();
+    const key = name.toLowerCase();
+    if (!pendingCharitiesMap.has(key)) {
+      pendingCharitiesMap.set(key, {
+        name,
+        readinessCount: 0,
+        hexagonalCount: 0,
+        establishmentDate: r.establishmentDate || undefined,
+        licenseNumber: r.licenseNumber || undefined,
+        latestDate: new Date(r.createdAt),
+      });
+    }
+    const item = pendingCharitiesMap.get(key)!;
+    item.readinessCount++;
+    if (r.establishmentDate && !item.establishmentDate) {
+      item.establishmentDate = r.establishmentDate;
+    }
+    if (r.licenseNumber && !item.licenseNumber) {
+      item.licenseNumber = r.licenseNumber;
+    }
+    if (new Date(r.createdAt) > item.latestDate) {
+      item.latestDate = new Date(r.createdAt);
+    }
+  });
+
+  pendingHexs.forEach(h => {
+    const name = h.charityName.trim();
+    const key = name.toLowerCase();
+    if (!pendingCharitiesMap.has(key)) {
+      pendingCharitiesMap.set(key, {
+        name,
+        readinessCount: 0,
+        hexagonalCount: 0,
+        latestDate: new Date(h.createdAt),
+      });
+    }
+    const item = pendingCharitiesMap.get(key)!;
+    item.hexagonalCount++;
+    if (new Date(h.createdAt) > item.latestDate) {
+      item.latestDate = new Date(h.createdAt);
+    }
+  });
+
+  const pendingCharitiesList = Array.from(pendingCharitiesMap.values());
+  pendingCharitiesList.sort((a, b) => b.latestDate.getTime() - a.latestDate.getTime());
 
   // Calculate stats for each charity
   const charityStats = charities.map(charity => {
@@ -85,6 +148,81 @@ export default async function Dashboard() {
               </div>
             </div>
           </div>
+
+          {/* Pending Submissions Section */}
+          {pendingCharitiesList.length > 0 && (
+            <div className="mb-8 bg-amber-50/40 rounded-3xl p-6 border border-amber-200 shadow-sm">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-amber-100 rounded-xl flex items-center justify-center text-amber-700 text-xl font-bold shadow-sm">
+                    ⚠️
+                  </div>
+                  <div>
+                    <h2 className="text-lg font-bold text-amber-900">استبيانات معلقة من جمعيات غير مسجلة</h2>
+                    <p className="text-xs text-amber-600 mt-0.5">هناك استبيانات مرسلة من جمعيات غير مضافة لقائمة الجمعيات المتعاقد معها. يمكنك تفعيلها لإدراجها تلقائياً.</p>
+                  </div>
+                </div>
+              </div>
+              <div className="bg-white rounded-2xl border border-amber-200/60 overflow-hidden shadow-sm">
+                <div className="overflow-x-auto">
+                  <table className="w-full text-right border-collapse whitespace-nowrap text-xs">
+                    <thead>
+                      <tr className="bg-amber-50/80 border-b border-amber-100 text-amber-800 font-bold">
+                        <th className="p-4 font-bold text-right">اسم الجمعية المعلقة</th>
+                        <th className="p-4 text-center font-bold">مقياس الجاهزية</th>
+                        <th className="p-4 text-center font-bold">التحليل السداسي</th>
+                        <th className="p-4 font-bold">تاريخ التأسيس</th>
+                        <th className="p-4 font-bold">رقم الترخيص</th>
+                        <th className="p-4 font-bold">آخر نشاط</th>
+                        <th className="p-4 text-center font-bold">الإجراء</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-amber-100/30 text-slate-700">
+                      {pendingCharitiesList.map((pending) => (
+                        <tr key={pending.name} className="hover:bg-amber-50/10 transition-colors">
+                          <td className="p-4 font-bold text-slate-800 text-sm">{pending.name}</td>
+                          <td className="p-4 text-center font-bold">
+                            {pending.readinessCount > 0 ? (
+                              <span className="inline-block bg-amber-100 text-amber-800 px-3 py-1 rounded-full">
+                                {pending.readinessCount} استبيان
+                              </span>
+                            ) : (
+                              <span className="text-slate-400 text-xs">-</span>
+                            )}
+                          </td>
+                          <td className="p-4 text-center font-bold">
+                            {pending.hexagonalCount > 0 ? (
+                              <span className="inline-block bg-amber-100 text-amber-800 px-3 py-1 rounded-full">
+                                {pending.hexagonalCount} استبيان
+                              </span>
+                            ) : (
+                              <span className="text-slate-400 text-xs">-</span>
+                            )}
+                          </td>
+                          <td className="p-4 text-slate-600">{pending.establishmentDate || "-"}</td>
+                          <td className="p-4 text-slate-600">{pending.licenseNumber || "-"}</td>
+                          <td className="p-4 text-slate-500">
+                            {new Date(pending.latestDate).toLocaleDateString("ar-SA", {
+                              year: "numeric",
+                              month: "short",
+                              day: "numeric",
+                            })}
+                          </td>
+                          <td className="p-4 text-center flex justify-center items-center">
+                            <ApproveCharityButton
+                              name={pending.name}
+                              establishmentDate={pending.establishmentDate}
+                              licenseNumber={pending.licenseNumber}
+                            />
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          )}
 
           <div className="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden">
             <div className="overflow-x-auto">

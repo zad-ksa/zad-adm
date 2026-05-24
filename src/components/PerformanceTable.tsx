@@ -39,21 +39,49 @@ const DEFAULT_AXES: Axis[] = [
   { id: "5", name: "التعلم والنمو", goals: [] },
 ];
 
-export default function PerformanceTable({
-  charityName,
-  year,
-  quarter,
-  initialData
-}: {
-  charityName: string;
-  year: number;
-  quarter: string;
-  initialData: Axis[] | null;
+export default function PerformanceTable({ 
+  charityName, 
+  year, 
+  quarter, 
+  initialData 
+}: { 
+  charityName: string; 
+  year: number; 
+  quarter: string; 
+  initialData: any;
 }) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [isSaving, setIsSaving] = useState(false);
-  const [axes, setAxes] = useState<Axis[]>(initialData || DEFAULT_AXES);
+  const [axes, setAxes] = useState<Axis[]>(() => {
+    if (!initialData) return DEFAULT_AXES;
+    if (Array.isArray(initialData)) return initialData;
+    if (initialData && typeof initialData === "object" && "axes" in initialData) {
+      return (initialData as any).axes || DEFAULT_AXES;
+    }
+    return DEFAULT_AXES;
+  });
+
+  const [goalPrefix, setGoalPrefix] = useState<string>(() => {
+    if (initialData && typeof initialData === "object" && !Array.isArray(initialData) && "goalPrefix" in initialData) {
+      return (initialData as any).goalPrefix || "غ";
+    }
+    return "غ";
+  });
+
+  // Get a map of goal IDs to their sequential numbers
+  const getGoalNumbers = () => {
+    const map: Record<string, number> = {};
+    let counter = 0;
+    axes.forEach(axis => {
+      axis.goals.forEach(goal => {
+        counter++;
+        map[goal.id] = counter;
+      });
+    });
+    return map;
+  };
+  const goalNumbers = getGoalNumbers();
 
   // Helper to generate IDs
   const generateId = () => Math.random().toString(36).substring(2, 9);
@@ -223,7 +251,22 @@ export default function PerformanceTable({
   const handleSave = async () => {
     setIsSaving(true);
     try {
-      const res = await savePerformanceMetric(charityName, year, axes);
+      const updatedAxes = axes.map(axis => ({
+        ...axis,
+        goals: axis.goals.map(goal => {
+          const gCode = `${goalPrefix}-${goalNumbers[goal.id]}`;
+          return {
+            ...goal,
+            code: gCode,
+            indicators: goal.indicators.map((ind, iIdx) => ({
+              ...ind,
+              code: `${gCode}-${iIdx + 1}`
+            }))
+          };
+        })
+      }));
+
+      const res = await savePerformanceMetric(charityName, year, { axes: updatedAxes, goalPrefix });
       if (res.success) {
         alert("تم الحفظ بنجاح");
       } else {
@@ -331,6 +374,8 @@ export default function PerformanceTable({
                   {axis.goals.map((goal, goalIndex) => {
                     const goalRowSpan = Math.max(1, goal.indicators.length);
                     const gPerf = calcGoalPerf(goal);
+                    const goalNum = goalNumbers[goal.id] || (goalIndex + 1);
+                    const goalCode = `غ-${goalNum}`;
 
                     return (
                       <>
@@ -344,8 +389,8 @@ export default function PerformanceTable({
                                 </div>
                               </td>
                             )}
-                            <td className="border border-slate-300 p-1">
-                              <input type="text" value={goal.code} onChange={e => updateGoal(axis.id, goal.id, "code", e.target.value)} className="w-full text-center bg-transparent focus:bg-white border-0 outline-none p-1" />
+                            <td className="border border-slate-300 p-1 font-bold text-slate-600 bg-slate-50 w-[80px]">
+                              {goalCode}
                             </td>
                             <td className="border border-slate-300 p-1 bg-[#d9e1f2] font-semibold text-right">
                               <input type="text" value={goal.name} onChange={e => updateGoal(axis.id, goal.id, "name", e.target.value)} className="w-full bg-transparent focus:bg-white border-0 outline-none p-1" />
@@ -380,8 +425,8 @@ export default function PerformanceTable({
 
                               {isFirstInd && (
                                 <>
-                                  <td className="border border-slate-300 p-1 font-bold text-slate-700 bg-white" rowSpan={goalRowSpan}>
-                                    <input type="text" value={goal.code} onChange={e => updateGoal(axis.id, goal.id, "code", e.target.value)} className="w-full text-center bg-transparent focus:bg-slate-100 border-0 outline-none p-1 rounded" />
+                                  <td className="border border-slate-300 p-1 font-bold text-slate-700 bg-slate-50 text-center w-[80px]" rowSpan={goalRowSpan}>
+                                    {goalCode}
                                   </td>
                                   <td className="border border-slate-300 p-1 bg-[#d9e1f2] font-bold text-slate-800 text-right leading-tight max-w-[200px] whitespace-normal" rowSpan={goalRowSpan}>
                                     <textarea value={goal.name} onChange={e => updateGoal(axis.id, goal.id, "name", e.target.value)} className="w-full h-full min-h-[60px] bg-transparent focus:bg-white border-0 outline-none p-1 resize-none rounded" />
@@ -392,8 +437,8 @@ export default function PerformanceTable({
                                 </>
                               )}
 
-                              <td className="border border-slate-300 p-1">
-                                <input type="text" value={ind.code} onChange={e => updateIndicator(axis.id, goal.id, ind.id, "code", e.target.value)} className="w-full text-center bg-transparent focus:bg-white border-0 outline-none p-1 rounded" />
+                              <td className="border border-slate-300 p-1 font-semibold text-slate-500 bg-slate-50/50 w-[80px]">
+                                {goalCode}-{indIndex + 1}
                               </td>
                               <td className="border border-slate-300 p-1 text-right whitespace-normal">
                                 <textarea value={ind.name} onChange={e => updateIndicator(axis.id, goal.id, ind.id, "name", e.target.value)} className="w-full h-full min-h-[40px] bg-transparent focus:bg-white border-0 outline-none p-1 resize-none rounded" />

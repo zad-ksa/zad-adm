@@ -29,14 +29,26 @@ type Axis = {
   id: string;
   name: string;
   goals: Goal[];
+  prefix?: string;
+};
+
+const getAxisDefaultPrefix = (axisId: string) => {
+  switch (axisId) {
+    case "1": return "أ";
+    case "2": return "ب";
+    case "3": return "ج";
+    case "4": return "د";
+    case "5": return "هـ";
+    default: return "غ";
+  }
 };
 
 const DEFAULT_AXES: Axis[] = [
-  { id: "1", name: "المستفيدين", goals: [] },
-  { id: "2", name: "أصحاب المصلحة", goals: [] },
-  { id: "3", name: "المالي", goals: [] },
-  { id: "4", name: "العمليات الداخلية", goals: [] },
-  { id: "5", name: "التعلم والنمو", goals: [] },
+  { id: "1", name: "المستفيدين", goals: [], prefix: "أ" },
+  { id: "2", name: "أصحاب المصلحة", goals: [], prefix: "ب" },
+  { id: "3", name: "المالي", goals: [], prefix: "ج" },
+  { id: "4", name: "العمليات الداخلية", goals: [], prefix: "د" },
+  { id: "5", name: "التعلم والنمو", goals: [], prefix: "هـ" },
 ];
 
 export default function PerformanceTable({ 
@@ -55,33 +67,32 @@ export default function PerformanceTable({
   const [isSaving, setIsSaving] = useState(false);
   const [axes, setAxes] = useState<Axis[]>(() => {
     if (!initialData) return DEFAULT_AXES;
-    if (Array.isArray(initialData)) return initialData;
-    if (initialData && typeof initialData === "object" && "axes" in initialData) {
-      return (initialData as any).axes || DEFAULT_AXES;
+    
+    // If initialData is the new object schema containing axes, unwrap it
+    let loadedAxes: Axis[] = [];
+    if (Array.isArray(initialData)) {
+      loadedAxes = initialData;
+    } else if (initialData && typeof initialData === "object" && "axes" in initialData) {
+      loadedAxes = (initialData as any).axes || DEFAULT_AXES;
+    } else {
+      return DEFAULT_AXES;
     }
-    return DEFAULT_AXES;
+
+    // Ensure all loaded axes have their prefixes initialized properly
+    return loadedAxes.map(axis => ({
+      ...axis,
+      prefix: axis.prefix || getAxisDefaultPrefix(axis.id)
+    }));
   });
 
-  const [goalPrefix, setGoalPrefix] = useState<string>(() => {
-    if (initialData && typeof initialData === "object" && !Array.isArray(initialData) && "goalPrefix" in initialData) {
-      return (initialData as any).goalPrefix || "غ";
-    }
-    return "غ";
-  });
-
-  // Get a map of goal IDs to their sequential numbers
-  const getGoalNumbers = () => {
-    const map: Record<string, number> = {};
-    let counter = 0;
-    axes.forEach(axis => {
-      axis.goals.forEach(goal => {
-        counter++;
-        map[goal.id] = counter;
-      });
-    });
-    return map;
+  const updateAxisPrefix = (axisId: string, value: string) => {
+    setAxes(prev => prev.map(axis => {
+      if (axis.id === axisId) {
+        return { ...axis, prefix: value };
+      }
+      return axis;
+    }));
   };
-  const goalNumbers = getGoalNumbers();
 
   // Helper to generate IDs
   const generateId = () => Math.random().toString(36).substring(2, 9);
@@ -251,22 +262,26 @@ export default function PerformanceTable({
   const handleSave = async () => {
     setIsSaving(true);
     try {
-      const updatedAxes = axes.map(axis => ({
-        ...axis,
-        goals: axis.goals.map(goal => {
-          const gCode = `${goalPrefix}-${goalNumbers[goal.id]}`;
-          return {
-            ...goal,
-            code: gCode,
-            indicators: goal.indicators.map((ind, iIdx) => ({
-              ...ind,
-              code: `${gCode}-${iIdx + 1}`
-            }))
-          };
-        })
-      }));
+      const updatedAxes = axes.map(axis => {
+        const aPrefix = axis.prefix || getAxisDefaultPrefix(axis.id);
+        return {
+          ...axis,
+          prefix: aPrefix,
+          goals: axis.goals.map((goal, goalIndex) => {
+            const gCode = `${aPrefix}-${goalIndex + 1}`;
+            return {
+              ...goal,
+              code: gCode,
+              indicators: goal.indicators.map((ind, iIdx) => ({
+                ...ind,
+                code: `${gCode}-${iIdx + 1}`
+              }))
+            };
+          })
+        };
+      });
 
-      const res = await savePerformanceMetric(charityName, year, { axes: updatedAxes, goalPrefix });
+      const res = await savePerformanceMetric(charityName, year, updatedAxes);
       if (res.success) {
         alert("تم الحفظ بنجاح");
       } else {
@@ -305,16 +320,6 @@ export default function PerformanceTable({
             <option value="Q3">الربع الثالث</option>
             <option value="Q4">الربع الرابع</option>
           </select>
-          <div className="flex items-center gap-2 bg-white px-3 py-2 rounded-lg border border-slate-300">
-            <span className="text-xs font-bold text-slate-500">رمز الهدف:</span>
-            <input 
-              type="text" 
-              value={goalPrefix} 
-              onChange={(e) => setGoalPrefix(e.target.value.slice(0, 5))}
-              className="w-12 text-center font-bold border-b border-slate-200 focus:border-primary outline-none text-sm bg-transparent"
-              placeholder="غ"
-            />
-          </div>
         </div>
 
         <div className="flex items-center gap-4">
@@ -363,15 +368,25 @@ export default function PerformanceTable({
             {axes.map((axis, axisIndex) => {
               const axisRowSpan = Math.max(1, axis.goals.reduce((acc, g) => acc + Math.max(1, g.indicators.length), 0));
               const aPerf = calcAxisPerf(axis);
+              const aPrefix = axis.prefix || getAxisDefaultPrefix(axis.id);
 
               return (
                 <>
                   {axis.goals.length === 0 ? (
                     <tr key={axis.id} className="border-b border-slate-300 hover:bg-slate-50">
-                      <td className="border border-slate-300 p-2 bg-[#2f75b5] text-white font-bold align-middle" rowSpan={1}>
+                      <td className="border border-slate-300 p-2 bg-[#2f75b5] text-white font-bold align-middle w-12" rowSpan={1}>
                         <div className="flex flex-col items-center gap-2">
                           <span className="writing-vertical text-center">{axis.name}</span>
-                          <button onClick={() => addGoal(axis.id)} className="bg-white/20 hover:bg-white/30 text-white text-xs px-2 py-1 rounded">+</button>
+                          <div className="flex flex-col items-center gap-1 mt-1 bg-white/10 p-1 rounded">
+                            <span className="text-[10px] text-white/80">الرمز:</span>
+                            <input 
+                              type="text" 
+                              value={axis.prefix || getAxisDefaultPrefix(axis.id)} 
+                              onChange={(e) => updateAxisPrefix(axis.id, e.target.value.slice(0, 3))}
+                              className="w-10 text-center font-bold text-slate-800 bg-white rounded border-0 outline-none text-xs p-0.5"
+                            />
+                          </div>
+                          <button onClick={() => addGoal(axis.id)} className="bg-white/20 hover:bg-white/30 text-white text-xs px-2 py-1 rounded mt-1">+</button>
                         </div>
                       </td>
                       <td colSpan={17} className="border border-slate-300 p-4 text-slate-400">
@@ -384,17 +399,25 @@ export default function PerformanceTable({
                   {axis.goals.map((goal, goalIndex) => {
                     const goalRowSpan = Math.max(1, goal.indicators.length);
                     const gPerf = calcGoalPerf(goal);
-                    const goalNum = goalNumbers[goal.id] || (goalIndex + 1);
-                    const goalCode = `${goalPrefix}-${goalNum}`;
+                    const goalCode = `${aPrefix}-${goalIndex + 1}`;
 
                     return (
                       <>
                         {goal.indicators.length === 0 ? (
                           <tr key={goal.id} className="border-b border-slate-300 hover:bg-slate-50 group">
                             {goalIndex === 0 && (
-                              <td className="border border-slate-300 p-2 bg-[#2f75b5] text-white font-bold align-middle" rowSpan={axisRowSpan}>
-                                <div className="flex flex-col items-center justify-center gap-4 h-full min-h-[100px]">
+                              <td className="border border-slate-300 p-2 bg-[#2f75b5] text-white font-bold align-middle w-12" rowSpan={axisRowSpan}>
+                                <div className="flex flex-col items-center justify-center gap-3 h-full min-h-[100px]">
                                   <span className="text-center font-bold" style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}>{axis.name}</span>
+                                  <div className="flex flex-col items-center gap-1 mt-1 bg-white/10 p-1 rounded">
+                                    <span className="text-[10px] text-white/80">الرمز:</span>
+                                    <input 
+                                      type="text" 
+                                      value={axis.prefix || getAxisDefaultPrefix(axis.id)} 
+                                      onChange={(e) => updateAxisPrefix(axis.id, e.target.value.slice(0, 3))}
+                                      className="w-10 text-center font-bold text-slate-800 bg-white rounded border-0 outline-none text-xs p-0.5"
+                                    />
+                                  </div>
                                   <button onClick={() => addGoal(axis.id)} className="bg-white/20 hover:bg-white/30 text-white text-xs px-2 py-1 rounded mt-2">م. جديد</button>
                                 </div>
                               </td>
@@ -426,8 +449,17 @@ export default function PerformanceTable({
                             <tr key={ind.id} className="border-b border-slate-300 hover:bg-blue-50/50 transition-colors group">
                               {isFirstGoal && (
                                 <td className="border border-slate-300 p-2 bg-[#1f4e78] text-white font-bold align-middle w-12" rowSpan={axisRowSpan}>
-                                  <div className="flex flex-col items-center justify-center gap-4 h-full">
+                                  <div className="flex flex-col items-center justify-center gap-3 h-full">
                                     <span className="text-center font-bold tracking-widest leading-loose" style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}>{axis.name}</span>
+                                    <div className="flex flex-col items-center gap-1 mt-1 bg-white/10 p-1 rounded">
+                                      <span className="text-[10px] text-white/80">الرمز:</span>
+                                      <input 
+                                        type="text" 
+                                        value={axis.prefix || getAxisDefaultPrefix(axis.id)} 
+                                        onChange={(e) => updateAxisPrefix(axis.id, e.target.value.slice(0, 3))}
+                                        className="w-10 text-center font-bold text-slate-800 bg-white rounded border-0 outline-none text-xs p-0.5"
+                                      />
+                                    </div>
                                     <button onClick={() => addGoal(axis.id)} title="إضافة هدف" className="bg-white/20 hover:bg-white/30 text-white text-xs px-2 py-1 rounded">+</button>
                                   </div>
                                 </td>

@@ -557,9 +557,9 @@ export default function PerformanceTable({
         <div className="fixed inset-0 bg-slate-950/60 backdrop-blur-sm flex items-center justify-center z-50 transition-all duration-300" dir="rtl">
           <div className="bg-white rounded-2xl shadow-2xl border border-slate-100 max-w-md w-full mx-4 overflow-hidden transform scale-100 transition-all duration-300">
             {/* Modal Header */}
-            <div className="bg-gradient-to-r from-blue-700 to-[#1f4e78] p-6 text-white text-right">
+            <div className="bg-gradient-to-r from-[#2f75b5] to-[#1f4e78] p-6 text-white text-right">
               <h3 className="text-xl font-bold">تعديل رمز المحور</h3>
-              <p className="text-blue-100 text-xs mt-1">{editingAxis.name}</p>
+              <p className="text-slate-100 text-xs mt-1">{editingAxis.name}</p>
             </div>
             
             {/* Modal Body */}
@@ -569,7 +569,7 @@ export default function PerformanceTable({
                 type="text" 
                 value={modalInput}
                 onChange={(e) => setModalInput(e.target.value.slice(0, 5))}
-                className="w-full px-4 py-2.5 rounded-xl border border-slate-300 focus:border-blue-600 focus:ring-2 focus:ring-blue-600/20 outline-none text-center font-bold text-lg transition-all"
+                className="w-full px-4 py-2.5 rounded-xl border border-slate-300 focus:border-[#1f4e78] focus:ring-2 focus:ring-[#1f4e78]/20 outline-none text-center font-bold text-lg transition-all"
                 placeholder="أدخل الرمز هنا (مثال: س)"
                 autoFocus
                 onKeyDown={(e) => {
@@ -597,7 +597,7 @@ export default function PerformanceTable({
                   }
                   setEditingAxis(null);
                 }}
-                className="bg-blue-600 hover:bg-blue-700 text-white font-bold px-6 py-2.5 rounded-xl text-sm transition-colors shadow-sm cursor-pointer"
+                className="bg-[#1f4e78] hover:bg-[#153551] text-white font-bold px-6 py-2.5 rounded-xl text-sm transition-colors shadow-sm cursor-pointer"
               >
                 تحديث الرمز
               </button>

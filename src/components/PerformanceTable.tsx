@@ -12,10 +12,11 @@ type Indicator = {
   owner: string;
   annualTarget: number;
   annualAchieved: number;
-  q1Target: number; q1Achieved: number;
-  q2Target: number; q2Achieved: number;
-  q3Target: number; q3Achieved: number;
-  q4Target: number; q4Achieved: number;
+  q1Target: number; q1Achieved: number | null;
+  q2Target: number; q2Achieved: number | null;
+  q3Target: number; q3Achieved: number | null;
+  q4Target: number; q4Achieved: number | null;
+  postponed?: boolean;
 };
 
 type Goal = {
@@ -77,10 +78,21 @@ export default function PerformanceTable({
       return DEFAULT_AXES;
     }
 
-    // Initialize prefix, falling back to new defaults
+    // Initialize prefix, falling back to new defaults and normalise indicators
     return loadedAxes.map(axis => ({
       ...axis,
-      prefix: axis.prefix || getAxisDefaultPrefix(axis.id)
+      prefix: axis.prefix || getAxisDefaultPrefix(axis.id),
+      goals: (axis.goals || []).map(goal => ({
+        ...goal,
+        indicators: (goal.indicators || []).map(ind => ({
+          ...ind,
+          postponed: ind.postponed || false,
+          q1Achieved: ind.q1Achieved === undefined ? null : ind.q1Achieved,
+          q2Achieved: ind.q2Achieved === undefined ? null : ind.q2Achieved,
+          q3Achieved: ind.q3Achieved === undefined ? null : ind.q3Achieved,
+          q4Achieved: ind.q4Achieved === undefined ? null : ind.q4Achieved,
+        }))
+      }))
     }));
   });
 
@@ -142,10 +154,11 @@ export default function PerformanceTable({
                   owner: "",
                   annualTarget: 0,
                   annualAchieved: 0,
-                  q1Target: 0, q1Achieved: 0,
-                  q2Target: 0, q2Achieved: 0,
-                  q3Target: 0, q3Achieved: 0,
-                  q4Target: 0, q4Achieved: 0,
+                  q1Target: 0, q1Achieved: null,
+                  q2Target: 0, q2Achieved: null,
+                  q3Target: 0, q3Achieved: null,
+                  q4Target: 0, q4Achieved: null,
+                  postponed: false,
                 }]
               };
             }
@@ -217,49 +230,107 @@ export default function PerformanceTable({
     }));
   };
 
+  // Helpers
+  const hasData = (val: any) => val !== null && val !== undefined && val !== "";
+
+  const getIndicatorStatus = (ind: Indicator) => {
+    if (ind.postponed) return "مؤجل";
+    const achieved = getQuarterAchieved(ind);
+    if (!hasData(achieved)) return "لا توجد بيانات";
+    const target = getQuarterTarget(ind) || 0;
+    if (Number(achieved) >= target) return "مكتمل";
+    return "جاري";
+  };
+
+  const getStatusBadgeClass = (status: string) => {
+    switch (status) {
+      case "مؤجل":
+        return "bg-amber-50 text-amber-700 border border-amber-200";
+      case "لا توجد بيانات":
+        return "bg-slate-100 text-slate-500 border border-slate-200";
+      case "مكتمل":
+        return "bg-emerald-50 text-emerald-600 border border-emerald-200";
+      case "جاري":
+      default:
+        return "bg-blue-50 text-blue-600 border border-blue-200";
+    }
+  };
+
+  const togglePostponeIndicator = (axisId: string, goalId: string, indId: string) => {
+    setAxes(prev => prev.map(axis => {
+      if (axis.id === axisId) {
+        return {
+          ...axis,
+          goals: axis.goals.map(goal => {
+            if (goal.id === goalId) {
+              return {
+                ...goal,
+                indicators: goal.indicators.map(ind => {
+                  if (ind.id === indId) {
+                    return { ...ind, postponed: !ind.postponed };
+                  }
+                  return ind;
+                })
+              };
+            }
+            return goal;
+          })
+        };
+      }
+      return axis;
+    }));
+  };
+
   // Calculations
   const getQuarterTarget = (ind: Indicator) => ind[`${quarter.toLowerCase()}Target` as keyof Indicator] as number;
-  const getQuarterAchieved = (ind: Indicator) => ind[`${quarter.toLowerCase()}Achieved` as keyof Indicator] as number;
+  const getQuarterAchieved = (ind: Indicator) => ind[`${quarter.toLowerCase()}Achieved` as keyof Indicator] as number | null;
 
-  const calcPercentage = (achieved: number, target: number) => {
-    if (target === 0) return 0;
-    const val = (achieved / target) * 100;
+  const calcPercentage = (achieved: number | null, target: number) => {
+    if (!hasData(achieved)) return 0;
+    if (target === 0) return achieved !== null && achieved >= 0 ? 100 : 0;
+    const val = (Number(achieved) / target) * 100;
     return Math.min(Math.round(val * 10) / 10, 100); // Max 100%
   };
 
   const calcIndicatorPerf = (ind: Indicator) => {
+    if (ind.postponed) return 0;
     return calcPercentage(getQuarterAchieved(ind), getQuarterTarget(ind));
   };
 
   const calcGoalPerf = (goal: Goal) => {
-    if (goal.indicators.length === 0) return 0;
-    const total = goal.indicators.reduce((acc, ind) => acc + calcIndicatorPerf(ind), 0);
-    return Math.round((total / goal.indicators.length) * 10) / 10;
+    const activeIndicators = goal.indicators.filter(ind => !ind.postponed);
+    if (activeIndicators.length === 0) return 0;
+    const total = activeIndicators.reduce((acc, ind) => acc + calcIndicatorPerf(ind), 0);
+    return Math.round((total / activeIndicators.length) * 10) / 10;
   };
 
   const calcAxisPerf = (axis: Axis) => {
-    const goalsWithIndicators = axis.goals.filter(g => g.indicators.length > 0);
-    if (goalsWithIndicators.length === 0) return 0;
-    const total = goalsWithIndicators.reduce((acc, goal) => acc + calcGoalPerf(goal), 0);
-    return Math.round((total / goalsWithIndicators.length) * 10) / 10;
+    const goalsWithActiveIndicators = axis.goals.filter(g => g.indicators.some(ind => !ind.postponed));
+    if (goalsWithActiveIndicators.length === 0) return 0;
+    const total = goalsWithActiveIndicators.reduce((acc, goal) => acc + calcGoalPerf(goal), 0);
+    return Math.round((total / goalsWithActiveIndicators.length) * 10) / 10;
   };
 
   const calcCharityPerf = () => {
-    const axesWithData = axes.filter(a => a.goals.some(g => g.indicators.length > 0));
-    if (axesWithData.length === 0) return 0;
-    const total = axesWithData.reduce((acc, axis) => acc + calcAxisPerf(axis), 0);
-    return Math.round((total / axesWithData.length) * 10) / 10;
+    const axesWithActiveData = axes.filter(a => a.goals.some(g => g.indicators.some(ind => !ind.postponed)));
+    if (axesWithActiveData.length === 0) return 0;
+    const total = axesWithActiveData.reduce((acc, axis) => acc + calcAxisPerf(axis), 0);
+    return Math.round((total / axesWithActiveData.length) * 10) / 10;
   };
 
   // Color logic
-  const getPerfColor = (val: number) => {
+  const getPerfColor = (val: number, hasDataValue = true, isPostponed = false) => {
+    if (isPostponed) return "bg-amber-100 text-amber-700 border border-amber-200";
+    if (!hasDataValue) return "bg-slate-100 text-slate-500 border border-slate-200";
     if (val >= 90) return "bg-[#00b050] text-white"; // Excellent
     if (val >= 70) return "bg-[#92d050] text-slate-800"; // Good
     if (val >= 50) return "bg-[#ffc000] text-slate-800"; // Acceptable
     return "bg-[#ff0000] text-white"; // Weak
   };
 
-  const getClassification = (val: number) => {
+  const getClassification = (val: number, hasDataValue = true, isPostponed = false) => {
+    if (isPostponed) return { text: "مؤجل", icon: "⏸️", color: "text-amber-600" };
+    if (!hasDataValue) return { text: "لا توجد بيانات", icon: "⚪", color: "text-slate-400" };
     if (val >= 90) return { text: "ممتاز", icon: "✅", color: "text-[#00b050]" };
     if (val >= 70) return { text: "جيد", icon: "✓", color: "text-[#92d050]" };
     if (val >= 50) return { text: "مقبول", icon: "⚠️", color: "text-[#ffc000]" };
@@ -281,7 +352,8 @@ export default function PerformanceTable({
               code: gCode,
               indicators: goal.indicators.map((ind, iIdx) => ({
                 ...ind,
-                code: `${gCode}-${iIdx + 1}`
+                code: `${gCode}-${iIdx + 1}`,
+                status: getIndicatorStatus(ind)
               }))
             };
           })
@@ -435,13 +507,13 @@ export default function PerformanceTable({
 
                           const annualPerf = calcPercentage(ind.annualAchieved, ind.annualTarget);
                           const indPerf = calcIndicatorPerf(ind);
-                          const classification = getClassification(indPerf);
+                          const classification = getClassification(indPerf, hasData(getQuarterAchieved(ind)), ind.postponed);
 
                           const targetField = `${quarter.toLowerCase()}Target` as keyof Indicator;
                           const achievedField = `${quarter.toLowerCase()}Achieved` as keyof Indicator;
 
                           return (
-                            <tr key={ind.id} className="border-b border-slate-300 hover:bg-blue-50/50 transition-colors group">
+                            <tr key={ind.id} className={`border-b border-slate-300 transition-colors group ${ind.postponed ? "bg-slate-50/80 text-slate-400 font-medium italic" : "hover:bg-blue-50/50"}`}>
                               {isFirstGoal && (
                                 <td className="border border-slate-300 p-2 bg-[#1f4e78] text-white font-bold align-middle w-12" rowSpan={axisRowSpan}>
                                   <div className="flex flex-col items-center justify-center gap-3 h-full">
@@ -475,29 +547,31 @@ export default function PerformanceTable({
                                 {goalCode}-{indIndex + 1}
                               </td>
                               <td className="border border-slate-300 p-1 text-right whitespace-normal">
-                                <textarea value={ind.name} onChange={e => updateIndicator(axis.id, goal.id, ind.id, "name", e.target.value)} className="w-full h-full min-h-[40px] bg-transparent focus:bg-white border-0 outline-none p-1 resize-none rounded" />
+                                <textarea value={ind.name} disabled={ind.postponed} onChange={e => updateIndicator(axis.id, goal.id, ind.id, "name", e.target.value)} className="w-full h-full min-h-[40px] bg-transparent focus:bg-white border-0 outline-none p-1 resize-none rounded disabled:text-slate-400 disabled:cursor-not-allowed" />
+                              </td>
+                              <td className="border border-slate-300 p-1.5 align-middle">
+                                {(() => {
+                                  const status = getIndicatorStatus(ind);
+                                  return (
+                                    <span className={`px-2.5 py-1 rounded-full text-xs font-bold inline-block shadow-sm ${getStatusBadgeClass(status)}`}>
+                                      {status}
+                                    </span>
+                                  );
+                                })()}
                               </td>
                               <td className="border border-slate-300 p-1">
-                                <select value={ind.status} onChange={e => updateIndicator(axis.id, goal.id, ind.id, "status", e.target.value)} className="w-full bg-transparent border border-slate-200 rounded p-1 text-xs outline-none">
-                                  <option value="جاري">جاري</option>
-                                  <option value="مكتمل">مكتمل</option>
-                                  <option value="متأخر">متأخر</option>
-                                  <option value="لا توجد بيانات">لا توجد بيانات</option>
-                                </select>
-                              </td>
-                              <td className="border border-slate-300 p-1">
-                                <input type="text" value={ind.owner} onChange={e => updateIndicator(axis.id, goal.id, ind.id, "owner", e.target.value)} placeholder="اسم المالك" className="w-full text-center bg-transparent focus:bg-white border-0 outline-none p-1 rounded text-xs" />
+                                <input type="text" value={ind.owner} disabled={ind.postponed} onChange={e => updateIndicator(axis.id, goal.id, ind.id, "owner", e.target.value)} placeholder={ind.postponed ? "مؤجل" : "اسم المالك"} className="w-full text-center bg-transparent focus:bg-white border-0 outline-none p-1 rounded text-xs disabled:text-slate-400 disabled:cursor-not-allowed" />
                               </td>
 
                               {/* Annual Metrics */}
                               <td className="border border-slate-300 p-1 bg-slate-50 font-semibold">
-                                <input type="number" value={ind.annualTarget || ""} onChange={e => updateIndicator(axis.id, goal.id, ind.id, "annualTarget", Number(e.target.value))} className="w-16 text-center bg-transparent focus:bg-white border-b border-transparent focus:border-primary outline-none" />
+                                <input type="number" value={ind.annualTarget ?? ""} disabled={ind.postponed} onChange={e => updateIndicator(axis.id, goal.id, ind.id, "annualTarget", e.target.value === "" ? null : Number(e.target.value))} className="w-16 text-center bg-transparent focus:bg-white border-b border-transparent focus:border-primary outline-none disabled:text-slate-400 disabled:cursor-not-allowed" />
                               </td>
                               <td className="border border-slate-300 p-1 bg-slate-50 font-semibold">
-                                <input type="number" value={ind.annualAchieved || ""} onChange={e => updateIndicator(axis.id, goal.id, ind.id, "annualAchieved", Number(e.target.value))} className="w-16 text-center bg-transparent focus:bg-white border-b border-transparent focus:border-primary outline-none" />
+                                <input type="number" value={ind.annualAchieved ?? ""} disabled={ind.postponed} onChange={e => updateIndicator(axis.id, goal.id, ind.id, "annualAchieved", e.target.value === "" ? null : Number(e.target.value))} className="w-16 text-center bg-transparent focus:bg-white border-b border-transparent focus:border-primary outline-none disabled:text-slate-400 disabled:cursor-not-allowed" />
                               </td>
                               <td className="border border-slate-300 p-2 font-bold text-slate-700 bg-slate-100">
-                                {annualPerf}%
+                                {ind.postponed ? "مؤجل" : `${annualPerf}%`}
                               </td>
 
                               {/* Quarter Metrics & Classification */}
@@ -505,15 +579,15 @@ export default function PerformanceTable({
                                 {classification.icon} {classification.text}
                               </td>
                               <td className="border border-slate-300 p-1 bg-blue-50/30 font-semibold">
-                                <input type="number" value={ind[targetField] || ""} onChange={e => updateIndicator(axis.id, goal.id, ind.id, targetField, Number(e.target.value))} className="w-16 text-center bg-transparent focus:bg-white border-b border-transparent focus:border-primary outline-none" />
+                                <input type="number" value={(ind[targetField] as number | null) ?? ""} disabled={ind.postponed} onChange={e => updateIndicator(axis.id, goal.id, ind.id, targetField, e.target.value === "" ? null : Number(e.target.value))} className="w-16 text-center bg-transparent focus:bg-white border-b border-transparent focus:border-primary outline-none disabled:text-slate-400 disabled:cursor-not-allowed" />
                               </td>
                               <td className="border border-slate-300 p-1 bg-blue-50/30 font-semibold">
-                                <input type="number" value={ind[achievedField] || ""} onChange={e => updateIndicator(axis.id, goal.id, ind.id, achievedField, Number(e.target.value))} className="w-16 text-center bg-transparent focus:bg-white border-b border-transparent focus:border-primary outline-none" />
+                                <input type="number" value={(ind[achievedField] as number | null) ?? ""} disabled={ind.postponed} onChange={e => updateIndicator(axis.id, goal.id, ind.id, achievedField, e.target.value === "" ? null : Number(e.target.value))} className="w-16 text-center bg-transparent focus:bg-white border-b border-transparent focus:border-primary outline-none disabled:text-slate-400 disabled:cursor-not-allowed" />
                               </td>
 
                               {/* Performances */}
-                              <td className={`border border-slate-300 p-2 font-bold ${getPerfColor(indPerf)}`}>
-                                {indPerf}%
+                              <td className={`border border-slate-300 p-2 font-bold ${getPerfColor(indPerf, hasData(getQuarterAchieved(ind)), ind.postponed)}`}>
+                                {ind.postponed ? "مؤجل" : `${indPerf}%`}
                               </td>
 
                               {isFirstInd && (
@@ -535,9 +609,35 @@ export default function PerformanceTable({
                               )}
 
                               <td className="border border-slate-300 p-2">
-                                <button onClick={() => deleteIndicator(axis.id, goal.id, ind.id)} className="text-red-500 hover:text-red-700 bg-red-50 hover:bg-red-100 p-1.5 rounded transition-colors" title="حذف المؤشر">
-                                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path></svg>
-                                </button>
+                                <div className="flex gap-1.5 justify-center items-center">
+                                  <button 
+                                    onClick={() => togglePostponeIndicator(axis.id, goal.id, ind.id)} 
+                                    className={`p-1.5 rounded transition-colors ${
+                                      ind.postponed 
+                                        ? "bg-amber-100 text-amber-700 hover:bg-amber-200" 
+                                        : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                                    }`} 
+                                    title={ind.postponed ? "تنشيط المؤشر" : "تأجيل المؤشر"}
+                                  >
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                      {ind.postponed ? (
+                                        <>
+                                          {/* Play / Activate icon */}
+                                          <polygon points="5 3 19 12 5 21 5 3" fill="currentColor"/>
+                                        </>
+                                      ) : (
+                                        <>
+                                          {/* Pause / Postpone icon */}
+                                          <rect x="6" y="4" width="4" height="16" fill="currentColor"/>
+                                          <rect x="14" y="4" width="4" height="16" fill="currentColor"/>
+                                        </>
+                                      )}
+                                    </svg>
+                                  </button>
+                                  <button onClick={() => deleteIndicator(axis.id, goal.id, ind.id)} className="text-red-500 hover:text-red-700 bg-red-50 hover:bg-red-100 p-1.5 rounded transition-colors" title="حذف المؤشر">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path></svg>
+                                  </button>
+                                </div>
                               </td>
                             </tr>
                           );

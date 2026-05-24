@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useTransition, useEffect } from "react";
 import { savePerformanceMetric } from "@/app/actions/performance";
 import { useRouter } from "next/navigation";
 
@@ -66,6 +66,19 @@ export default function PerformanceTable({
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [isSaving, setIsSaving] = useState(false);
+  const [isFullScreen, setIsFullScreen] = useState(false);
+
+  // Exit fullscreen on Escape key press
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setIsFullScreen(false);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
+
   const [axes, setAxes] = useState<Axis[]>(() => {
     if (!initialData) return DEFAULT_AXES;
     
@@ -389,9 +402,13 @@ export default function PerformanceTable({
   const totalPerf = calcCharityPerf();
 
   return (
-    <div className="space-y-6">
+    <div className={`space-y-6 transition-all duration-300 ${
+      isFullScreen 
+        ? "fixed inset-0 z-[9999] bg-slate-50 p-6 sm:p-8 flex flex-col w-screen h-screen overflow-hidden" 
+        : ""
+    }`}>
       {/* Controls */}
-      <div className="flex flex-col md:flex-row gap-4 justify-between items-center bg-slate-100 p-4 rounded-xl border border-slate-200">
+      <div className="flex flex-col md:flex-row gap-4 justify-between items-center bg-slate-100 p-4 rounded-xl border border-slate-200 shrink-0">
         <div className="flex gap-4">
           <select
             value={year}
@@ -414,17 +431,40 @@ export default function PerformanceTable({
           </select>
         </div>
 
-        <div className="flex items-center gap-4">
+        <div className="flex flex-wrap items-center gap-3">
           <div className="text-sm font-bold bg-white px-4 py-2 rounded-lg border border-slate-200 shadow-sm flex items-center gap-2">
             <span>أداء الجمعية:</span>
             <span className={`px-2 py-0.5 rounded font-black ${getPerfColor(totalPerf)}`}>
               {totalPerf}%
             </span>
           </div>
+
+          <button
+            onClick={() => setIsFullScreen(!isFullScreen)}
+            className="bg-white hover:bg-slate-200 text-slate-700 border border-slate-300 px-4 py-2 rounded-lg font-bold transition-all shadow-sm flex items-center gap-2 cursor-pointer select-none active:scale-[0.98]"
+            title={isFullScreen ? "خروج من وضع ملء الشاشة (Esc)" : "تفعيل وضع ملء الشاشة"}
+          >
+            {isFullScreen ? (
+              <>
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M4 14h6v6m10-6h-6v6M4 10h6V4m10 6h-6V4" />
+                </svg>
+                <span>خروج من ملء الشاشة</span>
+              </>
+            ) : (
+              <>
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3" />
+                </svg>
+                <span>ملء الشاشة</span>
+              </>
+            )}
+          </button>
+
           <button
             onClick={handleSave}
             disabled={isSaving}
-            className="bg-primary hover:bg-primary/90 text-primary-foreground px-6 py-2 rounded-lg font-bold transition-colors shadow-sm disabled:opacity-50"
+            className="bg-primary hover:bg-primary/90 text-primary-foreground px-6 py-2 rounded-lg font-bold transition-all shadow-sm disabled:opacity-50 cursor-pointer select-none active:scale-[0.98]"
           >
             {isSaving ? "جاري الحفظ..." : "حفظ التعديلات"}
           </button>
@@ -432,7 +472,11 @@ export default function PerformanceTable({
       </div>
 
       {/* Table */}
-      <div className="overflow-x-auto w-full border border-slate-300 rounded-xl shadow-sm bg-white pb-[200px]">
+      <div className={`border border-slate-300 rounded-xl shadow-sm bg-white ${
+        isFullScreen 
+          ? "flex-1 overflow-auto w-full pb-[200px]" 
+          : "overflow-x-auto w-full pb-[200px]"
+      }`}>
         <table className="w-full text-center border-collapse text-sm whitespace-nowrap">
           <thead>
             <tr className="bg-[#1f4e78] text-white font-bold text-xs">

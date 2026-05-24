@@ -6,6 +6,14 @@ datasource db {
   provider  = "postgresql"
 }
 
+model Charity {
+  id                String   @id @default(uuid())
+  name              String   @unique
+  establishmentDate String?
+  licenseNumber     String?
+  createdAt         DateTime @default(now())
+}
+
 model SurveyResponse {
   id              String   @id @default(uuid())
   charityName     String

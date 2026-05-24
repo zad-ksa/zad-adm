@@ -125,9 +125,16 @@ export default async function Dashboard() {
   // Sort by latest activity
   charityStats.sort((a, b) => b.latestDate.getTime() - a.latestDate.getTime());
 
+  let overallAverage = 0;
+  const charitiesWithScore = charityStats.filter(c => c.readinessCount > 0);
+  if (charitiesWithScore.length > 0) {
+      overallAverage = Math.round(charitiesWithScore.reduce((acc, curr) => acc + curr.averagePercentage, 0) / charitiesWithScore.length);
+  }
+  const totalSurveys = responses.length + hexagonalResponses.length;
+
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col" dir="rtl">
-      <Header title="لوحة التحكم" />
+    <div className="min-h-screen bg-[#1a1d21] flex flex-col text-slate-200" dir="rtl">
+      <Header title="لوحة التحكم" isDark={true} />
       
       <div className="flex-1 flex max-w-[1600px] w-full mx-auto px-4 py-8 gap-8">
         {/* Company Sidebar Component */}
@@ -136,38 +143,94 @@ export default async function Dashboard() {
         <main className="flex-1 min-w-0">
           <div className="mb-8 flex flex-col xl:flex-row justify-between items-start xl:items-end gap-6">
             <div>
-              <h1 className="text-3xl font-bold text-slate-800 mb-2">لوحة تحكم زاد التنموية</h1>
-              <p className="text-slate-600">قائمة بالجمعيات التي المتعاقد معها وإحصائيات الاستبيانات</p>
+              <h1 className="text-3xl font-bold text-white mb-2">لوحة تحكم زاد التنموية</h1>
+              <p className="text-slate-400">نظرة عامة على الجمعيات وإحصائيات الاستبيانات</p>
             </div>
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
               <CopyLinkButton />
               <CopyLinkButton path="/hexagonal" label="رابط التحليل السداسي" />
-              <div className="bg-white px-5 py-2.5 rounded-xl shadow-sm border border-slate-200 flex items-center justify-center gap-2 text-sm">
-                <span className="font-semibold text-slate-700">إجمالي الجمعيات: </span>
-                <span className="text-primary font-extrabold text-lg">{charities.length}</span>
+            </div>
+          </div>
+
+          {/* Top Metrics Cards */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+            <div className="bg-[#212529] p-6 rounded-2xl border border-[#32383e] shadow-sm flex flex-col justify-between relative overflow-hidden group">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-primary/10 rounded-full blur-3xl -mr-10 -mt-10 transition-transform group-hover:scale-110"></div>
+              <div className="flex justify-between items-start mb-4 relative z-10">
+                <div>
+                  <p className="text-slate-400 text-sm font-semibold mb-1">إجمالي الجمعيات</p>
+                  <h3 className="text-3xl font-bold text-white">{charities.length}</h3>
+                </div>
+                <div className="w-12 h-12 rounded-xl bg-primary/20 flex items-center justify-center text-primary-300 text-2xl shadow-inner border border-primary/20">
+                  🏢
+                </div>
               </div>
+              <div className="text-xs text-slate-500 relative z-10"><span className="text-primary-400">مسجلة</span> في النظام</div>
+            </div>
+
+            <div className="bg-[#212529] p-6 rounded-2xl border border-[#32383e] shadow-sm flex flex-col justify-between relative overflow-hidden group">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-secondary/10 rounded-full blur-3xl -mr-10 -mt-10 transition-transform group-hover:scale-110"></div>
+              <div className="flex justify-between items-start mb-4 relative z-10">
+                <div>
+                  <p className="text-slate-400 text-sm font-semibold mb-1">إجمالي الاستبيانات</p>
+                  <h3 className="text-3xl font-bold text-white">{totalSurveys}</h3>
+                </div>
+                <div className="w-12 h-12 rounded-xl bg-secondary/20 flex items-center justify-center text-secondary-foreground text-2xl shadow-inner border border-secondary/20">
+                  📄
+                </div>
+              </div>
+              <div className="text-xs text-slate-500 relative z-10">جاهزية وتحليل سداسي</div>
+            </div>
+
+            <div className="bg-[#212529] p-6 rounded-2xl border border-[#32383e] shadow-sm flex flex-col justify-between relative overflow-hidden group">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-amber-500/10 rounded-full blur-3xl -mr-10 -mt-10 transition-transform group-hover:scale-110"></div>
+              <div className="flex justify-between items-start mb-4 relative z-10">
+                <div>
+                  <p className="text-slate-400 text-sm font-semibold mb-1">الاستبيانات المعلقة</p>
+                  <h3 className="text-3xl font-bold text-white">{pendingCharitiesList.length}</h3>
+                </div>
+                <div className="w-12 h-12 rounded-xl bg-amber-500/20 flex items-center justify-center text-amber-500 text-2xl shadow-inner border border-amber-500/20">
+                  ⏳
+                </div>
+              </div>
+              <div className="text-xs text-slate-500 relative z-10">بانتظار الاعتماد</div>
+            </div>
+
+            <div className="bg-[#212529] p-6 rounded-2xl border border-[#32383e] shadow-sm flex flex-col justify-between relative overflow-hidden group">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-green-500/10 rounded-full blur-3xl -mr-10 -mt-10 transition-transform group-hover:scale-110"></div>
+              <div className="flex justify-between items-start mb-4 relative z-10">
+                <div>
+                  <p className="text-slate-400 text-sm font-semibold mb-1">متوسط الجاهزية</p>
+                  <h3 className="text-3xl font-bold text-white">{overallAverage}%</h3>
+                </div>
+                <div className="w-12 h-12 rounded-xl bg-green-500/20 flex items-center justify-center text-green-400 text-2xl shadow-inner border border-green-500/20">
+                  📈
+                </div>
+              </div>
+              <div className="text-xs text-slate-500 relative z-10">لجميع الجمعيات المقيمة</div>
             </div>
           </div>
 
           {/* Pending Submissions Section */}
           {pendingCharitiesList.length > 0 && (
-            <div className="mb-8 bg-amber-50/40 rounded-3xl p-6 border border-amber-200 shadow-sm">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
+            <div className="mb-8 bg-amber-900/20 rounded-3xl p-6 border border-amber-700/30 shadow-sm relative overflow-hidden">
+              <div className="absolute left-0 top-0 w-1 bg-amber-500 h-full"></div>
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-5">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-amber-100 rounded-xl flex items-center justify-center text-amber-700 text-xl font-bold shadow-sm">
+                  <div className="w-10 h-10 bg-amber-500/20 rounded-xl flex items-center justify-center text-amber-500 text-xl font-bold shadow-sm border border-amber-500/20">
                     ⚠️
                   </div>
                   <div>
-                    <h2 className="text-lg font-bold text-amber-900">استبيانات معلقة من جمعيات غير مسجلة</h2>
-                    <p className="text-xs text-amber-600 mt-0.5">هناك استبيانات مرسلة من جمعيات غير مضافة لقائمة الجمعيات المتعاقد معها. يمكنك تفعيلها لإدراجها تلقائياً.</p>
+                    <h2 className="text-lg font-bold text-amber-500">استبيانات معلقة من جمعيات غير مسجلة</h2>
+                    <p className="text-xs text-amber-400/80 mt-0.5">هناك استبيانات مرسلة من جمعيات غير مضافة لقائمة الجمعيات المتعاقد معها. يمكنك تفعيلها لإدراجها تلقائياً.</p>
                   </div>
                 </div>
               </div>
-              <div className="bg-white rounded-2xl border border-amber-200/60 overflow-hidden shadow-sm">
+              <div className="bg-[#1a1d21] rounded-2xl border border-amber-700/30 overflow-hidden shadow-sm">
                 <div className="overflow-x-auto">
                   <table className="w-full text-right border-collapse whitespace-nowrap text-xs">
                     <thead>
-                      <tr className="bg-amber-50/80 border-b border-amber-100 text-amber-800 font-bold">
+                      <tr className="bg-[#212529] border-b border-[#32383e] text-slate-300 font-bold">
                         <th className="p-4 font-bold text-right">اسم الجمعية المعلقة</th>
                         <th className="p-4 text-center font-bold">مقياس الجاهزية</th>
                         <th className="p-4 text-center font-bold">التحليل السداسي</th>
@@ -177,30 +240,30 @@ export default async function Dashboard() {
                         <th className="p-4 text-center font-bold">الإجراء</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-amber-100/30 text-slate-700">
+                    <tbody className="divide-y divide-[#32383e] text-slate-300">
                       {pendingCharitiesList.map((pending) => (
-                        <tr key={pending.name} className="hover:bg-amber-50/10 transition-colors">
-                          <td className="p-4 font-bold text-slate-800 text-sm">{pending.name}</td>
+                        <tr key={pending.name} className="hover:bg-amber-500/5 transition-colors">
+                          <td className="p-4 font-bold text-white text-sm">{pending.name}</td>
                           <td className="p-4 text-center font-bold">
                             {pending.readinessCount > 0 ? (
-                              <span className="inline-block bg-amber-100 text-amber-800 px-3 py-1 rounded-full">
+                              <span className="inline-block bg-amber-500/20 border border-amber-500/30 text-amber-400 px-3 py-1 rounded-full">
                                 {pending.readinessCount} استبيان
                               </span>
                             ) : (
-                              <span className="text-slate-400 text-xs">-</span>
+                              <span className="text-slate-600 text-xs">-</span>
                             )}
                           </td>
                           <td className="p-4 text-center font-bold">
                             {pending.hexagonalCount > 0 ? (
-                              <span className="inline-block bg-amber-100 text-amber-800 px-3 py-1 rounded-full">
+                              <span className="inline-block bg-amber-500/20 border border-amber-500/30 text-amber-400 px-3 py-1 rounded-full">
                                 {pending.hexagonalCount} استبيان
                               </span>
                             ) : (
-                              <span className="text-slate-400 text-xs">-</span>
+                              <span className="text-slate-600 text-xs">-</span>
                             )}
                           </td>
-                          <td className="p-4 text-slate-600">{pending.establishmentDate || "-"}</td>
-                          <td className="p-4 text-slate-600">{pending.licenseNumber || "-"}</td>
+                          <td className="p-4 text-slate-400">{pending.establishmentDate || "-"}</td>
+                          <td className="p-4 text-slate-400">{pending.licenseNumber || "-"}</td>
                           <td className="p-4 text-slate-500">
                             {new Date(pending.latestDate).toLocaleDateString("ar-SA", {
                               year: "numeric",
@@ -224,11 +287,14 @@ export default async function Dashboard() {
             </div>
           )}
 
-          <div className="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden">
+          <div className="bg-[#212529] rounded-3xl shadow-sm border border-[#32383e] overflow-hidden">
+            <div className="p-5 border-b border-[#32383e] flex justify-between items-center">
+              <h2 className="text-lg font-bold text-white">الجمعيات المتعاقد معها</h2>
+            </div>
             <div className="overflow-x-auto">
               <table className="w-full text-right border-collapse whitespace-nowrap">
                 <thead>
-                  <tr className="bg-slate-50 border-b border-slate-200 text-slate-600 text-sm">
+                  <tr className="bg-[#1a1d21] border-b border-[#32383e] text-slate-400 text-sm">
                     <th className="p-5 font-semibold">اسم الجمعية</th>
                     <th className="p-5 font-semibold text-center">الاستبيانات</th>
                     <th className="p-5 font-semibold text-center">التحليل السداسي</th>
@@ -238,35 +304,35 @@ export default async function Dashboard() {
                     <th className="p-5 font-semibold text-center">متوسط الجاهزية</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100">
+                <tbody className="divide-y divide-[#32383e]">
                   {charityStats.map((charity) => (
-                    <tr key={charity.id} className="hover:bg-slate-50 transition-colors">
-                      <td className="p-5 font-bold text-primary hover:underline">
+                    <tr key={charity.id} className="hover:bg-[#1a1d21]/50 transition-colors">
+                      <td className="p-5 font-bold text-primary-400 hover:text-primary-300 hover:underline">
                         <Link href={`/dashboard/charity/${encodeURIComponent(charity.name)}`}>
                           {charity.name}
                         </Link>
                       </td>
-                      <td className="p-5 text-slate-600 text-center font-bold">
+                      <td className="p-5 text-slate-300 text-center font-bold">
                         {charity.readinessCount > 0 ? (
-                          <span className="inline-block bg-primary/10 text-primary px-3 py-1 rounded-full text-xs">
+                          <span className="inline-block bg-primary/20 border border-primary/30 text-primary-300 px-3 py-1 rounded-full text-xs">
                             {charity.readinessCount}
                           </span>
                         ) : (
-                          <span className="text-slate-400 text-xs">-</span>
+                          <span className="text-slate-600 text-xs">-</span>
                         )}
                       </td>
-                      <td className="p-5 text-slate-600 text-center font-bold">
+                      <td className="p-5 text-slate-300 text-center font-bold">
                         {charity.hexagonalCount > 0 ? (
-                          <span className="inline-block bg-secondary/15 text-secondary-foreground px-3 py-1 rounded-full text-xs">
+                          <span className="inline-block bg-secondary/20 border border-secondary/30 text-secondary-foreground px-3 py-1 rounded-full text-xs">
                             {charity.hexagonalCount}
                           </span>
                         ) : (
-                          <span className="text-slate-400 text-xs">-</span>
+                          <span className="text-slate-600 text-xs">-</span>
                         )}
                       </td>
-                      <td className="p-5 text-slate-600">{charity.establishmentDate || "-"}</td>
-                      <td className="p-5 text-slate-600">{charity.licenseNumber || "-"}</td>
-                      <td className="p-5 text-slate-600 text-sm">
+                      <td className="p-5 text-slate-400">{charity.establishmentDate || "-"}</td>
+                      <td className="p-5 text-slate-400">{charity.licenseNumber || "-"}</td>
+                      <td className="p-5 text-slate-500 text-sm">
                         {new Date(charity.latestDate).toLocaleDateString("ar-SA", {
                           year: "numeric",
                           month: "short",
@@ -276,19 +342,19 @@ export default async function Dashboard() {
                       <td className="p-5 text-center">
                         {charity.readinessCount > 0 ? (
                           <div className="flex items-center justify-center">
-                            <div className={`px-4 py-1.5 rounded-full text-sm font-bold flex items-center justify-center
+                            <div className={`px-4 py-1.5 rounded-full text-sm font-bold flex items-center justify-center border
                               ${
-                                charity.averagePercentage >= 80 ? "bg-green-100 text-green-700" :
-                                charity.averagePercentage >= 60 ? "bg-blue-100 text-blue-700" :
-                                charity.averagePercentage >= 40 ? "bg-orange-100 text-orange-700" :
-                                "bg-red-100 text-red-700"
+                                charity.averagePercentage >= 80 ? "bg-green-500/20 text-green-400 border-green-500/30" :
+                                charity.averagePercentage >= 60 ? "bg-blue-500/20 text-blue-400 border-blue-500/30" :
+                                charity.averagePercentage >= 40 ? "bg-orange-500/20 text-orange-400 border-orange-500/30" :
+                                "bg-red-500/20 text-red-400 border-red-500/30"
                               }
                             `}>
                               {charity.averagePercentage}%
                             </div>
                           </div>
                         ) : (
-                          <span className="text-slate-400 text-xs">لا يوجد مقياس</span>
+                          <span className="text-slate-600 text-xs">لا يوجد مقياس</span>
                         )}
                       </td>
                     </tr>
@@ -297,7 +363,7 @@ export default async function Dashboard() {
                     <tr>
                       <td colSpan={7} className="p-12 text-center text-slate-500">
                         <div className="text-4xl mb-4">🏢</div>
-                        <h3 className="text-lg font-bold text-slate-700 mb-2">لا توجد جمعيات مضافة</h3>
+                        <h3 className="text-lg font-bold text-slate-300 mb-2">لا توجد جمعيات مضافة</h3>
                         <p>استخدم زر "إضافة جمعية جديدة" من القائمة الجانبية للبدء.</p>
                       </td>
                     </tr>

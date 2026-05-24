@@ -13,8 +13,8 @@ export default async function CharityLayout({
   const decodedName = decodeURIComponent(name);
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col" dir="rtl">
-      <Header title={decodedName} />
+    <div className="min-h-screen bg-[#1a1d21] flex flex-col text-slate-200" dir="rtl">
+      <Header title={decodedName} isDark={true} />
 
       <div className="flex-1 flex max-w-7xl mx-auto w-full px-4 py-8 gap-6">
         <CharitySidebar charityName={decodedName} />

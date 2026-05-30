@@ -132,7 +132,7 @@ export default function PerformanceTable({
   // Update URL params
   const handlePeriodChange = (newYear: number, newQuarter: string) => {
     startTransition(() => {
-      router.push(`/dashboard/charity/${encodeURIComponent(charityName)}/performance?year=${newYear}&quarter=${newQuarter}`);
+      router.push(`/dashboard/charity/${encodeURIComponent(charityName)}/strategy/performance?year=${newYear}&quarter=${newQuarter}`);
     });
   };
 

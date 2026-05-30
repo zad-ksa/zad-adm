@@ -40,7 +40,7 @@ export async function savePerformanceMetric(charityName: string, year: number, d
       },
     });
 
-    revalidatePath(`/dashboard/charity/${encodeURIComponent(charityName)}/performance`);
+    revalidatePath(`/dashboard/charity/${encodeURIComponent(charityName)}/strategy/performance`);
     return { success: true, metric };
   } catch (error: any) {
     console.error("Error saving performance metric:", error);

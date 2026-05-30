@@ -42,6 +42,7 @@ export default async function CharityPerformancePage({ params, searchParams }: {
       </p>
       
       <PerformanceTable 
+        key={`${decodedName}-${year}`}
         charityName={decodedName} 
         year={year} 
         quarter={quarter}

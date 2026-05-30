@@ -638,8 +638,8 @@ export default function PerformanceTable({
                                 ${isNewGoalRow ? "border-t-2 border-t-slate-200" : ""}
                                 ${ind.postponed
                                   ? "bg-slate-50/80 text-slate-400 font-medium opacity-80"
-                                  : indIndex % 2 !== 0
-                                    ? "bg-slate-50/60 hover:bg-slate-100"
+                                  : isOddGoal
+                                    ? "bg-slate-100/70 hover:bg-slate-200/50"
                                     : "bg-white hover:bg-slate-50"
                                 }
                               `}
@@ -661,13 +661,13 @@ export default function PerformanceTable({
                                   <td
                                     onClick={() => handleAxisPrefixClick(axis.id, axis.name, aPrefix)}
                                     title="انقر لتعديل رمز المحور"
-                                    className="border-l border-slate-100 p-2 font-bold text-slate-500 bg-slate-50/80 text-center w-[80px] cursor-pointer select-none hover:bg-slate-100 transition-colors text-sm"
+                                    className={`border-l border-slate-100 p-2 font-bold text-slate-500 text-center w-[80px] cursor-pointer select-none hover:bg-slate-100/50 transition-colors text-sm ${isOddGoal ? "bg-slate-100/70" : "bg-white"}`}
                                     rowSpan={goalRowSpan}
                                   >
                                     <div className="bg-white border border-slate-200 rounded px-2 py-1 inline-block shadow-sm group-hover:border-primary/30 transition-colors">{goalCode}</div>
                                   </td>
-                                  <td className="border-l border-slate-100 p-3 bg-white font-bold text-slate-700 text-right leading-tight max-w-[200px] whitespace-normal" rowSpan={goalRowSpan}>
-                                    <textarea value={goal.name} onChange={e => updateGoal(axis.id, goal.id, "name", e.target.value)} className="w-full h-full min-h-[60px] bg-slate-50 hover:bg-slate-100 focus:bg-white border border-transparent focus:border-primary/30 rounded-lg outline-none p-3 resize-none transition-all" />
+                                  <td className={`border-l border-slate-100 p-3 font-bold text-slate-700 text-right leading-tight max-w-[200px] whitespace-normal ${isOddGoal ? "bg-slate-100/70" : "bg-white"}`} rowSpan={goalRowSpan}>
+                                    <textarea value={goal.name} onChange={e => updateGoal(axis.id, goal.id, "name", e.target.value)} className="w-full h-full min-h-[60px] bg-transparent hover:bg-white/50 focus:bg-white border border-transparent focus:border-primary/30 rounded-lg outline-none p-3 resize-none transition-all" />
                                     <div className="mt-2 text-center">
                                       <button onClick={() => addIndicator(axis.id, goal.id)} className="text-[11px] font-bold text-primary bg-primary/10 px-3 py-1.5 rounded-lg hover:bg-primary/20 transition-colors inline-flex items-center gap-1">
                                         <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
@@ -728,7 +728,7 @@ export default function PerformanceTable({
                               </td>
 
                               {isFirstInd && (
-                                <td className="border-l border-slate-100 p-2" rowSpan={goalRowSpan}>
+                                <td className={`border-l border-slate-100 p-2 ${isOddGoal ? "bg-slate-100/70" : "bg-white"}`} rowSpan={goalRowSpan}>
                                   <span className={`px-3 py-2 rounded-lg font-black text-sm block border ${getPerfColor(gPerf)} border-transparent`}>
                                     {gPerf}%
                                   </span>

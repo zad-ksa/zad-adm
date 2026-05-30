@@ -539,85 +539,92 @@ export default function PerformanceTable({
             </tr>
           </thead>
           <tbody>
-            {axes.map((axis, axisIndex) => {
-              const axisRowSpan = Math.max(1, axis.goals.reduce((acc, g) => acc + Math.max(1, g.indicators.length), 0));
-              const aPerf = calcAxisPerf(axis);
-              const aPrefix = axis.prefix || getAxisDefaultPrefix(axis.id);
+            {(() => {
+              let globalGoalIndex = 0;
+              return axes.map((axis, axisIndex) => {
+                const axisRowSpan = Math.max(1, axis.goals.reduce((acc, g) => acc + Math.max(1, g.indicators.length), 0));
+                const aPerf = calcAxisPerf(axis);
+                const aPrefix = axis.prefix || getAxisDefaultPrefix(axis.id);
 
-              return (
-                <>
-                  {axis.goals.length === 0 ? (
-                    <tr key={axis.id} className="border-b border-slate-100 hover:bg-slate-50/50 transition-colors">
-                      <td className="border-l border-slate-100 p-2 bg-primary text-white font-bold align-middle w-12" rowSpan={1}>
-                        <div className="flex flex-col items-center gap-3 py-4">
-                          <span className="text-center font-bold tracking-wider leading-loose" style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}>{axis.name}</span>
-                          <span className="text-[10px] text-white/90 font-bold bg-white/20 px-2 py-0.5 rounded-md mt-1 shadow-sm">الرمز: {aPrefix}</span>
-                          <button onClick={() => addGoal(axis.id)} className="bg-white/20 hover:bg-white/30 text-white text-xs w-8 h-8 rounded-lg mt-2 flex items-center justify-center transition-colors">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-                          </button>
-                        </div>
-                      </td>
-                      <td colSpan={17} className="p-8 text-slate-400 bg-slate-50/30">
-                        <div className="flex flex-col items-center justify-center gap-3">
-                          <div className="text-3xl opacity-30">🎯</div>
-                          <p>لا توجد أهداف في هذا المحور. أضف هدفاً للبدء.</p>
-                          <button onClick={() => addGoal(axis.id)} className="mt-2 bg-white border border-slate-200 text-slate-700 hover:text-primary hover:border-primary/30 px-4 py-2 rounded-lg font-bold text-sm shadow-sm transition-all flex items-center gap-2">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-                            إضافة هدف
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ) : null}
+                return (
+                  <>
+                    {axis.goals.length === 0 ? (
+                      <tr key={axis.id} className="border-b border-slate-100 hover:bg-slate-50/50 transition-colors">
+                        <td className="border-l border-slate-100 p-2 bg-primary text-white font-bold align-middle w-12" rowSpan={1}>
+                          <div className="flex flex-col items-center gap-3 py-4">
+                            <span className="text-center font-bold tracking-wider leading-loose" style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}>{axis.name}</span>
+                            <span className="text-[10px] text-white/90 font-bold bg-white/20 px-2 py-0.5 rounded-md mt-1 shadow-sm">الرمز: {aPrefix}</span>
+                            <button onClick={() => addGoal(axis.id)} className="bg-white/20 hover:bg-white/30 text-white text-xs w-8 h-8 rounded-lg mt-2 flex items-center justify-center transition-colors">
+                              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                            </button>
+                          </div>
+                        </td>
+                        <td colSpan={17} className="p-8 text-slate-400 bg-slate-50/30">
+                          <div className="flex flex-col items-center justify-center gap-3">
+                            <div className="text-3xl opacity-30">🎯</div>
+                            <p>لا توجد أهداف في هذا المحور. أضف هدفاً للبدء.</p>
+                            <button onClick={() => addGoal(axis.id)} className="mt-2 bg-white border border-slate-200 text-slate-700 hover:text-primary hover:border-primary/30 px-4 py-2 rounded-lg font-bold text-sm shadow-sm transition-all flex items-center gap-2">
+                              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                              إضافة هدف
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ) : null}
 
-                  {axis.goals.map((goal, goalIndex) => {
-                    const goalRowSpan = Math.max(1, goal.indicators.length);
-                    const gPerf = calcGoalPerf(goal);
-                    const goalCode = `${aPrefix}-${goalIndex + 1}`;
+                    {axis.goals.map((goal, goalIndex) => {
+                      const goalRowSpan = Math.max(1, goal.indicators.length);
+                      const gPerf = calcGoalPerf(goal);
+                      const goalCode = `${aPrefix}-${goalIndex + 1}`;
+                      const currentGoalIndex = globalGoalIndex++;
+                      const isOddGoal = currentGoalIndex % 2 !== 0;
 
-                    return (
-                      <>
-                        {goal.indicators.length === 0 ? (
-                          <tr
-                            key={goal.id}
-                            className={`border-b border-slate-100 transition-colors group
-                              ${goalIndex > 0 ? "border-t-2 border-t-slate-200" : ""}
-                              ${goalIndex % 2 !== 0 ? "bg-slate-50/50 hover:bg-slate-50" : "bg-white hover:bg-slate-50"}
-                            `}
-                          >
-                            {goalIndex === 0 && (
-                              <td className="border-l border-slate-100 p-2 bg-primary text-white font-bold align-middle w-12" rowSpan={axisRowSpan}>
-                                <div className="flex flex-col items-center justify-center gap-3 h-full min-h-[150px] py-4">
-                                  <span className="text-center font-bold tracking-wider leading-loose" style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}>{axis.name}</span>
-                                  <span className="text-[10px] text-white/90 font-bold bg-white/20 px-2 py-0.5 rounded-md mt-1 shadow-sm">الرمز: {aPrefix}</span>
-                                  <button onClick={() => addGoal(axis.id)} title="إضافة هدف" className="bg-white/20 hover:bg-white/30 text-white text-xs w-8 h-8 rounded-lg mt-2 flex items-center justify-center transition-colors">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-                                  </button>
-                                </div>
-                              </td>
-                            )}
-                            <td
-                              onClick={() => handleAxisPrefixClick(axis.id, axis.name, aPrefix)}
-                              title="انقر لتعديل رمز المحور"
-                              className="border-l border-slate-100 p-3 font-bold text-slate-500 bg-slate-50/80 w-[80px] cursor-pointer select-none hover:bg-slate-100 transition-colors text-center text-sm"
+                      return (
+                        <>
+                          {goal.indicators.length === 0 ? (
+                            <tr
+                              key={goal.id}
+                              className={`border-b border-slate-100 transition-colors group
+                                ${goalIndex > 0 ? "border-t-2 border-t-slate-200" : ""}
+                                ${isOddGoal 
+                                  ? "bg-slate-100/70 hover:bg-slate-200/50" 
+                                  : "bg-white hover:bg-slate-50"
+                                }
+                              `}
                             >
-                              <div className="bg-white border border-slate-200 rounded px-2 py-1 inline-block shadow-sm group-hover:border-primary/30 transition-colors">{goalCode}</div>
-                            </td>
-                            <td className="border-l border-slate-100 p-2 bg-white font-bold text-slate-700 text-right">
-                              <input type="text" value={goal.name} onChange={e => updateGoal(axis.id, goal.id, "name", e.target.value)} className="w-full bg-slate-50 hover:bg-slate-100 focus:bg-white border border-transparent focus:border-primary/30 rounded-lg outline-none px-3 py-2 transition-all" />
-                            </td>
-                            <td colSpan={15} className="p-4 text-slate-400">
-                              <button onClick={() => addIndicator(axis.id, goal.id)} className="bg-slate-50 hover:bg-slate-100 text-slate-600 border border-slate-200 hover:border-slate-300 px-4 py-2 rounded-lg text-xs font-bold transition-all shadow-sm flex items-center gap-1.5 mx-auto">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-                                إضافة مؤشر
-                              </button>
-                            </td>
-                          </tr>
-                        ) : null}
+                              {goalIndex === 0 && (
+                                <td className="border-l border-slate-100 p-2 bg-primary text-white font-bold align-middle w-12" rowSpan={axisRowSpan}>
+                                  <div className="flex flex-col items-center justify-center gap-3 h-full min-h-[150px] py-4">
+                                    <span className="text-center font-bold tracking-wider leading-loose" style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}>{axis.name}</span>
+                                    <span className="text-[10px] text-white/90 font-bold bg-white/20 px-2 py-0.5 rounded-md mt-1 shadow-sm">الرمز: {aPrefix}</span>
+                                    <button onClick={() => addGoal(axis.id)} title="إضافة هدف" className="bg-white/20 hover:bg-white/30 text-white text-xs w-8 h-8 rounded-lg mt-2 flex items-center justify-center transition-colors">
+                                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                                    </button>
+                                  </div>
+                                </td>
+                              )}
+                              <td
+                                onClick={() => handleAxisPrefixClick(axis.id, axis.name, aPrefix)}
+                                title="انقر لتعديل رمز المحور"
+                                className={`border-l border-slate-100 p-3 font-bold text-slate-500 w-[80px] cursor-pointer select-none hover:bg-slate-100/50 transition-colors text-center text-sm ${isOddGoal ? "bg-slate-100/70" : "bg-white"}`}
+                              >
+                                <div className="bg-white border border-slate-200 rounded px-2 py-1 inline-block shadow-sm group-hover:border-primary/30 transition-colors">{goalCode}</div>
+                              </td>
+                              <td className={`border-l border-slate-100 p-2 font-bold text-slate-700 text-right ${isOddGoal ? "bg-slate-100/70" : "bg-white"}`}>
+                                <input type="text" value={goal.name} onChange={e => updateGoal(axis.id, goal.id, "name", e.target.value)} className="w-full bg-transparent hover:bg-white/50 focus:bg-white border border-transparent focus:border-primary/30 rounded-lg outline-none px-3 py-2 transition-all" />
+                              </td>
+                              <td colSpan={15} className="p-4 text-slate-400">
+                                <button onClick={() => addIndicator(axis.id, goal.id)} className="bg-slate-50 hover:bg-slate-100 text-slate-600 border border-slate-200 hover:border-slate-300 px-4 py-2 rounded-lg text-xs font-bold transition-all shadow-sm flex items-center gap-1.5 mx-auto">
+                                  <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                                  إضافة مؤشر
+                                </button>
+                              </td>
+                            </tr>
+                          ) : null}
 
-                        {goal.indicators.map((ind, indIndex) => {
-                          const isFirstInd = indIndex === 0;
-                          const isFirstGoal = goalIndex === 0 && isFirstInd;
+                          {goal.indicators.map((ind, indIndex) => {
+                            const isFirstInd = indIndex === 0;
+                            const isFirstGoal = goalIndex === 0 && isFirstInd;
 
                           const annualTarget = getAnnualTargetValue(ind);
                           const annualAchieved = getAnnualAchievedValue(ind);
@@ -628,7 +635,6 @@ export default function PerformanceTable({
                           const targetField = `${quarter.toLowerCase()}Target` as keyof Indicator;
                           const achievedField = `${quarter.toLowerCase()}Achieved` as keyof Indicator;
 
-                          const isOddGoal = goalIndex % 2 !== 0;
                           const isNewGoalRow = isFirstInd && !isFirstGoal;
 
                           return (
@@ -790,7 +796,8 @@ export default function PerformanceTable({
                   })}
                 </>
               );
-            })}
+            });
+          })()}
           </tbody>
         </table>
       </div>

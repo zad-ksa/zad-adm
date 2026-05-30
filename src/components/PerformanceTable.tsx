@@ -269,14 +269,14 @@ export default function PerformanceTable({
   const getStatusBadgeClass = (status: string) => {
     switch (status) {
       case "مؤجل":
-        return "bg-amber-50 text-amber-700 border border-amber-200";
+        return "bg-amber-50 text-amber-600 border border-amber-100";
       case "لا توجد بيانات":
-        return "bg-slate-100 text-slate-500 border border-slate-200";
+        return "bg-slate-50 text-slate-500 border border-slate-100";
       case "مكتمل":
-        return "bg-emerald-50 text-emerald-600 border border-emerald-200";
+        return "bg-[#00b050]/10 text-[#00b050] border-[#00b050]/20";
       case "جاري":
       default:
-        return "bg-blue-50 text-blue-600 border border-blue-200";
+        return "bg-primary/10 text-primary border-primary/20";
     }
   };
 
@@ -344,20 +344,20 @@ export default function PerformanceTable({
 
   // Color logic
   const getPerfColor = (val: number, hasDataValue = true, isPostponed = false) => {
-    if (isPostponed) return "bg-amber-100 text-amber-700 border border-amber-200";
-    if (!hasDataValue) return "bg-slate-100 text-slate-500 border border-slate-200";
-    if (val >= 90) return "bg-[#00b050] text-white"; // Excellent
-    if (val >= 70) return "bg-[#92d050] text-slate-800"; // Good
-    if (val >= 50) return "bg-[#ffc000] text-slate-800"; // Acceptable
-    return "bg-[#ff0000] text-white"; // Weak
+    if (isPostponed) return "bg-amber-50 text-amber-600";
+    if (!hasDataValue) return "bg-slate-50 text-slate-400";
+    if (val >= 90) return "bg-[#00b050]/10 text-[#00b050]"; // Excellent
+    if (val >= 70) return "bg-[#92d050]/10 text-[#71a638]"; // Good
+    if (val >= 50) return "bg-[#ffc000]/10 text-[#c29300]"; // Acceptable
+    return "bg-[#ff0000]/10 text-[#ff0000]"; // Weak
   };
 
   const getClassification = (val: number, hasDataValue = true, isPostponed = false) => {
-    if (isPostponed) return { text: "مؤجل", icon: "⏸️", color: "text-amber-600" };
+    if (isPostponed) return { text: "مؤجل", icon: "⏸️", color: "text-amber-500" };
     if (!hasDataValue) return { text: "لا توجد بيانات", icon: "⚪", color: "text-slate-400" };
     if (val >= 90) return { text: "ممتاز", icon: "✅", color: "text-[#00b050]" };
-    if (val >= 70) return { text: "جيد", icon: "✓", color: "text-[#92d050]" };
-    if (val >= 50) return { text: "مقبول", icon: "⚠️", color: "text-[#ffc000]" };
+    if (val >= 70) return { text: "جيد", icon: "✓", color: "text-[#71a638]" };
+    if (val >= 50) return { text: "مقبول", icon: "⚠️", color: "text-[#c29300]" };
     return { text: "ضعيف", icon: "❌", color: "text-[#ff0000]" };
   };
 
@@ -407,12 +407,12 @@ export default function PerformanceTable({
         : ""
       }`}>
       {/* Controls */}
-      <div className="flex flex-col md:flex-row gap-4 justify-between items-center bg-slate-100 p-4 rounded-xl border border-slate-200 shrink-0">
+      <div className="flex flex-col md:flex-row gap-4 justify-between items-center bg-white p-4 rounded-xl border border-slate-100 shadow-sm shrink-0">
         <div className="flex gap-4">
           <select
             value={year}
             onChange={(e) => handlePeriodChange(parseInt(e.target.value), quarter)}
-            className="px-4 py-2 rounded-lg border border-slate-300 font-bold bg-white"
+            className="px-4 py-2.5 rounded-xl border border-slate-100 font-bold bg-slate-50 text-slate-700 outline-none focus:ring-2 focus:ring-primary/20 transition-all hover:bg-slate-100 cursor-pointer"
           >
             {[2023, 2024, 2025, 2026, 2027].map(y => (
               <option key={y} value={y}>{y}</option>
@@ -421,7 +421,7 @@ export default function PerformanceTable({
           <select
             value={quarter}
             onChange={(e) => handlePeriodChange(year, e.target.value)}
-            className="px-4 py-2 rounded-lg border border-slate-300 font-bold bg-white"
+            className="px-4 py-2.5 rounded-xl border border-slate-100 font-bold bg-slate-50 text-slate-700 outline-none focus:ring-2 focus:ring-primary/20 transition-all hover:bg-slate-100 cursor-pointer"
           >
             <option value="Q1">الربع الأول</option>
             <option value="Q2">الربع الثاني</option>
@@ -431,16 +431,16 @@ export default function PerformanceTable({
         </div>
 
         <div className="flex flex-wrap items-center gap-3">
-          <div className="text-sm font-bold bg-white px-4 py-2 rounded-lg border border-slate-200 shadow-sm flex items-center gap-2">
-            <span>أداء الجمعية:</span>
-            <span className={`px-2 py-0.5 rounded font-black ${getPerfColor(totalPerf)}`}>
+          <div className="text-sm font-bold bg-slate-50 px-5 py-2.5 rounded-xl border border-slate-100 flex items-center gap-3">
+            <span className="text-slate-500">أداء الجمعية:</span>
+            <span className={`px-2.5 py-1 rounded-lg font-black text-sm border ${getPerfColor(totalPerf)} border-transparent`}>
               {totalPerf}%
             </span>
           </div>
 
           <button
             onClick={() => setIsFullScreen(!isFullScreen)}
-            className="bg-white hover:bg-slate-200 text-slate-700 border border-slate-300 px-4 py-2 rounded-lg font-bold transition-all shadow-sm flex items-center gap-2 cursor-pointer select-none active:scale-[0.98]"
+            className="bg-slate-50 hover:bg-slate-100 text-slate-600 border border-slate-100 px-5 py-2.5 rounded-xl font-bold transition-all flex items-center gap-2 cursor-pointer select-none active:scale-[0.98]"
             title={isFullScreen ? "خروج من وضع ملء الشاشة (Esc)" : "تفعيل وضع ملء الشاشة"}
           >
             {isFullScreen ? (
@@ -448,14 +448,14 @@ export default function PerformanceTable({
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M4 14h6v6m10-6h-6v6M4 10h6V4m10 6h-6V4" />
                 </svg>
-                <span>خروج من ملء الشاشة</span>
+                <span className="hidden sm:inline">خروج من ملء الشاشة</span>
               </>
             ) : (
               <>
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3" />
                 </svg>
-                <span>ملء الشاشة</span>
+                <span className="hidden sm:inline">ملء الشاشة</span>
               </>
             )}
           </button>
@@ -463,38 +463,48 @@ export default function PerformanceTable({
           <button
             onClick={handleSave}
             disabled={isSaving}
-            className="bg-primary hover:bg-primary/90 text-primary-foreground px-6 py-2 rounded-lg font-bold transition-all shadow-sm disabled:opacity-50 cursor-pointer select-none active:scale-[0.98]"
+            className="bg-primary hover:bg-primary/90 text-white px-8 py-2.5 rounded-xl font-bold transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer select-none active:scale-[0.98] shadow-sm flex items-center gap-2"
           >
-            {isSaving ? "جاري الحفظ..." : "حفظ التعديلات"}
+            {isSaving ? (
+              <>
+                <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                جاري الحفظ...
+              </>
+            ) : (
+              "حفظ التعديلات"
+            )}
           </button>
         </div>
       </div>
 
-      <div className={`border border-slate-200 rounded-xl bg-white ${isFullScreen
+      <div className={`rounded-2xl bg-white shadow-sm border border-slate-100 ${isFullScreen
           ? "flex-1 overflow-auto w-full pb-[200px]"
           : "overflow-x-auto w-full pb-[200px]"
         }`}>
         <table className="w-full text-center border-collapse text-sm whitespace-nowrap">
           <thead>
-            <tr className="bg-primary text-white font-bold text-xs">
-              <th className="border border-teal-700/60 p-2 min-w-[120px]">المحور</th>
-              <th className="border border-teal-700/60 p-2 w-[80px]">رمز الهدف</th>
-              <th className="border border-teal-700/60 p-2 min-w-[200px]">الهدف</th>
-              <th className="border border-teal-700/60 p-2 w-[80px]">رمز المؤشر</th>
-              <th className="border border-teal-700/60 p-2 min-w-[300px]">المؤشر</th>
-              <th className="border border-teal-700/60 p-2 min-w-[120px]">حالة المؤشر</th>
-              <th className="border border-teal-700/60 p-2 min-w-[120px]">مالك المؤشر</th>
-              <th className="border border-teal-700/60 p-2 min-w-[80px] bg-teal-800">المستهدف السنوي</th>
-              <th className="border border-teal-700/60 p-2 min-w-[80px] bg-teal-800">المحقق السنوي</th>
-              <th className="border border-teal-700/60 p-2 min-w-[80px] bg-teal-800">نسبة الإنجاز (سنوي)</th>
-              <th className="border border-teal-700/60 p-2 min-w-[100px] bg-teal-800">تصنيف المؤشر</th>
-              <th className="border border-teal-700/60 p-2 min-w-[80px] bg-secondary">المستهدف ({quarter})</th>
-              <th className="border border-teal-700/60 p-2 min-w-[80px] bg-secondary">المتحقق ({quarter})</th>
-              <th className="border border-teal-700/60 p-2 min-w-[80px] bg-secondary">أداء المؤشر</th>
-              <th className="border border-teal-700/60 p-2 min-w-[80px]">أداء الهدف</th>
-              <th className="border border-teal-700/60 p-2 min-w-[80px]">أداء المحور</th>
-              <th className="border border-teal-700/60 p-2 min-w-[80px] bg-teal-900">أداء الجمعية</th>
-              <th className="border border-teal-700/60 p-2 min-w-[80px]">إجراءات</th>
+            <tr className="bg-slate-50 text-slate-600 font-bold text-xs uppercase tracking-wider border-b-2 border-slate-100">
+              <th className="p-4 border-l border-slate-100 min-w-[120px]">المحور</th>
+              <th className="p-4 border-l border-slate-100 w-[80px]">رمز الهدف</th>
+              <th className="p-4 border-l border-slate-100 min-w-[200px]">الهدف</th>
+              <th className="p-4 border-l border-slate-100 w-[80px]">رمز المؤشر</th>
+              <th className="p-4 border-l border-slate-100 min-w-[300px]">المؤشر</th>
+              <th className="p-4 border-l border-slate-100 min-w-[120px]">حالة المؤشر</th>
+              <th className="p-4 border-l border-slate-100 min-w-[120px]">مالك المؤشر</th>
+              <th className="p-4 border-l border-slate-100 min-w-[80px] text-primary">المستهدف السنوي</th>
+              <th className="p-4 border-l border-slate-100 min-w-[80px] text-primary">المحقق السنوي</th>
+              <th className="p-4 border-l border-slate-100 min-w-[80px] text-primary">الإنجاز (سنوي)</th>
+              <th className="p-4 border-l border-slate-100 min-w-[100px]">تصنيف المؤشر</th>
+              <th className="p-4 border-l border-slate-100 min-w-[80px] text-secondary">المستهدف ({quarter})</th>
+              <th className="p-4 border-l border-slate-100 min-w-[80px] text-secondary">المتحقق ({quarter})</th>
+              <th className="p-4 border-l border-slate-100 min-w-[80px] text-secondary">أداء المؤشر</th>
+              <th className="p-4 border-l border-slate-100 min-w-[80px]">أداء الهدف</th>
+              <th className="p-4 border-l border-slate-100 min-w-[80px]">أداء المحور</th>
+              <th className="p-4 border-l border-slate-100 min-w-[80px] bg-primary/5 text-primary">أداء الجمعية</th>
+              <th className="p-4 min-w-[80px]">إجراءات</th>
             </tr>
           </thead>
           <tbody>
@@ -506,17 +516,25 @@ export default function PerformanceTable({
               return (
                 <>
                   {axis.goals.length === 0 ? (
-                    <tr key={axis.id} className="border-b border-slate-200 hover:bg-slate-50">
-                      <td className="border border-slate-200 p-2 bg-teal-700 text-white font-bold align-middle w-12" rowSpan={1}>
-                        <div className="flex flex-col items-center gap-2">
-                          <span className="writing-vertical text-center">{axis.name}</span>
-                          <span className="text-[10px] text-white/80 font-bold bg-white/10 px-1.5 py-0.5 rounded mt-1">الرمز: {aPrefix}</span>
-                          <button onClick={() => addGoal(axis.id)} className="bg-white/20 hover:bg-white/30 text-white text-xs px-2 py-1 rounded mt-1">+</button>
+                    <tr key={axis.id} className="border-b border-slate-100 hover:bg-slate-50/50 transition-colors">
+                      <td className="border-l border-slate-100 p-2 bg-primary text-white font-bold align-middle w-12" rowSpan={1}>
+                        <div className="flex flex-col items-center gap-3 py-4">
+                          <span className="text-center font-bold tracking-wider leading-loose" style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}>{axis.name}</span>
+                          <span className="text-[10px] text-white/90 font-bold bg-white/20 px-2 py-0.5 rounded-md mt-1 shadow-sm">الرمز: {aPrefix}</span>
+                          <button onClick={() => addGoal(axis.id)} className="bg-white/20 hover:bg-white/30 text-white text-xs w-8 h-8 rounded-lg mt-2 flex items-center justify-center transition-colors">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                          </button>
                         </div>
                       </td>
-                      <td colSpan={17} className="border border-slate-300 p-4 text-slate-400">
-                        لا توجد أهداف في هذا المحور. أضف هدفاً للبدء.
-                        <button onClick={() => addGoal(axis.id)} className="mr-4 text-primary underline font-bold">إضافة هدف</button>
+                      <td colSpan={17} className="p-8 text-slate-400 bg-slate-50/30">
+                        <div className="flex flex-col items-center justify-center gap-3">
+                          <div className="text-3xl opacity-30">🎯</div>
+                          <p>لا توجد أهداف في هذا المحور. أضف هدفاً للبدء.</p>
+                          <button onClick={() => addGoal(axis.id)} className="mt-2 bg-white border border-slate-200 text-slate-700 hover:text-primary hover:border-primary/30 px-4 py-2 rounded-lg font-bold text-sm shadow-sm transition-all flex items-center gap-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                            إضافة هدف
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ) : null}
@@ -531,32 +549,37 @@ export default function PerformanceTable({
                         {goal.indicators.length === 0 ? (
                           <tr
                             key={goal.id}
-                            className={`border-b border-slate-200 transition-colors group
-                              ${goalIndex > 0 ? "border-t-2 border-t-slate-300" : ""}
-                              ${goalIndex % 2 !== 0 ? "bg-slate-50 hover:bg-teal-50/20" : "bg-white hover:bg-teal-50/20"}
+                            className={`border-b border-slate-100 transition-colors group
+                              ${goalIndex > 0 ? "border-t-2 border-t-slate-200" : ""}
+                              ${goalIndex % 2 !== 0 ? "bg-slate-50/50 hover:bg-slate-50" : "bg-white hover:bg-slate-50"}
                             `}
                           >
                             {goalIndex === 0 && (
-                              <td className="border border-slate-200 p-2 bg-teal-700 text-white font-bold align-middle w-12" rowSpan={axisRowSpan}>
-                                <div className="flex flex-col items-center justify-center gap-3 h-full min-h-[100px]">
-                                  <span className="text-center font-bold" style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}>{axis.name}</span>
-                                  <span className="text-[10px] text-white/80 font-bold bg-white/10 px-1.5 py-0.5 rounded mt-1">الرمز: {aPrefix}</span>
-                                  <button onClick={() => addGoal(axis.id)} className="bg-white/20 hover:bg-white/30 text-white text-xs px-2 py-1 rounded mt-2">م. جديد</button>
+                              <td className="border-l border-slate-100 p-2 bg-primary text-white font-bold align-middle w-12" rowSpan={axisRowSpan}>
+                                <div className="flex flex-col items-center justify-center gap-3 h-full min-h-[150px] py-4">
+                                  <span className="text-center font-bold tracking-wider leading-loose" style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}>{axis.name}</span>
+                                  <span className="text-[10px] text-white/90 font-bold bg-white/20 px-2 py-0.5 rounded-md mt-1 shadow-sm">الرمز: {aPrefix}</span>
+                                  <button onClick={() => addGoal(axis.id)} title="إضافة هدف" className="bg-white/20 hover:bg-white/30 text-white text-xs w-8 h-8 rounded-lg mt-2 flex items-center justify-center transition-colors">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                                  </button>
                                 </div>
                               </td>
                             )}
                             <td
                               onClick={() => handleAxisPrefixClick(axis.id, axis.name, aPrefix)}
                               title="انقر لتعديل رمز المحور"
-                              className="border border-slate-200 p-1 font-bold text-slate-600 bg-slate-50 w-[80px] cursor-pointer select-none hover:bg-slate-100 transition-colors text-center"
+                              className="border-l border-slate-100 p-3 font-bold text-slate-500 bg-slate-50/80 w-[80px] cursor-pointer select-none hover:bg-slate-100 transition-colors text-center text-sm"
                             >
-                              {goalCode}
+                              <div className="bg-white border border-slate-200 rounded px-2 py-1 inline-block shadow-sm group-hover:border-primary/30 transition-colors">{goalCode}</div>
                             </td>
-                            <td className="border border-slate-200 p-1 bg-teal-50/40 font-semibold text-right">
-                              <input type="text" value={goal.name} onChange={e => updateGoal(axis.id, goal.id, "name", e.target.value)} className="w-full bg-transparent focus:bg-white border-0 outline-none p-1" />
+                            <td className="border-l border-slate-100 p-2 bg-white font-bold text-slate-700 text-right">
+                              <input type="text" value={goal.name} onChange={e => updateGoal(axis.id, goal.id, "name", e.target.value)} className="w-full bg-slate-50 hover:bg-slate-100 focus:bg-white border border-transparent focus:border-primary/30 rounded-lg outline-none px-3 py-2 transition-all" />
                             </td>
-                            <td colSpan={15} className="border border-slate-200 p-2 text-slate-400">
-                              <button onClick={() => addIndicator(axis.id, goal.id)} className="text-primary underline font-bold">إضافة مؤشر</button>
+                            <td colSpan={15} className="p-4 text-slate-400">
+                              <button onClick={() => addIndicator(axis.id, goal.id)} className="bg-slate-50 hover:bg-slate-100 text-slate-600 border border-slate-200 hover:border-slate-300 px-4 py-2 rounded-lg text-xs font-bold transition-all shadow-sm flex items-center gap-1.5 mx-auto">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                                إضافة مؤشر
+                              </button>
                             </td>
                           </tr>
                         ) : null}
@@ -580,22 +603,24 @@ export default function PerformanceTable({
                           return (
                             <tr
                               key={ind.id}
-                              className={`border-b border-slate-200 transition-colors group
-                                ${isNewGoalRow ? "border-t-2 border-t-slate-300" : ""}
+                              className={`border-b border-slate-100 transition-colors group
+                                ${isNewGoalRow ? "border-t-2 border-t-slate-200" : ""}
                                 ${ind.postponed
-                                  ? "bg-slate-50/80 text-slate-400 font-medium italic"
+                                  ? "bg-slate-50/80 text-slate-400 font-medium opacity-80"
                                   : isOddGoal
-                                    ? "bg-slate-50/30 hover:bg-teal-50/20"
-                                    : "bg-white hover:bg-teal-50/20"
+                                    ? "bg-slate-50/30 hover:bg-slate-50"
+                                    : "bg-white hover:bg-slate-50"
                                 }
                               `}
                             >
                               {isFirstGoal && (
-                                <td className="border border-slate-200 p-2 bg-teal-700 text-white font-bold align-middle w-12" rowSpan={axisRowSpan}>
-                                  <div className="flex flex-col items-center justify-center gap-3 h-full">
-                                    <span className="text-center font-bold tracking-widest leading-loose" style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}>{axis.name}</span>
-                                    <span className="text-[10px] text-white/80 font-bold bg-white/10 px-1.5 py-0.5 rounded mt-1">الرمز: {aPrefix}</span>
-                                    <button onClick={() => addGoal(axis.id)} title="إضافة هدف" className="bg-white/20 hover:bg-white/30 text-white text-xs px-2 py-1 rounded">+</button>
+                                <td className="border-l border-slate-100 p-2 bg-primary text-white font-bold align-middle w-12" rowSpan={axisRowSpan}>
+                                  <div className="flex flex-col items-center justify-center gap-3 h-full py-4 min-h-[200px]">
+                                    <span className="text-center font-bold tracking-wider leading-loose" style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}>{axis.name}</span>
+                                    <span className="text-[10px] text-white/90 font-bold bg-white/20 px-2 py-0.5 rounded-md mt-1 shadow-sm">الرمز: {aPrefix}</span>
+                                    <button onClick={() => addGoal(axis.id)} title="إضافة هدف" className="bg-white/20 hover:bg-white/30 text-white text-xs w-8 h-8 rounded-lg mt-2 flex items-center justify-center transition-colors">
+                                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                                    </button>
                                   </div>
                                 </td>
                               )}
@@ -605,112 +630,121 @@ export default function PerformanceTable({
                                   <td
                                     onClick={() => handleAxisPrefixClick(axis.id, axis.name, aPrefix)}
                                     title="انقر لتعديل رمز المحور"
-                                    className="border border-slate-200 p-1 font-bold text-slate-700 bg-slate-50 text-center w-[80px] cursor-pointer select-none hover:bg-slate-100 transition-colors"
+                                    className="border-l border-slate-100 p-2 font-bold text-slate-500 bg-slate-50/80 text-center w-[80px] cursor-pointer select-none hover:bg-slate-100 transition-colors text-sm"
                                     rowSpan={goalRowSpan}
                                   >
-                                    {goalCode}
+                                    <div className="bg-white border border-slate-200 rounded px-2 py-1 inline-block shadow-sm group-hover:border-primary/30 transition-colors">{goalCode}</div>
                                   </td>
-                                  <td className="border border-slate-200 p-1 bg-teal-50/40 font-bold text-slate-800 text-right leading-tight max-w-[200px] whitespace-normal" rowSpan={goalRowSpan}>
-                                    <textarea value={goal.name} onChange={e => updateGoal(axis.id, goal.id, "name", e.target.value)} className="w-full h-full min-h-[60px] bg-transparent focus:bg-white border-0 outline-none p-1 resize-none rounded" />
-                                    <div className="mt-1">
-                                      <button onClick={() => addIndicator(axis.id, goal.id)} className="text-xs text-primary bg-primary/10 px-2 py-1 rounded hover:bg-primary/20">+ مؤشر</button>
+                                  <td className="border-l border-slate-100 p-3 bg-white font-bold text-slate-700 text-right leading-tight max-w-[200px] whitespace-normal" rowSpan={goalRowSpan}>
+                                    <textarea value={goal.name} onChange={e => updateGoal(axis.id, goal.id, "name", e.target.value)} className="w-full h-full min-h-[60px] bg-slate-50 hover:bg-slate-100 focus:bg-white border border-transparent focus:border-primary/30 rounded-lg outline-none p-3 resize-none transition-all" />
+                                    <div className="mt-2 text-center">
+                                      <button onClick={() => addIndicator(axis.id, goal.id)} className="text-[11px] font-bold text-primary bg-primary/10 px-3 py-1.5 rounded-lg hover:bg-primary/20 transition-colors inline-flex items-center gap-1">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                                        إضافة مؤشر
+                                      </button>
                                     </div>
                                   </td>
                                 </>
                               )}
 
-                              <td className="border border-slate-200 p-1 font-semibold text-slate-500 bg-slate-50/50 w-[80px]">
+                              <td className="border-l border-slate-100 p-2 font-bold text-slate-500 bg-slate-50/50 w-[80px] text-[13px]">
                                 {goalCode}-{indIndex + 1}
                               </td>
-                              <td className="border border-slate-200 p-1 text-right whitespace-normal">
-                                <textarea value={ind.name} disabled={ind.postponed} onChange={e => updateIndicator(axis.id, goal.id, ind.id, "name", e.target.value)} className="w-full h-full min-h-[40px] bg-transparent focus:bg-white border-0 outline-none p-1 resize-none rounded disabled:text-slate-400 disabled:cursor-not-allowed" />
+                              <td className="border-l border-slate-100 p-2 text-right whitespace-normal min-w-[250px]">
+                                <textarea value={ind.name} disabled={ind.postponed} onChange={e => updateIndicator(axis.id, goal.id, ind.id, "name", e.target.value)} className="w-full h-full min-h-[44px] bg-transparent hover:bg-white focus:bg-white border border-transparent hover:border-slate-200 focus:border-primary/30 outline-none p-2 resize-none rounded-lg disabled:text-slate-400 disabled:hover:bg-transparent disabled:hover:border-transparent transition-all font-medium text-[13px]" />
                               </td>
-                              <td className="border border-slate-200 p-1.5 align-middle">
+                              <td className="border-l border-slate-100 p-2 align-middle">
                                 {(() => {
                                   const status = getIndicatorStatus(ind);
                                   return (
-                                    <span className={`px-2.5 py-1 rounded-full text-xs font-bold inline-block border ${getStatusBadgeClass(status)}`}>
+                                    <span className={`px-3 py-1 rounded-md text-[11px] font-bold inline-block border ${getStatusBadgeClass(status)}`}>
                                       {status}
                                     </span>
                                   );
                                 })()}
                               </td>
-                              <td className="border border-slate-200 p-1">
-                                <input type="text" value={ind.owner} disabled={ind.postponed} onChange={e => updateIndicator(axis.id, goal.id, ind.id, "owner", e.target.value)} placeholder={ind.postponed ? "مؤجل" : "اسم المالك"} className="w-full text-center bg-transparent focus:bg-white border-0 outline-none p-1 rounded text-xs disabled:text-slate-400 disabled:cursor-not-allowed" />
+                              <td className="border-l border-slate-100 p-2">
+                                <input type="text" value={ind.owner} disabled={ind.postponed} onChange={e => updateIndicator(axis.id, goal.id, ind.id, "owner", e.target.value)} placeholder={ind.postponed ? "مؤجل" : "اسم المالك"} className="w-full text-center bg-transparent hover:bg-white focus:bg-white border border-transparent hover:border-slate-200 focus:border-primary/30 outline-none p-2 rounded-lg text-xs font-semibold disabled:text-slate-400 disabled:hover:bg-transparent disabled:hover:border-transparent transition-all" />
                               </td>
 
                               {/* Annual Metrics */}
-                              <td className="border border-slate-200 p-2 font-semibold text-slate-700 bg-slate-50/50">
+                              <td className="border-l border-slate-100 p-2 font-bold text-slate-700 bg-primary/5">
                                 {annualTarget}
                               </td>
-                              <td className="border border-slate-200 p-2 font-semibold text-slate-700 bg-slate-50/50">
+                              <td className="border-l border-slate-100 p-2 font-bold text-slate-700 bg-primary/5">
                                 {annualAchieved ?? "-"}
                               </td>
-                              <td className="border border-slate-200 p-2 font-bold text-slate-700 bg-slate-50">
+                              <td className="border-l border-slate-100 p-2 font-black text-slate-700 bg-primary/5">
                                 {ind.postponed ? "مؤجل" : `${annualPerf}%`}
                               </td>
 
                               {/* Quarter Metrics & Classification */}
-                              <td className={`border border-slate-200 p-2 font-bold text-sm ${classification.color} bg-slate-50`}>
+                              <td className={`border-l border-slate-100 p-2 font-bold text-sm ${classification.color} bg-slate-50`}>
                                 {classification.icon} {classification.text}
                               </td>
-                              <td className="border border-slate-200 p-1 bg-slate-50/50 font-semibold">
-                                <input type="number" value={(ind[targetField] as number | null) ?? ""} disabled={ind.postponed} onChange={e => updateIndicator(axis.id, goal.id, ind.id, targetField, e.target.value === "" ? null : Number(e.target.value))} className="w-16 text-center bg-transparent focus:bg-white border-b border-transparent focus:border-primary outline-none disabled:text-slate-400 disabled:cursor-not-allowed" />
+                              <td className="border-l border-slate-100 p-2 bg-secondary/5 font-bold">
+                                <input type="number" value={(ind[targetField] as number | null) ?? ""} disabled={ind.postponed} onChange={e => updateIndicator(axis.id, goal.id, ind.id, targetField, e.target.value === "" ? null : Number(e.target.value))} className="w-16 text-center bg-white border border-slate-200 focus:border-secondary outline-none rounded-md py-1 px-1 text-sm disabled:bg-transparent disabled:border-transparent disabled:text-slate-400 shadow-sm disabled:shadow-none transition-all" />
                               </td>
-                              <td className="border border-slate-200 p-1 bg-slate-50/50 font-semibold">
-                                <input type="number" value={(ind[achievedField] as number | null) ?? ""} disabled={ind.postponed} onChange={e => updateIndicator(axis.id, goal.id, ind.id, achievedField, e.target.value === "" ? null : Number(e.target.value))} className="w-16 text-center bg-transparent focus:bg-white border-b border-transparent focus:border-primary outline-none disabled:text-slate-400 disabled:cursor-not-allowed" />
+                              <td className="border-l border-slate-100 p-2 bg-secondary/5 font-bold">
+                                <input type="number" value={(ind[achievedField] as number | null) ?? ""} disabled={ind.postponed} onChange={e => updateIndicator(axis.id, goal.id, ind.id, achievedField, e.target.value === "" ? null : Number(e.target.value))} className="w-16 text-center bg-white border border-slate-200 focus:border-secondary outline-none rounded-md py-1 px-1 text-sm disabled:bg-transparent disabled:border-transparent disabled:text-slate-400 shadow-sm disabled:shadow-none transition-all" />
                               </td>
 
                               {/* Performances */}
-                              <td className={`border border-slate-200 p-2 font-bold ${getPerfColor(indPerf, hasData(getQuarterAchieved(ind)), ind.postponed)}`}>
-                                {ind.postponed ? "مؤجل" : `${indPerf}%`}
+                              <td className="border-l border-slate-100 p-2">
+                                <span className={`px-3 py-1.5 rounded-lg font-black text-sm block border ${getPerfColor(indPerf, hasData(getQuarterAchieved(ind)), ind.postponed)} border-transparent`}>
+                                  {ind.postponed ? "مؤجل" : `${indPerf}%`}
+                                </span>
                               </td>
 
                               {isFirstInd && (
-                                <td className={`border border-slate-200 p-2 font-bold ${getPerfColor(gPerf)}`} rowSpan={goalRowSpan}>
-                                  {gPerf}%
+                                <td className="border-l border-slate-100 p-2" rowSpan={goalRowSpan}>
+                                  <span className={`px-3 py-2 rounded-lg font-black text-sm block border ${getPerfColor(gPerf)} border-transparent`}>
+                                    {gPerf}%
+                                  </span>
                                 </td>
                               )}
 
                               {isFirstGoal && (
-                                <td className={`border border-slate-200 p-2 font-bold ${getPerfColor(aPerf)}`} rowSpan={axisRowSpan}>
-                                  {aPerf}%
+                                <td className="border-l border-slate-100 p-2" rowSpan={axisRowSpan}>
+                                  <span className={`px-3 py-2 rounded-lg font-black text-sm block border ${getPerfColor(aPerf)} border-transparent`}>
+                                    {aPerf}%
+                                  </span>
                                 </td>
                               )}
 
                               {isFirstGoal && axisIndex === 0 && (
-                                <td className={`border border-slate-200 p-2 font-black text-lg ${getPerfColor(totalPerf)}`} rowSpan={axes.reduce((acc, a) => acc + Math.max(1, a.goals.reduce((gacc, g) => gacc + Math.max(1, g.indicators.length), 0)), 0)}>
-                                  {totalPerf}%
+                                <td className="border-l border-slate-100 p-2 bg-slate-50/50" rowSpan={axes.reduce((acc, a) => acc + Math.max(1, a.goals.reduce((gacc, g) => gacc + Math.max(1, g.indicators.length), 0)), 0)}>
+                                  <span className={`px-4 py-3 rounded-xl font-black text-lg block border ${getPerfColor(totalPerf)} border-transparent shadow-sm`}>
+                                    {totalPerf}%
+                                  </span>
                                 </td>
                               )}
 
-                              <td className="border border-slate-300 p-2">
-                                <div className="flex gap-1.5 justify-center items-center">
+                              <td className="p-2">
+                                <div className="flex gap-2 justify-center items-center">
                                   <button
                                     onClick={() => togglePostponeIndicator(axis.id, goal.id, ind.id)}
-                                    className={`p-1.5 rounded transition-colors ${ind.postponed
-                                        ? "bg-amber-100 text-amber-700 hover:bg-amber-200"
-                                        : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                                    className={`p-2 rounded-lg transition-colors border ${ind.postponed
+                                        ? "bg-amber-50 text-amber-600 border-amber-200 hover:bg-amber-100"
+                                        : "bg-white text-slate-400 border-slate-200 hover:text-slate-600 hover:bg-slate-50 shadow-sm"
                                       }`}
                                     title={ind.postponed ? "تنشيط المؤشر" : "تأجيل المؤشر"}
                                   >
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                                       {ind.postponed ? (
                                         <>
-                                          {/* Play / Activate icon */}
                                           <polygon points="5 3 19 12 5 21 5 3" fill="currentColor" />
                                         </>
                                       ) : (
                                         <>
-                                          {/* Pause / Postpone icon */}
                                           <rect x="6" y="4" width="4" height="16" fill="currentColor" />
                                           <rect x="14" y="4" width="4" height="16" fill="currentColor" />
                                         </>
                                       )}
                                     </svg>
                                   </button>
-                                  <button onClick={() => deleteIndicator(axis.id, goal.id, ind.id)} className="text-red-500 hover:text-red-700 bg-red-50 hover:bg-red-100 p-1.5 rounded transition-colors" title="حذف المؤشر">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                  <button onClick={() => deleteIndicator(axis.id, goal.id, ind.id)} className="text-red-500 hover:text-red-600 bg-white border border-slate-200 hover:border-red-200 hover:bg-red-50 p-2 rounded-lg transition-colors shadow-sm" title="حذف المؤشر">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                                       <polyline points="3 6 5 6 21 6"></polyline>
                                       <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
                                     </svg>
@@ -732,41 +766,52 @@ export default function PerformanceTable({
 
       {/* Custom Modal for editing Axis Prefix */}
       {editingAxis && (
-        <div className="fixed inset-0 bg-slate-950/60 backdrop-blur-xs flex items-center justify-center z-50 transition-all duration-300" dir="rtl">
-          <div className="bg-white rounded-xl border border-slate-200 max-w-md w-full mx-4 overflow-hidden transform scale-100 transition-all duration-300">
+        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center z-50 transition-all duration-300 p-4" dir="rtl">
+          <div className="bg-white rounded-2xl border border-slate-100 max-w-md w-full overflow-hidden shadow-xl transform scale-100 transition-all duration-300">
             {/* Modal Header */}
-            <div className="bg-primary p-6 text-white text-right">
-              <h3 className="text-lg font-bold">تعديل رمز المحور</h3>
-              <p className="text-white/80 text-xs mt-1">{editingAxis.name}</p>
+            <div className="bg-slate-50 px-6 py-5 border-b border-slate-100 flex items-center justify-between">
+              <div>
+                <h3 className="text-lg font-bold text-slate-800 tracking-tight">تعديل رمز المحور</h3>
+                <p className="text-slate-500 text-xs mt-1 font-medium">{editingAxis.name}</p>
+              </div>
+              <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center text-primary text-xl">
+                ✏️
+              </div>
             </div>
  
             {/* Modal Body */}
-            <div className="p-6 space-y-4 text-right">
-              <label className="block text-sm font-bold text-slate-700">الرمز أو البادئة الجديدة للمحور:</label>
-              <input
-                type="text"
-                value={modalInput}
-                onChange={(e) => setModalInput(e.target.value.slice(0, 5))}
-                className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-primary focus:ring-2 focus:ring-primary/15 outline-none text-center font-bold text-lg transition-all"
-                placeholder="أدخل الرمز هنا (مثال: س)"
-                autoFocus
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    const trimmed = modalInput.trim();
-                    if (trimmed) {
-                      updateAxisPrefix(editingAxis.id, trimmed);
+            <div className="p-6 md:p-8 space-y-5 text-right">
+              <div>
+                <label className="block text-sm font-bold text-slate-700 mb-2">الرمز أو البادئة الجديدة للمحور:</label>
+                <input
+                  type="text"
+                  value={modalInput}
+                  onChange={(e) => setModalInput(e.target.value.slice(0, 5))}
+                  className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none text-center font-bold text-xl transition-all shadow-sm"
+                  placeholder="أدخل الرمز هنا (مثال: س)"
+                  autoFocus
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      const trimmed = modalInput.trim();
+                      if (trimmed) {
+                        updateAxisPrefix(editingAxis.id, trimmed);
+                      }
+                      setEditingAxis(null);
                     }
-                    setEditingAxis(null);
-                  }
-                }}
-              />
-              <p className="text-[11px] text-slate-400 leading-relaxed">
-                سيتم استخدام هذا الرمز كأساس لترقيم جميع أهداف ومؤشرات هذا المحور تلقائياً (مثال: {modalInput || "غ"}-1، {modalInput || "غ"}-1-1).
-              </p>
+                  }}
+                />
+              </div>
+              
+              <div className="bg-primary/5 p-4 rounded-xl border border-primary/10 flex items-start gap-3">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-primary mt-0.5 shrink-0"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+                <p className="text-xs text-slate-600 font-medium leading-relaxed">
+                  سيتم استخدام هذا الرمز كأساس لترقيم جميع أهداف ومؤشرات هذا المحور تلقائياً (مثال: <span className="font-bold text-primary">{modalInput || "غ"}-1</span>، <span className="font-bold text-primary">{modalInput || "غ"}-1-1</span>).
+                </p>
+              </div>
             </div>
  
             {/* Modal Footer */}
-            <div className="bg-slate-50 px-6 py-4 flex flex-row-reverse gap-3 border-t border-slate-100">
+            <div className="bg-slate-50 px-6 py-5 flex flex-row-reverse gap-3 border-t border-slate-100">
               <button
                 onClick={() => {
                   const trimmed = modalInput.trim();
@@ -775,13 +820,13 @@ export default function PerformanceTable({
                   }
                   setEditingAxis(null);
                 }}
-                className="bg-primary hover:bg-primary/95 text-white font-bold px-6 py-2.5 rounded-xl text-sm transition-colors shadow-none cursor-pointer"
+                className="bg-primary hover:bg-primary/90 text-white font-bold px-6 py-2.5 rounded-xl text-sm transition-all shadow-sm cursor-pointer flex-1"
               >
-                تحديث الرمز
+                حفظ التعديلات
               </button>
               <button
                 onClick={() => setEditingAxis(null)}
-                className="bg-white hover:bg-slate-50 text-slate-700 font-bold px-6 py-2.5 rounded-xl text-sm border border-slate-300 transition-colors cursor-pointer"
+                className="bg-white hover:bg-slate-100 text-slate-600 font-bold px-6 py-2.5 rounded-xl text-sm border border-slate-200 transition-all cursor-pointer flex-1 shadow-sm"
               >
                 إلغاء
               </button>

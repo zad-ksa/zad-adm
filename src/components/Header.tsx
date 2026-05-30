@@ -26,8 +26,8 @@ export default function Header({ disableLink = false, title = "استبيان ا
   );
 
   return (
-    <header className="w-full bg-white shadow-sm border-b border-slate-200">
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 h-20 flex items-center justify-between">
+    <header className="w-full bg-white border-b border-slate-200">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 h-20 flex items-center justify-between">
         {disableLink ? (
           logoContent
         ) : (

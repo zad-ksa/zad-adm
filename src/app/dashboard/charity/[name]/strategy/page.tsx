@@ -97,10 +97,10 @@ export default async function StrategySurveysPage({ params }: { params: Promise<
             <div className="lg:col-span-2 space-y-6">
               <h3 className="text-lg font-bold text-slate-700">تحليل متوسط الجاهزية للمحاور</h3>
               
-              <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-200 space-y-6">
-                <div className="flex items-center justify-between p-4 bg-slate-50 rounded-xl mb-4 border border-slate-100">
-                  <span className="font-bold text-slate-700">المتوسط العام للجاهزية</span>
-                  <div className={`px-4 py-2 rounded-xl text-xl font-bold
+              <div className="bg-white rounded-xl p-6 border border-slate-200 space-y-6">
+                <div className="flex items-center justify-between p-4 bg-slate-50 rounded-xl mb-4 border border-slate-200">
+                  <span className="font-bold text-slate-700 text-sm">المتوسط العام للجاهزية</span>
+                  <div className={`px-4 py-2 rounded-xl text-lg font-bold
                     ${
                       overallAveragePercentage >= 80 ? "bg-green-100 text-green-700" :
                       overallAveragePercentage >= 60 ? "bg-blue-100 text-blue-700" :
@@ -152,14 +152,14 @@ export default async function StrategySurveysPage({ params }: { params: Promise<
                   <Link
                     href={`/dashboard/${res.id}`}
                     key={res.id}
-                    className="block bg-white rounded-2xl p-5 shadow-sm border border-slate-200 hover:border-primary hover:shadow-md transition-all group"
+                    className="block bg-white rounded-xl p-5 border border-slate-200 hover:border-primary transition-all group"
                   >
                     <div className="flex justify-between items-start mb-3">
                       <div>
-                        <h4 className="font-bold text-slate-800 group-hover:text-primary transition-colors">
+                        <h4 className="font-bold text-slate-800 group-hover:text-primary transition-colors text-sm">
                           {res.authorizedName}
                         </h4>
-                        <p className="text-xs text-slate-500">{res.authorizedTitle}</p>
+                        <p className="text-[11px] text-slate-400">{res.authorizedTitle}</p>
                       </div>
                       
                       <div className={`px-2.5 py-1 rounded-lg text-xs font-bold
@@ -218,33 +218,33 @@ export default async function StrategySurveysPage({ params }: { params: Promise<
               return (
                 <div 
                   key={res.id} 
-                  className="bg-white rounded-2xl p-6 shadow-sm border border-slate-200 hover:border-secondary transition-all flex flex-col justify-between group"
+                  className="bg-white rounded-xl p-6 border border-slate-200 hover:border-secondary transition-all flex flex-col justify-between group"
                 >
                   <div>
                     <div className="flex justify-between items-start mb-4">
                       <div>
-                        <span className="text-xs bg-secondary/10 text-secondary-foreground font-bold px-2.5 py-1 rounded-full">
+                        <span className="text-xs bg-secondary/15 text-secondary-foreground font-bold px-2.5 py-1 rounded-full">
                           التحليل السداسي
                         </span>
-                        <h3 className="font-bold text-slate-800 text-lg mt-2 group-hover:text-secondary transition-colors">
+                        <h3 className="font-bold text-slate-800 text-base mt-2 group-hover:text-secondary transition-colors">
                           بواسطة: {res.authorizedTitle}
                         </h3>
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-3 gap-2 text-xs text-slate-500 mb-6 bg-slate-50 p-3.5 rounded-xl border border-slate-100">
-                      <div>💪 قوة: <span className="font-bold text-slate-700">{strengthsCount}</span></div>
-                      <div>⚠️ ضعف: <span className="font-bold text-slate-700">{weaknessesCount}</span></div>
-                      <div>🌟 فرص: <span className="font-bold text-slate-700">{oppCount}</span></div>
-                      <div>🛑 مخاطر: <span className="font-bold text-slate-700">{threatCount}</span></div>
-                      <div>🔑 نجاح: <span className="font-bold text-slate-700">{successCount}</span></div>
-                      <div>🏆 تميز: <span className="font-bold text-slate-700">{compCount}</span></div>
+                    <div className="grid grid-cols-3 gap-2 text-[10px] text-slate-400 mb-6 bg-slate-50 p-3.5 rounded-xl border border-slate-200">
+                      <div>💪 قوة: <span className="font-bold text-slate-600">{strengthsCount}</span></div>
+                      <div>⚠️ ضعف: <span className="font-bold text-slate-600">{weaknessesCount}</span></div>
+                      <div>🌟 فرص: <span className="font-bold text-slate-600">{oppCount}</span></div>
+                      <div>🛑 مخاطر: <span className="font-bold text-slate-600">{threatCount}</span></div>
+                      <div>🔑 نجاح: <span className="font-bold text-slate-600">{successCount}</span></div>
+                      <div>🏆 تميز: <span className="font-bold text-slate-600">{compCount}</span></div>
                     </div>
                   </div>
 
                   <Link
                     href={`/dashboard/hexagonal/${res.id}`}
-                    className="w-full text-center py-3 bg-secondary hover:bg-secondary/95 text-white font-bold rounded-xl transition-all shadow-md shadow-secondary/15 hover:shadow-secondary/25 text-sm"
+                    className="w-full text-center py-2.5 bg-secondary hover:bg-secondary/95 text-white font-bold rounded-xl transition-all text-xs"
                   >
                     عرض بنود التحليل السداسي ←
                   </Link>

@@ -39,7 +39,7 @@ export default function ApproveCharityButton({
         ${
           isPending
             ? "bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed"
-            : "bg-amber-600 hover:bg-amber-700 text-white border-amber-700/20 hover:shadow-md hover:shadow-amber-600/15"
+            : "bg-secondary hover:bg-secondary/95 text-white border-secondary/20 shadow-none"
         }
       `}
     >

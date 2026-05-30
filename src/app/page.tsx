@@ -40,7 +40,7 @@ export default function AdminLogin() {
       <Header />
       
       <main className="flex-1 flex items-center justify-center p-4">
-        <div className="bg-white p-8 rounded-3xl shadow-xl w-full max-w-md border border-slate-100">
+        <div className="bg-white p-8 rounded-2xl border border-slate-200 w-full max-w-md">
           <div className="text-center mb-8">
             <h1 className="text-2xl font-bold text-slate-800 mb-2">تسجيل الدخول للإدارة</h1>
             <p className="text-slate-500">خاص بفريق زاد التنموية لأثر مستدام</p>
@@ -54,14 +54,14 @@ export default function AdminLogin() {
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-4 py-3 rounded-xl border border-slate-300 focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all outline-none text-left"
+                className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all outline-none text-left bg-white text-slate-800"
                 dir="ltr"
                 placeholder="••••••••"
               />
             </div>
 
             {error && (
-              <div className="p-3 bg-red-50 text-red-600 rounded-xl text-sm text-center">
+              <div className="p-3 bg-red-50 text-red-600 rounded-xl text-sm text-center border border-red-100">
                 {error}
               </div>
             )}
@@ -69,10 +69,10 @@ export default function AdminLogin() {
             <button
               type="submit"
               disabled={isLoading}
-              className={`w-full py-4 rounded-xl font-bold text-white transition-all flex items-center justify-center gap-2 ${
+              className={`w-full py-3.5 rounded-xl font-bold text-white transition-all flex items-center justify-center gap-2 ${
                 isLoading
                   ? "bg-primary/70 cursor-not-allowed"
-                  : "bg-primary hover:bg-primary/90 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-primary/30"
+                  : "bg-primary hover:bg-primary-hover active:scale-[0.98]"
               }`}
             >
               {isLoading && <div className="w-5 h-5 border-2 border-white/50 border-t-white rounded-full animate-spin" />}

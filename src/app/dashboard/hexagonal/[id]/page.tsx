@@ -97,21 +97,20 @@ export default async function HexagonalDetails({ params }: { params: { id: strin
         </Link>
 
         {/* Charity Info Card */}
-        <div className="bg-white rounded-3xl shadow-xl border border-slate-100 overflow-hidden mb-8 relative">
-           <div className="absolute top-0 right-0 w-32 h-32 bg-secondary/5 rounded-full -mr-10 -mt-10 blur-xl pointer-events-none" />
+        <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden mb-8">
            <div className="p-8">
              <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
                 <div>
-                  <span className="text-xs bg-secondary/15 text-secondary-foreground font-bold px-3 py-1 rounded-full">
+                  <span className="text-xs bg-secondary/15 text-secondary-foreground font-bold px-3 py-1 rounded-full border border-secondary/20">
                      تقرير التحليل السداسي
                   </span>
-                  <h1 className="text-3xl font-bold text-slate-800 mt-3 mb-2">{response.charityName}</h1>
-                  <p className="text-slate-500">تم إعداد التحليل بواسطة: <strong className="text-slate-700">{response.authorizedTitle}</strong></p>
+                  <h1 className="text-2xl font-bold text-slate-800 mt-3 mb-2">{response.charityName}</h1>
+                  <p className="text-xs text-slate-500">تم إعداد التحليل بواسطة: <strong className="text-slate-700">{response.authorizedTitle}</strong></p>
                 </div>
                 
                 <div className="text-slate-400 text-sm">
-                  <div className="text-slate-400 mb-1">تاريخ التعبئة</div>
-                  <div className="font-semibold text-slate-700">
+                  <div className="text-xs text-slate-400 mb-1">تاريخ التعبئة</div>
+                  <div className="font-bold text-slate-700 text-sm">
                     {new Date(response.createdAt).toLocaleDateString("ar-SA", {
                       year: "numeric",
                       month: "long",
@@ -125,11 +124,11 @@ export default async function HexagonalDetails({ params }: { params: { id: strin
              </div>
            </div>
         </div>
-
+ 
         <h2 className="text-2xl font-bold text-slate-800 mb-6 flex items-center gap-2">
           <span>📊</span> تفاصيل أبعاد التحليل السداسي
         </h2>
-
+ 
         {/* Breakdown Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {Object.entries(METADATA).map(([key, meta]) => {
@@ -138,7 +137,7 @@ export default async function HexagonalDetails({ params }: { params: { id: strin
             return (
               <div 
                 key={key} 
-                className={`bg-white rounded-2xl p-6 shadow-sm border ${meta.borderClass} flex flex-col justify-between`}
+                className={`bg-white rounded-xl p-6 border ${meta.borderClass} flex flex-col justify-between`}
               >
                 <div>
                   <div className="flex items-center gap-2 pb-4 mb-4 border-b border-slate-100">

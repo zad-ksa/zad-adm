@@ -129,7 +129,7 @@ export default async function Dashboard() {
     <div className="min-h-screen bg-slate-50 flex flex-col" dir="rtl">
       <Header title="لوحة التحكم" />
       
-      <div className="flex-1 flex max-w-[1600px] w-full mx-auto px-4 py-8 gap-8">
+      <div className="flex-1 flex max-w-[1600px] w-full mx-auto px-4 py-8 relative">
         {/* Company Sidebar Component */}
         <CompanySidebar charities={charities.map(c => ({ id: c.id, name: c.name }))} />
 
@@ -142,7 +142,7 @@ export default async function Dashboard() {
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
               <CopyLinkButton />
               <CopyLinkButton path="/hexagonal" label="رابط التحليل السداسي" />
-              <div className="bg-white px-5 py-2.5 rounded-xl shadow-sm border border-slate-200 flex items-center justify-center gap-2 text-sm">
+              <div className="bg-white px-5 py-2.5 rounded-xl border border-slate-200 flex items-center justify-center gap-2 text-sm">
                 <span className="font-semibold text-slate-700">إجمالي الجمعيات: </span>
                 <span className="text-primary font-extrabold text-lg">{charities.length}</span>
               </div>
@@ -151,10 +151,10 @@ export default async function Dashboard() {
 
           {/* Pending Submissions Section */}
           {pendingCharitiesList.length > 0 && (
-            <div className="mb-8 bg-amber-50/40 rounded-3xl p-6 border border-amber-200 shadow-sm">
+            <div className="mb-8 bg-amber-50/20 rounded-2xl p-6 border border-amber-200">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-amber-100 rounded-xl flex items-center justify-center text-amber-700 text-xl font-bold shadow-sm">
+                  <div className="w-10 h-10 bg-amber-100 rounded-xl flex items-center justify-center text-amber-700 text-xl font-bold border border-amber-200">
                     ⚠️
                   </div>
                   <div>
@@ -163,7 +163,7 @@ export default async function Dashboard() {
                   </div>
                 </div>
               </div>
-              <div className="bg-white rounded-2xl border border-amber-200/60 overflow-hidden shadow-sm">
+              <div className="bg-white rounded-2xl border border-amber-200/60 overflow-hidden">
                 <div className="overflow-x-auto">
                   <table className="w-full text-right border-collapse whitespace-nowrap text-xs">
                     <thead>
@@ -224,7 +224,7 @@ export default async function Dashboard() {
             </div>
           )}
 
-          <div className="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden">
+          <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full text-right border-collapse whitespace-nowrap">
                 <thead>

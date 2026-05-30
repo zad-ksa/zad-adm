@@ -1,9 +1,7 @@
 import { prisma } from "@/lib/db";
 import Header from "@/components/Header";
 import type { Metadata } from "next";
-import CompanySidebar from "./CompanySidebar";
 import { getCharities } from "@/app/actions/charity";
-
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
@@ -18,23 +16,26 @@ export default async function MainDashboard() {
   const hexagonalResponses = await prisma.hexagonalResponse.findMany();
 
   // Calculate surveys per charity
-  const surveyCounts = new Map<string, number>();
+  const surveyCounts = new Map<string, { readiness: number, hexagonal: number }>();
   
   responses.forEach(r => {
     const name = r.charityName.trim();
-    surveyCounts.set(name, (surveyCounts.get(name) || 0) + 1);
+    if (!surveyCounts.has(name)) surveyCounts.set(name, { readiness: 0, hexagonal: 0 });
+    surveyCounts.get(name)!.readiness++;
   });
   
   hexagonalResponses.forEach(h => {
     const name = h.charityName.trim();
-    surveyCounts.set(name, (surveyCounts.get(name) || 0) + 1);
+    if (!surveyCounts.has(name)) surveyCounts.set(name, { readiness: 0, hexagonal: 0 });
+    surveyCounts.get(name)!.hexagonal++;
   });
 
-  const surveysList = Array.from(surveyCounts.entries()).map(([name, count]) => ({
+  const surveysList = Array.from(surveyCounts.entries()).map(([name, counts]) => ({
     name,
-    count
-  })).sort((a, b) => b.count - a.count);
-
+    readiness: counts.readiness,
+    hexagonal: counts.hexagonal,
+    total: counts.readiness + counts.hexagonal
+  })).sort((a, b) => b.total - a.total);
   const totalSurveys = responses.length + hexagonalResponses.length;
 
   const navItems = [
@@ -48,9 +49,7 @@ export default async function MainDashboard() {
       <Header title="بيانات الشركة" showSidebarToggle navItems={navItems} />
       
       <div className="flex-1 flex max-w-[1600px] w-full mx-auto px-4 relative">
-        <CompanySidebar charities={charities.map(c => ({ id: c.id, name: c.name }))} />
-
-        <main className="flex-1 min-w-0 py-8 lg:pr-8">
+        <main className="flex-1 min-w-0 py-8">
           <div className="mb-8">
             <h1 className="text-3xl font-bold text-slate-800 mb-2">نظرة عامة</h1>
             <p className="text-slate-600">ملخص بيانات الشركة والجمعيات المتعاقد معها</p>
@@ -117,23 +116,33 @@ export default async function MainDashboard() {
                 <thead>
                   <tr className="bg-slate-50 border-b border-slate-100 text-slate-500 text-sm tracking-wide">
                     <th className="p-5 font-bold uppercase">اسم الجمعية</th>
-                    <th className="p-5 font-bold uppercase">عدد الاستبيانات المعبأة</th>
+                    <th className="p-5 font-bold uppercase text-center">مقياس الجاهزية</th>
+                    <th className="p-5 font-bold uppercase text-center">التحليل السداسي</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-50">
                   {surveysList.map((survey) => (
                     <tr key={survey.name} className="hover:bg-slate-50/50 transition-colors">
                       <td className="p-5 font-bold text-slate-800">{survey.name}</td>
-                      <td className="p-5 font-bold text-primary">
-                        <span className="inline-block bg-primary/5 text-primary px-4 py-1.5 rounded-lg text-xs font-bold border border-primary/10">
-                          {survey.count}
-                        </span>
+                      <td className="p-5 text-center font-bold">
+                        {survey.readiness > 0 ? (
+                          <span className="inline-block bg-primary/5 text-primary px-4 py-1.5 rounded-lg text-xs font-bold border border-primary/10">
+                            {survey.readiness}
+                          </span>
+                        ) : <span className="text-slate-300">-</span>}
+                      </td>
+                      <td className="p-5 text-center font-bold">
+                        {survey.hexagonal > 0 ? (
+                          <span className="inline-block bg-secondary/10 text-secondary-foreground px-4 py-1.5 rounded-lg text-xs font-bold border border-secondary/20">
+                            {survey.hexagonal}
+                          </span>
+                        ) : <span className="text-slate-300">-</span>}
                       </td>
                     </tr>
                   ))}
                   {surveysList.length === 0 && (
                     <tr>
-                      <td colSpan={2} className="p-16 text-center text-slate-500">
+                      <td colSpan={3} className="p-16 text-center text-slate-500">
                         <p className="font-medium">لا توجد استبيانات معبأة حالياً.</p>
                       </td>
                     </tr>

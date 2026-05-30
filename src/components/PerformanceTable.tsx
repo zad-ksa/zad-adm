@@ -710,7 +710,27 @@ export default function PerformanceTable({
                                     </svg>
                                   </button>
                                   <button onClick={() => deleteIndicator(axis.id, goal.id, ind.id)} className="text-red-500 hover:text-red-700 bg-red-50 hover:bg-red-100 p-1.5 rounded transition-colors" title="حذف المؤشر">
-                          {/* Custom Modal for editing Axis Prefix */}
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                      <polyline points="3 6 5 6 21 6"></polyline>
+                                      <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                                    </svg>
+                                  </button>
+                                </div>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </>
+                    );
+                  })}
+                </>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+
+      {/* Custom Modal for editing Axis Prefix */}
       {editingAxis && (
         <div className="fixed inset-0 bg-slate-950/60 backdrop-blur-xs flex items-center justify-center z-50 transition-all duration-300" dir="rtl">
           <div className="bg-white rounded-xl border border-slate-200 max-w-md w-full mx-4 overflow-hidden transform scale-100 transition-all duration-300">
@@ -756,26 +776,6 @@ export default function PerformanceTable({
                   setEditingAxis(null);
                 }}
                 className="bg-primary hover:bg-primary/95 text-white font-bold px-6 py-2.5 rounded-xl text-sm transition-colors shadow-none cursor-pointer"
-              >
-                تحديث الرمز
-              </button>
-              <button
-                onClick={() => setEditingAxis(null)}
-                className="bg-white hover:bg-slate-50 text-slate-700 font-bold px-6 py-2.5 rounded-xl text-sm border border-slate-300 transition-colors cursor-pointer"
-              >
-                إلغاء
-              </button>
-            </div>
-          </div>
-        </div>
-      )}             onClick={() => {
-                  const trimmed = modalInput.trim();
-                  if (trimmed) {
-                    updateAxisPrefix(editingAxis.id, trimmed);
-                  }
-                  setEditingAxis(null);
-                }}
-                className="bg-[#1f4e78] hover:bg-[#153551] text-white font-bold px-6 py-2.5 rounded-xl text-sm transition-colors shadow-sm cursor-pointer"
               >
                 تحديث الرمز
               </button>

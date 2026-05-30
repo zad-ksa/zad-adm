@@ -67,6 +67,7 @@ export default function PerformanceTable({
   const [isPending, startTransition] = useTransition();
   const [isSaving, setIsSaving] = useState(false);
   const [isFullScreen, setIsFullScreen] = useState(false);
+  const [zoomLevel, setZoomLevel] = useState<number>(100);
 
   // Exit fullscreen on Escape key press
   useEffect(() => {
@@ -438,6 +439,33 @@ export default function PerformanceTable({
             </span>
           </div>
 
+          {/* Zoom Controls */}
+          <div className="flex items-center bg-slate-50 rounded-xl border border-slate-100 p-1 gap-1">
+            <button
+              onClick={() => setZoomLevel(prev => Math.max(70, prev - 10))}
+              disabled={zoomLevel <= 70}
+              className="w-8 h-8 rounded-lg flex items-center justify-center font-bold text-slate-600 hover:bg-slate-200/60 disabled:opacity-40 disabled:cursor-not-allowed transition-all select-none active:scale-[0.9] cursor-pointer"
+              title="تصغير الجدول"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+            </button>
+            <span 
+              onClick={() => setZoomLevel(100)}
+              className="text-xs font-bold text-slate-500 px-2 min-w-[45px] text-center cursor-pointer hover:text-primary transition-colors select-none"
+              title="إعادة ضبط التكبير (100%)"
+            >
+              {zoomLevel}%
+            </span>
+            <button
+              onClick={() => setZoomLevel(prev => Math.min(130, prev + 10))}
+              disabled={zoomLevel >= 130}
+              className="w-8 h-8 rounded-lg flex items-center justify-center font-bold text-slate-600 hover:bg-slate-200/60 disabled:opacity-40 disabled:cursor-not-allowed transition-all select-none active:scale-[0.9] cursor-pointer"
+              title="تكبير الجدول"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+            </button>
+          </div>
+
           <button
             onClick={() => setIsFullScreen(!isFullScreen)}
             className="bg-slate-50 hover:bg-slate-100 text-slate-600 border border-slate-100 px-5 py-2.5 rounded-xl font-bold transition-all flex items-center gap-2 cursor-pointer select-none active:scale-[0.98]"
@@ -484,7 +512,10 @@ export default function PerformanceTable({
           ? "flex-1 overflow-auto w-full pb-[200px]"
           : "overflow-x-auto w-full pb-[200px]"
         }`}>
-        <table className="w-full text-center border-collapse text-sm whitespace-nowrap">
+        <table 
+          style={{ zoom: `${zoomLevel}%` }} 
+          className="w-full text-center border-collapse text-sm whitespace-nowrap"
+        >
           <thead>
             <tr className="bg-slate-50 text-slate-600 font-bold text-xs uppercase tracking-wider border-b-2 border-slate-100">
               <th className="p-4 border-l border-slate-100 min-w-[120px]">المحور</th>
@@ -607,8 +638,8 @@ export default function PerformanceTable({
                                 ${isNewGoalRow ? "border-t-2 border-t-slate-200" : ""}
                                 ${ind.postponed
                                   ? "bg-slate-50/80 text-slate-400 font-medium opacity-80"
-                                  : isOddGoal
-                                    ? "bg-slate-50/30 hover:bg-slate-50"
+                                  : indIndex % 2 !== 0
+                                    ? "bg-slate-50/60 hover:bg-slate-100"
                                     : "bg-white hover:bg-slate-50"
                                 }
                               `}
@@ -647,7 +678,7 @@ export default function PerformanceTable({
                                 </>
                               )}
 
-                              <td className="border-l border-slate-100 p-2 font-bold text-slate-500 bg-slate-50/50 w-[80px] text-[13px]">
+                              <td className="border-l border-slate-100 p-2 font-bold text-slate-500 w-[80px] text-[13px]">
                                 {goalCode}-{indIndex + 1}
                               </td>
                               <td className="border-l border-slate-100 p-2 text-right whitespace-normal min-w-[250px]">
@@ -679,7 +710,7 @@ export default function PerformanceTable({
                               </td>
 
                               {/* Quarter Metrics & Classification */}
-                              <td className={`border-l border-slate-100 p-2 font-bold text-sm ${classification.color} bg-slate-50`}>
+                              <td className={`border-l border-slate-100 p-2 font-bold text-sm ${classification.color}`}>
                                 {classification.icon} {classification.text}
                               </td>
                               <td className="border-l border-slate-100 p-2 bg-secondary/5 font-bold">

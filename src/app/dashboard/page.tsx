@@ -224,49 +224,49 @@ export default async function Dashboard() {
             </div>
           )}
 
-          <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden">
+          <div className="bg-white rounded-2xl border border-slate-100 overflow-hidden shadow-sm">
             <div className="overflow-x-auto">
               <table className="w-full text-right border-collapse whitespace-nowrap">
                 <thead>
-                  <tr className="bg-slate-50 border-b border-slate-200 text-slate-600 text-sm">
-                    <th className="p-5 font-semibold">اسم الجمعية</th>
-                    <th className="p-5 font-semibold text-center">الاستبيانات</th>
-                    <th className="p-5 font-semibold text-center">التحليل السداسي</th>
-                    <th className="p-5 font-semibold">تاريخ التأسيس</th>
-                    <th className="p-5 font-semibold">رقم التصريح</th>
-                    <th className="p-5 font-semibold">آخر نشاط</th>
-                    <th className="p-5 font-semibold text-center">متوسط الجاهزية</th>
+                  <tr className="bg-slate-50 border-b border-slate-100 text-slate-500 text-sm tracking-wide">
+                    <th className="p-5 font-bold uppercase">اسم الجمعية</th>
+                    <th className="p-5 font-bold text-center uppercase">الاستبيانات</th>
+                    <th className="p-5 font-bold text-center uppercase">التحليل السداسي</th>
+                    <th className="p-5 font-bold uppercase">تاريخ التأسيس</th>
+                    <th className="p-5 font-bold uppercase">رقم التصريح</th>
+                    <th className="p-5 font-bold uppercase">آخر نشاط</th>
+                    <th className="p-5 font-bold text-center uppercase">متوسط الجاهزية</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100">
+                <tbody className="divide-y divide-slate-50">
                   {charityStats.map((charity) => (
-                    <tr key={charity.id} className="hover:bg-slate-50 transition-colors">
-                      <td className="p-5 font-bold text-primary hover:underline">
-                        <Link href={`/dashboard/charity/${encodeURIComponent(charity.name)}`}>
+                    <tr key={charity.id} className="hover:bg-slate-50/50 transition-colors group">
+                      <td className="p-5 font-bold text-slate-800 group-hover:text-primary transition-colors">
+                        <Link href={`/dashboard/charity/${encodeURIComponent(charity.name)}`} className="block">
                           {charity.name}
                         </Link>
                       </td>
-                      <td className="p-5 text-slate-600 text-center font-bold">
+                      <td className="p-5 text-center font-bold">
                         {charity.readinessCount > 0 ? (
-                          <span className="inline-block bg-primary/10 text-primary px-3 py-1 rounded-full text-xs">
+                          <span className="inline-block bg-primary/5 text-primary px-4 py-1.5 rounded-lg text-xs font-bold border border-primary/10">
                             {charity.readinessCount}
                           </span>
                         ) : (
-                          <span className="text-slate-400 text-xs">-</span>
+                          <span className="text-slate-300 text-xs">-</span>
                         )}
                       </td>
-                      <td className="p-5 text-slate-600 text-center font-bold">
+                      <td className="p-5 text-center font-bold">
                         {charity.hexagonalCount > 0 ? (
-                          <span className="inline-block bg-secondary/15 text-secondary-foreground px-3 py-1 rounded-full text-xs">
+                          <span className="inline-block bg-secondary/10 text-secondary-foreground px-4 py-1.5 rounded-lg text-xs font-bold border border-secondary/20">
                             {charity.hexagonalCount}
                           </span>
                         ) : (
-                          <span className="text-slate-400 text-xs">-</span>
+                          <span className="text-slate-300 text-xs">-</span>
                         )}
                       </td>
-                      <td className="p-5 text-slate-600">{charity.establishmentDate || "-"}</td>
-                      <td className="p-5 text-slate-600">{charity.licenseNumber || "-"}</td>
-                      <td className="p-5 text-slate-600 text-sm">
+                      <td className="p-5 text-slate-600 font-medium">{charity.establishmentDate || "-"}</td>
+                      <td className="p-5 text-slate-600 font-medium">{charity.licenseNumber || "-"}</td>
+                      <td className="p-5 text-slate-500 text-sm font-medium">
                         {new Date(charity.latestDate).toLocaleDateString("ar-SA", {
                           year: "numeric",
                           month: "short",
@@ -276,29 +276,29 @@ export default async function Dashboard() {
                       <td className="p-5 text-center">
                         {charity.readinessCount > 0 ? (
                           <div className="flex items-center justify-center">
-                            <div className={`px-4 py-1.5 rounded-full text-sm font-bold flex items-center justify-center
+                            <div className={`px-5 py-2 rounded-xl text-sm font-bold flex items-center justify-center min-w-[4rem]
                               ${
-                                charity.averagePercentage >= 80 ? "bg-green-100 text-green-700" :
-                                charity.averagePercentage >= 60 ? "bg-blue-100 text-blue-700" :
-                                charity.averagePercentage >= 40 ? "bg-orange-100 text-orange-700" :
-                                "bg-red-100 text-red-700"
+                                charity.averagePercentage >= 80 ? "bg-[#00b050]/10 text-[#00b050]" :
+                                charity.averagePercentage >= 60 ? "bg-[#92d050]/10 text-[#71a638]" :
+                                charity.averagePercentage >= 40 ? "bg-[#ffc000]/10 text-[#c29300]" :
+                                "bg-[#ff0000]/10 text-[#ff0000]"
                               }
                             `}>
                               {charity.averagePercentage}%
                             </div>
                           </div>
                         ) : (
-                          <span className="text-slate-400 text-xs">لا يوجد مقياس</span>
+                          <span className="text-slate-400 text-xs font-medium bg-slate-50 px-3 py-1.5 rounded-lg">لا يوجد مقياس</span>
                         )}
                       </td>
                     </tr>
                   ))}
                   {charityStats.length === 0 && (
                     <tr>
-                      <td colSpan={7} className="p-12 text-center text-slate-500">
-                        <div className="text-4xl mb-4">🏢</div>
-                        <h3 className="text-lg font-bold text-slate-700 mb-2">لا توجد جمعيات مضافة</h3>
-                        <p>استخدم زر "إضافة جمعية جديدة" من القائمة الجانبية للبدء.</p>
+                      <td colSpan={7} className="p-16 text-center text-slate-500">
+                        <div className="text-5xl mb-6 opacity-50">🏢</div>
+                        <h3 className="text-xl font-bold text-slate-700 mb-2">لا توجد جمعيات مضافة</h3>
+                        <p className="font-medium text-slate-500">استخدم زر "إضافة جمعية جديدة" من القائمة الجانبية للبدء.</p>
                       </td>
                     </tr>
                   )}

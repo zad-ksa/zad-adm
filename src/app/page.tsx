@@ -36,32 +36,32 @@ export default function AdminLogin() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col">
+    <div className="min-h-screen bg-slate-50 flex flex-col font-sans">
       <Header />
       
       <main className="flex-1 flex items-center justify-center p-4">
-        <div className="bg-white p-8 rounded-2xl border border-slate-200 w-full max-w-md">
-          <div className="text-center mb-8">
-            <h1 className="text-2xl font-bold text-slate-800 mb-2">تسجيل الدخول للإدارة</h1>
-            <p className="text-slate-500">خاص بفريق زاد التنموية لأثر مستدام</p>
+        <div className="bg-white p-10 rounded-2xl border border-slate-100 w-full max-w-md shadow-sm">
+          <div className="text-center mb-10">
+            <h1 className="text-3xl font-bold text-slate-800 mb-3 tracking-tight">تسجيل الدخول للإدارة</h1>
+            <p className="text-slate-500 font-medium">خاص بفريق زاد التنموية لأثر مستدام</p>
           </div>
 
           <form onSubmit={handleLogin} className="space-y-6">
             <div>
-              <label className="block text-sm font-semibold text-slate-700 mb-2">كلمة المرور</label>
+              <label className="block text-sm font-bold text-slate-700 mb-2">كلمة المرور</label>
               <input
                 type="password"
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all outline-none text-left bg-white text-slate-800"
+                className="w-full px-5 py-4 rounded-xl border border-slate-200 focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all outline-none text-left bg-slate-50 focus:bg-white text-slate-800 font-medium"
                 dir="ltr"
                 placeholder="••••••••"
               />
             </div>
 
             {error && (
-              <div className="p-3 bg-red-50 text-red-600 rounded-xl text-sm text-center border border-red-100">
+              <div className="p-4 bg-red-50 text-red-600 rounded-xl text-sm text-center border border-red-100 font-bold">
                 {error}
               </div>
             )}
@@ -69,14 +69,14 @@ export default function AdminLogin() {
             <button
               type="submit"
               disabled={isLoading}
-              className={`w-full py-3.5 rounded-xl font-bold text-white transition-all flex items-center justify-center gap-2 ${
+              className={`w-full py-4 rounded-xl font-bold text-white transition-all flex items-center justify-center gap-3 text-lg ${
                 isLoading
-                  ? "bg-primary/70 cursor-not-allowed"
-                  : "bg-primary hover:bg-primary-hover active:scale-[0.98]"
+                  ? "bg-slate-300 cursor-not-allowed text-slate-500"
+                  : "bg-primary hover:bg-primary/90 active:scale-[0.98] shadow-sm hover:shadow"
               }`}
             >
-              {isLoading && <div className="w-5 h-5 border-2 border-white/50 border-t-white rounded-full animate-spin" />}
-              تسجيل الدخول
+              {isLoading && <div className="w-5 h-5 border-2 border-slate-500/30 border-t-slate-600 rounded-full animate-spin" />}
+              {isLoading ? "جاري التحقق..." : "تسجيل الدخول"}
             </button>
           </form>
         </div>

@@ -727,33 +727,25 @@ export default function PerformanceTable({
                               </td>
 
                               {/* Performances */}
-                              <td className="border-l border-slate-100 p-2">
-                                <span className={`px-3 py-1.5 rounded-lg font-black text-sm block border ${getPerfColor(indPerf, hasData(getQuarterAchieved(ind)), ind.postponed)} border-transparent`}>
-                                  {ind.postponed ? "مؤجل" : `${indPerf}%`}
-                                </span>
+                              <td className={`border-l border-slate-100 p-3 font-black text-sm text-center ${getPerfColor(indPerf, hasData(getQuarterAchieved(ind)), ind.postponed)}`}>
+                                {ind.postponed ? "مؤجل" : `${indPerf}%`}
                               </td>
 
                               {isFirstInd && (
-                                <td className={`border-l border-slate-100 p-2 ${isOddGoal ? "bg-slate-100/70" : "bg-white"}`} rowSpan={goalRowSpan}>
-                                  <span className={`px-3 py-2 rounded-lg font-black text-sm block border ${getPerfColor(gPerf)} border-transparent`}>
-                                    {gPerf}%
-                                  </span>
+                                <td className={`border-l border-slate-100 p-3 font-black text-sm text-center ${getPerfColor(gPerf)}`} rowSpan={goalRowSpan}>
+                                  {gPerf}%
                                 </td>
                               )}
 
                               {isFirstGoal && (
-                                <td className="border-l border-slate-100 p-2" rowSpan={axisRowSpan}>
-                                  <span className={`px-3 py-2 rounded-lg font-black text-sm block border ${getPerfColor(aPerf)} border-transparent`}>
-                                    {aPerf}%
-                                  </span>
+                                <td className={`border-l border-slate-100 p-3 font-black text-sm text-center ${getPerfColor(aPerf)}`} rowSpan={axisRowSpan}>
+                                  {aPerf}%
                                 </td>
                               )}
 
                               {isFirstGoal && axisIndex === 0 && (
-                                <td className="border-l border-slate-100 p-2 bg-slate-50/50" rowSpan={axes.reduce((acc, a) => acc + Math.max(1, a.goals.reduce((gacc, g) => gacc + Math.max(1, g.indicators.length), 0)), 0)}>
-                                  <span className={`px-4 py-3 rounded-xl font-black text-lg block border ${getPerfColor(totalPerf)} border-transparent shadow-sm`}>
-                                    {totalPerf}%
-                                  </span>
+                                <td className={`border-l border-slate-100 p-3 font-black text-lg text-center ${getPerfColor(totalPerf)}`} rowSpan={axes.reduce((acc, a) => acc + Math.max(1, a.goals.reduce((gacc, g) => gacc + Math.max(1, g.indicators.length), 0)), 0)}>
+                                  {totalPerf}%
                                 </td>
                               )}
 

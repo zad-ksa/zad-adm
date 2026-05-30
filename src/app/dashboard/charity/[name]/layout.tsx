@@ -14,7 +14,7 @@ export default async function CharityLayout({
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col" dir="rtl">
-      <Header title={decodedName} />
+      <Header title={decodedName} showSidebarToggle />
 
       <div className="flex-1 flex max-w-[1600px] w-full mx-auto px-4 py-8 relative">
         <CharitySidebar charityName={decodedName} />

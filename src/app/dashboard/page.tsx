@@ -127,7 +127,7 @@ export default async function Dashboard() {
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col" dir="rtl">
-      <Header title="لوحة التحكم" />
+      <Header title="لوحة التحكم" showSidebarToggle />
       
       <div className="flex-1 flex max-w-[1600px] w-full mx-auto px-4 py-8 relative">
         {/* Company Sidebar Component */}

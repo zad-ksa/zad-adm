@@ -2,7 +2,6 @@ import { prisma } from "@/lib/db";
 import Header from "@/components/Header";
 import Link from "next/link";
 import type { Metadata } from "next";
-import CompanySidebar from "../CompanySidebar";
 import { getCharities } from "@/app/actions/charity";
 
 export const dynamic = "force-dynamic";
@@ -23,12 +22,10 @@ export default async function CharitiesDashboard() {
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col" dir="rtl">
-      <Header title="الجمعيات" showSidebarToggle navItems={navItems} />
+      <Header title="الجمعيات" navItems={navItems} />
       
       <div className="flex-1 flex max-w-[1600px] w-full mx-auto px-4 relative">
-        <CompanySidebar charities={charities.map(c => ({ id: c.id, name: c.name }))} />
-
-        <main className="flex-1 min-w-0 py-8 lg:pr-8">
+        <main className="flex-1 min-w-0 py-8">
           <div className="mb-8">
             <h1 className="text-3xl font-bold text-slate-800 mb-2">إدارة الجمعيات</h1>
             <p className="text-slate-600">قائمة بالجمعيات المتعاقد معها والجمعيات المستهدفة</p>

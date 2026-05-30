@@ -46,7 +46,7 @@ export default async function MainDashboard() {
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col" dir="rtl">
-      <Header title="بيانات الشركة" showSidebarToggle navItems={navItems} />
+      <Header title="بيانات الشركة" navItems={navItems} />
       
       <div className="flex-1 flex max-w-[1600px] w-full mx-auto px-4 relative">
         <main className="flex-1 min-w-0 py-8">

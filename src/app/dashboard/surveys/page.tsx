@@ -3,7 +3,6 @@ import Header from "@/components/Header";
 import Link from "next/link";
 import CopyLinkButton from "@/components/CopyLinkButton";
 import type { Metadata } from "next";
-import CompanySidebar from "../CompanySidebar";
 import { getCharities, bootstrapCharities } from "@/app/actions/charity";
 import ApproveCharityButton from "../ApproveCharityButton";
 
@@ -129,12 +128,10 @@ export default async function SurveysDashboard() {
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col" dir="rtl">
-      <Header title="لوحة التحكم" showSidebarToggle navItems={navItems} />
+      <Header title="لوحة التحكم" navItems={navItems} />
       
       <div className="flex-1 flex max-w-[1600px] w-full mx-auto px-4 relative">
-        <CompanySidebar charities={charities.map(c => ({ id: c.id, name: c.name }))} />
-
-        <main className="flex-1 min-w-0 py-8 lg:pr-8">
+        <main className="flex-1 min-w-0 py-8">
           <div className="mb-8 flex flex-col xl:flex-row justify-between items-start xl:items-end gap-6">
             <div>
               <h1 className="text-3xl font-bold text-slate-800 mb-2">الاستبيانات المعبأة</h1>

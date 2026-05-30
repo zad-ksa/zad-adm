@@ -10,12 +10,12 @@ type Indicator = {
   name: string;
   status: string;
   owner: string;
-  annualTarget: number;
-  annualAchieved: number;
-  q1Target: number; q1Achieved: number | null;
-  q2Target: number; q2Achieved: number | null;
-  q3Target: number; q3Achieved: number | null;
-  q4Target: number; q4Achieved: number | null;
+  annualTarget: string | number;
+  annualAchieved: string | number | null;
+  q1Target: string | number; q1Achieved: string | number | null;
+  q2Target: string | number; q2Achieved: string | number | null;
+  q3Target: string | number; q3Achieved: string | number | null;
+  q4Target: string | number; q4Achieved: string | number | null;
   postponed?: boolean;
 };
 
@@ -245,25 +245,68 @@ export default function PerformanceTable({
   };
 
   // Helpers
-  const hasData = (val: any) => val !== null && val !== undefined && val !== "";
+  const hasData = (val: any) => val !== null && val !== undefined && String(val).trim() !== "";
+
+  const parseValueToNumber = (val: any): number => {
+    if (val === null || val === undefined) return 0;
+    const str = String(val).trim();
+    if (!str) return 0;
+    if (str.endsWith("%")) {
+      const num = parseFloat(str.replace("%", ""));
+      return isNaN(num) ? 0 : num;
+    }
+    const num = parseFloat(str);
+    return isNaN(num) ? 0 : num;
+  };
+
+  const isPercentageValue = (val: any) => {
+    return val !== null && val !== undefined && String(val).trim().includes("%");
+  };
 
   const getAnnualTargetValue = (ind: Indicator) => {
-    return (ind.q1Target || 0) + (ind.q2Target || 0) + (ind.q3Target || 0) + (ind.q4Target || 0);
+    const values = [ind.q1Target, ind.q2Target, ind.q3Target, ind.q4Target];
+    const isPercentage = values.some(isPercentageValue);
+    
+    const parsedValues = values.map(parseValueToNumber);
+    const activeCount = values.filter(v => v !== null && v !== undefined && String(v).trim() !== "").length;
+    
+    if (activeCount === 0) return 0;
+    
+    if (isPercentage) {
+      const sum = parsedValues.reduce((acc, curr) => acc + curr, 0);
+      const avg = Math.round((sum / activeCount) * 10) / 10;
+      return `${avg}%`;
+    } else {
+      return parsedValues.reduce((acc, curr) => acc + curr, 0);
+    }
   };
 
   const getAnnualAchievedValue = (ind: Indicator) => {
-    if (ind.q1Achieved === null && ind.q2Achieved === null && ind.q3Achieved === null && ind.q4Achieved === null) {
-      return null;
+    const values = [ind.q1Achieved, ind.q2Achieved, ind.q3Achieved, ind.q4Achieved];
+    const isPercentage = values.some(isPercentageValue);
+    
+    const parsedValues = values.map(parseValueToNumber);
+    const activeCount = values.filter(v => v !== null && v !== undefined && String(v).trim() !== "").length;
+    
+    if (activeCount === 0) return null;
+    
+    if (isPercentage) {
+      const sum = parsedValues.reduce((acc, curr) => acc + curr, 0);
+      const avg = Math.round((sum / activeCount) * 10) / 10;
+      return `${avg}%`;
+    } else {
+      return parsedValues.reduce((acc, curr) => acc + curr, 0);
     }
-    return (ind.q1Achieved || 0) + (ind.q2Achieved || 0) + (ind.q3Achieved || 0) + (ind.q4Achieved || 0);
   };
 
   const getIndicatorStatus = (ind: Indicator) => {
     if (ind.postponed) return "مؤجل";
     const achieved = getQuarterAchieved(ind);
     if (!hasData(achieved)) return "لا توجد بيانات";
-    const target = getQuarterTarget(ind) || 0;
-    if (Number(achieved) >= target) return "مكتمل";
+    const target = getQuarterTarget(ind);
+    const parsedAchieved = parseValueToNumber(achieved);
+    const parsedTarget = parseValueToNumber(target);
+    if (parsedAchieved >= parsedTarget) return "مكتمل";
     return "جاري";
   };
 
@@ -307,13 +350,18 @@ export default function PerformanceTable({
   };
 
   // Calculations
-  const getQuarterTarget = (ind: Indicator) => ind[`${quarter.toLowerCase()}Target` as keyof Indicator] as number;
-  const getQuarterAchieved = (ind: Indicator) => ind[`${quarter.toLowerCase()}Achieved` as keyof Indicator] as number | null;
+  const getQuarterTarget = (ind: Indicator) => ind[`${quarter.toLowerCase()}Target` as keyof Indicator] as any;
+  const getQuarterAchieved = (ind: Indicator) => ind[`${quarter.toLowerCase()}Achieved` as keyof Indicator] as any;
 
-  const calcPercentage = (achieved: number | null, target: number) => {
-    if (!hasData(achieved)) return 0;
-    if (target === 0) return achieved !== null && achieved >= 0 ? 100 : 0;
-    const val = (Number(achieved) / target) * 100;
+  const calcPercentage = (achieved: any, target: any) => {
+    if (!hasData(achieved) || !hasData(target)) return 0;
+    const parsedAchieved = parseValueToNumber(achieved);
+    const parsedTarget = parseValueToNumber(target);
+    
+    if (parsedTarget === 0) {
+      return parsedAchieved >= 0 ? 100 : 0;
+    }
+    const val = (parsedAchieved / parsedTarget) * 100;
     return Math.min(Math.round(val * 10) / 10, 100); // Max 100%
   };
 
@@ -720,10 +768,10 @@ export default function PerformanceTable({
                                 {classification.icon} {classification.text}
                               </td>
                               <td className="border-l border-slate-100 p-2 bg-secondary/5 font-bold">
-                                <input type="number" value={(ind[targetField] as number | null) ?? ""} disabled={ind.postponed} onChange={e => updateIndicator(axis.id, goal.id, ind.id, targetField, e.target.value === "" ? null : Number(e.target.value))} className="w-16 text-center bg-white border border-slate-200 focus:border-secondary outline-none rounded-md py-1 px-1 text-sm disabled:bg-transparent disabled:border-transparent disabled:text-slate-400 shadow-sm disabled:shadow-none transition-all" />
+                                <input type="text" value={(ind[targetField] as any) ?? ""} disabled={ind.postponed} onChange={e => updateIndicator(axis.id, goal.id, ind.id, targetField, e.target.value === "" ? null : e.target.value)} className="w-16 text-center bg-white border border-slate-200 focus:border-secondary outline-none rounded-md py-1 px-1 text-sm disabled:bg-transparent disabled:border-transparent disabled:text-slate-400 shadow-sm disabled:shadow-none transition-all" />
                               </td>
                               <td className="border-l border-slate-100 p-2 bg-secondary/5 font-bold">
-                                <input type="number" value={(ind[achievedField] as number | null) ?? ""} disabled={ind.postponed} onChange={e => updateIndicator(axis.id, goal.id, ind.id, achievedField, e.target.value === "" ? null : Number(e.target.value))} className="w-16 text-center bg-white border border-slate-200 focus:border-secondary outline-none rounded-md py-1 px-1 text-sm disabled:bg-transparent disabled:border-transparent disabled:text-slate-400 shadow-sm disabled:shadow-none transition-all" />
+                                <input type="text" value={(ind[achievedField] as any) ?? ""} disabled={ind.postponed} onChange={e => updateIndicator(axis.id, goal.id, ind.id, achievedField, e.target.value === "" ? null : e.target.value)} className="w-16 text-center bg-white border border-slate-200 focus:border-secondary outline-none rounded-md py-1 px-1 text-sm disabled:bg-transparent disabled:border-transparent disabled:text-slate-400 shadow-sm disabled:shadow-none transition-all" />
                               </td>
 
                               {/* Performances */}

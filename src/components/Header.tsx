@@ -4,16 +4,24 @@ import Image from "next/image";
 import Link from "next/link";
 import { useState, useEffect } from "react";
 
+interface NavItem {
+  label: string;
+  href: string;
+  active?: boolean;
+}
+
 interface HeaderProps {
   disableLink?: boolean;
   title?: string;
   showSidebarToggle?: boolean;
+  navItems?: NavItem[];
 }
 
 export default function Header({ 
   disableLink = false, 
   title = "استبيان الجاهزية",
-  showSidebarToggle = false
+  showSidebarToggle = false,
+  navItems
 }: HeaderProps) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
@@ -107,6 +115,25 @@ export default function Header({
             </Link>
           )}
         </div>
+
+        {/* Navigation Items */}
+        {navItems && navItems.length > 0 && (
+          <nav className="hidden md:flex items-center gap-2 mx-4">
+            {navItems.map((item, idx) => (
+              <Link 
+                key={idx} 
+                href={item.href}
+                className={`px-4 py-2 rounded-xl text-sm font-bold transition-all ${
+                  item.active 
+                    ? "bg-primary text-white shadow-md shadow-primary/20" 
+                    : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+                }`}
+              >
+                {item.label}
+              </Link>
+            ))}
+          </nav>
+        )}
         
         <div className="flex items-center">
           <span className="bg-primary/5 text-primary px-4 sm:px-5 py-2 rounded-xl text-xs sm:text-sm font-bold border border-primary/10">

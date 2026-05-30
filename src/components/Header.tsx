@@ -66,19 +66,11 @@ export default function Header({
   return (
     <header className="w-full bg-white border-b border-slate-200 sticky top-0 z-50">
       <div className="max-w-[1600px] mx-auto px-4 sm:px-6 h-20 flex items-center justify-between">
-        {disableLink ? (
-          logoContent
-        ) : (
-          <Link href="/" className="block">
-            {logoContent}
-          </Link>
-        )}
-        
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-4">
           {showSidebarToggle && (
             <button
               onClick={toggleSidebar}
-              className={`w-11 h-11 rounded-xl flex items-center justify-center transition-all duration-300 border cursor-pointer select-none active:scale-95 ${
+              className={`w-9 h-9 rounded-lg flex items-center justify-center transition-all duration-300 border cursor-pointer select-none active:scale-95 ${
                 isSidebarOpen 
                   ? "bg-primary/10 border-primary/20 text-primary" 
                   : "bg-slate-50 hover:bg-slate-100 border-slate-200 text-slate-600 hover:text-slate-900"
@@ -87,26 +79,36 @@ export default function Header({
               aria-expanded={isSidebarOpen}
             >
               {/* Animated Hamburger Icon */}
-              <div className="relative w-5 h-4 flex flex-col justify-between items-center pointer-events-none">
+              <div className="relative w-4.5 h-3 flex flex-col justify-between items-center pointer-events-none">
                 <span 
-                  className={`w-5 h-[2px] bg-current rounded-full transition-all duration-300 ease-in-out origin-center ${
-                    isSidebarOpen ? "rotate-45 translate-y-[7px]" : ""
+                  className={`w-4.5 h-[1.5px] bg-current rounded-full transition-all duration-300 ease-in-out origin-center ${
+                    isSidebarOpen ? "rotate-45 translate-y-[5.25px]" : ""
                   }`} 
                 />
                 <span 
-                  className={`w-5 h-[2px] bg-current rounded-full transition-all duration-300 ease-in-out ${
+                  className={`w-4.5 h-[1.5px] bg-current rounded-full transition-all duration-300 ease-in-out ${
                     isSidebarOpen ? "opacity-0 scale-0" : "opacity-100 scale-100"
                   }`} 
                 />
                 <span 
-                  className={`w-5 h-[2px] bg-current rounded-full transition-all duration-300 ease-in-out origin-center ${
-                    isSidebarOpen ? "-rotate-45 -translate-y-[7px]" : ""
+                  className={`w-4.5 h-[1.5px] bg-current rounded-full transition-all duration-300 ease-in-out origin-center ${
+                    isSidebarOpen ? "-rotate-45 -translate-y-[5.25px]" : ""
                   }`} 
                 />
               </div>
             </button>
           )}
 
+          {disableLink ? (
+            logoContent
+          ) : (
+            <Link href="/" className="block">
+              {logoContent}
+            </Link>
+          )}
+        </div>
+        
+        <div className="flex items-center">
           <span className="bg-primary/5 text-primary px-4 sm:px-5 py-2 rounded-xl text-xs sm:text-sm font-bold border border-primary/10">
             {title}
           </span>

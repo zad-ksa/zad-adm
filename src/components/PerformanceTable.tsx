@@ -345,12 +345,12 @@ export default function PerformanceTable({
 
   // Color logic
   const getPerfColor = (val: number, hasDataValue = true, isPostponed = false) => {
-    if (isPostponed) return "bg-amber-50 text-amber-600";
-    if (!hasDataValue) return "bg-slate-50 text-slate-400";
-    if (val >= 90) return "bg-[#00b050]/10 text-[#00b050]"; // Excellent
-    if (val >= 70) return "bg-[#92d050]/10 text-[#71a638]"; // Good
-    if (val >= 50) return "bg-[#ffc000]/10 text-[#c29300]"; // Acceptable
-    return "bg-[#ff0000]/10 text-[#ff0000]"; // Weak
+    if (isPostponed) return "bg-amber-500 text-white";
+    if (!hasDataValue) return "bg-slate-100 text-slate-500";
+    if (val >= 90) return "bg-[#00b050] text-white"; // Excellent
+    if (val >= 70) return "bg-[#92d050] text-white"; // Good
+    if (val >= 50) return "bg-[#ffc000] text-slate-900"; // Acceptable
+    return "bg-[#ff0000] text-white"; // Weak
   };
 
   const getClassification = (val: number, hasDataValue = true, isPostponed = false) => {

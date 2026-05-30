@@ -43,9 +43,11 @@ const LicenseIcon = () => (
 const RocketIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-8 h-8 text-primary">
     <path d="M4.5 16.5c-1.5 1.25-2.5 3.5-2.5 3.5s2.25-1 3.5-2.5" />
-    <path d="M12 2C6 2 2 6 2 12c0 2.5 1.5 4.5 3 5.5l1.5-1.5C6 15 5 13.5 5 12c0-4.5 3-7.5 7-7.5s7 3 7 7.5c0 1.5-1 3-1.5 4l-1.5-1.5c1.5-1 3-3 3-5.5 0-6-4-10-10-10z" className="fill-primary/5" />
-    <path d="M19 19s-1-2.25-2.5-3.5l1.5-1.5c1.5 1.25 3.5 2.5 3.5 2.5s-1 1.25-2.5 2.5z" />
-    <circle cx="12" cy="9" r="2" />
+    <path d="M14 2c1.8 0 3 1.2 3 3 0 .2 0 .4-.1.6l-3.3 3.3c-.6.6-1.5.6-2.1 0L9.4 6.8c-.6-.6-.6-1.5 0-2.1L12.7 1.4c.2-.2.4-.4.6-.4h.7z" className="fill-primary/5" />
+    <path d="M9 12c0-.6.4-1 1-1h1.5l1.5-3 3-1.5V11c0 .6-.4 1-1 1H7.5l-1.5 3-3 1.5V11z" />
+    <path d="M12 15l-3-3" />
+    <path d="M9 21v-4" />
+    <path d="M14 17v4" />
   </svg>
 );
 

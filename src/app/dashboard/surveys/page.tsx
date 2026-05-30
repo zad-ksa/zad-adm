@@ -252,7 +252,7 @@ export default async function SurveysDashboard() {
                       </td>
                       <td className="p-5 text-center font-bold">
                         {charity.hexagonalCount > 0 ? (
-                          <span className="inline-block bg-secondary/10 text-secondary-foreground px-4 py-1.5 rounded-lg text-xs font-bold border border-secondary/20">
+                          <span className="inline-block bg-secondary/10 text-[#c29300] px-4 py-1.5 rounded-lg text-xs font-bold border border-secondary/20">
                             {charity.hexagonalCount}
                           </span>
                         ) : (

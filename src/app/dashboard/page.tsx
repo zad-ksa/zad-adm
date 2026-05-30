@@ -133,7 +133,7 @@ export default async function MainDashboard() {
                       </td>
                       <td className="p-5 text-center font-bold">
                         {survey.hexagonal > 0 ? (
-                          <span className="inline-block bg-secondary/10 text-secondary-foreground px-4 py-1.5 rounded-lg text-xs font-bold border border-secondary/20">
+                          <span className="inline-block bg-secondary/10 text-[#c29300] px-4 py-1.5 rounded-lg text-xs font-bold border border-secondary/20">
                             {survey.hexagonal}
                           </span>
                         ) : <span className="text-slate-300">-</span>}

@@ -4,6 +4,57 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState, useEffect } from "react";
 
+const HomeIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
+    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" className="fill-primary/5 stroke-primary/10" />
+    <polyline points="9 22 9 12 15 12 15 22" />
+    <path d="M3 9l9-7 9 7" />
+  </svg>
+);
+
+const StrategyIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
+    <circle cx="12" cy="12" r="10" className="stroke-slate-300" />
+    <circle cx="12" cy="12" r="6" className="fill-primary/5 stroke-primary/30" />
+    <circle cx="12" cy="12" r="2" className="fill-primary stroke-primary" />
+    <path d="M12 2v4M12 18v4M2 12h4M18 12h4" />
+  </svg>
+);
+
+const GovernanceIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
+    <line x1="12" y1="2" x2="12" y2="22" />
+    <line x1="5" y1="7" x2="19" y2="7" />
+    <path d="M5 7l3 7h-6z" className="fill-slate-500/5 stroke-current" />
+    <path d="M19 7l3 7h-6z" className="fill-slate-500/5 stroke-current" />
+    <path d="M12 22h6m-12 0h6" />
+  </svg>
+);
+
+const ProgramsIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
+    <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" className="fill-primary/5 stroke-current" />
+    <line x1="2" y1="10" x2="22" y2="10" className="opacity-50" />
+  </svg>
+);
+
+const HRIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
+    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+    <circle cx="9" cy="7" r="4" className="fill-primary/5" />
+    <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+    <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+  </svg>
+);
+
+const FinanceIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
+    <rect x="2" y="4" width="20" height="16" rx="2" className="fill-primary/5" />
+    <path d="M12 8v8M9 11h6m-6 2h6" className="stroke-primary" />
+    <circle cx="20" cy="12" r="2" className="fill-secondary stroke-secondary" />
+  </svg>
+);
+
 export default function CharitySidebar({ charityName }: { charityName: string }) {
   const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(true);
@@ -44,35 +95,35 @@ export default function CharitySidebar({ charityName }: { charityName: string })
       title: "الرئيسية",
       href: `/dashboard/charity/${encodeURIComponent(charityName)}`,
       exact: true,
-      icon: "🏠",
+      icon: <HomeIcon />,
     },
     {
       title: "الاستراتيجية",
       href: `/dashboard/charity/${encodeURIComponent(charityName)}/strategy`,
-      icon: "🎯",
+      icon: <StrategyIcon />,
     },
     {
       title: "الحوكمة",
       href: "#",
-      icon: "⚖️",
+      icon: <GovernanceIcon />,
       comingSoon: true,
     },
     {
       title: "البرامج والمشاريع",
       href: "#",
-      icon: "📂",
+      icon: <ProgramsIcon />,
       comingSoon: true,
     },
     {
       title: "الموارد البشرية",
       href: "#",
-      icon: "👥",
+      icon: <HRIcon />,
       comingSoon: true,
     },
     {
       title: "المالية",
       href: "#",
-      icon: "💰",
+      icon: <FinanceIcon />,
       comingSoon: true,
     },
   ];

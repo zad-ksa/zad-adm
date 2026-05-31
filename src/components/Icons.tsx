@@ -20,7 +20,11 @@ import {
   ShieldAlert,
   Key,
   Rocket as LucideRocket,
-  HelpCircle
+  HelpCircle,
+  Phone,
+  Lock,
+  AlertCircle,
+  Loader2
 } from "lucide-react";
 
 // Custom SVG Icons
@@ -92,5 +96,9 @@ export {
   ShieldAlert,
   Key,
   LucideRocket as Rocket,
-  HelpCircle
+  HelpCircle,
+  Phone,
+  Lock,
+  AlertCircle,
+  Loader2
 };

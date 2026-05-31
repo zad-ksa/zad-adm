@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/db";
 import type { Metadata } from "next";
-import { BuildingIcon, CalendarIcon, LicenseIcon, RocketIcon, ClipboardList } from "@/components/Icons";
+import { CalendarIcon, LicenseIcon, Rocket, ClipboardList, Building2 } from "@/components/Icons";
 
 export const dynamic = "force-dynamic";
 
@@ -33,7 +33,7 @@ export default async function CharityOverview({ params }: { params: Promise<{ na
       <div className="bg-white rounded-2xl p-10 border border-slate-100 shadow-sm relative overflow-hidden">
         {/* Decorative subtle background element */}
         <div className="absolute top-0 left-0 w-64 h-64 bg-primary/5 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2 pointer-events-none"></div>
-        
+
         <div className="relative z-10">
           <div className="flex items-center gap-4 mb-10">
             <div className="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center text-primary border border-primary/20 shadow-inner">
@@ -48,7 +48,7 @@ export default async function CharityOverview({ params }: { params: Promise<{ na
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             <div className="bg-slate-50/80 p-6 rounded-2xl border border-slate-100 hover:border-slate-200 transition-colors">
               <div className="flex items-center gap-2 mb-3">
-                <BuildingIcon />
+                <Building2 />
                 <div className="text-sm font-bold text-slate-500">اسم الجمعية</div>
               </div>
               <div className="text-xl font-bold text-slate-800">{decodedName}</div>
@@ -80,10 +80,10 @@ export default async function CharityOverview({ params }: { params: Promise<{ na
       <div className="bg-white rounded-2xl p-12 border border-slate-100 shadow-sm relative overflow-hidden">
         {/* Subtle patterned background for empty state */}
         <div className="absolute inset-0 bg-[radial-gradient(#e2e8f0_1px,transparent_1px)] [background-size:16px_16px] opacity-30"></div>
-        
+
         <div className="relative text-center max-w-md mx-auto">
           <div className="w-16 h-16 bg-primary/5 rounded-2xl flex items-center justify-center mx-auto mb-6 border border-primary/10 shadow-sm">
-            <RocketIcon />
+            <Rocket />
           </div>
           <h3 className="text-xl font-bold text-slate-800 mb-3 tracking-tight">المزيد من البيانات قريباً</h3>
           <p className="text-slate-500 font-medium leading-relaxed">

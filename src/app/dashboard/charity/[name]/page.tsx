@@ -48,7 +48,7 @@ export default async function CharityOverview({ params }: { params: Promise<{ na
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             <div className="bg-slate-50/80 p-6 rounded-2xl border border-slate-100 hover:border-slate-200 transition-colors">
               <div className="flex items-center gap-2 mb-3">
-                <Building2 />
+                <Building2 className="w-5 h-5 text-slate-400" />
                 <div className="text-sm font-bold text-slate-500">اسم الجمعية</div>
               </div>
               <div className="text-xl font-bold text-slate-800">{decodedName}</div>
@@ -83,7 +83,7 @@ export default async function CharityOverview({ params }: { params: Promise<{ na
 
         <div className="relative text-center max-w-md mx-auto">
           <div className="w-16 h-16 bg-primary/5 rounded-2xl flex items-center justify-center mx-auto mb-6 border border-primary/10 shadow-sm">
-            <Rocket />
+            <Rocket className="w-8 h-8 text-primary" />
           </div>
           <h3 className="text-xl font-bold text-slate-800 mb-3 tracking-tight">المزيد من البيانات قريباً</h3>
           <p className="text-slate-500 font-medium leading-relaxed">

@@ -15,15 +15,20 @@ interface HeaderProps {
   title?: string;
   showSidebarToggle?: boolean;
   navItems?: NavItem[];
+  isSidebarOpen?: boolean;
+  onToggleSidebar?: () => void;
 }
 
 export default function Header({ 
   disableLink = false, 
   title = "استبيان الجاهزية",
   showSidebarToggle = false,
-  navItems
+  navItems,
+  isSidebarOpen: externalIsSidebarOpen,
+  onToggleSidebar
 }: HeaderProps) {
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [internalIsSidebarOpen, setInternalIsSidebarOpen] = useState(false);
+  const isSidebarOpen = externalIsSidebarOpen !== undefined ? externalIsSidebarOpen : internalIsSidebarOpen;
 
   useEffect(() => {
     if (!showSidebarToggle) return;
@@ -32,7 +37,7 @@ export default function Header({
     const handleStateChange = (e: Event) => {
       const customEvent = e as CustomEvent<{ isOpen: boolean }>;
       if (customEvent.detail && typeof customEvent.detail.isOpen === "boolean") {
-        setIsSidebarOpen(customEvent.detail.isOpen);
+        setInternalIsSidebarOpen(customEvent.detail.isOpen);
       }
     };
 
@@ -43,14 +48,17 @@ export default function Header({
   }, [showSidebarToggle]);
 
   const toggleSidebar = () => {
-    const nextState = !isSidebarOpen;
-    setIsSidebarOpen(nextState);
-    
-    // Dispatch event to toggle the sidebar component
-    const event = new CustomEvent("toggle-sidebar", {
-      detail: { isOpen: nextState }
-    });
-    window.dispatchEvent(event);
+    if (onToggleSidebar) {
+      onToggleSidebar();
+    } else {
+      const nextState = !isSidebarOpen;
+      setInternalIsSidebarOpen(nextState);
+      
+      const event = new CustomEvent("toggle-sidebar", {
+        detail: { isOpen: nextState }
+      });
+      window.dispatchEvent(event);
+    }
   };
 
   const logoContent = (

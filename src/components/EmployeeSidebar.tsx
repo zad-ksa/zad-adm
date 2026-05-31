@@ -1,39 +1,20 @@
 "use client";
 
 import Link from "next/link";
-import { useState, useEffect } from "react";
 import { User, ShieldAlert, Users, X, LogOut } from "lucide-react";
 import { logout } from "@/app/login/actions";
 import { usePathname } from "next/navigation";
 
-export default function EmployeeSidebar({ session }: { session: any }) {
-  const [isOpen, setIsOpen] = useState(true);
+export default function EmployeeSidebar({ 
+  session, 
+  isOpen, 
+  setIsOpen 
+}: { 
+  session: any; 
+  isOpen: boolean; 
+  setIsOpen: (v: boolean) => void;
+}) {
   const pathname = usePathname();
-
-  // Auto close sidebar on mobile when navigating
-  useEffect(() => {
-    if (typeof window !== "undefined" && window.innerWidth < 1024) {
-      setIsOpen(false);
-    }
-  }, [pathname]);
-
-  useEffect(() => {
-    const handleToggle = (e: Event) => {
-      const customEvent = e as CustomEvent<{ isOpen?: boolean }>;
-      if (customEvent.detail && typeof customEvent.detail.isOpen === "boolean") {
-        setIsOpen(customEvent.detail.isOpen);
-      } else {
-        setIsOpen(prev => !prev);
-      }
-    };
-    window.addEventListener("toggle-sidebar", handleToggle);
-    return () => window.removeEventListener("toggle-sidebar", handleToggle);
-  }, []);
-
-  useEffect(() => {
-    const event = new CustomEvent("sidebar-state-change", { detail: { isOpen } });
-    window.dispatchEvent(event);
-  }, [isOpen]);
 
   const sidebarContent = (
     <div className="bg-white p-6 flex flex-col h-full border-l border-slate-200/80">

@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/db";
 import type { Metadata } from "next";
-import { BuildingIcon, CalendarIcon, LicenseIcon, RocketIcon } from "@/components/Icons";
+import { BuildingIcon, CalendarIcon, LicenseIcon, RocketIcon, ClipboardList } from "@/components/Icons";
 
 export const dynamic = "force-dynamic";
 
@@ -36,8 +36,8 @@ export default async function CharityOverview({ params }: { params: Promise<{ na
         
         <div className="relative z-10">
           <div className="flex items-center gap-4 mb-10">
-            <div className="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center text-primary font-bold text-3xl border border-primary/20 shadow-inner">
-              {decodedName.substring(0, 1)}
+            <div className="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center text-primary border border-primary/20 shadow-inner">
+              <ClipboardList className="w-8 h-8" />
             </div>
             <div>
               <h1 className="text-3xl font-bold text-slate-800 mb-1 tracking-tight">{decodedName}</h1>

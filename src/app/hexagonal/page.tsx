@@ -5,6 +5,29 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Header from "@/components/Header";
 import ProgressBar from "@/components/ProgressBar";
+import { 
+  BookOpen, 
+  Zap, 
+  Clock, 
+  ClipboardList, 
+  X, 
+  User, 
+  Sliders, 
+  Send, 
+  Lightbulb, 
+  Check, 
+  ArrowLeft,
+  ArrowRight,
+  Building2,
+  UserCircle,
+  Award,
+  AlertTriangle,
+  Sparkles,
+  ShieldAlert,
+  Key,
+  Rocket,
+  HelpCircle
+} from "lucide-react";
 
 interface RegistrationData {
   charityName: string;
@@ -64,6 +87,15 @@ const QUESTIONS: QuestionConfig[] = [
   },
 ];
 
+const QUESTION_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
+  q1: Award,          // Strengths
+  q2: AlertTriangle,  // Weaknesses
+  q3: Sparkles,       // Opportunities
+  q4: ShieldAlert,    // Threats
+  q5: Key,            // Critical Success Factors
+  q6: Rocket,         // Competitive Advantage
+};
+
 export default function HexagonalSurvey() {
   const router = useRouter();
   const [step, setStep] = useState<"welcome" | "register" | "survey">("welcome");
@@ -93,6 +125,8 @@ export default function HexagonalSurvey() {
   const currentQuestion = QUESTIONS[currentQuestionIndex];
   const currentAnswers = answers[currentQuestion.id];
   const isLastQuestion = currentQuestionIndex === QUESTIONS.length - 1;
+
+  const QuestionIcon = QUESTION_ICONS[currentQuestion.id] || Sparkles;
 
   // Validate that at least the first item is filled for the current question
   const isCurrentQuestionValid = currentAnswers[0].trim().length > 0;
@@ -206,10 +240,10 @@ export default function HexagonalSurvey() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
                 <button
                   onClick={() => setShowGuide(true)}
-                  className="flex flex-col items-center justify-center p-6 bg-slate-50 hover:bg-slate-100 border border-slate-200 hover:border-secondary/30 rounded-2xl transition-all group"
+                  className="flex flex-col items-center justify-center p-6 bg-slate-50 hover:bg-slate-100 border border-slate-200 hover:border-secondary/30 rounded-2xl transition-all group cursor-pointer"
                 >
-                  <div className="w-12 h-12 bg-secondary/10 rounded-full flex items-center justify-center text-secondary text-xl mb-3 group-hover:scale-110 transition-transform">
-                    📄
+                  <div className="w-12 h-12 bg-secondary/10 rounded-full flex items-center justify-center text-secondary mb-3 group-hover:scale-110 transition-transform">
+                    <BookOpen className="w-6 h-6" />
                   </div>
                   <span className="font-bold text-slate-800 mb-1">دليل الاستخدام</span>
                   <span className="text-xs text-slate-500 text-center">
@@ -219,10 +253,10 @@ export default function HexagonalSurvey() {
 
                 <button
                   onClick={() => setStep("register")}
-                  className="flex flex-col items-center justify-center p-6 bg-primary hover:bg-primary/95 text-white rounded-2xl transition-all shadow-lg shadow-primary/20 hover:shadow-primary/30 hover:-translate-y-0.5"
+                  className="flex flex-col items-center justify-center p-6 bg-primary hover:bg-primary/95 text-white rounded-2xl transition-all shadow-lg shadow-primary/20 hover:shadow-primary/30 hover:-translate-y-0.5 group cursor-pointer"
                 >
-                  <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center text-white text-xl mb-3 animate-pulse">
-                    ⚡
+                  <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center text-white mb-3 animate-pulse">
+                    <Zap className="w-6 h-6 fill-current" />
                   </div>
                   <span className="font-bold mb-1 text-lg">البدء بالاستبيان</span>
                   <span className="text-xs text-white/80 text-center">
@@ -231,10 +265,16 @@ export default function HexagonalSurvey() {
                 </button>
               </div>
 
-              <div className="text-slate-400 text-xs flex justify-center items-center gap-2">
-                <span>🕒 يستغرق التقييم حوالي 15-20 دقيقة</span>
-                <span>•</span>
-                <span>📝 يتكون من 6 أسئلة تحليلية رئيسية</span>
+              <div className="text-slate-500 text-xs sm:text-sm flex flex-col sm:flex-row justify-center items-center gap-3 sm:gap-6 bg-slate-50 p-4 rounded-2xl border border-slate-100 max-w-lg mx-auto">
+                <span className="flex items-center gap-2">
+                  <Clock className="w-4.5 h-4.5 text-primary shrink-0" />
+                  <span>يستغرق التقييم حوالي 15-20 دقيقة</span>
+                </span>
+                <span className="hidden sm:inline text-slate-300">•</span>
+                <span className="flex items-center gap-2">
+                  <ClipboardList className="w-4.5 h-4.5 text-primary shrink-0" />
+                  <span>يتكون من 6 أسئلة تحليلية رئيسية</span>
+                </span>
               </div>
             </div>
           </div>
@@ -250,15 +290,17 @@ export default function HexagonalSurvey() {
 
             <div className="bg-white rounded-3xl shadow-2xl w-full max-w-4xl max-h-[92vh] overflow-hidden flex flex-col relative z-10 border border-slate-100 animate-in fade-in zoom-in duration-300">
               {/* Modal Header */}
-              <div className="p-4 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+              <div className="p-4 border-b border-slate-100 flex justify-between items-center bg-slate-50/50" dir="rtl">
                 <h2 className="font-bold text-slate-800 text-lg flex items-center gap-2">
-                  <span>📋 دليل التحليل السداسي للجمعيات الخيرية</span>
+                  <BookOpen className="w-5 h-5 text-primary" />
+                  <span>دليل التحليل السداسي للجمعيات الخيرية</span>
                 </h2>
                 <button
                   onClick={() => setShowGuide(false)}
-                  className="w-10 h-10 rounded-full bg-slate-200/50 hover:bg-slate-200 text-slate-600 hover:text-slate-800 transition-colors flex items-center justify-center text-xl font-bold"
+                  className="w-10 h-10 rounded-full bg-slate-200/50 hover:bg-slate-200 text-slate-600 hover:text-slate-800 transition-colors flex items-center justify-center cursor-pointer"
+                  title="إغلاق"
                 >
-                  ✕
+                  <X className="w-5 h-5" />
                 </button>
               </div>
 
@@ -284,10 +326,11 @@ export default function HexagonalSurvey() {
                   {/* Intro text */}
                   <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100">
                     <h4 className="font-extrabold text-slate-800 text-lg mb-3 flex items-center gap-2">
-                      <span>❓</span> ما هو التحليل السداسي؟
+                      <HelpCircle className="w-5 h-5 text-primary" />
+                      <span>ما هو التحليل السداسي؟</span>
                     </h4>
                     <p className="text-slate-600 leading-relaxed text-sm md:text-base">
-                      التحليل السداسي هو أداة تخطيط استراتيجي متكاملة تُوظَّف لفهم الوضع الراهن للجمعية الخيرية من ست زوايا مختلفة ومتكاملة. يجمع هذا التحليل بين البُعدين الداخلي والخارجي لرسم صورة شاملة تُساعد القيادة في اتخاذ قرارات مدروسة وصياغة خطط واقعية.
+                      التحليل السداسي هو أداة تخطيط استراتيجي متكاملة تُوظَّف لفهم الوضع الراهن للجمعية الخيرية من ست زوايا مختلفة ومتكاملة. يجمع this التحليل بين البُعدين الداخلي والخارجي لرسم صورة شاملة تُساعد القيادة في اتخاذ قرارات مدروسة وصياغة خطط واقعية.
                     </p>
                     <p className="text-slate-600 leading-relaxed text-sm md:text-base mt-3">
                       يشمل هذا التحليل ستة محاور أساسية: نقاط القوة، نقاط الضعف، الفرص، المخاطر، عوامل النجاح الحاسمة، والميزة التنافسية. وفيما يلي شرح موسّع لكل محور مع أمثلة تطبيقية من واقع العمل الخيري.
@@ -297,7 +340,7 @@ export default function HexagonalSurvey() {
                   {/* 1. Strengths */}
                   <div className="bg-white rounded-2xl p-6 shadow-sm border border-emerald-100">
                     <div className="flex items-center gap-3 mb-4 pb-3 border-b border-slate-100">
-                      <span className="text-2xl">💪</span>
+                      <Award className="w-6 h-6 text-emerald-600" />
                       <div>
                         <h4 className="font-extrabold text-emerald-800 text-lg">أولاً: نقاط القوة (Strengths)</h4>
                         <span className="text-xs text-emerald-600 font-semibold">عوامل داخلية إيجابية</span>
@@ -328,7 +371,7 @@ export default function HexagonalSurvey() {
                   {/* 2. Weaknesses */}
                   <div className="bg-white rounded-2xl p-6 shadow-sm border border-rose-100">
                     <div className="flex items-center gap-3 mb-4 pb-3 border-b border-slate-100">
-                      <span className="text-2xl">⚠️</span>
+                      <AlertTriangle className="w-6 h-6 text-rose-600" />
                       <div>
                         <h4 className="font-extrabold text-rose-800 text-lg">ثانياً: نقاط الضعف (Weaknesses)</h4>
                         <span className="text-xs text-rose-600 font-semibold">عوامل داخلية سلبية</span>
@@ -359,7 +402,7 @@ export default function HexagonalSurvey() {
                   {/* 3. Opportunities */}
                   <div className="bg-white rounded-2xl p-6 shadow-sm border border-sky-100">
                     <div className="flex items-center gap-3 mb-4 pb-3 border-b border-slate-100">
-                      <span className="text-2xl">🌟</span>
+                      <Sparkles className="w-6 h-6 text-sky-600" />
                       <div>
                         <h4 className="font-extrabold text-sky-800 text-lg">ثالثاً: الفرص (Opportunities)</h4>
                         <span className="text-xs text-sky-600 font-semibold">عوامل خارجية إيجابية</span>
@@ -390,7 +433,7 @@ export default function HexagonalSurvey() {
                   {/* 4. Threats */}
                   <div className="bg-white rounded-2xl p-6 shadow-sm border border-amber-100">
                     <div className="flex items-center gap-3 mb-4 pb-3 border-b border-slate-100">
-                      <span className="text-2xl">🔴</span>
+                      <ShieldAlert className="w-6 h-6 text-amber-600" />
                       <div>
                         <h4 className="font-extrabold text-amber-800 text-lg">رابعاً: المخاطر (Threats)</h4>
                         <span className="text-xs text-amber-600 font-semibold">عوامل خارجية سلبية</span>
@@ -421,7 +464,7 @@ export default function HexagonalSurvey() {
                   {/* 5. Success Factors */}
                   <div className="bg-white rounded-2xl p-6 shadow-sm border border-yellow-100">
                     <div className="flex items-center gap-3 mb-4 pb-3 border-b border-slate-100">
-                      <span className="text-2xl">🏆</span>
+                      <Key className="w-6 h-6 text-yellow-600" />
                       <div>
                         <h4 className="font-extrabold text-yellow-800 text-lg">خامساً: عوامل النجاح الحاسمة (Critical Success Factors)</h4>
                         <span className="text-xs text-yellow-600 font-semibold">مرتكزات جوهرية</span>
@@ -452,7 +495,7 @@ export default function HexagonalSurvey() {
                   {/* 6. Competitive Advantage */}
                   <div className="bg-white rounded-2xl p-6 shadow-sm border border-violet-100">
                     <div className="flex items-center gap-3 mb-4 pb-3 border-b border-slate-100">
-                      <span className="text-2xl">🚀</span>
+                      <Rocket className="w-6 h-6 text-violet-600" />
                       <div>
                         <h4 className="font-extrabold text-violet-800 text-lg">سادساً: الميزة التنافسية (Competitive Advantage)</h4>
                         <span className="text-xs text-violet-600 font-semibold">خصائص فريدة مميزة</span>
@@ -497,13 +540,14 @@ export default function HexagonalSurvey() {
                     setShowGuide(false);
                     setStep("register");
                   }}
-                  className="px-6 py-3 bg-primary hover:bg-primary/95 text-white font-bold rounded-xl transition-all shadow-md hover:shadow-lg"
+                  className="px-6 py-3 bg-primary hover:bg-primary/95 text-white font-bold rounded-xl transition-all shadow-md hover:shadow-lg flex items-center gap-2 group cursor-pointer"
                 >
-                  البدء بالاستبيان الآن ←
+                  <span>البدء بالاستبيان الآن</span>
+                  <ArrowLeft className="w-5 h-5 transition-transform group-hover:-translate-x-1" />
                 </button>
                 <button
                   onClick={() => setShowGuide(false)}
-                  className="px-5 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium rounded-xl transition-colors"
+                  className="px-5 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium rounded-xl transition-colors cursor-pointer"
                 >
                   إغلاق الدليل
                 </button>
@@ -513,10 +557,13 @@ export default function HexagonalSurvey() {
         )}
 
         {step === "register" && (
-          <div className="glassmorphism rounded-3xl p-8 sm:p-12 w-full animate-in fade-in slide-in-from-bottom-4 duration-500 max-w-xl mx-auto shadow-xl bg-white border border-slate-100">
+          <div className="glassmorphism rounded-3xl p-8 sm:p-12 w-full animate-in fade-in slide-in-from-bottom-4 duration-500 max-w-xl mx-auto shadow-xl bg-white border border-slate-100" dir="rtl">
             <div className="mb-8 text-center">
+              <div className="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-primary/20 text-primary">
+                <ClipboardList className="w-8 h-8" />
+              </div>
               <h2 className="text-2xl sm:text-3xl font-bold text-slate-800 mb-2">بيانات الجمعية</h2>
-              <p className="text-slate-500">يرجى تعبئة البيانات التالية للبدء في استبيان التحليل السداسي</p>
+              <p className="text-slate-500 text-sm">يرجى تعبئة البيانات التالية للبدء في استبيان التحليل السداسي</p>
             </div>
 
             <form
@@ -528,39 +575,55 @@ export default function HexagonalSurvey() {
             >
               <div>
                 <label className="block text-sm font-semibold text-slate-700 mb-2">اسم الجمعية بالكامل (حسب السجل)</label>
-                <input
-                  required
-                  type="text"
-                  value={registrationData.charityName}
-                  onChange={(e) => setRegistrationData(prev => ({ ...prev, charityName: e.target.value }))}
-                  className="w-full px-4 py-3 rounded-xl border border-slate-300 focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all outline-none"
-                  placeholder="مثال: جمعية البر الأهلية"
-                />
+                <div className="relative">
+                  <input
+                    required
+                    type="text"
+                    value={registrationData.charityName}
+                    onChange={(e) => setRegistrationData(prev => ({ ...prev, charityName: e.target.value }))}
+                    className="w-full pr-11 pl-4 py-3 rounded-xl border border-slate-300 focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all outline-none text-slate-800"
+                    placeholder="مثال: جمعية البر الأهلية"
+                  />
+                  <div className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
+                    <Building2 className="w-5 h-5" />
+                  </div>
+                </div>
               </div>
 
               <div>
                 <label className="block text-sm font-semibold text-slate-700 mb-2">صفة معبي الاستبيان</label>
-                <select
-                  required
-                  value={registrationData.authorizedTitle}
-                  onChange={(e) => setRegistrationData(prev => ({ ...prev, authorizedTitle: e.target.value }))}
-                  className="w-full px-4 py-3 rounded-xl border border-slate-300 focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all outline-none bg-white text-slate-800"
-                >
-                  <option value="" disabled>اختر الصفة...</option>
-                  <option value="عضو جمعية عمومية">عضو جمعية عمومية</option>
-                  <option value="عضو مجلس إدارة">عضو مجلس إدارة</option>
-                  <option value="موظف بدوام كامل">موظف بدوام كامل</option>
-                  <option value="موظف بدوام جزئي">موظف بدوام جزئي</option>
-                  <option value="متطوع">متطوع</option>
-                </select>
+                <div className="relative">
+                  <select
+                    required
+                    value={registrationData.authorizedTitle}
+                    onChange={(e) => setRegistrationData(prev => ({ ...prev, authorizedTitle: e.target.value }))}
+                    className="w-full pr-11 pl-10 py-3 rounded-xl border border-slate-300 focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all outline-none bg-white text-slate-800 appearance-none font-medium"
+                  >
+                    <option value="" disabled>اختر الصفة...</option>
+                    <option value="عضو جمعية عمومية">عضو جمعية عمومية</option>
+                    <option value="عضو مجلس إدارة">عضو مجلس إدارة</option>
+                    <option value="موظف بدوام كامل">موظف بدوام كامل</option>
+                    <option value="موظف بدوام جزئي">موظف بدوام جزئي</option>
+                    <option value="متطوع">متطوع</option>
+                  </select>
+                  <div className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
+                    <UserCircle className="w-5 h-5" />
+                  </div>
+                  <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </div>
+                </div>
               </div>
 
               <div className="pt-4">
                 <button
                   type="submit"
-                  className="w-full py-4 rounded-xl font-bold text-white bg-primary hover:bg-primary/90 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-primary/30 transition-all"
+                  className="w-full py-4 rounded-xl font-bold text-white bg-primary hover:bg-primary/95 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-primary/30 transition-all flex items-center justify-center gap-2 group cursor-pointer"
                 >
-                  الذهاب للأسئلة
+                  <span>الذهاب للأسئلة</span>
+                  <ArrowLeft className="w-5 h-5 transition-transform group-hover:-translate-x-1" />
                 </button>
               </div>
             </form>
@@ -587,12 +650,14 @@ export default function HexagonalSurvey() {
               <div className="mb-8 p-6 bg-primary text-white rounded-2xl shadow-lg relative overflow-hidden">
                 <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-10 -mt-10 blur-xl pointer-events-none" />
                 <div className="flex items-center gap-3 mb-2">
-                  <span className="text-3xl shrink-0">{currentQuestion.icon}</span>
+                  <span className="p-2 bg-white/20 rounded-xl shrink-0 text-white">
+                    <QuestionIcon className="w-8 h-8" />
+                  </span>
                   <h2 className="text-xl sm:text-2xl font-bold">
                     {currentQuestion.title}
                   </h2>
                 </div>
-                <p className="text-primary-foreground/90 text-sm sm:text-base leading-relaxed mr-11">
+                <p className="text-primary-foreground/90 text-sm sm:text-base leading-relaxed mr-14">
                   {currentQuestion.description}
                 </p>
               </div>
@@ -629,24 +694,26 @@ export default function HexagonalSurvey() {
                 <button
                   onClick={handlePrev}
                   disabled={currentQuestionIndex === 0 || isTransitioning || isSubmitting}
-                  className={`px-6 py-3 rounded-xl font-medium transition-all ${currentQuestionIndex === 0
+                  className={`px-6 py-3 rounded-xl font-medium transition-all flex items-center gap-2 group cursor-pointer ${currentQuestionIndex === 0
                       ? "opacity-0 pointer-events-none"
                       : "text-slate-600 bg-white border border-slate-200 hover:bg-slate-50 shadow-sm"
                     }`}
                 >
-                  السؤال السابق
+                  <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
+                  <span>السؤال السابق</span>
                 </button>
 
                 <button
                   onClick={handleNext}
                   disabled={!isCurrentQuestionValid || isTransitioning || isSubmitting}
-                  className={`px-8 py-3 rounded-xl font-bold text-white transition-all shadow-lg flex items-center justify-center gap-2 ${isCurrentQuestionValid && !isSubmitting
-                      ? "bg-primary hover:bg-primary/90 hover:-translate-y-0.5 hover:shadow-primary/30"
+                  className={`px-8 py-3 rounded-xl font-bold text-white transition-all shadow-lg flex items-center justify-center gap-2 group cursor-pointer ${isCurrentQuestionValid && !isSubmitting
+                      ? "bg-primary hover:bg-primary/95 hover:-translate-y-0.5 hover:shadow-primary/30"
                       : "bg-slate-300 cursor-not-allowed shadow-none"
                     }`}
                 >
                   {isSubmitting && <div className="w-5 h-5 border-2 border-white/50 border-t-white rounded-full animate-spin" />}
-                  {isLastQuestion ? "إنهاء وإرسال التحليل" : "السؤال التالي"}
+                  <span>{isLastQuestion ? "إنهاء وإرسال التحليل" : "السؤال التالي"}</span>
+                  {!isSubmitting && <ArrowLeft className="w-5 h-5 transition-transform group-hover:-translate-x-1" />}
                 </button>
               </div>
             </div>

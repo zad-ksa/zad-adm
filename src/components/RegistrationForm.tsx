@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Building2, UserCircle, ClipboardList, ArrowLeft } from "@/components/Icons";
+import { Building2, UserCircle, ClipboardList, ArrowLeft, ChevronDownIcon } from "@/components/Icons";
 
 export interface RegistrationData {
   charityName: string;
@@ -83,9 +83,7 @@ export default function RegistrationForm({ onComplete }: RegistrationFormProps) 
             </div>
             {/* Custom dropdown arrow for clean styling */}
             <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
-              </svg>
+              <ChevronDownIcon />
             </div>
           </div>
         </div>

@@ -2,6 +2,7 @@ import { prisma } from "@/lib/db";
 import Link from "next/link";
 import { surveyData } from "@/data/surveyData";
 import type { Metadata } from "next";
+import { Award, AlertTriangle, Sparkles, ShieldAlert, Key, Rocket } from "@/components/Icons";
 
 export const dynamic = "force-dynamic";
 
@@ -46,50 +47,6 @@ const ClipboardLargeIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-12 h-12 text-slate-300 mx-auto mb-4">
     <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" />
     <rect x="8" y="2" width="8" height="4" rx="1" ry="1" />
-  </svg>
-);
-
-const StrengthIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4 text-emerald-600">
-    <path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3" className="fill-emerald-500/5" />
-  </svg>
-);
-
-const WarningIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4 text-amber-600">
-    <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" className="fill-amber-500/5" />
-    <line x1="12" y1="9" x2="12" y2="13" />
-    <line x1="12" y1="17" x2="12.01" y2="17" />
-  </svg>
-);
-
-const StarIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4 text-sky-500">
-    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" className="fill-sky-500/5" />
-  </svg>
-);
-
-const ThreatIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4 text-rose-500">
-    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" className="fill-rose-500/5" />
-    <line x1="12" y1="8" x2="12" y2="16" />
-    <line x1="8" y1="12" x2="16" y2="12" />
-  </svg>
-);
-
-const KeyIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4 text-teal-600">
-    <path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4" className="fill-teal-500/5" />
-  </svg>
-);
-
-const TrophyIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4 text-yellow-600">
-    <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6" />
-    <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18" />
-    <path d="M4 22h16" />
-    <path d="M10 14.66V17c0 .55-.45 1-1 1H4v2h16v-2h-5c-.55 0-1-.45-1-1v-2.34" className="fill-yellow-500/5" />
-    <path d="M12 2a6 6 0 0 1 6 6v5a6 6 0 0 1-6 6 6 6 0 0 1-6-6V8a6 6 0 0 1 6-6z" />
   </svg>
 );
 
@@ -343,27 +300,27 @@ export default async function StrategySurveysPage({ params }: { params: Promise<
 
                     <div className="grid grid-cols-3 gap-3 text-[11px] text-slate-500 mb-6 bg-slate-50 p-4 rounded-xl border border-slate-100">
                       <div className="flex flex-col gap-1.5 items-center bg-white p-2.5 rounded-lg border border-slate-100">
-                        <StrengthIcon />
+                        <Award className="w-5 h-5 text-emerald-600 shrink-0" />
                         <span className="font-bold text-slate-700">{strengthsCount} <span className="text-[9px] text-slate-400 font-normal">قوة</span></span>
                       </div>
                       <div className="flex flex-col gap-1.5 items-center bg-white p-2.5 rounded-lg border border-slate-100">
-                        <WarningIcon />
+                        <AlertTriangle className="w-5 h-5 text-rose-600 shrink-0" />
                         <span className="font-bold text-slate-700">{weaknessesCount} <span className="text-[9px] text-slate-400 font-normal">ضعف</span></span>
                       </div>
                       <div className="flex flex-col gap-1.5 items-center bg-white p-2.5 rounded-lg border border-slate-100">
-                        <StarIcon />
+                        <Sparkles className="w-5 h-5 text-sky-500 shrink-0" />
                         <span className="font-bold text-slate-700">{oppCount} <span className="text-[9px] text-slate-400 font-normal">فرص</span></span>
                       </div>
                       <div className="flex flex-col gap-1.5 items-center bg-white p-2.5 rounded-lg border border-slate-100">
-                        <ThreatIcon />
+                        <ShieldAlert className="w-5 h-5 text-amber-500 shrink-0" />
                         <span className="font-bold text-slate-700">{threatCount} <span className="text-[9px] text-slate-400 font-normal">مخاطر</span></span>
                       </div>
                       <div className="flex flex-col gap-1.5 items-center bg-white p-2.5 rounded-lg border border-slate-100">
-                        <KeyIcon />
+                        <Key className="w-5 h-5 text-yellow-600 shrink-0" />
                         <span className="font-bold text-slate-700">{successCount} <span className="text-[9px] text-slate-400 font-normal">نجاح</span></span>
                       </div>
                       <div className="flex flex-col gap-1.5 items-center bg-white p-2.5 rounded-lg border border-slate-100">
-                        <TrophyIcon />
+                        <Rocket className="w-5 h-5 text-violet-600 shrink-0" />
                         <span className="font-bold text-slate-700">{compCount} <span className="text-[9px] text-slate-400 font-normal">تميز</span></span>
                       </div>
                     </div>

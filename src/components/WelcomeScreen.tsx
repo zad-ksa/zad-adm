@@ -1,5 +1,18 @@
 import { useState } from "react";
 import Image from "next/image";
+import { 
+  BookOpen, 
+  Zap, 
+  Clock, 
+  ClipboardList, 
+  X, 
+  User, 
+  Sliders, 
+  Send, 
+  Lightbulb, 
+  Check, 
+  ArrowLeft 
+} from "lucide-react";
 
 interface WelcomeScreenProps {
   onStart: () => void;
@@ -39,10 +52,10 @@ export default function WelcomeScreen({ onStart }: WelcomeScreenProps) {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
           <button
             onClick={() => setShowGuide(true)}
-            className="flex flex-col items-center justify-center p-6 bg-slate-50 hover:bg-slate-100 border border-slate-200 hover:border-primary/30 rounded-2xl transition-all group"
+            className="flex flex-col items-center justify-center p-6 bg-slate-50 hover:bg-slate-100 border border-slate-200 hover:border-primary/30 rounded-2xl transition-all group cursor-pointer"
           >
-            <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center text-primary text-xl mb-3 group-hover:scale-110 transition-transform">
-              📄
+            <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center text-primary mb-3 group-hover:scale-110 transition-transform">
+              <BookOpen className="w-6 h-6" />
             </div>
             <span className="font-bold text-slate-800 mb-1">دليل الاستخدام</span>
             <span className="text-xs text-slate-500 text-center">
@@ -52,10 +65,10 @@ export default function WelcomeScreen({ onStart }: WelcomeScreenProps) {
 
           <button
             onClick={onStart}
-            className="flex flex-col items-center justify-center p-6 bg-primary hover:bg-primary/95 text-white rounded-2xl transition-all shadow-lg shadow-primary/20 hover:shadow-primary/30 hover:-translate-y-0.5"
+            className="flex flex-col items-center justify-center p-6 bg-primary hover:bg-primary/95 text-white rounded-2xl transition-all shadow-lg shadow-primary/20 hover:shadow-primary/30 hover:-translate-y-0.5 group cursor-pointer"
           >
-            <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center text-white text-xl mb-3 animate-pulse">
-              ⚡
+            <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center text-white mb-3 animate-pulse">
+              <Zap className="w-6 h-6 fill-current" />
             </div>
             <span className="font-bold mb-1 text-lg">البدء بالاستبيان</span>
             <span className="text-xs text-white/80 text-center">
@@ -64,10 +77,16 @@ export default function WelcomeScreen({ onStart }: WelcomeScreenProps) {
           </button>
         </div>
 
-        <div className="text-slate-400 text-xs flex justify-center items-center gap-2">
-          <span>🕒 يستغرق التقييم حوالي 20-30 دقيقة</span>
-          <span>•</span>
-          <span>📝 يتكون من 64 بنداً موزعة على 10 محاور</span>
+        <div className="text-slate-500 text-xs sm:text-sm flex flex-col sm:flex-row justify-center items-center gap-3 sm:gap-6 bg-slate-50 p-4 rounded-2xl border border-slate-100 max-w-lg mx-auto">
+          <span className="flex items-center gap-2">
+            <Clock className="w-4.5 h-4.5 text-primary shrink-0" />
+            <span>يستغرق التقييم حوالي 20-30 دقيقة</span>
+          </span>
+          <span className="hidden sm:inline text-slate-300">•</span>
+          <span className="flex items-center gap-2">
+            <ClipboardList className="w-4.5 h-4.5 text-primary shrink-0" />
+            <span>يتكون من 64 بنداً موزعة على 10 محاور</span>
+          </span>
         </div>
       </div>
 
@@ -81,15 +100,17 @@ export default function WelcomeScreen({ onStart }: WelcomeScreenProps) {
 
           <div className="bg-white rounded-3xl shadow-2xl w-full max-w-4xl max-h-[92vh] overflow-hidden flex flex-col relative z-10 border border-slate-100 animate-in fade-in zoom-in duration-300">
             {/* Modal Header */}
-            <div className="p-4 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+            <div className="p-4 border-b border-slate-100 flex justify-between items-center bg-slate-50/50" dir="rtl">
               <h2 className="font-bold text-slate-800 text-lg flex items-center gap-2">
-                <span>📋 دليل استخدام مقياس الجاهزية</span>
+                <BookOpen className="w-5 h-5 text-primary" />
+                <span>دليل استخدام مقياس الجاهزية</span>
               </h2>
               <button
                 onClick={() => setShowGuide(false)}
-                className="w-10 h-10 rounded-full bg-slate-200/50 hover:bg-slate-200 text-slate-600 hover:text-slate-800 transition-colors flex items-center justify-center text-xl font-bold"
+                className="w-10 h-10 rounded-full bg-slate-200/50 hover:bg-slate-200 text-slate-600 hover:text-slate-800 transition-colors flex items-center justify-center cursor-pointer"
+                title="إغلاق"
               >
-                ✕
+                <X className="w-5 h-5" />
               </button>
             </div>
 
@@ -149,7 +170,7 @@ export default function WelcomeScreen({ onStart }: WelcomeScreenProps) {
                       "نتائجه تساعد الجهات الداعمة على تقديم الدعم المناسب لكم"
                     ].map((item, idx) => (
                       <li key={idx} className="flex items-start gap-2.5 text-slate-600 text-sm md:text-base leading-relaxed">
-                        <span className="text-secondary font-bold shrink-0 mt-1">✓</span>
+                        <Check className="text-secondary w-4.5 h-4.5 shrink-0 mt-1" strokeWidth={3} />
                         <span>{item}</span>
                       </li>
                     ))}
@@ -248,27 +269,34 @@ export default function WelcomeScreen({ onStart }: WelcomeScreenProps) {
 
                   <div className="space-y-6">
                     {[
-                      { step: "١", title: "أجب بشكل فردي ومستقل", desc: "يُعبَّأ النموذج بشكل فردي — لا تتشاور مع الآخرين أثناء التعبئة" },
-                      { step: "٢", title: "اختر درجة لكل بند", desc: "لكل بند، اختر رقماً من 1 إلى 5 يعبّر عن الواقع الفعلي في جمعيتك" },
-                      { step: "٣", title: "أرسل النموذج", desc: "بعد الانتهاء، اضغط (إرسال) — ستصلك رسالة تأكيد باستلام إجابتك" },
-                    ].map((item, idx) => (
-                      <div key={idx} className="flex gap-4 items-start">
-                        <div className="w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center text-sm font-bold shrink-0 mt-0.5 shadow-sm">
-                          {item.step}
+                      { step: "١", icon: User, title: "أجب بشكل فردي ومستقل", desc: "يُعبَّأ النموذج بشكل فردي — لا تتشاور مع الآخرين أثناء التعبئة" },
+                      { step: "٢", icon: Sliders, title: "اختر درجة لكل بند", desc: "لكل بند، اختر رقماً من 1 إلى 5 يعبّر عن الواقع الفعلي في جمعيتك" },
+                      { step: "٣", icon: Send, title: "أرسل النموذج", desc: "بعد الانتهاء، اضغط (إرسال) — ستصلك رسالة تأكيد باستلام إجابتك" },
+                    ].map((item, idx) => {
+                      const IconComponent = item.icon;
+                      return (
+                        <div key={idx} className="flex gap-4 items-start">
+                          <div className="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center shrink-0 mt-0.5 shadow-sm relative">
+                            <IconComponent className="w-5 h-5" />
+                            <span className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-secondary text-white text-[10px] font-bold rounded-full flex items-center justify-center border border-white">
+                              {item.step}
+                            </span>
+                          </div>
+                          <div>
+                            <h5 className="font-bold text-slate-800 text-base mb-1">{item.title}</h5>
+                            <p className="text-slate-600 text-sm leading-relaxed">{item.desc}</p>
+                          </div>
                         </div>
-                        <div>
-                          <h5 className="font-bold text-slate-800 text-base mb-1">{item.title}</h5>
-                          <p className="text-slate-600 text-sm leading-relaxed">{item.desc}</p>
-                        </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 </div>
 
                 {/* Tips Section */}
                 <div className="bg-amber-50/60 rounded-2xl p-6 border border-amber-100 shadow-sm">
                   <h4 className="font-extrabold text-amber-950 text-lg mb-4 flex items-center gap-2">
-                    <span className="shrink-0 text-xl">💡</span> نصائح للحصول على نتائج دقيقة:
+                    <Lightbulb className="w-5 h-5 text-secondary shrink-0" />
+                    <span>نصائح للحصول على نتائج دقيقة:</span>
                   </h4>
                   <ul className="space-y-3">
                     {[
@@ -279,7 +307,7 @@ export default function WelcomeScreen({ onStart }: WelcomeScreenProps) {
                       "خصص 20 إلى 30 دقيقة هادئة للتعبئة دون انقطاع"
                     ].map((tip, idx) => (
                       <li key={idx} className="flex items-start gap-2.5 text-amber-950 text-sm md:text-base leading-relaxed">
-                        <span className="text-amber-500 font-bold shrink-0 mt-0.5">•</span>
+                        <span className="w-1.5 h-1.5 rounded-full bg-secondary shrink-0 mt-2.5" />
                         <span>{tip}</span>
                       </li>
                     ))}
@@ -295,13 +323,14 @@ export default function WelcomeScreen({ onStart }: WelcomeScreenProps) {
                   setShowGuide(false);
                   onStart();
                 }}
-                className="px-6 py-3 bg-primary hover:bg-primary/95 text-white font-bold rounded-xl transition-all shadow-md hover:shadow-lg"
+                className="px-6 py-3 bg-primary hover:bg-primary/95 text-white font-bold rounded-xl transition-all shadow-md hover:shadow-lg flex items-center gap-2 group cursor-pointer"
               >
-                البدء بالاستبيان الآن ←
+                <span>البدء بالاستبيان الآن</span>
+                <ArrowLeft className="w-5 h-5 transition-transform group-hover:-translate-x-1" />
               </button>
               <button
                 onClick={() => setShowGuide(false)}
-                className="px-5 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium rounded-xl transition-colors"
+                className="px-5 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium rounded-xl transition-colors cursor-pointer"
               >
                 إغلاق الدليل
               </button>

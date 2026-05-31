@@ -1,26 +1,29 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+import { getSession } from "@/lib/auth";
 
-export function proxy(request: NextRequest) {
-  const adminToken = request.cookies.get("admin_token");
-
+export async function proxy(request: NextRequest) {
+  const { pathname } = request.nextUrl;
+  
   // Protect /dashboard routes
-  if (request.nextUrl.pathname.startsWith("/dashboard")) {
-    if (!adminToken || adminToken.value !== "authenticated") {
-      // Redirect to login page if not authenticated
-      return NextResponse.redirect(new URL("/", request.url));
+  if (pathname.startsWith("/dashboard")) {
+    const session = await getSession();
+    
+    if (!session) {
+      return NextResponse.redirect(new URL("/login", request.url));
     }
   }
-
-  // Optional: Prevent logged-in admins from seeing the login page again
-  if (request.nextUrl.pathname === "/") {
-    if (adminToken && adminToken.value === "authenticated") {
+  
+  if (pathname === "/login") {
+    const session = await getSession();
+    if (session) {
       return NextResponse.redirect(new URL("/dashboard", request.url));
     }
   }
 
   return NextResponse.next();
 }
+
 export const config = {
-  matcher: ["/", "/dashboard/:path*"],
+  matcher: ["/dashboard/:path*", "/login"],
 };

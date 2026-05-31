@@ -12,7 +12,7 @@ import {
   Lightbulb, 
   Check, 
   ArrowLeft 
-} from "lucide-react";
+} from "@/components/Icons";
 
 interface WelcomeScreenProps {
   onStart: () => void;

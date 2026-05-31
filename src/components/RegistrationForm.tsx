@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Building2, UserCircle, ClipboardList, ArrowLeft } from "lucide-react";
+import { Building2, UserCircle, ClipboardList, ArrowLeft } from "@/components/Icons";
 
 export interface RegistrationData {
   charityName: string;

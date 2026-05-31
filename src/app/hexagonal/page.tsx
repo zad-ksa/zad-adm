@@ -27,7 +27,7 @@ import {
   Key,
   Rocket,
   HelpCircle
-} from "lucide-react";
+} from "@/components/Icons";
 
 interface RegistrationData {
   charityName: string;

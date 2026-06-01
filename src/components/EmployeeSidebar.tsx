@@ -5,6 +5,7 @@ import { User, ShieldAlert, Users, X, LogOut, LayoutDashboard, Building2, Clipbo
 import { logout } from "@/app/login/actions";
 import { usePathname } from "next/navigation";
 import Image from "next/image";
+import ZadLogo from "@/components/ZadLogo";
 
 export default function EmployeeSidebar({ 
   session, 
@@ -41,12 +42,12 @@ export default function EmployeeSidebar({
       {/* Header / Logo */}
       <div className={`flex items-center ${isOpen ? "justify-start px-6" : "justify-center px-0"} h-24 border-b border-slate-100 shrink-0 transition-all`}>
         {isOpen ? (
-          <div className="w-full h-full flex items-center relative py-4">
-            <Image src="/assets/logos/لوجو زاد-01.png" alt="Zad" fill className="object-contain object-right" />
+          <div className="w-full h-full flex items-center py-4 relative pr-2">
+            <ZadLogo isOpen={true} className="h-12 w-auto" />
           </div>
         ) : (
-          <div className="w-10 h-10 bg-gradient-to-br from-primary to-primary/80 rounded-xl flex items-center justify-center text-white font-extrabold text-xl shadow-md">
-            ز
+          <div className="w-12 h-12 flex items-center justify-center">
+            <ZadLogo isOpen={false} className="h-10 w-auto" />
           </div>
         )}
       </div>

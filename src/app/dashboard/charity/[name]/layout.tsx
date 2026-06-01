@@ -1,6 +1,5 @@
-import Header from "@/components/Header";
 import { ReactNode } from "react";
-import CharitySidebar from "./CharitySidebar";
+import CharityLayoutClient from "./CharityLayoutClient";
 
 export default async function CharityLayout({
   children,
@@ -13,17 +12,8 @@ export default async function CharityLayout({
   const decodedName = decodeURIComponent(name);
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col" dir="rtl">
-      <Header title={decodedName} showSidebarToggle />
-
-      <div className="flex-1 flex max-w-[1600px] w-full mx-auto px-4 relative">
-        <CharitySidebar charityName={decodedName} />
-
-        {/* Main Content */}
-        <main className="flex-1 min-w-0 py-8 md:pr-8">
-          {children}
-        </main>
-      </div>
-    </div>
+    <CharityLayoutClient charityName={decodedName}>
+      {children}
+    </CharityLayoutClient>
   );
 }

@@ -4,6 +4,7 @@ import { useActionState } from "react";
 import Image from "next/image";
 import { loginUser } from "./actions";
 import { AlertCircle, Phone, Lock, Loader2 } from "@/components/Icons";
+import ZadLogo from "@/components/ZadLogo";
 
 export default function LoginPage() {
   const [state, formAction, isPending] = useActionState(loginUser, null);
@@ -11,15 +12,8 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8" dir="rtl">
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="flex justify-center mb-8">
-          <Image 
-            src="/assets/logos/لوجو زاد-02.png" 
-            alt="شعار زاد التنموية" 
-            width={280} 
-            height={280} 
-            className="object-contain"
-            priority
-          />
+        <div className="flex justify-center mb-8 h-20 w-auto">
+          <ZadLogo isOpen={true} className="h-20 w-auto" />
         </div>
         <h2 className="mt-2 text-center text-3xl font-extrabold text-slate-900 tracking-tight">
           تسجيل الدخول للنظام

@@ -40,7 +40,7 @@ export async function sendOTP(phone: string) {
   // 2. Send OTP
   if (!apiKey) {
     // Simulation Mode (Local Development)
-    const simulatedOtp = "123456";
+    const simulatedOtp = "1234";
     console.log(`\n--- [SIMULATION MODE] ---`);
     console.log(`Sending OTP to: ${formattedPhone}`);
     console.log(`Code: ${simulatedOtp}`);
@@ -108,11 +108,11 @@ export async function verifyOTP(phone: string, otp: string) {
     
     if (simCookie) {
       const { phone: simPhone, code: simCode } = JSON.parse(simCookie);
-      if (simPhone === phone && (simCode === otp || otp === "123456")) {
+      if (simPhone === phone && (simCode === otp || otp === "1234")) {
         isVerified = true;
         cookieStore.delete("simulated_otp");
       }
-    } else if (otp === "123456") {
+    } else if (otp === "1234") {
       isVerified = true;
     }
   } else {

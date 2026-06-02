@@ -9,6 +9,7 @@ export default function LoginPage() {
   const [step, setStep] = useState<1 | 2>(1);
   const [phone, setPhone] = useState("");
   const [otp, setOtp] = useState("");
+  const [otpValues, setOtpValues] = useState(["", "", "", ""]);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [timer, setTimer] = useState(0);
@@ -22,6 +23,57 @@ export default function LoginPage() {
       return () => clearInterval(interval);
     }
   }, [timer]);
+
+  const handleOtpChange = (val: string, index: number) => {
+    const cleaned = val.replace(/\D/g, "");
+    if (!cleaned) {
+      const newOtp = [...otpValues];
+      newOtp[index] = "";
+      setOtpValues(newOtp);
+      setOtp(newOtp.join(""));
+      return;
+    }
+
+    if (cleaned.length > 1) {
+      const digits = cleaned.split("").slice(0, 4);
+      const newOtp = [...otpValues];
+      digits.forEach((digit, idx) => {
+        if (index + idx < 4) {
+          newOtp[index + idx] = digit;
+        }
+      });
+      setOtpValues(newOtp);
+      setOtp(newOtp.join(""));
+      
+      const focusIndex = Math.min(index + digits.length - 1, 3);
+      const nextInput = document.getElementById(`otp-${focusIndex}`);
+      nextInput?.focus();
+      return;
+    }
+
+    const newOtp = [...otpValues];
+    newOtp[index] = cleaned;
+    setOtpValues(newOtp);
+    setOtp(newOtp.join(""));
+
+    if (index < 3) {
+      const nextInput = document.getElementById(`otp-${index + 1}`);
+      nextInput?.focus();
+    }
+  };
+
+  const handleOtpKeyDown = (e: React.KeyboardEvent<HTMLInputElement>, index: number) => {
+    if (e.key === "Backspace") {
+      if (!otpValues[index] && index > 0) {
+        const newOtp = [...otpValues];
+        newOtp[index - 1] = "";
+        setOtpValues(newOtp);
+        setOtp(newOtp.join(""));
+        const prevInput = document.getElementById(`otp-${index - 1}`);
+        prevInput?.focus();
+      }
+    }
+  };
 
   const handleSendOTP = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -42,9 +94,11 @@ export default function LoginPage() {
       } else {
         setSuccess(
           result.isSimulated 
-            ? "تم إرسال الرمز 123456 (وضع التجربة محلياً)" 
+            ? "تم إرسال الرمز 1234 (وضع التجربة محلياً)" 
             : "تم إرسال رمز التحقق بنجاح إلى رقم جوالك"
         );
+        setOtp("");
+        setOtpValues(["", "", "", ""]);
         setStep(2);
         setTimer(60);
       }
@@ -55,13 +109,14 @@ export default function LoginPage() {
     e.preventDefault();
     setError(null);
 
-    if (otp.length < 4) {
+    const otpCode = otpValues.join("");
+    if (otpCode.length < 4) {
       setError("يرجى إدخال رمز التحقق كاملاً");
       return;
     }
 
     startTransition(async () => {
-      const result = await verifyOTP(phone, otp);
+      const result = await verifyOTP(phone, otpCode);
       if (result && result.error) {
         setError(result.error);
       }
@@ -73,6 +128,7 @@ export default function LoginPage() {
     setError(null);
     setSuccess(null);
     setOtp("");
+    setOtpValues(["", "", "", ""]);
 
     startTransition(async () => {
       const result = await sendOTP(phone);
@@ -81,7 +137,7 @@ export default function LoginPage() {
       } else {
         setSuccess(
           result.isSimulated 
-            ? "تم إرسال الرمز 123456 (وضع التجربة محلياً)" 
+            ? "تم إرسال الرمز 1234 (وضع التجربة محلياً)" 
             : "تم إعادة إرسال الرمز بنجاح"
         );
         setTimer(60);
@@ -183,26 +239,24 @@ export default function LoginPage() {
               </div>
               
               <div>
-                <label htmlFor="otp" className="block text-sm font-bold text-slate-700 mb-2">
+                <label className="block text-sm font-bold text-slate-700 mb-4 text-center">
                   رمز التحقق (OTP)
                 </label>
-                <div className="mt-1 relative rounded-xl">
-                  <div className="absolute inset-y-0 right-0 pr-3.5 flex items-center pointer-events-none">
-                    <Lock className="h-5 w-5 text-slate-400" />
-                  </div>
-                  <input
-                    id="otp"
-                    name="otp"
-                    type="text"
-                    required
-                    maxLength={6}
-                    value={otp}
-                    onChange={(e) => setOtp(e.target.value.replace(/\D/g, ""))}
-                    className="appearance-none block w-full pr-11 pl-4 py-3.5 border border-slate-200 rounded-xl bg-slate-50 focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary/30 focus:bg-white text-slate-800 transition-all text-center tracking-[0.5em] text-lg font-extrabold"
-                    placeholder="••••••"
-                    dir="ltr"
-                    disabled={isPending}
-                  />
+                <div className="flex justify-center gap-3 dir-ltr" dir="ltr">
+                  {otpValues.map((value, index) => (
+                    <input
+                      key={index}
+                      id={`otp-${index}`}
+                      type="text"
+                      maxLength={1}
+                      value={value}
+                      onChange={(e) => handleOtpChange(e.target.value, index)}
+                      onKeyDown={(e) => handleOtpKeyDown(e, index)}
+                      className="w-14 h-14 text-center text-xl font-extrabold text-slate-800 border border-slate-200 rounded-xl bg-slate-50 focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary/30 focus:bg-white transition-all shadow-inner"
+                      placeholder="-"
+                      disabled={isPending}
+                    />
+                  ))}
                 </div>
               </div>
 
@@ -232,6 +286,7 @@ export default function LoginPage() {
                     if (isPending) return;
                     setStep(1);
                     setOtp("");
+                    setOtpValues(["", "", "", ""]);
                     setError(null);
                     setSuccess(null);
                   }}

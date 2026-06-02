@@ -121,20 +121,13 @@ export async function updateCharity(oldName: string, formData: FormData) {
       return { success: false, message: "الجمعية غير موجودة" };
     }
 
-    // 3. Handle logo file upload locally
+    // 3. Convert logo file to Base64 string to store in database (Vercel serverless compatible)
     let logoUrl = charity.logoUrl;
     if (logoFile && logoFile.size > 0) {
       const bytes = await logoFile.arrayBuffer();
       const buffer = Buffer.from(bytes);
-      
-      const uploadDir = join(process.cwd(), "public", "uploads");
-      await mkdir(uploadDir, { recursive: true });
-      
-      const fileExt = logoFile.name.split(".").pop();
-      const filename = `${charity.id}-${Date.now()}.${fileExt}`;
-      const filepath = join(uploadDir, filename);
-      await writeFile(filepath, buffer);
-      logoUrl = `/uploads/${filename}`;
+      const base64Image = buffer.toString("base64");
+      logoUrl = `data:${logoFile.type};base64,${base64Image}`;
     }
 
     // 4. Update the charity details

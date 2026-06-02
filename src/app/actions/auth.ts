@@ -58,7 +58,7 @@ export async function sendOTP(phone: string) {
   }
 
   try {
-    const response = await fetch("https://api.authentica.sa/api/sdk/v1/sendOTP", {
+    const response = await fetch("https://api.authentica.sa/api/v2/send-otp", {
       method: "POST",
       headers: {
         "Accept": "application/json",
@@ -66,8 +66,8 @@ export async function sendOTP(phone: string) {
         "X-Authorization": apiKey,
       },
       body: JSON.stringify({
-        To: formattedPhone,
-        Channel: "sms",
+        phone: formattedPhone,
+        method: "sms",
       }),
     });
 
@@ -118,7 +118,7 @@ export async function verifyOTP(phone: string, otp: string) {
   } else {
     // Validate with Authentica API
     try {
-      const response = await fetch("https://api.authentica.sa/api/sdk/v1/verifyOTP", {
+      const response = await fetch("https://api.authentica.sa/api/v2/verify-otp", {
         method: "POST",
         headers: {
           "Accept": "application/json",
@@ -126,15 +126,18 @@ export async function verifyOTP(phone: string, otp: string) {
           "X-Authorization": apiKey,
         },
         body: JSON.stringify({
-          To: formattedPhone,
-          Otp: otp,
+          phone: formattedPhone,
+          otp: otp,
+          method: "sms",
         }),
       });
 
       const data = await response.json();
 
-      if (response.ok && data && data.status !== "failed") {
+      if (response.ok && data && data.status !== "failed" && !data.error) {
         isVerified = true;
+      } else if (data && (data.message || data.error)) {
+        return { error: data.message || data.error || "رمز التحقق غير صحيح" };
       }
     } catch (error) {
       console.error("Authentica verifyOTP error:", error);

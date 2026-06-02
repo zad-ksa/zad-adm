@@ -6,7 +6,7 @@ export default async function MainLayout({ children }: { children: React.ReactNo
   const session = await getSession();
   
   if (!session) {
-    redirect("/login");
+    redirect("/");
   }
 
   return (

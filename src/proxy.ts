@@ -2,20 +2,19 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { getSession } from "@/lib/auth";
 
-export async function proxy(request: NextRequest) {
+export default async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
-  
+  const session = await getSession();
+
   // Protect /dashboard routes
   if (pathname.startsWith("/dashboard")) {
-    const session = await getSession();
-    
     if (!session) {
-      return NextResponse.redirect(new URL("/login", request.url));
+      return NextResponse.redirect(new URL("/", request.url));
     }
   }
-  
-  if (pathname === "/login") {
-    const session = await getSession();
+
+  // Prevent logged-in users from seeing the login page (root "/") again
+  if (pathname === "/") {
     if (session) {
       return NextResponse.redirect(new URL("/dashboard", request.url));
     }
@@ -25,5 +24,5 @@ export async function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/dashboard/:path*", "/login"],
+  matcher: ["/dashboard/:path*", "/"],
 };

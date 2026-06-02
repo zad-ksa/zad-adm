@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { User, ShieldAlert, Users, X, LogOut, LayoutDashboard, Building2, ClipboardList, ChevronRight } from "lucide-react";
-import { logout } from "@/app/login/actions";
+import { logout } from "@/app/actions/auth";
 import { usePathname } from "next/navigation";
 import Image from "next/image";
 import ZadLogo from "@/components/ZadLogo";

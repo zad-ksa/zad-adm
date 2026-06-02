@@ -68,6 +68,7 @@ export async function sendOTP(phone: string) {
       body: JSON.stringify({
         phone: formattedPhone,
         method: "sms",
+        template_id: 4,
       }),
     });
 

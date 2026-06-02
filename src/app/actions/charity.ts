@@ -2,6 +2,8 @@
 
 import { prisma } from "@/lib/db";
 import { revalidatePath } from "next/cache";
+import { writeFile, mkdir } from "fs/promises";
+import { join } from "path";
 
 export async function getCharities() {
   try {
@@ -84,5 +86,93 @@ export async function bootstrapCharities() {
   } catch (error) {
     console.error("Error bootstrapping charities:", error);
     return { success: false, message: "حدث خطأ أثناء التهيئة" };
+  }
+}
+
+export async function updateCharity(oldName: string, formData: FormData) {
+  try {
+    const name = formData.get("name") as string;
+    const establishmentDate = formData.get("establishmentDate") as string;
+    const licenseNumber = formData.get("licenseNumber") as string;
+    const logoFile = formData.get("logo") as File;
+
+    if (!name || !name.trim()) {
+      return { success: false, message: "اسم الجمعية مطلوب" };
+    }
+
+    const trimmedName = name.trim();
+
+    // 1. Check if name is being changed and if new name already exists
+    if (trimmedName.toLowerCase() !== oldName.toLowerCase()) {
+      const existing = await prisma.charity.findUnique({
+        where: { name: trimmedName }
+      });
+      if (existing) {
+        return { success: false, message: "جمعية بهذا الاسم موجودة بالفعل" };
+      }
+    }
+
+    // 2. Fetch the current charity record
+    const charity = await prisma.charity.findUnique({
+      where: { name: oldName }
+    });
+
+    if (!charity) {
+      return { success: false, message: "الجمعية غير موجودة" };
+    }
+
+    // 3. Handle logo file upload locally
+    let logoUrl = charity.logoUrl;
+    if (logoFile && logoFile.size > 0) {
+      const bytes = await logoFile.arrayBuffer();
+      const buffer = Buffer.from(bytes);
+      
+      const uploadDir = join(process.cwd(), "public", "uploads");
+      await mkdir(uploadDir, { recursive: true });
+      
+      const fileExt = logoFile.name.split(".").pop();
+      const filename = `${charity.id}-${Date.now()}.${fileExt}`;
+      const filepath = join(uploadDir, filename);
+      await writeFile(filepath, buffer);
+      logoUrl = `/uploads/${filename}`;
+    }
+
+    // 4. Update the charity details
+    const updatedCharity = await prisma.charity.update({
+      where: { name: oldName },
+      data: {
+        name: trimmedName,
+        establishmentDate: establishmentDate || null,
+        licenseNumber: licenseNumber || null,
+        logoUrl,
+      }
+    });
+
+    // 5. Cascade updates if the name changed to avoid broken references
+    if (trimmedName.toLowerCase() !== oldName.toLowerCase()) {
+      await prisma.surveyResponse.updateMany({
+        where: { charityName: oldName },
+        data: { charityName: trimmedName }
+      });
+
+      await prisma.hexagonalResponse.updateMany({
+        where: { charityName: oldName },
+        data: { charityName: trimmedName }
+      });
+
+      await prisma.performanceMetric.updateMany({
+        where: { charityName: oldName },
+        data: { charityName: trimmedName }
+      });
+    }
+
+    revalidatePath("/dashboard");
+    revalidatePath(`/dashboard/charity/${encodeURIComponent(oldName)}`);
+    revalidatePath(`/dashboard/charity/${encodeURIComponent(trimmedName)}`);
+
+    return { success: true, name: trimmedName };
+  } catch (error: any) {
+    console.error("Error updating charity profile:", error);
+    return { success: false, message: error.message || "حدث خطأ أثناء تحديث البيانات" };
   }
 }

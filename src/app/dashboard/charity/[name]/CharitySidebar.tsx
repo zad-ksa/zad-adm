@@ -18,10 +18,12 @@ import ZadLogo from "@/components/ZadLogo";
 
 export default function CharitySidebar({ 
   charityName,
+  logoUrl,
   isOpen,
   setIsOpen 
 }: { 
   charityName: string;
+  logoUrl: string | null;
   isOpen: boolean;
   setIsOpen: (v: boolean) => void;
 }) {
@@ -99,9 +101,15 @@ export default function CharitySidebar({
       <div className="flex-1 overflow-y-auto custom-scrollbar py-6 flex flex-col">
         {/* Charity Profile */}
         <div className={`flex flex-col ${isOpen ? "items-start px-6" : "items-center px-2"} mb-8 pb-6 border-b border-slate-100 transition-all overflow-hidden`}>
-          <div className={`bg-primary/5 text-primary rounded-2xl flex items-center justify-center mb-3 shrink-0 transition-all ${isOpen ? "w-14 h-14" : "w-10 h-10"}`}>
-            <Building2 className={isOpen ? "w-7 h-7" : "w-5 h-5"} />
-          </div>
+          {logoUrl ? (
+            <div className={`rounded-2xl overflow-hidden border border-slate-150 bg-white flex items-center justify-center mb-3 shrink-0 transition-all ${isOpen ? "w-14 h-14" : "w-10 h-10"}`}>
+              <img src={logoUrl} alt={charityName} className="w-full h-full object-contain p-1" />
+            </div>
+          ) : (
+            <div className={`bg-primary/5 text-primary rounded-2xl flex items-center justify-center mb-3 shrink-0 transition-all ${isOpen ? "w-14 h-14" : "w-10 h-10"}`}>
+              <Building2 className={isOpen ? "w-7 h-7" : "w-5 h-5"} />
+            </div>
+          )}
           
           {isOpen && (
             <div className="overflow-hidden whitespace-nowrap fade-in w-full">

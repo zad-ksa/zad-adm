@@ -8,9 +8,11 @@ import { Menu } from "lucide-react";
 export default function CharityLayoutClient({
   children,
   charityName,
+  logoUrl,
 }: {
   children: React.ReactNode;
   charityName: string;
+  logoUrl: string | null;
 }) {
   const pathname = usePathname();
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
@@ -24,7 +26,7 @@ export default function CharityLayoutClient({
 
   return (
     <div className="flex h-screen bg-slate-50 overflow-hidden" dir="rtl">
-      <CharitySidebar charityName={charityName} isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />
+      <CharitySidebar charityName={charityName} logoUrl={logoUrl} isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />
       
       <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden relative">
         {/* Mobile Header (Only visible on small screens since Desktop has Sidebar) */}

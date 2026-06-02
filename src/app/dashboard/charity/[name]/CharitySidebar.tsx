@@ -113,10 +113,12 @@ export default function CharitySidebar({
           
           {isOpen && (
             <div className="overflow-hidden whitespace-nowrap fade-in w-full">
-              <div className="text-[10px] font-bold text-slate-400 mb-1.5 uppercase tracking-wider">ملف الجمعية</div>
-              <h2 className="text-base font-bold text-slate-800 truncate" title={charityName}>
+              <h2 className="text-base font-bold text-slate-800 truncate mb-1" title={charityName}>
                 {charityName}
               </h2>
+              <div className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-slate-50 border border-slate-100 rounded-full text-[10px] text-slate-500 font-bold">
+                ملف الجمعية
+              </div>
             </div>
           )}
         </div>

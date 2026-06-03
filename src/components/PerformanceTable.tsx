@@ -274,8 +274,8 @@ export default function PerformanceTable({
     
     if (isPercentage) {
       const sum = parsedValues.reduce((acc, curr) => acc + curr, 0);
-      const avg = Math.round((sum / activeCount) * 10) / 10;
-      return `${avg}%`;
+      const roundedSum = Math.round(sum * 10) / 10;
+      return `${roundedSum}%`;
     } else {
       return parsedValues.reduce((acc, curr) => acc + curr, 0);
     }
@@ -292,8 +292,8 @@ export default function PerformanceTable({
     
     if (isPercentage) {
       const sum = parsedValues.reduce((acc, curr) => acc + curr, 0);
-      const avg = Math.round((sum / activeCount) * 10) / 10;
-      return `${avg}%`;
+      const roundedSum = Math.round(sum * 10) / 10;
+      return `${roundedSum}%`;
     } else {
       return parsedValues.reduce((acc, curr) => acc + curr, 0);
     }

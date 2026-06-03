@@ -24,7 +24,9 @@ import {
   Phone,
   Lock,
   AlertCircle,
-  Loader2
+  Loader2,
+  Eye,
+  EyeOff
 } from "lucide-react";
 
 // Custom SVG Icons
@@ -100,5 +102,7 @@ export {
   Phone,
   Lock,
   AlertCircle,
-  Loader2
+  Loader2,
+  Eye,
+  EyeOff
 };

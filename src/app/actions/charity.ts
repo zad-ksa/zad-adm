@@ -17,7 +17,7 @@ export async function getCharities() {
   }
 }
 
-export async function addCharity(data: { name: string; establishmentDate?: string; licenseNumber?: string; domain?: string }) {
+export async function addCharity(data: { name: string; establishmentDate?: string; licenseNumber?: string; domain?: string; logoUrl?: string | null }) {
   try {
     const existing = await prisma.charity.findUnique({
       where: { name: data.name.trim() }
@@ -33,6 +33,7 @@ export async function addCharity(data: { name: string; establishmentDate?: strin
         establishmentDate: data.establishmentDate || null,
         licenseNumber: data.licenseNumber || null,
         domain: data.domain || null,
+        logoUrl: data.logoUrl || null,
       }
     });
 

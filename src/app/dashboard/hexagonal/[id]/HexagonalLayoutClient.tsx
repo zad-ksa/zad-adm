@@ -35,8 +35,11 @@ export default function HexagonalLayoutClient({
   const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(true);
 
-  // Close sidebar on mobile when navigating
+  const [isNavigating, setIsNavigating] = useState(false);
+
+  // Reset navigating state when pathname changes (navigation completed)
   useEffect(() => {
+    setIsNavigating(false);
     if (typeof window !== "undefined" && window.innerWidth < 1024) {
       setIsOpen(false);
     }
@@ -118,6 +121,11 @@ export default function HexagonalLayoutClient({
               <Link
                 key={item.id}
                 href={`/dashboard/hexagonal/${item.id}`}
+                onClick={() => {
+                  if (item.id !== currentResponseId) {
+                    setIsNavigating(true);
+                  }
+                }}
                 title={!isOpen ? `${item.authorizedTitle} (${formattedDate})` : undefined}
                 className={`flex items-center ${isOpen ? "justify-start px-3" : "justify-center"} py-2.5 rounded-xl font-bold transition-all group relative overflow-hidden ${
                   isActive 
@@ -145,6 +153,7 @@ export default function HexagonalLayoutClient({
         <div className="mt-auto px-3 pt-6 border-t border-slate-100 shrink-0">
           <Link
             href={`/dashboard/charity/${encodeURIComponent(charityName)}`}
+            onClick={() => setIsNavigating(true)}
             title={!isOpen ? "العودة لملف الجمعية" : undefined}
             className={`flex items-center ${isOpen ? "justify-start px-3" : "justify-center"} w-full py-3 text-slate-500 hover:bg-primary/5 hover:text-primary rounded-xl font-bold transition-all group`}
           >
@@ -191,7 +200,16 @@ export default function HexagonalLayoutClient({
         </div>
         
         {/* Scrollable Children Container */}
-        <main className="flex-1 overflow-y-auto w-full p-4 sm:p-6 lg:p-8">
+        <main className="flex-1 overflow-y-auto w-full p-4 sm:p-6 lg:p-8 relative">
+          {isNavigating && (
+            <div className="absolute inset-0 bg-white/70 backdrop-blur-sm z-50 flex items-center justify-center animate-in fade-in duration-200">
+              <div className="text-center bg-white/90 p-8 rounded-3xl border border-slate-100 shadow-xl max-w-xs w-full flex flex-col items-center">
+                <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin mb-4" />
+                <h3 className="text-base font-bold text-slate-800">جاري تحميل التقرير...</h3>
+                <p className="text-xs text-slate-400 mt-1 font-medium">يرجى الانتظار لحظات</p>
+              </div>
+            </div>
+          )}
           <div className="max-w-5xl mx-auto w-full">
             {children}
           </div>

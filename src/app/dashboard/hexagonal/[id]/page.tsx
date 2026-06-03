@@ -2,6 +2,16 @@ import { prisma } from "@/lib/db";
 import Header from "@/components/Header";
 import Link from "next/link";
 import type { Metadata } from "next";
+import { 
+  Award, 
+  AlertTriangle, 
+  Sparkles, 
+  ShieldAlert, 
+  Key, 
+  Rocket,
+  Clock
+} from "@/components/Icons";
+import { Search, BarChart3 } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
@@ -11,7 +21,7 @@ export const metadata: Metadata = {
 
 interface QuestionMeta {
   title: string;
-  icon: string;
+  icon: React.ComponentType<{ className?: string }>;
   colorClass: string;
   bgClass: string;
   borderClass: string;
@@ -21,7 +31,7 @@ interface QuestionMeta {
 const METADATA: Record<string, QuestionMeta> = {
   q1: {
     title: "نقاط القوة التي تمتلكها الجمعية",
-    icon: "💪",
+    icon: Award,
     colorClass: "text-[#00b050]",
     bgClass: "bg-[#00b050]/10",
     borderClass: "border-[#00b050]/20",
@@ -29,7 +39,7 @@ const METADATA: Record<string, QuestionMeta> = {
   },
   q2: {
     title: "نقاط الضعف لدى الجمعية",
-    icon: "⚠️",
+    icon: AlertTriangle,
     colorClass: "text-rose-600",
     bgClass: "bg-rose-500/10",
     borderClass: "border-rose-500/20",
@@ -37,7 +47,7 @@ const METADATA: Record<string, QuestionMeta> = {
   },
   q3: {
     title: "الفرص التي يمكن ان تستثمرها الجمعية",
-    icon: "🌟",
+    icon: Sparkles,
     colorClass: "text-sky-600",
     bgClass: "bg-sky-500/10",
     borderClass: "border-sky-500/20",
@@ -45,7 +55,7 @@ const METADATA: Record<string, QuestionMeta> = {
   },
   q4: {
     title: "المخاطر التي يمكن ان تشكل خطرا على الجمعية",
-    icon: "🛑",
+    icon: ShieldAlert,
     colorClass: "text-amber-600",
     bgClass: "bg-amber-500/10",
     borderClass: "border-amber-500/20",
@@ -53,7 +63,7 @@ const METADATA: Record<string, QuestionMeta> = {
   },
   q5: {
     title: "عوامل النجاح التي لابد من توفرها في الجمعية",
-    icon: "🔑",
+    icon: Key,
     colorClass: "text-[#ffc000]",
     bgClass: "bg-[#ffc000]/10",
     borderClass: "border-[#ffc000]/20",
@@ -61,7 +71,7 @@ const METADATA: Record<string, QuestionMeta> = {
   },
   q6: {
     title: "الميزة التنافسية للجمعية",
-    icon: "🏆",
+    icon: Rocket,
     colorClass: "text-violet-600",
     bgClass: "bg-violet-500/10",
     borderClass: "border-violet-500/20",
@@ -79,8 +89,10 @@ export default async function HexagonalDetails({ params }: { params: { id: strin
   if (!response) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-50 font-sans" dir="rtl">
-        <div className="text-center bg-white p-12 rounded-2xl border border-slate-100 shadow-sm max-w-md w-full mx-4">
-          <div className="text-5xl mb-6 opacity-30">🔍</div>
+        <div className="text-center bg-white p-12 rounded-2xl border border-slate-100 shadow-sm max-w-md w-full mx-4 flex flex-col items-center">
+          <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center text-slate-400 mb-6 opacity-80 border border-slate-200">
+            <Search className="w-8 h-8" />
+          </div>
           <h1 className="text-2xl font-bold text-slate-800 mb-3 tracking-tight">التقرير غير موجود</h1>
           <p className="text-slate-500 font-medium mb-8">عذراً، لم نتمكن من العثور على التقرير المطلوب.</p>
           <Link href="/dashboard" className="bg-primary text-white font-bold py-3 px-6 rounded-xl hover:bg-primary/90 transition-all inline-block shadow-sm hover:shadow">
@@ -135,7 +147,7 @@ export default async function HexagonalDetails({ params }: { params: { id: strin
                 
                 <div className="w-full md:w-auto bg-slate-50 p-5 rounded-xl border border-slate-100">
                   <div className="flex items-center gap-2 mb-2">
-                    <span className="text-slate-400">🕒</span>
+                    <Clock className="w-4 h-4 text-slate-400" />
                     <div className="text-xs font-bold text-slate-500 uppercase tracking-wider">تاريخ التعبئة</div>
                   </div>
                   <div className="font-bold text-slate-800">
@@ -154,8 +166,8 @@ export default async function HexagonalDetails({ params }: { params: { id: strin
         </div>
  
         <div className="flex items-center gap-3 mb-8 pb-4 border-b border-slate-200">
-          <div className="w-10 h-10 bg-secondary/10 rounded-xl flex items-center justify-center text-secondary text-xl font-bold">
-            📊
+          <div className="w-10 h-10 bg-secondary/10 rounded-xl flex items-center justify-center text-secondary border border-secondary/20 shadow-inner">
+            <BarChart3 className="w-5 h-5" />
           </div>
           <h2 className="text-2xl font-bold text-slate-800 tracking-tight">تفاصيل أبعاد التحليل السداسي</h2>
         </div>
@@ -175,8 +187,8 @@ export default async function HexagonalDetails({ params }: { params: { id: strin
                 
                 <div className="relative z-10">
                   <div className="flex items-center gap-3 pb-5 mb-5 border-b border-slate-100">
-                    <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-2xl ${meta.bgClass} border ${meta.borderClass}`}>
-                      {meta.icon}
+                    <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${meta.bgClass} border ${meta.borderClass}`}>
+                      <meta.icon className={`w-6 h-6 ${meta.colorClass}`} />
                     </div>
                     <h3 className={`font-bold text-lg ${meta.colorClass} tracking-tight leading-tight`}>
                       {meta.title}

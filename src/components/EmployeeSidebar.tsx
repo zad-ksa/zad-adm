@@ -1,10 +1,11 @@
 "use client";
 
+import { useState, useEffect, useRef, useTransition } from "react";
 import Link from "next/link";
-import { User, ShieldAlert, Users, X, LogOut, LayoutDashboard, Building2, ClipboardList, ChevronRight } from "lucide-react";
+import { User, ShieldAlert, Users, X, LogOut, LayoutDashboard, Building2, ClipboardList, ChevronRight, Edit, Eye, EyeOff, Camera, Loader2, AlertCircle, CheckCircle2 } from "lucide-react";
 import { logout } from "@/app/actions/auth";
+import { updateProfile } from "@/app/actions/profile";
 import { usePathname } from "next/navigation";
-import Image from "next/image";
 import ZadLogo from "@/components/ZadLogo";
 
 export default function EmployeeSidebar({ 
@@ -17,6 +18,22 @@ export default function EmployeeSidebar({
   setIsOpen: (v: boolean) => void;
 }) {
   const pathname = usePathname();
+  const [userState, setUserState] = useState(session);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [name, setName] = useState("");
+  const [phone, setPhone] = useState("");
+  const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [newAvatar, setNewAvatar] = useState<string | null>(null);
+  const [modalError, setModalError] = useState<string | null>(null);
+  const [modalSuccess, setModalSuccess] = useState<string | null>(null);
+  const [isPending, startTransition] = useTransition();
+
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    setUserState(session);
+  }, [session]);
 
   const navItems = [
     { label: "الرئيسية", href: "/dashboard", icon: LayoutDashboard },
@@ -24,9 +41,64 @@ export default function EmployeeSidebar({
     { label: "الاستبيانات", href: "/dashboard/surveys", icon: ClipboardList },
   ];
 
-  if (session.role === "ADMIN") {
+  if (userState?.role === "ADMIN") {
     navItems.push({ label: "إدارة الموظفين", href: "/dashboard/employees", icon: Users });
   }
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > 1 * 1024 * 1024) {
+        setModalError("حجم الصورة يجب أن يكون أقل من 1 ميجابايت");
+        return;
+      }
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setNewAvatar(reader.result as string);
+        setModalError(null);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleSaveProfile = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setModalError(null);
+    setModalSuccess(null);
+
+    if (!name.trim()) {
+      setModalError("الاسم مطلوب");
+      return;
+    }
+
+    if (!phone.trim()) {
+      setModalError("رقم الجوال مطلوب");
+      return;
+    }
+
+    startTransition(async () => {
+      const res = await updateProfile({
+        name,
+        phone,
+        password: password || undefined,
+        avatarUrl: newAvatar,
+      });
+
+      if (res.error) {
+        setModalError(res.error);
+      } else if (res.success) {
+        setModalSuccess(res.success);
+        if (res.user) {
+          setUserState(res.user);
+        }
+        setTimeout(() => {
+          setIsEditModalOpen(false);
+          setModalSuccess(null);
+          setPassword("");
+        }, 1500);
+      }
+    });
+  };
 
   const sidebarContent = (
     <div className="bg-white flex flex-col h-full border-l border-slate-200/80 shadow-[4px_0_24px_rgba(0,0,0,0.02)] relative transition-all duration-300">
@@ -62,16 +134,56 @@ export default function EmployeeSidebar({
       <div className="flex-1 overflow-y-auto custom-scrollbar py-6 flex flex-col">
         {/* User Profile */}
         <div className={`flex flex-col ${isOpen ? "items-start px-6" : "items-center px-2"} mb-8 pb-6 border-b border-slate-100 transition-all overflow-hidden`}>
-          <div className={`bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center mb-3 shrink-0 transition-all ${isOpen ? "w-14 h-14" : "w-10 h-10"}`}>
-            <User className={isOpen ? "w-7 h-7" : "w-5 h-5"} />
-          </div>
+          <button 
+            type="button"
+            onClick={() => {
+              setName(userState?.name || "");
+              setPhone(userState?.phone || "");
+              setPassword("");
+              setNewAvatar(userState?.avatarUrl || null);
+              setModalError(null);
+              setModalSuccess(null);
+              setIsEditModalOpen(true);
+            }}
+            className="group/avatar flex flex-col items-center justify-center focus:outline-none cursor-pointer"
+            title="تعديل الملف الشخصي"
+          >
+            <div className={`relative overflow-hidden bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center mb-3 shrink-0 transition-all ${isOpen ? "w-14 h-14" : "w-10 h-10"} group-hover/avatar:ring-2 group-hover/avatar:ring-primary/40`}>
+              {userState?.avatarUrl ? (
+                <img src={userState.avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
+              ) : (
+                <User className={isOpen ? "w-7 h-7" : "w-5 h-5"} />
+              )}
+              <div className="absolute inset-0 bg-black/40 opacity-0 group-hover/avatar:opacity-100 transition-opacity flex items-center justify-center text-white">
+                <Edit className="w-4.5 h-4.5" />
+              </div>
+            </div>
+          </button>
           
           {isOpen && (
             <div className="overflow-hidden whitespace-nowrap fade-in w-full">
-              <h2 className="text-base font-bold text-slate-800 truncate">{session.name}</h2>
+              <div className="flex items-center justify-between gap-2 w-full">
+                <h2 className="text-base font-bold text-slate-800 truncate" title={userState?.name}>{userState?.name}</h2>
+                <button 
+                  type="button"
+                  onClick={() => {
+                    setName(userState?.name || "");
+                    setPhone(userState?.phone || "");
+                    setPassword("");
+                    setNewAvatar(userState?.avatarUrl || null);
+                    setModalError(null);
+                    setModalSuccess(null);
+                    setIsEditModalOpen(true);
+                  }}
+                  className="text-slate-400 hover:text-primary hover:bg-slate-50 p-1.5 rounded-lg transition-colors cursor-pointer shrink-0"
+                  title="تعديل الملف الشخصي"
+                >
+                  <Edit className="w-4 h-4" />
+                </button>
+              </div>
               <div className="mt-1.5 inline-flex items-center gap-1.5 px-2.5 py-1 bg-slate-50 border border-slate-100 rounded-full text-[11px] text-slate-600 font-bold">
                 <ShieldAlert className="w-3.5 h-3.5 text-emerald-500" />
-                {session.role === "ADMIN" ? "مدير النظام" : "موظف"}
+                {userState?.role === "ADMIN" ? "مدير النظام" : "موظف"}
               </div>
             </div>
           )}
@@ -135,6 +247,171 @@ export default function EmployeeSidebar({
           {sidebarContent}
         </div>
       </div>
+
+      {/* Edit Profile Modal */}
+      {isEditModalOpen && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+          {/* Backdrop overlay */}
+          <div 
+            className="absolute inset-0 bg-slate-950/65 backdrop-blur-md transition-opacity duration-300"
+            onClick={() => { if (!isPending) setIsEditModalOpen(false); }}
+          />
+          
+          {/* Modal Container */}
+          <div className="bg-white rounded-2xl border border-slate-100 shadow-2xl w-full max-w-md overflow-hidden relative z-10 transform transition-all duration-300 scale-100 max-h-[90vh] flex flex-col font-sans" dir="rtl">
+            {/* Header */}
+            <div className="px-6 py-5 border-b border-slate-100 flex items-center justify-between shrink-0">
+              <h3 className="text-lg font-bold text-slate-800">تعديل الملف الشخصي</h3>
+              <button 
+                type="button"
+                onClick={() => setIsEditModalOpen(false)} 
+                disabled={isPending}
+                className="text-slate-400 hover:text-slate-600 hover:bg-slate-50 p-2 rounded-lg transition-colors cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Form Body */}
+            <form onSubmit={handleSaveProfile} className="flex-1 overflow-y-auto p-6 space-y-6">
+              {modalError && (
+                <div className="bg-red-50 border border-red-100 p-4 rounded-xl flex items-start text-sm text-red-700 font-bold">
+                  <AlertCircle className="w-5 h-5 ml-2 text-red-500 shrink-0 mt-0.5" />
+                  <span>{modalError}</span>
+                </div>
+              )}
+
+              {modalSuccess && (
+                <div className="bg-emerald-50 border border-emerald-100 p-4 rounded-xl flex items-start text-sm text-emerald-800 font-bold">
+                  <CheckCircle2 className="w-5 h-5 ml-2 text-emerald-500 shrink-0 mt-0.5" />
+                  <span>{modalSuccess}</span>
+                </div>
+              )}
+
+              {/* Avatar Uploader */}
+              <div className="flex flex-col items-center gap-3">
+                <div className="relative group">
+                  <div className="w-24 h-24 rounded-2xl overflow-hidden border border-slate-200 bg-slate-50 flex items-center justify-center relative shadow-inner group-hover:border-primary/40 transition-colors">
+                    {newAvatar ? (
+                      <img src={newAvatar} alt="صورة الموظف" className="w-full h-full object-cover" />
+                    ) : (
+                      <User className="w-10 h-10 text-slate-300" />
+                    )}
+                  </div>
+                  
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={isPending}
+                    className="absolute -bottom-2 -left-2 bg-primary text-white p-2 rounded-xl shadow hover:bg-primary/95 transition-all text-xs font-bold cursor-pointer active:scale-95 disabled:opacity-50 flex items-center justify-center"
+                    title="تغيير الصورة"
+                  >
+                    <Camera className="w-4 h-4" />
+                  </button>
+                </div>
+                
+                <input 
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={handleImageChange}
+                  disabled={isPending}
+                />
+                <p className="text-[10px] text-slate-400 font-medium">الحد الأقصى: 1 ميجابايت (PNG, JPG)</p>
+              </div>
+
+              {/* Inputs */}
+              <div className="space-y-4">
+                <div>
+                  <label htmlFor="profile-name" className="block text-sm font-bold text-slate-700 mb-2">
+                    الاسم بالكامل
+                  </label>
+                  <input
+                    id="profile-name"
+                    type="text"
+                    required
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    disabled={isPending}
+                    className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all outline-none bg-slate-50 focus:bg-white text-slate-800 text-sm font-bold"
+                    placeholder="أدخل اسمك بالكامل"
+                  />
+                </div>
+
+                <div>
+                  <label htmlFor="profile-phone" className="block text-sm font-bold text-slate-700 mb-2">
+                    رقم الجوال
+                  </label>
+                  <input
+                    id="profile-phone"
+                    type="tel"
+                    required
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    disabled={isPending}
+                    className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all outline-none bg-slate-50 focus:bg-white text-slate-800 text-sm font-bold"
+                    placeholder="05XXXXXXXX"
+                    dir="ltr"
+                  />
+                </div>
+
+                <div>
+                  <label htmlFor="profile-password" className="block text-sm font-bold text-slate-700 mb-2">
+                    كلمة المرور الجديدة (اختياري)
+                  </label>
+                  <div className="relative rounded-xl">
+                    <input
+                      id="profile-password"
+                      type={showPassword ? "text" : "password"}
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      disabled={isPending}
+                      className="w-full pr-4 pl-12 py-3 rounded-xl border border-slate-200 focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all outline-none bg-slate-50 focus:bg-white text-slate-800 text-sm font-bold"
+                      placeholder="اتركها فارغة إذا لم ترغب في التغيير"
+                      dir="ltr"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400 hover:text-slate-600 transition-colors focus:outline-none"
+                      disabled={isPending}
+                      tabIndex={-1}
+                    >
+                      {showPassword ? (
+                        <EyeOff className="h-5 w-5" />
+                      ) : (
+                        <Eye className="h-5 w-5" />
+                      )}
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Footer Actions */}
+              <div className="pt-6 border-t border-slate-100 flex items-center justify-end gap-3 shrink-0">
+                <button
+                  type="button"
+                  onClick={() => setIsEditModalOpen(false)}
+                  disabled={isPending}
+                  className="px-5 py-3 rounded-xl border border-slate-200 text-slate-500 hover:bg-slate-50 hover:text-slate-700 font-bold transition-all text-sm cursor-pointer disabled:opacity-50"
+                >
+                  إلغاء
+                </button>
+                
+                <button
+                  type="submit"
+                  disabled={isPending}
+                  className="px-6 py-3 rounded-xl bg-primary text-white hover:bg-primary/95 font-bold transition-all text-sm flex items-center gap-2 cursor-pointer disabled:opacity-75 disabled:cursor-not-allowed shadow-sm hover:shadow"
+                >
+                  {isPending && <Loader2 className="w-4 h-4 animate-spin" />}
+                  <span>حفظ التغييرات</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </>
   );
 }

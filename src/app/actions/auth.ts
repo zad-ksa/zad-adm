@@ -37,6 +37,7 @@ export async function loginWithPassword(phone: string, password: string) {
     phone: employee.phone,
     role: employee.role,
     permissions: employee.permissions,
+    avatarUrl: employee.avatarUrl,
   };
 
   const encryptedSession = await encrypt(sessionData);

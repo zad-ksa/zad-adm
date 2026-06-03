@@ -67,13 +67,6 @@ export default async function CharityOverview({ params }: { params: Promise<{ na
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             <div className="bg-slate-50/80 p-6 rounded-2xl border border-slate-100 hover:border-slate-200 transition-colors">
               <div className="flex items-center gap-2 mb-3">
-                {/* {charity.logoUrl ? (
-                  <div className="w-5 h-5 rounded overflow-hidden flex items-center justify-center bg-white border border-slate-200 shrink-0">
-                    <img src={charity.logoUrl} alt={charity.name} className="w-full h-full object-contain p-0.5" />
-                  </div>
-                ) : (
-                  <Building2 className="w-5 h-5 text-slate-400 shrink-0" />
-                )} */}
                 <div className="text-sm font-bold text-slate-500">اسم الجمعية</div>
               </div>
               <div className="text-xl font-bold text-slate-800">{charity.name}</div>
@@ -81,7 +74,6 @@ export default async function CharityOverview({ params }: { params: Promise<{ na
 
             <div className="bg-slate-50/80 p-6 rounded-2xl border border-slate-100 hover:border-slate-200 transition-colors">
               <div className="flex items-center gap-2 mb-3">
-                <Sparkles className="w-5 h-5 text-slate-400 shrink-0" />
                 <div className="text-sm font-bold text-slate-500">مجال العمل</div>
               </div>
               <div className="text-xl font-bold text-slate-800">
@@ -91,7 +83,6 @@ export default async function CharityOverview({ params }: { params: Promise<{ na
 
             <div className="bg-slate-50/80 p-6 rounded-2xl border border-slate-100 hover:border-slate-200 transition-colors">
               <div className="flex items-center gap-2 mb-3">
-                <CalendarIcon />
                 <div className="text-sm font-bold text-slate-500">تاريخ التأسيس</div>
               </div>
               <div className="text-xl font-bold text-slate-800">
@@ -101,7 +92,6 @@ export default async function CharityOverview({ params }: { params: Promise<{ na
 
             <div className="bg-slate-50/80 p-6 rounded-2xl border border-slate-100 hover:border-slate-200 transition-colors">
               <div className="flex items-center gap-2 mb-3">
-                <LicenseIcon />
                 <div className="text-sm font-bold text-slate-500">رقم التصريح</div>
               </div>
               <div className="text-xl font-bold text-slate-800">

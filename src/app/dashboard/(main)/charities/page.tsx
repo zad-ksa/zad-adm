@@ -58,7 +58,7 @@ export default async function CharitiesDashboard() {
                     </Link>
                   </td>
                   <td className="p-5 text-slate-600 text-sm font-semibold">
-                    {charity.domain || <span className="text-slate-300 font-medium">غير محدد</span>}
+                    {(charity as any).domain || <span className="text-slate-300 font-medium">غير محدد</span>}
                   </td>
                   <td className="p-5 text-slate-600 font-medium">{charity.establishmentDate || "-"}</td>
                   <td className="p-5 text-slate-600 font-medium">{charity.licenseNumber || "-"}</td>

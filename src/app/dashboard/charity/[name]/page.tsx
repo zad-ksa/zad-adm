@@ -85,7 +85,7 @@ export default async function CharityOverview({ params }: { params: Promise<{ na
                 <div className="text-sm font-bold text-slate-500">مجال العمل</div>
               </div>
               <div className="text-xl font-bold text-slate-800">
-                {charity.domain || <span className="text-slate-300 font-medium text-sm">غير متوفر</span>}
+                {(charity as any).domain || <span className="text-slate-300 font-medium text-sm">غير متوفر</span>}
               </div>
             </div>
 

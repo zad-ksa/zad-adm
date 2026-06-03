@@ -12,6 +12,7 @@ interface EditCharityModalProps {
     licenseNumber: string | null;
     establishmentDate: string | null;
     logoUrl: string | null;
+    domain?: string | null;
   };
   onClose: () => void;
 }
@@ -20,6 +21,7 @@ export default function EditCharityModal({ charity, onClose }: EditCharityModalP
   const [name, setName] = useState(charity.name);
   const [licenseNumber, setLicenseNumber] = useState(charity.licenseNumber || "");
   const [establishmentDate, setEstablishmentDate] = useState(charity.establishmentDate || "");
+  const [domain, setDomain] = useState(charity.domain || "");
   const [logoPreview, setLogoPreview] = useState<string | null>(charity.logoUrl);
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -54,6 +56,7 @@ export default function EditCharityModal({ charity, onClose }: EditCharityModalP
     formData.append("name", name);
     formData.append("licenseNumber", licenseNumber);
     formData.append("establishmentDate", establishmentDate);
+    formData.append("domain", domain);
     if (logoFile) {
       formData.append("logo", logoFile);
     }
@@ -154,8 +157,23 @@ export default function EditCharityModal({ charity, onClose }: EditCharityModalP
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 disabled={isPending}
-                className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all outline-none bg-slate-50 focus:bg-white text-slate-800 text-sm font-bold animate-none"
+                className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all outline-none bg-slate-50 focus:bg-white text-slate-800 text-sm font-bold"
                 placeholder="أدخل اسم الجمعية"
+              />
+            </div>
+
+            <div>
+              <label htmlFor="charity-domain" className="block text-sm font-bold text-slate-700 mb-2">
+                مجال العمل
+              </label>
+              <input
+                id="charity-domain"
+                type="text"
+                value={domain}
+                onChange={(e) => setDomain(e.target.value)}
+                disabled={isPending}
+                className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all outline-none bg-slate-50 focus:bg-white text-slate-800 text-sm font-bold"
+                placeholder="مثال: رعاية الأيتام، التنمية الأسرية"
               />
             </div>
 

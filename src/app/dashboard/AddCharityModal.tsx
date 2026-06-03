@@ -12,10 +12,11 @@ export default function AddCharityModal({ onClose, onSuccess }: { onClose: () =>
     setLoading(true);
     setError(null);
 
-    const formData = new FormData(e.currentTarget);
+        const formData = new FormData(e.currentTarget);
     const name = formData.get("name") as string;
     const establishmentDate = formData.get("establishmentDate") as string;
     const licenseNumber = formData.get("licenseNumber") as string;
+    const domain = formData.get("domain") as string;
 
     if (!name.trim()) {
       setError("اسم الجمعية مطلوب");
@@ -23,7 +24,7 @@ export default function AddCharityModal({ onClose, onSuccess }: { onClose: () =>
       return;
     }
 
-    const res = await addCharity({ name, establishmentDate, licenseNumber });
+    const res = await addCharity({ name, establishmentDate, licenseNumber, domain });
 
     if (res.success) {
       onSuccess();
@@ -59,6 +60,16 @@ export default function AddCharityModal({ onClose, onSuccess }: { onClose: () =>
               required
               className="w-full border border-slate-200 rounded-xl px-4 py-2.5 outline-none focus:border-primary focus:ring-2 focus:ring-primary/15 transition-all text-slate-800"
               placeholder="مثال: جمعية البر الخيرية"
+            />
+          </div>
+
+          <div className="space-y-1.5">
+            <label className="text-sm font-semibold text-slate-700">مجال العمل (اختياري)</label>
+            <input 
+              type="text" 
+              name="domain" 
+              className="w-full border border-slate-200 rounded-xl px-4 py-2.5 outline-none focus:border-primary focus:ring-2 focus:ring-primary/15 transition-all text-slate-800"
+              placeholder="مثال: رعاية الأيتام، التنمية الأسرية"
             />
           </div>
 

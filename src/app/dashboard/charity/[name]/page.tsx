@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/db";
 import type { Metadata } from "next";
-import { CalendarIcon, LicenseIcon, Rocket, ClipboardList, Building2 } from "@/components/Icons";
+import { CalendarIcon, LicenseIcon, Rocket, ClipboardList, Building2, Sparkles } from "@/components/Icons";
 import EditProfileButton from "./EditProfileButton";
 
 export const dynamic = "force-dynamic";
@@ -64,7 +64,7 @@ export default async function CharityOverview({ params }: { params: Promise<{ na
             <EditProfileButton charity={charity} />
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             <div className="bg-slate-50/80 p-6 rounded-2xl border border-slate-100 hover:border-slate-200 transition-colors">
               <div className="flex items-center gap-2 mb-3">
                 {charity.logoUrl ? (
@@ -77,6 +77,16 @@ export default async function CharityOverview({ params }: { params: Promise<{ na
                 <div className="text-sm font-bold text-slate-500">اسم الجمعية</div>
               </div>
               <div className="text-xl font-bold text-slate-800">{charity.name}</div>
+            </div>
+
+            <div className="bg-slate-50/80 p-6 rounded-2xl border border-slate-100 hover:border-slate-200 transition-colors">
+              <div className="flex items-center gap-2 mb-3">
+                <Sparkles className="w-5 h-5 text-slate-400 shrink-0" />
+                <div className="text-sm font-bold text-slate-500">مجال العمل</div>
+              </div>
+              <div className="text-xl font-bold text-slate-800">
+                {charity.domain || <span className="text-slate-300 font-medium text-sm">غير متوفر</span>}
+              </div>
             </div>
 
             <div className="bg-slate-50/80 p-6 rounded-2xl border border-slate-100 hover:border-slate-200 transition-colors">

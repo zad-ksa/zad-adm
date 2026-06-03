@@ -12,6 +12,7 @@ model Charity {
   establishmentDate String?
   licenseNumber     String?
   logoUrl           String?
+  domain            String?
   createdAt         DateTime @default(now())
 }
 

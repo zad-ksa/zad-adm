@@ -2,6 +2,7 @@ import { prisma } from "@/lib/db";
 import Link from "next/link";
 import type { Metadata } from "next";
 import { getCharities } from "@/app/actions/charity";
+import AddCharityButton from "./AddCharityButton";
 
 export const dynamic = "force-dynamic";
 
@@ -15,9 +16,12 @@ export default async function CharitiesDashboard() {
 
   return (
     <main className="flex-1 min-w-0 py-8">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-slate-800 mb-2">إدارة الجمعيات</h1>
-        <p className="text-slate-600">قائمة بالجمعيات المتعاقد معها والجمعيات المستهدفة</p>
+      <div className="mb-8 flex justify-between items-center flex-wrap gap-4">
+        <div>
+          <h1 className="text-3xl font-bold text-slate-800 mb-2">إدارة الجمعيات</h1>
+          <p className="text-slate-600">قائمة بالجمعيات المتعاقد معها والجمعيات المستهدفة</p>
+        </div>
+        <AddCharityButton />
       </div>
 
       {/* Contracted Charities Table */}
@@ -39,7 +43,7 @@ export default async function CharitiesDashboard() {
             <thead>
               <tr className="bg-slate-50 border-b border-slate-100 text-slate-500 text-sm tracking-wide">
                 <th className="p-5 font-bold uppercase">اسم الجمعية</th>
-                <th className="p-5 font-bold uppercase">نبذة عن الجمعية</th>
+                <th className="p-5 font-bold uppercase">مجال العمل</th>
                 <th className="p-5 font-bold uppercase">تاريخ التأسيس</th>
                 <th className="p-5 font-bold uppercase">رقم التصريح</th>
                 <th className="p-5 font-bold uppercase">تاريخ الإضافة</th>
@@ -53,8 +57,8 @@ export default async function CharitiesDashboard() {
                       {charity.name}
                     </Link>
                   </td>
-                  <td className="p-5 text-slate-500 text-sm">
-                    جمعية خيرية مسجلة ومصرحة
+                  <td className="p-5 text-slate-600 text-sm font-semibold">
+                    {charity.domain || <span className="text-slate-300 font-medium">غير محدد</span>}
                   </td>
                   <td className="p-5 text-slate-600 font-medium">{charity.establishmentDate || "-"}</td>
                   <td className="p-5 text-slate-600 font-medium">{charity.licenseNumber || "-"}</td>

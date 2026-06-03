@@ -17,7 +17,7 @@ export async function getCharities() {
   }
 }
 
-export async function addCharity(data: { name: string; establishmentDate?: string; licenseNumber?: string }) {
+export async function addCharity(data: { name: string; establishmentDate?: string; licenseNumber?: string; domain?: string }) {
   try {
     const existing = await prisma.charity.findUnique({
       where: { name: data.name.trim() }
@@ -32,6 +32,7 @@ export async function addCharity(data: { name: string; establishmentDate?: strin
         name: data.name.trim(),
         establishmentDate: data.establishmentDate || null,
         licenseNumber: data.licenseNumber || null,
+        domain: data.domain || null,
       }
     });
 
@@ -94,6 +95,7 @@ export async function updateCharity(oldName: string, formData: FormData) {
     const name = formData.get("name") as string;
     const establishmentDate = formData.get("establishmentDate") as string;
     const licenseNumber = formData.get("licenseNumber") as string;
+    const domain = formData.get("domain") as string;
     const logoFile = formData.get("logo") as File;
 
     if (!name || !name.trim()) {
@@ -138,6 +140,7 @@ export async function updateCharity(oldName: string, formData: FormData) {
         establishmentDate: establishmentDate || null,
         licenseNumber: licenseNumber || null,
         logoUrl,
+        domain: domain || null,
       }
     });
 

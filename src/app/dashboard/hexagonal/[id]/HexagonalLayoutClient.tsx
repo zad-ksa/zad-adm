@@ -81,6 +81,12 @@ export default function HexagonalLayoutClient({
   const [isOpen, setIsOpen] = useState(true);
 
   const [isNavigating, setIsNavigating] = useState(false);
+  const [activeTabId, setActiveTabId] = useState(currentResponseId);
+
+  // Sync activeTabId with currentResponseId when props change (navigation complete)
+  useEffect(() => {
+    setActiveTabId(currentResponseId);
+  }, [currentResponseId]);
 
   // Reset navigating state when pathname changes (navigation completed)
   useEffect(() => {
@@ -155,7 +161,7 @@ export default function HexagonalLayoutClient({
           )}
           
           {responses.map((item) => {
-            const isActive = item.id === currentResponseId;
+            const isActive = item.id === activeTabId;
             const formattedDate = new Date(item.createdAt).toLocaleDateString("ar-SA", {
               month: "short",
               day: "numeric",
@@ -168,6 +174,7 @@ export default function HexagonalLayoutClient({
                 href={`/dashboard/hexagonal/${item.id}`}
                 onClick={() => {
                   if (item.id !== currentResponseId) {
+                    setActiveTabId(item.id);
                     setIsNavigating(true);
                   }
                 }}

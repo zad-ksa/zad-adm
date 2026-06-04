@@ -136,107 +136,105 @@ export default function EmployeeSidebar({
         </button>
       </div>
 
-      <div className="flex-1 overflow-y-auto custom-scrollbar py-6 flex flex-col">
-        {/* User Profile */}
-        <div className={`flex flex-col ${isOpen ? "items-start px-6" : "items-center px-2"} mb-8 pb-6 border-b border-slate-100 transition-all overflow-hidden`}>
-          <button 
-            type="button"
-            onClick={() => {
-              setName(userState?.name || "");
-              setPhone(userState?.phone || "");
-              setPassword("");
-              setNewAvatar(userState?.avatarUrl || null);
-              setModalError(null);
-              setModalSuccess(null);
-              setIsEditModalOpen(true);
-            }}
-            className="group/avatar flex flex-col items-center justify-center focus:outline-none cursor-pointer"
-            title="تعديل الملف الشخصي"
-          >
-            <div className={`relative overflow-hidden bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center mb-3 shrink-0 transition-all ${isOpen ? "w-14 h-14" : "w-10 h-10"} group-hover/avatar:ring-2 group-hover/avatar:ring-primary/40`}>
-              {userState?.avatarUrl ? (
-                <img src={userState.avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
-              ) : (
-                <User className={isOpen ? "w-7 h-7" : "w-5 h-5"} />
-              )}
-              <div className="absolute inset-0 bg-black/40 opacity-0 group-hover/avatar:opacity-100 transition-opacity flex items-center justify-center text-white">
-                <Edit className="w-4.5 h-4.5" />
-              </div>
+      {/* User Profile - Fixed at top */}
+      <div className={`flex flex-col ${isOpen ? "items-start px-6" : "items-center px-2"} mb-8 pb-6 border-b border-slate-100 transition-all overflow-hidden shrink-0`}>
+        <button 
+          type="button"
+          onClick={() => {
+            setName(userState?.name || "");
+            setPhone(userState?.phone || "");
+            setPassword("");
+            setNewAvatar(userState?.avatarUrl || null);
+            setModalError(null);
+            setModalSuccess(null);
+            setIsEditModalOpen(true);
+          }}
+          className="group/avatar flex flex-col items-center justify-center focus:outline-none cursor-pointer"
+          title="تعديل الملف الشخصي"
+        >
+          <div className={`relative overflow-hidden bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center mb-3 shrink-0 transition-all ${isOpen ? "w-14 h-14" : "w-10 h-10"} group-hover/avatar:ring-2 group-hover/avatar:ring-primary/40`}>
+            {userState?.avatarUrl ? (
+              <img src={userState.avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
+            ) : (
+              <User className={isOpen ? "w-7 h-7" : "w-5 h-5"} />
+            )}
+            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover/avatar:opacity-100 transition-opacity flex items-center justify-center text-white">
+              <Edit className="w-4.5 h-4.5" />
             </div>
-          </button>
-          
-          {isOpen && (
-            <div className="overflow-hidden whitespace-nowrap fade-in w-full">
-              <div className="flex items-center justify-between gap-2 w-full">
-                <h2 className="text-base font-bold text-slate-800 truncate" title={userState?.name}>{userState?.name}</h2>
-                <button 
-                  type="button"
-                  onClick={() => {
-                    setName(userState?.name || "");
-                    setPhone(userState?.phone || "");
-                    setPassword("");
-                    setNewAvatar(userState?.avatarUrl || null);
-                    setModalError(null);
-                    setModalSuccess(null);
-                    setIsEditModalOpen(true);
-                  }}
-                  className="text-slate-400 hover:text-primary hover:bg-slate-50 p-1.5 rounded-lg transition-colors cursor-pointer shrink-0"
-                  title="تعديل الملف الشخصي"
-                >
-                  <Edit className="w-4 h-4" />
-                </button>
-              </div>
-              <div className="mt-1.5 inline-flex items-center gap-1.5 px-2.5 py-1 bg-slate-50 border border-slate-100 rounded-full text-[11px] text-slate-600 font-bold">
-                <ShieldAlert className="w-3.5 h-3.5 text-emerald-500" />
-                {userState?.role === "ADMIN" ? "مدير النظام" :
-                 userState?.role === "EXECUTIVE_DIRECTOR" ? "مدير تنفيذي" :
-                 userState?.role === "GENERAL_MANAGER" ? "مدير عام" :
-                 userState?.role === "ADMINISTRATIVE_SECRETARIAT" ? "سكرتارية ادارية" :
-                 userState?.role === "STRATEGY" ? "الاستراتيجية" :
-                 userState?.role === "FINANCE" ? "المالية" : "موظف"}
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Navigation */}
-        <div className="flex-1 px-3 space-y-1.5">
-          {isOpen && <div className="px-3 mb-3 text-[10px] font-bold text-slate-400 uppercase tracking-wider">القائمة الرئيسية</div>}
-          
-          {navItems.map((item) => {
-            const isActive = pathname.startsWith(item.href) && (item.href !== "/dashboard" || pathname === "/dashboard");
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                title={!isOpen ? item.label : undefined}
-                className={`flex items-center ${isOpen ? "justify-start px-3" : "justify-center"} py-3 rounded-xl font-bold transition-all group relative overflow-hidden ${
-                  isActive 
-                    ? "bg-primary text-white shadow-md shadow-primary/20" 
-                    : "text-slate-500 hover:bg-primary/5 hover:text-primary"
-                }`}
+          </div>
+        </button>
+        
+        {isOpen && (
+          <div className="overflow-hidden whitespace-nowrap fade-in w-full">
+            <div className="flex items-center justify-between gap-2 w-full">
+              <h2 className="text-base font-bold text-slate-800 truncate" title={userState?.name}>{userState?.name}</h2>
+              <button 
+                type="button"
+                onClick={() => {
+                  setName(userState?.name || "");
+                  setPhone(userState?.phone || "");
+                  setPassword("");
+                  setNewAvatar(userState?.avatarUrl || null);
+                  setModalError(null);
+                  setModalSuccess(null);
+                  setIsEditModalOpen(true);
+                }}
+                className="text-slate-400 hover:text-primary hover:bg-slate-50 p-1.5 rounded-lg transition-colors cursor-pointer shrink-0"
+                title="تعديل الملف الشخصي"
               >
-                {isActive && isOpen && <div className="absolute right-0 top-0 bottom-0 w-1 bg-white/20 rounded-l-full"></div>}
-                <item.icon className={`w-5 h-5 shrink-0 transition-all ${isOpen ? "ml-3" : "ml-0"} ${isActive ? "text-white" : "text-slate-400 group-hover:text-primary"}`} />
-                {isOpen && <span className="whitespace-nowrap">{item.label}</span>}
-              </Link>
-            )
-          })}
-        </div>
+                <Edit className="w-4 h-4" />
+              </button>
+            </div>
+            <div className="mt-1.5 inline-flex items-center gap-1.5 px-2.5 py-1 bg-slate-50 border border-slate-100 rounded-full text-[11px] text-slate-600 font-bold">
+              <ShieldAlert className="w-3.5 h-3.5 text-emerald-500" />
+              {userState?.role === "ADMIN" ? "مدير النظام" :
+               userState?.role === "EXECUTIVE_DIRECTOR" ? "مدير تنفيذي" :
+               userState?.role === "GENERAL_MANAGER" ? "مدير عام" :
+               userState?.role === "ADMINISTRATIVE_SECRETARIAT" ? "سكرتارية ادارية" :
+               userState?.role === "STRATEGY" ? "الاستراتيجية" :
+               userState?.role === "FINANCE" ? "المالية" : "موظف"}
+            </div>
+          </div>
+        )}
+      </div>
 
-        {/* Logout */}
-        <div className="mt-auto px-3 pt-6 border-t border-slate-100">
-          <form action={logout}>
-            <button 
-              type="submit" 
-              title={!isOpen ? "تسجيل الخروج" : undefined}
-              className={`flex items-center ${isOpen ? "justify-start px-3" : "justify-center"} w-full py-3 text-red-500 hover:bg-red-50 hover:text-red-600 rounded-xl font-bold transition-colors group`}
+      {/* Navigation - Scrollable if items exceed height */}
+      <div className="flex-1 overflow-y-auto custom-scrollbar px-3 space-y-1.5 pb-6">
+        {isOpen && <div className="px-3 mb-3 text-[10px] font-bold text-slate-400 uppercase tracking-wider">القائمة الرئيسية</div>}
+        
+        {navItems.map((item) => {
+          const isActive = pathname.startsWith(item.href) && (item.href !== "/dashboard" || pathname === "/dashboard");
+          return (
+            <Link
+              key={item.href}
+              href={item.href}
+              title={!isOpen ? item.label : undefined}
+              className={`flex items-center ${isOpen ? "justify-start px-3" : "justify-center"} py-3 rounded-xl font-bold transition-all group relative overflow-hidden ${
+                isActive 
+                  ? "bg-primary text-white shadow-md shadow-primary/20" 
+                  : "text-slate-500 hover:bg-primary/5 hover:text-primary"
+              }`}
             >
-              <LogOut className={`w-5 h-5 shrink-0 transition-all ${isOpen ? "ml-3" : "ml-0"} text-red-400 group-hover:text-red-600`} />
-              {isOpen && <span className="whitespace-nowrap">تسجيل الخروج</span>}
-            </button>
-          </form>
-        </div>
+              {isActive && isOpen && <div className="absolute right-0 top-0 bottom-0 w-1 bg-white/20 rounded-l-full"></div>}
+              <item.icon className={`w-5 h-5 shrink-0 transition-all ${isOpen ? "ml-3" : "ml-0"} ${isActive ? "text-white" : "text-slate-400 group-hover:text-primary"}`} />
+              {isOpen && <span className="whitespace-nowrap">{item.label}</span>}
+            </Link>
+          )
+        })}
+      </div>
+
+      {/* Logout - Fixed at bottom */}
+      <div className="shrink-0 px-3 py-6 border-t border-slate-100">
+        <form action={logout}>
+          <button 
+            type="submit" 
+            title={!isOpen ? "تسجيل الخروج" : undefined}
+            className={`flex items-center ${isOpen ? "justify-start px-3" : "justify-center"} w-full py-3 text-red-500 hover:bg-red-50 hover:text-red-600 rounded-xl font-bold transition-colors group`}
+          >
+            <LogOut className={`w-5 h-5 shrink-0 transition-all ${isOpen ? "ml-3" : "ml-0"} text-red-400 group-hover:text-red-600`} />
+            {isOpen && <span className="whitespace-nowrap">تسجيل الخروج</span>}
+          </button>
+        </form>
       </div>
     </div>
   );

@@ -119,7 +119,7 @@ export default async function MainDashboard() {
   // Display stats based on real data only (no fallbacks)
   const displayBeneficiaries = dbTotalBeneficiaries;
   const displayPrograms = dbTotalPrograms;
-  const displayGrants = totalGrants;
+  const displayGrants = charities.reduce((sum, c) => sum + (c.grants || 0), 0);
 
   // Map charities and calculate metrics
   const charitiesData = charities.map((charity) => {
@@ -171,7 +171,7 @@ export default async function MainDashboard() {
     const dbProgsCount = dbCharityProgramsCount.get(charity.id) || 0;
     const dbBenSum = dbCharityBeneficiariesSum.get(charity.id) || 0;
 
-    const displayGrants = grants;
+    const displayGrants = charity.grants || 0;
     const displayPrograms = dbProgsCount;
     const displayBeneficiaries = dbBenSum;
 

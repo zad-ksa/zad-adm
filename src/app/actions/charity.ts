@@ -4,6 +4,7 @@ import { prisma } from "@/lib/db";
 import { revalidatePath } from "next/cache";
 import { writeFile, mkdir } from "fs/promises";
 import { join } from "path";
+import { getSession } from "@/lib/auth";
 
 export async function getCharities() {
   try {
@@ -169,3 +170,52 @@ export async function updateCharity(
     return { success: false, message: error.message || "حدث خطأ أثناء تحديث البيانات" };
   }
 }
+
+export async function updateCharityFinanceAction(
+  charityId: string,
+  data: {
+    contractValue: number;
+    paidAmount: number;
+    grants: number;
+  }
+) {
+  try {
+    const session = await getSession();
+    if (!session || !session.id) {
+      return { success: false, message: "غير مصرح لك بإجراء هذه العملية" };
+    }
+
+    const { contractValue, paidAmount, grants } = data;
+
+    if (contractValue < 0 || paidAmount < 0 || grants < 0) {
+      return { success: false, message: "يجب أن تكون القيم المالية أرقاماً أكبر من أو تساوي 0" };
+    }
+
+    const charity = await prisma.charity.findUnique({
+      where: { id: charityId }
+    });
+
+    if (!charity) {
+      return { success: false, message: "الجمعية غير موجودة" };
+    }
+
+    const updated = await prisma.charity.update({
+      where: { id: charityId },
+      data: {
+        contractValue,
+        paidAmount,
+        grants
+      }
+    });
+
+    revalidatePath("/dashboard");
+    revalidatePath(`/dashboard/charity/${encodeURIComponent(charity.name)}`);
+    revalidatePath(`/dashboard/charity/${encodeURIComponent(charity.name)}/finance`);
+
+    return { success: true, charity: updated };
+  } catch (error: any) {
+    console.error("Error updating charity finance:", error);
+    return { success: false, message: error.message || "حدث خطأ أثناء تحديث البيانات المالية" };
+  }
+}
+

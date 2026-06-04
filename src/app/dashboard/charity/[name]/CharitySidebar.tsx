@@ -60,9 +60,8 @@ export default function CharitySidebar({
     },
     {
       title: "المالية",
-      href: "#",
+      href: `/dashboard/charity/${encodeURIComponent(charityName)}/finance`,
       icon: Coins,
-      comingSoon: true,
     },
   ];
 

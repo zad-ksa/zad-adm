@@ -20,6 +20,17 @@ model Charity {
   contractValue     Float    @default(0)
   paidAmount        Float    @default(0)
   grants            Float    @default(0)
+  financialLogs     FinancialLog[]
+}
+
+model FinancialLog {
+  id          String   @id @default(uuid())
+  charityId   String
+  charity     Charity  @relation(fields: [charityId], references: [id], onDelete: Cascade)
+  type        String   // "CONTRACT_UPDATE" | "PAID_UPDATE" | "ADD_GRANT" | "DISBURSEMENT"
+  amount      Float
+  notes       String?
+  createdAt   DateTime @default(now())
 }
 
 model Program {

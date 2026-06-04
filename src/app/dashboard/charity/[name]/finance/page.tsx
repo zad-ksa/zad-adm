@@ -19,6 +19,11 @@ export default async function CharityFinancePage({ params }: { params: Promise<{
   // Fetch charity record from Charity table or bootstrap it from survey responses
   let charity = await prisma.charity.findUnique({
     where: { name: decodedName },
+    include: {
+      financialLogs: {
+        orderBy: { createdAt: "desc" }
+      }
+    }
   });
 
   if (!charity) {
@@ -27,25 +32,31 @@ export default async function CharityFinancePage({ params }: { params: Promise<{
       orderBy: { createdAt: "desc" },
     });
 
-    charity = await prisma.charity.create({
+    const createdCharity = await prisma.charity.create({
       data: {
         name: decodedName,
         establishmentDate: latestResponse?.establishmentDate || null,
         licenseNumber: latestResponse?.licenseNumber || null,
       },
     });
+
+    charity = {
+      ...createdCharity,
+      financialLogs: []
+    } as any;
   }
 
   return (
     <FinanceClient
       charity={{
-        id: charity.id,
-        name: charity.name,
-        logoUrl: charity.logoUrl,
-        contractValue: charity.contractValue,
-        paidAmount: charity.paidAmount,
-        grants: charity.grants,
+        id: charity!.id,
+        name: charity!.name,
+        logoUrl: charity!.logoUrl,
+        contractValue: charity!.contractValue,
+        paidAmount: charity!.paidAmount,
+        grants: charity!.grants,
       }}
+      initialLogs={charity!.financialLogs || []}
     />
   );
 }

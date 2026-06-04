@@ -171,13 +171,11 @@ export async function updateCharity(
   }
 }
 
-export async function updateCharityFinanceAction(
+export async function addFinancialTransactionAction(
   charityId: string,
-  data: {
-    contractValue: number;
-    paidAmount: number;
-    grants: number;
-  }
+  type: "CONTRACT_UPDATE" | "PAID_UPDATE" | "ADD_GRANT" | "DISBURSEMENT",
+  amount: number,
+  notes?: string
 ) {
   try {
     const session = await getSession();
@@ -185,10 +183,8 @@ export async function updateCharityFinanceAction(
       return { success: false, message: "غير مصرح لك بإجراء هذه العملية" };
     }
 
-    const { contractValue, paidAmount, grants } = data;
-
-    if (contractValue < 0 || paidAmount < 0 || grants < 0) {
-      return { success: false, message: "يجب أن تكون القيم المالية أرقاماً أكبر من أو تساوي 0" };
+    if (amount < 0 || isNaN(amount)) {
+      return { success: false, message: "يجب أن يكون المبلغ رقماً موجباً أكبر من أو يساوي 0" };
     }
 
     const charity = await prisma.charity.findUnique({
@@ -199,23 +195,43 @@ export async function updateCharityFinanceAction(
       return { success: false, message: "الجمعية غير موجودة" };
     }
 
-    const updated = await prisma.charity.update({
-      where: { id: charityId },
-      data: {
-        contractValue,
-        paidAmount,
-        grants
-      }
-    });
+    let updatedData: any = {};
+    if (type === "CONTRACT_UPDATE") {
+      updatedData.contractValue = amount;
+    } else if (type === "PAID_UPDATE") {
+      updatedData.paidAmount = amount;
+    } else if (type === "ADD_GRANT") {
+      updatedData.grants = charity.grants + amount;
+    } else if (type === "DISBURSEMENT") {
+      updatedData.paidAmount = charity.paidAmount + amount;
+    } else {
+      return { success: false, message: "نوع العملية غير صالح" };
+    }
+
+    // Perform database transaction to ensure both charity update and log insertion are atomic
+    const [updatedCharity, log] = await prisma.$transaction([
+      prisma.charity.update({
+        where: { id: charityId },
+        data: updatedData
+      }),
+      prisma.financialLog.create({
+        data: {
+          charityId,
+          type,
+          amount,
+          notes: notes ? notes.trim() : null
+        }
+      })
+    ]);
 
     revalidatePath("/dashboard");
     revalidatePath(`/dashboard/charity/${encodeURIComponent(charity.name)}`);
     revalidatePath(`/dashboard/charity/${encodeURIComponent(charity.name)}/finance`);
 
-    return { success: true, charity: updated };
+    return { success: true, charity: updatedCharity, log };
   } catch (error: any) {
-    console.error("Error updating charity finance:", error);
-    return { success: false, message: error.message || "حدث خطأ أثناء تحديث البيانات المالية" };
+    console.error("Error adding financial transaction:", error);
+    return { success: false, message: error.message || "حدث خطأ أثناء إجراء العملية المالية" };
   }
 }
 

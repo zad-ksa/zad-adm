@@ -12,19 +12,19 @@ export const metadata: Metadata = {
 
 export default async function MainDashboard() {
   const charities = await getCharities();
-  
+
   const responses = await prisma.surveyResponse.findMany();
   const hexagonalResponses = await prisma.hexagonalResponse.findMany();
 
   // Calculate surveys per charity
   const surveyCounts = new Map<string, { readiness: number, hexagonal: number }>();
-  
+
   responses.forEach(r => {
     const name = r.charityName.trim();
     if (!surveyCounts.has(name)) surveyCounts.set(name, { readiness: 0, hexagonal: 0 });
     surveyCounts.get(name)!.readiness++;
   });
-  
+
   hexagonalResponses.forEach(h => {
     const name = h.charityName.trim();
     if (!surveyCounts.has(name)) surveyCounts.set(name, { readiness: 0, hexagonal: 0 });
@@ -63,18 +63,18 @@ export default async function MainDashboard() {
     try {
       const data = typeof metric.data === "string" ? JSON.parse(metric.data) : metric.data;
       const axes = Array.isArray(data) ? data : (data?.axes || []);
-      
+
       axes.forEach((axis: any) => {
         axis.goals?.forEach((goal: any) => {
           goal.indicators?.forEach((ind: any) => {
             const name = ind.name || "";
             const achieved = parseValueToNumber(ind.annualAchieved);
-            
+
             // 1. Beneficiaries (contains "مستفيد" or "المستفيدين")
             if (name.includes("مستفيد") || name.includes("المستفيدين")) {
               totalBeneficiaries += achieved;
             }
-            
+
             // 2. Programs / Initiatives (contains "برنامج" or "البرامج" or "مبادرة" or "مبادرات", but not about beneficiaries/satisfaction/impact)
             if (
               (name.includes("برنامج") || name.includes("البرامج") || name.includes("مبادرة") || name.includes("مبادرات")) &&
@@ -83,7 +83,7 @@ export default async function MainDashboard() {
             ) {
               totalPrograms += achieved;
             }
-            
+
             // 3. Grants / Donors / Fundings (contains "منح" or "المنح" or "منحة" or "تمويل" or "المانح" or "تبرع" or "تبرعات")
             if (name.includes("منح") || name.includes("المنح") || name.includes("منحة") || name.includes("تمويل") || name.includes("المانح") || name.includes("تبرع") || name.includes("تبرعات")) {
               totalGrants += achieved;
@@ -99,34 +99,34 @@ export default async function MainDashboard() {
   // If there are no performance metrics or they are 0, use realistic placeholder numbers for demo purposes
   const displayBeneficiaries = totalBeneficiaries > 0 ? totalBeneficiaries : 107226;
   const displayPrograms = totalPrograms > 0 ? totalPrograms : 34;
-  const displayGrants = totalGrants > 0 ? totalGrants : 18;
+  const displayGrants = totalGrants > 0 ? totalGrants : 1850000;
 
   // Map charities and calculate metrics
   const charitiesData = charities.map((charity) => {
     const metric = performanceMetrics.find(
       (m) => m.charityName.trim().toLowerCase() === charity.name.trim().toLowerCase()
     );
-    
+
     let beneficiaries = 0;
     let programs = 0;
     let grants = 0;
-    
+
     if (metric) {
       try {
         const data = typeof metric.data === "string" ? JSON.parse(metric.data) : metric.data;
         const axes = Array.isArray(data) ? data : (data?.axes || []);
-        
+
         axes.forEach((axis: any) => {
           axis.goals?.forEach((goal: any) => {
             goal.indicators?.forEach((ind: any) => {
               const name = ind.name || "";
               const achieved = parseValueToNumber(ind.annualAchieved);
-              
+
               // 1. Beneficiaries
               if (name.includes("مستفيد") || name.includes("المستفيدين")) {
                 beneficiaries += achieved;
               }
-              
+
               // 2. Programs
               if (
                 (name.includes("برنامج") || name.includes("البرامج") || name.includes("مبادرة") || name.includes("مبادرات")) &&
@@ -135,7 +135,7 @@ export default async function MainDashboard() {
               ) {
                 programs += achieved;
               }
-              
+
               // 3. Grants
               if (name.includes("منح") || name.includes("المنح") || name.includes("منحة") || name.includes("تمويل") || name.includes("المانح") || name.includes("تبرع") || name.includes("تبرعات")) {
                 grants += achieved;
@@ -147,14 +147,14 @@ export default async function MainDashboard() {
         console.error(`Error parsing metric data for charity ${charity.name}:`, e);
       }
     }
-    
+
     // Deterministic fallback generator for demo purposes based on charity name characters
     const hash = charity.name.split("").reduce((acc, char) => acc + char.charCodeAt(0), 0);
-    
-    const displayGrants = grants > 0 ? grants : (hash % 5) + 2; // 2 to 6 grants
+
+    const displayGrants = grants > 0 ? grants : (hash % 5) * 150000 + 250000; // Between 250,000 and 850,000 ريال
     const displayPrograms = programs > 0 ? programs : (hash % 4) + 3; // 3 to 6 programs
     const displayBeneficiaries = beneficiaries > 0 ? beneficiaries : ((hash % 10) + 1) * 350 + 1200; // 1200 to 4700 beneficiaries
-    
+
     return {
       ...charity,
       grants: displayGrants,
@@ -194,7 +194,7 @@ export default async function MainDashboard() {
           </div>
           <div>
             <p className="text-sm text-slate-500 font-medium mb-1">المنح</p>
-            <h3 className="text-2xl font-bold text-slate-800">{displayGrants.toLocaleString()}</h3>
+            <h3 className="text-2xl font-bold text-slate-800">{displayGrants.toLocaleString()} ريال</h3>
           </div>
         </div>
 
@@ -231,7 +231,7 @@ export default async function MainDashboard() {
           <span className="w-2.5 h-6 bg-primary rounded-full"></span>
           الجمعيات المتعاقد معها
         </h2>
-        
+
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {charitiesData.map((charity) => (
             <Link
@@ -269,10 +269,10 @@ export default async function MainDashboard() {
                       <svg className="w-4 h-4 text-emerald-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                         <path strokeLinecap="round" strokeLinejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                       </svg>
-                      المنح التي تحصلت عليها الجمعية:
+                      المنح:
                     </span>
                     <span className="font-bold text-slate-800 bg-emerald-50 text-emerald-700 px-2.5 py-1 rounded-lg text-xs shrink-0">
-                      {charity.grants} منحة
+                      {charity.grants.toLocaleString()} ريال
                     </span>
                   </div>
 
@@ -282,7 +282,7 @@ export default async function MainDashboard() {
                       <svg className="w-4 h-4 text-violet-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                         <path strokeLinecap="round" strokeLinejoin="round" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2H6a2 2 0 01-2-2v-4zM14 16a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2h-2a2 2 0 01-2-2v-4z" />
                       </svg>
-                      البرامج التي قدمتها شركة زاد للجمعية:
+                      عدد البرامج:
                     </span>
                     <span className="font-bold text-slate-800 bg-violet-50 text-violet-700 px-2.5 py-1 rounded-lg text-xs shrink-0">
                       {charity.programs} برنامج
@@ -295,7 +295,7 @@ export default async function MainDashboard() {
                       <svg className="w-4 h-4 text-indigo-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                         <path strokeLinecap="round" strokeLinejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
                       </svg>
-                      عدد المستفيدين من هذه البرامج:
+                      عدد المستفيدين:
                     </span>
                     <span className="font-bold text-slate-800 bg-indigo-50 text-indigo-700 px-2.5 py-1 rounded-lg text-xs shrink-0">
                       {charity.beneficiaries.toLocaleString()} مستفيد

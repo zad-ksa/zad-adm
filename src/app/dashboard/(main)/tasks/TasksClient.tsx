@@ -15,7 +15,10 @@ import {
   FolderPlus, 
   UserPlus, 
   Calendar,
-  AlertCircle
+  AlertCircle,
+  Pencil,
+  Check,
+  X
 } from "lucide-react";
 import { 
   createTaskAction, 
@@ -23,7 +26,8 @@ import {
   reassignTaskAction, 
   toggleTaskCompletionAction, 
   createAchievementAction, 
-  deleteAchievementAction 
+  deleteAchievementAction,
+  updateTaskTitleAction
 } from "@/app/actions/tasks";
 
 interface Task {
@@ -89,6 +93,10 @@ export default function TasksClient({
   const [reassigningTaskId, setReassigningTaskId] = useState<string | null>(null);
   const [reassignToEmployeeId, setReassignToEmployeeId] = useState<string>("");
 
+  // Edit task state
+  const [editingTaskId, setEditingTaskId] = useState<string | null>(null);
+  const [editingTaskTitle, setEditingTaskTitle] = useState("");
+
   const [isPending, startTransition] = useTransition();
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
@@ -148,6 +156,25 @@ export default function TasksClient({
       assignedToId: a.employeeId,
     })),
   ].sort((a, b) => b.date.getTime() - a.date.getTime());
+
+  // Handle task title update
+  const handleUpdateTaskTitle = async (taskId: string) => {
+    if (!editingTaskTitle.trim()) return;
+
+    startTransition(async () => {
+      const res = await updateTaskTitleAction(taskId, editingTaskTitle.trim());
+      if (res.error) {
+        showNotification("error", res.error);
+      } else {
+        setTasks((prev) =>
+          prev.map((t) => (t.id === taskId ? { ...t, title: editingTaskTitle.trim() } : t))
+        );
+        setEditingTaskId(null);
+        setEditingTaskTitle("");
+        showNotification("success", "تم تعديل مسمى المهمة بنجاح");
+      }
+    });
+  };
 
   // Handle task creation
   const handleCreateTask = async (e: React.FormEvent) => {
@@ -472,6 +499,7 @@ export default function TasksClient({
               {filteredActiveTasks.map((task) => {
                 const assignedEmp = employees.find((e) => e.id === task.assignedToId);
                 const canDelete = isDirectorOrAdmin || (task.createdById === session.id && task.assignedToId === session.id);
+                const canEdit = isDirectorOrAdmin || (task.createdById === session.id && task.assignedToId === session.id);
                 
                 return (
                   <div 
@@ -489,9 +517,42 @@ export default function TasksClient({
                       </button>
 
                       <div className="space-y-1.5 flex-1">
-                        <h4 className="font-bold text-slate-800 text-sm leading-relaxed">
-                          {task.title}
-                        </h4>
+                        {editingTaskId === task.id ? (
+                          <div className="flex items-center gap-1.5 w-full">
+                            <input
+                              type="text"
+                              value={editingTaskTitle}
+                              onChange={(e) => setEditingTaskTitle(e.target.value)}
+                              className="flex-1 bg-white border border-slate-200 rounded-lg px-2.5 py-1 text-xs outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary/30 text-slate-800 font-bold"
+                              onKeyDown={(e) => {
+                                if (e.key === "Enter") handleUpdateTaskTitle(task.id);
+                                if (e.key === "Escape") setEditingTaskId(null);
+                              }}
+                              autoFocus
+                            />
+                            <button
+                              type="button"
+                              onClick={() => handleUpdateTaskTitle(task.id)}
+                              disabled={isPending}
+                              className="p-1 text-emerald-600 hover:bg-emerald-50 rounded-md transition-colors cursor-pointer shrink-0"
+                              title="حفظ"
+                            >
+                              <Check className="w-3.5 h-3.5" />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setEditingTaskId(null)}
+                              className="p-1 text-red-500 hover:bg-red-50 rounded-md transition-colors cursor-pointer shrink-0"
+                              title="إلغاء"
+                            >
+                              <X className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        ) : (
+                          <h4 className="font-bold text-slate-800 text-sm leading-relaxed">
+                            {task.title}
+                          </h4>
+                        )}
                         
                         {/* Task badges / metadata */}
                         <div className="flex flex-wrap items-center gap-1.5">
@@ -525,9 +586,25 @@ export default function TasksClient({
                       </div>
 
                       <div className="flex items-center gap-2">
+                        {/* Edit Title */}
+                        {canEdit && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setEditingTaskId(task.id);
+                              setEditingTaskTitle(task.title);
+                            }}
+                            title="تعديل مسمى المهمة"
+                            className="p-1 text-slate-400 hover:text-primary hover:bg-primary/5 rounded-lg transition-colors cursor-pointer"
+                          >
+                            <Pencil className="w-4 h-4" />
+                          </button>
+                        )}
+
                         {/* Reassign (Director/Admin only) */}
                         {isDirectorOrAdmin && (
                           <button
+                            type="button"
                             onClick={() => {
                               setReassigningTaskId(task.id);
                               setReassignToEmployeeId(task.assignedToId);
@@ -542,6 +619,7 @@ export default function TasksClient({
                         {/* Delete */}
                         {canDelete && (
                           <button
+                            type="button"
                             onClick={() => handleDeleteTask(task.id)}
                             title="حذف المهمة"
                             className="p-1 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors cursor-pointer"

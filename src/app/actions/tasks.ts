@@ -206,3 +206,42 @@ export async function deleteAchievementAction(achievementId: string) {
     return { error: error.message || "حدث خطأ أثناء حذف المنجز" };
   }
 }
+
+// 7. Update task title
+export async function updateTaskTitleAction(taskId: string, newTitle: string) {
+  try {
+    const user = await getAuthenticatedUser();
+    
+    if (!newTitle || !newTitle.trim()) {
+      return { error: "يرجى كتابة مسمى المهمة" };
+    }
+
+    const task = await prisma.task.findUnique({
+      where: { id: taskId },
+    });
+
+    if (!task) {
+      return { error: "المهمة غير موجودة" };
+    }
+
+    const isDirectorOrAdmin = ["ADMIN", "EXECUTIVE_DIRECTOR"].includes(user.role);
+    // Standard employee can only edit tasks they created for themselves
+    const isOwner = task.createdById === user.id && task.assignedToId === user.id;
+
+    if (!isDirectorOrAdmin && !isOwner) {
+      return { error: "غير مصرح لك بتعديل مسمى هذه المهمة" };
+    }
+
+    await prisma.task.update({
+      where: { id: taskId },
+      data: {
+        title: newTitle.trim(),
+      },
+    });
+
+    revalidatePath("/dashboard/tasks");
+    return { success: true };
+  } catch (error: any) {
+    return { error: error.message || "حدث خطأ أثناء تعديل مسمى المهمة" };
+  }
+}

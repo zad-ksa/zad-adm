@@ -42,6 +42,26 @@ export default async function MainDashboard() {
   // Fetch performance metrics for aggregation
   const performanceMetrics = await prisma.performanceMetric.findMany();
 
+  // Fetch all programs in DB
+  const dbPrograms = await prisma.program.findMany();
+  
+  // Calculate DB programs and beneficiaries per charity
+  const dbCharityProgramsCount = new Map<string, number>();
+  const dbCharityBeneficiariesSum = new Map<string, number>();
+
+  dbPrograms.forEach((prog) => {
+    const charityId = prog.charityId;
+    if (!dbCharityProgramsCount.has(charityId)) {
+      dbCharityProgramsCount.set(charityId, 0);
+      dbCharityBeneficiariesSum.set(charityId, 0);
+    }
+    dbCharityProgramsCount.set(charityId, dbCharityProgramsCount.get(charityId)! + 1);
+    dbCharityBeneficiariesSum.set(charityId, dbCharityBeneficiariesSum.get(charityId)! + prog.beneficiaries);
+  });
+
+  const dbTotalPrograms = dbPrograms.length;
+  const dbTotalBeneficiaries = dbPrograms.reduce((sum, p) => sum + p.beneficiaries, 0);
+
   // Helper to parse values to number
   const parseValueToNumber = (val: any): number => {
     if (val === null || val === undefined) return 0;
@@ -97,8 +117,8 @@ export default async function MainDashboard() {
   });
 
   // If there are no performance metrics or they are 0, use realistic placeholder numbers for demo purposes
-  const displayBeneficiaries = totalBeneficiaries > 0 ? totalBeneficiaries : 107226;
-  const displayPrograms = totalPrograms > 0 ? totalPrograms : 34;
+  const displayBeneficiaries = (totalBeneficiaries > 0 ? totalBeneficiaries : 107226) + dbTotalBeneficiaries;
+  const displayPrograms = (totalPrograms > 0 ? totalPrograms : 34) + dbTotalPrograms;
   const displayGrants = totalGrants > 0 ? totalGrants : 1850000;
 
   // Map charities and calculate metrics
@@ -151,9 +171,12 @@ export default async function MainDashboard() {
     // Deterministic fallback generator for demo purposes based on charity name characters
     const hash = charity.name.split("").reduce((acc, char) => acc + char.charCodeAt(0), 0);
 
+    const dbProgsCount = dbCharityProgramsCount.get(charity.id) || 0;
+    const dbBenSum = dbCharityBeneficiariesSum.get(charity.id) || 0;
+
     const displayGrants = grants > 0 ? grants : (hash % 5) * 150000 + 250000; // Between 250,000 and 850,000 ريال
-    const displayPrograms = programs > 0 ? programs : (hash % 4) + 3; // 3 to 6 programs
-    const displayBeneficiaries = beneficiaries > 0 ? beneficiaries : ((hash % 10) + 1) * 350 + 1200; // 1200 to 4700 beneficiaries
+    const displayPrograms = (programs > 0 ? programs : (hash % 4) + 3) + dbProgsCount; // 3 to 6 programs + DB programs
+    const displayBeneficiaries = (beneficiaries > 0 ? beneficiaries : ((hash % 10) + 1) * 350 + 1200) + dbBenSum; // 1200 to 4700 beneficiaries + DB beneficiaries
 
     return {
       ...charity,

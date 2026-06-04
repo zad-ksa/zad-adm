@@ -49,9 +49,8 @@ export default function CharitySidebar({
     },
     {
       title: "البرامج والمشاريع",
-      href: "#",
+      href: `/dashboard/charity/${encodeURIComponent(charityName)}/programs`,
       icon: FolderKanban,
-      comingSoon: true,
     },
     {
       title: "الموارد البشرية",

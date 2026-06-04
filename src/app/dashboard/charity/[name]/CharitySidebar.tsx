@@ -96,91 +96,89 @@ export default function CharitySidebar({
         </button>
       </div>
 
-      <div className="flex-1 overflow-y-auto custom-scrollbar py-6 flex flex-col">
-        {/* Charity Profile */}
-        <div className={`flex flex-col ${isOpen ? "items-start px-6" : "items-center px-2"} mb-8 pb-6 border-b border-slate-100 transition-all overflow-hidden`}>
-          {logoUrl ? (
-            <div className={`rounded-2xl overflow-hidden border border-slate-150 bg-white flex items-center justify-center mb-3 shrink-0 transition-all ${isOpen ? "w-14 h-14" : "w-10 h-10"}`}>
-              <img src={logoUrl} alt={charityName} className="w-full h-full object-contain p-1" />
+      {/* Charity Profile - Fixed at top */}
+      <div className={`flex flex-col ${isOpen ? "items-start px-6" : "items-center px-2"} pt-6 pb-6 border-b border-slate-100 transition-all overflow-hidden shrink-0`}>
+        {logoUrl ? (
+          <div className={`rounded-2xl overflow-hidden border border-slate-150 bg-white flex items-center justify-center mb-3 shrink-0 transition-all ${isOpen ? "w-14 h-14" : "w-10 h-10"}`}>
+            <img src={logoUrl} alt={charityName} className="w-full h-full object-contain p-1" />
+          </div>
+        ) : (
+          <div className={`bg-primary/5 text-primary rounded-2xl flex items-center justify-center mb-3 shrink-0 transition-all ${isOpen ? "w-14 h-14" : "w-10 h-10"}`}>
+            <Building2 className={isOpen ? "w-7 h-7" : "w-5 h-5"} />
+          </div>
+        )}
+        
+        {isOpen && (
+          <div className="overflow-hidden whitespace-nowrap fade-in w-full">
+            <h2 className="text-base font-bold text-slate-800 truncate mb-1" title={charityName}>
+              {charityName}
+            </h2>
+            <div className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-slate-50 border border-slate-100 rounded-full text-[10px] text-slate-500 font-bold">
+              ملف الجمعية
             </div>
-          ) : (
-            <div className={`bg-primary/5 text-primary rounded-2xl flex items-center justify-center mb-3 shrink-0 transition-all ${isOpen ? "w-14 h-14" : "w-10 h-10"}`}>
-              <Building2 className={isOpen ? "w-7 h-7" : "w-5 h-5"} />
-            </div>
-          )}
-          
-          {isOpen && (
-            <div className="overflow-hidden whitespace-nowrap fade-in w-full">
-              <h2 className="text-base font-bold text-slate-800 truncate mb-1" title={charityName}>
-                {charityName}
-              </h2>
-              <div className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-slate-50 border border-slate-100 rounded-full text-[10px] text-slate-500 font-bold">
-                ملف الجمعية
-              </div>
-            </div>
-          )}
-        </div>
+          </div>
+        )}
+      </div>
 
-        {/* Navigation */}
-        <div className="flex-1 px-3 space-y-1.5">
-          {isOpen && <div className="px-3 mb-3 text-[10px] font-bold text-slate-400 uppercase tracking-wider">القائمة الرئيسية</div>}
-          
-          {navItems.map((item, idx) => {
-            if (item.comingSoon) {
-              return (
-                <div
-                  key={idx}
-                  title={!isOpen ? `${item.title} (قريباً)` : undefined}
-                  className={`flex items-center ${isOpen ? "justify-start px-3" : "justify-center"} py-3 rounded-xl text-slate-400 bg-slate-50/50 cursor-not-allowed opacity-70 text-sm font-bold`}
-                >
-                  <item.icon className={`w-5 h-5 shrink-0 transition-all ${isOpen ? "ml-3" : "ml-0"} opacity-60`} />
-                  {isOpen && <span className="whitespace-nowrap">{item.title}</span>}
-                  {isOpen && (
-                    <span className="mr-auto text-[9px] bg-slate-200 text-slate-500 px-1.5 py-0.5 rounded font-extrabold">
-                      قريباً
-                    </span>
-                  )}
-                </div>
-              );
-            }
-
-            const decodedPathname = decodeURIComponent(pathname);
-            const decodedHref = decodeURIComponent(item.href);
-            
-            const isActive = item.exact
-              ? decodedPathname === decodedHref
-              : decodedPathname.startsWith(decodedHref);
-
+      {/* Navigation - Scrollable if items exceed height */}
+      <div className="flex-1 overflow-y-auto custom-scrollbar px-3 py-6 space-y-1.5">
+        {isOpen && <div className="px-3 mb-3 text-[10px] font-bold text-slate-400 uppercase tracking-wider">القائمة الرئيسية</div>}
+        
+        {navItems.map((item, idx) => {
+          if (item.comingSoon) {
             return (
-              <Link
+              <div
                 key={idx}
-                href={item.href}
-                title={!isOpen ? item.title : undefined}
-                className={`flex items-center ${isOpen ? "justify-start px-3" : "justify-center"} py-3 rounded-xl font-bold transition-all group relative overflow-hidden ${
-                  isActive 
-                    ? "bg-primary text-white shadow-md shadow-primary/20" 
-                    : "text-slate-500 hover:bg-primary/5 hover:text-primary"
-                }`}
+                title={!isOpen ? `${item.title} (قريباً)` : undefined}
+                className={`flex items-center ${isOpen ? "justify-start px-3" : "justify-center"} py-3 rounded-xl text-slate-400 bg-slate-50/50 cursor-not-allowed opacity-70 text-sm font-bold`}
               >
-                {isActive && isOpen && <div className="absolute right-0 top-0 bottom-0 w-1 bg-white/20 rounded-l-full"></div>}
-                <item.icon className={`w-5 h-5 shrink-0 transition-all ${isOpen ? "ml-3" : "ml-0"} ${isActive ? "text-white" : "text-slate-400 group-hover:text-primary"}`} />
+                <item.icon className={`w-5 h-5 shrink-0 transition-all ${isOpen ? "ml-3" : "ml-0"} opacity-60`} />
                 {isOpen && <span className="whitespace-nowrap">{item.title}</span>}
-              </Link>
+                {isOpen && (
+                  <span className="mr-auto text-[9px] bg-slate-200 text-slate-500 px-1.5 py-0.5 rounded font-extrabold">
+                    قريباً
+                  </span>
+                )}
+              </div>
             );
-          })}
-        </div>
+          }
 
-        {/* Return to Dashboard */}
-        <div className="mt-auto px-3 pt-6 border-t border-slate-100 shrink-0">
-          <Link
-            href="/dashboard"
-            title={!isOpen ? "العودة للوحة التحكم" : undefined}
-            className={`flex items-center ${isOpen ? "justify-start px-3" : "justify-center"} w-full py-3 text-slate-500 hover:bg-primary/5 hover:text-primary rounded-xl font-bold transition-all group`}
-          >
-            <ArrowLeft className={`w-5 h-5 shrink-0 transition-all ${isOpen ? "ml-3" : "ml-0"} text-slate-400 group-hover:text-primary`} />
-            {isOpen && <span className="whitespace-nowrap">العودة للوحة التحكم</span>}
-          </Link>
-        </div>
+          const decodedPathname = decodeURIComponent(pathname);
+          const decodedHref = decodeURIComponent(item.href);
+          
+          const isActive = item.exact
+            ? decodedPathname === decodedHref
+            : decodedPathname.startsWith(decodedHref);
+
+          return (
+            <Link
+              key={idx}
+              href={item.href}
+              title={!isOpen ? item.title : undefined}
+              className={`flex items-center ${isOpen ? "justify-start px-3" : "justify-center"} py-3 rounded-xl font-bold transition-all group relative overflow-hidden ${
+                isActive 
+                  ? "bg-primary text-white shadow-md shadow-primary/20" 
+                  : "text-slate-500 hover:bg-primary/5 hover:text-primary"
+              }`}
+            >
+              {isActive && isOpen && <div className="absolute right-0 top-0 bottom-0 w-1 bg-white/20 rounded-l-full"></div>}
+              <item.icon className={`w-5 h-5 shrink-0 transition-all ${isOpen ? "ml-3" : "ml-0"} ${isActive ? "text-white" : "text-slate-400 group-hover:text-primary"}`} />
+              {isOpen && <span className="whitespace-nowrap">{item.title}</span>}
+            </Link>
+          );
+        })}
+      </div>
+
+      {/* Return to Dashboard - Fixed at bottom */}
+      <div className="shrink-0 px-3 py-6 border-t border-slate-100">
+        <Link
+          href="/dashboard"
+          title={!isOpen ? "العودة للوحة التحكم" : undefined}
+          className={`flex items-center ${isOpen ? "justify-start px-3" : "justify-center"} w-full py-3 text-slate-500 hover:bg-primary/5 hover:text-primary rounded-xl font-bold transition-all group`}
+        >
+          <ArrowLeft className={`w-5 h-5 shrink-0 transition-all ${isOpen ? "ml-3" : "ml-0"} text-slate-400 group-hover:text-primary`} />
+          {isOpen && <span className="whitespace-nowrap">العودة للوحة التحكم</span>}
+        </Link>
       </div>
     </div>
   );

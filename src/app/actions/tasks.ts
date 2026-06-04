@@ -245,3 +245,50 @@ export async function updateTaskTitleAction(taskId: string, newTitle: string) {
     return { error: error.message || "حدث خطأ أثناء تعديل مسمى المهمة" };
   }
 }
+
+export async function createNewsAction(data: {
+  charityName: string;
+  category: string;
+  title: string;
+  description?: string;
+}) {
+  try {
+    const user = await getAuthenticatedUser();
+    
+    const isAuthorized = ["ADMIN", "ADMINISTRATIVE_SECRETARIAT"].includes(user.role);
+    if (!isAuthorized) {
+      throw new Error("غير مصرح لك بنشر الأخبار أو الإنجازات");
+    }
+
+    const { charityName, category, title, description } = data;
+
+    if (!charityName || !charityName.trim()) {
+      return { error: "يرجى تحديد الجمعية" };
+    }
+
+    if (!category || !category.trim()) {
+      return { error: "يرجى تحديد القسم" };
+    }
+
+    if (!title || !title.trim()) {
+      return { error: "يرجى إدخال العنوان" };
+    }
+
+    const newsItem = await prisma.news.create({
+      data: {
+        charityName: charityName.trim(),
+        category: category.trim(),
+        title: title.trim(),
+        description: description ? description.trim() : null,
+      },
+    });
+
+    revalidatePath("/dashboard/tasks");
+    revalidatePath("/dashboard/news");
+    revalidatePath("/dashboard");
+    
+    return { success: true, newsItem };
+  } catch (error: any) {
+    return { error: error.message || "حدث خطأ أثناء إضافة الخبر/الإنجاز" };
+  }
+}

@@ -18,7 +18,8 @@ import {
   AlertCircle,
   Pencil,
   Check,
-  X
+  X,
+  Newspaper
 } from "lucide-react";
 import { 
   createTaskAction, 
@@ -27,7 +28,8 @@ import {
   toggleTaskCompletionAction, 
   createAchievementAction, 
   deleteAchievementAction,
-  updateTaskTitleAction
+  updateTaskTitleAction,
+  createNewsAction
 } from "@/app/actions/tasks";
 
 interface Task {
@@ -89,6 +91,13 @@ export default function TasksClient({
   const [achievementTitle, setAchievementTitle] = useState("");
   const [showDirectAchievementForm, setShowDirectAchievementForm] = useState(false);
   
+  // News / Announcement states (for Secretariat)
+  const [showNewsForm, setShowNewsForm] = useState(false);
+  const [newsCharityName, setNewsCharityName] = useState("");
+  const [newsCategory, setNewsCategory] = useState("الاستراتيجية");
+  const [newsTitle, setNewsTitle] = useState("");
+  const [newsDescription, setNewsDescription] = useState("");
+
   // Reassignment state
   const [reassigningTaskId, setReassigningTaskId] = useState<string | null>(null);
   const [reassignToEmployeeId, setReassignToEmployeeId] = useState<string>("");

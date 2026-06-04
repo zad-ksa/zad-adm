@@ -379,10 +379,21 @@ export default async function MainDashboard() {
 
         {/* News Column - 1/3 width */}
         <div className="space-y-6">
-          <h2 className="text-2xl font-bold text-slate-800 mb-6 flex items-center gap-3">
-            <span className="w-2.5 h-6 bg-amber-500 rounded-full"></span>
-            آخر الأخبار والإنجازات
-          </h2>
+          <div className="flex items-center justify-between">
+            <h2 className="text-2xl font-bold text-slate-800 flex items-center gap-3">
+              <span className="w-2.5 h-6 bg-amber-500 rounded-full"></span>
+              آخر الأخبار والإنجازات
+            </h2>
+            <Link
+              href="/dashboard/news"
+              className="text-xs font-bold text-primary bg-primary/5 hover:bg-primary/10 px-3 py-1.5 rounded-lg transition-all duration-300 flex items-center gap-1 shrink-0"
+            >
+              عرض الكل
+              <svg className="w-3.5 h-3.5 transition-transform duration-300 transform hover:-translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+              </svg>
+            </Link>
+          </div>
 
           <div className="bg-white rounded-2xl border border-slate-100 p-6 shadow-sm divide-y divide-slate-100">
             {newsItems.map((item, idx) => (

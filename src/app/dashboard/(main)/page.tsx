@@ -116,10 +116,10 @@ export default async function MainDashboard() {
     }
   });
 
-  // If there are no performance metrics or they are 0, use realistic placeholder numbers for demo purposes
-  const displayBeneficiaries = (totalBeneficiaries > 0 ? totalBeneficiaries : 107226) + dbTotalBeneficiaries;
-  const displayPrograms = (totalPrograms > 0 ? totalPrograms : 34) + dbTotalPrograms;
-  const displayGrants = totalGrants > 0 ? totalGrants : 1850000;
+  // Display stats based on real data only (no fallbacks)
+  const displayBeneficiaries = dbTotalBeneficiaries;
+  const displayPrograms = dbTotalPrograms;
+  const displayGrants = totalGrants;
 
   // Map charities and calculate metrics
   const charitiesData = charities.map((charity) => {
@@ -168,15 +168,12 @@ export default async function MainDashboard() {
       }
     }
 
-    // Deterministic fallback generator for demo purposes based on charity name characters
-    const hash = charity.name.split("").reduce((acc, char) => acc + char.charCodeAt(0), 0);
-
     const dbProgsCount = dbCharityProgramsCount.get(charity.id) || 0;
     const dbBenSum = dbCharityBeneficiariesSum.get(charity.id) || 0;
 
-    const displayGrants = grants > 0 ? grants : (hash % 5) * 150000 + 250000; // Between 250,000 and 850,000 ريال
-    const displayPrograms = (programs > 0 ? programs : (hash % 4) + 3) + dbProgsCount; // 3 to 6 programs + DB programs
-    const displayBeneficiaries = (beneficiaries > 0 ? beneficiaries : ((hash % 10) + 1) * 350 + 1200) + dbBenSum; // 1200 to 4700 beneficiaries + DB beneficiaries
+    const displayGrants = grants;
+    const displayPrograms = dbProgsCount;
+    const displayBeneficiaries = dbBenSum;
 
     return {
       ...charity,
@@ -274,20 +271,7 @@ export default async function MainDashboard() {
           </div>
         </div>
 
-        {/* Card 3: عدد المستفيدين */}
-        <div className="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm flex items-center gap-4 hover:border-indigo-500/20 hover:shadow-md transition-all duration-300">
-          <div className="w-14 h-14 bg-indigo-50 rounded-xl flex items-center justify-center text-indigo-600 shrink-0">
-            <svg className="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-            </svg>
-          </div>
-          <div>
-            <p className="text-sm text-slate-500 font-medium mb-1">عدد المستفيدين</p>
-            <h3 className="text-2xl font-bold text-slate-800">{displayBeneficiaries.toLocaleString()}</h3>
-          </div>
-        </div>
-
-        {/* Card 4: عدد البرامج */}
+        {/* Card 3: عدد البرامج */}
         <div className="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm flex items-center gap-4 hover:border-violet-500/20 hover:shadow-md transition-all duration-300">
           <div className="w-14 h-14 bg-violet-50 rounded-xl flex items-center justify-center text-violet-600 shrink-0">
             <svg className="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
@@ -297,6 +281,19 @@ export default async function MainDashboard() {
           <div>
             <p className="text-sm text-slate-500 font-medium mb-1">عدد البرامج</p>
             <h3 className="text-2xl font-bold text-slate-800">{displayPrograms.toLocaleString()}</h3>
+          </div>
+        </div>
+
+        {/* Card 4: عدد المستفيدين */}
+        <div className="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm flex items-center gap-4 hover:border-indigo-500/20 hover:shadow-md transition-all duration-300">
+          <div className="w-14 h-14 bg-indigo-50 rounded-xl flex items-center justify-center text-indigo-600 shrink-0">
+            <svg className="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+            </svg>
+          </div>
+          <div>
+            <p className="text-sm text-slate-500 font-medium mb-1">عدد المستفيدين</p>
+            <h3 className="text-2xl font-bold text-slate-800">{displayBeneficiaries.toLocaleString()}</h3>
           </div>
         </div>
       </div>

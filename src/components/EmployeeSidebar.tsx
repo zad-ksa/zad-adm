@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, useTransition } from "react";
 import Link from "next/link";
-import { User, ShieldAlert, Users, X, LogOut, LayoutDashboard, Building2, ClipboardList, ChevronRight, Edit, Eye, EyeOff, Camera, Loader2, AlertCircle, CheckCircle2, Newspaper } from "lucide-react";
+import { User, ShieldAlert, Users, X, LogOut, LayoutDashboard, Building2, ClipboardList, ChevronRight, Edit, Eye, EyeOff, Camera, Loader2, AlertCircle, CheckCircle2, Newspaper, CheckSquare } from "lucide-react";
 import { logout } from "@/app/actions/auth";
 import { updateProfile } from "@/app/actions/profile";
 import { usePathname } from "next/navigation";
@@ -41,6 +41,10 @@ export default function EmployeeSidebar({
     { label: "الاستبيانات", href: "/dashboard/surveys", icon: ClipboardList },
     { label: "الأخبار والإنجازات", href: "/dashboard/news", icon: Newspaper },
   ];
+
+  if (userState?.role !== "GENERAL_MANAGER") {
+    navItems.push({ label: "المهام والمنجزات", href: "/dashboard/tasks", icon: CheckSquare });
+  }
 
   if (userState?.role === "ADMIN" || userState?.role === "EXECUTIVE_DIRECTOR" || userState?.role === "GENERAL_MANAGER") {
     navItems.push({ label: "إدارة الموظفين", href: "/dashboard/employees", icon: Users });

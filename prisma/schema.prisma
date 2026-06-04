@@ -58,14 +58,45 @@ enum Role {
 }
 
 model Employee {
+  id                   String        @id @default(uuid())
+  name                 String
+  phone                String        @unique
+  password             String
+  avatarUrl            String?
+  role                 Role          @default(EMPLOYEE)
+  permissions          String[]
+  isActive             Boolean       @default(true)
+  createdAt            DateTime      @default(now())
+  updatedAt            DateTime      @updatedAt
+  assignedTasks        Task[]        @relation("AssignedTasks")
+  createdTasks         Task[]        @relation("CreatedTasks")
+  employeeAchievements Achievement[] @relation("EmployeeAchievements")
+  createdAchievements  Achievement[] @relation("CreatedAchievements")
+}
+
+model Task {
+  id           String    @id @default(uuid())
+  title        String
+  assignedToId String
+  assignedTo   Employee  @relation("AssignedTasks", fields: [assignedToId], references: [id], onDelete: Cascade)
+  createdById  String
+  createdBy    Employee  @relation("CreatedTasks", fields: [createdById], references: [id], onDelete: Cascade)
+  charityId    String?
+  charityName  String?
+  isInternal   Boolean   @default(false)
+  isCompleted  Boolean   @default(false)
+  completedAt  DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+}
+
+model Achievement {
   id          String   @id @default(uuid())
-  name        String
-  phone       String   @unique
-  password    String
-  avatarUrl   String?
-  role        Role     @default(EMPLOYEE)
-  permissions String[]
-  isActive    Boolean  @default(true)
+  title       String
+  employeeId  String
+  employee    Employee @relation("EmployeeAchievements", fields: [employeeId], references: [id], onDelete: Cascade)
+  createdById String
+  createdBy   Employee @relation("CreatedAchievements", fields: [createdById], references: [id], onDelete: Cascade)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 }

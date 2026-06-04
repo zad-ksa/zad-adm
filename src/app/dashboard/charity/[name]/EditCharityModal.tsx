@@ -23,7 +23,6 @@ export default function EditCharityModal({ charity, onClose }: EditCharityModalP
   const [establishmentDate, setEstablishmentDate] = useState(charity.establishmentDate || "");
   const [domain, setDomain] = useState(charity.domain || "");
   const [logoPreview, setLogoPreview] = useState<string | null>(charity.logoUrl);
-  const [logoFile, setLogoFile] = useState<File | null>(null);
   const [error, setError] = useState<string | null>(null);
   
   const [isPending, startTransition] = useTransition();
@@ -37,9 +36,12 @@ export default function EditCharityModal({ charity, onClose }: EditCharityModalP
         setError("حجم الملف يجب أن يكون أقل من 2 ميجابايت");
         return;
       }
-      setLogoFile(file);
-      setLogoPreview(URL.createObjectURL(file));
-      setError(null);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setLogoPreview(reader.result as string);
+        setError(null);
+      };
+      reader.readAsDataURL(file);
     }
   };
 
@@ -52,17 +54,14 @@ export default function EditCharityModal({ charity, onClose }: EditCharityModalP
       return;
     }
 
-    const formData = new FormData();
-    formData.append("name", name);
-    formData.append("licenseNumber", licenseNumber);
-    formData.append("establishmentDate", establishmentDate);
-    formData.append("domain", domain);
-    if (logoFile) {
-      formData.append("logo", logoFile);
-    }
-
     startTransition(async () => {
-      const result = await updateCharity(charity.name, formData);
+      const result = await updateCharity(charity.name, {
+        name,
+        licenseNumber: licenseNumber || undefined,
+        establishmentDate: establishmentDate || undefined,
+        domain: domain || undefined,
+        logoUrl: logoPreview,
+      });
       if (result.success) {
         onClose();
         // Redirect to new path if name changed, otherwise refresh page

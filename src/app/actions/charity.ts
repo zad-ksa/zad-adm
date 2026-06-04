@@ -91,13 +91,18 @@ export async function bootstrapCharities() {
   }
 }
 
-export async function updateCharity(oldName: string, formData: FormData) {
+export async function updateCharity(
+  oldName: string,
+  data: {
+    name: string;
+    establishmentDate?: string;
+    licenseNumber?: string;
+    domain?: string;
+    logoUrl?: string | null;
+  }
+) {
   try {
-    const name = formData.get("name") as string;
-    const establishmentDate = formData.get("establishmentDate") as string;
-    const licenseNumber = formData.get("licenseNumber") as string;
-    const domain = formData.get("domain") as string;
-    const logoFile = formData.get("logo") as File;
+    const { name, establishmentDate, licenseNumber, domain, logoUrl } = data;
 
     if (!name || !name.trim()) {
       return { success: false, message: "اسم الجمعية مطلوب" };
@@ -124,15 +129,6 @@ export async function updateCharity(oldName: string, formData: FormData) {
       return { success: false, message: "الجمعية غير موجودة" };
     }
 
-    // 3. Convert logo file to Base64 string to store in database (Vercel serverless compatible)
-    let logoUrl = charity.logoUrl;
-    if (logoFile && logoFile.size > 0) {
-      const bytes = await logoFile.arrayBuffer();
-      const buffer = Buffer.from(bytes);
-      const base64Image = buffer.toString("base64");
-      logoUrl = `data:${logoFile.type};base64,${base64Image}`;
-    }
-
     // 4. Update the charity details
     const updatedCharity = await prisma.charity.update({
       where: { name: oldName },
@@ -140,7 +136,7 @@ export async function updateCharity(oldName: string, formData: FormData) {
         name: trimmedName,
         establishmentDate: establishmentDate || null,
         licenseNumber: licenseNumber || null,
-        logoUrl,
+        logoUrl: logoUrl,
         domain: domain || null,
       }
     });

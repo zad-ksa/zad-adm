@@ -168,26 +168,31 @@ export default async function MainDashboard() {
     const newsTemplates = [
       {
         title: "إطلاق الخطة الاستراتيجية الخمسية الجديدة",
+        category: "الاستراتيجية",
         description: "أنهت الجمعية بنجاح إطلاق خطتها الاستراتيجية الخمسية المحدثة بالتعاون الفني مع شركة زاد التنموية، للتحول نحو الأثر المستدام.",
         dateOffset: 2, // 2 days ago
       },
       {
         title: "تجاوز المستهدف الربعي لأعداد المستفيدين",
+        category: "الإعلامية",
         description: "أعلنت الجمعية اليوم عن تجاوز المستهدفات الربعية لبرامجها التنموية والمبادرات الشبابية المنفذة بنسبة فاقت التوقعات.",
         dateOffset: 4, // 4 days ago
       },
       {
         title: "توقيع اتفاقية منح ودعم تنموي جديدة",
+        category: "تنمية الموارد",
         description: "وقّعت الجمعية اتفاقية تمويلية جديدة لبرامج التدريب والتأهيل التخصصي، مما يضمن استمرارية خدماتها للفترات القادمة.",
         dateOffset: 6, // 6 days ago
       },
       {
         title: "اعتماد معايير الحوكمة والشفافية بنسبة 95%",
+        category: "الاستراتيجية",
         description: "حققت الجمعية تقييماً متقدماً في تطبيق أدلة وسياسات الحوكمة والعمل المؤسسي المعتمدة، مما يعزز الموثوقية لدى المانحين.",
         dateOffset: 9, // 9 days ago
       },
       {
         title: "بدء تحليل مقاييس الأداء للمشاريع المشتركة",
+        category: "التقنية",
         description: "انطلقت ورشة عمل مكثفة لتحليل ومراجعة مؤشرات أداء المشاريع التنموية بالشراكة مع مستشاري زاد لرصد الأثر الفعلي.",
         dateOffset: 12, // 12 days ago
       }
@@ -201,6 +206,7 @@ export default async function MainDashboard() {
       id: `${charity.id}-news`,
       charityName: charity.name,
       title: template.title,
+      category: template.category,
       description: template.description,
       date: date.toLocaleDateString("ar-SA", {
         year: "numeric",
@@ -381,9 +387,19 @@ export default async function MainDashboard() {
           <div className="bg-white rounded-2xl border border-slate-100 p-6 shadow-sm divide-y divide-slate-100">
             {newsItems.map((item, idx) => (
               <div key={item.id} className={`group ${idx > 0 ? "pt-5" : ""} ${idx < newsItems.length - 1 ? "pb-5" : ""}`}>
-                <span className="inline-block text-[10px] font-bold text-primary bg-primary/5 px-2 py-0.5 rounded-md mb-2">
-                  {item.charityName}
-                </span>
+                <div className="flex flex-wrap items-center gap-2 mb-2">
+                  <span className="inline-block text-[10px] font-bold text-primary bg-primary/5 px-2 py-0.5 rounded-md">
+                    {item.charityName}
+                  </span>
+                  <span className={`inline-block text-[10px] font-bold px-2 py-0.5 rounded-md ${
+                    item.category === "الاستراتيجية" ? "text-violet-700 bg-violet-50" :
+                    item.category === "التقنية" ? "text-blue-700 bg-blue-50" :
+                    item.category === "تنمية الموارد" ? "text-emerald-700 bg-emerald-50" :
+                    "text-amber-700 bg-amber-50" // الإعلامية
+                  }`}>
+                    {item.category}
+                  </span>
+                </div>
                 <h4 className="font-bold text-slate-800 text-sm mb-1.5 group-hover:text-primary transition-colors duration-300">
                   {item.title}
                 </h4>

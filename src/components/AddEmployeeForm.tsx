@@ -84,9 +84,12 @@ export function AddEmployeeForm() {
             <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
               <ShieldAlert className="h-5 w-5 text-slate-400" />
             </div>
-            <select name="role" className="appearance-none block w-full pr-10 pl-3 py-2.5 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent sm:text-sm bg-white">
-              <option value="EMPLOYEE">موظف (صلاحيات مخصصة)</option>
-              <option value="ADMIN">مدير النظام (صلاحيات كاملة)</option>
+            <select name="role" className="appearance-none block w-full pr-10 pl-3 py-2.5 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent sm:text-sm bg-white font-bold text-slate-800 cursor-pointer">
+              <option value="EXECUTIVE_DIRECTOR">مدير تنفيذي</option>
+              <option value="GENERAL_MANAGER">مدير عام</option>
+              <option value="ADMINISTRATIVE_SECRETARIAT">سكرتارية ادارية</option>
+              <option value="STRATEGY">الاستراتيجية</option>
+              <option value="FINANCE">المالية</option>
             </select>
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
               <ChevronDownIcon className="h-4 w-4 text-slate-400" />

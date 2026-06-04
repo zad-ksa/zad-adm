@@ -4,11 +4,31 @@ import { prisma } from "@/lib/db";
 import { AddEmployeeForm } from "@/components/AddEmployeeForm";
 import { Users, UserCircle, ShieldAlert, Check, X } from "lucide-react";
 
+const roleTranslations: Record<string, string> = {
+  ADMIN: "مدير النظام",
+  EXECUTIVE_DIRECTOR: "مدير تنفيذي",
+  GENERAL_MANAGER: "مدير عام",
+  ADMINISTRATIVE_SECRETARIAT: "سكرتارية ادارية",
+  STRATEGY: "الاستراتيجية",
+  FINANCE: "المالية",
+  EMPLOYEE: "موظف",
+};
+
+const roleBadgeStyles: Record<string, string> = {
+  ADMIN: "bg-purple-100 text-purple-700",
+  EXECUTIVE_DIRECTOR: "bg-purple-100 text-purple-700",
+  GENERAL_MANAGER: "bg-blue-100 text-blue-700",
+  ADMINISTRATIVE_SECRETARIAT: "bg-amber-100 text-amber-700",
+  STRATEGY: "bg-indigo-100 text-indigo-700",
+  FINANCE: "bg-emerald-100 text-emerald-700",
+  EMPLOYEE: "bg-slate-100 text-slate-700",
+};
+
 export default async function EmployeesPage() {
   const session = await getSession();
 
-  // Protect route for ADMIN only
-  if (!session || session.role !== "ADMIN") {
+  // Protect route for ADMIN, EXECUTIVE_DIRECTOR, GENERAL_MANAGER
+  if (!session || !["ADMIN", "EXECUTIVE_DIRECTOR", "GENERAL_MANAGER"].includes(session.role)) {
     redirect("/dashboard");
   }
 
@@ -67,13 +87,11 @@ export default async function EmployeesPage() {
                       {emp.phone}
                     </td>
                     <td className="px-6 py-4">
-                      <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${
-                        emp.role === "ADMIN" 
-                          ? "bg-purple-100 text-purple-700" 
-                          : "bg-blue-100 text-blue-700"
+                      <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold ${
+                        roleBadgeStyles[emp.role] || "bg-slate-100 text-slate-700"
                       }`}>
                         <ShieldAlert className="w-3.5 h-3.5" />
-                        {emp.role === "ADMIN" ? "مدير نظام" : "موظف"}
+                        {roleTranslations[emp.role] || emp.role}
                       </span>
                     </td>
                     <td className="px-6 py-4">

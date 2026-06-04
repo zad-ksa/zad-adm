@@ -33,12 +33,15 @@ export async function addEmployee(prevState: any, formData: FormData) {
 
     const hashedPassword = await hash(password, 10);
 
+    const validRoles = ["EXECUTIVE_DIRECTOR", "GENERAL_MANAGER", "ADMINISTRATIVE_SECRETARIAT", "STRATEGY", "FINANCE", "ADMIN", "EMPLOYEE"];
+    const dbRole = validRoles.includes(role) ? (role as any) : "EMPLOYEE";
+
     await prisma.employee.create({
       data: {
         name,
         phone,
         password: hashedPassword,
-        role: role === "ADMIN" ? "ADMIN" : "EMPLOYEE",
+        role: dbRole,
         permissions,
         isActive: true,
       },

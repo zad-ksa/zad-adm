@@ -42,7 +42,7 @@ export default function EmployeeSidebar({
     { label: "الأخبار والإنجازات", href: "/dashboard/news", icon: Newspaper },
   ];
 
-  if (userState?.role === "ADMIN") {
+  if (userState?.role === "ADMIN" || userState?.role === "EXECUTIVE_DIRECTOR" || userState?.role === "GENERAL_MANAGER") {
     navItems.push({ label: "إدارة الموظفين", href: "/dashboard/employees", icon: Users });
   }
 
@@ -184,7 +184,12 @@ export default function EmployeeSidebar({
               </div>
               <div className="mt-1.5 inline-flex items-center gap-1.5 px-2.5 py-1 bg-slate-50 border border-slate-100 rounded-full text-[11px] text-slate-600 font-bold">
                 <ShieldAlert className="w-3.5 h-3.5 text-emerald-500" />
-                {userState?.role === "ADMIN" ? "مدير النظام" : "موظف"}
+                {userState?.role === "ADMIN" ? "مدير النظام" :
+                 userState?.role === "EXECUTIVE_DIRECTOR" ? "مدير تنفيذي" :
+                 userState?.role === "GENERAL_MANAGER" ? "مدير عام" :
+                 userState?.role === "ADMINISTRATIVE_SECRETARIAT" ? "سكرتارية ادارية" :
+                 userState?.role === "STRATEGY" ? "الاستراتيجية" :
+                 userState?.role === "FINANCE" ? "المالية" : "موظف"}
               </div>
             </div>
           )}

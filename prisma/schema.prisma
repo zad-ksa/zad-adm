@@ -50,6 +50,11 @@ model PerformanceMetric {
 enum Role {
   ADMIN
   EMPLOYEE
+  EXECUTIVE_DIRECTOR
+  GENERAL_MANAGER
+  ADMINISTRATIVE_SECRETARIAT
+  STRATEGY
+  FINANCE
 }
 
 model Employee {

@@ -10,9 +10,10 @@ import {
   Plus, 
   Newspaper, 
   CheckCircle2, 
-  AlertCircle 
+  AlertCircle,
+  Trash2
 } from "lucide-react";
-import { createNewsAction } from "@/app/actions/tasks";
+import { createNewsAction, deleteNewsAction } from "@/app/actions/tasks";
 
 interface NewsItem {
   id: string;
@@ -123,6 +124,21 @@ export default function NewsFilterClient({
         setSelectedCharityNames([]);
         setShowNewsForm(false);
         showNotification("success", "تم نشر الخبر أو الإنجاز بنجاح");
+      }
+    });
+  };
+
+  // Handle news deletion
+  const handleDeleteNews = async (newsId: string) => {
+    if (!confirm("هل أنت متأكد من رغبتك في حذف هذا الخبر؟")) return;
+
+    startTransition(async () => {
+      const res = await deleteNewsAction(newsId);
+      if (res.error) {
+        showNotification("error", res.error);
+      } else if (res.success) {
+        setNewsItems((prev) => prev.filter((item) => item.id !== newsId));
+        showNotification("success", "تم حذف الخبر بنجاح");
       }
     });
   };
@@ -278,23 +294,37 @@ export default function NewsFilterClient({
                     className="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-300 flex flex-col justify-between group"
                   >
                     <div>
-                      {/* Badges (Tags) */}
-                      <div className="flex flex-wrap items-center gap-2 mb-4">
-                        {itemCharitiesList.map((cName) => (
-                          <span key={cName} className="inline-block text-[10px] font-bold text-primary bg-primary/5 px-2.5 py-1 rounded-md">
-                            {cName}
+                      {/* Badges & Delete Action */}
+                      <div className="flex items-center justify-between gap-4 mb-4">
+                        <div className="flex flex-wrap items-center gap-2">
+                          {itemCharitiesList.map((cName) => (
+                            <span key={cName} className="inline-block text-[10px] font-bold text-primary bg-primary/5 px-2.5 py-1 rounded-md">
+                              {cName}
+                            </span>
+                          ))}
+                          <span className={`inline-block text-[10px] font-bold px-2.5 py-1 rounded-md ${
+                            item.category === "الاستراتيجية" ? "text-violet-700 bg-violet-50" :
+                            item.category === "التقنية" ? "text-blue-700 bg-blue-50" :
+                            item.category === "تنمية الموارد" ? "text-emerald-700 bg-emerald-50" :
+                            item.category === "تكليف" ? "text-rose-700 bg-rose-50" :
+                            item.category === "استقطاب" ? "text-teal-700 bg-teal-50" :
+                            "text-amber-700 bg-amber-50" // الإعلامية
+                          }`}>
+                            {item.category}
                           </span>
-                        ))}
-                        <span className={`inline-block text-[10px] font-bold px-2.5 py-1 rounded-md ${
-                          item.category === "الاستراتيجية" ? "text-violet-700 bg-violet-50" :
-                          item.category === "التقنية" ? "text-blue-700 bg-blue-50" :
-                          item.category === "تنمية الموارد" ? "text-emerald-700 bg-emerald-50" :
-                          item.category === "تكليف" ? "text-rose-700 bg-rose-50" :
-                          item.category === "استقطاب" ? "text-teal-700 bg-teal-50" :
-                          "text-amber-700 bg-amber-50" // الإعلامية
-                        }`}>
-                          {item.category}
-                        </span>
+                        </div>
+
+                        {/* Delete Button (Secretariat & Admin only) */}
+                        {isSecretariatOrAdmin && (
+                          <button
+                            onClick={() => handleDeleteNews(item.id)}
+                            disabled={isPending}
+                            title="حذف الخبر"
+                            className="text-slate-400 hover:text-red-500 hover:bg-red-50 p-1.5 rounded-lg transition-colors cursor-pointer select-none shrink-0"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        )}
                       </div>
 
                       {/* News Title */}

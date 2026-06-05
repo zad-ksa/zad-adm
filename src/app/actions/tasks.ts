@@ -292,3 +292,34 @@ export async function createNewsAction(data: {
     return { error: error.message || "حدث خطأ أثناء إضافة الخبر/الإنجاز" };
   }
 }
+
+export async function deleteNewsAction(newsId: string) {
+  try {
+    const user = await getAuthenticatedUser();
+    
+    const isAuthorized = ["ADMIN", "ADMINISTRATIVE_SECRETARIAT"].includes(user.role);
+    if (!isAuthorized) {
+      throw new Error("غير مصرح لك بحذف الأخبار أو الإنجازات");
+    }
+
+    const newsItem = await prisma.news.findUnique({
+      where: { id: newsId },
+    });
+
+    if (!newsItem) {
+      return { error: "الخبر غير موجود" };
+    }
+
+    await prisma.news.delete({
+      where: { id: newsId },
+    });
+
+    revalidatePath("/dashboard/tasks");
+    revalidatePath("/dashboard/news");
+    revalidatePath("/dashboard");
+    
+    return { success: true };
+  } catch (error: any) {
+    return { error: error.message || "حدث خطأ أثناء حذف الخبر" };
+  }
+}

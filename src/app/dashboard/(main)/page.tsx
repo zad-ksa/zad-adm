@@ -183,8 +183,27 @@ export default async function MainDashboard() {
     };
   });
 
+  // Fetch news from the database
+  const dbNewsItems = await prisma.news.findMany({
+    orderBy: { createdAt: "desc" },
+  });
+
+  const formattedDbNews = dbNewsItems.map((news) => ({
+    id: news.id,
+    charityName: news.charityName,
+    title: news.title,
+    category: news.category,
+    description: news.description || "",
+    createdAt: news.createdAt,
+    date: new Date(news.createdAt).toLocaleDateString("ar-SA", {
+      year: "numeric",
+      month: "long",
+      day: "numeric"
+    })
+  }));
+
   // Generate deterministic news items based on charities in the database
-  const newsItems = charities.map((charity, index) => {
+  const mockNewsItems = charities.map((charity, index) => {
     const newsTemplates = [
       {
         title: "إطلاق الخطة الاستراتيجية الخمسية الجديدة",
@@ -228,13 +247,19 @@ export default async function MainDashboard() {
       title: template.title,
       category: template.category,
       description: template.description,
+      createdAt: date,
       date: date.toLocaleDateString("ar-SA", {
         year: "numeric",
         month: "long",
         day: "numeric"
       })
     };
-  }).slice(0, 5); // Display top 5 latest news items
+  });
+
+  // Combine DB and mock news items, then sort by latest
+  const newsItems = [...formattedDbNews, ...mockNewsItems]
+    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+    .slice(0, 5);
 
   return (
     <main className="flex-1 min-w-0 py-8">

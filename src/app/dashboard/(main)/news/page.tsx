@@ -27,8 +27,31 @@ export default async function NewsDashboard() {
     return isNaN(num) ? 0 : num;
   };
 
+  // Fetch news from the database
+  const dbNewsItems = await prisma.news.findMany({
+    orderBy: { createdAt: "desc" },
+  });
+
+  const formattedDbNews = dbNewsItems.map((news) => {
+    const charity = charities.find((c) => c.name.trim().toLowerCase() === news.charityName.trim().toLowerCase());
+    return {
+      id: news.id,
+      charityId: charity?.id || "unknown",
+      charityName: news.charityName,
+      title: news.title,
+      category: news.category,
+      description: news.description || "",
+      rawDate: news.createdAt.toISOString(),
+      date: new Date(news.createdAt).toLocaleDateString("ar-SA", {
+        year: "numeric",
+        month: "long",
+        day: "numeric"
+      })
+    };
+  });
+
   // Compile news items dynamically
-  const newsItems = charities.map((charity, index) => {
+  const mockNewsItems = charities.map((charity, index) => {
     const newsTemplates = [
       {
         title: "إطلاق الخطة الاستراتيجية الخمسية الجديدة",
@@ -81,6 +104,10 @@ export default async function NewsDashboard() {
       })
     };
   });
+
+  const newsItems = [...formattedDbNews, ...mockNewsItems].sort(
+    (a, b) => new Date(b.rawDate).getTime() - new Date(a.rawDate).getTime()
+  );
 
   return (
     <NewsFilterClient charities={charities} initialNewsItems={newsItems} />

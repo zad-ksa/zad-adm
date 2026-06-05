@@ -388,13 +388,17 @@ export default async function MainDashboard() {
             {newsItems.map((item, idx) => (
               <div key={item.id} className={`group ${idx > 0 ? "pt-5" : ""} ${idx < newsItems.length - 1 ? "pb-5" : ""}`}>
                 <div className="flex flex-wrap items-center gap-2 mb-2">
-                  <span className="inline-block text-[10px] font-bold text-primary bg-primary/5 px-2 py-0.5 rounded-md">
-                    {item.charityName}
-                  </span>
+                  {item.charityName.split(",").map((cName) => (
+                    <span key={cName} className="inline-block text-[10px] font-bold text-primary bg-primary/5 px-2 py-0.5 rounded-md">
+                      {cName.trim()}
+                    </span>
+                  ))}
                   <span className={`inline-block text-[10px] font-bold px-2 py-0.5 rounded-md ${
                     item.category === "الاستراتيجية" ? "text-violet-700 bg-violet-50" :
                     item.category === "التقنية" ? "text-blue-700 bg-blue-50" :
                     item.category === "تنمية الموارد" ? "text-emerald-700 bg-emerald-50" :
+                    item.category === "تكليف" ? "text-rose-700 bg-rose-50" :
+                    item.category === "استقطاب" ? "text-teal-700 bg-teal-50" :
                     "text-amber-700 bg-amber-50" // الإعلامية
                   }`}>
                     {item.category}

@@ -41,7 +41,7 @@ export default function NewsFilterClient({
 }) {
   const [newsItems, setNewsItems] = useState<NewsItem[]>(initialNewsItems);
   
-  // Sync news items when parent updates (server-side refresh)
+  // Sync news items when parent updates
   useEffect(() => {
     setNewsItems(initialNewsItems);
   }, [initialNewsItems]);
@@ -50,9 +50,9 @@ export default function NewsFilterClient({
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [selectedDate, setSelectedDate] = useState<string>("");
 
-  // Form states (for Secretariat & Admin)
+  // Form states (supporting multiple selected charities)
   const [showNewsForm, setShowNewsForm] = useState(false);
-  const [newsCharityName, setNewsCharityName] = useState(charities[0]?.name || "");
+  const [selectedCharityNames, setSelectedCharityNames] = useState<string[]>([]);
   const [newsCategory, setNewsCategory] = useState("الاستراتيجية");
   const [newsTitle, setNewsTitle] = useState("");
   const [newsDescription, setNewsDescription] = useState("");
@@ -84,11 +84,11 @@ export default function NewsFilterClient({
   // Handle news/achievement creation
   const handleCreateNews = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newsCharityName || !newsCategory || !newsTitle.trim()) return;
+    if (selectedCharityNames.length === 0 || !newsCategory || !newsTitle.trim()) return;
 
     startTransition(async () => {
       const res = await createNewsAction({
-        charityName: newsCharityName,
+        charityName: selectedCharityNames.join(", "),
         category: newsCategory,
         title: newsTitle.trim(),
         description: newsDescription.trim() || undefined,
@@ -97,12 +97,12 @@ export default function NewsFilterClient({
       if (res.error) {
         showNotification("error", res.error);
       } else if (res.success && res.newsItem) {
-        const charity = charities.find(
-          (c) => c.name.trim().toLowerCase() === res.newsItem.charityName.trim().toLowerCase()
+        const primaryCharity = charities.find(
+          (c) => c.name.trim().toLowerCase() === selectedCharityNames[0].trim().toLowerCase()
         );
         const newItem: NewsItem = {
           id: res.newsItem.id,
-          charityId: charity?.id || "unknown",
+          charityId: primaryCharity?.id || "unknown",
           charityName: res.newsItem.charityName,
           title: res.newsItem.title,
           category: res.newsItem.category,
@@ -120,6 +120,7 @@ export default function NewsFilterClient({
         setNewsItems((prev) => [newItem, ...prev]);
         setNewsTitle("");
         setNewsDescription("");
+        setSelectedCharityNames([]);
         setShowNewsForm(false);
         showNotification("success", "تم نشر الخبر أو الإنجاز بنجاح");
       }
@@ -127,9 +128,12 @@ export default function NewsFilterClient({
   };
 
   const filteredNews = newsItems.filter((item) => {
-    // 1. Charity Filter
-    if (selectedCharity !== "all" && item.charityName !== selectedCharity) {
-      return false;
+    // 1. Charity Filter (matches if selected charity is one of the news item's charities)
+    if (selectedCharity !== "all") {
+      const itemCharities = item.charityName.split(",").map(name => name.trim().toLowerCase());
+      if (!itemCharities.includes(selectedCharity.trim().toLowerCase())) {
+        return false;
+      }
     }
     
     // 2. Category Filter
@@ -137,7 +141,7 @@ export default function NewsFilterClient({
       return false;
     }
     
-    // 3. Date Filter (matches items on or after selected date)
+    // 3. Date Filter
     if (selectedDate) {
       const itemDate = new Date(item.rawDate).setHours(0, 0, 0, 0);
       const filterDate = new Date(selectedDate).setHours(0, 0, 0, 0);
@@ -172,7 +176,7 @@ export default function NewsFilterClient({
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* News Feed Content (2/3 width on large screens if admin/secretariat, else 3/3) */}
+        {/* News Feed Content */}
         <div className={isSecretariatOrAdmin ? "lg:col-span-2 space-y-8" : "lg:col-span-3 space-y-8"}>
           
           {/* Filters Card */}
@@ -207,6 +211,8 @@ export default function NewsFilterClient({
                   className="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-sm outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary/30 focus:bg-white text-slate-805 transition-all font-bold cursor-pointer"
                 >
                   <option value="all">كل الجمعيات</option>
+                  <option value="إدارة زاد">إدارة زاد</option>
+                  <option value="عدة جمعيات">عدة جمعيات</option>
                   {charities.map((c) => (
                     <option key={c.id} value={c.name}>
                       {c.name}
@@ -259,59 +265,74 @@ export default function NewsFilterClient({
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {filteredNews.map((item) => (
-                <div
-                  key={item.id}
-                  className="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-300 flex flex-col justify-between group"
-                >
-                  <div>
-                    {/* Badges */}
-                    <div className="flex flex-wrap items-center gap-2 mb-4">
-                      <span className="inline-block text-[10px] font-bold text-primary bg-primary/5 px-2.5 py-1 rounded-md">
-                        {item.charityName}
-                      </span>
-                      <span className={`inline-block text-[10px] font-bold px-2.5 py-1 rounded-md ${
-                        item.category === "الاستراتيجية" ? "text-violet-700 bg-violet-50" :
-                        item.category === "التقنية" ? "text-blue-700 bg-blue-50" :
-                        item.category === "تنمية الموارد" ? "text-emerald-700 bg-emerald-50" :
-                        item.category === "تكليف" ? "text-rose-700 bg-rose-50" :
-                        item.category === "استقطاب" ? "text-teal-700 bg-teal-50" :
-                        "text-amber-700 bg-amber-50" // الإعلامية
-                      }`}>
-                        {item.category}
-                      </span>
+              {filteredNews.map((item) => {
+                // Parse charities and identify valid DB charity records to generate direct links
+                const itemCharitiesList = item.charityName.split(",").map(n => n.trim());
+                const validCharities = itemCharitiesList.filter(name =>
+                  charities.some(c => c.name.trim().toLowerCase() === name.toLowerCase())
+                );
+
+                return (
+                  <div
+                    key={item.id}
+                    className="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-300 flex flex-col justify-between group"
+                  >
+                    <div>
+                      {/* Badges (Tags) */}
+                      <div className="flex flex-wrap items-center gap-2 mb-4">
+                        {itemCharitiesList.map((cName) => (
+                          <span key={cName} className="inline-block text-[10px] font-bold text-primary bg-primary/5 px-2.5 py-1 rounded-md">
+                            {cName}
+                          </span>
+                        ))}
+                        <span className={`inline-block text-[10px] font-bold px-2.5 py-1 rounded-md ${
+                          item.category === "الاستراتيجية" ? "text-violet-700 bg-violet-50" :
+                          item.category === "التقنية" ? "text-blue-700 bg-blue-50" :
+                          item.category === "تنمية الموارد" ? "text-emerald-700 bg-emerald-50" :
+                          item.category === "تكليف" ? "text-rose-700 bg-rose-50" :
+                          item.category === "استقطاب" ? "text-teal-700 bg-teal-50" :
+                          "text-amber-700 bg-amber-50" // الإعلامية
+                        }`}>
+                          {item.category}
+                        </span>
+                      </div>
+
+                      {/* News Title */}
+                      <h4 className="font-bold text-slate-800 text-base mb-2 group-hover:text-primary transition-colors duration-300">
+                        {item.title}
+                      </h4>
+
+                      {/* Description */}
+                      <p className="text-sm text-slate-500 font-medium leading-relaxed mb-6">
+                        {item.description}
+                      </p>
                     </div>
 
-                    {/* News Title */}
-                    <h4 className="font-bold text-slate-800 text-base mb-2 group-hover:text-primary transition-colors duration-300">
-                      {item.title}
-                    </h4>
-
-                    {/* Description */}
-                    <p className="text-sm text-slate-500 font-medium leading-relaxed mb-6">
-                      {item.description}
-                    </p>
-                  </div>
-
-                  {/* Footer */}
-                  <div className="flex items-center justify-between pt-4 border-t border-slate-50 text-[11px] font-bold text-slate-400">
-                    <div className="flex items-center gap-1.5">
-                      <Calendar className="w-3.5 h-3.5" />
-                      {item.date}
+                    {/* Footer */}
+                    <div className="flex flex-wrap items-center justify-between gap-4 pt-4 border-t border-slate-50 text-[11px] font-bold text-slate-400">
+                      <div className="flex items-center gap-1.5 shrink-0">
+                        <Calendar className="w-3.5 h-3.5" />
+                        {item.date}
+                      </div>
+                      
+                      <div className="flex flex-wrap gap-3">
+                        {validCharities.map((cName) => (
+                          <Link
+                            key={cName}
+                            href={`/dashboard/charity/${encodeURIComponent(cName)}`}
+                            className="text-primary hover:text-primary/80 transition-colors flex items-center gap-1 text-[11px]"
+                          >
+                            {validCharities.length > 1 ? cName : "صفحة الجمعية"}
+                            <svg className="w-3 h-3 rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                            </svg>
+                          </Link>
+                        ))}
+                      </div>
                     </div>
-                    
-                    <Link
-                      href={`/dashboard/charity/${encodeURIComponent(item.charityName)}`}
-                      className="text-primary hover:text-primary/80 transition-colors flex items-center gap-1"
-                    >
-                      صفحة الجمعية
-                      <svg className="w-3 h-3 rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-                      </svg>
-                    </Link>
                   </div>
-                </div>
-              ))}
+                );
+              })}
 
               {filteredNews.length === 0 && (
                 <div className="col-span-full bg-white rounded-2xl p-16 text-center text-slate-400 border border-slate-100 shadow-sm">
@@ -324,7 +345,7 @@ export default function NewsFilterClient({
           </div>
         </div>
 
-        {/* Sidebar Column: Add News Card (for Secretariat & Admin only) */}
+        {/* Sidebar Column: Add News Card */}
         {isSecretariatOrAdmin && (
           <div className="space-y-6 lg:col-span-1">
             <div className="bg-gradient-to-br from-amber-500/5 to-amber-500/10 rounded-3xl border border-amber-500/10 p-6">
@@ -333,16 +354,13 @@ export default function NewsFilterClient({
                 نشر خبر أو إنجاز جديد
               </h3>
               <p className="text-xs text-slate-500 font-medium leading-relaxed mb-4">
-                يمكنك نشر خبر أو إنجاز جديد يخص جمعية معينة وتحديد القسم المناسب ليظهر مباشرة للجميع.
+                يمكنك نشر خبر أو إنجاز جديد وتحديد جمعية أو أكثر ليظهر مباشرة للجميع كأوسمة فوق الخبر.
               </p>
 
               {!showNewsForm ? (
                 <button
                   onClick={() => {
                     setShowNewsForm(true);
-                    if (charities.length > 0 && !newsCharityName) {
-                      setNewsCharityName(charities[0].name);
-                    }
                   }}
                   className="bg-amber-600 hover:bg-amber-700 text-white py-2.5 px-4 rounded-xl font-bold text-xs shadow-sm transition-all duration-300 flex items-center gap-1.5 cursor-pointer w-full justify-center"
                 >
@@ -352,20 +370,33 @@ export default function NewsFilterClient({
               ) : (
                 <form onSubmit={handleCreateNews} className="space-y-4">
                   <div>
-                    <label className="block text-[11px] font-bold text-slate-500 mb-1.5">الجمعية</label>
-                    <select
-                      value={newsCharityName}
-                      onChange={(e) => setNewsCharityName(e.target.value)}
-                      required
-                      className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs outline-none focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500/30 text-slate-800 transition-all font-bold cursor-pointer"
-                    >
-                      <option value="" disabled>اختر الجمعية...</option>
-                      {charities.map((ch) => (
-                        <option key={ch.id} value={ch.name}>
-                          {ch.name}
-                        </option>
-                      ))}
-                    </select>
+                    <label className="block text-[11px] font-bold text-slate-500 mb-1.5">الجمعيات المعنية (اختر جمعية أو أكثر)</label>
+                    <div className="border border-slate-200 rounded-xl p-3 bg-white max-h-40 overflow-y-auto space-y-2 focus-within:ring-4 focus-within:ring-amber-500/10 focus-within:border-amber-500/30 transition-all">
+                      {[
+                        "إدارة زاد",
+                        "عدة جمعيات",
+                        ...charities.map((ch) => ch.name)
+                      ].map((name) => {
+                        const isChecked = selectedCharityNames.includes(name);
+                        return (
+                          <label key={name} className="flex items-center gap-2 text-xs font-bold text-slate-750 cursor-pointer select-none">
+                            <input
+                              type="checkbox"
+                              checked={isChecked}
+                              onChange={() => {
+                                if (isChecked) {
+                                  setSelectedCharityNames(prev => prev.filter(n => n !== name));
+                                } else {
+                                  setSelectedCharityNames(prev => [...prev, name]);
+                                }
+                              }}
+                              className="rounded border-slate-300 text-amber-600 focus:ring-amber-500 w-4 h-4 cursor-pointer"
+                            />
+                            {name}
+                          </label>
+                        );
+                      })}
+                    </div>
                   </div>
 
                   <div>
@@ -411,7 +442,7 @@ export default function NewsFilterClient({
                   <div className="flex items-center gap-2 pt-1">
                     <button
                       type="submit"
-                      disabled={isPending || !newsTitle.trim() || !newsCharityName}
+                      disabled={isPending || selectedCharityNames.length === 0 || !newsTitle.trim()}
                       className="bg-amber-600 hover:bg-amber-700 text-white py-2 px-4 rounded-lg font-bold text-xs transition-colors cursor-pointer disabled:opacity-50"
                     >
                       نشر الآن
@@ -422,6 +453,7 @@ export default function NewsFilterClient({
                         setShowNewsForm(false);
                         setNewsTitle("");
                         setNewsDescription("");
+                        setSelectedCharityNames([]);
                       }}
                       className="bg-slate-100 hover:bg-slate-200 text-slate-600 py-2 px-3 rounded-lg font-bold text-xs transition-colors cursor-pointer"
                     >

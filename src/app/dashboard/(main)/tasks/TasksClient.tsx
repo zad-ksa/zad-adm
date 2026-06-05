@@ -18,8 +18,7 @@ import {
   AlertCircle,
   Pencil,
   Check,
-  X,
-  Newspaper
+  X
 } from "lucide-react";
 import { 
   createTaskAction, 
@@ -28,8 +27,7 @@ import {
   toggleTaskCompletionAction, 
   createAchievementAction, 
   deleteAchievementAction,
-  updateTaskTitleAction,
-  createNewsAction
+  updateTaskTitleAction
 } from "@/app/actions/tasks";
 
 interface Task {
@@ -91,12 +89,7 @@ export default function TasksClient({
   const [achievementTitle, setAchievementTitle] = useState("");
   const [showDirectAchievementForm, setShowDirectAchievementForm] = useState(false);
   
-  // News / Announcement states (for Secretariat)
-  const [showNewsForm, setShowNewsForm] = useState(false);
-  const [newsCharityName, setNewsCharityName] = useState(charities[0]?.name || "");
-  const [newsCategory, setNewsCategory] = useState("الاستراتيجية");
-  const [newsTitle, setNewsTitle] = useState("");
-  const [newsDescription, setNewsDescription] = useState("");
+
 
   // Reassignment state
   const [reassigningTaskId, setReassigningTaskId] = useState<string | null>(null);
@@ -111,7 +104,7 @@ export default function TasksClient({
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
 
   const isDirectorOrAdmin = ["ADMIN", "EXECUTIVE_DIRECTOR"].includes(session.role);
-  const isSecretariatOrAdmin = ["ADMIN", "ADMINISTRATIVE_SECRETARIAT"].includes(session.role);
+
 
   const showNotification = (type: "success" | "error", message: string) => {
     if (type === "success") {
@@ -230,29 +223,7 @@ export default function TasksClient({
     });
   };
 
-  // Handle news/achievement creation (for Secretariat)
-  const handleCreateNews = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newsCharityName || !newsCategory || !newsTitle.trim()) return;
 
-    startTransition(async () => {
-      const res = await createNewsAction({
-        charityName: newsCharityName,
-        category: newsCategory,
-        title: newsTitle.trim(),
-        description: newsDescription.trim() || undefined,
-      });
-
-      if (res.error) {
-        showNotification("error", res.error);
-      } else if (res.success) {
-        setNewsTitle("");
-        setNewsDescription("");
-        setShowNewsForm(false);
-        showNotification("success", "تم نشر الخبر أو الإنجاز بنجاح");
-      }
-    });
-  };
 
   // Handle task completion toggle
   const handleToggleCompletion = async (taskId: string, isCompleted: boolean) => {
@@ -516,111 +487,7 @@ export default function TasksClient({
             )}
           </div>
 
-          {/* Add News / Announcement Card (for Secretariat & Admin only) */}
-          {isSecretariatOrAdmin && (
-            <div className="bg-gradient-to-br from-amber-500/5 to-amber-500/10 rounded-3xl border border-amber-500/10 p-6">
-              <h3 className="text-base font-bold text-slate-800 mb-3 flex items-center gap-2">
-                <Newspaper className="w-5 h-5 text-amber-600" />
-                نشر خبر أو إنجاز جديد
-              </h3>
-              <p className="text-xs text-slate-500 font-medium leading-relaxed mb-4">
-                بصفتك سكرتارية، يمكنك نشر خبر أو إنجاز يخص جمعية معينة ليظهر في الصفحة الرئيسية وصفحة الأخبار العامة.
-              </p>
 
-              {!showNewsForm ? (
-                <button
-                  onClick={() => {
-                    setShowNewsForm(true);
-                    if (charities.length > 0 && !newsCharityName) {
-                      setNewsCharityName(charities[0].name);
-                    }
-                  }}
-                  className="bg-amber-600 hover:bg-amber-700 text-white py-2.5 px-4 rounded-xl font-bold text-xs shadow-sm transition-all duration-300 flex items-center gap-1.5 cursor-pointer w-full justify-center"
-                >
-                  <Plus className="w-4 h-4" />
-                  <span>إنشاء خبر/إنجاز</span>
-                </button>
-              ) : (
-                <form onSubmit={handleCreateNews} className="space-y-4">
-                  <div>
-                    <label className="block text-[11px] font-bold text-slate-500 mb-1.5">الجمعية</label>
-                    <select
-                      value={newsCharityName}
-                      onChange={(e) => setNewsCharityName(e.target.value)}
-                      required
-                      className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs outline-none focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500/30 text-slate-800 transition-all font-bold cursor-pointer"
-                    >
-                      <option value="" disabled>اختر الجمعية...</option>
-                      {charities.map((ch) => (
-                        <option key={ch.id} value={ch.name}>
-                          {ch.name}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="block text-[11px] font-bold text-slate-500 mb-1.5">القسم المعني</label>
-                    <select
-                      value={newsCategory}
-                      onChange={(e) => setNewsCategory(e.target.value)}
-                      required
-                      className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs outline-none focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500/30 text-slate-800 transition-all font-bold cursor-pointer"
-                    >
-                      <option value="الاستراتيجية">الاستراتيجية</option>
-                      <option value="التقنية">التقنية</option>
-                      <option value="تنمية الموارد">تنمية الموارد</option>
-                      <option value="الإعلامية">الإعلامية</option>
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="block text-[11px] font-bold text-slate-500 mb-1.5">العنوان</label>
-                    <input
-                      type="text"
-                      required
-                      value={newsTitle}
-                      onChange={(e) => setNewsTitle(e.target.value)}
-                      placeholder="عنوان الخبر أو الإنجاز..."
-                      className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs outline-none focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500/30 text-slate-800 transition-all font-medium"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-[11px] font-bold text-slate-500 mb-1.5">الوصف (اختياري)</label>
-                    <textarea
-                      value={newsDescription}
-                      onChange={(e) => setNewsDescription(e.target.value)}
-                      placeholder="تفاصيل إضافية عن الخبر..."
-                      rows={3}
-                      className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs outline-none focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500/30 text-slate-800 transition-all font-medium resize-none"
-                    />
-                  </div>
-
-                  <div className="flex items-center gap-2 pt-1">
-                    <button
-                      type="submit"
-                      disabled={isPending || !newsTitle.trim() || !newsCharityName}
-                      className="bg-amber-600 hover:bg-amber-700 text-white py-2 px-4 rounded-lg font-bold text-xs transition-colors cursor-pointer disabled:opacity-50"
-                    >
-                      نشر الآن
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setShowNewsForm(false);
-                        setNewsTitle("");
-                        setNewsDescription("");
-                      }}
-                      className="bg-slate-100 hover:bg-slate-200 text-slate-600 py-2 px-3 rounded-lg font-bold text-xs transition-colors cursor-pointer"
-                    >
-                      إلغاء
-                    </button>
-                  </div>
-                </form>
-              )}
-            </div>
-          )}
         </div>
 
         {/* Left Side: Tasks & Achievements Columns (2/3 Width) */}

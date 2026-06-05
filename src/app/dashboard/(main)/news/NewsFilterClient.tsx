@@ -1,8 +1,18 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useTransition } from "react";
 import Link from "next/link";
-import { Calendar, Folder, Building2, RotateCcw } from "lucide-react";
+import { 
+  Calendar, 
+  Folder, 
+  Building2, 
+  RotateCcw, 
+  Plus, 
+  Newspaper, 
+  CheckCircle2, 
+  AlertCircle 
+} from "lucide-react";
+import { createNewsAction } from "@/app/actions/tasks";
 
 interface NewsItem {
   id: string;
@@ -23,13 +33,47 @@ interface Charity {
 export default function NewsFilterClient({
   charities,
   initialNewsItems,
+  session,
 }: {
   charities: Charity[];
   initialNewsItems: NewsItem[];
+  session: any;
 }) {
+  const [newsItems, setNewsItems] = useState<NewsItem[]>(initialNewsItems);
+  
+  // Sync news items when parent updates (server-side refresh)
+  useEffect(() => {
+    setNewsItems(initialNewsItems);
+  }, [initialNewsItems]);
+
   const [selectedCharity, setSelectedCharity] = useState<string>("all");
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [selectedDate, setSelectedDate] = useState<string>("");
+
+  // Form states (for Secretariat & Admin)
+  const [showNewsForm, setShowNewsForm] = useState(false);
+  const [newsCharityName, setNewsCharityName] = useState(charities[0]?.name || "");
+  const [newsCategory, setNewsCategory] = useState("الاستراتيجية");
+  const [newsTitle, setNewsTitle] = useState("");
+  const [newsDescription, setNewsDescription] = useState("");
+
+  const [isPending, startTransition] = useTransition();
+  const [successMsg, setSuccessMsg] = useState<string | null>(null);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+
+  const isSecretariatOrAdmin = ["ADMIN", "ADMINISTRATIVE_SECRETARIAT"].includes(session?.role);
+
+  const showNotification = (type: "success" | "error", message: string) => {
+    if (type === "success") {
+      setSuccessMsg(message);
+      setErrorMsg(null);
+      setTimeout(() => setSuccessMsg(null), 3000);
+    } else {
+      setErrorMsg(message);
+      setSuccessMsg(null);
+      setTimeout(() => setErrorMsg(null), 4000);
+    }
+  };
 
   const resetFilters = () => {
     setSelectedCharity("all");
@@ -37,7 +81,52 @@ export default function NewsFilterClient({
     setSelectedDate("");
   };
 
-  const filteredNews = initialNewsItems.filter((item) => {
+  // Handle news/achievement creation
+  const handleCreateNews = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newsCharityName || !newsCategory || !newsTitle.trim()) return;
+
+    startTransition(async () => {
+      const res = await createNewsAction({
+        charityName: newsCharityName,
+        category: newsCategory,
+        title: newsTitle.trim(),
+        description: newsDescription.trim() || undefined,
+      });
+
+      if (res.error) {
+        showNotification("error", res.error);
+      } else if (res.success && res.newsItem) {
+        const charity = charities.find(
+          (c) => c.name.trim().toLowerCase() === res.newsItem.charityName.trim().toLowerCase()
+        );
+        const newItem: NewsItem = {
+          id: res.newsItem.id,
+          charityId: charity?.id || "unknown",
+          charityName: res.newsItem.charityName,
+          title: res.newsItem.title,
+          category: res.newsItem.category,
+          description: res.newsItem.description || "",
+          rawDate: res.newsItem.createdAt instanceof Date 
+            ? res.newsItem.createdAt.toISOString() 
+            : new Date(res.newsItem.createdAt).toISOString(),
+          date: new Date(res.newsItem.createdAt).toLocaleDateString("ar-SA", {
+            year: "numeric",
+            month: "long",
+            day: "numeric",
+          }),
+        };
+
+        setNewsItems((prev) => [newItem, ...prev]);
+        setNewsTitle("");
+        setNewsDescription("");
+        setShowNewsForm(false);
+        showNotification("success", "تم نشر الخبر أو الإنجاز بنجاح");
+      }
+    });
+  };
+
+  const filteredNews = newsItems.filter((item) => {
     // 1. Charity Filter
     if (selectedCharity !== "all" && item.charityName !== selectedCharity) {
       return false;
@@ -61,155 +150,289 @@ export default function NewsFilterClient({
   });
 
   return (
-    <main className="flex-1 min-w-0 py-8">
+    <main className="flex-1 min-w-0 py-8 relative" dir="rtl">
+      {/* Notifications */}
+      {successMsg && (
+        <div className="fixed bottom-6 left-6 z-50 bg-emerald-500 text-white px-5 py-3 rounded-2xl shadow-xl flex items-center gap-2 animate-fade-in font-bold text-sm">
+          <CheckCircle2 className="w-5 h-5" />
+          {successMsg}
+        </div>
+      )}
+      {errorMsg && (
+        <div className="fixed bottom-6 left-6 z-50 bg-red-500 text-white px-5 py-3 rounded-2xl shadow-xl flex items-center gap-2 animate-fade-in font-bold text-sm">
+          <AlertCircle className="w-5 h-5" />
+          {errorMsg}
+        </div>
+      )}
+
       {/* Page Header */}
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-slate-800 mb-2">الأخبار والإنجازات</h1>
         <p className="text-slate-600 font-medium">تصفية واستعراض كافة الإنجازات والتقارير الإخبارية للجمعيات المتعاقد معها</p>
       </div>
 
-      {/* Filters Card */}
-      <div className="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm mb-8">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4 pb-4 border-b border-slate-50">
-          <h3 className="font-bold text-slate-800 text-sm flex items-center gap-2">
-            <span className="w-2 h-4.5 bg-primary rounded-full"></span>
-            أدوات التصفية والبحث
-          </h3>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {/* News Feed Content (2/3 width on large screens if admin/secretariat, else 3/3) */}
+        <div className={isSecretariatOrAdmin ? "lg:col-span-2 space-y-8" : "lg:col-span-3 space-y-8"}>
           
-          {(selectedCharity !== "all" || selectedCategory !== "all" || selectedDate) && (
-            <button
-              onClick={resetFilters}
-              className="text-xs font-bold text-red-500 hover:text-red-650 flex items-center gap-1.5 transition-colors cursor-pointer select-none"
-            >
-              <RotateCcw className="w-3.5 h-3.5" />
-              إعادة ضبط الفلاتر
-            </button>
-          )}
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {/* Charity Filter */}
-          <div className="space-y-2">
-            <label className="block text-xs font-bold text-slate-500 flex items-center gap-1.5">
-              <Building2 className="w-3.5 h-3.5 text-slate-400" />
-              تصفية حسب الجمعية
-            </label>
-            <select
-              value={selectedCharity}
-              onChange={(e) => setSelectedCharity(e.target.value)}
-              className="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-sm outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary/30 focus:bg-white text-slate-805 transition-all font-bold cursor-pointer"
-            >
-              <option value="all">كل الجمعيات</option>
-              {charities.map((c) => (
-                <option key={c.id} value={c.name}>
-                  {c.name}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {/* Category Filter */}
-          <div className="space-y-2">
-            <label className="block text-xs font-bold text-slate-500 flex items-center gap-1.5">
-              <Folder className="w-3.5 h-3.5 text-slate-400" />
-              تصفية حسب القسم
-            </label>
-            <select
-              value={selectedCategory}
-              onChange={(e) => setSelectedCategory(e.target.value)}
-              className="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-sm outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary/30 focus:bg-white text-slate-805 transition-all font-bold cursor-pointer"
-            >
-              <option value="all">كل الأقسام</option>
-              <option value="الاستراتيجية">الاستراتيجية</option>
-              <option value="التقنية">التقنية</option>
-              <option value="تنمية الموارد">تنمية الموارد</option>
-              <option value="الإعلامية">الإعلامية</option>
-            </select>
-          </div>
-
-          {/* Date Filter */}
-          <div className="space-y-2">
-            <label className="block text-xs font-bold text-slate-500 flex items-center gap-1.5">
-              <Calendar className="w-3.5 h-3.5 text-slate-400" />
-              البدء من تاريخ (منذ تاريخ)
-            </label>
-            <input
-              type="date"
-              value={selectedDate}
-              onChange={(e) => setSelectedDate(e.target.value)}
-              className="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-2.5 text-sm outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary/30 focus:bg-white text-slate-805 transition-all font-bold cursor-pointer"
-            />
-          </div>
-        </div>
-      </div>
-
-      {/* Results List */}
-      <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <h3 className="font-bold text-slate-800 text-lg">الأخبار والتقارير ({filteredNews.length})</h3>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {filteredNews.map((item) => (
-            <div
-              key={item.id}
-              className="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-300 flex flex-col justify-between group"
-            >
-              <div>
-                {/* Badges */}
-                <div className="flex flex-wrap items-center gap-2 mb-4">
-                  <span className="inline-block text-[10px] font-bold text-primary bg-primary/5 px-2.5 py-1 rounded-md">
-                    {item.charityName}
-                  </span>
-                  <span className={`inline-block text-[10px] font-bold px-2.5 py-1 rounded-md ${
-                    item.category === "الاستراتيجية" ? "text-violet-700 bg-violet-50" :
-                    item.category === "التقنية" ? "text-blue-700 bg-blue-50" :
-                    item.category === "تنمية الموارد" ? "text-emerald-700 bg-emerald-50" :
-                    "text-amber-700 bg-amber-50" // الإعلامية
-                  }`}>
-                    {item.category}
-                  </span>
-                </div>
-
-                {/* News Title */}
-                <h4 className="font-bold text-slate-800 text-base mb-2 group-hover:text-primary transition-colors duration-300">
-                  {item.title}
-                </h4>
-
-                {/* Description */}
-                <p className="text-sm text-slate-500 font-medium leading-relaxed mb-6">
-                  {item.description}
-                </p>
-              </div>
-
-              {/* Footer */}
-              <div className="flex items-center justify-between pt-4 border-t border-slate-50 text-[11px] font-bold text-slate-400">
-                <div className="flex items-center gap-1.5">
-                  <Calendar className="w-3.5 h-3.5" />
-                  {item.date}
-                </div>
-                
-                <Link
-                  href={`/dashboard/charity/${encodeURIComponent(item.charityName)}`}
-                  className="text-primary hover:text-primary/80 transition-colors flex items-center gap-1"
+          {/* Filters Card */}
+          <div className="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4 pb-4 border-b border-slate-50">
+              <h3 className="font-bold text-slate-800 text-sm flex items-center gap-2">
+                <span className="w-2 h-4.5 bg-primary rounded-full"></span>
+                أدوات التصفية والبحث
+              </h3>
+              
+              {(selectedCharity !== "all" || selectedCategory !== "all" || selectedDate) && (
+                <button
+                  onClick={resetFilters}
+                  className="text-xs font-bold text-red-500 hover:text-red-650 flex items-center gap-1.5 transition-colors cursor-pointer select-none"
                 >
-                  صفحة الجمعية
-                  <svg className="w-3 h-3 rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-                  </svg>
-                </Link>
+                  <RotateCcw className="w-3.5 h-3.5" />
+                  إعادة ضبط الفلاتر
+                </button>
+              )}
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {/* Charity Filter */}
+              <div className="space-y-2">
+                <label className="block text-xs font-bold text-slate-500 flex items-center gap-1.5">
+                  <Building2 className="w-3.5 h-3.5 text-slate-400" />
+                  تصفية حسب الجمعية
+                </label>
+                <select
+                  value={selectedCharity}
+                  onChange={(e) => setSelectedCharity(e.target.value)}
+                  className="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-sm outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary/30 focus:bg-white text-slate-805 transition-all font-bold cursor-pointer"
+                >
+                  <option value="all">كل الجمعيات</option>
+                  {charities.map((c) => (
+                    <option key={c.id} value={c.name}>
+                      {c.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Category Filter */}
+              <div className="space-y-2">
+                <label className="block text-xs font-bold text-slate-500 flex items-center gap-1.5">
+                  <Folder className="w-3.5 h-3.5 text-slate-400" />
+                  تصفية حسب القسم
+                </label>
+                <select
+                  value={selectedCategory}
+                  onChange={(e) => setSelectedCategory(e.target.value)}
+                  className="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-sm outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary/30 focus:bg-white text-slate-805 transition-all font-bold cursor-pointer"
+                >
+                  <option value="all">كل الأقسام</option>
+                  <option value="الاستراتيجية">الاستراتيجية</option>
+                  <option value="التقنية">التقنية</option>
+                  <option value="تنمية الموارد">تنمية الموارد</option>
+                  <option value="الإعلامية">الإعلامية</option>
+                  <option value="تكليف">تكليف</option>
+                  <option value="استقطاب">استقطاب</option>
+                </select>
+              </div>
+
+              {/* Date Filter */}
+              <div className="space-y-2">
+                <label className="block text-xs font-bold text-slate-500 flex items-center gap-1.5">
+                  <Calendar className="w-3.5 h-3.5 text-slate-400" />
+                  البدء من تاريخ (منذ تاريخ)
+                </label>
+                <input
+                  type="date"
+                  value={selectedDate}
+                  onChange={(e) => setSelectedDate(e.target.value)}
+                  className="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-2.5 text-sm outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary/30 focus:bg-white text-slate-805 transition-all font-bold cursor-pointer"
+                />
               </div>
             </div>
-          ))}
+          </div>
 
-          {filteredNews.length === 0 && (
-            <div className="col-span-full bg-white rounded-2xl p-16 text-center text-slate-400 border border-slate-100 shadow-sm">
-              <div className="text-4xl mb-4 opacity-40">📰</div>
-              <p className="font-bold text-base text-slate-700 mb-1">لا توجد نتائج مطابقة</p>
-              <p className="text-xs text-slate-400 font-medium">جرب تغيير خيارات التصفية أو إعادة ضبط الفلاتر.</p>
+          {/* Results List */}
+          <div className="space-y-6">
+            <div className="flex items-center justify-between">
+              <h3 className="font-bold text-slate-800 text-lg">الأخبار والتقارير ({filteredNews.length})</h3>
             </div>
-          )}
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {filteredNews.map((item) => (
+                <div
+                  key={item.id}
+                  className="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-300 flex flex-col justify-between group"
+                >
+                  <div>
+                    {/* Badges */}
+                    <div className="flex flex-wrap items-center gap-2 mb-4">
+                      <span className="inline-block text-[10px] font-bold text-primary bg-primary/5 px-2.5 py-1 rounded-md">
+                        {item.charityName}
+                      </span>
+                      <span className={`inline-block text-[10px] font-bold px-2.5 py-1 rounded-md ${
+                        item.category === "الاستراتيجية" ? "text-violet-700 bg-violet-50" :
+                        item.category === "التقنية" ? "text-blue-700 bg-blue-50" :
+                        item.category === "تنمية الموارد" ? "text-emerald-700 bg-emerald-50" :
+                        item.category === "تكليف" ? "text-rose-700 bg-rose-50" :
+                        item.category === "استقطاب" ? "text-teal-700 bg-teal-50" :
+                        "text-amber-700 bg-amber-50" // الإعلامية
+                      }`}>
+                        {item.category}
+                      </span>
+                    </div>
+
+                    {/* News Title */}
+                    <h4 className="font-bold text-slate-800 text-base mb-2 group-hover:text-primary transition-colors duration-300">
+                      {item.title}
+                    </h4>
+
+                    {/* Description */}
+                    <p className="text-sm text-slate-500 font-medium leading-relaxed mb-6">
+                      {item.description}
+                    </p>
+                  </div>
+
+                  {/* Footer */}
+                  <div className="flex items-center justify-between pt-4 border-t border-slate-50 text-[11px] font-bold text-slate-400">
+                    <div className="flex items-center gap-1.5">
+                      <Calendar className="w-3.5 h-3.5" />
+                      {item.date}
+                    </div>
+                    
+                    <Link
+                      href={`/dashboard/charity/${encodeURIComponent(item.charityName)}`}
+                      className="text-primary hover:text-primary/80 transition-colors flex items-center gap-1"
+                    >
+                      صفحة الجمعية
+                      <svg className="w-3 h-3 rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                      </svg>
+                    </Link>
+                  </div>
+                </div>
+              ))}
+
+              {filteredNews.length === 0 && (
+                <div className="col-span-full bg-white rounded-2xl p-16 text-center text-slate-400 border border-slate-100 shadow-sm">
+                  <div className="text-4xl mb-4 opacity-40">📰</div>
+                  <p className="font-bold text-base text-slate-700 mb-1">لا توجد نتائج مطابقة</p>
+                  <p className="text-xs text-slate-400 font-medium">جرب تغيير خيارات التصفية أو إعادة ضبط الفلاتر.</p>
+                </div>
+              )}
+            </div>
+          </div>
         </div>
+
+        {/* Sidebar Column: Add News Card (for Secretariat & Admin only) */}
+        {isSecretariatOrAdmin && (
+          <div className="space-y-6 lg:col-span-1">
+            <div className="bg-gradient-to-br from-amber-500/5 to-amber-500/10 rounded-3xl border border-amber-500/10 p-6">
+              <h3 className="text-base font-bold text-slate-800 mb-3 flex items-center gap-2">
+                <Newspaper className="w-5 h-5 text-amber-600" />
+                نشر خبر أو إنجاز جديد
+              </h3>
+              <p className="text-xs text-slate-500 font-medium leading-relaxed mb-4">
+                يمكنك نشر خبر أو إنجاز جديد يخص جمعية معينة وتحديد القسم المناسب ليظهر مباشرة للجميع.
+              </p>
+
+              {!showNewsForm ? (
+                <button
+                  onClick={() => {
+                    setShowNewsForm(true);
+                    if (charities.length > 0 && !newsCharityName) {
+                      setNewsCharityName(charities[0].name);
+                    }
+                  }}
+                  className="bg-amber-600 hover:bg-amber-700 text-white py-2.5 px-4 rounded-xl font-bold text-xs shadow-sm transition-all duration-300 flex items-center gap-1.5 cursor-pointer w-full justify-center"
+                >
+                  <Plus className="w-4 h-4" />
+                  <span>إنشاء خبر/إنجاز</span>
+                </button>
+              ) : (
+                <form onSubmit={handleCreateNews} className="space-y-4">
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-500 mb-1.5">الجمعية</label>
+                    <select
+                      value={newsCharityName}
+                      onChange={(e) => setNewsCharityName(e.target.value)}
+                      required
+                      className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs outline-none focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500/30 text-slate-800 transition-all font-bold cursor-pointer"
+                    >
+                      <option value="" disabled>اختر الجمعية...</option>
+                      {charities.map((ch) => (
+                        <option key={ch.id} value={ch.name}>
+                          {ch.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-500 mb-1.5">القسم المعني</label>
+                    <select
+                      value={newsCategory}
+                      onChange={(e) => setNewsCategory(e.target.value)}
+                      required
+                      className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs outline-none focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500/30 text-slate-800 transition-all font-bold cursor-pointer"
+                    >
+                      <option value="الاستراتيجية">الاستراتيجية</option>
+                      <option value="التقنية">التقنية</option>
+                      <option value="تنمية الموارد">تنمية الموارد</option>
+                      <option value="الإعلامية">الإعلامية</option>
+                      <option value="تكليف">تكليف</option>
+                      <option value="استقطاب">استقطاب</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-500 mb-1.5">العنوان</label>
+                    <input
+                      type="text"
+                      required
+                      value={newsTitle}
+                      onChange={(e) => setNewsTitle(e.target.value)}
+                      placeholder="عنوان الخبر أو الإنجاز..."
+                      className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs outline-none focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500/30 text-slate-800 transition-all font-medium"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-500 mb-1.5">الوصف (اختياري)</label>
+                    <textarea
+                      value={newsDescription}
+                      onChange={(e) => setNewsDescription(e.target.value)}
+                      placeholder="تفاصيل إضافية عن الخبر..."
+                      rows={3}
+                      className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs outline-none focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500/30 text-slate-800 transition-all font-medium resize-none"
+                    />
+                  </div>
+
+                  <div className="flex items-center gap-2 pt-1">
+                    <button
+                      type="submit"
+                      disabled={isPending || !newsTitle.trim() || !newsCharityName}
+                      className="bg-amber-600 hover:bg-amber-700 text-white py-2 px-4 rounded-lg font-bold text-xs transition-colors cursor-pointer disabled:opacity-50"
+                    >
+                      نشر الآن
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowNewsForm(false);
+                        setNewsTitle("");
+                        setNewsDescription("");
+                      }}
+                      className="bg-slate-100 hover:bg-slate-200 text-slate-600 py-2 px-3 rounded-lg font-bold text-xs transition-colors cursor-pointer"
+                    >
+                      إلغاء
+                    </button>
+                  </div>
+                </form>
+              )}
+            </div>
+          </div>
+        )}
       </div>
     </main>
   );

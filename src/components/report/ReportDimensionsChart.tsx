@@ -148,7 +148,7 @@ export default function ReportDimensionsChart({ axes, quarter }: ReportDimension
           ];
 
           return (
-            <div key={`print-${axis.id}`} className="flex flex-col w-full h-[190mm] max-h-[190mm] break-after-page page-break-after-always bg-white mb-4 relative overflow-hidden font-sans box-border py-4 px-12 justify-between">
+            <div key={`print-${axis.id}`} className="flex flex-col w-[100vw] h-[100vh] break-after-page page-break-after-always bg-white mb-4 relative overflow-hidden font-sans box-border py-4 px-12 justify-between">
               
               {/* Header Bar at the top (full width, replaces sidebar and previous header row) */}
               <div className="w-full bg-[#1ca386] h-16 rounded-xl flex items-center justify-between px-6 shadow-sm mb-6 shrink-0 relative overflow-hidden border-b-4 border-[#14876e]">

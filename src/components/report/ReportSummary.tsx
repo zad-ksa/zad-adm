@@ -152,7 +152,7 @@ export default function ReportSummary({ axes, quarter, year = new Date().getFull
 
 
       {/* PRINT ONLY VIEW - FULL PAGE */}
-      <div className="hidden print:flex flex-col items-center justify-center w-full h-[190mm] max-h-[190mm] break-after-page page-break-after-always bg-white relative overflow-hidden">
+      <div className="hidden print:flex flex-col items-center justify-center w-[100vw] h-[100vh] break-after-page page-break-after-always bg-white relative overflow-hidden">
         
         {/* Decorative Background Elements based on image */}
         <div className="absolute inset-0 pointer-events-none opacity-[0.03]">

@@ -51,7 +51,7 @@ export default function ReportAnalysis() {
                 <path d="M9 12l2 2 4-4"></path>
               </svg>
             </span>
-            التوصيات العامة للربع القادم
+            التوصيات العامة:
           </h3>
           <textarea
             className="w-full min-h-[150px] p-4 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-700 outline-none focus:border-emerald-300 focus:bg-white transition-all resize-none leading-relaxed"
@@ -63,15 +63,15 @@ export default function ReportAnalysis() {
       </div>
 
       {/* PRINT VIEW (4 Slides Landscape Layout with Explicit Page Breaks) */}
-      
+
       {/* 1. General Analysis Divider/Cover Page */}
       <div className="hidden print:block" style={{ pageBreakBefore: 'always', breakBefore: 'page', pageBreakAfter: 'always', breakAfter: 'page' }}>
-        <div className="print:flex w-full h-[190mm] max-h-[190mm] bg-white relative overflow-hidden font-sans box-border" dir="rtl">
+        <div className="print:flex w-[100vw] h-[100vh] bg-white relative overflow-hidden font-sans box-border" dir="rtl">
           {/* Right Column (Title block - 35% width) */}
           <div className="w-[35%] h-full bg-[#fcfcfc] border-l border-slate-100 flex flex-col justify-center items-center relative overflow-hidden shrink-0">
             {/* Top gray block */}
             <div className="absolute top-0 right-0 w-full h-[3.5rem] bg-[#a6a6a6]"></div>
-            
+
             {/* Watermark logo */}
             <div className="absolute inset-0 opacity-[0.05] pointer-events-none flex items-center justify-center">
               <img src="/assets/logos/%D9%84%D9%88%D8%AC%D9%88%20%D8%B2%D8%A7%D8%AF-01.svg" className="w-[90%] h-[90%] object-contain max-w-none transform translate-x-4" alt="" />
@@ -188,7 +188,7 @@ export default function ReportAnalysis() {
 
       {/* 2. General Analysis Content Page */}
       <div className="hidden print:block" style={{ pageBreakBefore: 'always', breakBefore: 'page', pageBreakAfter: 'always', breakAfter: 'page' }}>
-        <div className="print:flex flex-col w-full h-[190mm] max-h-[190mm] bg-white relative overflow-hidden font-sans box-border py-4 px-12 justify-between" dir="rtl">
+        <div className="print:flex flex-col w-[100vw] h-[100vh] bg-white relative overflow-hidden font-sans box-border py-4 px-12 justify-between" dir="rtl">
           {/* Header Bar */}
           <div className="w-full bg-[#1ca386] h-16 rounded-xl flex items-center justify-between px-6 shadow-sm mb-6 shrink-0 relative overflow-hidden border-b-4 border-[#14876e]">
             <div className="flex items-center gap-3">
@@ -234,12 +234,12 @@ export default function ReportAnalysis() {
 
       {/* 3. General Recommendations Divider/Cover Page */}
       <div className="hidden print:block" style={{ pageBreakBefore: 'always', breakBefore: 'page', pageBreakAfter: 'always', breakAfter: 'page' }}>
-        <div className="print:flex w-full h-[190mm] max-h-[190mm] bg-white relative overflow-hidden font-sans box-border" dir="rtl">
+        <div className="print:flex w-[100vw] h-[100vh] bg-white relative overflow-hidden font-sans box-border" dir="rtl">
           {/* Right Column (Title block - 35% width) */}
           <div className="w-[35%] h-full bg-[#fcfcfc] border-l border-slate-100 flex flex-col justify-center items-center relative overflow-hidden shrink-0">
             {/* Top gray block */}
             <div className="absolute top-0 right-0 w-full h-[3.5rem] bg-[#a6a6a6]"></div>
-            
+
             {/* Watermark logo */}
             <div className="absolute inset-0 opacity-[0.05] pointer-events-none flex items-center justify-center">
               <img src="/assets/logos/%D9%84%D9%88%D8%AC%D9%88%20%D8%B2%D8%A7%D8%AF-01.svg" className="w-[90%] h-[90%] object-contain max-w-none transform translate-x-4" alt="" />
@@ -298,7 +298,7 @@ export default function ReportAnalysis() {
 
       {/* 4. General Recommendations Content Page */}
       <div className="hidden print:block" style={{ pageBreakBefore: 'always', breakBefore: 'page', pageBreakAfter: 'always', breakAfter: 'page' }}>
-        <div className="print:flex flex-col w-full h-[190mm] max-h-[190mm] bg-white relative overflow-hidden font-sans box-border py-4 px-12 justify-between" dir="rtl">
+        <div className="print:flex flex-col w-[100vw] h-[100vh] bg-white relative overflow-hidden font-sans box-border py-4 px-12 justify-between" dir="rtl">
           {/* Header Bar */}
           <div className="w-full bg-[#1ca386] h-16 rounded-xl flex items-center justify-between px-6 shadow-sm mb-6 shrink-0 relative overflow-hidden border-b-4 border-[#14876e]">
             <div className="flex items-center gap-3">

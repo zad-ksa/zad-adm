@@ -93,8 +93,8 @@ export default function StrategicReportClient({ charityName, year, quarter, init
 
       <style dangerouslySetInnerHTML={{__html: `
         @page {
-          size: landscape;
-          margin: 8mm;
+          size: A4 landscape;
+          margin: 0;
         }
         @media print {
           /* Hide sidebar, header controls, print buttons, and other interactive elements */

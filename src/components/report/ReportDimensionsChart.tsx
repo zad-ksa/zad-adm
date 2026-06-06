@@ -2,20 +2,35 @@
 
 import React, { useState, useEffect } from 'react';
 import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts';
-import { Axis } from './types';
+import { Axis, ReportData } from './types';
 import { calcAxisPerf, isAxisPostponed, getReportClassification } from './logic';
 
 type ReportDimensionsChartProps = {
   axes: Axis[];
   quarter: string;
+  reportData: ReportData;
+  setReportData: React.Dispatch<React.SetStateAction<ReportData>>;
 };
 
-export default function ReportDimensionsChart({ axes, quarter }: ReportDimensionsChartProps) {
+export default function ReportDimensionsChart({ axes, quarter, reportData, setReportData }: ReportDimensionsChartProps) {
   const [mounted, setMounted] = useState(false);
   
-  // States for analysis and recommendations per dimension (keyed by axis.id)
-  const [analyses, setAnalyses] = useState<Record<string, string>>({});
-  const [recommendations, setRecommendations] = useState<Record<string, string>>({});
+  const analyses = reportData.dimensionAnalyses || {};
+  const recommendations = reportData.dimensionRecommendations || {};
+
+  const setAnalyses = (updater: React.SetStateAction<Record<string, string>>) => {
+    setReportData(prev => {
+      const newAnalyses = typeof updater === 'function' ? updater(prev.dimensionAnalyses || {}) : updater;
+      return { ...prev, dimensionAnalyses: newAnalyses };
+    });
+  };
+
+  const setRecommendations = (updater: React.SetStateAction<Record<string, string>>) => {
+    setReportData(prev => {
+      const newRecs = typeof updater === 'function' ? updater(prev.dimensionRecommendations || {}) : updater;
+      return { ...prev, dimensionRecommendations: newRecs };
+    });
+  };
 
   useEffect(() => {
     setMounted(true);

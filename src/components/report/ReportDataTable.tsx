@@ -1,12 +1,14 @@
 "use client";
 
 import React, { useState } from 'react';
-import { Axis, Goal, Indicator } from './types';
+import { Axis, Goal, Indicator, ReportData } from './types';
 import { calcIndicatorPerf, getQuarterAchieved, hasData, calcGoalPerf, isGoalPostponed } from './logic';
 
 type ReportDataTableProps = {
   axis: Axis;
   quarter: string;
+  reportData: ReportData;
+  setReportData: React.Dispatch<React.SetStateAction<ReportData>>;
 };
 
 // Helper function to match the exact colors from the user's mockup image
@@ -18,11 +20,31 @@ const getStatusBgColor = (perf: number, postponed: boolean, hasDataValue: boolea
   return "bg-[#dd4b39]"; // Red for risk
 };
 
-export default function ReportDataTable({ axis, quarter }: ReportDataTableProps) {
-  // Local state for analysis and recommendations
-  const [goalAnalyses, setGoalAnalyses] = useState<Record<string, string>>({});
-  const [indicatorAnalyses, setIndicatorAnalyses] = useState<Record<string, string>>({});
-  const [indicatorRecommendations, setIndicatorRecommendations] = useState<Record<string, string>>({});
+export default function ReportDataTable({ axis, quarter, reportData, setReportData }: ReportDataTableProps) {
+  const goalAnalyses = reportData.goalAnalyses || {};
+  const indicatorAnalyses = reportData.indicatorAnalyses || {};
+  const indicatorRecommendations = reportData.indicatorRecommendations || {};
+
+  const setGoalAnalyses = (updater: React.SetStateAction<Record<string, string>>) => {
+    setReportData(prev => {
+      const newValues = typeof updater === 'function' ? updater(prev.goalAnalyses || {}) : updater;
+      return { ...prev, goalAnalyses: newValues };
+    });
+  };
+
+  const setIndicatorAnalyses = (updater: React.SetStateAction<Record<string, string>>) => {
+    setReportData(prev => {
+      const newValues = typeof updater === 'function' ? updater(prev.indicatorAnalyses || {}) : updater;
+      return { ...prev, indicatorAnalyses: newValues };
+    });
+  };
+
+  const setIndicatorRecommendations = (updater: React.SetStateAction<Record<string, string>>) => {
+    setReportData(prev => {
+      const newValues = typeof updater === 'function' ? updater(prev.indicatorRecommendations || {}) : updater;
+      return { ...prev, indicatorRecommendations: newValues };
+    });
+  };
 
   if (!axis.goals || axis.goals.length === 0) return null;
 

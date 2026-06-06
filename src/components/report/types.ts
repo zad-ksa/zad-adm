@@ -28,3 +28,13 @@ export type Axis = {
   goals: Goal[];
   prefix?: string;
 };
+
+export type ReportData = {
+  generalAnalysis: string;
+  generalRecommendations: string;
+  dimensionAnalyses: Record<string, string>;
+  dimensionRecommendations: Record<string, string>;
+  goalAnalyses: Record<string, string>;
+  indicatorAnalyses: Record<string, string>;
+  indicatorRecommendations: Record<string, string>;
+};

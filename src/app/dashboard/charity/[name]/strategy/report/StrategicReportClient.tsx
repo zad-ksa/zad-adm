@@ -6,7 +6,8 @@ import ReportSummary from '@/components/report/ReportSummary';
 import ReportDimensionsChart from '@/components/report/ReportDimensionsChart';
 import ReportDataTable from '@/components/report/ReportDataTable';
 import ReportAnalysis from '@/components/report/ReportAnalysis';
-import { Axis } from '@/components/report/types';
+import { Axis, ReportData } from '@/components/report/types';
+import { savePerformanceMetric } from "@/app/actions/performance";
 
 const formatDimensionName = (name: string) => {
   if (!name) return name;
@@ -42,6 +43,16 @@ type StrategicReportClientProps = {
   initialData: any;
 };
 
+const defaultReportData: ReportData = {
+  generalAnalysis: "",
+  generalRecommendations: "",
+  dimensionAnalyses: {},
+  dimensionRecommendations: {},
+  goalAnalyses: {},
+  indicatorAnalyses: {},
+  indicatorRecommendations: {},
+};
+
 export default function StrategicReportClient({ charityName, year, quarter, initialData }: StrategicReportClientProps) {
   const [axes] = useState<Axis[]>(() => {
     if (!initialData) return DEFAULT_AXES;
@@ -74,21 +85,57 @@ export default function StrategicReportClient({ charityName, year, quarter, init
     }));
   });
 
+  const [reportData, setReportData] = useState<ReportData>(() => {
+    if (initialData && typeof initialData === "object" && "reports" in initialData) {
+      const reports = (initialData as any).reports || {};
+      return reports[quarter] || defaultReportData;
+    }
+    return defaultReportData;
+  });
+
+  const [isSaving, setIsSaving] = useState(false);
+
+  const handleSaveReport = async () => {
+    setIsSaving(true);
+    try {
+      const newData = {
+        ...(typeof initialData === "object" ? initialData : { axes }),
+        axes,
+        reports: {
+          ...(initialData?.reports || {}),
+          [quarter]: reportData
+        }
+      };
+      
+      const res = await savePerformanceMetric(charityName, year, newData);
+      if (res?.success) {
+        alert("تم حفظ التقرير بنجاح!");
+      } else {
+        alert("حدث خطأ أثناء الحفظ: " + (res?.error || "خطأ غير معروف"));
+      }
+    } catch (error) {
+      console.error(error);
+      alert("حدث خطأ أثناء الاتصال بالخادم.");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   return (
     <div className="bg-slate-50 min-h-screen p-6 font-sans print:m-0 print:p-0" dir="rtl">
       <div className="max-w-[1400px] mx-auto space-y-6 print:space-y-4 print:p-0 print:m-0 print:max-w-full print:w-full">
-        <ReportHeader charityName={charityName} year={year} quarter={quarter} />
+        <ReportHeader charityName={charityName} year={year} quarter={quarter} onSave={handleSaveReport} isSaving={isSaving} />
         <ReportSummary axes={axes} quarter={quarter} year={year} />
-        <ReportDimensionsChart axes={axes} quarter={quarter} />
+        <ReportDimensionsChart axes={axes} quarter={quarter} reportData={reportData} setReportData={setReportData} />
         
         <div className="mt-8">
           <h2 className="text-2xl font-bold text-slate-800 mb-6 print:text-xl">تفاصيل الأداء الاستراتيجي</h2>
           {axes.map(axis => (
-            <ReportDataTable key={axis.id} axis={axis} quarter={quarter} />
+            <ReportDataTable key={axis.id} axis={axis} quarter={quarter} reportData={reportData} setReportData={setReportData} />
           ))}
         </div>
 
-        <ReportAnalysis />
+        <ReportAnalysis reportData={reportData} setReportData={setReportData} />
       </div>
 
       <style dangerouslySetInnerHTML={{__html: `

@@ -1,10 +1,24 @@
 "use client";
 
-import React, { useState } from 'react';
+import React from 'react';
+import { ReportData } from './types';
 
-export default function ReportAnalysis() {
-  const [analysis, setAnalysis] = useState("");
-  const [recommendations, setRecommendations] = useState("");
+type ReportAnalysisProps = {
+  reportData: ReportData;
+  setReportData: React.Dispatch<React.SetStateAction<ReportData>>;
+};
+
+export default function ReportAnalysis({ reportData, setReportData }: ReportAnalysisProps) {
+  const analysis = reportData.generalAnalysis || "";
+  const recommendations = reportData.generalRecommendations || "";
+
+  const setAnalysis = (val: string) => {
+    setReportData(prev => ({ ...prev, generalAnalysis: val }));
+  };
+
+  const setRecommendations = (val: string) => {
+    setReportData(prev => ({ ...prev, generalRecommendations: val }));
+  };
 
   const parsePoints = (text: string) => {
     if (!text) return [];

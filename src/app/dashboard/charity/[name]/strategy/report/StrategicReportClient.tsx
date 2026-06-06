@@ -93,13 +93,39 @@ export default function StrategicReportClient({ charityName, year, quarter, init
 
       <style dangerouslySetInnerHTML={{__html: `
         @media print {
+          /* Hide sidebar, header controls, print buttons, and other interactive elements */
+          aside,
+          .lg\\:hidden,
+          .print\\:hidden,
+          button {
+            display: none !important;
+          }
+
+          /* Reset heights and overflow properties to enable multi-page document printing */
+          html, body, main, [class*="h-screen"], [class*="overflow-"] {
+            height: auto !important;
+            overflow: visible !important;
+            position: static !important;
+          }
+
           body {
             background-color: white !important;
             print-color-adjust: exact;
             -webkit-print-color-adjust: exact;
+            padding: 0 !important;
+            margin: 0 !important;
           }
-          .print\\:hidden {
-            display: none !important;
+
+          main {
+            padding: 0 !important;
+            margin: 0 !important;
+            width: 100% !important;
+          }
+
+          /* Prevent elements like cards from breaking awkwardly between pages */
+          .print\\:break-inside-avoid {
+            page-break-inside: avoid !important;
+            break-inside: avoid !important;
           }
         }
       `}} />

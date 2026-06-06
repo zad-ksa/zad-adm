@@ -47,7 +47,7 @@ export default function ReportDataTable({ axis, quarter }: ReportDataTableProps)
           const goalBg = getStatusBgColor(goalPerf, goalPostponed, true);
 
           return (
-            <div key={goal.id} className="relative w-full print:break-before-page bg-white print:pt-8">
+            <div key={goal.id} className="relative w-full print:break-before-page bg-white print:pt-8 print:px-12">
               
               {/* Image-like Header */}
               <div className="flex items-stretch justify-between gap-3 mb-2">

@@ -148,7 +148,7 @@ export default function ReportDimensionsChart({ axes, quarter }: ReportDimension
           ];
 
           return (
-            <div key={`print-${axis.id}`} className="flex flex-col w-full h-[190mm] max-h-[190mm] break-after-page page-break-after-always bg-white mb-4 relative overflow-hidden font-sans box-border p-4 justify-between">
+            <div key={`print-${axis.id}`} className="flex flex-col w-full h-[190mm] max-h-[190mm] break-after-page page-break-after-always bg-white mb-4 relative overflow-hidden font-sans box-border py-4 px-12 justify-between">
               
               {/* Header Bar at the top (full width, replaces sidebar and previous header row) */}
               <div className="w-full bg-[#1ca386] h-16 rounded-xl flex items-center justify-between px-6 shadow-sm mb-6 shrink-0 relative overflow-hidden border-b-4 border-[#14876e]">
@@ -225,19 +225,19 @@ export default function ReportDimensionsChart({ axes, quarter }: ReportDimension
                 <thead>
                   <tr className="bg-[#1ca386] text-white">
                     {/* In RTL, the first th is rendered on the right. Image has Analysis on right, Recommendations on left */}
-                    <th className="p-2 border border-slate-300 w-1/2 text-lg font-bold">التحليل</th>
-                    <th className="p-2 border border-slate-300 w-1/2 text-lg font-bold">التوصيات</th>
+                    <th className="p-2.5 border border-slate-300 w-1/2 text-xl font-black">التحليل</th>
+                    <th className="p-2.5 border border-slate-300 w-1/2 text-xl font-black">التوصيات</th>
                   </tr>
                 </thead>
                 <tbody>
                   <tr className="bg-slate-100">
-                    <td className="p-3 border border-slate-300 align-top h-[120px]">
-                       <div className="whitespace-pre-wrap text-sm md:text-base font-bold text-slate-800 leading-[1.6] text-right">
+                    <td className="p-4 border border-slate-300 align-top h-[165px]">
+                       <div className="whitespace-pre-wrap text-base md:text-lg font-bold text-slate-800 leading-[1.7] text-right">
                          {analyses[axis.id] || "لا يوجد تحليل مسجل لهذا البعد."}
                        </div>
                     </td>
-                    <td className="p-3 border border-slate-300 align-top h-[120px]">
-                       <div className="whitespace-pre-wrap text-sm md:text-base font-bold text-slate-800 leading-[1.6] text-right">
+                    <td className="p-4 border border-slate-300 align-top h-[165px]">
+                       <div className="whitespace-pre-wrap text-base md:text-lg font-bold text-slate-800 leading-[1.7] text-right">
                          {recommendations[axis.id] || "لا توجد توصيات مسجلة لهذا البعد."}
                        </div>
                     </td>

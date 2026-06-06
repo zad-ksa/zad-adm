@@ -141,10 +141,10 @@ export default function ReportDimensionsChart({ axes, quarter }: ReportDimension
           const postponed = isAxisPostponed(axis);
           const classification = getReportClassification(perf, true, postponed);
 
-          // Data for Pie Chart
+          // Data for Pie/Doughnut Chart
           const chartData = [
             { name: 'Achieved', value: postponed ? 100 : perf, color: classification.hex },
-            { name: 'Remaining', value: postponed ? 0 : (100 - perf), color: '#b0b0b0' } // grey
+            { name: 'Remaining', value: postponed ? 0 : (100 - perf), color: '#e2e8f0' } // soft grey
           ];
 
           return (
@@ -185,34 +185,19 @@ export default function ReportDimensionsChart({ axes, quarter }: ReportDimension
                   </div>
                 </div>
 
-                {/* Pie Chart and Legend Box */}
-                <div className="flex-1 flex items-center justify-center border border-slate-200 mb-4 p-4 relative bg-white shadow-sm">
+                {/* Pie Chart and Legend Box (Side-by-side using Flexbox to avoid overlap and utilize space) */}
+                <div className="flex-1 flex flex-row items-center justify-center gap-16 border border-slate-200 mb-4 p-4 bg-white shadow-sm">
                   
-                  {/* Legend (Left side visually, meaning absolute left-8) */}
-                  <div className="absolute left-6 top-1/2 -translate-y-1/2 space-y-3">
-                    <div className="flex items-center gap-3">
-                      <div className="w-5 h-5 shadow-sm border border-slate-200" style={{ backgroundColor: classification.hex }}></div>
-                      <span className="text-base font-bold text-slate-800">الأداء المتحقق</span>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      {/* Gradient/Pattern for 'deficit' to match image grey box with cross pattern */}
-                      <div className="w-5 h-5 shadow-inner border border-slate-300 bg-[#b0b0b0] relative overflow-hidden flex items-center justify-center">
-                        <div className="w-[140%] h-[1px] bg-slate-400 rotate-45 absolute"></div>
-                        <div className="w-[140%] h-[1px] bg-slate-400 -rotate-45 absolute"></div>
-                      </div>
-                      <span className="text-base font-bold text-slate-800">عجز الأداء</span>
-                    </div>
-                  </div>
-
-                  {/* Pie Chart */}
-                  <div className="w-[240px] h-[240px] relative drop-shadow-lg flex items-center justify-center">
+                  {/* Pie/Doughnut Chart (First in DOM, rendered on the right in RTL) */}
+                  <div className="w-[280px] h-[280px] relative drop-shadow-lg flex items-center justify-center">
                     {mounted && (
-                      <PieChart width={240} height={240}>
+                      <PieChart width={280} height={280}>
                         <Pie
                           data={chartData}
                           cx="50%"
                           cy="50%"
-                          outerRadius={100}
+                          innerRadius={80}
+                          outerRadius={115}
                           dataKey="value"
                           stroke="#fff"
                           strokeWidth={3}
@@ -225,15 +210,20 @@ export default function ReportDimensionsChart({ axes, quarter }: ReportDimension
                       </PieChart>
                     )}
                     
-                    {/* Percentage Labels on Chart (Optional, similar to mockup) */}
-                    <div className="absolute top-2 right-4 text-2xl font-black drop-shadow-md" style={{ color: classification.hex }}>
-                       {postponed ? "100%" : `${perf}%`}
+                    {/* Centered Percentage Label inside the Doughnut Chart */}
+                    <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                      <span className="text-4xl font-black drop-shadow-sm animate-fade-in" style={{ color: classification.hex }}>
+                         {postponed ? "مؤجل" : `%${perf}`}
+                      </span>
                     </div>
-                    {(!postponed && perf < 100) && (
-                      <div className="absolute bottom-6 left-6 text-2xl font-black text-slate-400 drop-shadow-md">
-                         {100 - perf}%
-                      </div>
-                    )}
+                  </div>
+
+                  {/* Legend (Second in DOM, rendered on the left in RTL) */}
+                  <div className="space-y-3 min-w-[150px]">
+                    <div className="flex items-center gap-3">
+                      <div className="w-6 h-6 shadow-sm border border-slate-200 rounded-sm" style={{ backgroundColor: classification.hex }}></div>
+                      <span className="text-lg font-bold text-slate-800">نسبة تحقق البعد</span>
+                    </div>
                   </div>
                 </div>
 
@@ -248,12 +238,12 @@ export default function ReportDimensionsChart({ axes, quarter }: ReportDimension
                   </thead>
                   <tbody>
                     <tr className="bg-slate-100">
-                      <td className="p-3 border border-slate-300 align-top h-[110px]">
+                      <td className="p-3 border border-slate-300 align-top h-[140px]">
                          <div className="whitespace-pre-wrap text-sm md:text-base font-bold text-slate-800 leading-[1.6] text-right">
                            {analyses[axis.id] || "لا يوجد تحليل مسجل لهذا البعد."}
                          </div>
                       </td>
-                      <td className="p-3 border border-slate-300 align-top h-[110px]">
+                      <td className="p-3 border border-slate-300 align-top h-[140px]">
                          <div className="whitespace-pre-wrap text-sm md:text-base font-bold text-slate-800 leading-[1.6] text-right">
                            {recommendations[axis.id] || "لا توجد توصيات مسجلة لهذا البعد."}
                          </div>
@@ -280,3 +270,4 @@ export default function ReportDimensionsChart({ axes, quarter }: ReportDimension
     </>
   );
 }
+

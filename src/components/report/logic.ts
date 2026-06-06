@@ -65,16 +65,14 @@ export const calcAxisPerf = (axis: Axis, quarter: string) => {
 };
 
 export const calcCharityPerf = (axes: Axis[], quarter: string) => {
-  if (isCharityPostponed(axes)) return 100;
   const allAxes = axes.filter(a => a.goals.some(g => g.indicators.length > 0));
   if (allAxes.length === 0) return 0;
-  const total = allAxes.reduce((acc, axis) => {
-    if (isAxisPostponed(axis)) {
-      return acc + 100;
-    }
+  const activeAxes = allAxes.filter(a => !isAxisPostponed(a));
+  if (activeAxes.length === 0) return 0;
+  const total = activeAxes.reduce((acc, axis) => {
     return acc + calcAxisPerf(axis, quarter);
   }, 0);
-  return Math.round((total / allAxes.length) * 10) / 10;
+  return Math.round((total / activeAxes.length) * 10) / 10;
 };
 
 // Colors and badges logic based on user request:

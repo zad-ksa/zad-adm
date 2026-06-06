@@ -75,7 +75,7 @@ export default function StrategicReportClient({ charityName, year, quarter, init
   });
 
   return (
-    <div className="bg-slate-50 min-h-screen -m-6 p-6 font-sans print:m-0 print:p-0" dir="rtl">
+    <div className="bg-slate-50 min-h-screen p-6 font-sans print:m-0 print:p-0" dir="rtl">
       <div className="max-w-[1400px] mx-auto space-y-6 print:space-y-4 print:p-0 print:m-0">
         <ReportHeader charityName={charityName} year={year} quarter={quarter} />
         <ReportSummary axes={axes} quarter={quarter} year={year} />
@@ -94,7 +94,7 @@ export default function StrategicReportClient({ charityName, year, quarter, init
       <style dangerouslySetInnerHTML={{__html: `
         @page {
           size: landscape;
-          margin: 0;
+          margin: 8mm;
         }
         @media print {
           /* Hide sidebar, header controls, print buttons, and other interactive elements */

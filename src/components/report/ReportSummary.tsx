@@ -44,7 +44,6 @@ const GaugeChart = ({ totalPerf, isPostponed }: { totalPerf: number, isPostponed
         return (
           <g key={val} transform={`translate(150, 110) rotate(${angle - 180})`}>
             <line x1="95" y1="0" x2="108" y2="0" stroke="#999" strokeWidth="1" />
-            <text x="122" y="4" fontSize="11" fontWeight="bold" fill="#000" textAnchor="middle" transform={`rotate(${180 - angle}, 122, 0)`}>{val}</text>
           </g>
         );
       })}

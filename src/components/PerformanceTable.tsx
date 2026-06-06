@@ -409,16 +409,21 @@ export default function PerformanceTable({
   };
 
   const calcCharityPerf = () => {
-    if (isCharityPostponed()) return 0;
-    const activeAxes = axes.filter(a => a.goals.some(g => g.indicators.length > 0) && !isAxisPostponed(a));
-    if (activeAxes.length === 0) return 0;
-    const total = activeAxes.reduce((acc, axis) => acc + calcAxisPerf(axis), 0);
-    return Math.round((total / activeAxes.length) * 10) / 10;
+    if (isCharityPostponed()) return 100;
+    const allAxes = axes.filter(a => a.goals.some(g => g.indicators.length > 0));
+    if (allAxes.length === 0) return 0;
+    const total = allAxes.reduce((acc, axis) => {
+      if (isAxisPostponed(axis)) {
+        return acc + 100;
+      }
+      return acc + calcAxisPerf(axis);
+    }, 0);
+    return Math.round((total / allAxes.length) * 10) / 10;
   };
 
   // Color logic
   const getPerfColor = (val: number, hasDataValue = true, isPostponed = false) => {
-    if (isPostponed) return "bg-amber-500 text-white";
+    if (isPostponed) return "bg-blue-500 text-white";
     if (!hasDataValue) return "bg-slate-100 text-slate-500";
     if (val >= 90) return "bg-[#00b050] text-white"; // Excellent
     if (val >= 70) return "bg-[#92d050] text-white"; // Good
@@ -427,7 +432,7 @@ export default function PerformanceTable({
   };
 
   const getClassification = (val: number, hasDataValue = true, isPostponed = false) => {
-    if (isPostponed) return { text: "مؤجل", icon: "⏸️", color: "text-amber-500" };
+    if (isPostponed) return { text: "مؤجل", icon: "⏸️", color: "text-blue-500" };
     if (!hasDataValue) return { text: "لا توجد بيانات", icon: "⚪", color: "text-slate-400" };
     if (val >= 90) return { text: "ممتاز", icon: "✅", color: "text-[#00b050]" };
     if (val >= 70) return { text: "جيد", icon: "✓", color: "text-[#71a638]" };

@@ -76,7 +76,7 @@ export default function ReportSummary({ axes, quarter }: ReportSummaryProps) {
           return (
             <div key={axis.id} className="bg-white rounded-2xl border border-slate-100 p-5 shadow-sm flex flex-col justify-between">
               <div>
-                <span className="text-xs font-bold text-slate-400 block mb-1">محور الاستراتيجية</span>
+                <span className="text-xs font-bold text-slate-400 block mb-1">بُعد الاستراتيجية</span>
                 <h4 className="text-slate-800 font-bold text-md">{axis.name}</h4>
               </div>
               

@@ -19,7 +19,7 @@ export default function ReportDataTable({ axis, quarter }: ReportDataTableProps)
           <span className="w-8 h-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center text-sm">
             {axis.prefix || "غ"}
           </span>
-          محور: {axis.name}
+          {axis.name}
         </h3>
       </div>
       

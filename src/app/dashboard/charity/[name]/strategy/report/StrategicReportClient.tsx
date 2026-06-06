@@ -3,9 +3,17 @@
 import React, { useState } from 'react';
 import ReportHeader from '@/components/report/ReportHeader';
 import ReportSummary from '@/components/report/ReportSummary';
+import ReportDimensionsChart from '@/components/report/ReportDimensionsChart';
 import ReportDataTable from '@/components/report/ReportDataTable';
 import ReportAnalysis from '@/components/report/ReportAnalysis';
 import { Axis } from '@/components/report/types';
+
+const formatDimensionName = (name: string) => {
+  if (!name) return name;
+  if (name.includes("بعد") || name.includes("بُعد") || name.includes("البعد") || name.includes("البُعد")) return name;
+  if (name === "المالي") return "البُعد المالي";
+  return `بُعد ${name}`;
+};
 
 // Default Axes in case of empty data, matching the main performance logic
 const getAxisDefaultPrefix = (axisId: string) => {
@@ -20,11 +28,11 @@ const getAxisDefaultPrefix = (axisId: string) => {
 };
 
 const DEFAULT_AXES: Axis[] = [
-  { id: "1", name: "المستفيدين", goals: [], prefix: "س" },
-  { id: "2", name: "أصحاب المصلحة", goals: [], prefix: "ص" },
-  { id: "3", name: "المالي", goals: [], prefix: "م" },
-  { id: "4", name: "العمليات الداخلية", goals: [], prefix: "ل" },
-  { id: "5", name: "التعلم والنمو", goals: [], prefix: "ت" },
+  { id: "1", name: "بُعد المستفيدين", goals: [], prefix: "س" },
+  { id: "2", name: "بُعد أصحاب المصلحة", goals: [], prefix: "ص" },
+  { id: "3", name: "البُعد المالي", goals: [], prefix: "م" },
+  { id: "4", name: "بُعد العمليات الداخلية", goals: [], prefix: "ل" },
+  { id: "5", name: "بُعد التعلم والنمو", goals: [], prefix: "ت" },
 ];
 
 type StrategicReportClientProps = {
@@ -49,6 +57,7 @@ export default function StrategicReportClient({ charityName, year, quarter, init
 
     return loadedAxes.map(axis => ({
       ...axis,
+      name: formatDimensionName(axis.name),
       prefix: axis.prefix || getAxisDefaultPrefix(axis.id),
       goals: (axis.goals || []).map(goal => ({
         ...goal,
@@ -70,6 +79,7 @@ export default function StrategicReportClient({ charityName, year, quarter, init
       <div className="max-w-[1400px] mx-auto space-y-6 print:space-y-4 print:p-0 print:m-0">
         <ReportHeader charityName={charityName} year={year} quarter={quarter} />
         <ReportSummary axes={axes} quarter={quarter} />
+        <ReportDimensionsChart axes={axes} quarter={quarter} />
         
         <div className="mt-8">
           <h2 className="text-2xl font-bold text-slate-800 mb-6 print:text-xl">تفاصيل الأداء الاستراتيجي</h2>

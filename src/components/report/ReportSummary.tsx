@@ -18,34 +18,31 @@ export default function ReportSummary({ axes, quarter }: ReportSummaryProps) {
   const isPostponed = isCharityPostponed(axes);
   const overallClassification = getReportClassification(totalPerf, true, isPostponed);
 
-  // Data for the half-circle gauge chart
+  // Data for the circular progress chart
   const data = [
-    { name: 'Achieved', value: isPostponed ? 0 : totalPerf, color: overallClassification.hex },
-    { name: 'Remaining', value: isPostponed ? 100 : (100 - totalPerf), color: '#f3f4f6' } // bg-slate-100
+    { name: 'Achieved', value: isPostponed ? 100 : totalPerf, color: overallClassification.hex },
+    { name: 'Remaining', value: isPostponed ? 0 : (100 - totalPerf), color: '#f1f5f9' }
   ];
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8 mt-6">
-      {/* Overall Gauge Chart */}
-      <div className="bg-white rounded-2xl border border-slate-100 p-6 shadow-sm flex flex-col items-center justify-center relative">
-        <h3 className="text-slate-800 font-bold mb-4 text-lg">الأداء العام للربع</h3>
+      {/* Overall Performance Chart */}
+      <div className="bg-white rounded-2xl border border-slate-100 p-6 shadow-sm flex flex-col items-center justify-between min-h-[280px] print:shadow-none print:border-slate-200 print:break-inside-avoid">
+        <h3 className="text-slate-800 font-bold text-lg">الأداء العام للربع</h3>
         
-        <div className="w-full h-[200px] relative">
-          {mounted && (
+        <div className="relative w-40 h-40 my-3 flex items-center justify-center">
+          {mounted ? (
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie
                   data={data}
                   cx="50%"
-                  cy="100%" // Shift center down for half circle
-                  startAngle={180}
-                  endAngle={0}
-                  innerRadius={80}
-                  outerRadius={110}
+                  cy="50%"
+                  innerRadius={55}
+                  outerRadius={73}
                   paddingAngle={0}
                   dataKey="value"
                   stroke="none"
-                  cornerRadius={isPostponed ? 0 : 5}
                 >
                   {data.map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={entry.color} />
@@ -53,16 +50,22 @@ export default function ReportSummary({ axes, quarter }: ReportSummaryProps) {
                 </Pie>
               </PieChart>
             </ResponsiveContainer>
+          ) : (
+            <div className="w-24 h-24 rounded-full border-4 border-slate-100 border-t-primary animate-spin" />
           )}
           
-          <div className="absolute inset-0 flex flex-col items-center justify-end pb-2">
-            <span className="text-4xl font-black text-slate-800" style={{ color: overallClassification.hex }}>
+          <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+            <span className="text-3xl font-black text-slate-800 transition-colors duration-300" style={{ color: overallClassification.hex }}>
               {isPostponed ? "مؤجل" : `${totalPerf}%`}
             </span>
-            <span className={`mt-2 px-3 py-1 rounded-full text-xs font-bold border ${overallClassification.color}`}>
+            <span className={`mt-2 px-3 py-1 rounded-full text-[10px] font-bold border transition-all ${overallClassification.color}`}>
               {overallClassification.text}
             </span>
           </div>
+        </div>
+
+        <div className="text-xs text-slate-400 font-bold text-center mt-2 shrink-0">
+          معدل الإنجاز الكلي للجمعية
         </div>
       </div>
 

@@ -110,6 +110,7 @@ export default function StrategicReportClient({ charityName, year, quarter, init
             height: auto !important;
             overflow: visible !important;
             position: static !important;
+            direction: rtl !important;
           }
 
           body {

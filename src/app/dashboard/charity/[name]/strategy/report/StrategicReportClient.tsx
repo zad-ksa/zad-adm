@@ -1,0 +1,98 @@
+"use client";
+
+import React, { useState } from 'react';
+import ReportHeader from '@/components/report/ReportHeader';
+import ReportSummary from '@/components/report/ReportSummary';
+import ReportDataTable from '@/components/report/ReportDataTable';
+import ReportAnalysis from '@/components/report/ReportAnalysis';
+import { Axis } from '@/components/report/types';
+
+// Default Axes in case of empty data, matching the main performance logic
+const getAxisDefaultPrefix = (axisId: string) => {
+  switch (axisId) {
+    case "1": return "س";
+    case "2": return "ص";
+    case "3": return "م";
+    case "4": return "ل";
+    case "5": return "ت";
+    default: return "غ";
+  }
+};
+
+const DEFAULT_AXES: Axis[] = [
+  { id: "1", name: "المستفيدين", goals: [], prefix: "س" },
+  { id: "2", name: "أصحاب المصلحة", goals: [], prefix: "ص" },
+  { id: "3", name: "المالي", goals: [], prefix: "م" },
+  { id: "4", name: "العمليات الداخلية", goals: [], prefix: "ل" },
+  { id: "5", name: "التعلم والنمو", goals: [], prefix: "ت" },
+];
+
+type StrategicReportClientProps = {
+  charityName: string;
+  year: number;
+  quarter: string;
+  initialData: any;
+};
+
+export default function StrategicReportClient({ charityName, year, quarter, initialData }: StrategicReportClientProps) {
+  const [axes] = useState<Axis[]>(() => {
+    if (!initialData) return DEFAULT_AXES;
+
+    let loadedAxes: Axis[] = [];
+    if (Array.isArray(initialData)) {
+      loadedAxes = initialData;
+    } else if (initialData && typeof initialData === "object" && "axes" in initialData) {
+      loadedAxes = (initialData as any).axes || DEFAULT_AXES;
+    } else {
+      return DEFAULT_AXES;
+    }
+
+    return loadedAxes.map(axis => ({
+      ...axis,
+      prefix: axis.prefix || getAxisDefaultPrefix(axis.id),
+      goals: (axis.goals || []).map(goal => ({
+        ...goal,
+        indicators: (goal.indicators || []).map(ind => ({
+          ...ind,
+          postponed: ind.postponed || false,
+          annualTarget: ind.annualTarget !== undefined && ind.annualTarget !== null ? ind.annualTarget : "",
+          q1Achieved: ind.q1Achieved === undefined ? null : ind.q1Achieved,
+          q2Achieved: ind.q2Achieved === undefined ? null : ind.q2Achieved,
+          q3Achieved: ind.q3Achieved === undefined ? null : ind.q3Achieved,
+          q4Achieved: ind.q4Achieved === undefined ? null : ind.q4Achieved,
+        }))
+      }))
+    }));
+  });
+
+  return (
+    <div className="bg-slate-50 min-h-screen -m-6 p-6 font-sans" dir="rtl">
+      <div className="max-w-[1400px] mx-auto space-y-6 print:space-y-4 print:p-0 print:m-0">
+        <ReportHeader charityName={charityName} year={year} quarter={quarter} />
+        <ReportSummary axes={axes} quarter={quarter} />
+        
+        <div className="mt-8">
+          <h2 className="text-2xl font-bold text-slate-800 mb-6 print:text-xl">تفاصيل الأداء الاستراتيجي</h2>
+          {axes.map(axis => (
+            <ReportDataTable key={axis.id} axis={axis} quarter={quarter} />
+          ))}
+        </div>
+
+        <ReportAnalysis />
+      </div>
+
+      <style dangerouslySetInnerHTML={{__html: `
+        @media print {
+          body {
+            background-color: white !important;
+            print-color-adjust: exact;
+            -webkit-print-color-adjust: exact;
+          }
+          .print\\:hidden {
+            display: none !important;
+          }
+        }
+      `}} />
+    </div>
+  );
+}

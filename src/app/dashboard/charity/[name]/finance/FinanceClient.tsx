@@ -1,11 +1,11 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { 
-  Coins, 
-  Wallet, 
-  TrendingUp, 
-  CheckCircle2, 
+import {
+  Coins,
+  Wallet,
+  TrendingUp,
+  CheckCircle2,
   AlertCircle,
   Sparkles,
   ClipboardList,
@@ -77,7 +77,7 @@ export default function FinanceClient({
 
   // Calculations
   const remainingAmount = Math.max(0, currentFinance.contractValue - currentFinance.paidAmount);
-  const disbursementPercentage = currentFinance.contractValue > 0 
+  const disbursementPercentage = currentFinance.contractValue > 0
     ? Math.min(100, (currentFinance.paidAmount / currentFinance.contractValue) * 100)
     : 0;
 
@@ -182,13 +182,13 @@ export default function FinanceClient({
 
       {/* Main Grid Layout */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        
+
         {/* Left Side: Finance Cards, Progress & History Log (2/3 width) */}
         <div className="lg:col-span-2 space-y-8">
-          
+
           {/* Top Row Cards */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            
+
             {/* Card 1: قيمة العقد */}
             <div className="bg-white rounded-3xl p-6 border border-slate-100 shadow-sm flex items-center gap-5 hover:shadow-md transition-all duration-300 relative group overflow-hidden">
               <div className="absolute top-0 right-0 w-2 h-full bg-blue-500 group-hover:w-3 transition-all"></div>
@@ -254,23 +254,21 @@ export default function FinanceClient({
                 <Percent className="w-5 h-5 text-primary" />
                 نسبة الصرف الفعلي
               </h3>
-              <span className={`px-3 py-1.5 rounded-full text-xs font-black shadow-sm ${
-                disbursementPercentage >= 100 ? "bg-emerald-50 text-emerald-700 border border-emerald-100" :
+              <span className={`px-3 py-1.5 rounded-full text-xs font-black shadow-sm ${disbursementPercentage >= 100 ? "bg-emerald-50 text-emerald-700 border border-emerald-100" :
                 disbursementPercentage >= 50 ? "bg-blue-50 text-blue-700 border border-blue-100" :
-                "bg-amber-50 text-amber-700 border border-amber-100"
-              }`}>
+                  "bg-amber-50 text-amber-700 border border-amber-100"
+                }`}>
                 {disbursementPercentage.toFixed(1)}% مكتمل
               </span>
             </div>
 
             <div className="space-y-4">
               <div className="w-full bg-slate-50 border border-slate-100 h-6 rounded-full overflow-hidden p-1 shadow-inner">
-                <div 
-                  className={`h-full rounded-full transition-all duration-700 relative ${
-                    disbursementPercentage >= 100 ? "bg-emerald-500" :
+                <div
+                  className={`h-full rounded-full transition-all duration-700 relative ${disbursementPercentage >= 100 ? "bg-emerald-500" :
                     disbursementPercentage >= 50 ? "bg-blue-500" :
-                    "bg-amber-500"
-                  }`}
+                      "bg-amber-500"
+                    }`}
                   style={{ width: `${disbursementPercentage}%` }}
                 >
                   {disbursementPercentage > 8 && (
@@ -299,24 +297,22 @@ export default function FinanceClient({
               {logs.map((log) => (
                 <div key={log.id} className="relative group">
                   {/* Circle dot on the timeline */}
-                  <div className={`absolute -right-[31px] top-1.5 w-4 h-4 rounded-full border-4 border-white shadow-sm transition-transform group-hover:scale-125 ${
-                    log.type === "CONTRACT_UPDATE" ? "bg-blue-500" :
+                  <div className={`absolute -right-[31px] top-1.5 w-4 h-4 rounded-full border-4 border-white shadow-sm transition-transform group-hover:scale-125 ${log.type === "CONTRACT_UPDATE" ? "bg-blue-500" :
                     log.type === "PAID_UPDATE" ? "bg-purple-500" :
-                    log.type === "ADD_GRANT" ? "bg-emerald-500" :
-                    "bg-amber-500" // DISBURSEMENT
-                  }`}></div>
+                      log.type === "ADD_GRANT" ? "bg-emerald-500" :
+                        "bg-amber-500" // DISBURSEMENT
+                    }`}></div>
 
                   <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 bg-slate-50/50 p-4 rounded-2xl border border-slate-100/50 group-hover:border-slate-200 group-hover:bg-slate-50 transition-all">
                     <div className="space-y-2">
                       <div className="flex flex-wrap items-center gap-2">
                         {getLogTypeBadge(log.type)}
-                        <span className={`text-base font-black ${
-                          log.type === "ADD_GRANT" || log.type === "DISBURSEMENT" ? "text-emerald-600" : "text-slate-800"
-                        }`}>
+                        <span className={`text-base font-black ${log.type === "ADD_GRANT" || log.type === "DISBURSEMENT" ? "text-emerald-600" : "text-slate-800"
+                          }`}>
                           {log.type === "ADD_GRANT" || log.type === "DISBURSEMENT" ? "+" : "="} {log.amount.toLocaleString()} ريال
                         </span>
                       </div>
-                      
+
                       {log.notes && (
                         <p className="text-xs text-slate-500 font-semibold flex items-center gap-1.5 bg-white px-3 py-1.5 rounded-xl border border-slate-100/80 w-fit">
                           <MessageSquare className="w-3.5 h-3.5 text-slate-400" />
@@ -360,7 +356,7 @@ export default function FinanceClient({
               <Sparkles className="w-5 h-5 text-primary" />
               العمليات المالية السريعة
             </h3>
-            
+
             <div className="grid grid-cols-1 gap-3">
               {/* Button 1: إضافة منحة */}
               <button
@@ -369,17 +365,15 @@ export default function FinanceClient({
                   setAmount("");
                   setNotes("");
                 }}
-                className={`w-full py-3.5 px-4 rounded-2xl font-black text-sm flex items-center justify-between border transition-all duration-300 cursor-pointer ${
-                  activeAction === "ADD_GRANT"
-                    ? "bg-emerald-600 border-emerald-600 text-white shadow-lg shadow-emerald-100"
-                    : "bg-emerald-50/50 hover:bg-emerald-50 text-emerald-700 border-emerald-100"
-                }`}
+                className={`w-full py-3.5 px-4 rounded-2xl font-black text-sm flex items-center justify-between border transition-all duration-300 cursor-pointer ${activeAction === "ADD_GRANT"
+                  ? "bg-emerald-600 border-emerald-600 text-white shadow-lg shadow-emerald-100"
+                  : "bg-emerald-50/50 hover:bg-emerald-50 text-emerald-700 border-emerald-100"
+                  }`}
               >
                 <span className="flex items-center gap-2">
                   <HandCoins className="w-5 h-5" />
                   إضافة منحة جديدة
                 </span>
-                <span className="text-xs">➕</span>
               </button>
 
               {/* Button 2: صرف مالي */}
@@ -389,17 +383,15 @@ export default function FinanceClient({
                   setAmount("");
                   setNotes("");
                 }}
-                className={`w-full py-3.5 px-4 rounded-2xl font-black text-sm flex items-center justify-between border transition-all duration-300 cursor-pointer ${
-                  activeAction === "DISBURSEMENT"
-                    ? "bg-amber-600 border-amber-600 text-white shadow-lg shadow-amber-100"
-                    : "bg-amber-50/50 hover:bg-amber-50 text-amber-700 border-amber-100"
-                }`}
+                className={`w-full py-3.5 px-4 rounded-2xl font-black text-sm flex items-center justify-between border transition-all duration-300 cursor-pointer ${activeAction === "DISBURSEMENT"
+                  ? "bg-amber-600 border-amber-600 text-white shadow-lg shadow-amber-100"
+                  : "bg-amber-50/50 hover:bg-amber-50 text-amber-700 border-amber-100"
+                  }`}
               >
                 <span className="flex items-center gap-2">
                   <ArrowDownRight className="w-5 h-5" />
                   تسجيل صرف جديد (صرف)
                 </span>
-                <span className="text-xs">💸</span>
               </button>
 
               {/* Button 3: تحديث قيمة العقد */}
@@ -409,17 +401,15 @@ export default function FinanceClient({
                   setAmount("");
                   setNotes("");
                 }}
-                className={`w-full py-3.5 px-4 rounded-2xl font-black text-sm flex items-center justify-between border transition-all duration-300 cursor-pointer ${
-                  activeAction === "CONTRACT_UPDATE"
-                    ? "bg-blue-600 border-blue-600 text-white shadow-lg shadow-blue-100"
-                    : "bg-blue-50/50 hover:bg-blue-50 text-blue-700 border-blue-105"
-                }`}
+                className={`w-full py-3.5 px-4 rounded-2xl font-black text-sm flex items-center justify-between border transition-all duration-300 cursor-pointer ${activeAction === "CONTRACT_UPDATE"
+                  ? "bg-blue-600 border-blue-600 text-white shadow-lg shadow-blue-100"
+                  : "bg-blue-50/50 hover:bg-blue-50 text-blue-700 border-blue-105"
+                  }`}
               >
                 <span className="flex items-center gap-2">
                   <Coins className="w-5 h-5" />
                   تحديث قيمة العقد
                 </span>
-                <span className="text-xs">📝</span>
               </button>
 
               {/* Button 4: تحديث المدفوع */}
@@ -429,17 +419,15 @@ export default function FinanceClient({
                   setAmount("");
                   setNotes("");
                 }}
-                className={`w-full py-3.5 px-4 rounded-2xl font-black text-sm flex items-center justify-between border transition-all duration-300 cursor-pointer ${
-                  activeAction === "PAID_UPDATE"
-                    ? "bg-purple-600 border-purple-600 text-white shadow-lg shadow-purple-100"
-                    : "bg-purple-50/50 hover:bg-purple-50 text-purple-700 border-purple-105"
-                }`}
+                className={`w-full py-3.5 px-4 rounded-2xl font-black text-sm flex items-center justify-between border transition-all duration-300 cursor-pointer ${activeAction === "PAID_UPDATE"
+                  ? "bg-purple-600 border-purple-600 text-white shadow-lg shadow-purple-100"
+                  : "bg-purple-50/50 hover:bg-purple-50 text-purple-700 border-purple-105"
+                  }`}
               >
                 <span className="flex items-center gap-2">
                   <Wallet className="w-5 h-5" />
                   تحديث إجمالي المدفوع
                 </span>
-                <span className="text-xs">💵</span>
               </button>
             </div>
 

@@ -101,6 +101,7 @@ export default function PerformanceTable({
         indicators: (goal.indicators || []).map(ind => ({
           ...ind,
           postponed: ind.postponed || false,
+          annualTarget: ind.annualTarget !== undefined && ind.annualTarget !== null ? ind.annualTarget : "",
           q1Achieved: ind.q1Achieved === undefined ? null : ind.q1Achieved,
           q2Achieved: ind.q2Achieved === undefined ? null : ind.q2Achieved,
           q3Achieved: ind.q3Achieved === undefined ? null : ind.q3Achieved,
@@ -196,7 +197,14 @@ export default function PerformanceTable({
                 ...goal,
                 indicators: goal.indicators.map(ind => {
                   if (ind.id === indId) {
-                    return { ...ind, [field]: value };
+                    const updatedInd = { ...ind, [field]: value };
+                    
+                    // If we updated a quarterly target, automatically recalculate the annual target
+                    if (field === "q1Target" || field === "q2Target" || field === "q3Target" || field === "q4Target") {
+                      updatedInd.annualTarget = getAnnualTargetValue(updatedInd);
+                    }
+                    
+                    return updatedInd;
                   }
                   return ind;
                 })
@@ -353,6 +361,20 @@ export default function PerformanceTable({
   const getQuarterTarget = (ind: Indicator) => ind[`${quarter.toLowerCase()}Target` as keyof Indicator] as any;
   const getQuarterAchieved = (ind: Indicator) => ind[`${quarter.toLowerCase()}Achieved` as keyof Indicator] as any;
 
+  const isGoalPostponed = (goal: Goal) => {
+    return goal.indicators.length > 0 && goal.indicators.every(ind => ind.postponed);
+  };
+
+  const isAxisPostponed = (axis: Axis) => {
+    const goalsWithIndicators = axis.goals.filter(g => g.indicators.length > 0);
+    return goalsWithIndicators.length > 0 && goalsWithIndicators.every(g => isGoalPostponed(g));
+  };
+
+  const isCharityPostponed = () => {
+    const axesWithIndicators = axes.filter(a => a.goals.some(g => g.indicators.length > 0));
+    return axesWithIndicators.length > 0 && axesWithIndicators.every(a => isAxisPostponed(a));
+  };
+
   const calcPercentage = (achieved: any, target: any) => {
     if (!hasData(achieved) || !hasData(target)) return 0;
     const parsedAchieved = parseValueToNumber(achieved);
@@ -371,6 +393,7 @@ export default function PerformanceTable({
   };
 
   const calcGoalPerf = (goal: Goal) => {
+    if (isGoalPostponed(goal)) return 0;
     const activeIndicators = goal.indicators.filter(ind => !ind.postponed);
     if (activeIndicators.length === 0) return 0;
     const total = activeIndicators.reduce((acc, ind) => acc + calcIndicatorPerf(ind), 0);
@@ -378,17 +401,19 @@ export default function PerformanceTable({
   };
 
   const calcAxisPerf = (axis: Axis) => {
-    const goalsWithActiveIndicators = axis.goals.filter(g => g.indicators.some(ind => !ind.postponed));
-    if (goalsWithActiveIndicators.length === 0) return 0;
-    const total = goalsWithActiveIndicators.reduce((acc, goal) => acc + calcGoalPerf(goal), 0);
-    return Math.round((total / goalsWithActiveIndicators.length) * 10) / 10;
+    if (isAxisPostponed(axis)) return 0;
+    const activeGoals = axis.goals.filter(g => g.indicators.length > 0 && !isGoalPostponed(g));
+    if (activeGoals.length === 0) return 0;
+    const total = activeGoals.reduce((acc, goal) => acc + calcGoalPerf(goal), 0);
+    return Math.round((total / activeGoals.length) * 10) / 10;
   };
 
   const calcCharityPerf = () => {
-    const axesWithActiveData = axes.filter(a => a.goals.some(g => g.indicators.some(ind => !ind.postponed)));
-    if (axesWithActiveData.length === 0) return 0;
-    const total = axesWithActiveData.reduce((acc, axis) => acc + calcAxisPerf(axis), 0);
-    return Math.round((total / axesWithActiveData.length) * 10) / 10;
+    if (isCharityPostponed()) return 0;
+    const activeAxes = axes.filter(a => a.goals.some(g => g.indicators.length > 0) && !isAxisPostponed(a));
+    if (activeAxes.length === 0) return 0;
+    const total = activeAxes.reduce((acc, axis) => acc + calcAxisPerf(axis), 0);
+    return Math.round((total / activeAxes.length) * 10) / 10;
   };
 
   // Color logic
@@ -427,7 +452,7 @@ export default function PerformanceTable({
                 ...ind,
                 code: `${gCode}-${iIdx + 1}`,
                 status: getIndicatorStatus(ind),
-                annualTarget: getAnnualTargetValue(ind),
+                annualTarget: ind.annualTarget !== undefined && ind.annualTarget !== null && String(ind.annualTarget).trim() !== "" ? ind.annualTarget : getAnnualTargetValue(ind),
                 annualAchieved: getAnnualAchievedValue(ind) ?? 0
               }))
             };
@@ -482,8 +507,12 @@ export default function PerformanceTable({
         <div className="flex flex-wrap items-center gap-3">
           <div className="text-sm font-bold bg-slate-50 px-5 py-2.5 rounded-xl border border-slate-100 flex items-center gap-3">
             <span className="text-slate-500">أداء الجمعية:</span>
-            <span className={`px-2.5 py-1 rounded-lg font-black text-sm border ${getPerfColor(totalPerf)} border-transparent`}>
-              {totalPerf}%
+            <span className={`px-2.5 py-1 rounded-lg font-black text-sm border ${
+              isCharityPostponed()
+                ? getPerfColor(0, true, true)
+                : getPerfColor(totalPerf)
+            } border-transparent`}>
+              {isCharityPostponed() ? "مؤجل" : `${totalPerf}%`}
             </span>
           </div>
 
@@ -674,7 +703,7 @@ export default function PerformanceTable({
                             const isFirstInd = indIndex === 0;
                             const isFirstGoal = goalIndex === 0 && isFirstInd;
 
-                          const annualTarget = getAnnualTargetValue(ind);
+                          const annualTarget = ind.annualTarget !== undefined && ind.annualTarget !== null && String(ind.annualTarget).trim() !== "" ? ind.annualTarget : getAnnualTargetValue(ind);
                           const annualAchieved = getAnnualAchievedValue(ind);
                           const annualPerf = calcPercentage(annualAchieved, annualTarget);
                           const indPerf = calcIndicatorPerf(ind);
@@ -753,8 +782,14 @@ export default function PerformanceTable({
                               </td>
 
                               {/* Annual Metrics */}
-                              <td className="border-l border-slate-100 p-2 font-bold text-slate-700 bg-primary/5">
-                                {annualTarget}
+                              <td className="border-l border-slate-100 p-2 bg-primary/5 font-bold">
+                                <input 
+                                  type="text" 
+                                  value={annualTarget ?? ""} 
+                                  disabled={ind.postponed} 
+                                  onChange={e => updateIndicator(axis.id, goal.id, ind.id, "annualTarget", e.target.value)} 
+                                  className="w-16 text-center bg-white border border-slate-200 focus:border-primary outline-none rounded-md py-1 px-1 text-sm disabled:bg-transparent disabled:border-transparent disabled:text-slate-700 shadow-sm disabled:shadow-none transition-all font-bold" 
+                                />
                               </td>
                               <td className="border-l border-slate-100 p-2 font-bold text-slate-700 bg-primary/5">
                                 {annualAchieved ?? "-"}
@@ -780,20 +815,41 @@ export default function PerformanceTable({
                               </td>
 
                               {isFirstInd && (
-                                <td className={`border-l border-slate-100 p-3 font-black text-sm text-center ${getPerfColor(gPerf)}`} rowSpan={goalRowSpan}>
-                                  {gPerf}%
+                                <td 
+                                  className={`border-l border-slate-100 p-3 font-black text-sm text-center ${
+                                    isGoalPostponed(goal)
+                                      ? getPerfColor(0, true, true)
+                                      : getPerfColor(gPerf)
+                                  }`}
+                                  rowSpan={goalRowSpan}
+                                >
+                                  {isGoalPostponed(goal) ? "مؤجل" : `${gPerf}%`}
                                 </td>
                               )}
 
                               {isFirstGoal && (
-                                <td className={`border-l border-slate-100 p-3 font-black text-sm text-center ${getPerfColor(aPerf)}`} rowSpan={axisRowSpan}>
-                                  {aPerf}%
+                                <td 
+                                  className={`border-l border-slate-100 p-3 font-black text-sm text-center ${
+                                    isAxisPostponed(axis)
+                                      ? getPerfColor(0, true, true)
+                                      : getPerfColor(aPerf)
+                                  }`}
+                                  rowSpan={axisRowSpan}
+                                >
+                                  {isAxisPostponed(axis) ? "مؤجل" : `${aPerf}%`}
                                 </td>
                               )}
 
                               {isFirstGoal && axisIndex === 0 && (
-                                <td className={`border-l border-slate-100 p-3 font-black text-lg text-center ${getPerfColor(totalPerf)}`} rowSpan={axes.reduce((acc, a) => acc + Math.max(1, a.goals.reduce((gacc, g) => gacc + Math.max(1, g.indicators.length), 0)), 0)}>
-                                  {totalPerf}%
+                                <td 
+                                  className={`border-l border-slate-100 p-3 font-black text-lg text-center ${
+                                    isCharityPostponed()
+                                      ? getPerfColor(0, true, true)
+                                      : getPerfColor(totalPerf)
+                                  }`}
+                                  rowSpan={axes.reduce((acc, a) => acc + Math.max(1, a.goals.reduce((gacc, g) => gacc + Math.max(1, g.indicators.length), 0)), 0)}
+                                >
+                                  {isCharityPostponed() ? "مؤجل" : `${totalPerf}%`}
                                 </td>
                               )}
 

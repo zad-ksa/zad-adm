@@ -27,9 +27,9 @@ const GaugeChart = ({ totalPerf, isPostponed }: { totalPerf: number, isPostponed
   const greenLen = 0.1 * halfC; 
 
   return (
-    <svg viewBox="0 0 240 140" className="w-full max-w-[400px] mx-auto drop-shadow-md">
+    <svg viewBox="0 0 300 140" className="w-full max-w-[400px] mx-auto drop-shadow-md">
       {/* Colored bands */}
-      <g transform="translate(120, 110) rotate(-180)">
+      <g transform="translate(150, 110) rotate(-180)">
         {/* Red 0-69 */}
         <circle cx="0" cy="0" r="80" fill="none" stroke="#ff0000" strokeWidth="24" strokeDasharray={`${redLen} ${C}`} strokeDashoffset="0" />
         {/* Yellow 70-89 */}
@@ -42,7 +42,7 @@ const GaugeChart = ({ totalPerf, isPostponed }: { totalPerf: number, isPostponed
       {[0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100].map(val => {
         const angle = (val / 100) * 180;
         return (
-          <g key={val} transform={`translate(120, 110) rotate(${angle - 180})`}>
+          <g key={val} transform={`translate(150, 110) rotate(${angle - 180})`}>
             <line x1="95" y1="0" x2="108" y2="0" stroke="#999" strokeWidth="1" />
             <text x="122" y="4" fontSize="11" fontWeight="bold" fill="#000" textAnchor="middle" transform={`rotate(${180 - angle}, 122, 0)`}>{val}</text>
           </g>
@@ -51,14 +51,14 @@ const GaugeChart = ({ totalPerf, isPostponed }: { totalPerf: number, isPostponed
 
       {/* Needle */}
       {!isPostponed && (
-        <g transform={`translate(120, 110) rotate(${((totalPerf / 100) * 180) - 180})`}>
+        <g transform={`translate(150, 110) rotate(${((totalPerf / 100) * 180) - 180})`}>
           <polygon points="-8,-3 -8,3 85,0" fill="#222" />
           <circle cx="0" cy="0" r="6" fill="#222" />
         </g>
       )}
 
       {/* Percentage Text inside gauge */}
-      <text x="120" y="95" textAnchor="middle" fontSize="32" fontWeight="900" fill="#000" className="drop-shadow-sm">
+      <text x="150" y="95" textAnchor="middle" fontSize="32" fontWeight="900" fill="#000" className="drop-shadow-sm">
         {isPostponed ? "مؤجل" : `%${totalPerf}`}
       </text>
     </svg>

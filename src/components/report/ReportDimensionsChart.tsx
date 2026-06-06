@@ -148,91 +148,89 @@ export default function ReportDimensionsChart({ axes, quarter }: ReportDimension
           ];
 
           return (
-            <div key={`print-${axis.id}`} className="flex w-full min-h-[95vh] break-after-page page-break-after-always bg-white mb-4 relative overflow-hidden font-sans">
+            <div key={`print-${axis.id}`} className="flex w-full h-[200mm] max-h-[200mm] break-after-page page-break-after-always bg-white mb-4 relative overflow-hidden font-sans box-border">
               
               {/* Main Content (70% width, on the left in RTL but it comes first in DOM? No, in RTL, flex row makes the first element on the right. 
                   Wait, if we want Main Content on the left, it should be the SECOND element. 
                   Or we can just use absolute positioning or explicit flex order.
                   Let's use explicit order just to be safe. */}
-              <div className="w-[70%] p-10 flex flex-col justify-between order-2">
+              <div className="w-[70%] h-full p-6 flex flex-col justify-between order-2 box-border">
                 
                 {/* Header Row */}
-                <div className="relative mb-12 h-16">
+                <div className="relative mb-4 h-12">
                   {/* Decorative horizontal line behind the boxes */}
                   <div className="absolute top-1/2 left-0 right-0 h-[1px] bg-slate-300 -translate-y-1/2 z-0"></div>
                   
                   <div className="relative z-10 flex items-stretch justify-between h-full gap-4">
                     {/* Right: Icon (First in visual RTL, so flex item 1) */}
-                    <div className="w-16 flex items-end justify-center gap-1.5 bg-white px-2 py-2 shrink-0">
-                      <div className="w-2.5 h-6 bg-slate-400"></div>
-                      <div className="w-2.5 h-10 bg-slate-500"></div>
-                      <div className="w-2.5 h-4 bg-slate-400"></div>
-                      <div className="w-2.5 h-3 bg-slate-400"></div>
+                    <div className="w-12 flex items-end justify-center gap-1 bg-white px-1 py-1 shrink-0">
+                      <div className="w-2 h-4 bg-slate-400"></div>
+                      <div className="w-2 h-8 bg-slate-500"></div>
+                      <div className="w-2 h-3 bg-slate-400"></div>
+                      <div className="w-2 h-2 bg-slate-400"></div>
                     </div>
 
                     {/* Center: Title */}
                     <div className="flex-1 bg-white border border-slate-300 flex items-center justify-center shadow-sm">
-                      <span className="text-2xl font-bold text-slate-800">{axis.name}</span>
+                      <span className="text-xl font-bold text-slate-800">{axis.name}</span>
                     </div>
 
                     {/* Left: Percentage */}
                     <div 
-                      className="text-white flex items-center justify-center w-32 shadow-md border-b-[6px] shrink-0"
+                      className="text-white flex items-center justify-center w-24 shadow-md border-b-[4px] shrink-0"
                       style={{ backgroundColor: classification.hex, borderBottomColor: 'rgba(0,0,0,0.15)' }}
                     >
-                      <span className="text-4xl font-black">{postponed ? "مؤجل" : `%${perf}`}</span>
+                      <span className="text-2xl font-black">{postponed ? "مؤجل" : `%${perf}`}</span>
                     </div>
                   </div>
                 </div>
 
                 {/* Pie Chart and Legend Box */}
-                <div className="flex-1 flex items-center justify-center border border-slate-200 mb-8 p-6 relative bg-white shadow-sm">
+                <div className="flex-1 flex items-center justify-center border border-slate-200 mb-4 p-4 relative bg-white shadow-sm">
                   
                   {/* Legend (Left side visually, meaning absolute left-8) */}
-                  <div className="absolute left-10 top-1/2 -translate-y-1/2 space-y-6">
-                    <div className="flex items-center gap-4">
-                      <div className="w-6 h-6 shadow-sm border border-slate-200" style={{ backgroundColor: classification.hex }}></div>
-                      <span className="text-xl font-bold text-slate-800">الأداء المتحقق</span>
+                  <div className="absolute left-6 top-1/2 -translate-y-1/2 space-y-3">
+                    <div className="flex items-center gap-3">
+                      <div className="w-5 h-5 shadow-sm border border-slate-200" style={{ backgroundColor: classification.hex }}></div>
+                      <span className="text-base font-bold text-slate-800">الأداء المتحقق</span>
                     </div>
-                    <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-3">
                       {/* Gradient/Pattern for 'deficit' to match image grey box with cross pattern */}
-                      <div className="w-6 h-6 shadow-inner border border-slate-300 bg-[#b0b0b0] relative overflow-hidden flex items-center justify-center">
+                      <div className="w-5 h-5 shadow-inner border border-slate-300 bg-[#b0b0b0] relative overflow-hidden flex items-center justify-center">
                         <div className="w-[140%] h-[1px] bg-slate-400 rotate-45 absolute"></div>
                         <div className="w-[140%] h-[1px] bg-slate-400 -rotate-45 absolute"></div>
                       </div>
-                      <span className="text-xl font-bold text-slate-800">عجز الأداء</span>
+                      <span className="text-base font-bold text-slate-800">عجز الأداء</span>
                     </div>
                   </div>
 
                   {/* Pie Chart */}
-                  <div className="w-[340px] h-[340px] relative drop-shadow-xl">
+                  <div className="w-[240px] h-[240px] relative drop-shadow-lg flex items-center justify-center">
                     {mounted && (
-                      <ResponsiveContainer width="100%" height="100%">
-                        <PieChart>
-                          <Pie
-                            data={chartData}
-                            cx="50%"
-                            cy="50%"
-                            outerRadius={140}
-                            dataKey="value"
-                            stroke="#fff"
-                            strokeWidth={3}
-                            isAnimationActive={false}
-                          >
-                            {chartData.map((entry, index) => (
-                              <Cell key={`cell-${index}`} fill={entry.color} />
-                            ))}
-                          </Pie>
-                        </PieChart>
-                      </ResponsiveContainer>
+                      <PieChart width={240} height={240}>
+                        <Pie
+                          data={chartData}
+                          cx="50%"
+                          cy="50%"
+                          outerRadius={100}
+                          dataKey="value"
+                          stroke="#fff"
+                          strokeWidth={3}
+                          isAnimationActive={false}
+                        >
+                          {chartData.map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={entry.color} />
+                          ))}
+                        </Pie>
+                      </PieChart>
                     )}
                     
                     {/* Percentage Labels on Chart (Optional, similar to mockup) */}
-                    <div className="absolute top-4 right-10 text-3xl font-black drop-shadow-md" style={{ color: classification.hex }}>
+                    <div className="absolute top-2 right-4 text-2xl font-black drop-shadow-md" style={{ color: classification.hex }}>
                        {postponed ? "100%" : `${perf}%`}
                     </div>
                     {(!postponed && perf < 100) && (
-                      <div className="absolute bottom-8 left-16 text-3xl font-black text-slate-400 drop-shadow-md">
+                      <div className="absolute bottom-6 left-6 text-2xl font-black text-slate-400 drop-shadow-md">
                          {100 - perf}%
                       </div>
                     )}
@@ -240,23 +238,23 @@ export default function ReportDimensionsChart({ axes, quarter }: ReportDimension
                 </div>
 
                 {/* Analysis Table */}
-                <table className="w-full border-collapse border border-slate-300 text-center shadow-sm mt-auto">
+                <table className="w-full border-collapse border border-slate-300 text-center shadow-sm">
                   <thead>
                     <tr className="bg-[#1ca386] text-white">
                       {/* In RTL, the first th is rendered on the right. Image has Analysis on right, Recommendations on left */}
-                      <th className="p-4 border border-slate-300 w-1/2 text-2xl font-bold">التحليل</th>
-                      <th className="p-4 border border-slate-300 w-1/2 text-2xl font-bold">التوصيات</th>
+                      <th className="p-2 border border-slate-300 w-1/2 text-lg font-bold">التحليل</th>
+                      <th className="p-2 border border-slate-300 w-1/2 text-lg font-bold">التوصيات</th>
                     </tr>
                   </thead>
                   <tbody>
                     <tr className="bg-slate-100">
-                      <td className="p-6 border border-slate-300 align-top h-48">
-                         <div className="whitespace-pre-wrap text-xl font-bold text-slate-800 leading-[1.8] text-right">
+                      <td className="p-3 border border-slate-300 align-top h-[110px]">
+                         <div className="whitespace-pre-wrap text-sm md:text-base font-bold text-slate-800 leading-[1.6] text-right">
                            {analyses[axis.id] || "لا يوجد تحليل مسجل لهذا البعد."}
                          </div>
                       </td>
-                      <td className="p-6 border border-slate-300 align-top h-48">
-                         <div className="whitespace-pre-wrap text-xl font-bold text-slate-800 leading-[1.8] text-right">
+                      <td className="p-3 border border-slate-300 align-top h-[110px]">
+                         <div className="whitespace-pre-wrap text-sm md:text-base font-bold text-slate-800 leading-[1.6] text-right">
                            {recommendations[axis.id] || "لا توجد توصيات مسجلة لهذا البعد."}
                          </div>
                       </td>
@@ -266,8 +264,8 @@ export default function ReportDimensionsChart({ axes, quarter }: ReportDimension
               </div>
 
               {/* Right Sidebar (30% width, on the right in RTL, so order-1) */}
-              <div className="w-[30%] bg-[#1ca386] flex items-center justify-center p-8 shrink-0 relative overflow-hidden order-1">
-                <h2 className="text-white text-[3.5rem] font-black text-center leading-[1.3] drop-shadow-lg relative z-10 tracking-tight">
+              <div className="w-[30%] bg-[#1ca386] flex items-center justify-center p-6 shrink-0 relative overflow-hidden order-1 box-border">
+                <h2 className="text-white text-[2.2rem] font-black text-center leading-[1.3] drop-shadow-lg relative z-10 tracking-tight">
                   الأداء على<br/>مستوى<br/>الأبعاد
                 </h2>
                 {/* Decorative background shapes mimicking presentation slide template */}

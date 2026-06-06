@@ -148,7 +148,7 @@ export default function ReportDimensionsChart({ axes, quarter }: ReportDimension
           ];
 
           return (
-            <div key={`print-${axis.id}`} className="flex flex-col w-full h-[200mm] max-h-[200mm] break-after-page page-break-after-always bg-white mb-4 relative overflow-hidden font-sans box-border p-6 justify-between">
+            <div key={`print-${axis.id}`} className="flex flex-col w-full h-[190mm] max-h-[190mm] break-after-page page-break-after-always bg-white mb-4 relative overflow-hidden font-sans box-border p-4 justify-between">
               
               {/* Header Bar at the top (full width, replaces sidebar and previous header row) */}
               <div className="w-full bg-[#1ca386] h-16 rounded-xl flex items-center justify-between px-6 shadow-sm mb-6 shrink-0 relative overflow-hidden border-b-4 border-[#14876e]">
@@ -182,15 +182,15 @@ export default function ReportDimensionsChart({ axes, quarter }: ReportDimension
               <div className="flex-1 flex flex-row items-center justify-center gap-24 border border-slate-200 mb-6 p-6 bg-white shadow-sm rounded-xl">
                 
                 {/* Pie/Doughnut Chart (First in DOM, rendered on the right in RTL) */}
-                <div className="w-[280px] h-[280px] relative drop-shadow-lg flex items-center justify-center">
+                <div className="w-[260px] h-[260px] relative drop-shadow-lg flex items-center justify-center">
                   {mounted && (
-                    <PieChart width={280} height={280}>
+                    <PieChart width={260} height={260}>
                       <Pie
                         data={chartData}
                         cx="50%"
                         cy="50%"
-                        innerRadius={80}
-                        outerRadius={115}
+                        innerRadius={70}
+                        outerRadius={105}
                         dataKey="value"
                         stroke="#fff"
                         strokeWidth={3}
@@ -231,12 +231,12 @@ export default function ReportDimensionsChart({ axes, quarter }: ReportDimension
                 </thead>
                 <tbody>
                   <tr className="bg-slate-100">
-                    <td className="p-3 border border-slate-300 align-top h-[150px]">
+                    <td className="p-3 border border-slate-300 align-top h-[120px]">
                        <div className="whitespace-pre-wrap text-sm md:text-base font-bold text-slate-800 leading-[1.6] text-right">
                          {analyses[axis.id] || "لا يوجد تحليل مسجل لهذا البعد."}
                        </div>
                     </td>
-                    <td className="p-3 border border-slate-300 align-top h-[150px]">
+                    <td className="p-3 border border-slate-300 align-top h-[120px]">
                        <div className="whitespace-pre-wrap text-sm md:text-base font-bold text-slate-800 leading-[1.6] text-right">
                          {recommendations[axis.id] || "لا توجد توصيات مسجلة لهذا البعد."}
                        </div>

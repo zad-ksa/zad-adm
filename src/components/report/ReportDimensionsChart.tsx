@@ -148,120 +148,102 @@ export default function ReportDimensionsChart({ axes, quarter }: ReportDimension
           ];
 
           return (
-            <div key={`print-${axis.id}`} className="flex w-full h-[200mm] max-h-[200mm] break-after-page page-break-after-always bg-white mb-4 relative overflow-hidden font-sans box-border">
+            <div key={`print-${axis.id}`} className="flex flex-col w-full h-[200mm] max-h-[200mm] break-after-page page-break-after-always bg-white mb-4 relative overflow-hidden font-sans box-border p-6 justify-between">
               
-              {/* Main Content (70% width, on the left in RTL but it comes first in DOM? No, in RTL, flex row makes the first element on the right. 
-                  Wait, if we want Main Content on the left, it should be the SECOND element. 
-                  Or we can just use absolute positioning or explicit flex order.
-                  Let's use explicit order just to be safe. */}
-              <div className="w-[70%] h-full p-6 flex flex-col justify-between order-2 box-border">
+              {/* Header Bar at the top (full width, replaces sidebar and previous header row) */}
+              <div className="w-full bg-[#1ca386] h-16 rounded-xl flex items-center justify-between px-6 shadow-sm mb-6 shrink-0 relative overflow-hidden border-b-4 border-[#14876e]">
+                {/* Right side: Icon + Category title */}
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-lg bg-white/15 flex items-center justify-center text-white font-bold text-lg">
+                    {axis.prefix || "غ"}
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="text-white/70 text-[10px] font-bold">التقرير الاستراتيجي</span>
+                    <span className="text-white text-lg font-black leading-none">الأداء على مستوى الأبعاد</span>
+                  </div>
+                </div>
+
+                {/* Center: Dimension Name */}
+                <div className="bg-white/10 px-6 py-2 rounded-lg border border-white/20">
+                  <span className="text-white text-xl font-black">{axis.name}</span>
+                </div>
+
+                {/* Left side: Percentage value */}
+                <div 
+                  className="bg-white text-slate-800 shadow-md font-black text-2xl px-6 py-2 rounded-lg flex items-center justify-center min-w-[100px]"
+                >
+                  <span style={{ color: classification.hex }}>
+                    {postponed ? "مؤجل" : `%${perf}`}
+                  </span>
+                </div>
+              </div>
+
+              {/* Pie Chart and Legend Box (Side-by-side using Flexbox to avoid overlap and utilize space) */}
+              <div className="flex-1 flex flex-row items-center justify-center gap-24 border border-slate-200 mb-6 p-6 bg-white shadow-sm rounded-xl">
                 
-                {/* Header Row */}
-                <div className="relative mb-4 h-12">
-                  {/* Decorative horizontal line behind the boxes */}
-                  <div className="absolute top-1/2 left-0 right-0 h-[1px] bg-slate-300 -translate-y-1/2 z-0"></div>
+                {/* Pie/Doughnut Chart (First in DOM, rendered on the right in RTL) */}
+                <div className="w-[280px] h-[280px] relative drop-shadow-lg flex items-center justify-center">
+                  {mounted && (
+                    <PieChart width={280} height={280}>
+                      <Pie
+                        data={chartData}
+                        cx="50%"
+                        cy="50%"
+                        innerRadius={80}
+                        outerRadius={115}
+                        dataKey="value"
+                        stroke="#fff"
+                        strokeWidth={3}
+                        isAnimationActive={false}
+                      >
+                        {chartData.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={entry.color} />
+                        ))}
+                      </Pie>
+                    </PieChart>
+                  )}
                   
-                  <div className="relative z-10 flex items-stretch justify-between h-full gap-4">
-                    {/* Right: Icon (First in visual RTL, so flex item 1) */}
-                    <div className="w-12 flex items-end justify-center gap-1 bg-white px-1 py-1 shrink-0">
-                      <div className="w-2 h-4 bg-slate-400"></div>
-                      <div className="w-2 h-8 bg-slate-500"></div>
-                      <div className="w-2 h-3 bg-slate-400"></div>
-                      <div className="w-2 h-2 bg-slate-400"></div>
-                    </div>
-
-                    {/* Center: Title */}
-                    <div className="flex-1 bg-white border border-slate-300 flex items-center justify-center shadow-sm">
-                      <span className="text-xl font-bold text-slate-800">{axis.name}</span>
-                    </div>
-
-                    {/* Left: Percentage */}
-                    <div 
-                      className="text-white flex items-center justify-center w-24 shadow-md border-b-[4px] shrink-0"
-                      style={{ backgroundColor: classification.hex, borderBottomColor: 'rgba(0,0,0,0.15)' }}
-                    >
-                      <span className="text-2xl font-black">{postponed ? "مؤجل" : `%${perf}`}</span>
-                    </div>
+                  {/* Centered Percentage Label inside the Doughnut Chart */}
+                  <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                    <span className="text-4xl font-black drop-shadow-sm animate-fade-in" style={{ color: classification.hex }}>
+                       {postponed ? "مؤجل" : `%${perf}`}
+                    </span>
                   </div>
                 </div>
 
-                {/* Pie Chart and Legend Box (Side-by-side using Flexbox to avoid overlap and utilize space) */}
-                <div className="flex-1 flex flex-row items-center justify-center gap-16 border border-slate-200 mb-4 p-4 bg-white shadow-sm">
-                  
-                  {/* Pie/Doughnut Chart (First in DOM, rendered on the right in RTL) */}
-                  <div className="w-[280px] h-[280px] relative drop-shadow-lg flex items-center justify-center">
-                    {mounted && (
-                      <PieChart width={280} height={280}>
-                        <Pie
-                          data={chartData}
-                          cx="50%"
-                          cy="50%"
-                          innerRadius={80}
-                          outerRadius={115}
-                          dataKey="value"
-                          stroke="#fff"
-                          strokeWidth={3}
-                          isAnimationActive={false}
-                        >
-                          {chartData.map((entry, index) => (
-                            <Cell key={`cell-${index}`} fill={entry.color} />
-                          ))}
-                        </Pie>
-                      </PieChart>
-                    )}
-                    
-                    {/* Centered Percentage Label inside the Doughnut Chart */}
-                    <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                      <span className="text-4xl font-black drop-shadow-sm animate-fade-in" style={{ color: classification.hex }}>
-                         {postponed ? "مؤجل" : `%${perf}`}
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Legend (Second in DOM, rendered on the left in RTL) */}
-                  <div className="space-y-3 min-w-[150px]">
-                    <div className="flex items-center gap-3">
-                      <div className="w-6 h-6 shadow-sm border border-slate-200 rounded-sm" style={{ backgroundColor: classification.hex }}></div>
-                      <span className="text-lg font-bold text-slate-800">نسبة تحقق البعد</span>
-                    </div>
+                {/* Legend (Second in DOM, rendered on the left in RTL) */}
+                <div className="space-y-3 min-w-[200px] bg-slate-50 p-6 rounded-xl border border-slate-100 flex items-center justify-center">
+                  <div className="flex items-center gap-3">
+                    <div className="w-6 h-6 shadow-sm border border-slate-200 rounded-sm" style={{ backgroundColor: classification.hex }}></div>
+                    <span className="text-lg font-bold text-slate-800">نسبة تحقق البعد</span>
                   </div>
                 </div>
-
-                {/* Analysis Table */}
-                <table className="w-full border-collapse border border-slate-300 text-center shadow-sm">
-                  <thead>
-                    <tr className="bg-[#1ca386] text-white">
-                      {/* In RTL, the first th is rendered on the right. Image has Analysis on right, Recommendations on left */}
-                      <th className="p-2 border border-slate-300 w-1/2 text-lg font-bold">التحليل</th>
-                      <th className="p-2 border border-slate-300 w-1/2 text-lg font-bold">التوصيات</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr className="bg-slate-100">
-                      <td className="p-3 border border-slate-300 align-top h-[140px]">
-                         <div className="whitespace-pre-wrap text-sm md:text-base font-bold text-slate-800 leading-[1.6] text-right">
-                           {analyses[axis.id] || "لا يوجد تحليل مسجل لهذا البعد."}
-                         </div>
-                      </td>
-                      <td className="p-3 border border-slate-300 align-top h-[140px]">
-                         <div className="whitespace-pre-wrap text-sm md:text-base font-bold text-slate-800 leading-[1.6] text-right">
-                           {recommendations[axis.id] || "لا توجد توصيات مسجلة لهذا البعد."}
-                         </div>
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
               </div>
 
-              {/* Right Sidebar (30% width, on the right in RTL, so order-1) */}
-              <div className="w-[30%] bg-[#1ca386] flex items-center justify-center p-6 shrink-0 relative overflow-hidden order-1 box-border">
-                <h2 className="text-white text-[2.2rem] font-black text-center leading-[1.3] drop-shadow-lg relative z-10 tracking-tight">
-                  الأداء على<br/>مستوى<br/>الأبعاد
-                </h2>
-                {/* Decorative background shapes mimicking presentation slide template */}
-                <div className="absolute -top-20 -right-20 w-80 h-80 bg-white/10 rounded-full blur-2xl"></div>
-                <div className="absolute -bottom-20 -left-20 w-80 h-80 bg-black/10 rounded-full blur-2xl"></div>
-              </div>
+              {/* Analysis Table */}
+              <table className="w-full border-collapse border border-slate-300 text-center shadow-sm">
+                <thead>
+                  <tr className="bg-[#1ca386] text-white">
+                    {/* In RTL, the first th is rendered on the right. Image has Analysis on right, Recommendations on left */}
+                    <th className="p-2 border border-slate-300 w-1/2 text-lg font-bold">التحليل</th>
+                    <th className="p-2 border border-slate-300 w-1/2 text-lg font-bold">التوصيات</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr className="bg-slate-100">
+                    <td className="p-3 border border-slate-300 align-top h-[150px]">
+                       <div className="whitespace-pre-wrap text-sm md:text-base font-bold text-slate-800 leading-[1.6] text-right">
+                         {analyses[axis.id] || "لا يوجد تحليل مسجل لهذا البعد."}
+                       </div>
+                    </td>
+                    <td className="p-3 border border-slate-300 align-top h-[150px]">
+                       <div className="whitespace-pre-wrap text-sm md:text-base font-bold text-slate-800 leading-[1.6] text-right">
+                         {recommendations[axis.id] || "لا توجد توصيات مسجلة لهذا البعد."}
+                       </div>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
 
             </div>
           );

@@ -47,7 +47,7 @@ export default function ReportDataTable({ axis, quarter }: ReportDataTableProps)
           const goalBg = getStatusBgColor(goalPerf, goalPostponed, true);
 
           return (
-            <div key={goal.id} className="relative w-full print:break-before-page bg-white print:pt-8 print:px-12">
+            <div key={goal.id} className="relative w-full print:break-before-page bg-white print:pt-8 print:px-12 print:min-h-[209mm] print:flex print:flex-col">
               
               {/* Image-like Header */}
               <div className="flex items-stretch justify-between gap-3 mb-2">
@@ -146,8 +146,7 @@ export default function ReportDataTable({ axis, quarter }: ReportDataTableProps)
                   onChange={(e) => setGoalAnalyses(prev => ({ ...prev, [goal.id]: e.target.value }))}
                 />
                 
-                {/* Print view for goal analysis - Matches image exact red styling */}
-                <div className="hidden print:block whitespace-pre-wrap text-[#d32f2f] font-bold text-center text-lg leading-relaxed px-4 max-w-4xl mx-auto">
+                <div className="hidden print:flex flex-1 items-center justify-center text-[#d32f2f] font-bold text-center text-lg leading-relaxed px-4 max-w-4xl mx-auto">
                   {goalAnalyses[goal.id]}
                 </div>
               </div>

@@ -66,7 +66,7 @@ export default function ReportAnalysis() {
 
       {/* 1. General Analysis Divider/Cover Page */}
       <div className="hidden print:block" style={{ pageBreakBefore: 'always', breakBefore: 'page', pageBreakAfter: 'always', breakAfter: 'page' }}>
-        <div className="print:flex w-[100vw] h-[100vh] bg-white relative overflow-hidden font-sans box-border" dir="rtl">
+        <div className="print:flex w-full h-[209mm] max-h-[210mm] bg-white relative overflow-hidden font-sans box-border" dir="rtl">
           {/* Right Column (Title block - 35% width) */}
           <div className="w-[35%] h-full bg-[#fcfcfc] border-l border-slate-100 flex flex-col justify-center items-center relative overflow-hidden shrink-0">
             {/* Top gray block */}
@@ -188,7 +188,7 @@ export default function ReportAnalysis() {
 
       {/* 2. General Analysis Content Page */}
       <div className="hidden print:block" style={{ pageBreakBefore: 'always', breakBefore: 'page', pageBreakAfter: 'always', breakAfter: 'page' }}>
-        <div className="print:flex flex-col w-[100vw] h-[100vh] bg-white relative overflow-hidden font-sans box-border py-4 px-12 justify-between" dir="rtl">
+        <div className="print:flex flex-col w-full h-[209mm] max-h-[210mm] bg-white relative overflow-hidden font-sans box-border py-4 px-12 justify-between" dir="rtl">
           {/* Header Bar */}
           <div className="w-full bg-[#1ca386] h-16 rounded-xl flex items-center justify-between px-6 shadow-sm mb-6 shrink-0 relative overflow-hidden border-b-4 border-[#14876e]">
             <div className="flex items-center gap-3">
@@ -234,7 +234,7 @@ export default function ReportAnalysis() {
 
       {/* 3. General Recommendations Divider/Cover Page */}
       <div className="hidden print:block" style={{ pageBreakBefore: 'always', breakBefore: 'page', pageBreakAfter: 'always', breakAfter: 'page' }}>
-        <div className="print:flex w-[100vw] h-[100vh] bg-white relative overflow-hidden font-sans box-border" dir="rtl">
+        <div className="print:flex w-full h-[209mm] max-h-[210mm] bg-white relative overflow-hidden font-sans box-border" dir="rtl">
           {/* Right Column (Title block - 35% width) */}
           <div className="w-[35%] h-full bg-[#fcfcfc] border-l border-slate-100 flex flex-col justify-center items-center relative overflow-hidden shrink-0">
             {/* Top gray block */}
@@ -298,7 +298,7 @@ export default function ReportAnalysis() {
 
       {/* 4. General Recommendations Content Page */}
       <div className="hidden print:block" style={{ pageBreakBefore: 'always', breakBefore: 'page', pageBreakAfter: 'always', breakAfter: 'page' }}>
-        <div className="print:flex flex-col w-[100vw] h-[100vh] bg-white relative overflow-hidden font-sans box-border py-4 px-12 justify-between" dir="rtl">
+        <div className="print:flex flex-col w-full h-[209mm] max-h-[210mm] bg-white relative overflow-hidden font-sans box-border py-4 px-12 justify-between" dir="rtl">
           {/* Header Bar */}
           <div className="w-full bg-[#1ca386] h-16 rounded-xl flex items-center justify-between px-6 shadow-sm mb-6 shrink-0 relative overflow-hidden border-b-4 border-[#14876e]">
             <div className="flex items-center gap-3">

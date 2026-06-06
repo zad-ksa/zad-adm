@@ -94,7 +94,7 @@ export default function ReportAnalysis() {
           </div>
 
           {/* Left Column (5 Questions - 65% width) */}
-          <div className="w-[65%] h-full p-10 flex flex-col justify-center gap-4 relative">
+          <div className="w-[65%] h-full py-12 px-10 flex flex-col justify-between relative" dir="rtl">
             {/* Top-left decoration */}
             <div className="absolute top-0 left-0 w-24 h-16 bg-[#e0f7f3] rounded-bl-3xl flex items-center justify-center">
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#1ca386" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="w-6 h-6">
@@ -107,69 +107,69 @@ export default function ReportAnalysis() {
             </div>
 
             {/* Cards Stack */}
-            <div className="flex flex-col gap-3.5 mt-8">
+            <div className="flex-1 flex flex-col justify-between mt-12 mb-2">
               {/* Q1 */}
-              <div className="bg-white border border-slate-200 rounded-xl flex items-center h-[3.2rem] overflow-hidden shadow-[0_2px_8px_-3px_rgba(0,0,0,0.05)]">
-                <div className="w-[4.5rem] h-full flex items-center justify-center border-l border-slate-200 bg-[#fafafa] shrink-0">
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#1ca386" strokeWidth="2" className="w-7 h-7">
+              <div className="bg-white border border-[#1ca386]/30 rounded-2xl flex items-center h-[4.8rem] overflow-hidden shadow-[0_4px_12px_-4px_rgba(0,0,0,0.06)]">
+                <div className="w-[6rem] h-full flex items-center justify-center border-l border-slate-200 bg-[#fafafa] shrink-0">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#1ca386" strokeWidth="2" className="w-9 h-9">
                     <circle cx="12" cy="12" r="10" />
                     <circle cx="12" cy="12" r="6" />
                     <circle cx="12" cy="12" r="2" />
                   </svg>
                 </div>
-                <div className="flex-1 px-6 text-right text-[#114b79] font-black text-lg">
+                <div className="flex-1 px-8 text-right text-[#114b79] font-black text-xl">
                   هل حققنا المستهدف؟
                 </div>
               </div>
 
               {/* Q2 */}
-              <div className="bg-white border border-slate-200 rounded-xl flex items-center h-[3.2rem] overflow-hidden shadow-[0_2px_8px_-3px_rgba(0,0,0,0.05)]">
-                <div className="w-[4.5rem] h-full flex items-center justify-center border-l border-slate-200 bg-[#fafafa] shrink-0">
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#1ca386" strokeWidth="2" className="w-7 h-7">
+              <div className="bg-white border border-[#1ca386]/30 rounded-2xl flex items-center h-[4.8rem] overflow-hidden shadow-[0_4px_12px_-4px_rgba(0,0,0,0.06)]">
+                <div className="w-[6rem] h-full flex items-center justify-center border-l border-slate-200 bg-[#fafafa] shrink-0">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#1ca386" strokeWidth="2" className="w-9 h-9">
                     <rect x="2" y="3" width="20" height="13" rx="2" />
                     <line x1="12" y1="16" x2="12" y2="21" />
                     <line x1="8" y1="21" x2="16" y2="21" />
                     <path d="M7 10l3-3 3 3 4-4" />
                   </svg>
                 </div>
-                <div className="flex-1 px-6 text-right text-[#114b79] font-black text-lg">
+                <div className="flex-1 px-8 text-right text-[#114b79] font-black text-xl">
                   هل نحن نتقدم باتجاه المستهدف ؟
                 </div>
               </div>
 
               {/* Q3 */}
-              <div className="bg-white border border-slate-200 rounded-xl flex items-center h-[3.2rem] overflow-hidden shadow-[0_2px_8px_-3px_rgba(0,0,0,0.05)]">
-                <div className="w-[4.5rem] h-full flex items-center justify-center border-l border-slate-200 bg-[#fafafa] shrink-0">
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#1ca386" strokeWidth="2" className="w-7 h-7">
+              <div className="bg-white border border-[#1ca386]/30 rounded-2xl flex items-center h-[4.8rem] overflow-hidden shadow-[0_4px_12px_-4px_rgba(0,0,0,0.06)]">
+                <div className="w-[6rem] h-full flex items-center justify-center border-l border-slate-200 bg-[#fafafa] shrink-0">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#1ca386" strokeWidth="2" className="w-9 h-9">
                     <path d="M3 3v18h18" />
                     <rect x="7" y="10" width="4" height="7" rx="1" />
                     <rect x="14" y="6" width="4" height="11" rx="1" />
                     <circle cx="18" cy="18" r="2" />
                   </svg>
                 </div>
-                <div className="flex-1 px-6 text-right text-[#114b79] font-black text-lg">
+                <div className="flex-1 px-8 text-right text-[#114b79] font-black text-xl">
                   هل هناك أي قصور في تسلسل إجراءاتنا؟
                 </div>
               </div>
 
               {/* Q4 */}
-              <div className="bg-white border border-slate-200 rounded-xl flex items-center h-[3.2rem] overflow-hidden shadow-[0_2px_8px_-3px_rgba(0,0,0,0.05)]">
-                <div className="w-[4.5rem] h-full flex items-center justify-center border-l border-slate-200 bg-[#fafafa] shrink-0">
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#1ca386" strokeWidth="2" className="w-7 h-7">
+              <div className="bg-white border border-[#1ca386]/30 rounded-2xl flex items-center h-[4.8rem] overflow-hidden shadow-[0_4px_12px_-4px_rgba(0,0,0,0.06)]">
+                <div className="w-[6rem] h-full flex items-center justify-center border-l border-slate-200 bg-[#fafafa] shrink-0">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#1ca386" strokeWidth="2.2" className="w-9 h-9">
                     <path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z" />
                     <path d="M12 18h.01" />
                     <path d="M12 14c.01-.25.15-.5.35-.64l1.3-1.01a2.4 2.4 0 0 0 .85-1.85 2.5 2.5 0 0 0-5-1" />
                   </svg>
                 </div>
-                <div className="flex-1 px-6 text-right text-[#114b79] font-black text-lg">
+                <div className="flex-1 px-8 text-right text-[#114b79] font-black text-xl">
                   لماذا نحصل على هذه النتائج التي نحصل عليها؟
                 </div>
               </div>
 
               {/* Q5 */}
-              <div className="bg-white border border-slate-200 rounded-xl flex items-center h-[3.2rem] overflow-hidden shadow-[0_2px_8px_-3px_rgba(0,0,0,0.05)]">
-                <div className="w-[4.5rem] h-full flex items-center justify-center border-l border-slate-200 bg-[#fafafa] shrink-0">
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#1ca386" strokeWidth="2" className="w-7 h-7">
+              <div className="bg-white border border-[#1ca386]/30 rounded-2xl flex items-center h-[4.8rem] overflow-hidden shadow-[0_4px_12px_-4px_rgba(0,0,0,0.06)]">
+                <div className="w-[6rem] h-full flex items-center justify-center border-l border-slate-200 bg-[#fafafa] shrink-0">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#1ca386" strokeWidth="2" className="w-9 h-9">
                     <circle cx="18" cy="5" r="3" />
                     <circle cx="6" cy="12" r="3" />
                     <circle cx="18" cy="19" r="3" />
@@ -177,7 +177,7 @@ export default function ReportAnalysis() {
                     <line x1="15.41" y1="6.51" x2="8.59" y2="10.49" />
                   </svg>
                 </div>
-                <div className="flex-1 px-6 text-right text-[#114b79] font-black text-lg">
+                <div className="flex-1 px-8 text-right text-[#114b79] font-black text-xl">
                   ما الذي يمكن أن يحدث في المستقبل؟
                 </div>
               </div>
@@ -262,32 +262,32 @@ export default function ReportAnalysis() {
           </div>
 
           {/* Left Column (3 Step Cards - 65% width) */}
-          <div className="w-[65%] h-full p-10 flex flex-col justify-center relative">
+          <div className="w-[65%] h-full py-12 px-10 flex flex-col justify-between relative" dir="rtl">
             {/* Top-left decoration */}
             <div className="absolute top-0 left-0 w-24 h-16 bg-[#e0f7f3] rounded-bl-3xl"></div>
 
             {/* Steps Grid */}
-            <div className="grid grid-cols-3 gap-6 h-[70%] items-stretch px-4 mt-8">
+            <div className="grid grid-cols-3 gap-6 flex-1 items-stretch px-4 mt-12 mb-2">
               {/* Card 1 */}
-              <div className="bg-[#f0f5f3] rounded-2xl p-4 flex flex-col items-center gap-4 h-full border border-slate-100 shadow-[0_4px_12px_-5px_rgba(0,0,0,0.05)]">
-                <div className="text-4xl font-extrabold text-slate-800">1</div>
-                <div className="bg-[#1ca386] rounded-xl p-5 flex-1 w-full flex items-center justify-center text-center text-white font-black text-xl leading-relaxed shadow-sm">
+              <div className="bg-[#f0f5f3] rounded-2xl p-6 flex flex-col items-center gap-6 h-full border border-slate-100 shadow-[0_4px_12px_-5px_rgba(0,0,0,0.05)]">
+                <div className="text-5xl font-extrabold text-slate-800 mt-2">1</div>
+                <div className="bg-[#1ca386] rounded-2xl p-6 flex-1 w-full flex items-center justify-center text-center text-white font-black text-2xl leading-relaxed shadow-sm">
                   ما الذي سنحسنه؟
                 </div>
               </div>
 
               {/* Card 2 */}
-              <div className="bg-[#f0f5f3] rounded-2xl p-4 flex flex-col items-center gap-4 h-full border border-slate-100 shadow-[0_4px_12px_-5px_rgba(0,0,0,0.05)]">
-                <div className="text-4xl font-extrabold text-slate-800">2</div>
-                <div className="bg-[#1ca386] rounded-xl p-5 flex-1 w-full flex items-center justify-center text-center text-white font-black text-xl leading-relaxed shadow-sm">
+              <div className="bg-[#f0f5f3] rounded-2xl p-6 flex flex-col items-center gap-6 h-full border border-slate-100 shadow-[0_4px_12px_-5px_rgba(0,0,0,0.05)]">
+                <div className="text-5xl font-extrabold text-slate-800 mt-2">2</div>
+                <div className="bg-[#1ca386] rounded-2xl p-6 flex-1 w-full flex items-center justify-center text-center text-white font-black text-2xl leading-relaxed shadow-sm">
                   كم سنحسنه؟
                 </div>
               </div>
 
               {/* Card 3 */}
-              <div className="bg-[#f0f5f3] rounded-2xl p-4 flex flex-col items-center gap-4 h-full border border-slate-100 shadow-[0_4px_12px_-5px_rgba(0,0,0,0.05)]">
-                <div className="text-4xl font-extrabold text-slate-800">3</div>
-                <div className="bg-[#1ca386] rounded-xl p-5 flex-1 w-full flex items-center justify-center text-center text-white font-black text-xl leading-relaxed shadow-sm">
+              <div className="bg-[#f0f5f3] rounded-2xl p-6 flex flex-col items-center gap-6 h-full border border-slate-100 shadow-[0_4px_12px_-5px_rgba(0,0,0,0.05)]">
+                <div className="text-5xl font-extrabold text-slate-800 mt-2">3</div>
+                <div className="bg-[#1ca386] rounded-2xl p-6 flex-1 w-full flex items-center justify-center text-center text-white font-black text-2xl leading-relaxed shadow-sm">
                   كيف سنقوم بهذا التحسين؟
                 </div>
               </div>

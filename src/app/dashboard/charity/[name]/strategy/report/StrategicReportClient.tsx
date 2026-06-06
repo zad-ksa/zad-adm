@@ -78,7 +78,7 @@ export default function StrategicReportClient({ charityName, year, quarter, init
     <div className="bg-slate-50 min-h-screen -m-6 p-6 font-sans" dir="rtl">
       <div className="max-w-[1400px] mx-auto space-y-6 print:space-y-4 print:p-0 print:m-0">
         <ReportHeader charityName={charityName} year={year} quarter={quarter} />
-        <ReportSummary axes={axes} quarter={quarter} />
+        <ReportSummary axes={axes} quarter={quarter} year={year} />
         <ReportDimensionsChart axes={axes} quarter={quarter} />
         
         <div className="mt-8">

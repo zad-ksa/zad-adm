@@ -73,7 +73,7 @@ export default async function HexagonalSurveysPage({ params }: { params: Promise
       if (items && Array.isArray(items)) {
         items.forEach(item => {
           if (item.trim()) {
-            target.push({ text: item, author: res.authorizedName });
+            target.push({ text: item, author: res.authorizedTitle });
           }
         });
       }
@@ -253,9 +253,9 @@ export default async function HexagonalSurveysPage({ params }: { params: Promise
                         التحليل السداسي
                       </span>
                       <h3 className="font-bold text-slate-800 text-sm mt-3 group-hover:text-secondary transition-colors">
-                        <span className="text-slate-400 font-normal mr-1">بواسطة:</span> {res.authorizedName}
+                        <span className="text-slate-400 font-normal mr-1">بواسطة:</span> {res.authorizedTitle}
                       </h3>
-                      <p className="text-[10px] text-slate-500 font-medium bg-slate-50 inline-block px-2 py-0.5 rounded mt-1">{res.authorizedTitle}</p>
+
                     </div>
                   </div>
 

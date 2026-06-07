@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Header from "@/components/Header";
 import ProgressBar from "@/components/ProgressBar";
+import LinkClosedScreen from "@/components/LinkClosedScreen";
 import { 
   BookOpen, 
   Zap, 
@@ -230,13 +231,7 @@ export default function HexagonalSurvey() {
       <main className="flex-1 w-full max-w-4xl mx-auto px-4 py-8 sm:py-12 z-10 relative">
         {step === "welcome" && (
           invalidToken ? (
-            <div className="bg-white rounded-3xl p-12 text-center max-w-xl mx-auto shadow-xl border border-rose-100">
-              <div className="w-20 h-20 bg-rose-50 rounded-full flex items-center justify-center mx-auto mb-6">
-                <ShieldAlert className="w-10 h-10 text-rose-500" />
-              </div>
-              <h2 className="text-2xl font-bold text-slate-800 mb-2">الرابط غير متاح</h2>
-              <p className="text-slate-500 mb-8">عذراً، هذا الرابط قد تم إغلاقه أو أنه غير صالح. يرجى التواصل مع إدارة الجمعية للحصول على رابط جديد.</p>
-            </div>
+            <LinkClosedScreen />
           ) : (
           <div className="bg-white rounded-3xl shadow-xl border border-slate-100 p-8 sm:p-12 relative overflow-hidden">
             {/* Decorative blobs */}

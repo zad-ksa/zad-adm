@@ -7,6 +7,7 @@ import ProgressBar from "@/components/ProgressBar";
 import QuestionCard from "@/components/QuestionCard";
 import RegistrationForm, { RegistrationData } from "@/components/RegistrationForm";
 import WelcomeScreen from "@/components/WelcomeScreen";
+import LinkClosedScreen from "@/components/LinkClosedScreen";
 import { surveyData, Section, Question } from "@/data/surveyData";
 
 export default function Home() {
@@ -131,13 +132,7 @@ export default function Home() {
       <main className="flex-1 w-full max-w-4xl mx-auto px-4 py-8 sm:py-12 z-10 relative">
         {!hasAcceptedWelcome ? (
           invalidToken ? (
-            <div className="bg-white rounded-3xl p-12 text-center max-w-xl mx-auto shadow-xl border border-rose-100">
-              <div className="w-20 h-20 bg-rose-50 rounded-full flex items-center justify-center mx-auto mb-6">
-                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-rose-500"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
-              </div>
-              <h2 className="text-2xl font-bold text-slate-800 mb-2">الرابط غير متاح</h2>
-              <p className="text-slate-500 mb-8">عذراً، هذا الرابط قد تم إغلاقه أو أنه غير صالح. يرجى التواصل مع إدارة الجمعية للحصول على رابط جديد.</p>
-            </div>
+            <LinkClosedScreen />
           ) : (
             <WelcomeScreen onStart={() => setHasAcceptedWelcome(true)} />
           )

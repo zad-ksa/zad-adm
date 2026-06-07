@@ -14,6 +14,7 @@ export default function Home() {
   const [hasAcceptedWelcome, setHasAcceptedWelcome] = useState(false);
   const [registrationData, setRegistrationData] = useState<RegistrationData | null>(null);
   const [prefilledCharityName, setPrefilledCharityName] = useState<string | undefined>(undefined);
+  const [prefilledCharityLogo, setPrefilledCharityLogo] = useState<string | undefined>(undefined);
   const [invalidToken, setInvalidToken] = useState(false);
   const [currentSectionIndex, setCurrentSectionIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<string, string>>({});
@@ -32,6 +33,7 @@ export default function Home() {
         .then(data => {
           if (data && data.isActive && data.surveyType === "READINESS") {
             setPrefilledCharityName(data.charityName);
+            setPrefilledCharityLogo(data.logoUrl);
           } else if (data && !data.isActive) {
             setInvalidToken(true);
           }
@@ -140,7 +142,11 @@ export default function Home() {
             <WelcomeScreen onStart={() => setHasAcceptedWelcome(true)} />
           )
         ) : !registrationData ? (
-          <RegistrationForm onComplete={setRegistrationData} prefilledCharityName={prefilledCharityName} />
+          <RegistrationForm 
+            onComplete={setRegistrationData} 
+            prefilledCharityName={prefilledCharityName} 
+            prefilledCharityLogo={prefilledCharityLogo} 
+          />
         ) : (
           <>
             <ProgressBar current={currentSectionIndex + 1} total={surveyData.length} />

@@ -105,6 +105,7 @@ export default function HexagonalSurvey() {
     authorizedTitle: "",
   });
   const [prefilledCharityName, setPrefilledCharityName] = useState<string | undefined>(undefined);
+  const [prefilledCharityLogo, setPrefilledCharityLogo] = useState<string | undefined>(undefined);
   const [invalidToken, setInvalidToken] = useState(false);
 
   useEffect(() => {
@@ -117,6 +118,7 @@ export default function HexagonalSurvey() {
         .then(data => {
           if (data && data.isActive && data.surveyType === "HEXAGONAL") {
             setPrefilledCharityName(data.charityName);
+            setPrefilledCharityLogo(data.logoUrl);
             setRegistrationData(prev => ({ ...prev, charityName: data.charityName }));
           } else if (data && !data.isActive) {
             setInvalidToken(true);
@@ -586,9 +588,19 @@ export default function HexagonalSurvey() {
         {step === "register" && (
           <div className="glassmorphism rounded-3xl p-8 sm:p-12 w-full animate-in fade-in slide-in-from-bottom-4 duration-500 max-w-xl mx-auto shadow-xl bg-white border border-slate-100" dir="rtl">
             <div className="mb-8 text-center">
-              <div className="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-primary/20 text-primary">
-                <ClipboardList className="w-8 h-8" />
-              </div>
+              {prefilledCharityLogo ? (
+                <div className="w-24 h-24 bg-white rounded-2xl flex items-center justify-center mx-auto mb-4 border border-slate-100 shadow-md p-3 relative overflow-hidden transition-all duration-300 hover:scale-105">
+                  <img 
+                    src={prefilledCharityLogo} 
+                    alt={registrationData.charityName || "شعار الجمعية"} 
+                    className="w-full h-full object-contain"
+                  />
+                </div>
+              ) : (
+                <div className="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-primary/20 text-primary">
+                  <ClipboardList className="w-8 h-8" />
+                </div>
+              )}
               <h2 className="text-2xl sm:text-3xl font-bold text-slate-800 mb-2">بيانات الجمعية</h2>
               <p className="text-slate-500 text-sm">يرجى تعبئة البيانات التالية للبدء في استبيان التحليل السداسي</p>
             </div>

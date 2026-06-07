@@ -15,7 +15,14 @@ export async function GET(request: Request) {
       if (!link) {
         return NextResponse.json({ error: "الرابط غير موجود" }, { status: 404 });
       }
-      return NextResponse.json(link);
+      const charity = await prisma.charity.findUnique({
+        where: { name: link.charityName },
+        select: { logoUrl: true },
+      });
+      return NextResponse.json({
+        ...link,
+        logoUrl: charity?.logoUrl || null,
+      });
     }
 
     if (charityName && surveyType) {

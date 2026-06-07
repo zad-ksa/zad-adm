@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Building2, UserCircle, ClipboardList, ArrowLeft, ChevronDownIcon } from "@/components/Icons";
 
 export interface RegistrationData {
@@ -12,9 +12,10 @@ export interface RegistrationData {
 interface RegistrationFormProps {
   onComplete: (data: RegistrationData) => void;
   prefilledCharityName?: string;
+  prefilledCharityLogo?: string;
 }
 
-export default function RegistrationForm({ onComplete, prefilledCharityName }: RegistrationFormProps) {
+export default function RegistrationForm({ onComplete, prefilledCharityName, prefilledCharityLogo }: RegistrationFormProps) {
   const [formData, setFormData] = useState<RegistrationData>({
     charityName: prefilledCharityName || "",
     establishmentDate: "-",
@@ -22,6 +23,12 @@ export default function RegistrationForm({ onComplete, prefilledCharityName }: R
     authorizedName: "-",
     authorizedTitle: "",
   });
+
+  useEffect(() => {
+    if (prefilledCharityName) {
+      setFormData((prev) => ({ ...prev, charityName: prefilledCharityName }));
+    }
+  }, [prefilledCharityName]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
@@ -35,10 +42,20 @@ export default function RegistrationForm({ onComplete, prefilledCharityName }: R
   return (
     <div className="glassmorphism rounded-3xl p-8 sm:p-12 w-full animate-in fade-in slide-in-from-bottom-4 duration-500 max-w-xl mx-auto shadow-xl" dir="rtl">
       <div className="mb-8 text-center">
-        {/* Site-specific styled icon badge */}
-        <div className="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-primary/20 text-primary">
-          <ClipboardList className="w-8 h-8" />
-        </div>
+        {/* Professional representation of Charity Logo or Icon Badge */}
+        {prefilledCharityLogo ? (
+          <div className="w-24 h-24 bg-white rounded-2xl flex items-center justify-center mx-auto mb-4 border border-slate-100 shadow-md p-3 relative overflow-hidden transition-all duration-300 hover:scale-105">
+            <img 
+              src={prefilledCharityLogo} 
+              alt={formData.charityName || "شعار الجمعية"} 
+              className="w-full h-full object-contain"
+            />
+          </div>
+        ) : (
+          <div className="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-primary/20 text-primary">
+            <ClipboardList className="w-8 h-8" />
+          </div>
+        )}
         <h2 className="text-2xl sm:text-3xl font-bold text-slate-800 mb-2">بيانات الجمعية</h2>
         <p className="text-slate-500 text-sm">يرجى تعبئة البيانات التالية للبدء في استبيان الجاهزية</p>
       </div>

@@ -27,7 +27,8 @@ import {
   ShieldAlert,
   Key,
   Rocket,
-  HelpCircle
+  HelpCircle,
+  ChevronDownIcon
 } from "@/components/Icons";
 
 interface RegistrationData {

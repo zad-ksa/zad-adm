@@ -13,6 +13,8 @@ export default function Home() {
   const router = useRouter();
   const [hasAcceptedWelcome, setHasAcceptedWelcome] = useState(false);
   const [registrationData, setRegistrationData] = useState<RegistrationData | null>(null);
+  const [prefilledCharityName, setPrefilledCharityName] = useState<string | undefined>(undefined);
+  const [invalidToken, setInvalidToken] = useState(false);
   const [currentSectionIndex, setCurrentSectionIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [isTransitioning, setIsTransitioning] = useState(false);
@@ -20,6 +22,23 @@ export default function Home() {
 
   const currentSection = surveyData[currentSectionIndex];
   const isLastSection = currentSectionIndex === surveyData.length - 1;
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const token = params.get("token");
+    if (token) {
+      fetch(`/api/survey-links?token=${token}`)
+        .then(res => res.json())
+        .then(data => {
+          if (data && data.isActive && data.surveyType === "READINESS") {
+            setPrefilledCharityName(data.charityName);
+          } else if (data && !data.isActive) {
+            setInvalidToken(true);
+          }
+        })
+        .catch(err => console.error("Error fetching token:", err));
+    }
+  }, []);
 
   // Check if all questions in current section are answered
   const allCurrentAnswered = currentSection.questions.every(
@@ -109,9 +128,19 @@ export default function Home() {
 
       <main className="flex-1 w-full max-w-4xl mx-auto px-4 py-8 sm:py-12 z-10 relative">
         {!hasAcceptedWelcome ? (
-          <WelcomeScreen onStart={() => setHasAcceptedWelcome(true)} />
+          invalidToken ? (
+            <div className="bg-white rounded-3xl p-12 text-center max-w-xl mx-auto shadow-xl border border-rose-100">
+              <div className="w-20 h-20 bg-rose-50 rounded-full flex items-center justify-center mx-auto mb-6">
+                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-rose-500"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+              </div>
+              <h2 className="text-2xl font-bold text-slate-800 mb-2">الرابط غير متاح</h2>
+              <p className="text-slate-500 mb-8">عذراً، هذا الرابط قد تم إغلاقه أو أنه غير صالح. يرجى التواصل مع إدارة الجمعية للحصول على رابط جديد.</p>
+            </div>
+          ) : (
+            <WelcomeScreen onStart={() => setHasAcceptedWelcome(true)} />
+          )
         ) : !registrationData ? (
-          <RegistrationForm onComplete={setRegistrationData} />
+          <RegistrationForm onComplete={setRegistrationData} prefilledCharityName={prefilledCharityName} />
         ) : (
           <>
             <ProgressBar current={currentSectionIndex + 1} total={surveyData.length} />

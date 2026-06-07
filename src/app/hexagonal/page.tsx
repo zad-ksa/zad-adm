@@ -104,9 +104,26 @@ export default function HexagonalSurvey() {
     charityName: "",
     authorizedTitle: "",
   });
+  const [prefilledCharityName, setPrefilledCharityName] = useState<string | undefined>(undefined);
+  const [invalidToken, setInvalidToken] = useState(false);
 
   useEffect(() => {
     document.title = "التحليل السداسي | زاد التنموية";
+    const params = new URLSearchParams(window.location.search);
+    const token = params.get("token");
+    if (token) {
+      fetch(`/api/survey-links?token=${token}`)
+        .then(res => res.json())
+        .then(data => {
+          if (data && data.isActive && data.surveyType === "HEXAGONAL") {
+            setPrefilledCharityName(data.charityName);
+            setRegistrationData(prev => ({ ...prev, charityName: data.charityName }));
+          } else if (data && !data.isActive) {
+            setInvalidToken(true);
+          }
+        })
+        .catch(err => console.error("Error fetching token:", err));
+    }
   }, []);
 
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
@@ -210,6 +227,15 @@ export default function HexagonalSurvey() {
 
       <main className="flex-1 w-full max-w-4xl mx-auto px-4 py-8 sm:py-12 z-10 relative">
         {step === "welcome" && (
+          invalidToken ? (
+            <div className="bg-white rounded-3xl p-12 text-center max-w-xl mx-auto shadow-xl border border-rose-100">
+              <div className="w-20 h-20 bg-rose-50 rounded-full flex items-center justify-center mx-auto mb-6">
+                <ShieldAlert className="w-10 h-10 text-rose-500" />
+              </div>
+              <h2 className="text-2xl font-bold text-slate-800 mb-2">الرابط غير متاح</h2>
+              <p className="text-slate-500 mb-8">عذراً، هذا الرابط قد تم إغلاقه أو أنه غير صالح. يرجى التواصل مع إدارة الجمعية للحصول على رابط جديد.</p>
+            </div>
+          ) : (
           <div className="bg-white rounded-3xl shadow-xl border border-slate-100 p-8 sm:p-12 relative overflow-hidden">
             {/* Decorative blobs */}
             <div className="absolute top-0 right-0 w-48 h-48 bg-primary/5 rounded-full -mr-16 -mt-16 blur-2xl pointer-events-none" />
@@ -278,6 +304,7 @@ export default function HexagonalSurvey() {
               </div>
             </div>
           </div>
+          )
         )}
 
         {/* Guide Modal */}
@@ -581,7 +608,8 @@ export default function HexagonalSurvey() {
                     type="text"
                     value={registrationData.charityName}
                     onChange={(e) => setRegistrationData(prev => ({ ...prev, charityName: e.target.value }))}
-                    className="w-full pr-11 pl-4 py-3 rounded-xl border border-slate-300 focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all outline-none text-slate-800"
+                    disabled={!!prefilledCharityName}
+                    className={`w-full pr-11 pl-4 py-3 rounded-xl border border-slate-300 focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all outline-none text-slate-800 ${prefilledCharityName ? 'bg-slate-100 cursor-not-allowed opacity-70' : ''}`}
                     placeholder="مثال: جمعية البر الأهلية"
                   />
                   <div className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">

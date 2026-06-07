@@ -137,3 +137,11 @@ model News {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 }
+
+model SurveyLink {
+  id          String   @id @default(uuid())
+  charityName String
+  surveyType  String   // "READINESS" or "HEXAGONAL"
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+}

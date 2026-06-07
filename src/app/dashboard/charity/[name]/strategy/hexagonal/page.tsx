@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/db";
 import Link from "next/link";
 import type { Metadata } from "next";
+import SurveyLinkManager from "@/components/SurveyLinkManager";
 import { Award, AlertTriangle, Sparkles, ShieldAlert, Key, Rocket } from "@/components/Icons";
 
 export const dynamic = "force-dynamic";
@@ -47,15 +48,7 @@ export default async function HexagonalSurveysPage({ params }: { params: Promise
 
   const hasHexagonal = hexagonalResponses.length > 0;
 
-  if (!hasHexagonal) {
-    return (
-      <div className="text-center py-20 text-slate-500 bg-white rounded-2xl border border-slate-100 shadow-sm mt-6">
-        <ClipboardLargeIcon />
-        <h3 className="text-xl font-bold text-slate-700 mb-2">لا توجد بيانات متاحة</h3>
-        <p className="font-medium text-slate-500">لم يقم أي مشارك بتعبئة تقرير التحليل السداسي لهذه الجمعية بعد.</p>
-      </div>
-    );
-  }
+
 
   // Aggregate responses
   const aggregated = {
@@ -89,7 +82,17 @@ export default async function HexagonalSurveysPage({ params }: { params: Promise
 
   return (
     <div className="space-y-12">
-      {/* Section 1: Aggregated Results */}
+      <SurveyLinkManager charityName={decodedName} surveyType="HEXAGONAL" />
+
+      {!hasHexagonal ? (
+        <div className="text-center py-20 text-slate-500 bg-white rounded-2xl border border-slate-100 shadow-sm mt-6">
+          <ClipboardLargeIcon />
+          <h3 className="text-xl font-bold text-slate-700 mb-2">لا توجد بيانات متاحة</h3>
+          <p className="font-medium text-slate-500">لم يقم أي مشارك بتعبئة تقرير التحليل السداسي لهذه الجمعية بعد.</p>
+        </div>
+      ) : (
+        <>
+          {/* Section 1: Aggregated Results */}
       <div>
         <div className="flex items-center gap-3 mb-8 border-b border-slate-200 pb-4">
           <div className="w-12 h-12 bg-secondary/10 rounded-xl flex items-center justify-center text-secondary font-bold">
@@ -299,6 +302,8 @@ export default async function HexagonalSurveysPage({ params }: { params: Promise
           })}
         </div>
       </div>
+        </>
+      )}
     </div>
   );
 }

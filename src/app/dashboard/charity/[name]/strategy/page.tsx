@@ -2,6 +2,7 @@ import { prisma } from "@/lib/db";
 import Link from "next/link";
 import { surveyData } from "@/data/surveyData";
 import ReadinessResultsClient from "./ReadinessResultsClient";
+import SurveyLinkManager from "@/components/SurveyLinkManager";
 import type { Metadata } from "next";
 import { Award, AlertTriangle, Sparkles, ShieldAlert, Key, Rocket } from "@/components/Icons";
 
@@ -54,20 +55,14 @@ export default async function StrategySurveysPage({ params }: { params: Promise<
 
   const hasReadiness = responses.length > 0;
 
-  if (!hasReadiness) {
-    return (
-      <div className="text-center py-20 text-slate-500 bg-white rounded-2xl border border-slate-100 shadow-sm mt-6">
-        <ChartBarIcon />
-        <h3 className="text-xl font-bold text-slate-700 mb-2">لا توجد بيانات متاحة</h3>
-        <p className="font-medium text-slate-500">لم يتم العثور على أية نتائج استبيانات لهذه الجمعية حتى الآن.</p>
-      </div>
-    );
-  }
+
 
 
 
   return (
     <div className="space-y-12">
+      <SurveyLinkManager charityName={decodedName} surveyType="READINESS" />
+
       {/* Section 1: Readiness Survey Results */}
       <div>
         <div className="flex items-center gap-3 mb-8 border-b border-slate-200 pb-4">

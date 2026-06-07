@@ -11,11 +11,12 @@ export interface RegistrationData {
 
 interface RegistrationFormProps {
   onComplete: (data: RegistrationData) => void;
+  prefilledCharityName?: string;
 }
 
-export default function RegistrationForm({ onComplete }: RegistrationFormProps) {
+export default function RegistrationForm({ onComplete, prefilledCharityName }: RegistrationFormProps) {
   const [formData, setFormData] = useState<RegistrationData>({
-    charityName: "",
+    charityName: prefilledCharityName || "",
     establishmentDate: "-",
     licenseNumber: "-",
     authorizedName: "-",
@@ -52,7 +53,8 @@ export default function RegistrationForm({ onComplete }: RegistrationFormProps) 
               name="charityName"
               value={formData.charityName}
               onChange={handleChange}
-              className="w-full pr-11 pl-4 py-3 rounded-xl border border-slate-300 focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all outline-none text-slate-800"
+              disabled={!!prefilledCharityName}
+              className={`w-full pr-11 pl-4 py-3 rounded-xl border border-slate-300 focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all outline-none text-slate-800 ${prefilledCharityName ? 'bg-slate-100 cursor-not-allowed opacity-70' : ''}`}
               placeholder="مثال: جمعية البر الأهلية"
             />
             <div className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">

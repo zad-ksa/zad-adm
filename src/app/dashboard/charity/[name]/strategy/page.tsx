@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/db";
 import Link from "next/link";
 import { surveyData } from "@/data/surveyData";
+import ReadinessResultsClient from "./ReadinessResultsClient";
 import type { Metadata } from "next";
 import { Award, AlertTriangle, Sparkles, ShieldAlert, Key, Rocket } from "@/components/Icons";
 
@@ -84,44 +85,7 @@ export default async function StrategySurveysPage({ params }: { params: Promise<
     );
   }
 
-  const participantCount = responses.length;
 
-  // Calculate overall average score percentage
-  let overallAveragePercentage = 0;
-  if (hasReadiness) {
-    const totalPercentageSum = responses.reduce((acc, r) => acc + r.scorePercentage, 0);
-    overallAveragePercentage = Math.round(totalPercentageSum / participantCount);
-  }
-
-  // Calculate average percentage per section
-  const sectionAverages = surveyData.map((section, idx) => {
-    let totalSecScore = 0;
-    let maxSecScore = 0;
-
-    section.questions.forEach((q) => {
-      maxSecScore += Math.max(...q.options.map(o => o.score));
-    });
-
-    responses.forEach((res) => {
-      const answers = res.answers as Record<string, string>;
-      section.questions.forEach((q) => {
-        const selectedOptionId = answers[q.id];
-        const option = q.options.find(o => o.id === selectedOptionId);
-        if (option) {
-          totalSecScore += option.score;
-        }
-      });
-    });
-
-    const totalMaxSecScore = maxSecScore * participantCount;
-    const averagePercentage = totalMaxSecScore > 0 ? Math.round((totalSecScore / totalMaxSecScore) * 100) : 0;
-
-    return {
-      index: idx + 1,
-      title: section.title,
-      averagePercentage,
-    };
-  });
 
   return (
     <div className="space-y-12">
@@ -137,116 +101,7 @@ export default async function StrategySurveysPage({ params }: { params: Promise<
         </div>
 
         {hasReadiness ? (
-          <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
-            <div className="xl:col-span-2 space-y-6">
-              <h3 className="text-lg font-bold text-slate-700 flex items-center gap-2">
-                <span className="w-2 h-6 rounded-full bg-primary inline-block"></span>
-                تحليل متوسط الجاهزية للمحاور
-              </h3>
-
-              <div className="bg-white rounded-2xl p-8 border border-slate-100 shadow-sm space-y-8">
-                <div className="flex items-center justify-between p-6 bg-slate-50 rounded-2xl border border-slate-100 hover:border-primary/20 transition-colors">
-                  <div className="space-y-1">
-                    <span className="font-bold text-slate-800 text-base">المتوسط العام للجاهزية</span>
-                    <p className="text-xs text-slate-500 font-medium">بناءً على {participantCount} مشاركات</p>
-                  </div>
-                  <div className={`px-5 py-2.5 rounded-xl text-xl font-bold shadow-sm
-                    ${overallAveragePercentage >= 80 ? "bg-[#00b050]/10 text-[#00b050]" :
-                      overallAveragePercentage >= 60 ? "bg-[#92d050]/10 text-[#71a638]" :
-                        overallAveragePercentage >= 40 ? "bg-[#ffc000]/10 text-[#c29300]" :
-                          "bg-[#ff0000]/10 text-[#ff0000]"
-                    }
-                  `}>
-                    {overallAveragePercentage}%
-                  </div>
-                </div>
-
-                <div className="space-y-5">
-                  {sectionAverages.map((sec) => (
-                    <div key={sec.index} className="space-y-2 group">
-                      <div className="flex justify-between items-center text-sm font-bold">
-                        <span className="text-slate-700 group-hover:text-slate-900 transition-colors">{sec.index}. {sec.title}</span>
-                        <span className={`px-2 py-0.5 rounded text-xs font-bold
-                          ${sec.averagePercentage >= 80 ? "bg-[#00b050]/10 text-[#00b050]" :
-                            sec.averagePercentage >= 60 ? "bg-[#92d050]/10 text-[#71a638]" :
-                              sec.averagePercentage >= 40 ? "bg-[#ffc000]/10 text-[#c29300]" :
-                                "bg-[#ff0000]/10 text-[#ff0000]"
-                          }
-                        `}>{sec.averagePercentage}%</span>
-                      </div>
-
-                      <div className="w-full bg-slate-100 h-2.5 rounded-full overflow-hidden">
-                        <div
-                          className={`h-full rounded-full transition-all duration-1000 ease-out
-                            ${sec.averagePercentage >= 80 ? "bg-[#00b050]" :
-                              sec.averagePercentage >= 60 ? "bg-[#92d050]" :
-                                sec.averagePercentage >= 40 ? "bg-[#ffc000]" :
-                                  "bg-[#ff0000]"
-                            }
-                          `}
-                          style={{ width: `${sec.averagePercentage}%` }}
-                        />
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-
-            <div className="space-y-6">
-              <div className="flex items-center justify-between">
-                <h3 className="text-lg font-bold text-slate-700 flex items-center gap-2">
-                  <span className="w-2 h-6 rounded-full bg-slate-400 inline-block"></span>
-                  المشاركون
-                </h3>
-                <span className="bg-slate-100 text-slate-600 px-3 py-1 rounded-full text-xs font-bold">{participantCount} استبيان</span>
-              </div>
-
-              <div className="space-y-4 max-h-[600px] overflow-y-auto pr-2 custom-scrollbar">
-                {responses.map((res) => (
-                  <Link
-                    href={`/dashboard/${res.id}`}
-                    key={res.id}
-                    className="block bg-white rounded-xl p-5 border border-slate-100 hover:border-primary/50 shadow-sm hover:shadow transition-all group"
-                  >
-                    <div className="flex justify-between items-start mb-4">
-                      <div>
-                        <h4 className="font-bold text-slate-800 group-hover:text-primary transition-colors text-sm mb-1">
-                          {res.authorizedName}
-                        </h4>
-                        <p className="text-[11px] text-slate-500 font-medium bg-slate-50 inline-block px-2 py-0.5 rounded">{res.authorizedTitle}</p>
-                      </div>
-
-                      <div className={`px-3 py-1.5 rounded-lg text-xs font-bold shadow-sm
-                        ${res.scorePercentage >= 80 ? "bg-[#00b050]/10 text-[#00b050]" :
-                          res.scorePercentage >= 60 ? "bg-[#92d050]/10 text-[#71a638]" :
-                            res.scorePercentage >= 40 ? "bg-[#ffc000]/10 text-[#c29300]" :
-                              "bg-[#ff0000]/10 text-[#ff0000]"
-                        }
-                      `}>
-                        {res.scorePercentage}%
-                      </div>
-                    </div>
-
-                    <div className="text-[11px] font-medium text-slate-400 flex justify-between items-center border-t border-slate-50 pt-3">
-                      <span className="flex items-center gap-1">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
-                        {new Date(res.createdAt).toLocaleDateString("ar-SA", {
-                          month: "short",
-                          day: "numeric",
-                          timeZone: "Asia/Riyadh"
-                        })}
-                      </span>
-                      <span className="text-primary font-bold opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1">
-                        التفاصيل
-                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
-                      </span>
-                    </div>
-                  </Link>
-                ))}
-              </div>
-            </div>
-          </div>
+          <ReadinessResultsClient responses={responses} />
         ) : (
           <div className="bg-white rounded-2xl p-12 text-center text-slate-500 border border-slate-100 shadow-sm">
             <FileEditIcon />

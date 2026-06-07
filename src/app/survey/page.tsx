@@ -124,8 +124,6 @@ export default function Home() {
 
   return (
     <div className="min-h-screen flex flex-col bg-slate-50">
-      <Header disableLink />
-
       <main className="flex-1 w-full max-w-4xl mx-auto px-4 py-8 sm:py-12 z-10 relative">
         {!hasAcceptedWelcome ? (
           invalidToken ? (

@@ -44,16 +44,30 @@ export default function RegistrationForm({ onComplete, prefilledCharityName, pre
       <div className="mb-8 text-center">
         {/* Professional flat representation of Charity Logo or Icon Badge */}
         {prefilledCharityLogo ? (
-          <div className="w-20 h-20 bg-white rounded-xl flex items-center justify-center mx-auto mb-4 border border-slate-200 p-2.5 transition-all duration-200">
-            <img 
-              src={prefilledCharityLogo} 
-              alt={formData.charityName || "شعار الجمعية"} 
-              className="w-full h-full object-contain"
-            />
+          <div className="flex items-center justify-center gap-4 mb-4">
+            <div className="w-20 h-20 bg-white rounded-xl flex items-center justify-center border border-slate-200 p-2.5">
+              <img 
+                src="/assets/logos/لوجو زاد-01.svg" 
+                alt="زاد التنموية" 
+                className="w-full h-full object-contain"
+              />
+            </div>
+            <span className="text-slate-350 text-xl font-light">×</span>
+            <div className="w-20 h-20 bg-white rounded-xl flex items-center justify-center border border-slate-200 p-2.5">
+              <img 
+                src={prefilledCharityLogo} 
+                alt={formData.charityName || "شعار الجمعية"} 
+                className="w-full h-full object-contain"
+              />
+            </div>
           </div>
         ) : (
-          <div className="w-14 h-14 bg-primary/5 text-primary border border-primary/10 rounded-xl flex items-center justify-center mx-auto mb-4">
-            <ClipboardList className="w-7 h-7" />
+          <div className="w-20 h-20 bg-white rounded-xl flex items-center justify-center mx-auto mb-4 border border-slate-200 p-2.5">
+            <img 
+              src="/assets/logos/لوجو زاد-01.svg" 
+              alt="زاد التنموية" 
+              className="w-full h-full object-contain"
+            />
           </div>
         )}
         <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-800 mb-2">بيانات الجمعية</h2>

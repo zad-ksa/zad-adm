@@ -26,7 +26,7 @@ export default function WelcomeScreen({ onStart }: WelcomeScreenProps) {
       <div className="text-center relative z-10 max-w-2xl mx-auto">
         <div className="relative w-24 h-24 mx-auto mb-6">
           <Image
-            src="/assets/logos/لوجو زاد-09.png"
+            src="/assets/logos/لوجو زاد-01.svg"
             alt="زاد التنموية"
             fill
             className="object-contain"

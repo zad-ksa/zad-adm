@@ -111,7 +111,7 @@ export default function AddCharityModal({ onClose, onSuccess }: { onClose: () =>
               onChange={handleFileChange}
               disabled={loading}
             />
-            <p className="text-[10px] text-slate-400 font-medium">الحد الأقصى لحجم الملف: 2 ميجابايت (PNG, JPG)</p>
+            <p className="text-[10px] text-slate-400 font-medium">الحد الأقصى لحجم الملف: 2 ميجابايت (PNG, JPG, SVG)</p>
           </div>
 
           <div className="space-y-1.5">

@@ -140,7 +140,7 @@ export default function EditCharityModal({ charity, onClose }: EditCharityModalP
               onChange={handleFileChange}
               disabled={isPending}
             />
-            <p className="text-[11px] text-slate-400 font-medium">الحد الأقصى لحجم الملف: 2 ميجابايت (PNG, JPG)</p>
+            <p className="text-[11px] text-slate-400 font-medium">الحد الأقصى لحجم الملف: 2 ميجابايت (PNG, JPG, SVG)</p>
           </div>
 
           {/* Inputs */}

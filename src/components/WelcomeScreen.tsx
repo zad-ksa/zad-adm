@@ -22,13 +22,9 @@ export default function WelcomeScreen({ onStart }: WelcomeScreenProps) {
   const [showGuide, setShowGuide] = useState(false);
 
   return (
-    <div className="bg-white rounded-3xl shadow-xl border border-slate-100 p-8 sm:p-12 relative overflow-hidden">
-      {/* Decorative background blobs */}
-      <div className="absolute top-0 right-0 w-48 h-48 bg-primary/5 rounded-full -mr-16 -mt-16 blur-2xl pointer-events-none" />
-      <div className="absolute bottom-0 left-0 w-48 h-48 bg-secondary/5 rounded-full -ml-16 -mt-16 blur-2xl pointer-events-none" />
-
+    <div className="bg-white border border-slate-200 rounded-2xl p-8 sm:p-12 relative overflow-hidden">
       <div className="text-center relative z-10 max-w-2xl mx-auto">
-        <div className="relative w-28 h-28 mx-auto mb-6">
+        <div className="relative w-24 h-24 mx-auto mb-6">
           <Image
             src="/assets/logos/لوجو زاد-09.png"
             alt="زاد التنموية"
@@ -38,11 +34,11 @@ export default function WelcomeScreen({ onStart }: WelcomeScreenProps) {
           />
         </div>
 
-        <h1 className="text-3xl sm:text-4xl font-extrabold text-slate-800 mb-4 leading-tight">
+        <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-800 mb-4 leading-tight">
           مقياس جاهزية الجمعيات للتخطيط الاستراتيجي
         </h1>
 
-        <p className="text-lg text-slate-600 leading-relaxed mb-8">
+        <p className="text-base text-slate-650 leading-relaxed mb-8">
           أهلاً بكم في مقياس الجاهزية للتخطيط الاستراتيجي المقدّم من{" "}
           <strong className="text-primary font-bold">زاد التنموية</strong>.
           يهدف هذا المقياس لمساعدتكم في تقييم مدى جاهزية جمعيتكم الموقرة للانطلاق في صياغة خطتكم الاستراتيجية.
@@ -52,9 +48,9 @@ export default function WelcomeScreen({ onStart }: WelcomeScreenProps) {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
           <button
             onClick={() => setShowGuide(true)}
-            className="flex flex-col items-center justify-center p-6 bg-slate-50 hover:bg-slate-100 border border-slate-200 hover:border-primary/30 rounded-2xl transition-all group cursor-pointer"
+            className="flex flex-col items-center justify-center p-6 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-xl transition-colors group cursor-pointer"
           >
-            <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center text-primary mb-3 group-hover:scale-110 transition-transform">
+            <div className="w-12 h-12 bg-primary/5 text-primary border border-primary/10 rounded-xl flex items-center justify-center mb-3">
               <BookOpen className="w-6 h-6" />
             </div>
             <span className="font-bold text-slate-800 mb-1">دليل الاستخدام</span>
@@ -65,9 +61,9 @@ export default function WelcomeScreen({ onStart }: WelcomeScreenProps) {
 
           <button
             onClick={onStart}
-            className="flex flex-col items-center justify-center p-6 bg-primary hover:bg-primary/95 text-white rounded-2xl transition-all shadow-lg shadow-primary/20 hover:shadow-primary/30 hover:-translate-y-0.5 group cursor-pointer"
+            className="flex flex-col items-center justify-center p-6 bg-primary hover:bg-primary/95 text-white rounded-xl transition-colors group cursor-pointer"
           >
-            <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center text-white mb-3 animate-pulse">
+            <div className="w-12 h-12 bg-white/10 text-white rounded-xl flex items-center justify-center mb-3">
               <Zap className="w-6 h-6 fill-current" />
             </div>
             <span className="font-bold mb-1 text-lg">البدء بالاستبيان</span>
@@ -77,7 +73,7 @@ export default function WelcomeScreen({ onStart }: WelcomeScreenProps) {
           </button>
         </div>
 
-        <div className="text-slate-500 text-xs sm:text-sm flex flex-col sm:flex-row justify-center items-center gap-3 sm:gap-6 bg-slate-50 p-4 rounded-2xl border border-slate-100 max-w-lg mx-auto">
+        <div className="text-slate-600 text-xs sm:text-sm flex flex-col sm:flex-row justify-center items-center gap-3 sm:gap-6 bg-slate-50 p-4 rounded-xl border border-slate-200 max-w-lg mx-auto">
           <span className="flex items-center gap-2">
             <Clock className="w-4.5 h-4.5 text-primary shrink-0" />
             <span>يستغرق التقييم حوالي 20-30 دقيقة</span>
@@ -92,58 +88,55 @@ export default function WelcomeScreen({ onStart }: WelcomeScreenProps) {
 
       {/* Guide Image Lightbox/Modal */}
       {showGuide && (
-        <div className="fixed inset-0 bg-slate-900/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <div
             className="absolute inset-0 cursor-pointer"
             onClick={() => setShowGuide(false)}
           />
 
-          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-4xl max-h-[92vh] overflow-hidden flex flex-col relative z-10 border border-slate-100 animate-in fade-in zoom-in duration-300">
+          <div className="bg-white rounded-2xl w-full max-w-4xl max-h-[92vh] overflow-hidden flex flex-col relative z-10 border border-slate-200 animate-in fade-in zoom-in-95 duration-200">
             {/* Modal Header */}
-            <div className="p-4 border-b border-slate-100 flex justify-between items-center bg-slate-50/50" dir="rtl">
-              <h2 className="font-bold text-slate-800 text-lg flex items-center gap-2">
+            <div className="p-4 border-b border-slate-200 flex justify-between items-center bg-slate-50" dir="rtl">
+              <h2 className="font-extrabold text-slate-800 text-base sm:text-lg flex items-center gap-2">
                 <BookOpen className="w-5 h-5 text-primary" />
                 <span>دليل استخدام مقياس الجاهزية</span>
               </h2>
               <button
                 onClick={() => setShowGuide(false)}
-                className="w-10 h-10 rounded-full bg-slate-200/50 hover:bg-slate-200 text-slate-600 hover:text-slate-800 transition-colors flex items-center justify-center cursor-pointer"
+                className="w-9 h-9 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600 hover:text-slate-800 transition-colors flex items-center justify-center cursor-pointer font-bold"
                 title="إغلاق"
               >
-                <X className="w-5 h-5" />
+                <X className="w-4.5 h-4.5" />
               </button>
             </div>
 
             {/* Scrollable Content Container */}
             <div className="flex-1 overflow-y-auto p-6 bg-slate-50 text-right" dir="rtl">
-              <div className="max-w-3xl mx-auto">
+              <div className="max-w-3xl mx-auto space-y-6">
                 {/* Title Section */}
-                <div className="bg-gradient-to-r from-primary to-teal-800 text-white p-8 rounded-2xl mb-8 text-center relative overflow-hidden shadow-md">
-                  <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full -mr-10 -mt-10 blur-xl pointer-events-none" />
-                  <div className="absolute bottom-0 left-0 w-32 h-32 bg-secondary/10 rounded-full -ml-10 -mb-10 blur-xl pointer-events-none" />
-
-                  <span className="inline-block bg-secondary text-white text-xs font-bold px-3 py-1 rounded-full mb-3 uppercase tracking-wider">
+                <div className="bg-primary text-white p-8 rounded-xl text-center relative overflow-hidden">
+                  <span className="inline-block bg-secondary text-white text-xs font-bold px-3 py-1 rounded-md mb-3 uppercase tracking-wider">
                     دليل الاستخدام
                   </span>
-                  <h3 className="text-2xl md:text-3xl font-extrabold mb-2 leading-tight">
+                  <h3 className="text-xl md:text-2xl font-extrabold mb-2 leading-tight">
                     مقياس جاهزية الجمعيات للتخطيط الاستراتيجي
                   </h3>
-                  <p className="text-teal-100 text-sm md:text-base max-w-xl mx-auto font-medium">
+                  <p className="text-slate-100 text-xs md:text-sm max-w-xl mx-auto font-medium">
                     خاص بالجمعيات الناشئة | حديثة التأسيس
                   </p>
-                  <div className="mt-4 pt-4 border-t border-white/10 text-teal-50 text-sm max-w-lg mx-auto leading-relaxed">
+                  <div className="mt-4 pt-4 border-t border-white/10 text-white/90 text-xs sm:text-sm max-w-lg mx-auto leading-relaxed">
                     هذا الدليل يساعدك على فهم المقياس وكيفية تعبئة استبانته بكل سهولة ويُسر.
                     نتائجه ستحدد مستوى جاهزية جمعيتك وتوجهها نحو الخطوات الصحيحة.
                   </div>
                 </div>
 
                 {/* Section 1: ما هذا المقياس؟ */}
-                <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 mb-6">
+                <div className="bg-white rounded-xl p-6 border border-slate-200">
                   <div className="flex items-center gap-3 mb-4">
-                    <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary text-xl font-bold">
+                    <div className="w-8 h-8 rounded-lg bg-primary text-white flex items-center justify-center font-bold text-sm">
                       ١
                     </div>
-                    <h4 className="font-extrabold text-slate-800 text-lg">أولاً: ما هذا المقياس؟</h4>
+                    <h4 className="font-extrabold text-slate-800 text-base sm:text-lg">أولاً: ما هذا المقياس؟</h4>
                   </div>
                   <p className="text-slate-600 leading-relaxed text-sm md:text-base">
                     مقياس جاهزية الجمعيات للتخطيط الاستراتيجي هو أداة تقييم مُصمَّمة خصيصاً للجمعيات الأهلية حديثة التأسيس، يهدف إلى الإجابة عن سؤال واحد مهم: <strong className="text-primary font-bold">هل جمعيتنا جاهزة الآن للدخول في مشروع التخطيط الاستراتيجي؟</strong>
@@ -154,12 +147,12 @@ export default function WelcomeScreen({ onStart }: WelcomeScreenProps) {
                 </div>
 
                 {/* Section 2: لماذا هو مهم لجمعيتك؟ */}
-                <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 mb-6">
+                <div className="bg-white rounded-xl p-6 border border-slate-200">
                   <div className="flex items-center gap-3 mb-4">
-                    <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary text-xl font-bold">
+                    <div className="w-8 h-8 rounded-lg bg-primary text-white flex items-center justify-center font-bold text-sm">
                       ٢
                     </div>
-                    <h4 className="font-extrabold text-slate-800 text-lg">ثانياً: لماذا هو مهم لجمعيتك؟</h4>
+                    <h4 className="font-extrabold text-slate-800 text-base sm:text-lg">ثانياً: لماذا هو مهم لجمعيتك؟</h4>
                   </div>
                   <ul className="space-y-3">
                     {[
@@ -169,7 +162,7 @@ export default function WelcomeScreen({ onStart }: WelcomeScreenProps) {
                       "يبني ثقافة التقييم والمساءلة المؤسسية من مرحلة مبكرة",
                       "نتائجه تساعد الجهات الداعمة على تقديم الدعم المناسب لكم"
                     ].map((item, idx) => (
-                      <li key={idx} className="flex items-start gap-2.5 text-slate-600 text-sm md:text-base leading-relaxed">
+                      <li key={idx} className="flex items-start gap-2.5 text-slate-650 text-sm md:text-base leading-relaxed">
                         <Check className="text-secondary w-4.5 h-4.5 shrink-0 mt-1" strokeWidth={3} />
                         <span>{item}</span>
                       </li>
@@ -178,12 +171,12 @@ export default function WelcomeScreen({ onStart }: WelcomeScreenProps) {
                 </div>
 
                 {/* Section 3: محاور المقياس العشرة */}
-                <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 mb-6">
+                <div className="bg-white rounded-xl p-6 border border-slate-200">
                   <div className="flex items-center gap-3 mb-4">
-                    <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary text-xl font-bold">
+                    <div className="w-8 h-8 rounded-lg bg-primary text-white flex items-center justify-center font-bold text-sm">
                       ٣
                     </div>
-                    <h4 className="font-extrabold text-slate-800 text-lg">ثالثاً: محاور المقياس العشرة</h4>
+                    <h4 className="font-extrabold text-slate-800 text-base sm:text-lg">ثالثاً: محاور المقياس العشرة</h4>
                   </div>
                   <p className="text-slate-600 text-sm md:text-base mb-4">
                     يشتمل المقياس على 10 محاور رئيسية تغطي جوانب العمل المؤسسي كافة:
@@ -211,7 +204,7 @@ export default function WelcomeScreen({ onStart }: WelcomeScreenProps) {
                           { id: "٩", name: "الشفافية والإفصاح وإدارة البيانات", items: 5 },
                           { id: "١٠", name: "الجاهزية التنفيذية للتخطيط الاستراتيجي", items: 7 },
                         ].map((row, idx) => (
-                          <tr key={idx} className="hover:bg-slate-50/50 transition-colors">
+                          <tr key={idx} className="hover:bg-slate-50 transition-colors">
                             <td className="p-3 text-slate-500 text-center font-medium">{row.id}</td>
                             <td className="p-3 text-slate-800 font-medium">{row.name}</td>
                             <td className="p-3 text-slate-600 text-center">{row.items}</td>
@@ -228,12 +221,12 @@ export default function WelcomeScreen({ onStart }: WelcomeScreenProps) {
                 </div>
 
                 {/* Section 4: مقياس التقييم الخماسي */}
-                <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 mb-6">
+                <div className="bg-white rounded-xl p-6 border border-slate-200">
                   <div className="flex items-center gap-3 mb-4">
-                    <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary text-xl font-bold">
+                    <div className="w-8 h-8 rounded-lg bg-primary text-white flex items-center justify-center font-bold text-sm">
                       ٤
                     </div>
-                    <h4 className="font-extrabold text-slate-800 text-lg">رابعاً: مقياس التقييم الخماسي</h4>
+                    <h4 className="font-extrabold text-slate-800 text-base sm:text-lg">رابعاً: مقياس التقييم الخماسي</h4>
                   </div>
                   <p className="text-slate-600 text-sm md:text-base mb-6">
                     لكل بند من البنود الـ 64، اختر درجة واحدة فقط من القائمة التالية تعبّر عن الواقع الفعلي في جمعيتك:
@@ -247,8 +240,8 @@ export default function WelcomeScreen({ onStart }: WelcomeScreenProps) {
                       { score: 2, label: "في طور البداية", desc: "موجود بشكل مبدئي أو ضعيف", bg: "bg-orange-50 border-orange-200 text-orange-800" },
                       { score: 1, label: "غير متوفر حتى الآن", desc: "غير متوفر بالجمعية", bg: "bg-rose-50 border-rose-200 text-rose-800" },
                     ].map((item, idx) => (
-                      <div key={idx} className={`p-4 rounded-xl border flex flex-col justify-between text-center transition-all hover:scale-[1.02] ${item.bg}`}>
-                        <div className="w-8 h-8 rounded-full bg-white/90 shadow-sm flex items-center justify-center text-sm font-bold mx-auto mb-2 border border-current/10 shrink-0">
+                      <div key={idx} className={`p-4 rounded-xl border flex flex-col justify-between text-center transition-colors ${item.bg}`}>
+                        <div className="w-8 h-8 rounded-md bg-white shadow-sm flex items-center justify-center text-sm font-bold mx-auto mb-2 border border-current/10 shrink-0">
                           {item.score}
                         </div>
                         <div className="font-bold text-xs md:text-sm mb-1">{item.label}</div>
@@ -259,12 +252,12 @@ export default function WelcomeScreen({ onStart }: WelcomeScreenProps) {
                 </div>
 
                 {/* Section 5: كيف تُعبِّئ الاستبانة خطوة بخطوة؟ */}
-                <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 mb-6">
+                <div className="bg-white rounded-xl p-6 border border-slate-200">
                   <div className="flex items-center gap-3 mb-6">
-                    <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary text-xl font-bold">
+                    <div className="w-8 h-8 rounded-lg bg-primary text-white flex items-center justify-center font-bold text-sm">
                       ٥
                     </div>
-                    <h4 className="font-extrabold text-slate-800 text-lg">خامساً: كيف تُعبِّئ الاستبانة خطوة بخطوة؟</h4>
+                    <h4 className="font-extrabold text-slate-800 text-base sm:text-lg">خامساً: كيف تُعبِّئ الاستبانة خطوة بخطوة؟</h4>
                   </div>
 
                   <div className="space-y-6">
@@ -276,15 +269,15 @@ export default function WelcomeScreen({ onStart }: WelcomeScreenProps) {
                       const IconComponent = item.icon;
                       return (
                         <div key={idx} className="flex gap-4 items-start">
-                          <div className="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center shrink-0 mt-0.5 shadow-sm relative">
+                          <div className="w-10 h-10 rounded-lg bg-slate-50 text-slate-700 border border-slate-250 flex items-center justify-center shrink-0 mt-0.5 relative">
                             <IconComponent className="w-5 h-5" />
-                            <span className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-secondary text-white text-[10px] font-bold rounded-full flex items-center justify-center border border-white">
+                            <span className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-secondary text-white text-[10px] font-bold rounded-md flex items-center justify-center border border-white">
                               {item.step}
                             </span>
                           </div>
                           <div>
                             <h5 className="font-bold text-slate-800 text-base mb-1">{item.title}</h5>
-                            <p className="text-slate-600 text-sm leading-relaxed">{item.desc}</p>
+                            <p className="text-slate-650 text-sm leading-relaxed">{item.desc}</p>
                           </div>
                         </div>
                       );
@@ -293,8 +286,8 @@ export default function WelcomeScreen({ onStart }: WelcomeScreenProps) {
                 </div>
 
                 {/* Tips Section */}
-                <div className="bg-amber-50/60 rounded-2xl p-6 border border-amber-100 shadow-sm">
-                  <h4 className="font-extrabold text-amber-950 text-lg mb-4 flex items-center gap-2">
+                <div className="bg-amber-50 border border-amber-200 rounded-xl p-6">
+                  <h4 className="font-extrabold text-amber-950 text-base sm:text-lg mb-4 flex items-center gap-2">
                     <Lightbulb className="w-5 h-5 text-secondary shrink-0" />
                     <span>نصائح للحصول على نتائج دقيقة:</span>
                   </h4>
@@ -317,20 +310,20 @@ export default function WelcomeScreen({ onStart }: WelcomeScreenProps) {
             </div>
 
             {/* Modal Footer */}
-            <div className="p-4 border-t border-slate-100 flex justify-end gap-3 bg-white">
+            <div className="p-4 border-t border-slate-200 flex justify-end gap-3 bg-white">
               <button
                 onClick={() => {
                   setShowGuide(false);
                   onStart();
                 }}
-                className="px-6 py-3 bg-primary hover:bg-primary/95 text-white font-bold rounded-xl transition-all shadow-md hover:shadow-lg flex items-center gap-2 group cursor-pointer"
+                className="px-6 py-3 bg-primary hover:bg-primary/95 text-white font-bold rounded-xl transition-colors flex items-center gap-2 group cursor-pointer text-sm"
               >
                 <span>البدء بالاستبيان الآن</span>
                 <ArrowLeft className="w-5 h-5 transition-transform group-hover:-translate-x-1" />
               </button>
               <button
                 onClick={() => setShowGuide(false)}
-                className="px-5 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium rounded-xl transition-colors cursor-pointer"
+                className="px-5 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-xl transition-colors cursor-pointer text-sm"
               >
                 إغلاق الدليل
               </button>

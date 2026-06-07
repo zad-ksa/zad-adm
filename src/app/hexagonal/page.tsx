@@ -221,11 +221,7 @@ export default function HexagonalSurvey() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col relative overflow-hidden bg-slate-50 text-right" dir="rtl">
-      {/* Decorative background blobs */}
-      <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-primary/20 rounded-full blur-[100px] pointer-events-none" />
-      <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-secondary/20 rounded-full blur-[100px] pointer-events-none" />
-
+    <div className="min-h-screen flex flex-col bg-slate-50 text-right" dir="rtl">
       <Header disableLink title="التحليل السداسي" />
 
       <main className="flex-1 w-full max-w-4xl mx-auto px-4 py-8 sm:py-12 z-10 relative">
@@ -233,13 +229,9 @@ export default function HexagonalSurvey() {
           invalidToken ? (
             <LinkClosedScreen />
           ) : (
-          <div className="bg-white rounded-3xl shadow-xl border border-slate-100 p-8 sm:p-12 relative overflow-hidden">
-            {/* Decorative blobs */}
-            <div className="absolute top-0 right-0 w-48 h-48 bg-primary/5 rounded-full -mr-16 -mt-16 blur-2xl pointer-events-none" />
-            <div className="absolute bottom-0 left-0 w-48 h-48 bg-secondary/5 rounded-full -ml-16 -mt-16 blur-2xl pointer-events-none" />
-
+          <div className="bg-white border border-slate-200 rounded-2xl p-8 sm:p-12 relative overflow-hidden">
             <div className="text-center relative z-10 max-w-2xl mx-auto">
-              <div className="relative w-28 h-28 mx-auto mb-6">
+              <div className="relative w-24 h-24 mx-auto mb-6">
                 <Image
                   src="/assets/logos/لوجو زاد-09.png"
                   alt="زاد التنموية"
@@ -249,23 +241,23 @@ export default function HexagonalSurvey() {
                 />
               </div>
 
-              <h1 className="text-3xl sm:text-4xl font-extrabold text-slate-800 mb-4 leading-tight">
+              <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-800 mb-4 leading-tight">
                 التحليل السداسي للجمعيات الخيرية
               </h1>
 
-              <p className="text-lg text-slate-600 leading-relaxed mb-8">
+              <p className="text-base text-slate-650 leading-relaxed mb-8">
                 أهلاً بكم في استبيان التحليل السداسي المقدّم من{" "}
                 <strong className="text-primary font-bold">زاد التنموية</strong>.
-                يساعد هذا الاستبيان في رسم صورة تحليلية متكاملة لجمعيتكم من خلال رصد ستة أبعاد جوهرية تشمل نقاط القوة والضعف والفرص والمخاطر، بالإضافة لعوامل النجاح والميزة التنافسية.
+                يساعد هذا استبيان في رسم صورة تحليلية متكاملة لجمعيتكم من خلال رصد ستة أبعاد جوهرية تشمل نقاط القوة والضعف والفرص والمخاطر، بالإضافة لعوامل النجاح والميزة التنافسية.
               </p>
 
               {/* Action Options */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
                 <button
                   onClick={() => setShowGuide(true)}
-                  className="flex flex-col items-center justify-center p-6 bg-slate-50 hover:bg-slate-100 border border-slate-200 hover:border-secondary/30 rounded-2xl transition-all group cursor-pointer"
+                  className="flex flex-col items-center justify-center p-6 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-xl transition-colors group cursor-pointer"
                 >
-                  <div className="w-12 h-12 bg-secondary/10 rounded-full flex items-center justify-center text-secondary mb-3 group-hover:scale-110 transition-transform">
+                  <div className="w-12 h-12 bg-secondary/5 text-secondary border border-secondary/10 rounded-xl flex items-center justify-center mb-3">
                     <BookOpen className="w-6 h-6" />
                   </div>
                   <span className="font-bold text-slate-800 mb-1">دليل الاستخدام</span>
@@ -276,9 +268,9 @@ export default function HexagonalSurvey() {
 
                 <button
                   onClick={() => setStep("register")}
-                  className="flex flex-col items-center justify-center p-6 bg-primary hover:bg-primary/95 text-white rounded-2xl transition-all shadow-lg shadow-primary/20 hover:shadow-primary/30 hover:-translate-y-0.5 group cursor-pointer"
+                  className="flex flex-col items-center justify-center p-6 bg-primary hover:bg-primary/95 text-white rounded-xl transition-colors group cursor-pointer"
                 >
-                  <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center text-white mb-3 animate-pulse">
+                  <div className="w-12 h-12 bg-white/10 text-white rounded-xl flex items-center justify-center mb-3">
                     <Zap className="w-6 h-6 fill-current" />
                   </div>
                   <span className="font-bold mb-1 text-lg">البدء بالاستبيان</span>
@@ -288,7 +280,7 @@ export default function HexagonalSurvey() {
                 </button>
               </div>
 
-              <div className="text-slate-500 text-xs sm:text-sm flex flex-col sm:flex-row justify-center items-center gap-3 sm:gap-6 bg-slate-50 p-4 rounded-2xl border border-slate-100 max-w-lg mx-auto">
+              <div className="text-slate-600 text-xs sm:text-sm flex flex-col sm:flex-row justify-center items-center gap-3 sm:gap-6 bg-slate-50 p-4 rounded-xl border border-slate-200 max-w-lg mx-auto">
                 <span className="flex items-center gap-2">
                   <Clock className="w-4.5 h-4.5 text-primary shrink-0" />
                   <span>يستغرق التقييم حوالي 15-20 دقيقة</span>
@@ -312,19 +304,19 @@ export default function HexagonalSurvey() {
               onClick={() => setShowGuide(false)}
             />
 
-            <div className="bg-white rounded-3xl shadow-2xl w-full max-w-4xl max-h-[92vh] overflow-hidden flex flex-col relative z-10 border border-slate-100 animate-in fade-in zoom-in duration-300">
+            <div className="bg-white rounded-2xl w-full max-w-4xl max-h-[92vh] overflow-hidden flex flex-col relative z-10 border border-slate-200 animate-in fade-in zoom-in-95 duration-205">
               {/* Modal Header */}
-              <div className="p-4 border-b border-slate-100 flex justify-between items-center bg-slate-50/50" dir="rtl">
-                <h2 className="font-bold text-slate-800 text-lg flex items-center gap-2">
+              <div className="p-4 border-b border-slate-200 flex justify-between items-center bg-slate-50" dir="rtl">
+                <h2 className="font-extrabold text-slate-800 text-base sm:text-lg flex items-center gap-2">
                   <BookOpen className="w-5 h-5 text-primary" />
                   <span>دليل التحليل السداسي للجمعيات الخيرية</span>
                 </h2>
                 <button
                   onClick={() => setShowGuide(false)}
-                  className="w-10 h-10 rounded-full bg-slate-200/50 hover:bg-slate-200 text-slate-600 hover:text-slate-800 transition-colors flex items-center justify-center cursor-pointer"
+                  className="w-9 h-9 rounded-lg bg-slate-150 hover:bg-slate-200 text-slate-600 hover:text-slate-800 transition-colors flex items-center justify-center cursor-pointer font-semibold"
                   title="إغلاق"
                 >
-                  <X className="w-5 h-5" />
+                  <X className="w-4.5 h-4.5" />
                 </button>
               </div>
 
@@ -332,9 +324,7 @@ export default function HexagonalSurvey() {
               <div className="flex-1 overflow-y-auto p-6 bg-slate-50 text-right font-sans" dir="rtl">
                 <div className="max-w-3xl mx-auto space-y-8">
                   {/* Title banner */}
-                  <div className="bg-gradient-to-r from-primary to-teal-800 text-white p-8 rounded-2xl text-center relative overflow-hidden shadow-md">
-                    <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full -mr-10 -mt-10 blur-xl pointer-events-none" />
-                    <div className="absolute bottom-0 left-0 w-32 h-32 bg-secondary/10 rounded-full -ml-10 -mb-10 blur-xl pointer-events-none" />
+                  <div className="bg-primary text-white p-8 rounded-xl text-center relative overflow-hidden">
 
                     <span className="inline-block bg-secondary text-white text-xs font-bold px-3 py-1 rounded-full mb-3 uppercase tracking-wider">
                       الدليل التعريفي للتحليل السداسي
@@ -581,10 +571,10 @@ export default function HexagonalSurvey() {
         )}
 
         {step === "register" && (
-          <div className="glassmorphism rounded-3xl p-8 sm:p-12 w-full animate-in fade-in slide-in-from-bottom-4 duration-500 max-w-xl mx-auto shadow-xl bg-white border border-slate-100" dir="rtl">
+          <div className="bg-white border border-slate-200 rounded-2xl p-8 sm:p-10 w-full animate-in fade-in duration-300 max-w-xl mx-auto shadow-sm" dir="rtl">
             <div className="mb-8 text-center">
               {prefilledCharityLogo ? (
-                <div className="w-24 h-24 bg-white rounded-2xl flex items-center justify-center mx-auto mb-4 border border-slate-100 shadow-md p-3 relative overflow-hidden transition-all duration-300 hover:scale-105">
+                <div className="w-20 h-20 bg-white rounded-xl flex items-center justify-center mx-auto mb-4 border border-slate-200 p-2.5 transition-all duration-200">
                   <img 
                     src={prefilledCharityLogo} 
                     alt={registrationData.charityName || "شعار الجمعية"} 
@@ -592,11 +582,11 @@ export default function HexagonalSurvey() {
                   />
                 </div>
               ) : (
-                <div className="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-primary/20 text-primary">
-                  <ClipboardList className="w-8 h-8" />
+                <div className="w-14 h-14 bg-primary/5 text-primary border border-primary/10 rounded-xl flex items-center justify-center mx-auto mb-4">
+                  <ClipboardList className="w-7 h-7" />
                 </div>
               )}
-              <h2 className="text-2xl sm:text-3xl font-bold text-slate-800 mb-2">بيانات الجمعية</h2>
+              <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-800 mb-2">بيانات الجمعية</h2>
               <p className="text-slate-500 text-sm">يرجى تعبئة البيانات التالية للبدء في استبيان التحليل السداسي</p>
             </div>
 
@@ -608,7 +598,7 @@ export default function HexagonalSurvey() {
               className="space-y-6"
             >
               <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-2">اسم الجمعية بالكامل (حسب السجل)</label>
+                <label className="block text-sm font-bold text-slate-700 mb-2">اسم الجمعية بالكامل (حسب السجل)</label>
                 <div className="relative">
                   <input
                     required
@@ -616,7 +606,7 @@ export default function HexagonalSurvey() {
                     value={registrationData.charityName}
                     onChange={(e) => setRegistrationData(prev => ({ ...prev, charityName: e.target.value }))}
                     disabled={!!prefilledCharityName}
-                    className={`w-full pr-11 pl-4 py-3 rounded-xl border border-slate-300 focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all outline-none text-slate-800 ${prefilledCharityName ? 'bg-slate-100 cursor-not-allowed opacity-70' : ''}`}
+                    className={`w-full pr-11 pl-4 py-3 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:border-primary transition-all outline-none text-slate-800 ${prefilledCharityName ? 'bg-slate-100/70 cursor-not-allowed opacity-80' : ''}`}
                     placeholder="مثال: جمعية البر الأهلية"
                   />
                   <div className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
@@ -626,13 +616,13 @@ export default function HexagonalSurvey() {
               </div>
 
               <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-2">صفة معبي الاستبيان</label>
+                <label className="block text-sm font-bold text-slate-700 mb-2">صفة معبي الاستبيان</label>
                 <div className="relative">
                   <select
                     required
                     value={registrationData.authorizedTitle}
                     onChange={(e) => setRegistrationData(prev => ({ ...prev, authorizedTitle: e.target.value }))}
-                    className="w-full pr-11 pl-10 py-3 rounded-xl border border-slate-300 focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all outline-none bg-white text-slate-800 appearance-none font-medium"
+                    className="w-full pr-11 pl-10 py-3 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:border-primary transition-all outline-none text-slate-800 appearance-none font-medium"
                   >
                     <option value="" disabled>اختر الصفة...</option>
                     <option value="عضو جمعية عمومية">عضو جمعية عمومية</option>
@@ -645,9 +635,7 @@ export default function HexagonalSurvey() {
                     <UserCircle className="w-5 h-5" />
                   </div>
                   <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
-                    </svg>
+                    <ChevronDownIcon />
                   </div>
                 </div>
               </div>
@@ -655,7 +643,7 @@ export default function HexagonalSurvey() {
               <div className="pt-4">
                 <button
                   type="submit"
-                  className="w-full py-4 rounded-xl font-bold text-white bg-primary hover:bg-primary/95 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-primary/30 transition-all flex items-center justify-center gap-2 group cursor-pointer"
+                  className="w-full py-3.5 rounded-xl font-bold text-white bg-primary hover:bg-primary/95 transition-all flex items-center justify-center gap-2 group cursor-pointer"
                 >
                   <span>الذهاب للأسئلة</span>
                   <ArrowLeft className="w-5 h-5 transition-transform group-hover:-translate-x-1" />
@@ -671,34 +659,33 @@ export default function HexagonalSurvey() {
 
             {/* Transition Overlay */}
             <div
-              className={`absolute inset-0 z-50 flex items-center justify-center bg-slate-50/90 backdrop-blur-sm transition-all duration-500 rounded-3xl ${isTransitioning ? "opacity-100 visible" : "opacity-0 invisible"
+              className={`absolute inset-0 z-50 flex items-center justify-center bg-slate-50/95 transition-all duration-300 rounded-2xl ${isTransitioning ? "opacity-100 visible" : "opacity-0 invisible"
                 }`}
             >
-              <div className="text-center transform transition-transform duration-500 scale-110">
-                <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-                <h2 className="text-2xl font-bold text-slate-800">جاري الانتقال للسؤال التالي...</h2>
+              <div className="text-center transform transition-all duration-350 scale-100">
+                <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+                <h2 className="text-xl font-bold text-slate-800">جاري الانتقال للسؤال التالي...</h2>
               </div>
             </div>
 
-            <div className={`transition-opacity duration-500 ${isTransitioning ? 'opacity-0' : 'opacity-100'}`}>
+            <div className={`transition-opacity duration-300 ${isTransitioning ? 'opacity-0' : 'opacity-100'}`}>
               {/* Question Header Card */}
-              <div className="mb-8 p-6 bg-primary text-white rounded-2xl shadow-lg relative overflow-hidden">
-                <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-10 -mt-10 blur-xl pointer-events-none" />
+              <div className="mb-8 p-6 bg-primary text-white rounded-2xl relative overflow-hidden">
                 <div className="flex items-center gap-3 mb-2">
-                  <span className="p-2 bg-white/20 rounded-xl shrink-0 text-white">
-                    <QuestionIcon className="w-8 h-8" />
+                  <span className="p-2 bg-white/10 rounded-lg shrink-0 text-white">
+                    <QuestionIcon className="w-7 h-7" />
                   </span>
-                  <h2 className="text-xl sm:text-2xl font-bold">
+                  <h2 className="text-xl sm:text-2xl font-extrabold">
                     {currentQuestion.title}
                   </h2>
                 </div>
-                <p className="text-primary-foreground/90 text-sm sm:text-base leading-relaxed mr-14">
+                <p className="text-slate-100 text-sm sm:text-base leading-relaxed mr-12">
                   {currentQuestion.description}
                 </p>
               </div>
 
               {/* Input Fields */}
-              <div className="bg-white rounded-3xl p-6 sm:p-8 shadow-sm border border-slate-200 space-y-5">
+              <div className="bg-white rounded-2xl p-6 sm:p-8 border border-slate-200 space-y-5">
                 <div className="pb-3 border-b border-slate-100 flex justify-between items-center text-xs text-slate-400">
                   <span>يرجى تعبئة بند واحد على الأقل للتمكن من الانتقال</span>
                   <span className="text-primary font-semibold">باقي البنود اختيارية</span>
@@ -706,7 +693,7 @@ export default function HexagonalSurvey() {
 
                 {[0, 1, 2, 3, 4].map((index) => (
                   <div key={index} className="flex gap-4 items-center">
-                    <span className="w-8 h-8 rounded-full bg-slate-100 text-slate-500 flex items-center justify-center font-bold text-sm shrink-0">
+                    <span className="w-7 h-7 rounded-lg bg-slate-50 border border-slate-200 text-slate-500 flex items-center justify-center font-bold text-xs shrink-0">
                       {index + 1}
                     </span>
                     <input
@@ -716,8 +703,8 @@ export default function HexagonalSurvey() {
                       onChange={(e) => handleInputChange(index, e.target.value)}
                       placeholder={index === 0 ? currentQuestion.placeholder : "إدخال اختياري إضافي..."}
                       className={`w-full px-4 py-3 rounded-xl border transition-all outline-none text-slate-800 text-sm sm:text-base ${index === 0 && !currentAnswers[0].trim()
-                          ? "border-amber-300 focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 bg-amber-50/10"
-                          : "border-slate-300 focus:border-primary focus:ring-2 focus:ring-primary/20 bg-white"
+                          ? "border-amber-350 focus:border-amber-500 bg-amber-50/10"
+                          : "border-slate-200 focus:border-primary bg-slate-50 focus:bg-white"
                         }`}
                     />
                   </div>
@@ -729,9 +716,9 @@ export default function HexagonalSurvey() {
                 <button
                   onClick={handlePrev}
                   disabled={currentQuestionIndex === 0 || isTransitioning || isSubmitting}
-                  className={`px-6 py-3 rounded-xl font-medium transition-all flex items-center gap-2 group cursor-pointer ${currentQuestionIndex === 0
+                  className={`px-6 py-3 rounded-xl font-semibold transition-colors flex items-center gap-2 group cursor-pointer ${currentQuestionIndex === 0
                       ? "opacity-0 pointer-events-none"
-                      : "text-slate-600 bg-white border border-slate-200 hover:bg-slate-50 shadow-sm"
+                      : "text-slate-700 bg-white border border-slate-200 hover:bg-slate-50"
                     }`}
                 >
                   <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
@@ -741,9 +728,9 @@ export default function HexagonalSurvey() {
                 <button
                   onClick={handleNext}
                   disabled={!isCurrentQuestionValid || isTransitioning || isSubmitting}
-                  className={`px-8 py-3 rounded-xl font-bold text-white transition-all shadow-lg flex items-center justify-center gap-2 group cursor-pointer ${isCurrentQuestionValid && !isSubmitting
-                      ? "bg-primary hover:bg-primary/95 hover:-translate-y-0.5 hover:shadow-primary/30"
-                      : "bg-slate-300 cursor-not-allowed shadow-none"
+                  className={`px-8 py-3 rounded-xl font-bold text-white transition-colors flex items-center justify-center gap-2 group cursor-pointer ${isCurrentQuestionValid && !isSubmitting
+                      ? "bg-primary hover:bg-primary/95"
+                      : "bg-slate-200 text-slate-400 cursor-not-allowed"
                     }`}
                 >
                   {isSubmitting && <div className="w-5 h-5 border-2 border-white/50 border-t-white rounded-full animate-spin" />}

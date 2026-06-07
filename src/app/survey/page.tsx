@@ -123,10 +123,7 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col relative overflow-hidden bg-slate-50">
-      <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-primary/20 rounded-full blur-[100px] pointer-events-none" />
-      <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-secondary/20 rounded-full blur-[100px] pointer-events-none" />
-
+    <div className="min-h-screen flex flex-col bg-slate-50">
       <Header disableLink />
 
       <main className="flex-1 w-full max-w-4xl mx-auto px-4 py-8 sm:py-12 z-10 relative">
@@ -148,23 +145,22 @@ export default function Home() {
 
             {/* Transition Overlay */}
             <div
-              className={`absolute inset-0 z-50 flex items-center justify-center bg-slate-50/90 backdrop-blur-sm transition-all duration-500 rounded-3xl ${
+              className={`absolute inset-0 z-50 flex items-center justify-center bg-slate-50/95 transition-all duration-300 rounded-2xl ${
                 isTransitioning ? "opacity-100 visible" : "opacity-0 invisible"
               }`}
             >
-              <div className="text-center transform transition-transform duration-500 scale-110">
-                <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-                <h2 className="text-2xl font-bold text-slate-800">جاري الانتقال للمحور التالي...</h2>
+              <div className="text-center transform transition-all duration-300 scale-100">
+                <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+                <h2 className="text-xl font-bold text-slate-800">جاري الانتقال للمحور التالي...</h2>
               </div>
             </div>
 
-            <div className={`transition-opacity duration-500 ${isTransitioning ? 'opacity-0' : 'opacity-100'}`}>
-              <div className="mb-8 p-6 bg-primary text-white rounded-2xl shadow-lg relative overflow-hidden">
-                 <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-10 -mt-10 blur-xl pointer-events-none" />
-                 <h2 className="text-2xl sm:text-3xl font-bold mb-2">
+            <div className={`transition-opacity duration-300 ${isTransitioning ? 'opacity-0' : 'opacity-100'}`}>
+              <div className="mb-8 p-6 bg-primary text-white rounded-2xl relative overflow-hidden">
+                 <h2 className="text-xl sm:text-2xl font-extrabold mb-2">
                   {currentSection.title}
                  </h2>
-                 <p className="text-primary-foreground/80">
+                 <p className="text-slate-100 text-sm">
                    يرجى الإجابة على جميع أسئلة هذا المحور للانتقال للتالي.
                  </p>
               </div>
@@ -185,10 +181,10 @@ export default function Home() {
                 <button
                   onClick={handlePrev}
                   disabled={currentSectionIndex === 0 || isTransitioning || isSubmitting}
-                  className={`px-6 py-3 rounded-xl font-medium transition-all ${
+                  className={`px-6 py-3 rounded-xl font-semibold transition-colors cursor-pointer ${
                     currentSectionIndex === 0
                       ? "opacity-0 pointer-events-none"
-                      : "text-slate-600 bg-white border border-slate-200 hover:bg-slate-50 shadow-sm"
+                      : "text-slate-700 bg-white border border-slate-200 hover:bg-slate-50"
                   }`}
                 >
                   المحور السابق
@@ -197,10 +193,10 @@ export default function Home() {
                 <button
                   onClick={handleNext}
                   disabled={!allCurrentAnswered || isTransitioning || isSubmitting}
-                  className={`px-8 py-3 rounded-xl font-bold text-white transition-all shadow-lg flex items-center justify-center gap-2 ${
+                  className={`px-8 py-3 rounded-xl font-bold text-white transition-colors flex items-center justify-center gap-2 cursor-pointer ${
                     allCurrentAnswered && !isSubmitting
-                      ? "bg-primary hover:bg-primary/90 hover:-translate-y-0.5 hover:shadow-primary/30"
-                      : "bg-slate-300 cursor-not-allowed shadow-none"
+                      ? "bg-primary hover:bg-primary/95"
+                      : "bg-slate-200 text-slate-400 cursor-not-allowed"
                   }`}
                 >
                   {isSubmitting && <div className="w-5 h-5 border-2 border-white/50 border-t-white rounded-full animate-spin" />}

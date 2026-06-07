@@ -241,11 +241,11 @@ export default function HexagonalSurvey() {
                       />
                     </div>
                     <div className="h-8 w-[1px] bg-slate-300 shrink-0" />
-                    <div className="w-16 h-16 flex items-center justify-center transition-transform duration-200 hover:scale-105 select-none">
+                    <div className="h-16 flex items-center justify-center transition-transform duration-200 hover:scale-105 select-none shrink-0">
                       <img 
                         src={prefilledCharityLogo} 
                         alt={prefilledCharityName || "شعار الجمعية"} 
-                        className="w-full h-full object-contain filter drop-shadow-sm"
+                        className="h-full w-auto max-w-[120px] object-contain filter drop-shadow-sm"
                       />
                     </div>
                   </div>
@@ -617,11 +617,11 @@ export default function HexagonalSurvey() {
                     />
                   </div>
                   <div className="h-7 w-[1px] bg-slate-300 shrink-0" />
-                  <div className="w-14 h-14 flex items-center justify-center transition-transform duration-200 hover:scale-105 select-none">
+                  <div className="h-14 flex items-center justify-center transition-transform duration-200 hover:scale-105 select-none shrink-0">
                     <img 
                       src={prefilledCharityLogo} 
                       alt={registrationData.charityName || "شعار الجمعية"} 
-                      className="w-full h-full object-contain filter drop-shadow-sm"
+                      className="h-full w-auto max-w-[100px] object-contain filter drop-shadow-sm"
                     />
                   </div>
                 </div>

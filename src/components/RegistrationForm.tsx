@@ -53,11 +53,11 @@ export default function RegistrationForm({ onComplete, prefilledCharityName, pre
               />
             </div>
             <div className="h-7 w-[1px] bg-slate-300 shrink-0" />
-            <div className="w-14 h-14 flex items-center justify-center transition-transform duration-200 hover:scale-105 select-none">
+            <div className="h-14 flex items-center justify-center transition-transform duration-200 hover:scale-105 select-none shrink-0">
               <img 
                 src={prefilledCharityLogo} 
                 alt={formData.charityName || "شعار الجمعية"} 
-                className="w-full h-full object-contain filter drop-shadow-sm"
+                className="h-full w-auto max-w-[100px] object-contain filter drop-shadow-sm"
               />
             </div>
           </div>

@@ -65,7 +65,7 @@ export default function Header({
     <div className={`flex items-center gap-3 ${disableLink ? "" : "group"}`}>
       <div className={`relative w-16 h-16 sm:w-20 sm:h-20 transition-transform duration-300 ${disableLink ? "" : "group-hover:scale-105"}`}>
         <Image
-          src="/assets/logos/لوجو زاد-09.png"
+          src="/assets/logos/لوجو زاد-01.svg"
           alt="زاد التنموية"
           fill
           className="object-contain"

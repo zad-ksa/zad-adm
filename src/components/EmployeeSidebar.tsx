@@ -46,7 +46,7 @@ export default function EmployeeSidebar({
     navItems.push({ label: "المهام والمنجزات", href: "/dashboard/tasks", icon: CheckSquare });
   }
 
-  if (userState?.role === "ADMIN" || userState?.role === "EXECUTIVE_DIRECTOR" || userState?.role === "GENERAL_MANAGER") {
+  if (userState?.role === "ADMIN" || userState?.role === "EXECUTIVE_DIRECTOR" || userState?.role === "GENERAL_MANAGER" || userState?.role === "ADMINISTRATIVE_SECRETARIAT") {
     navItems.push({ label: "إدارة الموظفين", href: "/dashboard/employees", icon: Users });
   }
 

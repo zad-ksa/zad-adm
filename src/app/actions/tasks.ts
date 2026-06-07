@@ -24,8 +24,8 @@ export async function createTaskAction(data: {
     const user = await getAuthenticatedUser();
     
     // Check role permissions:
-    // Only ADMIN and EXECUTIVE_DIRECTOR can assign tasks to other employees.
-    const isDirectorOrAdmin = ["ADMIN", "EXECUTIVE_DIRECTOR"].includes(user.role);
+    // Only ADMIN, EXECUTIVE_DIRECTOR and ADMINISTRATIVE_SECRETARIAT can assign tasks to other employees.
+    const isDirectorOrAdmin = ["ADMIN", "EXECUTIVE_DIRECTOR", "ADMINISTRATIVE_SECRETARIAT"].includes(user.role);
     const finalAssignedToId = isDirectorOrAdmin ? data.assignedToId : user.id;
 
     let charityName = null;
@@ -70,7 +70,7 @@ export async function deleteTaskAction(taskId: string) {
       return { error: "المهمة غير موجودة" };
     }
 
-    const isDirectorOrAdmin = ["ADMIN", "EXECUTIVE_DIRECTOR"].includes(user.role);
+    const isDirectorOrAdmin = ["ADMIN", "EXECUTIVE_DIRECTOR", "ADMINISTRATIVE_SECRETARIAT"].includes(user.role);
     // Standard employee can only delete tasks they created for themselves
     const isOwner = task.createdById === user.id && task.assignedToId === user.id;
 
@@ -94,7 +94,7 @@ export async function reassignTaskAction(taskId: string, newEmployeeId: string) 
   try {
     const user = await getAuthenticatedUser();
     
-    const isDirectorOrAdmin = ["ADMIN", "EXECUTIVE_DIRECTOR"].includes(user.role);
+    const isDirectorOrAdmin = ["ADMIN", "EXECUTIVE_DIRECTOR", "ADMINISTRATIVE_SECRETARIAT"].includes(user.role);
     if (!isDirectorOrAdmin) {
       return { error: "غير مصرح لك بنقل المهام" };
     }
@@ -134,7 +134,7 @@ export async function toggleTaskCompletionAction(taskId: string, isCompleted: bo
       return { error: "المهمة غير موجودة" };
     }
 
-    const isDirectorOrAdmin = ["ADMIN", "EXECUTIVE_DIRECTOR"].includes(user.role);
+    const isDirectorOrAdmin = ["ADMIN", "EXECUTIVE_DIRECTOR", "ADMINISTRATIVE_SECRETARIAT"].includes(user.role);
     const isAssigned = task.assignedToId === user.id;
 
     if (!isDirectorOrAdmin && !isAssigned) {
@@ -224,7 +224,7 @@ export async function updateTaskTitleAction(taskId: string, newTitle: string) {
       return { error: "المهمة غير موجودة" };
     }
 
-    const isDirectorOrAdmin = ["ADMIN", "EXECUTIVE_DIRECTOR"].includes(user.role);
+    const isDirectorOrAdmin = ["ADMIN", "EXECUTIVE_DIRECTOR", "ADMINISTRATIVE_SECRETARIAT"].includes(user.role);
     // Standard employee can only edit tasks they created for themselves
     const isOwner = task.createdById === user.id && task.assignedToId === user.id;
 

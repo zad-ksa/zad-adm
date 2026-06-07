@@ -103,7 +103,7 @@ export default function TasksClient({
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
 
-  const isDirectorOrAdmin = ["ADMIN", "EXECUTIVE_DIRECTOR"].includes(session.role);
+  const isDirectorOrAdmin = ["ADMIN", "EXECUTIVE_DIRECTOR", "ADMINISTRATIVE_SECRETARIAT"].includes(session.role);
 
 
   const showNotification = (type: "success" | "error", message: string) => {

@@ -66,3 +66,53 @@ export async function toggleEmployeeStatus(id: string, currentStatus: boolean) {
     return { error: "حدث خطأ" };
   }
 }
+
+export async function updateEmployee(
+  id: string,
+  data: {
+    name: string;
+    phone: string;
+    role: string;
+    permissions: string[];
+    password?: string;
+  }
+) {
+  if (!data.name || !data.phone || !data.role) {
+    return { error: "يرجى تعبئة الحقول المطلوبة: الاسم، الجوال، ونوع الحساب" };
+  }
+
+  try {
+    const existingEmployee = await prisma.employee.findFirst({
+      where: {
+        phone: data.phone,
+        id: { not: id },
+      },
+    });
+
+    if (existingEmployee) {
+      return { error: "رقم الجوال مسجل لموظف آخر" };
+    }
+
+    const updateData: any = {
+      name: data.name,
+      phone: data.phone,
+      role: data.role as any,
+      permissions: data.permissions,
+    };
+
+    if (data.password && data.password.trim() !== "") {
+      updateData.password = await hash(data.password, 10);
+    }
+
+    await prisma.employee.update({
+      where: { id },
+      data: updateData,
+    });
+
+    revalidatePath("/dashboard/employees");
+    return { success: "تم تحديث بيانات الموظف وصلاحياته بنجاح" };
+  } catch (error: any) {
+    console.error("Error updating employee:", error);
+    return { error: error.message || "حدث خطأ أثناء تحديث بيانات الموظف" };
+  }
+}

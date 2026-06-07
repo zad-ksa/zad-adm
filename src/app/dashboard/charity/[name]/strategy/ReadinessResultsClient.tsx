@@ -182,42 +182,7 @@ export default function ReadinessResultsClient({ responses }: { responses: any[]
           </div>
         </div>
 
-        {/* القسم المنفصل لجميع الأسئلة */}
-        <div className="mt-10">
-          <h3 className="text-lg font-bold text-slate-700 flex items-center gap-2 mb-6">
-            <span className="w-2 h-6 rounded-full bg-emerald-500 inline-block"></span>
-            تفصيل نسبة الإجابة لجميع الأسئلة
-          </h3>
-          <div className="bg-white rounded-2xl p-8 border border-slate-100 shadow-sm space-y-8">
-            {sectionData.map((sec) => (
-              <div key={sec.index} className="space-y-4">
-                <h4 className="text-sm font-bold text-slate-800 bg-slate-50 p-3 rounded-xl border border-slate-100 flex items-center gap-2">
-                  <span className="bg-white w-6 h-6 rounded-md shadow-sm border border-slate-100 flex items-center justify-center text-xs text-primary">{sec.index}</span>
-                  {sec.title}
-                </h4>
-                <div className="space-y-3 pl-2 pr-2">
-                  {sec.questions.map((q, qIdx) => (
-                    <div key={q.id} className="space-y-1.5">
-                      <div className="flex justify-between items-start text-xs font-medium gap-4">
-                        <span className="text-slate-600 flex-1 leading-relaxed">{qIdx + 1}- {q.text}</span>
-                        <span className={`px-2 py-0.5 rounded text-[10px] font-bold shrink-0 ${getPercentageColorClass(q.averagePercentage)}`}>
-                          {q.averagePercentage}%
-                        </span>
-                      </div>
-                      <div className="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
-                        <div
-                          className={`h-full rounded-full transition-all duration-1000 ease-out ${getPercentageBgClass(q.averagePercentage)}`}
-                          style={{ width: `${q.averagePercentage}%` }}
-                        />
-                      </div>
-                    </div>
-                  ))}
-                </div>
-                {sec.index !== sectionData.length && <div className="h-px bg-slate-100 my-4 w-full"></div>}
-              </div>
-            ))}
-          </div>
-        </div>
+
       </div>
 
       <div className="space-y-6">

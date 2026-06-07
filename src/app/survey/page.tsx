@@ -129,7 +129,11 @@ export default function Home() {
           invalidToken ? (
             <LinkClosedScreen />
           ) : (
-            <WelcomeScreen onStart={() => setHasAcceptedWelcome(true)} />
+            <WelcomeScreen 
+              onStart={() => setHasAcceptedWelcome(true)} 
+              prefilledCharityName={prefilledCharityName}
+              prefilledCharityLogo={prefilledCharityLogo}
+            />
           )
         ) : !registrationData ? (
           <RegistrationForm 

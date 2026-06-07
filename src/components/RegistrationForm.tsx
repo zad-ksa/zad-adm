@@ -44,29 +44,29 @@ export default function RegistrationForm({ onComplete, prefilledCharityName, pre
       <div className="mb-8 text-center">
         {/* Professional flat representation of Charity Logo or Icon Badge */}
         {prefilledCharityLogo ? (
-          <div className="flex items-center justify-center gap-4 mb-4">
-            <div className="w-20 h-20 bg-white rounded-xl flex items-center justify-center border border-slate-200 p-2.5">
+          <div className="flex items-center justify-center gap-4.5 mb-6">
+            <div className="w-28 h-14 flex items-center justify-center transition-transform duration-200 hover:scale-105 select-none">
               <img 
-                src="/assets/logos/لوجو زاد-01.svg" 
+                src="/assets/logos/لوجو زاد-cropped.svg" 
                 alt="زاد التنموية" 
-                className="w-full h-full object-contain"
+                className="w-full h-full object-contain filter drop-shadow-sm"
               />
             </div>
-            <span className="text-slate-350 text-xl font-light">×</span>
-            <div className="w-20 h-20 bg-white rounded-xl flex items-center justify-center border border-slate-200 p-2.5">
+            <div className="h-7 w-[1px] bg-slate-300 shrink-0" />
+            <div className="w-14 h-14 flex items-center justify-center transition-transform duration-200 hover:scale-105 select-none">
               <img 
                 src={prefilledCharityLogo} 
                 alt={formData.charityName || "شعار الجمعية"} 
-                className="w-full h-full object-contain"
+                className="w-full h-full object-contain filter drop-shadow-sm"
               />
             </div>
           </div>
         ) : (
-          <div className="w-20 h-20 bg-white rounded-xl flex items-center justify-center mx-auto mb-4 border border-slate-200 p-2.5">
+          <div className="w-36 h-18 flex items-center justify-center mx-auto mb-6 transition-transform duration-200 hover:scale-105 select-none">
             <img 
-              src="/assets/logos/لوجو زاد-01.svg" 
+              src="/assets/logos/لوجو زاد-cropped.svg" 
               alt="زاد التنموية" 
-              className="w-full h-full object-contain"
+              className="w-full h-full object-contain filter drop-shadow-sm"
             />
           </div>
         )}

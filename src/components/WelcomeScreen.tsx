@@ -16,77 +16,115 @@ import {
 
 interface WelcomeScreenProps {
   onStart: () => void;
+  prefilledCharityName?: string;
+  prefilledCharityLogo?: string;
 }
 
-export default function WelcomeScreen({ onStart }: WelcomeScreenProps) {
+export default function WelcomeScreen({ onStart, prefilledCharityName, prefilledCharityLogo }: WelcomeScreenProps) {
   const [showGuide, setShowGuide] = useState(false);
 
   return (
-    <div className="bg-white border border-slate-200 rounded-2xl p-8 sm:p-12 relative overflow-hidden">
-      <div className="text-center relative z-10 max-w-2xl mx-auto">
-        <div className="relative w-24 h-24 mx-auto mb-6">
-          <Image
-            src="/assets/logos/لوجو زاد-01.svg"
-            alt="زاد التنموية"
-            fill
-            className="object-contain"
-            priority
-          />
-        </div>
+    <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden grid grid-cols-1 md:grid-cols-12 max-w-5xl mx-auto shadow-sm" dir="rtl">
+      {/* Right Side: Branding & Logos (5 columns on md) */}
+      <div className="md:col-span-5 bg-slate-50 border-l border-slate-200 p-8 sm:p-12 flex flex-col justify-center items-center text-center">
+        {/* Prominent logos display */}
+        {prefilledCharityLogo ? (
+          <div className="flex items-center justify-center gap-5 mb-8">
+            <div className="w-32 h-16 flex items-center justify-center transition-transform duration-200 hover:scale-105 select-none">
+              <img 
+                src="/assets/logos/لوجو زاد-cropped.svg" 
+                alt="زاد التنموية" 
+                className="w-full h-full object-contain filter drop-shadow-sm"
+              />
+            </div>
+            <div className="h-8 w-[1px] bg-slate-300 shrink-0" />
+            <div className="w-16 h-16 flex items-center justify-center transition-transform duration-200 hover:scale-105 select-none">
+              <img 
+                src={prefilledCharityLogo} 
+                alt={prefilledCharityName || "شعار الجمعية"} 
+                className="w-full h-full object-contain filter drop-shadow-sm"
+              />
+            </div>
+          </div>
+        ) : (
+          <div className="w-40 h-20 flex items-center justify-center mb-8 transition-transform duration-200 hover:scale-105 select-none">
+            <img 
+              src="/assets/logos/لوجو زاد-cropped.svg" 
+              alt="زاد التنموية" 
+              className="w-full h-full object-contain filter drop-shadow-sm"
+            />
+          </div>
+        )}
 
-        <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-800 mb-4 leading-tight">
+        <h2 className="text-xl sm:text-2xl font-extrabold text-slate-800 mb-3 leading-tight">
           مقياس جاهزية الجمعيات للتخطيط الاستراتيجي
-        </h1>
+        </h2>
 
-        <p className="text-base text-slate-650 leading-relaxed mb-8">
-          أهلاً بكم في مقياس الجاهزية للتخطيط الاستراتيجي المقدّم من{" "}
-          <strong className="text-primary font-bold">زاد التنموية</strong>.
-          يهدف هذا المقياس لمساعدتكم في تقييم مدى جاهزية جمعيتكم الموقرة للانطلاق في صياغة خطتكم الاستراتيجية.
-        </p>
+        {prefilledCharityName ? (
+          <div className="mt-1 inline-flex items-center gap-1.5 px-3 py-1 bg-primary/5 border border-primary/10 rounded-full text-xs text-primary font-bold">
+            مخصص لـ {prefilledCharityName}
+          </div>
+        ) : (
+          <p className="text-slate-500 text-sm leading-relaxed max-w-xs">
+            تقييم متكامل لمساعدة الجمعيات الأهلية في تحديد مدى استعدادها للانطلاق في صياغة خطتها الاستراتيجية.
+          </p>
+        )}
+      </div>
 
-        {/* Action Options */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
-          <button
-            onClick={() => setShowGuide(true)}
-            className="flex flex-col items-center justify-center p-6 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-xl transition-colors group cursor-pointer"
-          >
-            <div className="w-12 h-12 bg-primary/5 text-primary border border-primary/10 rounded-xl flex items-center justify-center mb-3">
-              <BookOpen className="w-6 h-6" />
-            </div>
-            <span className="font-bold text-slate-800 mb-1">دليل الاستخدام</span>
-            <span className="text-xs text-slate-500 text-center">
-              اطّلع على المحاور، معايير التقييم ونصائح التعبئة
+      {/* Left Side: Interactive options & start button (7 columns on md) */}
+      <div className="md:col-span-7 p-8 sm:p-12 flex flex-col justify-center">
+        <div className="max-w-xl mx-auto w-full">
+          <div className="mb-6">
+            <h3 className="text-lg font-bold text-slate-800 mb-2">أهلاً بكم في مقياس الجاهزية</h3>
+            <p className="text-sm text-slate-650 leading-relaxed">
+              يهدف هذا المقياس لمساعدتكم في تقييم مدى جاهزية جمعيتكم الموقرة للانطلاق في صياغة خطتكم الاستراتيجية بكل يسر وسهولة.
+            </p>
+          </div>
+
+          {/* Action Options */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+            <button
+              onClick={() => setShowGuide(true)}
+              className="flex flex-col items-center justify-center p-5 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-xl transition-colors group cursor-pointer"
+            >
+              <div className="w-10 h-10 bg-primary/5 text-primary border border-primary/10 rounded-lg flex items-center justify-center mb-3">
+                <BookOpen className="w-5 h-5" />
+              </div>
+              <span className="font-bold text-slate-800 text-sm mb-1">دليل الاستخدام</span>
+              <span className="text-[11px] text-slate-500 text-center leading-snug">
+                شرح المحاور، معايير التقييم والنصائح
+              </span>
+            </button>
+
+            <button
+              onClick={onStart}
+              className="flex flex-col items-center justify-center p-5 bg-primary hover:bg-primary/95 text-white rounded-xl transition-colors group cursor-pointer"
+            >
+              <div className="w-10 h-10 bg-white/10 text-white rounded-lg flex items-center justify-center mb-3">
+                <Zap className="w-5 h-5 fill-current" />
+              </div>
+              <span className="font-bold text-sm mb-1">البدء بالاستبيان</span>
+              <span className="text-[11px] text-white/80 text-center leading-snug">
+                تعبئة بيانات الجمعية وبدء التقييم
+              </span>
+            </button>
+          </div>
+
+          <div className="text-slate-600 text-xs flex flex-col sm:flex-row justify-center items-center gap-3 sm:gap-6 bg-slate-50 p-4 rounded-xl border border-slate-200">
+            <span className="flex items-center gap-2">
+              <Clock className="w-4.5 h-4.5 text-primary shrink-0" />
+              <span>يستغرق حوالي 20-30 دقيقة</span>
             </span>
-          </button>
-
-          <button
-            onClick={onStart}
-            className="flex flex-col items-center justify-center p-6 bg-primary hover:bg-primary/95 text-white rounded-xl transition-colors group cursor-pointer"
-          >
-            <div className="w-12 h-12 bg-white/10 text-white rounded-xl flex items-center justify-center mb-3">
-              <Zap className="w-6 h-6 fill-current" />
-            </div>
-            <span className="font-bold mb-1 text-lg">البدء بالاستبيان</span>
-            <span className="text-xs text-white/80 text-center">
-              الانتقال مباشرة لتعبئة بيانات الجمعية وبدء التقييم
+            <span className="hidden sm:inline text-slate-300">•</span>
+            <span className="flex items-center gap-2">
+              <ClipboardList className="w-4.5 h-4.5 text-primary shrink-0" />
+              <span>يتكون من 64 بنداً (10 محاور)</span>
             </span>
-          </button>
-        </div>
-
-        <div className="text-slate-600 text-xs sm:text-sm flex flex-col sm:flex-row justify-center items-center gap-3 sm:gap-6 bg-slate-50 p-4 rounded-xl border border-slate-200 max-w-lg mx-auto">
-          <span className="flex items-center gap-2">
-            <Clock className="w-4.5 h-4.5 text-primary shrink-0" />
-            <span>يستغرق التقييم حوالي 20-30 دقيقة</span>
-          </span>
-          <span className="hidden sm:inline text-slate-300">•</span>
-          <span className="flex items-center gap-2">
-            <ClipboardList className="w-4.5 h-4.5 text-primary shrink-0" />
-            <span>يتكون من 64 بنداً موزعة على 10 محاور</span>
-          </span>
+          </div>
         </div>
       </div>
 
-      {/* Guide Image Lightbox/Modal */}
+      {/* Guide Modal */}
       {showGuide && (
         <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <div
@@ -94,7 +132,7 @@ export default function WelcomeScreen({ onStart }: WelcomeScreenProps) {
             onClick={() => setShowGuide(false)}
           />
 
-          <div className="bg-white rounded-2xl w-full max-w-4xl max-h-[92vh] overflow-hidden flex flex-col relative z-10 border border-slate-200 animate-in fade-in zoom-in-95 duration-200">
+          <div className="bg-white rounded-2xl w-full max-w-4xl max-h-[92vh] overflow-hidden flex flex-col relative z-10 border border-slate-200 animate-in fade-in zoom-in-95 duration-205">
             {/* Modal Header */}
             <div className="p-4 border-b border-slate-200 flex justify-between items-center bg-slate-50" dir="rtl">
               <h2 className="font-extrabold text-slate-800 text-base sm:text-lg flex items-center gap-2">
@@ -138,10 +176,10 @@ export default function WelcomeScreen({ onStart }: WelcomeScreenProps) {
                     </div>
                     <h4 className="font-extrabold text-slate-800 text-base sm:text-lg">أولاً: ما هذا المقياس؟</h4>
                   </div>
-                  <p className="text-slate-600 leading-relaxed text-sm md:text-base">
+                  <p className="text-slate-650 leading-relaxed text-sm md:text-base">
                     مقياس جاهزية الجمعيات للتخطيط الاستراتيجي هو أداة تقييم مُصمَّمة خصيصاً للجمعيات الأهلية حديثة التأسيس، يهدف إلى الإجابة عن سؤال واحد مهم: <strong className="text-primary font-bold">هل جمعيتنا جاهزة الآن للدخول في مشروع التخطيط الاستراتيجي؟</strong>
                   </p>
-                  <p className="text-slate-600 leading-relaxed text-sm md:text-base mt-3">
+                  <p className="text-slate-650 leading-relaxed text-sm md:text-base mt-3">
                     يقيس المقياس <strong className="text-slate-800 font-semibold">عشرة محاور جوهرية</strong> تشمل: الوضع القانوني، الحوكمة، فريق العمل، الوضع المالي، البرامج، المرافق، الشراكات، الثقافة المؤسسية، إدارة المعلومات، والجاهزية المباشرة للتخطيط.
                   </p>
                 </div>
@@ -178,7 +216,7 @@ export default function WelcomeScreen({ onStart }: WelcomeScreenProps) {
                     </div>
                     <h4 className="font-extrabold text-slate-800 text-base sm:text-lg">ثالثاً: محاور المقياس العشرة</h4>
                   </div>
-                  <p className="text-slate-600 text-sm md:text-base mb-4">
+                  <p className="text-slate-650 text-sm md:text-base mb-4">
                     يشتمل المقياس على 10 محاور رئيسية تغطي جوانب العمل المؤسسي كافة:
                   </p>
 
@@ -207,7 +245,7 @@ export default function WelcomeScreen({ onStart }: WelcomeScreenProps) {
                           <tr key={idx} className="hover:bg-slate-50 transition-colors">
                             <td className="p-3 text-slate-500 text-center font-medium">{row.id}</td>
                             <td className="p-3 text-slate-800 font-medium">{row.name}</td>
-                            <td className="p-3 text-slate-600 text-center">{row.items}</td>
+                            <td className="p-3 text-slate-650 text-center">{row.items}</td>
                           </tr>
                         ))}
                         <tr className="bg-primary/5 font-bold border-t border-slate-200">
@@ -228,7 +266,7 @@ export default function WelcomeScreen({ onStart }: WelcomeScreenProps) {
                     </div>
                     <h4 className="font-extrabold text-slate-800 text-base sm:text-lg">رابعاً: مقياس التقييم الخماسي</h4>
                   </div>
-                  <p className="text-slate-600 text-sm md:text-base mb-6">
+                  <p className="text-slate-650 text-sm md:text-base mb-6">
                     لكل بند من البنود الـ 64، اختر درجة واحدة فقط من القائمة التالية تعبّر عن الواقع الفعلي في جمعيتك:
                   </p>
 

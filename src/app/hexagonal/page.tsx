@@ -228,70 +228,105 @@ export default function HexagonalSurvey() {
           invalidToken ? (
             <LinkClosedScreen />
           ) : (
-          <div className="bg-white border border-slate-200 rounded-2xl p-8 sm:p-12 relative overflow-hidden">
-            <div className="text-center relative z-10 max-w-2xl mx-auto">
-              <div className="relative w-24 h-24 mx-auto mb-6">
-                <Image
-                  src="/assets/logos/لوجو زاد-09.png"
-                  alt="زاد التنموية"
-                  fill
-                  className="object-contain"
-                  priority
-                />
+            <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden grid grid-cols-1 md:grid-cols-12 max-w-5xl mx-auto shadow-sm" dir="rtl">
+              {/* Right Side: Branding & Logos (5 columns on md) */}
+              <div className="md:col-span-5 bg-slate-50 border-l border-slate-200 p-8 sm:p-12 flex flex-col justify-center items-center text-center">
+                {prefilledCharityLogo ? (
+                  <div className="flex items-center justify-center gap-5 mb-8">
+                    <div className="w-32 h-16 flex items-center justify-center transition-transform duration-200 hover:scale-105 select-none">
+                      <img 
+                        src="/assets/logos/لوجو زاد-cropped.svg" 
+                        alt="زاد التنموية" 
+                        className="w-full h-full object-contain filter drop-shadow-sm"
+                      />
+                    </div>
+                    <div className="h-8 w-[1px] bg-slate-300 shrink-0" />
+                    <div className="w-16 h-16 flex items-center justify-center transition-transform duration-200 hover:scale-105 select-none">
+                      <img 
+                        src={prefilledCharityLogo} 
+                        alt={prefilledCharityName || "شعار الجمعية"} 
+                        className="w-full h-full object-contain filter drop-shadow-sm"
+                      />
+                    </div>
+                  </div>
+                ) : (
+                  <div className="w-40 h-20 flex items-center justify-center mb-8 transition-transform duration-200 hover:scale-105 select-none">
+                    <img 
+                      src="/assets/logos/لوجو زاد-cropped.svg" 
+                      alt="زاد التنموية" 
+                      className="w-full h-full object-contain filter drop-shadow-sm"
+                    />
+                  </div>
+                )}
+
+                <h2 className="text-xl sm:text-2xl font-extrabold text-slate-800 mb-3 leading-tight">
+                  التحليل السداسي للجمعيات الخيرية
+                </h2>
+
+                {prefilledCharityName ? (
+                  <div className="mt-1 inline-flex items-center gap-1.5 px-3 py-1 bg-primary/5 border border-primary/10 rounded-full text-xs text-primary font-bold">
+                    مخصص لـ {prefilledCharityName}
+                  </div>
+                ) : (
+                  <p className="text-slate-500 text-sm leading-relaxed max-w-xs">
+                    رصد وتحليل جوانب التميز والتحديات والفرص لتمكين الجمعيات الأهلية من رسم خريطتها الاستراتيجية.
+                  </p>
+                )}
               </div>
 
-              <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-800 mb-4 leading-tight">
-                التحليل السداسي للجمعيات الخيرية
-              </h1>
-
-              <p className="text-base text-slate-650 leading-relaxed mb-8">
-                أهلاً بكم في استبيان التحليل السداسي المقدّم من{" "}
-                <strong className="text-primary font-bold">زاد التنموية</strong>.
-                يساعد هذا استبيان في رسم صورة تحليلية متكاملة لجمعيتكم من خلال رصد ستة أبعاد جوهرية تشمل نقاط القوة والضعف والفرص والمخاطر، بالإضافة لعوامل النجاح والميزة التنافسية.
-              </p>
-
-              {/* Action Options */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
-                <button
-                  onClick={() => setShowGuide(true)}
-                  className="flex flex-col items-center justify-center p-6 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-xl transition-colors group cursor-pointer"
-                >
-                  <div className="w-12 h-12 bg-secondary/5 text-secondary border border-secondary/10 rounded-xl flex items-center justify-center mb-3">
-                    <BookOpen className="w-6 h-6" />
+              {/* Left Side: Interactive options & start button (7 columns on md) */}
+              <div className="md:col-span-7 p-8 sm:p-12 flex flex-col justify-center">
+                <div className="max-w-xl mx-auto w-full">
+                  <div className="mb-6">
+                    <h3 className="text-lg font-bold text-slate-800 mb-2">أهلاً بكم في استبيان التحليل السداسي</h3>
+                    <p className="text-sm text-slate-650 leading-relaxed">
+                      يساعد هذا الاستبيان في رسم صورة تحليلية متكاملة لجمعيتكم الموقرة من خلال رصد ستة أبعاد جوهرية تشمل نقاط القوة والضعف والفرص والمخاطر، بالإضافة لعوامل النجاح والميزة التنافسية.
+                    </p>
                   </div>
-                  <span className="font-bold text-slate-800 mb-1">دليل الاستخدام</span>
-                  <span className="text-xs text-slate-500 text-center">
-                    اطّلع على مفهوم التحليل السداسي وأبعاد التقييم بالتفصيل
-                  </span>
-                </button>
 
-                <button
-                  onClick={() => setStep("register")}
-                  className="flex flex-col items-center justify-center p-6 bg-primary hover:bg-primary/95 text-white rounded-xl transition-colors group cursor-pointer"
-                >
-                  <div className="w-12 h-12 bg-white/10 text-white rounded-xl flex items-center justify-center mb-3">
-                    <Zap className="w-6 h-6 fill-current" />
+                  {/* Action Options */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+                    <button
+                      onClick={() => setShowGuide(true)}
+                      className="flex flex-col items-center justify-center p-5 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-xl transition-colors group cursor-pointer"
+                    >
+                      <div className="w-10 h-10 bg-primary/5 text-primary border border-primary/10 rounded-lg flex items-center justify-center mb-3">
+                        <BookOpen className="w-5 h-5" />
+                      </div>
+                      <span className="font-bold text-slate-800 text-sm mb-1">دليل الاستخدام</span>
+                      <span className="text-[11px] text-slate-500 text-center leading-snug">
+                        مفهوم التحليل السداسي وأبعاد التقييم بالتفصيل
+                      </span>
+                    </button>
+
+                    <button
+                      onClick={() => setStep("register")}
+                      className="flex flex-col items-center justify-center p-5 bg-primary hover:bg-primary/95 text-white rounded-xl transition-colors group cursor-pointer"
+                    >
+                      <div className="w-10 h-10 bg-white/10 text-white rounded-lg flex items-center justify-center mb-3">
+                        <Zap className="w-5 h-5 fill-current" />
+                      </div>
+                      <span className="font-bold text-sm mb-1">البدء بالاستبيان</span>
+                      <span className="text-[11px] text-white/80 text-center leading-snug">
+                        تعبئة بيانات الجمعية وبدء التحليل
+                      </span>
+                    </button>
                   </div>
-                  <span className="font-bold mb-1 text-lg">البدء بالاستبيان</span>
-                  <span className="text-xs text-white/80 text-center">
-                    الانتقال مباشرة لتعبئة بيانات الجمعية وبدء التقييم
-                  </span>
-                </button>
-              </div>
 
-              <div className="text-slate-600 text-xs sm:text-sm flex flex-col sm:flex-row justify-center items-center gap-3 sm:gap-6 bg-slate-50 p-4 rounded-xl border border-slate-200 max-w-lg mx-auto">
-                <span className="flex items-center gap-2">
-                  <Clock className="w-4.5 h-4.5 text-primary shrink-0" />
-                  <span>يستغرق التقييم حوالي 15-20 دقيقة</span>
-                </span>
-                <span className="hidden sm:inline text-slate-300">•</span>
-                <span className="flex items-center gap-2">
-                  <ClipboardList className="w-4.5 h-4.5 text-primary shrink-0" />
-                  <span>يتكون من 6 أسئلة تحليلية رئيسية</span>
-                </span>
+                  <div className="text-slate-600 text-xs flex flex-col sm:flex-row justify-center items-center gap-3 sm:gap-6 bg-slate-50 p-4 rounded-xl border border-slate-200">
+                    <span className="flex items-center gap-2">
+                      <Clock className="w-4.5 h-4.5 text-primary shrink-0" />
+                      <span>يستغرق حوالي 15-20 دقيقة</span>
+                    </span>
+                    <span className="hidden sm:inline text-slate-300">•</span>
+                    <span className="flex items-center gap-2">
+                      <ClipboardList className="w-4.5 h-4.5 text-primary shrink-0" />
+                      <span>يتكون من 6 أسئلة تحليلية رئيسية</span>
+                    </span>
+                  </div>
+                </div>
               </div>
             </div>
-          </div>
           )
         )}
 
@@ -573,29 +608,29 @@ export default function HexagonalSurvey() {
           <div className="bg-white border border-slate-200 rounded-2xl p-8 sm:p-10 w-full animate-in fade-in duration-300 max-w-xl mx-auto shadow-sm" dir="rtl">
             <div className="mb-8 text-center">
               {prefilledCharityLogo ? (
-                <div className="flex items-center justify-center gap-4 mb-4">
-                  <div className="w-20 h-20 bg-white rounded-xl flex items-center justify-center border border-slate-200 p-2.5">
+                <div className="flex items-center justify-center gap-4.5 mb-6">
+                  <div className="w-28 h-14 flex items-center justify-center transition-transform duration-200 hover:scale-105 select-none">
                     <img 
-                      src="/assets/logos/لوجو زاد-01.svg" 
+                      src="/assets/logos/لوجو زاد-cropped.svg" 
                       alt="زاد التنموية" 
-                      className="w-full h-full object-contain"
+                      className="w-full h-full object-contain filter drop-shadow-sm"
                     />
                   </div>
-                  <span className="text-slate-350 text-xl font-light">×</span>
-                  <div className="w-20 h-20 bg-white rounded-xl flex items-center justify-center border border-slate-200 p-2.5">
+                  <div className="h-7 w-[1px] bg-slate-300 shrink-0" />
+                  <div className="w-14 h-14 flex items-center justify-center transition-transform duration-200 hover:scale-105 select-none">
                     <img 
                       src={prefilledCharityLogo} 
                       alt={registrationData.charityName || "شعار الجمعية"} 
-                      className="w-full h-full object-contain"
+                      className="w-full h-full object-contain filter drop-shadow-sm"
                     />
                   </div>
                 </div>
               ) : (
-                <div className="w-20 h-20 bg-white rounded-xl flex items-center justify-center mx-auto mb-4 border border-slate-200 p-2.5">
+                <div className="w-36 h-18 flex items-center justify-center mx-auto mb-6 transition-transform duration-200 hover:scale-105 select-none">
                   <img 
-                    src="/assets/logos/لوجو زاد-01.svg" 
+                    src="/assets/logos/لوجو زاد-cropped.svg" 
                     alt="زاد التنموية" 
-                    className="w-full h-full object-contain"
+                    className="w-full h-full object-contain filter drop-shadow-sm"
                   />
                 </div>
               )}

@@ -6,27 +6,74 @@ import { unstable_cache } from "next/cache";
 
 const getCachedDashboardData = unstable_cache(
   async () => {
-    return await Promise.all([
+    const [
+      charities,
+      allSurveys,
+      allHexSurveys,
+      allPrograms,
+      dbNewsItems
+    ] = await Promise.all([
       prisma.charity.findMany({ orderBy: { createdAt: "desc" } }),
-      prisma.surveyResponse.groupBy({
-        by: ['charityName'],
-        _count: { id: true }
-      }),
-      prisma.hexagonalResponse.groupBy({
-        by: ['charityName'],
-        _count: { id: true }
-      }),
-      prisma.program.groupBy({
-        by: ['charityId'],
-        _count: { id: true },
-        _sum: { beneficiaries: true }
-      }),
-      prisma.program.aggregate({
-        _count: { id: true },
-        _sum: { beneficiaries: true }
-      }),
+      prisma.surveyResponse.findMany({ select: { id: true, charityName: true } }),
+      prisma.hexagonalResponse.findMany({ select: { id: true, charityName: true } }),
+      prisma.program.findMany({ select: { id: true, charityId: true, beneficiaries: true } }),
       prisma.news.findMany({ take: 5, orderBy: { createdAt: "desc" } })
     ]);
+
+    // In-memory aggregations (much faster than unindexed DB groupBy)
+    const surveyResponsesGrouped: any[] = [];
+    const hexagonalResponsesGrouped: any[] = [];
+    const programsGrouped: any[] = [];
+    
+    // Group surveys
+    const surveyCountsMap = new Map<string, number>();
+    allSurveys.forEach(s => {
+      const name = s.charityName;
+      surveyCountsMap.set(name, (surveyCountsMap.get(name) || 0) + 1);
+    });
+    surveyCountsMap.forEach((count, name) => surveyResponsesGrouped.push({ charityName: name, _count: { id: count } }));
+
+    // Group hex surveys
+    const hexCountsMap = new Map<string, number>();
+    allHexSurveys.forEach(s => {
+      const name = s.charityName;
+      hexCountsMap.set(name, (hexCountsMap.get(name) || 0) + 1);
+    });
+    hexCountsMap.forEach((count, name) => hexagonalResponsesGrouped.push({ charityName: name, _count: { id: count } }));
+
+    // Group programs
+    const progMap = new Map<string, { count: number, ben: number }>();
+    let totalProgramsCount = 0;
+    let totalBeneficiariesSum = 0;
+
+    allPrograms.forEach(p => {
+      totalProgramsCount++;
+      totalBeneficiariesSum += p.beneficiaries || 0;
+
+      if (p.charityId) {
+        if (!progMap.has(p.charityId)) {
+          progMap.set(p.charityId, { count: 0, ben: 0 });
+        }
+        const data = progMap.get(p.charityId)!;
+        data.count++;
+        data.ben += p.beneficiaries || 0;
+      }
+    });
+
+    progMap.forEach((data, charityId) => {
+      programsGrouped.push({
+        charityId,
+        _count: { id: data.count },
+        _sum: { beneficiaries: data.ben }
+      });
+    });
+
+    const programsAgg = {
+      _count: { id: totalProgramsCount },
+      _sum: { beneficiaries: totalBeneficiariesSum }
+    };
+
+    return [charities, surveyResponsesGrouped, hexagonalResponsesGrouped, programsGrouped, programsAgg, dbNewsItems];
   },
   ['dashboard-main-data'],
   { revalidate: 300, tags: ['dashboard-data'] }

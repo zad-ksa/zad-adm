@@ -2,6 +2,35 @@ import { prisma } from "@/lib/db";
 import type { Metadata } from "next";
 import { getCharities } from "@/app/actions/charity";
 import Link from "next/link";
+import { unstable_cache } from "next/cache";
+
+const getCachedDashboardData = unstable_cache(
+  async () => {
+    return await Promise.all([
+      getCharities(),
+      prisma.surveyResponse.groupBy({
+        by: ['charityName'],
+        _count: { id: true }
+      }),
+      prisma.hexagonalResponse.groupBy({
+        by: ['charityName'],
+        _count: { id: true }
+      }),
+      prisma.program.groupBy({
+        by: ['charityId'],
+        _count: { id: true },
+        _sum: { beneficiaries: true }
+      }),
+      prisma.program.aggregate({
+        _count: { id: true },
+        _sum: { beneficiaries: true }
+      }),
+      prisma.news.findMany({ take: 5, orderBy: { createdAt: "desc" } })
+    ]);
+  },
+  ['dashboard-main-data'],
+  { revalidate: 300, tags: ['dashboard-data'] }
+);
 
 export const revalidate = 300; // تحديث الصفحة كل 5 دقائق (تخزين مؤقت)
 
@@ -11,7 +40,7 @@ export const metadata: Metadata = {
 };
 
 export default async function MainDashboard() {
-  // جلب جميع البيانات من قاعدة البيانات بالتوازي باستخدام التجميع (Aggregations) لتحقيق أداء صاروخي
+  // جلب جميع البيانات من قاعدة البيانات بالتوازي باستخدام التجميع (Aggregations) مع التخزين المؤقت الإجباري
   const [
     charities,
     surveyResponsesGrouped,
@@ -19,27 +48,7 @@ export default async function MainDashboard() {
     programsGrouped,
     programsAgg,
     dbNewsItems
-  ] = await Promise.all([
-    getCharities(),
-    prisma.surveyResponse.groupBy({
-      by: ['charityName'],
-      _count: { id: true }
-    }),
-    prisma.hexagonalResponse.groupBy({
-      by: ['charityName'],
-      _count: { id: true }
-    }),
-    prisma.program.groupBy({
-      by: ['charityId'],
-      _count: { id: true },
-      _sum: { beneficiaries: true }
-    }),
-    prisma.program.aggregate({
-      _count: { id: true },
-      _sum: { beneficiaries: true }
-    }),
-    prisma.news.findMany({ take: 5, orderBy: { createdAt: "desc" } })
-  ]);
+  ] = await getCachedDashboardData();
 
   // Calculate surveys per charity FAST using grouped data
   const surveyCounts = new Map<string, { readiness: number, hexagonal: number }>();

@@ -10,9 +10,18 @@ import { unstable_cache } from "next/cache";
 const getCachedSurveysData = unstable_cache(
   async () => {
     const [charities, responses, hexagonalResponses] = await Promise.all([
-      prisma.charity.findMany({ orderBy: { createdAt: "desc" } }),
-      prisma.surveyResponse.findMany({ orderBy: { createdAt: "desc" } }),
-      prisma.hexagonalResponse.findMany({ orderBy: { createdAt: "desc" } })
+      prisma.charity.findMany({ 
+        select: { id: true, name: true, createdAt: true, establishmentDate: true, licenseNumber: true },
+        orderBy: { createdAt: "desc" } 
+      }),
+      prisma.surveyResponse.findMany({ 
+        select: { id: true, charityName: true, establishmentDate: true, licenseNumber: true, createdAt: true, scorePercentage: true },
+        orderBy: { createdAt: "desc" } 
+      }),
+      prisma.hexagonalResponse.findMany({ 
+        select: { id: true, charityName: true, createdAt: true },
+        orderBy: { createdAt: "desc" } 
+      })
     ]);
 
     const registeredNames = new Set(charities.map(c => c.name.trim().toLowerCase()));

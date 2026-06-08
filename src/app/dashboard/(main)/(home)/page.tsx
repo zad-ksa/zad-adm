@@ -13,7 +13,10 @@ const getCachedDashboardData = unstable_cache(
       allPrograms,
       dbNewsItems
     ] = await Promise.all([
-      prisma.charity.findMany({ orderBy: { createdAt: "desc" } }),
+      prisma.charity.findMany({ 
+        select: { id: true, name: true, createdAt: true, domain: true, grants: true, logoUrl: true },
+        orderBy: { createdAt: "desc" } 
+      }),
       prisma.surveyResponse.findMany({ select: { id: true, charityName: true } }),
       prisma.hexagonalResponse.findMany({ select: { id: true, charityName: true } }),
       prisma.program.findMany({ select: { id: true, charityId: true, beneficiaries: true } }),

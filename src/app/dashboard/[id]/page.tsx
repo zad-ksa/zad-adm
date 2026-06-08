@@ -4,7 +4,7 @@ import Link from "next/link";
 import { surveyData, Section, Question } from "@/data/surveyData";
 import type { Metadata } from "next";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 300;
 
 export const metadata: Metadata = {
   title: "تفاصيل استبيان الجاهزية | زاد التنموية",

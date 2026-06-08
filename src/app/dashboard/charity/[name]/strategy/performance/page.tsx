@@ -2,7 +2,7 @@ import { getPerformanceMetric } from "@/app/actions/performance";
 import PerformanceTable from "@/components/PerformanceTable";
 import type { Metadata } from "next";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 300;
 
 export async function generateMetadata({ params }: { params: Promise<{ name: string }> }): Promise<Metadata> {
   const { name } = await params;

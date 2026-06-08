@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import { CalendarIcon, LicenseIcon, Rocket, ClipboardList, Building2, Sparkles } from "@/components/Icons";
 import EditProfileButton from "./EditProfileButton";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 300;
 
 export async function generateMetadata({ params }: { params: Promise<{ name: string }> }): Promise<Metadata> {
   const { name } = await params;

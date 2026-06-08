@@ -4,7 +4,7 @@ import type { Metadata } from "next";
 import { getSession } from "@/lib/auth";
 import NewsFilterClient from "./NewsFilterClient";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 300;
 
 export const metadata: Metadata = {
   title: "آخر الأخبار والإنجازات | زاد التنموية",

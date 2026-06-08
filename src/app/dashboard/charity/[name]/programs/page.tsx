@@ -2,7 +2,7 @@ import { prisma } from "@/lib/db";
 import type { Metadata } from "next";
 import ProgramsClient from "./ProgramsClient";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 300;
 
 export async function generateMetadata({ params }: { params: Promise<{ name: string }> }): Promise<Metadata> {
   const { name } = await params;

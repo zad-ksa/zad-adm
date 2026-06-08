@@ -6,7 +6,22 @@ import SurveyLinkManager from "@/components/SurveyLinkManager";
 import type { Metadata } from "next";
 import { Award, AlertTriangle, Sparkles, ShieldAlert, Key, Rocket } from "@/components/Icons";
 
-export const dynamic = "force-dynamic";
+import { unstable_cache } from "next/cache";
+
+const getCachedResponses = unstable_cache(
+  async (charityName: string) => {
+    const allResponses = await prisma.surveyResponse.findMany({
+      orderBy: { createdAt: "desc" },
+    });
+    return allResponses.filter(
+      (res) => res.charityName.trim().toLowerCase() === charityName.trim().toLowerCase()
+    );
+  },
+  ['strategy-survey-responses'],
+  { revalidate: 300, tags: ['surveys'] }
+);
+
+export const revalidate = 300;
 
 export async function generateMetadata({ params }: { params: Promise<{ name: string }> }): Promise<Metadata> {
   const { name } = await params;
@@ -38,21 +53,11 @@ const FileEditIcon = () => (
   </svg>
 );
 
-
-
 export default async function StrategySurveysPage({ params }: { params: Promise<{ name: string }> }) {
   const { name } = await params;
   const decodedName = decodeURIComponent(name);
 
-  // Fetch all responses and filter in JS to prevent trailing space mismatches
-  const allResponses = await prisma.surveyResponse.findMany({
-    orderBy: { createdAt: "desc" },
-  });
-
-  const responses = allResponses.filter(
-    (res) => res.charityName.trim().toLowerCase() === decodedName.trim().toLowerCase()
-  );
-
+  const responses = await getCachedResponses(decodedName);
   const hasReadiness = responses.length > 0;
 
 

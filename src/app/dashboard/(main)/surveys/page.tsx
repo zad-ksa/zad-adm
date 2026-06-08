@@ -5,7 +5,111 @@ import type { Metadata } from "next";
 import { getCharities, bootstrapCharities } from "@/app/actions/charity";
 import ApproveCharityButton from "@/app/dashboard/ApproveCharityButton";
 
-export const dynamic = "force-dynamic";
+import { unstable_cache } from "next/cache";
+
+const getCachedSurveysData = unstable_cache(
+  async () => {
+    const charities = await prisma.charity.findMany({ orderBy: { createdAt: "desc" } });
+    const responses = await prisma.surveyResponse.findMany({ orderBy: { createdAt: "desc" } });
+    const hexagonalResponses = await prisma.hexagonalResponse.findMany({ orderBy: { createdAt: "desc" } });
+
+    const registeredNames = new Set(charities.map(c => c.name.trim().toLowerCase()));
+    
+    const pendingResponses = responses.filter(r => !registeredNames.has(r.charityName.trim().toLowerCase()));
+    const pendingHexs = hexagonalResponses.filter(h => !registeredNames.has(h.charityName.trim().toLowerCase()));
+
+    const pendingCharitiesMap = new Map<string, {
+      name: string;
+      readinessCount: number;
+      hexagonalCount: number;
+      establishmentDate?: string;
+      licenseNumber?: string;
+      latestDate: string;
+    }>();
+
+    pendingResponses.forEach(r => {
+      const name = r.charityName.trim();
+      const key = name.toLowerCase();
+      if (!pendingCharitiesMap.has(key)) {
+        pendingCharitiesMap.set(key, {
+          name,
+          readinessCount: 0,
+          hexagonalCount: 0,
+          establishmentDate: r.establishmentDate || undefined,
+          licenseNumber: r.licenseNumber || undefined,
+          latestDate: new Date(r.createdAt).toISOString(),
+        });
+      }
+      const item = pendingCharitiesMap.get(key)!;
+      item.readinessCount++;
+      if (r.establishmentDate && !item.establishmentDate) item.establishmentDate = r.establishmentDate;
+      if (r.licenseNumber && !item.licenseNumber) item.licenseNumber = r.licenseNumber;
+      if (new Date(r.createdAt) > new Date(item.latestDate)) {
+        item.latestDate = new Date(r.createdAt).toISOString();
+      }
+    });
+
+    pendingHexs.forEach(h => {
+      const name = h.charityName.trim();
+      const key = name.toLowerCase();
+      if (!pendingCharitiesMap.has(key)) {
+        pendingCharitiesMap.set(key, {
+          name,
+          readinessCount: 0,
+          hexagonalCount: 0,
+          latestDate: new Date(h.createdAt).toISOString(),
+        });
+      }
+      const item = pendingCharitiesMap.get(key)!;
+      item.hexagonalCount++;
+      if (new Date(h.createdAt) > new Date(item.latestDate)) {
+        item.latestDate = new Date(h.createdAt).toISOString();
+      }
+    });
+
+    const pendingCharitiesList = Array.from(pendingCharitiesMap.values());
+    pendingCharitiesList.sort((a, b) => new Date(b.latestDate).getTime() - new Date(a.latestDate).getTime());
+
+    const charityStats = charities.map(charity => {
+      const charityResponses = responses.filter(r => r.charityName.trim() === charity.name.trim());
+      const charityHexs = hexagonalResponses.filter(h => h.charityName.trim() === charity.name.trim());
+
+      let averagePercentage = 0;
+      if (charityResponses.length > 0) {
+        const total = charityResponses.reduce((acc, curr) => acc + curr.scorePercentage, 0);
+        averagePercentage = Math.round(total / charityResponses.length);
+      }
+
+      const dates = [
+        ...charityResponses.map(r => new Date(r.createdAt)),
+        ...charityHexs.map(h => new Date(h.createdAt))
+      ];
+      
+      const latestDate = dates.length > 0 
+        ? new Date(Math.max(...dates.map(d => d.getTime())))
+        : new Date(charity.createdAt);
+
+      return {
+        id: charity.id,
+        name: charity.name,
+        establishmentDate: charity.establishmentDate,
+        licenseNumber: charity.licenseNumber,
+        readinessCount: charityResponses.length,
+        hexagonalCount: charityHexs.length,
+        averagePercentage,
+        latestDate: latestDate.toISOString()
+      };
+    });
+
+    charityStats.sort((a, b) => new Date(b.latestDate).getTime() - new Date(a.latestDate).getTime());
+
+    return { pendingCharitiesList, charityStats };
+  },
+  ['surveys-dashboard-data'],
+  { revalidate: 300, tags: ['surveys'] }
+);
+
+export const revalidate = 300;
 
 export const metadata: Metadata = {
   title: "الاستبيانات | زاد التنموية",
@@ -13,111 +117,12 @@ export const metadata: Metadata = {
 };
 
 export default async function SurveysDashboard() {
-  let charities = await getCharities();
-  
-  if (charities.length === 0) {
+  const c = await getCharities();
+  if (c.length === 0) {
     await bootstrapCharities();
-    charities = await getCharities();
   }
 
-  const responses = await prisma.surveyResponse.findMany({
-    orderBy: { createdAt: "desc" },
-  });
-
-  const hexagonalResponses = await prisma.hexagonalResponse.findMany({
-    orderBy: { createdAt: "desc" },
-  });
-
-  const registeredNames = new Set(charities.map(c => c.name.trim().toLowerCase()));
-  
-  const pendingResponses = responses.filter(r => !registeredNames.has(r.charityName.trim().toLowerCase()));
-  const pendingHexs = hexagonalResponses.filter(h => !registeredNames.has(h.charityName.trim().toLowerCase()));
-
-  const pendingCharitiesMap = new Map<string, {
-    name: string;
-    readinessCount: number;
-    hexagonalCount: number;
-    establishmentDate?: string;
-    licenseNumber?: string;
-    latestDate: Date;
-  }>();
-
-  pendingResponses.forEach(r => {
-    const name = r.charityName.trim();
-    const key = name.toLowerCase();
-    if (!pendingCharitiesMap.has(key)) {
-      pendingCharitiesMap.set(key, {
-        name,
-        readinessCount: 0,
-        hexagonalCount: 0,
-        establishmentDate: r.establishmentDate || undefined,
-        licenseNumber: r.licenseNumber || undefined,
-        latestDate: new Date(r.createdAt),
-      });
-    }
-    const item = pendingCharitiesMap.get(key)!;
-    item.readinessCount++;
-    if (r.establishmentDate && !item.establishmentDate) {
-      item.establishmentDate = r.establishmentDate;
-    }
-    if (r.licenseNumber && !item.licenseNumber) {
-      item.licenseNumber = r.licenseNumber;
-    }
-    if (new Date(r.createdAt) > item.latestDate) {
-      item.latestDate = new Date(r.createdAt);
-    }
-  });
-
-  pendingHexs.forEach(h => {
-    const name = h.charityName.trim();
-    const key = name.toLowerCase();
-    if (!pendingCharitiesMap.has(key)) {
-      pendingCharitiesMap.set(key, {
-        name,
-        readinessCount: 0,
-        hexagonalCount: 0,
-        latestDate: new Date(h.createdAt),
-      });
-    }
-    const item = pendingCharitiesMap.get(key)!;
-    item.hexagonalCount++;
-    if (new Date(h.createdAt) > item.latestDate) {
-      item.latestDate = new Date(h.createdAt);
-    }
-  });
-
-  const pendingCharitiesList = Array.from(pendingCharitiesMap.values());
-  pendingCharitiesList.sort((a, b) => b.latestDate.getTime() - a.latestDate.getTime());
-
-  const charityStats = charities.map(charity => {
-    const charityResponses = responses.filter(r => r.charityName.trim() === charity.name.trim());
-    const charityHexs = hexagonalResponses.filter(h => h.charityName.trim() === charity.name.trim());
-
-    let averagePercentage = 0;
-    if (charityResponses.length > 0) {
-      const total = charityResponses.reduce((acc, curr) => acc + curr.scorePercentage, 0);
-      averagePercentage = Math.round(total / charityResponses.length);
-    }
-
-    const dates = [
-      ...charityResponses.map(r => new Date(r.createdAt)),
-      ...charityHexs.map(h => new Date(h.createdAt))
-    ];
-    
-    const latestDate = dates.length > 0 
-      ? new Date(Math.max(...dates.map(d => d.getTime())))
-      : new Date(charity.createdAt);
-
-    return {
-      ...charity,
-      readinessCount: charityResponses.length,
-      hexagonalCount: charityHexs.length,
-      averagePercentage,
-      latestDate
-    };
-  });
-
-  charityStats.sort((a, b) => b.latestDate.getTime() - a.latestDate.getTime());
+  const { pendingCharitiesList, charityStats } = await getCachedSurveysData();
 
   return (
     <main className="flex-1 min-w-0 py-8">

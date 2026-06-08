@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
 import TasksClient from "./TasksClient";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 300;
 
 export default async function TasksPage() {
   const session = await getSession();

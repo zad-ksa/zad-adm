@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import { getCharities } from "@/app/actions/charity";
 import Link from "next/link";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 300; // تحديث الصفحة كل 5 دقائق (تخزين مؤقت)
 
 export const metadata: Metadata = {
   title: "الرئيسية | زاد التنموية",
@@ -11,10 +11,22 @@ export const metadata: Metadata = {
 };
 
 export default async function MainDashboard() {
-  const charities = await getCharities();
-
-  const responses = await prisma.surveyResponse.findMany();
-  const hexagonalResponses = await prisma.hexagonalResponse.findMany();
+  // جلب جميع البيانات من قاعدة البيانات بالتوازي (في نفس اللحظة)
+  const [
+    charities,
+    responses,
+    hexagonalResponses,
+    performanceMetrics,
+    dbPrograms,
+    dbNewsItems
+  ] = await Promise.all([
+    getCharities(),
+    prisma.surveyResponse.findMany(),
+    prisma.hexagonalResponse.findMany(),
+    prisma.performanceMetric.findMany(),
+    prisma.program.findMany(),
+    prisma.news.findMany({ take: 5, orderBy: { createdAt: "desc" } }) // جلب آخر 5 أخبار فقط بدلاً من الكل
+  ]);
 
   // Calculate surveys per charity
   const surveyCounts = new Map<string, { readiness: number, hexagonal: number }>();
@@ -38,12 +50,6 @@ export default async function MainDashboard() {
     total: counts.readiness + counts.hexagonal
   })).sort((a, b) => b.total - a.total);
   const totalSurveys = responses.length + hexagonalResponses.length;
-
-  // Fetch performance metrics for aggregation
-  const performanceMetrics = await prisma.performanceMetric.findMany();
-
-  // Fetch all programs in DB
-  const dbPrograms = await prisma.program.findMany();
   
   // Calculate DB programs and beneficiaries per charity
   const dbCharityProgramsCount = new Map<string, number>();
@@ -183,10 +189,7 @@ export default async function MainDashboard() {
     };
   });
 
-  // Fetch news from the database
-  const dbNewsItems = await prisma.news.findMany({
-    orderBy: { createdAt: "desc" },
-  });
+  // تم جلب الأخبار مسبقاً في Promise.all لضمان السرعة
 
   const formattedDbNews = dbNewsItems.map((news) => ({
     id: news.id,

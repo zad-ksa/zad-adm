@@ -6,17 +6,23 @@ import { writeFile, mkdir } from "fs/promises";
 import { join } from "path";
 import { getSession } from "@/lib/auth";
 
-export async function getCharities() {
-  try {
-    const charities = await prisma.charity.findMany({
-      orderBy: { createdAt: "desc" },
-    });
-    return charities;
-  } catch (error) {
-    console.error("Error fetching charities:", error);
-    return [];
-  }
-}
+import { unstable_cache } from "next/cache";
+
+export const getCharities = unstable_cache(
+  async () => {
+    try {
+      const charities = await prisma.charity.findMany({
+        orderBy: { createdAt: "desc" },
+      });
+      return charities;
+    } catch (error) {
+      console.error("Error fetching charities:", error);
+      return [];
+    }
+  },
+  ['all-charities'],
+  { revalidate: 300, tags: ['charities'] }
+);
 
 export async function addCharity(data: { name: string; establishmentDate?: string; licenseNumber?: string; domain?: string; logoUrl?: string | null }) {
   try {

@@ -3,6 +3,7 @@ import { getCharities } from "@/app/actions/charity";
 import type { Metadata } from "next";
 import { getSession } from "@/lib/auth";
 import NewsFilterClient from "./NewsFilterClient";
+import { unstable_cache } from "next/cache";
 
 export const revalidate = 300;
 
@@ -15,10 +16,18 @@ export default async function NewsDashboard() {
   const charities = await getCharities();
   const session = await getSession();
 
+  const getCachedNews = unstable_cache(
+    async () => {
+      return await prisma.news.findMany({
+        orderBy: { createdAt: "desc" },
+      });
+    },
+    ['news-dashboard'],
+    { revalidate: 300, tags: ['news'] }
+  );
+
   // Fetch news from the database
-  const dbNewsItems = await prisma.news.findMany({
-    orderBy: { createdAt: "desc" },
-  });
+  const dbNewsItems = await getCachedNews();
 
   const formattedDbNews = dbNewsItems.map((news) => {
     const charity = charities.find((c) => c.name.trim().toLowerCase() === news.charityName.trim().toLowerCase());

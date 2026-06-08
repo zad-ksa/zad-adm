@@ -17,6 +17,11 @@ const getCachedProgramsData = unstable_cache(
   async (charityName: string) => {
     let charityData = await prisma.charity.findUnique({
       where: { name: charityName },
+      include: {
+        programs: {
+          orderBy: { createdAt: "desc" }
+        }
+      }
     });
 
     if (!charityData) {
@@ -31,15 +36,11 @@ const getCachedProgramsData = unstable_cache(
           establishmentDate: latestResponse?.establishmentDate || null,
           licenseNumber: latestResponse?.licenseNumber || null,
         },
-      });
+      }) as any;
+      charityData.programs = [];
     }
 
-    const programsData = await prisma.program.findMany({
-      where: { charityId: charityData.id },
-      orderBy: { createdAt: "desc" },
-    });
-
-    return { charity: charityData, programs: programsData };
+    return { charity: charityData, programs: charityData.programs };
   },
   ['charity-programs'],
   { revalidate: 300, tags: ['programs'] }

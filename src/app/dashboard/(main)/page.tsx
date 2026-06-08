@@ -11,36 +11,49 @@ export const metadata: Metadata = {
 };
 
 export default async function MainDashboard() {
-  // جلب جميع البيانات من قاعدة البيانات بالتوازي (في نفس اللحظة)
+  // جلب جميع البيانات من قاعدة البيانات بالتوازي باستخدام التجميع (Aggregations) لتحقيق أداء صاروخي
   const [
     charities,
-    responses,
-    hexagonalResponses,
-    performanceMetrics,
-    dbPrograms,
+    surveyResponsesGrouped,
+    hexagonalResponsesGrouped,
+    programsGrouped,
+    programsAgg,
     dbNewsItems
   ] = await Promise.all([
     getCharities(),
-    prisma.surveyResponse.findMany(),
-    prisma.hexagonalResponse.findMany(),
-    prisma.performanceMetric.findMany(),
-    prisma.program.findMany(),
-    prisma.news.findMany({ take: 5, orderBy: { createdAt: "desc" } }) // جلب آخر 5 أخبار فقط بدلاً من الكل
+    prisma.surveyResponse.groupBy({
+      by: ['charityName'],
+      _count: { id: true }
+    }),
+    prisma.hexagonalResponse.groupBy({
+      by: ['charityName'],
+      _count: { id: true }
+    }),
+    prisma.program.groupBy({
+      by: ['charityId'],
+      _count: { id: true },
+      _sum: { beneficiaries: true }
+    }),
+    prisma.program.aggregate({
+      _count: { id: true },
+      _sum: { beneficiaries: true }
+    }),
+    prisma.news.findMany({ take: 5, orderBy: { createdAt: "desc" } })
   ]);
 
-  // Calculate surveys per charity
+  // Calculate surveys per charity FAST using grouped data
   const surveyCounts = new Map<string, { readiness: number, hexagonal: number }>();
 
-  responses.forEach(r => {
+  surveyResponsesGrouped.forEach(r => {
     const name = r.charityName.trim();
     if (!surveyCounts.has(name)) surveyCounts.set(name, { readiness: 0, hexagonal: 0 });
-    surveyCounts.get(name)!.readiness++;
+    surveyCounts.get(name)!.readiness += r._count.id;
   });
 
-  hexagonalResponses.forEach(h => {
+  hexagonalResponsesGrouped.forEach(h => {
     const name = h.charityName.trim();
     if (!surveyCounts.has(name)) surveyCounts.set(name, { readiness: 0, hexagonal: 0 });
-    surveyCounts.get(name)!.hexagonal++;
+    surveyCounts.get(name)!.hexagonal += h._count.id;
   });
 
   const surveysList = Array.from(surveyCounts.entries()).map(([name, counts]) => ({
@@ -49,78 +62,23 @@ export default async function MainDashboard() {
     hexagonal: counts.hexagonal,
     total: counts.readiness + counts.hexagonal
   })).sort((a, b) => b.total - a.total);
-  const totalSurveys = responses.length + hexagonalResponses.length;
   
-  // Calculate DB programs and beneficiaries per charity
+  const totalSurveys = surveyResponsesGrouped.reduce((sum, g) => sum + g._count.id, 0) + 
+                       hexagonalResponsesGrouped.reduce((sum, g) => sum + g._count.id, 0);
+  
+  // Calculate DB programs and beneficiaries per charity FAST using grouped data
   const dbCharityProgramsCount = new Map<string, number>();
   const dbCharityBeneficiariesSum = new Map<string, number>();
 
-  dbPrograms.forEach((prog) => {
-    const charityId = prog.charityId;
-    if (!dbCharityProgramsCount.has(charityId)) {
-      dbCharityProgramsCount.set(charityId, 0);
-      dbCharityBeneficiariesSum.set(charityId, 0);
-    }
-    dbCharityProgramsCount.set(charityId, dbCharityProgramsCount.get(charityId)! + 1);
-    dbCharityBeneficiariesSum.set(charityId, dbCharityBeneficiariesSum.get(charityId)! + prog.beneficiaries);
-  });
-
-  const dbTotalPrograms = dbPrograms.length;
-  const dbTotalBeneficiaries = dbPrograms.reduce((sum, p) => sum + p.beneficiaries, 0);
-
-  // Helper to parse values to number
-  const parseValueToNumber = (val: any): number => {
-    if (val === null || val === undefined) return 0;
-    const str = String(val).trim();
-    if (!str) return 0;
-    if (str.endsWith("%")) {
-      const num = parseFloat(str.replace("%", ""));
-      return isNaN(num) ? 0 : num;
-    }
-    const num = parseFloat(str.replace(/,/g, ""));
-    return isNaN(num) ? 0 : num;
-  };
-
-  let totalBeneficiaries = 0;
-  let totalPrograms = 0;
-  let totalGrants = 0;
-
-  performanceMetrics.forEach((metric) => {
-    try {
-      const data = typeof metric.data === "string" ? JSON.parse(metric.data) : metric.data;
-      const axes = Array.isArray(data) ? data : (data?.axes || []);
-
-      axes.forEach((axis: any) => {
-        axis.goals?.forEach((goal: any) => {
-          goal.indicators?.forEach((ind: any) => {
-            const name = ind.name || "";
-            const achieved = parseValueToNumber(ind.annualAchieved);
-
-            // 1. Beneficiaries (contains "مستفيد" or "المستفيدين")
-            if (name.includes("مستفيد") || name.includes("المستفيدين")) {
-              totalBeneficiaries += achieved;
-            }
-
-            // 2. Programs / Initiatives (contains "برنامج" or "البرامج" or "مبادرة" or "مبادرات", but not about beneficiaries/satisfaction/impact)
-            if (
-              (name.includes("برنامج") || name.includes("البرامج") || name.includes("مبادرة") || name.includes("مبادرات")) &&
-              !name.includes("مستفيد") && !name.includes("المستفيدين") &&
-              !name.includes("رضا") && !name.includes("أثر") && !name.includes("تأثير") && !name.includes("نسبة")
-            ) {
-              totalPrograms += achieved;
-            }
-
-            // 3. Grants / Donors / Fundings (contains "منح" or "المنح" or "منحة" or "تمويل" or "المانح" or "تبرع" or "تبرعات")
-            if (name.includes("منح") || name.includes("المنح") || name.includes("منحة") || name.includes("تمويل") || name.includes("المانح") || name.includes("تبرع") || name.includes("تبرعات")) {
-              totalGrants += achieved;
-            }
-          });
-        });
-      });
-    } catch (e) {
-      console.error("Error parsing metric data:", e);
+  programsGrouped.forEach((prog) => {
+    if (prog.charityId) {
+      dbCharityProgramsCount.set(prog.charityId, prog._count.id);
+      dbCharityBeneficiariesSum.set(prog.charityId, prog._sum.beneficiaries || 0);
     }
   });
+
+  const dbTotalPrograms = programsAgg._count.id;
+  const dbTotalBeneficiaries = programsAgg._sum.beneficiaries || 0;
 
   // Display stats based on real data only (no fallbacks)
   const displayBeneficiaries = dbTotalBeneficiaries;
@@ -129,51 +87,6 @@ export default async function MainDashboard() {
 
   // Map charities and calculate metrics
   const charitiesData = charities.map((charity) => {
-    const metric = performanceMetrics.find(
-      (m) => m.charityName.trim().toLowerCase() === charity.name.trim().toLowerCase()
-    );
-
-    let beneficiaries = 0;
-    let programs = 0;
-    let grants = 0;
-
-    if (metric) {
-      try {
-        const data = typeof metric.data === "string" ? JSON.parse(metric.data) : metric.data;
-        const axes = Array.isArray(data) ? data : (data?.axes || []);
-
-        axes.forEach((axis: any) => {
-          axis.goals?.forEach((goal: any) => {
-            goal.indicators?.forEach((ind: any) => {
-              const name = ind.name || "";
-              const achieved = parseValueToNumber(ind.annualAchieved);
-
-              // 1. Beneficiaries
-              if (name.includes("مستفيد") || name.includes("المستفيدين")) {
-                beneficiaries += achieved;
-              }
-
-              // 2. Programs
-              if (
-                (name.includes("برنامج") || name.includes("البرامج") || name.includes("مبادرة") || name.includes("مبادرات")) &&
-                !name.includes("مستفيد") && !name.includes("المستفيدين") &&
-                !name.includes("رضا") && !name.includes("أثر") && !name.includes("تأثير") && !name.includes("نسبة")
-              ) {
-                programs += achieved;
-              }
-
-              // 3. Grants
-              if (name.includes("منح") || name.includes("المنح") || name.includes("منحة") || name.includes("تمويل") || name.includes("المانح") || name.includes("تبرع") || name.includes("تبرعات")) {
-                grants += achieved;
-              }
-            });
-          });
-        });
-      } catch (e) {
-        console.error(`Error parsing metric data for charity ${charity.name}:`, e);
-      }
-    }
-
     const dbProgsCount = dbCharityProgramsCount.get(charity.id) || 0;
     const dbBenSum = dbCharityBeneficiariesSum.get(charity.id) || 0;
 

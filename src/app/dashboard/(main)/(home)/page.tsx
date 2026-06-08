@@ -73,7 +73,7 @@ const getCachedDashboardData = unstable_cache(
       _sum: { beneficiaries: totalBeneficiariesSum }
     };
 
-    return [charities, surveyResponsesGrouped, hexagonalResponsesGrouped, programsGrouped, programsAgg, dbNewsItems];
+    return { charities, surveyResponsesGrouped, hexagonalResponsesGrouped, programsGrouped, programsAgg, dbNewsItems };
   },
   ['dashboard-main-data'],
   { revalidate: 300, tags: ['dashboard-data'] }
@@ -88,14 +88,14 @@ export const metadata: Metadata = {
 
 export default async function MainDashboard() {
   // جلب جميع البيانات من قاعدة البيانات بالتوازي باستخدام التجميع (Aggregations) مع التخزين المؤقت الإجباري
-  const [
+  const {
     charities,
     surveyResponsesGrouped,
     hexagonalResponsesGrouped,
     programsGrouped,
     programsAgg,
     dbNewsItems
-  ] = await getCachedDashboardData();
+  } = await getCachedDashboardData();
 
   // Calculate surveys per charity FAST using grouped data
   const surveyCounts = new Map<string, { readiness: number, hexagonal: number }>();

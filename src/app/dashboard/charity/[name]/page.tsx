@@ -14,35 +14,35 @@ export async function generateMetadata({ params }: { params: Promise<{ name: str
   };
 }
 
+const getCachedCharity = unstable_cache(
+  async (charityName: string) => {
+    let charityData = await prisma.charity.findUnique({
+      where: { name: charityName },
+    });
+
+    if (!charityData) {
+      const latestResponse = await prisma.surveyResponse.findFirst({
+        where: { charityName: { equals: charityName, mode: "insensitive" } },
+        orderBy: { createdAt: "desc" },
+      });
+
+      charityData = await prisma.charity.create({
+        data: {
+          name: charityName,
+          establishmentDate: latestResponse?.establishmentDate || null,
+          licenseNumber: latestResponse?.licenseNumber || null,
+        },
+      });
+    }
+    return charityData;
+  },
+  ['charity-overview'],
+  { revalidate: 300, tags: ['charity'] }
+);
+
 export default async function CharityOverview({ params }: { params: Promise<{ name: string }> }) {
   const { name } = await params;
   const decodedName = decodeURIComponent(name);
-
-  const getCachedCharity = unstable_cache(
-    async (charityName: string) => {
-      let charityData = await prisma.charity.findUnique({
-        where: { name: charityName },
-      });
-
-      if (!charityData) {
-        const latestResponse = await prisma.surveyResponse.findFirst({
-          where: { charityName: { equals: charityName, mode: "insensitive" } },
-          orderBy: { createdAt: "desc" },
-        });
-
-        charityData = await prisma.charity.create({
-          data: {
-            name: charityName,
-            establishmentDate: latestResponse?.establishmentDate || null,
-            licenseNumber: latestResponse?.licenseNumber || null,
-          },
-        });
-      }
-      return charityData;
-    },
-    ['charity-overview'],
-    { revalidate: 300, tags: ['charity'] }
-  );
 
   const charity = await getCachedCharity(decodedName);
 

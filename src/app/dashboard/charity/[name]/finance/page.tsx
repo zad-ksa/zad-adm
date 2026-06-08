@@ -13,46 +13,46 @@ export async function generateMetadata({ params }: { params: Promise<{ name: str
   };
 }
 
+const getCachedFinanceData = unstable_cache(
+  async (charityName: string) => {
+    let charityData = await prisma.charity.findUnique({
+      where: { name: charityName },
+      include: {
+        financialLogs: {
+          orderBy: { createdAt: "desc" }
+        }
+      }
+    });
+
+    if (!charityData) {
+      const latestResponse = await prisma.surveyResponse.findFirst({
+        where: { charityName: { equals: charityName, mode: "insensitive" } },
+        orderBy: { createdAt: "desc" },
+      });
+
+      const createdCharity = await prisma.charity.create({
+        data: {
+          name: charityName,
+          establishmentDate: latestResponse?.establishmentDate || null,
+          licenseNumber: latestResponse?.licenseNumber || null,
+        },
+      });
+
+      charityData = {
+        ...createdCharity,
+        financialLogs: []
+      } as any;
+    }
+    
+    return charityData;
+  },
+  ['charity-finance'],
+  { revalidate: 300, tags: ['finance'] }
+);
+
 export default async function CharityFinancePage({ params }: { params: Promise<{ name: string }> }) {
   const { name } = await params;
   const decodedName = decodeURIComponent(name);
-
-  const getCachedFinanceData = unstable_cache(
-    async (charityName: string) => {
-      let charityData = await prisma.charity.findUnique({
-        where: { name: charityName },
-        include: {
-          financialLogs: {
-            orderBy: { createdAt: "desc" }
-          }
-        }
-      });
-
-      if (!charityData) {
-        const latestResponse = await prisma.surveyResponse.findFirst({
-          where: { charityName: { equals: charityName, mode: "insensitive" } },
-          orderBy: { createdAt: "desc" },
-        });
-
-        const createdCharity = await prisma.charity.create({
-          data: {
-            name: charityName,
-            establishmentDate: latestResponse?.establishmentDate || null,
-            licenseNumber: latestResponse?.licenseNumber || null,
-          },
-        });
-
-        charityData = {
-          ...createdCharity,
-          financialLogs: []
-        } as any;
-      }
-      
-      return charityData;
-    },
-    ['charity-finance'],
-    { revalidate: 300, tags: ['finance'] }
-  );
 
   const charity = await getCachedFinanceData(decodedName);
 

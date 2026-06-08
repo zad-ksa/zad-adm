@@ -7,7 +7,7 @@ import { unstable_cache } from "next/cache";
 const getCachedDashboardData = unstable_cache(
   async () => {
     return await Promise.all([
-      getCharities(),
+      prisma.charity.findMany({ orderBy: { createdAt: "desc" } }),
       prisma.surveyResponse.groupBy({
         by: ['charityName'],
         _count: { id: true }

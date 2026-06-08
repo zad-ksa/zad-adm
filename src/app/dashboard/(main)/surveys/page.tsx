@@ -9,9 +9,11 @@ import { unstable_cache } from "next/cache";
 
 const getCachedSurveysData = unstable_cache(
   async () => {
-    const charities = await prisma.charity.findMany({ orderBy: { createdAt: "desc" } });
-    const responses = await prisma.surveyResponse.findMany({ orderBy: { createdAt: "desc" } });
-    const hexagonalResponses = await prisma.hexagonalResponse.findMany({ orderBy: { createdAt: "desc" } });
+    const [charities, responses, hexagonalResponses] = await Promise.all([
+      prisma.charity.findMany({ orderBy: { createdAt: "desc" } }),
+      prisma.surveyResponse.findMany({ orderBy: { createdAt: "desc" } }),
+      prisma.hexagonalResponse.findMany({ orderBy: { createdAt: "desc" } })
+    ]);
 
     const registeredNames = new Set(charities.map(c => c.name.trim().toLowerCase()));
     

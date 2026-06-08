@@ -38,13 +38,18 @@ export default async function HexagonalSurveysPage({ params }: { params: Promise
   const { name } = await params;
   const decodedName = decodeURIComponent(name);
 
-  const allHexResponses = await prisma.hexagonalResponse.findMany({
-    orderBy: { createdAt: "desc" },
-  });
-
-  const hexagonalResponses = allHexResponses.filter(
-    (res) => res.charityName.trim().toLowerCase() === decodedName.trim().toLowerCase()
+  const getCachedHexResponses = unstable_cache(
+    async (charityName: string) => {
+      return await prisma.hexagonalResponse.findMany({
+        where: { charityName: { equals: charityName, mode: "insensitive" } },
+        orderBy: { createdAt: "desc" },
+      });
+    },
+    ['hexagonal-responses'],
+    { revalidate: 300, tags: ['hexagonal'] }
   );
+
+  const hexagonalResponses = await getCachedHexResponses(decodedName);
 
   const hasHexagonal = hexagonalResponses.length > 0;
 

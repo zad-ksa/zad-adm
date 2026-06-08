@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/db";
 import type { Metadata } from "next";
 import ProgramsClient from "./ProgramsClient";
+import { unstable_cache } from "next/cache";
 
 export const revalidate = 300;
 
@@ -16,31 +17,39 @@ export default async function CharityProgramsPage({ params }: { params: Promise<
   const { name } = await params;
   const decodedName = decodeURIComponent(name);
 
-  // Fetch charity record from Charity table or bootstrap it from survey responses
-  let charity = await prisma.charity.findUnique({
-    where: { name: decodedName },
-  });
+  const getCachedProgramsData = unstable_cache(
+    async (charityName: string) => {
+      let charityData = await prisma.charity.findUnique({
+        where: { name: charityName },
+      });
 
-  if (!charity) {
-    const latestResponse = await prisma.surveyResponse.findFirst({
-      where: { charityName: { equals: decodedName, mode: "insensitive" } },
-      orderBy: { createdAt: "desc" },
-    });
+      if (!charityData) {
+        const latestResponse = await prisma.surveyResponse.findFirst({
+          where: { charityName: { equals: charityName, mode: "insensitive" } },
+          orderBy: { createdAt: "desc" },
+        });
 
-    charity = await prisma.charity.create({
-      data: {
-        name: decodedName,
-        establishmentDate: latestResponse?.establishmentDate || null,
-        licenseNumber: latestResponse?.licenseNumber || null,
-      },
-    });
-  }
+        charityData = await prisma.charity.create({
+          data: {
+            name: charityName,
+            establishmentDate: latestResponse?.establishmentDate || null,
+            licenseNumber: latestResponse?.licenseNumber || null,
+          },
+        });
+      }
 
-  // Fetch all programs for this charity
-  const programs = await prisma.program.findMany({
-    where: { charityId: charity.id },
-    orderBy: { createdAt: "desc" },
-  });
+      const programsData = await prisma.program.findMany({
+        where: { charityId: charityData.id },
+        orderBy: { createdAt: "desc" },
+      });
+
+      return { charity: charityData, programs: programsData };
+    },
+    ['charity-programs'],
+    { revalidate: 300, tags: ['programs'] }
+  );
+
+  const { charity, programs } = await getCachedProgramsData(decodedName);
 
   return (
     <ProgramsClient

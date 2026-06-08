@@ -2,6 +2,7 @@ import { prisma } from "@/lib/db";
 import type { Metadata } from "next";
 import { CalendarIcon, LicenseIcon, Rocket, ClipboardList, Building2, Sparkles } from "@/components/Icons";
 import EditProfileButton from "./EditProfileButton";
+import { unstable_cache } from "next/cache";
 
 export const revalidate = 300;
 
@@ -17,25 +18,33 @@ export default async function CharityOverview({ params }: { params: Promise<{ na
   const { name } = await params;
   const decodedName = decodeURIComponent(name);
 
-  // 1. Fetch charity record from Charity table or bootstrap it from survey responses
-  let charity = await prisma.charity.findUnique({
-    where: { name: decodedName },
-  });
+  const getCachedCharity = unstable_cache(
+    async (charityName: string) => {
+      let charityData = await prisma.charity.findUnique({
+        where: { name: charityName },
+      });
 
-  if (!charity) {
-    const latestResponse = await prisma.surveyResponse.findFirst({
-      where: { charityName: { equals: decodedName, mode: "insensitive" } },
-      orderBy: { createdAt: "desc" },
-    });
+      if (!charityData) {
+        const latestResponse = await prisma.surveyResponse.findFirst({
+          where: { charityName: { equals: charityName, mode: "insensitive" } },
+          orderBy: { createdAt: "desc" },
+        });
 
-    charity = await prisma.charity.create({
-      data: {
-        name: decodedName,
-        establishmentDate: latestResponse?.establishmentDate || null,
-        licenseNumber: latestResponse?.licenseNumber || null,
-      },
-    });
-  }
+        charityData = await prisma.charity.create({
+          data: {
+            name: charityName,
+            establishmentDate: latestResponse?.establishmentDate || null,
+            licenseNumber: latestResponse?.licenseNumber || null,
+          },
+        });
+      }
+      return charityData;
+    },
+    ['charity-overview'],
+    { revalidate: 300, tags: ['charity'] }
+  );
+
+  const charity = await getCachedCharity(decodedName);
 
   return (
     <div className="space-y-6">

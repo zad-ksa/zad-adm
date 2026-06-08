@@ -10,12 +10,11 @@ import { unstable_cache } from "next/cache";
 
 const getCachedResponses = unstable_cache(
   async (charityName: string) => {
-    const allResponses = await prisma.surveyResponse.findMany({
+    const charityResponses = await prisma.surveyResponse.findMany({
+      where: { charityName: { equals: charityName, mode: "insensitive" } },
       orderBy: { createdAt: "desc" },
     });
-    return allResponses.filter(
-      (res) => res.charityName.trim().toLowerCase() === charityName.trim().toLowerCase()
-    );
+    return charityResponses;
   },
   ['strategy-survey-responses'],
   { revalidate: 300, tags: ['surveys'] }

@@ -15,6 +15,7 @@ const ChevronUpIcon = () => (
 export default function ReadinessResultsClient({ responses }: { responses: any[] }) {
   const [excludedIds, setExcludedIds] = useState<Set<string>>(new Set());
   const [openSections, setOpenSections] = useState<Set<number>>(new Set());
+  const [showAllParticipants, setShowAllParticipants] = useState(false);
 
   const toggleExclude = (id: string) => {
     setExcludedIds(prev => {
@@ -201,7 +202,7 @@ export default function ReadinessResultsClient({ responses }: { responses: any[]
         </p>
 
         <div className="space-y-4 max-h-[800px] overflow-y-auto pr-2 custom-scrollbar">
-          {responses.map((res) => {
+          {(showAllParticipants ? responses : responses.slice(0, 5)).map((res) => {
             const isExcluded = excludedIds.has(res.id);
             return (
               <div 
@@ -249,6 +250,15 @@ export default function ReadinessResultsClient({ responses }: { responses: any[]
               </div>
             );
           })}
+          
+          {!showAllParticipants && responses.length > 5 && (
+            <button
+              onClick={() => setShowAllParticipants(true)}
+              className="w-full py-3 bg-slate-50 hover:bg-slate-100 text-slate-600 font-bold rounded-xl border border-slate-200 transition-colors text-sm"
+            >
+              عرض جميع المشاركين ({responses.length})
+            </button>
+          )}
         </div>
       </div>
     </div>

@@ -100,12 +100,12 @@ export default async function HexagonalSurveysPage({ params }: { params: Promise
         <>
           {/* Section 1: Aggregated Results */}
       <div>
-        <div className="flex items-center gap-3 mb-8 border-b border-slate-200 pb-4">
-          <div className="w-12 h-12 bg-secondary/10 rounded-xl flex items-center justify-center text-secondary font-bold">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 mb-6 sm:mb-8 border-b border-slate-200 pb-4">
+          <div className="w-12 h-12 bg-secondary/10 rounded-xl flex items-center justify-center text-secondary font-bold shrink-0">
             <HexagonIcon />
           </div>
           <div>
-            <h2 className="text-2xl font-bold text-slate-800 tracking-tight">
+            <h2 className="text-xl sm:text-2xl font-bold text-slate-800 tracking-tight">
               نتائج التحليل السداسي المجمعة
             </h2>
             <p className="text-slate-500 text-sm mt-1">تجميع لكافة المدخلات من جميع المشاركين ({hexagonalResponses.length} مشارك)</p>
@@ -114,7 +114,7 @@ export default async function HexagonalSurveysPage({ params }: { params: Promise
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Strengths */}
-          <div className="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm">
+          <div className="bg-white rounded-2xl p-4 sm:p-6 border border-slate-100 shadow-sm">
             <div className="flex items-center gap-3 mb-4 border-b border-slate-100 pb-3">
               <div className="p-2 bg-emerald-50 rounded-lg">
                 <Award className="w-6 h-6 text-emerald-600" />
@@ -133,7 +133,7 @@ export default async function HexagonalSurveysPage({ params }: { params: Promise
           </div>
 
           {/* Weaknesses */}
-          <div className="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm">
+          <div className="bg-white rounded-2xl p-4 sm:p-6 border border-slate-100 shadow-sm">
             <div className="flex items-center gap-3 mb-4 border-b border-slate-100 pb-3">
               <div className="p-2 bg-rose-50 rounded-lg">
                 <AlertTriangle className="w-6 h-6 text-rose-600" />
@@ -152,7 +152,7 @@ export default async function HexagonalSurveysPage({ params }: { params: Promise
           </div>
 
           {/* Opportunities */}
-          <div className="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm">
+          <div className="bg-white rounded-2xl p-4 sm:p-6 border border-slate-100 shadow-sm">
             <div className="flex items-center gap-3 mb-4 border-b border-slate-100 pb-3">
               <div className="p-2 bg-sky-50 rounded-lg">
                 <Sparkles className="w-6 h-6 text-sky-500" />
@@ -171,7 +171,7 @@ export default async function HexagonalSurveysPage({ params }: { params: Promise
           </div>
 
           {/* Threats */}
-          <div className="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm">
+          <div className="bg-white rounded-2xl p-4 sm:p-6 border border-slate-100 shadow-sm">
             <div className="flex items-center gap-3 mb-4 border-b border-slate-100 pb-3">
               <div className="p-2 bg-amber-50 rounded-lg">
                 <ShieldAlert className="w-6 h-6 text-amber-500" />
@@ -190,7 +190,7 @@ export default async function HexagonalSurveysPage({ params }: { params: Promise
           </div>
 
           {/* Success Factors */}
-          <div className="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm">
+          <div className="bg-white rounded-2xl p-4 sm:p-6 border border-slate-100 shadow-sm">
             <div className="flex items-center gap-3 mb-4 border-b border-slate-100 pb-3">
               <div className="p-2 bg-yellow-50 rounded-lg">
                 <Key className="w-6 h-6 text-yellow-600" />
@@ -209,7 +209,7 @@ export default async function HexagonalSurveysPage({ params }: { params: Promise
           </div>
 
           {/* Competitiveness */}
-          <div className="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm">
+          <div className="bg-white rounded-2xl p-4 sm:p-6 border border-slate-100 shadow-sm">
             <div className="flex items-center gap-3 mb-4 border-b border-slate-100 pb-3">
               <div className="p-2 bg-violet-50 rounded-lg">
                 <Rocket className="w-6 h-6 text-violet-600" />
@@ -231,11 +231,11 @@ export default async function HexagonalSurveysPage({ params }: { params: Promise
 
       {/* Section 2: Individual Participants */}
       <div className="pt-8">
-        <div className="flex items-center gap-3 mb-8 border-b border-slate-200 pb-4">
-          <div className="w-10 h-10 bg-secondary/10 rounded-xl flex items-center justify-center text-secondary font-bold">
+        <div className="flex items-center gap-3 mb-6 sm:mb-8 border-b border-slate-200 pb-4">
+          <div className="w-10 h-10 bg-secondary/10 rounded-xl flex items-center justify-center text-secondary font-bold shrink-0">
             <ClipboardIcon />
           </div>
-          <h2 className="text-2xl font-bold text-slate-800 tracking-tight">
+          <h2 className="text-xl sm:text-2xl font-bold text-slate-800 tracking-tight">
             استبيانات الموظفين
           </h2>
         </div>
@@ -253,12 +253,12 @@ export default async function HexagonalSurveysPage({ params }: { params: Promise
             return (
               <div
                 key={res.id}
-                className="bg-white rounded-2xl p-6 border border-slate-100 hover:border-secondary/50 shadow-sm hover:shadow transition-all flex flex-col justify-between group"
+                className="bg-white rounded-2xl p-4 sm:p-6 border border-slate-100 hover:border-secondary/50 shadow-sm hover:shadow transition-all flex flex-col justify-between group"
               >
                 <div>
                   <div className="flex justify-between items-start mb-6 border-b border-slate-50 pb-4">
                     <div>
-                      <span className="text-[10px] uppercase tracking-wider bg-secondary/10 text-secondary font-bold px-3 py-1 rounded-full">
+                      <span className="text-[10px] sm:text-xs uppercase tracking-wider bg-secondary/10 text-secondary font-bold px-3 py-1 rounded-full">
                         التحليل السداسي
                       </span>
                       <h3 className="font-bold text-slate-800 text-sm mt-3 group-hover:text-secondary transition-colors">
@@ -268,37 +268,37 @@ export default async function HexagonalSurveysPage({ params }: { params: Promise
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-3 gap-3 text-[11px] text-slate-500 mb-6 bg-slate-50 p-4 rounded-xl border border-slate-100">
-                    <div className="flex flex-col gap-1.5 items-center bg-white p-2.5 rounded-lg border border-slate-100">
+                  <div className="grid grid-cols-2 min-[400px]:grid-cols-3 gap-2 sm:gap-3 text-xs sm:text-[11px] text-slate-500 mb-6 bg-slate-50 p-3 sm:p-4 rounded-xl border border-slate-100">
+                    <div className="flex flex-col gap-1.5 items-center bg-white p-2.5 rounded-lg border border-slate-100 shadow-sm">
                       <Award className="w-5 h-5 text-emerald-600 shrink-0" />
-                      <span className="font-bold text-slate-700">{strengthsCount} <span className="text-[9px] text-slate-400 font-normal">قوة</span></span>
+                      <span className="font-bold text-slate-700 text-center">{strengthsCount} <span className="text-[10px] sm:text-[9px] text-slate-400 font-normal block sm:inline">قوة</span></span>
                     </div>
-                    <div className="flex flex-col gap-1.5 items-center bg-white p-2.5 rounded-lg border border-slate-100">
+                    <div className="flex flex-col gap-1.5 items-center bg-white p-2.5 rounded-lg border border-slate-100 shadow-sm">
                       <AlertTriangle className="w-5 h-5 text-rose-600 shrink-0" />
-                      <span className="font-bold text-slate-700">{weaknessesCount} <span className="text-[9px] text-slate-400 font-normal">ضعف</span></span>
+                      <span className="font-bold text-slate-700 text-center">{weaknessesCount} <span className="text-[10px] sm:text-[9px] text-slate-400 font-normal block sm:inline">ضعف</span></span>
                     </div>
-                    <div className="flex flex-col gap-1.5 items-center bg-white p-2.5 rounded-lg border border-slate-100">
+                    <div className="flex flex-col gap-1.5 items-center bg-white p-2.5 rounded-lg border border-slate-100 shadow-sm">
                       <Sparkles className="w-5 h-5 text-sky-500 shrink-0" />
-                      <span className="font-bold text-slate-700">{oppCount} <span className="text-[9px] text-slate-400 font-normal">فرص</span></span>
+                      <span className="font-bold text-slate-700 text-center">{oppCount} <span className="text-[10px] sm:text-[9px] text-slate-400 font-normal block sm:inline">فرص</span></span>
                     </div>
-                    <div className="flex flex-col gap-1.5 items-center bg-white p-2.5 rounded-lg border border-slate-100">
+                    <div className="flex flex-col gap-1.5 items-center bg-white p-2.5 rounded-lg border border-slate-100 shadow-sm">
                       <ShieldAlert className="w-5 h-5 text-amber-500 shrink-0" />
-                      <span className="font-bold text-slate-700">{threatCount} <span className="text-[9px] text-slate-400 font-normal">مخاطر</span></span>
+                      <span className="font-bold text-slate-700 text-center">{threatCount} <span className="text-[10px] sm:text-[9px] text-slate-400 font-normal block sm:inline">مخاطر</span></span>
                     </div>
-                    <div className="flex flex-col gap-1.5 items-center bg-white p-2.5 rounded-lg border border-slate-100">
+                    <div className="flex flex-col gap-1.5 items-center bg-white p-2.5 rounded-lg border border-slate-100 shadow-sm">
                       <Key className="w-5 h-5 text-yellow-600 shrink-0" />
-                      <span className="font-bold text-slate-700">{successCount} <span className="text-[9px] text-slate-400 font-normal">نجاح</span></span>
+                      <span className="font-bold text-slate-700 text-center">{successCount} <span className="text-[10px] sm:text-[9px] text-slate-400 font-normal block sm:inline">نجاح</span></span>
                     </div>
-                    <div className="flex flex-col gap-1.5 items-center bg-white p-2.5 rounded-lg border border-slate-100">
+                    <div className="flex flex-col gap-1.5 items-center bg-white p-2.5 rounded-lg border border-slate-100 shadow-sm">
                       <Rocket className="w-5 h-5 text-violet-600 shrink-0" />
-                      <span className="font-bold text-slate-700">{compCount} <span className="text-[9px] text-slate-400 font-normal">تميز</span></span>
+                      <span className="font-bold text-slate-700 text-center">{compCount} <span className="text-[10px] sm:text-[9px] text-slate-400 font-normal block sm:inline">تميز</span></span>
                     </div>
                   </div>
                 </div>
 
                 <Link
                   href={`/dashboard/hexagonal/${res.id}`}
-                  className="w-full text-center py-3 bg-secondary/5 hover:bg-secondary text-secondary hover:text-white font-bold rounded-xl transition-all text-xs flex items-center justify-center gap-2"
+                  className="w-full text-center py-3.5 bg-secondary/5 hover:bg-secondary text-secondary hover:text-white font-bold rounded-xl transition-all text-sm flex items-center justify-center gap-2 mt-auto"
                 >
                   عرض بنود التحليل السداسي
                   <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>

@@ -3,7 +3,8 @@
 import { usePathname } from "next/navigation";
 import CharitySidebar from "./CharitySidebar";
 import { useState, useEffect } from "react";
-import { Menu } from "lucide-react";
+import { Menu, Home, Target, FolderKanban, Coins } from "lucide-react";
+import MobileBottomNav from "@/components/MobileBottomNav";
 
 export default function CharityLayoutClient({
   children,
@@ -24,17 +25,24 @@ export default function CharityLayoutClient({
     }
   }, [pathname]);
 
+  const mobileNavItems = [
+    { label: "الرئيسية", href: `/dashboard/charity/${encodeURIComponent(charityName)}`, icon: Home, exact: true },
+    { label: "الاستراتيجية", href: `/dashboard/charity/${encodeURIComponent(charityName)}/strategy`, icon: Target },
+    { label: "البرامج", href: `/dashboard/charity/${encodeURIComponent(charityName)}/programs`, icon: FolderKanban },
+    { label: "المالية", href: `/dashboard/charity/${encodeURIComponent(charityName)}/finance`, icon: Coins },
+  ];
+
   return (
-    <div className="flex h-screen bg-slate-50 overflow-hidden" dir="rtl">
+    <div className="flex h-[100dvh] bg-slate-50 overflow-hidden" dir="rtl">
       <CharitySidebar charityName={charityName} logoUrl={logoUrl} isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />
       
       <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden relative">
-        {/* Mobile Header (Only visible on small screens since Desktop has Sidebar) */}
-        <div className="lg:hidden bg-white border-b border-slate-200 h-16 flex items-center justify-between px-4 shrink-0 z-10 shadow-sm">
+        {/* Mobile Header (Sticky & Blur) */}
+        <div className="lg:hidden sticky top-0 bg-white/80 backdrop-blur-lg border-b border-slate-200/80 h-16 flex items-center justify-between px-4 shrink-0 z-30 shadow-sm">
           <div className="flex items-center gap-3">
             <button 
               onClick={() => setIsSidebarOpen(true)} 
-              className="p-2 -mr-2 text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
+              className="p-2 -mr-2 text-slate-600 hover:bg-slate-100 rounded-lg transition-colors active:scale-95"
             >
               <Menu className="w-6 h-6" />
             </button>
@@ -45,12 +53,15 @@ export default function CharityLayoutClient({
         </div>
         
         {/* Main Content Area */}
-        <main className="flex-1 overflow-y-auto w-full p-4 sm:p-6 lg:p-8">
+        <main className="flex-1 overflow-y-auto w-full p-4 sm:p-6 lg:p-8 pb-24 lg:pb-8">
           <div className="max-w-[1600px] mx-auto w-full">
             {children}
           </div>
         </main>
       </div>
+
+      {/* Bottom Navigation for Mobile */}
+      <MobileBottomNav items={mobileNavItems} />
     </div>
   );
 }

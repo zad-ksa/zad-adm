@@ -3,6 +3,7 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import SurveyLinkManager from "@/components/SurveyLinkManager";
 import { Award, AlertTriangle, Sparkles, ShieldAlert, Key, Rocket } from "@/components/Icons";
+import { unstable_cache } from "next/cache";
 
 export const revalidate = 300;
 

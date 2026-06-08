@@ -37,10 +37,10 @@ const getCachedProgramsData = unstable_cache(
           licenseNumber: latestResponse?.licenseNumber || null,
         },
       }) as any;
-      charityData.programs = [];
+      (charityData as any).programs = [];
     }
 
-    return { charity: charityData, programs: charityData.programs };
+    return { charity: charityData!, programs: (charityData as any).programs };
   },
   ['charity-programs'],
   { revalidate: 300, tags: ['programs'] }

@@ -261,7 +261,7 @@ export default async function MainDashboard() {
                     <img
                       src={charity.logoUrl}
                       alt=""
-                      className="w-full h-full object-contain opacity-60 scale-110 group-hover:scale-125 group-hover:opacity-75 transition-all duration-700 ease-out"
+                      className="w-full h-full object-contain opacity-40 scale-110 group-hover:scale-125 group-hover:opacity-75 transition-all duration-700 ease-out"
                     />
                   </div>
                 )}
@@ -382,11 +382,11 @@ export default async function MainDashboard() {
                     </span>
                   ))}
                   <span className={`inline-block text-[10px] font-bold px-2 py-0.5 rounded-md ${item.category === "الاستراتيجية" ? "text-violet-700 bg-violet-50" :
-                      item.category === "التقنية" ? "text-blue-700 bg-blue-50" :
-                        item.category === "تنمية الموارد" ? "text-emerald-700 bg-emerald-50" :
-                          item.category === "تكليف" ? "text-rose-700 bg-rose-50" :
-                            item.category === "استقطاب" ? "text-teal-700 bg-teal-50" :
-                              "text-amber-700 bg-amber-50" // الإعلامية
+                    item.category === "التقنية" ? "text-blue-700 bg-blue-50" :
+                      item.category === "تنمية الموارد" ? "text-emerald-700 bg-emerald-50" :
+                        item.category === "تكليف" ? "text-rose-700 bg-rose-50" :
+                          item.category === "استقطاب" ? "text-teal-700 bg-teal-50" :
+                            "text-amber-700 bg-amber-50" // الإعلامية
                     }`}>
                     {item.category}
                   </span>

@@ -94,9 +94,8 @@ export default async function CharityDetails({ params }: { params: { id: string 
                   <div className="text-xs font-bold text-slate-400 dark:text-slate-500 mb-2 uppercase tracking-wider transition-colors">النتيجة العامة</div>
                   <div className={`px-5 py-2 rounded-xl text-2xl font-bold w-full text-center shadow-sm border transition-colors
                     ${
-                      response.scorePercentage >= 80 ? "bg-[#00b050]/10 text-[#00b050] border-[#00b050]/20" :
-                      response.scorePercentage >= 60 ? "bg-[#92d050]/10 text-[#71a638] border-[#92d050]/20" :
-                      response.scorePercentage >= 40 ? "bg-[#ffc000]/10 text-[#c29300] border-[#ffc000]/20" :
+                      response.scorePercentage >= 85 ? "bg-[#00b050]/10 text-[#00b050] border-[#00b050]/20" :
+                      response.scorePercentage >= 70 ? "bg-[#ffc000]/10 text-[#c29300] border-[#ffc000]/20" :
                       "bg-[#ff0000]/10 text-[#ff0000] border-[#ff0000]/20"
                     }
                   `}>
@@ -159,9 +158,8 @@ export default async function CharityDetails({ params }: { params: { id: string 
                 </h3>
                 <div className={`px-4 py-1.5 rounded-lg text-sm font-bold border shadow-sm transition-colors
                   ${
-                    sec.percentage >= 80 ? "bg-[#00b050]/10 text-[#00b050] border-[#00b050]/20" :
-                    sec.percentage >= 60 ? "bg-[#92d050]/10 text-[#71a638] border-[#92d050]/20" :
-                    sec.percentage >= 40 ? "bg-[#ffc000]/10 text-[#c29300] border-[#ffc000]/20" :
+                    sec.percentage >= 85 ? "bg-[#00b050]/10 text-[#00b050] border-[#00b050]/20" :
+                    sec.percentage >= 70 ? "bg-[#ffc000]/10 text-[#c29300] border-[#ffc000]/20" :
                     "bg-[#ff0000]/10 text-[#ff0000] border-[#ff0000]/20"
                   }
                 `}>

@@ -275,9 +275,8 @@ export default async function SurveysDashboard() {
                       <div className="flex items-center justify-center">
                         <div className={`px-5 py-2 rounded-xl text-sm font-bold flex items-center justify-center min-w-[4rem]
                           ${
-                            charity.averagePercentage >= 80 ? "bg-[#00b050]/10 text-[#00b050]" :
-                            charity.averagePercentage >= 60 ? "bg-[#92d050]/10 text-[#71a638]" :
-                            charity.averagePercentage >= 40 ? "bg-[#ffc000]/10 text-[#c29300]" :
+                            charity.averagePercentage >= 85 ? "bg-[#00b050]/10 text-[#00b050]" :
+                            charity.averagePercentage >= 70 ? "bg-[#ffc000]/10 text-[#c29300]" :
                             "bg-[#ff0000]/10 text-[#ff0000]"
                           }
                         `}>

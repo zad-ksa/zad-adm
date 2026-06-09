@@ -39,16 +39,14 @@ export default function ReadinessResultsClient({ responses }: { responses: any[]
   const participantCount = includedResponses.length;
 
   const getPercentageColorClass = (percentage: number) => {
-    if (percentage >= 80) return "bg-[#00b050]/10 text-[#00b050]";
-    if (percentage >= 60) return "bg-[#92d050]/10 text-[#71a638]";
-    if (percentage >= 40) return "bg-[#ffc000]/10 text-[#c29300]";
+    if (percentage >= 85) return "bg-[#00b050]/10 text-[#00b050]";
+    if (percentage >= 70) return "bg-[#ffc000]/10 text-[#c29300]";
     return "bg-[#ff0000]/10 text-[#ff0000]";
   };
 
   const getPercentageBgClass = (percentage: number) => {
-    if (percentage >= 80) return "bg-[#00b050]";
-    if (percentage >= 60) return "bg-[#92d050]";
-    if (percentage >= 40) return "bg-[#ffc000]";
+    if (percentage >= 85) return "bg-[#00b050]";
+    if (percentage >= 70) return "bg-[#ffc000]";
     return "bg-[#ff0000]";
   };
 

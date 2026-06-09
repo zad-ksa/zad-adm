@@ -623,7 +623,6 @@ export default function TasksClient({
           </div>
           
         </div>
-      </div>
 
     {/* Task Reassignment Dialog/Modal */}
       {reassigningTaskId && (

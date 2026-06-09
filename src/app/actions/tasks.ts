@@ -192,6 +192,8 @@ export async function createAchievementAction(data: {
   isInternal: boolean;
   proofUrl?: string;
   proofPublicId?: string;
+  date?: string;
+  category: string;
 }) {
   try {
     const user = await getAuthenticatedUser();
@@ -206,6 +208,8 @@ export async function createAchievementAction(data: {
       }
     }
 
+    const targetDate = data.date ? new Date(data.date) : new Date();
+
     const achievement = await prisma.achievement.create({
       data: {
         title: data.title,
@@ -216,10 +220,24 @@ export async function createAchievementAction(data: {
         isInternal: data.isInternal,
         proofUrl: data.proofUrl || null,
         proofPublicId: data.proofPublicId || null,
+        date: targetDate,
+      },
+    });
+
+    // Automatically publish to News
+    await prisma.news.create({
+      data: {
+        charityName: data.isInternal ? "إدارة زاد" : (charityName || "غير محدد"),
+        category: data.category,
+        title: data.title,
+        description: "تم تسجيل هذا كإنجاز مباشر",
+        date: targetDate,
       },
     });
 
     revalidatePath("/dashboard/tasks");
+    revalidatePath("/dashboard/news");
+    revalidatePath("/dashboard");
     return { success: true, achievement };
   } catch (error: any) {
     return { error: error.message || "حدث خطأ أثناء إضافة المنجز" };

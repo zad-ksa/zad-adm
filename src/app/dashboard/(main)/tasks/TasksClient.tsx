@@ -21,7 +21,8 @@ import {
   X,
   UploadCloud,
   FileImage,
-  Link as LinkIcon
+  Link as LinkIcon,
+  Folder
 } from "lucide-react";
 import { 
   createTaskAction, 
@@ -99,7 +100,14 @@ export default function TasksClient({
   
   const [achievementTitle, setAchievementTitle] = useState("");
   const [showDirectAchievementForm, setShowDirectAchievementForm] = useState(false);
+  const defaultCategory = isDirectorOrAdmin ? "الاستراتيجية" : 
+      (session.role === "STRATEGY" ? "الاستراتيجية" : 
+       session.role === "FINANCE" ? "تنمية الموارد" : 
+       session.role === "ADMINISTRATIVE_SECRETARIAT" ? "تكليف" : "الاستراتيجية");
+
   const [achievementCharityId, setAchievementCharityId] = useState("internal");
+  const [achievementDate, setAchievementDate] = useState("");
+  const [achievementCategory, setAchievementCategory] = useState(defaultCategory);
   const [achievementProofFile, setAchievementProofFile] = useState<File | null>(null);
   const [isUploadingAchievementProof, setIsUploadingAchievementProof] = useState(false);
   
@@ -262,6 +270,8 @@ export default function TasksClient({
           isInternal,
           proofUrl: uploadedUrl || undefined,
           proofPublicId: uploadedPublicId || undefined,
+          date: achievementDate || undefined,
+          category: achievementCategory,
         });
 
         if (res.error) {
@@ -270,6 +280,8 @@ export default function TasksClient({
           setAchievements((prev) => [res.achievement as Achievement, ...prev]);
           setAchievementTitle("");
           setAchievementCharityId("internal");
+          setAchievementDate("");
+          setAchievementCategory(defaultCategory);
           setAchievementProofFile(null);
           setShowDirectAchievementForm(false);
           showNotification("success", "تم تسجيل الإنجاز بنجاح");
@@ -1040,6 +1052,42 @@ export default function TasksClient({
                     </option>
                   ))}
                 </select>
+              </div>
+
+              {isDirectorOrAdmin && (
+                <div>
+                  <label className="block text-xs font-bold text-slate-500 mb-2 flex items-center gap-1">
+                    <Folder className="w-3.5 h-3.5 text-slate-400" />
+                    القسم المعني
+                  </label>
+                  <select
+                    value={achievementCategory}
+                    onChange={(e) => setAchievementCategory(e.target.value)}
+                    required
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500/30 text-slate-800 transition-all font-bold cursor-pointer"
+                  >
+                    <option value="الاستراتيجية">الاستراتيجية</option>
+                    <option value="التقنية">التقنية</option>
+                    <option value="تنمية الموارد">تنمية الموارد</option>
+                    <option value="الإعلامية">الإعلامية</option>
+                    <option value="تكليف">تكليف</option>
+                    <option value="استقطاب">استقطاب</option>
+                  </select>
+                </div>
+              )}
+
+              <div>
+                <label className="block text-xs font-bold text-slate-500 mb-2 flex items-center gap-1">
+                  <Calendar className="w-3.5 h-3.5 text-slate-400" />
+                  تاريخ الإنجاز (اختياري)
+                </label>
+                <input
+                  type="date"
+                  value={achievementDate}
+                  onChange={(e) => setAchievementDate(e.target.value)}
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500/30 text-slate-800 transition-all font-medium cursor-pointer"
+                />
+                <p className="text-[10px] text-slate-400 mt-1.5 font-bold">في حال تركه فارغاً، سيتم اعتماد تاريخ اليوم كافتراضي.</p>
               </div>
 
               <div>

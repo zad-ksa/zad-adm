@@ -2,7 +2,8 @@
 
 import { useState, useEffect, useRef, useTransition } from "react";
 import Link from "next/link";
-import { User, ShieldAlert, Users, X, LogOut, LayoutDashboard, Building2, ClipboardList, ChevronRight, Edit, Eye, EyeOff, Camera, Loader2, AlertCircle, CheckCircle2, Newspaper, CheckSquare } from "lucide-react";
+import { User, ShieldAlert, Users, X, LogOut, LayoutDashboard, Building2, ClipboardList, ChevronRight, Edit, Eye, EyeOff, Camera, Loader2, AlertCircle, CheckCircle2, Newspaper, CheckSquare, Moon, Sun } from "lucide-react";
+import { useTheme } from "next-themes";
 import { logout } from "@/app/actions/auth";
 import { updateProfile } from "@/app/actions/profile";
 import { usePathname } from "next/navigation";
@@ -29,6 +30,12 @@ export default function EmployeeSidebar({
   const [modalError, setModalError] = useState<string | null>(null);
   const [modalSuccess, setModalSuccess] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
+  const { theme, setTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -135,18 +142,18 @@ export default function EmployeeSidebar({
   };
 
   const sidebarContent = (
-    <div className="bg-white flex flex-col h-full border-l border-slate-200/80 shadow-[4px_0_24px_rgba(0,0,0,0.02)] relative transition-all duration-300">
+    <div className="bg-white dark:bg-slate-900 flex flex-col h-full border-l border-slate-200/80 dark:border-slate-800/80 shadow-[4px_0_24px_rgba(0,0,0,0.02)] relative transition-all duration-300">
       
       {/* Desktop Toggle Button */}
       <button 
         onClick={() => setIsOpen(!isOpen)} 
-        className="hidden lg:flex absolute top-8 -left-3 bg-white border border-slate-200 text-slate-400 hover:text-primary hover:border-primary/30 rounded-full w-6 h-6 items-center justify-center z-50 transition-all shadow-sm"
+        className="hidden lg:flex absolute top-8 -left-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-400 hover:text-primary hover:border-primary/30 rounded-full w-6 h-6 items-center justify-center z-50 transition-all shadow-sm cursor-pointer"
       >
         <ChevronRight className={`w-4 h-4 transition-transform duration-300 ${!isOpen ? "rotate-180" : ""}`} />
       </button>
 
       {/* Header / Logo */}
-      <div className={`flex items-center ${isOpen ? "justify-start px-6" : "justify-center px-0"} h-24 border-b border-slate-100 shrink-0 transition-all`}>
+      <div className={`flex items-center ${isOpen ? "justify-start px-6" : "justify-center px-0"} h-24 border-b border-slate-100 dark:border-slate-800 shrink-0 transition-all`}>
         {isOpen ? (
           <div className="w-full h-full flex items-center py-4 relative pr-2">
             <ZadLogo isOpen={true} className="h-12 w-auto" />
@@ -166,9 +173,10 @@ export default function EmployeeSidebar({
       </div>
 
       {/* User Profile - Fixed at top */}
-      <div className={`flex flex-col ${isOpen ? "items-start px-6" : "items-center px-2"} mb-8 pb-6 border-b border-slate-100 transition-all overflow-hidden shrink-0`}>
-        <button 
-          type="button"
+      <div className={`flex flex-col ${isOpen ? "items-start px-6" : "items-center px-2"} mb-8 pb-6 border-b border-slate-100 dark:border-slate-800 transition-all overflow-hidden shrink-0`}>
+        <div className="w-full flex items-center justify-between">
+          <button 
+            type="button"
           onClick={() => {
             setName(userState?.name || "");
             setPhone(userState?.phone || "");
@@ -192,11 +200,23 @@ export default function EmployeeSidebar({
             </div>
           </div>
         </button>
+
+        {/* Theme Toggle Button */}
+        {mounted && isOpen && (
+          <button
+            onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+            className="p-2 rounded-xl bg-slate-50 dark:bg-slate-800 text-slate-400 dark:text-slate-300 hover:text-primary dark:hover:text-primary transition-colors cursor-pointer ml-auto mb-3"
+            title="تبديل الوضع الداكن/الفاتح"
+          >
+            {theme === "dark" ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+          </button>
+        )}
+        </div>
         
         {isOpen && (
           <div className="overflow-hidden whitespace-nowrap fade-in w-full">
             <div className="flex items-center justify-between gap-2 w-full">
-              <h2 className="text-base font-bold text-slate-800 truncate" title={userState?.name}>{userState?.name}</h2>
+              <h2 className="text-base font-bold text-slate-800 dark:text-slate-100 truncate" title={userState?.name}>{userState?.name}</h2>
               <button 
                 type="button"
                 onClick={() => {
@@ -214,7 +234,7 @@ export default function EmployeeSidebar({
                 <Edit className="w-4 h-4" />
               </button>
             </div>
-            <div className="mt-1.5 inline-flex items-center gap-1.5 px-2.5 py-1 bg-slate-50 border border-slate-100 rounded-full text-[11px] text-slate-600 font-bold">
+            <div className="mt-1.5 inline-flex items-center gap-1.5 px-2.5 py-1 bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-full text-[11px] text-slate-600 dark:text-slate-300 font-bold">
               <ShieldAlert className="w-3.5 h-3.5 text-emerald-500" />
               {userState?.role === "ADMIN" ? "مدير النظام" :
                userState?.role === "EXECUTIVE_DIRECTOR" ? "مدير تنفيذي" :
@@ -241,7 +261,7 @@ export default function EmployeeSidebar({
               className={`flex items-center ${isOpen ? "justify-start px-3" : "justify-center"} py-3 rounded-xl font-bold transition-all group relative overflow-hidden ${
                 isActive 
                   ? "bg-primary text-white shadow-md shadow-primary/20" 
-                  : "text-slate-500 hover:bg-primary/5 hover:text-primary"
+                  : "text-slate-500 dark:text-slate-400 hover:bg-primary/5 dark:hover:bg-primary/10 hover:text-primary dark:hover:text-primary"
               }`}
             >
               {isActive && isOpen && <div className="absolute right-0 top-0 bottom-0 w-1 bg-white/20 rounded-l-full"></div>}
@@ -253,7 +273,7 @@ export default function EmployeeSidebar({
       </div>
 
       {/* Logout - Fixed at bottom */}
-      <div className="shrink-0 px-3 py-6 border-t border-slate-100">
+      <div className="shrink-0 px-3 py-6 border-t border-slate-100 dark:border-slate-800">
         <form action={logout}>
           <button 
             type="submit" 

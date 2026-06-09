@@ -173,7 +173,7 @@ export default function EmployeeSidebar({
       </div>
 
       {/* User Profile - Fixed at top */}
-      <div className={`flex flex-col ${isOpen ? "items-start px-6" : "items-center px-2"} mb-8 pb-6 border-b border-slate-100 dark:border-slate-700/50 dark:border-slate-800 transition-all overflow-hidden shrink-0`}>
+      <div className={`flex flex-col ${isOpen ? "items-start px-6" : "items-center px-2"} pt-6 mb-8 pb-6 border-b border-slate-100 dark:border-slate-700/50 dark:border-slate-800 transition-all overflow-hidden shrink-0`}>
         <div className={`w-full flex ${isOpen ? "flex-row items-center justify-between" : "flex-col items-center gap-2"} mb-4`}>
           <button 
             type="button"

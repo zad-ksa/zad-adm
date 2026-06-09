@@ -176,7 +176,7 @@ export default async function SurveysDashboard() {
                 </thead>
                 <tbody className="divide-y divide-amber-100/30 text-slate-700 dark:text-slate-200">
                   {pendingCharitiesList.map((pending) => (
-                    <tr key={pending.name} className="hover:bg-amber-50 dark:bg-amber-900/20/10 transition-colors">
+                    <tr key={pending.name} className="hover:bg-amber-50 dark:hover:bg-amber-900/20/10 transition-colors">
                       <td className="p-4 font-bold text-slate-800 dark:text-slate-100 text-sm">{pending.name}</td>
                       <td className="p-4 text-center font-bold">
                         {pending.readinessCount > 0 ? (

@@ -278,7 +278,7 @@ export default function EmployeeSidebar({
           <button 
             type="submit" 
             title={!isOpen ? "تسجيل الخروج" : undefined}
-            className={`flex items-center ${isOpen ? "justify-start px-3" : "justify-center"} w-full py-3 text-red-500 hover:bg-red-50 dark:bg-red-900/20 hover:text-red-600 rounded-xl font-bold transition-colors group`}
+            className={`flex items-center ${isOpen ? "justify-start px-3" : "justify-center"} w-full py-3 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-600 rounded-xl font-bold transition-colors group`}
           >
             <LogOut className={`w-5 h-5 shrink-0 transition-all ${isOpen ? "ml-3" : "ml-0"} text-red-400 group-hover:text-red-600`} />
             {isOpen && <span className="whitespace-nowrap">تسجيل الخروج</span>}

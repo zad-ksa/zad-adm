@@ -302,7 +302,7 @@ export default async function MainDashboard() {
                           </svg>
                           المنح:
                         </span>
-                        <span className="font-bold text-emerald-800 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-900/200/10 backdrop-blur-md px-2 py-0.5 rounded-md text-[10px] shrink-0 border border-emerald-500/20 shadow-sm">
+                        <span className="font-bold text-emerald-800 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-900/20/10 backdrop-blur-md px-2 py-0.5 rounded-md text-[10px] shrink-0 border border-emerald-500/20 shadow-sm">
                           {charity.grants.toLocaleString()} ريال
                         </span>
                       </div>
@@ -358,7 +358,7 @@ export default async function MainDashboard() {
         <div className="space-y-6">
           <div className="flex items-center justify-between">
             <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-100 flex items-center gap-3">
-              <span className="w-2.5 h-6 bg-amber-50 dark:bg-amber-900/200 rounded-full"></span>
+              <span className="w-2.5 h-6 bg-amber-50 dark:bg-amber-900/20 rounded-full"></span>
               آخر الأخبار والإنجازات
             </h2>
             <Link
@@ -381,11 +381,11 @@ export default async function MainDashboard() {
                       {cName.trim()}
                     </span>
                   ))}
-                  <span className={`inline-block text-[10px] font-bold px-2 py-0.5 rounded-md ${item.category === "الاستراتيجية" ? "text-violet-700 bg-violet-50" :
+                  <span className={`inline-block text-[10px] font-bold px-2 py-0.5 rounded-md ${item.category === "الاستراتيجية" ? "text-violet-700 dark:text-violet-400 bg-violet-50 dark:bg-violet-900/20" :
                     item.category === "التقنية" ? "text-blue-700 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20" :
                       item.category === "تنمية الموارد" ? "text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/20" :
-                        item.category === "تكليف" ? "text-rose-700 bg-rose-50" :
-                          item.category === "استقطاب" ? "text-teal-700 bg-teal-50" :
+                        item.category === "تكليف" ? "text-rose-700 dark:text-rose-400 bg-rose-50 dark:bg-rose-900/20" :
+                          item.category === "استقطاب" ? "text-teal-700 dark:text-teal-400 bg-teal-50 dark:bg-teal-900/20" :
                             "text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20" // الإعلامية
                     }`}>
                     {item.category}

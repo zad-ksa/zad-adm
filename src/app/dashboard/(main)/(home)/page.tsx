@@ -255,18 +255,18 @@ export default async function MainDashboard() {
                 href={`/dashboard/charity/${encodeURIComponent(charity.name)}`}
                 className="relative overflow-hidden rounded-xl border border-slate-100 shadow-sm hover:shadow-md hover:-translate-y-1 hover:border-primary/30 transition-all duration-500 group flex flex-col justify-between"
               >
-                {/* Blurred Background Logo */}
+                {/* Background Logo */}
                 {charity.logoUrl && (
-                  <div className="absolute inset-0 z-0 pointer-events-none">
+                  <div className="absolute inset-0 z-0 pointer-events-none flex items-center justify-center p-4">
                     <img 
                       src={charity.logoUrl} 
                       alt="" 
-                      className="w-full h-full object-cover opacity-50 blur-md scale-110 group-hover:scale-125 group-hover:opacity-60 transition-all duration-700 ease-out" 
+                      className="w-full h-full object-contain opacity-25 scale-125 group-hover:scale-150 group-hover:opacity-35 transition-all duration-700 ease-out" 
                     />
                   </div>
                 )}
-                {/* Glassmorphism Overlay */}
-                <div className={`absolute inset-0 z-0 pointer-events-none transition-colors duration-500 ${charity.logoUrl ? "bg-white/60 backdrop-blur-[8px] group-hover:bg-white/50" : "bg-white"}`}></div>
+                {/* Overlay */}
+                <div className={`absolute inset-0 z-0 pointer-events-none transition-colors duration-500 ${charity.logoUrl ? "bg-white/50 backdrop-blur-sm group-hover:bg-white/40" : "bg-white"}`}></div>
 
                 {/* Card Content */}
                 <div className="relative z-10 p-3 sm:p-4 flex flex-col justify-between h-full">

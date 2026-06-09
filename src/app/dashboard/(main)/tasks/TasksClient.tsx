@@ -92,6 +92,8 @@ export default function TasksClient({
   const [achievements, setAchievements] = useState<Achievement[]>(initialAchievements);
   const [selectedEmployeeId, setSelectedEmployeeId] = useState<string>(session.id); // Default to current user
   
+  const isDirectorOrAdmin = ["ADMIN", "EXECUTIVE_DIRECTOR", "ADMINISTRATIVE_SECRETARIAT"].includes(session.role);
+
   // Form states
   const [taskTitle, setTaskTitle] = useState("");
   const [showTaskForm, setShowTaskForm] = useState(false);
@@ -129,9 +131,6 @@ export default function TasksClient({
   const [isPending, startTransition] = useTransition();
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
-
-  const isDirectorOrAdmin = ["ADMIN", "EXECUTIVE_DIRECTOR", "ADMINISTRATIVE_SECRETARIAT"].includes(session.role);
-
 
   const showNotification = (type: "success" | "error", message: string) => {
     if (type === "success") {

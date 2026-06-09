@@ -83,6 +83,7 @@ export default function TasksClient({
   
   // Form states
   const [taskTitle, setTaskTitle] = useState("");
+  const [showTaskForm, setShowTaskForm] = useState(false);
   const [taskAssigneeId, setTaskAssigneeId] = useState(session.id);
   const [taskCharityId, setTaskCharityId] = useState("internal"); // Default to internal task
   
@@ -358,140 +359,8 @@ export default function TasksClient({
         )}
       </div>
 
-      {/* Main Grid: Add Task & Lists */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        
-        {/* Right Sidebar: Forms Column (1/3 Width) */}
-        <div className="space-y-6 lg:col-span-1">
-          
-          {/* Add Task Card */}
-          <div className="bg-white rounded-3xl border border-slate-100 p-6 shadow-sm">
-            <h3 className="text-lg font-bold text-slate-800 mb-5 flex items-center gap-2">
-              <span className="w-2.5 h-5 bg-primary rounded-full"></span>
-              إضافة مهمة جديدة
-            </h3>
-            
-            <form onSubmit={handleCreateTask} className="space-y-4">
-              <div>
-                <label className="block text-xs font-bold text-slate-500 mb-2">عنوان المهمة</label>
-                <textarea
-                  value={taskTitle}
-                  onChange={(e) => setTaskTitle(e.target.value)}
-                  placeholder="اكتب تفاصيل المهمة هنا..."
-                  rows={3}
-                  required
-                  className="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-sm outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary/30 focus:bg-white text-slate-800 transition-all font-medium resize-none"
-                />
-              </div>
-
-              {/* Assignment Dropdown (Executive Director / Admin only) */}
-              {isDirectorOrAdmin && (
-                <div>
-                  <label className="block text-xs font-bold text-slate-500 mb-2 flex items-center gap-1">
-                    <UserPlus className="w-3.5 h-3.5 text-slate-400" />
-                    إسناد المهمة إلى الموظف
-                  </label>
-                  <select
-                    value={taskAssigneeId}
-                    onChange={(e) => setTaskAssigneeId(e.target.value)}
-                    className="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-sm outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary/30 focus:bg-white text-slate-800 transition-all font-bold cursor-pointer"
-                  >
-                    {employees.map((emp) => (
-                      <option key={emp.id} value={emp.id}>
-                        {emp.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              )}
-
-              {/* Charity / Internal Link Dropdown */}
-              <div>
-                <label className="block text-xs font-bold text-slate-500 mb-2 flex items-center gap-1">
-                  <FolderPlus className="w-3.5 h-3.5 text-slate-400" />
-                  الجهة التابعة لها المهمة
-                </label>
-                <select
-                  value={taskCharityId}
-                  onChange={(e) => setTaskCharityId(e.target.value)}
-                  className="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-sm outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary/30 focus:bg-white text-slate-800 transition-all font-bold cursor-pointer"
-                >
-                  <option value="internal">مهام داخلية في شركة زاد</option>
-                  {charities.map((ch) => (
-                    <option key={ch.id} value={ch.id}>
-                      {ch.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <button
-                type="submit"
-                disabled={isPending || !taskTitle.trim()}
-                className="w-full bg-primary hover:bg-primary/95 text-white py-3 px-4 rounded-xl font-bold text-sm shadow-sm transition-all duration-300 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed mt-2"
-              >
-                <Plus className="w-5 h-5" />
-                <span>إضافة مهمة جديدة</span>
-              </button>
-            </form>
-          </div>
-
-          {/* Add Direct Achievement Card (for normal employees / custom option) */}
-          <div className="bg-gradient-to-br from-emerald-500/5 to-emerald-500/10 rounded-3xl border border-emerald-500/10 p-6">
-            <h3 className="text-base font-bold text-slate-800 mb-3 flex items-center gap-2">
-              <Sparkles className="w-5 h-5 text-emerald-600" />
-              هل أنجزت شيئاً مباشراً اليوم؟
-            </h3>
-            <p className="text-xs text-slate-500 font-medium leading-relaxed mb-4">
-              يمكنك تسجيل منجزاتك التنموية مباشرة في السجل دون الحاجة لإنشاء مهمة مسبقة لتظهر في ملفك المهني.
-            </p>
-
-            {!showDirectAchievementForm ? (
-              <button
-                onClick={() => setShowDirectAchievementForm(true)}
-                className="bg-emerald-600 hover:bg-emerald-700 text-white py-2.5 px-4 rounded-xl font-bold text-xs shadow-sm transition-all duration-300 flex items-center gap-1.5 cursor-pointer"
-              >
-                <Plus className="w-4 h-4" />
-                <span>تسجيل إنجاز مباشر</span>
-              </button>
-            ) : (
-              <form onSubmit={handleCreateAchievement} className="space-y-3">
-                <input
-                  type="text"
-                  required
-                  value={achievementTitle}
-                  onChange={(e) => setAchievementTitle(e.target.value)}
-                  placeholder="مثال: تقديم ورشة الحوكمة أو صياغة عقد..."
-                  className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2.5 text-xs outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500/30 text-slate-800 transition-all font-medium"
-                />
-                <div className="flex items-center gap-2">
-                  <button
-                    type="submit"
-                    disabled={isPending || !achievementTitle.trim()}
-                    className="bg-emerald-600 hover:bg-emerald-700 text-white py-2 px-4 rounded-lg font-bold text-xs transition-colors cursor-pointer disabled:opacity-50"
-                  >
-                    حفظ
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setShowDirectAchievementForm(false);
-                      setAchievementTitle("");
-                    }}
-                    className="bg-slate-100 hover:bg-slate-200 text-slate-600 py-2 px-3 rounded-lg font-bold text-xs transition-colors cursor-pointer"
-                  >
-                    إلغاء
-                  </button>
-                </div>
-              </form>
-            )}
-          </div>
-
-
-        </div>
-
-        {/* Left Side: Tasks & Achievements Columns (2/3 Width) */}
-        <div className="lg:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
+      {/* Main Grid: Tasks & Achievements Columns */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
           
           {/* Active Tasks Column */}
           <div className="bg-white rounded-3xl border border-slate-100 p-6 shadow-sm space-y-5">
@@ -756,7 +625,7 @@ export default function TasksClient({
         </div>
       </div>
 
-      {/* Task Reassignment Dialog/Modal */}
+    {/* Task Reassignment Dialog/Modal */}
       {reassigningTaskId && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
           <div 
@@ -798,6 +667,190 @@ export default function TasksClient({
                   className="px-6 py-2.5 rounded-xl bg-primary text-white hover:bg-primary/95 font-bold transition-all text-xs flex items-center gap-2 cursor-pointer disabled:opacity-75 disabled:cursor-not-allowed shadow-sm hover:shadow"
                 >
                   حفظ ونقل
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Floating Action Buttons */}
+      <div className="fixed bottom-8 left-8 z-40 flex flex-col gap-4">
+        <button
+          onClick={() => setShowDirectAchievementForm(true)}
+          title="تسجيل إنجاز مباشر"
+          className="bg-emerald-600 hover:bg-emerald-700 text-white w-12 h-12 rounded-full shadow-lg hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 flex items-center justify-center cursor-pointer"
+        >
+          <Sparkles className="w-5 h-5" />
+        </button>
+        <button
+          onClick={() => setShowTaskForm(true)}
+          title="إضافة مهمة جديدة"
+          className="bg-primary hover:bg-primary/95 text-white w-14 h-14 rounded-full shadow-xl hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 flex items-center justify-center cursor-pointer"
+        >
+          <Plus className="w-6 h-6" />
+        </button>
+      </div>
+
+      {/* Modal: Add Task */}
+      {showTaskForm && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+          <div 
+            className="absolute inset-0 bg-slate-950/65 backdrop-blur-md transition-opacity duration-300"
+            onClick={() => setShowTaskForm(false)}
+          />
+          <div className="bg-white rounded-3xl border border-slate-100 shadow-2xl w-full max-w-lg overflow-hidden relative z-10 transform transition-all duration-300 scale-100 p-6 md:p-8 space-y-6" dir="rtl">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-4">
+              <div>
+                <h3 className="text-xl font-bold text-slate-800 flex items-center gap-2">
+                  <span className="w-2.5 h-6 bg-primary rounded-full"></span>
+                  إضافة مهمة جديدة
+                </h3>
+                <p className="text-xs text-slate-500 font-medium mt-1.5">
+                  قم بإنشاء مهمة جديدة وحدد الجهة المرتبطة بها لإضافتها لقائمة المهام الجارية.
+                </p>
+              </div>
+              <button
+                onClick={() => setShowTaskForm(false)}
+                className="p-2 bg-slate-100 hover:bg-slate-200 text-slate-500 rounded-full transition-colors cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            
+            <form onSubmit={(e) => {
+              handleCreateTask(e);
+              setShowTaskForm(false);
+            }} className="space-y-5">
+              <div>
+                <label className="block text-xs font-bold text-slate-500 mb-2">عنوان المهمة</label>
+                <textarea
+                  value={taskTitle}
+                  onChange={(e) => setTaskTitle(e.target.value)}
+                  placeholder="اكتب تفاصيل المهمة هنا..."
+                  rows={3}
+                  required
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary/30 text-slate-800 transition-all font-medium resize-none"
+                />
+              </div>
+
+              {/* Assignment Dropdown (Executive Director / Admin only) */}
+              {isDirectorOrAdmin && (
+                <div>
+                  <label className="block text-xs font-bold text-slate-500 mb-2 flex items-center gap-1">
+                    <UserPlus className="w-3.5 h-3.5 text-slate-400" />
+                    إسناد المهمة إلى الموظف
+                  </label>
+                  <select
+                    value={taskAssigneeId}
+                    onChange={(e) => setTaskAssigneeId(e.target.value)}
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary/30 text-slate-800 transition-all font-bold cursor-pointer"
+                  >
+                    {employees.map((emp) => (
+                      <option key={emp.id} value={emp.id}>
+                        {emp.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
+              {/* Charity / Internal Link Dropdown */}
+              <div>
+                <label className="block text-xs font-bold text-slate-500 mb-2 flex items-center gap-1">
+                  <FolderPlus className="w-3.5 h-3.5 text-slate-400" />
+                  الجهة التابعة لها المهمة
+                </label>
+                <select
+                  value={taskCharityId}
+                  onChange={(e) => setTaskCharityId(e.target.value)}
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary/30 text-slate-800 transition-all font-bold cursor-pointer"
+                >
+                  <option value="internal">مهام داخلية في شركة زاد</option>
+                  {charities.map((ch) => (
+                    <option key={ch.id} value={ch.id}>
+                      {ch.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-100">
+                <button
+                  type="button"
+                  onClick={() => setShowTaskForm(false)}
+                  className="px-5 py-2.5 rounded-xl border border-slate-200 text-slate-500 hover:bg-slate-50 hover:text-slate-700 font-bold transition-all text-xs cursor-pointer"
+                >
+                  إلغاء
+                </button>
+                <button
+                  type="submit"
+                  disabled={isPending || !taskTitle.trim()}
+                  className="px-6 py-2.5 rounded-xl bg-primary text-white hover:bg-primary/95 font-bold transition-all text-xs flex items-center gap-2 cursor-pointer disabled:opacity-75 disabled:cursor-not-allowed shadow-sm hover:shadow"
+                >
+                  <Plus className="w-4 h-4" />
+                  حفظ المهمة
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modal: Add Direct Achievement */}
+      {showDirectAchievementForm && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+          <div 
+            className="absolute inset-0 bg-slate-950/65 backdrop-blur-md transition-opacity duration-300"
+            onClick={() => setShowDirectAchievementForm(false)}
+          />
+          <div className="bg-white rounded-3xl border border-slate-100 shadow-2xl w-full max-w-md overflow-hidden relative z-10 transform transition-all duration-300 scale-100 p-6 md:p-8 space-y-6" dir="rtl">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-4">
+              <div>
+                <h3 className="text-xl font-bold text-slate-800 flex items-center gap-2">
+                  <Sparkles className="w-6 h-6 text-emerald-500" />
+                  تسجيل إنجاز مباشر
+                </h3>
+                <p className="text-xs text-slate-500 font-medium mt-1.5">
+                  سجل منجزاً عملياً مباشراً ليظهر فوراً في ملفك المهني.
+                </p>
+              </div>
+              <button
+                onClick={() => setShowDirectAchievementForm(false)}
+                className="p-2 bg-slate-100 hover:bg-slate-200 text-slate-500 rounded-full transition-colors cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            
+            <form onSubmit={handleCreateAchievement} className="space-y-5">
+              <div>
+                <label className="block text-xs font-bold text-slate-500 mb-2">ماذا أنجزت؟</label>
+                <input
+                  type="text"
+                  required
+                  value={achievementTitle}
+                  onChange={(e) => setAchievementTitle(e.target.value)}
+                  placeholder="مثال: تقديم ورشة الحوكمة أو صياغة عقد..."
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500/30 text-slate-800 transition-all font-medium"
+                />
+              </div>
+              
+              <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-100">
+                <button
+                  type="button"
+                  onClick={() => setShowDirectAchievementForm(false)}
+                  className="px-5 py-2.5 rounded-xl border border-slate-200 text-slate-500 hover:bg-slate-50 hover:text-slate-700 font-bold transition-all text-xs cursor-pointer"
+                >
+                  إلغاء
+                </button>
+                <button
+                  type="submit"
+                  disabled={isPending || !achievementTitle.trim()}
+                  className="px-6 py-2.5 rounded-xl bg-emerald-600 text-white hover:bg-emerald-700 font-bold transition-all text-xs flex items-center gap-2 cursor-pointer disabled:opacity-75 disabled:cursor-not-allowed shadow-sm hover:shadow"
+                >
+                  <Sparkles className="w-4 h-4" />
+                  حفظ الإنجاز
                 </button>
               </div>
             </form>

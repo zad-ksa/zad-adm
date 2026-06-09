@@ -191,9 +191,9 @@ export default function NewsFilterClient({
         <p className="text-slate-600 font-medium">تصفية واستعراض كافة الإنجازات والتقارير الإخبارية للجمعيات المتعاقد معها</p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div className="flex flex-col gap-8">
         {/* News Feed Content */}
-        <div className={isSecretariatOrAdmin ? "lg:col-span-2 space-y-8" : "lg:col-span-3 space-y-8"}>
+        <div className="space-y-8">
           
           {/* Filters Card */}
           <div className="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm">
@@ -375,123 +375,136 @@ export default function NewsFilterClient({
           </div>
         </div>
 
-        {/* Sidebar Column: Add News Card */}
-        {isSecretariatOrAdmin && (
-          <div className="space-y-6 lg:col-span-1">
-            <div className="bg-gradient-to-br from-amber-500/5 to-amber-500/10 rounded-3xl border border-amber-500/10 p-6">
-              <h3 className="text-base font-bold text-slate-800 mb-3 flex items-center gap-2">
-                <Newspaper className="w-5 h-5 text-amber-600" />
-                نشر خبر أو إنجاز جديد
-              </h3>
-              <p className="text-xs text-slate-500 font-medium leading-relaxed mb-4">
-                يمكنك نشر خبر أو إنجاز جديد وتحديد جمعية أو أكثر ليظهر مباشرة للجميع كأوسمة فوق الخبر.
-              </p>
+        {/* Floating Action Button (FAB) */}
+        {isSecretariatOrAdmin && !showNewsForm && (
+          <button
+            onClick={() => setShowNewsForm(true)}
+            title="نشر خبر أو إنجاز جديد"
+            className="fixed bottom-8 left-8 z-40 bg-amber-600 hover:bg-amber-700 text-white w-14 h-14 rounded-full shadow-xl hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 flex items-center justify-center cursor-pointer"
+          >
+            <Plus className="w-6 h-6" />
+          </button>
+        )}
 
-              {!showNewsForm ? (
+        {/* Modal: Add News Form */}
+        {isSecretariatOrAdmin && showNewsForm && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+            <div 
+              className="absolute inset-0 bg-slate-950/65 backdrop-blur-md transition-opacity duration-300"
+              onClick={() => setShowNewsForm(false)}
+            />
+            <div className="bg-white rounded-3xl border border-slate-100 shadow-2xl w-full max-w-lg overflow-hidden relative z-10 transform transition-all duration-300 scale-100 p-6 md:p-8 max-h-[90vh] overflow-y-auto" dir="rtl">
+              <div className="flex items-center justify-between mb-6 border-b border-slate-100 pb-4">
+                <div>
+                  <h3 className="text-xl font-bold text-slate-800 flex items-center gap-2">
+                    <Newspaper className="w-6 h-6 text-amber-600" />
+                    نشر خبر أو إنجاز جديد
+                  </h3>
+                  <p className="text-xs text-slate-500 font-medium leading-relaxed mt-1.5">
+                    يمكنك تحديد جمعية أو أكثر ليظهر مباشرة كأوسمة فوق الخبر.
+                  </p>
+                </div>
                 <button
-                  onClick={() => {
-                    setShowNewsForm(true);
-                  }}
-                  className="bg-amber-600 hover:bg-amber-700 text-white py-2.5 px-4 rounded-xl font-bold text-xs shadow-sm transition-all duration-300 flex items-center gap-1.5 cursor-pointer w-full justify-center"
+                  onClick={() => setShowNewsForm(false)}
+                  className="p-2 bg-slate-100 hover:bg-slate-200 text-slate-500 rounded-full transition-colors cursor-pointer"
                 >
-                  <Plus className="w-4 h-4" />
-                  <span>إنشاء خبر/إنجاز</span>
+                  <X className="w-5 h-5" />
                 </button>
-              ) : (
-                <form onSubmit={handleCreateNews} className="space-y-4">
-                  <div>
-                    <label className="block text-[11px] font-bold text-slate-500 mb-1.5">الجمعيات المعنية (اختر جمعية أو أكثر)</label>
-                    <div className="border border-slate-200 rounded-xl p-3 bg-white max-h-40 overflow-y-auto space-y-2 focus-within:ring-4 focus-within:ring-amber-500/10 focus-within:border-amber-500/30 transition-all">
-                      {[
-                        "إدارة زاد",
-                        "عدة جمعيات",
-                        ...charities.map((ch) => ch.name)
-                      ].map((name) => {
-                        const isChecked = selectedCharityNames.includes(name);
-                        return (
-                          <label key={name} className="flex items-center gap-2 text-xs font-bold text-slate-750 cursor-pointer select-none">
-                            <input
-                              type="checkbox"
-                              checked={isChecked}
-                              onChange={() => {
-                                if (isChecked) {
-                                  setSelectedCharityNames(prev => prev.filter(n => n !== name));
-                                } else {
-                                  setSelectedCharityNames(prev => [...prev, name]);
-                                }
-                              }}
-                              className="rounded border-slate-300 text-amber-600 focus:ring-amber-500 w-4 h-4 cursor-pointer"
-                            />
-                            {name}
-                          </label>
-                        );
-                      })}
-                    </div>
-                  </div>
+              </div>
 
-                  <div>
-                    <label className="block text-[11px] font-bold text-slate-500 mb-1.5">القسم المعني</label>
-                    <select
-                      value={newsCategory}
-                      onChange={(e) => setNewsCategory(e.target.value)}
-                      required
-                      className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs outline-none focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500/30 text-slate-800 transition-all font-bold cursor-pointer"
-                    >
-                      <option value="الاستراتيجية">الاستراتيجية</option>
-                      <option value="التقنية">التقنية</option>
-                      <option value="تنمية الموارد">تنمية الموارد</option>
-                      <option value="الإعلامية">الإعلامية</option>
-                      <option value="تكليف">تكليف</option>
-                      <option value="استقطاب">استقطاب</option>
-                    </select>
+              <form onSubmit={handleCreateNews} className="space-y-5">
+                <div>
+                  <label className="block text-xs font-bold text-slate-500 mb-2">الجمعيات المعنية (اختر جمعية أو أكثر)</label>
+                  <div className="border border-slate-200 rounded-xl p-3 bg-slate-50 max-h-40 overflow-y-auto space-y-2 focus-within:ring-4 focus-within:ring-amber-500/10 focus-within:border-amber-500/30 transition-all">
+                    {[
+                      "إدارة زاد",
+                      "عدة جمعيات",
+                      ...charities.map((ch) => ch.name)
+                    ].map((name) => {
+                      const isChecked = selectedCharityNames.includes(name);
+                      return (
+                        <label key={name} className="flex items-center gap-2 text-sm font-bold text-slate-750 cursor-pointer select-none py-1">
+                          <input
+                            type="checkbox"
+                            checked={isChecked}
+                            onChange={() => {
+                              if (isChecked) {
+                                setSelectedCharityNames(prev => prev.filter(n => n !== name));
+                              } else {
+                                setSelectedCharityNames(prev => [...prev, name]);
+                              }
+                            }}
+                            className="rounded border-slate-300 text-amber-600 focus:ring-amber-500 w-4 h-4 cursor-pointer"
+                          />
+                          {name}
+                        </label>
+                      );
+                    })}
                   </div>
+                </div>
 
-                  <div>
-                    <label className="block text-[11px] font-bold text-slate-500 mb-1.5">العنوان</label>
-                    <input
-                      type="text"
-                      required
-                      value={newsTitle}
-                      onChange={(e) => setNewsTitle(e.target.value)}
-                      placeholder="عنوان الخبر أو الإنجاز..."
-                      className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs outline-none focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500/30 text-slate-800 transition-all font-medium"
-                    />
-                  </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-500 mb-2">القسم المعني</label>
+                  <select
+                    value={newsCategory}
+                    onChange={(e) => setNewsCategory(e.target.value)}
+                    required
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm outline-none focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500/30 text-slate-800 transition-all font-bold cursor-pointer"
+                  >
+                    <option value="الاستراتيجية">الاستراتيجية</option>
+                    <option value="التقنية">التقنية</option>
+                    <option value="تنمية الموارد">تنمية الموارد</option>
+                    <option value="الإعلامية">الإعلامية</option>
+                    <option value="تكليف">تكليف</option>
+                    <option value="استقطاب">استقطاب</option>
+                  </select>
+                </div>
 
-                  <div>
-                    <label className="block text-[11px] font-bold text-slate-500 mb-1.5">الوصف (اختياري)</label>
-                    <textarea
-                      value={newsDescription}
-                      onChange={(e) => setNewsDescription(e.target.value)}
-                      placeholder="تفاصيل إضافية عن الخبر..."
-                      rows={3}
-                      className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs outline-none focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500/30 text-slate-800 transition-all font-medium resize-none"
-                    />
-                  </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-500 mb-2">العنوان</label>
+                  <input
+                    type="text"
+                    required
+                    value={newsTitle}
+                    onChange={(e) => setNewsTitle(e.target.value)}
+                    placeholder="عنوان الخبر أو الإنجاز..."
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm outline-none focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500/30 text-slate-800 transition-all font-medium"
+                  />
+                </div>
 
-                  <div className="flex items-center gap-2 pt-1">
-                    <button
-                      type="submit"
-                      disabled={isPending || selectedCharityNames.length === 0 || !newsTitle.trim()}
-                      className="bg-amber-600 hover:bg-amber-700 text-white py-2 px-4 rounded-lg font-bold text-xs transition-colors cursor-pointer disabled:opacity-50"
-                    >
-                      نشر الآن
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setShowNewsForm(false);
-                        setNewsTitle("");
-                        setNewsDescription("");
-                        setSelectedCharityNames([]);
-                      }}
-                      className="bg-slate-100 hover:bg-slate-200 text-slate-600 py-2 px-3 rounded-lg font-bold text-xs transition-colors cursor-pointer"
-                    >
-                      إلغاء
-                    </button>
-                  </div>
-                </form>
-              )}
+                <div>
+                  <label className="block text-xs font-bold text-slate-500 mb-2">الوصف (اختياري)</label>
+                  <textarea
+                    value={newsDescription}
+                    onChange={(e) => setNewsDescription(e.target.value)}
+                    placeholder="تفاصيل إضافية عن الخبر..."
+                    rows={4}
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm outline-none focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500/30 text-slate-800 transition-all font-medium resize-none"
+                  />
+                </div>
+
+                <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-100">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowNewsForm(false);
+                      setNewsTitle("");
+                      setNewsDescription("");
+                      setSelectedCharityNames([]);
+                    }}
+                    className="px-5 py-2.5 rounded-xl border border-slate-200 text-slate-500 hover:bg-slate-50 hover:text-slate-700 font-bold transition-all text-xs cursor-pointer"
+                  >
+                    إلغاء
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={isPending || selectedCharityNames.length === 0 || !newsTitle.trim()}
+                    className="px-6 py-2.5 rounded-xl bg-amber-600 text-white hover:bg-amber-700 font-bold transition-all text-xs flex items-center gap-2 cursor-pointer disabled:opacity-75 disabled:cursor-not-allowed shadow-sm hover:shadow"
+                  >
+                    {isPending ? "جاري النشر..." : "نشر الخبر الآن"}
+                  </button>
+                </div>
+              </form>
             </div>
           </div>
         )}

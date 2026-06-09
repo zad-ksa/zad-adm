@@ -6,78 +6,78 @@ import Link from "next/link";
 
 
 const getCachedDashboardData = async () => {
-    const [
-      charities,
-      allSurveys,
-      allHexSurveys,
-      allPrograms,
-      dbNewsItems
-    ] = await Promise.all([
-      prisma.charity.findMany({ 
-        select: { id: true, name: true, createdAt: true, domain: true, grants: true, logoUrl: true },
-        orderBy: { createdAt: "desc" } 
-      }),
-      prisma.surveyResponse.findMany({ select: { id: true, charityName: true } }),
-      prisma.hexagonalResponse.findMany({ select: { id: true, charityName: true } }),
-      prisma.program.findMany({ select: { id: true, charityId: true, beneficiaries: true } }),
-      prisma.news.findMany({ take: 5, orderBy: { createdAt: "desc" } })
-    ]);
+  const [
+    charities,
+    allSurveys,
+    allHexSurveys,
+    allPrograms,
+    dbNewsItems
+  ] = await Promise.all([
+    prisma.charity.findMany({
+      select: { id: true, name: true, createdAt: true, domain: true, grants: true, logoUrl: true },
+      orderBy: { createdAt: "desc" }
+    }),
+    prisma.surveyResponse.findMany({ select: { id: true, charityName: true } }),
+    prisma.hexagonalResponse.findMany({ select: { id: true, charityName: true } }),
+    prisma.program.findMany({ select: { id: true, charityId: true, beneficiaries: true } }),
+    prisma.news.findMany({ take: 5, orderBy: { createdAt: "desc" } })
+  ]);
 
-    // In-memory aggregations (much faster than unindexed DB groupBy)
-    const surveyResponsesGrouped: any[] = [];
-    const hexagonalResponsesGrouped: any[] = [];
-    const programsGrouped: any[] = [];
-    
-    // Group surveys
-    const surveyCountsMap = new Map<string, number>();
-    allSurveys.forEach(s => {
-      const name = s.charityName;
-      surveyCountsMap.set(name, (surveyCountsMap.get(name) || 0) + 1);
-    });
-    surveyCountsMap.forEach((count, name) => surveyResponsesGrouped.push({ charityName: name, _count: { id: count } }));
+  // In-memory aggregations (much faster than unindexed DB groupBy)
+  const surveyResponsesGrouped: any[] = [];
+  const hexagonalResponsesGrouped: any[] = [];
+  const programsGrouped: any[] = [];
 
-    // Group hex surveys
-    const hexCountsMap = new Map<string, number>();
-    allHexSurveys.forEach(s => {
-      const name = s.charityName;
-      hexCountsMap.set(name, (hexCountsMap.get(name) || 0) + 1);
-    });
-    hexCountsMap.forEach((count, name) => hexagonalResponsesGrouped.push({ charityName: name, _count: { id: count } }));
+  // Group surveys
+  const surveyCountsMap = new Map<string, number>();
+  allSurveys.forEach(s => {
+    const name = s.charityName;
+    surveyCountsMap.set(name, (surveyCountsMap.get(name) || 0) + 1);
+  });
+  surveyCountsMap.forEach((count, name) => surveyResponsesGrouped.push({ charityName: name, _count: { id: count } }));
 
-    // Group programs
-    const progMap = new Map<string, { count: number, ben: number }>();
-    let totalProgramsCount = 0;
-    let totalBeneficiariesSum = 0;
+  // Group hex surveys
+  const hexCountsMap = new Map<string, number>();
+  allHexSurveys.forEach(s => {
+    const name = s.charityName;
+    hexCountsMap.set(name, (hexCountsMap.get(name) || 0) + 1);
+  });
+  hexCountsMap.forEach((count, name) => hexagonalResponsesGrouped.push({ charityName: name, _count: { id: count } }));
 
-    allPrograms.forEach(p => {
-      totalProgramsCount++;
-      totalBeneficiariesSum += p.beneficiaries || 0;
+  // Group programs
+  const progMap = new Map<string, { count: number, ben: number }>();
+  let totalProgramsCount = 0;
+  let totalBeneficiariesSum = 0;
 
-      if (p.charityId) {
-        if (!progMap.has(p.charityId)) {
-          progMap.set(p.charityId, { count: 0, ben: 0 });
-        }
-        const data = progMap.get(p.charityId)!;
-        data.count++;
-        data.ben += p.beneficiaries || 0;
+  allPrograms.forEach(p => {
+    totalProgramsCount++;
+    totalBeneficiariesSum += p.beneficiaries || 0;
+
+    if (p.charityId) {
+      if (!progMap.has(p.charityId)) {
+        progMap.set(p.charityId, { count: 0, ben: 0 });
       }
+      const data = progMap.get(p.charityId)!;
+      data.count++;
+      data.ben += p.beneficiaries || 0;
+    }
+  });
+
+  progMap.forEach((data, charityId) => {
+    programsGrouped.push({
+      charityId,
+      _count: { id: data.count },
+      _sum: { beneficiaries: data.ben }
     });
+  });
 
-    progMap.forEach((data, charityId) => {
-      programsGrouped.push({
-        charityId,
-        _count: { id: data.count },
-        _sum: { beneficiaries: data.ben }
-      });
-    });
-
-    const programsAgg = {
-      _count: { id: totalProgramsCount },
-      _sum: { beneficiaries: totalBeneficiariesSum }
-    };
-
-    return { charities, surveyResponsesGrouped, hexagonalResponsesGrouped, programsGrouped, programsAgg, dbNewsItems };
+  const programsAgg = {
+    _count: { id: totalProgramsCount },
+    _sum: { beneficiaries: totalBeneficiariesSum }
   };
+
+  return { charities, surveyResponsesGrouped, hexagonalResponsesGrouped, programsGrouped, programsAgg, dbNewsItems };
+};
 
 export const dynamic = "force-dynamic";
 
@@ -118,10 +118,10 @@ export default async function MainDashboard() {
     hexagonal: counts.hexagonal,
     total: counts.readiness + counts.hexagonal
   })).sort((a, b) => b.total - a.total);
-  
-  const totalSurveys = surveyResponsesGrouped.reduce((sum, g) => sum + g._count.id, 0) + 
-                       hexagonalResponsesGrouped.reduce((sum, g) => sum + g._count.id, 0);
-  
+
+  const totalSurveys = surveyResponsesGrouped.reduce((sum, g) => sum + g._count.id, 0) +
+    hexagonalResponsesGrouped.reduce((sum, g) => sum + g._count.id, 0);
+
   // Calculate DB programs and beneficiaries per charity FAST using grouped data
   const dbCharityProgramsCount = new Map<string, number>();
   const dbCharityBeneficiariesSum = new Map<string, number>();
@@ -258,10 +258,10 @@ export default async function MainDashboard() {
                 {/* Background Logo */}
                 {charity.logoUrl && (
                   <div className="absolute inset-0 z-0 pointer-events-none flex items-center justify-center p-2">
-                    <img 
-                      src={charity.logoUrl} 
-                      alt="" 
-                      className="w-full h-full object-contain opacity-60 scale-110 group-hover:scale-125 group-hover:opacity-75 transition-all duration-700 ease-out" 
+                    <img
+                      src={charity.logoUrl}
+                      alt=""
+                      className="w-full h-full object-contain opacity-60 scale-110 group-hover:scale-125 group-hover:opacity-75 transition-all duration-700 ease-out"
                     />
                   </div>
                 )}
@@ -272,9 +272,9 @@ export default async function MainDashboard() {
                 <div className="relative z-10 p-3 sm:p-4 flex flex-col justify-between h-full">
                   <div>
                     {/* Header */}
-                    <div className="flex items-center gap-3 mb-3 pb-3 border-b border-slate-200/50">
+                    <div className="flex items-center gap-3 mb-3 pb-3 border-b border-slate-200/40">
                       {charity.logoUrl ? (
-                        <div className="w-10 h-10 rounded-lg overflow-hidden border border-slate-200/60 bg-white/90 flex items-center justify-center shrink-0 shadow-sm group-hover:scale-105 transition-transform duration-300">
+                        <div className="w-10 h-10 rounded-lg overflow-hidden border border-slate-200/60 bg-white/80 flex items-center justify-center shrink-0 shadow-sm group-hover:scale-105 transition-transform duration-300">
                           <img src={charity.logoUrl} alt={charity.name} className="w-full h-full object-contain p-1 drop-shadow-sm" />
                         </div>
                       ) : (
@@ -283,10 +283,10 @@ export default async function MainDashboard() {
                         </div>
                       )}
                       <div className="overflow-hidden">
-                        <h3 className="text-sm font-bold text-slate-900 group-hover:text-primary transition-colors duration-300 truncate drop-shadow-md" title={charity.name}>
+                        <h3 className="text-sm font-bold text-slate-800 group-hover:text-primary transition-colors duration-300 truncate" title={charity.name}>
                           {charity.name}
                         </h3>
-                        <p className="text-[10px] text-slate-700 font-bold mt-0.5 truncate drop-shadow-md">
+                        <p className="text-[10px] text-slate-500 font-medium mt-0.5 truncate drop-shadow-sm">
                           {charity.domain || "تنمية مجتمعية"}
                         </p>
                       </div>
@@ -295,40 +295,40 @@ export default async function MainDashboard() {
                     {/* Details List */}
                     <div className="space-y-2">
                       {/* Stats 1: المنح */}
-                      <div className="flex items-center justify-between text-[11px] sm:text-xs bg-white/80 backdrop-blur-sm px-2 py-1.5 rounded-lg border border-white/50 shadow-sm">
-                        <span className="text-slate-800 font-bold flex items-center gap-1.5">
+                      <div className="flex items-center justify-between text-[11px] sm:text-xs">
+                        <span className="text-slate-600 font-bold flex items-center gap-1.5 drop-shadow-sm">
                           <svg className="w-3.5 h-3.5 text-emerald-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                             <path strokeLinecap="round" strokeLinejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                           </svg>
                           المنح:
                         </span>
-                        <span className="font-bold text-emerald-700 text-[10px] shrink-0">
+                        <span className="font-bold text-emerald-800 bg-emerald-500/10 backdrop-blur-md px-2 py-0.5 rounded-md text-[10px] shrink-0 border border-emerald-500/20 shadow-sm">
                           {charity.grants.toLocaleString()} ريال
                         </span>
                       </div>
 
                       {/* Stats 2: البرامج */}
-                      <div className="flex items-center justify-between text-[11px] sm:text-xs bg-white/80 backdrop-blur-sm px-2 py-1.5 rounded-lg border border-white/50 shadow-sm">
-                        <span className="text-slate-800 font-bold flex items-center gap-1.5">
+                      <div className="flex items-center justify-between text-[11px] sm:text-xs">
+                        <span className="text-slate-600 font-bold flex items-center gap-1.5 drop-shadow-sm">
                           <svg className="w-3.5 h-3.5 text-violet-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                             <path strokeLinecap="round" strokeLinejoin="round" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2H6a2 2 0 01-2-2v-4zM14 16a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2h-2a2 2 0 01-2-2v-4z" />
                           </svg>
                           البرامج:
                         </span>
-                        <span className="font-bold text-violet-700 text-[10px] shrink-0">
+                        <span className="font-bold text-violet-800 bg-violet-500/10 backdrop-blur-md px-2 py-0.5 rounded-md text-[10px] shrink-0 border border-violet-500/20 shadow-sm">
                           {charity.programs} برامج
                         </span>
                       </div>
 
                       {/* Stats 3: المستفيدين */}
-                      <div className="flex items-center justify-between text-[11px] sm:text-xs bg-white/80 backdrop-blur-sm px-2 py-1.5 rounded-lg border border-white/50 shadow-sm">
-                        <span className="text-slate-800 font-bold flex items-center gap-1.5">
+                      <div className="flex items-center justify-between text-[11px] sm:text-xs">
+                        <span className="text-slate-600 font-bold flex items-center gap-1.5 drop-shadow-sm">
                           <svg className="w-3.5 h-3.5 text-indigo-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                             <path strokeLinecap="round" strokeLinejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
                           </svg>
                           المستفيدين:
                         </span>
-                        <span className="font-bold text-indigo-700 text-[10px] shrink-0">
+                        <span className="font-bold text-indigo-800 bg-indigo-500/10 backdrop-blur-md px-2 py-0.5 rounded-md text-[10px] shrink-0 border border-indigo-500/20 shadow-sm">
                           {charity.beneficiaries.toLocaleString()} مستفيد
                         </span>
                       </div>
@@ -336,8 +336,8 @@ export default async function MainDashboard() {
                   </div>
 
                   {/* Action Link Footer */}
-                  <div className="mt-3 pt-2 border-t border-slate-200/50 flex items-center justify-end text-[10px] font-bold text-primary opacity-0 group-hover:opacity-100 group-hover:translate-x-[-4px] transition-all duration-300">
-                    <span className="bg-white/80 backdrop-blur-sm px-2 py-1 rounded-md shadow-sm border border-white">عرض الملف</span>
+                  <div className="mt-3 pt-2 border-t border-slate-200/40 flex items-center justify-end text-[10px] font-bold text-primary opacity-0 group-hover:opacity-100 group-hover:translate-x-[-4px] transition-all duration-300">
+                    <span className="bg-white/50 px-2 py-1 rounded-md">عرض الملف</span>
                     <svg className="w-3 h-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
                     </svg>
@@ -381,14 +381,13 @@ export default async function MainDashboard() {
                       {cName.trim()}
                     </span>
                   ))}
-                  <span className={`inline-block text-[10px] font-bold px-2 py-0.5 rounded-md ${
-                    item.category === "الاستراتيجية" ? "text-violet-700 bg-violet-50" :
-                    item.category === "التقنية" ? "text-blue-700 bg-blue-50" :
-                    item.category === "تنمية الموارد" ? "text-emerald-700 bg-emerald-50" :
-                    item.category === "تكليف" ? "text-rose-700 bg-rose-50" :
-                    item.category === "استقطاب" ? "text-teal-700 bg-teal-50" :
-                    "text-amber-700 bg-amber-50" // الإعلامية
-                  }`}>
+                  <span className={`inline-block text-[10px] font-bold px-2 py-0.5 rounded-md ${item.category === "الاستراتيجية" ? "text-violet-700 bg-violet-50" :
+                      item.category === "التقنية" ? "text-blue-700 bg-blue-50" :
+                        item.category === "تنمية الموارد" ? "text-emerald-700 bg-emerald-50" :
+                          item.category === "تكليف" ? "text-rose-700 bg-rose-50" :
+                            item.category === "استقطاب" ? "text-teal-700 bg-teal-50" :
+                              "text-amber-700 bg-amber-50" // الإعلامية
+                    }`}>
                     {item.category}
                   </span>
                 </div>

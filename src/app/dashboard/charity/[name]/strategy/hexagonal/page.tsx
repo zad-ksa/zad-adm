@@ -1,11 +1,12 @@
+import { unstable_cache } from "next/cache";
 import { prisma } from "@/lib/db";
 import Link from "next/link";
 import type { Metadata } from "next";
 import SurveyLinkManager from "@/components/SurveyLinkManager";
 import { Award, AlertTriangle, Sparkles, ShieldAlert, Key, Rocket } from "@/components/Icons";
-import { unstable_cache } from "next/cache";
 
-export const revalidate = 300;
+
+export const dynamic = "force-dynamic";
 
 export async function generateMetadata({ params }: { params: Promise<{ name: string }> }): Promise<Metadata> {
   const { name } = await params;
@@ -43,7 +44,7 @@ const getCachedHexResponses = unstable_cache(
     });
   },
   ['hexagonal-responses'],
-  { revalidate: 300, tags: ['hexagonal'] }
+  { revalidate: 0, tags: ['hexagonal'] }
 );
 
 export default async function HexagonalSurveysPage({ params }: { params: Promise<{ name: string }> }) {

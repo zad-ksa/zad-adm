@@ -1,8 +1,9 @@
+import { unstable_cache } from "next/cache";
 import { prisma } from "@/lib/db";
 import type { Metadata } from "next";
 import { getCharities } from "@/app/actions/charity";
 import Link from "next/link";
-import { unstable_cache } from "next/cache";
+
 
 const getCachedDashboardData = unstable_cache(
   async () => {
@@ -79,10 +80,10 @@ const getCachedDashboardData = unstable_cache(
     return { charities, surveyResponsesGrouped, hexagonalResponsesGrouped, programsGrouped, programsAgg, dbNewsItems };
   },
   ['dashboard-main-data'],
-  { revalidate: 300, tags: ['dashboard-data'] }
+  { revalidate: 0, tags: ['dashboard-data'] }
 );
 
-export const revalidate = 300; // تحديث الصفحة كل 5 دقائق (تخزين مؤقت)
+export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "الرئيسية | زاد التنموية",

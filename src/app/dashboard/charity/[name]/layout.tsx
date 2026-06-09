@@ -1,7 +1,8 @@
+import { unstable_cache } from "next/cache";
 import { ReactNode } from "react";
 import CharityLayoutClient from "./CharityLayoutClient";
 import { prisma } from "@/lib/db";
-import { unstable_cache } from "next/cache";
+
 
 const getCachedCharityLayout = unstable_cache(
   async (name: string) => {
@@ -11,7 +12,7 @@ const getCachedCharityLayout = unstable_cache(
     });
   },
   ['charity-layout'],
-  { revalidate: 300, tags: ['charity'] }
+  { revalidate: 0, tags: ['charity'] }
 );
 
 export default async function CharityLayout({

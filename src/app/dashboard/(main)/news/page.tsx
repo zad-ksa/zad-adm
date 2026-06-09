@@ -1,11 +1,12 @@
+import { unstable_cache } from "next/cache";
 import { prisma } from "@/lib/db";
 import { getCharities } from "@/app/actions/charity";
 import type { Metadata } from "next";
 import { getSession } from "@/lib/auth";
 import NewsFilterClient from "./NewsFilterClient";
-import { unstable_cache } from "next/cache";
 
-export const revalidate = 300;
+
+export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "آخر الأخبار والإنجازات | زاد التنموية",
@@ -19,7 +20,7 @@ const getCachedNews = unstable_cache(
     });
   },
   ['news-dashboard'],
-  { revalidate: 300, tags: ['news'] }
+  { revalidate: 0, tags: ['news'] }
 );
 
 export default async function NewsDashboard() {
@@ -31,6 +32,7 @@ export default async function NewsDashboard() {
 
   const formattedDbNews = dbNewsItems.map((news) => {
     const charity = charities.find((c) => c.name.trim().toLowerCase() === news.charityName.trim().toLowerCase());
+    const createdDate = new Date(news.createdAt);
     return {
       id: news.id,
       charityId: charity?.id || "unknown",
@@ -38,8 +40,8 @@ export default async function NewsDashboard() {
       title: news.title,
       category: news.category,
       description: news.description || "",
-      rawDate: news.createdAt.toISOString(),
-      date: new Date(news.createdAt).toLocaleDateString("ar-SA", {
+      rawDate: createdDate.toISOString(),
+      date: createdDate.toLocaleDateString("ar-SA", {
         year: "numeric",
         month: "long",
         day: "numeric"

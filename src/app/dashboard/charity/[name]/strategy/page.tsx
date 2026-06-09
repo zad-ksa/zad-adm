@@ -1,3 +1,4 @@
+import { unstable_cache } from "next/cache";
 import { prisma } from "@/lib/db";
 import Link from "next/link";
 import { surveyData } from "@/data/surveyData";
@@ -6,7 +7,7 @@ import SurveyLinkManager from "@/components/SurveyLinkManager";
 import type { Metadata } from "next";
 import { Award, AlertTriangle, Sparkles, ShieldAlert, Key, Rocket } from "@/components/Icons";
 
-import { unstable_cache } from "next/cache";
+
 
 const getCachedResponses = unstable_cache(
   async (charityName: string) => {
@@ -17,10 +18,10 @@ const getCachedResponses = unstable_cache(
     return charityResponses;
   },
   ['strategy-survey-responses'],
-  { revalidate: 300, tags: ['surveys'] }
+  { revalidate: 0, tags: ['surveys'] }
 );
 
-export const revalidate = 300;
+export const dynamic = "force-dynamic";
 
 export async function generateMetadata({ params }: { params: Promise<{ name: string }> }): Promise<Metadata> {
   const { name } = await params;

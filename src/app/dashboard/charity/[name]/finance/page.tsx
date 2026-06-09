@@ -1,9 +1,10 @@
+import { unstable_cache } from "next/cache";
 import { prisma } from "@/lib/db";
 import type { Metadata } from "next";
 import FinanceClient from "./FinanceClient";
-import { unstable_cache } from "next/cache";
 
-export const revalidate = 300;
+
+export const dynamic = "force-dynamic";
 
 export async function generateMetadata({ params }: { params: Promise<{ name: string }> }): Promise<Metadata> {
   const { name } = await params;
@@ -47,7 +48,7 @@ const getCachedFinanceData = unstable_cache(
     return charityData;
   },
   ['charity-finance'],
-  { revalidate: 300, tags: ['finance'] }
+  { revalidate: 0, tags: ['finance'] }
 );
 
 export default async function CharityFinancePage({ params }: { params: Promise<{ name: string }> }) {

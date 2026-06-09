@@ -13,7 +13,7 @@ import {
 import { Search, BarChart3 } from "lucide-react";
 import HexagonalLayoutClient from "./HexagonalLayoutClient";
 
-export const revalidate = 300;
+export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "تفاصيل التحليل السداسي | زاد التنموية",

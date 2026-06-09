@@ -1,10 +1,11 @@
+import { unstable_cache } from "next/cache";
 import { prisma } from "@/lib/db";
 import type { Metadata } from "next";
 import { CalendarIcon, LicenseIcon, Rocket, ClipboardList, Building2, Sparkles } from "@/components/Icons";
 import EditProfileButton from "./EditProfileButton";
-import { unstable_cache } from "next/cache";
 
-export const revalidate = 300;
+
+export const dynamic = "force-dynamic";
 
 export async function generateMetadata({ params }: { params: Promise<{ name: string }> }): Promise<Metadata> {
   const { name } = await params;
@@ -37,7 +38,7 @@ const getCachedCharity = unstable_cache(
     return charityData;
   },
   ['charity-overview'],
-  { revalidate: 300, tags: ['charity'] }
+  { revalidate: 0, tags: ['charity'] }
 );
 
 export default async function CharityOverview({ params }: { params: Promise<{ name: string }> }) {

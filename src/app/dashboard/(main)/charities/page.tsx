@@ -4,7 +4,7 @@ import type { Metadata } from "next";
 import { getCharities } from "@/app/actions/charity";
 import AddCharityButton from "./AddCharityButton";
 
-export const revalidate = 300;
+export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "الجمعيات | زاد التنموية",

@@ -1,4 +1,5 @@
 "use server";
+import { unstable_cache } from "next/cache";
 
 import { prisma } from "@/lib/db";
 import { revalidatePath } from "next/cache";
@@ -6,7 +7,7 @@ import { writeFile, mkdir } from "fs/promises";
 import { join } from "path";
 import { getSession } from "@/lib/auth";
 
-import { unstable_cache } from "next/cache";
+
 
 export const getCharities = unstable_cache(
   async () => {
@@ -21,7 +22,7 @@ export const getCharities = unstable_cache(
     }
   },
   ['all-charities'],
-  { revalidate: 300, tags: ['charities'] }
+  { revalidate: 0, tags: ['charities'] }
 );
 
 export async function addCharity(data: { name: string; establishmentDate?: string; licenseNumber?: string; domain?: string; logoUrl?: string | null }) {

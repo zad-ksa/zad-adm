@@ -1,3 +1,4 @@
+import { unstable_cache } from "next/cache";
 import { prisma } from "@/lib/db";
 import Link from "next/link";
 import CopyLinkButton from "@/components/CopyLinkButton";
@@ -5,7 +6,7 @@ import type { Metadata } from "next";
 import { getCharities, bootstrapCharities } from "@/app/actions/charity";
 import ApproveCharityButton from "@/app/dashboard/ApproveCharityButton";
 
-import { unstable_cache } from "next/cache";
+
 
 const getCachedSurveysData = unstable_cache(
   async () => {
@@ -117,10 +118,10 @@ const getCachedSurveysData = unstable_cache(
     return { pendingCharitiesList, charityStats };
   },
   ['surveys-dashboard-data'],
-  { revalidate: 300, tags: ['surveys'] }
+  { revalidate: 0, tags: ['surveys'] }
 );
 
-export const revalidate = 300;
+export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "الاستبيانات | زاد التنموية",

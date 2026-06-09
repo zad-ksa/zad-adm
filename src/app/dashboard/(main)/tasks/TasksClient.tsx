@@ -348,7 +348,7 @@ export default function TasksClient({
                   {emp.name} ({emp.role === "ADMIN" ? "مدير النظام" : 
                              emp.role === "EXECUTIVE_DIRECTOR" ? "مدير تنفيذي" :
                              emp.role === "GENERAL_MANAGER" ? "مدير عام" :
-                             emp.role === "ADMINISTRATIVE_SECRETARIAT" ? "سكرتارية" :
+                             emp.role === "ADMINISTRATIVE_SECRETARIAT" ? "مساعد مدير" :
                              emp.role === "STRATEGY" ? "الاستراتيجية" :
                              emp.role === "FINANCE" ? "المالية" : "موظف"})
                 </option>

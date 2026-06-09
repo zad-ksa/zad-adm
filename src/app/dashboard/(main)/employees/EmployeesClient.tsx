@@ -19,7 +19,7 @@ const roleTranslations: Record<string, string> = {
   ADMIN: "مدير النظام",
   EXECUTIVE_DIRECTOR: "مدير تنفيذي",
   GENERAL_MANAGER: "مدير عام",
-  ADMINISTRATIVE_SECRETARIAT: "سكرتارية ادارية",
+  ADMINISTRATIVE_SECRETARIAT: "مساعد مدير",
   STRATEGY: "الاستراتيجية",
   FINANCE: "المالية",
   EMPLOYEE: "موظف",
@@ -342,7 +342,7 @@ export function EmployeesClient({
                     >
                       <option value="EXECUTIVE_DIRECTOR">مدير تنفيذي</option>
                       <option value="GENERAL_MANAGER">مدير عام</option>
-                      <option value="ADMINISTRATIVE_SECRETARIAT">سكرتارية ادارية</option>
+                      <option value="ADMINISTRATIVE_SECRETARIAT">مساعد مدير</option>
                       <option value="STRATEGY">الاستراتيجية</option>
                       <option value="FINANCE">المالية</option>
                       <option value="EMPLOYEE">موظف</option>

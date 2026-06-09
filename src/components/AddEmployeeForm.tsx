@@ -87,7 +87,7 @@ export function AddEmployeeForm() {
             <select name="role" className="appearance-none block w-full pr-10 pl-3 py-2.5 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent sm:text-sm bg-white font-bold text-slate-800 cursor-pointer">
               <option value="EXECUTIVE_DIRECTOR">مدير تنفيذي</option>
               <option value="GENERAL_MANAGER">مدير عام</option>
-              <option value="ADMINISTRATIVE_SECRETARIAT">سكرتارية ادارية</option>
+              <option value="ADMINISTRATIVE_SECRETARIAT">مساعد مدير</option>
               <option value="STRATEGY">الاستراتيجية</option>
               <option value="FINANCE">المالية</option>
               <option value="EMPLOYEE">موظف</option>

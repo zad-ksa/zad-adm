@@ -36,19 +36,31 @@ export default function EmployeeSidebar({
     setUserState(session);
   }, [session]);
 
-  const navItems = [
-    { label: "الرئيسية", href: "/dashboard", icon: LayoutDashboard },
-    { label: "الجمعيات", href: "/dashboard/charities", icon: Building2 },
-    { label: "الاستبيانات", href: "/dashboard/surveys", icon: ClipboardList },
-    { label: "الأخبار والإنجازات", href: "/dashboard/news", icon: Newspaper },
-  ];
+  let navItems = [];
 
-  if (userState?.role !== "GENERAL_MANAGER") {
-    navItems.push({ label: "المهام والمنجزات", href: "/dashboard/tasks", icon: CheckSquare });
-  }
+  if (userState?.role === "ADMINISTRATIVE_SECRETARIAT") {
+    navItems = [
+      { label: "الرئيسية", href: "/dashboard", icon: LayoutDashboard },
+      { label: "المهام والمنجزات", href: "/dashboard/tasks", icon: CheckSquare },
+      { label: "الأخبار والإنجازات", href: "/dashboard/news", icon: Newspaper },
+      { label: "الجمعيات", href: "/dashboard/charities", icon: Building2 },
+      { label: "إدارة الموظفين", href: "/dashboard/employees", icon: Users },
+    ];
+  } else {
+    navItems = [
+      { label: "الرئيسية", href: "/dashboard", icon: LayoutDashboard },
+      { label: "الجمعيات", href: "/dashboard/charities", icon: Building2 },
+      { label: "الاستبيانات", href: "/dashboard/surveys", icon: ClipboardList },
+      { label: "الأخبار والإنجازات", href: "/dashboard/news", icon: Newspaper },
+    ];
 
-  if (userState?.role === "ADMIN" || userState?.role === "EXECUTIVE_DIRECTOR" || userState?.role === "GENERAL_MANAGER" || userState?.role === "ADMINISTRATIVE_SECRETARIAT") {
-    navItems.push({ label: "إدارة الموظفين", href: "/dashboard/employees", icon: Users });
+    if (userState?.role !== "GENERAL_MANAGER") {
+      navItems.push({ label: "المهام والمنجزات", href: "/dashboard/tasks", icon: CheckSquare });
+    }
+
+    if (userState?.role === "ADMIN" || userState?.role === "EXECUTIVE_DIRECTOR" || userState?.role === "GENERAL_MANAGER") {
+      navItems.push({ label: "إدارة الموظفين", href: "/dashboard/employees", icon: Users });
+    }
   }
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -207,7 +219,7 @@ export default function EmployeeSidebar({
               {userState?.role === "ADMIN" ? "مدير النظام" :
                userState?.role === "EXECUTIVE_DIRECTOR" ? "مدير تنفيذي" :
                userState?.role === "GENERAL_MANAGER" ? "مدير عام" :
-               userState?.role === "ADMINISTRATIVE_SECRETARIAT" ? "سكرتارية ادارية" :
+               userState?.role === "ADMINISTRATIVE_SECRETARIAT" ? "مساعد مدير" :
                userState?.role === "STRATEGY" ? "الاستراتيجية" :
                userState?.role === "FINANCE" ? "المالية" : "موظف"}
             </div>

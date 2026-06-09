@@ -261,12 +261,12 @@ export default async function MainDashboard() {
                     <img 
                       src={charity.logoUrl} 
                       alt="" 
-                      className="w-full h-full object-cover opacity-60 blur-2xl scale-125 group-hover:scale-150 transition-transform duration-700 ease-out" 
+                      className="w-full h-full object-cover opacity-50 blur-md scale-110 group-hover:scale-125 group-hover:opacity-60 transition-all duration-700 ease-out" 
                     />
                   </div>
                 )}
                 {/* Glassmorphism Overlay */}
-                <div className={`absolute inset-0 z-0 pointer-events-none transition-colors duration-500 ${charity.logoUrl ? "bg-white/75 backdrop-blur-[16px] group-hover:bg-white/65" : "bg-white"}`}></div>
+                <div className={`absolute inset-0 z-0 pointer-events-none transition-colors duration-500 ${charity.logoUrl ? "bg-white/60 backdrop-blur-[8px] group-hover:bg-white/50" : "bg-white"}`}></div>
 
                 {/* Card Content */}
                 <div className="relative z-10 p-3 sm:p-4 flex flex-col justify-between h-full">

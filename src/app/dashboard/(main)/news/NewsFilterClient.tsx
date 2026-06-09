@@ -11,7 +11,8 @@ import {
   Newspaper, 
   CheckCircle2, 
   AlertCircle,
-  Trash2
+  Trash2,
+  X
 } from "lucide-react";
 import { createNewsAction, deleteNewsAction } from "@/app/actions/tasks";
 

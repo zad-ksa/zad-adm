@@ -8,6 +8,7 @@ export default function AddCharityModal({ onClose, onSuccess }: { onClose: () =>
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -18,11 +19,9 @@ export default function AddCharityModal({ onClose, onSuccess }: { onClose: () =>
         return;
       }
       
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setLogoPreview(reader.result as string);
-      };
-      reader.readAsDataURL(file);
+      const objectUrl = URL.createObjectURL(file);
+      setLogoPreview(objectUrl);
+      setSelectedFile(file);
       setError(null);
     }
   };
@@ -44,12 +43,31 @@ export default function AddCharityModal({ onClose, onSuccess }: { onClose: () =>
       return;
     }
 
+    let uploadedLogoUrl = null;
+    if (selectedFile) {
+      try {
+        const uploadData = new FormData();
+        uploadData.append("file", selectedFile);
+        const uploadRes = await fetch("/api/upload", {
+          method: "POST",
+          body: uploadData,
+        });
+        if (!uploadRes.ok) throw new Error("Upload failed");
+        const data = await uploadRes.json();
+        uploadedLogoUrl = data.url;
+      } catch (err) {
+        setError("فشل رفع الشعار، يرجى المحاولة مرة أخرى");
+        setLoading(false);
+        return;
+      }
+    }
+
     const res = await addCharity({ 
       name, 
       establishmentDate, 
       licenseNumber, 
       domain,
-      logoUrl: logoPreview
+      logoUrl: uploadedLogoUrl
     });
 
     if (res.success) {

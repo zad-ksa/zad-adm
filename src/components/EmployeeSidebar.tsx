@@ -25,6 +25,7 @@ export default function EmployeeSidebar({
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [newAvatar, setNewAvatar] = useState<string | null>(null);
+  const [selectedAvatarFile, setSelectedAvatarFile] = useState<File | null>(null);
   const [modalError, setModalError] = useState<string | null>(null);
   const [modalSuccess, setModalSuccess] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
@@ -57,12 +58,10 @@ export default function EmployeeSidebar({
         setModalError("حجم الصورة يجب أن يكون أقل من 1 ميجابايت");
         return;
       }
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setNewAvatar(reader.result as string);
-        setModalError(null);
-      };
-      reader.readAsDataURL(file);
+      const objectUrl = URL.createObjectURL(file);
+      setNewAvatar(objectUrl);
+      setSelectedAvatarFile(file);
+      setModalError(null);
     }
   };
 
@@ -82,11 +81,29 @@ export default function EmployeeSidebar({
     }
 
     startTransition(async () => {
+      let uploadedAvatarUrl = newAvatar;
+      if (selectedAvatarFile) {
+        try {
+          const uploadData = new FormData();
+          uploadData.append("file", selectedAvatarFile);
+          const uploadRes = await fetch("/api/upload", {
+            method: "POST",
+            body: uploadData,
+          });
+          if (!uploadRes.ok) throw new Error("Upload failed");
+          const data = await uploadRes.json();
+          uploadedAvatarUrl = data.url;
+        } catch (err) {
+          setModalError("فشل رفع الصورة الشخصية، يرجى المحاولة مرة أخرى");
+          return;
+        }
+      }
+
       const res = await updateProfile({
         name,
         phone,
         password: password || undefined,
-        avatarUrl: newAvatar,
+        avatarUrl: uploadedAvatarUrl,
       });
 
       if (res.error) {

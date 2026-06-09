@@ -23,6 +23,7 @@ export default function EditCharityModal({ charity, onClose }: EditCharityModalP
   const [establishmentDate, setEstablishmentDate] = useState(charity.establishmentDate || "");
   const [domain, setDomain] = useState(charity.domain || "");
   const [logoPreview, setLogoPreview] = useState<string | null>(charity.logoUrl);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [error, setError] = useState<string | null>(null);
   
   const [isPending, startTransition] = useTransition();
@@ -36,12 +37,10 @@ export default function EditCharityModal({ charity, onClose }: EditCharityModalP
         setError("حجم الملف يجب أن يكون أقل من 2 ميجابايت");
         return;
       }
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setLogoPreview(reader.result as string);
-        setError(null);
-      };
-      reader.readAsDataURL(file);
+      const objectUrl = URL.createObjectURL(file);
+      setLogoPreview(objectUrl);
+      setSelectedFile(file);
+      setError(null);
     }
   };
 
@@ -55,12 +54,30 @@ export default function EditCharityModal({ charity, onClose }: EditCharityModalP
     }
 
     startTransition(async () => {
+      let uploadedLogoUrl = logoPreview;
+      if (selectedFile) {
+        try {
+          const uploadData = new FormData();
+          uploadData.append("file", selectedFile);
+          const uploadRes = await fetch("/api/upload", {
+            method: "POST",
+            body: uploadData,
+          });
+          if (!uploadRes.ok) throw new Error("Upload failed");
+          const data = await uploadRes.json();
+          uploadedLogoUrl = data.url;
+        } catch (err) {
+          setError("فشل رفع الشعار، يرجى المحاولة مرة أخرى");
+          return;
+        }
+      }
+
       const result = await updateCharity(charity.name, {
         name,
         licenseNumber: licenseNumber || undefined,
         establishmentDate: establishmentDate || undefined,
         domain: domain || undefined,
-        logoUrl: logoPreview,
+        logoUrl: uploadedLogoUrl,
       });
       if (result.success) {
         onClose();

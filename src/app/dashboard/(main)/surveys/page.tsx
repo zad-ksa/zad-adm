@@ -8,8 +8,7 @@ import ApproveCharityButton from "@/app/dashboard/ApproveCharityButton";
 
 
 
-const getCachedSurveysData = unstable_cache(
-  async () => {
+const getCachedSurveysData = async () => {
     const [charities, responses, hexagonalResponses] = await Promise.all([
       prisma.charity.findMany({ 
         select: { id: true, name: true, createdAt: true, establishmentDate: true, licenseNumber: true },
@@ -116,10 +115,7 @@ const getCachedSurveysData = unstable_cache(
     charityStats.sort((a, b) => new Date(b.latestDate).getTime() - new Date(a.latestDate).getTime());
 
     return { pendingCharitiesList, charityStats };
-  },
-  ['surveys-dashboard-data'],
-  { revalidate: 0, tags: ['surveys'] }
-);
+  };
 
 export const dynamic = "force-dynamic";
 

@@ -9,8 +9,7 @@ import { getSession } from "@/lib/auth";
 
 
 
-export const getCharities = unstable_cache(
-  async () => {
+export const getCharities = async () => {
     try {
       const charities = await prisma.charity.findMany({
         orderBy: { createdAt: "desc" },
@@ -20,10 +19,7 @@ export const getCharities = unstable_cache(
       console.error("Error fetching charities:", error);
       return [];
     }
-  },
-  ['all-charities'],
-  { revalidate: 0, tags: ['charities'] }
-);
+  };
 
 export async function addCharity(data: { name: string; establishmentDate?: string; licenseNumber?: string; domain?: string; logoUrl?: string | null }) {
   try {

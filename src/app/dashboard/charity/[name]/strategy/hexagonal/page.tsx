@@ -36,16 +36,12 @@ const HexagonIcon = () => (
   </svg>
 );
 
-const getCachedHexResponses = unstable_cache(
-  async (charityName: string) => {
+const getCachedHexResponses = async (charityName: string) => {
     return await prisma.hexagonalResponse.findMany({
       where: { charityName: { equals: charityName, mode: "insensitive" } },
       orderBy: { createdAt: "desc" },
     });
-  },
-  ['hexagonal-responses'],
-  { revalidate: 0, tags: ['hexagonal'] }
-);
+  };
 
 export default async function HexagonalSurveysPage({ params }: { params: Promise<{ name: string }> }) {
   const { name } = await params;

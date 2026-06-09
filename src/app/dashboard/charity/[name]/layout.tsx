@@ -4,16 +4,12 @@ import CharityLayoutClient from "./CharityLayoutClient";
 import { prisma } from "@/lib/db";
 
 
-const getCachedCharityLayout = unstable_cache(
-  async (name: string) => {
+const getCachedCharityLayout = async (name: string) => {
     return await prisma.charity.findUnique({
       where: { name },
       select: { logoUrl: true }
     });
-  },
-  ['charity-layout'],
-  { revalidate: 0, tags: ['charity'] }
-);
+  };
 
 export default async function CharityLayout({
   children,

@@ -5,8 +5,7 @@ import { getCharities } from "@/app/actions/charity";
 import Link from "next/link";
 
 
-const getCachedDashboardData = unstable_cache(
-  async () => {
+const getCachedDashboardData = async () => {
     const [
       charities,
       allSurveys,
@@ -78,10 +77,7 @@ const getCachedDashboardData = unstable_cache(
     };
 
     return { charities, surveyResponsesGrouped, hexagonalResponsesGrouped, programsGrouped, programsAgg, dbNewsItems };
-  },
-  ['dashboard-main-data'],
-  { revalidate: 0, tags: ['dashboard-data'] }
-);
+  };
 
 export const dynamic = "force-dynamic";
 

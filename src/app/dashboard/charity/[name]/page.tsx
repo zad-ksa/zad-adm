@@ -15,8 +15,7 @@ export async function generateMetadata({ params }: { params: Promise<{ name: str
   };
 }
 
-const getCachedCharity = unstable_cache(
-  async (charityName: string) => {
+const getCachedCharity = async (charityName: string) => {
     let charityData = await prisma.charity.findUnique({
       where: { name: charityName },
     });
@@ -36,10 +35,7 @@ const getCachedCharity = unstable_cache(
       });
     }
     return charityData;
-  },
-  ['charity-overview'],
-  { revalidate: 0, tags: ['charity'] }
-);
+  };
 
 export default async function CharityOverview({ params }: { params: Promise<{ name: string }> }) {
   const { name } = await params;

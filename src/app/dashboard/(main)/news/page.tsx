@@ -13,15 +13,11 @@ export const metadata: Metadata = {
   description: "عرض وتصفية آخر أخبار وإنجازات الجمعيات المتعاقد معها",
 };
 
-const getCachedNews = unstable_cache(
-  async () => {
+const getCachedNews = async () => {
     return await prisma.news.findMany({
       orderBy: { createdAt: "desc" },
     });
-  },
-  ['news-dashboard'],
-  { revalidate: 0, tags: ['news'] }
-);
+  };
 
 export default async function NewsDashboard() {
   const charities = await getCharities();

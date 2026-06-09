@@ -14,8 +14,7 @@ export async function generateMetadata({ params }: { params: Promise<{ name: str
   };
 }
 
-const getCachedFinanceData = unstable_cache(
-  async (charityName: string) => {
+const getCachedFinanceData = async (charityName: string) => {
     let charityData = await prisma.charity.findUnique({
       where: { name: charityName },
       include: {
@@ -46,10 +45,7 @@ const getCachedFinanceData = unstable_cache(
     }
     
     return charityData;
-  },
-  ['charity-finance'],
-  { revalidate: 0, tags: ['finance'] }
-);
+  };
 
 export default async function CharityFinancePage({ params }: { params: Promise<{ name: string }> }) {
   const { name } = await params;

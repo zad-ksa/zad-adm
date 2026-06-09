@@ -9,17 +9,13 @@ import { Award, AlertTriangle, Sparkles, ShieldAlert, Key, Rocket } from "@/comp
 
 
 
-const getCachedResponses = unstable_cache(
-  async (charityName: string) => {
+const getCachedResponses = async (charityName: string) => {
     const charityResponses = await prisma.surveyResponse.findMany({
       where: { charityName: { equals: charityName, mode: "insensitive" } },
       orderBy: { createdAt: "desc" },
     });
     return charityResponses;
-  },
-  ['strategy-survey-responses'],
-  { revalidate: 0, tags: ['surveys'] }
-);
+  };
 
 export const dynamic = "force-dynamic";
 

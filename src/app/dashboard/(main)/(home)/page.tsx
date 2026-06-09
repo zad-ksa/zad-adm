@@ -248,7 +248,7 @@ export default async function MainDashboard() {
             الجمعيات المتعاقد معها
           </h2>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3 sm:gap-4">
+          <div className="grid grid-cols-2 xl:grid-cols-3 gap-3 sm:gap-4">
             {charitiesData.map((charity) => (
               <Link
                 key={charity.id}

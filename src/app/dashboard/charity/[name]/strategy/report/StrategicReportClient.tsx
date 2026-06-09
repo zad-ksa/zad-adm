@@ -122,14 +122,14 @@ export default function StrategicReportClient({ charityName, year, quarter, init
   };
 
   return (
-    <div className="bg-slate-50 min-h-screen p-6 font-sans print:m-0 print:p-0" dir="rtl">
+    <div className="bg-slate-50 dark:bg-slate-900 transition-colors min-h-screen p-6 font-sans print:m-0 print:p-0" dir="rtl">
       <div className="max-w-[1400px] mx-auto space-y-6 print:space-y-4 print:p-0 print:m-0 print:max-w-full print:w-full">
         <ReportHeader charityName={charityName} year={year} quarter={quarter} onSave={handleSaveReport} isSaving={isSaving} />
         <ReportSummary axes={axes} quarter={quarter} year={year} />
         <ReportDimensionsChart axes={axes} quarter={quarter} reportData={reportData} setReportData={setReportData} />
         
         <div className="mt-8">
-          <h2 className="text-2xl font-bold text-slate-800 mb-6 print:text-xl">تفاصيل الأداء الاستراتيجي</h2>
+          <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-100 mb-6 print:text-xl transition-colors">تفاصيل الأداء الاستراتيجي</h2>
           {axes.map(axis => (
             <ReportDataTable key={axis.id} axis={axis} quarter={quarter} reportData={reportData} setReportData={setReportData} />
           ))}

@@ -12,9 +12,13 @@ import {
   Scale, 
   FolderKanban, 
   Users, 
-  Coins 
+  Coins,
+  Moon,
+  Sun
 } from "lucide-react";
 import ZadLogo from "@/components/ZadLogo";
+import { useTheme } from "next-themes";
+import { useState, useEffect } from "react";
 
 export default function CharitySidebar({ 
   charityName,
@@ -28,6 +32,12 @@ export default function CharitySidebar({
   setIsOpen: (v: boolean) => void;
 }) {
   const pathname = usePathname();
+  const { theme, setTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const navItems = [
     {
@@ -109,11 +119,22 @@ export default function CharitySidebar({
         )}
         
         {isOpen && (
-          <div className="overflow-hidden whitespace-nowrap fade-in w-full">
-            <h2 className="text-base font-bold text-slate-800 dark:text-slate-100 truncate mb-1" title={charityName}>
-              {charityName}
-            </h2>
-            <div className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-slate-50 dark:bg-slate-900/50 border border-slate-100 dark:border-slate-700/50 dark:border-slate-800/80 rounded-full text-[10px] text-slate-500 dark:text-slate-400 font-bold">
+          <div className="overflow-hidden whitespace-nowrap fade-in w-full flex flex-col gap-2">
+            <div className="flex items-center justify-between w-full">
+              <h2 className="text-base font-bold text-slate-800 dark:text-slate-100 truncate flex-1" title={charityName}>
+                {charityName}
+              </h2>
+              {mounted && (
+                <button
+                  onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+                  className="p-1.5 rounded-lg bg-slate-50 dark:bg-slate-900/50 text-slate-400 dark:text-slate-300 hover:text-primary dark:hover:text-primary transition-colors cursor-pointer shrink-0 mr-2"
+                  title="تبديل الوضع الداكن/الفاتح"
+                >
+                  {theme === "dark" ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+                </button>
+              )}
+            </div>
+            <div className="inline-flex w-max items-center gap-1.5 px-2.5 py-1 bg-slate-50 dark:bg-slate-900/50 border border-slate-100 dark:border-slate-700/50 rounded-full text-[10px] text-slate-500 dark:text-slate-400 font-bold">
               ملف الجمعية
             </div>
           </div>

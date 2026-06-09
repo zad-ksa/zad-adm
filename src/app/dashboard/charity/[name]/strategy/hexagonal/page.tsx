@@ -24,7 +24,7 @@ const ClipboardIcon = () => (
 );
 
 const ClipboardLargeIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-12 h-12 text-slate-300 mx-auto mb-4">
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-12 h-12 text-slate-300 dark:text-slate-600 mx-auto mb-4">
     <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" />
     <rect x="8" y="2" width="8" height="4" rx="1" ry="1" />
   </svg>
@@ -84,155 +84,155 @@ export default async function HexagonalSurveysPage({ params }: { params: Promise
   });
 
   return (
-    <div className="space-y-12">
+    <div className="space-y-12 transition-colors">
       <SurveyLinkManager charityName={decodedName} surveyType="HEXAGONAL" />
 
       {!hasHexagonal ? (
-        <div className="text-center py-20 text-slate-500 bg-white rounded-2xl border border-slate-100 shadow-sm mt-6">
+        <div className="text-center py-20 text-slate-500 dark:text-slate-400 bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm mt-6 transition-colors">
           <ClipboardLargeIcon />
-          <h3 className="text-xl font-bold text-slate-700 mb-2">لا توجد بيانات متاحة</h3>
-          <p className="font-medium text-slate-500">لم يقم أي مشارك بتعبئة تقرير التحليل السداسي لهذه الجمعية بعد.</p>
+          <h3 className="text-xl font-bold text-slate-700 dark:text-slate-300 mb-2 transition-colors">لا توجد بيانات متاحة</h3>
+          <p className="font-medium text-slate-500 dark:text-slate-400 transition-colors">لم يقم أي مشارك بتعبئة تقرير التحليل السداسي لهذه الجمعية بعد.</p>
         </div>
       ) : (
         <>
           {/* Section 1: Aggregated Results */}
       <div>
-        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 mb-6 sm:mb-8 border-b border-slate-200 pb-4">
-          <div className="w-12 h-12 bg-secondary/10 rounded-xl flex items-center justify-center text-secondary font-bold shrink-0">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 mb-6 sm:mb-8 border-b border-slate-200 dark:border-slate-700 pb-4 transition-colors">
+          <div className="w-12 h-12 bg-secondary/10 dark:bg-secondary/20 rounded-xl flex items-center justify-center text-secondary font-bold shrink-0 transition-colors">
             <HexagonIcon />
           </div>
           <div>
-            <h2 className="text-xl sm:text-2xl font-bold text-slate-800 tracking-tight">
+            <h2 className="text-xl sm:text-2xl font-bold text-slate-800 dark:text-slate-100 tracking-tight transition-colors">
               نتائج التحليل السداسي المجمعة
             </h2>
-            <p className="text-slate-500 text-sm mt-1">تجميع لكافة المدخلات من جميع المشاركين ({hexagonalResponses.length} مشارك)</p>
+            <p className="text-slate-500 dark:text-slate-400 text-sm mt-1 transition-colors">تجميع لكافة المدخلات من جميع المشاركين ({hexagonalResponses.length} مشارك)</p>
           </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Strengths */}
-          <div className="bg-white rounded-2xl p-4 sm:p-6 border border-slate-100 shadow-sm">
-            <div className="flex items-center gap-3 mb-4 border-b border-slate-100 pb-3">
-              <div className="p-2 bg-emerald-50 rounded-lg">
-                <Award className="w-6 h-6 text-emerald-600" />
+          <div className="bg-white dark:bg-slate-800 rounded-2xl p-4 sm:p-6 border border-slate-100 dark:border-slate-700 shadow-sm transition-colors">
+            <div className="flex items-center gap-3 mb-4 border-b border-slate-100 dark:border-slate-700 pb-3 transition-colors">
+              <div className="p-2 bg-emerald-50 dark:bg-emerald-900/30 rounded-lg transition-colors">
+                <Award className="w-6 h-6 text-emerald-600 dark:text-emerald-400" />
               </div>
-              <h3 className="font-bold text-slate-800">نقاط القوة</h3>
-              <span className="mr-auto bg-slate-100 text-slate-600 px-2 py-1 rounded text-xs font-bold">{aggregated.strengths.length}</span>
+              <h3 className="font-bold text-slate-800 dark:text-slate-100 transition-colors">نقاط القوة</h3>
+              <span className="mr-auto bg-slate-100 dark:bg-slate-900/50 text-slate-600 dark:text-slate-400 px-2 py-1 rounded text-xs font-bold transition-colors">{aggregated.strengths.length}</span>
             </div>
             <ul className="space-y-3 max-h-80 overflow-y-auto pr-2 custom-scrollbar">
               {aggregated.strengths.length > 0 ? aggregated.strengths.map((item, idx) => (
-                <li key={idx} className="text-sm text-slate-700 bg-slate-50 p-3 rounded-xl border border-slate-100 relative group">
+                <li key={idx} className="text-sm text-slate-700 dark:text-slate-300 bg-slate-50 dark:bg-slate-900/50 p-3 rounded-xl border border-slate-100 dark:border-slate-700 relative group transition-colors">
                   {item.text}
-                  <span className="block text-[10px] text-slate-400 mt-2 opacity-0 group-hover:opacity-100 transition-opacity">من: {item.author}</span>
+                  <span className="block text-[10px] text-slate-400 dark:text-slate-500 mt-2 opacity-0 group-hover:opacity-100 transition-opacity">من: {item.author}</span>
                 </li>
-              )) : <li className="text-sm text-slate-400 italic text-center py-4">لا توجد مدخلات</li>}
+              )) : <li className="text-sm text-slate-400 dark:text-slate-500 italic text-center py-4 transition-colors">لا توجد مدخلات</li>}
             </ul>
           </div>
 
           {/* Weaknesses */}
-          <div className="bg-white rounded-2xl p-4 sm:p-6 border border-slate-100 shadow-sm">
-            <div className="flex items-center gap-3 mb-4 border-b border-slate-100 pb-3">
-              <div className="p-2 bg-rose-50 rounded-lg">
-                <AlertTriangle className="w-6 h-6 text-rose-600" />
+          <div className="bg-white dark:bg-slate-800 rounded-2xl p-4 sm:p-6 border border-slate-100 dark:border-slate-700 shadow-sm transition-colors">
+            <div className="flex items-center gap-3 mb-4 border-b border-slate-100 dark:border-slate-700 pb-3 transition-colors">
+              <div className="p-2 bg-rose-50 dark:bg-rose-900/30 rounded-lg transition-colors">
+                <AlertTriangle className="w-6 h-6 text-rose-600 dark:text-rose-400" />
               </div>
-              <h3 className="font-bold text-slate-800">نقاط الضعف</h3>
-              <span className="mr-auto bg-slate-100 text-slate-600 px-2 py-1 rounded text-xs font-bold">{aggregated.weaknesses.length}</span>
+              <h3 className="font-bold text-slate-800 dark:text-slate-100 transition-colors">نقاط الضعف</h3>
+              <span className="mr-auto bg-slate-100 dark:bg-slate-900/50 text-slate-600 dark:text-slate-400 px-2 py-1 rounded text-xs font-bold transition-colors">{aggregated.weaknesses.length}</span>
             </div>
             <ul className="space-y-3 max-h-80 overflow-y-auto pr-2 custom-scrollbar">
               {aggregated.weaknesses.length > 0 ? aggregated.weaknesses.map((item, idx) => (
-                <li key={idx} className="text-sm text-slate-700 bg-slate-50 p-3 rounded-xl border border-slate-100 relative group">
+                <li key={idx} className="text-sm text-slate-700 dark:text-slate-300 bg-slate-50 dark:bg-slate-900/50 p-3 rounded-xl border border-slate-100 dark:border-slate-700 relative group transition-colors">
                   {item.text}
-                  <span className="block text-[10px] text-slate-400 mt-2 opacity-0 group-hover:opacity-100 transition-opacity">من: {item.author}</span>
+                  <span className="block text-[10px] text-slate-400 dark:text-slate-500 mt-2 opacity-0 group-hover:opacity-100 transition-opacity">من: {item.author}</span>
                 </li>
-              )) : <li className="text-sm text-slate-400 italic text-center py-4">لا توجد مدخلات</li>}
+              )) : <li className="text-sm text-slate-400 dark:text-slate-500 italic text-center py-4 transition-colors">لا توجد مدخلات</li>}
             </ul>
           </div>
 
           {/* Opportunities */}
-          <div className="bg-white rounded-2xl p-4 sm:p-6 border border-slate-100 shadow-sm">
-            <div className="flex items-center gap-3 mb-4 border-b border-slate-100 pb-3">
-              <div className="p-2 bg-sky-50 rounded-lg">
-                <Sparkles className="w-6 h-6 text-sky-500" />
+          <div className="bg-white dark:bg-slate-800 rounded-2xl p-4 sm:p-6 border border-slate-100 dark:border-slate-700 shadow-sm transition-colors">
+            <div className="flex items-center gap-3 mb-4 border-b border-slate-100 dark:border-slate-700 pb-3 transition-colors">
+              <div className="p-2 bg-sky-50 dark:bg-sky-900/30 rounded-lg transition-colors">
+                <Sparkles className="w-6 h-6 text-sky-500 dark:text-sky-400" />
               </div>
-              <h3 className="font-bold text-slate-800">الفرص</h3>
-              <span className="mr-auto bg-slate-100 text-slate-600 px-2 py-1 rounded text-xs font-bold">{aggregated.opportunities.length}</span>
+              <h3 className="font-bold text-slate-800 dark:text-slate-100 transition-colors">الفرص</h3>
+              <span className="mr-auto bg-slate-100 dark:bg-slate-900/50 text-slate-600 dark:text-slate-400 px-2 py-1 rounded text-xs font-bold transition-colors">{aggregated.opportunities.length}</span>
             </div>
             <ul className="space-y-3 max-h-80 overflow-y-auto pr-2 custom-scrollbar">
               {aggregated.opportunities.length > 0 ? aggregated.opportunities.map((item, idx) => (
-                <li key={idx} className="text-sm text-slate-700 bg-slate-50 p-3 rounded-xl border border-slate-100 relative group">
+                <li key={idx} className="text-sm text-slate-700 dark:text-slate-300 bg-slate-50 dark:bg-slate-900/50 p-3 rounded-xl border border-slate-100 dark:border-slate-700 relative group transition-colors">
                   {item.text}
-                  <span className="block text-[10px] text-slate-400 mt-2 opacity-0 group-hover:opacity-100 transition-opacity">من: {item.author}</span>
+                  <span className="block text-[10px] text-slate-400 dark:text-slate-500 mt-2 opacity-0 group-hover:opacity-100 transition-opacity">من: {item.author}</span>
                 </li>
-              )) : <li className="text-sm text-slate-400 italic text-center py-4">لا توجد مدخلات</li>}
+              )) : <li className="text-sm text-slate-400 dark:text-slate-500 italic text-center py-4 transition-colors">لا توجد مدخلات</li>}
             </ul>
           </div>
 
           {/* Threats */}
-          <div className="bg-white rounded-2xl p-4 sm:p-6 border border-slate-100 shadow-sm">
-            <div className="flex items-center gap-3 mb-4 border-b border-slate-100 pb-3">
-              <div className="p-2 bg-amber-50 rounded-lg">
-                <ShieldAlert className="w-6 h-6 text-amber-500" />
+          <div className="bg-white dark:bg-slate-800 rounded-2xl p-4 sm:p-6 border border-slate-100 dark:border-slate-700 shadow-sm transition-colors">
+            <div className="flex items-center gap-3 mb-4 border-b border-slate-100 dark:border-slate-700 pb-3 transition-colors">
+              <div className="p-2 bg-amber-50 dark:bg-amber-900/30 rounded-lg transition-colors">
+                <ShieldAlert className="w-6 h-6 text-amber-500 dark:text-amber-400" />
               </div>
-              <h3 className="font-bold text-slate-800">المخاطر المهددة</h3>
-              <span className="mr-auto bg-slate-100 text-slate-600 px-2 py-1 rounded text-xs font-bold">{aggregated.threats.length}</span>
+              <h3 className="font-bold text-slate-800 dark:text-slate-100 transition-colors">المخاطر المهددة</h3>
+              <span className="mr-auto bg-slate-100 dark:bg-slate-900/50 text-slate-600 dark:text-slate-400 px-2 py-1 rounded text-xs font-bold transition-colors">{aggregated.threats.length}</span>
             </div>
             <ul className="space-y-3 max-h-80 overflow-y-auto pr-2 custom-scrollbar">
               {aggregated.threats.length > 0 ? aggregated.threats.map((item, idx) => (
-                <li key={idx} className="text-sm text-slate-700 bg-slate-50 p-3 rounded-xl border border-slate-100 relative group">
+                <li key={idx} className="text-sm text-slate-700 dark:text-slate-300 bg-slate-50 dark:bg-slate-900/50 p-3 rounded-xl border border-slate-100 dark:border-slate-700 relative group transition-colors">
                   {item.text}
-                  <span className="block text-[10px] text-slate-400 mt-2 opacity-0 group-hover:opacity-100 transition-opacity">من: {item.author}</span>
+                  <span className="block text-[10px] text-slate-400 dark:text-slate-500 mt-2 opacity-0 group-hover:opacity-100 transition-opacity">من: {item.author}</span>
                 </li>
-              )) : <li className="text-sm text-slate-400 italic text-center py-4">لا توجد مدخلات</li>}
+              )) : <li className="text-sm text-slate-400 dark:text-slate-500 italic text-center py-4 transition-colors">لا توجد مدخلات</li>}
             </ul>
           </div>
 
           {/* Success Factors */}
-          <div className="bg-white rounded-2xl p-4 sm:p-6 border border-slate-100 shadow-sm">
-            <div className="flex items-center gap-3 mb-4 border-b border-slate-100 pb-3">
-              <div className="p-2 bg-yellow-50 rounded-lg">
-                <Key className="w-6 h-6 text-yellow-600" />
+          <div className="bg-white dark:bg-slate-800 rounded-2xl p-4 sm:p-6 border border-slate-100 dark:border-slate-700 shadow-sm transition-colors">
+            <div className="flex items-center gap-3 mb-4 border-b border-slate-100 dark:border-slate-700 pb-3 transition-colors">
+              <div className="p-2 bg-yellow-50 dark:bg-yellow-900/30 rounded-lg transition-colors">
+                <Key className="w-6 h-6 text-yellow-600 dark:text-yellow-400" />
               </div>
-              <h3 className="font-bold text-slate-800">مقومات النجاح</h3>
-              <span className="mr-auto bg-slate-100 text-slate-600 px-2 py-1 rounded text-xs font-bold">{aggregated.success.length}</span>
+              <h3 className="font-bold text-slate-800 dark:text-slate-100 transition-colors">مقومات النجاح</h3>
+              <span className="mr-auto bg-slate-100 dark:bg-slate-900/50 text-slate-600 dark:text-slate-400 px-2 py-1 rounded text-xs font-bold transition-colors">{aggregated.success.length}</span>
             </div>
             <ul className="space-y-3 max-h-80 overflow-y-auto pr-2 custom-scrollbar">
               {aggregated.success.length > 0 ? aggregated.success.map((item, idx) => (
-                <li key={idx} className="text-sm text-slate-700 bg-slate-50 p-3 rounded-xl border border-slate-100 relative group">
+                <li key={idx} className="text-sm text-slate-700 dark:text-slate-300 bg-slate-50 dark:bg-slate-900/50 p-3 rounded-xl border border-slate-100 dark:border-slate-700 relative group transition-colors">
                   {item.text}
-                  <span className="block text-[10px] text-slate-400 mt-2 opacity-0 group-hover:opacity-100 transition-opacity">من: {item.author}</span>
+                  <span className="block text-[10px] text-slate-400 dark:text-slate-500 mt-2 opacity-0 group-hover:opacity-100 transition-opacity">من: {item.author}</span>
                 </li>
-              )) : <li className="text-sm text-slate-400 italic text-center py-4">لا توجد مدخلات</li>}
+              )) : <li className="text-sm text-slate-400 dark:text-slate-500 italic text-center py-4 transition-colors">لا توجد مدخلات</li>}
             </ul>
           </div>
 
           {/* Competitiveness */}
-          <div className="bg-white rounded-2xl p-4 sm:p-6 border border-slate-100 shadow-sm">
-            <div className="flex items-center gap-3 mb-4 border-b border-slate-100 pb-3">
-              <div className="p-2 bg-violet-50 rounded-lg">
-                <Rocket className="w-6 h-6 text-violet-600" />
+          <div className="bg-white dark:bg-slate-800 rounded-2xl p-4 sm:p-6 border border-slate-100 dark:border-slate-700 shadow-sm transition-colors">
+            <div className="flex items-center gap-3 mb-4 border-b border-slate-100 dark:border-slate-700 pb-3 transition-colors">
+              <div className="p-2 bg-violet-50 dark:bg-violet-900/30 rounded-lg transition-colors">
+                <Rocket className="w-6 h-6 text-violet-600 dark:text-violet-400" />
               </div>
-              <h3 className="font-bold text-slate-800">الميزة التنافسية</h3>
-              <span className="mr-auto bg-slate-100 text-slate-600 px-2 py-1 rounded text-xs font-bold">{aggregated.comp.length}</span>
+              <h3 className="font-bold text-slate-800 dark:text-slate-100 transition-colors">الميزة التنافسية</h3>
+              <span className="mr-auto bg-slate-100 dark:bg-slate-900/50 text-slate-600 dark:text-slate-400 px-2 py-1 rounded text-xs font-bold transition-colors">{aggregated.comp.length}</span>
             </div>
             <ul className="space-y-3 max-h-80 overflow-y-auto pr-2 custom-scrollbar">
               {aggregated.comp.length > 0 ? aggregated.comp.map((item, idx) => (
-                <li key={idx} className="text-sm text-slate-700 bg-slate-50 p-3 rounded-xl border border-slate-100 relative group">
+                <li key={idx} className="text-sm text-slate-700 dark:text-slate-300 bg-slate-50 dark:bg-slate-900/50 p-3 rounded-xl border border-slate-100 dark:border-slate-700 relative group transition-colors">
                   {item.text}
-                  <span className="block text-[10px] text-slate-400 mt-2 opacity-0 group-hover:opacity-100 transition-opacity">من: {item.author}</span>
+                  <span className="block text-[10px] text-slate-400 dark:text-slate-500 mt-2 opacity-0 group-hover:opacity-100 transition-opacity">من: {item.author}</span>
                 </li>
-              )) : <li className="text-sm text-slate-400 italic text-center py-4">لا توجد مدخلات</li>}
+              )) : <li className="text-sm text-slate-400 dark:text-slate-500 italic text-center py-4 transition-colors">لا توجد مدخلات</li>}
             </ul>
           </div>
         </div>
       </div>
 
       {/* Section 2: Individual Participants */}
-      <div className="pt-8">
-        <div className="flex items-center gap-3 mb-6 sm:mb-8 border-b border-slate-200 pb-4">
-          <div className="w-10 h-10 bg-secondary/10 rounded-xl flex items-center justify-center text-secondary font-bold shrink-0">
+      <div className="pt-8 transition-colors">
+        <div className="flex items-center gap-3 mb-6 sm:mb-8 border-b border-slate-200 dark:border-slate-700 pb-4 transition-colors">
+          <div className="w-10 h-10 bg-secondary/10 dark:bg-secondary/20 rounded-xl flex items-center justify-center text-secondary font-bold shrink-0 transition-colors">
             <ClipboardIcon />
           </div>
-          <h2 className="text-xl sm:text-2xl font-bold text-slate-800 tracking-tight">
+          <h2 className="text-xl sm:text-2xl font-bold text-slate-800 dark:text-slate-100 tracking-tight transition-colors">
             استبيانات الموظفين
           </h2>
         </div>
@@ -250,45 +250,45 @@ export default async function HexagonalSurveysPage({ params }: { params: Promise
             return (
               <div
                 key={res.id}
-                className="bg-white rounded-2xl p-4 sm:p-6 border border-slate-100 hover:border-secondary/50 shadow-sm hover:shadow transition-all flex flex-col justify-between group"
+                className="bg-white dark:bg-slate-800 rounded-2xl p-4 sm:p-6 border border-slate-100 dark:border-slate-700 hover:border-secondary/50 dark:hover:border-secondary/50 shadow-sm hover:shadow transition-all flex flex-col justify-between group"
               >
                 <div>
-                  <div className="flex justify-between items-start mb-6 border-b border-slate-50 pb-4">
+                  <div className="flex justify-between items-start mb-6 border-b border-slate-50 dark:border-slate-700 pb-4 transition-colors">
                     <div>
-                      <span className="text-[10px] sm:text-xs uppercase tracking-wider bg-secondary/10 text-secondary font-bold px-3 py-1 rounded-full">
+                      <span className="text-[10px] sm:text-xs uppercase tracking-wider bg-secondary/10 dark:bg-secondary/20 text-secondary font-bold px-3 py-1 rounded-full transition-colors">
                         التحليل السداسي
                       </span>
-                      <h3 className="font-bold text-slate-800 text-sm mt-3 group-hover:text-secondary transition-colors">
-                        <span className="text-slate-400 font-normal mr-1">بواسطة:</span> {res.authorizedTitle}
+                      <h3 className="font-bold text-slate-800 dark:text-slate-100 text-sm mt-3 group-hover:text-secondary transition-colors">
+                        <span className="text-slate-400 dark:text-slate-500 font-normal mr-1 transition-colors">بواسطة:</span> {res.authorizedTitle}
                       </h3>
 
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-2 min-[400px]:grid-cols-3 gap-2 sm:gap-3 text-xs sm:text-[11px] text-slate-500 mb-6 bg-slate-50 p-3 sm:p-4 rounded-xl border border-slate-100">
-                    <div className="flex flex-col gap-1.5 items-center bg-white p-2.5 rounded-lg border border-slate-100 shadow-sm">
-                      <Award className="w-5 h-5 text-emerald-600 shrink-0" />
-                      <span className="font-bold text-slate-700 text-center">{strengthsCount} <span className="text-[10px] sm:text-[9px] text-slate-400 font-normal block sm:inline">قوة</span></span>
+                  <div className="grid grid-cols-2 min-[400px]:grid-cols-3 gap-2 sm:gap-3 text-xs sm:text-[11px] text-slate-500 dark:text-slate-400 mb-6 bg-slate-50 dark:bg-slate-900/50 p-3 sm:p-4 rounded-xl border border-slate-100 dark:border-slate-700 transition-colors">
+                    <div className="flex flex-col gap-1.5 items-center bg-white dark:bg-slate-800 p-2.5 rounded-lg border border-slate-100 dark:border-slate-700 shadow-sm transition-colors">
+                      <Award className="w-5 h-5 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                      <span className="font-bold text-slate-700 dark:text-slate-300 text-center">{strengthsCount} <span className="text-[10px] sm:text-[9px] text-slate-400 dark:text-slate-500 font-normal block sm:inline">قوة</span></span>
                     </div>
-                    <div className="flex flex-col gap-1.5 items-center bg-white p-2.5 rounded-lg border border-slate-100 shadow-sm">
-                      <AlertTriangle className="w-5 h-5 text-rose-600 shrink-0" />
-                      <span className="font-bold text-slate-700 text-center">{weaknessesCount} <span className="text-[10px] sm:text-[9px] text-slate-400 font-normal block sm:inline">ضعف</span></span>
+                    <div className="flex flex-col gap-1.5 items-center bg-white dark:bg-slate-800 p-2.5 rounded-lg border border-slate-100 dark:border-slate-700 shadow-sm transition-colors">
+                      <AlertTriangle className="w-5 h-5 text-rose-600 dark:text-rose-400 shrink-0" />
+                      <span className="font-bold text-slate-700 dark:text-slate-300 text-center">{weaknessesCount} <span className="text-[10px] sm:text-[9px] text-slate-400 dark:text-slate-500 font-normal block sm:inline">ضعف</span></span>
                     </div>
-                    <div className="flex flex-col gap-1.5 items-center bg-white p-2.5 rounded-lg border border-slate-100 shadow-sm">
-                      <Sparkles className="w-5 h-5 text-sky-500 shrink-0" />
-                      <span className="font-bold text-slate-700 text-center">{oppCount} <span className="text-[10px] sm:text-[9px] text-slate-400 font-normal block sm:inline">فرص</span></span>
+                    <div className="flex flex-col gap-1.5 items-center bg-white dark:bg-slate-800 p-2.5 rounded-lg border border-slate-100 dark:border-slate-700 shadow-sm transition-colors">
+                      <Sparkles className="w-5 h-5 text-sky-500 dark:text-sky-400 shrink-0" />
+                      <span className="font-bold text-slate-700 dark:text-slate-300 text-center">{oppCount} <span className="text-[10px] sm:text-[9px] text-slate-400 dark:text-slate-500 font-normal block sm:inline">فرص</span></span>
                     </div>
-                    <div className="flex flex-col gap-1.5 items-center bg-white p-2.5 rounded-lg border border-slate-100 shadow-sm">
-                      <ShieldAlert className="w-5 h-5 text-amber-500 shrink-0" />
-                      <span className="font-bold text-slate-700 text-center">{threatCount} <span className="text-[10px] sm:text-[9px] text-slate-400 font-normal block sm:inline">مخاطر</span></span>
+                    <div className="flex flex-col gap-1.5 items-center bg-white dark:bg-slate-800 p-2.5 rounded-lg border border-slate-100 dark:border-slate-700 shadow-sm transition-colors">
+                      <ShieldAlert className="w-5 h-5 text-amber-500 dark:text-amber-400 shrink-0" />
+                      <span className="font-bold text-slate-700 dark:text-slate-300 text-center">{threatCount} <span className="text-[10px] sm:text-[9px] text-slate-400 dark:text-slate-500 font-normal block sm:inline">مخاطر</span></span>
                     </div>
-                    <div className="flex flex-col gap-1.5 items-center bg-white p-2.5 rounded-lg border border-slate-100 shadow-sm">
-                      <Key className="w-5 h-5 text-yellow-600 shrink-0" />
-                      <span className="font-bold text-slate-700 text-center">{successCount} <span className="text-[10px] sm:text-[9px] text-slate-400 font-normal block sm:inline">نجاح</span></span>
+                    <div className="flex flex-col gap-1.5 items-center bg-white dark:bg-slate-800 p-2.5 rounded-lg border border-slate-100 dark:border-slate-700 shadow-sm transition-colors">
+                      <Key className="w-5 h-5 text-yellow-600 dark:text-yellow-400 shrink-0" />
+                      <span className="font-bold text-slate-700 dark:text-slate-300 text-center">{successCount} <span className="text-[10px] sm:text-[9px] text-slate-400 dark:text-slate-500 font-normal block sm:inline">نجاح</span></span>
                     </div>
-                    <div className="flex flex-col gap-1.5 items-center bg-white p-2.5 rounded-lg border border-slate-100 shadow-sm">
-                      <Rocket className="w-5 h-5 text-violet-600 shrink-0" />
-                      <span className="font-bold text-slate-700 text-center">{compCount} <span className="text-[10px] sm:text-[9px] text-slate-400 font-normal block sm:inline">تميز</span></span>
+                    <div className="flex flex-col gap-1.5 items-center bg-white dark:bg-slate-800 p-2.5 rounded-lg border border-slate-100 dark:border-slate-700 shadow-sm transition-colors">
+                      <Rocket className="w-5 h-5 text-violet-600 dark:text-violet-400 shrink-0" />
+                      <span className="font-bold text-slate-700 dark:text-slate-300 text-center">{compCount} <span className="text-[10px] sm:text-[9px] text-slate-400 dark:text-slate-500 font-normal block sm:inline">تميز</span></span>
                     </div>
                   </div>
                 </div>

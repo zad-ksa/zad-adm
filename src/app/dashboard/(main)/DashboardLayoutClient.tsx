@@ -3,8 +3,7 @@
 import { usePathname } from "next/navigation";
 import EmployeeSidebar from "@/components/EmployeeSidebar";
 import { useState, useEffect } from "react";
-import { Menu, LayoutDashboard, Building2, ClipboardList, Newspaper } from "lucide-react";
-import MobileBottomNav from "@/components/MobileBottomNav";
+import { Menu } from "lucide-react";
 
 export default function DashboardLayoutClient({ children, session }: { children: React.ReactNode, session: any }) {
   const pathname = usePathname();
@@ -16,13 +15,6 @@ export default function DashboardLayoutClient({ children, session }: { children:
       setIsSidebarOpen(false);
     }
   }, [pathname]);
-
-  const mobileNavItems = [
-    { label: "الرئيسية", href: "/dashboard", icon: LayoutDashboard, exact: true },
-    { label: "الجمعيات", href: "/dashboard/charities", icon: Building2 },
-    { label: "الاستبيانات", href: "/dashboard/surveys", icon: ClipboardList },
-    { label: "الأخبار", href: "/dashboard/news", icon: Newspaper },
-  ];
 
   return (
     <div className="flex h-[100dvh] bg-slate-50 overflow-hidden" dir="rtl">
@@ -44,15 +36,12 @@ export default function DashboardLayoutClient({ children, session }: { children:
         </div>
         
         {/* Main Content Area */}
-        <main className="flex-1 overflow-y-auto w-full p-4 sm:p-6 lg:p-8 pb-24 lg:pb-8">
+        <main className="flex-1 overflow-y-auto w-full p-4 sm:p-6 lg:p-8 pb-8">
           <div className="max-w-[1600px] mx-auto w-full">
             {children}
           </div>
         </main>
       </div>
-
-      {/* Bottom Navigation for Mobile */}
-      <MobileBottomNav items={mobileNavItems} />
     </div>
   );
 }

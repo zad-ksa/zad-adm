@@ -18,7 +18,10 @@ import {
   AlertCircle,
   Pencil,
   Check,
-  X
+  X,
+  UploadCloud,
+  FileImage,
+  Link as LinkIcon
 } from "lucide-react";
 import { 
   createTaskAction, 
@@ -40,6 +43,8 @@ interface Task {
   isInternal: boolean;
   isCompleted: boolean;
   completedAt: Date | string | null;
+  proofUrl?: string | null;
+  proofPublicId?: string | null;
   createdAt: Date | string;
 }
 
@@ -100,6 +105,11 @@ export default function TasksClient({
   const [editingTaskId, setEditingTaskId] = useState<string | null>(null);
   const [editingTaskTitle, setEditingTaskTitle] = useState("");
 
+  // Proof upload state
+  const [completingTaskId, setCompletingTaskId] = useState<string | null>(null);
+  const [proofFile, setProofFile] = useState<File | null>(null);
+  const [isUploadingProof, setIsUploadingProof] = useState(false);
+
   const [isPending, startTransition] = useTransition();
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
@@ -146,6 +156,7 @@ export default function TasksClient({
       charityName: t.charityName,
       isInternal: t.isInternal,
       date: t.completedAt ? new Date(t.completedAt) : new Date(t.createdAt),
+      proofUrl: t.proofUrl,
       createdById: t.createdById,
       assignedToId: t.assignedToId,
     })),
@@ -228,24 +239,71 @@ export default function TasksClient({
 
   // Handle task completion toggle
   const handleToggleCompletion = async (taskId: string, isCompleted: boolean) => {
+    if (isCompleted) {
+      setCompletingTaskId(taskId);
+      return;
+    }
+
     startTransition(async () => {
-      const res = await toggleTaskCompletionAction(taskId, isCompleted);
+      const res = await toggleTaskCompletionAction(taskId, false);
       if (res.error) {
         showNotification("error", res.error);
       } else {
         setTasks((prev) =>
           prev.map((t) =>
             t.id === taskId
-              ? { ...t, isCompleted, completedAt: isCompleted ? new Date().toISOString() : null }
+              ? { ...t, isCompleted: false, completedAt: null, proofUrl: null, proofPublicId: null }
               : t
           )
         );
-        showNotification(
-          "success",
-          isCompleted ? "تم نقل المهمة إلى المنجزات" : "تمت إعادة المهمة لقائمة المهام"
-        );
+        showNotification("success", "تمت إعادة المهمة لقائمة المهام");
       }
     });
+  };
+
+  const handleProofSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!completingTaskId || !proofFile) return;
+
+    setIsUploadingProof(true);
+    try {
+      const formData = new FormData();
+      formData.append("file", proofFile);
+
+      const uploadRes = await fetch("/api/tasks/upload-proof", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!uploadRes.ok) {
+        throw new Error("فشل رفع الشاهد");
+      }
+
+      const { url, public_id } = await uploadRes.json();
+
+      startTransition(async () => {
+        const res = await toggleTaskCompletionAction(completingTaskId, true, url, public_id);
+        if (res.error) {
+          showNotification("error", res.error);
+        } else {
+          setTasks((prev) =>
+            prev.map((t) =>
+              t.id === completingTaskId
+                ? { ...t, isCompleted: true, completedAt: new Date().toISOString(), proofUrl: url, proofPublicId: public_id }
+                : t
+            )
+          );
+          showNotification("success", "تم نقل المهمة إلى المنجزات مع الشاهد");
+        }
+        setCompletingTaskId(null);
+        setProofFile(null);
+        setIsUploadingProof(false);
+      });
+    } catch (err) {
+      console.error(err);
+      showNotification("error", "حدث خطأ أثناء رفع الشاهد");
+      setIsUploadingProof(false);
+    }
   };
 
   // Handle deleting a task
@@ -587,6 +645,19 @@ export default function TasksClient({
                       </div>
 
                       <div className="flex items-center gap-2">
+                        {/* View Proof URL */}
+                        {isTask && item.proofUrl && (
+                          <a
+                            href={item.proofUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            title="مشاهدة الشاهد"
+                            className="p-1 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors cursor-pointer"
+                          >
+                            <LinkIcon className="w-4 h-4" />
+                          </a>
+                        )}
+
                         {/* Undo Task (Restore back to Active Tasks) */}
                         {canUndoTask && (
                           <button
@@ -624,7 +695,76 @@ export default function TasksClient({
           
         </div>
 
-    {/* Task Reassignment Dialog/Modal */}
+      {/* Task Proof Upload Modal */}
+      {completingTaskId && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+          <div 
+            className="absolute inset-0 bg-slate-950/65 backdrop-blur-md transition-opacity duration-300"
+            onClick={() => {
+              if (!isUploadingProof) {
+                setCompletingTaskId(null);
+                setProofFile(null);
+              }
+            }}
+          />
+          <div className="bg-white rounded-3xl border border-slate-100 shadow-2xl w-full max-w-md overflow-hidden relative z-10 transform transition-all duration-300 scale-100 p-6 space-y-6" dir="rtl">
+            <div>
+              <h3 className="text-lg font-bold text-slate-800 flex items-center gap-2">
+                <UploadCloud className="w-5 h-5 text-primary" />
+                رفع شاهد المهمة
+              </h3>
+              <p className="text-xs text-slate-500 mt-2 leading-relaxed">
+                يجب إرفاق شاهد (صورة) كإثبات على إنجاز المهمة. سيتم حفظ هذا الشاهد للتوثيق والتدقيق.
+              </p>
+            </div>
+
+            <form onSubmit={handleProofSubmit} className="space-y-4">
+              <div className="border-2 border-dashed border-slate-200 rounded-2xl p-6 text-center bg-slate-50 relative hover:border-primary/50 transition-colors">
+                <input
+                  type="file"
+                  accept="image/*"
+                  required
+                  onChange={(e) => setProofFile(e.target.files?.[0] || null)}
+                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                  disabled={isUploadingProof}
+                />
+                <FileImage className={`w-8 h-8 mx-auto mb-3 ${proofFile ? 'text-primary' : 'text-slate-400'}`} />
+                {proofFile ? (
+                  <p className="text-sm font-bold text-slate-800">{proofFile.name}</p>
+                ) : (
+                  <div>
+                    <p className="text-sm font-bold text-slate-600">انقر أو اسحب الصورة هنا</p>
+                    <p className="text-xs text-slate-400 mt-1">PNG, JPG حتى 5MB</p>
+                  </div>
+                )}
+              </div>
+
+              <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-100">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setCompletingTaskId(null);
+                    setProofFile(null);
+                  }}
+                  disabled={isUploadingProof}
+                  className="px-5 py-2.5 rounded-xl border border-slate-200 text-slate-500 hover:bg-slate-50 hover:text-slate-700 font-bold transition-all text-xs cursor-pointer"
+                >
+                  إلغاء
+                </button>
+                <button
+                  type="submit"
+                  disabled={isUploadingProof || !proofFile}
+                  className="px-6 py-2.5 rounded-xl bg-primary text-white hover:bg-primary/95 font-bold transition-all text-xs flex items-center gap-2 cursor-pointer disabled:opacity-75 disabled:cursor-not-allowed shadow-sm hover:shadow"
+                >
+                  {isUploadingProof ? "جاري الرفع..." : "رفع وإنجاز"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Task Reassignment Dialog/Modal */}
       {reassigningTaskId && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
           <div 

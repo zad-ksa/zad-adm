@@ -3,7 +3,13 @@
 import { prisma } from "@/lib/db";
 import { getSession } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
+import { v2 as cloudinary } from "cloudinary";
 
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
 // Helper to verify user session and roles
 async function getAuthenticatedUser() {
   const session = await getSession();
@@ -78,6 +84,14 @@ export async function deleteTaskAction(taskId: string) {
       return { error: "غير مصرح لك بحذف هذه المهمة" };
     }
 
+    if (task.proofPublicId) {
+      try {
+        await cloudinary.uploader.destroy(task.proofPublicId);
+      } catch (err) {
+        console.error("Failed to delete image from Cloudinary", err);
+      }
+    }
+
     await prisma.task.delete({
       where: { id: taskId },
     });
@@ -122,7 +136,12 @@ export async function reassignTaskAction(taskId: string, newEmployeeId: string) 
 }
 
 // 4. Complete/Undo Completion of a task
-export async function toggleTaskCompletionAction(taskId: string, isCompleted: boolean) {
+export async function toggleTaskCompletionAction(
+  taskId: string, 
+  isCompleted: boolean,
+  proofUrl?: string,
+  proofPublicId?: string
+) {
   try {
     const user = await getAuthenticatedUser();
     
@@ -141,11 +160,21 @@ export async function toggleTaskCompletionAction(taskId: string, isCompleted: bo
       return { error: "غير مصرح لك بتعديل هذه المهمة" };
     }
 
+    if (!isCompleted && task.proofPublicId) {
+      try {
+        await cloudinary.uploader.destroy(task.proofPublicId);
+      } catch (e) {
+        console.error("Failed to delete proof from Cloudinary during undo", e);
+      }
+    }
+
     await prisma.task.update({
       where: { id: taskId },
       data: {
         isCompleted,
         completedAt: isCompleted ? new Date() : null,
+        proofUrl: isCompleted ? proofUrl || null : null,
+        proofPublicId: isCompleted ? proofPublicId || null : null,
       },
     });
 

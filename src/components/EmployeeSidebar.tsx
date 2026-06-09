@@ -174,43 +174,43 @@ export default function EmployeeSidebar({
 
       {/* User Profile - Fixed at top */}
       <div className={`flex flex-col ${isOpen ? "items-start px-6" : "items-center px-2"} mb-8 pb-6 border-b border-slate-100 dark:border-slate-700/50 dark:border-slate-800 transition-all overflow-hidden shrink-0`}>
-        <div className="w-full flex items-center justify-between">
+        <div className={`w-full flex ${isOpen ? "flex-row items-center justify-between" : "flex-col items-center gap-2"} mb-4`}>
           <button 
             type="button"
-          onClick={() => {
-            setName(userState?.name || "");
-            setPhone(userState?.phone || "");
-            setPassword("");
-            setNewAvatar(userState?.avatarUrl || null);
-            setModalError(null);
-            setModalSuccess(null);
-            setIsEditModalOpen(true);
-          }}
-          className="group/avatar flex flex-col items-center justify-center focus:outline-none cursor-pointer"
-          title="تعديل الملف الشخصي"
-        >
-          <div className={`relative overflow-hidden bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 rounded-2xl flex items-center justify-center mb-3 shrink-0 transition-all ${isOpen ? "w-14 h-14" : "w-10 h-10"} group-hover/avatar:ring-2 group-hover/avatar:ring-primary/40`}>
-            {userState?.avatarUrl ? (
-              <img src={userState.avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
-            ) : (
-              <User className={isOpen ? "w-7 h-7" : "w-5 h-5"} />
-            )}
-            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover/avatar:opacity-100 transition-opacity flex items-center justify-center text-white">
-              <Edit className="w-4.5 h-4.5" />
-            </div>
-          </div>
-        </button>
-
-        {/* Theme Toggle Button */}
-        {mounted && isOpen && (
-          <button
-            onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-            className="p-2 rounded-xl bg-slate-50 dark:bg-slate-900/50 dark:bg-slate-800 text-slate-400 dark:text-slate-300 hover:text-primary dark:hover:text-primary transition-colors cursor-pointer ml-auto mb-3"
-            title="تبديل الوضع الداكن/الفاتح"
+            onClick={() => {
+              setName(userState?.name || "");
+              setPhone(userState?.phone || "");
+              setPassword("");
+              setNewAvatar(userState?.avatarUrl || null);
+              setModalError(null);
+              setModalSuccess(null);
+              setIsEditModalOpen(true);
+            }}
+            className="group/avatar flex items-center justify-center focus:outline-none cursor-pointer"
+            title="تعديل الملف الشخصي"
           >
-            {theme === "dark" ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+            <div className={`relative overflow-hidden bg-primary/10 dark:bg-primary/20 text-primary border border-primary/20 rounded-2xl flex items-center justify-center shrink-0 transition-all duration-300 ${isOpen ? "w-14 h-14" : "w-11 h-11"} group-hover/avatar:shadow-md group-hover/avatar:ring-2 group-hover/avatar:ring-primary/40 group-hover/avatar:border-primary/50`}>
+              {userState?.avatarUrl ? (
+                <img src={userState.avatarUrl} alt="Avatar" className="w-full h-full object-cover transition-transform duration-500 group-hover/avatar:scale-110" />
+              ) : (
+                <User className={isOpen ? "w-7 h-7" : "w-5 h-5"} />
+              )}
+              <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-[2px] opacity-0 group-hover/avatar:opacity-100 transition-all duration-300 flex items-center justify-center text-white">
+                <Edit className="w-5 h-5" />
+              </div>
+            </div>
           </button>
-        )}
+
+          {/* Theme Toggle Button */}
+          {mounted && (
+            <button
+              onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+              className={`flex items-center justify-center rounded-xl bg-slate-100 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/80 text-slate-500 dark:text-slate-400 hover:bg-primary hover:text-white hover:border-primary dark:hover:bg-primary dark:hover:text-white dark:hover:border-primary transition-all duration-300 cursor-pointer shadow-sm ${isOpen ? "w-10 h-10 ml-2" : "w-10 h-10"}`}
+              title="تبديل الوضع الداكن/الفاتح"
+            >
+              {theme === "dark" ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+            </button>
+          )}
         </div>
         
         {isOpen && (

@@ -51,11 +51,11 @@ export default function ReportDataTable({ axis, quarter, reportData, setReportDa
   return (
     <div className="mb-10">
       {/* Hide the axis header in print mode since each goal is on a new page anyway, but keep it on screen */}
-      <div className="flex items-center gap-3 mb-6 bg-slate-50 p-4 rounded-xl border border-slate-200 print:hidden">
+      <div className="flex items-center gap-3 mb-6 bg-slate-50 dark:bg-slate-900/50 p-4 rounded-xl border border-slate-200 dark:border-slate-700 print:hidden transition-colors">
         <div className="w-10 h-10 rounded-lg bg-[#24a991] text-white flex items-center justify-center text-lg font-bold shadow-sm">
           {axis.prefix || "غ"}
         </div>
-        <h3 className="text-[#114b79] font-bold text-xl">
+        <h3 className="text-[#114b79] dark:text-[#24a991] font-bold text-xl transition-colors">
           {axis.name}
         </h3>
       </div>
@@ -69,7 +69,7 @@ export default function ReportDataTable({ axis, quarter, reportData, setReportDa
           const goalBg = getStatusBgColor(goalPerf, goalPostponed, true);
 
           return (
-            <div key={goal.id} className="relative w-full print:break-before-page bg-white print:pt-8 print:px-12 print:min-h-[209mm] print:flex print:flex-col">
+            <div key={goal.id} className="relative w-full print:break-before-page bg-white dark:bg-slate-800 print:pt-8 print:px-12 print:min-h-[209mm] print:flex print:flex-col transition-colors">
               
               {/* Image-like Header */}
               <div className="flex items-stretch justify-between gap-3 mb-2">
@@ -80,7 +80,7 @@ export default function ReportDataTable({ axis, quarter, reportData, setReportDa
                 </div>
 
                 {/* Center: Goal Name */}
-                <div className="flex-1 border-2 border-[#24a991] text-[#114b79] flex items-center justify-center text-center px-4 py-3 font-bold text-lg md:text-xl rounded-sm">
+                <div className="flex-1 border-2 border-[#24a991] text-[#114b79] dark:text-slate-100 flex items-center justify-center text-center px-4 py-3 font-bold text-lg md:text-xl rounded-sm transition-colors">
                   {goal.name}
                 </div>
 
@@ -113,17 +113,17 @@ export default function ReportDataTable({ axis, quarter, reportData, setReportDa
                       const resultBg = getStatusBgColor(perf, ind.postponed || false, hasData(achieved));
 
                       return (
-                        <tr key={ind.id} className="even:bg-[#f9fafb] odd:bg-white text-slate-800">
-                          <td className="p-3 border border-slate-200 font-bold" dir="ltr">{indCode}</td>
-                          <td className="p-3 border border-slate-200 font-medium leading-relaxed">{ind.name}</td>
-                          <td className={`p-3 border border-white font-bold text-white ${resultBg}`}>
+                        <tr key={ind.id} className="even:bg-[#f9fafb] dark:even:bg-slate-800/80 odd:bg-white dark:odd:bg-slate-800 text-slate-800 dark:text-slate-100 transition-colors">
+                          <td className="p-3 border border-slate-200 dark:border-slate-700 font-bold transition-colors" dir="ltr">{indCode}</td>
+                          <td className="p-3 border border-slate-200 dark:border-slate-700 font-medium leading-relaxed transition-colors">{ind.name}</td>
+                          <td className={`p-3 border border-white dark:border-slate-800 font-bold text-white transition-colors ${resultBg}`}>
                             {ind.postponed ? "مؤجل" : `%${perf}`}
                           </td>
                           
                           {/* Analysis */}
-                          <td className="p-0 border border-slate-200 align-top relative">
+                          <td className="p-0 border border-slate-200 dark:border-slate-700 align-top relative transition-colors">
                             <textarea
-                              className="w-full h-full min-h-[60px] p-3 bg-transparent resize-none outline-none focus:bg-indigo-50/50 print:hidden text-xs leading-relaxed text-right"
+                              className="w-full h-full min-h-[60px] p-3 bg-transparent resize-none outline-none focus:bg-indigo-50/50 dark:focus:bg-indigo-900/30 print:hidden text-xs leading-relaxed text-right dark:text-slate-200 transition-colors"
                               placeholder="اكتب التحليل..."
                               value={indicatorAnalyses[ind.id] || ""}
                               onChange={(e) => setIndicatorAnalyses(prev => ({ ...prev, [ind.id]: e.target.value }))}
@@ -135,9 +135,9 @@ export default function ReportDataTable({ axis, quarter, reportData, setReportDa
                           </td>
 
                           {/* Recommendations */}
-                          <td className="p-0 border border-slate-200 align-top relative">
+                          <td className="p-0 border border-slate-200 dark:border-slate-700 align-top relative transition-colors">
                             <textarea
-                              className="w-full h-full min-h-[60px] p-3 bg-transparent resize-none outline-none focus:bg-emerald-50/50 print:hidden text-xs leading-relaxed text-right"
+                              className="w-full h-full min-h-[60px] p-3 bg-transparent resize-none outline-none focus:bg-emerald-50/50 dark:focus:bg-emerald-900/30 print:hidden text-xs leading-relaxed text-right dark:text-slate-200 transition-colors"
                               placeholder="اكتب التوصيات..."
                               value={indicatorRecommendations[ind.id] || ""}
                               onChange={(e) => setIndicatorRecommendations(prev => ({ ...prev, [ind.id]: e.target.value }))}
@@ -155,14 +155,14 @@ export default function ReportDataTable({ axis, quarter, reportData, setReportDa
 
               {/* Goal Analysis (Red Text) */}
               <div className="mt-6 print:mt-8">
-                <label className="text-red-600 font-bold mb-2 flex items-center gap-2 print:hidden px-2">
+                <label className="text-red-600 dark:text-red-500 font-bold mb-2 flex items-center gap-2 print:hidden px-2 transition-colors">
                   <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
                   </svg>
                   التحليل الإجمالي للهدف (سيظهر باللون الأحمر عند الطباعة):
                 </label>
                 <textarea
-                  className="w-full p-4 border border-red-200 rounded-lg text-red-600 font-bold outline-none focus:border-red-400 resize-none min-h-[100px] print:hidden text-center text-lg leading-relaxed bg-red-50/30"
+                  className="w-full p-4 border border-red-200 dark:border-red-800 rounded-lg text-red-600 dark:text-red-400 font-bold outline-none focus:border-red-400 dark:focus:border-red-600 resize-none min-h-[100px] print:hidden text-center text-lg leading-relaxed bg-red-50/30 dark:bg-red-900/10 transition-colors"
                   placeholder="اكتب خلاصة تحليل الهدف هنا..."
                   value={goalAnalyses[goal.id] || ""}
                   onChange={(e) => setGoalAnalyses(prev => ({ ...prev, [goal.id]: e.target.value }))}

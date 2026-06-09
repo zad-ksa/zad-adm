@@ -49,7 +49,7 @@ export default function StrategyTabs({ charityName }: { charityName: string }) {
   ];
 
   return (
-    <div className="flex gap-2 mb-6 border-b border-slate-200">
+    <div className="flex gap-2 mb-6 border-b border-slate-200 dark:border-slate-700 transition-colors">
       {tabs.map((tab, idx) => {
         const decodedPathname = decodeURIComponent(pathname);
         const decodedHref = decodeURIComponent(tab.href);
@@ -64,8 +64,8 @@ export default function StrategyTabs({ charityName }: { charityName: string }) {
             href={tab.href}
             className={`px-6 py-3 font-bold text-sm rounded-t-xl transition-all relative flex items-center gap-2 cursor-pointer select-none ${
               isActive
-                ? "bg-white text-primary border-t border-x border-slate-200 -mb-[1px] shadow-sm"
-                : "text-slate-500 hover:text-slate-800 hover:bg-slate-100/60"
+                ? "bg-white dark:bg-slate-800 text-primary border-t border-x border-slate-200 dark:border-slate-700 -mb-[1px] shadow-sm"
+                : "text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-slate-100/60 dark:hover:bg-slate-800/50"
             }`}
           >
             {tab.icon}

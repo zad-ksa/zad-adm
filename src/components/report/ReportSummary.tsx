@@ -93,8 +93,8 @@ export default function ReportSummary({ axes, quarter, year = new Date().getFull
       {/* SCREEN VIEW */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8 mt-6 print:hidden">
         {/* Overall Performance Chart */}
-        <div className="bg-white rounded-2xl border border-slate-100 p-6 shadow-sm flex flex-col items-center justify-between min-h-[280px]">
-          <h3 className="text-slate-800 font-bold text-lg mb-4">الأداء العام للربع</h3>
+        <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 p-6 shadow-sm flex flex-col items-center justify-between min-h-[280px] transition-colors">
+          <h3 className="text-slate-800 dark:text-slate-100 font-bold text-lg mb-4 transition-colors">الأداء العام للربع</h3>
           
           <div className="w-full flex-1 flex items-center justify-center">
             {mounted ? (
@@ -104,7 +104,7 @@ export default function ReportSummary({ axes, quarter, year = new Date().getFull
             )}
           </div>
 
-          <div className="text-xs text-slate-400 font-bold text-center mt-4 shrink-0">
+          <div className="text-xs text-slate-400 dark:text-slate-500 font-bold text-center mt-4 shrink-0 transition-colors">
             معدل الإنجاز الكلي للجمعية
           </div>
         </div>
@@ -117,10 +117,10 @@ export default function ReportSummary({ axes, quarter, year = new Date().getFull
             const classification = getReportClassification(perf, true, postponed);
 
             return (
-              <div key={axis.id} className="bg-white rounded-2xl border border-slate-100 p-5 shadow-sm flex flex-col justify-between hover:shadow-md transition-shadow">
+              <div key={axis.id} className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 p-5 shadow-sm flex flex-col justify-between hover:shadow-md transition-all">
                 <div>
-                  <span className="text-xs font-bold text-slate-400 block mb-1">بُعد الاستراتيجية</span>
-                  <h4 className="text-slate-800 font-bold text-md">{axis.name}</h4>
+                  <span className="text-xs font-bold text-slate-400 dark:text-slate-500 block mb-1 transition-colors">بُعد الاستراتيجية</span>
+                  <h4 className="text-slate-800 dark:text-slate-100 font-bold text-md transition-colors">{axis.name}</h4>
                 </div>
                 
                 <div className="mt-4 flex items-end justify-between">
@@ -135,7 +135,7 @@ export default function ReportSummary({ axes, quarter, year = new Date().getFull
                 </div>
 
                 {/* Mini Progress Bar */}
-                <div className="w-full bg-slate-100 rounded-full h-2 mt-4 overflow-hidden">
+                <div className="w-full bg-slate-100 dark:bg-slate-700/50 rounded-full h-2 mt-4 overflow-hidden transition-colors">
                   <div 
                     className="h-full rounded-full transition-all duration-1000" 
                     style={{ 

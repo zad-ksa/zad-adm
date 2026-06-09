@@ -40,7 +40,7 @@ export default function ReportDimensionsChart({ axes, quarter, reportData, setRe
     <>
       {/* SCREEN VIEW (Grid Layout) */}
       <div className="mb-6 mt-6 print:hidden">
-        <h3 className="text-slate-800 font-bold text-xl mb-6 text-center">أداء وتحليل الأبعاد الاستراتيجية</h3>
+        <h3 className="text-slate-800 dark:text-slate-100 font-bold text-xl mb-6 text-center transition-colors">أداء وتحليل الأبعاد الاستراتيجية</h3>
         
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
           {axes.map(axis => {
@@ -56,12 +56,12 @@ export default function ReportDimensionsChart({ axes, quarter, reportData, setRe
             return (
               <div 
                 key={axis.id} 
-                className="bg-white rounded-2xl border border-slate-100 p-6 shadow-sm flex flex-col justify-between transition-all duration-300 hover:shadow-md hover:border-slate-200/80"
+                className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 p-6 shadow-sm flex flex-col justify-between transition-all duration-300 hover:shadow-md hover:border-slate-200/80 dark:hover:border-slate-600"
               >
                 {/* Card Header */}
-                <div className="text-center mb-4 border-b border-slate-50 pb-3">
-                  <span className="text-xs font-bold text-indigo-500 block mb-1">بُعد الاستراتيجية</span>
-                  <h4 className="text-slate-800 font-bold text-base md:text-lg line-clamp-1">{axis.name}</h4>
+                <div className="text-center mb-4 border-b border-slate-50 dark:border-slate-700/50 pb-3 transition-colors">
+                  <span className="text-xs font-bold text-indigo-500 dark:text-indigo-400 block mb-1 transition-colors">بُعد الاستراتيجية</span>
+                  <h4 className="text-slate-800 dark:text-slate-100 font-bold text-base md:text-lg line-clamp-1 transition-colors">{axis.name}</h4>
                 </div>
 
                 {/* Doughnut Chart */}
@@ -106,8 +106,8 @@ export default function ReportDimensionsChart({ axes, quarter, reportData, setRe
                 <div className="space-y-4">
                   {/* Analysis Field */}
                   <div className="flex flex-col">
-                    <label className="text-slate-700 font-bold mb-1.5 flex items-center gap-1.5 text-xs">
-                      <span className="w-5 h-5 rounded bg-indigo-50 text-indigo-600 flex items-center justify-center">
+                    <label className="text-slate-700 dark:text-slate-300 font-bold mb-1.5 flex items-center gap-1.5 text-xs transition-colors">
+                      <span className="w-5 h-5 rounded bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 flex items-center justify-center transition-colors">
                         <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                           <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
                         </svg>
@@ -115,17 +115,17 @@ export default function ReportDimensionsChart({ axes, quarter, reportData, setRe
                       التحليل والتشخيص
                     </label>
                     <textarea
-                      className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-700 outline-none focus:border-indigo-300 focus:bg-white transition-all resize-none leading-relaxed min-h-[80px]"
+                      className="w-full p-2.5 bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl text-xs text-slate-700 dark:text-slate-200 outline-none focus:border-indigo-300 dark:focus:border-indigo-500 focus:bg-white dark:focus:bg-slate-900 transition-all resize-none leading-relaxed min-h-[80px]"
                       placeholder={`اكتب تحليلاً لأداء ${axis.name}...`}
                       value={analyses[axis.id] || ""}
                       onChange={(e) => setAnalyses(prev => ({ ...prev, [axis.id]: e.target.value }))}
                     />
                   </div>
-
+                  
                   {/* Recommendations Field */}
                   <div className="flex flex-col">
-                    <label className="text-slate-700 font-bold mb-1.5 flex items-center gap-1.5 text-xs">
-                      <span className="w-5 h-5 rounded bg-emerald-50 text-emerald-600 flex items-center justify-center">
+                    <label className="text-slate-700 dark:text-slate-300 font-bold mb-1.5 flex items-center gap-1.5 text-xs transition-colors">
+                      <span className="w-5 h-5 rounded bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 flex items-center justify-center transition-colors">
                         <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                           <path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"></path>
                           <path d="M9 12l2 2 4-4"></path>
@@ -134,7 +134,7 @@ export default function ReportDimensionsChart({ axes, quarter, reportData, setRe
                       توصيات التحسين والتطوير
                     </label>
                     <textarea
-                      className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-700 outline-none focus:border-emerald-300 focus:bg-white transition-all resize-none leading-relaxed min-h-[80px]"
+                      className="w-full p-2.5 bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl text-xs text-slate-700 dark:text-slate-200 outline-none focus:border-emerald-300 dark:focus:border-emerald-500 focus:bg-white dark:focus:bg-slate-900 transition-all resize-none leading-relaxed min-h-[80px]"
                       placeholder={`اكتب التوصيات المقترحة لـ ${axis.name}...`}
                       value={recommendations[axis.id] || ""}
                       onChange={(e) => setRecommendations(prev => ({ ...prev, [axis.id]: e.target.value }))}

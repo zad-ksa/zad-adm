@@ -37,9 +37,9 @@ export default function ReportAnalysis({ reportData, setReportData }: ReportAnal
       {/* SCREEN VIEW */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-8 print:hidden">
         {/* General Analysis */}
-        <div className="bg-white rounded-2xl border border-slate-100 p-6 shadow-sm flex flex-col">
-          <h3 className="text-slate-800 font-bold text-lg mb-4 flex items-center gap-2">
-            <span className="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center">
+        <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 p-6 shadow-sm flex flex-col transition-colors">
+          <h3 className="text-slate-800 dark:text-slate-100 font-bold text-lg mb-4 flex items-center gap-2 transition-colors">
+            <span className="w-8 h-8 rounded-lg bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 flex items-center justify-center transition-colors">
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                 <line x1="18" y1="20" x2="18" y2="10"></line>
                 <line x1="12" y1="20" x2="12" y2="4"></line>
@@ -49,7 +49,7 @@ export default function ReportAnalysis({ reportData, setReportData }: ReportAnal
             التحليل العام للربع
           </h3>
           <textarea
-            className="w-full min-h-[150px] p-4 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-700 outline-none focus:border-indigo-300 focus:bg-white transition-all resize-none leading-relaxed"
+            className="w-full min-h-[150px] p-4 bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl text-sm text-slate-700 dark:text-slate-200 outline-none focus:border-indigo-300 dark:focus:border-indigo-500 focus:bg-white dark:focus:bg-slate-900 transition-all resize-none leading-relaxed"
             placeholder="اكتب التحليل العام لأداء الجمعية خلال هذا الربع (يمكنك كتابة نقاط جديدة بالضغط على Enter)..."
             value={analysis}
             onChange={(e) => setAnalysis(e.target.value)}
@@ -57,9 +57,9 @@ export default function ReportAnalysis({ reportData, setReportData }: ReportAnal
         </div>
 
         {/* General Recommendations */}
-        <div className="bg-white rounded-2xl border border-slate-100 p-6 shadow-sm flex flex-col">
-          <h3 className="text-slate-800 font-bold text-lg mb-4 flex items-center gap-2">
-            <span className="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center">
+        <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 p-6 shadow-sm flex flex-col transition-colors">
+          <h3 className="text-slate-800 dark:text-slate-100 font-bold text-lg mb-4 flex items-center gap-2 transition-colors">
+            <span className="w-8 h-8 rounded-lg bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 flex items-center justify-center transition-colors">
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"></path>
                 <path d="M9 12l2 2 4-4"></path>
@@ -68,7 +68,7 @@ export default function ReportAnalysis({ reportData, setReportData }: ReportAnal
             التوصيات العامة:
           </h3>
           <textarea
-            className="w-full min-h-[150px] p-4 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-700 outline-none focus:border-emerald-300 focus:bg-white transition-all resize-none leading-relaxed"
+            className="w-full min-h-[150px] p-4 bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl text-sm text-slate-700 dark:text-slate-200 outline-none focus:border-emerald-300 dark:focus:border-emerald-500 focus:bg-white dark:focus:bg-slate-900 transition-all resize-none leading-relaxed"
             placeholder="اكتب التوصيات المقترحة لتحسين الأداء أو معالجة أوجه القصور..."
             value={recommendations}
             onChange={(e) => setRecommendations(e.target.value)}

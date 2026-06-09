@@ -18,10 +18,10 @@ export default function ReportHeader({ charityName, year, quarter, onSave, isSav
   const quarterName = quarter === 'Q1' ? 'الربع الأول' : quarter === 'Q2' ? 'الربع الثاني' : quarter === 'Q3' ? 'الربع الثالث' : 'الربع الرابع';
 
   return (
-    <div className="flex flex-col md:flex-row justify-between items-center bg-white p-6 rounded-2xl border border-slate-100 shadow-sm print:hidden">
+    <div className="flex flex-col md:flex-row justify-between items-center bg-white dark:bg-slate-800 p-6 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm print:hidden transition-colors">
       <div>
-        <h1 className="text-2xl font-bold text-slate-800">تقرير الأداء الاستراتيجي - {quarterName} {year}</h1>
-        <p className="text-slate-500 mt-2 font-medium">{charityName}</p>
+        <h1 className="text-2xl font-bold text-slate-800 dark:text-slate-100 transition-colors">تقرير الأداء الاستراتيجي - {quarterName} {year}</h1>
+        <p className="text-slate-500 dark:text-slate-400 mt-2 font-medium transition-colors">{charityName}</p>
       </div>
       <div className="mt-4 md:mt-0 flex gap-3">
         {onSave && (
@@ -43,7 +43,7 @@ export default function ReportHeader({ charityName, year, quarter, onSave, isSav
           </button>
         )}
         <button 
-          className="bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200 px-5 py-2.5 rounded-xl font-bold transition-all flex items-center gap-2"
+          className="bg-slate-50 dark:bg-slate-900/50 hover:bg-slate-100 dark:hover:bg-slate-900 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 px-5 py-2.5 rounded-xl font-bold transition-all flex items-center gap-2"
         >
           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
             <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>

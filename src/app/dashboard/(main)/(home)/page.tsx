@@ -194,8 +194,8 @@ export default async function MainDashboard() {
             </svg>
           </div>
           <div>
-            <p className="text-sm text-slate-500 font-medium mb-1">الجمعيات المتعاقد معها</p>
-            <h3 className="text-2xl font-bold text-slate-800">{charities.length}</h3>
+            <p className="text-xs sm:text-sm text-slate-500 font-medium mb-1">الجمعيات المتعاقد معها</p>
+            <h3 className="text-lg sm:text-2xl font-bold text-slate-800">{charities.length}</h3>
           </div>
         </div>
 
@@ -207,8 +207,8 @@ export default async function MainDashboard() {
             </svg>
           </div>
           <div>
-            <p className="text-sm text-slate-500 font-medium mb-1">المنح</p>
-            <h3 className="text-2xl font-bold text-slate-800">{displayGrants.toLocaleString()} ريال</h3>
+            <p className="text-xs sm:text-sm text-slate-500 font-medium mb-1">المنح</p>
+            <h3 className="text-lg sm:text-2xl font-bold text-slate-800">{displayGrants.toLocaleString()} ريال</h3>
           </div>
         </div>
 
@@ -220,8 +220,8 @@ export default async function MainDashboard() {
             </svg>
           </div>
           <div>
-            <p className="text-sm text-slate-500 font-medium mb-1">عدد البرامج</p>
-            <h3 className="text-2xl font-bold text-slate-800">{displayPrograms.toLocaleString()}</h3>
+            <p className="text-xs sm:text-sm text-slate-500 font-medium mb-1">عدد البرامج</p>
+            <h3 className="text-lg sm:text-2xl font-bold text-slate-800">{displayPrograms.toLocaleString()}</h3>
           </div>
         </div>
 
@@ -233,8 +233,8 @@ export default async function MainDashboard() {
             </svg>
           </div>
           <div>
-            <p className="text-sm text-slate-500 font-medium mb-1">عدد المستفيدين</p>
-            <h3 className="text-2xl font-bold text-slate-800">{displayBeneficiaries.toLocaleString()}</h3>
+            <p className="text-xs sm:text-sm text-slate-500 font-medium mb-1">عدد المستفيدين</p>
+            <h3 className="text-lg sm:text-2xl font-bold text-slate-800">{displayBeneficiaries.toLocaleString()}</h3>
           </div>
         </div>
       </div>
@@ -391,7 +391,7 @@ export default async function MainDashboard() {
                     {item.category}
                   </span>
                 </div>
-                <h4 className="font-bold text-slate-800 text-sm mb-1.5 group-hover:text-primary transition-colors duration-300">
+                <h4 className="font-bold text-slate-800 text-xs sm:text-sm mb-1.5 group-hover:text-primary transition-colors duration-300">
                   {item.title}
                 </h4>
                 <p className="text-xs text-slate-500 font-medium leading-relaxed mb-3">

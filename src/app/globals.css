@@ -17,6 +17,13 @@ body {
   color: rgb(var(--foreground));
 }
 
+/* تصغير الخطوط والمسافات تلقائياً في شاشات الجوال */
+@media (max-width: 640px) {
+  html {
+    font-size: 14px !important;
+  }
+}
+
 /* Hide scrollbar for Chrome, Safari and Opera */
 .no-scrollbar::-webkit-scrollbar {
   display: none;

@@ -309,6 +309,7 @@ export async function createNewsAction(data: {
   category: string;
   title: string;
   description?: string;
+  date?: string;
 }) {
   try {
     const user = await getAuthenticatedUser();
@@ -338,6 +339,7 @@ export async function createNewsAction(data: {
         category: category.trim(),
         title: title.trim(),
         description: description ? description.trim() : null,
+        date: data.date ? new Date(data.date) : new Date(),
       },
     });
 

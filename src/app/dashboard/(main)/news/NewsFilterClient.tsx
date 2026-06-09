@@ -58,6 +58,7 @@ export default function NewsFilterClient({
   const [newsCategory, setNewsCategory] = useState("الاستراتيجية");
   const [newsTitle, setNewsTitle] = useState("");
   const [newsDescription, setNewsDescription] = useState("");
+  const [newsDate, setNewsDate] = useState("");
 
   const [isPending, startTransition] = useTransition();
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
@@ -94,6 +95,7 @@ export default function NewsFilterClient({
         category: newsCategory,
         title: newsTitle.trim(),
         description: newsDescription.trim() || undefined,
+        date: newsDate || undefined,
       });
 
       if (res.error) {
@@ -109,10 +111,10 @@ export default function NewsFilterClient({
           title: res.newsItem.title,
           category: res.newsItem.category,
           description: res.newsItem.description || "",
-          rawDate: res.newsItem.createdAt instanceof Date 
-            ? res.newsItem.createdAt.toISOString() 
-            : new Date(res.newsItem.createdAt).toISOString(),
-          date: new Date(res.newsItem.createdAt).toLocaleDateString("ar-SA", {
+          rawDate: res.newsItem.date instanceof Date 
+            ? res.newsItem.date.toISOString() 
+            : new Date(res.newsItem.date).toISOString(),
+          date: new Date(res.newsItem.date).toLocaleDateString("ar-SA", {
             year: "numeric",
             month: "long",
             day: "numeric",
@@ -122,6 +124,7 @@ export default function NewsFilterClient({
         setNewsItems((prev) => [newItem, ...prev]);
         setNewsTitle("");
         setNewsDescription("");
+        setNewsDate("");
         setSelectedCharityNames([]);
         setShowNewsForm(false);
         showNotification("success", "تم نشر الخبر أو الإنجاز بنجاح");
@@ -484,6 +487,17 @@ export default function NewsFilterClient({
                   />
                 </div>
 
+                <div>
+                  <label className="block text-xs font-bold text-slate-500 mb-2">تاريخ الخبر (اختياري)</label>
+                  <input
+                    type="date"
+                    value={newsDate}
+                    onChange={(e) => setNewsDate(e.target.value)}
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm outline-none focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500/30 text-slate-800 transition-all font-medium cursor-pointer"
+                  />
+                  <p className="text-[10px] text-slate-400 mt-1.5 font-bold">في حال تركه فارغاً، سيتم اعتماد تاريخ اليوم كافتراضي.</p>
+                </div>
+
                 <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-100">
                   <button
                     type="button"
@@ -491,6 +505,7 @@ export default function NewsFilterClient({
                       setShowNewsForm(false);
                       setNewsTitle("");
                       setNewsDescription("");
+                      setNewsDate("");
                       setSelectedCharityNames([]);
                     }}
                     className="px-5 py-2.5 rounded-xl border border-slate-200 text-slate-500 hover:bg-slate-50 hover:text-slate-700 font-bold transition-all text-xs cursor-pointer"

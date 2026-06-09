@@ -15,7 +15,7 @@ export const metadata: Metadata = {
 
 const getCachedNews = async () => {
     return await prisma.news.findMany({
-      orderBy: { createdAt: "desc" },
+      orderBy: { date: "desc" },
     });
   };
 
@@ -28,7 +28,7 @@ export default async function NewsDashboard() {
 
   const formattedDbNews = dbNewsItems.map((news) => {
     const charity = charities.find((c) => c.name.trim().toLowerCase() === news.charityName.trim().toLowerCase());
-    const createdDate = new Date(news.createdAt);
+    const createdDate = new Date(news.date);
     return {
       id: news.id,
       charityId: charity?.id || "unknown",

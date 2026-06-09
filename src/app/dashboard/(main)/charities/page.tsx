@@ -25,8 +25,8 @@ export default async function CharitiesDashboard() {
       </div>
 
       {/* Contracted Charities Table */}
-      <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-800/80 overflow-hidden shadow-sm mb-8">
-        <div className="p-6 border-b border-slate-100 dark:border-slate-800/80 flex items-center justify-between">
+      <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700/50 dark:border-slate-800/80 overflow-hidden shadow-sm mb-8">
+        <div className="p-6 border-b border-slate-100 dark:border-slate-700/50 dark:border-slate-800/80 flex items-center justify-between">
           <div>
             <h2 className="text-xl font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
               <div className="w-2 h-6 bg-primary rounded-full"></div>
@@ -41,7 +41,7 @@ export default async function CharitiesDashboard() {
         <div className="overflow-x-auto">
           <table className="w-full text-right border-collapse whitespace-nowrap">
             <thead>
-              <tr className="bg-slate-50 dark:bg-slate-900/50 border-b border-slate-100 dark:border-slate-800/80 text-slate-500 dark:text-slate-400 text-sm tracking-wide">
+              <tr className="bg-slate-50 dark:bg-slate-900/50 border-b border-slate-100 dark:border-slate-700/50 dark:border-slate-800/80 text-slate-500 dark:text-slate-400 text-sm tracking-wide">
                 <th className="p-5 font-bold uppercase">اسم الجمعية</th>
                 <th className="p-5 font-bold uppercase">مجال العمل</th>
                 <th className="p-5 font-bold uppercase">تاريخ التأسيس</th>
@@ -51,7 +51,7 @@ export default async function CharitiesDashboard() {
             </thead>
             <tbody className="divide-y divide-slate-50">
               {charities.map((charity) => (
-                <tr key={charity.id} className="hover:bg-slate-50 dark:bg-slate-900/50/50 transition-colors">
+                <tr key={charity.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 dark:bg-slate-900/50 dark:hover:bg-slate-800/50 dark:bg-slate-900/50/50 transition-colors">
                   <td className="p-5 font-bold text-slate-800 dark:text-slate-100">
                     <Link href={`/dashboard/charity/${encodeURIComponent(charity.name)}`} className="hover:text-primary transition-colors">
                       {charity.name}
@@ -84,8 +84,8 @@ export default async function CharitiesDashboard() {
       </div>
 
       {/* Target Charities Table */}
-      <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-800/80 overflow-hidden shadow-sm opacity-75">
-        <div className="p-6 border-b border-slate-100 dark:border-slate-800/80">
+      <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700/50 dark:border-slate-800/80 overflow-hidden shadow-sm opacity-75">
+        <div className="p-6 border-b border-slate-100 dark:border-slate-700/50 dark:border-slate-800/80">
           <h2 className="text-xl font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
             <div className="w-2 h-6 bg-slate-300 rounded-full"></div>
             الجمعيات المستهدفة
@@ -95,7 +95,7 @@ export default async function CharitiesDashboard() {
         <div className="overflow-x-auto">
           <table className="w-full text-right border-collapse whitespace-nowrap">
             <thead>
-              <tr className="bg-slate-50 dark:bg-slate-900/50 border-b border-slate-100 dark:border-slate-800/80 text-slate-500 dark:text-slate-400 text-sm tracking-wide">
+              <tr className="bg-slate-50 dark:bg-slate-900/50 border-b border-slate-100 dark:border-slate-700/50 dark:border-slate-800/80 text-slate-500 dark:text-slate-400 text-sm tracking-wide">
                 <th className="p-5 font-bold uppercase">اسم الجمعية</th>
                 <th className="p-5 font-bold uppercase">المدينة / المنطقة</th>
                 <th className="p-5 font-bold uppercase">مجال العمل</th>

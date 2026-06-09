@@ -142,7 +142,7 @@ export default function EmployeeSidebar({
   };
 
   const sidebarContent = (
-    <div className="bg-white dark:bg-slate-900 flex flex-col h-full border-l border-slate-200/80 dark:border-slate-800/80 shadow-[4px_0_24px_rgba(0,0,0,0.02)] relative transition-all duration-300">
+    <div className="bg-white dark:bg-slate-800 dark:bg-slate-900 flex flex-col h-full border-l border-slate-200 dark:border-slate-700/80 dark:border-slate-800/80 shadow-[4px_0_24px_rgba(0,0,0,0.02)] relative transition-all duration-300">
       
       {/* Desktop Toggle Button */}
       <button 
@@ -153,7 +153,7 @@ export default function EmployeeSidebar({
       </button>
 
       {/* Header / Logo */}
-      <div className={`flex items-center ${isOpen ? "justify-start px-6" : "justify-center px-0"} h-24 border-b border-slate-100 dark:border-slate-800 shrink-0 transition-all`}>
+      <div className={`flex items-center ${isOpen ? "justify-start px-6" : "justify-center px-0"} h-24 border-b border-slate-100 dark:border-slate-700/50 dark:border-slate-800 shrink-0 transition-all`}>
         {isOpen ? (
           <div className="w-full h-full flex items-center py-4 relative pr-2">
             <ZadLogo isOpen={true} className="h-12 w-auto" />
@@ -167,13 +167,13 @@ export default function EmployeeSidebar({
 
       {/* Mobile Close Button */}
       <div className="lg:hidden absolute top-6 left-6 z-50">
-        <button onClick={() => setIsOpen(false)} className="text-slate-400 hover:text-slate-600 hover:bg-slate-100 p-2 rounded-lg transition-colors">
+        <button onClick={() => setIsOpen(false)} className="text-slate-400 hover:text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 dark:bg-slate-800 dark:hover:bg-slate-700 dark:bg-slate-800 p-2 rounded-lg transition-colors">
           <X className="w-5 h-5" />
         </button>
       </div>
 
       {/* User Profile - Fixed at top */}
-      <div className={`flex flex-col ${isOpen ? "items-start px-6" : "items-center px-2"} mb-8 pb-6 border-b border-slate-100 dark:border-slate-800 transition-all overflow-hidden shrink-0`}>
+      <div className={`flex flex-col ${isOpen ? "items-start px-6" : "items-center px-2"} mb-8 pb-6 border-b border-slate-100 dark:border-slate-700/50 dark:border-slate-800 transition-all overflow-hidden shrink-0`}>
         <div className="w-full flex items-center justify-between">
           <button 
             type="button"
@@ -189,7 +189,7 @@ export default function EmployeeSidebar({
           className="group/avatar flex flex-col items-center justify-center focus:outline-none cursor-pointer"
           title="تعديل الملف الشخصي"
         >
-          <div className={`relative overflow-hidden bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center mb-3 shrink-0 transition-all ${isOpen ? "w-14 h-14" : "w-10 h-10"} group-hover/avatar:ring-2 group-hover/avatar:ring-primary/40`}>
+          <div className={`relative overflow-hidden bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 rounded-2xl flex items-center justify-center mb-3 shrink-0 transition-all ${isOpen ? "w-14 h-14" : "w-10 h-10"} group-hover/avatar:ring-2 group-hover/avatar:ring-primary/40`}>
             {userState?.avatarUrl ? (
               <img src={userState.avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
             ) : (
@@ -205,7 +205,7 @@ export default function EmployeeSidebar({
         {mounted && isOpen && (
           <button
             onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-            className="p-2 rounded-xl bg-slate-50 dark:bg-slate-800 text-slate-400 dark:text-slate-300 hover:text-primary dark:hover:text-primary transition-colors cursor-pointer ml-auto mb-3"
+            className="p-2 rounded-xl bg-slate-50 dark:bg-slate-900/50 dark:bg-slate-800 text-slate-400 dark:text-slate-300 hover:text-primary dark:hover:text-primary transition-colors cursor-pointer ml-auto mb-3"
             title="تبديل الوضع الداكن/الفاتح"
           >
             {theme === "dark" ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
@@ -228,13 +228,13 @@ export default function EmployeeSidebar({
                   setModalSuccess(null);
                   setIsEditModalOpen(true);
                 }}
-                className="text-slate-400 hover:text-primary hover:bg-slate-50 p-1.5 rounded-lg transition-colors cursor-pointer shrink-0"
+                className="text-slate-400 hover:text-primary hover:bg-slate-50 dark:hover:bg-slate-800/50 dark:bg-slate-900/50 dark:hover:bg-slate-800/50 dark:bg-slate-900/50 p-1.5 rounded-lg transition-colors cursor-pointer shrink-0"
                 title="تعديل الملف الشخصي"
               >
                 <Edit className="w-4 h-4" />
               </button>
             </div>
-            <div className="mt-1.5 inline-flex items-center gap-1.5 px-2.5 py-1 bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-full text-[11px] text-slate-600 dark:text-slate-300 font-bold">
+            <div className="mt-1.5 inline-flex items-center gap-1.5 px-2.5 py-1 bg-slate-50 dark:bg-slate-900/50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700/50 dark:border-slate-700 rounded-full text-[11px] text-slate-600 dark:text-slate-300 font-bold">
               <ShieldAlert className="w-3.5 h-3.5 text-emerald-500" />
               {userState?.role === "ADMIN" ? "مدير النظام" :
                userState?.role === "EXECUTIVE_DIRECTOR" ? "مدير تنفيذي" :
@@ -264,7 +264,7 @@ export default function EmployeeSidebar({
                   : "text-slate-500 dark:text-slate-400 hover:bg-primary/5 dark:hover:bg-primary/10 hover:text-primary dark:hover:text-primary"
               }`}
             >
-              {isActive && isOpen && <div className="absolute right-0 top-0 bottom-0 w-1 bg-white/20 rounded-l-full"></div>}
+              {isActive && isOpen && <div className="absolute right-0 top-0 bottom-0 w-1 bg-white dark:bg-slate-800/20 rounded-l-full"></div>}
               <item.icon className={`w-5 h-5 shrink-0 transition-all ${isOpen ? "ml-3" : "ml-0"} ${isActive ? "text-white" : "text-slate-400 group-hover:text-primary"}`} />
               {isOpen && <span className="whitespace-nowrap">{item.label}</span>}
             </Link>
@@ -273,12 +273,12 @@ export default function EmployeeSidebar({
       </div>
 
       {/* Logout - Fixed at bottom */}
-      <div className="shrink-0 px-3 py-6 border-t border-slate-100 dark:border-slate-800">
+      <div className="shrink-0 px-3 py-6 border-t border-slate-100 dark:border-slate-700/50 dark:border-slate-800">
         <form action={logout}>
           <button 
             type="submit" 
             title={!isOpen ? "تسجيل الخروج" : undefined}
-            className={`flex items-center ${isOpen ? "justify-start px-3" : "justify-center"} w-full py-3 text-red-500 hover:bg-red-50 hover:text-red-600 rounded-xl font-bold transition-colors group`}
+            className={`flex items-center ${isOpen ? "justify-start px-3" : "justify-center"} w-full py-3 text-red-500 hover:bg-red-50 dark:bg-red-900/20 hover:text-red-600 rounded-xl font-bold transition-colors group`}
           >
             <LogOut className={`w-5 h-5 shrink-0 transition-all ${isOpen ? "ml-3" : "ml-0"} text-red-400 group-hover:text-red-600`} />
             {isOpen && <span className="whitespace-nowrap">تسجيل الخروج</span>}
@@ -300,7 +300,7 @@ export default function EmployeeSidebar({
       {/* Mobile Drawer */}
       <div className={`fixed inset-0 z-[60] lg:hidden transition-all duration-300 ${isOpen ? "visible" : "invisible pointer-events-none"}`}>
         <div className={`absolute inset-0 bg-slate-950/60 backdrop-blur-sm transition-opacity duration-300 ${isOpen ? "opacity-100" : "opacity-0"}`} onClick={() => setIsOpen(false)} />
-        <div className={`absolute top-0 right-0 h-full w-72 max-w-[85vw] transform transition-transform duration-300 ease-in-out bg-white shadow-2xl ${isOpen ? "translate-x-0" : "translate-x-full"}`}>
+        <div className={`absolute top-0 right-0 h-full w-72 max-w-[85vw] transform transition-transform duration-300 ease-in-out bg-white dark:bg-slate-800 shadow-2xl ${isOpen ? "translate-x-0" : "translate-x-full"}`}>
           {sidebarContent}
         </div>
       </div>
@@ -315,15 +315,15 @@ export default function EmployeeSidebar({
           />
           
           {/* Modal Container */}
-          <div className="bg-white rounded-2xl border border-slate-100 shadow-2xl w-full max-w-md overflow-hidden relative z-10 transform transition-all duration-300 scale-100 max-h-[90vh] flex flex-col font-sans" dir="rtl">
+          <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700/50 shadow-2xl w-full max-w-md overflow-hidden relative z-10 transform transition-all duration-300 scale-100 max-h-[90vh] flex flex-col font-sans" dir="rtl">
             {/* Header */}
-            <div className="px-6 py-5 border-b border-slate-100 flex items-center justify-between shrink-0">
-              <h3 className="text-lg font-bold text-slate-800">تعديل الملف الشخصي</h3>
+            <div className="px-6 py-5 border-b border-slate-100 dark:border-slate-700/50 flex items-center justify-between shrink-0">
+              <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100">تعديل الملف الشخصي</h3>
               <button 
                 type="button"
                 onClick={() => setIsEditModalOpen(false)} 
                 disabled={isPending}
-                className="text-slate-400 hover:text-slate-600 hover:bg-slate-50 p-2 rounded-lg transition-colors cursor-pointer"
+                className="text-slate-400 hover:text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/50 dark:bg-slate-900/50 dark:hover:bg-slate-800/50 dark:bg-slate-900/50 p-2 rounded-lg transition-colors cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -332,14 +332,14 @@ export default function EmployeeSidebar({
             {/* Form Body */}
             <form onSubmit={handleSaveProfile} className="flex-1 overflow-y-auto p-6 space-y-6">
               {modalError && (
-                <div className="bg-red-50 border border-red-100 p-4 rounded-xl flex items-start text-sm text-red-700 font-bold">
+                <div className="bg-red-50 dark:bg-red-900/20 border border-red-100 dark:border-red-800/50 p-4 rounded-xl flex items-start text-sm text-red-700 dark:text-red-400 font-bold">
                   <AlertCircle className="w-5 h-5 ml-2 text-red-500 shrink-0 mt-0.5" />
                   <span>{modalError}</span>
                 </div>
               )}
 
               {modalSuccess && (
-                <div className="bg-emerald-50 border border-emerald-100 p-4 rounded-xl flex items-start text-sm text-emerald-800 font-bold">
+                <div className="bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-100 dark:border-emerald-800/50 p-4 rounded-xl flex items-start text-sm text-emerald-800 dark:text-emerald-300 font-bold">
                   <CheckCircle2 className="w-5 h-5 ml-2 text-emerald-500 shrink-0 mt-0.5" />
                   <span>{modalSuccess}</span>
                 </div>
@@ -348,7 +348,7 @@ export default function EmployeeSidebar({
               {/* Avatar Uploader */}
               <div className="flex flex-col items-center gap-3">
                 <div className="relative group">
-                  <div className="w-24 h-24 rounded-2xl overflow-hidden border border-slate-200 bg-slate-50 flex items-center justify-center relative shadow-inner group-hover:border-primary/40 transition-colors">
+                  <div className="w-24 h-24 rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50 flex items-center justify-center relative shadow-inner group-hover:border-primary/40 transition-colors">
                     {newAvatar ? (
                       <img src={newAvatar} alt="صورة الموظف" className="w-full h-full object-cover" />
                     ) : (
@@ -381,7 +381,7 @@ export default function EmployeeSidebar({
               {/* Inputs */}
               <div className="space-y-4">
                 <div>
-                  <label htmlFor="profile-name" className="block text-sm font-bold text-slate-700 mb-2">
+                  <label htmlFor="profile-name" className="block text-sm font-bold text-slate-700 dark:text-slate-200 mb-2">
                     الاسم بالكامل
                   </label>
                   <input
@@ -391,13 +391,13 @@ export default function EmployeeSidebar({
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     disabled={isPending}
-                    className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all outline-none bg-slate-50 focus:bg-white text-slate-800 text-sm font-bold"
+                    className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all outline-none bg-slate-50 dark:bg-slate-900/50 focus:bg-white dark:focus:bg-slate-800 dark:bg-slate-800 dark:focus:bg-slate-800 dark:bg-slate-800 text-slate-800 dark:text-slate-100 text-sm font-bold"
                     placeholder="أدخل اسمك بالكامل"
                   />
                 </div>
 
                 <div>
-                  <label htmlFor="profile-phone" className="block text-sm font-bold text-slate-700 mb-2">
+                  <label htmlFor="profile-phone" className="block text-sm font-bold text-slate-700 dark:text-slate-200 mb-2">
                     رقم الجوال
                   </label>
                   <input
@@ -407,14 +407,14 @@ export default function EmployeeSidebar({
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
                     disabled={isPending}
-                    className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all outline-none bg-slate-50 focus:bg-white text-slate-800 text-sm font-bold"
+                    className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all outline-none bg-slate-50 dark:bg-slate-900/50 focus:bg-white dark:focus:bg-slate-800 dark:bg-slate-800 dark:focus:bg-slate-800 dark:bg-slate-800 text-slate-800 dark:text-slate-100 text-sm font-bold"
                     placeholder="05XXXXXXXX"
                     dir="ltr"
                   />
                 </div>
 
                 <div>
-                  <label htmlFor="profile-password" className="block text-sm font-bold text-slate-700 mb-2">
+                  <label htmlFor="profile-password" className="block text-sm font-bold text-slate-700 dark:text-slate-200 mb-2">
                     كلمة المرور الجديدة (اختياري)
                   </label>
                   <div className="relative rounded-xl">
@@ -424,14 +424,14 @@ export default function EmployeeSidebar({
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       disabled={isPending}
-                      className="w-full pr-4 pl-12 py-3 rounded-xl border border-slate-200 focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all outline-none bg-slate-50 focus:bg-white text-slate-800 text-sm font-bold"
+                      className="w-full pr-4 pl-12 py-3 rounded-xl border border-slate-200 dark:border-slate-700 focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all outline-none bg-slate-50 dark:bg-slate-900/50 focus:bg-white dark:focus:bg-slate-800 dark:bg-slate-800 dark:focus:bg-slate-800 dark:bg-slate-800 text-slate-800 dark:text-slate-100 text-sm font-bold"
                       placeholder="اتركها فارغة إذا لم ترغب في التغيير"
                       dir="ltr"
                     />
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
-                      className="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400 hover:text-slate-600 transition-colors focus:outline-none"
+                      className="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400 hover:text-slate-600 dark:text-slate-300 transition-colors focus:outline-none"
                       disabled={isPending}
                       tabIndex={-1}
                     >
@@ -446,12 +446,12 @@ export default function EmployeeSidebar({
               </div>
 
               {/* Footer Actions */}
-              <div className="pt-6 border-t border-slate-100 flex items-center justify-end gap-3 shrink-0">
+              <div className="pt-6 border-t border-slate-100 dark:border-slate-700/50 flex items-center justify-end gap-3 shrink-0">
                 <button
                   type="button"
                   onClick={() => setIsEditModalOpen(false)}
                   disabled={isPending}
-                  className="px-5 py-3 rounded-xl border border-slate-200 text-slate-500 hover:bg-slate-50 hover:text-slate-700 font-bold transition-all text-sm cursor-pointer disabled:opacity-50"
+                  className="px-5 py-3 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50 dark:bg-slate-900/50 dark:hover:bg-slate-800/50 dark:bg-slate-900/50 hover:text-slate-700 dark:text-slate-200 font-bold transition-all text-sm cursor-pointer disabled:opacity-50"
                 >
                   إلغاء
                 </button>

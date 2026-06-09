@@ -146,10 +146,10 @@ export default async function SurveysDashboard() {
       </div>
 
       {pendingCharitiesList.length > 0 && (
-        <div className="mb-8 bg-amber-50/20 rounded-2xl p-6 border border-amber-200">
+        <div className="mb-8 bg-amber-50 dark:bg-amber-900/20/20 rounded-2xl p-6 border border-amber-200">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-amber-100 rounded-xl flex items-center justify-center text-amber-700 text-xl font-bold border border-amber-200">
+              <div className="w-10 h-10 bg-amber-100 dark:bg-amber-900/40 rounded-xl flex items-center justify-center text-amber-700 dark:text-amber-400 text-xl font-bold border border-amber-200">
                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                 </svg>
@@ -164,7 +164,7 @@ export default async function SurveysDashboard() {
             <div className="overflow-x-auto">
               <table className="w-full text-right border-collapse whitespace-nowrap text-xs">
                 <thead>
-                  <tr className="bg-amber-50/80 border-b border-amber-100 text-amber-800 font-bold">
+                  <tr className="bg-amber-50 dark:bg-amber-900/20/80 border-b border-amber-100 dark:border-amber-800/50 text-amber-800 dark:text-amber-300 font-bold">
                     <th className="p-4 font-bold text-right">اسم الجمعية المعلقة</th>
                     <th className="p-4 text-center font-bold">مقياس الجاهزية</th>
                     <th className="p-4 text-center font-bold">التحليل السداسي</th>
@@ -176,11 +176,11 @@ export default async function SurveysDashboard() {
                 </thead>
                 <tbody className="divide-y divide-amber-100/30 text-slate-700 dark:text-slate-200">
                   {pendingCharitiesList.map((pending) => (
-                    <tr key={pending.name} className="hover:bg-amber-50/10 transition-colors">
+                    <tr key={pending.name} className="hover:bg-amber-50 dark:bg-amber-900/20/10 transition-colors">
                       <td className="p-4 font-bold text-slate-800 dark:text-slate-100 text-sm">{pending.name}</td>
                       <td className="p-4 text-center font-bold">
                         {pending.readinessCount > 0 ? (
-                          <span className="inline-block bg-amber-100 text-amber-800 px-3 py-1 rounded-full">
+                          <span className="inline-block bg-amber-100 dark:bg-amber-900/40 text-amber-800 dark:text-amber-300 px-3 py-1 rounded-full">
                             {pending.readinessCount} استبيان
                           </span>
                         ) : (
@@ -189,7 +189,7 @@ export default async function SurveysDashboard() {
                       </td>
                       <td className="p-4 text-center font-bold">
                         {pending.hexagonalCount > 0 ? (
-                          <span className="inline-block bg-amber-100 text-amber-800 px-3 py-1 rounded-full">
+                          <span className="inline-block bg-amber-100 dark:bg-amber-900/40 text-amber-800 dark:text-amber-300 px-3 py-1 rounded-full">
                             {pending.hexagonalCount} استبيان
                           </span>
                         ) : (
@@ -221,11 +221,11 @@ export default async function SurveysDashboard() {
         </div>
       )}
 
-      <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-800/80 overflow-hidden shadow-sm">
+      <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700/50 dark:border-slate-800/80 overflow-hidden shadow-sm">
         <div className="overflow-x-auto">
           <table className="w-full text-right border-collapse whitespace-nowrap">
             <thead>
-              <tr className="bg-slate-50 dark:bg-slate-900/50 border-b border-slate-100 dark:border-slate-800/80 text-slate-500 dark:text-slate-400 text-sm tracking-wide">
+              <tr className="bg-slate-50 dark:bg-slate-900/50 border-b border-slate-100 dark:border-slate-700/50 dark:border-slate-800/80 text-slate-500 dark:text-slate-400 text-sm tracking-wide">
                 <th className="p-5 font-bold uppercase">اسم الجمعية</th>
                 <th className="p-5 font-bold text-center uppercase">الاستبيانات</th>
                 <th className="p-5 font-bold text-center uppercase">التحليل السداسي</th>
@@ -237,7 +237,7 @@ export default async function SurveysDashboard() {
             </thead>
             <tbody className="divide-y divide-slate-50">
               {charityStats.map((charity) => (
-                <tr key={charity.id} className="hover:bg-slate-50 dark:bg-slate-900/50/50 transition-colors group">
+                <tr key={charity.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 dark:bg-slate-900/50 dark:hover:bg-slate-800/50 dark:bg-slate-900/50/50 transition-colors group">
                   <td className="p-5 font-bold text-slate-800 dark:text-slate-100 group-hover:text-primary transition-colors">
                     <Link href={`/dashboard/charity/${encodeURIComponent(charity.name)}`} className="block">
                       {charity.name}

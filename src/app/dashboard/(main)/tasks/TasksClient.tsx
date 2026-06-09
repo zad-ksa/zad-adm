@@ -421,13 +421,13 @@ export default function TasksClient({
     <main className="flex-1 min-w-0 py-8 relative" dir="rtl">
       {/* Notifications */}
       {successMsg && (
-        <div className="fixed bottom-6 left-6 z-50 bg-emerald-500 text-white px-5 py-3 rounded-2xl shadow-xl flex items-center gap-2 animate-fade-in font-bold text-sm">
+        <div className="fixed bottom-6 left-6 z-50 bg-emerald-50 dark:bg-emerald-900/200 text-white px-5 py-3 rounded-2xl shadow-xl flex items-center gap-2 animate-fade-in font-bold text-sm">
           <CheckCircle2 className="w-5 h-5" />
           {successMsg}
         </div>
       )}
       {errorMsg && (
-        <div className="fixed bottom-6 left-6 z-50 bg-red-500 text-white px-5 py-3 rounded-2xl shadow-xl flex items-center gap-2 animate-fade-in font-bold text-sm">
+        <div className="fixed bottom-6 left-6 z-50 bg-red-50 dark:bg-red-900/200 text-white px-5 py-3 rounded-2xl shadow-xl flex items-center gap-2 animate-fade-in font-bold text-sm">
           <AlertCircle className="w-5 h-5" />
           {errorMsg}
         </div>
@@ -447,7 +447,7 @@ export default function TasksClient({
 
         {/* Filter Dropdown for Executive Director */}
         {isDirectorOrAdmin && (
-          <div className="flex items-center gap-3 bg-white dark:bg-slate-800 dark:bg-slate-800 px-4 py-2 border border-slate-100 dark:border-slate-800/80 dark:border-slate-800/80 rounded-2xl shadow-sm shrink-0">
+          <div className="flex items-center gap-3 bg-white dark:bg-slate-800 dark:bg-slate-800 px-4 py-2 border border-slate-100 dark:border-slate-700/50 dark:border-slate-800/80 dark:border-slate-800/80 rounded-2xl shadow-sm shrink-0">
             <span className="text-xs font-bold text-slate-500 dark:text-slate-400 dark:text-slate-400 flex items-center gap-1.5">
               <User className="w-4 h-4 text-slate-400" />
               عرض مهام:
@@ -480,10 +480,10 @@ export default function TasksClient({
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
           
           {/* Active Tasks Column */}
-          <div className="bg-white dark:bg-slate-800 dark:bg-slate-800 rounded-3xl border border-slate-100 dark:border-slate-800/80 dark:border-slate-800/80 p-6 shadow-sm space-y-5">
+          <div className="bg-white dark:bg-slate-800 dark:bg-slate-800 rounded-3xl border border-slate-100 dark:border-slate-700/50 dark:border-slate-800/80 dark:border-slate-800/80 p-6 shadow-sm space-y-5">
             <div className="flex items-center justify-between border-b border-slate-50 pb-3">
               <h3 className="font-bold text-slate-800 dark:text-slate-100 dark:text-slate-100 text-lg flex items-center gap-2">
-                <span className="w-2.5 h-5 bg-amber-500 rounded-full"></span>
+                <span className="w-2.5 h-5 bg-amber-50 dark:bg-amber-900/200 rounded-full"></span>
                 المهام الحالية ({filteredActiveTasks.length})
               </h3>
             </div>
@@ -497,14 +497,14 @@ export default function TasksClient({
                 return (
                   <div 
                     key={task.id} 
-                    className="border border-slate-100 dark:border-slate-800/80 dark:border-slate-800/80 hover:border-primary/20 rounded-2xl p-4 shadow-sm hover:shadow-md transition-all duration-300 group relative flex flex-col justify-between gap-3 bg-slate-50 dark:bg-slate-900/50 dark:bg-slate-900/50/30"
+                    className="border border-slate-100 dark:border-slate-700/50 dark:border-slate-800/80 dark:border-slate-800/80 hover:border-primary/20 rounded-2xl p-4 shadow-sm hover:shadow-md transition-all duration-300 group relative flex flex-col justify-between gap-3 bg-slate-50 dark:bg-slate-900/50 dark:bg-slate-900/50/30"
                   >
                     <div className="flex items-start gap-3">
                       {/* Completion Checkbox */}
                       <button
                         onClick={() => handleToggleCompletion(task.id, true)}
                         title="تعليم كمنجز"
-                        className="w-5 h-5 rounded-md border-2 border-slate-300 hover:border-emerald-500 flex items-center justify-center shrink-0 cursor-pointer mt-0.5 hover:bg-emerald-50 transition-colors"
+                        className="w-5 h-5 rounded-md border-2 border-slate-300 dark:border-slate-600 hover:border-emerald-500 flex items-center justify-center shrink-0 cursor-pointer mt-0.5 hover:bg-emerald-50 dark:bg-emerald-900/20 transition-colors"
                       >
                         <span className="opacity-0 hover:opacity-100 text-emerald-500 text-xs font-bold">✓</span>
                       </button>
@@ -527,7 +527,7 @@ export default function TasksClient({
                               type="button"
                               onClick={() => handleUpdateTaskTitle(task.id)}
                               disabled={isPending}
-                              className="p-1 text-emerald-600 hover:bg-emerald-50 rounded-md transition-colors cursor-pointer shrink-0"
+                              className="p-1 text-emerald-600 hover:bg-emerald-50 dark:bg-emerald-900/20 rounded-md transition-colors cursor-pointer shrink-0"
                               title="حفظ"
                             >
                               <Check className="w-3.5 h-3.5" />
@@ -535,7 +535,7 @@ export default function TasksClient({
                             <button
                               type="button"
                               onClick={() => setEditingTaskId(null)}
-                              className="p-1 text-red-500 hover:bg-red-50 rounded-md transition-colors cursor-pointer shrink-0"
+                              className="p-1 text-red-500 hover:bg-red-50 dark:bg-red-900/20 rounded-md transition-colors cursor-pointer shrink-0"
                               title="إلغاء"
                             >
                               <X className="w-3.5 h-3.5" />
@@ -572,7 +572,7 @@ export default function TasksClient({
                     </div>
 
                     {/* Task Actions */}
-                    <div className="flex items-center justify-between border-t border-slate-100 dark:border-slate-800/80 dark:border-slate-800/80/60 pt-3 text-[10px] text-slate-400 font-bold">
+                    <div className="flex items-center justify-between border-t border-slate-100 dark:border-slate-700/50 dark:border-slate-800/80 dark:border-slate-800/80/60 pt-3 text-[10px] text-slate-400 font-bold">
                       <div className="flex items-center gap-1">
                         <Calendar className="w-3 h-3" />
                         {new Date(task.createdAt).toLocaleDateString("ar-SA")}
@@ -615,7 +615,7 @@ export default function TasksClient({
                             type="button"
                             onClick={() => handleDeleteTask(task.id)}
                             title="حذف المهمة"
-                            className="p-1 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
+                            className="p-1 text-slate-400 hover:text-red-500 hover:bg-red-50 dark:bg-red-900/20 rounded-lg transition-colors cursor-pointer"
                           >
                             <Trash2 className="w-4 h-4" />
                           </button>
@@ -627,7 +627,7 @@ export default function TasksClient({
               })}
 
               {filteredActiveTasks.length === 0 && (
-                <div className="text-center py-16 text-slate-400 border border-dashed border-slate-100 dark:border-slate-800/80 dark:border-slate-800/80 rounded-2xl">
+                <div className="text-center py-16 text-slate-400 border border-dashed border-slate-100 dark:border-slate-700/50 dark:border-slate-800/80 dark:border-slate-800/80 rounded-2xl">
                   <p className="text-xs font-semibold">لا توجد مهام حالية جارية.</p>
                 </div>
               )}
@@ -635,10 +635,10 @@ export default function TasksClient({
           </div>
 
           {/* Achievements Column */}
-          <div className="bg-white dark:bg-slate-800 dark:bg-slate-800 rounded-3xl border border-slate-100 dark:border-slate-800/80 dark:border-slate-800/80 p-6 shadow-sm space-y-5">
+          <div className="bg-white dark:bg-slate-800 dark:bg-slate-800 rounded-3xl border border-slate-100 dark:border-slate-700/50 dark:border-slate-800/80 dark:border-slate-800/80 p-6 shadow-sm space-y-5">
             <div className="flex items-center justify-between border-b border-slate-50 pb-3">
               <h3 className="font-bold text-slate-800 dark:text-slate-100 dark:text-slate-100 text-lg flex items-center gap-2">
-                <span className="w-2.5 h-5 bg-emerald-500 rounded-full"></span>
+                <span className="w-2.5 h-5 bg-emerald-50 dark:bg-emerald-900/200 rounded-full"></span>
                 سجل المنجزات ({combinedAchievements.length})
               </h3>
             </div>
@@ -653,8 +653,8 @@ export default function TasksClient({
                 return (
                   <div 
                     key={item.id} 
-                    className={`border border-slate-100 dark:border-slate-800/80 dark:border-slate-800/80 rounded-2xl p-4 shadow-sm hover:shadow-md transition-all duration-300 relative flex flex-col justify-between gap-3 ${
-                      isTask ? "bg-emerald-50/10 hover:border-emerald-500/20" : "bg-teal-50/10 hover:border-teal-500/20"
+                    className={`border border-slate-100 dark:border-slate-700/50 dark:border-slate-800/80 dark:border-slate-800/80 rounded-2xl p-4 shadow-sm hover:shadow-md transition-all duration-300 relative flex flex-col justify-between gap-3 ${
+                      isTask ? "bg-emerald-50 dark:bg-emerald-900/20/10 hover:border-emerald-500/20" : "bg-teal-50/10 hover:border-teal-500/20"
                     }`}
                   >
                     <div className="flex items-start gap-3">
@@ -667,7 +667,7 @@ export default function TasksClient({
 
                         <div className="flex flex-wrap items-center gap-1.5">
                           <span className={`text-[9px] font-bold px-2 py-0.5 rounded ${
-                            isTask ? "text-emerald-700 bg-emerald-50" : "text-teal-700 bg-teal-50"
+                            isTask ? "text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/20" : "text-teal-700 bg-teal-50"
                           }`}>
                             {isTask ? "مهمة منجزة" : "منجز مباشر"}
                           </span>
@@ -697,7 +697,7 @@ export default function TasksClient({
                     </div>
 
                     {/* Achievement Footer & Undo/Delete Buttons */}
-                    <div className="flex items-center justify-between border-t border-slate-100 dark:border-slate-800/80 dark:border-slate-800/80/60 pt-3 text-[10px] text-slate-400 font-bold">
+                    <div className="flex items-center justify-between border-t border-slate-100 dark:border-slate-700/50 dark:border-slate-800/80 dark:border-slate-800/80/60 pt-3 text-[10px] text-slate-400 font-bold">
                       <div className="flex items-center gap-1">
                         <Calendar className="w-3 h-3" />
                         {item.date.toLocaleDateString("ar-SA")}
@@ -711,7 +711,7 @@ export default function TasksClient({
                             target="_blank"
                             rel="noopener noreferrer"
                             title="مشاهدة الشاهد"
-                            className="p-1 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors cursor-pointer"
+                            className="p-1 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 dark:bg-emerald-900/20 rounded-lg transition-colors cursor-pointer"
                           >
                             <LinkIcon className="w-4 h-4" />
                           </a>
@@ -722,7 +722,7 @@ export default function TasksClient({
                           <button
                             onClick={() => handleToggleCompletion(item.id, false)}
                             title="إعادة المهمة لقائمة المهام الجارية"
-                            className="p-1 text-slate-400 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition-colors cursor-pointer"
+                            className="p-1 text-slate-400 hover:text-amber-600 hover:bg-amber-50 dark:bg-amber-900/20 rounded-lg transition-colors cursor-pointer"
                           >
                             <Undo className="w-4 h-4" />
                           </button>
@@ -733,7 +733,7 @@ export default function TasksClient({
                           <button
                             onClick={() => handleDeleteAchievement(item.id)}
                             title="حذف المنجز"
-                            className="p-1 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
+                            className="p-1 text-slate-400 hover:text-red-500 hover:bg-red-50 dark:bg-red-900/20 rounded-lg transition-colors cursor-pointer"
                           >
                             <Trash2 className="w-4 h-4" />
                           </button>
@@ -745,7 +745,7 @@ export default function TasksClient({
               })}
 
               {combinedAchievements.length === 0 && (
-                <div className="text-center py-16 text-slate-400 border border-dashed border-slate-100 dark:border-slate-800/80 dark:border-slate-800/80 rounded-2xl">
+                <div className="text-center py-16 text-slate-400 border border-dashed border-slate-100 dark:border-slate-700/50 dark:border-slate-800/80 dark:border-slate-800/80 rounded-2xl">
                   <p className="text-xs font-semibold">لا توجد منجزات مسجلة.</p>
                 </div>
               )}
@@ -766,7 +766,7 @@ export default function TasksClient({
               }
             }}
           />
-          <div className="bg-white dark:bg-slate-800 dark:bg-slate-800 rounded-3xl border border-slate-100 dark:border-slate-800/80 dark:border-slate-800/80 shadow-2xl w-full max-w-md overflow-hidden relative z-10 transform transition-all duration-300 scale-100 p-6 space-y-6" dir="rtl">
+          <div className="bg-white dark:bg-slate-800 dark:bg-slate-800 rounded-3xl border border-slate-100 dark:border-slate-700/50 dark:border-slate-800/80 dark:border-slate-800/80 shadow-2xl w-full max-w-md overflow-hidden relative z-10 transform transition-all duration-300 scale-100 p-6 space-y-6" dir="rtl">
             <div>
               <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100 dark:text-slate-100 flex items-center gap-2">
                 <UploadCloud className="w-5 h-5 text-primary" />
@@ -798,7 +798,7 @@ export default function TasksClient({
                 )}
               </div>
 
-              <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-100 dark:border-slate-800/80 dark:border-slate-800/80">
+              <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-100 dark:border-slate-700/50 dark:border-slate-800/80 dark:border-slate-800/80">
                 <button
                   type="button"
                   onClick={() => {
@@ -806,7 +806,7 @@ export default function TasksClient({
                     setProofFile(null);
                   }}
                   disabled={isUploadingProof}
-                  className="px-5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 dark:border-slate-700 text-slate-500 dark:text-slate-400 dark:text-slate-400 hover:bg-slate-50 dark:bg-slate-900/50 dark:bg-slate-900/50 hover:text-slate-700 dark:text-slate-200 dark:text-slate-200 font-bold transition-all text-xs cursor-pointer"
+                  className="px-5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 dark:border-slate-700 text-slate-500 dark:text-slate-400 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50 dark:bg-slate-900/50 dark:hover:bg-slate-800/50 dark:bg-slate-900/50 dark:bg-slate-900/50 hover:text-slate-700 dark:text-slate-200 dark:text-slate-200 font-bold transition-all text-xs cursor-pointer"
                 >
                   إلغاء
                 </button>
@@ -830,7 +830,7 @@ export default function TasksClient({
             className="absolute inset-0 bg-slate-950/65 backdrop-blur-md transition-opacity duration-300"
             onClick={() => setReassigningTaskId(null)}
           />
-          <div className="bg-white dark:bg-slate-800 dark:bg-slate-800 rounded-3xl border border-slate-100 dark:border-slate-800/80 dark:border-slate-800/80 shadow-2xl w-full max-w-md overflow-hidden relative z-10 transform transition-all duration-300 scale-100 p-6 space-y-6" dir="rtl">
+          <div className="bg-white dark:bg-slate-800 dark:bg-slate-800 rounded-3xl border border-slate-100 dark:border-slate-700/50 dark:border-slate-800/80 dark:border-slate-800/80 shadow-2xl w-full max-w-md overflow-hidden relative z-10 transform transition-all duration-300 scale-100 p-6 space-y-6" dir="rtl">
             <div>
               <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100 dark:text-slate-100">إعادة إسناد المهمة</h3>
               <p className="text-xs text-slate-500 dark:text-slate-400 dark:text-slate-400 mt-1">اختر الموظف الجديد الذي ترغب بنقل هذه المهمة إليه:</p>
@@ -841,7 +841,7 @@ export default function TasksClient({
                 value={reassignToEmployeeId}
                 onChange={(e) => setReassignToEmployeeId(e.target.value)}
                 required
-                className="w-full bg-slate-50 dark:bg-slate-900/50 dark:bg-slate-900/50 border border-slate-100 dark:border-slate-800/80 dark:border-slate-800/80 rounded-xl px-4 py-3 text-sm outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary/30 focus:bg-white dark:bg-slate-800 dark:bg-slate-800 text-slate-800 dark:text-slate-100 dark:text-slate-100 transition-all font-bold cursor-pointer"
+                className="w-full bg-slate-50 dark:bg-slate-900/50 dark:bg-slate-900/50 border border-slate-100 dark:border-slate-700/50 dark:border-slate-800/80 dark:border-slate-800/80 rounded-xl px-4 py-3 text-sm outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary/30 focus:bg-white dark:focus:bg-slate-800 dark:bg-slate-800 dark:focus:bg-slate-800 dark:bg-slate-800 dark:bg-slate-800 text-slate-800 dark:text-slate-100 dark:text-slate-100 transition-all font-bold cursor-pointer"
               >
                 <option value="" disabled>اختر الموظف...</option>
                 {employees.map((emp) => (
@@ -851,11 +851,11 @@ export default function TasksClient({
                 ))}
               </select>
 
-              <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-100 dark:border-slate-800/80 dark:border-slate-800/80">
+              <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-100 dark:border-slate-700/50 dark:border-slate-800/80 dark:border-slate-800/80">
                 <button
                   type="button"
                   onClick={() => setReassigningTaskId(null)}
-                  className="px-5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 dark:border-slate-700 text-slate-500 dark:text-slate-400 dark:text-slate-400 hover:bg-slate-50 dark:bg-slate-900/50 dark:bg-slate-900/50 hover:text-slate-700 dark:text-slate-200 dark:text-slate-200 font-bold transition-all text-xs cursor-pointer"
+                  className="px-5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 dark:border-slate-700 text-slate-500 dark:text-slate-400 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50 dark:bg-slate-900/50 dark:hover:bg-slate-800/50 dark:bg-slate-900/50 dark:bg-slate-900/50 hover:text-slate-700 dark:text-slate-200 dark:text-slate-200 font-bold transition-all text-xs cursor-pointer"
                 >
                   إلغاء
                 </button>
@@ -897,8 +897,8 @@ export default function TasksClient({
             className="absolute inset-0 bg-slate-950/65 backdrop-blur-md transition-opacity duration-300"
             onClick={() => setShowTaskForm(false)}
           />
-          <div className="bg-white dark:bg-slate-800 dark:bg-slate-800 rounded-3xl border border-slate-100 dark:border-slate-800/80 dark:border-slate-800/80 shadow-2xl w-full max-w-lg overflow-hidden relative z-10 transform transition-all duration-300 scale-100 p-6 md:p-8 space-y-6" dir="rtl">
-            <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800/80 dark:border-slate-800/80 pb-4">
+          <div className="bg-white dark:bg-slate-800 dark:bg-slate-800 rounded-3xl border border-slate-100 dark:border-slate-700/50 dark:border-slate-800/80 dark:border-slate-800/80 shadow-2xl w-full max-w-lg overflow-hidden relative z-10 transform transition-all duration-300 scale-100 p-6 md:p-8 space-y-6" dir="rtl">
+            <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-700/50 dark:border-slate-800/80 dark:border-slate-800/80 pb-4">
               <div>
                 <h3 className="text-xl font-bold text-slate-800 dark:text-slate-100 dark:text-slate-100 flex items-center gap-2">
                   <span className="w-2.5 h-6 bg-primary rounded-full"></span>
@@ -910,7 +910,7 @@ export default function TasksClient({
               </div>
               <button
                 onClick={() => setShowTaskForm(false)}
-                className="p-2 bg-slate-100 dark:bg-slate-800 dark:bg-slate-800 hover:bg-slate-200 text-slate-500 dark:text-slate-400 dark:text-slate-400 rounded-full transition-colors cursor-pointer"
+                className="p-2 bg-slate-100 dark:bg-slate-800 dark:bg-slate-800 hover:bg-slate-200 dark:bg-slate-700 text-slate-500 dark:text-slate-400 dark:text-slate-400 rounded-full transition-colors cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -973,11 +973,11 @@ export default function TasksClient({
                 </select>
               </div>
 
-              <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-100 dark:border-slate-800/80 dark:border-slate-800/80">
+              <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-100 dark:border-slate-700/50 dark:border-slate-800/80 dark:border-slate-800/80">
                 <button
                   type="button"
                   onClick={() => setShowTaskForm(false)}
-                  className="px-5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 dark:border-slate-700 text-slate-500 dark:text-slate-400 dark:text-slate-400 hover:bg-slate-50 dark:bg-slate-900/50 dark:bg-slate-900/50 hover:text-slate-700 dark:text-slate-200 dark:text-slate-200 font-bold transition-all text-xs cursor-pointer"
+                  className="px-5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 dark:border-slate-700 text-slate-500 dark:text-slate-400 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50 dark:bg-slate-900/50 dark:hover:bg-slate-800/50 dark:bg-slate-900/50 dark:bg-slate-900/50 hover:text-slate-700 dark:text-slate-200 dark:text-slate-200 font-bold transition-all text-xs cursor-pointer"
                 >
                   إلغاء
                 </button>
@@ -1002,8 +1002,8 @@ export default function TasksClient({
             className="absolute inset-0 bg-slate-950/65 backdrop-blur-md transition-opacity duration-300"
             onClick={() => setShowDirectAchievementForm(false)}
           />
-          <div className="bg-white dark:bg-slate-800 dark:bg-slate-800 rounded-3xl border border-slate-100 dark:border-slate-800/80 dark:border-slate-800/80 shadow-2xl w-full max-w-md overflow-hidden relative z-10 transform transition-all duration-300 scale-100 p-6 md:p-8 space-y-6" dir="rtl">
-            <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800/80 dark:border-slate-800/80 pb-4">
+          <div className="bg-white dark:bg-slate-800 dark:bg-slate-800 rounded-3xl border border-slate-100 dark:border-slate-700/50 dark:border-slate-800/80 dark:border-slate-800/80 shadow-2xl w-full max-w-md overflow-hidden relative z-10 transform transition-all duration-300 scale-100 p-6 md:p-8 space-y-6" dir="rtl">
+            <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-700/50 dark:border-slate-800/80 dark:border-slate-800/80 pb-4">
               <div>
                 <h3 className="text-xl font-bold text-slate-800 dark:text-slate-100 dark:text-slate-100 flex items-center gap-2">
                   <Sparkles className="w-6 h-6 text-emerald-500" />
@@ -1015,7 +1015,7 @@ export default function TasksClient({
               </div>
               <button
                 onClick={() => setShowDirectAchievementForm(false)}
-                className="p-2 bg-slate-100 dark:bg-slate-800 dark:bg-slate-800 hover:bg-slate-200 text-slate-500 dark:text-slate-400 dark:text-slate-400 rounded-full transition-colors cursor-pointer"
+                className="p-2 bg-slate-100 dark:bg-slate-800 dark:bg-slate-800 hover:bg-slate-200 dark:bg-slate-700 text-slate-500 dark:text-slate-400 dark:text-slate-400 rounded-full transition-colors cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -1116,12 +1116,12 @@ export default function TasksClient({
                 </div>
               </div>
               
-              <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-100 dark:border-slate-800/80 dark:border-slate-800/80">
+              <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-100 dark:border-slate-700/50 dark:border-slate-800/80 dark:border-slate-800/80">
                 <button
                   type="button"
                   onClick={() => setShowDirectAchievementForm(false)}
                   disabled={isUploadingAchievementProof}
-                  className="px-5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 dark:border-slate-700 text-slate-500 dark:text-slate-400 dark:text-slate-400 hover:bg-slate-50 dark:bg-slate-900/50 dark:bg-slate-900/50 hover:text-slate-700 dark:text-slate-200 dark:text-slate-200 font-bold transition-all text-xs cursor-pointer"
+                  className="px-5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 dark:border-slate-700 text-slate-500 dark:text-slate-400 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50 dark:bg-slate-900/50 dark:hover:bg-slate-800/50 dark:bg-slate-900/50 dark:bg-slate-900/50 hover:text-slate-700 dark:text-slate-200 dark:text-slate-200 font-bold transition-all text-xs cursor-pointer"
                 >
                   إلغاء
                 </button>

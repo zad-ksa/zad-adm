@@ -78,7 +78,7 @@ export default async function StrategySurveysPage({ params }: { params: Promise<
         {hasReadiness ? (
           <ReadinessResultsClient responses={responses} />
         ) : (
-          <div className="bg-white dark:bg-slate-800 rounded-2xl p-12 text-center text-slate-500 dark:text-slate-400 border border-slate-100 dark:border-slate-800/80 shadow-sm">
+          <div className="bg-white dark:bg-slate-800 rounded-2xl p-12 text-center text-slate-500 dark:text-slate-400 border border-slate-100 dark:border-slate-700/50 dark:border-slate-800/80 shadow-sm">
             <FileEditIcon />
             <p className="font-bold">لم يقم أي مشارك بتعبئة استبيان الجاهزية للتخطيط الاستراتيجي لهذه الجمعية بعد.</p>
           </div>

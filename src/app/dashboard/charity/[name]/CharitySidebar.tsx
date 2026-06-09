@@ -77,7 +77,7 @@ export default function CharitySidebar({
       </button>
 
       {/* Header / Logo */}
-      <div className={`flex items-center ${isOpen ? "justify-start px-6" : "justify-center px-0"} h-24 border-b border-slate-100 dark:border-slate-800/80 shrink-0 transition-all`}>
+      <div className={`flex items-center ${isOpen ? "justify-start px-6" : "justify-center px-0"} h-24 border-b border-slate-100 dark:border-slate-700/50 dark:border-slate-800/80 shrink-0 transition-all`}>
         {isOpen ? (
           <div className="w-full h-full flex items-center py-4 relative pr-2">
             <ZadLogo isOpen={true} className="h-12 w-auto" />
@@ -91,13 +91,13 @@ export default function CharitySidebar({
 
       {/* Mobile Close Button */}
       <div className="lg:hidden absolute top-6 left-6 z-50">
-        <button onClick={() => setIsOpen(false)} className="text-slate-400 hover:text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:bg-slate-800 p-2 rounded-lg transition-colors">
+        <button onClick={() => setIsOpen(false)} className="text-slate-400 hover:text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 dark:bg-slate-800 p-2 rounded-lg transition-colors">
           <X className="w-5 h-5" />
         </button>
       </div>
 
       {/* Charity Profile - Fixed at top */}
-      <div className={`flex flex-col ${isOpen ? "items-start px-6" : "items-center px-2"} pt-6 pb-6 border-b border-slate-100 dark:border-slate-800/80 transition-all overflow-hidden shrink-0`}>
+      <div className={`flex flex-col ${isOpen ? "items-start px-6" : "items-center px-2"} pt-6 pb-6 border-b border-slate-100 dark:border-slate-700/50 dark:border-slate-800/80 transition-all overflow-hidden shrink-0`}>
         {logoUrl ? (
           <div className={`rounded-2xl overflow-hidden border border-slate-150 bg-white dark:bg-slate-800 flex items-center justify-center mb-3 shrink-0 transition-all ${isOpen ? "w-14 h-14" : "w-10 h-10"}`}>
             <img src={logoUrl} alt={charityName} className="w-full h-full object-contain p-1" />
@@ -113,7 +113,7 @@ export default function CharitySidebar({
             <h2 className="text-base font-bold text-slate-800 dark:text-slate-100 truncate mb-1" title={charityName}>
               {charityName}
             </h2>
-            <div className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-slate-50 dark:bg-slate-900/50 border border-slate-100 dark:border-slate-800/80 rounded-full text-[10px] text-slate-500 dark:text-slate-400 font-bold">
+            <div className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-slate-50 dark:bg-slate-900/50 border border-slate-100 dark:border-slate-700/50 dark:border-slate-800/80 rounded-full text-[10px] text-slate-500 dark:text-slate-400 font-bold">
               ملف الجمعية
             </div>
           </div>
@@ -135,7 +135,7 @@ export default function CharitySidebar({
                 <item.icon className={`w-5 h-5 shrink-0 transition-all ${isOpen ? "ml-3" : "ml-0"} opacity-60`} />
                 {isOpen && <span className="whitespace-nowrap">{item.title}</span>}
                 {isOpen && (
-                  <span className="mr-auto text-[9px] bg-slate-200 text-slate-500 dark:text-slate-400 px-1.5 py-0.5 rounded font-extrabold">
+                  <span className="mr-auto text-[9px] bg-slate-200 dark:bg-slate-700 text-slate-500 dark:text-slate-400 px-1.5 py-0.5 rounded font-extrabold">
                     قريباً
                   </span>
                 )}
@@ -170,7 +170,7 @@ export default function CharitySidebar({
       </div>
 
       {/* Return to Dashboard - Fixed at bottom */}
-      <div className="shrink-0 px-3 py-6 border-t border-slate-100 dark:border-slate-800/80">
+      <div className="shrink-0 px-3 py-6 border-t border-slate-100 dark:border-slate-700/50 dark:border-slate-800/80">
         <Link
           href="/dashboard"
           title={!isOpen ? "العودة للوحة التحكم" : undefined}

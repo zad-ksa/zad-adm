@@ -177,13 +177,13 @@ export default function NewsFilterClient({
     <main className="flex-1 min-w-0 py-8 relative" dir="rtl">
       {/* Notifications */}
       {successMsg && (
-        <div className="fixed bottom-6 left-6 z-50 bg-emerald-500 text-white px-5 py-3 rounded-2xl shadow-xl flex items-center gap-2 animate-fade-in font-bold text-sm">
+        <div className="fixed bottom-6 left-6 z-50 bg-emerald-50 dark:bg-emerald-900/200 text-white px-5 py-3 rounded-2xl shadow-xl flex items-center gap-2 animate-fade-in font-bold text-sm">
           <CheckCircle2 className="w-5 h-5" />
           {successMsg}
         </div>
       )}
       {errorMsg && (
-        <div className="fixed bottom-6 left-6 z-50 bg-red-500 text-white px-5 py-3 rounded-2xl shadow-xl flex items-center gap-2 animate-fade-in font-bold text-sm">
+        <div className="fixed bottom-6 left-6 z-50 bg-red-50 dark:bg-red-900/200 text-white px-5 py-3 rounded-2xl shadow-xl flex items-center gap-2 animate-fade-in font-bold text-sm">
           <AlertCircle className="w-5 h-5" />
           {errorMsg}
         </div>
@@ -200,7 +200,7 @@ export default function NewsFilterClient({
         <div className="space-y-8">
           
           {/* Filters Card */}
-          <div className="bg-white dark:bg-slate-800 dark:bg-slate-800 rounded-2xl p-6 border border-slate-100 dark:border-slate-800/80 dark:border-slate-800/80 shadow-sm">
+          <div className="bg-white dark:bg-slate-800 dark:bg-slate-800 rounded-2xl p-6 border border-slate-100 dark:border-slate-700/50 dark:border-slate-800/80 dark:border-slate-800/80 shadow-sm">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4 pb-4 border-b border-slate-50">
               <h3 className="font-bold text-slate-800 dark:text-slate-100 dark:text-slate-100 text-sm flex items-center gap-2">
                 <span className="w-2 h-4.5 bg-primary rounded-full"></span>
@@ -228,7 +228,7 @@ export default function NewsFilterClient({
                 <select
                   value={selectedCharity}
                   onChange={(e) => setSelectedCharity(e.target.value)}
-                  className="w-full bg-slate-50 dark:bg-slate-900/50 dark:bg-slate-900/50 border border-slate-100 dark:border-slate-800/80 dark:border-slate-800/80 rounded-xl px-4 py-3 text-sm outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary/30 focus:bg-white dark:bg-slate-800 dark:bg-slate-800 text-slate-805 transition-all font-bold cursor-pointer"
+                  className="w-full bg-slate-50 dark:bg-slate-900/50 dark:bg-slate-900/50 border border-slate-100 dark:border-slate-700/50 dark:border-slate-800/80 dark:border-slate-800/80 rounded-xl px-4 py-3 text-sm outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary/30 focus:bg-white dark:focus:bg-slate-800 dark:bg-slate-800 dark:focus:bg-slate-800 dark:bg-slate-800 dark:bg-slate-800 text-slate-805 transition-all font-bold cursor-pointer"
                 >
                   <option value="all">كل الجمعيات</option>
                   <option value="إدارة زاد">إدارة زاد</option>
@@ -250,7 +250,7 @@ export default function NewsFilterClient({
                 <select
                   value={selectedCategory}
                   onChange={(e) => setSelectedCategory(e.target.value)}
-                  className="w-full bg-slate-50 dark:bg-slate-900/50 dark:bg-slate-900/50 border border-slate-100 dark:border-slate-800/80 dark:border-slate-800/80 rounded-xl px-4 py-3 text-sm outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary/30 focus:bg-white dark:bg-slate-800 dark:bg-slate-800 text-slate-805 transition-all font-bold cursor-pointer"
+                  className="w-full bg-slate-50 dark:bg-slate-900/50 dark:bg-slate-900/50 border border-slate-100 dark:border-slate-700/50 dark:border-slate-800/80 dark:border-slate-800/80 rounded-xl px-4 py-3 text-sm outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary/30 focus:bg-white dark:focus:bg-slate-800 dark:bg-slate-800 dark:focus:bg-slate-800 dark:bg-slate-800 dark:bg-slate-800 text-slate-805 transition-all font-bold cursor-pointer"
                 >
                   <option value="all">كل الأقسام</option>
                   <option value="الاستراتيجية">الاستراتيجية</option>
@@ -272,7 +272,7 @@ export default function NewsFilterClient({
                   type="date"
                   value={selectedDate}
                   onChange={(e) => setSelectedDate(e.target.value)}
-                  className="w-full bg-slate-50 dark:bg-slate-900/50 dark:bg-slate-900/50 border border-slate-100 dark:border-slate-800/80 dark:border-slate-800/80 rounded-xl px-4 py-2.5 text-sm outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary/30 focus:bg-white dark:bg-slate-800 dark:bg-slate-800 text-slate-805 transition-all font-bold cursor-pointer"
+                  className="w-full bg-slate-50 dark:bg-slate-900/50 dark:bg-slate-900/50 border border-slate-100 dark:border-slate-700/50 dark:border-slate-800/80 dark:border-slate-800/80 rounded-xl px-4 py-2.5 text-sm outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary/30 focus:bg-white dark:focus:bg-slate-800 dark:bg-slate-800 dark:focus:bg-slate-800 dark:bg-slate-800 dark:bg-slate-800 text-slate-805 transition-all font-bold cursor-pointer"
                 />
               </div>
             </div>
@@ -295,7 +295,7 @@ export default function NewsFilterClient({
                 return (
                   <div
                     key={item.id}
-                    className="bg-white dark:bg-slate-800 dark:bg-slate-800 rounded-2xl p-6 border border-slate-100 dark:border-slate-800/80 dark:border-slate-800/80 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-300 flex flex-col justify-between group"
+                    className="bg-white dark:bg-slate-800 dark:bg-slate-800 rounded-2xl p-6 border border-slate-100 dark:border-slate-700/50 dark:border-slate-800/80 dark:border-slate-800/80 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-300 flex flex-col justify-between group"
                   >
                     <div>
                       {/* Badges & Delete Action */}
@@ -308,11 +308,11 @@ export default function NewsFilterClient({
                           ))}
                           <span className={`inline-block text-[10px] font-bold px-2.5 py-1 rounded-md ${
                             item.category === "الاستراتيجية" ? "text-violet-700 bg-violet-50" :
-                            item.category === "التقنية" ? "text-blue-700 bg-blue-50" :
-                            item.category === "تنمية الموارد" ? "text-emerald-700 bg-emerald-50" :
+                            item.category === "التقنية" ? "text-blue-700 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20" :
+                            item.category === "تنمية الموارد" ? "text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/20" :
                             item.category === "تكليف" ? "text-rose-700 bg-rose-50" :
                             item.category === "استقطاب" ? "text-teal-700 bg-teal-50" :
-                            "text-amber-700 bg-amber-50" // الإعلامية
+                            "text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20" // الإعلامية
                           }`}>
                             {item.category}
                           </span>
@@ -324,7 +324,7 @@ export default function NewsFilterClient({
                             onClick={() => handleDeleteNews(item.id)}
                             disabled={isPending}
                             title="حذف الخبر"
-                            className="text-slate-400 hover:text-red-500 hover:bg-red-50 p-1.5 rounded-lg transition-colors cursor-pointer select-none shrink-0"
+                            className="text-slate-400 hover:text-red-500 hover:bg-red-50 dark:bg-red-900/20 p-1.5 rounded-lg transition-colors cursor-pointer select-none shrink-0"
                           >
                             <Trash2 className="w-4 h-4" />
                           </button>
@@ -369,7 +369,7 @@ export default function NewsFilterClient({
               })}
 
               {filteredNews.length === 0 && (
-                <div className="col-span-full bg-white dark:bg-slate-800 dark:bg-slate-800 rounded-2xl p-16 text-center text-slate-400 border border-slate-100 dark:border-slate-800/80 dark:border-slate-800/80 shadow-sm">
+                <div className="col-span-full bg-white dark:bg-slate-800 dark:bg-slate-800 rounded-2xl p-16 text-center text-slate-400 border border-slate-100 dark:border-slate-700/50 dark:border-slate-800/80 dark:border-slate-800/80 shadow-sm">
                   <div className="text-4xl mb-4 opacity-40">📰</div>
                   <p className="font-bold text-base text-slate-700 dark:text-slate-200 dark:text-slate-200 mb-1">لا توجد نتائج مطابقة</p>
                   <p className="text-xs text-slate-400 font-medium">جرب تغيير خيارات التصفية أو إعادة ضبط الفلاتر.</p>
@@ -397,8 +397,8 @@ export default function NewsFilterClient({
               className="absolute inset-0 bg-slate-950/65 backdrop-blur-md transition-opacity duration-300"
               onClick={() => setShowNewsForm(false)}
             />
-            <div className="bg-white dark:bg-slate-800 dark:bg-slate-800 rounded-3xl border border-slate-100 dark:border-slate-800/80 dark:border-slate-800/80 shadow-2xl w-full max-w-lg overflow-hidden relative z-10 transform transition-all duration-300 scale-100 p-6 md:p-8 max-h-[90vh] overflow-y-auto" dir="rtl">
-              <div className="flex items-center justify-between mb-6 border-b border-slate-100 dark:border-slate-800/80 dark:border-slate-800/80 pb-4">
+            <div className="bg-white dark:bg-slate-800 dark:bg-slate-800 rounded-3xl border border-slate-100 dark:border-slate-700/50 dark:border-slate-800/80 dark:border-slate-800/80 shadow-2xl w-full max-w-lg overflow-hidden relative z-10 transform transition-all duration-300 scale-100 p-6 md:p-8 max-h-[90vh] overflow-y-auto" dir="rtl">
+              <div className="flex items-center justify-between mb-6 border-b border-slate-100 dark:border-slate-700/50 dark:border-slate-800/80 dark:border-slate-800/80 pb-4">
                 <div>
                   <h3 className="text-xl font-bold text-slate-800 dark:text-slate-100 dark:text-slate-100 flex items-center gap-2">
                     <Newspaper className="w-6 h-6 text-amber-600" />
@@ -410,7 +410,7 @@ export default function NewsFilterClient({
                 </div>
                 <button
                   onClick={() => setShowNewsForm(false)}
-                  className="p-2 bg-slate-100 dark:bg-slate-800 dark:bg-slate-800 hover:bg-slate-200 text-slate-500 dark:text-slate-400 dark:text-slate-400 rounded-full transition-colors cursor-pointer"
+                  className="p-2 bg-slate-100 dark:bg-slate-800 dark:bg-slate-800 hover:bg-slate-200 dark:bg-slate-700 text-slate-500 dark:text-slate-400 dark:text-slate-400 rounded-full transition-colors cursor-pointer"
                 >
                   <X className="w-5 h-5" />
                 </button>
@@ -438,7 +438,7 @@ export default function NewsFilterClient({
                                 setSelectedCharityNames(prev => [...prev, name]);
                               }
                             }}
-                            className="rounded border-slate-300 text-amber-600 focus:ring-amber-500 w-4 h-4 cursor-pointer"
+                            className="rounded border-slate-300 dark:border-slate-600 text-amber-600 focus:ring-amber-500 w-4 h-4 cursor-pointer"
                           />
                           {name}
                         </label>
@@ -498,7 +498,7 @@ export default function NewsFilterClient({
                   <p className="text-[10px] text-slate-400 mt-1.5 font-bold">في حال تركه فارغاً، سيتم اعتماد تاريخ اليوم كافتراضي.</p>
                 </div>
 
-                <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-100 dark:border-slate-800/80 dark:border-slate-800/80">
+                <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-100 dark:border-slate-700/50 dark:border-slate-800/80 dark:border-slate-800/80">
                   <button
                     type="button"
                     onClick={() => {
@@ -508,7 +508,7 @@ export default function NewsFilterClient({
                       setNewsDate("");
                       setSelectedCharityNames([]);
                     }}
-                    className="px-5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 dark:border-slate-700 text-slate-500 dark:text-slate-400 dark:text-slate-400 hover:bg-slate-50 dark:bg-slate-900/50 dark:bg-slate-900/50 hover:text-slate-700 dark:text-slate-200 dark:text-slate-200 font-bold transition-all text-xs cursor-pointer"
+                    className="px-5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 dark:border-slate-700 text-slate-500 dark:text-slate-400 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50 dark:bg-slate-900/50 dark:hover:bg-slate-800/50 dark:bg-slate-900/50 dark:bg-slate-900/50 hover:text-slate-700 dark:text-slate-200 dark:text-slate-200 font-bold transition-all text-xs cursor-pointer"
                   >
                     إلغاء
                   </button>

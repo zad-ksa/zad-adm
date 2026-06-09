@@ -26,12 +26,12 @@ const roleTranslations: Record<string, string> = {
 };
 
 const roleBadgeStyles: Record<string, string> = {
-  ADMIN: "bg-purple-100 text-purple-700",
-  EXECUTIVE_DIRECTOR: "bg-purple-100 text-purple-700",
-  GENERAL_MANAGER: "bg-blue-100 text-blue-700",
-  ADMINISTRATIVE_SECRETARIAT: "bg-amber-100 text-amber-700",
+  ADMIN: "bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-400",
+  EXECUTIVE_DIRECTOR: "bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-400",
+  GENERAL_MANAGER: "bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-400",
+  ADMINISTRATIVE_SECRETARIAT: "bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-400",
   STRATEGY: "bg-indigo-100 text-indigo-700",
-  FINANCE: "bg-emerald-100 text-emerald-700",
+  FINANCE: "bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-400",
   EMPLOYEE: "bg-slate-100 dark:bg-slate-800 dark:bg-slate-800 text-slate-700 dark:text-slate-200 dark:text-slate-200",
 };
 
@@ -154,10 +154,10 @@ export function EmployeesClient({
 
   return (
     <div className="space-y-6">
-      <div className="bg-white dark:bg-slate-800 dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800/80 dark:border-slate-800/80 overflow-hidden">
+      <div className="bg-white dark:bg-slate-800 dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700/50 dark:border-slate-800/80 dark:border-slate-800/80 overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-right">
-            <thead className="bg-slate-50 dark:bg-slate-900/50 dark:bg-slate-900/50 border-b border-slate-100 dark:border-slate-800/80 dark:border-slate-800/80">
+            <thead className="bg-slate-50 dark:bg-slate-900/50 dark:bg-slate-900/50 border-b border-slate-100 dark:border-slate-700/50 dark:border-slate-800/80 dark:border-slate-800/80">
               <tr>
                 <th className="px-6 py-4 text-sm font-bold text-slate-650">الموظف</th>
                 <th className="px-6 py-4 text-sm font-bold text-slate-650">رقم الجوال</th>
@@ -169,12 +169,12 @@ export function EmployeesClient({
             </thead>
             <tbody className="divide-y divide-slate-100">
               {employees.map((emp) => (
-                <tr key={emp.id} className="hover:bg-slate-50 dark:bg-slate-900/50 dark:bg-slate-900/50/50 transition-colors">
+                <tr key={emp.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 dark:bg-slate-900/50 dark:hover:bg-slate-800/50 dark:bg-slate-900/50 dark:bg-slate-900/50/50 transition-colors">
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-3">
                       <UserCircle className="w-10 h-10 text-slate-400" />
                       <div>
-                        <div className="font-bold text-slate-900">{emp.name}</div>
+                        <div className="font-bold text-slate-900 dark:text-slate-50">{emp.name}</div>
                         <div className="text-[11px] text-slate-400 font-medium">
                           تاريخ الإضافة: {new Date(emp.createdAt).toLocaleDateString("ar-SA")}
                         </div>
@@ -195,8 +195,8 @@ export function EmployeesClient({
                   <td className="px-6 py-4">
                     <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold ${
                       emp.isActive 
-                        ? "bg-emerald-50 text-emerald-700" 
-                        : "bg-red-50 text-red-700"
+                        ? "bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400" 
+                        : "bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400"
                     }`}>
                       {emp.isActive ? <Check className="w-3.5 h-3.5" /> : <X className="w-3.5 h-3.5" />}
                       {emp.isActive ? "نشط" : "موقوف"}
@@ -233,8 +233,8 @@ export function EmployeesClient({
                         disabled={isPending || emp.id === session.id || emp.role === "ADMIN"}
                         className={`px-2 py-1 text-xs font-bold rounded-lg cursor-pointer transition-colors disabled:opacity-40 disabled:cursor-not-allowed ${
                           emp.isActive 
-                            ? "text-red-600 hover:bg-red-50" 
-                            : "text-emerald-600 hover:bg-emerald-50"
+                            ? "text-red-600 hover:bg-red-50 dark:bg-red-900/20" 
+                            : "text-emerald-600 hover:bg-emerald-50 dark:bg-emerald-900/20"
                         }`}
                       >
                         {emp.isActive ? "تعطيل" : "تفعيل"}
@@ -263,14 +263,14 @@ export function EmployeesClient({
             onClick={() => { if (!isPending) setEditingEmployee(null); }}
           />
           
-          <div className="bg-white dark:bg-slate-800 dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-800/80 dark:border-slate-800/80 shadow-2xl w-full max-w-lg overflow-hidden relative z-10 animate-in fade-in zoom-in-95 duration-200 max-h-[90vh] flex flex-col font-sans" dir="rtl">
+          <div className="bg-white dark:bg-slate-800 dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700/50 dark:border-slate-800/80 dark:border-slate-800/80 shadow-2xl w-full max-w-lg overflow-hidden relative z-10 animate-in fade-in zoom-in-95 duration-200 max-h-[90vh] flex flex-col font-sans" dir="rtl">
             {/* Header */}
-            <div className="px-6 py-5 border-b border-slate-100 dark:border-slate-800/80 dark:border-slate-800/80 flex items-center justify-between shrink-0">
+            <div className="px-6 py-5 border-b border-slate-100 dark:border-slate-700/50 dark:border-slate-800/80 dark:border-slate-800/80 flex items-center justify-between shrink-0">
               <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100 dark:text-slate-100">تعديل بيانات وصلاحيات الموظف</h3>
               <button 
                 onClick={() => setEditingEmployee(null)} 
                 disabled={isPending}
-                className="text-slate-400 hover:text-slate-600 dark:text-slate-300 dark:text-slate-300 hover:bg-slate-50 dark:bg-slate-900/50 dark:bg-slate-900/50 p-2 rounded-lg transition-colors cursor-pointer"
+                className="text-slate-400 hover:text-slate-600 dark:text-slate-300 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/50 dark:bg-slate-900/50 dark:hover:bg-slate-800/50 dark:bg-slate-900/50 dark:bg-slate-900/50 p-2 rounded-lg transition-colors cursor-pointer"
               >
                 ✕
               </button>
@@ -279,14 +279,14 @@ export function EmployeesClient({
             {/* Form Body */}
             <form onSubmit={handleEditSubmit} className="flex-1 overflow-y-auto p-6 space-y-6">
               {modalError && (
-                <div className="bg-red-50 border border-red-100 p-4 rounded-xl flex items-start text-sm text-red-700 font-bold">
+                <div className="bg-red-50 dark:bg-red-900/20 border border-red-100 dark:border-red-800/50 p-4 rounded-xl flex items-start text-sm text-red-700 dark:text-red-400 font-bold">
                   <AlertTriangle className="w-5 h-5 ml-2 text-red-500 shrink-0 mt-0.5" />
                   <span>{modalError}</span>
                 </div>
               )}
 
               {modalSuccess && (
-                <div className="bg-emerald-50 border border-emerald-100 p-4 rounded-xl flex items-start text-sm text-emerald-800 font-bold">
+                <div className="bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-100 dark:border-emerald-800/50 p-4 rounded-xl flex items-start text-sm text-emerald-800 dark:text-emerald-300 font-bold">
                   <Check className="w-5 h-5 ml-2 text-emerald-500 shrink-0 mt-0.5" />
                   <span>{modalSuccess}</span>
                 </div>
@@ -370,7 +370,7 @@ export function EmployeesClient({
               </div>
 
               {/* Permissions Section */}
-              <div className="pt-4 border-t border-slate-100 dark:border-slate-800/80 dark:border-slate-800/80">
+              <div className="pt-4 border-t border-slate-100 dark:border-slate-700/50 dark:border-slate-800/80 dark:border-slate-800/80">
                 <h4 className="text-sm font-bold text-slate-700 dark:text-slate-200 dark:text-slate-200 mb-3">الصلاحيات المخصصة</h4>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   {permissionsList.map((perm) => {
@@ -384,7 +384,7 @@ export function EmployeesClient({
                         className={`flex items-center gap-3 p-3 rounded-xl border text-right transition-all cursor-pointer ${
                           isChecked 
                             ? "border-primary bg-primary/5 text-primary" 
-                            : "border-slate-100 dark:border-slate-800/80 dark:border-slate-800/80 hover:bg-slate-50 dark:bg-slate-900/50 dark:bg-slate-900/50 text-slate-600 dark:text-slate-300 dark:text-slate-300"
+                            : "border-slate-100 dark:border-slate-700/50 dark:border-slate-800/80 dark:border-slate-800/80 hover:bg-slate-50 dark:hover:bg-slate-800/50 dark:bg-slate-900/50 dark:hover:bg-slate-800/50 dark:bg-slate-900/50 dark:bg-slate-900/50 text-slate-600 dark:text-slate-300 dark:text-slate-300"
                         }`}
                       >
                         <div className={`w-4 h-4 rounded border flex items-center justify-center ${
@@ -400,12 +400,12 @@ export function EmployeesClient({
               </div>
 
               {/* Footer Actions */}
-              <div className="pt-6 border-t border-slate-100 dark:border-slate-800/80 dark:border-slate-800/80 flex items-center justify-end gap-3 shrink-0">
+              <div className="pt-6 border-t border-slate-100 dark:border-slate-700/50 dark:border-slate-800/80 dark:border-slate-800/80 flex items-center justify-end gap-3 shrink-0">
                 <button
                   type="button"
                   onClick={() => setEditingEmployee(null)}
                   disabled={isPending}
-                  className="px-5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 dark:border-slate-700 text-slate-500 dark:text-slate-400 dark:text-slate-400 hover:bg-slate-50 dark:bg-slate-900/50 dark:bg-slate-900/50 hover:text-slate-700 dark:text-slate-200 dark:text-slate-200 font-bold transition-all text-xs cursor-pointer"
+                  className="px-5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 dark:border-slate-700 text-slate-500 dark:text-slate-400 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50 dark:bg-slate-900/50 dark:hover:bg-slate-800/50 dark:bg-slate-900/50 dark:bg-slate-900/50 hover:text-slate-700 dark:text-slate-200 dark:text-slate-200 font-bold transition-all text-xs cursor-pointer"
                 >
                   إلغاء
                 </button>

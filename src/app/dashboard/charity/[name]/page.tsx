@@ -45,12 +45,12 @@ export default async function CharityOverview({ params }: { params: Promise<{ na
 
   return (
     <div className="space-y-6">
-      <div className="bg-white dark:bg-slate-800 rounded-2xl p-10 border border-slate-100 dark:border-slate-800/80 shadow-sm relative overflow-hidden">
+      <div className="bg-white dark:bg-slate-800 rounded-2xl p-10 border border-slate-100 dark:border-slate-700/50 dark:border-slate-800/80 shadow-sm relative overflow-hidden">
         {/* Decorative subtle background element */}
         <div className="absolute top-0 left-0 w-64 h-64 bg-primary/5 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2 pointer-events-none"></div>
 
         <div className="relative z-10">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 mb-10 pb-6 border-b border-slate-100 dark:border-slate-800/80">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 mb-10 pb-6 border-b border-slate-100 dark:border-slate-700/50 dark:border-slate-800/80">
             <div className="flex items-center gap-4">
               {charity.logoUrl ? (
                 <div className="w-16 h-16 rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-700 shadow-inner bg-white dark:bg-slate-800 flex items-center justify-center">
@@ -71,14 +71,14 @@ export default async function CharityOverview({ params }: { params: Promise<{ na
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <div className="bg-slate-50 dark:bg-slate-900/50/80 p-6 rounded-2xl border border-slate-100 dark:border-slate-800/80 hover:border-slate-200 dark:border-slate-700 transition-colors">
+            <div className="bg-slate-50 dark:bg-slate-900/50/80 p-6 rounded-2xl border border-slate-100 dark:border-slate-700/50 dark:border-slate-800/80 hover:border-slate-200 dark:border-slate-700 transition-colors">
               <div className="flex items-center gap-2 mb-3">
                 <div className="text-sm font-bold text-slate-500 dark:text-slate-400">اسم الجمعية</div>
               </div>
               <div className="text-xl font-bold text-slate-800 dark:text-slate-100">{charity.name}</div>
             </div>
 
-            <div className="bg-slate-50 dark:bg-slate-900/50/80 p-6 rounded-2xl border border-slate-100 dark:border-slate-800/80 hover:border-slate-200 dark:border-slate-700 transition-colors">
+            <div className="bg-slate-50 dark:bg-slate-900/50/80 p-6 rounded-2xl border border-slate-100 dark:border-slate-700/50 dark:border-slate-800/80 hover:border-slate-200 dark:border-slate-700 transition-colors">
               <div className="flex items-center gap-2 mb-3">
                 <div className="text-sm font-bold text-slate-500 dark:text-slate-400">مجال العمل</div>
               </div>
@@ -87,7 +87,7 @@ export default async function CharityOverview({ params }: { params: Promise<{ na
               </div>
             </div>
 
-            <div className="bg-slate-50 dark:bg-slate-900/50/80 p-6 rounded-2xl border border-slate-100 dark:border-slate-800/80 hover:border-slate-200 dark:border-slate-700 transition-colors">
+            <div className="bg-slate-50 dark:bg-slate-900/50/80 p-6 rounded-2xl border border-slate-100 dark:border-slate-700/50 dark:border-slate-800/80 hover:border-slate-200 dark:border-slate-700 transition-colors">
               <div className="flex items-center gap-2 mb-3">
                 <div className="text-sm font-bold text-slate-500 dark:text-slate-400">تاريخ التأسيس</div>
               </div>
@@ -96,7 +96,7 @@ export default async function CharityOverview({ params }: { params: Promise<{ na
               </div>
             </div>
 
-            <div className="bg-slate-50 dark:bg-slate-900/50/80 p-6 rounded-2xl border border-slate-100 dark:border-slate-800/80 hover:border-slate-200 dark:border-slate-700 transition-colors">
+            <div className="bg-slate-50 dark:bg-slate-900/50/80 p-6 rounded-2xl border border-slate-100 dark:border-slate-700/50 dark:border-slate-800/80 hover:border-slate-200 dark:border-slate-700 transition-colors">
               <div className="flex items-center gap-2 mb-3">
                 <div className="text-sm font-bold text-slate-500 dark:text-slate-400">رقم التصريح</div>
               </div>
@@ -108,7 +108,7 @@ export default async function CharityOverview({ params }: { params: Promise<{ na
         </div>
       </div>
 
-      <div className="bg-white dark:bg-slate-800 rounded-2xl p-12 border border-slate-100 dark:border-slate-800/80 shadow-sm relative overflow-hidden">
+      <div className="bg-white dark:bg-slate-800 rounded-2xl p-12 border border-slate-100 dark:border-slate-700/50 dark:border-slate-800/80 shadow-sm relative overflow-hidden">
         {/* Subtle patterned background for empty state */}
         <div className="absolute inset-0 bg-[radial-gradient(#e2e8f0_1px,transparent_1px)] [background-size:16px_16px] opacity-30"></div>
 

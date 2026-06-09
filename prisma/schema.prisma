@@ -124,9 +124,14 @@ model Achievement {
   title       String
   employeeId  String
   employee    Employee @relation("EmployeeAchievements", fields: [employeeId], references: [id], onDelete: Cascade)
-  createdById String
-  createdBy   Employee @relation("CreatedAchievements", fields: [createdById], references: [id], onDelete: Cascade)
-  createdAt   DateTime @default(now())
+  createdById   String
+  createdBy     Employee @relation("CreatedAchievements", fields: [createdById], references: [id], onDelete: Cascade)
+  charityId     String?
+  charityName   String?
+  isInternal    Boolean  @default(false)
+  proofUrl      String?
+  proofPublicId String?
+  createdAt     DateTime @default(now())
   updatedAt   DateTime @updatedAt
 }
 

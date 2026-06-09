@@ -53,6 +53,11 @@ interface Achievement {
   title: string;
   employeeId: string;
   createdById: string;
+  charityId?: string | null;
+  charityName?: string | null;
+  isInternal: boolean;
+  proofUrl?: string | null;
+  proofPublicId?: string | null;
   createdAt: Date | string;
 }
 
@@ -94,6 +99,9 @@ export default function TasksClient({
   
   const [achievementTitle, setAchievementTitle] = useState("");
   const [showDirectAchievementForm, setShowDirectAchievementForm] = useState(false);
+  const [achievementCharityId, setAchievementCharityId] = useState("internal");
+  const [achievementProofFile, setAchievementProofFile] = useState<File | null>(null);
+  const [isUploadingAchievementProof, setIsUploadingAchievementProof] = useState(false);
   
 
 
@@ -164,9 +172,10 @@ export default function TasksClient({
       id: a.id,
       title: a.title,
       type: "direct" as const,
-      charityName: null,
-      isInternal: true,
+      charityName: a.charityName,
+      isInternal: a.isInternal,
       date: new Date(a.createdAt),
+      proofUrl: a.proofUrl,
       createdById: a.createdById,
       assignedToId: a.employeeId,
     })),
@@ -221,18 +230,57 @@ export default function TasksClient({
     e.preventDefault();
     if (!achievementTitle.trim()) return;
 
-    startTransition(async () => {
-      const res = await createAchievementAction(achievementTitle.trim());
+    setIsUploadingAchievementProof(true);
+    try {
+      let uploadedUrl = null;
+      let uploadedPublicId = null;
 
-      if (res.error) {
-        showNotification("error", res.error);
-      } else if (res.success && res.achievement) {
-        setAchievements((prev) => [res.achievement as Achievement, ...prev]);
-        setAchievementTitle("");
-        setShowDirectAchievementForm(false);
-        showNotification("success", "تم تسجيل الإنجاز بنجاح");
+      // Upload proof if provided
+      if (achievementProofFile) {
+        const formData = new FormData();
+        formData.append("file", achievementProofFile);
+
+        const uploadRes = await fetch("/api/tasks/upload-proof", {
+          method: "POST",
+          body: formData,
+        });
+
+        if (!uploadRes.ok) {
+          throw new Error("فشل رفع الشاهد");
+        }
+
+        const data = await uploadRes.json();
+        uploadedUrl = data.url;
+        uploadedPublicId = data.public_id;
       }
-    });
+
+      startTransition(async () => {
+        const isInternal = achievementCharityId === "internal";
+        const res = await createAchievementAction({
+          title: achievementTitle.trim(),
+          charityId: isInternal ? undefined : achievementCharityId,
+          isInternal,
+          proofUrl: uploadedUrl || undefined,
+          proofPublicId: uploadedPublicId || undefined,
+        });
+
+        if (res.error) {
+          showNotification("error", res.error);
+        } else if (res.success && res.achievement) {
+          setAchievements((prev) => [res.achievement as Achievement, ...prev]);
+          setAchievementTitle("");
+          setAchievementCharityId("internal");
+          setAchievementProofFile(null);
+          setShowDirectAchievementForm(false);
+          showNotification("success", "تم تسجيل الإنجاز بنجاح");
+        }
+        setIsUploadingAchievementProof(false);
+      });
+    } catch (err) {
+      console.error(err);
+      showNotification("error", "حدث خطأ أثناء تسجيل الإنجاز");
+      setIsUploadingAchievementProof(false);
+    }
   };
 
 
@@ -620,7 +668,7 @@ export default function TasksClient({
                             </span>
                           )}
 
-                          {isTask && item.charityName && (
+                          {item.charityName && (
                             <span className="inline-flex items-center gap-1 text-[10px] font-bold text-primary bg-primary/5 px-2 py-0.5 rounded">
                               <Building2 className="w-3 h-3" />
                               {item.charityName}
@@ -646,7 +694,7 @@ export default function TasksClient({
 
                       <div className="flex items-center gap-2">
                         {/* View Proof URL */}
-                        {isTask && item.proofUrl && (
+                        {item.proofUrl && (
                           <a
                             href={item.proofUrl}
                             target="_blank"
@@ -975,21 +1023,72 @@ export default function TasksClient({
                 />
               </div>
               
+              <div>
+                <label className="block text-xs font-bold text-slate-500 mb-2 flex items-center gap-1">
+                  <FolderPlus className="w-3.5 h-3.5 text-slate-400" />
+                  الجهة التابعة لها الإنجاز
+                </label>
+                <select
+                  value={achievementCharityId}
+                  onChange={(e) => setAchievementCharityId(e.target.value)}
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500/30 text-slate-800 transition-all font-bold cursor-pointer"
+                >
+                  <option value="internal">إنجاز داخلي لشركة زاد</option>
+                  {charities.map((ch) => (
+                    <option key={ch.id} value={ch.id}>
+                      {ch.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-500 mb-2 flex items-center gap-1">
+                  <UploadCloud className="w-3.5 h-3.5 text-slate-400" />
+                  شاهد الإنجاز (صورة)
+                </label>
+                <div className="border-2 border-dashed border-slate-200 rounded-xl p-4 text-center bg-slate-50 relative hover:border-emerald-500/50 transition-colors">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    required
+                    onChange={(e) => setAchievementProofFile(e.target.files?.[0] || null)}
+                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                    disabled={isUploadingAchievementProof}
+                  />
+                  <div className="flex items-center justify-center gap-2">
+                    <FileImage className={`w-5 h-5 ${achievementProofFile ? 'text-emerald-500' : 'text-slate-400'}`} />
+                    {achievementProofFile ? (
+                      <span className="text-xs font-bold text-slate-800 truncate max-w-[200px]">
+                        {achievementProofFile.name}
+                      </span>
+                    ) : (
+                      <span className="text-xs font-bold text-slate-600">ارفع صورة كشاهد للإنجاز</span>
+                    )}
+                  </div>
+                </div>
+              </div>
+              
               <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-100">
                 <button
                   type="button"
                   onClick={() => setShowDirectAchievementForm(false)}
+                  disabled={isUploadingAchievementProof}
                   className="px-5 py-2.5 rounded-xl border border-slate-200 text-slate-500 hover:bg-slate-50 hover:text-slate-700 font-bold transition-all text-xs cursor-pointer"
                 >
                   إلغاء
                 </button>
                 <button
                   type="submit"
-                  disabled={isPending || !achievementTitle.trim()}
+                  disabled={isUploadingAchievementProof || !achievementTitle.trim() || !achievementProofFile}
                   className="px-6 py-2.5 rounded-xl bg-emerald-600 text-white hover:bg-emerald-700 font-bold transition-all text-xs flex items-center gap-2 cursor-pointer disabled:opacity-75 disabled:cursor-not-allowed shadow-sm hover:shadow"
                 >
-                  <Sparkles className="w-4 h-4" />
-                  حفظ الإنجاز
+                  {isUploadingAchievementProof ? "جاري الرفع والحفظ..." : (
+                    <>
+                      <Sparkles className="w-4 h-4" />
+                      حفظ الإنجاز
+                    </>
+                  )}
                 </button>
               </div>
             </form>

@@ -186,15 +186,36 @@ export async function toggleTaskCompletionAction(
 }
 
 // 5. Create a direct achievement
-export async function createAchievementAction(title: string) {
+export async function createAchievementAction(data: {
+  title: string;
+  charityId?: string;
+  isInternal: boolean;
+  proofUrl?: string;
+  proofPublicId?: string;
+}) {
   try {
     const user = await getAuthenticatedUser();
     
+    let charityName = null;
+    if (!data.isInternal && data.charityId) {
+      const charity = await prisma.charity.findUnique({
+        where: { id: data.charityId },
+      });
+      if (charity) {
+        charityName = charity.name;
+      }
+    }
+
     const achievement = await prisma.achievement.create({
       data: {
-        title,
+        title: data.title,
         employeeId: user.id,
         createdById: user.id,
+        charityId: data.isInternal ? null : (data.charityId || null),
+        charityName: data.isInternal ? null : charityName,
+        isInternal: data.isInternal,
+        proofUrl: data.proofUrl || null,
+        proofPublicId: data.proofPublicId || null,
       },
     });
 
@@ -223,6 +244,14 @@ export async function deleteAchievementAction(achievementId: string) {
 
     if (!isDirectorOrAdmin && !isOwner) {
       return { error: "غير مصرح لك بحذف هذا المنجز" };
+    }
+
+    if (achievement.proofPublicId) {
+      try {
+        await cloudinary.uploader.destroy(achievement.proofPublicId);
+      } catch (err) {
+        console.error("Failed to delete image from Cloudinary", err);
+      }
     }
 
     await prisma.achievement.delete({

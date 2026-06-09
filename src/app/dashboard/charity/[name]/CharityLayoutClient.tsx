@@ -33,20 +33,20 @@ export default function CharityLayoutClient({
   ];
 
   return (
-    <div className="flex h-[100dvh] bg-slate-50 overflow-hidden" dir="rtl">
+    <div className="flex h-[100dvh] bg-slate-50 dark:bg-slate-900/50 overflow-hidden" dir="rtl">
       <CharitySidebar charityName={charityName} logoUrl={logoUrl} isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />
       
       <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden relative">
         {/* Mobile Header (Sticky & Blur) */}
-        <div className="lg:hidden sticky top-0 bg-white/80 backdrop-blur-lg border-b border-slate-200/80 h-16 flex items-center justify-between px-4 shrink-0 z-30 shadow-sm">
+        <div className="lg:hidden sticky top-0 bg-white dark:bg-slate-800/80 backdrop-blur-lg border-b border-slate-200 dark:border-slate-700/80 h-16 flex items-center justify-between px-4 shrink-0 z-30 shadow-sm">
           <div className="flex items-center gap-3">
             <button 
               onClick={() => setIsSidebarOpen(true)} 
-              className="p-2 -mr-2 text-slate-600 hover:bg-slate-100 rounded-lg transition-colors active:scale-95"
+              className="p-2 -mr-2 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:bg-slate-800 rounded-lg transition-colors active:scale-95"
             >
               <Menu className="w-6 h-6" />
             </button>
-            <span className="font-bold text-slate-800 text-lg truncate max-w-[200px]" title={charityName}>
+            <span className="font-bold text-slate-800 dark:text-slate-100 text-lg truncate max-w-[200px]" title={charityName}>
               {charityName}
             </span>
           </div>

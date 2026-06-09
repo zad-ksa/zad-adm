@@ -136,8 +136,8 @@ export default async function SurveysDashboard() {
     <main className="flex-1 min-w-0 py-8">
       <div className="mb-8 flex flex-col xl:flex-row justify-between items-start xl:items-end gap-6">
         <div>
-          <h1 className="text-3xl font-bold text-slate-800 mb-2">الاستبيانات المعبأة</h1>
-          <p className="text-slate-600">قائمة بالجمعيات وإحصائيات استبيانات الجاهزية والتحليل السداسي</p>
+          <h1 className="text-3xl font-bold text-slate-800 dark:text-slate-100 mb-2">الاستبيانات المعبأة</h1>
+          <p className="text-slate-600 dark:text-slate-300">قائمة بالجمعيات وإحصائيات استبيانات الجاهزية والتحليل السداسي</p>
         </div>
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
           <CopyLinkButton />
@@ -160,7 +160,7 @@ export default async function SurveysDashboard() {
               </div>
             </div>
           </div>
-          <div className="bg-white rounded-2xl border border-amber-200/60 overflow-hidden">
+          <div className="bg-white dark:bg-slate-800 rounded-2xl border border-amber-200/60 overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full text-right border-collapse whitespace-nowrap text-xs">
                 <thead>
@@ -174,10 +174,10 @@ export default async function SurveysDashboard() {
                     <th className="p-4 text-center font-bold">الإجراء</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-amber-100/30 text-slate-700">
+                <tbody className="divide-y divide-amber-100/30 text-slate-700 dark:text-slate-200">
                   {pendingCharitiesList.map((pending) => (
                     <tr key={pending.name} className="hover:bg-amber-50/10 transition-colors">
-                      <td className="p-4 font-bold text-slate-800 text-sm">{pending.name}</td>
+                      <td className="p-4 font-bold text-slate-800 dark:text-slate-100 text-sm">{pending.name}</td>
                       <td className="p-4 text-center font-bold">
                         {pending.readinessCount > 0 ? (
                           <span className="inline-block bg-amber-100 text-amber-800 px-3 py-1 rounded-full">
@@ -196,9 +196,9 @@ export default async function SurveysDashboard() {
                           <span className="text-slate-400 text-xs">-</span>
                         )}
                       </td>
-                      <td className="p-4 text-slate-600">{pending.establishmentDate || "-"}</td>
-                      <td className="p-4 text-slate-600">{pending.licenseNumber || "-"}</td>
-                      <td className="p-4 text-slate-500">
+                      <td className="p-4 text-slate-600 dark:text-slate-300">{pending.establishmentDate || "-"}</td>
+                      <td className="p-4 text-slate-600 dark:text-slate-300">{pending.licenseNumber || "-"}</td>
+                      <td className="p-4 text-slate-500 dark:text-slate-400">
                         {new Date(pending.latestDate).toLocaleDateString("ar-SA", {
                           year: "numeric",
                           month: "short",
@@ -221,11 +221,11 @@ export default async function SurveysDashboard() {
         </div>
       )}
 
-      <div className="bg-white rounded-2xl border border-slate-100 overflow-hidden shadow-sm">
+      <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-800/80 overflow-hidden shadow-sm">
         <div className="overflow-x-auto">
           <table className="w-full text-right border-collapse whitespace-nowrap">
             <thead>
-              <tr className="bg-slate-50 border-b border-slate-100 text-slate-500 text-sm tracking-wide">
+              <tr className="bg-slate-50 dark:bg-slate-900/50 border-b border-slate-100 dark:border-slate-800/80 text-slate-500 dark:text-slate-400 text-sm tracking-wide">
                 <th className="p-5 font-bold uppercase">اسم الجمعية</th>
                 <th className="p-5 font-bold text-center uppercase">الاستبيانات</th>
                 <th className="p-5 font-bold text-center uppercase">التحليل السداسي</th>
@@ -237,8 +237,8 @@ export default async function SurveysDashboard() {
             </thead>
             <tbody className="divide-y divide-slate-50">
               {charityStats.map((charity) => (
-                <tr key={charity.id} className="hover:bg-slate-50/50 transition-colors group">
-                  <td className="p-5 font-bold text-slate-800 group-hover:text-primary transition-colors">
+                <tr key={charity.id} className="hover:bg-slate-50 dark:bg-slate-900/50/50 transition-colors group">
+                  <td className="p-5 font-bold text-slate-800 dark:text-slate-100 group-hover:text-primary transition-colors">
                     <Link href={`/dashboard/charity/${encodeURIComponent(charity.name)}`} className="block">
                       {charity.name}
                     </Link>
@@ -261,9 +261,9 @@ export default async function SurveysDashboard() {
                       <span className="text-slate-300 text-xs">-</span>
                     )}
                   </td>
-                  <td className="p-5 text-slate-600 font-medium">{charity.establishmentDate || "-"}</td>
-                  <td className="p-5 text-slate-600 font-medium">{charity.licenseNumber || "-"}</td>
-                  <td className="p-5 text-slate-500 text-sm font-medium">
+                  <td className="p-5 text-slate-600 dark:text-slate-300 font-medium">{charity.establishmentDate || "-"}</td>
+                  <td className="p-5 text-slate-600 dark:text-slate-300 font-medium">{charity.licenseNumber || "-"}</td>
+                  <td className="p-5 text-slate-500 dark:text-slate-400 text-sm font-medium">
                     {new Date(charity.latestDate).toLocaleDateString("ar-SA", {
                       year: "numeric",
                       month: "short",
@@ -285,21 +285,21 @@ export default async function SurveysDashboard() {
                         </div>
                       </div>
                     ) : (
-                      <span className="text-slate-400 text-xs font-medium bg-slate-50 px-3 py-1.5 rounded-lg">لا يوجد مقياس</span>
+                      <span className="text-slate-400 text-xs font-medium bg-slate-50 dark:bg-slate-900/50 px-3 py-1.5 rounded-lg">لا يوجد مقياس</span>
                     )}
                   </td>
                 </tr>
               ))}
               {charityStats.length === 0 && (
                 <tr>
-                  <td colSpan={7} className="p-16 text-center text-slate-500">
-                    <div className="w-16 h-16 mx-auto bg-slate-50 rounded-2xl flex items-center justify-center mb-6">
+                  <td colSpan={7} className="p-16 text-center text-slate-500 dark:text-slate-400">
+                    <div className="w-16 h-16 mx-auto bg-slate-50 dark:bg-slate-900/50 rounded-2xl flex items-center justify-center mb-6">
                       <svg className="w-8 h-8 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                       </svg>
                     </div>
-                    <h3 className="text-xl font-bold text-slate-700 mb-2">لا توجد استبيانات</h3>
-                    <p className="font-medium text-slate-500">لم يتم إرسال أي استبيانات حتى الآن.</p>
+                    <h3 className="text-xl font-bold text-slate-700 dark:text-slate-200 mb-2">لا توجد استبيانات</h3>
+                    <p className="font-medium text-slate-500 dark:text-slate-400">لم يتم إرسال أي استبيانات حتى الآن.</p>
                   </td>
                 </tr>
               )}

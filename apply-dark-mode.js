@@ -6,6 +6,12 @@ const filesToUpdate = [
   'src/app/dashboard/(main)/news/NewsFilterClient.tsx',
   'src/app/dashboard/(main)/employees/EmployeesClient.tsx',
   'src/app/dashboard/(main)/charities/CharitiesClient.tsx',
+  'src/app/dashboard/(main)/(home)/page.tsx',
+  'src/app/dashboard/(main)/surveys/page.tsx',
+  'src/components/CharitySidebar.tsx',
+  'src/app/dashboard/charity/[name]/CharityLayoutClient.tsx',
+  'src/app/dashboard/charity/[name]/programs/page.tsx',
+  'src/app/dashboard/charity/[name]/finance/page.tsx',
 ];
 
 const replacements = [

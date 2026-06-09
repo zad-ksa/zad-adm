@@ -20,24 +20,24 @@ export default async function EmployeesPage() {
   return (
     <div className="space-y-8" dir="rtl">
       <div>
-        <h1 className="text-2xl font-bold text-slate-900 flex items-center gap-2">
+        <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
           <Users className="w-6 h-6 text-primary" />
           إدارة الموظفين
         </h1>
-        <p className="text-slate-600 mt-1">
+        <p className="text-slate-600 dark:text-slate-300 mt-1">
           إضافة موظفين جدد وإدارة صلاحياتهم
         </p>
       </div>
 
       {/* Add Employee Form */}
       <section>
-        <h2 className="text-lg font-semibold text-slate-800 mb-4">إضافة موظف جديد</h2>
+        <h2 className="text-lg font-semibold text-slate-800 dark:text-slate-100 mb-4">إضافة موظف جديد</h2>
         <AddEmployeeForm />
       </section>
 
       {/* Employees List */}
       <section>
-        <h2 className="text-lg font-semibold text-slate-800 mb-4">قائمة الموظفين</h2>
+        <h2 className="text-lg font-semibold text-slate-800 dark:text-slate-100 mb-4">قائمة الموظفين</h2>
         <EmployeesClient employees={employees as any} session={session} />
       </section>
     </div>

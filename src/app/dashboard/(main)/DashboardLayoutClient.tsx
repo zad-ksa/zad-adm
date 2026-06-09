@@ -17,20 +17,20 @@ export default function DashboardLayoutClient({ children, session }: { children:
   }, [pathname]);
 
   return (
-    <div className="flex h-[100dvh] bg-slate-50 overflow-hidden" dir="rtl">
+    <div className="flex h-[100dvh] bg-slate-50 dark:bg-slate-950 overflow-hidden" dir="rtl">
       <EmployeeSidebar session={session} isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />
       
       <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden relative">
         {/* Mobile Header (Sticky & Blur) */}
-        <div className="lg:hidden sticky top-0 bg-white/80 backdrop-blur-lg border-b border-slate-200/80 h-16 flex items-center justify-between px-4 shrink-0 z-30 shadow-sm">
+        <div className="lg:hidden sticky top-0 bg-white/80 dark:bg-slate-900/80 backdrop-blur-lg border-b border-slate-200/80 dark:border-slate-800/80 h-16 flex items-center justify-between px-4 shrink-0 z-30 shadow-sm">
           <div className="flex items-center gap-3">
             <button 
               onClick={() => setIsSidebarOpen(true)} 
-              className="p-2 -mr-2 text-slate-600 hover:bg-slate-100 rounded-lg transition-colors active:scale-95"
+              className="p-2 -mr-2 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors active:scale-95"
             >
               <Menu className="w-6 h-6" />
             </button>
-            <span className="font-bold text-slate-800 text-lg">لوحة التحكم</span>
+            <span className="font-bold text-slate-800 dark:text-slate-100 text-lg">لوحة التحكم</span>
           </div>
           {/* User profile pic can be added here optionally */}
         </div>

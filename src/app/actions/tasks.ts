@@ -25,6 +25,7 @@ export async function createTaskAction(data: {
   assignedToId: string;
   charityId?: string;
   isInternal: boolean;
+  priority?: number;
 }) {
   try {
     const user = await getAuthenticatedUser();
@@ -53,6 +54,7 @@ export async function createTaskAction(data: {
         charityName: data.isInternal ? null : charityName,
         isInternal: data.isInternal,
         isCompleted: false,
+        priority: data.priority ?? 3,
       },
     });
 

@@ -43,6 +43,7 @@ interface Task {
   charityName: string | null;
   isInternal: boolean;
   isCompleted: boolean;
+  priority?: number;
   completedAt: Date | string | null;
   proofUrl?: string | null;
   proofPublicId?: string | null;
@@ -99,6 +100,11 @@ export default function TasksClient({
   const [showTaskForm, setShowTaskForm] = useState(false);
   const [taskAssigneeId, setTaskAssigneeId] = useState(session.id);
   const [taskCharityId, setTaskCharityId] = useState("internal"); // Default to internal task
+  const [taskPriority, setTaskPriority] = useState<number>(3); // 1: High, 2: Medium, 3: Low
+  
+  const [isFabOpen, setIsFabOpen] = useState(false);
+  const [tasksSortBy, setTasksSortBy] = useState<"priority" | "date">("priority");
+  const [achievementsSortBy, setAchievementsSortBy] = useState<"date">("date");
   
   const [achievementTitle, setAchievementTitle] = useState("");
   const [showDirectAchievementForm, setShowDirectAchievementForm] = useState(false);
@@ -150,6 +156,13 @@ export default function TasksClient({
   const filteredActiveTasks = tasks.filter((t) => {
     if (visibleEmployeeId === "all") return !t.isCompleted;
     return t.assignedToId === visibleEmployeeId && !t.isCompleted;
+  }).sort((a, b) => {
+    if (tasksSortBy === "priority") {
+      const pA = a.priority ?? 3;
+      const pB = b.priority ?? 3;
+      if (pA !== pB) return pA - pB;
+    }
+    return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
   });
 
   const filteredCompletedTasks = tasks.filter((t) => {
@@ -219,6 +232,7 @@ export default function TasksClient({
         assignedToId: isDirectorOrAdmin ? taskAssigneeId : session.id,
         charityId: isInternal ? undefined : taskCharityId,
         isInternal,
+        priority: taskPriority,
       });
 
       if (res.error) {
@@ -227,6 +241,7 @@ export default function TasksClient({
         setTasks((prev) => [res.task as Task, ...prev]);
         setTaskTitle("");
         setTaskCharityId("internal");
+        setTaskPriority(3);
         showNotification("success", "تمت إضافة المهمة بنجاح");
       }
     });
@@ -486,6 +501,14 @@ export default function TasksClient({
                 <span className="w-2.5 h-5 bg-amber-400 dark:bg-amber-500 rounded-full"></span>
                 المهام الحالية ({filteredActiveTasks.length})
               </h3>
+              <select
+                value={tasksSortBy}
+                onChange={(e) => setTasksSortBy(e.target.value as "priority" | "date")}
+                className="text-xs font-bold bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-lg px-2 py-1 text-slate-600 dark:text-slate-300 outline-none focus:ring-2 focus:ring-primary/20 cursor-pointer"
+              >
+                <option value="priority">حسب الأولوية</option>
+                <option value="date">حسب تاريخ الإضافة</option>
+              </select>
             </div>
 
             <div className="space-y-4 max-h-[70vh] overflow-y-auto pr-1">
@@ -549,6 +572,15 @@ export default function TasksClient({
                         
                         {/* Task badges / metadata */}
                         <div className="flex flex-wrap items-center gap-1.5">
+                          <span className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded ${
+                            task.priority === 1 ? 'bg-red-50 text-red-600 dark:bg-red-900/20 dark:text-red-400' : 
+                            task.priority === 2 ? 'bg-amber-50 text-amber-600 dark:bg-amber-900/20 dark:text-amber-400' : 
+                            'bg-emerald-50 text-emerald-600 dark:bg-emerald-900/20 dark:text-emerald-400'
+                          }`}>
+                            <span className={`w-1.5 h-1.5 rounded-full ${task.priority === 1 ? 'bg-red-500' : task.priority === 2 ? 'bg-amber-500' : 'bg-emerald-500'}`}></span>
+                            {task.priority === 1 ? 'أولوية قصوى' : task.priority === 2 ? 'أولوية متوسطة' : 'أولوية منخفضة'}
+                          </span>
+
                           {task.isInternal ? (
                             <span className="inline-flex items-center gap-1 text-[10px] font-bold text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded">
                               <Briefcase className="w-3 h-3" />
@@ -641,6 +673,13 @@ export default function TasksClient({
                 <span className="w-2.5 h-5 bg-emerald-400 dark:bg-emerald-500 rounded-full"></span>
                 سجل المنجزات ({combinedAchievements.length})
               </h3>
+              <select
+                value={achievementsSortBy}
+                onChange={(e) => setAchievementsSortBy(e.target.value as "date")}
+                className="text-xs font-bold bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-lg px-2 py-1 text-slate-600 dark:text-slate-300 outline-none focus:ring-2 focus:ring-emerald-500/20 cursor-pointer"
+              >
+                <option value="date">حسب تاريخ الإنجاز</option>
+              </select>
             </div>
 
             <div className="space-y-4 max-h-[70vh] overflow-y-auto pr-1">
@@ -873,18 +912,31 @@ export default function TasksClient({
       )}
 
       {/* Floating Action Buttons */}
-      <div className="fixed bottom-8 left-8 z-40 flex flex-col gap-4">
+      <div className="fixed bottom-8 left-8 z-40 flex flex-col gap-4 items-center">
+        {isFabOpen && (
+          <div className="flex flex-col gap-3 animate-fade-in mb-2 items-center">
+            <button
+              onClick={() => { setShowDirectAchievementForm(true); setIsFabOpen(false); }}
+              title="تسجيل إنجاز مباشر"
+              className="bg-emerald-600 hover:bg-emerald-700 text-white w-12 h-12 rounded-full shadow-lg hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 flex items-center justify-center cursor-pointer relative group"
+            >
+              <Sparkles className="w-5 h-5" />
+              <span className="absolute right-14 bg-slate-800 text-white text-xs font-bold px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">إضافة إنجاز</span>
+            </button>
+            <button
+              onClick={() => { setShowTaskForm(true); setIsFabOpen(false); }}
+              title="إضافة مهمة جديدة"
+              className="bg-primary hover:bg-primary/95 text-white w-12 h-12 rounded-full shadow-lg hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 flex items-center justify-center cursor-pointer relative group"
+            >
+              <CheckSquare className="w-5 h-5" />
+              <span className="absolute right-14 bg-slate-800 text-white text-xs font-bold px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">إضافة مهمة</span>
+            </button>
+          </div>
+        )}
         <button
-          onClick={() => setShowDirectAchievementForm(true)}
-          title="تسجيل إنجاز مباشر"
-          className="bg-emerald-600 hover:bg-emerald-700 text-white w-12 h-12 rounded-full shadow-lg hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 flex items-center justify-center cursor-pointer"
-        >
-          <Sparkles className="w-5 h-5" />
-        </button>
-        <button
-          onClick={() => setShowTaskForm(true)}
-          title="إضافة مهمة جديدة"
-          className="bg-primary hover:bg-primary/95 text-white w-14 h-14 rounded-full shadow-xl hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 flex items-center justify-center cursor-pointer"
+          onClick={() => setIsFabOpen(!isFabOpen)}
+          title={isFabOpen ? "إغلاق" : "إضافة"}
+          className={`bg-slate-800 dark:bg-slate-700 hover:bg-slate-900 dark:hover:bg-slate-600 text-white w-14 h-14 rounded-full shadow-xl hover:shadow-2xl transition-all duration-300 flex items-center justify-center cursor-pointer ${isFabOpen ? 'rotate-45' : ''}`}
         >
           <Plus className="w-6 h-6" />
         </button>
@@ -971,6 +1023,28 @@ export default function TasksClient({
                     </option>
                   ))}
                 </select>
+              </div>
+
+              {/* Task Priority Selection */}
+              <div>
+                <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-2">الأولوية</label>
+                <div className="flex gap-3">
+                  <label className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-xl border ${taskPriority === 1 ? 'border-red-500 bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400' : 'border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'} cursor-pointer transition-all`}>
+                    <input type="radio" name="priority" checked={taskPriority === 1} onChange={() => setTaskPriority(1)} className="hidden" />
+                    <span className="w-2 h-2 rounded-full bg-red-500"></span>
+                    <span className="text-sm font-bold">قصوى</span>
+                  </label>
+                  <label className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-xl border ${taskPriority === 2 ? 'border-amber-500 bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400' : 'border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'} cursor-pointer transition-all`}>
+                    <input type="radio" name="priority" checked={taskPriority === 2} onChange={() => setTaskPriority(2)} className="hidden" />
+                    <span className="w-2 h-2 rounded-full bg-amber-500"></span>
+                    <span className="text-sm font-bold">متوسطة</span>
+                  </label>
+                  <label className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-xl border ${taskPriority === 3 ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400' : 'border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'} cursor-pointer transition-all`}>
+                    <input type="radio" name="priority" checked={taskPriority === 3} onChange={() => setTaskPriority(3)} className="hidden" />
+                    <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
+                    <span className="text-sm font-bold">منخفضة</span>
+                  </label>
+                </div>
               </div>
 
               <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-100 dark:border-slate-700/50 dark:border-slate-800/80">

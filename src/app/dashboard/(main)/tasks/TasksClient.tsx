@@ -912,34 +912,44 @@ export default function TasksClient({
       )}
 
       {/* Floating Action Buttons */}
-      <div className="fixed bottom-8 left-8 z-40 flex flex-col gap-4 items-center">
-        {isFabOpen && (
-          <div className="flex flex-col gap-3 animate-fade-in mb-2 items-center">
+      <div className="fixed bottom-8 left-8 z-40">
+        <div className="relative">
+          {/* Pop-up options */}
+          <div 
+            className={`absolute bottom-[70px] left-0 flex flex-col gap-3 transition-all duration-300 origin-bottom-left ${
+              isFabOpen ? 'opacity-100 scale-100 translate-y-0' : 'opacity-0 scale-95 translate-y-4 pointer-events-none'
+            }`}
+          >
             <button
               onClick={() => { setShowDirectAchievementForm(true); setIsFabOpen(false); }}
-              title="تسجيل إنجاز مباشر"
-              className="bg-emerald-600 hover:bg-emerald-700 text-white w-12 h-12 rounded-full shadow-lg hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 flex items-center justify-center cursor-pointer relative group"
+              className="bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:text-emerald-600 dark:hover:text-emerald-400 px-4 py-3 rounded-2xl shadow-xl hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 flex items-center justify-start gap-3 whitespace-nowrap border border-slate-100 dark:border-slate-700 font-bold w-max"
             >
-              <Sparkles className="w-5 h-5" />
-              <span className="absolute right-14 bg-slate-800 text-white text-xs font-bold px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">إضافة إنجاز</span>
+              <div className="bg-emerald-100 dark:bg-emerald-900/40 p-2 rounded-xl text-emerald-600 dark:text-emerald-400">
+                <Sparkles className="w-5 h-5" />
+              </div>
+              <span>إضافة إنجاز</span>
             </button>
+
             <button
               onClick={() => { setShowTaskForm(true); setIsFabOpen(false); }}
-              title="إضافة مهمة جديدة"
-              className="bg-primary hover:bg-primary/95 text-white w-12 h-12 rounded-full shadow-lg hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 flex items-center justify-center cursor-pointer relative group"
+              className="bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:text-primary dark:hover:text-primary px-4 py-3 rounded-2xl shadow-xl hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 flex items-center justify-start gap-3 whitespace-nowrap border border-slate-100 dark:border-slate-700 font-bold w-max"
             >
-              <CheckSquare className="w-5 h-5" />
-              <span className="absolute right-14 bg-slate-800 text-white text-xs font-bold px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">إضافة مهمة</span>
+              <div className="bg-primary/10 dark:bg-primary/20 p-2 rounded-xl text-primary">
+                <CheckSquare className="w-5 h-5" />
+              </div>
+              <span>إضافة مهمة</span>
             </button>
           </div>
-        )}
-        <button
-          onClick={() => setIsFabOpen(!isFabOpen)}
-          title={isFabOpen ? "إغلاق" : "إضافة"}
-          className={`bg-slate-800 dark:bg-slate-700 hover:bg-slate-900 dark:hover:bg-slate-600 text-white w-14 h-14 rounded-full shadow-xl hover:shadow-2xl transition-all duration-300 flex items-center justify-center cursor-pointer ${isFabOpen ? 'rotate-45' : ''}`}
-        >
-          <Plus className="w-6 h-6" />
-        </button>
+
+          {/* Main FAB */}
+          <button
+            onClick={() => setIsFabOpen(!isFabOpen)}
+            title={isFabOpen ? "إغلاق" : "إضافة"}
+            className={`bg-slate-800 dark:bg-slate-700 hover:bg-slate-900 dark:hover:bg-slate-600 text-white w-14 h-14 rounded-full shadow-xl hover:shadow-2xl transition-all duration-300 flex items-center justify-center cursor-pointer relative z-10 ${isFabOpen ? 'rotate-45' : ''}`}
+          >
+            <Plus className="w-6 h-6" />
+          </button>
+        </div>
       </div>
 
       {/* Modal: Add Task */}

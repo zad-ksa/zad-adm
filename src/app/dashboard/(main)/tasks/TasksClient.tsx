@@ -31,7 +31,8 @@ import {
   toggleTaskCompletionAction, 
   createAchievementAction, 
   deleteAchievementAction,
-  updateTaskTitleAction
+  updateTaskTitleAction,
+  updateTaskPriorityAction
 } from "@/app/actions/tasks";
 
 interface Task {
@@ -91,9 +92,9 @@ export default function TasksClient({
 }) {
   const [tasks, setTasks] = useState<Task[]>(initialTasks);
   const [achievements, setAchievements] = useState<Achievement[]>(initialAchievements);
-  const [selectedEmployeeId, setSelectedEmployeeId] = useState<string>(session.id); // Default to current user
-  
   const isDirectorOrAdmin = ["ADMIN", "EXECUTIVE_DIRECTOR", "ADMINISTRATIVE_SECRETARIAT"].includes(session.role);
+  const [selectedEmployeeId, setSelectedEmployeeId] = useState<string>(isDirectorOrAdmin ? "all" : session.id);
+
 
   // Form states
   const [taskTitle, setTaskTitle] = useState("");
@@ -128,6 +129,7 @@ export default function TasksClient({
   // Edit task state
   const [editingTaskId, setEditingTaskId] = useState<string | null>(null);
   const [editingTaskTitle, setEditingTaskTitle] = useState("");
+  const [editingPriorityTaskId, setEditingPriorityTaskId] = useState<string | null>(null);
 
   // Proof upload state
   const [completingTaskId, setCompletingTaskId] = useState<string | null>(null);
@@ -216,6 +218,21 @@ export default function TasksClient({
         setEditingTaskId(null);
         setEditingTaskTitle("");
         showNotification("success", "تم تعديل مسمى المهمة بنجاح");
+      }
+    });
+  };
+
+  const handleUpdateTaskPriority = async (taskId: string, newPriority: number) => {
+    startTransition(async () => {
+      const res = await updateTaskPriorityAction(taskId, newPriority);
+      if (res.error) {
+        showNotification("error", res.error);
+      } else {
+        setTasks((prev) =>
+          prev.map((t) => (t.id === taskId ? { ...t, priority: newPriority } : t))
+        );
+        setEditingPriorityTaskId(null);
+        showNotification("success", "تم تعديل الأولوية بنجاح");
       }
     });
   };
@@ -524,13 +541,15 @@ export default function TasksClient({
                   >
                     <div className="flex items-start gap-3">
                       {/* Completion Checkbox */}
-                      <button
-                        onClick={() => handleToggleCompletion(task.id, true)}
-                        title="تعليم كمنجز"
-                        className="w-5 h-5 rounded-md border-2 border-slate-300 dark:border-slate-600 hover:border-emerald-500 flex items-center justify-center shrink-0 cursor-pointer mt-0.5 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 transition-colors"
-                      >
-                        <span className="opacity-0 hover:opacity-100 text-emerald-500 text-xs font-bold">✓</span>
-                      </button>
+                      {(session.role === "ADMIN" || task.assignedToId === session.id) && (
+                        <button
+                          onClick={() => handleToggleCompletion(task.id, true)}
+                          title="تعليم كمنجز"
+                          className="w-5 h-5 rounded-md border-2 border-slate-300 dark:border-slate-600 hover:border-emerald-500 flex items-center justify-center shrink-0 cursor-pointer mt-0.5 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 transition-colors"
+                        >
+                          <span className="opacity-0 hover:opacity-100 text-emerald-500 text-xs font-bold">✓</span>
+                        </button>
+                      )}
 
                       <div className="space-y-1.5 flex-1">
                         {editingTaskId === task.id ? (
@@ -611,6 +630,34 @@ export default function TasksClient({
                       </div>
 
                       <div className="flex items-center gap-2">
+                        {/* Edit Priority */}
+                        {canEdit && (
+                          <div className="relative">
+                            <button
+                              type="button"
+                              onClick={() => setEditingPriorityTaskId(editingPriorityTaskId === task.id ? null : task.id)}
+                              title="تعديل الأولوية"
+                              className="p-1 text-slate-400 hover:text-amber-500 hover:bg-amber-50 dark:hover:bg-amber-900/20 rounded-lg transition-colors cursor-pointer"
+                            >
+                              <AlertCircle className="w-4 h-4" />
+                            </button>
+                            
+                            {editingPriorityTaskId === task.id && (
+                              <div className="absolute bottom-full mb-2 left-0 bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-xl shadow-xl p-2 flex flex-col gap-1 z-10 w-32">
+                                <button onClick={() => handleUpdateTaskPriority(task.id, 1)} className="text-xs font-bold px-2 py-1.5 rounded hover:bg-slate-50 dark:hover:bg-slate-700 text-right text-red-600 flex items-center gap-2 cursor-pointer">
+                                  <span className="w-1.5 h-1.5 rounded-full bg-red-500"></span> قصوى
+                                </button>
+                                <button onClick={() => handleUpdateTaskPriority(task.id, 2)} className="text-xs font-bold px-2 py-1.5 rounded hover:bg-slate-50 dark:hover:bg-slate-700 text-right text-amber-600 flex items-center gap-2 cursor-pointer">
+                                  <span className="w-1.5 h-1.5 rounded-full bg-amber-500"></span> متوسطة
+                                </button>
+                                <button onClick={() => handleUpdateTaskPriority(task.id, 3)} className="text-xs font-bold px-2 py-1.5 rounded hover:bg-slate-50 dark:hover:bg-slate-700 text-right text-emerald-600 flex items-center gap-2 cursor-pointer">
+                                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> منخفضة
+                                </button>
+                              </div>
+                            )}
+                          </div>
+                        )}
+
                         {/* Edit Title */}
                         {canEdit && (
                           <button
@@ -687,7 +734,7 @@ export default function TasksClient({
                 const assignedEmp = employees.find((e) => e.id === item.assignedToId);
                 const isTask = item.type === "task";
                 const canDeleteDirect = !isTask && (isDirectorOrAdmin || item.createdById === session.id);
-                const canUndoTask = isTask && (isDirectorOrAdmin || item.assignedToId === session.id);
+                const canUndoTask = isTask && (session.role === "ADMIN" || item.assignedToId === session.id);
 
                 return (
                   <div 

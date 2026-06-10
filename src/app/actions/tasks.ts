@@ -155,11 +155,11 @@ export async function toggleTaskCompletionAction(
       return { error: "المهمة غير موجودة" };
     }
 
-    const isDirectorOrAdmin = ["ADMIN", "EXECUTIVE_DIRECTOR", "ADMINISTRATIVE_SECRETARIAT"].includes(user.role);
+    const isAdmin = user.role === "ADMIN";
     const isAssigned = task.assignedToId === user.id;
 
-    if (!isDirectorOrAdmin && !isAssigned) {
-      return { error: "غير مصرح لك بتعديل هذه المهمة" };
+    if (!isAdmin && !isAssigned) {
+      return { error: "إتمام المهام خاص بالموظف الذي أسندت إليه المهمة أو مدير النظام فقط" };
     }
 
     if (!isCompleted && task.proofPublicId) {
@@ -321,6 +321,40 @@ export async function updateTaskTitleAction(taskId: string, newTitle: string) {
     return { success: true };
   } catch (error: any) {
     return { error: error.message || "حدث خطأ أثناء تعديل مسمى المهمة" };
+  }
+}
+
+// 8. Update task priority
+export async function updateTaskPriorityAction(taskId: string, priority: number) {
+  try {
+    const user = await getAuthenticatedUser();
+
+    const task = await prisma.task.findUnique({
+      where: { id: taskId },
+    });
+
+    if (!task) {
+      return { error: "المهمة غير موجودة" };
+    }
+
+    const isDirectorOrAdmin = ["ADMIN", "EXECUTIVE_DIRECTOR", "ADMINISTRATIVE_SECRETARIAT"].includes(user.role);
+    const isOwner = task.createdById === user.id && task.assignedToId === user.id;
+
+    if (!isDirectorOrAdmin && !isOwner) {
+      return { error: "غير مصرح لك بتعديل أولوية هذه المهمة" };
+    }
+
+    await prisma.task.update({
+      where: { id: taskId },
+      data: {
+        priority,
+      },
+    });
+
+    revalidatePath("/dashboard/tasks");
+    return { success: true };
+  } catch (error: any) {
+    return { error: error.message || "حدث خطأ أثناء تعديل أولوية المهمة" };
   }
 }
 

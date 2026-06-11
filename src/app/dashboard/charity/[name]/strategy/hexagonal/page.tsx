@@ -4,6 +4,7 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import SurveyLinkManager from "@/components/SurveyLinkManager";
 import { Award, AlertTriangle, Sparkles, ShieldAlert, Key, Rocket } from "@/components/Icons";
+import CopyTextButton from "@/components/CopyTextButton";
 
 
 export const dynamic = "force-dynamic";
@@ -117,7 +118,10 @@ export default async function HexagonalSurveysPage({ params }: { params: Promise
                 <Award className="w-6 h-6 text-emerald-600 dark:text-emerald-400" />
               </div>
               <h3 className="font-bold text-slate-800 dark:text-slate-100 transition-colors">نقاط القوة</h3>
-              <span className="mr-auto bg-slate-100 dark:bg-slate-900/50 text-slate-600 dark:text-slate-400 px-2 py-1 rounded text-xs font-bold transition-colors">{aggregated.strengths.length}</span>
+              <div className="mr-auto flex items-center gap-2">
+                <CopyTextButton texts={aggregated.strengths.map(item => item.text)} />
+                <span className="bg-slate-100 dark:bg-slate-900/50 text-slate-600 dark:text-slate-400 px-2 py-1 rounded text-xs font-bold transition-colors">{aggregated.strengths.length}</span>
+              </div>
             </div>
             <ul className="space-y-3 max-h-80 overflow-y-auto pr-2 custom-scrollbar">
               {aggregated.strengths.length > 0 ? aggregated.strengths.map((item, idx) => (
@@ -136,7 +140,10 @@ export default async function HexagonalSurveysPage({ params }: { params: Promise
                 <AlertTriangle className="w-6 h-6 text-rose-600 dark:text-rose-400" />
               </div>
               <h3 className="font-bold text-slate-800 dark:text-slate-100 transition-colors">نقاط الضعف</h3>
-              <span className="mr-auto bg-slate-100 dark:bg-slate-900/50 text-slate-600 dark:text-slate-400 px-2 py-1 rounded text-xs font-bold transition-colors">{aggregated.weaknesses.length}</span>
+              <div className="mr-auto flex items-center gap-2">
+                <CopyTextButton texts={aggregated.weaknesses.map(item => item.text)} />
+                <span className="bg-slate-100 dark:bg-slate-900/50 text-slate-600 dark:text-slate-400 px-2 py-1 rounded text-xs font-bold transition-colors">{aggregated.weaknesses.length}</span>
+              </div>
             </div>
             <ul className="space-y-3 max-h-80 overflow-y-auto pr-2 custom-scrollbar">
               {aggregated.weaknesses.length > 0 ? aggregated.weaknesses.map((item, idx) => (
@@ -155,7 +162,10 @@ export default async function HexagonalSurveysPage({ params }: { params: Promise
                 <Sparkles className="w-6 h-6 text-sky-500 dark:text-sky-400" />
               </div>
               <h3 className="font-bold text-slate-800 dark:text-slate-100 transition-colors">الفرص</h3>
-              <span className="mr-auto bg-slate-100 dark:bg-slate-900/50 text-slate-600 dark:text-slate-400 px-2 py-1 rounded text-xs font-bold transition-colors">{aggregated.opportunities.length}</span>
+              <div className="mr-auto flex items-center gap-2">
+                <CopyTextButton texts={aggregated.opportunities.map(item => item.text)} />
+                <span className="bg-slate-100 dark:bg-slate-900/50 text-slate-600 dark:text-slate-400 px-2 py-1 rounded text-xs font-bold transition-colors">{aggregated.opportunities.length}</span>
+              </div>
             </div>
             <ul className="space-y-3 max-h-80 overflow-y-auto pr-2 custom-scrollbar">
               {aggregated.opportunities.length > 0 ? aggregated.opportunities.map((item, idx) => (
@@ -174,7 +184,10 @@ export default async function HexagonalSurveysPage({ params }: { params: Promise
                 <ShieldAlert className="w-6 h-6 text-amber-500 dark:text-amber-400" />
               </div>
               <h3 className="font-bold text-slate-800 dark:text-slate-100 transition-colors">المخاطر المهددة</h3>
-              <span className="mr-auto bg-slate-100 dark:bg-slate-900/50 text-slate-600 dark:text-slate-400 px-2 py-1 rounded text-xs font-bold transition-colors">{aggregated.threats.length}</span>
+              <div className="mr-auto flex items-center gap-2">
+                <CopyTextButton texts={aggregated.threats.map(item => item.text)} />
+                <span className="bg-slate-100 dark:bg-slate-900/50 text-slate-600 dark:text-slate-400 px-2 py-1 rounded text-xs font-bold transition-colors">{aggregated.threats.length}</span>
+              </div>
             </div>
             <ul className="space-y-3 max-h-80 overflow-y-auto pr-2 custom-scrollbar">
               {aggregated.threats.length > 0 ? aggregated.threats.map((item, idx) => (
@@ -193,7 +206,10 @@ export default async function HexagonalSurveysPage({ params }: { params: Promise
                 <Key className="w-6 h-6 text-yellow-600 dark:text-yellow-400" />
               </div>
               <h3 className="font-bold text-slate-800 dark:text-slate-100 transition-colors">مقومات النجاح</h3>
-              <span className="mr-auto bg-slate-100 dark:bg-slate-900/50 text-slate-600 dark:text-slate-400 px-2 py-1 rounded text-xs font-bold transition-colors">{aggregated.success.length}</span>
+              <div className="mr-auto flex items-center gap-2">
+                <CopyTextButton texts={aggregated.success.map(item => item.text)} />
+                <span className="bg-slate-100 dark:bg-slate-900/50 text-slate-600 dark:text-slate-400 px-2 py-1 rounded text-xs font-bold transition-colors">{aggregated.success.length}</span>
+              </div>
             </div>
             <ul className="space-y-3 max-h-80 overflow-y-auto pr-2 custom-scrollbar">
               {aggregated.success.length > 0 ? aggregated.success.map((item, idx) => (
@@ -212,7 +228,10 @@ export default async function HexagonalSurveysPage({ params }: { params: Promise
                 <Rocket className="w-6 h-6 text-violet-600 dark:text-violet-400" />
               </div>
               <h3 className="font-bold text-slate-800 dark:text-slate-100 transition-colors">الميزة التنافسية</h3>
-              <span className="mr-auto bg-slate-100 dark:bg-slate-900/50 text-slate-600 dark:text-slate-400 px-2 py-1 rounded text-xs font-bold transition-colors">{aggregated.comp.length}</span>
+              <div className="mr-auto flex items-center gap-2">
+                <CopyTextButton texts={aggregated.comp.map(item => item.text)} />
+                <span className="bg-slate-100 dark:bg-slate-900/50 text-slate-600 dark:text-slate-400 px-2 py-1 rounded text-xs font-bold transition-colors">{aggregated.comp.length}</span>
+              </div>
             </div>
             <ul className="space-y-3 max-h-80 overflow-y-auto pr-2 custom-scrollbar">
               {aggregated.comp.length > 0 ? aggregated.comp.map((item, idx) => (

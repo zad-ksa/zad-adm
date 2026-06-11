@@ -259,7 +259,7 @@ export async function deleteAchievementAction(achievementId: string) {
       return { error: "المنجز غير موجود" };
     }
 
-    const isDirectorOrAdmin = ["ADMIN", "EXECUTIVE_DIRECTOR"].includes(user.role);
+    const isDirectorOrAdmin = ["ADMIN", "EXECUTIVE_DIRECTOR", "ADMINISTRATIVE_SECRETARIAT"].includes(user.role);
     const isOwner = achievement.createdById === user.id;
 
     if (!isDirectorOrAdmin && !isOwner) {

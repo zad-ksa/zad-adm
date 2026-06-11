@@ -31,7 +31,7 @@ export default async function TasksPage() {
     orderBy: { name: "asc" },
   });
 
-  const isDirectorOrAdmin = ["ADMIN", "EXECUTIVE_DIRECTOR"].includes(session.role);
+  const isDirectorOrAdmin = ["ADMIN", "EXECUTIVE_DIRECTOR", "ADMINISTRATIVE_SECRETARIAT"].includes(session.role);
 
   // Fetch initial tasks and achievements
   let initialTasks = [];

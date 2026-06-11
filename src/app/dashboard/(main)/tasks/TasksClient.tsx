@@ -490,7 +490,7 @@ export default function TasksClient({
                 setSelectedEmployeeId(e.target.value);
                 setTaskAssigneeId(e.target.value === "all" ? session.id : e.target.value);
               }}
-              className="text-sm font-bold text-slate-700 dark:text-slate-200 bg-transparent border-none outline-none cursor-pointer pr-1 pl-6"
+              className="text-sm font-bold text-slate-700 dark:text-slate-200 bg-transparent border-none outline-none cursor-pointer pr-1 pl-6 [&>option]:bg-white [&>option]:dark:bg-slate-800 [&>option]:text-slate-700 [&>option]:dark:text-slate-200"
             >
               <option value="all">كل الموظفين</option>
               {employees.map((emp) => (
@@ -521,7 +521,7 @@ export default function TasksClient({
               <select
                 value={tasksSortBy}
                 onChange={(e) => setTasksSortBy(e.target.value as "priority" | "date")}
-                className="text-xs font-bold bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-lg px-2 py-1 text-slate-600 dark:text-slate-300 outline-none focus:ring-2 focus:ring-primary/20 cursor-pointer"
+                className="text-xs font-bold bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-lg px-2 py-1 text-slate-600 dark:text-slate-300 outline-none focus:ring-2 focus:ring-primary/20 cursor-pointer [&>option]:bg-white [&>option]:dark:bg-slate-800 [&>option]:text-slate-700 [&>option]:dark:text-slate-200"
               >
                 <option value="priority">حسب الأولوية</option>
                 <option value="date">حسب تاريخ الإضافة</option>
@@ -723,7 +723,7 @@ export default function TasksClient({
               <select
                 value={achievementsSortBy}
                 onChange={(e) => setAchievementsSortBy(e.target.value as "date")}
-                className="text-xs font-bold bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-lg px-2 py-1 text-slate-600 dark:text-slate-300 outline-none focus:ring-2 focus:ring-emerald-500/20 cursor-pointer"
+                className="text-xs font-bold bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-lg px-2 py-1 text-slate-600 dark:text-slate-300 outline-none focus:ring-2 focus:ring-emerald-500/20 cursor-pointer [&>option]:bg-white [&>option]:dark:bg-slate-800 [&>option]:text-slate-700 [&>option]:dark:text-slate-200"
               >
                 <option value="date">حسب تاريخ الإنجاز</option>
               </select>
@@ -927,7 +927,7 @@ export default function TasksClient({
                 value={reassignToEmployeeId}
                 onChange={(e) => setReassignToEmployeeId(e.target.value)}
                 required
-                className="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-100 dark:border-slate-700/50 dark:border-slate-800/80 rounded-xl px-4 py-3 text-sm outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary/30 focus:bg-white dark:focus:bg-slate-800 dark:bg-slate-800 dark:focus:bg-slate-800 dark:bg-slate-800 text-slate-800 dark:text-slate-100 transition-all font-bold cursor-pointer"
+                className="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-100 dark:border-slate-700/50 dark:border-slate-800/80 rounded-xl px-4 py-3 text-sm outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary/30 focus:bg-white dark:focus:bg-slate-800 text-slate-800 dark:text-slate-100 transition-all font-bold cursor-pointer [&>option]:bg-white [&>option]:dark:bg-slate-800 [&>option]:text-slate-700 [&>option]:dark:text-slate-200"
               >
                 <option value="" disabled>اختر الموظف...</option>
                 {employees.map((emp) => (
@@ -1051,7 +1051,7 @@ export default function TasksClient({
                   <select
                     value={taskAssigneeId}
                     onChange={(e) => setTaskAssigneeId(e.target.value)}
-                    className="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-sm outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary/30 text-slate-800 dark:text-slate-100 transition-all font-bold cursor-pointer"
+                    className="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-sm outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary/30 text-slate-800 dark:text-slate-100 transition-all font-bold cursor-pointer [&>option]:bg-white [&>option]:dark:bg-slate-800 [&>option]:text-slate-700 [&>option]:dark:text-slate-200"
                   >
                     {employees.map((emp) => (
                       <option key={emp.id} value={emp.id}>
@@ -1071,7 +1071,7 @@ export default function TasksClient({
                 <select
                   value={taskCharityId}
                   onChange={(e) => setTaskCharityId(e.target.value)}
-                  className="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-sm outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary/30 text-slate-800 dark:text-slate-100 transition-all font-bold cursor-pointer"
+                  className="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-sm outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary/30 text-slate-800 dark:text-slate-100 transition-all font-bold cursor-pointer [&>option]:bg-white [&>option]:dark:bg-slate-800 [&>option]:text-slate-700 [&>option]:dark:text-slate-200"
                 >
                   <option value="internal">مهام داخلية في شركة زاد</option>
                   {charities.map((ch) => (
@@ -1173,7 +1173,7 @@ export default function TasksClient({
                 <select
                   value={achievementCharityId}
                   onChange={(e) => setAchievementCharityId(e.target.value)}
-                  className="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-sm outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500/30 text-slate-800 dark:text-slate-100 transition-all font-bold cursor-pointer"
+                  className="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-sm outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500/30 text-slate-800 dark:text-slate-100 transition-all font-bold cursor-pointer [&>option]:bg-white [&>option]:dark:bg-slate-800 [&>option]:text-slate-700 [&>option]:dark:text-slate-200"
                 >
                   <option value="internal">إنجاز داخلي لشركة زاد</option>
                   {charities.map((ch) => (
@@ -1194,7 +1194,7 @@ export default function TasksClient({
                     value={achievementCategory}
                     onChange={(e) => setAchievementCategory(e.target.value)}
                     required
-                    className="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-sm outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500/30 text-slate-800 dark:text-slate-100 transition-all font-bold cursor-pointer"
+                    className="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-sm outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500/30 text-slate-800 dark:text-slate-100 transition-all font-bold cursor-pointer [&>option]:bg-white [&>option]:dark:bg-slate-800 [&>option]:text-slate-700 [&>option]:dark:text-slate-200"
                   >
                     <option value="الاستراتيجية">الاستراتيجية</option>
                     <option value="التقنية">التقنية</option>

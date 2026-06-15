@@ -20,7 +20,8 @@ const getDashboardStats = async () => {
     tasksCompletedToday,
     tasksCompletedThisWeek,
     urgentTasks,
-    recentAchievements
+    recentAchievements,
+    recentCompletedTasks
   ] = await Promise.all([
     prisma.charity.count(),
     prisma.task.count(),
@@ -47,10 +48,37 @@ const getDashboardStats = async () => {
       take: 5, 
       orderBy: { date: 'desc' }, 
       include: { employee: true } 
+    }),
+    prisma.task.findMany({
+      where: { isCompleted: true },
+      take: 5,
+      orderBy: { completedAt: 'desc' },
+      include: { assignedTo: true }
     })
   ]);
 
   const completionPercentage = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
+
+  const combinedActivities = [
+    ...recentAchievements.map(ach => ({
+      id: `ach-${ach.id}`,
+      type: 'achievement' as const,
+      title: ach.title,
+      charityName: ach.charityName,
+      date: ach.date,
+      person: ach.employee,
+      originalId: ach.id
+    })),
+    ...recentCompletedTasks.map(task => ({
+      id: `task-${task.id}`,
+      type: 'task' as const,
+      title: task.title,
+      charityName: task.charityName,
+      date: task.completedAt || task.updatedAt,
+      person: task.assignedTo,
+      originalId: task.id
+    }))
+  ].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()).slice(0, 5);
 
   return {
     charitiesCount,
@@ -60,7 +88,7 @@ const getDashboardStats = async () => {
     tasksCompletedThisWeek,
     completionPercentage,
     urgentTasks,
-    recentAchievements
+    combinedActivities
   };
 };
 
@@ -222,40 +250,51 @@ export default async function MainDashboard() {
           </div>
 
           <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 p-6 shadow-sm divide-y divide-slate-100 dark:divide-slate-700">
-            {stats.recentAchievements.map((ach, idx) => (
-              <div key={ach.id} className={`group ${idx > 0 ? "pt-5" : ""} ${idx < stats.recentAchievements.length - 1 ? "pb-5" : ""}`}>
+            {stats.combinedActivities.map((activity, idx) => (
+              <div key={activity.id} className={`group ${idx > 0 ? "pt-5" : ""} ${idx < stats.combinedActivities.length - 1 ? "pb-5" : ""}`}>
                 <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
-                  {ach.charityName && (
-                    <span className="inline-block text-[10px] font-bold text-primary dark:text-primary bg-primary/5 dark:bg-primary/10 px-2 py-0.5 rounded-md">
-                      {ach.charityName}
-                    </span>
-                  )}
+                  <div className="flex items-center gap-2">
+                    {activity.type === 'achievement' ? (
+                      <span className="inline-block text-[10px] font-bold text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/30 px-2 py-0.5 rounded-md border border-amber-200 dark:border-amber-700/50">
+                        إنجاز
+                      </span>
+                    ) : (
+                      <span className="inline-block text-[10px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/30 px-2 py-0.5 rounded-md border border-emerald-200 dark:border-emerald-700/50">
+                        مهمة منجزة
+                      </span>
+                    )}
+                    {activity.charityName && (
+                      <span className="inline-block text-[10px] font-bold text-primary dark:text-primary bg-primary/5 dark:bg-primary/10 px-2 py-0.5 rounded-md">
+                        {activity.charityName}
+                      </span>
+                    )}
+                  </div>
                   <div className="flex items-center gap-1.5 text-[10px] text-slate-400 dark:text-slate-500 font-bold">
                     <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                     </svg>
-                    {new Date(ach.date).toLocaleDateString("ar-SA")}
+                    {new Date(activity.date).toLocaleDateString("ar-SA")}
                   </div>
                 </div>
                 <h4 className="font-bold text-slate-800 dark:text-slate-100 text-sm mb-1.5 group-hover:text-primary dark:group-hover:text-primary transition-colors duration-300">
-                  {ach.title}
+                  {activity.title}
                 </h4>
                 <div className="flex items-center gap-2 mt-2">
-                  {ach.employee?.avatarUrl ? (
-                    <img src={ach.employee.avatarUrl} alt={ach.employee.name} className="w-6 h-6 rounded-full object-cover border border-slate-200 dark:border-slate-700" />
+                  {activity.person?.avatarUrl ? (
+                    <img src={activity.person.avatarUrl} alt={activity.person.name} className="w-6 h-6 rounded-full object-cover border border-slate-200 dark:border-slate-700" />
                   ) : (
-                    <div className="w-6 h-6 rounded-full bg-amber-50 dark:bg-amber-900/30 flex items-center justify-center text-amber-600 dark:text-amber-400 text-xs font-bold border border-amber-200 dark:border-amber-700/50">
-                      {ach.employee?.name?.charAt(0) || '?'}
+                    <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold border ${activity.type === 'achievement' ? 'bg-amber-50 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 border-amber-200 dark:border-amber-700/50' : 'bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 border-emerald-200 dark:border-emerald-700/50'}`}>
+                      {activity.person?.name?.charAt(0) || '?'}
                     </div>
                   )}
-                  <span className="text-xs text-slate-600 dark:text-slate-400 font-medium">بواسطة: {ach.employee?.name || "غير محدد"}</span>
+                  <span className="text-xs text-slate-600 dark:text-slate-400 font-medium">بواسطة: {activity.person?.name || "غير محدد"}</span>
                 </div>
               </div>
             ))}
 
-            {stats.recentAchievements.length === 0 && (
+            {stats.combinedActivities.length === 0 && (
               <div className="text-center py-16 text-slate-400 dark:text-slate-500">
-                <p className="text-sm font-semibold">لا توجد إنجازات مسجلة مؤخراً.</p>
+                <p className="text-sm font-semibold">لا توجد إنجازات أو مهام منجزة مسجلة مؤخراً.</p>
               </div>
             )}
           </div>

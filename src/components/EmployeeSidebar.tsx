@@ -62,7 +62,8 @@ export default function EmployeeSidebar({
     ];
 
     if (userState?.role !== "GENERAL_MANAGER") {
-      navItems.push({ label: "المهام والمنجزات", href: "/dashboard/tasks", icon: CheckSquare });
+      const isManager = ["ADMIN", "EXECUTIVE_DIRECTOR"].includes(userState?.role);
+      navItems.push({ label: isManager ? "المهام والمنجزات" : "مهامي", href: "/dashboard/tasks", icon: CheckSquare });
     }
 
     if (userState?.role === "ADMIN" || userState?.role === "EXECUTIVE_DIRECTOR" || userState?.role === "GENERAL_MANAGER") {

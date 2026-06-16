@@ -470,7 +470,7 @@ export default function TasksClient({
         <div>
           <h1 className="text-3xl font-bold text-slate-800 dark:text-slate-100 flex items-center gap-3">
             <CheckSquare className="w-8 h-8 text-primary" />
-            المهام والمنجزات
+            {isDirectorOrAdmin ? "المهام والمنجزات" : "مهامي"}
           </h1>
           <p className="text-slate-600 dark:text-slate-300 mt-1 font-medium">
             متابعة المهام اليومية وتسجيل المنجزات المباشرة

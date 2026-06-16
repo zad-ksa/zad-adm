@@ -260,7 +260,7 @@ export default function HexagonalSurvey() {
                 )}
 
                 <h2 className="text-xl sm:text-2xl font-extrabold text-slate-800 mb-3 leading-tight">
-                  التحليل السداسي للجمعيات الخيرية
+                  التحليل السداسي للجمعيات الأهلية
                 </h2>
 
                 {prefilledCharityName ? (

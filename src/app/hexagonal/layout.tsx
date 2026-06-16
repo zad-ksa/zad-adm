@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: "التحليل السداسي | زاد التنموية",
-  description: "التحليل السداسي للجمعيات الخيرية - إعداد زاد التنموية",
+  description: "التحليل السداسي للجمعيات الأهلية - إعداد زاد التنموية",
 };
 
 export default function HexagonalLayout({

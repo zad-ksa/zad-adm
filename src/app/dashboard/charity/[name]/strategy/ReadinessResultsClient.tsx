@@ -15,6 +15,7 @@ const ChevronUpIcon = () => (
 export default function ReadinessResultsClient({ responses }: { responses: any[] }) {
   const [excludedIds, setExcludedIds] = useState<Set<string>>(new Set());
   const [openSections, setOpenSections] = useState<Set<number>>(new Set());
+  const [openCategories, setOpenCategories] = useState<Set<string>>(new Set());
   const [showAllParticipants, setShowAllParticipants] = useState(false);
 
   const toggleExclude = (id: string) => {
@@ -28,6 +29,15 @@ export default function ReadinessResultsClient({ responses }: { responses: any[]
 
   const toggleSection = (id: number) => {
     setOpenSections(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const toggleCategory = (id: string) => {
+    setOpenCategories(prev => {
       const next = new Set(prev);
       if (next.has(id)) next.delete(id);
       else next.add(id);
@@ -294,68 +304,113 @@ export default function ReadinessResultsClient({ responses }: { responses: any[]
           تصنيف الأسئلة حسب نسبة الجاهزية
         </h3>
         
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="bg-white dark:bg-slate-800 rounded-2xl p-6 border border-slate-100 dark:border-slate-700 shadow-sm space-y-4 transition-colors">
-             <h4 className="font-bold text-[#00b050] flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-[#00b050]"></span>
-                نقاط القوة (85% - 100%)
-             </h4>
-             <div className="space-y-3 max-h-[400px] overflow-y-auto custom-scrollbar pr-2">
-               {categorizedQuestions.green.map((q) => (
-                 <div key={q.id} className="p-3 bg-[#00b050]/5 dark:bg-[#00b050]/10 rounded-xl border border-[#00b050]/20 transition-colors">
-                    <div className="text-[10px] font-bold text-[#00b050]/80 mb-1">{q.sectionTitle}</div>
-                    <div className="text-sm font-medium text-slate-700 dark:text-slate-200 flex justify-between gap-3 items-start">
-                      <span className="leading-relaxed">{q.text}</span>
-                      <span className="font-bold text-[#00b050] bg-white dark:bg-slate-800 px-2 py-0.5 rounded shadow-sm text-xs">{q.averagePercentage}%</span>
+        <div className="space-y-4">
+          {/* Green Category */}
+          <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm overflow-hidden transition-colors">
+            <div 
+              className="p-5 flex justify-between items-center cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-900/50 transition-colors"
+              onClick={() => toggleCategory('green')}
+            >
+              <h4 className="font-bold text-[#00b050] flex items-center gap-2">
+                 <span className="w-2 h-2 rounded-full bg-[#00b050]"></span>
+                 نقاط القوة (85% - 100%)
+                 <span className="text-xs bg-[#00b050]/10 px-2 py-0.5 rounded-full mr-2">{categorizedQuestions.green.length} أسئلة</span>
+              </h4>
+              <div className="text-slate-400">
+                {openCategories.has('green') ? <ChevronUpIcon /> : <ChevronDownIcon />}
+              </div>
+            </div>
+            
+            {openCategories.has('green') && (
+              <div className="p-5 pt-0 border-t border-slate-100 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-900/20">
+                <div className="space-y-3 mt-4 max-h-[600px] overflow-y-auto custom-scrollbar pr-2">
+                  {categorizedQuestions.green.map((q: any) => (
+                    <div key={q.id} className="p-3 bg-[#00b050]/5 dark:bg-[#00b050]/10 rounded-xl border border-[#00b050]/20 transition-colors">
+                       <div className="text-[10px] font-bold text-[#00b050]/80 mb-1">{q.sectionTitle}</div>
+                       <div className="text-sm font-medium text-slate-700 dark:text-slate-200 flex justify-between gap-3 items-start">
+                         <span className="leading-relaxed">{q.text}</span>
+                         <span className="font-bold text-[#00b050] bg-white dark:bg-slate-800 px-2 py-0.5 rounded shadow-sm text-xs">{q.averagePercentage}%</span>
+                       </div>
                     </div>
-                 </div>
-               ))}
-               {categorizedQuestions.green.length === 0 && (
-                 <p className="text-sm text-slate-500 text-center py-8">لا توجد أسئلة في هذا النطاق</p>
-               )}
-             </div>
+                  ))}
+                  {categorizedQuestions.green.length === 0 && (
+                    <p className="text-sm text-slate-500 text-center py-4">لا توجد أسئلة في هذا النطاق</p>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
 
-          <div className="bg-white dark:bg-slate-800 rounded-2xl p-6 border border-slate-100 dark:border-slate-700 shadow-sm space-y-4 transition-colors">
-             <h4 className="font-bold text-[#c29300] flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-[#ffc000]"></span>
-                نقاط للتحسين (70% - 84%)
-             </h4>
-             <div className="space-y-3 max-h-[400px] overflow-y-auto custom-scrollbar pr-2">
-               {categorizedQuestions.yellow.map((q) => (
-                 <div key={q.id} className="p-3 bg-[#ffc000]/5 dark:bg-[#ffc000]/10 rounded-xl border border-[#ffc000]/20 transition-colors">
-                    <div className="text-[10px] font-bold text-[#c29300]/80 mb-1">{q.sectionTitle}</div>
-                    <div className="text-sm font-medium text-slate-700 dark:text-slate-200 flex justify-between gap-3 items-start">
-                      <span className="leading-relaxed">{q.text}</span>
-                      <span className="font-bold text-[#c29300] bg-white dark:bg-slate-800 px-2 py-0.5 rounded shadow-sm text-xs">{q.averagePercentage}%</span>
+          {/* Yellow Category */}
+          <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm overflow-hidden transition-colors">
+            <div 
+              className="p-5 flex justify-between items-center cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-900/50 transition-colors"
+              onClick={() => toggleCategory('yellow')}
+            >
+              <h4 className="font-bold text-[#c29300] flex items-center gap-2">
+                 <span className="w-2 h-2 rounded-full bg-[#ffc000]"></span>
+                 نقاط للتحسين (70% - 84%)
+                 <span className="text-xs bg-[#ffc000]/10 px-2 py-0.5 rounded-full mr-2">{categorizedQuestions.yellow.length} أسئلة</span>
+              </h4>
+              <div className="text-slate-400">
+                {openCategories.has('yellow') ? <ChevronUpIcon /> : <ChevronDownIcon />}
+              </div>
+            </div>
+            
+            {openCategories.has('yellow') && (
+              <div className="p-5 pt-0 border-t border-slate-100 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-900/20">
+                <div className="space-y-3 mt-4 max-h-[600px] overflow-y-auto custom-scrollbar pr-2">
+                  {categorizedQuestions.yellow.map((q: any) => (
+                    <div key={q.id} className="p-3 bg-[#ffc000]/5 dark:bg-[#ffc000]/10 rounded-xl border border-[#ffc000]/20 transition-colors">
+                       <div className="text-[10px] font-bold text-[#c29300]/80 mb-1">{q.sectionTitle}</div>
+                       <div className="text-sm font-medium text-slate-700 dark:text-slate-200 flex justify-between gap-3 items-start">
+                         <span className="leading-relaxed">{q.text}</span>
+                         <span className="font-bold text-[#c29300] bg-white dark:bg-slate-800 px-2 py-0.5 rounded shadow-sm text-xs">{q.averagePercentage}%</span>
+                       </div>
                     </div>
-                 </div>
-               ))}
-               {categorizedQuestions.yellow.length === 0 && (
-                 <p className="text-sm text-slate-500 text-center py-8">لا توجد أسئلة في هذا النطاق</p>
-               )}
-             </div>
+                  ))}
+                  {categorizedQuestions.yellow.length === 0 && (
+                    <p className="text-sm text-slate-500 text-center py-4">لا توجد أسئلة في هذا النطاق</p>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
 
-          <div className="bg-white dark:bg-slate-800 rounded-2xl p-6 border border-slate-100 dark:border-slate-700 shadow-sm space-y-4 transition-colors">
-             <h4 className="font-bold text-[#ff0000] flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-[#ff0000]"></span>
-                نقاط الضعف (أقل من 70%)
-             </h4>
-             <div className="space-y-3 max-h-[400px] overflow-y-auto custom-scrollbar pr-2">
-               {categorizedQuestions.red.map((q) => (
-                 <div key={q.id} className="p-3 bg-[#ff0000]/5 dark:bg-[#ff0000]/10 rounded-xl border border-[#ff0000]/20 transition-colors">
-                    <div className="text-[10px] font-bold text-[#ff0000]/80 mb-1">{q.sectionTitle}</div>
-                    <div className="text-sm font-medium text-slate-700 dark:text-slate-200 flex justify-between gap-3 items-start">
-                      <span className="leading-relaxed">{q.text}</span>
-                      <span className="font-bold text-[#ff0000] bg-white dark:bg-slate-800 px-2 py-0.5 rounded shadow-sm text-xs">{q.averagePercentage}%</span>
+          {/* Red Category */}
+          <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm overflow-hidden transition-colors">
+            <div 
+              className="p-5 flex justify-between items-center cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-900/50 transition-colors"
+              onClick={() => toggleCategory('red')}
+            >
+              <h4 className="font-bold text-[#ff0000] flex items-center gap-2">
+                 <span className="w-2 h-2 rounded-full bg-[#ff0000]"></span>
+                 نقاط الضعف (أقل من 70%)
+                 <span className="text-xs bg-[#ff0000]/10 px-2 py-0.5 rounded-full mr-2">{categorizedQuestions.red.length} أسئلة</span>
+              </h4>
+              <div className="text-slate-400">
+                {openCategories.has('red') ? <ChevronUpIcon /> : <ChevronDownIcon />}
+              </div>
+            </div>
+            
+            {openCategories.has('red') && (
+              <div className="p-5 pt-0 border-t border-slate-100 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-900/20">
+                <div className="space-y-3 mt-4 max-h-[600px] overflow-y-auto custom-scrollbar pr-2">
+                  {categorizedQuestions.red.map((q: any) => (
+                    <div key={q.id} className="p-3 bg-[#ff0000]/5 dark:bg-[#ff0000]/10 rounded-xl border border-[#ff0000]/20 transition-colors">
+                       <div className="text-[10px] font-bold text-[#ff0000]/80 mb-1">{q.sectionTitle}</div>
+                       <div className="text-sm font-medium text-slate-700 dark:text-slate-200 flex justify-between gap-3 items-start">
+                         <span className="leading-relaxed">{q.text}</span>
+                         <span className="font-bold text-[#ff0000] bg-white dark:bg-slate-800 px-2 py-0.5 rounded shadow-sm text-xs">{q.averagePercentage}%</span>
+                       </div>
                     </div>
-                 </div>
-               ))}
-               {categorizedQuestions.red.length === 0 && (
-                 <p className="text-sm text-slate-500 text-center py-8">لا توجد أسئلة في هذا النطاق</p>
-               )}
-             </div>
+                  ))}
+                  {categorizedQuestions.red.length === 0 && (
+                    <p className="text-sm text-slate-500 text-center py-4">لا توجد أسئلة في هذا النطاق</p>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>

@@ -12,6 +12,8 @@ export interface Task {
   completedAt?: Date | string | null;
   createdAt: Date | string;
   updatedAt?: Date | string;
+  proofUrl?: string | null;
+  proofPublicId?: string | null;
 }
 
 export interface Achievement {
@@ -26,7 +28,7 @@ export interface Achievement {
   proofPublicId?: string | null;
   createdAt: Date | string;
   date: Date | string;
-  category: string;
+  category?: string;
 }
 
 export interface Employee {

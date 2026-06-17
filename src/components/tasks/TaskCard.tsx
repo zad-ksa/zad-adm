@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Check, X, Briefcase, Building2, User, Calendar, AlertCircle, Pencil, ArrowLeftRight, Trash2 } from "@/components/Icons";
+import { Check, X, Briefcase, Building2, User, Calendar, AlertCircle, Pencil, ArrowLeftRight, Trash2 } from "lucide-react";
 import { Task, Employee, Session } from "@/types";
 import { TASK_STATUS, TASK_PRIORITIES } from "@/lib/constants";
 

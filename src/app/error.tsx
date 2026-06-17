@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
-import { AlertCircle } from "@/components/Icons";
+import { AlertCircle } from "lucide-react";
 
 export default function Error({
   error,

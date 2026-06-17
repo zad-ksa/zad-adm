@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { X, Sparkles, FolderPlus, Folder, Calendar, UploadCloud, FileImage } from "@/components/Icons";
+import { X, Sparkles, FolderPlus, Folder, Calendar, UploadCloud, FileImage } from "lucide-react";
 import { Charity } from "@/types";
 
 interface AchievementFormModalProps {

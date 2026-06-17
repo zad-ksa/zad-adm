@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { X, Plus, UserPlus, FolderPlus } from "@/components/Icons";
+import { X, Plus, UserPlus, FolderPlus } from "lucide-react";
 import { Employee, Charity } from "@/types";
 
 interface TaskFormModalProps {

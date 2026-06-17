@@ -212,6 +212,42 @@ export default function ReadinessPrintReport({
         </div>
       </PageWrapper>
 
+      <style dangerouslySetInnerHTML={{__html: `
+        @page {
+          size: A4 landscape;
+          margin: 0;
+        }
+        @media print {
+          aside,
+          nav,
+          .lg\\:hidden,
+          .print\\:hidden,
+          button {
+            display: none !important;
+          }
+
+          html, body, main, [class*="h-\\[100dvh\\]"], [class*="overflow-"] {
+            height: auto !important;
+            overflow: visible !important;
+            position: static !important;
+          }
+
+          body {
+            background-color: white !important;
+            print-color-adjust: exact;
+            -webkit-print-color-adjust: exact;
+            padding: 0 !important;
+            margin: 0 !important;
+          }
+
+          main {
+            padding: 0 !important;
+            margin: 0 !important;
+            width: 100% !important;
+            max-width: none !important;
+          }
+        }
+      `}} />
     </div>
   );
 }

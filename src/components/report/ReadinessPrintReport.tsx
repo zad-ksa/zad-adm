@@ -42,15 +42,15 @@ const CriteriaList = ({ items, startIndex = 0 }: { items: QuestionPrintData[], s
   const renderItem = (q: QuestionPrintData) => {
     const colors = getPercentageColorStyle(q.averagePercentage);
     return (
-      <div key={q.id} className="flex items-center justify-between gap-4 py-2">
-        <div className="flex items-start gap-3 flex-1">
-          <div className="w-6 h-6 rounded-full bg-slate-700 text-white flex items-center justify-center text-[10px] font-bold shrink-0 mt-0.5 shadow-sm">
+      <div key={q.id} className="flex items-center justify-between gap-3 py-1.5 border-b border-slate-200/50 last:border-0">
+        <div className="flex items-start gap-2.5 flex-1">
+          <div className="w-5 h-5 rounded-full bg-slate-700 text-white flex items-center justify-center text-[9px] font-bold shrink-0 mt-0.5 shadow-sm">
             {q.globalIndex}
           </div>
-          <p className="text-[10px] text-slate-700 font-bold leading-snug flex-1 text-right">{q.text}</p>
+          <p className="text-[10px] text-slate-800 font-bold leading-tight flex-1 text-right">{q.text}</p>
         </div>
         <div 
-          className="px-3 py-1 rounded-full text-[10px] font-bold shadow-sm shrink-0 w-12 text-center"
+          className="px-2 py-0.5 rounded-full text-[10px] font-bold shadow-sm shrink-0 w-11 text-center"
           style={{ backgroundColor: colors.badgeBg, color: colors.badgeText }}
         >
           {q.averagePercentage}%
@@ -60,11 +60,11 @@ const CriteriaList = ({ items, startIndex = 0 }: { items: QuestionPrintData[], s
   };
 
   return (
-    <div className="grid grid-cols-2 gap-x-12 gap-y-2 mt-8">
-      <div className="flex flex-col gap-1">
+    <div className="grid grid-cols-2 gap-x-10 gap-y-1 mt-4">
+      <div className="flex flex-col gap-0.5">
         {rightCol.map(renderItem)}
       </div>
-      <div className="flex flex-col gap-1">
+      <div className="flex flex-col gap-0.5">
         {leftCol.map(renderItem)}
       </div>
     </div>

@@ -21,7 +21,9 @@ const getDashboardStats = async () => {
     tasksCompletedThisWeek,
     urgentTasks,
     recentAchievements,
-    recentCompletedTasks
+    recentAchievements,
+    recentCompletedTasks,
+    inProgressTasks
   ] = await Promise.all([
     prisma.charity.count(),
     prisma.task.count(),
@@ -52,7 +54,14 @@ const getDashboardStats = async () => {
     prisma.task.findMany({
       where: { isCompleted: true },
       take: 5,
+      take: 5,
       orderBy: { completedAt: 'desc' },
+      include: { assignedTo: true }
+    }),
+    prisma.task.findMany({
+      where: { status: "IN_PROGRESS", isCompleted: false },
+      take: 5,
+      orderBy: { updatedAt: 'desc' },
       include: { assignedTo: true }
     })
   ]);
@@ -86,9 +95,11 @@ const getDashboardStats = async () => {
     completedTasks,
     tasksCompletedToday,
     tasksCompletedThisWeek,
+    tasksCompletedThisWeek,
     completionPercentage,
     urgentTasks,
-    combinedActivities
+    combinedActivities,
+    inProgressTasks
   };
 };
 
@@ -181,8 +192,8 @@ export default async function MainDashboard() {
         </p>
       </div>
 
-      {/* Two Column Section: Tasks & Achievements */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+      {/* Three Column Section: Tasks & Achievements */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         
         {/* Urgent Tasks Column */}
         <div className="space-y-6">
@@ -240,11 +251,67 @@ export default async function MainDashboard() {
           </div>
         </div>
 
-        {/* Achievements Column */}
+        {/* In Progress Tasks Column */}
         <div className="space-y-6">
           <div className="flex items-center justify-between">
             <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-100 flex items-center gap-3">
               <span className="w-2.5 h-6 bg-amber-400 dark:bg-amber-500 rounded-full"></span>
+              المهام الجاري تنفيذها
+            </h2>
+            <Link
+              href="/dashboard/tasks"
+              className="text-xs font-bold text-primary dark:text-primary bg-primary/5 dark:bg-primary/10 hover:bg-primary/10 dark:hover:bg-primary/20 px-3 py-1.5 rounded-lg transition-all duration-300 flex items-center gap-1 shrink-0"
+            >
+              عرض الكل
+              <svg className="w-3.5 h-3.5 transition-transform duration-300 transform hover:-translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+              </svg>
+            </Link>
+          </div>
+
+          <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 p-6 shadow-sm divide-y divide-slate-100 dark:divide-slate-700">
+            {stats.inProgressTasks.map((task, idx) => (
+              <div key={task.id} className={`group ${idx > 0 ? "pt-5" : ""} ${idx < stats.inProgressTasks.length - 1 ? "pb-5" : ""}`}>
+                <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
+                  <span className="inline-block text-[10px] font-bold text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 px-2 py-0.5 rounded-md border border-amber-200 dark:border-amber-700/50">
+                    جاري التنفيذ
+                  </span>
+                  <div className="flex items-center gap-1.5 text-[10px] text-slate-400 dark:text-slate-500 font-bold">
+                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                    {new Date(task.updatedAt).toLocaleDateString("ar-SA")}
+                  </div>
+                </div>
+                <h4 className="font-bold text-slate-800 dark:text-slate-100 text-sm mb-1.5 group-hover:text-primary dark:group-hover:text-primary transition-colors duration-300">
+                  {task.title}
+                </h4>
+                <div className="flex items-center gap-2 mt-2">
+                  {task.assignedTo?.avatarUrl ? (
+                    <img src={task.assignedTo.avatarUrl} alt={task.assignedTo.name} className="w-6 h-6 rounded-full object-cover border border-slate-200 dark:border-slate-700" />
+                  ) : (
+                    <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center text-primary text-xs font-bold border border-primary/20">
+                      {task.assignedTo?.name?.charAt(0) || '?'}
+                    </div>
+                  )}
+                  <span className="text-xs text-slate-600 dark:text-slate-400 font-medium">{task.assignedTo?.name || "غير محدد"}</span>
+                </div>
+              </div>
+            ))}
+
+            {stats.inProgressTasks.length === 0 && (
+              <div className="text-center py-16 text-slate-400 dark:text-slate-500">
+                <p className="text-sm font-semibold">لا توجد مهام جاري تنفيذها حالياً.</p>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Achievements Column */}
+        <div className="space-y-6">
+          <div className="flex items-center justify-between">
+            <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-100 flex items-center gap-3">
+              <span className="w-2.5 h-6 bg-emerald-400 dark:bg-emerald-500 rounded-full"></span>
               أبرز ما تم إنجازه
             </h2>
           </div>

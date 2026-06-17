@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useTransition, useEffect } from "react";
 import { 
   CheckSquare, 
   Plus, 
@@ -97,6 +97,19 @@ export default function TasksClient({
   const [editingPriorityTaskId, setEditingPriorityTaskId] = useState<string | null>(null);
   const [editingAssigneeTaskId, setEditingAssigneeTaskId] = useState<string | null>(null);
   const [editingCharityTaskId, setEditingCharityTaskId] = useState<string | null>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Element;
+      if (!target.closest('.inline-dropdown-container')) {
+        setEditingPriorityTaskId(null);
+        setEditingAssigneeTaskId(null);
+        setEditingCharityTaskId(null);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   // Proof upload state
   const [completingTaskId, setCompletingTaskId] = useState<string | null>(null);
@@ -632,7 +645,7 @@ export default function TasksClient({
                         {/* Task badges / metadata */}
                         <div className="flex flex-wrap items-center gap-1.5">
                           {/* Priority Badge */}
-                          <div className="relative">
+                          <div className="relative inline-dropdown-container">
                             <button
                               type="button"
                               onClick={() => canEdit && setEditingPriorityTaskId(editingPriorityTaskId === task.id ? null : task.id)}
@@ -662,7 +675,7 @@ export default function TasksClient({
                           </div>
 
                           {/* Charity Badge */}
-                          <div className="relative">
+                          <div className="relative inline-dropdown-container">
                             <button
                               type="button"
                               onClick={() => isDirectorOrAdmin && setEditingCharityTaskId(editingCharityTaskId === task.id ? null : task.id)}
@@ -690,7 +703,7 @@ export default function TasksClient({
 
                           {/* Assignee Badge */}
                           {isDirectorOrAdmin && assignedEmp && (
-                            <div className="relative">
+                            <div className="relative inline-dropdown-container">
                               <button
                                 type="button"
                                 onClick={() => setEditingAssigneeTaskId(editingAssigneeTaskId === task.id ? null : task.id)}

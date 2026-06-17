@@ -62,28 +62,18 @@ export default function TasksClient({
   const [selectedEmployeeId, setSelectedEmployeeId] = useState<string>(isDirectorOrAdmin ? "all" : session.id);
 
 
-  // Form states
-  const [taskTitle, setTaskTitle] = useState("");
   const [showTaskForm, setShowTaskForm] = useState(false);
-  const [taskAssigneeId, setTaskAssigneeId] = useState(session.id);
-  const [taskCharityId, setTaskCharityId] = useState("internal"); // Default to internal task
-  const [taskPriority, setTaskPriority] = useState<number>(3); // 1: High, 2: Medium, 3: Low
   
   const [isFabOpen, setIsFabOpen] = useState(false);
   const [tasksSortBy, setTasksSortBy] = useState<"priority" | "date">("priority");
   const [achievementsSortBy, setAchievementsSortBy] = useState<"date">("date");
   
-  const [achievementTitle, setAchievementTitle] = useState("");
   const [showDirectAchievementForm, setShowDirectAchievementForm] = useState(false);
   const defaultCategory = isDirectorOrAdmin ? "الاستراتيجية" : 
       (session.role === "STRATEGY" ? "الاستراتيجية" : 
        session.role === "FINANCE" ? "تنمية الموارد" : 
        session.role === "ADMINISTRATIVE_SECRETARIAT" ? "تكليف" : "الاستراتيجية");
 
-  const [achievementCharityId, setAchievementCharityId] = useState("internal");
-  const [achievementDate, setAchievementDate] = useState("");
-  const [achievementCategory, setAchievementCategory] = useState(defaultCategory);
-  const [achievementProofFile, setAchievementProofFile] = useState<File | null>(null);
   const [isUploadingAchievementProof, setIsUploadingAchievementProof] = useState(false);
   
 
@@ -278,36 +268,32 @@ export default function TasksClient({
   };
 
   // Handle task creation
-  const handleCreateTask = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!taskTitle.trim()) return;
+  const handleCreateTask = async (data: { title: string; assignedToId: string; charityId: string; priority: number }) => {
+    if (!data.title.trim()) return;
 
     startTransition(async () => {
-      const isInternal = taskCharityId === "internal";
+      const isInternal = data.charityId === "internal";
       const res = await createTaskAction({
-        title: taskTitle.trim(),
-        assignedToId: isDirectorOrAdmin ? taskAssigneeId : session.id,
-        charityId: isInternal ? undefined : taskCharityId,
+        title: data.title.trim(),
+        assignedToId: isDirectorOrAdmin ? data.assignedToId : session.id,
+        charityId: isInternal ? undefined : data.charityId,
         isInternal,
-        priority: taskPriority,
+        priority: data.priority,
       });
 
       if (res.error) {
         showNotification("error", res.error);
       } else if (res.success && res.task) {
         setTasks((prev) => [res.task as Task, ...prev]);
-        setTaskTitle("");
-        setTaskCharityId("internal");
-        setTaskPriority(3);
+        setShowTaskForm(false);
         showNotification("success", "تمت إضافة المهمة بنجاح");
       }
     });
   };
 
   // Handle direct achievement creation
-  const handleCreateAchievement = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!achievementTitle.trim()) return;
+  const handleCreateAchievement = async (data: { title: string; charityId: string; category: string; date: string; proofFile: File }) => {
+    if (!data.title.trim()) return;
 
     setIsUploadingAchievementProof(true);
     try {
@@ -315,9 +301,9 @@ export default function TasksClient({
       let uploadedPublicId = null;
 
       // Upload proof if provided
-      if (achievementProofFile) {
+      if (data.proofFile) {
         const formData = new FormData();
-        formData.append("file", achievementProofFile);
+        formData.append("file", data.proofFile);
 
         const uploadRes = await fetch("/api/tasks/upload-proof", {
           method: "POST",
@@ -329,32 +315,27 @@ export default function TasksClient({
           throw new Error(errorData.error || "فشل رفع الشاهد");
         }
 
-        const data = await uploadRes.json();
-        uploadedUrl = data.url;
-        uploadedPublicId = data.public_id;
+        const uploadData = await uploadRes.json();
+        uploadedUrl = uploadData.url;
+        uploadedPublicId = uploadData.public_id;
       }
 
       startTransition(async () => {
-        const isInternal = achievementCharityId === "internal";
+        const isInternal = data.charityId === "internal";
         const res = await createAchievementAction({
-          title: achievementTitle.trim(),
-          charityId: isInternal ? undefined : achievementCharityId,
+          title: data.title.trim(),
+          charityId: isInternal ? undefined : data.charityId,
           isInternal,
           proofUrl: uploadedUrl || undefined,
           proofPublicId: uploadedPublicId || undefined,
-          date: achievementDate || undefined,
-          category: achievementCategory,
+          date: data.date || undefined,
+          category: data.category,
         });
 
         if (res.error) {
           showNotification("error", res.error);
         } else if (res.success && res.achievement) {
           setAchievements((prev) => [res.achievement as Achievement, ...prev]);
-          setAchievementTitle("");
-          setAchievementCharityId("internal");
-          setAchievementDate("");
-          setAchievementCategory(defaultCategory);
-          setAchievementProofFile(null);
           setShowDirectAchievementForm(false);
           showNotification("success", "تم تسجيل الإنجاز بنجاح");
         }
@@ -1153,16 +1134,7 @@ export default function TasksClient({
         isOpen={showTaskForm}
         onClose={() => setShowTaskForm(false)}
         onSubmit={(data) => {
-          setTaskTitle(data.title);
-          setTaskAssigneeId(data.assigneeId);
-          setTaskCharityId(data.charityId);
-          setTaskPriority(data.priority);
-          // Small delay to allow state to update before submitting
-          setTimeout(() => {
-            const formEvent = { preventDefault: () => {} } as React.FormEvent;
-            handleCreateTask(formEvent);
-            setShowTaskForm(false);
-          }, 0);
+          handleCreateTask(data);
         }}
         isDirectorOrAdmin={isDirectorOrAdmin}
         employees={employees}
@@ -1175,16 +1147,7 @@ export default function TasksClient({
         isOpen={showDirectAchievementForm}
         onClose={() => setShowDirectAchievementForm(false)}
         onSubmit={(data) => {
-          setAchievementTitle(data.title);
-          setAchievementCharityId(data.charityId);
-          setAchievementCategory(data.category);
-          setAchievementDate(data.date);
-          setAchievementProofFile(data.proofFile);
-          // Small delay to allow state to update before submitting
-          setTimeout(() => {
-            const formEvent = { preventDefault: () => {} } as React.FormEvent;
-            handleCreateAchievement(formEvent);
-          }, 0);
+          handleCreateAchievement(data);
         }}
         isDirectorOrAdmin={isDirectorOrAdmin}
         charities={charities}

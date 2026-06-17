@@ -35,49 +35,10 @@ import {
   updateTaskPriorityAction,
   updateTaskStatusAction
 } from "@/app/actions/tasks";
-
-interface Task {
-  id: string;
-  title: string;
-  assignedToId: string;
-  createdById: string;
-  charityId: string | null;
-  charityName: string | null;
-  isInternal: boolean;
-  isCompleted: boolean;
-  status: string;
-  priority?: number;
-  completedAt: Date | string | null;
-  proofUrl?: string | null;
-  proofPublicId?: string | null;
-  createdAt: Date | string;
-}
-
-interface Achievement {
-  id: string;
-  title: string;
-  employeeId: string;
-  createdById: string;
-  charityId?: string | null;
-  charityName?: string | null;
-  isInternal: boolean;
-  proofUrl?: string | null;
-  proofPublicId?: string | null;
-  createdAt: Date | string;
-}
-
-interface Employee {
-  id: string;
-  name: string;
-  phone: string;
-  role: string;
-  avatarUrl: string | null;
-}
-
-interface Charity {
-  id: string;
-  name: string;
-}
+import { Charity, Employee, Session, Task, Achievement } from "@/types";
+import { ADMIN_ROLES } from "@/lib/constants";
+import TaskFormModal from "@/components/tasks/TaskFormModal";
+import AchievementFormModal from "@/components/tasks/AchievementFormModal";
 
 export default function TasksClient({
   session,
@@ -94,7 +55,7 @@ export default function TasksClient({
 }) {
   const [tasks, setTasks] = useState<Task[]>(initialTasks);
   const [achievements, setAchievements] = useState<Achievement[]>(initialAchievements);
-  const isDirectorOrAdmin = ["ADMIN", "EXECUTIVE_DIRECTOR", "ADMINISTRATIVE_SECRETARIAT"].includes(session.role);
+  const isDirectorOrAdmin = ADMIN_ROLES.includes(session.role);
   const [selectedEmployeeId, setSelectedEmployeeId] = useState<string>(isDirectorOrAdmin ? "all" : session.id);
 
 
@@ -1036,280 +997,48 @@ export default function TasksClient({
         </div>
       </div>
 
-      {/* Modal: Add Task */}
-      {showTaskForm && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-          <div 
-            className="absolute inset-0 bg-slate-950/65 backdrop-blur-md transition-opacity duration-300"
-            onClick={() => setShowTaskForm(false)}
-          />
-          <div className="bg-white dark:bg-slate-800 rounded-3xl border border-slate-100 dark:border-slate-700/50 dark:border-slate-800/80 shadow-2xl w-full max-w-lg overflow-hidden relative z-10 transform transition-all duration-300 scale-100 p-6 md:p-8 space-y-6" dir="rtl">
-            <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-700/50 dark:border-slate-800/80 pb-4">
-              <div>
-                <h3 className="text-xl font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
-                  <span className="w-2.5 h-6 bg-primary rounded-full"></span>
-                  إضافة مهمة جديدة
-                </h3>
-                <p className="text-xs text-slate-500 dark:text-slate-400 font-medium mt-1.5">
-                  قم بإنشاء مهمة جديدة وحدد الجهة المرتبطة بها لإضافتها لقائمة المهام الجارية.
-                </p>
-              </div>
-              <button
-                onClick={() => setShowTaskForm(false)}
-                className="p-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:bg-slate-700 text-slate-500 dark:text-slate-400 rounded-full transition-colors cursor-pointer"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-            
-            <form onSubmit={(e) => {
-              handleCreateTask(e);
-              setShowTaskForm(false);
-            }} className="space-y-5">
-              <div>
-                <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-2">عنوان المهمة</label>
-                <textarea
-                  value={taskTitle}
-                  onChange={(e) => setTaskTitle(e.target.value)}
-                  placeholder="اكتب تفاصيل المهمة هنا..."
-                  rows={3}
-                  required
-                  className="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-sm outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary/30 text-slate-800 dark:text-slate-100 transition-all font-medium resize-none"
-                />
-              </div>
+      <TaskFormModal
+        isOpen={showTaskForm}
+        onClose={() => setShowTaskForm(false)}
+        onSubmit={(data) => {
+          setTaskTitle(data.title);
+          setTaskAssigneeId(data.assigneeId);
+          setTaskCharityId(data.charityId);
+          setTaskPriority(data.priority);
+          // Small delay to allow state to update before submitting
+          setTimeout(() => {
+            const formEvent = { preventDefault: () => {} } as React.FormEvent;
+            handleCreateTask(formEvent);
+            setShowTaskForm(false);
+          }, 0);
+        }}
+        isDirectorOrAdmin={isDirectorOrAdmin}
+        employees={employees}
+        charities={charities}
+        currentUserId={session.id}
+        isPending={isPending}
+      />
 
-              {/* Assignment Dropdown (Executive Director / Admin only) */}
-              {isDirectorOrAdmin && (
-                <div>
-                  <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-2 flex items-center gap-1">
-                    <UserPlus className="w-3.5 h-3.5 text-slate-400" />
-                    إسناد المهمة إلى الموظف
-                  </label>
-                  <select
-                    value={taskAssigneeId}
-                    onChange={(e) => setTaskAssigneeId(e.target.value)}
-                    className="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-sm outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary/30 text-slate-800 dark:text-slate-100 transition-all font-bold cursor-pointer [&>option]:bg-white [&>option]:dark:bg-slate-800 [&>option]:text-slate-700 [&>option]:dark:text-slate-200"
-                  >
-                    {employees.map((emp) => (
-                      <option key={emp.id} value={emp.id}>
-                        {emp.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              )}
-
-              {/* Charity / Internal Link Dropdown */}
-              <div>
-                <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-2 flex items-center gap-1">
-                  <FolderPlus className="w-3.5 h-3.5 text-slate-400" />
-                  الجهة التابعة لها المهمة
-                </label>
-                <select
-                  value={taskCharityId}
-                  onChange={(e) => setTaskCharityId(e.target.value)}
-                  className="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-sm outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary/30 text-slate-800 dark:text-slate-100 transition-all font-bold cursor-pointer [&>option]:bg-white [&>option]:dark:bg-slate-800 [&>option]:text-slate-700 [&>option]:dark:text-slate-200"
-                >
-                  <option value="internal">مهام داخلية في شركة زاد</option>
-                  {charities.map((ch) => (
-                    <option key={ch.id} value={ch.id}>
-                      {ch.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Task Priority Selection */}
-              <div>
-                <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-2">الأولوية</label>
-                <div className="flex gap-3">
-                  <label className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-xl border ${taskPriority === 1 ? 'border-red-500 bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400' : 'border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'} cursor-pointer transition-all`}>
-                    <input type="radio" name="priority" checked={taskPriority === 1} onChange={() => setTaskPriority(1)} className="hidden" />
-                    <span className="w-2 h-2 rounded-full bg-red-500"></span>
-                    <span className="text-sm font-bold">قصوى</span>
-                  </label>
-                  <label className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-xl border ${taskPriority === 2 ? 'border-amber-500 bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400' : 'border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'} cursor-pointer transition-all`}>
-                    <input type="radio" name="priority" checked={taskPriority === 2} onChange={() => setTaskPriority(2)} className="hidden" />
-                    <span className="w-2 h-2 rounded-full bg-amber-500"></span>
-                    <span className="text-sm font-bold">متوسطة</span>
-                  </label>
-                  <label className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-xl border ${taskPriority === 3 ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400' : 'border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'} cursor-pointer transition-all`}>
-                    <input type="radio" name="priority" checked={taskPriority === 3} onChange={() => setTaskPriority(3)} className="hidden" />
-                    <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
-                    <span className="text-sm font-bold">منخفضة</span>
-                  </label>
-                </div>
-              </div>
-
-              <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-100 dark:border-slate-700/50 dark:border-slate-800/80">
-                <button
-                  type="button"
-                  onClick={() => setShowTaskForm(false)}
-                  className="px-5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50 dark:bg-slate-900/50 dark:hover:bg-slate-800/50 dark:bg-slate-900/50 hover:text-slate-700 dark:text-slate-200 font-bold transition-all text-xs cursor-pointer"
-                >
-                  إلغاء
-                </button>
-                <button
-                  type="submit"
-                  disabled={isPending || !taskTitle.trim()}
-                  className="px-6 py-2.5 rounded-xl bg-primary text-white hover:bg-primary/95 font-bold transition-all text-xs flex items-center gap-2 cursor-pointer disabled:opacity-75 disabled:cursor-not-allowed shadow-sm hover:shadow"
-                >
-                  <Plus className="w-4 h-4" />
-                  حفظ المهمة
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* Modal: Add Direct Achievement */}
-      {showDirectAchievementForm && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-          <div 
-            className="absolute inset-0 bg-slate-950/65 backdrop-blur-md transition-opacity duration-300"
-            onClick={() => setShowDirectAchievementForm(false)}
-          />
-          <div className="bg-white dark:bg-slate-800 rounded-3xl border border-slate-100 dark:border-slate-700/50 dark:border-slate-800/80 shadow-2xl w-full max-w-md overflow-hidden relative z-10 transform transition-all duration-300 scale-100 p-6 md:p-8 space-y-6" dir="rtl">
-            <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-700/50 dark:border-slate-800/80 pb-4">
-              <div>
-                <h3 className="text-xl font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
-                  <Sparkles className="w-6 h-6 text-emerald-500" />
-                  تسجيل إنجاز مباشر
-                </h3>
-                <p className="text-xs text-slate-500 dark:text-slate-400 font-medium mt-1.5">
-                  سجل منجزاً عملياً مباشراً ليظهر فوراً في ملفك المهني.
-                </p>
-              </div>
-              <button
-                onClick={() => setShowDirectAchievementForm(false)}
-                className="p-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:bg-slate-700 text-slate-500 dark:text-slate-400 rounded-full transition-colors cursor-pointer"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-            
-            <form onSubmit={handleCreateAchievement} className="space-y-5">
-              <div>
-                <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-2">ماذا أنجزت؟</label>
-                <input
-                  type="text"
-                  required
-                  value={achievementTitle}
-                  onChange={(e) => setAchievementTitle(e.target.value)}
-                  placeholder="مثال: تقديم ورشة الحوكمة أو صياغة عقد..."
-                  className="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-sm outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500/30 text-slate-800 dark:text-slate-100 transition-all font-medium"
-                />
-              </div>
-              
-              <div>
-                <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-2 flex items-center gap-1">
-                  <FolderPlus className="w-3.5 h-3.5 text-slate-400" />
-                  الجهة التابعة لها الإنجاز
-                </label>
-                <select
-                  value={achievementCharityId}
-                  onChange={(e) => setAchievementCharityId(e.target.value)}
-                  className="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-sm outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500/30 text-slate-800 dark:text-slate-100 transition-all font-bold cursor-pointer [&>option]:bg-white [&>option]:dark:bg-slate-800 [&>option]:text-slate-700 [&>option]:dark:text-slate-200"
-                >
-                  <option value="internal">إنجاز داخلي لشركة زاد</option>
-                  {charities.map((ch) => (
-                    <option key={ch.id} value={ch.id}>
-                      {ch.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              {isDirectorOrAdmin && (
-                <div>
-                  <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-2 flex items-center gap-1">
-                    <Folder className="w-3.5 h-3.5 text-slate-400" />
-                    القسم المعني
-                  </label>
-                  <select
-                    value={achievementCategory}
-                    onChange={(e) => setAchievementCategory(e.target.value)}
-                    required
-                    className="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-sm outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500/30 text-slate-800 dark:text-slate-100 transition-all font-bold cursor-pointer [&>option]:bg-white [&>option]:dark:bg-slate-800 [&>option]:text-slate-700 [&>option]:dark:text-slate-200"
-                  >
-                    <option value="الاستراتيجية">الاستراتيجية</option>
-                    <option value="التقنية">التقنية</option>
-                    <option value="تنمية الموارد">تنمية الموارد</option>
-                    <option value="الإعلامية">الإعلامية</option>
-                    <option value="تكليف">تكليف</option>
-                    <option value="استقطاب">استقطاب</option>
-                  </select>
-                </div>
-              )}
-
-              <div>
-                <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-2 flex items-center gap-1">
-                  <Calendar className="w-3.5 h-3.5 text-slate-400" />
-                  تاريخ الإنجاز (اختياري)
-                </label>
-                <input
-                  type="date"
-                  value={achievementDate}
-                  onChange={(e) => setAchievementDate(e.target.value)}
-                  className="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-sm outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500/30 text-slate-800 dark:text-slate-100 transition-all font-medium cursor-pointer"
-                />
-                <p className="text-[10px] text-slate-400 mt-1.5 font-bold">في حال تركه فارغاً، سيتم اعتماد تاريخ اليوم كافتراضي.</p>
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-2 flex items-center gap-1">
-                  <UploadCloud className="w-3.5 h-3.5 text-slate-400" />
-                  شاهد الإنجاز (صورة)
-                </label>
-                <div className="border-2 border-dashed border-slate-200 dark:border-slate-700 rounded-xl p-4 text-center bg-slate-50 dark:bg-slate-900/50 relative hover:border-emerald-500/50 transition-colors">
-                  <input
-                    type="file"
-                    accept="image/*"
-                    required
-                    onChange={(e) => setAchievementProofFile(e.target.files?.[0] || null)}
-                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                    disabled={isUploadingAchievementProof}
-                  />
-                  <div className="flex items-center justify-center gap-2">
-                    <FileImage className={`w-5 h-5 ${achievementProofFile ? 'text-emerald-500' : 'text-slate-400'}`} />
-                    {achievementProofFile ? (
-                      <span className="text-xs font-bold text-slate-800 dark:text-slate-100 truncate max-w-[200px]">
-                        {achievementProofFile.name}
-                      </span>
-                    ) : (
-                      <span className="text-xs font-bold text-slate-600 dark:text-slate-300">ارفع صورة كشاهد للإنجاز</span>
-                    )}
-                  </div>
-                </div>
-              </div>
-              
-              <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-100 dark:border-slate-700/50 dark:border-slate-800/80">
-                <button
-                  type="button"
-                  onClick={() => setShowDirectAchievementForm(false)}
-                  disabled={isUploadingAchievementProof}
-                  className="px-5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50 dark:bg-slate-900/50 dark:hover:bg-slate-800/50 dark:bg-slate-900/50 hover:text-slate-700 dark:text-slate-200 font-bold transition-all text-xs cursor-pointer"
-                >
-                  إلغاء
-                </button>
-                <button
-                  type="submit"
-                  disabled={isUploadingAchievementProof || !achievementTitle.trim() || !achievementProofFile}
-                  className="px-6 py-2.5 rounded-xl bg-emerald-600 text-white hover:bg-emerald-700 font-bold transition-all text-xs flex items-center gap-2 cursor-pointer disabled:opacity-75 disabled:cursor-not-allowed shadow-sm hover:shadow"
-                >
-                  {isUploadingAchievementProof ? "جاري الرفع والحفظ..." : (
-                    <>
-                      <Sparkles className="w-4 h-4" />
-                      حفظ الإنجاز
-                    </>
-                  )}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+      <AchievementFormModal
+        isOpen={showDirectAchievementForm}
+        onClose={() => setShowDirectAchievementForm(false)}
+        onSubmit={(data) => {
+          setAchievementTitle(data.title);
+          setAchievementCharityId(data.charityId);
+          setAchievementCategory(data.category);
+          setAchievementDate(data.date);
+          setAchievementProofFile(data.proofFile);
+          // Small delay to allow state to update before submitting
+          setTimeout(() => {
+            const formEvent = { preventDefault: () => {} } as React.FormEvent;
+            handleCreateAchievement(formEvent);
+            setShowDirectAchievementForm(false);
+          }, 0);
+        }}
+        isDirectorOrAdmin={isDirectorOrAdmin}
+        charities={charities}
+        isUploading={isUploadingAchievementProof}
+      />
     </main>
   );
 }

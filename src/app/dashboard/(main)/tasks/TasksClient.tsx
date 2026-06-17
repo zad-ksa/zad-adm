@@ -22,7 +22,8 @@ import {
   UploadCloud,
   FileImage,
   Link as LinkIcon,
-  Folder
+  Folder,
+  Camera
 } from "lucide-react";
 import { 
   createTaskAction, 
@@ -968,21 +969,50 @@ export default function TasksClient({
 
             <form onSubmit={handleProofSubmit} className="space-y-4">
               <div className="border-2 border-dashed border-slate-200 dark:border-slate-700 rounded-2xl p-6 text-center bg-slate-50 dark:bg-slate-900/50 relative hover:border-primary/50 transition-colors">
-                <input
-                  type="file"
-                  accept="image/*"
-                  required
-                  onChange={(e) => setProofFile(e.target.files?.[0] || null)}
-                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                  disabled={isUploadingProof}
-                />
-                <FileImage className={`w-8 h-8 mx-auto mb-3 ${proofFile ? 'text-primary' : 'text-slate-400'}`} />
                 {proofFile ? (
-                  <p className="text-sm font-bold text-slate-800 dark:text-slate-100">{proofFile.name}</p>
+                  <div className="flex flex-col items-center">
+                    <FileImage className="w-8 h-8 text-primary mb-3" />
+                    <p className="text-sm font-bold text-slate-800 dark:text-slate-100">{proofFile.name}</p>
+                    <button 
+                      type="button" 
+                      onClick={() => setProofFile(null)} 
+                      className="text-xs text-red-500 hover:text-red-600 mt-2 font-bold cursor-pointer"
+                    >
+                      إلغاء وتغيير الملف
+                    </button>
+                  </div>
                 ) : (
-                  <div>
-                    <p className="text-sm font-bold text-slate-600 dark:text-slate-300">انقر أو اسحب الصورة هنا</p>
-                    <p className="text-xs text-slate-400 mt-1">PNG, JPG حتى 5MB</p>
+                  <div className="space-y-4">
+                    <FileImage className="w-8 h-8 mx-auto text-slate-400" />
+                    <div>
+                      <p className="text-sm font-bold text-slate-600 dark:text-slate-300">ارفع شاهد الإنجاز</p>
+                      <p className="text-xs text-slate-400 mt-1">PNG, JPG حتى 5MB</p>
+                    </div>
+                    <div className="flex flex-col sm:flex-row gap-2 justify-center pt-2">
+                      <label className="flex items-center justify-center gap-1.5 px-4 py-2.5 bg-primary text-white text-xs font-bold rounded-xl cursor-pointer hover:bg-primary/95 transition-all shadow-sm">
+                        <Camera className="w-4 h-4" />
+                        التقاط صورة بالكاميرا
+                        <input
+                          type="file"
+                          accept="image/*"
+                          capture="environment"
+                          onChange={(e) => setProofFile(e.target.files?.[0] || null)}
+                          className="hidden"
+                          disabled={isUploadingProof}
+                        />
+                      </label>
+                      <label className="flex items-center justify-center gap-1.5 px-4 py-2.5 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 text-xs font-bold rounded-xl cursor-pointer hover:bg-slate-200 dark:hover:bg-slate-700 transition-all border border-slate-200 dark:border-slate-700">
+                        <UploadCloud className="w-4 h-4" />
+                        اختر صورة من المعرض
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={(e) => setProofFile(e.target.files?.[0] || null)}
+                          className="hidden"
+                          disabled={isUploadingProof}
+                        />
+                      </label>
+                    </div>
                   </div>
                 )}
               </div>

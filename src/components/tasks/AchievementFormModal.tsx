@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { X, Sparkles, FolderPlus, Folder, Calendar, UploadCloud, FileImage } from "lucide-react";
+import { X, Sparkles, FolderPlus, Folder, Calendar, UploadCloud, FileImage, Camera } from "lucide-react";
 import { Charity } from "@/types";
 
 interface AchievementFormModalProps {
@@ -135,24 +135,53 @@ export default function AchievementFormModal({
               شاهد الإنجاز (صورة)
             </label>
             <div className="border-2 border-dashed border-slate-200 dark:border-slate-700 rounded-xl p-4 text-center bg-slate-50 dark:bg-slate-900/50 relative hover:border-emerald-500/50 transition-colors">
-              <input
-                type="file"
-                accept="image/*"
-                required
-                onChange={(e) => setProofFile(e.target.files?.[0] || null)}
-                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                disabled={isUploading}
-              />
-              <div className="flex items-center justify-center gap-2">
-                <FileImage className={`w-5 h-5 ${proofFile ? 'text-emerald-500' : 'text-slate-400'}`} />
-                {proofFile ? (
+              {proofFile ? (
+                <div className="flex items-center justify-center gap-2">
+                  <FileImage className="w-5 h-5 text-emerald-500" />
                   <span className="text-xs font-bold text-slate-800 dark:text-slate-100 truncate max-w-[200px]">
                     {proofFile.name}
                   </span>
-                ) : (
-                  <span className="text-xs font-bold text-slate-600 dark:text-slate-300">ارفع صورة كشاهد للإنجاز</span>
-                )}
-              </div>
+                  <button 
+                    type="button" 
+                    onClick={() => setProofFile(null)} 
+                    className="text-xs text-red-500 hover:text-red-600 font-bold cursor-pointer mr-2"
+                  >
+                    تغيير
+                  </button>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  <div className="flex items-center justify-center gap-2">
+                    <FileImage className="w-5 h-5 text-slate-400" />
+                    <span className="text-xs font-bold text-slate-600 dark:text-slate-300">أرفق شاهد الإنجاز كإثبات</span>
+                  </div>
+                  <div className="flex gap-2 justify-center">
+                    <label className="flex items-center justify-center gap-1.5 px-3 py-2 bg-emerald-600 text-white text-[11px] font-bold rounded-lg cursor-pointer hover:bg-emerald-700 transition-all shadow-sm">
+                      <Camera className="w-3.5 h-3.5" />
+                      كاميرا الجوال
+                      <input
+                        type="file"
+                        accept="image/*"
+                        capture="environment"
+                        onChange={(e) => setProofFile(e.target.files?.[0] || null)}
+                        className="hidden"
+                        disabled={isUploading}
+                      />
+                    </label>
+                    <label className="flex items-center justify-center gap-1.5 px-3 py-2 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 text-[11px] font-bold rounded-lg cursor-pointer hover:bg-slate-200 dark:hover:bg-slate-700 transition-all border border-slate-200 dark:border-slate-700">
+                      <UploadCloud className="w-3.5 h-3.5" />
+                      المعرض
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => setProofFile(e.target.files?.[0] || null)}
+                        className="hidden"
+                        disabled={isUploading}
+                      />
+                    </label>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
           

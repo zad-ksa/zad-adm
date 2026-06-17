@@ -193,10 +193,27 @@ export default function ReadinessPrintReport({
                    >
                      {sec.averagePercentage}%
                    </div>
-                   <div className="flex-1 bg-slate-200 h-6 rounded-full overflow-hidden flex justify-end" dir="ltr" style={{ WebkitPrintColorAdjust: 'exact', printColorAdjust: 'exact' }}>
+                   <div 
+                      className="flex-1 h-6 rounded-full overflow-hidden flex justify-end" 
+                      dir="ltr" 
+                      style={{ 
+                        backgroundColor: '#e2e8f0',
+                        backgroundImage: 'linear-gradient(#e2e8f0, #e2e8f0)',
+                        boxShadow: 'inset 0 0 0 1000px #e2e8f0',
+                        WebkitPrintColorAdjust: 'exact', 
+                        printColorAdjust: 'exact' 
+                      }}
+                   >
                      <div 
                        className="h-full rounded-full transition-all"
-                       style={{ width: `${sec.averagePercentage}%`, backgroundColor: colors.badgeBg, WebkitPrintColorAdjust: 'exact', printColorAdjust: 'exact' }}
+                       style={{ 
+                         width: `${sec.averagePercentage}%`, 
+                         backgroundColor: colors.badgeBg, 
+                         backgroundImage: `linear-gradient(${colors.badgeBg}, ${colors.badgeBg})`,
+                         boxShadow: `inset 0 0 0 1000px ${colors.badgeBg}`,
+                         WebkitPrintColorAdjust: 'exact', 
+                         printColorAdjust: 'exact' 
+                       }}
                      />
                    </div>
                 </div>

@@ -1,22 +1,24 @@
 import { jwtVerify, SignJWT } from "jose";
 import { cookies } from "next/headers";
 
-const secretKey = process.env.JWT_SECRET;
-if (!secretKey) {
-  throw new Error("JWT_SECRET is not defined in environment variables");
+function getSecretKey() {
+  const secretKey = process.env.JWT_SECRET;
+  if (!secretKey) {
+    throw new Error("JWT_SECRET is not defined in environment variables");
+  }
+  return new TextEncoder().encode(secretKey);
 }
-const key = new TextEncoder().encode(secretKey);
 
 export async function encrypt(payload: any) {
   return await new SignJWT(payload)
     .setProtectedHeader({ alg: "HS256" })
     .setIssuedAt()
     .setExpirationTime("24h")
-    .sign(key);
+    .sign(getSecretKey());
 }
 
 export async function decrypt(input: string): Promise<any> {
-  const { payload } = await jwtVerify(input, key, {
+  const { payload } = await jwtVerify(input, getSecretKey(), {
     algorithms: ["HS256"],
   });
   return payload;

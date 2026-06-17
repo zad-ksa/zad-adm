@@ -115,6 +115,7 @@ export default function TasksClient({
   // Proof upload state
   const [completingTaskId, setCompletingTaskId] = useState<string | null>(null);
   const [proofFile, setProofFile] = useState<File | null>(null);
+  const [proofUploadError, setProofUploadError] = useState<string | null>(null);
   const [isUploadingProof, setIsUploadingProof] = useState(false);
 
   const [isPending, startTransition] = useTransition();
@@ -324,7 +325,8 @@ export default function TasksClient({
         });
 
         if (!uploadRes.ok) {
-          throw new Error("فشل رفع الشاهد");
+          const errorData = await uploadRes.json().catch(() => ({}));
+          throw new Error(errorData.error || "فشل رفع الشاهد");
         }
 
         const data = await uploadRes.json();
@@ -358,9 +360,9 @@ export default function TasksClient({
         }
         setIsUploadingAchievementProof(false);
       });
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
-      showNotification("error", "حدث خطأ أثناء تسجيل الإنجاز");
+      showNotification("error", `فشل تسجيل الإنجاز: ${err.message || "حدث خطأ غير متوقع أثناء رفع الشاهد"}`);
       setIsUploadingAchievementProof(false);
     }
   };
@@ -396,6 +398,7 @@ export default function TasksClient({
     if (!completingTaskId || !proofFile) return;
 
     setIsUploadingProof(true);
+    setProofUploadError(null);
     try {
       const formData = new FormData();
       formData.append("file", proofFile);
@@ -406,7 +409,8 @@ export default function TasksClient({
       });
 
       if (!uploadRes.ok) {
-        throw new Error("فشل رفع الشاهد");
+        const errorData = await uploadRes.json().catch(() => ({}));
+        throw new Error(errorData.error || "فشل رفع الشاهد");
       }
 
       const { url, public_id } = await uploadRes.json();
@@ -414,6 +418,7 @@ export default function TasksClient({
       startTransition(async () => {
         const res = await toggleTaskCompletionAction(completingTaskId, true, url, public_id);
         if (res.error) {
+          setProofUploadError(res.error);
           showNotification("error", res.error);
         } else {
           setTasks((prev) =>
@@ -424,14 +429,17 @@ export default function TasksClient({
             )
           );
           showNotification("success", "تم نقل المهمة إلى المنجزات مع الشاهد");
+          setCompletingTaskId(null);
+          setProofFile(null);
+          setProofUploadError(null);
         }
-        setCompletingTaskId(null);
-        setProofFile(null);
         setIsUploadingProof(false);
       });
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
-      showNotification("error", "حدث خطأ أثناء رفع الشاهد");
+      const msg = err.message || "حدث خطأ غير متوقع أثناء رفع الشاهد";
+      setProofUploadError(msg);
+      showNotification("error", `فشل رفع الشاهد: ${msg}`);
       setIsUploadingProof(false);
     }
   };
@@ -497,13 +505,13 @@ export default function TasksClient({
     <main className="flex-1 min-w-0 py-8 relative" dir="rtl">
       {/* Notifications */}
       {successMsg && (
-        <div className="fixed bottom-6 left-6 z-50 bg-emerald-500 dark:bg-emerald-600 text-white px-5 py-3 rounded-2xl shadow-xl flex items-center gap-2 animate-fade-in font-bold text-sm">
+        <div className="fixed bottom-6 left-6 z-[150] bg-emerald-500 dark:bg-emerald-600 text-white px-5 py-3 rounded-2xl shadow-xl flex items-center gap-2 animate-fade-in font-bold text-sm">
           <CheckCircle2 className="w-5 h-5" />
           {successMsg}
         </div>
       )}
       {errorMsg && (
-        <div className="fixed bottom-6 left-6 z-50 bg-red-500 dark:bg-red-600 text-white px-5 py-3 rounded-2xl shadow-xl flex items-center gap-2 animate-fade-in font-bold text-sm">
+        <div className="fixed bottom-6 left-6 z-[150] bg-red-500 dark:bg-red-600 text-white px-5 py-3 rounded-2xl shadow-xl flex items-center gap-2 animate-fade-in font-bold text-sm">
           <AlertCircle className="w-5 h-5" />
           {errorMsg}
         </div>
@@ -953,6 +961,7 @@ export default function TasksClient({
               if (!isUploadingProof) {
                 setCompletingTaskId(null);
                 setProofFile(null);
+                setProofUploadError(null);
               }
             }}
           />
@@ -1017,12 +1026,20 @@ export default function TasksClient({
                 )}
               </div>
 
+              {proofUploadError && (
+                <div className="bg-red-50 dark:bg-red-950/20 text-red-600 dark:text-red-400 p-3 rounded-xl text-xs font-bold flex items-center gap-2 border border-red-100 dark:border-red-900/30">
+                  <AlertCircle className="w-4 h-4 shrink-0 text-red-500" />
+                  <span>{proofUploadError}</span>
+                </div>
+              )}
+
               <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-100 dark:border-slate-700/50 dark:border-slate-800/80">
                 <button
                   type="button"
                   onClick={() => {
                     setCompletingTaskId(null);
                     setProofFile(null);
+                    setProofUploadError(null);
                   }}
                   disabled={isUploadingProof}
                   className="px-5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50 dark:bg-slate-900/50 dark:hover:bg-slate-800/50 dark:bg-slate-900/50 hover:text-slate-700 dark:text-slate-200 font-bold transition-all text-xs cursor-pointer"
@@ -1167,7 +1184,6 @@ export default function TasksClient({
           setTimeout(() => {
             const formEvent = { preventDefault: () => {} } as React.FormEvent;
             handleCreateAchievement(formEvent);
-            setShowDirectAchievementForm(false);
           }, 0);
         }}
         isDirectorOrAdmin={isDirectorOrAdmin}

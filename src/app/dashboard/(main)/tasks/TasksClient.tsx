@@ -240,15 +240,23 @@ export default function TasksClient({
   };
 
   const handleUpdateTaskStatus = async (taskId: string, newStatus: string) => {
+    // 1. Save original tasks for rollback
+    const originalTasks = [...tasks];
+    
+    // 2. Optimistic update (instant UI change)
+    setTasks((prev) =>
+      prev.map((t) => (t.id === taskId ? { ...t, status: newStatus } : t))
+    );
+
+    // 3. Background server request
     startTransition(async () => {
       const res = await updateTaskStatusAction(taskId, newStatus);
       if (res.error) {
+        setTasks(originalTasks); // Rollback on error
         showNotification("error", res.error);
       } else {
-        setTasks((prev) =>
-          prev.map((t) => (t.id === taskId ? { ...t, status: newStatus } : t))
-        );
-        showNotification("success", "تم تعديل حالة المهمة بنجاح");
+        // We don't need a success message for every click to avoid annoying the user with popups, or we can keep it subtle.
+        // Let's omit the success notification since the UI update is instant and feels natural.
       }
     });
   };

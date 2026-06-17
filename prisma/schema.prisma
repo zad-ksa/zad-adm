@@ -119,6 +119,8 @@ model Task {
   proofPublicId String?
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
+
+  @@index([assignedToId, isCompleted])
 }
 
 model Achievement {
@@ -136,6 +138,8 @@ model Achievement {
   date          DateTime @default(now())
   createdAt     DateTime @default(now())
   updatedAt   DateTime @updatedAt
+
+  @@index([employeeId])
 }
 
 model News {
@@ -147,6 +151,8 @@ model News {
   date        DateTime @default(now())
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+
+  @@index([charityName])
 }
 
 model SurveyLink {

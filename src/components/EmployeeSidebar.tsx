@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, useTransition } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { User, ShieldAlert, Users, X, LogOut, LayoutDashboard, Building2, ClipboardList, ChevronRight, Edit, Eye, EyeOff, Camera, Loader2, AlertCircle, CheckCircle2, Newspaper, CheckSquare, Moon, Sun } from "lucide-react";
 import { useTheme } from "next-themes";
 import { logout } from "@/app/actions/auth";
@@ -192,7 +193,7 @@ export default function EmployeeSidebar({
           >
             <div className={`relative overflow-hidden bg-primary/10 dark:bg-primary/20 text-primary border border-primary/20 rounded-2xl flex items-center justify-center shrink-0 transition-all duration-300 ${isOpen ? "w-14 h-14" : "w-11 h-11"} group-hover/avatar:shadow-md group-hover/avatar:ring-2 group-hover/avatar:ring-primary/40 group-hover/avatar:border-primary/50`}>
               {userState?.avatarUrl ? (
-                <img src={userState.avatarUrl} alt="Avatar" className="w-full h-full object-cover transition-transform duration-500 group-hover/avatar:scale-110" />
+                <Image src={userState.avatarUrl} alt="Avatar" fill className="object-cover transition-transform duration-500 group-hover/avatar:scale-110" />
               ) : (
                 <User className={isOpen ? "w-7 h-7" : "w-5 h-5"} />
               )}

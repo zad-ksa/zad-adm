@@ -2,6 +2,7 @@ import { unstable_cache } from "next/cache";
 import { prisma } from "@/lib/db";
 import type { Metadata } from "next";
 import Link from "next/link";
+import Image from "next/image";
 
 const getDashboardStats = async () => {
   const now = new Date();
@@ -229,7 +230,7 @@ export default async function MainDashboard() {
                 </h4>
                 <div className="flex items-center gap-2 mt-2">
                   {task.assignedTo?.avatarUrl ? (
-                    <img src={task.assignedTo.avatarUrl} alt={task.assignedTo.name} className="w-6 h-6 rounded-full object-cover border border-slate-200 dark:border-slate-700" />
+                    <Image src={task.assignedTo.avatarUrl} alt={task.assignedTo.name} width={24} height={24} className="w-6 h-6 rounded-full object-cover border border-slate-200 dark:border-slate-700" />
                   ) : (
                     <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center text-primary text-xs font-bold border border-primary/20">
                       {task.assignedTo?.name?.charAt(0) || '?'}
@@ -285,7 +286,7 @@ export default async function MainDashboard() {
                 </h4>
                 <div className="flex items-center gap-2 mt-2">
                   {task.assignedTo?.avatarUrl ? (
-                    <img src={task.assignedTo.avatarUrl} alt={task.assignedTo.name} className="w-6 h-6 rounded-full object-cover border border-slate-200 dark:border-slate-700" />
+                    <Image src={task.assignedTo.avatarUrl} alt={task.assignedTo.name} width={24} height={24} className="w-6 h-6 rounded-full object-cover border border-slate-200 dark:border-slate-700" />
                   ) : (
                     <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center text-primary text-xs font-bold border border-primary/20">
                       {task.assignedTo?.name?.charAt(0) || '?'}
@@ -345,7 +346,7 @@ export default async function MainDashboard() {
                 </h4>
                 <div className="flex items-center gap-2 mt-2">
                   {activity.person?.avatarUrl ? (
-                    <img src={activity.person.avatarUrl} alt={activity.person.name} className="w-6 h-6 rounded-full object-cover border border-slate-200 dark:border-slate-700" />
+                    <Image src={activity.person.avatarUrl} alt={activity.person.name} width={24} height={24} className="w-6 h-6 rounded-full object-cover border border-slate-200 dark:border-slate-700" />
                   ) : (
                     <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold border ${activity.type === 'achievement' ? 'bg-amber-50 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 border-amber-200 dark:border-amber-700/50' : 'bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 border-emerald-200 dark:border-emerald-700/50'}`}>
                       {activity.person?.name?.charAt(0) || '?'}

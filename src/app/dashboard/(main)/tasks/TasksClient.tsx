@@ -39,6 +39,7 @@ import { Charity, Employee, Session, Task, Achievement } from "@/types";
 import { ADMIN_ROLES } from "@/lib/constants";
 import TaskFormModal from "@/components/tasks/TaskFormModal";
 import AchievementFormModal from "@/components/tasks/AchievementFormModal";
+import ConfirmModal from "@/components/ui/ConfirmModal";
 
 export default function TasksClient({
   session,
@@ -102,6 +103,9 @@ export default function TasksClient({
   const [isPending, startTransition] = useTransition();
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
+
+  // Delete modal state
+  const [itemToDelete, setItemToDelete] = useState<{ id: string, type: 'task' | 'achievement' } | null>(null);
 
   const showNotification = (type: "success" | "error", message: string) => {
     if (type === "success") {
@@ -383,32 +387,37 @@ export default function TasksClient({
   };
 
   // Handle deleting a task
-  const handleDeleteTask = async (taskId: string) => {
-    if (!confirm("هل أنت متأكد من رغبتك في حذف هذه المهمة؟")) return;
-
-    startTransition(async () => {
-      const res = await deleteTaskAction(taskId);
-      if (res.error) {
-        showNotification("error", res.error);
-      } else {
-        setTasks((prev) => prev.filter((t) => t.id !== taskId));
-        showNotification("success", "تم حذف المهمة بنجاح");
-      }
-    });
+  const handleDeleteTask = (taskId: string) => {
+    setItemToDelete({ id: taskId, type: 'task' });
   };
 
   // Handle deleting a direct achievement
-  const handleDeleteAchievement = async (achievementId: string) => {
-    if (!confirm("هل أنت متأكد من رغبتك في حذف هذا المنجز؟")) return;
+  const handleDeleteAchievement = (achievementId: string) => {
+    setItemToDelete({ id: achievementId, type: 'achievement' });
+  };
 
+  const confirmDelete = () => {
+    if (!itemToDelete) return;
+    
     startTransition(async () => {
-      const res = await deleteAchievementAction(achievementId);
-      if (res.error) {
-        showNotification("error", res.error);
+      if (itemToDelete.type === 'task') {
+        const res = await deleteTaskAction(itemToDelete.id);
+        if (res.error) {
+          showNotification("error", res.error);
+        } else {
+          setTasks((prev) => prev.filter((t) => t.id !== itemToDelete.id));
+          showNotification("success", "تم حذف المهمة بنجاح");
+        }
       } else {
-        setAchievements((prev) => prev.filter((a) => a.id !== achievementId));
-        showNotification("success", "تم حذف المنجز بنجاح");
+        const res = await deleteAchievementAction(itemToDelete.id);
+        if (res.error) {
+          showNotification("error", res.error);
+        } else {
+          setAchievements((prev) => prev.filter((a) => a.id !== itemToDelete.id));
+          showNotification("success", "تم حذف المنجز بنجاح");
+        }
       }
+      setItemToDelete(null);
     });
   };
 
@@ -449,6 +458,15 @@ export default function TasksClient({
           {errorMsg}
         </div>
       )}
+
+      <ConfirmModal
+        isOpen={itemToDelete !== null}
+        title={itemToDelete?.type === 'task' ? "حذف المهمة" : "حذف المنجز"}
+        message={itemToDelete?.type === 'task' ? "هل أنت متأكد من رغبتك في حذف هذه المهمة نهائياً؟ لا يمكن التراجع عن هذا الإجراء." : "هل أنت متأكد من رغبتك في حذف هذا المنجز نهائياً؟ لا يمكن التراجع عن هذا الإجراء."}
+        onConfirm={confirmDelete}
+        onCancel={() => setItemToDelete(null)}
+        isPending={isPending}
+      />
 
       {/* Page Header & Employee Selector */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8">

@@ -215,7 +215,7 @@ export default function ReadinessPrintReport({
       <style dangerouslySetInnerHTML={{__html: `
         @page {
           size: A4 landscape;
-          margin: 0;
+          margin: 0mm !important;
         }
         @media print {
           aside,

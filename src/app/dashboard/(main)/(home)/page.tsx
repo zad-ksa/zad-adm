@@ -53,7 +53,6 @@ const getDashboardStats = async () => {
     prisma.task.findMany({
       where: { isCompleted: true },
       take: 5,
-      take: 5,
       orderBy: { completedAt: 'desc' },
       include: { assignedTo: true }
     }),

@@ -21,7 +21,6 @@ const getDashboardStats = async () => {
     tasksCompletedThisWeek,
     urgentTasks,
     recentAchievements,
-    recentAchievements,
     recentCompletedTasks,
     inProgressTasks
   ] = await Promise.all([
@@ -94,7 +93,6 @@ const getDashboardStats = async () => {
     totalTasks,
     completedTasks,
     tasksCompletedToday,
-    tasksCompletedThisWeek,
     tasksCompletedThisWeek,
     completionPercentage,
     urgentTasks,

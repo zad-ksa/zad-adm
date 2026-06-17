@@ -268,14 +268,14 @@ export default function TasksClient({
   };
 
   // Handle task creation
-  const handleCreateTask = async (data: { title: string; assignedToId: string; charityId: string; priority: number }) => {
+  const handleCreateTask = async (data: { title: string; assigneeId: string; charityId: string; priority: number }) => {
     if (!data.title.trim()) return;
 
     startTransition(async () => {
       const isInternal = data.charityId === "internal";
       const res = await createTaskAction({
         title: data.title.trim(),
-        assignedToId: isDirectorOrAdmin ? data.assignedToId : session.id,
+        assignedToId: isDirectorOrAdmin ? data.assigneeId : session.id,
         charityId: isInternal ? undefined : data.charityId,
         isInternal,
         priority: data.priority,

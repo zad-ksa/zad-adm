@@ -33,7 +33,8 @@ import {
   deleteAchievementAction,
   updateTaskTitleAction,
   updateTaskPriorityAction,
-  updateTaskStatusAction
+  updateTaskStatusAction,
+  updateTaskCharityAction
 } from "@/app/actions/tasks";
 import { Charity, Employee, Session, Task, Achievement } from "@/types";
 import { ADMIN_ROLES } from "@/lib/constants";
@@ -94,6 +95,8 @@ export default function TasksClient({
   const [editingTaskId, setEditingTaskId] = useState<string | null>(null);
   const [editingTaskTitle, setEditingTaskTitle] = useState("");
   const [editingPriorityTaskId, setEditingPriorityTaskId] = useState<string | null>(null);
+  const [editingAssigneeTaskId, setEditingAssigneeTaskId] = useState<string | null>(null);
+  const [editingCharityTaskId, setEditingCharityTaskId] = useState<string | null>(null);
 
   // Proof upload state
   const [completingTaskId, setCompletingTaskId] = useState<string | null>(null);
@@ -200,6 +203,39 @@ export default function TasksClient({
         );
         setEditingPriorityTaskId(null);
         showNotification("success", "تم تعديل الأولوية بنجاح");
+      }
+    });
+  };
+
+  const handleUpdateTaskCharity = async (taskId: string, charityId: string) => {
+    const isInternal = charityId === "internal";
+    const charityName = isInternal ? null : charities.find((c) => c.id === charityId)?.name || null;
+    
+    startTransition(async () => {
+      const res = await updateTaskCharityAction(taskId, isInternal ? undefined : charityId, charityName, isInternal);
+      if (res.error) {
+        showNotification("error", res.error);
+      } else {
+        setTasks((prev) =>
+          prev.map((t) => (t.id === taskId ? { ...t, charityId: isInternal ? null : charityId, charityName, isInternal } : t))
+        );
+        setEditingCharityTaskId(null);
+        showNotification("success", "تم تعديل ارتباط المهمة بنجاح");
+      }
+    });
+  };
+
+  const handleUpdateTaskAssigneeInline = async (taskId: string, newAssigneeId: string) => {
+    startTransition(async () => {
+      const res = await reassignTaskAction(taskId, newAssigneeId);
+      if (res.error) {
+        showNotification("error", res.error);
+      } else {
+        setTasks((prev) =>
+          prev.map((t) => (t.id === taskId ? { ...t, assignedToId: newAssigneeId } : t))
+        );
+        setEditingAssigneeTaskId(null);
+        showNotification("success", "تم تحويل المهمة بنجاح");
       }
     });
   };
@@ -595,32 +631,84 @@ export default function TasksClient({
                         
                         {/* Task badges / metadata */}
                         <div className="flex flex-wrap items-center gap-1.5">
-                          <span className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded ${
-                            task.priority === 1 ? 'bg-red-50 text-red-600 dark:bg-red-900/20 dark:text-red-400' : 
-                            task.priority === 2 ? 'bg-amber-50 text-amber-600 dark:bg-amber-900/20 dark:text-amber-400' : 
-                            'bg-emerald-50 text-emerald-600 dark:bg-emerald-900/20 dark:text-emerald-400'
-                          }`}>
-                            <span className={`w-1.5 h-1.5 rounded-full ${task.priority === 1 ? 'bg-red-500' : task.priority === 2 ? 'bg-amber-500' : 'bg-emerald-500'}`}></span>
-                            {task.priority === 1 ? 'أولوية قصوى' : task.priority === 2 ? 'أولوية متوسطة' : 'أولوية منخفضة'}
-                          </span>
+                          {/* Priority Badge */}
+                          <div className="relative">
+                            <button
+                              type="button"
+                              onClick={() => canEdit && setEditingPriorityTaskId(editingPriorityTaskId === task.id ? null : task.id)}
+                              disabled={!canEdit}
+                              className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded cursor-pointer transition-colors ${
+                                task.priority === 1 ? 'bg-red-50 text-red-600 hover:bg-red-100 dark:bg-red-900/20 dark:text-red-400 dark:hover:bg-red-900/40' : 
+                                task.priority === 2 ? 'bg-amber-50 text-amber-600 hover:bg-amber-100 dark:bg-amber-900/20 dark:text-amber-400 dark:hover:bg-amber-900/40' : 
+                                'bg-emerald-50 text-emerald-600 hover:bg-emerald-100 dark:bg-emerald-900/20 dark:text-emerald-400 dark:hover:bg-emerald-900/40'
+                              }`}
+                            >
+                              <span className={`w-1.5 h-1.5 rounded-full ${task.priority === 1 ? 'bg-red-500' : task.priority === 2 ? 'bg-amber-500' : 'bg-emerald-500'}`}></span>
+                              {task.priority === 1 ? 'أولوية قصوى' : task.priority === 2 ? 'أولوية متوسطة' : 'أولوية منخفضة'}
+                            </button>
+                            {editingPriorityTaskId === task.id && (
+                              <div className="absolute top-full mt-2 right-0 bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-xl shadow-xl p-2 flex flex-col gap-1 z-50 w-32">
+                                <button onClick={() => handleUpdateTaskPriority(task.id, 1)} className="text-xs font-bold px-2 py-1.5 rounded hover:bg-slate-50 dark:hover:bg-slate-700 text-right text-red-600 flex items-center gap-2 cursor-pointer">
+                                  <span className="w-1.5 h-1.5 rounded-full bg-red-500"></span> قصوى
+                                </button>
+                                <button onClick={() => handleUpdateTaskPriority(task.id, 2)} className="text-xs font-bold px-2 py-1.5 rounded hover:bg-slate-50 dark:hover:bg-slate-700 text-right text-amber-600 flex items-center gap-2 cursor-pointer">
+                                  <span className="w-1.5 h-1.5 rounded-full bg-amber-500"></span> متوسطة
+                                </button>
+                                <button onClick={() => handleUpdateTaskPriority(task.id, 3)} className="text-xs font-bold px-2 py-1.5 rounded hover:bg-slate-50 dark:hover:bg-slate-700 text-right text-emerald-600 flex items-center gap-2 cursor-pointer">
+                                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> منخفضة
+                                </button>
+                              </div>
+                            )}
+                          </div>
 
-                          {task.isInternal ? (
-                            <span className="inline-flex items-center gap-1 text-[10px] font-bold text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded">
-                              <Briefcase className="w-3 h-3" />
-                              مهمة داخلية
-                            </span>
-                          ) : (
-                            <span className="inline-flex items-center gap-1 text-[10px] font-bold text-primary bg-primary/5 px-2 py-0.5 rounded">
-                              <Building2 className="w-3 h-3" />
-                              {task.charityName || "جمعية متعاقدة"}
-                            </span>
-                          )}
+                          {/* Charity Badge */}
+                          <div className="relative">
+                            <button
+                              type="button"
+                              onClick={() => isDirectorOrAdmin && setEditingCharityTaskId(editingCharityTaskId === task.id ? null : task.id)}
+                              disabled={!isDirectorOrAdmin}
+                              className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded cursor-pointer transition-colors ${
+                                task.isInternal ? 'text-slate-500 dark:text-slate-400 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700' : 'text-primary bg-primary/5 hover:bg-primary/10'
+                              }`}
+                            >
+                              {task.isInternal ? <Briefcase className="w-3 h-3" /> : <Building2 className="w-3 h-3" />}
+                              {task.isInternal ? "مهمة داخلية" : (task.charityName || "جمعية متعاقدة")}
+                            </button>
+                            {editingCharityTaskId === task.id && (
+                              <div className="absolute top-full mt-2 right-0 bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-xl shadow-xl p-2 flex flex-col gap-1 z-50 w-48 max-h-48 overflow-y-auto custom-scrollbar">
+                                <button onClick={() => handleUpdateTaskCharity(task.id, "internal")} className="text-xs font-bold px-2 py-1.5 rounded hover:bg-slate-50 dark:hover:bg-slate-700 text-right text-slate-700 dark:text-slate-200 flex items-center gap-2 cursor-pointer">
+                                  <Briefcase className="w-3 h-3" /> مهمة داخلية
+                                </button>
+                                {charities.map(c => (
+                                  <button key={c.id} onClick={() => handleUpdateTaskCharity(task.id, c.id)} className="text-xs font-bold px-2 py-1.5 rounded hover:bg-slate-50 dark:hover:bg-slate-700 text-right text-primary flex items-center gap-2 cursor-pointer">
+                                    <Building2 className="w-3 h-3" /> {c.name}
+                                  </button>
+                                ))}
+                              </div>
+                            )}
+                          </div>
 
+                          {/* Assignee Badge */}
                           {isDirectorOrAdmin && assignedEmp && (
-                            <span className="inline-flex items-center gap-1 text-[10px] font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/20 px-2 py-0.5 rounded">
-                              <User className="w-3 h-3" />
-                              {assignedEmp.name}
-                            </span>
+                            <div className="relative">
+                              <button
+                                type="button"
+                                onClick={() => setEditingAssigneeTaskId(editingAssigneeTaskId === task.id ? null : task.id)}
+                                className="inline-flex items-center gap-1 text-[10px] font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-900/20 dark:hover:bg-indigo-900/40 px-2 py-0.5 rounded cursor-pointer transition-colors"
+                              >
+                                <User className="w-3 h-3" />
+                                {assignedEmp.name}
+                              </button>
+                              {editingAssigneeTaskId === task.id && (
+                                <div className="absolute top-full mt-2 right-0 bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-xl shadow-xl p-2 flex flex-col gap-1 z-50 w-48 max-h-48 overflow-y-auto custom-scrollbar">
+                                  {employees.map(e => (
+                                    <button key={e.id} onClick={() => handleUpdateTaskAssigneeInline(task.id, e.id)} className="text-xs font-bold px-2 py-1.5 rounded hover:bg-slate-50 dark:hover:bg-slate-700 text-right text-indigo-700 dark:text-indigo-300 flex items-center gap-2 cursor-pointer">
+                                      <User className="w-3 h-3" /> {e.name}
+                                    </button>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
                           )}
                         </div>
                       </div>
@@ -657,20 +745,6 @@ export default function TasksClient({
                             >
                               <AlertCircle className="w-4 h-4" />
                             </button>
-                            
-                            {editingPriorityTaskId === task.id && (
-                              <div className="absolute top-full mt-2 left-0 bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-xl shadow-xl p-2 flex flex-col gap-1 z-50 w-32">
-                                <button onClick={() => handleUpdateTaskPriority(task.id, 1)} className="text-xs font-bold px-2 py-1.5 rounded hover:bg-slate-50 dark:hover:bg-slate-700 text-right text-red-600 flex items-center gap-2 cursor-pointer">
-                                  <span className="w-1.5 h-1.5 rounded-full bg-red-500"></span> قصوى
-                                </button>
-                                <button onClick={() => handleUpdateTaskPriority(task.id, 2)} className="text-xs font-bold px-2 py-1.5 rounded hover:bg-slate-50 dark:hover:bg-slate-700 text-right text-amber-600 flex items-center gap-2 cursor-pointer">
-                                  <span className="w-1.5 h-1.5 rounded-full bg-amber-500"></span> متوسطة
-                                </button>
-                                <button onClick={() => handleUpdateTaskPriority(task.id, 3)} className="text-xs font-bold px-2 py-1.5 rounded hover:bg-slate-50 dark:hover:bg-slate-700 text-right text-emerald-600 flex items-center gap-2 cursor-pointer">
-                                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> منخفضة
-                                </button>
-                              </div>
-                            )}
                           </div>
                         )}
 

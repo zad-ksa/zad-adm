@@ -472,3 +472,27 @@ export async function updateTaskStatusAction(taskId: string, status: string) {
   }
 }
 
+// 10. Update task charity
+export async function updateTaskCharityAction(taskId: string, charityId: string | undefined, charityName: string | null, isInternal: boolean) {
+  try {
+    const user = await getAuthenticatedUser();
+    
+    if (user.role !== "ADMIN" && user.role !== "EXECUTIVE_DIRECTOR") {
+      return { error: "غير مصرح لك بتغيير جمعية المهمة" };
+    }
+
+    await prisma.task.update({
+      where: { id: taskId },
+      data: {
+        charityId,
+        charityName,
+        isInternal,
+      },
+    });
+
+    revalidatePath("/dashboard/tasks");
+    return { success: true };
+  } catch (error: any) {
+    return { error: error.message || "حدث خطأ أثناء تعديل جمعية المهمة" };
+  }
+}

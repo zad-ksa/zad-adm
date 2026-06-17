@@ -437,3 +437,38 @@ export async function deleteNewsAction(newsId: string) {
     return { error: error.message || "حدث خطأ أثناء حذف الخبر" };
   }
 }
+
+// 9. Update task status
+export async function updateTaskStatusAction(taskId: string, status: string) {
+  try {
+    const user = await getAuthenticatedUser();
+    
+    const task = await prisma.task.findUnique({
+      where: { id: taskId },
+    });
+
+    if (!task) {
+      return { error: "المهمة غير موجودة" };
+    }
+
+    const isAdmin = user.role === "ADMIN";
+    const isAssigned = task.assignedToId === user.id;
+
+    if (!isAdmin && !isAssigned) {
+      return { error: "تغيير حالة المهمة خاص بالموظف الذي أسندت إليه المهمة أو مدير النظام فقط" };
+    }
+
+    await prisma.task.update({
+      where: { id: taskId },
+      data: {
+        status,
+      },
+    });
+
+    revalidatePath("/dashboard/tasks");
+    return { success: true };
+  } catch (error: any) {
+    return { error: error.message || "حدث خطأ أثناء تعديل حالة المهمة" };
+  }
+}
+

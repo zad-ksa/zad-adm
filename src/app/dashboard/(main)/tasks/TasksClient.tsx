@@ -32,7 +32,8 @@ import {
   createAchievementAction, 
   deleteAchievementAction,
   updateTaskTitleAction,
-  updateTaskPriorityAction
+  updateTaskPriorityAction,
+  updateTaskStatusAction
 } from "@/app/actions/tasks";
 
 interface Task {
@@ -44,6 +45,7 @@ interface Task {
   charityName: string | null;
   isInternal: boolean;
   isCompleted: boolean;
+  status: string;
   priority?: number;
   completedAt: Date | string | null;
   proofUrl?: string | null;
@@ -233,6 +235,20 @@ export default function TasksClient({
         );
         setEditingPriorityTaskId(null);
         showNotification("success", "تم تعديل الأولوية بنجاح");
+      }
+    });
+  };
+
+  const handleUpdateTaskStatus = async (taskId: string, newStatus: string) => {
+    startTransition(async () => {
+      const res = await updateTaskStatusAction(taskId, newStatus);
+      if (res.error) {
+        showNotification("error", res.error);
+      } else {
+        setTasks((prev) =>
+          prev.map((t) => (t.id === taskId ? { ...t, status: newStatus } : t))
+        );
+        showNotification("success", "تم تعديل حالة المهمة بنجاح");
       }
     });
   };
@@ -533,11 +549,12 @@ export default function TasksClient({
                 const assignedEmp = employees.find((e) => e.id === task.assignedToId);
                 const canDelete = isDirectorOrAdmin || (task.createdById === session.id && task.assignedToId === session.id);
                 const canEdit = isDirectorOrAdmin || (task.createdById === session.id && task.assignedToId === session.id);
+                const isInProgress = task.status === "IN_PROGRESS";
                 
                 return (
                   <div 
                     key={task.id} 
-                    className="border border-slate-100 dark:border-slate-700/50 dark:border-slate-800/80 hover:border-primary/20 rounded-2xl p-4 shadow-sm hover:shadow-md transition-all duration-300 group relative flex flex-col justify-between gap-3 bg-slate-50 dark:dark:bg-slate-900/30"
+                    className={`border ${isInProgress ? 'border-amber-200 dark:border-amber-700 bg-amber-50 dark:bg-amber-900/20 shadow-md shadow-amber-500/10' : 'border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 shadow-sm shadow-slate-500/10'} hover:border-primary/20 rounded-2xl p-4 transition-all duration-300 group relative flex flex-col justify-between gap-3`}
                   >
                     <div className="flex items-start gap-3">
                       {/* Completion Checkbox */}
@@ -630,6 +647,18 @@ export default function TasksClient({
                       </div>
 
                       <div className="flex items-center gap-2">
+                        {/* Status Toggle */}
+                        {canEdit && (
+                          <button
+                            type="button"
+                            onClick={() => handleUpdateTaskStatus(task.id, task.status === "IN_PROGRESS" ? "NOT_STARTED" : "IN_PROGRESS")}
+                            title={task.status === "IN_PROGRESS" ? "تغيير إلى: لم يتم التنفيذ" : "تغيير إلى: جاري التنفيذ"}
+                            className={`p-1 rounded-lg transition-colors cursor-pointer text-xs flex items-center gap-1 font-bold ${task.status === "IN_PROGRESS" ? "text-amber-600 bg-amber-100 hover:bg-amber-200 dark:bg-amber-900/40 dark:text-amber-400" : "text-slate-500 bg-slate-200 hover:bg-slate-300 dark:bg-slate-700 dark:text-slate-300"}`}
+                          >
+                            {task.status === "IN_PROGRESS" ? "جاري التنفيذ" : "لم يتم التنفيذ"}
+                          </button>
+                        )}
+
                         {/* Edit Priority */}
                         {canEdit && (
                           <div className="relative">

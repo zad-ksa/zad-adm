@@ -112,6 +112,7 @@ model Task {
   charityName  String?
   isInternal   Boolean   @default(false)
   isCompleted  Boolean   @default(false)
+  status       String    @default("NOT_STARTED") // "NOT_STARTED", "IN_PROGRESS", "COMPLETED"
   priority     Int       @default(3) // 1: High, 2: Medium, 3: Low
   completedAt  DateTime?
   proofUrl     String?

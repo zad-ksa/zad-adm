@@ -90,10 +90,10 @@ export default function ReadinessPrintReport({
   // Page 2: 33-64 (or whatever is left)
   const allCriteriaPage2 = allQuestions.slice(32);
 
-  // Categorized pagination (32 per page)
-  const greenPages = chunkArray(categorizedQuestions.green, 32);
-  const yellowPages = chunkArray(categorizedQuestions.yellow, 32);
-  const redPages = chunkArray(categorizedQuestions.red, 32);
+  // Categorized pagination (24 per page to prevent overflow)
+  const greenPages = chunkArray(categorizedQuestions.green, 24);
+  const yellowPages = chunkArray(categorizedQuestions.yellow, 24);
+  const redPages = chunkArray(categorizedQuestions.red, 24);
 
   const PageWrapper = ({ children, bg = "bg-slate-50/50" }: { children: React.ReactNode, bg?: string }) => (
     <div className="hidden print:block" style={{ pageBreakBefore: 'always', breakBefore: 'page', pageBreakAfter: 'always', breakAfter: 'page' }}>
@@ -186,18 +186,17 @@ export default function ReadinessPrintReport({
             const colors = getPercentageColorStyle(sec.averagePercentage);
             return (
               <div key={sec.index} className="flex items-center gap-8 w-full">
-                {/* Progress bar container (Left side) */}
                 <div className="flex-1 flex items-center gap-4">
                    <div 
                       className="px-3 py-1.5 rounded-md text-[13px] font-black shadow-sm shrink-0 w-14 text-center"
-                      style={{ color: colors.badgeBg, backgroundColor: colors.badgeBg + '15' }}
+                      style={{ color: colors.badgeBg, backgroundColor: colors.badgeBg + '15', WebkitPrintColorAdjust: 'exact', printColorAdjust: 'exact' }}
                    >
                      {sec.averagePercentage}%
                    </div>
-                   <div className="flex-1 bg-slate-200 h-6 rounded-full overflow-hidden flex justify-end" dir="ltr">
+                   <div className="flex-1 bg-slate-200 h-6 rounded-full overflow-hidden flex justify-end" dir="ltr" style={{ WebkitPrintColorAdjust: 'exact', printColorAdjust: 'exact' }}>
                      <div 
                        className="h-full rounded-full transition-all"
-                       style={{ width: `${sec.averagePercentage}%`, backgroundColor: colors.badgeBg }}
+                       style={{ width: `${sec.averagePercentage}%`, backgroundColor: colors.badgeBg, WebkitPrintColorAdjust: 'exact', printColorAdjust: 'exact' }}
                      />
                    </div>
                 </div>
@@ -218,6 +217,11 @@ export default function ReadinessPrintReport({
           margin: 0mm !important;
         }
         @media print {
+          * {
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+          }
+          
           aside,
           nav,
           .lg\\:hidden,

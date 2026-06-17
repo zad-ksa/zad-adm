@@ -62,11 +62,13 @@ export default async function StrategySurveysPage({ params }: { params: Promise<
 
   return (
     <div className="space-y-12">
-      <SurveyLinkManager charityName={decodedName} surveyType="READINESS" />
+      <div className="print:hidden">
+        <SurveyLinkManager charityName={decodedName} surveyType="READINESS" />
+      </div>
 
       {/* Section 1: Readiness Survey Results */}
       <div>
-        <div className="flex items-center gap-3 mb-8 border-b border-slate-200 dark:border-slate-700 pb-4">
+        <div className="flex items-center gap-3 mb-8 border-b border-slate-200 dark:border-slate-700 pb-4 print:hidden">
           <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center text-primary font-bold">
             <ChartLineIcon />
           </div>

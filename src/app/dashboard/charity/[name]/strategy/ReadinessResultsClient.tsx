@@ -108,13 +108,40 @@ export default function ReadinessResultsClient({ responses }: { responses: any[]
     });
   }, [includedResponses, participantCount]);
 
+  const categorizedQuestions = useMemo(() => {
+    const green: any[] = [];
+    const yellow: any[] = [];
+    const red: any[] = [];
+
+    sectionData.forEach((sec) => {
+      sec.questions.forEach((q) => {
+        const questionData = { ...q, sectionTitle: sec.title };
+        if (q.averagePercentage >= 85) {
+          green.push(questionData);
+        } else if (q.averagePercentage >= 70) {
+          yellow.push(questionData);
+        } else {
+          red.push(questionData);
+        }
+      });
+    });
+
+    // Sort descending by percentage
+    green.sort((a, b) => b.averagePercentage - a.averagePercentage);
+    yellow.sort((a, b) => b.averagePercentage - a.averagePercentage);
+    red.sort((a, b) => a.averagePercentage - b.averagePercentage); // sort ascending for red (lowest first)
+
+    return { green, yellow, red };
+  }, [sectionData]);
+
   if (responses.length === 0) {
     return null; // Handled by parent
   }
 
   return (
-    <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
-      <div className="xl:col-span-2 space-y-6">
+    <div className="space-y-8">
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
+        <div className="xl:col-span-2 space-y-6">
         <h3 className="text-lg font-bold text-slate-700 dark:text-slate-200 flex items-center gap-2 transition-colors">
           <span className="w-2 h-6 rounded-full bg-primary inline-block"></span>
           تحليل متوسط الجاهزية للمحاور
@@ -257,6 +284,79 @@ export default function ReadinessResultsClient({ responses }: { responses: any[]
               عرض جميع المشاركين ({responses.length})
             </button>
           )}
+        </div>
+      </div>
+      </div>
+
+      <div className="space-y-6">
+        <h3 className="text-lg font-bold text-slate-700 dark:text-slate-200 flex items-center gap-2 transition-colors">
+          <span className="w-2 h-6 rounded-full bg-slate-400 inline-block"></span>
+          تصنيف الأسئلة حسب نسبة الجاهزية
+        </h3>
+        
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="bg-white dark:bg-slate-800 rounded-2xl p-6 border border-slate-100 dark:border-slate-700 shadow-sm space-y-4 transition-colors">
+             <h4 className="font-bold text-[#00b050] flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-[#00b050]"></span>
+                نقاط القوة (85% - 100%)
+             </h4>
+             <div className="space-y-3 max-h-[400px] overflow-y-auto custom-scrollbar pr-2">
+               {categorizedQuestions.green.map((q) => (
+                 <div key={q.id} className="p-3 bg-[#00b050]/5 dark:bg-[#00b050]/10 rounded-xl border border-[#00b050]/20 transition-colors">
+                    <div className="text-[10px] font-bold text-[#00b050]/80 mb-1">{q.sectionTitle}</div>
+                    <div className="text-sm font-medium text-slate-700 dark:text-slate-200 flex justify-between gap-3 items-start">
+                      <span className="leading-relaxed">{q.text}</span>
+                      <span className="font-bold text-[#00b050] bg-white dark:bg-slate-800 px-2 py-0.5 rounded shadow-sm text-xs">{q.averagePercentage}%</span>
+                    </div>
+                 </div>
+               ))}
+               {categorizedQuestions.green.length === 0 && (
+                 <p className="text-sm text-slate-500 text-center py-8">لا توجد أسئلة في هذا النطاق</p>
+               )}
+             </div>
+          </div>
+
+          <div className="bg-white dark:bg-slate-800 rounded-2xl p-6 border border-slate-100 dark:border-slate-700 shadow-sm space-y-4 transition-colors">
+             <h4 className="font-bold text-[#c29300] flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-[#ffc000]"></span>
+                نقاط للتحسين (70% - 84%)
+             </h4>
+             <div className="space-y-3 max-h-[400px] overflow-y-auto custom-scrollbar pr-2">
+               {categorizedQuestions.yellow.map((q) => (
+                 <div key={q.id} className="p-3 bg-[#ffc000]/5 dark:bg-[#ffc000]/10 rounded-xl border border-[#ffc000]/20 transition-colors">
+                    <div className="text-[10px] font-bold text-[#c29300]/80 mb-1">{q.sectionTitle}</div>
+                    <div className="text-sm font-medium text-slate-700 dark:text-slate-200 flex justify-between gap-3 items-start">
+                      <span className="leading-relaxed">{q.text}</span>
+                      <span className="font-bold text-[#c29300] bg-white dark:bg-slate-800 px-2 py-0.5 rounded shadow-sm text-xs">{q.averagePercentage}%</span>
+                    </div>
+                 </div>
+               ))}
+               {categorizedQuestions.yellow.length === 0 && (
+                 <p className="text-sm text-slate-500 text-center py-8">لا توجد أسئلة في هذا النطاق</p>
+               )}
+             </div>
+          </div>
+
+          <div className="bg-white dark:bg-slate-800 rounded-2xl p-6 border border-slate-100 dark:border-slate-700 shadow-sm space-y-4 transition-colors">
+             <h4 className="font-bold text-[#ff0000] flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-[#ff0000]"></span>
+                نقاط الضعف (أقل من 70%)
+             </h4>
+             <div className="space-y-3 max-h-[400px] overflow-y-auto custom-scrollbar pr-2">
+               {categorizedQuestions.red.map((q) => (
+                 <div key={q.id} className="p-3 bg-[#ff0000]/5 dark:bg-[#ff0000]/10 rounded-xl border border-[#ff0000]/20 transition-colors">
+                    <div className="text-[10px] font-bold text-[#ff0000]/80 mb-1">{q.sectionTitle}</div>
+                    <div className="text-sm font-medium text-slate-700 dark:text-slate-200 flex justify-between gap-3 items-start">
+                      <span className="leading-relaxed">{q.text}</span>
+                      <span className="font-bold text-[#ff0000] bg-white dark:bg-slate-800 px-2 py-0.5 rounded shadow-sm text-xs">{q.averagePercentage}%</span>
+                    </div>
+                 </div>
+               ))}
+               {categorizedQuestions.red.length === 0 && (
+                 <p className="text-sm text-slate-500 text-center py-8">لا توجد أسئلة في هذا النطاق</p>
+               )}
+             </div>
+          </div>
         </div>
       </div>
     </div>

@@ -530,7 +530,6 @@ export default function TasksClient({
               value={selectedEmployeeId}
               onChange={(e) => {
                 setSelectedEmployeeId(e.target.value);
-                setTaskAssigneeId(e.target.value === "all" ? session.id : e.target.value);
               }}
               className="text-sm font-bold text-slate-700 dark:text-slate-200 bg-transparent border-none outline-none cursor-pointer pr-1 pl-6 [&>option]:bg-white [&>option]:dark:bg-slate-800 [&>option]:text-slate-700 [&>option]:dark:text-slate-200"
             >

@@ -680,7 +680,7 @@ export default function TasksClient({
                             </button>
                             
                             {editingPriorityTaskId === task.id && (
-                              <div className="absolute bottom-full mb-2 left-0 bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-xl shadow-xl p-2 flex flex-col gap-1 z-10 w-32">
+                              <div className="absolute top-full mt-2 left-0 bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-xl shadow-xl p-2 flex flex-col gap-1 z-50 w-32">
                                 <button onClick={() => handleUpdateTaskPriority(task.id, 1)} className="text-xs font-bold px-2 py-1.5 rounded hover:bg-slate-50 dark:hover:bg-slate-700 text-right text-red-600 flex items-center gap-2 cursor-pointer">
                                   <span className="w-1.5 h-1.5 rounded-full bg-red-500"></span> قصوى
                                 </button>

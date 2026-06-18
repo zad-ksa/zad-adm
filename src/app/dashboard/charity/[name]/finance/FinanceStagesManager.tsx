@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { Sparkles, Check, X, Edit2, Trash2, Plus, ArrowUp, ArrowDown, Loader2 } from "lucide-react";
-import { addStrategicStage, updateStrategicStage, deleteStrategicStage, setCurrentStrategicStage, reorderStrategicStages } from "@/app/actions/strategy";
+import { addFinanceStage, updateFinanceStage, deleteFinanceStage, setCurrentFinanceStage, reorderFinanceStages } from "@/app/actions/finance";
 
 type Stage = {
   id: string;
@@ -12,7 +12,7 @@ type Stage = {
   duration?: string | null;
 };
 
-export default function StrategicStagesManager({ charityId, initialStages }: { charityId: string, initialStages: Stage[] }) {
+export default function FinanceStagesManager({ charityId, initialStages }: { charityId: string, initialStages: Stage[] }) {
   const [stages, setStages] = useState<Stage[]>(initialStages);
   const [isPending, startTransition] = useTransition();
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -35,7 +35,7 @@ export default function StrategicStagesManager({ charityId, initialStages }: { c
       setNewName("");
       setNewDuration("");
       
-      await addStrategicStage(charityId, newName, newDuration);
+      await addFinanceStage(charityId, newName, newDuration);
       // Full refresh to get the real IDs from DB
       window.location.reload();
     });
@@ -46,7 +46,7 @@ export default function StrategicStagesManager({ charityId, initialStages }: { c
     startTransition(async () => {
       setStages(stages.map(s => s.id === id ? { ...s, name: editName, duration: editDuration } : s));
       setEditingId(null);
-      await updateStrategicStage(id, editName, editDuration);
+      await updateFinanceStage(id, editName, editDuration);
     });
   };
 
@@ -54,14 +54,14 @@ export default function StrategicStagesManager({ charityId, initialStages }: { c
     if (!confirm("هل أنت متأكد من حذف هذه المرحلة؟")) return;
     startTransition(async () => {
       setStages(stages.filter(s => s.id !== id));
-      await deleteStrategicStage(id);
+      await deleteFinanceStage(id);
     });
   };
 
   const handleSetCurrent = (id: string) => {
     startTransition(async () => {
       setStages(stages.map(s => ({ ...s, isCurrent: s.id === id })));
-      await setCurrentStrategicStage(charityId, id);
+      await setCurrentFinanceStage(charityId, id);
     });
   };
 
@@ -82,7 +82,7 @@ export default function StrategicStagesManager({ charityId, initialStages }: { c
     setStages(reordered);
 
     startTransition(async () => {
-      await reorderStrategicStages(charityId, reordered.map(s => s.id));
+      await reorderFinanceStages(charityId, reordered.map(s => s.id));
     });
   };
 
@@ -91,7 +91,7 @@ export default function StrategicStagesManager({ charityId, initialStages }: { c
       <div className="p-6 border-b border-slate-100 dark:border-slate-700 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <h3 className="text-xl font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
           <Sparkles className="w-5 h-5 text-primary" />
-          إدارة مراحل التخطيط الاستراتيجي
+          إدارة مراحل تنمية الموارد المالية
         </h3>
         <button
           onClick={() => setIsAdding(true)}

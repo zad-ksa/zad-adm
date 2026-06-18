@@ -69,7 +69,9 @@ export default async function StrategySurveysPage({ params }: { params: Promise<
       where: { charityId: charity.id },
       orderBy: { order: 'asc' },
     });
-  }  return (
+  }
+  
+  return (
     <div className="space-y-12">
       <div className="print:hidden">
         <SurveyLinkManager charityName={decodedName} surveyType="READINESS" />
@@ -91,16 +93,10 @@ export default async function StrategySurveysPage({ params }: { params: Promise<
         ) : (
           <div className="bg-white dark:bg-slate-800 rounded-2xl p-12 text-center text-slate-500 dark:text-slate-400 border border-slate-100 dark:border-slate-700 shadow-sm transition-colors">
             <FileEditIcon />
-            <p className="font-bold">لم يقم أي مشارك بتعبئة استبيان الجاهزية للتخطيط الاستراتيجي لهذه الجمعية بعد.</p>
+            <p className="font-bold mt-4">لم يقم أي مشارك بتعبئة استبيان الجاهزية للتخطيط الاستراتيجي لهذه الجمعية بعد.</p>
           </div>
         )}
       </div>
-
-      {/* Section 2: Strategic Stages Management */}
-      {charity && (
-        <StrategicStagesManager charityId={charity.id} initialStages={stages} />
-      )}
-
     </div>
   );
 }

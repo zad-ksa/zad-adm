@@ -1,5 +1,8 @@
 import { Scale } from "lucide-react";
 import type { Metadata } from "next";
+import { prisma } from "@/lib/db";
+import GovernanceStagesManager from "./GovernanceStagesManager";
+import GovernanceRegulationsManager from "./GovernanceRegulationsManager";
 
 export async function generateMetadata({ params }: { params: Promise<{ name: string }> }): Promise<Metadata> {
   const { name } = await params;
@@ -12,6 +15,26 @@ export async function generateMetadata({ params }: { params: Promise<{ name: str
 export default async function GovernancePage({ params }: { params: Promise<{ name: string }> }) {
   const { name } = await params;
   const decodedName = decodeURIComponent(name);
+
+  const charity = await prisma.charity.findUnique({
+    where: { name: decodedName },
+  });
+
+  let stages: any[] = [];
+  let regulations: any[] = [];
+  if (charity) {
+    stages = await prisma.governanceStage.findMany({
+      where: { charityId: charity.id },
+      orderBy: { order: 'asc' },
+    });
+    
+    regulations = await prisma.regulation.findMany({
+      orderBy: { createdAt: 'desc' },
+      include: {
+        charityVisibilities: true
+      }
+    });
+  }
 
   return (
     <div className="space-y-6">
@@ -31,6 +54,13 @@ export default async function GovernancePage({ params }: { params: Promise<{ nam
           </p>
         </div>
       </div>
+
+      {charity && (
+        <>
+          <GovernanceStagesManager charityId={charity.id} initialStages={stages} />
+          <GovernanceRegulationsManager charityId={charity.id} regulations={regulations} />
+        </>
+      )}
     </div>
   );
 }

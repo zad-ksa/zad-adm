@@ -24,11 +24,39 @@ model Charity {
   meetings          Meeting[]
   strategicStage    Int      @default(1)
   strategicStages   StrategicStage[]
+  governanceStages  GovernanceStage[]
+  financeStages     FinanceStage[]
+  regulationVisibilities CharityRegulationVisibility[]
 }
 
 model StrategicStage {
   id          String   @id @default(uuid())
   name        String
+  duration    String?
+  order       Int      @default(0)
+  isCurrent   Boolean  @default(false)
+  charityId   String
+  charity     Charity  @relation(fields: [charityId], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model GovernanceStage {
+  id          String   @id @default(uuid())
+  name        String
+  duration    String?
+  order       Int      @default(0)
+  isCurrent   Boolean  @default(false)
+  charityId   String
+  charity     Charity  @relation(fields: [charityId], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model FinanceStage {
+  id          String   @id @default(uuid())
+  name        String
+  duration    String?
   order       Int      @default(0)
   isCurrent   Boolean  @default(false)
   charityId   String
@@ -184,4 +212,25 @@ model SurveyLink {
   surveyType  String   // "READINESS" or "HEXAGONAL"
   isActive    Boolean  @default(true)
   createdAt   DateTime @default(now())
+}
+
+model Regulation {
+  id          String   @id @default(uuid())
+  title       String
+  category    String   // "الإشراف والحوكمة" or "التحول الرقمي"
+  link        String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  charityVisibilities CharityRegulationVisibility[]
+}
+
+model CharityRegulationVisibility {
+  id           String     @id @default(uuid())
+  charityId    String
+  regulationId String
+  isVisible    Boolean    @default(true)
+  charity      Charity    @relation(fields: [charityId], references: [id], onDelete: Cascade)
+  regulation   Regulation @relation(fields: [regulationId], references: [id], onDelete: Cascade)
+
+  @@unique([charityId, regulationId])
 }

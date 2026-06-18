@@ -3,6 +3,7 @@ import { prisma } from "@/lib/db";
 import { ensureStagesForCharity } from "@/app/actions/strategy";
 import type { Metadata } from "next";
 import { CalendarIcon, LicenseIcon, Rocket, ClipboardList, Building2, Sparkles, Check, Clock, Award } from "@/components/Icons";
+import { Scale, Coins } from "lucide-react";
 import EditProfileButton from "./EditProfileButton";
 
 
@@ -46,7 +47,7 @@ export default async function CharityOverview({ params }: { params: Promise<{ na
   
   await ensureStagesForCharity(charity.id);
 
-  const [completedTasks, latestNews, upcomingMeetings, strategicStages] = await Promise.all([
+  const [completedTasks, latestNews, upcomingMeetings, strategicStages, governanceStages, financeStages] = await Promise.all([
     prisma.task.findMany({
       where: { charityName: decodedName, isCompleted: true },
       orderBy: { completedAt: 'desc' },
@@ -63,6 +64,14 @@ export default async function CharityOverview({ params }: { params: Promise<{ na
       take: 5,
     }),
     prisma.strategicStage.findMany({
+      where: { charityId: charity.id },
+      orderBy: { order: 'asc' }
+    }),
+    prisma.governanceStage.findMany({
+      where: { charityId: charity.id },
+      orderBy: { order: 'asc' }
+    }),
+    prisma.financeStage.findMany({
       where: { charityId: charity.id },
       orderBy: { order: 'asc' }
     })
@@ -132,33 +141,164 @@ export default async function CharityOverview({ params }: { params: Promise<{ na
             المرحلة الحالية في التخطيط الاستراتيجي
           </h3>
           <div className="relative">
-            <div className="absolute top-1/2 left-0 w-full h-1 bg-slate-100 dark:bg-slate-700 -translate-y-1/2 rounded-full hidden md:block"></div>
-            <div className="grid grid-cols-1 md:grid-cols-6 gap-4 relative z-10">
-              {strategicStages.map((stage, index) => {
-                const stageNumber = index + 1;
-                const isCurrent = stage.isCurrent;
-                const isCompleted = strategicStages.findIndex(s => s.isCurrent) > index;
-                
-                return (
-                  <div key={stage.id} className="flex flex-col items-center text-center">
-                    <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm mb-3 shadow-sm border-2 transition-colors ${
-                      isCurrent ? "bg-white dark:bg-slate-800 text-primary border-primary ring-4 ring-primary/20" :
-                      isCompleted ? "bg-primary text-white border-primary" :
-                      "bg-slate-50 dark:bg-slate-900 text-slate-400 border-slate-200 dark:border-slate-700"
-                    }`}>
-                      {isCompleted ? <Check className="w-5 h-5" /> : stageNumber}
-                    </div>
-                    <div className={`text-sm font-medium transition-colors ${
-                      isCurrent ? "text-primary font-bold" : "text-slate-600 dark:text-slate-400"
-                    }`}>
-                      {stage.name}
-                    </div>
+            {(() => {
+              const currentIndex = strategicStages.findIndex(s => s.isCurrent);
+              const calcIndex = currentIndex === -1 ? strategicStages.length - 1 : currentIndex;
+              const progressWidth = strategicStages.length > 0 ? `${((calcIndex + 0.5) / strategicStages.length) * 100}%` : '0%';
+              return (
+                <>
+                  <div className="absolute top-5 left-0 w-full h-1 bg-slate-100 dark:bg-slate-700 -translate-y-1/2 rounded-full hidden md:block z-0"></div>
+                  <div 
+                    className="absolute top-5 right-0 h-1 bg-primary -translate-y-1/2 rounded-full hidden md:block transition-all duration-1000 ease-out z-0"
+                    style={{ width: progressWidth }}
+                  ></div>
+                  <div className="flex flex-col md:flex-row gap-4 relative z-10">
+                    {strategicStages.map((stage, index) => {
+                      const stageNumber = index + 1;
+                      const isCurrent = stage.isCurrent;
+                      const isCompleted = currentIndex !== -1 ? index < currentIndex : true;
+                      
+                      return (
+                        <div key={stage.id} className="flex-1 flex flex-col items-center text-center">
+                          <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm mb-3 shadow-sm border-2 transition-colors ${
+                            isCurrent ? "bg-white dark:bg-slate-800 text-primary border-primary ring-4 ring-primary/20" :
+                            isCompleted ? "bg-primary text-white border-primary" :
+                            "bg-slate-50 dark:bg-slate-900 text-slate-400 border-slate-200 dark:border-slate-700"
+                          }`}>
+                            {isCompleted ? <Check className="w-5 h-5" /> : stageNumber}
+                          </div>
+                          <div className={`text-sm font-medium transition-colors ${
+                            isCurrent ? "text-primary font-bold" : "text-slate-600 dark:text-slate-400"
+                          }`}>
+                            {stage.name}
+                          </div>
+                          {stage.duration && (
+                            <div className="mt-2 text-xs text-slate-500 dark:text-slate-400 font-semibold bg-slate-100 dark:bg-slate-700/50 px-2 py-0.5 rounded-full inline-flex items-center justify-center gap-1">
+                              <Clock className="w-3 h-3" />
+                              {stage.duration}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
                   </div>
-                );
-              })}
-            </div>
+                </>
+              );
+            })()}
           </div>
         </div>
+
+        {/* Governance Stage */}
+        {governanceStages.length > 0 && (
+          <div className="bg-white dark:bg-slate-800 rounded-2xl p-8 border border-slate-100 dark:border-slate-700 shadow-sm relative overflow-hidden transition-colors lg:col-span-2">
+            <h3 className="text-xl font-bold text-slate-800 dark:text-slate-100 mb-6 flex items-center gap-2">
+              <Scale className="w-6 h-6 text-emerald-500" />
+              المرحلة الحالية في الحوكمة
+            </h3>
+            <div className="relative">
+              {(() => {
+                const currentIndex = governanceStages.findIndex(s => s.isCurrent);
+                const calcIndex = currentIndex === -1 ? governanceStages.length - 1 : currentIndex;
+                const progressWidth = governanceStages.length > 0 ? `${((calcIndex + 0.5) / governanceStages.length) * 100}%` : '0%';
+                return (
+                  <>
+                    <div className="absolute top-5 left-0 w-full h-1 bg-slate-100 dark:bg-slate-700 -translate-y-1/2 rounded-full hidden md:block z-0"></div>
+                    <div 
+                      className="absolute top-5 right-0 h-1 bg-emerald-500 -translate-y-1/2 rounded-full hidden md:block transition-all duration-1000 ease-out z-0"
+                      style={{ width: progressWidth }}
+                    ></div>
+                    <div className="flex flex-col md:flex-row gap-4 relative z-10">
+                      {governanceStages.map((stage, index) => {
+                        const stageNumber = index + 1;
+                        const isCurrent = stage.isCurrent;
+                        const isCompleted = currentIndex !== -1 ? index < currentIndex : true;
+                        
+                        return (
+                          <div key={stage.id} className="flex-1 flex flex-col items-center text-center">
+                            <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm mb-3 shadow-sm border-2 transition-colors ${
+                              isCurrent ? "bg-white dark:bg-slate-800 text-emerald-600 border-emerald-500 ring-4 ring-emerald-500/20" :
+                              isCompleted ? "bg-emerald-500 text-white border-emerald-500" :
+                              "bg-slate-50 dark:bg-slate-900 text-slate-400 border-slate-200 dark:border-slate-700"
+                            }`}>
+                              {isCompleted ? <Check className="w-5 h-5" /> : stageNumber}
+                            </div>
+                            <div className={`text-sm font-medium transition-colors ${
+                              isCurrent ? "text-emerald-600 font-bold" : "text-slate-600 dark:text-slate-400"
+                            }`}>
+                              {stage.name}
+                            </div>
+                            {stage.duration && (
+                              <div className="mt-2 text-xs text-slate-500 dark:text-slate-400 font-semibold bg-slate-100 dark:bg-slate-700/50 px-2 py-0.5 rounded-full inline-flex items-center justify-center gap-1">
+                                <Clock className="w-3 h-3" />
+                                {stage.duration}
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </>
+                );
+              })()}
+            </div>
+          </div>
+        )}
+
+        {/* Finance Stage */}
+        {financeStages.length > 0 && (
+          <div className="bg-white dark:bg-slate-800 rounded-2xl p-8 border border-slate-100 dark:border-slate-700 shadow-sm relative overflow-hidden transition-colors lg:col-span-2">
+            <h3 className="text-xl font-bold text-slate-800 dark:text-slate-100 mb-6 flex items-center gap-2">
+              <Coins className="w-6 h-6 text-amber-500" />
+              المرحلة الحالية في تنمية الموارد المالية
+            </h3>
+            <div className="relative">
+              {(() => {
+                const currentIndex = financeStages.findIndex(s => s.isCurrent);
+                const calcIndex = currentIndex === -1 ? financeStages.length - 1 : currentIndex;
+                const progressWidth = financeStages.length > 0 ? `${((calcIndex + 0.5) / financeStages.length) * 100}%` : '0%';
+                return (
+                  <>
+                    <div className="absolute top-5 left-0 w-full h-1 bg-slate-100 dark:bg-slate-700 -translate-y-1/2 rounded-full hidden md:block z-0"></div>
+                    <div 
+                      className="absolute top-5 right-0 h-1 bg-amber-500 -translate-y-1/2 rounded-full hidden md:block transition-all duration-1000 ease-out z-0"
+                      style={{ width: progressWidth }}
+                    ></div>
+                    <div className="flex flex-col md:flex-row gap-4 relative z-10">
+                      {financeStages.map((stage, index) => {
+                        const stageNumber = index + 1;
+                        const isCurrent = stage.isCurrent;
+                        const isCompleted = currentIndex !== -1 ? index < currentIndex : true;
+                        
+                        return (
+                          <div key={stage.id} className="flex-1 flex flex-col items-center text-center">
+                            <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm mb-3 shadow-sm border-2 transition-colors ${
+                              isCurrent ? "bg-white dark:bg-slate-800 text-amber-600 border-amber-500 ring-4 ring-amber-500/20" :
+                              isCompleted ? "bg-amber-500 text-white border-amber-500" :
+                              "bg-slate-50 dark:bg-slate-900 text-slate-400 border-slate-200 dark:border-slate-700"
+                            }`}>
+                              {isCompleted ? <Check className="w-5 h-5" /> : stageNumber}
+                            </div>
+                            <div className={`text-sm font-medium transition-colors ${
+                              isCurrent ? "text-amber-600 font-bold" : "text-slate-600 dark:text-slate-400"
+                            }`}>
+                              {stage.name}
+                            </div>
+                            {stage.duration && (
+                              <div className="mt-2 text-xs text-slate-500 dark:text-slate-400 font-semibold bg-slate-100 dark:bg-slate-700/50 px-2 py-0.5 rounded-full inline-flex items-center justify-center gap-1">
+                                <Clock className="w-3 h-3" />
+                                {stage.duration}
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </>
+                );
+              })()}
+            </div>
+          </div>
+        )}
 
         {/* Latest Completed Tasks */}
         <div className="bg-white dark:bg-slate-800 rounded-2xl p-8 border border-slate-100 dark:border-slate-700 shadow-sm relative overflow-hidden transition-colors">

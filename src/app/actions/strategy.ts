@@ -27,6 +27,7 @@ export async function ensureStagesForCharity(charityId: string) {
     
     const newStages = DEFAULT_STAGES.map((name, index) => ({
       name,
+      duration: "",
       order: index,
       charityId,
       isCurrent: index === currentStageIndex,
@@ -38,7 +39,7 @@ export async function ensureStagesForCharity(charityId: string) {
   }
 }
 
-export async function addStrategicStage(charityId: string, name: string) {
+export async function addStrategicStage(charityId: string, name: string, duration?: string) {
   await ensureStagesForCharity(charityId);
   
   const lastStage = await prisma.strategicStage.findFirst({
@@ -51,6 +52,7 @@ export async function addStrategicStage(charityId: string, name: string) {
   await prisma.strategicStage.create({
     data: {
       name,
+      duration,
       order: newOrder,
       charityId,
       isCurrent: false
@@ -65,10 +67,10 @@ export async function addStrategicStage(charityId: string, name: string) {
   }
 }
 
-export async function updateStrategicStage(stageId: string, name: string) {
+export async function updateStrategicStage(stageId: string, name: string, duration?: string) {
   const stage = await prisma.strategicStage.update({
     where: { id: stageId },
-    data: { name },
+    data: { name, duration },
     include: { charity: true }
   });
   

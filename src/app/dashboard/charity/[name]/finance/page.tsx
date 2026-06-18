@@ -2,6 +2,7 @@ import { unstable_cache } from "next/cache";
 import { prisma } from "@/lib/db";
 import type { Metadata } from "next";
 import FinanceClient from "./FinanceClient";
+import FinanceStagesManager from "./FinanceStagesManager";
 
 
 export const dynamic = "force-dynamic";
@@ -53,17 +54,31 @@ export default async function CharityFinancePage({ params }: { params: Promise<{
 
   const charity = await getCachedFinanceData(decodedName);
 
+  let stages: any[] = [];
+  if (charity) {
+    stages = await prisma.financeStage.findMany({
+      where: { charityId: charity.id },
+      orderBy: { order: 'asc' },
+    });
+  }
+
   return (
-    <FinanceClient
-      charity={{
-        id: charity!.id,
-        name: charity!.name,
-        logoUrl: charity!.logoUrl,
-        contractValue: charity!.contractValue,
-        paidAmount: charity!.paidAmount,
-        grants: charity!.grants,
-      }}
-      initialLogs={charity!.financialLogs || []}
-    />
+    <div className="space-y-12">
+      <FinanceClient
+        charity={{
+          id: charity!.id,
+          name: charity!.name,
+          logoUrl: charity!.logoUrl,
+          contractValue: charity!.contractValue,
+          paidAmount: charity!.paidAmount,
+          grants: charity!.grants,
+        }}
+        initialLogs={charity!.financialLogs || []}
+      />
+      
+      {charity && (
+        <FinanceStagesManager charityId={charity.id} initialStages={stages} />
+      )}
+    </div>
   );
 }

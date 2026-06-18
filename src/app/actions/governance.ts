@@ -80,10 +80,11 @@ export async function reorderGovernanceStages(charityId: string, stageIds: strin
   }
 }
 
-export async function addRegulation(title: string, category: string, link: string) {
+export async function addRegulation(title: string, category: string, link: string, description?: string) {
   await prisma.regulation.create({
     data: {
       title,
+      description,
       category,
       link,
     }

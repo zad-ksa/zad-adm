@@ -217,7 +217,8 @@ model SurveyLink {
 model Regulation {
   id          String   @id @default(uuid())
   title       String
-  category    String   // "الإشراف والحوكمة" or "التحول الرقمي"
+  description String?
+  category    String   // "الإشراف والحوكمة" or "التحول الرقمي" or "القطاع غير الربحي"
   link        String
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Plus, Link as LinkIcon, FileText, Scale, Cpu, Eye, EyeOff, Trash2 } from "lucide-react";
+import { Plus, Link as LinkIcon, FileText, Scale, Cpu, Eye, EyeOff, Trash2, Building } from "lucide-react";
 import { addRegulation, deleteRegulation, toggleRegulationVisibility } from "@/app/actions/governance";
 
 type CharityRegulationVisibility = {
@@ -15,6 +15,7 @@ type Regulation = {
   id: string;
   title: string;
   category: string;
+  description?: string | null;
   link: string;
   charityVisibilities: CharityRegulationVisibility[];
 };
@@ -28,7 +29,7 @@ export default function GovernanceRegulationsManager({
 }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [newReg, setNewReg] = useState({ title: "", category: "الإشراف والحوكمة", link: "" });
+  const [newReg, setNewReg] = useState({ title: "", description: "", category: "الإشراف والحوكمة", link: "" });
 
   const handleAddRegulation = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -36,9 +37,9 @@ export default function GovernanceRegulationsManager({
     
     setIsSubmitting(true);
     try {
-      await addRegulation(newReg.title, newReg.category, newReg.link);
+      await addRegulation(newReg.title, newReg.category, newReg.link, newReg.description);
       setIsModalOpen(false);
-      setNewReg({ title: "", category: "الإشراف والحوكمة", link: "" });
+      setNewReg({ title: "", description: "", category: "الإشراف والحوكمة", link: "" });
     } finally {
       setIsSubmitting(false);
     }
@@ -87,12 +88,21 @@ export default function GovernanceRegulationsManager({
                       <span className={`text-xs px-2 py-0.5 rounded-full font-medium inline-flex items-center gap-1 ${
                         reg.category === "الإشراف والحوكمة" 
                           ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-400" 
-                          : "bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-400"
+                          : reg.category === "التحول الرقمي"
+                          ? "bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-400"
+                          : "bg-purple-100 text-purple-700 dark:bg-purple-900/50 dark:text-purple-400"
                       }`}>
-                        {reg.category === "الإشراف والحوكمة" ? <Scale className="w-3 h-3" /> : <Cpu className="w-3 h-3" />}
+                        {reg.category === "الإشراف والحوكمة" ? <Scale className="w-3 h-3" /> : 
+                         reg.category === "التحول الرقمي" ? <Cpu className="w-3 h-3" /> : 
+                         <Building className="w-3 h-3" />}
                         {reg.category}
                       </span>
                     </div>
+                    {reg.description && (
+                      <p className="text-sm text-slate-500 dark:text-slate-400 line-clamp-2 mt-1">
+                        {reg.description}
+                      </p>
+                    )}
                   </div>
                   <div className="flex items-center gap-1 shrink-0">
                     <button
@@ -167,6 +177,19 @@ export default function GovernanceRegulationsManager({
 
               <div>
                 <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                  الوصف (اختياري)
+                </label>
+                <textarea
+                  value={newReg.description}
+                  onChange={e => setNewReg({...newReg, description: e.target.value})}
+                  className="w-full px-4 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all dark:text-white resize-none"
+                  placeholder="اكتب وصفاً مختصراً للائحة..."
+                  rows={3}
+                ></textarea>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
                   القسم
                 </label>
                 <select
@@ -176,6 +199,7 @@ export default function GovernanceRegulationsManager({
                 >
                   <option value="الإشراف والحوكمة">الإشراف والحوكمة</option>
                   <option value="التحول الرقمي">التحول الرقمي</option>
+                  <option value="القطاع غير الربحي">القطاع غير الربحي</option>
                 </select>
               </div>
 

@@ -65,13 +65,13 @@ export default function CharitySidebar({
       title: "الاستراتيجية",
       href: `/charity/${encodeURIComponent(charityName)}/strategy`,
       icon: Target,
-      show: isAdmin || isStrategy,
+      show: isAdmin || isStrategy || isCharityClient,
     },
     {
       title: "الحوكمة",
       href: `/charity/${encodeURIComponent(charityName)}/governance`,
       icon: Scale,
-      show: canManageGovernance,
+      show: canManageGovernance || isCharityClient,
     },
     {
       title: "البرامج والمشاريع",
@@ -97,7 +97,7 @@ export default function CharitySidebar({
       href: `/charity/${encodeURIComponent(charityName)}/tasks`,
       icon: CheckSquare,
       comingSoon: true, // Will be implemented soon
-      show: isCharityClient,
+      show: false,
     },
   ];
 

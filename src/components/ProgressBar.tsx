@@ -1,4 +1,4 @@
-interface ProgressBarProps {
+﻿interface ProgressBarProps {
   current: number;
   total: number;
 }

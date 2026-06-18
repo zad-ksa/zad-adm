@@ -36,25 +36,25 @@ export default function StrategyTabs({ charityName }: { charityName: string }) {
   const tabs = [
     {
       title: "استبيان الجاهزية",
-      href: `/dashboard/charity/${encodeURIComponent(charityName)}/strategy`,
+      href: `/charity/${encodeURIComponent(charityName)}/strategy`,
       exact: true,
       icon: <SurveyIcon />,
     },
     {
       title: "التحليل السداسي",
-      href: `/dashboard/charity/${encodeURIComponent(charityName)}/strategy/hexagonal`,
+      href: `/charity/${encodeURIComponent(charityName)}/strategy/hexagonal`,
       exact: false,
       icon: <HexagonIcon />,
     },
     {
       title: "مقياس الأداء",
-      href: `/dashboard/charity/${encodeURIComponent(charityName)}/strategy/performance`,
+      href: `/charity/${encodeURIComponent(charityName)}/strategy/performance`,
       exact: false,
       icon: <MetricIcon />,
     },
     {
       title: "إدارة المراحل",
-      href: `/dashboard/charity/${encodeURIComponent(charityName)}/strategy/stages`,
+      href: `/charity/${encodeURIComponent(charityName)}/strategy/stages`,
       exact: false,
       icon: <StagesIcon />,
     },

@@ -1,4 +1,4 @@
-import { Lock, Phone, ArrowRight } from "@/components/Icons";
+﻿import { Lock, Phone, ArrowRight } from "@/components/Icons";
 
 interface LinkClosedScreenProps {
   onBackToHome?: () => void;

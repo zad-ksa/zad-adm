@@ -104,7 +104,7 @@ export default function EditCharityModal({ charity, onClose }: EditCharityModalP
         onClose();
         // Redirect to new path if name changed, otherwise refresh page
         if (result.name && result.name.toLowerCase() !== charity.name.toLowerCase()) {
-          router.push(`/dashboard/charity/${encodeURIComponent(result.name)}`);
+          router.push(`/charity/${encodeURIComponent(result.name)}`);
         } else {
           router.refresh();
         }

@@ -1,4 +1,4 @@
-"use server";
+﻿"use server";
 import { unstable_cache } from "next/cache";
 
 import { prisma } from "@/lib/db";
@@ -164,8 +164,8 @@ export async function updateCharity(
     }
 
     revalidatePath("/dashboard");
-    revalidatePath(`/dashboard/charity/${encodeURIComponent(oldName)}`);
-    revalidatePath(`/dashboard/charity/${encodeURIComponent(trimmedName)}`);
+    revalidatePath(`/charity/${encodeURIComponent(oldName)}`);
+    revalidatePath(`/charity/${encodeURIComponent(trimmedName)}`);
 
     return { success: true, name: trimmedName };
   } catch (error: any) {
@@ -228,8 +228,8 @@ export async function addFinancialTransactionAction(
     ]);
 
     revalidatePath("/dashboard");
-    revalidatePath(`/dashboard/charity/${encodeURIComponent(charity.name)}`);
-    revalidatePath(`/dashboard/charity/${encodeURIComponent(charity.name)}/finance`);
+    revalidatePath(`/charity/${encodeURIComponent(charity.name)}`);
+    revalidatePath(`/charity/${encodeURIComponent(charity.name)}/finance`);
 
     return { success: true, charity: updatedCharity, log };
   } catch (error: any) {

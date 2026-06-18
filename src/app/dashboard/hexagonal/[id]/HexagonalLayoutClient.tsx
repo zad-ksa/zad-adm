@@ -204,7 +204,7 @@ export default function HexagonalLayoutClient({
         {/* Return to Charity Profile */}
         <div className="mt-auto px-3 pt-6 border-t border-slate-100 shrink-0">
           <Link
-            href={`/dashboard/charity/${encodeURIComponent(charityName)}`}
+            href={`/charity/${encodeURIComponent(charityName)}`}
             onClick={() => setIsNavigating(true)}
             title={!isOpen ? "العودة لملف الجمعية" : undefined}
             className={`flex items-center ${isOpen ? "justify-start px-3" : "justify-center"} w-full py-3 text-slate-500 hover:bg-primary/5 hover:text-primary rounded-xl font-bold transition-all group`}

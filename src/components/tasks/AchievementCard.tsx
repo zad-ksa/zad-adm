@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { CheckCircle2, Sparkles, Building2, User, Calendar, Link as LinkIcon, Undo, Trash2 } from "lucide-react";
 import { Achievement, Employee, Session } from "@/types";

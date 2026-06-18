@@ -5,6 +5,8 @@ import type { Metadata } from "next";
 import { CalendarIcon, LicenseIcon, Rocket, ClipboardList, Building2, Sparkles, Check, Clock, Award } from "@/components/Icons";
 import { Scale, Coins } from "lucide-react";
 import EditProfileButton from "./EditProfileButton";
+import CreateCharityAccountModal from "./CreateCharityAccountModal";
+import { getSession } from "@/lib/auth";
 
 
 export const dynamic = "force-dynamic";
@@ -44,6 +46,8 @@ export default async function CharityOverview({ params }: { params: Promise<{ na
   const decodedName = decodeURIComponent(name);
 
   const charity = await getCachedCharity(decodedName);
+  const session = await getSession();
+  const isAdmin = ["ADMIN", "EXECUTIVE_DIRECTOR", "GENERAL_MANAGER"].includes(session?.role || "");
   
   await ensureStagesForCharity(charity.id);
 
@@ -101,7 +105,12 @@ export default async function CharityOverview({ params }: { params: Promise<{ na
               </div>
             </div>
 
-            <EditProfileButton charity={charity} />
+            <div className="flex items-center gap-3">
+              {isAdmin && (
+                <CreateCharityAccountModal charityId={charity.id} charityName={charity.name} />
+              )}
+              <EditProfileButton charity={charity} />
+            </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

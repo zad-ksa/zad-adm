@@ -1,4 +1,4 @@
-"use server";
+﻿"use server";
 
 import { prisma } from "@/lib/db";
 import { revalidatePath } from "next/cache";
@@ -40,7 +40,7 @@ export async function savePerformanceMetric(charityName: string, year: number, d
       },
     });
 
-    revalidatePath(`/dashboard/charity/${encodeURIComponent(charityName)}/strategy/performance`);
+    revalidatePath(`/charity/${encodeURIComponent(charityName)}/strategy/performance`);
     return { success: true, metric };
   } catch (error: any) {
     console.error("Error saving performance metric:", error);

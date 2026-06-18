@@ -43,6 +43,7 @@ export async function loginWithPassword(phone: string, password: string) {
       role: employee.role,
       permissions: employee.permissions,
       avatarUrl: employee.avatarUrl,
+      charityId: employee.charityId,
     };
 
     const encryptedSession = await encrypt(sessionData);
@@ -59,6 +60,15 @@ export async function loginWithPassword(phone: string, password: string) {
   } catch (error: any) {
     console.error("Login Error:", error);
     return { error: "حدث خطأ داخلي: " + (error.message || "Unknown error") };
+  }
+  
+  const employee = await prisma.employee.findUnique({
+    where: { phone },
+    include: { charity: true }
+  });
+  
+  if (employee?.role === "CHARITY_CLIENT" && employee.charity) {
+    redirect(`/charity/${encodeURIComponent(employee.charity.name)}`);
   }
   
   redirect("/dashboard");

@@ -35,20 +35,20 @@ export default function CharityLayoutClient({
   const canManageGovernance = isAdmin || permissions?.includes("manage_governance");
 
   let mobileNavItems = [
-    { label: "الرئيسية", href: `/dashboard/charity/${encodeURIComponent(charityName)}`, icon: Home, exact: true },
+    { label: "الرئيسية", href: `/charity/${encodeURIComponent(charityName)}`, icon: Home, exact: true },
   ];
 
   if (isAdmin || isStrategy) {
-    mobileNavItems.push({ label: "الاستراتيجية", href: `/dashboard/charity/${encodeURIComponent(charityName)}/strategy`, icon: Target, exact: false });
-    mobileNavItems.push({ label: "البرامج", href: `/dashboard/charity/${encodeURIComponent(charityName)}/programs`, icon: FolderKanban, exact: false });
+    mobileNavItems.push({ label: "الاستراتيجية", href: `/charity/${encodeURIComponent(charityName)}/strategy`, icon: Target, exact: false });
+    mobileNavItems.push({ label: "البرامج", href: `/charity/${encodeURIComponent(charityName)}/programs`, icon: FolderKanban, exact: false });
   }
 
   if (canManageGovernance) {
-    mobileNavItems.push({ label: "الحوكمة", href: `/dashboard/charity/${encodeURIComponent(charityName)}/governance`, icon: Scale, exact: false });
+    mobileNavItems.push({ label: "الحوكمة", href: `/charity/${encodeURIComponent(charityName)}/governance`, icon: Scale, exact: false });
   }
 
   if (isAdmin || isFinance) {
-    mobileNavItems.push({ label: "المالية", href: `/dashboard/charity/${encodeURIComponent(charityName)}/finance`, icon: Coins, exact: false });
+    mobileNavItems.push({ label: "المالية", href: `/charity/${encodeURIComponent(charityName)}/finance`, icon: Coins, exact: false });
   }
 
   return (

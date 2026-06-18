@@ -1,4 +1,4 @@
-import { Axis, Goal, Indicator } from "./types";
+﻿import { Axis, Goal, Indicator } from "./types";
 
 export const hasData = (val: any) => val !== null && val !== undefined && String(val).trim() !== "";
 

@@ -1,4 +1,4 @@
-import { unstable_cache } from "next/cache";
+﻿import { unstable_cache } from "next/cache";
 import { prisma } from "@/lib/db";
 import type { Metadata } from "next";
 import Link from "next/link";
@@ -250,7 +250,7 @@ export default async function CharitiesDashboard() {
             {charitiesData.map((charity) => (
               <Link
                 key={charity.id}
-                href={`/dashboard/charity/${encodeURIComponent(charity.name)}`}
+                href={`/charity/${encodeURIComponent(charity.name)}`}
                 className="relative overflow-hidden rounded-xl border border-slate-100 dark:border-slate-700 shadow-sm hover:shadow-md hover:-translate-y-1 hover:border-primary/30 dark:hover:border-primary/50 transition-all duration-500 group flex flex-col justify-between"
               >
                 {/* Background Logo */}

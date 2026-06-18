@@ -1,4 +1,4 @@
-import { unstable_cache } from "next/cache";
+﻿import { unstable_cache } from "next/cache";
 import { prisma } from "@/lib/db";
 import Link from "next/link";
 import CopyLinkButton from "@/components/CopyLinkButton";
@@ -239,7 +239,7 @@ export default async function SurveysDashboard() {
               {charityStats.map((charity) => (
                 <tr key={charity.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 dark:bg-slate-900/50 dark:hover:bg-slate-800/50 dark:bg-slate-900/50/50 transition-colors group">
                   <td className="p-5 font-bold text-slate-800 dark:text-slate-100 group-hover:text-primary transition-colors">
-                    <Link href={`/dashboard/charity/${encodeURIComponent(charity.name)}`} className="block">
+                    <Link href={`/charity/${encodeURIComponent(charity.name)}`} className="block">
                       {charity.name}
                     </Link>
                   </td>

@@ -14,11 +14,14 @@ import {
   Users, 
   Coins,
   Moon,
-  Sun
+  Sun,
+  CheckSquare,
+  LogOut
 } from "lucide-react";
 import ZadLogo from "@/components/ZadLogo";
 import { useTheme } from "next-themes";
 import { useState, useEffect } from "react";
+import { logout } from "@/app/actions/auth";
 
 export default function CharitySidebar({ 
   charityName,
@@ -46,32 +49,33 @@ export default function CharitySidebar({
   const isAdmin = ["ADMIN", "EXECUTIVE_DIRECTOR", "GENERAL_MANAGER"].includes(role || "");
   const isStrategy = role === "STRATEGY";
   const isFinance = role === "FINANCE";
+  const isCharityClient = role === "CHARITY_CLIENT";
   const canManageGovernance = isAdmin || permissions?.includes("manage_governance");
   const canManageHR = isAdmin || permissions?.includes("manage_hr");
 
   const allNavItems = [
     {
       title: "الرئيسية",
-      href: `/dashboard/charity/${encodeURIComponent(charityName)}`,
+      href: `/charity/${encodeURIComponent(charityName)}`,
       exact: true,
       icon: Home,
       show: true,
     },
     {
       title: "الاستراتيجية",
-      href: `/dashboard/charity/${encodeURIComponent(charityName)}/strategy`,
+      href: `/charity/${encodeURIComponent(charityName)}/strategy`,
       icon: Target,
       show: isAdmin || isStrategy,
     },
     {
       title: "الحوكمة",
-      href: `/dashboard/charity/${encodeURIComponent(charityName)}/governance`,
+      href: `/charity/${encodeURIComponent(charityName)}/governance`,
       icon: Scale,
       show: canManageGovernance,
     },
     {
       title: "البرامج والمشاريع",
-      href: `/dashboard/charity/${encodeURIComponent(charityName)}/programs`,
+      href: `/charity/${encodeURIComponent(charityName)}/programs`,
       icon: FolderKanban,
       show: isAdmin || isStrategy,
     },
@@ -84,9 +88,16 @@ export default function CharitySidebar({
     },
     {
       title: "المالية",
-      href: `/dashboard/charity/${encodeURIComponent(charityName)}/finance`,
+      href: `/charity/${encodeURIComponent(charityName)}/finance`,
       icon: Coins,
       show: isAdmin || isFinance,
+    },
+    {
+      title: "مهامي",
+      href: `/charity/${encodeURIComponent(charityName)}/tasks`,
+      icon: CheckSquare,
+      comingSoon: true, // Will be implemented soon
+      show: isCharityClient,
     },
   ];
 
@@ -207,16 +218,27 @@ export default function CharitySidebar({
         })}
       </div>
 
-      {/* Return to Dashboard - Fixed at bottom */}
+      {/* Bottom Actions - Fixed at bottom */}
       <div className="shrink-0 px-3 py-6 border-t border-slate-100 dark:border-slate-700/50 dark:border-slate-800/80">
-        <Link
-          href="/dashboard"
-          title={!isOpen ? "العودة للوحة التحكم" : undefined}
-          className={`flex items-center ${isOpen ? "justify-start px-3" : "justify-center"} w-full py-3 text-slate-500 dark:text-slate-400 hover:bg-primary/5 hover:text-primary rounded-xl font-bold transition-all group`}
-        >
-          <ArrowLeft className={`w-5 h-5 shrink-0 transition-all ${isOpen ? "ml-3" : "ml-0"} text-slate-400 group-hover:text-primary`} />
-          {isOpen && <span className="whitespace-nowrap">العودة للوحة التحكم</span>}
-        </Link>
+        {!isCharityClient ? (
+          <Link
+            href="/dashboard"
+            title={!isOpen ? "العودة للوحة التحكم" : undefined}
+            className={`flex items-center ${isOpen ? "justify-start px-3" : "justify-center"} w-full py-3 text-slate-500 dark:text-slate-400 hover:bg-primary/5 hover:text-primary rounded-xl font-bold transition-all group`}
+          >
+            <ArrowLeft className={`w-5 h-5 shrink-0 transition-all ${isOpen ? "ml-3" : "ml-0"} text-slate-400 group-hover:text-primary`} />
+            {isOpen && <span className="whitespace-nowrap">العودة للوحة التحكم</span>}
+          </Link>
+        ) : (
+          <button
+            onClick={() => logout()}
+            title={!isOpen ? "تسجيل الخروج" : undefined}
+            className={`flex items-center ${isOpen ? "justify-start px-3" : "justify-center"} w-full py-3 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-xl font-bold transition-all group`}
+          >
+            <LogOut className={`w-5 h-5 shrink-0 transition-all ${isOpen ? "ml-3" : "ml-0"}`} />
+            {isOpen && <span className="whitespace-nowrap">تسجيل الخروج</span>}
+          </button>
+        )}
       </div>
     </div>
   );

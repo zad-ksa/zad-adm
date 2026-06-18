@@ -1,4 +1,4 @@
-export type Indicator = {
+﻿export type Indicator = {
   id: string;
   code: string;
   name: string;

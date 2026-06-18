@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import Link from "next/link";
 import { useState, useEffect } from "react";
@@ -95,7 +95,7 @@ export default function CompanySidebar({ charities }: { charities: { id: string;
           filteredCharities.map((charity) => (
             <Link
               key={charity.id}
-              href={`/dashboard/charity/${encodeURIComponent(charity.name)}`}
+              href={`/charity/${encodeURIComponent(charity.name)}`}
               className="block px-3 py-2.5 rounded-xl text-slate-600 hover:bg-primary/5 hover:text-primary font-bold transition-all duration-200 truncate text-sm hover:-translate-x-1 hover:pr-4"
               title={charity.name}
             >

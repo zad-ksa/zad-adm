@@ -1,4 +1,4 @@
-import { Question, Option } from "@/data/surveyData";
+﻿import { Question, Option } from "@/data/surveyData";
 
 interface QuestionCardProps {
   question: Question;

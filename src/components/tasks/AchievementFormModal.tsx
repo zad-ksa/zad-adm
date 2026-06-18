@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState } from "react";
 import { X, Sparkles, FolderPlus, Folder, Calendar, UploadCloud, FileImage, Camera } from "lucide-react";

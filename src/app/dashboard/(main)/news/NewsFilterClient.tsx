@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState, useEffect, useTransition } from "react";
 import Link from "next/link";
@@ -353,7 +353,7 @@ export default function NewsFilterClient({
                         {validCharities.map((cName) => (
                           <Link
                             key={cName}
-                            href={`/dashboard/charity/${encodeURIComponent(cName)}`}
+                            href={`/charity/${encodeURIComponent(cName)}`}
                             className="text-primary hover:text-primary/80 transition-colors flex items-center gap-1 text-[11px]"
                           >
                             {validCharities.length > 1 ? cName : "صفحة الجمعية"}

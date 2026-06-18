@@ -1,4 +1,4 @@
-"use server";
+﻿"use server";
 
 import { prisma } from "@/lib/db";
 import { getSession } from "@/lib/auth";
@@ -46,8 +46,8 @@ export async function addProgramAction(
       },
     });
 
-    revalidatePath(`/dashboard/charity/${encodeURIComponent(charity.name)}`);
-    revalidatePath(`/dashboard/charity/${encodeURIComponent(charity.name)}/programs`);
+    revalidatePath(`/charity/${encodeURIComponent(charity.name)}`);
+    revalidatePath(`/charity/${encodeURIComponent(charity.name)}/programs`);
     revalidatePath("/dashboard");
     
     return { success: true, program };
@@ -74,8 +74,8 @@ export async function deleteProgramAction(programId: string) {
       where: { id: programId },
     });
 
-    revalidatePath(`/dashboard/charity/${encodeURIComponent(program.charity.name)}`);
-    revalidatePath(`/dashboard/charity/${encodeURIComponent(program.charity.name)}/programs`);
+    revalidatePath(`/charity/${encodeURIComponent(program.charity.name)}`);
+    revalidatePath(`/charity/${encodeURIComponent(program.charity.name)}/programs`);
     revalidatePath("/dashboard");
 
     return { success: true };

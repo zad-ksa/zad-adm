@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+﻿import { useState, useEffect } from "react";
 import { Building2, UserCircle, ClipboardList, ArrowLeft, ChevronDownIcon } from "@/components/Icons";
 
 export interface RegistrationData {

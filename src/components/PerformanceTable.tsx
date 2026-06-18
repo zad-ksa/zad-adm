@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState, useTransition, useEffect } from "react";
 import { savePerformanceMetric } from "@/app/actions/performance";
@@ -134,7 +134,7 @@ export default function PerformanceTable({
   // Update URL params
   const handlePeriodChange = (newYear: number, newQuarter: string) => {
     startTransition(() => {
-      router.push(`/dashboard/charity/${encodeURIComponent(charityName)}/strategy/performance?year=${newYear}&quarter=${newQuarter}`);
+      router.push(`/charity/${encodeURIComponent(charityName)}/strategy/performance?year=${newYear}&quarter=${newQuarter}`);
     });
   };
 
@@ -569,7 +569,7 @@ export default function PerformanceTable({
           </button>
 
           <button
-            onClick={() => router.push(`/dashboard/charity/${encodeURIComponent(charityName)}/strategy/report?year=${year}&quarter=${quarter}`)}
+            onClick={() => router.push(`/charity/${encodeURIComponent(charityName)}/strategy/report?year=${year}&quarter=${quarter}`)}
             className="bg-indigo-50 dark:bg-indigo-900/30 hover:bg-indigo-100 dark:hover:bg-indigo-900/50 text-indigo-700 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800 px-5 py-2.5 rounded-xl font-bold transition-all flex items-center gap-2 cursor-pointer select-none active:scale-[0.98]"
             title="إنشاء تقرير الأداء الاستراتيجي"
           >

@@ -27,6 +27,7 @@ model Charity {
   governanceStages  GovernanceStage[]
   financeStages     FinanceStage[]
   regulationVisibilities CharityRegulationVisibility[]
+  employees         Employee[]
 }
 
 model StrategicStage {
@@ -133,6 +134,7 @@ enum Role {
   ADMINISTRATIVE_SECRETARIAT
   STRATEGY
   FINANCE
+  CHARITY_CLIENT
 }
 
 model Employee {
@@ -142,6 +144,8 @@ model Employee {
   password             String
   avatarUrl            String?
   role                 Role          @default(STRATEGY)
+  charityId            String?       // For CHARITY_CLIENT accounts
+  charity              Charity?      @relation(fields: [charityId], references: [id])
   permissions          String[]
   isActive             Boolean       @default(true)
   createdAt            DateTime      @default(now())

@@ -24,12 +24,16 @@ export default function CharitySidebar({
   charityName,
   logoUrl,
   isOpen,
-  setIsOpen 
+  setIsOpen,
+  role,
+  permissions 
 }: { 
   charityName: string;
   logoUrl: string | null;
   isOpen: boolean;
   setIsOpen: (v: boolean) => void;
+  role?: string;
+  permissions?: string[];
 }) {
   const pathname = usePathname();
   const { theme, setTheme } = useTheme();
@@ -39,41 +43,54 @@ export default function CharitySidebar({
     setMounted(true);
   }, []);
 
-  const navItems = [
+  const isAdmin = ["ADMIN", "EXECUTIVE_DIRECTOR", "GENERAL_MANAGER"].includes(role || "");
+  const isStrategy = role === "STRATEGY";
+  const isFinance = role === "FINANCE";
+  const canManageGovernance = isAdmin || permissions?.includes("manage_governance");
+  const canManageHR = isAdmin || permissions?.includes("manage_hr");
+
+  const allNavItems = [
     {
       title: "الرئيسية",
       href: `/dashboard/charity/${encodeURIComponent(charityName)}`,
       exact: true,
       icon: Home,
+      show: true,
     },
     {
       title: "الاستراتيجية",
       href: `/dashboard/charity/${encodeURIComponent(charityName)}/strategy`,
       icon: Target,
+      show: isAdmin || isStrategy,
     },
     {
       title: "الحوكمة",
-      href: "#",
+      href: `/dashboard/charity/${encodeURIComponent(charityName)}/governance`,
       icon: Scale,
-      comingSoon: true,
+      show: canManageGovernance,
     },
     {
       title: "البرامج والمشاريع",
       href: `/dashboard/charity/${encodeURIComponent(charityName)}/programs`,
       icon: FolderKanban,
+      show: isAdmin || isStrategy,
     },
     {
       title: "الموارد البشرية",
       href: "#",
       icon: Users,
       comingSoon: true,
+      show: canManageHR,
     },
     {
       title: "المالية",
       href: `/dashboard/charity/${encodeURIComponent(charityName)}/finance`,
       icon: Coins,
+      show: isAdmin || isFinance,
     },
   ];
+
+  const navItems = allNavItems.filter(item => item.show);
 
   const sidebarContent = (
     <div className="bg-white dark:bg-slate-800 flex flex-col h-full border-l border-slate-200 dark:border-slate-700/80 shadow-[4px_0_24px_rgba(0,0,0,0.02)] relative transition-all duration-300">

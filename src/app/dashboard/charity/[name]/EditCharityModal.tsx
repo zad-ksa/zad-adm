@@ -1,10 +1,31 @@
 "use client";
 
-import { useState, useRef, useTransition } from "react";
+import { useState, useRef, useTransition, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import { updateCharity } from "@/app/actions/charity";
 import { X, Loader2, AlertCircle } from "@/components/Icons";
 import { Image as ImageIcon } from "lucide-react";
+import DatePicker from "react-multi-date-picker";
+import arabic from "react-date-object/calendars/arabic";
+import arabic_ar from "react-date-object/locales/arabic_ar";
+import "react-multi-date-picker/styles/colors/teal.css";
+
+const custom_arabic_ar = { ...arabic_ar };
+custom_arabic_ar.months = [
+  ["محرم", "محرم"],
+  ["صفر", "صفر"],
+  ["ربيع الأول", "ربيع الأول"],
+  ["ربيع الآخر", "ربيع الآخر"],
+  ["جمادى الأولى", "جمادى الأولى"],
+  ["جمادى الآخرة", "جمادى الآخرة"],
+  ["رجب", "رجب"],
+  ["شعبان", "شعبان"],
+  ["رمضان", "رمضان"],
+  ["شوال", "شوال"],
+  ["ذي القعدة", "ذي القعدة"],
+  ["ذي الحجة", "ذي الحجة"]
+];
 
 interface EditCharityModalProps {
   charity: {
@@ -18,10 +39,11 @@ interface EditCharityModalProps {
 }
 
 export default function EditCharityModal({ charity, onClose }: EditCharityModalProps) {
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
   const [name, setName] = useState(charity.name);
   const [licenseNumber, setLicenseNumber] = useState(charity.licenseNumber || "");
   const [establishmentDate, setEstablishmentDate] = useState(charity.establishmentDate || "");
-  const [domain, setDomain] = useState(charity.domain || "");
   const [logoPreview, setLogoPreview] = useState<string | null>(charity.logoUrl);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -76,7 +98,6 @@ export default function EditCharityModal({ charity, onClose }: EditCharityModalP
         name,
         licenseNumber: licenseNumber || undefined,
         establishmentDate: establishmentDate || undefined,
-        domain: domain || undefined,
         logoUrl: uploadedLogoUrl,
       });
       if (result.success) {
@@ -93,8 +114,8 @@ export default function EditCharityModal({ charity, onClose }: EditCharityModalP
     });
   };
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+  const modalContent = (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
       {/* Backdrop overlay */}
       <div 
         className="absolute inset-0 bg-slate-950/60 backdrop-blur-md transition-opacity duration-300"
@@ -178,21 +199,6 @@ export default function EditCharityModal({ charity, onClose }: EditCharityModalP
               />
             </div>
 
-            <div>
-              <label htmlFor="charity-domain" className="block text-sm font-bold text-slate-700 mb-2">
-                مجال العمل
-              </label>
-              <input
-                id="charity-domain"
-                type="text"
-                value={domain}
-                onChange={(e) => setDomain(e.target.value)}
-                disabled={isPending}
-                className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all outline-none bg-slate-50 focus:bg-white text-slate-800 text-sm font-bold"
-                placeholder="مثال: رعاية الأيتام، التنمية الأسرية"
-              />
-            </div>
-
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label htmlFor="license-number" className="block text-sm font-bold text-slate-700 mb-2">
@@ -211,16 +217,19 @@ export default function EditCharityModal({ charity, onClose }: EditCharityModalP
 
               <div>
                 <label htmlFor="est-date" className="block text-sm font-bold text-slate-700 mb-2">
-                  تاريخ التأسيس
+                  تاريخ التأسيس (هجري)
                 </label>
-                <input
-                  id="est-date"
-                  type="text"
+                <DatePicker
                   value={establishmentDate}
-                  onChange={(e) => setEstablishmentDate(e.target.value)}
+                  onChange={(date: any) => setEstablishmentDate(date?.format?.("YYYY/MM/DD") || "")}
+                  calendar={arabic}
+                  locale={custom_arabic_ar}
+                  className="teal"
+                  calendarPosition="bottom-right"
+                  containerClassName="w-full"
+                  inputClass="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all outline-none bg-slate-50 focus:bg-white text-slate-800 text-sm font-bold"
+                  placeholder="اختر التاريخ الهجري"
                   disabled={isPending}
-                  className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all outline-none bg-slate-50 focus:bg-white text-slate-800 text-sm font-bold"
-                  placeholder="مثال: 1440هـ أو 2019م"
                 />
               </div>
             </div>
@@ -250,4 +259,7 @@ export default function EditCharityModal({ charity, onClose }: EditCharityModalP
       </div>
     </div>
   );
+
+  if (!mounted) return null;
+  return createPortal(modalContent, document.body);
 }

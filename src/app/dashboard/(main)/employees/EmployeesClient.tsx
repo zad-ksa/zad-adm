@@ -22,7 +22,6 @@ const roleTranslations: Record<string, string> = {
   ADMINISTRATIVE_SECRETARIAT: "مساعد مدير",
   STRATEGY: "الاستراتيجية",
   FINANCE: "المالية",
-  EMPLOYEE: "موظف",
 };
 
 const roleBadgeStyles: Record<string, string> = {
@@ -32,15 +31,11 @@ const roleBadgeStyles: Record<string, string> = {
   ADMINISTRATIVE_SECRETARIAT: "bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300",
   STRATEGY: "bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300",
   FINANCE: "bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300",
-  EMPLOYEE: "bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200",
 };
 
 const permissionsList = [
-  { id: "view_charities", label: "عرض الجمعيات" },
-  { id: "edit_charity", label: "تعديل بيانات الجمعية" },
-  { id: "view_surveys", label: "عرض الاستبيانات" },
-  { id: "manage_surveys", label: "إدارة الاستبيانات" },
-  { id: "view_reports", label: "عرض التقارير" },
+  { id: "manage_governance", label: "إدارة الحوكمة" },
+  { id: "manage_hr", label: "إدارة الموارد البشرية" },
 ];
 
 interface Employee {
@@ -340,7 +335,6 @@ export function EmployeesClient({
                       <option value="ADMINISTRATIVE_SECRETARIAT">مساعد مدير</option>
                       <option value="STRATEGY">الاستراتيجية</option>
                       <option value="FINANCE">المالية</option>
-                      <option value="EMPLOYEE">موظف</option>
                       {editingEmployee.role === "ADMIN" && <option value="ADMIN">مدير النظام</option>}
                     </select>
                   </div>

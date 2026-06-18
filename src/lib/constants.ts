@@ -5,8 +5,10 @@ export const ADMIN_ROLES = ["ADMIN", "EXECUTIVE_DIRECTOR", "ADMINISTRATIVE_SECRE
 export const ROLE_LABELS: Record<string, string> = {
   ADMIN: "مدير النظام",
   EXECUTIVE_DIRECTOR: "المدير التنفيذي",
+  GENERAL_MANAGER: "مساعد المدير",
   ADMINISTRATIVE_SECRETARIAT: "السكرتارية الإدارية",
-  EMPLOYEE: "موظف",
+  STRATEGY: "الاستراتيجية",
+  FINANCE: "المالية",
 };
 
 // Task Statuses

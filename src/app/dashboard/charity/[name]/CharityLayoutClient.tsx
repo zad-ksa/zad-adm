@@ -3,17 +3,21 @@
 import { usePathname } from "next/navigation";
 import CharitySidebar from "./CharitySidebar";
 import { useState, useEffect } from "react";
-import { Menu, Home, Target, FolderKanban, Coins } from "lucide-react";
+import { Menu, Home, Target, FolderKanban, Coins, Scale } from "lucide-react";
 import MobileBottomNav from "@/components/MobileBottomNav";
 
 export default function CharityLayoutClient({
   children,
   charityName,
   logoUrl,
+  role,
+  permissions,
 }: {
   children: React.ReactNode;
   charityName: string;
   logoUrl: string | null;
+  role?: string;
+  permissions?: string[];
 }) {
   const pathname = usePathname();
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
@@ -25,16 +29,38 @@ export default function CharityLayoutClient({
     }
   }, [pathname]);
 
-  const mobileNavItems = [
+  const isAdmin = ["ADMIN", "EXECUTIVE_DIRECTOR", "GENERAL_MANAGER"].includes(role || "");
+  const isStrategy = role === "STRATEGY";
+  const isFinance = role === "FINANCE";
+  const canManageGovernance = isAdmin || permissions?.includes("manage_governance");
+
+  let mobileNavItems = [
     { label: "الرئيسية", href: `/dashboard/charity/${encodeURIComponent(charityName)}`, icon: Home, exact: true },
-    { label: "الاستراتيجية", href: `/dashboard/charity/${encodeURIComponent(charityName)}/strategy`, icon: Target },
-    { label: "البرامج", href: `/dashboard/charity/${encodeURIComponent(charityName)}/programs`, icon: FolderKanban },
-    { label: "المالية", href: `/dashboard/charity/${encodeURIComponent(charityName)}/finance`, icon: Coins },
   ];
+
+  if (isAdmin || isStrategy) {
+    mobileNavItems.push({ label: "الاستراتيجية", href: `/dashboard/charity/${encodeURIComponent(charityName)}/strategy`, icon: Target });
+    mobileNavItems.push({ label: "البرامج", href: `/dashboard/charity/${encodeURIComponent(charityName)}/programs`, icon: FolderKanban });
+  }
+
+  if (canManageGovernance) {
+    mobileNavItems.push({ label: "الحوكمة", href: `/dashboard/charity/${encodeURIComponent(charityName)}/governance`, icon: Scale });
+  }
+
+  if (isAdmin || isFinance) {
+    mobileNavItems.push({ label: "المالية", href: `/dashboard/charity/${encodeURIComponent(charityName)}/finance`, icon: Coins });
+  }
 
   return (
     <div className="flex h-[100dvh] bg-slate-50 dark:bg-slate-900/50 dark:bg-slate-950 overflow-hidden" dir="rtl">
-      <CharitySidebar charityName={charityName} logoUrl={logoUrl} isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />
+      <CharitySidebar 
+        charityName={charityName} 
+        logoUrl={logoUrl} 
+        isOpen={isSidebarOpen} 
+        setIsOpen={setIsSidebarOpen}
+        role={role}
+        permissions={permissions}
+      />
       
       <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden relative">
         {/* Mobile Header (Sticky & Blur) */}

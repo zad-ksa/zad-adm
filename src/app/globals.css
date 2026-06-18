@@ -35,3 +35,37 @@ body {
   -ms-overflow-style: none;  /* IE and Edge */
   scrollbar-width: none;  /* Firefox */
 }
+
+/* Custom Theme for react-multi-date-picker */
+.rmdp-wrapper {
+  border-radius: 1rem !important;
+  border: 1px solid theme('colors.slate.200') !important;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1) !important;
+  font-family: inherit !important;
+}
+.rmdp-header-values {
+  color: var(--color-primary) !important;
+  font-weight: 700 !important;
+}
+.rmdp-arrow {
+  border-color: var(--color-primary) !important;
+}
+.rmdp-week-day {
+  color: var(--color-primary) !important;
+}
+.rmdp-day.rmdp-selected span:not(.highlight) {
+  background-color: var(--color-primary) !important;
+  box-shadow: 0 0 3px var(--color-primary) !important;
+}
+.rmdp-day:not(.rmdp-disabled):not(.rmdp-day-hidden) span:hover {
+  background-color: var(--color-primary) !important;
+  opacity: 0.8;
+  color: white !important;
+}
+.rmdp-day.rmdp-today span {
+  background-color: #f1f5f9 !important;
+  color: var(--color-primary) !important;
+}
+.rmdp-header {
+  font-weight: bold !important;
+}

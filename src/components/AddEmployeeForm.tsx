@@ -24,11 +24,8 @@ export function AddEmployeeForm() {
   }, [state]);
 
   const permissionsList = [
-    { id: "view_charities", label: "عرض الجمعيات" },
-    { id: "edit_charity", label: "تعديل بيانات الجمعية" },
-    { id: "view_surveys", label: "عرض الاستبيانات" },
-    { id: "manage_surveys", label: "إدارة الاستبيانات" },
-    { id: "view_reports", label: "عرض التقارير" },
+    { id: "manage_governance", label: "إدارة الحوكمة" },
+    { id: "manage_hr", label: "إدارة الموارد البشرية" },
   ];
 
   return (
@@ -90,7 +87,6 @@ export function AddEmployeeForm() {
               <option value="ADMINISTRATIVE_SECRETARIAT">مساعد مدير</option>
               <option value="STRATEGY">الاستراتيجية</option>
               <option value="FINANCE">المالية</option>
-              <option value="EMPLOYEE">موظف</option>
             </select>
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
               <ChevronDownIcon className="h-4 w-4 text-slate-400 dark:text-slate-500" />

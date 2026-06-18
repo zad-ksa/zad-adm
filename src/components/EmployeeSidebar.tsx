@@ -54,6 +54,13 @@ export default function EmployeeSidebar({
       { label: "الجمعيات", href: "/dashboard/charities", icon: Building2 },
       { label: "إدارة الموظفين", href: "/dashboard/employees", icon: Users },
     ];
+  } else if (userState?.role === "STRATEGY") {
+    navItems = [
+      { label: "الرئيسية", href: "/dashboard", icon: LayoutDashboard },
+      { label: "الجمعيات", href: "/dashboard/charities", icon: Building2 },
+      { label: "الاستبيانات", href: "/dashboard/surveys", icon: ClipboardList },
+      { label: "مهامي", href: "/dashboard/tasks", icon: CheckSquare },
+    ];
   } else {
     navItems = [
       { label: "الرئيسية", href: "/dashboard", icon: LayoutDashboard },

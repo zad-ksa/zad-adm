@@ -6,6 +6,8 @@ import ReadinessResultsClient from "./ReadinessResultsClient";
 import SurveyLinkManager from "@/components/SurveyLinkManager";
 import type { Metadata } from "next";
 import { Award, AlertTriangle, Sparkles, ShieldAlert, Key, Rocket } from "@/components/Icons";
+import StrategicStagesManager from "./StrategicStagesManager";
+import { ensureStagesForCharity } from "@/app/actions/strategy";
 
 
 
@@ -56,11 +58,18 @@ export default async function StrategySurveysPage({ params }: { params: Promise<
   const responses = await getCachedResponses(decodedName);
   const hasReadiness = responses.length > 0;
 
+  const charity = await prisma.charity.findUnique({
+    where: { name: decodedName },
+  });
 
-
-
-
-  return (
+  let stages: any[] = [];
+  if (charity) {
+    await ensureStagesForCharity(charity.id);
+    stages = await prisma.strategicStage.findMany({
+      where: { charityId: charity.id },
+      orderBy: { order: 'asc' },
+    });
+  }  return (
     <div className="space-y-12">
       <div className="print:hidden">
         <SurveyLinkManager charityName={decodedName} surveyType="READINESS" />
@@ -87,6 +96,10 @@ export default async function StrategySurveysPage({ params }: { params: Promise<
         )}
       </div>
 
+      {/* Section 2: Strategic Stages Management */}
+      {charity && (
+        <StrategicStagesManager charityId={charity.id} initialStages={stages} />
+      )}
 
     </div>
   );

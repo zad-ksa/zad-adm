@@ -22,10 +22,12 @@ type Regulation = {
 
 export default function GovernanceRegulationsManager({
   charityId,
-  regulations
+  regulations,
+  isAdmin = false
 }: {
   charityId: string;
   regulations: Regulation[];
+  isAdmin?: boolean;
 }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -70,11 +72,13 @@ export default function GovernanceRegulationsManager({
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {regulations.map((reg) => {
-            const isVisible = !reg.charityVisibilities.some(v => v.charityId === charityId && v.isVisible === false);
-            
-            return (
-              <div 
-                key={reg.id} 
+              const isVisible = !reg.charityVisibilities.some(v => v.charityId === charityId && v.isVisible === false);
+              
+              if (!isVisible && !isAdmin) return null;
+
+              return (
+                <div 
+                  key={reg.id} 
                 className={`flex flex-col gap-3 p-5 rounded-xl border transition-all ${
                   isVisible 
                     ? "bg-slate-50 dark:bg-slate-900/50 border-slate-200 dark:border-slate-700" 
@@ -105,24 +109,28 @@ export default function GovernanceRegulationsManager({
                     )}
                   </div>
                   <div className="flex items-center gap-1 shrink-0">
-                    <button
-                      onClick={() => handleToggle(reg.id, isVisible)}
-                      title={isVisible ? "إخفاء عن هذه الجمعية" : "إظهار لهذه الجمعية"}
-                      className={`p-2 rounded-lg transition-colors ${
-                        isVisible 
-                          ? "text-emerald-600 bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-900/20 dark:hover:bg-emerald-900/40" 
-                          : "text-slate-500 bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600"
-                      }`}
-                    >
-                      {isVisible ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
-                    </button>
-                    <button
-                      onClick={() => handleDelete(reg.id)}
-                      title="حذف اللائحة من النظام بالكامل"
-                      className="p-2 rounded-lg text-red-500 bg-red-50 hover:bg-red-100 dark:bg-red-900/20 dark:hover:bg-red-900/40 transition-colors"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
+                    {isAdmin && (
+                      <>
+                        <button
+                          onClick={() => handleToggle(reg.id, isVisible)}
+                          title={isVisible ? "إخفاء عن هذه الجمعية" : "إظهار لهذه الجمعية"}
+                          className={`p-2 rounded-lg transition-colors ${
+                            isVisible 
+                              ? "text-emerald-600 bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-900/20 dark:hover:bg-emerald-900/40" 
+                              : "text-slate-500 bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600"
+                          }`}
+                        >
+                          {isVisible ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
+                        </button>
+                        <button
+                          onClick={() => handleDelete(reg.id)}
+                          title="حذف اللائحة من النظام بالكامل"
+                          className="p-2 rounded-lg text-red-500 bg-red-50 hover:bg-red-100 dark:bg-red-900/20 dark:hover:bg-red-900/40 transition-colors"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </>
+                    )}
                   </div>
                 </div>
 
@@ -144,12 +152,14 @@ export default function GovernanceRegulationsManager({
       )}
 
       {/* Floating Action Button */}
-      <button
-        onClick={() => setIsModalOpen(true)}
-        className="fixed bottom-8 left-8 w-14 h-14 bg-emerald-500 hover:bg-emerald-600 text-white rounded-full shadow-lg hover:shadow-xl flex items-center justify-center transition-all hover:scale-105 z-50 group"
-      >
-        <Plus className="w-6 h-6 transition-transform group-hover:rotate-90" />
-      </button>
+      {isAdmin && (
+        <button
+          onClick={() => setIsModalOpen(true)}
+          className="fixed bottom-8 left-8 w-14 h-14 bg-emerald-500 hover:bg-emerald-600 text-white rounded-full shadow-lg hover:shadow-xl flex items-center justify-center transition-all hover:scale-105 z-50 group"
+        >
+          <Plus className="w-6 h-6 transition-transform group-hover:rotate-90" />
+        </button>
+      )}
 
       {/* Add Modal */}
       {isModalOpen && (

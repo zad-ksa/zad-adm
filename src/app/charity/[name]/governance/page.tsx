@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { prisma } from "@/lib/db";
 import GovernanceStagesManager from "./GovernanceStagesManager";
 import GovernanceRegulationsManager from "./GovernanceRegulationsManager";
+import { getSession } from "@/lib/auth";
 
 export async function generateMetadata({ params }: { params: Promise<{ name: string }> }): Promise<Metadata> {
   const { name } = await params;
@@ -19,6 +20,9 @@ export default async function GovernancePage({ params }: { params: Promise<{ nam
   const charity = await prisma.charity.findUnique({
     where: { name: decodedName },
   });
+
+  const session = await getSession();
+  const isAdmin = ["ADMIN", "EXECUTIVE_DIRECTOR", "GENERAL_MANAGER"].includes(session?.role || "");
 
   let stages: any[] = [];
   let regulations: any[] = [];
@@ -57,8 +61,8 @@ export default async function GovernancePage({ params }: { params: Promise<{ nam
 
       {charity && (
         <>
-          <GovernanceStagesManager charityId={charity.id} initialStages={stages} />
-          <GovernanceRegulationsManager charityId={charity.id} regulations={regulations} />
+          {isAdmin && <GovernanceStagesManager charityId={charity.id} initialStages={stages} />}
+          <GovernanceRegulationsManager charityId={charity.id} regulations={regulations} isAdmin={isAdmin} />
         </>
       )}
     </div>

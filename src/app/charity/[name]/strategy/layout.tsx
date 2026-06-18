@@ -1,5 +1,6 @@
 import { ReactNode } from "react";
 import StrategyTabs from "./StrategyTabs";
+import { getSession } from "@/lib/auth";
 
 export default async function StrategyLayout({
   children,
@@ -10,6 +11,8 @@ export default async function StrategyLayout({
 }) {
   const { name } = await params;
   const decodedName = decodeURIComponent(name);
+  const session = await getSession();
+  const isAdmin = ["ADMIN", "EXECUTIVE_DIRECTOR", "GENERAL_MANAGER"].includes(session?.role || "");
 
   return (
     <div className="flex flex-col h-full">
@@ -19,7 +22,7 @@ export default async function StrategyLayout({
       </div>
 
       <div className="print:hidden">
-        <StrategyTabs charityName={decodedName} />
+        <StrategyTabs charityName={decodedName} isAdmin={isAdmin} />
       </div>
 
       <div className="flex-1 bg-white dark:bg-slate-800 rounded-b-3xl rounded-tl-3xl p-6 md:p-8 shadow-sm border border-slate-200 dark:border-slate-700 print:shadow-none print:border-none print:p-0 print:m-0 transition-colors">

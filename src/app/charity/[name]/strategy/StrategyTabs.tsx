@@ -30,7 +30,7 @@ const StagesIcon = () => (
   </svg>
 );
 
-export default function StrategyTabs({ charityName }: { charityName: string }) {
+export default function StrategyTabs({ charityName, isAdmin = false }: { charityName: string, isAdmin?: boolean }) {
   const pathname = usePathname();
 
   const tabs = [
@@ -57,8 +57,9 @@ export default function StrategyTabs({ charityName }: { charityName: string }) {
       href: `/charity/${encodeURIComponent(charityName)}/strategy/stages`,
       exact: false,
       icon: <StagesIcon />,
+      show: isAdmin,
     },
-  ];
+  ].filter(t => t.show !== false);
 
   return (
     <div className="flex gap-2 mb-6 border-b border-slate-200 dark:border-slate-700 transition-colors">

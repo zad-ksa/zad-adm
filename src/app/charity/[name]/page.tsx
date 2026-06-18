@@ -151,7 +151,7 @@ export default async function CharityOverview({ params }: { params: Promise<{ na
           </h3>
           <div className="relative">
             {(() => {
-              const currentIndex = strategicStages.findIndex(s => s.isCurrent);
+              const currentIndex = strategicStages.findIndex((s: any) => s.isCurrent);
               const calcIndex = currentIndex === -1 ? strategicStages.length - 1 : currentIndex;
               const progressWidth = strategicStages.length > 0 ? `${((calcIndex + 0.5) / strategicStages.length) * 100}%` : '0%';
               return (
@@ -162,7 +162,7 @@ export default async function CharityOverview({ params }: { params: Promise<{ na
                     style={{ width: progressWidth }}
                   ></div>
                   <div className="flex flex-col md:flex-row gap-4 relative z-10">
-                    {strategicStages.map((stage, index) => {
+                    {strategicStages.map((stage: any, index: number) => {
                       const stageNumber = index + 1;
                       const isCurrent = stage.isCurrent;
                       const isCompleted = currentIndex !== -1 ? index < currentIndex : true;
@@ -206,7 +206,7 @@ export default async function CharityOverview({ params }: { params: Promise<{ na
             </h3>
             <div className="relative">
               {(() => {
-                const currentIndex = governanceStages.findIndex(s => s.isCurrent);
+                const currentIndex = governanceStages.findIndex((s: any) => s.isCurrent);
                 const calcIndex = currentIndex === -1 ? governanceStages.length - 1 : currentIndex;
                 const progressWidth = governanceStages.length > 0 ? `${((calcIndex + 0.5) / governanceStages.length) * 100}%` : '0%';
                 return (
@@ -217,7 +217,7 @@ export default async function CharityOverview({ params }: { params: Promise<{ na
                       style={{ width: progressWidth }}
                     ></div>
                     <div className="flex flex-col md:flex-row gap-4 relative z-10">
-                      {governanceStages.map((stage, index) => {
+                      {governanceStages.map((stage: any, index: number) => {
                         const stageNumber = index + 1;
                         const isCurrent = stage.isCurrent;
                         const isCompleted = currentIndex !== -1 ? index < currentIndex : true;
@@ -262,7 +262,7 @@ export default async function CharityOverview({ params }: { params: Promise<{ na
             </h3>
             <div className="relative">
               {(() => {
-                const currentIndex = financeStages.findIndex(s => s.isCurrent);
+                const currentIndex = financeStages.findIndex((s: any) => s.isCurrent);
                 const calcIndex = currentIndex === -1 ? financeStages.length - 1 : currentIndex;
                 const progressWidth = financeStages.length > 0 ? `${((calcIndex + 0.5) / financeStages.length) * 100}%` : '0%';
                 return (
@@ -273,7 +273,7 @@ export default async function CharityOverview({ params }: { params: Promise<{ na
                       style={{ width: progressWidth }}
                     ></div>
                     <div className="flex flex-col md:flex-row gap-4 relative z-10">
-                      {financeStages.map((stage, index) => {
+                      {financeStages.map((stage: any, index: number) => {
                         const stageNumber = index + 1;
                         const isCurrent = stage.isCurrent;
                         const isCompleted = currentIndex !== -1 ? index < currentIndex : true;
@@ -317,7 +317,7 @@ export default async function CharityOverview({ params }: { params: Promise<{ na
           </h3>
           {completedTasks.length > 0 ? (
             <div className="space-y-4">
-              {completedTasks.map(task => (
+              {completedTasks.map((task: any) => (
                 <div key={task.id} className="flex items-start gap-3 p-4 bg-slate-50 dark:bg-slate-900/50 rounded-xl border border-slate-100 dark:border-slate-700">
                   <div className="w-8 h-8 rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5">
                     <Check className="w-4 h-4" />
@@ -347,7 +347,7 @@ export default async function CharityOverview({ params }: { params: Promise<{ na
           </h3>
           {latestNews.length > 0 ? (
             <div className="space-y-4">
-              {latestNews.map(news => (
+              {latestNews.map((news: any) => (
                 <div key={news.id} className="flex items-start gap-3 p-4 bg-slate-50 dark:bg-slate-900/50 rounded-xl border border-slate-100 dark:border-slate-700">
                   <div className="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center text-blue-600 dark:text-blue-400 shrink-0 mt-0.5">
                     <ClipboardList className="w-4 h-4" />
@@ -395,7 +395,7 @@ export default async function CharityOverview({ params }: { params: Promise<{ na
           </h3>
           {upcomingMeetings.length > 0 ? (
             <div className="space-y-4">
-              {upcomingMeetings.map(meeting => (
+              {upcomingMeetings.map((meeting: any) => (
                 <div key={meeting.id} className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-900/50 rounded-xl border border-slate-100 dark:border-slate-700">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-xl bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center text-purple-600 dark:text-purple-400 shrink-0">

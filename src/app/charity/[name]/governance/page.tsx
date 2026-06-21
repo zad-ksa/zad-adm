@@ -33,7 +33,7 @@ export default async function GovernancePage({ params }: { params: Promise<{ nam
     });
     
     regulations = await prisma.regulation.findMany({
-      orderBy: { createdAt: 'desc' },
+      orderBy: { createdAt: 'asc' },
       include: {
         charityVisibilities: true
       }

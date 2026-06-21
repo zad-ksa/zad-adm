@@ -28,6 +28,8 @@ model Charity {
   financeStages     FinanceStage[]
   regulationVisibilities CharityRegulationVisibility[]
   employees         Employee[]
+  isReadinessVisible Boolean @default(false)
+  isPerformanceEditable Boolean @default(false)
 }
 
 model StrategicStage {

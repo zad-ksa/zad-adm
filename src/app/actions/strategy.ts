@@ -1,4 +1,4 @@
-﻿"use server";
+"use server";
 
 import { prisma } from "@/lib/db";
 import { revalidatePath } from "next/cache";
@@ -128,4 +128,59 @@ export async function reorderStrategicStages(charityId: string, stageIds: string
     revalidatePath(`/charity/${encodeURIComponent(charity.name)}`);
     revalidatePath(`/charity/${encodeURIComponent(charity.name)}/strategy`);
   }
+}
+
+export async function toggleReadinessVisibility(charityName: string, isVisible: boolean) {
+  await prisma.charity.update({
+    where: { name: charityName },
+    data: { isReadinessVisible: isVisible }
+  });
+  revalidatePath(`/charity/${encodeURIComponent(charityName)}/strategy`);
+}
+
+export async function togglePerformanceEditability(charityName: string, isEditable: boolean) {
+  await prisma.charity.update({
+    where: { name: charityName },
+    data: { isPerformanceEditable: isEditable }
+  });
+  revalidatePath(`/charity/${encodeURIComponent(charityName)}/strategy`);
+  revalidatePath(`/charity/${encodeURIComponent(charityName)}/strategy/performance`);
+}
+
+export async function getCharityDashboardData(charityName: string) {
+  const charity = await prisma.charity.findUnique({
+    where: { name: charityName },
+    include: {
+      strategicStages: {
+        orderBy: { order: 'asc' }
+      }
+    }
+  });
+
+  if (!charity) return null;
+
+  const nextMeeting = await prisma.meeting.findFirst({
+    where: { 
+      charityId: charity.id,
+      date: { gte: new Date() }
+    },
+    orderBy: { date: 'asc' }
+  });
+
+  const activeTasks = await prisma.task.findMany({
+    where: {
+      charityName: charityName,
+      status: 'IN_PROGRESS',
+      assignedTo: { role: 'STRATEGY' }
+    },
+    include: {
+      assignedTo: true
+    }
+  });
+
+  return {
+    charity,
+    nextMeeting,
+    activeTasks
+  };
 }

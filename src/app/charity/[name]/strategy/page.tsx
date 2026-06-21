@@ -7,9 +7,10 @@ import SurveyLinkManager from "@/components/SurveyLinkManager";
 import type { Metadata } from "next";
 import { Award, AlertTriangle, Sparkles, ShieldAlert, Key, Rocket } from "@/components/Icons";
 import StrategicStagesManager from "./StrategicStagesManager";
-import { ensureStagesForCharity } from "@/app/actions/strategy";
-
-
+import { ensureStagesForCharity, getCharityDashboardData } from "@/app/actions/strategy";
+import { getSession } from "@/lib/auth";
+import CharityClientStrategyDashboard from "@/components/CharityClientStrategyDashboard";
+import StrategyPermissionToggle from "@/components/StrategyPermissionToggle";
 
 const getCachedResponses = async (charityName: string) => {
     const charityResponses = await prisma.surveyResponse.findMany({
@@ -55,6 +56,10 @@ export default async function StrategySurveysPage({ params }: { params: Promise<
   const { name } = await params;
   const decodedName = decodeURIComponent(name);
 
+  const session = await getSession();
+  const isCharityClient = session?.role === "CHARITY_CLIENT";
+  const isStrategyTeam = session?.role === "STRATEGY";
+
   const responses = await getCachedResponses(decodedName);
   const hasReadiness = responses.length > 0;
 
@@ -62,20 +67,59 @@ export default async function StrategySurveysPage({ params }: { params: Promise<
     where: { name: decodedName },
   });
 
-  let stages: any[] = [];
   if (charity) {
     await ensureStagesForCharity(charity.id);
-    stages = await prisma.strategicStage.findMany({
-      where: { charityId: charity.id },
-      orderBy: { order: 'asc' },
-    });
   }
-  
+
+  // --- CHARITY CLIENT DASHBOARD ---
+  if (isCharityClient) {
+    const dashboardData = await getCharityDashboardData(decodedName);
+    
+    return (
+      <div className="space-y-12">
+        <CharityClientStrategyDashboard charityName={decodedName} data={dashboardData} />
+        
+        {dashboardData?.charity?.isReadinessVisible && (
+          <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 p-6 shadow-sm mt-8 animate-in fade-in slide-in-from-bottom-4 duration-500 delay-150">
+             <div className="flex items-center gap-3 mb-8 border-b border-slate-200 dark:border-slate-700 pb-4">
+              <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center text-primary font-bold">
+                <ChartLineIcon />
+              </div>
+              <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-100 tracking-tight">
+                نتائج استبيان الجاهزية للتخطيط الاستراتيجي
+              </h2>
+            </div>
+
+            {hasReadiness ? (
+              <ReadinessResultsClient responses={responses} />
+            ) : (
+              <div className="bg-slate-50 dark:bg-slate-900/50 rounded-2xl p-12 text-center text-slate-500 dark:text-slate-400 border border-slate-100 dark:border-slate-700">
+                <FileEditIcon />
+                <p className="font-bold mt-4">لم يقم أي مشارك بتعبئة استبيان الجاهزية للتخطيط الاستراتيجي لهذه الجمعية بعد.</p>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  // --- DEFAULT VIEW (Admin, Strategy, etc.) ---
   return (
     <div className="space-y-12">
       <div className="print:hidden">
         <SurveyLinkManager charityName={decodedName} surveyType="READINESS" />
       </div>
+
+      {isStrategyTeam && charity && (
+        <StrategyPermissionToggle
+          charityName={decodedName}
+          type="readiness"
+          initialState={charity.isReadinessVisible}
+          label="إظهار نتيجة مقياس الجاهزية للجمعية"
+          description="تفعيل هذا الخيار سيسمح لموظفي الجمعية بالاطلاع على نتائج مقياس الجاهزية في لوحة التحكم الخاصة بهم."
+        />
+      )}
 
       {/* Section 1: Readiness Survey Results */}
       <div>

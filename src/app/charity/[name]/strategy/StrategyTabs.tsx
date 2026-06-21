@@ -30,8 +30,10 @@ const StagesIcon = () => (
   </svg>
 );
 
-export default function StrategyTabs({ charityName, isAdmin = false }: { charityName: string, isAdmin?: boolean }) {
+export default function StrategyTabs({ charityName, isAdmin = false, isCharityClient = false }: { charityName: string, isAdmin?: boolean, isCharityClient?: boolean }) {
   const pathname = usePathname();
+
+  if (isCharityClient) return null;
 
   const tabs = [
     {

@@ -1,8 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { format } from "date-fns";
-import { arSA } from "date-fns/locale";
 
 const CalendarIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
@@ -74,7 +72,16 @@ export default function CharityClientStrategyDashboard({
                 <p className="font-bold text-xl text-slate-800 dark:text-slate-100 mb-2">{nextMeeting.title}</p>
                 <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400">
                   <ClockIcon />
-                  <span>{format(new Date(nextMeeting.date), "dd MMMM yyyy - hh:mm a", { locale: arSA })}</span>
+                  <span>
+                    {new Intl.DateTimeFormat('ar-SA', {
+                      day: '2-digit',
+                      month: 'long',
+                      year: 'numeric',
+                      hour: '2-digit',
+                      minute: '2-digit',
+                      hour12: true
+                    }).format(new Date(nextMeeting.date))}
+                  </span>
                 </div>
               </div>
             ) : (

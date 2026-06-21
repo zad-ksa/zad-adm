@@ -88,7 +88,7 @@ export default async function CharityOverview({ params }: { params: Promise<{ na
         <div className="absolute top-0 left-0 w-64 h-64 bg-primary/5 dark:bg-primary/10 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2 pointer-events-none"></div>
 
         <div className="relative z-10">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 mb-10 pb-6 border-b border-slate-100 dark:border-slate-700 transition-colors">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 transition-colors">
             <div className="flex items-center gap-4">
               {charity.logoUrl ? (
                 <div className="w-16 h-16 rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-600 shadow-inner bg-white dark:bg-slate-900 flex items-center justify-center transition-colors">
@@ -113,201 +113,12 @@ export default async function CharityOverview({ params }: { params: Promise<{ na
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <div className="bg-slate-50 dark:bg-slate-900/50 p-6 rounded-2xl border border-slate-100 dark:border-slate-700 hover:border-slate-200 dark:hover:border-slate-600 transition-colors">
-              <div className="flex items-center gap-2 mb-3">
-                <div className="text-sm font-bold text-slate-500 dark:text-slate-400 transition-colors">اسم الجمعية</div>
-              </div>
-              <div className="text-xl font-bold text-slate-800 dark:text-slate-100 transition-colors">{charity.name}</div>
-            </div>
 
-            <div className="bg-slate-50 dark:bg-slate-900/50 p-6 rounded-2xl border border-slate-100 dark:border-slate-700 hover:border-slate-200 dark:hover:border-slate-600 transition-colors">
-              <div className="flex items-center gap-2 mb-3">
-                <div className="text-sm font-bold text-slate-500 dark:text-slate-400 transition-colors">تاريخ التأسيس</div>
-              </div>
-              <div className="text-xl font-bold text-slate-800 dark:text-slate-100 transition-colors">
-                {charity.establishmentDate || <span className="text-slate-300 dark:text-slate-600 font-medium text-sm transition-colors">غير متوفر</span>}
-              </div>
-            </div>
-
-            <div className="bg-slate-50 dark:bg-slate-900/50 p-6 rounded-2xl border border-slate-100 dark:border-slate-700 hover:border-slate-200 dark:hover:border-slate-600 transition-colors">
-              <div className="flex items-center gap-2 mb-3">
-                <div className="text-sm font-bold text-slate-500 dark:text-slate-400 transition-colors">رقم التصريح</div>
-              </div>
-              <div className="text-xl font-bold text-slate-800 dark:text-slate-100 transition-colors">
-                {charity.licenseNumber || <span className="text-slate-300 dark:text-slate-600 font-medium text-sm transition-colors">غير متوفر</span>}
-              </div>
-            </div>
-          </div>
         </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
-        {/* Strategic Planning Stage */}
-        <div className="bg-white dark:bg-slate-800 rounded-2xl p-8 border border-slate-100 dark:border-slate-700 shadow-sm relative overflow-hidden transition-colors lg:col-span-2">
-          <h3 className="text-xl font-bold text-slate-800 dark:text-slate-100 mb-6 flex items-center gap-2">
-            <Sparkles className="w-6 h-6 text-primary" />
-            المرحلة الحالية في التخطيط الاستراتيجي
-          </h3>
-          <div className="relative">
-            {(() => {
-              const currentIndex = strategicStages.findIndex((s: any) => s.isCurrent);
-              const calcIndex = currentIndex === -1 ? strategicStages.length - 1 : currentIndex;
-              const progressWidth = strategicStages.length > 0 ? `${((calcIndex + 0.5) / strategicStages.length) * 100}%` : '0%';
-              return (
-                <>
-                  <div className="absolute top-5 left-0 w-full h-1 bg-slate-100 dark:bg-slate-700 -translate-y-1/2 rounded-full hidden md:block z-0"></div>
-                  <div 
-                    className="absolute top-5 right-0 h-1 bg-primary -translate-y-1/2 rounded-full hidden md:block transition-all duration-1000 ease-out z-0"
-                    style={{ width: progressWidth }}
-                  ></div>
-                  <div className="flex flex-col md:flex-row gap-4 relative z-10">
-                    {strategicStages.map((stage: any, index: number) => {
-                      const stageNumber = index + 1;
-                      const isCurrent = stage.isCurrent;
-                      const isCompleted = currentIndex !== -1 ? index < currentIndex : true;
-                      
-                      return (
-                        <div key={stage.id} className="flex-1 flex flex-col items-center text-center">
-                          <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm mb-3 shadow-sm border-2 transition-colors ${
-                            isCurrent ? "bg-white dark:bg-slate-800 text-primary border-primary ring-4 ring-primary/20" :
-                            isCompleted ? "bg-primary text-white border-primary" :
-                            "bg-slate-50 dark:bg-slate-900 text-slate-400 border-slate-200 dark:border-slate-700"
-                          }`}>
-                            {isCompleted ? <Check className="w-5 h-5" /> : stageNumber}
-                          </div>
-                          <div className={`text-sm font-medium transition-colors ${
-                            isCurrent ? "text-primary font-bold" : "text-slate-600 dark:text-slate-400"
-                          }`}>
-                            {stage.name}
-                          </div>
-                          {stage.duration && (
-                            <div className="mt-2 text-xs text-slate-500 dark:text-slate-400 font-semibold bg-slate-100 dark:bg-slate-700/50 px-2 py-0.5 rounded-full inline-flex items-center justify-center gap-1">
-                              <Clock className="w-3 h-3" />
-                              {stage.duration}
-                            </div>
-                          )}
-                        </div>
-                      );
-                    })}
-                  </div>
-                </>
-              );
-            })()}
-          </div>
-        </div>
 
-        {/* Governance Stage */}
-        {governanceStages.length > 0 && (
-          <div className="bg-white dark:bg-slate-800 rounded-2xl p-8 border border-slate-100 dark:border-slate-700 shadow-sm relative overflow-hidden transition-colors lg:col-span-2">
-            <h3 className="text-xl font-bold text-slate-800 dark:text-slate-100 mb-6 flex items-center gap-2">
-              <Scale className="w-6 h-6 text-emerald-500" />
-              المرحلة الحالية في الحوكمة
-            </h3>
-            <div className="relative">
-              {(() => {
-                const currentIndex = governanceStages.findIndex((s: any) => s.isCurrent);
-                const calcIndex = currentIndex === -1 ? governanceStages.length - 1 : currentIndex;
-                const progressWidth = governanceStages.length > 0 ? `${((calcIndex + 0.5) / governanceStages.length) * 100}%` : '0%';
-                return (
-                  <>
-                    <div className="absolute top-5 left-0 w-full h-1 bg-slate-100 dark:bg-slate-700 -translate-y-1/2 rounded-full hidden md:block z-0"></div>
-                    <div 
-                      className="absolute top-5 right-0 h-1 bg-emerald-500 -translate-y-1/2 rounded-full hidden md:block transition-all duration-1000 ease-out z-0"
-                      style={{ width: progressWidth }}
-                    ></div>
-                    <div className="flex flex-col md:flex-row gap-4 relative z-10">
-                      {governanceStages.map((stage: any, index: number) => {
-                        const stageNumber = index + 1;
-                        const isCurrent = stage.isCurrent;
-                        const isCompleted = currentIndex !== -1 ? index < currentIndex : true;
-                        
-                        return (
-                          <div key={stage.id} className="flex-1 flex flex-col items-center text-center">
-                            <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm mb-3 shadow-sm border-2 transition-colors ${
-                              isCurrent ? "bg-white dark:bg-slate-800 text-emerald-600 border-emerald-500 ring-4 ring-emerald-500/20" :
-                              isCompleted ? "bg-emerald-500 text-white border-emerald-500" :
-                              "bg-slate-50 dark:bg-slate-900 text-slate-400 border-slate-200 dark:border-slate-700"
-                            }`}>
-                              {isCompleted ? <Check className="w-5 h-5" /> : stageNumber}
-                            </div>
-                            <div className={`text-sm font-medium transition-colors ${
-                              isCurrent ? "text-emerald-600 font-bold" : "text-slate-600 dark:text-slate-400"
-                            }`}>
-                              {stage.name}
-                            </div>
-                            {stage.duration && (
-                              <div className="mt-2 text-xs text-slate-500 dark:text-slate-400 font-semibold bg-slate-100 dark:bg-slate-700/50 px-2 py-0.5 rounded-full inline-flex items-center justify-center gap-1">
-                                <Clock className="w-3 h-3" />
-                                {stage.duration}
-                              </div>
-                            )}
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </>
-                );
-              })()}
-            </div>
-          </div>
-        )}
-
-        {/* Finance Stage */}
-        {financeStages.length > 0 && (
-          <div className="bg-white dark:bg-slate-800 rounded-2xl p-8 border border-slate-100 dark:border-slate-700 shadow-sm relative overflow-hidden transition-colors lg:col-span-2">
-            <h3 className="text-xl font-bold text-slate-800 dark:text-slate-100 mb-6 flex items-center gap-2">
-              <Coins className="w-6 h-6 text-amber-500" />
-              المرحلة الحالية في تنمية الموارد المالية
-            </h3>
-            <div className="relative">
-              {(() => {
-                const currentIndex = financeStages.findIndex((s: any) => s.isCurrent);
-                const calcIndex = currentIndex === -1 ? financeStages.length - 1 : currentIndex;
-                const progressWidth = financeStages.length > 0 ? `${((calcIndex + 0.5) / financeStages.length) * 100}%` : '0%';
-                return (
-                  <>
-                    <div className="absolute top-5 left-0 w-full h-1 bg-slate-100 dark:bg-slate-700 -translate-y-1/2 rounded-full hidden md:block z-0"></div>
-                    <div 
-                      className="absolute top-5 right-0 h-1 bg-amber-500 -translate-y-1/2 rounded-full hidden md:block transition-all duration-1000 ease-out z-0"
-                      style={{ width: progressWidth }}
-                    ></div>
-                    <div className="flex flex-col md:flex-row gap-4 relative z-10">
-                      {financeStages.map((stage: any, index: number) => {
-                        const stageNumber = index + 1;
-                        const isCurrent = stage.isCurrent;
-                        const isCompleted = currentIndex !== -1 ? index < currentIndex : true;
-                        
-                        return (
-                          <div key={stage.id} className="flex-1 flex flex-col items-center text-center">
-                            <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm mb-3 shadow-sm border-2 transition-colors ${
-                              isCurrent ? "bg-white dark:bg-slate-800 text-amber-600 border-amber-500 ring-4 ring-amber-500/20" :
-                              isCompleted ? "bg-amber-500 text-white border-amber-500" :
-                              "bg-slate-50 dark:bg-slate-900 text-slate-400 border-slate-200 dark:border-slate-700"
-                            }`}>
-                              {isCompleted ? <Check className="w-5 h-5" /> : stageNumber}
-                            </div>
-                            <div className={`text-sm font-medium transition-colors ${
-                              isCurrent ? "text-amber-600 font-bold" : "text-slate-600 dark:text-slate-400"
-                            }`}>
-                              {stage.name}
-                            </div>
-                            {stage.duration && (
-                              <div className="mt-2 text-xs text-slate-500 dark:text-slate-400 font-semibold bg-slate-100 dark:bg-slate-700/50 px-2 py-0.5 rounded-full inline-flex items-center justify-center gap-1">
-                                <Clock className="w-3 h-3" />
-                                {stage.duration}
-                              </div>
-                            )}
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </>
-                );
-              })()}
-            </div>
-          </div>
-        )}
 
         {/* Latest Completed Tasks */}
         <div className="bg-white dark:bg-slate-800 rounded-2xl p-8 border border-slate-100 dark:border-slate-700 shadow-sm relative overflow-hidden transition-colors">
@@ -339,59 +150,34 @@ export default async function CharityOverview({ params }: { params: Promise<{ na
           )}
         </div>
 
-        {/* Latest News */}
-        <div className="bg-white dark:bg-slate-800 rounded-2xl p-8 border border-slate-100 dark:border-slate-700 shadow-sm relative overflow-hidden transition-colors">
-          <h3 className="text-xl font-bold text-slate-800 dark:text-slate-100 mb-6 flex items-center gap-2">
-            <ClipboardList className="w-6 h-6 text-blue-500" />
-            اخر الاخبار
-          </h3>
-          {latestNews.length > 0 ? (
-            <div className="space-y-4">
-              {latestNews.map((news: any) => (
-                <div key={news.id} className="flex items-start gap-3 p-4 bg-slate-50 dark:bg-slate-900/50 rounded-xl border border-slate-100 dark:border-slate-700">
-                  <div className="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center text-blue-600 dark:text-blue-400 shrink-0 mt-0.5">
-                    <ClipboardList className="w-4 h-4" />
-                  </div>
-                  <div>
-                    <div className="font-semibold text-slate-800 dark:text-slate-200">{news.title}</div>
-                    {news.description && <div className="text-sm text-slate-600 dark:text-slate-400 mt-1 line-clamp-2">{news.description}</div>}
-                    <div className="text-xs text-slate-500 dark:text-slate-400 mt-2 flex items-center gap-1">
-                      <CalendarIcon className="w-3 h-3" />
-                      {new Date(news.date).toLocaleDateString('ar-SA')}
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="text-center py-8 text-slate-500 dark:text-slate-400">لا توجد اخبار بعد</div>
-          )}
-        </div>
+
 
         {/* Grants */}
-        <div className="bg-white dark:bg-slate-800 rounded-2xl p-8 border border-slate-100 dark:border-slate-700 shadow-sm relative overflow-hidden transition-colors">
-          <h3 className="text-xl font-bold text-slate-800 dark:text-slate-100 mb-6 flex items-center gap-2">
-            <Award className="w-6 h-6 text-amber-500" />
-            المنح الحاصلة عليها الجمعية
-          </h3>
-          <div className="bg-amber-50 dark:bg-amber-900/10 p-6 rounded-2xl border border-amber-100 dark:border-amber-900/30 flex items-center justify-between">
-             <div>
-               <div className="text-sm font-bold text-amber-600 dark:text-amber-500 mb-1">إجمالي المنح</div>
-               <div className="text-3xl font-bold text-slate-800 dark:text-slate-100">
-                 {new Intl.NumberFormat('ar-SA', { style: 'currency', currency: 'SAR', maximumFractionDigits: 0 }).format(charity.grants || 0)}
+        {!!charity.grants && charity.grants > 0 && (
+          <div className="bg-white dark:bg-slate-800 rounded-2xl p-8 border border-slate-100 dark:border-slate-700 shadow-sm relative overflow-hidden transition-colors">
+            <h3 className="text-xl font-bold text-slate-800 dark:text-slate-100 mb-6 flex items-center gap-2">
+              <Award className="w-6 h-6 text-amber-500" />
+              المنح الحاصلة عليها الجمعية
+            </h3>
+            <div className="bg-amber-50 dark:bg-amber-900/10 p-6 rounded-2xl border border-amber-100 dark:border-amber-900/30 flex items-center justify-between">
+               <div>
+                 <div className="text-sm font-bold text-amber-600 dark:text-amber-500 mb-1">إجمالي المنح</div>
+                 <div className="text-3xl font-bold text-slate-800 dark:text-slate-100">
+                   {new Intl.NumberFormat('ar-SA', { style: 'currency', currency: 'SAR', maximumFractionDigits: 0 }).format(charity.grants || 0)}
+                 </div>
                </div>
-             </div>
-             <div className="w-16 h-16 bg-amber-100 dark:bg-amber-900/30 rounded-full flex items-center justify-center text-amber-500">
-               <Award className="w-8 h-8" />
-             </div>
+               <div className="w-16 h-16 bg-amber-100 dark:bg-amber-900/30 rounded-full flex items-center justify-center text-amber-500">
+                 <Award className="w-8 h-8" />
+               </div>
+            </div>
           </div>
-        </div>
+        )}
 
         {/* Upcoming Meetings */}
         <div className="bg-white dark:bg-slate-800 rounded-2xl p-8 border border-slate-100 dark:border-slate-700 shadow-sm relative overflow-hidden transition-colors">
           <h3 className="text-xl font-bold text-slate-800 dark:text-slate-100 mb-6 flex items-center gap-2">
             <CalendarIcon className="w-6 h-6 text-purple-500" />
-            الاجتماعات القادمة مع زاد
+            المواعيد
           </h3>
           {upcomingMeetings.length > 0 ? (
             <div className="space-y-4">

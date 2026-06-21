@@ -5,6 +5,7 @@ import { Briefcase } from "lucide-react";
 import StrategicStagesManager from "../strategy/StrategicStagesManager";
 import GovernanceStagesManager from "../governance/GovernanceStagesManager";
 import FinanceStagesManager from "../finance/FinanceStagesManager";
+import GenericStagesManager from "@/components/GenericStagesManager";
 import CharityClientTimeline from "@/components/CharityClientTimeline";
 import ServicesManagerClient from "@/components/ServicesManagerClient";
 
@@ -68,7 +69,6 @@ export default async function ServicesPage({ params }: { params: Promise<{ name:
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
       <div className="bg-white dark:bg-slate-800 rounded-2xl p-10 border border-slate-100 dark:border-slate-700 shadow-sm relative overflow-hidden transition-colors">
-        {/* Decorative subtle background element */}
         <div className="absolute top-0 left-0 w-64 h-64 bg-primary/5 dark:bg-primary/10 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2 pointer-events-none"></div>
         
         <div className="relative z-10 text-center py-8">
@@ -79,17 +79,24 @@ export default async function ServicesPage({ params }: { params: Promise<{ name:
             المخططات والمراحل الزمنية
           </h2>
           <p className="text-slate-500 dark:text-slate-400 max-w-lg mx-auto leading-relaxed text-lg">
-            متابعة المخططات والمراحل الزمنية الخاصة بجمعية <span className="font-bold text-slate-700 dark:text-slate-300">{decodedName}</span> للخطط الاستراتيجية، الحوكمة، والمالية.
+            متابعة المخططات والمراحل الزمنية الخاصة بجمعية <span className="font-bold text-slate-700 dark:text-slate-300">{decodedName}</span> لمختلف الأقسام وإدارتها من مكان واحد.
           </p>
         </div>
       </div>
+
+      {!isCharityClient && (
+        <ServicesManagerClient 
+          charityId={charity.id} 
+          initialServices={additionalServices} 
+          isAdmin={isAdmin}
+        />
+      )}
 
       {isCharityClient ? (
         <div className="space-y-8">
           <CharityClientTimeline title={charity.strategyTimelineName || "المخطط الزمني للتخطيط الاستراتيجي"} stages={strategicStages} />
           <CharityClientTimeline title={charity.governanceTimelineName || "المخطط الزمني للحوكمة"} stages={governanceStages} />
           <CharityClientTimeline title={charity.financeTimelineName || "المخطط الزمني للمالية"} stages={financeStages} />
-          {/* Dynamic services for charity client */}
           {additionalServices.map(service => (
             <CharityClientTimeline key={service.id} title={service.name} stages={service.stages} />
           ))}
@@ -121,23 +128,14 @@ export default async function ServicesPage({ params }: { params: Promise<{ name:
             />
           )}
           
-          {(isAdmin || additionalServices.length > 0) && (
-            <div className="pt-8 mt-8 border-t border-slate-200 dark:border-slate-700">
-              <div className="mb-6">
-                <h3 className="text-2xl font-bold text-slate-800 dark:text-slate-100">
-                  مخططات زمنية إضافية مخصصة
-                </h3>
-                <p className="text-slate-500 dark:text-slate-400 mt-2">
-                  يمكنك إضافة مخططات زمنية إضافية للجمعية من هنا وربطها بالأقسام.
-                </p>
-              </div>
-              <ServicesManagerClient 
-                charityId={charity.id} 
-                initialServices={additionalServices} 
-                isAdmin={isAdmin}
-              />
-            </div>
-          )}
+          {additionalServices.map(service => (
+            (isAdmin || session?.role === service.department) && (
+               <GenericStagesManager 
+                 key={service.id}
+                 service={service}
+               />
+            )
+          ))}
         </>
       )}
     </div>

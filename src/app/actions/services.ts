@@ -21,18 +21,29 @@ export async function getServices(charityId: string, department?: string | null)
 }
 
 export async function createService(charityId: string, name: string, department: string | null) {
+  // Enforce max 1 timeline per department (unless no department)
+  if (department && department !== "NONE") {
+    const existingService = await prisma.service.findFirst({
+      where: { charityId, department }
+    });
+    
+    if (existingService) {
+      throw new Error(`يوجد بالفعل مخطط زمني مرتبط بقسم ${department}`);
+    }
+  }
+
   const service = await prisma.service.create({
     data: {
       name,
-      department,
+      department: department === "NONE" ? null : department,
       charityId
     },
     include: { charity: true }
   });
   
   revalidatePath(`/charity/${encodeURIComponent(service.charity.name)}/services`);
-  if (department) {
-    revalidatePath(`/charity/${encodeURIComponent(service.charity.name)}/${department.toLowerCase()}`);
+  if (service.department) {
+    revalidatePath(`/charity/${encodeURIComponent(service.charity.name)}/${service.department.toLowerCase()}`);
   }
   
   return service;

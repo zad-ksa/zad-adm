@@ -58,62 +58,29 @@ export default function ServicesManagerClient({
     e.preventDefault();
     startTransition(async () => {
       try {
-        const created = await createService(charityId, serviceName, serviceDepartment || null);
-        setServices([{...created, stages: []}, ...services]);
+        await createService(charityId, serviceName, serviceDepartment || null);
         setIsServiceModalOpen(false);
-      } catch (error) {
+      } catch (error: any) {
         console.error("Error saving service", error);
-        alert("حدث خطأ أثناء حفظ الخدمة");
+        alert(error.message || "حدث خطأ أثناء حفظ الخدمة");
       }
     });
   };
 
-  const handleDeleteService = (id: string) => {
-    startTransition(async () => {
-      try {
-        await deleteService(id);
-        setServices(services.filter(s => s.id !== id));
-      } catch (error) {
-        console.error("Error deleting service", error);
-        alert("حدث خطأ أثناء الحذف");
-      }
-    });
-  };
+  if (!isAdmin) return null;
 
   return (
-    <div className="space-y-8">
-      {isAdmin && (
-        <div className="flex justify-end">
-          <button
-            onClick={openAddService}
-            disabled={isPending}
-            className="flex items-center gap-2 bg-primary hover:bg-primary/90 text-white px-5 py-2.5 rounded-xl font-bold transition-colors shadow-sm disabled:opacity-50"
-          >
-            <Plus className="w-5 h-5" />
-            إضافة خط زمني جديد
-          </button>
-        </div>
-      )}
-
-      {services.length === 0 ? (
-        <div className="bg-white dark:bg-slate-800 rounded-2xl p-12 text-center border border-slate-200 dark:border-slate-700 shadow-sm">
-          <Map className="w-16 h-16 text-slate-300 dark:text-slate-600 mx-auto mb-4" />
-          <h3 className="text-xl font-bold text-slate-800 dark:text-slate-200 mb-2">لا توجد خدمات مضافة</h3>
-          <p className="text-slate-500 dark:text-slate-400">لم يتم إضافة أي خدمات أو خطوط زمنية لهذه الجمعية بعد.</p>
-        </div>
-      ) : (
-        <div className="space-y-12">
-          {services.map(service => (
-            <ServiceTimeline 
-              key={service.id} 
-              charityId={charityId} 
-              initialService={service} 
-              isAdmin={isAdmin}
-              onDeleteService={handleDeleteService}
-            />
-          ))}
-        </div>
-      )}
+    <>
+      <div className="flex justify-end mb-6">
+        <button
+          onClick={openAddService}
+          disabled={isPending}
+          className="flex items-center gap-2 bg-slate-800 hover:bg-slate-700 dark:bg-slate-700 dark:hover:bg-slate-600 text-white px-5 py-2.5 rounded-xl font-bold transition-colors shadow-sm disabled:opacity-50"
+        >
+          <Plus className="w-5 h-5" />
+          إضافة مخطط زمني جديد
+        </button>
+      </div>
 
       {/* Add Service Modal */}
       {isServiceModalOpen && (
@@ -122,34 +89,34 @@ export default function ServicesManagerClient({
           <div className="relative bg-white dark:bg-slate-800 rounded-2xl w-full max-w-md shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200 border border-slate-200 dark:border-slate-700">
             <div className="p-6 border-b border-slate-100 dark:border-slate-700">
               <h2 className="text-xl font-bold text-slate-800 dark:text-slate-100">
-                إضافة خط زمني جديد
+                إضافة مخطط زمني جديد
               </h2>
             </div>
             <form onSubmit={handleServiceSubmit} className="p-6 space-y-5">
               <div>
-                <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">اسم الخدمة / الخط الزمني</label>
+                <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">اسم المخطط</label>
                 <input
                   type="text"
                   required
                   value={serviceName}
                   onChange={e => setServiceName(e.target.value)}
                   className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all dark:text-white"
-                  placeholder="مثال: تقديم استشارات إدارية..."
+                  placeholder="مثال: المخطط الزمني للبرامج..."
                 />
               </div>
               <div>
-                <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">القسم التابع له (اختياري)</label>
+                <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">القسم التابع له</label>
                 <select
                   value={serviceDepartment}
                   onChange={e => setServiceDepartment(e.target.value)}
                   className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all dark:text-white"
                 >
                   {DEPARTMENTS.map(d => (
-                    <option key={d.value} value={d.value}>{d.label}</option>
+                     <option key={d.value} value={d.value}>{d.label}</option>
                   ))}
                 </select>
                 <p className="text-xs text-slate-500 mt-2">
-                  في حال اختيار قسم معين، سيظهر هذا الخط الزمني أيضاً في تبويب القسم المختار تلقائياً.
+                  في حال اختيار قسم معين، سيظهر هذا المخطط الزمني في أعلى صفحة القسم التابع له (بحد أقصى مخطط واحد للقسم).
                 </p>
               </div>
               <div className="flex gap-3 pt-4 border-t border-slate-100 dark:border-slate-700">
@@ -172,6 +139,6 @@ export default function ServicesManagerClient({
           </div>
         </div>
       )}
-    </div>
+    </>
   );
 }

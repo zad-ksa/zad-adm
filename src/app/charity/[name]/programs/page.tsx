@@ -2,8 +2,7 @@ import { unstable_cache } from "next/cache";
 import { prisma } from "@/lib/db";
 import type { Metadata } from "next";
 import ProgramsClient from "./ProgramsClient";
-import DepartmentServicesTimeline from "@/components/DepartmentServicesTimeline";
-
+import CharityClientTimeline from "@/components/CharityClientTimeline";
 
 export const dynamic = "force-dynamic";
 
@@ -50,8 +49,24 @@ export default async function CharityProgramsPage({ params }: { params: Promise<
 
   const { charity, programs } = await getCachedProgramsData(decodedName);
 
+  const programsTimeline = await prisma.service.findFirst({
+    where: { charityId: charity.id, department: "PROGRAMS" },
+    include: {
+      stages: {
+        orderBy: { order: 'asc' }
+      }
+    }
+  });
+
   return (
     <div className="space-y-12">
+      {programsTimeline && (
+        <CharityClientTimeline 
+          title={programsTimeline.name} 
+          stages={programsTimeline.stages} 
+        />
+      )}
+      
       <ProgramsClient
         charity={{
           id: charity.id,

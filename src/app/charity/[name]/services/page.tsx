@@ -3,6 +3,7 @@ import { prisma } from "@/lib/db";
 import { getSession } from "@/lib/auth";
 import { Briefcase } from "lucide-react";
 import ServicesManagerClient from "@/components/ServicesManagerClient";
+import StrategicStagesManager from "../strategy/StrategicStagesManager";
 
 export async function generateMetadata({ params }: { params: Promise<{ name: string }> }): Promise<Metadata> {
   const { name } = await params;
@@ -37,6 +38,14 @@ export default async function ServicesPage({ params }: { params: Promise<{ name:
     orderBy: { createdAt: 'desc' }
   });
 
+  let strategicStages: any[] = [];
+  if (isAdmin || session?.role === "STRATEGY") {
+    strategicStages = await prisma.strategicStage.findMany({
+      where: { charityId: charity.id },
+      orderBy: { order: 'asc' }
+    });
+  }
+
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
       <div className="bg-white dark:bg-slate-800 rounded-2xl p-10 border border-slate-100 dark:border-slate-700 shadow-sm relative overflow-hidden transition-colors">
@@ -55,6 +64,10 @@ export default async function ServicesPage({ params }: { params: Promise<{ name:
           </p>
         </div>
       </div>
+
+      {(isAdmin || session?.role === "STRATEGY") && (
+        <StrategicStagesManager charityId={charity.id} initialStages={strategicStages} />
+      )}
 
       <ServicesManagerClient charityId={charity.id} initialServices={services} isAdmin={isAdmin} />
     </div>

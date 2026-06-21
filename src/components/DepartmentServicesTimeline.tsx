@@ -51,11 +51,11 @@ export default async function DepartmentServicesTimeline({
                 <div className="hidden md:block absolute top-[28px] left-0 w-full h-1 bg-slate-100 dark:bg-slate-700 rounded-full"></div>
                 
                 <div className="flex flex-col md:flex-row gap-6 md:gap-4 relative z-10 overflow-x-auto custom-scrollbar pb-4">
-                  {service.stages.map((stage, idx) => {
-                    // Check if current (simple heuristic: if today is between start and end date, or just show normal)
-                    const now = new Date();
-                    const isCurrent = stage.startDate && stage.endDate && now >= new Date(stage.startDate) && now <= new Date(stage.endDate);
-                    const isPast = stage.endDate && now > new Date(stage.endDate);
+                  {service.stages.map((stage, index) => {
+                    // We use isCurrent instead of date checking
+                    const currentIndex = service.stages.findIndex(s => s.isCurrent);
+                    const isCurrent = stage.isCurrent;
+                    const isPast = currentIndex !== -1 ? index < currentIndex : true;
 
                     return (
                       <div key={stage.id} className="flex flex-row md:flex-col items-start md:items-center gap-4 md:w-64 shrink-0 group">
@@ -63,11 +63,11 @@ export default async function DepartmentServicesTimeline({
                         <div className="md:hidden absolute right-[31px] top-12 bottom-0 w-0.5 bg-slate-100 dark:bg-slate-700 -z-10"></div>
                         
                         <div className={`w-14 h-14 rounded-full border-4 flex items-center justify-center font-bold text-lg bg-white dark:bg-slate-800 shrink-0 transition-all duration-300
-                          ${isPast ? 'border-emerald-500 text-emerald-500' : 
-                            isCurrent ? 'border-primary text-primary scale-110 shadow-lg shadow-primary/20' : 
+                          ${isCurrent ? 'border-primary text-primary scale-110 shadow-lg shadow-primary/20' : 
+                            isPast ? 'border-primary text-white bg-primary' : 
                             'border-slate-200 dark:border-slate-600 text-slate-400 dark:text-slate-500'}`}
                         >
-                          {idx + 1}
+                          {isPast ? <CheckCircleIcon className="w-6 h-6" /> : (index + 1)}
                         </div>
                         
                         <div className={`flex-1 text-right md:text-center p-4 rounded-xl transition-all w-full
@@ -76,7 +76,7 @@ export default async function DepartmentServicesTimeline({
                           <h4 className={`font-bold mb-2 ${isCurrent ? 'text-primary' : 'text-slate-700 dark:text-slate-300'}`}>{stage.name}</h4>
                           
                           {(stage.startDate || stage.endDate) && (
-                            <div className="flex items-center md:justify-center gap-1.5 text-xs text-slate-500 dark:text-slate-400 mb-2">
+                            <div className="flex items-center md:justify-center gap-1.5 text-xs text-slate-500 dark:text-slate-400 mb-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-2 py-1 rounded-full">
                               <Calendar className="w-3.5 h-3.5" />
                               <span dir="ltr">
                                 {stage.startDate ? new Intl.DateTimeFormat('ar-SA').format(new Date(stage.startDate)) : '—'}

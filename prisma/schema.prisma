@@ -261,6 +261,7 @@ model ServiceStage {
   startDate   DateTime?
   endDate     DateTime?
   order       Int      @default(0)
+  isCurrent   Boolean  @default(false)
   serviceId   String
   service     Service  @relation(fields: [serviceId], references: [id], onDelete: Cascade)
   createdAt   DateTime @default(now())

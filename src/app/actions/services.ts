@@ -160,3 +160,29 @@ export async function reorderServiceStages(stageIds: string[]) {
     }
   }
 }
+
+export async function setCurrentServiceStage(serviceId: string, stageId: string) {
+  await prisma.$transaction([
+    prisma.serviceStage.updateMany({
+      where: { serviceId },
+      data: { isCurrent: false }
+    }),
+    prisma.serviceStage.update({
+      where: { id: stageId },
+      data: { isCurrent: true }
+    })
+  ]);
+  
+  const stage = await prisma.serviceStage.findUnique({
+    where: { id: stageId },
+    include: { service: { include: { charity: true } } }
+  });
+  
+  if (stage) {
+    revalidatePath(`/charity/${encodeURIComponent(stage.service.charity.name)}/services`);
+    revalidatePath(`/charity/${encodeURIComponent(stage.service.charity.name)}`);
+    if (stage.service.department) {
+      revalidatePath(`/charity/${encodeURIComponent(stage.service.charity.name)}/${stage.service.department.toLowerCase()}`);
+    }
+  }
+}

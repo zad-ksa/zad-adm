@@ -1,9 +1,16 @@
-﻿"use server";
+"use server";
 
 import { prisma } from "@/lib/db";
 import { revalidatePath } from "next/cache";
 
-export async function addGovernanceStage(charityId: string, name: string, duration?: string) {
+export async function addGovernanceStage(
+  charityId: string, 
+  name: string, 
+  duration?: string,
+  description?: string,
+  startDate?: string,
+  endDate?: string
+) {
   const lastStage = await prisma.governanceStage.findFirst({
     where: { charityId },
     orderBy: { order: 'desc' }
@@ -15,6 +22,9 @@ export async function addGovernanceStage(charityId: string, name: string, durati
     data: {
       name,
       duration,
+      description: description || null,
+      startDate: startDate ? new Date(startDate) : null,
+      endDate: endDate ? new Date(endDate) : null,
       order: newOrder,
       charityId,
       isCurrent: false
@@ -28,10 +38,23 @@ export async function addGovernanceStage(charityId: string, name: string, durati
   }
 }
 
-export async function updateGovernanceStage(stageId: string, name: string, duration?: string) {
+export async function updateGovernanceStage(
+  stageId: string, 
+  name: string, 
+  duration?: string,
+  description?: string,
+  startDate?: string,
+  endDate?: string
+) {
   const stage = await prisma.governanceStage.update({
     where: { id: stageId },
-    data: { name, duration },
+    data: { 
+      name, 
+      duration,
+      description: description || null,
+      startDate: startDate ? new Date(startDate) : null,
+      endDate: endDate ? new Date(endDate) : null
+    },
     include: { charity: true }
   });
   

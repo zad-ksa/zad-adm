@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { formatDurationArabic } from "@/lib/dateUtils";
 
 const CalendarIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
@@ -157,11 +158,14 @@ export default function CharityClientStrategyDashboard({
                 const isPast = strategicStages.findIndex((s: any) => s.isCurrent) > idx;
                 const isCurrent = stage.isCurrent;
                 
+                const calculatedDuration = formatDurationArabic(stage.startDate, stage.endDate);
+                const displayDuration = calculatedDuration || stage.duration;
+                
                 return (
-                  <div key={stage.id} className="flex flex-row md:flex-col items-center gap-4 md:flex-1 group">
+                  <div key={stage.id} className="flex flex-row md:flex-col items-start md:items-center gap-4 md:flex-1 group relative">
                     <div className="md:hidden w-1 h-full bg-slate-100 dark:bg-slate-700 absolute right-6 top-0 -z-10"></div>
                     
-                    <div className={`w-12 h-12 rounded-full border-4 flex items-center justify-center font-bold text-lg bg-white dark:bg-slate-800 shrink-0 transition-all duration-300
+                    <div className={`w-12 h-12 rounded-full border-4 flex items-center justify-center font-bold text-lg bg-white dark:bg-slate-800 shrink-0 transition-all duration-300 relative z-10 mt-2 md:mt-0
                       ${isPast ? 'border-emerald-500 text-emerald-500' : 
                         isCurrent ? 'border-primary text-primary scale-110 shadow-lg shadow-primary/20' : 
                         'border-slate-200 dark:border-slate-600 text-slate-400 dark:text-slate-500'}`}
@@ -169,12 +173,15 @@ export default function CharityClientStrategyDashboard({
                       {isPast ? <CheckCircleIcon /> : (idx + 1)}
                     </div>
                     
-                    <div className={`text-right md:text-center p-4 rounded-xl transition-all duration-300 ${isCurrent ? 'bg-primary/5 dark:bg-primary/10 border-primary/20 dark:border-primary/20' : 'bg-transparent'} border border-transparent`}>
+                    <div className={`flex-1 text-right md:text-center p-4 rounded-xl transition-all duration-300 ${isCurrent ? 'bg-primary/5 dark:bg-primary/10 border-primary/20 dark:border-primary/20' : 'bg-transparent'} border border-transparent`}>
                       <h4 className={`font-bold ${isCurrent ? 'text-primary' : 'text-slate-700 dark:text-slate-300'}`}>{stage.name}</h4>
-                      {stage.duration && (
-                        <span className="text-sm text-slate-500 dark:text-slate-400 mt-1 block">{stage.duration}</span>
+                      {stage.description && (
+                        <p className="text-xs text-slate-500 dark:text-slate-400 mt-2 leading-relaxed">{stage.description}</p>
                       )}
-                      {isCurrent && <span className="inline-block mt-2 text-xs font-bold bg-primary text-white px-2 py-0.5 rounded-full">المرحلة الحالية</span>}
+                      {displayDuration && (
+                        <span className="inline-block bg-slate-100 dark:bg-slate-800/80 text-slate-600 dark:text-slate-300 text-xs px-2.5 py-1 rounded-md mt-3 font-medium border border-slate-200 dark:border-slate-700/50">المدة: {displayDuration}</span>
+                      )}
+                      {isCurrent && <span className="block mt-3 text-xs font-bold bg-primary text-white px-3 py-1 rounded-full w-max md:mx-auto">المرحلة الحالية</span>}
                     </div>
                   </div>
                 );

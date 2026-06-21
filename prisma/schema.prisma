@@ -36,6 +36,9 @@ model Charity {
 model StrategicStage {
   id          String   @id @default(uuid())
   name        String
+  description String?
+  startDate   DateTime?
+  endDate     DateTime?
   duration    String?
   order       Int      @default(0)
   isCurrent   Boolean  @default(false)
@@ -48,6 +51,9 @@ model StrategicStage {
 model GovernanceStage {
   id          String   @id @default(uuid())
   name        String
+  description String?
+  startDate   DateTime?
+  endDate     DateTime?
   duration    String?
   order       Int      @default(0)
   isCurrent   Boolean  @default(false)
@@ -60,6 +66,9 @@ model GovernanceStage {
 model FinanceStage {
   id          String   @id @default(uuid())
   name        String
+  description String?
+  startDate   DateTime?
+  endDate     DateTime?
   duration    String?
   order       Int      @default(0)
   isCurrent   Boolean  @default(false)

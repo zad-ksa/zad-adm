@@ -39,7 +39,14 @@ export async function ensureStagesForCharity(charityId: string) {
   }
 }
 
-export async function addStrategicStage(charityId: string, name: string, duration?: string) {
+export async function addStrategicStage(
+  charityId: string, 
+  name: string, 
+  duration?: string, 
+  description?: string, 
+  startDate?: string, 
+  endDate?: string
+) {
   await ensureStagesForCharity(charityId);
   
   const lastStage = await prisma.strategicStage.findFirst({
@@ -53,6 +60,9 @@ export async function addStrategicStage(charityId: string, name: string, duratio
     data: {
       name,
       duration,
+      description: description || null,
+      startDate: startDate ? new Date(startDate) : null,
+      endDate: endDate ? new Date(endDate) : null,
       order: newOrder,
       charityId,
       isCurrent: false
@@ -67,10 +77,23 @@ export async function addStrategicStage(charityId: string, name: string, duratio
   }
 }
 
-export async function updateStrategicStage(stageId: string, name: string, duration?: string) {
+export async function updateStrategicStage(
+  stageId: string, 
+  name: string, 
+  duration?: string,
+  description?: string,
+  startDate?: string,
+  endDate?: string
+) {
   const stage = await prisma.strategicStage.update({
     where: { id: stageId },
-    data: { name, duration },
+    data: { 
+      name, 
+      duration,
+      description: description || null,
+      startDate: startDate ? new Date(startDate) : null,
+      endDate: endDate ? new Date(endDate) : null
+    },
     include: { charity: true }
   });
   

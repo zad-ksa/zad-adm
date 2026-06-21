@@ -61,11 +61,11 @@ export default async function GovernancePage({ params }: { params: Promise<{ nam
       </div>
 
       {charity && (
-        <>
-          {isAdmin && <GovernanceStagesManager charityId={charity.id} initialStages={stages} />}
-          <GovernanceRegulationsManager charityId={charity.id} regulations={regulations} isAdmin={isAdmin} />
-          <DepartmentServicesTimeline charityId={charity.id} department="GOVERNANCE" />
-        </>
+        <DepartmentServicesTimeline charityId={charity.id} department="GOVERNANCE" />
+      )}
+
+      {charity && (
+        <GovernanceRegulationsManager charityId={charity.id} regulations={regulations} isAdmin={isAdmin} />
       )}
     </div>
   );

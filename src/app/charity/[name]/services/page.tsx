@@ -4,6 +4,8 @@ import { getSession } from "@/lib/auth";
 import { Briefcase } from "lucide-react";
 import ServicesManagerClient from "@/components/ServicesManagerClient";
 import StrategicStagesManager from "../strategy/StrategicStagesManager";
+import GovernanceStagesManager from "../governance/GovernanceStagesManager";
+import FinanceStagesManager from "../finance/FinanceStagesManager";
 
 export async function generateMetadata({ params }: { params: Promise<{ name: string }> }): Promise<Metadata> {
   const { name } = await params;
@@ -39,8 +41,23 @@ export default async function ServicesPage({ params }: { params: Promise<{ name:
   });
 
   let strategicStages: any[] = [];
+  let governanceStages: any[] = [];
+  let financeStages: any[] = [];
+  
   if (isAdmin || session?.role === "STRATEGY") {
     strategicStages = await prisma.strategicStage.findMany({
+      where: { charityId: charity.id },
+      orderBy: { order: 'asc' }
+    });
+  }
+  if (isAdmin || session?.role === "GOVERNANCE") {
+    governanceStages = await prisma.governanceStage.findMany({
+      where: { charityId: charity.id },
+      orderBy: { order: 'asc' }
+    });
+  }
+  if (isAdmin || session?.role === "FINANCE") {
+    financeStages = await prisma.financeStage.findMany({
       where: { charityId: charity.id },
       orderBy: { order: 'asc' }
     });
@@ -67,6 +84,12 @@ export default async function ServicesPage({ params }: { params: Promise<{ name:
 
       {(isAdmin || session?.role === "STRATEGY") && (
         <StrategicStagesManager charityId={charity.id} initialStages={strategicStages} />
+      )}
+      {(isAdmin || session?.role === "GOVERNANCE") && (
+        <GovernanceStagesManager charityId={charity.id} initialStages={governanceStages} />
+      )}
+      {(isAdmin || session?.role === "FINANCE") && (
+        <FinanceStagesManager charityId={charity.id} initialStages={financeStages} />
       )}
 
       <ServicesManagerClient charityId={charity.id} initialServices={services} isAdmin={isAdmin} />

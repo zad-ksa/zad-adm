@@ -26,20 +26,18 @@ export default async function DepartmentServicesTimeline({
   }
 
   return (
-    <div className="space-y-6 mt-12 animate-in fade-in duration-500">
-      <div className="flex items-center gap-3 mb-6 border-b border-slate-200 dark:border-slate-700 pb-4">
-        <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center text-primary font-bold">
-          <LayoutList className="w-5 h-5" />
-        </div>
-        <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-100 tracking-tight">
-          الخدمات المرتبطة بالقسم
-        </h2>
-      </div>
-
+    <div className="space-y-6 animate-in fade-in duration-500">
       <div className="grid gap-6">
         {services.map(service => (
           <div key={service.id} className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 p-6 shadow-sm">
-            <h3 className="font-bold text-xl text-slate-800 dark:text-slate-100 mb-6">{service.name}</h3>
+            <div className="flex items-center gap-3 mb-6 border-b border-slate-100 dark:border-slate-700 pb-4">
+              <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center text-primary font-bold">
+                <LayoutList className="w-5 h-5" />
+              </div>
+              <h2 className="text-xl font-bold text-slate-800 dark:text-slate-100 tracking-tight">
+                المخطط الزمني
+              </h2>
+            </div>
             
             {service.stages.length === 0 ? (
               <div className="text-center py-6 text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-slate-900/50 rounded-xl border border-dashed border-slate-200 dark:border-slate-700">

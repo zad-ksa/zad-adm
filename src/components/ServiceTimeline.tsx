@@ -323,28 +323,34 @@ export default function ServiceTimeline({
                           value={stageNameEdit} 
                           onChange={e => setStageNameEdit(e.target.value)} 
                           placeholder="اسم المرحلة"
-                          className="w-full border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary/50 outline-none"
+                          className="w-full border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary/50 outline-none"
                         />
                         <textarea 
                           value={stageDescEdit} 
                           onChange={e => setStageDescEdit(e.target.value)} 
                           placeholder="الوصف (اختياري)"
                           rows={2}
-                          className="w-full border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary/50 outline-none resize-none custom-scrollbar"
+                          className="w-full border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary/50 outline-none resize-none custom-scrollbar"
                         />
-                        <div className="flex flex-col sm:flex-row gap-3">
-                          <input 
-                            type="date" 
-                            value={stageStartDateEdit} 
-                            onChange={e => setStageStartDateEdit(e.target.value)} 
-                            className="w-full sm:w-1/2 border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary/50 outline-none [color-scheme:light] dark:[color-scheme:dark]"
-                          />
-                          <input 
-                            type="date" 
-                            value={stageEndDateEdit} 
-                            onChange={e => setStageEndDateEdit(e.target.value)} 
-                            className="w-full sm:w-1/2 border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary/50 outline-none [color-scheme:light] dark:[color-scheme:dark]"
-                          />
+                        <div className="flex flex-col sm:flex-row gap-4 sm:gap-3">
+                          <div className="w-full sm:w-1/2">
+                            <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-1">تاريخ البداية (اختياري)</label>
+                            <input 
+                              type="date" 
+                              value={stageStartDateEdit} 
+                              onChange={e => setStageStartDateEdit(e.target.value)} 
+                              className="w-full border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary/50 outline-none [color-scheme:light] dark:[color-scheme:dark]"
+                            />
+                          </div>
+                          <div className="w-full sm:w-1/2">
+                            <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-1">تاريخ النهاية (اختياري)</label>
+                            <input 
+                              type="date" 
+                              value={stageEndDateEdit} 
+                              onChange={e => setStageEndDateEdit(e.target.value)} 
+                              className="w-full border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary/50 outline-none [color-scheme:light] dark:[color-scheme:dark]"
+                            />
+                          </div>
                         </div>
                         <div className="flex gap-2 mt-2">
                           <button onClick={() => handleUpdateStage(stage.id)} className="flex items-center gap-1.5 px-4 py-2 text-white bg-primary hover:bg-primary/90 rounded-lg font-bold" disabled={isPending}>
@@ -437,7 +443,7 @@ export default function ServiceTimeline({
                     value={newStageName} 
                     onChange={e => setNewStageName(e.target.value)} 
                     placeholder="اسم المرحلة"
-                    className="w-full border border-primary/30 bg-white dark:bg-slate-800 rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary/50 outline-none"
+                    className="w-full border border-primary/30 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary/50 outline-none"
                     autoFocus
                   />
                   <textarea 
@@ -445,21 +451,27 @@ export default function ServiceTimeline({
                     onChange={e => setNewStageDesc(e.target.value)} 
                     placeholder="الوصف (اختياري)"
                     rows={2}
-                    className="w-full border border-primary/30 bg-white dark:bg-slate-800 rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary/50 outline-none resize-none custom-scrollbar"
+                    className="w-full border border-primary/30 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary/50 outline-none resize-none custom-scrollbar"
                   />
-                  <div className="flex flex-col sm:flex-row gap-3">
-                    <input 
-                      type="date" 
-                      value={newStageStartDate} 
-                      onChange={e => setNewStageStartDate(e.target.value)} 
-                      className="w-full sm:w-1/2 border border-primary/30 bg-white dark:bg-slate-800 rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary/50 outline-none [color-scheme:light] dark:[color-scheme:dark]"
-                    />
-                    <input 
-                      type="date" 
-                      value={newStageEndDate} 
-                      onChange={e => setNewStageEndDate(e.target.value)} 
-                      className="w-full sm:w-1/2 border border-primary/30 bg-white dark:bg-slate-800 rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary/50 outline-none [color-scheme:light] dark:[color-scheme:dark]"
-                    />
+                  <div className="flex flex-col sm:flex-row gap-4 sm:gap-3">
+                    <div className="w-full sm:w-1/2">
+                      <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-1">تاريخ البداية (اختياري)</label>
+                      <input 
+                        type="date" 
+                        value={newStageStartDate} 
+                        onChange={e => setNewStageStartDate(e.target.value)} 
+                        className="w-full border border-primary/30 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary/50 outline-none [color-scheme:light] dark:[color-scheme:dark]"
+                      />
+                    </div>
+                    <div className="w-full sm:w-1/2">
+                      <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-1">تاريخ النهاية (اختياري)</label>
+                      <input 
+                        type="date" 
+                        value={newStageEndDate} 
+                        onChange={e => setNewStageEndDate(e.target.value)} 
+                        className="w-full border border-primary/30 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary/50 outline-none [color-scheme:light] dark:[color-scheme:dark]"
+                      />
+                    </div>
                   </div>
                   <div className="flex gap-3 mt-4">
                     <button onClick={handleAddStage} className="flex-1 flex justify-center items-center gap-2 px-4 py-3 text-white bg-primary hover:bg-primary/90 rounded-xl font-bold transition-colors" disabled={isPending}>

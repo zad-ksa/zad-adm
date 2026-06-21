@@ -31,7 +31,7 @@ export default async function ServicesPage({ params }: { params: Promise<{ name:
 
   const session = await getSession();
   const isCharityClient = session?.role === "CHARITY_CLIENT";
-  const isAdmin = ["ADMIN", "EXECUTIVE_DIRECTOR", "GENERAL_MANAGER"].includes(session?.role || "");
+  const isAdmin = ["ADMIN", "EXECUTIVE_DIRECTOR", "GENERAL_MANAGER", "ADMINISTRATIVE_SECRETARIAT"].includes(session?.role || "");
 
   let strategicStages: any[] = [];
   let governanceStages: any[] = [];

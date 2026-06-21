@@ -47,7 +47,7 @@ export default function CharitySidebar({
     setMounted(true);
   }, []);
 
-  const isAdmin = ["ADMIN", "EXECUTIVE_DIRECTOR", "GENERAL_MANAGER"].includes(role || "");
+  const isAdmin = ["ADMIN", "EXECUTIVE_DIRECTOR", "GENERAL_MANAGER", "ADMINISTRATIVE_SECRETARIAT"].includes(role || "");
   const isStrategy = role === "STRATEGY";
   const isFinance = role === "FINANCE";
   const isCharityClient = role === "CHARITY_CLIENT";

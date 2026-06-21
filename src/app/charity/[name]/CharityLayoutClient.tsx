@@ -29,7 +29,7 @@ export default function CharityLayoutClient({
     }
   }, [pathname]);
 
-  const isAdmin = ["ADMIN", "EXECUTIVE_DIRECTOR", "GENERAL_MANAGER"].includes(role || "");
+  const isAdmin = ["ADMIN", "EXECUTIVE_DIRECTOR", "GENERAL_MANAGER", "ADMINISTRATIVE_SECRETARIAT"].includes(role || "");
   const isStrategy = role === "STRATEGY";
   const isFinance = role === "FINANCE";
   const canManageGovernance = isAdmin || permissions?.includes("manage_governance");

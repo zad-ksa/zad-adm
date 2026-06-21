@@ -47,7 +47,7 @@ export default async function CharityOverview({ params }: { params: Promise<{ na
 
   const charity = await getCachedCharity(decodedName);
   const session = await getSession();
-  const isAdmin = ["ADMIN", "EXECUTIVE_DIRECTOR", "GENERAL_MANAGER"].includes(session?.role || "");
+  const isAdmin = ["ADMIN", "EXECUTIVE_DIRECTOR", "GENERAL_MANAGER", "ADMINISTRATIVE_SECRETARIAT"].includes(session?.role || "");
   
   await ensureStagesForCharity(charity.id);
 

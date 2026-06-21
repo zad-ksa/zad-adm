@@ -23,9 +23,20 @@ model Charity {
   financialLogs     FinancialLog[]
   meetings          Meeting[]
   strategicStage    Int      @default(1)
-  strategicStages   StrategicStage[]
-  governanceStages  GovernanceStage[]
-  financeStages     FinanceStage[]
+  strategicStages  StrategicStage[]
+  governanceStages GovernanceStage[]
+  financeStages    FinanceStage[]
+  
+  // Timeline Configurations
+  strategyTimelineName String? @default("التخطيط الاستراتيجي")
+  strategyTimelineDept String? @default("STRATEGY")
+  
+  governanceTimelineName String? @default("الحوكمة")
+  governanceTimelineDept String? @default("GOVERNANCE")
+  
+  financeTimelineName String? @default("تنمية الموارد المالية")
+  financeTimelineDept String? @default("FINANCE")
+
   regulationVisibilities CharityRegulationVisibility[]
   employees         Employee[]
   isReadinessVisible Boolean @default(false)

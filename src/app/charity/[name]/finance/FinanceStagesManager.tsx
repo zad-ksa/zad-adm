@@ -1,8 +1,9 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { Sparkles, Check, X, Edit2, Trash2, Plus, ArrowUp, ArrowDown, Loader2 } from "lucide-react";
+import { Coins, Check, X, Edit2, Trash2, Plus, ArrowUp, ArrowDown, Loader2, Settings } from "lucide-react";
 import { addFinanceStage, updateFinanceStage, deleteFinanceStage, setCurrentFinanceStage, reorderFinanceStages } from "@/app/actions/finance";
+import { updateTimelineConfig } from "@/app/actions/charity";
 
 type Stage = {
   id: string;
@@ -15,7 +16,17 @@ type Stage = {
   duration?: string | null;
 };
 
-export default function FinanceStagesManager({ charityId, initialStages }: { charityId: string, initialStages: Stage[] }) {
+export default function FinanceStagesManager({ 
+  charityId, 
+  initialStages,
+  timelineName = "المخطط الزمني للمالية",
+  timelineDept = "FINANCE"
+}: { 
+  charityId: string, 
+  initialStages: Stage[],
+  timelineName?: string,
+  timelineDept?: string
+}) {
   const [stages, setStages] = useState<Stage[]>(initialStages);
   const [isPending, startTransition] = useTransition();
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -29,8 +40,20 @@ export default function FinanceStagesManager({ charityId, initialStages }: { cha
   const [newStartDate, setNewStartDate] = useState("");
   const [newEndDate, setNewEndDate] = useState("");
 
+  const [isEditingConfig, setIsEditingConfig] = useState(false);
+  const [configName, setConfigName] = useState(timelineName);
+  const [configDept, setConfigDept] = useState(timelineDept);
+
   // Sort locally by order
   const sortedStages = [...stages].sort((a, b) => a.order - b.order);
+
+  const handleConfigUpdate = () => {
+    if (!configName.trim() || !configDept.trim()) return;
+    startTransition(async () => {
+      await updateTimelineConfig(charityId, "FINANCE", configName, configDept);
+      setIsEditingConfig(false);
+    });
+  };
 
   const handleAdd = () => {
     if (!newName.trim()) return;
@@ -120,19 +143,68 @@ export default function FinanceStagesManager({ charityId, initialStages }: { cha
   return (
     <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm overflow-hidden mt-8 transition-colors">
       <div className="p-6 border-b border-slate-100 dark:border-slate-700 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <h3 className="text-xl font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
-          <Sparkles className="w-5 h-5 text-primary" />
-          إدارة مراحل المالية
-        </h3>
+        <div className="flex items-center gap-3">
+          <h3 className="text-xl font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
+            <Coins className="w-5 h-5 text-amber-500" />
+            إدارة: {timelineName}
+          </h3>
+          <button 
+            onClick={() => setIsEditingConfig(!isEditingConfig)}
+            className="p-1.5 text-slate-400 hover:text-amber-500 bg-slate-50 hover:bg-amber-500/10 rounded-lg transition-colors"
+            title="إعدادات المخطط"
+          >
+            <Settings className="w-4 h-4" />
+          </button>
+        </div>
         <button
           onClick={() => setIsAdding(true)}
-          className="flex items-center justify-center gap-2 bg-primary/10 hover:bg-primary/20 text-primary px-4 py-2 rounded-xl text-sm font-semibold transition-colors"
+          className="flex items-center justify-center gap-2 bg-amber-500/10 hover:bg-amber-500/20 text-amber-600 px-4 py-2 rounded-xl text-sm font-semibold transition-colors"
           disabled={isPending}
         >
           <Plus className="w-4 h-4" />
           إضافة مرحلة
         </button>
       </div>
+
+      {isEditingConfig && (
+        <div className="p-6 border-b border-slate-100 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/30">
+          <h4 className="font-bold text-sm mb-4 text-slate-700 dark:text-slate-300">إعدادات المخطط الزمني</h4>
+          <div className="flex flex-col sm:flex-row gap-4 mb-4">
+            <div className="flex-1">
+              <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-1">اسم المخطط</label>
+              <input 
+                type="text" 
+                value={configName} 
+                onChange={e => setConfigName(e.target.value)} 
+                className="w-full border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-amber-500/50 outline-none"
+              />
+            </div>
+            <div className="flex-1">
+              <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-1">القسم التابع له</label>
+              <select 
+                value={configDept} 
+                onChange={e => setConfigDept(e.target.value)} 
+                className="w-full border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-amber-500/50 outline-none"
+              >
+                <option value="STRATEGY">التخطيط الاستراتيجي</option>
+                <option value="GOVERNANCE">الحوكمة</option>
+                <option value="FINANCE">المالية</option>
+                <option value="ADMINISTRATIVE_SECRETARIAT">السكرتارية الإدارية</option>
+                <option value="GENERAL_MANAGER">الإدارة العامة</option>
+                <option value="NONE">لا ينتمي لقسم محدد (يظهر للكل)</option>
+              </select>
+            </div>
+          </div>
+          <div className="flex gap-2">
+            <button onClick={handleConfigUpdate} className="flex items-center gap-1.5 px-4 py-2 text-white bg-amber-500 hover:bg-amber-600 rounded-lg text-sm font-bold" disabled={isPending}>
+              {isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />} حفظ الإعدادات
+            </button>
+            <button onClick={() => setIsEditingConfig(false)} className="flex items-center gap-1.5 px-4 py-2 text-slate-600 bg-slate-200 hover:bg-slate-300 dark:bg-slate-700 dark:hover:bg-slate-600 dark:text-slate-300 rounded-lg text-sm font-bold" disabled={isPending}>
+              إلغاء
+            </button>
+          </div>
+        </div>
+      )}
 
       <div className="p-6 space-y-3">
         {sortedStages.map((stage, index) => {

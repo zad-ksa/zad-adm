@@ -1,4 +1,4 @@
-﻿"use server";
+"use server";
 import { unstable_cache } from "next/cache";
 
 import { prisma } from "@/lib/db";
@@ -238,3 +238,49 @@ export async function addFinancialTransactionAction(
   }
 }
 
+export async function updateTimelineConfig(
+  charityId: string,
+  timelineType: "STRATEGY" | "GOVERNANCE" | "FINANCE",
+  name: string,
+  department: string
+) {
+  try {
+    const session = await getSession();
+    if (!session || !session.id) {
+      return { success: false, message: "غير مصرح لك بإجراء هذه العملية" };
+    }
+
+    const charity = await prisma.charity.findUnique({
+      where: { id: charityId }
+    });
+
+    if (!charity) {
+      return { success: false, message: "الجمعية غير موجودة" };
+    }
+
+    let dataToUpdate: any = {};
+    if (timelineType === "STRATEGY") {
+      dataToUpdate = { strategyTimelineName: name, strategyTimelineDept: department };
+    } else if (timelineType === "GOVERNANCE") {
+      dataToUpdate = { governanceTimelineName: name, governanceTimelineDept: department };
+    } else if (timelineType === "FINANCE") {
+      dataToUpdate = { financeTimelineName: name, financeTimelineDept: department };
+    }
+
+    await prisma.charity.update({
+      where: { id: charityId },
+      data: dataToUpdate
+    });
+
+    revalidatePath("/dashboard");
+    revalidatePath(`/charity/${encodeURIComponent(charity.name)}/services`);
+    revalidatePath(`/charity/${encodeURIComponent(charity.name)}/strategy`);
+    revalidatePath(`/charity/${encodeURIComponent(charity.name)}/governance`);
+    revalidatePath(`/charity/${encodeURIComponent(charity.name)}/finance`);
+
+    return { success: true };
+  } catch (error: any) {
+    console.error("Error updating timeline config:", error);
+    return { success: false, message: error.message || "حدث خطأ أثناء تحديث الإعدادات" };
+  }
+}

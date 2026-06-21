@@ -146,7 +146,7 @@ export default function CharityClientStrategyDashboard({
       </div>
 
       {/* Strategic Stages Timeline */}
-      <CharityClientTimeline title="المخطط الزمني للتخطيط الاستراتيجي" stages={strategicStages} />
+      <CharityClientTimeline title={charity.strategyTimelineName || "المخطط الزمني للتخطيط الاستراتيجي"} stages={strategicStages} />
 
       {/* Active Tasks List */}
       <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 p-6 shadow-sm">

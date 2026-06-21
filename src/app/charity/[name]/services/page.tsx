@@ -75,20 +75,35 @@ export default async function ServicesPage({ params }: { params: Promise<{ name:
 
       {isCharityClient ? (
         <div className="space-y-8">
-          <CharityClientTimeline title="المخطط الزمني للتخطيط الاستراتيجي" stages={strategicStages} />
-          <CharityClientTimeline title="المخطط الزمني للحوكمة" stages={governanceStages} />
-          <CharityClientTimeline title="المخطط الزمني للمالية" stages={financeStages} />
+          <CharityClientTimeline title={charity.strategyTimelineName || "المخطط الزمني للتخطيط الاستراتيجي"} stages={strategicStages} />
+          <CharityClientTimeline title={charity.governanceTimelineName || "المخطط الزمني للحوكمة"} stages={governanceStages} />
+          <CharityClientTimeline title={charity.financeTimelineName || "المخطط الزمني للمالية"} stages={financeStages} />
         </div>
       ) : (
         <>
-          {(isAdmin || session?.role === "STRATEGY") && (
-            <StrategicStagesManager charityId={charity.id} initialStages={strategicStages} />
+          {(isAdmin || session?.role === (charity.strategyTimelineDept || "STRATEGY")) && (
+            <StrategicStagesManager 
+              charityId={charity.id} 
+              initialStages={strategicStages}
+              timelineName={charity.strategyTimelineName || "المخطط الزمني للتخطيط الاستراتيجي"}
+              timelineDept={charity.strategyTimelineDept || "STRATEGY"}
+            />
           )}
-          {(isAdmin || session?.role === "GOVERNANCE") && (
-            <GovernanceStagesManager charityId={charity.id} initialStages={governanceStages} />
+          {(isAdmin || session?.role === (charity.governanceTimelineDept || "GOVERNANCE")) && (
+            <GovernanceStagesManager 
+              charityId={charity.id} 
+              initialStages={governanceStages} 
+              timelineName={charity.governanceTimelineName || "المخطط الزمني للحوكمة"}
+              timelineDept={charity.governanceTimelineDept || "GOVERNANCE"}
+            />
           )}
-          {(isAdmin || session?.role === "FINANCE") && (
-            <FinanceStagesManager charityId={charity.id} initialStages={financeStages} />
+          {(isAdmin || session?.role === (charity.financeTimelineDept || "FINANCE")) && (
+            <FinanceStagesManager 
+              charityId={charity.id} 
+              initialStages={financeStages} 
+              timelineName={charity.financeTimelineName || "المخطط الزمني للمالية"}
+              timelineDept={charity.financeTimelineDept || "FINANCE"}
+            />
           )}
         </>
       )}

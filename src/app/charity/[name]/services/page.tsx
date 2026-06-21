@@ -5,6 +5,7 @@ import { Briefcase } from "lucide-react";
 import StrategicStagesManager from "../strategy/StrategicStagesManager";
 import GovernanceStagesManager from "../governance/GovernanceStagesManager";
 import FinanceStagesManager from "../finance/FinanceStagesManager";
+import CharityClientTimeline from "@/components/CharityClientTimeline";
 
 export async function generateMetadata({ params }: { params: Promise<{ name: string }> }): Promise<Metadata> {
   const { name } = await params;
@@ -27,25 +28,26 @@ export default async function ServicesPage({ params }: { params: Promise<{ name:
   }
 
   const session = await getSession();
+  const isCharityClient = session?.role === "CHARITY_CLIENT";
   const isAdmin = ["ADMIN", "EXECUTIVE_DIRECTOR", "GENERAL_MANAGER"].includes(session?.role || "");
 
   let strategicStages: any[] = [];
   let governanceStages: any[] = [];
   let financeStages: any[] = [];
   
-  if (isAdmin || session?.role === "STRATEGY") {
+  if (isAdmin || session?.role === "STRATEGY" || isCharityClient) {
     strategicStages = await prisma.strategicStage.findMany({
       where: { charityId: charity.id },
       orderBy: { order: 'asc' }
     });
   }
-  if (isAdmin || session?.role === "GOVERNANCE") {
+  if (isAdmin || session?.role === "GOVERNANCE" || isCharityClient) {
     governanceStages = await prisma.governanceStage.findMany({
       where: { charityId: charity.id },
       orderBy: { order: 'asc' }
     });
   }
-  if (isAdmin || session?.role === "FINANCE") {
+  if (isAdmin || session?.role === "FINANCE" || isCharityClient) {
     financeStages = await prisma.financeStage.findMany({
       where: { charityId: charity.id },
       orderBy: { order: 'asc' }
@@ -63,22 +65,32 @@ export default async function ServicesPage({ params }: { params: Promise<{ name:
             <Briefcase className="w-10 h-10" />
           </div>
           <h2 className="text-3xl font-bold text-slate-800 dark:text-slate-100 mb-4 tracking-tight">
-            إدارة المراحل الزمنية
+            المخططات والمراحل الزمنية
           </h2>
           <p className="text-slate-500 dark:text-slate-400 max-w-lg mx-auto leading-relaxed text-lg">
-            إدارة ومتابعة المخططات والمراحل الزمنية الخاصة بجمعية <span className="font-bold text-slate-700 dark:text-slate-300">{decodedName}</span> للخطط الاستراتيجية، الحوكمة، والمالية.
+            متابعة المخططات والمراحل الزمنية الخاصة بجمعية <span className="font-bold text-slate-700 dark:text-slate-300">{decodedName}</span> للخطط الاستراتيجية، الحوكمة، والمالية.
           </p>
         </div>
       </div>
 
-      {(isAdmin || session?.role === "STRATEGY") && (
-        <StrategicStagesManager charityId={charity.id} initialStages={strategicStages} />
-      )}
-      {(isAdmin || session?.role === "GOVERNANCE") && (
-        <GovernanceStagesManager charityId={charity.id} initialStages={governanceStages} />
-      )}
-      {(isAdmin || session?.role === "FINANCE") && (
-        <FinanceStagesManager charityId={charity.id} initialStages={financeStages} />
+      {isCharityClient ? (
+        <div className="space-y-8">
+          <CharityClientTimeline title="المخطط الزمني للتخطيط الاستراتيجي" stages={strategicStages} />
+          <CharityClientTimeline title="المخطط الزمني للحوكمة" stages={governanceStages} />
+          <CharityClientTimeline title="المخطط الزمني للمالية" stages={financeStages} />
+        </div>
+      ) : (
+        <>
+          {(isAdmin || session?.role === "STRATEGY") && (
+            <StrategicStagesManager charityId={charity.id} initialStages={strategicStages} />
+          )}
+          {(isAdmin || session?.role === "GOVERNANCE") && (
+            <GovernanceStagesManager charityId={charity.id} initialStages={governanceStages} />
+          )}
+          {(isAdmin || session?.role === "FINANCE") && (
+            <FinanceStagesManager charityId={charity.id} initialStages={financeStages} />
+          )}
+        </>
       )}
     </div>
   );

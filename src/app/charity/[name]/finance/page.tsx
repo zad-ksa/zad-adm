@@ -4,7 +4,8 @@ import type { Metadata } from "next";
 import FinanceClient from "./FinanceClient";
 import FinanceStagesManager from "./FinanceStagesManager";
 import DepartmentServicesTimeline from "@/components/DepartmentServicesTimeline";
-
+import CharityClientTimeline from "@/components/CharityClientTimeline";
+import { getSession } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
 
@@ -54,6 +55,7 @@ export default async function CharityFinancePage({ params }: { params: Promise<{
   const decodedName = decodeURIComponent(name);
 
   const charity = await getCachedFinanceData(decodedName);
+  const session = await getSession();
 
   let stages: any[] = [];
   if (charity) {
@@ -65,6 +67,10 @@ export default async function CharityFinancePage({ params }: { params: Promise<{
 
   return (
     <div className="space-y-12">
+      {session?.role === "CHARITY_CLIENT" && (
+        <CharityClientTimeline title="المخطط الزمني" stages={stages} />
+      )}
+
       <FinanceClient
         charity={{
           id: charity!.id,
@@ -76,6 +82,10 @@ export default async function CharityFinancePage({ params }: { params: Promise<{
         }}
         initialLogs={charity!.financialLogs || []}
       />
+
+      {charity && (
+        <DepartmentServicesTimeline charityId={charity.id} department="FINANCE" />
+      )}
     </div>
   );
 }

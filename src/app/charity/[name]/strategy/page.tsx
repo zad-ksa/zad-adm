@@ -142,6 +142,10 @@ export default async function StrategySurveysPage({ params }: { params: Promise<
           </div>
         )}
       </div>
+
+      {charity && (
+        <DepartmentServicesTimeline charityId={charity.id} department="STRATEGY" />
+      )}
     </div>
   );
 }

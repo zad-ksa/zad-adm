@@ -4,8 +4,8 @@ import { prisma } from "@/lib/db";
 import { revalidatePath } from "next/cache";
 
 export async function addGovernanceStage(
-  charityId: string, 
-  name: string, 
+  charityId: string,
+  name: string,
   duration?: string,
   description?: string,
   startDate?: string,
@@ -15,9 +15,9 @@ export async function addGovernanceStage(
     where: { charityId },
     orderBy: { order: 'desc' }
   });
-  
+
   const newOrder = lastStage ? lastStage.order + 1 : 0;
-  
+
   await prisma.governanceStage.create({
     data: {
       name,
@@ -30,7 +30,7 @@ export async function addGovernanceStage(
       isCurrent: false
     }
   });
-  
+
   const charity = await prisma.charity.findUnique({ where: { id: charityId } });
   if (charity) {
     revalidatePath(`/charity/${encodeURIComponent(charity.name)}`);
@@ -39,8 +39,8 @@ export async function addGovernanceStage(
 }
 
 export async function updateGovernanceStage(
-  stageId: string, 
-  name: string, 
+  stageId: string,
+  name: string,
   duration?: string,
   description?: string,
   startDate?: string,
@@ -48,8 +48,8 @@ export async function updateGovernanceStage(
 ) {
   const stage = await prisma.governanceStage.update({
     where: { id: stageId },
-    data: { 
-      name, 
+    data: {
+      name,
       duration,
       description: description || null,
       startDate: startDate ? new Date(startDate) : null,
@@ -57,7 +57,7 @@ export async function updateGovernanceStage(
     },
     include: { charity: true }
   });
-  
+
   revalidatePath(`/charity/${encodeURIComponent(stage.charity.name)}`);
   revalidatePath(`/charity/${encodeURIComponent(stage.charity.name)}/governance`);
 }
@@ -67,7 +67,7 @@ export async function deleteGovernanceStage(stageId: string) {
     where: { id: stageId },
     include: { charity: true }
   });
-  
+
   revalidatePath(`/charity/${encodeURIComponent(stage.charity.name)}`);
   revalidatePath(`/charity/${encodeURIComponent(stage.charity.name)}/governance`);
 }
@@ -77,13 +77,13 @@ export async function setCurrentGovernanceStage(charityId: string, stageId: stri
     where: { charityId },
     data: { isCurrent: false }
   });
-  
+
   const updatedStage = await prisma.governanceStage.update({
     where: { id: stageId },
     data: { isCurrent: true },
     include: { charity: true }
   });
-  
+
   revalidatePath(`/charity/${encodeURIComponent(updatedStage.charity.name)}`);
   revalidatePath(`/charity/${encodeURIComponent(updatedStage.charity.name)}/governance`);
 }
@@ -95,7 +95,7 @@ export async function reorderGovernanceStages(charityId: string, stageIds: strin
       data: { order: i }
     });
   }
-  
+
   const charity = await prisma.charity.findUnique({ where: { id: charityId } });
   if (charity) {
     revalidatePath(`/charity/${encodeURIComponent(charity.name)}`);
@@ -112,7 +112,7 @@ export async function addRegulation(title: string, category: string, link: strin
       link,
     }
   });
-  
+
   revalidatePath("/", "layout");
 }
 
@@ -120,7 +120,7 @@ export async function deleteRegulation(regulationId: string) {
   await prisma.regulation.delete({
     where: { id: regulationId },
   });
-  
+
   revalidatePath("/", "layout");
 }
 
@@ -143,6 +143,6 @@ export async function toggleRegulationVisibility(charityId: string, regulationId
       }
     });
   }
-  
+
   revalidatePath("/", "layout");
 }

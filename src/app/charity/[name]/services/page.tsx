@@ -6,6 +6,7 @@ import StrategicStagesManager from "../strategy/StrategicStagesManager";
 import GovernanceStagesManager from "../governance/GovernanceStagesManager";
 import FinanceStagesManager from "../finance/FinanceStagesManager";
 import CharityClientTimeline from "@/components/CharityClientTimeline";
+import ServicesManagerClient from "@/components/ServicesManagerClient";
 
 export async function generateMetadata({ params }: { params: Promise<{ name: string }> }): Promise<Metadata> {
   const { name } = await params;
@@ -54,6 +55,16 @@ export default async function ServicesPage({ params }: { params: Promise<{ name:
     });
   }
 
+  const additionalServices = await prisma.service.findMany({
+    where: { charityId: charity.id },
+    include: {
+      stages: {
+        orderBy: { order: 'asc' }
+      }
+    },
+    orderBy: { createdAt: 'desc' }
+  });
+
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
       <div className="bg-white dark:bg-slate-800 rounded-2xl p-10 border border-slate-100 dark:border-slate-700 shadow-sm relative overflow-hidden transition-colors">
@@ -78,6 +89,10 @@ export default async function ServicesPage({ params }: { params: Promise<{ name:
           <CharityClientTimeline title={charity.strategyTimelineName || "المخطط الزمني للتخطيط الاستراتيجي"} stages={strategicStages} />
           <CharityClientTimeline title={charity.governanceTimelineName || "المخطط الزمني للحوكمة"} stages={governanceStages} />
           <CharityClientTimeline title={charity.financeTimelineName || "المخطط الزمني للمالية"} stages={financeStages} />
+          {/* Dynamic services for charity client */}
+          {additionalServices.map(service => (
+            <CharityClientTimeline key={service.id} title={service.name} stages={service.stages} />
+          ))}
         </div>
       ) : (
         <>
@@ -104,6 +119,24 @@ export default async function ServicesPage({ params }: { params: Promise<{ name:
               timelineName={charity.financeTimelineName || "المخطط الزمني للمالية"}
               timelineDept={charity.financeTimelineDept || "FINANCE"}
             />
+          )}
+          
+          {(isAdmin || additionalServices.length > 0) && (
+            <div className="pt-8 mt-8 border-t border-slate-200 dark:border-slate-700">
+              <div className="mb-6">
+                <h3 className="text-2xl font-bold text-slate-800 dark:text-slate-100">
+                  مخططات زمنية إضافية مخصصة
+                </h3>
+                <p className="text-slate-500 dark:text-slate-400 mt-2">
+                  يمكنك إضافة مخططات زمنية إضافية للجمعية من هنا وربطها بالأقسام.
+                </p>
+              </div>
+              <ServicesManagerClient 
+                charityId={charity.id} 
+                initialServices={additionalServices} 
+                isAdmin={isAdmin}
+              />
+            </div>
           )}
         </>
       )}

@@ -5,6 +5,7 @@ import GovernanceStagesManager from "./GovernanceStagesManager";
 import GovernanceRegulationsManager from "./GovernanceRegulationsManager";
 import { getSession } from "@/lib/auth";
 import DepartmentServicesTimeline from "@/components/DepartmentServicesTimeline";
+import CharityClientTimeline from "@/components/CharityClientTimeline";
 
 export async function generateMetadata({ params }: { params: Promise<{ name: string }> }): Promise<Metadata> {
   const { name } = await params;
@@ -60,8 +61,16 @@ export default async function GovernancePage({ params }: { params: Promise<{ nam
         </div>
       </div>
       
+      {session?.role === "CHARITY_CLIENT" && (
+        <CharityClientTimeline title="المخطط الزمني" stages={stages} />
+      )}
+
       {charity && (
         <GovernanceRegulationsManager charityId={charity.id} regulations={regulations} isAdmin={isAdmin} />
+      )}
+      
+      {charity && (
+        <DepartmentServicesTimeline charityId={charity.id} department="GOVERNANCE" />
       )}
     </div>
   );

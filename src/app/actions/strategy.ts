@@ -17,14 +17,14 @@ export async function ensureStagesForCharity(charityId: string) {
   const existingStages = await prisma.strategicStage.findMany({
     where: { charityId }
   });
-  
+
   if (existingStages.length === 0) {
     const charity = await prisma.charity.findUnique({
       where: { id: charityId }
     });
-    
+
     const currentStageIndex = Math.max(1, charity?.strategicStage || 1) - 1;
-    
+
     const newStages = DEFAULT_STAGES.map((name, index) => ({
       name,
       duration: "",
@@ -32,7 +32,7 @@ export async function ensureStagesForCharity(charityId: string) {
       charityId,
       isCurrent: index === currentStageIndex,
     }));
-    
+
     await prisma.strategicStage.createMany({
       data: newStages
     });
@@ -40,22 +40,22 @@ export async function ensureStagesForCharity(charityId: string) {
 }
 
 export async function addStrategicStage(
-  charityId: string, 
-  name: string, 
-  duration?: string, 
-  description?: string, 
-  startDate?: string, 
+  charityId: string,
+  name: string,
+  duration?: string,
+  description?: string,
+  startDate?: string,
   endDate?: string
 ) {
   await ensureStagesForCharity(charityId);
-  
+
   const lastStage = await prisma.strategicStage.findFirst({
     where: { charityId },
     orderBy: { order: 'desc' }
   });
-  
+
   const newOrder = lastStage ? lastStage.order + 1 : 0;
-  
+
   await prisma.strategicStage.create({
     data: {
       name,
@@ -68,7 +68,7 @@ export async function addStrategicStage(
       isCurrent: false
     }
   });
-  
+
   // Revalidate charity page and strategy page
   const charity = await prisma.charity.findUnique({ where: { id: charityId } });
   if (charity) {
@@ -78,8 +78,8 @@ export async function addStrategicStage(
 }
 
 export async function updateStrategicStage(
-  stageId: string, 
-  name: string, 
+  stageId: string,
+  name: string,
   duration?: string,
   description?: string,
   startDate?: string,
@@ -87,8 +87,8 @@ export async function updateStrategicStage(
 ) {
   const stage = await prisma.strategicStage.update({
     where: { id: stageId },
-    data: { 
-      name, 
+    data: {
+      name,
       duration,
       description: description || null,
       startDate: startDate ? new Date(startDate) : null,
@@ -96,7 +96,7 @@ export async function updateStrategicStage(
     },
     include: { charity: true }
   });
-  
+
   revalidatePath(`/charity/${encodeURIComponent(stage.charity.name)}`);
   revalidatePath(`/charity/${encodeURIComponent(stage.charity.name)}/strategy`);
 }
@@ -106,7 +106,7 @@ export async function deleteStrategicStage(stageId: string) {
     where: { id: stageId },
     include: { charity: true }
   });
-  
+
   revalidatePath(`/charity/${encodeURIComponent(stage.charity.name)}`);
   revalidatePath(`/charity/${encodeURIComponent(stage.charity.name)}/strategy`);
 }
@@ -119,20 +119,20 @@ export async function setCurrentStrategicStage(charityId: string, stageId: strin
     where: { charityId },
     data: { isCurrent: false }
   });
-  
+
   // Set the specific one
   const updatedStage = await prisma.strategicStage.update({
     where: { id: stageId },
     data: { isCurrent: true },
     include: { charity: true }
   });
-  
+
   // Also update the legacy strategicStage integer to match the order + 1, so the rest of the app doesn't break if it relies on it
   await prisma.charity.update({
     where: { id: charityId },
     data: { strategicStage: updatedStage.order + 1 }
   });
-  
+
   revalidatePath(`/charity/${encodeURIComponent(updatedStage.charity.name)}`);
   revalidatePath(`/charity/${encodeURIComponent(updatedStage.charity.name)}/strategy`);
 }
@@ -145,7 +145,7 @@ export async function reorderStrategicStages(charityId: string, stageIds: string
       data: { order: i }
     });
   }
-  
+
   const charity = await prisma.charity.findUnique({ where: { id: charityId } });
   if (charity) {
     revalidatePath(`/charity/${encodeURIComponent(charity.name)}`);
@@ -183,7 +183,7 @@ export async function getCharityDashboardData(charityName: string) {
   if (!charity) return null;
 
   const nextMeeting = await prisma.meeting.findFirst({
-    where: { 
+    where: {
       charityId: charity.id,
       date: { gte: new Date() }
     },

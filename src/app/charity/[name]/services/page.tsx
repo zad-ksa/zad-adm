@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import { prisma } from "@/lib/db";
 import { getSession } from "@/lib/auth";
 import { Briefcase } from "lucide-react";
-import ServicesManagerClient from "@/components/ServicesManagerClient";
 import StrategicStagesManager from "../strategy/StrategicStagesManager";
 import GovernanceStagesManager from "../governance/GovernanceStagesManager";
 import FinanceStagesManager from "../finance/FinanceStagesManager";
@@ -29,16 +28,6 @@ export default async function ServicesPage({ params }: { params: Promise<{ name:
 
   const session = await getSession();
   const isAdmin = ["ADMIN", "EXECUTIVE_DIRECTOR", "GENERAL_MANAGER"].includes(session?.role || "");
-
-  const services = await prisma.service.findMany({
-    where: { charityId: charity.id },
-    include: {
-      stages: {
-        orderBy: { order: 'asc' }
-      }
-    },
-    orderBy: { createdAt: 'desc' }
-  });
 
   let strategicStages: any[] = [];
   let governanceStages: any[] = [];
@@ -74,10 +63,10 @@ export default async function ServicesPage({ params }: { params: Promise<{ name:
             <Briefcase className="w-10 h-10" />
           </div>
           <h2 className="text-3xl font-bold text-slate-800 dark:text-slate-100 mb-4 tracking-tight">
-            إدارة الخدمات
+            إدارة المراحل الزمنية
           </h2>
           <p className="text-slate-500 dark:text-slate-400 max-w-lg mx-auto leading-relaxed text-lg">
-            إدارة ومتابعة الخدمات المقدمة لجمعية <span className="font-bold text-slate-700 dark:text-slate-300">{decodedName}</span> والجدول الزمني الخاص بكل منها.
+            إدارة ومتابعة المخططات والمراحل الزمنية الخاصة بجمعية <span className="font-bold text-slate-700 dark:text-slate-300">{decodedName}</span> للخطط الاستراتيجية، الحوكمة، والمالية.
           </p>
         </div>
       </div>
@@ -91,8 +80,6 @@ export default async function ServicesPage({ params }: { params: Promise<{ name:
       {(isAdmin || session?.role === "FINANCE") && (
         <FinanceStagesManager charityId={charity.id} initialStages={financeStages} />
       )}
-
-      <ServicesManagerClient charityId={charity.id} initialServices={services} isAdmin={isAdmin} />
     </div>
   );
 }

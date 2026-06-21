@@ -108,10 +108,6 @@ export default async function StrategySurveysPage({ params }: { params: Promise<
   // --- DEFAULT VIEW (Admin, Strategy, etc.) ---
   return (
     <div className="space-y-12">
-      {charity && (
-        <DepartmentServicesTimeline charityId={charity.id} department="STRATEGY" />
-      )}
-
       <div className="print:hidden">
         <SurveyLinkManager charityName={decodedName} surveyType="READINESS" />
       </div>

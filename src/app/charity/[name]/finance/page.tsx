@@ -65,10 +65,6 @@ export default async function CharityFinancePage({ params }: { params: Promise<{
 
   return (
     <div className="space-y-12">
-      {charity && (
-        <DepartmentServicesTimeline charityId={charity.id} department="FINANCE" />
-      )}
-
       <FinanceClient
         charity={{
           id: charity!.id,

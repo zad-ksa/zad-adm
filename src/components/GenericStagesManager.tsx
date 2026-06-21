@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { Sparkles, Check, X, Edit2, Trash2, Plus, ArrowUp, ArrowDown, Loader2, Settings } from "lucide-react";
-import { addServiceStage, updateServiceStage, deleteServiceStage, setCurrentServiceStage, reorderServiceStages, updateService } from "@/app/actions/services";
+import { addServiceStage, updateServiceStage, deleteServiceStage, setCurrentServiceStage, reorderServiceStages, updateService, deleteService } from "@/app/actions/services";
 
 type ServiceStage = {
   id: string;
@@ -129,6 +129,18 @@ export default function GenericStagesManager({
     });
   };
 
+  const handleDeleteService = () => {
+    if (!confirm(`هل أنت متأكد من حذف المخطط الزمني "${configName}" وجميع مراحله؟ لا يمكن التراجع عن هذا الإجراء.`)) return;
+    startTransition(async () => {
+      try {
+        await deleteService(service.id);
+      } catch (error) {
+        console.error(error);
+        alert("حدث خطأ أثناء الحذف");
+      }
+    });
+  };
+
   const startEdit = (stage: ServiceStage) => {
     setEditingId(stage.id);
     setEditName(stage.name);
@@ -191,12 +203,17 @@ export default function GenericStagesManager({
               </select>
             </div>
           </div>
-          <div className="flex gap-2">
-            <button onClick={handleConfigUpdate} className="flex items-center gap-1.5 px-4 py-2 text-white bg-primary hover:bg-primary/90 rounded-lg text-sm font-bold" disabled={isPending}>
-              {isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />} حفظ الإعدادات
-            </button>
-            <button onClick={() => { setIsEditingConfig(false); setConfigName(service.name); setConfigDept(service.department || "NONE"); }} className="flex items-center gap-1.5 px-4 py-2 text-slate-600 bg-slate-200 hover:bg-slate-300 dark:bg-slate-700 dark:hover:bg-slate-600 dark:text-slate-300 rounded-lg text-sm font-bold" disabled={isPending}>
-              إلغاء
+          <div className="flex justify-between items-center mt-2">
+            <div className="flex gap-2">
+              <button onClick={handleConfigUpdate} className="flex items-center gap-1.5 px-4 py-2 text-white bg-primary hover:bg-primary/90 rounded-lg text-sm font-bold" disabled={isPending}>
+                {isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />} حفظ الإعدادات
+              </button>
+              <button onClick={() => { setIsEditingConfig(false); setConfigName(service.name); setConfigDept(service.department || "NONE"); }} className="flex items-center gap-1.5 px-4 py-2 text-slate-600 bg-slate-200 hover:bg-slate-300 dark:bg-slate-700 dark:hover:bg-slate-600 dark:text-slate-300 rounded-lg text-sm font-bold" disabled={isPending}>
+                إلغاء
+              </button>
+            </div>
+            <button onClick={handleDeleteService} className="flex items-center gap-1.5 px-4 py-2 text-red-600 bg-red-100 hover:bg-red-200 dark:bg-red-900/30 dark:hover:bg-red-900/50 dark:text-red-400 rounded-lg text-sm font-bold transition-colors" disabled={isPending}>
+              <Trash2 className="w-4 h-4" /> حذف المخطط
             </button>
           </div>
         </div>

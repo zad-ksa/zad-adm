@@ -3,6 +3,7 @@ import { prisma } from "@/lib/db";
 import type { Metadata } from "next";
 import FinanceClient from "./FinanceClient";
 import FinanceStagesManager from "./FinanceStagesManager";
+import DepartmentServicesTimeline from "@/components/DepartmentServicesTimeline";
 
 
 export const dynamic = "force-dynamic";
@@ -77,7 +78,10 @@ export default async function CharityFinancePage({ params }: { params: Promise<{
       />
       
       {charity && (
-        <FinanceStagesManager charityId={charity.id} initialStages={stages} />
+        <>
+          <FinanceStagesManager charityId={charity.id} initialStages={stages} />
+          <DepartmentServicesTimeline charityId={charity.id} department="FINANCE" />
+        </>
       )}
     </div>
   );

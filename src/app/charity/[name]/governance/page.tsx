@@ -4,6 +4,7 @@ import { prisma } from "@/lib/db";
 import GovernanceStagesManager from "./GovernanceStagesManager";
 import GovernanceRegulationsManager from "./GovernanceRegulationsManager";
 import { getSession } from "@/lib/auth";
+import DepartmentServicesTimeline from "@/components/DepartmentServicesTimeline";
 
 export async function generateMetadata({ params }: { params: Promise<{ name: string }> }): Promise<Metadata> {
   const { name } = await params;
@@ -63,6 +64,7 @@ export default async function GovernancePage({ params }: { params: Promise<{ nam
         <>
           {isAdmin && <GovernanceStagesManager charityId={charity.id} initialStages={stages} />}
           <GovernanceRegulationsManager charityId={charity.id} regulations={regulations} isAdmin={isAdmin} />
+          <DepartmentServicesTimeline charityId={charity.id} department="GOVERNANCE" />
         </>
       )}
     </div>

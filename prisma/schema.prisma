@@ -30,6 +30,7 @@ model Charity {
   employees         Employee[]
   isReadinessVisible Boolean @default(false)
   isPerformanceEditable Boolean @default(false)
+  services          Service[]
 }
 
 model StrategicStage {
@@ -240,4 +241,28 @@ model CharityRegulationVisibility {
   regulation   Regulation @relation(fields: [regulationId], references: [id], onDelete: Cascade)
 
   @@unique([charityId, regulationId])
+}
+
+model Service {
+  id          String   @id @default(uuid())
+  name        String
+  department  String?  // 'STRATEGY', 'GOVERNANCE', 'FINANCE', 'PROGRAMS', 'HR' or null
+  charityId   String
+  charity     Charity  @relation(fields: [charityId], references: [id], onDelete: Cascade)
+  stages      ServiceStage[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model ServiceStage {
+  id          String   @id @default(uuid())
+  name        String
+  description String?
+  startDate   DateTime?
+  endDate     DateTime?
+  order       Int      @default(0)
+  serviceId   String
+  service     Service  @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 }

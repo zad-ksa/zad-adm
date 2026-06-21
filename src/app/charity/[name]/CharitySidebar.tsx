@@ -16,7 +16,8 @@ import {
   Moon,
   Sun,
   CheckSquare,
-  LogOut
+  LogOut,
+  Briefcase
 } from "lucide-react";
 import ZadLogo from "@/components/ZadLogo";
 import { useTheme } from "next-themes";
@@ -91,6 +92,12 @@ export default function CharitySidebar({
       href: `/charity/${encodeURIComponent(charityName)}/finance`,
       icon: Coins,
       show: isAdmin || isFinance,
+    },
+    {
+      title: "الخدمات",
+      href: `/charity/${encodeURIComponent(charityName)}/services`,
+      icon: Briefcase,
+      show: isAdmin || isCharityClient || isStrategy || isFinance, // generally visible to anyone who has access to charity
     },
     {
       title: "مهامي",

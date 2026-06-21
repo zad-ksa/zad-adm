@@ -11,6 +11,7 @@ import { ensureStagesForCharity, getCharityDashboardData } from "@/app/actions/s
 import { getSession } from "@/lib/auth";
 import CharityClientStrategyDashboard from "@/components/CharityClientStrategyDashboard";
 import StrategyPermissionToggle from "@/components/StrategyPermissionToggle";
+import DepartmentServicesTimeline from "@/components/DepartmentServicesTimeline";
 
 const getCachedResponses = async (charityName: string) => {
     const charityResponses = await prisma.surveyResponse.findMany({
@@ -141,6 +142,10 @@ export default async function StrategySurveysPage({ params }: { params: Promise<
           </div>
         )}
       </div>
+
+      {charity && (
+        <DepartmentServicesTimeline charityId={charity.id} department="STRATEGY" />
+      )}
     </div>
   );
 }

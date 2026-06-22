@@ -53,6 +53,8 @@ model StrategicStage {
   duration    String?
   order       Int      @default(0)
   isCurrent   Boolean  @default(false)
+  isContinuous Boolean @default(false)
+  isActive    Boolean  @default(true)
   charityId   String
   charity     Charity  @relation(fields: [charityId], references: [id], onDelete: Cascade)
   createdAt   DateTime @default(now())
@@ -68,6 +70,8 @@ model GovernanceStage {
   duration    String?
   order       Int      @default(0)
   isCurrent   Boolean  @default(false)
+  isContinuous Boolean @default(false)
+  isActive    Boolean  @default(true)
   charityId   String
   charity     Charity  @relation(fields: [charityId], references: [id], onDelete: Cascade)
   createdAt   DateTime @default(now())
@@ -83,6 +87,8 @@ model FinanceStage {
   duration    String?
   order       Int      @default(0)
   isCurrent   Boolean  @default(false)
+  isContinuous Boolean @default(false)
+  isActive    Boolean  @default(true)
   charityId   String
   charity     Charity  @relation(fields: [charityId], references: [id], onDelete: Cascade)
   createdAt   DateTime @default(now())
@@ -282,6 +288,8 @@ model ServiceStage {
   endDate     DateTime?
   order       Int      @default(0)
   isCurrent   Boolean  @default(false)
+  isContinuous Boolean @default(false)
+  isActive    Boolean  @default(true)
   serviceId   String
   service     Service  @relation(fields: [serviceId], references: [id], onDelete: Cascade)
   createdAt   DateTime @default(now())

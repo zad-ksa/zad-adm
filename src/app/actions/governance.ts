@@ -9,7 +9,9 @@ export async function addGovernanceStage(
   duration?: string,
   description?: string,
   startDate?: string,
-  endDate?: string
+  endDate?: string,
+  isContinuous: boolean = false,
+  isActive: boolean = true
 ) {
   const lastStage = await prisma.governanceStage.findFirst({
     where: { charityId },
@@ -27,7 +29,9 @@ export async function addGovernanceStage(
       endDate: endDate ? new Date(endDate) : null,
       order: newOrder,
       charityId,
-      isCurrent: false
+      isCurrent: false,
+      isContinuous,
+      isActive
     }
   });
 
@@ -44,7 +48,9 @@ export async function updateGovernanceStage(
   duration?: string,
   description?: string,
   startDate?: string,
-  endDate?: string
+  endDate?: string,
+  isContinuous: boolean = false,
+  isActive: boolean = true
 ) {
   const stage = await prisma.governanceStage.update({
     where: { id: stageId },
@@ -53,7 +59,9 @@ export async function updateGovernanceStage(
       duration,
       description: description || null,
       startDate: startDate ? new Date(startDate) : null,
-      endDate: endDate ? new Date(endDate) : null
+      endDate: endDate ? new Date(endDate) : null,
+      isContinuous,
+      isActive
     },
     include: { charity: true }
   });
@@ -65,6 +73,17 @@ export async function updateGovernanceStage(
 export async function deleteGovernanceStage(stageId: string) {
   const stage = await prisma.governanceStage.delete({
     where: { id: stageId },
+    include: { charity: true }
+  });
+
+  revalidatePath(`/charity/${encodeURIComponent(stage.charity.name)}`);
+  revalidatePath(`/charity/${encodeURIComponent(stage.charity.name)}/governance`);
+}
+
+export async function toggleActiveGovernanceStage(stageId: string, isActive: boolean) {
+  const stage = await prisma.governanceStage.update({
+    where: { id: stageId },
+    data: { isActive },
     include: { charity: true }
   });
 

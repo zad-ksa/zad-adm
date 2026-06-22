@@ -1,10 +1,10 @@
 "use client";
 
 import { useState, useTransition, useEffect } from "react";
-import { Sparkles, Check, X, Edit2, Trash2, Plus, ArrowUp, ArrowDown, Loader2, Settings, ChevronDown, ChevronUp } from "lucide-react";
+import { Sparkles, Check, X, Edit2, Trash2, Plus, ArrowUp, ArrowDown, Loader2, Settings, ChevronDown, ChevronUp, Eye, EyeOff, Activity } from "lucide-react";
 import { useRouter } from "next/navigation";
 import CharityClientTimeline from "@/components/CharityClientTimeline";
-import { addGovernanceStage, updateGovernanceStage, deleteGovernanceStage, setCurrentGovernanceStage, reorderGovernanceStages } from "@/app/actions/governance";
+import { addGovernanceStage, updateGovernanceStage, deleteGovernanceStage, setCurrentGovernanceStage, reorderGovernanceStages, toggleActiveGovernanceStage } from "@/app/actions/governance";
 import { updateTimelineConfig } from "@/app/actions/charity";
 
 type Stage = {
@@ -16,6 +16,8 @@ type Stage = {
   order: number;
   isCurrent: boolean;
   duration?: string | null;
+  isContinuous: boolean;
+  isActive: boolean;
 };
 
 export default function GovernanceStagesManager({ 
@@ -50,6 +52,8 @@ export default function GovernanceStagesManager({
   const [newDescription, setNewDescription] = useState("");
   const [newStartDate, setNewStartDate] = useState("");
   const [newEndDate, setNewEndDate] = useState("");
+  const [newIsContinuous, setNewIsContinuous] = useState(false);
+  const [editIsContinuous, setEditIsContinuous] = useState(false);
 
   const [isEditingConfig, setIsEditingConfig] = useState(false);
   const [configName, setConfigName] = useState(timelineName);
@@ -70,7 +74,9 @@ export default function GovernanceStagesManager({
         endDate: newEndDate ? new Date(newEndDate) : null,
         duration: "", 
         order: stages.length, 
-        isCurrent: false 
+        isCurrent: false,
+        isContinuous: newIsContinuous,
+        isActive: true
       };
       setStages([...stages, optimisticStage]);
       setIsAdding(false);
@@ -78,24 +84,28 @@ export default function GovernanceStagesManager({
       setNewDescription("");
       setNewStartDate("");
       setNewEndDate("");
+      setNewIsContinuous(false);
       
-      await addGovernanceStage(charityId, newName, "", newDescription, newStartDate, newEndDate);
+      await addGovernanceStage(charityId, newName, "", newDescription, newStartDate, newEndDate, newIsContinuous, true);
       router.refresh();
     });
   };
 
   const handleUpdate = (id: string) => {
     if (!editName.trim()) return;
+    const stageToUpdate = stages.find(s => s.id === id);
+    if (!stageToUpdate) return;
     startTransition(async () => {
       setStages(stages.map(s => s.id === id ? { 
         ...s, 
         name: editName, 
         description: editDescription,
         startDate: editStartDate ? new Date(editStartDate) : null,
-        endDate: editEndDate ? new Date(editEndDate) : null
+        endDate: editEndDate ? new Date(editEndDate) : null,
+        isContinuous: editIsContinuous
       } : s));
       setEditingId(null);
-      await updateGovernanceStage(id, editName, "", editDescription, editStartDate, editEndDate);
+      await updateGovernanceStage(id, editName, "", editDescription, editStartDate, editEndDate, editIsContinuous, stageToUpdate.isActive);
     });
   };
 
@@ -116,6 +126,13 @@ export default function GovernanceStagesManager({
     startTransition(async () => {
       setStages(stages.map(s => ({ ...s, isCurrent: s.id === id })));
       await setCurrentGovernanceStage(charityId, id);
+    });
+  };
+
+  const handleToggleActive = (id: string, currentActive: boolean) => {
+    startTransition(async () => {
+      setStages(stages.map(s => s.id === id ? { ...s, isActive: !currentActive } : s));
+      await toggleActiveGovernanceStage(id, !currentActive);
     });
   };
 
@@ -152,6 +169,7 @@ export default function GovernanceStagesManager({
     setEditDescription(stage.description || "");
     setEditStartDate(stage.startDate ? new Date(stage.startDate).toISOString().split('T')[0] : "");
     setEditEndDate(stage.endDate ? new Date(stage.endDate).toISOString().split('T')[0] : "");
+    setEditIsContinuous(stage.isContinuous);
   };
 
   return (
@@ -238,6 +256,8 @@ export default function GovernanceStagesManager({
             <div 
               key={stage.id} 
               className={`flex items-start gap-3 p-3 rounded-xl border transition-colors ${
+                !stage.isActive ? "opacity-60 grayscale-[50%]" : ""
+              } ${
                 isCurrent ? "border-primary bg-primary/5 shadow-sm" : "border-slate-100 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50 hover:border-slate-200 dark:hover:border-slate-600"
               }`}
             >
@@ -250,11 +270,12 @@ export default function GovernanceStagesManager({
                   <ArrowUp className="w-3.5 h-3.5" />
                 </button>
                 <div className={`w-6 h-6 rounded-full flex items-center justify-center font-bold text-xs border-2 ${
+                  stage.isContinuous ? "bg-amber-100 dark:bg-amber-900/30 text-amber-600 border-amber-200 dark:border-amber-800/50" :
                   isCurrent ? "bg-primary text-white border-primary" :
                   isCompleted ? "bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 border-emerald-200 dark:border-emerald-800/50" :
                   "bg-white dark:bg-slate-800 text-slate-400 border-slate-200 dark:border-slate-700"
                 }`}>
-                  {isCompleted ? <Check className="w-3 h-3" /> : index + 1}
+                  {stage.isContinuous ? <Activity className="w-3 h-3" /> : isCompleted ? <Check className="w-3 h-3" /> : index + 1}
                 </div>
                 <button 
                   onClick={() => handleMove(index, 'down')} 
@@ -299,7 +320,19 @@ export default function GovernanceStagesManager({
                       rows={1}
                       className="w-full border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 rounded-lg px-3 py-1.5 text-sm focus:ring-2 focus:ring-primary/50 outline-none resize-none custom-scrollbar"
                     />
-                    <div className="flex gap-2">
+                    <div className="flex items-center gap-2 mt-2 bg-slate-50 dark:bg-slate-900/50 p-2 rounded-lg border border-slate-200 dark:border-slate-700">
+                      <input
+                        type="checkbox"
+                        id={`edit-continuous-${stage.id}`}
+                        checked={editIsContinuous}
+                        onChange={(e) => setEditIsContinuous(e.target.checked)}
+                        className="w-4 h-4 rounded border-slate-300 text-primary focus:ring-primary/50"
+                      />
+                      <label htmlFor={`edit-continuous-${stage.id}`} className="text-sm text-slate-600 dark:text-slate-300 cursor-pointer">
+                        مرحلة مستمرة (تستمر طوال فترة المخطط وتعمل بالتوازي مع باقي المراحل)
+                      </label>
+                    </div>
+                    <div className="flex gap-2 mt-1">
                       <button onClick={() => handleUpdate(stage.id)} className="flex items-center gap-1 px-3 py-1 text-white bg-primary hover:bg-primary/90 rounded-lg text-sm font-bold" disabled={isPending}>
                         <Check className="w-3 h-3" /> حفظ
                       </button>
@@ -310,8 +343,9 @@ export default function GovernanceStagesManager({
                   </div>
                 ) : (
                   <div className="flex flex-col mt-0.5">
-                     <span className={`font-semibold ${isCurrent ? "text-primary text-base" : "text-slate-700 dark:text-slate-200 text-base"}`}>
+                     <span className={`font-semibold flex items-center gap-2 ${isCurrent ? "text-primary text-base" : "text-slate-700 dark:text-slate-200 text-base"}`}>
                        {stage.name}
+                       {!stage.isActive && <span className="text-xs bg-slate-200 dark:bg-slate-700 text-slate-500 dark:text-slate-400 px-2 py-0.5 rounded-full">غير مفعلة</span>}
                      </span>
                      {stage.description && (
                        <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">{stage.description}</p>
@@ -331,13 +365,14 @@ export default function GovernanceStagesManager({
                          </span>
                        )}
                        {isCurrent && <span className="text-xs text-primary font-medium bg-primary/10 px-2 py-0.5 rounded-full border border-primary/20">المرحلة الحالية</span>}
+                       {stage.isContinuous && <span className="text-xs text-amber-600 dark:text-amber-500 font-medium bg-amber-50 dark:bg-amber-900/20 px-2 py-0.5 rounded-full border border-amber-200 dark:border-amber-800/50 flex items-center gap-1"><Activity className="w-3 h-3" /> نشاط مستمر</span>}
                      </div>
                   </div>
                 )}
               </div>
 
               <div className="flex items-center gap-1 shrink-0 mt-0.5">
-                {!isCurrent && (
+                {!isCurrent && !stage.isContinuous && (
                   <button 
                     onClick={() => handleSetCurrent(stage.id)} 
                     disabled={isPending}
@@ -346,6 +381,15 @@ export default function GovernanceStagesManager({
                     تعيين كحالية
                   </button>
                 )}
+                
+                <button
+                  onClick={() => handleToggleActive(stage.id, stage.isActive)}
+                  disabled={isPending}
+                  className={`p-1.5 rounded-lg transition-colors ${stage.isActive ? 'text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800' : 'text-amber-500 hover:bg-amber-50 dark:hover:bg-amber-900/20'}`}
+                  title={stage.isActive ? "إيقاف التفعيل" : "تفعيل"}
+                >
+                  {stage.isActive ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                </button>
                 
                 <button 
                   onClick={() => startEdit(stage)} 
@@ -410,6 +454,18 @@ export default function GovernanceStagesManager({
                 rows={1}
                 className="w-full border border-primary/30 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 rounded-lg px-3 py-1.5 text-sm focus:ring-2 focus:ring-primary/50 outline-none resize-none custom-scrollbar"
               />
+              <div className="flex items-center gap-2 mt-2 bg-slate-50 dark:bg-slate-900/50 p-2 rounded-lg border border-primary/20">
+                <input
+                  type="checkbox"
+                  id="new-continuous"
+                  checked={newIsContinuous}
+                  onChange={(e) => setNewIsContinuous(e.target.checked)}
+                  className="w-4 h-4 rounded border-slate-300 text-primary focus:ring-primary/50"
+                />
+                <label htmlFor="new-continuous" className="text-sm text-slate-600 dark:text-slate-300 cursor-pointer">
+                  مرحلة مستمرة (تستمر طوال فترة المخطط وتعمل بالتوازي مع باقي المراحل)
+                </label>
+              </div>
               <div className="flex gap-2 mt-1">
                 <button onClick={handleAdd} className="flex items-center gap-1 px-4 py-1.5 text-white bg-primary hover:bg-primary/90 rounded-lg text-sm font-bold transition-colors" disabled={isPending}>
                   {isPending ? <Loader2 className="w-3 h-3 animate-spin" /> : <Check className="w-3 h-3" />} إضافة

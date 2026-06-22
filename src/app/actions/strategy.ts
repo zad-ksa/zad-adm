@@ -45,7 +45,9 @@ export async function addStrategicStage(
   duration?: string,
   description?: string,
   startDate?: string,
-  endDate?: string
+  endDate?: string,
+  isContinuous: boolean = false,
+  isActive: boolean = true
 ) {
   await ensureStagesForCharity(charityId);
 
@@ -65,7 +67,9 @@ export async function addStrategicStage(
       endDate: endDate ? new Date(endDate) : null,
       order: newOrder,
       charityId,
-      isCurrent: false
+      isCurrent: false,
+      isContinuous,
+      isActive
     }
   });
 
@@ -83,7 +87,9 @@ export async function updateStrategicStage(
   duration?: string,
   description?: string,
   startDate?: string,
-  endDate?: string
+  endDate?: string,
+  isContinuous: boolean = false,
+  isActive: boolean = true
 ) {
   const stage = await prisma.strategicStage.update({
     where: { id: stageId },
@@ -92,7 +98,9 @@ export async function updateStrategicStage(
       duration,
       description: description || null,
       startDate: startDate ? new Date(startDate) : null,
-      endDate: endDate ? new Date(endDate) : null
+      endDate: endDate ? new Date(endDate) : null,
+      isContinuous,
+      isActive
     },
     include: { charity: true }
   });
@@ -104,6 +112,17 @@ export async function updateStrategicStage(
 export async function deleteStrategicStage(stageId: string) {
   const stage = await prisma.strategicStage.delete({
     where: { id: stageId },
+    include: { charity: true }
+  });
+
+  revalidatePath(`/charity/${encodeURIComponent(stage.charity.name)}`);
+  revalidatePath(`/charity/${encodeURIComponent(stage.charity.name)}/strategy`);
+}
+
+export async function toggleActiveStrategicStage(stageId: string, isActive: boolean) {
+  const stage = await prisma.strategicStage.update({
+    where: { id: stageId },
+    data: { isActive },
     include: { charity: true }
   });
 

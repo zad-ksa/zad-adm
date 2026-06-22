@@ -9,7 +9,9 @@ export async function addFinanceStage(
   duration?: string,
   description?: string,
   startDate?: string,
-  endDate?: string
+  endDate?: string,
+  isContinuous: boolean = false,
+  isActive: boolean = true
 ) {
   const lastStage = await prisma.financeStage.findFirst({
     where: { charityId },
@@ -27,7 +29,9 @@ export async function addFinanceStage(
       endDate: endDate ? new Date(endDate) : null,
       order: newOrder,
       charityId,
-      isCurrent: false
+      isCurrent: false,
+      isContinuous,
+      isActive
     }
   });
   
@@ -44,7 +48,9 @@ export async function updateFinanceStage(
   duration?: string,
   description?: string,
   startDate?: string,
-  endDate?: string
+  endDate?: string,
+  isContinuous: boolean = false,
+  isActive: boolean = true
 ) {
   const stage = await prisma.financeStage.update({
     where: { id: stageId },
@@ -53,7 +59,9 @@ export async function updateFinanceStage(
       duration,
       description: description || null,
       startDate: startDate ? new Date(startDate) : null,
-      endDate: endDate ? new Date(endDate) : null
+      endDate: endDate ? new Date(endDate) : null,
+      isContinuous,
+      isActive
     },
     include: { charity: true }
   });
@@ -65,6 +73,17 @@ export async function updateFinanceStage(
 export async function deleteFinanceStage(stageId: string) {
   const stage = await prisma.financeStage.delete({
     where: { id: stageId },
+    include: { charity: true }
+  });
+  
+  revalidatePath(`/charity/${encodeURIComponent(stage.charity.name)}`);
+  revalidatePath(`/charity/${encodeURIComponent(stage.charity.name)}/finance`);
+}
+
+export async function toggleActiveFinanceStage(stageId: string, isActive: boolean) {
+  const stage = await prisma.financeStage.update({
+    where: { id: stageId },
+    data: { isActive },
     include: { charity: true }
   });
   

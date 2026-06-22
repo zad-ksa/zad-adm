@@ -85,7 +85,9 @@ export async function addServiceStage(
   name: string, 
   description: string | null, 
   startDate: Date | null, 
-  endDate: Date | null
+  endDate: Date | null,
+  isContinuous: boolean = false,
+  isActive: boolean = true
 ) {
   const lastStage = await prisma.serviceStage.findFirst({
     where: { serviceId },
@@ -101,7 +103,9 @@ export async function addServiceStage(
       description,
       startDate,
       endDate,
-      order: newOrder
+      order: newOrder,
+      isContinuous,
+      isActive
     },
     include: { service: { include: { charity: true } } }
   });
@@ -119,11 +123,13 @@ export async function updateServiceStage(
   name: string, 
   description: string | null, 
   startDate: Date | null, 
-  endDate: Date | null
+  endDate: Date | null,
+  isContinuous: boolean = false,
+  isActive: boolean = true
 ) {
   const stage = await prisma.serviceStage.update({
     where: { id },
-    data: { name, description, startDate, endDate },
+    data: { name, description, startDate, endDate, isContinuous, isActive },
     include: { service: { include: { charity: true } } }
   });
   
@@ -147,6 +153,21 @@ export async function deleteServiceStage(id: string) {
   }
   
   return stage;
+}
+
+export async function toggleActiveServiceStage(stageId: string, isActive: boolean) {
+  const stage = await prisma.serviceStage.update({
+    where: { id: stageId },
+    data: { isActive },
+    include: { service: { include: { charity: true } } }
+  });
+
+  if (stage) {
+    revalidatePath(`/charity/${encodeURIComponent(stage.service.charity.name)}/services`);
+    if (stage.service.department) {
+      revalidatePath(`/charity/${encodeURIComponent(stage.service.charity.name)}/${stage.service.department.toLowerCase()}`);
+    }
+  }
 }
 
 export async function reorderServiceStages(stageIds: string[]) {

@@ -17,9 +17,8 @@ export default function CharityClientTimeline({
   title: string, 
   stages: any[] 
 }) {
-  const activeStages = stages?.filter(s => s.isActive !== false) || [];
-  const sequentialStages = activeStages.filter(s => !s.isContinuous);
-  const continuousStages = activeStages.filter(s => s.isContinuous);
+  const sequentialStages = stages?.filter(s => !s.isContinuous && s.isActive !== false) || [];
+  const continuousStages = stages?.filter(s => s.isContinuous) || [];
 
   return (
     <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 p-6 shadow-sm">
@@ -80,38 +79,25 @@ export default function CharityClientTimeline({
       )}
 
       {continuousStages.length > 0 && (
-        <div className="mt-8 border-t border-slate-100 dark:border-slate-700 pt-6">
-          <h4 className="font-bold text-sm text-slate-500 dark:text-slate-400 flex items-center gap-2 mb-4">
-            <Activity className="w-4 h-4" />
-            الأنشطة والمراحل المستمرة
-          </h4>
-          <div className="flex flex-col gap-3">
-            {continuousStages.map((stage: any) => {
-              const displayDuration = formatDurationArabic(stage.startDate, stage.endDate) || stage.duration;
-              return (
-                <div key={stage.id} className="relative group overflow-hidden rounded-xl bg-slate-50 dark:bg-slate-900/50 border border-slate-100 dark:border-slate-700 p-4">
-                  {/* Decorative timeline bar */}
-                  <div className="absolute top-0 bottom-0 right-0 w-1 bg-amber-400/50 group-hover:bg-amber-400 transition-colors"></div>
-                  
-                  <div className="mr-3 flex flex-col md:flex-row md:items-center justify-between gap-4">
-                    <div>
-                      <h5 className="font-bold text-slate-700 dark:text-slate-200">{stage.name}</h5>
-                      {stage.description && (
-                        <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">{stage.description}</p>
-                      )}
-                    </div>
-                    {displayDuration && (
-                      <div className="shrink-0">
-                        <span className="inline-block bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 text-xs px-3 py-1 rounded-lg font-medium border border-slate-200 dark:border-slate-700">
-                          المدة: {displayDuration}
-                        </span>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
+        <div className="mt-8 pt-6 border-t border-slate-100 dark:border-slate-700 flex flex-wrap gap-2 justify-center">
+          {continuousStages.map((stage: any) => {
+            const isActive = stage.isActive !== false;
+            return (
+              <div 
+                key={stage.id} 
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-semibold border transition-all ${
+                  isActive 
+                    ? "bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-500 border-amber-200 dark:border-amber-800/50" 
+                    : "bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 border-slate-200 dark:border-slate-700 grayscale-[50%]"
+                }`}
+                title={stage.description || undefined}
+              >
+                <Activity className="w-4 h-4" />
+                {stage.name}
+                {!isActive && <span className="text-[10px] bg-slate-200 dark:bg-slate-700 px-1.5 py-0.5 rounded-md mr-1">غير مفعلة</span>}
+              </div>
+            );
+          })}
         </div>
       )}
     </div>

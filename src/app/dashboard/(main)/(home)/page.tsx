@@ -1,10 +1,12 @@
-﻿import { unstable_cache } from "next/cache";
+import { unstable_cache } from "next/cache";
 import { prisma } from "@/lib/db";
 import type { Metadata } from "next";
 import Link from "next/link";
 import Image from "next/image";
 
-const getDashboardStats = async () => {
+import { getSession } from "@/lib/auth";
+
+const getDashboardStats = async (session: any) => {
   const now = new Date();
   
   // بداية اليوم
@@ -13,6 +15,10 @@ const getDashboardStats = async () => {
   // آخر 7 أيام (أسبوع)
   const last7Days = new Date();
   last7Days.setDate(last7Days.getDate() - 7);
+
+  const isLimitedRole = session?.role === "STRATEGY" || session?.role === "FINANCE";
+  const employeeFilter = isLimitedRole ? { assignedToId: session.id } : {};
+  const achievementFilter = isLimitedRole ? { employeeId: session.id } : {};
 
   const [
     charitiesCount,
@@ -26,39 +32,42 @@ const getDashboardStats = async () => {
     inProgressTasks
   ] = await Promise.all([
     prisma.charity.count(),
-    prisma.task.count(),
-    prisma.task.count({ where: { isCompleted: true } }),
+    prisma.task.count({ where: { ...employeeFilter } }),
+    prisma.task.count({ where: { isCompleted: true, ...employeeFilter } }),
     prisma.task.count({ 
       where: { 
         isCompleted: true, 
-        completedAt: { gte: startOfDay } 
+        completedAt: { gte: startOfDay },
+        ...employeeFilter
       } 
     }),
     prisma.task.count({ 
       where: { 
         isCompleted: true, 
-        completedAt: { gte: last7Days } 
+        completedAt: { gte: last7Days },
+        ...employeeFilter
       } 
     }),
     prisma.task.findMany({ 
-      where: { priority: 1, isCompleted: false }, 
+      where: { priority: 1, isCompleted: false, ...employeeFilter }, 
       take: 5, 
       orderBy: { createdAt: 'desc' },
       include: { assignedTo: true } 
     }),
     prisma.achievement.findMany({ 
+      where: { ...achievementFilter },
       take: 5, 
       orderBy: { date: 'desc' }, 
       include: { employee: true } 
     }),
     prisma.task.findMany({
-      where: { isCompleted: true },
+      where: { isCompleted: true, ...employeeFilter },
       take: 5,
       orderBy: { completedAt: 'desc' },
       include: { assignedTo: true }
     }),
     prisma.task.findMany({
-      where: { status: "IN_PROGRESS", isCompleted: false },
+      where: { status: "IN_PROGRESS", isCompleted: false, ...employeeFilter },
       take: 5,
       orderBy: { updatedAt: 'desc' },
       include: { assignedTo: true }
@@ -109,7 +118,8 @@ export const metadata: Metadata = {
 };
 
 export default async function MainDashboard() {
-  const stats = await getDashboardStats();
+  const session = await getSession();
+  const stats = await getDashboardStats(session);
 
   return (
     <main className="flex-1 min-w-0 py-8">

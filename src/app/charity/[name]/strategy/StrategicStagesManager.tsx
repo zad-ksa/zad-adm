@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition, useEffect } from "react";
-import { Sparkles, Check, X, Edit2, Trash2, Plus, ArrowUp, ArrowDown, Loader2, Settings } from "lucide-react";
+import { Sparkles, Check, X, Edit2, Trash2, Plus, ArrowUp, ArrowDown, Loader2, Settings, ChevronDown, ChevronUp } from "lucide-react";
 import { useRouter } from "next/navigation";
 import CharityClientTimeline from "@/components/CharityClientTimeline";
 import { addStrategicStage, updateStrategicStage, deleteStrategicStage, setCurrentStrategicStage, reorderStrategicStages } from "@/app/actions/strategy";
@@ -43,6 +43,7 @@ export default function StrategicStagesManager({
   const [editStartDate, setEditStartDate] = useState("");
   const [editEndDate, setEditEndDate] = useState("");
   const [stageToDelete, setStageToDelete] = useState<string | null>(null);
+  const [isExpanded, setIsExpanded] = useState(false);
   
   const [isAdding, setIsAdding] = useState(false);
   const [newName, setNewName] = useState("");
@@ -154,23 +155,31 @@ export default function StrategicStagesManager({
   };
 
   return (
-    <div className="max-w-5xl mx-auto w-full bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm overflow-hidden mt-8 transition-colors">
-      <div className="p-6 border-b border-slate-100 dark:border-slate-700 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm overflow-hidden mt-8 transition-colors">
+      <div 
+        className="p-6 border-b border-slate-100 dark:border-slate-700 flex flex-col sm:flex-row sm:items-center justify-between gap-4 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-900/50 transition-colors"
+        onClick={() => setIsExpanded(!isExpanded)}
+      >
         <div className="flex items-center gap-3">
+          <div className="p-1 text-slate-400 hover:text-slate-600 transition-colors">
+            {isExpanded ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
+          </div>
           <h3 className="text-xl font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
             <Sparkles className="w-5 h-5 text-primary" />
             إدارة: {timelineName}
           </h3>
-          <button 
-            onClick={() => setIsEditingConfig(!isEditingConfig)}
-            className="p-1.5 text-slate-400 hover:text-primary bg-slate-50 hover:bg-primary/10 rounded-lg transition-colors"
-            title="إعدادات المخطط"
-          >
-            <Settings className="w-4 h-4" />
-          </button>
+          {isExpanded && (
+            <button 
+              onClick={(e) => { e.stopPropagation(); setIsEditingConfig(!isEditingConfig); }}
+              className="p-1.5 text-slate-400 hover:text-primary bg-white dark:bg-slate-800 hover:bg-primary/10 rounded-lg transition-colors border border-slate-200 dark:border-slate-700"
+              title="إعدادات المخطط"
+            >
+              <Settings className="w-4 h-4" />
+            </button>
+          )}
         </div>
         <button
-          onClick={() => setIsAdding(true)}
+          onClick={(e) => { e.stopPropagation(); setIsAdding(true); setIsExpanded(true); }}
           className="flex items-center justify-center gap-2 bg-primary/10 hover:bg-primary/20 text-primary px-4 py-2 rounded-xl text-sm font-semibold transition-colors"
           disabled={isPending}
         >
@@ -179,7 +188,9 @@ export default function StrategicStagesManager({
         </button>
       </div>
 
-      {isEditingConfig && (
+      {isExpanded && (
+        <div className="flex flex-col">
+          {isEditingConfig && (
         <div className="p-6 border-b border-slate-100 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/30">
           <h4 className="font-bold text-sm mb-4 text-slate-700 dark:text-slate-300">إعدادات المخطط الزمني</h4>
           <div className="flex flex-col sm:flex-row gap-4 mb-4">
@@ -300,27 +311,27 @@ export default function StrategicStagesManager({
                   </div>
                 ) : (
                   <div className="flex flex-col mt-0.5">
-                     <span className={`font-semibold ${isCurrent ? "text-primary text-sm" : "text-slate-700 dark:text-slate-200 text-sm"}`}>
+                     <span className={`font-semibold ${isCurrent ? "text-primary text-base" : "text-slate-700 dark:text-slate-200 text-base"}`}>
                        {stage.name}
                      </span>
                      {stage.description && (
-                       <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">{stage.description}</p>
+                       <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">{stage.description}</p>
                      )}
-                     <div className="flex flex-wrap items-center gap-1.5 mt-1.5">
+                     <div className="flex flex-wrap items-center gap-2 mt-2">
                        {stage.startDate && (
-                         <span className="text-[11px] text-slate-500 dark:text-slate-400 font-medium bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-1.5 py-0.5 rounded-full" dir="ltr">
+                         <span className="text-xs text-slate-500 dark:text-slate-400 font-medium bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-2 py-0.5 rounded-full" dir="ltr">
                            {new Date(stage.startDate).toLocaleDateString('en-CA')}
                          </span>
                        )}
                        {stage.startDate && stage.endDate && (
-                         <span className="text-[11px] text-slate-400 px-1">إلى</span>
+                         <span className="text-xs text-slate-400 px-1">إلى</span>
                        )}
                        {stage.endDate && (
-                         <span className="text-[11px] text-slate-500 dark:text-slate-400 font-medium bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-1.5 py-0.5 rounded-full" dir="ltr">
+                         <span className="text-xs text-slate-500 dark:text-slate-400 font-medium bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-2 py-0.5 rounded-full" dir="ltr">
                            {new Date(stage.endDate).toLocaleDateString('en-CA')}
                          </span>
                        )}
-                       {isCurrent && <span className="text-[11px] text-primary font-medium bg-primary/10 px-1.5 py-0.5 rounded-full border border-primary/20">المرحلة الحالية</span>}
+                       {isCurrent && <span className="text-xs text-primary font-medium bg-primary/10 px-2 py-0.5 rounded-full border border-primary/20">المرحلة الحالية</span>}
                      </div>
                   </div>
                 )}
@@ -417,6 +428,8 @@ export default function StrategicStagesManager({
         <h4 className="text-sm font-bold text-slate-500 dark:text-slate-400 mb-4 text-center">معاينة المخطط الزمني</h4>
         <CharityClientTimeline title={configName} stages={sortedStages} />
       </div>
+      </div>
+      )}
 
       {stageToDelete && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm">

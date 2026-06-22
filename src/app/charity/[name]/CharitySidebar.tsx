@@ -63,41 +63,45 @@ export default function CharitySidebar({
       show: true,
     },
     {
+      title: "الخدمات",
+      href: `/charity/${encodeURIComponent(charityName)}/services`,
+      icon: Briefcase,
+      show: isAdmin || isCharityClient || isStrategy || isFinance, // generally visible to anyone who has access to charity
+    },
+    {
       title: "الاستراتيجية",
       href: `/charity/${encodeURIComponent(charityName)}/strategy`,
       icon: Target,
+      comingSoon: isCharityClient,
       show: isAdmin || isStrategy || isCharityClient,
     },
     {
       title: "الحوكمة",
       href: `/charity/${encodeURIComponent(charityName)}/governance`,
       icon: Scale,
+      comingSoon: isCharityClient,
       show: canManageGovernance || isCharityClient,
     },
     {
       title: "البرامج والمشاريع",
       href: `/charity/${encodeURIComponent(charityName)}/programs`,
       icon: FolderKanban,
-      show: isAdmin || isStrategy,
+      comingSoon: isCharityClient,
+      show: isAdmin || isStrategy || isCharityClient,
+    },
+    {
+      title: "المالية",
+      href: `/charity/${encodeURIComponent(charityName)}/finance`,
+      icon: Coins,
+      comingSoon: isCharityClient,
+      show: isAdmin || isFinance || isCharityClient,
     },
     {
       title: "الموارد البشرية",
       href: "#",
       icon: Users,
       comingSoon: true,
-      show: canManageHR,
-    },
-    {
-      title: "المالية",
-      href: `/charity/${encodeURIComponent(charityName)}/finance`,
-      icon: Coins,
-      show: isAdmin || isFinance,
-    },
-    {
-      title: "الخدمات",
-      href: `/charity/${encodeURIComponent(charityName)}/services`,
-      icon: Briefcase,
-      show: isAdmin || isCharityClient || isStrategy || isFinance, // generally visible to anyone who has access to charity
+      show: canManageHR || isCharityClient,
     },
     {
       title: "مهامي",

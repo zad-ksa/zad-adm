@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useState, useEffect, useRef, useTransition } from "react";
 import Link from "next/link";
@@ -59,6 +59,13 @@ export default function EmployeeSidebar({
       { label: "الرئيسية", href: "/dashboard", icon: LayoutDashboard },
       { label: "الجمعيات", href: "/dashboard/charities", icon: Building2 },
       { label: "الاستبيانات", href: "/dashboard/surveys", icon: ClipboardList },
+      { label: "مهامي", href: "/dashboard/tasks", icon: CheckSquare },
+    ];
+  } else if (userState?.role === "FINANCE") {
+    navItems = [
+      { label: "الرئيسية", href: "/dashboard", icon: LayoutDashboard },
+      { label: "الجمعيات", href: "/dashboard/charities", icon: Building2 },
+      { label: "الأخبار والإنجازات", href: "/dashboard/news", icon: Newspaper },
       { label: "مهامي", href: "/dashboard/tasks", icon: CheckSquare },
     ];
   } else {

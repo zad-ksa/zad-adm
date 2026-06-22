@@ -1,7 +1,9 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useTransition, useEffect } from "react";
 import { Sparkles, Check, X, Edit2, Trash2, Plus, ArrowUp, ArrowDown, Loader2, Settings } from "lucide-react";
+import { useRouter } from "next/navigation";
+import CharityClientTimeline from "@/components/CharityClientTimeline";
 import { addStrategicStage, updateStrategicStage, deleteStrategicStage, setCurrentStrategicStage, reorderStrategicStages } from "@/app/actions/strategy";
 import { updateTimelineConfig } from "@/app/actions/charity";
 
@@ -28,6 +30,12 @@ export default function StrategicStagesManager({
   timelineDept?: string
 }) {
   const [stages, setStages] = useState<Stage[]>(initialStages);
+  const router = useRouter();
+
+  useEffect(() => {
+    setStages(initialStages);
+  }, [initialStages]);
+
   const [isPending, startTransition] = useTransition();
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editName, setEditName] = useState("");
@@ -70,7 +78,7 @@ export default function StrategicStagesManager({
       setNewEndDate("");
       
       await addStrategicStage(charityId, newName, "", newDescription, newStartDate, newEndDate);
-      window.location.reload();
+      router.refresh();
     });
   };
 
@@ -243,48 +251,44 @@ export default function StrategicStagesManager({
 
               <div className="flex-1">
                 {editingId === stage.id ? (
-                  <div className="flex flex-col gap-3">
-                    <input 
-                      type="text" 
-                      value={editName} 
-                      onChange={e => setEditName(e.target.value)} 
-                      placeholder="اسم المرحلة"
-                      className="w-full border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary/50 outline-none"
-                      autoFocus
-                    />
+                  <div className="flex flex-col gap-2">
+                    <div className="flex flex-col sm:flex-row gap-2">
+                      <input 
+                        type="text" 
+                        value={editName} 
+                        onChange={e => setEditName(e.target.value)} 
+                        placeholder="اسم المرحلة"
+                        className="flex-1 border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 rounded-lg px-3 py-1.5 text-sm focus:ring-2 focus:ring-primary/50 outline-none"
+                        autoFocus
+                      />
+                      <input 
+                        type="date" 
+                        value={editStartDate} 
+                        onChange={e => setEditStartDate(e.target.value)} 
+                        className="w-full sm:w-32 border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 rounded-lg px-2 py-1.5 text-xs focus:ring-2 focus:ring-primary/50 outline-none [color-scheme:light] dark:[color-scheme:dark]"
+                        title="تاريخ البداية"
+                      />
+                      <input 
+                        type="date" 
+                        value={editEndDate} 
+                        onChange={e => setEditEndDate(e.target.value)} 
+                        className="w-full sm:w-32 border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 rounded-lg px-2 py-1.5 text-xs focus:ring-2 focus:ring-primary/50 outline-none [color-scheme:light] dark:[color-scheme:dark]"
+                        title="تاريخ النهاية"
+                      />
+                    </div>
                     <textarea 
                       value={editDescription} 
                       onChange={e => setEditDescription(e.target.value)} 
                       placeholder="وصف مختصر للمرحلة (اختياري)"
-                      rows={2}
-                      className="w-full border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary/50 outline-none resize-none custom-scrollbar"
+                      rows={1}
+                      className="w-full border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 rounded-lg px-3 py-1.5 text-sm focus:ring-2 focus:ring-primary/50 outline-none resize-none custom-scrollbar"
                     />
-                    <div className="flex flex-col sm:flex-row gap-4 sm:gap-3">
-                      <div className="w-full sm:w-1/2">
-                        <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-1">تاريخ البداية (اختياري)</label>
-                        <input 
-                          type="date" 
-                          value={editStartDate} 
-                          onChange={e => setEditStartDate(e.target.value)} 
-                          className="w-full border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary/50 outline-none [color-scheme:light] dark:[color-scheme:dark]"
-                        />
-                      </div>
-                      <div className="w-full sm:w-1/2">
-                        <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-1">تاريخ النهاية (اختياري)</label>
-                        <input 
-                          type="date" 
-                          value={editEndDate} 
-                          onChange={e => setEditEndDate(e.target.value)} 
-                          className="w-full border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary/50 outline-none [color-scheme:light] dark:[color-scheme:dark]"
-                        />
-                      </div>
-                    </div>
-                    <div className="flex gap-2 mt-2">
-                      <button onClick={() => handleUpdate(stage.id)} className="flex items-center gap-1.5 px-4 py-2 text-white bg-primary hover:bg-primary/90 rounded-lg font-bold" disabled={isPending}>
-                        <Check className="w-4 h-4" /> حفظ
+                    <div className="flex gap-2">
+                      <button onClick={() => handleUpdate(stage.id)} className="flex items-center gap-1 px-3 py-1 text-white bg-primary hover:bg-primary/90 rounded-lg text-sm font-bold" disabled={isPending}>
+                        <Check className="w-3 h-3" /> حفظ
                       </button>
-                      <button onClick={() => setEditingId(null)} className="flex items-center gap-1.5 px-4 py-2 text-slate-600 bg-slate-200 hover:bg-slate-300 dark:bg-slate-700 dark:hover:bg-slate-600 dark:text-slate-300 rounded-lg font-bold" disabled={isPending}>
-                        <X className="w-4 h-4" /> إلغاء
+                      <button onClick={() => setEditingId(null)} className="flex items-center gap-1 px-3 py-1 text-slate-600 bg-slate-200 hover:bg-slate-300 dark:bg-slate-700 dark:hover:bg-slate-600 dark:text-slate-300 rounded-lg text-sm font-bold" disabled={isPending}>
+                        <X className="w-3 h-3" /> إلغاء
                       </button>
                     </div>
                   </div>
@@ -358,53 +362,54 @@ export default function StrategicStagesManager({
             <div className="w-8 h-8 shrink-0 flex items-center justify-center mt-1">
                <div className="w-6 h-6 rounded-full border-2 border-primary/30 border-dashed" />
             </div>
-            <div className="flex-1 flex flex-col gap-3">
-              <input 
-                type="text" 
-                value={newName} 
-                onChange={e => setNewName(e.target.value)} 
-                placeholder="اسم المرحلة الجديدة..."
-                className="w-full border border-primary/30 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary/50 outline-none"
-                autoFocus
-              />
+            <div className="flex-1 flex flex-col gap-2">
+              <div className="flex flex-col sm:flex-row gap-2">
+                <input 
+                  type="text" 
+                  value={newName} 
+                  onChange={e => setNewName(e.target.value)} 
+                  placeholder="اسم المرحلة الجديدة..."
+                  className="flex-1 border border-primary/30 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 rounded-lg px-3 py-1.5 text-sm focus:ring-2 focus:ring-primary/50 outline-none"
+                  autoFocus
+                />
+                <input 
+                  type="date" 
+                  value={newStartDate} 
+                  onChange={e => setNewStartDate(e.target.value)} 
+                  className="w-full sm:w-32 border border-primary/30 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 rounded-lg px-2 py-1.5 text-xs focus:ring-2 focus:ring-primary/50 outline-none [color-scheme:light] dark:[color-scheme:dark]"
+                  title="تاريخ البداية"
+                />
+                <input 
+                  type="date" 
+                  value={newEndDate} 
+                  onChange={e => setNewEndDate(e.target.value)} 
+                  className="w-full sm:w-32 border border-primary/30 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 rounded-lg px-2 py-1.5 text-xs focus:ring-2 focus:ring-primary/50 outline-none [color-scheme:light] dark:[color-scheme:dark]"
+                  title="تاريخ النهاية"
+                />
+              </div>
               <textarea 
                 value={newDescription} 
                 onChange={e => setNewDescription(e.target.value)} 
                 placeholder="وصف مختصر للمرحلة (اختياري)"
-                rows={2}
-                className="w-full border border-primary/30 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary/50 outline-none resize-none custom-scrollbar"
+                rows={1}
+                className="w-full border border-primary/30 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 rounded-lg px-3 py-1.5 text-sm focus:ring-2 focus:ring-primary/50 outline-none resize-none custom-scrollbar"
               />
-              <div className="flex flex-col sm:flex-row gap-4 sm:gap-3">
-                <div className="w-full sm:w-1/2">
-                  <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-1">تاريخ البداية (اختياري)</label>
-                  <input 
-                    type="date" 
-                    value={newStartDate} 
-                    onChange={e => setNewStartDate(e.target.value)} 
-                    className="w-full border border-primary/30 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary/50 outline-none [color-scheme:light] dark:[color-scheme:dark]"
-                  />
-                </div>
-                <div className="w-full sm:w-1/2">
-                  <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-1">تاريخ النهاية (اختياري)</label>
-                  <input 
-                    type="date" 
-                    value={newEndDate} 
-                    onChange={e => setNewEndDate(e.target.value)} 
-                    className="w-full border border-primary/30 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary/50 outline-none [color-scheme:light] dark:[color-scheme:dark]"
-                  />
-                </div>
-              </div>
-              <div className="flex gap-2 mt-2">
-                <button onClick={handleAdd} className="flex-1 flex justify-center items-center gap-2 px-4 py-2 text-white bg-primary hover:bg-primary/90 rounded-lg font-bold transition-colors" disabled={isPending}>
-                  {isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <><Check className="w-4 h-4" /> إضافة</>}
+              <div className="flex gap-2 mt-1">
+                <button onClick={handleAdd} className="flex items-center gap-1 px-4 py-1.5 text-white bg-primary hover:bg-primary/90 rounded-lg text-sm font-bold transition-colors" disabled={isPending}>
+                  {isPending ? <Loader2 className="w-3 h-3 animate-spin" /> : <Check className="w-3 h-3" />} إضافة
                 </button>
-                <button onClick={() => setIsAdding(false)} className="px-4 py-2 text-slate-600 bg-slate-200 hover:bg-slate-300 dark:bg-slate-700 dark:hover:bg-slate-600 dark:text-slate-300 rounded-lg font-bold" disabled={isPending}>
+                <button onClick={() => setIsAdding(false)} className="px-4 py-1.5 text-slate-600 bg-slate-200 hover:bg-slate-300 dark:bg-slate-700 dark:hover:bg-slate-600 dark:text-slate-300 rounded-lg text-sm font-bold" disabled={isPending}>
                   إلغاء
                 </button>
               </div>
             </div>
           </div>
         )}
+      </div>
+
+      <div className="mt-2 border-t border-slate-100 dark:border-slate-700 pt-6 px-6 pb-6 bg-slate-50 dark:bg-slate-900/20">
+        <h4 className="text-sm font-bold text-slate-500 dark:text-slate-400 mb-4 text-center">معاينة المخطط الزمني</h4>
+        <CharityClientTimeline title={configName} stages={sortedStages} />
       </div>
     </div>
   );

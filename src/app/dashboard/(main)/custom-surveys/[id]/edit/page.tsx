@@ -316,6 +316,7 @@ export default function EditSurveyPage({ params }: { params: Promise<{ id: strin
                         <option value="YES_NO">نعم / لا</option>
                         <option value="OPTIONS">خيارات متعددة</option>
                         <option value="HIJRI_DATE">تاريخ هجري</option>
+                        <option value="FILE">رفع ملف</option>
                       </select>
                     </div>
                     {question.type === "OPTIONS" && (
@@ -366,15 +367,17 @@ export default function EditSurveyPage({ params }: { params: Promise<{ id: strin
                         />
                         <span className="text-sm font-bold text-slate-600">سؤال إجباري</span>
                       </label>
-                      <label className="flex items-center gap-2 cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={question.allowAttachment}
-                          onChange={(e) => updateQuestion(sIndex, qIndex, { allowAttachment: e.target.checked })}
-                          className="w-4 h-4 rounded text-primary focus:ring-primary/20 cursor-pointer"
-                        />
-                        <span className="text-sm font-bold text-slate-600">السماح برفع مرفق (صورة/PDF/مستند)</span>
-                      </label>
+                      {question.type !== "FILE" && (
+                        <label className="flex items-center gap-2 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={question.allowAttachment}
+                            onChange={(e) => updateQuestion(sIndex, qIndex, { allowAttachment: e.target.checked })}
+                            className="w-4 h-4 rounded text-primary focus:ring-primary/20 cursor-pointer"
+                          />
+                          <span className="text-sm font-bold text-slate-600">السماح برفع مرفق (صورة/PDF/مستند)</span>
+                        </label>
+                      )}
                       {question.type === "YES_NO" && (
                         <label className="flex items-center gap-2 cursor-pointer">
                           <input

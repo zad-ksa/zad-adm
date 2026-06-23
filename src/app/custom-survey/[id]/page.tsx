@@ -59,7 +59,6 @@ export default function CustomSurveyPage({ params }: { params: Promise<{ id: str
   // States
   const [hasAcceptedWelcome, setHasAcceptedWelcome] = useState(false);
   const [charityName, setCharityName] = useState("");
-  const [isRegistered, setIsRegistered] = useState(false);
   
   const [currentSectionIndex, setCurrentSectionIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<string, string>>({});
@@ -71,6 +70,11 @@ export default function CustomSurveyPage({ params }: { params: Promise<{ id: str
 
   useEffect(() => {
     fetchSurvey();
+    if (typeof window !== "undefined") {
+      const urlParams = new URLSearchParams(window.location.search);
+      const nameParam = urlParams.get("charity") || urlParams.get("name") || "مشارك عام";
+      setCharityName(nameParam);
+    }
   }, []);
 
   const fetchSurvey = async () => {
@@ -205,7 +209,7 @@ export default function CustomSurveyPage({ params }: { params: Promise<{ id: str
       <main className="flex-1 w-full max-w-3xl mx-auto px-4 py-12">
         {!hasAcceptedWelcome ? (
           <div className="bg-white border border-slate-200 rounded-2xl p-10 shadow-sm animate-in fade-in duration-500">
-            <div className="w-24 h-24 mx-auto mb-6">
+            <div className="w-48 h-48 mx-auto mb-6">
               <img src="/assets/logos/لوجو زاد-01.svg" alt="زاد التنموية" className="w-full h-full object-contain" />
             </div>
             <h1 className="text-2xl font-black text-center text-primary mb-6">{survey.title}</h1>
@@ -220,33 +224,6 @@ export default function CustomSurveyPage({ params }: { params: Promise<{ id: str
             >
               البدء الآن
             </button>
-          </div>
-        ) : !isRegistered ? (
-          <div className="bg-white border border-slate-200 rounded-2xl p-10 shadow-sm animate-in fade-in duration-500">
-            <h2 className="text-2xl font-bold text-slate-800 mb-2">بيانات الجمعية</h2>
-            <p className="text-slate-500 mb-8">يرجى إدخال اسم الجمعية للمتابعة.</p>
-            <div className="space-y-6">
-              <div>
-                <label className="block text-sm font-bold text-slate-700 mb-2">اسم الجمعية بالكامل</label>
-                <input
-                  type="text"
-                  required
-                  value={charityName}
-                  onChange={(e) => setCharityName(e.target.value)}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 font-medium outline-none focus:border-primary focus:bg-white transition-colors"
-                  placeholder="مثال: جمعية البر الأهلية..."
-                />
-              </div>
-              <button
-                onClick={() => {
-                  if (charityName.trim()) setIsRegistered(true);
-                }}
-                disabled={!charityName.trim()}
-                className="w-full bg-primary text-white py-3.5 rounded-xl font-bold hover:bg-primary/95 transition-all disabled:opacity-50"
-              >
-                متابعة
-              </button>
-            </div>
           </div>
         ) : (
           <div className="animate-in fade-in duration-500">
@@ -312,6 +289,35 @@ export default function CustomSurveyPage({ params }: { params: Promise<{ id: str
                               placeholder="اختر التاريخ الهجري..."
                             />
                           </div>
+                        ) : question.type === "FILE" ? (
+                          <div className="w-full">
+                            <label className={`flex flex-col items-center justify-center gap-3 border-2 border-dashed rounded-2xl p-8 cursor-pointer transition-all ${
+                              attachments[question.id] 
+                                ? 'border-emerald-500 bg-emerald-50/50 text-emerald-700' 
+                                : 'border-slate-300 hover:border-primary/50 hover:bg-primary/5 text-slate-500 hover:text-primary'
+                            }`}>
+                              {uploadingFiles[question.id] ? (
+                                <div className="flex flex-col items-center gap-2 text-primary font-bold">
+                                  <div className="w-8 h-8 border-3 border-primary/30 border-t-primary rounded-full animate-spin" />
+                                  <span>جاري رفع الملف...</span>
+                                </div>
+                              ) : attachments[question.id] ? (
+                                <div className="flex flex-col items-center gap-2">
+                                  <CheckCircle2 className="w-10 h-10 text-emerald-500" />
+                                  <span className="font-bold text-emerald-700">تم رفع الملف بنجاح</span>
+                                  <span className="text-xs text-slate-400 font-medium text-center">انقر هنا لتغيير الملف المرفوع</span>
+                                  <input type="file" className="hidden" onChange={(e) => handleFileUpload(e, question.id)} />
+                                </div>
+                              ) : (
+                                <div className="flex flex-col items-center gap-2">
+                                  <UploadCloud className="w-10 h-10 text-slate-400 animate-bounce duration-1000" />
+                                  <span className="font-bold text-slate-700">انقر هنا لرفع الملف المطلوب</span>
+                                  <span className="text-xs text-slate-400">يدعم الصور والمستندات (PDF, Word)</span>
+                                  <input type="file" className="hidden" onChange={(e) => handleFileUpload(e, question.id)} />
+                                </div>
+                              )}
+                            </label>
+                          </div>
                         ) : (
                           <textarea
                             value={answers[question.id] || ""}
@@ -323,7 +329,7 @@ export default function CustomSurveyPage({ params }: { params: Promise<{ id: str
                         )}
                       </div>
 
-                      {question.allowAttachment && (
+                      {question.allowAttachment && question.type !== "FILE" && (
                         <div className="mt-4">
                           <label className={`flex items-center justify-center gap-2 border-2 border-dashed rounded-xl p-6 cursor-pointer transition-colors ${
                             attachments[question.id] 

@@ -130,7 +130,7 @@ export default function GovernanceRegulationsManager({
                     
                     {/* Title */}
                     <div className="flex-1 min-w-0">
-                      <h4 className="font-bold text-slate-800 dark:text-white text-lg truncate transition-colors duration-500 group-hover:text-emerald-900 dark:group-hover:text-emerald-100" title={reg.title}>
+                      <h4 className="font-bold text-slate-800 dark:text-white text-base leading-snug transition-colors duration-500 group-hover:text-emerald-900 dark:group-hover:text-emerald-100" title={reg.title}>
                         {reg.title}
                       </h4>
                       <div className="mt-1 flex items-center gap-2">

@@ -264,6 +264,35 @@ export default function CustomSurveyPage({ params }: { params: Promise<{ id: str
                               </label>
                             ))}
                           </div>
+                        ) : question.type === "MULTI_OPTIONS" ? (
+                          <div className="space-y-3">
+                            {(question.options || []).map(opt => {
+                              const currentSelected = answers[question.id] ? answers[question.id].split(",") : [];
+                              const isChecked = currentSelected.includes(opt.id);
+                              const handleToggle = () => {
+                                let newSelected;
+                                if (isChecked) {
+                                  newSelected = currentSelected.filter(id => id !== opt.id);
+                                } else {
+                                  newSelected = [...currentSelected, opt.id];
+                                }
+                                setAnswers(prev => ({ ...prev, [question.id]: newSelected.join(",") }));
+                              };
+                              return (
+                                <label key={opt.id} className="flex items-center gap-3 cursor-pointer p-3 border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors">
+                                  <input
+                                    type="checkbox"
+                                    name={question.id}
+                                    value={opt.id}
+                                    checked={isChecked}
+                                    onChange={handleToggle}
+                                    className="w-5 h-5 rounded text-primary focus:ring-primary/20 cursor-pointer"
+                                  />
+                                  <span className="text-slate-700 font-medium">{opt.text}</span>
+                                </label>
+                              );
+                            })}
+                          </div>
                         ) : question.type === "YES_NO" ? (
                           <div className="flex gap-4">
                             <label className={`flex-1 text-center py-3 rounded-xl border-2 cursor-pointer transition-all ${answers[question.id] === 'yes' ? 'border-primary bg-primary/5 text-primary' : 'border-slate-200 text-slate-500 hover:bg-slate-50'}`}>
@@ -330,6 +359,10 @@ export default function CustomSurveyPage({ params }: { params: Promise<{ id: str
                       </div>
 
                       {question.allowAttachment && question.type !== "FILE" && (
+                        question.type !== "YES_NO" || 
+                        !question.requireAttachmentIfYes || 
+                        answers[question.id] === "yes"
+                      ) && (
                         <div className="mt-4">
                           <label className={`flex items-center justify-center gap-2 border-2 border-dashed rounded-xl p-6 cursor-pointer transition-colors ${
                             attachments[question.id] 

@@ -314,12 +314,13 @@ export default function EditSurveyPage({ params }: { params: Promise<{ id: strin
                       >
                         <option value="TEXT">نصي</option>
                         <option value="YES_NO">نعم / لا</option>
-                        <option value="OPTIONS">خيارات متعددة</option>
+                        <option value="OPTIONS">خيارات متعددة (خيار واحد)</option>
+                        <option value="MULTI_OPTIONS">خيارات متعددة (متعدد الاختيار)</option>
                         <option value="HIJRI_DATE">تاريخ هجري</option>
                         <option value="FILE">رفع ملف</option>
                       </select>
                     </div>
-                    {question.type === "OPTIONS" && (
+                    {(question.type === "OPTIONS" || question.type === "MULTI_OPTIONS") && (
                       <div className="space-y-2 bg-white p-4 rounded-xl border border-slate-200">
                         <div className="text-sm font-bold text-slate-700">خيارات الإجابة:</div>
                         {(question.options || []).map((opt, oIndex) => (

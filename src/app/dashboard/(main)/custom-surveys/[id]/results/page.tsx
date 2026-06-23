@@ -126,9 +126,11 @@ export default function SurveyResultsPage({ params }: { params: Promise<{ id: st
                                 <p className="text-slate-800 bg-white border border-slate-200 px-4 py-2 rounded-lg text-sm">
                                   {question.type === "OPTIONS" 
                                     ? (question.options?.find(opt => opt.id === answer)?.text || answer)
-                                    : question.type === "YES_NO"
-                                      ? (answer === "yes" ? "نعم" : "لا")
-                                      : answer}
+                                    : question.type === "MULTI_OPTIONS"
+                                      ? answer.split(",").map(id => question.options?.find(opt => opt.id === id)?.text || id).join("، ")
+                                      : question.type === "YES_NO"
+                                        ? (answer === "yes" ? "نعم" : "لا")
+                                        : answer}
                                 </p>
                               )}
                               {attachment && (

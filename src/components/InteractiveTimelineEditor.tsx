@@ -366,10 +366,8 @@ export default function InteractiveTimelineEditor({
 
               <button 
                 onClick={() => {
-                  if (confirm("هل أنت متأكد من حذف هذه المرحلة؟")) {
-                    onDelete(selectedStage.id);
-                    setSelectedStageId(null);
-                  }
+                  onDelete(selectedStage.id);
+                  setSelectedStageId(null);
                 }}
                 className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-red-50 hover:bg-red-100 dark:bg-red-900/20 text-red-600 rounded-xl font-bold transition-colors border border-red-100 dark:border-red-900/50"
               >

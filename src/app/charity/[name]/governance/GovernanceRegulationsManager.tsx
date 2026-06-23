@@ -70,8 +70,8 @@ export default function GovernanceRegulationsManager({
           <p>لا توجد لوائح مسجلة في النظام بعد.</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {regulations.map((reg) => {
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {regulations.map((reg, index) => {
               const isVisible = !reg.charityVisibilities.some(v => v.charityId === charityId && v.isVisible === false);
               
               if (!isVisible && !isAdmin) return null;
@@ -79,74 +79,96 @@ export default function GovernanceRegulationsManager({
               return (
                 <div 
                   key={reg.id} 
-                className={`flex flex-col gap-3 p-5 rounded-xl border transition-all ${
-                  isVisible 
-                    ? "bg-slate-50 dark:bg-slate-900/50 border-slate-200 dark:border-slate-700" 
-                    : "bg-slate-100/50 dark:bg-slate-800/30 border-slate-100 dark:border-slate-800 opacity-60 grayscale"
-                }`}
-              >
-                <div className="flex items-start justify-between gap-4">
-                  <div className="flex-1 min-w-0">
-                    <div className="flex flex-wrap items-center gap-2 mb-2">
-                      <h4 className="font-bold text-slate-800 dark:text-slate-100 truncate">{reg.title}</h4>
-                      <span className={`text-xs px-2 py-0.5 rounded-full font-medium inline-flex items-center gap-1 ${
-                        reg.category === "الإشراف والحوكمة" 
-                          ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-400" 
-                          : reg.category === "التحول الرقمي"
-                          ? "bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-400"
-                          : "bg-purple-100 text-purple-700 dark:bg-purple-900/50 dark:text-purple-400"
-                      }`}>
-                        {reg.category === "الإشراف والحوكمة" ? <Scale className="w-3 h-3" /> : 
-                         reg.category === "التحول الرقمي" ? <Cpu className="w-3 h-3" /> : 
-                         <Building className="w-3 h-3" />}
-                        {reg.category}
-                      </span>
+                  className={`group relative overflow-hidden bg-white dark:bg-slate-800 rounded-2xl px-6 pt-8 pb-6 shadow-xl ring-1 ring-slate-900/5 dark:ring-white/10 transition-all duration-500 transform hover:scale-105 hover:shadow-2xl flex flex-col gap-4 ${
+                    !isVisible ? "opacity-60 grayscale" : ""
+                  }`}
+                >
+                  {/* Background expanding circle */}
+                  <span
+                    className="absolute top-0 right-0 z-0 h-32 w-32 rounded-full bg-gradient-to-r from-emerald-500 to-teal-500 opacity-20 dark:opacity-30 transition-all duration-500 transform group-hover:scale-[20]"
+                  ></span>
+                  
+                  <div className="relative z-10 flex items-center gap-4 w-full">
+                    {/* Number Circle */}
+                    <span
+                      className="shrink-0 grid h-14 w-14 place-items-center rounded-full bg-gradient-to-r from-emerald-500 to-teal-500 transition-all duration-500 transform group-hover:bg-gradient-to-r group-hover:from-emerald-400 group-hover:to-teal-400 text-white font-bold text-xl shadow-md"
+                    >
+                      {index + 1}
+                    </span>
+                    
+                    {/* Title */}
+                    <div className="flex-1 min-w-0">
+                      <h4 className="font-bold text-slate-800 dark:text-white text-lg truncate transition-colors duration-500 group-hover:text-white" title={reg.title}>
+                        {reg.title}
+                      </h4>
+                      <div className="mt-1 flex items-center gap-2">
+                        <span className={`text-[11px] px-2 py-0.5 rounded-full font-medium inline-flex items-center gap-1 transition-colors duration-500
+                          ${reg.category === "الإشراف والحوكمة" 
+                            ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-400 group-hover:bg-white/20 group-hover:text-white" 
+                            : reg.category === "التحول الرقمي"
+                            ? "bg-blue-50 text-blue-700 dark:bg-blue-900/50 dark:text-blue-400 group-hover:bg-white/20 group-hover:text-white"
+                            : "bg-purple-50 text-purple-700 dark:bg-purple-900/50 dark:text-purple-400 group-hover:bg-white/20 group-hover:text-white"
+                          }`}
+                        >
+                          {reg.category === "الإشراف والحوكمة" ? <Scale className="w-3 h-3" /> : 
+                           reg.category === "التحول الرقمي" ? <Cpu className="w-3 h-3" /> : 
+                           <Building className="w-3 h-3" />}
+                          {reg.category}
+                        </span>
+                      </div>
                     </div>
-                    {reg.description && (
-                      <p className="text-sm text-slate-500 dark:text-slate-400 line-clamp-2 mt-1">
+                  </div>
+
+                  <div className="relative z-10 flex-1 mt-2">
+                    {reg.description ? (
+                      <p className="text-sm text-slate-600 dark:text-slate-300 line-clamp-2 transition-colors duration-500 group-hover:text-white/90 leading-relaxed" title={reg.description}>
                         {reg.description}
+                      </p>
+                    ) : (
+                      <p className="text-sm text-slate-400 dark:text-slate-500 italic transition-colors duration-500 group-hover:text-white/70">
+                        لا يوجد وصف لهذه اللائحة
                       </p>
                     )}
                   </div>
-                  <div className="flex items-center gap-1 shrink-0">
-                    {isAdmin && (
-                      <>
-                        <button
-                          onClick={() => handleToggle(reg.id, isVisible)}
-                          title={isVisible ? "إخفاء عن هذه الجمعية" : "إظهار لهذه الجمعية"}
-                          className={`p-2 rounded-lg transition-colors ${
-                            isVisible 
-                              ? "text-emerald-600 bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-900/20 dark:hover:bg-emerald-900/40" 
-                              : "text-slate-500 bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600"
-                          }`}
-                        >
-                          {isVisible ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
-                        </button>
-                        <button
-                          onClick={() => handleDelete(reg.id)}
-                          title="حذف اللائحة من النظام بالكامل"
-                          className="p-2 rounded-lg text-red-500 bg-red-50 hover:bg-red-100 dark:bg-red-900/20 dark:hover:bg-red-900/40 transition-colors"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </>
-                    )}
+
+                  <div className="relative z-10 flex items-center justify-between pt-4 mt-auto border-t border-slate-100 dark:border-slate-700 transition-colors duration-500 group-hover:border-white/20">
+                    <a 
+                      href={reg.link} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="text-sm text-emerald-600 dark:text-emerald-400 font-bold inline-flex items-center gap-2 transition-colors duration-500 group-hover:text-white"
+                    >
+                      <span>عرض اللائحة</span>
+                      <LinkIcon className="w-4 h-4" />
+                    </a>
+
+                    <div className="flex items-center gap-1">
+                      {isAdmin && (
+                        <>
+                          <button
+                            onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleToggle(reg.id, isVisible); }}
+                            title={isVisible ? "إخفاء عن هذه الجمعية" : "إظهار لهذه الجمعية"}
+                            className={`p-2 rounded-lg transition-colors duration-500 ${
+                              isVisible 
+                                ? "text-emerald-600 bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-900/20 dark:hover:bg-emerald-900/40 group-hover:bg-white/10 group-hover:text-white group-hover:hover:bg-white/20" 
+                                : "text-slate-500 bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 group-hover:bg-white/10 group-hover:text-white/70 group-hover:hover:bg-white/20 group-hover:hover:text-white"
+                            }`}
+                          >
+                            {isVisible ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
+                          </button>
+                          <button
+                            onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleDelete(reg.id); }}
+                            title="حذف اللائحة من النظام بالكامل"
+                            className="p-2 rounded-lg text-red-500 bg-red-50 hover:bg-red-100 dark:bg-red-900/20 dark:hover:bg-red-900/40 transition-colors duration-500 group-hover:bg-red-500/20 group-hover:text-red-100 group-hover:hover:bg-red-500/40 group-hover:hover:text-white"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </>
+                      )}
+                    </div>
                   </div>
                 </div>
-
-                {isVisible && (
-                  <a 
-                    href={reg.link} 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    className="mt-auto text-sm text-primary hover:underline font-medium inline-flex items-center gap-1 w-fit"
-                  >
-                    <LinkIcon className="w-3 h-3" />
-                    عرض اللائحة في المركز الوطني
-                  </a>
-                )}
-              </div>
-            );
+              );
           })}
         </div>
       )}

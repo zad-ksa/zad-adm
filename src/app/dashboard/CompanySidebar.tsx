@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import Link from "next/link";
 import { useState, useEffect } from "react";
@@ -65,13 +65,19 @@ export default function CompanySidebar({ charities }: { charities: { id: string;
       </div>
 
       {/* Add Charity Button */}
-      <div className="mb-6 shrink-0">
+      <div className="mb-6 shrink-0 flex gap-2">
         <button
           onClick={() => setIsModalOpen(true)}
-          className="w-full bg-primary/5 text-primary border border-primary/10 font-bold py-2.5 px-4 rounded-xl hover:bg-primary hover:text-white hover:border-primary transition-all duration-300 flex items-center justify-center gap-2 cursor-pointer select-none active:scale-[0.98] text-sm hover:shadow-lg hover:shadow-primary/10"
+          className="flex-1 bg-primary/5 text-primary border border-primary/10 font-bold py-2.5 px-3 rounded-xl hover:bg-primary hover:text-white hover:border-primary transition-all duration-300 flex items-center justify-center gap-1 cursor-pointer select-none active:scale-[0.98] text-xs hover:shadow-lg hover:shadow-primary/10"
         >
-          <span className="text-lg font-light leading-none">+</span> إضافة جمعية جديدة
+          <span className="text-sm font-light leading-none">+</span> إضافة جمعية
         </button>
+        <Link
+          href="/dashboard/custom-surveys"
+          className="flex-1 bg-slate-50 text-slate-600 border border-slate-200 font-bold py-2.5 px-3 rounded-xl hover:bg-slate-100 hover:text-slate-900 transition-all duration-300 flex items-center justify-center gap-1 cursor-pointer select-none active:scale-[0.98] text-xs hover:shadow-md"
+        >
+          الاستبيانات
+        </Link>
       </div>
 
       {/* Search Input */}

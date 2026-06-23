@@ -1,4 +1,4 @@
-﻿import { NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { v2 as cloudinary } from "cloudinary";
 
 cloudinary.config({
@@ -22,7 +22,7 @@ export async function POST(request: Request) {
     // Upload to Cloudinary using a promise
     const result = await new Promise((resolve, reject) => {
       cloudinary.uploader.upload_stream(
-        { folder: "zad_charity_logos" }, // optional folder
+        { folder: "zad_charity_logos", resource_type: "auto" }, // optional folder
         (error, result) => {
           if (error) reject(error);
           else resolve(result);

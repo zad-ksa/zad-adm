@@ -52,13 +52,14 @@ export default function EmployeeSidebar({
       { label: "المهام والمنجزات", href: "/dashboard/tasks", icon: CheckSquare },
       { label: "الأخبار والإنجازات", href: "/dashboard/news", icon: Newspaper },
       { label: "الجمعيات", href: "/dashboard/charities", icon: Building2 },
+      { label: "الاستبيانات", href: "/dashboard/custom-surveys", icon: ClipboardList },
       { label: "إدارة الموظفين", href: "/dashboard/employees", icon: Users },
     ];
   } else if (userState?.role === "STRATEGY") {
     navItems = [
       { label: "الرئيسية", href: "/dashboard", icon: LayoutDashboard },
       { label: "الجمعيات", href: "/dashboard/charities", icon: Building2 },
-      { label: "الاستبيانات", href: "/dashboard/surveys", icon: ClipboardList },
+      { label: "الاستبيانات", href: "/dashboard/custom-surveys", icon: ClipboardList },
       { label: "الأخبار والإنجازات", href: "/dashboard/news", icon: Newspaper },
       { label: "مهامي", href: "/dashboard/tasks", icon: CheckSquare },
     ];
@@ -73,7 +74,7 @@ export default function EmployeeSidebar({
     navItems = [
       { label: "الرئيسية", href: "/dashboard", icon: LayoutDashboard },
       { label: "الجمعيات", href: "/dashboard/charities", icon: Building2 },
-      { label: "الاستبيانات", href: "/dashboard/surveys", icon: ClipboardList },
+      { label: "الاستبيانات", href: "/dashboard/custom-surveys", icon: ClipboardList },
       { label: "الأخبار والإنجازات", href: "/dashboard/news", icon: Newspaper },
     ];
 

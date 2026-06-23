@@ -4,6 +4,7 @@ import { useState, useTransition, useEffect } from "react";
 import { Coins, Check, X, Edit2, Trash2, Plus, ArrowUp, ArrowDown, Loader2, Settings, ChevronDown, ChevronUp, Eye, EyeOff, Activity } from "lucide-react";
 import { useRouter } from "next/navigation";
 import CharityClientTimeline from "@/components/CharityClientTimeline";
+import InteractiveTimelineEditor from "@/components/InteractiveTimelineEditor";
 import { addFinanceStage, updateFinanceStage, deleteFinanceStage, setCurrentFinanceStage, reorderFinanceStages, toggleActiveFinanceStage } from "@/app/actions/finance";
 import { updateTimelineConfig } from "@/app/actions/charity";
 
@@ -249,241 +250,53 @@ export default function FinanceStagesManager({
         </div>
       )}
 
-      <div className="p-4 space-y-2">
-        {sortedStages.map((stage, index) => {
-          const isCurrent = stage.isCurrent;
-          const isCompleted = stages.findIndex(s => s.isCurrent) > index; // Completed if before current
-          
-          return (
-            <div 
-              key={stage.id} 
-              className={`flex items-start gap-3 p-3 rounded-xl border transition-colors ${
-                !stage.isActive ? "opacity-60 grayscale-[50%]" : ""
-              } ${
-                isCurrent ? "border-primary bg-primary/5 shadow-sm" : "border-slate-100 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50 hover:border-slate-200 dark:hover:border-slate-600"
-              }`}
-            >
-              <div className="flex flex-col items-center gap-0.5 shrink-0">
-                <button 
-                  onClick={() => handleMove(index, 'up')} 
-                  disabled={index === 0 || isPending}
-                  className="text-slate-400 hover:text-slate-600 disabled:opacity-30 p-0.5"
-                >
-                  <ArrowUp className="w-3.5 h-3.5" />
-                </button>
-                <div className={`w-6 h-6 rounded-full flex items-center justify-center font-bold text-xs border-2 ${
-                  stage.isContinuous ? "bg-amber-100 dark:bg-amber-900/30 text-amber-600 border-amber-200 dark:border-amber-800/50" :
-                  isCurrent ? "bg-primary text-white border-primary" :
-                  isCompleted ? "bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 border-emerald-200 dark:border-emerald-800/50" :
-                  "bg-white dark:bg-slate-800 text-slate-400 border-slate-200 dark:border-slate-700"
-                }`}>
-                  {stage.isContinuous ? <Activity className="w-3 h-3" /> : isCompleted ? <Check className="w-3 h-3" /> : index + 1}
-                </div>
-                <button 
-                  onClick={() => handleMove(index, 'down')} 
-                  disabled={index === sortedStages.length - 1 || isPending}
-                  className="text-slate-400 hover:text-slate-600 disabled:opacity-30 p-0.5"
-                >
-                  <ArrowDown className="w-3.5 h-3.5" />
-                </button>
-              </div>
-
-              <div className="flex-1">
-                {editingId === stage.id ? (
-                  <div className="flex flex-col gap-2">
-                    <div className="flex flex-col sm:flex-row gap-2">
-                      <input 
-                        type="text" 
-                        value={editName} 
-                        onChange={e => setEditName(e.target.value)} 
-                        placeholder="اسم المرحلة"
-                        className="flex-1 border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 rounded-lg px-3 py-1.5 text-sm focus:ring-2 focus:ring-primary/50 outline-none"
-                        autoFocus
-                      />
-                      <input 
-                        type="date" 
-                        value={editStartDate} 
-                        onChange={e => setEditStartDate(e.target.value)} 
-                        className="w-full sm:w-32 border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 rounded-lg px-2 py-1.5 text-xs focus:ring-2 focus:ring-primary/50 outline-none [color-scheme:light] dark:[color-scheme:dark]"
-                        title="تاريخ البداية"
-                      />
-                      <input 
-                        type="date" 
-                        value={editEndDate} 
-                        onChange={e => setEditEndDate(e.target.value)} 
-                        className="w-full sm:w-32 border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 rounded-lg px-2 py-1.5 text-xs focus:ring-2 focus:ring-primary/50 outline-none [color-scheme:light] dark:[color-scheme:dark]"
-                        title="تاريخ النهاية"
-                      />
-                    </div>
-                    <textarea 
-                      value={editDescription} 
-                      onChange={e => setEditDescription(e.target.value)} 
-                      placeholder="وصف مختصر للمرحلة (اختياري)"
-                      rows={1}
-                      className="w-full border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 rounded-lg px-3 py-1.5 text-sm focus:ring-2 focus:ring-primary/50 outline-none resize-none custom-scrollbar"
-                    />
-                    <div className="flex items-center gap-2 mt-2 bg-slate-50 dark:bg-slate-900/50 p-2 rounded-lg border border-slate-200 dark:border-slate-700">
-                      <input
-                        type="checkbox"
-                        id={`edit-continuous-${stage.id}`}
-                        checked={editIsContinuous}
-                        onChange={(e) => setEditIsContinuous(e.target.checked)}
-                        className="w-4 h-4 rounded border-slate-300 text-amber-500 focus:ring-amber-500/50"
-                      />
-                      <label htmlFor={`edit-continuous-${stage.id}`} className="text-sm text-slate-600 dark:text-slate-300 cursor-pointer">
-                        مرحلة مستمرة (تستمر طوال فترة المخطط وتعمل بالتوازي مع باقي المراحل)
-                      </label>
-                    </div>
-                    <div className="flex gap-2 mt-1">
-                      <button onClick={() => handleUpdate(stage.id)} className="flex items-center gap-1 px-3 py-1 text-white bg-primary hover:bg-primary/90 rounded-lg text-sm font-bold" disabled={isPending}>
-                        <Check className="w-3 h-3" /> حفظ
-                      </button>
-                      <button onClick={() => setEditingId(null)} className="flex items-center gap-1 px-3 py-1 text-slate-600 bg-slate-200 hover:bg-slate-300 dark:bg-slate-700 dark:hover:bg-slate-600 dark:text-slate-300 rounded-lg text-sm font-bold" disabled={isPending}>
-                        <X className="w-3 h-3" /> إلغاء
-                      </button>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="flex flex-col mt-0.5">
-                     <span className={`font-semibold flex items-center gap-2 ${isCurrent ? "text-primary text-base" : "text-slate-700 dark:text-slate-200 text-base"}`}>
-                       {stage.name}
-                       {!stage.isActive && <span className="text-xs bg-slate-200 dark:bg-slate-700 text-slate-500 dark:text-slate-400 px-2 py-0.5 rounded-full">غير مفعلة</span>}
-                     </span>
-                     {stage.description && (
-                       <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">{stage.description}</p>
-                     )}
-                     <div className="flex flex-wrap items-center gap-2 mt-2">
-                       {stage.startDate && (
-                         <span className="text-xs text-slate-500 dark:text-slate-400 font-medium bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-2 py-0.5 rounded-full" dir="ltr">
-                           {new Date(stage.startDate).toLocaleDateString('en-CA')}
-                         </span>
-                       )}
-                       {stage.startDate && stage.endDate && (
-                         <span className="text-xs text-slate-400 px-1">إلى</span>
-                       )}
-                       {stage.endDate && (
-                         <span className="text-xs text-slate-500 dark:text-slate-400 font-medium bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-2 py-0.5 rounded-full" dir="ltr">
-                           {new Date(stage.endDate).toLocaleDateString('en-CA')}
-                         </span>
-                       )}
-                       {isCurrent && <span className="text-xs text-primary font-medium bg-primary/10 px-2 py-0.5 rounded-full border border-primary/20">المرحلة الحالية</span>}
-                       {stage.isContinuous && <span className="text-xs text-amber-600 dark:text-amber-500 font-medium bg-amber-50 dark:bg-amber-900/20 px-2 py-0.5 rounded-full border border-amber-200 dark:border-amber-800/50 flex items-center gap-1"><Activity className="w-3 h-3" /> نشاط مستمر</span>}
-                     </div>
-                  </div>
-                )}
-              </div>
-
-              <div className="flex items-center gap-1 shrink-0 mt-0.5">
-                {!isCurrent && !stage.isContinuous && (
-                  <button 
-                    onClick={() => handleSetCurrent(stage.id)} 
-                    disabled={isPending}
-                    className="hidden sm:block px-2 py-1 text-[11px] font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg transition-colors"
-                  >
-                    تعيين كحالية
-                  </button>
-                )}
-                
-                <button
-                  onClick={() => handleToggleActive(stage.id, stage.isActive)}
-                  disabled={isPending}
-                  className={`p-1.5 rounded-lg transition-colors ${stage.isActive ? 'text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800' : 'text-amber-500 hover:bg-amber-50 dark:hover:bg-amber-900/20'}`}
-                  title={stage.isActive ? "إيقاف التفعيل" : "تفعيل"}
-                >
-                  {stage.isActive ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
-                </button>
-                
-                <button 
-                  onClick={() => startEdit(stage)} 
-                  disabled={isPending}
-                  className="p-1.5 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors"
-                  title="تعديل"
-                >
-                  <Edit2 className="w-3.5 h-3.5" />
-                </button>
-                
-                <button 
-                  onClick={() => handleDelete(stage.id)} 
-                  disabled={isPending}
-                  className="p-1.5 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
-                  title="حذف"
-                >
-                  <Trash2 className="w-3.5 h-3.5" />
-                </button>
-              </div>
-            </div>
-          );
-        })}
-
-        {stages.length === 0 && !isAdding && (
-          <div className="text-center py-8 text-slate-500 dark:text-slate-400">لا توجد مراحل مسجلة.</div>
-        )}
-
-        {isAdding && (
-          <div className="flex items-start gap-3 p-3 rounded-xl border border-primary border-dashed bg-primary/5">
-            <div className="w-6 h-6 shrink-0 flex items-center justify-center">
-               <div className="w-4 h-4 rounded-full border-2 border-primary/30 border-dashed" />
-            </div>
-            <div className="flex-1 flex flex-col gap-2">
-              <div className="flex flex-col sm:flex-row gap-2">
-                <input 
-                  type="text" 
-                  value={newName} 
-                  onChange={e => setNewName(e.target.value)} 
-                  placeholder="اسم المرحلة الجديدة..."
-                  className="flex-1 border border-primary/30 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 rounded-lg px-3 py-1.5 text-sm focus:ring-2 focus:ring-primary/50 outline-none"
-                  autoFocus
-                />
-                <input 
-                  type="date" 
-                  value={newStartDate} 
-                  onChange={e => setNewStartDate(e.target.value)} 
-                  className="w-full sm:w-32 border border-primary/30 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 rounded-lg px-2 py-1.5 text-xs focus:ring-2 focus:ring-primary/50 outline-none [color-scheme:light] dark:[color-scheme:dark]"
-                  title="تاريخ البداية"
-                />
-                <input 
-                  type="date" 
-                  value={newEndDate} 
-                  onChange={e => setNewEndDate(e.target.value)} 
-                  className="w-full sm:w-32 border border-primary/30 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 rounded-lg px-2 py-1.5 text-xs focus:ring-2 focus:ring-primary/50 outline-none [color-scheme:light] dark:[color-scheme:dark]"
-                  title="تاريخ النهاية"
-                />
-              </div>
-              <textarea 
-                value={newDescription} 
-                onChange={e => setNewDescription(e.target.value)} 
-                placeholder="وصف مختصر للمرحلة (اختياري)"
-                rows={1}
-                className="w-full border border-primary/30 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 rounded-lg px-3 py-1.5 text-sm focus:ring-2 focus:ring-primary/50 outline-none resize-none custom-scrollbar"
-              />
-              <div className="flex items-center gap-2 mt-2 bg-slate-50 dark:bg-slate-900/50 p-2 rounded-lg border border-primary/20">
-                <input
-                  type="checkbox"
-                  id="new-continuous"
-                  checked={newIsContinuous}
-                  onChange={(e) => setNewIsContinuous(e.target.checked)}
-                  className="w-4 h-4 rounded border-slate-300 text-amber-500 focus:ring-amber-500/50"
-                />
-                <label htmlFor="new-continuous" className="text-sm text-slate-600 dark:text-slate-300 cursor-pointer">
-                  مرحلة مستمرة (تستمر طوال فترة المخطط وتعمل بالتوازي مع باقي المراحل)
-                </label>
-              </div>
-              <div className="flex gap-2 mt-1">
-                <button onClick={handleAdd} className="flex items-center gap-1 px-4 py-1.5 text-white bg-primary hover:bg-primary/90 rounded-lg text-sm font-bold transition-colors" disabled={isPending}>
-                  {isPending ? <Loader2 className="w-3 h-3 animate-spin" /> : <Check className="w-3 h-3" />} إضافة
-                </button>
-                <button onClick={() => setIsAdding(false)} className="px-4 py-1.5 text-slate-600 bg-slate-200 hover:bg-slate-300 dark:bg-slate-700 dark:hover:bg-slate-600 dark:text-slate-300 rounded-lg text-sm font-bold" disabled={isPending}>
-                  إلغاء
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
-
-      <div className="mt-2 border-t border-slate-100 dark:border-slate-700 pt-6 px-6 pb-6 bg-slate-50 dark:bg-slate-900/20">
-        <h4 className="text-sm font-bold text-slate-500 dark:text-slate-400 mb-4 text-center">معاينة المخطط الزمني</h4>
-        <CharityClientTimeline title={configName} stages={sortedStages} />
+      <div className="mt-6 border-t border-slate-100 dark:border-slate-700 pt-6 px-2 sm:px-6 pb-6">
+        <InteractiveTimelineEditor
+          title={configName}
+          stages={sortedStages as any}
+          isPending={isPending}
+          onAdd={(stage) => {
+            startTransition(async () => {
+              const optimisticStage: Stage = { 
+                id: Math.random().toString(), 
+                name: stage.name,
+                description: stage.description,
+                startDate: stage.startDate,
+                endDate: stage.endDate,
+                duration: "",
+                order: stages.length, 
+                isCurrent: false,
+                isContinuous: stage.isContinuous,
+                isActive: true
+              };
+              setStages([...stages, optimisticStage]);
+              await addFinanceStage(charityId, stage.name, "", stage.description || "", stage.startDate ? stage.startDate.toISOString() : "", stage.endDate ? stage.endDate.toISOString() : "", stage.isContinuous, true);
+            });
+          }}
+          onUpdate={(id, updates) => {
+            const stage = stages.find(s => s.id === id);
+            if (!stage) return;
+            startTransition(async () => {
+              setStages(stages.map(s => s.id === id ? { ...s, ...updates } : s));
+              await updateFinanceStage(
+                id, 
+                updates.name !== undefined ? updates.name : stage.name, 
+                "", 
+                updates.description !== undefined ? (updates.description || "") : (stage.description || ""), 
+                updates.startDate !== undefined ? (updates.startDate ? updates.startDate.toISOString() : "") : (stage.startDate ? new Date(stage.startDate).toISOString() : ""), 
+                updates.endDate !== undefined ? (updates.endDate ? updates.endDate.toISOString() : "") : (stage.endDate ? new Date(stage.endDate).toISOString() : ""), 
+                updates.isContinuous !== undefined ? updates.isContinuous : stage.isContinuous, 
+                updates.isActive !== undefined ? updates.isActive : stage.isActive
+              );
+            });
+          }}
+          onDelete={(id) => {
+            handleDelete(id);
+          }}
+          onMove={(index, direction) => handleMove(index, direction)}
+          onToggleActive={(id, currentActive) => handleToggleActive(id, currentActive)}
+          onSetCurrent={(id) => handleSetCurrent(id)}
+        />
       </div>
       </div>
       )}

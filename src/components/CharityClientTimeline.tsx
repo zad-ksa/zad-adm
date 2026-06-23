@@ -1,7 +1,7 @@
 "use client";
 
 import { formatDurationArabic } from "@/lib/dateUtils";
-import { Activity } from "lucide-react";
+import { Infinity } from "lucide-react";
 
 const CheckCircleIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
@@ -92,9 +92,8 @@ export default function CharityClientTimeline({
                 }`}
                 title={stage.description || undefined}
               >
-                <Activity className="w-4 h-4" />
+                <Infinity className="w-4 h-4" />
                 {stage.name}
-                {!isActive && <span className="text-[10px] bg-slate-200 dark:bg-slate-700 px-1.5 py-0.5 rounded-md mr-1">غير مفعلة</span>}
               </div>
             );
           })}

@@ -44,18 +44,18 @@ export default async function GovernancePage({ params }: { params: Promise<{ nam
 
   return (
     <div className="space-y-6">
-      <div className="bg-white dark:bg-slate-800 rounded-2xl p-10 border border-slate-100 dark:border-slate-700 shadow-sm relative overflow-hidden transition-colors">
+      <div className="bg-white dark:bg-slate-800 rounded-2xl p-6 border border-slate-100 dark:border-slate-700 shadow-sm relative overflow-hidden transition-colors">
         {/* Decorative subtle background element */}
-        <div className="absolute top-0 left-0 w-64 h-64 bg-primary/5 dark:bg-primary/10 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2 pointer-events-none"></div>
+        <div className="absolute top-0 left-0 w-48 h-48 bg-primary/5 dark:bg-primary/10 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2 pointer-events-none"></div>
         
-        <div className="relative z-10 text-center py-12">
-          <div className="w-20 h-20 bg-primary/10 dark:bg-primary/20 rounded-full flex items-center justify-center text-primary mx-auto mb-6">
-            <Scale className="w-10 h-10" />
+        <div className="relative z-10 text-center py-6">
+          <div className="w-14 h-14 bg-primary/10 dark:bg-primary/20 rounded-full flex items-center justify-center text-primary mx-auto mb-4">
+            <Scale className="w-7 h-7" />
           </div>
-          <h2 className="text-3xl font-bold text-slate-800 dark:text-slate-100 mb-4">
+          <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-100 mb-2">
             حوكمة الجمعية
           </h2>
-          <p className="text-slate-500 dark:text-slate-400 max-w-lg mx-auto leading-relaxed">
+          <p className="text-sm text-slate-500 dark:text-slate-400 max-w-lg mx-auto leading-relaxed">
             هذه المساحة مخصصة لإدارة ومتابعة معايير الحوكمة والامتثال لجمعية <span className="font-bold text-slate-700 dark:text-slate-300">{decodedName}</span>. سيتم إضافة الأدوات والمؤشرات قريباً.
           </p>
         </div>

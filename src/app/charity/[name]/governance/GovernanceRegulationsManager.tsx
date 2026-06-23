@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Plus, Link as LinkIcon, FileText, Scale, Cpu, Eye, EyeOff, Trash2, Building } from "lucide-react";
 import { addRegulation, deleteRegulation, toggleRegulationVisibility } from "@/app/actions/governance";
 
@@ -29,9 +29,14 @@ export default function GovernanceRegulationsManager({
   regulations: Regulation[];
   isAdmin?: boolean;
 }) {
+  const [localRegulations, setLocalRegulations] = useState(regulations);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [newReg, setNewReg] = useState({ title: "", description: "", category: "الإشراف والحوكمة", link: "" });
+
+  useEffect(() => {
+    setLocalRegulations(regulations);
+  }, [regulations]);
 
   const handleAddRegulation = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -48,12 +53,39 @@ export default function GovernanceRegulationsManager({
   };
 
   const handleToggle = async (regId: string, currentIsVisible: boolean) => {
-    await toggleRegulationVisibility(charityId, regId, currentIsVisible);
+    // تحديث واجهة المستخدم فورياً (Optimistic Update)
+    setLocalRegulations(prev => prev.map(reg => {
+      if (reg.id === regId) {
+        const newVisibilities = [...reg.charityVisibilities];
+        const existingIndex = newVisibilities.findIndex(v => v.charityId === charityId);
+        if (existingIndex >= 0) {
+          newVisibilities[existingIndex] = { ...newVisibilities[existingIndex], isVisible: !currentIsVisible };
+        } else {
+          newVisibilities.push({ id: 'temp-' + Date.now(), charityId, regulationId: regId, isVisible: !currentIsVisible });
+        }
+        return { ...reg, charityVisibilities: newVisibilities };
+      }
+      return reg;
+    }));
+
+    try {
+      await toggleRegulationVisibility(charityId, regId, currentIsVisible);
+    } catch (error) {
+      // استرجاع الحالة السابقة في حال فشل الطلب
+      setLocalRegulations(regulations);
+    }
   };
 
   const handleDelete = async (regId: string) => {
     if (confirm("هل أنت متأكد من حذف هذه اللائحة من النظام بشكل نهائي لجميع الجمعيات؟")) {
-      await deleteRegulation(regId);
+      // تحديث واجهة المستخدم فورياً
+      setLocalRegulations(prev => prev.filter(reg => reg.id !== regId));
+      try {
+        await deleteRegulation(regId);
+      } catch (error) {
+        // استرجاع الحالة السابقة في حال فشل الطلب
+        setLocalRegulations(regulations);
+      }
     }
   };
 
@@ -64,14 +96,14 @@ export default function GovernanceRegulationsManager({
         لوائح الحوكمة
       </h3>
 
-      {regulations.length === 0 ? (
+      {localRegulations.length === 0 ? (
         <div className="text-center py-12 text-slate-500 dark:text-slate-400">
           <FileText className="w-12 h-12 mx-auto mb-4 opacity-50" />
           <p>لا توجد لوائح مسجلة في النظام بعد.</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {regulations.map((reg, index) => {
+          {localRegulations.map((reg, index) => {
               const isVisible = !reg.charityVisibilities.some(v => v.charityId === charityId && v.isVisible === false);
               
               if (!isVisible && !isAdmin) return null;

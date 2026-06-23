@@ -2,7 +2,7 @@ import { Scale } from "lucide-react";
 import type { Metadata } from "next";
 import { prisma } from "@/lib/db";
 import GovernanceStagesManager from "./GovernanceStagesManager";
-import GovernanceRegulationsManager from "./GovernanceRegulationsManager";
+import GovernanceFolders from "./GovernanceFolders";
 import { getSession } from "@/lib/auth";
 import DepartmentServicesTimeline from "@/components/DepartmentServicesTimeline";
 import CharityClientTimeline from "@/components/CharityClientTimeline";
@@ -66,7 +66,7 @@ export default async function GovernancePage({ params }: { params: Promise<{ nam
       )}
 
       {charity && (
-        <GovernanceRegulationsManager charityId={charity.id} regulations={regulations} isAdmin={isAdmin} />
+        <GovernanceFolders charityId={charity.id} regulations={regulations} isAdmin={isAdmin} />
       )}
       
       {charity && (

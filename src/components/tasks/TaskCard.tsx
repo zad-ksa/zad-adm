@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useState } from "react";
 import { Check, X, Briefcase, Building2, User, Calendar, AlertCircle, Pencil, ArrowLeftRight, Trash2 } from "lucide-react";
@@ -122,7 +122,7 @@ export default function TaskCard({
                 مهمة داخلية
               </span>
             ) : (
-              <span className="inline-flex items-center gap-1 text-[10px] font-bold text-primary bg-primary/5 px-2 py-0.5 rounded">
+              <span className="inline-flex items-center gap-1 text-[10px] font-bold text-primary dark:text-teal-400 bg-primary/5 dark:bg-teal-950/30 px-2 py-0.5 rounded border border-transparent dark:border-teal-900/20">
                 <Building2 className="w-3 h-3" />
                 {task.charityName || "جمعية متعاقدة"}
               </span>
@@ -138,7 +138,7 @@ export default function TaskCard({
         </div>
       </div>
 
-      <div className="flex items-center justify-between border-t border-slate-100 dark:border-slate-700/50 dark:border-slate-800/80/60 pt-3 text-[10px] text-slate-400 font-bold">
+      <div className="flex items-center justify-between border-t border-slate-100 dark:border-slate-700/40 pt-3 text-[10px] text-slate-400 font-bold">
         <div className="flex items-center gap-1">
           <Calendar className="w-3 h-3" />
           {new Date(task.createdAt).toLocaleDateString("ar-SA")}

@@ -190,7 +190,7 @@ export default function CharitySidebar({
               <div
                 key={idx}
                 title={!isOpen ? `${item.title} (قريباً)` : undefined}
-                className={`flex items-center ${isOpen ? "justify-start px-3" : "justify-center"} py-3 rounded-xl text-slate-400 bg-slate-50 dark:bg-slate-900/50/50 cursor-not-allowed opacity-70 text-sm font-bold`}
+                className={`flex items-center ${isOpen ? "justify-start px-3" : "justify-center"} py-3 rounded-xl text-slate-400 bg-slate-50 dark:bg-slate-900/50 cursor-not-allowed opacity-70 text-sm font-bold`}
               >
                 <item.icon className={`w-5 h-5 shrink-0 transition-all ${isOpen ? "ml-3" : "ml-0"} opacity-60`} />
                 {isOpen && <span className="whitespace-nowrap">{item.title}</span>}

@@ -1,5 +1,6 @@
 import { unstable_cache } from "next/cache";
 import { prisma } from "@/lib/db";
+import { notFound } from "next/navigation";
 import { ensureStagesForCharity } from "@/app/actions/strategy";
 import type { Metadata } from "next";
 import { CalendarIcon, LicenseIcon, Rocket, ClipboardList, Building2, Sparkles, Check, Clock, Award } from "@/components/Icons";
@@ -30,11 +31,15 @@ const getCachedCharity = async (charityName: string) => {
         orderBy: { createdAt: "desc" },
       });
 
+      if (!latestResponse) {
+        notFound();
+      }
+
       charityData = await prisma.charity.create({
         data: {
           name: charityName,
-          establishmentDate: latestResponse?.establishmentDate || null,
-          licenseNumber: latestResponse?.licenseNumber || null,
+          establishmentDate: latestResponse.establishmentDate || null,
+          licenseNumber: latestResponse.licenseNumber || null,
         },
       });
     }

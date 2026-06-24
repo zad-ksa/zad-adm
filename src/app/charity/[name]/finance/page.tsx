@@ -1,5 +1,6 @@
 import { unstable_cache } from "next/cache";
 import { prisma } from "@/lib/db";
+import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import FinanceClient from "./FinanceClient";
 import FinanceStagesManager from "./FinanceStagesManager";
@@ -33,11 +34,15 @@ const getCachedFinanceData = async (charityName: string) => {
         orderBy: { createdAt: "desc" },
       });
 
+      if (!latestResponse) {
+        notFound();
+      }
+
       const createdCharity = await prisma.charity.create({
         data: {
           name: charityName,
-          establishmentDate: latestResponse?.establishmentDate || null,
-          licenseNumber: latestResponse?.licenseNumber || null,
+          establishmentDate: latestResponse.establishmentDate || null,
+          licenseNumber: latestResponse.licenseNumber || null,
         },
       });
 

@@ -1,5 +1,6 @@
 import { unstable_cache } from "next/cache";
 import { prisma } from "@/lib/db";
+import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import ProgramsClient from "./ProgramsClient";
 import CharityClientTimeline from "@/components/CharityClientTimeline";
@@ -30,11 +31,15 @@ const getCachedProgramsData = async (charityName: string) => {
         orderBy: { createdAt: "desc" },
       });
 
+      if (!latestResponse) {
+        notFound();
+      }
+
       charityData = await prisma.charity.create({
         data: {
           name: charityName,
-          establishmentDate: latestResponse?.establishmentDate || null,
-          licenseNumber: latestResponse?.licenseNumber || null,
+          establishmentDate: latestResponse.establishmentDate || null,
+          licenseNumber: latestResponse.licenseNumber || null,
         },
       }) as any;
       (charityData as any).programs = [];

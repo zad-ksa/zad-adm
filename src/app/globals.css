@@ -13,6 +13,11 @@
   --foreground: 30 41 59;
 }
 
+.dark {
+  --background: 2 6 23;
+  --foreground: 241 245 249;
+}
+
 body {
   background-color: rgb(var(--background));
   color: rgb(var(--foreground));
@@ -34,6 +39,13 @@ body {
 .no-scrollbar {
   -ms-overflow-style: none;  /* IE and Edge */
   scrollbar-width: none;  /* Firefox */
+}
+
+/* Fix native date/color picker in dark mode */
+.dark input[type="date"],
+.dark input[type="time"],
+.dark input[type="datetime-local"] {
+  color-scheme: dark;
 }
 
 /* Custom Theme for react-multi-date-picker */

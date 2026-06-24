@@ -1022,7 +1022,7 @@ export default function TasksClient({
                     setProofUploadError(null);
                   }}
                   disabled={isUploadingProof}
-                  className="px-5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50 dark:bg-slate-900/50 dark:hover:bg-slate-800/50 dark:bg-slate-900/50 hover:text-slate-700 dark:text-slate-200 font-bold transition-all text-xs cursor-pointer"
+                  className="px-5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:bg-slate-800/50 dark:hover:bg-slate-700/50 hover:text-slate-700 dark:text-slate-200 font-bold transition-all text-xs cursor-pointer"
                 >
                   إلغاء
                 </button>
@@ -1071,7 +1071,7 @@ export default function TasksClient({
                 <button
                   type="button"
                   onClick={() => setReassigningTaskId(null)}
-                  className="px-5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50 dark:bg-slate-900/50 dark:hover:bg-slate-800/50 dark:bg-slate-900/50 hover:text-slate-700 dark:text-slate-200 font-bold transition-all text-xs cursor-pointer"
+                  className="px-5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:bg-slate-800/50 dark:hover:bg-slate-700/50 hover:text-slate-700 dark:text-slate-200 font-bold transition-all text-xs cursor-pointer"
                 >
                   إلغاء
                 </button>

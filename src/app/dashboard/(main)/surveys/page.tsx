@@ -237,7 +237,7 @@ export default async function SurveysDashboard() {
             </thead>
             <tbody className="divide-y divide-slate-50">
               {charityStats.map((charity) => (
-                <tr key={charity.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 dark:bg-slate-900/50 dark:hover:bg-slate-800/50 dark:bg-slate-900/50/50 transition-colors group">
+                <tr key={charity.id} className="hover:bg-slate-50 dark:bg-slate-800/50 dark:hover:bg-slate-700/50/50 transition-colors group">
                   <td className="p-5 font-bold text-slate-800 dark:text-slate-100 group-hover:text-primary transition-colors">
                     <Link href={`/charity/${encodeURIComponent(charity.name)}`} className="block">
                       {charity.name}

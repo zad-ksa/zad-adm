@@ -160,7 +160,7 @@ export default function EmployeeSidebar({
   };
 
   const sidebarContent = (
-    <div className="bg-white dark:bg-slate-800 dark:bg-slate-900 flex flex-col h-full border-l border-slate-200 dark:border-slate-700/80 dark:border-slate-800/80 shadow-[4px_0_24px_rgba(0,0,0,0.02)] relative transition-all duration-300">
+    <div className="bg-white dark:bg-slate-900 flex flex-col h-full border-l border-slate-200 dark:border-slate-800 shadow-[4px_0_24px_rgba(0,0,0,0.02)] relative transition-all duration-300">
       
       {/* Desktop Toggle Button */}
       <button 
@@ -246,13 +246,13 @@ export default function EmployeeSidebar({
                   setModalSuccess(null);
                   setIsEditModalOpen(true);
                 }}
-                className="text-slate-400 hover:text-primary hover:bg-slate-50 dark:hover:bg-slate-800/50 dark:bg-slate-900/50 dark:hover:bg-slate-800/50 dark:bg-slate-900/50 p-1.5 rounded-lg transition-colors cursor-pointer shrink-0"
+                className="text-slate-400 hover:text-primary hover:bg-slate-50 dark:bg-slate-800/50 dark:hover:bg-slate-700/50 p-1.5 rounded-lg transition-colors cursor-pointer shrink-0"
                 title="تعديل الملف الشخصي"
               >
                 <Edit className="w-4 h-4" />
               </button>
             </div>
-            <div className="mt-1.5 inline-flex items-center gap-1.5 px-2.5 py-1 bg-slate-50 dark:bg-slate-900/50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700/50 dark:border-slate-700 rounded-full text-[11px] text-slate-600 dark:text-slate-300 font-bold">
+            <div className="mt-1.5 inline-flex items-center gap-1.5 px-2.5 py-1 bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-full text-[11px] text-slate-600 dark:text-slate-300 font-bold">
               <ShieldAlert className="w-3.5 h-3.5 text-emerald-500" />
               {userState?.role === "ADMIN" ? "مدير النظام" :
                userState?.role === "EXECUTIVE_DIRECTOR" ? "مدير تنفيذي" :
@@ -341,7 +341,7 @@ export default function EmployeeSidebar({
                 type="button"
                 onClick={() => setIsEditModalOpen(false)} 
                 disabled={isPending}
-                className="text-slate-400 hover:text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/50 dark:bg-slate-900/50 dark:hover:bg-slate-800/50 dark:bg-slate-900/50 p-2 rounded-lg transition-colors cursor-pointer"
+                className="text-slate-400 hover:text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:bg-slate-800/50 dark:hover:bg-slate-700/50 p-2 rounded-lg transition-colors cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -469,7 +469,7 @@ export default function EmployeeSidebar({
                   type="button"
                   onClick={() => setIsEditModalOpen(false)}
                   disabled={isPending}
-                  className="px-5 py-3 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50 dark:bg-slate-900/50 dark:hover:bg-slate-800/50 dark:bg-slate-900/50 hover:text-slate-700 dark:text-slate-200 font-bold transition-all text-sm cursor-pointer disabled:opacity-50"
+                  className="px-5 py-3 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:bg-slate-800/50 dark:hover:bg-slate-700/50 hover:text-slate-700 dark:text-slate-200 font-bold transition-all text-sm cursor-pointer disabled:opacity-50"
                 >
                   إلغاء
                 </button>

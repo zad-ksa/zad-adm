@@ -79,24 +79,38 @@ export default function CharityClientTimeline({
       )}
 
       {continuousStages.length > 0 && (
-        <div className="mt-8 pt-6 border-t border-slate-100 dark:border-slate-700 flex flex-wrap gap-2 justify-center">
-          {continuousStages.map((stage: any) => {
-            const isActive = stage.isActive !== false;
-            return (
-              <div 
-                key={stage.id} 
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-semibold border transition-all ${
-                  isActive 
-                    ? "bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-500 border-amber-200 dark:border-amber-800/50" 
-                    : "bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 border-slate-200 dark:border-slate-700 grayscale-[50%]"
-                }`}
-                title={stage.description || undefined}
-              >
-                <Infinity className="w-4 h-4" />
-                {stage.name}
-              </div>
-            );
-          })}
+        <div className="mt-8 pt-6 border-t border-slate-100 dark:border-slate-700">
+          <div className="relative pb-4">
+            <div className="flex flex-col md:flex-row gap-6 md:gap-2 justify-between relative z-10 flex-wrap">
+              {continuousStages.map((stage: any) => {
+                const isActive = stage.isActive !== false;
+                const calculatedDuration = formatDurationArabic(stage.startDate, stage.endDate);
+                const displayDuration = calculatedDuration || stage.duration;
+                
+                return (
+                  <div key={stage.id} className={`flex flex-row md:flex-col items-start md:items-center gap-3 group relative flex-1 min-w-[150px] ${!isActive ? "opacity-60 grayscale-[50%]" : ""}`}>
+                    
+                    <div className={`w-12 h-12 rounded-full border-4 flex items-center justify-center font-bold text-lg bg-white dark:bg-slate-800 shrink-0 transition-all duration-300 relative z-10
+                      ${isActive ? 'border-amber-500 text-amber-500 shadow-lg shadow-amber-500/20' : 
+                        'border-slate-200 dark:border-slate-600 text-slate-400 dark:text-slate-500'}`}
+                    >
+                      <Infinity className="w-6 h-6" />
+                    </div>
+                    
+                    <div className={`flex-1 text-right md:text-center p-3 rounded-xl transition-all duration-300 ${isActive ? 'bg-amber-500/5 dark:bg-amber-500/10 border-amber-500/20 shadow-sm' : 'bg-transparent'} border border-transparent w-full`}>
+                      <h4 className={`font-bold text-sm lg:text-base ${isActive ? 'text-amber-600 dark:text-amber-500' : 'text-slate-700 dark:text-slate-300'}`}>{stage.name}</h4>
+                      {stage.description && (
+                        <p className="text-xs text-slate-500 dark:text-slate-400 mt-1.5 leading-relaxed break-words">{stage.description}</p>
+                      )}
+                      {displayDuration && (
+                        <span className="inline-block bg-slate-100 dark:bg-slate-800/80 text-slate-600 dark:text-slate-300 text-xs px-2 py-0.5 rounded-md mt-2 font-medium border border-slate-200 dark:border-slate-700/50">المدة: {displayDuration}</span>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
         </div>
       )}
     </div>

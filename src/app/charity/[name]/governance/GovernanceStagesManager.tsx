@@ -137,22 +137,33 @@ export default function GovernanceStagesManager({
     });
   };
 
-  const handleMove = (index: number, direction: 'up' | 'down') => {
-    if (direction === 'up' && index === 0) return;
-    if (direction === 'down' && index === sortedStages.length - 1) return;
+  const handleMove = (id: string, direction: 'up' | 'down') => {
+    const stageToMove = stages.find(s => s.id === id);
+    if (!stageToMove) return;
 
-    const newStages = [...sortedStages];
-    const targetIndex = direction === 'up' ? index - 1 : index + 1;
+    const isCont = stageToMove.isContinuous;
+    const sameTypeStages = sortedStages.filter(s => !!s.isContinuous === !!isCont);
+    const currentIndex = sameTypeStages.findIndex(s => s.id === id);
     
-    const temp = newStages[index];
-    newStages[index] = newStages[targetIndex];
-    newStages[targetIndex] = temp;
+    if (direction === 'up' && currentIndex === 0) return;
+    if (direction === 'down' && currentIndex === sameTypeStages.length - 1) return;
 
-    const reordered = newStages.map((s, i) => ({ ...s, order: i }));
-    setStages(reordered);
+    const targetIndex = direction === 'up' ? currentIndex - 1 : currentIndex + 1;
+    const targetStage = sameTypeStages[targetIndex];
+
+    const newStages = [...stages];
+    const stage1 = newStages.find(s => s.id === stageToMove.id)!;
+    const stage2 = newStages.find(s => s.id === targetStage.id)!;
+
+    const tempOrder = stage1.order;
+    stage1.order = stage2.order;
+    stage2.order = tempOrder;
+
+    setStages(newStages);
 
     startTransition(async () => {
-      await reorderGovernanceStages(charityId, reordered.map(s => s.id));
+      const reorderedIds = [...newStages].sort((a,b) => a.order - b.order).map(s => s.id);
+      await reorderGovernanceStages(charityId, reorderedIds);
     });
   };
 
@@ -291,7 +302,7 @@ export default function GovernanceStagesManager({
           onDelete={(id) => {
             handleDelete(id);
           }}
-          onMove={(index, direction) => handleMove(index, direction)}
+          onMove={(id, direction) => handleMove(id, direction)}
           onToggleActive={(id, currentActive) => handleToggleActive(id, currentActive)}
           onSetCurrent={(id) => handleSetCurrent(id)}
         />

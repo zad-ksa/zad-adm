@@ -24,7 +24,7 @@ interface InteractiveTimelineEditorProps {
   onAdd: (stage: Omit<TimelineStage, 'id' | 'order' | 'isCurrent' | 'isActive'>) => void;
   onUpdate: (id: string, stage: Partial<TimelineStage>) => void;
   onDelete: (id: string) => void;
-  onMove: (index: number, direction: 'up' | 'down') => void;
+  onMove: (id: string, direction: 'up' | 'down') => void;
   onToggleActive: (id: string, currentActive: boolean) => void;
   onSetCurrent: (id: string) => void;
 }
@@ -136,7 +136,7 @@ export default function InteractiveTimelineEditor({
                 {/* Reorder Arrows (Visible on Hover) */}
                 <div className="absolute -top-6 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm p-1 rounded-lg border border-slate-200 dark:border-slate-700 z-20 shadow-sm">
                    <button 
-                     onClick={() => onMove(idx, 'up')}
+                     onClick={() => onMove(stage.id, 'up')}
                      disabled={idx === 0 || isPending}
                      className="p-1 bg-white dark:bg-slate-700 shadow-sm border border-slate-200 dark:border-slate-600 rounded-md hover:bg-slate-50 dark:hover:bg-slate-600 disabled:opacity-30"
                      title="تحريك يميناً (للخلف)"
@@ -144,7 +144,7 @@ export default function InteractiveTimelineEditor({
                      <ArrowRight className="w-3.5 h-3.5 text-slate-600 dark:text-slate-300" />
                    </button>
                    <button 
-                     onClick={() => onMove(idx, 'down')}
+                     onClick={() => onMove(stage.id, 'down')}
                      disabled={idx === sequentialStages.length - 1 || isPending}
                      className="p-1 bg-white dark:bg-slate-700 shadow-sm border border-slate-200 dark:border-slate-600 rounded-md hover:bg-slate-50 dark:hover:bg-slate-600 disabled:opacity-30"
                      title="تحريك يساراً (للأمام)"
@@ -282,24 +282,119 @@ export default function InteractiveTimelineEditor({
             <Plus className="w-3 h-3" /> إضافة
           </button>
         </h4>
-        <div className="flex flex-wrap gap-2">
-          {continuousStages.map(stage => (
-            <div 
-              key={stage.id} 
-              onClick={() => setSelectedStageId(stage.id)}
-              className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-semibold border cursor-pointer hover:shadow-sm transition-all ${
-                stage.isActive 
-                  ? "bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-500 border-amber-200 dark:border-amber-800/50 hover:bg-amber-100" 
-                  : "bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 border-slate-200 dark:border-slate-700 grayscale-[50%] hover:bg-slate-200"
-              }`}
-            >
-              <Infinity className="w-4 h-4" />
-              {stage.name}
-            </div>
-          ))}
-          {continuousStages.length === 0 && (
-            <p className="text-xs text-slate-400">لا توجد أنشطة مستمرة.</p>
-          )}
+        <div className="relative pb-8 min-w-max">
+          <div className="flex flex-row gap-6 relative z-10 items-start pt-6">
+            {continuousStages.map((stage, idx) => {
+              const displayDuration = formatDurationArabic(stage.startDate, stage.endDate);
+              const isCurrent = stage.isCurrent;
+              return (
+                <div key={stage.id} className={`flex flex-col items-center gap-3 group relative w-[220px] transition-all ${!stage.isActive ? "opacity-60 grayscale-[50%]" : ""}`}>
+                  
+                  {/* Reorder Arrows (Visible on Hover) */}
+                  <div className="absolute -top-6 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm p-1 rounded-lg border border-slate-200 dark:border-slate-700 z-20 shadow-sm">
+                     <button 
+                       onClick={() => onMove(stage.id, 'up')}
+                       disabled={idx === 0 || isPending}
+                       className="p-1 bg-white dark:bg-slate-700 shadow-sm border border-slate-200 dark:border-slate-600 rounded-md hover:bg-slate-50 dark:hover:bg-slate-600 disabled:opacity-30"
+                       title="تحريك يميناً (للخلف)"
+                     >
+                       <ArrowRight className="w-3.5 h-3.5 text-slate-600 dark:text-slate-300" />
+                     </button>
+                     <button 
+                       onClick={() => onMove(stage.id, 'down')}
+                       disabled={idx === continuousStages.length - 1 || isPending}
+                       className="p-1 bg-white dark:bg-slate-700 shadow-sm border border-slate-200 dark:border-slate-600 rounded-md hover:bg-slate-50 dark:hover:bg-slate-600 disabled:opacity-30"
+                       title="تحريك يساراً (للأمام)"
+                     >
+                       <ArrowLeft className="w-3.5 h-3.5 text-slate-600 dark:text-slate-300" />
+                     </button>
+                  </div>
+
+                  {/* Circle - GOLD without lines */}
+                  <button 
+                    onClick={() => setSelectedStageId(stage.id)}
+                    className={`w-14 h-14 rounded-full border-4 flex items-center justify-center font-bold text-xl bg-white dark:bg-slate-800 shrink-0 transition-all duration-300 relative z-10 cursor-pointer hover:scale-110 hover:shadow-md
+                    ${isCurrent ? 'border-amber-500 text-amber-500 scale-110 shadow-lg shadow-amber-500/20' : 
+                      'border-amber-200 dark:border-amber-700 text-amber-500 dark:text-amber-500'}`}
+                    title="انقر لخيارات المرحلة"
+                  >
+                    <Infinity className="w-6 h-6" />
+                  </button>
+                  
+                  {/* Info Card */}
+                  <div className={`flex flex-col items-center w-full p-3 rounded-xl transition-all duration-300 border ${isCurrent ? 'bg-amber-500/5 dark:bg-amber-500/10 border-amber-500/20 shadow-sm' : 'bg-slate-50 dark:bg-slate-900/50 border-transparent hover:border-slate-200 dark:hover:border-slate-700'}`}>
+                    
+                    {/* Name */}
+                    {editingField?.id === stage.id && editingField.field === 'name' ? (
+                      <input 
+                        autoFocus
+                        className="w-full text-center text-sm font-bold bg-white dark:bg-slate-800 border-2 border-amber-500/50 rounded-md px-1 py-0.5 outline-none"
+                        value={editName}
+                        onChange={e => setEditName(e.target.value)}
+                        onBlur={() => handleSaveInline(stage)}
+                        onKeyDown={e => e.key === 'Enter' && handleSaveInline(stage)}
+                      />
+                    ) : (
+                      <h4 
+                        onClick={() => handleStartInlineEdit(stage, 'name')}
+                        className={`font-bold text-sm text-center cursor-text hover:text-amber-500 transition-colors ${isCurrent ? 'text-amber-600 dark:text-amber-500' : 'text-slate-700 dark:text-slate-300'} line-clamp-2 w-full`}
+                        title="انقر للتعديل"
+                      >
+                        {stage.name}
+                      </h4>
+                    )}
+
+                    {/* Description */}
+                    {editingField?.id === stage.id && editingField.field === 'description' ? (
+                      <textarea 
+                        autoFocus
+                        className="w-full mt-2 text-xs text-center bg-white dark:bg-slate-800 border-2 border-amber-500/50 rounded-md px-1 py-0.5 outline-none resize-none"
+                        value={editDesc}
+                        onChange={e => setEditDesc(e.target.value)}
+                        onBlur={() => handleSaveInline(stage)}
+                        onKeyDown={e => e.key === 'Enter' && !e.shiftKey && handleSaveInline(stage)}
+                        rows={2}
+                      />
+                    ) : (
+                      <p 
+                        onClick={() => handleStartInlineEdit(stage, 'description')}
+                        className="text-xs text-slate-500 dark:text-slate-400 mt-1.5 leading-relaxed text-center line-clamp-3 cursor-text hover:text-amber-500 transition-colors min-h-[1.5rem] w-full border border-transparent hover:border-slate-200 dark:hover:border-slate-600 rounded p-0.5"
+                        title="انقر لتعديل الوصف"
+                      >
+                        {stage.description || <span className="opacity-50 italic">إضافة وصف...</span>}
+                      </p>
+                    )}
+
+                    {/* Dates / Duration */}
+                    {editingField?.id === stage.id && editingField.field === 'dates' ? (
+                      <div className="flex flex-col gap-1 mt-2 w-full">
+                        <input type="date" className="text-[10px] p-1 border rounded w-full dark:bg-slate-800 dark:border-slate-600 [color-scheme:light] dark:[color-scheme:dark]" value={editStart} onChange={e => setEditStart(e.target.value)} />
+                        <input type="date" className="text-[10px] p-1 border rounded w-full dark:bg-slate-800 dark:border-slate-600 [color-scheme:light] dark:[color-scheme:dark]" value={editEnd} onChange={e => setEditEnd(e.target.value)} />
+                        <button onClick={() => handleSaveInline(stage)} className="text-[10px] bg-amber-500 text-white py-1 rounded">حفظ التواريخ</button>
+                      </div>
+                    ) : (
+                      <div 
+                        onClick={() => handleStartInlineEdit(stage, 'dates')}
+                        className="inline-flex items-center gap-1 bg-slate-100 dark:bg-slate-800/80 text-slate-600 dark:text-slate-300 text-[10px] px-2 py-1 rounded-md mt-2 font-medium border border-slate-200 dark:border-slate-700/50 cursor-pointer hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors w-full justify-center"
+                        title="انقر لتعديل التواريخ"
+                      >
+                        <Calendar className="w-3 h-3" />
+                        {displayDuration ? displayDuration : "تحديد التواريخ"}
+                      </div>
+                    )}
+
+                    {isCurrent && <span className="block mt-2 text-[10px] font-bold bg-amber-500 text-white px-3 py-0.5 rounded-full">النشاط الحالي</span>}
+                  </div>
+                </div>
+              );
+            })}
+            
+            {continuousStages.length === 0 && (
+              <div className="flex items-center justify-center w-full py-4">
+                <p className="text-xs text-slate-400">لا توجد أنشطة مستمرة.</p>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 

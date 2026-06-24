@@ -67,6 +67,9 @@ export default function InteractiveTimelineEditor({
   const [isAdding, setIsAdding] = useState(false);
   const [newName, setNewName] = useState("");
 
+  const [isAddingContinuous, setIsAddingContinuous] = useState(false);
+  const [newContinuousName, setNewContinuousName] = useState("");
+
   const handleStartInlineEdit = (stage: TimelineStage, field: 'name' | 'description' | 'dates' | 'duration') => {
     if (isPending) return;
     setEditingField({ id: stage.id, field });
@@ -109,6 +112,19 @@ export default function InteractiveTimelineEditor({
     });
     setIsAdding(false);
     setNewName("");
+  };
+
+  const submitNewContinuousStage = () => {
+    if (!newContinuousName.trim()) return;
+    onAdd({
+      name: newContinuousName,
+      description: null,
+      startDate: null,
+      endDate: null,
+      isContinuous: true
+    });
+    setIsAddingContinuous(false);
+    setNewContinuousName("");
   };
 
   return (
@@ -280,11 +296,9 @@ export default function InteractiveTimelineEditor({
         <h4 className="text-sm font-bold text-slate-500 dark:text-slate-400 mb-4 flex items-center gap-2">
           <Infinity className="w-4 h-4" /> المراحل والأنشطة المستمرة
           <button 
-            onClick={() => {
-              onAdd({ name: "نشاط مستمر جديد", description: null, startDate: null, endDate: null, isContinuous: true });
-            }}
+            onClick={() => setIsAddingContinuous(true)}
             disabled={isPending}
-            className="mr-auto text-xs bg-primary/10 text-primary hover:bg-primary/20 px-2 py-1 rounded-md flex items-center gap-1 transition-colors"
+            className="mr-auto text-xs bg-amber-500/10 text-amber-600 dark:text-amber-500 hover:bg-amber-500/20 px-2 py-1 rounded-md flex items-center gap-1 transition-colors font-bold"
           >
             <Plus className="w-3 h-3" /> إضافة
           </button>
@@ -395,7 +409,27 @@ export default function InteractiveTimelineEditor({
               );
             })}
             
-            {continuousStages.length === 0 && (
+            {/* Add New Continuous Stage Form */}
+            {isAddingContinuous && (
+              <div className="flex flex-col items-center gap-3 w-[220px]">
+                <div className="flex flex-col items-center w-full p-3 rounded-xl border-2 border-amber-500/50 border-dashed bg-amber-500/5 mt-10">
+                  <input 
+                    autoFocus
+                    className="w-full text-center text-sm font-bold bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 rounded-md px-2 py-1 outline-none mb-2 focus:border-amber-500 focus:ring-1 focus:ring-amber-500"
+                    placeholder="اسم النشاط المستمر..."
+                    value={newContinuousName}
+                    onChange={e => setNewContinuousName(e.target.value)}
+                    onKeyDown={e => e.key === 'Enter' && submitNewContinuousStage()}
+                  />
+                  <div className="flex gap-2">
+                    <button onClick={submitNewContinuousStage} className="bg-amber-500 text-white p-1.5 rounded-md hover:bg-amber-600"><Check className="w-4 h-4" /></button>
+                    <button onClick={() => { setIsAddingContinuous(false); setNewContinuousName(""); }} className="bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 p-1.5 rounded-md hover:bg-slate-300"><X className="w-4 h-4" /></button>
+                  </div>
+                </div>
+              </div>
+            )}
+            
+            {continuousStages.length === 0 && !isAddingContinuous && (
               <div className="flex items-center justify-center w-full py-4">
                 <p className="text-xs text-slate-400">لا توجد أنشطة مستمرة.</p>
               </div>

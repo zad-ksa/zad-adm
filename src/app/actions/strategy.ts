@@ -189,6 +189,15 @@ export async function togglePerformanceEditability(charityName: string, isEditab
   revalidatePath(`/charity/${encodeURIComponent(charityName)}/strategy/performance`);
 }
 
+export async function toggleVisionMissionVisibility(charityName: string, isVisible: boolean) {
+  await prisma.charity.update({
+    where: { name: charityName },
+    data: { isVisionMissionVisible: isVisible }
+  });
+  revalidatePath(`/charity/${encodeURIComponent(charityName)}/strategy`);
+  revalidatePath(`/charity/${encodeURIComponent(charityName)}/strategy/vision-mission`);
+}
+
 export async function getCharityDashboardData(charityName: string) {
   const charity = await prisma.charity.findUnique({
     where: { name: charityName },

@@ -30,6 +30,14 @@ const StagesIcon = () => (
   </svg>
 );
 
+const TargetIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
+    <circle cx="12" cy="12" r="10" />
+    <circle cx="12" cy="12" r="6" />
+    <circle cx="12" cy="12" r="2" />
+  </svg>
+);
+
 export default function StrategyTabs({ charityName, isAdmin = false, isCharityClient = false }: { charityName: string, isAdmin?: boolean, isCharityClient?: boolean }) {
   const pathname = usePathname();
 
@@ -41,6 +49,12 @@ export default function StrategyTabs({ charityName, isAdmin = false, isCharityCl
       href: `/charity/${encodeURIComponent(charityName)}/strategy`,
       exact: true,
       icon: <SurveyIcon />,
+    },
+    {
+      title: "استبيان الرؤية والرسالة والأثر",
+      href: `/charity/${encodeURIComponent(charityName)}/strategy/vision-mission`,
+      exact: false,
+      icon: <TargetIcon />,
     },
     {
       title: "التحليل السداسي",

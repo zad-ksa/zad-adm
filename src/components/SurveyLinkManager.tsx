@@ -1,8 +1,8 @@
-﻿"use client";
+"use client";
 
 import { useState, useEffect } from "react";
 
-export default function SurveyLinkManager({ charityName, surveyType }: { charityName: string, surveyType: "READINESS" | "HEXAGONAL" }) {
+export default function SurveyLinkManager({ charityName, surveyType }: { charityName: string, surveyType: "READINESS" | "HEXAGONAL" | "VISION_MISSION" }) {
   const [activeLink, setActiveLink] = useState<{ id: string; isActive: boolean } | null>(null);
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
@@ -68,7 +68,7 @@ export default function SurveyLinkManager({ charityName, surveyType }: { charity
   const handleCopy = () => {
     if (!activeLink) return;
     const origin = window.location.origin;
-    const path = surveyType === "READINESS" ? "/survey" : "/hexagonal";
+    const path = surveyType === "READINESS" ? "/survey" : surveyType === "HEXAGONAL" ? "/hexagonal" : "/survey/vision-mission";
     const url = `${origin}${path}?token=${activeLink.id}`;
     navigator.clipboard.writeText(url);
     setCopied(true);
@@ -79,7 +79,11 @@ export default function SurveyLinkManager({ charityName, surveyType }: { charity
     return <div className="animate-pulse bg-slate-100 h-24 rounded-2xl w-full mb-8 border border-slate-200"></div>;
   }
 
-  const title = surveyType === "READINESS" ? "رابط استبيان الجاهزية المخصص للجمعية" : "رابط التحليل السداسي المخصص للجمعية";
+  const title = surveyType === "READINESS" 
+    ? "رابط استبيان الجاهزية المخصص للجمعية" 
+    : surveyType === "HEXAGONAL" 
+      ? "رابط التحليل السداسي المخصص للجمعية" 
+      : "رابط استبيان الرؤية والرسالة والأثر المخصص للجمعية";
 
   return (
     <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm mb-8 space-y-4">

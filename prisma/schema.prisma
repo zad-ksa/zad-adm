@@ -40,8 +40,10 @@ model Charity {
   regulationVisibilities CharityRegulationVisibility[]
   employees         Employee[]
   isReadinessVisible Boolean @default(false)
+  isVisionMissionVisible Boolean @default(false)
   isPerformanceEditable Boolean @default(false)
   services          Service[]
+  visionMissionResponses VisionMissionResponse[]
 }
 
 model StrategicStage {
@@ -337,5 +339,16 @@ model CustomSurveyResponse {
   charityName     String   // Charity name or other info collected
   answers         Json     // Stores {"questionId": "answer or optionId"}
   attachments     Json?    // Stores {"questionId": "fileUrl"}
+  createdAt       DateTime @default(now())
+}
+
+model VisionMissionResponse {
+  id              String   @id @default(uuid())
+  charityId       String
+  charity         Charity  @relation(fields: [charityId], references: [id], onDelete: Cascade)
+  charityName     String
+  respondentName  String
+  respondentTitle String
+  answers         Json
   createdAt       DateTime @default(now())
 }

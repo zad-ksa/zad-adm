@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { toggleReadinessVisibility, togglePerformanceEditability } from "@/app/actions/strategy";
+import { toggleReadinessVisibility, togglePerformanceEditability, toggleVisionMissionVisibility } from "@/app/actions/strategy";
 
 export default function StrategyPermissionToggle({
   charityName,
@@ -11,7 +11,7 @@ export default function StrategyPermissionToggle({
   description
 }: {
   charityName: string;
-  type: "readiness" | "performance";
+  type: "readiness" | "performance" | "vision-mission";
   initialState: boolean;
   label: string;
   description?: string;
@@ -27,8 +27,10 @@ export default function StrategyPermissionToggle({
       try {
         if (type === "readiness") {
           await toggleReadinessVisibility(charityName, newState);
-        } else {
+        } else if (type === "performance") {
           await togglePerformanceEditability(charityName, newState);
+        } else {
+          await toggleVisionMissionVisibility(charityName, newState);
         }
       } catch (error) {
         // Revert on error

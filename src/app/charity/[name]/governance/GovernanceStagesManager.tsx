@@ -116,23 +116,24 @@ export default function GovernanceStagesManager({
 
   const handleDeleteConfirm = () => {
     if (!stageToDelete) return;
+    const stageId = stageToDelete;
+    setStages(stages.filter(s => s.id !== stageId));
+    setStageToDelete(null);
     startTransition(async () => {
-      setStages(stages.filter(s => s.id !== stageToDelete));
-      await deleteGovernanceStage(stageToDelete);
-      setStageToDelete(null);
+      await deleteGovernanceStage(stageId);
     });
   };
 
   const handleSetCurrent = (id: string) => {
+    setStages(stages.map(s => ({ ...s, isCurrent: s.id === id })));
     startTransition(async () => {
-      setStages(stages.map(s => ({ ...s, isCurrent: s.id === id })));
       await setCurrentGovernanceStage(charityId, id);
     });
   };
 
   const handleToggleActive = (id: string, currentActive: boolean) => {
+    setStages(stages.map(s => s.id === id ? { ...s, isActive: !currentActive } : s));
     startTransition(async () => {
-      setStages(stages.map(s => s.id === id ? { ...s, isActive: !currentActive } : s));
       await toggleActiveGovernanceStage(id, !currentActive);
     });
   };
@@ -265,28 +266,28 @@ export default function GovernanceStagesManager({
           stages={sortedStages as any}
           isPending={isPending}
           onAdd={(stage) => {
+            const optimisticStage: Stage = { 
+              id: Math.random().toString(), 
+              name: stage.name,
+              description: stage.description,
+              startDate: stage.startDate,
+              endDate: stage.endDate,
+              duration: "",
+              order: stages.length, 
+              isCurrent: false,
+              isContinuous: stage.isContinuous,
+              isActive: true
+            };
+            setStages([...stages, optimisticStage]);
             startTransition(async () => {
-              const optimisticStage: Stage = { 
-                id: Math.random().toString(), 
-                name: stage.name,
-                description: stage.description,
-                startDate: stage.startDate,
-                endDate: stage.endDate,
-                duration: "",
-                order: stages.length, 
-                isCurrent: false,
-                isContinuous: stage.isContinuous,
-                isActive: true
-              };
-              setStages([...stages, optimisticStage]);
               await addGovernanceStage(charityId, stage.name, stage.duration || "", stage.description || "", stage.startDate ? stage.startDate.toISOString() : "", stage.endDate ? stage.endDate.toISOString() : "", stage.isContinuous, true);
             });
           }}
           onUpdate={(id, updates) => {
             const stage = stages.find(s => s.id === id);
             if (!stage) return;
+            setStages(stages.map(s => s.id === id ? { ...s, ...updates } : s));
             startTransition(async () => {
-              setStages(stages.map(s => s.id === id ? { ...s, ...updates } : s));
               await updateGovernanceStage(
                 id, 
                 updates.name !== undefined ? updates.name : stage.name, 

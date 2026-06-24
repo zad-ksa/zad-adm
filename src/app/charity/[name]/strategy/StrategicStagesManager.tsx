@@ -280,7 +280,7 @@ export default function StrategicStagesManager({
                 isActive: true
               };
               setStages([...stages, optimisticStage]);
-              await addStrategicStage(charityId, stage.name, "", stage.description || "", stage.startDate ? stage.startDate.toISOString() : "", stage.endDate ? stage.endDate.toISOString() : "", stage.isContinuous, true);
+              await addStrategicStage(charityId, stage.name, stage.duration || "", stage.description || "", stage.startDate ? stage.startDate.toISOString() : "", stage.endDate ? stage.endDate.toISOString() : "", stage.isContinuous, true);
             });
           }}
           onUpdate={(id, updates) => {
@@ -291,7 +291,7 @@ export default function StrategicStagesManager({
               await updateStrategicStage(
                 id, 
                 updates.name !== undefined ? updates.name : stage.name, 
-                "", 
+                updates.duration !== undefined ? (updates.duration || "") : (stage.duration || ""), 
                 updates.description !== undefined ? (updates.description || "") : (stage.description || ""), 
                 updates.startDate !== undefined ? (updates.startDate ? updates.startDate.toISOString() : "") : (stage.startDate ? new Date(stage.startDate).toISOString() : ""), 
                 updates.endDate !== undefined ? (updates.endDate ? updates.endDate.toISOString() : "") : (stage.endDate ? new Date(stage.endDate).toISOString() : ""), 

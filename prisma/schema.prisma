@@ -286,6 +286,7 @@ model ServiceStage {
   description String?
   startDate   DateTime?
   endDate     DateTime?
+  duration    String?
   order       Int      @default(0)
   isCurrent   Boolean  @default(false)
   isContinuous Boolean @default(false)

@@ -17,6 +17,7 @@ type ServiceStage = {
   isCurrent: boolean;
   isContinuous: boolean;
   isActive: boolean;
+  duration: string | null;
 };
 
 type Service = {
@@ -75,7 +76,8 @@ export default function GenericStagesManager({
         order: stages.length, 
         isCurrent: false,
         isContinuous: newIsContinuous,
-        isActive: true
+        isActive: true,
+        duration: null
       };
       setStages([...stages, optimisticStage]);
       setIsAdding(false);
@@ -85,7 +87,7 @@ export default function GenericStagesManager({
       setNewEndDate("");
       setNewIsContinuous(false);
       
-      await addServiceStage(service.id, newName, newDescription || null, newStartDate ? new Date(newStartDate) : null, newEndDate ? new Date(newEndDate) : null, newIsContinuous, true);
+      await addServiceStage(service.id, newName, newDescription || null, newStartDate ? new Date(newStartDate) : null, newEndDate ? new Date(newEndDate) : null, newIsContinuous, true, null);
       router.refresh();
     });
   };
@@ -104,7 +106,7 @@ export default function GenericStagesManager({
         isContinuous: editIsContinuous
       } : s));
       setEditingId(null);
-      await updateServiceStage(id, editName, editDescription || null, editStartDate ? new Date(editStartDate) : null, editEndDate ? new Date(editEndDate) : null, editIsContinuous, stageToUpdate.isActive);
+      await updateServiceStage(id, editName, editDescription || null, editStartDate ? new Date(editStartDate) : null, editEndDate ? new Date(editEndDate) : null, editIsContinuous, stageToUpdate.isActive, stageToUpdate.duration);
     });
   };
 
@@ -290,10 +292,11 @@ export default function GenericStagesManager({
                 order: stages.length, 
                 isCurrent: false,
                 isContinuous: stage.isContinuous,
-                isActive: true
+                isActive: true,
+                duration: stage.duration || null
               };
               setStages([...stages, optimisticStage]);
-              await addServiceStage(service.id, stage.name, stage.description, stage.startDate, stage.endDate, stage.isContinuous, true);
+              await addServiceStage(service.id, stage.name, stage.description, stage.startDate, stage.endDate, stage.isContinuous, true, stage.duration || null);
             });
           }}
           onUpdate={(id, updates) => {
@@ -308,7 +311,8 @@ export default function GenericStagesManager({
                 updates.startDate !== undefined ? updates.startDate : stage.startDate, 
                 updates.endDate !== undefined ? updates.endDate : stage.endDate, 
                 updates.isContinuous !== undefined ? updates.isContinuous : stage.isContinuous, 
-                updates.isActive !== undefined ? updates.isActive : stage.isActive
+                updates.isActive !== undefined ? updates.isActive : stage.isActive,
+                updates.duration !== undefined ? updates.duration : stage.duration
               );
             });
           }}

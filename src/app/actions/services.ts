@@ -83,11 +83,12 @@ export async function deleteService(id: string) {
 export async function addServiceStage(
   serviceId: string, 
   name: string, 
-  description: string | null, 
-  startDate: Date | null, 
-  endDate: Date | null,
+  description: string | null = null, 
+  startDate: Date | null = null, 
+  endDate: Date | null = null,
   isContinuous: boolean = false,
-  isActive: boolean = true
+  isActive: boolean = true,
+  duration: string | null = null
 ) {
   const lastStage = await prisma.serviceStage.findFirst({
     where: { serviceId },
@@ -105,7 +106,8 @@ export async function addServiceStage(
       endDate,
       order: newOrder,
       isContinuous,
-      isActive
+      isActive,
+      duration
     },
     include: { service: { include: { charity: true } } }
   });
@@ -125,11 +127,12 @@ export async function updateServiceStage(
   startDate: Date | null, 
   endDate: Date | null,
   isContinuous: boolean = false,
-  isActive: boolean = true
+  isActive: boolean = true,
+  duration: string | null = null
 ) {
   const stage = await prisma.serviceStage.update({
     where: { id },
-    data: { name, description, startDate, endDate, isContinuous, isActive },
+    data: { name, description, startDate, endDate, isContinuous, isActive, duration },
     include: { service: { include: { charity: true } } }
   });
   

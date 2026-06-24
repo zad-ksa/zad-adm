@@ -15,6 +15,7 @@ export type TimelineStage = {
   isCurrent: boolean;
   isContinuous: boolean;
   isActive: boolean;
+  duration?: string | null;
 };
 
 interface InteractiveTimelineEditorProps {
@@ -50,13 +51,14 @@ export default function InteractiveTimelineEditor({
   const sequentialStages = stages?.filter(s => !s.isContinuous) || [];
   const continuousStages = stages?.filter(s => s.isContinuous) || [];
 
-  const [editingField, setEditingField] = useState<{ id: string, field: 'name' | 'description' | 'dates' } | null>(null);
+  const [editingField, setEditingField] = useState<{ id: string, field: 'name' | 'description' | 'dates' | 'duration' } | null>(null);
   
   // Inline edit states
   const [editName, setEditName] = useState("");
   const [editDesc, setEditDesc] = useState("");
   const [editStart, setEditStart] = useState("");
   const [editEnd, setEditEnd] = useState("");
+  const [editDuration, setEditDuration] = useState("");
 
   const [selectedStageId, setSelectedStageId] = useState<string | null>(null);
   const selectedStage = stages.find(s => s.id === selectedStageId);
@@ -65,7 +67,7 @@ export default function InteractiveTimelineEditor({
   const [isAdding, setIsAdding] = useState(false);
   const [newName, setNewName] = useState("");
 
-  const handleStartInlineEdit = (stage: TimelineStage, field: 'name' | 'description' | 'dates') => {
+  const handleStartInlineEdit = (stage: TimelineStage, field: 'name' | 'description' | 'dates' | 'duration') => {
     if (isPending) return;
     setEditingField({ id: stage.id, field });
     if (field === 'name') setEditName(stage.name);
@@ -73,6 +75,9 @@ export default function InteractiveTimelineEditor({
     if (field === 'dates') {
       setEditStart(stage.startDate ? new Date(stage.startDate).toISOString().split('T')[0] : "");
       setEditEnd(stage.endDate ? new Date(stage.endDate).toISOString().split('T')[0] : "");
+    }
+    if (field === 'duration') {
+      setEditDuration(stage.duration || "");
     }
   };
 
@@ -87,6 +92,8 @@ export default function InteractiveTimelineEditor({
       const newStart = editStart ? new Date(editStart) : null;
       const newEnd = editEnd ? new Date(editEnd) : null;
       onUpdate(stage.id, { startDate: newStart, endDate: newEnd });
+    } else if (editingField.field === 'duration') {
+      onUpdate(stage.id, { duration: editDuration });
     }
     setEditingField(null);
   };
@@ -365,21 +372,20 @@ export default function InteractiveTimelineEditor({
                       </p>
                     )}
 
-                    {/* Dates / Duration */}
-                    {editingField?.id === stage.id && editingField.field === 'dates' ? (
+                    {/* Duration */}
+                    {editingField?.id === stage.id && editingField.field === 'duration' ? (
                       <div className="flex flex-col gap-1 mt-2 w-full">
-                        <input type="date" className="text-[10px] p-1 border rounded w-full dark:bg-slate-800 dark:border-slate-600 [color-scheme:light] dark:[color-scheme:dark]" value={editStart} onChange={e => setEditStart(e.target.value)} />
-                        <input type="date" className="text-[10px] p-1 border rounded w-full dark:bg-slate-800 dark:border-slate-600 [color-scheme:light] dark:[color-scheme:dark]" value={editEnd} onChange={e => setEditEnd(e.target.value)} />
-                        <button onClick={() => handleSaveInline(stage)} className="text-[10px] bg-amber-500 text-white py-1 rounded">حفظ التواريخ</button>
+                        <input type="text" className="text-xs p-1.5 border rounded w-full dark:bg-slate-800 dark:border-slate-600 text-center text-slate-800 dark:text-slate-100" placeholder="مثال: مستمر طوال العام" value={editDuration} onChange={e => setEditDuration(e.target.value)} onKeyDown={e => e.key === 'Enter' && handleSaveInline(stage)} />
+                        <button onClick={() => handleSaveInline(stage)} className="text-[10px] bg-amber-500 text-white py-1 rounded">حفظ المدة</button>
                       </div>
                     ) : (
                       <div 
-                        onClick={() => handleStartInlineEdit(stage, 'dates')}
+                        onClick={() => handleStartInlineEdit(stage, 'duration')}
                         className="inline-flex items-center gap-1 bg-slate-100 dark:bg-slate-800/80 text-slate-600 dark:text-slate-300 text-[10px] px-2 py-1 rounded-md mt-2 font-medium border border-slate-200 dark:border-slate-700/50 cursor-pointer hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors w-full justify-center"
-                        title="انقر لتعديل التواريخ"
+                        title="انقر لتعديل المدة"
                       >
                         <Calendar className="w-3 h-3" />
-                        {displayDuration ? displayDuration : "تحديد التواريخ"}
+                        {stage.duration ? stage.duration : "تحديد المدة النصية"}
                       </div>
                     )}
 

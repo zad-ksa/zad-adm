@@ -333,9 +333,9 @@ export default function VisionMissionSurveyPage() {
 
                       <div className="space-y-2">
                         <label className="block text-xs font-bold text-slate-700 dark:text-slate-300">وصف الفئة</label>
-                        <input
-                          type="text"
-                          className="w-full border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 rounded-xl px-3 py-2.5 text-sm focus:ring-2 focus:ring-primary/50 outline-none"
+                        <textarea
+                          rows={5}
+                          className="w-full border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 rounded-xl px-3 py-2.5 text-sm focus:ring-2 focus:ring-primary/50 outline-none resize-none"
                           placeholder="مثال: الفئة العمرية من 6 إلى 12 عاماً"
                           value={cat.description}
                           onChange={(e) => handleCategoryChange(idx, "description", e.target.value)}
@@ -344,9 +344,9 @@ export default function VisionMissionSurveyPage() {
 
                       <div className="space-y-2">
                         <label className="block text-xs font-bold text-slate-700 dark:text-slate-300">الأثر المراد إحداثه</label>
-                        <input
-                          type="text"
-                          className="w-full border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 rounded-xl px-3 py-2.5 text-sm focus:ring-2 focus:ring-primary/50 outline-none"
+                        <textarea
+                          rows={5}
+                          className="w-full border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 rounded-xl px-3 py-2.5 text-sm focus:ring-2 focus:ring-primary/50 outline-none resize-none"
                           placeholder="مثال: التمكين التعليمي والتربوي المستدام"
                           value={cat.impact}
                           onChange={(e) => handleCategoryChange(idx, "impact", e.target.value)}

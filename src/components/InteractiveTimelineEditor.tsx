@@ -61,6 +61,7 @@ export default function InteractiveTimelineEditor({
   const [editDuration, setEditDuration] = useState("");
 
   const [selectedStageId, setSelectedStageId] = useState<string | null>(null);
+  const [modalEditName, setModalEditName] = useState("");
   const selectedStage = stages.find(s => s.id === selectedStageId);
 
   // New stage states
@@ -178,7 +179,10 @@ export default function InteractiveTimelineEditor({
 
                 {/* Circle */}
                 <button 
-                  onClick={() => setSelectedStageId(stage.id)}
+                  onClick={() => {
+                    setSelectedStageId(stage.id);
+                    setModalEditName(stage.name);
+                  }}
                   className={`w-14 h-14 rounded-full border-4 flex items-center justify-center font-bold text-xl bg-white dark:bg-slate-800 shrink-0 transition-all duration-300 relative z-10 cursor-pointer hover:scale-110 hover:shadow-md
                   ${isPast ? 'border-emerald-500 text-emerald-500' : 
                     isCurrent ? 'border-primary text-primary scale-110 shadow-lg shadow-primary/20' : 
@@ -333,7 +337,10 @@ export default function InteractiveTimelineEditor({
 
                   {/* Circle - GOLD without lines */}
                   <button 
-                    onClick={() => setSelectedStageId(stage.id)}
+                    onClick={() => {
+                      setSelectedStageId(stage.id);
+                      setModalEditName(stage.name);
+                    }}
                     className={`w-14 h-14 rounded-full border-4 flex items-center justify-center font-bold text-xl bg-white dark:bg-slate-800 shrink-0 transition-all duration-300 relative z-10 cursor-pointer hover:scale-110 hover:shadow-md
                     ${isCurrent ? 'border-amber-500 text-amber-500 scale-110 shadow-lg shadow-amber-500/20' : 
                       'border-amber-200 dark:border-amber-700 text-amber-500 dark:text-amber-500'}`}
@@ -457,8 +464,19 @@ export default function InteractiveTimelineEditor({
                 <label className="block text-xs font-bold text-slate-500 mb-1">تغيير الاسم</label>
                 <input 
                   className="w-full border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-100 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary/50 outline-none"
-                  value={selectedStage.name}
-                  onChange={e => onUpdate(selectedStage.id, { name: e.target.value })}
+                  value={modalEditName}
+                  onChange={e => setModalEditName(e.target.value)}
+                  onBlur={() => {
+                    if (modalEditName.trim() && modalEditName !== selectedStage.name) {
+                      onUpdate(selectedStage.id, { name: modalEditName });
+                    }
+                  }}
+                  onKeyDown={e => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      e.currentTarget.blur();
+                    }
+                  }}
                 />
               </div>
 

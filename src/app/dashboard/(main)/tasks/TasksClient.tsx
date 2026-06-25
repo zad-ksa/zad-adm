@@ -1,19 +1,19 @@
 "use client";
 
 import { useState, useTransition, useEffect } from "react";
-import { 
-  CheckSquare, 
-  Plus, 
-  Trash2, 
-  ArrowLeftRight, 
-  CheckCircle2, 
-  Undo, 
-  Building2, 
-  Briefcase, 
-  User, 
-  Sparkles, 
-  FolderPlus, 
-  UserPlus, 
+import {
+  CheckSquare,
+  Plus,
+  Trash2,
+  ArrowLeftRight,
+  CheckCircle2,
+  Undo,
+  Building2,
+  Briefcase,
+  User,
+  Sparkles,
+  FolderPlus,
+  UserPlus,
   Calendar,
   AlertCircle,
   Pencil,
@@ -23,7 +23,8 @@ import {
   FileImage,
   Link as LinkIcon,
   Folder,
-  Camera
+  Camera,
+  Printer
 } from "lucide-react";
 import { 
   createTaskAction, 
@@ -125,6 +126,92 @@ export default function TasksClient({
       setSuccessMsg(null);
       setTimeout(() => setErrorMsg(null), 4000);
     }
+  };
+
+  const handlePrint = () => {
+    const filterLabel = visibleEmployeeId === "all"
+      ? "كل الموظفين"
+      : employees.find(e => e.id === visibleEmployeeId)?.name || "";
+
+    const priorityLabel = (p: number) =>
+      p === 1 ? "أولوية قصوى" : p === 2 ? "أولوية متوسطة" : "أولوية منخفضة";
+
+    const tasksRows = filteredActiveTasks.map(t => {
+      const emp = employees.find(e => e.id === t.assignedToId);
+      return `<tr>
+        <td>${t.title}</td>
+        <td>${priorityLabel(t.priority ?? 3)}</td>
+        <td>${t.isInternal ? "داخلية" : (t.charityName || "—")}</td>
+        <td>${emp?.name || "—"}</td>
+        <td>${t.status === "IN_PROGRESS" ? "جاري" : "لم يبدأ"}</td>
+        <td>${new Date(t.createdAt).toLocaleDateString("ar-SA")}</td>
+      </tr>`;
+    }).join("");
+
+    const achRows = combinedAchievements.map(a => {
+      const emp = employees.find(e => e.id === a.assignedToId);
+      return `<tr>
+        <td>${a.title}</td>
+        <td>${a.type === "task" ? "مهمة منجزة" : "منجز مباشر"}</td>
+        <td>${a.charityName || "—"}</td>
+        <td>${emp?.name || "—"}</td>
+        <td>${a.date.toLocaleDateString("ar-SA")}</td>
+      </tr>`;
+    }).join("");
+
+    const html = `<!DOCTYPE html>
+<html dir="rtl" lang="ar">
+<head>
+<meta charset="UTF-8"/>
+<title>تقرير المهام والمنجزات</title>
+<style>
+  body { font-family: 'Segoe UI', Tahoma, Arial, sans-serif; font-size: 12px; color: #1e293b; margin: 24px; }
+  h1 { font-size: 18px; font-weight: bold; margin-bottom: 4px; }
+  .meta { font-size: 11px; color: #64748b; margin-bottom: 20px; }
+  h2 { font-size: 14px; font-weight: bold; margin: 20px 0 8px; border-right: 4px solid #0f766e; padding-right: 8px; }
+  table { width: 100%; border-collapse: collapse; margin-bottom: 8px; }
+  th { background: #f1f5f9; text-align: right; padding: 6px 10px; font-size: 11px; border: 1px solid #e2e8f0; }
+  td { padding: 6px 10px; border: 1px solid #e2e8f0; vertical-align: top; }
+  tr:nth-child(even) td { background: #f8fafc; }
+  .summary { display: flex; gap: 24px; margin-bottom: 20px; }
+  .box { background: #f1f5f9; border-radius: 8px; padding: 10px 16px; min-width: 120px; }
+  .box .num { font-size: 22px; font-weight: bold; color: #0f766e; }
+  .box .lbl { font-size: 10px; color: #64748b; }
+  @media print { body { margin: 12px; } }
+</style>
+</head>
+<body>
+<h1>تقرير المهام والمنجزات</h1>
+<div class="meta">التصفية: ${filterLabel} &nbsp;|&nbsp; تاريخ التقرير: ${new Date().toLocaleDateString("ar-SA")}</div>
+<div class="summary">
+  <div class="box"><div class="num">${filteredActiveTasks.length}</div><div class="lbl">مهام حالية</div></div>
+  <div class="box"><div class="num">${combinedAchievements.length}</div><div class="lbl">منجزات</div></div>
+  <div class="box"><div class="num">${filteredActiveTasks.filter(t => t.priority === 1).length}</div><div class="lbl">أولوية قصوى</div></div>
+  <div class="box"><div class="num">${filteredActiveTasks.filter(t => t.status === "IN_PROGRESS").length}</div><div class="lbl">جارية التنفيذ</div></div>
+</div>
+
+${filteredActiveTasks.length > 0 ? `
+<h2>المهام الحالية (${filteredActiveTasks.length})</h2>
+<table>
+  <thead><tr><th>المهمة</th><th>الأولوية</th><th>الجمعية</th><th>المسؤول</th><th>الحالة</th><th>التاريخ</th></tr></thead>
+  <tbody>${tasksRows}</tbody>
+</table>` : ""}
+
+${combinedAchievements.length > 0 ? `
+<h2>سجل المنجزات (${combinedAchievements.length})</h2>
+<table>
+  <thead><tr><th>المنجز</th><th>النوع</th><th>الجمعية</th><th>المسؤول</th><th>التاريخ</th></tr></thead>
+  <tbody>${achRows}</tbody>
+</table>` : ""}
+
+</body>
+</html>`;
+
+    const win = window.open("", "_blank");
+    if (!win) return;
+    win.document.write(html);
+    win.document.close();
+    win.onload = () => win.print();
   };
 
   // Filter tasks & achievements based on role and selector
@@ -519,9 +606,20 @@ export default function TasksClient({
           </p>
         </div>
 
+        <div className="flex items-center gap-3 shrink-0">
+        {/* Print Button */}
+        <button
+          onClick={handlePrint}
+          title="طباعة المهام والمنجزات المعروضة"
+          className="flex items-center gap-2 bg-white dark:bg-slate-800 px-4 py-2.5 border border-slate-100 dark:border-slate-700/50 rounded-2xl shadow-sm text-slate-600 dark:text-slate-300 hover:text-primary hover:border-primary/30 transition-all font-bold text-sm"
+        >
+          <Printer className="w-4 h-4" />
+          طباعة
+        </button>
+
         {/* Filter Dropdown for Executive Director */}
         {isDirectorOrAdmin && (
-          <div className="flex items-center gap-3 bg-white dark:bg-slate-800 px-4 py-2 border border-slate-100 dark:border-slate-700/50 dark:border-slate-800/80 rounded-2xl shadow-sm shrink-0">
+          <div className="flex items-center gap-3 bg-white dark:bg-slate-800 px-4 py-2 border border-slate-100 dark:border-slate-700/50 dark:border-slate-800/80 rounded-2xl shadow-sm">
             <span className="text-xs font-bold text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
               <User className="w-4 h-4 text-slate-400" />
               عرض مهام:
@@ -547,6 +645,7 @@ export default function TasksClient({
             </select>
           </div>
         )}
+        </div>
       </div>
 
       {/* Main Grid: Tasks & Achievements Columns */}

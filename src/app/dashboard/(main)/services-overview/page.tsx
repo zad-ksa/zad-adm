@@ -11,7 +11,7 @@ export const metadata: Metadata = {
 const DEPT_LABELS: Record<string, string> = {
   STRATEGY: "التخطيط الاستراتيجي",
   GOVERNANCE: "الحوكمة",
-  FINANCE: "المالية",
+  FINANCE: "تنمية الموارد",
   PROGRAMS: "البرامج والمشاريع",
 };
 

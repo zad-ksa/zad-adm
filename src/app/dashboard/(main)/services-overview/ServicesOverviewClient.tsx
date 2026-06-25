@@ -1,10 +1,10 @@
 "use client";
 
-import { useState, useMemo, useTransition } from "react";
+import { useState, useMemo, useTransition, useRef } from "react";
 import {
   Check, Calendar, Printer, ChevronDown, ChevronRight,
   Briefcase, LayoutGrid, ChevronLeft, Edit2, X, Plus,
-  Trash2, ArrowUp, ArrowDown, Loader2
+  Trash2, ArrowUp, ArrowDown, Loader2, Save
 } from "lucide-react";
 import {
   setCurrentStrategicStage, addStrategicStage, updateStrategicStage,
@@ -218,6 +218,16 @@ function InlineTimeline({
     startTransition(() => actionReorder(dept, serviceId, charityId, reordered.map(s => s.id)));
   };
 
+  const listRef = useRef<HTMLDivElement>(null);
+
+  // Scroll pagination via wheel on the list
+  const handleWheel = (e: React.WheelEvent) => {
+    if (total <= PAGE_SIZE) return;
+    e.preventDefault();
+    if (e.deltaY > 0) setPageOffset(o => Math.min(total - PAGE_SIZE, o + 1));
+    else setPageOffset(o => Math.max(0, o - 1));
+  };
+
   // VIEW MODE
   if (!isEditing) {
     return (
@@ -225,7 +235,7 @@ function InlineTimeline({
         {total === 0 && <p className="text-xs text-slate-400 italic py-2">لا توجد مراحل مسجلة</p>}
 
         {total > 0 && (
-          <div className="space-y-1">
+          <div ref={listRef} onWheel={handleWheel} className="space-y-1 select-none">
             {visible.map((stage, i) => {
               const globalIdx = pageOffset + i;
               const isCompleted = currentIdx !== -1 && globalIdx < currentIdx;
@@ -258,19 +268,17 @@ function InlineTimeline({
           </div>
         )}
 
-        {/* Pagination */}
+        {/* Scroll hint */}
         {total > PAGE_SIZE && (
-          <div className="flex items-center justify-between mt-2 pt-2 border-t border-slate-100 dark:border-slate-700/50">
+          <div className="flex items-center justify-between mt-1.5 text-[10px] text-slate-400 dark:text-slate-500 select-none">
             <button onClick={() => setPageOffset(o => Math.max(0, o - 1))} disabled={!canPrev}
-              className="p-1 rounded text-slate-400 hover:text-slate-700 disabled:opacity-30 disabled:cursor-not-allowed">
-              <ChevronRight className="w-4 h-4" />
+              className="flex items-center gap-0.5 hover:text-slate-600 disabled:opacity-30 disabled:cursor-not-allowed transition-colors">
+              <ArrowUp className="w-3 h-3" /> السابقة
             </button>
-            <span className="text-[10px] text-slate-400 font-medium">
-              {pageOffset + 1}–{Math.min(pageOffset + PAGE_SIZE, total)} من {total}
-            </span>
+            <span>{pageOffset + 1}–{Math.min(pageOffset + PAGE_SIZE, total)} من {total}</span>
             <button onClick={() => setPageOffset(o => Math.min(total - PAGE_SIZE, o + 1))} disabled={!canNext}
-              className="p-1 rounded text-slate-400 hover:text-slate-700 disabled:opacity-30 disabled:cursor-not-allowed">
-              <ChevronLeft className="w-4 h-4" />
+              className="flex items-center gap-0.5 hover:text-slate-600 disabled:opacity-30 disabled:cursor-not-allowed transition-colors">
+              التالية <ArrowDown className="w-3 h-3" />
             </button>
           </div>
         )}
@@ -292,8 +300,9 @@ function InlineTimeline({
     <div className="mt-2 space-y-2">
       <div className="flex items-center justify-between mb-1">
         <span className="text-xs font-bold text-slate-600 dark:text-slate-300">تعديل المراحل</span>
-        <button onClick={() => setIsEditing(false)} className="text-xs text-slate-400 hover:text-slate-600 flex items-center gap-1">
-          <X className="w-3 h-3" /> إنهاء
+        <button onClick={() => { setIsEditing(false); setEditingId(null); setIsAdding(false); }}
+          className="text-xs text-slate-400 hover:text-slate-600 flex items-center gap-1 px-2 py-1 rounded hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors">
+          <X className="w-3 h-3" /> إغلاق
         </button>
       </div>
 
@@ -301,7 +310,7 @@ function InlineTimeline({
         <div key={stage.id} className={`rounded-lg border p-2 ${stage.isCurrent ? "border-primary/30 bg-primary/5" : "border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50"}`}>
           {editingId === stage.id ? (
             <div className="space-y-2">
-              <input value={editName} onChange={e => setEditName(e.target.value)} placeholder="اسم المرحلة"
+              <input value={editName} onChange={e => setEditName(e.target.value)} placeholder="اسم المرحلة" autoFocus
                 className="w-full text-xs bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 rounded-lg px-3 py-1.5 outline-none focus:ring-2 focus:ring-primary/30 text-slate-800 dark:text-slate-100" />
               <input value={editDesc} onChange={e => setEditDesc(e.target.value)} placeholder="وصف (اختياري)"
                 className="w-full text-xs bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 rounded-lg px-3 py-1.5 outline-none focus:ring-2 focus:ring-primary/30 text-slate-800 dark:text-slate-100" />
@@ -312,11 +321,11 @@ function InlineTimeline({
                   className="flex-1 text-xs bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 rounded-lg px-2 py-1.5 outline-none [color-scheme:light] dark:[color-scheme:dark]" />
               </div>
               <div className="flex gap-2">
-                <button onClick={() => handleUpdate(stage.id)} disabled={isPending}
-                  className="flex-1 py-1.5 text-xs font-bold text-white bg-primary hover:bg-primary/90 rounded-lg flex items-center justify-center gap-1">
-                  {isPending ? <Loader2 className="w-3 h-3 animate-spin" /> : <Check className="w-3 h-3" />} حفظ
+                <button onClick={() => handleUpdate(stage.id)} disabled={isPending || !editName.trim()}
+                  className="flex-1 py-1.5 text-xs font-bold text-white bg-primary hover:bg-primary/90 rounded-lg flex items-center justify-center gap-1 disabled:opacity-60">
+                  {isPending ? <Loader2 className="w-3 h-3 animate-spin" /> : <Save className="w-3 h-3" />} حفظ
                 </button>
-                <button onClick={() => setEditingId(null)} className="px-3 py-1.5 text-xs text-slate-500 bg-slate-100 dark:bg-slate-700 rounded-lg">إلغاء</button>
+                <button onClick={() => setEditingId(null)} className="px-3 py-1.5 text-xs font-bold text-slate-500 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 rounded-lg transition-colors">إلغاء</button>
               </div>
             </div>
           ) : (
@@ -379,7 +388,7 @@ function InlineTimeline({
               className="flex-1 py-1.5 text-xs font-bold text-white bg-primary hover:bg-primary/90 rounded-lg flex items-center justify-center gap-1 disabled:opacity-60">
               {isPending ? <Loader2 className="w-3 h-3 animate-spin" /> : <Plus className="w-3 h-3" />} إضافة
             </button>
-            <button onClick={() => setIsAdding(false)} className="px-3 py-1.5 text-xs text-slate-500 bg-slate-100 dark:bg-slate-700 rounded-lg">إلغاء</button>
+            <button onClick={() => setIsAdding(false)} className="px-3 py-1.5 text-xs font-bold text-slate-500 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 rounded-lg transition-colors">إلغاء</button>
           </div>
         </div>
       ) : (
@@ -519,12 +528,25 @@ export default function ServicesOverviewClient({
   const genericSvcInfo = genericSvcId ? uniqueServiceKeys.find(s => s.id === genericSvcId) : null;
   const activeLabel = tabs.find(t => t.key === activeTab)?.label || "";
 
+  // Extra charities picker (جمعيات غير موجودة في القائمة الحالية)
+  const [showAddCharity, setShowAddCharity] = useState(false);
+
   const charitiesWithData = useMemo(() => {
     if (!isGenericTab) {
       return charities.filter(c => (stagesData[activeTab] || []).some((s: Stage) => s.charityId === c.id));
     }
     return charities.filter(c => allServices.some(svc => svc.name === genericSvcInfo?.name && svc.charityId === c.id));
   }, [activeTab, charities, stagesData, allServices, isGenericTab, genericSvcInfo]);
+
+  // Charities that have NO data in this tab yet
+  const charitiesWithoutData = useMemo(() => {
+    const withIds = new Set(charitiesWithData.map(c => c.id));
+    return charities.filter(c => !withIds.has(c.id));
+  }, [charities, charitiesWithData]);
+
+  // Extra charities manually added to view (empty timeline)
+  const [extraCharityIds, setExtraCharityIds] = useState<string[]>([]);
+  const extraCharities = charities.filter(c => extraCharityIds.includes(c.id));
 
   const allStages: Stage[] = !isGenericTab ? (stagesData[activeTab] || []) : [];
   const totalCharities = charitiesWithData.length;
@@ -543,14 +565,14 @@ export default function ServicesOverviewClient({
   return (
     <div className="space-y-5 animate-in fade-in slide-in-from-bottom-4 duration-500">
       {/* Header */}
-      <div className="bg-white dark:bg-slate-800 rounded-2xl p-6 border border-slate-100 dark:border-slate-700 shadow-sm">
+      <div className="bg-white dark:bg-slate-800 rounded-2xl p-4 border border-slate-100 dark:border-slate-700 shadow-sm">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center text-primary">
-            <LayoutGrid className="w-5 h-5" />
+          <div className="w-9 h-9 bg-primary/10 rounded-xl flex items-center justify-center text-primary shrink-0">
+            <LayoutGrid className="w-4 h-4" />
           </div>
           <div>
-            <h1 className="text-xl font-bold text-slate-800 dark:text-slate-100">عرض الخدمات عبر الجمعيات</h1>
-            <p className="text-sm text-slate-500 dark:text-slate-400">اختر قسماً لمشاهدة حالته في جميع الجمعيات دفعة واحدة</p>
+            <h1 className="text-base font-bold text-slate-800 dark:text-slate-100">عرض الخدمات عبر الجمعيات</h1>
+            <p className="text-xs text-slate-500 dark:text-slate-400">اختر قسماً لمشاهدة حالته في جميع الجمعيات دفعة واحدة</p>
           </div>
         </div>
       </div>
@@ -560,8 +582,8 @@ export default function ServicesOverviewClient({
           {/* Tabs */}
           <div className="flex overflow-x-auto border-b border-slate-100 dark:border-slate-700 scrollbar-none">
             {tabs.map(tab => (
-              <button key={tab.key} onClick={() => setActiveTab(tab.key)}
-                className={`px-5 py-3.5 text-sm font-bold whitespace-nowrap transition-colors border-b-2 -mb-px ${
+              <button key={tab.key} onClick={() => { setActiveTab(tab.key); setExtraCharityIds([]); }}
+                className={`px-4 py-3 text-sm font-bold whitespace-nowrap transition-colors border-b-2 -mb-px ${
                   activeTab === tab.key ? "border-primary text-primary bg-primary/5" : "border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200"
                 }`}>
                 {tab.label}
@@ -570,23 +592,51 @@ export default function ServicesOverviewClient({
           </div>
 
           {/* Stats bar */}
-          <div className="flex items-center justify-between gap-4 px-5 py-3 border-b border-slate-100 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-900/30">
-            <div className="flex items-center gap-4 text-sm">
+          <div className="flex items-center justify-between gap-3 px-4 py-2.5 border-b border-slate-100 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-900/30">
+            <div className="flex items-center gap-3 text-xs">
               <span className="text-slate-500 dark:text-slate-400">الجمعيات: <strong className="text-slate-800 dark:text-slate-200">{totalCharities}</strong></span>
               <span className="text-slate-500 dark:text-slate-400">نشطة: <strong className="text-emerald-600 dark:text-emerald-400">{doneCharities}</strong></span>
             </div>
-            <button onClick={() => handlePrint(activeTab, activeLabel, charities, stagesData)}
-              className="flex items-center gap-2 px-4 py-2 text-sm font-bold bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 rounded-xl transition-colors">
-              <Printer className="w-4 h-4" /> طباعة / PDF
-            </button>
+            <div className="flex items-center gap-2">
+              {canEdit && charitiesWithoutData.length > 0 && (
+                <div className="relative">
+                  <button
+                    onClick={() => setShowAddCharity(v => !v)}
+                    className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-600 dark:text-slate-300 rounded-lg transition-colors"
+                  >
+                    <Plus className="w-3.5 h-3.5" /> فتح خطة جمعية
+                  </button>
+                  {showAddCharity && (
+                    <div className="absolute left-0 top-full mt-1 z-30 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl shadow-xl min-w-[180px] py-1 max-h-60 overflow-y-auto">
+                      {charitiesWithoutData.map(c => (
+                        <button
+                          key={c.id}
+                          onClick={() => {
+                            setExtraCharityIds(prev => prev.includes(c.id) ? prev.filter(id => id !== c.id) : [...prev, c.id]);
+                            setShowAddCharity(false);
+                          }}
+                          className="w-full text-right px-3 py-2 text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-primary/5 hover:text-primary transition-colors"
+                        >
+                          {c.name}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+              <button onClick={() => handlePrint(activeTab, activeLabel, charities, stagesData)}
+                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 rounded-lg transition-colors">
+                <Printer className="w-3.5 h-3.5" /> طباعة
+              </button>
+            </div>
           </div>
 
           {/* Cards grid */}
-          <div className="p-5">
-            {charitiesWithData.length === 0 ? (
-              <div className="text-center py-12 text-slate-400 dark:text-slate-500">
-                <Briefcase className="w-10 h-10 mx-auto mb-3 opacity-40" />
-                <p>لا توجد جمعيات لديها بيانات في هذا القسم</p>
+          <div className="p-4">
+            {charitiesWithData.length === 0 && extraCharities.length === 0 ? (
+              <div className="text-center py-10 text-slate-400 dark:text-slate-500">
+                <Briefcase className="w-9 h-9 mx-auto mb-2 opacity-40" />
+                <p className="text-sm">لا توجد جمعيات لديها بيانات في هذا القسم</p>
               </div>
             ) : (
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
@@ -602,6 +652,10 @@ export default function ServicesOverviewClient({
                     <CharityCard key={charity.id} charity={charity} stages={stages} dept={getDept()} serviceId="" canEdit={canEdit} />
                   );
                 })}
+                {/* Extra charities (empty timelines, canEdit only) */}
+                {extraCharities.map(charity => (
+                  <CharityCard key={charity.id} charity={charity} stages={[]} dept={getDept()} serviceId="" canEdit={canEdit} />
+                ))}
               </div>
             )}
           </div>
@@ -613,6 +667,9 @@ export default function ServicesOverviewClient({
           لا توجد خدمات متاحة لحسابك حالياً
         </div>
       )}
+
+      {/* Backdrop for dropdown */}
+      {showAddCharity && <div className="fixed inset-0 z-20" onClick={() => setShowAddCharity(false)} />}
     </div>
   );
 }

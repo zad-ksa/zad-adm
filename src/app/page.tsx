@@ -1,6 +1,6 @@
-﻿"use client";
+"use client";
 
-import { useState, useTransition } from "react";
+import { useState, useTransition, useEffect } from "react";
 import { loginWithPassword } from "@/app/actions/auth";
 import { AlertCircle, Phone, Lock, Loader2, Eye, EyeOff } from "@/components/Icons";
 import ZadLogo from "@/components/ZadLogo";
@@ -12,6 +12,10 @@ export default function LoginPage() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
+
+  useEffect(() => {
+    document.title = "تسجيل الدخول | زاد التنموية";
+  }, []);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();

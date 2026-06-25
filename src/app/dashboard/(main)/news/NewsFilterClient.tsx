@@ -1,6 +1,6 @@
-﻿"use client";
+"use client";
 
-import { useState, useEffect, useTransition } from "react";
+import { useState, useEffect, useTransition, useMemo } from "react";
 import Link from "next/link";
 import { 
   Calendar, 
@@ -51,6 +51,15 @@ export default function NewsFilterClient({
   const [selectedCharity, setSelectedCharity] = useState<string>("all");
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [selectedDate, setSelectedDate] = useState<string>("");
+
+  const uniqueCategories = useMemo(() => {
+    const defaultCats = ["الاستراتيجية", "التقنية", "تنمية الموارد", "الإعلامية", "تكليف", "استقطاب"];
+    const cats = new Set<string>(defaultCats);
+    newsItems.forEach((item) => {
+      if (item.category) cats.add(item.category);
+    });
+    return Array.from(cats);
+  }, [newsItems]);
 
   // Form states (supporting multiple selected charities)
   const [showNewsForm, setShowNewsForm] = useState(false);
@@ -253,12 +262,11 @@ export default function NewsFilterClient({
                   className="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-100 dark:border-slate-700/50 dark:border-slate-800/80 rounded-xl px-4 py-3 text-sm outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary/30 focus:bg-white dark:focus:bg-slate-800 dark:bg-slate-800 dark:focus:bg-slate-800 dark:bg-slate-800 text-slate-800 dark:text-slate-100 transition-all font-bold cursor-pointer"
                 >
                   <option value="all">كل الأقسام</option>
-                  <option value="الاستراتيجية">الاستراتيجية</option>
-                  <option value="التقنية">التقنية</option>
-                  <option value="تنمية الموارد">تنمية الموارد</option>
-                  <option value="الإعلامية">الإعلامية</option>
-                  <option value="تكليف">تكليف</option>
-                  <option value="استقطاب">استقطاب</option>
+                  {uniqueCategories.map((cat) => (
+                    <option key={cat} value={cat}>
+                      {cat}
+                    </option>
+                  ))}
                 </select>
               </div>
 
@@ -449,19 +457,23 @@ export default function NewsFilterClient({
 
                 <div>
                   <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-2">القسم المعني</label>
-                  <select
+                  <input
+                    type="text"
+                    list="news-categories"
                     value={newsCategory}
                     onChange={(e) => setNewsCategory(e.target.value)}
                     required
-                    className="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-sm outline-none focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500/30 text-slate-800 dark:text-slate-100 transition-all font-bold cursor-pointer"
-                  >
-                    <option value="الاستراتيجية">الاستراتيجية</option>
-                    <option value="التقنية">التقنية</option>
-                    <option value="تنمية الموارد">تنمية الموارد</option>
-                    <option value="الإعلامية">الإعلامية</option>
-                    <option value="تكليف">تكليف</option>
-                    <option value="استقطاب">استقطاب</option>
-                  </select>
+                    placeholder="اختر أو اكتب القسم المعني..."
+                    className="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-sm outline-none focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500/30 text-slate-800 dark:text-slate-100 transition-all font-bold"
+                  />
+                  <datalist id="news-categories">
+                    <option value="الاستراتيجية" />
+                    <option value="التقنية" />
+                    <option value="تنمية الموارد" />
+                    <option value="الإعلامية" />
+                    <option value="تكليف" />
+                    <option value="استقطاب" />
+                  </datalist>
                 </div>
 
                 <div>

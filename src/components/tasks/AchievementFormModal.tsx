@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useState } from "react";
 import { X, Sparkles, FolderPlus, Folder, Calendar, UploadCloud, FileImage, Camera } from "lucide-react";
@@ -99,19 +99,23 @@ export default function AchievementFormModal({
                 <Folder className="w-3.5 h-3.5 text-slate-400" />
                 القسم المعني
               </label>
-              <select
+              <input
+                type="text"
+                list="achievement-categories"
                 value={category}
                 onChange={(e) => setCategory(e.target.value)}
                 required
-                className="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-sm outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500/30 text-slate-800 dark:text-slate-100 transition-all font-bold cursor-pointer [&>option]:bg-white [&>option]:dark:bg-slate-800 [&>option]:text-slate-700 [&>option]:dark:text-slate-200"
-              >
-                <option value="الاستراتيجية">الاستراتيجية</option>
-                <option value="التقنية">التقنية</option>
-                <option value="تنمية الموارد">تنمية الموارد</option>
-                <option value="الإعلامية">الإعلامية</option>
-                <option value="تكليف">تكليف</option>
-                <option value="استقطاب">استقطاب</option>
-              </select>
+                placeholder="اختر أو اكتب القسم المعني..."
+                className="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-sm outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500/30 text-slate-800 dark:text-slate-100 transition-all font-bold"
+              />
+              <datalist id="achievement-categories" className="bg-white dark:bg-slate-800 text-slate-750 dark:text-slate-200">
+                <option value="الاستراتيجية" />
+                <option value="التقنية" />
+                <option value="تنمية الموارد" />
+                <option value="الإعلامية" />
+                <option value="تكليف" />
+                <option value="استقطاب" />
+              </datalist>
             </div>
           )}
 

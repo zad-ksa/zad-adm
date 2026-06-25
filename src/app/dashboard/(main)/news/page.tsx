@@ -4,6 +4,7 @@ import { getCharities } from "@/app/actions/charity";
 import type { Metadata } from "next";
 import { getSession } from "@/lib/auth";
 import NewsFilterClient from "./NewsFilterClient";
+import { getCategories } from "@/app/actions/categories";
 
 
 export const dynamic = "force-dynamic";
@@ -45,7 +46,9 @@ export default async function NewsDashboard() {
     };
   });
 
+  const categories = await getCategories();
+
   return (
-    <NewsFilterClient charities={charities} initialNewsItems={formattedDbNews} session={session} />
+    <NewsFilterClient charities={charities} initialNewsItems={formattedDbNews} session={session} categories={categories} />
   );
 }

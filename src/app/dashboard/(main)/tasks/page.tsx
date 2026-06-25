@@ -2,6 +2,7 @@
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
 import TasksClient from "./TasksClient";
+import { getCategories } from "@/app/actions/categories";
 
 export const dynamic = "force-dynamic";
 
@@ -57,6 +58,8 @@ export default async function TasksPage() {
     });
   }
 
+  const categories = await getCategories();
+
   return (
     <TasksClient
       session={session}
@@ -64,6 +67,7 @@ export default async function TasksPage() {
       charities={charities}
       initialTasks={initialTasks}
       initialAchievements={initialAchievements}
+      categories={categories}
     />
   );
 }

@@ -1,20 +1,22 @@
 "use client";
 
-import { useState, useEffect, useTransition, useMemo } from "react";
+import { useState, useEffect, useTransition } from "react";
 import Link from "next/link";
-import { 
-  Calendar, 
-  Folder, 
-  Building2, 
-  RotateCcw, 
-  Plus, 
-  Newspaper, 
-  CheckCircle2, 
+import {
+  Calendar,
+  Folder,
+  Building2,
+  RotateCcw,
+  Plus,
+  Newspaper,
+  CheckCircle2,
   AlertCircle,
   Trash2,
-  X
+  X,
+  Loader2
 } from "lucide-react";
 import { createNewsAction, deleteNewsAction } from "@/app/actions/tasks";
+import { addCategory, deleteCategory } from "@/app/actions/categories";
 
 interface NewsItem {
   id: string;
@@ -36,13 +38,16 @@ export default function NewsFilterClient({
   charities,
   initialNewsItems,
   session,
+  categories: initialCategories,
 }: {
   charities: Charity[];
   initialNewsItems: NewsItem[];
   session: any;
+  categories: string[];
 }) {
   const [newsItems, setNewsItems] = useState<NewsItem[]>(initialNewsItems);
-  
+  const [categories, setCategories] = useState<string[]>(initialCategories);
+
   // Sync news items when parent updates
   useEffect(() => {
     setNewsItems(initialNewsItems);
@@ -52,28 +57,50 @@ export default function NewsFilterClient({
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [selectedDate, setSelectedDate] = useState<string>("");
 
-  const uniqueCategories = useMemo(() => {
-    const defaultCats = ["الاستراتيجية", "التقنية", "تنمية الموارد", "الإعلامية", "تكليف", "استقطاب"];
-    const cats = new Set<string>(defaultCats);
-    newsItems.forEach((item) => {
-      if (item.category) cats.add(item.category);
-    });
-    return Array.from(cats);
-  }, [newsItems]);
-
   // Form states (supporting multiple selected charities)
   const [showNewsForm, setShowNewsForm] = useState(false);
   const [selectedCharityNames, setSelectedCharityNames] = useState<string[]>([]);
-  const [newsCategory, setNewsCategory] = useState("الاستراتيجية");
+  const [newsCategory, setNewsCategory] = useState(initialCategories[0] || "الاستراتيجية");
   const [newsTitle, setNewsTitle] = useState("");
   const [newsDescription, setNewsDescription] = useState("");
   const [newsDate, setNewsDate] = useState("");
+
+  // Category management state
+  const [showAddCat, setShowAddCat] = useState(false);
+  const [newCatName, setNewCatName] = useState("");
+  const [catError, setCatError] = useState<string | null>(null);
 
   const [isPending, startTransition] = useTransition();
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
-  const isSecretariatOrAdmin = ["ADMIN", "ADMINISTRATIVE_SECRETARIAT"].includes(session?.role);
+  const isSecretariatOrAdmin = ["ADMIN", "ADMINISTRATIVE_SECRETARIAT", "EXECUTIVE_DIRECTOR"].includes(session?.role);
+
+  const handleAddCategory = () => {
+    if (!newCatName.trim()) return;
+    setCatError(null);
+    startTransition(async () => {
+      const res = await addCategory(newCatName.trim());
+      if (res.error) {
+        setCatError(res.error);
+      } else if (res.categories) {
+        setCategories(res.categories);
+        setNewsCategory(newCatName.trim());
+        setNewCatName("");
+        setShowAddCat(false);
+      }
+    });
+  };
+
+  const handleDeleteCategory = (name: string) => {
+    startTransition(async () => {
+      const res = await deleteCategory(name);
+      if (res.categories) {
+        setCategories(res.categories);
+        if (newsCategory === name) setNewsCategory(res.categories[0] || "");
+      }
+    });
+  };
 
   const showNotification = (type: "success" | "error", message: string) => {
     if (type === "success") {
@@ -262,7 +289,7 @@ export default function NewsFilterClient({
                   className="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-100 dark:border-slate-700/50 dark:border-slate-800/80 rounded-xl px-4 py-3 text-sm outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary/30 focus:bg-white dark:focus:bg-slate-800 dark:bg-slate-800 dark:focus:bg-slate-800 dark:bg-slate-800 text-slate-800 dark:text-slate-100 transition-all font-bold cursor-pointer"
                 >
                   <option value="all">كل الأقسام</option>
-                  {uniqueCategories.map((cat) => (
+                  {categories.map((cat) => (
                     <option key={cat} value={cat}>
                       {cat}
                     </option>
@@ -457,23 +484,72 @@ export default function NewsFilterClient({
 
                 <div>
                   <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-2">القسم المعني</label>
-                  <input
-                    type="text"
-                    list="news-categories"
-                    value={newsCategory}
-                    onChange={(e) => setNewsCategory(e.target.value)}
-                    required
-                    placeholder="اختر أو اكتب القسم المعني..."
-                    className="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-sm outline-none focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500/30 text-slate-800 dark:text-slate-100 transition-all font-bold"
-                  />
-                  <datalist id="news-categories">
-                    <option value="الاستراتيجية" />
-                    <option value="التقنية" />
-                    <option value="تنمية الموارد" />
-                    <option value="الإعلامية" />
-                    <option value="تكليف" />
-                    <option value="استقطاب" />
-                  </datalist>
+                  <div className="flex gap-2">
+                    <select
+                      value={newsCategory}
+                      onChange={(e) => setNewsCategory(e.target.value)}
+                      required
+                      className="flex-1 bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-sm outline-none focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500/30 text-slate-800 dark:text-slate-100 transition-all font-bold cursor-pointer [&>option]:bg-white [&>option]:dark:bg-slate-800"
+                    >
+                      {categories.map((cat) => (
+                        <option key={cat} value={cat}>{cat}</option>
+                      ))}
+                    </select>
+                    {isSecretariatOrAdmin && (
+                      <button
+                        type="button"
+                        onClick={() => { setShowAddCat(v => !v); setCatError(null); setNewCatName(""); }}
+                        className="shrink-0 w-10 h-10 mt-0.5 flex items-center justify-center rounded-xl bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400 hover:bg-amber-100 dark:hover:bg-amber-900/40 border border-amber-200 dark:border-amber-800/50 transition-colors"
+                        title="إضافة قسم جديد"
+                      >
+                        <Plus className="w-4 h-4" />
+                      </button>
+                    )}
+                  </div>
+
+                  {showAddCat && isSecretariatOrAdmin && (
+                    <div className="mt-2 p-3 bg-amber-50 dark:bg-amber-900/10 border border-amber-200 dark:border-amber-800/40 rounded-xl space-y-2">
+                      <p className="text-xs font-bold text-amber-700 dark:text-amber-400">إضافة قسم جديد</p>
+                      <div className="flex gap-2">
+                        <input
+                          type="text"
+                          value={newCatName}
+                          onChange={(e) => setNewCatName(e.target.value)}
+                          onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), handleAddCategory())}
+                          placeholder="اسم القسم..."
+                          className="flex-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-amber-500/30 text-slate-800 dark:text-slate-100"
+                          autoFocus
+                        />
+                        <button
+                          type="button"
+                          onClick={handleAddCategory}
+                          disabled={isPending || !newCatName.trim()}
+                          className="px-3 py-2 bg-amber-600 text-white rounded-lg text-xs font-bold hover:bg-amber-700 transition-colors disabled:opacity-60"
+                        >
+                          {isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : "إضافة"}
+                        </button>
+                      </div>
+                      {catError && <p className="text-xs text-red-500 font-medium">{catError}</p>}
+                      <div className="pt-1 border-t border-amber-200/60 dark:border-amber-800/40">
+                        <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 mb-1.5">الأقسام الحالية (اضغط للحذف)</p>
+                        <div className="flex flex-wrap gap-1.5">
+                          {categories.map((cat) => (
+                            <button
+                              key={cat}
+                              type="button"
+                              onClick={() => handleDeleteCategory(cat)}
+                              disabled={isPending}
+                              className="flex items-center gap-1 px-2 py-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-xs text-slate-600 dark:text-slate-300 hover:border-red-300 hover:text-red-500 dark:hover:text-red-400 transition-colors disabled:opacity-50"
+                              title={`حذف "${cat}"`}
+                            >
+                              {cat}
+                              <Trash2 className="w-3 h-3 opacity-50" />
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 <div>

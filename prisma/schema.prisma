@@ -364,3 +364,9 @@ model VisionMissionResponse {
   answers         Json
   createdAt       DateTime @default(now())
 }
+
+model AchievementCategory {
+  id        String   @id @default(uuid())
+  name      String   @unique
+  createdAt DateTime @default(now())
+}

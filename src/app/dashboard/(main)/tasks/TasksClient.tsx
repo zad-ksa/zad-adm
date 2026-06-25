@@ -55,15 +55,18 @@ export default function TasksClient({
   charities,
   initialTasks,
   initialAchievements,
+  categories: initialCategories,
 }: {
   session: any;
   employees: Employee[];
   charities: Charity[];
   initialTasks: any[];
   initialAchievements: any[];
+  categories: string[];
 }) {
   const [tasks, setTasks] = useState<Task[]>(initialTasks);
   const [achievements, setAchievements] = useState<Achievement[]>(initialAchievements);
+  const [categories, setCategories] = useState<string[]>(initialCategories);
   const isDirectorOrAdmin = ADMIN_ROLES.includes(session.role);
   const [selectedEmployeeId, setSelectedEmployeeId] = useState<string>(isDirectorOrAdmin ? "all" : session.id);
 
@@ -1228,6 +1231,8 @@ ${combinedAchievements.length > 0 ? `
         isDirectorOrAdmin={isDirectorOrAdmin}
         charities={charities}
         isUploading={isUploadingAchievementProof}
+        categories={categories}
+        onCategoriesChange={setCategories}
       />
     </main>
   );

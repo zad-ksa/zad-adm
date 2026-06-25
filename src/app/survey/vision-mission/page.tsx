@@ -88,6 +88,10 @@ export default function VisionMissionSurveyPage() {
     }
   }, []);
 
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }, [step]);
+
   const handleCheckboxChange = (option: string) => {
     setVisionQ11((prev) =>
       prev.includes(option) ? prev.filter((item) => item !== option) : [...prev, option]
@@ -113,7 +117,7 @@ export default function VisionMissionSurveyPage() {
   // Validations per step
   const isStepValid = () => {
     if (step === 0) {
-      return respondentName.trim() !== "" && respondentTitle.trim() !== "";
+      return prefilledCharityName.trim() !== "";
     }
     if (step === 1) {
       // At least the first category is required
@@ -125,11 +129,7 @@ export default function VisionMissionSurveyPage() {
         visionQ3.trim() !== "" &&
         visionQ4.trim() !== "" &&
         visionQ5Points.every(p => p.trim() !== "") &&
-        visionQ6.trim() !== ""
-      );
-    }
-    if (step === 3) {
-      return (
+        visionQ6.trim() !== "" &&
         visionQ7 !== "" &&
         visionQ8.trim() !== "" &&
         visionQ9.trim() !== "" &&
@@ -138,19 +138,14 @@ export default function VisionMissionSurveyPage() {
         visionQ12.trim() !== ""
       );
     }
-    if (step === 4) {
+    if (step === 3) {
       return (
         missionQ1.trim() !== "" &&
         missionQ2.trim() !== "" &&
         missionQ3.trim() !== "" &&
-        missionQ4.trim() !== ""
-      );
-    }
-    if (step === 5) {
-      return (
+        missionQ4.trim() !== "" &&
         missionQ5.trim() !== "" &&
-        missionQ6 !== "" &&
-        missionQ7.trim() !== ""
+        missionQ6 !== ""
       );
     }
     return true;
@@ -193,8 +188,8 @@ export default function VisionMissionSurveyPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           charityName: prefilledCharityName,
-          respondentName,
-          respondentTitle,
+          respondentName: "",
+          respondentTitle: "",
           answers,
         }),
       });
@@ -231,7 +226,7 @@ export default function VisionMissionSurveyPage() {
       <Header disableLink={true} title="استبيان الرؤية والرسالة والأثر" />
 
       <main className="flex-1 w-full max-w-4xl mx-auto px-4 py-8 relative">
-        {step > 0 && <ProgressBar current={step} total={5} />}
+        {step > 0 && <ProgressBar current={step} total={3} />}
 
         <div className="bg-white dark:bg-slate-800 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-md p-6 sm:p-10 transition-colors mt-6">
           {/* Step 0: Welcome and Personal Information */}
@@ -249,34 +244,16 @@ export default function VisionMissionSurveyPage() {
                   مرحباً بكم في استبيان الرؤية والرسالة والأثر
                 </h2>
                 <p className="text-slate-600 dark:text-slate-400 leading-relaxed text-sm">
-                  يسعى هذا الاستبيان لجمع الرؤى والتطلعات من منسوبي جمعية{" "}
-                  <strong className="text-primary">{prefilledCharityName}</strong> لصياغة رسالة ورؤية واضحتين تحددان النطاق والأثر المراد إحداثه. يرجى البدء بتسجيل بياناتك الشخصية:
+                  يسعى هذا الاستبيان لجمع الرؤى والتطلعات من منسوبي الجمعية لصياغة رسالة ورؤية واضحتين تحددان النطاق والأثر المراد إحداثه:
                 </p>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 max-w-xl mx-auto">
-                <div className="space-y-2">
-                  <label className="block text-sm font-bold text-slate-700 dark:text-slate-300">الاسم الكريم</label>
-                  <input
-                    type="text"
-                    required
-                    className="w-full border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary/50 outline-none transition-all"
-                    placeholder="مثال: محمد بن عبد الله"
-                    value={respondentName}
-                    onChange={(e) => setRespondentName(e.target.value)}
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <label className="block text-sm font-bold text-slate-700 dark:text-slate-300">المسمى الوظيفي / صفتك في الجمعية</label>
-                  <input
-                    type="text"
-                    required
-                    className="w-full border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary/50 outline-none transition-all"
-                    placeholder="مثال: مدير مشروع / عضو مجلس إدارة"
-                    value={respondentTitle}
-                    onChange={(e) => setRespondentTitle(e.target.value)}
-                  />
+              <div className="max-w-xl mx-auto">
+                <div className="bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-2xl p-6 text-center shadow-sm">
+                  <span className="text-xs text-slate-400 dark:text-slate-500 font-bold block mb-1">الجمعية المستهدفة بالاستبيان</span>
+                  <span className="text-xl font-black text-primary dark:text-primary">
+                    {prefilledCharityName}
+                  </span>
                 </div>
               </div>
 
@@ -376,13 +353,13 @@ export default function VisionMissionSurveyPage() {
             </div>
           )}
 
-          {/* Step 2: Vision Part 1 */}
+          {/* Step 2: Vision */}
           {step === 2 && (
             <div className="space-y-8">
               <div className="border-b border-slate-100 dark:border-slate-700 pb-4">
                 <h3 className="text-2xl font-extrabold text-slate-800 dark:text-slate-100 flex items-center gap-2">
                   <Target className="w-6 h-6 text-amber-500" />
-                  المحور الثاني: رؤية الجمعية (الجزء الأول)
+                  المحور الثاني: رؤية الجمعية
                 </h3>
                 <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">
                   نتطلع لتطلعاتكم حول مستقبل الجمعية والمستفيدين وصورتنا المستقبلية.
@@ -398,7 +375,7 @@ export default function VisionMissionSurveyPage() {
                   <div className="space-y-4">
                     <div className="space-y-2">
                       <label className="block text-sm font-bold text-slate-800 dark:text-slate-200">
-                        1. حين تتخيّل جمعيتنا في عام 2030، ما أول صورة تخطر ببالك؟ صِفها في سطر أو سطرين.
+                        1. حين نتخيّل جمعيتنا في عام 2030، ما أول صورة تخطر ببالنا؟ نصفها في سطر أو سطرين.
                       </label>
                       <textarea
                         required
@@ -412,7 +389,7 @@ export default function VisionMissionSurveyPage() {
 
                     <div className="space-y-2">
                       <label className="block text-sm font-bold text-slate-800 dark:text-slate-200">
-                        2. بماذا تتمنى أن تشتهر جمعيتنا في ذلك الوقت، وما الذي يجعلها مختلفة عن غيرها؟
+                        2. بماذا نتمنى أن تشتهر جمعيتنا في ذلك الوقت، وما الذي يجعلها مختلفة عن غيرها؟
                       </label>
                       <textarea
                         required
@@ -426,7 +403,7 @@ export default function VisionMissionSurveyPage() {
 
                     <div className="space-y-2">
                       <label className="block text-sm font-bold text-slate-800 dark:text-slate-200">
-                        3. ما أهم أثر تتمنى أن تتركه الجمعية في مجال عملها كجمعية متخصصة في القيم؟
+                        3. ما أهم أثر نتمنى أن تتركه الجمعية في مجال عملنا كجمعية متخصصة في القيم؟
                       </label>
                       <textarea
                         required
@@ -448,7 +425,7 @@ export default function VisionMissionSurveyPage() {
                   <div className="space-y-4">
                     <div className="space-y-3">
                       <label className="block text-sm font-bold text-slate-800 dark:text-slate-200">
-                        4. ما أهم ثلاثة أشياء تتمنى أن تقدّمها الجمعية لمستفيديها؟ (ثلاث نقاط رئيسية)
+                        4. ما أهم ثلاثة أشياء نتمنى أن تقدّمها الجمعية لمستفيديها؟ (ثلاث نقاط رئيسية)
                       </label>
                       {visionQ5Points.map((point, idx) => (
                         <div key={idx} className="flex gap-2 items-center">
@@ -467,7 +444,7 @@ export default function VisionMissionSurveyPage() {
 
                     <div className="space-y-2">
                       <label className="block text-sm font-bold text-slate-800 dark:text-slate-200">
-                        5. ما التغيير الحقيقي الذي تأمل أن تُحدثه الجمعية في حياة مستفيديها؟
+                        5. ما التغيير الحقيقي الذي نأمل أن تُحدثه الجمعية في حياة مستفيديها؟
                       </label>
                       <textarea
                         required
@@ -480,42 +457,11 @@ export default function VisionMissionSurveyPage() {
                     </div>
                   </div>
                 </div>
-              </div>
 
-              <div className="flex justify-between items-center pt-6 border-t border-slate-100 dark:border-slate-700">
-                <button
-                  onClick={() => setStep(1)}
-                  className="border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-900 text-slate-700 dark:text-slate-300 font-bold px-6 py-2.5 rounded-xl transition-all cursor-pointer"
-                >
-                  الخلف
-                </button>
-                <button
-                  onClick={() => setStep(3)}
-                  disabled={!isStepValid()}
-                  className="bg-primary hover:bg-primary/95 disabled:bg-slate-200 disabled:text-slate-400 text-white font-bold px-8 py-2.5 rounded-xl transition-all flex items-center gap-2 cursor-pointer"
-                >
-                  المحور التالي
-                  <ChevronLeft className="w-4 h-4" />
-                </button>
-              </div>
-            </div>
-          )}
-
-          {/* Step 3: Vision Part 2 */}
-          {step === 3 && (
-            <div className="space-y-8">
-              <div className="border-b border-slate-100 dark:border-slate-700 pb-4">
-                <h3 className="text-2xl font-extrabold text-slate-800 dark:text-slate-100 flex items-center gap-2">
-                  <Target className="w-6 h-6 text-amber-500" />
-                  المحور الثاني: رؤية الجمعية (الجزء الثاني)
-                </h3>
-              </div>
-
-              <div className="space-y-6">
                 {/* Ambition level */}
                 <div className="p-5 rounded-2xl bg-slate-50 dark:bg-slate-900/50 border border-slate-100 dark:border-slate-800 space-y-3">
                   <label className="block text-sm font-bold text-slate-800 dark:text-slate-200">
-                    6. ما مستوى الطموح الذي تتمناه لحجم أثر الجمعية مستقبلاً؟ (اختيار واحد)
+                    6. ما مستوى الطموح الذي نتمناه لحجم أثر الجمعية مستقبلاً؟ (اختيار واحد)
                   </label>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-2">
                     {[
@@ -546,8 +492,8 @@ export default function VisionMissionSurveyPage() {
                 </div>
 
                 <div className="space-y-2">
-                  <label className="block text-sm font-bold text-slate-855 dark:text-slate-200">
-                    7. ماذا تتمنى أن يقول الناس عن جمعيتنا حين يذكرونها بعد سنوات؟
+                  <label className="block text-sm font-bold text-slate-800 dark:text-slate-200">
+                    7. ماذا نتمنى أن يقول الناس عن جمعيتنا حين يذكرونها بعد سنوات؟
                   </label>
                   <textarea
                     required
@@ -580,7 +526,7 @@ export default function VisionMissionSurveyPage() {
                     </div>
                     <div className="space-y-2">
                       <label className="block text-sm font-bold text-slate-800 dark:text-slate-200">
-                        9. ما الأمور التي تتمنى أن ترفض الجمعية القيام بها مهما كانت المغريات؟
+                        9. ما الأمور التي نتمنى أن ترفض الجمعية القيام بها مهما كانت المغريات؟
                       </label>
                       <textarea
                         required
@@ -602,7 +548,7 @@ export default function VisionMissionSurveyPage() {
                   <div className="space-y-4">
                     <div className="space-y-2">
                       <label className="block text-sm font-bold text-slate-800 dark:text-slate-200">
-                        10. ما الشعور الذي تتمنى أن يحمله العاملون والمتطوعون تجاه عملهم في الجمعية؟ (اختيار متعدد)
+                        10. ما الشعور الذي نتمنى أن يحمله العاملون والمتطوعون تجاه عملهم في الجمعية؟ (اختيار متعدد)
                       </label>
                       <div className="grid grid-cols-2 gap-3 mt-2">
                         {["الفخر", "الانتماء", "الإلهام", "الأمان", "النمو والتطور"].map((opt) => (
@@ -635,7 +581,7 @@ export default function VisionMissionSurveyPage() {
 
                     <div className="space-y-2">
                       <label className="block text-sm font-bold text-slate-855 dark:text-slate-200">
-                        11. لو كان بيدك أن تمنح الجمعية أمنية واحدة لمستقبلها، فماذا تكون؟ (سؤال ملهم لختام الرؤية)
+                        11. لو كان بأيدينا أن نمنح الجمعية أمنية واحدة لمستقبلها، فماذا تكون؟ (سؤال ملهم لختام الرؤية)
                       </label>
                       <textarea
                         required
@@ -652,13 +598,13 @@ export default function VisionMissionSurveyPage() {
 
               <div className="flex justify-between items-center pt-6 border-t border-slate-100 dark:border-slate-700">
                 <button
-                  onClick={() => setStep(2)}
+                  onClick={() => setStep(1)}
                   className="border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-900 text-slate-700 dark:text-slate-300 font-bold px-6 py-2.5 rounded-xl transition-all cursor-pointer"
                 >
                   الخلف
                 </button>
                 <button
-                  onClick={() => setStep(4)}
+                  onClick={() => setStep(3)}
                   disabled={!isStepValid()}
                   className="bg-primary hover:bg-primary/95 disabled:bg-slate-200 disabled:text-slate-400 text-white font-bold px-8 py-2.5 rounded-xl transition-all flex items-center gap-2 cursor-pointer"
                 >
@@ -669,13 +615,13 @@ export default function VisionMissionSurveyPage() {
             </div>
           )}
 
-          {/* Step 4: Mission Part 1 */}
-          {step === 4 && (
+          {/* Step 3: Mission */}
+          {step === 3 && (
             <div className="space-y-8">
               <div className="border-b border-slate-100 dark:border-slate-700 pb-4">
                 <h3 className="text-2xl font-extrabold text-slate-800 dark:text-slate-100 flex items-center gap-2">
                   <BookOpen className="w-6 h-6 text-indigo-500" />
-                  المحور الثالث: تحديد رسالة الجمعية (الجزء الأول)
+                  المحور الثالث: تحديد رسالة الجمعية
                 </h3>
                 <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">
                   الرسالة تصف غرض وجود الجمعية الحالي، ماذا تقدم، ومن تخدم بوضوح.
@@ -685,7 +631,7 @@ export default function VisionMissionSurveyPage() {
               <div className="space-y-5">
                 <div className="space-y-2">
                   <label className="block text-sm font-bold text-slate-800 dark:text-slate-200">
-                    12. لماذا تأسست جمعيتنا؟ ما الحاجة أو القضية الأساسية التي وُجدت لأجلها؟ (جملة أو جملتان)
+                    1. لماذا تأسست جمعيتنا؟ ما الحاجة أو القضية الأساسية التي وُجدت لأجلها؟ (جملة أو جملتان)
                   </label>
                   <textarea
                     required
@@ -699,7 +645,7 @@ export default function VisionMissionSurveyPage() {
 
                 <div className="space-y-2">
                   <label className="block text-sm font-bold text-slate-800 dark:text-slate-200">
-                    13. من هم المستفيدون الرئيسون من خدمات الجمعية؟ (اذكر الفئات بوضوح)
+                    2. من هم المستفيدون الرئيسون من خدمات الجمعية؟ (اذكر الفئات بوضوح)
                   </label>
                   <textarea
                     required
@@ -713,7 +659,7 @@ export default function VisionMissionSurveyPage() {
 
                 <div className="space-y-2">
                   <label className="block text-sm font-bold text-slate-800 dark:text-slate-200">
-                    14. ما الخدمات والبرامج الرئيسة التي تقدّمها الجمعية؟ (مجالات العمل)
+                    3. ما الخدمات والبرامج الرئيسة التي تقدّمها الجمعية؟ (مجالات العمل)
                   </label>
                   <textarea
                     required
@@ -727,7 +673,7 @@ export default function VisionMissionSurveyPage() {
 
                 <div className="space-y-2">
                   <label className="block text-sm font-bold text-slate-800 dark:text-slate-200">
-                    15. ما النتائج المحددة التي نساعد مستفيدينا على تحقيقها؟ اذكرها كـ (معارف جديدة / مهارات / تغيّر سلوكي).
+                    4. ما النتائج المحددة التي نساعد مستفيدينا على تحقيقها؟ اذكرها كـ (معارف جديدة / مهارات / تغيّر سلوكي).
                   </label>
                   <textarea
                     required
@@ -738,41 +684,10 @@ export default function VisionMissionSurveyPage() {
                     onChange={(e) => setMissionQ4(e.target.value)}
                   />
                 </div>
-              </div>
 
-              <div className="flex justify-between items-center pt-6 border-t border-slate-100 dark:border-slate-700">
-                <button
-                  onClick={() => setStep(3)}
-                  className="border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-900 text-slate-700 dark:text-slate-300 font-bold px-6 py-2.5 rounded-xl transition-all cursor-pointer"
-                >
-                  الخلف
-                </button>
-                <button
-                  onClick={() => setStep(5)}
-                  disabled={!isStepValid()}
-                  className="bg-primary hover:bg-primary/95 disabled:bg-slate-200 disabled:text-slate-400 text-white font-bold px-8 py-2.5 rounded-xl transition-all flex items-center gap-2 cursor-pointer"
-                >
-                  المحور التالي
-                  <ChevronLeft className="w-4 h-4" />
-                </button>
-              </div>
-            </div>
-          )}
-
-          {/* Step 5: Mission Part 2 */}
-          {step === 5 && (
-            <div className="space-y-8">
-              <div className="border-b border-slate-100 dark:border-slate-700 pb-4">
-                <h3 className="text-2xl font-extrabold text-slate-800 dark:text-slate-100 flex items-center gap-2">
-                  <BookOpen className="w-6 h-6 text-indigo-500" />
-                  المحور الثالث: رسالة الجمعية (الجزء الثاني والصياغة)
-                </h3>
-              </div>
-
-              <div className="space-y-6">
                 <div className="space-y-2">
                   <label className="block text-sm font-bold text-slate-800 dark:text-slate-200">
-                    16. ما الذي يميّز جمعيتنا عن غيرها من الجمعيات المشابهة في المجال القيمي/الدعوي؟ (المنهجية، الخبرة، إلخ)
+                    5. ما الذي يميّز جمعيتنا عن غيرها من الجمعيات المشابهة في المجال القيمي/الدعوي؟ (المنهجية، الخبرة، إلخ)
                   </label>
                   <textarea
                     required
@@ -787,7 +702,7 @@ export default function VisionMissionSurveyPage() {
                 {/* Geographical Scope */}
                 <div className="p-5 rounded-2xl bg-slate-50 dark:bg-slate-900/50 border border-slate-100 dark:border-slate-800 space-y-3">
                   <label className="block text-sm font-bold text-slate-800 dark:text-slate-200">
-                    17. ما النطاق الجغرافي الذي تعمل فيه الجمعية وتخدم مستفيديها حالياً؟
+                    6. ما النطاق الجغرافي الذي تعمل فيه الجمعية وتخدم مستفيديها حالياً؟
                   </label>
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-2">
                     {["حي/مدينة", "منطقة", "على مستوى الوطن", "خارج الوطن"].map((opt) => (
@@ -811,39 +726,11 @@ export default function VisionMissionSurveyPage() {
                     ))}
                   </div>
                 </div>
-
-                {/* Suggested Wording and Guide */}
-                <div className="p-6 rounded-2xl bg-primary/5 border border-primary/20 space-y-4">
-                  <h4 className="font-bold text-primary text-base flex items-center gap-2">
-                    <Sparkles className="w-5 h-5" /> 18. صياغتك المقترحة لرسالة الجمعية
-                  </h4>
-
-                  <div className="bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-100 dark:border-slate-800/50 text-xs leading-relaxed text-slate-500 dark:text-slate-400 space-y-2">
-                    <p className="font-bold text-slate-700 dark:text-slate-350">💡 قالب استرشادي لصياغة الرسالة:</p>
-                    <p dir="rtl" className="font-medium bg-slate-50 dark:bg-slate-950 p-2 rounded text-center border font-mono">
-                      «نُسهم في <span className="text-primary font-bold">[غرض الوجود/الأثر]</span> لخدمة <span className="text-indigo-500 font-bold">[المستفيدين]</span> من خلال <span className="text-emerald-500 font-bold">[الخدمات]</span>، لمساعدتهم على <span className="text-amber-500 font-bold">[النتائج]</span>، متميّزين بـ <span className="text-purple-500 font-bold">[ما يميّزنا]</span>»
-                    </p>
-                  </div>
-
-                  <div className="space-y-2">
-                    <label className="block text-sm font-bold text-slate-800 dark:text-slate-200">
-                      بناءً على إجاباتك السابقة، حاول صياغة مسودة لرسالة الجمعية في عبارة واحدة موجزة:
-                    </label>
-                    <textarea
-                      required
-                      rows={4}
-                      className="w-full border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary/50 outline-none resize-none"
-                      placeholder="اكتب صياغتك المقترحة هنا..."
-                      value={missionQ7}
-                      onChange={(e) => setMissionQ7(e.target.value)}
-                    />
-                  </div>
-                </div>
               </div>
 
               <div className="flex justify-between items-center pt-6 border-t border-slate-100 dark:border-slate-700">
                 <button
-                  onClick={() => setStep(4)}
+                  onClick={() => setStep(2)}
                   className="border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-900 text-slate-700 dark:text-slate-300 font-bold px-6 py-2.5 rounded-xl transition-all cursor-pointer"
                 >
                   الخلف

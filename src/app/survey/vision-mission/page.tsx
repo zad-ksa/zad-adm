@@ -125,11 +125,7 @@ export default function VisionMissionSurveyPage() {
         visionQ3.trim() !== "" &&
         visionQ4.trim() !== "" &&
         visionQ5Points.every(p => p.trim() !== "") &&
-        visionQ6.trim() !== ""
-      );
-    }
-    if (step === 3) {
-      return (
+        visionQ6.trim() !== "" &&
         visionQ7 !== "" &&
         visionQ8.trim() !== "" &&
         visionQ9.trim() !== "" &&
@@ -138,16 +134,12 @@ export default function VisionMissionSurveyPage() {
         visionQ12.trim() !== ""
       );
     }
-    if (step === 4) {
+    if (step === 3) {
       return (
         missionQ1.trim() !== "" &&
         missionQ2.trim() !== "" &&
         missionQ3.trim() !== "" &&
-        missionQ4.trim() !== ""
-      );
-    }
-    if (step === 5) {
-      return (
+        missionQ4.trim() !== "" &&
         missionQ5.trim() !== "" &&
         missionQ6 !== "" &&
         missionQ7.trim() !== ""
@@ -231,7 +223,7 @@ export default function VisionMissionSurveyPage() {
       <Header disableLink={true} title="استبيان الرؤية والرسالة والأثر" />
 
       <main className="flex-1 w-full max-w-4xl mx-auto px-4 py-8 relative">
-        {step > 0 && <ProgressBar current={step} total={5} />}
+        {step > 0 && <ProgressBar current={step} total={3} />}
 
         <div className="bg-white dark:bg-slate-800 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-md p-6 sm:p-10 transition-colors mt-6">
           {/* Step 0: Welcome and Personal Information */}
@@ -376,13 +368,13 @@ export default function VisionMissionSurveyPage() {
             </div>
           )}
 
-          {/* Step 2: Vision Part 1 */}
+          {/* Step 2: Vision */}
           {step === 2 && (
             <div className="space-y-8">
               <div className="border-b border-slate-100 dark:border-slate-700 pb-4">
                 <h3 className="text-2xl font-extrabold text-slate-800 dark:text-slate-100 flex items-center gap-2">
                   <Target className="w-6 h-6 text-amber-500" />
-                  المحور الثاني: رؤية الجمعية (الجزء الأول)
+                  المحور الثاني: رؤية الجمعية
                 </h3>
                 <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">
                   نتطلع لتطلعاتكم حول مستقبل الجمعية والمستفيدين وصورتنا المستقبلية.
@@ -480,38 +472,7 @@ export default function VisionMissionSurveyPage() {
                     </div>
                   </div>
                 </div>
-              </div>
 
-              <div className="flex justify-between items-center pt-6 border-t border-slate-100 dark:border-slate-700">
-                <button
-                  onClick={() => setStep(1)}
-                  className="border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-900 text-slate-700 dark:text-slate-300 font-bold px-6 py-2.5 rounded-xl transition-all cursor-pointer"
-                >
-                  الخلف
-                </button>
-                <button
-                  onClick={() => setStep(3)}
-                  disabled={!isStepValid()}
-                  className="bg-primary hover:bg-primary/95 disabled:bg-slate-200 disabled:text-slate-400 text-white font-bold px-8 py-2.5 rounded-xl transition-all flex items-center gap-2 cursor-pointer"
-                >
-                  المحور التالي
-                  <ChevronLeft className="w-4 h-4" />
-                </button>
-              </div>
-            </div>
-          )}
-
-          {/* Step 3: Vision Part 2 */}
-          {step === 3 && (
-            <div className="space-y-8">
-              <div className="border-b border-slate-100 dark:border-slate-700 pb-4">
-                <h3 className="text-2xl font-extrabold text-slate-800 dark:text-slate-100 flex items-center gap-2">
-                  <Target className="w-6 h-6 text-amber-500" />
-                  المحور الثاني: رؤية الجمعية (الجزء الثاني)
-                </h3>
-              </div>
-
-              <div className="space-y-6">
                 {/* Ambition level */}
                 <div className="p-5 rounded-2xl bg-slate-50 dark:bg-slate-900/50 border border-slate-100 dark:border-slate-800 space-y-3">
                   <label className="block text-sm font-bold text-slate-800 dark:text-slate-200">
@@ -546,7 +507,7 @@ export default function VisionMissionSurveyPage() {
                 </div>
 
                 <div className="space-y-2">
-                  <label className="block text-sm font-bold text-slate-855 dark:text-slate-200">
+                  <label className="block text-sm font-bold text-slate-800 dark:text-slate-200">
                     7. ماذا تتمنى أن يقول الناس عن جمعيتنا حين يذكرونها بعد سنوات؟
                   </label>
                   <textarea
@@ -652,13 +613,13 @@ export default function VisionMissionSurveyPage() {
 
               <div className="flex justify-between items-center pt-6 border-t border-slate-100 dark:border-slate-700">
                 <button
-                  onClick={() => setStep(2)}
+                  onClick={() => setStep(1)}
                   className="border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-900 text-slate-700 dark:text-slate-300 font-bold px-6 py-2.5 rounded-xl transition-all cursor-pointer"
                 >
                   الخلف
                 </button>
                 <button
-                  onClick={() => setStep(4)}
+                  onClick={() => setStep(3)}
                   disabled={!isStepValid()}
                   className="bg-primary hover:bg-primary/95 disabled:bg-slate-200 disabled:text-slate-400 text-white font-bold px-8 py-2.5 rounded-xl transition-all flex items-center gap-2 cursor-pointer"
                 >
@@ -669,13 +630,13 @@ export default function VisionMissionSurveyPage() {
             </div>
           )}
 
-          {/* Step 4: Mission Part 1 */}
-          {step === 4 && (
+          {/* Step 3: Mission */}
+          {step === 3 && (
             <div className="space-y-8">
               <div className="border-b border-slate-100 dark:border-slate-700 pb-4">
                 <h3 className="text-2xl font-extrabold text-slate-800 dark:text-slate-100 flex items-center gap-2">
                   <BookOpen className="w-6 h-6 text-indigo-500" />
-                  المحور الثالث: تحديد رسالة الجمعية (الجزء الأول)
+                  المحور الثالث: تحديد رسالة الجمعية
                 </h3>
                 <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">
                   الرسالة تصف غرض وجود الجمعية الحالي، ماذا تقدم، ومن تخدم بوضوح.
@@ -738,38 +699,7 @@ export default function VisionMissionSurveyPage() {
                     onChange={(e) => setMissionQ4(e.target.value)}
                   />
                 </div>
-              </div>
 
-              <div className="flex justify-between items-center pt-6 border-t border-slate-100 dark:border-slate-700">
-                <button
-                  onClick={() => setStep(3)}
-                  className="border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-900 text-slate-700 dark:text-slate-300 font-bold px-6 py-2.5 rounded-xl transition-all cursor-pointer"
-                >
-                  الخلف
-                </button>
-                <button
-                  onClick={() => setStep(5)}
-                  disabled={!isStepValid()}
-                  className="bg-primary hover:bg-primary/95 disabled:bg-slate-200 disabled:text-slate-400 text-white font-bold px-8 py-2.5 rounded-xl transition-all flex items-center gap-2 cursor-pointer"
-                >
-                  المحور التالي
-                  <ChevronLeft className="w-4 h-4" />
-                </button>
-              </div>
-            </div>
-          )}
-
-          {/* Step 5: Mission Part 2 */}
-          {step === 5 && (
-            <div className="space-y-8">
-              <div className="border-b border-slate-100 dark:border-slate-700 pb-4">
-                <h3 className="text-2xl font-extrabold text-slate-800 dark:text-slate-100 flex items-center gap-2">
-                  <BookOpen className="w-6 h-6 text-indigo-500" />
-                  المحور الثالث: رسالة الجمعية (الجزء الثاني والصياغة)
-                </h3>
-              </div>
-
-              <div className="space-y-6">
                 <div className="space-y-2">
                   <label className="block text-sm font-bold text-slate-800 dark:text-slate-200">
                     16. ما الذي يميّز جمعيتنا عن غيرها من الجمعيات المشابهة في المجال القيمي/الدعوي؟ (المنهجية، الخبرة، إلخ)
@@ -843,7 +773,7 @@ export default function VisionMissionSurveyPage() {
 
               <div className="flex justify-between items-center pt-6 border-t border-slate-100 dark:border-slate-700">
                 <button
-                  onClick={() => setStep(4)}
+                  onClick={() => setStep(2)}
                   className="border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-900 text-slate-700 dark:text-slate-300 font-bold px-6 py-2.5 rounded-xl transition-all cursor-pointer"
                 >
                   الخلف

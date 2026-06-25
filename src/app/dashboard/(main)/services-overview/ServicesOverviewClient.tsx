@@ -58,10 +58,10 @@ const DEPT_COLORS: Record<string, string> = {
   FINANCE: "bg-emerald-500", PROGRAMS: "bg-amber-500",
 };
 const DEPT_LIGHT: Record<string, string> = {
-  STRATEGY: "bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800/50",
-  GOVERNANCE: "bg-purple-50 dark:bg-purple-900/20 border-purple-200 dark:border-purple-800/50",
-  FINANCE: "bg-emerald-50 dark:bg-emerald-900/20 border-emerald-200 dark:border-emerald-800/50",
-  PROGRAMS: "bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800/50",
+  STRATEGY: "bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700",
+  GOVERNANCE: "bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700",
+  FINANCE: "bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700",
+  PROGRAMS: "bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700",
 };
 
 function fmtDate(d: Date | string | null | undefined) {

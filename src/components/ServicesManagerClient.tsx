@@ -237,7 +237,7 @@ export default function ServicesManagerClient({
                 <button
                   type="submit"
                   disabled={isPending}
-                  className="flex-1 bg-red-650 hover:bg-red-700 dark:bg-red-700 dark:hover:bg-red-600 text-white py-3 rounded-xl font-bold transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                  className="flex-1 bg-red-600 hover:bg-red-700 dark:bg-red-700 dark:hover:bg-red-600 text-white py-3 rounded-xl font-bold transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
                 >
                   {isPending ? "جاري تعميم المراحل..." : "تأكيد التعميم وتطبيق المراحل"}
                 </button>

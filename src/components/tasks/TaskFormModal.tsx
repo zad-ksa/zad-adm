@@ -1,6 +1,6 @@
-﻿"use client";
+"use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { X, Plus, UserPlus, FolderPlus } from "lucide-react";
 import { Employee, Charity } from "@/types";
 
@@ -29,6 +29,15 @@ export default function TaskFormModal({
   const [assigneeId, setAssigneeId] = useState(currentUserId);
   const [charityId, setCharityId] = useState("internal");
   const [priority, setPriority] = useState<number>(3);
+
+  useEffect(() => {
+    if (isOpen) {
+      setTitle("");
+      setAssigneeId(currentUserId);
+      setCharityId("internal");
+      setPriority(3);
+    }
+  }, [isOpen, currentUserId]);
 
   if (!isOpen) return null;
 

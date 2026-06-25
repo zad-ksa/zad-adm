@@ -332,7 +332,6 @@ export function EmployeesClient({
                     >
                       <option value="EXECUTIVE_DIRECTOR">إدارة تنفيذية</option>
                       <option value="GENERAL_MANAGER">مدير عام</option>
-                      <option value="ADMINISTRATIVE_SECRETARIAT">إدارة تنفيذية</option>
                       <option value="STRATEGY">الاستراتيجية</option>
                       <option value="FINANCE">المالية</option>
                       {editingEmployee.role === "ADMIN" && <option value="ADMIN">مدير النظام</option>}

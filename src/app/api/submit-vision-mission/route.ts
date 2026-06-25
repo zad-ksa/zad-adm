@@ -12,7 +12,7 @@ export async function POST(req: Request) {
       answers,
     } = body;
 
-    if (!charityName || !respondentName || !respondentTitle || !answers) {
+    if (!charityName || respondentName === undefined || respondentTitle === undefined || !answers) {
       return NextResponse.json(
         { error: "جميع الحقول المطلوبة يجب ملؤها" },
         { status: 400 }
@@ -34,8 +34,8 @@ export async function POST(req: Request) {
       data: {
         charityId: charity.id,
         charityName: charity.name,
-        respondentName: respondentName.trim(),
-        respondentTitle: respondentTitle.trim(),
+        respondentName: (respondentName || "").trim(),
+        respondentTitle: (respondentTitle || "").trim(),
         answers, // JSON format
       },
     });

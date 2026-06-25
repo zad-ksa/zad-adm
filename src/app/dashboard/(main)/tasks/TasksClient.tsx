@@ -844,35 +844,35 @@ ${combinedAchievements.length > 0 ? `
                       </div>
                     </div>
 
-                    {/* Actions — on hover */}
-                    <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+                    {/* Actions */}
+                    <div className="flex items-center gap-1 shrink-0">
                       {canEdit && (
                         <button
                           type="button"
                           onClick={() => handleUpdateTaskStatus(task.id, task.status === "IN_PROGRESS" ? "NOT_STARTED" : "IN_PROGRESS")}
-                          className={`px-1.5 py-0.5 rounded text-[9px] font-bold transition-colors cursor-pointer ${task.status === "IN_PROGRESS" ? "text-amber-600 bg-amber-100 hover:bg-amber-200 dark:bg-amber-900/40 dark:text-amber-400" : "text-slate-400 bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:text-slate-400"}`}
+                          className={`px-2 py-1 rounded text-[10px] font-bold transition-colors cursor-pointer ${task.status === "IN_PROGRESS" ? "text-amber-600 bg-amber-100 hover:bg-amber-200 dark:bg-amber-900/40 dark:text-amber-400" : "text-slate-500 bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:text-slate-300"}`}
                         >
                           {task.status === "IN_PROGRESS" ? "جاري" : "ابدأ"}
                         </button>
                       )}
                       {canAddUpdate && (
-                        <button type="button" onClick={() => setExpandedTaskId(isExpanded ? null : task.id)} title="تحديث التقدم" className="p-1 text-slate-300 hover:text-primary dark:hover:text-primary rounded transition-colors cursor-pointer">
-                          <MessageSquarePlus className="w-3 h-3" />
+                        <button type="button" onClick={() => setExpandedTaskId(isExpanded ? null : task.id)} title="تحديث التقدم" className="p-1.5 text-slate-400 hover:text-primary dark:text-slate-500 dark:hover:text-primary rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors cursor-pointer">
+                          <MessageSquarePlus className="w-4 h-4" />
                         </button>
                       )}
                       {canEdit && (
-                        <button type="button" onClick={() => { setEditingTaskId(task.id); setEditingTaskTitle(task.title); }} title="تعديل" className="p-1 text-slate-300 hover:text-primary dark:hover:text-primary rounded transition-colors cursor-pointer">
-                          <Pencil className="w-3 h-3" />
+                        <button type="button" onClick={() => { setEditingTaskId(task.id); setEditingTaskTitle(task.title); }} title="تعديل" className="p-1.5 text-slate-400 hover:text-primary dark:text-slate-500 dark:hover:text-primary rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors cursor-pointer">
+                          <Pencil className="w-4 h-4" />
                         </button>
                       )}
                       {isDirectorOrAdmin && (
-                        <button type="button" onClick={() => { setReassigningTaskId(task.id); setReassignToEmployeeId(task.assignedToId); }} title="نقل" className="p-1 text-slate-300 hover:text-indigo-500 dark:hover:text-indigo-400 rounded transition-colors cursor-pointer">
-                          <ArrowLeftRight className="w-3 h-3" />
+                        <button type="button" onClick={() => { setReassigningTaskId(task.id); setReassignToEmployeeId(task.assignedToId); }} title="نقل" className="p-1.5 text-slate-400 hover:text-indigo-500 dark:text-slate-500 dark:hover:text-indigo-400 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors cursor-pointer">
+                          <ArrowLeftRight className="w-4 h-4" />
                         </button>
                       )}
                       {canDelete && (
-                        <button type="button" onClick={() => handleDeleteTask(task.id)} title="حذف" className="p-1 text-slate-300 hover:text-red-500 rounded transition-colors cursor-pointer">
-                          <Trash2 className="w-3 h-3" />
+                        <button type="button" onClick={() => handleDeleteTask(task.id)} title="حذف" className="p-1.5 text-slate-400 hover:text-red-500 dark:text-slate-500 dark:hover:text-red-400 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors cursor-pointer">
+                          <Trash2 className="w-4 h-4" />
                         </button>
                       )}
                     </div>

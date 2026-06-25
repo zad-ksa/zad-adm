@@ -112,7 +112,7 @@ export default function ServicesManagerClient({
           className="flex items-center gap-2 bg-white hover:bg-slate-50 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 px-5 py-2.5 rounded-xl font-bold transition-colors shadow-sm disabled:opacity-50"
         >
           <Layers className="w-5 h-5 text-amber-500" />
-          توحيد المراحل لجميع الخدمات
+          تعميم مراحل قسم على الجمعيات
         </button>
         <button
           onClick={openAddService}
@@ -193,10 +193,10 @@ export default function ServicesManagerClient({
               </div>
               <div>
                 <h2 className="text-xl font-bold text-slate-800 dark:text-slate-100">
-                  توحيد المراحل لجميع الخدمات
+                  تعميم مراحل القسم على الجمعيات الأخرى
                 </h2>
                 <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
-                  نسخ مراحل مخطط زمني واحد وتعميمه على كافة المخططات الأخرى
+                  نسخ مراحل قسم محدد من هذه الجمعية وتعميمها على نفس القسم في كافة الجمعيات الأخرى
                 </p>
               </div>
             </div>
@@ -228,7 +228,7 @@ export default function ServicesManagerClient({
                 <div className="space-y-1">
                   <h4 className="text-sm font-bold text-red-800 dark:text-red-400">تنبيه هام جداً وإجراء غير قابل للتراجع</h4>
                   <p className="text-xs text-red-700/90 dark:text-red-300/80 leading-relaxed">
-                    عند إتمام هذه العملية، سيتم <strong>حذف كافة المراحل الحالية</strong> في جميع المخططات والخدمات الأخرى نهائياً، وسيتم <strong>إنشاء نسخ متطابقة</strong> من مراحل المخطط المصدر المختار أعلاه لها جميعاً.
+                    عند إتمام هذه العملية، سيتم <strong>حذف كافة المراحل الحالية للقسم المختار</strong> في جميع الجمعيات الأخرى نهائياً، وسيتم <strong>إنشاء نسخ متطابقة</strong> من مراحل هذا القسم لهذه الجمعيات.
                   </p>
                 </div>
               </div>
@@ -239,7 +239,7 @@ export default function ServicesManagerClient({
                   disabled={isPending}
                   className="flex-1 bg-red-650 hover:bg-red-700 dark:bg-red-700 dark:hover:bg-red-600 text-white py-3 rounded-xl font-bold transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
                 >
-                  {isPending ? "جاري توحيد المراحل..." : "تأكيد التوحيد وتطبيق المراحل"}
+                  {isPending ? "جاري تعميم المراحل..." : "تأكيد التعميم وتطبيق المراحل"}
                 </button>
                 <button
                   type="button"

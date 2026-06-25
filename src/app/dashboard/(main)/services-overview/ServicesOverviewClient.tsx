@@ -526,46 +526,24 @@ export default function ServicesOverviewClient({
   const [unifyCharity, setUnifyCharity] = useState<{
     id: string;
     name: string;
-    strategyName: string;
-    governanceName: string;
-    financeName: string;
-    services: { id: string; name: string }[];
+    sourceTimelineType: string;
+    sourceServiceId?: string;
+    departmentLabel: string;
   } | null>(null);
-  const [selectedSource, setSelectedSource] = useState("STRATEGY");
   const [isUnifyPending, startUnifyTransition] = useTransition();
-
-  const handleOpenUnify = (charity: Charity, services: { id: string; name: string }[]) => {
-    setUnifyCharity({
-      id: charity.id,
-      name: charity.name,
-      strategyName: charity.strategyTimelineName || "المخطط الزمني للتخطيط الاستراتيجي",
-      governanceName: charity.governanceTimelineName || "المخطط الزمني للحوكمة",
-      financeName: charity.financeTimelineName || "المخطط الزمني للمالية",
-      services
-    });
-    setSelectedSource("STRATEGY");
-  };
 
   const handleUnifySubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!unifyCharity) return;
 
-    let sourceTimelineType = selectedSource;
-    let sourceServiceId: string | undefined = undefined;
-
-    if (selectedSource.startsWith("CUSTOM_")) {
-      sourceTimelineType = "CUSTOM";
-      sourceServiceId = selectedSource.replace("CUSTOM_", "");
-    }
-
     startUnifyTransition(async () => {
       try {
-        await unifyCharityStagesAction(unifyCharity.id, sourceTimelineType, sourceServiceId);
+        await unifyCharityStagesAction(unifyCharity.id, unifyCharity.sourceTimelineType, unifyCharity.sourceServiceId);
         setUnifyCharity(null);
         router.refresh();
       } catch (error: any) {
         console.error("Error unifying stages", error);
-        alert(error.message || "حدث خطأ أثناء توحيد المراحل");
+        alert(error.message || "حدث خطأ أثناء تعميم المراحل");
       }
     });
   };
@@ -592,6 +570,24 @@ export default function ServicesOverviewClient({
   const genericSvcId = isGenericTab ? activeTab.replace("SVC:", "") : null;
   const genericSvcInfo = genericSvcId ? uniqueServiceKeys.find(s => s.id === genericSvcId) : null;
   const activeLabel = tabs.find(t => t.key === activeTab)?.label || "";
+
+  const handleOpenUnify = (charity: Charity) => {
+    let sourceTimelineType = activeTab;
+    let sourceServiceId: string | undefined = undefined;
+
+    if (activeTab.startsWith("SVC:")) {
+      sourceTimelineType = "CUSTOM";
+      sourceServiceId = activeTab.replace("SVC:", "");
+    }
+
+    setUnifyCharity({
+      id: charity.id,
+      name: charity.name,
+      sourceTimelineType,
+      sourceServiceId,
+      departmentLabel: activeLabel
+    });
+  };
 
   // Extra charities picker (جمعيات غير موجودة في القائمة الحالية)
   const [showAddCharity, setShowAddCharity] = useState(false);
@@ -706,9 +702,6 @@ export default function ServicesOverviewClient({
             ) : (
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
                 {charitiesWithData.map(charity => {
-                  const charityServices = allServices
-                    .filter(s => s.charityId === charity.id)
-                    .map(s => ({ id: s.id, name: s.name }));
                   if (isGenericTab) {
                     const svcs = allServices.filter(svc => svc.name === genericSvcInfo?.name && svc.charityId === charity.id);
                     return svcs.map(svc => (
@@ -719,7 +712,7 @@ export default function ServicesOverviewClient({
                         dept="SERVICE"
                         serviceId={svc.id}
                         canEdit={canEdit}
-                        onUnifyClick={() => handleOpenUnify(charity, charityServices)}
+                        onUnifyClick={() => handleOpenUnify(charity)}
                       />
                     ));
                   }
@@ -732,15 +725,12 @@ export default function ServicesOverviewClient({
                       dept={getDept()}
                       serviceId=""
                       canEdit={canEdit}
-                      onUnifyClick={() => handleOpenUnify(charity, charityServices)}
+                      onUnifyClick={() => handleOpenUnify(charity)}
                     />
                   );
                 })}
                 {/* Extra charities (empty timelines, canEdit only) */}
                 {extraCharities.map(charity => {
-                  const charityServices = allServices
-                    .filter(s => s.charityId === charity.id)
-                    .map(s => ({ id: s.id, name: s.name }));
                   return (
                     <CharityCard
                       key={charity.id}
@@ -749,7 +739,7 @@ export default function ServicesOverviewClient({
                       dept={getDept()}
                       serviceId=""
                       canEdit={canEdit}
-                      onUnifyClick={() => handleOpenUnify(charity, charityServices)}
+                      onUnifyClick={() => handleOpenUnify(charity)}
                     />
                   );
                 })}
@@ -776,42 +766,21 @@ export default function ServicesOverviewClient({
               </div>
               <div>
                 <h2 className="text-xl font-bold text-slate-800 dark:text-slate-100">
-                  توحيد المراحل لجمعية {unifyCharity.name}
+                  تعميم مراحل {unifyCharity.departmentLabel}
                 </h2>
                 <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
-                  نسخ مراحل مخطط زمني واحد وتعميمه على كافة المخططات الأخرى التابعة لهذه الجمعية
+                  نسخ مراحل قسم "{unifyCharity.departmentLabel}" من جمعية {unifyCharity.name} وتعميمها على كافة الجمعيات الأخرى
                 </p>
               </div>
             </div>
             <form onSubmit={handleUnifySubmit} className="p-6 space-y-6">
-              <div>
-                <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">
-                  المخطط الزمني المصدر (الذي سيتم نسخ المراحل منه):
-                </label>
-                <select
-                  value={selectedSource}
-                  onChange={e => setSelectedSource(e.target.value)}
-                  disabled={isUnifyPending}
-                  className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none transition-all dark:text-white disabled:opacity-50"
-                >
-                  <option value="STRATEGY">{unifyCharity.strategyName}</option>
-                  <option value="GOVERNANCE">{unifyCharity.governanceName}</option>
-                  <option value="FINANCE">{unifyCharity.financeName}</option>
-                  {unifyCharity.services.map(service => (
-                    <option key={service.id} value={`CUSTOM_${service.id}`}>
-                      {service.name} (مخطط مخصص)
-                    </option>
-                  ))}
-                </select>
-              </div>
-
               {/* Warning box */}
               <div className="p-4 bg-red-50 dark:bg-red-950/20 border border-red-100 dark:border-red-900/30 rounded-xl flex gap-3">
                 <AlertCircle className="w-5 h-5 text-red-500 shrink-0 mt-0.5" />
                 <div className="space-y-1">
                   <h4 className="text-sm font-bold text-red-800 dark:text-red-400">تنبيه هام جداً وإجراء غير قابل للتراجع</h4>
                   <p className="text-xs text-red-700/90 dark:text-red-300/80 leading-relaxed">
-                    عند إتمام هذه العملية، سيتم <strong>حذف كافة المراحل الحالية</strong> في جميع المخططات والخدمات الأخرى التابعة لجمعية <strong>{unifyCharity.name}</strong> نهائياً، وسيتم <strong>إنشاء نسخ متطابقة</strong> من مراحل المخطط المصدر المختار أعلاه لها جميعاً.
+                    عند إتمام هذه العملية، سيتم <strong>حذف كافة المراحل الحالية</strong> لقسم <strong>{unifyCharity.departmentLabel}</strong> في جميع الجمعيات الأخرى نهائياً، وسيتم <strong>إنشاء نسخ متطابقة</strong> من مراحل هذا القسم الموجودة في جمعية <strong>{unifyCharity.name}</strong> لها جميعاً.
                   </p>
                 </div>
               </div>
@@ -822,7 +791,7 @@ export default function ServicesOverviewClient({
                   disabled={isUnifyPending}
                   className="flex-1 bg-red-650 hover:bg-red-700 dark:bg-red-700 dark:hover:bg-red-600 text-white py-3 rounded-xl font-bold transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
                 >
-                  {isUnifyPending ? "جاري توحيد المراحل..." : "تأكيد التوحيد وتطبيق المراحل"}
+                  {isUnifyPending ? "جاري تعميم المراحل..." : "تأكيد التعميم وتطبيق المراحل"}
                 </button>
                 <button
                   type="button"

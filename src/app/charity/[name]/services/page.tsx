@@ -8,6 +8,7 @@ import FinanceStagesManager from "../finance/FinanceStagesManager";
 import GenericStagesManager from "@/components/GenericStagesManager";
 import CharityClientTimeline from "@/components/CharityClientTimeline";
 import ServicesManagerClient from "@/components/ServicesManagerClient";
+import ServicesPrintButton from "@/components/ServicesPrintButton";
 
 export async function generateMetadata({ params }: { params: Promise<{ name: string }> }): Promise<Metadata> {
   const { name } = await params;
@@ -70,7 +71,7 @@ export default async function ServicesPage({ params }: { params: Promise<{ name:
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
       <div className="bg-white dark:bg-slate-800 rounded-2xl p-10 border border-slate-100 dark:border-slate-700 shadow-sm relative overflow-hidden transition-colors">
         <div className="absolute top-0 left-0 w-64 h-64 bg-primary/5 dark:bg-primary/10 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2 pointer-events-none"></div>
-        
+
         <div className="relative z-10 text-center py-8">
           <div className="w-20 h-20 bg-primary/10 dark:bg-primary/20 rounded-full flex items-center justify-center text-primary mx-auto mb-6 shadow-sm">
             <Briefcase className="w-10 h-10" />
@@ -81,6 +82,17 @@ export default async function ServicesPage({ params }: { params: Promise<{ name:
           <p className="text-slate-500 dark:text-slate-400 max-w-lg mx-auto leading-relaxed text-lg">
             متابعة المخططات والمراحل الزمنية الخاصة بجمعية <span className="font-bold text-slate-700 dark:text-slate-300">{decodedName}</span> لمختلف الأقسام وإدارتها من مكان واحد.
           </p>
+          <div className="mt-6 flex justify-center">
+            <ServicesPrintButton
+              charityName={decodedName}
+              sections={[
+                ...(strategicStages.length > 0 ? [{ title: charity.strategyTimelineName || "المخطط الزمني للتخطيط الاستراتيجي", stages: strategicStages }] : []),
+                ...(governanceStages.length > 0 ? [{ title: charity.governanceTimelineName || "المخطط الزمني للحوكمة", stages: governanceStages }] : []),
+                ...(financeStages.length > 0 ? [{ title: charity.financeTimelineName || "المخطط الزمني للمالية", stages: financeStages }] : []),
+                ...additionalServices.map(svc => ({ title: svc.name, stages: svc.stages })),
+              ]}
+            />
+          </div>
         </div>
       </div>
 

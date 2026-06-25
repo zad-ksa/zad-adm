@@ -1,4 +1,12 @@
-﻿export interface Task {
+﻿export interface TaskUpdate {
+  id: string;
+  taskId: string;
+  authorId: string;
+  content: string;
+  createdAt: Date | string;
+}
+
+export interface Task {
   id: string;
   title: string;
   assignedToId: string;
@@ -14,6 +22,7 @@
   updatedAt?: Date | string;
   proofUrl?: string | null;
   proofPublicId?: string | null;
+  updates?: TaskUpdate[];
 }
 
 export interface Achievement {

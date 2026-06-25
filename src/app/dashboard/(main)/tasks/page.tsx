@@ -38,18 +38,18 @@ export default async function TasksPage() {
   let initialAchievements = [];
 
   if (isDirectorOrAdmin) {
-    // Admins and Directors can fetch/view all tasks and achievements to allow instant switching
     initialTasks = await prisma.task.findMany({
       orderBy: { createdAt: "desc" },
+      include: { updates: { orderBy: { createdAt: "asc" } } },
     });
     initialAchievements = await prisma.achievement.findMany({
       orderBy: { createdAt: "desc" },
     });
   } else {
-    // Regular employees only fetch their own assigned tasks and achievements
     initialTasks = await prisma.task.findMany({
       where: { assignedToId: session.id },
       orderBy: { createdAt: "desc" },
+      include: { updates: { orderBy: { createdAt: "asc" } } },
     });
     initialAchievements = await prisma.achievement.findMany({
       where: { employeeId: session.id },

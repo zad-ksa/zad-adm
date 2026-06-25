@@ -24,21 +24,26 @@ import {
   Link as LinkIcon,
   Folder,
   Camera,
-  Printer
+  Printer,
+  ChevronDown,
+  MessageSquarePlus,
+  Send,
 } from "lucide-react";
-import { 
-  createTaskAction, 
-  deleteTaskAction, 
-  reassignTaskAction, 
-  toggleTaskCompletionAction, 
-  createAchievementAction, 
+import {
+  createTaskAction,
+  deleteTaskAction,
+  reassignTaskAction,
+  toggleTaskCompletionAction,
+  createAchievementAction,
   deleteAchievementAction,
   updateTaskTitleAction,
   updateTaskPriorityAction,
   updateTaskStatusAction,
-  updateTaskCharityAction
+  updateTaskCharityAction,
+  addTaskUpdateAction,
+  deleteTaskUpdateAction,
 } from "@/app/actions/tasks";
-import { Charity, Employee, Session, Task, Achievement } from "@/types";
+import { Charity, Employee, Session, Task, TaskUpdate, Achievement } from "@/types";
 import { ADMIN_ROLES } from "@/lib/constants";
 import TaskFormModal from "@/components/tasks/TaskFormModal";
 import AchievementFormModal from "@/components/tasks/AchievementFormModal";
@@ -116,6 +121,11 @@ export default function TasksClient({
   // Delete modal state
   const [itemToDelete, setItemToDelete] = useState<{ id: string, type: 'task' | 'achievement' } | null>(null);
 
+  // Task updates state
+  const [expandedTaskId, setExpandedTaskId] = useState<string | null>(null);
+  const [newUpdateText, setNewUpdateText] = useState<Record<string, string>>({});
+  const [isSubmittingUpdate, setIsSubmittingUpdate] = useState(false);
+
   const showNotification = (type: "success" | "error", message: string) => {
     if (type === "success") {
       setSuccessMsg(message);
@@ -125,6 +135,37 @@ export default function TasksClient({
       setErrorMsg(message);
       setSuccessMsg(null);
       setTimeout(() => setErrorMsg(null), 4000);
+    }
+  };
+
+  const handleAddUpdate = async (taskId: string) => {
+    const content = newUpdateText[taskId]?.trim();
+    if (!content) return;
+    setIsSubmittingUpdate(true);
+    const res = await addTaskUpdateAction(taskId, content);
+    if (res.error) {
+      showNotification("error", res.error);
+    } else if (res.update) {
+      setTasks(prev => prev.map(t =>
+        t.id === taskId
+          ? { ...t, updates: [...(t.updates || []), res.update as TaskUpdate] }
+          : t
+      ));
+      setNewUpdateText(prev => ({ ...prev, [taskId]: "" }));
+    }
+    setIsSubmittingUpdate(false);
+  };
+
+  const handleDeleteUpdate = async (taskId: string, updateId: string) => {
+    const res = await deleteTaskUpdateAction(updateId);
+    if (res.error) {
+      showNotification("error", res.error);
+    } else {
+      setTasks(prev => prev.map(t =>
+        t.id === taskId
+          ? { ...t, updates: (t.updates || []).filter(u => u.id !== updateId) }
+          : t
+      ));
     }
   };
 
@@ -659,161 +700,235 @@ ${combinedAchievements.length > 0 ? `
             </select>
           </div>
 
-          <div className="divide-y divide-slate-50 dark:divide-slate-700/30 max-h-[76vh] overflow-y-auto">
-            {filteredActiveTasks.map((task) => {
+          <div className="max-h-[76vh] overflow-y-auto">
+            {filteredActiveTasks.map((task, index) => {
               const assignedEmp = employees.find((e) => e.id === task.assignedToId);
               const canDelete = isDirectorOrAdmin || (task.createdById === session.id && task.assignedToId === session.id);
               const canEdit = isDirectorOrAdmin || (task.createdById === session.id && task.assignedToId === session.id);
+              const canAddUpdate = isDirectorOrAdmin || task.assignedToId === session.id;
               const isInProgress = task.status === "IN_PROGRESS";
+              const isExpanded = expandedTaskId === task.id;
+              const updates = task.updates || [];
 
               return (
                 <div
                   key={task.id}
-                  className={`px-4 py-3 flex items-start gap-3 group transition-colors ${
+                  className={`group transition-colors ${index > 0 ? "border-t border-slate-100 dark:border-slate-700/40" : ""} ${
                     isInProgress
-                      ? "bg-amber-50/60 dark:bg-amber-900/10 hover:bg-amber-50 dark:hover:bg-amber-900/20"
-                      : "hover:bg-slate-50/80 dark:hover:bg-slate-700/20"
+                      ? "bg-amber-50/50 dark:bg-amber-900/10"
+                      : ""
                   }`}
                 >
-                  {/* Checkbox */}
-                  {(session.role === "ADMIN" || task.assignedToId === session.id) && (
-                    <button
-                      onClick={() => handleToggleCompletion(task.id, true)}
-                      title="تعليم كمنجز"
-                      className="w-4 h-4 rounded border-2 border-slate-300 dark:border-slate-600 hover:border-emerald-500 flex items-center justify-center shrink-0 cursor-pointer mt-0.5 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 transition-colors"
-                    >
-                      <span className="opacity-0 group-hover:opacity-60 text-emerald-500 text-[9px] font-bold leading-none">✓</span>
-                    </button>
-                  )}
-
-                  <div className="flex-1 min-w-0">
-                    {/* Title row */}
-                    {editingTaskId === task.id ? (
-                      <div className="flex items-center gap-1.5">
-                        <input
-                          type="text"
-                          value={editingTaskTitle}
-                          onChange={(e) => setEditingTaskTitle(e.target.value)}
-                          className="flex-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded px-2 py-0.5 text-xs outline-none focus:ring-2 focus:ring-primary/20 text-slate-800 dark:text-slate-100 font-bold"
-                          onKeyDown={(e) => {
-                            if (e.key === "Enter") handleUpdateTaskTitle(task.id);
-                            if (e.key === "Escape") setEditingTaskId(null);
-                          }}
-                          autoFocus
-                        />
-                        <button type="button" onClick={() => handleUpdateTaskTitle(task.id)} disabled={isPending} className="p-0.5 text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 rounded cursor-pointer"><Check className="w-3 h-3" /></button>
-                        <button type="button" onClick={() => setEditingTaskId(null)} className="p-0.5 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded cursor-pointer"><X className="w-3 h-3" /></button>
-                      </div>
-                    ) : (
-                      <p className="text-sm font-semibold text-slate-800 dark:text-slate-100 leading-snug truncate">{task.title}</p>
+                  {/* Main task row */}
+                  <div className={`px-4 py-3 flex items-start gap-3 ${isInProgress ? "hover:bg-amber-50 dark:hover:bg-amber-900/20" : "hover:bg-slate-50/80 dark:hover:bg-slate-700/20"} transition-colors`}>
+                    {/* Checkbox */}
+                    {(session.role === "ADMIN" || task.assignedToId === session.id) && (
+                      <button
+                        onClick={() => handleToggleCompletion(task.id, true)}
+                        title="تعليم كمنجز"
+                        className="w-4 h-4 rounded border-2 border-slate-300 dark:border-slate-600 hover:border-emerald-500 flex items-center justify-center shrink-0 cursor-pointer mt-0.5 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 transition-colors"
+                      >
+                        <span className="opacity-0 group-hover:opacity-60 text-emerald-500 text-[9px] font-bold leading-none">✓</span>
+                      </button>
                     )}
 
-                    {/* Badges row */}
-                    <div className="flex flex-wrap items-center gap-1 mt-1">
-                      {/* Priority */}
-                      <div className="relative inline-dropdown-container">
-                        <button
-                          type="button"
-                          onClick={() => canEdit && setEditingPriorityTaskId(editingPriorityTaskId === task.id ? null : task.id)}
-                          disabled={!canEdit}
-                          className={`inline-flex items-center gap-1 text-[9px] font-bold px-1.5 py-0.5 rounded transition-colors ${
-                            task.priority === 1 ? 'bg-red-50 text-red-600 hover:bg-red-100 dark:bg-red-900/20 dark:text-red-400' :
-                            task.priority === 2 ? 'bg-amber-50 text-amber-600 hover:bg-amber-100 dark:bg-amber-900/20 dark:text-amber-400' :
-                            'bg-slate-100 text-slate-500 hover:bg-slate-200 dark:bg-slate-700/50 dark:text-slate-400'
-                          }`}
-                        >
-                          <span className={`w-1.5 h-1.5 rounded-full ${task.priority === 1 ? 'bg-red-500' : task.priority === 2 ? 'bg-amber-500' : 'bg-slate-400'}`}></span>
-                          {task.priority === 1 ? 'قصوى' : task.priority === 2 ? 'متوسطة' : 'منخفضة'}
-                        </button>
-                        {editingPriorityTaskId === task.id && (
-                          <div className="absolute top-full mt-1 right-0 bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-lg shadow-lg p-1.5 flex flex-col gap-0.5 z-50 w-28">
-                            <button onClick={() => handleUpdateTaskPriority(task.id, 1)} className="text-[10px] font-bold px-2 py-1 rounded hover:bg-slate-50 dark:hover:bg-slate-700 text-right text-red-600 flex items-center gap-1.5 cursor-pointer"><span className="w-1.5 h-1.5 rounded-full bg-red-500"></span>قصوى</button>
-                            <button onClick={() => handleUpdateTaskPriority(task.id, 2)} className="text-[10px] font-bold px-2 py-1 rounded hover:bg-slate-50 dark:hover:bg-slate-700 text-right text-amber-600 flex items-center gap-1.5 cursor-pointer"><span className="w-1.5 h-1.5 rounded-full bg-amber-500"></span>متوسطة</button>
-                            <button onClick={() => handleUpdateTaskPriority(task.id, 3)} className="text-[10px] font-bold px-2 py-1 rounded hover:bg-slate-50 dark:hover:bg-slate-700 text-right text-slate-500 flex items-center gap-1.5 cursor-pointer"><span className="w-1.5 h-1.5 rounded-full bg-slate-400"></span>منخفضة</button>
-                          </div>
-                        )}
-                      </div>
+                    <div className="flex-1 min-w-0">
+                      {/* Title */}
+                      {editingTaskId === task.id ? (
+                        <div className="flex items-center gap-1.5">
+                          <input
+                            type="text"
+                            value={editingTaskTitle}
+                            onChange={(e) => setEditingTaskTitle(e.target.value)}
+                            className="flex-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded px-2 py-0.5 text-xs outline-none focus:ring-2 focus:ring-primary/20 text-slate-800 dark:text-slate-100 font-bold"
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter") handleUpdateTaskTitle(task.id);
+                              if (e.key === "Escape") setEditingTaskId(null);
+                            }}
+                            autoFocus
+                          />
+                          <button type="button" onClick={() => handleUpdateTaskTitle(task.id)} disabled={isPending} className="p-0.5 text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 rounded cursor-pointer"><Check className="w-3 h-3" /></button>
+                          <button type="button" onClick={() => setEditingTaskId(null)} className="p-0.5 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded cursor-pointer"><X className="w-3 h-3" /></button>
+                        </div>
+                      ) : (
+                        <p className="text-sm font-semibold text-slate-800 dark:text-slate-100 leading-snug">{task.title}</p>
+                      )}
 
-                      {/* Charity */}
-                      <div className="relative inline-dropdown-container">
-                        <button
-                          type="button"
-                          onClick={() => isDirectorOrAdmin && setEditingCharityTaskId(editingCharityTaskId === task.id ? null : task.id)}
-                          disabled={!isDirectorOrAdmin}
-                          className={`inline-flex items-center gap-1 text-[9px] font-bold px-1.5 py-0.5 rounded transition-colors ${
-                            task.isInternal ? 'text-slate-400 bg-slate-100 dark:bg-slate-700/50' : 'text-primary bg-primary/5 hover:bg-primary/10'
-                          }`}
-                        >
-                          {task.isInternal ? <Briefcase className="w-2.5 h-2.5" /> : <Building2 className="w-2.5 h-2.5" />}
-                          {task.isInternal ? "داخلية" : (task.charityName || "متعاقدة")}
-                        </button>
-                        {editingCharityTaskId === task.id && (
-                          <div className="absolute top-full mt-1 right-0 bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-lg shadow-lg p-1.5 flex flex-col gap-0.5 z-50 w-44 max-h-44 overflow-y-auto">
-                            <button onClick={() => handleUpdateTaskCharity(task.id, "internal")} className="text-[10px] font-bold px-2 py-1 rounded hover:bg-slate-50 dark:hover:bg-slate-700 text-right text-slate-600 dark:text-slate-300 flex items-center gap-1.5 cursor-pointer"><Briefcase className="w-3 h-3" />داخلية</button>
-                            {charities.map(c => (
-                              <button key={c.id} onClick={() => handleUpdateTaskCharity(task.id, c.id)} className="text-[10px] font-bold px-2 py-1 rounded hover:bg-slate-50 dark:hover:bg-slate-700 text-right text-primary flex items-center gap-1.5 cursor-pointer"><Building2 className="w-3 h-3" />{c.name}</button>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Assignee */}
-                      {isDirectorOrAdmin && assignedEmp && (
+                      {/* Badges */}
+                      <div className="flex flex-wrap items-center gap-1 mt-1">
+                        {/* Priority */}
                         <div className="relative inline-dropdown-container">
                           <button
                             type="button"
-                            onClick={() => setEditingAssigneeTaskId(editingAssigneeTaskId === task.id ? null : task.id)}
-                            className="inline-flex items-center gap-1 text-[9px] font-bold text-indigo-500 dark:text-indigo-400 bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-900/20 px-1.5 py-0.5 rounded cursor-pointer transition-colors"
+                            onClick={() => canEdit && setEditingPriorityTaskId(editingPriorityTaskId === task.id ? null : task.id)}
+                            disabled={!canEdit}
+                            className={`inline-flex items-center gap-1 text-[9px] font-bold px-1.5 py-0.5 rounded transition-colors ${
+                              task.priority === 1 ? 'bg-red-50 text-red-600 hover:bg-red-100 dark:bg-red-900/20 dark:text-red-400' :
+                              task.priority === 2 ? 'bg-amber-50 text-amber-600 hover:bg-amber-100 dark:bg-amber-900/20 dark:text-amber-400' :
+                              'bg-slate-100 text-slate-500 hover:bg-slate-200 dark:bg-slate-700/50 dark:text-slate-400'
+                            }`}
                           >
-                            <User className="w-2.5 h-2.5" />
-                            {assignedEmp.name}
+                            <span className={`w-1.5 h-1.5 rounded-full ${task.priority === 1 ? 'bg-red-500' : task.priority === 2 ? 'bg-amber-500' : 'bg-slate-400'}`}></span>
+                            {task.priority === 1 ? 'قصوى' : task.priority === 2 ? 'متوسطة' : 'منخفضة'}
                           </button>
-                          {editingAssigneeTaskId === task.id && (
+                          {editingPriorityTaskId === task.id && (
+                            <div className="absolute top-full mt-1 right-0 bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-lg shadow-lg p-1.5 flex flex-col gap-0.5 z-50 w-28">
+                              <button onClick={() => handleUpdateTaskPriority(task.id, 1)} className="text-[10px] font-bold px-2 py-1 rounded hover:bg-slate-50 dark:hover:bg-slate-700 text-right text-red-600 flex items-center gap-1.5 cursor-pointer"><span className="w-1.5 h-1.5 rounded-full bg-red-500"></span>قصوى</button>
+                              <button onClick={() => handleUpdateTaskPriority(task.id, 2)} className="text-[10px] font-bold px-2 py-1 rounded hover:bg-slate-50 dark:hover:bg-slate-700 text-right text-amber-600 flex items-center gap-1.5 cursor-pointer"><span className="w-1.5 h-1.5 rounded-full bg-amber-500"></span>متوسطة</button>
+                              <button onClick={() => handleUpdateTaskPriority(task.id, 3)} className="text-[10px] font-bold px-2 py-1 rounded hover:bg-slate-50 dark:hover:bg-slate-700 text-right text-slate-500 flex items-center gap-1.5 cursor-pointer"><span className="w-1.5 h-1.5 rounded-full bg-slate-400"></span>منخفضة</button>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Charity */}
+                        <div className="relative inline-dropdown-container">
+                          <button
+                            type="button"
+                            onClick={() => isDirectorOrAdmin && setEditingCharityTaskId(editingCharityTaskId === task.id ? null : task.id)}
+                            disabled={!isDirectorOrAdmin}
+                            className={`inline-flex items-center gap-1 text-[9px] font-bold px-1.5 py-0.5 rounded transition-colors ${
+                              task.isInternal ? 'text-slate-400 bg-slate-100 dark:bg-slate-700/50' : 'text-primary bg-primary/5 hover:bg-primary/10'
+                            }`}
+                          >
+                            {task.isInternal ? <Briefcase className="w-2.5 h-2.5" /> : <Building2 className="w-2.5 h-2.5" />}
+                            {task.isInternal ? "داخلية" : (task.charityName || "متعاقدة")}
+                          </button>
+                          {editingCharityTaskId === task.id && (
                             <div className="absolute top-full mt-1 right-0 bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-lg shadow-lg p-1.5 flex flex-col gap-0.5 z-50 w-44 max-h-44 overflow-y-auto">
-                              {employees.map(e => (
-                                <button key={e.id} onClick={() => handleUpdateTaskAssigneeInline(task.id, e.id)} className="text-[10px] font-bold px-2 py-1 rounded hover:bg-slate-50 dark:hover:bg-slate-700 text-right text-indigo-600 dark:text-indigo-300 flex items-center gap-1.5 cursor-pointer"><User className="w-3 h-3" />{e.name}</button>
+                              <button onClick={() => handleUpdateTaskCharity(task.id, "internal")} className="text-[10px] font-bold px-2 py-1 rounded hover:bg-slate-50 dark:hover:bg-slate-700 text-right text-slate-600 dark:text-slate-300 flex items-center gap-1.5 cursor-pointer"><Briefcase className="w-3 h-3" />داخلية</button>
+                              {charities.map(c => (
+                                <button key={c.id} onClick={() => handleUpdateTaskCharity(task.id, c.id)} className="text-[10px] font-bold px-2 py-1 rounded hover:bg-slate-50 dark:hover:bg-slate-700 text-right text-primary flex items-center gap-1.5 cursor-pointer"><Building2 className="w-3 h-3" />{c.name}</button>
                               ))}
                             </div>
                           )}
                         </div>
-                      )}
 
-                      {/* Date */}
-                      <span className="text-[9px] text-slate-400 flex items-center gap-0.5 mr-auto">
-                        <Calendar className="w-2.5 h-2.5" />
-                        {new Date(task.createdAt).toLocaleDateString("ar-SA")}
-                      </span>
+                        {/* Assignee */}
+                        {isDirectorOrAdmin && assignedEmp && (
+                          <div className="relative inline-dropdown-container">
+                            <button
+                              type="button"
+                              onClick={() => setEditingAssigneeTaskId(editingAssigneeTaskId === task.id ? null : task.id)}
+                              className="inline-flex items-center gap-1 text-[9px] font-bold text-indigo-500 dark:text-indigo-400 bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-900/20 px-1.5 py-0.5 rounded cursor-pointer transition-colors"
+                            >
+                              <User className="w-2.5 h-2.5" />
+                              {assignedEmp.name}
+                            </button>
+                            {editingAssigneeTaskId === task.id && (
+                              <div className="absolute top-full mt-1 right-0 bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-lg shadow-lg p-1.5 flex flex-col gap-0.5 z-50 w-44 max-h-44 overflow-y-auto">
+                                {employees.map(e => (
+                                  <button key={e.id} onClick={() => handleUpdateTaskAssigneeInline(task.id, e.id)} className="text-[10px] font-bold px-2 py-1 rounded hover:bg-slate-50 dark:hover:bg-slate-700 text-right text-indigo-600 dark:text-indigo-300 flex items-center gap-1.5 cursor-pointer"><User className="w-3 h-3" />{e.name}</button>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        )}
+
+                        {/* Updates count badge */}
+                        {updates.length > 0 && (
+                          <button
+                            type="button"
+                            onClick={() => setExpandedTaskId(isExpanded ? null : task.id)}
+                            className="inline-flex items-center gap-1 text-[9px] font-bold text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-700/50 hover:bg-slate-200 dark:hover:bg-slate-700 px-1.5 py-0.5 rounded transition-colors cursor-pointer"
+                          >
+                            <MessageSquarePlus className="w-2.5 h-2.5" />
+                            {updates.length} تحديث
+                          </button>
+                        )}
+
+                        {/* Date */}
+                        <span className="text-[9px] text-slate-400 flex items-center gap-0.5 mr-auto">
+                          <Calendar className="w-2.5 h-2.5" />
+                          {new Date(task.createdAt).toLocaleDateString("ar-SA")}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Actions — on hover */}
+                    <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+                      {canEdit && (
+                        <button
+                          type="button"
+                          onClick={() => handleUpdateTaskStatus(task.id, task.status === "IN_PROGRESS" ? "NOT_STARTED" : "IN_PROGRESS")}
+                          className={`px-1.5 py-0.5 rounded text-[9px] font-bold transition-colors cursor-pointer ${task.status === "IN_PROGRESS" ? "text-amber-600 bg-amber-100 hover:bg-amber-200 dark:bg-amber-900/40 dark:text-amber-400" : "text-slate-400 bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:text-slate-400"}`}
+                        >
+                          {task.status === "IN_PROGRESS" ? "جاري" : "ابدأ"}
+                        </button>
+                      )}
+                      {canAddUpdate && (
+                        <button type="button" onClick={() => setExpandedTaskId(isExpanded ? null : task.id)} title="تحديث التقدم" className="p-1 text-slate-300 hover:text-primary dark:hover:text-primary rounded transition-colors cursor-pointer">
+                          <MessageSquarePlus className="w-3 h-3" />
+                        </button>
+                      )}
+                      {canEdit && (
+                        <button type="button" onClick={() => { setEditingTaskId(task.id); setEditingTaskTitle(task.title); }} title="تعديل" className="p-1 text-slate-300 hover:text-primary dark:hover:text-primary rounded transition-colors cursor-pointer">
+                          <Pencil className="w-3 h-3" />
+                        </button>
+                      )}
+                      {isDirectorOrAdmin && (
+                        <button type="button" onClick={() => { setReassigningTaskId(task.id); setReassignToEmployeeId(task.assignedToId); }} title="نقل" className="p-1 text-slate-300 hover:text-indigo-500 dark:hover:text-indigo-400 rounded transition-colors cursor-pointer">
+                          <ArrowLeftRight className="w-3 h-3" />
+                        </button>
+                      )}
+                      {canDelete && (
+                        <button type="button" onClick={() => handleDeleteTask(task.id)} title="حذف" className="p-1 text-slate-300 hover:text-red-500 rounded transition-colors cursor-pointer">
+                          <Trash2 className="w-3 h-3" />
+                        </button>
+                      )}
                     </div>
                   </div>
 
-                  {/* Actions — visible on hover */}
-                  <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
-                    {canEdit && (
-                      <button
-                        type="button"
-                        onClick={() => handleUpdateTaskStatus(task.id, task.status === "IN_PROGRESS" ? "NOT_STARTED" : "IN_PROGRESS")}
-                        title={task.status === "IN_PROGRESS" ? "إيقاف" : "بدء التنفيذ"}
-                        className={`px-1.5 py-0.5 rounded text-[9px] font-bold transition-colors cursor-pointer ${task.status === "IN_PROGRESS" ? "text-amber-600 bg-amber-100 hover:bg-amber-200 dark:bg-amber-900/40 dark:text-amber-400" : "text-slate-400 bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:text-slate-400"}`}
-                      >
-                        {task.status === "IN_PROGRESS" ? "جاري" : "ابدأ"}
-                      </button>
-                    )}
-                    {canEdit && (
-                      <button type="button" onClick={() => { setEditingTaskId(task.id); setEditingTaskTitle(task.title); }} title="تعديل" className="p-1 text-slate-300 hover:text-primary dark:hover:text-primary rounded transition-colors cursor-pointer">
-                        <Pencil className="w-3 h-3" />
-                      </button>
-                    )}
-                    {isDirectorOrAdmin && (
-                      <button type="button" onClick={() => { setReassigningTaskId(task.id); setReassignToEmployeeId(task.assignedToId); }} title="نقل" className="p-1 text-slate-300 hover:text-indigo-500 dark:hover:text-indigo-400 rounded transition-colors cursor-pointer">
-                        <ArrowLeftRight className="w-3 h-3" />
-                      </button>
-                    )}
-                    {canDelete && (
-                      <button type="button" onClick={() => handleDeleteTask(task.id)} title="حذف" className="p-1 text-slate-300 hover:text-red-500 rounded transition-colors cursor-pointer">
-                        <Trash2 className="w-3 h-3" />
-                      </button>
-                    )}
-                  </div>
+                  {/* Expandable updates section */}
+                  {isExpanded && (
+                    <div className="px-4 pb-3 bg-slate-50/80 dark:bg-slate-900/30 border-t border-dashed border-slate-200 dark:border-slate-700/40">
+                      {/* Existing updates */}
+                      {updates.length > 0 && (
+                        <div className="pt-2 space-y-1.5 mb-2">
+                          {updates.map((u) => {
+                            const author = employees.find(e => e.id === u.authorId);
+                            const canDeleteU = isDirectorOrAdmin || u.authorId === session.id;
+                            return (
+                              <div key={u.id} className="flex items-start gap-2 group/update">
+                                <span className="w-1 h-1 rounded-full bg-slate-400 mt-1.5 shrink-0"></span>
+                                <div className="flex-1 min-w-0">
+                                  <p className="text-[10px] text-slate-700 dark:text-slate-300 leading-relaxed">{u.content}</p>
+                                  <p className="text-[9px] text-slate-400 mt-0.5">
+                                    {author?.name || "—"} · {new Date(u.createdAt).toLocaleDateString("ar-SA")}
+                                  </p>
+                                </div>
+                                {canDeleteU && (
+                                  <button onClick={() => handleDeleteUpdate(task.id, u.id)} className="opacity-0 group-hover/update:opacity-100 p-0.5 text-slate-300 hover:text-red-400 transition-all cursor-pointer shrink-0">
+                                    <X className="w-2.5 h-2.5" />
+                                  </button>
+                                )}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+
+                      {/* Add new update */}
+                      {canAddUpdate && (
+                        <div className="flex items-center gap-2 pt-1">
+                          <input
+                            type="text"
+                            placeholder="أضف تحديثاً على سير المهمة..."
+                            value={newUpdateText[task.id] || ""}
+                            onChange={(e) => setNewUpdateText(prev => ({ ...prev, [task.id]: e.target.value }))}
+                            onKeyDown={(e) => { if (e.key === "Enter") handleAddUpdate(task.id); }}
+                            className="flex-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 rounded-lg px-2.5 py-1.5 text-xs outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/30 text-slate-700 dark:text-slate-200 placeholder:text-slate-400"
+                          />
+                          <button
+                            onClick={() => handleAddUpdate(task.id)}
+                            disabled={isSubmittingUpdate || !newUpdateText[task.id]?.trim()}
+                            className="p-1.5 bg-primary text-white rounded-lg hover:bg-primary/90 disabled:opacity-50 transition-colors cursor-pointer shrink-0"
+                          >
+                            <Send className="w-3 h-3" />
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
               );
             })}

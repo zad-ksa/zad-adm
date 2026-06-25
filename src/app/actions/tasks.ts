@@ -496,3 +496,47 @@ export async function updateTaskCharityAction(taskId: string, charityId: string 
     return { error: error.message || "حدث خطأ أثناء تعديل جمعية المهمة" };
   }
 }
+
+// Add a progress update to a task
+export async function addTaskUpdateAction(taskId: string, content: string) {
+  try {
+    const user = await getAuthenticatedUser();
+
+    const task = await prisma.task.findUnique({ where: { id: taskId } });
+    if (!task) return { error: "المهمة غير موجودة" };
+
+    const isDirectorOrAdmin = ["ADMIN", "EXECUTIVE_DIRECTOR", "GENERAL_MANAGER", "ADMINISTRATIVE_SECRETARIAT"].includes(user.role);
+    if (!isDirectorOrAdmin && task.assignedToId !== user.id) {
+      return { error: "غير مصرح لك بإضافة تحديث لهذه المهمة" };
+    }
+
+    const update = await prisma.taskUpdate.create({
+      data: { taskId, authorId: user.id, content: content.trim() },
+    });
+
+    revalidatePath("/dashboard/tasks");
+    return { success: true, update };
+  } catch (error: any) {
+    return { error: error.message || "حدث خطأ أثناء إضافة التحديث" };
+  }
+}
+
+// Delete a task update
+export async function deleteTaskUpdateAction(updateId: string) {
+  try {
+    const user = await getAuthenticatedUser();
+    const update = await prisma.taskUpdate.findUnique({ where: { id: updateId } });
+    if (!update) return { error: "التحديث غير موجود" };
+
+    const isDirectorOrAdmin = ["ADMIN", "EXECUTIVE_DIRECTOR", "GENERAL_MANAGER", "ADMINISTRATIVE_SECRETARIAT"].includes(user.role);
+    if (!isDirectorOrAdmin && update.authorId !== user.id) {
+      return { error: "غير مصرح لك بحذف هذا التحديث" };
+    }
+
+    await prisma.taskUpdate.delete({ where: { id: updateId } });
+    revalidatePath("/dashboard/tasks");
+    return { success: true };
+  } catch (error: any) {
+    return { error: error.message || "حدث خطأ أثناء حذف التحديث" };
+  }
+}

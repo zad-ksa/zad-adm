@@ -221,3 +221,146 @@ export async function setCurrentServiceStage(serviceId: string, stageId: string)
     }
   }
 }
+
+export async function unifyCharityStagesAction(charityId: string, sourceTimelineType: string, sourceServiceId?: string) {
+  // 1. Get source stages
+  let sourceStages: {
+    name: string;
+    description: string | null;
+    startDate: Date | null;
+    endDate: Date | null;
+    duration: string | null;
+    order: number;
+    isCurrent: boolean;
+    isContinuous: boolean;
+    isActive: boolean;
+  }[] = [];
+
+  if (sourceTimelineType === "STRATEGY") {
+    const stages = await prisma.strategicStage.findMany({
+      where: { charityId },
+      orderBy: { order: "asc" }
+    });
+    sourceStages = stages.map(s => ({
+      name: s.name,
+      description: s.description,
+      startDate: s.startDate,
+      endDate: s.endDate,
+      duration: s.duration,
+      order: s.order,
+      isCurrent: s.isCurrent,
+      isContinuous: s.isContinuous,
+      isActive: s.isActive
+    }));
+  } else if (sourceTimelineType === "GOVERNANCE") {
+    const stages = await prisma.governanceStage.findMany({
+      where: { charityId },
+      orderBy: { order: "asc" }
+    });
+    sourceStages = stages.map(s => ({
+      name: s.name,
+      description: s.description,
+      startDate: s.startDate,
+      endDate: s.endDate,
+      duration: s.duration,
+      order: s.order,
+      isCurrent: s.isCurrent,
+      isContinuous: s.isContinuous,
+      isActive: s.isActive
+    }));
+  } else if (sourceTimelineType === "FINANCE") {
+    const stages = await prisma.financeStage.findMany({
+      where: { charityId },
+      orderBy: { order: "asc" }
+    });
+    sourceStages = stages.map(s => ({
+      name: s.name,
+      description: s.description,
+      startDate: s.startDate,
+      endDate: s.endDate,
+      duration: s.duration,
+      order: s.order,
+      isCurrent: s.isCurrent,
+      isContinuous: s.isContinuous,
+      isActive: s.isActive
+    }));
+  } else if (sourceTimelineType === "CUSTOM" && sourceServiceId) {
+    const stages = await prisma.serviceStage.findMany({
+      where: { serviceId: sourceServiceId },
+      orderBy: { order: "asc" }
+    });
+    sourceStages = stages.map(s => ({
+      name: s.name,
+      description: s.description,
+      startDate: s.startDate,
+      endDate: s.endDate,
+      duration: s.duration,
+      order: s.order,
+      isCurrent: s.isCurrent,
+      isContinuous: s.isContinuous,
+      isActive: s.isActive
+    }));
+  }
+
+  if (sourceStages.length === 0) {
+    throw new Error("لا توجد مراحل في المخطط الزمني المختار لنسخها");
+  }
+
+  // 2. Perform transaction to clear and write stages to other timelines
+  await prisma.$transaction([
+    // Delete target stages for standard timelines
+    ...(sourceTimelineType !== "STRATEGY" ? [prisma.strategicStage.deleteMany({ where: { charityId } })] : []),
+    ...(sourceTimelineType !== "GOVERNANCE" ? [prisma.governanceStage.deleteMany({ where: { charityId } })] : []),
+    ...(sourceTimelineType !== "FINANCE" ? [prisma.financeStage.deleteMany({ where: { charityId } })] : []),
+    
+    // Create new stages for target standard timelines
+    ...(sourceTimelineType !== "STRATEGY" ? [
+      prisma.strategicStage.createMany({
+        data: sourceStages.map(s => ({ ...s, charityId }))
+      })
+    ] : []),
+    ...(sourceTimelineType !== "GOVERNANCE" ? [
+      prisma.governanceStage.createMany({
+        data: sourceStages.map(s => ({ ...s, charityId }))
+      })
+    ] : []),
+    ...(sourceTimelineType !== "FINANCE" ? [
+      prisma.financeStage.createMany({
+        data: sourceStages.map(s => ({ ...s, charityId }))
+      })
+    ] : []),
+  ]);
+
+  // For custom timelines: delete and insert stages for each service (except the source one)
+  const services = await prisma.service.findMany({
+    where: { charityId }
+  });
+
+  for (const service of services) {
+    if (sourceTimelineType === "CUSTOM" && service.id === sourceServiceId) {
+      continue;
+    }
+    
+    await prisma.$transaction([
+      prisma.serviceStage.deleteMany({ where: { serviceId: service.id } }),
+      prisma.serviceStage.createMany({
+        data: sourceStages.map(s => ({ ...s, serviceId: service.id }))
+      })
+    ]);
+  }
+
+  // Get charity name for revalidation path
+  const charity = await prisma.charity.findUnique({
+    where: { id: charityId }
+  });
+
+  if (charity) {
+    revalidatePath(`/charity/${encodeURIComponent(charity.name)}/services`);
+    revalidatePath(`/charity/${encodeURIComponent(charity.name)}/strategy`);
+    revalidatePath(`/charity/${encodeURIComponent(charity.name)}/governance`);
+    revalidatePath(`/charity/${encodeURIComponent(charity.name)}/finance`);
+    revalidatePath(`/charity/${encodeURIComponent(charity.name)}/programs`);
+  }
+
+  return { success: true };
+}

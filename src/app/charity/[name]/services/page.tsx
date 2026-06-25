@@ -101,6 +101,9 @@ export default async function ServicesPage({ params }: { params: Promise<{ name:
           charityId={charity.id} 
           initialServices={additionalServices} 
           isAdmin={isAdmin}
+          strategyTimelineName={charity.strategyTimelineName || "المخطط الزمني للتخطيط الاستراتيجي"}
+          governanceTimelineName={charity.governanceTimelineName || "المخطط الزمني للحوكمة"}
+          financeTimelineName={charity.financeTimelineName || "المخطط الزمني للمالية"}
         />
       )}
 

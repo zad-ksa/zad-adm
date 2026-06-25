@@ -4,8 +4,10 @@ import { useState, useMemo, useTransition, useRef } from "react";
 import {
   Check, Calendar, Printer, ChevronDown, ChevronRight,
   Briefcase, LayoutGrid, ChevronLeft, Edit2, X, Plus,
-  Trash2, ArrowUp, ArrowDown, Loader2, Save
+  Trash2, ArrowUp, ArrowDown, Loader2, Save, Layers,
+  AlertTriangle, AlertCircle
 } from "lucide-react";
+import { useRouter } from "next/navigation";
 import {
   setCurrentStrategicStage, addStrategicStage, updateStrategicStage,
   deleteStrategicStage, reorderStrategicStages
@@ -20,7 +22,7 @@ import {
 } from "@/app/actions/finance";
 import {
   setCurrentServiceStage, addServiceStage, updateServiceStage,
-  deleteServiceStage, reorderServiceStages
+  deleteServiceStage, reorderServiceStages, unifyCharityStagesAction
 } from "@/app/actions/services";
 
 const PAGE_SIZE = 5;
@@ -110,12 +112,14 @@ function InlineTimeline({
   serviceId,
   dept,
   canEdit,
+  onUnifyClick,
 }: {
   stages: Stage[];
   charityId: string;
   serviceId: string;
   dept: DeptKey;
   canEdit: boolean;
+  onUnifyClick?: () => void;
 }) {
   const [stages, setStages] = useState<Stage[]>(initialStages);
   const [isEditing, setIsEditing] = useState(false);
@@ -284,12 +288,23 @@ function InlineTimeline({
         )}
 
         {canEdit && (
-          <button
-            onClick={() => setIsEditing(true)}
-            className="mt-2 w-full flex items-center justify-center gap-1.5 py-1.5 text-[11px] font-bold text-slate-400 dark:text-slate-500 hover:text-primary dark:hover:text-primary hover:bg-primary/5 rounded-lg transition-colors border border-dashed border-slate-200 dark:border-slate-700"
-          >
-            <Edit2 className="w-3 h-3" /> تعديل المراحل
-          </button>
+          <div className="flex gap-1.5 mt-2">
+            <button
+              onClick={() => setIsEditing(true)}
+              className="flex-1 flex items-center justify-center gap-1.5 py-1.5 text-[11px] font-bold text-slate-400 dark:text-slate-500 hover:text-primary dark:hover:text-primary hover:bg-primary/5 rounded-lg transition-colors border border-dashed border-slate-200 dark:border-slate-700"
+            >
+              <Edit2 className="w-3 h-3" /> تعديل المراحل
+            </button>
+            {onUnifyClick && (
+              <button
+                type="button"
+                onClick={onUnifyClick}
+                className="flex-1 flex items-center justify-center gap-1.5 py-1.5 text-[11px] font-bold text-slate-400 dark:text-slate-500 hover:text-amber-500 dark:hover:text-amber-500 hover:bg-amber-500/5 rounded-lg transition-colors border border-dashed border-slate-200 dark:border-slate-700"
+              >
+                <Layers className="w-3.5 h-3.5 text-amber-500" /> توحيد المراحل
+              </button>
+            )}
+          </div>
         )}
       </div>
     );
@@ -403,13 +418,14 @@ function InlineTimeline({
 
 // ── Charity Card ────────────────────────────────────────────────────
 function CharityCard({
-  charity, stages, dept, serviceId, canEdit,
+  charity, stages, dept, serviceId, canEdit, onUnifyClick,
 }: {
   charity: Charity;
   stages: Stage[];
   dept: DeptKey;
   serviceId: string;
   canEdit: boolean;
+  onUnifyClick?: () => void;
 }) {
   const [open, setOpen] = useState(true);
   const sorted = [...stages].sort((a, b) => a.order - b.order);
@@ -446,6 +462,7 @@ function CharityCard({
             serviceId={serviceId}
             dept={dept}
             canEdit={canEdit}
+            onUnifyClick={onUnifyClick}
           />
         </div>
       )}
@@ -505,6 +522,54 @@ export default function ServicesOverviewClient({
   role: string;
   deptLabels: Record<string, string>;
 }) {
+  const router = useRouter();
+  const [unifyCharity, setUnifyCharity] = useState<{
+    id: string;
+    name: string;
+    strategyName: string;
+    governanceName: string;
+    financeName: string;
+    services: { id: string; name: string }[];
+  } | null>(null);
+  const [selectedSource, setSelectedSource] = useState("STRATEGY");
+  const [isUnifyPending, startUnifyTransition] = useTransition();
+
+  const handleOpenUnify = (charity: Charity, services: { id: string; name: string }[]) => {
+    setUnifyCharity({
+      id: charity.id,
+      name: charity.name,
+      strategyName: charity.strategyTimelineName || "المخطط الزمني للتخطيط الاستراتيجي",
+      governanceName: charity.governanceTimelineName || "المخطط الزمني للحوكمة",
+      financeName: charity.financeTimelineName || "المخطط الزمني للمالية",
+      services
+    });
+    setSelectedSource("STRATEGY");
+  };
+
+  const handleUnifySubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!unifyCharity) return;
+
+    let sourceTimelineType = selectedSource;
+    let sourceServiceId: string | undefined = undefined;
+
+    if (selectedSource.startsWith("CUSTOM_")) {
+      sourceTimelineType = "CUSTOM";
+      sourceServiceId = selectedSource.replace("CUSTOM_", "");
+    }
+
+    startUnifyTransition(async () => {
+      try {
+        await unifyCharityStagesAction(unifyCharity.id, sourceTimelineType, sourceServiceId);
+        setUnifyCharity(null);
+        router.refresh();
+      } catch (error: any) {
+        console.error("Error unifying stages", error);
+        alert(error.message || "حدث خطأ أثناء توحيد المراحل");
+      }
+    });
+  };
+
   const builtinDepts = ["STRATEGY", "GOVERNANCE", "FINANCE"].filter(d => d in stagesData);
   const allServices: ServiceWithStages[] = stagesData["SERVICES"] || [];
 
@@ -641,21 +706,53 @@ export default function ServicesOverviewClient({
             ) : (
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
                 {charitiesWithData.map(charity => {
+                  const charityServices = allServices
+                    .filter(s => s.charityId === charity.id)
+                    .map(s => ({ id: s.id, name: s.name }));
                   if (isGenericTab) {
                     const svcs = allServices.filter(svc => svc.name === genericSvcInfo?.name && svc.charityId === charity.id);
                     return svcs.map(svc => (
-                      <CharityCard key={svc.id} charity={charity} stages={svc.stages} dept="SERVICE" serviceId={svc.id} canEdit={canEdit} />
+                      <CharityCard
+                        key={svc.id}
+                        charity={charity}
+                        stages={svc.stages}
+                        dept="SERVICE"
+                        serviceId={svc.id}
+                        canEdit={canEdit}
+                        onUnifyClick={() => handleOpenUnify(charity, charityServices)}
+                      />
                     ));
                   }
                   const stages = allStages.filter((s: Stage) => s.charityId === charity.id);
                   return (
-                    <CharityCard key={charity.id} charity={charity} stages={stages} dept={getDept()} serviceId="" canEdit={canEdit} />
+                    <CharityCard
+                      key={charity.id}
+                      charity={charity}
+                      stages={stages}
+                      dept={getDept()}
+                      serviceId=""
+                      canEdit={canEdit}
+                      onUnifyClick={() => handleOpenUnify(charity, charityServices)}
+                    />
                   );
                 })}
                 {/* Extra charities (empty timelines, canEdit only) */}
-                {extraCharities.map(charity => (
-                  <CharityCard key={charity.id} charity={charity} stages={[]} dept={getDept()} serviceId="" canEdit={canEdit} />
-                ))}
+                {extraCharities.map(charity => {
+                  const charityServices = allServices
+                    .filter(s => s.charityId === charity.id)
+                    .map(s => ({ id: s.id, name: s.name }));
+                  return (
+                    <CharityCard
+                      key={charity.id}
+                      charity={charity}
+                      stages={[]}
+                      dept={getDept()}
+                      serviceId=""
+                      canEdit={canEdit}
+                      onUnifyClick={() => handleOpenUnify(charity, charityServices)}
+                    />
+                  );
+                })}
               </div>
             )}
           </div>
@@ -665,6 +762,79 @@ export default function ServicesOverviewClient({
       {tabs.length === 0 && (
         <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 p-12 text-center text-slate-400 dark:text-slate-500">
           لا توجد خدمات متاحة لحسابك حالياً
+        </div>
+      )}
+
+      {/* Unify Stages Modal */}
+      {unifyCharity && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={() => setUnifyCharity(null)}></div>
+          <div className="relative bg-white dark:bg-slate-800 rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200 border border-slate-200 dark:border-slate-700" dir="rtl">
+            <div className="p-6 border-b border-slate-100 dark:border-slate-700 flex items-center gap-3">
+              <div className="p-2 bg-amber-50 dark:bg-amber-950/30 text-amber-500 rounded-lg">
+                <AlertTriangle className="w-6 h-6" />
+              </div>
+              <div>
+                <h2 className="text-xl font-bold text-slate-800 dark:text-slate-100">
+                  توحيد المراحل لجمعية {unifyCharity.name}
+                </h2>
+                <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+                  نسخ مراحل مخطط زمني واحد وتعميمه على كافة المخططات الأخرى التابعة لهذه الجمعية
+                </p>
+              </div>
+            </div>
+            <form onSubmit={handleUnifySubmit} className="p-6 space-y-6">
+              <div>
+                <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">
+                  المخطط الزمني المصدر (الذي سيتم نسخ المراحل منه):
+                </label>
+                <select
+                  value={selectedSource}
+                  onChange={e => setSelectedSource(e.target.value)}
+                  disabled={isUnifyPending}
+                  className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none transition-all dark:text-white disabled:opacity-50"
+                >
+                  <option value="STRATEGY">{unifyCharity.strategyName}</option>
+                  <option value="GOVERNANCE">{unifyCharity.governanceName}</option>
+                  <option value="FINANCE">{unifyCharity.financeName}</option>
+                  {unifyCharity.services.map(service => (
+                    <option key={service.id} value={`CUSTOM_${service.id}`}>
+                      {service.name} (مخطط مخصص)
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Warning box */}
+              <div className="p-4 bg-red-50 dark:bg-red-950/20 border border-red-100 dark:border-red-900/30 rounded-xl flex gap-3">
+                <AlertCircle className="w-5 h-5 text-red-500 shrink-0 mt-0.5" />
+                <div className="space-y-1">
+                  <h4 className="text-sm font-bold text-red-800 dark:text-red-400">تنبيه هام جداً وإجراء غير قابل للتراجع</h4>
+                  <p className="text-xs text-red-700/90 dark:text-red-300/80 leading-relaxed">
+                    عند إتمام هذه العملية، سيتم <strong>حذف كافة المراحل الحالية</strong> في جميع المخططات والخدمات الأخرى التابعة لجمعية <strong>{unifyCharity.name}</strong> نهائياً، وسيتم <strong>إنشاء نسخ متطابقة</strong> من مراحل المخطط المصدر المختار أعلاه لها جميعاً.
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex gap-3 pt-4 border-t border-slate-100 dark:border-slate-700">
+                <button
+                  type="submit"
+                  disabled={isUnifyPending}
+                  className="flex-1 bg-red-650 hover:bg-red-700 dark:bg-red-700 dark:hover:bg-red-600 text-white py-3 rounded-xl font-bold transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                >
+                  {isUnifyPending ? "جاري توحيد المراحل..." : "تأكيد التوحيد وتطبيق المراحل"}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setUnifyCharity(null)}
+                  disabled={isUnifyPending}
+                  className="flex-1 bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 py-3 rounded-xl font-bold transition-colors disabled:opacity-50"
+                >
+                  إلغاء
+                </button>
+              </div>
+            </form>
+          </div>
         </div>
       )}
 

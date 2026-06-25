@@ -666,9 +666,9 @@ ${combinedAchievements.length > 0 ? `
                 {employees.map((emp) => (
                   <option key={emp.id} value={emp.id}>
                     {emp.name} ({emp.role === "ADMIN" ? "مدير النظام" :
-                               emp.role === "EXECUTIVE_DIRECTOR" ? "مدير تنفيذي" :
+                               emp.role === "EXECUTIVE_DIRECTOR" ? "إدارة تنفيذية" :
                                emp.role === "GENERAL_MANAGER" ? "مدير عام" :
-                               emp.role === "ADMINISTRATIVE_SECRETARIAT" ? "مساعد مدير" :
+                               emp.role === "ADMINISTRATIVE_SECRETARIAT" ? "إدارة تنفيذية" :
                                emp.role === "STRATEGY" ? "الاستراتيجية" :
                                emp.role === "FINANCE" ? "المالية" : "موظف"})
                   </option>

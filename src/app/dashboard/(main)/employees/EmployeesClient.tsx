@@ -17,9 +17,9 @@ import { Edit, ShieldCheck } from "lucide-react";
 
 const roleTranslations: Record<string, string> = {
   ADMIN: "مدير النظام",
-  EXECUTIVE_DIRECTOR: "مدير تنفيذي",
+  EXECUTIVE_DIRECTOR: "إدارة تنفيذية",
   GENERAL_MANAGER: "مدير عام",
-  ADMINISTRATIVE_SECRETARIAT: "مساعد مدير",
+  ADMINISTRATIVE_SECRETARIAT: "إدارة تنفيذية",
   STRATEGY: "الاستراتيجية",
   FINANCE: "المالية",
 };
@@ -330,9 +330,9 @@ export function EmployeesClient({
                       disabled={isPending || editingEmployee.role === "ADMIN"}
                       className="appearance-none block w-full pr-10 pl-3 py-2.5 border border-slate-200 dark:border-slate-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary/50 text-sm font-bold text-slate-800 dark:text-slate-100 bg-white dark:bg-slate-900/50 cursor-pointer transition-colors"
                     >
-                      <option value="EXECUTIVE_DIRECTOR">مدير تنفيذي</option>
+                      <option value="EXECUTIVE_DIRECTOR">إدارة تنفيذية</option>
                       <option value="GENERAL_MANAGER">مدير عام</option>
-                      <option value="ADMINISTRATIVE_SECRETARIAT">مساعد مدير</option>
+                      <option value="ADMINISTRATIVE_SECRETARIAT">إدارة تنفيذية</option>
                       <option value="STRATEGY">الاستراتيجية</option>
                       <option value="FINANCE">المالية</option>
                       {editingEmployee.role === "ADMIN" && <option value="ADMIN">مدير النظام</option>}

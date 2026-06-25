@@ -255,9 +255,9 @@ export default function EmployeeSidebar({
             <div className="mt-1.5 inline-flex items-center gap-1.5 px-2.5 py-1 bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-full text-[11px] text-slate-600 dark:text-slate-300 font-bold">
               <ShieldAlert className="w-3.5 h-3.5 text-emerald-500" />
               {userState?.role === "ADMIN" ? "مدير النظام" :
-               userState?.role === "EXECUTIVE_DIRECTOR" ? "مدير تنفيذي" :
+               userState?.role === "EXECUTIVE_DIRECTOR" ? "إدارة تنفيذية" :
                userState?.role === "GENERAL_MANAGER" ? "مدير عام" :
-               userState?.role === "ADMINISTRATIVE_SECRETARIAT" ? "مساعد مدير" :
+               userState?.role === "ADMINISTRATIVE_SECRETARIAT" ? "إدارة تنفيذية" :
                userState?.role === "STRATEGY" ? "الاستراتيجية" :
                userState?.role === "FINANCE" ? "المالية" : "موظف"}
             </div>

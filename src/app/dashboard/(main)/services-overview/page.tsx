@@ -74,11 +74,15 @@ export default async function ServicesOverviewPage() {
     });
   }
 
+  const canEdit = isAdmin || ["STRATEGY", "GOVERNANCE", "FINANCE"].includes(role) || (!["ADMIN","EXECUTIVE_DIRECTOR","GENERAL_MANAGER","ADMINISTRATIVE_SECRETARIAT","STRATEGY","GOVERNANCE","FINANCE"].includes(role));
+
   return (
     <ServicesOverviewClient
       charities={charities}
       stagesData={data}
       isAdmin={isAdmin}
+      canEdit={canEdit}
+      role={role}
       deptLabels={DEPT_LABELS}
     />
   );

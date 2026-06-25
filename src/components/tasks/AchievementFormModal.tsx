@@ -1,9 +1,10 @@
 "use client";
 
-import { useState, useTransition } from "react";
-import { X, Sparkles, FolderPlus, Folder, Calendar, UploadCloud, FileImage, Camera, Plus, Trash2, Loader2 } from "lucide-react";
+import { useState, useTransition, useCallback } from "react";
+import { X, Sparkles, FolderPlus, Folder, Calendar, UploadCloud, FileImage, Camera, Plus, Trash2, Loader2, ClipboardPaste } from "lucide-react";
 import { Charity } from "@/types";
 import { addCategory, deleteCategory } from "@/app/actions/categories";
+import { useImagePaste } from "@/hooks/useImagePaste";
 
 interface AchievementFormModalProps {
   isOpen: boolean;
@@ -37,6 +38,11 @@ export default function AchievementFormModal({
   const [newCatName, setNewCatName] = useState("");
   const [catError, setCatError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
+
+  const handlePastedImage = useCallback((file: File) => {
+    setProofFile(file);
+  }, []);
+  useImagePaste(handlePastedImage, isOpen);
 
   if (!isOpen) return null;
 
@@ -269,6 +275,10 @@ export default function AchievementFormModal({
                         disabled={isUploading}
                       />
                     </label>
+                  </div>
+                  <div className="flex items-center justify-center gap-1.5 text-[10px] text-slate-400 dark:text-slate-500 font-medium">
+                    <ClipboardPaste className="w-3 h-3" />
+                    أو الصق صورة منسوخة (Ctrl+V)
                   </div>
                 </div>
               )}

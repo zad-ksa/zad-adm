@@ -13,7 +13,9 @@ import {
   AlertCircle,
   Trash2,
   X,
-  Loader2
+  Loader2,
+  Filter,
+  ChevronDown
 } from "lucide-react";
 import { createNewsAction, deleteNewsAction } from "@/app/actions/tasks";
 import { addCategory, deleteCategory } from "@/app/actions/categories";
@@ -34,6 +36,15 @@ interface Charity {
   name: string;
 }
 
+const CATEGORY_COLORS: Record<string, string> = {
+  "الاستراتيجية": "text-violet-700 dark:text-violet-400 bg-violet-50 dark:bg-violet-900/20",
+  "التقنية": "text-blue-700 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20",
+  "تنمية الموارد": "text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/20",
+  "تكليف": "text-rose-700 dark:text-rose-400 bg-rose-50 dark:bg-rose-900/20",
+  "استقطاب": "text-teal-700 dark:text-teal-400 bg-teal-50 dark:bg-teal-900/20",
+};
+const catColor = (cat: string) => CATEGORY_COLORS[cat] || "text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20";
+
 export default function NewsFilterClient({
   charities,
   initialNewsItems,
@@ -48,16 +59,14 @@ export default function NewsFilterClient({
   const [newsItems, setNewsItems] = useState<NewsItem[]>(initialNewsItems);
   const [categories, setCategories] = useState<string[]>(initialCategories);
 
-  // Sync news items when parent updates
-  useEffect(() => {
-    setNewsItems(initialNewsItems);
-  }, [initialNewsItems]);
+  useEffect(() => { setNewsItems(initialNewsItems); }, [initialNewsItems]);
 
   const [selectedCharity, setSelectedCharity] = useState<string>("all");
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [selectedDate, setSelectedDate] = useState<string>("");
+  const [showFilters, setShowFilters] = useState(false);
 
-  // Form states (supporting multiple selected charities)
+  // Form states
   const [showNewsForm, setShowNewsForm] = useState(false);
   const [selectedCharityNames, setSelectedCharityNames] = useState<string[]>([]);
   const [newsCategory, setNewsCategory] = useState(initialCategories[0] || "الاستراتيجية");
@@ -65,7 +74,7 @@ export default function NewsFilterClient({
   const [newsDescription, setNewsDescription] = useState("");
   const [newsDate, setNewsDate] = useState("");
 
-  // Category management state
+  // Category management
   const [showAddCat, setShowAddCat] = useState(false);
   const [newCatName, setNewCatName] = useState("");
   const [catError, setCatError] = useState<string | null>(null);
@@ -81,13 +90,11 @@ export default function NewsFilterClient({
     setCatError(null);
     startTransition(async () => {
       const res = await addCategory(newCatName.trim());
-      if (res.error) {
-        setCatError(res.error);
-      } else if (res.categories) {
+      if (res.error) { setCatError(res.error); }
+      else if (res.categories) {
         setCategories(res.categories);
         setNewsCategory(newCatName.trim());
-        setNewCatName("");
-        setShowAddCat(false);
+        setNewCatName(""); setShowAddCat(false);
       }
     });
   };
@@ -103,28 +110,16 @@ export default function NewsFilterClient({
   };
 
   const showNotification = (type: "success" | "error", message: string) => {
-    if (type === "success") {
-      setSuccessMsg(message);
-      setErrorMsg(null);
-      setTimeout(() => setSuccessMsg(null), 3000);
-    } else {
-      setErrorMsg(message);
-      setSuccessMsg(null);
-      setTimeout(() => setErrorMsg(null), 4000);
-    }
+    if (type === "success") { setSuccessMsg(message); setErrorMsg(null); setTimeout(() => setSuccessMsg(null), 3000); }
+    else { setErrorMsg(message); setSuccessMsg(null); setTimeout(() => setErrorMsg(null), 4000); }
   };
 
-  const resetFilters = () => {
-    setSelectedCharity("all");
-    setSelectedCategory("all");
-    setSelectedDate("");
-  };
+  const resetFilters = () => { setSelectedCharity("all"); setSelectedCategory("all"); setSelectedDate(""); };
+  const hasFilters = selectedCharity !== "all" || selectedCategory !== "all" || selectedDate;
 
-  // Handle news/achievement creation
   const handleCreateNews = async (e: React.FormEvent) => {
     e.preventDefault();
     if (selectedCharityNames.length === 0 || !newsCategory || !newsTitle.trim()) return;
-
     startTransition(async () => {
       const res = await createNewsAction({
         charityName: selectedCharityNames.join(", "),
@@ -133,13 +128,9 @@ export default function NewsFilterClient({
         description: newsDescription.trim() || undefined,
         date: newsDate || undefined,
       });
-
-      if (res.error) {
-        showNotification("error", res.error);
-      } else if (res.success && res.newsItem) {
-        const primaryCharity = charities.find(
-          (c) => c.name.trim().toLowerCase() === selectedCharityNames[0].trim().toLowerCase()
-        );
+      if (res.error) { showNotification("error", res.error); }
+      else if (res.success && res.newsItem) {
+        const primaryCharity = charities.find(c => c.name.trim().toLowerCase() === selectedCharityNames[0].trim().toLowerCase());
         const newItem: NewsItem = {
           id: res.newsItem.id,
           charityId: primaryCharity?.id || "unknown",
@@ -147,472 +138,347 @@ export default function NewsFilterClient({
           title: res.newsItem.title,
           category: res.newsItem.category,
           description: res.newsItem.description || "",
-          rawDate: res.newsItem.date instanceof Date 
-            ? res.newsItem.date.toISOString() 
-            : new Date(res.newsItem.date).toISOString(),
-          date: new Date(res.newsItem.date).toLocaleDateString("ar-SA", {
-            year: "numeric",
-            month: "long",
-            day: "numeric",
-          }),
+          rawDate: res.newsItem.date instanceof Date ? res.newsItem.date.toISOString() : new Date(res.newsItem.date).toISOString(),
+          date: new Date(res.newsItem.date).toLocaleDateString("ar-SA", { year: "numeric", month: "long", day: "numeric" }),
         };
-
-        setNewsItems((prev) => [newItem, ...prev]);
-        setNewsTitle("");
-        setNewsDescription("");
-        setNewsDate("");
-        setSelectedCharityNames([]);
+        setNewsItems(prev => [newItem, ...prev]);
+        setNewsTitle(""); setNewsDescription(""); setNewsDate(""); setSelectedCharityNames([]);
         setShowNewsForm(false);
-        showNotification("success", "تم نشر الخبر أو الإنجاز بنجاح");
+        showNotification("success", "تم نشر الخبر بنجاح");
       }
     });
   };
 
-  // Handle news deletion
   const handleDeleteNews = async (newsId: string) => {
     if (!confirm("هل أنت متأكد من رغبتك في حذف هذا الخبر؟")) return;
-
     startTransition(async () => {
       const res = await deleteNewsAction(newsId);
-      if (res.error) {
-        showNotification("error", res.error);
-      } else if (res.success) {
-        setNewsItems((prev) => prev.filter((item) => item.id !== newsId));
-        showNotification("success", "تم حذف الخبر بنجاح");
-      }
+      if (res.error) { showNotification("error", res.error); }
+      else if (res.success) { setNewsItems(prev => prev.filter(i => i.id !== newsId)); showNotification("success", "تم حذف الخبر"); }
     });
   };
 
-  const filteredNews = newsItems.filter((item) => {
-    // 1. Charity Filter (matches if selected charity is one of the news item's charities)
+  const filteredNews = newsItems.filter(item => {
     if (selectedCharity !== "all") {
-      const itemCharities = item.charityName.split(",").map(name => name.trim().toLowerCase());
-      if (!itemCharities.includes(selectedCharity.trim().toLowerCase())) {
-        return false;
-      }
+      const itemCharities = item.charityName.split(",").map(n => n.trim().toLowerCase());
+      if (!itemCharities.includes(selectedCharity.trim().toLowerCase())) return false;
     }
-    
-    // 2. Category Filter
-    if (selectedCategory !== "all" && item.category !== selectedCategory) {
-      return false;
-    }
-    
-    // 3. Date Filter
+    if (selectedCategory !== "all" && item.category !== selectedCategory) return false;
     if (selectedDate) {
       const itemDate = new Date(item.rawDate).setHours(0, 0, 0, 0);
       const filterDate = new Date(selectedDate).setHours(0, 0, 0, 0);
-      if (itemDate < filterDate) {
-        return false;
-      }
+      if (itemDate < filterDate) return false;
     }
-    
     return true;
   });
 
   return (
-    <main className="flex-1 min-w-0 py-8 relative" dir="rtl">
+    <main className="flex-1 min-w-0 py-6 relative" dir="rtl">
       {/* Notifications */}
       {successMsg && (
-        <div className="fixed bottom-6 left-6 z-50 bg-emerald-500 dark:bg-emerald-600 text-white px-5 py-3 rounded-2xl shadow-xl flex items-center gap-2 animate-fade-in font-bold text-sm">
-          <CheckCircle2 className="w-5 h-5" />
-          {successMsg}
+        <div className="fixed bottom-5 left-5 z-50 bg-emerald-500 text-white px-4 py-2.5 rounded-xl shadow-lg flex items-center gap-2 font-bold text-sm">
+          <CheckCircle2 className="w-4 h-4" />{successMsg}
         </div>
       )}
       {errorMsg && (
-        <div className="fixed bottom-6 left-6 z-50 bg-red-500 dark:bg-red-600 text-white px-5 py-3 rounded-2xl shadow-xl flex items-center gap-2 animate-fade-in font-bold text-sm">
-          <AlertCircle className="w-5 h-5" />
-          {errorMsg}
+        <div className="fixed bottom-5 left-5 z-50 bg-red-500 text-white px-4 py-2.5 rounded-xl shadow-lg flex items-center gap-2 font-bold text-sm">
+          <AlertCircle className="w-4 h-4" />{errorMsg}
         </div>
       )}
 
       {/* Page Header */}
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-slate-800 dark:text-slate-100 mb-2">الأخبار والإنجازات</h1>
-        <p className="text-slate-600 dark:text-slate-300 font-medium">تصفية واستعراض كافة الإنجازات والتقارير الإخبارية للجمعيات المتعاقد معها</p>
+      <div className="flex items-center justify-between mb-5">
+        <div>
+          <h1 className="text-xl font-bold text-slate-800 dark:text-slate-100">الأخبار والإنجازات</h1>
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">{filteredNews.length} خبر{hasFilters ? " (مفلتر)" : ""}</p>
+        </div>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setShowFilters(v => !v)}
+            className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold border transition-colors ${hasFilters ? "bg-primary/10 text-primary border-primary/30" : "bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:border-slate-300"}`}
+          >
+            <Filter className="w-3.5 h-3.5" />
+            تصفية
+            {hasFilters && <span className="w-1.5 h-1.5 rounded-full bg-primary" />}
+            <ChevronDown className={`w-3 h-3 transition-transform ${showFilters ? "rotate-180" : ""}`} />
+          </button>
+          {isSecretariatOrAdmin && (
+            <button
+              onClick={() => setShowNewsForm(true)}
+              className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold bg-amber-600 hover:bg-amber-700 text-white transition-colors shadow-sm"
+            >
+              <Plus className="w-3.5 h-3.5" />
+              نشر خبر
+            </button>
+          )}
+        </div>
       </div>
 
-      <div className="flex flex-col gap-8">
-        {/* News Feed Content */}
-        <div className="space-y-8">
-          
-          {/* Filters Card */}
-          <div className="bg-white dark:bg-slate-800 rounded-2xl p-6 border border-slate-100 dark:border-slate-700/50 dark:border-slate-800/80 shadow-sm">
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4 pb-4 border-b border-slate-100 dark:border-slate-800/60 dark:border-slate-800/60">
-              <h3 className="font-bold text-slate-800 dark:text-slate-100 text-sm flex items-center gap-2">
-                <span className="w-2 h-4.5 bg-primary rounded-full"></span>
-                أدوات التصفية والبحث
-              </h3>
-              
-              {(selectedCharity !== "all" || selectedCategory !== "all" || selectedDate) && (
-                <button
-                  onClick={resetFilters}
-                  className="text-xs font-bold text-red-500 hover:text-red-650 flex items-center gap-1.5 transition-colors cursor-pointer select-none"
-                >
-                  <RotateCcw className="w-3.5 h-3.5" />
-                  إعادة ضبط الفلاتر
-                </button>
-              )}
+      {/* Collapsible Filters */}
+      {showFilters && (
+        <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-700/50 shadow-sm p-4 mb-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div>
+              <label className="block text-[11px] font-bold text-slate-400 dark:text-slate-500 mb-1 flex items-center gap-1">
+                <Building2 className="w-3 h-3" />الجمعية
+              </label>
+              <select
+                value={selectedCharity}
+                onChange={e => setSelectedCharity(e.target.value)}
+                className="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-xs outline-none focus:ring-2 focus:ring-primary/20 text-slate-800 dark:text-slate-100 font-bold cursor-pointer"
+              >
+                <option value="all">كل الجمعيات</option>
+                <option value="إدارة زاد">إدارة زاد</option>
+                <option value="عدة جمعيات">عدة جمعيات</option>
+                {charities.map(c => <option key={c.id} value={c.name}>{c.name}</option>)}
+              </select>
             </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {/* Charity Filter */}
-              <div className="space-y-2">
-                <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
-                  <Building2 className="w-3.5 h-3.5 text-slate-400" />
-                  تصفية حسب الجمعية
-                </label>
-                <select
-                  value={selectedCharity}
-                  onChange={(e) => setSelectedCharity(e.target.value)}
-                  className="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-100 dark:border-slate-700/50 dark:border-slate-800/80 rounded-xl px-4 py-3 text-sm outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary/30 focus:bg-white dark:focus:bg-slate-800 dark:bg-slate-800 dark:focus:bg-slate-800 dark:bg-slate-800 text-slate-800 dark:text-slate-100 transition-all font-bold cursor-pointer"
-                >
-                  <option value="all">كل الجمعيات</option>
-                  <option value="إدارة زاد">إدارة زاد</option>
-                  <option value="عدة جمعيات">عدة جمعيات</option>
-                  {charities.map((c) => (
-                    <option key={c.id} value={c.name}>
-                      {c.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Category Filter */}
-              <div className="space-y-2">
-                <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
-                  <Folder className="w-3.5 h-3.5 text-slate-400" />
-                  تصفية حسب القسم
-                </label>
-                <select
-                  value={selectedCategory}
-                  onChange={(e) => setSelectedCategory(e.target.value)}
-                  className="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-100 dark:border-slate-700/50 dark:border-slate-800/80 rounded-xl px-4 py-3 text-sm outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary/30 focus:bg-white dark:focus:bg-slate-800 dark:bg-slate-800 dark:focus:bg-slate-800 dark:bg-slate-800 text-slate-800 dark:text-slate-100 transition-all font-bold cursor-pointer"
-                >
-                  <option value="all">كل الأقسام</option>
-                  {categories.map((cat) => (
-                    <option key={cat} value={cat}>
-                      {cat}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Date Filter */}
-              <div className="space-y-2">
-                <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
-                  <Calendar className="w-3.5 h-3.5 text-slate-400" />
-                  البدء من تاريخ (منذ تاريخ)
-                </label>
-                <input
-                  type="date"
-                  value={selectedDate}
-                  onChange={(e) => setSelectedDate(e.target.value)}
-                  className="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-100 dark:border-slate-700/50 dark:border-slate-800/80 rounded-xl px-4 py-2.5 text-sm outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary/30 focus:bg-white dark:focus:bg-slate-800 dark:bg-slate-800 dark:focus:bg-slate-800 dark:bg-slate-800 text-slate-800 dark:text-slate-100 transition-all font-bold cursor-pointer"
-                />
-              </div>
+            <div>
+              <label className="block text-[11px] font-bold text-slate-400 dark:text-slate-500 mb-1 flex items-center gap-1">
+                <Folder className="w-3 h-3" />القسم
+              </label>
+              <select
+                value={selectedCategory}
+                onChange={e => setSelectedCategory(e.target.value)}
+                className="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-xs outline-none focus:ring-2 focus:ring-primary/20 text-slate-800 dark:text-slate-100 font-bold cursor-pointer"
+              >
+                <option value="all">كل الأقسام</option>
+                {categories.map(cat => <option key={cat} value={cat}>{cat}</option>)}
+              </select>
+            </div>
+            <div>
+              <label className="block text-[11px] font-bold text-slate-400 dark:text-slate-500 mb-1 flex items-center gap-1">
+                <Calendar className="w-3 h-3" />منذ تاريخ
+              </label>
+              <input
+                type="date"
+                value={selectedDate}
+                onChange={e => setSelectedDate(e.target.value)}
+                className="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-xs outline-none focus:ring-2 focus:ring-primary/20 text-slate-800 dark:text-slate-100 font-bold cursor-pointer"
+              />
             </div>
           </div>
-
-          {/* Results List */}
-          <div className="space-y-6">
-            <div className="flex items-center justify-between">
-              <h3 className="font-bold text-slate-800 dark:text-slate-100 text-lg">الأخبار والتقارير ({filteredNews.length})</h3>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {filteredNews.map((item) => {
-                // Parse charities and identify valid DB charity records to generate direct links
-                const itemCharitiesList = item.charityName.split(",").map(n => n.trim());
-                const validCharities = itemCharitiesList.filter(name =>
-                  charities.some(c => c.name.trim().toLowerCase() === name.toLowerCase())
-                );
-
-                return (
-                  <div
-                    key={item.id}
-                    className="bg-white dark:bg-slate-800 rounded-2xl p-6 border border-slate-100 dark:border-slate-700/50 dark:border-slate-800/80 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-300 flex flex-col justify-between group"
-                  >
-                    <div>
-                      {/* Badges & Delete Action */}
-                      <div className="flex items-center justify-between gap-4 mb-4">
-                        <div className="flex flex-wrap items-center gap-2">
-                          {itemCharitiesList.map((cName) => (
-                            <span key={cName} className="inline-block text-[10px] font-bold text-primary bg-primary/5 px-2.5 py-1 rounded-md">
-                              {cName}
-                            </span>
-                          ))}
-                          <span className={`inline-block text-[10px] font-bold px-2.5 py-1 rounded-md ${
-                            item.category === "الاستراتيجية" ? "text-violet-700 dark:text-violet-400 bg-violet-50 dark:bg-violet-900/20" :
-                            item.category === "التقنية" ? "text-blue-700 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20" :
-                            item.category === "تنمية الموارد" ? "text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/20" :
-                            item.category === "تكليف" ? "text-rose-700 dark:text-rose-400 bg-rose-50 dark:bg-rose-900/20" :
-                            item.category === "استقطاب" ? "text-teal-700 dark:text-teal-400 bg-teal-50 dark:bg-teal-900/20" :
-                            "text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20" // الإعلامية
-                          }`}>
-                            {item.category}
-                          </span>
-                        </div>
-
-                        {/* Delete Button (Secretariat & Admin only) */}
-                        {isSecretariatOrAdmin && (
-                          <button
-                            onClick={() => handleDeleteNews(item.id)}
-                            disabled={isPending}
-                            title="حذف الخبر"
-                            className="text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 p-1.5 rounded-lg transition-colors cursor-pointer select-none shrink-0"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
-                        )}
-                      </div>
-
-                      {/* News Title */}
-                      <h4 className="font-bold text-slate-800 dark:text-slate-100 text-base mb-2 group-hover:text-primary transition-colors duration-300">
-                        {item.title}
-                      </h4>
-
-                      {/* Description */}
-                      <p className="text-sm text-slate-500 dark:text-slate-400 font-medium leading-relaxed mb-6">
-                        {item.description}
-                      </p>
-                    </div>
-
-                    {/* Footer */}
-                    <div className="flex flex-wrap items-center justify-between gap-4 pt-4 border-t border-slate-50 dark:border-slate-800/60 text-[11px] font-bold text-slate-400">
-                      <div className="flex items-center gap-1.5 shrink-0">
-                        <Calendar className="w-3.5 h-3.5" />
-                        {item.date}
-                      </div>
-                      
-                      <div className="flex flex-wrap gap-3">
-                        {validCharities.map((cName) => (
-                          <Link
-                            key={cName}
-                            href={`/charity/${encodeURIComponent(cName)}`}
-                            className="text-primary hover:text-primary/80 transition-colors flex items-center gap-1 text-[11px]"
-                          >
-                            {validCharities.length > 1 ? cName : "صفحة الجمعية"}
-                            <svg className="w-3 h-3 rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                              <path strokeLinecap="round" strokeLinejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-                            </svg>
-                          </Link>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-
-              {filteredNews.length === 0 && (
-                <div className="col-span-full bg-white dark:bg-slate-800 rounded-2xl p-16 text-center text-slate-400 border border-slate-100 dark:border-slate-700/50 dark:border-slate-800/80 shadow-sm">
-                  <div className="text-4xl mb-4 opacity-40">📰</div>
-                  <p className="font-bold text-base text-slate-700 dark:text-slate-200 mb-1">لا توجد نتائج مطابقة</p>
-                  <p className="text-xs text-slate-400 font-medium">جرب تغيير خيارات التصفية أو إعادة ضبط الفلاتر.</p>
-                </div>
-              )}
-            </div>
-          </div>
+          {hasFilters && (
+            <button onClick={resetFilters} className="mt-3 text-[11px] font-bold text-red-500 hover:text-red-600 flex items-center gap-1">
+              <RotateCcw className="w-3 h-3" />إعادة ضبط الفلاتر
+            </button>
+          )}
         </div>
+      )}
 
-        {/* Floating Action Button (FAB) */}
-        {isSecretariatOrAdmin && !showNewsForm && (
-          <button
-            onClick={() => setShowNewsForm(true)}
-            title="نشر خبر أو إنجاز جديد"
-            className="fixed bottom-8 left-8 z-40 bg-amber-600 hover:bg-amber-700 text-white w-14 h-14 rounded-full shadow-xl hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 flex items-center justify-center cursor-pointer"
-          >
-            <Plus className="w-6 h-6" />
-          </button>
-        )}
-
-        {/* Modal: Add News Form */}
-        {isSecretariatOrAdmin && showNewsForm && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-            <div 
-              className="absolute inset-0 bg-slate-950/65 backdrop-blur-md transition-opacity duration-300"
-              onClick={() => setShowNewsForm(false)}
-            />
-            <div className="bg-white dark:bg-slate-800 rounded-3xl border border-slate-100 dark:border-slate-700/50 dark:border-slate-800/80 shadow-2xl w-full max-w-lg overflow-hidden relative z-10 transform transition-all duration-300 scale-100 p-6 md:p-8 max-h-[90vh] overflow-y-auto" dir="rtl">
-              <div className="flex items-center justify-between mb-6 border-b border-slate-100 dark:border-slate-700/50 dark:border-slate-800/80 pb-4">
-                <div>
-                  <h3 className="text-xl font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
-                    <Newspaper className="w-6 h-6 text-amber-600" />
-                    نشر خبر أو إنجاز جديد
-                  </h3>
-                  <p className="text-xs text-slate-500 dark:text-slate-400 font-medium leading-relaxed mt-1.5">
-                    يمكنك تحديد جمعية أو أكثر ليظهر مباشرة كأوسمة فوق الخبر.
+      {/* News List */}
+      <div className="space-y-2">
+        {filteredNews.map(item => {
+          const itemCharitiesList = item.charityName.split(",").map(n => n.trim());
+          const validCharities = itemCharitiesList.filter(name =>
+            charities.some(c => c.name.trim().toLowerCase() === name.toLowerCase())
+          );
+          return (
+            <div
+              key={item.id}
+              className="bg-white dark:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-700/50 hover:border-slate-200 dark:hover:border-slate-600 hover:shadow-sm transition-all duration-200 px-4 py-3"
+            >
+              <div className="flex items-start gap-3">
+                {/* Left column: badges + title + desc */}
+                <div className="flex-1 min-w-0">
+                  {/* Badges row */}
+                  <div className="flex flex-wrap items-center gap-1.5 mb-1.5">
+                    {itemCharitiesList.map(cName => (
+                      <span key={cName} className="text-[10px] font-bold text-primary bg-primary/8 px-2 py-0.5 rounded-md">
+                        {cName}
+                      </span>
+                    ))}
+                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md ${catColor(item.category)}`}>
+                      {item.category}
+                    </span>
+                  </div>
+                  {/* Title */}
+                  <p className="text-sm font-bold text-slate-800 dark:text-slate-100 leading-snug">
+                    {item.title}
                   </p>
+                  {/* Description */}
+                  {item.description && (
+                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 leading-relaxed line-clamp-2">
+                      {item.description}
+                    </p>
+                  )}
+                  {/* Footer row */}
+                  <div className="flex items-center gap-3 mt-2 text-[11px] text-slate-400 dark:text-slate-500">
+                    <span className="flex items-center gap-1">
+                      <Calendar className="w-3 h-3" />{item.date}
+                    </span>
+                    {validCharities.map(cName => (
+                      <Link
+                        key={cName}
+                        href={`/charity/${encodeURIComponent(cName)}`}
+                        className="text-primary hover:text-primary/70 font-bold transition-colors"
+                      >
+                        {validCharities.length > 1 ? cName : "صفحة الجمعية ←"}
+                      </Link>
+                    ))}
+                  </div>
                 </div>
-                <button
-                  onClick={() => setShowNewsForm(false)}
-                  className="p-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:bg-slate-700 text-slate-500 dark:text-slate-400 rounded-full transition-colors cursor-pointer"
-                >
-                  <X className="w-5 h-5" />
-                </button>
+                {/* Right: delete */}
+                {isSecretariatOrAdmin && (
+                  <button
+                    onClick={() => handleDeleteNews(item.id)}
+                    disabled={isPending}
+                    className="shrink-0 p-1.5 text-slate-300 dark:text-slate-600 hover:text-red-500 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
+                )}
+              </div>
+            </div>
+          );
+        })}
+
+        {filteredNews.length === 0 && (
+          <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-700/50 p-12 text-center">
+            <div className="text-3xl mb-3 opacity-30">📰</div>
+            <p className="font-bold text-sm text-slate-600 dark:text-slate-300">لا توجد نتائج مطابقة</p>
+            <p className="text-xs text-slate-400 mt-1">جرب تغيير خيارات التصفية.</p>
+          </div>
+        )}
+      </div>
+
+      {/* Modal: Add News Form */}
+      {isSecretariatOrAdmin && showNewsForm && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-slate-950/60 backdrop-blur-sm" onClick={() => setShowNewsForm(false)} />
+          <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700/50 shadow-2xl w-full max-w-md relative z-10 p-5 max-h-[90vh] overflow-y-auto" dir="rtl">
+            <div className="flex items-center justify-between mb-4 pb-3 border-b border-slate-100 dark:border-slate-700/50">
+              <h3 className="text-base font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
+                <Newspaper className="w-4 h-4 text-amber-600" />نشر خبر أو إنجاز
+              </h3>
+              <button onClick={() => setShowNewsForm(false)} className="p-1.5 rounded-lg text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <form onSubmit={handleCreateNews} className="space-y-4">
+              {/* Charities */}
+              <div>
+                <label className="block text-[11px] font-bold text-slate-500 dark:text-slate-400 mb-1.5">الجمعيات المعنية</label>
+                <div className="border border-slate-200 dark:border-slate-700 rounded-xl p-2.5 bg-slate-50 dark:bg-slate-900/50 max-h-36 overflow-y-auto space-y-1">
+                  {["إدارة زاد", "عدة جمعيات", ...charities.map(ch => ch.name)].map(name => {
+                    const isChecked = selectedCharityNames.includes(name);
+                    return (
+                      <label key={name} className="flex items-center gap-2 text-xs font-bold text-slate-700 dark:text-slate-200 cursor-pointer py-0.5">
+                        <input
+                          type="checkbox"
+                          checked={isChecked}
+                          onChange={() => setSelectedCharityNames(prev => isChecked ? prev.filter(n => n !== name) : [...prev, name])}
+                          className="rounded border-slate-300 dark:border-slate-600 text-amber-600 focus:ring-amber-500 w-3.5 h-3.5"
+                        />
+                        {name}
+                      </label>
+                    );
+                  })}
+                </div>
               </div>
 
-              <form onSubmit={handleCreateNews} className="space-y-5">
-                <div>
-                  <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-2">الجمعيات المعنية (اختر جمعية أو أكثر)</label>
-                  <div className="border border-slate-200 dark:border-slate-700 rounded-xl p-3 bg-slate-50 dark:bg-slate-900/50 max-h-40 overflow-y-auto space-y-2 focus-within:ring-4 focus-within:ring-amber-500/10 focus-within:border-amber-500/30 transition-all">
-                    {[
-                      "إدارة زاد",
-                      "عدة جمعيات",
-                      ...charities.map((ch) => ch.name)
-                    ].map((name) => {
-                      const isChecked = selectedCharityNames.includes(name);
-                      return (
-                        <label key={name} className="flex items-center gap-2 text-sm font-bold text-slate-700 dark:text-slate-200 cursor-pointer select-none py-1">
-                          <input
-                            type="checkbox"
-                            checked={isChecked}
-                            onChange={() => {
-                              if (isChecked) {
-                                setSelectedCharityNames(prev => prev.filter(n => n !== name));
-                              } else {
-                                setSelectedCharityNames(prev => [...prev, name]);
-                              }
-                            }}
-                            className="rounded border-slate-300 dark:border-slate-600 text-amber-600 focus:ring-amber-500 w-4 h-4 cursor-pointer"
-                          />
-                          {name}
-                        </label>
-                      );
-                    })}
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-2">القسم المعني</label>
-                  <div className="flex gap-2">
-                    <select
-                      value={newsCategory}
-                      onChange={(e) => setNewsCategory(e.target.value)}
-                      required
-                      className="flex-1 bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-sm outline-none focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500/30 text-slate-800 dark:text-slate-100 transition-all font-bold cursor-pointer [&>option]:bg-white [&>option]:dark:bg-slate-800"
-                    >
-                      {categories.map((cat) => (
-                        <option key={cat} value={cat}>{cat}</option>
-                      ))}
-                    </select>
-                    {isSecretariatOrAdmin && (
-                      <button
-                        type="button"
-                        onClick={() => { setShowAddCat(v => !v); setCatError(null); setNewCatName(""); }}
-                        className="shrink-0 w-10 h-10 mt-0.5 flex items-center justify-center rounded-xl bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400 hover:bg-amber-100 dark:hover:bg-amber-900/40 border border-amber-200 dark:border-amber-800/50 transition-colors"
-                        title="إضافة قسم جديد"
-                      >
-                        <Plus className="w-4 h-4" />
-                      </button>
-                    )}
-                  </div>
-
-                  {showAddCat && isSecretariatOrAdmin && (
-                    <div className="mt-2 p-3 bg-amber-50 dark:bg-amber-900/10 border border-amber-200 dark:border-amber-800/40 rounded-xl space-y-2">
-                      <p className="text-xs font-bold text-amber-700 dark:text-amber-400">إضافة قسم جديد</p>
-                      <div className="flex gap-2">
-                        <input
-                          type="text"
-                          value={newCatName}
-                          onChange={(e) => setNewCatName(e.target.value)}
-                          onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), handleAddCategory())}
-                          placeholder="اسم القسم..."
-                          className="flex-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-amber-500/30 text-slate-800 dark:text-slate-100"
-                          autoFocus
-                        />
-                        <button
-                          type="button"
-                          onClick={handleAddCategory}
-                          disabled={isPending || !newCatName.trim()}
-                          className="px-3 py-2 bg-amber-600 text-white rounded-lg text-xs font-bold hover:bg-amber-700 transition-colors disabled:opacity-60"
-                        >
-                          {isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : "إضافة"}
-                        </button>
-                      </div>
-                      {catError && <p className="text-xs text-red-500 font-medium">{catError}</p>}
-                      <div className="pt-1 border-t border-amber-200/60 dark:border-amber-800/40">
-                        <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 mb-1.5">الأقسام الحالية (اضغط للحذف)</p>
-                        <div className="flex flex-wrap gap-1.5">
-                          {categories.map((cat) => (
-                            <button
-                              key={cat}
-                              type="button"
-                              onClick={() => handleDeleteCategory(cat)}
-                              disabled={isPending}
-                              className="flex items-center gap-1 px-2 py-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-xs text-slate-600 dark:text-slate-300 hover:border-red-300 hover:text-red-500 dark:hover:text-red-400 transition-colors disabled:opacity-50"
-                              title={`حذف "${cat}"`}
-                            >
-                              {cat}
-                              <Trash2 className="w-3 h-3 opacity-50" />
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-2">العنوان</label>
-                  <input
-                    type="text"
+              {/* Category */}
+              <div>
+                <label className="block text-[11px] font-bold text-slate-500 dark:text-slate-400 mb-1.5">القسم المعني</label>
+                <div className="flex gap-2">
+                  <select
+                    value={newsCategory}
+                    onChange={e => setNewsCategory(e.target.value)}
                     required
-                    value={newsTitle}
-                    onChange={(e) => setNewsTitle(e.target.value)}
-                    placeholder="عنوان الخبر أو الإنجاز..."
-                    className="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-sm outline-none focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500/30 text-slate-800 dark:text-slate-100 transition-all font-medium"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-2">الوصف (اختياري)</label>
-                  <textarea
-                    value={newsDescription}
-                    onChange={(e) => setNewsDescription(e.target.value)}
-                    placeholder="تفاصيل إضافية عن الخبر..."
-                    rows={4}
-                    className="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-sm outline-none focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500/30 text-slate-800 dark:text-slate-100 transition-all font-medium resize-none"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-2">تاريخ الخبر (اختياري)</label>
-                  <input
-                    type="date"
-                    value={newsDate}
-                    onChange={(e) => setNewsDate(e.target.value)}
-                    className="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-sm outline-none focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500/30 text-slate-800 dark:text-slate-100 transition-all font-medium cursor-pointer"
-                  />
-                  <p className="text-[10px] text-slate-400 mt-1.5 font-bold">في حال تركه فارغاً، سيتم اعتماد تاريخ اليوم كافتراضي.</p>
-                </div>
-
-                <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-100 dark:border-slate-700/50 dark:border-slate-800/80">
+                    className="flex-1 bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-xs outline-none focus:ring-2 focus:ring-amber-500/20 text-slate-800 dark:text-slate-100 font-bold cursor-pointer"
+                  >
+                    {categories.map(cat => <option key={cat} value={cat}>{cat}</option>)}
+                  </select>
                   <button
                     type="button"
-                    onClick={() => {
-                      setShowNewsForm(false);
-                      setNewsTitle("");
-                      setNewsDescription("");
-                      setNewsDate("");
-                      setSelectedCharityNames([]);
-                    }}
-                    className="px-5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:bg-slate-800/50 dark:hover:bg-slate-700/50 hover:text-slate-700 dark:text-slate-200 font-bold transition-all text-xs cursor-pointer"
+                    onClick={() => { setShowAddCat(v => !v); setCatError(null); setNewCatName(""); }}
+                    className="shrink-0 w-9 h-9 flex items-center justify-center rounded-xl bg-amber-50 dark:bg-amber-900/20 text-amber-600 hover:bg-amber-100 dark:hover:bg-amber-900/40 border border-amber-200 dark:border-amber-800/50 transition-colors"
                   >
-                    إلغاء
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={isPending || selectedCharityNames.length === 0 || !newsTitle.trim()}
-                    className="px-6 py-2.5 rounded-xl bg-amber-600 text-white hover:bg-amber-700 font-bold transition-all text-xs flex items-center gap-2 cursor-pointer disabled:opacity-75 disabled:cursor-not-allowed shadow-sm hover:shadow"
-                  >
-                    {isPending ? "جاري النشر..." : "نشر الخبر الآن"}
+                    <Plus className="w-3.5 h-3.5" />
                   </button>
                 </div>
-              </form>
-            </div>
+                {showAddCat && (
+                  <div className="mt-2 p-2.5 bg-amber-50 dark:bg-amber-900/10 border border-amber-200 dark:border-amber-800/40 rounded-xl space-y-2">
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        value={newCatName}
+                        onChange={e => setNewCatName(e.target.value)}
+                        onKeyDown={e => e.key === "Enter" && (e.preventDefault(), handleAddCategory())}
+                        placeholder="اسم القسم..."
+                        className="flex-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-1.5 text-xs outline-none focus:ring-2 focus:ring-amber-500/30 text-slate-800 dark:text-slate-100"
+                        autoFocus
+                      />
+                      <button type="button" onClick={handleAddCategory} disabled={isPending || !newCatName.trim()}
+                        className="px-2.5 py-1.5 bg-amber-600 text-white rounded-lg text-xs font-bold disabled:opacity-60">
+                        {isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : "إضافة"}
+                      </button>
+                    </div>
+                    {catError && <p className="text-[11px] text-red-500 font-medium">{catError}</p>}
+                    <div className="flex flex-wrap gap-1 pt-1.5 border-t border-amber-200/60 dark:border-amber-800/40">
+                      {categories.map(cat => (
+                        <button key={cat} type="button" onClick={() => handleDeleteCategory(cat)} disabled={isPending}
+                          className="flex items-center gap-0.5 px-2 py-0.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded text-[11px] text-slate-500 dark:text-slate-400 hover:text-red-500 hover:border-red-200 transition-colors">
+                          {cat}<Trash2 className="w-2.5 h-2.5 opacity-50" />
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Title */}
+              <div>
+                <label className="block text-[11px] font-bold text-slate-500 dark:text-slate-400 mb-1.5">العنوان</label>
+                <input
+                  type="text"
+                  required
+                  value={newsTitle}
+                  onChange={e => setNewsTitle(e.target.value)}
+                  placeholder="عنوان الخبر أو الإنجاز..."
+                  className="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-xs outline-none focus:ring-2 focus:ring-amber-500/20 text-slate-800 dark:text-slate-100 font-medium"
+                />
+              </div>
+
+              {/* Description */}
+              <div>
+                <label className="block text-[11px] font-bold text-slate-500 dark:text-slate-400 mb-1.5">الوصف (اختياري)</label>
+                <textarea
+                  value={newsDescription}
+                  onChange={e => setNewsDescription(e.target.value)}
+                  placeholder="تفاصيل إضافية..."
+                  rows={3}
+                  className="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-xs outline-none focus:ring-2 focus:ring-amber-500/20 text-slate-800 dark:text-slate-100 font-medium resize-none"
+                />
+              </div>
+
+              {/* Date */}
+              <div>
+                <label className="block text-[11px] font-bold text-slate-500 dark:text-slate-400 mb-1.5">تاريخ الخبر (اختياري)</label>
+                <input
+                  type="date"
+                  value={newsDate}
+                  onChange={e => setNewsDate(e.target.value)}
+                  className="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-xs outline-none focus:ring-2 focus:ring-amber-500/20 text-slate-800 dark:text-slate-100 cursor-pointer"
+                />
+              </div>
+
+              {/* Actions */}
+              <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-100 dark:border-slate-700/50">
+                <button type="button" onClick={() => { setShowNewsForm(false); setNewsTitle(""); setNewsDescription(""); setNewsDate(""); setSelectedCharityNames([]); }}
+                  className="px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700/50 font-bold text-xs cursor-pointer">
+                  إلغاء
+                </button>
+                <button type="submit" disabled={isPending || selectedCharityNames.length === 0 || !newsTitle.trim()}
+                  className="px-4 py-2 rounded-xl bg-amber-600 text-white hover:bg-amber-700 font-bold text-xs flex items-center gap-1.5 disabled:opacity-75 disabled:cursor-not-allowed shadow-sm">
+                  {isPending ? <><Loader2 className="w-3.5 h-3.5 animate-spin" />جاري...</> : "نشر الخبر"}
+                </button>
+              </div>
+            </form>
           </div>
-        )}
-      </div>
+        </div>
+      )}
     </main>
   );
 }

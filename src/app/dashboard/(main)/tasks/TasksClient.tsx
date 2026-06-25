@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition, useEffect } from "react";
+import { useState, useTransition, useEffect, useCallback } from "react";
 import {
   CheckSquare,
   Plus,
@@ -48,6 +48,7 @@ import { ADMIN_ROLES } from "@/lib/constants";
 import TaskFormModal from "@/components/tasks/TaskFormModal";
 import AchievementFormModal from "@/components/tasks/AchievementFormModal";
 import ConfirmModal from "@/components/ui/ConfirmModal";
+import { useImagePaste } from "@/hooks/useImagePaste";
 
 export default function TasksClient({
   session,
@@ -116,6 +117,9 @@ export default function TasksClient({
   const [proofFile, setProofFile] = useState<File | null>(null);
   const [proofUploadError, setProofUploadError] = useState<string | null>(null);
   const [isUploadingProof, setIsUploadingProof] = useState(false);
+
+  const handlePastedProof = useCallback((file: File) => setProofFile(file), []);
+  useImagePaste(handlePastedProof, !!completingTaskId);
 
   const [isPending, startTransition] = useTransition();
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
@@ -1082,6 +1086,10 @@ ${combinedAchievements.length > 0 ? `
                         />
                       </label>
                     </div>
+                    <p className="text-[10px] text-slate-400 dark:text-slate-500 font-medium flex items-center justify-center gap-1 mt-1">
+                      <span>أو الصق صورة منسوخة</span>
+                      <kbd className="px-1 py-0.5 bg-slate-100 dark:bg-slate-700 rounded text-[9px] font-mono border border-slate-200 dark:border-slate-600">Ctrl+V</kbd>
+                    </p>
                   </div>
                 )}
               </div>

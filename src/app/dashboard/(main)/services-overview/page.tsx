@@ -28,6 +28,7 @@ export default async function ServicesOverviewPage() {
   // Get assigned charity IDs for restricted roles (null = all access)
   const assignedIds = isAdmin ? null : await getAssignedCharityIds(session.id, role);
   const charityFilter = assignedIds !== null ? { id: { in: assignedIds } } : undefined;
+  const serviceCharityFilter = assignedIds !== null ? { charityId: { in: assignedIds } } : undefined;
   const stageFilter = assignedIds !== null ? { charityId: { in: assignedIds } } : {};
 
   const charities = await prisma.charity.findMany({
@@ -73,13 +74,13 @@ export default async function ServicesOverviewPage() {
   const isSpecialDept = BUILTIN_DEPTS.includes(role);
   if (isAdmin) {
     data["SERVICES"] = await prisma.service.findMany({
-      where: charityFilter,
+      where: serviceCharityFilter,
       include: { stages: { orderBy: { order: "asc" } } },
       orderBy: { charityId: "asc" },
     });
   } else if (!isSpecialDept) {
     data["SERVICES"] = await prisma.service.findMany({
-      where: { department: role, ...stageFilter },
+      where: { department: role, ...(assignedIds !== null ? { charityId: { in: assignedIds } } : {}) },
       include: { stages: { orderBy: { order: "asc" } } },
       orderBy: { charityId: "asc" },
     });

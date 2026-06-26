@@ -529,8 +529,27 @@ export default function ServicesOverviewClient({
 
   // Logo editing
   const [logoEditCharityId, setLogoEditCharityId] = useState<string | null>(null);
-  const [logoUrl, setLogoUrl] = useState("");
+  const [logoPreview, setLogoPreview] = useState<string | null>(null);
+  const [logoFile, setLogoFile] = useState<File | null>(null);
+  const [logoError, setLogoError] = useState<string | null>(null);
   const [isLogoPending, startLogoTransition] = useTransition();
+  const logoFileRef = useRef<HTMLInputElement>(null);
+
+  const openLogoModal = (charityId: string, currentLogoUrl: string | null | undefined) => {
+    setLogoEditCharityId(charityId);
+    setLogoPreview(currentLogoUrl || null);
+    setLogoFile(null);
+    setLogoError(null);
+  };
+
+  const handleLogoFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 2 * 1024 * 1024) { setLogoError("حجم الملف يجب أن يكون أقل من 2 ميجابايت"); return; }
+    setLogoPreview(URL.createObjectURL(file));
+    setLogoFile(file);
+    setLogoError(null);
+  };
 
   const handleSaveServiceName = (svcId: string, dept: string | null) => {
     if (!editingServiceName.trim()) return;
@@ -544,9 +563,24 @@ export default function ServicesOverviewClient({
 
   const handleSaveLogo = (charityId: string) => {
     startLogoTransition(async () => {
-      await updateCharityLogo(charityId, logoUrl.trim() || null);
+      let finalUrl: string | null = logoPreview;
+      if (logoFile) {
+        try {
+          const fd = new FormData();
+          fd.append("file", logoFile);
+          const res = await fetch("/api/upload", { method: "POST", body: fd });
+          if (!res.ok) throw new Error();
+          const data = await res.json();
+          finalUrl = data.url;
+        } catch {
+          setLogoError("فشل رفع الصورة، يرجى المحاولة مرة أخرى");
+          return;
+        }
+      }
+      await updateCharityLogo(charityId, finalUrl);
       setLogoEditCharityId(null);
-      setLogoUrl("");
+      setLogoPreview(null);
+      setLogoFile(null);
       router.refresh();
     });
   };
@@ -785,7 +819,7 @@ export default function ServicesOverviewClient({
                         canEdit={canEdit}
                         onUnifyClick={() => handleOpenUnify(charity)}
                         charityLogoUrl={charity.logoUrl}
-                        onLogoClick={isAdmin ? () => { setLogoEditCharityId(charity.id); setLogoUrl(charity.logoUrl || ""); } : undefined}
+                        onLogoClick={isAdmin ? () => openLogoModal(charity.id, charity.logoUrl) : undefined}
                       />
                     ));
                   }
@@ -800,7 +834,7 @@ export default function ServicesOverviewClient({
                       canEdit={canEdit}
                       onUnifyClick={() => handleOpenUnify(charity)}
                       charityLogoUrl={charity.logoUrl}
-                      onLogoClick={isAdmin ? () => { setLogoEditCharityId(charity.id); setLogoUrl(charity.logoUrl || ""); } : undefined}
+                      onLogoClick={isAdmin ? () => openLogoModal(charity.id, charity.logoUrl) : undefined}
                     />
                   );
                 })}
@@ -816,7 +850,7 @@ export default function ServicesOverviewClient({
                       canEdit={canEdit}
                       onUnifyClick={() => handleOpenUnify(charity)}
                       charityLogoUrl={charity.logoUrl}
-                      onLogoClick={isAdmin ? () => { setLogoEditCharityId(charity.id); setLogoUrl(charity.logoUrl || ""); } : undefined}
+                      onLogoClick={isAdmin ? () => openLogoModal(charity.id, charity.logoUrl) : undefined}
                     />
                   );
                 })}
@@ -887,48 +921,73 @@ export default function ServicesOverviewClient({
       {/* Logo edit modal */}
       {logoEditCharityId && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={() => setLogoEditCharityId(null)} />
+          <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={() => !isLogoPending && setLogoEditCharityId(null)} />
           <div className="relative bg-white dark:bg-slate-800 rounded-2xl w-full max-w-sm shadow-2xl border border-slate-200 dark:border-slate-700 animate-in zoom-in-95 duration-200" dir="rtl">
             <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100 dark:border-slate-700">
-              <h3 className="text-sm font-bold text-slate-800 dark:text-slate-100">تغيير صورة الجمعية</h3>
-              <button onClick={() => setLogoEditCharityId(null)} className="p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg">
+              <h3 className="text-sm font-bold text-slate-800 dark:text-slate-100">تغيير شعار الجمعية</h3>
+              <button onClick={() => setLogoEditCharityId(null)} disabled={isLogoPending} className="p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg">
                 <X className="w-4 h-4" />
               </button>
             </div>
             <div className="p-5 space-y-4">
-              {logoUrl && (
-                <div className="flex justify-center">
-                  <div className="w-20 h-20 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-900 flex items-center justify-center overflow-hidden">
-                    <img src={logoUrl} alt="preview" className="w-full h-full object-contain p-1" onError={e => (e.currentTarget.style.display = "none")} />
-                  </div>
-                </div>
-              )}
-              <div>
-                <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-1.5">رابط الصورة (URL)</label>
-                <input
-                  type="text"
-                  value={logoUrl}
-                  onChange={e => setLogoUrl(e.target.value)}
-                  placeholder="https://..."
-                  dir="ltr"
-                  className="w-full text-xs border border-slate-200 dark:border-slate-600 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-primary/30 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100"
-                />
+              {/* Preview */}
+              <div className="flex justify-center">
+                <button
+                  type="button"
+                  onClick={() => logoFileRef.current?.click()}
+                  className="relative group w-24 h-24 rounded-2xl border-2 border-dashed border-slate-300 dark:border-slate-600 hover:border-primary dark:hover:border-primary bg-slate-50 dark:bg-slate-900 flex items-center justify-center overflow-hidden transition-colors cursor-pointer"
+                >
+                  {logoPreview ? (
+                    <>
+                      <img src={logoPreview} alt="preview" className="w-full h-full object-contain p-2" />
+                      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                        <Edit2 className="w-5 h-5 text-white" />
+                      </div>
+                    </>
+                  ) : (
+                    <div className="text-center text-slate-400 dark:text-slate-500">
+                      <Plus className="w-6 h-6 mx-auto mb-1" />
+                      <span className="text-[10px] font-bold">اختر صورة</span>
+                    </div>
+                  )}
+                </button>
               </div>
-              <div className="flex gap-2 pt-2">
+
+              <input
+                ref={logoFileRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={handleLogoFileChange}
+              />
+
+              <p className="text-center text-[11px] text-slate-400 dark:text-slate-500">
+                PNG أو JPG أو SVG — الحد الأقصى 2 ميجابايت
+              </p>
+
+              {logoError && (
+                <p className="text-xs text-red-600 dark:text-red-400 font-bold text-center">{logoError}</p>
+              )}
+
+              <div className="flex gap-2 pt-1">
                 <button
                   onClick={() => handleSaveLogo(logoEditCharityId)}
                   disabled={isLogoPending}
                   className="flex-1 py-2 text-xs font-bold text-white bg-primary hover:bg-primary/90 rounded-lg flex items-center justify-center gap-1.5 disabled:opacity-60"
                 >
                   {isLogoPending ? <Loader2 className="w-3 h-3 animate-spin" /> : <Save className="w-3 h-3" />}
-                  حفظ
+                  {isLogoPending ? "جاري الرفع..." : "حفظ"}
                 </button>
-                <button onClick={() => { handleSaveLogo(logoEditCharityId); setLogoUrl(""); }}
-                  disabled={isLogoPending}
-                  className="px-3 py-2 text-xs font-bold text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors">
-                  حذف الصورة
-                </button>
-                <button onClick={() => setLogoEditCharityId(null)} className="px-3 py-2 text-xs font-bold text-slate-500 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 rounded-lg transition-colors">
+                {logoPreview && (
+                  <button
+                    onClick={() => { setLogoPreview(null); setLogoFile(null); }}
+                    disabled={isLogoPending}
+                    className="px-3 py-2 text-xs font-bold text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors disabled:opacity-50"
+                  >
+                    حذف
+                  </button>
+                )}
+                <button onClick={() => setLogoEditCharityId(null)} disabled={isLogoPending} className="px-3 py-2 text-xs font-bold text-slate-500 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 rounded-lg transition-colors disabled:opacity-50">
                   إلغاء
                 </button>
               </div>

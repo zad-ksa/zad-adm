@@ -284,3 +284,24 @@ export async function updateTimelineConfig(
     return { success: false, message: error.message || "حدث خطأ أثناء تحديث الإعدادات" };
   }
 }
+
+export async function updateCharityLogo(charityId: string, logoUrl: string | null) {
+  const session = await getSession();
+  const adminRoles = ["ADMIN", "EXECUTIVE_DIRECTOR", "GENERAL_MANAGER", "ADMINISTRATIVE_SECRETARIAT"];
+  if (!session || !adminRoles.includes(session.role)) {
+    return { success: false, message: "غير مصرح" };
+  }
+  try {
+    const charity = await prisma.charity.update({
+      where: { id: charityId },
+      data: { logoUrl },
+      select: { name: true },
+    });
+    revalidatePath("/dashboard");
+    revalidatePath("/dashboard/charities");
+    revalidatePath(`/charity/${encodeURIComponent(charity.name)}`);
+    return { success: true };
+  } catch (error: any) {
+    return { success: false, message: error.message || "حدث خطأ" };
+  }
+}

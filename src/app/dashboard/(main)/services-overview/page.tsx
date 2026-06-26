@@ -36,6 +36,7 @@ export default async function ServicesOverviewPage() {
     select: {
       id: true,
       name: true,
+      logoUrl: true,
       strategyTimelineName: true,
       governanceTimelineName: true,
       financeTimelineName: true,

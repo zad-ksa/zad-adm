@@ -22,14 +22,15 @@ import {
 } from "@/app/actions/finance";
 import {
   setCurrentServiceStage, addServiceStage, updateServiceStage,
-  deleteServiceStage, reorderServiceStages, unifyCharityStagesAction
+  deleteServiceStage, reorderServiceStages, unifyCharityStagesAction,
+  updateService
 } from "@/app/actions/services";
-
-const PAGE_SIZE = 5;
+import { updateCharityLogo } from "@/app/actions/charity";
 
 type Charity = {
   id: string;
   name: string;
+  logoUrl?: string | null;
   strategyTimelineName?: string | null;
   governanceTimelineName?: string | null;
   financeTimelineName?: string | null;
@@ -130,21 +131,9 @@ function InlineTimeline({
   const [isEditing, setIsEditing] = useState(false);
   const [isPending, startTransition] = useTransition();
 
-  // Pagination
   const sorted = [...stages].sort((a, b) => a.order - b.order);
   const currentIdx = sorted.findIndex(s => s.isCurrent);
-  // Center window on current stage
   const total = sorted.length;
-  const computeOffset = () => {
-    if (total <= PAGE_SIZE) return 0;
-    const center = currentIdx === -1 ? 0 : currentIdx;
-    const half = Math.floor(PAGE_SIZE / 2);
-    return Math.max(0, Math.min(center - half, total - PAGE_SIZE));
-  };
-  const [pageOffset, setPageOffset] = useState(computeOffset);
-  const visible = sorted.slice(pageOffset, pageOffset + PAGE_SIZE);
-  const canPrev = pageOffset > 0;
-  const canNext = pageOffset + PAGE_SIZE < total;
 
   // Edit state
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -229,14 +218,6 @@ function InlineTimeline({
 
   const listRef = useRef<HTMLDivElement>(null);
 
-  // Scroll pagination via wheel on the list
-  const handleWheel = (e: React.WheelEvent) => {
-    if (total <= PAGE_SIZE) return;
-    e.preventDefault();
-    if (e.deltaY > 0) setPageOffset(o => Math.min(total - PAGE_SIZE, o + 1));
-    else setPageOffset(o => Math.max(0, o - 1));
-  };
-
   // VIEW MODE
   if (!isEditing) {
     return (
@@ -244,9 +225,12 @@ function InlineTimeline({
         {total === 0 && <p className="text-xs text-slate-400 italic py-2">لا توجد مراحل مسجلة</p>}
 
         {total > 0 && (
-          <div ref={listRef} onWheel={handleWheel} className="space-y-1 select-none">
-            {visible.map((stage, i) => {
-              const globalIdx = pageOffset + i;
+          <div
+            ref={listRef}
+            className="space-y-1 select-none overflow-y-auto max-h-[220px] custom-scrollbar pr-0.5"
+            style={{ scrollbarWidth: "thin" }}
+          >
+            {sorted.map((stage, globalIdx) => {
               const isCompleted = currentIdx !== -1 && globalIdx < currentIdx;
               const isCurrent = stage.isCurrent;
               return (
@@ -274,21 +258,6 @@ function InlineTimeline({
                 </div>
               );
             })}
-          </div>
-        )}
-
-        {/* Scroll hint */}
-        {total > PAGE_SIZE && (
-          <div className="flex items-center justify-between mt-1.5 text-[10px] text-slate-400 dark:text-slate-500 select-none">
-            <button onClick={() => setPageOffset(o => Math.max(0, o - 1))} disabled={!canPrev}
-              className="flex items-center gap-0.5 hover:text-slate-600 disabled:opacity-30 disabled:cursor-not-allowed transition-colors">
-              <ArrowUp className="w-3 h-3" /> السابقة
-            </button>
-            <span>{pageOffset + 1}–{Math.min(pageOffset + PAGE_SIZE, total)} من {total}</span>
-            <button onClick={() => setPageOffset(o => Math.min(total - PAGE_SIZE, o + 1))} disabled={!canNext}
-              className="flex items-center gap-0.5 hover:text-slate-600 disabled:opacity-30 disabled:cursor-not-allowed transition-colors">
-              التالية <ArrowDown className="w-3 h-3" />
-            </button>
           </div>
         )}
 
@@ -423,14 +392,16 @@ function InlineTimeline({
 
 // ── Charity Card ────────────────────────────────────────────────────
 function CharityCard({
-  charity, stages, dept, serviceId, canEdit, onUnifyClick,
+  charity, stages, dept, serviceId, canEdit, onUnifyClick, onLogoClick, charityLogoUrl,
 }: {
-  charity: Charity;
+  charity: Charity & { logoUrl?: string | null };
   stages: Stage[];
   dept: DeptKey;
   serviceId: string;
   canEdit: boolean;
   onUnifyClick?: () => void;
+  onLogoClick?: () => void;
+  charityLogoUrl?: string | null;
 }) {
   const [open, setOpen] = useState(true);
   const sorted = [...stages].sort((a, b) => a.order - b.order);
@@ -445,6 +416,27 @@ function CharityCard({
     <div className={`rounded-xl border ${deptLight} overflow-hidden`}>
       <button className="w-full flex items-center justify-between gap-3 p-3 text-right" onClick={() => setOpen(o => !o)}>
         <div className="flex items-center gap-2 min-w-0">
+          {/* Logo */}
+          <div
+            className="relative group/logo shrink-0"
+            onClick={e => { e.stopPropagation(); onLogoClick?.(); }}
+            title={canEdit ? "تغيير صورة الجمعية" : undefined}
+          >
+            {charityLogoUrl ? (
+              <div className={`w-7 h-7 rounded-lg overflow-hidden border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-900 flex items-center justify-center ${canEdit ? "cursor-pointer" : ""}`}>
+                <img src={charityLogoUrl} alt={charity.name} className="w-full h-full object-contain p-0.5" />
+              </div>
+            ) : (
+              <div className={`w-7 h-7 rounded-lg bg-primary/10 text-primary flex items-center justify-center text-xs font-bold border border-primary/20 ${canEdit ? "cursor-pointer" : ""}`}>
+                {charity.name.charAt(0)}
+              </div>
+            )}
+            {canEdit && (
+              <div className="absolute inset-0 bg-black/40 rounded-lg flex items-center justify-center opacity-0 group-hover/logo:opacity-100 transition-opacity cursor-pointer">
+                <Edit2 className="w-3 h-3 text-white" />
+              </div>
+            )}
+          </div>
           <div className={`w-2 h-2 rounded-full shrink-0 ${deptColor}`} />
           <span className="font-bold text-sm text-slate-800 dark:text-slate-200 truncate">{charity.name}</span>
           {currentStage && <span className="text-xs text-slate-500 dark:text-slate-400 truncate hidden sm:inline">— {currentStage.name}</span>}
@@ -528,6 +520,37 @@ export default function ServicesOverviewClient({
   deptLabels: Record<string, string>;
 }) {
   const router = useRouter();
+
+  // Service name editing
+  const [editingServiceId, setEditingServiceId] = useState<string | null>(null);
+  const [editingServiceName, setEditingServiceName] = useState("");
+  const [serviceNames, setServiceNames] = useState<Record<string, string>>({});
+  const [isServiceNamePending, startServiceNameTransition] = useTransition();
+
+  // Logo editing
+  const [logoEditCharityId, setLogoEditCharityId] = useState<string | null>(null);
+  const [logoUrl, setLogoUrl] = useState("");
+  const [isLogoPending, startLogoTransition] = useTransition();
+
+  const handleSaveServiceName = (svcId: string, dept: string | null) => {
+    if (!editingServiceName.trim()) return;
+    startServiceNameTransition(async () => {
+      setServiceNames(prev => ({ ...prev, [svcId]: editingServiceName.trim() }));
+      setEditingServiceId(null);
+      await updateService(svcId, editingServiceName.trim(), dept);
+      router.refresh();
+    });
+  };
+
+  const handleSaveLogo = (charityId: string) => {
+    startLogoTransition(async () => {
+      await updateCharityLogo(charityId, logoUrl.trim() || null);
+      setLogoEditCharityId(null);
+      setLogoUrl("");
+      router.refresh();
+    });
+  };
+
   const [unifyCharity, setUnifyCharity] = useState<{
     id: string;
     name: string;
@@ -647,14 +670,57 @@ export default function ServicesOverviewClient({
         <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm overflow-hidden">
           {/* Tabs */}
           <div className="flex overflow-x-auto border-b border-slate-100 dark:border-slate-700 scrollbar-none">
-            {tabs.map(tab => (
-              <button key={tab.key} onClick={() => { setActiveTab(tab.key); setExtraCharityIds([]); }}
-                className={`px-4 py-3 text-sm font-bold whitespace-nowrap transition-colors border-b-2 -mb-px ${
-                  activeTab === tab.key ? "border-primary text-primary bg-primary/5" : "border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200"
-                }`}>
-                {tab.label}
-              </button>
-            ))}
+            {tabs.map(tab => {
+              const isSvc = tab.key.startsWith("SVC:");
+              const svcId = isSvc ? tab.key.replace("SVC:", "") : null;
+              const svcInfo = svcId ? uniqueServiceKeys.find(s => s.id === svcId) : null;
+              const displayName = (svcId && serviceNames[svcId]) || tab.label;
+              const isEditingThis = editingServiceId === svcId;
+
+              return (
+                <div key={tab.key} className="relative flex items-center group/tab">
+                  {isEditingThis ? (
+                    <div className="flex items-center gap-1 px-2 py-2">
+                      <input
+                        autoFocus
+                        value={editingServiceName}
+                        onChange={e => setEditingServiceName(e.target.value)}
+                        onKeyDown={e => {
+                          if (e.key === "Enter") handleSaveServiceName(svcId!, svcInfo?.dept ?? null);
+                          if (e.key === "Escape") setEditingServiceId(null);
+                        }}
+                        className="text-xs font-bold border border-primary/40 rounded px-2 py-1 outline-none focus:ring-1 focus:ring-primary/30 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 w-28"
+                      />
+                      <button onClick={() => handleSaveServiceName(svcId!, svcInfo?.dept ?? null)} disabled={isServiceNamePending}
+                        className="p-1 text-primary hover:bg-primary/10 rounded">
+                        {isServiceNamePending ? <Loader2 className="w-3 h-3 animate-spin" /> : <Save className="w-3 h-3" />}
+                      </button>
+                      <button onClick={() => setEditingServiceId(null)} className="p-1 text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 rounded">
+                        <X className="w-3 h-3" />
+                      </button>
+                    </div>
+                  ) : (
+                    <>
+                      <button onClick={() => { setActiveTab(tab.key); setExtraCharityIds([]); }}
+                        className={`px-4 py-3 text-sm font-bold whitespace-nowrap transition-colors border-b-2 -mb-px ${
+                          activeTab === tab.key ? "border-primary text-primary bg-primary/5" : "border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200"
+                        }`}>
+                        {displayName}
+                      </button>
+                      {isAdmin && isSvc && (
+                        <button
+                          onClick={() => { setEditingServiceId(svcId!); setEditingServiceName(displayName); }}
+                          className="absolute -top-0.5 left-0 opacity-0 group-hover/tab:opacity-100 transition-opacity p-0.5 text-slate-400 hover:text-primary"
+                          title="تعديل اسم الخدمة"
+                        >
+                          <Edit2 className="w-2.5 h-2.5" />
+                        </button>
+                      )}
+                    </>
+                  )}
+                </div>
+              );
+            })}
           </div>
 
           {/* Stats bar */}
@@ -718,6 +784,8 @@ export default function ServicesOverviewClient({
                         serviceId={svc.id}
                         canEdit={canEdit}
                         onUnifyClick={() => handleOpenUnify(charity)}
+                        charityLogoUrl={charity.logoUrl}
+                        onLogoClick={isAdmin ? () => { setLogoEditCharityId(charity.id); setLogoUrl(charity.logoUrl || ""); } : undefined}
                       />
                     ));
                   }
@@ -731,6 +799,8 @@ export default function ServicesOverviewClient({
                       serviceId=""
                       canEdit={canEdit}
                       onUnifyClick={() => handleOpenUnify(charity)}
+                      charityLogoUrl={charity.logoUrl}
+                      onLogoClick={isAdmin ? () => { setLogoEditCharityId(charity.id); setLogoUrl(charity.logoUrl || ""); } : undefined}
                     />
                   );
                 })}
@@ -745,6 +815,8 @@ export default function ServicesOverviewClient({
                       serviceId=""
                       canEdit={canEdit}
                       onUnifyClick={() => handleOpenUnify(charity)}
+                      charityLogoUrl={charity.logoUrl}
+                      onLogoClick={isAdmin ? () => { setLogoEditCharityId(charity.id); setLogoUrl(charity.logoUrl || ""); } : undefined}
                     />
                   );
                 })}
@@ -808,6 +880,59 @@ export default function ServicesOverviewClient({
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Logo edit modal */}
+      {logoEditCharityId && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={() => setLogoEditCharityId(null)} />
+          <div className="relative bg-white dark:bg-slate-800 rounded-2xl w-full max-w-sm shadow-2xl border border-slate-200 dark:border-slate-700 animate-in zoom-in-95 duration-200" dir="rtl">
+            <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100 dark:border-slate-700">
+              <h3 className="text-sm font-bold text-slate-800 dark:text-slate-100">تغيير صورة الجمعية</h3>
+              <button onClick={() => setLogoEditCharityId(null)} className="p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            <div className="p-5 space-y-4">
+              {logoUrl && (
+                <div className="flex justify-center">
+                  <div className="w-20 h-20 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-900 flex items-center justify-center overflow-hidden">
+                    <img src={logoUrl} alt="preview" className="w-full h-full object-contain p-1" onError={e => (e.currentTarget.style.display = "none")} />
+                  </div>
+                </div>
+              )}
+              <div>
+                <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-1.5">رابط الصورة (URL)</label>
+                <input
+                  type="text"
+                  value={logoUrl}
+                  onChange={e => setLogoUrl(e.target.value)}
+                  placeholder="https://..."
+                  dir="ltr"
+                  className="w-full text-xs border border-slate-200 dark:border-slate-600 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-primary/30 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100"
+                />
+              </div>
+              <div className="flex gap-2 pt-2">
+                <button
+                  onClick={() => handleSaveLogo(logoEditCharityId)}
+                  disabled={isLogoPending}
+                  className="flex-1 py-2 text-xs font-bold text-white bg-primary hover:bg-primary/90 rounded-lg flex items-center justify-center gap-1.5 disabled:opacity-60"
+                >
+                  {isLogoPending ? <Loader2 className="w-3 h-3 animate-spin" /> : <Save className="w-3 h-3" />}
+                  حفظ
+                </button>
+                <button onClick={() => { handleSaveLogo(logoEditCharityId); setLogoUrl(""); }}
+                  disabled={isLogoPending}
+                  className="px-3 py-2 text-xs font-bold text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors">
+                  حذف الصورة
+                </button>
+                <button onClick={() => setLogoEditCharityId(null)} className="px-3 py-2 text-xs font-bold text-slate-500 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 rounded-lg transition-colors">
+                  إلغاء
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}

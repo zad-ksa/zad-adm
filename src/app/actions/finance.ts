@@ -2,10 +2,12 @@
 
 import { prisma } from "@/lib/db";
 import { revalidatePath } from "next/cache";
+import { getSession } from "@/lib/auth";
+import { assertCharityAccess } from "@/lib/access";
 
 export async function addFinanceStage(
-  charityId: string, 
-  name: string, 
+  charityId: string,
+  name: string,
   duration?: string,
   description?: string,
   startDate?: string,
@@ -13,6 +15,9 @@ export async function addFinanceStage(
   isContinuous: boolean = false,
   isActive: boolean = true
 ) {
+  const session = await getSession();
+  if (!session) throw new Error("UNAUTHORIZED");
+  await assertCharityAccess(session.id, session.role, charityId);
   const lastStage = await prisma.financeStage.findFirst({
     where: { charityId },
     orderBy: { order: 'desc' }
@@ -43,8 +48,8 @@ export async function addFinanceStage(
 }
 
 export async function updateFinanceStage(
-  stageId: string, 
-  name: string, 
+  stageId: string,
+  name: string,
   duration?: string,
   description?: string,
   startDate?: string,
@@ -52,6 +57,10 @@ export async function updateFinanceStage(
   isContinuous: boolean = false,
   isActive: boolean = true
 ) {
+  const session = await getSession();
+  if (!session) throw new Error("UNAUTHORIZED");
+  const stageRef = await prisma.financeStage.findUnique({ where: { id: stageId }, select: { charityId: true } });
+  if (stageRef) await assertCharityAccess(session.id, session.role, stageRef.charityId);
   const stage = await prisma.financeStage.update({
     where: { id: stageId },
     data: { 
@@ -71,6 +80,10 @@ export async function updateFinanceStage(
 }
 
 export async function deleteFinanceStage(stageId: string) {
+  const session = await getSession();
+  if (!session) throw new Error("UNAUTHORIZED");
+  const stageRef = await prisma.financeStage.findUnique({ where: { id: stageId }, select: { charityId: true } });
+  if (stageRef) await assertCharityAccess(session.id, session.role, stageRef.charityId);
   const stage = await prisma.financeStage.delete({
     where: { id: stageId },
     include: { charity: true }
@@ -92,6 +105,9 @@ export async function toggleActiveFinanceStage(stageId: string, isActive: boolea
 }
 
 export async function setCurrentFinanceStage(charityId: string, stageId: string) {
+  const session = await getSession();
+  if (!session) throw new Error("UNAUTHORIZED");
+  await assertCharityAccess(session.id, session.role, charityId);
   await prisma.financeStage.updateMany({
     where: { charityId },
     data: { isCurrent: false }
@@ -108,6 +124,9 @@ export async function setCurrentFinanceStage(charityId: string, stageId: string)
 }
 
 export async function reorderFinanceStages(charityId: string, stageIds: string[]) {
+  const session = await getSession();
+  if (!session) throw new Error("UNAUTHORIZED");
+  await assertCharityAccess(session.id, session.role, charityId);
   for (let i = 0; i < stageIds.length; i++) {
     await prisma.financeStage.update({
       where: { id: stageIds[i] },

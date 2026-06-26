@@ -2,6 +2,8 @@
 
 import { prisma } from "@/lib/db";
 import { revalidatePath } from "next/cache";
+import { getSession } from "@/lib/auth";
+import { assertCharityAccess } from "@/lib/access";
 
 const DEFAULT_STAGES = [
   "مرحلة قياس الجاهزية",
@@ -49,6 +51,9 @@ export async function addStrategicStage(
   isContinuous: boolean = false,
   isActive: boolean = true
 ) {
+  const session = await getSession();
+  if (!session) throw new Error("UNAUTHORIZED");
+  await assertCharityAccess(session.id, session.role, charityId);
   await ensureStagesForCharity(charityId);
 
   const lastStage = await prisma.strategicStage.findFirst({
@@ -91,6 +96,10 @@ export async function updateStrategicStage(
   isContinuous: boolean = false,
   isActive: boolean = true
 ) {
+  const session = await getSession();
+  if (!session) throw new Error("UNAUTHORIZED");
+  const stageRef = await prisma.strategicStage.findUnique({ where: { id: stageId }, select: { charityId: true } });
+  if (stageRef) await assertCharityAccess(session.id, session.role, stageRef.charityId);
   const stage = await prisma.strategicStage.update({
     where: { id: stageId },
     data: {
@@ -110,6 +119,10 @@ export async function updateStrategicStage(
 }
 
 export async function deleteStrategicStage(stageId: string) {
+  const session = await getSession();
+  if (!session) throw new Error("UNAUTHORIZED");
+  const stageRef = await prisma.strategicStage.findUnique({ where: { id: stageId }, select: { charityId: true } });
+  if (stageRef) await assertCharityAccess(session.id, session.role, stageRef.charityId);
   const stage = await prisma.strategicStage.delete({
     where: { id: stageId },
     include: { charity: true }
@@ -131,6 +144,9 @@ export async function toggleActiveStrategicStage(stageId: string, isActive: bool
 }
 
 export async function setCurrentStrategicStage(charityId: string, stageId: string) {
+  const session = await getSession();
+  if (!session) throw new Error("UNAUTHORIZED");
+  await assertCharityAccess(session.id, session.role, charityId);
   await ensureStagesForCharity(charityId);
 
   // Unset all
@@ -157,6 +173,9 @@ export async function setCurrentStrategicStage(charityId: string, stageId: strin
 }
 
 export async function reorderStrategicStages(charityId: string, stageIds: string[]) {
+  const session = await getSession();
+  if (!session) throw new Error("UNAUTHORIZED");
+  await assertCharityAccess(session.id, session.role, charityId);
   // We receive the new array of IDs in the desired order
   for (let i = 0; i < stageIds.length; i++) {
     await prisma.strategicStage.update({

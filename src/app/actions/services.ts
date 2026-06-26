@@ -2,6 +2,8 @@
 
 import { prisma } from "@/lib/db";
 import { revalidatePath } from "next/cache";
+import { getSession } from "@/lib/auth";
+import { assertCharityAccess } from "@/lib/access";
 
 export async function getServices(charityId: string, department?: string | null) {
   const whereClause: any = { charityId };
@@ -21,6 +23,9 @@ export async function getServices(charityId: string, department?: string | null)
 }
 
 export async function createService(charityId: string, name: string, department: string | null) {
+  const session = await getSession();
+  if (!session) throw new Error("UNAUTHORIZED");
+  await assertCharityAccess(session.id, session.role, charityId);
   // Enforce max 1 timeline per department (unless no department)
   if (department && department !== "NONE") {
     const existingService = await prisma.service.findFirst({
@@ -50,6 +55,10 @@ export async function createService(charityId: string, name: string, department:
 }
 
 export async function updateService(id: string, name: string, department: string | null) {
+  const session = await getSession();
+  if (!session) throw new Error("UNAUTHORIZED");
+  const svc = await prisma.service.findUnique({ where: { id }, select: { charityId: true } });
+  if (svc) await assertCharityAccess(session.id, session.role, svc.charityId);
   const service = await prisma.service.update({
     where: { id },
     data: { name, department },
@@ -66,6 +75,10 @@ export async function updateService(id: string, name: string, department: string
 }
 
 export async function deleteService(id: string) {
+  const session = await getSession();
+  if (!session) throw new Error("UNAUTHORIZED");
+  const svc = await prisma.service.findUnique({ where: { id }, select: { charityId: true } });
+  if (svc) await assertCharityAccess(session.id, session.role, svc.charityId);
   const service = await prisma.service.delete({
     where: { id },
     include: { charity: true }

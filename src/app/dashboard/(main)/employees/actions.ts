@@ -3,6 +3,8 @@
 import { prisma } from "@/lib/db";
 import { hash } from "bcryptjs";
 import { revalidatePath } from "next/cache";
+import { getSession } from "@/lib/auth";
+import { isAdminRole } from "@/lib/access";
 
 export async function addEmployee(prevState: any, formData: FormData) {
   const name = formData.get("name") as string;
@@ -65,6 +67,26 @@ export async function toggleEmployeeStatus(id: string, currentStatus: boolean) {
   } catch (error) {
     return { error: "حدث خطأ" };
   }
+}
+
+export async function updateEmployeeCharities(
+  employeeId: string,
+  charityIds: string[]
+) {
+  const session = await getSession();
+  if (!session || !isAdminRole(session.role)) throw new Error("FORBIDDEN");
+
+  await prisma.$transaction([
+    prisma.employeeCharity.deleteMany({ where: { employeeId } }),
+    ...(charityIds.length > 0
+      ? [prisma.employeeCharity.createMany({
+          data: charityIds.map((charityId) => ({ employeeId, charityId })),
+        })]
+      : []),
+  ]);
+
+  revalidatePath("/dashboard/employees");
+  return { success: true };
 }
 
 export async function updateEmployee(

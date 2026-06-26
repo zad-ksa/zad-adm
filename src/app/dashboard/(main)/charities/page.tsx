@@ -1,10 +1,13 @@
-﻿import { unstable_cache } from "next/cache";
-import { prisma } from "@/lib/db";
+﻿import { prisma } from "@/lib/db";
 import type { Metadata } from "next";
 import Link from "next/link";
 import AddCharityButton from "./AddCharityButton";
+import { getSession } from "@/lib/auth";
+import { getAssignedCharityIds } from "@/lib/access";
 
-const getCachedDashboardData = async () => {
+const getCachedDashboardData = async (assignedIds: string[] | null) => {
+  const charityFilter = assignedIds !== null ? { id: { in: assignedIds } } : undefined;
+
   const [
     charities,
     allSurveys,
@@ -13,6 +16,7 @@ const getCachedDashboardData = async () => {
     dbNewsItems
   ] = await Promise.all([
     prisma.charity.findMany({
+      where: charityFilter,
       select: { id: true, name: true, createdAt: true, domain: true, grants: true, logoUrl: true },
       orderBy: { createdAt: "desc" }
     }),
@@ -86,6 +90,9 @@ export const metadata: Metadata = {
 };
 
 export default async function CharitiesDashboard() {
+  const session = await getSession();
+  const assignedIds = session ? await getAssignedCharityIds(session.id, session.role) : [];
+
   const {
     charities,
     surveyResponsesGrouped,
@@ -93,7 +100,7 @@ export default async function CharitiesDashboard() {
     programsGrouped,
     programsAgg,
     dbNewsItems
-  } = await getCachedDashboardData();
+  } = await getCachedDashboardData(assignedIds);
 
   // Calculate surveys per charity FAST using grouped data
   const surveyCounts = new Map<string, { readiness: number, hexagonal: number }>();

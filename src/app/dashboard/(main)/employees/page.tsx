@@ -13,9 +13,13 @@ export default async function EmployeesPage() {
     redirect("/dashboard");
   }
 
-  const employees = await prisma.employee.findMany({
-    orderBy: { createdAt: "desc" },
-  });
+  const [employees, allCharities] = await Promise.all([
+    prisma.employee.findMany({
+      orderBy: { createdAt: "desc" },
+      include: { assignedCharities: { select: { charityId: true } } },
+    }),
+    prisma.charity.findMany({ select: { id: true, name: true }, orderBy: { name: "asc" } }),
+  ]);
 
   return (
     <div className="space-y-8" dir="rtl">
@@ -25,7 +29,7 @@ export default async function EmployeesPage() {
           إدارة الموظفين
         </h1>
         <p className="text-slate-600 dark:text-slate-300 mt-1">
-          إضافة موظفين جدد وإدارة صلاحياتهم
+          إضافة موظفين جدد وإدارة صلاحياتهم وتخصيص الجمعيات لهم
         </p>
       </div>
 
@@ -38,7 +42,7 @@ export default async function EmployeesPage() {
       {/* Employees List */}
       <section>
         <h2 className="text-lg font-semibold text-slate-800 dark:text-slate-100 mb-4">قائمة الموظفين</h2>
-        <EmployeesClient employees={employees as any} session={session} />
+        <EmployeesClient employees={employees as any} session={session} allCharities={allCharities} />
       </section>
     </div>
   );

@@ -1,19 +1,21 @@
 ﻿"use client";
 
 import { useState, useTransition } from "react";
-import { toggleEmployeeStatus, updateEmployee } from "./actions";
-import { 
-  UserCircle, 
-  ShieldAlert, 
-  Check, 
-  X, 
-  Loader2, 
-  AlertTriangle, 
-  User, 
-  Phone, 
+import { toggleEmployeeStatus, updateEmployee, updateEmployeeCharities } from "./actions";
+import {
+  UserCircle,
+  ShieldAlert,
+  Check,
+  X,
+  Loader2,
+  AlertTriangle,
+  User,
+  Phone,
   Key
 } from "@/components/Icons";
-import { Edit, ShieldCheck } from "lucide-react";
+import { Edit, ShieldCheck, Building2 } from "lucide-react";
+
+const ADMIN_ROLES = ["ADMIN", "EXECUTIVE_DIRECTOR", "GENERAL_MANAGER", "ADMINISTRATIVE_SECRETARIAT"];
 
 const roleTranslations: Record<string, string> = {
   ADMIN: "مدير النظام",
@@ -38,6 +40,11 @@ const permissionsList = [
   { id: "manage_hr", label: "إدارة الموارد البشرية" },
 ];
 
+interface Charity {
+  id: string;
+  name: string;
+}
+
 interface Employee {
   id: string;
   name: string;
@@ -46,14 +53,17 @@ interface Employee {
   permissions: string[];
   isActive: boolean;
   createdAt: Date | string;
+  assignedCharities?: { charityId: string }[];
 }
 
-export function EmployeesClient({ 
+export function EmployeesClient({
   employees: initialEmployees,
-  session
-}: { 
+  session,
+  allCharities = [],
+}: {
   employees: Employee[];
   session: any;
+  allCharities?: Charity[];
 }) {
   const [employees, setEmployees] = useState<Employee[]>(initialEmployees);
   const [editingEmployee, setEditingEmployee] = useState<Employee | null>(null);
@@ -64,6 +74,7 @@ export function EmployeesClient({
   const [editPassword, setEditPassword] = useState("");
   const [editRole, setEditRole] = useState("");
   const [editPermissions, setEditPermissions] = useState<string[]>([]);
+  const [editCharityIds, setEditCharityIds] = useState<string[]>([]);
   const [modalError, setModalError] = useState<string | null>(null);
   const [modalSuccess, setModalSuccess] = useState<string | null>(null);
 
@@ -89,8 +100,15 @@ export function EmployeesClient({
     setEditRole(emp.role);
     setEditPermissions(emp.permissions);
     setEditPassword("");
+    setEditCharityIds(emp.assignedCharities?.map((c) => c.charityId) ?? []);
     setModalError(null);
     setModalSuccess(null);
+  };
+
+  const handleCharityToggle = (charityId: string) => {
+    setEditCharityIds((prev) =>
+      prev.includes(charityId) ? prev.filter((id) => id !== charityId) : [...prev, charityId]
+    );
   };
 
   const handlePermissionToggle = (permId: string) => {
@@ -119,19 +137,32 @@ export function EmployeesClient({
 
       if (res.error) {
         setModalError(res.error);
-      } else {
-        setModalSuccess(res.success || "تم تحديث البيانات بنجاح");
-        setEmployees(prev => 
-          prev.map(emp => 
-            emp.id === editingEmployee.id 
-              ? { ...emp, name: editName, phone: editPhone, role: editRole, permissions: editPermissions } 
-              : emp
-          )
-        );
-        setTimeout(() => {
-          setEditingEmployee(null);
-        }, 1000);
+        return;
       }
+
+      // Save charity assignments for restricted roles
+      if (!ADMIN_ROLES.includes(editRole) && editRole !== "CHARITY_CLIENT") {
+        await updateEmployeeCharities(editingEmployee.id, editCharityIds);
+      }
+
+      setModalSuccess(res.success || "تم تحديث البيانات بنجاح");
+      setEmployees((prev) =>
+        prev.map((emp) =>
+          emp.id === editingEmployee.id
+            ? {
+                ...emp,
+                name: editName,
+                phone: editPhone,
+                role: editRole,
+                permissions: editPermissions,
+                assignedCharities: editCharityIds.map((id) => ({ charityId: id })),
+              }
+            : emp
+        )
+      );
+      setTimeout(() => {
+        setEditingEmployee(null);
+      }, 1000);
     });
   };
 
@@ -389,6 +420,52 @@ export function EmployeesClient({
                   })}
                 </div>
               </div>
+
+              {/* Charity Assignment Section — shown only for restricted roles */}
+              {!ADMIN_ROLES.includes(editRole) && editRole !== "CHARITY_CLIENT" && allCharities.length > 0 && (
+                <div className="pt-4 border-t border-slate-100 dark:border-slate-700">
+                  <div className="flex items-center gap-2 mb-3">
+                    <Building2 className="w-4 h-4 text-slate-500 dark:text-slate-400" />
+                    <h4 className="text-sm font-bold text-slate-700 dark:text-slate-200">الجمعيات المخصصة</h4>
+                    <span className="text-[11px] text-slate-400 dark:text-slate-500 font-medium mr-auto">
+                      {editCharityIds.length} / {allCharities.length} محددة
+                    </span>
+                  </div>
+                  <div className="max-h-44 overflow-y-auto rounded-xl border border-slate-200 dark:border-slate-700 divide-y divide-slate-100 dark:divide-slate-700/60">
+                    {allCharities.map((charity) => {
+                      const isChecked = editCharityIds.includes(charity.id);
+                      return (
+                        <button
+                          key={charity.id}
+                          type="button"
+                          onClick={() => handleCharityToggle(charity.id)}
+                          disabled={isPending}
+                          className={`w-full flex items-center gap-3 px-3 py-2.5 text-right transition-colors cursor-pointer ${
+                            isChecked
+                              ? "bg-primary/5 dark:bg-primary/10 text-primary dark:text-primary"
+                              : "hover:bg-slate-50 dark:hover:bg-slate-700/40 text-slate-600 dark:text-slate-300"
+                          }`}
+                        >
+                          <div className={`w-4 h-4 rounded border flex items-center justify-center shrink-0 ${
+                            isChecked
+                              ? "bg-primary border-primary"
+                              : "border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800"
+                          }`}>
+                            {isChecked && <Check className="w-3 h-3 text-white" />}
+                          </div>
+                          <span className="text-xs font-bold">{charity.name}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                  {editCharityIds.length === 0 && (
+                    <p className="mt-2 text-[11px] text-amber-600 dark:text-amber-400 font-medium flex items-center gap-1.5">
+                      <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
+                      بدون تخصيص، لن يتمكن الموظف من الوصول إلى أي جمعية
+                    </p>
+                  )}
+                </div>
+              )}
 
               {/* Footer Actions */}
               <div className="pt-6 border-t border-slate-100 dark:border-slate-700 flex items-center justify-end gap-3 shrink-0">

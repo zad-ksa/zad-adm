@@ -2,6 +2,8 @@
 
 import { prisma } from "@/lib/db";
 import { revalidatePath } from "next/cache";
+import { getSession } from "@/lib/auth";
+import { assertCharityAccess } from "@/lib/access";
 
 export async function addGovernanceStage(
   charityId: string,
@@ -13,6 +15,9 @@ export async function addGovernanceStage(
   isContinuous: boolean = false,
   isActive: boolean = true
 ) {
+  const session = await getSession();
+  if (!session) throw new Error("UNAUTHORIZED");
+  await assertCharityAccess(session.id, session.role, charityId);
   const lastStage = await prisma.governanceStage.findFirst({
     where: { charityId },
     orderBy: { order: 'desc' }
@@ -52,6 +57,10 @@ export async function updateGovernanceStage(
   isContinuous: boolean = false,
   isActive: boolean = true
 ) {
+  const session = await getSession();
+  if (!session) throw new Error("UNAUTHORIZED");
+  const stageRef = await prisma.governanceStage.findUnique({ where: { id: stageId }, select: { charityId: true } });
+  if (stageRef) await assertCharityAccess(session.id, session.role, stageRef.charityId);
   const stage = await prisma.governanceStage.update({
     where: { id: stageId },
     data: {
@@ -71,6 +80,10 @@ export async function updateGovernanceStage(
 }
 
 export async function deleteGovernanceStage(stageId: string) {
+  const session = await getSession();
+  if (!session) throw new Error("UNAUTHORIZED");
+  const stageRef = await prisma.governanceStage.findUnique({ where: { id: stageId }, select: { charityId: true } });
+  if (stageRef) await assertCharityAccess(session.id, session.role, stageRef.charityId);
   const stage = await prisma.governanceStage.delete({
     where: { id: stageId },
     include: { charity: true }
@@ -92,6 +105,9 @@ export async function toggleActiveGovernanceStage(stageId: string, isActive: boo
 }
 
 export async function setCurrentGovernanceStage(charityId: string, stageId: string) {
+  const session = await getSession();
+  if (!session) throw new Error("UNAUTHORIZED");
+  await assertCharityAccess(session.id, session.role, charityId);
   await prisma.governanceStage.updateMany({
     where: { charityId },
     data: { isCurrent: false }
@@ -108,6 +124,9 @@ export async function setCurrentGovernanceStage(charityId: string, stageId: stri
 }
 
 export async function reorderGovernanceStages(charityId: string, stageIds: string[]) {
+  const session = await getSession();
+  if (!session) throw new Error("UNAUTHORIZED");
+  await assertCharityAccess(session.id, session.role, charityId);
   for (let i = 0; i < stageIds.length; i++) {
     await prisma.governanceStage.update({
       where: { id: stageIds[i] },

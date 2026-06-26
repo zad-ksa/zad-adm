@@ -3,6 +3,7 @@ import { getSession } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { Metadata } from "next";
 import ServicesOverviewClient from "./ServicesOverviewClient";
+import { getAssignedCharityIds } from "@/lib/access";
 
 export const metadata: Metadata = {
   title: "عرض الخدمات | زاد التنموية",
@@ -24,7 +25,13 @@ export default async function ServicesOverviewPage() {
   const role = session.role;
   const isAdmin = ["ADMIN", "EXECUTIVE_DIRECTOR", "GENERAL_MANAGER", "ADMINISTRATIVE_SECRETARIAT"].includes(role);
 
+  // Get assigned charity IDs for restricted roles (null = all access)
+  const assignedIds = isAdmin ? null : await getAssignedCharityIds(session.id, role);
+  const charityFilter = assignedIds !== null ? { id: { in: assignedIds } } : undefined;
+  const stageFilter = assignedIds !== null ? { charityId: { in: assignedIds } } : {};
+
   const charities = await prisma.charity.findMany({
+    where: charityFilter,
     orderBy: { name: "asc" },
     select: {
       id: true,
@@ -44,16 +51,19 @@ export default async function ServicesOverviewPage() {
 
   if (canSee("STRATEGY")) {
     data["STRATEGY"] = await prisma.strategicStage.findMany({
+      where: stageFilter,
       orderBy: [{ charityId: "asc" }, { order: "asc" }],
     });
   }
   if (canSee("GOVERNANCE")) {
     data["GOVERNANCE"] = await prisma.governanceStage.findMany({
+      where: stageFilter,
       orderBy: [{ charityId: "asc" }, { order: "asc" }],
     });
   }
   if (canSee("FINANCE")) {
     data["FINANCE"] = await prisma.financeStage.findMany({
+      where: stageFilter,
       orderBy: [{ charityId: "asc" }, { order: "asc" }],
     });
   }
@@ -62,13 +72,13 @@ export default async function ServicesOverviewPage() {
   const isSpecialDept = BUILTIN_DEPTS.includes(role);
   if (isAdmin) {
     data["SERVICES"] = await prisma.service.findMany({
+      where: charityFilter,
       include: { stages: { orderBy: { order: "asc" } } },
       orderBy: { charityId: "asc" },
     });
   } else if (!isSpecialDept) {
-    // Roles like PROGRAMS, HR, etc. only see their own services
     data["SERVICES"] = await prisma.service.findMany({
-      where: { department: role },
+      where: { department: role, ...stageFilter },
       include: { stages: { orderBy: { order: "asc" } } },
       orderBy: { charityId: "asc" },
     });

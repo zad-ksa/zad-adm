@@ -39,6 +39,7 @@ model Charity {
 
   regulationVisibilities CharityRegulationVisibility[]
   employees         Employee[]
+  assignedEmployees EmployeeCharity[] @relation("AssignedEmployees")
   isReadinessVisible Boolean @default(false)
   isVisionMissionVisible Boolean @default(false)
   isPerformanceEditable Boolean @default(false)
@@ -169,22 +170,36 @@ enum Role {
 }
 
 model Employee {
-  id                   String        @id @default(uuid())
+  id                   String           @id @default(uuid())
   name                 String
-  phone                String        @unique
+  phone                String           @unique
   password             String
   avatarUrl            String?
-  role                 Role          @default(STRATEGY)
-  charityId            String?       // For CHARITY_CLIENT accounts
-  charity              Charity?      @relation(fields: [charityId], references: [id])
+  role                 Role             @default(STRATEGY)
+  charityId            String?          // For CHARITY_CLIENT accounts
+  charity              Charity?         @relation(fields: [charityId], references: [id])
   permissions          String[]
-  isActive             Boolean       @default(true)
-  createdAt            DateTime      @default(now())
-  updatedAt            DateTime      @updatedAt
-  assignedTasks        Task[]        @relation("AssignedTasks")
-  createdTasks         Task[]        @relation("CreatedTasks")
-  employeeAchievements Achievement[] @relation("EmployeeAchievements")
-  createdAchievements  Achievement[] @relation("CreatedAchievements")
+  isActive             Boolean          @default(true)
+  createdAt            DateTime         @default(now())
+  updatedAt            DateTime         @updatedAt
+  assignedTasks        Task[]           @relation("AssignedTasks")
+  createdTasks         Task[]           @relation("CreatedTasks")
+  employeeAchievements Achievement[]    @relation("EmployeeAchievements")
+  createdAchievements  Achievement[]    @relation("CreatedAchievements")
+  assignedCharities    EmployeeCharity[] @relation("AssignedCharities")
+}
+
+model EmployeeCharity {
+  id         String   @id @default(uuid())
+  employeeId String
+  charityId  String
+  employee   Employee @relation("AssignedCharities", fields: [employeeId], references: [id], onDelete: Cascade)
+  charity    Charity  @relation("AssignedEmployees", fields: [charityId], references: [id], onDelete: Cascade)
+  assignedAt DateTime @default(now())
+
+  @@unique([employeeId, charityId])
+  @@index([employeeId])
+  @@index([charityId])
 }
 
 model Task {

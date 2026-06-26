@@ -3,13 +3,11 @@
 import { prisma } from "@/lib/db";
 import { getSession } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
+import { assertCharityAccess } from "@/lib/access";
 
-// Helper to verify user session
 async function getAuthenticatedUser() {
   const session = await getSession();
-  if (!session || !session.id) {
-    throw new Error("غير مصرح لك بإجراء هذه العملية");
-  }
+  if (!session || !session.id) throw new Error("غير مصرح لك بإجراء هذه العملية");
   return session;
 }
 
@@ -20,7 +18,8 @@ export async function addProgramAction(
   beneficiaries: number
 ) {
   try {
-    await getAuthenticatedUser();
+    const user = await getAuthenticatedUser();
+    await assertCharityAccess(user.id, user.role, charityId);
 
     if (!name || !name.trim()) {
       return { error: "يرجى إدخال اسم البرنامج أو المشروع" };
@@ -59,7 +58,7 @@ export async function addProgramAction(
 // 2. Delete a program
 export async function deleteProgramAction(programId: string) {
   try {
-    await getAuthenticatedUser();
+    const user = await getAuthenticatedUser();
 
     const program = await prisma.program.findUnique({
       where: { id: programId },
@@ -69,6 +68,8 @@ export async function deleteProgramAction(programId: string) {
     if (!program) {
       return { error: "البرنامج غير موجود" };
     }
+
+    await assertCharityAccess(user.id, user.role, program.charityId);
 
     await prisma.program.delete({
       where: { id: programId },

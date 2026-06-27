@@ -714,7 +714,7 @@ export default function ServicesOverviewClient({
               const svcId = isSvc ? tab.key.replace("SVC:", "") : null;
               const svcInfo = svcId ? uniqueServiceKeys.find(s => s.id === svcId) : null;
               const displayName = (svcId && serviceNames[svcId]) || tab.label;
-              const isEditingThis = editingServiceId === svcId;
+              const isEditingThis = svcId !== null && editingServiceId === svcId;
 
               return (
                 <div key={tab.key} className="relative flex items-center group/tab">

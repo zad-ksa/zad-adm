@@ -12,7 +12,7 @@ type Stage = {
   duration?: string | null;
   order: number;
   isCurrent: boolean;
-  isContinuous?: boolean;
+  isContinuous?: boolean | null;
 };
 
 type ServiceWithStages = {

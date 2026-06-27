@@ -47,7 +47,7 @@ type Stage = {
   endDate?: Date | string | null;
   order: number;
   isCurrent: boolean;
-  isContinuous?: boolean;
+  isContinuous?: boolean | null;
 };
 
 type ServiceWithStages = {
@@ -83,17 +83,17 @@ async function actionSetCurrent(dept: DeptKey, serviceId: string, charityId: str
   if (dept === "FINANCE") return setCurrentFinanceStage(charityId, stageId);
   return setCurrentServiceStage(serviceId, stageId);
 }
-async function actionAdd(dept: DeptKey, serviceId: string, charityId: string, name: string, desc: string | null, start: Date | null, end: Date | null) {
-  if (dept === "STRATEGY") return addStrategicStage(charityId, name, undefined, desc || undefined, start?.toISOString().split("T")[0], end?.toISOString().split("T")[0]);
-  if (dept === "GOVERNANCE") return addGovernanceStage(charityId, name, undefined, desc || undefined, start?.toISOString().split("T")[0], end?.toISOString().split("T")[0]);
-  if (dept === "FINANCE") return addFinanceStage(charityId, name, undefined, desc || undefined, start?.toISOString().split("T")[0], end?.toISOString().split("T")[0]);
-  return addServiceStage(serviceId, name, desc, start, end);
+async function actionAdd(dept: DeptKey, serviceId: string, charityId: string, name: string, desc: string | null, start: Date | null, end: Date | null, isContinuous = false) {
+  if (dept === "STRATEGY") return addStrategicStage(charityId, name, undefined, desc || undefined, start?.toISOString().split("T")[0], end?.toISOString().split("T")[0], isContinuous);
+  if (dept === "GOVERNANCE") return addGovernanceStage(charityId, name, undefined, desc || undefined, start?.toISOString().split("T")[0], end?.toISOString().split("T")[0], isContinuous);
+  if (dept === "FINANCE") return addFinanceStage(charityId, name, undefined, desc || undefined, start?.toISOString().split("T")[0], end?.toISOString().split("T")[0], isContinuous);
+  return addServiceStage(serviceId, name, desc, start, end, isContinuous);
 }
-async function actionUpdate(dept: DeptKey, stageId: string, name: string, desc: string | null, start: Date | null, end: Date | null) {
-  if (dept === "STRATEGY") return updateStrategicStage(stageId, name, undefined, desc || undefined, start?.toISOString().split("T")[0], end?.toISOString().split("T")[0]);
-  if (dept === "GOVERNANCE") return updateGovernanceStage(stageId, name, undefined, desc || undefined, start?.toISOString().split("T")[0], end?.toISOString().split("T")[0]);
-  if (dept === "FINANCE") return updateFinanceStage(stageId, name, undefined, desc || undefined, start?.toISOString().split("T")[0], end?.toISOString().split("T")[0]);
-  return updateServiceStage(stageId, name, desc, start, end);
+async function actionUpdate(dept: DeptKey, stageId: string, name: string, desc: string | null, start: Date | null, end: Date | null, isContinuous = false) {
+  if (dept === "STRATEGY") return updateStrategicStage(stageId, name, undefined, desc || undefined, start?.toISOString().split("T")[0], end?.toISOString().split("T")[0], isContinuous);
+  if (dept === "GOVERNANCE") return updateGovernanceStage(stageId, name, undefined, desc || undefined, start?.toISOString().split("T")[0], end?.toISOString().split("T")[0], isContinuous);
+  if (dept === "FINANCE") return updateFinanceStage(stageId, name, undefined, desc || undefined, start?.toISOString().split("T")[0], end?.toISOString().split("T")[0], isContinuous);
+  return updateServiceStage(stageId, name, desc, start, end, isContinuous);
 }
 async function actionDelete(dept: DeptKey, stageId: string) {
   if (dept === "STRATEGY") return deleteStrategicStage(stageId);
@@ -148,6 +148,8 @@ function InlineTimeline({
   const [newDesc, setNewDesc] = useState("");
   const [newStart, setNewStart] = useState("");
   const [newEnd, setNewEnd] = useState("");
+  const [newIsContinuous, setNewIsContinuous] = useState(false);
+  const [editIsContinuous, setEditIsContinuous] = useState(false);
 
   const openEdit = (s: Stage) => {
     setEditingId(s.id);
@@ -155,6 +157,7 @@ function InlineTimeline({
     setEditDesc(s.description || "");
     setEditStart(s.startDate ? new Date(s.startDate).toISOString().split("T")[0] : "");
     setEditEnd(s.endDate ? new Date(s.endDate).toISOString().split("T")[0] : "");
+    setEditIsContinuous(!!s.isContinuous);
   };
 
   const handleSetCurrent = (stageId: string) => {
@@ -170,10 +173,10 @@ function InlineTimeline({
       const start = editStart ? new Date(editStart) : null;
       const end = editEnd ? new Date(editEnd) : null;
       setStages(prev => prev.map(s => s.id === id
-        ? { ...s, name: editName, description: editDesc || null, startDate: start, endDate: end }
+        ? { ...s, name: editName, description: editDesc || null, startDate: start, endDate: end, isContinuous: editIsContinuous }
         : s));
       setEditingId(null);
-      await actionUpdate(dept, id, editName, editDesc || null, start, end);
+      await actionUpdate(dept, id, editName, editDesc || null, start, end, editIsContinuous);
     });
   };
 
@@ -190,8 +193,7 @@ function InlineTimeline({
     startTransition(async () => {
       const start = newStart ? new Date(newStart) : null;
       const end = newEnd ? new Date(newEnd) : null;
-      await actionAdd(dept, serviceId, charityId, newName, newDesc || null, start, end);
-      // Optimistic: add at end
+      await actionAdd(dept, serviceId, charityId, newName, newDesc || null, start, end, newIsContinuous);
       const newStage: Stage = {
         id: Math.random().toString(),
         charityId,
@@ -201,9 +203,10 @@ function InlineTimeline({
         endDate: end,
         order: stages.length,
         isCurrent: false,
+        isContinuous: newIsContinuous,
       };
       setStages(prev => [...prev, newStage]);
-      setNewName(""); setNewDesc(""); setNewStart(""); setNewEnd("");
+      setNewName(""); setNewDesc(""); setNewStart(""); setNewEnd(""); setNewIsContinuous(false);
       setIsAdding(false);
     });
   };
@@ -248,6 +251,7 @@ function InlineTimeline({
                     <div className={`font-semibold leading-tight ${isCurrent ? "text-primary" : "text-slate-700 dark:text-slate-300"}`}>
                       {stage.name}
                       {isCurrent && <span className="mr-1.5 text-[10px] bg-primary text-white px-1.5 py-0.5 rounded-full font-bold">الحالية</span>}
+                      {stage.isContinuous && <span className="mr-1 text-[10px] bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300 px-1.5 py-0.5 rounded-full font-bold">دائمة</span>}
                     </div>
                     {stage.description && <p className="text-slate-500 dark:text-slate-400 mt-0.5 text-[11px]">{stage.description}</p>}
                     {(stage.startDate || stage.endDate) && (
@@ -311,6 +315,10 @@ function InlineTimeline({
                 <input type="date" value={editEnd} onChange={e => setEditEnd(e.target.value)}
                   className="flex-1 text-xs bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 rounded-lg px-2 py-1.5 outline-none [color-scheme:light] dark:[color-scheme:dark]" />
               </div>
+              <label className="flex items-center gap-2 cursor-pointer text-xs text-slate-600 dark:text-slate-300">
+                <input type="checkbox" checked={editIsContinuous} onChange={e => setEditIsContinuous(e.target.checked)} className="w-3.5 h-3.5 accent-amber-500" />
+                <span>مرحلة دائمة (تعمل بالتوازي مع المراحل الأخرى)</span>
+              </label>
               <div className="flex gap-2">
                 <button onClick={() => handleUpdate(stage.id)} disabled={isPending || !editName.trim()}
                   className="flex-1 py-1.5 text-xs font-bold text-white bg-primary hover:bg-primary/90 rounded-lg flex items-center justify-center gap-1 disabled:opacity-60">
@@ -334,7 +342,10 @@ function InlineTimeline({
               }`}>{idx + 1}</div>
               {/* Name */}
               <div className="flex-1 min-w-0">
-                <div className={`text-xs font-semibold truncate ${stage.isCurrent ? "text-primary" : "text-slate-700 dark:text-slate-300"}`}>{stage.name}</div>
+                <div className={`text-xs font-semibold truncate flex items-center gap-1 ${stage.isCurrent ? "text-primary" : "text-slate-700 dark:text-slate-300"}`}>
+                  {stage.name}
+                  {stage.isContinuous && <span className="text-[9px] bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300 px-1 py-0.5 rounded font-bold shrink-0">دائمة</span>}
+                </div>
                 {(stage.startDate || stage.endDate) && (
                   <div className="text-[10px] text-slate-400" dir="ltr">{fmtDate(stage.startDate)}{stage.startDate && stage.endDate ? "—" : ""}{fmtDate(stage.endDate)}</div>
                 )}
@@ -374,6 +385,10 @@ function InlineTimeline({
             <input type="date" value={newEnd} onChange={e => setNewEnd(e.target.value)}
               className="flex-1 text-xs bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 rounded-lg px-2 py-1.5 outline-none [color-scheme:light] dark:[color-scheme:dark]" />
           </div>
+          <label className="flex items-center gap-2 cursor-pointer text-xs text-slate-600 dark:text-slate-300">
+            <input type="checkbox" checked={newIsContinuous} onChange={e => setNewIsContinuous(e.target.checked)} className="w-3.5 h-3.5 accent-amber-500" />
+            <span>مرحلة دائمة (تعمل بالتوازي مع المراحل الأخرى)</span>
+          </label>
           <div className="flex gap-2">
             <button onClick={handleAdd} disabled={isPending || !newName.trim()}
               className="flex-1 py-1.5 text-xs font-bold text-white bg-primary hover:bg-primary/90 rounded-lg flex items-center justify-center gap-1 disabled:opacity-60">

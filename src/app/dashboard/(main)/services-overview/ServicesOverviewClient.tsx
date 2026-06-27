@@ -662,7 +662,11 @@ export default function ServicesOverviewClient({
 
     if (activeTab.startsWith("SVC:")) {
       sourceTimelineType = "CUSTOM";
-      sourceServiceId = activeTab.replace("SVC:", "");
+      // Find the service belonging to THIS charity specifically (not the first one in the tab)
+      const thisChartiyService = allServices.find(
+        s => s.charityId === charity.id && s.name === genericSvcInfo?.name
+      );
+      sourceServiceId = thisChartiyService?.id ?? activeTab.replace("SVC:", "");
     }
 
     setUnifyCharity({

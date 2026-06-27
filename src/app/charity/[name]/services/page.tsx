@@ -9,6 +9,7 @@ import GenericStagesManager from "@/components/GenericStagesManager";
 import CharityClientTimeline from "@/components/CharityClientTimeline";
 import ServicesManagerClient from "@/components/ServicesManagerClient";
 import ServicesPrintButton from "@/components/ServicesPrintButton";
+import { getTimelineConfigs } from "@/app/actions/settings";
 
 export async function generateMetadata({ params }: { params: Promise<{ name: string }> }): Promise<Metadata> {
   const { name } = await params;
@@ -57,6 +58,11 @@ export default async function ServicesPage({ params }: { params: Promise<{ name:
     });
   }
 
+  const timelineNames = await getTimelineConfigs();
+  const strategyName = timelineNames["STRATEGY"] || "المخطط الزمني للتخطيط الاستراتيجي";
+  const governanceName = timelineNames["GOVERNANCE"] || "المخطط الزمني للحوكمة";
+  const financeName = timelineNames["FINANCE"] || "المخطط الزمني للمالية";
+
   const additionalServices = await prisma.service.findMany({
     where: { charityId: charity.id },
     include: {
@@ -86,9 +92,9 @@ export default async function ServicesPage({ params }: { params: Promise<{ name:
             <ServicesPrintButton
               charityName={decodedName}
               sections={[
-                ...(strategicStages.length > 0 ? [{ title: charity.strategyTimelineName || "المخطط الزمني للتخطيط الاستراتيجي", stages: strategicStages }] : []),
-                ...(governanceStages.length > 0 ? [{ title: charity.governanceTimelineName || "المخطط الزمني للحوكمة", stages: governanceStages }] : []),
-                ...(financeStages.length > 0 ? [{ title: charity.financeTimelineName || "المخطط الزمني للمالية", stages: financeStages }] : []),
+                ...(strategicStages.length > 0 ? [{ title: strategyName, stages: strategicStages }] : []),
+                ...(governanceStages.length > 0 ? [{ title: governanceName, stages: governanceStages }] : []),
+                ...(financeStages.length > 0 ? [{ title: financeName, stages: financeStages }] : []),
                 ...additionalServices.map(svc => ({ title: svc.name, stages: svc.stages })),
               ]}
             />
@@ -101,17 +107,17 @@ export default async function ServicesPage({ params }: { params: Promise<{ name:
           charityId={charity.id} 
           initialServices={additionalServices} 
           isAdmin={isAdmin}
-          strategyTimelineName={charity.strategyTimelineName || "المخطط الزمني للتخطيط الاستراتيجي"}
-          governanceTimelineName={charity.governanceTimelineName || "المخطط الزمني للحوكمة"}
-          financeTimelineName={charity.financeTimelineName || "المخطط الزمني للمالية"}
+          strategyTimelineName={strategyName}
+          governanceTimelineName={governanceName}
+          financeTimelineName={financeName}
         />
       )}
 
       {isCharityClient ? (
         <div className="space-y-8">
-          <CharityClientTimeline title={charity.strategyTimelineName || "المخطط الزمني للتخطيط الاستراتيجي"} stages={strategicStages} />
-          <CharityClientTimeline title={charity.governanceTimelineName || "المخطط الزمني للحوكمة"} stages={governanceStages} />
-          <CharityClientTimeline title={charity.financeTimelineName || "المخطط الزمني للمالية"} stages={financeStages} />
+          <CharityClientTimeline title={strategyName} stages={strategicStages} />
+          <CharityClientTimeline title={governanceName} stages={governanceStages} />
+          <CharityClientTimeline title={financeName} stages={financeStages} />
           {additionalServices.map(service => (
             <CharityClientTimeline key={service.id} title={service.name} stages={service.stages} />
           ))}
@@ -122,23 +128,23 @@ export default async function ServicesPage({ params }: { params: Promise<{ name:
             <StrategicStagesManager 
               charityId={charity.id} 
               initialStages={strategicStages}
-              timelineName={charity.strategyTimelineName || "المخطط الزمني للتخطيط الاستراتيجي"}
+              timelineName={strategyName}
               timelineDept={charity.strategyTimelineDept || "STRATEGY"}
             />
           )}
           {(isAdmin || session?.role === (charity.governanceTimelineDept || "GOVERNANCE")) && (
-            <GovernanceStagesManager 
-              charityId={charity.id} 
-              initialStages={governanceStages} 
-              timelineName={charity.governanceTimelineName || "المخطط الزمني للحوكمة"}
+            <GovernanceStagesManager
+              charityId={charity.id}
+              initialStages={governanceStages}
+              timelineName={governanceName}
               timelineDept={charity.governanceTimelineDept || "GOVERNANCE"}
             />
           )}
           {(isAdmin || session?.role === (charity.financeTimelineDept || "FINANCE")) && (
-            <FinanceStagesManager 
-              charityId={charity.id} 
-              initialStages={financeStages} 
-              timelineName={charity.financeTimelineName || "المخطط الزمني للمالية"}
+            <FinanceStagesManager
+              charityId={charity.id}
+              initialStages={financeStages}
+              timelineName={financeName}
               timelineDept={charity.financeTimelineDept || "FINANCE"}
             />
           )}

@@ -334,24 +334,27 @@ export async function unifyCharityStagesAction(sourceCharityId: string, timeline
     return { success: true };
   }
 
+  // IDs of charities we will actually overwrite
+  const targetIds = otherCharities.map(c => c.id);
+
   // 2. Perform transaction to clear and write stages to other charities for the SAME timeline
   if (timelineType === "STRATEGY") {
     await prisma.$transaction([
-      prisma.strategicStage.deleteMany({ where: { charityId: { not: sourceCharityId } } }),
+      prisma.strategicStage.deleteMany({ where: { charityId: { in: targetIds } } }),
       prisma.strategicStage.createMany({
         data: otherCharities.flatMap(c => sourceStages.map(s => ({ ...s, charityId: c.id })))
       })
     ]);
   } else if (timelineType === "GOVERNANCE") {
     await prisma.$transaction([
-      prisma.governanceStage.deleteMany({ where: { charityId: { not: sourceCharityId } } }),
+      prisma.governanceStage.deleteMany({ where: { charityId: { in: targetIds } } }),
       prisma.governanceStage.createMany({
         data: otherCharities.flatMap(c => sourceStages.map(s => ({ ...s, charityId: c.id })))
       })
     ]);
   } else if (timelineType === "FINANCE") {
     await prisma.$transaction([
-      prisma.financeStage.deleteMany({ where: { charityId: { not: sourceCharityId } } }),
+      prisma.financeStage.deleteMany({ where: { charityId: { in: targetIds } } }),
       prisma.financeStage.createMany({
         data: otherCharities.flatMap(c => sourceStages.map(s => ({ ...s, charityId: c.id })))
       })

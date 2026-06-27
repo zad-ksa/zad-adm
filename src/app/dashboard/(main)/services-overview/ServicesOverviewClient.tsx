@@ -5,9 +5,10 @@ import {
   Check, Calendar, Printer, ChevronDown, ChevronRight,
   Briefcase, LayoutGrid, ChevronLeft, Edit2, X, Plus,
   Trash2, ArrowUp, ArrowDown, Loader2, Save, Layers,
-  AlertTriangle, AlertCircle
+  AlertTriangle, AlertCircle, GanttChartSquare
 } from "lucide-react";
 import { useRouter } from "next/navigation";
+import GanttChart from "./GanttChart";
 import {
   setCurrentStrategicStage, addStrategicStage, updateStrategicStage,
   deleteStrategicStage, reorderStrategicStages
@@ -675,6 +676,7 @@ export default function ServicesOverviewClient({
 
   // Extra charities picker (جمعيات غير موجودة في القائمة الحالية)
   const [showAddCharity, setShowAddCharity] = useState(false);
+  const [showGantt, setShowGantt] = useState(false);
 
   const charitiesWithData = useMemo(() => {
     if (!isGenericTab) {
@@ -845,6 +847,11 @@ export default function ServicesOverviewClient({
                   )}
                 </div>
               )}
+              <button
+                onClick={() => setShowGantt(true)}
+                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 rounded-lg transition-colors">
+                <GanttChartSquare className="w-3.5 h-3.5" /> غانت
+              </button>
               <button onClick={() => handlePrint(activeTab, activeLabel, charities, stagesData)}
                 className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 rounded-lg transition-colors">
                 <Printer className="w-3.5 h-3.5" /> طباعة
@@ -1053,6 +1060,21 @@ export default function ServicesOverviewClient({
 
       {/* Backdrop for dropdown */}
       {showAddCharity && <div className="fixed inset-0 z-20" onClick={() => setShowAddCharity(false)} />}
+
+      {/* Gantt Chart Modal */}
+      {showGantt && (
+        <GanttChart
+          charities={charities}
+          stagesData={stagesData}
+          allServices={allServices}
+          activeTab={activeTab}
+          activeLabel={activeLabel}
+          isGenericTab={isGenericTab}
+          genericSvcName={genericSvcInfo?.name ?? null}
+          deptColors={DEPT_COLORS}
+          onClose={() => setShowGantt(false)}
+        />
+      )}
     </div>
   );
 }

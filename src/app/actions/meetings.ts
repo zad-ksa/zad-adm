@@ -3,6 +3,26 @@ import { prisma } from "@/lib/db";
 import { getSession } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
 
+export async function createTasksFromMeeting(
+  tasks: { title: string; assignedToId: string }[]
+) {
+  const session = await getSession();
+  if (!session || !TIER1.includes(session.role)) throw new Error("غير مصرح");
+  for (const t of tasks) {
+    await prisma.task.create({
+      data: {
+        title: t.title,
+        assignedToId: t.assignedToId,
+        createdById: session.id,
+        isInternal: true,
+        priority: 2,
+      },
+    });
+  }
+  revalidatePath("/dashboard/tasks");
+  return { success: true };
+}
+
 const TIER1 = ["ADMIN", "EXECUTIVE_DIRECTOR", "ADMINISTRATIVE_SECRETARIAT"];
 const ALL_STAFF = [...TIER1, "GENERAL_MANAGER", "STRATEGY", "FINANCE", "GOVERNANCE"];
 

@@ -4,16 +4,10 @@ import { redirect } from "next/navigation";
 import { Metadata } from "next";
 import ServicesOverviewClient from "./ServicesOverviewClient";
 import { getAssignedCharityIds } from "@/lib/access";
+import { getTimelineConfigs } from "@/app/actions/settings";
 
 export const metadata: Metadata = {
   title: "عرض الخدمات | زاد التنموية",
-};
-
-const DEPT_LABELS: Record<string, string> = {
-  STRATEGY: "التخطيط الاستراتيجي",
-  GOVERNANCE: "الحوكمة",
-  FINANCE: "المالية",
-  PROGRAMS: "البرامج والمشاريع",
 };
 
 const BUILTIN_DEPTS = ["STRATEGY", "GOVERNANCE", "FINANCE"];
@@ -21,6 +15,14 @@ const BUILTIN_DEPTS = ["STRATEGY", "GOVERNANCE", "FINANCE"];
 export default async function ServicesOverviewPage() {
   const session = await getSession();
   if (!session) redirect("/");
+
+  const timelineNames = await getTimelineConfigs();
+  const DEPT_LABELS: Record<string, string> = {
+    STRATEGY: timelineNames["STRATEGY"] || "التخطيط الاستراتيجي",
+    GOVERNANCE: timelineNames["GOVERNANCE"] || "الحوكمة",
+    FINANCE: timelineNames["FINANCE"] || "تنمية الموارد المالية",
+    PROGRAMS: "البرامج والمشاريع",
+  };
 
   const role = session.role;
   const isAdmin = ["ADMIN", "EXECUTIVE_DIRECTOR", "GENERAL_MANAGER", "ADMINISTRATIVE_SECRETARIAT"].includes(role);

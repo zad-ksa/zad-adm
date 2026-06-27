@@ -385,3 +385,25 @@ model AchievementCategory {
   name      String   @unique
   createdAt DateTime @default(now())
 }
+
+// Default stages template — used when creating a new charity or resetting stages
+model DefaultStage {
+  id           String   @id @default(uuid())
+  timelineType String   // 'STRATEGY' | 'GOVERNANCE' | 'FINANCE'
+  name         String
+  description  String?
+  order        Int      @default(0)
+  isContinuous Boolean  @default(false)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([timelineType])
+}
+
+// Global timeline display names (shown in tabs and headers across the app)
+model TimelineConfig {
+  id           String   @id @default(uuid())
+  timelineType String   @unique // 'STRATEGY' | 'GOVERNANCE' | 'FINANCE'
+  displayName  String
+  updatedAt    DateTime @updatedAt
+}

@@ -25,7 +25,8 @@ import {
   deleteServiceStage, reorderServiceStages, unifyCharityStagesAction,
   updateService
 } from "@/app/actions/services";
-import { updateCharityLogo, updateAllCharitiesTimelineName } from "@/app/actions/charity";
+import { updateCharityLogo } from "@/app/actions/charity";
+import { updateTimelineDisplayName } from "@/app/actions/settings";
 
 type Charity = {
   id: string;
@@ -538,7 +539,7 @@ export default function ServicesOverviewClient({
     startBuiltinNameTransition(async () => {
       setBuiltinNames(prev => ({ ...prev, [tabKey]: editingBuiltinName.trim() }));
       setEditingBuiltinTab(null);
-      await updateAllCharitiesTimelineName(tabKey as "STRATEGY" | "GOVERNANCE" | "FINANCE", editingBuiltinName.trim());
+      await updateTimelineDisplayName(tabKey, editingBuiltinName.trim());
       router.refresh();
     });
   };

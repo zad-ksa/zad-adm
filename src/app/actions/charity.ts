@@ -285,22 +285,6 @@ export async function updateTimelineConfig(
   }
 }
 
-export async function updateAllCharitiesTimelineName(
-  timelineType: "STRATEGY" | "GOVERNANCE" | "FINANCE",
-  newName: string
-) {
-  const session = await getSession();
-  const adminRoles = ["ADMIN", "EXECUTIVE_DIRECTOR", "GENERAL_MANAGER", "ADMINISTRATIVE_SECRETARIAT"];
-  if (!session || !adminRoles.includes(session.role)) return { success: false, message: "غير مصرح" };
-  const field =
-    timelineType === "STRATEGY" ? "strategyTimelineName" :
-    timelineType === "GOVERNANCE" ? "governanceTimelineName" : "financeTimelineName";
-  await prisma.charity.updateMany({ data: { [field]: newName } });
-  revalidatePath("/dashboard/services-overview");
-  revalidatePath("/charity/[name]/services", "page");
-  return { success: true };
-}
-
 export async function updateCharityLogo(charityId: string, logoUrl: string | null) {
   const session = await getSession();
   const adminRoles = ["ADMIN", "EXECUTIVE_DIRECTOR", "GENERAL_MANAGER", "ADMINISTRATIVE_SECRETARIAT"];

@@ -5,40 +5,28 @@ import { revalidatePath } from "next/cache";
 import { getSession } from "@/lib/auth";
 import { assertCharityAccess } from "@/lib/access";
 
-const DEFAULT_STAGES = [
-  "مرحلة قياس الجاهزية",
-  "مرحلة بناء التقرير الاستراتيجي",
-  "مرحلة بناء التوجه الاستراتيجي",
-  "مرحلة بناء دليل الاهداف والمؤشرات",
-  "مرحلة انشاء المبادرات والخطة التشغيلية",
-  "مرحلة متابعة الأداء"
-];
-
-// Seed default stages if none exist for a charity
+// Seed default stages from DB if none exist for a charity
 export async function ensureStagesForCharity(charityId: string) {
-  const existingStages = await prisma.strategicStage.findMany({
-    where: { charityId }
+  const existingStages = await prisma.strategicStage.findMany({ where: { charityId } });
+  if (existingStages.length > 0) return;
+
+  const defaults = await prisma.defaultStage.findMany({
+    where: { timelineType: "STRATEGY" },
+    orderBy: { order: "asc" },
   });
 
-  if (existingStages.length === 0) {
-    const charity = await prisma.charity.findUnique({
-      where: { id: charityId }
-    });
+  if (defaults.length === 0) return;
 
-    const currentStageIndex = Math.max(1, charity?.strategicStage || 1) - 1;
-
-    const newStages = DEFAULT_STAGES.map((name, index) => ({
-      name,
-      duration: "",
-      order: index,
+  await prisma.strategicStage.createMany({
+    data: defaults.map((s, idx) => ({
+      name: s.name,
+      description: s.description,
+      order: idx,
       charityId,
-      isCurrent: index === currentStageIndex,
-    }));
-
-    await prisma.strategicStage.createMany({
-      data: newStages
-    });
-  }
+      isCurrent: idx === 0,
+      isContinuous: s.isContinuous,
+    })),
+  });
 }
 
 export async function addStrategicStage(

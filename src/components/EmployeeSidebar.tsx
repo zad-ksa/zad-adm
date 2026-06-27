@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, useTransition } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { User, ShieldAlert, Users, X, LogOut, LayoutDashboard, Building2, ClipboardList, ChevronRight, Edit, Eye, EyeOff, Camera, Loader2, AlertCircle, CheckCircle2, Newspaper, CheckSquare, Moon, Sun, LayoutGrid } from "lucide-react";
+import { User, ShieldAlert, Users, X, LogOut, LayoutDashboard, Building2, ClipboardList, ChevronRight, Edit, Eye, EyeOff, Camera, Loader2, AlertCircle, CheckCircle2, Newspaper, CheckSquare, Moon, Sun, LayoutGrid, FileText } from "lucide-react";
 import { useTheme } from "next-themes";
 import { logout } from "@/app/actions/auth";
 import { updateProfile } from "@/app/actions/profile";
@@ -54,6 +54,7 @@ export default function EmployeeSidebar({
       { label: "الجمعيات", href: "/dashboard/charities", icon: Building2 },
       { label: "عرض الخدمات", href: "/dashboard/services-overview", icon: LayoutGrid },
       { label: "الاستبيانات", href: "/dashboard/custom-surveys", icon: ClipboardList },
+      { label: "محاضر الاجتماعات", href: "/dashboard/meetings", icon: FileText },
       { label: "إدارة الموظفين", href: "/dashboard/employees", icon: Users },
     ];
   } else if (userState?.role === "STRATEGY") {
@@ -63,6 +64,7 @@ export default function EmployeeSidebar({
       { label: "عرض الخدمات", href: "/dashboard/services-overview", icon: LayoutGrid },
       { label: "الاستبيانات", href: "/dashboard/custom-surveys", icon: ClipboardList },
       { label: "الأخبار والإنجازات", href: "/dashboard/news", icon: Newspaper },
+      { label: "محاضر الاجتماعات", href: "/dashboard/meetings", icon: FileText },
       { label: "مهامي", href: "/dashboard/tasks", icon: CheckSquare },
     ];
   } else if (userState?.role === "FINANCE") {
@@ -71,6 +73,7 @@ export default function EmployeeSidebar({
       { label: "الجمعيات", href: "/dashboard/charities", icon: Building2 },
       { label: "عرض الخدمات", href: "/dashboard/services-overview", icon: LayoutGrid },
       { label: "الأخبار والإنجازات", href: "/dashboard/news", icon: Newspaper },
+      { label: "محاضر الاجتماعات", href: "/dashboard/meetings", icon: FileText },
       { label: "مهامي", href: "/dashboard/tasks", icon: CheckSquare },
     ];
   } else {
@@ -80,6 +83,7 @@ export default function EmployeeSidebar({
       { label: "عرض الخدمات", href: "/dashboard/services-overview", icon: LayoutGrid },
       { label: "الاستبيانات", href: "/dashboard/custom-surveys", icon: ClipboardList },
       { label: "الأخبار والإنجازات", href: "/dashboard/news", icon: Newspaper },
+      { label: "محاضر الاجتماعات", href: "/dashboard/meetings", icon: FileText },
     ];
 
     if (userState?.role !== "GENERAL_MANAGER") {

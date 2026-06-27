@@ -99,13 +99,23 @@ model FinanceStage {
 }
 
 model Meeting {
-  id          String   @id @default(uuid())
-  title       String
-  date        DateTime
-  charityId   String
-  charity     Charity  @relation(fields: [charityId], references: [id], onDelete: Cascade)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id               String    @id @default(uuid())
+  title            String
+  date             DateTime
+  location         String?
+  charityId        String?
+  charity          Charity?  @relation(fields: [charityId], references: [id], onDelete: SetNull)
+  rawNotes         String    @db.Text
+  formattedContent String    @db.Text
+  attendees        String?
+  isPrivate        Boolean   @default(false)
+  createdById      String
+  createdBy        Employee  @relation("MeetingCreator", fields: [createdById], references: [id])
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  @@index([createdById])
+  @@index([charityId])
 }
 
 model FinancialLog {
@@ -187,6 +197,7 @@ model Employee {
   employeeAchievements Achievement[]    @relation("EmployeeAchievements")
   createdAchievements  Achievement[]    @relation("CreatedAchievements")
   assignedCharities    EmployeeCharity[] @relation("AssignedCharities")
+  createdMeetings      Meeting[]         @relation("MeetingCreator")
 }
 
 model EmployeeCharity {

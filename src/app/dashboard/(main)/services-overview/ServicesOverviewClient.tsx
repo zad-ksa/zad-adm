@@ -616,7 +616,9 @@ export default function ServicesOverviewClient({
   const uniqueServiceKeys = useMemo(() => {
     const seen = new Map<string, { name: string; dept: string | null; id: string }>();
     for (const svc of allServices) {
-      const key = `${svc.name}__${svc.department || ""}`;
+      // Group by name+dept so same service across charities shares one tab
+      // But if name is empty, use id to avoid merging unrelated services
+      const key = svc.name?.trim() ? `${svc.name}__${svc.department || ""}` : svc.id;
       if (!seen.has(key)) seen.set(key, { name: svc.name, dept: svc.department ?? null, id: svc.id });
     }
     return Array.from(seen.values());

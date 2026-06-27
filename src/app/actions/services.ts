@@ -297,7 +297,8 @@ export async function unifyCharityStagesAction(sourceCharityId: string, timeline
       isContinuous: s.isContinuous,
       isActive: s.isActive
     }));
-  } else if (timelineType === "CUSTOM" && sourceServiceId) {
+  } else if (timelineType === "CUSTOM") {
+    if (!sourceServiceId) throw new Error("لم يتم تحديد الخدمة المصدر");
     const stages = await prisma.serviceStage.findMany({
       where: { serviceId: sourceServiceId },
       orderBy: { order: "asc" }
@@ -316,6 +317,9 @@ export async function unifyCharityStagesAction(sourceCharityId: string, timeline
   }
 
   if (sourceStages.length === 0) {
+    if (timelineType === "CUSTOM" && !sourceServiceId) {
+      throw new Error("لم يتم العثور على خدمة مطابقة لهذه الجمعية");
+    }
     throw new Error("لا توجد مراحل في المخطط الزمني المختار لنسخها");
   }
 

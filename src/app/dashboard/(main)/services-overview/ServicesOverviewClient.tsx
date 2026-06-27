@@ -663,11 +663,13 @@ export default function ServicesOverviewClient({
 
     if (activeTab.startsWith("SVC:")) {
       sourceTimelineType = "CUSTOM";
-      // Find the service belonging to THIS charity specifically (not the first one in the tab)
-      const thisChartiyService = allServices.find(
-        s => s.charityId === charity.id && s.name === genericSvcInfo?.name
+      // activeLabel = اسم الخدمة في التبويب الحالي
+      // نبحث عن خدمة هذه الجمعية تحديداً بنفس الاسم
+      const svcName = activeLabel;
+      const thisCharityService = allServices.find(
+        s => s.charityId === charity.id && s.name === svcName
       );
-      sourceServiceId = thisChartiyService?.id ?? activeTab.replace("SVC:", "");
+      sourceServiceId = thisCharityService?.id;
     }
 
     setUnifyCharity({
@@ -946,6 +948,9 @@ export default function ServicesOverviewClient({
                 <h2 className="text-xl font-bold text-slate-800 dark:text-slate-100">
                   تعميم مراحل {unifyCharity.departmentLabel}
                 </h2>
+                {unifyCharity.sourceTimelineType === "CUSTOM" && !unifyCharity.sourceServiceId && (
+                  <p className="text-xs text-red-500 font-bold mt-1">هذه الجمعية ليس لديها خدمة "{unifyCharity.departmentLabel}" بعد — لا يمكن التعميم منها</p>
+                )}
                 <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
                   نسخ مراحل قسم "{unifyCharity.departmentLabel}" من جمعية {unifyCharity.name} وتعميمها على كافة الجمعيات الأخرى
                 </p>
@@ -1002,7 +1007,7 @@ export default function ServicesOverviewClient({
               <div className="flex gap-3 pt-2 border-t border-slate-100 dark:border-slate-700">
                 <button
                   type="submit"
-                  disabled={isUnifyPending || unifyTargetIds.length === 0}
+                  disabled={isUnifyPending || unifyTargetIds.length === 0 || (unifyCharity.sourceTimelineType === "CUSTOM" && !unifyCharity.sourceServiceId)}
                   className="flex-1 bg-red-600 hover:bg-red-700 dark:bg-red-700 dark:hover:bg-red-600 text-white py-3 rounded-xl font-bold transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
                 >
                   {isUnifyPending ? "جاري التعميم..." : `تعميم على ${unifyTargetIds.length} جمعية`}

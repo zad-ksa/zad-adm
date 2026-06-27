@@ -235,7 +235,7 @@ export async function setCurrentServiceStage(serviceId: string, stageId: string)
   }
 }
 
-export async function unifyCharityStagesAction(sourceCharityId: string, timelineType: string, sourceServiceId?: string) {
+export async function unifyCharityStagesAction(sourceCharityId: string, timelineType: string, sourceServiceId?: string, targetCharityIds?: string[]) {
   // 1. Get source stages
   let sourceStages: {
     name: string;
@@ -319,9 +319,11 @@ export async function unifyCharityStagesAction(sourceCharityId: string, timeline
     throw new Error("لا توجد مراحل في المخطط الزمني المختار لنسخها");
   }
 
-  // Find all other charities
+  // Find target charities (specific list or all except source)
   const otherCharities = await prisma.charity.findMany({
-    where: { id: { not: sourceCharityId } }
+    where: targetCharityIds?.length
+      ? { id: { in: targetCharityIds } }
+      : { id: { not: sourceCharityId } }
   });
 
   if (otherCharities.length === 0) {
@@ -357,7 +359,12 @@ export async function unifyCharityStagesAction(sourceCharityId: string, timeline
     });
     if (sourceService) {
       const matchingServices = await prisma.service.findMany({
-        where: { name: sourceService.name, charityId: { not: sourceCharityId } }
+        where: {
+          name: sourceService.name,
+          charityId: targetCharityIds?.length
+            ? { in: targetCharityIds }
+            : { not: sourceCharityId }
+        }
       });
       
       for (const svc of matchingServices) {

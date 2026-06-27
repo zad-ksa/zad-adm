@@ -610,16 +610,17 @@ export default function ServicesOverviewClient({
     sourceServiceId?: string;
     departmentLabel: string;
   } | null>(null);
+  const [unifyTargetIds, setUnifyTargetIds] = useState<string[]>([]);
   const [isUnifyPending, startUnifyTransition] = useTransition();
 
   const handleUnifySubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!unifyCharity) return;
-
     startUnifyTransition(async () => {
       try {
-        await unifyCharityStagesAction(unifyCharity.id, unifyCharity.sourceTimelineType, unifyCharity.sourceServiceId);
+        await unifyCharityStagesAction(unifyCharity.id, unifyCharity.sourceTimelineType, unifyCharity.sourceServiceId, unifyTargetIds.length ? unifyTargetIds : undefined);
         setUnifyCharity(null);
+        setUnifyTargetIds([]);
         router.refresh();
       } catch (error: any) {
         console.error("Error unifying stages", error);
@@ -950,29 +951,65 @@ export default function ServicesOverviewClient({
                 </p>
               </div>
             </div>
-            <form onSubmit={handleUnifySubmit} className="p-6 space-y-6">
+            <form onSubmit={handleUnifySubmit} className="p-6 space-y-5">
+              {/* Target charities selector */}
+              {(() => {
+                const otherCharities = charities.filter(c => c.id !== unifyCharity.id);
+                const allSelected = unifyTargetIds.length === otherCharities.length;
+                return (
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-sm font-bold text-slate-700 dark:text-slate-200">الجمعيات المستهدفة</span>
+                      <button
+                        type="button"
+                        onClick={() => setUnifyTargetIds(allSelected ? [] : otherCharities.map(c => c.id))}
+                        className="text-xs font-bold text-primary hover:underline"
+                      >
+                        {allSelected ? "إلغاء تحديد الكل" : "تحديد الكل"}
+                      </button>
+                    </div>
+                    <div className="border border-slate-200 dark:border-slate-600 rounded-xl max-h-44 overflow-y-auto divide-y divide-slate-100 dark:divide-slate-700">
+                      {otherCharities.map(c => {
+                        const checked = unifyTargetIds.includes(c.id);
+                        return (
+                          <label key={c.id} className="flex items-center gap-3 px-3 py-2.5 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
+                            <input
+                              type="checkbox"
+                              checked={checked}
+                              onChange={() => setUnifyTargetIds(prev => checked ? prev.filter(id => id !== c.id) : [...prev, c.id])}
+                              className="w-4 h-4 rounded accent-primary"
+                            />
+                            <span className="text-sm text-slate-700 dark:text-slate-200">{c.name}</span>
+                          </label>
+                        );
+                      })}
+                    </div>
+                    {unifyTargetIds.length === 0 && (
+                      <p className="text-xs text-amber-600 dark:text-amber-400 mt-1.5 font-bold">حدد جمعية واحدة على الأقل</p>
+                    )}
+                  </div>
+                );
+              })()}
+
               {/* Warning box */}
               <div className="p-4 bg-red-50 dark:bg-red-950/20 border border-red-100 dark:border-red-900/30 rounded-xl flex gap-3">
                 <AlertCircle className="w-5 h-5 text-red-500 shrink-0 mt-0.5" />
-                <div className="space-y-1">
-                  <h4 className="text-sm font-bold text-red-800 dark:text-red-400">تنبيه هام جداً وإجراء غير قابل للتراجع</h4>
-                  <p className="text-xs text-red-700/90 dark:text-red-300/80 leading-relaxed">
-                    عند إتمام هذه العملية، سيتم <strong>حذف كافة المراحل الحالية</strong> لقسم <strong>{unifyCharity.departmentLabel}</strong> في جميع الجمعيات الأخرى نهائياً، وسيتم <strong>إنشاء نسخ متطابقة</strong> من مراحل هذا القسم الموجودة في جمعية <strong>{unifyCharity.name}</strong> لها جميعاً.
-                  </p>
-                </div>
+                <p className="text-xs text-red-700/90 dark:text-red-300/80 leading-relaxed">
+                  سيتم <strong>حذف المراحل الحالية</strong> للجمعيات المحددة واستبدالها بمراحل جمعية <strong>{unifyCharity.name}</strong>. هذا الإجراء غير قابل للتراجع.
+                </p>
               </div>
 
-              <div className="flex gap-3 pt-4 border-t border-slate-100 dark:border-slate-700">
+              <div className="flex gap-3 pt-2 border-t border-slate-100 dark:border-slate-700">
                 <button
                   type="submit"
-                  disabled={isUnifyPending}
+                  disabled={isUnifyPending || unifyTargetIds.length === 0}
                   className="flex-1 bg-red-600 hover:bg-red-700 dark:bg-red-700 dark:hover:bg-red-600 text-white py-3 rounded-xl font-bold transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
                 >
-                  {isUnifyPending ? "جاري تعميم المراحل..." : "تأكيد التعميم وتطبيق المراحل"}
+                  {isUnifyPending ? "جاري التعميم..." : `تعميم على ${unifyTargetIds.length} جمعية`}
                 </button>
                 <button
                   type="button"
-                  onClick={() => setUnifyCharity(null)}
+                  onClick={() => { setUnifyCharity(null); setUnifyTargetIds([]); }}
                   disabled={isUnifyPending}
                   className="flex-1 bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 py-3 rounded-xl font-bold transition-colors disabled:opacity-50"
                 >

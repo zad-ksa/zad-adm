@@ -611,7 +611,7 @@ export default function ServicesOverviewClient({
   };
 
   const builtinDepts = ["STRATEGY", "GOVERNANCE", "FINANCE"].filter(d => d in stagesData);
-  const allServices: ServiceWithStages[] = stagesData["SERVICES"] || [];
+  const allServices: ServiceWithStages[] = (stagesData["SERVICES"] || []).filter((s: ServiceWithStages) => s.name?.trim());
 
   const uniqueServiceKeys = useMemo(() => {
     const seen = new Map<string, { name: string; dept: string | null; id: string }>();
@@ -632,8 +632,11 @@ export default function ServicesOverviewClient({
   const [activeTab, setActiveTab] = useState(tabs[0]?.key || "");
   const isGenericTab = activeTab.startsWith("SVC:");
   const genericSvcId = isGenericTab ? activeTab.replace("SVC:", "") : null;
-  const genericSvcInfo = genericSvcId ? uniqueServiceKeys.find(s => s.id === genericSvcId) : null;
   const activeLabel = tabs.find(t => t.key === activeTab)?.label || "";
+  // Look up by id first, fall back to matching by label (handles id drift after re-render)
+  const genericSvcInfo = genericSvcId
+    ? (uniqueServiceKeys.find(s => s.id === genericSvcId) ?? uniqueServiceKeys.find(s => s.name === activeLabel) ?? null)
+    : null;
 
   const handleOpenUnify = (charity: Charity) => {
     let sourceTimelineType = activeTab;

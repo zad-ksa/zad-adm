@@ -25,7 +25,7 @@ import {
   deleteServiceStage, reorderServiceStages, unifyCharityStagesAction,
   updateService
 } from "@/app/actions/services";
-import { updateCharityLogo } from "@/app/actions/charity";
+import { updateCharityLogo, updateAllCharitiesTimelineName } from "@/app/actions/charity";
 
 type Charity = {
   id: string;
@@ -527,6 +527,22 @@ export default function ServicesOverviewClient({
   const [serviceNames, setServiceNames] = useState<Record<string, string>>({});
   const [isServiceNamePending, startServiceNameTransition] = useTransition();
 
+  // Builtin tab name editing (STRATEGY/GOVERNANCE/FINANCE)
+  const [editingBuiltinTab, setEditingBuiltinTab] = useState<string | null>(null);
+  const [editingBuiltinName, setEditingBuiltinName] = useState("");
+  const [builtinNames, setBuiltinNames] = useState<Record<string, string>>({});
+  const [isBuiltinNamePending, startBuiltinNameTransition] = useTransition();
+
+  const handleSaveBuiltinName = (tabKey: string) => {
+    if (!editingBuiltinName.trim()) return;
+    startBuiltinNameTransition(async () => {
+      setBuiltinNames(prev => ({ ...prev, [tabKey]: editingBuiltinName.trim() }));
+      setEditingBuiltinTab(null);
+      await updateAllCharitiesTimelineName(tabKey as "STRATEGY" | "GOVERNANCE" | "FINANCE", editingBuiltinName.trim());
+      router.refresh();
+    });
+  };
+
   // Logo editing
   const [logoEditCharityId, setLogoEditCharityId] = useState<string | null>(null);
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
@@ -711,10 +727,14 @@ export default function ServicesOverviewClient({
           <div className="flex overflow-x-auto border-b border-slate-100 dark:border-slate-700 scrollbar-none">
             {tabs.map(tab => {
               const isSvc = tab.key.startsWith("SVC:");
+              const isBuiltin = ["STRATEGY", "GOVERNANCE", "FINANCE"].includes(tab.key);
               const svcId = isSvc ? tab.key.replace("SVC:", "") : null;
               const svcInfo = svcId ? uniqueServiceKeys.find(s => s.id === svcId) : null;
-              const displayName = (svcId && serviceNames[svcId]) || tab.label;
+              const displayName = isBuiltin
+                ? (builtinNames[tab.key] || tab.label)
+                : ((svcId && serviceNames[svcId]) || tab.label);
               const isEditingThis = svcId !== null && editingServiceId === svcId;
+              const isEditingBuiltin = isBuiltin && editingBuiltinTab === tab.key;
 
               return (
                 <div key={tab.key} className="relative flex items-center group/tab">
@@ -738,6 +758,26 @@ export default function ServicesOverviewClient({
                         <X className="w-3 h-3" />
                       </button>
                     </div>
+                  ) : isEditingBuiltin ? (
+                    <div className="flex items-center gap-1 px-2 py-2">
+                      <input
+                        autoFocus
+                        value={editingBuiltinName}
+                        onChange={e => setEditingBuiltinName(e.target.value)}
+                        onKeyDown={e => {
+                          if (e.key === "Enter") handleSaveBuiltinName(tab.key);
+                          if (e.key === "Escape") setEditingBuiltinTab(null);
+                        }}
+                        className="text-xs font-bold border border-primary/40 rounded px-2 py-1 outline-none focus:ring-1 focus:ring-primary/30 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 w-28"
+                      />
+                      <button onClick={() => handleSaveBuiltinName(tab.key)} disabled={isBuiltinNamePending}
+                        className="p-1 text-primary hover:bg-primary/10 rounded">
+                        {isBuiltinNamePending ? <Loader2 className="w-3 h-3 animate-spin" /> : <Save className="w-3 h-3" />}
+                      </button>
+                      <button onClick={() => setEditingBuiltinTab(null)} className="p-1 text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 rounded">
+                        <X className="w-3 h-3" />
+                      </button>
+                    </div>
                   ) : (
                     <>
                       <button onClick={() => { setActiveTab(tab.key); setExtraCharityIds([]); }}
@@ -751,6 +791,15 @@ export default function ServicesOverviewClient({
                           onClick={() => { setEditingServiceId(svcId!); setEditingServiceName(displayName); }}
                           className="absolute -top-0.5 left-0 opacity-0 group-hover/tab:opacity-100 transition-opacity p-0.5 text-slate-400 hover:text-primary"
                           title="تعديل اسم الخدمة"
+                        >
+                          <Edit2 className="w-2.5 h-2.5" />
+                        </button>
+                      )}
+                      {isAdmin && isBuiltin && (
+                        <button
+                          onClick={() => { setEditingBuiltinTab(tab.key); setEditingBuiltinName(displayName); }}
+                          className="absolute -top-0.5 left-0 opacity-0 group-hover/tab:opacity-100 transition-opacity p-0.5 text-slate-400 hover:text-primary"
+                          title="تعديل اسم القسم"
                         >
                           <Edit2 className="w-2.5 h-2.5" />
                         </button>

@@ -183,7 +183,7 @@ const LETTERHEAD_CSS = `
 `;
 
 function buildLetterheadDoc(m: Meeting, forPrint: boolean): string {
-  const body = injectTasksIntoHtml(mdToHtml(m.formattedContent), m.meetingTasks);
+  const body = `<div class="meeting-title">${m.title}</div>\n` + injectTasksIntoHtml(mdToHtml(m.formattedContent), m.meetingTasks);
   const dateStr = formatDate(m.date);
   const numStr = m.meetingNumber ? `ZAD_M_${String(m.meetingNumber).padStart(3, "0")}` : "";
   const letterheadUrl = `${window.location.origin}/assets/letterhead.png`;

@@ -65,6 +65,7 @@ export default function VisionMissionSurveyPage() {
   // Default Questions
   const [customQuestions, setCustomQuestions] = useState({
     visionQ4: "3. ما أهم أثر نتمنى أن تتركه الجمعية في مجال عملنا كجمعية متخصصة في القيم؟",
+    missionQ4: "4. ما النتائج المحددة التي نساعد مستفيدينا على تحقيقها؟ اذكرها كـ (معارف جديدة / مهارات / تغيّر سلوكي).",
     missionQ5: "5. ما الذي يميّز جمعيتنا عن غيرها من الجمعيات المشابهة في المجال القيمي/الدعوي؟ (المنهجية، الخبرة، إلخ)"
   });
 
@@ -84,8 +85,9 @@ export default function VisionMissionSurveyPage() {
             // Apply custom AI generated questions if available
             if (data.customQuestions) {
               setCustomQuestions({
-                visionQ4: `3. ${data.customQuestions.visionQ4 || "ما أهم أثر نتمنى أن تتركه الجمعية في مجال عملنا كجمعية متخصصة في القيم؟"}`,
-                missionQ5: `5. ${data.customQuestions.missionQ5 || "ما الذي يميّز جمعيتنا عن غيرها من الجمعيات المشابهة في المجال القيمي/الدعوي؟ (المنهجية، الخبرة، إلخ)"}`
+                visionQ4: data.customQuestions.visionQ4 || "3. ما أهم أثر نتمنى أن تتركه الجمعية في مجال عملنا كجمعية متخصصة في القيم؟",
+                missionQ4: data.customQuestions.missionQ4 || "4. ما النتائج المحددة التي نساعد مستفيدينا على تحقيقها؟ اذكرها كـ (معارف جديدة / مهارات / تغيّر سلوكي).",
+                missionQ5: data.customQuestions.missionQ5 || "5. ما الذي يميّز جمعيتنا عن غيرها من الجمعيات المشابهة في المجال القيمي/الدعوي؟ (المنهجية، الخبرة، إلخ)"
               });
             }
           } else {
@@ -718,7 +720,7 @@ export default function VisionMissionSurveyPage() {
 
                 <div className="space-y-2">
                   <label className="block text-sm font-bold text-slate-800 dark:text-slate-200">
-                    4. ما النتائج المحددة التي نساعد مستفيدينا على تحقيقها؟ اذكرها كـ (معارف جديدة / مهارات / تغيّر سلوكي).
+                    {customQuestions.missionQ4}
                   </label>
                   <textarea
                     required

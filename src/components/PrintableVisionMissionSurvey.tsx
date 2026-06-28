@@ -5,6 +5,7 @@ interface PrintableSurveyProps {
   charityLogo?: string | null;
   customQuestions: {
     visionQ4: string;
+    missionQ4?: string;
     missionQ5: string;
   };
 }
@@ -165,7 +166,7 @@ export default function PrintableVisionMissionSurvey({
           </div>
 
           <div className="space-y-2">
-            <label className="font-bold">4. كيف نقوم بعملنا؟ (ما هو الأسلوب أو الطريقة التي نتبعها في تقديم خدماتنا؟)</label>
+            <label className="font-bold">{customQuestions.missionQ4 || "4. ما النتائج المحددة التي نساعد مستفيدينا على تحقيقها؟ اذكرها كـ (معارف جديدة / مهارات / تغيّر سلوكي)."}</label>
             <div className="border border-black h-16 w-full"></div>
           </div>
 

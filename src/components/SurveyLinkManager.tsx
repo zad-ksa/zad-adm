@@ -9,6 +9,7 @@ export default function SurveyLinkManager({ charityName, surveyType }: { charity
   const [copied, setCopied] = useState(false);
 
   const [customVisionQ4, setCustomVisionQ4] = useState("ما أهم أثر نتمنى أن تتركه الجمعية في مجال عملنا كجمعية متخصصة في القيم؟");
+  const [customMissionQ4, setCustomMissionQ4] = useState("ما النتائج المحددة التي نساعد مستفيدينا على تحقيقها؟ اذكرها كـ (معارف جديدة / مهارات / تغيّر سلوكي).");
   const [customMissionQ5, setCustomMissionQ5] = useState("ما الذي يميّز جمعيتنا عن غيرها من الجمعيات المشابهة في المجال القيمي/الدعوي؟ (المنهجية، الخبرة، إلخ)");
 
   const fetchLink = async () => {
@@ -38,7 +39,7 @@ export default function SurveyLinkManager({ charityName, surveyType }: { charity
         body: JSON.stringify({ 
           charityName, 
           surveyType, 
-          customQuestions: surveyType === "VISION_MISSION" ? { visionQ4: customVisionQ4, missionQ5: customMissionQ5 } : undefined 
+          customQuestions: surveyType === "VISION_MISSION" ? { visionQ4: customVisionQ4, missionQ4: customMissionQ4, missionQ5: customMissionQ5 } : undefined 
         }),
       });
       if (res.ok) {
@@ -130,7 +131,16 @@ export default function SurveyLinkManager({ charityName, surveyType }: { charity
               />
             </div>
             <div>
-              <label className="block text-sm font-bold text-slate-700 mb-1">تخصيص سؤال الرسالة (اختياري)</label>
+              <label className="block text-sm font-bold text-slate-700 mb-1">تخصيص السؤال الأول في الرسالة (السؤال الرابع) (اختياري)</label>
+              <textarea
+                value={customMissionQ4}
+                onChange={(e) => setCustomMissionQ4(e.target.value)}
+                rows={2}
+                className="w-full px-4 py-2 rounded-lg border border-slate-200 text-sm focus:outline-none focus:border-blue-500 resize-none"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-bold text-slate-700 mb-1">تخصيص السؤال الثاني في الرسالة (السؤال الخامس) (اختياري)</label>
               <textarea
                 value={customMissionQ5}
                 onChange={(e) => setCustomMissionQ5(e.target.value)}

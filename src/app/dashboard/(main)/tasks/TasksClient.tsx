@@ -69,7 +69,7 @@ export default function TasksClient({
   const [achievements, setAchievements] = useState<Achievement[]>(initialAchievements);
   const [categories, setCategories] = useState<string[]>(initialCategories);
   const isDirectorOrAdmin = ADMIN_ROLES.includes(session.role);
-  const [selectedEmployeeId, setSelectedEmployeeId] = useState<string>(isDirectorOrAdmin ? "all" : session.id);
+  const [selectedEmployeeId, setSelectedEmployeeId] = useState<string>(session.id);
 
 
   const [showTaskForm, setShowTaskForm] = useState(false);
@@ -128,9 +128,11 @@ export default function TasksClient({
   // Delete modal state
   const [itemToDelete, setItemToDelete] = useState<{ id: string, type: 'task' | 'achievement' } | null>(null);
 
-  // Task updates state
+  // Task updates state — collapse when employee filter changes
   const [expandedTaskId, setExpandedTaskId] = useState<string | null>(null);
   const [newUpdateText, setNewUpdateText] = useState<Record<string, string>>({});
+
+  useEffect(() => { setExpandedTaskId(null); }, [selectedEmployeeId]);
   const [isSubmittingUpdate, setIsSubmittingUpdate] = useState(false);
 
   const showNotification = (type: "success" | "error", message: string) => {
@@ -669,7 +671,6 @@ ${combinedAchievements.length > 0 ? `
                 onChange={(e) => setSelectedEmployeeId(e.target.value)}
                 className="text-xs font-bold text-slate-700 dark:text-slate-200 bg-transparent border-none outline-none cursor-pointer [&>option]:bg-white [&>option]:dark:bg-slate-800"
               >
-                <option value="all">كل الموظفين</option>
                 {employees.map((emp) => (
                   <option key={emp.id} value={emp.id}>
                     {emp.name} ({emp.role === "ADMIN" ? "مدير النظام" :
@@ -680,6 +681,7 @@ ${combinedAchievements.length > 0 ? `
                                emp.role === "FINANCE" ? "المالية" : "موظف"})
                   </option>
                 ))}
+                <option value="all">— كل الموظفين —</option>
               </select>
             </div>
           )}

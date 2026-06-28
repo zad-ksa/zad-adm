@@ -673,31 +673,23 @@ export default function ServicesOverviewClient({
     : null;
 
   const handleOpenUnify = (charity: Charity) => {
-    let sourceTimelineType = activeTab;
-    let sourceServiceId: string | undefined = undefined;
-
-    if (activeTab.startsWith("SVC:")) {
-      sourceTimelineType = "CUSTOM";
-      const repId = activeTab.replace("SVC:", "");
-      const repService = allServices.find(s => s.id === repId);
-      const svcName = repService?.name ?? activeLabel;
-      // إذا كانت الجمعية هي نفس صاحبة الـ representative service استخدم ID مباشرة
-      if (repService && repService.charityId === charity.id) {
-        sourceServiceId = repService.id;
-      } else {
-        // ابحث عن خدمة هذه الجمعية بنفس الاسم
-        const thisCharityService = allServices.find(
-          s => s.charityId === charity.id && s.name?.trim() === svcName?.trim()
-        );
-        sourceServiceId = thisCharityService?.id;
-      }
-    }
-
+    // Only called for builtin tabs (STRATEGY, GOVERNANCE, FINANCE)
     setUnifyCharity({
       id: charity.id,
       name: charity.name,
-      sourceTimelineType,
-      sourceServiceId,
+      sourceTimelineType: activeTab,
+      sourceServiceId: undefined,
+      departmentLabel: activeLabel
+    });
+  };
+
+  // For CUSTOM service tabs — we know exactly which service to use
+  const handleOpenUnifyCustom = (charity: Charity, knownServiceId: string) => {
+    setUnifyCharity({
+      id: charity.id,
+      name: charity.name,
+      sourceTimelineType: "CUSTOM",
+      sourceServiceId: knownServiceId,
       departmentLabel: activeLabel
     });
   };
@@ -907,7 +899,7 @@ export default function ServicesOverviewClient({
                         dept="SERVICE"
                         serviceId={svc.id}
                         canEdit={canEdit}
-                        onUnifyClick={() => handleOpenUnify(charity)}
+                        onUnifyClick={() => handleOpenUnifyCustom(charity, svc.id)}
                         charityLogoUrl={charity.logoUrl}
                         onLogoClick={isAdmin ? () => openLogoModal(charity.id, charity.logoUrl) : undefined}
                       />

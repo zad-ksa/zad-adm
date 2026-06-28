@@ -50,7 +50,7 @@ export default function GovernanceStagesManager({
   const [editStartDate, setEditStartDate] = useState("");
   const [editEndDate, setEditEndDate] = useState("");
   const [stageToDelete, setStageToDelete] = useState<string | null>(null);
-  const [isExpanded, setIsExpanded] = useState(true);
+  const [isExpanded, setIsExpanded] = useState(false);
   
   const [isAdding, setIsAdding] = useState(false);
   const [newName, setNewName] = useState("");

@@ -285,12 +285,11 @@ function handlePreview(m: Meeting) {
 
 // ── Summary accordion on meeting card ────────────────────────────────────────
 function MeetingSummaryPanel({
-  meeting, isTier1, employees, onTasksUpdated,
+  meeting, isTier1, employees,
 }: {
   meeting: Meeting;
   isTier1: boolean;
   employees: Employee[];
-  onTasksUpdated: () => void;
 }) {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -370,7 +369,6 @@ function MeetingSummaryPanel({
       }));
       setLocalTasks(updated);
       setEditing(false);
-      onTasksUpdated();
     } catch (e: any) { alert(e.message); }
     finally { setSaving(false); }
   }
@@ -384,7 +382,7 @@ function MeetingSummaryPanel({
     const updated = localTasks.map(t => t.id === task.id ? { ...t, isDone: !t.isDone } : t);
     setLocalTasks(updated);
     startTransition(async () => {
-      try { await toggleMeetingTask(task.id, !task.isDone); onTasksUpdated(); } catch {}
+      try { await toggleMeetingTask(task.id, !task.isDone); } catch {}
     });
   }
 
@@ -768,7 +766,6 @@ export default function MeetingsClient({ meetings, charities, employees, session
                 meeting={m}
                 isTier1={isTier1}
                 employees={employees}
-                onTasksUpdated={() => router.refresh()}
               />
             </div>
           ))}

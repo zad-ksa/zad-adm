@@ -186,8 +186,8 @@ function handlePrint(m: Meeting) {
   /* الرقم — أسفل خانة "الرقم :" في الكليشة */
   .page .number-area {
     position: absolute;
-    top: 17mm;
-    left: 20mm;
+    top: 14mm;
+    left: 17mm;
     font-size: 8.5pt;
     color: #111;
     z-index: 2;
@@ -199,8 +199,8 @@ function handlePrint(m: Meeting) {
   /* التاريخ — أسفل خانة "التاريخ :" في الكليشة */
   .page .date-area {
     position: absolute;
-    top: 22mm;
-    left: 20mm;
+    top: 19mm;
+    left: 17mm;
     font-size: 8.5pt;
     color: #111;
     z-index: 2;

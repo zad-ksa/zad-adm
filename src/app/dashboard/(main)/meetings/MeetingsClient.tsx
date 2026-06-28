@@ -52,8 +52,7 @@ function formatDate(d: string | Date) {
   const day = String(dt.getDate()).padStart(2, "0");
   const month = String(dt.getMonth() + 1).padStart(2, "0");
   const year = dt.getFullYear();
-  // الكليشة RTL: خانة التاريخ "/ /" — يوم / شهر / سنة من اليمين لليسار
-  return `${day} / ${month} / ${year}`;
+  return `${year}-${month}-${day}`;
 }
 
 function formatDateHijri(d: string | Date) {
@@ -180,28 +179,30 @@ function handlePrint(m: Meeting) {
     z-index: 0;
   }
 
-  /* الرقم على الكليشة — بجانب "الرقم :" */
+  /* الرقم — أسفل خانة "الرقم :" في الكليشة */
   .page .number-area {
     position: absolute;
-    top: 15mm;
-    left: 38mm;
-    font-size: 9pt;
+    top: 17mm;
+    left: 20mm;
+    font-size: 8.5pt;
     color: #111;
     z-index: 2;
-    direction: rtl;
+    direction: ltr;
     letter-spacing: 1px;
+    font-family: 'Courier New', monospace;
   }
 
-  /* التاريخ على الكليشة — بجانب "التاريخ : / /" */
+  /* التاريخ — أسفل خانة "التاريخ :" في الكليشة */
   .page .date-area {
     position: absolute;
-    top: 19.5mm;
-    left: 38mm;
-    font-size: 9pt;
+    top: 22mm;
+    left: 20mm;
+    font-size: 8.5pt;
     color: #111;
     z-index: 2;
-    direction: rtl;
-    letter-spacing: 3px;
+    direction: ltr;
+    letter-spacing: 1px;
+    font-family: 'Courier New', monospace;
   }
 
   /* منطقة المحتوى — فوق الكليشة */

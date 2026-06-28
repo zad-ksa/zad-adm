@@ -20,10 +20,10 @@ export default function PrintableVisionMissionSurvey({
       <div className="flex flex-col items-center justify-center text-center space-y-6 break-after-page min-h-[80vh] pt-12">
         <div className="flex items-center justify-center gap-8 mb-4">
           {charityLogo && (
-            <img src={charityLogo} alt="Charity Logo" className="h-24 w-auto object-contain grayscale" />
+            <img src={charityLogo} alt="Charity Logo" className="h-24 w-auto object-contain" />
           )}
           <div className="h-16 w-px bg-black hidden sm:block"></div>
-          <img src="/logo-full.svg" alt="Zad Logo" className="h-16 w-auto object-contain grayscale" />
+          <img src="/logo-full.svg" alt="Zad Logo" className="h-16 w-auto object-contain" />
         </div>
         <h1 className="text-3xl font-bold mt-8">استبيان الرؤية والرسالة والأثر</h1>
         <div className="border-2 border-black px-8 py-3 font-bold text-xl inline-block mt-4">

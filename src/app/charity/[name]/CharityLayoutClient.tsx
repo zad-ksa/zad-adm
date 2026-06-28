@@ -4,7 +4,6 @@ import { usePathname } from "next/navigation";
 import CharitySidebar from "./CharitySidebar";
 import { useState, useEffect } from "react";
 import { Menu, Home, Target, FolderKanban, Coins, Scale } from "lucide-react";
-import MobileBottomNav from "@/components/MobileBottomNav";
 import { hasPermission } from "@/lib/permissions";
 
 export default function CharityLayoutClient({
@@ -88,9 +87,6 @@ export default function CharityLayoutClient({
           </div>
         </main>
       </div>
-
-      {/* Bottom Navigation for Mobile */}
-      <MobileBottomNav items={mobileNavItems} />
     </div>
   );
 }

@@ -109,7 +109,8 @@ export default function CharitySidebar({
   isOpen,
   setIsOpen,
   role,
-  permissions 
+  permissions,
+  navOrder
 }: { 
   charityName: string;
   logoUrl: string | null;

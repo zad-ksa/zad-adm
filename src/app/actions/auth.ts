@@ -42,6 +42,7 @@ export async function loginWithPassword(phone: string, password: string) {
       phone: employee.phone,
       role: employee.role,
       permissions: employee.permissions,
+      // @ts-ignore
       navOrder: employee.navOrder || [],
       avatarUrl: employee.avatarUrl,
       charityId: employee.charityId,

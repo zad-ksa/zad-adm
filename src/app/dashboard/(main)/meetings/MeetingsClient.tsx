@@ -12,6 +12,7 @@ type Meeting = {
   id: string;
   title: string;
   date: string | Date;
+  meetingNumber: number | null;
   location: string | null;
   charityId: string | null;
   rawNotes: string;
@@ -138,6 +139,7 @@ function handlePrint(m: Meeting) {
 
   const body = mdToHtml(m.formattedContent);
   const dateStr = formatDate(m.date);
+  const numStr = m.meetingNumber ? `ZAD_M_${String(m.meetingNumber).padStart(3, "0")}` : "";
   const letterheadUrl = `${window.location.origin}/assets/letterhead.png`;
 
   // A4 dimensions in px at 96dpi: 794 × 1123
@@ -178,18 +180,29 @@ function handlePrint(m: Meeting) {
     z-index: 0;
   }
 
+  /* الرقم على الكليشة */
+  .page .number-area {
+    position: absolute;
+    top: 7.7mm;
+    left: 19mm;
+    font-size: 9pt;
+    color: #111;
+    z-index: 2;
+    direction: ltr;
+    letter-spacing: 1px;
+  }
+
   /* التاريخ على الكليشة — في خانة التاريخ يسار الرأس */
   .page .date-area {
     position: absolute;
-    top: 19.5mm;
-    left: 14mm;
-    right: 115mm;
+    top: 11.8mm;
+    left: 19mm;
     font-size: 9pt;
     color: #111;
     z-index: 2;
     direction: ltr;
     text-align: left;
-    letter-spacing: 2px;
+    letter-spacing: 4px;
   }
 
   /* منطقة المحتوى — فوق الكليشة */
@@ -282,7 +295,7 @@ function handlePrint(m: Meeting) {
 (function() {
   var letterheadUrl = ${JSON.stringify(letterheadUrl)};
   var dateStr = ${JSON.stringify(dateStr)};
-  var meetingTitle = ${JSON.stringify("محضر اجتماع")};
+  var numStr = ${JSON.stringify(numStr)};
 
   // Parse the content HTML into nodes
   var tmp = document.createElement('div');
@@ -307,6 +320,12 @@ function handlePrint(m: Meeting) {
     page.appendChild(img);
 
     // التاريخ في كل صفحة لأن الكليشة تتكرر
+    if (numStr) {
+      var numDiv = document.createElement('div');
+      numDiv.className = 'number-area';
+      numDiv.textContent = numStr;
+      page.appendChild(numDiv);
+    }
     var dateDiv = document.createElement('div');
     dateDiv.className = 'date-area';
     dateDiv.textContent = dateStr;
@@ -483,6 +502,7 @@ export default function MeetingsClient({ meetings, charities, employees, session
 
   // Form fields
   const [title, setTitle] = useState("");
+  const [meetingNumber, setMeetingNumber] = useState("");
   const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
   const [location, setLocation] = useState("");
   const [charityId, setCharityId] = useState("");
@@ -496,7 +516,7 @@ export default function MeetingsClient({ meetings, charities, employees, session
   const [error, setError] = useState("");
 
   function resetForm() {
-    setTitle(""); setDate(new Date().toISOString().slice(0, 10));
+    setTitle(""); setMeetingNumber(""); setDate(new Date().toISOString().slice(0, 10));
     setLocation(""); setCharityId(""); setAttendees("");
     setRawNotes(""); setIsPrivate(false);
     setFormattedContent(""); setStep(1); setAiError(""); setError("");
@@ -506,7 +526,8 @@ export default function MeetingsClient({ meetings, charities, employees, session
   function openCreate() { resetForm(); setShowModal(true); }
 
   function openEdit(m: Meeting) {
-    setTitle(m.title); setDate(new Date(m.date).toISOString().slice(0, 10));
+    setTitle(m.title); setMeetingNumber(m.meetingNumber ? String(m.meetingNumber) : "");
+    setDate(new Date(m.date).toISOString().slice(0, 10));
     setLocation(m.location || ""); setCharityId(m.charityId || "");
     setAttendees(m.attendees || ""); setRawNotes(m.rawNotes);
     setIsPrivate(m.isPrivate); setFormattedContent(m.formattedContent);
@@ -537,10 +558,11 @@ export default function MeetingsClient({ meetings, charities, employees, session
     setError("");
     startTransition(async () => {
       try {
+        const numVal = meetingNumber ? parseInt(meetingNumber) : null;
         if (editingId) {
-          await updateMeeting(editingId, { title, formattedContent, isPrivate });
+          await updateMeeting(editingId, { title, formattedContent, isPrivate, meetingNumber: numVal });
         } else {
-          await createMeeting({ title, date, location, charityId, rawNotes, formattedContent, attendees, isPrivate });
+          await createMeeting({ title, meetingNumber: numVal, date, location, charityId, rawNotes, formattedContent, attendees, isPrivate });
         }
         setShowModal(false); resetForm(); router.refresh();
       } catch (e: any) { setError(e.message || "حدث خطأ"); }
@@ -708,10 +730,22 @@ export default function MeetingsClient({ meetings, charities, employees, session
               {step === 1 && (
                 <>
                   <div className="grid grid-cols-2 gap-3">
-                    <div className="col-span-2">
+                    <div>
                       <label className="text-xs font-bold text-slate-500 dark:text-slate-400 mb-1 block">عنوان الاجتماع *</label>
                       <input value={title} onChange={e => setTitle(e.target.value)} placeholder="مثال: اجتماع فريق زاد الأسبوعي"
                         className="w-full border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-sm bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                    </div>
+                    <div>
+                      <label className="text-xs font-bold text-slate-500 dark:text-slate-400 mb-1 block">رقم الاجتماع</label>
+                      <div className="relative">
+                        <input type="number" min="1" value={meetingNumber} onChange={e => setMeetingNumber(e.target.value)} placeholder="1"
+                          className="w-full border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-sm bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                        {meetingNumber && (
+                          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-slate-400 pointer-events-none">
+                            {`ZAD_M_${String(meetingNumber).padStart(3, "0")}`}
+                          </span>
+                        )}
+                      </div>
                     </div>
                     <div>
                       <label className="text-xs font-bold text-slate-500 dark:text-slate-400 mb-1 block">التاريخ *</label>

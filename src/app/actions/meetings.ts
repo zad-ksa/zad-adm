@@ -42,6 +42,7 @@ export async function getMeetings() {
 
 export async function createMeeting(data: {
   title: string;
+  meetingNumber?: number | null;
   date: string;
   location?: string;
   charityId?: string;
@@ -55,6 +56,7 @@ export async function createMeeting(data: {
   await prisma.meeting.create({
     data: {
       title: data.title,
+      meetingNumber: data.meetingNumber ?? null,
       date: new Date(data.date),
       location: data.location || null,
       charityId: data.charityId || null,
@@ -71,7 +73,7 @@ export async function createMeeting(data: {
 
 export async function updateMeeting(
   id: string,
-  data: Partial<{ title: string; formattedContent: string; isPrivate: boolean }>
+  data: Partial<{ title: string; formattedContent: string; isPrivate: boolean; meetingNumber: number | null }>
 ) {
   const session = await getSession();
   if (!session) throw new Error("غير مصرح");

@@ -109,7 +109,7 @@ function handlePrint(m: Meeting) {
 
   const body = mdToHtml(m.formattedContent);
   const dateStr = formatDate(m.date);
-  const logoUrl = `${window.location.origin}/assets/logos/${encodeURIComponent("لوجو زاد-01.png")}`;
+  const letterheadUrl = `${window.location.origin}/assets/letterhead.png`;
 
   win.document.write(`<!DOCTYPE html>
 <html lang="ar" dir="rtl">
@@ -125,77 +125,75 @@ function handlePrint(m: Meeting) {
     color: #222;
     background: white;
   }
+
+  /* الكليشة كاملة كـ background — المحتوى يُكتب فوقها */
   .page {
     width: 210mm;
     min-height: 297mm;
     margin: 0 auto;
     position: relative;
-    display: flex;
-    flex-direction: column;
+    background-image: url('${letterheadUrl}');
+    background-size: 210mm 297mm;
+    background-repeat: no-repeat;
+    background-position: top left;
   }
 
-  /* ── الكليشة الرسمية ── */
-  .letterhead {
-    padding: 14mm 16mm 0 16mm;
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-  }
-  .lh-left {
-    font-size: 10pt;
-    color: #1a7a8a;
+  /* منطقة التاريخ — أعلى يسار الكليشة */
+  .date-area {
+    position: absolute;
+    top: 23mm;
+    left: 18mm;
+    font-size: 9.5pt;
+    color: #333;
     line-height: 2;
     text-align: right;
-    margin-top: 4mm;
-  }
-  .lh-left span { color: #444; }
-  .lh-logo img {
-    height: 70px;
-    display: block;
-  }
-  .header-divider {
-    margin: 6mm 16mm 0 16mm;
-    border: none;
-    border-top: 2px solid #3bb0c1;
+    direction: rtl;
   }
 
-  /* ── المحتوى ── */
+  /* منطقة المحتوى — تبدأ بعد رأس الكليشة وتنتهي قبل الفوتر */
   .content {
-    flex: 1;
-    padding: 10mm 18mm 8mm 18mm;
+    position: absolute;
+    top: 52mm;
+    right: 16mm;
+    left: 16mm;
+    bottom: 42mm;
     font-size: 11pt;
-    line-height: 1.9;
+    line-height: 1.85;
+    overflow: hidden;
+    direction: rtl;
+    text-align: right;
   }
+
   h2.sec-title {
     color: #1a7a8a;
     font-size: 13pt;
     font-weight: 700;
     text-align: center;
-    margin: 14px 0 8px;
-    padding-bottom: 5px;
-    border-bottom: 1.5px solid #d0ecf0;
+    margin: 10px 0 6px;
+    padding-bottom: 4px;
+    border-bottom: 1px solid #d0ecf0;
   }
   h3.sub-title {
     color: #2c7080;
-    font-size: 11.5pt;
+    font-size: 11pt;
     font-weight: 700;
     text-align: center;
-    margin: 12px 0 6px;
+    margin: 8px 0 4px;
   }
-  ul { padding-right: 22px; margin: 6px 0; }
-  li { margin-bottom: 5px; text-align: right; }
-  hr { border: none; border-top: 1px solid #ddd; margin: 10px 0; }
+  ul { padding-right: 20px; margin: 4px 0; }
+  li { margin-bottom: 3px; }
+  hr { border: none; border-top: 1px solid #ddd; margin: 8px 0; }
   strong { font-weight: 700; }
   table {
     width: 100%;
     border-collapse: collapse;
-    margin: 12px 0;
-    font-size: 10.5pt;
+    margin: 8px 0;
+    font-size: 10pt;
     direction: rtl;
   }
   td {
     border: 1px solid #a8d8e0;
-    padding: 7px 12px;
+    padding: 5px 10px;
     text-align: right;
     vertical-align: top;
   }
@@ -207,64 +205,27 @@ function handlePrint(m: Meeting) {
   }
   tr:nth-child(even) td { background: #f5fbfc; }
 
-  /* ── الفوتر ── */
-  .footer {
-    position: relative;
-    padding: 6mm 18mm 10mm 18mm;
-    border-top: 2px solid #3bb0c1;
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-end;
-  }
-  .footer-watermark {
-    position: absolute;
-    bottom: 8mm;
-    left: 14mm;
-    opacity: 0.07;
-    height: 110px;
-  }
-  .footer-info {
-    font-size: 8.5pt;
-    color: #1a7a8a;
-    line-height: 1.8;
-    text-align: left;
-    direction: ltr;
-  }
-
   @media print {
     body { margin: 0; }
-    .page { page-break-after: always; }
+    .page {
+      page-break-after: always;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
   }
 </style>
 </head>
 <body>
 <div class="page">
 
-  <div class="letterhead">
-    <div class="lh-left">
-      الـرقـم :&nbsp;<span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><br>
-      التـاريـخ :&nbsp;<span>${dateStr}</span><br>
-      المرفقات :&nbsp;<span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
-    </div>
-    <div class="lh-logo">
-      <img src="${logoUrl}" alt="زاد التنموية" onerror="this.style.display='none'">
-    </div>
+  <!-- التاريخ فوق الكليشة في مكانه الصحيح -->
+  <div class="date-area">
+    ${dateStr}
   </div>
 
-  <hr class="header-divider">
-
+  <!-- المحتوى فوق الكليشة -->
   <div class="content">
     ${body}
-  </div>
-
-  <div class="footer">
-    <img class="footer-watermark" src="${logoUrl}" alt="">
-    <div class="footer-info">
-      7053414848 : س . ت<br>
-      0555 493 583<br>
-      zad.adm.ksa@gmail.com<br>
-      المملكة العربية السعودية - جدة - أبرق الرغامة
-    </div>
   </div>
 
 </div>

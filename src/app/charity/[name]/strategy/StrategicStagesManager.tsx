@@ -6,7 +6,10 @@ import { useRouter } from "next/navigation";
 import CharityClientTimeline from "@/components/CharityClientTimeline";
 import InteractiveTimelineEditor from "@/components/InteractiveTimelineEditor";
 import { addStrategicStage, updateStrategicStage, deleteStrategicStage, setCurrentStrategicStage, reorderStrategicStages, toggleActiveStrategicStage } from "@/app/actions/strategy";
+import { addStrategicStageStep, updateStrategicStageStep, deleteStrategicStageStep } from "@/app/actions/stageSteps";
 import { updateTimelineConfig } from "@/app/actions/charity";
+
+type StageStep = { id: string; name: string; isDone: boolean; order: number };
 
 type Stage = {
   id: string;
@@ -19,6 +22,7 @@ type Stage = {
   duration?: string | null;
   isContinuous: boolean;
   isActive: boolean;
+  steps?: StageStep[];
 };
 
 export default function StrategicStagesManager({ 
@@ -307,6 +311,12 @@ export default function StrategicStagesManager({
           onMove={(id, direction) => handleMove(id, direction)}
           onToggleActive={(id, currentActive) => handleToggleActive(id, currentActive)}
           onSetCurrent={(id) => handleSetCurrent(id)}
+          stepCallbacks={{
+            onAddStep: (stageId, name) => addStrategicStageStep(stageId, name),
+            onToggleStep: (stageId, stepId, isDone) => updateStrategicStageStep(stepId, { isDone }),
+            onRenameStep: (stageId, stepId, name) => updateStrategicStageStep(stepId, { name }),
+            onDeleteStep: (stageId, stepId) => deleteStrategicStageStep(stepId),
+          }}
         />
       </div>
       </div>

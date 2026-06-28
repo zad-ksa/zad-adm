@@ -3,8 +3,16 @@
 import { useState } from "react";
 import { formatDurationArabic } from "@/lib/dateUtils";
 import { Activity, Check, Plus, ArrowRight, ArrowLeft, Trash2, Settings, Eye, EyeOff, X, Calendar, Edit2, Infinity } from "lucide-react";
+import StageStepsPanel from "@/components/StageStepsPanel";
 
 // Types
+export type StageStep = {
+  id: string;
+  name: string;
+  isDone: boolean;
+  order: number;
+};
+
 export type TimelineStage = {
   id: string;
   name: string;
@@ -16,18 +24,28 @@ export type TimelineStage = {
   isContinuous: boolean;
   isActive: boolean;
   duration?: string | null;
+  steps?: StageStep[];
 };
+
+interface StepCallbacks {
+  onAddStep: (stageId: string, name: string) => Promise<any>;
+  onToggleStep: (stageId: string, stepId: string, isDone: boolean) => Promise<any>;
+  onRenameStep: (stageId: string, stepId: string, name: string) => Promise<any>;
+  onDeleteStep: (stageId: string, stepId: string) => Promise<any>;
+}
 
 interface InteractiveTimelineEditorProps {
   title: string;
   stages: TimelineStage[];
   isPending: boolean;
+  canEdit?: boolean;
   onAdd: (stage: Omit<TimelineStage, 'id' | 'order' | 'isCurrent' | 'isActive'>) => void;
   onUpdate: (id: string, stage: Partial<TimelineStage>) => void;
   onDelete: (id: string) => void;
   onMove: (id: string, direction: 'up' | 'down') => void;
   onToggleActive: (id: string, currentActive: boolean) => void;
   onSetCurrent: (id: string) => void;
+  stepCallbacks?: StepCallbacks;
 }
 
 const CheckCircleIcon = () => (
@@ -41,12 +59,14 @@ export default function InteractiveTimelineEditor({
   title,
   stages,
   isPending,
+  canEdit = true,
   onAdd,
   onUpdate,
   onDelete,
   onMove,
   onToggleActive,
-  onSetCurrent
+  onSetCurrent,
+  stepCallbacks,
 }: InteractiveTimelineEditorProps) {
   const sequentialStages = stages?.filter(s => !s.isContinuous) || [];
   const continuousStages = stages?.filter(s => s.isContinuous) || [];
@@ -255,6 +275,17 @@ export default function InteractiveTimelineEditor({
                   )}
 
                   {isCurrent && <span className="block mt-2 text-[10px] font-bold bg-primary text-white px-3 py-0.5 rounded-full">المرحلة الحالية</span>}
+
+                  {stepCallbacks && (
+                    <StageStepsPanel
+                      steps={stage.steps || []}
+                      canEdit={canEdit}
+                      onAdd={(name) => stepCallbacks.onAddStep(stage.id, name)}
+                      onToggle={(stepId, isDone) => stepCallbacks.onToggleStep(stage.id, stepId, isDone)}
+                      onRename={(stepId, name) => stepCallbacks.onRenameStep(stage.id, stepId, name)}
+                      onDelete={(stepId) => stepCallbacks.onDeleteStep(stage.id, stepId)}
+                    />
+                  )}
                 </div>
               </div>
             );

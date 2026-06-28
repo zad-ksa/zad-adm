@@ -6,7 +6,10 @@ import { useRouter } from "next/navigation";
 import CharityClientTimeline from "@/components/CharityClientTimeline";
 import InteractiveTimelineEditor from "@/components/InteractiveTimelineEditor";
 import { addGovernanceStage, updateGovernanceStage, deleteGovernanceStage, setCurrentGovernanceStage, reorderGovernanceStages, toggleActiveGovernanceStage } from "@/app/actions/governance";
+import { addGovernanceStageStep, updateGovernanceStageStep, deleteGovernanceStageStep } from "@/app/actions/stageSteps";
 import { updateTimelineConfig } from "@/app/actions/charity";
+
+type StageStep = { id: string; name: string; isDone: boolean; order: number };
 
 type Stage = {
   id: string;
@@ -19,6 +22,7 @@ type Stage = {
   duration?: string | null;
   isContinuous: boolean;
   isActive: boolean;
+  steps?: StageStep[];
 };
 
 export default function GovernanceStagesManager({ 
@@ -306,6 +310,12 @@ export default function GovernanceStagesManager({
           onMove={(id, direction) => handleMove(id, direction)}
           onToggleActive={(id, currentActive) => handleToggleActive(id, currentActive)}
           onSetCurrent={(id) => handleSetCurrent(id)}
+          stepCallbacks={{
+            onAddStep: (stageId, name) => addGovernanceStageStep(stageId, name),
+            onToggleStep: (stageId, stepId, isDone) => updateGovernanceStageStep(stepId, { isDone }),
+            onRenameStep: (stageId, stepId, name) => updateGovernanceStageStep(stepId, { name }),
+            onDeleteStep: (stageId, stepId) => deleteGovernanceStageStep(stepId),
+          }}
         />
       </div>
       </div>

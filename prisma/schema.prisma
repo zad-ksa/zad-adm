@@ -3,155 +3,188 @@ generator client {
 }
 
 datasource db {
-  provider  = "postgresql"
+  provider = "postgresql"
 }
 
 enum CharitySize {
-  MICRO    // متناهية الصغر
-  SMALL    // صغيرة
-  MEDIUM   // متوسطة
-  LARGE    // كبيرة
-  MEGA     // متناهية الكبر
+  MICRO // متناهية الصغر
+  SMALL // صغيرة
+  MEDIUM // متوسطة
+  LARGE // كبيرة
+  MEGA // متناهية الكبر
 }
 
 model Charity {
-  id                String   @id @default(uuid())
-  name              String   @unique
+  id                String    @id @default(uuid())
+  name              String    @unique
   establishmentDate String?
   licenseNumber     String?
   logoUrl           String?
   domain            String?
-  createdAt         DateTime @default(now())
+  createdAt         DateTime  @default(now())
   programs          Program[]
 
   // Financial fields
-  contractValue     Float    @default(0)
-  paidAmount        Float    @default(0)
-  grants            Float    @default(0)
-  financialLogs     FinancialLog[]
-  meetings          Meeting[]
-  strategicStage    Int      @default(1)
+  contractValue    Float             @default(0)
+  paidAmount       Float             @default(0)
+  grants           Float             @default(0)
+  financialLogs    FinancialLog[]
+  meetings         Meeting[]
+  strategicStage   Int               @default(1)
   strategicStages  StrategicStage[]
   governanceStages GovernanceStage[]
   financeStages    FinanceStage[]
-  
+
   // Timeline Configurations
   strategyTimelineName String? @default("التخطيط الاستراتيجي")
   strategyTimelineDept String? @default("STRATEGY")
-  
+
   governanceTimelineName String? @default("الحوكمة")
   governanceTimelineDept String? @default("GOVERNANCE")
-  
+
   financeTimelineName String? @default("تنمية الموارد المالية")
   financeTimelineDept String? @default("FINANCE")
 
   regulationVisibilities CharityRegulationVisibility[]
-  employees         Employee[]
-  assignedEmployees EmployeeCharity[] @relation("AssignedEmployees")
-  isReadinessVisible Boolean @default(false)
-  isVisionMissionVisible Boolean @default(false)
-  isPerformanceEditable Boolean @default(false)
-  size              CharitySize?
-  services          Service[]
+  employees              Employee[]
+  assignedEmployees      EmployeeCharity[]             @relation("AssignedEmployees")
+  isReadinessVisible     Boolean                       @default(false)
+  isVisionMissionVisible Boolean                       @default(false)
+  isPerformanceEditable  Boolean                       @default(false)
+  size                   CharitySize?
+  services               Service[]
   visionMissionResponses VisionMissionResponse[]
-  governanceProgress GovernanceProgress[]
+  governanceProgress     GovernanceProgress[]
 }
 
 model GovernanceProgress {
-  id              String   @id @default(uuid())
-  charityId       String
-  charity         Charity  @relation(fields: [charityId], references: [id], onDelete: Cascade)
-  indicatorId     String   // The ID of the indicator from the static JSON
-  status          String   @default("NOT_STARTED") // NOT_STARTED, IN_PROGRESS, COMPLETED
-  proofUrl        String?
-  proofPublicId   String?
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  id            String   @id @default(uuid())
+  charityId     String
+  charity       Charity  @relation(fields: [charityId], references: [id], onDelete: Cascade)
+  indicatorId   String // The ID of the indicator from the static JSON
+  status        String   @default("NOT_STARTED") // NOT_STARTED, IN_PROGRESS, COMPLETED
+  proofUrl      String?
+  proofPublicId String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 
   @@unique([charityId, indicatorId])
   @@index([charityId])
 }
 
 model StrategicStage {
-  id          String   @id @default(uuid())
-  name        String
-  description String?
-  startDate   DateTime?
-  endDate     DateTime?
-  duration    String?
-  order       Int      @default(0)
-  isCurrent   Boolean  @default(false)
-  isContinuous Boolean @default(false)
-  isActive    Boolean  @default(true)
-  charityId   String
-  charity     Charity  @relation(fields: [charityId], references: [id], onDelete: Cascade)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id           String               @id @default(uuid())
+  name         String
+  description  String?
+  startDate    DateTime?
+  endDate      DateTime?
+  duration     String?
+  order        Int                  @default(0)
+  isCurrent    Boolean              @default(false)
+  isContinuous Boolean              @default(false)
+  isActive     Boolean              @default(true)
+  charityId    String
+  charity      Charity              @relation(fields: [charityId], references: [id], onDelete: Cascade)
+  steps        StrategicStageStep[]
+  createdAt    DateTime             @default(now())
+  updatedAt    DateTime             @updatedAt
+}
+
+model StrategicStageStep {
+  id        String         @id @default(uuid())
+  name      String
+  isDone    Boolean        @default(false)
+  order     Int            @default(0)
+  stageId   String
+  stage     StrategicStage @relation(fields: [stageId], references: [id], onDelete: Cascade)
+  createdAt DateTime       @default(now())
 }
 
 model GovernanceStage {
-  id          String   @id @default(uuid())
-  name        String
-  description String?
-  startDate   DateTime?
-  endDate     DateTime?
-  duration    String?
-  order       Int      @default(0)
-  isCurrent   Boolean  @default(false)
-  isContinuous Boolean @default(false)
-  isActive    Boolean  @default(true)
-  charityId   String
-  charity     Charity  @relation(fields: [charityId], references: [id], onDelete: Cascade)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id           String               @id @default(uuid())
+  name         String
+  description  String?
+  startDate    DateTime?
+  endDate      DateTime?
+  duration     String?
+  order        Int                  @default(0)
+  isCurrent    Boolean              @default(false)
+  isContinuous Boolean              @default(false)
+  isActive     Boolean              @default(true)
+  charityId    String
+  charity      Charity              @relation(fields: [charityId], references: [id], onDelete: Cascade)
+  steps        GovernanceStageStep[]
+  createdAt    DateTime             @default(now())
+  updatedAt    DateTime             @updatedAt
+}
+
+model GovernanceStageStep {
+  id        String          @id @default(uuid())
+  name      String
+  isDone    Boolean         @default(false)
+  order     Int             @default(0)
+  stageId   String
+  stage     GovernanceStage @relation(fields: [stageId], references: [id], onDelete: Cascade)
+  createdAt DateTime        @default(now())
 }
 
 model FinanceStage {
-  id          String   @id @default(uuid())
-  name        String
-  description String?
-  startDate   DateTime?
-  endDate     DateTime?
-  duration    String?
-  order       Int      @default(0)
-  isCurrent   Boolean  @default(false)
-  isContinuous Boolean @default(false)
-  isActive    Boolean  @default(true)
-  charityId   String
-  charity     Charity  @relation(fields: [charityId], references: [id], onDelete: Cascade)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id           String             @id @default(uuid())
+  name         String
+  description  String?
+  startDate    DateTime?
+  endDate      DateTime?
+  duration     String?
+  order        Int                @default(0)
+  isCurrent    Boolean            @default(false)
+  isContinuous Boolean            @default(false)
+  isActive     Boolean            @default(true)
+  charityId    String
+  charity      Charity            @relation(fields: [charityId], references: [id], onDelete: Cascade)
+  steps        FinanceStageStep[]
+  createdAt    DateTime           @default(now())
+  updatedAt    DateTime           @updatedAt
+}
+
+model FinanceStageStep {
+  id        String       @id @default(uuid())
+  name      String
+  isDone    Boolean      @default(false)
+  order     Int          @default(0)
+  stageId   String
+  stage     FinanceStage @relation(fields: [stageId], references: [id], onDelete: Cascade)
+  createdAt DateTime     @default(now())
 }
 
 model Meeting {
-  id               String    @id @default(uuid())
+  id               String   @id @default(uuid())
   title            String
   date             DateTime
   meetingNumber    Int?
   location         String?
   charityId        String?
-  charity          Charity?  @relation(fields: [charityId], references: [id], onDelete: SetNull)
-  rawNotes         String    @db.Text
-  formattedContent String    @db.Text
+  charity          Charity? @relation(fields: [charityId], references: [id], onDelete: SetNull)
+  rawNotes         String   @db.Text
+  formattedContent String   @db.Text
   attendees        String?
-  isPrivate        Boolean   @default(false)
+  isPrivate        Boolean  @default(false)
   createdById      String
-  createdBy        Employee  @relation("MeetingCreator", fields: [createdById], references: [id])
-  createdAt        DateTime  @default(now())
-  updatedAt        DateTime  @updatedAt
+  createdBy        Employee @relation("MeetingCreator", fields: [createdById], references: [id])
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
 
   @@index([createdById])
   @@index([charityId])
 }
 
 model FinancialLog {
-  id          String   @id @default(uuid())
-  charityId   String
-  charity     Charity  @relation(fields: [charityId], references: [id], onDelete: Cascade)
-  type        String   // "CONTRACT_UPDATE" | "PAID_UPDATE" | "ADD_GRANT" | "DISBURSEMENT"
-  amount      Float
-  notes       String?
-  createdAt   DateTime @default(now())
+  id        String   @id @default(uuid())
+  charityId String
+  charity   Charity  @relation(fields: [charityId], references: [id], onDelete: Cascade)
+  type      String // "CONTRACT_UPDATE" | "PAID_UPDATE" | "ADD_GRANT" | "DISBURSEMENT"
+  amount    Float
+  notes     String?
+  createdAt DateTime @default(now())
 }
 
 model Program {
@@ -165,15 +198,15 @@ model Program {
 }
 
 model SurveyResponse {
-  id              String   @id @default(uuid())
-  charityName     String
+  id                String   @id @default(uuid())
+  charityName       String
   establishmentDate String
-  licenseNumber   String
-  authorizedName  String
-  authorizedTitle String
-  scorePercentage Int
-  answers         Json
-  createdAt       DateTime @default(now())
+  licenseNumber     String
+  authorizedName    String
+  authorizedTitle   String
+  scorePercentage   Int
+  answers           Json
+  createdAt         DateTime @default(now())
 }
 
 model HexagonalResponse {
@@ -185,12 +218,12 @@ model HexagonalResponse {
 }
 
 model PerformanceMetric {
-  id              String   @id @default(uuid())
-  charityName     String
-  year            Int
-  data            Json
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  id          String   @id @default(uuid())
+  charityName String
+  year        Int
+  data        Json
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
   @@unique([charityName, year])
 }
@@ -206,23 +239,23 @@ enum Role {
 }
 
 model Employee {
-  id                   String           @id @default(uuid())
+  id                   String            @id @default(uuid())
   name                 String
-  phone                String           @unique
+  phone                String            @unique
   password             String
   avatarUrl            String?
-  role                 Role             @default(STRATEGY)
-  charityId            String?          // For CHARITY_CLIENT accounts
-  charity              Charity?         @relation(fields: [charityId], references: [id])
+  role                 Role              @default(STRATEGY)
+  charityId            String? // For CHARITY_CLIENT accounts
+  charity              Charity?          @relation(fields: [charityId], references: [id])
   permissions          String[]
-  navOrder             String[]         @default([])
-  isActive             Boolean          @default(true)
-  createdAt            DateTime         @default(now())
-  updatedAt            DateTime         @updatedAt
-  assignedTasks        Task[]           @relation("AssignedTasks")
-  createdTasks         Task[]           @relation("CreatedTasks")
-  employeeAchievements Achievement[]    @relation("EmployeeAchievements")
-  createdAchievements  Achievement[]    @relation("CreatedAchievements")
+  navOrder             String[]          @default([])
+  isActive             Boolean           @default(true)
+  createdAt            DateTime          @default(now())
+  updatedAt            DateTime          @updatedAt
+  assignedTasks        Task[]            @relation("AssignedTasks")
+  createdTasks         Task[]            @relation("CreatedTasks")
+  employeeAchievements Achievement[]     @relation("EmployeeAchievements")
+  createdAchievements  Achievement[]     @relation("CreatedAchievements")
   assignedCharities    EmployeeCharity[] @relation("AssignedCharities")
   createdMeetings      Meeting[]         @relation("MeetingCreator")
 }
@@ -241,24 +274,24 @@ model EmployeeCharity {
 }
 
 model Task {
-  id           String    @id @default(uuid())
-  title        String
-  assignedToId String
-  assignedTo   Employee  @relation("AssignedTasks", fields: [assignedToId], references: [id], onDelete: Cascade)
-  createdById  String
-  createdBy    Employee  @relation("CreatedTasks", fields: [createdById], references: [id], onDelete: Cascade)
-  charityId    String?
-  charityName  String?
-  isInternal   Boolean   @default(false)
-  isCompleted  Boolean   @default(false)
-  status       String    @default("NOT_STARTED") // "NOT_STARTED", "IN_PROGRESS", "COMPLETED"
-  priority     Int       @default(3) // 1: High, 2: Medium, 3: Low
-  completedAt  DateTime?
-  proofUrl     String?
+  id            String       @id @default(uuid())
+  title         String
+  assignedToId  String
+  assignedTo    Employee     @relation("AssignedTasks", fields: [assignedToId], references: [id], onDelete: Cascade)
+  createdById   String
+  createdBy     Employee     @relation("CreatedTasks", fields: [createdById], references: [id], onDelete: Cascade)
+  charityId     String?
+  charityName   String?
+  isInternal    Boolean      @default(false)
+  isCompleted   Boolean      @default(false)
+  status        String       @default("NOT_STARTED") // "NOT_STARTED", "IN_PROGRESS", "COMPLETED"
+  priority      Int          @default(3) // 1: High, 2: Medium, 3: Low
+  completedAt   DateTime?
+  proofUrl      String?
   proofPublicId String?
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
-  updates      TaskUpdate[]
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+  updates       TaskUpdate[]
 
   @@index([assignedToId, isCompleted])
 }
@@ -275,10 +308,10 @@ model TaskUpdate {
 }
 
 model Achievement {
-  id          String   @id @default(uuid())
-  title       String
-  employeeId  String
-  employee    Employee @relation("EmployeeAchievements", fields: [employeeId], references: [id], onDelete: Cascade)
+  id            String   @id @default(uuid())
+  title         String
+  employeeId    String
+  employee      Employee @relation("EmployeeAchievements", fields: [employeeId], references: [id], onDelete: Cascade)
   createdById   String
   createdBy     Employee @relation("CreatedAchievements", fields: [createdById], references: [id], onDelete: Cascade)
   charityId     String?
@@ -288,7 +321,7 @@ model Achievement {
   proofPublicId String?
   date          DateTime @default(now())
   createdAt     DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  updatedAt     DateTime @updatedAt
 
   @@index([employeeId])
 }
@@ -309,20 +342,20 @@ model News {
 model SurveyLink {
   id              String   @id @default(uuid())
   charityName     String
-  surveyType      String   // "READINESS" or "HEXAGONAL" or "VISION_MISSION"
+  surveyType      String // "READINESS" or "HEXAGONAL" or "VISION_MISSION"
   isActive        Boolean  @default(true)
   customQuestions Json?
   createdAt       DateTime @default(now())
 }
 
 model Regulation {
-  id          String   @id @default(uuid())
-  title       String
-  description String?
-  category    String   // "الإشراف والحوكمة" or "التحول الرقمي" or "القطاع غير الربحي"
-  link        String
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id                  String                        @id @default(uuid())
+  title               String
+  description         String?
+  category            String // "الإشراف والحوكمة" or "التحول الرقمي" or "القطاع غير الربحي"
+  link                String
+  createdAt           DateTime                      @default(now())
+  updatedAt           DateTime                      @updatedAt
   charityVisibilities CharityRegulationVisibility[]
 }
 
@@ -338,74 +371,85 @@ model CharityRegulationVisibility {
 }
 
 model Service {
-  id          String   @id @default(uuid())
-  name        String
-  department  String?  // 'STRATEGY', 'GOVERNANCE', 'FINANCE', 'PROGRAMS', 'HR' or null
-  charityId   String
-  charity     Charity  @relation(fields: [charityId], references: [id], onDelete: Cascade)
-  stages      ServiceStage[]
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id         String         @id @default(uuid())
+  name       String
+  department String? // 'STRATEGY', 'GOVERNANCE', 'FINANCE', 'PROGRAMS', 'HR' or null
+  charityId  String
+  charity    Charity        @relation(fields: [charityId], references: [id], onDelete: Cascade)
+  stages     ServiceStage[]
+  createdAt  DateTime       @default(now())
+  updatedAt  DateTime       @updatedAt
 }
 
 model ServiceStage {
-  id          String   @id @default(uuid())
-  name        String
-  description String?
-  startDate   DateTime?
-  endDate     DateTime?
-  duration    String?
-  order       Int      @default(0)
-  isCurrent   Boolean  @default(false)
-  isContinuous Boolean @default(false)
-  isActive    Boolean  @default(true)
-  serviceId   String
-  service     Service  @relation(fields: [serviceId], references: [id], onDelete: Cascade)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id           String             @id @default(uuid())
+  name         String
+  description  String?
+  startDate    DateTime?
+  endDate      DateTime?
+  duration     String?
+  order        Int                @default(0)
+  isCurrent    Boolean            @default(false)
+  isContinuous Boolean            @default(false)
+  isActive     Boolean            @default(true)
+  serviceId    String
+  service      Service            @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+  steps        ServiceStageStep[]
+  createdAt    DateTime           @default(now())
+  updatedAt    DateTime           @updatedAt
+}
+
+model ServiceStageStep {
+  id        String       @id @default(uuid())
+  name      String
+  isDone    Boolean      @default(false)
+  order     Int          @default(0)
+  stageId   String
+  stage     ServiceStage @relation(fields: [stageId], references: [id], onDelete: Cascade)
+  createdAt DateTime     @default(now())
 }
 
 model CustomSurvey {
-  id          String   @id @default(uuid())
-  title       String
-  introText   String?
-  isActive    Boolean  @default(false)
-  sections    CustomSurveySection[]
-  responses   CustomSurveyResponse[]
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id        String                 @id @default(uuid())
+  title     String
+  introText String?
+  isActive  Boolean                @default(false)
+  sections  CustomSurveySection[]
+  responses CustomSurveyResponse[]
+  createdAt DateTime               @default(now())
+  updatedAt DateTime               @updatedAt
 }
 
 model CustomSurveySection {
-  id          String   @id @default(uuid())
-  title       String
-  order       Int
-  surveyId    String
-  survey      CustomSurvey @relation(fields: [surveyId], references: [id], onDelete: Cascade)
-  questions   CustomSurveyQuestion[]
+  id        String                 @id @default(uuid())
+  title     String
+  order     Int
+  surveyId  String
+  survey    CustomSurvey           @relation(fields: [surveyId], references: [id], onDelete: Cascade)
+  questions CustomSurveyQuestion[]
 }
 
 model CustomSurveyQuestion {
-  id              String   @id @default(uuid())
-  text            String
-  type            String   @default("TEXT") // "TEXT", "MULTIPLE_CHOICE", "FILE"
-  isRequired      Boolean  @default(true)
-  allowAttachment Boolean  @default(false)
-  requireAttachmentIfYes Boolean @default(false)
-  options         Json?    // Array of { id, text, score }
-  order           Int
-  sectionId       String
-  section         CustomSurveySection @relation(fields: [sectionId], references: [id], onDelete: Cascade)
+  id                     String              @id @default(uuid())
+  text                   String
+  type                   String              @default("TEXT") // "TEXT", "MULTIPLE_CHOICE", "FILE"
+  isRequired             Boolean             @default(true)
+  allowAttachment        Boolean             @default(false)
+  requireAttachmentIfYes Boolean             @default(false)
+  options                Json? // Array of { id, text, score }
+  order                  Int
+  sectionId              String
+  section                CustomSurveySection @relation(fields: [sectionId], references: [id], onDelete: Cascade)
 }
 
 model CustomSurveyResponse {
-  id              String   @id @default(uuid())
-  surveyId        String
-  survey          CustomSurvey @relation(fields: [surveyId], references: [id], onDelete: Cascade)
-  charityName     String   // Charity name or other info collected
-  answers         Json     // Stores {"questionId": "answer or optionId"}
-  attachments     Json?    // Stores {"questionId": "fileUrl"}
-  createdAt       DateTime @default(now())
+  id          String       @id @default(uuid())
+  surveyId    String
+  survey      CustomSurvey @relation(fields: [surveyId], references: [id], onDelete: Cascade)
+  charityName String // Charity name or other info collected
+  answers     Json // Stores {"questionId": "answer or optionId"}
+  attachments Json? // Stores {"questionId": "fileUrl"}
+  createdAt   DateTime     @default(now())
 }
 
 model VisionMissionResponse {
@@ -428,7 +472,7 @@ model AchievementCategory {
 // Default stages template — used when creating a new charity or resetting stages
 model DefaultStage {
   id           String   @id @default(uuid())
-  timelineType String   // 'STRATEGY' | 'GOVERNANCE' | 'FINANCE'
+  timelineType String // 'STRATEGY' | 'GOVERNANCE' | 'FINANCE'
   name         String
   description  String?
   order        Int      @default(0)

@@ -6,6 +6,9 @@ import { useRouter } from "next/navigation";
 import CharityClientTimeline from "@/components/CharityClientTimeline";
 import InteractiveTimelineEditor from "@/components/InteractiveTimelineEditor";
 import { addServiceStage, updateServiceStage, deleteServiceStage, setCurrentServiceStage, reorderServiceStages, updateService, deleteService, toggleActiveServiceStage } from "@/app/actions/services";
+import { addServiceStageStep, updateServiceStageStep, deleteServiceStageStep } from "@/app/actions/stageSteps";
+
+type StageStep = { id: string; name: string; isDone: boolean; order: number };
 
 type ServiceStage = {
   id: string;
@@ -18,6 +21,7 @@ type ServiceStage = {
   isContinuous: boolean;
   isActive: boolean;
   duration: string | null;
+  steps?: StageStep[];
 };
 
 type Service = {
@@ -323,6 +327,12 @@ export default function GenericStagesManager({
           onMove={(id, direction) => handleMove(id, direction)}
           onToggleActive={(id, currentActive) => handleToggleActive(id, currentActive)}
           onSetCurrent={(id) => handleSetCurrent(id)}
+          stepCallbacks={{
+            onAddStep: (stageId, name) => addServiceStageStep(stageId, name),
+            onToggleStep: (stageId, stepId, isDone) => updateServiceStageStep(stepId, { isDone }),
+            onRenameStep: (stageId, stepId, name) => updateServiceStageStep(stepId, { name }),
+            onDeleteStep: (stageId, stepId) => deleteServiceStageStep(stepId),
+          }}
         />
       </div>
       </div>

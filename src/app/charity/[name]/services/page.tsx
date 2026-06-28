@@ -42,19 +42,22 @@ export default async function ServicesPage({ params }: { params: Promise<{ name:
   if (isAdmin || session?.role === "STRATEGY" || isCharityClient) {
     strategicStages = await prisma.strategicStage.findMany({
       where: { charityId: charity.id },
-      orderBy: { order: 'asc' }
+      orderBy: { order: 'asc' },
+      include: { steps: { orderBy: { order: 'asc' } } }
     });
   }
   if (isAdmin || session?.role === "GOVERNANCE" || isCharityClient) {
     governanceStages = await prisma.governanceStage.findMany({
       where: { charityId: charity.id },
-      orderBy: { order: 'asc' }
+      orderBy: { order: 'asc' },
+      include: { steps: { orderBy: { order: 'asc' } } }
     });
   }
   if (isAdmin || session?.role === "FINANCE" || isCharityClient) {
     financeStages = await prisma.financeStage.findMany({
       where: { charityId: charity.id },
-      orderBy: { order: 'asc' }
+      orderBy: { order: 'asc' },
+      include: { steps: { orderBy: { order: 'asc' } } }
     });
   }
 
@@ -67,7 +70,8 @@ export default async function ServicesPage({ params }: { params: Promise<{ name:
     where: { charityId: charity.id },
     include: {
       stages: {
-        orderBy: { order: 'asc' }
+        orderBy: { order: 'asc' },
+        include: { steps: { orderBy: { order: 'asc' } } }
       }
     },
     orderBy: { createdAt: 'desc' }

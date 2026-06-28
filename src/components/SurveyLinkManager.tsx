@@ -8,7 +8,8 @@ export default function SurveyLinkManager({ charityName, surveyType }: { charity
   const [generating, setGenerating] = useState(false);
   const [copied, setCopied] = useState(false);
 
-  const [charityFocus, setCharityFocus] = useState("");
+  const [customVisionQ4, setCustomVisionQ4] = useState("ما أهم أثر نتمنى أن تتركه الجمعية في مجال عملنا كجمعية متخصصة في القيم؟");
+  const [customMissionQ5, setCustomMissionQ5] = useState("ما الذي يميّز جمعيتنا عن غيرها من الجمعيات المشابهة في المجال القيمي/الدعوي؟ (المنهجية، الخبرة، إلخ)");
 
   const fetchLink = async () => {
     try {
@@ -34,12 +35,15 @@ export default function SurveyLinkManager({ charityName, surveyType }: { charity
       const res = await fetch(`/api/survey-links`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ charityName, surveyType, charityFocus }),
+        body: JSON.stringify({ 
+          charityName, 
+          surveyType, 
+          customQuestions: surveyType === "VISION_MISSION" ? { visionQ4: customVisionQ4, missionQ5: customMissionQ5 } : undefined 
+        }),
       });
       if (res.ok) {
         const data = await res.json();
         setActiveLink(data);
-        setCharityFocus(""); // reset after success
       } else {
         const errData = await res.json().catch(() => ({}));
         alert(`حدث خطأ: ${errData.error || "تأكد من إعداد المفاتيح"}`);
@@ -107,27 +111,34 @@ export default function SurveyLinkManager({ charityName, surveyType }: { charity
             disabled={generating}
             className="bg-blue-50 hover:bg-blue-100 text-blue-700 font-bold py-2 px-4 rounded-xl text-sm transition-colors flex items-center gap-2 whitespace-nowrap"
           >
-            {generating ? "جاري..." : charityFocus ? "إنشاء رابط مخصص بالذكاء الاصطناعي" : "إنشاء رابط جديد"}
-            {!generating && !charityFocus && (
+            {generating ? "جاري..." : "إنشاء رابط جديد"}
+            {!generating && (
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
-            )}
-            {!generating && charityFocus && (
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2v20"></path><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
             )}
           </button>
         </div>
         
         {surveyType === "VISION_MISSION" && (
-          <div className="bg-slate-50 p-4 rounded-xl border border-slate-100 flex flex-col gap-2">
-            <label className="text-sm font-bold text-slate-700">توجه الجمعية / مجال العمل (اختياري لتخصيص الأسئلة بالذكاء الاصطناعي)</label>
-            <input
-              type="text"
-              value={charityFocus}
-              onChange={(e) => setCharityFocus(e.target.value)}
-              placeholder="مثال: رعاية الأيتام، تحفيظ القرآن، التنمية الأسرية..."
-              className="w-full px-4 py-2 rounded-lg border border-slate-200 text-sm focus:outline-none focus:border-blue-500"
-            />
-            <p className="text-xs text-slate-500">سيتم استخدام الذكاء الاصطناعي لتعديل بعض الأسئلة بما يتناسب مع هذا المجال.</p>
+          <div className="bg-slate-50 p-4 rounded-xl border border-slate-100 flex flex-col gap-4">
+            <div>
+              <label className="block text-sm font-bold text-slate-700 mb-1">تخصيص سؤال الرؤية (اختياري)</label>
+              <textarea
+                value={customVisionQ4}
+                onChange={(e) => setCustomVisionQ4(e.target.value)}
+                rows={2}
+                className="w-full px-4 py-2 rounded-lg border border-slate-200 text-sm focus:outline-none focus:border-blue-500 resize-none"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-bold text-slate-700 mb-1">تخصيص سؤال الرسالة (اختياري)</label>
+              <textarea
+                value={customMissionQ5}
+                onChange={(e) => setCustomMissionQ5(e.target.value)}
+                rows={2}
+                className="w-full px-4 py-2 rounded-lg border border-slate-200 text-sm focus:outline-none focus:border-blue-500 resize-none"
+              />
+            </div>
+            <p className="text-xs text-slate-500">يمكنك تعديل هذه الأسئلة يدوياً لتتناسب مع مجال عمل الجمعية قبل إنشاء الرابط.</p>
           </div>
         )}
       </div>

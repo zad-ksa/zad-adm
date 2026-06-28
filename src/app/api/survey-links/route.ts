@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { getSession } from "@/lib/auth";
-import Anthropic from "@anthropic-ai/sdk";
 
 export async function GET(request: Request) {
   try {
@@ -54,54 +53,10 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
-    const { charityName, surveyType, charityFocus } = body;
+    const { charityName, surveyType, customQuestions } = body;
 
     if (!charityName || !surveyType) {
       return NextResponse.json({ error: "Missing fields" }, { status: 400 });
-    }
-
-    let customQuestions = null;
-    if (surveyType === "VISION_MISSION" && charityFocus) {
-      try {
-        const anthropic = new Anthropic({
-          apiKey: process.env.ANTHROPIC_API_KEY || "", // Ensure you have this in .env
-        });
-
-        const prompt = `أنت خبير في التخطيط الاستراتيجي للجمعيات الأهلية.
-مجال عمل الجمعية هو: "${charityFocus}"
-
-المطلوب إعادة صياغة السؤالين التاليين ليتناسبا مع مجال عمل الجمعية، مع استبدال الكلمات مثل "القيم" أو "المجال القيمي/الدعوي" بما يناسب مجال الجمعية المعطى. حافظ على نفس المعنى والهدف من السؤال.
-
-السؤال الأول (visionQ4): "ما أهم أثر نتمنى أن تتركه الجمعية في مجال عملنا كجمعية متخصصة في القيم؟"
-السؤال الثاني (missionQ5): "ما الذي يميّز جمعيتنا عن غيرها من الجمعيات المشابهة في المجال القيمي/الدعوي؟ (المنهجية، الخبرة، إلخ)"
-
-أخرج النتيجة بصيغة JSON صالحة فقط بالهيكل التالي، وبدون أي نصوص إضافية أو علامات Markdown:
-{
-  "visionQ4": "السؤال الأول بعد الصياغة",
-  "missionQ5": "السؤال الثاني بعد الصياغة"
-}`;
-
-        const msg = await anthropic.messages.create({
-          model: "claude-3-5-sonnet-20241022",
-          max_tokens: 300,
-          temperature: 0.7,
-          messages: [{ role: "user", content: prompt }],
-        });
-
-        if (msg.content[0].type === "text") {
-          let content = msg.content[0].text.trim();
-          if (content.startsWith("```json")) {
-            content = content.replace(/```json/g, "").replace(/```/g, "").trim();
-          }
-          customQuestions = JSON.parse(content);
-        }
-      } catch (error: any) {
-        console.error("AI customization failed:", error);
-        return NextResponse.json(
-          { error: `فشل تخصيص الأسئلة بالذكاء الاصطناعي. الرجاء التحقق من إعداد مفتاح ANTHROPIC_API_KEY في ملف .env. التفاصيل: ${error.message}` },
-          { status: 400 }
-        );
-      }
     }
 
     // Deactivate previous active links for this charity and survey type

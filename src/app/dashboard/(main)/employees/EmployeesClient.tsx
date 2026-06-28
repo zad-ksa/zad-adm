@@ -463,6 +463,20 @@ export function EmployeesClient({
                     <span className="text-[11px] text-slate-400 dark:text-slate-500 font-medium mr-auto">
                       {editCharityIds.length} / {allCharities.length} محددة
                     </span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (editCharityIds.length === allCharities.length) {
+                          setEditCharityIds([]);
+                        } else {
+                          setEditCharityIds(allCharities.map(c => c.id));
+                        }
+                      }}
+                      disabled={isPending}
+                      className="text-[10px] font-bold text-primary hover:text-primary/80 transition-colors cursor-pointer mr-2 disabled:opacity-50"
+                    >
+                      {editCharityIds.length === allCharities.length ? "إلغاء الكل" : "تحديد الكل"}
+                    </button>
                   </div>
                   <div className="max-h-44 overflow-y-auto rounded-xl border border-slate-200 dark:border-slate-700 divide-y divide-slate-100 dark:divide-slate-700/60">
                     {allCharities.map((charity) => {

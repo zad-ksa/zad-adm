@@ -1,12 +1,26 @@
-﻿"use server";
+"use server";
 
 import { prisma } from "@/lib/db";
 import { hash } from "bcryptjs";
 import { revalidatePath } from "next/cache";
 import { getSession } from "@/lib/auth";
-import { isAdminRole } from "@/lib/access";
+import { hasPermission } from "@/lib/permissions";
+
+async function checkManageEmployeesAuth() {
+  const session = await getSession();
+  if (!session) throw new Error("Not authenticated");
+  if (!hasPermission(session.role, session.permissions || [], "manage_employees")) {
+    throw new Error("FORBIDDEN");
+  }
+}
 
 export async function addEmployee(prevState: any, formData: FormData) {
+  try {
+    await checkManageEmployeesAuth();
+  } catch (err: any) {
+    return { error: "ليس لديك صلاحية لإدارة الموظفين" };
+  }
+
   const name = formData.get("name") as string;
   const phone = formData.get("phone") as string;
   const password = formData.get("password") as string;
@@ -14,9 +28,12 @@ export async function addEmployee(prevState: any, formData: FormData) {
   
   // Extract permissions
   const permissions: string[] = [];
+  const charityIds: string[] = [];
   formData.forEach((value, key) => {
     if (key.startsWith("permission_") && value === "on") {
       permissions.push(key.replace("permission_", ""));
+    } else if (key.startsWith("charity_") && value === "on") {
+      charityIds.push(key.replace("charity_", ""));
     }
   });
 
@@ -46,6 +63,11 @@ export async function addEmployee(prevState: any, formData: FormData) {
         role: dbRole,
         permissions,
         isActive: true,
+        ...(charityIds.length > 0 && dbRole !== "ADMIN" && dbRole !== "CHARITY_CLIENT" && {
+          assignedCharities: {
+            create: charityIds.map((charityId) => ({ charityId })),
+          },
+        }),
       },
     });
 
@@ -57,6 +79,12 @@ export async function addEmployee(prevState: any, formData: FormData) {
 }
 
 export async function toggleEmployeeStatus(id: string, currentStatus: boolean) {
+  try {
+    await checkManageEmployeesAuth();
+  } catch (err: any) {
+    return { error: "ليس لديك صلاحية لإدارة الموظفين" };
+  }
+
   try {
     await prisma.employee.update({
       where: { id },
@@ -73,8 +101,11 @@ export async function updateEmployeeCharities(
   employeeId: string,
   charityIds: string[]
 ) {
-  const session = await getSession();
-  if (!session || !isAdminRole(session.role)) throw new Error("FORBIDDEN");
+  try {
+    await checkManageEmployeesAuth();
+  } catch (err: any) {
+    throw new Error("FORBIDDEN");
+  }
 
   await prisma.$transaction([
     prisma.employeeCharity.deleteMany({ where: { employeeId } }),
@@ -99,6 +130,12 @@ export async function updateEmployee(
     password?: string;
   }
 ) {
+  try {
+    await checkManageEmployeesAuth();
+  } catch (err: any) {
+    return { error: "ليس لديك صلاحية لإدارة الموظفين" };
+  }
+
   if (!data.name || !data.phone || !data.role) {
     return { error: "يرجى تعبئة الحقول المطلوبة: الاسم، الجوال، ونوع الحساب" };
   }

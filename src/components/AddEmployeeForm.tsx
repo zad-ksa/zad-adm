@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useEffect, useRef } from "react";
+import { useActionState, useEffect, useRef, useState } from "react";
 import { addEmployee } from "@/app/dashboard/(main)/employees/actions";
 import { 
   User, 
@@ -14,9 +14,10 @@ import {
 } from "@/components/Icons";
 import { PERMISSION_GROUPS } from "@/lib/permissions";
 
-export function AddEmployeeForm() {
+export function AddEmployeeForm({ allCharities }: { allCharities?: { id: string, name: string }[] }) {
   const [state, formAction, isPending] = useActionState(addEmployee, null);
   const formRef = useRef<HTMLFormElement>(null);
+  const [selectedCharityIds, setSelectedCharityIds] = useState<string[]>([]);
 
   useEffect(() => {
     if (state?.success) {
@@ -112,6 +113,61 @@ export function AddEmployeeForm() {
           ))}
         </div>
       </div>
+
+      {allCharities && allCharities.length > 0 && (
+        <div className="pt-4 border-t border-slate-100 dark:border-slate-700">
+          <div className="flex items-center gap-2 mb-3">
+            <h4 className="text-sm font-bold text-slate-700 dark:text-slate-200">الجمعيات المخصصة</h4>
+            <span className="text-[11px] text-slate-400 dark:text-slate-500 font-medium mr-auto">
+              {selectedCharityIds.length} / {allCharities.length} محددة
+            </span>
+            <button
+              type="button"
+              onClick={() => {
+                if (selectedCharityIds.length === allCharities.length) {
+                  setSelectedCharityIds([]);
+                } else {
+                  setSelectedCharityIds(allCharities.map(c => c.id));
+                }
+              }}
+              disabled={isPending}
+              className="text-[10px] font-bold text-primary hover:text-primary/80 transition-colors cursor-pointer mr-2 disabled:opacity-50"
+            >
+              {selectedCharityIds.length === allCharities.length ? "إلغاء الكل" : "تحديد الكل"}
+            </button>
+          </div>
+          <div className="max-h-44 overflow-y-auto rounded-xl border border-slate-200 dark:border-slate-700 divide-y divide-slate-100 dark:divide-slate-700/60">
+            {allCharities.map((charity) => {
+              const isChecked = selectedCharityIds.includes(charity.id);
+              return (
+                <label
+                  key={charity.id}
+                  className={`w-full flex items-center gap-3 px-3 py-2.5 text-right transition-colors cursor-pointer ${
+                    isChecked
+                      ? "bg-primary/5 dark:bg-primary/10 text-primary dark:text-primary"
+                      : "hover:bg-slate-50 dark:hover:bg-slate-700/40 text-slate-600 dark:text-slate-300"
+                  }`}
+                >
+                  <input
+                    type="checkbox"
+                    name={`charity_${charity.id}`}
+                    checked={isChecked}
+                    onChange={(e) => {
+                      if (e.target.checked) {
+                        setSelectedCharityIds((prev) => [...prev, charity.id]);
+                      } else {
+                        setSelectedCharityIds((prev) => prev.filter((id) => id !== charity.id));
+                      }
+                    }}
+                    className="w-4 h-4 rounded text-primary border-slate-300 dark:border-slate-600 focus:ring-primary/50"
+                  />
+                  <span className="text-xs font-bold">{charity.name}</span>
+                </label>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       <div className="flex justify-end pt-4 border-t border-slate-100 dark:border-slate-700">
         <button

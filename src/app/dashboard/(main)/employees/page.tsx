@@ -37,7 +37,7 @@ export default async function EmployeesPage() {
       {/* Add Employee Form */}
       <section>
         <h2 className="text-lg font-semibold text-slate-800 dark:text-slate-100 mb-4">إضافة موظف جديد</h2>
-        <AddEmployeeForm />
+        <AddEmployeeForm allCharities={allCharities} />
       </section>
 
       {/* Employees List */}

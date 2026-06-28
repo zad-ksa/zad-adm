@@ -5,7 +5,7 @@ import {
   FileText, Plus, X, Lock, Globe, Trash2, Edit2,
   Printer, Loader2, Sparkles, Eye, UserPlus, Check, ChevronDown,
   ChevronRight, AlertCircle, CheckCircle2, Clock, User, BookOpen,
-  ClipboardList, LayoutTemplate,
+  ClipboardList, LayoutTemplate, RefreshCw,
 } from "lucide-react";
 import {
   createMeeting, updateMeeting, deleteMeeting,
@@ -303,17 +303,20 @@ function MeetingSummaryPanel({
   const [saving, setSaving] = useState(false);
   const [, startTransition] = useTransition();
 
-  // حالة التحميل الأولي للملخص والمهام
   const [summary, setSummary] = useState(meeting.summary || "");
-  const [extracted, setExtracted] = useState(false);
+  // إذا يوجد ملخص محفوظ في DB لا نشغّل الـ AI تلقائياً مجدداً
+  const alreadyExtracted = !!meeting.summary;
+  const [extracted, setExtracted] = useState(alreadyExtracted);
 
   const unassigned = localTasks.filter(t => !t.assignedToId).length;
   const done = localTasks.filter(t => t.isDone).length;
   const total = localTasks.length;
   const pct = total > 0 ? Math.round((done / total) * 100) : 0;
 
-  async function loadSummary() {
-    if (extracted || loading) return;
+  async function loadSummary(force = false) {
+    if (loading) return;
+    if (extracted && !force) return;
+    if (force && !confirm("سيتم إعادة تحليل المحضر بالذكاء الاصطناعي وتحديث الملخص. هل تريد المتابعة؟")) return;
     setLoading(true);
     try {
       const res = await fetch("/api/meetings/extract-tasks", {
@@ -323,8 +326,7 @@ function MeetingSummaryPanel({
       });
       const data = await res.json();
       if (data.summary) setSummary(data.summary);
-      if (data.tasks?.length > 0 && localTasks.length === 0) {
-        // اقتراح مهام من الذكاء — لا تحفظ تلقائياً، أعرض للتعديل
+      if (data.tasks?.length > 0 && (localTasks.length === 0 || force)) {
         const suggested: MeetingTask[] = (data.tasks as { title: string; assigneeName: string | null }[]).map((t, i) => ({
           id: `tmp_${i}`,
           title: t.title,
@@ -335,7 +337,6 @@ function MeetingSummaryPanel({
         }));
         setLocalTasks(suggested);
       }
-      // حفظ الملخص في DB
       if (data.summary) {
         await updateMeeting(meeting.id, { summary: data.summary });
       }
@@ -393,7 +394,7 @@ function MeetingSummaryPanel({
   const handleOpen = () => {
     const next = !open;
     setOpen(next);
-    if (next && !extracted && !loading) loadSummary();
+    if (next && !extracted && !loading) loadSummary(false);
   };
 
   return (
@@ -407,6 +408,15 @@ function MeetingSummaryPanel({
           {open ? <ChevronDown className="w-3.5 h-3.5" /> : <ChevronRight className="w-3.5 h-3.5" />}
           <span>الملخص والمهام</span>
         </button>
+        {extracted && !loading && (
+          <button
+            onClick={() => loadSummary(true)}
+            title="إعادة تحليل المحضر بالذكاء الاصطناعي"
+            className="p-0.5 text-slate-300 hover:text-blue-500 transition-colors rounded"
+          >
+            <RefreshCw className="w-3 h-3" />
+          </button>
+        )}
 
         {/* مؤشرات سريعة */}
         <div className="flex items-center gap-2 flex-1">

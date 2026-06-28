@@ -360,25 +360,34 @@ export async function unifyCharityStagesAction(sourceCharityId: string, timeline
       })
     ]);
   } else if (timelineType === "CUSTOM" && sourceServiceId) {
-    // For custom timelines: copy to services with the exact same name in other charities
     const sourceService = await prisma.service.findUnique({
       where: { id: sourceServiceId }
     });
     if (sourceService) {
-      const matchingServices = await prisma.service.findMany({
-        where: {
-          name: sourceService.name,
-          charityId: targetCharityIds?.length
-            ? { in: targetCharityIds }
-            : { not: sourceCharityId }
+      for (const targetCharity of otherCharities) {
+        // Find existing service with same name in this charity
+        let targetSvc = await prisma.service.findFirst({
+          where: {
+            charityId: targetCharity.id,
+            name: sourceService.name
+          }
+        });
+
+        // If it doesn't exist yet, create it so stages can be copied
+        if (!targetSvc) {
+          targetSvc = await prisma.service.create({
+            data: {
+              name: sourceService.name,
+              department: sourceService.department,
+              charityId: targetCharity.id
+            }
+          });
         }
-      });
-      
-      for (const svc of matchingServices) {
+
         await prisma.$transaction([
-          prisma.serviceStage.deleteMany({ where: { serviceId: svc.id } }),
+          prisma.serviceStage.deleteMany({ where: { serviceId: targetSvc.id } }),
           prisma.serviceStage.createMany({
-            data: sourceStages.map(s => ({ ...s, serviceId: svc.id }))
+            data: sourceStages.map(s => ({ ...s, serviceId: targetSvc!.id }))
           })
         ]);
       }

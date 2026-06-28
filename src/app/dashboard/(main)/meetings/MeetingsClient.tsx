@@ -306,7 +306,7 @@ function handlePrint(m: Meeting) {
 
   // Parse the content HTML into nodes
   var tmp = document.createElement('div');
-  tmp.innerHTML = ${JSON.stringify(`<div class="meeting-title">محضر اجتماع</div>\n${body}`)};
+  tmp.innerHTML = ${JSON.stringify(body)};
   var nodes = Array.from(tmp.childNodes);
 
   // Page dimensions (px at 96dpi)

@@ -593,6 +593,10 @@ export default function ServicesOverviewClient({
 }) {
   const router = useRouter();
 
+  // Local logo state to avoid router.refresh() on logo update
+  const [logoUrls, setLogoUrls] = useState<Record<string, string | null>>({});
+  const getLogoUrl = (charity: Charity) => logoUrls[charity.id] !== undefined ? logoUrls[charity.id] : charity.logoUrl ?? null;
+
   // Service name editing
   const [editingServiceId, setEditingServiceId] = useState<string | null>(null);
   const [editingServiceName, setEditingServiceName] = useState("");
@@ -611,7 +615,6 @@ export default function ServicesOverviewClient({
       setBuiltinNames(prev => ({ ...prev, [tabKey]: editingBuiltinName.trim() }));
       setEditingBuiltinTab(null);
       await updateTimelineDisplayName(tabKey, editingBuiltinName.trim());
-      router.refresh();
     });
   };
 
@@ -645,7 +648,6 @@ export default function ServicesOverviewClient({
       setServiceNames(prev => ({ ...prev, [svcId]: editingServiceName.trim() }));
       setEditingServiceId(null);
       await updateService(svcId, editingServiceName.trim(), dept);
-      router.refresh();
     });
   };
 
@@ -666,10 +668,10 @@ export default function ServicesOverviewClient({
         }
       }
       await updateCharityLogo(charityId, finalUrl);
+      setLogoUrls(prev => ({ ...prev, [charityId]: finalUrl }));
       setLogoEditCharityId(null);
       setLogoPreview(null);
       setLogoFile(null);
-      router.refresh();
     });
   };
 
@@ -963,8 +965,8 @@ export default function ServicesOverviewClient({
                         serviceId={svc.id}
                         canEdit={canEdit}
                         onUnifyClick={() => handleOpenUnifyCustom(charity, svc.id)}
-                        charityLogoUrl={charity.logoUrl}
-                        onLogoClick={isAdmin ? () => openLogoModal(charity.id, charity.logoUrl) : undefined}
+                        charityLogoUrl={getLogoUrl(charity)}
+                        onLogoClick={isAdmin ? () => openLogoModal(charity.id, getLogoUrl(charity)) : undefined}
                       />
                     ));
                   }

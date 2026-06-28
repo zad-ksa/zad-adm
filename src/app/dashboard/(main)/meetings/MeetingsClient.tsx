@@ -62,44 +62,65 @@ function canEdit(meeting: Meeting, sessionId: string, isTier1: boolean) {
 
 // ── Markdown → HTML converter ─────────────────────────────────────────────────
 function mdToHtml(md: string): string {
-  let html = md
-    .replace(/^## (.+)$/gm, '<h2 class="sec-title">$1</h2>')
-    .replace(/^### (.+)$/gm, '<h3 class="sub-title">$1</h3>')
+  const lines = md.split("\n");
+  const out: string[] = [];
+  let inTable = false;
+  let inUl = false;
+
+  for (const raw of lines) {
+    const line = raw.trimEnd();
+
+    // Markdown table row
+    if (/^\|(.+)\|$/.test(line)) {
+      const cells = line.split("|").slice(1, -1).map(c => c.trim());
+      // Skip separator rows like |---|---|
+      if (cells.every(c => /^[-: ]+$/.test(c))) continue;
+      if (!inTable) { out.push("<table>"); inTable = true; }
+      if (inUl) { out.push("</ul>"); inUl = false; }
+      const isHeader = out[out.length - 1] === "<table>";
+      const tag = isHeader ? "th" : "td";
+      out.push(`<tr>${cells.map(c => `<${tag}>${applyInline(c)}</${tag}>`).join("")}</tr>`);
+      continue;
+    } else if (inTable) {
+      out.push("</table>");
+      inTable = false;
+    }
+
+    // List item
+    if (/^[-•*] (.+)$/.test(line)) {
+      const text = line.replace(/^[-•*] /, "");
+      if (!inUl) { out.push("<ul>"); inUl = true; }
+      out.push(`<li>${applyInline(text)}</li>`);
+      continue;
+    } else if (inUl) {
+      out.push("</ul>");
+      inUl = false;
+    }
+
+    // Headings
+    if (/^## (.+)$/.test(line)) {
+      out.push(`<h2 class="sec-title">${applyInline(line.slice(3))}</h2>`);
+    } else if (/^### (.+)$/.test(line)) {
+      out.push(`<h3 class="sub-title">${applyInline(line.slice(4))}</h3>`);
+    } else if (/^---+$/.test(line)) {
+      out.push("<hr>");
+    } else if (line === "") {
+      out.push("<br>");
+    } else {
+      out.push(`<p>${applyInline(line)}</p>`);
+    }
+  }
+
+  if (inTable) out.push("</table>");
+  if (inUl) out.push("</ul>");
+
+  return out.join("\n");
+}
+
+function applyInline(text: string): string {
+  return text
     .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
-    .replace(/^\|(.+)\|$/gm, (row) => {
-      const cells = row.split("|").slice(1, -1).map(c => c.trim());
-      return `<tr>${cells.map(c => `<td>${c}</td>`).join("")}</tr>`;
-    })
-    .replace(/<tr>(<td>[-: ]+<\/td>)+<\/tr>/g, "")
-    .replace(/^[-•] (.+)$/gm, "<li>$1</li>")
-    .replace(/^---$/gm, "<hr>")
-    .replace(/\n/g, "<br>");
-
-  html = html.split(/(?=<tr>)|(?<=<\/tr>)/).reduce((acc: string[], part) => {
-    if (part.startsWith("<tr>")) {
-      const last = acc[acc.length - 1];
-      if (last && last.startsWith("<table>")) {
-        acc[acc.length - 1] = last.slice(0, -8) + part.replace(/<br>/g, "") + "</table>";
-      } else {
-        acc.push("<table>" + part.replace(/<br>/g, "") + "</table>");
-      }
-    } else { acc.push(part); }
-    return acc;
-  }, []).join("");
-
-  html = html.split(/(?=<li>)|(?<=<\/li>)/).reduce((acc: string[], part) => {
-    if (part.startsWith("<li>")) {
-      const last = acc[acc.length - 1];
-      if (last && last.startsWith("<ul>")) {
-        acc[acc.length - 1] = last.slice(0, -5) + part.replace(/<br>/g, "") + "</ul>";
-      } else {
-        acc.push("<ul>" + part.replace(/<br>/g, "") + "</ul>");
-      }
-    } else { acc.push(part); }
-    return acc;
-  }, []).join("");
-
-  return html;
+    .replace(/\*(.+?)\*/g, "<em>$1</em>");
 }
 
 // ── Letterhead print ──────────────────────────────────────────────────────────
@@ -119,119 +140,113 @@ function handlePrint(m: Meeting) {
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap');
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  body {
-    font-family: 'Cairo', 'Segoe UI', Tahoma, sans-serif;
-    direction: rtl; text-align: right;
-    color: #222;
-    background: white;
+
+  /*
+   * نموذج الطباعة:
+   * - الكليشة تظهر كـ @page background في كل صفحة
+   * - هامش علوي كبير يترك مساحة لرأس الكليشة (الشعار + الخط الأزرق)
+   * - هامش سفلي يترك مساحة لفوتر الكليشة
+   */
+  @page {
+    size: A4;
+    margin-top: 52mm;
+    margin-bottom: 42mm;
+    margin-right: 17mm;
+    margin-left: 17mm;
+    background-image: url('${letterheadUrl}');
+    background-size: 210mm 297mm;
+    background-position: top left;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
   }
 
-  /* الكليشة كاملة كـ background — المحتوى يُكتب فوقها */
-  .page {
-    width: 210mm;
-    min-height: 297mm;
-    margin: 0 auto;
-    position: relative;
+  body {
+    font-family: 'Cairo', 'Segoe UI', Tahoma, sans-serif;
+    direction: rtl;
+    text-align: right;
+    color: #1a1a1a;
+    font-size: 11pt;
+    line-height: 1.55;
     background-image: url('${letterheadUrl}');
     background-size: 210mm 297mm;
     background-repeat: no-repeat;
     background-position: top left;
+    background-attachment: fixed;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+    padding-top: 52mm;
+    padding-bottom: 42mm;
+    padding-right: 17mm;
+    padding-left: 17mm;
   }
 
-  /* منطقة التاريخ — أعلى يسار الكليشة */
-  .date-area {
-    position: absolute;
-    top: 23mm;
-    left: 18mm;
-    font-size: 9.5pt;
+  /* التاريخ في مكانه على الكليشة — أعلى يسار */
+  .date-overlay {
+    position: fixed;
+    top: 29mm;
+    left: 17mm;
+    font-size: 9pt;
     color: #333;
-    line-height: 2;
-    text-align: right;
-    direction: rtl;
-  }
-
-  /* منطقة المحتوى — تبدأ بعد رأس الكليشة وتنتهي قبل الفوتر */
-  .content {
-    position: absolute;
-    top: 52mm;
-    right: 16mm;
-    left: 16mm;
-    bottom: 42mm;
-    font-size: 11pt;
-    line-height: 1.85;
-    overflow: hidden;
     direction: rtl;
     text-align: right;
   }
 
+  /* المحتوى */
   h2.sec-title {
     color: #1a7a8a;
     font-size: 13pt;
     font-weight: 700;
     text-align: center;
-    margin: 10px 0 6px;
-    padding-bottom: 4px;
-    border-bottom: 1px solid #d0ecf0;
+    margin: 10px 0 5px;
+    padding-bottom: 3px;
+    border-bottom: 1.5px solid #c8e8ed;
   }
   h3.sub-title {
-    color: #2c7080;
+    color: #1a7a8a;
     font-size: 11pt;
     font-weight: 700;
     text-align: center;
     margin: 8px 0 4px;
   }
-  ul { padding-right: 20px; margin: 4px 0; }
-  li { margin-bottom: 3px; }
-  hr { border: none; border-top: 1px solid #ddd; margin: 8px 0; }
+  p { margin: 3px 0; }
+  br { display: block; margin: 1px 0; }
+  ul { padding-right: 18px; margin: 3px 0 6px; }
+  li { margin-bottom: 2px; line-height: 1.5; }
+  hr { border: none; border-top: 1px solid #ddd; margin: 6px 0; }
   strong { font-weight: 700; }
+
   table {
     width: 100%;
     border-collapse: collapse;
     margin: 8px 0;
     font-size: 10pt;
     direction: rtl;
+    page-break-inside: avoid;
   }
-  td {
+  th, td {
     border: 1px solid #a8d8e0;
     padding: 5px 10px;
     text-align: right;
     vertical-align: top;
   }
-  tr:first-child td {
-    background: #e0f4f7;
+  th {
+    background-color: #ddf0f4;
     font-weight: 700;
     color: #1a7a8a;
     text-align: center;
   }
-  tr:nth-child(even) td { background: #f5fbfc; }
-
-  @media print {
-    body { margin: 0; }
-    .page {
-      page-break-after: always;
-      -webkit-print-color-adjust: exact;
-      print-color-adjust: exact;
-    }
-  }
+  tr:nth-child(even) td { background-color: #f4fbfc; }
 </style>
 </head>
 <body>
-<div class="page">
 
-  <!-- التاريخ فوق الكليشة في مكانه الصحيح -->
-  <div class="date-area">
-    ${dateStr}
-  </div>
+  <div class="date-overlay">${dateStr}</div>
 
-  <!-- المحتوى فوق الكليشة -->
-  <div class="content">
-    ${body}
-  </div>
+  ${body}
 
-</div>
 </body></html>`);
   win.document.close();
-  setTimeout(() => win.print(), 800);
+  setTimeout(() => win.print(), 900);
 }
 
 // ── Task assignment modal ─────────────────────────────────────────────────────

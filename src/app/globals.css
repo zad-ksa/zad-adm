@@ -1,4 +1,4 @@
-﻿@import "tailwindcss";
+@import "tailwindcss";
 @custom-variant dark (&:where(.dark, .dark *));
 
 @theme {
@@ -80,4 +80,10 @@ body {
 }
 .rmdp-header {
   font-weight: bold !important;
+}
+/* Hide placeholder text when printing */
+@media print {
+  ::placeholder {
+    color: transparent !important;
+  }
 }

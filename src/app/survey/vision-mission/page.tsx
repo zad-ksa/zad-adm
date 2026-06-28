@@ -244,7 +244,7 @@ export default function VisionMissionSurveyPage() {
         <div className="bg-white dark:bg-slate-800 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-md p-6 sm:p-10 transition-colors mt-6 print:shadow-none print:border-none print:p-0">
           {/* Step 0: Welcome and Personal Information */}
           {(step === 0 || isPrintMode) && (
-            <div className="space-y-8 print:pb-16 print:pt-12">
+            <div className="space-y-8 print:pb-16 print:pt-12 print:flex print:flex-col print:justify-center print:min-h-[85vh]">
               <div className="text-center space-y-4 max-w-2xl mx-auto">
                 <div className="flex items-center justify-center gap-8 mb-6">
                   {prefilledCharityLogo && (
@@ -317,11 +317,11 @@ export default function VisionMissionSurveyPage() {
                 </p>
               </div>
 
-              <div className="space-y-8">
+              <div className="space-y-8 print:space-y-4">
                 {categories.map((cat, idx) => (
                   <div
                     key={idx}
-                    className="p-6 rounded-2xl border border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/30 space-y-4"
+                    className="p-6 rounded-2xl border border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/30 space-y-4 print:p-3 print:space-y-2"
                   >
                     <h4 className="font-bold text-slate-800 dark:text-slate-200 text-base flex items-center gap-2">
                       <span className="w-6 h-6 rounded-full bg-primary/10 text-primary text-xs font-bold flex items-center justify-center">
@@ -342,22 +342,22 @@ export default function VisionMissionSurveyPage() {
                         />
                       </div>
 
-                      <div className="space-y-2">
+                      <div className="space-y-2 print:space-y-1">
                         <label className="block text-xs font-bold text-slate-700 dark:text-slate-300">وصف الفئة</label>
                         <textarea
-                          rows={5}
-                          className="w-full border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 rounded-xl px-3 py-2.5 text-sm focus:ring-2 focus:ring-primary/50 outline-none resize-none"
+                          rows={3}
+                          className="w-full border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 rounded-xl px-3 py-2.5 text-sm focus:ring-2 focus:ring-primary/50 outline-none resize-none print:h-12 print:text-xs print:p-2"
                           placeholder="مثال: الفئة العمرية من 6 إلى 12 عاماً"
                           value={cat.description}
                           onChange={(e) => handleCategoryChange(idx, "description", e.target.value)}
                         />
                       </div>
 
-                      <div className="space-y-2">
+                      <div className="space-y-2 print:space-y-1">
                         <label className="block text-xs font-bold text-slate-700 dark:text-slate-300">الأثر المراد إحداثه</label>
                         <textarea
-                          rows={5}
-                          className="w-full border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 rounded-xl px-3 py-2.5 text-sm focus:ring-2 focus:ring-primary/50 outline-none resize-none"
+                          rows={3}
+                          className="w-full border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 rounded-xl px-3 py-2.5 text-sm focus:ring-2 focus:ring-primary/50 outline-none resize-none print:h-12 print:text-xs print:p-2"
                           placeholder="مثال: التمكين التعليمي والتربوي المستدام"
                           value={cat.impact}
                           onChange={(e) => handleCategoryChange(idx, "impact", e.target.value)}

@@ -84,11 +84,11 @@ export default function AchievementFormModal({
         className="absolute inset-0 bg-slate-950/65 backdrop-blur-md transition-opacity duration-300"
         onClick={onClose}
       />
-      <div className="bg-white dark:bg-slate-800 rounded-3xl border border-slate-100 dark:border-slate-700/50 shadow-2xl w-full max-w-md overflow-hidden relative z-10 transform transition-all duration-300 scale-100 p-6 md:p-8 space-y-6" dir="rtl">
-        <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-700/50 pb-4">
+      <div className="bg-white dark:bg-slate-800 rounded-3xl border border-slate-100 dark:border-slate-700/50 shadow-2xl w-full max-w-md overflow-hidden relative z-10 transform transition-all duration-300 scale-100 p-5 space-y-4" dir="rtl">
+        <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-700/50 pb-3">
           <div>
-            <h3 className="text-xl font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
-              <Sparkles className="w-6 h-6 text-emerald-500" />
+            <h3 className="text-base font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
+              <Sparkles className="w-4 h-4 text-emerald-500" />
               تسجيل إنجاز مباشر
             </h3>
             <p className="text-xs text-slate-500 dark:text-slate-400 font-medium mt-1.5">
@@ -103,7 +103,7 @@ export default function AchievementFormModal({
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-5">
+        <form onSubmit={handleSubmit} className="space-y-3">
           <div>
             <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-2">ماذا أنجزت؟</label>
             <input

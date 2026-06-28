@@ -173,7 +173,7 @@ export default function NewsFilterClient({
   });
 
   return (
-    <main className="flex-1 min-w-0 py-6 relative" dir="rtl">
+    <main className="flex-1 min-w-0 py-4 relative" dir="rtl">
       {/* Notifications */}
       {successMsg && (
         <div className="fixed bottom-5 left-5 z-50 bg-emerald-500 text-white px-4 py-2.5 rounded-xl shadow-lg flex items-center gap-2 font-bold text-sm">

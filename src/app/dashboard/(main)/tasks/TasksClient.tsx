@@ -1033,7 +1033,7 @@ ${combinedAchievements.length > 0 ? `
               }
             }}
           />
-          <div className="bg-white dark:bg-slate-800 rounded-3xl border border-slate-100 dark:border-slate-700/50 dark:border-slate-800/80 shadow-2xl w-full max-w-md overflow-hidden relative z-10 transform transition-all duration-300 scale-100 p-6 space-y-6" dir="rtl">
+          <div className="bg-white dark:bg-slate-800 rounded-3xl border border-slate-100 dark:border-slate-700/50 dark:border-slate-800/80 shadow-2xl w-full max-w-md overflow-hidden relative z-10 transform transition-all duration-300 scale-100 p-5 space-y-4" dir="rtl">
             <div>
               <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
                 <UploadCloud className="w-5 h-5 text-primary" />
@@ -1138,7 +1138,7 @@ ${combinedAchievements.length > 0 ? `
             className="absolute inset-0 bg-slate-950/65 backdrop-blur-md transition-opacity duration-300"
             onClick={() => setReassigningTaskId(null)}
           />
-          <div className="bg-white dark:bg-slate-800 rounded-3xl border border-slate-100 dark:border-slate-700/50 dark:border-slate-800/80 shadow-2xl w-full max-w-md overflow-hidden relative z-10 transform transition-all duration-300 scale-100 p-6 space-y-6" dir="rtl">
+          <div className="bg-white dark:bg-slate-800 rounded-3xl border border-slate-100 dark:border-slate-700/50 dark:border-slate-800/80 shadow-2xl w-full max-w-md overflow-hidden relative z-10 transform transition-all duration-300 scale-100 p-5 space-y-4" dir="rtl">
             <div>
               <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100">إعادة إسناد المهمة</h3>
               <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">اختر الموظف الجديد الذي ترغب بنقل هذه المهمة إليه:</p>

@@ -180,19 +180,19 @@ export default async function CharitiesDashboard() {
   const newsItems = formattedDbNews.slice(0, 5);
 
   return (
-    <main className="flex-1 min-w-0 py-8">
-      <div className="mb-8 flex justify-between items-center flex-wrap gap-4">
+    <main className="flex-1 min-w-0 py-5">
+      <div className="mb-5 flex justify-between items-center flex-wrap gap-3">
         <div>
-          <h1 className="text-3xl font-bold text-slate-800 dark:text-slate-100 mb-2">إدارة الجمعيات</h1>
+          <h1 className="text-lg font-bold text-slate-800 dark:text-slate-100 mb-1">إدارة الجمعيات</h1>
           <p className="text-slate-600 dark:text-slate-300">نظرة عامة على الجمعيات المتعاقد معها</p>
         </div>
         <AddCharityButton />
       </div>
 
       {/* Cards Grid */}
-      <div className="grid grid-cols-2 md:grid-cols-2 xl:grid-cols-4 gap-3 sm:gap-6 mb-8 sm:mb-12">
+      <div className="grid grid-cols-2 md:grid-cols-2 xl:grid-cols-4 gap-3 mb-5">
         {/* Card 1: الجمعيات المتعاقد معها */}
-        <div className="bg-white dark:bg-slate-800 rounded-2xl p-4 sm:p-6 border border-slate-100 dark:border-slate-700 shadow-sm flex flex-col sm:flex-row items-center sm:items-start text-center sm:text-right gap-3 sm:gap-4 hover:border-primary/20 dark:hover:border-primary/40 hover:shadow-md transition-all duration-300">
+        <div className="bg-white dark:bg-slate-800 rounded-2xl p-4 sm:p-4 border border-slate-100 dark:border-slate-700 shadow-sm flex flex-col sm:flex-row items-center sm:items-start text-center sm:text-right gap-3 sm:gap-4 hover:border-primary/20 dark:hover:border-primary/40 hover:shadow-md transition-all duration-300">
           <div className="w-12 h-12 sm:w-14 sm:h-14 bg-primary/10 dark:bg-primary/20 rounded-xl flex items-center justify-center text-primary shrink-0">
             <svg className="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
@@ -200,12 +200,12 @@ export default async function CharitiesDashboard() {
           </div>
           <div>
             <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 font-medium mb-1">الجمعيات المتعاقد معها</p>
-            <h3 className="text-lg sm:text-2xl font-bold text-slate-800 dark:text-slate-100">{charities.length}</h3>
+            <h3 className="text-lg sm:text-xl font-bold text-slate-800 dark:text-slate-100">{charities.length}</h3>
           </div>
         </div>
 
         {/* Card 2: المنح */}
-        <div className="bg-white dark:bg-slate-800 rounded-2xl p-4 sm:p-6 border border-slate-100 dark:border-slate-700 shadow-sm flex flex-col sm:flex-row items-center sm:items-start text-center sm:text-right gap-3 sm:gap-4 hover:border-emerald-500/20 dark:hover:border-emerald-500/40 hover:shadow-md transition-all duration-300">
+        <div className="bg-white dark:bg-slate-800 rounded-2xl p-4 sm:p-4 border border-slate-100 dark:border-slate-700 shadow-sm flex flex-col sm:flex-row items-center sm:items-start text-center sm:text-right gap-3 sm:gap-4 hover:border-emerald-500/20 dark:hover:border-emerald-500/40 hover:shadow-md transition-all duration-300">
           <div className="w-12 h-12 sm:w-14 sm:h-14 bg-emerald-50 dark:bg-emerald-900/30 rounded-xl flex items-center justify-center text-emerald-600 dark:text-emerald-400 shrink-0">
             <svg className="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -213,12 +213,12 @@ export default async function CharitiesDashboard() {
           </div>
           <div>
             <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 font-medium mb-1">المنح</p>
-            <h3 className="text-lg sm:text-2xl font-bold text-slate-800 dark:text-slate-100">{displayGrants.toLocaleString()} ريال</h3>
+            <h3 className="text-lg sm:text-xl font-bold text-slate-800 dark:text-slate-100">{displayGrants.toLocaleString()} ريال</h3>
           </div>
         </div>
 
         {/* Card 3: عدد البرامج */}
-        <div className="bg-white dark:bg-slate-800 rounded-2xl p-4 sm:p-6 border border-slate-100 dark:border-slate-700 shadow-sm flex flex-col sm:flex-row items-center sm:items-start text-center sm:text-right gap-3 sm:gap-4 hover:border-violet-500/20 dark:hover:border-violet-500/40 hover:shadow-md transition-all duration-300">
+        <div className="bg-white dark:bg-slate-800 rounded-2xl p-4 sm:p-4 border border-slate-100 dark:border-slate-700 shadow-sm flex flex-col sm:flex-row items-center sm:items-start text-center sm:text-right gap-3 sm:gap-4 hover:border-violet-500/20 dark:hover:border-violet-500/40 hover:shadow-md transition-all duration-300">
           <div className="w-12 h-12 sm:w-14 sm:h-14 bg-violet-50 dark:bg-violet-900/30 rounded-xl flex items-center justify-center text-violet-600 dark:text-violet-400 shrink-0">
             <svg className="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2H6a2 2 0 01-2-2v-4zM14 16a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2h-2a2 2 0 01-2-2v-4z" />
@@ -226,12 +226,12 @@ export default async function CharitiesDashboard() {
           </div>
           <div>
             <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 font-medium mb-1">عدد البرامج</p>
-            <h3 className="text-lg sm:text-2xl font-bold text-slate-800 dark:text-slate-100">{displayPrograms.toLocaleString()}</h3>
+            <h3 className="text-lg sm:text-xl font-bold text-slate-800 dark:text-slate-100">{displayPrograms.toLocaleString()}</h3>
           </div>
         </div>
 
         {/* Card 4: عدد المستفيدين */}
-        <div className="bg-white dark:bg-slate-800 rounded-2xl p-4 sm:p-6 border border-slate-100 dark:border-slate-700 shadow-sm flex flex-col sm:flex-row items-center sm:items-start text-center sm:text-right gap-3 sm:gap-4 hover:border-indigo-500/20 dark:hover:border-indigo-500/40 hover:shadow-md transition-all duration-300">
+        <div className="bg-white dark:bg-slate-800 rounded-2xl p-4 sm:p-4 border border-slate-100 dark:border-slate-700 shadow-sm flex flex-col sm:flex-row items-center sm:items-start text-center sm:text-right gap-3 sm:gap-4 hover:border-indigo-500/20 dark:hover:border-indigo-500/40 hover:shadow-md transition-all duration-300">
           <div className="w-12 h-12 sm:w-14 sm:h-14 bg-indigo-50 dark:bg-indigo-900/30 rounded-xl flex items-center justify-center text-indigo-600 dark:text-indigo-400 shrink-0">
             <svg className="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
@@ -239,17 +239,17 @@ export default async function CharitiesDashboard() {
           </div>
           <div>
             <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 font-medium mb-1">عدد المستفيدين</p>
-            <h3 className="text-lg sm:text-2xl font-bold text-slate-800 dark:text-slate-100">{displayBeneficiaries.toLocaleString()}</h3>
+            <h3 className="text-lg sm:text-xl font-bold text-slate-800 dark:text-slate-100">{displayBeneficiaries.toLocaleString()}</h3>
           </div>
         </div>
       </div>
 
       {/* Two Column Section: Charities & News */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
         {/* Charities Column - 2/3 width */}
-        <div className="lg:col-span-2 space-y-6">
-          <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-100 mb-6 flex items-center gap-3">
-            <span className="w-2.5 h-6 bg-primary rounded-full"></span>
+        <div className="lg:col-span-2 space-y-4">
+          <h2 className="text-base font-bold text-slate-800 dark:text-slate-100 mb-3 flex items-center gap-2">
+            <span className="w-2 h-5 bg-primary rounded-full"></span>
             الجمعيات المتعاقد معها
           </h2>
 
@@ -362,8 +362,8 @@ export default async function CharitiesDashboard() {
         {/* News Column - 1/3 width */}
         <div className="space-y-6">
           <div className="flex items-center justify-between">
-            <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-100 flex items-center gap-3">
-              <span className="w-2.5 h-6 bg-amber-400 dark:bg-amber-500 rounded-full"></span>
+            <h2 className="text-base font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
+              <span className="w-2 h-5 bg-amber-400 dark:bg-amber-500 rounded-full"></span>
               آخر الأخبار والإنجازات
             </h2>
             <Link
@@ -377,9 +377,9 @@ export default async function CharitiesDashboard() {
             </Link>
           </div>
 
-          <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 p-6 shadow-sm divide-y divide-slate-100 dark:divide-slate-700">
+          <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 p-4 shadow-sm divide-y divide-slate-100 dark:divide-slate-700">
             {newsItems.map((item, idx) => (
-              <div key={item.id} className={`group ${idx > 0 ? "pt-5" : ""} ${idx < newsItems.length - 1 ? "pb-5" : ""}`}>
+              <div key={item.id} className={`group ${idx > 0 ? "pt-3" : ""} ${idx < newsItems.length - 1 ? "pb-3" : ""}`}>
                 <div className="flex flex-wrap items-center gap-2 mb-2">
                   {item.charityName.split(",").map((cName) => (
                     <span key={cName} className="inline-block text-[10px] font-bold text-primary dark:text-primary bg-primary/5 dark:bg-primary/10 px-2 py-0.5 rounded-md">

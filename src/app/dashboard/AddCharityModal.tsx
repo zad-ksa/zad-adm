@@ -82,14 +82,14 @@ export default function AddCharityModal({ onClose, onSuccess }: { onClose: () =>
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/50 p-4" dir="rtl">
       <div className="bg-white rounded-xl w-full max-w-md border border-slate-200 overflow-hidden animate-in fade-in zoom-in-95 duration-200 max-h-[90vh] flex flex-col">
-        <div className="p-6 border-b border-slate-100 flex justify-between items-center shrink-0">
-          <h2 className="text-xl font-bold text-slate-800">إضافة جمعية جديدة</h2>
+        <div className="p-4 border-b border-slate-100 flex justify-between items-center shrink-0">
+          <h2 className="text-base font-bold text-slate-800">إضافة جمعية جديدة</h2>
           <button onClick={onClose} className="text-slate-400 hover:text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-lg w-8 h-8 flex items-center justify-center transition-colors cursor-pointer select-none">
             ✕
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-6 space-y-4 overflow-y-auto flex-1">
+        <form onSubmit={handleSubmit} className="p-4 space-y-3 overflow-y-auto flex-1">
           {error && (
             <div className="bg-red-50 text-red-600 p-3 rounded-xl text-sm font-semibold border border-red-100">
               {error}

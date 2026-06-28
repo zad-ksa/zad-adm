@@ -125,7 +125,7 @@ export default function EditCharityModal({ charity, onClose }: EditCharityModalP
       {/* Modal Container */}
       <div className="bg-white rounded-2xl border border-slate-100 shadow-2xl w-full max-w-lg overflow-hidden relative z-10 transform transition-all duration-300 scale-100 max-h-[90vh] flex flex-col font-sans" dir="rtl">
         {/* Header */}
-        <div className="px-6 py-5 border-b border-slate-100 flex items-center justify-between shrink-0">
+        <div className="px-4 py-3 border-b border-slate-100 flex items-center justify-between shrink-0">
           <h3 className="text-lg font-bold text-slate-800">تعديل ملف الجمعية</h3>
           <button 
             onClick={onClose} 
@@ -137,7 +137,7 @@ export default function EditCharityModal({ charity, onClose }: EditCharityModalP
         </div>
 
         {/* Form Body */}
-        <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-6 space-y-6">
+        <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-5 space-y-4">
           {error && (
             <div className="bg-red-50 border border-red-100 p-4 rounded-xl flex items-start text-sm text-red-700 font-bold">
               <AlertCircle className="w-5 h-5 ml-2 text-red-500 shrink-0 mt-0.5" />

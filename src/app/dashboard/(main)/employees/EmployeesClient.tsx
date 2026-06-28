@@ -171,18 +171,18 @@ export function EmployeesClient({
           <table className="w-full text-right">
             <thead className="bg-slate-50 dark:bg-slate-900/60 border-b border-slate-100 dark:border-slate-700">
               <tr>
-                <th className="px-6 py-4 text-sm font-bold text-slate-500 dark:text-slate-400">الموظف</th>
-                <th className="px-6 py-4 text-sm font-bold text-slate-500 dark:text-slate-400">رقم الجوال</th>
-                <th className="px-6 py-4 text-sm font-bold text-slate-500 dark:text-slate-400">نوع الحساب</th>
-                <th className="px-6 py-4 text-sm font-bold text-slate-500 dark:text-slate-400">الحالة</th>
-                <th className="px-6 py-4 text-sm font-bold text-slate-500 dark:text-slate-400">الصلاحيات</th>
-                <th className="px-6 py-4 text-sm font-bold text-slate-500 dark:text-slate-400">الإجراءات</th>
+                <th className="px-4 py-2.5 text-sm font-bold text-slate-500 dark:text-slate-400">الموظف</th>
+                <th className="px-4 py-2.5 text-sm font-bold text-slate-500 dark:text-slate-400">رقم الجوال</th>
+                <th className="px-4 py-2.5 text-sm font-bold text-slate-500 dark:text-slate-400">نوع الحساب</th>
+                <th className="px-4 py-2.5 text-sm font-bold text-slate-500 dark:text-slate-400">الحالة</th>
+                <th className="px-4 py-2.5 text-sm font-bold text-slate-500 dark:text-slate-400">الصلاحيات</th>
+                <th className="px-4 py-2.5 text-sm font-bold text-slate-500 dark:text-slate-400">الإجراءات</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-700/60">
               {employees.map((emp) => (
                 <tr key={emp.id} className="hover:bg-slate-50 dark:hover:bg-slate-700/30 transition-colors">
-                  <td className="px-6 py-4">
+                  <td className="px-4 py-2.5">
                     <div className="flex items-center gap-3">
                       <UserCircle className="w-10 h-10 text-slate-300 dark:text-slate-600" />
                       <div>
@@ -193,10 +193,10 @@ export function EmployeesClient({
                       </div>
                     </div>
                   </td>
-                  <td className="px-6 py-4 text-sm text-slate-600 dark:text-slate-300 font-bold" dir="ltr">
+                  <td className="px-4 py-2.5 text-sm text-slate-600 dark:text-slate-300 font-bold" dir="ltr">
                     {emp.phone}
                   </td>
-                  <td className="px-6 py-4">
+                  <td className="px-4 py-2.5">
                     <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold ${
                       roleBadgeStyles[emp.role] || "bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300"
                     }`}>
@@ -204,7 +204,7 @@ export function EmployeesClient({
                       {ROLE_LABELS[emp.role] || emp.role}
                     </span>
                   </td>
-                  <td className="px-6 py-4">
+                  <td className="px-4 py-2.5">
                     <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold ${
                       emp.isActive 
                         ? "bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400" 
@@ -214,7 +214,7 @@ export function EmployeesClient({
                       {emp.isActive ? "نشط" : "موقوف"}
                     </span>
                   </td>
-                  <td className="px-6 py-4">
+                  <td className="px-4 py-2.5">
                     <div className="flex flex-wrap gap-1 max-w-[280px]">
                       {AUTO_ADMIN_ROLES.includes(emp.role) ? (
                         <span className="inline-block text-[10px] font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-900/30 px-2 py-0.5 rounded">
@@ -234,7 +234,7 @@ export function EmployeesClient({
                       )}
                     </div>
                   </td>
-                  <td className="px-6 py-4">
+                  <td className="px-4 py-2.5">
                     <div className="flex items-center gap-2">
                       <button
                         onClick={() => openEditModal(emp)}
@@ -282,8 +282,8 @@ export function EmployeesClient({
           
           <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-2xl w-full max-w-lg overflow-hidden relative z-10 animate-in fade-in zoom-in-95 duration-200 max-h-[90vh] flex flex-col" dir="rtl">
             {/* Modal Header */}
-            <div className="px-6 py-5 border-b border-slate-100 dark:border-slate-700 flex items-center justify-between shrink-0">
-              <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100">تعديل بيانات وصلاحيات الموظف</h3>
+            <div className="px-4 py-3 border-b border-slate-100 dark:border-slate-700 flex items-center justify-between shrink-0">
+              <h3 className="text-sm font-bold text-slate-800 dark:text-slate-100">تعديل بيانات وصلاحيات الموظف</h3>
               <button 
                 onClick={() => setEditingEmployee(null)} 
                 disabled={isPending}
@@ -294,7 +294,7 @@ export function EmployeesClient({
             </div>
 
             {/* Modal Form Body */}
-            <form onSubmit={handleEditSubmit} className="flex-1 overflow-y-auto p-6 space-y-6">
+            <form onSubmit={handleEditSubmit} className="flex-1 overflow-y-auto p-4 space-y-4">
               {/* Error Alert */}
               {modalError && (
                 <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800/50 p-4 rounded-xl flex items-start text-sm text-red-700 dark:text-red-400 font-bold gap-2">

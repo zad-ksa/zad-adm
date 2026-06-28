@@ -790,9 +790,9 @@ export default function MeetingsClient({ meetings, charities, employees, session
       {viewingMeeting && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm" dir="rtl">
           <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-2xl w-full max-w-3xl max-h-[90vh] flex flex-col">
-            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 dark:border-slate-800 shrink-0">
+            <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100 dark:border-slate-800 shrink-0">
               <div>
-                <h2 className="font-bold text-slate-800 dark:text-slate-100">{viewingMeeting.title}</h2>
+                <h2 className="font-bold text-slate-800 dark:text-slate-100 text-sm">{viewingMeeting.title}</h2>
                 <p className="text-xs text-slate-400 mt-0.5">{formatDate(viewingMeeting.date)}{viewingMeeting.location ? ` · ${viewingMeeting.location}` : ""}</p>
               </div>
               <div className="flex gap-2">
@@ -807,7 +807,7 @@ export default function MeetingsClient({ meetings, charities, employees, session
                 </button>
               </div>
             </div>
-            <div className="flex-1 overflow-auto p-6">
+            <div className="flex-1 overflow-auto p-4">
               <pre className="whitespace-pre-wrap font-sans text-sm leading-relaxed text-slate-700 dark:text-slate-200 text-right" dir="rtl">
                 {viewingMeeting.formattedContent}
               </pre>
@@ -820,9 +820,9 @@ export default function MeetingsClient({ meetings, charities, employees, session
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm" dir="rtl">
           <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-2xl w-full max-w-2xl max-h-[95vh] flex flex-col">
-            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 dark:border-slate-800 shrink-0">
-              <div className="flex items-center gap-3">
-                <Sparkles className="w-5 h-5 text-blue-500" />
+            <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100 dark:border-slate-800 shrink-0">
+              <div className="flex items-center gap-2">
+                <Sparkles className="w-4 h-4 text-blue-500" />
                 <h2 className="font-bold text-slate-800 dark:text-slate-100">
                   {editingId ? "تعديل المحضر" : "محضر اجتماع جديد"}
                 </h2>
@@ -839,7 +839,7 @@ export default function MeetingsClient({ meetings, charities, employees, session
               </button>
             </div>
 
-            <div className="flex-1 overflow-auto p-6 space-y-4">
+            <div className="flex-1 overflow-auto p-4 space-y-3">
               {step === 1 && (
                 <>
                   <div className="grid grid-cols-2 gap-3">

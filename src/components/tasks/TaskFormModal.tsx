@@ -53,11 +53,11 @@ export default function TaskFormModal({
         className="absolute inset-0 bg-slate-950/65 backdrop-blur-md transition-opacity duration-300"
         onClick={onClose}
       />
-      <div className="bg-white dark:bg-slate-800 rounded-3xl border border-slate-100 dark:border-slate-700/50 dark:border-slate-800/80 shadow-2xl w-full max-w-lg overflow-hidden relative z-10 transform transition-all duration-300 scale-100 p-6 md:p-8 space-y-6" dir="rtl">
+      <div className="bg-white dark:bg-slate-800 rounded-3xl border border-slate-100 dark:border-slate-700/50 dark:border-slate-800/80 shadow-2xl w-full max-w-lg overflow-hidden relative z-10 transform transition-all duration-300 scale-100 p-5 space-y-4" dir="rtl">
         <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-700/50 dark:border-slate-800/80 pb-4">
           <div>
-            <h3 className="text-xl font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
-              <span className="w-2.5 h-6 bg-primary rounded-full"></span>
+            <h3 className="text-base font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
+              <span className="w-2 h-5 bg-primary rounded-full"></span>
               إضافة مهمة جديدة
             </h3>
             <p className="text-xs text-slate-500 dark:text-slate-400 font-medium mt-1.5">
@@ -72,7 +72,7 @@ export default function TaskFormModal({
           </button>
         </div>
         
-        <form onSubmit={handleSubmit} className="space-y-5">
+        <form onSubmit={handleSubmit} className="space-y-3">
           <div>
             <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-2">عنوان المهمة</label>
             <textarea
@@ -81,7 +81,7 @@ export default function TaskFormModal({
               placeholder="اكتب تفاصيل المهمة هنا..."
               rows={3}
               required
-              className="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-sm outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary/30 text-slate-800 dark:text-slate-100 transition-all font-medium resize-none"
+              className="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-sm outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary/30 text-slate-800 dark:text-slate-100 transition-all font-medium resize-none"
             />
           </div>
 
@@ -94,7 +94,7 @@ export default function TaskFormModal({
               <select
                 value={assigneeId}
                 onChange={(e) => setAssigneeId(e.target.value)}
-                className="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-sm outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary/30 text-slate-800 dark:text-slate-100 transition-all font-bold cursor-pointer [&>option]:bg-white [&>option]:dark:bg-slate-800 [&>option]:text-slate-700 [&>option]:dark:text-slate-200"
+                className="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-sm outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary/30 text-slate-800 dark:text-slate-100 transition-all font-bold cursor-pointer [&>option]:bg-white [&>option]:dark:bg-slate-800 [&>option]:text-slate-700 [&>option]:dark:text-slate-200"
               >
                 {employees.map((emp) => (
                   <option key={emp.id} value={emp.id}>
@@ -113,7 +113,7 @@ export default function TaskFormModal({
             <select
               value={charityId}
               onChange={(e) => setCharityId(e.target.value)}
-              className="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-sm outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary/30 text-slate-800 dark:text-slate-100 transition-all font-bold cursor-pointer [&>option]:bg-white [&>option]:dark:bg-slate-800 [&>option]:text-slate-700 [&>option]:dark:text-slate-200"
+              className="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-sm outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary/30 text-slate-800 dark:text-slate-100 transition-all font-bold cursor-pointer [&>option]:bg-white [&>option]:dark:bg-slate-800 [&>option]:text-slate-700 [&>option]:dark:text-slate-200"
             >
               <option value="internal">مهام داخلية في شركة زاد</option>
               {charities.map((ch) => (

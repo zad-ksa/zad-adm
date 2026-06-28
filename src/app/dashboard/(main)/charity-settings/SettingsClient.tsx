@@ -190,8 +190,8 @@ export default function SettingsClient() {
   };
 
   return (
-    <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm p-6">
-      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-8 pb-6 border-b border-slate-100 dark:border-slate-800">
+    <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm p-4">
+      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3 mb-5 pb-4 border-b border-slate-100 dark:border-slate-800">
         <div className="w-full sm:w-72">
           <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">اختر حساب الموظف:</label>
           <div className="relative">

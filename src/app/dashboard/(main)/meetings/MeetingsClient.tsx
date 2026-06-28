@@ -60,71 +60,56 @@ function canEdit(meeting: Meeting, sessionId: string, isTier1: boolean) {
   return meeting.createdById === sessionId || isTier1;
 }
 
+// ── Markdown → HTML converter ─────────────────────────────────────────────────
+function mdToHtml(md: string): string {
+  let html = md
+    .replace(/^## (.+)$/gm, '<h2 class="sec-title">$1</h2>')
+    .replace(/^### (.+)$/gm, '<h3 class="sub-title">$1</h3>')
+    .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
+    .replace(/^\|(.+)\|$/gm, (row) => {
+      const cells = row.split("|").slice(1, -1).map(c => c.trim());
+      return `<tr>${cells.map(c => `<td>${c}</td>`).join("")}</tr>`;
+    })
+    .replace(/<tr>(<td>[-: ]+<\/td>)+<\/tr>/g, "")
+    .replace(/^[-•] (.+)$/gm, "<li>$1</li>")
+    .replace(/^---$/gm, "<hr>")
+    .replace(/\n/g, "<br>");
+
+  html = html.split(/(?=<tr>)|(?<=<\/tr>)/).reduce((acc: string[], part) => {
+    if (part.startsWith("<tr>")) {
+      const last = acc[acc.length - 1];
+      if (last && last.startsWith("<table>")) {
+        acc[acc.length - 1] = last.slice(0, -8) + part.replace(/<br>/g, "") + "</table>";
+      } else {
+        acc.push("<table>" + part.replace(/<br>/g, "") + "</table>");
+      }
+    } else { acc.push(part); }
+    return acc;
+  }, []).join("");
+
+  html = html.split(/(?=<li>)|(?<=<\/li>)/).reduce((acc: string[], part) => {
+    if (part.startsWith("<li>")) {
+      const last = acc[acc.length - 1];
+      if (last && last.startsWith("<ul>")) {
+        acc[acc.length - 1] = last.slice(0, -5) + part.replace(/<br>/g, "") + "</ul>";
+      } else {
+        acc.push("<ul>" + part.replace(/<br>/g, "") + "</ul>");
+      }
+    } else { acc.push(part); }
+    return acc;
+  }, []).join("");
+
+  return html;
+}
+
 // ── Letterhead print ──────────────────────────────────────────────────────────
 function handlePrint(m: Meeting) {
   const win = window.open("", "_blank");
   if (!win) return;
 
-  // Convert markdown-ish to HTML with RTL table support
-  let body = m.formattedContent
-    // headers
-    .replace(/^## (.+)$/gm, '<h2 class="sec-title">$1</h2>')
-    .replace(/^### (.+)$/gm, '<h3 class="sub-title">$3<span>$1</span></h3>'.replace('$3',''))
-    .replace(/^### (.+)$/gm, '<h3 class="sub-title">$1</h3>')
-    // bold
-    .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
-    // table rows
-    .replace(/^\|(.+)\|$/gm, (row) => {
-      const cells = row.split("|").slice(1, -1).map(c => c.trim());
-      const isHeader = false;
-      return `<tr>${cells.map(c => `<td>${c}</td>`).join("")}</tr>`;
-    })
-    // separator rows (|----|)
-    .replace(/<tr>(<td>[-: ]+<\/td>)+<\/tr>/g, "")
-    // list items
-    .replace(/^[-•] (.+)$/gm, "<li>$1</li>")
-    // hr
-    .replace(/^---$/gm, "<hr>")
-    // line breaks
-    .replace(/\n/g, "<br>");
-
-  // Wrap consecutive <tr> into <table>
-  body = body
-    .split(/(?=<tr>)|(?<=<\/tr>)/)
-    .reduce((acc: string[], part) => {
-      if (part.startsWith("<tr>")) {
-        const last = acc[acc.length - 1];
-        if (last && last.startsWith("<table>")) {
-          acc[acc.length - 1] = last.slice(0, -8) + part.replace(/<br>/g, "") + "</table>";
-        } else {
-          acc.push("<table>" + part.replace(/<br>/g, "") + "</table>");
-        }
-      } else {
-        acc.push(part);
-      }
-      return acc;
-    }, [])
-    .join("");
-
-  // Wrap consecutive <li> into <ul>
-  body = body
-    .split(/(?=<li>)|(?<=<\/li>)/)
-    .reduce((acc: string[], part) => {
-      if (part.startsWith("<li>")) {
-        const last = acc[acc.length - 1];
-        if (last && last.startsWith("<ul>")) {
-          acc[acc.length - 1] = last.slice(0, -5) + part.replace(/<br>/g, "") + "</ul>";
-        } else {
-          acc.push("<ul>" + part.replace(/<br>/g, "") + "</ul>");
-        }
-      } else {
-        acc.push(part);
-      }
-      return acc;
-    }, [])
-    .join("");
-
+  const body = mdToHtml(m.formattedContent);
   const dateStr = formatDate(m.date);
+  const logoUrl = `${window.location.origin}/assets/logos/${encodeURIComponent("لوجو زاد-01.png")}`;
 
   win.document.write(`<!DOCTYPE html>
 <html lang="ar" dir="rtl">
@@ -138,110 +123,113 @@ function handlePrint(m: Meeting) {
     font-family: 'Cairo', 'Segoe UI', Tahoma, sans-serif;
     direction: rtl; text-align: right;
     color: #222;
-    padding: 0;
     background: white;
   }
   .page {
     width: 210mm;
     min-height: 297mm;
     margin: 0 auto;
-    padding: 0;
     position: relative;
     display: flex;
     flex-direction: column;
   }
 
-  /* ── Header / Letterhead ── */
+  /* ── الكليشة الرسمية ── */
   .letterhead {
-    padding: 18mm 18mm 0 18mm;
+    padding: 14mm 16mm 0 16mm;
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
   }
-  .letterhead-left {
+  .lh-left {
     font-size: 10pt;
     color: #1a7a8a;
-    line-height: 1.9;
+    line-height: 2;
     text-align: right;
+    margin-top: 4mm;
   }
-  .letterhead-left span { color: #333; }
-  .letterhead-logo {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-end;
+  .lh-left span { color: #444; }
+  .lh-logo img {
+    height: 70px;
+    display: block;
   }
-  .letterhead-logo img { height: 55px; }
-  .letterhead-logo .tagline {
-    font-size: 8pt;
-    color: #888;
-    margin-top: 4px;
-    letter-spacing: 0.5px;
-  }
-
-  /* ── Divider ── */
   .header-divider {
-    margin: 10mm 18mm 0 18mm;
+    margin: 6mm 16mm 0 16mm;
     border: none;
-    border-top: 1.5px solid #1a7a8a;
+    border-top: 2px solid #3bb0c1;
   }
 
-  /* ── Content area ── */
+  /* ── المحتوى ── */
   .content {
     flex: 1;
-    padding: 10mm 18mm;
+    padding: 10mm 18mm 8mm 18mm;
     font-size: 11pt;
-    line-height: 1.85;
+    line-height: 1.9;
   }
-
   h2.sec-title {
     color: #1a7a8a;
     font-size: 13pt;
     font-weight: 700;
+    text-align: center;
     margin: 14px 0 8px;
-    padding-bottom: 4px;
-    border-bottom: 1.5px solid #e0f0f2;
+    padding-bottom: 5px;
+    border-bottom: 1.5px solid #d0ecf0;
   }
   h3.sub-title {
-    color: #2c5f6b;
+    color: #2c7080;
     font-size: 11.5pt;
     font-weight: 700;
+    text-align: center;
     margin: 12px 0 6px;
   }
-  p, br { line-height: 1.85; }
-  ul { padding-right: 20px; margin: 6px 0; }
-  li { margin-bottom: 4px; }
-  hr { border: none; border-top: 1px solid #ddd; margin: 12px 0; }
+  ul { padding-right: 22px; margin: 6px 0; }
+  li { margin-bottom: 5px; text-align: right; }
+  hr { border: none; border-top: 1px solid #ddd; margin: 10px 0; }
   strong { font-weight: 700; }
-
   table {
     width: 100%;
     border-collapse: collapse;
-    margin: 10px 0;
+    margin: 12px 0;
     font-size: 10.5pt;
     direction: rtl;
   }
-  th, td {
-    border: 1px solid #b0d8de;
+  td {
+    border: 1px solid #a8d8e0;
     padding: 7px 12px;
     text-align: right;
     vertical-align: top;
   }
-  tr:first-child td { background: #e8f6f8; font-weight: 700; color: #1a7a8a; }
-  tr:nth-child(even) td { background: #f6fcfd; }
+  tr:first-child td {
+    background: #e0f4f7;
+    font-weight: 700;
+    color: #1a7a8a;
+    text-align: center;
+  }
+  tr:nth-child(even) td { background: #f5fbfc; }
 
-  /* ── Footer ── */
+  /* ── الفوتر ── */
   .footer {
-    padding: 8mm 18mm 12mm 18mm;
-    border-top: 1.5px solid #1a7a8a;
+    position: relative;
+    padding: 6mm 18mm 10mm 18mm;
+    border-top: 2px solid #3bb0c1;
     display: flex;
     justify-content: space-between;
-    align-items: center;
-    font-size: 8.5pt;
-    color: #555;
+    align-items: flex-end;
   }
-  .footer-logo { opacity: 0.15; height: 60px; }
-  .footer-info { text-align: left; color: #1a7a8a; line-height: 1.7; font-size: 8pt; }
-  .footer-info a { color: #1a7a8a; text-decoration: none; }
+  .footer-watermark {
+    position: absolute;
+    bottom: 8mm;
+    left: 14mm;
+    opacity: 0.07;
+    height: 110px;
+  }
+  .footer-info {
+    font-size: 8.5pt;
+    color: #1a7a8a;
+    line-height: 1.8;
+    text-align: left;
+    direction: ltr;
+  }
 
   @media print {
     body { margin: 0; }
@@ -252,56 +240,37 @@ function handlePrint(m: Meeting) {
 <body>
 <div class="page">
 
-  <!-- Letterhead -->
   <div class="letterhead">
-    <div class="letterhead-left">
-      الـرقـم : <span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><br>
-      التـاريـخ : <span>${dateStr}</span><br>
-      المرفقات : <span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+    <div class="lh-left">
+      الـرقـم :&nbsp;<span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><br>
+      التـاريـخ :&nbsp;<span>${dateStr}</span><br>
+      المرفقات :&nbsp;<span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
     </div>
-    <div class="letterhead-logo">
-      <svg width="160" height="55" viewBox="0 0 400 130" xmlns="http://www.w3.org/2000/svg">
-        <!-- Zad logo text approximation -->
-        <text x="200" y="55" font-family="Cairo,sans-serif" font-size="42" font-weight="700"
-          fill="url(#lg)" text-anchor="middle">زاد التـنـمـويـة</text>
-        <text x="200" y="80" font-family="Cairo,sans-serif" font-size="18" fill="#888"
-          text-anchor="middle">Zad Development Services</text>
-        <text x="200" y="105" font-family="Cairo,sans-serif" font-size="14" fill="#aaa"
-          text-anchor="middle">─── لأثر مستدام ───</text>
-        <defs>
-          <linearGradient id="lg" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" style="stop-color:#1a7a8a"/>
-            <stop offset="100%" style="stop-color:#4daf62"/>
-          </linearGradient>
-        </defs>
-      </svg>
+    <div class="lh-logo">
+      <img src="${logoUrl}" alt="زاد التنموية" onerror="this.style.display='none'">
     </div>
   </div>
 
   <hr class="header-divider">
 
-  <!-- Body -->
   <div class="content">
     ${body}
   </div>
 
-  <!-- Footer -->
   <div class="footer">
-    <div class="footer-info" style="text-align:right">
-      📞 7053414848 &nbsp;|&nbsp; 0555 493 583<br>
-      ✉ zad.adm.ksa@gmail.com<br>
-      📍 المملكة العربية السعودية - جدة - أبرق الرغامة
+    <img class="footer-watermark" src="${logoUrl}" alt="">
+    <div class="footer-info">
+      7053414848 : س . ت<br>
+      0555 493 583<br>
+      zad.adm.ksa@gmail.com<br>
+      المملكة العربية السعودية - جدة - أبرق الرغامة
     </div>
-    <svg width="50" height="50" viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg" style="opacity:0.12">
-      <ellipse cx="38" cy="60" rx="22" ry="38" fill="none" stroke="#1a7a8a" stroke-width="8"/>
-      <ellipse cx="82" cy="60" rx="22" ry="38" fill="none" stroke="#4daf62" stroke-width="8"/>
-    </svg>
   </div>
 
 </div>
 </body></html>`);
   win.document.close();
-  setTimeout(() => win.print(), 600);
+  setTimeout(() => win.print(), 800);
 }
 
 // ── Task assignment modal ─────────────────────────────────────────────────────
@@ -309,14 +278,20 @@ type PendingTask = { title: string; assignedToId: string };
 
 function TaskAssignModal({
   employees,
+  initialTasks,
   onClose,
   onSave,
 }: {
   employees: Employee[];
+  initialTasks: { title: string }[];
   onClose: () => void;
   onSave: (tasks: PendingTask[]) => Promise<void>;
 }) {
-  const [tasks, setTasks] = useState<PendingTask[]>([{ title: "", assignedToId: "" }]);
+  const [tasks, setTasks] = useState<PendingTask[]>(
+    initialTasks.length > 0
+      ? initialTasks.map(t => ({ title: t.title, assignedToId: "" }))
+      : [{ title: "", assignedToId: "" }]
+  );
   const [saving, setSaving] = useState(false);
   const [err, setErr] = useState("");
 
@@ -349,7 +324,14 @@ function TaskAssignModal({
         </div>
 
         <div className="flex-1 overflow-auto p-6 space-y-3">
-          <p className="text-xs text-slate-400 dark:text-slate-500">ستُحفظ المهام في قسم المهام وتظهر للموظف المعني.</p>
+          <div className="flex items-center gap-2">
+            <p className="text-xs text-slate-400 dark:text-slate-500">ستُحفظ المهام في قسم المهام وتظهر للموظف المعني.</p>
+            {initialTasks.length > 0 && (
+              <span className="flex items-center gap-1 text-[10px] bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 px-2 py-0.5 rounded-full font-bold shrink-0">
+                <Sparkles className="w-3 h-3" /> مستخلصة بالذكاء الاصطناعي
+              </span>
+            )}
+          </div>
           {tasks.map((task, i) => (
             <div key={i} className="flex gap-2 items-start">
               <div className="flex-1 space-y-1.5">
@@ -408,6 +390,8 @@ export default function MeetingsClient({ meetings, charities, employees, session
   const [editingId, setEditingId] = useState<string | null>(null);
   const [viewingMeeting, setViewingMeeting] = useState<Meeting | null>(null);
   const [assignMeeting, setAssignMeeting] = useState<Meeting | null>(null);
+  const [extractedTasks, setExtractedTasks] = useState<{ title: string }[]>([]);
+  const [extracting, setExtracting] = useState(false);
 
   // Form fields
   const [title, setTitle] = useState("");
@@ -483,6 +467,22 @@ export default function MeetingsClient({ meetings, charities, employees, session
     });
   }
 
+  async function openAssign(m: Meeting) {
+    setExtracting(true);
+    setExtractedTasks([]);
+    setAssignMeeting(m);
+    try {
+      const res = await fetch("/api/meetings/extract-tasks", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ formattedContent: m.formattedContent }),
+      });
+      const data = await res.json();
+      if (res.ok && Array.isArray(data.tasks)) setExtractedTasks(data.tasks);
+    } catch { /* show modal anyway with empty tasks */ }
+    finally { setExtracting(false); }
+  }
+
   async function handleAssignTasks(tasks: PendingTask[]) {
     await createTasksFromMeeting(tasks);
     router.refresh();
@@ -539,8 +539,15 @@ export default function MeetingsClient({ meetings, charities, employees, session
                   <Printer className="w-4 h-4" />
                 </button>
                 {isTier1 && (
-                  <button onClick={() => setAssignMeeting(m)} className="p-2 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/20 text-slate-400 hover:text-blue-600 transition-colors" title="تكليف مهام">
-                    <UserPlus className="w-4 h-4" />
+                  <button
+                    onClick={() => openAssign(m)}
+                    disabled={extracting && assignMeeting?.id === m.id}
+                    className="p-2 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/20 text-slate-400 hover:text-blue-600 transition-colors disabled:opacity-50"
+                    title="تكليف مهام"
+                  >
+                    {extracting && assignMeeting?.id === m.id
+                      ? <Loader2 className="w-4 h-4 animate-spin" />
+                      : <UserPlus className="w-4 h-4" />}
                   </button>
                 )}
                 {canEdit(m, sessionId, isTier1) && (
@@ -702,10 +709,11 @@ export default function MeetingsClient({ meetings, charities, employees, session
       )}
 
       {/* Task Assign Modal */}
-      {assignMeeting && (
+      {assignMeeting && !extracting && (
         <TaskAssignModal
           employees={employees}
-          onClose={() => setAssignMeeting(null)}
+          initialTasks={extractedTasks}
+          onClose={() => { setAssignMeeting(null); setExtractedTasks([]); }}
           onSave={handleAssignTasks}
         />
       )}

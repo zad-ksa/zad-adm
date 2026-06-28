@@ -662,7 +662,7 @@ export default function MeetingsClient({ meetings, charities, employees, session
                     <span className="text-xs font-bold text-slate-600 dark:text-slate-300">المحضر المنسق — يمكنك التعديل مباشرة</span>
                   </div>
                   <textarea value={formattedContent} onChange={e => setFormattedContent(e.target.value)} rows={15}
-                    className="w-full border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-sm bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none font-mono" dir="rtl" />
+                    className="w-full border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-sm bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none leading-relaxed" dir="rtl" />
                   {isTier1 && (
                     <label className="flex items-center gap-2 cursor-pointer select-none">
                       <input type="checkbox" checked={isPrivate} onChange={e => setIsPrivate(e.target.checked)} className="w-4 h-4 rounded accent-amber-500" />

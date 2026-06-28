@@ -47,7 +47,11 @@ const ROLE_LABELS: Record<string, string> = {
 };
 
 function formatDate(d: string | Date) {
-  return new Date(d).toLocaleDateString("ar-SA", { year: "numeric", month: "2-digit", day: "2-digit" });
+  const dt = new Date(d);
+  const day = String(dt.getDate()).padStart(2, "0");
+  const month = String(dt.getMonth() + 1).padStart(2, "0");
+  const year = dt.getFullYear();
+  return `${day}   ${month}   ${year}`;
 }
 
 function formatDateHijri(d: string | Date) {
@@ -176,13 +180,14 @@ function handlePrint(m: Meeting) {
   /* التاريخ على الكليشة — في خانة التاريخ يسار الرأس */
   .page .date-area {
     position: absolute;
-    top: 25mm;
-    left: 20mm;
-    font-size: 8.5pt;
+    top: 21mm;
+    left: 22mm;
+    font-size: 9pt;
     color: #111;
     z-index: 2;
     direction: ltr;
     text-align: left;
+    letter-spacing: 1px;
   }
 
   /* منطقة المحتوى — فوق الكليشة */

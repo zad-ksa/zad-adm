@@ -1,9 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { updateCharitySize, updateGovernanceProgress } from "@/app/actions/governance";
+import { updateCharitySize } from "@/app/actions/governance";
 import { CharitySize, governanceManuals } from "@/data/governanceManual";
-import { CheckCircle, Circle, ArrowRight, Building, Upload, FileText } from "lucide-react";
+import { ArrowRight, Building, FileText } from "lucide-react";
 
 interface ProgressItem {
   indicatorId: string;
@@ -23,11 +23,6 @@ export default function GovernanceManualViewer({
   const [size, setSize] = useState<CharitySize | null>(initialSize);
   const [isUpdatingSize, setIsUpdatingSize] = useState(false);
 
-  // Helper function to check status
-  const getStatus = (id: string) => {
-    const item = progress.find((p) => p.indicatorId === id);
-    return item?.status || "NOT_STARTED";
-  };
 
   const handleSizeSelect = async (selectedSize: CharitySize) => {
     setIsUpdatingSize(true);
@@ -38,16 +33,6 @@ export default function GovernanceManualViewer({
       alert(res.error);
     }
     setIsUpdatingSize(false);
-  };
-
-  const toggleStatus = async (id: string, currentStatus: string) => {
-    const newStatus = currentStatus === "COMPLETED" ? "NOT_STARTED" : "COMPLETED";
-    // Optimistic UI update can be added here, but since we revalidate Path, it will refresh.
-    // For smoother experience, we should use React transitioning, but for now we'll just wait for the action.
-    const res = await updateGovernanceProgress(charityId, id, newStatus);
-    if (!res.success) {
-      alert(res.error);
-    }
   };
 
   if (!size) {
@@ -123,26 +108,6 @@ export default function GovernanceManualViewer({
                         <h5 className="font-bold text-slate-700 text-sm">{practice.title}</h5>
                         {practice.description && <p className="text-xs text-slate-500 mt-1">{practice.description}</p>}
                       </div>
-                      <button
-                        onClick={() => toggleStatus(practice.id, getStatus(practice.id))}
-                        className={`shrink-0 flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-bold transition-colors ${
-                          getStatus(practice.id) === "COMPLETED" 
-                            ? "bg-emerald-100 text-emerald-700 hover:bg-emerald-200" 
-                            : "bg-slate-100 text-slate-600 hover:bg-slate-200"
-                        }`}
-                      >
-                        {getStatus(practice.id) === "COMPLETED" ? (
-                          <>
-                            <CheckCircle className="w-4 h-4" />
-                            مكتمل
-                          </>
-                        ) : (
-                          <>
-                            <Circle className="w-4 h-4" />
-                            تحديد كمكتمل
-                          </>
-                        )}
-                      </button>
                     </div>
                     
                     <ul className="space-y-2 mt-3">
@@ -154,13 +119,6 @@ export default function GovernanceManualViewer({
                       ))}
                     </ul>
 
-                    {/* Placeholder for future file upload feature per indicator */}
-                    <div className="mt-4 pt-4 border-t border-slate-100 flex items-center gap-2">
-                      <button className="text-xs flex items-center gap-1.5 text-slate-500 hover:text-primary transition-colors bg-white border border-slate-200 px-3 py-1.5 rounded-lg">
-                        <Upload className="w-3.5 h-3.5" />
-                        رفع مستند الإثبات (قريباً)
-                      </button>
-                    </div>
                   </div>
                 ))}
               </div>

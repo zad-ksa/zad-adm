@@ -187,7 +187,7 @@ function handlePrint(m: Meeting) {
   .page .number-area {
     position: absolute;
     top: 14mm;
-    left: 10mm;
+    left: 12mm;
     font-size: 8.5pt;
     color: #111;
     z-index: 2;
@@ -200,7 +200,7 @@ function handlePrint(m: Meeting) {
   .page .date-area {
     position: absolute;
     top: 19mm;
-    left: 10mm;
+    left: 12mm;
     font-size: 8.5pt;
     color: #111;
     z-index: 2;

@@ -61,6 +61,12 @@ export default function VisionMissionSurveyPage() {
   const [missionQ6, setMissionQ6] = useState(""); // scope of work
   const [missionQ7, setMissionQ7] = useState(""); // formulation
 
+  // Default Questions
+  const [customQuestions, setCustomQuestions] = useState({
+    visionQ4: "3. ما أهم أثر نتمنى أن تتركه الجمعية في مجال عملنا كجمعية متخصصة في القيم؟",
+    missionQ5: "5. ما الذي يميّز جمعيتنا عن غيرها من الجمعيات المشابهة في المجال القيمي/الدعوي؟ (المنهجية، الخبرة، إلخ)"
+  });
+
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const urlToken = params.get("token");
@@ -73,6 +79,14 @@ export default function VisionMissionSurveyPage() {
           if (data && data.isActive && data.surveyType === "VISION_MISSION") {
             setPrefilledCharityName(data.charityName);
             setPrefilledCharityLogo(data.logoUrl);
+            
+            // Apply custom AI generated questions if available
+            if (data.customQuestions) {
+              setCustomQuestions({
+                visionQ4: `3. ${data.customQuestions.visionQ4 || "ما أهم أثر نتمنى أن تتركه الجمعية في مجال عملنا كجمعية متخصصة في القيم؟"}`,
+                missionQ5: `5. ${data.customQuestions.missionQ5 || "ما الذي يميّز جمعيتنا عن غيرها من الجمعيات المشابهة في المجال القيمي/الدعوي؟ (المنهجية، الخبرة، إلخ)"}`
+              });
+            }
           } else {
             setInvalidToken(true);
           }
@@ -403,13 +417,13 @@ export default function VisionMissionSurveyPage() {
 
                     <div className="space-y-2">
                       <label className="block text-sm font-bold text-slate-800 dark:text-slate-200">
-                        3. ما أهم أثر نتمنى أن تتركه الجمعية في مجال عملنا كجمعية متخصصة في القيم؟
+                        {customQuestions.visionQ4}
                       </label>
                       <textarea
                         required
                         rows={3}
                         className="w-full border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary/50 outline-none resize-none"
-                        placeholder="الأثر الاستراتيجي في القيم..."
+                        placeholder="الأثر الاستراتيجي..."
                         value={visionQ4}
                         onChange={(e) => setVisionQ4(e.target.value)}
                       />
@@ -687,7 +701,7 @@ export default function VisionMissionSurveyPage() {
 
                 <div className="space-y-2">
                   <label className="block text-sm font-bold text-slate-800 dark:text-slate-200">
-                    5. ما الذي يميّز جمعيتنا عن غيرها من الجمعيات المشابهة في المجال القيمي/الدعوي؟ (المنهجية، الخبرة، إلخ)
+                    {customQuestions.missionQ5}
                   </label>
                   <textarea
                     required

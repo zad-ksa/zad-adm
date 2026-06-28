@@ -282,11 +282,12 @@ model News {
 }
 
 model SurveyLink {
-  id          String   @id @default(uuid())
-  charityName String
-  surveyType  String   // "READINESS" or "HEXAGONAL"
-  isActive    Boolean  @default(true)
-  createdAt   DateTime @default(now())
+  id              String   @id @default(uuid())
+  charityName     String
+  surveyType      String   // "READINESS" or "HEXAGONAL" or "VISION_MISSION"
+  isActive        Boolean  @default(true)
+  customQuestions Json?
+  createdAt       DateTime @default(now())
 }
 
 model Regulation {

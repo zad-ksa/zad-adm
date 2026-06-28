@@ -8,6 +8,8 @@ export default function SurveyLinkManager({ charityName, surveyType }: { charity
   const [generating, setGenerating] = useState(false);
   const [copied, setCopied] = useState(false);
 
+  const [charityFocus, setCharityFocus] = useState("");
+
   const fetchLink = async () => {
     try {
       const res = await fetch(`/api/survey-links?charityName=${encodeURIComponent(charityName)}&surveyType=${surveyType}`);
@@ -32,11 +34,12 @@ export default function SurveyLinkManager({ charityName, surveyType }: { charity
       const res = await fetch(`/api/survey-links`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ charityName, surveyType }),
+        body: JSON.stringify({ charityName, surveyType, charityFocus }),
       });
       if (res.ok) {
         const data = await res.json();
         setActiveLink(data);
+        setCharityFocus(""); // reset after success
       }
     } catch (e) {
       console.error(e);
@@ -87,24 +90,43 @@ export default function SurveyLinkManager({ charityName, surveyType }: { charity
 
   return (
     <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm mb-8 space-y-4">
-      <div className="flex items-center justify-between">
-        <div>
-          <h3 className="font-bold text-slate-800 flex items-center gap-2">
-            <span className="w-2 h-6 rounded-full bg-blue-500 inline-block"></span>
-            {title}
-          </h3>
-          <p className="text-xs text-slate-500 mt-1">قم بإنشاء رابط مخصص وإرساله للموظفين. عند فتحهم للرابط سيتم تعبئة اسم الجمعية تلقائياً ولا يمكنهم تغييره.</p>
+      <div className="flex flex-col gap-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <h3 className="font-bold text-slate-800 flex items-center gap-2">
+              <span className="w-2 h-6 rounded-full bg-blue-500 inline-block"></span>
+              {title}
+            </h3>
+            <p className="text-xs text-slate-500 mt-1">قم بإنشاء رابط مخصص وإرساله للموظفين. عند فتحهم للرابط سيتم تعبئة اسم الجمعية تلقائياً ولا يمكنهم تغييره.</p>
+          </div>
+          <button
+            onClick={handleGenerate}
+            disabled={generating}
+            className="bg-blue-50 hover:bg-blue-100 text-blue-700 font-bold py-2 px-4 rounded-xl text-sm transition-colors flex items-center gap-2 whitespace-nowrap"
+          >
+            {generating ? "جاري..." : charityFocus ? "إنشاء رابط مخصص بالذكاء الاصطناعي" : "إنشاء رابط جديد"}
+            {!generating && !charityFocus && (
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
+            )}
+            {!generating && charityFocus && (
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2v20"></path><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+            )}
+          </button>
         </div>
-        <button
-          onClick={handleGenerate}
-          disabled={generating}
-          className="bg-blue-50 hover:bg-blue-100 text-blue-700 font-bold py-2 px-4 rounded-xl text-sm transition-colors flex items-center gap-2"
-        >
-          {generating ? "جاري..." : "إنشاء رابط جديد"}
-          {!generating && (
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
-          )}
-        </button>
+        
+        {surveyType === "VISION_MISSION" && (
+          <div className="bg-slate-50 p-4 rounded-xl border border-slate-100 flex flex-col gap-2">
+            <label className="text-sm font-bold text-slate-700">توجه الجمعية / مجال العمل (اختياري لتخصيص الأسئلة بالذكاء الاصطناعي)</label>
+            <input
+              type="text"
+              value={charityFocus}
+              onChange={(e) => setCharityFocus(e.target.value)}
+              placeholder="مثال: رعاية الأيتام، تحفيظ القرآن، التنمية الأسرية..."
+              className="w-full px-4 py-2 rounded-lg border border-slate-200 text-sm focus:outline-none focus:border-blue-500"
+            />
+            <p className="text-xs text-slate-500">سيتم استخدام الذكاء الاصطناعي لتعديل بعض الأسئلة بما يتناسب مع هذا المجال.</p>
+          </div>
+        )}
       </div>
 
       {activeLink && (

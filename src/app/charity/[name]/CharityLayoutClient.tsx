@@ -13,12 +13,14 @@ export default function CharityLayoutClient({
   logoUrl,
   role,
   permissions,
+  navOrder,
 }: {
   children: React.ReactNode;
   charityName: string;
   logoUrl: string | null;
   role?: string;
   permissions?: string[];
+  navOrder?: string[];
 }) {
   const pathname = usePathname();
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
@@ -60,6 +62,7 @@ export default function CharityLayoutClient({
         setIsOpen={setIsSidebarOpen}
         role={role}
         permissions={permissions}
+        navOrder={navOrder}
       />
       
       <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden relative">

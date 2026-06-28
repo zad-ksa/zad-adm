@@ -190,6 +190,7 @@ model Employee {
   charityId            String?          // For CHARITY_CLIENT accounts
   charity              Charity?         @relation(fields: [charityId], references: [id])
   permissions          String[]
+  navOrder             String[]         @default([])
   isActive             Boolean          @default(true)
   createdAt            DateTime         @default(now())
   updatedAt            DateTime         @updatedAt

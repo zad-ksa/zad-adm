@@ -17,13 +17,91 @@ import {
   Sun,
   CheckSquare,
   LogOut,
-  Briefcase
+  Briefcase,
+  GripVertical,
+  Settings2,
+  Check,
+  Loader2
 } from "lucide-react";
 import ZadLogo from "@/components/ZadLogo";
 import { useTheme } from "next-themes";
 import { useState, useEffect } from "react";
 import { logout } from "@/app/actions/auth";
 import { hasPermission } from "@/lib/permissions";
+import { updateNavOrder } from "@/app/actions/profile";
+import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent } from '@dnd-kit/core';
+import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy, useSortable } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
+
+// --- Sortable Item Component ---
+function SortableNavItem({ item, isActive, isOpen, isEditMode }: { item: any, isActive: boolean, isOpen: boolean, isEditMode: boolean }) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: item.href });
+  
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    zIndex: isDragging ? 50 : 'auto',
+    opacity: isDragging ? 0.8 : 1,
+  };
+
+  const content = (
+    <>
+      {isActive && isOpen && !isEditMode && <div className="absolute right-0 top-0 bottom-0 w-1 bg-white dark:bg-slate-800/20 rounded-l-full"></div>}
+      {isEditMode && isOpen && (
+        <div {...attributes} {...listeners} className="p-1.5 cursor-grab active:cursor-grabbing text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 ml-1 shrink-0 touch-none">
+          <GripVertical className="w-4 h-4" />
+        </div>
+      )}
+      <item.icon className={`w-4 h-4 shrink-0 transition-all ${isOpen ? (isEditMode ? "ml-1.5" : "ml-2.5") : "ml-0"} ${isActive && !isEditMode ? "text-white" : "text-slate-400 group-hover:text-primary"}`} />
+      {isOpen && <span className="whitespace-nowrap">{item.title}</span>}
+      
+      {item.comingSoon && isOpen && (
+        <span className="mr-auto text-[9px] bg-slate-200 dark:bg-slate-700 text-slate-500 dark:text-slate-400 px-1.5 py-0.5 rounded font-extrabold">
+          قريباً
+        </span>
+      )}
+    </>
+  );
+
+  if (item.comingSoon && !isEditMode) {
+    return (
+      <div
+        title={!isOpen ? `${item.title} (قريباً)` : undefined}
+        className={`flex items-center ${isOpen ? "justify-start px-2.5" : "justify-center"} py-2 rounded-xl text-slate-400 bg-slate-50 dark:bg-slate-900/50 cursor-not-allowed opacity-70 text-xs font-bold`}
+      >
+        <item.icon className={`w-4 h-4 shrink-0 transition-all ${isOpen ? "ml-2.5" : "ml-0"} opacity-60`} />
+        {isOpen && <span className="whitespace-nowrap">{item.title}</span>}
+        {isOpen && (
+          <span className="mr-auto text-[9px] bg-slate-200 dark:bg-slate-700 text-slate-500 dark:text-slate-400 px-1.5 py-0.5 rounded font-extrabold">
+            قريباً
+          </span>
+        )}
+      </div>
+    );
+  }
+
+  return (
+    <div ref={setNodeRef} style={style} className="relative group touch-none">
+      {isEditMode ? (
+        <div className={`flex items-center ${isOpen ? "justify-start px-2" : "justify-center"} py-2 rounded-xl text-xs font-bold transition-all bg-slate-50 dark:bg-slate-800/50 text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-700 shadow-sm`}>
+          {content}
+        </div>
+      ) : (
+        <Link
+          href={item.href}
+          title={!isOpen ? item.title : undefined}
+          className={`flex items-center ${isOpen ? "justify-start px-2.5" : "justify-center"} py-2 rounded-xl text-xs font-bold transition-all group relative overflow-hidden ${
+            isActive
+              ? "bg-primary text-white shadow-md shadow-primary/20"
+              : "text-slate-500 dark:text-slate-400 hover:bg-primary/5 hover:text-primary"
+          }`}
+        >
+          {content}
+        </Link>
+      )}
+    </div>
+  );
+}
 
 export default function CharitySidebar({ 
   charityName,
@@ -39,10 +117,24 @@ export default function CharitySidebar({
   setIsOpen: (v: boolean) => void;
   role?: string;
   permissions?: string[];
+  navOrder?: string[];
 }) {
   const pathname = usePathname();
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
+  const [isNavEditMode, setIsNavEditMode] = useState(false);
+  const [orderedNavItems, setOrderedNavItems] = useState<any[]>([]);
+  const [isSavingOrder, setIsSavingOrder] = useState(false);
+  const [currentNavOrder, setCurrentNavOrder] = useState<string[]>(navOrder || []);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: { distance: 5 },
+    }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
 
   useEffect(() => {
     setMounted(true);
@@ -112,6 +204,41 @@ export default function CharitySidebar({
 
   const navItems = allNavItems.filter(item => item.show);
 
+  useEffect(() => {
+    const savedOrder = currentNavOrder || [];
+    const ordered = [...navItems].sort((a, b) => {
+      const indexA = savedOrder.indexOf(a.href);
+      const indexB = savedOrder.indexOf(b.href);
+      if (indexA !== -1 && indexB !== -1) return indexA - indexB;
+      if (indexA !== -1) return -1;
+      if (indexB !== -1) return 1;
+      return 0;
+    });
+    setOrderedNavItems(ordered);
+  }, [navItems.map(n => n.href).join(","), currentNavOrder]);
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (over && active.id !== over.id) {
+      setOrderedNavItems((items) => {
+        const oldIndex = items.findIndex((i) => i.href === active.id);
+        const newIndex = items.findIndex((i) => i.href === over.id);
+        return arrayMove(items, oldIndex, newIndex);
+      });
+    }
+  };
+
+  const handleSaveNavOrder = async () => {
+    setIsSavingOrder(true);
+    const newOrder = orderedNavItems.map(item => item.href);
+    const res = await updateNavOrder(newOrder);
+    if (res.success) {
+      setCurrentNavOrder(res.navOrder || []);
+      setIsNavEditMode(false);
+    }
+    setIsSavingOrder(false);
+  };
+
   const sidebarContent = (
     <div className="bg-white dark:bg-slate-800 flex flex-col h-full border-l border-slate-200 dark:border-slate-700/80 shadow-[4px_0_24px_rgba(0,0,0,0.02)] relative transition-all duration-300">
       
@@ -179,52 +306,54 @@ export default function CharitySidebar({
       </div>
 
       {/* Navigation */}
-      <div className="flex-1 overflow-y-auto custom-scrollbar px-2.5 py-3 space-y-0.5">
-        {isOpen && <div className="px-2.5 mb-2 text-[10px] font-bold text-slate-400 uppercase tracking-wider">القائمة الرئيسية</div>}
-
-        {navItems.map((item, idx) => {
-          if (item.comingSoon) {
-            return (
-              <div
-                key={idx}
-                title={!isOpen ? `${item.title} (قريباً)` : undefined}
-                className={`flex items-center ${isOpen ? "justify-start px-2.5" : "justify-center"} py-2 rounded-xl text-slate-400 bg-slate-50 dark:bg-slate-900/50 cursor-not-allowed opacity-70 text-xs font-bold`}
+      <div className="flex-1 overflow-y-auto custom-scrollbar px-2.5 py-3 space-y-0.5 flex flex-col relative">
+        {isOpen && (
+          <div className="flex items-center justify-between px-2.5 mb-2">
+            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">القائمة الرئيسية</span>
+            {!isNavEditMode ? (
+              <button
+                onClick={() => setIsNavEditMode(true)}
+                className="text-slate-400 hover:text-primary transition-colors flex items-center justify-center p-1 rounded-md hover:bg-primary/5"
+                title="تعديل ترتيب القائمة"
               >
-                <item.icon className={`w-4 h-4 shrink-0 transition-all ${isOpen ? "ml-2.5" : "ml-0"} opacity-60`} />
-                {isOpen && <span className="whitespace-nowrap">{item.title}</span>}
-                {isOpen && (
-                  <span className="mr-auto text-[9px] bg-slate-200 dark:bg-slate-700 text-slate-500 dark:text-slate-400 px-1.5 py-0.5 rounded font-extrabold">
-                    قريباً
-                  </span>
-                )}
-              </div>
-            );
-          }
+                <Settings2 className="w-3.5 h-3.5" />
+              </button>
+            ) : (
+              <button
+                onClick={handleSaveNavOrder}
+                disabled={isSavingOrder}
+                className="text-emerald-500 hover:text-emerald-600 transition-colors flex items-center justify-center p-1 rounded-md hover:bg-emerald-50 dark:hover:bg-emerald-900/20"
+                title="حفظ الترتيب"
+              >
+                {isSavingOrder ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" />}
+              </button>
+            )}
+          </div>
+        )}
 
-          const decodedPathname = decodeURIComponent(pathname);
-          const decodedHref = decodeURIComponent(item.href);
+        <div className="flex-1 space-y-0.5 relative">
+          <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+            <SortableContext items={orderedNavItems.map(i => i.href)} strategy={verticalListSortingStrategy}>
+              {orderedNavItems.map((item, idx) => {
+                const decodedPathname = decodeURIComponent(pathname);
+                const decodedHref = decodeURIComponent(item.href);
+                const isActive = item.exact
+                  ? decodedPathname === decodedHref
+                  : decodedPathname.startsWith(decodedHref);
 
-          const isActive = item.exact
-            ? decodedPathname === decodedHref
-            : decodedPathname.startsWith(decodedHref);
-
-          return (
-            <Link
-              key={idx}
-              href={item.href}
-              title={!isOpen ? item.title : undefined}
-              className={`flex items-center ${isOpen ? "justify-start px-2.5" : "justify-center"} py-2 rounded-xl text-xs font-bold transition-all group relative overflow-hidden ${
-                isActive
-                  ? "bg-primary text-white shadow-md shadow-primary/20"
-                  : "text-slate-500 dark:text-slate-400 hover:bg-primary/5 hover:text-primary"
-              }`}
-            >
-              {isActive && isOpen && <div className="absolute right-0 top-0 bottom-0 w-1 bg-white dark:bg-slate-800/20 rounded-l-full"></div>}
-              <item.icon className={`w-4 h-4 shrink-0 transition-all ${isOpen ? "ml-2.5" : "ml-0"} ${isActive ? "text-white" : "text-slate-400 group-hover:text-primary"}`} />
-              {isOpen && <span className="whitespace-nowrap">{item.title}</span>}
-            </Link>
-          );
-        })}
+                return (
+                  <SortableNavItem 
+                    key={item.href}
+                    item={item}
+                    isActive={isActive}
+                    isOpen={isOpen}
+                    isEditMode={isNavEditMode}
+                  />
+                )
+              })}
+            </SortableContext>
+          </DndContext>
+        </div>
       </div>
 
       {/* Bottom Actions */}

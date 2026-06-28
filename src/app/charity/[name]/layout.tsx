@@ -38,6 +38,7 @@ export default async function CharityLayout({
       logoUrl={charity.logoUrl || null}
       role={session.role}
       permissions={session.permissions || []}
+      navOrder={session.navOrder || []}
     >
       {children}
     </CharityLayoutClient>

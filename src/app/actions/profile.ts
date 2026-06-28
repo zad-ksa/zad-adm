@@ -1,4 +1,4 @@
-﻿"use server";
+"use server";
 
 import { prisma } from "@/lib/db";
 import { encrypt, decrypt } from "@/lib/auth";
@@ -75,7 +75,9 @@ export async function updateProfile(data: {
     phone: updatedEmployee.phone,
     role: updatedEmployee.role,
     permissions: updatedEmployee.permissions,
+    navOrder: updatedEmployee.navOrder || [],
     avatarUrl: updatedEmployee.avatarUrl,
+    charityId: updatedEmployee.charityId,
   };
 
   const encryptedSession = await encrypt(sessionData);
@@ -91,4 +93,41 @@ export async function updateProfile(data: {
   });
 
   return { success: "تم تحديث الملف الشخصي بنجاح", user: sessionData };
+}
+
+export async function updateNavOrder(newOrder: string[]) {
+  const session = (await cookies()).get("session")?.value;
+  if (!session) return { error: "غير مصرح" };
+
+  let currentUser;
+  try {
+    currentUser = await decrypt(session);
+  } catch (e) {
+    return { error: "انتهت صلاحية الجلسة" };
+  }
+
+  if (!currentUser || !currentUser.id) return { error: "مستخدم غير صالح" };
+
+  const updatedEmployee = await prisma.employee.update({
+    where: { id: currentUser.id },
+    data: { navOrder: newOrder },
+  });
+
+  const sessionData = {
+    ...currentUser,
+    navOrder: updatedEmployee.navOrder || [],
+  };
+
+  const encryptedSession = await encrypt(sessionData);
+
+  const cookieStore = await cookies();
+  cookieStore.set("session", encryptedSession, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax",
+    path: "/",
+    maxAge: 60 * 60 * 24, // 1 day
+  });
+
+  return { success: true, navOrder: sessionData.navOrder };
 }

@@ -3,13 +3,63 @@
 import { useState, useEffect, useRef, useTransition } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { User, ShieldAlert, Users, X, LogOut, LayoutDashboard, Building2, ClipboardList, ChevronRight, Edit, Eye, EyeOff, Camera, Loader2, AlertCircle, CheckCircle2, Newspaper, CheckSquare, Moon, Sun, LayoutGrid, FileText } from "lucide-react";
+import { User, ShieldAlert, Users, X, LogOut, LayoutDashboard, Building2, ClipboardList, ChevronRight, Edit, Eye, EyeOff, Camera, Loader2, AlertCircle, CheckCircle2, Newspaper, CheckSquare, Moon, Sun, LayoutGrid, FileText, GripVertical, Settings2, Check } from "lucide-react";
 import { useTheme } from "next-themes";
 import { logout } from "@/app/actions/auth";
-import { updateProfile } from "@/app/actions/profile";
+import { updateProfile, updateNavOrder } from "@/app/actions/profile";
 import { usePathname } from "next/navigation";
 import ZadLogo from "@/components/ZadLogo";
 import { AUTO_ADMIN_ROLES, ROLE_LABELS } from "@/lib/permissions";
+import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent } from '@dnd-kit/core';
+import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy, useSortable } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
+
+// --- Sortable Item Component ---
+function SortableNavItem({ item, isActive, isOpen, isEditMode }: { item: any, isActive: boolean, isOpen: boolean, isEditMode: boolean }) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: item.href });
+  
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    zIndex: isDragging ? 50 : 'auto',
+    opacity: isDragging ? 0.8 : 1,
+  };
+
+  const content = (
+    <>
+      {isEditMode && isOpen && (
+        <div {...attributes} {...listeners} className="p-1.5 cursor-grab active:cursor-grabbing text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 ml-1 shrink-0 touch-none">
+          <GripVertical className="w-4 h-4" />
+        </div>
+      )}
+      <item.icon className={`w-4 h-4 shrink-0 transition-all ${isOpen ? (isEditMode ? "ml-1.5" : "ml-2.5") : "ml-0"} ${isActive && !isEditMode ? "text-white" : "text-slate-400 group-hover:text-primary"}`} />
+      {isOpen && <span className="whitespace-nowrap">{item.label}</span>}
+    </>
+  );
+
+  return (
+    <div ref={setNodeRef} style={style} className="relative group touch-none">
+      {isEditMode ? (
+        <div className={`flex items-center ${isOpen ? "justify-start px-2" : "justify-center"} py-2 rounded-lg text-sm font-bold transition-all bg-slate-50 dark:bg-slate-800/50 text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-700 shadow-sm`}>
+          {content}
+        </div>
+      ) : (
+        <Link
+          href={item.href}
+          title={!isOpen ? item.label : undefined}
+          className={`flex items-center ${isOpen ? "justify-start px-2.5" : "justify-center"} py-2 rounded-lg text-sm font-bold transition-all group relative ${
+            isActive
+              ? "bg-primary text-white shadow-sm shadow-primary/20"
+              : "text-slate-500 dark:text-slate-400 hover:bg-primary/5 dark:hover:bg-primary/10 hover:text-primary dark:hover:text-primary"
+          }`}
+        >
+          {content}
+        </Link>
+      )}
+    </div>
+  );
+}
+
 
 export default function EmployeeSidebar({ 
   session, 
@@ -40,6 +90,19 @@ export default function EmployeeSidebar({
   }, []);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const [isNavEditMode, setIsNavEditMode] = useState(false);
+  const [orderedNavItems, setOrderedNavItems] = useState<{ label: string; href: string; icon: any }[]>([]);
+  const [isSavingOrder, setIsSavingOrder] = useState(false);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: { distance: 5 }, // 5px tolerance before drag starts
+    }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
 
   useEffect(() => {
     setUserState(session);
@@ -75,6 +138,44 @@ export default function EmployeeSidebar({
   if (can("manage_employees")) {
     navItems.push({ label: "إدارة الموظفين", href: "/dashboard/employees", icon: Users });
   }
+
+  // Effect to sort navItems based on userState.navOrder
+  useEffect(() => {
+    if (!userState) return;
+    
+    const savedOrder = userState.navOrder || [];
+    const ordered = [...navItems].sort((a, b) => {
+      const indexA = savedOrder.indexOf(a.href);
+      const indexB = savedOrder.indexOf(b.href);
+      if (indexA !== -1 && indexB !== -1) return indexA - indexB;
+      if (indexA !== -1) return -1;
+      if (indexB !== -1) return 1;
+      return 0; // Both not in savedOrder, keep original order
+    });
+    setOrderedNavItems(ordered);
+  }, [userState, role, perms.join(",")]); // Dependency array covers anything that might change the nav items
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (over && active.id !== over.id) {
+      setOrderedNavItems((items) => {
+        const oldIndex = items.findIndex((i) => i.href === active.id);
+        const newIndex = items.findIndex((i) => i.href === over.id);
+        return arrayMove(items, oldIndex, newIndex);
+      });
+    }
+  };
+
+  const handleSaveNavOrder = async () => {
+    setIsSavingOrder(true);
+    const newOrder = orderedNavItems.map(item => item.href);
+    const res = await updateNavOrder(newOrder);
+    if (res.success) {
+      setUserState({ ...userState, navOrder: res.navOrder });
+      setIsNavEditMode(false);
+    }
+    setIsSavingOrder(false);
+  };
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -231,27 +332,49 @@ export default function EmployeeSidebar({
       </div>
 
       {/* Navigation */}
-      <div className="flex-1 overflow-y-auto custom-scrollbar px-2.5 py-2 space-y-0.5">
-        {isOpen && <div className="px-2 mb-1.5 text-[10px] font-bold text-slate-400 uppercase tracking-wider">القائمة الرئيسية</div>}
+      <div className="flex-1 overflow-y-auto custom-scrollbar px-2.5 py-2 space-y-0.5 flex flex-col relative">
+        {isOpen && (
+          <div className="flex items-center justify-between px-2 mb-2">
+            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">القائمة الرئيسية</span>
+            {!isNavEditMode ? (
+              <button
+                onClick={() => setIsNavEditMode(true)}
+                className="text-slate-400 hover:text-primary transition-colors flex items-center justify-center p-1 rounded-md hover:bg-primary/5"
+                title="تعديل ترتيب القائمة"
+              >
+                <Settings2 className="w-3.5 h-3.5" />
+              </button>
+            ) : (
+              <button
+                onClick={handleSaveNavOrder}
+                disabled={isSavingOrder}
+                className="text-emerald-500 hover:text-emerald-600 transition-colors flex items-center justify-center p-1 rounded-md hover:bg-emerald-50 dark:hover:bg-emerald-900/20"
+                title="حفظ الترتيب"
+              >
+                {isSavingOrder ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" />}
+              </button>
+            )}
+          </div>
+        )}
 
-        {navItems.map((item) => {
-          const isActive = pathname.startsWith(item.href) && (item.href !== "/dashboard" || pathname === "/dashboard");
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              title={!isOpen ? item.label : undefined}
-              className={`flex items-center ${isOpen ? "justify-start px-2.5" : "justify-center"} py-2 rounded-lg text-sm font-bold transition-all group relative ${
-                isActive
-                  ? "bg-primary text-white shadow-sm shadow-primary/20"
-                  : "text-slate-500 dark:text-slate-400 hover:bg-primary/5 dark:hover:bg-primary/10 hover:text-primary dark:hover:text-primary"
-              }`}
-            >
-              <item.icon className={`w-4 h-4 shrink-0 transition-all ${isOpen ? "ml-2.5" : "ml-0"} ${isActive ? "text-white" : "text-slate-400 group-hover:text-primary"}`} />
-              {isOpen && <span className="whitespace-nowrap">{item.label}</span>}
-            </Link>
-          )
-        })}
+        <div className="flex-1 space-y-0.5 relative">
+          <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+            <SortableContext items={orderedNavItems.map(i => i.href)} strategy={verticalListSortingStrategy}>
+              {orderedNavItems.map((item) => {
+                const isActive = pathname.startsWith(item.href) && (item.href !== "/dashboard" || pathname === "/dashboard");
+                return (
+                  <SortableNavItem 
+                    key={item.href}
+                    item={item}
+                    isActive={isActive}
+                    isOpen={isOpen}
+                    isEditMode={isNavEditMode}
+                  />
+                )
+              })}
+            </SortableContext>
+          </DndContext>
+        </div>
       </div>
 
       {/* Logout */}

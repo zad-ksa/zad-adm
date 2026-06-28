@@ -49,6 +49,7 @@ type Stage = {
   isCurrent: boolean;
   isContinuous?: boolean | null;
   isActive?: boolean | null;
+  duration?: string | null;
 };
 
 type ServiceWithStages = {
@@ -90,11 +91,11 @@ async function actionAdd(dept: DeptKey, serviceId: string, charityId: string, na
   if (dept === "FINANCE") return addFinanceStage(charityId, name, undefined, desc || undefined, start?.toISOString().split("T")[0], end?.toISOString().split("T")[0], isContinuous);
   return addServiceStage(serviceId, name, desc, start, end, isContinuous);
 }
-async function actionUpdate(dept: DeptKey, stageId: string, name: string, desc: string | null, start: Date | null, end: Date | null, isContinuous = false) {
+async function actionUpdate(dept: DeptKey, stageId: string, name: string, desc: string | null, start: Date | null, end: Date | null, isContinuous = false, duration?: string) {
   if (dept === "STRATEGY") return updateStrategicStage(stageId, name, undefined, desc || undefined, start?.toISOString().split("T")[0], end?.toISOString().split("T")[0], isContinuous);
   if (dept === "GOVERNANCE") return updateGovernanceStage(stageId, name, undefined, desc || undefined, start?.toISOString().split("T")[0], end?.toISOString().split("T")[0], isContinuous);
   if (dept === "FINANCE") return updateFinanceStage(stageId, name, undefined, desc || undefined, start?.toISOString().split("T")[0], end?.toISOString().split("T")[0], isContinuous);
-  return updateServiceStage(stageId, name, desc, start, end, isContinuous);
+  return updateServiceStage(stageId, name, desc, start, end, isContinuous, true, duration ?? null);
 }
 async function actionDelete(dept: DeptKey, stageId: string) {
   if (dept === "STRATEGY") return deleteStrategicStage(stageId);
@@ -113,6 +114,35 @@ async function actionToggleActive(dept: DeptKey, stageId: string, isActive: bool
   if (dept === "GOVERNANCE") return toggleActiveGovernanceStage(stageId, isActive);
   if (dept === "FINANCE") return toggleActiveFinanceStage(stageId, isActive);
   return toggleActiveServiceStage(stageId, isActive);
+}
+
+// ── Date calculation helpers ────────────────────────────────────────
+function addDays(date: Date, days: number, workOnly: boolean): Date {
+  let d = new Date(date);
+  let added = 0;
+  while (added < days) {
+    d.setDate(d.getDate() + 1);
+    if (!workOnly || (d.getDay() !== 5 && d.getDay() !== 6)) added++;
+  }
+  return d;
+}
+
+function toDateInput(d: Date): string {
+  return d.toISOString().split("T")[0];
+}
+
+function calcDatesFromDays(
+  days: number,
+  workOnly: boolean,
+  prevEndDate: Date | string | null | undefined
+): { start: string; end: string } {
+  const startBase = prevEndDate ? new Date(prevEndDate) : new Date();
+  // start = day after prev end (or today)
+  const start = prevEndDate ? addDays(startBase, 1, false) : startBase;
+  // normalize to midnight
+  start.setHours(0, 0, 0, 0);
+  const end = addDays(new Date(start), days - 1, workOnly);
+  return { start: toDateInput(start), end: toDateInput(end) };
 }
 
 // ── Inline Timeline Editor ──────────────────────────────────────────
@@ -158,6 +188,12 @@ function InlineTimeline({
   const [newIsContinuous, setNewIsContinuous] = useState(false);
   const [editIsContinuous, setEditIsContinuous] = useState(false);
 
+  // Days-based duration
+  const [editDays, setEditDays] = useState("");
+  const [editWorkDaysOnly, setEditWorkDaysOnly] = useState(false);
+  const [newDays, setNewDays] = useState("");
+  const [newWorkDaysOnly, setNewWorkDaysOnly] = useState(false);
+
   const openEdit = (s: Stage) => {
     setEditingId(s.id);
     setEditName(s.name);
@@ -165,6 +201,8 @@ function InlineTimeline({
     setEditStart(s.startDate ? new Date(s.startDate).toISOString().split("T")[0] : "");
     setEditEnd(s.endDate ? new Date(s.endDate).toISOString().split("T")[0] : "");
     setEditIsContinuous(!!s.isContinuous);
+    setEditDays("");
+    setEditWorkDaysOnly(false);
   };
 
   const handleSetCurrent = (stageId: string) => {
@@ -177,13 +215,24 @@ function InlineTimeline({
   const handleUpdate = (id: string) => {
     if (!editName.trim()) return;
     startTransition(async () => {
-      const start = editStart ? new Date(editStart) : null;
-      const end = editEnd ? new Date(editEnd) : null;
+      let start: Date | null = editStart ? new Date(editStart) : null;
+      let end: Date | null = editEnd ? new Date(editEnd) : null;
+      let durStr: string | null = null;
+
+      if (editDays && parseInt(editDays) > 0) {
+        const idx = sorted.findIndex(s => s.id === id);
+        const prevEnd = idx > 0 ? sorted[idx - 1].endDate : null;
+        const calc = calcDatesFromDays(parseInt(editDays), editWorkDaysOnly, prevEnd);
+        start = new Date(calc.start);
+        end = new Date(calc.end);
+        durStr = editWorkDaysOnly ? `${editDays}w` : `${editDays}d`;
+      }
+
       setStages(prev => prev.map(s => s.id === id
-        ? { ...s, name: editName, description: editDesc || null, startDate: start, endDate: end, isContinuous: editIsContinuous }
+        ? { ...s, name: editName, description: editDesc || null, startDate: start, endDate: end, isContinuous: editIsContinuous, duration: durStr ?? s.duration }
         : s));
       setEditingId(null);
-      await actionUpdate(dept, id, editName, editDesc || null, start, end, editIsContinuous);
+      await actionUpdate(dept, id, editName, editDesc || null, start, end, editIsContinuous, durStr ?? undefined);
     });
   };
 
@@ -198,8 +247,19 @@ function InlineTimeline({
   const handleAdd = () => {
     if (!newName.trim()) return;
     startTransition(async () => {
-      const start = newStart ? new Date(newStart) : null;
-      const end = newEnd ? new Date(newEnd) : null;
+      let start: Date | null = newStart ? new Date(newStart) : null;
+      let end: Date | null = newEnd ? new Date(newEnd) : null;
+      let durStr: string | null = null;
+
+      if (newDays && parseInt(newDays) > 0) {
+        const regularSorted = sorted.filter(s => !s.isContinuous);
+        const prevEnd = regularSorted.length > 0 ? regularSorted[regularSorted.length - 1].endDate : null;
+        const calc = calcDatesFromDays(parseInt(newDays), newWorkDaysOnly, prevEnd);
+        start = new Date(calc.start);
+        end = new Date(calc.end);
+        durStr = newWorkDaysOnly ? `${newDays}w` : `${newDays}d`;
+      }
+
       await actionAdd(dept, serviceId, charityId, newName, newDesc || null, start, end, newIsContinuous);
       const newStage: Stage = {
         id: Math.random().toString(),
@@ -211,9 +271,11 @@ function InlineTimeline({
         order: stages.length,
         isCurrent: false,
         isContinuous: newIsContinuous,
+        duration: durStr,
       };
       setStages(prev => [...prev, newStage]);
-      setNewName(""); setNewDesc(""); setNewStart(""); setNewEnd(""); setNewIsContinuous(false);
+      setNewName(""); setNewDesc(""); setNewStart(""); setNewEnd("");
+      setNewDays(""); setNewWorkDaysOnly(false); setNewIsContinuous(false);
       setIsAdding(false);
     });
   };
@@ -223,9 +285,26 @@ function InlineTimeline({
     const target = dir === "up" ? idx - 1 : idx + 1;
     if (target < 0 || target >= newSorted.length) return;
     [newSorted[idx], newSorted[target]] = [newSorted[target], newSorted[idx]];
-    const reordered = newSorted.map((s, i) => ({ ...s, order: i }));
+    // Recalculate dates for stages that have duration (days) stored
+    const reordered = newSorted.map((s, i) => {
+      if (!s.duration) return { ...s, order: i };
+      const days = parseInt(s.duration);
+      if (!days || isNaN(days)) return { ...s, order: i };
+      const workOnly = s.duration.includes("w");
+      const prevEnd = i > 0 ? newSorted[i - 1].endDate : null;
+      const { start, end } = calcDatesFromDays(days, workOnly, prevEnd);
+      return { ...s, order: i, startDate: new Date(start), endDate: new Date(end) };
+    });
     setStages(reordered);
-    startTransition(() => actionReorder(dept, serviceId, charityId, reordered.map(s => s.id)));
+    startTransition(async () => {
+      await actionReorder(dept, serviceId, charityId, reordered.map(s => s.id));
+      // Update dates for stages with recalculated dates
+      for (const s of reordered) {
+        if (s.duration && parseInt(s.duration)) {
+          await actionUpdate(dept, s.id, s.name, s.description ?? null, s.startDate ? new Date(s.startDate) : null, s.endDate ? new Date(s.endDate) : null, !!s.isContinuous);
+        }
+      }
+    });
   };
 
   const listRef = useRef<HTMLDivElement>(null);
@@ -360,11 +439,40 @@ function InlineTimeline({
                 className="w-full text-xs bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 rounded-lg px-3 py-1.5 outline-none focus:ring-2 focus:ring-primary/30 text-slate-800 dark:text-slate-100" />
               <input value={editDesc} onChange={e => setEditDesc(e.target.value)} placeholder="وصف (اختياري)"
                 className="w-full text-xs bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 rounded-lg px-3 py-1.5 outline-none focus:ring-2 focus:ring-primary/30 text-slate-800 dark:text-slate-100" />
-              <div className="flex gap-2">
-                <input type="date" value={editStart} onChange={e => setEditStart(e.target.value)}
-                  className="flex-1 text-xs bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 rounded-lg px-2 py-1.5 outline-none [color-scheme:light] dark:[color-scheme:dark]" />
-                <input type="date" value={editEnd} onChange={e => setEditEnd(e.target.value)}
-                  className="flex-1 text-xs bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 rounded-lg px-2 py-1.5 outline-none [color-scheme:light] dark:[color-scheme:dark]" />
+              {/* خيار الأيام أو التواريخ */}
+              <div className="rounded-lg bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-600 p-2 space-y-2">
+                <div className="flex items-center gap-2">
+                  <input
+                    type="number" min="1" value={editDays}
+                    onChange={e => {
+                      setEditDays(e.target.value);
+                      if (e.target.value) { setEditStart(""); setEditEnd(""); }
+                    }}
+                    placeholder="عدد الأيام"
+                    className="w-24 text-xs bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-lg px-2 py-1.5 outline-none focus:ring-2 focus:ring-primary/30"
+                  />
+                  <label className="flex items-center gap-1.5 cursor-pointer text-xs text-slate-600 dark:text-slate-300">
+                    <input type="checkbox" checked={editWorkDaysOnly} onChange={e => setEditWorkDaysOnly(e.target.checked)} className="w-3 h-3 accent-primary" />
+                    أيام عمل فقط
+                  </label>
+                  {editDays && (
+                    <span className="text-[10px] text-primary font-medium">
+                      {(() => {
+                        const idx = sorted.findIndex(s => s.id === editingId);
+                        const prevEnd = idx > 0 ? sorted[idx - 1].endDate : null;
+                        const calc = calcDatesFromDays(parseInt(editDays) || 1, editWorkDaysOnly, prevEnd);
+                        return `${calc.start} ← ${calc.end}`;
+                      })()}
+                    </span>
+                  )}
+                </div>
+                <div className="text-[10px] text-slate-400 text-center">— أو حدد التواريخ يدوياً —</div>
+                <div className="flex gap-2">
+                  <input type="date" value={editStart} onChange={e => { setEditStart(e.target.value); setEditDays(""); }}
+                    className="flex-1 text-xs bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 rounded-lg px-2 py-1.5 outline-none [color-scheme:light] dark:[color-scheme:dark]" />
+                  <input type="date" value={editEnd} onChange={e => { setEditEnd(e.target.value); setEditDays(""); }}
+                    className="flex-1 text-xs bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 rounded-lg px-2 py-1.5 outline-none [color-scheme:light] dark:[color-scheme:dark]" />
+                </div>
               </div>
               <label className="flex items-center gap-2 cursor-pointer text-xs text-slate-600 dark:text-slate-300">
                 <input type="checkbox" checked={editIsContinuous} onChange={e => setEditIsContinuous(e.target.checked)} className="w-3.5 h-3.5 accent-amber-500" />
@@ -434,11 +542,37 @@ function InlineTimeline({
             className="w-full text-xs bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 rounded-lg px-3 py-1.5 outline-none focus:ring-2 focus:ring-primary/30 text-slate-800 dark:text-slate-100" />
           <input value={newDesc} onChange={e => setNewDesc(e.target.value)} placeholder="وصف (اختياري)"
             className="w-full text-xs bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 rounded-lg px-3 py-1.5 outline-none focus:ring-2 focus:ring-primary/30 text-slate-800 dark:text-slate-100" />
-          <div className="flex gap-2">
-            <input type="date" value={newStart} onChange={e => setNewStart(e.target.value)}
-              className="flex-1 text-xs bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 rounded-lg px-2 py-1.5 outline-none [color-scheme:light] dark:[color-scheme:dark]" />
-            <input type="date" value={newEnd} onChange={e => setNewEnd(e.target.value)}
-              className="flex-1 text-xs bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 rounded-lg px-2 py-1.5 outline-none [color-scheme:light] dark:[color-scheme:dark]" />
+          {/* خيار الأيام أو التواريخ */}
+          <div className="rounded-lg bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-600 p-2 space-y-2">
+            <div className="flex items-center gap-2">
+              <input
+                type="number" min="1" value={newDays}
+                onChange={e => { setNewDays(e.target.value); if (e.target.value) { setNewStart(""); setNewEnd(""); } }}
+                placeholder="عدد الأيام"
+                className="w-24 text-xs bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-lg px-2 py-1.5 outline-none focus:ring-2 focus:ring-primary/30"
+              />
+              <label className="flex items-center gap-1.5 cursor-pointer text-xs text-slate-600 dark:text-slate-300">
+                <input type="checkbox" checked={newWorkDaysOnly} onChange={e => setNewWorkDaysOnly(e.target.checked)} className="w-3 h-3 accent-primary" />
+                أيام عمل فقط
+              </label>
+              {newDays && (
+                <span className="text-[10px] text-primary font-medium">
+                  {(() => {
+                    const regularSorted = sorted.filter(s => !s.isContinuous);
+                    const prevEnd = regularSorted.length > 0 ? regularSorted[regularSorted.length - 1].endDate : null;
+                    const calc = calcDatesFromDays(parseInt(newDays) || 1, newWorkDaysOnly, prevEnd);
+                    return `${calc.start} ← ${calc.end}`;
+                  })()}
+                </span>
+              )}
+            </div>
+            <div className="text-[10px] text-slate-400 text-center">— أو حدد التواريخ يدوياً —</div>
+            <div className="flex gap-2">
+              <input type="date" value={newStart} onChange={e => { setNewStart(e.target.value); setNewDays(""); }}
+                className="flex-1 text-xs bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 rounded-lg px-2 py-1.5 outline-none [color-scheme:light] dark:[color-scheme:dark]" />
+              <input type="date" value={newEnd} onChange={e => { setNewEnd(e.target.value); setNewDays(""); }}
+                className="flex-1 text-xs bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 rounded-lg px-2 py-1.5 outline-none [color-scheme:light] dark:[color-scheme:dark]" />
+            </div>
           </div>
           <label className="flex items-center gap-2 cursor-pointer text-xs text-slate-600 dark:text-slate-300">
             <input type="checkbox" checked={newIsContinuous} onChange={e => setNewIsContinuous(e.target.checked)} className="w-3.5 h-3.5 accent-amber-500" />

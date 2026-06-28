@@ -109,17 +109,17 @@ export default function ServicesManagerClient({
         <button
           onClick={() => setIsUnifyModalOpen(true)}
           disabled={isPending}
-          className="flex items-center gap-2 bg-white hover:bg-slate-50 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 px-5 py-2.5 rounded-xl font-bold transition-colors shadow-sm disabled:opacity-50"
+          className="flex items-center gap-2 bg-white hover:bg-slate-50 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 px-3.5 py-1.5 rounded-lg text-sm font-semibold transition-colors shadow-sm disabled:opacity-50"
         >
-          <Layers className="w-5 h-5 text-amber-500" />
+          <Layers className="w-4 h-4 text-amber-500" />
           تعميم مراحل قسم على الجمعيات
         </button>
         <button
           onClick={openAddService}
           disabled={isPending}
-          className="flex items-center gap-2 bg-slate-800 hover:bg-slate-700 dark:bg-slate-700 dark:hover:bg-slate-600 text-white px-5 py-2.5 rounded-xl font-bold transition-colors shadow-sm disabled:opacity-50"
+          className="flex items-center gap-2 bg-slate-800 hover:bg-slate-700 dark:bg-slate-700 dark:hover:bg-slate-600 text-white px-3.5 py-1.5 rounded-lg text-sm font-semibold transition-colors shadow-sm disabled:opacity-50"
         >
-          <Plus className="w-5 h-5" />
+          <Plus className="w-4 h-4" />
           إضافة مخطط زمني جديد
         </button>
       </div>

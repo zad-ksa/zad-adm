@@ -164,7 +164,8 @@ const LETTERHEAD_CSS = `
   .page .number-area { position: absolute; top: 14mm; left: 12mm; font-size: 8.5pt; color: #111; z-index: 2; direction: ltr; letter-spacing: 1px; font-family: 'Courier New', monospace; }
   .page .date-area { position: absolute; top: 19mm; left: 12mm; font-size: 8.5pt; color: #111; z-index: 2; direction: ltr; letter-spacing: 1px; font-family: 'Courier New', monospace; }
   .page .content-area { position: absolute; top: 50mm; right: 17mm; left: 17mm; bottom: 40mm; z-index: 2; overflow: hidden; direction: rtl; text-align: right; font-size: 10.5pt; line-height: 1.55; color: #1a1a1a; }
-  .meeting-title { text-align: center; font-size: 15pt; font-weight: 700; color: #1a7a8a; margin-bottom: 8px; }
+  .meeting-label { text-align: center; font-size: 9pt; font-weight: 600; color: #1a7a8a; margin-bottom: 2px; letter-spacing: 0.5px; }
+  .meeting-title { text-align: center; font-size: 13pt; font-weight: 700; color: #1a1a1a; margin-bottom: 10px; border-bottom: 1.5px solid #c8e8ed; padding-bottom: 6px; }
   h2.sec-title { color: #1a7a8a; font-size: 12pt; font-weight: 700; text-align: center; margin: 8px 0 4px; padding-bottom: 2px; border-bottom: 1.5px solid #c8e8ed; }
   h3.sub-title { color: #1a7a8a; font-size: 10.5pt; font-weight: 700; text-align: center; margin: 6px 0 3px; }
   h4.sub-title { color: #1a7a8a; font-size: 10pt; font-weight: 700; margin: 5px 0 2px; }
@@ -183,7 +184,10 @@ const LETTERHEAD_CSS = `
 `;
 
 function buildLetterheadDoc(m: Meeting, forPrint: boolean): string {
-  const body = `<div class="meeting-title">${m.title}</div>\n` + injectTasksIntoHtml(mdToHtml(m.formattedContent), m.meetingTasks);
+  // حذف أي جداول مهام أضافها AI من formattedContent لتجنب التكرار مع injectTasksIntoHtml
+  const rawHtml = mdToHtml(m.formattedContent);
+  const cleanHtml = rawHtml.replace(/<h[23][^>]*>.*?(?:مهام|توصيات|تكليفات).*?<\/h[23]>\s*(<table[\s\S]*?<\/table>)/gi, "").replace(/<table[\s\S]*?<\/table>/gi, "");
+  const body = `<div class="meeting-label">محضر اجتماع</div><div class="meeting-title">${m.title}</div>\n` + injectTasksIntoHtml(cleanHtml, m.meetingTasks);
   const dateStr = formatDate(m.date);
   const numStr = m.meetingNumber ? `ZAD_M_${String(m.meetingNumber).padStart(3, "0")}` : "";
   const letterheadUrl = `${window.location.origin}/assets/letterhead.png`;

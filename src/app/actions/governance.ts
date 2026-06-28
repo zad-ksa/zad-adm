@@ -195,3 +195,53 @@ export async function toggleRegulationVisibility(charityId: string, regulationId
 
   revalidatePath("/", "layout");
 }
+
+export async function updateCharitySize(charityId: string, size: "MICRO" | "SMALL" | "MEDIUM" | "LARGE" | "MEGA") {
+  try {
+    await prisma.charity.update({
+      where: { id: charityId },
+      data: { size },
+    });
+    revalidatePath(`/charity/[name]/governance`);
+    return { success: true };
+  } catch (error) {
+    console.error("Failed to update charity size:", error);
+    return { success: false, error: "حدث خطأ أثناء تحديث حجم الجمعية" };
+  }
+}
+
+export async function updateGovernanceProgress(
+  charityId: string,
+  indicatorId: string,
+  status: string,
+  proofUrl?: string,
+  proofPublicId?: string
+) {
+  try {
+    await prisma.governanceProgress.upsert({
+      where: {
+        charityId_indicatorId: {
+          charityId,
+          indicatorId,
+        },
+      },
+      update: {
+        status,
+        ...(proofUrl && { proofUrl }),
+        ...(proofPublicId && { proofPublicId }),
+      },
+      create: {
+        charityId,
+        indicatorId,
+        status,
+        proofUrl,
+        proofPublicId,
+      },
+    });
+    revalidatePath(`/charity/[name]/governance`);
+    return { success: true };
+  } catch (error) {
+    console.error("Failed to update governance progress:", error);
+    return { success: false, error: "حدث خطأ أثناء تحديث الإنجاز" };
+  }
+}

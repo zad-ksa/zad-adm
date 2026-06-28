@@ -11,20 +11,20 @@ import { useRouter } from "next/navigation";
 import GanttChart from "./GanttChart";
 import {
   setCurrentStrategicStage, addStrategicStage, updateStrategicStage,
-  deleteStrategicStage, reorderStrategicStages
+  deleteStrategicStage, reorderStrategicStages, toggleActiveStrategicStage
 } from "@/app/actions/strategy";
 import {
   setCurrentGovernanceStage, addGovernanceStage, updateGovernanceStage,
-  deleteGovernanceStage, reorderGovernanceStages
+  deleteGovernanceStage, reorderGovernanceStages, toggleActiveGovernanceStage
 } from "@/app/actions/governance";
 import {
   setCurrentFinanceStage, addFinanceStage, updateFinanceStage,
-  deleteFinanceStage, reorderFinanceStages
+  deleteFinanceStage, reorderFinanceStages, toggleActiveFinanceStage
 } from "@/app/actions/finance";
 import {
   setCurrentServiceStage, addServiceStage, updateServiceStage,
   deleteServiceStage, reorderServiceStages, unifyCharityStagesAction,
-  updateService
+  updateService, toggleActiveServiceStage
 } from "@/app/actions/services";
 import { updateCharityLogo } from "@/app/actions/charity";
 import { updateTimelineDisplayName } from "@/app/actions/settings";
@@ -48,6 +48,7 @@ type Stage = {
   order: number;
   isCurrent: boolean;
   isContinuous?: boolean | null;
+  isActive?: boolean | null;
 };
 
 type ServiceWithStages = {
@@ -106,6 +107,12 @@ async function actionReorder(dept: DeptKey, serviceId: string, charityId: string
   if (dept === "GOVERNANCE") return reorderGovernanceStages(charityId, ids);
   if (dept === "FINANCE") return reorderFinanceStages(charityId, ids);
   return reorderServiceStages(ids);
+}
+async function actionToggleActive(dept: DeptKey, stageId: string, isActive: boolean) {
+  if (dept === "STRATEGY") return toggleActiveStrategicStage(stageId, isActive);
+  if (dept === "GOVERNANCE") return toggleActiveGovernanceStage(stageId, isActive);
+  if (dept === "FINANCE") return toggleActiveFinanceStage(stageId, isActive);
+  return toggleActiveServiceStage(stageId, isActive);
 }
 
 // ── Inline Timeline Editor ──────────────────────────────────────────
@@ -243,15 +250,14 @@ function InlineTimeline({
             {/* المراحل الدائمة — خارج الترتيب المرقم، تظهر أولاً */}
             {continuousStages.length > 0 && (
               <div className="mb-2 pb-2 border-b border-dashed border-amber-200 dark:border-amber-800/40 space-y-1">
-                {continuousStages.map(stage => (
-                  <div key={stage.id} className="flex items-start gap-2.5 p-2 rounded-lg text-xs bg-amber-50/60 dark:bg-amber-900/10 border border-amber-100 dark:border-amber-800/30">
-                    <div className="w-5 h-5 rounded-md flex items-center justify-center shrink-0 mt-0.5 bg-amber-400 dark:bg-amber-600 text-white">
-                      <span className="text-[9px] font-bold">∞</span>
-                    </div>
+                {continuousStages.map(stage => {
+                  const active = stage.isActive !== false;
+                  return (
+                  <div key={stage.id} className={`flex items-start gap-2.5 p-2 rounded-lg text-xs border ${active ? "bg-amber-50/60 dark:bg-amber-900/10 border-amber-100 dark:border-amber-800/30" : "bg-slate-50 dark:bg-slate-800/30 border-slate-200 dark:border-slate-700/50 opacity-50"}`}>
+                    <div className="w-5 h-5 rounded-md flex items-center justify-center shrink-0 mt-0.5 bg-amber-400 dark:bg-amber-600 text-white text-[11px] font-bold">∞</div>
                     <div className="flex-1 min-w-0">
-                      <div className="font-semibold leading-tight text-amber-800 dark:text-amber-300 flex items-center gap-1.5 flex-wrap">
+                      <div className={`font-semibold leading-tight flex items-center gap-1.5 flex-wrap ${active ? "text-amber-800 dark:text-amber-300" : "text-slate-500"}`}>
                         {stage.name}
-                        {stage.isCurrent && <span className="text-[10px] bg-primary text-white px-1.5 py-0.5 rounded-full font-bold">الحالية</span>}
                         <span className="text-[9px] text-amber-600 dark:text-amber-400 font-medium opacity-70">دائمة</span>
                       </div>
                       {stage.description && <p className="text-amber-700/70 dark:text-amber-400/60 mt-0.5 text-[11px]">{stage.description}</p>}
@@ -262,8 +268,21 @@ function InlineTimeline({
                         </div>
                       )}
                     </div>
+                    <button
+                      onClick={() => {
+                        startTransition(async () => {
+                          setStages(prev => prev.map(s => s.id === stage.id ? { ...s, isActive: !active } : s));
+                          await actionToggleActive(dept, stage.id, !active);
+                        });
+                      }}
+                      disabled={isPending}
+                      className={`shrink-0 text-[9px] font-bold px-1.5 py-0.5 rounded transition-colors ${active ? "bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 hover:bg-amber-200" : "bg-slate-100 dark:bg-slate-700 text-slate-500 hover:bg-slate-200"}`}
+                    >
+                      {active ? "تعطيل" : "تفعيل"}
+                    </button>
                   </div>
-                ))}
+                  );
+                })}
               </div>
             )}
 
@@ -369,9 +388,13 @@ function InlineTimeline({
                   className="p-0.5 text-slate-300 hover:text-slate-600 disabled:opacity-20"><ArrowDown className="w-3 h-3" /></button>
               </div>
               {/* Badge */}
-              <div className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold shrink-0 border ${
-                stage.isCurrent ? "border-primary bg-primary text-white" : "border-slate-300 dark:border-slate-600 text-slate-400"
-              }`}>{idx + 1}</div>
+              <div className={`w-5 h-5 rounded-md flex items-center justify-center text-[10px] font-bold shrink-0 border ${
+                stage.isContinuous
+                  ? "border-amber-400 bg-amber-400 text-white"
+                  : stage.isCurrent
+                    ? "border-primary bg-primary text-white rounded-full"
+                    : "border-slate-300 dark:border-slate-600 text-slate-400 rounded-full"
+              }`}>{stage.isContinuous ? "∞" : idx + 1}</div>
               {/* Name */}
               <div className="flex-1 min-w-0">
                 <div className={`text-xs font-semibold truncate flex items-center gap-1 ${stage.isCurrent ? "text-primary" : "text-slate-700 dark:text-slate-300"}`}>

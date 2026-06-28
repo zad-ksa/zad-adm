@@ -149,7 +149,7 @@ export default function InteractiveTimelineEditor({
   };
 
   return (
-    <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-3 shadow-sm overflow-x-auto custom-scrollbar">
+    <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-3 shadow-sm overflow-x-auto overflow-y-visible custom-scrollbar">
       <h3 className="font-bold text-sm text-slate-800 dark:text-slate-100 mb-4 border-b border-slate-100 dark:border-slate-700 pb-2 flex justify-between items-center">
         <span>{title}</span>
         <span className="text-[10px] bg-primary/10 text-primary px-2 py-0.5 rounded-full font-bold flex items-center gap-1">
@@ -158,7 +158,7 @@ export default function InteractiveTimelineEditor({
       </h3>
 
       <div className="relative pb-4 min-w-max">
-        <div className="flex flex-row gap-3 relative z-10 items-start pt-4">
+        <div className="flex flex-row gap-3 relative z-10 items-start pt-4 overflow-visible">
           
           {sequentialStages.map((stage, idx) => {
             const isPast = sequentialStages.findIndex(s => s.isCurrent) > idx;
@@ -166,7 +166,7 @@ export default function InteractiveTimelineEditor({
             const displayDuration = formatDurationArabic(stage.startDate, stage.endDate);
             
             return (
-              <div key={stage.id} className={`flex flex-col items-center gap-2 group relative w-[160px] transition-all ${!stage.isActive ? "opacity-60 grayscale-[50%]" : ""}`}>
+              <div key={stage.id} className={`flex flex-col items-center gap-2 group relative w-[160px] transition-all overflow-visible ${!stage.isActive ? "opacity-60 grayscale-[50%]" : ""}`}>
 
                 {/* Connecting Line */}
                 {idx !== sequentialStages.length - 1 && (
@@ -344,7 +344,7 @@ export default function InteractiveTimelineEditor({
               const displayDuration = formatDurationArabic(stage.startDate, stage.endDate);
               const isCurrent = stage.isCurrent;
               return (
-                <div key={stage.id} className={`flex flex-col items-center gap-2 group relative w-[160px] transition-all ${!stage.isActive ? "opacity-60 grayscale-[50%]" : ""}`}>
+                <div key={stage.id} className={`flex flex-col items-center gap-2 group relative w-[160px] transition-all overflow-visible ${!stage.isActive ? "opacity-60 grayscale-[50%]" : ""}`}>
 
                   {/* Reorder Arrows (Visible on Hover) */}
                   <div className="absolute -top-5 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm p-0.5 rounded-md border border-slate-200 dark:border-slate-700 z-20 shadow-sm">

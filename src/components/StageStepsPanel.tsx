@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useTransition, useEffect, useRef } from "react";
 import { Check, Plus, Trash2, ChevronDown, ChevronUp, X, GripVertical } from "lucide-react";
 
 export type StageStep = {
@@ -28,6 +28,15 @@ export default function StageStepsPanel({ steps, canEdit, onAdd, onToggle, onRen
   const [editName, setEditName] = useState("");
   const [isPending, startTransition] = useTransition();
 
+  // sync local steps when the prop changes (after server revalidation)
+  const prevStepsRef = useRef(steps);
+  useEffect(() => {
+    if (prevStepsRef.current !== steps) {
+      prevStepsRef.current = steps;
+      setLocalSteps([...steps].sort((a, b) => a.order - b.order));
+    }
+  }, [steps]);
+
   const sorted = [...localSteps].sort((a, b) => a.order - b.order);
   const doneCount = sorted.filter(s => s.isDone).length;
   const total = sorted.length;
@@ -35,27 +44,29 @@ export default function StageStepsPanel({ steps, canEdit, onAdd, onToggle, onRen
   function handleToggle(step: StageStep) {
     const updated = localSteps.map(s => s.id === step.id ? { ...s, isDone: !s.isDone } : s);
     setLocalSteps(updated);
-    startTransition(() => onToggle(step.id, !step.isDone));
+    startTransition(async () => { try { await onToggle(step.id, !step.isDone); } catch {} });
   }
 
   function handleAdd() {
     if (!newName.trim()) return;
     const optimistic: StageStep = { id: Math.random().toString(), name: newName, isDone: false, order: localSteps.length };
     setLocalSteps(prev => [...prev, optimistic]);
+    const nameToAdd = newName;
     setNewName(""); setAdding(false);
-    startTransition(() => onAdd(optimistic.name));
+    startTransition(async () => { try { await onAdd(nameToAdd); } catch {} });
   }
 
   function handleRename(id: string) {
     if (!editName.trim()) { setEditingId(null); return; }
     setLocalSteps(prev => prev.map(s => s.id === id ? { ...s, name: editName } : s));
+    const nameToSave = editName;
     setEditingId(null);
-    startTransition(() => onRename(id, editName));
+    startTransition(async () => { try { await onRename(id, nameToSave); } catch {} });
   }
 
   function handleDelete(id: string) {
     setLocalSteps(prev => prev.filter(s => s.id !== id));
-    startTransition(() => onDelete(id));
+    startTransition(async () => { try { await onDelete(id); } catch {} });
   }
 
   if (total === 0 && !canEdit) return null;

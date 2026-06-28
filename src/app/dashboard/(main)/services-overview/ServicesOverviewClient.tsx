@@ -184,6 +184,7 @@ function InlineTimeline({
 
   const [isEditing, setIsEditing] = useState(false);
   const [isPending, startTransition] = useTransition();
+  const [showAllStages, setShowAllStages] = useState(false);
 
   const sorted = [...stages].sort((a, b) => a.order - b.order);
   const currentIdx = sorted.findIndex(s => s.isCurrent);
@@ -354,6 +355,23 @@ function InlineTimeline({
     // آخر مرحلة حالية في الترتيب — كل ما قبلها يُعدّ منجزاً
     const lastCurrentIdx = regularStages.reduce((last, s, i) => s.isCurrent ? i : last, -1);
 
+    // عرض 5 مراحل فقط مع إمكانية عرض الكل
+    const MAX_VISIBLE = 5;
+
+    // حساب نافذة الـ5 مراحل المرئية بحيث تشمل المرحلة الحالية
+    const getVisibleRegularStages = () => {
+      if (showAllStages || regularStages.length <= MAX_VISIBLE) return regularStages;
+      if (lastCurrentIdx === -1) return regularStages.slice(0, MAX_VISIBLE);
+      // ابدأ من المرحلة الحالية مع وضعها في الأول
+      const start = Math.max(0, Math.min(lastCurrentIdx, regularStages.length - MAX_VISIBLE));
+      return regularStages.slice(start, start + MAX_VISIBLE);
+    };
+    const visibleRegularStages = getVisibleRegularStages();
+    const hasHiddenStages = !showAllStages && regularStages.length > MAX_VISIBLE;
+    // الأوفست لأرقام المراحل
+    const visibleOffset = showAllStages || regularStages.length <= MAX_VISIBLE ? 0
+      : Math.max(0, Math.min(lastCurrentIdx, regularStages.length - MAX_VISIBLE));
+
     return (
       <div className="mt-2">
         {total === 0 && <p className="text-xs text-slate-400 italic py-2">لا توجد مراحل مسجلة</p>}
@@ -361,8 +379,7 @@ function InlineTimeline({
         {total > 0 && (
           <div
             ref={listRef}
-            className="space-y-1 select-none overflow-y-auto max-h-[220px] custom-scrollbar pr-0.5"
-            style={{ scrollbarWidth: "thin" }}
+            className="space-y-1 select-none"
           >
             {/* المراحل الدائمة — خارج الترتيب المرقم، تظهر أولاً */}
             {continuousStages.length > 0 && (
@@ -403,8 +420,9 @@ function InlineTimeline({
               </div>
             )}
 
-            {/* المراحل العادية — الخط المرقم */}
-            {regularStages.map((stage, idx) => {
+            {/* المراحل العادية — الخط المرقم (5 فقط) */}
+            {visibleRegularStages.map((stage, localIdx) => {
+              const idx = visibleOffset + localIdx;
               const isCompleted = lastCurrentIdx !== -1 && idx < lastCurrentIdx;
               const isCurrent = stage.isCurrent;
               return (
@@ -416,12 +434,12 @@ function InlineTimeline({
                   }`}>
                     {(isCurrent || isCompleted) ? <Check className="w-3 h-3" /> : idx + 1}
                   </div>
-                  <div className="flex-1 min-w-0">
+                  <div className="flex-1 min-w-0 overflow-hidden">
                     <div className={`font-semibold leading-tight ${isCurrent ? "text-primary" : isCompleted ? "text-slate-500 dark:text-slate-400" : "text-slate-700 dark:text-slate-300"}`}>
                       {stage.name}
                       {isCurrent && <span className="mr-1.5 text-[10px] bg-primary text-white px-1.5 py-0.5 rounded-full font-bold">حالية</span>}
                     </div>
-                    {stage.description && <p className="text-slate-500 dark:text-slate-400 mt-0.5 text-[11px]">{stage.description}</p>}
+                    {stage.description && <p className="text-slate-500 dark:text-slate-400 mt-0.5 text-[11px] break-words">{stage.description}</p>}
                     {(stage.startDate || stage.endDate) && (
                       <div className="flex items-center gap-1 mt-0.5 text-slate-400 dark:text-slate-500">
                         <Calendar className="w-3 h-3 shrink-0" />
@@ -462,6 +480,16 @@ function InlineTimeline({
                 </div>
               );
             })}
+
+            {/* زر عرض الكل / إخفاء */}
+            {regularStages.length > MAX_VISIBLE && (
+              <button
+                onClick={() => setShowAllStages(v => !v)}
+                className="w-full text-center text-[11px] font-bold text-primary/70 hover:text-primary py-1 hover:bg-primary/5 rounded-lg transition-colors"
+              >
+                {showAllStages ? `إخفاء (${regularStages.length - MAX_VISIBLE} مرحلة)` : `عرض الكل (${regularStages.length} مرحلة)`}
+              </button>
+            )}
           </div>
         )}
 
@@ -675,7 +703,7 @@ function CharityCard({
   onLogoClick?: () => void;
   charityLogoUrl?: string | null;
 }) {
-  const [open, setOpen] = useState(true);
+  const [open, setOpen] = useState(false);
   const sorted = [...stages].sort((a, b) => a.order - b.order);
   const regularSorted = sorted.filter(s => !s.isContinuous);
   // آخر مرحلة حالية

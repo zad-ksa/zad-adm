@@ -14,7 +14,9 @@ export default async function MeetingsPage() {
   const session = await getSession();
   if (!session || !hasPermission(session.role, session.permissions || [], "manage_meetings")) redirect("/dashboard");
 
-  const isTier1 = AUTO_ADMIN_ROLES.includes(session.role);
+  const isTier1 = AUTO_ADMIN_ROLES.includes(session.role) || 
+    session.permissions?.includes("developer_mode") || 
+    ["EXECUTIVE_DIRECTOR", "GENERAL_MANAGER", "ADMINISTRATIVE_SECRETARIAT"].includes(session.role);
 
   const [meetings, charities, employees] = await Promise.all([
     getMeetings(),

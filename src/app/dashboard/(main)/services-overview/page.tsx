@@ -31,10 +31,10 @@ export default async function ServicesOverviewPage() {
   };
 
   const role = session.role;
-  const isAdmin = AUTO_ADMIN_ROLES.includes(role);
+  const isAdmin = AUTO_ADMIN_ROLES.includes(role) || session.permissions?.includes("developer_mode");
 
   // Get assigned charity IDs for restricted roles (null = all access)
-  const assignedIds = isAdmin ? null : await getAssignedCharityIds(session.id, role);
+  const assignedIds = isAdmin ? null : await getAssignedCharityIds(session.id, role, session.permissions);
   const charityFilter = assignedIds !== null ? { id: { in: assignedIds } } : undefined;
   const serviceCharityFilter = assignedIds !== null ? { charityId: { in: assignedIds } } : undefined;
   const stageFilter = assignedIds !== null ? { charityId: { in: assignedIds } } : {};

@@ -1,4 +1,4 @@
-﻿import { prisma } from "@/lib/db";
+import { prisma } from "@/lib/db";
 import type { Metadata } from "next";
 import Link from "next/link";
 import AddCharityButton from "./AddCharityButton";
@@ -91,7 +91,7 @@ export const metadata: Metadata = {
 
 export default async function CharitiesDashboard() {
   const session = await getSession();
-  const assignedIds = session ? await getAssignedCharityIds(session.id, session.role) : [];
+  const assignedIds = session ? await getAssignedCharityIds(session.id, session.role, session.permissions) : [];
 
   const {
     charities,

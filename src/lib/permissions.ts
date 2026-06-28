@@ -1,12 +1,16 @@
 // Admin roles that automatically have all permissions
 export const AUTO_ADMIN_ROLES = [
   "ADMIN",
-  "EXECUTIVE_DIRECTOR",
-  "ADMINISTRATIVE_SECRETARIAT",
 ];
 
 // All available permissions grouped by category
 export const PERMISSION_GROUPS = [
+  {
+    title: "صلاحيات النظام الخاصة",
+    permissions: [
+      { id: "developer_mode", label: "صلاحية المطور (الوصول الشامل)" },
+    ],
+  },
   {
     title: "صلاحيات لوحة التحكم",
     permissions: [
@@ -21,6 +25,7 @@ export const PERMISSION_GROUPS = [
   {
     title: "صلاحيات صفحة الجمعية",
     permissions: [
+      { id: "manage_charity_settings", label: "إعدادات تبويبات الجمعيات" },
       { id: "manage_strategy", label: "الاستراتيجية" },
       { id: "manage_governance", label: "الحوكمة" },
       { id: "manage_programs", label: "البرامج والمشاريع" },
@@ -47,6 +52,7 @@ export const ROLE_LABELS: Record<string, string> = {
 /**
  * Check if a user has a specific permission.
  * Admin roles automatically have all permissions.
+ * Developer mode bypasses all permission checks.
  */
 export function hasPermission(
   role: string,
@@ -54,5 +60,6 @@ export function hasPermission(
   required: string
 ): boolean {
   if (AUTO_ADMIN_ROLES.includes(role)) return true;
+  if (permissions.includes("developer_mode")) return true;
   return permissions.includes(required);
 }

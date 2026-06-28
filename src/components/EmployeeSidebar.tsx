@@ -132,11 +132,16 @@ export default function EmployeeSidebar({
     navItems.push({ label: "محاضر الاجتماعات", href: "/dashboard/meetings", icon: FileText });
   }
   if (can("manage_tasks")) {
-    const isManager = AUTO_ADMIN_ROLES.includes(role);
+    const isManager = AUTO_ADMIN_ROLES.includes(role) || 
+      perms.includes("developer_mode") || 
+      ["EXECUTIVE_DIRECTOR", "GENERAL_MANAGER", "ADMINISTRATIVE_SECRETARIAT"].includes(role);
     navItems.push({ label: isManager ? "المهام والمنجزات" : "مهامي", href: "/dashboard/tasks", icon: CheckSquare });
   }
   if (can("manage_employees")) {
     navItems.push({ label: "إدارة الموظفين", href: "/dashboard/employees", icon: Users });
+  }
+  if (can("manage_charity_settings")) {
+    navItems.push({ label: "إعدادات الجمعيات", href: "/dashboard/charity-settings", icon: Settings2 });
   }
 
   // Effect to sort navItems based on userState.navOrder

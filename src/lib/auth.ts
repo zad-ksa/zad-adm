@@ -1,4 +1,4 @@
-﻿import { jwtVerify, SignJWT } from "jose";
+import { jwtVerify, SignJWT } from "jose";
 import { cookies } from "next/headers";
 
 function getSecretKey() {
@@ -25,10 +25,28 @@ export async function decrypt(input: string): Promise<any> {
 }
 
 export async function getSession() {
-  const session = (await cookies()).get("session")?.value;
-  if (!session) return null;
+  const cookieStore = await cookies();
+  const sessionCookie = cookieStore.get("session")?.value;
+  if (!sessionCookie) return null;
   try {
-    return await decrypt(session);
+    const session = await decrypt(sessionCookie);
+    
+    // Check if user is originally a developer
+    const isDeveloper = session.permissions?.includes("developer_mode");
+    session.isDeveloper = isDeveloper;
+    
+    if (isDeveloper) {
+      const overrideRole = cookieStore.get("dev_role_override")?.value;
+      if (overrideRole && overrideRole !== "DEVELOPER_RESET") {
+        session.originalRole = session.role;
+        session.role = overrideRole;
+        // Strip permissions to perfectly emulate the selected role, 
+        // unless they emulate an admin which would normally have permissions
+        session.permissions = []; 
+      }
+    }
+    
+    return session;
   } catch (error) {
     return null;
   }

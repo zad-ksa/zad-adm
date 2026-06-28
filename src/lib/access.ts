@@ -2,9 +2,6 @@ import { prisma } from "@/lib/db";
 
 const ADMIN_ROLES = [
   "ADMIN",
-  "EXECUTIVE_DIRECTOR",
-  "GENERAL_MANAGER",
-  "ADMINISTRATIVE_SECRETARIAT",
 ];
 
 export function isAdminRole(role: string): boolean {
@@ -17,9 +14,10 @@ export function isAdminRole(role: string): boolean {
  */
 export async function getAssignedCharityIds(
   employeeId: string,
-  role: string
+  role: string,
+  permissions?: string[]
 ): Promise<string[] | null> {
-  if (isAdminRole(role) || role === "CHARITY_CLIENT") return null;
+  if (isAdminRole(role) || role === "CHARITY_CLIENT" || permissions?.includes("developer_mode")) return null;
   const rows = await prisma.employeeCharity.findMany({
     where: { employeeId },
     select: { charityId: true },
@@ -30,9 +28,10 @@ export async function getAssignedCharityIds(
 export async function assertCharityAccess(
   employeeId: string,
   role: string,
-  charityId: string
+  charityId: string,
+  permissions?: string[]
 ): Promise<void> {
-  const assigned = await getAssignedCharityIds(employeeId, role);
+  const assigned = await getAssignedCharityIds(employeeId, role, permissions);
   if (assigned === null) return;
   if (!assigned.includes(charityId)) throw new Error("FORBIDDEN");
 }

@@ -5,6 +5,7 @@ import CharitySidebar from "./CharitySidebar";
 import { useState, useEffect } from "react";
 import { Menu, Home, Target, FolderKanban, Coins, Scale } from "lucide-react";
 import { hasPermission } from "@/lib/permissions";
+import DeveloperRoleSwitcher from "@/components/DeveloperRoleSwitcher";
 
 export default function CharityLayoutClient({
   children,
@@ -12,14 +13,16 @@ export default function CharityLayoutClient({
   logoUrl,
   role,
   permissions,
-  navOrder,
+  navSettings,
+  isDeveloper,
 }: {
   children: React.ReactNode;
   charityName: string;
   logoUrl: string | null;
   role?: string;
   permissions?: string[];
-  navOrder?: string[];
+  navSettings?: any[];
+  isDeveloper?: boolean;
 }) {
   const pathname = usePathname();
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
@@ -36,7 +39,7 @@ export default function CharityLayoutClient({
   const can = (p: string) => hasPermission(role || "", perms, p);
 
   let mobileNavItems = [
-    { label: "الرئيسية", href: `/charity/${encodeURIComponent(charityName)}`, icon: Home, exact: true },
+    { label: "الرئيسية", href: `/charity/${encodeURIComponent(charityName)}/overview`, icon: Home, exact: true },
   ];
 
   if (can("manage_strategy") && !isCharityClient) {
@@ -61,7 +64,7 @@ export default function CharityLayoutClient({
         setIsOpen={setIsSidebarOpen}
         role={role}
         permissions={permissions}
-        navOrder={navOrder}
+        navSettings={navSettings}
       />
       
       <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden relative">
@@ -87,6 +90,8 @@ export default function CharityLayoutClient({
           </div>
         </main>
       </div>
+      
+      {isDeveloper && <DeveloperRoleSwitcher currentRole={role || "ADMIN"} />}
     </div>
   );
 }

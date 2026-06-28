@@ -57,6 +57,13 @@ model Charity {
   governanceProgress     GovernanceProgress[]
 }
 
+model RoleNavSetting {
+  id        String   @id @default(uuid())
+  role      String   @unique // e.g., 'CHARITY_CLIENT', 'FINANCE', 'STRATEGY', etc.
+  settings  Json     // The navigation settings array for this role
+  updatedAt DateTime @updatedAt
+}
+
 model GovernanceProgress {
   id            String   @id @default(uuid())
   charityId     String

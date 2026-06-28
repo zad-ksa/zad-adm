@@ -81,3 +81,24 @@ export async function logout() {
   cookieStore.delete("session");
   redirect("/");
 }
+
+export async function setDeveloperOverrideRole(role: string | null) {
+  const cookieStore = await cookies();
+  if (role) {
+    cookieStore.set("dev_role_override", role, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      path: "/",
+      maxAge: 60 * 60 * 24,
+    });
+  } else {
+    cookieStore.set("dev_role_override", "DEVELOPER_RESET", {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      path: "/",
+      maxAge: 60 * 60 * 24,
+    });
+  }
+}

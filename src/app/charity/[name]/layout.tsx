@@ -26,11 +26,15 @@ export default async function CharityLayout({
 
   // Access gate: restricted roles must have this charity assigned
   if (!isAdminRole(session.role) && session.role !== "CHARITY_CLIENT") {
-    const assigned = await getAssignedCharityIds(session.id, session.role);
+    const assigned = await getAssignedCharityIds(session.id, session.role, session.permissions);
     if (assigned !== null && !assigned.includes(charity.id)) {
       redirect("/dashboard");
     }
   }
+
+  // Fetch nav settings for this role
+  const { getRoleNavSettings } = await import("@/app/actions/roleSettings");
+  const navSettings = await getRoleNavSettings(session.role);
 
   return (
     <CharityLayoutClient
@@ -38,7 +42,8 @@ export default async function CharityLayout({
       logoUrl={charity.logoUrl || null}
       role={session.role}
       permissions={session.permissions || []}
-      navOrder={session.navOrder || []}
+      navSettings={navSettings}
+      isDeveloper={session.isDeveloper}
     >
       {children}
     </CharityLayoutClient>

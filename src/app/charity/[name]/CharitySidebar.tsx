@@ -17,42 +17,19 @@ import {
   Sun,
   CheckSquare,
   LogOut,
-  Briefcase,
-  GripVertical,
-  Settings2,
-  Check,
-  Loader2
+  Briefcase
 } from "lucide-react";
 import ZadLogo from "@/components/ZadLogo";
 import { useTheme } from "next-themes";
 import { useState, useEffect } from "react";
 import { logout } from "@/app/actions/auth";
-import { hasPermission } from "@/lib/permissions";
-import { updateNavOrder } from "@/app/actions/profile";
-import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent } from '@dnd-kit/core';
-import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy, useSortable } from '@dnd-kit/sortable';
-import { CSS } from '@dnd-kit/utilities';
 
-// --- Sortable Item Component ---
-function SortableNavItem({ item, isActive, isOpen, isEditMode }: { item: any, isActive: boolean, isOpen: boolean, isEditMode: boolean }) {
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: item.href });
-  
-  const style = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-    zIndex: isDragging ? 50 : 'auto',
-    opacity: isDragging ? 0.8 : 1,
-  };
-
+// --- Nav Item Component ---
+function NavItem({ item, isActive, isOpen }: { item: any, isActive: boolean, isOpen: boolean }) {
   const content = (
     <>
-      {isActive && isOpen && !isEditMode && <div className="absolute right-0 top-0 bottom-0 w-1 bg-white dark:bg-slate-800/20 rounded-l-full"></div>}
-      {isEditMode && isOpen && (
-        <div {...attributes} {...listeners} className="p-1.5 cursor-grab active:cursor-grabbing text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 ml-1 shrink-0 touch-none">
-          <GripVertical className="w-4 h-4" />
-        </div>
-      )}
-      <item.icon className={`w-4 h-4 shrink-0 transition-all ${isOpen ? (isEditMode ? "ml-1.5" : "ml-2.5") : "ml-0"} ${isActive && !isEditMode ? "text-white" : "text-slate-400 group-hover:text-primary"}`} />
+      {isActive && isOpen && <div className="absolute right-0 top-0 bottom-0 w-1 bg-white dark:bg-slate-800/20 rounded-l-full"></div>}
+      <item.icon className={`w-4 h-4 shrink-0 transition-all ml-0 ${isOpen ? "ml-2.5" : ""} ${isActive ? "text-white" : "text-slate-400 group-hover:text-primary"}`} />
       {isOpen && <span className="whitespace-nowrap">{item.title}</span>}
       
       {item.comingSoon && isOpen && (
@@ -63,11 +40,11 @@ function SortableNavItem({ item, isActive, isOpen, isEditMode }: { item: any, is
     </>
   );
 
-  if (item.comingSoon && !isEditMode) {
+  if (item.comingSoon) {
     return (
       <div
         title={!isOpen ? `${item.title} (قريباً)` : undefined}
-        className={`flex items-center ${isOpen ? "justify-start px-2.5" : "justify-center"} py-2 rounded-xl text-slate-400 bg-slate-50 dark:bg-slate-900/50 cursor-not-allowed opacity-70 text-xs font-bold`}
+        className={`flex items-center ${isOpen ? "justify-start px-2.5" : "justify-center"} py-2 rounded-xl text-slate-400 bg-slate-50 dark:bg-slate-900/50 cursor-not-allowed opacity-70 text-xs font-bold mb-0.5`}
       >
         <item.icon className={`w-4 h-4 shrink-0 transition-all ${isOpen ? "ml-2.5" : "ml-0"} opacity-60`} />
         {isOpen && <span className="whitespace-nowrap">{item.title}</span>}
@@ -81,25 +58,17 @@ function SortableNavItem({ item, isActive, isOpen, isEditMode }: { item: any, is
   }
 
   return (
-    <div ref={setNodeRef} style={style} className="relative group touch-none">
-      {isEditMode ? (
-        <div className={`flex items-center ${isOpen ? "justify-start px-2" : "justify-center"} py-2 rounded-xl text-xs font-bold transition-all bg-slate-50 dark:bg-slate-800/50 text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-700 shadow-sm`}>
-          {content}
-        </div>
-      ) : (
-        <Link
-          href={item.href}
-          title={!isOpen ? item.title : undefined}
-          className={`flex items-center ${isOpen ? "justify-start px-2.5" : "justify-center"} py-2 rounded-xl text-xs font-bold transition-all group relative overflow-hidden ${
-            isActive
-              ? "bg-primary text-white shadow-md shadow-primary/20"
-              : "text-slate-500 dark:text-slate-400 hover:bg-primary/5 hover:text-primary"
-          }`}
-        >
-          {content}
-        </Link>
-      )}
-    </div>
+    <Link
+      href={item.href}
+      title={!isOpen ? item.title : undefined}
+      className={`flex items-center ${isOpen ? "justify-start px-2.5" : "justify-center"} py-2 mb-0.5 rounded-xl text-xs font-bold transition-all group relative overflow-hidden ${
+        isActive
+          ? "bg-primary text-white shadow-md shadow-primary/20"
+          : "text-slate-500 dark:text-slate-400 hover:bg-primary/5 hover:text-primary"
+      }`}
+    >
+      {content}
+    </Link>
   );
 }
 
@@ -110,7 +79,7 @@ export default function CharitySidebar({
   setIsOpen,
   role,
   permissions,
-  navOrder
+  navSettings
 }: { 
   charityName: string;
   logoUrl: string | null;
@@ -118,135 +87,43 @@ export default function CharitySidebar({
   setIsOpen: (v: boolean) => void;
   role?: string;
   permissions?: string[];
-  navOrder?: string[];
+  navSettings?: any[];
 }) {
   const pathname = usePathname();
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
-  const [isNavEditMode, setIsNavEditMode] = useState(false);
-  const [orderedNavItems, setOrderedNavItems] = useState<any[]>([]);
-  const [isSavingOrder, setIsSavingOrder] = useState(false);
-  const [currentNavOrder, setCurrentNavOrder] = useState<string[]>(navOrder || []);
-
-  const sensors = useSensors(
-    useSensor(PointerSensor, {
-      activationConstraint: { distance: 5 },
-    }),
-    useSensor(KeyboardSensor, {
-      coordinateGetter: sortableKeyboardCoordinates,
-    })
-  );
 
   useEffect(() => {
     setMounted(true);
   }, []);
 
   const isCharityClient = role === "CHARITY_CLIENT";
-  const perms = permissions || [];
-  const can = (p: string) => hasPermission(role || "", perms, p);
 
   const allNavItems = [
-    {
-      title: "الرئيسية",
-      href: `/charity/${encodeURIComponent(charityName)}`,
-      exact: true,
-      icon: Home,
-      show: true,
-      section: "sub",
-    },
-    {
-      title: "الخدمات",
-      href: `/charity/${encodeURIComponent(charityName)}/services`,
-      icon: Briefcase,
-      show: !isCharityClient || isCharityClient,
-      section: "main",
-    },
-    {
-      title: "الاستراتيجية",
-      href: `/charity/${encodeURIComponent(charityName)}/strategy`,
-      icon: Target,
-      comingSoon: isCharityClient,
-      show: can("manage_strategy") || isCharityClient,
-      section: "sub",
-    },
-    {
-      title: "الحوكمة",
-      href: `/charity/${encodeURIComponent(charityName)}/governance`,
-      icon: Scale,
-      comingSoon: isCharityClient,
-      show: can("manage_governance") || isCharityClient,
-      section: "main",
-    },
-    {
-      title: "البرامج والمشاريع",
-      href: `/charity/${encodeURIComponent(charityName)}/programs`,
-      icon: FolderKanban,
-      comingSoon: isCharityClient,
-      show: can("manage_programs") || isCharityClient,
-      section: "sub",
-    },
-    {
-      title: "المالية",
-      href: `/charity/${encodeURIComponent(charityName)}/finance`,
-      icon: Coins,
-      comingSoon: isCharityClient,
-      show: can("manage_finance") || isCharityClient,
-      section: "sub",
-    },
-    {
-      title: "الموارد البشرية",
-      href: "#",
-      icon: Users,
-      comingSoon: true,
-      show: can("manage_hr") || isCharityClient,
-      section: "sub",
-    },
-    {
-      title: "مهامي",
-      href: `/charity/${encodeURIComponent(charityName)}/tasks`,
-      icon: CheckSquare,
-      comingSoon: true,
-      show: false,
-      section: "sub",
-    },
+    { id: "overview", href: `/charity/${encodeURIComponent(charityName)}/overview`, exact: true, icon: Home },
+    { id: "services", href: `/charity/${encodeURIComponent(charityName)}`, exact: true, icon: Briefcase },
+    { id: "strategy", href: `/charity/${encodeURIComponent(charityName)}/strategy`, icon: Target },
+    { id: "governance", href: `/charity/${encodeURIComponent(charityName)}/governance`, icon: Scale },
+    { id: "programs", href: `/charity/${encodeURIComponent(charityName)}/programs`, icon: FolderKanban },
+    { id: "finance", href: `/charity/${encodeURIComponent(charityName)}/finance`, icon: Coins },
+    { id: "hr", href: "#", icon: Users },
+    { id: "tasks", href: `/charity/${encodeURIComponent(charityName)}/tasks`, icon: CheckSquare },
   ];
 
-  const navItems = allNavItems.filter(item => item.show);
+  const navItems = (navSettings || []).map(setting => {
+    const baseItem = allNavItems.find(i => i.id === setting.id);
+    if (!baseItem) return null;
+    if (setting.status === "HIDDEN") return null;
+    return {
+      ...baseItem,
+      title: setting.title,
+      comingSoon: setting.status === "COMING_SOON",
+      section: setting.section,
+    };
+  }).filter(Boolean);
 
-  useEffect(() => {
-    const savedOrder = currentNavOrder || [];
-    const ordered = [...navItems].sort((a, b) => {
-      const indexA = savedOrder.indexOf(a.href);
-      const indexB = savedOrder.indexOf(b.href);
-      if (indexA !== -1 && indexB !== -1) return indexA - indexB;
-      if (indexA !== -1) return -1;
-      if (indexB !== -1) return 1;
-      return 0;
-    });
-    setOrderedNavItems(ordered);
-  }, [navItems.map(n => n.href).join(","), currentNavOrder]);
-
-  const handleDragEnd = (event: DragEndEvent) => {
-    const { active, over } = event;
-    if (over && active.id !== over.id) {
-      setOrderedNavItems((items) => {
-        const oldIndex = items.findIndex((i) => i.href === active.id);
-        const newIndex = items.findIndex((i) => i.href === over.id);
-        return arrayMove(items, oldIndex, newIndex);
-      });
-    }
-  };
-
-  const handleSaveNavOrder = async () => {
-    setIsSavingOrder(true);
-    const newOrder = orderedNavItems.map(item => item.href);
-    const res = await updateNavOrder(newOrder);
-    if (res.success) {
-      setCurrentNavOrder(res.navOrder || []);
-      setIsNavEditMode(false);
-    }
-    setIsSavingOrder(false);
-  };
+  const mainItems = navItems.filter((i: any) => i.section === 'main');
+  const subItems = navItems.filter((i: any) => i.section === 'sub');
 
   const sidebarContent = (
     <div className="bg-white dark:bg-slate-800 flex flex-col h-full border-l border-slate-200 dark:border-slate-700/80 shadow-[4px_0_24px_rgba(0,0,0,0.02)] relative transition-all duration-300">
@@ -316,81 +193,51 @@ export default function CharitySidebar({
 
       {/* Navigation */}
       <div className="flex-1 overflow-y-auto custom-scrollbar px-2.5 py-3 space-y-0.5 flex flex-col relative">
-        {isOpen && (
+        {isOpen && mainItems.length > 0 && (
           <div className="flex items-center justify-between px-2.5 mb-2">
             <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">التبويبات الرئيسية</span>
-            {!isNavEditMode ? (
-              <button
-                onClick={() => setIsNavEditMode(true)}
-                className="text-slate-400 hover:text-primary transition-colors flex items-center justify-center p-1 rounded-md hover:bg-primary/5"
-                title="تعديل ترتيب القائمة"
-              >
-                <Settings2 className="w-3.5 h-3.5" />
-              </button>
-            ) : (
-              <button
-                onClick={handleSaveNavOrder}
-                disabled={isSavingOrder}
-                className="text-emerald-500 hover:text-emerald-600 transition-colors flex items-center justify-center p-1 rounded-md hover:bg-emerald-50 dark:hover:bg-emerald-900/20"
-                title="حفظ الترتيب"
-              >
-                {isSavingOrder ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" />}
-              </button>
-            )}
           </div>
         )}
 
-        <div className="flex-1 space-y-0.5 relative">
-          <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-            <SortableContext items={orderedNavItems.filter(i => i.section === 'main').map(i => i.href)} strategy={verticalListSortingStrategy}>
-              {orderedNavItems.filter(i => i.section === 'main').map((item, idx) => {
-                const decodedPathname = decodeURIComponent(pathname);
-                const decodedHref = decodeURIComponent(item.href);
-                const isActive = item.exact
-                  ? decodedPathname === decodedHref
-                  : decodedPathname.startsWith(decodedHref);
+        {mainItems.map((item: any) => {
+          const decodedPathname = decodeURIComponent(pathname);
+          const decodedHref = decodeURIComponent(item.href);
+          const isActive = item.exact
+            ? decodedPathname === decodedHref
+            : decodedPathname.startsWith(decodedHref);
 
-                return (
-                  <SortableNavItem 
-                    key={item.href}
-                    item={item}
-                    isActive={isActive}
-                    isOpen={isOpen}
-                    isEditMode={isNavEditMode}
-                  />
-                )
-              })}
-            </SortableContext>
-          </DndContext>
-          
-          {isOpen && orderedNavItems.filter(i => i.section === 'sub').length > 0 && (
-            <div className="flex items-center justify-between px-2.5 mt-6 mb-2">
-              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">التبويبات الفرعية</span>
-            </div>
-          )}
-          
-          <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-            <SortableContext items={orderedNavItems.filter(i => i.section === 'sub').map(i => i.href)} strategy={verticalListSortingStrategy}>
-              {orderedNavItems.filter(i => i.section === 'sub').map((item, idx) => {
-                const decodedPathname = decodeURIComponent(pathname);
-                const decodedHref = decodeURIComponent(item.href);
-                const isActive = item.exact
-                  ? decodedPathname === decodedHref
-                  : decodedPathname.startsWith(decodedHref);
+          return (
+            <NavItem 
+              key={item.href}
+              item={item}
+              isActive={isActive}
+              isOpen={isOpen}
+            />
+          )
+        })}
+        
+        {isOpen && subItems.length > 0 && (
+          <div className="flex items-center justify-between px-2.5 mt-6 mb-2">
+            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">التبويبات الفرعية</span>
+          </div>
+        )}
+        
+        {subItems.map((item: any) => {
+          const decodedPathname = decodeURIComponent(pathname);
+          const decodedHref = decodeURIComponent(item.href);
+          const isActive = item.exact
+            ? decodedPathname === decodedHref
+            : decodedPathname.startsWith(decodedHref);
 
-                return (
-                  <SortableNavItem 
-                    key={item.href}
-                    item={item}
-                    isActive={isActive}
-                    isOpen={isOpen}
-                    isEditMode={isNavEditMode}
-                  />
-                )
-              })}
-            </SortableContext>
-          </DndContext>
-        </div>
+          return (
+            <NavItem 
+              key={item.href}
+              item={item}
+              isActive={isActive}
+              isOpen={isOpen}
+            />
+          )
+        })}
       </div>
 
       {/* Bottom Actions */}

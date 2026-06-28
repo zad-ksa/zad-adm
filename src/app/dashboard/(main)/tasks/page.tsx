@@ -33,7 +33,9 @@ export default async function TasksPage() {
     orderBy: { name: "asc" },
   });
 
-  const isDirectorOrAdmin = AUTO_ADMIN_ROLES.includes(session.role);
+  const isDirectorOrAdmin = AUTO_ADMIN_ROLES.includes(session.role) || 
+    session.permissions?.includes("developer_mode") || 
+    ["EXECUTIVE_DIRECTOR", "GENERAL_MANAGER", "ADMINISTRATIVE_SECRETARIAT"].includes(session.role);
 
   // Fetch initial tasks and achievements
   let initialTasks = [];

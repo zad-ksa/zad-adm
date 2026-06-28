@@ -43,9 +43,6 @@ export default async function ServicesOverviewPage() {
       strategyTimelineName: true,
       governanceTimelineName: true,
       financeTimelineName: true,
-      strategyTimelineDept: true,
-      governanceTimelineDept: true,
-      financeTimelineDept: true,
     },
   });
 

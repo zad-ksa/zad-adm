@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Eye, Award, CheckCircle, ChevronLeft, ChevronRight, Target, Users, BookOpen, ShieldAlert, Sparkles, AlertTriangle } from "lucide-react";
+import { Eye, Award, CheckCircle, ChevronLeft, ChevronRight, Target, Users, BookOpen, ShieldAlert, Sparkles, AlertTriangle, Printer } from "lucide-react";
 import Header from "@/components/Header";
 import ProgressBar from "@/components/ProgressBar";
 import LinkClosedScreen from "@/components/LinkClosedScreen";
@@ -29,6 +29,7 @@ export default function VisionMissionSurveyPage() {
   // Survey Wizard Step (0: Welcome/Info, 1: Categories, 2: Vision Part 1, 3: Vision Part 2, 4: Mission Part 1, 5: Mission Part 2)
   const [step, setStep] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isPrintMode, setIsPrintMode] = useState(false);
 
   // Form states
   // Part 1: Categories (3 categories)
@@ -240,11 +241,11 @@ export default function VisionMissionSurveyPage() {
       <Header disableLink={true} title="استبيان الرؤية والرسالة والأثر" />
 
       <main className="flex-1 w-full max-w-4xl mx-auto px-4 py-8 relative">
-        {step > 0 && <ProgressBar current={step} total={3} />}
+        {step > 0 && !isPrintMode && <ProgressBar current={step} total={3} />}
 
-        <div className="bg-white dark:bg-slate-800 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-md p-6 sm:p-10 transition-colors mt-6">
+        <div className="bg-white dark:bg-slate-800 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-md p-6 sm:p-10 transition-colors mt-6 print:shadow-none print:border-none print:p-0">
           {/* Step 0: Welcome and Personal Information */}
-          {step === 0 && (
+          {(step === 0 || isPrintMode) && (
             <div className="space-y-8">
               <div className="text-center space-y-4 max-w-2xl mx-auto">
                 {prefilledCharityLogo && (
@@ -271,7 +272,20 @@ export default function VisionMissionSurveyPage() {
                 </div>
               </div>
 
-              <div className="flex justify-center pt-4">
+              <div className="flex justify-center gap-4 pt-4 print:hidden flex-wrap">
+                <button
+                  onClick={() => {
+                    setIsPrintMode(true);
+                    setTimeout(() => {
+                      window.print();
+                      setIsPrintMode(false);
+                    }, 500);
+                  }}
+                  className="bg-white border border-slate-200 text-slate-700 font-bold px-8 py-3 rounded-xl transition-all shadow-sm flex items-center gap-2 cursor-pointer hover:bg-slate-50"
+                >
+                  <Printer className="w-5 h-5" />
+                  طباعة الاستبيان (فارغ)
+                </button>
                 <button
                   onClick={() => setStep(1)}
                   disabled={!isStepValid()}
@@ -285,7 +299,7 @@ export default function VisionMissionSurveyPage() {
           )}
 
           {/* Step 1: Categories and Impact */}
-          {step === 1 && (
+          {(step === 1 || isPrintMode) && (
             <div className="space-y-8">
               <div className="border-b border-slate-100 dark:border-slate-700 pb-4">
                 <h3 className="text-2xl font-extrabold text-slate-800 dark:text-slate-100 flex items-center gap-2">
@@ -348,7 +362,7 @@ export default function VisionMissionSurveyPage() {
                 ))}
               </div>
 
-              <div className="flex justify-between items-center pt-6 border-t border-slate-100 dark:border-slate-700">
+              <div className="flex justify-between items-center pt-6 border-t border-slate-100 dark:border-slate-700 print:hidden">
                 <button
                   onClick={() => setStep(0)}
                   className="border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-900 text-slate-700 dark:text-slate-300 font-bold px-6 py-2.5 rounded-xl transition-all cursor-pointer"
@@ -368,7 +382,7 @@ export default function VisionMissionSurveyPage() {
           )}
 
           {/* Step 2: Vision */}
-          {step === 2 && (
+          {(step === 2 || isPrintMode) && (
             <div className="space-y-8">
               <div className="border-b border-slate-100 dark:border-slate-700 pb-4">
                 <h3 className="text-2xl font-extrabold text-slate-800 dark:text-slate-100 flex items-center gap-2">
@@ -610,7 +624,7 @@ export default function VisionMissionSurveyPage() {
                 </div>
               </div>
 
-              <div className="flex justify-between items-center pt-6 border-t border-slate-100 dark:border-slate-700">
+              <div className="flex justify-between items-center pt-6 border-t border-slate-100 dark:border-slate-700 print:hidden">
                 <button
                   onClick={() => setStep(1)}
                   className="border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-900 text-slate-700 dark:text-slate-300 font-bold px-6 py-2.5 rounded-xl transition-all cursor-pointer"
@@ -630,7 +644,7 @@ export default function VisionMissionSurveyPage() {
           )}
 
           {/* Step 3: Mission */}
-          {step === 3 && (
+          {(step === 3 || isPrintMode) && (
             <div className="space-y-8">
               <div className="border-b border-slate-100 dark:border-slate-700 pb-4">
                 <h3 className="text-2xl font-extrabold text-slate-800 dark:text-slate-100 flex items-center gap-2">
@@ -742,7 +756,7 @@ export default function VisionMissionSurveyPage() {
                 </div>
               </div>
 
-              <div className="flex justify-between items-center pt-6 border-t border-slate-100 dark:border-slate-700">
+              <div className="flex justify-between items-center pt-6 border-t border-slate-100 dark:border-slate-700 print:hidden">
                 <button
                   onClick={() => setStep(2)}
                   className="border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-900 text-slate-700 dark:text-slate-300 font-bold px-6 py-2.5 rounded-xl transition-all cursor-pointer"

@@ -123,6 +123,17 @@ export async function setCurrentGovernanceStage(charityId: string, stageId: stri
   revalidatePath(`/charity/${encodeURIComponent(updatedStage.charity.name)}/governance`);
 }
 
+export async function toggleCurrentGovernanceStage(stageId: string, isCurrent: boolean) {
+  const session = await getSession();
+  if (!session) throw new Error("UNAUTHORIZED");
+  const stage = await prisma.governanceStage.update({
+    where: { id: stageId },
+    data: { isCurrent },
+    include: { charity: true }
+  });
+  revalidatePath(`/charity/${encodeURIComponent(stage.charity.name)}/governance`);
+}
+
 export async function reorderGovernanceStages(charityId: string, stageIds: string[]) {
   const session = await getSession();
   if (!session) throw new Error("UNAUTHORIZED");

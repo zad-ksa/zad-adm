@@ -235,6 +235,15 @@ export async function setCurrentServiceStage(serviceId: string, stageId: string)
   }
 }
 
+export async function toggleCurrentServiceStage(stageId: string, isCurrent: boolean) {
+  const stage = await prisma.serviceStage.update({
+    where: { id: stageId },
+    data: { isCurrent },
+    include: { service: { include: { charity: true } } }
+  });
+  revalidatePath(`/charity/${encodeURIComponent(stage.service.charity.name)}/services`);
+}
+
 export async function unifyCharityStagesAction(sourceCharityId: string, timelineType: string, sourceServiceId?: string, targetCharityIds?: string[]) {
   // 1. Get source stages
   let sourceStages: {

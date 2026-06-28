@@ -160,6 +160,17 @@ export async function setCurrentStrategicStage(charityId: string, stageId: strin
   revalidatePath(`/charity/${encodeURIComponent(updatedStage.charity.name)}/strategy`);
 }
 
+export async function toggleCurrentStrategicStage(stageId: string, isCurrent: boolean) {
+  const session = await getSession();
+  if (!session) throw new Error("UNAUTHORIZED");
+  const stage = await prisma.strategicStage.update({
+    where: { id: stageId },
+    data: { isCurrent },
+    include: { charity: true }
+  });
+  revalidatePath(`/charity/${encodeURIComponent(stage.charity.name)}/strategy`);
+}
+
 export async function reorderStrategicStages(charityId: string, stageIds: string[]) {
   const session = await getSession();
   if (!session) throw new Error("UNAUTHORIZED");

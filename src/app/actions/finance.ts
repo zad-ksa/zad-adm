@@ -123,6 +123,17 @@ export async function setCurrentFinanceStage(charityId: string, stageId: string)
   revalidatePath(`/charity/${encodeURIComponent(updatedStage.charity.name)}/finance`);
 }
 
+export async function toggleCurrentFinanceStage(stageId: string, isCurrent: boolean) {
+  const session = await getSession();
+  if (!session) throw new Error("UNAUTHORIZED");
+  const stage = await prisma.financeStage.update({
+    where: { id: stageId },
+    data: { isCurrent },
+    include: { charity: true }
+  });
+  revalidatePath(`/charity/${encodeURIComponent(stage.charity.name)}/finance`);
+}
+
 export async function reorderFinanceStages(charityId: string, stageIds: string[]) {
   const session = await getSession();
   if (!session) throw new Error("UNAUTHORIZED");

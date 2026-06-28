@@ -11,20 +11,23 @@ import { useRouter } from "next/navigation";
 import GanttChart from "./GanttChart";
 import {
   setCurrentStrategicStage, addStrategicStage, updateStrategicStage,
-  deleteStrategicStage, reorderStrategicStages, toggleActiveStrategicStage
+  deleteStrategicStage, reorderStrategicStages, toggleActiveStrategicStage,
+  toggleCurrentStrategicStage
 } from "@/app/actions/strategy";
 import {
   setCurrentGovernanceStage, addGovernanceStage, updateGovernanceStage,
-  deleteGovernanceStage, reorderGovernanceStages, toggleActiveGovernanceStage
+  deleteGovernanceStage, reorderGovernanceStages, toggleActiveGovernanceStage,
+  toggleCurrentGovernanceStage
 } from "@/app/actions/governance";
 import {
   setCurrentFinanceStage, addFinanceStage, updateFinanceStage,
-  deleteFinanceStage, reorderFinanceStages, toggleActiveFinanceStage
+  deleteFinanceStage, reorderFinanceStages, toggleActiveFinanceStage,
+  toggleCurrentFinanceStage
 } from "@/app/actions/finance";
 import {
   setCurrentServiceStage, addServiceStage, updateServiceStage,
   deleteServiceStage, reorderServiceStages, unifyCharityStagesAction,
-  updateService, toggleActiveServiceStage
+  updateService, toggleActiveServiceStage, toggleCurrentServiceStage
 } from "@/app/actions/services";
 import { updateCharityLogo } from "@/app/actions/charity";
 import { updateTimelineDisplayName } from "@/app/actions/settings";
@@ -84,6 +87,12 @@ async function actionSetCurrent(dept: DeptKey, serviceId: string, charityId: str
   if (dept === "GOVERNANCE") return setCurrentGovernanceStage(charityId, stageId);
   if (dept === "FINANCE") return setCurrentFinanceStage(charityId, stageId);
   return setCurrentServiceStage(serviceId, stageId);
+}
+async function actionToggleCurrent(dept: DeptKey, stageId: string, isCurrent: boolean) {
+  if (dept === "STRATEGY") return toggleCurrentStrategicStage(stageId, isCurrent);
+  if (dept === "GOVERNANCE") return toggleCurrentGovernanceStage(stageId, isCurrent);
+  if (dept === "FINANCE") return toggleCurrentFinanceStage(stageId, isCurrent);
+  return toggleCurrentServiceStage(stageId, isCurrent);
 }
 async function actionAdd(dept: DeptKey, serviceId: string, charityId: string, name: string, desc: string | null, start: Date | null, end: Date | null, isContinuous = false) {
   if (dept === "STRATEGY") return addStrategicStage(charityId, name, undefined, desc || undefined, start?.toISOString().split("T")[0], end?.toISOString().split("T")[0], isContinuous);
@@ -201,10 +210,33 @@ function InlineTimeline({
     setEditWorkDaysOnly(false);
   };
 
-  const handleSetCurrent = (stageId: string) => {
+  const handleToggleCurrent = (stageId: string) => {
     startTransition(async () => {
-      setStages(prev => prev.map(s => ({ ...s, isCurrent: s.id === stageId })));
-      await actionSetCurrent(dept, serviceId, charityId, stageId);
+      const sorted = [...stages].sort((a, b) => a.order - b.order).filter(s => !s.isContinuous);
+      const clickedIdx = sorted.findIndex(s => s.id === stageId);
+      const wasActive = sorted[clickedIdx]?.isCurrent;
+      // Toggle clicked stage; mark all before it as current (منجزة), all after as not current
+      setStages(prev => prev.map(s => {
+        if (s.isContinuous) return s;
+        const idx = sorted.findIndex(r => r.id === s.id);
+        if (idx < clickedIdx) return { ...s, isCurrent: true };
+        if (idx === clickedIdx) return { ...s, isCurrent: !wasActive };
+        return { ...s, isCurrent: false };
+      }));
+      // Persist: toggle the clicked stage; stages before it stay/become current
+      const newVal = !wasActive;
+      await actionToggleCurrent(dept, stageId, newVal);
+      if (newVal) {
+        // Mark all before as current too
+        for (const s of sorted.slice(0, clickedIdx)) {
+          if (!s.isCurrent) await actionToggleCurrent(dept, s.id, true);
+        }
+      } else {
+        // Mark all after as not current
+        for (const s of sorted.slice(clickedIdx + 1)) {
+          if (s.isCurrent) await actionToggleCurrent(dept, s.id, false);
+        }
+      }
     });
   };
 
@@ -309,8 +341,8 @@ function InlineTimeline({
   if (!isEditing) {
     const continuousStages = sorted.filter(s => s.isContinuous);
     const regularStages = sorted.filter(s => !s.isContinuous);
-    // currentIdx relative to regular stages only
-    const regularCurrentIdx = regularStages.findIndex(s => s.isCurrent);
+    // آخر مرحلة حالية في الترتيب — كل ما قبلها يُعدّ منجزاً
+    const lastCurrentIdx = regularStages.reduce((last, s, i) => s.isCurrent ? i : last, -1);
 
     return (
       <div className="mt-2">
@@ -363,21 +395,21 @@ function InlineTimeline({
 
             {/* المراحل العادية — الخط المرقم */}
             {regularStages.map((stage, idx) => {
-              const isCompleted = regularCurrentIdx !== -1 && idx < regularCurrentIdx;
+              const isCompleted = lastCurrentIdx !== -1 && idx < lastCurrentIdx;
               const isCurrent = stage.isCurrent;
               return (
                 <div key={stage.id} className={`flex items-start gap-2.5 p-2 rounded-lg text-xs group ${isCurrent ? "bg-primary/8 dark:bg-primary/15" : "hover:bg-slate-50 dark:hover:bg-slate-700/30"}`}>
                   <div className={`w-5 h-5 rounded-full flex items-center justify-center shrink-0 text-[10px] font-bold mt-0.5 border ${
-                    isCurrent ? "border-primary bg-white dark:bg-slate-800 text-primary" :
+                    isCurrent ? "border-primary bg-primary text-white" :
                     isCompleted ? "border-emerald-500 bg-emerald-500 text-white" :
                     "border-slate-300 dark:border-slate-600 text-slate-400"
                   }`}>
-                    {isCompleted ? <Check className="w-3 h-3" /> : idx + 1}
+                    {(isCurrent || isCompleted) ? <Check className="w-3 h-3" /> : idx + 1}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <div className={`font-semibold leading-tight ${isCurrent ? "text-primary" : "text-slate-700 dark:text-slate-300"}`}>
+                    <div className={`font-semibold leading-tight ${isCurrent ? "text-primary" : isCompleted ? "text-slate-500 dark:text-slate-400" : "text-slate-700 dark:text-slate-300"}`}>
                       {stage.name}
-                      {isCurrent && <span className="mr-1.5 text-[10px] bg-primary text-white px-1.5 py-0.5 rounded-full font-bold">الحالية</span>}
+                      {isCurrent && <span className="mr-1.5 text-[10px] bg-primary text-white px-1.5 py-0.5 rounded-full font-bold">حالية</span>}
                     </div>
                     {stage.description && <p className="text-slate-500 dark:text-slate-400 mt-0.5 text-[11px]">{stage.description}</p>}
                     {(stage.startDate || stage.endDate) && (
@@ -511,12 +543,10 @@ function InlineTimeline({
               </div>
               {/* Actions */}
               <div className="flex items-center gap-1 shrink-0">
-                {!stage.isCurrent && (
-                  <button onClick={() => handleSetCurrent(stage.id)} disabled={isPending}
-                    className="text-[10px] px-1.5 py-0.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 rounded text-slate-500 hover:text-primary hover:border-primary/30 transition-colors">
-                    تعيين حالية
-                  </button>
-                )}
+                <button onClick={() => handleToggleCurrent(stage.id)} disabled={isPending}
+                  className={`text-[10px] px-1.5 py-0.5 border rounded transition-colors ${stage.isCurrent ? "bg-primary/10 border-primary/30 text-primary hover:bg-red-50 hover:border-red-300 hover:text-red-500" : "bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-600 text-slate-500 hover:text-primary hover:border-primary/30"}`}>
+                  {stage.isCurrent ? "إلغاء الحالية" : "تعيين حالية"}
+                </button>
                 <button onClick={() => openEdit(stage)} disabled={isPending}
                   className="p-1 text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded">
                   <Edit2 className="w-3 h-3" />
@@ -607,10 +637,12 @@ function CharityCard({
 }) {
   const [open, setOpen] = useState(true);
   const sorted = [...stages].sort((a, b) => a.order - b.order);
-  const currentIdx = sorted.findIndex(s => s.isCurrent);
-  const currentStage = sorted[currentIdx];
-  const completedCount = currentIdx > 0 ? currentIdx : 0;
-  const pct = sorted.length > 0 ? Math.round(((completedCount + (currentStage ? 0.5 : 0)) / sorted.length) * 100) : 0;
+  const regularSorted = sorted.filter(s => !s.isContinuous);
+  // آخر مرحلة حالية
+  const lastCurrentIdx = regularSorted.reduce((last, s, i) => s.isCurrent ? i : last, -1);
+  const currentStage = lastCurrentIdx >= 0 ? regularSorted[lastCurrentIdx] : null;
+  const completedCount = lastCurrentIdx >= 0 ? lastCurrentIdx : 0;
+  const pct = regularSorted.length > 0 ? Math.round(((completedCount + (currentStage ? 0.5 : 0)) / regularSorted.length) * 100) : 0;
   const deptColor = DEPT_COLORS[dept] || "bg-slate-400";
   const deptLight = DEPT_LIGHT[dept] || "bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700";
 

@@ -225,6 +225,11 @@ function InlineTimeline({
 
   // VIEW MODE
   if (!isEditing) {
+    const continuousStages = sorted.filter(s => s.isContinuous);
+    const regularStages = sorted.filter(s => !s.isContinuous);
+    // currentIdx relative to regular stages only
+    const regularCurrentIdx = regularStages.findIndex(s => s.isCurrent);
+
     return (
       <div className="mt-2">
         {total === 0 && <p className="text-xs text-slate-400 italic py-2">لا توجد مراحل مسجلة</p>}
@@ -235,8 +240,36 @@ function InlineTimeline({
             className="space-y-1 select-none overflow-y-auto max-h-[220px] custom-scrollbar pr-0.5"
             style={{ scrollbarWidth: "thin" }}
           >
-            {sorted.map((stage, globalIdx) => {
-              const isCompleted = currentIdx !== -1 && globalIdx < currentIdx;
+            {/* المراحل الدائمة — خارج الترتيب المرقم، تظهر أولاً */}
+            {continuousStages.length > 0 && (
+              <div className="mb-2 pb-2 border-b border-dashed border-amber-200 dark:border-amber-800/40 space-y-1">
+                {continuousStages.map(stage => (
+                  <div key={stage.id} className="flex items-start gap-2.5 p-2 rounded-lg text-xs bg-amber-50/60 dark:bg-amber-900/10 border border-amber-100 dark:border-amber-800/30">
+                    <div className="w-5 h-5 rounded-md flex items-center justify-center shrink-0 mt-0.5 bg-amber-400 dark:bg-amber-600 text-white">
+                      <span className="text-[9px] font-bold">∞</span>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="font-semibold leading-tight text-amber-800 dark:text-amber-300 flex items-center gap-1.5 flex-wrap">
+                        {stage.name}
+                        {stage.isCurrent && <span className="text-[10px] bg-primary text-white px-1.5 py-0.5 rounded-full font-bold">الحالية</span>}
+                        <span className="text-[9px] text-amber-600 dark:text-amber-400 font-medium opacity-70">دائمة</span>
+                      </div>
+                      {stage.description && <p className="text-amber-700/70 dark:text-amber-400/60 mt-0.5 text-[11px]">{stage.description}</p>}
+                      {(stage.startDate || stage.endDate) && (
+                        <div className="flex items-center gap-1 mt-0.5 text-amber-600/60 dark:text-amber-500/50">
+                          <Calendar className="w-3 h-3 shrink-0" />
+                          <span dir="ltr">{fmtDate(stage.startDate)}{stage.startDate && stage.endDate ? " — " : ""}{fmtDate(stage.endDate)}</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* المراحل العادية — الخط المرقم */}
+            {regularStages.map((stage, idx) => {
+              const isCompleted = regularCurrentIdx !== -1 && idx < regularCurrentIdx;
               const isCurrent = stage.isCurrent;
               return (
                 <div key={stage.id} className={`flex items-start gap-2.5 p-2 rounded-lg text-xs group ${isCurrent ? "bg-primary/8 dark:bg-primary/15" : "hover:bg-slate-50 dark:hover:bg-slate-700/30"}`}>
@@ -245,13 +278,12 @@ function InlineTimeline({
                     isCompleted ? "border-emerald-500 bg-emerald-500 text-white" :
                     "border-slate-300 dark:border-slate-600 text-slate-400"
                   }`}>
-                    {isCompleted ? <Check className="w-3 h-3" /> : globalIdx + 1}
+                    {isCompleted ? <Check className="w-3 h-3" /> : idx + 1}
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className={`font-semibold leading-tight ${isCurrent ? "text-primary" : "text-slate-700 dark:text-slate-300"}`}>
                       {stage.name}
                       {isCurrent && <span className="mr-1.5 text-[10px] bg-primary text-white px-1.5 py-0.5 rounded-full font-bold">الحالية</span>}
-                      {stage.isContinuous && <span className="mr-1 text-[10px] bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300 px-1.5 py-0.5 rounded-full font-bold">دائمة</span>}
                     </div>
                     {stage.description && <p className="text-slate-500 dark:text-slate-400 mt-0.5 text-[11px]">{stage.description}</p>}
                     {(stage.startDate || stage.endDate) && (

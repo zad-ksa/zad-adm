@@ -47,7 +47,7 @@ const ROLE_LABELS: Record<string, string> = {
 };
 
 function formatDate(d: string | Date) {
-  return new Date(d).toLocaleDateString("ar-SA", { year: "numeric", month: "long", day: "numeric" });
+  return new Date(d).toLocaleDateString("ar-SA", { year: "numeric", month: "2-digit", day: "2-digit" });
 }
 
 function formatDateHijri(d: string | Date) {
@@ -97,11 +97,11 @@ function mdToHtml(md: string): string {
       inUl = false;
     }
 
-    // Headings
+    // Headings (strip ## / ### prefix)
     if (/^## (.+)$/.test(line)) {
-      out.push(`<h2 class="sec-title">${applyInline(line.slice(3))}</h2>`);
+      out.push(`<h2 class="sec-title">${applyInline(line.replace(/^## /, ""))}</h2>`);
     } else if (/^### (.+)$/.test(line)) {
-      out.push(`<h3 class="sub-title">${applyInline(line.slice(4))}</h3>`);
+      out.push(`<h3 class="sub-title">${applyInline(line.replace(/^### /, ""))}</h3>`);
     } else if (/^---+$/.test(line)) {
       out.push("<hr>");
     } else if (line === "") {
@@ -191,6 +191,14 @@ function handlePrint(m: Meeting) {
     text-align: right;
   }
 
+  .meeting-title {
+    text-align: center;
+    font-size: 16pt;
+    font-weight: 700;
+    color: #1a7a8a;
+    margin-bottom: 10px;
+  }
+
   /* المحتوى */
   h2.sec-title {
     color: #1a7a8a;
@@ -241,6 +249,8 @@ function handlePrint(m: Meeting) {
 <body>
 
   <div class="date-overlay">${dateStr}</div>
+
+  <div class="meeting-title">محضر اجتماع</div>
 
   ${body}
 

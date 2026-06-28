@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useTransition, useRef, useEffect } from "react";
+import { useState, useMemo, useTransition, useRef } from "react";
 import {
   Check, Calendar, Printer, ChevronDown, ChevronRight,
   Briefcase, LayoutGrid, ChevronLeft, Edit2, X, Plus,
@@ -162,10 +162,6 @@ function InlineTimeline({
   onUnifyClick?: () => void;
 }) {
   const [stages, setStages] = useState<Stage[]>(initialStages);
-
-  useEffect(() => {
-    setStages(initialStages);
-  }, [initialStages]);
 
   const [isEditing, setIsEditing] = useState(false);
   const [isPending, startTransition] = useTransition();

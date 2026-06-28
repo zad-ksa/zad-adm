@@ -128,11 +128,8 @@ export default function TasksClient({
   // Delete modal state
   const [itemToDelete, setItemToDelete] = useState<{ id: string, type: 'task' | 'achievement' } | null>(null);
 
-  // Task updates state — collapse when employee filter changes
-  const [expandedTaskId, setExpandedTaskId] = useState<string | null>(null);
+  // Task updates state
   const [newUpdateText, setNewUpdateText] = useState<Record<string, string>>({});
-
-  useEffect(() => { setExpandedTaskId(null); }, [selectedEmployeeId]);
   const [isSubmittingUpdate, setIsSubmittingUpdate] = useState(false);
 
   const showNotification = (type: "success" | "error", message: string) => {
@@ -716,7 +713,6 @@ ${combinedAchievements.length > 0 ? `
               const canEdit = isDirectorOrAdmin || (task.createdById === session.id && task.assignedToId === session.id);
               const canAddUpdate = isDirectorOrAdmin || task.assignedToId === session.id;
               const isInProgress = task.status === "IN_PROGRESS";
-              const isExpanded = expandedTaskId === task.id;
               const updates = task.updates || [];
 
               return (
@@ -835,14 +831,10 @@ ${combinedAchievements.length > 0 ? `
 
                         {/* Updates count badge */}
                         {updates.length > 0 && (
-                          <button
-                            type="button"
-                            onClick={() => setExpandedTaskId(isExpanded ? null : task.id)}
-                            className="inline-flex items-center gap-1 text-[9px] font-bold text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-700/50 hover:bg-slate-200 dark:hover:bg-slate-700 px-1.5 py-0.5 rounded transition-colors cursor-pointer"
-                          >
+                          <span className="inline-flex items-center gap-1 text-[9px] font-bold text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-700/50 px-1.5 py-0.5 rounded">
                             <MessageSquarePlus className="w-2.5 h-2.5" />
                             {updates.length} تحديث
-                          </button>
+                          </span>
                         )}
 
                         {/* Date */}
@@ -864,11 +856,6 @@ ${combinedAchievements.length > 0 ? `
                           {task.status === "IN_PROGRESS" ? "جاري" : "ابدأ"}
                         </button>
                       )}
-                      {canAddUpdate && (
-                        <button type="button" onClick={() => setExpandedTaskId(isExpanded ? null : task.id)} title="تحديث التقدم" className="p-1.5 text-slate-400 hover:text-primary dark:text-slate-500 dark:hover:text-primary rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors cursor-pointer">
-                          <MessageSquarePlus className="w-4 h-4" />
-                        </button>
-                      )}
                       {canEdit && (
                         <button type="button" onClick={() => { setEditingTaskId(task.id); setEditingTaskTitle(task.title); }} title="تعديل" className="p-1.5 text-slate-400 hover:text-primary dark:text-slate-500 dark:hover:text-primary rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors cursor-pointer">
                           <Pencil className="w-4 h-4" />
@@ -887,8 +874,8 @@ ${combinedAchievements.length > 0 ? `
                     </div>
                   </div>
 
-                  {/* Expandable updates section */}
-                  {isExpanded && (
+                  {/* Updates section — always visible */}
+                  {(updates.length > 0 || canAddUpdate) && (
                     <div className="px-4 pb-3 bg-slate-50/80 dark:bg-slate-900/30 border-t border-dashed border-slate-200 dark:border-slate-700/40">
                       {/* Existing updates */}
                       {updates.length > 0 && (

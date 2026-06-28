@@ -141,7 +141,10 @@ export default function TaskCard({
       <div className="flex items-center justify-between border-t border-slate-100 dark:border-slate-700/40 pt-3 text-[10px] text-slate-400 font-bold">
         <div className="flex items-center gap-1">
           <Calendar className="w-3 h-3" />
-          {new Date(task.createdAt).toLocaleDateString("ar-SA")}
+          {(() => {
+            const days = Math.floor((Date.now() - new Date(task.createdAt).getTime()) / 86400000);
+            return days === 0 ? "اليوم" : `منذ ${days} يوم`;
+          })()}
         </div>
 
         <div className="flex items-center gap-2">

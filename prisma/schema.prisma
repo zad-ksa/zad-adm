@@ -6,6 +6,14 @@ datasource db {
   provider  = "postgresql"
 }
 
+enum CharitySize {
+  MICRO    // متناهية الصغر
+  SMALL    // صغيرة
+  MEDIUM   // متوسطة
+  LARGE    // كبيرة
+  MEGA     // متناهية الكبر
+}
+
 model Charity {
   id                String   @id @default(uuid())
   name              String   @unique
@@ -43,8 +51,25 @@ model Charity {
   isReadinessVisible Boolean @default(false)
   isVisionMissionVisible Boolean @default(false)
   isPerformanceEditable Boolean @default(false)
+  size              CharitySize?
   services          Service[]
   visionMissionResponses VisionMissionResponse[]
+  governanceProgress GovernanceProgress[]
+}
+
+model GovernanceProgress {
+  id              String   @id @default(uuid())
+  charityId       String
+  charity         Charity  @relation(fields: [charityId], references: [id], onDelete: Cascade)
+  indicatorId     String   // The ID of the indicator from the static JSON
+  status          String   @default("NOT_STARTED") // NOT_STARTED, IN_PROGRESS, COMPLETED
+  proofUrl        String?
+  proofPublicId   String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@unique([charityId, indicatorId])
+  @@index([charityId])
 }
 
 model StrategicStage {

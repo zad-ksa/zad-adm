@@ -3,7 +3,6 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Eye, Award, CheckCircle, ChevronLeft, ChevronRight, Target, Users, BookOpen, ShieldAlert, Sparkles, AlertTriangle, Printer } from "lucide-react";
-import Header from "@/components/Header";
 import ProgressBar from "@/components/ProgressBar";
 import LinkClosedScreen from "@/components/LinkClosedScreen";
 
@@ -237,8 +236,7 @@ export default function VisionMissionSurveyPage() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-100 transition-colors pb-12">
-      <Header disableLink={true} title="استبيان الرؤية والرسالة والأثر" />
+    <div className="min-h-screen flex flex-col bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-100 transition-colors pb-12 pt-8">
 
       <main className="flex-1 w-full max-w-4xl mx-auto px-4 py-8 relative">
         {step > 0 && !isPrintMode && <ProgressBar current={step} total={3} />}
@@ -246,15 +244,23 @@ export default function VisionMissionSurveyPage() {
         <div className="bg-white dark:bg-slate-800 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-md p-6 sm:p-10 transition-colors mt-6 print:shadow-none print:border-none print:p-0">
           {/* Step 0: Welcome and Personal Information */}
           {(step === 0 || isPrintMode) && (
-            <div className="space-y-8">
+            <div className="space-y-8 print:[break-after:page] print:pb-16 print:pt-12">
               <div className="text-center space-y-4 max-w-2xl mx-auto">
-                {prefilledCharityLogo && (
-                  <img
-                    src={prefilledCharityLogo}
-                    alt="Logo"
-                    className="h-20 w-auto object-contain mx-auto mb-6 bg-slate-50 dark:bg-slate-900 p-2 rounded-2xl border border-slate-100 dark:border-slate-800"
+                <div className="flex items-center justify-center gap-8 mb-6">
+                  {prefilledCharityLogo && (
+                    <img
+                      src={prefilledCharityLogo}
+                      alt="Charity Logo"
+                      className="h-24 w-auto object-contain bg-slate-50 dark:bg-slate-900 p-2 rounded-2xl border border-slate-100 dark:border-slate-800"
+                    />
+                  )}
+                  <div className="h-16 w-px bg-slate-200 dark:bg-slate-700 hidden sm:block"></div>
+                  <img 
+                    src="/logo-full.svg" 
+                    alt="Zad Logo" 
+                    className="h-14 w-auto object-contain"
                   />
-                )}
+                </div>
                 <h2 className="text-3xl font-extrabold text-slate-800 dark:text-slate-100">
                   مرحباً بكم في استبيان الرؤية والرسالة والأثر
                 </h2>

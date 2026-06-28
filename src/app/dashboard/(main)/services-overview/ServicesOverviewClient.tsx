@@ -678,13 +678,19 @@ export default function ServicesOverviewClient({
 
     if (activeTab.startsWith("SVC:")) {
       sourceTimelineType = "CUSTOM";
-      // activeLabel = اسم الخدمة في التبويب الحالي
-      // نبحث عن خدمة هذه الجمعية تحديداً بنفس الاسم
-      const svcName = activeLabel;
-      const thisCharityService = allServices.find(
-        s => s.charityId === charity.id && s.name === svcName
-      );
-      sourceServiceId = thisCharityService?.id;
+      const repId = activeTab.replace("SVC:", "");
+      const repService = allServices.find(s => s.id === repId);
+      const svcName = repService?.name ?? activeLabel;
+      // إذا كانت الجمعية هي نفس صاحبة الـ representative service استخدم ID مباشرة
+      if (repService && repService.charityId === charity.id) {
+        sourceServiceId = repService.id;
+      } else {
+        // ابحث عن خدمة هذه الجمعية بنفس الاسم
+        const thisCharityService = allServices.find(
+          s => s.charityId === charity.id && s.name?.trim() === svcName?.trim()
+        );
+        sourceServiceId = thisCharityService?.id;
+      }
     }
 
     setUnifyCharity({

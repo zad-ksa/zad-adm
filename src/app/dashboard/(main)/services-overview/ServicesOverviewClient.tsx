@@ -688,6 +688,7 @@ function CharityCard({
       {open && (
         <div className="px-3 pb-3 border-t border-slate-200/50 dark:border-slate-700/50">
           <InlineTimeline
+            key={`${charity.id}-${dept}-${serviceId}`}
             stages={stages}
             charityId={charity.id}
             serviceId={serviceId}

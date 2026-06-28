@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { ROLE_LABELS } from "@/lib/permissions";
-import { getRoleNavSettings, updateRoleNavSettings, NavTabSetting } from "@/app/actions/roleSettings";
-import { Loader2, Check, AlertCircle, GripVertical, Settings2 } from "lucide-react";
+import { getEmployeeNavSettings, updateEmployeeNavSettings, getAllEmployees, NavTabSetting } from "@/app/actions/employeeSettings";
+import { Loader2, Check, AlertCircle, GripVertical, Settings2, User } from "lucide-react";
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent } from '@dnd-kit/core';
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy, useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
@@ -62,9 +62,10 @@ function SortableTabRow({ item, onChange }: { item: NavTabSetting, onChange: (up
 }
 
 export default function SettingsClient() {
-  const [selectedRole, setSelectedRole] = useState<string>("CHARITY_CLIENT");
+  const [employees, setEmployees] = useState<{id: string, name: string, role: string}[]>([]);
+  const [selectedEmployee, setSelectedEmployee] = useState<string>("");
   const [settings, setSettings] = useState<NavTabSetting[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
@@ -75,15 +76,30 @@ export default function SettingsClient() {
   );
 
   useEffect(() => {
-    loadSettings(selectedRole);
-  }, [selectedRole]);
+    async function init() {
+      const emps = await getAllEmployees();
+      setEmployees(emps);
+      if (emps.length > 0) {
+        setSelectedEmployee(emps[0].id);
+      } else {
+        setIsLoading(false);
+      }
+    }
+    init();
+  }, []);
 
-  async function loadSettings(role: string) {
+  useEffect(() => {
+    if (selectedEmployee) {
+      loadSettings(selectedEmployee);
+    }
+  }, [selectedEmployee]);
+
+  async function loadSettings(empId: string) {
     setIsLoading(true);
     setError(null);
     setSuccess(null);
     try {
-      const data = await getRoleNavSettings(role);
+      const data = await getEmployeeNavSettings(empId);
       setSettings(data);
     } catch (err) {
       setError("حدث خطأ أثناء جلب الإعدادات");
@@ -112,7 +128,7 @@ export default function SettingsClient() {
     setError(null);
     setSuccess(null);
     try {
-      const res = await updateRoleNavSettings(selectedRole, settings);
+      const res = await updateEmployeeNavSettings(selectedEmployee, settings);
       if (res.success) {
         setSuccess("تم حفظ الإعدادات بنجاح");
       } else {
@@ -129,21 +145,28 @@ export default function SettingsClient() {
     <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm p-6">
       <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-8 pb-6 border-b border-slate-100 dark:border-slate-800">
         <div className="w-full sm:w-72">
-          <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">اختر نوع الحساب (المنظور):</label>
-          <select
-            value={selectedRole}
-            onChange={(e) => setSelectedRole(e.target.value)}
-            className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2.5 outline-none focus:ring-2 focus:ring-primary/20 text-slate-800 dark:text-slate-100"
-          >
-            {Object.entries(ROLE_LABELS).map(([key, label]) => (
-              <option key={key} value={key}>{label}</option>
-            ))}
-          </select>
+          <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">اختر حساب الموظف:</label>
+          <div className="relative">
+            <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-slate-400">
+              <User className="w-5 h-5" />
+            </div>
+            <select
+              value={selectedEmployee}
+              onChange={(e) => setSelectedEmployee(e.target.value)}
+              className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl pl-4 pr-10 py-2.5 outline-none focus:ring-2 focus:ring-primary/20 text-slate-800 dark:text-slate-100 appearance-none"
+            >
+              {employees.map((emp) => (
+                <option key={emp.id} value={emp.id}>
+                  {emp.name} ({ROLE_LABELS[emp.role as keyof typeof ROLE_LABELS] || emp.role})
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
         
         <button
           onClick={handleSave}
-          disabled={isLoading || isSaving}
+          disabled={isLoading || isSaving || !selectedEmployee}
           className="bg-primary text-white font-bold px-6 py-2.5 rounded-xl hover:bg-primary/90 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
         >
           {isSaving ? <Loader2 className="w-5 h-5 animate-spin" /> : <Check className="w-5 h-5" />}
@@ -168,6 +191,11 @@ export default function SettingsClient() {
       {isLoading ? (
         <div className="flex items-center justify-center py-20 text-slate-400">
           <Loader2 className="w-8 h-8 animate-spin" />
+        </div>
+      ) : settings.length === 0 ? (
+        <div className="flex flex-col items-center justify-center py-20 text-slate-400 gap-2">
+          <AlertCircle className="w-8 h-8" />
+          <span>لا يوجد موظفين لعرض الإعدادات</span>
         </div>
       ) : (
         <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>

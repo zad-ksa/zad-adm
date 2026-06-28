@@ -24,18 +24,39 @@ const DEFAULT_NAV_TABS: NavTabSetting[] = [
   { id: "tasks", title: "مهامي", status: "HIDDEN", section: "sub" },
 ];
 
-export async function getRoleNavSettings(role: string): Promise<NavTabSetting[]> {
+export async function getAllEmployees() {
+  const session = await getSession();
+  if (!session) return [];
+
   try {
-    const record = await prisma.roleNavSetting.findUnique({
-      where: { role },
+    const employees = await prisma.employee.findMany({
+      select: {
+        id: true,
+        name: true,
+        role: true,
+      },
+      orderBy: {
+        name: 'asc'
+      }
+    });
+    return employees;
+  } catch (error) {
+    console.error("Error fetching employees:", error);
+    return [];
+  }
+}
+
+export async function getEmployeeNavSettings(employeeId: string): Promise<NavTabSetting[]> {
+  if (!employeeId) return [...DEFAULT_NAV_TABS];
+  try {
+    const record = await prisma.employeeNavSetting.findUnique({
+      where: { employeeId },
     });
     
     if (record && record.settings) {
-      // Merge with defaults in case new tabs were added in code
       const savedSettings = record.settings as unknown as NavTabSetting[];
       const merged = savedSettings.filter(s => DEFAULT_NAV_TABS.some(d => d.id === s.id));
       
-      // Add any missing new defaults
       for (const def of DEFAULT_NAV_TABS) {
         if (!merged.find(m => m.id === def.id)) {
           merged.push(def);
@@ -46,12 +67,12 @@ export async function getRoleNavSettings(role: string): Promise<NavTabSetting[]>
 
     return [...DEFAULT_NAV_TABS];
   } catch (error) {
-    console.error("Error fetching role nav settings:", error);
+    console.error("Error fetching employee nav settings:", error);
     return [...DEFAULT_NAV_TABS];
   }
 }
 
-export async function updateRoleNavSettings(role: string, settings: NavTabSetting[]) {
+export async function updateEmployeeNavSettings(employeeId: string, settings: NavTabSetting[]) {
   const session = await getSession();
   if (!session) return { success: false, error: "Not authenticated" };
 
@@ -63,23 +84,22 @@ export async function updateRoleNavSettings(role: string, settings: NavTabSettin
   }
 
   try {
-    await prisma.roleNavSetting.upsert({
-      where: { role },
+    await prisma.employeeNavSetting.upsert({
+      where: { employeeId },
       update: {
         settings: settings as any,
       },
       create: {
-        role,
+        employeeId,
         settings: settings as any,
       },
     });
 
-    // Revalidate paths so sidebars update immediately
     revalidatePath("/", "layout");
 
     return { success: true };
   } catch (error) {
-    console.error("Error updating role nav settings:", error);
+    console.error("Error updating employee nav settings:", error);
     return { success: false, error: "Failed to update settings" };
   }
 }

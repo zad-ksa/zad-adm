@@ -36,13 +36,24 @@ export async function getSession() {
     session.isDeveloper = isDeveloper;
     
     if (isDeveloper) {
-      const overrideRole = cookieStore.get("dev_role_override")?.value;
-      if (overrideRole && overrideRole !== "DEVELOPER_RESET") {
-        session.originalRole = session.role;
-        session.role = overrideRole;
-        // Strip permissions to perfectly emulate the selected role, 
-        // unless they emulate an admin which would normally have permissions
-        session.permissions = []; 
+      const overrideEmployeeId = cookieStore.get("dev_employee_override")?.value;
+      if (overrideEmployeeId && overrideEmployeeId !== "DEVELOPER_RESET") {
+        const { prisma } = await import("@/lib/db");
+        const emp = await prisma.employee.findUnique({
+          where: { id: overrideEmployeeId },
+          select: { id: true, name: true, role: true, permissions: true, charityId: true, avatarUrl: true }
+        });
+        
+        if (emp) {
+          session.originalId = session.id;
+          session.originalRole = session.role;
+          session.id = emp.id;
+          session.name = emp.name;
+          session.role = emp.role;
+          session.permissions = emp.permissions;
+          session.charityId = emp.charityId;
+          session.avatarUrl = emp.avatarUrl;
+        }
       }
     }
     

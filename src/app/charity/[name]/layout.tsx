@@ -32,9 +32,9 @@ export default async function CharityLayout({
     }
   }
 
-  // Fetch nav settings for this role
-  const { getRoleNavSettings } = await import("@/app/actions/roleSettings");
-  const navSettings = await getRoleNavSettings(session.role);
+  // Fetch nav settings for this employee
+  const { getEmployeeNavSettings } = await import("@/app/actions/employeeSettings");
+  const navSettings = await getEmployeeNavSettings(session.id);
 
   return (
     <CharityLayoutClient
@@ -44,6 +44,7 @@ export default async function CharityLayout({
       permissions={session.permissions || []}
       navSettings={navSettings}
       isDeveloper={session.isDeveloper}
+      currentEmployeeId={session.originalId ? session.id : undefined}
     >
       {children}
     </CharityLayoutClient>

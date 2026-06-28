@@ -82,10 +82,10 @@ export async function logout() {
   redirect("/");
 }
 
-export async function setDeveloperOverrideRole(role: string | null) {
+export async function setDeveloperOverrideEmployee(employeeId: string | null) {
   const cookieStore = await cookies();
-  if (role) {
-    cookieStore.set("dev_role_override", role, {
+  if (employeeId) {
+    cookieStore.set("dev_employee_override", employeeId, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",
@@ -93,7 +93,7 @@ export async function setDeveloperOverrideRole(role: string | null) {
       maxAge: 60 * 60 * 24,
     });
   } else {
-    cookieStore.set("dev_role_override", "DEVELOPER_RESET", {
+    cookieStore.set("dev_employee_override", "DEVELOPER_RESET", {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",

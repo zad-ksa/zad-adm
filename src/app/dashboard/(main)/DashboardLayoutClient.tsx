@@ -1,9 +1,11 @@
-﻿"use client";
+"use client";
 
 import { usePathname } from "next/navigation";
 import EmployeeSidebar from "@/components/EmployeeSidebar";
 import { useState, useEffect } from "react";
 import { Menu } from "lucide-react";
+
+import DeveloperRoleSwitcher from "@/components/DeveloperRoleSwitcher";
 
 export default function DashboardLayoutClient({ children, session }: { children: React.ReactNode, session: any }) {
   const pathname = usePathname();
@@ -42,6 +44,8 @@ export default function DashboardLayoutClient({ children, session }: { children:
           </div>
         </main>
       </div>
+
+      {session?.isDeveloper && <DeveloperRoleSwitcher currentEmployeeId={session.originalId ? session.id : undefined} hideCharityClients={true} />}
     </div>
   );
 }

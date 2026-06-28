@@ -57,11 +57,12 @@ model Charity {
   governanceProgress     GovernanceProgress[]
 }
 
-model RoleNavSetting {
-  id        String   @id @default(uuid())
-  role      String   @unique // e.g., 'CHARITY_CLIENT', 'FINANCE', 'STRATEGY', etc.
-  settings  Json     // The navigation settings array for this role
-  updatedAt DateTime @updatedAt
+model EmployeeNavSetting {
+  id         String   @id @default(uuid())
+  employeeId String   @unique
+  settings   Json
+  updatedAt  DateTime @updatedAt
+  employee   Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
 }
 
 model GovernanceProgress {
@@ -265,6 +266,7 @@ model Employee {
   createdAchievements  Achievement[]     @relation("CreatedAchievements")
   assignedCharities    EmployeeCharity[] @relation("AssignedCharities")
   createdMeetings      Meeting[]         @relation("MeetingCreator")
+  navSetting           EmployeeNavSetting?
 }
 
 model EmployeeCharity {

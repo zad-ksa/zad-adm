@@ -15,6 +15,7 @@ export default function CharityLayoutClient({
   permissions,
   navSettings,
   isDeveloper,
+  currentEmployeeId,
 }: {
   children: React.ReactNode;
   charityName: string;
@@ -23,6 +24,7 @@ export default function CharityLayoutClient({
   permissions?: string[];
   navSettings?: any[];
   isDeveloper?: boolean;
+  currentEmployeeId?: string;
 }) {
   const pathname = usePathname();
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
@@ -91,7 +93,7 @@ export default function CharityLayoutClient({
         </main>
       </div>
       
-      {isDeveloper && <DeveloperRoleSwitcher currentRole={role || "ADMIN"} />}
+      {isDeveloper && <DeveloperRoleSwitcher currentEmployeeId={currentEmployeeId} />}
     </div>
   );
 }

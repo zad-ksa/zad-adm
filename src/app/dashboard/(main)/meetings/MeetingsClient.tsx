@@ -132,6 +132,10 @@ function handlePrint(m: Meeting) {
   const dateStr = formatDate(m.date);
   const letterheadUrl = `${window.location.origin}/assets/letterhead.png`;
 
+  // A4 dimensions in px at 96dpi: 794 × 1123
+  // Content area: top 195px (≈52mm), bottom 158px (≈42mm), sides 64px (≈17mm)
+  // Usable height per page: 1123 - 195 - 158 = 770px
+
   win.document.write(`<!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
@@ -141,104 +145,98 @@ function handlePrint(m: Meeting) {
   @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap');
   * { box-sizing: border-box; margin: 0; padding: 0; }
 
-  /*
-   * نموذج الطباعة:
-   * - الكليشة تظهر كـ @page background في كل صفحة
-   * - هامش علوي كبير يترك مساحة لرأس الكليشة (الشعار + الخط الأزرق)
-   * - هامش سفلي يترك مساحة لفوتر الكليشة
-   */
-  @page {
-    size: A4;
-    margin-top: 52mm;
-    margin-bottom: 42mm;
-    margin-right: 17mm;
-    margin-left: 17mm;
-    background-image: url('${letterheadUrl}');
-    background-size: 210mm 297mm;
-    background-position: top left;
-    -webkit-print-color-adjust: exact;
-    print-color-adjust: exact;
-  }
-
-  body {
+  html, body {
+    background: #888;
     font-family: 'Cairo', 'Segoe UI', Tahoma, sans-serif;
     direction: rtl;
-    text-align: right;
-    color: #1a1a1a;
-    font-size: 11pt;
-    line-height: 1.55;
-    background-image: url('${letterheadUrl}');
-    background-size: 210mm 297mm;
-    background-repeat: no-repeat;
-    background-position: top left;
-    background-attachment: fixed;
-    -webkit-print-color-adjust: exact;
-    print-color-adjust: exact;
-    padding-top: 52mm;
-    padding-bottom: 42mm;
-    padding-right: 17mm;
-    padding-left: 17mm;
   }
 
-  /* التاريخ في مكانه على الكليشة — أعلى يسار */
-  .date-overlay {
-    position: fixed;
+  /* كل صفحة = div بحجم A4 ثابت */
+  .page {
+    position: relative;
+    width: 210mm;
+    height: 297mm;
+    margin: 8mm auto;
+    overflow: hidden;
+    background: white;
+  }
+
+  /* الكليشة تملأ الصفحة كاملة */
+  .page .letterhead {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    object-fit: fill;
+    z-index: 0;
+  }
+
+  /* التاريخ على الكليشة */
+  .page .date-area {
+    position: absolute;
     top: 29mm;
-    left: 17mm;
+    left: 18mm;
     font-size: 9pt;
-    color: #333;
+    color: #222;
+    z-index: 2;
+    direction: rtl;
+  }
+
+  /* منطقة المحتوى — فوق الكليشة */
+  .page .content-area {
+    position: absolute;
+    top: 50mm;
+    right: 17mm;
+    left: 17mm;
+    bottom: 40mm;
+    z-index: 2;
+    overflow: hidden;
     direction: rtl;
     text-align: right;
+    font-size: 10.5pt;
+    line-height: 1.55;
+    color: #1a1a1a;
   }
 
+  /* تنسيق المحتوى */
   .meeting-title {
     text-align: center;
-    font-size: 16pt;
+    font-size: 15pt;
     font-weight: 700;
     color: #1a7a8a;
-    margin-bottom: 10px;
+    margin-bottom: 8px;
   }
-
-  /* المحتوى */
   h2.sec-title {
     color: #1a7a8a;
-    font-size: 13pt;
+    font-size: 12pt;
     font-weight: 700;
     text-align: center;
-    margin: 10px 0 5px;
-    padding-bottom: 3px;
+    margin: 8px 0 4px;
+    padding-bottom: 2px;
     border-bottom: 1.5px solid #c8e8ed;
   }
   h3.sub-title {
     color: #1a7a8a;
-    font-size: 11pt;
+    font-size: 10.5pt;
     font-weight: 700;
     text-align: center;
-    margin: 8px 0 4px;
+    margin: 6px 0 3px;
   }
-  p { margin: 3px 0; }
+  p { margin: 2px 0; }
   br { display: block; margin: 1px 0; }
-  ul {
-    list-style-position: inside;
-    padding: 0;
-    margin: 3px 0 6px;
-    text-align: right;
-  }
-  li { margin-bottom: 2px; line-height: 1.5; text-align: right; }
-  hr { border: none; border-top: 1px solid #ddd; margin: 6px 0; }
+  ul { list-style: disc; padding-right: 16px; margin: 2px 0 5px; }
+  li { margin-bottom: 2px; line-height: 1.45; }
+  hr { border: none; border-top: 1px solid #ddd; margin: 5px 0; }
   strong { font-weight: 700; }
-
   table {
     width: 100%;
     border-collapse: collapse;
-    margin: 8px 0;
-    font-size: 10pt;
+    margin: 6px 0;
+    font-size: 9.5pt;
     direction: rtl;
-    page-break-inside: avoid;
   }
   th, td {
     border: 1px solid #a8d8e0;
-    padding: 5px 10px;
+    padding: 4px 8px;
     text-align: right;
     vertical-align: top;
   }
@@ -249,19 +247,103 @@ function handlePrint(m: Meeting) {
     text-align: center;
   }
   tr:nth-child(even) td { background-color: #f4fbfc; }
+
+  @media print {
+    html, body { background: white; }
+    .page {
+      margin: 0;
+      page-break-after: always;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+    .page:last-child { page-break-after: avoid; }
+  }
 </style>
 </head>
 <body>
+<div id="root"></div>
+<script>
+(function() {
+  var letterheadUrl = ${JSON.stringify(letterheadUrl)};
+  var dateStr = ${JSON.stringify(dateStr)};
+  var meetingTitle = ${JSON.stringify("محضر اجتماع")};
 
-  <div class="date-overlay">${dateStr}</div>
+  // Parse the content HTML into nodes
+  var tmp = document.createElement('div');
+  tmp.innerHTML = ${JSON.stringify(`<div class="meeting-title">محضر اجتماع</div>\n${body}`)};
+  var nodes = Array.from(tmp.childNodes);
 
-  <div class="meeting-title">محضر اجتماع</div>
+  // Page dimensions (px at 96dpi)
+  var PAGE_H = 1123; // 297mm
+  var TOP_OFFSET = 189; // 50mm
+  var BOT_OFFSET = 151; // 40mm
+  var USABLE = PAGE_H - TOP_OFFSET - BOT_OFFSET; // ~783px
 
-  ${body}
+  var root = document.getElementById('root');
 
+  function newPage(isFirst) {
+    var page = document.createElement('div');
+    page.className = 'page';
+
+    var img = document.createElement('img');
+    img.className = 'letterhead';
+    img.src = letterheadUrl;
+    page.appendChild(img);
+
+    if (isFirst) {
+      var dateDiv = document.createElement('div');
+      dateDiv.className = 'date-area';
+      dateDiv.textContent = dateStr;
+      page.appendChild(dateDiv);
+    }
+
+    var ca = document.createElement('div');
+    ca.className = 'content-area';
+    page.appendChild(ca);
+
+    root.appendChild(page);
+    return ca;
+  }
+
+  var currentArea = newPage(true);
+  var usedHeight = 0;
+
+  function getHeight(el) {
+    // Temporarily append to measure
+    currentArea.appendChild(el);
+    var h = el.offsetHeight || el.getBoundingClientRect().height || 20;
+    currentArea.removeChild(el);
+    return h;
+  }
+
+  function appendToPage(el) {
+    var h = getHeight(el);
+    if (usedHeight + h > USABLE && usedHeight > 0) {
+      currentArea = newPage(false);
+      usedHeight = 0;
+    }
+    currentArea.appendChild(el);
+    usedHeight += h;
+  }
+
+  nodes.forEach(function(node) {
+    if (node.nodeType === 3) {
+      // text node — skip bare whitespace
+      if (node.textContent.trim()) {
+        var p = document.createElement('p');
+        p.textContent = node.textContent;
+        appendToPage(p);
+      }
+    } else if (node.nodeType === 1) {
+      appendToPage(node);
+    }
+  });
+
+  setTimeout(function() { window.print(); }, 1200);
+})();
+</script>
 </body></html>`);
   win.document.close();
-  setTimeout(() => win.print(), 900);
 }
 
 // ── Task assignment modal ─────────────────────────────────────────────────────

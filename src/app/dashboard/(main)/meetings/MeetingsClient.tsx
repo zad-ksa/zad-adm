@@ -304,8 +304,8 @@ function MeetingSummaryPanel({
   const [, startTransition] = useTransition();
 
   const [summary, setSummary] = useState(meeting.summary || "");
-  // إذا يوجد ملخص محفوظ في DB لا نشغّل الـ AI تلقائياً مجدداً
-  const alreadyExtracted = !!meeting.summary;
+  // meeting.summary === null يعني لم يُحلَّل بعد، أما "" أو أي نص = تم التحليل
+  const alreadyExtracted = meeting.summary !== null || meeting.meetingTasks.length > 0;
   const [extracted, setExtracted] = useState(alreadyExtracted);
 
   const unassigned = localTasks.filter(t => !t.assignedToId).length;
@@ -337,9 +337,8 @@ function MeetingSummaryPanel({
         }));
         setLocalTasks(suggested);
       }
-      if (data.summary) {
-        await updateMeeting(meeting.id, { summary: data.summary });
-      }
+      // احفظ دائماً حتى لو كان فارغاً — "" تعني "تم التحليل ولا يوجد ملخص"
+      await updateMeeting(meeting.id, { summary: data.summary || "" });
       setExtracted(true);
     } catch { setExtracted(true); }
     finally { setLoading(false); }

@@ -202,7 +202,7 @@ export default function GenericStagesManager({
   };
 
   return (
-    <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-700 shadow-sm overflow-hidden mt-4 transition-colors">
+    <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-700 shadow-sm overflow-hidden mt-2 transition-colors">
       <div
         className="p-3 border-b border-slate-100 dark:border-slate-700 flex flex-col sm:flex-row sm:items-center justify-between gap-2 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-900/50 transition-colors"
         onClick={() => setIsExpanded(!isExpanded)}
@@ -213,7 +213,7 @@ export default function GenericStagesManager({
           </div>
           <h3 className="text-sm font-bold text-slate-800 dark:text-slate-100 flex items-center gap-1.5">
             <Sparkles className="w-4 h-4 text-primary" />
-            إدارة: {configName}
+            خدمة: {configName}
           </h3>
           {isExpanded && (
             <button

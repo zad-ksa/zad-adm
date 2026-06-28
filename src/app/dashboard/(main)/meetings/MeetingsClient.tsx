@@ -654,12 +654,39 @@ export default function MeetingsClient({ meetings, charities, employees, session
     startTransition(async () => {
       try {
         const numVal = meetingNumber ? parseInt(meetingNumber) : null;
+        let savedId = editingId;
         if (editingId) {
           await updateMeeting(editingId, { title, formattedContent, isPrivate, meetingNumber: numVal });
         } else {
-          await createMeeting({ title, meetingNumber: numVal, date, location, charityId, rawNotes, formattedContent, attendees, isPrivate });
+          const res = await createMeeting({ title, meetingNumber: numVal, date, location, charityId, rawNotes, formattedContent, attendees, isPrivate });
+          savedId = res.id;
         }
-        setShowModal(false); resetForm(); router.refresh();
+        setShowModal(false);
+        resetForm();
+        // استخلاص الملخص والمهام تلقائياً في الخلفية بعد الحفظ
+        if (savedId) {
+          fetch("/api/meetings/extract-tasks", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ formattedContent }),
+          }).then(r => r.json()).then(async data => {
+            try {
+              await updateMeeting(savedId!, { summary: data.summary || "" });
+              if (data.tasks?.length > 0) {
+                const toSave = (data.tasks as { title: string }[]).map(t => ({
+                  id: undefined,
+                  title: t.title,
+                  assignedToId: null,
+                  dueDays: null,
+                  isDone: false,
+                }));
+                await upsertMeetingTasks(savedId!, toSave);
+              }
+            } catch {}
+          }).catch(() => {}).finally(() => { router.refresh(); });
+        } else {
+          router.refresh();
+        }
       } catch (e: any) { setError(e.message || "حدث خطأ"); }
     });
   }

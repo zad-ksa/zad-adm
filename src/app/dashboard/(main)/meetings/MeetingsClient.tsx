@@ -110,6 +110,8 @@ function mdToHtml(md: string): string {
       out.push(`<h2 class="sec-title">${applyInline(line.replace(/^## /, ""))}</h2>`);
     } else if (/^### (.+)$/.test(line)) {
       out.push(`<h3 class="sub-title">${applyInline(line.replace(/^### /, ""))}</h3>`);
+    } else if (/^#{1,6} (.+)$/.test(line)) {
+      out.push(`<h4 class="sub-title">${applyInline(line.replace(/^#{1,6} /, ""))}</h4>`);
     } else if (/^---+$/.test(line)) {
       out.push("<hr>");
     } else if (line === "") {

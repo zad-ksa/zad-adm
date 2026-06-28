@@ -102,6 +102,7 @@ model Meeting {
   id               String    @id @default(uuid())
   title            String
   date             DateTime
+  meetingNumber    Int?
   location         String?
   charityId        String?
   charity          Charity?  @relation(fields: [charityId], references: [id], onDelete: SetNull)

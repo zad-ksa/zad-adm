@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Eye, Award, CheckCircle, ChevronLeft, ChevronRight, Target, Users, BookOpen, ShieldAlert, Sparkles, AlertTriangle, Printer } from "lucide-react";
 import ProgressBar from "@/components/ProgressBar";
 import LinkClosedScreen from "@/components/LinkClosedScreen";
+import PrintableVisionMissionSurvey from "@/components/PrintableVisionMissionSurvey";
 
 // Types for responses
 type CategoryInput = {
@@ -235,15 +236,25 @@ export default function VisionMissionSurveyPage() {
     return <LinkClosedScreen />;
   }
 
+  if (isPrintMode) {
+    return (
+      <PrintableVisionMissionSurvey
+        charityName={prefilledCharityName}
+        charityLogo={prefilledCharityLogo}
+        customQuestions={customQuestions}
+      />
+    );
+  }
+
   return (
-    <div className="min-h-screen flex flex-col bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-100 transition-colors pb-12 pt-8">
+    <div className="min-h-screen flex flex-col bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-100 transition-colors pb-12 pt-8 print:hidden">
 
       <main className="flex-1 w-full max-w-4xl mx-auto px-4 py-8 relative">
-        {step > 0 && !isPrintMode && <ProgressBar current={step} total={3} />}
+        {step > 0 && <ProgressBar current={step} total={3} />}
 
-        <div className="bg-white dark:bg-slate-800 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-md p-6 sm:p-10 transition-colors mt-6 print:shadow-none print:border-none print:p-0">
+        <div className="bg-white dark:bg-slate-800 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-md p-6 sm:p-10 transition-colors mt-6">
           {/* Step 0: Welcome and Personal Information */}
-          {(step === 0 || isPrintMode) && (
+          {step === 0 && (
             <div className="space-y-8 print:pb-16 print:pt-12 print:flex print:flex-col print:justify-center print:min-h-[85vh]">
               <div className="text-center space-y-4 max-w-2xl mx-auto">
                 <div className="flex items-center justify-center gap-8 mb-6">
@@ -305,8 +316,8 @@ export default function VisionMissionSurveyPage() {
           )}
 
           {/* Step 1: Categories and Impact */}
-          {(step === 1 || isPrintMode) && (
-            <div className="space-y-8 print:[break-before:page] print:pt-8">
+          {step === 1 && (
+            <div className="space-y-8">
               <div className="border-b border-slate-100 dark:border-slate-700 pb-4">
                 <h3 className="text-2xl font-extrabold text-slate-800 dark:text-slate-100 flex items-center gap-2">
                   <Users className="w-6 h-6 text-primary" />
@@ -388,8 +399,8 @@ export default function VisionMissionSurveyPage() {
           )}
 
           {/* Step 2: Vision */}
-          {(step === 2 || isPrintMode) && (
-            <div className="space-y-8 print:[break-before:page] print:pt-8">
+          {step === 2 && (
+            <div className="space-y-8">
               <div className="border-b border-slate-100 dark:border-slate-700 pb-4">
                 <h3 className="text-2xl font-extrabold text-slate-800 dark:text-slate-100 flex items-center gap-2">
                   <Target className="w-6 h-6 text-amber-500" />
@@ -650,8 +661,8 @@ export default function VisionMissionSurveyPage() {
           )}
 
           {/* Step 3: Mission */}
-          {(step === 3 || isPrintMode) && (
-            <div className="space-y-8 print:[break-before:page] print:pt-8">
+          {step === 3 && (
+            <div className="space-y-8">
               <div className="border-b border-slate-100 dark:border-slate-700 pb-4">
                 <h3 className="text-2xl font-extrabold text-slate-800 dark:text-slate-100 flex items-center gap-2">
                   <BookOpen className="w-6 h-6 text-indigo-500" />

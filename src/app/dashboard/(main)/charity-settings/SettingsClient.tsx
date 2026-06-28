@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { ROLE_LABELS } from "@/lib/permissions";
-import { getEmployeeNavSettings, updateEmployeeNavSettings, getAllEmployees, NavTabSetting } from "@/app/actions/employeeSettings";
-import { Loader2, Check, AlertCircle, GripVertical, Settings2, User } from "lucide-react";
+import { getEmployeeNavSettings, updateEmployeeNavSettings, getAllEmployees, NavTabSetting, broadcastToCharityClients, broadcastToEmployees } from "@/app/actions/employeeSettings";
+import { Loader2, Check, AlertCircle, GripVertical, Settings2, User, Users, Building2 } from "lucide-react";
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent } from '@dnd-kit/core';
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy, useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
@@ -108,6 +108,10 @@ export default function SettingsClient() {
     }
   }
 
+  const [broadcastModalOpen, setBroadcastModalOpen] = useState(false);
+  const [broadcastTarget, setBroadcastTarget] = useState<'charities' | 'employees' | null>(null);
+  const [broadcastSelectedIds, setBroadcastSelectedIds] = useState<string[]>([]);
+
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
     if (over && active.id !== over.id) {
@@ -130,12 +134,56 @@ export default function SettingsClient() {
     try {
       const res = await updateEmployeeNavSettings(selectedEmployee, settings);
       if (res.success) {
-        setSuccess("تم حفظ الإعدادات بنجاح");
+        setSuccess("تم حفظ الإعدادات بنجاح للموظف المحدد");
       } else {
         setError(res.error || "حدث خطأ غير معروف");
       }
     } catch (err) {
       setError("حدث خطأ أثناء الحفظ");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const openBroadcastModal = (target: 'charities' | 'employees') => {
+    setBroadcastTarget(target);
+    const targetEmployees = employees.filter(emp => target === 'charities' ? emp.role === "CHARITY_CLIENT" : emp.role !== "CHARITY_CLIENT");
+    setBroadcastSelectedIds(targetEmployees.map(e => e.id));
+    setBroadcastModalOpen(true);
+  };
+
+  const closeBroadcastModal = () => {
+    setBroadcastModalOpen(false);
+    setTimeout(() => {
+      setBroadcastTarget(null);
+      setBroadcastSelectedIds([]);
+    }, 200);
+  };
+
+  const handleConfirmBroadcast = async () => {
+    if (broadcastSelectedIds.length === 0) {
+      setError("يرجى تحديد حساب واحد على الأقل للتعميم");
+      closeBroadcastModal();
+      return;
+    }
+    
+    setIsSaving(true);
+    setError(null);
+    setSuccess(null);
+    closeBroadcastModal();
+
+    try {
+      const res = broadcastTarget === 'charities' 
+        ? await broadcastToCharityClients(settings, broadcastSelectedIds)
+        : await broadcastToEmployees(settings, broadcastSelectedIds);
+        
+      if (res.success) {
+        setSuccess(`تم تعميم الإعدادات بنجاح لـ ${broadcastSelectedIds.length} حساب(ات)`);
+      } else {
+        setError(res.error || "حدث خطأ غير معروف");
+      }
+    } catch (err) {
+      setError("حدث خطأ أثناء التعميم");
     } finally {
       setIsSaving(false);
     }
@@ -164,14 +212,37 @@ export default function SettingsClient() {
           </div>
         </div>
         
-        <button
-          onClick={handleSave}
-          disabled={isLoading || isSaving || !selectedEmployee}
-          className="bg-primary text-white font-bold px-6 py-2.5 rounded-xl hover:bg-primary/90 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
-        >
-          {isSaving ? <Loader2 className="w-5 h-5 animate-spin" /> : <Check className="w-5 h-5" />}
-          <span>حفظ التعديلات</span>
-        </button>
+        <div className="flex flex-col gap-2">
+          <button
+            onClick={handleSave}
+            disabled={isLoading || isSaving || !selectedEmployee}
+            className="bg-primary text-white font-bold px-6 py-2.5 rounded-xl hover:bg-primary/90 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+          >
+            {isSaving ? <Loader2 className="w-5 h-5 animate-spin" /> : <Check className="w-5 h-5" />}
+            <span>حفظ للموظف المحدد</span>
+          </button>
+          
+          <div className="flex gap-2">
+            <button
+              onClick={() => openBroadcastModal('charities')}
+              disabled={isLoading || isSaving}
+              className="bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 font-bold px-3 py-2 text-xs rounded-xl hover:bg-amber-200 dark:hover:bg-amber-900/50 transition-all flex items-center justify-center gap-1.5 flex-1 disabled:opacity-50"
+              title="تعميم التبويبات الحالية لتطبيقها على جميع عملاء الجمعيات"
+            >
+              <Building2 className="w-3.5 h-3.5" />
+              <span>تعميم للجمعيات</span>
+            </button>
+            <button
+              onClick={() => openBroadcastModal('employees')}
+              disabled={isLoading || isSaving}
+              className="bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 font-bold px-3 py-2 text-xs rounded-xl hover:bg-emerald-200 dark:hover:bg-emerald-900/50 transition-all flex items-center justify-center gap-1.5 flex-1 disabled:opacity-50"
+              title="تعميم التبويبات الحالية لتطبيقها على جميع موظفي زاد"
+            >
+              <Users className="w-3.5 h-3.5" />
+              <span>تعميم للموظفين</span>
+            </button>
+          </div>
+        </div>
       </div>
 
       {error && (
@@ -205,6 +276,89 @@ export default function SettingsClient() {
             ))}
           </SortableContext>
         </DndContext>
+      )}
+
+      {/* Broadcast Modal */}
+      {broadcastModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-800 w-full max-w-lg flex flex-col max-h-[85vh] animate-in zoom-in-95 duration-200 overflow-hidden">
+            <div className="p-5 border-b border-slate-100 dark:border-slate-800 shrink-0">
+              <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
+                {broadcastTarget === 'charities' ? (
+                  <><Building2 className="w-5 h-5 text-amber-500" /> تعميم الإعدادات لعملاء الجمعيات</>
+                ) : (
+                  <><Users className="w-5 h-5 text-emerald-500" /> تعميم الإعدادات למوظفي زاد</>
+                )}
+              </h3>
+              <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+                سيتم استبدال الإعدادات الحالية للحسابات المحددة بالإعدادات الظاهرة في الشاشة.
+              </p>
+            </div>
+            
+            <div className="p-3 bg-slate-50 dark:bg-slate-800/50 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center shrink-0">
+              <span className="text-xs font-bold text-slate-600 dark:text-slate-300">
+                المحدد: {broadcastSelectedIds.length} من {employees.filter(emp => broadcastTarget === 'charities' ? emp.role === "CHARITY_CLIENT" : emp.role !== "CHARITY_CLIENT").length}
+              </span>
+              <button
+                onClick={() => {
+                  const targetEmployees = employees.filter(emp => broadcastTarget === 'charities' ? emp.role === "CHARITY_CLIENT" : emp.role !== "CHARITY_CLIENT");
+                  if (broadcastSelectedIds.length === targetEmployees.length) {
+                    setBroadcastSelectedIds([]);
+                  } else {
+                    setBroadcastSelectedIds(targetEmployees.map(e => e.id));
+                  }
+                }}
+                className="text-xs font-bold text-primary hover:text-primary/80 transition-colors"
+              >
+                {broadcastSelectedIds.length === employees.filter(emp => broadcastTarget === 'charities' ? emp.role === "CHARITY_CLIENT" : emp.role !== "CHARITY_CLIENT").length 
+                  ? "إلغاء تحديد الكل" 
+                  : "تحديد الكل"
+                }
+              </button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto p-3 space-y-1 custom-scrollbar">
+              {employees
+                .filter(emp => broadcastTarget === 'charities' ? emp.role === "CHARITY_CLIENT" : emp.role !== "CHARITY_CLIENT")
+                .map(emp => (
+                  <label key={emp.id} className="flex items-center gap-3 p-3 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/50 cursor-pointer transition-colors border border-transparent hover:border-slate-200 dark:hover:border-slate-700">
+                    <input 
+                      type="checkbox" 
+                      className="w-4 h-4 rounded text-primary focus:ring-primary/20 bg-slate-100 dark:bg-slate-900 border-slate-300 dark:border-slate-700"
+                      checked={broadcastSelectedIds.includes(emp.id)}
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          setBroadcastSelectedIds(prev => [...prev, emp.id]);
+                        } else {
+                          setBroadcastSelectedIds(prev => prev.filter(id => id !== emp.id));
+                        }
+                      }}
+                    />
+                    <div className="flex flex-col">
+                      <span className="text-sm font-bold text-slate-700 dark:text-slate-200">{emp.name}</span>
+                      <span className="text-xs text-slate-500 dark:text-slate-400">{ROLE_LABELS[emp.role as keyof typeof ROLE_LABELS] || emp.role}</span>
+                    </div>
+                  </label>
+              ))}
+            </div>
+
+            <div className="p-4 border-t border-slate-100 dark:border-slate-800 flex gap-3 shrink-0 bg-white dark:bg-slate-900">
+              <button
+                onClick={closeBroadcastModal}
+                className="flex-1 px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 font-bold hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
+              >
+                إلغاء
+              </button>
+              <button
+                onClick={handleConfirmBroadcast}
+                disabled={broadcastSelectedIds.length === 0}
+                className="flex-1 px-4 py-2.5 rounded-xl bg-primary text-white font-bold hover:bg-primary/90 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+              >
+                تأكيد التعميم
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

@@ -103,3 +103,84 @@ export async function updateEmployeeNavSettings(employeeId: string, settings: Na
     return { success: false, error: "Failed to update settings" };
   }
 }
+
+export async function broadcastToCharityClients(settings: NavTabSetting[], targetEmployeeIds?: string[]) {
+  const session = await getSession();
+  if (!session) return { success: false, error: "Not authenticated" };
+
+  const isAdmin = ["ADMIN", "EXECUTIVE_DIRECTOR", "GENERAL_MANAGER", "ADMINISTRATIVE_SECRETARIAT"].includes(session.role);
+  const hasPerm = session.permissions?.includes("manage_charity_settings") || session.permissions?.includes("developer_mode");
+
+  if (!isAdmin && !hasPerm) {
+    return { success: false, error: "Not authorized" };
+  }
+
+  try {
+    const clients = await prisma.employee.findMany({
+      where: { 
+        role: "CHARITY_CLIENT",
+        ...(targetEmployeeIds && { id: { in: targetEmployeeIds } })
+      },
+      select: { id: true },
+    });
+
+    if (clients.length === 0) return { success: true };
+
+    // Use transaction to upsert all
+    await prisma.$transaction(
+      clients.map((client) =>
+        prisma.employeeNavSetting.upsert({
+          where: { employeeId: client.id },
+          update: { settings: settings as any },
+          create: { employeeId: client.id, settings: settings as any },
+        })
+      )
+    );
+
+    revalidatePath("/", "layout");
+    return { success: true };
+  } catch (error) {
+    console.error("Error broadcasting to charity clients:", error);
+    return { success: false, error: "Failed to broadcast settings" };
+  }
+}
+
+export async function broadcastToEmployees(settings: NavTabSetting[], targetEmployeeIds?: string[]) {
+  const session = await getSession();
+  if (!session) return { success: false, error: "Not authenticated" };
+
+  const isAdmin = ["ADMIN", "EXECUTIVE_DIRECTOR", "GENERAL_MANAGER", "ADMINISTRATIVE_SECRETARIAT"].includes(session.role);
+  const hasPerm = session.permissions?.includes("manage_charity_settings") || session.permissions?.includes("developer_mode");
+
+  if (!isAdmin && !hasPerm) {
+    return { success: false, error: "Not authorized" };
+  }
+
+  try {
+    const employees = await prisma.employee.findMany({
+      where: { 
+        role: { not: "CHARITY_CLIENT" },
+        ...(targetEmployeeIds && { id: { in: targetEmployeeIds } })
+      },
+      select: { id: true },
+    });
+
+    if (employees.length === 0) return { success: true };
+
+    await prisma.$transaction(
+      employees.map((emp) =>
+        prisma.employeeNavSetting.upsert({
+          where: { employeeId: emp.id },
+          update: { settings: settings as any },
+          create: { employeeId: emp.id, settings: settings as any },
+        })
+      )
+    );
+
+    revalidatePath("/", "layout");
+    return { success: true };
+  } catch (error) {
+    console.error("Error broadcasting to employees:", error);
+    return { success: false, error: "Failed to broadcast settings" };
+  }
+}

@@ -60,6 +60,7 @@ export default async function ServicesOverviewPage() {
     data["STRATEGY"] = await prisma.strategicStage.findMany({
       where: stageFilter,
       orderBy: [{ charityId: "asc" }, { order: "asc" }],
+      include: { steps: { orderBy: { order: "asc" } } },
     });
   }
   if (canSee("GOVERNANCE")) {
@@ -67,6 +68,7 @@ export default async function ServicesOverviewPage() {
       data["GOVERNANCE"] = await prisma.governanceStage.findMany({
         where: stageFilter,
         orderBy: [{ charityId: "asc" }, { order: "asc" }],
+        include: { steps: { orderBy: { order: "asc" } } },
       });
     } catch (e) { console.error("[ServicesOverview] governanceStage error:", e); data["GOVERNANCE"] = []; }
   }
@@ -74,6 +76,7 @@ export default async function ServicesOverviewPage() {
     data["FINANCE"] = await prisma.financeStage.findMany({
       where: stageFilter,
       orderBy: [{ charityId: "asc" }, { order: "asc" }],
+      include: { steps: { orderBy: { order: "asc" } } },
     });
   }
 
@@ -82,13 +85,13 @@ export default async function ServicesOverviewPage() {
   if (isAdmin) {
     data["SERVICES"] = await prisma.service.findMany({
       where: serviceCharityFilter,
-      include: { stages: { orderBy: { order: "asc" } } },
+      include: { stages: { orderBy: { order: "asc" }, include: { steps: { orderBy: { order: "asc" } } } } },
       orderBy: { charityId: "asc" },
     });
   } else if (!isSpecialDept) {
     data["SERVICES"] = await prisma.service.findMany({
       where: { department: role, ...(assignedIds !== null ? { charityId: { in: assignedIds } } : {}) },
-      include: { stages: { orderBy: { order: "asc" } } },
+      include: { stages: { orderBy: { order: "asc" }, include: { steps: { orderBy: { order: "asc" } } } } },
       orderBy: { charityId: "asc" },
     });
   }

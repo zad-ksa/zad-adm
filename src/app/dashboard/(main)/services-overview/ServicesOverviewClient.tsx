@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import GanttChart from "./GanttChart";
+import StageStepsPanel from "@/components/StageStepsPanel";
 import {
   setCurrentStrategicStage, addStrategicStage, updateStrategicStage,
   deleteStrategicStage, reorderStrategicStages, toggleActiveStrategicStage,
@@ -29,6 +30,12 @@ import {
   deleteServiceStage, reorderServiceStages, unifyCharityStagesAction,
   updateService, toggleActiveServiceStage, toggleCurrentServiceStage
 } from "@/app/actions/services";
+import {
+  addStrategicStageStep, updateStrategicStageStep, deleteStrategicStageStep,
+  addGovernanceStageStep, updateGovernanceStageStep, deleteGovernanceStageStep,
+  addFinanceStageStep, updateFinanceStageStep, deleteFinanceStageStep,
+  addServiceStageStep, updateServiceStageStep, deleteServiceStageStep,
+} from "@/app/actions/stageSteps";
 import { updateCharityLogo } from "@/app/actions/charity";
 import { updateTimelineDisplayName } from "@/app/actions/settings";
 
@@ -40,6 +47,8 @@ type Charity = {
   governanceTimelineName?: string | null;
   financeTimelineName?: string | null;
 };
+
+type StageStep = { id: string; name: string; isDone: boolean; order: number };
 
 type Stage = {
   id: string;
@@ -53,6 +62,7 @@ type Stage = {
   isContinuous?: boolean | null;
   isActive?: boolean | null;
   duration?: string | null;
+  steps?: StageStep[];
 };
 
 type ServiceWithStages = {
@@ -417,6 +427,36 @@ function InlineTimeline({
                         <Calendar className="w-3 h-3 shrink-0" />
                         <span dir="ltr">{fmtDate(stage.startDate)}{stage.startDate && stage.endDate ? " — " : ""}{fmtDate(stage.endDate)}</span>
                       </div>
+                    )}
+                    {(stage.steps && stage.steps.length > 0 || canEdit) && (
+                      <StageStepsPanel
+                        steps={stage.steps || []}
+                        canEdit={canEdit}
+                        onAdd={(name) => {
+                          if (dept === "STRATEGY") return addStrategicStageStep(stage.id, name);
+                          if (dept === "GOVERNANCE") return addGovernanceStageStep(stage.id, name);
+                          if (dept === "FINANCE") return addFinanceStageStep(stage.id, name);
+                          return addServiceStageStep(stage.id, name);
+                        }}
+                        onToggle={(stepId, isDone) => {
+                          if (dept === "STRATEGY") return updateStrategicStageStep(stepId, { isDone });
+                          if (dept === "GOVERNANCE") return updateGovernanceStageStep(stepId, { isDone });
+                          if (dept === "FINANCE") return updateFinanceStageStep(stepId, { isDone });
+                          return updateServiceStageStep(stepId, { isDone });
+                        }}
+                        onRename={(stepId, name) => {
+                          if (dept === "STRATEGY") return updateStrategicStageStep(stepId, { name });
+                          if (dept === "GOVERNANCE") return updateGovernanceStageStep(stepId, { name });
+                          if (dept === "FINANCE") return updateFinanceStageStep(stepId, { name });
+                          return updateServiceStageStep(stepId, { name });
+                        }}
+                        onDelete={(stepId) => {
+                          if (dept === "STRATEGY") return deleteStrategicStageStep(stepId);
+                          if (dept === "GOVERNANCE") return deleteGovernanceStageStep(stepId);
+                          if (dept === "FINANCE") return deleteFinanceStageStep(stepId);
+                          return deleteServiceStageStep(stepId);
+                        }}
+                      />
                     )}
                   </div>
                 </div>

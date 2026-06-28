@@ -244,7 +244,7 @@ export default function VisionMissionSurveyPage() {
         <div className="bg-white dark:bg-slate-800 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-md p-6 sm:p-10 transition-colors mt-6 print:shadow-none print:border-none print:p-0">
           {/* Step 0: Welcome and Personal Information */}
           {(step === 0 || isPrintMode) && (
-            <div className="space-y-8 print:[break-after:page] print:pb-16 print:pt-12">
+            <div className="space-y-8 print:pb-16 print:pt-12">
               <div className="text-center space-y-4 max-w-2xl mx-auto">
                 <div className="flex items-center justify-center gap-8 mb-6">
                   {prefilledCharityLogo && (
@@ -306,7 +306,7 @@ export default function VisionMissionSurveyPage() {
 
           {/* Step 1: Categories and Impact */}
           {(step === 1 || isPrintMode) && (
-            <div className="space-y-8">
+            <div className="space-y-8 print:[break-before:page] print:pt-8">
               <div className="border-b border-slate-100 dark:border-slate-700 pb-4">
                 <h3 className="text-2xl font-extrabold text-slate-800 dark:text-slate-100 flex items-center gap-2">
                   <Users className="w-6 h-6 text-primary" />
@@ -389,7 +389,7 @@ export default function VisionMissionSurveyPage() {
 
           {/* Step 2: Vision */}
           {(step === 2 || isPrintMode) && (
-            <div className="space-y-8">
+            <div className="space-y-8 print:[break-before:page] print:pt-8">
               <div className="border-b border-slate-100 dark:border-slate-700 pb-4">
                 <h3 className="text-2xl font-extrabold text-slate-800 dark:text-slate-100 flex items-center gap-2">
                   <Target className="w-6 h-6 text-amber-500" />
@@ -651,7 +651,7 @@ export default function VisionMissionSurveyPage() {
 
           {/* Step 3: Mission */}
           {(step === 3 || isPrintMode) && (
-            <div className="space-y-8">
+            <div className="space-y-8 print:[break-before:page] print:pt-8">
               <div className="border-b border-slate-100 dark:border-slate-700 pb-4">
                 <h3 className="text-2xl font-extrabold text-slate-800 dark:text-slate-100 flex items-center gap-2">
                   <BookOpen className="w-6 h-6 text-indigo-500" />

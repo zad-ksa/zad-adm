@@ -217,7 +217,7 @@ export default function InteractiveTimelineEditor({
                   
                   {/* Name */}
                   {editingField?.id === stage.id && editingField.field === 'name' ? (
-                    <input 
+                    <input
                       autoFocus
                       className="w-full text-center text-sm font-bold bg-white dark:bg-slate-800 border-2 border-primary/50 rounded-md px-1 py-0.5 outline-none"
                       value={editName}
@@ -226,10 +226,11 @@ export default function InteractiveTimelineEditor({
                       onKeyDown={e => e.key === 'Enter' && handleSaveInline(stage)}
                     />
                   ) : (
-                    <h4 
+                    <h4
                       onClick={() => handleStartInlineEdit(stage, 'name')}
-                      className={`font-bold text-sm text-center cursor-text hover:text-primary transition-colors ${isCurrent ? 'text-primary' : 'text-slate-700 dark:text-slate-300'} line-clamp-2 w-full`}
-                      title="انقر للتعديل"
+                      className={`font-bold text-center cursor-text hover:text-primary transition-colors ${isCurrent ? 'text-primary' : 'text-slate-700 dark:text-slate-300'} w-full leading-snug`}
+                      style={{ fontSize: stage.name.length > 24 ? '10px' : stage.name.length > 16 ? '11px' : stage.name.length > 10 ? '12px' : '13px' }}
+                      title={stage.name}
                     >
                       {stage.name}
                     </h4>

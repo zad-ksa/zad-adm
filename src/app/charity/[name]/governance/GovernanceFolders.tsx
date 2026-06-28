@@ -28,7 +28,6 @@ export default function GovernanceFolders({ charityId, regulations, isAdmin }: a
   }>({ isOpen: false, itemId: "", itemName: "", itemType: 'file' });
 
   const folders = [
-    { id: "services", title: "خدمات المركز الوطني" },
     { id: "employee-training", title: "الدورات التدريبية للموظفين" },
     { id: "basic-bylaws", title: "اللائحة الأساسية" },
     { id: "approved-regulations", title: "اللوائح والسياسات المعتمدة" },
@@ -207,21 +206,6 @@ export default function GovernanceFolders({ charityId, regulations, isAdmin }: a
     </div>
   );
 
-  // عرض صفحة خدمات المركز الوطني
-  if (currentFolderId === "services") {
-    return (
-      <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500" dir="rtl">
-        <button 
-          onClick={handleGoToMain}
-          className="flex items-center gap-2 text-slate-600 dark:text-slate-300 hover:text-primary transition-colors font-medium bg-white dark:bg-slate-800 px-4 py-2 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700 w-fit hover:shadow-md"
-        >
-          <ArrowRight className="w-5 h-5" />
-          العودة للمجلدات
-        </button>
-        <GovernanceRegulationsManager charityId={charityId} regulations={regulations} isAdmin={isAdmin} />
-      </div>
-    );
-  }
 
   // عرض محتويات المجلد الفرعي أو المجلد النشط
   if (currentFolderId && currentFolderId !== "services") {

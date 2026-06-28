@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { prisma } from "@/lib/db";
 import GovernanceStagesManager from "./GovernanceStagesManager";
 import GovernanceFolders from "./GovernanceFolders";
+import GovernanceRegulationsManager from "./GovernanceRegulationsManager";
 import { getSession } from "@/lib/auth";
 import DepartmentServicesTimeline from "@/components/DepartmentServicesTimeline";
 import CharityClientTimeline from "@/components/CharityClientTimeline";
@@ -117,7 +118,10 @@ export default async function GovernancePage({
       )}
       
       {charity && activeTab === 'services' && (
-        <DepartmentServicesTimeline charityId={charity.id} department="GOVERNANCE" />
+        <div className="space-y-12">
+          <GovernanceRegulationsManager charityId={charity.id} regulations={regulations} isAdmin={isAdmin} />
+          <DepartmentServicesTimeline charityId={charity.id} department="GOVERNANCE" />
+        </div>
       )}
     </div>
   );

@@ -218,8 +218,13 @@ function handlePrint(m: Meeting) {
   }
   p { margin: 3px 0; }
   br { display: block; margin: 1px 0; }
-  ul { padding-right: 18px; margin: 3px 0 6px; }
-  li { margin-bottom: 2px; line-height: 1.5; }
+  ul {
+    list-style-position: inside;
+    padding: 0;
+    margin: 3px 0 6px;
+    text-align: right;
+  }
+  li { margin-bottom: 2px; line-height: 1.5; text-align: right; }
   hr { border: none; border-top: 1px solid #ddd; margin: 6px 0; }
   strong { font-weight: 700; }
 

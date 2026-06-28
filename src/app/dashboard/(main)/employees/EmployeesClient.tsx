@@ -362,9 +362,9 @@ export function EmployeesClient({
                       disabled={isPending || editingEmployee.role === "ADMIN"}
                       className="appearance-none block w-full pr-10 pl-3 py-2.5 border border-slate-200 dark:border-slate-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary/50 text-sm font-bold text-slate-800 dark:text-slate-100 bg-white dark:bg-slate-900/50 cursor-pointer transition-colors"
                     >
-                      <option value="EXECUTIVE_DIRECTOR">المدير التنفيذي</option>
-                      <option value="ADMINISTRATIVE_SECRETARIAT">السكرتارية التنفيذية</option>
-                      <option value="GENERAL_MANAGER">مساعد المدير</option>
+                      <option value="GENERAL_MANAGER">المدير العام</option>
+                      <option value="EXECUTIVE_DIRECTOR">الإدارة التنفيذية</option>
+                      <option value="ADMINISTRATIVE_SECRETARIAT">مساعد المدير</option>
                       <option value="STRATEGY">الاستراتيجية</option>
                       <option value="FINANCE">المالية</option>
                       {editingEmployee.role === "ADMIN" && <option value="ADMIN">مدير النظام</option>}

@@ -1,12 +1,12 @@
-﻿// Roles that have admin or director level access
+// Roles that have admin or director level access
 export const ADMIN_ROLES = ["ADMIN", "EXECUTIVE_DIRECTOR", "ADMINISTRATIVE_SECRETARIAT"];
 
 // Map roles to human-readable labels
 export const ROLE_LABELS: Record<string, string> = {
   ADMIN: "مدير النظام",
-  EXECUTIVE_DIRECTOR: "المدير التنفيذي",
-  GENERAL_MANAGER: "مساعد المدير",
-  ADMINISTRATIVE_SECRETARIAT: "إدارة تنفيذية",
+  EXECUTIVE_DIRECTOR: "الإدارة التنفيذية",
+  GENERAL_MANAGER: "المدير العام",
+  ADMINISTRATIVE_SECRETARIAT: "مساعد المدير",
   STRATEGY: "الاستراتيجية",
   FINANCE: "المالية",
 };

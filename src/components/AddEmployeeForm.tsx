@@ -78,9 +78,9 @@ export function AddEmployeeForm() {
               <ShieldAlert className="h-5 w-5 text-slate-400 dark:text-slate-500" />
             </div>
             <select name="role" className="appearance-none block w-full pr-10 pl-3 py-2.5 bg-white dark:bg-slate-900/50 border border-slate-200 dark:border-slate-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary/50 sm:text-sm font-bold text-slate-800 dark:text-slate-100 cursor-pointer transition-colors">
-              <option value="EXECUTIVE_DIRECTOR">المدير التنفيذي</option>
-              <option value="ADMINISTRATIVE_SECRETARIAT">السكرتارية التنفيذية</option>
-              <option value="GENERAL_MANAGER">مساعد المدير</option>
+              <option value="GENERAL_MANAGER">المدير العام</option>
+              <option value="EXECUTIVE_DIRECTOR">الإدارة التنفيذية</option>
+              <option value="ADMINISTRATIVE_SECRETARIAT">مساعد المدير</option>
               <option value="STRATEGY">الاستراتيجية</option>
               <option value="FINANCE">المالية</option>
             </select>

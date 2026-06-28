@@ -36,9 +36,9 @@ export const ALL_PERMISSIONS = PERMISSION_GROUPS.flatMap((g) => g.permissions);
 // Role display labels
 export const ROLE_LABELS: Record<string, string> = {
   ADMIN: "مدير النظام",
-  EXECUTIVE_DIRECTOR: "المدير التنفيذي",
-  GENERAL_MANAGER: "مساعد المدير",
-  ADMINISTRATIVE_SECRETARIAT: "السكرتارية التنفيذية",
+  EXECUTIVE_DIRECTOR: "الإدارة التنفيذية",
+  GENERAL_MANAGER: "المدير العام",
+  ADMINISTRATIVE_SECRETARIAT: "مساعد المدير",
   STRATEGY: "الاستراتيجية",
   FINANCE: "المالية",
   CHARITY_CLIENT: "عميل جمعية",

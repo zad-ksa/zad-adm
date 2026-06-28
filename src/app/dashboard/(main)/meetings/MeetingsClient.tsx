@@ -42,7 +42,7 @@ const ROLE_LABELS: Record<string, string> = {
   ADMIN: "مدير النظام",
   EXECUTIVE_DIRECTOR: "إدارة تنفيذية",
   GENERAL_MANAGER: "مدير عام",
-  ADMINISTRATIVE_SECRETARIAT: "سكرتارية إدارية",
+  ADMINISTRATIVE_SECRETARIAT: "إدارة تنفيذية",
   STRATEGY: "الاستراتيجية",
   FINANCE: "المالية",
 };

@@ -6,7 +6,7 @@ export const ROLE_LABELS: Record<string, string> = {
   ADMIN: "مدير النظام",
   EXECUTIVE_DIRECTOR: "المدير التنفيذي",
   GENERAL_MANAGER: "مساعد المدير",
-  ADMINISTRATIVE_SECRETARIAT: "السكرتارية الإدارية",
+  ADMINISTRATIVE_SECRETARIAT: "إدارة تنفيذية",
   STRATEGY: "الاستراتيجية",
   FINANCE: "المالية",
 };

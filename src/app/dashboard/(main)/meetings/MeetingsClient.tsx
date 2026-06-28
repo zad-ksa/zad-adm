@@ -97,8 +97,11 @@ function mdToHtml(md: string): string {
       inUl = false;
     }
 
-    // Headings (strip ## / ### prefix)
-    if (/^## (.+)$/.test(line)) {
+    // Headings (strip #, ##, ### prefix)
+    if (/^# (.+)$/.test(line)) {
+      // H1 — skip, we add our own "محضر اجتماع" title
+      continue;
+    } else if (/^## (.+)$/.test(line)) {
       out.push(`<h2 class="sec-title">${applyInline(line.replace(/^## /, ""))}</h2>`);
     } else if (/^### (.+)$/.test(line)) {
       out.push(`<h3 class="sub-title">${applyInline(line.replace(/^### /, ""))}</h3>`);
@@ -170,15 +173,16 @@ function handlePrint(m: Meeting) {
     z-index: 0;
   }
 
-  /* التاريخ على الكليشة */
+  /* التاريخ على الكليشة — في خانة التاريخ يسار الرأس */
   .page .date-area {
     position: absolute;
-    top: 29mm;
-    left: 18mm;
-    font-size: 9pt;
-    color: #222;
+    top: 25mm;
+    left: 20mm;
+    font-size: 8.5pt;
+    color: #111;
     z-index: 2;
-    direction: rtl;
+    direction: ltr;
+    text-align: left;
   }
 
   /* منطقة المحتوى — فوق الكليشة */
@@ -248,10 +252,15 @@ function handlePrint(m: Meeting) {
   }
   tr:nth-child(even) td { background-color: #f4fbfc; }
 
+  @page {
+    size: A4;
+    margin: 0;
+  }
+
   @media print {
-    html, body { background: white; }
+    html, body { background: white !important; }
     .page {
-      margin: 0;
+      margin: 0 !important;
       page-break-after: always;
       -webkit-print-color-adjust: exact;
       print-color-adjust: exact;
@@ -281,7 +290,7 @@ function handlePrint(m: Meeting) {
 
   var root = document.getElementById('root');
 
-  function newPage(isFirst) {
+  function newPage() {
     var page = document.createElement('div');
     page.className = 'page';
 
@@ -290,12 +299,11 @@ function handlePrint(m: Meeting) {
     img.src = letterheadUrl;
     page.appendChild(img);
 
-    if (isFirst) {
-      var dateDiv = document.createElement('div');
-      dateDiv.className = 'date-area';
-      dateDiv.textContent = dateStr;
-      page.appendChild(dateDiv);
-    }
+    // التاريخ في كل صفحة لأن الكليشة تتكرر
+    var dateDiv = document.createElement('div');
+    dateDiv.className = 'date-area';
+    dateDiv.textContent = dateStr;
+    page.appendChild(dateDiv);
 
     var ca = document.createElement('div');
     ca.className = 'content-area';
@@ -305,7 +313,7 @@ function handlePrint(m: Meeting) {
     return ca;
   }
 
-  var currentArea = newPage(true);
+  var currentArea = newPage();
   var usedHeight = 0;
 
   function getHeight(el) {
@@ -319,7 +327,7 @@ function handlePrint(m: Meeting) {
   function appendToPage(el) {
     var h = getHeight(el);
     if (usedHeight + h > USABLE && usedHeight > 0) {
-      currentArea = newPage(false);
+      currentArea = newPage();
       usedHeight = 0;
     }
     currentArea.appendChild(el);

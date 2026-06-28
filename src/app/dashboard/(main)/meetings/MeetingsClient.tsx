@@ -53,7 +53,7 @@ function formatDate(d: string | Date) {
   const month = String(dt.getMonth() + 1).padStart(2, "0");
   const year = dt.getFullYear();
   // ترتيب خانات الكليشة: يوم (يمين) — شهر (وسط) — سنة (يسار)
-  return `${day}      ${month}      ${year}`;
+  return `${day}         ${month}         ${year}`;
 }
 
 function formatDateHijri(d: string | Date) {
@@ -496,6 +496,10 @@ export default function MeetingsClient({ meetings, charities, employees, session
   const [showModal, setShowModal] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [viewingMeeting, setViewingMeeting] = useState<Meeting | null>(null);
+
+  // Inline number editing
+  const [editingNumberId, setEditingNumberId] = useState<string | null>(null);
+  const [editingNumberVal, setEditingNumberVal] = useState("");
   const [assignMeeting, setAssignMeeting] = useState<Meeting | null>(null);
   const [extractedTasks, setExtractedTasks] = useState<{ title: string }[]>([]);
   const [extracting, setExtracting] = useState(false);
@@ -639,6 +643,48 @@ export default function MeetingsClient({ meetings, charities, employees, session
                   <span>{formatDate(m.date)}</span>
                   {m.location && <span>· {m.location}</span>}
                   <span>· {m.createdBy.name}</span>
+                  {/* رقم الاجتماع — قابل للتعديل inline */}
+                  {editingNumberId === m.id ? (
+                    <span className="flex items-center gap-1">
+                      <span className="text-slate-400">ZAD_M_</span>
+                      <input
+                        type="number" min="1" autoFocus
+                        value={editingNumberVal}
+                        onChange={e => setEditingNumberVal(e.target.value)}
+                        onKeyDown={async e => {
+                          if (e.key === "Enter") {
+                            const n = editingNumberVal ? parseInt(editingNumberVal) : null;
+                            await updateMeeting(m.id, { meetingNumber: n });
+                            setEditingNumberId(null);
+                            router.refresh();
+                          } else if (e.key === "Escape") {
+                            setEditingNumberId(null);
+                          }
+                        }}
+                        className="w-14 text-xs border border-primary/40 rounded px-1.5 py-0.5 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 outline-none focus:ring-1 focus:ring-primary"
+                        placeholder="001"
+                      />
+                      <button onClick={async () => {
+                        const n = editingNumberVal ? parseInt(editingNumberVal) : null;
+                        await updateMeeting(m.id, { meetingNumber: n });
+                        setEditingNumberId(null);
+                        router.refresh();
+                      }} className="text-primary hover:text-primary/80">
+                        <Check className="w-3.5 h-3.5" />
+                      </button>
+                      <button onClick={() => setEditingNumberId(null)} className="text-slate-400 hover:text-slate-600">
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    </span>
+                  ) : (
+                    <button
+                      onClick={() => { setEditingNumberId(m.id); setEditingNumberVal(m.meetingNumber ? String(m.meetingNumber) : ""); }}
+                      className="flex items-center gap-1 text-[11px] font-mono bg-slate-100 dark:bg-slate-700 hover:bg-primary/10 hover:text-primary px-2 py-0.5 rounded transition-colors"
+                      title="تعديل رقم الاجتماع"
+                    >
+                      {m.meetingNumber ? `ZAD_M_${String(m.meetingNumber).padStart(3, "0")}` : <span className="text-slate-300 dark:text-slate-600">+ رقم</span>}
+                    </button>
+                  )}
                 </div>
               </div>
               <div className="flex items-center gap-1 shrink-0">

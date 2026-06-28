@@ -40,6 +40,9 @@ export default function SurveyLinkManager({ charityName, surveyType }: { charity
         const data = await res.json();
         setActiveLink(data);
         setCharityFocus(""); // reset after success
+      } else {
+        const errData = await res.json().catch(() => ({}));
+        alert(`حدث خطأ: ${errData.error || "تأكد من إعداد المفاتيح"}`);
       }
     } catch (e) {
       console.error(e);

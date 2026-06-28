@@ -95,9 +95,12 @@ export async function POST(request: Request) {
           }
           customQuestions = JSON.parse(content);
         }
-      } catch (error) {
+      } catch (error: any) {
         console.error("AI customization failed:", error);
-        // We log the error but allow link creation to succeed without custom questions
+        return NextResponse.json(
+          { error: `فشل تخصيص الأسئلة بالذكاء الاصطناعي. الرجاء التحقق من إعداد مفتاح ANTHROPIC_API_KEY في ملف .env. التفاصيل: ${error.message}` },
+          { status: 400 }
+        );
       }
     }
 

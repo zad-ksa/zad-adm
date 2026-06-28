@@ -3,6 +3,7 @@ import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { redirect } from "next/navigation";
 import MeetingsClient from "./MeetingsClient";
+import { hasPermission, AUTO_ADMIN_ROLES } from "@/lib/permissions";
 
 const ALL_STAFF = [
   "ADMIN", "EXECUTIVE_DIRECTOR", "GENERAL_MANAGER",
@@ -11,10 +12,9 @@ const ALL_STAFF = [
 
 export default async function MeetingsPage() {
   const session = await getSession();
-  if (!session || !ALL_STAFF.includes(session.role)) redirect("/dashboard");
+  if (!session || !hasPermission(session.role, session.permissions || [], "manage_meetings")) redirect("/dashboard");
 
-  const TIER1 = ["ADMIN", "EXECUTIVE_DIRECTOR", "ADMINISTRATIVE_SECRETARIAT"];
-  const isTier1 = TIER1.includes(session.role);
+  const isTier1 = AUTO_ADMIN_ROLES.includes(session.role);
 
   const [meetings, charities, employees] = await Promise.all([
     getMeetings(),

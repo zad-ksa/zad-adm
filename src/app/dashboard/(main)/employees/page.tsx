@@ -1,15 +1,16 @@
-﻿import { getSession } from "@/lib/auth";
+import { getSession } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { AddEmployeeForm } from "@/components/AddEmployeeForm";
 import { EmployeesClient } from "./EmployeesClient";
 import { Users } from "lucide-react";
+import { hasPermission } from "@/lib/permissions";
 
 export default async function EmployeesPage() {
   const session = await getSession();
 
-  // Protect route for ADMIN, EXECUTIVE_DIRECTOR, GENERAL_MANAGER, ADMINISTRATIVE_SECRETARIAT
-  if (!session || !["ADMIN", "EXECUTIVE_DIRECTOR", "GENERAL_MANAGER", "ADMINISTRATIVE_SECRETARIAT"].includes(session.role)) {
+  // Protect route: only users with manage_employees permission
+  if (!session || !hasPermission(session.role, session.permissions || [], "manage_employees")) {
     redirect("/dashboard");
   }
 

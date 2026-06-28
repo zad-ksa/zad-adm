@@ -5,6 +5,7 @@ import { Metadata } from "next";
 import ServicesOverviewClient from "./ServicesOverviewClient";
 import { getAssignedCharityIds } from "@/lib/access";
 import { getTimelineConfigs } from "@/app/actions/settings";
+import { hasPermission, AUTO_ADMIN_ROLES } from "@/lib/permissions";
 
 export const metadata: Metadata = {
   title: "عرض الخدمات | زاد التنموية",
@@ -16,6 +17,10 @@ export default async function ServicesOverviewPage() {
   const session = await getSession();
   if (!session) redirect("/");
 
+  if (!hasPermission(session.role, session.permissions || [], "view_services_overview")) {
+    redirect("/dashboard");
+  }
+
   let timelineNames: Record<string, string> = {};
   try { timelineNames = await getTimelineConfigs(); } catch (e) { console.error("[ServicesOverview] getTimelineConfigs error:", e); }
   const DEPT_LABELS: Record<string, string> = {
@@ -26,7 +31,7 @@ export default async function ServicesOverviewPage() {
   };
 
   const role = session.role;
-  const isAdmin = ["ADMIN", "EXECUTIVE_DIRECTOR", "GENERAL_MANAGER", "ADMINISTRATIVE_SECRETARIAT"].includes(role);
+  const isAdmin = AUTO_ADMIN_ROLES.includes(role);
 
   // Get assigned charity IDs for restricted roles (null = all access)
   const assignedIds = isAdmin ? null : await getAssignedCharityIds(session.id, role);

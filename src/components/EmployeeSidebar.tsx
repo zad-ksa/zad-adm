@@ -9,6 +9,7 @@ import { logout } from "@/app/actions/auth";
 import { updateProfile } from "@/app/actions/profile";
 import { usePathname } from "next/navigation";
 import ZadLogo from "@/components/ZadLogo";
+import { AUTO_ADMIN_ROLES, ROLE_LABELS } from "@/lib/permissions";
 
 export default function EmployeeSidebar({ 
   session, 
@@ -44,56 +45,35 @@ export default function EmployeeSidebar({
     setUserState(session);
   }, [session]);
 
-  let navItems = [];
+  let navItems: { label: string; href: string; icon: any }[] = [];
 
-  if (userState?.role === "ADMINISTRATIVE_SECRETARIAT") {
-    navItems = [
-      { label: "الرئيسية", href: "/dashboard", icon: LayoutDashboard },
-      { label: "المهام والمنجزات", href: "/dashboard/tasks", icon: CheckSquare },
-      { label: "الأخبار والإنجازات", href: "/dashboard/news", icon: Newspaper },
-      { label: "الجمعيات", href: "/dashboard/charities", icon: Building2 },
-      { label: "عرض الخدمات", href: "/dashboard/services-overview", icon: LayoutGrid },
-      { label: "الاستبيانات", href: "/dashboard/custom-surveys", icon: ClipboardList },
-      { label: "محاضر الاجتماعات", href: "/dashboard/meetings", icon: FileText },
-      { label: "إدارة الموظفين", href: "/dashboard/employees", icon: Users },
-    ];
-  } else if (userState?.role === "STRATEGY") {
-    navItems = [
-      { label: "الرئيسية", href: "/dashboard", icon: LayoutDashboard },
-      { label: "الجمعيات", href: "/dashboard/charities", icon: Building2 },
-      { label: "عرض الخدمات", href: "/dashboard/services-overview", icon: LayoutGrid },
-      { label: "الاستبيانات", href: "/dashboard/custom-surveys", icon: ClipboardList },
-      { label: "الأخبار والإنجازات", href: "/dashboard/news", icon: Newspaper },
-      { label: "محاضر الاجتماعات", href: "/dashboard/meetings", icon: FileText },
-      { label: "مهامي", href: "/dashboard/tasks", icon: CheckSquare },
-    ];
-  } else if (userState?.role === "FINANCE") {
-    navItems = [
-      { label: "الرئيسية", href: "/dashboard", icon: LayoutDashboard },
-      { label: "الجمعيات", href: "/dashboard/charities", icon: Building2 },
-      { label: "عرض الخدمات", href: "/dashboard/services-overview", icon: LayoutGrid },
-      { label: "الأخبار والإنجازات", href: "/dashboard/news", icon: Newspaper },
-      { label: "محاضر الاجتماعات", href: "/dashboard/meetings", icon: FileText },
-      { label: "مهامي", href: "/dashboard/tasks", icon: CheckSquare },
-    ];
-  } else {
-    navItems = [
-      { label: "الرئيسية", href: "/dashboard", icon: LayoutDashboard },
-      { label: "الجمعيات", href: "/dashboard/charities", icon: Building2 },
-      { label: "عرض الخدمات", href: "/dashboard/services-overview", icon: LayoutGrid },
-      { label: "الاستبيانات", href: "/dashboard/custom-surveys", icon: ClipboardList },
-      { label: "الأخبار والإنجازات", href: "/dashboard/news", icon: Newspaper },
-      { label: "محاضر الاجتماعات", href: "/dashboard/meetings", icon: FileText },
-    ];
+  const role = userState?.role || "";
+  const perms: string[] = userState?.permissions || [];
+  const can = (p: string) => AUTO_ADMIN_ROLES.includes(role) || perms.includes(p);
 
-    if (userState?.role !== "GENERAL_MANAGER") {
-      const isManager = ["ADMIN", "EXECUTIVE_DIRECTOR"].includes(userState?.role);
-      navItems.push({ label: isManager ? "المهام والمنجزات" : "مهامي", href: "/dashboard/tasks", icon: CheckSquare });
-    }
+  navItems = [
+    { label: "الرئيسية", href: "/dashboard", icon: LayoutDashboard },
+    { label: "الجمعيات", href: "/dashboard/charities", icon: Building2 },
+  ];
 
-    if (userState?.role === "ADMIN" || userState?.role === "EXECUTIVE_DIRECTOR" || userState?.role === "GENERAL_MANAGER") {
-      navItems.push({ label: "إدارة الموظفين", href: "/dashboard/employees", icon: Users });
-    }
+  if (can("view_services_overview")) {
+    navItems.push({ label: "عرض الخدمات", href: "/dashboard/services-overview", icon: LayoutGrid });
+  }
+  if (can("manage_surveys")) {
+    navItems.push({ label: "الاستبيانات", href: "/dashboard/custom-surveys", icon: ClipboardList });
+  }
+  if (can("manage_news")) {
+    navItems.push({ label: "الأخبار والإنجازات", href: "/dashboard/news", icon: Newspaper });
+  }
+  if (can("manage_meetings")) {
+    navItems.push({ label: "محاضر الاجتماعات", href: "/dashboard/meetings", icon: FileText });
+  }
+  if (can("manage_tasks")) {
+    const isManager = AUTO_ADMIN_ROLES.includes(role);
+    navItems.push({ label: isManager ? "المهام والمنجزات" : "مهامي", href: "/dashboard/tasks", icon: CheckSquare });
+  }
+  if (can("manage_employees")) {
+    navItems.push({ label: "إدارة الموظفين", href: "/dashboard/employees", icon: Users });
   }
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -232,12 +212,7 @@ export default function EmployeeSidebar({
             <div className="mt-0.5 inline-flex items-center gap-1 px-1.5 py-0.5 bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-full text-[10px] text-slate-500 dark:text-slate-400 font-bold">
               <ShieldAlert className="w-3 h-3 text-emerald-500 shrink-0" />
               <span className="truncate">
-                {userState?.role === "ADMIN" ? "مدير النظام" :
-                 userState?.role === "EXECUTIVE_DIRECTOR" ? "إدارة تنفيذية" :
-                 userState?.role === "GENERAL_MANAGER" ? "مدير عام" :
-                 userState?.role === "ADMINISTRATIVE_SECRETARIAT" ? "إدارة تنفيذية" :
-                 userState?.role === "STRATEGY" ? "الاستراتيجية" :
-                 userState?.role === "FINANCE" ? "المالية" : "موظف"}
+                {ROLE_LABELS[userState?.role] || "موظف"}
               </span>
             </div>
           </div>

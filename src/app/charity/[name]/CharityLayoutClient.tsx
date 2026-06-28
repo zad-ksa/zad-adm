@@ -5,6 +5,7 @@ import CharitySidebar from "./CharitySidebar";
 import { useState, useEffect } from "react";
 import { Menu, Home, Target, FolderKanban, Coins, Scale } from "lucide-react";
 import MobileBottomNav from "@/components/MobileBottomNav";
+import { hasPermission } from "@/lib/permissions";
 
 export default function CharityLayoutClient({
   children,
@@ -29,25 +30,24 @@ export default function CharityLayoutClient({
     }
   }, [pathname]);
 
-  const isAdmin = ["ADMIN", "EXECUTIVE_DIRECTOR", "GENERAL_MANAGER", "ADMINISTRATIVE_SECRETARIAT"].includes(role || "");
-  const isStrategy = role === "STRATEGY";
-  const isFinance = role === "FINANCE";
-  const canManageGovernance = isAdmin || permissions?.includes("manage_governance");
+  const isCharityClient = role === "CHARITY_CLIENT";
+  const perms = permissions || [];
+  const can = (p: string) => hasPermission(role || "", perms, p);
 
   let mobileNavItems = [
     { label: "الرئيسية", href: `/charity/${encodeURIComponent(charityName)}`, icon: Home, exact: true },
   ];
 
-  if (isAdmin || isStrategy) {
+  if (can("manage_strategy") && !isCharityClient) {
     mobileNavItems.push({ label: "الاستراتيجية", href: `/charity/${encodeURIComponent(charityName)}/strategy`, icon: Target, exact: false });
     mobileNavItems.push({ label: "البرامج", href: `/charity/${encodeURIComponent(charityName)}/programs`, icon: FolderKanban, exact: false });
   }
 
-  if (canManageGovernance) {
+  if (can("manage_governance") && !isCharityClient) {
     mobileNavItems.push({ label: "الحوكمة", href: `/charity/${encodeURIComponent(charityName)}/governance`, icon: Scale, exact: false });
   }
 
-  if (isAdmin || isFinance) {
+  if (can("manage_finance") && !isCharityClient) {
     mobileNavItems.push({ label: "المالية", href: `/charity/${encodeURIComponent(charityName)}/finance`, icon: Coins, exact: false });
   }
 

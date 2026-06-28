@@ -1,16 +1,17 @@
-﻿import { getSession } from "@/lib/auth";
+import { getSession } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
 import TasksClient from "./TasksClient";
 import { getCategories } from "@/app/actions/categories";
+import { hasPermission, AUTO_ADMIN_ROLES } from "@/lib/permissions";
 
 export const dynamic = "force-dynamic";
 
 export default async function TasksPage() {
   const session = await getSession();
 
-  // Reject access for GENERAL_MANAGER or if not authenticated
-  if (!session || session.role === "GENERAL_MANAGER") {
+  // Reject access if user doesn't have manage_tasks permission
+  if (!session || !hasPermission(session.role, session.permissions || [], "manage_tasks")) {
     redirect("/dashboard");
   }
 
@@ -32,7 +33,7 @@ export default async function TasksPage() {
     orderBy: { name: "asc" },
   });
 
-  const isDirectorOrAdmin = ["ADMIN", "EXECUTIVE_DIRECTOR", "ADMINISTRATIVE_SECRETARIAT"].includes(session.role);
+  const isDirectorOrAdmin = AUTO_ADMIN_ROLES.includes(session.role);
 
   // Fetch initial tasks and achievements
   let initialTasks = [];

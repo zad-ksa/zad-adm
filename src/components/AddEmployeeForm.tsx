@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useActionState, useEffect, useRef } from "react";
 import { addEmployee } from "@/app/dashboard/(main)/employees/actions";
@@ -12,6 +12,7 @@ import {
   Check, 
   Loader2 
 } from "@/components/Icons";
+import { PERMISSION_GROUPS } from "@/lib/permissions";
 
 export function AddEmployeeForm() {
   const [state, formAction, isPending] = useActionState(addEmployee, null);
@@ -22,11 +23,6 @@ export function AddEmployeeForm() {
       formRef.current?.reset();
     }
   }, [state]);
-
-  const permissionsList = [
-    { id: "manage_governance", label: "إدارة الحوكمة" },
-    { id: "manage_hr", label: "إدارة الموارد البشرية" },
-  ];
 
   return (
     <form ref={formRef} action={formAction} className="space-y-6 bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700 transition-colors">
@@ -82,8 +78,9 @@ export function AddEmployeeForm() {
               <ShieldAlert className="h-5 w-5 text-slate-400 dark:text-slate-500" />
             </div>
             <select name="role" className="appearance-none block w-full pr-10 pl-3 py-2.5 bg-white dark:bg-slate-900/50 border border-slate-200 dark:border-slate-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary/50 sm:text-sm font-bold text-slate-800 dark:text-slate-100 cursor-pointer transition-colors">
-              <option value="EXECUTIVE_DIRECTOR">إدارة تنفيذية</option>
-              <option value="GENERAL_MANAGER">مدير عام</option>
+              <option value="EXECUTIVE_DIRECTOR">المدير التنفيذي</option>
+              <option value="ADMINISTRATIVE_SECRETARIAT">السكرتارية التنفيذية</option>
+              <option value="GENERAL_MANAGER">مساعد المدير</option>
               <option value="STRATEGY">الاستراتيجية</option>
               <option value="FINANCE">المالية</option>
             </select>
@@ -96,12 +93,22 @@ export function AddEmployeeForm() {
 
       <div className="pt-4 border-t border-slate-100 dark:border-slate-700">
         <h4 className="text-sm font-medium text-slate-700 dark:text-slate-200 mb-4">الصلاحيات المخصصة</h4>
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-          {permissionsList.map((perm) => (
-            <label key={perm.id} className="flex items-center gap-3 p-3 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700/50 cursor-pointer transition-colors">
-              <input type="checkbox" name={`permission_${perm.id}`} className="w-4 h-4 text-primary rounded border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900/50 focus:ring-primary/50" />
-              <span className="text-sm text-slate-700 dark:text-slate-200">{perm.label}</span>
-            </label>
+        <div className="space-y-5">
+          {PERMISSION_GROUPS.map((group) => (
+            <div key={group.title}>
+              <h5 className="text-xs font-bold text-slate-500 dark:text-slate-400 mb-3 flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-primary/60"></span>
+                {group.title}
+              </h5>
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                {group.permissions.map((perm) => (
+                  <label key={perm.id} className="flex items-center gap-3 p-3 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700/50 cursor-pointer transition-colors">
+                    <input type="checkbox" name={`permission_${perm.id}`} className="w-4 h-4 text-primary rounded border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900/50 focus:ring-primary/50" />
+                    <span className="text-sm text-slate-700 dark:text-slate-200">{perm.label}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
           ))}
         </div>
       </div>

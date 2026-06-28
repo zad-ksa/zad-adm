@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useState, useTransition } from "react";
 import { toggleEmployeeStatus, updateEmployee, updateEmployeeCharities } from "./actions";
@@ -14,17 +14,7 @@ import {
   Key
 } from "@/components/Icons";
 import { Edit, ShieldCheck, Building2 } from "lucide-react";
-
-const ADMIN_ROLES = ["ADMIN", "EXECUTIVE_DIRECTOR", "GENERAL_MANAGER", "ADMINISTRATIVE_SECRETARIAT"];
-
-const roleTranslations: Record<string, string> = {
-  ADMIN: "مدير النظام",
-  EXECUTIVE_DIRECTOR: "إدارة تنفيذية",
-  GENERAL_MANAGER: "مدير عام",
-  ADMINISTRATIVE_SECRETARIAT: "إدارة تنفيذية",
-  STRATEGY: "الاستراتيجية",
-  FINANCE: "المالية",
-};
+import { PERMISSION_GROUPS, ALL_PERMISSIONS, AUTO_ADMIN_ROLES, ROLE_LABELS } from "@/lib/permissions";
 
 const roleBadgeStyles: Record<string, string> = {
   ADMIN: "bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300",
@@ -34,11 +24,6 @@ const roleBadgeStyles: Record<string, string> = {
   STRATEGY: "bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300",
   FINANCE: "bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300",
 };
-
-const permissionsList = [
-  { id: "manage_governance", label: "إدارة الحوكمة" },
-  { id: "manage_hr", label: "إدارة الموارد البشرية" },
-];
 
 interface Charity {
   id: string;
@@ -119,6 +104,16 @@ export function EmployeesClient({
     );
   };
 
+  const handleSelectAllGroup = (groupPermissions: { id: string }[]) => {
+    const ids = groupPermissions.map(p => p.id);
+    const allSelected = ids.every(id => editPermissions.includes(id));
+    if (allSelected) {
+      setEditPermissions(prev => prev.filter(id => !ids.includes(id)));
+    } else {
+      setEditPermissions(prev => [...new Set([...prev, ...ids])]);
+    }
+  };
+
   const handleEditSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingEmployee) return;
@@ -140,8 +135,8 @@ export function EmployeesClient({
         return;
       }
 
-      // Save charity assignments for restricted roles
-      if (!ADMIN_ROLES.includes(editRole) && editRole !== "CHARITY_CLIENT") {
+      // Save charity assignments for non-admin roles
+      if (!AUTO_ADMIN_ROLES.includes(editRole) && editRole !== "CHARITY_CLIENT") {
         await updateEmployeeCharities(editingEmployee.id, editCharityIds);
       }
 
@@ -165,6 +160,8 @@ export function EmployeesClient({
       }, 1000);
     });
   };
+
+  const isEditRoleAdmin = AUTO_ADMIN_ROLES.includes(editRole);
 
   return (
     <div className="space-y-6">
@@ -204,7 +201,7 @@ export function EmployeesClient({
                       roleBadgeStyles[emp.role] || "bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300"
                     }`}>
                       <ShieldAlert className="w-3.5 h-3.5" />
-                      {roleTranslations[emp.role] || emp.role}
+                      {ROLE_LABELS[emp.role] || emp.role}
                     </span>
                   </td>
                   <td className="px-6 py-4">
@@ -219,9 +216,13 @@ export function EmployeesClient({
                   </td>
                   <td className="px-6 py-4">
                     <div className="flex flex-wrap gap-1 max-w-[280px]">
-                      {emp.permissions.length > 0 ? (
+                      {AUTO_ADMIN_ROLES.includes(emp.role) ? (
+                        <span className="inline-block text-[10px] font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-900/30 px-2 py-0.5 rounded">
+                          جميع الصلاحيات (تلقائي)
+                        </span>
+                      ) : emp.permissions.length > 0 ? (
                         emp.permissions.map(permId => {
-                          const label = permissionsList.find(p => p.id === permId)?.label || permId;
+                          const label = ALL_PERMISSIONS.find(p => p.id === permId)?.label || permId;
                           return (
                             <span key={permId} className="inline-block text-[10px] font-bold text-indigo-700 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-900/30 px-2 py-0.5 rounded">
                               {label}
@@ -361,8 +362,9 @@ export function EmployeesClient({
                       disabled={isPending || editingEmployee.role === "ADMIN"}
                       className="appearance-none block w-full pr-10 pl-3 py-2.5 border border-slate-200 dark:border-slate-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary/50 text-sm font-bold text-slate-800 dark:text-slate-100 bg-white dark:bg-slate-900/50 cursor-pointer transition-colors"
                     >
-                      <option value="EXECUTIVE_DIRECTOR">إدارة تنفيذية</option>
-                      <option value="GENERAL_MANAGER">مدير عام</option>
+                      <option value="EXECUTIVE_DIRECTOR">المدير التنفيذي</option>
+                      <option value="ADMINISTRATIVE_SECRETARIAT">السكرتارية التنفيذية</option>
+                      <option value="GENERAL_MANAGER">مساعد المدير</option>
                       <option value="STRATEGY">الاستراتيجية</option>
                       <option value="FINANCE">المالية</option>
                       {editingEmployee.role === "ADMIN" && <option value="ADMIN">مدير النظام</option>}
@@ -392,37 +394,68 @@ export function EmployeesClient({
               {/* Permissions Section */}
               <div className="pt-4 border-t border-slate-100 dark:border-slate-700">
                 <h4 className="text-sm font-bold text-slate-700 dark:text-slate-200 mb-3">الصلاحيات المخصصة</h4>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  {permissionsList.map((perm) => {
-                    const isChecked = editPermissions.includes(perm.id);
+                
+                {isEditRoleAdmin && (
+                  <div className="bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800/50 p-3 rounded-xl text-xs text-emerald-700 dark:text-emerald-300 font-bold mb-4 flex items-center gap-2">
+                    <Check className="w-4 h-4 shrink-0" />
+                    هذا الدور يملك جميع الصلاحيات تلقائياً
+                  </div>
+                )}
+
+                <div className="space-y-4">
+                  {PERMISSION_GROUPS.map((group) => {
+                    const allGroupSelected = group.permissions.every(p => editPermissions.includes(p.id));
                     return (
-                      <button
-                        key={perm.id}
-                        type="button"
-                        onClick={() => handlePermissionToggle(perm.id)}
-                        disabled={isPending}
-                        className={`flex items-center gap-3 p-3 rounded-xl border text-right transition-all cursor-pointer ${
-                          isChecked 
-                            ? "border-primary bg-primary/5 dark:bg-primary/10 text-primary dark:text-primary" 
-                            : "border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700/50 text-slate-600 dark:text-slate-300"
-                        }`}
-                      >
-                        <div className={`w-4 h-4 rounded border flex items-center justify-center shrink-0 ${
-                          isChecked 
-                            ? "bg-primary border-primary text-white" 
-                            : "border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800"
-                        }`}>
-                          {isChecked && <Check className="w-3 h-3 text-white" />}
+                      <div key={group.title} className={isEditRoleAdmin ? "opacity-50 pointer-events-none" : ""}>
+                        <div className="flex items-center justify-between mb-2">
+                          <h5 className="text-xs font-bold text-slate-500 dark:text-slate-400 flex items-center gap-2">
+                            <span className="w-2 h-2 rounded-full bg-primary/60"></span>
+                            {group.title}
+                          </h5>
+                          <button
+                            type="button"
+                            onClick={() => handleSelectAllGroup(group.permissions)}
+                            disabled={isPending || isEditRoleAdmin}
+                            className="text-[10px] font-bold text-primary hover:text-primary/80 transition-colors cursor-pointer disabled:opacity-50"
+                          >
+                            {allGroupSelected ? "إلغاء الكل" : "تحديد الكل"}
+                          </button>
                         </div>
-                        <span className="text-xs font-bold">{perm.label}</span>
-                      </button>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                          {group.permissions.map((perm) => {
+                            const isChecked = isEditRoleAdmin || editPermissions.includes(perm.id);
+                            return (
+                              <button
+                                key={perm.id}
+                                type="button"
+                                onClick={() => handlePermissionToggle(perm.id)}
+                                disabled={isPending || isEditRoleAdmin}
+                                className={`flex items-center gap-3 p-2.5 rounded-xl border text-right transition-all cursor-pointer ${
+                                  isChecked 
+                                    ? "border-primary bg-primary/5 dark:bg-primary/10 text-primary dark:text-primary" 
+                                    : "border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700/50 text-slate-600 dark:text-slate-300"
+                                }`}
+                              >
+                                <div className={`w-4 h-4 rounded border flex items-center justify-center shrink-0 ${
+                                  isChecked 
+                                    ? "bg-primary border-primary text-white" 
+                                    : "border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800"
+                                }`}>
+                                  {isChecked && <Check className="w-3 h-3 text-white" />}
+                                </div>
+                                <span className="text-xs font-bold">{perm.label}</span>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
                     );
                   })}
                 </div>
               </div>
 
-              {/* Charity Assignment Section — shown only for restricted roles */}
-              {!ADMIN_ROLES.includes(editRole) && editRole !== "CHARITY_CLIENT" && allCharities.length > 0 && (
+              {/* Charity Assignment Section — shown only for non-admin roles */}
+              {!AUTO_ADMIN_ROLES.includes(editRole) && editRole !== "CHARITY_CLIENT" && allCharities.length > 0 && (
                 <div className="pt-4 border-t border-slate-100 dark:border-slate-700">
                   <div className="flex items-center gap-2 mb-3">
                     <Building2 className="w-4 h-4 text-slate-500 dark:text-slate-400" />

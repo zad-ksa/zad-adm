@@ -23,6 +23,7 @@ import ZadLogo from "@/components/ZadLogo";
 import { useTheme } from "next-themes";
 import { useState, useEffect } from "react";
 import { logout } from "@/app/actions/auth";
+import { hasPermission } from "@/lib/permissions";
 
 export default function CharitySidebar({ 
   charityName,
@@ -47,12 +48,9 @@ export default function CharitySidebar({
     setMounted(true);
   }, []);
 
-  const isAdmin = ["ADMIN", "EXECUTIVE_DIRECTOR", "GENERAL_MANAGER", "ADMINISTRATIVE_SECRETARIAT"].includes(role || "");
-  const isStrategy = role === "STRATEGY";
-  const isFinance = role === "FINANCE";
   const isCharityClient = role === "CHARITY_CLIENT";
-  const canManageGovernance = isAdmin || permissions?.includes("manage_governance");
-  const canManageHR = isAdmin || permissions?.includes("manage_hr");
+  const perms = permissions || [];
+  const can = (p: string) => hasPermission(role || "", perms, p);
 
   const allNavItems = [
     {
@@ -66,48 +64,48 @@ export default function CharitySidebar({
       title: "الخدمات",
       href: `/charity/${encodeURIComponent(charityName)}/services`,
       icon: Briefcase,
-      show: isAdmin || isCharityClient || isStrategy || isFinance, // generally visible to anyone who has access to charity
+      show: !isCharityClient || isCharityClient,
     },
     {
       title: "الاستراتيجية",
       href: `/charity/${encodeURIComponent(charityName)}/strategy`,
       icon: Target,
       comingSoon: isCharityClient,
-      show: isAdmin || isStrategy || isCharityClient,
+      show: can("manage_strategy") || isCharityClient,
     },
     {
       title: "الحوكمة",
       href: `/charity/${encodeURIComponent(charityName)}/governance`,
       icon: Scale,
       comingSoon: isCharityClient,
-      show: canManageGovernance || isCharityClient,
+      show: can("manage_governance") || isCharityClient,
     },
     {
       title: "البرامج والمشاريع",
       href: `/charity/${encodeURIComponent(charityName)}/programs`,
       icon: FolderKanban,
       comingSoon: isCharityClient,
-      show: isAdmin || isStrategy || isCharityClient,
+      show: can("manage_programs") || isCharityClient,
     },
     {
       title: "المالية",
       href: `/charity/${encodeURIComponent(charityName)}/finance`,
       icon: Coins,
       comingSoon: isCharityClient,
-      show: isAdmin || isFinance || isCharityClient,
+      show: can("manage_finance") || isCharityClient,
     },
     {
       title: "الموارد البشرية",
       href: "#",
       icon: Users,
       comingSoon: true,
-      show: canManageHR || isCharityClient,
+      show: can("manage_hr") || isCharityClient,
     },
     {
       title: "مهامي",
       href: `/charity/${encodeURIComponent(charityName)}/tasks`,
       icon: CheckSquare,
-      comingSoon: true, // Will be implemented soon
+      comingSoon: true,
       show: false,
     },
   ];

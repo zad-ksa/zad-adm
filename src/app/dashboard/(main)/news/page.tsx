@@ -1,10 +1,12 @@
-﻿import { unstable_cache } from "next/cache";
+import { unstable_cache } from "next/cache";
 import { prisma } from "@/lib/db";
 import { getCharities } from "@/app/actions/charity";
 import type { Metadata } from "next";
 import { getSession } from "@/lib/auth";
 import NewsFilterClient from "./NewsFilterClient";
 import { getCategories } from "@/app/actions/categories";
+import { redirect } from "next/navigation";
+import { hasPermission } from "@/lib/permissions";
 
 
 export const dynamic = "force-dynamic";
@@ -23,6 +25,10 @@ const getCachedNews = async () => {
 export default async function NewsDashboard() {
   const charities = await getCharities();
   const session = await getSession();
+
+  if (!session || !hasPermission(session.role, session.permissions || [], "manage_news")) {
+    redirect("/dashboard");
+  }
 
   // Fetch news from the database
   const dbNewsItems = await getCachedNews();

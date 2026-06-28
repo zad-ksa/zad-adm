@@ -152,12 +152,14 @@ export default function CharitySidebar({
       exact: true,
       icon: Home,
       show: true,
+      section: "sub",
     },
     {
       title: "الخدمات",
       href: `/charity/${encodeURIComponent(charityName)}/services`,
       icon: Briefcase,
       show: !isCharityClient || isCharityClient,
+      section: "main",
     },
     {
       title: "الاستراتيجية",
@@ -165,6 +167,7 @@ export default function CharitySidebar({
       icon: Target,
       comingSoon: isCharityClient,
       show: can("manage_strategy") || isCharityClient,
+      section: "sub",
     },
     {
       title: "الحوكمة",
@@ -172,6 +175,7 @@ export default function CharitySidebar({
       icon: Scale,
       comingSoon: isCharityClient,
       show: can("manage_governance") || isCharityClient,
+      section: "main",
     },
     {
       title: "البرامج والمشاريع",
@@ -179,6 +183,7 @@ export default function CharitySidebar({
       icon: FolderKanban,
       comingSoon: isCharityClient,
       show: can("manage_programs") || isCharityClient,
+      section: "sub",
     },
     {
       title: "المالية",
@@ -186,6 +191,7 @@ export default function CharitySidebar({
       icon: Coins,
       comingSoon: isCharityClient,
       show: can("manage_finance") || isCharityClient,
+      section: "sub",
     },
     {
       title: "الموارد البشرية",
@@ -193,6 +199,7 @@ export default function CharitySidebar({
       icon: Users,
       comingSoon: true,
       show: can("manage_hr") || isCharityClient,
+      section: "sub",
     },
     {
       title: "مهامي",
@@ -200,6 +207,7 @@ export default function CharitySidebar({
       icon: CheckSquare,
       comingSoon: true,
       show: false,
+      section: "sub",
     },
   ];
 
@@ -310,7 +318,7 @@ export default function CharitySidebar({
       <div className="flex-1 overflow-y-auto custom-scrollbar px-2.5 py-3 space-y-0.5 flex flex-col relative">
         {isOpen && (
           <div className="flex items-center justify-between px-2.5 mb-2">
-            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">القائمة الرئيسية</span>
+            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">التبويبات الرئيسية</span>
             {!isNavEditMode ? (
               <button
                 onClick={() => setIsNavEditMode(true)}
@@ -334,8 +342,36 @@ export default function CharitySidebar({
 
         <div className="flex-1 space-y-0.5 relative">
           <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-            <SortableContext items={orderedNavItems.map(i => i.href)} strategy={verticalListSortingStrategy}>
-              {orderedNavItems.map((item, idx) => {
+            <SortableContext items={orderedNavItems.filter(i => i.section === 'main').map(i => i.href)} strategy={verticalListSortingStrategy}>
+              {orderedNavItems.filter(i => i.section === 'main').map((item, idx) => {
+                const decodedPathname = decodeURIComponent(pathname);
+                const decodedHref = decodeURIComponent(item.href);
+                const isActive = item.exact
+                  ? decodedPathname === decodedHref
+                  : decodedPathname.startsWith(decodedHref);
+
+                return (
+                  <SortableNavItem 
+                    key={item.href}
+                    item={item}
+                    isActive={isActive}
+                    isOpen={isOpen}
+                    isEditMode={isNavEditMode}
+                  />
+                )
+              })}
+            </SortableContext>
+          </DndContext>
+          
+          {isOpen && orderedNavItems.filter(i => i.section === 'sub').length > 0 && (
+            <div className="flex items-center justify-between px-2.5 mt-6 mb-2">
+              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">التبويبات الفرعية</span>
+            </div>
+          )}
+          
+          <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+            <SortableContext items={orderedNavItems.filter(i => i.section === 'sub').map(i => i.href)} strategy={verticalListSortingStrategy}>
+              {orderedNavItems.filter(i => i.section === 'sub').map((item, idx) => {
                 const decodedPathname = decodeURIComponent(pathname);
                 const decodedHref = decodeURIComponent(item.href);
                 const isActive = item.exact

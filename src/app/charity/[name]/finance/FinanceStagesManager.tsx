@@ -185,35 +185,35 @@ export default function FinanceStagesManager({
   };
 
   return (
-    <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm overflow-hidden mt-8 transition-colors">
-      <div 
-        className="p-6 border-b border-slate-100 dark:border-slate-700 flex flex-col sm:flex-row sm:items-center justify-between gap-4 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-900/50 transition-colors"
+    <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-700 shadow-sm overflow-hidden mt-4 transition-colors">
+      <div
+        className="p-3 border-b border-slate-100 dark:border-slate-700 flex flex-col sm:flex-row sm:items-center justify-between gap-2 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-900/50 transition-colors"
         onClick={() => setIsExpanded(!isExpanded)}
       >
-        <div className="flex items-center gap-3">
-          <div className="p-1 text-slate-400 hover:text-slate-600 transition-colors">
-            {isExpanded ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
+        <div className="flex items-center gap-2">
+          <div className="p-0.5 text-slate-400 hover:text-slate-600 transition-colors">
+            {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
           </div>
-          <h3 className="text-xl font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
-            <Coins className="w-5 h-5 text-amber-500" />
+          <h3 className="text-sm font-bold text-slate-800 dark:text-slate-100 flex items-center gap-1.5">
+            <Coins className="w-4 h-4 text-amber-500" />
             إدارة: {timelineName}
           </h3>
           {isExpanded && (
-            <button 
+            <button
               onClick={(e) => { e.stopPropagation(); setIsEditingConfig(!isEditingConfig); }}
-              className="p-1.5 text-slate-400 hover:text-primary bg-white dark:bg-slate-800 hover:bg-primary/10 rounded-lg transition-colors border border-slate-200 dark:border-slate-700"
+              className="p-1 text-slate-400 hover:text-primary bg-white dark:bg-slate-800 hover:bg-primary/10 rounded transition-colors border border-slate-200 dark:border-slate-700"
               title="إعدادات المخطط"
             >
-              <Settings className="w-4 h-4" />
+              <Settings className="w-3.5 h-3.5" />
             </button>
           )}
         </div>
         <button
           onClick={(e) => { e.stopPropagation(); setIsAdding(true); setIsExpanded(true); }}
-          className="flex items-center justify-center gap-2 bg-primary/10 hover:bg-primary/20 text-primary px-4 py-2 rounded-xl text-sm font-semibold transition-colors"
+          className="flex items-center justify-center gap-1.5 bg-primary/10 hover:bg-primary/20 text-primary px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors"
           disabled={isPending}
         >
-          <Plus className="w-4 h-4" />
+          <Plus className="w-3.5 h-3.5" />
           إضافة مرحلة
         </button>
       </div>
@@ -260,7 +260,7 @@ export default function FinanceStagesManager({
         </div>
       )}
 
-      <div className="mt-6 border-t border-slate-100 dark:border-slate-700 pt-6 px-2 sm:px-6 pb-6">
+      <div className="mt-2 border-t border-slate-100 dark:border-slate-700 pt-2 px-2 sm:px-3 pb-3">
         <InteractiveTimelineEditor
           title={configName}
           stages={sortedStages as any}

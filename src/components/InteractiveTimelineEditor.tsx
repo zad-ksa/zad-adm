@@ -129,16 +129,16 @@ export default function InteractiveTimelineEditor({
   };
 
   return (
-    <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 p-6 shadow-sm overflow-x-auto custom-scrollbar">
-      <h3 className="font-bold text-xl text-slate-800 dark:text-slate-100 mb-8 border-b border-slate-100 dark:border-slate-700 pb-4 flex justify-between items-center">
+    <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-3 shadow-sm overflow-x-auto custom-scrollbar">
+      <h3 className="font-bold text-sm text-slate-800 dark:text-slate-100 mb-4 border-b border-slate-100 dark:border-slate-700 pb-2 flex justify-between items-center">
         <span>{title}</span>
-        <span className="text-xs bg-primary/10 text-primary px-3 py-1 rounded-full font-bold flex items-center gap-1">
-          <Edit2 className="w-3 h-3" /> وضع التعديل المباشر
+        <span className="text-[10px] bg-primary/10 text-primary px-2 py-0.5 rounded-full font-bold flex items-center gap-1">
+          <Edit2 className="w-2.5 h-2.5" /> وضع التعديل المباشر
         </span>
       </h3>
-      
-      <div className="relative pb-8 min-w-max">
-        <div className="flex flex-row gap-6 relative z-10 items-start pt-6">
+
+      <div className="relative pb-4 min-w-max">
+        <div className="flex flex-row gap-3 relative z-10 items-start pt-4">
           
           {sequentialStages.map((stage, idx) => {
             const isPast = sequentialStages.findIndex(s => s.isCurrent) > idx;
@@ -146,54 +146,54 @@ export default function InteractiveTimelineEditor({
             const displayDuration = formatDurationArabic(stage.startDate, stage.endDate);
             
             return (
-              <div key={stage.id} className={`flex flex-col items-center gap-3 group relative w-[220px] transition-all ${!stage.isActive ? "opacity-60 grayscale-[50%]" : ""}`}>
-                
+              <div key={stage.id} className={`flex flex-col items-center gap-2 group relative w-[160px] transition-all ${!stage.isActive ? "opacity-60 grayscale-[50%]" : ""}`}>
+
                 {/* Connecting Line */}
                 {idx !== sequentialStages.length - 1 && (
-                  <div className={`absolute top-6 right-1/2 w-[calc(100%+1.5rem)] h-1 -z-10 ${isPast ? 'bg-emerald-500' : 'bg-slate-200 dark:bg-slate-700'}`}></div>
+                  <div className={`absolute top-4 right-1/2 w-[calc(100%+0.75rem)] h-0.5 -z-10 ${isPast ? 'bg-emerald-500' : 'bg-slate-200 dark:bg-slate-700'}`}></div>
                 )}
                 {/* Connecting Line to Add Button */}
                 {idx === sequentialStages.length - 1 && (
-                  <div className={`absolute top-6 right-1/2 w-[calc(100%+1.5rem)] h-1 -z-10 bg-slate-200 dark:bg-slate-700 border-dashed border-t-2 border-slate-300 dark:border-slate-600 bg-transparent`}></div>
+                  <div className={`absolute top-4 right-1/2 w-[calc(100%+0.75rem)] h-0.5 -z-10 bg-slate-200 dark:bg-slate-700 border-dashed border-t border-slate-300 dark:border-slate-600 bg-transparent`}></div>
                 )}
-                
+
                 {/* Reorder Arrows (Visible on Hover) */}
-                <div className="absolute -top-6 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm p-1 rounded-lg border border-slate-200 dark:border-slate-700 z-20 shadow-sm">
-                   <button 
+                <div className="absolute -top-5 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm p-0.5 rounded-md border border-slate-200 dark:border-slate-700 z-20 shadow-sm">
+                   <button
                      onClick={() => onMove(stage.id, 'up')}
                      disabled={idx === 0 || isPending}
-                     className="p-1 bg-white dark:bg-slate-700 shadow-sm border border-slate-200 dark:border-slate-600 rounded-md hover:bg-slate-50 dark:hover:bg-slate-600 disabled:opacity-30"
+                     className="p-0.5 bg-white dark:bg-slate-700 shadow-sm border border-slate-200 dark:border-slate-600 rounded hover:bg-slate-50 dark:hover:bg-slate-600 disabled:opacity-30"
                      title="تحريك يميناً (للخلف)"
                    >
-                     <ArrowRight className="w-3.5 h-3.5 text-slate-600 dark:text-slate-300" />
+                     <ArrowRight className="w-3 h-3 text-slate-600 dark:text-slate-300" />
                    </button>
-                   <button 
+                   <button
                      onClick={() => onMove(stage.id, 'down')}
                      disabled={idx === sequentialStages.length - 1 || isPending}
-                     className="p-1 bg-white dark:bg-slate-700 shadow-sm border border-slate-200 dark:border-slate-600 rounded-md hover:bg-slate-50 dark:hover:bg-slate-600 disabled:opacity-30"
+                     className="p-0.5 bg-white dark:bg-slate-700 shadow-sm border border-slate-200 dark:border-slate-600 rounded hover:bg-slate-50 dark:hover:bg-slate-600 disabled:opacity-30"
                      title="تحريك يساراً (للأمام)"
                    >
-                     <ArrowLeft className="w-3.5 h-3.5 text-slate-600 dark:text-slate-300" />
+                     <ArrowLeft className="w-3 h-3 text-slate-600 dark:text-slate-300" />
                    </button>
                 </div>
 
                 {/* Circle */}
-                <button 
+                <button
                   onClick={() => {
                     setSelectedStageId(stage.id);
                     setModalEditName(stage.name);
                   }}
-                  className={`w-14 h-14 rounded-full border-4 flex items-center justify-center font-bold text-xl bg-white dark:bg-slate-800 shrink-0 transition-all duration-300 relative z-10 cursor-pointer hover:scale-110 hover:shadow-md
-                  ${isPast ? 'border-emerald-500 text-emerald-500' : 
-                    isCurrent ? 'border-primary text-primary scale-110 shadow-lg shadow-primary/20' : 
+                  className={`w-9 h-9 rounded-full border-2 flex items-center justify-center font-bold text-sm bg-white dark:bg-slate-800 shrink-0 transition-all duration-300 relative z-10 cursor-pointer hover:scale-110 hover:shadow-md
+                  ${isPast ? 'border-emerald-500 text-emerald-500' :
+                    isCurrent ? 'border-primary text-primary scale-110 shadow-lg shadow-primary/20' :
                     'border-slate-200 dark:border-slate-600 text-slate-400 dark:text-slate-500'}`}
                   title="انقر لخيارات المرحلة"
                 >
                   {isPast ? <CheckCircleIcon /> : (idx + 1)}
                 </button>
-                
+
                 {/* Info Card */}
-                <div className={`flex flex-col items-center w-full p-3 rounded-xl transition-all duration-300 border ${isCurrent ? 'bg-primary/5 dark:bg-primary/10 border-primary/20 shadow-sm' : 'bg-slate-50 dark:bg-slate-900/50 border-transparent hover:border-slate-200 dark:hover:border-slate-700'}`}>
+                <div className={`flex flex-col items-center w-full p-2 rounded-lg transition-all duration-300 border ${isCurrent ? 'bg-primary/5 dark:bg-primary/10 border-primary/20 shadow-sm' : 'bg-slate-50 dark:bg-slate-900/50 border-transparent hover:border-slate-200 dark:hover:border-slate-700'}`}>
                   
                   {/* Name */}
                   {editingField?.id === stage.id && editingField.field === 'name' ? (
@@ -261,33 +261,33 @@ export default function InteractiveTimelineEditor({
           })}
 
           {/* Add New Stage Button */}
-          <div className="flex flex-col items-center gap-3 w-[220px]">
+          <div className="flex flex-col items-center gap-2 w-[160px]">
             {isAdding ? (
-              <div className="flex flex-col items-center w-full p-3 rounded-xl border-2 border-primary/50 border-dashed bg-primary/5 mt-10">
-                <input 
+              <div className="flex flex-col items-center w-full p-2 rounded-lg border border-primary/50 border-dashed bg-primary/5 mt-6">
+                <input
                   autoFocus
-                  className="w-full text-center text-sm font-bold bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 rounded-md px-2 py-1 outline-none mb-2"
+                  className="w-full text-center text-xs font-bold bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 rounded px-2 py-1 outline-none mb-1.5"
                   placeholder="اسم المرحلة..."
                   value={newName}
                   onChange={e => setNewName(e.target.value)}
                   onKeyDown={e => e.key === 'Enter' && submitNewStage()}
                 />
-                <div className="flex gap-2">
-                  <button onClick={submitNewStage} className="bg-primary text-white p-1.5 rounded-md hover:bg-primary/90"><Check className="w-4 h-4" /></button>
-                  <button onClick={() => { setIsAdding(false); setNewName(""); }} className="bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 p-1.5 rounded-md hover:bg-slate-300"><X className="w-4 h-4" /></button>
+                <div className="flex gap-1.5">
+                  <button onClick={submitNewStage} className="bg-primary text-white p-1 rounded hover:bg-primary/90"><Check className="w-3 h-3" /></button>
+                  <button onClick={() => { setIsAdding(false); setNewName(""); }} className="bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 p-1 rounded hover:bg-slate-300"><X className="w-3 h-3" /></button>
                 </div>
               </div>
             ) : (
               <>
-                <button 
+                <button
                   onClick={() => setIsAdding(true)}
                   disabled={isPending}
-                  className="w-14 h-14 rounded-full border-4 border-dashed border-slate-300 dark:border-slate-600 flex items-center justify-center text-slate-400 hover:text-primary hover:border-primary hover:bg-primary/5 transition-all cursor-pointer relative z-10 bg-white dark:bg-slate-800"
+                  className="w-9 h-9 rounded-full border-2 border-dashed border-slate-300 dark:border-slate-600 flex items-center justify-center text-slate-400 hover:text-primary hover:border-primary hover:bg-primary/5 transition-all cursor-pointer relative z-10 bg-white dark:bg-slate-800"
                   title="إضافة مرحلة جديدة"
                 >
-                  <Plus className="w-6 h-6" />
+                  <Plus className="w-4 h-4" />
                 </button>
-                <div className="mt-2 text-sm text-slate-400 font-medium">إضافة مرحلة</div>
+                <div className="text-xs text-slate-400 font-medium">إضافة مرحلة</div>
               </>
             )}
           </div>
@@ -296,61 +296,61 @@ export default function InteractiveTimelineEditor({
       </div>
 
       {/* Continuous Stages Row */}
-      <div className="mt-8 pt-6 border-t border-slate-100 dark:border-slate-700">
-        <h4 className="text-sm font-bold text-slate-500 dark:text-slate-400 mb-4 flex items-center gap-2">
-          <Infinity className="w-4 h-4" /> المراحل والأنشطة المستمرة
-          <button 
+      <div className="mt-4 pt-3 border-t border-slate-100 dark:border-slate-700">
+        <h4 className="text-xs font-bold text-slate-500 dark:text-slate-400 mb-2 flex items-center gap-1.5">
+          <Infinity className="w-3 h-3" /> المراحل والأنشطة المستمرة
+          <button
             onClick={() => setIsAddingContinuous(true)}
             disabled={isPending}
-            className="mr-auto text-xs bg-amber-500/10 text-amber-600 dark:text-amber-500 hover:bg-amber-500/20 px-2 py-1 rounded-md flex items-center gap-1 transition-colors font-bold"
+            className="mr-auto text-[10px] bg-amber-500/10 text-amber-600 dark:text-amber-500 hover:bg-amber-500/20 px-2 py-0.5 rounded flex items-center gap-1 transition-colors font-bold"
           >
-            <Plus className="w-3 h-3" /> إضافة
+            <Plus className="w-2.5 h-2.5" /> إضافة
           </button>
         </h4>
-        <div className="relative pb-8 min-w-max">
-          <div className="flex flex-row gap-6 relative z-10 items-start pt-6">
+        <div className="relative pb-4 min-w-max">
+          <div className="flex flex-row gap-3 relative z-10 items-start pt-4">
             {continuousStages.map((stage, idx) => {
               const displayDuration = formatDurationArabic(stage.startDate, stage.endDate);
               const isCurrent = stage.isCurrent;
               return (
-                <div key={stage.id} className={`flex flex-col items-center gap-3 group relative w-[220px] transition-all ${!stage.isActive ? "opacity-60 grayscale-[50%]" : ""}`}>
-                  
+                <div key={stage.id} className={`flex flex-col items-center gap-2 group relative w-[160px] transition-all ${!stage.isActive ? "opacity-60 grayscale-[50%]" : ""}`}>
+
                   {/* Reorder Arrows (Visible on Hover) */}
-                  <div className="absolute -top-6 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm p-1 rounded-lg border border-slate-200 dark:border-slate-700 z-20 shadow-sm">
-                     <button 
+                  <div className="absolute -top-5 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm p-0.5 rounded-md border border-slate-200 dark:border-slate-700 z-20 shadow-sm">
+                     <button
                        onClick={() => onMove(stage.id, 'up')}
                        disabled={idx === 0 || isPending}
-                       className="p-1 bg-white dark:bg-slate-700 shadow-sm border border-slate-200 dark:border-slate-600 rounded-md hover:bg-slate-50 dark:hover:bg-slate-600 disabled:opacity-30"
+                       className="p-0.5 bg-white dark:bg-slate-700 shadow-sm border border-slate-200 dark:border-slate-600 rounded hover:bg-slate-50 dark:hover:bg-slate-600 disabled:opacity-30"
                        title="تحريك يميناً (للخلف)"
                      >
-                       <ArrowRight className="w-3.5 h-3.5 text-slate-600 dark:text-slate-300" />
+                       <ArrowRight className="w-3 h-3 text-slate-600 dark:text-slate-300" />
                      </button>
-                     <button 
+                     <button
                        onClick={() => onMove(stage.id, 'down')}
                        disabled={idx === continuousStages.length - 1 || isPending}
-                       className="p-1 bg-white dark:bg-slate-700 shadow-sm border border-slate-200 dark:border-slate-600 rounded-md hover:bg-slate-50 dark:hover:bg-slate-600 disabled:opacity-30"
+                       className="p-0.5 bg-white dark:bg-slate-700 shadow-sm border border-slate-200 dark:border-slate-600 rounded hover:bg-slate-50 dark:hover:bg-slate-600 disabled:opacity-30"
                        title="تحريك يساراً (للأمام)"
                      >
-                       <ArrowLeft className="w-3.5 h-3.5 text-slate-600 dark:text-slate-300" />
+                       <ArrowLeft className="w-3 h-3 text-slate-600 dark:text-slate-300" />
                      </button>
                   </div>
 
                   {/* Circle - GOLD without lines */}
-                  <button 
+                  <button
                     onClick={() => {
                       setSelectedStageId(stage.id);
                       setModalEditName(stage.name);
                     }}
-                    className={`w-14 h-14 rounded-full border-4 flex items-center justify-center font-bold text-xl bg-white dark:bg-slate-800 shrink-0 transition-all duration-300 relative z-10 cursor-pointer hover:scale-110 hover:shadow-md
-                    ${isCurrent ? 'border-amber-500 text-amber-500 scale-110 shadow-lg shadow-amber-500/20' : 
+                    className={`w-9 h-9 rounded-full border-2 flex items-center justify-center font-bold text-sm bg-white dark:bg-slate-800 shrink-0 transition-all duration-300 relative z-10 cursor-pointer hover:scale-110 hover:shadow-md
+                    ${isCurrent ? 'border-amber-500 text-amber-500 scale-110 shadow-lg shadow-amber-500/20' :
                       'border-amber-200 dark:border-amber-700 text-amber-500 dark:text-amber-500'}`}
                     title="انقر لخيارات المرحلة"
                   >
-                    <Infinity className="w-6 h-6" />
+                    <Infinity className="w-4 h-4" />
                   </button>
-                  
+
                   {/* Info Card */}
-                  <div className={`flex flex-col items-center w-full p-3 rounded-xl transition-all duration-300 border ${isCurrent ? 'bg-amber-500/5 dark:bg-amber-500/10 border-amber-500/20 shadow-sm' : 'bg-slate-50 dark:bg-slate-900/50 border-transparent hover:border-slate-200 dark:hover:border-slate-700'}`}>
+                  <div className={`flex flex-col items-center w-full p-2 rounded-lg transition-all duration-300 border ${isCurrent ? 'bg-amber-500/5 dark:bg-amber-500/10 border-amber-500/20 shadow-sm' : 'bg-slate-50 dark:bg-slate-900/50 border-transparent hover:border-slate-200 dark:hover:border-slate-700'}`}>
                     
                     {/* Name */}
                     {editingField?.id === stage.id && editingField.field === 'name' ? (

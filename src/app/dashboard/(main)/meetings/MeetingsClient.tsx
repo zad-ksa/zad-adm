@@ -114,6 +114,10 @@ function mdToHtml(md: string): string {
       out.push("<hr>");
     } else if (line === "") {
       out.push("<br>");
+    } else if (/صدر هذا المحضر/.test(line)) {
+      // استبدال سطر الختام دائماً بالصياغة الصحيحة + السطر الإضافي
+      out.push(`<p class="footer-note"><em>صدر هذا المحضر عن شركة زاد للخدمات التنموية</em></p>`);
+      out.push(`<p class="footer-note"><em>محضر إلكتروني عبر موقع زاد</em></p>`);
     } else {
       out.push(`<p>${applyInline(line)}</p>`);
     }
@@ -250,6 +254,7 @@ function handlePrint(m: Meeting) {
   ul { list-style: disc; padding-right: 16px; margin: 2px 0 5px; }
   li { margin-bottom: 2px; line-height: 1.45; }
   hr { border: none; border-top: 1px solid #ddd; margin: 5px 0; }
+  p.footer-note { text-align: center; color: #64748b; font-size: 9pt; margin: 2px 0; }
   strong { font-weight: 700; }
   table {
     width: 100%;

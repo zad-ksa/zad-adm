@@ -16,7 +16,8 @@ export default async function ServicesOverviewPage() {
   const session = await getSession();
   if (!session) redirect("/");
 
-  const timelineNames = await getTimelineConfigs();
+  let timelineNames: Record<string, string> = {};
+  try { timelineNames = await getTimelineConfigs(); } catch (e) { console.error("[ServicesOverview] getTimelineConfigs error:", e); }
   const DEPT_LABELS: Record<string, string> = {
     STRATEGY: timelineNames["STRATEGY"] || "التخطيط الاستراتيجي",
     GOVERNANCE: timelineNames["GOVERNANCE"] || "الحوكمة",
@@ -57,10 +58,12 @@ export default async function ServicesOverviewPage() {
     });
   }
   if (canSee("GOVERNANCE")) {
-    data["GOVERNANCE"] = await prisma.governanceStage.findMany({
-      where: stageFilter,
-      orderBy: [{ charityId: "asc" }, { order: "asc" }],
-    });
+    try {
+      data["GOVERNANCE"] = await prisma.governanceStage.findMany({
+        where: stageFilter,
+        orderBy: [{ charityId: "asc" }, { order: "asc" }],
+      });
+    } catch (e) { console.error("[ServicesOverview] governanceStage error:", e); data["GOVERNANCE"] = []; }
   }
   if (canSee("FINANCE")) {
     data["FINANCE"] = await prisma.financeStage.findMany({

@@ -129,6 +129,7 @@ export default function TasksClient({
   const [itemToDelete, setItemToDelete] = useState<{ id: string, type: 'task' | 'achievement' } | null>(null);
 
   // Task updates state
+  const [expandedTaskId, setExpandedTaskId] = useState<string | null>(null);
   const [newUpdateText, setNewUpdateText] = useState<Record<string, string>>({});
   const [isSubmittingUpdate, setIsSubmittingUpdate] = useState(false);
 
@@ -829,12 +830,16 @@ ${combinedAchievements.length > 0 ? `
                           </div>
                         )}
 
-                        {/* Updates count badge */}
+                        {/* Updates count badge — click to toggle */}
                         {updates.length > 0 && (
-                          <span className="inline-flex items-center gap-1 text-[9px] font-bold text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-700/50 px-1.5 py-0.5 rounded">
+                          <button
+                            type="button"
+                            onClick={() => setExpandedTaskId(expandedTaskId === task.id ? null : task.id)}
+                            className="inline-flex items-center gap-1 text-[9px] font-bold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 hover:bg-blue-100 dark:hover:bg-blue-900/40 px-1.5 py-0.5 rounded transition-colors cursor-pointer"
+                          >
                             <MessageSquarePlus className="w-2.5 h-2.5" />
                             {updates.length} تحديث
-                          </span>
+                          </button>
                         )}
 
                         {/* Date */}
@@ -847,6 +852,16 @@ ${combinedAchievements.length > 0 ? `
 
                     {/* Actions */}
                     <div className="flex items-center gap-1 shrink-0">
+                      {canAddUpdate && (
+                        <button
+                          type="button"
+                          onClick={() => setExpandedTaskId(expandedTaskId === task.id ? null : task.id)}
+                          title="تحديثات المهمة"
+                          className={`p-1.5 rounded-lg transition-colors cursor-pointer ${expandedTaskId === task.id ? "text-blue-600 bg-blue-100 dark:bg-blue-900/30" : "text-slate-400 hover:text-blue-600 dark:text-slate-500 dark:hover:text-blue-400 hover:bg-slate-100 dark:hover:bg-slate-700"}`}
+                        >
+                          <MessageSquarePlus className="w-4 h-4" />
+                        </button>
+                      )}
                       {canEdit && (
                         <button
                           type="button"
@@ -874,8 +889,8 @@ ${combinedAchievements.length > 0 ? `
                     </div>
                   </div>
 
-                  {/* Updates section — always visible */}
-                  {(updates.length > 0 || canAddUpdate) && (
+                  {/* Updates section — toggled by icon button */}
+                  {(updates.length > 0 || canAddUpdate) && expandedTaskId === task.id && (
                     <div className="px-4 pb-3 bg-slate-50/80 dark:bg-slate-900/30 border-t border-dashed border-slate-200 dark:border-slate-700/40">
                       {/* Existing updates */}
                       {updates.length > 0 && (

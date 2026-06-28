@@ -637,6 +637,7 @@ export default function ServicesOverviewClient({
         setUnifyCharity(null);
         setUnifyTargetIds([]);
         router.refresh();
+        // activeTab is label-based now — survives key changes after refresh automatically
       } catch (error: any) {
         console.error("Error unifying stages", error);
         alert(error.message || "حدث خطأ أثناء تعميم المراحل");
@@ -663,7 +664,14 @@ export default function ServicesOverviewClient({
     ...uniqueServiceKeys.map(s => ({ key: `SVC:${s.id}`, label: s.name })),
   ];
 
-  const [activeTab, setActiveTab] = useState(tabs[0]?.key || "");
+  // Store active tab label so it survives key changes after router.refresh (new services created by unify get new IDs)
+  const [activeTabLabel, setActiveTabLabel] = useState(tabs[0]?.label || "");
+  const activeTab = tabs.find(t => t.label === activeTabLabel)?.key || tabs[0]?.key || "";
+  function setActiveTab(keyOrSetter: string | ((prev: string) => string)) {
+    const key = typeof keyOrSetter === "function" ? keyOrSetter(activeTab) : keyOrSetter;
+    const label = tabs.find(t => t.key === key)?.label || key;
+    setActiveTabLabel(label);
+  }
   const isGenericTab = activeTab.startsWith("SVC:");
   const genericSvcId = isGenericTab ? activeTab.replace("SVC:", "") : null;
   const activeLabel = tabs.find(t => t.key === activeTab)?.label || "";

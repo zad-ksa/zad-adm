@@ -12,15 +12,13 @@ export async function POST(req: NextRequest) {
     }
 
     let body: any;
-    try {
-      body = await req.json();
-    } catch {
+    try { body = await req.json(); } catch {
       return NextResponse.json({ error: "طلب غير صالح" }, { status: 400 });
     }
 
     const { formattedContent } = body;
     if (!formattedContent?.trim()) {
-      return NextResponse.json({ tasks: [] });
+      return NextResponse.json({ tasks: [], summary: "" });
     }
 
     if (!process.env.ANTHROPIC_API_KEY) {
@@ -31,30 +29,40 @@ export async function POST(req: NextRequest) {
 
     const message = await client.messages.create({
       model: "claude-haiku-4-5-20251001",
-      max_tokens: 512,
-      system: `أنت مساعد يستخلص المهام من محاضر الاجتماعات.
-استخرج كل مهمة أو إجراء مطلوب من النص وأعدها كـ JSON array.
-أعد فقط JSON بهذا الشكل بدون أي نص آخر:
-[{"title": "عنوان المهمة"}, ...]
-إذا لم توجد مهام أعد: []`,
-      messages: [
-        {
-          role: "user",
-          content: `استخرج المهام والإجراءات من هذا المحضر:\n\n${formattedContent}`,
-        },
-      ],
+      max_tokens: 1024,
+      system: `أنت مساعد يحلل محاضر اجتماعات وتعيد JSON فقط بهذا الشكل الدقيق بدون أي نص إضافي:
+{
+  "summary": "ملخص موجز جداً للمحضر في 2-3 جمل",
+  "tasks": [
+    {"title": "عنوان المهمة أو التوصية", "assigneeName": "اسم المكلف من النص أو null إذا لم يذكر"}
+  ]
+}
+قواعد:
+- الملخص: 2-3 جمل بالعربية تلخص أهم ما تم
+- المهام: كل إجراء أو توصية أو مهمة مذكورة في المحضر
+- assigneeName: اسم الشخص المكلف كما ذُكر في النص، أو null إذا لم يحدد أحد
+- لا تخترع معلومات غير موجودة في المحضر
+- أعد JSON فقط`,
+      messages: [{
+        role: "user",
+        content: `حلل هذا المحضر وأعد JSON:\n\n${formattedContent}`,
+      }],
     });
 
     const raw = (message.content[0] as any).text.trim();
-    let tasks: { title: string }[] = [];
+    let result: { summary: string; tasks: { title: string; assigneeName: string | null }[] } = { summary: "", tasks: [] };
     try {
-      const match = raw.match(/\[[\s\S]*\]/);
-      if (match) tasks = JSON.parse(match[0]);
+      const match = raw.match(/\{[\s\S]*\}/);
+      if (match) result = JSON.parse(match[0]);
     } catch {
-      tasks = [];
+      // fallback: try old format
+      try {
+        const arrMatch = raw.match(/\[[\s\S]*\]/);
+        if (arrMatch) result.tasks = JSON.parse(arrMatch[0]);
+      } catch {}
     }
 
-    return NextResponse.json({ tasks });
+    return NextResponse.json({ tasks: result.tasks || [], summary: result.summary || "" });
   } catch (err: any) {
     console.error("Extract tasks error:", err);
     return NextResponse.json({ error: err?.message || "حدث خطأ" }, { status: 500 });

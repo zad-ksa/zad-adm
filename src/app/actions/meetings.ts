@@ -3,26 +3,6 @@ import { prisma } from "@/lib/db";
 import { getSession } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
 
-export async function createTasksFromMeeting(
-  tasks: { title: string; assignedToId: string }[]
-) {
-  const session = await getSession();
-  if (!session || !TIER1.includes(session.role)) throw new Error("غير مصرح");
-  for (const t of tasks) {
-    await prisma.task.create({
-      data: {
-        title: t.title,
-        assignedToId: t.assignedToId,
-        createdById: session.id,
-        isInternal: true,
-        priority: 2,
-      },
-    });
-  }
-  revalidatePath("/dashboard/tasks");
-  return { success: true };
-}
-
 const TIER1 = ["ADMIN", "EXECUTIVE_DIRECTOR", "ADMINISTRATIVE_SECRETARIAT"];
 const ALL_STAFF = [...TIER1, "GENERAL_MANAGER", "STRATEGY", "FINANCE", "GOVERNANCE"];
 
@@ -35,6 +15,10 @@ export async function getMeetings() {
     include: {
       createdBy: { select: { id: true, name: true, role: true } },
       charity: { select: { name: true } },
+      meetingTasks: {
+        include: { assignedTo: { select: { id: true, name: true } } },
+        orderBy: { createdAt: "asc" },
+      },
     },
     orderBy: { date: "desc" },
   });
@@ -48,12 +32,13 @@ export async function createMeeting(data: {
   charityId?: string;
   rawNotes: string;
   formattedContent: string;
+  summary?: string;
   attendees?: string;
   isPrivate: boolean;
 }) {
   const session = await getSession();
   if (!session || !ALL_STAFF.includes(session.role)) throw new Error("غير مصرح");
-  await prisma.meeting.create({
+  const meeting = await prisma.meeting.create({
     data: {
       title: data.title,
       meetingNumber: data.meetingNumber ?? null,
@@ -62,18 +47,25 @@ export async function createMeeting(data: {
       charityId: data.charityId || null,
       rawNotes: data.rawNotes,
       formattedContent: data.formattedContent,
+      summary: data.summary || null,
       attendees: data.attendees || null,
       isPrivate: data.isPrivate,
       createdById: session.id,
     },
   });
   revalidatePath("/dashboard/meetings");
-  return { success: true };
+  return { success: true, id: meeting.id };
 }
 
 export async function updateMeeting(
   id: string,
-  data: Partial<{ title: string; formattedContent: string; isPrivate: boolean; meetingNumber: number | null }>
+  data: Partial<{
+    title: string;
+    formattedContent: string;
+    summary: string | null;
+    isPrivate: boolean;
+    meetingNumber: number | null;
+  }>
 ) {
   const session = await getSession();
   if (!session) throw new Error("غير مصرح");
@@ -113,5 +105,76 @@ export async function deleteMeeting(id: string) {
 
   await prisma.meeting.delete({ where: { id } });
   revalidatePath("/dashboard/meetings");
+  return { success: true };
+}
+
+// ── Meeting Tasks ──────────────────────────────────────────────────────────────
+
+export async function upsertMeetingTasks(
+  meetingId: string,
+  tasks: { id?: string; title: string; assignedToId?: string | null; dueDays?: number | null; isDone?: boolean }[]
+) {
+  const session = await getSession();
+  if (!session || !TIER1.includes(session.role)) throw new Error("غير مصرح");
+
+  // حذف المهام المحذوفة (موجودة في DB لكن غير موجودة في القائمة الجديدة)
+  const existingIds = tasks.filter(t => t.id).map(t => t.id!);
+  await prisma.meetingTask.deleteMany({
+    where: { meetingId, id: { notIn: existingIds } },
+  });
+
+  for (const t of tasks) {
+    if (t.id) {
+      await prisma.meetingTask.update({
+        where: { id: t.id },
+        data: {
+          title: t.title,
+          assignedToId: t.assignedToId || null,
+          dueDays: t.dueDays ?? null,
+          isDone: t.isDone ?? false,
+        },
+      });
+    } else {
+      await prisma.meetingTask.create({
+        data: {
+          meetingId,
+          title: t.title,
+          assignedToId: t.assignedToId || null,
+          dueDays: t.dueDays ?? null,
+          isDone: t.isDone ?? false,
+        },
+      });
+    }
+  }
+
+  revalidatePath("/dashboard/meetings");
+  return { success: true };
+}
+
+export async function toggleMeetingTask(taskId: string, isDone: boolean) {
+  const session = await getSession();
+  if (!session || !TIER1.includes(session.role)) throw new Error("غير مصرح");
+  await prisma.meetingTask.update({ where: { id: taskId }, data: { isDone } });
+  revalidatePath("/dashboard/meetings");
+  return { success: true };
+}
+
+export async function createTasksFromMeeting(
+  tasks: { title: string; assignedToId: string }[]
+) {
+  const session = await getSession();
+  if (!session || !TIER1.includes(session.role)) throw new Error("غير مصرح");
+  for (const t of tasks) {
+    await prisma.task.create({
+      data: {
+        title: t.title,
+        assignedToId: t.assignedToId,
+        createdById: session.id,
+        isInternal: true,
+        priority: 2,
+      },
+    });
+  }
+  revalidatePath("/dashboard/tasks");
   return { success: true };
 }

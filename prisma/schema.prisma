@@ -165,24 +165,41 @@ model FinanceStageStep {
 }
 
 model Meeting {
-  id               String   @id @default(uuid())
+  id               String        @id @default(uuid())
   title            String
   date             DateTime
   meetingNumber    Int?
   location         String?
   charityId        String?
-  charity          Charity? @relation(fields: [charityId], references: [id], onDelete: SetNull)
-  rawNotes         String   @db.Text
-  formattedContent String   @db.Text
+  charity          Charity?      @relation(fields: [charityId], references: [id], onDelete: SetNull)
+  rawNotes         String        @db.Text
+  formattedContent String        @db.Text
+  summary          String?       @db.Text
   attendees        String?
-  isPrivate        Boolean  @default(false)
+  isPrivate        Boolean       @default(false)
   createdById      String
-  createdBy        Employee @relation("MeetingCreator", fields: [createdById], references: [id])
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
+  createdBy        Employee      @relation("MeetingCreator", fields: [createdById], references: [id])
+  meetingTasks     MeetingTask[]
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
 
   @@index([createdById])
   @@index([charityId])
+}
+
+model MeetingTask {
+  id           String    @id @default(uuid())
+  meetingId    String
+  meeting      Meeting   @relation(fields: [meetingId], references: [id], onDelete: Cascade)
+  title        String
+  assignedToId String?
+  assignedTo   Employee? @relation("MeetingTaskAssignee", fields: [assignedToId], references: [id], onDelete: SetNull)
+  dueDays      Int?
+  dueDate      DateTime?
+  isDone       Boolean   @default(false)
+  createdAt    DateTime  @default(now())
+
+  @@index([meetingId])
 }
 
 model FinancialLog {
@@ -266,6 +283,7 @@ model Employee {
   createdAchievements  Achievement[]     @relation("CreatedAchievements")
   assignedCharities    EmployeeCharity[] @relation("AssignedCharities")
   createdMeetings      Meeting[]         @relation("MeetingCreator")
+  meetingTasksAssigned MeetingTask[]     @relation("MeetingTaskAssignee")
   navSetting           EmployeeNavSetting?
 }
 

@@ -14,7 +14,13 @@ import {
 } from "@/components/Icons";
 import { PERMISSION_GROUPS } from "@/lib/permissions";
 
-export function AddEmployeeForm({ allCharities }: { allCharities?: { id: string, name: string }[] }) {
+export function AddEmployeeForm({ 
+  allCharities, 
+  onSuccess 
+}: { 
+  allCharities?: { id: string, name: string }[], 
+  onSuccess?: () => void 
+}) {
   const [state, formAction, isPending] = useActionState(addEmployee, null);
   const formRef = useRef<HTMLFormElement>(null);
   const [selectedCharityIds, setSelectedCharityIds] = useState<string[]>([]);
@@ -22,8 +28,15 @@ export function AddEmployeeForm({ allCharities }: { allCharities?: { id: string,
   useEffect(() => {
     if (state?.success) {
       formRef.current?.reset();
+      setSelectedCharityIds([]);
+      if (onSuccess) {
+        const timer = setTimeout(() => {
+          onSuccess();
+        }, 1500);
+        return () => clearTimeout(timer);
+      }
     }
-  }, [state]);
+  }, [state, onSuccess]);
 
   return (
     <form ref={formRef} action={formAction} className="space-y-6 bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700 transition-colors">

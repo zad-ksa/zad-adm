@@ -13,7 +13,8 @@ import {
   Phone,
   Key
 } from "@/components/Icons";
-import { Edit, ShieldCheck, Building2 } from "lucide-react";
+import { Edit, ShieldCheck, Building2, UserPlus } from "lucide-react";
+import { AddEmployeeForm } from "@/components/AddEmployeeForm";
 import { PERMISSION_GROUPS, ALL_PERMISSIONS, AUTO_ADMIN_ROLES, ROLE_LABELS } from "@/lib/permissions";
 
 const roleBadgeStyles: Record<string, string> = {
@@ -52,6 +53,7 @@ export function EmployeesClient({
 }) {
   const [employees, setEmployees] = useState<Employee[]>(initialEmployees);
   const [editingEmployee, setEditingEmployee] = useState<Employee | null>(null);
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
 
   const [editName, setEditName] = useState("");
@@ -164,7 +166,27 @@ export function EmployeesClient({
   const isEditRoleAdmin = AUTO_ADMIN_ROLES.includes(editRole);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8" dir="rtl">
+      {/* Page Header with Add Button */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-white dark:bg-slate-800 p-6 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm transition-colors">
+        <div>
+          <h1 className="text-2xl font-black text-slate-900 dark:text-slate-100 flex items-center gap-2.5">
+            <UserCircle className="w-7 h-7 text-primary" />
+            <span>إدارة الموظفين</span>
+          </h1>
+          <p className="text-slate-500 dark:text-slate-400 mt-1 text-sm font-medium">
+            إضافة موظفين جدد وإدارة صلاحياتهم وتخصيص الجمعيات لهم
+          </p>
+        </div>
+        <button
+          onClick={() => setIsAddModalOpen(true)}
+          className="inline-flex items-center justify-center gap-2 py-3 px-5 bg-primary hover:bg-primary/95 text-white rounded-xl shadow-md hover:shadow-lg font-bold text-sm transition-all hover:scale-[1.02] active:scale-[0.98] cursor-pointer shrink-0"
+        >
+          <UserPlus className="w-5 h-5" />
+          <span>إضافة موظف جديد</span>
+        </button>
+      </div>
+
       {/* Employees Table */}
       <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700 overflow-hidden">
         <div className="overflow-x-auto">
@@ -535,6 +557,38 @@ export function EmployeesClient({
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Add Employee Modal */}
+      {isAddModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 animate-in fade-in duration-200">
+          {/* Backdrop */}
+          <div 
+            className="absolute inset-0 bg-slate-950/60 backdrop-blur-md"
+            onClick={() => setIsAddModalOpen(false)}
+          />
+          
+          <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-2xl w-full max-w-4xl overflow-hidden relative z-10 animate-in fade-in zoom-in-95 duration-200 max-h-[90vh] flex flex-col" dir="rtl">
+            {/* Modal Header */}
+            <div className="px-5 py-4 border-b border-slate-100 dark:border-slate-700 flex items-center justify-between shrink-0 bg-slate-50/50 dark:bg-slate-900/20">
+              <h3 className="text-sm font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
+                <UserPlus className="w-5 h-5 text-primary" />
+                <span>إضافة موظف جديد</span>
+              </h3>
+              <button 
+                onClick={() => setIsAddModalOpen(false)} 
+                className="text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 p-2 rounded-lg transition-colors cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Modal Form Body */}
+            <div className="flex-1 overflow-y-auto p-5">
+              <AddEmployeeForm allCharities={allCharities} onSuccess={() => setIsAddModalOpen(false)} />
+            </div>
           </div>
         </div>
       )}

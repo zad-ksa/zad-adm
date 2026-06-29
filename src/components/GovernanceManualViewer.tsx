@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { updateCharitySize } from "@/app/actions/governance";
 import { CharitySize, governanceManuals } from "@/data/governanceManual";
-import { ArrowRight, Building, FileText } from "lucide-react";
+import { ArrowRight, Building, FileText, CheckCircle2 } from "lucide-react";
 
 interface ProgressItem {
   indicatorId: string;
@@ -91,34 +91,50 @@ export default function GovernanceManualViewer({
       </div>
 
       {manual.length === 0 ? (
-        <div className="text-center p-8 text-slate-500">جاري إعداد محتوى هذا الدليل...</div>
+        <div className="text-center p-8 text-slate-500 dark:text-slate-400">جاري إعداد محتوى هذا الدليل...</div>
       ) : (
         <div className="space-y-8">
           {manual.map((standard) => (
-            <div key={standard.id} className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
-              <div className="bg-slate-50 p-4 border-b border-slate-200">
-                <h4 className="font-extrabold text-slate-800">{standard.title}</h4>
-                <p className="text-xs text-slate-500 mt-1">{standard.description}</p>
+            <div key={standard.id} className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 overflow-hidden shadow-sm transition-colors">
+              <div className="bg-slate-50 dark:bg-slate-900/40 p-5 border-b border-slate-200 dark:border-slate-700">
+                <h4 className="font-extrabold text-slate-800 dark:text-slate-100 text-lg">{standard.title}</h4>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">{standard.description}</p>
               </div>
-              <div className="divide-y divide-slate-100">
+              <div className="divide-y divide-slate-100 dark:divide-slate-700">
                 {standard.practices.map((practice) => (
-                  <div key={practice.id} className="p-4 sm:p-6 hover:bg-slate-50/50 transition-colors">
-                    <div className="flex items-start justify-between gap-4 mb-4">
-                      <div>
-                        <h5 className="font-bold text-slate-700 text-sm">{practice.title}</h5>
-                        {practice.description && <p className="text-xs text-slate-500 mt-1">{practice.description}</p>}
-                      </div>
+                  <div key={practice.id} className="p-5 sm:p-6 hover:bg-slate-50/30 dark:hover:bg-slate-900/10 transition-colors">
+                    <div className="mb-4">
+                      <h5 className="font-extrabold text-slate-800 dark:text-slate-200 text-base border-r-4 border-primary pr-3 leading-none">
+                        {practice.title}
+                      </h5>
+                      {practice.description && (
+                        <p className="text-xs text-slate-500 dark:text-slate-400 mt-2 pr-4">{practice.description}</p>
+                      )}
                     </div>
                     
-                    <ul className="space-y-2 mt-3">
-                      {practice.points.map((point, idx) => (
-                        <li key={idx} className="flex gap-2 text-xs text-slate-600 leading-relaxed">
-                          <ArrowRight className="w-3.5 h-3.5 text-primary shrink-0 mt-0.5" />
-                          <span>{point}</span>
-                        </li>
+                    <div className="space-y-4 mt-3 pr-1 sm:pr-4">
+                      {practice.questions.map((q, idx) => (
+                        <div key={idx} className="bg-slate-50/50 dark:bg-slate-900/30 p-4 rounded-xl border border-slate-100 dark:border-slate-800 hover:border-slate-200 dark:hover:border-slate-700 transition-all shadow-sm">
+                          <div className="flex items-start gap-3">
+                            <span className="flex items-center justify-center w-6 h-6 rounded-lg bg-primary/10 text-primary text-xs font-bold shrink-0 mt-0.5">
+                              {idx + 1}
+                            </span>
+                            <div className="space-y-3 w-full">
+                              <p className="text-sm font-bold text-slate-700 dark:text-slate-200 leading-relaxed">
+                                {q.question}
+                              </p>
+                              <div className="bg-emerald-50/60 dark:bg-emerald-950/20 text-emerald-800 dark:text-emerald-300 p-3 rounded-lg border border-emerald-100/50 dark:border-emerald-900/30 text-xs flex items-start gap-2">
+                                <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5" />
+                                <div>
+                                  <span className="font-extrabold block mb-0.5 text-emerald-900 dark:text-emerald-200">شاهد التحقق:</span>
+                                  <span className="leading-relaxed">{q.proof.replace(/^شاهد التحقق:\s*/, "")}</span>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
                       ))}
-                    </ul>
-
+                    </div>
                   </div>
                 ))}
               </div>

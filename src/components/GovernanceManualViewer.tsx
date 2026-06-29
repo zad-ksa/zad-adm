@@ -55,14 +55,14 @@ export default function GovernanceManualViewer({
             <button
               key={s.id}
               onClick={() => handleSizeSelect(s.id as CharitySize)}
-              disabled={isUpdatingSize || (s.id !== "MICRO")} // Disable others for now since we only have Micro data
+              disabled={isUpdatingSize || (s.id !== "MICRO" && s.id !== "SMALL" && s.id !== "MEDIUM" && s.id !== "LARGE")}
               className="p-4 border border-slate-200 rounded-xl hover:bg-primary/5 hover:border-primary text-slate-700 font-bold transition-all flex flex-col items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <div className="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center text-slate-400">
                 <Building className="w-5 h-5" />
               </div>
               {s.label}
-              {s.id !== "MICRO" && <span className="text-[10px] bg-slate-100 px-2 py-1 rounded text-slate-500">قريباً</span>}
+              {(s.id !== "MICRO" && s.id !== "SMALL" && s.id !== "MEDIUM" && s.id !== "LARGE") && <span className="text-[10px] bg-slate-100 px-2 py-1 rounded text-slate-500">قريباً</span>}
             </button>
           ))}
         </div>
@@ -71,6 +71,13 @@ export default function GovernanceManualViewer({
   }
 
   const manual = governanceManuals[size] || [];
+  const sizeLabels: Record<CharitySize, string> = {
+    MICRO: "متناهية الصغر",
+    SMALL: "صغيرة",
+    MEDIUM: "متوسطة",
+    LARGE: "كبيرة",
+    MEGA: "متناهية الكبر"
+  };
 
   return (
     <div className="space-y-6">
@@ -80,7 +87,7 @@ export default function GovernanceManualViewer({
             <FileText className="w-5 h-5" />
             دليل الحوكمة
           </h3>
-          <p className="text-xs text-primary/70 mt-1">يتم عرض الدليل المخصص للجمعيات: {size === "MICRO" ? "متناهية الصغر" : size}</p>
+          <p className="text-xs text-primary/70 mt-1">يتم عرض الدليل المخصص للجمعيات: {sizeLabels[size]}</p>
         </div>
         <button 
           onClick={() => setSize(null)}

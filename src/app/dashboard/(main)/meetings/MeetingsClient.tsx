@@ -10,6 +10,7 @@ import {
 import {
   createMeeting, updateMeeting, deleteMeeting,
   upsertMeetingTasks, toggleMeetingTask, createTasksFromMeeting, insertAiTasksIfEmpty, getTasksForMeeting,
+  checkMeetingNumberConflict, renumberMeetings,
 } from "@/app/actions/meetings";
 import { useRouter } from "next/navigation";
 
@@ -731,6 +732,43 @@ export default function MeetingsClient({ meetings, charities, employees, service
     });
   }
 
+  async function handleSaveMeetingNumber(m: Meeting) {
+    const n = editingNumberVal ? parseInt(editingNumberVal) : null;
+    if (n === m.meetingNumber) { setEditingNumberId(null); return; }
+
+    if (n === null) {
+      // إزالة الرقم فقط
+      await updateMeeting(m.id, { meetingNumber: null });
+      setEditingNumberId(null); router.refresh(); return;
+    }
+
+    // فحص التعارض
+    const conflict = await checkMeetingNumberConflict(n, m.id);
+    if (conflict) {
+      // احسب عدد المحاضر التي ستتأثر
+      const allNumbers = meetings.filter(x => x.meetingNumber !== null && x.id !== m.id).map(x => x.meetingNumber!);
+      const oldNum = m.meetingNumber;
+      let affectedCount = 0;
+      if (oldNum === null) {
+        affectedCount = allNumbers.filter(num => num >= n).length;
+      } else if (n < oldNum) {
+        affectedCount = allNumbers.filter(num => num >= n && num < oldNum).length;
+      } else {
+        affectedCount = allNumbers.filter(num => num > oldNum && num <= n).length;
+      }
+
+      const msg = affectedCount > 0
+        ? `الرقم ${n} مستخدم حالياً في المحضر "${conflict.title}".\n\nسيتم إعادة ترقيم ${affectedCount} محضر تلقائياً لإفساح المجال.\n\nهل تريد المتابعة؟`
+        : `الرقم ${n} مستخدم حالياً في المحضر "${conflict.title}".\n\nهل تريد المتابعة وإعادة الترقيم؟`;
+
+      if (!confirm(msg)) return;
+      await renumberMeetings(m.id, n);
+    } else {
+      await updateMeeting(m.id, { meetingNumber: n });
+    }
+    setEditingNumberId(null); router.refresh();
+  }
+
   async function handleDelete(id: string) {
     if (!confirm("هل تريد حذف هذا المحضر؟")) return;
     startTransition(async () => {
@@ -863,20 +901,13 @@ export default function MeetingsClient({ meetings, charities, employees, service
                           value={editingNumberVal}
                           onChange={e => setEditingNumberVal(e.target.value)}
                           onKeyDown={async e => {
-                            if (e.key === "Enter") {
-                              const n = editingNumberVal ? parseInt(editingNumberVal) : null;
-                              await updateMeeting(m.id, { meetingNumber: n });
-                              setEditingNumberId(null); router.refresh();
-                            } else if (e.key === "Escape") setEditingNumberId(null);
+                            if (e.key === "Enter") await handleSaveMeetingNumber(m);
+                            else if (e.key === "Escape") setEditingNumberId(null);
                           }}
                           className="w-14 text-xs border border-primary/40 rounded px-1.5 py-0.5 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 outline-none focus:ring-1 focus:ring-primary"
                           placeholder="001"
                         />
-                        <button onClick={async () => {
-                          const n = editingNumberVal ? parseInt(editingNumberVal) : null;
-                          await updateMeeting(m.id, { meetingNumber: n });
-                          setEditingNumberId(null); router.refresh();
-                        }} className="text-primary hover:text-primary/80"><Check className="w-3.5 h-3.5" /></button>
+                        <button onClick={() => handleSaveMeetingNumber(m)} className="text-primary hover:text-primary/80"><Check className="w-3.5 h-3.5" /></button>
                         <button onClick={() => setEditingNumberId(null)} className="text-slate-400 hover:text-slate-600"><X className="w-3.5 h-3.5" /></button>
                       </span>
                     ) : (

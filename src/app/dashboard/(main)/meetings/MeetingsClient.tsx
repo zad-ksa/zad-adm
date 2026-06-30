@@ -629,33 +629,45 @@ export default function MeetingsClient({ meetings, charities, employees, session
 
   // ── تصفيات ────────────────────────────────────────────────────────────────
   const [searchQuery, setSearchQuery] = useState("");
-  const [filterCharity, setFilterCharity] = useState(""); // "" = الكل, "internal" = داخلي, charity.id
+  const [filterContext, setFilterContext] = useState(""); // "" | "زاد" | "service:اسم"
+  const [filterCharityId, setFilterCharityId] = useState(""); // "" | charity.id
   const [filterPrivacy, setFilterPrivacy] = useState<"" | "private" | "public">("");
-  const [filterPeriod, setFilterPeriod] = useState<"" | "month" | "year">("");
+  const [filterPeriod, setFilterPeriod] = useState<"" | "today" | "week" | "month" | "quarter" | "year">("");
 
   const filteredMeetings = meetings.filter(m => {
     if (searchQuery.trim()) {
       const q = searchQuery.trim().toLowerCase();
-      const inTitle = m.title.toLowerCase().includes(q);
-      const inCreator = m.createdBy.name.toLowerCase().includes(q);
-      const inLocation = (m.location || "").toLowerCase().includes(q);
-      if (!inTitle && !inCreator && !inLocation) return false;
+      if (
+        !m.title.toLowerCase().includes(q) &&
+        !m.createdBy.name.toLowerCase().includes(q) &&
+        !(m.location || "").toLowerCase().includes(q)
+      ) return false;
     }
-    if (filterCharity === "ctx:زاد") {
+    if (filterContext === "ctx:زاد") {
       if (m.meetingContext !== "إدارة زاد") return false;
-    } else if (filterCharity.startsWith("ctx:service:")) {
-      const svcName = filterCharity.slice("ctx:service:".length);
+    } else if (filterContext.startsWith("ctx:service:")) {
+      const svcName = filterContext.slice("ctx:service:".length);
       if (m.meetingContext !== svcName) return false;
-    } else if (filterCharity) {
-      if (m.charityId !== filterCharity) return false;
     }
+    if (filterCharityId && m.charityId !== filterCharityId) return false;
     if (filterPrivacy === "private" && !m.isPrivate) return false;
     if (filterPrivacy === "public" && m.isPrivate) return false;
     if (filterPeriod) {
       const now = new Date();
       const mDate = new Date(m.date);
-      if (filterPeriod === "month") {
+      if (filterPeriod === "today") {
+        if (mDate.toDateString() !== now.toDateString()) return false;
+      } else if (filterPeriod === "week") {
+        const startOfWeek = new Date(now);
+        startOfWeek.setDate(now.getDate() - now.getDay());
+        startOfWeek.setHours(0, 0, 0, 0);
+        if (mDate < startOfWeek || mDate > now) return false;
+      } else if (filterPeriod === "month") {
         if (mDate.getFullYear() !== now.getFullYear() || mDate.getMonth() !== now.getMonth()) return false;
+      } else if (filterPeriod === "quarter") {
+        const q = Math.floor(now.getMonth() / 3);
+        const mq = Math.floor(mDate.getMonth() / 3);
+        if (mDate.getFullYear() !== now.getFullYear() || mq !== q) return false;
       } else if (filterPeriod === "year") {
         if (mDate.getFullYear() !== now.getFullYear()) return false;
       }
@@ -667,10 +679,10 @@ export default function MeetingsClient({ meetings, charities, employees, session
   const sortedByDate = [...meetings].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
   const meetingNumberMap = new Map<string, number>(sortedByDate.map((m, i) => [m.id, i + 1]));
 
-  const activeFilters = [searchQuery, filterCharity, filterPrivacy, filterPeriod].filter(Boolean).length;
+  const activeFilters = [searchQuery, filterContext, filterCharityId, filterPrivacy, filterPeriod].filter(Boolean).length;
 
   function resetFilters() {
-    setSearchQuery(""); setFilterCharity(""); setFilterPrivacy(""); setFilterPeriod("");
+    setSearchQuery(""); setFilterContext(""); setFilterCharityId(""); setFilterPrivacy(""); setFilterPeriod("");
   }
 
   function resetForm() {
@@ -825,64 +837,80 @@ export default function MeetingsClient({ meetings, charities, employees, session
             className="w-full border border-slate-200 dark:border-slate-700 rounded-lg pr-9 pl-3 py-1.5 text-xs bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-blue-500"
           />
         </div>
-        {/* صف الفلاتر */}
+
+        {/* صف الفلاتر — سطر أول: النوع والجمعية والخصوصية */}
         <div className="flex items-center gap-2 flex-wrap">
           <Filter className="w-3.5 h-3.5 text-slate-400 shrink-0" />
 
-          {/* الجمعية / السياق */}
+          {/* نوع / سياق الاجتماع */}
           <select
-            value={filterCharity}
-            onChange={e => setFilterCharity(e.target.value)}
-            className="border border-slate-200 dark:border-slate-700 rounded-lg px-2 py-1 text-xs bg-slate-50 dark:bg-slate-900 text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            value={filterContext}
+            onChange={e => setFilterContext(e.target.value)}
+            className={`border rounded-lg px-2 py-1 text-xs bg-slate-50 dark:bg-slate-900 focus:outline-none focus:ring-1 focus:ring-blue-500 transition-colors ${filterContext ? "border-blue-400 text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-900/20" : "border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200"}`}
           >
-            <option value="">كل الاجتماعات</option>
+            <option value="">كل الأنواع</option>
             <option value="ctx:زاد">إدارة زاد</option>
             <option disabled>── الأقسام ──</option>
             {DEPARTMENTS.map(d => <option key={d.value} value={`ctx:service:${d.value}`}>{d.label}</option>)}
-            {charities.length > 0 && (
-              <>
-                <option disabled>── الجمعيات ──</option>
-                {charities.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-              </>
-            )}
           </select>
 
-          {/* العمومية */}
+          {/* الجمعية */}
+          {charities.length > 0 && (
+            <select
+              value={filterCharityId}
+              onChange={e => setFilterCharityId(e.target.value)}
+              className={`border rounded-lg px-2 py-1 text-xs bg-slate-50 dark:bg-slate-900 focus:outline-none focus:ring-1 focus:ring-blue-500 transition-colors ${filterCharityId ? "border-blue-400 text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-900/20" : "border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200"}`}
+            >
+              <option value="">كل الجمعيات</option>
+              {charities.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+            </select>
+          )}
+
+          {/* الخصوصية */}
           <select
             value={filterPrivacy}
             onChange={e => setFilterPrivacy(e.target.value as any)}
-            className="border border-slate-200 dark:border-slate-700 rounded-lg px-2 py-1 text-xs bg-slate-50 dark:bg-slate-900 text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            className={`border rounded-lg px-2 py-1 text-xs bg-slate-50 dark:bg-slate-900 focus:outline-none focus:ring-1 focus:ring-blue-500 transition-colors ${filterPrivacy ? "border-blue-400 text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-900/20" : "border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200"}`}
           >
             <option value="">عام وخاص</option>
             <option value="public">عام فقط</option>
             <option value="private">خاص فقط</option>
           </select>
 
-          {/* الفترة الزمنية */}
-          <select
-            value={filterPeriod}
-            onChange={e => setFilterPeriod(e.target.value as any)}
-            className="border border-slate-200 dark:border-slate-700 rounded-lg px-2 py-1 text-xs bg-slate-50 dark:bg-slate-900 text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-1 focus:ring-blue-500"
-          >
-            <option value="">كل الفترات</option>
-            <option value="month">هذا الشهر</option>
-            <option value="year">هذه السنة</option>
-          </select>
-
           {/* عدد النتائج + مسح */}
           <div className="flex items-center gap-1.5 mr-auto">
-            <span className="text-[11px] text-slate-400">
-              {filteredMeetings.length} من {meetings.length}
-            </span>
+            <span className="text-[11px] text-slate-400">{filteredMeetings.length} من {meetings.length}</span>
             {activeFilters > 0 && (
-              <button
-                onClick={resetFilters}
-                className="flex items-center gap-1 text-[11px] font-bold text-red-400 hover:text-red-600 transition-colors"
-              >
-                <X className="w-3 h-3" /> مسح التصفية
+              <button onClick={resetFilters} className="flex items-center gap-1 text-[11px] font-bold text-red-400 hover:text-red-600 transition-colors">
+                <X className="w-3 h-3" /> مسح
               </button>
             )}
           </div>
+        </div>
+
+        {/* سطر ثانٍ: تصفية التاريخ كأزرار */}
+        <div className="flex items-center gap-1.5 flex-wrap pt-1 border-t border-slate-100 dark:border-slate-700/50">
+          <span className="text-[10px] font-bold text-slate-400 shrink-0">الفترة:</span>
+          {([
+            { value: "", label: "الكل" },
+            { value: "today", label: "اليوم" },
+            { value: "week", label: "هذا الأسبوع" },
+            { value: "month", label: "هذا الشهر" },
+            { value: "quarter", label: "هذا الربع" },
+            { value: "year", label: "هذه السنة" },
+          ] as const).map(opt => (
+            <button
+              key={opt.value}
+              onClick={() => setFilterPeriod(opt.value)}
+              className={`px-2.5 py-0.5 rounded-full text-[11px] font-bold transition-colors ${
+                filterPeriod === opt.value
+                  ? "bg-blue-600 text-white"
+                  : "bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-600"
+              }`}
+            >
+              {opt.label}
+            </button>
+          ))}
         </div>
       </div>
 

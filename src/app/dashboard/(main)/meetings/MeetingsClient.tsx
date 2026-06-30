@@ -49,11 +49,18 @@ type Props = {
   meetings: Meeting[];
   charities: Charity[];
   employees: Employee[];
-  serviceNames: string[];
   sessionId: string;
   sessionRole: string;
   isTier1: boolean;
 };
+
+const DEPARTMENTS = [
+  { value: "STRATEGY", label: "الاستراتيجية" },
+  { value: "GOVERNANCE", label: "الحوكمة" },
+  { value: "FINANCE", label: "المالية" },
+  { value: "PROGRAMS", label: "البرامج والمشاريع" },
+  { value: "HR", label: "الموارد البشرية" },
+];
 
 const TIER1 = ["ADMIN", "EXECUTIVE_DIRECTOR", "ADMINISTRATIVE_SECRETARIAT"];
 
@@ -593,7 +600,7 @@ function MeetingSummaryPanel({
 }
 
 // ── Main component ─────────────────────────────────────────────────────────────
-export default function MeetingsClient({ meetings, charities, employees, serviceNames, sessionId, sessionRole, isTier1 }: Props) {
+export default function MeetingsClient({ meetings, charities, employees, sessionId, sessionRole, isTier1 }: Props) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
 
@@ -874,12 +881,8 @@ export default function MeetingsClient({ meetings, charities, employees, service
           >
             <option value="">كل الاجتماعات</option>
             <option value="ctx:زاد">إدارة زاد</option>
-            {serviceNames.length > 0 && (
-              <>
-                <option disabled>── الخدمات ──</option>
-                {serviceNames.map(s => <option key={s} value={`ctx:service:${s}`}>{s}</option>)}
-              </>
-            )}
+            <option disabled>── الأقسام ──</option>
+            {DEPARTMENTS.map(d => <option key={d.value} value={`ctx:service:${d.value}`}>{d.label}</option>)}
             {charities.length > 0 && (
               <>
                 <option disabled>── الجمعيات ──</option>
@@ -952,7 +955,7 @@ export default function MeetingsClient({ meetings, charities, employees, service
                   <div className="flex items-center gap-1.5 flex-wrap">
                     <span className="text-sm font-bold text-slate-800 dark:text-slate-100 truncate">{m.title}</span>
                     {m.isPrivate && <span className="text-[10px] bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 px-1.5 py-0.5 rounded-full font-bold">خاص</span>}
-                    {m.meetingContext && <span className="text-[10px] bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400 px-1.5 py-0.5 rounded-full">{m.meetingContext}</span>}
+                    {m.meetingContext && <span className="text-[10px] bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400 px-1.5 py-0.5 rounded-full">{DEPARTMENTS.find(d => d.value === m.meetingContext)?.label ?? m.meetingContext}</span>}
                     {m.charity && <span className="text-[10px] bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 px-1.5 py-0.5 rounded-full">{m.charity.name}</span>}
                   </div>
                   <div className="text-[11px] text-slate-400 dark:text-slate-500 mt-0.5 flex items-center gap-2 flex-wrap">
@@ -1117,12 +1120,8 @@ export default function MeetingsClient({ meetings, charities, employees, service
                         className="w-full border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-sm bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500">
                         <option value="">— اختر النوع —</option>
                         <option value="زاد">إدارة زاد</option>
-                        {serviceNames.length > 0 && (
-                          <>
-                            <option disabled>── الخدمات ──</option>
-                            {serviceNames.map(s => <option key={s} value={`service:${s}`}>{s}</option>)}
-                          </>
-                        )}
+                        <option disabled>── الأقسام ──</option>
+                        {DEPARTMENTS.map(d => <option key={d.value} value={`service:${d.value}`}>{d.label}</option>)}
                       </select>
                     </div>
                     <div>

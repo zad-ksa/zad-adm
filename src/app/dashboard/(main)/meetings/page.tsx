@@ -18,7 +18,7 @@ export default async function MeetingsPage() {
     session.permissions?.includes("developer_mode") || 
     ["EXECUTIVE_DIRECTOR", "GENERAL_MANAGER", "ADMINISTRATIVE_SECRETARIAT"].includes(session.role);
 
-  const [meetings, charities, employees, serviceNames] = await Promise.all([
+  const [meetings, charities, employees] = await Promise.all([
     getMeetings(),
     prisma.charity.findMany({ select: { id: true, name: true }, orderBy: { name: "asc" } }),
     isTier1
@@ -28,7 +28,6 @@ export default async function MeetingsPage() {
           orderBy: { name: "asc" },
         })
       : Promise.resolve([]),
-    prisma.service.findMany({ select: { name: true }, distinct: ["name"], orderBy: { name: "asc" } }),
   ]);
 
   return (
@@ -36,7 +35,6 @@ export default async function MeetingsPage() {
       meetings={meetings as any}
       charities={charities}
       employees={employees}
-      serviceNames={serviceNames.map(s => s.name)}
       sessionId={session.id}
       sessionRole={session.role}
       isTier1={isTier1}

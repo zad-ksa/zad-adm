@@ -55,11 +55,16 @@ type Props = {
 };
 
 const DEPARTMENTS = [
-  { value: "STRATEGY", label: "الاستراتيجية" },
-  { value: "GOVERNANCE", label: "الحوكمة" },
-  { value: "FINANCE", label: "المالية" },
-  { value: "PROGRAMS", label: "البرامج والمشاريع" },
-  { value: "HR", label: "الموارد البشرية" },
+  { value: "التخطيط الاستراتيجي", label: "التخطيط الاستراتيجي" },
+  { value: "الحوكمة", label: "الحوكمة" },
+  { value: "تنمية الموارد المالية", label: "تنمية الموارد المالية" },
+  { value: "الإعلامية", label: "الإعلامية" },
+  { value: "التقنية", label: "التقنية" },
+  { value: "المالية", label: "المالية" },
+  { value: "التسويق", label: "التسويق" },
+  { value: "خدمات المشاريع", label: "خدمات المشاريع" },
+  { value: "الإدارية", label: "الإدارية" },
+  { value: "الإسناد الحكومي", label: "الإسناد الحكومي" },
 ];
 
 const TIER1 = ["ADMIN", "EXECUTIVE_DIRECTOR", "ADMINISTRATIVE_SECRETARIAT"];

@@ -10,7 +10,7 @@ import {
 import {
   createMeeting, updateMeeting, deleteMeeting,
   upsertMeetingTasks, toggleMeetingTask, createTasksFromMeeting, insertAiTasksIfEmpty, getTasksForMeeting,
-  checkMeetingNumberConflict, renumberMeetings,
+  checkMeetingNumberConflict, renumberMeetings, checkDateConflict, getNextMeetingNumber, compactMeetingNumbers,
 } from "@/app/actions/meetings";
 import { useRouter } from "next/navigation";
 
@@ -671,23 +671,36 @@ export default function MeetingsClient({ meetings, charities, employees, service
     setEditingId(null);
   }
 
-  function openCreate() { resetForm(); setShowModal(true); }
+  async function openCreate() {
+    resetForm();
+    // جلب الرقم التلقائي التالي
+    try {
+      const next = await getNextMeetingNumber();
+      setMeetingNumber(String(next));
+    } catch {}
+    setShowModal(true);
+  }
 
   function openEdit(m: Meeting) {
-    setTitle(m.title); setMeetingNumber(m.meetingNumber ? String(m.meetingNumber) : "");
+    setTitle(m.title);
+    setMeetingNumber(m.meetingNumber ? String(m.meetingNumber) : "");
     setDate(new Date(m.date).toISOString().slice(0, 10));
-    setLocation(m.location || ""); setCharityId(m.charityId || "");
-    setAttendees(m.attendees || ""); setRawNotes(m.rawNotes);
-    // استعادة قيمة الـ dropdown
+    setLocation(m.location || "");
+    setAttendees(m.attendees || "");
+    setRawNotes(m.rawNotes);
+    // استعادة قيمة الـ dropdown للنوع
     if (m.charityId) {
       setMeetingContext(`charity:${m.charityId}`);
+      setCharityId(m.charityId);
     } else if (m.meetingContext) {
       setMeetingContext(m.meetingContext === "إدارة زاد" ? "زاد" : `service:${m.meetingContext}`);
+      setCharityId("");
     } else {
       setMeetingContext("");
+      setCharityId("");
     }
     setIsPrivate(m.isPrivate); setFormattedContent(m.formattedContent);
-    setStep(2); setAiError(""); setError(""); setEditingId(m.id);
+    setStep(1); setAiError(""); setError(""); setEditingId(m.id);
     setShowModal(true);
   }
 
@@ -712,22 +725,40 @@ export default function MeetingsClient({ meetings, charities, employees, service
     if (!title.trim()) { setError("العنوان مطلوب"); return; }
     if (!formattedContent.trim()) { setError("المحضر المنسق مطلوب"); return; }
     setError("");
+
+    // فك ترميز قيمة الـ dropdown
+    let resolvedCharityId = "";
+    let resolvedContext = "";
+    if (meetingContext.startsWith("charity:")) {
+      resolvedCharityId = meetingContext.slice("charity:".length);
+    } else if (meetingContext.startsWith("service:")) {
+      resolvedContext = meetingContext.slice("service:".length);
+    } else if (meetingContext === "زاد") {
+      resolvedContext = "إدارة زاد";
+    }
+
+    // فحص تعارض التاريخ
+    const dateConflicts = await checkDateConflict(date, editingId || undefined);
+    if (dateConflicts.length > 0) {
+      const names = dateConflicts.map(c => `"${c.title}"`).join("، ");
+      const proceed = confirm(
+        `تنبيه: يوجد ${dateConflicts.length > 1 ? "محاضر أخرى" : "محضر آخر"} في نفس هذا التاريخ:\n${names}\n\nهل تريد المتابعة وحفظ المحضر على أي حال؟`
+      );
+      if (!proceed) return;
+    }
+
     startTransition(async () => {
       try {
         const numVal = meetingNumber ? parseInt(meetingNumber) : null;
-        // فك ترميز قيمة الـ dropdown
-        let resolvedCharityId = "";
-        let resolvedContext = "";
-        if (meetingContext.startsWith("charity:")) {
-          resolvedCharityId = meetingContext.slice("charity:".length);
-        } else if (meetingContext.startsWith("service:")) {
-          resolvedContext = meetingContext.slice("service:".length);
-        } else if (meetingContext === "زاد") {
-          resolvedContext = "إدارة زاد";
-        }
         let savedId = editingId;
         if (editingId) {
-          await updateMeeting(editingId, { title, formattedContent, isPrivate, meetingNumber: numVal });
+          await updateMeeting(editingId, {
+            title, date, location: location || null,
+            charityId: resolvedCharityId || null,
+            meetingContext: resolvedContext || null,
+            attendees: attendees || null,
+            rawNotes, formattedContent, isPrivate, meetingNumber: numVal,
+          });
         } else {
           const res = await createMeeting({ title, meetingNumber: numVal, date, location, charityId: resolvedCharityId, meetingContext: resolvedContext, rawNotes, formattedContent, attendees, isPrivate });
           savedId = res.id;
@@ -793,9 +824,16 @@ export default function MeetingsClient({ meetings, charities, employees, service
   }
 
   async function handleDelete(id: string) {
+    const m = meetings.find(x => x.id === id);
+    const hadNumber = m?.meetingNumber !== null;
     if (!confirm("هل تريد حذف هذا المحضر؟")) return;
     startTransition(async () => {
-      try { await deleteMeeting(id); router.refresh(); }
+      try {
+        await deleteMeeting(id);
+        // إذا كان المحضر المحذوف مرقماً → اضغط الأرقام لسد الفجوة
+        if (hadNumber) await compactMeetingNumbers();
+        router.refresh();
+      }
       catch (e: any) { alert(e.message); }
     });
   }
@@ -1110,10 +1148,38 @@ export default function MeetingsClient({ meetings, charities, employees, service
                       className="w-full border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-sm bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none" />
                   </div>
                   {aiError && <p className="text-xs text-red-500">{aiError}</p>}
+
+                  {/* عند التعديل: قسم المحضر المنسق يظهر في نفس الصفحة */}
+                  {editingId && (
+                    <div className="space-y-2 border-t border-slate-100 dark:border-slate-700 pt-3">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <Sparkles className="w-3.5 h-3.5 text-blue-500 shrink-0" />
+                        <span className="text-xs font-bold text-slate-600 dark:text-slate-300">المحضر المنسق</span>
+                        <button
+                          onClick={handleFormat}
+                          disabled={aiLoading || !rawNotes.trim()}
+                          className="flex items-center gap-1.5 text-[11px] font-bold text-blue-600 hover:text-blue-700 border border-blue-200 dark:border-blue-700 hover:bg-blue-50 dark:hover:bg-blue-900/20 px-2.5 py-1 rounded-lg transition-colors disabled:opacity-40 mr-auto"
+                        >
+                          {aiLoading ? <Loader2 className="w-3 h-3 animate-spin" /> : <Sparkles className="w-3 h-3" />}
+                          إعادة الصياغة
+                        </button>
+                      </div>
+                      <textarea value={formattedContent} onChange={e => setFormattedContent(e.target.value)} rows={10}
+                        className="w-full border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-sm bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none leading-relaxed" dir="rtl" />
+                      {isTier1 && (
+                        <label className="flex items-center gap-2 cursor-pointer select-none">
+                          <input type="checkbox" checked={isPrivate} onChange={e => setIsPrivate(e.target.checked)} className="w-4 h-4 rounded accent-amber-500" />
+                          <Lock className="w-3.5 h-3.5 text-amber-500" />
+                          <span className="text-sm text-slate-600 dark:text-slate-300">خاص بالإدارة التنفيذية فقط</span>
+                        </label>
+                      )}
+                    </div>
+                  )}
+                  {error && <p className="text-xs text-red-500">{error}</p>}
                 </>
               )}
 
-              {step === 2 && (
+              {step === 2 && !editingId && (
                 <>
                   <div className="flex items-center gap-2 mb-1 flex-wrap">
                     <Sparkles className="w-4 h-4 text-blue-500 shrink-0" />
@@ -1147,18 +1213,18 @@ export default function MeetingsClient({ meetings, charities, employees, service
                 : <div />}
               <div className="flex gap-2">
                 <button onClick={() => { setShowModal(false); resetForm(); }} className="px-4 py-2 text-sm text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 transition-colors">إلغاء</button>
-                {step === 1 && (
+                {step === 1 && !editingId && (
                   <button onClick={handleFormat} disabled={aiLoading || !rawNotes.trim()}
                     className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-white px-5 py-2 rounded-xl text-sm font-bold transition-colors">
                     {aiLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
                     {aiLoading ? "جاري الصياغة..." : "صياغة بالذكاء الاصطناعي"}
                   </button>
                 )}
-                {step === 2 && (
+                {(step === 2 || editingId) && (
                   <button onClick={handleSave} disabled={isPending || !formattedContent.trim()}
                     className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-white px-5 py-2 rounded-xl text-sm font-bold transition-colors">
                     {isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
-                    حفظ المحضر
+                    {editingId ? "حفظ التعديلات" : "حفظ المحضر"}
                   </button>
                 )}
               </div>

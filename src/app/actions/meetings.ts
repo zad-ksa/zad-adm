@@ -64,6 +64,12 @@ export async function updateMeeting(
   id: string,
   data: Partial<{
     title: string;
+    date: string;
+    location: string | null;
+    charityId: string | null;
+    meetingContext: string | null;
+    attendees: string | null;
+    rawNotes: string;
     formattedContent: string;
     summary: string | null;
     isPrivate: boolean;
@@ -85,9 +91,58 @@ export async function updateMeeting(
   if (creatorIsTier1 && !isTier1) throw new Error("لا يمكنك تعديل محاضر الإدارة التنفيذية");
   if (meeting.createdById !== session.id && !isTier1) throw new Error("غير مصرح");
 
-  await prisma.meeting.update({ where: { id }, data });
+  const { date, ...rest } = data;
+  await prisma.meeting.update({
+    where: { id },
+    data: { ...rest, ...(date ? { date: new Date(date) } : {}) },
+  });
   revalidatePath("/dashboard/meetings");
   return { success: true };
+}
+
+export async function checkDateConflict(date: string, excludeId?: string) {
+  const session = await getSession();
+  if (!session) throw new Error("غير مصرح");
+  const d = new Date(date);
+  const start = new Date(d); start.setHours(0, 0, 0, 0);
+  const end   = new Date(d); end.setHours(23, 59, 59, 999);
+  const conflicts = await prisma.meeting.findMany({
+    where: {
+      date: { gte: start, lte: end },
+      ...(excludeId ? { id: { not: excludeId } } : {}),
+    },
+    select: { id: true, title: true },
+  });
+  return conflicts;
+}
+
+export async function getNextMeetingNumber() {
+  const session = await getSession();
+  if (!session) throw new Error("غير مصرح");
+  const max = await prisma.meeting.aggregate({ _max: { meetingNumber: true } });
+  return (max._max.meetingNumber ?? 0) + 1;
+}
+
+export async function compactMeetingNumbers() {
+  const session = await getSession();
+  if (!session || !TIER1.includes(session.role)) throw new Error("غير مصرح");
+  const numbered = await prisma.meeting.findMany({
+    where: { meetingNumber: { not: null } },
+    select: { id: true, meetingNumber: true },
+    orderBy: { meetingNumber: "asc" },
+  });
+  const updates: { id: string; number: number }[] = [];
+  numbered.forEach((m, i) => {
+    const expected = i + 1;
+    if (m.meetingNumber !== expected) updates.push({ id: m.id, number: expected });
+  });
+  if (updates.length > 0) {
+    await prisma.$transaction(
+      updates.map(u => prisma.meeting.update({ where: { id: u.id }, data: { meetingNumber: u.number } }))
+    );
+    revalidatePath("/dashboard/meetings");
+  }
+  return { success: true, fixed: updates.length };
 }
 
 export async function checkMeetingNumberConflict(meetingNumber: number, excludeId?: string) {

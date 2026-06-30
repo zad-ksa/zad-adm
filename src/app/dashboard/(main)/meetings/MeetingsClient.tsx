@@ -30,6 +30,7 @@ type Meeting = {
   meetingNumber: number | null;
   location: string | null;
   charityId: string | null;
+  meetingContext: string | null;
   rawNotes: string;
   formattedContent: string;
   summary: string | null;
@@ -612,6 +613,7 @@ export default function MeetingsClient({ meetings, charities, employees, service
   const [charityId, setCharityId] = useState("");
   const [attendees, setAttendees] = useState("");
   const [rawNotes, setRawNotes] = useState("");
+  const [meetingContext, setMeetingContext] = useState(""); // "زاد" | "service:اسم الخدمة" | "charity:id"
   const [isPrivate, setIsPrivate] = useState(false);
   const [step, setStep] = useState<1 | 2>(1);
   const [formattedContent, setFormattedContent] = useState("");
@@ -634,7 +636,10 @@ export default function MeetingsClient({ meetings, charities, employees, service
       if (!inTitle && !inCreator && !inLocation) return false;
     }
     if (filterCharity === "internal") {
-      if (m.charityId !== null) return false;
+      if (m.charityId !== null || m.meetingContext !== "إدارة زاد") return false;
+    } else if (filterCharity.startsWith("service:")) {
+      const svcName = filterCharity.slice("service:".length);
+      if (m.meetingContext !== svcName) return false;
     } else if (filterCharity) {
       if (m.charityId !== filterCharity) return false;
     }
@@ -661,7 +666,7 @@ export default function MeetingsClient({ meetings, charities, employees, service
   function resetForm() {
     setTitle(""); setMeetingNumber(""); setDate(new Date().toISOString().slice(0, 10));
     setLocation(""); setCharityId(""); setAttendees("");
-    setRawNotes(""); setIsPrivate(false);
+    setRawNotes(""); setMeetingContext(""); setIsPrivate(false);
     setFormattedContent(""); setStep(1); setAiError(""); setError("");
     setEditingId(null);
   }
@@ -673,6 +678,14 @@ export default function MeetingsClient({ meetings, charities, employees, service
     setDate(new Date(m.date).toISOString().slice(0, 10));
     setLocation(m.location || ""); setCharityId(m.charityId || "");
     setAttendees(m.attendees || ""); setRawNotes(m.rawNotes);
+    // استعادة قيمة الـ dropdown
+    if (m.charityId) {
+      setMeetingContext(`charity:${m.charityId}`);
+    } else if (m.meetingContext) {
+      setMeetingContext(m.meetingContext === "إدارة زاد" ? "زاد" : `service:${m.meetingContext}`);
+    } else {
+      setMeetingContext("");
+    }
     setIsPrivate(m.isPrivate); setFormattedContent(m.formattedContent);
     setStep(2); setAiError(""); setError(""); setEditingId(m.id);
     setShowModal(true);
@@ -702,11 +715,21 @@ export default function MeetingsClient({ meetings, charities, employees, service
     startTransition(async () => {
       try {
         const numVal = meetingNumber ? parseInt(meetingNumber) : null;
+        // فك ترميز قيمة الـ dropdown
+        let resolvedCharityId = "";
+        let resolvedContext = "";
+        if (meetingContext.startsWith("charity:")) {
+          resolvedCharityId = meetingContext.slice("charity:".length);
+        } else if (meetingContext.startsWith("service:")) {
+          resolvedContext = meetingContext.slice("service:".length);
+        } else if (meetingContext === "زاد") {
+          resolvedContext = "إدارة زاد";
+        }
         let savedId = editingId;
         if (editingId) {
           await updateMeeting(editingId, { title, formattedContent, isPrivate, meetingNumber: numVal });
         } else {
-          const res = await createMeeting({ title, meetingNumber: numVal, date, location, charityId, rawNotes, formattedContent, attendees, isPrivate });
+          const res = await createMeeting({ title, meetingNumber: numVal, date, location, charityId: resolvedCharityId, meetingContext: resolvedContext, rawNotes, formattedContent, attendees, isPrivate });
           savedId = res.id;
         }
         setShowModal(false);
@@ -818,8 +841,19 @@ export default function MeetingsClient({ meetings, charities, employees, service
             className="border border-slate-200 dark:border-slate-700 rounded-lg px-2 py-1 text-xs bg-slate-50 dark:bg-slate-900 text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-1 focus:ring-blue-500"
           >
             <option value="">كل الاجتماعات</option>
-            <option value="internal">إداري داخلي</option>
-            {charities.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+            <option value="internal">إدارة زاد</option>
+            {serviceNames.length > 0 && (
+              <>
+                <option disabled>── الخدمات ──</option>
+                {serviceNames.map(s => <option key={s} value={`service:${s}`}>{s}</option>)}
+              </>
+            )}
+            {charities.length > 0 && (
+              <>
+                <option disabled>── الجمعيات ──</option>
+                {charities.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+              </>
+            )}
           </select>
 
           {/* العمومية */}
@@ -886,7 +920,8 @@ export default function MeetingsClient({ meetings, charities, employees, service
                   <div className="flex items-center gap-1.5 flex-wrap">
                     <span className="text-sm font-bold text-slate-800 dark:text-slate-100 truncate">{m.title}</span>
                     {m.isPrivate && <span className="text-[10px] bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 px-1.5 py-0.5 rounded-full font-bold">خاص</span>}
-                    {m.charity && <span className="text-[10px] bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400 px-1.5 py-0.5 rounded-full">{m.charity.name}</span>}
+                    {m.charity && <span className="text-[10px] bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 px-1.5 py-0.5 rounded-full">{m.charity.name}</span>}
+                    {!m.charity && m.meetingContext && <span className="text-[10px] bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400 px-1.5 py-0.5 rounded-full">{m.meetingContext}</span>}
                   </div>
                   <div className="text-[11px] text-slate-400 dark:text-slate-500 mt-0.5 flex items-center gap-2 flex-wrap">
                     <span>{formatDate(m.date)}</span>
@@ -1045,11 +1080,23 @@ export default function MeetingsClient({ meetings, charities, employees, service
                         className="w-full border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-sm bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500" />
                     </div>
                     <div>
-                      <label className="text-xs font-bold text-slate-500 dark:text-slate-400 mb-1 block">الجمعية (اختياري)</label>
-                      <select value={charityId} onChange={e => setCharityId(e.target.value)}
+                      <label className="text-xs font-bold text-slate-500 dark:text-slate-400 mb-1 block">نوع الاجتماع</label>
+                      <select value={meetingContext} onChange={e => setMeetingContext(e.target.value)}
                         className="w-full border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-sm bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500">
-                        <option value="">— اجتماع داخلي —</option>
-                        {charities.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                        <option value="">— اختر نوع الاجتماع —</option>
+                        <option value="زاد">إدارة زاد</option>
+                        {serviceNames.length > 0 && (
+                          <>
+                            <option disabled>── الخدمات ──</option>
+                            {serviceNames.map(s => <option key={s} value={`service:${s}`}>{s}</option>)}
+                          </>
+                        )}
+                        {charities.length > 0 && (
+                          <>
+                            <option disabled>── الجمعيات ──</option>
+                            {charities.map(c => <option key={c.id} value={`charity:${c.id}`}>{c.name}</option>)}
+                          </>
+                        )}
                       </select>
                     </div>
                   </div>

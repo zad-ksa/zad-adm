@@ -31,6 +31,7 @@ export async function createMeeting(data: {
   date: string;
   location?: string;
   charityId?: string;
+  meetingContext?: string;
   rawNotes: string;
   formattedContent: string;
   summary?: string;
@@ -46,6 +47,7 @@ export async function createMeeting(data: {
       date: new Date(data.date),
       location: data.location || null,
       charityId: data.charityId || null,
+      meetingContext: data.meetingContext || null,
       rawNotes: data.rawNotes,
       formattedContent: data.formattedContent,
       summary: data.summary || null,

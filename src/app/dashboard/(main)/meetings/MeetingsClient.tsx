@@ -5,7 +5,7 @@ import {
   FileText, Plus, X, Lock, Globe, Trash2, Edit2,
   Printer, Loader2, Sparkles, Eye, UserPlus, Check, ChevronDown,
   ChevronRight, AlertCircle, CheckCircle2, Clock, User, BookOpen,
-  ClipboardList, LayoutTemplate, RefreshCw,
+  ClipboardList, LayoutTemplate, RefreshCw, Search, Filter,
 } from "lucide-react";
 import {
   createMeeting, updateMeeting, deleteMeeting,
@@ -618,6 +618,45 @@ export default function MeetingsClient({ meetings, charities, employees, service
   const [aiError, setAiError] = useState("");
   const [error, setError] = useState("");
 
+  // ── تصفيات ────────────────────────────────────────────────────────────────
+  const [searchQuery, setSearchQuery] = useState("");
+  const [filterCharity, setFilterCharity] = useState(""); // "" = الكل, "internal" = داخلي, charity.id
+  const [filterPrivacy, setFilterPrivacy] = useState<"" | "private" | "public">("");
+  const [filterPeriod, setFilterPeriod] = useState<"" | "month" | "year">("");
+
+  const filteredMeetings = meetings.filter(m => {
+    if (searchQuery.trim()) {
+      const q = searchQuery.trim().toLowerCase();
+      const inTitle = m.title.toLowerCase().includes(q);
+      const inCreator = m.createdBy.name.toLowerCase().includes(q);
+      const inLocation = (m.location || "").toLowerCase().includes(q);
+      if (!inTitle && !inCreator && !inLocation) return false;
+    }
+    if (filterCharity === "internal") {
+      if (m.charityId !== null) return false;
+    } else if (filterCharity) {
+      if (m.charityId !== filterCharity) return false;
+    }
+    if (filterPrivacy === "private" && !m.isPrivate) return false;
+    if (filterPrivacy === "public" && m.isPrivate) return false;
+    if (filterPeriod) {
+      const now = new Date();
+      const mDate = new Date(m.date);
+      if (filterPeriod === "month") {
+        if (mDate.getFullYear() !== now.getFullYear() || mDate.getMonth() !== now.getMonth()) return false;
+      } else if (filterPeriod === "year") {
+        if (mDate.getFullYear() !== now.getFullYear()) return false;
+      }
+    }
+    return true;
+  });
+
+  const activeFilters = [searchQuery, filterCharity, filterPrivacy, filterPeriod].filter(Boolean).length;
+
+  function resetFilters() {
+    setSearchQuery(""); setFilterCharity(""); setFilterPrivacy(""); setFilterPeriod("");
+  }
+
   function resetForm() {
     setTitle(""); setMeetingNumber(""); setDate(new Date().toISOString().slice(0, 10));
     setLocation(""); setCharityId(""); setAttendees("");
@@ -718,15 +757,87 @@ export default function MeetingsClient({ meetings, charities, employees, service
         </button>
       </div>
 
+      {/* شريط التصفية */}
+      <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-700 p-3 space-y-2">
+        {/* بحث */}
+        <div className="relative">
+          <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400 pointer-events-none" />
+          <input
+            value={searchQuery}
+            onChange={e => setSearchQuery(e.target.value)}
+            placeholder="بحث في عنوان المحضر أو المنشئ أو المكان..."
+            className="w-full border border-slate-200 dark:border-slate-700 rounded-lg pr-9 pl-3 py-1.5 text-xs bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-blue-500"
+          />
+        </div>
+        {/* صف الفلاتر */}
+        <div className="flex items-center gap-2 flex-wrap">
+          <Filter className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+
+          {/* الجمعية / السياق */}
+          <select
+            value={filterCharity}
+            onChange={e => setFilterCharity(e.target.value)}
+            className="border border-slate-200 dark:border-slate-700 rounded-lg px-2 py-1 text-xs bg-slate-50 dark:bg-slate-900 text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-1 focus:ring-blue-500"
+          >
+            <option value="">كل الاجتماعات</option>
+            <option value="internal">إداري داخلي</option>
+            {charities.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+          </select>
+
+          {/* العمومية */}
+          <select
+            value={filterPrivacy}
+            onChange={e => setFilterPrivacy(e.target.value as any)}
+            className="border border-slate-200 dark:border-slate-700 rounded-lg px-2 py-1 text-xs bg-slate-50 dark:bg-slate-900 text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-1 focus:ring-blue-500"
+          >
+            <option value="">عام وخاص</option>
+            <option value="public">عام فقط</option>
+            <option value="private">خاص فقط</option>
+          </select>
+
+          {/* الفترة الزمنية */}
+          <select
+            value={filterPeriod}
+            onChange={e => setFilterPeriod(e.target.value as any)}
+            className="border border-slate-200 dark:border-slate-700 rounded-lg px-2 py-1 text-xs bg-slate-50 dark:bg-slate-900 text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-1 focus:ring-blue-500"
+          >
+            <option value="">كل الفترات</option>
+            <option value="month">هذا الشهر</option>
+            <option value="year">هذه السنة</option>
+          </select>
+
+          {/* عدد النتائج + مسح */}
+          <div className="flex items-center gap-1.5 mr-auto">
+            <span className="text-[11px] text-slate-400">
+              {filteredMeetings.length} من {meetings.length}
+            </span>
+            {activeFilters > 0 && (
+              <button
+                onClick={resetFilters}
+                className="flex items-center gap-1 text-[11px] font-bold text-red-400 hover:text-red-600 transition-colors"
+              >
+                <X className="w-3 h-3" /> مسح التصفية
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
+
       {/* List */}
       {meetings.length === 0 ? (
         <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 p-16 text-center">
           <FileText className="w-12 h-12 text-slate-300 dark:text-slate-600 mx-auto mb-3" />
           <p className="text-slate-400 dark:text-slate-500 text-sm">لا توجد محاضر بعد</p>
         </div>
+      ) : filteredMeetings.length === 0 ? (
+        <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-700 p-10 text-center">
+          <Search className="w-8 h-8 text-slate-300 dark:text-slate-600 mx-auto mb-2" />
+          <p className="text-slate-400 dark:text-slate-500 text-sm">لا توجد محاضر تطابق التصفية الحالية</p>
+          <button onClick={resetFilters} className="mt-2 text-xs text-blue-500 hover:underline">مسح التصفية</button>
+        </div>
       ) : (
         <div className="grid gap-2">
-          {meetings.map(m => (
+          {filteredMeetings.map(m => (
             <div key={m.id} className="bg-white dark:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-700 p-3 hover:shadow-sm transition-shadow">
               {/* صف المعلومات الرئيسية */}
               <div className="flex items-center gap-3">

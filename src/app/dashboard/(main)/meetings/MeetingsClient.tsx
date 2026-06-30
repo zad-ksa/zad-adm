@@ -9,8 +9,8 @@ import {
 } from "lucide-react";
 import {
   createMeeting, updateMeeting, deleteMeeting,
-  upsertMeetingTasks, toggleMeetingTask, createTasksFromMeeting, insertAiTasksIfEmpty, getTasksForMeeting,
-  checkMeetingNumberConflict, renumberMeetings, checkDateConflict, getNextMeetingNumber, compactMeetingNumbers,
+  upsertMeetingTasks, toggleMeetingTask, insertAiTasksIfEmpty, getTasksForMeeting,
+  checkDateConflict,
 } from "@/app/actions/meetings";
 import { useRouter } from "next/navigation";
 
@@ -27,7 +27,6 @@ type Meeting = {
   id: string;
   title: string;
   date: string | Date;
-  meetingNumber: number | null;
   location: string | null;
   charityId: string | null;
   meetingContext: string | null;
@@ -198,13 +197,13 @@ const LETTERHEAD_CSS = `
   @media print { html, body { background: white !important; } .page { margin: 0 !important; page-break-after: always; -webkit-print-color-adjust: exact; print-color-adjust: exact; } .page:last-child { page-break-after: avoid; } }
 `;
 
-function buildLetterheadDoc(m: Meeting, forPrint: boolean): string {
+function buildLetterheadDoc(m: Meeting, forPrint: boolean, meetingNum?: number): string {
   // حذف أي جداول مهام أضافها AI من formattedContent لتجنب التكرار مع injectTasksIntoHtml
   const rawHtml = mdToHtml(m.formattedContent);
   const cleanHtml = rawHtml.replace(/<h[23][^>]*>.*?(?:مهام|توصيات|تكليفات).*?<\/h[23]>\s*(<table[\s\S]*?<\/table>)/gi, "").replace(/<table[\s\S]*?<\/table>/gi, "");
   const body = `<div class="meeting-label">محضر اجتماع</div><div class="meeting-title">${m.title}</div>\n` + injectTasksIntoHtml(cleanHtml, m.meetingTasks);
   const dateStr = formatDate(m.date);
-  const numStr = m.meetingNumber ? `ZAD_M_${String(m.meetingNumber).padStart(3, "0")}` : "";
+  const numStr = meetingNum ? `ZAD_M_${String(meetingNum).padStart(3, "0")}` : "";
   const letterheadUrl = `${window.location.origin}/assets/letterhead.png`;
 
   return `<!DOCTYPE html>
@@ -288,17 +287,17 @@ function buildLetterheadDoc(m: Meeting, forPrint: boolean): string {
 }
 
 // ── Letterhead actions ────────────────────────────────────────────────────────
-function handlePrint(m: Meeting) {
+function handlePrint(m: Meeting, meetingNum?: number) {
   const win = window.open("", "_blank");
   if (!win) return;
-  win.document.write(buildLetterheadDoc(m, true));
+  win.document.write(buildLetterheadDoc(m, true, meetingNum));
   win.document.close();
 }
 
-function handlePreview(m: Meeting) {
+function handlePreview(m: Meeting, meetingNum?: number) {
   const win = window.open("", "_blank");
   if (!win) return;
-  win.document.write(buildLetterheadDoc(m, false));
+  win.document.write(buildLetterheadDoc(m, false, meetingNum));
   win.document.close();
 }
 
@@ -613,13 +612,8 @@ export default function MeetingsClient({ meetings, charities, employees, session
   const [editingId, setEditingId] = useState<string | null>(null);
   const [viewingMeeting, setViewingMeeting] = useState<Meeting | null>(null);
 
-  // Inline number editing
-  const [editingNumberId, setEditingNumberId] = useState<string | null>(null);
-  const [editingNumberVal, setEditingNumberVal] = useState("");
-
   // Form fields
   const [title, setTitle] = useState("");
-  const [meetingNumber, setMeetingNumber] = useState("");
   const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
   const [location, setLocation] = useState("");
   const [charityId, setCharityId] = useState("");
@@ -669,6 +663,10 @@ export default function MeetingsClient({ meetings, charities, employees, session
     return true;
   });
 
+  // ترقيم تلقائي: رتّب المحاضر حسب التاريخ تصاعدياً (الأقدم = 1)
+  const sortedByDate = [...meetings].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+  const meetingNumberMap = new Map<string, number>(sortedByDate.map((m, i) => [m.id, i + 1]));
+
   const activeFilters = [searchQuery, filterCharity, filterPrivacy, filterPeriod].filter(Boolean).length;
 
   function resetFilters() {
@@ -676,26 +674,20 @@ export default function MeetingsClient({ meetings, charities, employees, session
   }
 
   function resetForm() {
-    setTitle(""); setMeetingNumber(""); setDate(new Date().toISOString().slice(0, 10));
+    setTitle(""); setDate(new Date().toISOString().slice(0, 10));
     setLocation(""); setCharityId(""); setAttendees("");
     setRawNotes(""); setMeetingContext(""); setIsPrivate(false);
     setFormattedContent(""); setStep(1); setAiError(""); setError("");
     setEditingId(null);
   }
 
-  async function openCreate() {
+  function openCreate() {
     resetForm();
-    // جلب الرقم التلقائي التالي
-    try {
-      const next = await getNextMeetingNumber();
-      setMeetingNumber(String(next));
-    } catch {}
     setShowModal(true);
   }
 
   function openEdit(m: Meeting) {
     setTitle(m.title);
-    setMeetingNumber(m.meetingNumber ? String(m.meetingNumber) : "");
     setDate(new Date(m.date).toISOString().slice(0, 10));
     setLocation(m.location || "");
     setAttendees(m.attendees || "");
@@ -731,6 +723,7 @@ export default function MeetingsClient({ meetings, charities, employees, session
 
   async function handleSave() {
     if (!title.trim()) { setError("العنوان مطلوب"); return; }
+    if (!date) { setError("التاريخ مطلوب"); return; }
     if (!formattedContent.trim()) { setError("المحضر المنسق مطلوب"); return; }
     setError("");
 
@@ -755,7 +748,6 @@ export default function MeetingsClient({ meetings, charities, employees, session
 
     startTransition(async () => {
       try {
-        const numVal = meetingNumber ? parseInt(meetingNumber) : null;
         let savedId = editingId;
         if (editingId) {
           await updateMeeting(editingId, {
@@ -763,10 +755,10 @@ export default function MeetingsClient({ meetings, charities, employees, session
             charityId: resolvedCharityId || null,
             meetingContext: resolvedContext || null,
             attendees: attendees || null,
-            rawNotes, formattedContent, isPrivate, meetingNumber: numVal,
+            rawNotes, formattedContent, isPrivate,
           });
         } else {
-          const res = await createMeeting({ title, meetingNumber: numVal, date, location, charityId: resolvedCharityId, meetingContext: resolvedContext, rawNotes, formattedContent, attendees, isPrivate });
+          const res = await createMeeting({ title, date, location, charityId: resolvedCharityId, meetingContext: resolvedContext, rawNotes, formattedContent, attendees, isPrivate });
           savedId = res.id;
         }
         setShowModal(false);
@@ -792,52 +784,11 @@ export default function MeetingsClient({ meetings, charities, employees, session
     });
   }
 
-  async function handleSaveMeetingNumber(m: Meeting) {
-    const n = editingNumberVal ? parseInt(editingNumberVal) : null;
-    if (n === m.meetingNumber) { setEditingNumberId(null); return; }
-
-    if (n === null) {
-      // إزالة الرقم فقط
-      await updateMeeting(m.id, { meetingNumber: null });
-      setEditingNumberId(null); router.refresh(); return;
-    }
-
-    // فحص التعارض
-    const conflict = await checkMeetingNumberConflict(n, m.id);
-    if (conflict) {
-      // احسب عدد المحاضر التي ستتأثر
-      const allNumbers = meetings.filter(x => x.meetingNumber !== null && x.id !== m.id).map(x => x.meetingNumber!);
-      const oldNum = m.meetingNumber;
-      let affectedCount = 0;
-      if (oldNum === null) {
-        affectedCount = allNumbers.filter(num => num >= n).length;
-      } else if (n < oldNum) {
-        affectedCount = allNumbers.filter(num => num >= n && num < oldNum).length;
-      } else {
-        affectedCount = allNumbers.filter(num => num > oldNum && num <= n).length;
-      }
-
-      const msg = affectedCount > 0
-        ? `الرقم ${n} مستخدم حالياً في المحضر "${conflict.title}".\n\nسيتم إعادة ترقيم ${affectedCount} محضر تلقائياً لإفساح المجال.\n\nهل تريد المتابعة؟`
-        : `الرقم ${n} مستخدم حالياً في المحضر "${conflict.title}".\n\nهل تريد المتابعة وإعادة الترقيم؟`;
-
-      if (!confirm(msg)) return;
-      await renumberMeetings(m.id, n);
-    } else {
-      await updateMeeting(m.id, { meetingNumber: n });
-    }
-    setEditingNumberId(null); router.refresh();
-  }
-
   async function handleDelete(id: string) {
-    const m = meetings.find(x => x.id === id);
-    const hadNumber = m?.meetingNumber !== null;
     if (!confirm("هل تريد حذف هذا المحضر؟")) return;
     startTransition(async () => {
       try {
         await deleteMeeting(id);
-        // إذا كان المحضر المحذوف مرقماً → اضغط الأرقام لسد الفجوة
-        if (hadNumber) await compactMeetingNumbers();
         router.refresh();
       }
       catch (e: any) { alert(e.message); }
@@ -958,6 +909,9 @@ export default function MeetingsClient({ meetings, charities, employees, session
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-1.5 flex-wrap">
+                    <span className="text-[11px] font-mono bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400 px-2 py-0.5 rounded shrink-0">
+                      {`ZAD_M_${String(meetingNumberMap.get(m.id) ?? 0).padStart(3, "0")}`}
+                    </span>
                     <span className="text-sm font-bold text-slate-800 dark:text-slate-100 truncate">{m.title}</span>
                     {m.isPrivate && <span className="text-[10px] bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 px-1.5 py-0.5 rounded-full font-bold">خاص</span>}
                     {m.meetingContext && <span className="text-[10px] bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400 px-1.5 py-0.5 rounded-full">{DEPARTMENTS.find(d => d.value === m.meetingContext)?.label ?? m.meetingContext}</span>}
@@ -967,32 +921,6 @@ export default function MeetingsClient({ meetings, charities, employees, session
                     <span>{formatDate(m.date)}</span>
                     {m.location && <span>· {m.location}</span>}
                     <span>· {m.createdBy.name}</span>
-                    {/* رقم الاجتماع */}
-                    {editingNumberId === m.id ? (
-                      <span className="flex items-center gap-1">
-                        <span className="text-slate-400">ZAD_M_</span>
-                        <input
-                          type="number" min="1" autoFocus
-                          value={editingNumberVal}
-                          onChange={e => setEditingNumberVal(e.target.value)}
-                          onKeyDown={async e => {
-                            if (e.key === "Enter") await handleSaveMeetingNumber(m);
-                            else if (e.key === "Escape") setEditingNumberId(null);
-                          }}
-                          className="w-14 text-xs border border-primary/40 rounded px-1.5 py-0.5 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 outline-none focus:ring-1 focus:ring-primary"
-                          placeholder="001"
-                        />
-                        <button onClick={() => handleSaveMeetingNumber(m)} className="text-primary hover:text-primary/80"><Check className="w-3.5 h-3.5" /></button>
-                        <button onClick={() => setEditingNumberId(null)} className="text-slate-400 hover:text-slate-600"><X className="w-3.5 h-3.5" /></button>
-                      </span>
-                    ) : (
-                      <button
-                        onClick={() => { setEditingNumberId(m.id); setEditingNumberVal(m.meetingNumber ? String(m.meetingNumber) : ""); }}
-                        className="flex items-center gap-1 text-[11px] font-mono bg-slate-100 dark:bg-slate-700 hover:bg-primary/10 hover:text-primary px-2 py-0.5 rounded transition-colors"
-                      >
-                        {m.meetingNumber ? `ZAD_M_${String(m.meetingNumber).padStart(3, "0")}` : <span className="text-slate-300 dark:text-slate-600">+ رقم</span>}
-                      </button>
-                    )}
                   </div>
                 </div>
                 {/* أزرار الإجراءات */}
@@ -1000,10 +928,10 @@ export default function MeetingsClient({ meetings, charities, employees, session
                   <button onClick={() => setViewingMeeting(m)} className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-400 hover:text-blue-600 transition-colors" title="عرض النص">
                     <Eye className="w-3.5 h-3.5" />
                   </button>
-                  <button onClick={() => handlePreview(m)} className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-400 hover:text-teal-600 transition-colors" title="عرض بالكليشة">
+                  <button onClick={() => handlePreview(m, meetingNumberMap.get(m.id))} className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-400 hover:text-teal-600 transition-colors" title="عرض بالكليشة">
                     <LayoutTemplate className="w-3.5 h-3.5" />
                   </button>
-                  <button onClick={() => handlePrint(m)} className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-400 hover:text-slate-600 transition-colors" title="طباعة">
+                  <button onClick={() => handlePrint(m, meetingNumberMap.get(m.id))} className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-400 hover:text-slate-600 transition-colors" title="طباعة">
                     <Printer className="w-3.5 h-3.5" />
                   </button>
                   {canEditMeeting(m, sessionId, isTier1) && (
@@ -1040,10 +968,10 @@ export default function MeetingsClient({ meetings, charities, employees, session
                 <p className="text-xs text-slate-400 mt-0.5">{formatDate(viewingMeeting.date)}{viewingMeeting.location ? ` · ${viewingMeeting.location}` : ""}</p>
               </div>
               <div className="flex gap-2">
-                <button onClick={() => handlePreview(viewingMeeting)} className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-teal-600 transition-colors" title="عرض بالكليشة">
+                <button onClick={() => handlePreview(viewingMeeting, meetingNumberMap.get(viewingMeeting.id))} className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-teal-600 transition-colors" title="عرض بالكليشة">
                   <LayoutTemplate className="w-4 h-4" />
                 </button>
-                <button onClick={() => handlePrint(viewingMeeting)} className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 transition-colors" title="طباعة">
+                <button onClick={() => handlePrint(viewingMeeting, meetingNumberMap.get(viewingMeeting.id))} className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 transition-colors" title="طباعة">
                   <Printer className="w-4 h-4" />
                 </button>
                 <button onClick={() => setViewingMeeting(null)} className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 transition-colors">
@@ -1093,20 +1021,8 @@ export default function MeetingsClient({ meetings, charities, employees, session
                         className="w-full border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-sm bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500" />
                     </div>
                     <div>
-                      <label className="text-xs font-bold text-slate-500 dark:text-slate-400 mb-1 block">رقم الاجتماع</label>
-                      <div className="relative">
-                        <input type="number" min="1" value={meetingNumber} onChange={e => setMeetingNumber(e.target.value)} placeholder="1"
-                          className="w-full border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-sm bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500" />
-                        {meetingNumber && (
-                          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-slate-400 pointer-events-none">
-                            {`ZAD_M_${String(meetingNumber).padStart(3, "0")}`}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                    <div>
                       <label className="text-xs font-bold text-slate-500 dark:text-slate-400 mb-1 block">التاريخ *</label>
-                      <input type="date" value={date} onChange={e => setDate(e.target.value)}
+                      <input type="date" value={date} onChange={e => setDate(e.target.value)} required
                         className="w-full border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-sm bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500" />
                     </div>
                     <div>

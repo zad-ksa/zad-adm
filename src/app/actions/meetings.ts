@@ -27,7 +27,6 @@ export async function getMeetings() {
 
 export async function createMeeting(data: {
   title: string;
-  meetingNumber?: number | null;
   date: string;
   location?: string;
   charityId?: string;
@@ -43,7 +42,6 @@ export async function createMeeting(data: {
   const meeting = await prisma.meeting.create({
     data: {
       title: data.title,
-      meetingNumber: data.meetingNumber ?? null,
       date: new Date(data.date),
       location: data.location || null,
       charityId: data.charityId || null,
@@ -73,7 +71,6 @@ export async function updateMeeting(
     formattedContent: string;
     summary: string | null;
     isPrivate: boolean;
-    meetingNumber: number | null;
   }>
 ) {
   const session = await getSession();
@@ -114,109 +111,6 @@ export async function checkDateConflict(date: string, excludeId?: string) {
     select: { id: true, title: true },
   });
   return conflicts;
-}
-
-export async function getNextMeetingNumber() {
-  const session = await getSession();
-  if (!session) throw new Error("غير مصرح");
-  const max = await prisma.meeting.aggregate({ _max: { meetingNumber: true } });
-  return (max._max.meetingNumber ?? 0) + 1;
-}
-
-export async function compactMeetingNumbers() {
-  const session = await getSession();
-  if (!session || !TIER1.includes(session.role)) throw new Error("غير مصرح");
-  const numbered = await prisma.meeting.findMany({
-    where: { meetingNumber: { not: null } },
-    select: { id: true, meetingNumber: true },
-    orderBy: { meetingNumber: "asc" },
-  });
-  const updates: { id: string; number: number }[] = [];
-  numbered.forEach((m, i) => {
-    const expected = i + 1;
-    if (m.meetingNumber !== expected) updates.push({ id: m.id, number: expected });
-  });
-  if (updates.length > 0) {
-    await prisma.$transaction(
-      updates.map(u => prisma.meeting.update({ where: { id: u.id }, data: { meetingNumber: u.number } }))
-    );
-    revalidatePath("/dashboard/meetings");
-  }
-  return { success: true, fixed: updates.length };
-}
-
-export async function checkMeetingNumberConflict(meetingNumber: number, excludeId?: string) {
-  const session = await getSession();
-  if (!session) throw new Error("غير مصرح");
-  const conflict = await prisma.meeting.findFirst({
-    where: {
-      meetingNumber,
-      ...(excludeId ? { id: { not: excludeId } } : {}),
-    },
-    select: { id: true, title: true, meetingNumber: true },
-  });
-  return conflict;
-}
-
-// إعادة ترقيم المحاضر: عند وضع رقم X على محضر معين، تتحرك المحاضر بينه وبين الرقم القديم لتفسح المجال
-export async function renumberMeetings(targetId: string, newNumber: number) {
-  const session = await getSession();
-  if (!session || !TIER1.includes(session.role)) throw new Error("غير مصرح");
-
-  // جلب المحضر المستهدف ورقمه الحالي
-  const target = await prisma.meeting.findUnique({ where: { id: targetId }, select: { meetingNumber: true } });
-  if (!target) throw new Error("المحضر غير موجود");
-
-  const oldNumber = target.meetingNumber;
-
-  // جلب جميع المحاضر التي لها أرقام
-  const allNumbered = await prisma.meeting.findMany({
-    where: { meetingNumber: { not: null } },
-    select: { id: true, meetingNumber: true },
-    orderBy: { meetingNumber: "asc" },
-  });
-
-  // بناء خريطة id → رقم جديد
-  const updates: { id: string; number: number }[] = [];
-
-  if (oldNumber === null) {
-    // المحضر لم يكن له رقم — أدرجه في المكان المطلوب وازحه الباقين
-    for (const m of allNumbered) {
-      if (m.meetingNumber! >= newNumber) {
-        updates.push({ id: m.id, number: m.meetingNumber! + 1 });
-      }
-    }
-    updates.push({ id: targetId, number: newNumber });
-  } else if (newNumber < oldNumber) {
-    // تحرك للأمام — المحاضر بين newNumber و oldNumber-1 تزحزح للأمام +1
-    for (const m of allNumbered) {
-      if (m.id === targetId) continue;
-      if (m.meetingNumber! >= newNumber && m.meetingNumber! < oldNumber) {
-        updates.push({ id: m.id, number: m.meetingNumber! + 1 });
-      }
-    }
-    updates.push({ id: targetId, number: newNumber });
-  } else if (newNumber > oldNumber) {
-    // تحرك للخلف — المحاضر بين oldNumber+1 و newNumber تزحزح للخلف -1
-    for (const m of allNumbered) {
-      if (m.id === targetId) continue;
-      if (m.meetingNumber! > oldNumber && m.meetingNumber! <= newNumber) {
-        updates.push({ id: m.id, number: m.meetingNumber! - 1 });
-      }
-    }
-    updates.push({ id: targetId, number: newNumber });
-  } else {
-    // نفس الرقم — لا تغيير
-    return { success: true, changed: 0 };
-  }
-
-  // تطبيق التحديثات في transaction
-  await prisma.$transaction(
-    updates.map(u => prisma.meeting.update({ where: { id: u.id }, data: { meetingNumber: u.number } }))
-  );
-
-  revalidatePath("/dashboard/meetings");
-  return { success: true, changed: updates.length };
 }
 
 export async function deleteMeeting(id: string) {

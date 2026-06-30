@@ -172,6 +172,7 @@ model Meeting {
   location         String?
   charityId        String?
   charity          Charity?      @relation(fields: [charityId], references: [id], onDelete: SetNull)
+  meetingContext   String?
   rawNotes         String        @db.Text
   formattedContent String        @db.Text
   summary          String?       @db.Text

@@ -9,7 +9,7 @@ import {
 } from "lucide-react";
 import {
   createMeeting, updateMeeting, deleteMeeting,
-  upsertMeetingTasks, toggleMeetingTask, createTasksFromMeeting,
+  upsertMeetingTasks, toggleMeetingTask, createTasksFromMeeting, insertAiTasksIfEmpty, getTasksForMeeting,
 } from "@/app/actions/meetings";
 import { useRouter } from "next/navigation";
 
@@ -47,6 +47,7 @@ type Props = {
   meetings: Meeting[];
   charities: Charity[];
   employees: Employee[];
+  serviceNames: string[];
   sessionId: string;
   sessionRole: string;
   isTier1: boolean;
@@ -326,19 +327,26 @@ function MeetingSummaryPanel({
       });
       const data = await res.json();
       if (data.summary) setSummary(data.summary);
-      if (data.tasks?.length > 0 && (localTasks.length === 0 || force)) {
-        const suggested: MeetingTask[] = (data.tasks as { title: string; assigneeName: string | null }[]).map((t, i) => ({
-          id: `tmp_${i}`,
-          title: t.title,
-          assignedToId: null,
-          assignedTo: null,
-          dueDays: null,
-          isDone: false,
-        }));
-        setLocalTasks(suggested);
-      }
-      // احفظ دائماً حتى لو كان فارغاً — "" تعني "تم التحليل ولا يوجد ملخص"
+      // احفظ الملخص دائماً — "" تعني "تم التحليل ولا يوجد ملخص"
       await updateMeeting(meeting.id, { summary: data.summary || "" });
+      // احفظ المهام في DB
+      if (data.tasks?.length > 0) {
+        if (force) {
+          const toSave = (data.tasks as { title: string }[]).map(t => ({
+            id: undefined as string | undefined,
+            title: t.title,
+            assignedToId: null as string | null,
+            dueDays: null as number | null,
+            isDone: false,
+          }));
+          await upsertMeetingTasks(meeting.id, toSave);
+        } else {
+          await insertAiTasksIfEmpty(meeting.id, data.tasks as { title: string }[]);
+        }
+        // اجلب المهام المحفوظة من DB وحدّث الـ state المحلي
+        const saved = await getTasksForMeeting(meeting.id);
+        setLocalTasks(saved as MeetingTask[]);
+      }
       setExtracted(true);
     } catch { setExtracted(true); }
     finally { setLoading(false); }
@@ -583,7 +591,7 @@ function MeetingSummaryPanel({
 }
 
 // ── Main component ─────────────────────────────────────────────────────────────
-export default function MeetingsClient({ meetings, charities, employees, sessionId, sessionRole, isTier1 }: Props) {
+export default function MeetingsClient({ meetings, charities, employees, serviceNames, sessionId, sessionRole, isTier1 }: Props) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
 
@@ -673,14 +681,7 @@ export default function MeetingsClient({ meetings, charities, employees, session
             try {
               await updateMeeting(savedId!, { summary: data.summary || "" });
               if (data.tasks?.length > 0) {
-                const toSave = (data.tasks as { title: string }[]).map(t => ({
-                  id: undefined,
-                  title: t.title,
-                  assignedToId: null,
-                  dueDays: null,
-                  isDone: false,
-                }));
-                await upsertMeetingTasks(savedId!, toSave);
+                await insertAiTasksIfEmpty(savedId!, data.tasks as { title: string }[]);
               }
             } catch {}
           }).catch(() => {}).finally(() => { router.refresh(); });

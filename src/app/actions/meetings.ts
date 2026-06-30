@@ -20,6 +20,7 @@ export async function getMeetings() {
         orderBy: { createdAt: "asc" },
       },
     },
+    
     orderBy: { date: "desc" },
   });
 }
@@ -149,6 +150,43 @@ export async function upsertMeetingTasks(
 
   revalidatePath("/dashboard/meetings");
   return { success: true };
+}
+
+// تُستخدم فقط من الـ AI التلقائي — تُضيف مهام جديدة فقط إذا لم توجد مهام أصلاً، ولا تحذف شيئاً
+export async function insertAiTasksIfEmpty(
+  meetingId: string,
+  tasks: { title: string }[]
+) {
+  const session = await getSession();
+  if (!session) throw new Error("غير مصرح");
+
+  const existing = await prisma.meetingTask.count({ where: { meetingId } });
+  if (existing > 0) return { success: true, skipped: true };
+
+  if (tasks.length === 0) return { success: true, skipped: true };
+
+  await prisma.meetingTask.createMany({
+    data: tasks.map(t => ({
+      meetingId,
+      title: t.title,
+      assignedToId: null,
+      dueDays: null,
+      isDone: false,
+    })),
+  });
+
+  revalidatePath("/dashboard/meetings");
+  return { success: true, skipped: false };
+}
+
+export async function getTasksForMeeting(meetingId: string) {
+  const session = await getSession();
+  if (!session) throw new Error("غير مصرح");
+  return prisma.meetingTask.findMany({
+    where: { meetingId },
+    include: { assignedTo: { select: { id: true, name: true } } },
+    orderBy: { createdAt: "asc" },
+  });
 }
 
 export async function toggleMeetingTask(taskId: string, isDone: boolean) {

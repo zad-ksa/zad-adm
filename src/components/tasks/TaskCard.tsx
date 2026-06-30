@@ -113,7 +113,7 @@ export default function TaskCard({
               'bg-emerald-50 text-emerald-600 dark:bg-emerald-900/20 dark:text-emerald-400'
             }`}>
               <span className={`w-1.5 h-1.5 rounded-full ${task.priority === 1 ? 'bg-red-500' : task.priority === 2 ? 'bg-amber-500' : 'bg-emerald-500'}`}></span>
-              {task.priority === 1 ? 'أولوية قصوى' : task.priority === 2 ? 'أولوية متوسطة' : 'أولوية منخفضة'}
+              {task.priority === 1 ? 'أولوية عالية' : task.priority === 2 ? 'أولوية متوسطة' : 'أولوية منخفضة'}
             </span>
 
             {task.isInternal ? (
@@ -173,7 +173,7 @@ export default function TaskCard({
               {isEditingPriority && (
                 <div className="absolute top-full mt-2 left-0 bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-xl shadow-xl p-2 flex flex-col gap-1 z-50 w-32">
                   <button onClick={() => { onUpdatePriority(task.id, 1); setIsEditingPriority(false); }} className="text-xs font-bold px-2 py-1.5 rounded hover:bg-slate-50 dark:hover:bg-slate-700 text-right text-red-600 flex items-center gap-2 cursor-pointer">
-                    <span className="w-1.5 h-1.5 rounded-full bg-red-500"></span> قصوى
+                    <span className="w-1.5 h-1.5 rounded-full bg-red-500"></span> عالية
                   </button>
                   <button onClick={() => { onUpdatePriority(task.id, 2); setIsEditingPriority(false); }} className="text-xs font-bold px-2 py-1.5 rounded hover:bg-slate-50 dark:hover:bg-slate-700 text-right text-amber-600 flex items-center gap-2 cursor-pointer">
                     <span className="w-1.5 h-1.5 rounded-full bg-amber-500"></span> متوسطة

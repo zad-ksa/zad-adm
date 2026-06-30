@@ -130,7 +130,7 @@ export default function TaskFormModal({
               <label className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-xl border ${priority === 1 ? 'border-red-500 bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400' : 'border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'} cursor-pointer transition-all`}>
                 <input type="radio" name="priority" checked={priority === 1} onChange={() => setPriority(1)} className="hidden" />
                 <span className="w-2 h-2 rounded-full bg-red-500"></span>
-                <span className="text-sm font-bold">قصوى</span>
+                <span className="text-sm font-bold">عالية</span>
               </label>
               <label className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-xl border ${priority === 2 ? 'border-amber-500 bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400' : 'border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'} cursor-pointer transition-all`}>
                 <input type="radio" name="priority" checked={priority === 2} onChange={() => setPriority(2)} className="hidden" />

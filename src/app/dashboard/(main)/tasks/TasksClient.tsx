@@ -182,7 +182,7 @@ export default function TasksClient({
       : employees.find(e => e.id === visibleEmployeeId)?.name || "";
 
     const priorityLabel = (p: number) =>
-      p === 1 ? "أولوية قصوى" : p === 2 ? "أولوية متوسطة" : "أولوية منخفضة";
+      p === 1 ? "أولوية عالية" : p === 2 ? "أولوية متوسطة" : "أولوية منخفضة";
 
     const tasksRows = filteredActiveTasks.map(t => {
       const emp = employees.find(e => e.id === t.assignedToId);
@@ -234,7 +234,7 @@ export default function TasksClient({
 <div class="summary">
   <div class="box"><div class="num">${filteredActiveTasks.length}</div><div class="lbl">مهام حالية</div></div>
   <div class="box"><div class="num">${combinedAchievements.length}</div><div class="lbl">منجزات</div></div>
-  <div class="box"><div class="num">${filteredActiveTasks.filter(t => t.priority === 1).length}</div><div class="lbl">أولوية قصوى</div></div>
+  <div class="box"><div class="num">${filteredActiveTasks.filter(t => t.priority === 1).length}</div><div class="lbl">أولوية عالية</div></div>
   <div class="box"><div class="num">${filteredActiveTasks.filter(t => t.status === "IN_PROGRESS").length}</div><div class="lbl">جارية التنفيذ</div></div>
 </div>
 
@@ -775,11 +775,11 @@ ${combinedAchievements.length > 0 ? `
                             }`}
                           >
                             <span className={`w-1.5 h-1.5 rounded-full ${task.priority === 1 ? 'bg-red-500' : task.priority === 2 ? 'bg-amber-500' : 'bg-slate-400'}`}></span>
-                            {task.priority === 1 ? 'قصوى' : task.priority === 2 ? 'متوسطة' : 'منخفضة'}
+                            {task.priority === 1 ? 'عالية' : task.priority === 2 ? 'متوسطة' : 'منخفضة'}
                           </button>
                           {editingPriorityTaskId === task.id && (
                             <div className="absolute top-full mt-1 right-0 bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-lg shadow-lg p-1.5 flex flex-col gap-0.5 z-50 w-28">
-                              <button onClick={() => handleUpdateTaskPriority(task.id, 1)} className="text-[10px] font-bold px-2 py-1 rounded hover:bg-slate-50 dark:hover:bg-slate-700 text-right text-red-600 flex items-center gap-1.5 cursor-pointer"><span className="w-1.5 h-1.5 rounded-full bg-red-500"></span>قصوى</button>
+                              <button onClick={() => handleUpdateTaskPriority(task.id, 1)} className="text-[10px] font-bold px-2 py-1 rounded hover:bg-slate-50 dark:hover:bg-slate-700 text-right text-red-600 flex items-center gap-1.5 cursor-pointer"><span className="w-1.5 h-1.5 rounded-full bg-red-500"></span>عالية</button>
                               <button onClick={() => handleUpdateTaskPriority(task.id, 2)} className="text-[10px] font-bold px-2 py-1 rounded hover:bg-slate-50 dark:hover:bg-slate-700 text-right text-amber-600 flex items-center gap-1.5 cursor-pointer"><span className="w-1.5 h-1.5 rounded-full bg-amber-500"></span>متوسطة</button>
                               <button onClick={() => handleUpdateTaskPriority(task.id, 3)} className="text-[10px] font-bold px-2 py-1 rounded hover:bg-slate-50 dark:hover:bg-slate-700 text-right text-slate-500 flex items-center gap-1.5 cursor-pointer"><span className="w-1.5 h-1.5 rounded-full bg-slate-400"></span>منخفضة</button>
                             </div>

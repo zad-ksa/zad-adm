@@ -32,10 +32,10 @@ export default function DeveloperRoleSwitcher({ currentEmployeeId, hideCharityCl
   };
 
   return (
-    <div className="fixed bottom-6 left-6 z-50">
+    <div className="fixed bottom-6 right-6 z-50">
       <div className="relative">
         {isOpen && (
-          <div className="absolute bottom-full mb-4 left-0 w-72 max-h-96 overflow-y-auto custom-scrollbar bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-2xl p-2 animate-in fade-in slide-in-from-bottom-2">
+          <div className="absolute bottom-full mb-4 right-0 w-72 max-h-96 overflow-y-auto custom-scrollbar bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-2xl p-2 animate-in fade-in slide-in-from-bottom-2">
             <div className="sticky top-0 bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm z-10 px-3 py-2 border-b border-slate-100 dark:border-slate-700/50 mb-2">
               <h4 className="text-xs font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
                 <Settings className="w-4 h-4 text-primary" />

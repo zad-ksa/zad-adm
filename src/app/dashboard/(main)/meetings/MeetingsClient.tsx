@@ -700,20 +700,20 @@ export default function MeetingsClient({ meetings, charities, employees, session
   }
 
   return (
-    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500" dir="rtl">
+    <div className="space-y-3 animate-in fade-in slide-in-from-bottom-4 duration-500" dir="rtl">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-blue-100 dark:bg-blue-900/30 rounded-xl flex items-center justify-center">
-            <FileText className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+        <div className="flex items-center gap-2">
+          <div className="w-7 h-7 bg-blue-100 dark:bg-blue-900/30 rounded-lg flex items-center justify-center">
+            <FileText className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
           </div>
           <div>
-            <h1 className="text-xl font-bold text-slate-800 dark:text-slate-100">محاضر الاجتماعات</h1>
-            <p className="text-xs text-slate-500 dark:text-slate-400">{meetings.length} محضر</p>
+            <h1 className="text-base font-bold text-slate-800 dark:text-slate-100">محاضر الاجتماعات</h1>
+            <p className="text-[11px] text-slate-500 dark:text-slate-400">{meetings.length} محضر</p>
           </div>
         </div>
-        <button onClick={openCreate} className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl text-sm font-bold transition-colors">
-          <Plus className="w-4 h-4" /> محضر جديد
+        <button onClick={openCreate} className="flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-lg text-xs font-bold transition-colors">
+          <Plus className="w-3.5 h-3.5" /> محضر جديد
         </button>
       </div>
 
@@ -724,21 +724,21 @@ export default function MeetingsClient({ meetings, charities, employees, session
           <p className="text-slate-400 dark:text-slate-500 text-sm">لا توجد محاضر بعد</p>
         </div>
       ) : (
-        <div className="grid gap-3">
+        <div className="grid gap-2">
           {meetings.map(m => (
-            <div key={m.id} className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 p-5 hover:shadow-sm transition-shadow">
+            <div key={m.id} className="bg-white dark:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-700 p-3 hover:shadow-sm transition-shadow">
               {/* صف المعلومات الرئيسية */}
-              <div className="flex items-center gap-4">
-                <div className="w-10 h-10 rounded-xl bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center shrink-0">
-                  {m.isPrivate ? <Lock className="w-5 h-5 text-amber-500" /> : <Globe className="w-5 h-5 text-blue-500" />}
+              <div className="flex items-center gap-3">
+                <div className="w-7 h-7 rounded-lg bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center shrink-0">
+                  {m.isPrivate ? <Lock className="w-3.5 h-3.5 text-amber-500" /> : <Globe className="w-3.5 h-3.5 text-blue-500" />}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <span className="font-bold text-slate-800 dark:text-slate-100 truncate">{m.title}</span>
-                    {m.isPrivate && <span className="text-[10px] bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 px-2 py-0.5 rounded-full font-bold">خاص</span>}
-                    {m.charity && <span className="text-[10px] bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400 px-2 py-0.5 rounded-full">{m.charity.name}</span>}
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    <span className="text-sm font-bold text-slate-800 dark:text-slate-100 truncate">{m.title}</span>
+                    {m.isPrivate && <span className="text-[10px] bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 px-1.5 py-0.5 rounded-full font-bold">خاص</span>}
+                    {m.charity && <span className="text-[10px] bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400 px-1.5 py-0.5 rounded-full">{m.charity.name}</span>}
                   </div>
-                  <div className="text-xs text-slate-400 dark:text-slate-500 mt-0.5 flex items-center gap-3 flex-wrap">
+                  <div className="text-[11px] text-slate-400 dark:text-slate-500 mt-0.5 flex items-center gap-2 flex-wrap">
                     <span>{formatDate(m.date)}</span>
                     {m.location && <span>· {m.location}</span>}
                     <span>· {m.createdBy.name}</span>
@@ -778,24 +778,24 @@ export default function MeetingsClient({ meetings, charities, employees, session
                   </div>
                 </div>
                 {/* أزرار الإجراءات */}
-                <div className="flex items-center gap-1 shrink-0">
-                  <button onClick={() => setViewingMeeting(m)} className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-400 hover:text-blue-600 transition-colors" title="عرض النص">
-                    <Eye className="w-4 h-4" />
+                <div className="flex items-center gap-0.5 shrink-0">
+                  <button onClick={() => setViewingMeeting(m)} className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-400 hover:text-blue-600 transition-colors" title="عرض النص">
+                    <Eye className="w-3.5 h-3.5" />
                   </button>
-                  <button onClick={() => handlePreview(m)} className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-400 hover:text-teal-600 transition-colors" title="عرض بالكليشة">
-                    <LayoutTemplate className="w-4 h-4" />
+                  <button onClick={() => handlePreview(m)} className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-400 hover:text-teal-600 transition-colors" title="عرض بالكليشة">
+                    <LayoutTemplate className="w-3.5 h-3.5" />
                   </button>
-                  <button onClick={() => handlePrint(m)} className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-400 hover:text-slate-600 transition-colors" title="طباعة">
-                    <Printer className="w-4 h-4" />
+                  <button onClick={() => handlePrint(m)} className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-400 hover:text-slate-600 transition-colors" title="طباعة">
+                    <Printer className="w-3.5 h-3.5" />
                   </button>
                   {canEditMeeting(m, sessionId, isTier1) && (
-                    <button onClick={() => openEdit(m)} className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-400 hover:text-blue-600 transition-colors" title="تعديل">
-                      <Edit2 className="w-4 h-4" />
+                    <button onClick={() => openEdit(m)} className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-400 hover:text-blue-600 transition-colors" title="تعديل">
+                      <Edit2 className="w-3.5 h-3.5" />
                     </button>
                   )}
                   {canEditMeeting(m, sessionId, isTier1) && (
-                    <button onClick={() => handleDelete(m.id)} disabled={isPending} className="p-2 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 text-slate-400 hover:text-red-500 transition-colors" title="حذف">
-                      <Trash2 className="w-4 h-4" />
+                    <button onClick={() => handleDelete(m.id)} disabled={isPending} className="p-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 text-slate-400 hover:text-red-500 transition-colors" title="حذف">
+                      <Trash2 className="w-3.5 h-3.5" />
                     </button>
                   )}
                 </div>

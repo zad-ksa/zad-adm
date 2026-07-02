@@ -395,9 +395,10 @@ export default function InteractiveTimelineEditor({
                         onKeyDown={e => e.key === 'Enter' && handleSaveInline(stage)}
                       />
                     ) : (
-                      <h4 
+                      <h4
                         onClick={() => handleStartInlineEdit(stage, 'name')}
-                        className={`font-bold text-sm text-center cursor-text hover:text-amber-500 transition-colors ${isCurrent ? 'text-amber-600 dark:text-amber-500' : 'text-slate-700 dark:text-slate-300'} line-clamp-2 w-full`}
+                        className={`font-bold text-center cursor-text hover:text-amber-500 transition-colors leading-snug w-full ${isCurrent ? 'text-amber-600 dark:text-amber-500' : 'text-slate-700 dark:text-slate-300'}`}
+                        style={{ fontSize: stage.name.length > 40 ? '9px' : stage.name.length > 25 ? '10px' : stage.name.length > 15 ? '11px' : '13px' }}
                         title="انقر للتعديل"
                       >
                         {stage.name}

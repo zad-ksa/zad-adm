@@ -895,7 +895,7 @@ ${body}</body></html>`;
 
 // ── Main Export ─────────────────────────────────────────────────────
 export default function ServicesOverviewClient({
-  charities, stagesData, isAdmin, canEdit, role, deptLabels,
+  charities, stagesData, isAdmin, canEdit, role, deptLabels, allowedCharityIds,
 }: {
   charities: Charity[];
   stagesData: Record<string, any[]>;
@@ -903,6 +903,7 @@ export default function ServicesOverviewClient({
   canEdit: boolean;
   role: string;
   deptLabels: Record<string, string>;
+  allowedCharityIds: string[] | null;
 }) {
   const router = useRouter();
 
@@ -1370,7 +1371,10 @@ export default function ServicesOverviewClient({
             <form onSubmit={handleUnifySubmit} className="p-6 space-y-5">
               {/* Target charities selector */}
               {(() => {
-                const otherCharities = charities.filter(c => c.id !== unifyCharity.id);
+                const otherCharities = charities.filter(c =>
+                  c.id !== unifyCharity.id &&
+                  (allowedCharityIds === null || allowedCharityIds.includes(c.id))
+                );
                 const allSelected = unifyTargetIds.length === otherCharities.length;
                 return (
                   <div>

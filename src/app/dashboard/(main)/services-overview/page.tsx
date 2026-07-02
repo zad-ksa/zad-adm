@@ -106,6 +106,7 @@ export default async function ServicesOverviewPage() {
       canEdit={canEdit}
       role={role}
       deptLabels={DEPT_LABELS}
+      allowedCharityIds={assignedIds}
     />
   );
 }

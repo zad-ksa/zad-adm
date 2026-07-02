@@ -2,6 +2,9 @@ import { prisma } from "@/lib/db";
 
 const ADMIN_ROLES = [
   "ADMIN",
+  "EXECUTIVE_DIRECTOR",
+  "ADMINISTRATIVE_SECRETARIAT",
+  "GENERAL_MANAGER",
 ];
 
 export function isAdminRole(role: string): boolean {

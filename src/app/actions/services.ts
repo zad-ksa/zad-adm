@@ -244,7 +244,32 @@ export async function toggleCurrentServiceStage(stageId: string, isCurrent: bool
   revalidatePath(`/charity/${encodeURIComponent(stage.service.charity.name)}/services`);
 }
 
+const ADMIN_ROLES = ["ADMIN", "EXECUTIVE_DIRECTOR", "ADMINISTRATIVE_SECRETARIAT"];
+
 export async function unifyCharityStagesAction(sourceCharityId: string, timelineType: string, sourceServiceId?: string, targetCharityIds?: string[]) {
+  const session = await getSession();
+  if (!session) throw new Error("غير مصرح");
+
+  // الموظف العادي يقتصر على جمعياته المرتبطة فقط
+  const isAdmin = ADMIN_ROLES.includes(session.role);
+  if (!isAdmin) {
+    const assigned = await prisma.employeeCharity.findMany({
+      where: { employeeId: session.id },
+      select: { charityId: true },
+    });
+    const allowedIds = new Set(assigned.map(r => r.charityId));
+
+    if (!allowedIds.has(sourceCharityId)) throw new Error("لا يمكنك التعميم من جمعية غير مرتبطة بك");
+
+    if (targetCharityIds && targetCharityIds.length > 0) {
+      const forbidden = targetCharityIds.filter(id => !allowedIds.has(id));
+      if (forbidden.length > 0) throw new Error("لا يمكنك التعميم على جمعيات غير مرتبطة بك");
+    } else {
+      // إذا لم يحدد targetCharityIds نقيّدها على جمعياته فقط (ما عدا المصدر)
+      targetCharityIds = [...allowedIds].filter(id => id !== sourceCharityId);
+    }
+  }
+
   type StepData = { name: string; isDone: boolean; order: number };
   type SourceStage = {
     name: string; description: string | null; startDate: Date | null; endDate: Date | null;

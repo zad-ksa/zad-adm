@@ -35,10 +35,11 @@ export async function getSession() {
     const isDeveloper = session.permissions?.includes("developer_mode");
     session.isDeveloper = isDeveloper;
     
+    const { prisma } = await import("@/lib/db");
+    
     if (isDeveloper) {
       const overrideEmployeeId = cookieStore.get("dev_employee_override")?.value;
       if (overrideEmployeeId && overrideEmployeeId !== "DEVELOPER_RESET") {
-        const { prisma } = await import("@/lib/db");
         const emp = await prisma.employee.findUnique({
           where: { id: overrideEmployeeId },
           select: { id: true, name: true, role: true, permissions: true, charityId: true, avatarUrl: true }
@@ -54,6 +55,16 @@ export async function getSession() {
           session.charityId = emp.charityId;
           session.avatarUrl = emp.avatarUrl;
         }
+      }
+    } else {
+      // Sync real employee permissions for regular users dynamically
+      const emp = await prisma.employee.findUnique({
+        where: { id: session.id },
+        select: { permissions: true, role: true }
+      });
+      if (emp) {
+        session.permissions = emp.permissions;
+        session.role = emp.role;
       }
     }
     

@@ -1053,9 +1053,13 @@ export default function ServicesOverviewClient({
     return Array.from(seen.values());
   }, [allServices]);
 
+  const builtinLabels = new Set(builtinDepts.map(d => (deptLabels[d] || d).trim()));
+
   const tabs = [
     ...builtinDepts.map(d => ({ key: d, label: deptLabels[d] || d })),
-    ...uniqueServiceKeys.map(s => ({ key: `SVC:${s.id}`, label: s.name })),
+    ...uniqueServiceKeys
+      .filter(s => !builtinLabels.has(s.name?.trim()))
+      .map(s => ({ key: `SVC:${s.id}`, label: s.name })),
   ];
 
   // Store active tab label so it survives key changes after router.refresh (new services created by unify get new IDs)

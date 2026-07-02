@@ -3,63 +3,33 @@
 import { useState, useEffect, useRef, useTransition } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { User, ShieldAlert, Users, X, LogOut, LayoutDashboard, Building2, ClipboardList, ChevronRight, Edit, Eye, EyeOff, Camera, Loader2, AlertCircle, CheckCircle2, Newspaper, CheckSquare, Moon, Sun, LayoutGrid, FileText, GripVertical, Settings2, Check, FileSignature } from "lucide-react";
+import { User, ShieldAlert, Users, X, LogOut, LayoutDashboard, Building2, ClipboardList, ChevronRight, Edit, Eye, EyeOff, Camera, Loader2, AlertCircle, CheckCircle2, Newspaper, CheckSquare, Moon, Sun, LayoutGrid, FileText, Settings2, FileSignature } from "lucide-react";
 import { useTheme } from "next-themes";
 import { logout } from "@/app/actions/auth";
-import { updateProfile, updateNavOrder } from "@/app/actions/profile";
+import { updateProfile } from "@/app/actions/profile";
 import { usePathname } from "next/navigation";
 import ZadLogo from "@/components/ZadLogo";
 import { AUTO_ADMIN_ROLES, ROLE_LABELS } from "@/lib/permissions";
-import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent } from '@dnd-kit/core';
-import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy, useSortable } from '@dnd-kit/sortable';
-import { CSS } from '@dnd-kit/utilities';
 
-// --- Sortable Item Component ---
-function SortableNavItem({ item, isActive, isOpen, isEditMode }: { item: any, isActive: boolean, isOpen: boolean, isEditMode: boolean }) {
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: item.href });
-  
-  const style = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-    zIndex: isDragging ? 50 : 'auto',
-    opacity: isDragging ? 0.8 : 1,
-  };
-
-  const content = (
-    <>
-      {isEditMode && isOpen && (
-        <div {...attributes} {...listeners} className="p-1.5 cursor-grab active:cursor-grabbing text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 ml-1 shrink-0 touch-none">
-          <GripVertical className="w-4 h-4" />
-        </div>
-      )}
-      <item.icon className={`w-4 h-4 shrink-0 transition-all ${isOpen ? (isEditMode ? "ml-1.5" : "ml-2.5") : "ml-0"} ${isActive && !isEditMode ? "text-white" : "text-slate-400 group-hover:text-primary"}`} />
-      {isOpen && <span className="whitespace-nowrap">{item.label}</span>}
-    </>
-  );
-
+// --- Nav Item Component ---
+function NavItem({ item, isActive, isOpen }: { item: any, isActive: boolean, isOpen: boolean }) {
   return (
-    <div ref={setNodeRef} style={style} className="relative group touch-none">
-      {isEditMode ? (
-        <div className={`flex items-center ${isOpen ? "justify-start px-2" : "justify-center"} py-2 rounded-lg text-sm font-bold transition-all bg-slate-50 dark:bg-slate-800/50 text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-700 shadow-sm`}>
-          {content}
-        </div>
-      ) : (
-        <Link
-          href={item.href}
-          title={!isOpen ? item.label : undefined}
-          className={`flex items-center ${isOpen ? "justify-start px-2.5" : "justify-center"} py-2 rounded-lg text-sm font-bold transition-all group relative ${
-            isActive
-              ? "bg-primary text-white shadow-sm shadow-primary/20"
-              : "text-slate-500 dark:text-slate-400 hover:bg-primary/5 dark:hover:bg-primary/10 hover:text-primary dark:hover:text-primary"
-          }`}
-        >
-          {content}
-        </Link>
-      )}
+    <div className="relative group">
+      <Link
+        href={item.href}
+        title={!isOpen ? item.label : undefined}
+        className={`flex items-center ${isOpen ? "justify-start px-2.5" : "justify-center"} py-2 rounded-lg text-sm font-bold transition-all group relative ${
+          isActive
+            ? "bg-primary text-white shadow-sm shadow-primary/20"
+            : "text-slate-500 dark:text-slate-400 hover:bg-primary/5 dark:hover:bg-primary/10 hover:text-primary dark:hover:text-primary"
+        }`}
+      >
+        <item.icon className={`w-4 h-4 shrink-0 transition-all ${isOpen ? "ml-2.5" : "ml-0"} ${isActive ? "text-white" : "text-slate-400 group-hover:text-primary"}`} />
+        {isOpen && <span className="whitespace-nowrap">{item.label}</span>}
+      </Link>
     </div>
   );
 }
-
 
 export default function EmployeeSidebar({ 
   session, 
@@ -84,25 +54,13 @@ export default function EmployeeSidebar({
   const [isPending, startTransition] = useTransition();
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
+  const [collapsedGroups, setCollapsedGroups] = useState<string[]>([]);
 
   useEffect(() => {
     setMounted(true);
   }, []);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
-
-  const [isNavEditMode, setIsNavEditMode] = useState(false);
-  const [orderedNavItems, setOrderedNavItems] = useState<{ label: string; href: string; icon: any }[]>([]);
-  const [isSavingOrder, setIsSavingOrder] = useState(false);
-
-  const sensors = useSensors(
-    useSensor(PointerSensor, {
-      activationConstraint: { distance: 5 }, // 5px tolerance before drag starts
-    }),
-    useSensor(KeyboardSensor, {
-      coordinateGetter: sortableKeyboardCoordinates,
-    })
-  );
 
   useEffect(() => {
     setUserState(session);
@@ -146,44 +104,6 @@ export default function EmployeeSidebar({
   if (can("manage_charity_settings")) {
     navItems.push({ label: "إعدادات الجمعيات", href: "/dashboard/charity-settings", icon: Settings2 });
   }
-
-  // Effect to sort navItems based on userState.navOrder
-  useEffect(() => {
-    if (!userState) return;
-    
-    const savedOrder = userState.navOrder || [];
-    const ordered = [...navItems].sort((a, b) => {
-      const indexA = savedOrder.indexOf(a.href);
-      const indexB = savedOrder.indexOf(b.href);
-      if (indexA !== -1 && indexB !== -1) return indexA - indexB;
-      if (indexA !== -1) return -1;
-      if (indexB !== -1) return 1;
-      return 0; // Both not in savedOrder, keep original order
-    });
-    setOrderedNavItems(ordered);
-  }, [userState, role, perms.join(",")]); // Dependency array covers anything that might change the nav items
-
-  const handleDragEnd = (event: DragEndEvent) => {
-    const { active, over } = event;
-    if (over && active.id !== over.id) {
-      setOrderedNavItems((items) => {
-        const oldIndex = items.findIndex((i) => i.href === active.id);
-        const newIndex = items.findIndex((i) => i.href === over.id);
-        return arrayMove(items, oldIndex, newIndex);
-      });
-    }
-  };
-
-  const handleSaveNavOrder = async () => {
-    setIsSavingOrder(true);
-    const newOrder = orderedNavItems.map(item => item.href);
-    const res = await updateNavOrder(newOrder);
-    if (res.success) {
-      setUserState({ ...userState, navOrder: res.navOrder });
-      setIsNavEditMode(false);
-    }
-    setIsSavingOrder(false);
-  };
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -340,49 +260,51 @@ export default function EmployeeSidebar({
       </div>
 
       {/* Navigation */}
-      <div className="flex-1 overflow-y-auto custom-scrollbar px-2.5 py-2 space-y-0.5 flex flex-col relative">
-        {isOpen && (
-          <div className="flex items-center justify-between px-2 mb-2">
-            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">القائمة الرئيسية</span>
-            {!isNavEditMode ? (
-              <button
-                onClick={() => setIsNavEditMode(true)}
-                className="text-slate-400 hover:text-primary transition-colors flex items-center justify-center p-1 rounded-md hover:bg-primary/5"
-                title="تعديل ترتيب القائمة"
-              >
-                <Settings2 className="w-3.5 h-3.5" />
-              </button>
-            ) : (
-              <button
-                onClick={handleSaveNavOrder}
-                disabled={isSavingOrder}
-                className="text-emerald-500 hover:text-emerald-600 transition-colors flex items-center justify-center p-1 rounded-md hover:bg-emerald-50 dark:hover:bg-emerald-900/20"
-                title="حفظ الترتيب"
-              >
-                {isSavingOrder ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" />}
-              </button>
-            )}
-          </div>
-        )}
+      <div className="flex-1 overflow-y-auto custom-scrollbar px-2.5 py-2 space-y-4 flex flex-col relative">
+        {(() => {
+          const renderGroup = (title: string, labels: string[]) => {
+            const items = labels.map(label => navItems.find(i => i.label === label)).filter(Boolean) as typeof navItems;
+            if (items.length === 0) return null;
+            
+            const isCollapsed = title ? collapsedGroups.includes(title) : false;
 
-        <div className="flex-1 space-y-0.5 relative">
-          <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-            <SortableContext items={orderedNavItems.map(i => i.href)} strategy={verticalListSortingStrategy}>
-              {orderedNavItems.map((item) => {
-                const isActive = pathname.startsWith(item.href) && (item.href !== "/dashboard" || pathname === "/dashboard");
-                return (
-                  <SortableNavItem 
-                    key={item.href}
-                    item={item}
-                    isActive={isActive}
-                    isOpen={isOpen}
-                    isEditMode={isNavEditMode}
-                  />
-                )
-              })}
-            </SortableContext>
-          </DndContext>
-        </div>
+            return (
+              <div className="mb-2">
+                {isOpen && title && (
+                  <button 
+                    onClick={() => {
+                      setCollapsedGroups(prev => 
+                        prev.includes(title) ? prev.filter(g => g !== title) : [...prev, title]
+                      );
+                    }}
+                    className="flex items-center justify-between w-full px-2 mb-2 group cursor-pointer outline-none"
+                  >
+                    <span className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider group-hover:text-primary transition-colors">{title}</span>
+                    <ChevronRight className={`w-3.5 h-3.5 text-slate-400 group-hover:text-primary transition-transform duration-200 ${isCollapsed ? 'rotate-180' : 'rotate-90'}`} />
+                  </button>
+                )}
+                <div className={`space-y-0.5 overflow-hidden transition-all duration-300 ease-in-out ${isOpen && isCollapsed ? 'max-h-0 opacity-0' : 'max-h-[500px] opacity-100'}`}>
+                  {items.map((item) => {
+                    const isActive = pathname.startsWith(item.href) && (item.href !== "/dashboard" || pathname === "/dashboard");
+                    return <NavItem key={item.href} item={item} isActive={isActive} isOpen={isOpen} />;
+                  })}
+                </div>
+              </div>
+            );
+          };
+
+          return (
+            <>
+              {renderGroup("", ["الرئيسية"])}
+              {isOpen && <div className="h-px bg-slate-100 dark:bg-slate-800 mx-2" />}
+              {renderGroup("الجمعيات", ["الجمعيات", "عرض الخدمات", "العقود", "الاستبيانات"])}
+              {isOpen && <div className="h-px bg-slate-100 dark:bg-slate-800 mx-2" />}
+              {renderGroup("زاد", ["الأخبار والإنجازات", "محاضر الاجتماعات", "المهام والمنجزات", "مهامي"])}
+              {isOpen && <div className="h-px bg-slate-100 dark:bg-slate-800 mx-2" />}
+              {renderGroup("لوحة التحكم", ["إدارة الموظفين", "إعدادات الجمعيات"])}
+            </>
+          );
+        })()}
       </div>
 
       {/* Logout */}
@@ -478,104 +400,82 @@ export default function EmployeeSidebar({
                   >
                     <Camera className="w-4 h-4" />
                   </button>
+                  <input
+                    type="file"
+                    ref={fileInputRef}
+                    onChange={handleImageChange}
+                    accept="image/*"
+                    className="hidden"
+                  />
                 </div>
-                
-                <input 
-                  ref={fileInputRef}
-                  type="file"
-                  accept="image/*"
-                  className="hidden"
-                  onChange={handleImageChange}
-                  disabled={isPending}
-                />
-                <p className="text-[10px] text-slate-400 font-medium">الحد الأقصى: 1 ميجابايت (PNG, JPG)</p>
+                <span className="text-xs text-slate-500 font-bold">الحد الأقصى 1MB</span>
               </div>
 
               {/* Inputs */}
               <div className="space-y-4">
-                <div>
-                  <label htmlFor="profile-name" className="block text-sm font-bold text-slate-700 dark:text-slate-200 mb-2">
-                    الاسم بالكامل
-                  </label>
+                <div className="space-y-2">
+                  <label className="text-sm font-bold text-slate-700 dark:text-slate-300 block">الاسم</label>
                   <input
-                    id="profile-name"
                     type="text"
-                    required
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     disabled={isPending}
-                    className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all outline-none bg-slate-50 dark:bg-slate-900/50 focus:bg-white dark:focus:bg-slate-800 dark:bg-slate-800 dark:focus:bg-slate-800 dark:bg-slate-800 text-slate-800 dark:text-slate-100 text-sm font-bold"
-                    placeholder="أدخل اسمك بالكامل"
+                    className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all text-slate-800 dark:text-slate-100 font-bold disabled:opacity-60"
+                    placeholder="اسم الموظف"
                   />
                 </div>
-
-                <div>
-                  <label htmlFor="profile-phone" className="block text-sm font-bold text-slate-700 dark:text-slate-200 mb-2">
-                    رقم الجوال
-                  </label>
+                
+                <div className="space-y-2">
+                  <label className="text-sm font-bold text-slate-700 dark:text-slate-300 block">رقم الجوال</label>
                   <input
-                    id="profile-phone"
                     type="tel"
-                    required
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
                     disabled={isPending}
-                    className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all outline-none bg-slate-50 dark:bg-slate-900/50 focus:bg-white dark:focus:bg-slate-800 dark:bg-slate-800 dark:focus:bg-slate-800 dark:bg-slate-800 text-slate-800 dark:text-slate-100 text-sm font-bold"
+                    className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all text-slate-800 dark:text-slate-100 font-bold text-left disabled:opacity-60"
                     placeholder="05XXXXXXXX"
                     dir="ltr"
                   />
                 </div>
 
-                <div>
-                  <label htmlFor="profile-password" className="block text-sm font-bold text-slate-700 dark:text-slate-200 mb-2">
-                    كلمة المرور الجديدة (اختياري)
-                  </label>
-                  <div className="relative rounded-xl">
+                <div className="space-y-2">
+                  <label className="text-sm font-bold text-slate-700 dark:text-slate-300 block">كلمة المرور (اختياري)</label>
+                  <div className="relative">
                     <input
-                      id="profile-password"
                       type={showPassword ? "text" : "password"}
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       disabled={isPending}
-                      className="w-full pr-4 pl-12 py-3 rounded-xl border border-slate-200 dark:border-slate-700 focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all outline-none bg-slate-50 dark:bg-slate-900/50 focus:bg-white dark:focus:bg-slate-800 dark:bg-slate-800 dark:focus:bg-slate-800 dark:bg-slate-800 text-slate-800 dark:text-slate-100 text-sm font-bold"
-                      placeholder="اتركها فارغة إذا لم ترغب في التغيير"
+                      className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all text-slate-800 dark:text-slate-100 font-bold text-left disabled:opacity-60"
+                      placeholder="اتركها فارغة إذا لم ترد التغيير"
                       dir="ltr"
                     />
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
-                      className="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400 hover:text-slate-600 dark:text-slate-300 transition-colors focus:outline-none"
-                      disabled={isPending}
-                      tabIndex={-1}
+                      className="absolute inset-y-0 left-0 pl-3 flex items-center justify-center text-slate-400 hover:text-primary transition-colors focus:outline-none"
                     >
-                      {showPassword ? (
-                        <EyeOff className="h-5 w-5" />
-                      ) : (
-                        <Eye className="h-5 w-5" />
-                      )}
+                      {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                     </button>
                   </div>
                 </div>
               </div>
 
-              {/* Footer Actions */}
-              <div className="pt-6 border-t border-slate-100 dark:border-slate-700/50 flex items-center justify-end gap-3 shrink-0">
-                <button
-                  type="button"
-                  onClick={() => setIsEditModalOpen(false)}
-                  disabled={isPending}
-                  className="px-5 py-3 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:bg-slate-800/50 dark:hover:bg-slate-700/50 hover:text-slate-700 dark:text-slate-200 font-bold transition-all text-sm cursor-pointer disabled:opacity-50"
-                >
-                  إلغاء
-                </button>
-                
+              {/* Footer / Actions */}
+              <div className="pt-2">
                 <button
                   type="submit"
                   disabled={isPending}
-                  className="px-6 py-3 rounded-xl bg-primary text-white hover:bg-primary/95 font-bold transition-all text-sm flex items-center gap-2 cursor-pointer disabled:opacity-75 disabled:cursor-not-allowed shadow-sm hover:shadow"
+                  className="w-full py-3 px-4 bg-primary text-white rounded-xl font-bold hover:bg-primary/95 transition-all shadow-md shadow-primary/20 flex items-center justify-center cursor-pointer active:scale-[0.98] disabled:opacity-70 disabled:active:scale-100"
                 >
-                  {isPending && <Loader2 className="w-4 h-4 animate-spin" />}
-                  <span>حفظ التغييرات</span>
+                  {isPending ? (
+                    <>
+                      <Loader2 className="w-5 h-5 ml-2 animate-spin" />
+                      جاري الحفظ...
+                    </>
+                  ) : (
+                    "حفظ التعديلات"
+                  )}
                 </button>
               </div>
             </form>

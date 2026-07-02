@@ -247,13 +247,18 @@ function buildLetterheadDoc(m: Meeting, forPrint: boolean, meetingNum?: number):
     return ca;
   }
 
+  // حاوية قياس مؤقتة — نفس عرض content-area بدون overflow:hidden حتى نحصل على الارتفاع الحقيقي
+  var probe = document.createElement('div');
+  probe.style.cssText = 'position:absolute;visibility:hidden;top:-9999px;right:0;width:176mm;font-family:Cairo,Segoe UI,Tahoma,sans-serif;font-size:10.5pt;line-height:1.55;direction:rtl;';
+  document.body.appendChild(probe);
+
   var currentArea = newPage();
   var usedHeight = 0;
 
   function getHeight(el) {
-    currentArea.appendChild(el);
-    var h = el.offsetHeight || el.getBoundingClientRect().height || 20;
-    currentArea.removeChild(el);
+    probe.appendChild(el);
+    var h = el.offsetHeight || 20;
+    probe.removeChild(el);
     return h;
   }
 
@@ -277,6 +282,8 @@ function buildLetterheadDoc(m: Meeting, forPrint: boolean, meetingNum?: number):
       appendToPage(node);
     }
   });
+
+  document.body.removeChild(probe);
 
   if (shouldPrint) {
     setTimeout(function() { window.print(); }, 1200);

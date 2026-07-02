@@ -132,9 +132,9 @@ function mdToHtml(md: string): string {
       out.push("<hr>");
     } else if (line === "") {
       out.push("<br>");
-    } else if (/صدر هذا المحضر/.test(line)) {
-      out.push(`<p class="footer-note"><em>صدر هذا المحضر عن شركة زاد للخدمات التنموية</em></p>`);
-      out.push(`<p class="footer-note"><em>محضر إلكتروني عبر موقع زاد</em></p>`);
+    } else if (/صدر هذا المحضر|محضر إلكتروني/.test(line)) {
+      // تجاهل — الـ footer يُضاف مرة واحدة ثابتة في buildLetterheadDoc
+      continue;
     } else {
       out.push(`<p>${applyInline(line)}</p>`);
     }
@@ -201,7 +201,8 @@ function buildLetterheadDoc(m: Meeting, forPrint: boolean, meetingNum?: number):
   // حذف أي جداول مهام أضافها AI من formattedContent لتجنب التكرار مع injectTasksIntoHtml
   const rawHtml = mdToHtml(m.formattedContent);
   const cleanHtml = rawHtml.replace(/<h[23][^>]*>.*?(?:مهام|توصيات|تكليفات).*?<\/h[23]>\s*(<table[\s\S]*?<\/table>)/gi, "").replace(/<table[\s\S]*?<\/table>/gi, "");
-  const body = `<div class="meeting-label">محضر اجتماع</div><div class="meeting-title">${m.title}</div>\n` + injectTasksIntoHtml(cleanHtml, m.meetingTasks);
+  const footer = `<p class="footer-note"><em>صدر هذا المحضر عن شركة زاد للخدمات التنموية</em></p><p class="footer-note"><em>محضر إلكتروني عبر موقع زاد</em></p>`;
+  const body = `<div class="meeting-label">محضر اجتماع</div><div class="meeting-title">${m.title}</div>\n` + injectTasksIntoHtml(cleanHtml, m.meetingTasks) + "\n" + footer;
   const dateStr = formatDate(m.date);
   const numStr = meetingNum ? `ZAD_M_${String(meetingNum).padStart(3, "0")}` : "";
   const letterheadUrl = `${window.location.origin}/assets/letterhead.png`;

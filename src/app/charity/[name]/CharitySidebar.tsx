@@ -171,7 +171,11 @@ export default function CharitySidebar({
         {isOpen && (
           <div className="overflow-hidden fade-in flex-1 min-w-0 flex flex-col gap-0.5">
             <div className="flex items-center justify-between w-full gap-2">
-              <h2 className="text-sm font-bold text-slate-800 dark:text-slate-100 truncate flex-1" title={charityName}>
+              <h2
+                className="font-bold text-slate-800 dark:text-slate-100 leading-snug flex-1"
+                style={{ fontSize: charityName.length > 18 ? '10px' : charityName.length > 12 ? '11.5px' : '13px' }}
+                title={charityName}
+              >
                 {charityName}
               </h2>
               {mounted && (

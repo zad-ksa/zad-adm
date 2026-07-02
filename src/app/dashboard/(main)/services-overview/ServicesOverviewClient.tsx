@@ -800,7 +800,7 @@ function CharityCard({
 }
 
 // ── Print helper ────────────────────────────────────────────────────
-function buildPrintHtml(deptKey: string, deptLabel: string, selectedCharities: Charity[], stagesData: Record<string, any[]>): string {
+function buildPrintHtml(deptKey: string, deptLabel: string, selectedCharities: Charity[], stagesData: Record<string, any[]>, svcName?: string): string {
   const isGeneric = deptKey.startsWith("SVC:");
   const svcId = isGeneric ? deptKey.replace("SVC:", "") : null;
 
@@ -867,7 +867,10 @@ function buildPrintHtml(deptKey: string, deptLabel: string, selectedCharities: C
     if (!isGeneric) {
       allStgs = ((stagesData[deptKey] || []) as Stage[]).filter(s => s.charityId === charity.id).sort((a, b) => a.order - b.order);
     } else {
-      const svc = ((stagesData["SERVICES"] || []) as ServiceWithStages[]).find(s => s.id === svcId && s.charityId === charity.id);
+      // البحث بالاسم أولاً (لأن كل جمعية لها id مختلف لنفس الخدمة)
+      const svc = ((stagesData["SERVICES"] || []) as ServiceWithStages[]).find(s =>
+        s.charityId === charity.id && (svcName ? s.name === svcName : s.id === svcId)
+      );
       allStgs = (svc?.stages || []).sort((a: Stage, b: Stage) => a.order - b.order);
     }
     if (!allStgs.length) continue;
@@ -908,23 +911,24 @@ export default function ServicesOverviewClient({
   const router = useRouter();
 
   // Print charity selection modal
-  const [printModal, setPrintModal] = useState<{ deptKey: string; deptLabel: string } | null>(null);
+  const [printModal, setPrintModal] = useState<{ deptKey: string; deptLabel: string; svcName?: string } | null>(null);
   const [printSelected, setPrintSelected] = useState<Set<string>>(new Set());
 
-  function openPrintModal(deptKey: string, deptLabel: string, availableCharities: Charity[]) {
+  function openPrintModal(deptKey: string, deptLabel: string, availableCharities: Charity[], svcName?: string) {
     setPrintSelected(new Set(availableCharities.map(c => c.id)));
-    setPrintModal({ deptKey, deptLabel });
+    setPrintModal({ deptKey, deptLabel, svcName });
   }
 
   function executePrint() {
     if (!printModal) return;
     const selected = charities.filter(c => printSelected.has(c.id));
-    const html = buildPrintHtml(printModal.deptKey, printModal.deptLabel, selected, stagesData);
+    const html = buildPrintHtml(printModal.deptKey, printModal.deptLabel, selected, stagesData, printModal.svcName);
     setPrintModal(null);
-    const w = window.open("", "_blank", "width=900,height=700");
-    if (!w) return;
-    w.document.write(html); w.document.close();
-    setTimeout(() => w.print(), 400);
+    const blob = new Blob([html], { type: "text/html;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const w = window.open(url, "_blank", "width=900,height=700");
+    if (w) setTimeout(() => { w.print(); URL.revokeObjectURL(url); }, 600);
+    else URL.revokeObjectURL(url);
   }
 
   // Local logo state to avoid router.refresh() on logo update
@@ -1271,7 +1275,7 @@ export default function ServicesOverviewClient({
                 className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 rounded-lg transition-colors">
                 <GanttChartSquare className="w-3.5 h-3.5" /> غانت
               </button>
-              <button onClick={() => openPrintModal(activeTab, activeLabel, charitiesWithData)}
+              <button onClick={() => openPrintModal(activeTab, activeLabel, charitiesWithData, isGenericTab ? genericSvcInfo?.name : undefined)}
                 className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 rounded-lg transition-colors">
                 <Printer className="w-3.5 h-3.5" /> طباعة
               </button>

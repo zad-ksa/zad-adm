@@ -35,38 +35,7 @@ export default async function ServicesPage({ params }: { params: Promise<{ name:
   const isCharityClient = session?.role === "CHARITY_CLIENT";
   const isAdmin = ["ADMIN", "EXECUTIVE_DIRECTOR", "GENERAL_MANAGER", "ADMINISTRATIVE_SECRETARIAT"].includes(session?.role || "");
 
-  let strategicStages: any[] = [];
-  let governanceStages: any[] = [];
-  let financeStages: any[] = [];
-  
-  if (isAdmin || session?.role === "STRATEGY" || isCharityClient) {
-    strategicStages = await prisma.strategicStage.findMany({
-      where: { charityId: charity.id },
-      orderBy: { order: 'asc' },
-      include: { steps: { orderBy: { order: 'asc' } } }
-    });
-  }
-  if (isAdmin || session?.role === "GOVERNANCE" || isCharityClient) {
-    governanceStages = await prisma.governanceStage.findMany({
-      where: { charityId: charity.id },
-      orderBy: { order: 'asc' },
-      include: { steps: { orderBy: { order: 'asc' } } }
-    });
-  }
-  if (isAdmin || session?.role === "FINANCE" || isCharityClient) {
-    financeStages = await prisma.financeStage.findMany({
-      where: { charityId: charity.id },
-      orderBy: { order: 'asc' },
-      include: { steps: { orderBy: { order: 'asc' } } }
-    });
-  }
-
-  const timelineNames = await getTimelineConfigs();
-  const strategyName = timelineNames["STRATEGY"] || "المخطط الزمني للتخطيط الاستراتيجي";
-  const governanceName = timelineNames["GOVERNANCE"] || "المخطط الزمني للحوكمة";
-  const financeName = timelineNames["FINANCE"] || "المخطط الزمني للمالية";
-
-  const additionalServices = await prisma.service.findMany({
+  const allServices = await prisma.service.findMany({
     where: { charityId: charity.id },
     include: {
       stages: {
@@ -76,6 +45,31 @@ export default async function ServicesPage({ params }: { params: Promise<{ name:
     },
     orderBy: { createdAt: 'desc' }
   });
+
+  const strategicService = allServices.find(s => s.department === "STRATEGY");
+  const governanceService = allServices.find(s => s.department === "GOVERNANCE");
+  const financeService = allServices.find(s => s.department === "FINANCE");
+
+  let strategicStages: any[] = [];
+  let governanceStages: any[] = [];
+  let financeStages: any[] = [];
+  
+  if (isAdmin || session?.role === "STRATEGY" || isCharityClient) {
+    strategicStages = strategicService?.stages || [];
+  }
+  if (isAdmin || session?.role === "GOVERNANCE" || isCharityClient) {
+    governanceStages = governanceService?.stages || [];
+  }
+  if (isAdmin || session?.role === "FINANCE" || isCharityClient) {
+    financeStages = financeService?.stages || [];
+  }
+
+  const customServices = allServices.filter(s => !["STRATEGY", "GOVERNANCE", "FINANCE"].includes(s.department || ""));
+
+  const timelineNames = await getTimelineConfigs();
+  const strategyName = timelineNames["STRATEGY"] || "المخطط الزمني للتخطيط الاستراتيجي";
+  const governanceName = timelineNames["GOVERNANCE"] || "المخطط الزمني للحوكمة";
+  const financeName = timelineNames["FINANCE"] || "المخطط الزمني للمالية";
 
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -101,18 +95,17 @@ export default async function ServicesPage({ params }: { params: Promise<{ name:
                 ...(strategicStages.length > 0 ? [{ title: strategyName, stages: strategicStages }] : []),
                 ...(governanceStages.length > 0 ? [{ title: governanceName, stages: governanceStages }] : []),
                 ...(financeStages.length > 0 ? [{ title: financeName, stages: financeStages }] : []),
-                ...additionalServices.map(svc => ({ title: svc.name, stages: svc.stages })),
+                ...customServices.map(svc => ({ title: svc.name, stages: svc.stages })),
               ]}
             />
           </div>
         </div>
       </div>
 
-
       {!isCharityClient && (
         <ServicesManagerClient 
           charityId={charity.id} 
-          initialServices={additionalServices} 
+          initialServices={customServices} 
           isAdmin={isAdmin}
           strategyTimelineName={strategyName}
           governanceTimelineName={governanceName}
@@ -122,10 +115,10 @@ export default async function ServicesPage({ params }: { params: Promise<{ name:
 
       {isCharityClient ? (
         <div className="space-y-8">
-          <CharityClientTimeline title={strategyName} stages={strategicStages} />
-          <CharityClientTimeline title={governanceName} stages={governanceStages} />
-          <CharityClientTimeline title={financeName} stages={financeStages} />
-          {additionalServices.map(service => (
+          {strategicStages.length > 0 && <CharityClientTimeline title={strategyName} stages={strategicStages} />}
+          {governanceStages.length > 0 && <CharityClientTimeline title={governanceName} stages={governanceStages} />}
+          {financeStages.length > 0 && <CharityClientTimeline title={financeName} stages={financeStages} />}
+          {customServices.map(service => (
             <CharityClientTimeline key={service.id} title={service.name} stages={service.stages} />
           ))}
         </div>
@@ -156,7 +149,7 @@ export default async function ServicesPage({ params }: { params: Promise<{ name:
             />
           )}
           
-          {additionalServices.map(service => (
+          {customServices.map(service => (
             (isAdmin || session?.role === service.department) && (
                <GenericStagesManager 
                  key={service.id}

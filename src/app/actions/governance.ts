@@ -5,6 +5,26 @@ import { revalidatePath } from "next/cache";
 import { getSession } from "@/lib/auth";
 import { assertCharityAccess } from "@/lib/access";
 
+async function getGovernanceService(charityId: string) {
+  let service = await prisma.service.findFirst({
+    where: { charityId, department: "GOVERNANCE" }
+  });
+  if (!service) {
+    const charity = await prisma.charity.findUnique({ where: { id: charityId } });
+    const timelineName = charity?.governanceTimelineName || "الحوكمة";
+    service = await prisma.service.create({
+      data: {
+        name: timelineName,
+        department: "GOVERNANCE",
+        charityId,
+        responsibleName: charity?.governanceResponsibleName,
+        responsiblePhone: charity?.governanceResponsiblePhone
+      }
+    });
+  }
+  return service;
+}
+
 export async function addGovernanceStage(
   charityId: string,
   name: string,
@@ -18,14 +38,15 @@ export async function addGovernanceStage(
   const session = await getSession();
   if (!session) throw new Error("UNAUTHORIZED");
   await assertCharityAccess(session.id, session.role, charityId);
-  const lastStage = await prisma.governanceStage.findFirst({
-    where: { charityId },
+  const service = await getGovernanceService(charityId);
+  const lastStage = await prisma.serviceStage.findFirst({
+    where: { serviceId: service.id },
     orderBy: { order: 'desc' }
   });
 
   const newOrder = lastStage ? lastStage.order + 1 : 0;
 
-  await prisma.governanceStage.create({
+  await prisma.serviceStage.create({
     data: {
       name,
       duration,
@@ -33,7 +54,7 @@ export async function addGovernanceStage(
       startDate: startDate ? new Date(startDate) : null,
       endDate: endDate ? new Date(endDate) : null,
       order: newOrder,
-      charityId,
+      serviceId: service.id,
       isCurrent: false,
       isContinuous,
       isActive
@@ -59,9 +80,9 @@ export async function updateGovernanceStage(
 ) {
   const session = await getSession();
   if (!session) throw new Error("UNAUTHORIZED");
-  const stageRef = await prisma.governanceStage.findUnique({ where: { id: stageId }, select: { charityId: true } });
-  if (stageRef) await assertCharityAccess(session.id, session.role, stageRef.charityId);
-  const stage = await prisma.governanceStage.update({
+  const stageRef = await prisma.serviceStage.findUnique({ where: { id: stageId }, include: { service: { include: { charity: true } } } });
+  if (stageRef) await assertCharityAccess(session.id, session.role, stageRef.service.charityId);
+  const stage = await prisma.serviceStage.update({
     where: { id: stageId },
     data: {
       name,
@@ -72,66 +93,68 @@ export async function updateGovernanceStage(
       isContinuous,
       isActive
     },
-    include: { charity: true }
+    include: { service: { include: { charity: true } } }
   });
 
-  revalidatePath(`/charity/${encodeURIComponent(stage.charity.name)}`);
-  revalidatePath(`/charity/${encodeURIComponent(stage.charity.name)}/governance`);
+  revalidatePath(`/charity/${encodeURIComponent(stage.service.charity.name)}`);
+  revalidatePath(`/charity/${encodeURIComponent(stage.service.charity.name)}/governance`);
 }
 
 export async function deleteGovernanceStage(stageId: string) {
   const session = await getSession();
   if (!session) throw new Error("UNAUTHORIZED");
-  const stageRef = await prisma.governanceStage.findUnique({ where: { id: stageId }, select: { charityId: true } });
-  if (stageRef) await assertCharityAccess(session.id, session.role, stageRef.charityId);
-  const stage = await prisma.governanceStage.delete({
+  const stageRef = await prisma.serviceStage.findUnique({ where: { id: stageId }, include: { service: { include: { charity: true } } } });
+  if (stageRef) await assertCharityAccess(session.id, session.role, stageRef.service.charityId);
+  const stage = await prisma.serviceStage.delete({
     where: { id: stageId },
-    include: { charity: true }
+    include: { service: { include: { charity: true } } }
   });
 
-  revalidatePath(`/charity/${encodeURIComponent(stage.charity.name)}`);
-  revalidatePath(`/charity/${encodeURIComponent(stage.charity.name)}/governance`);
+  revalidatePath(`/charity/${encodeURIComponent(stage.service.charity.name)}`);
+  revalidatePath(`/charity/${encodeURIComponent(stage.service.charity.name)}/governance`);
 }
 
 export async function toggleActiveGovernanceStage(stageId: string, isActive: boolean) {
-  const stage = await prisma.governanceStage.update({
+  const stage = await prisma.serviceStage.update({
     where: { id: stageId },
     data: { isActive },
-    include: { charity: true }
+    include: { service: { include: { charity: true } } }
   });
 
-  revalidatePath(`/charity/${encodeURIComponent(stage.charity.name)}`);
-  revalidatePath(`/charity/${encodeURIComponent(stage.charity.name)}/governance`);
+  revalidatePath(`/charity/${encodeURIComponent(stage.service.charity.name)}`);
+  revalidatePath(`/charity/${encodeURIComponent(stage.service.charity.name)}/governance`);
 }
 
 export async function setCurrentGovernanceStage(charityId: string, stageId: string) {
   const session = await getSession();
   if (!session) throw new Error("UNAUTHORIZED");
   await assertCharityAccess(session.id, session.role, charityId);
-  await prisma.governanceStage.updateMany({
-    where: { charityId },
+  
+  const service = await getGovernanceService(charityId);
+  await prisma.serviceStage.updateMany({
+    where: { serviceId: service.id },
     data: { isCurrent: false }
   });
 
-  const updatedStage = await prisma.governanceStage.update({
+  const updatedStage = await prisma.serviceStage.update({
     where: { id: stageId },
     data: { isCurrent: true },
-    include: { charity: true }
+    include: { service: { include: { charity: true } } }
   });
 
-  revalidatePath(`/charity/${encodeURIComponent(updatedStage.charity.name)}`);
-  revalidatePath(`/charity/${encodeURIComponent(updatedStage.charity.name)}/governance`);
+  revalidatePath(`/charity/${encodeURIComponent(updatedStage.service.charity.name)}`);
+  revalidatePath(`/charity/${encodeURIComponent(updatedStage.service.charity.name)}/governance`);
 }
 
 export async function toggleCurrentGovernanceStage(stageId: string, isCurrent: boolean) {
   const session = await getSession();
   if (!session) throw new Error("UNAUTHORIZED");
-  const stage = await prisma.governanceStage.update({
+  const stage = await prisma.serviceStage.update({
     where: { id: stageId },
     data: { isCurrent },
-    include: { charity: true }
+    include: { service: { include: { charity: true } } }
   });
-  revalidatePath(`/charity/${encodeURIComponent(stage.charity.name)}/governance`);
+  revalidatePath(`/charity/${encodeURIComponent(stage.service.charity.name)}/governance`);
 }
 
 export async function reorderGovernanceStages(charityId: string, stageIds: string[]) {
@@ -139,7 +162,7 @@ export async function reorderGovernanceStages(charityId: string, stageIds: strin
   if (!session) throw new Error("UNAUTHORIZED");
   await assertCharityAccess(session.id, session.role, charityId);
   for (let i = 0; i < stageIds.length; i++) {
-    await prisma.governanceStage.update({
+    await prisma.serviceStage.update({
       where: { id: stageIds[i] },
       data: { order: i }
     });
@@ -175,7 +198,6 @@ export async function deleteRegulation(regulationId: string) {
 
 export async function toggleRegulationVisibility(charityId: string, regulationId: string, isCurrentlyVisible: boolean) {
   if (isCurrentlyVisible) {
-    // Hide it by creating a visibility record set to false
     await prisma.charityRegulationVisibility.create({
       data: {
         charityId,
@@ -184,7 +206,6 @@ export async function toggleRegulationVisibility(charityId: string, regulationId
       }
     });
   } else {
-    // Show it by deleting the visibility record
     await prisma.charityRegulationVisibility.deleteMany({
       where: {
         charityId,

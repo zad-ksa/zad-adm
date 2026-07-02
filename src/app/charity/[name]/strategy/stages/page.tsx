@@ -24,10 +24,13 @@ export default async function StrategicStagesPage({ params }: { params: Promise<
   let stages: any[] = [];
   if (charity) {
     await ensureStagesForCharity(charity.id);
-    stages = await prisma.strategicStage.findMany({
-      where: { charityId: charity.id },
-      orderBy: { order: 'asc' },
-    });
+    const svc = await prisma.service.findFirst({ where: { charityId: charity.id, department: "STRATEGY" } });
+    if (svc) {
+      stages = await prisma.serviceStage.findMany({
+        where: { serviceId: svc.id },
+        orderBy: { order: 'asc' },
+      });
+    }
   }
 
   return (

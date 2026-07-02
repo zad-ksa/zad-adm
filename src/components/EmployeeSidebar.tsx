@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, useTransition } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { User, ShieldAlert, Users, X, LogOut, LayoutDashboard, Building2, ClipboardList, ChevronRight, Edit, Eye, EyeOff, Camera, Loader2, AlertCircle, CheckCircle2, Newspaper, CheckSquare, Moon, Sun, LayoutGrid, FileText, Settings2, FileSignature } from "lucide-react";
+import { User, ShieldAlert, Users, X, LogOut, LayoutDashboard, Building2, ClipboardList, ChevronRight, Edit, Eye, EyeOff, Camera, Loader2, AlertCircle, CheckCircle2, Newspaper, CheckSquare, Moon, Sun, LayoutGrid, FileText, Settings2, FileSignature, MessageSquare } from "lucide-react";
 import { useTheme } from "next-themes";
 import { logout } from "@/app/actions/auth";
 import { updateProfile } from "@/app/actions/profile";
@@ -85,6 +85,9 @@ export default function EmployeeSidebar({
   }
   if (can("manage_surveys")) {
     navItems.push({ label: "الاستبيانات", href: "/dashboard/custom-surveys", icon: ClipboardList });
+  }
+  if (can("manage_communication")) {
+    navItems.push({ label: "التواصل", href: "/dashboard/communication", icon: MessageSquare });
   }
   if (can("manage_news")) {
     navItems.push({ label: "الأخبار والإنجازات", href: "/dashboard/news", icon: Newspaper });
@@ -297,7 +300,7 @@ export default function EmployeeSidebar({
             <>
               {renderGroup("", ["الرئيسية"])}
               {isOpen && <div className="h-px bg-slate-100 dark:bg-slate-800 mx-2" />}
-              {renderGroup("الجمعيات", ["الجمعيات", "عرض الخدمات", "العقود", "الاستبيانات"])}
+              {renderGroup("الجمعيات", ["الجمعيات", "عرض الخدمات", "العقود", "الاستبيانات", "التواصل"])}
               {isOpen && <div className="h-px bg-slate-100 dark:bg-slate-800 mx-2" />}
               {renderGroup("زاد", ["الأخبار والإنجازات", "محاضر الاجتماعات", "المهام والمنجزات", "مهامي"])}
               {isOpen && <div className="h-px bg-slate-100 dark:bg-slate-800 mx-2" />}

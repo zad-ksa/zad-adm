@@ -3,9 +3,10 @@ import { unstable_cache } from "next/cache";
 
 import { prisma } from "@/lib/db";
 import { revalidatePath } from "next/cache";
+import { getSession } from "@/lib/auth";
+import { processFirstGrant } from "./contracts";
 import { writeFile, mkdir } from "fs/promises";
 import { join } from "path";
-import { getSession } from "@/lib/auth";
 
 
 
@@ -205,6 +206,8 @@ export async function addFinancialTransactionAction(
       updatedData.paidAmount = amount;
     } else if (type === "ADD_GRANT") {
       updatedData.grants = charity.grants + amount;
+      // Trigger processFirstGrant
+      await processFirstGrant(charityId, new Date());
     } else if (type === "DISBURSEMENT") {
       updatedData.paidAmount = charity.paidAmount + amount;
     } else {

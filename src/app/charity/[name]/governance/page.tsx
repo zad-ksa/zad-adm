@@ -44,10 +44,13 @@ export default async function GovernancePage({
   let stages: any[] = [];
   let regulations: any[] = [];
   if (charity) {
-    stages = await prisma.governanceStage.findMany({
-      where: { charityId: charity.id },
-      orderBy: { order: 'asc' },
-    });
+    const svc = await prisma.service.findFirst({ where: { charityId: charity.id, department: "GOVERNANCE" } });
+    if (svc) {
+      stages = await prisma.serviceStage.findMany({
+        where: { serviceId: svc.id },
+        orderBy: { order: 'asc' },
+      });
+    }
     
     regulations = await prisma.regulation.findMany({
       orderBy: { createdAt: 'asc' },

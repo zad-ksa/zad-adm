@@ -22,6 +22,7 @@ export const PERMISSION_GROUPS = [
       { id: "manage_surveys", label: "الاستبيانات المخصصة" },
       { id: "view_services_overview", label: "عرض الخدمات" },
       { id: "manage_meetings", label: "محاضر الاجتماعات" },
+      { id: "manage_communication", label: "إدارة التواصل" },
     ],
   },
   {

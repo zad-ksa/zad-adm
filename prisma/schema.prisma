@@ -31,10 +31,6 @@ model Charity {
   financialLogs    FinancialLog[]
   contractInstallments ContractInstallment[]
   meetings         Meeting[]
-  strategicStage   Int               @default(1)
-  strategicStages  StrategicStage[]
-  governanceStages GovernanceStage[]
-  financeStages    FinanceStage[]
 
   // Timeline Configurations
   strategyTimelineName String? @default("التخطيط الاستراتيجي")
@@ -45,6 +41,14 @@ model Charity {
 
   financeTimelineName String? @default("تنمية الموارد المالية")
   financeTimelineDept String? @default("FINANCE")
+
+  // Core pillars manual contact info
+  strategyResponsibleName    String?
+  strategyResponsiblePhone   String?
+  governanceResponsibleName  String?
+  governanceResponsiblePhone String?
+  financeResponsibleName     String?
+  financeResponsiblePhone    String?
 
   regulationVisibilities CharityRegulationVisibility[]
   employees              Employee[]
@@ -79,90 +83,6 @@ model GovernanceProgress {
 
   @@unique([charityId, indicatorId])
   @@index([charityId])
-}
-
-model StrategicStage {
-  id           String               @id @default(uuid())
-  name         String
-  description  String?
-  startDate    DateTime?
-  endDate      DateTime?
-  duration     String?
-  order        Int                  @default(0)
-  isCurrent    Boolean              @default(false)
-  isContinuous Boolean              @default(false)
-  isActive     Boolean              @default(true)
-  charityId    String
-  charity      Charity              @relation(fields: [charityId], references: [id], onDelete: Cascade)
-  steps        StrategicStageStep[]
-  createdAt    DateTime             @default(now())
-  updatedAt    DateTime             @updatedAt
-}
-
-model StrategicStageStep {
-  id        String         @id @default(uuid())
-  name      String
-  isDone    Boolean        @default(false)
-  order     Int            @default(0)
-  stageId   String
-  stage     StrategicStage @relation(fields: [stageId], references: [id], onDelete: Cascade)
-  createdAt DateTime       @default(now())
-}
-
-model GovernanceStage {
-  id           String               @id @default(uuid())
-  name         String
-  description  String?
-  startDate    DateTime?
-  endDate      DateTime?
-  duration     String?
-  order        Int                  @default(0)
-  isCurrent    Boolean              @default(false)
-  isContinuous Boolean              @default(false)
-  isActive     Boolean              @default(true)
-  charityId    String
-  charity      Charity              @relation(fields: [charityId], references: [id], onDelete: Cascade)
-  steps        GovernanceStageStep[]
-  createdAt    DateTime             @default(now())
-  updatedAt    DateTime             @updatedAt
-}
-
-model GovernanceStageStep {
-  id        String          @id @default(uuid())
-  name      String
-  isDone    Boolean         @default(false)
-  order     Int             @default(0)
-  stageId   String
-  stage     GovernanceStage @relation(fields: [stageId], references: [id], onDelete: Cascade)
-  createdAt DateTime        @default(now())
-}
-
-model FinanceStage {
-  id           String             @id @default(uuid())
-  name         String
-  description  String?
-  startDate    DateTime?
-  endDate      DateTime?
-  duration     String?
-  order        Int                @default(0)
-  isCurrent    Boolean            @default(false)
-  isContinuous Boolean            @default(false)
-  isActive     Boolean            @default(true)
-  charityId    String
-  charity      Charity            @relation(fields: [charityId], references: [id], onDelete: Cascade)
-  steps        FinanceStageStep[]
-  createdAt    DateTime           @default(now())
-  updatedAt    DateTime           @updatedAt
-}
-
-model FinanceStageStep {
-  id        String       @id @default(uuid())
-  name      String
-  isDone    Boolean      @default(false)
-  order     Int          @default(0)
-  stageId   String
-  stage     FinanceStage @relation(fields: [stageId], references: [id], onDelete: Cascade)
-  createdAt DateTime     @default(now())
 }
 
 model Meeting {
@@ -402,10 +322,14 @@ model CharityRegulationVisibility {
 model Service {
   id         String         @id @default(uuid())
   name       String
-  department String? // 'STRATEGY', 'GOVERNANCE', 'FINANCE', 'PROGRAMS', 'HR' or null
+  department String?
   charityId  String
   charity    Charity        @relation(fields: [charityId], references: [id], onDelete: Cascade)
   stages     ServiceStage[]
+  
+  responsibleName  String?
+  responsiblePhone String?
+
   createdAt  DateTime       @default(now())
   updatedAt  DateTime       @updatedAt
 }

@@ -56,7 +56,7 @@ export default async function CharityOverview({ params }: { params: Promise<{ na
   
   await ensureStagesForCharity(charity.id);
 
-  const [completedTasks, latestNews, upcomingMeetings, strategicStages, governanceStages, financeStages] = await Promise.all([
+  const [completedTasks, latestNews, upcomingMeetings] = await Promise.all([
     prisma.task.findMany({
       where: { charityName: decodedName, isCompleted: true },
       orderBy: { completedAt: 'desc' },
@@ -72,18 +72,9 @@ export default async function CharityOverview({ params }: { params: Promise<{ na
       orderBy: { date: 'asc' },
       take: 5,
     }),
-    prisma.strategicStage.findMany({
-      where: { charityId: charity.id },
-      orderBy: { order: 'asc' }
-    }),
-    prisma.governanceStage.findMany({
-      where: { charityId: charity.id },
-      orderBy: { order: 'asc' }
-    }),
-    prisma.financeStage.findMany({
-      where: { charityId: charity.id },
-      orderBy: { order: 'asc' }
-    })
+    
+    
+    
   ]);
 
   return (

@@ -29,6 +29,7 @@ model Charity {
   paidAmount       Float             @default(0)
   grants           Float             @default(0)
   financialLogs    FinancialLog[]
+  contractInstallments ContractInstallment[]
   meetings         Meeting[]
   strategicStage   Int               @default(1)
   strategicStages  StrategicStage[]
@@ -517,4 +518,19 @@ model TimelineConfig {
   timelineType String   @unique // 'STRATEGY' | 'GOVERNANCE' | 'FINANCE'
   displayName  String
   updatedAt    DateTime @updatedAt
+}
+
+model ContractInstallment {
+  id                   String   @id @default(uuid())
+  amount               Float
+  dueDate              DateTime?
+  isLinkedToFirstGrant Boolean  @default(false)
+  isPaid               Boolean  @default(false)
+  paidDate             DateTime?
+  charityId            String
+  charity              Charity  @relation(fields: [charityId], references: [id], onDelete: Cascade)
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+
+  @@index([charityId])
 }

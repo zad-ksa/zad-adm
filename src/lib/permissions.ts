@@ -14,6 +14,7 @@ export const PERMISSION_GROUPS = [
   {
     title: "صلاحيات لوحة التحكم",
     permissions: [
+      { id: "manage_contracts", label: "إدارة العقود" },
       { id: "manage_employees", label: "إدارة الموظفين" },
       { id: "manage_tasks", label: "المهام والمنجزات" },
       { id: "manage_news", label: "الأخبار والإنجازات" },

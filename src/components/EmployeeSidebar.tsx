@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, useTransition } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { User, ShieldAlert, Users, X, LogOut, LayoutDashboard, Building2, ClipboardList, ChevronRight, Edit, Eye, EyeOff, Camera, Loader2, AlertCircle, CheckCircle2, Newspaper, CheckSquare, Moon, Sun, LayoutGrid, FileText, GripVertical, Settings2, Check } from "lucide-react";
+import { User, ShieldAlert, Users, X, LogOut, LayoutDashboard, Building2, ClipboardList, ChevronRight, Edit, Eye, EyeOff, Camera, Loader2, AlertCircle, CheckCircle2, Newspaper, CheckSquare, Moon, Sun, LayoutGrid, FileText, GripVertical, Settings2, Check, FileSignature } from "lucide-react";
 import { useTheme } from "next-themes";
 import { logout } from "@/app/actions/auth";
 import { updateProfile, updateNavOrder } from "@/app/actions/profile";
@@ -121,6 +121,9 @@ export default function EmployeeSidebar({
 
   if (can("view_services_overview")) {
     navItems.push({ label: "عرض الخدمات", href: "/dashboard/services-overview", icon: LayoutGrid });
+  }
+  if (can("manage_contracts")) {
+    navItems.push({ label: "العقود", href: "/dashboard/contracts", icon: FileSignature });
   }
   if (can("manage_surveys")) {
     navItems.push({ label: "الاستبيانات", href: "/dashboard/custom-surveys", icon: ClipboardList });

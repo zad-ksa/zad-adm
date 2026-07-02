@@ -517,18 +517,13 @@ function InlineTimeline({
   }
 
   // EDIT MODE
-  return (
-    <div className="mt-2 space-y-2">
-      <div className="flex items-center justify-between mb-1">
-        <span className="text-xs font-bold text-slate-600 dark:text-slate-300">تعديل المراحل</span>
-        <button onClick={() => { setIsEditing(false); setEditingId(null); setIsAdding(false); }}
-          className="text-xs text-slate-400 hover:text-slate-600 flex items-center gap-1 px-2 py-1 rounded hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors">
-          <X className="w-3 h-3" /> إغلاق
-        </button>
-      </div>
+  const editRegular = sorted.filter(s => !s.isContinuous);
+  const editContinuous = sorted.filter(s => s.isContinuous);
 
-      {sorted.map((stage, idx) => (
-        <div key={stage.id} className={`rounded-lg border p-2 ${stage.isCurrent ? "border-primary/30 bg-primary/5" : "border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50"}`}>
+  function renderEditItem(stage: Stage, idx: number, isContinuousSection: boolean) {
+    const contSortedList = isContinuousSection ? editContinuous : editRegular; // eslint-disable-line @typescript-eslint/no-unused-vars
+    return (
+      <div key={stage.id} className={`rounded-lg border p-2 ${isContinuousSection ? "border-amber-200 dark:border-amber-800/40 bg-amber-50/40 dark:bg-amber-900/10" : stage.isCurrent ? "border-primary/30 bg-primary/5" : "border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50"}`}>
           {editingId === stage.id ? (
             <div className="space-y-2">
               <input value={editName} onChange={e => setEditName(e.target.value)} placeholder="اسم المرحلة" autoFocus
@@ -588,22 +583,21 @@ function InlineTimeline({
               <div className="flex flex-col gap-0.5 shrink-0">
                 <button onClick={() => handleMove(idx, "up")} disabled={idx === 0 || isPending}
                   className="p-0.5 text-slate-300 hover:text-slate-600 disabled:opacity-20"><ArrowUp className="w-3 h-3" /></button>
-                <button onClick={() => handleMove(idx, "down")} disabled={idx === sorted.length - 1 || isPending}
+                <button onClick={() => handleMove(idx, "down")} disabled={idx === contSortedList.length - 1 || isPending}
                   className="p-0.5 text-slate-300 hover:text-slate-600 disabled:opacity-20"><ArrowDown className="w-3 h-3" /></button>
               </div>
               {/* Badge */}
               <div className={`w-5 h-5 rounded-md flex items-center justify-center text-[10px] font-bold shrink-0 border ${
-                stage.isContinuous
+                isContinuousSection
                   ? "border-amber-400 bg-amber-400 text-white"
                   : stage.isCurrent
                     ? "border-primary bg-primary text-white rounded-full"
                     : "border-slate-300 dark:border-slate-600 text-slate-400 rounded-full"
-              }`}>{stage.isContinuous ? "∞" : idx + 1}</div>
+              }`}>{isContinuousSection ? "∞" : idx + 1}</div>
               {/* Name */}
               <div className="flex-1 min-w-0">
-                <div className={`text-xs font-semibold truncate flex items-center gap-1 ${stage.isCurrent ? "text-primary" : "text-slate-700 dark:text-slate-300"}`}>
+                <div className={`text-xs font-semibold truncate flex items-center gap-1 ${isContinuousSection ? "text-amber-700 dark:text-amber-300" : stage.isCurrent ? "text-primary" : "text-slate-700 dark:text-slate-300"}`}>
                   {stage.name}
-                  {stage.isContinuous && <span className="text-[9px] bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300 px-1 py-0.5 rounded font-bold shrink-0">دائمة</span>}
                 </div>
                 {(stage.startDate || stage.endDate) && (
                   <div className="text-[10px] text-slate-400" dir="ltr">{fmtDate(stage.startDate)}{stage.startDate && stage.endDate ? "—" : ""}{fmtDate(stage.endDate)}</div>
@@ -612,8 +606,16 @@ function InlineTimeline({
               {/* Actions */}
               <div className="flex items-center gap-1 shrink-0">
                 <button onClick={() => handleToggleCurrent(stage.id)} disabled={isPending}
-                  className={`text-[10px] px-1.5 py-0.5 border rounded transition-colors ${stage.isCurrent ? "bg-primary/10 border-primary/30 text-primary hover:bg-red-50 hover:border-red-300 hover:text-red-500" : "bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-600 text-slate-500 hover:text-primary hover:border-primary/30"}`}>
-                  {stage.isCurrent ? "إلغاء الحالية" : "تعيين حالية"}
+                  className={`text-[10px] px-1.5 py-0.5 border rounded transition-colors ${
+                    isContinuousSection
+                      ? stage.isCurrent
+                        ? "bg-emerald-50 dark:bg-emerald-900/20 border-emerald-300 text-emerald-600 hover:bg-red-50 hover:border-red-300 hover:text-red-500"
+                        : "bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-600 text-slate-500 hover:text-emerald-600 hover:border-emerald-300"
+                      : stage.isCurrent
+                        ? "bg-primary/10 border-primary/30 text-primary hover:bg-red-50 hover:border-red-300 hover:text-red-500"
+                        : "bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-600 text-slate-500 hover:text-primary hover:border-primary/30"
+                  }`}>
+                  {isContinuousSection ? (stage.isCurrent ? "تعمل الآن ✓" : "تفعيل") : (stage.isCurrent ? "إلغاء الحالية" : "تعيين حالية")}
                 </button>
                 <button onClick={() => openEdit(stage)} disabled={isPending}
                   className="p-1 text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded">
@@ -627,7 +629,34 @@ function InlineTimeline({
             </div>
           )}
         </div>
-      ))}
+    );
+  }
+
+  return (
+    <div className="mt-2 space-y-2">
+      <div className="flex items-center justify-between mb-1">
+        <span className="text-xs font-bold text-slate-600 dark:text-slate-300">تعديل المراحل</span>
+        <button onClick={() => { setIsEditing(false); setEditingId(null); setIsAdding(false); }}
+          className="text-xs text-slate-400 hover:text-slate-600 flex items-center gap-1 px-2 py-1 rounded hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors">
+          <X className="w-3 h-3" /> إغلاق
+        </button>
+      </div>
+
+      {/* المراحل المرقمة */}
+      {editRegular.length > 0 && (
+        <div className="space-y-1.5">
+          <div className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wide px-1">المراحل المرحلية</div>
+          {editRegular.map((stage, idx) => renderEditItem(stage, idx, false))}
+        </div>
+      )}
+
+      {/* المراحل الدائمة — قسم مستقل */}
+      {editContinuous.length > 0 && (
+        <div className="space-y-1.5 pt-2 border-t border-dashed border-amber-200 dark:border-amber-800/40">
+          <div className="text-[10px] font-bold text-amber-500 dark:text-amber-400 uppercase tracking-wide px-1">المهام الدائمة والمستمرة</div>
+          {editContinuous.map((stage, idx) => renderEditItem(stage, idx, true))}
+        </div>
+      )}
 
       {/* Add stage */}
       {isAdding ? (

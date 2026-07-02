@@ -771,44 +771,82 @@ function CharityCard({
 }
 
 // ── Print helper ────────────────────────────────────────────────────
-function handlePrint(deptKey: string, deptLabel: string, charities: Charity[], stagesData: Record<string, any[]>) {
+function buildPrintHtml(deptKey: string, deptLabel: string, selectedCharities: Charity[], stagesData: Record<string, any[]>): string {
   const isGeneric = deptKey.startsWith("SVC:");
   const svcId = isGeneric ? deptKey.replace("SVC:", "") : null;
 
-  let html = `<!DOCTYPE html><html dir="rtl" lang="ar"><head><meta charset="utf-8"/><title>خطة ${deptLabel}</title>
-<style>@page{size:A4;margin:18mm}body{font-family:Arial,sans-serif;font-size:11pt;color:#1e293b;direction:rtl}
-h1{font-size:18pt;font-weight:bold;border-bottom:3px solid #0ea5e9;padding-bottom:8px;margin-bottom:20px}
-.cb{margin-bottom:28px;page-break-inside:avoid}.cn{font-size:14pt;font-weight:bold;margin-bottom:10px;background:#f1f5f9;padding:6px 10px;border-radius:6px}
-table{width:100%;border-collapse:collapse;font-size:9.5pt}th{background:#0ea5e9;color:#fff;padding:6px 8px;text-align:right}
-td{padding:5px 8px;border-bottom:1px solid #e2e8f0;vertical-align:top}tr:nth-child(even) td{background:#f8fafc}
-.cb1{background:#0ea5e9;color:#fff;font-size:8pt;padding:1px 6px;border-radius:10px}.cb2{background:#10b981;color:#fff;font-size:8pt;padding:1px 6px;border-radius:10px}
-</style></head><body><h1>${deptLabel}</h1><p style="font-size:9pt;color:#64748b;margin-bottom:16px">تاريخ الطباعة: ${new Date().toLocaleDateString("ar-SA")}</p>`;
+  const CSS = `
+    @page{size:A4;margin:18mm}
+    body{font-family:Arial,sans-serif;font-size:11pt;color:#1e293b;direction:rtl;margin:0}
+    h1{font-size:17pt;font-weight:bold;border-bottom:3px solid #0ea5e9;padding-bottom:8px;margin-bottom:4px}
+    .print-date{color:#64748b;font-size:9pt;margin-bottom:20px}
+    .charity-block{margin-bottom:36px;page-break-inside:avoid}
+    .charity-name{font-size:14pt;font-weight:bold;background:#f1f5f9;padding:7px 12px;border-radius:6px;border-right:4px solid #0ea5e9;margin-bottom:12px}
+    .section-label{font-size:11pt;font-weight:bold;color:#0ea5e9;margin:14px 0 6px;border-bottom:1px solid #e2e8f0;padding-bottom:3px}
+    table{width:100%;border-collapse:collapse;font-size:9pt;margin-bottom:6px}
+    th{background:#0ea5e9;color:#fff;padding:5px 8px;text-align:right}
+    td{padding:4px 8px;border-bottom:1px solid #e2e8f0;vertical-align:top}
+    tr:nth-child(even) td{background:#f8fafc}
+    .steps-cell ul{margin:2px 0 0 0;padding-right:14px}
+    .steps-cell li{font-size:8.5pt;color:#334155;margin-bottom:1px}
+    .steps-cell li.done{text-decoration:line-through;color:#94a3b8}
+    .b-cur{background:#0ea5e9;color:#fff;font-size:8pt;padding:1px 6px;border-radius:10px}
+    .b-done{background:#10b981;color:#fff;font-size:8pt;padding:1px 6px;border-radius:10px}
+    .b-cont{background:#f59e0b;color:#fff;font-size:8pt;padding:1px 6px;border-radius:10px}
+  `;
 
-  for (const charity of charities) {
-    let stgs: Stage[] = [];
-    if (!isGeneric) {
-      stgs = ((stagesData[deptKey] || []) as Stage[]).filter(s => s.charityId === charity.id).sort((a, b) => a.order - b.order);
-    } else {
-      const svc = ((stagesData["SERVICES"] || []) as ServiceWithStages[]).find(s => s.id === svcId && s.charityId === charity.id);
-      stgs = svc?.stages || [];
-    }
-    if (!stgs.length) continue;
-    const ci = stgs.findIndex(s => s.isCurrent);
-    html += `<div class="cb"><div class="cn">${charity.name}</div><table><thead><tr><th>#</th><th>المرحلة</th><th>الوصف</th><th>الفترة</th><th>الحالة</th></tr></thead><tbody>`;
-    stgs.forEach((s, i) => {
+  function renderStagesTable(stgs: Stage[], numbered: boolean): string {
+    if (!stgs.length) return "";
+    const regularStgs = numbered ? stgs.filter(s => !s.isContinuous) : stgs;
+    if (!regularStgs.length) return "";
+    const ci = regularStgs.findIndex(s => s.isCurrent);
+    let rows = "";
+    regularStgs.forEach((s, i) => {
       const done = ci !== -1 && i < ci;
       const cur = s.isCurrent;
       const dates = [s.startDate ? fmtDate(s.startDate) : "", s.endDate ? fmtDate(s.endDate) : ""].filter(Boolean).join(" — ");
-      const badge = cur ? `<span class="cb1">الحالية</span>` : done ? `<span class="cb2">مكتملة</span>` : "—";
-      html += `<tr><td style="text-align:center;font-weight:bold">${i+1}</td><td style="font-weight:${cur?"bold":"normal"}">${s.name}</td><td style="color:#475569">${s.description||"—"}</td><td dir="ltr" style="font-size:9pt;color:#475569">${dates||"—"}</td><td>${badge}</td></tr>`;
+      const badge = cur ? `<span class="b-cur">الحالية</span>` : done ? `<span class="b-done">مكتملة</span>` : "—";
+      const steps: StageStep[] = (s as any).steps || [];
+      const stepsHtml = steps.length
+        ? `<div class="steps-cell"><ul>${steps.map(st => `<li class="${st.isDone ? "done" : ""}">${st.name}</li>`).join("")}</ul></div>`
+        : "—";
+      const numCell = numbered ? `<td style="text-align:center;font-weight:bold;width:30px">${i + 1}</td>` : "";
+      rows += `<tr>${numCell}<td style="font-weight:${cur ? "bold" : "normal"}">${s.name}</td><td style="color:#475569;max-width:180px">${s.description || "—"}</td><td dir="ltr" style="font-size:8.5pt;color:#475569;white-space:nowrap">${dates || "—"}</td><td>${stepsHtml}</td><td>${badge}</td></tr>`;
     });
-    html += `</tbody></table></div>`;
+    const numHeader = numbered ? "<th style='width:30px'>#</th>" : "";
+    return `<table><thead><tr>${numHeader}<th>المرحلة</th><th>الوصف</th><th>الفترة</th><th>الخطوات</th><th>الحالة</th></tr></thead><tbody>${rows}</tbody></table>`;
   }
-  html += `</body></html>`;
-  const w = window.open("", "_blank", "width=900,height=700");
-  if (!w) return;
-  w.document.write(html); w.document.close();
-  setTimeout(() => w.print(), 400);
+
+  let body = "";
+  for (const charity of selectedCharities) {
+    let allStgs: Stage[] = [];
+    if (!isGeneric) {
+      allStgs = ((stagesData[deptKey] || []) as Stage[]).filter(s => s.charityId === charity.id).sort((a, b) => a.order - b.order);
+    } else {
+      const svc = ((stagesData["SERVICES"] || []) as ServiceWithStages[]).find(s => s.id === svcId && s.charityId === charity.id);
+      allStgs = (svc?.stages || []).sort((a: Stage, b: Stage) => a.order - b.order);
+    }
+    if (!allStgs.length) continue;
+
+    const continuous = allStgs.filter(s => s.isContinuous);
+    const regular = allStgs.filter(s => !s.isContinuous);
+
+    let charityHtml = `<div class="charity-block"><div class="charity-name">${charity.name}</div>`;
+    if (regular.length) {
+      charityHtml += `<div class="section-label">المراحل المرحلية</div>${renderStagesTable(regular, true)}`;
+    }
+    if (continuous.length) {
+      charityHtml += `<div class="section-label">المهام الدائمة والمستمرة</div>${renderStagesTable(continuous, false)}`;
+    }
+    charityHtml += `</div>`;
+    body += charityHtml;
+  }
+
+  if (!body) body = `<p style="color:#94a3b8;text-align:center;margin-top:40px">لا توجد بيانات للجمعيات المحددة</p>`;
+
+  return `<!DOCTYPE html><html dir="rtl" lang="ar"><head><meta charset="utf-8"/><title>خطة ${deptLabel}</title><style>${CSS}</style></head><body>
+<h1>${deptLabel}</h1><p class="print-date">تاريخ الطباعة: ${new Date().toLocaleDateString("ar-SA")}</p>
+${body}</body></html>`;
 }
 
 // ── Main Export ─────────────────────────────────────────────────────
@@ -823,6 +861,26 @@ export default function ServicesOverviewClient({
   deptLabels: Record<string, string>;
 }) {
   const router = useRouter();
+
+  // Print charity selection modal
+  const [printModal, setPrintModal] = useState<{ deptKey: string; deptLabel: string } | null>(null);
+  const [printSelected, setPrintSelected] = useState<Set<string>>(new Set());
+
+  function openPrintModal(deptKey: string, deptLabel: string, availableCharities: Charity[]) {
+    setPrintSelected(new Set(availableCharities.map(c => c.id)));
+    setPrintModal({ deptKey, deptLabel });
+  }
+
+  function executePrint() {
+    if (!printModal) return;
+    const selected = charities.filter(c => printSelected.has(c.id));
+    const html = buildPrintHtml(printModal.deptKey, printModal.deptLabel, selected, stagesData);
+    setPrintModal(null);
+    const w = window.open("", "_blank", "width=900,height=700");
+    if (!w) return;
+    w.document.write(html); w.document.close();
+    setTimeout(() => w.print(), 400);
+  }
 
   // Local logo state to avoid router.refresh() on logo update
   const [logoUrls, setLogoUrls] = useState<Record<string, string | null>>({});
@@ -1168,7 +1226,7 @@ export default function ServicesOverviewClient({
                 className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 rounded-lg transition-colors">
                 <GanttChartSquare className="w-3.5 h-3.5" /> غانت
               </button>
-              <button onClick={() => handlePrint(activeTab, activeLabel, charities, stagesData)}
+              <button onClick={() => openPrintModal(activeTab, activeLabel, charitiesWithData)}
                 className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 rounded-lg transition-colors">
                 <Printer className="w-3.5 h-3.5" /> طباعة
               </button>
@@ -1429,6 +1487,78 @@ export default function ServicesOverviewClient({
           deptColors={DEPT_COLORS}
           onClose={() => setShowGantt(false)}
         />
+      )}
+
+      {/* Print charity selection modal */}
+      {printModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm" dir="rtl">
+          <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-2xl w-full max-w-md">
+            <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100 dark:border-slate-800">
+              <div className="flex items-center gap-2">
+                <Printer className="w-4 h-4 text-blue-500" />
+                <h2 className="font-bold text-slate-800 dark:text-slate-100 text-sm">اختر الجمعيات للطباعة</h2>
+              </div>
+              <button onClick={() => setPrintModal(null)} className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="p-4 space-y-2 max-h-72 overflow-y-auto">
+              {/* تحديد الكل / إلغاء الكل */}
+              <div className="flex items-center justify-between mb-3 pb-2 border-b border-slate-100 dark:border-slate-800">
+                <span className="text-xs text-slate-500 dark:text-slate-400">
+                  {printSelected.size} من {charities.length} جمعية محددة
+                </span>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => setPrintSelected(new Set(charities.map(c => c.id)))}
+                    className="text-[11px] font-bold text-blue-500 hover:text-blue-700"
+                  >
+                    تحديد الكل
+                  </button>
+                  <span className="text-slate-300">|</span>
+                  <button
+                    onClick={() => setPrintSelected(new Set())}
+                    className="text-[11px] font-bold text-slate-400 hover:text-slate-600"
+                  >
+                    إلغاء الكل
+                  </button>
+                </div>
+              </div>
+
+              {charities.map(c => (
+                <label key={c.id} className="flex items-center gap-3 p-2.5 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer transition-colors">
+                  <input
+                    type="checkbox"
+                    checked={printSelected.has(c.id)}
+                    onChange={e => {
+                      const next = new Set(printSelected);
+                      if (e.target.checked) next.add(c.id);
+                      else next.delete(c.id);
+                      setPrintSelected(next);
+                    }}
+                    className="w-4 h-4 rounded accent-blue-500"
+                  />
+                  <span className="text-sm font-semibold text-slate-700 dark:text-slate-200">{c.name}</span>
+                </label>
+              ))}
+            </div>
+
+            <div className="flex items-center justify-end gap-2 px-5 py-4 border-t border-slate-100 dark:border-slate-800">
+              <button onClick={() => setPrintModal(null)} className="px-4 py-2 text-sm text-slate-500 hover:text-slate-700 transition-colors">
+                إلغاء
+              </button>
+              <button
+                onClick={executePrint}
+                disabled={printSelected.size === 0}
+                className="flex items-center gap-2 px-5 py-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-40 text-white rounded-xl text-sm font-bold transition-colors"
+              >
+                <Printer className="w-4 h-4" />
+                طباعة ({printSelected.size})
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

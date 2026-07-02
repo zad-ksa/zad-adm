@@ -787,31 +787,46 @@ function buildPrintHtml(deptKey: string, deptLabel: string, selectedCharities: C
     th{background:#0ea5e9;color:#fff;padding:5px 8px;text-align:right}
     td{padding:4px 8px;border-bottom:1px solid #e2e8f0;vertical-align:top}
     tr:nth-child(even) td{background:#f8fafc}
-    .steps-cell ul{margin:2px 0 0 0;padding-right:14px}
-    .steps-cell li{font-size:8.5pt;color:#334155;margin-bottom:1px}
-    .steps-cell li.done{text-decoration:line-through;color:#94a3b8}
+    .steps-cell{font-size:8.5pt;color:#334155}
+    .step-row{display:flex;align-items:flex-start;gap:5px;margin-bottom:3px}
+    .step-check{width:11px;height:11px;border:1.5px solid #94a3b8;border-radius:2px;flex-shrink:0;margin-top:1px;display:inline-flex;align-items:center;justify-content:center}
+    .step-check.done{background:#10b981;border-color:#10b981}
+    .step-check.done::after{content:"✓";color:#fff;font-size:7pt;line-height:1}
+    .step-name{line-height:1.4}
     .b-cur{background:#0ea5e9;color:#fff;font-size:8pt;padding:1px 6px;border-radius:10px}
     .b-done{background:#10b981;color:#fff;font-size:8pt;padding:1px 6px;border-radius:10px}
-    .b-cont{background:#f59e0b;color:#fff;font-size:8pt;padding:1px 6px;border-radius:10px}
+    .b-cont-active{background:#10b981;color:#fff;font-size:8pt;padding:1px 6px;border-radius:10px}
+    .b-cont-soon{background:#f59e0b;color:#fff;font-size:8pt;padding:1px 6px;border-radius:10px}
   `;
+
+  function renderStepsHtml(steps: StageStep[]): string {
+    if (!steps.length) return "—";
+    return `<div class="steps-cell">${steps.map(st =>
+      `<div class="step-row"><span class="step-check ${st.isDone ? "done" : ""}"></span><span class="step-name">${st.name}</span></div>`
+    ).join("")}</div>`;
+  }
 
   function renderStagesTable(stgs: Stage[], numbered: boolean): string {
     if (!stgs.length) return "";
-    const regularStgs = numbered ? stgs.filter(s => !s.isContinuous) : stgs;
-    if (!regularStgs.length) return "";
-    const ci = regularStgs.findIndex(s => s.isCurrent);
+    if (!stgs.length) return "";
+    const ci = numbered ? stgs.findIndex(s => s.isCurrent) : -1;
     let rows = "";
-    regularStgs.forEach((s, i) => {
-      const done = ci !== -1 && i < ci;
+    stgs.forEach((s, i) => {
+      const done = numbered && ci !== -1 && i < ci;
       const cur = s.isCurrent;
       const dates = [s.startDate ? fmtDate(s.startDate) : "", s.endDate ? fmtDate(s.endDate) : ""].filter(Boolean).join(" — ");
-      const badge = cur ? `<span class="b-cur">الحالية</span>` : done ? `<span class="b-done">مكتملة</span>` : "—";
       const steps: StageStep[] = (s as any).steps || [];
-      const stepsHtml = steps.length
-        ? `<div class="steps-cell"><ul>${steps.map(st => `<li class="${st.isDone ? "done" : ""}">${st.name}</li>`).join("")}</ul></div>`
-        : "—";
+
+      let badge: string;
+      if (!numbered) {
+        // مرحلة دائمة
+        badge = cur ? `<span class="b-cont-active">تعمل الآن</span>` : `<span class="b-cont-soon">قريباً</span>`;
+      } else {
+        badge = cur ? `<span class="b-cur">الحالية</span>` : done ? `<span class="b-done">مكتملة</span>` : "—";
+      }
+
       const numCell = numbered ? `<td style="text-align:center;font-weight:bold;width:30px">${i + 1}</td>` : "";
-      rows += `<tr>${numCell}<td style="font-weight:${cur ? "bold" : "normal"}">${s.name}</td><td style="color:#475569;max-width:180px">${s.description || "—"}</td><td dir="ltr" style="font-size:8.5pt;color:#475569;white-space:nowrap">${dates || "—"}</td><td>${stepsHtml}</td><td>${badge}</td></tr>`;
+      rows += `<tr>${numCell}<td style="font-weight:${cur ? "bold" : "normal"}">${s.name}</td><td style="color:#475569;max-width:160px">${s.description || "—"}</td><td dir="ltr" style="font-size:8.5pt;color:#475569;white-space:nowrap">${dates || "—"}</td><td>${renderStepsHtml(steps)}</td><td>${badge}</td></tr>`;
     });
     const numHeader = numbered ? "<th style='width:30px'>#</th>" : "";
     return `<table><thead><tr>${numHeader}<th>المرحلة</th><th>الوصف</th><th>الفترة</th><th>الخطوات</th><th>الحالة</th></tr></thead><tbody>${rows}</tbody></table>`;

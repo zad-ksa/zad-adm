@@ -924,10 +924,11 @@ export default function ServicesOverviewClient({
     const selected = charities.filter(c => printSelected.has(c.id));
     const html = buildPrintHtml(printModal.deptKey, printModal.deptLabel, selected, stagesData, printModal.svcName);
     setPrintModal(null);
-    const w = window.open("", "_blank", "width=900,height=700");
-    if (!w) return;
-    w.document.write(html); w.document.close();
-    setTimeout(() => w.print(), 400);
+    const blob = new Blob([html], { type: "text/html;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const w = window.open(url, "_blank", "width=900,height=700");
+    if (w) setTimeout(() => { w.print(); URL.revokeObjectURL(url); }, 600);
+    else URL.revokeObjectURL(url);
   }
 
   // Local logo state to avoid router.refresh() on logo update

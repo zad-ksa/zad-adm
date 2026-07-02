@@ -1,7 +1,16 @@
 import { prisma } from "@/lib/db";
+import { getSession } from "@/lib/auth";
+import { redirect } from "next/navigation";
 import ContractsClient from "./ContractsClient";
 
 export default async function ContractsPage() {
+  const session = await getSession();
+  if (!session || (!session.permissions?.includes("manage_contracts") && !session.permissions?.includes("developer_mode") && session.role !== "ADMIN")) {
+    redirect("/dashboard");
+  }
+
+  const canEdit = session.role === "ADMIN" || !!session.permissions?.includes("edit_contracts") || !!session.permissions?.includes("developer_mode");
+
   const charities = await prisma.charity.findMany({
     orderBy: { createdAt: "desc" },
     include: {
@@ -39,6 +48,11 @@ export default async function ContractsPage() {
   const totalContractsCount = contractsData.length;
   const activeContractsCount = contractsData.filter(c => c.status === "active").length;
   const totalValue = contractsData.reduce((sum, c) => sum + c.totalValue, 0);
+  
+  const totalPaidValue = contractsData.reduce((sum, c) => {
+    const paid = c.installments.filter((i: any) => i.isPaid).reduce((acc: number, curr: any) => acc + curr.amount, 0);
+    return sum + paid;
+  }, 0);
 
   // Find installments due this month
   const dueThisMonth = contractsData.flatMap(c => 
@@ -60,6 +74,8 @@ export default async function ContractsPage() {
       totalContractsCount={totalContractsCount}
       activeContractsCount={activeContractsCount}
       totalValue={totalValue}
+      totalPaidValue={totalPaidValue}
+      canEdit={canEdit}
       dueThisMonth={dueThisMonth}
       dueAmountThisMonth={dueAmountThisMonth}
       currentMonth={currentMonth}

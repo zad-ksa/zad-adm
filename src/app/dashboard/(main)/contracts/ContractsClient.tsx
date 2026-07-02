@@ -31,6 +31,8 @@ type Props = {
   dueAmountThisMonth: number;
   currentMonth: string;
   currentYear: string;
+  totalPaidValue: number;
+  canEdit: boolean;
 };
 
 export default function ContractsClient({
@@ -41,7 +43,9 @@ export default function ContractsClient({
   dueThisMonth,
   dueAmountThisMonth,
   currentMonth,
-  currentYear
+  currentYear,
+  totalPaidValue,
+  canEdit
 }: Props) {
   const [selectedCharityId, setSelectedCharityId] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
@@ -104,18 +108,19 @@ export default function ContractsClient({
         <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-sm">
           <div className="flex justify-between items-start">
             <div>
-              <p className="text-xs font-bold text-slate-500 dark:text-slate-400 mb-1">أقساط هذا الشهر</p>
-              <h3 className="text-2xl font-bold text-slate-800 dark:text-slate-100">{dueThisMonth.length}</h3>
+              <p className="text-xs font-bold text-slate-500 dark:text-slate-400 mb-1">إجمالي المبالغ المسددة</p>
+              <h3 className="text-2xl font-bold text-slate-800 dark:text-slate-100">{totalPaidValue.toLocaleString()} ر.س</h3>
             </div>
-            <div className="w-10 h-10 rounded-xl bg-amber-50 dark:bg-amber-900/20 text-amber-500 flex items-center justify-center">
-              <AlertCircle className="w-5 h-5" />
+            <div className="w-10 h-10 rounded-xl bg-blue-50 dark:bg-blue-900/20 text-blue-500 flex items-center justify-center">
+              <CheckCircle2 className="w-5 h-5" />
             </div>
           </div>
           <div className="mt-4 flex items-center text-xs font-bold text-slate-500 dark:text-slate-400">
-            <span className="text-amber-500 ml-1">تستحق قريباً</span>
-            يرجى المتابعة
+            مجموع الأقساط المحصلة فعلياً
           </div>
         </div>
+
+
 
         <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-sm">
           <div className="flex justify-between items-start">
@@ -150,7 +155,7 @@ export default function ContractsClient({
                   <th className="px-6 py-4 font-bold">القيمة الإجمالية</th>
                   <th className="px-6 py-4 font-bold">تاريخ الإنشاء</th>
                   <th className="px-6 py-4 font-bold text-center">الحالة</th>
-                  <th className="px-6 py-4 font-bold text-center">الإجراءات</th>
+                  {canEdit && <th className="px-6 py-4 font-bold text-center">الإجراءات</th>}
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
@@ -174,15 +179,17 @@ export default function ContractsClient({
                         {contract.status === "active" ? "نشط" : "مكتمل"}
                       </span>
                     </td>
-                    <td className="px-6 py-4 text-center">
-                      <button 
-                        onClick={() => setSelectedCharityId(contract.id)}
-                        className="px-3 py-1.5 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 rounded-lg text-xs font-bold hover:bg-primary/10 hover:text-primary transition-colors inline-flex items-center gap-1"
-                      >
-                        <Settings className="w-3.5 h-3.5" />
-                        إدارة الأقساط
-                      </button>
-                    </td>
+                    {canEdit && (
+                      <td className="px-6 py-4 text-center">
+                        <button 
+                          onClick={() => setSelectedCharityId(contract.id)}
+                          className="px-3 py-1.5 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 rounded-lg text-xs font-bold hover:bg-primary/10 hover:text-primary transition-colors inline-flex items-center gap-1"
+                        >
+                          <Settings className="w-3.5 h-3.5" />
+                          إدارة الأقساط
+                        </button>
+                      </td>
+                    )}
                   </tr>
                 ))}
               </tbody>
@@ -196,6 +203,9 @@ export default function ContractsClient({
             <h3 className="text-base font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
               <Calendar className="w-5 h-5 text-amber-500" />
               أقساط هذا الشهر ({currentMonth}/{currentYear})
+              <span className="bg-amber-100 text-amber-600 dark:bg-amber-900/30 dark:text-amber-400 py-0.5 px-2 rounded-full text-xs font-bold mr-auto">
+                {dueThisMonth.length} أقساط
+              </span>
             </h3>
           </div>
           <div className="p-5 flex-1 overflow-y-auto">
@@ -244,12 +254,14 @@ export default function ContractsClient({
              <div key={contract.id} className="border border-slate-200 dark:border-slate-700 rounded-xl p-4 bg-slate-50 dark:bg-slate-800/20">
                <div className="flex justify-between items-center mb-4 border-b border-slate-200 dark:border-slate-700 pb-3">
                  <h4 className="font-bold text-slate-800 dark:text-slate-200">{contract.charityName}</h4>
-                 <button 
-                    onClick={() => setSelectedCharityId(contract.id)}
-                    className="text-xs font-bold text-primary bg-primary/10 hover:bg-primary/20 px-2 py-1 rounded-md transition-colors"
-                  >
-                    تعديل
-                  </button>
+                 {canEdit && (
+                   <button 
+                      onClick={() => setSelectedCharityId(contract.id)}
+                      className="text-xs font-bold text-primary bg-primary/10 hover:bg-primary/20 px-2 py-1 rounded-md transition-colors"
+                    >
+                      تعديل
+                    </button>
+                 )}
                </div>
                <div className="space-y-3">
                  {contract.installments.length === 0 && (

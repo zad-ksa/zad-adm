@@ -5,6 +5,26 @@ import { revalidatePath } from "next/cache";
 import { getSession } from "@/lib/auth";
 import { assertCharityAccess } from "@/lib/access";
 
+async function getFinanceService(charityId: string) {
+  let service = await prisma.service.findFirst({
+    where: { charityId, department: "FINANCE" }
+  });
+  if (!service) {
+    const charity = await prisma.charity.findUnique({ where: { id: charityId } });
+    const timelineName = charity?.financeTimelineName || "تنمية الموارد المالية";
+    service = await prisma.service.create({
+      data: {
+        name: timelineName,
+        department: "FINANCE",
+        charityId,
+        responsibleName: charity?.financeResponsibleName,
+        responsiblePhone: charity?.financeResponsiblePhone
+      }
+    });
+  }
+  return service;
+}
+
 export async function addFinanceStage(
   charityId: string,
   name: string,
@@ -18,14 +38,15 @@ export async function addFinanceStage(
   const session = await getSession();
   if (!session) throw new Error("UNAUTHORIZED");
   await assertCharityAccess(session.id, session.role, charityId);
-  const lastStage = await prisma.financeStage.findFirst({
-    where: { charityId },
+  const service = await getFinanceService(charityId);
+  const lastStage = await prisma.serviceStage.findFirst({
+    where: { serviceId: service.id },
     orderBy: { order: 'desc' }
   });
   
   const newOrder = lastStage ? lastStage.order + 1 : 0;
   
-  await prisma.financeStage.create({
+  await prisma.serviceStage.create({
     data: {
       name,
       duration,
@@ -33,7 +54,7 @@ export async function addFinanceStage(
       startDate: startDate ? new Date(startDate) : null,
       endDate: endDate ? new Date(endDate) : null,
       order: newOrder,
-      charityId,
+      serviceId: service.id,
       isCurrent: false,
       isContinuous,
       isActive
@@ -59,9 +80,9 @@ export async function updateFinanceStage(
 ) {
   const session = await getSession();
   if (!session) throw new Error("UNAUTHORIZED");
-  const stageRef = await prisma.financeStage.findUnique({ where: { id: stageId }, select: { charityId: true } });
-  if (stageRef) await assertCharityAccess(session.id, session.role, stageRef.charityId);
-  const stage = await prisma.financeStage.update({
+  const stageRef = await prisma.serviceStage.findUnique({ where: { id: stageId }, include: { service: { include: { charity: true } } } });
+  if (stageRef) await assertCharityAccess(session.id, session.role, stageRef.service.charityId);
+  const stage = await prisma.serviceStage.update({
     where: { id: stageId },
     data: { 
       name, 
@@ -72,66 +93,67 @@ export async function updateFinanceStage(
       isContinuous,
       isActive
     },
-    include: { charity: true }
+    include: { service: { include: { charity: true } } }
   });
   
-  revalidatePath(`/charity/${encodeURIComponent(stage.charity.name)}`);
-  revalidatePath(`/charity/${encodeURIComponent(stage.charity.name)}/finance`);
+  revalidatePath(`/charity/${encodeURIComponent(stage.service.charity.name)}`);
+  revalidatePath(`/charity/${encodeURIComponent(stage.service.charity.name)}/finance`);
 }
 
 export async function deleteFinanceStage(stageId: string) {
   const session = await getSession();
   if (!session) throw new Error("UNAUTHORIZED");
-  const stageRef = await prisma.financeStage.findUnique({ where: { id: stageId }, select: { charityId: true } });
-  if (stageRef) await assertCharityAccess(session.id, session.role, stageRef.charityId);
-  const stage = await prisma.financeStage.delete({
+  const stageRef = await prisma.serviceStage.findUnique({ where: { id: stageId }, include: { service: { include: { charity: true } } } });
+  if (stageRef) await assertCharityAccess(session.id, session.role, stageRef.service.charityId);
+  const stage = await prisma.serviceStage.delete({
     where: { id: stageId },
-    include: { charity: true }
+    include: { service: { include: { charity: true } } }
   });
   
-  revalidatePath(`/charity/${encodeURIComponent(stage.charity.name)}`);
-  revalidatePath(`/charity/${encodeURIComponent(stage.charity.name)}/finance`);
+  revalidatePath(`/charity/${encodeURIComponent(stage.service.charity.name)}`);
+  revalidatePath(`/charity/${encodeURIComponent(stage.service.charity.name)}/finance`);
 }
 
 export async function toggleActiveFinanceStage(stageId: string, isActive: boolean) {
-  const stage = await prisma.financeStage.update({
+  const stage = await prisma.serviceStage.update({
     where: { id: stageId },
     data: { isActive },
-    include: { charity: true }
+    include: { service: { include: { charity: true } } }
   });
   
-  revalidatePath(`/charity/${encodeURIComponent(stage.charity.name)}`);
-  revalidatePath(`/charity/${encodeURIComponent(stage.charity.name)}/finance`);
+  revalidatePath(`/charity/${encodeURIComponent(stage.service.charity.name)}`);
+  revalidatePath(`/charity/${encodeURIComponent(stage.service.charity.name)}/finance`);
 }
 
 export async function setCurrentFinanceStage(charityId: string, stageId: string) {
   const session = await getSession();
   if (!session) throw new Error("UNAUTHORIZED");
   await assertCharityAccess(session.id, session.role, charityId);
-  await prisma.financeStage.updateMany({
-    where: { charityId },
+  const service = await getFinanceService(charityId);
+  await prisma.serviceStage.updateMany({
+    where: { serviceId: service.id },
     data: { isCurrent: false }
   });
   
-  const updatedStage = await prisma.financeStage.update({
+  const updatedStage = await prisma.serviceStage.update({
     where: { id: stageId },
     data: { isCurrent: true },
-    include: { charity: true }
+    include: { service: { include: { charity: true } } }
   });
   
-  revalidatePath(`/charity/${encodeURIComponent(updatedStage.charity.name)}`);
-  revalidatePath(`/charity/${encodeURIComponent(updatedStage.charity.name)}/finance`);
+  revalidatePath(`/charity/${encodeURIComponent(updatedStage.service.charity.name)}`);
+  revalidatePath(`/charity/${encodeURIComponent(updatedStage.service.charity.name)}/finance`);
 }
 
 export async function toggleCurrentFinanceStage(stageId: string, isCurrent: boolean) {
   const session = await getSession();
   if (!session) throw new Error("UNAUTHORIZED");
-  const stage = await prisma.financeStage.update({
+  const stage = await prisma.serviceStage.update({
     where: { id: stageId },
     data: { isCurrent },
-    include: { charity: true }
+    include: { service: { include: { charity: true } } }
   });
-  revalidatePath(`/charity/${encodeURIComponent(stage.charity.name)}/finance`);
+  revalidatePath(`/charity/${encodeURIComponent(stage.service.charity.name)}/finance`);
 }
 
 export async function reorderFinanceStages(charityId: string, stageIds: string[]) {
@@ -139,7 +161,7 @@ export async function reorderFinanceStages(charityId: string, stageIds: string[]
   if (!session) throw new Error("UNAUTHORIZED");
   await assertCharityAccess(session.id, session.role, charityId);
   for (let i = 0; i < stageIds.length; i++) {
-    await prisma.financeStage.update({
+    await prisma.serviceStage.update({
       where: { id: stageIds[i] },
       data: { order: i }
     });

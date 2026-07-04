@@ -250,7 +250,6 @@ export async function unifyCharityStagesAction(sourceCharityId: string, timeline
   const session = await getSession();
   if (!session) throw new Error("غير مصرح");
 
-  // الموظف العادي يقتصر على جمعياته المرتبطة فقط
   const isAdmin = ADMIN_ROLES.includes(session.role);
   if (!isAdmin) {
     const assigned = await prisma.employeeCharity.findMany({
@@ -265,7 +264,6 @@ export async function unifyCharityStagesAction(sourceCharityId: string, timeline
       const forbidden = targetCharityIds.filter(id => !allowedIds.has(id));
       if (forbidden.length > 0) throw new Error("لا يمكنك التعميم على جمعيات غير مرتبطة بك");
     } else {
-      // إذا لم يحدد targetCharityIds نقيّدها على جمعياته فقط (ما عدا المصدر)
       targetCharityIds = [...allowedIds].filter(id => id !== sourceCharityId);
     }
   }
@@ -278,36 +276,25 @@ export async function unifyCharityStagesAction(sourceCharityId: string, timeline
   };
 
   let sourceStages: SourceStage[] = [];
+  let resolvedSourceServiceId = sourceServiceId;
 
-  if (timelineType === "STRATEGY") {
-    const stages = await prisma.strategicStage.findMany({
-      where: { charityId: sourceCharityId }, orderBy: { order: "asc" },
-      include: { steps: { orderBy: { order: "asc" } } }
+  if (["STRATEGY", "GOVERNANCE", "FINANCE"].includes(timelineType)) {
+    const svc = await prisma.service.findFirst({
+      where: { charityId: sourceCharityId, department: timelineType }
     });
-    sourceStages = stages.map(s => ({ name: s.name, description: s.description, startDate: s.startDate, endDate: s.endDate, duration: s.duration, order: s.order, isCurrent: s.isCurrent, isContinuous: s.isContinuous, isActive: s.isActive, steps: s.steps.map(p => ({ name: p.name, isDone: p.isDone, order: p.order })) }));
-  } else if (timelineType === "GOVERNANCE") {
-    const stages = await prisma.governanceStage.findMany({
-      where: { charityId: sourceCharityId }, orderBy: { order: "asc" },
-      include: { steps: { orderBy: { order: "asc" } } }
-    });
-    sourceStages = stages.map(s => ({ name: s.name, description: s.description, startDate: s.startDate, endDate: s.endDate, duration: s.duration, order: s.order, isCurrent: s.isCurrent, isContinuous: s.isContinuous, isActive: s.isActive, steps: s.steps.map(p => ({ name: p.name, isDone: p.isDone, order: p.order })) }));
-  } else if (timelineType === "FINANCE") {
-    const stages = await prisma.financeStage.findMany({
-      where: { charityId: sourceCharityId }, orderBy: { order: "asc" },
-      include: { steps: { orderBy: { order: "asc" } } }
-    });
-    sourceStages = stages.map(s => ({ name: s.name, description: s.description, startDate: s.startDate, endDate: s.endDate, duration: s.duration, order: s.order, isCurrent: s.isCurrent, isContinuous: s.isContinuous, isActive: s.isActive, steps: s.steps.map(p => ({ name: p.name, isDone: p.isDone, order: p.order })) }));
-  } else if (timelineType === "CUSTOM") {
-    if (!sourceServiceId) throw new Error("لم يتم تحديد الخدمة المصدر");
-    const stages = await prisma.serviceStage.findMany({
-      where: { serviceId: sourceServiceId }, orderBy: { order: "asc" },
-      include: { steps: { orderBy: { order: "asc" } } }
-    });
-    sourceStages = stages.map(s => ({ name: s.name, description: s.description, startDate: s.startDate, endDate: s.endDate, duration: s.duration, order: s.order, isCurrent: s.isCurrent, isContinuous: s.isContinuous, isActive: s.isActive, steps: s.steps.map(p => ({ name: p.name, isDone: p.isDone, order: p.order })) }));
+    if (!svc) throw new Error("لم يتم العثور على مسار لهذه الجمعية");
+    resolvedSourceServiceId = svc.id;
   }
 
+  if (!resolvedSourceServiceId) throw new Error("لم يتم تحديد الخدمة المصدر");
+
+  const stages = await prisma.serviceStage.findMany({
+    where: { serviceId: resolvedSourceServiceId }, orderBy: { order: "asc" },
+    include: { steps: { orderBy: { order: "asc" } } }
+  });
+  sourceStages = stages.map(s => ({ name: s.name, description: s.description, startDate: s.startDate, endDate: s.endDate, duration: s.duration, order: s.order, isCurrent: s.isCurrent, isContinuous: s.isContinuous, isActive: s.isActive, steps: s.steps.map(p => ({ name: p.name, isDone: p.isDone, order: p.order })) }));
+
   if (sourceStages.length === 0) {
-    if (timelineType === "CUSTOM" && !sourceServiceId) throw new Error("لم يتم العثور على خدمة مطابقة لهذه الجمعية");
     throw new Error("لا توجد مراحل في المخطط الزمني المختار لنسخها");
   }
 
@@ -316,18 +303,36 @@ export async function unifyCharityStagesAction(sourceCharityId: string, timeline
   });
 
   if (otherCharities.length === 0) return { success: true };
-  const targetIds = otherCharities.map(c => c.id);
 
-  // Helper: create stages with their steps using nested writes
-  async function createStagesWithSteps(
-    createFn: (data: any) => Promise<any>,
-    stageData: SourceStage[],
-    charityOrServiceKey: Record<string, string>
-  ) {
-    for (const s of stageData) {
-      await createFn({
+  const sourceService = await prisma.service.findUnique({ where: { id: resolvedSourceServiceId } });
+  if (!sourceService) throw new Error("الخدمة المصدر غير موجودة");
+
+  for (const targetCharity of otherCharities) {
+    let targetSvc = await prisma.service.findFirst({ 
+      where: { 
+        charityId: targetCharity.id, 
+        ...(["STRATEGY", "GOVERNANCE", "FINANCE"].includes(timelineType) 
+             ? { department: timelineType } 
+             : { name: sourceService.name })
+      } 
+    });
+
+    if (!targetSvc) {
+      targetSvc = await prisma.service.create({
         data: {
-          ...charityOrServiceKey,
+          name: sourceService.name,
+          department: sourceService.department,
+          charityId: targetCharity.id,
+        }
+      });
+    }
+
+    await prisma.serviceStage.deleteMany({ where: { serviceId: targetSvc.id } });
+
+    for (const s of sourceStages) {
+      await prisma.serviceStage.create({
+        data: {
+          serviceId: targetSvc.id,
           name: s.name, description: s.description, startDate: s.startDate, endDate: s.endDate,
           duration: s.duration, order: s.order, isCurrent: s.isCurrent,
           isContinuous: s.isContinuous, isActive: s.isActive,
@@ -335,54 +340,6 @@ export async function unifyCharityStagesAction(sourceCharityId: string, timeline
         }
       });
     }
-  }
-
-  if (timelineType === "STRATEGY") {
-    await prisma.strategicStage.deleteMany({ where: { charityId: { in: targetIds } } });
-    for (const c of otherCharities) {
-      await createStagesWithSteps(prisma.strategicStage.create, sourceStages, { charityId: c.id });
-    }
-  } else if (timelineType === "GOVERNANCE") {
-    await prisma.governanceStage.deleteMany({ where: { charityId: { in: targetIds } } });
-    for (const c of otherCharities) {
-      await createStagesWithSteps(prisma.governanceStage.create, sourceStages, { charityId: c.id });
-    }
-  } else if (timelineType === "FINANCE") {
-    await prisma.financeStage.deleteMany({ where: { charityId: { in: targetIds } } });
-    for (const c of otherCharities) {
-      await createStagesWithSteps(prisma.financeStage.create, sourceStages, { charityId: c.id });
-    }
-  } else if (timelineType === "CUSTOM" && sourceServiceId) {
-    const sourceService = await prisma.service.findUnique({ where: { id: sourceServiceId } });
-    if (sourceService) {
-      for (const targetCharity of otherCharities) {
-        let targetSvc = await prisma.service.findFirst({ where: { charityId: targetCharity.id, name: sourceService.name } });
-        if (!targetSvc) {
-          targetSvc = await prisma.service.create({ data: { name: sourceService.name, department: sourceService.department, charityId: targetCharity.id } });
-        }
-        await prisma.serviceStage.deleteMany({ where: { serviceId: targetSvc.id } });
-        await createStagesWithSteps(prisma.serviceStage.create, sourceStages, { serviceId: targetSvc.id });
-      }
-    }
-  }
-
-  // Get charity name for revalidation path
-  const sourceCharity = await prisma.charity.findUnique({
-    where: { id: sourceCharityId }
-  });
-
-  if (sourceCharity) {
-    // For simplicity, we can just revalidate paths for all charities if needed, 
-    // but in Next.js App Router we can just rely on router.refresh() from the client side 
-    // or revalidate the specific paths for the dashboard.
-    // Dashboard overview
-    revalidatePath(`/dashboard/services-overview`);
-    // Revalidate for all charities (optimistic, or we can just let client router.refresh handle it)
-    revalidatePath(`/charity/[name]/services`, 'page');
-    revalidatePath(`/charity/[name]/strategy`, 'page');
-    revalidatePath(`/charity/[name]/governance`, 'page');
-    revalidatePath(`/charity/[name]/finance`, 'page');
-    revalidatePath(`/charity/[name]/programs`, 'page');
   }
 
   return { success: true };

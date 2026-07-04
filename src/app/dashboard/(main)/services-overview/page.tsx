@@ -33,11 +33,9 @@ export default async function ServicesOverviewPage() {
   const role = session.role;
   const isAdmin = AUTO_ADMIN_ROLES.includes(role) || session.permissions?.includes("developer_mode");
 
-  // Get assigned charity IDs for restricted roles (null = all access)
   const assignedIds = isAdmin ? null : await getAssignedCharityIds(session.id, role, session.permissions);
   const charityFilter = assignedIds !== null ? { id: { in: assignedIds } } : undefined;
   const serviceCharityFilter = assignedIds !== null ? { charityId: { in: assignedIds } } : undefined;
-  const stageFilter = assignedIds !== null ? { charityId: { in: assignedIds } } : {};
 
   const charities = await prisma.charity.findMany({
     where: charityFilter,
@@ -53,44 +51,63 @@ export default async function ServicesOverviewPage() {
   });
 
   const data: Record<string, any[]> = {};
-
   const canSee = (dept: string) => isAdmin || role === dept;
 
+  const mapStages = (stages: any[]) => stages.map(s => ({
+    ...s,
+    charityId: s.service.charityId
+  }));
+
   if (canSee("STRATEGY")) {
-    data["STRATEGY"] = await prisma.strategicStage.findMany({
-      where: stageFilter,
-      orderBy: [{ charityId: "asc" }, { order: "asc" }],
-      include: { steps: { orderBy: { order: "asc" } } },
+    const s = await prisma.serviceStage.findMany({
+      where: { service: { department: "STRATEGY", ...(serviceCharityFilter || {}) } },
+      orderBy: [{ service: { charityId: "asc" } }, { order: "asc" }],
+      include: { steps: { orderBy: { order: "asc" } }, service: { select: { charityId: true } } },
     });
+    data["STRATEGY"] = mapStages(s);
   }
+
   if (canSee("GOVERNANCE")) {
-    try {
-      data["GOVERNANCE"] = await prisma.governanceStage.findMany({
-        where: stageFilter,
-        orderBy: [{ charityId: "asc" }, { order: "asc" }],
-        include: { steps: { orderBy: { order: "asc" } } },
-      });
-    } catch (e) { console.error("[ServicesOverview] governanceStage error:", e); data["GOVERNANCE"] = []; }
-  }
-  if (canSee("FINANCE")) {
-    data["FINANCE"] = await prisma.financeStage.findMany({
-      where: stageFilter,
-      orderBy: [{ charityId: "asc" }, { order: "asc" }],
-      include: { steps: { orderBy: { order: "asc" } } },
+    const s = await prisma.serviceStage.findMany({
+      where: { service: { department: "GOVERNANCE", ...(serviceCharityFilter || {}) } },
+      orderBy: [{ service: { charityId: "asc" } }, { order: "asc" }],
+      include: { steps: { orderBy: { order: "asc" } }, service: { select: { charityId: true } } },
     });
+    data["GOVERNANCE"] = mapStages(s);
+  }
+
+  if (canSee("FINANCE")) {
+    const s = await prisma.serviceStage.findMany({
+      where: { service: { department: "FINANCE", ...(serviceCharityFilter || {}) } },
+      orderBy: [{ service: { charityId: "asc" } }, { order: "asc" }],
+      include: { steps: { orderBy: { order: "asc" } }, service: { select: { charityId: true } } },
+    });
+    data["FINANCE"] = mapStages(s);
   }
 
   // Generic (custom) services
   const isSpecialDept = BUILTIN_DEPTS.includes(role);
   if (isAdmin) {
     data["SERVICES"] = await prisma.service.findMany({
-      where: serviceCharityFilter,
+      where: { 
+        ...serviceCharityFilter, 
+        OR: [
+          { department: { notIn: BUILTIN_DEPTS } },
+          { department: null }
+        ]
+      },
       include: { stages: { orderBy: { order: "asc" }, include: { steps: { orderBy: { order: "asc" } } } } },
       orderBy: { charityId: "asc" },
     });
   } else if (!isSpecialDept) {
     data["SERVICES"] = await prisma.service.findMany({
-      where: { department: role, ...(assignedIds !== null ? { charityId: { in: assignedIds } } : {}) },
+      where: { 
+        OR: [
+          { department: role },
+          { department: null }
+        ],
+        ...(assignedIds !== null ? { charityId: { in: assignedIds } } : {}) 
+      },
       include: { stages: { orderBy: { order: "asc" }, include: { steps: { orderBy: { order: "asc" } } } } },
       orderBy: { charityId: "asc" },
     });

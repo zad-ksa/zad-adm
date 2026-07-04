@@ -64,10 +64,13 @@ export default async function CharityFinancePage({ params }: { params: Promise<{
 
   let stages: any[] = [];
   if (charity) {
-    stages = await prisma.financeStage.findMany({
-      where: { charityId: charity.id },
-      orderBy: { order: 'asc' },
-    });
+    const svc = await prisma.service.findFirst({ where: { charityId: charity.id, department: "FINANCE" } });
+    if (svc) {
+      stages = await prisma.serviceStage.findMany({
+        where: { serviceId: svc.id },
+        orderBy: { order: 'asc' },
+      });
+    }
   }
 
   return (

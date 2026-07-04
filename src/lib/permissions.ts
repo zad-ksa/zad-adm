@@ -3,6 +3,18 @@ export const AUTO_ADMIN_ROLES = [
   "ADMIN",
 ];
 
+// Roles that automatically have executive-level permissions (manage_requests etc.)
+export const EXECUTIVE_ROLES = [
+  "EXECUTIVE_DIRECTOR",
+  "GENERAL_MANAGER",
+  "ADMINISTRATIVE_SECRETARIAT",
+];
+
+// Permissions granted automatically to EXECUTIVE_ROLES without explicit assignment
+const EXECUTIVE_AUTO_PERMISSIONS = [
+  "manage_requests",
+];
+
 // All available permissions grouped by category
 export const PERMISSION_GROUPS = [
   {
@@ -65,5 +77,6 @@ export function hasPermission(
 ): boolean {
   if (AUTO_ADMIN_ROLES.includes(role)) return true;
   if (permissions.includes("developer_mode")) return true;
+  if (EXECUTIVE_ROLES.includes(role) && EXECUTIVE_AUTO_PERMISSIONS.includes(required)) return true;
   return permissions.includes(required);
 }

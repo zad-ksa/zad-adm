@@ -2,13 +2,11 @@
 
 import { prisma } from "@/lib/db";
 import { getSession } from "@/lib/auth";
-import { hasPermission, AUTO_ADMIN_ROLES } from "@/lib/permissions";
+import { hasPermission } from "@/lib/permissions";
 import { revalidatePath } from "next/cache";
 
-const EXEC_ROLES = ["ADMIN", "EXECUTIVE_DIRECTOR", "GENERAL_MANAGER", "ADMINISTRATIVE_SECRETARIAT"];
-
 function isExec(role: string, permissions: string[]) {
-  return EXEC_ROLES.includes(role) || permissions.includes("developer_mode");
+  return hasPermission(role, permissions, "manage_requests");
 }
 
 async function requireSession() {

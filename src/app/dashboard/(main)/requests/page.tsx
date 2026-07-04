@@ -1,21 +1,18 @@
 import { getSession } from "@/lib/auth";
 import { redirect } from "next/navigation";
-import { hasPermission, AUTO_ADMIN_ROLES } from "@/lib/permissions";
+import { hasPermission, EXECUTIVE_ROLES } from "@/lib/permissions";
 import { prisma } from "@/lib/db";
 import RequestsClient from "./RequestsClient";
 import { markNotificationsRead } from "@/app/actions/requests";
 
-const EXEC_ROLES = ["ADMIN", "EXECUTIVE_DIRECTOR", "GENERAL_MANAGER", "ADMINISTRATIVE_SECRETARIAT"];
-
 export default async function RequestsPage() {
   const session = await getSession();
-  const canAccess = EXEC_ROLES.includes(session.role) ||
-    hasPermission(session.role, session.permissions || [], "manage_requests");
-  if (!session || !canAccess) {
+  if (!session || !hasPermission(session.role, session.permissions || [], "manage_requests")) {
     redirect("/dashboard");
   }
 
-  const isExec = EXEC_ROLES.includes(session.role) || (session.permissions || []).includes("developer_mode");
+  // الإدارة التنفيذية ترى طلبات الجميع — الباقون يرون طلباتهم فقط
+  const isExec = EXECUTIVE_ROLES.includes(session.role) || (session.permissions || []).includes("developer_mode");
 
   // علّم إشعاراتك مقروءة عند فتح الصفحة
   await markNotificationsRead();

@@ -5,7 +5,7 @@ import {
   FileText, Plus, X, Lock, Globe, Trash2, Edit2,
   Printer, Loader2, Sparkles, Eye, UserPlus, Check, ChevronDown,
   ChevronRight, AlertCircle, CheckCircle2, Clock, User, BookOpen,
-  ClipboardList, LayoutTemplate, RefreshCw, Search, Filter,
+  ClipboardList, LayoutTemplate, RefreshCw, Search, Filter, ArrowRight,
 } from "lucide-react";
 import {
   createMeeting, updateMeeting, deleteMeeting,
@@ -611,10 +611,70 @@ function MeetingSummaryPanel({
   );
 }
 
+// ── بطاقات الأقسام ────────────────────────────────────────────────────────────
+const CATEGORY_CARDS = [
+  { key: "all",   label: "الكل",                  color: "from-slate-600 to-slate-700" },
+  { key: "زاد",   label: "إدارة زاد",              color: "from-blue-600 to-blue-700" },
+  { key: "التخطيط الاستراتيجي", label: "التخطيط الاستراتيجي", color: "from-indigo-600 to-indigo-700" },
+  { key: "الحوكمة",             label: "الحوكمة",              color: "from-violet-600 to-violet-700" },
+  { key: "تنمية الموارد المالية", label: "تنمية الموارد المالية", color: "from-emerald-600 to-emerald-700" },
+  { key: "الإعلامية",           label: "الإعلامية",            color: "from-pink-600 to-pink-700" },
+  { key: "التقنية",             label: "التقنية",              color: "from-cyan-600 to-cyan-700" },
+  { key: "المالية",             label: "المالية",              color: "from-amber-600 to-amber-700" },
+  { key: "التسويق",             label: "التسويق",              color: "from-orange-600 to-orange-700" },
+  { key: "خدمات المشاريع",      label: "خدمات المشاريع",       color: "from-teal-600 to-teal-700" },
+  { key: "الإدارية",            label: "الإدارية",             color: "from-rose-600 to-rose-700" },
+  { key: "الإسناد الحكومي",     label: "الإسناد الحكومي",      color: "from-sky-600 to-sky-700" },
+];
+
+function getCategoryCount(meetings: Meeting[], key: string): number {
+  if (key === "all") return meetings.length;
+  if (key === "زاد") return meetings.filter(m => m.meetingContext === "إدارة زاد").length;
+  return meetings.filter(m => m.meetingContext === key).length;
+}
+
+function CategorySelector({ meetings, onSelect }: { meetings: Meeting[]; onSelect: (key: string) => void }) {
+  return (
+    <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-500" dir="rtl">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <div className="w-7 h-7 bg-blue-100 dark:bg-blue-900/30 rounded-lg flex items-center justify-center">
+            <FileText className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
+          </div>
+          <div>
+            <h1 className="text-base font-bold text-slate-800 dark:text-slate-100">محاضر الاجتماعات</h1>
+            <p className="text-[11px] text-slate-500 dark:text-slate-400">اختر القسم للعرض</p>
+          </div>
+        </div>
+      </div>
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+        {CATEGORY_CARDS.map(cat => {
+          const count = getCategoryCount(meetings, cat.key);
+          return (
+            <button
+              key={cat.key}
+              onClick={() => onSelect(cat.key)}
+              className={`bg-gradient-to-br ${cat.color} rounded-xl p-4 text-white text-right hover:opacity-90 hover:shadow-lg transition-all active:scale-95 flex flex-col gap-2`}
+            >
+              <span className="text-2xl font-black tabular-nums">{count}</span>
+              <div className="flex items-center justify-between gap-1">
+                <span className="text-xs font-semibold leading-snug opacity-90">{cat.label}</span>
+                <ArrowRight className="w-3.5 h-3.5 opacity-70 shrink-0" />
+              </div>
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 // ── Main component ─────────────────────────────────────────────────────────────
 export default function MeetingsClient({ meetings, charities, employees, sessionId, sessionRole, isTier1 }: Props) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
+
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
 
   const [showModal, setShowModal] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -643,6 +703,14 @@ export default function MeetingsClient({ meetings, charities, employees, session
   const [filterPeriod, setFilterPeriod] = useState<"" | "today" | "week" | "month" | "quarter" | "year">("");
 
   const filteredMeetings = meetings.filter(m => {
+    // تصفية القسم المختار من لوحة الاختيار
+    if (selectedCategory && selectedCategory !== "all") {
+      if (selectedCategory === "زاد") {
+        if (m.meetingContext !== "إدارة زاد") return false;
+      } else {
+        if (m.meetingContext !== selectedCategory) return false;
+      }
+    }
     if (searchQuery.trim()) {
       const q = searchQuery.trim().toLowerCase();
       if (
@@ -815,16 +883,237 @@ export default function MeetingsClient({ meetings, charities, employees, session
     });
   }
 
+  function renderModal() {
+    return (
+      <>
+        {/* View Modal — عرض نص المحضر */}
+        {viewingMeeting && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm" dir="rtl">
+            <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-2xl w-full max-w-3xl max-h-[90vh] flex flex-col">
+              <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100 dark:border-slate-800 shrink-0">
+                <div>
+                  <h2 className="font-bold text-slate-800 dark:text-slate-100 text-sm">{viewingMeeting.title}</h2>
+                  <p className="text-xs text-slate-400 mt-0.5">{formatDate(viewingMeeting.date)}{viewingMeeting.location ? ` · ${viewingMeeting.location}` : ""}</p>
+                </div>
+                <div className="flex gap-2">
+                  <button onClick={() => handlePreview(viewingMeeting, meetingNumberMap.get(viewingMeeting.id))} className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-teal-600 transition-colors" title="عرض بالكليشة">
+                    <LayoutTemplate className="w-4 h-4" />
+                  </button>
+                  <button onClick={() => handlePrint(viewingMeeting, meetingNumberMap.get(viewingMeeting.id))} className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 transition-colors" title="طباعة">
+                    <Printer className="w-4 h-4" />
+                  </button>
+                  <button onClick={() => setViewingMeeting(null)} className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 transition-colors">
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+              </div>
+              <div className="flex-1 overflow-auto p-4">
+                <pre className="whitespace-pre-wrap font-sans text-sm leading-relaxed text-slate-700 dark:text-slate-200 text-right" dir="rtl">
+                  {viewingMeeting.formattedContent}
+                </pre>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Create/Edit Modal */}
+        {showModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm" dir="rtl">
+            <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-2xl w-full max-w-2xl max-h-[95vh] flex flex-col">
+              <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100 dark:border-slate-800 shrink-0">
+                <div className="flex items-center gap-2">
+                  <Sparkles className="w-4 h-4 text-blue-500" />
+                  <h2 className="font-bold text-slate-800 dark:text-slate-100">
+                    {editingId ? "تعديل المحضر" : "محضر اجتماع جديد"}
+                  </h2>
+                  {!editingId && (
+                    <div className="flex items-center gap-1 mr-2">
+                      <div className={`w-6 h-6 rounded-full text-[10px] font-bold flex items-center justify-center ${step === 1 ? "bg-blue-600 text-white" : "bg-blue-100 dark:bg-blue-900/40 text-blue-600"}`}>١</div>
+                      <div className="w-4 h-px bg-slate-200 dark:bg-slate-700" />
+                      <div className={`w-6 h-6 rounded-full text-[10px] font-bold flex items-center justify-center ${step === 2 ? "bg-blue-600 text-white" : "bg-slate-100 dark:bg-slate-800 text-slate-400"}`}>٢</div>
+                    </div>
+                  )}
+                </div>
+                <button onClick={() => { setShowModal(false); resetForm(); }} className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400">
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              <div className="flex-1 overflow-auto p-4 space-y-3">
+                {step === 1 && (
+                  <>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="text-xs font-bold text-slate-500 dark:text-slate-400 mb-1 block">عنوان الاجتماع *</label>
+                        <input value={title} onChange={e => setTitle(e.target.value)} placeholder="مثال: اجتماع فريق زاد الأسبوعي"
+                          className="w-full border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-sm bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                      </div>
+                      <div>
+                        <label className="text-xs font-bold text-slate-500 dark:text-slate-400 mb-1 block">التاريخ *</label>
+                        <input type="date" value={date} onChange={e => setDate(e.target.value)} required
+                          className="w-full border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-sm bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                      </div>
+                      <div>
+                        <label className="text-xs font-bold text-slate-500 dark:text-slate-400 mb-1 block">المكان</label>
+                        <input value={location} onChange={e => setLocation(e.target.value)} placeholder="مكتب زاد / أونلاين"
+                          className="w-full border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-sm bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                      </div>
+                      <div>
+                        <label className="text-xs font-bold text-slate-500 dark:text-slate-400 mb-1 block">الحضور</label>
+                        <input value={attendees} onChange={e => setAttendees(e.target.value)} placeholder="محمد، أحمد، سارة..."
+                          className="w-full border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-sm bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                      </div>
+                      <div>
+                        <label className="text-xs font-bold text-slate-500 dark:text-slate-400 mb-1 block">نوع / سياق الاجتماع</label>
+                        <select value={meetingContext} onChange={e => setMeetingContext(e.target.value)}
+                          className="w-full border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-sm bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                          <option value="">— اختر النوع —</option>
+                          <option value="زاد">إدارة زاد</option>
+                          <option disabled>── الأقسام ──</option>
+                          {DEPARTMENTS.map(d => <option key={d.value} value={`service:${d.value}`}>{d.label}</option>)}
+                        </select>
+                      </div>
+                      <div>
+                        <label className="text-xs font-bold text-slate-500 dark:text-slate-400 mb-1 block">الجمعية (اختياري)</label>
+                        <select value={charityId} onChange={e => setCharityId(e.target.value)}
+                          className="w-full border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-sm bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                          <option value="">— بدون جمعية —</option>
+                          {charities.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                        </select>
+                      </div>
+                    </div>
+                    <div>
+                      <label className="text-xs font-bold text-slate-500 dark:text-slate-400 mb-1 block">
+                        ملاحظات الاجتماع الخام *
+                        <span className="font-normal text-slate-400 mr-1">— اكتب بحرية وبالعامية</span>
+                      </label>
+                      <textarea value={rawNotes} onChange={e => setRawNotes(e.target.value)} rows={8}
+                        placeholder="اكتب ملاحظاتك هنا بأي طريقة... مثلاً: ناقشنا موضوع الميزانية وقرر المدير زيادتها، واحمد راح يتابع مع الجمعية..."
+                        className="w-full border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-sm bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none" />
+                    </div>
+                    {aiError && <p className="text-xs text-red-500">{aiError}</p>}
+
+                    {editingId && (
+                      <div className="space-y-2 border-t border-slate-100 dark:border-slate-700 pt-3">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <Sparkles className="w-3.5 h-3.5 text-blue-500 shrink-0" />
+                          <span className="text-xs font-bold text-slate-600 dark:text-slate-300">المحضر المنسق</span>
+                          <button
+                            onClick={handleFormat}
+                            disabled={aiLoading || !rawNotes.trim()}
+                            className="flex items-center gap-1.5 text-[11px] font-bold text-blue-600 hover:text-blue-700 border border-blue-200 dark:border-blue-700 hover:bg-blue-50 dark:hover:bg-blue-900/20 px-2.5 py-1 rounded-lg transition-colors disabled:opacity-40 mr-auto"
+                          >
+                            {aiLoading ? <Loader2 className="w-3 h-3 animate-spin" /> : <Sparkles className="w-3 h-3" />}
+                            إعادة الصياغة
+                          </button>
+                        </div>
+                        <textarea value={formattedContent} onChange={e => setFormattedContent(e.target.value)} rows={10}
+                          className="w-full border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-sm bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none leading-relaxed" dir="rtl" />
+                        {isTier1 && (
+                          <label className="flex items-center gap-2 cursor-pointer select-none">
+                            <input type="checkbox" checked={isPrivate} onChange={e => setIsPrivate(e.target.checked)} className="w-4 h-4 rounded accent-amber-500" />
+                            <Lock className="w-3.5 h-3.5 text-amber-500" />
+                            <span className="text-sm text-slate-600 dark:text-slate-300">خاص بالإدارة التنفيذية فقط</span>
+                          </label>
+                        )}
+                      </div>
+                    )}
+                    {error && <p className="text-xs text-red-500">{error}</p>}
+                  </>
+                )}
+
+                {step === 2 && !editingId && (
+                  <>
+                    <div className="flex items-center gap-2 mb-1 flex-wrap">
+                      <Sparkles className="w-4 h-4 text-blue-500 shrink-0" />
+                      <span className="text-xs font-bold text-slate-600 dark:text-slate-300">المحضر المنسق — يمكنك التعديل مباشرة</span>
+                      <button
+                        onClick={handleFormat}
+                        disabled={aiLoading || !rawNotes.trim()}
+                        className="flex items-center gap-1.5 text-[11px] font-bold text-blue-600 hover:text-blue-700 border border-blue-200 dark:border-blue-700 hover:bg-blue-50 dark:hover:bg-blue-900/20 px-2.5 py-1 rounded-lg transition-colors disabled:opacity-40 mr-auto"
+                      >
+                        {aiLoading ? <Loader2 className="w-3 h-3 animate-spin" /> : <Sparkles className="w-3 h-3" />}
+                        إعادة الصياغة
+                      </button>
+                    </div>
+                    <textarea value={formattedContent} onChange={e => setFormattedContent(e.target.value)} rows={15}
+                      className="w-full border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-sm bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none leading-relaxed" dir="rtl" />
+                    {isTier1 && (
+                      <label className="flex items-center gap-2 cursor-pointer select-none">
+                        <input type="checkbox" checked={isPrivate} onChange={e => setIsPrivate(e.target.checked)} className="w-4 h-4 rounded accent-amber-500" />
+                        <Lock className="w-3.5 h-3.5 text-amber-500" />
+                        <span className="text-sm text-slate-600 dark:text-slate-300">خاص بالإدارة التنفيذية فقط</span>
+                      </label>
+                    )}
+                    {error && <p className="text-xs text-red-500">{error}</p>}
+                  </>
+                )}
+              </div>
+
+              <div className="px-6 py-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between shrink-0">
+                {step === 2 && !editingId
+                  ? <button onClick={() => setStep(1)} className="text-sm text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 transition-colors">← العودة للملاحظات</button>
+                  : <div />}
+                <div className="flex gap-2">
+                  <button onClick={() => { setShowModal(false); resetForm(); }} className="px-4 py-2 text-sm text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 transition-colors">إلغاء</button>
+                  {step === 1 && !editingId && (
+                    <button onClick={handleFormat} disabled={aiLoading || !rawNotes.trim()}
+                      className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-white px-5 py-2 rounded-xl text-sm font-bold transition-colors">
+                      {aiLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
+                      {aiLoading ? "جاري الصياغة..." : "صياغة بالذكاء الاصطناعي"}
+                    </button>
+                  )}
+                  {(step === 2 || editingId) && (
+                    <button onClick={handleSave} disabled={isPending || !formattedContent.trim()}
+                      className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-white px-5 py-2 rounded-xl text-sm font-bold transition-colors">
+                      {isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
+                      {editingId ? "حفظ التعديلات" : "حفظ المحضر"}
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+      </>
+    );
+  }
+
+  // عرض لوحة الاختيار إذا لم يتم اختيار قسم
+  if (selectedCategory === null) {
+    return (
+      <div>
+        <div className="flex justify-end mb-3">
+          <button onClick={openCreate} className="flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-lg text-xs font-bold transition-colors">
+            <Plus className="w-3.5 h-3.5" /> محضر جديد
+          </button>
+        </div>
+        <CategorySelector meetings={meetings} onSelect={setSelectedCategory} />
+        {/* Modal الإنشاء متاح حتى من لوحة الاختيار */}
+        {showModal && renderModal()}
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-3 animate-in fade-in slide-in-from-bottom-4 duration-500" dir="rtl">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
+          <button
+            onClick={() => setSelectedCategory(null)}
+            className="p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-400 hover:text-slate-600 transition-colors"
+            title="رجوع"
+          >
+            <ArrowRight className="w-4 h-4" />
+          </button>
           <div className="w-7 h-7 bg-blue-100 dark:bg-blue-900/30 rounded-lg flex items-center justify-center">
             <FileText className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
           </div>
           <div>
-            <h1 className="text-base font-bold text-slate-800 dark:text-slate-100">محاضر الاجتماعات</h1>
+            <h1 className="text-base font-bold text-slate-800 dark:text-slate-100">
+              {selectedCategory === "all" ? "كل المحاضر" : selectedCategory === "زاد" ? "إدارة زاد" : selectedCategory}
+            </h1>
             <p className="text-[11px] text-slate-500 dark:text-slate-400">{meetings.length} محضر</p>
           </div>
         </div>
@@ -994,196 +1283,7 @@ export default function MeetingsClient({ meetings, charities, employees, session
         </div>
       )}
 
-      {/* View Modal — عرض نص المحضر */}
-      {viewingMeeting && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm" dir="rtl">
-          <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-2xl w-full max-w-3xl max-h-[90vh] flex flex-col">
-            <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100 dark:border-slate-800 shrink-0">
-              <div>
-                <h2 className="font-bold text-slate-800 dark:text-slate-100 text-sm">{viewingMeeting.title}</h2>
-                <p className="text-xs text-slate-400 mt-0.5">{formatDate(viewingMeeting.date)}{viewingMeeting.location ? ` · ${viewingMeeting.location}` : ""}</p>
-              </div>
-              <div className="flex gap-2">
-                <button onClick={() => handlePreview(viewingMeeting, meetingNumberMap.get(viewingMeeting.id))} className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-teal-600 transition-colors" title="عرض بالكليشة">
-                  <LayoutTemplate className="w-4 h-4" />
-                </button>
-                <button onClick={() => handlePrint(viewingMeeting, meetingNumberMap.get(viewingMeeting.id))} className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 transition-colors" title="طباعة">
-                  <Printer className="w-4 h-4" />
-                </button>
-                <button onClick={() => setViewingMeeting(null)} className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 transition-colors">
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
-            </div>
-            <div className="flex-1 overflow-auto p-4">
-              <pre className="whitespace-pre-wrap font-sans text-sm leading-relaxed text-slate-700 dark:text-slate-200 text-right" dir="rtl">
-                {viewingMeeting.formattedContent}
-              </pre>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Create/Edit Modal */}
-      {showModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm" dir="rtl">
-          <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-2xl w-full max-w-2xl max-h-[95vh] flex flex-col">
-            <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100 dark:border-slate-800 shrink-0">
-              <div className="flex items-center gap-2">
-                <Sparkles className="w-4 h-4 text-blue-500" />
-                <h2 className="font-bold text-slate-800 dark:text-slate-100">
-                  {editingId ? "تعديل المحضر" : "محضر اجتماع جديد"}
-                </h2>
-                {!editingId && (
-                  <div className="flex items-center gap-1 mr-2">
-                    <div className={`w-6 h-6 rounded-full text-[10px] font-bold flex items-center justify-center ${step === 1 ? "bg-blue-600 text-white" : "bg-blue-100 dark:bg-blue-900/40 text-blue-600"}`}>١</div>
-                    <div className="w-4 h-px bg-slate-200 dark:bg-slate-700" />
-                    <div className={`w-6 h-6 rounded-full text-[10px] font-bold flex items-center justify-center ${step === 2 ? "bg-blue-600 text-white" : "bg-slate-100 dark:bg-slate-800 text-slate-400"}`}>٢</div>
-                  </div>
-                )}
-              </div>
-              <button onClick={() => { setShowModal(false); resetForm(); }} className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400">
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            <div className="flex-1 overflow-auto p-4 space-y-3">
-              {step === 1 && (
-                <>
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <label className="text-xs font-bold text-slate-500 dark:text-slate-400 mb-1 block">عنوان الاجتماع *</label>
-                      <input value={title} onChange={e => setTitle(e.target.value)} placeholder="مثال: اجتماع فريق زاد الأسبوعي"
-                        className="w-full border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-sm bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500" />
-                    </div>
-                    <div>
-                      <label className="text-xs font-bold text-slate-500 dark:text-slate-400 mb-1 block">التاريخ *</label>
-                      <input type="date" value={date} onChange={e => setDate(e.target.value)} required
-                        className="w-full border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-sm bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500" />
-                    </div>
-                    <div>
-                      <label className="text-xs font-bold text-slate-500 dark:text-slate-400 mb-1 block">المكان</label>
-                      <input value={location} onChange={e => setLocation(e.target.value)} placeholder="مكتب زاد / أونلاين"
-                        className="w-full border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-sm bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500" />
-                    </div>
-                    <div>
-                      <label className="text-xs font-bold text-slate-500 dark:text-slate-400 mb-1 block">الحضور</label>
-                      <input value={attendees} onChange={e => setAttendees(e.target.value)} placeholder="محمد، أحمد، سارة..."
-                        className="w-full border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-sm bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500" />
-                    </div>
-                    <div>
-                      <label className="text-xs font-bold text-slate-500 dark:text-slate-400 mb-1 block">نوع / سياق الاجتماع</label>
-                      <select value={meetingContext} onChange={e => setMeetingContext(e.target.value)}
-                        className="w-full border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-sm bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500">
-                        <option value="">— اختر النوع —</option>
-                        <option value="زاد">إدارة زاد</option>
-                        <option disabled>── الأقسام ──</option>
-                        {DEPARTMENTS.map(d => <option key={d.value} value={`service:${d.value}`}>{d.label}</option>)}
-                      </select>
-                    </div>
-                    <div>
-                      <label className="text-xs font-bold text-slate-500 dark:text-slate-400 mb-1 block">الجمعية (اختياري)</label>
-                      <select value={charityId} onChange={e => setCharityId(e.target.value)}
-                        className="w-full border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-sm bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500">
-                        <option value="">— بدون جمعية —</option>
-                        {charities.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-                      </select>
-                    </div>
-                  </div>
-                  <div>
-                    <label className="text-xs font-bold text-slate-500 dark:text-slate-400 mb-1 block">
-                      ملاحظات الاجتماع الخام *
-                      <span className="font-normal text-slate-400 mr-1">— اكتب بحرية وبالعامية</span>
-                    </label>
-                    <textarea value={rawNotes} onChange={e => setRawNotes(e.target.value)} rows={8}
-                      placeholder="اكتب ملاحظاتك هنا بأي طريقة... مثلاً: ناقشنا موضوع الميزانية وقرر المدير زيادتها، واحمد راح يتابع مع الجمعية..."
-                      className="w-full border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-sm bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none" />
-                  </div>
-                  {aiError && <p className="text-xs text-red-500">{aiError}</p>}
-
-                  {/* عند التعديل: قسم المحضر المنسق يظهر في نفس الصفحة */}
-                  {editingId && (
-                    <div className="space-y-2 border-t border-slate-100 dark:border-slate-700 pt-3">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <Sparkles className="w-3.5 h-3.5 text-blue-500 shrink-0" />
-                        <span className="text-xs font-bold text-slate-600 dark:text-slate-300">المحضر المنسق</span>
-                        <button
-                          onClick={handleFormat}
-                          disabled={aiLoading || !rawNotes.trim()}
-                          className="flex items-center gap-1.5 text-[11px] font-bold text-blue-600 hover:text-blue-700 border border-blue-200 dark:border-blue-700 hover:bg-blue-50 dark:hover:bg-blue-900/20 px-2.5 py-1 rounded-lg transition-colors disabled:opacity-40 mr-auto"
-                        >
-                          {aiLoading ? <Loader2 className="w-3 h-3 animate-spin" /> : <Sparkles className="w-3 h-3" />}
-                          إعادة الصياغة
-                        </button>
-                      </div>
-                      <textarea value={formattedContent} onChange={e => setFormattedContent(e.target.value)} rows={10}
-                        className="w-full border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-sm bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none leading-relaxed" dir="rtl" />
-                      {isTier1 && (
-                        <label className="flex items-center gap-2 cursor-pointer select-none">
-                          <input type="checkbox" checked={isPrivate} onChange={e => setIsPrivate(e.target.checked)} className="w-4 h-4 rounded accent-amber-500" />
-                          <Lock className="w-3.5 h-3.5 text-amber-500" />
-                          <span className="text-sm text-slate-600 dark:text-slate-300">خاص بالإدارة التنفيذية فقط</span>
-                        </label>
-                      )}
-                    </div>
-                  )}
-                  {error && <p className="text-xs text-red-500">{error}</p>}
-                </>
-              )}
-
-              {step === 2 && !editingId && (
-                <>
-                  <div className="flex items-center gap-2 mb-1 flex-wrap">
-                    <Sparkles className="w-4 h-4 text-blue-500 shrink-0" />
-                    <span className="text-xs font-bold text-slate-600 dark:text-slate-300">المحضر المنسق — يمكنك التعديل مباشرة</span>
-                    <button
-                      onClick={handleFormat}
-                      disabled={aiLoading || !rawNotes.trim()}
-                      className="flex items-center gap-1.5 text-[11px] font-bold text-blue-600 hover:text-blue-700 border border-blue-200 dark:border-blue-700 hover:bg-blue-50 dark:hover:bg-blue-900/20 px-2.5 py-1 rounded-lg transition-colors disabled:opacity-40 mr-auto"
-                    >
-                      {aiLoading ? <Loader2 className="w-3 h-3 animate-spin" /> : <Sparkles className="w-3 h-3" />}
-                      إعادة الصياغة
-                    </button>
-                  </div>
-                  <textarea value={formattedContent} onChange={e => setFormattedContent(e.target.value)} rows={15}
-                    className="w-full border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-sm bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none leading-relaxed" dir="rtl" />
-                  {isTier1 && (
-                    <label className="flex items-center gap-2 cursor-pointer select-none">
-                      <input type="checkbox" checked={isPrivate} onChange={e => setIsPrivate(e.target.checked)} className="w-4 h-4 rounded accent-amber-500" />
-                      <Lock className="w-3.5 h-3.5 text-amber-500" />
-                      <span className="text-sm text-slate-600 dark:text-slate-300">خاص بالإدارة التنفيذية فقط</span>
-                    </label>
-                  )}
-                  {error && <p className="text-xs text-red-500">{error}</p>}
-                </>
-              )}
-            </div>
-
-            <div className="px-6 py-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between shrink-0">
-              {step === 2 && !editingId
-                ? <button onClick={() => setStep(1)} className="text-sm text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 transition-colors">← العودة للملاحظات</button>
-                : <div />}
-              <div className="flex gap-2">
-                <button onClick={() => { setShowModal(false); resetForm(); }} className="px-4 py-2 text-sm text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 transition-colors">إلغاء</button>
-                {step === 1 && !editingId && (
-                  <button onClick={handleFormat} disabled={aiLoading || !rawNotes.trim()}
-                    className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-white px-5 py-2 rounded-xl text-sm font-bold transition-colors">
-                    {aiLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
-                    {aiLoading ? "جاري الصياغة..." : "صياغة بالذكاء الاصطناعي"}
-                  </button>
-                )}
-                {(step === 2 || editingId) && (
-                  <button onClick={handleSave} disabled={isPending || !formattedContent.trim()}
-                    className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-white px-5 py-2 rounded-xl text-sm font-bold transition-colors">
-                    {isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
-                    {editingId ? "حفظ التعديلات" : "حفظ المحضر"}
-                  </button>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      {renderModal()}
     </div>
   );
 }

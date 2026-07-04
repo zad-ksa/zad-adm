@@ -613,18 +613,18 @@ function MeetingSummaryPanel({
 
 // ── بطاقات الأقسام ────────────────────────────────────────────────────────────
 const CATEGORY_CARDS = [
-  { key: "all",   label: "الكل",                  color: "from-slate-600 to-slate-700" },
-  { key: "زاد",   label: "إدارة زاد",              color: "from-blue-600 to-blue-700" },
-  { key: "التخطيط الاستراتيجي", label: "التخطيط الاستراتيجي", color: "from-indigo-600 to-indigo-700" },
-  { key: "الحوكمة",             label: "الحوكمة",              color: "from-violet-600 to-violet-700" },
-  { key: "تنمية الموارد المالية", label: "تنمية الموارد المالية", color: "from-emerald-600 to-emerald-700" },
-  { key: "الإعلامية",           label: "الإعلامية",            color: "from-pink-600 to-pink-700" },
-  { key: "التقنية",             label: "التقنية",              color: "from-cyan-600 to-cyan-700" },
-  { key: "المالية",             label: "المالية",              color: "from-amber-600 to-amber-700" },
-  { key: "التسويق",             label: "التسويق",              color: "from-orange-600 to-orange-700" },
-  { key: "خدمات المشاريع",      label: "خدمات المشاريع",       color: "from-teal-600 to-teal-700" },
-  { key: "الإدارية",            label: "الإدارية",             color: "from-rose-600 to-rose-700" },
-  { key: "الإسناد الحكومي",     label: "الإسناد الحكومي",      color: "from-sky-600 to-sky-700" },
+  { key: "all",                   label: "الكل",                   border: "border-slate-400 dark:border-slate-500",   text: "text-slate-600 dark:text-slate-300",   num: "text-slate-700 dark:text-slate-100" },
+  { key: "زاد",                   label: "إدارة زاد",               border: "border-blue-500",                          text: "text-blue-600 dark:text-blue-400",     num: "text-blue-700 dark:text-blue-300" },
+  { key: "التخطيط الاستراتيجي",   label: "التخطيط الاستراتيجي",    border: "border-indigo-500",                        text: "text-indigo-600 dark:text-indigo-400", num: "text-indigo-700 dark:text-indigo-300" },
+  { key: "الحوكمة",               label: "الحوكمة",                 border: "border-violet-500",                        text: "text-violet-600 dark:text-violet-400", num: "text-violet-700 dark:text-violet-300" },
+  { key: "تنمية الموارد المالية", label: "تنمية الموارد المالية",   border: "border-emerald-500",                       text: "text-emerald-600 dark:text-emerald-400", num: "text-emerald-700 dark:text-emerald-300" },
+  { key: "الإعلامية",             label: "الإعلامية",               border: "border-pink-500",                          text: "text-pink-600 dark:text-pink-400",     num: "text-pink-700 dark:text-pink-300" },
+  { key: "التقنية",               label: "التقنية",                 border: "border-cyan-500",                          text: "text-cyan-600 dark:text-cyan-400",     num: "text-cyan-700 dark:text-cyan-300" },
+  { key: "المالية",               label: "المالية",                 border: "border-amber-500",                         text: "text-amber-600 dark:text-amber-400",   num: "text-amber-700 dark:text-amber-300" },
+  { key: "التسويق",               label: "التسويق",                 border: "border-orange-500",                        text: "text-orange-600 dark:text-orange-400", num: "text-orange-700 dark:text-orange-300" },
+  { key: "خدمات المشاريع",        label: "خدمات المشاريع",          border: "border-teal-500",                          text: "text-teal-600 dark:text-teal-400",     num: "text-teal-700 dark:text-teal-300" },
+  { key: "الإدارية",              label: "الإدارية",                border: "border-rose-500",                          text: "text-rose-600 dark:text-rose-400",     num: "text-rose-700 dark:text-rose-300" },
+  { key: "الإسناد الحكومي",       label: "الإسناد الحكومي",         border: "border-sky-500",                           text: "text-sky-600 dark:text-sky-400",       num: "text-sky-700 dark:text-sky-300" },
 ];
 
 function getCategoryCount(meetings: Meeting[], key: string): number {
@@ -654,12 +654,12 @@ function CategorySelector({ meetings, onSelect }: { meetings: Meeting[]; onSelec
             <button
               key={cat.key}
               onClick={() => onSelect(cat.key)}
-              className={`bg-gradient-to-br ${cat.color} rounded-xl p-4 text-white text-right hover:opacity-90 hover:shadow-lg transition-all active:scale-95 flex flex-col gap-2`}
+              className={`bg-white dark:bg-slate-800 border ${cat.border} rounded-xl p-4 text-right hover:shadow-md transition-all active:scale-95 flex flex-col gap-2`}
             >
-              <span className="text-2xl font-black tabular-nums">{count}</span>
+              <span className={`text-2xl font-black tabular-nums ${cat.num}`}>{count}</span>
               <div className="flex items-center justify-between gap-1">
-                <span className="text-xs font-semibold leading-snug opacity-90">{cat.label}</span>
-                <ArrowRight className="w-3.5 h-3.5 opacity-70 shrink-0" />
+                <span className={`text-xs font-semibold leading-snug ${cat.text}`}>{cat.label}</span>
+                <ArrowRight className={`w-3.5 h-3.5 shrink-0 ${cat.text}`} />
               </div>
             </button>
           );

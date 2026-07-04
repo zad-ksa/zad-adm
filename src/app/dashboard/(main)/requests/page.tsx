@@ -3,7 +3,6 @@ import { redirect } from "next/navigation";
 import { hasPermission, EXECUTIVE_ROLES } from "@/lib/permissions";
 import { prisma } from "@/lib/db";
 import RequestsClient from "./RequestsClient";
-import { markNotificationsRead } from "@/app/actions/requests";
 
 export default async function RequestsPage() {
   const session = await getSession();
@@ -15,7 +14,10 @@ export default async function RequestsPage() {
   const isExec = EXECUTIVE_ROLES.includes(session.role) || (session.permissions || []).includes("developer_mode");
 
   // علّم إشعاراتك مقروءة عند فتح الصفحة
-  await markNotificationsRead();
+  await prisma.requestNotification.updateMany({
+    where: { employeeId: session.id, isRead: false },
+    data: { isRead: true },
+  });
 
   if (isExec) {
     // الإدارة: جلب كل الطلبات مرتبة بالأهمية

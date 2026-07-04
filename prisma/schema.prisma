@@ -207,6 +207,9 @@ model Employee {
   createdMeetings      Meeting[]         @relation("MeetingCreator")
   meetingTasksAssigned MeetingTask[]     @relation("MeetingTaskAssignee")
   navSetting           EmployeeNavSetting?
+  createdRequests      Request[]         @relation("CreatedRequests")
+  reviewedRequests     Request[]         @relation("ReviewedRequests")
+  requestNotifications RequestNotification[] @relation("RequestNotifications")
 }
 
 model EmployeeCharity {
@@ -442,6 +445,56 @@ model TimelineConfig {
   timelineType String   @unique // 'STRATEGY' | 'GOVERNANCE' | 'FINANCE'
   displayName  String
   updatedAt    DateTime @updatedAt
+}
+
+// ── نظام الطلبات ──────────────────────────────────────────────────────────────
+
+enum RequestStatus {
+  PENDING    // قيد المراجعة
+  RETURNED   // مرجع مع ملاحظات
+  APPROVED   // معتمد
+  REJECTED   // مرفوض
+}
+
+enum RequestPriority {
+  LOW      // منخفضة
+  MEDIUM   // متوسطة
+  HIGH     // عالية
+  URGENT   // عاجل
+}
+
+model Request {
+  id           String          @id @default(uuid())
+  title        String
+  body         String?         @db.Text
+  fileUrl      String?         // رابط Google Drive أو أي رابط
+  priority     RequestPriority @default(MEDIUM)
+  status       RequestStatus   @default(PENDING)
+  createdById  String
+  createdBy    Employee        @relation("CreatedRequests", fields: [createdById], references: [id], onDelete: Cascade)
+  reviewedById String?
+  reviewedBy   Employee?       @relation("ReviewedRequests", fields: [reviewedById], references: [id], onDelete: SetNull)
+  reviewNote   String?         @db.Text  // ملاحظات الرد (قبول أو رفض أو إرجاع)
+  reviewedAt   DateTime?
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
+  notifications RequestNotification[]
+
+  @@index([createdById])
+  @@index([status])
+}
+
+model RequestNotification {
+  id         String   @id @default(uuid())
+  requestId  String
+  request    Request  @relation(fields: [requestId], references: [id], onDelete: Cascade)
+  employeeId String
+  employee   Employee @relation("RequestNotifications", fields: [employeeId], references: [id], onDelete: Cascade)
+  isRead     Boolean  @default(false)
+  createdAt  DateTime @default(now())
+
+  @@unique([requestId, employeeId])
+  @@index([employeeId, isRead])
 }
 
 model ContractInstallment {

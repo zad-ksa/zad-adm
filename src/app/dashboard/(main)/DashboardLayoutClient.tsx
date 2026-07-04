@@ -7,7 +7,7 @@ import { Menu } from "lucide-react";
 
 import DeveloperRoleSwitcher from "@/components/DeveloperRoleSwitcher";
 
-export default function DashboardLayoutClient({ children, session }: { children: React.ReactNode, session: any }) {
+export default function DashboardLayoutClient({ children, session, unreadRequests = 0 }: { children: React.ReactNode, session: any, unreadRequests?: number }) {
   const pathname = usePathname();
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
 
@@ -20,7 +20,7 @@ export default function DashboardLayoutClient({ children, session }: { children:
 
   return (
     <div className="flex h-[100dvh] bg-slate-50 dark:bg-slate-950 overflow-hidden" dir="rtl">
-      <EmployeeSidebar session={session} isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />
+      <EmployeeSidebar session={session} isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} unreadRequests={unreadRequests} />
       
       <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden relative">
         {/* Mobile Header (Sticky & Blur) */}

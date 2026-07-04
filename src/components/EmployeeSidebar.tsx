@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, useTransition } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { User, ShieldAlert, Users, X, LogOut, LayoutDashboard, Building2, ClipboardList, ChevronRight, Edit, Eye, EyeOff, Camera, Loader2, AlertCircle, CheckCircle2, Newspaper, CheckSquare, Moon, Sun, LayoutGrid, FileText, Settings2, FileSignature, MessageSquare } from "lucide-react";
+import { User, ShieldAlert, Users, X, LogOut, LayoutDashboard, Building2, ClipboardList, ChevronRight, Edit, Eye, EyeOff, Camera, Loader2, AlertCircle, CheckCircle2, Newspaper, CheckSquare, Moon, Sun, LayoutGrid, FileText, Settings2, FileSignature, MessageSquare, Send } from "lucide-react";
 import { useTheme } from "next-themes";
 import { logout } from "@/app/actions/auth";
 import { updateProfile } from "@/app/actions/profile";
@@ -24,21 +24,39 @@ function NavItem({ item, isActive, isOpen }: { item: any, isActive: boolean, isO
             : "text-slate-500 dark:text-slate-400 hover:bg-primary/5 dark:hover:bg-primary/10 hover:text-primary dark:hover:text-primary"
         }`}
       >
-        <item.icon className={`w-4 h-4 shrink-0 transition-all ${isOpen ? "ml-2.5" : "ml-0"} ${isActive ? "text-white" : "text-slate-400 group-hover:text-primary"}`} />
-        {isOpen && <span className="whitespace-nowrap">{item.label}</span>}
+        <div className="relative shrink-0">
+          <item.icon className={`w-4 h-4 transition-all ${isOpen ? "ml-2.5" : "ml-0"} ${isActive ? "text-white" : "text-slate-400 group-hover:text-primary"}`} />
+          {item.badge > 0 && (
+            <span className="absolute -top-1.5 -right-1.5 min-w-[14px] h-3.5 flex items-center justify-center bg-red-500 text-white text-[9px] font-black rounded-full px-0.5 leading-none">
+              {item.badge > 99 ? "99+" : item.badge}
+            </span>
+          )}
+        </div>
+        {isOpen && (
+          <span className="flex-1 flex items-center justify-between whitespace-nowrap">
+            {item.label}
+            {item.badge > 0 && (
+              <span className="mr-1 min-w-[18px] h-4 flex items-center justify-center bg-red-500 text-white text-[10px] font-black rounded-full px-1">
+                {item.badge > 99 ? "99+" : item.badge}
+              </span>
+            )}
+          </span>
+        )}
       </Link>
     </div>
   );
 }
 
-export default function EmployeeSidebar({ 
-  session, 
-  isOpen, 
-  setIsOpen 
-}: { 
-  session: any; 
-  isOpen: boolean; 
+export default function EmployeeSidebar({
+  session,
+  isOpen,
+  setIsOpen,
+  unreadRequests = 0,
+}: {
+  session: any;
+  isOpen: boolean;
   setIsOpen: (v: boolean) => void;
+  unreadRequests?: number;
 }) {
   const pathname = usePathname();
   const [userState, setUserState] = useState(session);
@@ -66,7 +84,7 @@ export default function EmployeeSidebar({
     setUserState(session);
   }, [session]);
 
-  let navItems: { label: string; href: string; icon: any }[] = [];
+  let navItems: { label: string; href: string; icon: any; badge?: number }[] = [];
 
   const role = userState?.role || "";
   const perms: string[] = userState?.permissions || [];
@@ -96,10 +114,13 @@ export default function EmployeeSidebar({
     navItems.push({ label: "محاضر الاجتماعات", href: "/dashboard/meetings", icon: FileText });
   }
   if (can("manage_tasks")) {
-    const isManager = AUTO_ADMIN_ROLES.includes(role) || 
-      perms.includes("developer_mode") || 
+    const isManager = AUTO_ADMIN_ROLES.includes(role) ||
+      perms.includes("developer_mode") ||
       ["EXECUTIVE_DIRECTOR", "GENERAL_MANAGER", "ADMINISTRATIVE_SECRETARIAT"].includes(role);
     navItems.push({ label: isManager ? "المهام والمنجزات" : "مهامي", href: "/dashboard/tasks", icon: CheckSquare });
+  }
+  if (can("manage_requests")) {
+    navItems.push({ label: "الطلبات", href: "/dashboard/requests", icon: Send, badge: unreadRequests });
   }
   if (can("manage_employees")) {
     navItems.push({ label: "إدارة الموظفين", href: "/dashboard/employees", icon: Users });

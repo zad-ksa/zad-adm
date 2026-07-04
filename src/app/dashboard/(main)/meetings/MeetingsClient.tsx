@@ -426,9 +426,9 @@ function MeetingSummaryPanel({
   };
 
   return (
-    <div className="border-t border-slate-100 dark:border-slate-700/50 mt-2">
+    <div className="border-t border-slate-100 dark:border-slate-700/50 mt-1">
       {/* شريط الملخص الصغير — يظهر دائماً */}
-      <div className="flex items-center gap-2 pt-2 px-1">
+      <div className="flex items-center gap-2 pt-1 px-1">
         <button
           onClick={handleOpen}
           className="flex items-center gap-1.5 text-[11px] font-bold text-slate-400 hover:text-primary transition-colors"
@@ -935,49 +935,49 @@ export default function MeetingsClient({ meetings, charities, employees, session
           <button onClick={resetFilters} className="mt-2 text-xs text-blue-500 hover:underline">مسح التصفية</button>
         </div>
       ) : (
-        <div className="grid gap-2">
+        <div className="grid gap-1">
           {filteredMeetings.map(m => (
-            <div key={m.id} className="bg-white dark:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-700 p-3 hover:shadow-sm transition-shadow">
+            <div key={m.id} className="bg-white dark:bg-slate-800 rounded-lg border border-slate-100 dark:border-slate-700 px-3 py-1.5 hover:shadow-sm transition-shadow">
               {/* صف المعلومات الرئيسية */}
-              <div className="flex items-center gap-3">
-                <div className="w-7 h-7 rounded-lg bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center shrink-0">
-                  {m.isPrivate ? <Lock className="w-3.5 h-3.5 text-amber-500" /> : <Globe className="w-3.5 h-3.5 text-blue-500" />}
+              <div className="flex items-center gap-2">
+                <div className="w-5 h-5 rounded flex items-center justify-center shrink-0">
+                  {m.isPrivate ? <Lock className="w-3 h-3 text-amber-500" /> : <Globe className="w-3 h-3 text-blue-500" />}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-1.5 flex-wrap">
-                    <span className="text-[11px] font-mono bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400 px-2 py-0.5 rounded shrink-0">
+                  <div className="flex items-center gap-1 flex-wrap">
+                    <span className="text-[10px] font-mono bg-slate-100 dark:bg-slate-700 text-slate-400 dark:text-slate-500 px-1.5 py-px rounded shrink-0">
                       {`ZAD_M_${String(meetingNumberMap.get(m.id) ?? 0).padStart(3, "0")}`}
                     </span>
-                    <span className="text-sm font-bold text-slate-800 dark:text-slate-100 truncate">{m.title}</span>
-                    {m.isPrivate && <span className="text-[10px] bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 px-1.5 py-0.5 rounded-full font-bold">خاص</span>}
-                    {m.meetingContext && <span className="text-[10px] bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400 px-1.5 py-0.5 rounded-full">{DEPARTMENTS.find(d => d.value === m.meetingContext)?.label ?? m.meetingContext}</span>}
-                    {m.charity && <span className="text-[10px] bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 px-1.5 py-0.5 rounded-full">{m.charity.name}</span>}
+                    <span className="text-xs font-bold text-slate-800 dark:text-slate-100 truncate">{m.title}</span>
+                    {m.isPrivate && <span className="text-[10px] bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 px-1 py-px rounded-full font-bold">خاص</span>}
+                    {m.meetingContext && <span className="text-[10px] bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400 px-1 py-px rounded-full">{DEPARTMENTS.find(d => d.value === m.meetingContext)?.label ?? m.meetingContext}</span>}
+                    {m.charity && <span className="text-[10px] bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 px-1 py-px rounded-full">{m.charity.name}</span>}
                   </div>
-                  <div className="text-[11px] text-slate-400 dark:text-slate-500 mt-0.5 flex items-center gap-2 flex-wrap">
+                  <div className="text-[10px] text-slate-400 dark:text-slate-500 flex items-center gap-1.5">
                     <span>{formatDate(m.date)}</span>
                     {m.location && <span>· {m.location}</span>}
                     <span>· {m.createdBy.name}</span>
                   </div>
                 </div>
                 {/* أزرار الإجراءات */}
-                <div className="flex items-center gap-0.5 shrink-0">
-                  <button onClick={() => setViewingMeeting(m)} className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-400 hover:text-blue-600 transition-colors" title="عرض النص">
-                    <Eye className="w-3.5 h-3.5" />
+                <div className="flex items-center gap-px shrink-0">
+                  <button onClick={() => setViewingMeeting(m)} className="p-1 rounded hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-400 hover:text-blue-600 transition-colors" title="عرض النص">
+                    <Eye className="w-3 h-3" />
                   </button>
-                  <button onClick={() => handlePreview(m, meetingNumberMap.get(m.id))} className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-400 hover:text-teal-600 transition-colors" title="عرض بالكليشة">
-                    <LayoutTemplate className="w-3.5 h-3.5" />
+                  <button onClick={() => handlePreview(m, meetingNumberMap.get(m.id))} className="p-1 rounded hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-400 hover:text-teal-600 transition-colors" title="عرض بالكليشة">
+                    <LayoutTemplate className="w-3 h-3" />
                   </button>
-                  <button onClick={() => handlePrint(m, meetingNumberMap.get(m.id))} className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-400 hover:text-slate-600 transition-colors" title="طباعة">
-                    <Printer className="w-3.5 h-3.5" />
+                  <button onClick={() => handlePrint(m, meetingNumberMap.get(m.id))} className="p-1 rounded hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-400 hover:text-slate-600 transition-colors" title="طباعة">
+                    <Printer className="w-3 h-3" />
                   </button>
                   {canEditMeeting(m, sessionId, isTier1) && (
-                    <button onClick={() => openEdit(m)} className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-400 hover:text-blue-600 transition-colors" title="تعديل">
-                      <Edit2 className="w-3.5 h-3.5" />
+                    <button onClick={() => openEdit(m)} className="p-1 rounded hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-400 hover:text-blue-600 transition-colors" title="تعديل">
+                      <Edit2 className="w-3 h-3" />
                     </button>
                   )}
                   {canEditMeeting(m, sessionId, isTier1) && (
-                    <button onClick={() => handleDelete(m.id)} disabled={isPending} className="p-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 text-slate-400 hover:text-red-500 transition-colors" title="حذف">
-                      <Trash2 className="w-3.5 h-3.5" />
+                    <button onClick={() => handleDelete(m.id)} disabled={isPending} className="p-1 rounded hover:bg-red-50 dark:hover:bg-red-900/20 text-slate-400 hover:text-red-500 transition-colors" title="حذف">
+                      <Trash2 className="w-3 h-3" />
                     </button>
                   )}
                 </div>

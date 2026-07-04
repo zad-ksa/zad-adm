@@ -324,7 +324,7 @@ export default function EmployeeSidebar({
               {isOpen && <div className="h-px bg-slate-100 dark:bg-slate-800 mx-2" />}
               {renderGroup("زاد", ["الأخبار والإنجازات", "محاضر الاجتماعات", "المهام والمنجزات", "مهامي"])}
               {isOpen && <div className="h-px bg-slate-100 dark:bg-slate-800 mx-2" />}
-              {renderGroup("لوحة التحكم", ["إدارة الموظفين", "إعدادات الجمعيات"])}
+              {renderGroup("لوحة التحكم", ["الطلبات", "إدارة الموظفين", "إعدادات الجمعيات"])}
             </>
           );
         })()}

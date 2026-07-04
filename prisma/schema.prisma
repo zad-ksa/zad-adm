@@ -210,6 +210,11 @@ model Employee {
   createdRequests      Request[]         @relation("CreatedRequests")
   reviewedRequests     Request[]         @relation("ReviewedRequests")
   requestNotifications RequestNotification[] @relation("RequestNotifications")
+  workflowSteps        WorkflowStep[]    @relation("WorkflowStepApprover")
+  requestLogs          RequestLog[]      @relation("LogActor")
+  delegatedLogs        RequestLog[]      @relation("LogDelegatee")
+  currentlyReviewing   Request[]         @relation("CurrentReviewer")
+  delegatedRequests    Request[]         @relation("DelegatedTo")
 }
 
 model EmployeeCharity {
@@ -450,10 +455,11 @@ model TimelineConfig {
 // ── نظام الطلبات ──────────────────────────────────────────────────────────────
 
 enum RequestStatus {
-  PENDING    // قيد المراجعة
-  RETURNED   // مرجع مع ملاحظات
-  APPROVED   // معتمد
+  PENDING    // قيد المراجعة عند شخص معين
+  RETURNED   // مرجع للمرسل مع ملاحظات
+  APPROVED   // معتمد نهائياً
   REJECTED   // مرفوض
+  DELEGATED  // محوّل للتنفيذ
 }
 
 enum RequestPriority {
@@ -463,25 +469,90 @@ enum RequestPriority {
   URGENT   // عاجل
 }
 
+enum RequestAction {
+  SUBMITTED      // رفع الطلب لأول مرة
+  FORWARDED      // تمرير للمستوى التالي
+  APPROVED_FINAL // اعتماد نهائي
+  REJECTED       // رفض
+  RETURNED       // إرجاع للمرسل
+  DELEGATED      // تحويل التنفيذ لشخص آخر
+  RESUBMITTED    // إعادة إرسال بعد الإرجاع
+}
+
+// سلسلة اعتماد — تُعرَّف من إعدادات الداشبورد
+model WorkflowChain {
+  id        String         @id @default(uuid())
+  name      String
+  isActive  Boolean        @default(false)
+  steps     WorkflowStep[]
+  requests  Request[]
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+}
+
+// مستوى واحد في السلسلة — يرتبط بشخص محدد
+model WorkflowStep {
+  id         String        @id @default(uuid())
+  chainId    String
+  chain      WorkflowChain @relation(fields: [chainId], references: [id], onDelete: Cascade)
+  order      Int
+  approverId String
+  approver   Employee      @relation("WorkflowStepApprover", fields: [approverId], references: [id], onDelete: Cascade)
+  label      String?
+
+  @@unique([chainId, order])
+  @@index([chainId])
+}
+
+// سجل كل خطوة مر بها الطلب
+model RequestLog {
+  id            String        @id @default(uuid())
+  requestId     String
+  request       Request       @relation(fields: [requestId], references: [id], onDelete: Cascade)
+  stepOrder     Int           @default(0)
+  actorId       String
+  actor         Employee      @relation("LogActor", fields: [actorId], references: [id], onDelete: Cascade)
+  action        RequestAction
+  note          String?       @db.Text
+  delegatedToId String?
+  delegatedTo   Employee?     @relation("LogDelegatee", fields: [delegatedToId], references: [id], onDelete: SetNull)
+  createdAt     DateTime      @default(now())
+
+  @@index([requestId])
+}
+
 model Request {
-  id           String          @id @default(uuid())
-  title        String
-  body         String?         @db.Text
-  fileUrl      String?         // رابط Google Drive أو أي رابط
-  priority     RequestPriority @default(MEDIUM)
-  status       RequestStatus   @default(PENDING)
-  createdById  String
-  createdBy    Employee        @relation("CreatedRequests", fields: [createdById], references: [id], onDelete: Cascade)
-  reviewedById String?
-  reviewedBy   Employee?       @relation("ReviewedRequests", fields: [reviewedById], references: [id], onDelete: SetNull)
-  reviewNote   String?         @db.Text  // ملاحظات الرد (قبول أو رفض أو إرجاع)
-  reviewedAt   DateTime?
-  createdAt    DateTime        @default(now())
-  updatedAt    DateTime        @updatedAt
-  notifications RequestNotification[]
+  id                String          @id @default(uuid())
+  title             String
+  body              String?         @db.Text
+  fileUrl           String?
+  priority          RequestPriority @default(MEDIUM)
+  status            RequestStatus   @default(PENDING)
+  // المُرسِل
+  createdById       String
+  createdBy         Employee        @relation("CreatedRequests", fields: [createdById], references: [id], onDelete: Cascade)
+  // Workflow — السلسلة الحالية والمستوى
+  chainId           String?
+  chain             WorkflowChain?  @relation(fields: [chainId], references: [id], onDelete: SetNull)
+  currentStepOrder  Int             @default(1)
+  currentReviewerId String?
+  currentReviewer   Employee?       @relation("CurrentReviewer", fields: [currentReviewerId], references: [id], onDelete: SetNull)
+  // تحويل التنفيذ
+  delegatedToId     String?
+  delegatedTo       Employee?       @relation("DelegatedTo", fields: [delegatedToId], references: [id], onDelete: SetNull)
+  // للتوافق مع الكود القديم
+  reviewedById      String?
+  reviewedBy        Employee?       @relation("ReviewedRequests", fields: [reviewedById], references: [id], onDelete: SetNull)
+  reviewNote        String?         @db.Text
+  reviewedAt        DateTime?
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+  notifications     RequestNotification[]
+  logs              RequestLog[]
 
   @@index([createdById])
   @@index([status])
+  @@index([currentReviewerId])
 }
 
 model RequestNotification {

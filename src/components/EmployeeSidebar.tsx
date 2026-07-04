@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, useTransition } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { User, ShieldAlert, Users, X, LogOut, LayoutDashboard, Building2, ClipboardList, ChevronRight, Edit, Eye, EyeOff, Camera, Loader2, AlertCircle, CheckCircle2, Newspaper, CheckSquare, Moon, Sun, LayoutGrid, FileText, Settings2, FileSignature, MessageSquare, Send } from "lucide-react";
+import { User, ShieldAlert, Users, X, LogOut, LayoutDashboard, Building2, ClipboardList, ChevronRight, Edit, Eye, EyeOff, Camera, Loader2, AlertCircle, CheckCircle2, Newspaper, CheckSquare, Moon, Sun, LayoutGrid, FileText, Settings2, FileSignature, MessageSquare, Send, GitBranch } from "lucide-react";
 import { useTheme } from "next-themes";
 import { logout } from "@/app/actions/auth";
 import { updateProfile } from "@/app/actions/profile";
@@ -123,6 +123,9 @@ export default function EmployeeSidebar({
   }
   if (can("manage_employees")) {
     navItems.push({ label: "إدارة الموظفين", href: "/dashboard/employees", icon: Users });
+  }
+  if (can("manage_workflow")) {
+    navItems.push({ label: "سلاسل الاعتماد", href: "/dashboard/workflow-settings", icon: GitBranch });
   }
   if (can("manage_charity_settings")) {
     navItems.push({ label: "إعدادات الجمعيات", href: "/dashboard/charity-settings", icon: Settings2 });
@@ -324,7 +327,7 @@ export default function EmployeeSidebar({
               {isOpen && <div className="h-px bg-slate-100 dark:bg-slate-800 mx-2" />}
               {renderGroup("زاد", ["الأخبار والإنجازات", "محاضر الاجتماعات", "المهام والمنجزات", "مهامي"])}
               {isOpen && <div className="h-px bg-slate-100 dark:bg-slate-800 mx-2" />}
-              {renderGroup("لوحة التحكم", ["الطلبات", "إدارة الموظفين", "إعدادات الجمعيات"])}
+              {renderGroup("لوحة التحكم", ["الطلبات", "إدارة الموظفين", "سلاسل الاعتماد", "إعدادات الجمعيات"])}
             </>
           );
         })()}

@@ -5,10 +5,11 @@ import { getSession } from "@/lib/auth";
 import { hasPermission } from "@/lib/permissions";
 import { revalidatePath } from "next/cache";
 
+// ── helpers ───────────────────────────────────────────────────────────────────
+
 function canViewRequests(role: string, permissions: string[]) {
   return hasPermission(role, permissions, "view_requests");
 }
-
 function isExec(role: string, permissions: string[]) {
   return hasPermission(role, permissions, "manage_requests");
 }
@@ -17,6 +18,15 @@ async function requireSession() {
   const session = await getSession();
   if (!session?.id) throw new Error("غير مصرح");
   return session;
+}
+
+// أرسل إشعاراً لشخص واحد (upsert حتى لا يتكرر)
+async function notify(requestId: string, employeeId: string) {
+  await prisma.requestNotification.upsert({
+    where: { requestId_employeeId: { requestId, employeeId } },
+    create: { requestId, employeeId, isRead: false },
+    update: { isRead: false },
+  });
 }
 
 // ── إنشاء طلب جديد ───────────────────────────────────────────────────────────
@@ -31,6 +41,14 @@ export async function createRequest(data: {
     throw new Error("غير مصرح");
   }
 
+  // هل يوجد workflow نشط؟
+  const chain = await prisma.workflowChain.findFirst({
+    where: { isActive: true },
+    include: { steps: { orderBy: { order: "asc" } } },
+  });
+
+  const firstStep = chain?.steps[0] ?? null;
+
   const request = await prisma.request.create({
     data: {
       title: data.title.trim(),
@@ -39,124 +57,172 @@ export async function createRequest(data: {
       priority: data.priority,
       status: "PENDING",
       createdById: session.id,
+      chainId: chain?.id ?? null,
+      currentStepOrder: 1,
+      currentReviewerId: firstStep?.approverId ?? null,
     },
   });
 
-  // أرسل إشعاراً لكل أعضاء الإدارة التنفيذية
-  const execs = await prisma.employee.findMany({
-    where: {
-      isActive: true,
-      role: { in: ["EXECUTIVE_DIRECTOR", "GENERAL_MANAGER", "ADMINISTRATIVE_SECRETARIAT", "ADMIN"] },
-      id: { not: session.id }, // لا ترسل لنفسك إن كنت إدارة
+  // سجل الإنشاء
+  await prisma.requestLog.create({
+    data: {
+      requestId: request.id,
+      stepOrder: 0,
+      actorId: session.id,
+      action: "SUBMITTED",
     },
-    select: { id: true },
   });
 
-  if (execs.length > 0) {
-    await prisma.requestNotification.createMany({
-      data: execs.map((e) => ({
-        requestId: request.id,
-        employeeId: e.id,
-        isRead: false,
-      })),
-      skipDuplicates: true,
+  // إشعار: إذا وُجد workflow → أشعر الخطوة الأولى فقط؛ وإلا أشعر كل الإدارة
+  if (firstStep) {
+    if (firstStep.approverId !== session.id) {
+      await notify(request.id, firstStep.approverId);
+    }
+  } else {
+    const execs = await prisma.employee.findMany({
+      where: {
+        isActive: true,
+        role: { in: ["EXECUTIVE_DIRECTOR", "GENERAL_MANAGER", "ADMINISTRATIVE_SECRETARIAT", "ADMIN"] },
+        id: { not: session.id },
+      },
+      select: { id: true },
     });
+    for (const e of execs) {
+      await notify(request.id, e.id);
+    }
   }
 
   revalidatePath("/dashboard/requests");
   return request;
 }
 
-// ── جلب طلبات المستخدم الحالي ─────────────────────────────────────────────────
-export async function getMyRequests() {
-  const session = await requireSession();
-  if (!canViewRequests(session.role, session.permissions || [])) {
-    throw new Error("غير مصرح");
-  }
-
-  return prisma.request.findMany({
-    where: { createdById: session.id },
-    include: {
-      reviewedBy: { select: { id: true, name: true } },
-      _count: { select: { notifications: true } },
-    },
-    orderBy: [
-      { status: "asc" },
-      { createdAt: "desc" },
-    ],
-  });
-}
-
-// ── جلب كل الطلبات للإدارة التنفيذية ─────────────────────────────────────────
-export async function getAllRequests() {
-  const session = await requireSession();
-  if (!isExec(session.role, session.permissions || [])) {
-    throw new Error("غير مصرح");
-  }
-
-  const priorityOrder = { URGENT: 0, HIGH: 1, MEDIUM: 2, LOW: 3 };
-
-  const requests = await prisma.request.findMany({
-    include: {
-      createdBy: { select: { id: true, name: true, role: true, avatarUrl: true } },
-      reviewedBy: { select: { id: true, name: true } },
-    },
-    orderBy: [
-      { status: "asc" }, // PENDING أولاً
-      { createdAt: "asc" },
-    ],
-  });
-
-  // رتّب حسب الأهمية ثم الوقت
-  return requests.sort((a, b) => {
-    if (a.status === "PENDING" && b.status !== "PENDING") return -1;
-    if (b.status === "PENDING" && a.status !== "PENDING") return 1;
-    if (a.status === "PENDING" && b.status === "PENDING") {
-      const pa = priorityOrder[a.priority] ?? 3;
-      const pb = priorityOrder[b.priority] ?? 3;
-      if (pa !== pb) return pa - pb;
-      return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
-    }
-    return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-  });
-}
-
-// ── مراجعة طلب (قبول / رفض / إرجاع) ─────────────────────────────────────────
+// ── مراجعة طلب ────────────────────────────────────────────────────────────────
 export async function reviewRequest(data: {
   requestId: string;
-  action: "APPROVED" | "REJECTED" | "RETURNED";
-  reviewNote?: string;
+  action: "APPROVED_FINAL" | "FORWARDED" | "REJECTED" | "RETURNED" | "DELEGATED";
+  note?: string;
+  delegatedToId?: string; // مطلوب عند DELEGATED
 }) {
   const session = await requireSession();
   if (!isExec(session.role, session.permissions || [])) {
     throw new Error("غير مصرح");
   }
-  if (data.action !== "APPROVED" && !data.reviewNote?.trim()) {
-    throw new Error("يجب ذكر سبب الرفض أو ملاحظات الإرجاع");
+
+  const request = await prisma.request.findUnique({
+    where: { id: data.requestId },
+    include: {
+      chain: { include: { steps: { orderBy: { order: "asc" } } } },
+    },
+  });
+  if (!request) throw new Error("الطلب غير موجود");
+  if (request.status !== "PENDING") throw new Error("لا يمكن مراجعة طلب غير قيد المراجعة");
+
+  if (data.action !== "APPROVED_FINAL" && data.action !== "DELEGATED" && !data.note?.trim()) {
+    throw new Error("يجب ذكر السبب أو الملاحظات");
+  }
+  if (data.action === "DELEGATED" && !data.delegatedToId) {
+    throw new Error("يجب اختيار الشخص المحوَّل إليه");
   }
 
-  const request = await prisma.request.update({
-    where: { id: data.requestId },
+  // سجل الخطوة
+  await prisma.requestLog.create({
     data: {
-      status: data.action,
-      reviewedById: session.id,
-      reviewNote: data.reviewNote?.trim() || null,
-      reviewedAt: new Date(),
+      requestId: data.requestId,
+      stepOrder: request.currentStepOrder,
+      actorId: session.id,
+      action: data.action,
+      note: data.note?.trim() || null,
+      delegatedToId: data.delegatedToId ?? null,
     },
-    select: { createdById: true },
   });
 
-  // أرسل إشعاراً لصاحب الطلب
-  await prisma.requestNotification.upsert({
-    where: { requestId_employeeId: { requestId: data.requestId, employeeId: request.createdById } },
-    create: { requestId: data.requestId, employeeId: request.createdById, isRead: false },
-    update: { isRead: false },
-  });
+  if (data.action === "FORWARDED") {
+    // ابحث عن الخطوة التالية
+    const nextStep = request.chain?.steps.find(
+      (s) => s.order === request.currentStepOrder + 1
+    );
+
+    if (nextStep) {
+      await prisma.request.update({
+        where: { id: data.requestId },
+        data: {
+          currentStepOrder: nextStep.order,
+          currentReviewerId: nextStep.approverId,
+          reviewedById: session.id,
+          reviewedAt: new Date(),
+        },
+      });
+      await notify(data.requestId, nextStep.approverId);
+    } else {
+      // لا توجد خطوة تالية — اعتمد نهائياً
+      await prisma.request.update({
+        where: { id: data.requestId },
+        data: {
+          status: "APPROVED",
+          reviewedById: session.id,
+          reviewNote: data.note?.trim() || null,
+          reviewedAt: new Date(),
+        },
+      });
+      await notify(data.requestId, request.createdById);
+    }
+  } else if (data.action === "APPROVED_FINAL") {
+    await prisma.request.update({
+      where: { id: data.requestId },
+      data: {
+        status: "APPROVED",
+        reviewedById: session.id,
+        reviewNote: data.note?.trim() || null,
+        reviewedAt: new Date(),
+      },
+    });
+    await notify(data.requestId, request.createdById);
+  } else if (data.action === "REJECTED") {
+    await prisma.request.update({
+      where: { id: data.requestId },
+      data: {
+        status: "REJECTED",
+        reviewedById: session.id,
+        reviewNote: data.note?.trim() || null,
+        reviewedAt: new Date(),
+      },
+    });
+    await notify(data.requestId, request.createdById);
+  } else if (data.action === "RETURNED") {
+    await prisma.request.update({
+      where: { id: data.requestId },
+      data: {
+        status: "RETURNED",
+        reviewedById: session.id,
+        reviewNote: data.note?.trim() || null,
+        reviewedAt: new Date(),
+        currentStepOrder: 0,
+        currentReviewerId: null,
+      },
+    });
+    await notify(data.requestId, request.createdById);
+  } else if (data.action === "DELEGATED") {
+    await prisma.request.update({
+      where: { id: data.requestId },
+      data: {
+        status: "DELEGATED",
+        reviewedById: session.id,
+        reviewNote: data.note?.trim() || null,
+        reviewedAt: new Date(),
+        delegatedToId: data.delegatedToId,
+      },
+    });
+    // أشعر المحوَّل إليه والمرسل الأصلي
+    await notify(data.requestId, data.delegatedToId!);
+    if (data.delegatedToId !== request.createdById) {
+      await notify(data.requestId, request.createdById);
+    }
+  }
 
   revalidatePath("/dashboard/requests");
 }
 
-// ── تحرير طلب مرجع وإعادة إرساله ────────────────────────────────────────────
+// ── إعادة إرسال طلب مرجع ─────────────────────────────────────────────────────
 export async function resubmitRequest(data: {
   requestId: string;
   title: string;
@@ -168,10 +234,12 @@ export async function resubmitRequest(data: {
 
   const existing = await prisma.request.findUnique({
     where: { id: data.requestId },
-    select: { createdById: true, status: true },
+    include: { chain: { include: { steps: { orderBy: { order: "asc" } } } } },
   });
   if (!existing || existing.createdById !== session.id) throw new Error("غير مصرح");
   if (existing.status !== "RETURNED") throw new Error("لا يمكن إعادة إرسال هذا الطلب");
+
+  const firstStep = existing.chain?.steps[0] ?? null;
 
   await prisma.request.update({
     where: { id: data.requestId },
@@ -184,39 +252,41 @@ export async function resubmitRequest(data: {
       reviewedById: null,
       reviewNote: null,
       reviewedAt: null,
+      currentStepOrder: 1,
+      currentReviewerId: firstStep?.approverId ?? null,
     },
   });
 
-  // إعادة إشعار الإدارة
-  const execs = await prisma.employee.findMany({
-    where: {
-      isActive: true,
-      role: { in: ["EXECUTIVE_DIRECTOR", "GENERAL_MANAGER", "ADMINISTRATIVE_SECRETARIAT", "ADMIN"] },
-      id: { not: session.id },
+  await prisma.requestLog.create({
+    data: {
+      requestId: data.requestId,
+      stepOrder: 0,
+      actorId: session.id,
+      action: "RESUBMITTED",
     },
-    select: { id: true },
   });
 
-  if (execs.length > 0) {
-    await prisma.requestNotification.createMany({
-      data: execs.map((e) => ({
-        requestId: data.requestId,
-        employeeId: e.id,
-        isRead: false,
-      })),
-      skipDuplicates: true,
+  // إعادة الإشعار
+  if (firstStep) {
+    await notify(data.requestId, firstStep.approverId);
+  } else {
+    const execs = await prisma.employee.findMany({
+      where: {
+        isActive: true,
+        role: { in: ["EXECUTIVE_DIRECTOR", "GENERAL_MANAGER", "ADMINISTRATIVE_SECRETARIAT", "ADMIN"] },
+        id: { not: session.id },
+      },
+      select: { id: true },
     });
-    // تحديث القديمة لغير مقروء
-    await prisma.requestNotification.updateMany({
-      where: { requestId: data.requestId, employeeId: { in: execs.map((e) => e.id) } },
-      data: { isRead: false },
-    });
+    for (const e of execs) {
+      await notify(data.requestId, e.id);
+    }
   }
 
   revalidatePath("/dashboard/requests");
 }
 
-// ── حذف طلب (من صاحبه فقط إذا كان PENDING أو RETURNED) ─────────────────────
+// ── حذف طلب ──────────────────────────────────────────────────────────────────
 export async function deleteRequest(requestId: string) {
   const session = await requireSession();
 
@@ -236,15 +306,7 @@ export async function deleteRequest(requestId: string) {
   revalidatePath("/dashboard/requests");
 }
 
-// ── عدد الإشعارات غير المقروءة للمستخدم الحالي ───────────────────────────────
-export async function getUnreadNotificationsCount() {
-  const session = await requireSession();
-  return prisma.requestNotification.count({
-    where: { employeeId: session.id, isRead: false },
-  });
-}
-
-// ── تعليم الإشعارات مقروءة (عند فتح الصفحة) ─────────────────────────────────
+// ── إشعارات ──────────────────────────────────────────────────────────────────
 export async function markNotificationsRead() {
   const session = await requireSession();
   if (!canViewRequests(session.role, session.permissions || [])) return;
@@ -253,4 +315,11 @@ export async function markNotificationsRead() {
     data: { isRead: true },
   });
   revalidatePath("/dashboard/requests");
+}
+
+export async function getUnreadNotificationsCount() {
+  const session = await requireSession();
+  return prisma.requestNotification.count({
+    where: { employeeId: session.id, isRead: false },
+  });
 }

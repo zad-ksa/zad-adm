@@ -9,7 +9,7 @@ import { logout } from "@/app/actions/auth";
 import { updateProfile } from "@/app/actions/profile";
 import { usePathname } from "next/navigation";
 import ZadLogo from "@/components/ZadLogo";
-import { AUTO_ADMIN_ROLES, ROLE_LABELS } from "@/lib/permissions";
+import { hasPermission, ROLE_LABELS } from "@/lib/permissions";
 
 // --- Nav Item Component ---
 function NavItem({ item, isActive, isOpen }: { item: any, isActive: boolean, isOpen: boolean }) {
@@ -88,7 +88,7 @@ export default function EmployeeSidebar({
 
   const role = userState?.role || "";
   const perms: string[] = userState?.permissions || [];
-  const can = (p: string) => AUTO_ADMIN_ROLES.includes(role) || perms.includes(p);
+  const can = (p: string) => hasPermission(role, perms, p);
 
   navItems = [
     { label: "الرئيسية", href: "/dashboard", icon: LayoutDashboard },
@@ -114,9 +114,8 @@ export default function EmployeeSidebar({
     navItems.push({ label: "محاضر الاجتماعات", href: "/dashboard/meetings", icon: FileText });
   }
   if (can("manage_tasks")) {
-    const isManager = AUTO_ADMIN_ROLES.includes(role) ||
-      perms.includes("developer_mode") ||
-      ["EXECUTIVE_DIRECTOR", "GENERAL_MANAGER", "ADMINISTRATIVE_SECRETARIAT"].includes(role);
+    const isManager = perms.includes("developer_mode") ||
+      hasPermission(role, perms, "manage_requests");
     navItems.push({ label: isManager ? "المهام والمنجزات" : "مهامي", href: "/dashboard/tasks", icon: CheckSquare });
   }
   if (can("manage_requests")) {

@@ -12,6 +12,21 @@ import {
 } from "@/app/actions/requests";
 import { useRouter } from "next/navigation";
 
+// ── الأقسام ───────────────────────────────────────────────────────────────────
+const CATEGORIES = [
+  { key: "زاد",                   label: "إدارة زاد",               color: "text-blue-600 dark:text-blue-400",       bg: "bg-blue-50 dark:bg-blue-900/20",       border: "border-blue-400" },
+  { key: "التخطيط الاستراتيجي",   label: "التخطيط الاستراتيجي",    color: "text-indigo-600 dark:text-indigo-400",   bg: "bg-indigo-50 dark:bg-indigo-900/20",   border: "border-indigo-400" },
+  { key: "الحوكمة",               label: "الحوكمة",                 color: "text-violet-600 dark:text-violet-400",   bg: "bg-violet-50 dark:bg-violet-900/20",   border: "border-violet-400" },
+  { key: "تنمية الموارد المالية", label: "تنمية الموارد المالية",   color: "text-emerald-600 dark:text-emerald-400", bg: "bg-emerald-50 dark:bg-emerald-900/20", border: "border-emerald-400" },
+  { key: "المالية",               label: "المالية",                 color: "text-amber-600 dark:text-amber-400",     bg: "bg-amber-50 dark:bg-amber-900/20",     border: "border-amber-400" },
+  { key: "الإعلامية",             label: "الإعلامية",               color: "text-pink-600 dark:text-pink-400",       bg: "bg-pink-50 dark:bg-pink-900/20",       border: "border-pink-400" },
+  { key: "التقنية",               label: "التقنية",                 color: "text-cyan-600 dark:text-cyan-400",       bg: "bg-cyan-50 dark:bg-cyan-900/20",       border: "border-cyan-400" },
+  { key: "التسويق",               label: "التسويق",                 color: "text-orange-600 dark:text-orange-400",   bg: "bg-orange-50 dark:bg-orange-900/20",   border: "border-orange-400" },
+  { key: "خدمات المشاريع",        label: "خدمات المشاريع",          color: "text-teal-600 dark:text-teal-400",       bg: "bg-teal-50 dark:bg-teal-900/20",       border: "border-teal-400" },
+  { key: "الإدارية",              label: "الإدارية",                color: "text-rose-600 dark:text-rose-400",       bg: "bg-rose-50 dark:bg-rose-900/20",       border: "border-rose-400" },
+  { key: "الإسناد الحكومي",       label: "الإسناد الحكومي",         color: "text-sky-600 dark:text-sky-400",         bg: "bg-sky-50 dark:bg-sky-900/20",         border: "border-sky-400" },
+];
+
 // ── Types ─────────────────────────────────────────────────────────────────────
 type Priority = "LOW" | "MEDIUM" | "HIGH" | "URGENT";
 type Status = "PENDING" | "RETURNED" | "APPROVED" | "REJECTED" | "DELEGATED";
@@ -32,6 +47,7 @@ type RequestLog = {
 type Request = {
   id: string;
   title: string;
+  category: string | null;
   body: string | null;
   fileUrl: string | null;
   priority: Priority;
@@ -110,6 +126,7 @@ function RequestForm({
   isResubmit?: boolean; requestId?: string;
 }) {
   const [title, setTitle] = useState(initial?.title || "");
+  const [category, setCategory] = useState(initial?.category || "");
   const [body, setBody] = useState(initial?.body || "");
   const [fileUrl, setFileUrl] = useState(initial?.fileUrl || "");
   const [priority, setPriority] = useState<Priority>(initial?.priority || "MEDIUM");
@@ -122,9 +139,9 @@ function RequestForm({
     startTransition(async () => {
       try {
         if (isResubmit && requestId) {
-          await resubmitRequest({ requestId, title, body, fileUrl, priority });
+          await resubmitRequest({ requestId, title, category, body, fileUrl, priority });
         } else {
-          await createRequest({ title, body, fileUrl, priority });
+          await createRequest({ title, category, body, fileUrl, priority });
         }
         onDone(); onClose();
       } catch (e: any) { setError(e.message); }
@@ -147,6 +164,21 @@ function RequestForm({
             <input value={title} onChange={e => setTitle(e.target.value)}
               placeholder="أدخل عنوان الطلب..."
               className="w-full border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-sm bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+          </div>
+          <div>
+            <label className="text-xs font-bold text-slate-500 dark:text-slate-400 mb-1.5 block">القسم <span className="font-normal text-slate-400">(اختياري)</span></label>
+            <div className="flex flex-wrap gap-1.5">
+              {CATEGORIES.map(cat => (
+                <button key={cat.key} type="button" onClick={() => setCategory(category === cat.key ? "" : cat.key)}
+                  className={`px-2.5 py-1 rounded-full text-[11px] font-bold border transition-all ${
+                    category === cat.key
+                      ? `${cat.bg} ${cat.border} ${cat.color} ring-1 ring-current`
+                      : "border-slate-200 dark:border-slate-700 text-slate-400 hover:border-slate-300 dark:hover:border-slate-600"
+                  }`}>
+                  {cat.label}
+                </button>
+              ))}
+            </div>
           </div>
           <div>
             <label className="text-xs font-bold text-slate-500 dark:text-slate-400 mb-1.5 block">مستوى الأهمية</label>
@@ -408,6 +440,14 @@ function RequestCard({
             </span>
           </div>
 
+          {request.category && (() => {
+            const cat = CATEGORIES.find(c => c.key === request.category);
+            return cat ? (
+              <span className={`inline-flex mt-1 text-[10px] font-bold px-2 py-0.5 rounded-full border ${cat.bg} ${cat.color} ${cat.border}`}>
+                {cat.label}
+              </span>
+            ) : null;
+          })()}
           <div className="flex items-center gap-2 mt-1 flex-wrap text-[10px] text-slate-400 dark:text-slate-500">
             {isExec && request.createdBy && (
               <span className="flex items-center gap-1 font-medium text-slate-500 dark:text-slate-400">

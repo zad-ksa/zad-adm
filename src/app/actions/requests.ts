@@ -32,6 +32,7 @@ async function notify(requestId: string, employeeId: string) {
 // ── إنشاء طلب جديد ───────────────────────────────────────────────────────────
 export async function createRequest(data: {
   title: string;
+  category?: string;
   body?: string;
   fileUrl?: string;
   priority: "LOW" | "MEDIUM" | "HIGH" | "URGENT";
@@ -52,6 +53,7 @@ export async function createRequest(data: {
   const request = await prisma.request.create({
     data: {
       title: data.title.trim(),
+      category: data.category?.trim() || null,
       body: data.body?.trim() || null,
       fileUrl: data.fileUrl?.trim() || null,
       priority: data.priority,
@@ -226,6 +228,7 @@ export async function reviewRequest(data: {
 export async function resubmitRequest(data: {
   requestId: string;
   title: string;
+  category?: string;
   body?: string;
   fileUrl?: string;
   priority: "LOW" | "MEDIUM" | "HIGH" | "URGENT";
@@ -245,6 +248,7 @@ export async function resubmitRequest(data: {
     where: { id: data.requestId },
     data: {
       title: data.title.trim(),
+      category: data.category?.trim() || null,
       body: data.body?.trim() || null,
       fileUrl: data.fileUrl?.trim() || null,
       priority: data.priority,

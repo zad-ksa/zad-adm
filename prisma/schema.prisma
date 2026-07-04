@@ -524,6 +524,7 @@ model RequestLog {
 model Request {
   id                String          @id @default(uuid())
   title             String
+  category          String?         // التصنيف: "زاد"، "الحوكمة"، إلخ
   body              String?         @db.Text
   fileUrl           String?
   priority          RequestPriority @default(MEDIUM)

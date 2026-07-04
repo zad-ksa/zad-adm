@@ -13,6 +13,7 @@ export const EXECUTIVE_ROLES = [
 // Permissions granted automatically to EXECUTIVE_ROLES without explicit assignment
 const EXECUTIVE_AUTO_PERMISSIONS = [
   "manage_requests",
+  "view_requests",
 ];
 
 // All available permissions grouped by category
@@ -35,7 +36,8 @@ export const PERMISSION_GROUPS = [
       { id: "view_services_overview", label: "عرض الخدمات" },
       { id: "manage_meetings", label: "محاضر الاجتماعات" },
       { id: "manage_communication", label: "إدارة التواصل" },
-      { id: "manage_requests", label: "الطلبات الإدارية" },
+      { id: "view_requests", label: "الطلبات والاعتماد (رفع طلب ومتابعته)" },
+      { id: "manage_requests", label: "إدارة الطلبات (اعتماد / رفض / إرجاع)" },
     ],
   },
   {
@@ -78,5 +80,7 @@ export function hasPermission(
   if (AUTO_ADMIN_ROLES.includes(role)) return true;
   if (permissions.includes("developer_mode")) return true;
   if (EXECUTIVE_ROLES.includes(role) && EXECUTIVE_AUTO_PERMISSIONS.includes(required)) return true;
+  // manage_requests يشمل view_requests تلقائياً
+  if (required === "view_requests" && permissions.includes("manage_requests")) return true;
   return permissions.includes(required);
 }

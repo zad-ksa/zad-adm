@@ -118,7 +118,7 @@ export default function EmployeeSidebar({
       hasPermission(role, perms, "manage_requests");
     navItems.push({ label: isManager ? "المهام والمنجزات" : "مهامي", href: "/dashboard/tasks", icon: CheckSquare });
   }
-  if (can("manage_requests")) {
+  if (can("view_requests")) {
     navItems.push({ label: "الطلبات", href: "/dashboard/requests", icon: Send, badge: unreadRequests });
   }
   if (can("manage_employees")) {

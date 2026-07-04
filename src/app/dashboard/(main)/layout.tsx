@@ -18,7 +18,7 @@ export default async function MainLayout({ children }: { children: React.ReactNo
 
   // عدد الإشعارات غير المقروءة لهذا المستخدم
   let unreadRequests = 0;
-  if (hasPermission(session.role, session.permissions || [], "manage_requests")) {
+  if (hasPermission(session.role, session.permissions || [], "view_requests")) {
     unreadRequests = await prisma.requestNotification.count({
       where: { employeeId: session.id, isRead: false },
     });

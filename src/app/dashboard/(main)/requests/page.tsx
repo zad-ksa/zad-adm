@@ -6,12 +6,17 @@ import RequestsClient from "./RequestsClient";
 
 export default async function RequestsPage() {
   const session = await getSession();
-  if (!session || !hasPermission(session.role, session.permissions || [], "manage_requests")) {
+  const perms = session?.permissions || [];
+
+  // يحتاج على الأقل view_requests (أو manage_requests الذي يشملها)
+  if (!session || !hasPermission(session.role, perms, "view_requests")) {
     redirect("/dashboard");
   }
 
-  // الإدارة التنفيذية ترى طلبات الجميع — الباقون يرون طلباتهم فقط
-  const isExec = EXECUTIVE_ROLES.includes(session.role) || (session.permissions || []).includes("developer_mode");
+  // isExec = لديه صلاحية الاعتماد والرفض ورؤية طلبات الجميع
+  const isExec =
+    hasPermission(session.role, perms, "manage_requests") ||
+    perms.includes("developer_mode");
 
   // علّم إشعاراتك مقروءة عند فتح الصفحة
   await prisma.requestNotification.updateMany({
@@ -20,7 +25,6 @@ export default async function RequestsPage() {
   });
 
   if (isExec) {
-    // الإدارة: جلب كل الطلبات مرتبة بالأهمية
     const priorityOrder: Record<string, number> = { URGENT: 0, HIGH: 1, MEDIUM: 2, LOW: 3 };
 
     const requests = await prisma.request.findMany({
@@ -45,7 +49,6 @@ export default async function RequestsPage() {
 
     return <RequestsClient requests={sorted as any} isExec={true} sessionId={session.id} />;
   } else {
-    // الموظف: طلباته فقط
     const requests = await prisma.request.findMany({
       where: { createdById: session.id },
       include: {

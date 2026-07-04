@@ -5,6 +5,10 @@ import { getSession } from "@/lib/auth";
 import { hasPermission } from "@/lib/permissions";
 import { revalidatePath } from "next/cache";
 
+function canViewRequests(role: string, permissions: string[]) {
+  return hasPermission(role, permissions, "view_requests");
+}
+
 function isExec(role: string, permissions: string[]) {
   return hasPermission(role, permissions, "manage_requests");
 }
@@ -23,7 +27,7 @@ export async function createRequest(data: {
   priority: "LOW" | "MEDIUM" | "HIGH" | "URGENT";
 }) {
   const session = await requireSession();
-  if (!hasPermission(session.role, session.permissions || [], "manage_requests")) {
+  if (!canViewRequests(session.role, session.permissions || [])) {
     throw new Error("غير مصرح");
   }
 
@@ -66,7 +70,7 @@ export async function createRequest(data: {
 // ── جلب طلبات المستخدم الحالي ─────────────────────────────────────────────────
 export async function getMyRequests() {
   const session = await requireSession();
-  if (!hasPermission(session.role, session.permissions || [], "manage_requests")) {
+  if (!canViewRequests(session.role, session.permissions || [])) {
     throw new Error("غير مصرح");
   }
 
@@ -243,6 +247,7 @@ export async function getUnreadNotificationsCount() {
 // ── تعليم الإشعارات مقروءة (عند فتح الصفحة) ─────────────────────────────────
 export async function markNotificationsRead() {
   const session = await requireSession();
+  if (!canViewRequests(session.role, session.permissions || [])) return;
   await prisma.requestNotification.updateMany({
     where: { employeeId: session.id, isRead: false },
     data: { isRead: true },

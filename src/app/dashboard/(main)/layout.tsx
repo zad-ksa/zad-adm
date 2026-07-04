@@ -17,8 +17,11 @@ export default async function MainLayout({ children }: { children: React.ReactNo
   }
 
   // عدد الإشعارات غير المقروءة لهذا المستخدم
+  const EXEC_ROLES = ["ADMIN", "EXECUTIVE_DIRECTOR", "GENERAL_MANAGER", "ADMINISTRATIVE_SECRETARIAT"];
   let unreadRequests = 0;
-  if (hasPermission(session.role, session.permissions || [], "manage_requests")) {
+  const canRequests = EXEC_ROLES.includes(session.role) ||
+    hasPermission(session.role, session.permissions || [], "manage_requests");
+  if (canRequests) {
     unreadRequests = await prisma.requestNotification.count({
       where: { employeeId: session.id, isRead: false },
     });

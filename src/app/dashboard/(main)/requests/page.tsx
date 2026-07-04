@@ -9,7 +9,9 @@ const EXEC_ROLES = ["ADMIN", "EXECUTIVE_DIRECTOR", "GENERAL_MANAGER", "ADMINISTR
 
 export default async function RequestsPage() {
   const session = await getSession();
-  if (!session || !hasPermission(session.role, session.permissions || [], "manage_requests")) {
+  const canAccess = EXEC_ROLES.includes(session.role) ||
+    hasPermission(session.role, session.permissions || [], "manage_requests");
+  if (!session || !canAccess) {
     redirect("/dashboard");
   }
 

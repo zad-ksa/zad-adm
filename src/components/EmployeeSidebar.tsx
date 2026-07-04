@@ -119,7 +119,8 @@ export default function EmployeeSidebar({
       ["EXECUTIVE_DIRECTOR", "GENERAL_MANAGER", "ADMINISTRATIVE_SECRETARIAT"].includes(role);
     navItems.push({ label: isManager ? "المهام والمنجزات" : "مهامي", href: "/dashboard/tasks", icon: CheckSquare });
   }
-  if (can("manage_requests")) {
+  const isExecRole = ["EXECUTIVE_DIRECTOR", "GENERAL_MANAGER", "ADMINISTRATIVE_SECRETARIAT", "ADMIN"].includes(role);
+  if (isExecRole || can("manage_requests")) {
     navItems.push({ label: "الطلبات", href: "/dashboard/requests", icon: Send, badge: unreadRequests });
   }
   if (can("manage_employees")) {

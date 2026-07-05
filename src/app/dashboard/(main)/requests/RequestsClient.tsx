@@ -14,7 +14,7 @@ import { useRouter } from "next/navigation";
 
 // ── الأقسام ───────────────────────────────────────────────────────────────────
 const CATEGORIES = [
-  { key: "زاد",                   label: "إدارة زاد",               color: "text-blue-600 dark:text-blue-400",       bg: "bg-blue-50 dark:bg-blue-900/20",       border: "border-blue-400" },
+  { key: "زاد",                   label: "إدارة زاد",               color: "text-primary dark:text-primary/60",       bg: "bg-primary/10 dark:bg-primary/20",       border: "border-primary/50" },
   { key: "التخطيط الاستراتيجي",   label: "التخطيط الاستراتيجي",    color: "text-indigo-600 dark:text-indigo-400",   bg: "bg-indigo-50 dark:bg-indigo-900/20",   border: "border-indigo-400" },
   { key: "الحوكمة",               label: "الحوكمة",                 color: "text-violet-600 dark:text-violet-400",   bg: "bg-violet-50 dark:bg-violet-900/20",   border: "border-violet-400" },
   { key: "تنمية الموارد المالية", label: "تنمية الموارد المالية",   color: "text-emerald-600 dark:text-emerald-400", bg: "bg-emerald-50 dark:bg-emerald-900/20", border: "border-emerald-400" },
@@ -80,7 +80,7 @@ const PRIORITY_CONFIG: Record<Priority, { label: string; color: string; bg: stri
 };
 
 const STATUS_CONFIG: Record<Status, { label: string; color: string; bg: string; icon: any }> = {
-  PENDING:  { label: "قيد المراجعة", color: "text-blue-600 dark:text-blue-400",      bg: "bg-blue-50 dark:bg-blue-900/20",      icon: Clock },
+  PENDING:  { label: "قيد المراجعة", color: "text-primary dark:text-primary/60",      bg: "bg-primary/10 dark:bg-primary/20",      icon: Clock },
   RETURNED: { label: "مرجع للتعديل", color: "text-amber-600 dark:text-amber-400",    bg: "bg-amber-50 dark:bg-amber-900/20",    icon: CornerUpLeft },
   APPROVED: { label: "معتمد",        color: "text-emerald-600 dark:text-emerald-400",bg: "bg-emerald-50 dark:bg-emerald-900/20",icon: CheckCircle2 },
   REJECTED: { label: "مرفوض",        color: "text-red-600 dark:text-red-400",        bg: "bg-red-50 dark:bg-red-900/20",        icon: X },
@@ -88,13 +88,13 @@ const STATUS_CONFIG: Record<Status, { label: string; color: string; bg: string; 
 };
 
 const ACTION_CONFIG: Record<Action, { label: string; color: string; icon: any }> = {
-  SUBMITTED:     { label: "رُفع الطلب",             color: "text-blue-500",    icon: Send },
+  SUBMITTED:     { label: "رُفع الطلب",             color: "text-primary/80",    icon: Send },
   FORWARDED:     { label: "مُرِّر للمستوى التالي",  color: "text-indigo-500",  icon: ArrowRight },
   APPROVED_FINAL:{ label: "اعتُمد نهائياً",          color: "text-emerald-500", icon: CheckCircle2 },
   REJECTED:      { label: "رُفض",                   color: "text-red-500",     icon: X },
   RETURNED:      { label: "أُرجع للتعديل",           color: "text-amber-500",   icon: CornerUpLeft },
   DELEGATED:     { label: "حُوِّل التنفيذ",          color: "text-purple-500",  icon: UserCheck },
-  RESUBMITTED:   { label: "أُعيد إرساله",            color: "text-blue-400",    icon: RefreshCw },
+  RESUBMITTED:   { label: "أُعيد إرساله",            color: "text-primary/60",    icon: RefreshCw },
 };
 
 const ROLE_LABELS: Record<string, string> = {
@@ -153,7 +153,7 @@ function RequestForm({
       <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-2xl w-full max-w-lg flex flex-col max-h-[90vh]">
         <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100 dark:border-slate-800 shrink-0">
           <h2 className="font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
-            <Send className="w-4 h-4 text-blue-500" />
+            <Send className="w-4 h-4 text-primary/80" />
             {isResubmit ? "إعادة إرسال الطلب" : "طلب جديد"}
           </h2>
           <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400"><X className="w-4 h-4" /></button>
@@ -163,7 +163,7 @@ function RequestForm({
             <label className="text-xs font-bold text-slate-500 dark:text-slate-400 mb-1.5 block">عنوان الطلب *</label>
             <input value={title} onChange={e => setTitle(e.target.value)}
               placeholder="أدخل عنوان الطلب..."
-              className="w-full border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-sm bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+              className="w-full border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-sm bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-primary" />
           </div>
           <div>
             <label className="text-xs font-bold text-slate-500 dark:text-slate-400 mb-1.5 block">القسم <span className="font-normal text-slate-400">(اختياري)</span></label>
@@ -203,7 +203,7 @@ function RequestForm({
             </label>
             <textarea value={body} onChange={e => setBody(e.target.value)} rows={4}
               placeholder="اكتب تفاصيل طلبك هنا..."
-              className="w-full border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-sm bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none" />
+              className="w-full border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-sm bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-primary resize-none" />
           </div>
           <div>
             <label className="text-xs font-bold text-slate-500 dark:text-slate-400 mb-1.5 flex items-center gap-1">
@@ -211,14 +211,14 @@ function RequestForm({
             </label>
             <input value={fileUrl} onChange={e => setFileUrl(e.target.value)}
               placeholder="https://drive.google.com/..." dir="ltr"
-              className="w-full border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-sm bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+              className="w-full border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-sm bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-primary" />
           </div>
           {error && <p className="text-xs text-red-500 flex items-center gap-1"><AlertCircle className="w-3.5 h-3.5" />{error}</p>}
         </div>
         <div className="px-5 py-4 border-t border-slate-100 dark:border-slate-800 flex justify-end gap-2 shrink-0">
           <button onClick={onClose} className="px-4 py-2 text-sm text-slate-500 hover:text-slate-700 dark:hover:text-slate-300">إلغاء</button>
           <button onClick={handleSubmit} disabled={isPending}
-            className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white px-5 py-2 rounded-xl text-sm font-bold transition-colors">
+            className="flex items-center gap-2 bg-primary hover:bg-primary/90 disabled:opacity-50 text-white px-5 py-2 rounded-xl text-sm font-bold transition-colors">
             {isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
             {isPending ? "جاري الإرسال..." : "إرسال الطلب"}
           </button>
@@ -287,7 +287,7 @@ function ReviewModal({
       <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-2xl w-full max-w-md flex flex-col max-h-[90vh]">
         <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100 dark:border-slate-800 shrink-0">
           <h2 className="font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
-            <ShieldCheck className="w-4 h-4 text-blue-500" /> مراجعة الطلب
+            <ShieldCheck className="w-4 h-4 text-primary/80" /> مراجعة الطلب
           </h2>
           <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400"><X className="w-4 h-4" /></button>
         </div>
@@ -336,7 +336,7 @@ function ReviewModal({
             </label>
             <textarea value={note} onChange={e => setNote(e.target.value)} rows={3}
               placeholder="اكتب ملاحظاتك..."
-              className="w-full border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-sm bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none" />
+              className="w-full border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-sm bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-primary resize-none" />
           </div>
 
           {error && <p className="text-xs text-red-500 flex items-center gap-1"><AlertCircle className="w-3.5 h-3.5" />{error}</p>}
@@ -377,7 +377,7 @@ function RequestTimeline({ logs }: { logs: RequestLog[] }) {
                   log.action === "RETURNED" ? "bg-amber-100 dark:bg-amber-900/40" :
                   log.action === "DELEGATED" ? "bg-purple-100 dark:bg-purple-900/40" :
                   log.action === "FORWARDED" ? "bg-indigo-100 dark:bg-indigo-900/40" :
-                  "bg-blue-100 dark:bg-blue-900/40"
+                  "bg-primary/10 dark:bg-primary/30"
                 }`}>
                   <Icon className={`w-3.5 h-3.5 ${cfg.color}`} />
                 </div>
@@ -458,7 +458,7 @@ function RequestCard({
             )}
             <span className="flex items-center gap-1"><Calendar className="w-3 h-3" />{timeAgo(request.createdAt)}</span>
             {request.status === "PENDING" && request.currentReviewer && (
-              <span className="flex items-center gap-1 text-blue-500 font-bold">
+              <span className="flex items-center gap-1 text-primary/80 font-bold">
                 <ChevronRight className="w-3 h-3" /> عند: {request.currentReviewer.name}
               </span>
             )}
@@ -486,7 +486,7 @@ function RequestCard({
           )}
           {canReview && (
             <button onClick={() => onReview(request)}
-              className="flex items-center gap-1 text-xs font-bold bg-blue-600 hover:bg-blue-700 text-white px-2.5 py-1.5 rounded-lg transition-colors">
+              className="flex items-center gap-1 text-xs font-bold bg-primary hover:bg-primary/90 text-white px-2.5 py-1.5 rounded-lg transition-colors">
               <ShieldCheck className="w-3 h-3" /> مراجعة
             </button>
           )}
@@ -518,7 +518,7 @@ function RequestCard({
           )}
           {request.fileUrl && (
             <a href={request.fileUrl} target="_blank" rel="noopener noreferrer"
-              className="flex items-center gap-2 text-xs font-bold text-blue-600 dark:text-blue-400 hover:underline bg-blue-50 dark:bg-blue-900/20 rounded-xl px-3 py-2">
+              className="flex items-center gap-2 text-xs font-bold text-primary dark:text-primary/60 hover:underline bg-primary/10 dark:bg-primary/20 rounded-xl px-3 py-2">
               <ExternalLink className="w-3.5 h-3.5 shrink-0" /> فتح الملف المرفق
             </a>
           )}
@@ -583,8 +583,8 @@ export default function RequestsClient({ requests: initial, isExec, sessionId, a
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <div className="w-8 h-8 bg-blue-100 dark:bg-blue-900/30 rounded-lg flex items-center justify-center">
-            <Send className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+          <div className="w-8 h-8 bg-primary/10 dark:bg-primary/20 rounded-lg flex items-center justify-center">
+            <Send className="w-4 h-4 text-primary dark:text-primary/60" />
           </div>
           <div>
             <h1 className="text-base font-bold text-slate-800 dark:text-slate-100">
@@ -596,7 +596,7 @@ export default function RequestsClient({ requests: initial, isExec, sessionId, a
           </div>
         </div>
         <button onClick={() => setShowForm(true)}
-          className="flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-lg text-xs font-bold transition-colors">
+          className="flex items-center gap-1.5 bg-primary hover:bg-primary/90 text-white px-3 py-1.5 rounded-lg text-xs font-bold transition-colors">
           <Plus className="w-3.5 h-3.5" /> طلب جديد
         </button>
       </div>
@@ -613,7 +613,7 @@ export default function RequestsClient({ requests: initial, isExec, sessionId, a
         ] as const).map(opt => (
           <button key={opt.key} onClick={() => setFilterStatus(opt.key)}
             className={`flex items-center gap-1 px-3 py-1 rounded-full text-[11px] font-bold transition-colors ${
-              filterStatus === opt.key ? "bg-blue-600 text-white"
+              filterStatus === opt.key ? "bg-primary text-white"
               : "bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-600"
             }`}>
             {opt.label}
@@ -634,7 +634,7 @@ export default function RequestsClient({ requests: initial, isExec, sessionId, a
             {filterStatus === "ALL" ? (isExec ? "لا توجد طلبات بعد" : "لم ترفع أي طلب بعد") : "لا توجد طلبات بهذه الحالة"}
           </p>
           {filterStatus === "ALL" && (
-            <button onClick={() => setShowForm(true)} className="mt-3 text-xs text-blue-500 hover:underline font-bold">
+            <button onClick={() => setShowForm(true)} className="mt-3 text-xs text-primary/80 hover:underline font-bold">
               ارفع طلبك الأول
             </button>
           )}

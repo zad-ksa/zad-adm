@@ -11,10 +11,7 @@ export const EXECUTIVE_ROLES = [
 ];
 
 // Permissions granted automatically to EXECUTIVE_ROLES without explicit assignment
-const EXECUTIVE_AUTO_PERMISSIONS = [
-  "manage_requests",
-  "view_requests",
-];
+const EXECUTIVE_AUTO_PERMISSIONS: string[] = [];
 
 // All available permissions grouped by category
 export const PERMISSION_GROUPS = [

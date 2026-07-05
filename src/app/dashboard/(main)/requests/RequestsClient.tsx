@@ -545,7 +545,7 @@ export default function RequestsClient({ requests: initial, isExec, sessionId, a
   const [showForm, setShowForm] = useState(false);
   const [resubmitReq, setResubmitReq] = useState<Request | null>(null);
   const [reviewingReq, setReviewingReq] = useState<Request | null>(null);
-  const [filterStatus, setFilterStatus] = useState<Status | "ALL">("ALL");
+  const [filterStatus, setFilterStatus] = useState<Status | "ALL">("PENDING");
   const [loading, setLoading] = useState(false);
 
   // جلب البيانات الحية مباشرة من server action
@@ -621,8 +621,8 @@ export default function RequestsClient({ requests: initial, isExec, sessionId, a
       {/* فلاتر الحالة */}
       <div className="flex items-center gap-1.5 flex-wrap">
         {([
-          { key: "ALL",      label: "الكل" },
           { key: "PENDING",  label: "قيد المراجعة" },
+          { key: "ALL",      label: "الكل" },
           { key: "RETURNED", label: "مرجع" },
           { key: "APPROVED", label: "معتمد" },
           { key: "DELEGATED",label: "محوّل" },

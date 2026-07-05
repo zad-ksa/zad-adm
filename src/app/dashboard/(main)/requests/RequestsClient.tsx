@@ -3,7 +3,7 @@
 import { useState, useTransition, useEffect, useCallback } from "react";
 import {
   Plus, X, Send, Loader2, AlertCircle, CheckCircle2, Clock,
-  ChevronDown, ChevronUp, FileText, Link2, ExternalLink, Trash2,
+  FileText, Link2, ExternalLink, Trash2,
   RefreshCw, MessageSquare, CornerUpLeft, Check, ShieldCheck,
   User, Calendar, ArrowRight, GitBranch, UserCheck, ChevronRight,
 } from "lucide-react";
@@ -408,7 +408,6 @@ function RequestCard({
   onReview: (r: Request) => void; onResubmit: (r: Request) => void;
   onDelete: (id: string) => void;
 }) {
-  const [expanded, setExpanded] = useState(false);
   const status = STATUS_CONFIG[request.status];
   const priority = PRIORITY_CONFIG[request.priority];
   const StatusIcon = status.icon;
@@ -416,17 +415,15 @@ function RequestCard({
   const isOwner = request.createdBy ? request.createdBy.id === sessionId : true;
   const canDelete = isExec || (isOwner && ["PENDING", "RETURNED"].includes(request.status));
 
-  // زر المراجعة: يظهر فقط إذا كان هذا الشخص هو currentReviewer
-  // أو إذا لم توجد سلسلة وكان الشخص exec
   const isCurrentReviewer =
     request.status === "PENDING" && isExec && (
-      request.currentReviewerId === null   // بدون workflow → كل exec يمكنه
+      request.currentReviewerId === null
         ? true
-        : request.currentReviewerId === sessionId  // مع workflow → فقط صاحب الدور
+        : request.currentReviewerId === sessionId
     );
 
-  const hasDetails = !!(request.body || request.fileUrl || request.reviewNote || request.logs.length > 0);
   const catInfo = CATEGORIES.find(c => c.key === request.category);
+  const hasDetails = !!(request.body || request.fileUrl || request.reviewNote || request.logs.length > 0);
 
   return (
     <div className={`bg-white dark:bg-slate-800 rounded-xl border-r-4 ${priority.border} border border-slate-100 dark:border-slate-700 transition-shadow hover:shadow-sm`}>
@@ -479,13 +476,6 @@ function RequestCard({
         </div>
 
         <div className="flex items-center gap-1 shrink-0">
-          {hasDetails && (
-            <button onClick={() => setExpanded(v => !v)}
-              className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-400 transition-colors"
-              title={expanded ? "إخفاء" : "عرض التفاصيل"}>
-              {expanded ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
-            </button>
-          )}
           {isCurrentReviewer && (
             <button onClick={() => onReview(request)}
               className="flex items-center gap-1 text-xs font-bold bg-blue-600 hover:bg-blue-700 text-white px-2.5 py-1.5 rounded-lg transition-colors">
@@ -507,7 +497,7 @@ function RequestCard({
         </div>
       </div>
 
-      {expanded && (
+      {hasDetails && (
         <div className="px-4 pb-4 space-y-3 border-t border-slate-100 dark:border-slate-700/50 pt-3">
           {request.body && (
             <div className="bg-slate-50 dark:bg-slate-800/50 rounded-xl p-3">

@@ -1,0 +1,16 @@
+const fs = require('fs');
+let c = fs.readFileSync('src/app/dashboard/(main)/requests/RequestsClient.tsx', 'utf8');
+c = c.replace(/text-blue-600/g, 'text-primary');
+c = c.replace(/text-blue-500/g, 'text-primary/80');
+c = c.replace(/text-blue-400/g, 'text-primary/60');
+c = c.replace(/bg-blue-600/g, 'bg-primary');
+c = c.replace(/bg-blue-700/g, 'bg-primary/90');
+c = c.replace(/bg-blue-50/g, 'bg-primary/10');
+c = c.replace(/bg-blue-100/g, 'bg-primary/10');
+c = c.replace(new RegExp('bg-blue-900/20', 'g'), 'bg-primary/20');
+c = c.replace(new RegExp('bg-blue-900/30', 'g'), 'bg-primary/20');
+c = c.replace(new RegExp('bg-blue-900/40', 'g'), 'bg-primary/30');
+c = c.replace(/ring-blue-500/g, 'ring-primary');
+c = c.replace(/border-blue-400/g, 'border-primary/50');
+fs.writeFileSync('src/app/dashboard/(main)/requests/RequestsClient.tsx', c);
+console.log('Done');

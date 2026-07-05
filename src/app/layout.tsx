@@ -1,4 +1,4 @@
-﻿import type { Metadata } from "next";
+import type { Metadata } from "next";
 import { Inter, Noto_Kufi_Arabic } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next"
@@ -19,7 +19,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ar" dir="rtl" suppressHydrationWarning>
-      <body className={`${notoKufi.className} bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-100 antialiased`}>
+      <body suppressHydrationWarning className={`${notoKufi.className} bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-100 antialiased`}>
         <ThemeProvider
           attribute="class"
           defaultTheme="light"

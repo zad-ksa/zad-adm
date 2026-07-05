@@ -408,6 +408,7 @@ function RequestCard({
   onReview: (r: Request) => void; onResubmit: (r: Request) => void;
   onDelete: (id: string) => void;
 }) {
+  const [expanded, setExpanded] = useState(false);
   const status = STATUS_CONFIG[request.status];
   const priority = PRIORITY_CONFIG[request.priority];
   const StatusIcon = status.icon;
@@ -426,7 +427,8 @@ function RequestCard({
   const hasDetails = !!(request.body || request.fileUrl || request.reviewNote || request.logs.length > 0);
 
   return (
-    <div className={`bg-white dark:bg-slate-800 rounded-xl border-r-4 ${priority.border} border border-slate-100 dark:border-slate-700 transition-shadow hover:shadow-sm`}>
+    <div className={`bg-white dark:bg-slate-800 rounded-xl border-r-4 ${priority.border} border border-slate-100 dark:border-slate-700 transition-shadow hover:shadow-sm ${hasDetails ? "cursor-pointer" : ""}`}
+      onClick={hasDetails ? () => setExpanded(v => !v) : undefined}>
       <div className="flex items-start gap-3 p-3">
         <div className={`mt-0.5 flex items-center justify-center w-7 h-7 rounded-lg shrink-0 ${priority.bg}`}>
           <span className="text-sm">{priority.icon}</span>
@@ -475,7 +477,7 @@ function RequestCard({
           </div>
         </div>
 
-        <div className="flex items-center gap-1 shrink-0">
+        <div className="flex items-center gap-1 shrink-0" onClick={e => e.stopPropagation()}>
           {isCurrentReviewer && (
             <button onClick={() => onReview(request)}
               className="flex items-center gap-1 text-xs font-bold bg-blue-600 hover:bg-blue-700 text-white px-2.5 py-1.5 rounded-lg transition-colors">
@@ -497,7 +499,7 @@ function RequestCard({
         </div>
       </div>
 
-      {hasDetails && (
+      {hasDetails && expanded && (
         <div className="px-4 pb-4 space-y-3 border-t border-slate-100 dark:border-slate-700/50 pt-3">
           {request.body && (
             <div className="bg-slate-50 dark:bg-slate-800/50 rounded-xl p-3">

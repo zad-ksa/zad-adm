@@ -1,14 +1,15 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useTransition, useEffect, useCallback } from "react";
 import {
   Plus, X, Send, Loader2, AlertCircle, CheckCircle2, Clock,
   ChevronDown, ChevronUp, FileText, Link2, ExternalLink, Trash2,
-  RefreshCw, MessageSquare, CornerUpLeft, Check, ShieldCheck, Flag,
+  RefreshCw, MessageSquare, CornerUpLeft, Check, ShieldCheck,
   User, Calendar, ArrowRight, GitBranch, UserCheck, ChevronRight,
 } from "lucide-react";
 import {
   createRequest, reviewRequest, resubmitRequest, deleteRequest,
+  getMyRequests, getAllRequests,
 } from "@/app/actions/requests";
 import { useRouter } from "next/navigation";
 
@@ -56,6 +57,7 @@ type Request = {
   reviewedAt: string | Date | null;
   createdAt: string | Date;
   currentStepOrder: number;
+  currentReviewerId: string | null;
   createdBy?: Employee;
   reviewedBy?: Employee | null;
   currentReviewer?: Employee | null;
@@ -235,25 +237,29 @@ function ReviewModal({
   request: Request; onClose: () => void; onDone: () => void; allEmployees: Employee[];
 }) {
   type ReviewAction = "APPROVED_FINAL" | "FORWARDED" | "REJECTED" | "RETURNED" | "DELEGATED";
-  const [action, setAction] = useState<ReviewAction>("FORWARDED");
+
+  // الإجراء الافتراضي: تمرير إن كانت سلسلة، وإلا اعتماد
+  const defaultAction: ReviewAction = request.chain ? "FORWARDED" : "APPROVED_FINAL";
+  const [action, setAction] = useState<ReviewAction>(defaultAction);
   const [note, setNote] = useState("");
   const [delegatedToId, setDelegatedToId] = useState("");
   const [error, setError] = useState("");
   const [isPending, startTransition] = useTransition();
 
-  // هل توجد خطوة تالية في السلسلة؟
-  const hasNextStep = !!request.chain;
-
+  // الإجراءات المتاحة — التمرير فقط إذا توجد سلسلة
   const actions: { value: ReviewAction; label: string; icon: any; color: string; desc: string }[] = [
-    ...(hasNextStep ? [{ value: "FORWARDED" as ReviewAction, label: "تمرير للأعلى", icon: ArrowRight, color: "indigo", desc: "إرسال للمستوى التالي في السلسلة" }] : []),
+    ...(request.chain ? [{ value: "FORWARDED" as ReviewAction, label: "تمرير للأعلى", icon: ArrowRight, color: "indigo", desc: "إرسال للمستوى التالي في السلسلة" }] : []),
     { value: "APPROVED_FINAL", label: "اعتماد نهائي", icon: Check, color: "emerald", desc: "اعتماد الطلب وإغلاقه" },
     { value: "RETURNED", label: "إرجاع للتعديل", icon: CornerUpLeft, color: "amber", desc: "إرجاع للمرسل مع ملاحظات" },
     { value: "REJECTED", label: "رفض", icon: X, color: "red", desc: "رفض الطلب نهائياً" },
     { value: "DELEGATED", label: "تحويل التنفيذ", icon: UserCheck, color: "purple", desc: "تحويل تنفيذ الطلب لشخص آخر" },
   ];
 
+  // الملاحظات إلزامية فقط عند الإرجاع أو الرفض
+  const noteRequired = action === "RETURNED" || action === "REJECTED";
+
   function handleSubmit() {
-    if (action !== "APPROVED_FINAL" && action !== "DELEGATED" && !note.trim()) {
+    if (noteRequired && !note.trim()) {
       setError("يجب ذكر السبب أو الملاحظات"); return;
     }
     if (action === "DELEGATED" && !delegatedToId) {
@@ -296,14 +302,11 @@ function ReviewModal({
             {request.title}
           </p>
 
-          {/* اختيار الإجراء */}
           <div className="grid grid-cols-2 gap-2">
             {actions.map(opt => (
               <button key={opt.value} type="button" onClick={() => setAction(opt.value)}
                 className={`flex items-center gap-2 py-2.5 px-3 rounded-xl border text-xs font-bold transition-all text-right ${
-                  action === opt.value
-                    ? `${colorMap[opt.color]} ring-2`
-                    : "border-slate-200 dark:border-slate-700 text-slate-400 hover:border-slate-300"
+                  action === opt.value ? `${colorMap[opt.color]} ring-2` : "border-slate-200 dark:border-slate-700 text-slate-400 hover:border-slate-300"
                 }`}>
                 <opt.icon className="w-4 h-4 shrink-0" />
                 <div>
@@ -314,7 +317,6 @@ function ReviewModal({
             ))}
           </div>
 
-          {/* اختيار الشخص عند التحويل */}
           {action === "DELEGATED" && (
             <div>
               <label className="text-xs font-bold text-slate-500 dark:text-slate-400 mb-1.5 block">الشخص المحوَّل إليه *</label>
@@ -328,14 +330,12 @@ function ReviewModal({
             </div>
           )}
 
-          {/* الملاحظات */}
           <div>
             <label className="text-xs font-bold text-slate-500 dark:text-slate-400 mb-1.5 block">
-              {action === "APPROVED_FINAL" || action === "FORWARDED" || action === "DELEGATED"
-                ? "ملاحظات (اختياري)" : "السبب / الملاحظات *"}
+              {noteRequired ? "السبب / الملاحظات *" : "ملاحظات (اختياري)"}
             </label>
             <textarea value={note} onChange={e => setNote(e.target.value)} rows={3}
-              placeholder="اكتب ملاحظاتك..."
+              placeholder={noteRequired ? "اذكر السبب أو التعديلات المطلوبة..." : "يمكنك إضافة ملاحظة..."}
               className="w-full border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-sm bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none" />
           </div>
 
@@ -354,29 +354,28 @@ function ReviewModal({
   );
 }
 
-// ── خط سير الطلب (Timeline) ───────────────────────────────────────────────────
+// ── خط سير الطلب ─────────────────────────────────────────────────────────────
 function RequestTimeline({ logs }: { logs: RequestLog[] }) {
   if (logs.length === 0) return null;
   return (
-    <div className="space-y-0 mt-2">
+    <div className="mt-2">
       <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2 flex items-center gap-1">
         <GitBranch className="w-3 h-3" /> خط سير الطلب
       </p>
       <div className="relative">
-        {/* خط عمودي */}
         <div className="absolute right-[14px] top-2 bottom-2 w-px bg-slate-200 dark:bg-slate-700" />
         <div className="space-y-3">
-          {logs.map((log, i) => {
+          {logs.map(log => {
             const cfg = ACTION_CONFIG[log.action];
             const Icon = cfg.icon;
             return (
               <div key={log.id} className="flex items-start gap-3 relative">
                 <div className={`shrink-0 w-7 h-7 rounded-full flex items-center justify-center z-10 ring-2 ring-white dark:ring-slate-900 ${
                   log.action === "APPROVED_FINAL" ? "bg-emerald-100 dark:bg-emerald-900/40" :
-                  log.action === "REJECTED" ? "bg-red-100 dark:bg-red-900/40" :
-                  log.action === "RETURNED" ? "bg-amber-100 dark:bg-amber-900/40" :
-                  log.action === "DELEGATED" ? "bg-purple-100 dark:bg-purple-900/40" :
-                  log.action === "FORWARDED" ? "bg-indigo-100 dark:bg-indigo-900/40" :
+                  log.action === "REJECTED"       ? "bg-red-100 dark:bg-red-900/40" :
+                  log.action === "RETURNED"       ? "bg-amber-100 dark:bg-amber-900/40" :
+                  log.action === "DELEGATED"      ? "bg-purple-100 dark:bg-purple-900/40" :
+                  log.action === "FORWARDED"      ? "bg-indigo-100 dark:bg-indigo-900/40" :
                   "bg-blue-100 dark:bg-blue-900/40"
                 }`}>
                   <Icon className={`w-3.5 h-3.5 ${cfg.color}`} />
@@ -385,9 +384,7 @@ function RequestTimeline({ logs }: { logs: RequestLog[] }) {
                   <div className="flex items-center gap-1.5 flex-wrap">
                     <span className="text-xs font-bold text-slate-700 dark:text-slate-200">{log.actor.name}</span>
                     <span className={`text-[10px] font-bold ${cfg.color}`}>{cfg.label}</span>
-                    {log.delegatedTo && (
-                      <span className="text-[10px] text-purple-500 font-bold">→ {log.delegatedTo.name}</span>
-                    )}
+                    {log.delegatedTo && <span className="text-[10px] text-purple-500 font-bold">→ {log.delegatedTo.name}</span>}
                     <span className="text-[10px] text-slate-400 dark:text-slate-500 mr-auto">{timeAgo(log.createdAt)}</span>
                   </div>
                   {log.note && (
@@ -405,11 +402,11 @@ function RequestTimeline({ logs }: { logs: RequestLog[] }) {
 
 // ── بطاقة الطلب ───────────────────────────────────────────────────────────────
 function RequestCard({
-  request, isExec, sessionId, allEmployees, onReview, onResubmit, onDelete, onRefresh,
+  request, isExec, sessionId, allEmployees, onReview, onResubmit, onDelete,
 }: {
   request: Request; isExec: boolean; sessionId: string; allEmployees: Employee[];
   onReview: (r: Request) => void; onResubmit: (r: Request) => void;
-  onDelete: (id: string) => void; onRefresh: () => void;
+  onDelete: (id: string) => void;
 }) {
   const [expanded, setExpanded] = useState(false);
   const status = STATUS_CONFIG[request.status];
@@ -418,12 +415,21 @@ function RequestCard({
 
   const isOwner = request.createdBy ? request.createdBy.id === sessionId : true;
   const canDelete = isExec || (isOwner && ["PENDING", "RETURNED"].includes(request.status));
-  const canReview = isExec && request.status === "PENDING";
+
+  // زر المراجعة: يظهر فقط إذا كان هذا الشخص هو currentReviewer
+  // أو إذا لم توجد سلسلة وكان الشخص exec
+  const isCurrentReviewer =
+    request.status === "PENDING" && isExec && (
+      request.currentReviewerId === null   // بدون workflow → كل exec يمكنه
+        ? true
+        : request.currentReviewerId === sessionId  // مع workflow → فقط صاحب الدور
+    );
+
   const hasDetails = !!(request.body || request.fileUrl || request.reviewNote || request.logs.length > 0);
+  const catInfo = CATEGORIES.find(c => c.key === request.category);
 
   return (
     <div className={`bg-white dark:bg-slate-800 rounded-xl border-r-4 ${priority.border} border border-slate-100 dark:border-slate-700 transition-shadow hover:shadow-sm`}>
-      {/* رأس البطاقة */}
       <div className="flex items-start gap-3 p-3">
         <div className={`mt-0.5 flex items-center justify-center w-7 h-7 rounded-lg shrink-0 ${priority.bg}`}>
           <span className="text-sm">{priority.icon}</span>
@@ -438,16 +444,13 @@ function RequestCard({
             <span className={`shrink-0 text-[10px] font-bold px-2 py-0.5 rounded-full ${priority.bg} ${priority.color}`}>
               {priority.label}
             </span>
+            {catInfo && (
+              <span className={`shrink-0 text-[10px] font-bold px-2 py-0.5 rounded-full border ${catInfo.bg} ${catInfo.color} ${catInfo.border}`}>
+                {catInfo.label}
+              </span>
+            )}
           </div>
 
-          {request.category && (() => {
-            const cat = CATEGORIES.find(c => c.key === request.category);
-            return cat ? (
-              <span className={`inline-flex mt-1 text-[10px] font-bold px-2 py-0.5 rounded-full border ${cat.bg} ${cat.color} ${cat.border}`}>
-                {cat.label}
-              </span>
-            ) : null;
-          })()}
           <div className="flex items-center gap-2 mt-1 flex-wrap text-[10px] text-slate-400 dark:text-slate-500">
             {isExec && request.createdBy && (
               <span className="flex items-center gap-1 font-medium text-slate-500 dark:text-slate-400">
@@ -475,7 +478,6 @@ function RequestCard({
           </div>
         </div>
 
-        {/* أزرار */}
         <div className="flex items-center gap-1 shrink-0">
           {hasDetails && (
             <button onClick={() => setExpanded(v => !v)}
@@ -484,7 +486,7 @@ function RequestCard({
               {expanded ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
             </button>
           )}
-          {canReview && (
+          {isCurrentReviewer && (
             <button onClick={() => onReview(request)}
               className="flex items-center gap-1 text-xs font-bold bg-blue-600 hover:bg-blue-700 text-white px-2.5 py-1.5 rounded-lg transition-colors">
               <ShieldCheck className="w-3 h-3" /> مراجعة
@@ -505,7 +507,6 @@ function RequestCard({
         </div>
       </div>
 
-      {/* التفاصيل المنسدلة */}
       {expanded && (
         <div className="px-4 pb-4 space-y-3 border-t border-slate-100 dark:border-slate-700/50 pt-3">
           {request.body && (
@@ -524,18 +525,18 @@ function RequestCard({
           )}
           {request.reviewNote && (
             <div className={`rounded-xl p-3 ${
-              request.status === "APPROVED" ? "bg-emerald-50 dark:bg-emerald-900/20" :
-              request.status === "RETURNED" ? "bg-amber-50 dark:bg-amber-900/20" :
+              request.status === "APPROVED"  ? "bg-emerald-50 dark:bg-emerald-900/20" :
+              request.status === "RETURNED"  ? "bg-amber-50 dark:bg-amber-900/20" :
               request.status === "DELEGATED" ? "bg-purple-50 dark:bg-purple-900/20" :
               "bg-red-50 dark:bg-red-900/20"}`}>
               <p className={`text-xs font-bold mb-1 flex items-center gap-1 ${
-                request.status === "APPROVED" ? "text-emerald-700 dark:text-emerald-400" :
-                request.status === "RETURNED" ? "text-amber-700 dark:text-amber-400" :
+                request.status === "APPROVED"  ? "text-emerald-700 dark:text-emerald-400" :
+                request.status === "RETURNED"  ? "text-amber-700 dark:text-amber-400" :
                 request.status === "DELEGATED" ? "text-purple-700 dark:text-purple-400" :
                 "text-red-700 dark:text-red-400"}`}>
                 <MessageSquare className="w-3 h-3" />
-                {request.status === "APPROVED" ? "ملاحظات الاعتماد" :
-                 request.status === "RETURNED" ? "ملاحظات الإرجاع" :
+                {request.status === "APPROVED"  ? "ملاحظات الاعتماد" :
+                 request.status === "RETURNED"  ? "ملاحظات الإرجاع" :
                  request.status === "DELEGATED" ? "ملاحظات التحويل" : "سبب الرفض"}
               </p>
               <p className="text-sm text-slate-700 dark:text-slate-200 leading-relaxed">{request.reviewNote}</p>
@@ -550,32 +551,52 @@ function RequestCard({
 
 // ── المكون الرئيسي ────────────────────────────────────────────────────────────
 export default function RequestsClient({ requests: initial, isExec, sessionId, allEmployees }: Props) {
-  const router = useRouter();
-  const [requests, setRequests] = useState(initial);
+  const [requests, setRequests] = useState<Request[]>(initial);
   const [showForm, setShowForm] = useState(false);
   const [resubmitReq, setResubmitReq] = useState<Request | null>(null);
   const [reviewingReq, setReviewingReq] = useState<Request | null>(null);
   const [filterStatus, setFilterStatus] = useState<Status | "ALL">("ALL");
-  const [isPending, startTransition] = useTransition();
+  const [loading, setLoading] = useState(false);
 
-  function refresh() {
-    startTransition(() => { router.refresh(); });
+  // جلب البيانات الحية مباشرة من server action
+  const fetchRequests = useCallback(async () => {
+    try {
+      const fresh = isExec ? await getAllRequests() : await getMyRequests();
+      setRequests(fresh as any);
+    } catch {}
+  }, [isExec]);
+
+  // polling كل 15 ثانية للإشعارات والتحديثات
+  useEffect(() => {
+    const interval = setInterval(fetchRequests, 15000);
+    return () => clearInterval(interval);
+  }, [fetchRequests]);
+
+  async function handleAction(fn: () => Promise<void>) {
+    setLoading(true);
+    try {
+      await fn();
+      await fetchRequests();
+    } catch (e: any) {
+      alert(e.message);
+    } finally {
+      setLoading(false);
+    }
   }
 
   async function handleDelete(id: string) {
     if (!confirm("هل تريد حذف هذا الطلب؟")) return;
-    try { await deleteRequest(id); refresh(); } catch (e: any) { alert(e.message); }
+    await handleAction(() => deleteRequest(id));
   }
 
   const filtered = filterStatus === "ALL" ? requests : requests.filter(r => r.status === filterStatus);
-
   const counts = {
-    ALL: requests.length,
-    PENDING: requests.filter(r => r.status === "PENDING").length,
+    ALL:      requests.length,
+    PENDING:  requests.filter(r => r.status === "PENDING").length,
     RETURNED: requests.filter(r => r.status === "RETURNED").length,
     APPROVED: requests.filter(r => r.status === "APPROVED").length,
     REJECTED: requests.filter(r => r.status === "REJECTED").length,
-    DELEGATED: requests.filter(r => r.status === "DELEGATED").length,
+    DELEGATED:requests.filter(r => r.status === "DELEGATED").length,
   };
 
   return (
@@ -595,20 +616,26 @@ export default function RequestsClient({ requests: initial, isExec, sessionId, a
             </p>
           </div>
         </div>
-        <button onClick={() => setShowForm(true)}
-          className="flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-lg text-xs font-bold transition-colors">
-          <Plus className="w-3.5 h-3.5" /> طلب جديد
-        </button>
+        <div className="flex items-center gap-2">
+          <button onClick={fetchRequests} disabled={loading}
+            className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-400 transition-colors" title="تحديث">
+            <RefreshCw className={`w-3.5 h-3.5 ${loading ? "animate-spin" : ""}`} />
+          </button>
+          <button onClick={() => setShowForm(true)}
+            className="flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-lg text-xs font-bold transition-colors">
+            <Plus className="w-3.5 h-3.5" /> طلب جديد
+          </button>
+        </div>
       </div>
 
       {/* فلاتر الحالة */}
       <div className="flex items-center gap-1.5 flex-wrap">
         {([
-          { key: "ALL", label: "الكل" },
-          { key: "PENDING", label: "قيد المراجعة" },
+          { key: "ALL",      label: "الكل" },
+          { key: "PENDING",  label: "قيد المراجعة" },
           { key: "RETURNED", label: "مرجع" },
           { key: "APPROVED", label: "معتمد" },
-          { key: "DELEGATED", label: "محوّل" },
+          { key: "DELEGATED",label: "محوّل" },
           { key: "REJECTED", label: "مرفوض" },
         ] as const).map(opt => (
           <button key={opt.key} onClick={() => setFilterStatus(opt.key)}
@@ -644,20 +671,26 @@ export default function RequestsClient({ requests: initial, isExec, sessionId, a
           {filtered.map(r => (
             <RequestCard key={r.id} request={r} isExec={isExec} sessionId={sessionId}
               allEmployees={allEmployees}
-              onReview={setReviewingReq} onResubmit={setResubmitReq}
-              onDelete={handleDelete} onRefresh={refresh} />
+              onReview={req => setReviewingReq(req)}
+              onResubmit={req => setResubmitReq(req)}
+              onDelete={handleDelete} />
           ))}
         </div>
       )}
 
-      {showForm && <RequestForm onClose={() => setShowForm(false)} onDone={refresh} />}
+      {showForm && (
+        <RequestForm onClose={() => setShowForm(false)}
+          onDone={() => handleAction(async () => {})} />
+      )}
       {resubmitReq && (
         <RequestForm initial={resubmitReq} requestId={resubmitReq.id} isResubmit
-          onClose={() => setResubmitReq(null)} onDone={refresh} />
+          onClose={() => setResubmitReq(null)}
+          onDone={() => handleAction(async () => {})} />
       )}
       {reviewingReq && (
         <ReviewModal request={reviewingReq} allEmployees={allEmployees}
-          onClose={() => setReviewingReq(null)} onDone={refresh} />
+          onClose={() => setReviewingReq(null)}
+          onDone={() => handleAction(async () => {})} />
       )}
     </div>
   );

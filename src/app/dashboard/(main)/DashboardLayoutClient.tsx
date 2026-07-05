@@ -4,12 +4,14 @@ import { usePathname } from "next/navigation";
 import EmployeeSidebar from "@/components/EmployeeSidebar";
 import { useState, useEffect } from "react";
 import { Menu } from "lucide-react";
+import { getUnreadNotificationsCount } from "@/app/actions/requests";
 
 import DeveloperRoleSwitcher from "@/components/DeveloperRoleSwitcher";
 
-export default function DashboardLayoutClient({ children, session, unreadRequests = 0 }: { children: React.ReactNode, session: any, unreadRequests?: number }) {
+export default function DashboardLayoutClient({ children, session, unreadRequests: initial = 0 }: { children: React.ReactNode, session: any, unreadRequests?: number }) {
   const pathname = usePathname();
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [unreadRequests, setUnreadRequests] = useState(initial);
 
   // Close sidebar on mobile when navigating
   useEffect(() => {
@@ -17,6 +19,20 @@ export default function DashboardLayoutClient({ children, session, unreadRequest
       setIsSidebarOpen(false);
     }
   }, [pathname]);
+
+  // polling للإشعارات كل 20 ثانية
+  useEffect(() => {
+    let active = true;
+    async function poll() {
+      try {
+        const count = await getUnreadNotificationsCount();
+        if (active) setUnreadRequests(count);
+      } catch {}
+    }
+    poll();
+    const interval = setInterval(poll, 20000);
+    return () => { active = false; clearInterval(interval); };
+  }, []);
 
   return (
     <div className="flex h-[100dvh] bg-slate-50 dark:bg-slate-950 overflow-hidden" dir="rtl">

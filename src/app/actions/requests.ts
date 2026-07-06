@@ -119,7 +119,8 @@ export async function reviewRequest(data: {
   if (!request) throw new Error("الطلب غير موجود");
   if (request.status !== "PENDING") throw new Error("لا يمكن مراجعة طلب غير قيد المراجعة");
 
-  if (data.action !== "APPROVED_FINAL" && data.action !== "DELEGATED" && !data.note?.trim()) {
+  // الملاحظات إلزامية فقط عند الإرجاع أو الرفض
+  if ((data.action === "RETURNED" || data.action === "REJECTED") && !data.note?.trim()) {
     throw new Error("يجب ذكر السبب أو الملاحظات");
   }
   if (data.action === "DELEGATED" && !data.delegatedToId) {
@@ -308,6 +309,57 @@ export async function deleteRequest(requestId: string) {
 
   await prisma.request.delete({ where: { id: requestId } });
   revalidatePath("/dashboard/requests");
+}
+
+// ── جلب الطلبات (للـ polling في المكون) ──────────────────────────────────────
+
+const REQUEST_INCLUDE = {
+  createdBy: { select: { id: true, name: true, role: true, avatarUrl: true } },
+  reviewedBy: { select: { id: true, name: true } },
+  currentReviewer: { select: { id: true, name: true, role: true } },
+  delegatedTo: { select: { id: true, name: true, role: true } },
+  chain: { select: { id: true, name: true } },
+  logs: {
+    include: {
+      actor: { select: { id: true, name: true, role: true, avatarUrl: true } },
+      delegatedTo: { select: { id: true, name: true, role: true } },
+    },
+    orderBy: { createdAt: "asc" as const },
+  },
+} as const;
+
+const PRIORITY_ORDER: Record<string, number> = { URGENT: 0, HIGH: 1, MEDIUM: 2, LOW: 3 };
+
+function sortRequests(requests: any[]) {
+  return requests.sort((a: any, b: any) => {
+    if (a.status === "PENDING" && b.status !== "PENDING") return -1;
+    if (b.status === "PENDING" && a.status !== "PENDING") return 1;
+    if (a.status === "PENDING" && b.status === "PENDING") {
+      const pa = PRIORITY_ORDER[a.priority] ?? 3;
+      const pb = PRIORITY_ORDER[b.priority] ?? 3;
+      if (pa !== pb) return pa - pb;
+      return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+    }
+    return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+  });
+}
+
+export async function getMyRequests() {
+  const session = await requireSession();
+  if (!canViewRequests(session.role, session.permissions || [])) return [];
+  const requests = await prisma.request.findMany({
+    where: { createdById: session.id },
+    include: REQUEST_INCLUDE,
+    orderBy: { createdAt: "desc" },
+  });
+  return requests;
+}
+
+export async function getAllRequests() {
+  const session = await requireSession();
+  if (!isExec(session.role, session.permissions || [])) throw new Error("غير مصرح");
+  const requests = await prisma.request.findMany({ include: REQUEST_INCLUDE });
+  return sortRequests(requests);
 }
 
 // ── إشعارات ──────────────────────────────────────────────────────────────────

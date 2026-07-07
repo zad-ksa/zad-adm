@@ -5,7 +5,7 @@ import { getSession } from "@/lib/auth";
 import { hash } from "bcryptjs";
 import { revalidatePath } from "next/cache";
 
-export async function addCharityClientAccount(data: { name: string; phone: string; password: string; charityId: string }) {
+export async function addCharityClientAccount(data: { name: string; phone: string; password: string; charityId: string; permissions?: string[] }) {
   try {
     const session = await getSession();
     const isAdmin = ["ADMIN", "EXECUTIVE_DIRECTOR", "GENERAL_MANAGER"].includes(session?.role || "");
@@ -36,7 +36,7 @@ export async function addCharityClientAccount(data: { name: string; phone: strin
         password: hashedPassword,
         role: "CHARITY_CLIENT",
         charityId: data.charityId,
-        permissions: [],
+        permissions: data.permissions || [],
         isActive: true,
       }
     });
@@ -50,5 +50,35 @@ export async function addCharityClientAccount(data: { name: string; phone: strin
   } catch (error: any) {
     console.error("Error creating charity account:", error);
     return { success: false, error: error.message || "حدث خطأ أثناء إنشاء الحساب" };
+  }
+}
+
+export async function deleteCharityClientAccount(accountId: string) {
+  try {
+    const session = await getSession();
+    const isAdmin = ["ADMIN", "EXECUTIVE_DIRECTOR", "GENERAL_MANAGER"].includes(session?.role || "");
+    
+    if (!isAdmin) {
+      return { success: false, error: "غير مصرح لك بإجراء هذه العملية" };
+    }
+
+    const employee = await prisma.employee.findUnique({
+      where: { id: accountId }
+    });
+
+    if (!employee || employee.role !== "CHARITY_CLIENT") {
+      return { success: false, error: "الحساب غير موجود أو غير صالح" };
+    }
+
+    await prisma.employee.delete({
+      where: { id: accountId }
+    });
+
+    revalidatePath("/dashboard/charity-accounts");
+
+    return { success: true };
+  } catch (error: any) {
+    console.error("Error deleting charity account:", error);
+    return { success: false, error: error.message || "حدث خطأ أثناء الحذف" };
   }
 }

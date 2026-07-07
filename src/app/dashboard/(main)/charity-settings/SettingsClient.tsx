@@ -203,11 +203,20 @@ export default function SettingsClient() {
               onChange={(e) => setSelectedEmployee(e.target.value)}
               className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl pl-4 pr-10 py-2.5 outline-none focus:ring-2 focus:ring-primary/20 text-slate-800 dark:text-slate-100 appearance-none"
             >
-              {employees.map((emp) => (
-                <option key={emp.id} value={emp.id}>
-                  {emp.name} ({ROLE_LABELS[emp.role as keyof typeof ROLE_LABELS] || emp.role})
-                </option>
-              ))}
+              <optgroup label="موظفو زاد">
+                {employees.filter(emp => emp.role !== 'CHARITY_CLIENT').map((emp) => (
+                  <option key={emp.id} value={emp.id}>
+                    {emp.name} ({ROLE_LABELS[emp.role as keyof typeof ROLE_LABELS] || emp.role})
+                  </option>
+                ))}
+              </optgroup>
+              <optgroup label="موظفو الجمعيات">
+                {employees.filter(emp => emp.role === 'CHARITY_CLIENT').map((emp) => (
+                  <option key={emp.id} value={emp.id}>
+                    {emp.name} ({ROLE_LABELS[emp.role as keyof typeof ROLE_LABELS] || "عميل جمعية"})
+                  </option>
+                ))}
+              </optgroup>
             </select>
           </div>
         </div>

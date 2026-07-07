@@ -44,16 +44,19 @@ export default function CharityLayoutClient({
     { label: "الرئيسية", href: `/charity/${encodeURIComponent(charityName)}/overview`, icon: Home, exact: true },
   ];
 
-  if (can("manage_strategy") && !isCharityClient) {
+  if ((can("manage_strategy") && !isCharityClient) || (isCharityClient && perms.includes("view_charity_strategy"))) {
     mobileNavItems.push({ label: "الاستراتيجية", href: `/charity/${encodeURIComponent(charityName)}/strategy`, icon: Target, exact: false });
+  }
+  
+  if ((can("manage_strategy") && !isCharityClient) || (isCharityClient && perms.includes("view_charity_programs"))) {
     mobileNavItems.push({ label: "البرامج", href: `/charity/${encodeURIComponent(charityName)}/programs`, icon: FolderKanban, exact: false });
   }
 
-  if (can("manage_governance") && !isCharityClient) {
+  if ((can("manage_governance") && !isCharityClient) || (isCharityClient && perms.includes("view_charity_governance"))) {
     mobileNavItems.push({ label: "الحوكمة", href: `/charity/${encodeURIComponent(charityName)}/governance`, icon: Scale, exact: false });
   }
 
-  if (can("manage_finance") && !isCharityClient) {
+  if ((can("manage_finance") && !isCharityClient) || (isCharityClient && perms.includes("view_charity_finance"))) {
     mobileNavItems.push({ label: "المالية", href: `/charity/${encodeURIComponent(charityName)}/finance`, icon: Coins, exact: false });
   }
 

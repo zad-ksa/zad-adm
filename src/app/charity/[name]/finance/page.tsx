@@ -4,8 +4,7 @@ import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import FinanceClient from "./FinanceClient";
 import FinanceStagesManager from "./FinanceStagesManager";
-import DepartmentServicesTimeline from "@/components/DepartmentServicesTimeline";
-import CharityClientTimeline from "@/components/CharityClientTimeline";
+
 import { getSession } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
@@ -19,11 +18,20 @@ export async function generateMetadata({ params }: { params: Promise<{ name: str
 }
 
 const getCachedFinanceData = async (charityName: string) => {
-    let charityData = await prisma.charity.findUnique({
+    let charityData = await (prisma.charity as any).findUnique({
       where: { name: charityName },
       include: {
         financialLogs: {
           orderBy: { createdAt: "desc" }
+        },
+        donorAccounts: {
+          orderBy: { createdAt: "desc" }
+        },
+        grantApplications: {
+          orderBy: { createdAt: "desc" }
+        },
+        contractInstallments: {
+          orderBy: { dueDate: "asc" }
         }
       }
     });
@@ -48,7 +56,10 @@ const getCachedFinanceData = async (charityName: string) => {
 
       charityData = {
         ...createdCharity,
-        financialLogs: []
+        financialLogs: [],
+        donorAccounts: [],
+        grantApplications: [],
+        contractInstallments: [],
       } as any;
     }
     
@@ -62,23 +73,10 @@ export default async function CharityFinancePage({ params }: { params: Promise<{
   const charity = await getCachedFinanceData(decodedName);
   const session = await getSession();
 
-  let stages: any[] = [];
-  if (charity) {
-    const svc = await prisma.service.findFirst({ where: { charityId: charity.id, department: "FINANCE" } });
-    if (svc) {
-      stages = await prisma.serviceStage.findMany({
-        where: { serviceId: svc.id },
-        orderBy: { order: 'asc' },
-      });
-    }
-  }
+
 
   return (
     <div className="space-y-12">
-      {session?.role === "CHARITY_CLIENT" && (
-        <CharityClientTimeline title="المخطط الزمني" stages={stages} />
-      )}
-
       <FinanceClient
         charity={{
           id: charity!.id,
@@ -87,13 +85,13 @@ export default async function CharityFinancePage({ params }: { params: Promise<{
           contractValue: charity!.contractValue,
           paidAmount: charity!.paidAmount,
           grants: charity!.grants,
+          annualRevenue: (charity as any).annualRevenue,
         }}
-        initialLogs={charity!.financialLogs || []}
+        initialLogs={(charity as any).financialLogs || []}
+        initialDonorAccounts={(charity as any).donorAccounts || []}
+        initialGrantApplications={(charity as any).grantApplications || []}
+        initialInstallments={(charity as any).contractInstallments || []}
       />
-
-      {charity && (
-        <DepartmentServicesTimeline charityId={charity.id} department="FINANCE" />
-      )}
     </div>
   );
 }

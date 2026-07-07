@@ -114,6 +114,15 @@ export default function CharitySidebar({
     const baseItem = allNavItems.find(i => i.id === setting.id);
     if (!baseItem) return null;
     if (setting.status === "HIDDEN") return null;
+
+    if (isCharityClient) {
+      if (setting.id === "strategy" && !(permissions || []).includes("view_charity_strategy")) return null;
+      if (setting.id === "programs" && !(permissions || []).includes("view_charity_programs")) return null;
+      if (setting.id === "governance" && !(permissions || []).includes("view_charity_governance")) return null;
+      if (setting.id === "finance" && !(permissions || []).includes("view_charity_finance")) return null;
+      if (setting.id === "tasks" && !(permissions || []).includes("view_charity_tasks")) return null;
+    }
+
     return {
       ...baseItem,
       title: setting.title,

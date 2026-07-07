@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { updateCharitySize } from "@/app/actions/governance";
+import { updateCharitySize, updateCharityRevenueAndSize } from "@/app/actions/governance";
 import { CharitySize, governanceManuals } from "@/data/governanceManual";
 import { ArrowRight, Building, FileText, CheckCircle2 } from "lucide-react";
 
@@ -14,21 +14,40 @@ interface ProgressItem {
 export default function GovernanceManualViewer({
   charityId,
   initialSize,
+  annualRevenue,
   progress,
 }: {
   charityId: string;
   initialSize: CharitySize | null;
+  annualRevenue?: number | null;
   progress: ProgressItem[];
 }) {
   const [size, setSize] = useState<CharitySize | null>(initialSize);
+  const [revenue, setRevenue] = useState<number | null>(annualRevenue || null);
+  const [revenueInput, setRevenueInput] = useState<string>("");
   const [isUpdatingSize, setIsUpdatingSize] = useState(false);
-
 
   const handleSizeSelect = async (selectedSize: CharitySize) => {
     setIsUpdatingSize(true);
     const res = await updateCharitySize(charityId, selectedSize);
     if (res.success) {
       setSize(selectedSize);
+    } else {
+      alert(res.error);
+    }
+    setIsUpdatingSize(false);
+  };
+
+  const handleRevenueSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!revenueInput || isNaN(Number(revenueInput))) return;
+    
+    setIsUpdatingSize(true);
+    const numRevenue = Number(revenueInput);
+    const res = await updateCharityRevenueAndSize(charityId, numRevenue);
+    if (res.success && res.size) {
+      setSize(res.size as CharitySize);
+      setRevenue(numRevenue);
     } else {
       alert(res.error);
     }
@@ -44,6 +63,36 @@ export default function GovernanceManualViewer({
           لتتمكن من عرض دليل الحوكمة المناسب لك، يرجى تحديد حجم الجمعية بناءً على المعايير المعتمدة.
         </p>
         
+        <div className="max-w-md mx-auto mb-8 bg-slate-50 p-6 rounded-xl border border-slate-200">
+          <h4 className="font-bold text-slate-700 mb-4">التحديد التلقائي (موصى به)</h4>
+          <form onSubmit={handleRevenueSubmit} className="flex gap-2">
+            <input 
+              type="number" 
+              placeholder="أدخل إيرادات الجمعية السنوية" 
+              value={revenueInput}
+              onChange={(e) => setRevenueInput(e.target.value)}
+              className="flex-1 px-4 py-2 rounded-lg border border-slate-300 focus:ring-2 focus:ring-primary focus:border-primary outline-none"
+              required
+            />
+            <button 
+              type="submit" 
+              disabled={isUpdatingSize}
+              className="bg-primary text-white px-6 py-2 rounded-lg font-bold hover:bg-primary/90 disabled:opacity-50"
+            >
+              تحديد
+            </button>
+          </form>
+        </div>
+
+        <div className="relative mb-8">
+          <div className="absolute inset-0 flex items-center">
+            <div className="w-full border-t border-slate-200"></div>
+          </div>
+          <div className="relative flex justify-center text-sm">
+            <span className="px-4 bg-white text-slate-500">أو حدد الحجم يدوياً</span>
+          </div>
+        </div>
+
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 max-w-3xl mx-auto">
           {[
             { id: "MICRO", label: "متناهية الصغر" },
@@ -70,13 +119,29 @@ export default function GovernanceManualViewer({
   }
 
   const manual = governanceManuals[size] || [];
-  const sizeLabels: Record<CharitySize, string> = {
-    MICRO: "متناهية الصغر",
-    SMALL: "صغيرة",
-    MEDIUM: "متوسطة",
-    LARGE: "كبيرة",
-    MEGA: "متناهية الكبر"
+  const categoriesMap: Record<CharitySize, { name: string; max: number | null }> = {
+    MICRO: { name: "متناهية الصغر", max: 500000 },
+    SMALL: { name: "صغيرة", max: 2000000 },
+    MEDIUM: { name: "متوسطة", max: 8000000 },
+    LARGE: { name: "كبيرة", max: 30000000 },
+    MEGA: { name: "متناهية الكبر", max: null },
   };
+
+  const currentCategory = categoriesMap[size];
+  
+  // Find next category based on current size
+  const sizesOrder: CharitySize[] = ["MICRO", "SMALL", "MEDIUM", "LARGE", "MEGA"];
+  const currentIndex = sizesOrder.indexOf(size);
+  const nextSize = sizesOrder[currentIndex + 1];
+  const nextCategory = nextSize ? categoriesMap[nextSize] : null;
+
+  let isApproachingNext = false;
+  if (revenue && currentCategory.max !== null && nextCategory) {
+    const thresholdAmount = currentCategory.max * 0.9; // 90% threshold
+    if (revenue >= thresholdAmount) {
+      isApproachingNext = true;
+    }
+  }
 
   return (
     <div className="space-y-6">
@@ -86,15 +151,35 @@ export default function GovernanceManualViewer({
             <FileText className="w-5 h-5" />
             دليل الحوكمة
           </h3>
-          <p className="text-xs text-primary/70 mt-1">يتم عرض الدليل المخصص للجمعيات: {sizeLabels[size]}</p>
+          <p className="text-xs text-primary/70 mt-1">يتم عرض الدليل المخصص للجمعيات: {currentCategory.name}</p>
         </div>
         <button 
           onClick={() => setSize(null)}
           className="text-xs font-bold text-slate-500 hover:text-slate-800 underline"
         >
-          تغيير الحجم
+          تغيير الحجم أو الإيراد
         </button>
       </div>
+
+      {isApproachingNext && nextCategory && (
+        <div className="p-4 bg-amber-50 border border-amber-200 rounded-xl flex gap-4 items-start shadow-sm">
+          <div className="text-amber-500 mt-1 shrink-0">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </div>
+          <div>
+            <h4 className="font-bold text-amber-800">تنبيه استباقي للاستعداد</h4>
+            <p className="text-sm text-amber-700 mt-1 mb-2 leading-relaxed">
+              نلاحظ أن إيرادات جمعيتكم ({new Intl.NumberFormat('ar-SA').format(revenue!)}) تقترب من حاجز الانتقال ({new Intl.NumberFormat('ar-SA').format(currentCategory.max!)} ريال). 
+              عند تجاوز هذا الرقم ستنتقل جمعيتكم إلى فئة <strong>"{nextCategory.name}"</strong>.
+            </p>
+            <p className="text-sm font-semibold text-amber-800 bg-amber-100/50 inline-block px-2 py-1 rounded">
+              يرجى الاطلاع على معايير الجمعيات الـ {nextCategory.name} للاستعداد المبكر للحوكمة القادمة.
+            </p>
+          </div>
+        </div>
+      )}
 
       {manual.length === 0 ? (
         <div className="text-center p-8 text-slate-500 dark:text-slate-400">جاري إعداد محتوى هذا الدليل...</div>

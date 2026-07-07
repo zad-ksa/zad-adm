@@ -29,7 +29,7 @@ export async function addCharity(data: { name: string; establishmentDate?: strin
     });
 
     if (existing) {
-      return { success: false, message: "هذه الجمعية موجودة مسبقاً" };
+      return { success: false, message: "ظ‡ط°ظ‡ ط§ظ„ط¬ظ…ط¹ظٹط© ظ…ظˆط¬ظˆط¯ط© ظ…ط³ط¨ظ‚ط§ظ‹" };
     }
 
     const charity = await prisma.charity.create({
@@ -46,7 +46,7 @@ export async function addCharity(data: { name: string; establishmentDate?: strin
     return { success: true, data: charity };
   } catch (error: any) {
     console.error("Error adding charity:", error);
-    return { success: false, message: error.message || "حدث خطأ أثناء الإضافة" };
+    return { success: false, message: error.message || "ط­ط¯ط« ط®ط·ط£ ط£ط«ظ†ط§ط، ط§ظ„ط¥ط¶ط§ظپط©" };
   }
 }
 
@@ -89,10 +89,10 @@ export async function bootstrapCharities() {
       }
     }
 
-    return { success: true, message: `تم تحديث وإضافة ${added} جمعية جديدة من الاستبيانات السابقة.` };
+    return { success: true, message: `طھظ… طھط­ط¯ظٹط« ظˆط¥ط¶ط§ظپط© ${added} ط¬ظ…ط¹ظٹط© ط¬ط¯ظٹط¯ط© ظ…ظ† ط§ظ„ط§ط³طھط¨ظٹط§ظ†ط§طھ ط§ظ„ط³ط§ط¨ظ‚ط©.` };
   } catch (error) {
     console.error("Error bootstrapping charities:", error);
-    return { success: false, message: "حدث خطأ أثناء التهيئة" };
+    return { success: false, message: "ط­ط¯ط« ط®ط·ط£ ط£ط«ظ†ط§ط، ط§ظ„طھظ‡ظٹط¦ط©" };
   }
 }
 
@@ -110,7 +110,7 @@ export async function updateCharity(
     const { name, establishmentDate, licenseNumber, domain, logoUrl } = data;
 
     if (!name || !name.trim()) {
-      return { success: false, message: "اسم الجمعية مطلوب" };
+      return { success: false, message: "ط§ط³ظ… ط§ظ„ط¬ظ…ط¹ظٹط© ظ…ط·ظ„ظˆط¨" };
     }
 
     const trimmedName = name.trim();
@@ -121,7 +121,7 @@ export async function updateCharity(
         where: { name: trimmedName }
       });
       if (existing) {
-        return { success: false, message: "جمعية بهذا الاسم موجودة بالفعل" };
+        return { success: false, message: "ط¬ظ…ط¹ظٹط© ط¨ظ‡ط°ط§ ط§ظ„ط§ط³ظ… ظ…ظˆط¬ظˆط¯ط© ط¨ط§ظ„ظپط¹ظ„" };
       }
     }
 
@@ -131,7 +131,7 @@ export async function updateCharity(
     });
 
     if (!charity) {
-      return { success: false, message: "الجمعية غير موجودة" };
+      return { success: false, message: "ط§ظ„ط¬ظ…ط¹ظٹط© ط؛ظٹط± ظ…ظˆط¬ظˆط¯ط©" };
     }
 
     // 4. Update the charity details
@@ -171,7 +171,7 @@ export async function updateCharity(
     return { success: true, name: trimmedName };
   } catch (error: any) {
     console.error("Error updating charity profile:", error);
-    return { success: false, message: error.message || "حدث خطأ أثناء تحديث البيانات" };
+    return { success: false, message: error.message || "ط­ط¯ط« ط®ط·ط£ ط£ط«ظ†ط§ط، طھط­ط¯ظٹط« ط§ظ„ط¨ظٹط§ظ†ط§طھ" };
   }
 }
 
@@ -184,11 +184,11 @@ export async function addFinancialTransactionAction(
   try {
     const session = await getSession();
     if (!session || !session.id) {
-      return { success: false, message: "غير مصرح لك بإجراء هذه العملية" };
+      return { success: false, message: "ط؛ظٹط± ظ…طµط±ط­ ظ„ظƒ ط¨ط¥ط¬ط±ط§ط، ظ‡ط°ظ‡ ط§ظ„ط¹ظ…ظ„ظٹط©" };
     }
 
     if (amount < 0 || isNaN(amount)) {
-      return { success: false, message: "يجب أن يكون المبلغ رقماً موجباً أكبر من أو يساوي 0" };
+      return { success: false, message: "ظٹط¬ط¨ ط£ظ† ظٹظƒظˆظ† ط§ظ„ظ…ط¨ظ„ط؛ ط±ظ‚ظ…ط§ظ‹ ظ…ظˆط¬ط¨ط§ظ‹ ط£ظƒط¨ط± ظ…ظ† ط£ظˆ ظٹط³ط§ظˆظٹ 0" };
     }
 
     const charity = await prisma.charity.findUnique({
@@ -196,7 +196,7 @@ export async function addFinancialTransactionAction(
     });
 
     if (!charity) {
-      return { success: false, message: "الجمعية غير موجودة" };
+      return { success: false, message: "ط§ظ„ط¬ظ…ط¹ظٹط© ط؛ظٹط± ظ…ظˆط¬ظˆط¯ط©" };
     }
 
     let updatedData: any = {};
@@ -211,7 +211,7 @@ export async function addFinancialTransactionAction(
     } else if (type === "DISBURSEMENT") {
       updatedData.paidAmount = charity.paidAmount + amount;
     } else {
-      return { success: false, message: "نوع العملية غير صالح" };
+      return { success: false, message: "ظ†ظˆط¹ ط§ظ„ط¹ظ…ظ„ظٹط© ط؛ظٹط± طµط§ظ„ط­" };
     }
 
     // Perform database transaction to ensure both charity update and log insertion are atomic
@@ -237,7 +237,7 @@ export async function addFinancialTransactionAction(
     return { success: true, charity: updatedCharity, log };
   } catch (error: any) {
     console.error("Error adding financial transaction:", error);
-    return { success: false, message: error.message || "حدث خطأ أثناء إجراء العملية المالية" };
+    return { success: false, message: error.message || "ط­ط¯ط« ط®ط·ط£ ط£ط«ظ†ط§ط، ط¥ط¬ط±ط§ط، ط§ظ„ط¹ظ…ظ„ظٹط© ط§ظ„ظ…ط§ظ„ظٹط©" };
   }
 }
 
@@ -250,7 +250,7 @@ export async function updateTimelineConfig(
   try {
     const session = await getSession();
     if (!session || !session.id) {
-      return { success: false, message: "غير مصرح لك بإجراء هذه العملية" };
+      return { success: false, message: "ط؛ظٹط± ظ…طµط±ط­ ظ„ظƒ ط¨ط¥ط¬ط±ط§ط، ظ‡ط°ظ‡ ط§ظ„ط¹ظ…ظ„ظٹط©" };
     }
 
     const charity = await prisma.charity.findUnique({
@@ -258,7 +258,7 @@ export async function updateTimelineConfig(
     });
 
     if (!charity) {
-      return { success: false, message: "الجمعية غير موجودة" };
+      return { success: false, message: "ط§ظ„ط¬ظ…ط¹ظٹط© ط؛ظٹط± ظ…ظˆط¬ظˆط¯ط©" };
     }
 
     let dataToUpdate: any = {};
@@ -284,7 +284,7 @@ export async function updateTimelineConfig(
     return { success: true };
   } catch (error: any) {
     console.error("Error updating timeline config:", error);
-    return { success: false, message: error.message || "حدث خطأ أثناء تحديث الإعدادات" };
+    return { success: false, message: error.message || "ط­ط¯ط« ط®ط·ط£ ط£ط«ظ†ط§ط، طھط­ط¯ظٹط« ط§ظ„ط¥ط¹ط¯ط§ط¯ط§طھ" };
   }
 }
 
@@ -292,7 +292,7 @@ export async function updateCharityLogo(charityId: string, logoUrl: string | nul
   const session = await getSession();
   const adminRoles = ["ADMIN", "EXECUTIVE_DIRECTOR", "GENERAL_MANAGER", "ADMINISTRATIVE_SECRETARIAT"];
   if (!session || !adminRoles.includes(session.role)) {
-    return { success: false, message: "غير مصرح" };
+    return { success: false, message: "ط؛ظٹط± ظ…طµط±ط­" };
   }
   try {
     const charity = await prisma.charity.update({
@@ -305,6 +305,116 @@ export async function updateCharityLogo(charityId: string, logoUrl: string | nul
     revalidatePath(`/charity/${encodeURIComponent(charity.name)}`);
     return { success: true };
   } catch (error: any) {
-    return { success: false, message: error.message || "حدث خطأ" };
+    return { success: false, message: error.message || "ط­ط¯ط« ط®ط·ط£" };
+  }
+}
+
+export async function addDonorAccount(charityId: string, donorName: string, username: string, password: string, website?: string) {
+  try {
+    const session = await getSession();
+    if (!session || !session.id) return { success: false, message: "ط؛ظٹط± ظ…طµط±ط­" };
+
+    const account = await (prisma as any).donorAccount.create({
+      data: {
+        charityId,
+        donorName,
+        username,
+        password,
+        website: website || null,
+      }
+    });
+
+    const charity = await prisma.charity.findUnique({ where: { id: charityId } });
+    if (charity) revalidatePath(`/charity/${encodeURIComponent(charity.name)}/finance`);
+    
+    return { success: true, account };
+  } catch (error: any) {
+    console.error("Error adding donor account:", error);
+    return { success: false, message: "ط­ط¯ط« ط®ط·ط£ ط£ط«ظ†ط§ط، ط¥ط¶ط§ظپط© ط­ط³ط§ط¨ ط§ظ„ط¬ظ‡ط© ط§ظ„ظ…ط§ظ†ط­ط©" };
+  }
+}
+
+export async function deleteDonorAccount(accountId: string, charityId: string) {
+  try {
+    const session = await getSession();
+    if (!session || !session.id) return { success: false, message: "ط؛ظٹط± ظ…طµط±ط­" };
+
+    await (prisma as any).donorAccount.delete({
+      where: { id: accountId }
+    });
+
+    const charity = await prisma.charity.findUnique({ where: { id: charityId } });
+    if (charity) revalidatePath(`/charity/${encodeURIComponent(charity.name)}/finance`);
+    
+    return { success: true };
+  } catch (error: any) {
+    console.error("Error deleting donor account:", error);
+    return { success: false, message: "حدث خطأ أثناء الحذف" };
+  }
+}
+
+export async function addGrantApplication(charityId: string, initiativeName: string, requestedAmount: number, entityName: string) {
+  try {
+    const session = await getSession();
+    if (!session || !session.id) return { success: false, message: "غير مصرح" };
+
+    if (requestedAmount <= 0) return { success: false, message: "المبلغ غير صالح" };
+
+    const grant = await (prisma as any).grantApplication.create({
+      data: {
+        charityId,
+        initiativeName,
+        requestedAmount,
+        entityName,
+        status: "PENDING",
+      }
+    });
+
+    const charity = await prisma.charity.findUnique({ where: { id: charityId } });
+    if (charity) revalidatePath(`/charity/${encodeURIComponent(charity.name)}/finance`);
+    
+    return { success: true, grant };
+  } catch (error: any) {
+    console.error("Error adding grant application:", error);
+    return { success: false, message: "حدث خطأ أثناء رفع المنحة" };
+  }
+}
+
+export async function updateGrantApplicationStatus(grantId: string, charityId: string, status: "PENDING" | "APPROVED" | "REJECTED") {
+  try {
+    const session = await getSession();
+    if (!session || !session.id) return { success: false, message: "غير مصرح" };
+
+    await (prisma as any).grantApplication.update({
+      where: { id: grantId },
+      data: { status }
+    });
+
+    const charity = await prisma.charity.findUnique({ where: { id: charityId } });
+    if (charity) revalidatePath(`/charity/${encodeURIComponent(charity.name)}/finance`);
+    
+    return { success: true };
+  } catch (error: any) {
+    console.error("Error updating grant status:", error);
+    return { success: false, message: "حدث خطأ أثناء تحديث حالة المنحة" };
+  }
+}
+
+export async function deleteGrantApplication(grantId: string, charityId: string) {
+  try {
+    const session = await getSession();
+    if (!session || !session.id) return { success: false, message: "غير مصرح" };
+
+    await (prisma as any).grantApplication.delete({
+      where: { id: grantId }
+    });
+
+    const charity = await prisma.charity.findUnique({ where: { id: charityId } });
+    if (charity) revalidatePath(`/charity/${encodeURIComponent(charity.name)}/finance`);
+    
+    return { success: true };
+  } catch (error: any) {
+    console.error("Error deleting grant application:", error);
+    return { success: false, message: "حدث خطأ أثناء الحذف" };
   }
 }

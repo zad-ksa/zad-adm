@@ -231,6 +231,26 @@ export async function updateCharitySize(charityId: string, size: "MICRO" | "SMAL
   }
 }
 
+export async function updateCharityRevenueAndSize(charityId: string, revenue: number) {
+  try {
+    let size: "MICRO" | "SMALL" | "MEDIUM" | "LARGE" | "MEGA" = "MEGA";
+    if (revenue <= 500000) size = "MICRO";
+    else if (revenue <= 2000000) size = "SMALL";
+    else if (revenue <= 8000000) size = "MEDIUM";
+    else if (revenue <= 30000000) size = "LARGE";
+
+    await prisma.charity.update({
+      where: { id: charityId },
+      data: { annualRevenue: revenue, size },
+    });
+    revalidatePath(`/charity/[name]/governance`);
+    return { success: true, size, revenue };
+  } catch (error) {
+    console.error("Failed to update charity revenue:", error);
+    return { success: false, error: "حدث خطأ أثناء تحديث الإيرادات" };
+  }
+}
+
 export async function updateGovernanceProgress(
   charityId: string,
   indicatorId: string,

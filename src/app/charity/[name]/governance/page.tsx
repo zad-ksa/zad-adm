@@ -112,6 +112,7 @@ export default async function GovernancePage({
         <GovernanceManualViewer 
           charityId={charity.id} 
           initialSize={(charity.size as CharitySize) || null} 
+          annualRevenue={charity.annualRevenue}
           progress={charity.governanceProgress}
         />
       )}

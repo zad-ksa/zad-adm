@@ -121,14 +121,11 @@ export default function EmployeeSidebar({
   if (can("view_requests")) {
     navItems.push({ label: "الطلبات", href: "/dashboard/requests", icon: Send, badge: unreadRequests });
   }
-  if (can("manage_employees")) {
-    navItems.push({ label: "إدارة الموظفين", href: "/dashboard/employees", icon: Users });
+  if (can("manage_employees") || can("manage_charities") || can("manage_charity_settings")) {
+    navItems.push({ label: "لوحة التحكم", href: "/dashboard/admin", icon: Settings2 });
   }
   if (can("manage_workflow")) {
     navItems.push({ label: "سلاسل الاعتماد", href: "/dashboard/workflow-settings", icon: GitBranch });
-  }
-  if (can("manage_charity_settings")) {
-    navItems.push({ label: "إعدادات الجمعيات", href: "/dashboard/charity-settings", icon: Settings2 });
   }
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -325,9 +322,9 @@ export default function EmployeeSidebar({
               {isOpen && <div className="h-px bg-slate-100 dark:bg-slate-800 mx-2" />}
               {renderGroup("الجمعيات", ["الجمعيات", "عرض الخدمات", "العقود", "الاستبيانات", "التواصل"])}
               {isOpen && <div className="h-px bg-slate-100 dark:bg-slate-800 mx-2" />}
-              {renderGroup("زاد", ["الأخبار والإنجازات", "محاضر الاجتماعات", "المهام والمنجزات", "مهامي"])}
+              {renderGroup("زاد", ["الطلبات", "الأخبار والإنجازات", "محاضر الاجتماعات", "المهام والمنجزات", "مهامي"])}
               {isOpen && <div className="h-px bg-slate-100 dark:bg-slate-800 mx-2" />}
-              {renderGroup("لوحة التحكم", ["الطلبات", "إدارة الموظفين", "سلاسل الاعتماد", "إعدادات الجمعيات"])}
+              {renderGroup("لوحة التحكم", ["لوحة التحكم", "سلاسل الاعتماد"])}
             </>
           );
         })()}

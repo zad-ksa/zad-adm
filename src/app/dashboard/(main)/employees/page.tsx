@@ -16,6 +16,7 @@ export default async function EmployeesPage() {
 
   const [employees, allCharities] = await Promise.all([
     prisma.employee.findMany({
+      where: { role: { not: "CHARITY_CLIENT" } },
       orderBy: { createdAt: "desc" },
       include: { assignedCharities: { select: { charityId: true } } },
     }),

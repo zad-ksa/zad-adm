@@ -13,8 +13,9 @@ import {
   Phone,
   Key
 } from "@/components/Icons";
-import { Edit, ShieldCheck, Building2, UserPlus } from "lucide-react";
+import { Edit, ShieldCheck, Building2, UserPlus, ArrowRight } from "lucide-react";
 import { AddEmployeeForm } from "@/components/AddEmployeeForm";
+import Link from "next/link";
 import { PERMISSION_GROUPS, ALL_PERMISSIONS, AUTO_ADMIN_ROLES, ROLE_LABELS } from "@/lib/permissions";
 
 const roleBadgeStyles: Record<string, string> = {
@@ -169,14 +170,19 @@ export function EmployeesClient({
     <div className="space-y-8" dir="rtl">
       {/* Page Header with Add Button */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-white dark:bg-slate-800 p-6 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm transition-colors">
-        <div>
-          <h1 className="text-2xl font-black text-slate-900 dark:text-slate-100 flex items-center gap-2.5">
-            <UserCircle className="w-7 h-7 text-primary" />
-            <span>إدارة الموظفين</span>
-          </h1>
-          <p className="text-slate-500 dark:text-slate-400 mt-1 text-sm font-medium">
-            إضافة موظفين جدد وإدارة صلاحياتهم وتخصيص الجمعيات لهم
-          </p>
+        <div className="flex items-start gap-4">
+          <Link href="/dashboard/admin" className="p-2 bg-slate-50 dark:bg-slate-900 text-slate-500 hover:text-primary rounded-xl transition-colors mt-0.5 shadow-sm border border-slate-100 dark:border-slate-800">
+            <ArrowRight className="w-5 h-5" />
+          </Link>
+          <div>
+            <h1 className="text-2xl font-black text-slate-900 dark:text-slate-100 flex items-center gap-2.5">
+              <UserCircle className="w-7 h-7 text-primary" />
+              <span>إدارة الموظفين</span>
+            </h1>
+            <p className="text-slate-500 dark:text-slate-400 mt-1 text-sm font-medium">
+              إضافة موظفين جدد وإدارة صلاحياتهم وتخصيص الجمعيات لهم
+            </p>
+          </div>
         </div>
         <button
           onClick={() => setIsAddModalOpen(true)}

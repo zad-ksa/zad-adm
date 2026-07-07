@@ -380,20 +380,50 @@ export async function addGrantApplication(charityId: string, initiativeName: str
   }
 }
 
-export async function updateGrantApplicationStatus(grantId: string, charityId: string, status: "PENDING" | "APPROVED" | "REJECTED") {
+export async function updateGrantApplicationStatus(grantId: string, charityId: string, status: "PENDING" | "APPROVED" | "REJECTED", approvedAmount?: number) {
   try {
     const session = await getSession();
     if (!session || !session.id) return { success: false, message: "غير مصرح" };
 
-    await (prisma as any).grantApplication.update({
-      where: { id: grantId },
-      data: { status }
-    });
-
     const charity = await prisma.charity.findUnique({ where: { id: charityId } });
-    if (charity) revalidatePath(`/charity/${encodeURIComponent(charity.name)}/finance`);
+    if (!charity) return { success: false, message: "الجمعية غير موجودة" };
+
+    const grant = await (prisma as any).grantApplication.findUnique({ where: { id: grantId } });
+    if (!grant) return { success: false, message: "المنحة غير موجودة" };
+
+    const queries: any[] = [];
+
+    queries.push(
+      (prisma as any).grantApplication.update({
+        where: { id: grantId },
+        data: { status }
+      })
+    );
+
+    if (status === "APPROVED" && grant.status !== "APPROVED" && approvedAmount && approvedAmount > 0) {
+      queries.push(
+        prisma.charity.update({
+          where: { id: charityId },
+          data: { grants: charity.grants + approvedAmount }
+        })
+      );
+      queries.push(
+        prisma.financialLog.create({
+          data: {
+            charityId,
+            type: "ADD_GRANT",
+            amount: approvedAmount,
+            notes: `اعتماد منحة مشروع: ${grant.initiativeName}`
+          }
+        })
+      );
+    }
+
+    await prisma.$transaction(queries);
+
+    revalidatePath(`/charity/${encodeURIComponent(charity.name)}/finance`);
     
-    return { success: true };
+    return { success: true, grant: { ...grant, status } };
   } catch (error: any) {
     console.error("Error updating grant status:", error);
     return { success: false, message: "حدث خطأ أثناء تحديث حالة المنحة" };

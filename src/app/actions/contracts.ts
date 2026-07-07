@@ -72,16 +72,66 @@ export async function toggleInstallmentPaid(id: string, isPaid: boolean) {
   try {
     const paidDate = isPaid ? new Date() : null;
     
-    const installment = await prisma.contractInstallment.update({
+    const installment = await prisma.contractInstallment.findUnique({
       where: { id },
-      data: {
-        isPaid,
-        paidDate,
-      },
+      include: { charity: true }
     });
 
+    if (!installment || !installment.charity) return { error: "القسط أو الجمعية غير موجودة" };
+
+    const queries: any[] = [];
+
+    queries.push(
+      prisma.contractInstallment.update({
+        where: { id },
+        data: {
+          isPaid,
+          paidDate,
+        },
+      })
+    );
+
+    if (isPaid && !installment.isPaid) {
+      queries.push(
+        prisma.charity.update({
+          where: { id: installment.charityId },
+          data: { paidAmount: installment.charity.paidAmount + installment.amount }
+        })
+      );
+      queries.push(
+        prisma.financialLog.create({
+          data: {
+            charityId: installment.charityId,
+            type: "DISBURSEMENT",
+            amount: installment.amount,
+            notes: "سداد قسط مستحق"
+          }
+        })
+      );
+    } else if (!isPaid && installment.isPaid) {
+      queries.push(
+        prisma.charity.update({
+          where: { id: installment.charityId },
+          data: { paidAmount: Math.max(0, installment.charity.paidAmount - installment.amount) }
+        })
+      );
+      queries.push(
+        prisma.financialLog.create({
+          data: {
+            charityId: installment.charityId,
+            type: "DISBURSEMENT",
+            amount: -installment.amount,
+            notes: "إلغاء سداد قسط"
+          }
+        })
+      );
+    }
+
+    await prisma.$transaction(queries);
+
     revalidatePath("/dashboard/contracts");
-    return { success: isPaid ? "تم تسجيل سداد القسط" : "تم إلغاء سداد القسط", installment };
+    revalidatePath(`/charity/${encodeURIComponent(installment.charity.name)}/finance`);
+    return { success: isPaid ? "تم تسجيل سداد القسط" : "تم إلغاء سداد القسط", installment: { ...installment, isPaid, paidDate } };
   } catch (error: any) {
     console.error("Error toggling installment status:", error);
     return { error: "حدث خطأ أثناء تغيير حالة القسط" };

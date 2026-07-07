@@ -155,7 +155,7 @@ function RequestForm({
       <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-2xl w-full max-w-lg flex flex-col max-h-[90vh]">
         <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100 dark:border-slate-800 shrink-0">
           <h2 className="font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
-            <Send className="w-4 h-4 text-blue-500" />
+            <Send className="w-4 h-4 text-primary" />
             {isResubmit ? "إعادة إرسال الطلب" : "طلب جديد"}
           </h2>
           <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400"><X className="w-4 h-4" /></button>
@@ -165,7 +165,7 @@ function RequestForm({
             <label className="text-xs font-bold text-slate-500 dark:text-slate-400 mb-1.5 block">عنوان الطلب *</label>
             <input value={title} onChange={e => setTitle(e.target.value)}
               placeholder="أدخل عنوان الطلب..."
-              className="w-full border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-sm bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+              className="w-full border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-sm bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-primary" />
           </div>
           <div>
             <label className="text-xs font-bold text-slate-500 dark:text-slate-400 mb-1.5 block">القسم <span className="font-normal text-slate-400">(اختياري)</span></label>
@@ -205,7 +205,7 @@ function RequestForm({
             </label>
             <textarea value={body} onChange={e => setBody(e.target.value)} rows={4}
               placeholder="اكتب تفاصيل طلبك هنا..."
-              className="w-full border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-sm bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none" />
+              className="w-full border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-sm bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-primary resize-none" />
           </div>
           <div>
             <label className="text-xs font-bold text-slate-500 dark:text-slate-400 mb-1.5 flex items-center gap-1">
@@ -213,14 +213,14 @@ function RequestForm({
             </label>
             <input value={fileUrl} onChange={e => setFileUrl(e.target.value)}
               placeholder="https://drive.google.com/..." dir="ltr"
-              className="w-full border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-sm bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+              className="w-full border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-sm bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-primary" />
           </div>
           {error && <p className="text-xs text-red-500 flex items-center gap-1"><AlertCircle className="w-3.5 h-3.5" />{error}</p>}
         </div>
         <div className="px-5 py-4 border-t border-slate-100 dark:border-slate-800 flex justify-end gap-2 shrink-0">
           <button onClick={onClose} className="px-4 py-2 text-sm text-slate-500 hover:text-slate-700 dark:hover:text-slate-300">إلغاء</button>
           <button onClick={handleSubmit} disabled={isPending}
-            className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white px-5 py-2 rounded-xl text-sm font-bold transition-colors">
+            className="flex items-center gap-2 bg-primary hover:bg-primary/90 disabled:opacity-50 text-white px-5 py-2 rounded-xl text-sm font-bold transition-colors">
             {isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
             {isPending ? "جاري الإرسال..." : "إرسال الطلب"}
           </button>
@@ -293,7 +293,7 @@ function ReviewModal({
       <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-2xl w-full max-w-md flex flex-col max-h-[90vh]">
         <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100 dark:border-slate-800 shrink-0">
           <h2 className="font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
-            <ShieldCheck className="w-4 h-4 text-blue-500" /> مراجعة الطلب
+            <ShieldCheck className="w-4 h-4 text-primary" /> مراجعة الطلب
           </h2>
           <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400"><X className="w-4 h-4" /></button>
         </div>
@@ -336,7 +336,7 @@ function ReviewModal({
             </label>
             <textarea value={note} onChange={e => setNote(e.target.value)} rows={3}
               placeholder={noteRequired ? "اذكر السبب أو التعديلات المطلوبة..." : "يمكنك إضافة ملاحظة..."}
-              className="w-full border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-sm bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none" />
+              className="w-full border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-sm bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-primary resize-none" />
           </div>
 
           {error && <p className="text-xs text-red-500 flex items-center gap-1"><AlertCircle className="w-3.5 h-3.5" />{error}</p>}
@@ -460,7 +460,7 @@ function RequestCard({
             )}
             <span className="flex items-center gap-1"><Calendar className="w-3 h-3" />{timeAgo(request.createdAt)}</span>
             {request.status === "PENDING" && request.currentReviewer && (
-              <span className="flex items-center gap-1 text-blue-500 font-bold">
+              <span className="flex items-center gap-1 text-primary font-bold">
                 <ChevronRight className="w-3 h-3" /> عند: {request.currentReviewer.name}
               </span>
             )}
@@ -480,7 +480,7 @@ function RequestCard({
         <div className="flex items-center gap-1 shrink-0" onClick={e => e.stopPropagation()}>
           {isCurrentReviewer && (
             <button onClick={() => onReview(request)}
-              className="flex items-center gap-1 text-xs font-bold bg-blue-600 hover:bg-blue-700 text-white px-2.5 py-1.5 rounded-lg transition-colors">
+              className="flex items-center gap-1 text-xs font-bold bg-primary hover:bg-primary/90 text-white px-2.5 py-1.5 rounded-lg transition-colors">
               <ShieldCheck className="w-3 h-3" /> مراجعة
             </button>
           )}
@@ -511,7 +511,7 @@ function RequestCard({
           )}
           {request.fileUrl && (
             <a href={request.fileUrl} target="_blank" rel="noopener noreferrer"
-              className="flex items-center gap-2 text-xs font-bold text-blue-600 dark:text-blue-400 hover:underline bg-blue-50 dark:bg-blue-900/20 rounded-xl px-3 py-2">
+              className="flex items-center gap-2 text-xs font-bold text-primary hover:underline bg-primary/10 rounded-xl px-3 py-2">
               <ExternalLink className="w-3.5 h-3.5 shrink-0" /> فتح الملف المرفق
             </a>
           )}
@@ -596,8 +596,8 @@ export default function RequestsClient({ requests: initial, isExec, sessionId, a
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <div className="w-8 h-8 bg-blue-100 dark:bg-blue-900/30 rounded-lg flex items-center justify-center">
-            <Send className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+          <div className="w-8 h-8 bg-primary/10 rounded-lg flex items-center justify-center">
+            <Send className="w-4 h-4 text-primary" />
           </div>
           <div>
             <h1 className="text-base font-bold text-slate-800 dark:text-slate-100">
@@ -614,7 +614,7 @@ export default function RequestsClient({ requests: initial, isExec, sessionId, a
             <RefreshCw className={`w-3.5 h-3.5 ${loading ? "animate-spin" : ""}`} />
           </button>
           <button onClick={() => setShowForm(true)}
-            className="flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-lg text-xs font-bold transition-colors">
+            className="flex items-center gap-1.5 bg-primary hover:bg-primary/90 text-white px-3 py-1.5 rounded-lg text-xs font-bold transition-colors">
             <Plus className="w-3.5 h-3.5" /> طلب جديد
           </button>
         </div>
@@ -632,7 +632,7 @@ export default function RequestsClient({ requests: initial, isExec, sessionId, a
         ] as const).map(opt => (
           <button key={opt.key} onClick={() => setFilterStatus(opt.key)}
             className={`flex items-center gap-1 px-3 py-1 rounded-full text-[11px] font-bold transition-colors ${
-              filterStatus === opt.key ? "bg-blue-600 text-white"
+              filterStatus === opt.key ? "bg-primary text-white"
               : "bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-600"
             }`}>
             {opt.label}
@@ -653,7 +653,7 @@ export default function RequestsClient({ requests: initial, isExec, sessionId, a
             {filterStatus === "ALL" ? (isExec ? "لا توجد طلبات بعد" : "لم ترفع أي طلب بعد") : "لا توجد طلبات بهذه الحالة"}
           </p>
           {filterStatus === "ALL" && (
-            <button onClick={() => setShowForm(true)} className="mt-3 text-xs text-blue-500 hover:underline font-bold">
+            <button onClick={() => setShowForm(true)} className="mt-3 text-xs text-primary hover:underline font-bold">
               ارفع طلبك الأول
             </button>
           )}

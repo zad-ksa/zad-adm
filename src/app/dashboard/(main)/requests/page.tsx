@@ -39,7 +39,7 @@ export default async function RequestsPage() {
   const session = await getSession();
   const perms = session?.permissions || [];
 
-  if (!session || !hasPermission(session.role, perms, "view_requests")) {
+  if (!session) {
     redirect("/dashboard");
   }
 

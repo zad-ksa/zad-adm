@@ -497,7 +497,7 @@ export default function GanttChart({
               if (item.type === 'stage') acc[stageName].stage = item;
               else acc[stageName].steps.push(item);
               return acc;
-            }, {} as Record<string, { stage: any, steps: any[] }>)).slice(0, 3).map(([stageName, group], idx) => (
+            }, {} as Record<string, { stage: any, steps: any[] }>)).slice(0, 3).map(([stageName, group]: [string, any], idx) => (
               <div key={idx} className="bg-slate-50 dark:bg-slate-900/50 rounded-lg p-2 border border-slate-100 dark:border-slate-700">
                 <div className="flex items-center gap-2 font-bold text-slate-800 dark:text-slate-200 text-xs mb-1">
                   <div className={`w-2 h-2 rounded-full shrink-0 ${group.stage?.isDone ? 'bg-emerald-500' : 'bg-primary'}`} />
@@ -553,7 +553,7 @@ export default function GanttChart({
                   if (item.type === 'stage') acc[stageName].stage = item;
                   else acc[stageName].steps.push(item);
                   return acc;
-                }, {} as Record<string, { stage: any, steps: any[] }>)).map(([stageName, group], idx) => (
+                }, {} as Record<string, { stage: any, steps: any[] }>)).map(([stageName, group]: [string, any], idx) => (
                   <div key={idx} className="relative flex flex-col md:even:items-end group is-active z-10 pr-10 md:pr-0">
                     {/* Timeline dot */}
                     <div className="absolute right-0 top-3 md:top-3 md:left-1/2 md:right-auto md:-translate-x-1/2 flex items-center justify-center w-8 h-8 rounded-full border-4 border-white dark:border-slate-800 shadow-sm bg-white dark:bg-slate-800">

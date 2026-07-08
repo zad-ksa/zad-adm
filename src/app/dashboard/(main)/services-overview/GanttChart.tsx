@@ -2,7 +2,7 @@
 
 import { useMemo, useState, useTransition } from "react";
 import { X, Edit, Printer, Check, Plus, Info, Edit2, Trash2 } from "lucide-react";
-import { assignGanttDates, toggleGanttItemCompletion, addServiceStage, updateServiceStage, deleteServiceStage } from "@/app/actions/services";
+import { assignGanttDates, toggleGanttItemCompletion, addServiceStage, updateServiceStage, deleteServiceStage, unifyCharityStagesAction } from "@/app/actions/services";
 import { addServiceStageStep, updateServiceStageStep, deleteServiceStageStep } from "@/app/actions/stageSteps";
 import { useRouter } from "next/navigation";
 
@@ -88,7 +88,7 @@ export default function GanttChart({
     const arr = [];
     for (let i = 0; i < 12; i++) {
       const start = addDays(lastSunday, i * 7);
-      const end = addDays(start, 6);
+      const end = addDays(start, 4); // Thursday
       end.setHours(23, 59, 59, 999);
       let label = i === 0 ? "الأسبوع الماضي" : i === 1 ? "الأسبوع الحالي" : `الأسبوع ${i}`;
       arr.push({ start, end, label, isCurrent: i === 1 });
@@ -126,6 +126,7 @@ export default function GanttChart({
   // Edit Modal State
   const [modalState, setModalState] = useState<{
     isOpen: boolean;
+    charityId: string;
     charityName: string;
     serviceId: string;
     weekStart: Date;
@@ -134,6 +135,8 @@ export default function GanttChart({
     selectedStageIds: string[];
     selectedStepIds: string[];
   } | null>(null);
+
+  const [unifyTargetIds, setUnifyTargetIds] = useState<string[]>([]);
 
   // View Modal State
   const [viewModalData, setViewModalData] = useState<{
@@ -188,6 +191,7 @@ export default function GanttChart({
 
     setModalState({
       isOpen: true,
+      charityId: row.charity.id,
       charityName: row.charity.name,
       serviceId: row.serviceId,
       weekStart: week.start,
@@ -196,6 +200,7 @@ export default function GanttChart({
       selectedStageIds: Array.from(overlapsStg),
       selectedStepIds: Array.from(overlapsStp)
     });
+    setUnifyTargetIds([]);
   };
 
   const handleSaveModal = () => {
@@ -209,7 +214,15 @@ export default function GanttChart({
           modalState.selectedStageIds,
           modalState.selectedStepIds
         );
+        
+        if (unifyTargetIds.length > 0) {
+          // timelineType can be 'STRATEGY', 'GOVERNANCE', 'FINANCE', or 'CUSTOM'
+          const timelineType = isGenericTab ? 'CUSTOM' : activeTab;
+          await unifyCharityStagesAction(modalState.charityId, timelineType, modalState.serviceId, unifyTargetIds);
+        }
+        
         setModalState(null);
+        setUnifyTargetIds([]);
         router.refresh();
       } catch(e) {
         console.error(e);
@@ -577,8 +590,21 @@ export default function GanttChart({
                                   type="checkbox"
                                   checked={isStgSelected}
                                   onChange={(e) => {
-                                    if (e.target.checked) setModalState({...modalState, selectedStageIds: [...modalState.selectedStageIds, stg.id]});
-                                    else setModalState({...modalState, selectedStageIds: modalState.selectedStageIds.filter(id => id !== stg.id)});
+                                    const checked = e.target.checked;
+                                    const stepIds = stg.steps ? stg.steps.map(s => s.id) : [];
+                                    if (checked) {
+                                      setModalState({
+                                        ...modalState, 
+                                        selectedStageIds: [...modalState.selectedStageIds, stg.id],
+                                        selectedStepIds: [...new Set([...modalState.selectedStepIds, ...stepIds])]
+                                      });
+                                    } else {
+                                      setModalState({
+                                        ...modalState, 
+                                        selectedStageIds: modalState.selectedStageIds.filter(id => id !== stg.id),
+                                        selectedStepIds: modalState.selectedStepIds.filter(id => !stepIds.includes(id))
+                                      });
+                                    }
                                   }}
                                   className="peer w-5 h-5 appearance-none border-2 border-slate-300 dark:border-slate-600 rounded bg-transparent checked:bg-primary checked:border-primary transition-all cursor-pointer"
                                 />
@@ -672,20 +698,56 @@ export default function GanttChart({
               )}
             </div>
             
-            <div className="p-5 border-t border-slate-100 dark:border-slate-700 bg-white dark:bg-slate-800 flex gap-3">
-              <button 
-                onClick={handleSaveModal}
-                disabled={isPending}
-                className="flex-1 bg-primary hover:bg-primary/90 text-white py-3 rounded-xl font-bold transition-all shadow-lg shadow-primary/20 disabled:opacity-50"
-              >
-                {isPending ? "جاري الحفظ..." : "حفظ التواريخ واعتمادها"}
-              </button>
-              <button 
-                onClick={() => setModalState(null)}
-                className="flex-[0.5] bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-200 py-3 rounded-xl font-bold transition-all"
-              >
-                إلغاء
-              </button>
+            <div className="p-5 border-t border-slate-100 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 flex flex-col gap-3 shrink-0">
+              <div className="bg-white dark:bg-slate-800 p-4 rounded-xl border border-slate-200 dark:border-slate-700">
+                <label className="flex items-center gap-2 font-bold text-slate-700 dark:text-slate-200 cursor-pointer w-fit">
+                  <div className="relative flex items-center justify-center">
+                    <input 
+                      type="checkbox" 
+                      checked={unifyTargetIds.length > 0} 
+                      onChange={e => setUnifyTargetIds(e.target.checked ? charities.filter(c => c.id !== modalState.charityId).map(c => c.id) : [])} 
+                      className="peer w-5 h-5 appearance-none border-2 border-slate-300 dark:border-slate-600 rounded bg-transparent checked:bg-primary checked:border-primary transition-all cursor-pointer"
+                    />
+                    <Check className="w-3 h-3 text-white absolute pointer-events-none opacity-0 peer-checked:opacity-100 transition-opacity" />
+                  </div>
+                  تعميم هذه التواريخ والتعديلات على الجمعيات الأخرى
+                </label>
+                
+                {unifyTargetIds.length > 0 && (
+                  <div className="mt-4 grid grid-cols-2 sm:grid-cols-3 gap-3 pt-3 border-t border-slate-100 dark:border-slate-700 max-h-32 overflow-y-auto pr-2">
+                    {charities.filter(c => c.id !== modalState.charityId).map(c => (
+                      <label key={c.id} className="flex items-center gap-2 text-xs font-bold text-slate-600 dark:text-slate-400 cursor-pointer hover:text-primary transition-colors">
+                        <input 
+                          type="checkbox" 
+                          checked={unifyTargetIds.includes(c.id)} 
+                          onChange={e => {
+                            if (e.target.checked) setUnifyTargetIds([...unifyTargetIds, c.id]);
+                            else setUnifyTargetIds(unifyTargetIds.filter(id => id !== c.id));
+                          }} 
+                          className="rounded text-primary border-slate-300 cursor-pointer"
+                        />
+                        {c.name}
+                      </label>
+                    ))}
+                  </div>
+                )}
+              </div>
+              
+              <div className="flex gap-3">
+                <button 
+                  onClick={handleSaveModal}
+                  disabled={isPending}
+                  className="flex-1 bg-primary hover:bg-primary/90 text-white py-3 rounded-xl font-bold transition-all shadow-lg shadow-primary/20 disabled:opacity-50"
+                >
+                  {isPending ? "جاري الحفظ..." : "حفظ التواريخ واعتمادها"}
+                </button>
+                <button 
+                  onClick={() => setModalState(null)}
+                  className="flex-[0.5] bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-200 py-3 rounded-xl font-bold transition-all"
+                >
+                  إلغاء
+                </button>
+              </div>
             </div>
           </div>
         </div>

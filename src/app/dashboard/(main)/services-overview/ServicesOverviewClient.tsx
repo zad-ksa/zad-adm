@@ -59,6 +59,7 @@ type Stage = {
   endDate?: Date | string | null;
   order: number;
   isCurrent: boolean;
+  isDone?: boolean;
   isContinuous?: boolean | null;
   isActive?: boolean | null;
   duration?: string | null;
@@ -226,27 +227,47 @@ function InlineTimeline({
       const sorted = [...stages].sort((a, b) => a.order - b.order).filter(s => !s.isContinuous);
       const clickedIdx = sorted.findIndex(s => s.id === stageId);
       const wasActive = sorted[clickedIdx]?.isCurrent;
-      // Toggle clicked stage; mark all before it as current (منجزة), all after as not current
+      
+      const newVal = !wasActive;
+
+      // تحديث واجهة المستخدم فورياً لتتطابق مع الآلية الجديدة في السيرفر
       setStages(prev => prev.map(s => {
         if (s.isContinuous) return s;
         const idx = sorted.findIndex(r => r.id === s.id);
-        if (idx < clickedIdx) return { ...s, isCurrent: true };
-        if (idx === clickedIdx) return { ...s, isCurrent: !wasActive };
-        return { ...s, isCurrent: false };
+        if (newVal) {
+          if (idx < clickedIdx) {
+            return { 
+              ...s, 
+              isCurrent: false, 
+              isDone: true, 
+              steps: s.steps ? s.steps.map(step => ({ ...step, isDone: true })) : [] 
+            };
+          }
+          if (idx === clickedIdx) {
+            return { 
+              ...s, 
+              isCurrent: true,
+              isDone: false,
+              steps: s.steps ? s.steps.map(step => ({ ...step, isDone: false })) : [] 
+            };
+          }
+          return { 
+            ...s, 
+            isCurrent: false,
+            isDone: false,
+            steps: s.steps ? s.steps.map(step => ({ ...step, isDone: false })) : [] 
+          };
+        } else {
+          if (idx === clickedIdx) return { ...s, isCurrent: false };
+          return s;
+        }
       }));
-      // Persist: toggle the clicked stage; stages before it stay/become current
-      const newVal = !wasActive;
-      await actionToggleCurrent(dept, stageId, newVal);
+
+      // نعتمد على الدالة المركزية الجديدة في السيرفر لعمل التحديثات اللازمة
       if (newVal) {
-        // Mark all before as current too
-        for (const s of sorted.slice(0, clickedIdx)) {
-          if (!s.isCurrent) await actionToggleCurrent(dept, s.id, true);
-        }
+        await actionSetCurrent(dept, serviceId, charityId, stageId);
       } else {
-        // Mark all after as not current
-        for (const s of sorted.slice(clickedIdx + 1)) {
-          if (s.isCurrent) await actionToggleCurrent(dept, s.id, false);
-        }
+        await actionToggleCurrent(dept, stageId, false);
       }
     });
   };
@@ -272,6 +293,73 @@ function InlineTimeline({
         : s));
       setEditingId(null);
       await actionUpdate(dept, id, editName, editDesc || null, start, end, editIsContinuous, durStr ?? undefined);
+    });
+  };
+
+  const handleToggleStepOptimistic = (targetStageId: string, targetStepId: string, isDone: boolean) => {
+    setStages(prev => {
+      const sorted = [...prev].sort((a, b) => a.order - b.order).filter(s => !s.isContinuous);
+      const targetStageIndex = sorted.findIndex(s => s.id === targetStageId);
+      if (targetStageIndex === -1) return prev;
+      
+      const targetStage = sorted[targetStageIndex];
+      const sortedSteps = [...(targetStage.steps || [])].sort((a, b) => a.order - b.order);
+      const targetStepIndex = sortedSteps.findIndex(stp => stp.id === targetStepId);
+      if (targetStepIndex === -1) return prev;
+
+      // 1. تحديث الإنجاز بناءً على المنطق المائي (Water-mark)
+      const updatedStages = prev.map(s => {
+        if (s.isContinuous) return s;
+        const stageIdx = sorted.findIndex(r => r.id === s.id);
+        
+        let newIsDone = s.isDone;
+        let newSteps = s.steps ? [...s.steps] : [];
+
+        if (isDone) {
+          if (stageIdx < targetStageIndex) {
+            newIsDone = true;
+            newSteps = newSteps.map(step => ({ ...step, isDone: true }));
+          } else if (stageIdx === targetStageIndex) {
+            newSteps = newSteps.map(step => {
+               const stepIdx = sortedSteps.findIndex(x => x.id === step.id);
+               return { ...step, isDone: stepIdx <= targetStepIndex };
+            });
+          } else {
+            newIsDone = false;
+            newSteps = newSteps.map(step => ({ ...step, isDone: false }));
+          }
+        } else {
+          if (stageIdx === targetStageIndex) {
+            newSteps = newSteps.map(step => {
+               const stepIdx = sortedSteps.findIndex(x => x.id === step.id);
+               return { ...step, isDone: stepIdx < targetStepIndex ? step.isDone : false };
+            });
+          } else if (stageIdx > targetStageIndex) {
+            newIsDone = false;
+            newSteps = newSteps.map(step => ({ ...step, isDone: false }));
+          }
+        }
+        
+        return { ...s, isDone: newIsDone, steps: newSteps, isCurrent: false };
+      });
+
+      // 2. إعادة حساب المرحلة الحالية وإنجازها
+      const regularUpdated = updatedStages.filter(s => !s.isContinuous).sort((a, b) => a.order - b.order);
+      
+      regularUpdated.forEach(s => {
+        if (s.steps && s.steps.length > 0) {
+          s.isDone = s.steps.every(stp => stp.isDone);
+        }
+      });
+
+      let currentIdx = regularUpdated.findIndex(s => !s.isDone);
+      if (currentIdx === -1) currentIdx = regularUpdated.length - 1;
+
+      return updatedStages.map(s => {
+        if (s.isContinuous) return s;
+        const rIdx = regularUpdated.findIndex(r => r.id === s.id);
+        return { ...s, isCurrent: rIdx === currentIdx, isDone: regularUpdated[rIdx].isDone };
+      });
     });
   };
 
@@ -457,6 +545,7 @@ function InlineTimeline({
                           return addServiceStageStep(stage.id, name);
                         }}
                         onToggle={(stepId, isDone) => {
+                          handleToggleStepOptimistic(stage.id, stepId, isDone);
                           if (dept === "STRATEGY") return updateStrategicStageStep(stepId, { isDone });
                           if (dept === "GOVERNANCE") return updateGovernanceStageStep(stepId, { isDone });
                           if (dept === "FINANCE") return updateFinanceStageStep(stepId, { isDone });

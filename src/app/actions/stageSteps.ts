@@ -3,6 +3,7 @@
 import { prisma } from "@/lib/db";
 import { getSession } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
+import { syncServiceProgress } from "./services";
 
 async function requireSession() {
   const session = await getSession();
@@ -28,6 +29,10 @@ export async function addServiceStageStep(stageId: string, name: string) {
 export async function updateServiceStageStep(stepId: string, data: { name?: string; isDone?: boolean }) {
   await requireSession();
   const step = await prisma.serviceStageStep.update({ where: { id: stepId }, data, include: { stage: { include: { service: { include: { charity: true } } } } } });
+  
+  if (data.isDone !== undefined) {
+    await syncServiceProgress(step.stage.serviceId, { type: 'STEP', id: stepId, isDone: data.isDone });
+  }
   revalidatePath(`/charity/${encodeURIComponent(step.stage.service.charity.name)}/services`);
   revalidatePath(`/charity/${encodeURIComponent(step.stage.service.charity.name)}/strategy`);
   revalidatePath(`/charity/${encodeURIComponent(step.stage.service.charity.name)}/governance`);

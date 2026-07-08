@@ -4,6 +4,7 @@ import { prisma } from "@/lib/db";
 import { revalidatePath } from "next/cache";
 import { getSession } from "@/lib/auth";
 import { assertCharityAccess } from "@/lib/access";
+import { syncServiceProgress } from "./services";
 
 async function getFinanceService(charityId: string) {
   let service = await prisma.service.findFirst({
@@ -129,20 +130,19 @@ export async function setCurrentFinanceStage(charityId: string, stageId: string)
   const session = await getSession();
   if (!session) throw new Error("UNAUTHORIZED");
   await assertCharityAccess(session.id, session.role, charityId);
-  const service = await getFinanceService(charityId);
-  await prisma.serviceStage.updateMany({
-    where: { serviceId: service.id },
-    data: { isCurrent: false }
-  });
   
-  const updatedStage = await prisma.serviceStage.update({
+  const service = await getFinanceService(charityId);
+  await syncServiceProgress(service.id, stageId);
+
+  const updatedStage = await prisma.serviceStage.findUnique({
     where: { id: stageId },
-    data: { isCurrent: true },
     include: { service: { include: { charity: true } } }
   });
-  
-  revalidatePath(`/charity/${encodeURIComponent(updatedStage.service.charity.name)}`);
-  revalidatePath(`/charity/${encodeURIComponent(updatedStage.service.charity.name)}/finance`);
+
+  if (updatedStage) {
+    revalidatePath(`/charity/${encodeURIComponent(updatedStage.service.charity.name)}`);
+    revalidatePath(`/charity/${encodeURIComponent(updatedStage.service.charity.name)}/finance`);
+  }
 }
 
 export async function toggleCurrentFinanceStage(stageId: string, isCurrent: boolean) {

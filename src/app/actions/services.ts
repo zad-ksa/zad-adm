@@ -250,12 +250,17 @@ export async function updateServiceStage(
 export async function deleteServiceStage(id: string) {
   const stage = await prisma.serviceStage.delete({
     where: { id },
+
     include: { service: { include: { charity: true } } }
   });
   
   revalidatePath(`/charity/${encodeURIComponent(stage.service.charity.name)}/services`);
   if (stage.service.department) {
     revalidatePath(`/charity/${encodeURIComponent(stage.service.charity.name)}/${stage.service.department.toLowerCase()}`);
+  }
+  
+  if (stage.serviceId) {
+    await syncServiceProgress(stage.serviceId);
   }
   
   return stage;
@@ -299,17 +304,206 @@ export async function reorderServiceStages(stageIds: string[]) {
   }
 }
 
+export type SyncAction = { type: 'STAGE' | 'STEP'; id: string; isDone: boolean };
+
+export async function syncServiceProgress(
+  serviceId: string,
+  actionOrForcedId?: SyncAction | string
+) {
+  const allStages = await prisma.serviceStage.findMany({
+    where: { serviceId },
+    orderBy: { order: 'asc' },
+    include: { steps: { orderBy: { order: 'asc' } } }
+  });
+
+  if (allStages.length === 0) return;
+
+  let action: SyncAction | undefined;
+  if (typeof actionOrForcedId === 'string') {
+    // Legacy forcedCurrentStageId
+    action = { type: 'STAGE', id: actionOrForcedId, isDone: false };
+  } else {
+    action = actionOrForcedId;
+  }
+
+  if (action) {
+    let targetStageIndex = -1;
+    let targetStepIndex = -1;
+
+    if (action.type === 'STAGE') {
+      targetStageIndex = allStages.findIndex(s => s.id === action!.id);
+    } else {
+      for (let i = 0; i < allStages.length; i++) {
+        const sIdx = allStages[i].steps.findIndex(stp => stp.id === action!.id);
+        if (sIdx !== -1) {
+          targetStageIndex = i;
+          targetStepIndex = sIdx;
+          break;
+        }
+      }
+    }
+
+    if (targetStageIndex !== -1) {
+      if (action.type === 'STAGE') {
+        if (action.isDone) {
+          // Completed this stage.
+          // Before and including: DONE
+          for (let i = 0; i <= targetStageIndex; i++) {
+            if (!allStages[i].isDone) {
+              await (prisma as any).serviceStage.update({ where: { id: allStages[i].id }, data: { isDone: true } });
+              allStages[i].isDone = true;
+            }
+            for (const stp of allStages[i].steps) {
+              if (!stp.isDone) {
+                await (prisma as any).serviceStageStep.update({ where: { id: stp.id }, data: { isDone: true } });
+                stp.isDone = true;
+              }
+            }
+          }
+          // After: NOT DONE
+          for (let i = targetStageIndex + 1; i < allStages.length; i++) {
+            if (allStages[i].isDone) {
+              await (prisma as any).serviceStage.update({ where: { id: allStages[i].id }, data: { isDone: false } });
+              allStages[i].isDone = false;
+            }
+            for (const stp of allStages[i].steps) {
+              if (stp.isDone) {
+                await (prisma as any).serviceStageStep.update({ where: { id: stp.id }, data: { isDone: false } });
+                stp.isDone = false;
+              }
+            }
+          }
+        } else {
+          // Unchecked stage OR set as current.
+          // Before: DONE
+          for (let i = 0; i < targetStageIndex; i++) {
+            if (!allStages[i].isDone) {
+              await (prisma as any).serviceStage.update({ where: { id: allStages[i].id }, data: { isDone: true } });
+              allStages[i].isDone = true;
+            }
+            for (const stp of allStages[i].steps) {
+              if (!stp.isDone) {
+                await (prisma as any).serviceStageStep.update({ where: { id: stp.id }, data: { isDone: true } });
+                stp.isDone = true;
+              }
+            }
+          }
+          // Target and After: NOT DONE
+          for (let i = targetStageIndex; i < allStages.length; i++) {
+            if (allStages[i].isDone) {
+              await (prisma as any).serviceStage.update({ where: { id: allStages[i].id }, data: { isDone: false } });
+              allStages[i].isDone = false;
+            }
+            for (const stp of allStages[i].steps) {
+              if (stp.isDone) {
+                await (prisma as any).serviceStageStep.update({ where: { id: stp.id }, data: { isDone: false } });
+                stp.isDone = false;
+              }
+            }
+          }
+        }
+      } else if (action.type === 'STEP' && targetStepIndex !== -1) {
+        if (action.isDone) {
+          // Completed this step.
+          // Before stages: DONE
+          for (let i = 0; i < targetStageIndex; i++) {
+            if (!allStages[i].isDone) {
+              await (prisma as any).serviceStage.update({ where: { id: allStages[i].id }, data: { isDone: true } });
+              allStages[i].isDone = true;
+            }
+            for (const stp of allStages[i].steps) {
+              if (!stp.isDone) {
+                await (prisma as any).serviceStageStep.update({ where: { id: stp.id }, data: { isDone: true } });
+                stp.isDone = true;
+              }
+            }
+          }
+          // Same stage, steps up to target: DONE
+          for (let j = 0; j <= targetStepIndex; j++) {
+            if (!allStages[targetStageIndex].steps[j].isDone) {
+              await (prisma as any).serviceStageStep.update({ where: { id: allStages[targetStageIndex].steps[j].id }, data: { isDone: true } });
+              allStages[targetStageIndex].steps[j].isDone = true;
+            }
+          }
+          // Same stage, steps after target: NOT DONE
+          for (let j = targetStepIndex + 1; j < allStages[targetStageIndex].steps.length; j++) {
+            if (allStages[targetStageIndex].steps[j].isDone) {
+              await (prisma as any).serviceStageStep.update({ where: { id: allStages[targetStageIndex].steps[j].id }, data: { isDone: false } });
+              allStages[targetStageIndex].steps[j].isDone = false;
+            }
+          }
+          // After stages: NOT DONE
+          for (let i = targetStageIndex + 1; i < allStages.length; i++) {
+            if (allStages[i].isDone) {
+              await (prisma as any).serviceStage.update({ where: { id: allStages[i].id }, data: { isDone: false } });
+              allStages[i].isDone = false;
+            }
+            for (const stp of allStages[i].steps) {
+              if (stp.isDone) {
+                await (prisma as any).serviceStageStep.update({ where: { id: stp.id }, data: { isDone: false } });
+                stp.isDone = false;
+              }
+            }
+          }
+        } else {
+          // Unchecked step.
+          // Before stages: remain untouched (they should be DONE)
+          // Same stage, target step and after target: NOT DONE
+          for (let j = targetStepIndex; j < allStages[targetStageIndex].steps.length; j++) {
+            if (allStages[targetStageIndex].steps[j].isDone) {
+              await (prisma as any).serviceStageStep.update({ where: { id: allStages[targetStageIndex].steps[j].id }, data: { isDone: false } });
+              allStages[targetStageIndex].steps[j].isDone = false;
+            }
+          }
+          // After stages: NOT DONE
+          for (let i = targetStageIndex + 1; i < allStages.length; i++) {
+            if (allStages[i].isDone) {
+              await (prisma as any).serviceStage.update({ where: { id: allStages[i].id }, data: { isDone: false } });
+              allStages[i].isDone = false;
+            }
+            for (const stp of allStages[i].steps) {
+              if (stp.isDone) {
+                await (prisma as any).serviceStageStep.update({ where: { id: stp.id }, data: { isDone: false } });
+                stp.isDone = false;
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
+  // Evaluate each stage's isDone based on its steps
+  for (let i = 0; i < allStages.length; i++) {
+    const stage = allStages[i];
+    if (stage.steps.length > 0) {
+      const allStepsDone = stage.steps.every(stp => stp.isDone);
+      if (stage.isDone !== allStepsDone) {
+        await (prisma as any).serviceStage.update({ where: { id: stage.id }, data: { isDone: allStepsDone } });
+        stage.isDone = allStepsDone;
+      }
+    }
+  }
+
+  // Find the first stage that is not done
+  let currentStageIndex = allStages.findIndex(s => !s.isDone);
+  if (currentStageIndex === -1) {
+    currentStageIndex = allStages.length - 1;
+  }
+
+  for (let i = 0; i < allStages.length; i++) {
+    const shouldBeCurrent = i === currentStageIndex;
+    if (allStages[i].isCurrent !== shouldBeCurrent) {
+      await (prisma as any).serviceStage.update({ where: { id: allStages[i].id }, data: { isCurrent: shouldBeCurrent } });
+    }
+  }
+}
+
 export async function setCurrentServiceStage(serviceId: string, stageId: string) {
-  await prisma.$transaction([
-    prisma.serviceStage.updateMany({
-      where: { serviceId },
-      data: { isCurrent: false }
-    }),
-    prisma.serviceStage.update({
-      where: { id: stageId },
-      data: { isCurrent: true }
-    })
-  ]);
+  const session = await getSession();
+  if (!session) throw new Error("UNAUTHORIZED");
+
+  await syncServiceProgress(serviceId, stageId);
   
   const stage = await prisma.serviceStage.findUnique({
     where: { id: stageId },
@@ -326,11 +520,21 @@ export async function setCurrentServiceStage(serviceId: string, stageId: string)
 }
 
 export async function toggleCurrentServiceStage(stageId: string, isCurrent: boolean) {
+  const session = await getSession();
+  if (!session) throw new Error("UNAUTHORIZED");
+
   const stage = await prisma.serviceStage.update({
     where: { id: stageId },
     data: { isCurrent },
     include: { service: { include: { charity: true } } }
   });
+  
+  if (isCurrent) {
+    await syncServiceProgress(stage.serviceId, stageId);
+  } else {
+    await syncServiceProgress(stage.serviceId);
+  }
+  
   revalidatePath(`/charity/${encodeURIComponent(stage.service.charity.name)}/services`);
 }
 
@@ -488,13 +692,29 @@ export async function assignGanttDates(
 
 export async function toggleGanttItemCompletion(type: 'stage'|'step', id: string, isDone: boolean) {
   const session = await getSession();
-  if (!session) throw new Error("غير مصرح");
+  if (!session) throw new Error("UNAUTHORIZED");
+
+  let serviceId: string | null = null;
 
   if (type === 'stage') {
+    const stg = await prisma.serviceStage.findUnique({ where: { id } });
+    if (!stg) return { success: false };
+    serviceId = stg.serviceId;
+    
     await (prisma as any).serviceStage.update({ where: { id }, data: { isDone } });
+    await (prisma as any).serviceStageStep.updateMany({ where: { stageId: id }, data: { isDone } });
   } else {
+    const stp = await prisma.serviceStageStep.findUnique({ where: { id }, include: { stage: true } });
+    if (!stp) return { success: false };
+    serviceId = stp.stage.serviceId;
+    
     await (prisma as any).serviceStageStep.update({ where: { id }, data: { isDone } });
   }
+
+  if (serviceId) {
+    await syncServiceProgress(serviceId, { type: type === 'stage' ? 'STAGE' : 'STEP', id, isDone });
+  }
+
   revalidatePath('/dashboard');
   return { success: true };
 }
@@ -557,13 +777,13 @@ export async function broadcastGanttWeek(
           data: {
             serviceId: targetSvc.id, name: stg.name, description: stg.description, order: stg.order,
             isCurrent: false, isContinuous: stg.isContinuous, isActive: stg.isActive,
-            startDate: weekStart, endDate: weekEnd
+            startDate: weekStart, endDate: weekEnd, isDone: stg.isDone
           }
         });
       } else {
         await (prisma as any).serviceStage.update({
           where: { id: targetStage.id },
-          data: { startDate: weekStart, endDate: weekEnd }
+          data: { startDate: weekStart, endDate: weekEnd, isDone: stg.isDone }
         });
       }
     }
@@ -587,14 +807,14 @@ export async function broadcastGanttWeek(
       if (!targetStep) {
          await prisma.serviceStageStep.create({
            data: {
-             stageId: targetStage.id, name: stp.name, order: stp.order, isDone: false,
+             stageId: targetStage.id, name: stp.name, order: stp.order, isDone: stp.isDone,
              startDate: weekStart, endDate: weekEnd
            }
          });
       } else {
          await (prisma as any).serviceStageStep.update({
            where: { id: targetStep.id },
-           data: { startDate: weekStart, endDate: weekEnd }
+           data: { startDate: weekStart, endDate: weekEnd, isDone: stp.isDone }
          });
       }
     }

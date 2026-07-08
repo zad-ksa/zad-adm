@@ -78,6 +78,7 @@ export default function GanttChart({
 }: Props) {
   const router = useRouter();
   const [isEditMode, setIsEditMode] = useState(false);
+  const [displayMode, setDisplayMode] = useState<'dots' | 'text'>('dots');
   const [isPending, startTransition] = useTransition();
 
   // --- Calculate Weeks ---
@@ -335,11 +336,10 @@ export default function GanttChart({
           .print-container, .print-container * { visibility: visible; }
           .print-container { position: absolute; left: 0; top: 0; width: 100%; }
           .no-print { display: none !important; }
-          .print-text { display: block !important; }
-          .hide-in-print { display: none !important; }
+          .print-title { display: block !important; }
           @page { size: A4 landscape; margin: 1cm; }
         }
-        .print-text { display: none; }
+        .print-title { display: none; }
       `}} />
       
       <div className="print-container bg-white dark:bg-slate-900 md:rounded-2xl border border-slate-200 dark:border-slate-700 shadow-2xl w-full h-full md:h-auto md:max-h-[95vh] flex flex-col overflow-hidden">
@@ -352,6 +352,20 @@ export default function GanttChart({
             </p>
           </div>
           <div className="flex items-center gap-3">
+            <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 p-1 rounded-xl ml-2">
+              <button 
+                onClick={() => setDisplayMode('dots')} 
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${displayMode === 'dots' ? 'bg-white dark:bg-slate-700 text-primary shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}
+              >
+                النقاط
+              </button>
+              <button 
+                onClick={() => setDisplayMode('text')} 
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${displayMode === 'text' ? 'bg-white dark:bg-slate-700 text-primary shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}
+              >
+                النص
+              </button>
+            </div>
             {canEdit && (
               <button 
                 onClick={() => setIsEditMode(!isEditMode)} 
@@ -371,7 +385,7 @@ export default function GanttChart({
           </div>
         </div>
         
-        <div className="print-text px-5 py-4 font-black text-2xl text-center border-b">
+        <div className="print-title px-5 py-4 font-black text-2xl text-center border-b">
           مخطط تنفيذ {activeLabel}
         </div>
 
@@ -449,8 +463,7 @@ export default function GanttChart({
                           }}
                           onMouseLeave={() => setHoverData(null)}
                         >
-                          {/* Screen View (Dots) */}
-                          <div className="hide-in-print flex justify-center items-center h-full min-h-[30px]">
+                          <div className={`${displayMode === 'dots' ? 'flex' : 'hidden'} print:hidden justify-center items-center h-full min-h-[30px]`}>
                             {hasItems ? (
                               <div className={`w-5 h-5 rounded-full shadow-sm flex items-center justify-center text-[10px] text-white font-bold transition-all transform hover:scale-110 ${allDone ? 'bg-emerald-500' : dotColorClass}`}>
                                 {allDone && <Check className="w-3 h-3" />}
@@ -460,8 +473,7 @@ export default function GanttChart({
                             )}
                           </div>
                           
-                          {/* Print View (Text) */}
-                          <div className="print-text text-[9px] text-right">
+                          <div className={`${displayMode === 'text' ? 'block' : 'hidden'} print:!block text-[9px] text-right`}>
                             {overlappingItems.map((item, idx) => (
                               <div key={idx} className="mb-1 pb-1 border-b border-slate-100 last:border-0 flex items-center gap-1">
                                 <div className={`w-1.5 h-1.5 rounded-full shrink-0 ${item.isDone ? 'bg-emerald-500' : 'bg-slate-300'}`} />

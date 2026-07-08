@@ -113,14 +113,19 @@ export default async function ServicesOverviewPage() {
     });
   }
 
-  const canEdit = isAdmin || ["STRATEGY", "GOVERNANCE", "FINANCE"].includes(role) || (!["ADMIN","EXECUTIVE_DIRECTOR","GENERAL_MANAGER","ADMINISTRATIVE_SECRETARIAT","STRATEGY","GOVERNANCE","FINANCE"].includes(role));
+  const editableTabs = {
+    STRATEGY: isAdmin || hasPermission(session.role, session.permissions || [], "manage_strategy") || role === "STRATEGY",
+    GOVERNANCE: isAdmin || hasPermission(session.role, session.permissions || [], "manage_governance") || role === "GOVERNANCE",
+    FINANCE: isAdmin || hasPermission(session.role, session.permissions || [], "manage_finance") || role === "FINANCE",
+    SERVICES: isAdmin || hasPermission(session.role, session.permissions || [], "manage_programs") || role === "PROGRAMS",
+  };
 
   return (
     <ServicesOverviewClient
       charities={charities}
       stagesData={data}
       isAdmin={isAdmin}
-      canEdit={canEdit}
+      editableTabs={editableTabs}
       role={role}
       deptLabels={DEPT_LABELS}
       allowedCharityIds={assignedIds}

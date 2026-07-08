@@ -24,12 +24,6 @@ const getCachedFinanceData = async (charityName: string) => {
         financialLogs: {
           orderBy: { createdAt: "desc" }
         },
-        donorAccounts: {
-          orderBy: { createdAt: "desc" }
-        },
-        grantApplications: {
-          orderBy: { createdAt: "desc" }
-        },
         contractInstallments: {
           orderBy: { dueDate: "asc" }
         }
@@ -57,8 +51,6 @@ const getCachedFinanceData = async (charityName: string) => {
       charityData = {
         ...createdCharity,
         financialLogs: [],
-        donorAccounts: [],
-        grantApplications: [],
         contractInstallments: [],
       } as any;
     }
@@ -88,8 +80,6 @@ export default async function CharityFinancePage({ params }: { params: Promise<{
           annualRevenue: (charity as any).annualRevenue,
         }}
         initialLogs={(charity as any).financialLogs || []}
-        initialDonorAccounts={(charity as any).donorAccounts || []}
-        initialGrantApplications={(charity as any).grantApplications || []}
         initialInstallments={(charity as any).contractInstallments || []}
       />
     </div>

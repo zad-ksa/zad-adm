@@ -4,6 +4,8 @@ import CharityLayoutClient from "./CharityLayoutClient";
 import { prisma } from "@/lib/db";
 import { getSession } from "@/lib/auth";
 import { isAdminRole, getAssignedCharityIds } from "@/lib/access";
+import DashboardLayoutClient from "@/app/dashboard/(main)/DashboardLayoutClient";
+import { hasPermission } from "@/lib/permissions";
 
 export default async function CharityLayout({
   children,
@@ -32,7 +34,23 @@ export default async function CharityLayout({
     }
   }
 
-  // Fetch nav settings for this employee
+  // If the user is an employee, wrap with DashboardLayoutClient instead of CharityLayoutClient
+  if (session.role !== "CHARITY_CLIENT") {
+    let unreadRequests = 0;
+    if (hasPermission(session.role, session.permissions || [], "view_requests")) {
+      unreadRequests = await prisma.requestNotification.count({
+        where: { employeeId: session.id, isRead: false },
+      });
+    }
+
+    return (
+      <DashboardLayoutClient session={session} unreadRequests={unreadRequests}>
+        {children}
+      </DashboardLayoutClient>
+    );
+  }
+
+  // Fetch nav settings for this employee (actually for charity client in this fallback)
   const { getEmployeeNavSettings } = await import("@/app/actions/employeeSettings");
   const navSettings = await getEmployeeNavSettings(session.id);
 

@@ -4,9 +4,36 @@ import { unstable_cache } from "next/cache";
 import { prisma } from "@/lib/db";
 import { revalidatePath } from "next/cache";
 import { getSession } from "@/lib/auth";
+import { hasPermission } from "@/lib/permissions";
 import { processFirstGrant } from "./contracts";
 import { writeFile, mkdir } from "fs/promises";
 import { join } from "path";
+
+export const getSidebarCharities = async () => {
+  try {
+    const session = await getSession();
+    if (!session || !session.id) return [];
+
+    // If admin or has full manage_charities permission, return all
+    if (hasPermission(session.role, session.permissions, "manage_charities")) {
+      return await prisma.charity.findMany({
+        orderBy: { createdAt: "desc" },
+      });
+    }
+
+    // Otherwise return only assigned charities
+    const assigned = await prisma.employeeCharity.findMany({
+      where: { employeeId: session.id },
+      include: { charity: true },
+      orderBy: { charity: { createdAt: "desc" } }
+    });
+
+    return assigned.map(a => a.charity);
+  } catch (error) {
+    console.error("Error fetching sidebar charities:", error);
+    return [];
+  }
+};
 
 
 
@@ -41,6 +68,17 @@ export async function addCharity(data: { name: string; establishmentDate?: strin
         logoUrl: data.logoUrl || null,
       }
     });
+
+    const templates = await (prisma as any).serviceTemplate.findMany();
+    if (templates.length > 0) {
+      const servicesToCreate = templates.map((t: any) => ({
+        name: t.name,
+        department: t.department,
+        charityId: charity.id,
+        templateId: t.id
+      }));
+      await prisma.service.createMany({ data: servicesToCreate });
+    }
 
     revalidatePath("/dashboard");
     return { success: true, data: charity };
@@ -353,7 +391,13 @@ export async function deleteDonorAccount(accountId: string, charityId: string) {
   }
 }
 
-export async function addGrantApplication(charityId: string, initiativeName: string, requestedAmount: number, entityName: string) {
+export async function addGrantApplication(
+  charityId: string, 
+  initiativeName: string, 
+  requestedAmount: number, 
+  entityName: string,
+  status: string = "PENDING"
+) {
   try {
     const session = await getSession();
     if (!session || !session.id) return { success: false, message: "غير مصرح" };
@@ -366,12 +410,12 @@ export async function addGrantApplication(charityId: string, initiativeName: str
         initiativeName,
         requestedAmount,
         entityName,
-        status: "PENDING",
+        status,
       }
     });
 
     const charity = await prisma.charity.findUnique({ where: { id: charityId } });
-    if (charity) revalidatePath(`/charity/${encodeURIComponent(charity.name)}/finance`);
+    if (charity) revalidatePath(`/charity/${encodeURIComponent(charity.name)}/resource-development/grants`);
     
     return { success: true, grant };
   } catch (error: any) {
@@ -380,7 +424,17 @@ export async function addGrantApplication(charityId: string, initiativeName: str
   }
 }
 
-export async function updateGrantApplicationStatus(grantId: string, charityId: string, status: "PENDING" | "APPROVED" | "REJECTED", approvedAmount?: number) {
+export async function updateGrantApplicationStatus(
+  grantId: string, 
+  charityId: string, 
+  status: string, 
+  approvedAmount?: number,
+  installmentsCount?: number,
+  installmentsNotes?: string,
+  beneficiariesCount?: number,
+  collectedAmount?: number,
+  closureDate?: Date
+) {
   try {
     const session = await getSession();
     if (!session || !session.id) return { success: false, message: "غير مصرح" };
@@ -393,10 +447,17 @@ export async function updateGrantApplicationStatus(grantId: string, charityId: s
 
     const queries: any[] = [];
 
+    const updateData: any = { status };
+    if (installmentsCount !== undefined) updateData.installmentsCount = installmentsCount;
+    if (installmentsNotes !== undefined) updateData.installmentsNotes = installmentsNotes;
+    if (beneficiariesCount !== undefined) updateData.beneficiariesCount = beneficiariesCount;
+    if (collectedAmount !== undefined) updateData.collectedAmount = collectedAmount;
+    if (closureDate !== undefined) updateData.closureDate = closureDate;
+
     queries.push(
       (prisma as any).grantApplication.update({
         where: { id: grantId },
-        data: { status }
+        data: updateData
       })
     );
 
@@ -421,9 +482,10 @@ export async function updateGrantApplicationStatus(grantId: string, charityId: s
 
     await prisma.$transaction(queries);
 
+    revalidatePath(`/charity/${encodeURIComponent(charity.name)}/resource-development/grants`);
     revalidatePath(`/charity/${encodeURIComponent(charity.name)}/finance`);
     
-    return { success: true, grant: { ...grant, status } };
+    return { success: true, grant: { ...grant, ...updateData, status } };
   } catch (error: any) {
     console.error("Error updating grant status:", error);
     return { success: false, message: "حدث خطأ أثناء تحديث حالة المنحة" };

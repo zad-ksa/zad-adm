@@ -4,6 +4,96 @@ import { prisma } from "@/lib/db";
 import { revalidatePath } from "next/cache";
 import { getSession } from "@/lib/auth";
 import { assertCharityAccess } from "@/lib/access";
+import { hasPermission } from "@/lib/permissions";
+
+export async function getAllServiceTemplates() {
+  const session = await getSession();
+  if (!session) throw new Error("UNAUTHORIZED");
+  if (!hasPermission(session.role, session.permissions, "manage_charity_settings") && !hasPermission(session.role, session.permissions, "manage_charities")) {
+    throw new Error("UNAUTHORIZED");
+  }
+
+  return await (prisma as any).serviceTemplate.findMany({
+    include: {
+      stages: { orderBy: { order: 'asc' } }
+    },
+    orderBy: { createdAt: 'desc' }
+  });
+}
+
+export async function createServiceTemplate(name: string, department: string | null) {
+  const session = await getSession();
+  if (!session) throw new Error("UNAUTHORIZED");
+  if (!hasPermission(session.role, session.permissions, "manage_charity_settings") && !hasPermission(session.role, session.permissions, "manage_charities")) {
+    throw new Error("UNAUTHORIZED");
+  }
+
+  const template = await (prisma as any).serviceTemplate.create({
+    data: { name, department }
+  });
+
+  const charities = await prisma.charity.findMany({ select: { id: true } });
+  if (charities.length > 0) {
+    const servicesToCreate = charities.map(c => ({
+      name,
+      department,
+      charityId: c.id,
+      templateId: template.id
+    }));
+    await prisma.service.createMany({ data: servicesToCreate });
+  }
+  revalidatePath('/dashboard/manage-services');
+  return template;
+}
+
+export async function updateServiceTemplate(id: string, name: string, department: string | null) {
+  const session = await getSession();
+  if (!session) throw new Error("UNAUTHORIZED");
+  if (!hasPermission(session.role, session.permissions, "manage_charity_settings") && !hasPermission(session.role, session.permissions, "manage_charities")) {
+    throw new Error("UNAUTHORIZED");
+  }
+
+  const template = await (prisma as any).serviceTemplate.update({
+    where: { id },
+    data: { name, department }
+  });
+
+  await prisma.service.updateMany({
+    where: { templateId: id },
+    data: { name, department }
+  });
+  
+  revalidatePath('/dashboard/manage-services');
+  return template;
+}
+
+export async function deleteServiceTemplate(id: string) {
+  const session = await getSession();
+  if (!session) throw new Error("UNAUTHORIZED");
+  if (!hasPermission(session.role, session.permissions, "manage_charity_settings") && !hasPermission(session.role, session.permissions, "manage_charities")) {
+    throw new Error("UNAUTHORIZED");
+  }
+
+  // Delete linked services first (so we don't lose the reference due to SetNull)
+  await prisma.service.deleteMany({ where: { templateId: id } });
+  const template = await (prisma as any).serviceTemplate.delete({ where: { id } });
+  
+  revalidatePath('/dashboard/manage-services');
+  return template;
+}
+
+export async function getCharitiesForSelect() {
+  const session = await getSession();
+  if (!session) throw new Error("UNAUTHORIZED");
+  
+  if (hasPermission(session.role, session.permissions, "manage_charities") || hasPermission(session.role, session.permissions, "manage_charity_settings")) {
+    return await prisma.charity.findMany({
+      select: { id: true, name: true },
+      orderBy: { createdAt: 'desc' }
+    });
+  }
+  return [];
+}
 
 export async function getServices(charityId: string, department?: string | null) {
   const whereClause: any = { charityId };
@@ -342,5 +432,69 @@ export async function unifyCharityStagesAction(sourceCharityId: string, timeline
     }
   }
 
+
+  return { success: true };
+}
+
+export async function assignGanttDates(
+  serviceId: string,
+  startDate: Date,
+  endDate: Date,
+  stageIds: string[],
+  stepIds: string[]
+) {
+  const session = await getSession();
+  if (!session) throw new Error("غير مصرح");
+
+  // Clear dates for items in this service that currently have this exact week but were deselected
+  await (prisma as any).serviceStage.updateMany({
+    where: {
+      serviceId,
+      startDate: startDate,
+      endDate: endDate,
+      id: { notIn: stageIds.length > 0 ? stageIds : ['none'] }
+    },
+    data: { startDate: null, endDate: null }
+  });
+
+  await (prisma as any).serviceStageStep.updateMany({
+    where: {
+      stage: { serviceId },
+      startDate: startDate,
+      endDate: endDate,
+      id: { notIn: stepIds.length > 0 ? stepIds : ['none'] }
+    },
+    data: { startDate: null, endDate: null }
+  });
+
+  // Assign dates to selected ones
+  if (stageIds.length > 0) {
+    await (prisma as any).serviceStage.updateMany({
+      where: { id: { in: stageIds } },
+      data: { startDate, endDate }
+    });
+  }
+
+  if (stepIds.length > 0) {
+    await (prisma as any).serviceStageStep.updateMany({
+      where: { id: { in: stepIds } },
+      data: { startDate, endDate }
+    });
+  }
+
+  revalidatePath('/dashboard');
+  return { success: true };
+}
+
+export async function toggleGanttItemCompletion(type: 'stage'|'step', id: string, isDone: boolean) {
+  const session = await getSession();
+  if (!session) throw new Error("غير مصرح");
+
+  if (type === 'stage') {
+    await (prisma as any).serviceStage.update({ where: { id }, data: { isDone } });
+  } else {
+    await (prisma as any).serviceStageStep.update({ where: { id }, data: { isDone } });
+  }
+  revalidatePath('/dashboard');
   return { success: true };
 }

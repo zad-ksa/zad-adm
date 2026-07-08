@@ -1,7 +1,7 @@
 import { getSession } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { Building2, Users, ShieldAlert, ArrowLeft } from "lucide-react";
+import { Building2, Users, ShieldAlert, ArrowLeft, Layers } from "lucide-react";
 import { hasPermission } from "@/lib/permissions";
 
 export default async function AdminDashboardPage() {
@@ -70,6 +70,22 @@ export default async function AdminDashboardPage() {
             <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100 mb-2">إدارة الموظفين</h3>
             <p className="text-sm text-slate-500 dark:text-slate-400 mb-6 line-clamp-2">إدارة حسابات موظفي زاد التنموية، وتحديد أدوارهم وصلاحياتهم داخل النظام.</p>
             <div className="flex items-center gap-2 text-purple-600 font-bold text-sm">
+              <span>الدخول للإدارة</span>
+              <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
+            </div>
+          </Link>
+        )}
+
+        {/* Services Management */}
+        {(can("manage_charities") || can("manage_charity_settings")) && (
+          <Link href="/dashboard/manage-services" className="group bg-white dark:bg-slate-800 p-6 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700/50 hover:shadow-xl hover:shadow-primary/5 hover:border-primary/20 transition-all overflow-hidden relative">
+            <div className="absolute -left-6 -bottom-6 w-24 h-24 bg-primary/5 rounded-full group-hover:scale-150 transition-transform duration-500 pointer-events-none" />
+            <div className="w-12 h-12 bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400 rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 group-hover:rotate-3 transition-transform shadow-inner">
+              <Layers className="w-6 h-6" />
+            </div>
+            <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100 mb-2">إدارة الخدمات</h3>
+            <p className="text-sm text-slate-500 dark:text-slate-400 mb-6 line-clamp-2">إدارة المخططات الزمنية والخدمات الإضافية المرتبطة بجميع الجمعيات.</p>
+            <div className="flex items-center gap-2 text-amber-600 font-bold text-sm">
               <span>الدخول للإدارة</span>
               <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
             </div>

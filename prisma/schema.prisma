@@ -158,8 +158,13 @@ model GrantApplication {
   entityName      String   @default("غير محدد")
   initiativeName  String
   requestedAmount Float
-  status          String   @default("PENDING") // "PENDING", "APPROVED", "REJECTED"
-  createdAt       DateTime @default(now())
+  status             String    @default("PENDING") // "PENDING", "APPROVED", "REJECTED", "CLOSED"
+  installmentsCount  Int?
+  installmentsNotes  String?
+  beneficiariesCount Int?
+  collectedAmount    Float?
+  closureDate        DateTime?
+  createdAt          DateTime  @default(now())
   updatedAt       DateTime @updatedAt
   
   @@index([charityId])
@@ -358,12 +363,41 @@ model CharityRegulationVisibility {
   @@unique([charityId, regulationId])
 }
 
+model ServiceTemplate {
+  id         String         @id @default(uuid())
+  name       String
+  department String?
+  stages     ServiceStageTemplate[]
+  services   Service[]
+  
+  createdAt  DateTime       @default(now())
+  updatedAt  DateTime       @updatedAt
+}
+
+model ServiceStageTemplate {
+  id           String             @id @default(uuid())
+  name         String
+  description  String?
+  duration     String?
+  order        Int                @default(0)
+  
+  templateId   String
+  template     ServiceTemplate    @relation(fields: [templateId], references: [id], onDelete: Cascade)
+  
+  createdAt    DateTime           @default(now())
+  updatedAt    DateTime           @updatedAt
+}
+
 model Service {
   id         String         @id @default(uuid())
   name       String
   department String?
   charityId  String
   charity    Charity        @relation(fields: [charityId], references: [id], onDelete: Cascade)
+  
+  templateId String?
+  template   ServiceTemplate? @relation(fields: [templateId], references: [id], onDelete: SetNull)
+
   stages     ServiceStage[]
   
   responsibleName  String?
@@ -384,6 +418,10 @@ model ServiceStage {
   isCurrent    Boolean            @default(false)
   isContinuous Boolean            @default(false)
   isActive     Boolean            @default(true)
+  isDone       Boolean            @default(false)
+  
+  templateId   String?
+  
   serviceId    String
   service      Service            @relation(fields: [serviceId], references: [id], onDelete: Cascade)
   steps        ServiceStageStep[]
@@ -395,6 +433,8 @@ model ServiceStageStep {
   id        String       @id @default(uuid())
   name      String
   isDone    Boolean      @default(false)
+  startDate DateTime?
+  endDate   DateTime?
   order     Int          @default(0)
   stageId   String
   stage     ServiceStage @relation(fields: [stageId], references: [id], onDelete: Cascade)

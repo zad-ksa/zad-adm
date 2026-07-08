@@ -898,12 +898,12 @@ ${body}</body></html>`;
 
 // ── Main Export ─────────────────────────────────────────────────────
 export default function ServicesOverviewClient({
-  charities, stagesData, isAdmin, canEdit, role, deptLabels, allowedCharityIds,
+  charities, stagesData, isAdmin, editableTabs, role, deptLabels, allowedCharityIds,
 }: {
   charities: Charity[];
   stagesData: Record<string, any[]>;
   isAdmin: boolean;
-  canEdit: boolean;
+  editableTabs: Record<string, boolean>;
   role: string;
   deptLabels: Record<string, string>;
   allowedCharityIds: string[] | null;
@@ -1070,6 +1070,9 @@ export default function ServicesOverviewClient({
   const isGenericTab = activeTab.startsWith("SVC:");
   const genericSvcId = isGenericTab ? activeTab.replace("SVC:", "") : null;
   const activeLabel = tabs.find(t => t.key === activeTab)?.label || "";
+
+  // Derive canEdit based on active tab
+  const canEdit = editableTabs[isGenericTab ? 'SERVICES' : activeTab] || false;
   // Look up by id first, fall back to matching by label (handles id drift after re-render)
   const genericSvcInfo = genericSvcId
     ? (uniqueServiceKeys.find(s => s.id === genericSvcId) ?? uniqueServiceKeys.find(s => s.name === activeLabel) ?? null)
@@ -1537,6 +1540,7 @@ export default function ServicesOverviewClient({
           isGenericTab={isGenericTab}
           genericSvcName={genericSvcInfo?.name ?? null}
           deptColors={DEPT_COLORS}
+          canEdit={canEdit}
           onClose={() => setShowGantt(false)}
         />
       )}

@@ -22,9 +22,9 @@ export default async function StrategyLayout({
         <p className="text-slate-500 dark:text-slate-400 transition-colors">البيانات الاستراتيجية، الأداء، ونتائج التحليلات الخاصة بالجمعية.</p>
       </div>
 
-      <div className="print:hidden">
+      {/* <div className="print:hidden">
         <StrategyTabs charityName={decodedName} isAdmin={isAdmin} isCharityClient={isCharityClient} />
-      </div>
+      </div> */}
 
       <div className="flex-1 bg-white dark:bg-slate-800 rounded-b-3xl rounded-tl-3xl p-6 md:p-8 shadow-sm border border-slate-200 dark:border-slate-700 print:shadow-none print:border-none print:p-0 print:m-0 transition-colors">
         {children}

@@ -7,9 +7,21 @@ import { User, ShieldAlert, Users, X, LogOut, LayoutDashboard, Building2, Clipbo
 import { useTheme } from "next-themes";
 import { logout } from "@/app/actions/auth";
 import { updateProfile } from "@/app/actions/profile";
-import { usePathname } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 import ZadLogo from "@/components/ZadLogo";
 import { hasPermission, ROLE_LABELS } from "@/lib/permissions";
+import { getSidebarCharities } from "@/app/actions/charity";
+import { ChevronDown, Target, Scale, DollarSign } from "lucide-react";
+
+// --- Sub Tab Link Component ---
+function SubTabLink({ href, label, isActive }: { href: string, label: string, isActive: boolean }) {
+  return (
+    <Link href={href} className={`flex items-center px-1.5 py-1.5 rounded-lg text-[11px] font-bold transition-all ${isActive ? "bg-primary/10 text-primary" : "text-slate-500 hover:bg-slate-100 hover:text-slate-800 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-200"}`}>
+      <div className="w-1.5 h-1.5 rounded-full ml-1.5 shrink-0 bg-current opacity-50" />
+      <span className="truncate">{label}</span>
+    </Link>
+  );
+}
 
 // --- Nav Item Component ---
 function NavItem({ item, isActive, isOpen }: { item: any, isActive: boolean, isOpen: boolean }) {
@@ -18,7 +30,7 @@ function NavItem({ item, isActive, isOpen }: { item: any, isActive: boolean, isO
       <Link
         href={item.href}
         title={!isOpen ? item.label : undefined}
-        className={`flex items-center ${isOpen ? "justify-start px-2.5" : "justify-center"} py-2 rounded-lg text-sm font-bold transition-all group relative ${
+        className={`flex items-center ${isOpen ? "justify-start px-2.5" : "justify-center"} py-2 rounded-lg text-[13px] font-bold transition-all group relative ${
           isActive
             ? "bg-primary text-white shadow-sm shadow-primary/20"
             : "text-slate-500 dark:text-slate-400 hover:bg-primary/5 dark:hover:bg-primary/10 hover:text-primary dark:hover:text-primary"
@@ -59,6 +71,27 @@ export default function EmployeeSidebar({
   unreadRequests?: number;
 }) {
   const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const currentTab = searchParams.get("tab");
+  const decodedPathname = pathname ? decodeURIComponent(pathname) : "";
+  
+  let initialService: string | null = null;
+  let initialCharity: string | null = null;
+  
+  if (pathname && pathname.startsWith("/charity/")) {
+    const parts = pathname.split("/");
+    if (parts.length >= 4) {
+      const charityName = decodeURIComponent(parts[2]);
+      const serviceId = parts[3];
+      
+      initialService = serviceId;
+      initialCharity = `${serviceId}-${charityName}`;
+    }
+  }
+
+  const [expandedService, setExpandedService] = useState<string | null>(initialService);
+  const [expandedCharity, setExpandedCharity] = useState<string | null>(initialCharity);
+
   const [userState, setUserState] = useState(session);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [name, setName] = useState("");
@@ -72,11 +105,29 @@ export default function EmployeeSidebar({
   const [isPending, startTransition] = useTransition();
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
-  const [collapsedGroups, setCollapsedGroups] = useState<string[]>([]);
+  const [collapsedGroups, setCollapsedGroups] = useState<string[]>(initialService ? [] : ["الخدمات"]);
+  const [charities, setCharities] = useState<any[]>([]);
 
   useEffect(() => {
     setMounted(true);
+    getSidebarCharities().then(res => setCharities(res || []));
   }, []);
+
+  useEffect(() => {
+    if (!pathname) return;
+    
+    if (pathname.startsWith("/charity/")) {
+      const parts = pathname.split("/");
+      if (parts.length >= 4) {
+        const charityName = decodeURIComponent(parts[2]);
+        const serviceId = parts[3];
+        
+        setExpandedService(serviceId);
+        setExpandedCharity(`${serviceId}-${charityName}`);
+        setCollapsedGroups(prev => prev.filter(g => g !== "الخدمات"));
+      }
+    }
+  }, [pathname]);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -314,11 +365,124 @@ export default function EmployeeSidebar({
             );
           };
 
+          const renderServicesGroup = () => {
+            const hasServicesAccess = can("view_services_overview") || can("manage_charities");
+            if (!hasServicesAccess) return null;
+
+            const isServicesCollapsed = collapsedGroups.includes("الخدمات");
+            const toggleServices = () => setCollapsedGroups(prev => prev.includes("الخدمات") ? prev.filter(g => g !== "الخدمات") : [...prev, "الخدمات"]);
+
+            const allServices = [
+              { id: "strategy", label: "الاستراتيجية", icon: Target, required: "manage_strategy" },
+              { id: "governance", label: "الحوكمة", icon: Scale, required: "manage_governance" },
+              { id: "resource-development", label: "تنمية الموارد المالية", icon: Users, required: "manage_finance" },
+              { id: "finance", label: "المالية", icon: DollarSign, required: "manage_finance" },
+            ];
+
+            const services = allServices.filter(svc => can(svc.required));
+            if (services.length === 0) return null;
+
+            return (
+              <div className="mb-2">
+                {isOpen && (
+                  <button 
+                    onClick={toggleServices}
+                    className="flex items-center justify-between w-full px-2 mb-2 group cursor-pointer outline-none"
+                  >
+                    <span className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider group-hover:text-primary transition-colors">الخدمات</span>
+                    <ChevronRight className={`w-3.5 h-3.5 text-slate-400 group-hover:text-primary transition-transform duration-200 ${isServicesCollapsed ? 'rotate-180' : 'rotate-90'}`} />
+                  </button>
+                )}
+                <div className={`space-y-0.5 overflow-hidden transition-all duration-300 ease-in-out ${isOpen && isServicesCollapsed ? 'max-h-0 opacity-0' : 'max-h-[1500px] opacity-100'}`}>
+                  {isOpen && (
+                    <Link
+                      href="/dashboard/services-overview"
+                      className={`flex items-center w-full px-2.5 py-1.5 rounded-lg text-[11px] font-bold transition-all group mt-1 ${pathname === "/dashboard/services-overview" ? "bg-primary/10 text-primary" : "text-slate-500 hover:bg-primary/5 hover:text-primary"}`}
+                    >
+                      <LayoutGrid className="w-3.5 h-3.5 ml-2" />
+                      <span>الكل</span>
+                    </Link>
+                  )}
+                  
+                  {isOpen && services.map(svc => (
+                    <div key={svc.id} className="relative mt-1">
+                      <button 
+                        onClick={() => setExpandedService(prev => prev === svc.id ? null : svc.id)}
+                        className={`flex items-center justify-between w-full px-2.5 py-1.5 rounded-lg text-[11px] font-bold transition-all group ${expandedService === svc.id ? "bg-primary/5 text-primary" : "text-slate-500 hover:bg-primary/5 hover:text-primary"}`}
+                      >
+                        <div className="flex items-center">
+                          <svc.icon className="w-3.5 h-3.5 ml-2" />
+                          <span>{svc.label}</span>
+                        </div>
+                        <ChevronDown className={`w-3 h-3 transition-transform ${expandedService === svc.id ? 'rotate-180' : ''}`} />
+                      </button>
+                      
+                      <div className={`overflow-hidden transition-all duration-300 ease-in-out ${expandedService === svc.id ? 'max-h-[1000px] opacity-100 mt-1 mb-2' : 'max-h-0 opacity-0'}`}>
+                        <div className="mr-3 space-y-1 border-r-2 border-slate-100 dark:border-slate-800 pr-2">
+                          {charities.map(charity => {
+                            const charityKey = `${svc.id}-${charity.name}`;
+                            const isCharityExpanded = expandedCharity === charityKey;
+                            const toggleCharity = () => setExpandedCharity(prev => prev === charityKey ? null : charityKey);
+                            
+                            return (
+                              <div key={charity.id}>
+                                <button
+                                  onClick={toggleCharity}
+                                  className={`flex items-center justify-between w-full px-1.5 py-1.5 rounded-lg text-[11px] font-bold transition-all ${isCharityExpanded ? "text-primary bg-primary/5" : "text-slate-500 hover:text-primary hover:bg-slate-50 dark:hover:bg-slate-800"}`}
+                                >
+                                  <span className="truncate text-right">{charity.name}</span>
+                                  <ChevronDown className={`w-2.5 h-2.5 transition-transform shrink-0 ${isCharityExpanded ? 'rotate-180' : ''}`} />
+                                </button>
+                                
+                                <div className={`overflow-hidden transition-all duration-300 ease-in-out ${isCharityExpanded ? 'max-h-[500px] opacity-100 mt-1 mb-2' : 'max-h-0 opacity-0'}`}>
+                                  <div className="mr-2 space-y-0.5 border-r-2 border-slate-100 dark:border-slate-800 pr-1.5">
+                                    {svc.id === "strategy" && (
+                                      <>
+                                        <SubTabLink href={`/charity/${encodeURIComponent(charity.name)}/strategy`} label="استبيان الجاهزية" isActive={decodedPathname === `/charity/${charity.name}/strategy`} />
+                                        <SubTabLink href={`/charity/${encodeURIComponent(charity.name)}/strategy/vision-mission`} label="استبيان الرؤية" isActive={decodedPathname === `/charity/${charity.name}/strategy/vision-mission`} />
+                                        <SubTabLink href={`/charity/${encodeURIComponent(charity.name)}/strategy/hexagonal`} label="التحليل السداسي" isActive={decodedPathname === `/charity/${charity.name}/strategy/hexagonal`} />
+                                        <SubTabLink href={`/charity/${encodeURIComponent(charity.name)}/strategy/performance`} label="مقياس الأداء" isActive={decodedPathname === `/charity/${charity.name}/strategy/performance`} />
+                                      </>
+                                    )}
+                                    {svc.id === "governance" && (
+                                      <>
+                                        <SubTabLink href={`/charity/${encodeURIComponent(charity.name)}/governance?tab=manual`} label="دليل الحوكمة" isActive={decodedPathname === `/charity/${charity.name}/governance` && (!currentTab || currentTab === 'manual')} />
+                                        <SubTabLink href={`/charity/${encodeURIComponent(charity.name)}/governance?tab=files`} label="الملفات والأنظمة" isActive={decodedPathname === `/charity/${charity.name}/governance` && currentTab === 'files'} />
+                                        <SubTabLink href={`/charity/${encodeURIComponent(charity.name)}/governance?tab=services`} label="خدمات المركز" isActive={decodedPathname === `/charity/${charity.name}/governance` && currentTab === 'services'} />
+                                      </>
+                                    )}
+                                    {svc.id === "resource-development" && (
+                                      <>
+                                        <SubTabLink href={`/charity/${encodeURIComponent(charity.name)}/resource-development/donors`} label="الجهات المانحة" isActive={decodedPathname === `/charity/${charity.name}/resource-development/donors`} />
+                                        <SubTabLink href={`/charity/${encodeURIComponent(charity.name)}/resource-development/grants`} label="المنح" isActive={decodedPathname === `/charity/${charity.name}/resource-development/grants`} />
+                                      </>
+                                    )}
+                                    {svc.id === "finance" && (
+                                      <>
+                                        <SubTabLink href={`/charity/${encodeURIComponent(charity.name)}/finance`} label="الوضع المالي" isActive={decodedPathname === `/charity/${charity.name}/finance`} />
+                                      </>
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            );
+          };
+
           return (
             <>
               {renderGroup("", ["الرئيسية"])}
               {isOpen && <div className="h-px bg-slate-100 dark:bg-slate-800 mx-2" />}
-              {renderGroup("الجمعيات", ["الجمعيات", "عرض الخدمات", "العقود", "الاستبيانات", "التواصل"])}
+              {renderServicesGroup()}
+              {isOpen && <div className="h-px bg-slate-100 dark:bg-slate-800 mx-2" />}
+              {renderGroup("الجمعيات", ["الجمعيات", "العقود", "الاستبيانات", "التواصل"])}
               {isOpen && <div className="h-px bg-slate-100 dark:bg-slate-800 mx-2" />}
               {renderGroup("زاد", ["الطلبات", "الأخبار والإنجازات", "محاضر الاجتماعات", "المهام والمنجزات", "مهامي"])}
               {isOpen && <div className="h-px bg-slate-100 dark:bg-slate-800 mx-2" />}

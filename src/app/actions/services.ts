@@ -498,3 +498,107 @@ export async function toggleGanttItemCompletion(type: 'stage'|'step', id: string
   revalidatePath('/dashboard');
   return { success: true };
 }
+
+export async function broadcastGanttWeek(
+  sourceCharityId: string,
+  timelineType: string,
+  sourceServiceId: string,
+  targetCharityIds: string[],
+  weekStart: Date,
+  weekEnd: Date,
+  selectedStageIds: string[],
+  selectedStepIds: string[]
+) {
+  const session = await getSession();
+  if (!session) throw new Error("غير مصرح");
+  
+  const sourceService = await prisma.service.findUnique({ where: { id: sourceServiceId } });
+  if (!sourceService) throw new Error("الخدمة غير موجودة");
+
+  const selectedSourceStages = await prisma.serviceStage.findMany({ where: { id: { in: selectedStageIds } } });
+  const selectedSourceSteps = await prisma.serviceStageStep.findMany({ where: { id: { in: selectedStepIds } }, include: { stage: true } });
+
+  for (const targetId of targetCharityIds) {
+    let targetSvc = await prisma.service.findFirst({ 
+      where: { 
+        charityId: targetId, 
+        ...(["STRATEGY", "GOVERNANCE", "FINANCE"].includes(timelineType) 
+             ? { department: timelineType } 
+             : { name: sourceService.name })
+      } 
+    });
+
+    if (!targetSvc) {
+      targetSvc = await prisma.service.create({
+        data: {
+          name: sourceService.name,
+          department: sourceService.department,
+          charityId: targetId,
+        }
+      });
+    }
+
+    await (prisma as any).serviceStage.updateMany({
+      where: { serviceId: targetSvc.id, startDate: weekStart, endDate: weekEnd },
+      data: { startDate: null, endDate: null }
+    });
+    
+    await (prisma as any).serviceStageStep.updateMany({
+      where: { stage: { serviceId: targetSvc.id }, startDate: weekStart, endDate: weekEnd },
+      data: { startDate: null, endDate: null }
+    });
+
+    for (const stg of selectedSourceStages) {
+      let targetStage = await prisma.serviceStage.findFirst({
+        where: { serviceId: targetSvc.id, name: stg.name }
+      });
+      if (!targetStage) {
+        targetStage = await prisma.serviceStage.create({
+          data: {
+            serviceId: targetSvc.id, name: stg.name, description: stg.description, order: stg.order,
+            isCurrent: false, isContinuous: stg.isContinuous, isActive: stg.isActive,
+            startDate: weekStart, endDate: weekEnd
+          }
+        });
+      } else {
+        await (prisma as any).serviceStage.update({
+          where: { id: targetStage.id },
+          data: { startDate: weekStart, endDate: weekEnd }
+        });
+      }
+    }
+
+    for (const stp of selectedSourceSteps) {
+      let targetStage = await prisma.serviceStage.findFirst({
+        where: { serviceId: targetSvc.id, name: stp.stage.name }
+      });
+      if (!targetStage) {
+         targetStage = await prisma.serviceStage.create({
+            data: {
+              serviceId: targetSvc.id, name: stp.stage.name, order: stp.stage.order,
+              isCurrent: false, isContinuous: stp.stage.isContinuous, isActive: stp.stage.isActive
+            }
+         });
+      }
+      
+      let targetStep = await prisma.serviceStageStep.findFirst({
+         where: { stageId: targetStage.id, name: stp.name }
+      });
+      if (!targetStep) {
+         await prisma.serviceStageStep.create({
+           data: {
+             stageId: targetStage.id, name: stp.name, order: stp.order, isDone: false,
+             startDate: weekStart, endDate: weekEnd
+           }
+         });
+      } else {
+         await (prisma as any).serviceStageStep.update({
+           where: { id: targetStep.id },
+           data: { startDate: weekStart, endDate: weekEnd }
+         });
+      }
+    }
+  }
+  revalidatePath('/dashboard');
+  return { success: true };
+}

@@ -2,7 +2,7 @@
 
 import { useMemo, useState, useTransition } from "react";
 import { X, Edit, Printer, Check, Plus, Info, Edit2, Trash2 } from "lucide-react";
-import { assignGanttDates, toggleGanttItemCompletion, addServiceStage, updateServiceStage, deleteServiceStage, unifyCharityStagesAction } from "@/app/actions/services";
+import { assignGanttDates, toggleGanttItemCompletion, addServiceStage, updateServiceStage, deleteServiceStage, broadcastGanttWeek } from "@/app/actions/services";
 import { addServiceStageStep, updateServiceStageStep, deleteServiceStageStep } from "@/app/actions/stageSteps";
 import { useRouter } from "next/navigation";
 
@@ -216,9 +216,17 @@ export default function GanttChart({
         );
         
         if (unifyTargetIds.length > 0) {
-          // timelineType can be 'STRATEGY', 'GOVERNANCE', 'FINANCE', or 'CUSTOM'
           const timelineType = isGenericTab ? 'CUSTOM' : activeTab;
-          await unifyCharityStagesAction(modalState.charityId, timelineType, modalState.serviceId, unifyTargetIds);
+          await broadcastGanttWeek(
+            modalState.charityId, 
+            timelineType, 
+            modalState.serviceId, 
+            unifyTargetIds,
+            modalState.weekStart,
+            modalState.weekEnd,
+            modalState.selectedStageIds,
+            modalState.selectedStepIds
+          );
         }
         
         setModalState(null);
@@ -482,19 +490,38 @@ export default function GanttChart({
             <Info className="w-4 h-4 text-primary" />
             محتوى النقطة
           </h4>
-          <div className="space-y-3 pr-1 flex-1">
-            {hoverData.items.slice(0, 4).map((item, idx) => (
-              <div key={idx} className="text-xs">
-                <div className="flex items-center gap-2 font-bold text-slate-700 dark:text-slate-200">
-                  <div className={`w-2 h-2 rounded-full shrink-0 ${item.isDone ? 'bg-emerald-500' : 'bg-amber-400'}`} />
-                  {item.name}
+          <div className="space-y-4 pr-1 flex-1">
+            {Object.entries(hoverData.items.reduce((acc, item) => {
+              const stageName = item.type === 'stage' ? item.name : item.stageName;
+              if (!acc[stageName]) acc[stageName] = { stage: null, steps: [] };
+              if (item.type === 'stage') acc[stageName].stage = item;
+              else acc[stageName].steps.push(item);
+              return acc;
+            }, {} as Record<string, { stage: any, steps: any[] }>)).slice(0, 3).map(([stageName, group], idx) => (
+              <div key={idx} className="bg-slate-50 dark:bg-slate-900/50 rounded-lg p-2 border border-slate-100 dark:border-slate-700">
+                <div className="flex items-center gap-2 font-bold text-slate-800 dark:text-slate-200 text-xs mb-1">
+                  <div className={`w-2 h-2 rounded-full shrink-0 ${group.stage?.isDone ? 'bg-emerald-500' : 'bg-primary'}`} />
+                  {stageName}
                 </div>
-                {item.type === 'step' && <div className="text-[10px] text-slate-400 mt-0.5 pr-4">خطوة من مرحلة: {item.stageName}</div>}
+                {group.steps.length > 0 && (
+                  <div className="pl-4 border-r-2 border-slate-200 dark:border-slate-600 mr-1 mt-1.5 space-y-1.5 pr-2">
+                    {group.steps.map((stp: any, sIdx: number) => (
+                      <div key={sIdx} className="flex items-center gap-1.5 text-[10px] text-slate-600 dark:text-slate-400">
+                        <div className={`w-1.5 h-1.5 rounded-full shrink-0 ${stp.isDone ? 'bg-emerald-500' : 'bg-amber-400'}`} />
+                        {stp.name}
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             ))}
-            {hoverData.items.length > 4 && (
+            {Object.keys(hoverData.items.reduce((acc, item) => {
+              const stageName = item.type === 'stage' ? item.name : item.stageName;
+              if (!acc[stageName]) acc[stageName] = true;
+              return acc;
+            }, {} as Record<string, boolean>)).length > 3 && (
               <div className="mt-2 text-center text-[10px] font-bold text-primary bg-primary/5 rounded-lg py-2 border border-primary/10">
-                انقر لعرض {hoverData.items.length - 4} عناصر إضافية ...
+                انقر لعرض التفاصيل الكاملة ...
               </div>
             )}
           </div>
@@ -519,25 +546,43 @@ export default function GanttChart({
             </div>
             
             <div className="flex-1 overflow-auto p-6">
-              <div className="space-y-4 relative before:absolute before:inset-0 before:ml-5 before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-gradient-to-b before:from-transparent before:via-slate-200 dark:before:via-slate-700 before:to-transparent">
-                {viewModalData.items.map((item, idx) => (
-                  <div key={idx} className="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group is-active">
-                    <div className="flex items-center justify-center w-8 h-8 rounded-full border-4 border-white dark:border-slate-800 shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2 shadow-sm z-10 bg-white dark:bg-slate-800">
-                      <div className={`w-3 h-3 rounded-full ${item.isDone ? 'bg-emerald-500' : 'bg-amber-400 animate-pulse'}`} />
+              <div className="space-y-6 relative before:absolute before:inset-0 before:mr-3.5 md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-gradient-to-b before:from-transparent before:via-slate-200 dark:before:via-slate-700 before:to-transparent">
+                {Object.entries(viewModalData.items.reduce((acc, item) => {
+                  const stageName = item.type === 'stage' ? item.name : item.stageName;
+                  if (!acc[stageName]) acc[stageName] = { stage: null, steps: [] };
+                  if (item.type === 'stage') acc[stageName].stage = item;
+                  else acc[stageName].steps.push(item);
+                  return acc;
+                }, {} as Record<string, { stage: any, steps: any[] }>)).map(([stageName, group], idx) => (
+                  <div key={idx} className="relative flex flex-col md:even:items-end group is-active z-10 pr-10 md:pr-0">
+                    {/* Timeline dot */}
+                    <div className="absolute right-0 top-3 md:top-3 md:left-1/2 md:right-auto md:-translate-x-1/2 flex items-center justify-center w-8 h-8 rounded-full border-4 border-white dark:border-slate-800 shadow-sm bg-white dark:bg-slate-800">
+                      <div className={`w-3 h-3 rounded-full ${group.stage?.isDone ? 'bg-emerald-500' : 'bg-primary'}`} />
                     </div>
                     
-                    <div className="w-[calc(100%-4rem)] md:w-[calc(50%-2rem)] bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm hover:shadow-md transition-shadow">
-                      <div className="flex items-center gap-2 mb-1">
-                         <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${item.type === 'stage' ? 'bg-primary/10 text-primary' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300'}`}>
-                           {item.type === 'stage' ? 'مرحلة' : 'خطوة'}
-                         </span>
-                         {item.isDone && <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600">مكتملة <Check className="w-3 h-3 inline"/></span>}
+                    <div className="w-full md:w-[calc(50%-2rem)] bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm hover:shadow-md transition-shadow">
+                      <div className="flex items-center justify-between mb-3 border-b border-slate-100 dark:border-slate-800 pb-2">
+                         <div className="flex items-center gap-2">
+                           <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-primary/10 text-primary">مرحلة</span>
+                           <h4 className="font-bold text-slate-800 dark:text-slate-100 text-sm leading-tight">{stageName}</h4>
+                         </div>
+                         {group.stage?.isDone && <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 flex items-center gap-1">مكتملة <Check className="w-3 h-3"/></span>}
                       </div>
-                      <h4 className="font-bold text-slate-800 dark:text-slate-100 text-sm leading-tight">{item.name}</h4>
-                      {item.type === 'step' && (
-                        <p className="text-[10px] text-slate-500 mt-2 border-t border-slate-100 dark:border-slate-800 pt-2">
-                          تابعة لمرحلة: <span className="font-bold text-slate-700 dark:text-slate-300">{item.stageName}</span>
-                        </p>
+                      
+                      {group.steps.length > 0 ? (
+                        <div className="space-y-2.5">
+                          {group.steps.map((stp: any, sIdx: number) => (
+                            <div key={sIdx} className="flex items-center justify-between bg-slate-50 dark:bg-slate-800/50 p-2 rounded-lg border border-slate-100 dark:border-slate-700">
+                              <div className="flex items-center gap-2 text-xs font-bold text-slate-700 dark:text-slate-300">
+                                <div className={`w-1.5 h-1.5 rounded-full ${stp.isDone ? 'bg-emerald-500' : 'bg-amber-400'}`} />
+                                {stp.name}
+                              </div>
+                              {stp.isDone && <Check className="w-3 h-3 text-emerald-500" />}
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <p className="text-xs text-slate-400">لا توجد خطوات مخصصة لهذه المرحلة في هذا الأسبوع.</p>
                       )}
                     </div>
                   </div>
@@ -646,8 +691,23 @@ export default function GanttChart({
                                           type="checkbox"
                                           checked={isStpSelected}
                                           onChange={(e) => {
-                                            if (e.target.checked) setModalState({...modalState, selectedStepIds: [...modalState.selectedStepIds, stp.id]});
-                                            else setModalState({...modalState, selectedStepIds: modalState.selectedStepIds.filter(id => id !== stp.id)});
+                                            const checked = e.target.checked;
+                                            if (checked) {
+                                              const newStepIds = [...modalState.selectedStepIds, stp.id];
+                                              const allStepsInStage = stg.steps ? stg.steps.map(s => s.id) : [];
+                                              const allChecked = allStepsInStage.length > 0 && allStepsInStage.every(id => newStepIds.includes(id));
+                                              setModalState({
+                                                ...modalState, 
+                                                selectedStepIds: newStepIds,
+                                                selectedStageIds: allChecked ? [...new Set([...modalState.selectedStageIds, stg.id])] : modalState.selectedStageIds
+                                              });
+                                            } else {
+                                              setModalState({
+                                                ...modalState, 
+                                                selectedStepIds: modalState.selectedStepIds.filter(id => id !== stp.id),
+                                                selectedStageIds: modalState.selectedStageIds.filter(id => id !== stg.id)
+                                              });
+                                            }
                                           }}
                                           className="peer w-4 h-4 appearance-none border-2 border-slate-300 dark:border-slate-600 rounded bg-transparent checked:bg-amber-500 checked:border-amber-500 transition-all cursor-pointer"
                                         />

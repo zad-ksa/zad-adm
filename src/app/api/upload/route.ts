@@ -21,8 +21,19 @@ export async function POST(request: Request) {
 
     // Upload to Cloudinary using a promise
     const result = await new Promise((resolve, reject) => {
+      // Extract original filename without extension and the extension
+      const originalName = file.name || "file";
+      const lastDotIndex = originalName.lastIndexOf(".");
+      const nameWithoutExt = lastDotIndex !== -1 ? originalName.substring(0, lastDotIndex) : originalName;
+      const ext = lastDotIndex !== -1 ? originalName.substring(lastDotIndex + 1) : "";
+
       cloudinary.uploader.upload_stream(
-        { folder: "zad_charity_logos", resource_type: "auto" }, // optional folder
+        { 
+          folder: "zad_charity_logos", 
+          resource_type: "auto",
+          // Cloudinary for raw files needs the extension in the public_id to serve it correctly
+          public_id: nameWithoutExt.replace(/[^a-zA-Z0-9_-]/g, "_") + "_" + Date.now() + (ext ? `.${ext}` : ""),
+        },
         (error, result) => {
           if (error) reject(error);
           else resolve(result);

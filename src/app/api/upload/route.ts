@@ -26,13 +26,16 @@ export async function POST(request: Request) {
       const lastDotIndex = originalName.lastIndexOf(".");
       const nameWithoutExt = lastDotIndex !== -1 ? originalName.substring(0, lastDotIndex) : originalName;
       const ext = lastDotIndex !== -1 ? originalName.substring(lastDotIndex + 1) : "";
+      
+      const isMedia = ["jpg", "jpeg", "png", "gif", "webp", "mp4", "webm"].includes(ext.toLowerCase());
+      const resourceType = isMedia ? "auto" : "raw";
 
       cloudinary.uploader.upload_stream(
         { 
           folder: "zad_charity_logos", 
-          resource_type: "auto",
+          resource_type: resourceType,
           // Cloudinary for raw files needs the extension in the public_id to serve it correctly
-          public_id: nameWithoutExt.replace(/[^a-zA-Z0-9_-]/g, "_") + "_" + Date.now() + (ext ? `.${ext}` : ""),
+          public_id: nameWithoutExt.replace(/[^a-zA-Z0-9_-]/g, "_") + "_" + Date.now() + (ext && !isMedia ? `.${ext}` : ""),
         },
         (error, result) => {
           if (error) reject(error);

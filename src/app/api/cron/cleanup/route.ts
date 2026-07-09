@@ -1,5 +1,6 @@
-﻿import { NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
+import { Prisma } from "@prisma/client";
 import { v2 as cloudinary } from "cloudinary";
 
 cloudinary.config({
@@ -56,7 +57,7 @@ export async function GET(request: Request) {
             },
           });
 
-          deletedIds.push(task.id);
+          deletedIds.push(`task-${task.id}`);
         }
       } catch (err: any) {
         console.error(`Failed to delete proof for task ${task.id}:`, err);
@@ -64,9 +65,59 @@ export async function GET(request: Request) {
       }
     }
 
+    // --- Cleanup Request Attachments (2 days after approval) ---
+    const twoDaysAgo = new Date();
+    twoDaysAgo.setDate(twoDaysAgo.getDate() - 2);
+
+    const oldRequests = await prisma.request.findMany({
+      where: {
+        status: "APPROVED",
+        reviewedAt: {
+          lt: twoDaysAgo,
+        },
+        attachments: {
+          not: Prisma.DbNull,
+        },
+      },
+    });
+
+    for (const req of oldRequests) {
+      if (!req.attachments) continue;
+      
+      try {
+        let attachments: any[] = [];
+        if (typeof req.attachments === 'string') {
+          attachments = JSON.parse(req.attachments);
+        } else if (Array.isArray(req.attachments)) {
+          attachments = req.attachments;
+        }
+
+        let hasDeleted = false;
+        for (const att of attachments) {
+          if (att.publicId) {
+            await cloudinary.uploader.destroy(att.publicId);
+            hasDeleted = true;
+          }
+        }
+
+        if (hasDeleted) {
+          await prisma.request.update({
+            where: { id: req.id },
+            data: {
+              attachments: Prisma.DbNull,
+            },
+          });
+          deletedIds.push(`request-${req.id}`);
+        }
+      } catch (err: any) {
+        console.error(`Failed to delete attachments for request ${req.id}:`, err);
+        errors.push({ requestId: req.id, error: err.message });
+      }
+    }
+
     return NextResponse.json({
-      message: `Cleanup completed. Deleted ${deletedIds.length} proofs.`,
-      deletedTaskIds: deletedIds,
+      message: `Cleanup completed. Deleted ${deletedIds.length} items.`,
+      deletedIds,
       errors: errors.length > 0 ? errors : undefined,
     });
   } catch (error: any) {

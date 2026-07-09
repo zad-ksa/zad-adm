@@ -51,6 +51,7 @@ type Request = {
   category: string | null;
   body: string | null;
   fileUrl: string | null;
+  attachments?: any | null;
   priority: Priority;
   status: Status;
   reviewNote: string | null;
@@ -131,9 +132,59 @@ function RequestForm({
   const [category, setCategory] = useState(initial?.category || "");
   const [body, setBody] = useState(initial?.body || "");
   const [fileUrl, setFileUrl] = useState(initial?.fileUrl || "");
+  const [attachments, setAttachments] = useState<any[]>(Array.isArray(initial?.attachments) ? initial.attachments : (initial?.attachments ? JSON.parse(initial.attachments) : []));
   const [priority, setPriority] = useState<Priority>(initial?.priority || "MEDIUM");
   const [error, setError] = useState("");
   const [isPending, startTransition] = useTransition();
+  const [isUploading, setIsUploading] = useState(false);
+
+  async function handleFileUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const files = Array.from(e.target.files || []);
+    if (!files.length) return;
+
+    // Check size limit: 50MB
+    const MAX_SIZE = 50 * 1024 * 1024;
+    const validFiles = files.filter(f => f.size <= MAX_SIZE);
+    if (validFiles.length !== files.length) {
+      alert("بعض الملفات تجاوزت الحد المسموح (50 ميجابايت).");
+    }
+    if (!validFiles.length) return;
+
+    setIsUploading(true);
+    setError("");
+    const newAttachments = [...attachments];
+
+    try {
+      for (const file of validFiles) {
+        const formData = new FormData();
+        formData.append("file", file);
+        
+        const res = await fetch("/api/upload", {
+          method: "POST",
+          body: formData,
+        });
+
+        if (!res.ok) throw new Error("فشل رفع الملف " + file.name);
+        
+        const data = await res.json();
+        newAttachments.push({
+          name: data.name || file.name,
+          url: data.url,
+          publicId: data.publicId,
+          size: data.size || file.size,
+        });
+      }
+      setAttachments(newAttachments);
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setIsUploading(false);
+    }
+  }
+
+  function removeAttachment(index: number) {
+    setAttachments(prev => prev.filter((_, i) => i !== index));
+  }
 
   function handleSubmit() {
     if (!title.trim()) { setError("العنوان مطلوب"); return; }
@@ -141,9 +192,9 @@ function RequestForm({
     startTransition(async () => {
       try {
         if (isResubmit && requestId) {
-          await resubmitRequest({ requestId, title, category, body, fileUrl, priority });
+          await resubmitRequest({ requestId, title, category, body, fileUrl, attachments, priority });
         } else {
-          await createRequest({ title, category, body, fileUrl, priority });
+          await createRequest({ title, category, body, fileUrl, attachments, priority });
         }
         onDone(); onClose();
       } catch (e: any) { setError(e.message); }
@@ -209,17 +260,36 @@ function RequestForm({
           </div>
           <div>
             <label className="text-xs font-bold text-slate-500 dark:text-slate-400 mb-1.5 flex items-center gap-1">
-              <Link2 className="w-3 h-3" /> رابط ملف (Google Drive)
+              <Link2 className="w-3 h-3" /> المرفقات (بحد أقصى 50MB للملف)
             </label>
-            <input value={fileUrl} onChange={e => setFileUrl(e.target.value)}
-              placeholder="https://drive.google.com/..." dir="ltr"
-              className="w-full border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-sm bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-primary" />
+            <div className="space-y-2">
+              <input type="file" multiple onChange={handleFileUpload} disabled={isUploading || isPending}
+                className="w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-bold file:bg-primary/10 file:text-primary hover:file:bg-primary/20 transition-colors cursor-pointer" />
+              {isUploading && <p className="text-xs text-primary animate-pulse">جاري الرفع...</p>}
+              
+              {attachments.length > 0 && (
+                <div className="space-y-1.5 mt-2">
+                  {attachments.map((att, i) => (
+                    <div key={i} className="flex items-center justify-between bg-slate-50 dark:bg-slate-800/50 px-3 py-2 rounded-lg border border-slate-100 dark:border-slate-700">
+                      <div className="flex items-center gap-2 overflow-hidden">
+                        <FileText className="w-4 h-4 text-primary shrink-0" />
+                        <span className="text-xs font-medium truncate" title={att.name}>{att.name}</span>
+                        {att.size && <span className="text-[10px] text-slate-400 shrink-0">({(att.size / 1024 / 1024).toFixed(2)} MB)</span>}
+                      </div>
+                      <button type="button" onClick={() => removeAttachment(i)} className="text-red-500 hover:text-red-700 p-1">
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
           {error && <p className="text-xs text-red-500 flex items-center gap-1"><AlertCircle className="w-3.5 h-3.5" />{error}</p>}
         </div>
         <div className="px-5 py-4 border-t border-slate-100 dark:border-slate-800 flex justify-end gap-2 shrink-0">
           <button onClick={onClose} className="px-4 py-2 text-sm text-slate-500 hover:text-slate-700 dark:hover:text-slate-300">إلغاء</button>
-          <button onClick={handleSubmit} disabled={isPending}
+          <button onClick={handleSubmit} disabled={isPending || isUploading}
             className="flex items-center gap-2 bg-primary hover:bg-primary/90 disabled:opacity-50 text-white px-5 py-2 rounded-xl text-sm font-bold transition-colors">
             {isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
             {isPending ? "جاري الإرسال..." : "إرسال الطلب"}
@@ -424,7 +494,8 @@ function RequestCard({
     );
 
   const catInfo = CATEGORIES.find(c => c.key === request.category);
-  const hasDetails = !!(request.body || request.fileUrl || request.reviewNote || request.logs.length > 0);
+  const attachments = typeof request.attachments === 'string' ? JSON.parse(request.attachments) : request.attachments;
+  const hasDetails = !!(request.body || request.fileUrl || (Array.isArray(attachments) && attachments.length > 0) || request.reviewNote || request.logs.length > 0);
 
   return (
     <div className={`bg-white dark:bg-slate-800 rounded-xl border-r-4 ${priority.border} border border-slate-100 dark:border-slate-700 transition-shadow hover:shadow-sm ${hasDetails ? "cursor-pointer" : ""}`}
@@ -514,6 +585,20 @@ function RequestCard({
               className="flex items-center gap-2 text-xs font-bold text-primary hover:underline bg-primary/10 rounded-xl px-3 py-2">
               <ExternalLink className="w-3.5 h-3.5 shrink-0" /> فتح الملف المرفق
             </a>
+          )}
+          {Array.isArray(attachments) && attachments.length > 0 && (
+            <div className="space-y-1.5">
+              {attachments.map((att: any, i: number) => (
+                <a key={i} href={att.url} target="_blank" rel="noopener noreferrer"
+                  className="flex items-center justify-between text-xs font-bold text-primary hover:underline bg-primary/5 hover:bg-primary/10 rounded-xl px-3 py-2 transition-colors border border-primary/10">
+                  <div className="flex items-center gap-2 overflow-hidden">
+                    <ExternalLink className="w-3.5 h-3.5 shrink-0" />
+                    <span className="truncate">{att.name || "ملف مرفق"}</span>
+                  </div>
+                  {att.size && <span className="text-[10px] text-primary/70 shrink-0 font-normal">{(att.size / 1024 / 1024).toFixed(2)} MB</span>}
+                </a>
+              ))}
+            </div>
           )}
           {request.reviewNote && (
             <div className={`rounded-xl p-3 ${

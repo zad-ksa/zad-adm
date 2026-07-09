@@ -30,7 +30,12 @@ export async function POST(request: Request) {
       ).end(buffer);
     });
 
-    return NextResponse.json({ url: (result as any).secure_url });
+    return NextResponse.json({ 
+      url: (result as any).secure_url,
+      publicId: (result as any).public_id,
+      name: file.name,
+      size: file.size
+    });
   } catch (error) {
     console.error("Upload error:", error);
     return NextResponse.json({ error: "Upload failed" }, { status: 500 });

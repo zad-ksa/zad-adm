@@ -1,6 +1,7 @@
 "use server";
 
 import { prisma } from "@/lib/db";
+import { Prisma } from "@prisma/client";
 import { getSession } from "@/lib/auth";
 import { hasPermission } from "@/lib/permissions";
 import { revalidatePath } from "next/cache";
@@ -35,6 +36,7 @@ export async function createRequest(data: {
   category?: string;
   body?: string;
   fileUrl?: string;
+  attachments?: any[];
   priority: "LOW" | "MEDIUM" | "HIGH" | "URGENT";
 }) {
   const session = await requireSession();
@@ -56,6 +58,7 @@ export async function createRequest(data: {
       category: data.category?.trim() || null,
       body: data.body?.trim() || null,
       fileUrl: data.fileUrl?.trim() || null,
+      attachments: data.attachments ?? Prisma.DbNull,
       priority: data.priority,
       status: "PENDING",
       createdById: session.id,
@@ -232,6 +235,7 @@ export async function resubmitRequest(data: {
   category?: string;
   body?: string;
   fileUrl?: string;
+  attachments?: any[];
   priority: "LOW" | "MEDIUM" | "HIGH" | "URGENT";
 }) {
   const session = await requireSession();
@@ -252,6 +256,7 @@ export async function resubmitRequest(data: {
       category: data.category?.trim() || null,
       body: data.body?.trim() || null,
       fileUrl: data.fileUrl?.trim() || null,
+      attachments: data.attachments ?? Prisma.DbNull,
       priority: data.priority,
       status: "PENDING",
       reviewedById: null,

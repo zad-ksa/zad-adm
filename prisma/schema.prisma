@@ -598,6 +598,7 @@ model Request {
   category          String?         // التصنيف: "زاد"، "الحوكمة"، إلخ
   body              String?         @db.Text
   fileUrl           String?
+  attachments       Json?           // مصفوفة من المرفقات { url, name, size, publicId }
   priority          RequestPriority @default(MEDIUM)
   status            RequestStatus   @default(PENDING)
   // المُرسِل

@@ -330,7 +330,7 @@ export default function InteractiveTimelineEditor({
       {/* Continuous Stages Row */}
       <div className="mt-4 pt-3 border-t border-slate-100 dark:border-slate-700">
         <h4 className="text-xs font-bold text-slate-500 dark:text-slate-400 mb-2 flex items-center gap-1.5">
-          <Infinity className="w-3 h-3" /> المراحل والأنشطة المستمرة
+          <Infinity className="w-3 h-3" /> المراحل الدائمة
           <button
             onClick={() => setIsAddingContinuous(true)}
             disabled={isPending}

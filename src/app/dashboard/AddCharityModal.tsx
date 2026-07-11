@@ -81,36 +81,36 @@ export default function AddCharityModal({ onClose, onSuccess }: { onClose: () =>
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/50 p-4" dir="rtl">
-      <div className="bg-white rounded-xl w-full max-w-md border border-slate-200 overflow-hidden animate-in fade-in zoom-in-95 duration-200 max-h-[90vh] flex flex-col">
-        <div className="p-4 border-b border-slate-100 flex justify-between items-center shrink-0">
-          <h2 className="text-base font-bold text-slate-800">إضافة جمعية جديدة</h2>
-          <button onClick={onClose} className="text-slate-400 hover:text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-lg w-8 h-8 flex items-center justify-center transition-colors cursor-pointer select-none">
+      <div className="bg-white dark:bg-slate-800 rounded-xl w-full max-w-md border border-slate-200 dark:border-slate-700 overflow-hidden animate-in fade-in zoom-in-95 duration-200 max-h-[90vh] flex flex-col">
+        <div className="p-4 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center shrink-0">
+          <h2 className="text-base font-bold text-slate-800 dark:text-slate-100">إضافة جمعية جديدة</h2>
+          <button onClick={onClose} className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 rounded-lg w-8 h-8 flex items-center justify-center transition-colors cursor-pointer select-none">
             ✕
           </button>
         </div>
 
         <form onSubmit={handleSubmit} className="p-4 space-y-3 overflow-y-auto flex-1">
           {error && (
-            <div className="bg-red-50 text-red-600 p-3 rounded-xl text-sm font-semibold border border-red-100">
+            <div className="bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 p-3 rounded-xl text-sm font-semibold border border-red-100 dark:border-red-800/50">
               {error}
             </div>
           )}
 
           {/* Logo Uploader */}
           <div className="flex flex-col items-center gap-3 pb-2">
-            <label className="block text-sm font-semibold text-slate-700 w-full text-right">
+            <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 w-full text-right">
               شعار الجمعية
             </label>
-            
+
             <div className="relative group">
-              <div className="w-24 h-24 rounded-2xl overflow-hidden border-2 border-dashed border-slate-200 bg-slate-50 flex items-center justify-center relative shadow-inner group-hover:border-primary/40 transition-colors">
+              <div className="w-24 h-24 rounded-2xl overflow-hidden border-2 border-dashed border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 flex items-center justify-center relative shadow-inner group-hover:border-primary/40 transition-colors">
                 {logoPreview ? (
                   <img src={logoPreview} alt="شعار الجمعية" className="w-full h-full object-contain p-1" />
                 ) : (
-                  <ImageIcon className="w-8 h-8 text-slate-300" />
+                  <ImageIcon className="w-8 h-8 text-slate-300 dark:text-slate-600" />
                 )}
               </div>
-              
+
               <button
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
@@ -120,8 +120,8 @@ export default function AddCharityModal({ onClose, onSuccess }: { onClose: () =>
                 {logoPreview ? "تغيير" : "رفع"}
               </button>
             </div>
-            
-            <input 
+
+            <input
               ref={fileInputRef}
               type="file"
               accept="image/*"
@@ -129,46 +129,46 @@ export default function AddCharityModal({ onClose, onSuccess }: { onClose: () =>
               onChange={handleFileChange}
               disabled={loading}
             />
-            <p className="text-[10px] text-slate-400 font-medium">الحد الأقصى لحجم الملف: 2 ميجابايت (PNG, JPG, SVG)</p>
+            <p className="text-[10px] text-slate-400 dark:text-slate-500 font-medium">الحد الأقصى لحجم الملف: 2 ميجابايت (PNG, JPG, SVG)</p>
           </div>
 
           <div className="space-y-1.5">
-            <label className="text-sm font-semibold text-slate-700">اسم الجمعية *</label>
-            <input 
-              type="text" 
-              name="name" 
+            <label className="text-sm font-semibold text-slate-700 dark:text-slate-300">اسم الجمعية *</label>
+            <input
+              type="text"
+              name="name"
               required
-              className="w-full border border-slate-200 rounded-xl px-4 py-2.5 outline-none focus:border-primary focus:ring-2 focus:ring-primary/15 transition-all text-slate-800"
+              className="w-full border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-900 rounded-xl px-4 py-2.5 outline-none focus:border-primary focus:ring-2 focus:ring-primary/15 transition-all text-slate-800 dark:text-slate-100"
               placeholder="مثال: جمعية البر الخيرية"
             />
           </div>
 
           <div className="space-y-1.5">
-            <label className="text-sm font-semibold text-slate-700">مجال العمل (اختياري)</label>
-            <input 
-              type="text" 
-              name="domain" 
-              className="w-full border border-slate-200 rounded-xl px-4 py-2.5 outline-none focus:border-primary focus:ring-2 focus:ring-primary/15 transition-all text-slate-800"
+            <label className="text-sm font-semibold text-slate-700 dark:text-slate-300">مجال العمل (اختياري)</label>
+            <input
+              type="text"
+              name="domain"
+              className="w-full border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-900 rounded-xl px-4 py-2.5 outline-none focus:border-primary focus:ring-2 focus:ring-primary/15 transition-all text-slate-800 dark:text-slate-100"
               placeholder="مثال: رعاية الأيتام، التنمية الأسرية"
             />
           </div>
 
           <div className="space-y-1.5">
-            <label className="text-sm font-semibold text-slate-700">تاريخ التأسيس (اختياري)</label>
-            <input 
-              type="text" 
-              name="establishmentDate" 
-              className="w-full border border-slate-200 rounded-xl px-4 py-2.5 outline-none focus:border-primary focus:ring-2 focus:ring-primary/15 transition-all text-slate-800"
+            <label className="text-sm font-semibold text-slate-700 dark:text-slate-300">تاريخ التأسيس (اختياري)</label>
+            <input
+              type="text"
+              name="establishmentDate"
+              className="w-full border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-900 rounded-xl px-4 py-2.5 outline-none focus:border-primary focus:ring-2 focus:ring-primary/15 transition-all text-slate-800 dark:text-slate-100"
               placeholder="مثال: 1420 هـ"
             />
           </div>
 
           <div className="space-y-1.5">
-            <label className="text-sm font-semibold text-slate-700">رقم التصريح (اختياري)</label>
-            <input 
-              type="text" 
-              name="licenseNumber" 
-              className="w-full border border-slate-200 rounded-xl px-4 py-2.5 outline-none focus:border-primary focus:ring-2 focus:ring-primary/15 transition-all text-slate-800"
+            <label className="text-sm font-semibold text-slate-700 dark:text-slate-300">رقم التصريح (اختياري)</label>
+            <input
+              type="text"
+              name="licenseNumber"
+              className="w-full border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-900 rounded-xl px-4 py-2.5 outline-none focus:border-primary focus:ring-2 focus:ring-primary/15 transition-all text-slate-800 dark:text-slate-100"
               placeholder="مثال: 1234"
             />
           </div>
@@ -184,7 +184,7 @@ export default function AddCharityModal({ onClose, onSuccess }: { onClose: () =>
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-3 rounded-xl transition-all cursor-pointer select-none active:scale-[0.98]"
+              className="flex-1 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 font-bold py-3 rounded-xl transition-all cursor-pointer select-none active:scale-[0.98]"
             >
               إلغاء
             </button>

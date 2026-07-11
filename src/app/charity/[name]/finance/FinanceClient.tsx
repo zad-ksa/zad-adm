@@ -16,8 +16,8 @@ import {
   Check,
   X
 } from "lucide-react";
-import { 
-  addFinancialTransactionAction 
+import {
+  addFinancialTransactionAction
 } from "@/app/actions/charity";
 import { updateCharityRevenueAndSize } from "@/app/actions/governance";
 import { toggleInstallmentPaid } from "@/app/actions/contracts";
@@ -148,10 +148,10 @@ export default function FinanceClient({
       const res = await toggleInstallmentPaid(installmentModal.id!, installmentModal.isPaid);
       if (res.success && res.installment) {
         setInstallments((prev) => prev.map(i => i.id === installmentModal.id ? { ...i, isPaid: installmentModal.isPaid } : i));
-        
+
         const amountChange = installmentModal.isPaid ? res.installment.amount : -res.installment.amount;
         setCurrentFinance(prev => ({ ...prev, paidAmount: Math.max(0, prev.paidAmount + amountChange) }));
-        
+
         setLogs(prev => [{
           id: Date.now().toString(),
           charityId: charity.id,
@@ -171,11 +171,11 @@ export default function FinanceClient({
 
   const getLogTypeBadge = (type: string) => {
     switch (type) {
-      case "CONTRACT_UPDATE": return <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-blue-50 text-blue-700 rounded-lg text-xs font-black border border-blue-100">تحديث العقد</span>;
-      case "PAID_UPDATE": return <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-purple-50 text-purple-700 rounded-lg text-xs font-black border border-purple-100">تحديث المدفوع</span>;
-      case "ADD_GRANT": return <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-emerald-50 text-emerald-700 rounded-lg text-xs font-black border border-emerald-100">إضافة منحة</span>;
-      case "DISBURSEMENT": return <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-amber-50 text-amber-700 rounded-lg text-xs font-black border border-amber-100">صرف مالي</span>;
-      default: return <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-slate-50 text-slate-700 rounded-lg text-xs font-black border border-slate-100">عملية مالية</span>;
+      case "CONTRACT_UPDATE": return <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-blue-50 dark:bg-blue-500/10 text-blue-700 dark:text-blue-400 rounded-lg text-xs font-black border border-blue-100 dark:border-blue-500/20">تحديث العقد</span>;
+      case "PAID_UPDATE": return <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-purple-50 dark:bg-purple-500/10 text-purple-700 dark:text-purple-400 rounded-lg text-xs font-black border border-purple-100 dark:border-purple-500/20">تحديث المدفوع</span>;
+      case "ADD_GRANT": return <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 rounded-lg text-xs font-black border border-emerald-100 dark:border-emerald-500/20">إضافة منحة</span>;
+      case "DISBURSEMENT": return <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-400 rounded-lg text-xs font-black border border-amber-100 dark:border-amber-500/20">صرف مالي</span>;
+      default: return <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-slate-50 dark:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-lg text-xs font-black border border-slate-100 dark:border-slate-600">عملية مالية</span>;
     }
   };
 
@@ -195,12 +195,12 @@ export default function FinanceClient({
       )}
 
       {/* Header */}
-      <div className="bg-white rounded-xl p-4 border border-slate-100 shadow-sm relative overflow-hidden">
+      <div className="bg-white dark:bg-slate-800 rounded-xl p-4 border border-slate-100 dark:border-slate-700 shadow-sm relative overflow-hidden">
         <div className="absolute top-0 left-0 w-64 h-64 bg-primary/5 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2 pointer-events-none"></div>
         <div className="relative flex flex-col lg:flex-row justify-between items-center gap-3">
           <div className="flex items-center gap-3 w-full lg:w-auto">
             {charity.logoUrl ? (
-              <div className="w-10 h-10 rounded-lg overflow-hidden border border-slate-200 bg-white flex items-center justify-center p-0.5 shrink-0">
+              <div className="w-10 h-10 rounded-lg overflow-hidden border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 flex items-center justify-center p-0.5 shrink-0">
                 <img src={charity.logoUrl} alt={charity.name} className="w-full h-full object-contain" />
               </div>
             ) : (
@@ -209,8 +209,8 @@ export default function FinanceClient({
               </div>
             )}
             <div>
-              <h1 className="text-base font-black text-slate-800 mb-0.5">{charity.name} - الوضع المالي</h1>
-              <p className="text-slate-500 text-[11px] font-bold">الإدارة المالية والسجل المالي للمشروع</p>
+              <h1 className="text-base font-black text-slate-800 dark:text-slate-100 mb-0.5">{charity.name} - الوضع المالي</h1>
+              <p className="text-slate-500 dark:text-slate-400 text-[11px] font-bold">الإدارة المالية والسجل المالي للمشروع</p>
             </div>
           </div>
         </div>
@@ -218,67 +218,67 @@ export default function FinanceClient({
 
       <div className="space-y-5">
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-          <div className="bg-white rounded-xl p-4 border border-slate-100 shadow-sm flex items-center gap-3 hover:shadow-md transition-all relative overflow-hidden group">
+          <div className="bg-white dark:bg-slate-800 rounded-xl p-4 border border-slate-100 dark:border-slate-700 shadow-sm flex items-center gap-3 hover:shadow-md transition-all relative overflow-hidden group">
             <div className="absolute top-0 right-0 w-1.5 h-full bg-indigo-500 group-hover:w-2.5 transition-all"></div>
-            <div className="w-8 h-8 bg-indigo-50 text-indigo-600 rounded-lg flex items-center justify-center shrink-0 shadow-inner">
+            <div className="w-8 h-8 bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 rounded-lg flex items-center justify-center shrink-0 shadow-inner">
               <TrendingUp className="w-4 h-4" />
             </div>
             <div>
-              <p className="text-[10px] font-bold text-slate-400 mb-0.5">الإيراد السنوي</p>
-              <h3 className="text-base font-black text-slate-800">
-                {currentFinance.annualRevenue ? currentFinance.annualRevenue.toLocaleString('en-US') : "0"} <span className="text-[10px] font-bold text-slate-400">ريال</span>
+              <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 mb-0.5">الإيراد السنوي</p>
+              <h3 className="text-base font-black text-slate-800 dark:text-slate-100">
+                {currentFinance.annualRevenue ? currentFinance.annualRevenue.toLocaleString('en-US') : "0"} <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500">ريال</span>
               </h3>
             </div>
           </div>
 
-          <div className="bg-white rounded-xl p-4 border border-slate-100 shadow-sm flex items-center gap-3 hover:shadow-md transition-all relative overflow-hidden group">
+          <div className="bg-white dark:bg-slate-800 rounded-xl p-4 border border-slate-100 dark:border-slate-700 shadow-sm flex items-center gap-3 hover:shadow-md transition-all relative overflow-hidden group">
             <div className="absolute top-0 right-0 w-1.5 h-full bg-blue-500 group-hover:w-2.5 transition-all"></div>
-            <div className="w-8 h-8 bg-blue-50 text-blue-600 rounded-lg flex items-center justify-center shrink-0 shadow-inner">
+            <div className="w-8 h-8 bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 rounded-lg flex items-center justify-center shrink-0 shadow-inner">
               <Coins className="w-4 h-4" />
             </div>
             <div>
-              <p className="text-[10px] font-bold text-slate-400 mb-0.5">قيمة العقد</p>
-              <h3 className="text-base font-black text-slate-800">
-                {currentFinance.contractValue.toLocaleString('en-US')} <span className="text-[10px] font-bold text-slate-400">ريال</span>
+              <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 mb-0.5">قيمة العقد</p>
+              <h3 className="text-base font-black text-slate-800 dark:text-slate-100">
+                {currentFinance.contractValue.toLocaleString('en-US')} <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500">ريال</span>
               </h3>
             </div>
           </div>
 
-          <div className="bg-white rounded-xl p-4 border border-slate-100 shadow-sm flex items-center gap-3 hover:shadow-md transition-all relative overflow-hidden group">
+          <div className="bg-white dark:bg-slate-800 rounded-xl p-4 border border-slate-100 dark:border-slate-700 shadow-sm flex items-center gap-3 hover:shadow-md transition-all relative overflow-hidden group">
             <div className="absolute top-0 right-0 w-1.5 h-full bg-emerald-500 group-hover:w-2.5 transition-all"></div>
-            <div className="w-8 h-8 bg-emerald-50 text-emerald-600 rounded-lg flex items-center justify-center shrink-0 shadow-inner">
+            <div className="w-8 h-8 bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 rounded-lg flex items-center justify-center shrink-0 shadow-inner">
               <HandCoins className="w-4 h-4" />
             </div>
             <div>
-              <p className="text-[10px] font-bold text-slate-400 mb-0.5">إجمالي المنح</p>
-              <h3 className="text-base font-black text-slate-800">
-                {currentFinance.grants.toLocaleString('en-US')} <span className="text-[10px] font-bold text-slate-400">ريال</span>
+              <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 mb-0.5">إجمالي المنح</p>
+              <h3 className="text-base font-black text-slate-800 dark:text-slate-100">
+                {currentFinance.grants.toLocaleString('en-US')} <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500">ريال</span>
               </h3>
             </div>
           </div>
 
-          <div className="bg-white rounded-xl p-4 border border-slate-100 shadow-sm flex items-center gap-3 hover:shadow-md transition-all relative overflow-hidden group">
+          <div className="bg-white dark:bg-slate-800 rounded-xl p-4 border border-slate-100 dark:border-slate-700 shadow-sm flex items-center gap-3 hover:shadow-md transition-all relative overflow-hidden group">
             <div className="absolute top-0 right-0 w-1.5 h-full bg-purple-500 group-hover:w-2.5 transition-all"></div>
-            <div className="w-8 h-8 bg-purple-50 text-purple-600 rounded-lg flex items-center justify-center shrink-0 shadow-inner">
+            <div className="w-8 h-8 bg-purple-50 dark:bg-purple-500/10 text-purple-600 dark:text-purple-400 rounded-lg flex items-center justify-center shrink-0 shadow-inner">
               <Wallet className="w-4 h-4" />
             </div>
             <div>
-              <p className="text-[10px] font-bold text-slate-400 mb-0.5">المبلغ المدفوع</p>
-              <h3 className="text-base font-black text-slate-800">
-                {currentFinance.paidAmount.toLocaleString('en-US')} <span className="text-[10px] font-bold text-slate-400">ريال</span>
+              <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 mb-0.5">المبلغ المدفوع</p>
+              <h3 className="text-base font-black text-slate-800 dark:text-slate-100">
+                {currentFinance.paidAmount.toLocaleString('en-US')} <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500">ريال</span>
               </h3>
             </div>
           </div>
 
-          <div className="bg-white rounded-xl p-4 border border-slate-100 shadow-sm flex items-center gap-3 hover:shadow-md transition-all relative overflow-hidden group">
+          <div className="bg-white dark:bg-slate-800 rounded-xl p-4 border border-slate-100 dark:border-slate-700 shadow-sm flex items-center gap-3 hover:shadow-md transition-all relative overflow-hidden group">
             <div className="absolute top-0 right-0 w-1.5 h-full bg-amber-500 group-hover:w-2.5 transition-all"></div>
-            <div className="w-8 h-8 bg-amber-50 text-amber-600 rounded-lg flex items-center justify-center shrink-0 shadow-inner">
+            <div className="w-8 h-8 bg-amber-50 dark:bg-amber-500/10 text-amber-600 dark:text-amber-400 rounded-lg flex items-center justify-center shrink-0 shadow-inner">
               <TrendingUp className="w-4 h-4" />
             </div>
             <div>
-              <p className="text-[10px] font-bold text-slate-400 mb-0.5">المبلغ المتبقي</p>
-              <h3 className="text-base font-black text-slate-800">
-                {remainingAmount.toLocaleString('en-US')} <span className="text-[10px] font-bold text-slate-400">ريال</span>
+              <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 mb-0.5">المبلغ المتبقي</p>
+              <h3 className="text-base font-black text-slate-800 dark:text-slate-100">
+                {remainingAmount.toLocaleString('en-US')} <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500">ريال</span>
               </h3>
             </div>
           </div>
@@ -286,28 +286,28 @@ export default function FinanceClient({
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 items-start">
           {/* Installments Card */}
-          <div className="bg-white rounded-xl border border-slate-100 p-4 shadow-sm space-y-4">
-            <h3 className="text-sm font-black text-slate-800 flex items-center gap-2 border-b border-slate-50 pb-3">
+          <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-700 p-4 shadow-sm space-y-4">
+            <h3 className="text-sm font-black text-slate-800 dark:text-slate-100 flex items-center gap-2 border-b border-slate-50 dark:border-slate-700/50 pb-3">
               <Layers className="w-4 h-4 text-primary" />
               دفعات العقد (الأقساط)
             </h3>
             <div className="space-y-4">
               {installments.map((installment) => (
-                <div key={installment.id} className={`flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 rounded-2xl border transition-all ${installment.isPaid ? 'bg-emerald-50/50 border-emerald-100' : 'bg-slate-50 border-slate-100'}`}>
+                <div key={installment.id} className={`flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 rounded-2xl border transition-all ${installment.isPaid ? 'bg-emerald-50/50 dark:bg-emerald-500/10 border-emerald-100 dark:border-emerald-500/20' : 'bg-slate-50 dark:bg-slate-900/50 border-slate-100 dark:border-slate-700'}`}>
                   <div className="flex items-center gap-4">
-                    <button 
+                    <button
                       disabled={isPending}
                       onClick={() => promptToggleInstallment(installment.id, !installment.isPaid)}
-                      className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 transition-colors ${installment.isPaid ? 'bg-emerald-500 text-white shadow-md shadow-emerald-500/20' : 'bg-white text-slate-300 border-2 border-slate-200 hover:border-emerald-400 hover:text-emerald-500'}`}
+                      className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 transition-colors ${installment.isPaid ? 'bg-emerald-500 text-white shadow-md shadow-emerald-500/20' : 'bg-white dark:bg-slate-800 text-slate-300 dark:text-slate-600 border-2 border-slate-200 dark:border-slate-600 hover:border-emerald-400 hover:text-emerald-500'}`}
                     >
                       <Check className="w-5 h-5" strokeWidth={3} />
                     </button>
                     <div>
-                      <h4 className="font-black text-slate-800 text-lg">
-                        {installment.amount.toLocaleString('en-US')} <span className="text-sm font-bold text-slate-400">ريال</span>
+                      <h4 className="font-black text-slate-800 dark:text-slate-100 text-lg">
+                        {installment.amount.toLocaleString('en-US')} <span className="text-sm font-bold text-slate-400 dark:text-slate-500">ريال</span>
                       </h4>
                       {installment.dueDate && (
-                        <p className="text-xs font-bold text-slate-500 flex items-center gap-1.5 mt-1">
+                        <p className="text-xs font-bold text-slate-500 dark:text-slate-400 flex items-center gap-1.5 mt-1">
                           <Calendar className="w-3.5 h-3.5" />
                           تاريخ الاستحقاق: {new Date(installment.dueDate).toLocaleDateString("ar-SA")}
                         </p>
@@ -315,14 +315,14 @@ export default function FinanceClient({
                     </div>
                   </div>
                   <div>
-                    <span className={`inline-flex px-3 py-1.5 rounded-lg text-xs font-black ${installment.isPaid ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}`}>
+                    <span className={`inline-flex px-3 py-1.5 rounded-lg text-xs font-black ${installment.isPaid ? 'bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400' : 'bg-amber-100 dark:bg-amber-500/20 text-amber-700 dark:text-amber-400'}`}>
                       {installment.isPaid ? 'تم الدفع' : 'غير مدفوع'}
                     </span>
                   </div>
                 </div>
               ))}
               {installments.length === 0 && (
-                <div className="text-center py-6 text-slate-400">
+                <div className="text-center py-6 text-slate-400 dark:text-slate-500">
                   <Layers className="w-10 h-10 mx-auto mb-2 opacity-20" />
                   <p className="font-bold text-sm">لا توجد دفعات مسجلة حالياً</p>
                 </div>
@@ -330,38 +330,38 @@ export default function FinanceClient({
             </div>
           </div>
 
-          <div className="bg-white rounded-xl border border-slate-100 p-4 shadow-sm space-y-4">
-            <h3 className="text-sm font-black text-slate-800 flex items-center gap-2 border-b border-slate-50 pb-3">
+          <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-700 p-4 shadow-sm space-y-4">
+            <h3 className="text-sm font-black text-slate-800 dark:text-slate-100 flex items-center gap-2 border-b border-slate-50 dark:border-slate-700/50 pb-3">
               <History className="w-4 h-4 text-primary" />
               سجل الحركات المالية
             </h3>
-            <div className="relative pr-6 border-r-2 border-slate-100 space-y-8 mr-2">
+            <div className="relative pr-6 border-r-2 border-slate-100 dark:border-slate-700 space-y-8 mr-2">
               {logs.map((log) => (
                 <div key={log.id} className="relative group">
-                  <div className="absolute -right-[31px] top-1.5 w-4 h-4 rounded-full border-4 border-white bg-blue-500 shadow-sm"></div>
-                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 bg-slate-50/50 p-4 rounded-2xl border border-slate-100">
+                  <div className="absolute -right-[31px] top-1.5 w-4 h-4 rounded-full border-4 border-white dark:border-slate-800 bg-blue-500 shadow-sm"></div>
+                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 bg-slate-50/50 dark:bg-slate-900/50 p-4 rounded-2xl border border-slate-100 dark:border-slate-700">
                     <div className="space-y-2">
                       <div className="flex flex-wrap items-center gap-2">
                         {getLogTypeBadge(log.type)}
-                        <span className="text-base font-black text-slate-800">
+                        <span className="text-base font-black text-slate-800 dark:text-slate-100">
                           {log.amount.toLocaleString('en-US')} ريال
                         </span>
                       </div>
                       {log.notes && (
-                        <p className="text-xs text-slate-500 font-semibold flex items-center gap-1.5 bg-white px-3 py-1.5 rounded-xl border border-slate-100 w-fit">
-                          <MessageSquare className="w-3.5 h-3.5 text-slate-400" />
+                        <p className="text-xs text-slate-500 dark:text-slate-400 font-semibold flex items-center gap-1.5 bg-white dark:bg-slate-800 px-3 py-1.5 rounded-xl border border-slate-100 dark:border-slate-700 w-fit">
+                          <MessageSquare className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500" />
                           <span>{log.notes}</span>
                         </p>
                       )}
                     </div>
-                    <div className="flex items-center gap-1.5 text-xs text-slate-400 font-bold shrink-0">
+                    <div className="flex items-center gap-1.5 text-xs text-slate-400 dark:text-slate-500 font-bold shrink-0">
                       <Calendar className="w-4 h-4" />
                       <span>{new Date(log.createdAt).toLocaleDateString("ar-SA")}</span>
                     </div>
                   </div>
                 </div>
               ))}
-              {logs.length === 0 && <p className="text-sm font-bold text-slate-400">لا يوجد سجل حركات</p>}
+              {logs.length === 0 && <p className="text-sm font-bold text-slate-400 dark:text-slate-500">لا يوجد سجل حركات</p>}
             </div>
           </div>
         </div>
@@ -369,29 +369,29 @@ export default function FinanceClient({
 
       {installmentModal.isOpen && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-fade-in">
-          <div className="bg-white rounded-3xl w-full max-w-sm overflow-hidden shadow-2xl border border-slate-100 text-center">
+          <div className="bg-white dark:bg-slate-800 rounded-3xl w-full max-w-sm overflow-hidden shadow-2xl border border-slate-100 dark:border-slate-700 text-center">
             <div className="p-8">
-              <div className={`w-20 h-20 mx-auto rounded-full flex items-center justify-center mb-6 shadow-inner border ${installmentModal.isPaid ? 'bg-emerald-50 text-emerald-500 border-emerald-100' : 'bg-amber-50 text-amber-500 border-amber-100'}`}>
+              <div className={`w-20 h-20 mx-auto rounded-full flex items-center justify-center mb-6 shadow-inner border ${installmentModal.isPaid ? 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-500 border-emerald-100 dark:border-emerald-500/20' : 'bg-amber-50 dark:bg-amber-500/10 text-amber-500 border-amber-100 dark:border-amber-500/20'}`}>
                 {installmentModal.isPaid ? <Check className="w-10 h-10" strokeWidth={3} /> : <X className="w-10 h-10" strokeWidth={3} />}
               </div>
-              <h3 className="text-xl font-black text-slate-800 mb-2">
+              <h3 className="text-xl font-black text-slate-800 dark:text-slate-100 mb-2">
                 {installmentModal.isPaid ? 'تأكيد سداد القسط' : 'إلغاء سداد القسط'}
               </h3>
-              <p className="text-sm font-bold text-slate-500 leading-relaxed mb-2">
-                {installmentModal.isPaid 
-                  ? 'هل أنت متأكد من تسجيل هذا القسط كمدفوع؟' 
+              <p className="text-sm font-bold text-slate-500 dark:text-slate-400 leading-relaxed mb-2">
+                {installmentModal.isPaid
+                  ? 'هل أنت متأكد من تسجيل هذا القسط كمدفوع؟'
                   : 'هل أنت متأكد من إلغاء سداد هذا القسط؟'}
               </p>
-              <p className="text-[11px] font-bold text-slate-400 bg-slate-50 p-2 rounded-lg inline-block">
-                {installmentModal.isPaid 
-                  ? 'سيتم إضافة المبلغ إلى السجل المالي وتحديث إجمالي المدفوعات.' 
+              <p className="text-[11px] font-bold text-slate-400 dark:text-slate-500 bg-slate-50 dark:bg-slate-900/50 p-2 rounded-lg inline-block">
+                {installmentModal.isPaid
+                  ? 'سيتم إضافة المبلغ إلى السجل المالي وتحديث إجمالي المدفوعات.'
                   : 'سيتم خصم المبلغ من السجل المالي وتحديث إجمالي المدفوعات.'}
               </p>
             </div>
-            <div className="bg-slate-50 p-4 flex gap-3 border-t border-slate-100">
+            <div className="bg-slate-50 dark:bg-slate-900/50 p-4 flex gap-3 border-t border-slate-100 dark:border-slate-700">
               <button
                 onClick={() => setInstallmentModal({ isOpen: false, id: null, isPaid: false })}
-                className="flex-1 py-3 bg-white border border-slate-200 text-slate-700 font-bold rounded-xl hover:bg-slate-50 transition-colors"
+                className="flex-1 py-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 font-bold rounded-xl hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
                 disabled={isPending}
               >
                 تراجع

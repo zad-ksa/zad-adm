@@ -169,41 +169,41 @@ export default function EditSurveyPage({ params }: { params: Promise<{ id: strin
     setSurvey({ ...survey, sections: newSections });
   };
 
-  if (isLoading) return <div className="p-8 text-center">جاري التحميل...</div>;
-  if (!survey) return <div className="p-8 text-center">الاستبيان غير موجود</div>;
+  if (isLoading) return <div className="p-8 text-center dark:text-slate-300">جاري التحميل...</div>;
+  if (!survey) return <div className="p-8 text-center dark:text-slate-300">الاستبيان غير موجود</div>;
 
   return (
-    <div className="p-8 max-w-5xl mx-auto pb-32">
+    <div className="p-8 max-w-5xl mx-auto pb-32 dark:bg-slate-900">
       <div className="flex items-center justify-between mb-8">
         <div className="flex items-center gap-4">
-          <Link href="/dashboard/custom-surveys" className="text-slate-400 hover:text-slate-800 transition-colors">
+          <Link href="/dashboard/custom-surveys" className="text-slate-400 hover:text-slate-800 transition-colors dark:text-slate-500 dark:hover:text-slate-100">
             <ArrowRight className="w-6 h-6" />
           </Link>
           <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
-            <h1 className="text-2xl font-bold text-slate-800">تعديل الاستبيان المخصص</h1>
-            
+            <h1 className="text-2xl font-bold text-slate-800 dark:text-slate-100">تعديل الاستبيان المخصص</h1>
+
             {/* مؤشر الحفظ التلقائي */}
             <div className="flex items-center gap-1.5 text-xs font-bold">
               {saveStatus === "saving" && (
-                <span className="flex items-center gap-1.5 text-amber-600 bg-amber-50 border border-amber-200 px-3 py-1 rounded-full animate-pulse">
+                <span className="flex items-center gap-1.5 text-amber-600 bg-amber-50 border border-amber-200 px-3 py-1 rounded-full animate-pulse dark:text-amber-400 dark:bg-amber-500/10 dark:border-amber-500/20">
                   <Loader2 className="w-3.5 h-3.5 animate-spin" />
                   جاري الحفظ تلقائياً...
                 </span>
               )}
               {saveStatus === "saved" && (
-                <span className="flex items-center gap-1.5 text-emerald-600 bg-emerald-50 border border-emerald-200 px-3 py-1 rounded-full">
+                <span className="flex items-center gap-1.5 text-emerald-600 bg-emerald-50 border border-emerald-200 px-3 py-1 rounded-full dark:text-emerald-400 dark:bg-emerald-500/10 dark:border-emerald-500/20">
                   <CheckCircle className="w-3.5 h-3.5" />
                   تم حفظ جميع التغييرات
                 </span>
               )}
               {saveStatus === "error" && (
-                <span className="flex items-center gap-1.5 text-red-600 bg-red-50 border border-red-200 px-3 py-1 rounded-full">
+                <span className="flex items-center gap-1.5 text-red-600 bg-red-50 border border-red-200 px-3 py-1 rounded-full dark:text-red-400 dark:bg-red-500/10 dark:border-red-500/20">
                   <AlertCircle className="w-3.5 h-3.5" />
                   فشل الحفظ تلقائياً
                 </span>
               )}
               {saveStatus === "idle" && (
-                <span className="text-slate-400 bg-slate-50 border border-slate-200 px-3 py-1 rounded-full font-medium">
+                <span className="text-slate-400 bg-slate-50 border border-slate-200 px-3 py-1 rounded-full font-medium dark:text-slate-400 dark:bg-slate-800 dark:border-slate-700">
                   جاهز للتعديل
                 </span>
               )}
@@ -225,9 +225,9 @@ export default function EditSurveyPage({ params }: { params: Promise<{ id: strin
             disabled={saveStatus === "saving" || saveStatus === "saved" || saveStatus === "idle"}
             className={`px-6 py-2.5 rounded-xl font-bold flex items-center gap-2 transition-all shadow-lg ${
               saveStatus === "saving"
-                ? "bg-amber-100 text-amber-700 border border-amber-200 cursor-not-allowed"
+                ? "bg-amber-100 text-amber-700 border border-amber-200 cursor-not-allowed dark:bg-amber-500/10 dark:text-amber-400 dark:border-amber-500/20"
                 : saveStatus === "saved" || saveStatus === "idle"
-                  ? "bg-emerald-50 text-emerald-700 border border-emerald-100 cursor-not-allowed"
+                  ? "bg-emerald-50 text-emerald-700 border border-emerald-100 cursor-not-allowed dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/20"
                   : "bg-primary text-white hover:bg-primary/90 cursor-pointer"
             }`}
           >
@@ -245,37 +245,37 @@ export default function EditSurveyPage({ params }: { params: Promise<{ id: strin
         )}
       </div>
 
-      <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm mb-8 space-y-6">
+      <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm mb-8 space-y-6 dark:bg-slate-800 dark:border-slate-700">
         <div>
-          <label className="block text-sm font-bold text-slate-700 mb-2">عنوان الاستبيان</label>
+          <label className="block text-sm font-bold text-slate-700 mb-2 dark:text-slate-300">عنوان الاستبيان</label>
           <input
             type="text"
             value={survey.title}
             onChange={(e) => setSurvey({ ...survey, title: e.target.value })}
-            className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 font-bold text-lg outline-none focus:border-primary/50 focus:ring-4 focus:ring-primary/10 transition-all"
+            className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 font-bold text-lg outline-none focus:border-primary/50 focus:ring-4 focus:ring-primary/10 transition-all dark:bg-slate-900/50 dark:border-slate-700 dark:text-slate-100"
           />
         </div>
         <div>
-          <label className="block text-sm font-bold text-slate-700 mb-2">النص الترحيبي (المقدمة)</label>
+          <label className="block text-sm font-bold text-slate-700 mb-2 dark:text-slate-300">النص الترحيبي (المقدمة)</label>
           <textarea
             value={survey.introText}
             onChange={(e) => setSurvey({ ...survey, introText: e.target.value })}
             rows={4}
-            className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-slate-700 outline-none focus:border-primary/50 focus:ring-4 focus:ring-primary/10 transition-all resize-none"
+            className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-slate-700 outline-none focus:border-primary/50 focus:ring-4 focus:ring-primary/10 transition-all resize-none dark:bg-slate-900/50 dark:border-slate-700 dark:text-slate-300"
           />
         </div>
       </div>
 
       <div className="space-y-6">
         <div className="flex items-center justify-between">
-          <h2 className="text-xl font-bold text-slate-800">أقسام الاستبيان</h2>
+          <h2 className="text-xl font-bold text-slate-800 dark:text-slate-100">أقسام الاستبيان</h2>
         </div>
 
         {survey.sections.map((section, sIndex) => (
           <div key={section.id} className="space-y-4">
-            <div className="bg-white border-2 border-slate-200 rounded-2xl overflow-hidden shadow-sm">
-            <div className="bg-slate-50 p-4 border-b border-slate-200 flex items-center gap-4">
-              <span className="bg-slate-200 text-slate-600 w-8 h-8 rounded-lg flex items-center justify-center font-bold text-sm shrink-0">
+            <div className="bg-white border-2 border-slate-200 rounded-2xl overflow-hidden shadow-sm dark:bg-slate-800 dark:border-slate-700">
+            <div className="bg-slate-50 p-4 border-b border-slate-200 flex items-center gap-4 dark:bg-slate-900/50 dark:border-slate-700">
+              <span className="bg-slate-200 text-slate-600 w-8 h-8 rounded-lg flex items-center justify-center font-bold text-sm shrink-0 dark:bg-slate-700 dark:text-slate-300">
                 {sIndex + 1}
               </span>
               <input
@@ -283,11 +283,11 @@ export default function EditSurveyPage({ params }: { params: Promise<{ id: strin
                 value={section.title}
                 onChange={(e) => updateSectionTitle(sIndex, e.target.value)}
                 placeholder="عنوان القسم..."
-                className="flex-1 bg-white border border-slate-200 rounded-lg px-3 py-2 font-bold outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/20"
+                className="flex-1 bg-white border border-slate-200 rounded-lg px-3 py-2 font-bold outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/20 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-100"
               />
               <button
                 onClick={() => deleteSection(sIndex)}
-                className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors dark:text-slate-500 dark:hover:text-red-400 dark:hover:bg-red-500/10"
                 title="حذف القسم"
               >
                 <Trash2 className="w-5 h-5" />
@@ -296,8 +296,8 @@ export default function EditSurveyPage({ params }: { params: Promise<{ id: strin
 
             <div className="p-6 space-y-6">
               {section.questions.map((question, qIndex) => (
-                <div key={question.id} className="flex gap-4 p-4 border border-slate-100 rounded-xl bg-slate-50/50 hover:border-primary/30 transition-colors">
-                  <div className="text-slate-400 font-bold mt-2">{qIndex + 1}.</div>
+                <div key={question.id} className="flex gap-4 p-4 border border-slate-100 rounded-xl bg-slate-50/50 hover:border-primary/30 transition-colors dark:border-slate-700 dark:bg-slate-900/30">
+                  <div className="text-slate-400 font-bold mt-2 dark:text-slate-500">{qIndex + 1}.</div>
                   <div className="flex-1 space-y-4">
                     <div className="flex gap-4">
                       <input
@@ -305,12 +305,12 @@ export default function EditSurveyPage({ params }: { params: Promise<{ id: strin
                         value={question.text}
                         onChange={(e) => updateQuestion(sIndex, qIndex, { text: e.target.value })}
                         placeholder="نص السؤال..."
-                        className="flex-1 bg-white border border-slate-200 rounded-lg px-3 py-2 outline-none focus:border-primary/50"
+                        className="flex-1 bg-white border border-slate-200 rounded-lg px-3 py-2 outline-none focus:border-primary/50 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-100"
                       />
                       <select
                         value={question.type}
                         onChange={(e) => updateQuestion(sIndex, qIndex, { type: e.target.value })}
-                        className="bg-white border border-slate-200 rounded-lg px-3 py-2 outline-none focus:border-primary/50 text-sm font-bold text-slate-700"
+                        className="bg-white border border-slate-200 rounded-lg px-3 py-2 outline-none focus:border-primary/50 text-sm font-bold text-slate-700 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-300"
                       >
                         <option value="TEXT">نصي</option>
                         <option value="YES_NO">نعم / لا</option>
@@ -321,8 +321,8 @@ export default function EditSurveyPage({ params }: { params: Promise<{ id: strin
                       </select>
                     </div>
                     {(question.type === "OPTIONS" || question.type === "MULTI_OPTIONS") && (
-                      <div className="space-y-2 bg-white p-4 rounded-xl border border-slate-200">
-                        <div className="text-sm font-bold text-slate-700">خيارات الإجابة:</div>
+                      <div className="space-y-2 bg-white p-4 rounded-xl border border-slate-200 dark:bg-slate-800 dark:border-slate-700">
+                        <div className="text-sm font-bold text-slate-700 dark:text-slate-300">خيارات الإجابة:</div>
                         {(question.options || []).map((opt, oIndex) => (
                           <div key={opt.id} className="flex gap-2 items-center">
                             <input
@@ -334,14 +334,14 @@ export default function EditSurveyPage({ params }: { params: Promise<{ id: strin
                                 updateQuestion(sIndex, qIndex, { options: newOptions });
                               }}
                               placeholder="النص..."
-                              className="flex-1 bg-slate-50 border border-slate-200 rounded-md px-2 py-1 text-sm outline-none focus:border-primary/50"
+                              className="flex-1 bg-slate-50 border border-slate-200 rounded-md px-2 py-1 text-sm outline-none focus:border-primary/50 dark:bg-slate-900/50 dark:border-slate-700 dark:text-slate-100"
                             />
                             <button
                               onClick={() => {
                                 const newOptions = (question.options || []).filter((_, i) => i !== oIndex);
                                 updateQuestion(sIndex, qIndex, { options: newOptions });
                               }}
-                              className="text-red-500 hover:text-red-600 p-1"
+                              className="text-red-500 hover:text-red-600 p-1 dark:text-red-400 dark:hover:text-red-300"
                             >
                               <Trash2 className="w-4 h-4" />
                             </button>
@@ -366,7 +366,7 @@ export default function EditSurveyPage({ params }: { params: Promise<{ id: strin
                           onChange={(e) => updateQuestion(sIndex, qIndex, { isRequired: e.target.checked })}
                           className="w-4 h-4 rounded text-primary focus:ring-primary/20 cursor-pointer"
                         />
-                        <span className="text-sm font-bold text-slate-600">سؤال إجباري</span>
+                        <span className="text-sm font-bold text-slate-600 dark:text-slate-400">سؤال إجباري</span>
                       </label>
                       {question.type !== "FILE" && (
                         <label className="flex items-center gap-2 cursor-pointer">
@@ -376,7 +376,7 @@ export default function EditSurveyPage({ params }: { params: Promise<{ id: strin
                             onChange={(e) => updateQuestion(sIndex, qIndex, { allowAttachment: e.target.checked })}
                             className="w-4 h-4 rounded text-primary focus:ring-primary/20 cursor-pointer"
                           />
-                          <span className="text-sm font-bold text-slate-600">السماح برفع مرفق (صورة/PDF/مستند)</span>
+                          <span className="text-sm font-bold text-slate-600 dark:text-slate-400">السماح برفع مرفق (صورة/PDF/مستند)</span>
                         </label>
                       )}
                       {question.type === "YES_NO" && (
@@ -387,14 +387,14 @@ export default function EditSurveyPage({ params }: { params: Promise<{ id: strin
                             onChange={(e) => updateQuestion(sIndex, qIndex, { requireAttachmentIfYes: e.target.checked })}
                             className="w-4 h-4 rounded text-primary focus:ring-primary/20 cursor-pointer"
                           />
-                          <span className="text-sm font-bold text-slate-600">إجبار الرفع إذا اختار "نعم"</span>
+                          <span className="text-sm font-bold text-slate-600 dark:text-slate-400">إجبار الرفع إذا اختار "نعم"</span>
                         </label>
                       )}
                     </div>
                   </div>
                   <button
                     onClick={() => deleteQuestion(sIndex, qIndex)}
-                    className="self-start p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                    className="self-start p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors dark:text-slate-500 dark:hover:text-red-400 dark:hover:bg-red-500/10"
                   >
                     <Trash2 className="w-4 h-4" />
                   </button>
@@ -403,18 +403,18 @@ export default function EditSurveyPage({ params }: { params: Promise<{ id: strin
 
               <button
                 onClick={() => addQuestion(sIndex)}
-                className="w-full border-2 border-dashed border-slate-200 hover:border-primary/50 hover:bg-primary/5 text-slate-500 hover:text-primary rounded-xl py-4 flex items-center justify-center gap-2 font-bold transition-all text-sm"
+                className="w-full border-2 border-dashed border-slate-200 hover:border-primary/50 hover:bg-primary/5 text-slate-500 hover:text-primary rounded-xl py-4 flex items-center justify-center gap-2 font-bold transition-all text-sm dark:border-slate-700 dark:text-slate-400"
               >
                 <Plus className="w-4 h-4" /> إضافة سؤال جديد
               </button>
             </div>
           </div>
-          
+
           {/* زر إضافة قسم جديد تحت كل صندوق قسم */}
           <div className="flex justify-center py-2">
             <button
               onClick={() => addSection(sIndex)}
-              className="bg-slate-100 text-slate-700 hover:bg-primary hover:text-white border border-slate-200 px-5 py-2.5 rounded-xl text-xs font-bold flex items-center gap-2 transition-all shadow-sm active:scale-95 cursor-pointer"
+              className="bg-slate-100 text-slate-700 hover:bg-primary hover:text-white border border-slate-200 px-5 py-2.5 rounded-xl text-xs font-bold flex items-center gap-2 transition-all shadow-sm active:scale-95 cursor-pointer dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700"
             >
               <Plus className="w-3.5 h-3.5" /> إضافة قسم جديد بعد هذا القسم
             </button>
@@ -423,7 +423,7 @@ export default function EditSurveyPage({ params }: { params: Promise<{ id: strin
       ))}
 
         {survey.sections.length === 0 && (
-          <div className="text-center py-12 bg-white border border-slate-200 rounded-2xl text-slate-500 flex flex-col items-center gap-4">
+          <div className="text-center py-12 bg-white border border-slate-200 rounded-2xl text-slate-500 flex flex-col items-center gap-4 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-400">
             <span>لا توجد أقسام حالياً.</span>
             <button
               onClick={() => addSection()}

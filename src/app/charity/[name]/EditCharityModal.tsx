@@ -123,14 +123,14 @@ export default function EditCharityModal({ charity, onClose }: EditCharityModalP
       />
       
       {/* Modal Container */}
-      <div className="bg-white rounded-2xl border border-slate-100 shadow-2xl w-full max-w-lg overflow-hidden relative z-10 transform transition-all duration-300 scale-100 max-h-[90vh] flex flex-col font-sans" dir="rtl">
+      <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-2xl w-full max-w-lg overflow-hidden relative z-10 transform transition-all duration-300 scale-100 max-h-[90vh] flex flex-col font-sans" dir="rtl">
         {/* Header */}
-        <div className="px-4 py-3 border-b border-slate-100 flex items-center justify-between shrink-0">
-          <h3 className="text-lg font-bold text-slate-800">تعديل ملف الجمعية</h3>
-          <button 
-            onClick={onClose} 
+        <div className="px-4 py-3 border-b border-slate-100 dark:border-slate-700 flex items-center justify-between shrink-0">
+          <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100">تعديل ملف الجمعية</h3>
+          <button
+            onClick={onClose}
             disabled={isPending}
-            className="text-slate-400 hover:text-slate-600 hover:bg-slate-50 p-2 rounded-lg transition-colors cursor-pointer"
+            className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 p-2 rounded-lg transition-colors cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>
@@ -139,7 +139,7 @@ export default function EditCharityModal({ charity, onClose }: EditCharityModalP
         {/* Form Body */}
         <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-5 space-y-4">
           {error && (
-            <div className="bg-red-50 border border-red-100 p-4 rounded-xl flex items-start text-sm text-red-700 font-bold">
+            <div className="bg-red-50 dark:bg-red-900/20 border border-red-100 dark:border-red-800/50 p-4 rounded-xl flex items-start text-sm text-red-700 dark:text-red-400 font-bold">
               <AlertCircle className="w-5 h-5 ml-2 text-red-500 shrink-0 mt-0.5" />
               <span>{error}</span>
             </div>
@@ -147,19 +147,19 @@ export default function EditCharityModal({ charity, onClose }: EditCharityModalP
 
           {/* Logo Uploader */}
           <div className="flex flex-col items-center gap-4">
-            <label className="block text-sm font-bold text-slate-700 w-full text-right">
+            <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 w-full text-right">
               شعار الجمعية
             </label>
-            
+
             <div className="relative group">
-              <div className="w-28 h-28 rounded-2xl overflow-hidden border-2 border-dashed border-slate-200 bg-slate-50 flex items-center justify-center relative shadow-inner group-hover:border-primary/40 transition-colors">
+              <div className="w-28 h-28 rounded-2xl overflow-hidden border-2 border-dashed border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 flex items-center justify-center relative shadow-inner group-hover:border-primary/40 transition-colors">
                 {logoPreview ? (
                   <img src={logoPreview} alt="شعار الجمعية" className="w-full h-full object-contain p-1" />
                 ) : (
-                  <ImageIcon className="w-10 h-10 text-slate-300" />
+                  <ImageIcon className="w-10 h-10 text-slate-300 dark:text-slate-600" />
                 )}
               </div>
-              
+
               <button
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
@@ -169,8 +169,8 @@ export default function EditCharityModal({ charity, onClose }: EditCharityModalP
                 تغيير
               </button>
             </div>
-            
-            <input 
+
+            <input
               ref={fileInputRef}
               type="file"
               accept="image/*"
@@ -178,13 +178,13 @@ export default function EditCharityModal({ charity, onClose }: EditCharityModalP
               onChange={handleFileChange}
               disabled={isPending}
             />
-            <p className="text-[11px] text-slate-400 font-medium">الحد الأقصى لحجم الملف: 2 ميجابايت (PNG, JPG, SVG)</p>
+            <p className="text-[11px] text-slate-400 dark:text-slate-500 font-medium">الحد الأقصى لحجم الملف: 2 ميجابايت (PNG, JPG, SVG)</p>
           </div>
 
           {/* Inputs */}
           <div className="space-y-4">
             <div>
-              <label htmlFor="charity-name" className="block text-sm font-bold text-slate-700 mb-2">
+              <label htmlFor="charity-name" className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">
                 اسم الجمعية
               </label>
               <input
@@ -194,14 +194,14 @@ export default function EditCharityModal({ charity, onClose }: EditCharityModalP
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 disabled={isPending}
-                className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all outline-none bg-slate-50 focus:bg-white text-slate-800 text-sm font-bold"
+                className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all outline-none bg-slate-50 dark:bg-slate-900 focus:bg-white dark:focus:bg-slate-800 text-slate-800 dark:text-slate-100 text-sm font-bold"
                 placeholder="أدخل اسم الجمعية"
               />
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label htmlFor="license-number" className="block text-sm font-bold text-slate-700 mb-2">
+                <label htmlFor="license-number" className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">
                   رقم التصريح
                 </label>
                 <input
@@ -210,13 +210,13 @@ export default function EditCharityModal({ charity, onClose }: EditCharityModalP
                   value={licenseNumber}
                   onChange={(e) => setLicenseNumber(e.target.value)}
                   disabled={isPending}
-                  className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all outline-none bg-slate-50 focus:bg-white text-slate-800 text-sm font-bold"
+                  className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all outline-none bg-slate-50 dark:bg-slate-900 focus:bg-white dark:focus:bg-slate-800 text-slate-800 dark:text-slate-100 text-sm font-bold"
                   placeholder="رقم الترخيص"
                 />
               </div>
 
               <div>
-                <label htmlFor="est-date" className="block text-sm font-bold text-slate-700 mb-2">
+                <label htmlFor="est-date" className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">
                   تاريخ التأسيس (هجري)
                 </label>
                 <DatePicker
@@ -227,7 +227,7 @@ export default function EditCharityModal({ charity, onClose }: EditCharityModalP
                   className="teal"
                   calendarPosition="bottom-right"
                   containerClassName="w-full"
-                  inputClass="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all outline-none bg-slate-50 focus:bg-white text-slate-800 text-sm font-bold"
+                  inputClass="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all outline-none bg-slate-50 dark:bg-slate-900 focus:bg-white dark:focus:bg-slate-800 text-slate-800 dark:text-slate-100 text-sm font-bold"
                   placeholder="اختر التاريخ الهجري"
                   disabled={isPending}
                 />
@@ -236,12 +236,12 @@ export default function EditCharityModal({ charity, onClose }: EditCharityModalP
           </div>
 
           {/* Footer Actions */}
-          <div className="pt-6 border-t border-slate-100 flex items-center justify-end gap-3 shrink-0">
+          <div className="pt-6 border-t border-slate-100 dark:border-slate-700 flex items-center justify-end gap-3 shrink-0">
             <button
               type="button"
               onClick={onClose}
               disabled={isPending}
-              className="px-5 py-3 rounded-xl border border-slate-200 text-slate-500 hover:bg-slate-50 hover:text-slate-700 font-bold transition-all text-sm cursor-pointer disabled:opacity-50"
+              className="px-5 py-3 rounded-xl border border-slate-200 dark:border-slate-600 text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700 hover:text-slate-700 dark:hover:text-slate-200 font-bold transition-all text-sm cursor-pointer disabled:opacity-50"
             >
               إلغاء
             </button>

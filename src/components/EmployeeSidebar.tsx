@@ -30,7 +30,7 @@ function NavItem({ item, isActive, isOpen }: { item: any, isActive: boolean, isO
       <Link
         href={item.href}
         title={!isOpen ? item.label : undefined}
-        className={`flex items-center ${isOpen ? "justify-start px-2.5" : "justify-center"} py-2 rounded-lg text-[13px] font-bold transition-all group relative ${
+        className={`flex items-center ${isOpen ? "justify-start px-2.5" : "justify-center"} py-2 rounded-lg text-[11px] font-bold transition-all group relative ${
           isActive
             ? "bg-primary text-white shadow-sm shadow-primary/20"
             : "text-slate-500 dark:text-slate-400 hover:bg-primary/5 dark:hover:bg-primary/10 hover:text-primary dark:hover:text-primary"
@@ -57,6 +57,15 @@ function NavItem({ item, isActive, isOpen }: { item: any, isActive: boolean, isO
       </Link>
     </div>
   );
+}
+
+// --- Determine which section group the current path belongs to ---
+function getActiveGroup(path: string): string | null {
+  if (path.startsWith("/charity/") || path.startsWith("/dashboard/services-overview")) return "الخدمات";
+  if (["/dashboard/charities", "/dashboard/contracts", "/dashboard/custom-surveys", "/dashboard/communication"].some(h => path.startsWith(h))) return "الجمعيات";
+  if (["/dashboard/requests", "/dashboard/news", "/dashboard/meetings", "/dashboard/tasks"].some(h => path.startsWith(h))) return "زاد";
+  if (["/dashboard/admin", "/dashboard/workflow-settings"].some(h => path.startsWith(h))) return "لوحة التحكم";
+  return null;
 }
 
 export default function EmployeeSidebar({
@@ -105,7 +114,7 @@ export default function EmployeeSidebar({
   const [isPending, startTransition] = useTransition();
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
-  const [collapsedGroups, setCollapsedGroups] = useState<string[]>(initialService ? [] : ["الخدمات"]);
+  const [expandedGroup, setExpandedGroup] = useState<string | null>(getActiveGroup(pathname || ""));
   const [charities, setCharities] = useState<any[]>([]);
 
   useEffect(() => {
@@ -121,11 +130,14 @@ export default function EmployeeSidebar({
       if (parts.length >= 4) {
         const charityName = decodeURIComponent(parts[2]);
         const serviceId = parts[3];
-        
+
         setExpandedService(serviceId);
         setExpandedCharity(`${serviceId}-${charityName}`);
-        setCollapsedGroups(prev => prev.filter(g => g !== "الخدمات"));
+        setExpandedGroup("الخدمات");
       }
+    } else {
+      const g = getActiveGroup(pathname);
+      if (g) setExpandedGroup(g);
     }
   }, [pathname]);
 
@@ -334,21 +346,25 @@ export default function EmployeeSidebar({
       {/* Navigation */}
       <div className="flex-1 overflow-y-auto custom-scrollbar px-2.5 py-2 space-y-4 flex flex-col relative">
         {(() => {
+          // Accordion: only one group open at a time; collapsing/switching a group
+          // also resets its inner service/charity tree so it re-opens collapsed.
+          const toggleGroup = (title: string) => {
+            setExpandedService(null);
+            setExpandedCharity(null);
+            setExpandedGroup(prev => (prev === title ? null : title));
+          };
+
           const renderGroup = (title: string, labels: string[]) => {
             const items = labels.map(label => navItems.find(i => i.label === label)).filter(Boolean) as typeof navItems;
             if (items.length === 0) return null;
-            
-            const isCollapsed = title ? collapsedGroups.includes(title) : false;
+
+            const isCollapsed = title ? expandedGroup !== title : false;
 
             return (
               <div className="mb-2">
                 {isOpen && title && (
-                  <button 
-                    onClick={() => {
-                      setCollapsedGroups(prev => 
-                        prev.includes(title) ? prev.filter(g => g !== title) : [...prev, title]
-                      );
-                    }}
+                  <button
+                    onClick={() => toggleGroup(title)}
                     className="flex items-center justify-between w-full px-2 mb-2 group cursor-pointer outline-none"
                   >
                     <span className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider group-hover:text-primary transition-colors">{title}</span>
@@ -369,8 +385,8 @@ export default function EmployeeSidebar({
             const hasServicesAccess = can("view_services_overview") || can("manage_charities");
             if (!hasServicesAccess) return null;
 
-            const isServicesCollapsed = collapsedGroups.includes("الخدمات");
-            const toggleServices = () => setCollapsedGroups(prev => prev.includes("الخدمات") ? prev.filter(g => g !== "الخدمات") : [...prev, "الخدمات"]);
+            const isServicesCollapsed = expandedGroup !== "الخدمات";
+            const toggleServices = () => toggleGroup("الخدمات");
 
             const allServices = [
               { id: "strategy", label: "الاستراتيجية", icon: Target, required: "manage_strategy" },
@@ -407,7 +423,7 @@ export default function EmployeeSidebar({
                   {isOpen && services.map(svc => (
                     <div key={svc.id} className="relative mt-1">
                       <button 
-                        onClick={() => setExpandedService(prev => prev === svc.id ? null : svc.id)}
+                        onClick={() => { setExpandedCharity(null); setExpandedService(prev => prev === svc.id ? null : svc.id); }}
                         className={`flex items-center justify-between w-full px-2.5 py-1.5 rounded-lg text-[11px] font-bold transition-all group ${expandedService === svc.id ? "bg-primary/5 text-primary" : "text-slate-500 hover:bg-primary/5 hover:text-primary"}`}
                       >
                         <div className="flex items-center">

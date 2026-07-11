@@ -13,7 +13,7 @@ export function ServiceAccordionProvider({ children }: { children: ReactNode }) 
   const [expandedId, setExpandedId] = useState<string | null>(null);
   return (
     <ServiceAccordionContext.Provider value={{ expandedId, setExpandedId }}>
-      {children}
+      <div className="space-y-1.5">{children}</div>
     </ServiceAccordionContext.Provider>
   );
 }

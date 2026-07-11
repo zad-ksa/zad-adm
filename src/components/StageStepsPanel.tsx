@@ -120,7 +120,7 @@ export default function StageStepsPanel({ steps, canEdit, onAdd, onToggle, onRen
                 <span
                   onClick={() => { if (canEdit) { setEditingId(step.id); setEditName(step.name); } }}
                   className={`flex-1 text-[10px] leading-relaxed ${
-                    step.isDone ? "line-through text-slate-400 dark:text-slate-500" : "text-slate-700 dark:text-slate-300"
+                    step.isDone ? "text-slate-400 dark:text-slate-500" : "text-slate-700 dark:text-slate-300"
                   } ${canEdit ? "cursor-text hover:text-primary transition-colors" : ""}`}
                 >
                   {step.name}

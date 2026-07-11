@@ -9,6 +9,7 @@ import GenericStagesManager from "@/components/GenericStagesManager";
 import CharityClientTimeline from "@/components/CharityClientTimeline";
 import ServicesManagerClient from "@/components/ServicesManagerClient";
 import ServicesPrintButton from "@/components/ServicesPrintButton";
+import { ServiceAccordionProvider } from "@/components/ServiceAccordionContext";
 import { getTimelineConfigs } from "@/app/actions/settings";
 
 export async function generateMetadata({ params }: { params: Promise<{ name: string }> }): Promise<Metadata> {
@@ -123,7 +124,7 @@ export default async function ServicesPage({ params }: { params: Promise<{ name:
           ))}
         </div>
       ) : (
-        <>
+        <ServiceAccordionProvider>
           {(isAdmin || session?.role === (charity.strategyTimelineDept || "STRATEGY")) && (
             <StrategicStagesManager 
               charityId={charity.id} 
@@ -157,7 +158,7 @@ export default async function ServicesPage({ params }: { params: Promise<{ name:
                />
             )
           ))}
-        </>
+        </ServiceAccordionProvider>
       )}
     </div>
   );

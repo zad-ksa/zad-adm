@@ -444,6 +444,17 @@ export default function InteractiveTimelineEditor({
                     )}
 
                     {isCurrent && <span className="block mt-2 text-[10px] font-bold bg-amber-500 text-white px-3 py-0.5 rounded-full">النشاط الحالي</span>}
+
+                    {stepCallbacks && (
+                      <StageStepsPanel
+                        steps={stage.steps || []}
+                        canEdit={canEdit}
+                        onAdd={(name) => stepCallbacks.onAddStep(stage.id, name)}
+                        onToggle={(stepId, isDone) => stepCallbacks.onToggleStep(stage.id, stepId, isDone)}
+                        onRename={(stepId, name) => stepCallbacks.onRenameStep(stage.id, stepId, name)}
+                        onDelete={(stepId) => stepCallbacks.onDeleteStep(stage.id, stepId)}
+                      />
+                    )}
                   </div>
                 </div>
               );

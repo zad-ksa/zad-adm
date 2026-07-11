@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition, useEffect, useRef } from "react";
-import { Check, Plus, Trash2, ChevronDown, ChevronUp, X, GripVertical } from "lucide-react";
+import { Check, Plus, Trash2, X, GripVertical } from "lucide-react";
 
 export type StageStep = {
   id: string;
@@ -20,7 +20,6 @@ interface StageStepsPanelProps {
 }
 
 export default function StageStepsPanel({ steps, canEdit, onAdd, onToggle, onRename, onDelete }: StageStepsPanelProps) {
-  const [open, setOpen] = useState(false);
   const [localSteps, setLocalSteps] = useState<StageStep[]>(() => [...steps].sort((a, b) => a.order - b.order));
   const [adding, setAdding] = useState(false);
   const [newName, setNewName] = useState("");
@@ -73,11 +72,7 @@ export default function StageStepsPanel({ steps, canEdit, onAdd, onToggle, onRen
 
   return (
     <div className="mt-1.5">
-      <button
-        onClick={() => setOpen(o => !o)}
-        className="w-full flex items-center gap-1.5 text-[10px] font-bold text-slate-500 dark:text-slate-400 hover:text-primary transition-colors"
-      >
-        {open ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+      <div className="w-full flex items-center gap-1.5 text-[10px] font-bold text-slate-500 dark:text-slate-400">
         <span>الخطوات</span>
         {total > 0 && (
           <>
@@ -90,10 +85,9 @@ export default function StageStepsPanel({ steps, canEdit, onAdd, onToggle, onRen
             </div>
           </>
         )}
-      </button>
+      </div>
 
-      {open && (
-        <div className="mt-1.5 space-y-1">
+      <div className="mt-1.5 space-y-1">
           {sorted.map(step => (
             <div key={step.id} className="flex items-center gap-1.5 group">
               <button
@@ -162,8 +156,7 @@ export default function StageStepsPanel({ steps, canEdit, onAdd, onToggle, onRen
               </button>
             )
           )}
-        </div>
-      )}
+      </div>
     </div>
   );
 }

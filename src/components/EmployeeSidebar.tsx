@@ -59,15 +59,6 @@ function NavItem({ item, isActive, isOpen }: { item: any, isActive: boolean, isO
   );
 }
 
-// --- Determine which section group the current path belongs to ---
-function getActiveGroup(path: string): string | null {
-  if (path.startsWith("/charity/") || path.startsWith("/dashboard/services-overview")) return "الخدمات";
-  if (["/dashboard/charities", "/dashboard/contracts", "/dashboard/custom-surveys", "/dashboard/communication"].some(h => path.startsWith(h))) return "الجمعيات";
-  if (["/dashboard/requests", "/dashboard/news", "/dashboard/meetings", "/dashboard/tasks"].some(h => path.startsWith(h))) return "زاد";
-  if (["/dashboard/admin", "/dashboard/workflow-settings"].some(h => path.startsWith(h))) return "لوحة التحكم";
-  return null;
-}
-
 export default function EmployeeSidebar({
   session,
   isOpen,
@@ -84,22 +75,8 @@ export default function EmployeeSidebar({
   const currentTab = searchParams.get("tab");
   const decodedPathname = pathname ? decodeURIComponent(pathname) : "";
   
-  let initialService: string | null = null;
-  let initialCharity: string | null = null;
-  
-  if (pathname && pathname.startsWith("/charity/")) {
-    const parts = pathname.split("/");
-    if (parts.length >= 4) {
-      const charityName = decodeURIComponent(parts[2]);
-      const serviceId = parts[3];
-      
-      initialService = serviceId;
-      initialCharity = `${serviceId}-${charityName}`;
-    }
-  }
-
-  const [expandedService, setExpandedService] = useState<string | null>(initialService);
-  const [expandedCharity, setExpandedCharity] = useState<string | null>(initialCharity);
+  const [expandedService, setExpandedService] = useState<string | null>(null);
+  const [expandedCharity, setExpandedCharity] = useState<string | null>(null);
 
   const [userState, setUserState] = useState(session);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -114,32 +91,13 @@ export default function EmployeeSidebar({
   const [isPending, startTransition] = useTransition();
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
-  const [expandedGroup, setExpandedGroup] = useState<string | null>(getActiveGroup(pathname || ""));
+  const [expandedGroup, setExpandedGroup] = useState<string | null>(null);
   const [charities, setCharities] = useState<any[]>([]);
 
   useEffect(() => {
     setMounted(true);
     getSidebarCharities().then(res => setCharities(res || []));
   }, []);
-
-  useEffect(() => {
-    if (!pathname) return;
-    
-    if (pathname.startsWith("/charity/")) {
-      const parts = pathname.split("/");
-      if (parts.length >= 4) {
-        const charityName = decodeURIComponent(parts[2]);
-        const serviceId = parts[3];
-
-        setExpandedService(serviceId);
-        setExpandedCharity(`${serviceId}-${charityName}`);
-        setExpandedGroup("الخدمات");
-      }
-    } else {
-      const g = getActiveGroup(pathname);
-      if (g) setExpandedGroup(g);
-    }
-  }, [pathname]);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 

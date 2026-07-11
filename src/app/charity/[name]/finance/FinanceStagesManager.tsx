@@ -190,9 +190,9 @@ export default function FinanceStagesManager({
   };
 
   return (
-    <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-700 shadow-sm overflow-hidden mt-2 transition-colors">
+    <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-700 shadow-sm overflow-hidden mt-1.5 transition-colors">
       <div
-        className="p-3 border-b border-slate-100 dark:border-slate-700 flex flex-col sm:flex-row sm:items-center justify-between gap-2 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-900/50 transition-colors"
+        className="p-2 border-b border-slate-100 dark:border-slate-700 flex flex-col sm:flex-row sm:items-center justify-between gap-2 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-900/50 transition-colors"
         onClick={toggleExpanded}
       >
         <div className="flex items-center gap-2">

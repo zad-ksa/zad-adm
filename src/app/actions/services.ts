@@ -45,7 +45,7 @@ export async function createServiceTemplate(name: string, department: string | n
     }));
     await prisma.service.createMany({ data: servicesToCreate });
   }
-  revalidatePath('/dashboard/manage-services');
+  revalidatePath('/main/manage-services');
   return template;
 }
 
@@ -66,7 +66,7 @@ export async function updateServiceTemplate(id: string, name: string, department
     data: { name, department }
   });
   
-  revalidatePath('/dashboard/manage-services');
+  revalidatePath('/main/manage-services');
   return template;
 }
 
@@ -80,7 +80,7 @@ export async function deleteServiceTemplate(id: string) {
   await prisma.service.deleteMany({ where: { templateId: id } });
   const template = await (prisma as any).serviceTemplate.delete({ where: { id } });
   
-  revalidatePath('/dashboard/manage-services');
+  revalidatePath('/main/manage-services');
   return template;
 }
 
@@ -160,7 +160,7 @@ export async function addServiceToCharities(name: string, department: string | n
 
   await prisma.service.createMany({ data: servicesToCreate });
   
-  revalidatePath('/dashboard/manage-services');
+  revalidatePath('/main/manage-services');
   return { success: true, count: charityIds.length };
 }
 
@@ -177,7 +177,7 @@ export async function renameServiceGlobally(oldName: string, newName: string, ne
     data: { name: newName.trim(), department: newDepartment }
   });
 
-  revalidatePath('/dashboard/manage-services');
+  revalidatePath('/main/manage-services');
   return { success: true, updatedCount: result.count };
 }
 
@@ -191,7 +191,7 @@ export async function deleteServiceGlobally(name: string) {
 
   const result = await prisma.service.deleteMany({ where: { name } });
 
-  revalidatePath('/dashboard/manage-services');
+  revalidatePath('/main/manage-services');
   return { success: true, deletedCount: result.count };
 }
 
@@ -799,7 +799,7 @@ export async function assignGanttDates(
     });
   }
 
-  revalidatePath('/dashboard');
+  revalidatePath('/main');
   return { success: true };
 }
 
@@ -828,7 +828,7 @@ export async function toggleGanttItemCompletion(type: 'stage'|'step', id: string
     await syncServiceProgress(serviceId, { type: type === 'stage' ? 'STAGE' : 'STEP', id, isDone });
   }
 
-  revalidatePath('/dashboard');
+  revalidatePath('/main');
   return { success: true };
 }
 
@@ -932,6 +932,6 @@ export async function broadcastGanttWeek(
       }
     }
   }
-  revalidatePath('/dashboard');
+  revalidatePath('/main');
   return { success: true };
 }

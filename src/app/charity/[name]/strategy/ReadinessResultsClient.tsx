@@ -302,7 +302,7 @@ export default function ReadinessResultsClient({ responses }: { responses: any[]
                     })}
                   </span>
                   <Link
-                    href={`/dashboard/${res.id}`}
+                    href={`/main/${res.id}`}
                     className="text-primary font-bold opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1"
                   >
                     التفاصيل

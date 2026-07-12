@@ -47,7 +47,7 @@ export async function addProgramAction(
 
     revalidatePath(`/charity/${encodeURIComponent(charity.name)}`);
     revalidatePath(`/charity/${encodeURIComponent(charity.name)}/programs`);
-    revalidatePath("/dashboard");
+    revalidatePath("/main");
     
     return { success: true, program };
   } catch (error: any) {
@@ -77,7 +77,7 @@ export async function deleteProgramAction(programId: string) {
 
     revalidatePath(`/charity/${encodeURIComponent(program.charity.name)}`);
     revalidatePath(`/charity/${encodeURIComponent(program.charity.name)}/programs`);
-    revalidatePath("/dashboard");
+    revalidatePath("/main");
 
     return { success: true };
   } catch (error: any) {

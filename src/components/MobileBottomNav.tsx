@@ -23,7 +23,7 @@ export default function MobileBottomNav({ items }: { items: BottomNavItem[] }) {
           
           const isActive = item.exact 
             ? decodedPathname === decodedHref 
-            : decodedPathname.startsWith(decodedHref) && (item.href !== '/dashboard' || decodedPathname === '/dashboard');
+            : decodedPathname.startsWith(decodedHref) && (item.href !== '/main' || decodedPathname === '/main');
             
           return (
             <Link 

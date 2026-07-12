@@ -7,7 +7,7 @@ export default async function middleware(request: NextRequest) {
   const session = await getSession();
 
   // Protect /dashboard routes
-  if (pathname.startsWith("/dashboard")) {
+  if (pathname.startsWith("/main")) {
     if (!session) {
       return NextResponse.redirect(new URL("/", request.url));
     }
@@ -16,7 +16,7 @@ export default async function middleware(request: NextRequest) {
   // Prevent logged-in users from seeing the login page (root "/") again
   if (pathname === "/") {
     if (session) {
-      return NextResponse.redirect(new URL("/dashboard", request.url));
+      return NextResponse.redirect(new URL("/main", request.url));
     }
   }
 
@@ -40,5 +40,5 @@ export default async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/dashboard/:path*", "/", "/charity/:path*"],
+  matcher: ["/main/:path*", "/", "/charity/:path*"],
 };

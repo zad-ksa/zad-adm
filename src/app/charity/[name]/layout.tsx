@@ -4,7 +4,7 @@ import CharityLayoutClient from "./CharityLayoutClient";
 import { prisma } from "@/lib/db";
 import { getSession } from "@/lib/auth";
 import { isAdminRole, getAssignedCharityIds } from "@/lib/access";
-import DashboardLayoutClient from "@/app/dashboard/(main)/DashboardLayoutClient";
+import DashboardLayoutClient from "@/app/main/(main)/DashboardLayoutClient";
 import { hasPermission } from "@/lib/permissions";
 
 export default async function CharityLayout({
@@ -30,7 +30,7 @@ export default async function CharityLayout({
   if (!isAdminRole(session.role) && session.role !== "CHARITY_CLIENT") {
     const assigned = await getAssignedCharityIds(session.id, session.role, session.permissions);
     if (assigned !== null && !assigned.includes(charity.id)) {
-      redirect("/dashboard");
+      redirect("/main");
     }
   }
 

@@ -97,7 +97,7 @@ export async function createRequest(data: {
     }
   }
 
-  revalidatePath("/dashboard/requests");
+  revalidatePath("/main/requests");
   return request;
 }
 
@@ -225,7 +225,7 @@ export async function reviewRequest(data: {
     }
   }
 
-  revalidatePath("/dashboard/requests");
+  revalidatePath("/main/requests");
 }
 
 // ── إعادة إرسال طلب مرجع ─────────────────────────────────────────────────────
@@ -293,7 +293,7 @@ export async function resubmitRequest(data: {
     }
   }
 
-  revalidatePath("/dashboard/requests");
+  revalidatePath("/main/requests");
 }
 
 // ── حذف طلب ──────────────────────────────────────────────────────────────────
@@ -313,7 +313,7 @@ export async function deleteRequest(requestId: string) {
   if (!canDelete) throw new Error("غير مصرح بحذف هذا الطلب");
 
   await prisma.request.delete({ where: { id: requestId } });
-  revalidatePath("/dashboard/requests");
+  revalidatePath("/main/requests");
 }
 
 // ── جلب الطلبات (للـ polling في المكون) ──────────────────────────────────────
@@ -375,7 +375,7 @@ export async function markNotificationsRead() {
     where: { employeeId: session.id, isRead: false },
     data: { isRead: true },
   });
-  revalidatePath("/dashboard/requests");
+  revalidatePath("/main/requests");
 }
 
 export async function getUnreadNotificationsCount() {

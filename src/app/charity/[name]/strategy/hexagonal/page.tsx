@@ -313,7 +313,7 @@ export default async function HexagonalSurveysPage({ params }: { params: Promise
                 </div>
 
                 <Link
-                  href={`/dashboard/hexagonal/${res.id}`}
+                  href={`/main/hexagonal/${res.id}`}
                   className="w-full text-center py-3.5 bg-secondary/5 hover:bg-secondary text-secondary hover:text-white font-bold rounded-xl transition-all text-sm flex items-center justify-center gap-2 mt-auto"
                 >
                   عرض بنود التحليل السداسي

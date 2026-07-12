@@ -257,7 +257,7 @@ export default function CharitySidebar({
       <div className="shrink-0 px-2.5 py-2.5 border-t border-slate-100 dark:border-slate-700/50 dark:border-slate-800/80">
         {!isCharityClient ? (
           <Link
-            href="/dashboard"
+            href="/main"
             title={!isOpen ? "العودة للوحة التحكم" : undefined}
             className={`flex items-center ${isOpen ? "justify-start px-2.5" : "justify-center"} w-full py-2 text-slate-500 dark:text-slate-400 hover:bg-primary/5 hover:text-primary rounded-xl text-xs font-bold transition-all group`}
           >

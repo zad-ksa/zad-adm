@@ -20,7 +20,7 @@ export async function createChain(name: string) {
   const chain = await prisma.workflowChain.create({
     data: { name: name.trim(), isActive: false },
   });
-  revalidatePath("/dashboard/workflow-settings");
+  revalidatePath("/main/workflow-settings");
   return chain;
 }
 
@@ -28,7 +28,7 @@ export async function createChain(name: string) {
 export async function deleteChain(chainId: string) {
   await requireAdmin();
   await prisma.workflowChain.delete({ where: { id: chainId } });
-  revalidatePath("/dashboard/workflow-settings");
+  revalidatePath("/main/workflow-settings");
 }
 
 // ── تفعيل سلسلة كالافتراضية (وإلغاء تفعيل الباقي) ───────────────────────────
@@ -39,14 +39,14 @@ export async function setActiveChain(chainId: string) {
     where: { id: chainId },
     data: { isActive: true },
   });
-  revalidatePath("/dashboard/workflow-settings");
+  revalidatePath("/main/workflow-settings");
 }
 
 // ── إلغاء تفعيل جميع السلاسل (بدون workflow) ─────────────────────────────────
 export async function clearActiveChain() {
   await requireAdmin();
   await prisma.workflowChain.updateMany({ data: { isActive: false } });
-  revalidatePath("/dashboard/workflow-settings");
+  revalidatePath("/main/workflow-settings");
 }
 
 // ── إضافة خطوة لسلسلة ────────────────────────────────────────────────────────
@@ -72,7 +72,7 @@ export async function addStep(data: {
       order: nextOrder,
     },
   });
-  revalidatePath("/dashboard/workflow-settings");
+  revalidatePath("/main/workflow-settings");
 }
 
 // ── حذف خطوة ─────────────────────────────────────────────────────────────────
@@ -90,7 +90,7 @@ export async function removeStep(stepId: string) {
     WHERE "chainId" = ${step.chainId} AND "order" > ${step.order}
   `;
 
-  revalidatePath("/dashboard/workflow-settings");
+  revalidatePath("/main/workflow-settings");
 }
 
 // ── تبديل ترتيب خطوتين ───────────────────────────────────────────────────────
@@ -114,7 +114,7 @@ export async function reorderSteps(stepId: string, direction: "up" | "down") {
     prisma.workflowStep.update({ where: { id: sibling.id }, data: { order: step.order } }),
   ]);
 
-  revalidatePath("/dashboard/workflow-settings");
+  revalidatePath("/main/workflow-settings");
 }
 
 // ── تحديث label لخطوة ────────────────────────────────────────────────────────
@@ -124,7 +124,7 @@ export async function updateStepLabel(stepId: string, label: string) {
     where: { id: stepId },
     data: { label: label.trim() || null },
   });
-  revalidatePath("/dashboard/workflow-settings");
+  revalidatePath("/main/workflow-settings");
 }
 
 // ── تحديث اسم سلسلة ──────────────────────────────────────────────────────────
@@ -134,5 +134,5 @@ export async function updateChainName(chainId: string, name: string) {
     where: { id: chainId },
     data: { name: name.trim() },
   });
-  revalidatePath("/dashboard/workflow-settings");
+  revalidatePath("/main/workflow-settings");
 }

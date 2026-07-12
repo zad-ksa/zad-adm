@@ -52,7 +52,7 @@ export async function updateServiceResponsible(
       }
     });
 
-    revalidatePath("/dashboard/communication");
+    revalidatePath("/main/communication");
     return { success: true };
   } catch (error) {
     console.error("Error updating service responsible:", error);

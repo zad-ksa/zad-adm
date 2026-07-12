@@ -73,7 +73,7 @@ export async function loginWithPassword(phone: string, password: string) {
     redirect(`/charity/${encodeURIComponent(employee.charity.name)}`);
   }
   
-  redirect("/dashboard");
+  redirect("/main");
 }
 
 export async function logout() {

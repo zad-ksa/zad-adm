@@ -8,7 +8,7 @@ import "./globals.css";
 const notoKufi = Noto_Kufi_Arabic({ subsets: ["arabic"], weight: ["400", "500", "600", "700", "800"] });
 
 export const metadata: Metadata = {
-  title: "استبيان الجاهزية | زاد التنموية",
+  title: "تسجيل دخول | زاد التنموية",
   description: "استبيان الجاهزية لأثر مستدام - إعداد زاد التنموية",
 };
 

@@ -19,6 +19,9 @@ export async function generateMetadata({ params }: { params: Promise<{ name: str
   };
 }
 
+import { Suspense } from "react";
+import CircularLoader from "@/components/CircularLoader";
+
 export default async function GovernancePage({ 
   params, 
   searchParams 
@@ -30,37 +33,9 @@ export default async function GovernancePage({
   const { tab } = await searchParams;
   const decodedName = decodeURIComponent(name);
   const activeTab = tab || "manual"; // Default to manual
-
-  const charity = await prisma.charity.findUnique({
-    where: { name: decodedName },
-    include: {
-      governanceProgress: true
-    }
-  });
+  const encodedName = encodeURIComponent(decodedName);
 
   const session = await getSession();
-  const isAdmin = ["ADMIN", "EXECUTIVE_DIRECTOR", "GENERAL_MANAGER"].includes(session?.role || "");
-
-  let stages: any[] = [];
-  let regulations: any[] = [];
-  if (charity) {
-    const svc = await prisma.service.findFirst({ where: { charityId: charity.id, department: "GOVERNANCE" } });
-    if (svc) {
-      stages = await prisma.serviceStage.findMany({
-        where: { serviceId: svc.id },
-        orderBy: { order: 'asc' },
-      });
-    }
-    
-    regulations = await prisma.regulation.findMany({
-      orderBy: { createdAt: 'asc' },
-      include: {
-        charityVisibilities: true
-      }
-    });
-  }
-
-  const encodedName = encodeURIComponent(decodedName);
 
   return (
     <div className="space-y-6">
@@ -106,6 +81,52 @@ export default async function GovernancePage({
         </div>
       </div>
       
+      <Suspense key={activeTab} fallback={<div className="py-12"><CircularLoader /></div>}>
+        <GovernanceTabContent decodedName={decodedName} activeTab={activeTab} session={session} />
+      </Suspense>
+    </div>
+  );
+}
+
+async function GovernanceTabContent({ 
+  decodedName, 
+  activeTab, 
+  session 
+}: { 
+  decodedName: string, 
+  activeTab: string, 
+  session: any 
+}) {
+  const charity = await prisma.charity.findUnique({
+    where: { name: decodedName },
+    include: {
+      governanceProgress: true
+    }
+  });
+
+  const isAdmin = ["ADMIN", "EXECUTIVE_DIRECTOR", "GENERAL_MANAGER"].includes(session?.role || "");
+
+  let stages: any[] = [];
+  let regulations: any[] = [];
+  if (charity) {
+    const svc = await prisma.service.findFirst({ where: { charityId: charity.id, department: "GOVERNANCE" } });
+    if (svc) {
+      stages = await prisma.serviceStage.findMany({
+        where: { serviceId: svc.id },
+        orderBy: { order: 'asc' },
+      });
+    }
+    
+    regulations = await prisma.regulation.findMany({
+      orderBy: { createdAt: 'asc' },
+      include: {
+        charityVisibilities: true
+      }
+    });
+  }
+
+  return (
+    <>
       {session?.role === "CHARITY_CLIENT" && (
         <CharityClientTimeline title="المخطط الزمني" stages={stages} />
       )}
@@ -129,6 +150,6 @@ export default async function GovernancePage({
           <DepartmentServicesTimeline charityId={charity.id} department="GOVERNANCE" />
         </div>
       )}
-    </div>
+    </>
   );
 }

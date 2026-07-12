@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Plus, Edit2, Trash2, Eye, Copy, CheckCircle, Printer } from "lucide-react";
+import CircularLoader from "@/components/CircularLoader";
 
 interface Survey {
   id: string;
@@ -94,11 +95,8 @@ export default function SurveysPage() {
 
   if (isLoading) {
     return (
-      <div className="p-8 dark:bg-slate-900">
-        <h1 className="text-2xl font-bold mb-6 dark:text-slate-100">إدارة الاستبيانات المخصصة</h1>
-        <div className="flex items-center justify-center py-20">
-          <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
-        </div>
+      <div className="p-8 dark:bg-slate-900 min-h-screen flex items-center justify-center">
+        <CircularLoader />
       </div>
     );
   }

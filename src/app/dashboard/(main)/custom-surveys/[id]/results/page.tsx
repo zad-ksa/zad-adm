@@ -12,11 +12,18 @@ interface Response {
   createdAt: string;
 }
 
+interface FollowUpQuestion {
+  id: string;
+  text: string;
+  isRequired: boolean;
+}
+
 interface Question {
   id: string;
   text: string;
   type: string;
   options?: { id: string; text: string }[];
+  followUpQuestions?: FollowUpQuestion[];
 }
 
 interface Section {
@@ -29,6 +36,16 @@ interface Survey {
   id: string;
   title: string;
   sections: Section[];
+}
+
+// See edit page for why YES_NO questions store follow-ups inside `options`.
+function questionsFromApi(questions: any[]): Question[] {
+  return questions.map((q) => {
+    if (q.type === "YES_NO" && q.options && !Array.isArray(q.options)) {
+      return { ...q, options: undefined, followUpQuestions: q.options.followUpQuestions || [] };
+    }
+    return q;
+  });
 }
 
 export default function SurveyResultsPage({ params }: { params: Promise<{ id: string }> }) {
@@ -49,7 +66,11 @@ export default function SurveyResultsPage({ params }: { params: Promise<{ id: st
       ]);
 
       if (surveyRes.ok && responsesRes.ok) {
-        setSurvey(await surveyRes.json());
+        const surveyData = await surveyRes.json();
+        setSurvey({
+          ...surveyData,
+          sections: surveyData.sections.map((s: Section) => ({ ...s, questions: questionsFromApi(s.questions) }))
+        });
         setResponses(await responsesRes.json());
       }
     } catch (err) {
@@ -149,6 +170,22 @@ export default function SurveyResultsPage({ params }: { params: Promise<{ id: st
                                       <Download className="w-4 h-4" /> تحميل المرفق {attachmentUrls.length > 1 ? i + 1 : ""}
                                     </a>
                                   ))}
+                                </div>
+                              )}
+                              {question.type === "YES_NO" && answer === "yes" && question.followUpQuestions && question.followUpQuestions.length > 0 && (
+                                <div className="mt-2 space-y-2 border-r-4 border-primary/20 pr-4">
+                                  {question.followUpQuestions.map(followUp => {
+                                    const followUpAnswer = response.answers[followUp.id];
+                                    if (!followUpAnswer) return null;
+                                    return (
+                                      <div key={followUp.id} className="flex flex-col gap-1">
+                                        <span className="text-xs font-bold text-slate-500 dark:text-slate-400">{followUp.text}</span>
+                                        <p className="text-slate-800 bg-white border border-slate-200 px-3 py-1.5 rounded-lg text-sm dark:text-slate-100 dark:bg-slate-800 dark:border-slate-700">
+                                          {followUpAnswer}
+                                        </p>
+                                      </div>
+                                    );
+                                  })}
                                 </div>
                               )}
                             </div>

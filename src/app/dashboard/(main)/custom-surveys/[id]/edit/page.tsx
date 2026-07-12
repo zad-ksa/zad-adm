@@ -2,7 +2,7 @@
 
 import { useState, useEffect, use, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { Plus, Trash2, Save, ArrowRight, Settings, Loader2, AlertCircle, CheckCircle } from "lucide-react";
+import { Plus, Trash2, Save, ArrowRight, ArrowUp, ArrowDown, Settings, Loader2, AlertCircle, CheckCircle } from "lucide-react";
 import Link from "next/link";
 
 interface Question {
@@ -27,6 +27,22 @@ interface Survey {
   introText: string;
   isActive: boolean;
   sections: Section[];
+}
+
+function InsertDivider({ onInsert, label }: { onInsert: () => void; label: string }) {
+  return (
+    <div className="group/insert relative h-4 -my-1 flex items-center justify-center">
+      <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 h-px bg-transparent group-hover/insert:bg-primary/30 transition-colors" />
+      <button
+        type="button"
+        onClick={onInsert}
+        title={label}
+        className="relative z-10 w-6 h-6 rounded-full bg-primary text-white flex items-center justify-center opacity-0 scale-75 pointer-events-none group-hover/insert:opacity-100 group-hover/insert:scale-100 group-hover/insert:pointer-events-auto transition-all shadow-md cursor-pointer"
+      >
+        <Plus className="w-3.5 h-3.5" />
+      </button>
+    </div>
+  );
 }
 
 export default function EditSurveyPage({ params }: { params: Promise<{ id: string }> }) {
@@ -115,12 +131,12 @@ export default function EditSurveyPage({ params }: { params: Promise<{ id: strin
     return () => clearTimeout(delayDebounceFn);
   }, [survey, resolvedParams.id]);
 
-  const addSection = (sIndex?: number) => {
+  const addSection = (atIndex?: number) => {
     if (!survey) return;
     const newSections = [...survey.sections];
     const newSection = { id: Math.random().toString(), title: "قسم جديد", questions: [] };
-    if (typeof sIndex === "number") {
-      newSections.splice(sIndex + 1, 0, newSection);
+    if (typeof atIndex === "number") {
+      newSections.splice(atIndex, 0, newSection);
     } else {
       newSections.push(newSection);
     }
@@ -140,10 +156,19 @@ export default function EditSurveyPage({ params }: { params: Promise<{ id: strin
     setSurvey({ ...survey, sections: newSections });
   };
 
-  const addQuestion = (sIndex: number) => {
+  const moveSection = (sIndex: number, direction: "up" | "down") => {
+    if (!survey) return;
+    const targetIndex = direction === "up" ? sIndex - 1 : sIndex + 1;
+    if (targetIndex < 0 || targetIndex >= survey.sections.length) return;
+    const newSections = [...survey.sections];
+    [newSections[sIndex], newSections[targetIndex]] = [newSections[targetIndex], newSections[sIndex]];
+    setSurvey({ ...survey, sections: newSections });
+  };
+
+  const addQuestion = (sIndex: number, atIndex?: number) => {
     if (!survey) return;
     const newSections = [...survey.sections];
-    newSections[sIndex].questions.push({
+    const newQuestion = {
       id: Math.random().toString(),
       text: "",
       type: "TEXT",
@@ -151,7 +176,14 @@ export default function EditSurveyPage({ params }: { params: Promise<{ id: strin
       allowAttachment: false,
       requireAttachmentIfYes: false,
       options: []
-    });
+    };
+    const questions = [...newSections[sIndex].questions];
+    if (typeof atIndex === "number") {
+      questions.splice(atIndex, 0, newQuestion);
+    } else {
+      questions.push(newQuestion);
+    }
+    newSections[sIndex] = { ...newSections[sIndex], questions };
     setSurvey({ ...survey, sections: newSections });
   };
 
@@ -169,41 +201,53 @@ export default function EditSurveyPage({ params }: { params: Promise<{ id: strin
     setSurvey({ ...survey, sections: newSections });
   };
 
-  if (isLoading) return <div className="p-8 text-center">جاري التحميل...</div>;
-  if (!survey) return <div className="p-8 text-center">الاستبيان غير موجود</div>;
+  const moveQuestion = (sIndex: number, qIndex: number, direction: "up" | "down") => {
+    if (!survey) return;
+    const questions = survey.sections[sIndex].questions;
+    const targetIndex = direction === "up" ? qIndex - 1 : qIndex + 1;
+    if (targetIndex < 0 || targetIndex >= questions.length) return;
+    const newSections = [...survey.sections];
+    const newQuestions = [...questions];
+    [newQuestions[qIndex], newQuestions[targetIndex]] = [newQuestions[targetIndex], newQuestions[qIndex]];
+    newSections[sIndex] = { ...newSections[sIndex], questions: newQuestions };
+    setSurvey({ ...survey, sections: newSections });
+  };
+
+  if (isLoading) return <div className="p-8 text-center dark:text-slate-300">جاري التحميل...</div>;
+  if (!survey) return <div className="p-8 text-center dark:text-slate-300">الاستبيان غير موجود</div>;
 
   return (
-    <div className="p-8 max-w-5xl mx-auto pb-32">
+    <div className="p-8 max-w-5xl mx-auto pb-32 dark:bg-slate-900">
       <div className="flex items-center justify-between mb-8">
         <div className="flex items-center gap-4">
-          <Link href="/dashboard/custom-surveys" className="text-slate-400 hover:text-slate-800 transition-colors">
+          <Link href="/dashboard/custom-surveys" className="text-slate-400 hover:text-slate-800 transition-colors dark:text-slate-500 dark:hover:text-slate-100">
             <ArrowRight className="w-6 h-6" />
           </Link>
           <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
-            <h1 className="text-2xl font-bold text-slate-800">تعديل الاستبيان المخصص</h1>
-            
+            <h1 className="text-2xl font-bold text-slate-800 dark:text-slate-100">تعديل الاستبيان المخصص</h1>
+
             {/* مؤشر الحفظ التلقائي */}
             <div className="flex items-center gap-1.5 text-xs font-bold">
               {saveStatus === "saving" && (
-                <span className="flex items-center gap-1.5 text-amber-600 bg-amber-50 border border-amber-200 px-3 py-1 rounded-full animate-pulse">
+                <span className="flex items-center gap-1.5 text-amber-600 bg-amber-50 border border-amber-200 px-3 py-1 rounded-full animate-pulse dark:text-amber-400 dark:bg-amber-500/10 dark:border-amber-500/20">
                   <Loader2 className="w-3.5 h-3.5 animate-spin" />
                   جاري الحفظ تلقائياً...
                 </span>
               )}
               {saveStatus === "saved" && (
-                <span className="flex items-center gap-1.5 text-emerald-600 bg-emerald-50 border border-emerald-200 px-3 py-1 rounded-full">
+                <span className="flex items-center gap-1.5 text-emerald-600 bg-emerald-50 border border-emerald-200 px-3 py-1 rounded-full dark:text-emerald-400 dark:bg-emerald-500/10 dark:border-emerald-500/20">
                   <CheckCircle className="w-3.5 h-3.5" />
                   تم حفظ جميع التغييرات
                 </span>
               )}
               {saveStatus === "error" && (
-                <span className="flex items-center gap-1.5 text-red-600 bg-red-50 border border-red-200 px-3 py-1 rounded-full">
+                <span className="flex items-center gap-1.5 text-red-600 bg-red-50 border border-red-200 px-3 py-1 rounded-full dark:text-red-400 dark:bg-red-500/10 dark:border-red-500/20">
                   <AlertCircle className="w-3.5 h-3.5" />
                   فشل الحفظ تلقائياً
                 </span>
               )}
               {saveStatus === "idle" && (
-                <span className="text-slate-400 bg-slate-50 border border-slate-200 px-3 py-1 rounded-full font-medium">
+                <span className="text-slate-400 bg-slate-50 border border-slate-200 px-3 py-1 rounded-full font-medium dark:text-slate-400 dark:bg-slate-800 dark:border-slate-700">
                   جاهز للتعديل
                 </span>
               )}
@@ -225,9 +269,9 @@ export default function EditSurveyPage({ params }: { params: Promise<{ id: strin
             disabled={saveStatus === "saving" || saveStatus === "saved" || saveStatus === "idle"}
             className={`px-6 py-2.5 rounded-xl font-bold flex items-center gap-2 transition-all shadow-lg ${
               saveStatus === "saving"
-                ? "bg-amber-100 text-amber-700 border border-amber-200 cursor-not-allowed"
+                ? "bg-amber-100 text-amber-700 border border-amber-200 cursor-not-allowed dark:bg-amber-500/10 dark:text-amber-400 dark:border-amber-500/20"
                 : saveStatus === "saved" || saveStatus === "idle"
-                  ? "bg-emerald-50 text-emerald-700 border border-emerald-100 cursor-not-allowed"
+                  ? "bg-emerald-50 text-emerald-700 border border-emerald-100 cursor-not-allowed dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/20"
                   : "bg-primary text-white hover:bg-primary/90 cursor-pointer"
             }`}
           >
@@ -245,37 +289,41 @@ export default function EditSurveyPage({ params }: { params: Promise<{ id: strin
         )}
       </div>
 
-      <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm mb-8 space-y-6">
+      <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm mb-8 space-y-6 dark:bg-slate-800 dark:border-slate-700">
         <div>
-          <label className="block text-sm font-bold text-slate-700 mb-2">عنوان الاستبيان</label>
+          <label className="block text-sm font-bold text-slate-700 mb-2 dark:text-slate-300">عنوان الاستبيان</label>
           <input
             type="text"
             value={survey.title}
             onChange={(e) => setSurvey({ ...survey, title: e.target.value })}
-            className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 font-bold text-lg outline-none focus:border-primary/50 focus:ring-4 focus:ring-primary/10 transition-all"
+            className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 font-bold text-lg outline-none focus:border-primary/50 focus:ring-4 focus:ring-primary/10 transition-all dark:bg-slate-900/50 dark:border-slate-700 dark:text-slate-100"
           />
         </div>
         <div>
-          <label className="block text-sm font-bold text-slate-700 mb-2">النص الترحيبي (المقدمة)</label>
+          <label className="block text-sm font-bold text-slate-700 mb-2 dark:text-slate-300">النص الترحيبي (المقدمة)</label>
           <textarea
             value={survey.introText}
             onChange={(e) => setSurvey({ ...survey, introText: e.target.value })}
             rows={4}
-            className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-slate-700 outline-none focus:border-primary/50 focus:ring-4 focus:ring-primary/10 transition-all resize-none"
+            className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-slate-700 outline-none focus:border-primary/50 focus:ring-4 focus:ring-primary/10 transition-all resize-none dark:bg-slate-900/50 dark:border-slate-700 dark:text-slate-300"
           />
         </div>
       </div>
 
       <div className="space-y-6">
         <div className="flex items-center justify-between">
-          <h2 className="text-xl font-bold text-slate-800">أقسام الاستبيان</h2>
+          <h2 className="text-xl font-bold text-slate-800 dark:text-slate-100">أقسام الاستبيان</h2>
         </div>
+
+        {survey.sections.length > 0 && (
+          <InsertDivider onInsert={() => addSection(0)} label="إضافة قسم في البداية" />
+        )}
 
         {survey.sections.map((section, sIndex) => (
           <div key={section.id} className="space-y-4">
-            <div className="bg-white border-2 border-slate-200 rounded-2xl overflow-hidden shadow-sm">
-            <div className="bg-slate-50 p-4 border-b border-slate-200 flex items-center gap-4">
-              <span className="bg-slate-200 text-slate-600 w-8 h-8 rounded-lg flex items-center justify-center font-bold text-sm shrink-0">
+            <div className="bg-white border-2 border-slate-200 rounded-2xl overflow-hidden shadow-sm dark:bg-slate-800 dark:border-slate-700">
+            <div className="bg-slate-50 p-4 border-b border-slate-200 flex items-center gap-4 dark:bg-slate-900/50 dark:border-slate-700">
+              <span className="bg-slate-200 text-slate-600 w-8 h-8 rounded-lg flex items-center justify-center font-bold text-sm shrink-0 dark:bg-slate-700 dark:text-slate-300">
                 {sIndex + 1}
               </span>
               <input
@@ -283,21 +331,43 @@ export default function EditSurveyPage({ params }: { params: Promise<{ id: strin
                 value={section.title}
                 onChange={(e) => updateSectionTitle(sIndex, e.target.value)}
                 placeholder="عنوان القسم..."
-                className="flex-1 bg-white border border-slate-200 rounded-lg px-3 py-2 font-bold outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/20"
+                className="flex-1 bg-white border border-slate-200 rounded-lg px-3 py-2 font-bold outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/20 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-100"
               />
-              <button
-                onClick={() => deleteSection(sIndex)}
-                className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
-                title="حذف القسم"
-              >
-                <Trash2 className="w-5 h-5" />
-              </button>
+              <div className="flex items-center gap-1 shrink-0">
+                <button
+                  onClick={() => moveSection(sIndex, "up")}
+                  disabled={sIndex === 0}
+                  className="p-2 text-slate-400 hover:text-primary hover:bg-primary/5 rounded-lg transition-colors disabled:opacity-30 disabled:pointer-events-none dark:text-slate-500 dark:hover:text-primary dark:hover:bg-primary/10"
+                  title="تحريك القسم لأعلى"
+                >
+                  <ArrowUp className="w-4 h-4" />
+                </button>
+                <button
+                  onClick={() => moveSection(sIndex, "down")}
+                  disabled={sIndex === survey.sections.length - 1}
+                  className="p-2 text-slate-400 hover:text-primary hover:bg-primary/5 rounded-lg transition-colors disabled:opacity-30 disabled:pointer-events-none dark:text-slate-500 dark:hover:text-primary dark:hover:bg-primary/10"
+                  title="تحريك القسم لأسفل"
+                >
+                  <ArrowDown className="w-4 h-4" />
+                </button>
+                <button
+                  onClick={() => deleteSection(sIndex)}
+                  className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors dark:text-slate-500 dark:hover:text-red-400 dark:hover:bg-red-500/10"
+                  title="حذف القسم"
+                >
+                  <Trash2 className="w-5 h-5" />
+                </button>
+              </div>
             </div>
 
             <div className="p-6 space-y-6">
               {section.questions.map((question, qIndex) => (
-                <div key={question.id} className="flex gap-4 p-4 border border-slate-100 rounded-xl bg-slate-50/50 hover:border-primary/30 transition-colors">
-                  <div className="text-slate-400 font-bold mt-2">{qIndex + 1}.</div>
+                <div key={question.id}>
+                {qIndex === 0 && (
+                  <InsertDivider onInsert={() => addQuestion(sIndex, 0)} label="إضافة سؤال في البداية" />
+                )}
+                <div className="flex gap-4 p-4 border border-slate-100 rounded-xl bg-slate-50/50 hover:border-primary/30 transition-colors dark:border-slate-700 dark:bg-slate-900/30">
+                  <div className="text-slate-400 font-bold mt-2 dark:text-slate-500">{qIndex + 1}.</div>
                   <div className="flex-1 space-y-4">
                     <div className="flex gap-4">
                       <input
@@ -305,12 +375,12 @@ export default function EditSurveyPage({ params }: { params: Promise<{ id: strin
                         value={question.text}
                         onChange={(e) => updateQuestion(sIndex, qIndex, { text: e.target.value })}
                         placeholder="نص السؤال..."
-                        className="flex-1 bg-white border border-slate-200 rounded-lg px-3 py-2 outline-none focus:border-primary/50"
+                        className="flex-1 bg-white border border-slate-200 rounded-lg px-3 py-2 outline-none focus:border-primary/50 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-100"
                       />
                       <select
                         value={question.type}
                         onChange={(e) => updateQuestion(sIndex, qIndex, { type: e.target.value })}
-                        className="bg-white border border-slate-200 rounded-lg px-3 py-2 outline-none focus:border-primary/50 text-sm font-bold text-slate-700"
+                        className="bg-white border border-slate-200 rounded-lg px-3 py-2 outline-none focus:border-primary/50 text-sm font-bold text-slate-700 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-300"
                       >
                         <option value="TEXT">نصي</option>
                         <option value="YES_NO">نعم / لا</option>
@@ -321,8 +391,8 @@ export default function EditSurveyPage({ params }: { params: Promise<{ id: strin
                       </select>
                     </div>
                     {(question.type === "OPTIONS" || question.type === "MULTI_OPTIONS") && (
-                      <div className="space-y-2 bg-white p-4 rounded-xl border border-slate-200">
-                        <div className="text-sm font-bold text-slate-700">خيارات الإجابة:</div>
+                      <div className="space-y-2 bg-white p-4 rounded-xl border border-slate-200 dark:bg-slate-800 dark:border-slate-700">
+                        <div className="text-sm font-bold text-slate-700 dark:text-slate-300">خيارات الإجابة:</div>
                         {(question.options || []).map((opt, oIndex) => (
                           <div key={opt.id} className="flex gap-2 items-center">
                             <input
@@ -334,14 +404,14 @@ export default function EditSurveyPage({ params }: { params: Promise<{ id: strin
                                 updateQuestion(sIndex, qIndex, { options: newOptions });
                               }}
                               placeholder="النص..."
-                              className="flex-1 bg-slate-50 border border-slate-200 rounded-md px-2 py-1 text-sm outline-none focus:border-primary/50"
+                              className="flex-1 bg-slate-50 border border-slate-200 rounded-md px-2 py-1 text-sm outline-none focus:border-primary/50 dark:bg-slate-900/50 dark:border-slate-700 dark:text-slate-100"
                             />
                             <button
                               onClick={() => {
                                 const newOptions = (question.options || []).filter((_, i) => i !== oIndex);
                                 updateQuestion(sIndex, qIndex, { options: newOptions });
                               }}
-                              className="text-red-500 hover:text-red-600 p-1"
+                              className="text-red-500 hover:text-red-600 p-1 dark:text-red-400 dark:hover:text-red-300"
                             >
                               <Trash2 className="w-4 h-4" />
                             </button>
@@ -366,7 +436,7 @@ export default function EditSurveyPage({ params }: { params: Promise<{ id: strin
                           onChange={(e) => updateQuestion(sIndex, qIndex, { isRequired: e.target.checked })}
                           className="w-4 h-4 rounded text-primary focus:ring-primary/20 cursor-pointer"
                         />
-                        <span className="text-sm font-bold text-slate-600">سؤال إجباري</span>
+                        <span className="text-sm font-bold text-slate-600 dark:text-slate-400">سؤال إجباري</span>
                       </label>
                       {question.type !== "FILE" && (
                         <label className="flex items-center gap-2 cursor-pointer">
@@ -376,7 +446,7 @@ export default function EditSurveyPage({ params }: { params: Promise<{ id: strin
                             onChange={(e) => updateQuestion(sIndex, qIndex, { allowAttachment: e.target.checked })}
                             className="w-4 h-4 rounded text-primary focus:ring-primary/20 cursor-pointer"
                           />
-                          <span className="text-sm font-bold text-slate-600">السماح برفع مرفق (صورة/PDF/مستند)</span>
+                          <span className="text-sm font-bold text-slate-600 dark:text-slate-400">السماح برفع مرفق (صورة/PDF/مستند)</span>
                         </label>
                       )}
                       {question.type === "YES_NO" && (
@@ -387,43 +457,67 @@ export default function EditSurveyPage({ params }: { params: Promise<{ id: strin
                             onChange={(e) => updateQuestion(sIndex, qIndex, { requireAttachmentIfYes: e.target.checked })}
                             className="w-4 h-4 rounded text-primary focus:ring-primary/20 cursor-pointer"
                           />
-                          <span className="text-sm font-bold text-slate-600">إجبار الرفع إذا اختار "نعم"</span>
+                          <span className="text-sm font-bold text-slate-600 dark:text-slate-400">إجبار الرفع إذا اختار "نعم"</span>
                         </label>
                       )}
                     </div>
                   </div>
-                  <button
-                    onClick={() => deleteQuestion(sIndex, qIndex)}
-                    className="self-start p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
+                  <div className="flex flex-col items-center gap-1 shrink-0">
+                    <button
+                      onClick={() => moveQuestion(sIndex, qIndex, "up")}
+                      disabled={qIndex === 0}
+                      className="p-1.5 text-slate-400 hover:text-primary hover:bg-primary/5 rounded-lg transition-colors disabled:opacity-30 disabled:pointer-events-none dark:text-slate-500 dark:hover:text-primary dark:hover:bg-primary/10"
+                      title="تحريك السؤال لأعلى"
+                    >
+                      <ArrowUp className="w-4 h-4" />
+                    </button>
+                    <button
+                      onClick={() => moveQuestion(sIndex, qIndex, "down")}
+                      disabled={qIndex === section.questions.length - 1}
+                      className="p-1.5 text-slate-400 hover:text-primary hover:bg-primary/5 rounded-lg transition-colors disabled:opacity-30 disabled:pointer-events-none dark:text-slate-500 dark:hover:text-primary dark:hover:bg-primary/10"
+                      title="تحريك السؤال لأسفل"
+                    >
+                      <ArrowDown className="w-4 h-4" />
+                    </button>
+                    <button
+                      onClick={() => deleteQuestion(sIndex, qIndex)}
+                      className="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors dark:text-slate-500 dark:hover:text-red-400 dark:hover:bg-red-500/10"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+                <InsertDivider onInsert={() => addQuestion(sIndex, qIndex + 1)} label="إضافة سؤال هنا" />
                 </div>
               ))}
 
               <button
                 onClick={() => addQuestion(sIndex)}
-                className="w-full border-2 border-dashed border-slate-200 hover:border-primary/50 hover:bg-primary/5 text-slate-500 hover:text-primary rounded-xl py-4 flex items-center justify-center gap-2 font-bold transition-all text-sm"
+                className="w-full border-2 border-dashed border-slate-200 hover:border-primary/50 hover:bg-primary/5 text-slate-500 hover:text-primary rounded-xl py-4 flex items-center justify-center gap-2 font-bold transition-all text-sm dark:border-slate-700 dark:text-slate-400"
               >
                 <Plus className="w-4 h-4" /> إضافة سؤال جديد
               </button>
             </div>
           </div>
-          
+
           {/* زر إضافة قسم جديد تحت كل صندوق قسم */}
           <div className="flex justify-center py-2">
             <button
-              onClick={() => addSection(sIndex)}
-              className="bg-slate-100 text-slate-700 hover:bg-primary hover:text-white border border-slate-200 px-5 py-2.5 rounded-xl text-xs font-bold flex items-center gap-2 transition-all shadow-sm active:scale-95 cursor-pointer"
+              onClick={() => addSection(sIndex + 1)}
+              className="bg-slate-100 text-slate-700 hover:bg-primary hover:text-white border border-slate-200 px-5 py-2.5 rounded-xl text-xs font-bold flex items-center gap-2 transition-all shadow-sm active:scale-95 cursor-pointer dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700"
             >
               <Plus className="w-3.5 h-3.5" /> إضافة قسم جديد بعد هذا القسم
             </button>
           </div>
+
+          {sIndex < survey.sections.length - 1 && (
+            <InsertDivider onInsert={() => addSection(sIndex + 1)} label="إضافة قسم هنا" />
+          )}
         </div>
       ))}
 
         {survey.sections.length === 0 && (
-          <div className="text-center py-12 bg-white border border-slate-200 rounded-2xl text-slate-500 flex flex-col items-center gap-4">
+          <div className="text-center py-12 bg-white border border-slate-200 rounded-2xl text-slate-500 flex flex-col items-center gap-4 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-400">
             <span>لا توجد أقسام حالياً.</span>
             <button
               onClick={() => addSection()}

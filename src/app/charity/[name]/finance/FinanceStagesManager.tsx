@@ -8,6 +8,7 @@ import InteractiveTimelineEditor from "@/components/InteractiveTimelineEditor";
 import { addFinanceStage, updateFinanceStage, deleteFinanceStage, setCurrentFinanceStage, reorderFinanceStages, toggleActiveFinanceStage } from "@/app/actions/finance";
 import { addFinanceStageStep, updateFinanceStageStep, deleteFinanceStageStep } from "@/app/actions/stageSteps";
 import { updateTimelineConfig } from "@/app/actions/charity";
+import { useServiceAccordion } from "@/components/ServiceAccordionContext";
 
 type StageStep = { id: string; name: string; isDone: boolean; order: number };
 
@@ -50,7 +51,7 @@ export default function FinanceStagesManager({
   const [editStartDate, setEditStartDate] = useState("");
   const [editEndDate, setEditEndDate] = useState("");
   const [stageToDelete, setStageToDelete] = useState<string | null>(null);
-  const [isExpanded, setIsExpanded] = useState(false);
+  const { isExpanded, toggle: toggleExpanded, expand: expandPanel } = useServiceAccordion("finance");
   const [isAdding, setIsAdding] = useState(false);
   const [newName, setNewName] = useState("");
   const [newDescription, setNewDescription] = useState("");
@@ -189,10 +190,10 @@ export default function FinanceStagesManager({
   };
 
   return (
-    <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-700 shadow-sm overflow-hidden mt-2 transition-colors">
+    <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-700 shadow-sm overflow-hidden transition-colors">
       <div
-        className="p-3 border-b border-slate-100 dark:border-slate-700 flex flex-col sm:flex-row sm:items-center justify-between gap-2 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-900/50 transition-colors"
-        onClick={() => setIsExpanded(!isExpanded)}
+        className="p-2 border-b border-slate-100 dark:border-slate-700 flex flex-col sm:flex-row sm:items-center justify-between gap-2 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-900/50 transition-colors"
+        onClick={toggleExpanded}
       >
         <div className="flex items-center gap-2">
           <div className="p-0.5 text-slate-400 hover:text-slate-600 transition-colors">
@@ -213,7 +214,7 @@ export default function FinanceStagesManager({
           )}
         </div>
         <button
-          onClick={(e) => { e.stopPropagation(); setIsAdding(true); setIsExpanded(true); }}
+          onClick={(e) => { e.stopPropagation(); setIsAdding(true); expandPanel(); }}
           className="flex items-center justify-center gap-1.5 bg-primary/10 hover:bg-primary/20 text-primary px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors"
           disabled={isPending}
         >

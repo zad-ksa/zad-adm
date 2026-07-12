@@ -30,7 +30,7 @@ function NavItem({ item, isActive, isOpen }: { item: any, isActive: boolean, isO
       <Link
         href={item.href}
         title={!isOpen ? item.label : undefined}
-        className={`flex items-center ${isOpen ? "justify-start px-2.5" : "justify-center"} py-2 rounded-lg text-[13px] font-bold transition-all group relative ${
+        className={`flex items-center ${isOpen ? "justify-start px-2.5" : "justify-center"} py-2 rounded-lg text-[11px] font-bold transition-all group relative ${
           isActive
             ? "bg-primary text-white shadow-sm shadow-primary/20"
             : "text-slate-500 dark:text-slate-400 hover:bg-primary/5 dark:hover:bg-primary/10 hover:text-primary dark:hover:text-primary"
@@ -75,22 +75,8 @@ export default function EmployeeSidebar({
   const currentTab = searchParams.get("tab");
   const decodedPathname = pathname ? decodeURIComponent(pathname) : "";
   
-  let initialService: string | null = null;
-  let initialCharity: string | null = null;
-  
-  if (pathname && pathname.startsWith("/charity/")) {
-    const parts = pathname.split("/");
-    if (parts.length >= 4) {
-      const charityName = decodeURIComponent(parts[2]);
-      const serviceId = parts[3];
-      
-      initialService = serviceId;
-      initialCharity = `${serviceId}-${charityName}`;
-    }
-  }
-
-  const [expandedService, setExpandedService] = useState<string | null>(initialService);
-  const [expandedCharity, setExpandedCharity] = useState<string | null>(initialCharity);
+  const [expandedService, setExpandedService] = useState<string | null>(null);
+  const [expandedCharity, setExpandedCharity] = useState<string | null>(null);
 
   const [userState, setUserState] = useState(session);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -105,29 +91,13 @@ export default function EmployeeSidebar({
   const [isPending, startTransition] = useTransition();
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
-  const [collapsedGroups, setCollapsedGroups] = useState<string[]>(initialService ? [] : ["الخدمات"]);
+  const [expandedGroup, setExpandedGroup] = useState<string | null>(null);
   const [charities, setCharities] = useState<any[]>([]);
 
   useEffect(() => {
     setMounted(true);
     getSidebarCharities().then(res => setCharities(res || []));
   }, []);
-
-  useEffect(() => {
-    if (!pathname) return;
-    
-    if (pathname.startsWith("/charity/")) {
-      const parts = pathname.split("/");
-      if (parts.length >= 4) {
-        const charityName = decodeURIComponent(parts[2]);
-        const serviceId = parts[3];
-        
-        setExpandedService(serviceId);
-        setExpandedCharity(`${serviceId}-${charityName}`);
-        setCollapsedGroups(prev => prev.filter(g => g !== "الخدمات"));
-      }
-    }
-  }, [pathname]);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -334,21 +304,25 @@ export default function EmployeeSidebar({
       {/* Navigation */}
       <div className="flex-1 overflow-y-auto custom-scrollbar px-2.5 py-2 space-y-4 flex flex-col relative">
         {(() => {
+          // Accordion: only one group open at a time; collapsing/switching a group
+          // also resets its inner service/charity tree so it re-opens collapsed.
+          const toggleGroup = (title: string) => {
+            setExpandedService(null);
+            setExpandedCharity(null);
+            setExpandedGroup(prev => (prev === title ? null : title));
+          };
+
           const renderGroup = (title: string, labels: string[]) => {
             const items = labels.map(label => navItems.find(i => i.label === label)).filter(Boolean) as typeof navItems;
             if (items.length === 0) return null;
-            
-            const isCollapsed = title ? collapsedGroups.includes(title) : false;
+
+            const isCollapsed = title ? expandedGroup !== title : false;
 
             return (
               <div className="mb-2">
                 {isOpen && title && (
-                  <button 
-                    onClick={() => {
-                      setCollapsedGroups(prev => 
-                        prev.includes(title) ? prev.filter(g => g !== title) : [...prev, title]
-                      );
-                    }}
+                  <button
+                    onClick={() => toggleGroup(title)}
                     className="flex items-center justify-between w-full px-2 mb-2 group cursor-pointer outline-none"
                   >
                     <span className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider group-hover:text-primary transition-colors">{title}</span>
@@ -369,8 +343,8 @@ export default function EmployeeSidebar({
             const hasServicesAccess = can("view_services_overview") || can("manage_charities");
             if (!hasServicesAccess) return null;
 
-            const isServicesCollapsed = collapsedGroups.includes("الخدمات");
-            const toggleServices = () => setCollapsedGroups(prev => prev.includes("الخدمات") ? prev.filter(g => g !== "الخدمات") : [...prev, "الخدمات"]);
+            const isServicesCollapsed = expandedGroup !== "الخدمات";
+            const toggleServices = () => toggleGroup("الخدمات");
 
             const allServices = [
               { id: "strategy", label: "الاستراتيجية", icon: Target, required: "manage_strategy" },
@@ -407,7 +381,7 @@ export default function EmployeeSidebar({
                   {isOpen && services.map(svc => (
                     <div key={svc.id} className="relative mt-1">
                       <button 
-                        onClick={() => setExpandedService(prev => prev === svc.id ? null : svc.id)}
+                        onClick={() => { setExpandedCharity(null); setExpandedService(prev => prev === svc.id ? null : svc.id); }}
                         className={`flex items-center justify-between w-full px-2.5 py-1.5 rounded-lg text-[11px] font-bold transition-all group ${expandedService === svc.id ? "bg-primary/5 text-primary" : "text-slate-500 hover:bg-primary/5 hover:text-primary"}`}
                       >
                         <div className="flex items-center">

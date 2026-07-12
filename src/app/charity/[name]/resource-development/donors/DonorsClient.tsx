@@ -79,7 +79,7 @@ export default function DonorsClient({
       )}
 
       {/* Header */}
-      <div className="bg-white rounded-xl p-4 border border-slate-100 shadow-sm relative overflow-hidden">
+      <div className="bg-white dark:bg-slate-800 rounded-xl p-4 border border-slate-100 dark:border-slate-700 shadow-sm relative overflow-hidden">
         <div className="absolute top-0 left-0 w-64 h-64 bg-primary/5 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2 pointer-events-none"></div>
         <div className="relative flex flex-col sm:flex-row justify-between items-center gap-3">
           <div className="flex items-center gap-3 w-full sm:w-auto">
@@ -87,8 +87,8 @@ export default function DonorsClient({
               <Building2 className="w-5 h-5" />
             </div>
             <div>
-              <h1 className="text-base font-black text-slate-800 mb-0.5">{charityName} - حسابات المانحين</h1>
-              <p className="text-slate-500 text-[11px] font-bold">إدارة بيانات الدخول للجهات المانحة</p>
+              <h1 className="text-base font-black text-slate-800 dark:text-slate-100 mb-0.5">{charityName} - حسابات المانحين</h1>
+              <p className="text-slate-500 dark:text-slate-400 text-[11px] font-bold">إدارة بيانات الدخول للجهات المانحة</p>
             </div>
           </div>
           <button onClick={() => setShowAddDonor(!showAddDonor)} className="bg-primary text-white px-4 py-2 rounded-lg font-bold flex items-center gap-1.5 hover:bg-primary/90 shadow-sm whitespace-nowrap text-sm">
@@ -99,22 +99,22 @@ export default function DonorsClient({
 
       <div className="space-y-4">
         {showAddDonor && (
-          <form onSubmit={handleAddDonor} className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm animate-fade-in grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-3 items-end">
+          <form onSubmit={handleAddDonor} className="bg-white dark:bg-slate-800 p-4 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm animate-fade-in grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-3 items-end">
             <div>
-              <label className="block text-xs font-bold text-slate-500 mb-1">اسم الجهة المانحة</label>
-              <input required type="text" value={donorForm.name} onChange={e => setDonorForm({...donorForm, name: e.target.value})} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary font-bold" />
+              <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-1">اسم الجهة المانحة</label>
+              <input required type="text" value={donorForm.name} onChange={e => setDonorForm({...donorForm, name: e.target.value})} className="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary font-bold dark:text-slate-100" />
             </div>
             <div>
-              <label className="block text-xs font-bold text-slate-500 mb-1">اسم المستخدم</label>
-              <input required type="text" value={donorForm.username} onChange={e => setDonorForm({...donorForm, username: e.target.value})} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary font-bold" />
+              <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-1">اسم المستخدم</label>
+              <input required type="text" value={donorForm.username} onChange={e => setDonorForm({...donorForm, username: e.target.value})} className="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary font-bold dark:text-slate-100" />
             </div>
             <div>
-              <label className="block text-xs font-bold text-slate-500 mb-1">كلمة المرور</label>
-              <input required type="text" value={donorForm.password} onChange={e => setDonorForm({...donorForm, password: e.target.value})} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary font-bold" />
+              <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-1">كلمة المرور</label>
+              <input required type="text" value={donorForm.password} onChange={e => setDonorForm({...donorForm, password: e.target.value})} className="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary font-bold dark:text-slate-100" />
             </div>
             <div>
-              <label className="block text-xs font-bold text-slate-500 mb-1">رابط الموقع (اختياري)</label>
-              <input type="url" value={donorForm.website} onChange={e => setDonorForm({...donorForm, website: e.target.value})} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary font-bold" />
+              <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-1">رابط الموقع (اختياري)</label>
+              <input type="url" value={donorForm.website} onChange={e => setDonorForm({...donorForm, website: e.target.value})} className="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary font-bold dark:text-slate-100" />
             </div>
             <button type="submit" disabled={isPending} className="w-full bg-primary text-white py-2.5 rounded-xl font-bold shadow hover:bg-primary/90 disabled:opacity-50 h-[42px]">
               حفظ الحساب
@@ -126,39 +126,39 @@ export default function DonorsClient({
           {donorAccounts.map(account => {
             const submittedProjectsCount = grantApplications.filter((g: any) => g.entityName === account.donorName).length;
             return (
-            <div key={account.id} className="bg-white rounded-xl p-4 border border-slate-200 shadow-sm hover:shadow-md transition-shadow relative group">
+            <div key={account.id} className="bg-white dark:bg-slate-800 rounded-xl p-4 border border-slate-200 dark:border-slate-700 shadow-sm hover:shadow-md transition-shadow relative group">
               <button onClick={() => {
                 if (confirm("هل أنت متأكد من الحذف؟")) startTransition(() => {
                   deleteDonorAccount(account.id, charityId);
                   setDonorAccounts(prev => prev.filter(a => a.id !== account.id));
                 });
-              }} className="absolute top-3 left-3 p-1.5 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-lg opacity-0 group-hover:opacity-100 transition-all">
+              }} className="absolute top-3 left-3 p-1.5 text-slate-300 dark:text-slate-600 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-lg opacity-0 group-hover:opacity-100 transition-all">
                 <Trash2 className="w-3.5 h-3.5" />
               </button>
               <div className="w-8 h-8 bg-primary/10 text-primary rounded-lg flex items-center justify-center mb-2">
                 <Building2 className="w-4 h-4" />
               </div>
-              <h4 className="font-black text-slate-800 text-sm mb-2">{account.donorName}</h4>
-              
+              <h4 className="font-black text-slate-800 dark:text-slate-100 text-sm mb-2">{account.donorName}</h4>
+
               <div className="bg-primary/5 p-2 rounded-lg flex justify-center gap-2 items-center border border-primary/10 mb-2">
-                <span className="text-[11px] font-bold text-slate-700">المشاريع المرفوعة:</span>
+                <span className="text-[11px] font-bold text-slate-700 dark:text-slate-300">المشاريع المرفوعة:</span>
                 <span className="text-sm font-black text-primary">{submittedProjectsCount}</span>
               </div>
 
               <div className="space-y-3 mb-6">
-                <div className="bg-slate-50 p-3 rounded-xl flex justify-between items-center border border-slate-100 group/item">
+                <div className="bg-slate-50 dark:bg-slate-900/50 p-3 rounded-xl flex justify-between items-center border border-slate-100 dark:border-slate-700 group/item">
                   <div>
-                    <span className="block text-[10px] text-slate-400 font-bold mb-0.5">اسم المستخدم</span>
-                    <span className="text-sm font-bold text-slate-700">{account.username}</span>
+                    <span className="block text-[10px] text-slate-400 dark:text-slate-500 font-bold mb-0.5">اسم المستخدم</span>
+                    <span className="text-sm font-bold text-slate-700 dark:text-slate-300">{account.username}</span>
                   </div>
-                  <button onClick={() => copyToClipboard(account.username)} className="text-slate-400 hover:text-primary p-1.5 bg-white rounded-lg border border-slate-200 opacity-0 md:opacity-100 lg:opacity-0 group-hover/item:opacity-100 transition-opacity"><Copy className="w-4 h-4"/></button>
+                  <button onClick={() => copyToClipboard(account.username)} className="text-slate-400 dark:text-slate-500 hover:text-primary p-1.5 bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 opacity-0 md:opacity-100 lg:opacity-0 group-hover/item:opacity-100 transition-opacity"><Copy className="w-4 h-4"/></button>
                 </div>
-                <div className="bg-slate-50 p-3 rounded-xl flex justify-between items-center border border-slate-100 group/item">
+                <div className="bg-slate-50 dark:bg-slate-900/50 p-3 rounded-xl flex justify-between items-center border border-slate-100 dark:border-slate-700 group/item">
                   <div>
-                    <span className="block text-[10px] text-slate-400 font-bold mb-0.5">كلمة المرور</span>
-                    <span className="text-sm font-bold text-slate-700">{account.password}</span>
+                    <span className="block text-[10px] text-slate-400 dark:text-slate-500 font-bold mb-0.5">كلمة المرور</span>
+                    <span className="text-sm font-bold text-slate-700 dark:text-slate-300">{account.password}</span>
                   </div>
-                  <button onClick={() => copyToClipboard(account.password)} className="text-slate-400 hover:text-primary p-1.5 bg-white rounded-lg border border-slate-200 opacity-0 md:opacity-100 lg:opacity-0 group-hover/item:opacity-100 transition-opacity"><Copy className="w-4 h-4"/></button>
+                  <button onClick={() => copyToClipboard(account.password)} className="text-slate-400 dark:text-slate-500 hover:text-primary p-1.5 bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 opacity-0 md:opacity-100 lg:opacity-0 group-hover/item:opacity-100 transition-opacity"><Copy className="w-4 h-4"/></button>
                 </div>
               </div>
               {account.website && (
@@ -169,7 +169,7 @@ export default function DonorsClient({
             </div>
           )})}
           {donorAccounts.length === 0 && (
-            <div className="col-span-full py-12 text-center text-slate-400">
+            <div className="col-span-full py-12 text-center text-slate-400 dark:text-slate-500">
               <Building2 className="w-12 h-12 mx-auto mb-3 opacity-20" />
               <p className="font-bold">لا توجد حسابات مضافة حالياً</p>
             </div>

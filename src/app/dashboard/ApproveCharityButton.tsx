@@ -38,7 +38,7 @@ export default function ApproveCharityButton({
       className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 shadow-sm active:scale-[0.98] border cursor-pointer select-none
         ${
           isPending
-            ? "bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed"
+            ? "bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 border-slate-200 dark:border-slate-700 cursor-not-allowed"
             : "bg-secondary hover:bg-secondary/95 text-white border-secondary/20 shadow-none"
         }
       `}

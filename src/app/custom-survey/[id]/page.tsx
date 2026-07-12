@@ -2,7 +2,7 @@
 
 import { useState, useEffect, use } from "react";
 import { useRouter } from "next/navigation";
-import { UploadCloud, CheckCircle2, AlertCircle } from "lucide-react";
+import { UploadCloud, CheckCircle2, AlertCircle, X, Paperclip } from "lucide-react";
 import ProgressBar from "@/components/ProgressBar";
 import DatePicker from "react-multi-date-picker";
 import arabic from "react-date-object/calendars/arabic";
@@ -62,7 +62,7 @@ export default function CustomSurveyPage({ params }: { params: Promise<{ id: str
   
   const [currentSectionIndex, setCurrentSectionIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<string, string>>({});
-  const [attachments, setAttachments] = useState<Record<string, string>>({});
+  const [attachments, setAttachments] = useState<Record<string, string[]>>({});
   const [uploadingFiles, setUploadingFiles] = useState<Record<string, boolean>>({});
   
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -118,29 +118,34 @@ export default function CustomSurveyPage({ params }: { params: Promise<{ id: str
 
   // Validation
   const allCurrentRequiredAnswered = currentSection?.questions.every(q => {
-    if (q.type === "YES_NO" && q.requireAttachmentIfYes && answers[q.id] === "yes" && !attachments[q.id]) {
+    if (q.type === "YES_NO" && q.requireAttachmentIfYes && answers[q.id] === "yes" && !(attachments[q.id]?.length)) {
       return false; // Requires attachment if "yes"
     }
     if (!q.isRequired) return true;
-    return !!answers[q.id] || !!attachments[q.id];
+    return !!answers[q.id] || !!(attachments[q.id]?.length);
   });
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, questionId: string) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+    const files = Array.from(e.target.files || []);
+    if (files.length === 0) return;
+    e.target.value = "";
 
     setUploadingFiles(prev => ({ ...prev, [questionId]: true }));
-    const formData = new FormData();
-    formData.append("file", file);
 
     try {
-      const res = await fetch("/api/upload", {
-        method: "POST",
-        body: formData,
-      });
-      const data = await res.json();
-      if (data.url) {
-        setAttachments(prev => ({ ...prev, [questionId]: data.url }));
+      const uploadedUrls: string[] = [];
+      for (const file of files) {
+        const formData = new FormData();
+        formData.append("file", file);
+        const res = await fetch("/api/upload", {
+          method: "POST",
+          body: formData,
+        });
+        const data = await res.json();
+        if (data.url) uploadedUrls.push(data.url);
+      }
+      if (uploadedUrls.length > 0) {
+        setAttachments(prev => ({ ...prev, [questionId]: [...(prev[questionId] || []), ...uploadedUrls] }));
       }
     } catch (err) {
       console.error("Upload failed", err);
@@ -148,6 +153,10 @@ export default function CustomSurveyPage({ params }: { params: Promise<{ id: str
     } finally {
       setUploadingFiles(prev => ({ ...prev, [questionId]: false }));
     }
+  };
+
+  const handleRemoveAttachment = (questionId: string, url: string) => {
+    setAttachments(prev => ({ ...prev, [questionId]: (prev[questionId] || []).filter(u => u !== url) }));
   };
 
   const handleNext = async () => {
@@ -319,30 +328,36 @@ export default function CustomSurveyPage({ params }: { params: Promise<{ id: str
                             />
                           </div>
                         ) : question.type === "FILE" ? (
-                          <div className="w-full">
-                            <label className={`flex flex-col items-center justify-center gap-3 border-2 border-dashed rounded-2xl p-8 cursor-pointer transition-all ${
-                              attachments[question.id] 
-                                ? 'border-emerald-500 bg-emerald-50/50 text-emerald-700' 
-                                : 'border-slate-300 hover:border-primary/50 hover:bg-primary/5 text-slate-500 hover:text-primary'
-                            }`}>
+                          <div className="w-full space-y-3">
+                            {(attachments[question.id] || []).length > 0 && (
+                              <div className="space-y-2">
+                                {(attachments[question.id] || []).map((url, i) => (
+                                  <div key={url} className="flex items-center gap-2 bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-xl px-4 py-2.5">
+                                    <Paperclip className="w-4 h-4 shrink-0" />
+                                    <a href={url} target="_blank" rel="noopener noreferrer" className="flex-1 text-sm font-bold truncate hover:underline">
+                                      مرفق {i + 1}
+                                    </a>
+                                    <button type="button" onClick={() => handleRemoveAttachment(question.id, url)} className="text-emerald-600 hover:text-red-500 transition-colors shrink-0">
+                                      <X className="w-4 h-4" />
+                                    </button>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                            <label className="flex flex-col items-center justify-center gap-3 border-2 border-dashed rounded-2xl p-8 cursor-pointer transition-all border-slate-300 hover:border-primary/50 hover:bg-primary/5 text-slate-500 hover:text-primary">
                               {uploadingFiles[question.id] ? (
                                 <div className="flex flex-col items-center gap-2 text-primary font-bold">
                                   <div className="w-8 h-8 border-3 border-primary/30 border-t-primary rounded-full animate-spin" />
-                                  <span>جاري رفع الملف...</span>
-                                </div>
-                              ) : attachments[question.id] ? (
-                                <div className="flex flex-col items-center gap-2">
-                                  <CheckCircle2 className="w-10 h-10 text-emerald-500" />
-                                  <span className="font-bold text-emerald-700">تم رفع الملف بنجاح</span>
-                                  <span className="text-xs text-slate-400 font-medium text-center">انقر هنا لتغيير الملف المرفوع</span>
-                                  <input type="file" className="hidden" onChange={(e) => handleFileUpload(e, question.id)} />
+                                  <span>جاري رفع الملفات...</span>
                                 </div>
                               ) : (
                                 <div className="flex flex-col items-center gap-2">
                                   <UploadCloud className="w-10 h-10 text-slate-400 animate-bounce duration-1000" />
-                                  <span className="font-bold text-slate-700">انقر هنا لرفع الملف المطلوب</span>
-                                  <span className="text-xs text-slate-400">يدعم الصور والمستندات (PDF, Word)</span>
-                                  <input type="file" className="hidden" onChange={(e) => handleFileUpload(e, question.id)} />
+                                  <span className="font-bold text-slate-700">
+                                    {(attachments[question.id] || []).length > 0 ? "انقر هنا لإضافة مرفقات أخرى" : "انقر هنا لرفع الملف المطلوب"}
+                                  </span>
+                                  <span className="text-xs text-slate-400">يدعم الصور والمستندات (PDF, Word) - يمكن اختيار أكثر من ملف</span>
+                                  <input type="file" multiple className="hidden" onChange={(e) => handleFileUpload(e, question.id)} />
                                 </div>
                               )}
                             </label>
@@ -363,25 +378,32 @@ export default function CustomSurveyPage({ params }: { params: Promise<{ id: str
                         !question.requireAttachmentIfYes || 
                         answers[question.id] === "yes"
                       ) && (
-                        <div className="mt-4">
-                          <label className={`flex items-center justify-center gap-2 border-2 border-dashed rounded-xl p-6 cursor-pointer transition-colors ${
-                            attachments[question.id] 
-                              ? 'border-emerald-500 bg-emerald-50 text-emerald-700' 
-                              : 'border-slate-300 hover:border-primary/50 hover:bg-primary/5 text-slate-500 hover:text-primary'
-                          }`}>
+                        <div className="mt-4 space-y-2">
+                          {(attachments[question.id] || []).length > 0 && (
+                            <div className="space-y-2">
+                              {(attachments[question.id] || []).map((url, i) => (
+                                <div key={url} className="flex items-center gap-2 bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-xl px-4 py-2.5">
+                                  <Paperclip className="w-4 h-4 shrink-0" />
+                                  <a href={url} target="_blank" rel="noopener noreferrer" className="flex-1 text-sm font-bold truncate hover:underline">
+                                    مرفق {i + 1}
+                                  </a>
+                                  <button type="button" onClick={() => handleRemoveAttachment(question.id, url)} className="text-emerald-600 hover:text-red-500 transition-colors shrink-0">
+                                    <X className="w-4 h-4" />
+                                  </button>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                          <label className="flex items-center justify-center gap-2 border-2 border-dashed rounded-xl p-6 cursor-pointer transition-colors border-slate-300 hover:border-primary/50 hover:bg-primary/5 text-slate-500 hover:text-primary">
                             {uploadingFiles[question.id] ? (
                               <div className="flex items-center gap-2 text-primary font-bold">
                                 <div className="w-5 h-5 border-2 border-primary/30 border-t-primary rounded-full animate-spin" /> جاري الرفع...
                               </div>
-                            ) : attachments[question.id] ? (
-                              <>
-                                <CheckCircle2 className="w-5 h-5" /> تم رفع المرفق بنجاح (انقر لتغييره)
-                                <input type="file" className="hidden" onChange={(e) => handleFileUpload(e, question.id)} />
-                              </>
                             ) : (
                               <>
-                                <UploadCloud className="w-5 h-5" /> إرفاق ملف (صورة، PDF، Word)
-                                <input type="file" className="hidden" onChange={(e) => handleFileUpload(e, question.id)} />
+                                <UploadCloud className="w-5 h-5" />
+                                {(attachments[question.id] || []).length > 0 ? "إرفاق ملف آخر" : "إرفاق ملف (صورة، PDF، Word)"}
+                                <input type="file" multiple className="hidden" onChange={(e) => handleFileUpload(e, question.id)} />
                               </>
                             )}
                           </label>

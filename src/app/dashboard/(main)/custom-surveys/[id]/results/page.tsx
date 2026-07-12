@@ -8,7 +8,7 @@ interface Response {
   id: string;
   charityName: string;
   answers: Record<string, string>;
-  attachments: Record<string, string>;
+  attachments: Record<string, string | string[]>;
   createdAt: string;
 }
 
@@ -115,9 +115,12 @@ export default function SurveyResultsPage({ params }: { params: Promise<{ id: st
                       <div className="space-y-4">
                         {section.questions.map((question, qIdx) => {
                           const answer = response.answers[question.id];
-                          const attachment = response.attachments[question.id];
+                          const rawAttachment = response.attachments[question.id];
+                          const attachmentUrls = Array.isArray(rawAttachment)
+                            ? rawAttachment
+                            : rawAttachment ? [rawAttachment] : [];
 
-                          if (!answer && !attachment) return null;
+                          if (!answer && attachmentUrls.length === 0) return null;
 
                           return (
                             <div key={question.id} className="flex flex-col gap-1">
@@ -133,16 +136,19 @@ export default function SurveyResultsPage({ params }: { params: Promise<{ id: st
                                         : answer}
                                 </p>
                               )}
-                              {attachment && (
-                                <div className="mt-2">
-                                  <a
-                                    href={attachment}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="inline-flex items-center gap-2 bg-primary/10 text-primary hover:bg-primary hover:text-white px-4 py-2 rounded-lg text-sm font-bold transition-colors"
-                                  >
-                                    <Download className="w-4 h-4" /> تحميل المرفق
-                                  </a>
+                              {attachmentUrls.length > 0 && (
+                                <div className="mt-2 flex flex-wrap gap-2">
+                                  {attachmentUrls.map((url, i) => (
+                                    <a
+                                      key={url}
+                                      href={url}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="inline-flex items-center gap-2 bg-primary/10 text-primary hover:bg-primary hover:text-white px-4 py-2 rounded-lg text-sm font-bold transition-colors dark:bg-primary/20"
+                                    >
+                                      <Download className="w-4 h-4" /> تحميل المرفق {attachmentUrls.length > 1 ? i + 1 : ""}
+                                    </a>
+                                  ))}
                                 </div>
                               )}
                             </div>

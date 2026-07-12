@@ -2,7 +2,7 @@
 
 import { useState, useEffect, use, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { Plus, Trash2, Save, ArrowRight, Settings, Loader2, AlertCircle, CheckCircle } from "lucide-react";
+import { Plus, Trash2, Save, ArrowRight, ArrowUp, ArrowDown, Settings, Loader2, AlertCircle, CheckCircle } from "lucide-react";
 import Link from "next/link";
 
 interface Question {
@@ -140,6 +140,15 @@ export default function EditSurveyPage({ params }: { params: Promise<{ id: strin
     setSurvey({ ...survey, sections: newSections });
   };
 
+  const moveSection = (sIndex: number, direction: "up" | "down") => {
+    if (!survey) return;
+    const targetIndex = direction === "up" ? sIndex - 1 : sIndex + 1;
+    if (targetIndex < 0 || targetIndex >= survey.sections.length) return;
+    const newSections = [...survey.sections];
+    [newSections[sIndex], newSections[targetIndex]] = [newSections[targetIndex], newSections[sIndex]];
+    setSurvey({ ...survey, sections: newSections });
+  };
+
   const addQuestion = (sIndex: number) => {
     if (!survey) return;
     const newSections = [...survey.sections];
@@ -166,6 +175,18 @@ export default function EditSurveyPage({ params }: { params: Promise<{ id: strin
     if (!survey) return;
     const newSections = [...survey.sections];
     newSections[sIndex].questions = newSections[sIndex].questions.filter((_, i) => i !== qIndex);
+    setSurvey({ ...survey, sections: newSections });
+  };
+
+  const moveQuestion = (sIndex: number, qIndex: number, direction: "up" | "down") => {
+    if (!survey) return;
+    const questions = survey.sections[sIndex].questions;
+    const targetIndex = direction === "up" ? qIndex - 1 : qIndex + 1;
+    if (targetIndex < 0 || targetIndex >= questions.length) return;
+    const newSections = [...survey.sections];
+    const newQuestions = [...questions];
+    [newQuestions[qIndex], newQuestions[targetIndex]] = [newQuestions[targetIndex], newQuestions[qIndex]];
+    newSections[sIndex] = { ...newSections[sIndex], questions: newQuestions };
     setSurvey({ ...survey, sections: newSections });
   };
 
@@ -285,13 +306,31 @@ export default function EditSurveyPage({ params }: { params: Promise<{ id: strin
                 placeholder="عنوان القسم..."
                 className="flex-1 bg-white border border-slate-200 rounded-lg px-3 py-2 font-bold outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/20 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-100"
               />
-              <button
-                onClick={() => deleteSection(sIndex)}
-                className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors dark:text-slate-500 dark:hover:text-red-400 dark:hover:bg-red-500/10"
-                title="حذف القسم"
-              >
-                <Trash2 className="w-5 h-5" />
-              </button>
+              <div className="flex items-center gap-1 shrink-0">
+                <button
+                  onClick={() => moveSection(sIndex, "up")}
+                  disabled={sIndex === 0}
+                  className="p-2 text-slate-400 hover:text-primary hover:bg-primary/5 rounded-lg transition-colors disabled:opacity-30 disabled:pointer-events-none dark:text-slate-500 dark:hover:text-primary dark:hover:bg-primary/10"
+                  title="تحريك القسم لأعلى"
+                >
+                  <ArrowUp className="w-4 h-4" />
+                </button>
+                <button
+                  onClick={() => moveSection(sIndex, "down")}
+                  disabled={sIndex === survey.sections.length - 1}
+                  className="p-2 text-slate-400 hover:text-primary hover:bg-primary/5 rounded-lg transition-colors disabled:opacity-30 disabled:pointer-events-none dark:text-slate-500 dark:hover:text-primary dark:hover:bg-primary/10"
+                  title="تحريك القسم لأسفل"
+                >
+                  <ArrowDown className="w-4 h-4" />
+                </button>
+                <button
+                  onClick={() => deleteSection(sIndex)}
+                  className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors dark:text-slate-500 dark:hover:text-red-400 dark:hover:bg-red-500/10"
+                  title="حذف القسم"
+                >
+                  <Trash2 className="w-5 h-5" />
+                </button>
+              </div>
             </div>
 
             <div className="p-6 space-y-6">
@@ -392,12 +431,30 @@ export default function EditSurveyPage({ params }: { params: Promise<{ id: strin
                       )}
                     </div>
                   </div>
-                  <button
-                    onClick={() => deleteQuestion(sIndex, qIndex)}
-                    className="self-start p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors dark:text-slate-500 dark:hover:text-red-400 dark:hover:bg-red-500/10"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
+                  <div className="flex flex-col items-center gap-1 shrink-0">
+                    <button
+                      onClick={() => moveQuestion(sIndex, qIndex, "up")}
+                      disabled={qIndex === 0}
+                      className="p-1.5 text-slate-400 hover:text-primary hover:bg-primary/5 rounded-lg transition-colors disabled:opacity-30 disabled:pointer-events-none dark:text-slate-500 dark:hover:text-primary dark:hover:bg-primary/10"
+                      title="تحريك السؤال لأعلى"
+                    >
+                      <ArrowUp className="w-4 h-4" />
+                    </button>
+                    <button
+                      onClick={() => moveQuestion(sIndex, qIndex, "down")}
+                      disabled={qIndex === section.questions.length - 1}
+                      className="p-1.5 text-slate-400 hover:text-primary hover:bg-primary/5 rounded-lg transition-colors disabled:opacity-30 disabled:pointer-events-none dark:text-slate-500 dark:hover:text-primary dark:hover:bg-primary/10"
+                      title="تحريك السؤال لأسفل"
+                    >
+                      <ArrowDown className="w-4 h-4" />
+                    </button>
+                    <button
+                      onClick={() => deleteQuestion(sIndex, qIndex)}
+                      className="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors dark:text-slate-500 dark:hover:text-red-400 dark:hover:bg-red-500/10"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
                 </div>
               ))}
 

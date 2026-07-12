@@ -29,6 +29,22 @@ interface Survey {
   sections: Section[];
 }
 
+function InsertDivider({ onInsert, label }: { onInsert: () => void; label: string }) {
+  return (
+    <div className="group/insert relative h-4 -my-1 flex items-center justify-center">
+      <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 h-px bg-transparent group-hover/insert:bg-primary/30 transition-colors" />
+      <button
+        type="button"
+        onClick={onInsert}
+        title={label}
+        className="relative z-10 w-6 h-6 rounded-full bg-primary text-white flex items-center justify-center opacity-0 scale-75 pointer-events-none group-hover/insert:opacity-100 group-hover/insert:scale-100 group-hover/insert:pointer-events-auto transition-all shadow-md cursor-pointer"
+      >
+        <Plus className="w-3.5 h-3.5" />
+      </button>
+    </div>
+  );
+}
+
 export default function EditSurveyPage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = use(params);
   const router = useRouter();
@@ -115,12 +131,12 @@ export default function EditSurveyPage({ params }: { params: Promise<{ id: strin
     return () => clearTimeout(delayDebounceFn);
   }, [survey, resolvedParams.id]);
 
-  const addSection = (sIndex?: number) => {
+  const addSection = (atIndex?: number) => {
     if (!survey) return;
     const newSections = [...survey.sections];
     const newSection = { id: Math.random().toString(), title: "قسم جديد", questions: [] };
-    if (typeof sIndex === "number") {
-      newSections.splice(sIndex + 1, 0, newSection);
+    if (typeof atIndex === "number") {
+      newSections.splice(atIndex, 0, newSection);
     } else {
       newSections.push(newSection);
     }
@@ -149,10 +165,10 @@ export default function EditSurveyPage({ params }: { params: Promise<{ id: strin
     setSurvey({ ...survey, sections: newSections });
   };
 
-  const addQuestion = (sIndex: number) => {
+  const addQuestion = (sIndex: number, atIndex?: number) => {
     if (!survey) return;
     const newSections = [...survey.sections];
-    newSections[sIndex].questions.push({
+    const newQuestion = {
       id: Math.random().toString(),
       text: "",
       type: "TEXT",
@@ -160,7 +176,14 @@ export default function EditSurveyPage({ params }: { params: Promise<{ id: strin
       allowAttachment: false,
       requireAttachmentIfYes: false,
       options: []
-    });
+    };
+    const questions = [...newSections[sIndex].questions];
+    if (typeof atIndex === "number") {
+      questions.splice(atIndex, 0, newQuestion);
+    } else {
+      questions.push(newQuestion);
+    }
+    newSections[sIndex] = { ...newSections[sIndex], questions };
     setSurvey({ ...survey, sections: newSections });
   };
 
@@ -292,6 +315,10 @@ export default function EditSurveyPage({ params }: { params: Promise<{ id: strin
           <h2 className="text-xl font-bold text-slate-800 dark:text-slate-100">أقسام الاستبيان</h2>
         </div>
 
+        {survey.sections.length > 0 && (
+          <InsertDivider onInsert={() => addSection(0)} label="إضافة قسم في البداية" />
+        )}
+
         {survey.sections.map((section, sIndex) => (
           <div key={section.id} className="space-y-4">
             <div className="bg-white border-2 border-slate-200 rounded-2xl overflow-hidden shadow-sm dark:bg-slate-800 dark:border-slate-700">
@@ -335,7 +362,11 @@ export default function EditSurveyPage({ params }: { params: Promise<{ id: strin
 
             <div className="p-6 space-y-6">
               {section.questions.map((question, qIndex) => (
-                <div key={question.id} className="flex gap-4 p-4 border border-slate-100 rounded-xl bg-slate-50/50 hover:border-primary/30 transition-colors dark:border-slate-700 dark:bg-slate-900/30">
+                <div key={question.id}>
+                {qIndex === 0 && (
+                  <InsertDivider onInsert={() => addQuestion(sIndex, 0)} label="إضافة سؤال في البداية" />
+                )}
+                <div className="flex gap-4 p-4 border border-slate-100 rounded-xl bg-slate-50/50 hover:border-primary/30 transition-colors dark:border-slate-700 dark:bg-slate-900/30">
                   <div className="text-slate-400 font-bold mt-2 dark:text-slate-500">{qIndex + 1}.</div>
                   <div className="flex-1 space-y-4">
                     <div className="flex gap-4">
@@ -456,6 +487,8 @@ export default function EditSurveyPage({ params }: { params: Promise<{ id: strin
                     </button>
                   </div>
                 </div>
+                <InsertDivider onInsert={() => addQuestion(sIndex, qIndex + 1)} label="إضافة سؤال هنا" />
+                </div>
               ))}
 
               <button
@@ -470,12 +503,16 @@ export default function EditSurveyPage({ params }: { params: Promise<{ id: strin
           {/* زر إضافة قسم جديد تحت كل صندوق قسم */}
           <div className="flex justify-center py-2">
             <button
-              onClick={() => addSection(sIndex)}
+              onClick={() => addSection(sIndex + 1)}
               className="bg-slate-100 text-slate-700 hover:bg-primary hover:text-white border border-slate-200 px-5 py-2.5 rounded-xl text-xs font-bold flex items-center gap-2 transition-all shadow-sm active:scale-95 cursor-pointer dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700"
             >
               <Plus className="w-3.5 h-3.5" /> إضافة قسم جديد بعد هذا القسم
             </button>
           </div>
+
+          {sIndex < survey.sections.length - 1 && (
+            <InsertDivider onInsert={() => addSection(sIndex + 1)} label="إضافة قسم هنا" />
+          )}
         </div>
       ))}
 

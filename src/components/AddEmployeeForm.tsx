@@ -1,7 +1,7 @@
 "use client";
 
 import { useActionState, useEffect, useRef, useState } from "react";
-import { addEmployee } from "@/app/main/(main)/employees/actions";
+import { addEmployee } from "@/app/(dashboard)/main/(main)/employees/actions";
 import { 
   User, 
   Phone, 

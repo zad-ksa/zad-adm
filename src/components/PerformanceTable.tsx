@@ -1,6 +1,6 @@
-﻿"use client";
+"use client";
 
-import { useState, useTransition, useEffect } from "react";
+import { useState, useTransition, useEffect, Fragment } from "react";
 import { savePerformanceMetric } from "@/app/actions/performance";
 import { useRouter } from "next/navigation";
 
@@ -642,7 +642,7 @@ export default function PerformanceTable({
                 const aPrefix = axis.prefix || getAxisDefaultPrefix(axis.id);
 
                 return (
-                  <>
+                  <Fragment key={axis.id}>
                     {axis.goals.length === 0 ? (
                       <tr key={axis.id} className="border-b border-slate-100 dark:border-slate-700 hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition-colors">
                         <td className="border-l border-slate-100 dark:border-slate-700 p-2 bg-primary text-white font-bold align-middle w-12" rowSpan={1}>
@@ -908,7 +908,7 @@ export default function PerformanceTable({
                       </>
                     );
                   })}
-                </>
+                </Fragment>
               );
             });
           })()}

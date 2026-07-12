@@ -1,9 +1,9 @@
-﻿"use client";
+"use client";
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Plus } from "lucide-react";
-import AddCharityModal from "@/app/main/AddCharityModal";
+import AddCharityModal from "@/app/(dashboard)/main/AddCharityModal";
 
 export default function AddCharityButton() {
   const [isOpen, setIsOpen] = useState(false);

@@ -16,17 +16,6 @@ export default async function MainLayout({ children }: { children: React.ReactNo
     redirect("/");
   }
 
-  // عدد الإشعارات غير المقروءة لهذا المستخدم
-  let unreadRequests = 0;
-  if (hasPermission(session.role, session.permissions || [], "view_requests")) {
-    unreadRequests = await prisma.requestNotification.count({
-      where: { employeeId: session.id, isRead: false },
-    });
-  }
-
-  return (
-    <DashboardLayoutClient session={session} unreadRequests={unreadRequests}>
-      {children}
-    </DashboardLayoutClient>
-  );
+  // DashboardLayoutClient wrapper is now handled by the shared layout in src/app/(dashboard)/layout.tsx
+  return <>{children}</>;
 }

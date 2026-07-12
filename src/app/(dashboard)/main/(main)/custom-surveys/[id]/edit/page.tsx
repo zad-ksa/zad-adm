@@ -2,7 +2,7 @@
 
 import { useState, useEffect, use, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { Plus, Trash2, Save, ArrowRight, ArrowUp, ArrowDown, Settings, Loader2, AlertCircle, CheckCircle } from "lucide-react";
+import { Plus, Trash2, Save, ArrowRight, ArrowUp, ArrowDown, Settings, Loader2, AlertCircle, CheckCircle, Printer } from "lucide-react";
 import Link from "next/link";
 
 interface Question {
@@ -255,38 +255,48 @@ export default function EditSurveyPage({ params }: { params: Promise<{ id: strin
           </div>
         </div>
 
-        {saveStatus === "error" ? (
-          <button
-            onClick={handleSave}
-            className="bg-red-600 text-white px-6 py-2.5 rounded-xl font-bold flex items-center gap-2 hover:bg-red-700 transition-all shadow-lg shadow-red-100 cursor-pointer"
+        <div className="flex items-center gap-3">
+          <Link
+            href={`/main/custom-surveys/${resolvedParams.id}/print`}
+            target="_blank"
+            className="bg-white text-slate-700 border border-slate-200 px-4 py-2.5 rounded-xl font-bold flex items-center gap-2 hover:bg-slate-50 transition-all shadow-sm dark:bg-slate-800 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-700"
           >
-            <AlertCircle className="w-5 h-5" />
-            فشل الحفظ - حاول مجدداً
-          </button>
-        ) : (
-          <button
-            onClick={handleSave}
-            disabled={saveStatus === "saving" || saveStatus === "saved" || saveStatus === "idle"}
-            className={`px-6 py-2.5 rounded-xl font-bold flex items-center gap-2 transition-all shadow-lg ${
-              saveStatus === "saving"
-                ? "bg-amber-100 text-amber-700 border border-amber-200 cursor-not-allowed dark:bg-amber-500/10 dark:text-amber-400 dark:border-amber-500/20"
+            <Printer className="w-5 h-5" />
+            <span className="hidden sm:inline">طباعة</span>
+          </Link>
+          {saveStatus === "error" ? (
+            <button
+              onClick={handleSave}
+              className="bg-red-600 text-white px-6 py-2.5 rounded-xl font-bold flex items-center gap-2 hover:bg-red-700 transition-all shadow-lg shadow-red-100 cursor-pointer"
+            >
+              <AlertCircle className="w-5 h-5" />
+              فشل الحفظ - حاول مجدداً
+            </button>
+          ) : (
+            <button
+              onClick={handleSave}
+              disabled={saveStatus === "saving" || saveStatus === "saved" || saveStatus === "idle"}
+              className={`px-6 py-2.5 rounded-xl font-bold flex items-center gap-2 transition-all shadow-lg ${
+                saveStatus === "saving"
+                  ? "bg-amber-100 text-amber-700 border border-amber-200 cursor-not-allowed dark:bg-amber-500/10 dark:text-amber-400 dark:border-amber-500/20"
+                  : saveStatus === "saved" || saveStatus === "idle"
+                    ? "bg-emerald-50 text-emerald-700 border border-emerald-100 cursor-not-allowed dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/20"
+                    : "bg-primary text-white hover:bg-primary/90 cursor-pointer"
+              }`}
+            >
+              {saveStatus === "saving" ? (
+                <Loader2 className="w-5 h-5 animate-spin" />
+              ) : (
+                <CheckCircle className="w-5 h-5" />
+              )}
+              {saveStatus === "saving"
+                ? "جاري الحفظ..."
                 : saveStatus === "saved" || saveStatus === "idle"
-                  ? "bg-emerald-50 text-emerald-700 border border-emerald-100 cursor-not-allowed dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/20"
-                  : "bg-primary text-white hover:bg-primary/90 cursor-pointer"
-            }`}
-          >
-            {saveStatus === "saving" ? (
-              <Loader2 className="w-5 h-5 animate-spin" />
-            ) : (
-              <CheckCircle className="w-5 h-5" />
-            )}
-            {saveStatus === "saving"
-              ? "جاري الحفظ..."
-              : saveStatus === "saved" || saveStatus === "idle"
-                ? "تم حفظ التعديلات"
-                : "حفظ الآن"}
-          </button>
-        )}
+                  ? "تم الحفظ"
+                  : "حفظ الآن"}
+            </button>
+          )}
+        </div>
       </div>
 
       <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm mb-8 space-y-6 dark:bg-slate-800 dark:border-slate-700">

@@ -4,7 +4,7 @@ import Link from "next/link";
 import CopyLinkButton from "@/components/CopyLinkButton";
 import type { Metadata } from "next";
 import { getCharities, bootstrapCharities } from "@/app/actions/charity";
-import ApproveCharityButton from "@/app/main/ApproveCharityButton";
+import ApproveCharityButton from "@/app/(dashboard)/main/ApproveCharityButton";
 
 
 

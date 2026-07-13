@@ -13,7 +13,7 @@ export default async function CharityAccountsPage() {
   const can = (p: string) => hasPermission(role, perms, p);
 
   // Must have admin capabilities
-  if (!can("manage_charities") && !can("manage_employees") && !can("manage_charity_settings")) {
+  if (!can("manage_charity_accounts") && !can("manage_employees") && !can("manage_charity_settings")) {
     redirect("/main");
   }
 

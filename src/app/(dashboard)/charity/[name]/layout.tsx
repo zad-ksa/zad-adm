@@ -39,8 +39,8 @@ export default async function CharityLayout({
   }
 
   // Fetch nav settings for this employee (actually for charity client in this fallback)
-  const { getEmployeeNavSettings } = await import("@/app/actions/employeeSettings");
-  const navSettings = await getEmployeeNavSettings(session.id);
+  const { getCharityGlobalNavSettings } = await import("@/app/actions/globalSettings");
+  const navSettings = await getCharityGlobalNavSettings();
 
   return (
     <CharityLayoutClient

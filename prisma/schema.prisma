@@ -655,3 +655,13 @@ model ContractInstallment {
 
   @@index([charityId])
 }
+
+model GlobalSetting {
+  id        String   @id @default(uuid())
+  key       String   @unique
+  value     Json
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([key])
+}

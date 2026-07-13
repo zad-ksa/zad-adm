@@ -4,13 +4,14 @@ import { prisma } from "@/lib/db";
 import { getSession } from "@/lib/auth";
 import { hash } from "bcryptjs";
 import { revalidatePath } from "next/cache";
+import { hasPermission } from "@/lib/permissions";
 
 export async function addCharityClientAccount(data: { name: string; phone: string; password: string; charityId: string; permissions?: string[] }) {
   try {
     const session = await getSession();
-    const isAdmin = ["ADMIN", "EXECUTIVE_DIRECTOR", "GENERAL_MANAGER"].includes(session?.role || "");
+    const canManage = hasPermission(session?.role || "", session?.permissions || [], "manage_charity_accounts");
     
-    if (!isAdmin) {
+    if (!canManage) {
       return { success: false, error: "غير مصرح لك بإجراء هذه العملية" };
     }
 
@@ -56,9 +57,9 @@ export async function addCharityClientAccount(data: { name: string; phone: strin
 export async function deleteCharityClientAccount(accountId: string) {
   try {
     const session = await getSession();
-    const isAdmin = ["ADMIN", "EXECUTIVE_DIRECTOR", "GENERAL_MANAGER"].includes(session?.role || "");
+    const canManage = hasPermission(session?.role || "", session?.permissions || [], "manage_charity_accounts");
     
-    if (!isAdmin) {
+    if (!canManage) {
       return { success: false, error: "غير مصرح لك بإجراء هذه العملية" };
     }
 

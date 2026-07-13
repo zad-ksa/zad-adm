@@ -147,13 +147,13 @@ export default function CharityAccountsClient({ charities, accounts: initialAcco
                 </div>
                 
                 <div>
-                  <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1.5">رقم الجوال (لتسجيل الدخول)</label>
+                  <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1.5">رقم الجمعية (للدخول)</label>
                   <input 
                     required 
-                    type="tel" 
+                    type="text" 
                     value={form.phone} 
                     onChange={e => setForm({...form, phone: e.target.value})}
-                    placeholder="05XXXXXXXX"
+                    placeholder="مثال: 12345"
                     className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary font-bold text-left"
                     dir="ltr"
                   />
@@ -213,7 +213,7 @@ export default function CharityAccountsClient({ charities, accounts: initialAcco
               <tr>
                 <th className="px-6 py-4">الجمعية</th>
                 <th className="px-6 py-4">الممثل</th>
-                <th className="px-6 py-4 text-left" dir="ltr">رقم الجوال</th>
+                <th className="px-6 py-4 text-left" dir="ltr">رقم الجمعية</th>
                 <th className="px-6 py-4">الصلاحيات</th>
                 <th className="px-6 py-4">تاريخ الإنشاء</th>
                 <th className="px-6 py-4">إجراءات</th>

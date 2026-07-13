@@ -1,0 +1,65 @@
+"use server";
+
+import { prisma } from "@/lib/db";
+import { revalidatePath } from "next/cache";
+
+export type NavTabStatus = "OPEN" | "HIDDEN" | "COMING_SOON";
+
+export interface NavTabSetting {
+  id: string;
+  title: string;
+  status: NavTabStatus;
+  section: "main" | "sub";
+}
+
+const DEFAULT_CHARITY_NAV_TABS: NavTabSetting[] = [
+  { id: "services", title: "الخدمات", status: "OPEN", section: "main" },
+  { id: "governance", title: "الحوكمة", status: "OPEN", section: "main" },
+  { id: "overview", title: "الرئيسية", status: "OPEN", section: "sub" },
+  { id: "strategy", title: "الاستراتيجية", status: "OPEN", section: "sub" },
+  { id: "programs", title: "البرامج والمشاريع", status: "OPEN", section: "sub" },
+  { id: "finance", title: "المالية", status: "OPEN", section: "sub" },
+  { id: "hr", title: "الموارد البشرية", status: "COMING_SOON", section: "sub" },
+  { id: "tasks", title: "المهام", status: "HIDDEN", section: "sub" },
+];
+
+export async function getCharityGlobalNavSettings(): Promise<NavTabSetting[]> {
+  try {
+    const record = await prisma.globalSetting.findUnique({
+      where: { key: "CHARITY_PORTAL_NAV" },
+    });
+    
+    if (record && record.value) {
+      const savedSettings = record.value as unknown as NavTabSetting[];
+      const merged = savedSettings.filter(s => DEFAULT_CHARITY_NAV_TABS.some(d => d.id === s.id));
+      
+      for (const def of DEFAULT_CHARITY_NAV_TABS) {
+        if (!merged.find(m => m.id === def.id)) {
+          merged.push(def);
+        }
+      }
+      return merged;
+    }
+  } catch (error) {
+    console.error("Error fetching global charity nav settings:", error);
+  }
+  return [...DEFAULT_CHARITY_NAV_TABS];
+}
+
+export async function updateCharityGlobalNavSettings(settings: NavTabSetting[]) {
+  try {
+    await prisma.globalSetting.upsert({
+      where: { key: "CHARITY_PORTAL_NAV" },
+      update: { value: settings as any },
+      create: { key: "CHARITY_PORTAL_NAV", value: settings as any },
+    });
+    
+    // Revalidate paths so the UI updates
+    revalidatePath("/", "layout");
+    
+    return { success: true };
+  } catch (error: any) {
+    console.error("Error updating global settings:", error);
+    return { success: false, error: "فشل حفظ الإعدادات المركزية" };
+  }
+}

@@ -24,6 +24,7 @@ export const PERMISSION_GROUPS = [
   {
     title: "صلاحيات لوحة التحكم",
     permissions: [
+      { id: "manage_charity_accounts", label: "إدارة حسابات الجمعيات" },
       { id: "manage_contracts", label: "عرض العقود" },
       { id: "edit_contracts", label: "تعديل وإدارة العقود" },
       { id: "manage_employees", label: "إدارة الموظفين" },

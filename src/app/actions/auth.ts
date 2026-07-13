@@ -7,14 +7,16 @@ import { redirect } from "next/navigation";
 import { compare } from "bcryptjs";
 
 export async function loginWithPassword(phone: string, password: string) {
+  let employee;
   try {
     if (!phone || !password) {
       return { error: "يرجى إدخال رقم الجوال وكلمة المرور" };
     }
 
     // 1. Verify employee exists and is active in database
-    const employee = await prisma.employee.findUnique({
+    employee = await prisma.employee.findUnique({
       where: { phone },
+      include: { charity: true }
     });
 
     if (!employee) {
@@ -63,11 +65,6 @@ export async function loginWithPassword(phone: string, password: string) {
     console.error("Login Error:", error);
     return { error: "حدث خطأ داخلي: " + (error.message || "Unknown error") };
   }
-  
-  const employee = await prisma.employee.findUnique({
-    where: { phone },
-    include: { charity: true }
-  });
   
   if (employee?.role === "CHARITY_CLIENT" && employee.charity) {
     redirect(`/charity/${encodeURIComponent(employee.charity.name)}`);

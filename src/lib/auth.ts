@@ -1,5 +1,6 @@
 import { jwtVerify, SignJWT } from "jose";
 import { cookies } from "next/headers";
+import { cache } from "react";
 
 function getSecretKey() {
   const secretKey = process.env.JWT_SECRET;
@@ -24,7 +25,7 @@ export async function decrypt(input: string): Promise<any> {
   return payload;
 }
 
-export async function getSession() {
+export const getSession = cache(async () => {
   const cookieStore = await cookies();
   const sessionCookie = cookieStore.get("session")?.value;
   if (!sessionCookie) return null;
@@ -72,4 +73,4 @@ export async function getSession() {
   } catch (error) {
     return null;
   }
-}
+});

@@ -20,18 +20,31 @@ export default function DashboardLayoutClient({ children, session, unreadRequest
     }
   }, [pathname]);
 
-  // polling للإشعارات كل 20 ثانية
+  // polling للإشعارات كل 60 ثانية (يتوقف إذا كان التبويب في الخلفية)
   useEffect(() => {
     let active = true;
     async function poll() {
+      if (document.hidden) return;
       try {
         const count = await getUnreadNotificationsCount();
         if (active) setUnreadRequests(count);
       } catch {}
     }
-    poll();
-    const interval = setInterval(poll, 20000);
-    return () => { active = false; clearInterval(interval); };
+    
+    if (!document.hidden) poll();
+    
+    const interval = setInterval(poll, 60000);
+    
+    const handleVisibilityChange = () => {
+      if (!document.hidden) poll();
+    };
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    
+    return () => { 
+      active = false; 
+      clearInterval(interval); 
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
   }, []);
 
   return (

@@ -6,108 +6,112 @@ import Image from "next/image";
 
 import { getSession } from "@/lib/auth";
 
+const getCachedStats = unstable_cache(
+  async (role: string, employeeId: string) => {
+    const now = new Date();
+    const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const last7Days = new Date();
+    last7Days.setDate(last7Days.getDate() - 7);
+
+    const isLimitedRole = role === "STRATEGY" || role === "FINANCE";
+    const employeeFilter = isLimitedRole ? { assignedToId: employeeId } : {};
+    const achievementFilter = isLimitedRole ? { employeeId } : {};
+
+    const [
+      charitiesCount,
+      totalTasks,
+      completedTasks,
+      tasksCompletedToday,
+      tasksCompletedThisWeek,
+      urgentTasks,
+      recentAchievements,
+      recentCompletedTasks,
+      inProgressTasks
+    ] = await Promise.all([
+      prisma.charity.count(),
+      prisma.task.count({ where: { ...employeeFilter } }),
+      prisma.task.count({ where: { isCompleted: true, ...employeeFilter } }),
+      prisma.task.count({ 
+        where: { 
+          isCompleted: true, 
+          completedAt: { gte: startOfDay },
+          ...employeeFilter
+        } 
+      }),
+      prisma.task.count({ 
+        where: { 
+          isCompleted: true, 
+          completedAt: { gte: last7Days },
+          ...employeeFilter
+        } 
+      }),
+      prisma.task.findMany({ 
+        where: { priority: 1, isCompleted: false, ...employeeFilter }, 
+        take: 5, 
+        orderBy: { createdAt: 'desc' },
+        include: { assignedTo: true } 
+      }),
+      prisma.achievement.findMany({ 
+        where: { ...achievementFilter },
+        take: 5, 
+        orderBy: { date: 'desc' }, 
+        include: { employee: true } 
+      }),
+      prisma.task.findMany({
+        where: { isCompleted: true, ...employeeFilter },
+        take: 5,
+        orderBy: { completedAt: 'desc' },
+        include: { assignedTo: true }
+      }),
+      prisma.task.findMany({
+        where: { status: "IN_PROGRESS", isCompleted: false, ...employeeFilter },
+        take: 5,
+        orderBy: { updatedAt: 'desc' },
+        include: { assignedTo: true }
+      })
+    ]);
+
+    const completionPercentage = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
+
+    const combinedActivities = [
+      ...recentAchievements.map(ach => ({
+        id: `ach-${ach.id}`,
+        type: 'achievement' as const,
+        title: ach.title,
+        charityName: ach.charityName,
+        date: ach.date,
+        person: ach.employee,
+        originalId: ach.id
+      })),
+      ...recentCompletedTasks.map(task => ({
+        id: `task-${task.id}`,
+        type: 'task' as const,
+        title: task.title,
+        charityName: task.charityName,
+        date: task.completedAt || task.updatedAt,
+        person: task.assignedTo,
+        originalId: task.id
+      }))
+    ].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()).slice(0, 5);
+
+    return {
+      charitiesCount,
+      totalTasks,
+      completedTasks,
+      tasksCompletedToday,
+      tasksCompletedThisWeek,
+      completionPercentage,
+      urgentTasks,
+      combinedActivities,
+      inProgressTasks
+    };
+  },
+  ['dashboard-stats'],
+  { revalidate: 60, tags: ['dashboard'] }
+);
+
 const getDashboardStats = async (session: any) => {
-  const now = new Date();
-  
-  // بداية اليوم
-  const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  
-  // آخر 7 أيام (أسبوع)
-  const last7Days = new Date();
-  last7Days.setDate(last7Days.getDate() - 7);
-
-  const isLimitedRole = session?.role === "STRATEGY" || session?.role === "FINANCE";
-  const employeeFilter = isLimitedRole ? { assignedToId: session.id } : {};
-  const achievementFilter = isLimitedRole ? { employeeId: session.id } : {};
-
-  const [
-    charitiesCount,
-    totalTasks,
-    completedTasks,
-    tasksCompletedToday,
-    tasksCompletedThisWeek,
-    urgentTasks,
-    recentAchievements,
-    recentCompletedTasks,
-    inProgressTasks
-  ] = await Promise.all([
-    prisma.charity.count(),
-    prisma.task.count({ where: { ...employeeFilter } }),
-    prisma.task.count({ where: { isCompleted: true, ...employeeFilter } }),
-    prisma.task.count({ 
-      where: { 
-        isCompleted: true, 
-        completedAt: { gte: startOfDay },
-        ...employeeFilter
-      } 
-    }),
-    prisma.task.count({ 
-      where: { 
-        isCompleted: true, 
-        completedAt: { gte: last7Days },
-        ...employeeFilter
-      } 
-    }),
-    prisma.task.findMany({ 
-      where: { priority: 1, isCompleted: false, ...employeeFilter }, 
-      take: 5, 
-      orderBy: { createdAt: 'desc' },
-      include: { assignedTo: true } 
-    }),
-    prisma.achievement.findMany({ 
-      where: { ...achievementFilter },
-      take: 5, 
-      orderBy: { date: 'desc' }, 
-      include: { employee: true } 
-    }),
-    prisma.task.findMany({
-      where: { isCompleted: true, ...employeeFilter },
-      take: 5,
-      orderBy: { completedAt: 'desc' },
-      include: { assignedTo: true }
-    }),
-    prisma.task.findMany({
-      where: { status: "IN_PROGRESS", isCompleted: false, ...employeeFilter },
-      take: 5,
-      orderBy: { updatedAt: 'desc' },
-      include: { assignedTo: true }
-    })
-  ]);
-
-  const completionPercentage = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
-
-  const combinedActivities = [
-    ...recentAchievements.map(ach => ({
-      id: `ach-${ach.id}`,
-      type: 'achievement' as const,
-      title: ach.title,
-      charityName: ach.charityName,
-      date: ach.date,
-      person: ach.employee,
-      originalId: ach.id
-    })),
-    ...recentCompletedTasks.map(task => ({
-      id: `task-${task.id}`,
-      type: 'task' as const,
-      title: task.title,
-      charityName: task.charityName,
-      date: task.completedAt || task.updatedAt,
-      person: task.assignedTo,
-      originalId: task.id
-    }))
-  ].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()).slice(0, 5);
-
-  return {
-    charitiesCount,
-    totalTasks,
-    completedTasks,
-    tasksCompletedToday,
-    tasksCompletedThisWeek,
-    completionPercentage,
-    urgentTasks,
-    combinedActivities,
-    inProgressTasks
-  };
+  return getCachedStats(session?.role || '', session?.id || '');
 };
 
 export const dynamic = "force-dynamic";

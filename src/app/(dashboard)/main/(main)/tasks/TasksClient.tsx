@@ -45,10 +45,12 @@ import {
 } from "@/app/actions/tasks";
 import { Charity, Employee, Session, Task, TaskUpdate, Achievement } from "@/types";
 import { ADMIN_ROLES } from "@/lib/constants";
-import TaskFormModal from "@/components/tasks/TaskFormModal";
-import AchievementFormModal from "@/components/tasks/AchievementFormModal";
-import ConfirmModal from "@/components/ui/ConfirmModal";
 import { useImagePaste } from "@/hooks/useImagePaste";
+import dynamic from "next/dynamic";
+
+const TaskFormModal = dynamic(() => import("@/components/tasks/TaskFormModal"), { ssr: false });
+const AchievementFormModal = dynamic(() => import("@/components/tasks/AchievementFormModal"), { ssr: false });
+const ConfirmModal = dynamic(() => import("@/components/ui/ConfirmModal"), { ssr: false });
 
 export default function TasksClient({
   session,

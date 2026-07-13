@@ -72,8 +72,12 @@ export async function POST(request: Request) {
     });
 
     // Create a new active link
+    const crypto = require('crypto');
+    const shortId = crypto.randomBytes(4).toString('hex'); // generates an 8-character string like "f3a2b1c4"
+
     const newLink = await prisma.surveyLink.create({
       data: {
+        id: shortId,
         charityName,
         surveyType,
         isActive: true,

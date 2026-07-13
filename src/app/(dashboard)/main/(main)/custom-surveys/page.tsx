@@ -2,11 +2,12 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { Plus, Edit2, Trash2, Eye, Copy, CheckCircle, Printer } from "lucide-react";
+import { Plus, Edit2, Trash2, Eye, Copy, CheckCircle, Printer, RefreshCw } from "lucide-react";
 import CircularLoader from "@/components/CircularLoader";
 
 interface Survey {
   id: string;
+  slug: string | null;
   title: string;
   isActive: boolean;
   createdAt: string;
@@ -86,11 +87,29 @@ export default function SurveysPage() {
     }
   };
 
-  const copyLink = (id: string) => {
-    const link = `${window.location.origin}/custom-survey/${id}`;
+  const copyLink = (id: string, slug?: string | null) => {
+    const link = `${window.location.origin}/custom-survey/${slug || id}`;
     navigator.clipboard.writeText(link);
     setCopiedId(id);
     setTimeout(() => setCopiedId(null), 2000);
+  };
+
+  const handleRegenerateLink = async (id: string) => {
+    if (!confirm("تحذير: توليد رابط جديد سيلغي الرابط القديم ولن يعود صالحاً. هل أنت متأكد؟")) return;
+    try {
+      const res = await fetch(`/api/custom-surveys/${id}/regenerate-link`, {
+        method: "PUT",
+      });
+      if (res.ok) {
+        const updatedSurvey = await res.json();
+        setSurveys(surveys.map(s => s.id === id ? { ...s, slug: updatedSurvey.slug } : s));
+        alert("تم توليد الرابط الجديد بنجاح!");
+      } else {
+        alert("فشل توليد الرابط الجديد.");
+      }
+    } catch (err) {
+      console.error(err);
+    }
   };
 
   if (isLoading) {
@@ -196,7 +215,14 @@ export default function SurveysPage() {
               {/* Top Right Actions */}
               <div className="absolute top-4 left-4 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                 <button
-                  onClick={() => copyLink(survey.id)}
+                  onClick={() => handleRegenerateLink(survey.id)}
+                  className="p-2 bg-white border border-slate-200 rounded-lg text-slate-500 hover:text-amber-500 hover:border-amber-500/30 shadow-sm dark:bg-slate-800 dark:border-slate-700 dark:text-slate-400"
+                  title="توليد رابط جديد (إلغاء القديم)"
+                >
+                  <RefreshCw className="w-4 h-4" />
+                </button>
+                <button
+                  onClick={() => copyLink(survey.id, survey.slug)}
                   className="p-2 bg-white border border-slate-200 rounded-lg text-slate-500 hover:text-primary hover:border-primary/30 shadow-sm dark:bg-slate-800 dark:border-slate-700 dark:text-slate-400"
                   title="نسخ الرابط"
                 >

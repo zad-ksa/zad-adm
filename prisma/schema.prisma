@@ -443,6 +443,7 @@ model ServiceStageStep {
 
 model CustomSurvey {
   id        String                 @id @default(uuid())
+  slug      String?                @unique
   title     String
   introText String?
   isActive  Boolean                @default(false)

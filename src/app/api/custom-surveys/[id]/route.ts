@@ -4,8 +4,13 @@ import { prisma } from "@/lib/db";
 export async function GET(request: Request, context: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await context.params;
-    const survey = await prisma.customSurvey.findUnique({
-      where: { id },
+    const survey = await prisma.customSurvey.findFirst({
+      where: {
+        OR: [
+          { id },
+          { slug: id }
+        ]
+      },
       include: {
         sections: {
           orderBy: { order: 'asc' },

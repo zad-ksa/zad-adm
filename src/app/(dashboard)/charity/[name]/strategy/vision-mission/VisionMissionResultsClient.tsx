@@ -101,7 +101,9 @@ export default function VisionMissionResultsClient({ responses }: { responses: R
   };
 
   return (
-    <div className="space-y-6">
+    <div>
+      {/* -------------------- WEB LAYOUT -------------------- */}
+      <div className="space-y-6 print:hidden">
       
       {/* Print Button (Hidden on Print) */}
       <div className="flex justify-end print:hidden mb-4">
@@ -534,6 +536,130 @@ export default function VisionMissionResultsClient({ responses }: { responses: R
         </div>
       )}
 
+      </div>
+
+      {/* -------------------- PRINT LAYOUT -------------------- */}
+      <div className="hidden print:block space-y-12 text-black bg-white" dir="rtl">
+        <div className="text-center pb-6 mb-8 border-b-2 border-black">
+          <h1 className="text-3xl font-bold mb-2">تقرير نتائج استبيان الرؤية والرسالة والقيم</h1>
+          <p className="text-sm font-medium">عدد المشاركين في الاستبيان: {responses.length} مشارك</p>
+        </div>
+
+        {/* Categories Section */}
+        <div className="space-y-6 break-inside-avoid">
+          <h2 className="text-xl font-bold border-b border-gray-300 pb-2 mb-4 bg-gray-100 p-2">المحور الأول: الفئات المستهدفة والأثر</h2>
+          <div className="space-y-6">
+            {responses.map((res) => {
+              const cats = res.answers?.categories || [];
+              const validCats = cats.filter((c: any) => c && c.name && c.name.trim() !== "");
+              if (validCats.length === 0) return null;
+              return (
+                <div key={`print-cat-${res.id}`} className="mb-6 pb-4 border-b border-gray-200 border-dashed">
+                  <h3 className="font-bold text-base mb-3 flex items-center gap-2">
+                    <User className="w-4 h-4" /> {res.respondentName} <span className="text-xs font-normal text-gray-500">({res.respondentTitle})</span>
+                  </h3>
+                  <div className="pr-4 border-r-2 border-gray-300 space-y-3">
+                    {validCats.map((cat: any, idx: number) => (
+                      <div key={idx}>
+                        <p className="font-bold text-sm mb-1">{idx + 1}. {cat.name}</p>
+                        {cat.description && <p className="text-xs text-gray-700 leading-relaxed"><strong className="text-black">الوصف:</strong> {cat.description}</p>}
+                        {cat.impact && <p className="text-xs text-gray-700 leading-relaxed"><strong className="text-black">الأثر:</strong> {cat.impact}</p>}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Vision Section */}
+        <div className="space-y-6 break-before-page">
+          <h2 className="text-xl font-bold border-b border-gray-300 pb-2 mb-4 bg-gray-100 p-2">المحور الثاني: الرؤية والقيم</h2>
+          <div className="space-y-8">
+            {[
+              { id: "q2", title: "صورة المستقبل في 2030" },
+              { id: "q3", title: "بماذا تشتهر الجمعية وما يميزها مستقبلاً" },
+              { id: "q4", title: "أهم أثر في مجال تخصص القيم" },
+              { id: "q5", title: "أهم ثلاثة أشياء نتمنى تقديمها للمستفيدين" },
+              { id: "q6", title: "التغيير الحقيقي المأمول في حياة المستفيد" },
+              { id: "q7", title: "مستوى الطموح المستقبلي لحجم الأثر" },
+              { id: "q8", title: "ماذا يتمنى أن يقول الناس عن الجمعية بعد سنوات" },
+              { id: "q9", title: "القيم أو المبادئ التي لا يمكن التنازل عنها" },
+              { id: "q10", title: "الأمور التي تتمنى أن ترفضها الجمعية" },
+              { id: "q11", title: "الشعور المراد لدى العاملين والمتطوعين" },
+              { id: "q12", title: "أمنية ختامية لمستقبل الجمعية" },
+            ].map((qGroup) => {
+              return (
+                <div key={`print-vision-${qGroup.id}`} className="break-inside-avoid mb-6">
+                  <h3 className="font-bold text-sm mb-3 text-black">س: {qGroup.title}</h3>
+                  <div className="space-y-2 pr-4 border-r-2 border-gray-300">
+                    {responses.map((res) => {
+                      let answer = qGroup.id === "q5" 
+                        ? res.answers?.vision?.q5_points 
+                        : qGroup.id === "q11"
+                        ? [...(res.answers?.vision?.q11 || []), res.answers?.vision?.q11_other].filter(Boolean)
+                        : res.answers?.vision?.[qGroup.id];
+                      
+                      if (!answer || (typeof answer === "string" && answer.trim() === "") || (Array.isArray(answer) && answer.length === 0)) return null;
+
+                      return (
+                        <div key={`ans-${res.id}`} className="text-xs mb-2 pb-2 border-b border-gray-100 last:border-0">
+                          <p className="font-bold text-gray-800 mb-1">{res.respondentName}</p>
+                          {Array.isArray(answer) ? (
+                            <ul className="list-disc list-inside space-y-1 pr-2">
+                              {answer.map((pt: string, idx: number) => pt && <li key={idx} className="text-gray-700">{pt}</li>)}
+                            </ul>
+                          ) : (
+                            <p className="text-gray-700 pr-2 leading-relaxed">"{answer}"</p>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Mission Section */}
+        <div className="space-y-6 break-before-page">
+          <h2 className="text-xl font-bold border-b border-gray-300 pb-2 mb-4 bg-gray-100 p-2">المحور الثالث: رسالة الجمعية</h2>
+          <div className="space-y-8">
+            {[
+              { id: "q1", title: "لماذا تأسست الجمعية؟ غرض الوجود" },
+              { id: "q2", title: "المستفيدون الرئيسيون" },
+              { id: "q3", title: "الخدمات والبرامج الأساسية" },
+              { id: "q4", title: "النتائج المحددة المطلوب تحقيقها للمستفيد" },
+              { id: "q5", title: "ما يميز الجمعية عن المنافسين" },
+              { id: "q6", title: "النطاق الجغرافي الذي تخدمه الجمعية" },
+              { id: "q7", title: "الصياغات المقترحة لرسالة الجمعية" },
+            ].map((qGroup) => {
+              return (
+                <div key={`print-mission-${qGroup.id}`} className="break-inside-avoid mb-6">
+                  <h3 className="font-bold text-sm mb-3 text-black">س: {qGroup.title}</h3>
+                  <div className="space-y-2 pr-4 border-r-2 border-gray-300">
+                    {responses.map((res) => {
+                      const answer = res.answers?.mission?.[qGroup.id];
+                      if (!answer || answer.trim() === "") return null;
+
+                      return (
+                        <div key={`ans-m-${res.id}`} className="text-xs mb-2 pb-2 border-b border-gray-100 last:border-0">
+                          <p className="font-bold text-gray-800 mb-1">{res.respondentName}</p>
+                          <p className={`pr-2 leading-relaxed text-gray-700 ${qGroup.id === 'q7' ? 'font-bold' : ''}`}>
+                            {qGroup.id === 'q7' ? `« ${answer} »` : `"${answer}"`}
+                          </p>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

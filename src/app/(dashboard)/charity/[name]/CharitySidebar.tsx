@@ -25,7 +25,7 @@ import { useState, useEffect } from "react";
 import { logout } from "@/app/actions/auth";
 
 // --- Nav Item Component ---
-function NavItem({ item, isActive, isOpen }: { item: any, isActive: boolean, isOpen: boolean }) {
+function NavItem({ item, isActive, isOpen, onClick }: { item: any, isActive: boolean, isOpen: boolean, onClick?: () => void }) {
   const content = (
     <>
       {isActive && isOpen && <div className="absolute right-0 top-0 bottom-0 w-1 bg-white dark:bg-slate-800/20 rounded-l-full"></div>}
@@ -60,6 +60,7 @@ function NavItem({ item, isActive, isOpen }: { item: any, isActive: boolean, isO
   return (
     <Link
       href={item.href}
+      onClick={onClick}
       title={!isOpen ? item.title : undefined}
       className={`flex items-center ${isOpen ? "justify-start px-2.5" : "justify-center"} py-2 mb-0.5 rounded-xl text-xs font-bold transition-all group relative overflow-hidden ${
         isActive
@@ -90,12 +91,24 @@ export default function CharitySidebar({
   navSettings?: any[];
 }) {
   const pathname = usePathname();
+  const [activePath, setActivePath] = useState(decodeURIComponent(pathname));
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
+    setActivePath(decodeURIComponent(pathname));
+  }, [pathname]);
+
+  useEffect(() => {
     setMounted(true);
   }, []);
+
+  const handleLinkClick = (href: string) => {
+    setActivePath(decodeURIComponent(href));
+    if (typeof window !== "undefined" && window.innerWidth < 1024) {
+      setIsOpen(false);
+    }
+  };
 
   const isCharityClient = role === "CHARITY_CLIENT";
 
@@ -213,11 +226,10 @@ export default function CharitySidebar({
         )}
 
         {mainItems.map((item: any) => {
-          const decodedPathname = decodeURIComponent(pathname);
           const decodedHref = decodeURIComponent(item.href);
           const isActive = item.exact
-            ? decodedPathname === decodedHref
-            : decodedPathname.startsWith(decodedHref);
+            ? activePath === decodedHref
+            : activePath.startsWith(decodedHref);
 
           return (
             <NavItem 
@@ -225,6 +237,7 @@ export default function CharitySidebar({
               item={item}
               isActive={isActive}
               isOpen={isOpen}
+              onClick={() => handleLinkClick(item.href)}
             />
           )
         })}
@@ -236,11 +249,10 @@ export default function CharitySidebar({
         )}
         
         {subItems.map((item: any) => {
-          const decodedPathname = decodeURIComponent(pathname);
           const decodedHref = decodeURIComponent(item.href);
           const isActive = item.exact
-            ? decodedPathname === decodedHref
-            : decodedPathname.startsWith(decodedHref);
+            ? activePath === decodedHref
+            : activePath.startsWith(decodedHref);
 
           return (
             <NavItem 
@@ -248,6 +260,7 @@ export default function CharitySidebar({
               item={item}
               isActive={isActive}
               isOpen={isOpen}
+              onClick={() => handleLinkClick(item.href)}
             />
           )
         })}

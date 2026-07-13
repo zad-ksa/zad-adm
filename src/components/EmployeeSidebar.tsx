@@ -14,9 +14,9 @@ import { getSidebarCharities } from "@/app/actions/charity";
 import { ChevronDown, Target, Scale, DollarSign } from "lucide-react";
 
 // --- Sub Tab Link Component ---
-function SubTabLink({ href, label, isActive }: { href: string, label: string, isActive: boolean }) {
+function SubTabLink({ href, label, isActive, onClick }: { href: string, label: string, isActive: boolean, onClick?: () => void }) {
   return (
-    <Link href={href} className={`flex items-center px-1.5 py-1.5 rounded-lg text-[11px] font-bold transition-all ${isActive ? "bg-primary/10 text-primary" : "text-slate-500 hover:bg-slate-100 hover:text-slate-800 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-200"}`}>
+    <Link href={href} onClick={onClick} className={`flex items-center px-1.5 py-1.5 rounded-lg text-[11px] font-bold transition-all ${isActive ? "bg-primary/10 text-primary" : "text-slate-500 hover:bg-slate-100 hover:text-slate-800 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-200"}`}>
       <div className="w-1.5 h-1.5 rounded-full ml-1.5 shrink-0 bg-current opacity-50" />
       <span className="truncate">{label}</span>
     </Link>
@@ -24,11 +24,12 @@ function SubTabLink({ href, label, isActive }: { href: string, label: string, is
 }
 
 // --- Nav Item Component ---
-function NavItem({ item, isActive, isOpen }: { item: any, isActive: boolean, isOpen: boolean }) {
+function NavItem({ item, isActive, isOpen, onClick }: { item: any, isActive: boolean, isOpen: boolean, onClick?: () => void }) {
   return (
     <div className="relative group">
       <Link
         href={item.href}
+        onClick={onClick}
         title={!isOpen ? item.label : undefined}
         className={`flex items-center ${isOpen ? "justify-start px-2.5" : "justify-center"} py-2 rounded-lg text-[11px] font-bold transition-all group relative ${
           isActive
@@ -93,6 +94,51 @@ export default function EmployeeSidebar({
   const [mounted, setMounted] = useState(false);
   const [expandedGroup, setExpandedGroup] = useState<string | null>(null);
   const [charities, setCharities] = useState<any[]>([]);
+  const [activePath, setActivePath] = useState(decodedPathname);
+
+  useEffect(() => {
+    setActivePath(decodedPathname);
+  }, [decodedPathname]);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    
+    let newGroup: string | null = expandedGroup;
+    let newService: string | null = expandedService;
+    let newCharity: string | null = expandedCharity;
+
+    const path = activePath;
+
+    if (path === "/main") newGroup = "";
+    else if (path.startsWith("/main/charities") || path.startsWith("/main/contracts") || path.startsWith("/main/custom-surveys") || path.startsWith("/main/communication")) newGroup = "الجمعيات";
+    else if (path.startsWith("/main/requests") || path.startsWith("/main/news") || path.startsWith("/main/meetings") || path.startsWith("/main/tasks")) newGroup = "زاد";
+    else if (path.startsWith("/main/admin") || path.startsWith("/main/workflow-settings")) newGroup = "لوحة التحكم";
+    else if (path.startsWith("/main/services-overview") || path.includes("/charity/")) {
+      newGroup = "الخدمات";
+      if (path.includes("/charity/")) {
+        const parts = path.split('/');
+        if (parts.length >= 4) {
+          const charityNameStr = decodeURIComponent(parts[2]);
+          const serviceId = parts[3]; 
+          if (["strategy", "governance", "resource-development", "finance"].includes(serviceId)) {
+            newService = serviceId;
+            newCharity = `${serviceId}-${charityNameStr}`;
+          }
+        }
+      }
+    }
+
+    if (newGroup !== null) setExpandedGroup(newGroup);
+    if (newService !== null) setExpandedService(newService);
+    if (newCharity !== null) setExpandedCharity(newCharity);
+  }, [isOpen, activePath]);
+
+  const handleLinkClick = (href: string) => {
+    setActivePath(href);
+    if (typeof window !== "undefined" && window.innerWidth < 1024) {
+      setIsOpen(false);
+    }
+  };
 
   useEffect(() => {
     setMounted(true);
@@ -331,8 +377,8 @@ export default function EmployeeSidebar({
                 )}
                 <div className={`space-y-0.5 overflow-hidden transition-all duration-300 ease-in-out ${isOpen && isCollapsed ? 'max-h-0 opacity-0' : 'max-h-[500px] opacity-100'}`}>
                   {items.map((item) => {
-                    const isActive = pathname.startsWith(item.href) && (item.href !== "/main" || pathname === "/main");
-                    return <NavItem key={item.href} item={item} isActive={isActive} isOpen={isOpen} />;
+                    const isActive = activePath.startsWith(item.href) && (item.href !== "/main" || activePath === "/main");
+                    return <NavItem key={item.href} item={item} isActive={isActive} isOpen={isOpen} onClick={() => handleLinkClick(item.href)} />;
                   })}
                 </div>
               </div>
@@ -371,7 +417,8 @@ export default function EmployeeSidebar({
                   {isOpen && (
                     <Link
                       href="/main/services-overview"
-                      className={`flex items-center w-full px-2.5 py-1.5 rounded-lg text-[11px] font-bold transition-all group mt-1 ${pathname === "/main/services-overview" ? "bg-primary/10 text-primary" : "text-slate-500 hover:bg-primary/5 hover:text-primary"}`}
+                      onClick={() => handleLinkClick("/main/services-overview")}
+                      className={`flex items-center w-full px-2.5 py-1.5 rounded-lg text-[11px] font-bold transition-all group mt-1 ${activePath === "/main/services-overview" ? "bg-primary/10 text-primary" : "text-slate-500 hover:bg-primary/5 hover:text-primary"}`}
                     >
                       <LayoutGrid className="w-3.5 h-3.5 ml-2" />
                       <span>الكل</span>
@@ -412,28 +459,28 @@ export default function EmployeeSidebar({
                                   <div className="mr-2 space-y-0.5 border-r-2 border-slate-100 dark:border-slate-800 pr-1.5">
                                     {svc.id === "strategy" && (
                                       <>
-                                        <SubTabLink href={`/charity/${encodeURIComponent(charity.name)}/strategy`} label="استبيان الجاهزية" isActive={decodedPathname === `/charity/${charity.name}/strategy`} />
-                                        <SubTabLink href={`/charity/${encodeURIComponent(charity.name)}/strategy/vision-mission`} label="استبيان الرؤية" isActive={decodedPathname === `/charity/${charity.name}/strategy/vision-mission`} />
-                                        <SubTabLink href={`/charity/${encodeURIComponent(charity.name)}/strategy/hexagonal`} label="التحليل السداسي" isActive={decodedPathname === `/charity/${charity.name}/strategy/hexagonal`} />
-                                        <SubTabLink href={`/charity/${encodeURIComponent(charity.name)}/strategy/performance`} label="مقياس الأداء" isActive={decodedPathname === `/charity/${charity.name}/strategy/performance`} />
+                                        <SubTabLink href={`/charity/${encodeURIComponent(charity.name)}/strategy`} label="استبيان الجاهزية" isActive={activePath === `/charity/${charity.name}/strategy`} onClick={() => handleLinkClick(`/charity/${charity.name}/strategy`)} />
+                                        <SubTabLink href={`/charity/${encodeURIComponent(charity.name)}/strategy/vision-mission`} label="استبيان الرؤية" isActive={activePath === `/charity/${charity.name}/strategy/vision-mission`} onClick={() => handleLinkClick(`/charity/${charity.name}/strategy/vision-mission`)} />
+                                        <SubTabLink href={`/charity/${encodeURIComponent(charity.name)}/strategy/hexagonal`} label="التحليل السداسي" isActive={activePath === `/charity/${charity.name}/strategy/hexagonal`} onClick={() => handleLinkClick(`/charity/${charity.name}/strategy/hexagonal`)} />
+                                        <SubTabLink href={`/charity/${encodeURIComponent(charity.name)}/strategy/performance`} label="مقياس الأداء" isActive={activePath === `/charity/${charity.name}/strategy/performance`} onClick={() => handleLinkClick(`/charity/${charity.name}/strategy/performance`)} />
                                       </>
                                     )}
                                     {svc.id === "governance" && (
                                       <>
-                                        <SubTabLink href={`/charity/${encodeURIComponent(charity.name)}/governance?tab=manual`} label="دليل الحوكمة" isActive={decodedPathname === `/charity/${charity.name}/governance` && (!currentTab || currentTab === 'manual')} />
-                                        <SubTabLink href={`/charity/${encodeURIComponent(charity.name)}/governance?tab=files`} label="الملفات والأنظمة" isActive={decodedPathname === `/charity/${charity.name}/governance` && currentTab === 'files'} />
-                                        <SubTabLink href={`/charity/${encodeURIComponent(charity.name)}/governance?tab=services`} label="خدمات المركز" isActive={decodedPathname === `/charity/${charity.name}/governance` && currentTab === 'services'} />
+                                        <SubTabLink href={`/charity/${encodeURIComponent(charity.name)}/governance?tab=manual`} label="دليل الحوكمة" isActive={activePath === `/charity/${charity.name}/governance` && (!currentTab || currentTab === 'manual')} onClick={() => handleLinkClick(`/charity/${charity.name}/governance?tab=manual`)} />
+                                        <SubTabLink href={`/charity/${encodeURIComponent(charity.name)}/governance?tab=files`} label="الملفات والأنظمة" isActive={activePath === `/charity/${charity.name}/governance` && currentTab === 'files'} onClick={() => handleLinkClick(`/charity/${charity.name}/governance?tab=files`)} />
+                                        <SubTabLink href={`/charity/${encodeURIComponent(charity.name)}/governance?tab=services`} label="خدمات المركز" isActive={activePath === `/charity/${charity.name}/governance` && currentTab === 'services'} onClick={() => handleLinkClick(`/charity/${charity.name}/governance?tab=services`)} />
                                       </>
                                     )}
                                     {svc.id === "resource-development" && (
                                       <>
-                                        <SubTabLink href={`/charity/${encodeURIComponent(charity.name)}/resource-development/donors`} label="الجهات المانحة" isActive={decodedPathname === `/charity/${charity.name}/resource-development/donors`} />
-                                        <SubTabLink href={`/charity/${encodeURIComponent(charity.name)}/resource-development/grants`} label="المنح" isActive={decodedPathname === `/charity/${charity.name}/resource-development/grants`} />
+                                        <SubTabLink href={`/charity/${encodeURIComponent(charity.name)}/resource-development/donors`} label="الجهات المانحة" isActive={activePath === `/charity/${charity.name}/resource-development/donors`} onClick={() => handleLinkClick(`/charity/${charity.name}/resource-development/donors`)} />
+                                        <SubTabLink href={`/charity/${encodeURIComponent(charity.name)}/resource-development/grants`} label="المنح" isActive={activePath === `/charity/${charity.name}/resource-development/grants`} onClick={() => handleLinkClick(`/charity/${charity.name}/resource-development/grants`)} />
                                       </>
                                     )}
                                     {svc.id === "finance" && (
                                       <>
-                                        <SubTabLink href={`/charity/${encodeURIComponent(charity.name)}/finance`} label="الوضع المالي" isActive={decodedPathname === `/charity/${charity.name}/finance`} />
+                                        <SubTabLink href={`/charity/${encodeURIComponent(charity.name)}/finance`} label="الوضع المالي" isActive={activePath === `/charity/${charity.name}/finance`} onClick={() => handleLinkClick(`/charity/${charity.name}/finance`)} />
                                       </>
                                     )}
                                   </div>

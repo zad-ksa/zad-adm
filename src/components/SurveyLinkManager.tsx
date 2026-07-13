@@ -179,6 +179,13 @@ export default function SurveyLinkManager({ charityName, surveyType }: { charity
             >
               {activeLink.isActive ? "إغلاق الرابط" : "تفعيل الرابط"}
             </button>
+            <button
+              onClick={handleGenerate}
+              disabled={generating}
+              className="bg-blue-100 text-blue-700 hover:bg-blue-200 px-4 py-2 rounded-lg text-xs font-bold transition-colors flex items-center gap-2"
+            >
+              {generating ? "جاري التوليد..." : "توليد رابط جديد"}
+            </button>
             {activeLink.isActive && (
               <button
                 onClick={handleCopy}

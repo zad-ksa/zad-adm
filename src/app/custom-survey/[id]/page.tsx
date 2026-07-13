@@ -26,6 +26,12 @@ custom_arabic_ar.months = [
 ];
 
 
+interface FollowUpQuestion {
+  id: string;
+  text: string;
+  isRequired: boolean;
+}
+
 interface Question {
   id: string;
   text: string;
@@ -34,12 +40,23 @@ interface Question {
   allowAttachment: boolean;
   requireAttachmentIfYes?: boolean;
   options?: { id: string; text: string }[];
+  followUpQuestions?: FollowUpQuestion[];
 }
 
 interface Section {
   id: string;
   title: string;
   questions: Question[];
+}
+
+// See edit page for why YES_NO questions store follow-ups inside `options`.
+function questionsFromApi(questions: any[]): Question[] {
+  return questions.map((q) => {
+    if (q.type === "YES_NO" && q.options && !Array.isArray(q.options)) {
+      return { ...q, options: undefined, followUpQuestions: q.options.followUpQuestions || [] };
+    }
+    return q;
+  });
 }
 
 interface Survey {
@@ -82,7 +99,10 @@ export default function CustomSurveyPage({ params }: { params: Promise<{ id: str
       const res = await fetch(`/api/custom-surveys/${resolvedParams.id}`);
       if (res.ok) {
         const data = await res.json();
-        setSurvey(data);
+        setSurvey({
+          ...data,
+          sections: data.sections.map((s: Section) => ({ ...s, questions: questionsFromApi(s.questions) }))
+        });
       }
     } catch (err) {
       console.error(err);
@@ -120,6 +140,10 @@ export default function CustomSurveyPage({ params }: { params: Promise<{ id: str
   const allCurrentRequiredAnswered = currentSection?.questions.every(q => {
     if (q.type === "YES_NO" && q.requireAttachmentIfYes && answers[q.id] === "yes" && !(attachments[q.id]?.length)) {
       return false; // Requires attachment if "yes"
+    }
+    if (q.type === "YES_NO" && answers[q.id] === "yes" && q.followUpQuestions?.length) {
+      const allFollowUpsAnswered = q.followUpQuestions.every(f => !f.isRequired || !!answers[f.id]);
+      if (!allFollowUpsAnswered) return false;
     }
     if (!q.isRequired) return true;
     return !!answers[q.id] || !!(attachments[q.id]?.length);
@@ -303,15 +327,37 @@ export default function CustomSurveyPage({ params }: { params: Promise<{ id: str
                             })}
                           </div>
                         ) : question.type === "YES_NO" ? (
-                          <div className="flex gap-4">
-                            <label className={`flex-1 text-center py-3 rounded-xl border-2 cursor-pointer transition-all ${answers[question.id] === 'yes' ? 'border-primary bg-primary/5 text-primary' : 'border-slate-200 text-slate-500 hover:bg-slate-50'}`}>
-                              <input type="radio" name={question.id} value="yes" className="hidden" onChange={() => setAnswers(prev => ({ ...prev, [question.id]: 'yes' }))} />
-                              <span className="font-bold">نعم</span>
-                            </label>
-                            <label className={`flex-1 text-center py-3 rounded-xl border-2 cursor-pointer transition-all ${answers[question.id] === 'no' ? 'border-primary bg-primary/5 text-primary' : 'border-slate-200 text-slate-500 hover:bg-slate-50'}`}>
-                              <input type="radio" name={question.id} value="no" className="hidden" onChange={() => setAnswers(prev => ({ ...prev, [question.id]: 'no' }))} />
-                              <span className="font-bold">لا</span>
-                            </label>
+                          <div>
+                            <div className="flex gap-4">
+                              <label className={`flex-1 text-center py-3 rounded-xl border-2 cursor-pointer transition-all ${answers[question.id] === 'yes' ? 'border-primary bg-primary/5 text-primary' : 'border-slate-200 text-slate-500 hover:bg-slate-50'}`}>
+                                <input type="radio" name={question.id} value="yes" className="hidden" onChange={() => setAnswers(prev => ({ ...prev, [question.id]: 'yes' }))} />
+                                <span className="font-bold">نعم</span>
+                              </label>
+                              <label className={`flex-1 text-center py-3 rounded-xl border-2 cursor-pointer transition-all ${answers[question.id] === 'no' ? 'border-primary bg-primary/5 text-primary' : 'border-slate-200 text-slate-500 hover:bg-slate-50'}`}>
+                                <input type="radio" name={question.id} value="no" className="hidden" onChange={() => setAnswers(prev => ({ ...prev, [question.id]: 'no' }))} />
+                                <span className="font-bold">لا</span>
+                              </label>
+                            </div>
+
+                            {answers[question.id] === 'yes' && question.followUpQuestions && question.followUpQuestions.length > 0 && (
+                              <div className="mt-4 space-y-3 border-r-4 border-primary/20 pr-4">
+                                {question.followUpQuestions.map(followUp => (
+                                  <div key={followUp.id}>
+                                    <label className="block text-sm font-bold text-slate-600 mb-1.5">
+                                      {followUp.text}
+                                      {followUp.isRequired && <span className="text-red-500 mr-1">*</span>}
+                                    </label>
+                                    <textarea
+                                      value={answers[followUp.id] || ""}
+                                      onChange={(e) => setAnswers(prev => ({ ...prev, [followUp.id]: e.target.value }))}
+                                      placeholder="اكتب إجابتك هنا..."
+                                      rows={2}
+                                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 outline-none focus:border-primary/50 focus:bg-white transition-all resize-none text-sm"
+                                    />
+                                  </div>
+                                ))}
+                              </div>
+                            )}
                           </div>
                         ) : question.type === "HIJRI_DATE" ? (
                           <div className="w-full relative">

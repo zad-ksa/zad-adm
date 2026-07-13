@@ -5,6 +5,12 @@ import { useRouter } from "next/navigation";
 import { Plus, Trash2, Save, ArrowRight, ArrowUp, ArrowDown, Settings, Loader2, AlertCircle, CheckCircle, Printer } from "lucide-react";
 import Link from "next/link";
 
+interface FollowUpQuestion {
+  id: string;
+  text: string;
+  isRequired: boolean;
+}
+
 interface Question {
   id: string;
   text: string;
@@ -13,6 +19,29 @@ interface Question {
   allowAttachment: boolean;
   requireAttachmentIfYes?: boolean;
   options?: { id: string; text: string }[];
+  followUpQuestions?: FollowUpQuestion[]; // Shown only if this YES_NO question is answered "نعم"
+}
+
+// Wire format quirk: for YES_NO questions we repurpose the unused `options`
+// JSON column to store { followUpQuestions } instead of a choice list, so no
+// database schema change is needed to support follow-up questions.
+function questionsFromApi(questions: any[]): Question[] {
+  return questions.map((q) => {
+    if (q.type === "YES_NO" && q.options && !Array.isArray(q.options)) {
+      return { ...q, options: undefined, followUpQuestions: q.options.followUpQuestions || [] };
+    }
+    return q;
+  });
+}
+
+function questionsForApi(questions: Question[]): any[] {
+  return questions.map((q) => {
+    if (q.type === "YES_NO") {
+      const { followUpQuestions, ...rest } = q;
+      return { ...rest, options: followUpQuestions && followUpQuestions.length > 0 ? { followUpQuestions } : null };
+    }
+    return q;
+  });
 }
 
 interface Section {
@@ -62,7 +91,10 @@ export default function EditSurveyPage({ params }: { params: Promise<{ id: strin
       const res = await fetch(`/api/custom-surveys/${resolvedParams.id}`);
       if (res.ok) {
         const data = await res.json();
-        setSurvey(data);
+        setSurvey({
+          ...data,
+          sections: data.sections.map((s: Section) => ({ ...s, questions: questionsFromApi(s.questions) }))
+        });
       }
     } catch (err) {
       console.error(err);
@@ -82,7 +114,7 @@ export default function EditSurveyPage({ params }: { params: Promise<{ id: strin
           title: survey.title,
           introText: survey.introText,
           isActive: survey.isActive,
-          sections: survey.sections
+          sections: survey.sections.map(s => ({ ...s, questions: questionsForApi(s.questions) }))
         })
       });
       if (res.ok) {
@@ -114,7 +146,7 @@ export default function EditSurveyPage({ params }: { params: Promise<{ id: strin
             title: survey.title,
             introText: survey.introText,
             isActive: survey.isActive,
-            sections: survey.sections
+            sections: survey.sections.map(s => ({ ...s, questions: questionsForApi(s.questions) }))
           })
         });
         if (res.ok) {
@@ -198,6 +230,33 @@ export default function EditSurveyPage({ params }: { params: Promise<{ id: strin
     if (!survey) return;
     const newSections = [...survey.sections];
     newSections[sIndex].questions = newSections[sIndex].questions.filter((_, i) => i !== qIndex);
+    setSurvey({ ...survey, sections: newSections });
+  };
+
+  const addFollowUpQuestion = (sIndex: number, qIndex: number) => {
+    if (!survey) return;
+    const newSections = [...survey.sections];
+    const question = newSections[sIndex].questions[qIndex];
+    const followUpQuestions = [...(question.followUpQuestions || []), { id: Math.random().toString(), text: "", isRequired: true }];
+    newSections[sIndex].questions[qIndex] = { ...question, followUpQuestions };
+    setSurvey({ ...survey, sections: newSections });
+  };
+
+  const updateFollowUpQuestion = (sIndex: number, qIndex: number, fIndex: number, updates: Partial<FollowUpQuestion>) => {
+    if (!survey) return;
+    const newSections = [...survey.sections];
+    const question = newSections[sIndex].questions[qIndex];
+    const followUpQuestions = (question.followUpQuestions || []).map((f, i) => i === fIndex ? { ...f, ...updates } : f);
+    newSections[sIndex].questions[qIndex] = { ...question, followUpQuestions };
+    setSurvey({ ...survey, sections: newSections });
+  };
+
+  const deleteFollowUpQuestion = (sIndex: number, qIndex: number, fIndex: number) => {
+    if (!survey) return;
+    const newSections = [...survey.sections];
+    const question = newSections[sIndex].questions[qIndex];
+    const followUpQuestions = (question.followUpQuestions || []).filter((_, i) => i !== fIndex);
+    newSections[sIndex].questions[qIndex] = { ...question, followUpQuestions };
     setSurvey({ ...survey, sections: newSections });
   };
 
@@ -471,6 +530,44 @@ export default function EditSurveyPage({ params }: { params: Promise<{ id: strin
                         </label>
                       )}
                     </div>
+
+                    {question.type === "YES_NO" && (
+                      <div className="space-y-2 bg-white p-4 rounded-xl border border-slate-200 dark:bg-slate-800 dark:border-slate-700">
+                        <div className="text-sm font-bold text-slate-700 dark:text-slate-300">أسئلة فرعية (تظهر فقط إذا كانت الإجابة "نعم"):</div>
+                        {(question.followUpQuestions || []).map((followUp, fIndex) => (
+                          <div key={followUp.id} className="flex gap-2 items-center">
+                            <input
+                              type="text"
+                              value={followUp.text}
+                              onChange={(e) => updateFollowUpQuestion(sIndex, qIndex, fIndex, { text: e.target.value })}
+                              placeholder="نص السؤال الفرعي..."
+                              className="flex-1 bg-slate-50 border border-slate-200 rounded-md px-3 py-1.5 text-sm outline-none focus:border-primary/50 dark:bg-slate-900/50 dark:border-slate-700 dark:text-slate-100"
+                            />
+                            <label className="flex items-center gap-1.5 cursor-pointer shrink-0">
+                              <input
+                                type="checkbox"
+                                checked={followUp.isRequired}
+                                onChange={(e) => updateFollowUpQuestion(sIndex, qIndex, fIndex, { isRequired: e.target.checked })}
+                                className="w-4 h-4 rounded text-primary focus:ring-primary/20 cursor-pointer"
+                              />
+                              <span className="text-xs font-bold text-slate-500 dark:text-slate-400 whitespace-nowrap">إجباري</span>
+                            </label>
+                            <button
+                              onClick={() => deleteFollowUpQuestion(sIndex, qIndex, fIndex)}
+                              className="text-red-500 hover:text-red-600 p-1 dark:text-red-400 dark:hover:text-red-300 shrink-0"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </div>
+                        ))}
+                        <button
+                          onClick={() => addFollowUpQuestion(sIndex, qIndex)}
+                          className="text-primary hover:text-primary/80 text-sm font-bold flex items-center gap-1 mt-2"
+                        >
+                          <Plus className="w-4 h-4" /> إضافة سؤال فرعي
+                        </button>
+                      </div>
+                    )}
                   </div>
                   <div className="flex flex-col items-center gap-1 shrink-0">
                     <button

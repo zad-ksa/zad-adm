@@ -468,7 +468,7 @@ model CustomSurveyQuestion {
   isRequired             Boolean             @default(true)
   allowAttachment        Boolean             @default(false)
   requireAttachmentIfYes Boolean             @default(false)
-  options                Json? // Array of { id, text, score }
+  options                Json? // Array of { id, text, score } — for YES_NO questions this instead stores { followUpQuestions: [...] }
   order                  Int
   sectionId              String
   section                CustomSurveySection @relation(fields: [sectionId], references: [id], onDelete: Cascade)

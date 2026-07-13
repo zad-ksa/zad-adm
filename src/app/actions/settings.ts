@@ -28,7 +28,7 @@ export async function updateTimelineDisplayName(timelineType: string, displayNam
     update: { displayName },
     create: { timelineType, displayName },
   });
-  revalidatePath("/dashboard/services-overview");
+  revalidatePath("/main/services-overview");
   revalidatePath("/charity/[name]/services", "page");
   revalidatePath("/charity/[name]/strategy", "page");
   revalidatePath("/charity/[name]/governance", "page");

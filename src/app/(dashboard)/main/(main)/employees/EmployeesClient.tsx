@@ -1,0 +1,603 @@
+"use client";
+
+import { useState, useTransition } from "react";
+import { toggleEmployeeStatus, updateEmployee, updateEmployeeCharities } from "./actions";
+import {
+  UserCircle,
+  ShieldAlert,
+  Check,
+  X,
+  Loader2,
+  AlertTriangle,
+  User,
+  Phone,
+  Key
+} from "@/components/Icons";
+import { Edit, ShieldCheck, Building2, UserPlus, ArrowRight } from "lucide-react";
+import { AddEmployeeForm } from "@/components/AddEmployeeForm";
+import Link from "next/link";
+import { PERMISSION_GROUPS, ALL_PERMISSIONS, AUTO_ADMIN_ROLES, ROLE_LABELS } from "@/lib/permissions";
+
+const roleBadgeStyles: Record<string, string> = {
+  ADMIN: "bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300",
+  EXECUTIVE_DIRECTOR: "bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300",
+  GENERAL_MANAGER: "bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300",
+  ADMINISTRATIVE_SECRETARIAT: "bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300",
+  STRATEGY: "bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300",
+  FINANCE: "bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300",
+};
+
+interface Charity {
+  id: string;
+  name: string;
+}
+
+interface Employee {
+  id: string;
+  name: string;
+  phone: string;
+  role: string;
+  permissions: string[];
+  isActive: boolean;
+  createdAt: Date | string;
+  assignedCharities?: { charityId: string }[];
+}
+
+export function EmployeesClient({
+  employees: initialEmployees,
+  session,
+  allCharities = [],
+}: {
+  employees: Employee[];
+  session: any;
+  allCharities?: Charity[];
+}) {
+  const [employees, setEmployees] = useState<Employee[]>(initialEmployees);
+  const [editingEmployee, setEditingEmployee] = useState<Employee | null>(null);
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isPending, startTransition] = useTransition();
+
+  const [editName, setEditName] = useState("");
+  const [editPhone, setEditPhone] = useState("");
+  const [editPassword, setEditPassword] = useState("");
+  const [editRole, setEditRole] = useState("");
+  const [editPermissions, setEditPermissions] = useState<string[]>([]);
+  const [editCharityIds, setEditCharityIds] = useState<string[]>([]);
+  const [modalError, setModalError] = useState<string | null>(null);
+  const [modalSuccess, setModalSuccess] = useState<string | null>(null);
+
+  const handleToggleStatus = (id: string, currentStatus: boolean) => {
+    if (!confirm("هل أنت متأكد من رغبتك في تغيير حالة هذا الموظف؟")) return;
+
+    startTransition(async () => {
+      const res = await toggleEmployeeStatus(id, currentStatus);
+      if (res.success) {
+        setEmployees(prev => 
+          prev.map(emp => emp.id === id ? { ...emp, isActive: !currentStatus } : emp)
+        );
+      } else {
+        alert(res.error || "حدث خطأ أثناء تغيير الحالة");
+      }
+    });
+  };
+
+  const openEditModal = (emp: Employee) => {
+    setEditingEmployee(emp);
+    setEditName(emp.name);
+    setEditPhone(emp.phone);
+    setEditRole(emp.role);
+    setEditPermissions(emp.permissions);
+    setEditPassword("");
+    setEditCharityIds(emp.assignedCharities?.map((c) => c.charityId) ?? []);
+    setModalError(null);
+    setModalSuccess(null);
+  };
+
+  const handleCharityToggle = (charityId: string) => {
+    setEditCharityIds((prev) =>
+      prev.includes(charityId) ? prev.filter((id) => id !== charityId) : [...prev, charityId]
+    );
+  };
+
+  const handlePermissionToggle = (permId: string) => {
+    setEditPermissions(prev => 
+      prev.includes(permId) 
+        ? prev.filter(id => id !== permId) 
+        : [...prev, permId]
+    );
+  };
+
+  const handleSelectAllGroup = (groupPermissions: { id: string }[]) => {
+    const ids = groupPermissions.map(p => p.id);
+    const allSelected = ids.every(id => editPermissions.includes(id));
+    if (allSelected) {
+      setEditPermissions(prev => prev.filter(id => !ids.includes(id)));
+    } else {
+      setEditPermissions(prev => [...new Set([...prev, ...ids])]);
+    }
+  };
+
+  const handleEditSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingEmployee) return;
+
+    setModalError(null);
+    setModalSuccess(null);
+
+    startTransition(async () => {
+      const res = await updateEmployee(editingEmployee.id, {
+        name: editName,
+        phone: editPhone,
+        role: editRole,
+        permissions: editPermissions,
+        password: editPassword || undefined,
+      });
+
+      if (res.error) {
+        setModalError(res.error);
+        return;
+      }
+
+      // Save charity assignments for non-admin roles
+      if (!AUTO_ADMIN_ROLES.includes(editRole) && editRole !== "CHARITY_CLIENT") {
+        await updateEmployeeCharities(editingEmployee.id, editCharityIds);
+      }
+
+      setModalSuccess(res.success || "تم تحديث البيانات بنجاح");
+      setEmployees((prev) =>
+        prev.map((emp) =>
+          emp.id === editingEmployee.id
+            ? {
+                ...emp,
+                name: editName,
+                phone: editPhone,
+                role: editRole,
+                permissions: editPermissions,
+                assignedCharities: editCharityIds.map((id) => ({ charityId: id })),
+              }
+            : emp
+        )
+      );
+      setTimeout(() => {
+        setEditingEmployee(null);
+      }, 1000);
+    });
+  };
+
+  const isEditRoleAdmin = AUTO_ADMIN_ROLES.includes(editRole);
+
+  return (
+    <div className="space-y-8" dir="rtl">
+      {/* Page Header with Add Button */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-white dark:bg-slate-800 p-6 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm transition-colors">
+        <div className="flex items-start gap-4">
+          <Link href="/main/admin" className="p-2 bg-slate-50 dark:bg-slate-900 text-slate-500 hover:text-primary rounded-xl transition-colors mt-0.5 shadow-sm border border-slate-100 dark:border-slate-800">
+            <ArrowRight className="w-5 h-5" />
+          </Link>
+          <div>
+            <h1 className="text-2xl font-black text-slate-900 dark:text-slate-100 flex items-center gap-2.5">
+              <UserCircle className="w-7 h-7 text-primary" />
+              <span>إدارة الموظفين</span>
+            </h1>
+            <p className="text-slate-500 dark:text-slate-400 mt-1 text-sm font-medium">
+              إضافة موظفين جدد وإدارة صلاحياتهم وتخصيص الجمعيات لهم
+            </p>
+          </div>
+        </div>
+        <button
+          onClick={() => setIsAddModalOpen(true)}
+          className="inline-flex items-center justify-center gap-2 py-3 px-5 bg-primary hover:bg-primary/95 text-white rounded-xl shadow-md hover:shadow-lg font-bold text-sm transition-all hover:scale-[1.02] active:scale-[0.98] cursor-pointer shrink-0"
+        >
+          <UserPlus className="w-5 h-5" />
+          <span>إضافة موظف جديد</span>
+        </button>
+      </div>
+
+      {/* Employees Table */}
+      <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700 overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full text-right">
+            <thead className="bg-slate-50 dark:bg-slate-900/60 border-b border-slate-100 dark:border-slate-700">
+              <tr>
+                <th className="px-4 py-2.5 text-sm font-bold text-slate-500 dark:text-slate-400">الموظف</th>
+                <th className="px-4 py-2.5 text-sm font-bold text-slate-500 dark:text-slate-400">رقم الجوال</th>
+                <th className="px-4 py-2.5 text-sm font-bold text-slate-500 dark:text-slate-400">نوع الحساب</th>
+                <th className="px-4 py-2.5 text-sm font-bold text-slate-500 dark:text-slate-400">الحالة</th>
+                <th className="px-4 py-2.5 text-sm font-bold text-slate-500 dark:text-slate-400">الصلاحيات</th>
+                <th className="px-4 py-2.5 text-sm font-bold text-slate-500 dark:text-slate-400">الإجراءات</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100 dark:divide-slate-700/60">
+              {employees.map((emp) => (
+                <tr key={emp.id} className="hover:bg-slate-50 dark:hover:bg-slate-700/30 transition-colors">
+                  <td className="px-4 py-2.5">
+                    <div className="flex items-center gap-3">
+                      <UserCircle className="w-10 h-10 text-slate-300 dark:text-slate-600" />
+                      <div>
+                        <div className="font-bold text-slate-800 dark:text-slate-100">{emp.name}</div>
+                        <div className="text-[11px] text-slate-400 dark:text-slate-500 font-medium">
+                          تاريخ الإضافة: {new Date(emp.createdAt).toLocaleDateString("ar-SA")}
+                        </div>
+                      </div>
+                    </div>
+                  </td>
+                  <td className="px-4 py-2.5 text-sm text-slate-600 dark:text-slate-300 font-bold" dir="ltr">
+                    {emp.phone}
+                  </td>
+                  <td className="px-4 py-2.5">
+                    <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold ${
+                      roleBadgeStyles[emp.role] || "bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300"
+                    }`}>
+                      <ShieldAlert className="w-3.5 h-3.5" />
+                      {ROLE_LABELS[emp.role] || emp.role}
+                    </span>
+                  </td>
+                  <td className="px-4 py-2.5">
+                    <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold ${
+                      emp.isActive 
+                        ? "bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400" 
+                        : "bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400"
+                    }`}>
+                      {emp.isActive ? <Check className="w-3.5 h-3.5" /> : <X className="w-3.5 h-3.5" />}
+                      {emp.isActive ? "نشط" : "موقوف"}
+                    </span>
+                  </td>
+                  <td className="px-4 py-2.5">
+                    <div className="flex flex-wrap gap-1 max-w-[280px]">
+                      {AUTO_ADMIN_ROLES.includes(emp.role) ? (
+                        <span className="inline-block text-[10px] font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-900/30 px-2 py-0.5 rounded">
+                          جميع الصلاحيات (تلقائي)
+                        </span>
+                      ) : emp.permissions.length > 0 ? (
+                        emp.permissions.map(permId => {
+                          const label = ALL_PERMISSIONS.find(p => p.id === permId)?.label || permId;
+                          return (
+                            <span key={permId} className="inline-block text-[10px] font-bold text-indigo-700 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-900/30 px-2 py-0.5 rounded">
+                              {label}
+                            </span>
+                          );
+                        })
+                      ) : (
+                        <span className="text-xs text-slate-400 dark:text-slate-500 font-medium">لا توجد صلاحيات مخصصة</span>
+                      )}
+                    </div>
+                  </td>
+                  <td className="px-4 py-2.5">
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => openEditModal(emp)}
+                        disabled={isPending || emp.role === "ADMIN" && session.role !== "ADMIN"}
+                        className="p-1.5 text-slate-500 dark:text-slate-400 hover:text-primary dark:hover:text-primary hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+                        title="تعديل الموظف وصلاحياته"
+                      >
+                        <Edit className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={() => handleToggleStatus(emp.id, emp.isActive)}
+                        disabled={isPending || emp.id === session.id || emp.role === "ADMIN"}
+                        className={`px-2 py-1 text-xs font-bold rounded-lg cursor-pointer transition-colors disabled:opacity-40 disabled:cursor-not-allowed ${
+                          emp.isActive 
+                            ? "text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20" 
+                            : "text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/20"
+                        }`}
+                      >
+                        {emp.isActive ? "تعطيل" : "تفعيل"}
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+              {employees.length === 0 && (
+                <tr>
+                  <td colSpan={6} className="px-6 py-8 text-center text-slate-400 dark:text-slate-500 font-medium text-sm">
+                    لا يوجد موظفين حالياً
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* Edit Employee & Permissions Modal */}
+      {editingEmployee && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          {/* Backdrop */}
+          <div 
+            className="absolute inset-0 bg-slate-950/60 backdrop-blur-md"
+            onClick={() => { if (!isPending) setEditingEmployee(null); }}
+          />
+          
+          <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-2xl w-full max-w-lg overflow-hidden relative z-10 animate-in fade-in zoom-in-95 duration-200 max-h-[90vh] flex flex-col" dir="rtl">
+            {/* Modal Header */}
+            <div className="px-4 py-3 border-b border-slate-100 dark:border-slate-700 flex items-center justify-between shrink-0">
+              <h3 className="text-sm font-bold text-slate-800 dark:text-slate-100">تعديل بيانات وصلاحيات الموظف</h3>
+              <button 
+                onClick={() => setEditingEmployee(null)} 
+                disabled={isPending}
+                className="text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 p-2 rounded-lg transition-colors cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Modal Form Body */}
+            <form onSubmit={handleEditSubmit} className="flex-1 overflow-y-auto p-4 space-y-4">
+              {/* Error Alert */}
+              {modalError && (
+                <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800/50 p-4 rounded-xl flex items-start text-sm text-red-700 dark:text-red-400 font-bold gap-2">
+                  <AlertTriangle className="w-5 h-5 text-red-500 shrink-0 mt-0.5" />
+                  <span>{modalError}</span>
+                </div>
+              )}
+
+              {/* Success Alert */}
+              {modalSuccess && (
+                <div className="bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800/50 p-4 rounded-xl flex items-start text-sm text-emerald-700 dark:text-emerald-300 font-bold gap-2">
+                  <Check className="w-5 h-5 text-emerald-500 shrink-0 mt-0.5" />
+                  <span>{modalSuccess}</span>
+                </div>
+              )}
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {/* Name */}
+                <div>
+                  <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-2">اسم الموظف</label>
+                  <div className="relative">
+                    <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                      <User className="h-4 w-4 text-slate-400 dark:text-slate-500" />
+                    </div>
+                    <input 
+                      type="text" 
+                      required 
+                      value={editName}
+                      onChange={(e) => setEditName(e.target.value)}
+                      disabled={isPending}
+                      className="appearance-none block w-full pr-10 pl-3 py-2.5 border border-slate-200 dark:border-slate-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary/50 text-sm font-bold text-slate-800 dark:text-slate-100 bg-white dark:bg-slate-900/50 transition-colors" 
+                    />
+                  </div>
+                </div>
+
+                {/* Phone */}
+                <div>
+                  <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-2">رقم الجوال</label>
+                  <div className="relative">
+                    <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                      <Phone className="h-4 w-4 text-slate-400 dark:text-slate-500" />
+                    </div>
+                    <input 
+                      type="text" 
+                      required 
+                      value={editPhone}
+                      onChange={(e) => setEditPhone(e.target.value)}
+                      disabled={isPending}
+                      dir="ltr"
+                      className="appearance-none block w-full pr-10 pl-3 py-2.5 border border-slate-200 dark:border-slate-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary/50 text-sm font-bold text-slate-800 dark:text-slate-100 bg-white dark:bg-slate-900/50 text-right transition-colors" 
+                    />
+                  </div>
+                </div>
+
+                {/* Role */}
+                <div>
+                  <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-2">نوع الحساب</label>
+                  <div className="relative">
+                    <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                      <ShieldCheck className="h-4 w-4 text-slate-400 dark:text-slate-500" />
+                    </div>
+                    <select 
+                      value={editRole}
+                      onChange={(e) => setEditRole(e.target.value)}
+                      disabled={isPending || editingEmployee.role === "ADMIN"}
+                      className="appearance-none block w-full pr-10 pl-3 py-2.5 border border-slate-200 dark:border-slate-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary/50 text-sm font-bold text-slate-800 dark:text-slate-100 bg-white dark:bg-slate-900/50 cursor-pointer transition-colors"
+                    >
+                      <option value="GENERAL_MANAGER">المدير العام</option>
+                      <option value="EXECUTIVE_DIRECTOR">الإدارة التنفيذية</option>
+                      <option value="ADMINISTRATIVE_SECRETARIAT">مساعد المدير</option>
+                      <option value="STRATEGY">الاستراتيجية</option>
+                      <option value="FINANCE">المالية</option>
+                      {editingEmployee.role === "ADMIN" && <option value="ADMIN">مدير النظام</option>}
+                    </select>
+                  </div>
+                </div>
+
+                {/* Password */}
+                <div>
+                  <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-2">كلمة المرور الجديدة (اختياري)</label>
+                  <div className="relative">
+                    <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                      <Key className="h-4 w-4 text-slate-400 dark:text-slate-500" />
+                    </div>
+                    <input 
+                      type="text" 
+                      value={editPassword}
+                      onChange={(e) => setEditPassword(e.target.value)}
+                      disabled={isPending}
+                      placeholder="اتركها فارغة لعدم التغيير"
+                      className="placeholder:text-slate-300 dark:placeholder:text-slate-600 appearance-none block w-full pr-10 pl-3 py-2.5 border border-slate-200 dark:border-slate-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary/50 text-sm font-medium text-slate-800 dark:text-slate-100 bg-white dark:bg-slate-900/50 text-right transition-colors" 
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Permissions Section */}
+              <div className="pt-4 border-t border-slate-100 dark:border-slate-700">
+                <h4 className="text-sm font-bold text-slate-700 dark:text-slate-200 mb-3">الصلاحيات المخصصة</h4>
+                
+                {isEditRoleAdmin && (
+                  <div className="bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800/50 p-3 rounded-xl text-xs text-emerald-700 dark:text-emerald-300 font-bold mb-4 flex items-center gap-2">
+                    <Check className="w-4 h-4 shrink-0" />
+                    هذا الدور يملك جميع الصلاحيات تلقائياً
+                  </div>
+                )}
+
+                <div className="space-y-4">
+                  {PERMISSION_GROUPS.map((group) => {
+                    const allGroupSelected = group.permissions.every(p => editPermissions.includes(p.id));
+                    return (
+                      <div key={group.title} className={isEditRoleAdmin ? "opacity-50 pointer-events-none" : ""}>
+                        <div className="flex items-center justify-between mb-2">
+                          <h5 className="text-xs font-bold text-slate-500 dark:text-slate-400 flex items-center gap-2">
+                            <span className="w-2 h-2 rounded-full bg-primary/60"></span>
+                            {group.title}
+                          </h5>
+                          <button
+                            type="button"
+                            onClick={() => handleSelectAllGroup(group.permissions)}
+                            disabled={isPending || isEditRoleAdmin}
+                            className="text-[10px] font-bold text-primary hover:text-primary/80 transition-colors cursor-pointer disabled:opacity-50"
+                          >
+                            {allGroupSelected ? "إلغاء الكل" : "تحديد الكل"}
+                          </button>
+                        </div>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                          {group.permissions.map((perm) => {
+                            const isChecked = isEditRoleAdmin || editPermissions.includes(perm.id);
+                            return (
+                              <button
+                                key={perm.id}
+                                type="button"
+                                onClick={() => handlePermissionToggle(perm.id)}
+                                disabled={isPending || isEditRoleAdmin}
+                                className={`flex items-center gap-3 p-2.5 rounded-xl border text-right transition-all cursor-pointer ${
+                                  isChecked 
+                                    ? "border-primary bg-primary/5 dark:bg-primary/10 text-primary dark:text-primary" 
+                                    : "border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700/50 text-slate-600 dark:text-slate-300"
+                                }`}
+                              >
+                                <div className={`w-4 h-4 rounded border flex items-center justify-center shrink-0 ${
+                                  isChecked 
+                                    ? "bg-primary border-primary text-white" 
+                                    : "border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800"
+                                }`}>
+                                  {isChecked && <Check className="w-3 h-3 text-white" />}
+                                </div>
+                                <span className="text-xs font-bold">{perm.label}</span>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Charity Assignment Section — shown only for non-admin roles */}
+              {!AUTO_ADMIN_ROLES.includes(editRole) && editRole !== "CHARITY_CLIENT" && allCharities.length > 0 && (
+                <div className="pt-4 border-t border-slate-100 dark:border-slate-700">
+                  <div className="flex items-center gap-2 mb-3">
+                    <Building2 className="w-4 h-4 text-slate-500 dark:text-slate-400" />
+                    <h4 className="text-sm font-bold text-slate-700 dark:text-slate-200">الجمعيات المخصصة</h4>
+                    <span className="text-[11px] text-slate-400 dark:text-slate-500 font-medium mr-auto">
+                      {editCharityIds.length} / {allCharities.length} محددة
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (editCharityIds.length === allCharities.length) {
+                          setEditCharityIds([]);
+                        } else {
+                          setEditCharityIds(allCharities.map(c => c.id));
+                        }
+                      }}
+                      disabled={isPending}
+                      className="text-[10px] font-bold text-primary hover:text-primary/80 transition-colors cursor-pointer mr-2 disabled:opacity-50"
+                    >
+                      {editCharityIds.length === allCharities.length ? "إلغاء الكل" : "تحديد الكل"}
+                    </button>
+                  </div>
+                  <div className="max-h-44 overflow-y-auto rounded-xl border border-slate-200 dark:border-slate-700 divide-y divide-slate-100 dark:divide-slate-700/60">
+                    {allCharities.map((charity) => {
+                      const isChecked = editCharityIds.includes(charity.id);
+                      return (
+                        <button
+                          key={charity.id}
+                          type="button"
+                          onClick={() => handleCharityToggle(charity.id)}
+                          disabled={isPending}
+                          className={`w-full flex items-center gap-3 px-3 py-2.5 text-right transition-colors cursor-pointer ${
+                            isChecked
+                              ? "bg-primary/5 dark:bg-primary/10 text-primary dark:text-primary"
+                              : "hover:bg-slate-50 dark:hover:bg-slate-700/40 text-slate-600 dark:text-slate-300"
+                          }`}
+                        >
+                          <div className={`w-4 h-4 rounded border flex items-center justify-center shrink-0 ${
+                            isChecked
+                              ? "bg-primary border-primary"
+                              : "border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800"
+                          }`}>
+                            {isChecked && <Check className="w-3 h-3 text-white" />}
+                          </div>
+                          <span className="text-xs font-bold">{charity.name}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                  {editCharityIds.length === 0 && (
+                    <p className="mt-2 text-[11px] text-amber-600 dark:text-amber-400 font-medium flex items-center gap-1.5">
+                      <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
+                      بدون تخصيص، لن يتمكن الموظف من الوصول إلى أي جمعية
+                    </p>
+                  )}
+                </div>
+              )}
+
+              {/* Footer Actions */}
+              <div className="pt-6 border-t border-slate-100 dark:border-slate-700 flex items-center justify-end gap-3 shrink-0">
+                <button
+                  type="button"
+                  onClick={() => setEditingEmployee(null)}
+                  disabled={isPending}
+                  className="px-5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700/50 hover:text-slate-700 dark:hover:text-slate-200 font-bold transition-all text-xs cursor-pointer disabled:opacity-50"
+                >
+                  إلغاء
+                </button>
+                
+                <button
+                  type="submit"
+                  disabled={isPending}
+                  className="px-6 py-2.5 rounded-xl bg-primary text-white hover:bg-primary/90 font-bold transition-all text-xs flex items-center gap-2 cursor-pointer disabled:opacity-75 disabled:cursor-not-allowed shadow-sm hover:shadow"
+                >
+                  {isPending && <Loader2 className="w-4 h-4 animate-spin" />}
+                  <span>حفظ التعديلات</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Add Employee Modal */}
+      {isAddModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 animate-in fade-in duration-200">
+          {/* Backdrop */}
+          <div 
+            className="absolute inset-0 bg-slate-950/60 backdrop-blur-md"
+            onClick={() => setIsAddModalOpen(false)}
+          />
+          
+          <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-2xl w-full max-w-4xl overflow-hidden relative z-10 animate-in fade-in zoom-in-95 duration-200 max-h-[90vh] flex flex-col" dir="rtl">
+            {/* Modal Header */}
+            <div className="px-5 py-4 border-b border-slate-100 dark:border-slate-700 flex items-center justify-between shrink-0 bg-slate-50/50 dark:bg-slate-900/20">
+              <h3 className="text-sm font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
+                <UserPlus className="w-5 h-5 text-primary" />
+                <span>إضافة موظف جديد</span>
+              </h3>
+              <button 
+                onClick={() => setIsAddModalOpen(false)} 
+                className="text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 p-2 rounded-lg transition-colors cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Modal Form Body */}
+            <div className="flex-1 overflow-y-auto p-5">
+              <AddEmployeeForm allCharities={allCharities} onSuccess={() => setIsAddModalOpen(false)} />
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}

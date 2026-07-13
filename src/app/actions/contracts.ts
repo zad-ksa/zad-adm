@@ -20,7 +20,7 @@ export async function addInstallment(data: {
       } as any,
     });
 
-    revalidatePath("/dashboard/contracts");
+    revalidatePath("/main/contracts");
     return { success: "تمت إضافة القسط بنجاح", installment };
   } catch (error: any) {
     console.error("Error adding installment:", error);
@@ -46,7 +46,7 @@ export async function updateInstallment(data: {
       } as any,
     });
 
-    revalidatePath("/dashboard/contracts");
+    revalidatePath("/main/contracts");
     return { success: "تم تحديث القسط بنجاح", installment };
   } catch (error: any) {
     console.error("Error updating installment:", error);
@@ -60,7 +60,7 @@ export async function deleteInstallment(id: string) {
       where: { id },
     });
 
-    revalidatePath("/dashboard/contracts");
+    revalidatePath("/main/contracts");
     return { success: "تم حذف القسط بنجاح" };
   } catch (error: any) {
     console.error("Error deleting installment:", error);
@@ -129,7 +129,7 @@ export async function toggleInstallmentPaid(id: string, isPaid: boolean) {
 
     await prisma.$transaction(queries);
 
-    revalidatePath("/dashboard/contracts");
+    revalidatePath("/main/contracts");
     revalidatePath(`/charity/${encodeURIComponent(installment.charity.name)}/finance`);
     return { success: isPaid ? "تم تسجيل سداد القسط" : "تم إلغاء سداد القسط", installment: { ...installment, isPaid, paidDate } };
   } catch (error: any) {
@@ -151,7 +151,7 @@ export async function processFirstGrant(charityId: string, grantDate: Date) {
       },
     });
 
-    revalidatePath("/dashboard/contracts");
+    revalidatePath("/main/contracts");
     return { success: `تم تحديد تواريخ الاستحقاق لعدد ${installments.count} قسط بناءً على تاريخ أول منحة.` };
   } catch (error: any) {
     console.error("Error processing first grant:", error);
@@ -180,7 +180,7 @@ export async function batchAddInstallments(data: {
       data: installmentsData as any[],
     });
 
-    revalidatePath("/dashboard/contracts");
+    revalidatePath("/main/contracts");
     return { success: `تم إنشاء ${data.count} أقساط مقسمة بنجاح` };
   } catch (error: any) {
     console.error("Error batch adding installments:", error);

@@ -58,7 +58,7 @@ export async function createTaskAction(data: {
       },
     });
 
-    revalidatePath("/dashboard/tasks");
+    revalidatePath("/main/tasks");
     return { success: true, task };
   } catch (error: any) {
     return { error: error.message || "حدث خطأ أثناء إضافة المهمة" };
@@ -98,7 +98,7 @@ export async function deleteTaskAction(taskId: string) {
       where: { id: taskId },
     });
 
-    revalidatePath("/dashboard/tasks");
+    revalidatePath("/main/tasks");
     return { success: true };
   } catch (error: any) {
     return { error: error.message || "حدث خطأ أثناء حذف المهمة" };
@@ -130,7 +130,7 @@ export async function reassignTaskAction(taskId: string, newEmployeeId: string) 
       },
     });
 
-    revalidatePath("/dashboard/tasks");
+    revalidatePath("/main/tasks");
     return { success: true };
   } catch (error: any) {
     return { error: error.message || "حدث خطأ أثناء نقل المهمة" };
@@ -180,7 +180,7 @@ export async function toggleTaskCompletionAction(
       },
     });
 
-    revalidatePath("/dashboard/tasks");
+    revalidatePath("/main/tasks");
     return { success: true };
   } catch (error: any) {
     return { error: error.message || "حدث خطأ أثناء تحديث حالة المهمة" };
@@ -237,9 +237,9 @@ export async function createAchievementAction(data: {
       },
     });
 
-    revalidatePath("/dashboard/tasks");
-    revalidatePath("/dashboard/news");
-    revalidatePath("/dashboard");
+    revalidatePath("/main/tasks");
+    revalidatePath("/main/news");
+    revalidatePath("/main");
     return { success: true, achievement };
   } catch (error: any) {
     return { error: error.message || "حدث خطأ أثناء إضافة المنجز" };
@@ -278,7 +278,7 @@ export async function deleteAchievementAction(achievementId: string) {
       where: { id: achievementId },
     });
 
-    revalidatePath("/dashboard/tasks");
+    revalidatePath("/main/tasks");
     return { success: true };
   } catch (error: any) {
     return { error: error.message || "حدث خطأ أثناء حذف المنجز" };
@@ -317,7 +317,7 @@ export async function updateTaskTitleAction(taskId: string, newTitle: string) {
       },
     });
 
-    revalidatePath("/dashboard/tasks");
+    revalidatePath("/main/tasks");
     return { success: true };
   } catch (error: any) {
     return { error: error.message || "حدث خطأ أثناء تعديل مسمى المهمة" };
@@ -351,7 +351,7 @@ export async function updateTaskPriorityAction(taskId: string, priority: number)
       },
     });
 
-    revalidatePath("/dashboard/tasks");
+    revalidatePath("/main/tasks");
     return { success: true };
   } catch (error: any) {
     return { error: error.message || "حدث خطأ أثناء تعديل أولوية المهمة" };
@@ -397,9 +397,9 @@ export async function createNewsAction(data: {
       },
     });
 
-    revalidatePath("/dashboard/tasks");
-    revalidatePath("/dashboard/news");
-    revalidatePath("/dashboard");
+    revalidatePath("/main/tasks");
+    revalidatePath("/main/news");
+    revalidatePath("/main");
     
     return { success: true, newsItem };
   } catch (error: any) {
@@ -428,9 +428,9 @@ export async function deleteNewsAction(newsId: string) {
       where: { id: newsId },
     });
 
-    revalidatePath("/dashboard/tasks");
-    revalidatePath("/dashboard/news");
-    revalidatePath("/dashboard");
+    revalidatePath("/main/tasks");
+    revalidatePath("/main/news");
+    revalidatePath("/main");
     
     return { success: true };
   } catch (error: any) {
@@ -465,7 +465,7 @@ export async function updateTaskStatusAction(taskId: string, status: string) {
       },
     });
 
-    revalidatePath("/dashboard/tasks");
+    revalidatePath("/main/tasks");
     return { success: true };
   } catch (error: any) {
     return { error: error.message || "حدث خطأ أثناء تعديل حالة المهمة" };
@@ -490,7 +490,7 @@ export async function updateTaskCharityAction(taskId: string, charityId: string 
       },
     });
 
-    revalidatePath("/dashboard/tasks");
+    revalidatePath("/main/tasks");
     return { success: true };
   } catch (error: any) {
     return { error: error.message || "حدث خطأ أثناء تعديل جمعية المهمة" };
@@ -514,7 +514,7 @@ export async function addTaskUpdateAction(taskId: string, content: string) {
       data: { taskId, authorId: user.id, content: content.trim() },
     });
 
-    revalidatePath("/dashboard/tasks");
+    revalidatePath("/main/tasks");
     return { success: true, update };
   } catch (error: any) {
     return { error: error.message || "حدث خطأ أثناء إضافة التحديث" };
@@ -534,7 +534,7 @@ export async function deleteTaskUpdateAction(updateId: string) {
     }
 
     await prisma.taskUpdate.delete({ where: { id: updateId } });
-    revalidatePath("/dashboard/tasks");
+    revalidatePath("/main/tasks");
     return { success: true };
   } catch (error: any) {
     return { error: error.message || "حدث خطأ أثناء حذف التحديث" };

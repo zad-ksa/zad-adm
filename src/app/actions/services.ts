@@ -15,13 +15,13 @@ export async function getAllServiceTemplates() {
 
   return await (prisma as any).serviceTemplate.findMany({
     include: {
-      stages: { orderBy: { order: 'asc' } }
+      stages: { orderBy: { order: 'asc' } },
     },
     orderBy: { createdAt: 'desc' }
   });
 }
 
-export async function createServiceTemplate(name: string, department: string | null) {
+export async function createServiceTemplate(name: string, department: string | null, charityIds?: string[]) {
   const session = await getSession();
   if (!session) throw new Error("UNAUTHORIZED");
   if (!hasPermission(session.role, session.permissions, "manage_charity_settings") && !hasPermission(session.role, session.permissions, "manage_charities")) {
@@ -32,9 +32,12 @@ export async function createServiceTemplate(name: string, department: string | n
     data: { name, department }
   });
 
-  const charities = await prisma.charity.findMany({ select: { id: true } });
-  if (charities.length > 0) {
-    const servicesToCreate = charities.map(c => ({
+  const targetCharities = charityIds && charityIds.length > 0
+    ? await prisma.charity.findMany({ where: { id: { in: charityIds } }, select: { id: true } })
+    : await prisma.charity.findMany({ select: { id: true } });
+
+  if (targetCharities.length > 0) {
+    const servicesToCreate = targetCharities.map(c => ({
       name,
       department,
       charityId: c.id,
@@ -42,7 +45,7 @@ export async function createServiceTemplate(name: string, department: string | n
     }));
     await prisma.service.createMany({ data: servicesToCreate });
   }
-  revalidatePath('/dashboard/manage-services');
+  revalidatePath('/main/manage-services');
   return template;
 }
 
@@ -63,7 +66,7 @@ export async function updateServiceTemplate(id: string, name: string, department
     data: { name, department }
   });
   
-  revalidatePath('/dashboard/manage-services');
+  revalidatePath('/main/manage-services');
   return template;
 }
 
@@ -74,12 +77,122 @@ export async function deleteServiceTemplate(id: string) {
     throw new Error("UNAUTHORIZED");
   }
 
-  // Delete linked services first (so we don't lose the reference due to SetNull)
   await prisma.service.deleteMany({ where: { templateId: id } });
   const template = await (prisma as any).serviceTemplate.delete({ where: { id } });
   
-  revalidatePath('/dashboard/manage-services');
+  revalidatePath('/main/manage-services');
   return template;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// دوال إدارة الخدمات — تعمل مباشرة مع جدول Service
+// ═══════════════════════════════════════════════════════════════
+
+// جلب كل الخدمات مجمّعة حسب الاسم مع عدد الجمعيات
+export async function getServicesForManagement() {
+  const session = await getSession();
+  if (!session) throw new Error("UNAUTHORIZED");
+  if (!hasPermission(session.role, session.permissions, "manage_charity_settings") && !hasPermission(session.role, session.permissions, "manage_charities")) {
+    throw new Error("UNAUTHORIZED");
+  }
+
+  const allServices = await prisma.service.findMany({
+    select: {
+      id: true,
+      name: true,
+      department: true,
+      charity: { select: { id: true, name: true } }
+    },
+    orderBy: { createdAt: 'desc' }
+  });
+
+  // تجميع حسب الاسم
+  const grouped = new Map<string, {
+    name: string;
+    department: string | null;
+    charities: { id: string; name: string }[];
+    serviceIds: string[];
+  }>();
+
+  for (const svc of allServices) {
+    if (!grouped.has(svc.name)) {
+      grouped.set(svc.name, {
+        name: svc.name,
+        department: svc.department,
+        charities: [],
+        serviceIds: [],
+      });
+    }
+    const group = grouped.get(svc.name)!;
+    // تجنب تكرار نفس الجمعية
+    if (!group.charities.some(c => c.id === svc.charity.id)) {
+      group.charities.push(svc.charity);
+    }
+    group.serviceIds.push(svc.id);
+  }
+
+  return Array.from(grouped.values()).map(g => ({
+    name: g.name,
+    department: g.department,
+    charityCount: g.charities.length,
+    charities: g.charities,
+    serviceIds: g.serviceIds,
+  }));
+}
+
+// إضافة خدمة جديدة لجمعيات محددة
+export async function addServiceToCharities(name: string, department: string | null, charityIds: string[]) {
+  const session = await getSession();
+  if (!session) throw new Error("UNAUTHORIZED");
+  if (!hasPermission(session.role, session.permissions, "manage_charity_settings") && !hasPermission(session.role, session.permissions, "manage_charities")) {
+    throw new Error("UNAUTHORIZED");
+  }
+
+  if (!charityIds || charityIds.length === 0) {
+    throw new Error("يرجى تحديد جمعية واحدة على الأقل");
+  }
+
+  const servicesToCreate = charityIds.map(cId => ({
+    name: name.trim(),
+    department,
+    charityId: cId,
+  }));
+
+  await prisma.service.createMany({ data: servicesToCreate });
+  
+  revalidatePath('/main/manage-services');
+  return { success: true, count: charityIds.length };
+}
+
+// تعديل اسم خدمة عند كل الجمعيات
+export async function renameServiceGlobally(oldName: string, newName: string, newDepartment: string | null) {
+  const session = await getSession();
+  if (!session) throw new Error("UNAUTHORIZED");
+  if (!hasPermission(session.role, session.permissions, "manage_charity_settings") && !hasPermission(session.role, session.permissions, "manage_charities")) {
+    throw new Error("UNAUTHORIZED");
+  }
+
+  const result = await prisma.service.updateMany({
+    where: { name: oldName },
+    data: { name: newName.trim(), department: newDepartment }
+  });
+
+  revalidatePath('/main/manage-services');
+  return { success: true, updatedCount: result.count };
+}
+
+// حذف خدمة من كل الجمعيات
+export async function deleteServiceGlobally(name: string) {
+  const session = await getSession();
+  if (!session) throw new Error("UNAUTHORIZED");
+  if (!hasPermission(session.role, session.permissions, "manage_charity_settings") && !hasPermission(session.role, session.permissions, "manage_charities")) {
+    throw new Error("UNAUTHORIZED");
+  }
+
+  const result = await prisma.service.deleteMany({ where: { name } });
+
+  revalidatePath('/main/manage-services');
+  return { success: true, deletedCount: result.count };
 }
 
 export async function getCharitiesForSelect() {
@@ -686,7 +799,7 @@ export async function assignGanttDates(
     });
   }
 
-  revalidatePath('/dashboard');
+  revalidatePath('/main');
   return { success: true };
 }
 
@@ -715,7 +828,7 @@ export async function toggleGanttItemCompletion(type: 'stage'|'step', id: string
     await syncServiceProgress(serviceId, { type: type === 'stage' ? 'STAGE' : 'STEP', id, isDone });
   }
 
-  revalidatePath('/dashboard');
+  revalidatePath('/main');
   return { success: true };
 }
 
@@ -819,6 +932,6 @@ export async function broadcastGanttWeek(
       }
     }
   }
-  revalidatePath('/dashboard');
+  revalidatePath('/main');
   return { success: true };
 }

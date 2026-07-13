@@ -112,39 +112,39 @@ export default function EmployeeSidebar({
   const can = (p: string) => hasPermission(role, perms, p);
 
   navItems = [
-    { label: "الرئيسية", href: "/dashboard", icon: LayoutDashboard },
-    { label: "الجمعيات", href: "/dashboard/charities", icon: Building2 },
+    { label: "الرئيسية", href: "/main", icon: LayoutDashboard },
+    { label: "الجمعيات", href: "/main/charities", icon: Building2 },
   ];
 
   if (can("view_services_overview")) {
-    navItems.push({ label: "عرض الخدمات", href: "/dashboard/services-overview", icon: LayoutGrid });
+    navItems.push({ label: "عرض الخدمات", href: "/main/services-overview", icon: LayoutGrid });
   }
   if (can("manage_contracts")) {
-    navItems.push({ label: "العقود", href: "/dashboard/contracts", icon: FileSignature });
+    navItems.push({ label: "العقود", href: "/main/contracts", icon: FileSignature });
   }
   if (can("manage_surveys")) {
-    navItems.push({ label: "الاستبيانات", href: "/dashboard/custom-surveys", icon: ClipboardList });
+    navItems.push({ label: "الاستبيانات", href: "/main/custom-surveys", icon: ClipboardList });
   }
   if (can("manage_communication")) {
-    navItems.push({ label: "التواصل", href: "/dashboard/communication", icon: MessageSquare });
+    navItems.push({ label: "التواصل", href: "/main/communication", icon: MessageSquare });
   }
   if (can("manage_news")) {
-    navItems.push({ label: "الأخبار والإنجازات", href: "/dashboard/news", icon: Newspaper });
+    navItems.push({ label: "الأخبار والإنجازات", href: "/main/news", icon: Newspaper });
   }
   if (can("manage_meetings")) {
-    navItems.push({ label: "محاضر الاجتماعات", href: "/dashboard/meetings", icon: FileText });
+    navItems.push({ label: "محاضر الاجتماعات", href: "/main/meetings", icon: FileText });
   }
   if (can("manage_tasks")) {
     const isManager = perms.includes("developer_mode") ||
       hasPermission(role, perms, "manage_requests");
-    navItems.push({ label: isManager ? "المهام والمنجزات" : "مهامي", href: "/dashboard/tasks", icon: CheckSquare });
+    navItems.push({ label: isManager ? "المهام والمنجزات" : "مهامي", href: "/main/tasks", icon: CheckSquare });
   }
-  navItems.push({ label: "الطلبات", href: "/dashboard/requests", icon: Send, badge: unreadRequests });
+  navItems.push({ label: "الطلبات", href: "/main/requests", icon: Send, badge: unreadRequests });
   if (can("manage_employees") || can("manage_charities") || can("manage_charity_settings")) {
-    navItems.push({ label: "لوحة التحكم", href: "/dashboard/admin", icon: Settings2 });
+    navItems.push({ label: "لوحة التحكم", href: "/main/admin", icon: Settings2 });
   }
   if (can("manage_workflow")) {
-    navItems.push({ label: "سلاسل الاعتماد", href: "/dashboard/workflow-settings", icon: GitBranch });
+    navItems.push({ label: "سلاسل الاعتماد", href: "/main/workflow-settings", icon: GitBranch });
   }
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -331,7 +331,7 @@ export default function EmployeeSidebar({
                 )}
                 <div className={`space-y-0.5 overflow-hidden transition-all duration-300 ease-in-out ${isOpen && isCollapsed ? 'max-h-0 opacity-0' : 'max-h-[500px] opacity-100'}`}>
                   {items.map((item) => {
-                    const isActive = pathname.startsWith(item.href) && (item.href !== "/dashboard" || pathname === "/dashboard");
+                    const isActive = pathname.startsWith(item.href) && (item.href !== "/main" || pathname === "/main");
                     return <NavItem key={item.href} item={item} isActive={isActive} isOpen={isOpen} />;
                   })}
                 </div>
@@ -370,8 +370,8 @@ export default function EmployeeSidebar({
                 <div className={`space-y-0.5 overflow-hidden transition-all duration-300 ease-in-out ${isOpen && isServicesCollapsed ? 'max-h-0 opacity-0' : 'max-h-[1500px] opacity-100'}`}>
                   {isOpen && (
                     <Link
-                      href="/dashboard/services-overview"
-                      className={`flex items-center w-full px-2.5 py-1.5 rounded-lg text-[11px] font-bold transition-all group mt-1 ${pathname === "/dashboard/services-overview" ? "bg-primary/10 text-primary" : "text-slate-500 hover:bg-primary/5 hover:text-primary"}`}
+                      href="/main/services-overview"
+                      className={`flex items-center w-full px-2.5 py-1.5 rounded-lg text-[11px] font-bold transition-all group mt-1 ${pathname === "/main/services-overview" ? "bg-primary/10 text-primary" : "text-slate-500 hover:bg-primary/5 hover:text-primary"}`}
                     >
                       <LayoutGrid className="w-3.5 h-3.5 ml-2" />
                       <span>الكل</span>

@@ -33,7 +33,7 @@ export default function Error({
             إعادة المحاولة
           </button>
           <a
-            href="/dashboard"
+            href="/main"
             className="w-full inline-flex justify-center items-center px-4 py-3 border border-slate-200 text-sm font-bold rounded-xl text-slate-700 bg-white hover:bg-slate-50 focus:outline-none focus:ring-4 focus:ring-slate-100 transition-all shadow-sm"
           >
             العودة للرئيسية

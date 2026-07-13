@@ -74,7 +74,7 @@ export async function deleteCharityClientAccount(accountId: string) {
       where: { id: accountId }
     });
 
-    revalidatePath("/dashboard/charity-accounts");
+    revalidatePath("/main/charity-accounts");
 
     return { success: true };
   } catch (error: any) {

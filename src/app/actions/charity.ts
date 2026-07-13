@@ -80,7 +80,7 @@ export async function addCharity(data: { name: string; establishmentDate?: strin
       await prisma.service.createMany({ data: servicesToCreate });
     }
 
-    revalidatePath("/dashboard");
+    revalidatePath("/main");
     return { success: true, data: charity };
   } catch (error: any) {
     console.error("Error adding charity:", error);
@@ -202,7 +202,7 @@ export async function updateCharity(
       });
     }
 
-    revalidatePath("/dashboard");
+    revalidatePath("/main");
     revalidatePath(`/charity/${encodeURIComponent(oldName)}`);
     revalidatePath(`/charity/${encodeURIComponent(trimmedName)}`);
 
@@ -268,7 +268,7 @@ export async function addFinancialTransactionAction(
       })
     ]);
 
-    revalidatePath("/dashboard");
+    revalidatePath("/main");
     revalidatePath(`/charity/${encodeURIComponent(charity.name)}`);
     revalidatePath(`/charity/${encodeURIComponent(charity.name)}/finance`);
 
@@ -313,7 +313,7 @@ export async function updateTimelineConfig(
       data: dataToUpdate
     });
 
-    revalidatePath("/dashboard");
+    revalidatePath("/main");
     revalidatePath(`/charity/${encodeURIComponent(charity.name)}/services`);
     revalidatePath(`/charity/${encodeURIComponent(charity.name)}/strategy`);
     revalidatePath(`/charity/${encodeURIComponent(charity.name)}/governance`);
@@ -338,8 +338,8 @@ export async function updateCharityLogo(charityId: string, logoUrl: string | nul
       data: { logoUrl },
       select: { name: true },
     });
-    revalidatePath("/dashboard");
-    revalidatePath("/dashboard/charities");
+    revalidatePath("/main");
+    revalidatePath("/main/charities");
     revalidatePath(`/charity/${encodeURIComponent(charity.name)}`);
     return { success: true };
   } catch (error: any) {

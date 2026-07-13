@@ -54,7 +54,7 @@ export async function createMeeting(data: {
       createdById: session.id,
     },
   });
-  revalidatePath("/dashboard/meetings");
+  revalidatePath("/main/meetings");
   return { success: true, id: meeting.id };
 }
 
@@ -93,7 +93,7 @@ export async function updateMeeting(
     where: { id },
     data: { ...rest, ...(date ? { date: new Date(date) } : {}) },
   });
-  revalidatePath("/dashboard/meetings");
+  revalidatePath("/main/meetings");
   return { success: true };
 }
 
@@ -130,7 +130,7 @@ export async function deleteMeeting(id: string) {
   if (meeting.createdById !== session.id && !isTier1) throw new Error("غير مصرح");
 
   await prisma.meeting.delete({ where: { id } });
-  revalidatePath("/dashboard/meetings");
+  revalidatePath("/main/meetings");
   return { success: true };
 }
 
@@ -173,7 +173,7 @@ export async function upsertMeetingTasks(
     }
   }
 
-  revalidatePath("/dashboard/meetings");
+  revalidatePath("/main/meetings");
   return { success: true };
 }
 
@@ -200,7 +200,7 @@ export async function insertAiTasksIfEmpty(
     })),
   });
 
-  revalidatePath("/dashboard/meetings");
+  revalidatePath("/main/meetings");
   return { success: true, skipped: false };
 }
 
@@ -218,7 +218,7 @@ export async function toggleMeetingTask(taskId: string, isDone: boolean) {
   const session = await getSession();
   if (!session || !TIER1.includes(session.role)) throw new Error("غير مصرح");
   await prisma.meetingTask.update({ where: { id: taskId }, data: { isDone } });
-  revalidatePath("/dashboard/meetings");
+  revalidatePath("/main/meetings");
   return { success: true };
 }
 
@@ -238,6 +238,6 @@ export async function createTasksFromMeeting(
       },
     });
   }
-  revalidatePath("/dashboard/tasks");
+  revalidatePath("/main/tasks");
   return { success: true };
 }

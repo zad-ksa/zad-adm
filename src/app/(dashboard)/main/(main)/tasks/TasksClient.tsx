@@ -549,11 +549,11 @@ ${combinedAchievements.length > 0 ? `
           setTasks((prev) =>
             prev.map((t) =>
               t.id === completingTaskId
-                ? { ...t, isCompleted: true, completedAt: new Date().toISOString(), proofUrl: url, proofPublicId: public_id }
+                ? { ...t, isCompleted: true, completedAt: new Date().toISOString(), proofUrl: finalUrl || null, proofPublicId: finalPublicId || null }
                 : t
             )
           );
-          showNotification("success", "تم نقل المهمة إلى المنجزات مع الشاهد");
+          showNotification("success", "تم نقل المهمة إلى المنجزات بنجاح");
           setCompletingTaskId(null);
           setProofFile(null);
           setProofUploadError(null);

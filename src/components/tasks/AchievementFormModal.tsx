@@ -9,7 +9,7 @@ import { useImagePaste } from "@/hooks/useImagePaste";
 interface AchievementFormModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (data: { title: string; charityId: string; category: string; date: string; proofFile: File }) => void;
+  onSubmit: (data: { title: string; charityId: string; category: string; date: string; proofFile: File | null }) => void;
   isDirectorOrAdmin: boolean;
   charities: Charity[];
   isUploading: boolean;
@@ -48,7 +48,7 @@ export default function AchievementFormModal({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!title.trim() || !proofFile) return;
+    if (!title.trim()) return;
     onSubmit({ title, charityId, category, date, proofFile });
   };
 
@@ -105,7 +105,7 @@ export default function AchievementFormModal({
 
         <form onSubmit={handleSubmit} className="space-y-3">
           <div>
-            <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-2">ماذا أنجزت؟</label>
+            <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-2">وصف الإنجاز</label>
             <input
               type="text"
               required

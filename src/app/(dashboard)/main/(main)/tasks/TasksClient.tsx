@@ -429,7 +429,7 @@ ${combinedAchievements.length > 0 ? `
   };
 
   // Handle direct achievement creation
-  const handleCreateAchievement = async (data: { title: string; charityId: string; category: string; date: string; proofFile: File }) => {
+  const handleCreateAchievement = async (data: { title: string; charityId: string; category: string; date: string; proofFile: File | null }) => {
     if (!data.title.trim()) return;
 
     setIsUploadingAchievementProof(true);
@@ -513,28 +513,35 @@ ${combinedAchievements.length > 0 ? `
 
   const handleProofSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!completingTaskId || !proofFile) return;
+    if (!completingTaskId) return;
 
     setIsUploadingProof(true);
     setProofUploadError(null);
     try {
-      const formData = new FormData();
-      formData.append("file", proofFile);
+      let finalUrl: string | undefined = undefined;
+      let finalPublicId: string | undefined = undefined;
 
-      const uploadRes = await fetch("/api/tasks/upload-proof", {
-        method: "POST",
-        body: formData,
-      });
+      if (proofFile) {
+        const formData = new FormData();
+        formData.append("file", proofFile);
 
-      if (!uploadRes.ok) {
-        const errorData = await uploadRes.json().catch(() => ({}));
-        throw new Error(errorData.error || "فشل رفع الشاهد");
+        const uploadRes = await fetch("/api/tasks/upload-proof", {
+          method: "POST",
+          body: formData,
+        });
+
+        if (!uploadRes.ok) {
+          const errorData = await uploadRes.json().catch(() => ({}));
+          throw new Error(errorData.error || "فشل رفع الشاهد");
+        }
+
+        const { url, public_id } = await uploadRes.json();
+        finalUrl = url;
+        finalPublicId = public_id;
       }
 
-      const { url, public_id } = await uploadRes.json();
-
       startTransition(async () => {
-        const res = await toggleTaskCompletionAction(completingTaskId, true, url, public_id);
+        const res = await toggleTaskCompletionAction(completingTaskId, true, finalUrl, finalPublicId);
         if (res.error) {
           setProofUploadError(res.error);
           showNotification("error", res.error);
@@ -1042,7 +1049,7 @@ ${combinedAchievements.length > 0 ? `
                 رفع شاهد المهمة
               </h3>
               <p className="text-xs text-slate-500 dark:text-slate-400 mt-2 leading-relaxed">
-                يجب إرفاق شاهد (صورة) كإثبات على إنجاز المهمة. سيتم حفظ هذا الشاهد للتوثيق والتدقيق.
+                يمكنك إرفاق شاهد (صورة) كإثبات على إنجاز المهمة لتوثيقه في تقاريرك.
               </p>
             </div>
 
@@ -1122,7 +1129,7 @@ ${combinedAchievements.length > 0 ? `
                 </button>
                 <button
                   type="submit"
-                  disabled={isUploadingProof || !proofFile}
+                  disabled={isUploadingProof}
                   className="px-6 py-2.5 rounded-xl bg-primary text-white hover:bg-primary/95 font-bold transition-all text-xs flex items-center gap-2 cursor-pointer disabled:opacity-75 disabled:cursor-not-allowed shadow-sm hover:shadow"
                 >
                   {isUploadingProof ? "جاري الرفع..." : "رفع وإنجاز"}

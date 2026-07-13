@@ -83,10 +83,39 @@ body {
 .rmdp-header {
   font-weight: bold !important;
 }
-/* Hide placeholder text when printing */
+/* Global Print Styles */
 @media print {
   ::placeholder {
     color: transparent !important;
+  }
+
+  /* Force multi-page printing by removing height restrictions */
+  html, body, #__next, .h-screen, .h-\[100dvh\], .flex, .overflow-hidden, .overflow-y-auto {
+    height: auto !important;
+    min-height: auto !important;
+    max-height: none !important;
+    overflow: visible !important;
+    position: static !important;
+  }
+
+  /* When a print-content container exists, hide everything else */
+  body:has(.print-content) * {
+    visibility: hidden;
+  }
+  
+  /* Make only the print-content visible and absolute to top-left */
+  body:has(.print-content) .print-content, 
+  body:has(.print-content) .print-content * {
+    visibility: visible;
+  }
+
+  body:has(.print-content) .print-content {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    margin: 0 !important;
+    padding: 0 !important;
   }
 }
 

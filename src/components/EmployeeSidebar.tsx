@@ -448,13 +448,13 @@ export default function EmployeeSidebar({
     <>
       {/* Desktop Sidebar */}
       <aside 
-        className={`hidden lg:block shrink-0 transition-all duration-300 ease-in-out h-screen z-20 ${isOpen ? "w-56" : "w-16"}`}
+        className={`hidden lg:block shrink-0 transition-all duration-300 ease-in-out h-screen z-20 print:hidden ${isOpen ? "w-56" : "w-16"}`}
       >
         {sidebarContent}
       </aside>
 
       {/* Mobile Drawer */}
-      <div className={`fixed inset-0 z-[60] lg:hidden transition-all duration-300 ${isOpen ? "visible" : "invisible pointer-events-none"}`}>
+      <div className={`fixed inset-0 z-[60] lg:hidden transition-all duration-300 print:hidden ${isOpen ? "visible" : "invisible pointer-events-none"}`}>
         <div className={`absolute inset-0 bg-slate-950/60 backdrop-blur-sm transition-opacity duration-300 ${isOpen ? "opacity-100" : "opacity-0"}`} onClick={() => setIsOpen(false)} />
         <div className={`absolute top-0 right-0 h-full w-56 max-w-[85vw] transform transition-transform duration-300 ease-in-out bg-white dark:bg-slate-800 shadow-2xl ${isOpen ? "translate-x-0" : "translate-x-full"}`}>
           {sidebarContent}

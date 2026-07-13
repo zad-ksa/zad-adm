@@ -539,7 +539,7 @@ export default function VisionMissionResultsClient({ responses }: { responses: R
       </div>
 
       {/* -------------------- PRINT LAYOUT -------------------- */}
-      <div className="hidden print:block space-y-12 text-black bg-white" dir="rtl">
+      <div className="hidden print:block print-content space-y-12 text-black bg-white" dir="rtl">
         <div className="text-center pb-6 mb-8 border-b-2 border-black">
           <h1 className="text-3xl font-bold mb-2">تقرير نتائج استبيان الرؤية والرسالة والقيم</h1>
           <p className="text-sm font-medium">عدد المشاركين في الاستبيان: {responses.length} مشارك</p>

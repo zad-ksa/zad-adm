@@ -1,4 +1,5 @@
 "use server";
+import { hasAdminRole } from "@/lib/constants";
 
 import { prisma } from "@/lib/db";
 import { getSession } from "@/lib/auth";
@@ -76,7 +77,7 @@ export async function updateEmployeeNavSettings(employeeId: string, settings: Na
   const session = await getSession();
   if (!session) return { success: false, error: "Not authenticated" };
 
-  const isAdmin = ["ADMIN", "EXECUTIVE_DIRECTOR", "GENERAL_MANAGER", "ADMINISTRATIVE_SECRETARIAT"].includes(session.role);
+  const isAdmin = hasAdminRole(session.role);
   const hasPerm = session.permissions?.includes("manage_charity_settings") || session.permissions?.includes("developer_mode");
 
   if (!isAdmin && !hasPerm) {
@@ -108,7 +109,7 @@ export async function broadcastToCharityClients(settings: NavTabSetting[], targe
   const session = await getSession();
   if (!session) return { success: false, error: "Not authenticated" };
 
-  const isAdmin = ["ADMIN", "EXECUTIVE_DIRECTOR", "GENERAL_MANAGER", "ADMINISTRATIVE_SECRETARIAT"].includes(session.role);
+  const isAdmin = hasAdminRole(session.role);
   const hasPerm = session.permissions?.includes("manage_charity_settings") || session.permissions?.includes("developer_mode");
 
   if (!isAdmin && !hasPerm) {
@@ -149,7 +150,7 @@ export async function broadcastToEmployees(settings: NavTabSetting[], targetEmpl
   const session = await getSession();
   if (!session) return { success: false, error: "Not authenticated" };
 
-  const isAdmin = ["ADMIN", "EXECUTIVE_DIRECTOR", "GENERAL_MANAGER", "ADMINISTRATIVE_SECRETARIAT"].includes(session.role);
+  const isAdmin = hasAdminRole(session.role);
   const hasPerm = session.permissions?.includes("manage_charity_settings") || session.permissions?.includes("developer_mode");
 
   if (!isAdmin && !hasPerm) {

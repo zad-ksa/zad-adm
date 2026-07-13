@@ -43,7 +43,7 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8 relative overflow-hidden" dir="rtl">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col justify-center py-12 sm:px-6 lg:px-8 relative overflow-hidden" dir="rtl">
       {/* Decorative blurred background circles for premium look */}
       <div className="absolute top-0 -left-10 w-96 h-96 bg-primary/5 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2 pointer-events-none"></div>
       <div className="absolute bottom-0 -right-10 w-96 h-96 bg-primary/5 rounded-full blur-3xl translate-x-1/2 translate-y-1/2 pointer-events-none"></div>
@@ -52,42 +52,42 @@ export default function LoginPage() {
         <div className="flex justify-center mb-8 h-20 w-auto">
           <ZadLogo isOpen={true} className="h-20 w-auto" />
         </div>
-        <h1 className="mt-2 text-center text-3xl font-extrabold text-slate-900 tracking-tight">
+        <h1 className="mt-2 text-center text-3xl font-extrabold text-slate-900 dark:text-slate-100 tracking-tight">
           تسجيل الدخول للنظام
         </h1>
-        <p className="mt-2 text-center text-sm text-slate-500 font-medium">
+        <p className="mt-2 text-center text-sm text-slate-500 dark:text-slate-400 font-medium">
           بوابة الدخول الآمن لموظفي زاد التنموية
         </p>
       </div>
 
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md relative z-10 px-4 sm:px-0">
-        <div className="bg-white py-8 px-4 shadow-sm border border-slate-200 sm:rounded-2xl sm:px-10">
+        <div className="bg-white dark:bg-slate-900 py-8 px-4 shadow-sm border border-slate-200 dark:border-slate-800 sm:rounded-2xl sm:px-10">
           
           {error && (
-            <div className="bg-red-50 border border-red-100 p-4 rounded-xl flex items-start mb-6">
+            <div className="bg-red-50 dark:bg-red-900/20 border border-red-100 dark:border-red-800/50 p-4 rounded-xl flex items-start mb-6">
               <div className="flex-shrink-0">
                 <AlertCircle className="h-5 w-5 text-red-500" />
               </div>
               <div className="mr-3">
-                <p className="text-sm text-red-700 font-bold">{error}</p>
+                <p className="text-sm text-red-700 dark:text-red-400 font-bold">{error}</p>
               </div>
             </div>
           )}
 
           {success && (
-            <div className="bg-emerald-50 border border-emerald-100 p-4 rounded-xl flex items-start mb-6">
+            <div className="bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-100 dark:border-emerald-800/50 p-4 rounded-xl flex items-start mb-6">
               <div className="flex-shrink-0 text-emerald-500">
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
               </div>
               <div className="mr-3">
-                <p className="text-sm text-emerald-800 font-bold">{success}</p>
+                <p className="text-sm text-emerald-800 dark:text-emerald-400 font-bold">{success}</p>
               </div>
             </div>
           )}
 
           <form className="space-y-6" onSubmit={handleLogin}>
             <div>
-              <label htmlFor="phone" className="block text-sm font-bold text-slate-700 mb-2">
+              <label htmlFor="phone" className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">
                 رقم الجوال
               </label>
               <div className="mt-1 relative rounded-xl">
@@ -101,7 +101,7 @@ export default function LoginPage() {
                   required
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
-                  className="appearance-none block w-full pr-11 pl-4 py-3.5 border border-slate-200 rounded-xl bg-slate-50 focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary/30 focus:bg-white text-slate-800 transition-all text-sm font-bold"
+                  className="appearance-none block w-full pr-11 pl-4 py-3.5 border border-slate-200 dark:border-slate-700 rounded-xl bg-slate-50 dark:bg-slate-800 focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary/30 focus:bg-white dark:focus:bg-slate-900 text-slate-800 dark:text-slate-100 transition-all text-sm font-bold"
                   placeholder="05XXXXXXXX"
                   dir="ltr"
                   disabled={isPending}
@@ -110,7 +110,7 @@ export default function LoginPage() {
             </div>
 
             <div>
-              <label htmlFor="password" className="block text-sm font-bold text-slate-700 mb-2">
+              <label htmlFor="password" className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">
                 كلمة المرور
               </label>
               <div className="mt-1 relative rounded-xl">
@@ -124,7 +124,7 @@ export default function LoginPage() {
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="appearance-none block w-full pr-11 pl-12 py-3.5 border border-slate-200 rounded-xl bg-slate-50 focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary/30 focus:bg-white text-slate-800 transition-all text-sm font-bold"
+                  className="appearance-none block w-full pr-11 pl-12 py-3.5 border border-slate-200 dark:border-slate-700 rounded-xl bg-slate-50 dark:bg-slate-800 focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary/30 focus:bg-white dark:focus:bg-slate-900 text-slate-800 dark:text-slate-100 transition-all text-sm font-bold"
                   placeholder="••••••••"
                   dir="ltr"
                   disabled={isPending}

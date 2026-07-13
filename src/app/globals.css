@@ -89,3 +89,22 @@ body {
     color: transparent !important;
   }
 }
+
+/* Animations from CircularLoader */
+@keyframes pulse-scale {
+  0%, 100% { transform: scale(0.93); opacity: 0.85; }
+  50% { transform: scale(1.05); opacity: 1; }
+}
+
+@keyframes glow-pulse {
+  0%, 100% { opacity: 0.15; transform: scale(0.95); }
+  50% { opacity: 0.35; transform: scale(1.05); }
+}
+
+@utility animate-pulse-scale {
+  animation: pulse-scale 2.2s ease-in-out infinite;
+}
+
+@utility animate-glow-pulse {
+  animation: glow-pulse 3.5s ease-in-out infinite;
+}

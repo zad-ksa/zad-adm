@@ -1,14 +1,17 @@
 import type { Metadata } from "next";
 import { Inter, Noto_Kufi_Arabic } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
-import { SpeedInsights } from "@vercel/speed-insights/next"
+
 import { ThemeProvider } from "@/components/ThemeProvider";
 import "./globals.css";
 
 const notoKufi = Noto_Kufi_Arabic({ subsets: ["arabic"], weight: ["400", "500", "600", "700", "800"] });
 
 export const metadata: Metadata = {
-  title: "تسجيل دخول | زاد التنموية",
+  title: {
+    template: "%s | زاد التنموية",
+    default: "زاد التنموية",
+  },
   description: "استبيان الجاهزية لأثر مستدام - إعداد زاد التنموية",
 };
 

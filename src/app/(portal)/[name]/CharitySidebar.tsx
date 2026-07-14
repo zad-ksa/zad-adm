@@ -113,7 +113,7 @@ export default function CharitySidebar({
   const isCharityClient = role === "CHARITY_CLIENT";
 
   const allNavItems = [
-    { id: "overview", href: `/portal/${encodeURIComponent(charityName)}/overview`, exact: true, icon: Home },
+    { id: "overview", href: `/portal/${encodeURIComponent(charityName)}`, exact: true, icon: Home },
     { id: "services", href: `/portal/${encodeURIComponent(charityName)}`, exact: true, icon: Briefcase },
     { id: "strategy", href: `/portal/${encodeURIComponent(charityName)}/strategy`, icon: Target },
     { id: "governance", href: `/portal/${encodeURIComponent(charityName)}/governance`, icon: Scale },

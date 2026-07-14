@@ -1,4 +1,4 @@
-﻿import { NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { getSession } from "@/lib/auth";
 
@@ -20,20 +20,14 @@ export default async function middleware(request: NextRequest) {
     }
   }
 
-  // Protection for Charity Client restricted sections
+  // Protection for portal routes
   if (pathname.startsWith("/portal/")) {
-    if (session?.role === "CHARITY_CLIENT") {
-      const parts = pathname.split("/");
-      // Path format: /portal/[name]/[section]/...
-      if (parts.length > 3) {
-        const section = parts[3];
-        const restrictedSections = ["strategy", "governance", "programs", "finance", "hr", "tasks"];
-        if (restrictedSections.includes(section)) {
-          // Redirect them back to the charity's main page
-          return NextResponse.redirect(new URL(`/portal/${parts[2]}`, request.url));
-        }
-      }
+    // Only CHARITY_CLIENT can access /portal
+    if (session && session.role !== "CHARITY_CLIENT") {
+      return NextResponse.redirect(new URL("/main", request.url));
     }
+    // If not logged in, they will be caught by root layout or auth actions,
+    // but we can also explicitly redirect them here if we want.
   }
 
   return NextResponse.next();

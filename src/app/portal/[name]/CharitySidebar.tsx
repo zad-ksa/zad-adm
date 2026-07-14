@@ -7,15 +7,8 @@ import {
   ChevronRight,
   X,
   ArrowLeft,
-  Home,
-  Target,
-  Scale,
-  FolderKanban,
-  Users,
-  Coins,
   Moon,
   Sun,
-  CheckSquare,
   LogOut,
   Briefcase
 } from "lucide-react";
@@ -63,8 +56,8 @@ function NavItem({ item, isActive, isOpen, onClick }: { item: any, isActive: boo
       onClick={onClick}
       title={!isOpen ? (item.label || item.title) : undefined}
       className={`flex items-center ${isOpen ? "justify-start px-2.5" : "justify-center"} py-2 mb-0.5 rounded-xl text-xs font-bold transition-all group relative overflow-hidden ${isActive
-          ? "bg-primary text-white shadow-md shadow-primary/20"
-          : "text-slate-500 dark:text-slate-400 hover:bg-primary/5 hover:text-primary"
+        ? "bg-primary text-white shadow-md shadow-primary/20"
+        : "text-slate-500 dark:text-slate-400 hover:bg-primary/5 hover:text-primary"
         }`}
     >
       {content}
@@ -78,16 +71,12 @@ export default function CharitySidebar({
   isOpen,
   setIsOpen,
   role,
-  permissions,
-  navSettings
 }: {
   charityName: string;
   logoUrl: string | null;
   isOpen: boolean;
   setIsOpen: (v: boolean) => void;
   role?: string;
-  permissions?: string[];
-  navSettings?: any[];
 }) {
   const pathname = usePathname();
   const [activePath, setActivePath] = useState(decodeURIComponent(pathname));
@@ -113,7 +102,6 @@ export default function CharitySidebar({
 
   const mainItems = [
     { id: "services", label: "الخدمات", href: `/portal/${encodeURIComponent(charityName)}`, exact: true, icon: Briefcase },
-    { id: "strategy", label: "الاستراتيجية", href: `/portal/${encodeURIComponent(charityName)}/strategy`, icon: Target },
   ];
 
   const subItems: any[] = [];

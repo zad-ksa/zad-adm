@@ -3,8 +3,6 @@ import { redirect, notFound } from "next/navigation";
 import CharityLayoutClient from "./CharityLayoutClient";
 import { prisma } from "@/lib/db";
 import { getSession } from "@/lib/auth";
-import { isAdminRole, getAssignedCharityIds } from "@/lib/access";
-import { hasPermission } from "@/lib/permissions";
 
 export default async function CharityLayout({
   children,
@@ -30,17 +28,11 @@ export default async function CharityLayout({
     redirect("/main");
   }
 
-  // Fetch nav settings for this employee (actually for charity client in this fallback)
-  const { getCharityGlobalNavSettings } = await import("@/app/actions/globalSettings");
-  const navSettings = await getCharityGlobalNavSettings();
-
   return (
     <CharityLayoutClient
       charityName={decodedName}
       logoUrl={charity.logoUrl || null}
       role={session.role}
-      permissions={session.permissions || []}
-      navSettings={navSettings}
       isDeveloper={session.isDeveloper}
       currentEmployeeId={session.originalId ? session.id : undefined}
     >

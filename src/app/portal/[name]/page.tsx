@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { prisma } from "@/lib/db";
-import { getSession } from "@/lib/auth";
 import { Briefcase } from "lucide-react";
 import CharityClientTimeline from "@/components/CharityClientTimeline";
 import ServicesPrintButton from "@/components/ServicesPrintButton";
@@ -26,10 +25,6 @@ export default async function ServicesPage({ params }: { params: Promise<{ name:
     return <div>الجمعية غير موجودة</div>;
   }
 
-  const session = await getSession();
-  const isCharityClient = session?.role === "CHARITY_CLIENT";
-  const isAdmin = ["ADMIN", "EXECUTIVE_DIRECTOR", "GENERAL_MANAGER", "ADMINISTRATIVE_SECRETARIAT"].includes(session?.role || "");
-
   const allServices = await prisma.service.findMany({
     where: { charityId: charity.id },
     include: {
@@ -45,19 +40,9 @@ export default async function ServicesPage({ params }: { params: Promise<{ name:
   const governanceService = allServices.find(s => s.department === "GOVERNANCE");
   const financeService = allServices.find(s => s.department === "FINANCE");
 
-  let strategicStages: any[] = [];
-  let governanceStages: any[] = [];
-  let financeStages: any[] = [];
-  
-  if (isAdmin || session?.role === "STRATEGY" || isCharityClient) {
-    strategicStages = strategicService?.stages || [];
-  }
-  if (isAdmin || session?.role === "GOVERNANCE" || isCharityClient) {
-    governanceStages = governanceService?.stages || [];
-  }
-  if (isAdmin || session?.role === "FINANCE" || isCharityClient) {
-    financeStages = financeService?.stages || [];
-  }
+  const strategicStages = strategicService?.stages || [];
+  const governanceStages = governanceService?.stages || [];
+  const financeStages = financeService?.stages || [];
 
   const customServices = allServices.filter(s => !["STRATEGY", "GOVERNANCE", "FINANCE"].includes(s.department || ""));
 

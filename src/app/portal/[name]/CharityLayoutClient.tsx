@@ -3,8 +3,7 @@
 import { usePathname } from "next/navigation";
 import CharitySidebar from "./CharitySidebar";
 import { useState, useEffect } from "react";
-import { Menu, Home, Target, FolderKanban, Coins, Scale } from "lucide-react";
-import { hasPermission } from "@/lib/permissions";
+import { Menu } from "lucide-react";
 import DeveloperRoleSwitcher from "@/components/DeveloperRoleSwitcher";
 
 export default function CharityLayoutClient({
@@ -12,8 +11,6 @@ export default function CharityLayoutClient({
   charityName,
   logoUrl,
   role,
-  permissions,
-  navSettings,
   isDeveloper,
   currentEmployeeId,
 }: {
@@ -21,8 +18,6 @@ export default function CharityLayoutClient({
   charityName: string;
   logoUrl: string | null;
   role?: string;
-  permissions?: string[];
-  navSettings?: any[];
   isDeveloper?: boolean;
   currentEmployeeId?: string;
 }) {
@@ -36,10 +31,6 @@ export default function CharityLayoutClient({
     }
   }, [pathname]);
 
-  const isCharityClient = role === "CHARITY_CLIENT";
-  const perms = permissions || [];
-  const can = (p: string) => hasPermission(role || "", perms, p);
-
 
   return (
     <div className="flex h-[100dvh] bg-slate-50 dark:bg-slate-900/50 dark:bg-slate-950 overflow-hidden" dir="rtl">
@@ -49,8 +40,6 @@ export default function CharityLayoutClient({
         isOpen={isSidebarOpen} 
         setIsOpen={setIsSidebarOpen}
         role={role}
-        permissions={permissions}
-        navSettings={navSettings}
       />
       
       <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden relative">

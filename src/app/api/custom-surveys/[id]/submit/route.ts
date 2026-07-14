@@ -11,9 +11,24 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
       return NextResponse.json({ error: "Charity name is required" }, { status: 400 });
     }
 
+    // Resolve the real UUID of the survey first (in case parameter is a slug)
+    const survey = await prisma.customSurvey.findFirst({
+      where: {
+        OR: [
+          { id },
+          { slug: id }
+        ]
+      },
+      select: { id: true }
+    });
+
+    if (!survey) {
+      return NextResponse.json({ error: "Survey not found" }, { status: 404 });
+    }
+
     const response = await prisma.customSurveyResponse.create({
       data: {
-        surveyId: id,
+        surveyId: survey.id,
         charityName,
         answers: answers || {},
         attachments: attachments || {}

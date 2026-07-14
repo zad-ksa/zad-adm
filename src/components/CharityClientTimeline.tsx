@@ -12,17 +12,19 @@ const CheckCircleIcon = () => (
 
 export default function CharityClientTimeline({ 
   title, 
-  stages 
+  stages,
+  embedded = false
 }: { 
-  title: string, 
-  stages: any[] 
+  title: string; 
+  stages: any[];
+  embedded?: boolean;
 }) {
   const sequentialStages = stages?.filter(s => !s.isContinuous && s.isActive !== false) || [];
   const continuousStages = stages?.filter(s => s.isContinuous) || [];
 
   return (
-    <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 p-6 shadow-sm">
-      <h3 className="font-bold text-xl text-slate-800 dark:text-slate-100 mb-8 border-b border-slate-100 dark:border-slate-700 pb-4">{title}</h3>
+    <div className={embedded ? "" : "bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 p-6 shadow-sm"}>
+      {!embedded && <h3 className="font-bold text-xl text-slate-800 dark:text-slate-100 mb-8 border-b border-slate-100 dark:border-slate-700 pb-4">{title}</h3>}
       
       {sequentialStages.length > 0 ? (
         <div className="relative pb-4">

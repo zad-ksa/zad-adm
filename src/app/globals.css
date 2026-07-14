@@ -8,6 +8,7 @@
   --color-secondary-foreground: rgb(255 255 255);
   --text-xs: 0.6875rem;
   --text-sm: 0.6875rem;
+  --font-sans: var(--font-inter), var(--font-cairo), sans-serif;
 }
 
 :root {

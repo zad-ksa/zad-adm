@@ -101,7 +101,7 @@ export default function CharitySidebar({
   const isCharityClient = role === "CHARITY_CLIENT";
 
   const mainItems = [
-    { id: "services", label: "الخدمات", href: `/portal/${encodeURIComponent(charityName)}`, exact: true, icon: Briefcase },
+    { id: "services", label: "الخدمات", href: `/portal/${encodeURIComponent(charityName)}/services`, exact: true, icon: Briefcase },
   ];
 
   const subItems: any[] = [];

@@ -1,11 +1,22 @@
 import type { Metadata } from "next";
-import { Inter, Noto_Kufi_Arabic } from "next/font/google";
+import { Inter, Cairo } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
 
 import { ThemeProvider } from "@/components/ThemeProvider";
 import "./globals.css";
 
-const notoKufi = Noto_Kufi_Arabic({ subsets: ["arabic"], weight: ["400", "500", "600", "700", "800"] });
+const inter = Inter({ 
+  subsets: ["latin"], 
+  variable: "--font-inter",
+  display: "swap" 
+});
+
+const cairo = Cairo({ 
+  subsets: ["arabic"], 
+  weight: ["300", "400", "500", "600", "700", "800", "900"],
+  variable: "--font-cairo",
+  display: "swap" 
+});
 
 export const metadata: Metadata = {
   title: {
@@ -22,7 +33,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ar" dir="rtl" suppressHydrationWarning>
-      <body suppressHydrationWarning className={`${notoKufi.className} bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-100 antialiased`}>
+      <body suppressHydrationWarning className={`${inter.variable} ${cairo.variable} font-sans bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-100 antialiased`}>
         <ThemeProvider
           attribute="class"
           defaultTheme="light"

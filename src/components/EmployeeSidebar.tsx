@@ -107,17 +107,16 @@ export default function EmployeeSidebar({
     else if (path.startsWith("/main/charities") || path.startsWith("/main/contracts") || path.startsWith("/main/custom-surveys") || path.startsWith("/main/communication")) newGroup = "الجمعيات";
     else if (path.startsWith("/main/requests") || path.startsWith("/main/news") || path.startsWith("/main/meetings") || path.startsWith("/main/tasks")) newGroup = "زاد";
     else if (path.startsWith("/main/admin") || path.startsWith("/main/workflow-settings")) newGroup = "لوحة التحكم";
-    else if (path.startsWith("/main/services-overview") || path.includes("/charity/")) {
+    else if (path.startsWith("/main/services-overview") || path.startsWith("/main/strategy") || path.startsWith("/main/governance") || path.startsWith("/main/finance") || path.startsWith("/main/resource-development") || path.startsWith("/main/programs")) {
       newGroup = "الخدمات";
-      if (path.includes("/charity/")) {
-        const parts = path.split('/');
-        if (parts.length >= 4) {
-          const charityNameStr = decodeURIComponent(parts[2]);
-          const serviceId = parts[3]; 
-          if (["strategy", "governance", "resource-development", "finance"].includes(serviceId)) {
-            newService = serviceId;
-            newCharity = `${serviceId}-${charityNameStr}`;
-          }
+      const parts = path.split('/');
+      if (parts.length >= 4) {
+        // /main/serviceId/charityName
+        const serviceId = parts[2];
+        const charityNameStr = decodeURIComponent(parts[3]);
+        if (["strategy", "governance", "resource-development", "finance", "programs"].includes(serviceId)) {
+          newService = serviceId;
+          newCharity = `${serviceId}-${charityNameStr}`;
         }
       }
     }
@@ -374,28 +373,28 @@ export default function EmployeeSidebar({
                                   <div className="mr-2 space-y-0.5 border-r-2 border-slate-100 dark:border-slate-800 pr-1.5">
                                     {svc.id === "strategy" && (
                                       <>
-                                        <SubTabLink href={`/charity/${encodeURIComponent(charity.name)}/strategy`} label="استبيان الجاهزية" isActive={activePath === `/charity/${charity.name}/strategy`} onClick={() => handleLinkClick(`/charity/${charity.name}/strategy`)} />
-                                        <SubTabLink href={`/charity/${encodeURIComponent(charity.name)}/strategy/vision-mission`} label="استبيان الرؤية" isActive={activePath === `/charity/${charity.name}/strategy/vision-mission`} onClick={() => handleLinkClick(`/charity/${charity.name}/strategy/vision-mission`)} />
-                                        <SubTabLink href={`/charity/${encodeURIComponent(charity.name)}/strategy/hexagonal`} label="التحليل السداسي" isActive={activePath === `/charity/${charity.name}/strategy/hexagonal`} onClick={() => handleLinkClick(`/charity/${charity.name}/strategy/hexagonal`)} />
-                                        <SubTabLink href={`/charity/${encodeURIComponent(charity.name)}/strategy/performance`} label="مقياس الأداء" isActive={activePath === `/charity/${charity.name}/strategy/performance`} onClick={() => handleLinkClick(`/charity/${charity.name}/strategy/performance`)} />
+                                        <SubTabLink href={`/main/strategy/${encodeURIComponent(charity.name)}`} label="استبيان الجاهزية" isActive={activePath === `/main/strategy/${charity.name}`} onClick={() => handleLinkClick(`/main/strategy/${charity.name}`)} />
+                                        <SubTabLink href={`/main/strategy/${encodeURIComponent(charity.name)}/vision-mission`} label="استبيان الرؤية" isActive={activePath === `/main/strategy/${charity.name}/vision-mission`} onClick={() => handleLinkClick(`/main/strategy/${charity.name}/vision-mission`)} />
+                                        <SubTabLink href={`/main/strategy/${encodeURIComponent(charity.name)}/hexagonal`} label="التحليل السداسي" isActive={activePath === `/main/strategy/${charity.name}/hexagonal`} onClick={() => handleLinkClick(`/main/strategy/${charity.name}/hexagonal`)} />
+                                        <SubTabLink href={`/main/strategy/${encodeURIComponent(charity.name)}/performance`} label="مقياس الأداء" isActive={activePath === `/main/strategy/${charity.name}/performance`} onClick={() => handleLinkClick(`/main/strategy/${charity.name}/performance`)} />
                                       </>
                                     )}
                                     {svc.id === "governance" && (
                                       <>
-                                        <SubTabLink href={`/charity/${encodeURIComponent(charity.name)}/governance?tab=manual`} label="دليل الحوكمة" isActive={activePath === `/charity/${charity.name}/governance` && (!currentTab || currentTab === 'manual')} onClick={() => handleLinkClick(`/charity/${charity.name}/governance?tab=manual`)} />
-                                        <SubTabLink href={`/charity/${encodeURIComponent(charity.name)}/governance?tab=files`} label="الملفات والأنظمة" isActive={activePath === `/charity/${charity.name}/governance` && currentTab === 'files'} onClick={() => handleLinkClick(`/charity/${charity.name}/governance?tab=files`)} />
-                                        <SubTabLink href={`/charity/${encodeURIComponent(charity.name)}/governance?tab=services`} label="خدمات المركز" isActive={activePath === `/charity/${charity.name}/governance` && currentTab === 'services'} onClick={() => handleLinkClick(`/charity/${charity.name}/governance?tab=services`)} />
+                                        <SubTabLink href={`/main/governance/${encodeURIComponent(charity.name)}?tab=manual`} label="دليل الحوكمة" isActive={activePath === `/main/governance/${charity.name}` && (!currentTab || currentTab === 'manual')} onClick={() => handleLinkClick(`/main/governance/${charity.name}?tab=manual`)} />
+                                        <SubTabLink href={`/main/governance/${encodeURIComponent(charity.name)}?tab=files`} label="الملفات والأنظمة" isActive={activePath === `/main/governance/${charity.name}` && currentTab === 'files'} onClick={() => handleLinkClick(`/main/governance/${charity.name}?tab=files`)} />
+                                        <SubTabLink href={`/main/governance/${encodeURIComponent(charity.name)}?tab=services`} label="خدمات المركز" isActive={activePath === `/main/governance/${charity.name}` && currentTab === 'services'} onClick={() => handleLinkClick(`/main/governance/${charity.name}?tab=services`)} />
                                       </>
                                     )}
                                     {svc.id === "resource-development" && (
                                       <>
-                                        <SubTabLink href={`/charity/${encodeURIComponent(charity.name)}/resource-development/donors`} label="الجهات المانحة" isActive={activePath === `/charity/${charity.name}/resource-development/donors`} onClick={() => handleLinkClick(`/charity/${charity.name}/resource-development/donors`)} />
-                                        <SubTabLink href={`/charity/${encodeURIComponent(charity.name)}/resource-development/grants`} label="المنح" isActive={activePath === `/charity/${charity.name}/resource-development/grants`} onClick={() => handleLinkClick(`/charity/${charity.name}/resource-development/grants`)} />
+                                        <SubTabLink href={`/main/resource-development/${encodeURIComponent(charity.name)}/donors`} label="الجهات المانحة" isActive={activePath === `/main/resource-development/${charity.name}/donors`} onClick={() => handleLinkClick(`/main/resource-development/${charity.name}/donors`)} />
+                                        <SubTabLink href={`/main/resource-development/${encodeURIComponent(charity.name)}/grants`} label="المنح" isActive={activePath === `/main/resource-development/${charity.name}/grants`} onClick={() => handleLinkClick(`/main/resource-development/${charity.name}/grants`)} />
                                       </>
                                     )}
                                     {svc.id === "finance" && (
                                       <>
-                                        <SubTabLink href={`/charity/${encodeURIComponent(charity.name)}/finance`} label="الوضع المالي" isActive={activePath === `/charity/${charity.name}/finance`} onClick={() => handleLinkClick(`/charity/${charity.name}/finance`)} />
+                                        <SubTabLink href={`/main/finance/${encodeURIComponent(charity.name)}`} label="الوضع المالي" isActive={activePath === `/main/finance/${charity.name}`} onClick={() => handleLinkClick(`/main/finance/${charity.name}`)} />
                                       </>
                                     )}
                                   </div>

@@ -97,7 +97,7 @@ export default function CharityClientStrategyDashboard({
         {/* Action / Notifications Card */}
         <div className="lg:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-4">
           {isPerformanceEditable && (
-            <Link href={`/charity/${encodeURIComponent(charityName)}/strategy/performance`}
+            <Link href={`/portal/${encodeURIComponent(charityName)}/strategy/performance`}
               className="bg-gradient-to-br from-indigo-500 to-indigo-600 hover:from-indigo-600 hover:to-indigo-700 text-white rounded-2xl p-6 shadow-md transition-all hover:shadow-lg flex flex-col justify-between group">
               <div className="flex items-center justify-between mb-4">
                 <div className="p-3 bg-white/20 rounded-xl backdrop-blur-sm">

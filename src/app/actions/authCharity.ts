@@ -75,7 +75,7 @@ export async function loginCharityWithNumber(charityNumber: string, password: st
   });
   
   if (employee?.role === "CHARITY_CLIENT" && employee.charity) {
-    redirect(`/charity/${encodeURIComponent(employee.charity.name)}/overview`);
+    redirect(`/portal/${encodeURIComponent(employee.charity.name)}/overview`);
   } else {
     redirect("/charity-login");
   }

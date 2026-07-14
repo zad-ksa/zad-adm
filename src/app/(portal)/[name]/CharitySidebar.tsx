@@ -113,14 +113,14 @@ export default function CharitySidebar({
   const isCharityClient = role === "CHARITY_CLIENT";
 
   const allNavItems = [
-    { id: "overview", href: `/charity/${encodeURIComponent(charityName)}/overview`, exact: true, icon: Home },
-    { id: "services", href: `/charity/${encodeURIComponent(charityName)}`, exact: true, icon: Briefcase },
-    { id: "strategy", href: `/charity/${encodeURIComponent(charityName)}/strategy`, icon: Target },
-    { id: "governance", href: `/charity/${encodeURIComponent(charityName)}/governance`, icon: Scale },
-    { id: "programs", href: `/charity/${encodeURIComponent(charityName)}/programs`, icon: FolderKanban },
-    { id: "finance", href: `/charity/${encodeURIComponent(charityName)}/finance`, icon: Coins },
+    { id: "overview", href: `/portal/${encodeURIComponent(charityName)}/overview`, exact: true, icon: Home },
+    { id: "services", href: `/portal/${encodeURIComponent(charityName)}`, exact: true, icon: Briefcase },
+    { id: "strategy", href: `/portal/${encodeURIComponent(charityName)}/strategy`, icon: Target },
+    { id: "governance", href: `/portal/${encodeURIComponent(charityName)}/governance`, icon: Scale },
+    { id: "programs", href: `/portal/${encodeURIComponent(charityName)}/programs`, icon: FolderKanban },
+    { id: "finance", href: `/portal/${encodeURIComponent(charityName)}/finance`, icon: Coins },
     { id: "hr", href: "#", icon: Users },
-    { id: "tasks", href: `/charity/${encodeURIComponent(charityName)}/tasks`, icon: CheckSquare },
+    { id: "tasks", href: `/portal/${encodeURIComponent(charityName)}/tasks`, icon: CheckSquare },
   ];
 
   const navItems = (navSettings || []).map(setting => {

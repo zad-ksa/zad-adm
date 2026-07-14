@@ -2,14 +2,8 @@ import type { Metadata } from "next";
 import { prisma } from "@/lib/db";
 import { getSession } from "@/lib/auth";
 import { Briefcase } from "lucide-react";
-import StrategicStagesManager from "./strategy/StrategicStagesManager";
-import GovernanceStagesManager from "./governance/GovernanceStagesManager";
-import FinanceStagesManager from "./finance/FinanceStagesManager";
-import GenericStagesManager from "@/components/GenericStagesManager";
 import CharityClientTimeline from "@/components/CharityClientTimeline";
-import ServicesManagerClient from "@/components/ServicesManagerClient";
 import ServicesPrintButton from "@/components/ServicesPrintButton";
-import { ServiceAccordionProvider } from "@/components/ServiceAccordionContext";
 import { getTimelineConfigs } from "@/app/actions/settings";
 
 export async function generateMetadata({ params }: { params: Promise<{ name: string }> }): Promise<Metadata> {
@@ -103,63 +97,14 @@ export default async function ServicesPage({ params }: { params: Promise<{ name:
         </div>
       </div>
 
-      {!isCharityClient && (
-        <ServicesManagerClient 
-          charityId={charity.id} 
-          initialServices={customServices} 
-          isAdmin={isAdmin}
-          strategyTimelineName={strategyName}
-          governanceTimelineName={governanceName}
-          financeTimelineName={financeName}
-        />
-      )}
-
-      {isCharityClient ? (
-        <div className="space-y-8">
-          {strategicStages.length > 0 && <CharityClientTimeline title={strategyName} stages={strategicStages} />}
-          {governanceStages.length > 0 && <CharityClientTimeline title={governanceName} stages={governanceStages} />}
-          {financeStages.length > 0 && <CharityClientTimeline title={financeName} stages={financeStages} />}
-          {customServices.map(service => (
-            <CharityClientTimeline key={service.id} title={service.name} stages={service.stages} />
-          ))}
-        </div>
-      ) : (
-        <ServiceAccordionProvider>
-          {(isAdmin || session?.role === (charity.strategyTimelineDept || "STRATEGY")) && (
-            <StrategicStagesManager 
-              charityId={charity.id} 
-              initialStages={strategicStages}
-              timelineName={strategyName}
-              timelineDept={charity.strategyTimelineDept || "STRATEGY"}
-            />
-          )}
-          {(isAdmin || session?.role === (charity.governanceTimelineDept || "GOVERNANCE")) && (
-            <GovernanceStagesManager
-              charityId={charity.id}
-              initialStages={governanceStages}
-              timelineName={governanceName}
-              timelineDept={charity.governanceTimelineDept || "GOVERNANCE"}
-            />
-          )}
-          {(isAdmin || session?.role === (charity.financeTimelineDept || "FINANCE")) && (
-            <FinanceStagesManager
-              charityId={charity.id}
-              initialStages={financeStages}
-              timelineName={financeName}
-              timelineDept={charity.financeTimelineDept || "FINANCE"}
-            />
-          )}
-          
-          {customServices.map(service => (
-            (isAdmin || session?.role === service.department) && (
-               <GenericStagesManager 
-                 key={service.id}
-                 service={service}
-               />
-            )
-          ))}
-        </ServiceAccordionProvider>
-      )}
+      <div className="space-y-8">
+        {strategicStages.length > 0 && <CharityClientTimeline title={strategyName} stages={strategicStages} />}
+        {governanceStages.length > 0 && <CharityClientTimeline title={governanceName} stages={governanceStages} />}
+        {financeStages.length > 0 && <CharityClientTimeline title={financeName} stages={financeStages} />}
+        {customServices.map(service => (
+          <CharityClientTimeline key={service.id} title={service.name} stages={service.stages} />
+        ))}
+      </div>
     </div>
   );
 }

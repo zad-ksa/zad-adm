@@ -25,17 +25,9 @@ export default async function CharityLayout({
   });
   if (!charity) notFound();
 
-  // Access gate: restricted roles must have this charity assigned
-  if (!isAdminRole(session.role) && session.role !== "CHARITY_CLIENT") {
-    const assigned = await getAssignedCharityIds(session.id, session.role, session.permissions);
-    if (assigned !== null && !assigned.includes(charity.id)) {
-      redirect("/main");
-    }
-  }
-
-  // If the user is an employee, the DashboardLayoutClient is already provided by the shared layout in src/app/(dashboard)/layout.tsx
+  // Access gate: restricted to CHARITY_CLIENT ONLY
   if (session.role !== "CHARITY_CLIENT") {
-    return <>{children}</>;
+    redirect("/main");
   }
 
   // Fetch nav settings for this employee (actually for charity client in this fallback)

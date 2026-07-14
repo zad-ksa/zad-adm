@@ -2,16 +2,16 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { 
-  Building2, 
-  ChevronRight, 
-  X, 
-  ArrowLeft, 
-  Home, 
-  Target, 
-  Scale, 
-  FolderKanban, 
-  Users, 
+import {
+  Building2,
+  ChevronRight,
+  X,
+  ArrowLeft,
+  Home,
+  Target,
+  Scale,
+  FolderKanban,
+  Users,
   Coins,
   Moon,
   Sun,
@@ -30,8 +30,8 @@ function NavItem({ item, isActive, isOpen, onClick }: { item: any, isActive: boo
     <>
       {isActive && isOpen && <div className="absolute right-0 top-0 bottom-0 w-1 bg-white dark:bg-slate-800/20 rounded-l-full"></div>}
       <item.icon className={`w-4 h-4 shrink-0 transition-all ml-0 ${isOpen ? "ml-2.5" : ""} ${isActive ? "text-white" : "text-slate-400 group-hover:text-primary"}`} />
-      {isOpen && <span className="whitespace-nowrap">{item.title}</span>}
-      
+      {isOpen && <span className="whitespace-nowrap">{item.label || item.title}</span>}
+
       {item.comingSoon && isOpen && (
         <span className="mr-auto text-[9px] bg-slate-200 dark:bg-slate-700 text-slate-500 dark:text-slate-400 px-1.5 py-0.5 rounded font-extrabold">
           قريباً
@@ -43,11 +43,11 @@ function NavItem({ item, isActive, isOpen, onClick }: { item: any, isActive: boo
   if (item.comingSoon) {
     return (
       <div
-        title={!isOpen ? `${item.title} (قريباً)` : undefined}
+        title={!isOpen ? `${item.label || item.title} (قريباً)` : undefined}
         className={`flex items-center ${isOpen ? "justify-start px-2.5" : "justify-center"} py-2 rounded-xl text-slate-400 bg-slate-50 dark:bg-slate-900/50 cursor-not-allowed opacity-70 text-xs font-bold mb-0.5`}
       >
         <item.icon className={`w-4 h-4 shrink-0 transition-all ${isOpen ? "ml-2.5" : "ml-0"} opacity-60`} />
-        {isOpen && <span className="whitespace-nowrap">{item.title}</span>}
+        {isOpen && <span className="whitespace-nowrap">{item.label || item.title}</span>}
         {isOpen && (
           <span className="mr-auto text-[9px] bg-slate-200 dark:bg-slate-700 text-slate-500 dark:text-slate-400 px-1.5 py-0.5 rounded font-extrabold">
             قريباً
@@ -61,19 +61,18 @@ function NavItem({ item, isActive, isOpen, onClick }: { item: any, isActive: boo
     <Link
       href={item.href}
       onClick={onClick}
-      title={!isOpen ? item.title : undefined}
-      className={`flex items-center ${isOpen ? "justify-start px-2.5" : "justify-center"} py-2 mb-0.5 rounded-xl text-xs font-bold transition-all group relative overflow-hidden ${
-        isActive
+      title={!isOpen ? (item.label || item.title) : undefined}
+      className={`flex items-center ${isOpen ? "justify-start px-2.5" : "justify-center"} py-2 mb-0.5 rounded-xl text-xs font-bold transition-all group relative overflow-hidden ${isActive
           ? "bg-primary text-white shadow-md shadow-primary/20"
           : "text-slate-500 dark:text-slate-400 hover:bg-primary/5 hover:text-primary"
-      }`}
+        }`}
     >
       {content}
     </Link>
   );
 }
 
-export default function CharitySidebar({ 
+export default function CharitySidebar({
   charityName,
   logoUrl,
   isOpen,
@@ -81,7 +80,7 @@ export default function CharitySidebar({
   role,
   permissions,
   navSettings
-}: { 
+}: {
   charityName: string;
   logoUrl: string | null;
   isOpen: boolean;
@@ -112,47 +111,19 @@ export default function CharitySidebar({
 
   const isCharityClient = role === "CHARITY_CLIENT";
 
-  const allNavItems = [
-    { id: "overview", href: `/portal/${encodeURIComponent(charityName)}`, exact: true, icon: Home },
-    { id: "services", href: `/portal/${encodeURIComponent(charityName)}`, exact: true, icon: Briefcase },
-    { id: "strategy", href: `/portal/${encodeURIComponent(charityName)}/strategy`, icon: Target },
-    { id: "governance", href: `/portal/${encodeURIComponent(charityName)}/governance`, icon: Scale },
-    { id: "programs", href: `/portal/${encodeURIComponent(charityName)}/programs`, icon: FolderKanban },
-    { id: "finance", href: `/portal/${encodeURIComponent(charityName)}/finance`, icon: Coins },
-    { id: "hr", href: "#", icon: Users },
-    { id: "tasks", href: `/portal/${encodeURIComponent(charityName)}/tasks`, icon: CheckSquare },
+  const mainItems = [
+    { id: "services", label: "الخدمات", href: `/portal/${encodeURIComponent(charityName)}`, exact: true, icon: Briefcase },
+    { id: "strategy", label: "الاستراتيجية", href: `/portal/${encodeURIComponent(charityName)}/strategy`, icon: Target },
   ];
 
-  const navItems = (navSettings || []).map(setting => {
-    const baseItem = allNavItems.find(i => i.id === setting.id);
-    if (!baseItem) return null;
-    if (setting.status === "HIDDEN") return null;
-
-    if (isCharityClient) {
-      if (setting.id === "strategy" && !(permissions || []).includes("view_charity_strategy")) return null;
-      if (setting.id === "programs" && !(permissions || []).includes("view_charity_programs")) return null;
-      if (setting.id === "governance" && !(permissions || []).includes("view_charity_governance")) return null;
-      if (setting.id === "finance" && !(permissions || []).includes("view_charity_finance")) return null;
-      if (setting.id === "tasks" && !(permissions || []).includes("view_charity_tasks")) return null;
-    }
-
-    return {
-      ...baseItem,
-      title: setting.title,
-      comingSoon: setting.status === "COMING_SOON",
-      section: setting.section,
-    };
-  }).filter(Boolean);
-
-  const mainItems = navItems.filter((i: any) => i.section === 'main');
-  const subItems = navItems.filter((i: any) => i.section === 'sub');
+  const subItems: any[] = [];
 
   const sidebarContent = (
     <div className="bg-white dark:bg-slate-800 flex flex-col h-full border-l border-slate-200 dark:border-slate-700/80 shadow-[4px_0_24px_rgba(0,0,0,0.02)] relative transition-all duration-300">
-      
+
       {/* Desktop Toggle Button */}
-      <button 
-        onClick={() => setIsOpen(!isOpen)} 
+      <button
+        onClick={() => setIsOpen(!isOpen)}
         className="hidden lg:flex absolute top-8 -left-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-400 hover:text-primary hover:border-primary/30 rounded-full w-6 h-6 items-center justify-center z-50 transition-all shadow-sm"
       >
         <ChevronRight className={`w-4 h-4 transition-transform duration-300 ${!isOpen ? "rotate-180" : ""}`} />
@@ -232,7 +203,7 @@ export default function CharitySidebar({
             : activePath.startsWith(decodedHref);
 
           return (
-            <NavItem 
+            <NavItem
               key={item.href}
               item={item}
               isActive={isActive}
@@ -241,13 +212,13 @@ export default function CharitySidebar({
             />
           )
         })}
-        
+
         {isOpen && subItems.length > 0 && (
           <div className="flex items-center justify-between px-2.5 mt-6 mb-2">
             <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">التبويبات الفرعية</span>
           </div>
         )}
-        
+
         {subItems.map((item: any) => {
           const decodedHref = decodeURIComponent(item.href);
           const isActive = item.exact
@@ -255,7 +226,7 @@ export default function CharitySidebar({
             : activePath.startsWith(decodedHref);
 
           return (
-            <NavItem 
+            <NavItem
               key={item.href}
               item={item}
               isActive={isActive}
@@ -294,7 +265,7 @@ export default function CharitySidebar({
   return (
     <>
       {/* Desktop Sidebar */}
-      <aside 
+      <aside
         className={`hidden lg:block shrink-0 transition-all duration-300 ease-in-out h-screen z-20 ${isOpen ? "w-56" : "w-16"}`}
       >
         {sidebarContent}

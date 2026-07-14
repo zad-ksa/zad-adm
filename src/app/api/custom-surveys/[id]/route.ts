@@ -61,6 +61,7 @@ export async function PUT(request: Request, context: { params: Promise<{ id: str
       for (const [sIndex, section] of sections.entries()) {
         const createdSection = await prisma.customSurveySection.create({
           data: {
+            id: (section.id && typeof section.id === "string" && section.id.length > 10) ? section.id : undefined,
             title: section.title,
             order: sIndex,
             surveyId: id
@@ -71,6 +72,7 @@ export async function PUT(request: Request, context: { params: Promise<{ id: str
           for (const [qIndex, question] of section.questions.entries()) {
             await prisma.customSurveyQuestion.create({
               data: {
+                id: (question.id && typeof question.id === "string" && question.id.length > 10) ? question.id : undefined,
                 text: question.text,
                 type: question.type || "TEXT",
                 isRequired: question.isRequired ?? true,

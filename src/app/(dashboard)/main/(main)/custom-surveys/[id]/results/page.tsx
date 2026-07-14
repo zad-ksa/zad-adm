@@ -38,6 +38,18 @@ interface Survey {
   sections: Section[];
 }
 
+const getParsedJson = (val: any) => {
+  if (!val) return {};
+  if (typeof val === "string") {
+    try {
+      return JSON.parse(val);
+    } catch {
+      return {};
+    }
+  }
+  return val;
+};
+
 // See edit page for why YES_NO questions store follow-ups inside `options`.
 function questionsFromApi(questions: any[]): Question[] {
   return questions.map((q) => {
@@ -108,96 +120,126 @@ export default function SurveyResultsPage({ params }: { params: Promise<{ id: st
         </div>
       ) : (
         <div className="space-y-6">
-          {responses.map((response) => (
-            <div key={response.id} className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm dark:bg-slate-800 dark:border-slate-700">
-              <div className="flex items-center gap-4 border-b border-slate-100 pb-4 mb-4 dark:border-slate-700">
-                <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center text-primary">
-                  <User className="w-6 h-6" />
+          {responses.map((response) => {
+            const answers = getParsedJson(response.answers);
+            const attachments = getParsedJson(response.attachments);
+
+            // Resolve questions values handling both exact key match and index fallback (for modified surveys)
+            const getQuestionValue = (questionId: string) => {
+              if (answers[questionId] !== undefined) {
+                return {
+                  answer: answers[questionId],
+                  attachment: attachments[questionId]
+                };
+              }
+
+              // Fallback to match by index
+              const totalQuestionIndex = allQuestions.findIndex(q => q.id === questionId);
+              const oldQuestionId = totalQuestionIndex !== -1 ? Object.keys(answers)[totalQuestionIndex] : null;
+
+              if (oldQuestionId) {
+                return {
+                  answer: answers[oldQuestionId],
+                  attachment: attachments[oldQuestionId]
+                };
+              }
+
+              return { answer: undefined, attachment: undefined };
+            };
+
+            return (
+              <div key={response.id} className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm dark:bg-slate-800 dark:border-slate-700">
+                <div className="flex items-center gap-4 border-b border-slate-100 pb-4 mb-4 dark:border-slate-700">
+                  <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center text-primary">
+                    <User className="w-6 h-6" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100">{response.charityName}</h3>
+                    <p className="text-sm text-slate-500 dark:text-slate-400">
+                      تاريخ المشاركة: {new Date(response.createdAt).toLocaleDateString('ar-SA')} - {new Date(response.createdAt).toLocaleTimeString('ar-SA')}
+                    </p>
+                  </div>
                 </div>
-                <div>
-                  <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100">{response.charityName}</h3>
-                  <p className="text-sm text-slate-500 dark:text-slate-400">
-                    تاريخ المشاركة: {new Date(response.createdAt).toLocaleDateString('ar-SA')} - {new Date(response.createdAt).toLocaleTimeString('ar-SA')}
-                  </p>
-                </div>
-              </div>
 
-              <div className="space-y-6">
-                {survey.sections.map((section, sIdx) => {
-                  // Only show section if there are answers for its questions
-                  const sectionHasAnswers = section.questions.some(q => response.answers[q.id] || response.attachments[q.id]);
-                  if (!sectionHasAnswers) return null;
+                <div className="space-y-6">
+                  {survey.sections.map((section, sIdx) => {
+                    // Only show section if there are answers for its questions
+                    const sectionHasAnswers = section.questions.some(q => {
+                      const { answer, attachment } = getQuestionValue(q.id);
+                      return answer !== undefined || attachment !== undefined;
+                    });
+                    if (!sectionHasAnswers) return null;
 
-                  return (
-                    <div key={section.id} className="bg-slate-50 rounded-xl p-5 border border-slate-100 dark:bg-slate-900/50 dark:border-slate-700">
-                      <h4 className="font-bold text-slate-700 mb-4 pb-2 border-b border-slate-200 dark:text-slate-300 dark:border-slate-700">
-                        {sIdx + 1}. {section.title}
-                      </h4>
-                      <div className="space-y-4">
-                        {section.questions.map((question, qIdx) => {
-                          const answer = response.answers[question.id];
-                          const rawAttachment = response.attachments[question.id];
-                          const attachmentUrls = Array.isArray(rawAttachment)
-                            ? rawAttachment
-                            : rawAttachment ? [rawAttachment] : [];
+                    return (
+                      <div key={section.id} className="bg-slate-50 rounded-xl p-5 border border-slate-100 dark:bg-slate-900/50 dark:border-slate-700">
+                        <h4 className="font-bold text-slate-700 mb-4 pb-2 border-b border-slate-200 dark:text-slate-300 dark:border-slate-700">
+                          {sIdx + 1}. {section.title}
+                        </h4>
+                        <div className="space-y-4">
+                          {section.questions.map((question, qIdx) => {
+                            const { answer, attachment } = getQuestionValue(question.id);
+                            const attachmentUrls = Array.isArray(attachment)
+                              ? attachment
+                              : attachment ? [attachment] : [];
 
-                          if (!answer && attachmentUrls.length === 0) return null;
+                            if (!answer && attachmentUrls.length === 0) return null;
 
-                          return (
-                            <div key={question.id} className="flex flex-col gap-1">
-                              <span className="text-sm font-bold text-slate-600 dark:text-slate-400">{qIdx + 1}- {question.text}</span>
-                              {answer && (
-                                <p className="text-slate-800 bg-white border border-slate-200 px-4 py-2 rounded-lg text-sm dark:text-slate-100 dark:bg-slate-800 dark:border-slate-700">
-                                  {question.type === "OPTIONS"
-                                    ? (question.options?.find(opt => opt.id === answer)?.text || answer)
-                                    : question.type === "MULTI_OPTIONS"
-                                      ? answer.split(",").map(id => question.options?.find(opt => opt.id === id)?.text || id).join("، ")
-                                      : question.type === "YES_NO"
-                                        ? (answer === "yes" ? "نعم" : "لا")
-                                        : answer}
-                                </p>
-                              )}
-                              {attachmentUrls.length > 0 && (
-                                <div className="mt-2 flex flex-wrap gap-2">
-                                  {attachmentUrls.map((url, i) => (
-                                    <a
-                                      key={url}
-                                      href={url}
-                                      target="_blank"
-                                      rel="noopener noreferrer"
-                                      className="inline-flex items-center gap-2 bg-primary/10 text-primary hover:bg-primary hover:text-white px-4 py-2 rounded-lg text-sm font-bold transition-colors dark:bg-primary/20"
-                                    >
-                                      <Download className="w-4 h-4" /> تحميل المرفق {attachmentUrls.length > 1 ? i + 1 : ""}
-                                    </a>
-                                  ))}
-                                </div>
-                              )}
-                              {question.type === "YES_NO" && answer === "yes" && question.followUpQuestions && question.followUpQuestions.length > 0 && (
-                                <div className="mt-2 space-y-2 border-r-4 border-primary/20 pr-4">
-                                  {question.followUpQuestions.map(followUp => {
-                                    const followUpAnswer = response.answers[followUp.id];
-                                    if (!followUpAnswer) return null;
-                                    return (
-                                      <div key={followUp.id} className="flex flex-col gap-1">
-                                        <span className="text-xs font-bold text-slate-500 dark:text-slate-400">{followUp.text}</span>
-                                        <p className="text-slate-800 bg-white border border-slate-200 px-3 py-1.5 rounded-lg text-sm dark:text-slate-100 dark:bg-slate-800 dark:border-slate-700">
-                                          {followUpAnswer}
-                                        </p>
-                                      </div>
-                                    );
-                                  })}
-                                </div>
-                              )}
-                            </div>
-                          );
-                        })}
+                            return (
+                              <div key={question.id} className="flex flex-col gap-1">
+                                <span className="text-sm font-bold text-slate-600 dark:text-slate-400">{qIdx + 1}- {question.text}</span>
+                                {answer && (
+                                  <p className="text-slate-800 bg-white border border-slate-200 px-4 py-2 rounded-lg text-sm dark:text-slate-100 dark:bg-slate-800 dark:border-slate-700">
+                                    {question.type === "OPTIONS"
+                                      ? (question.options?.find(opt => opt.id === answer)?.text || answer)
+                                      : question.type === "MULTI_OPTIONS"
+                                        ? answer.split(",").map((id: string) => question.options?.find(opt => opt.id === id)?.text || id).join("، ")
+                                        : question.type === "YES_NO"
+                                          ? (answer === "yes" ? "نعم" : "لا")
+                                          : answer}
+                                  </p>
+                                )}
+                                {attachmentUrls.length > 0 && (
+                                  <div className="mt-2 flex flex-wrap gap-2">
+                                    {attachmentUrls.map((url, i) => (
+                                      <a
+                                        key={url}
+                                        href={url}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="inline-flex items-center gap-2 bg-primary/10 text-primary hover:bg-primary hover:text-white px-4 py-2 rounded-lg text-sm font-bold transition-colors dark:bg-primary/20"
+                                      >
+                                        <Download className="w-4 h-4" /> تحميل المرفق {attachmentUrls.length > 1 ? i + 1 : ""}
+                                      </a>
+                                    ))}
+                                  </div>
+                                )}
+                                {question.type === "YES_NO" && answer === "yes" && question.followUpQuestions && question.followUpQuestions.length > 0 && (
+                                  <div className="mt-2 space-y-2 border-r-4 border-primary/20 pr-4">
+                                    {question.followUpQuestions.map(followUp => {
+                                      const { answer: followUpAnswer } = getQuestionValue(followUp.id);
+                                      if (!followUpAnswer) return null;
+                                      return (
+                                        <div key={followUp.id} className="flex flex-col gap-1">
+                                          <span className="text-xs font-bold text-slate-500 dark:text-slate-400">{followUp.text}</span>
+                                          <p className="text-slate-800 bg-white border border-slate-200 px-3 py-1.5 rounded-lg text-sm dark:text-slate-100 dark:bg-slate-800 dark:border-slate-700">
+                                            {followUpAnswer}
+                                          </p>
+                                        </div>
+                                      );
+                                    })}
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          })}
+                        </div>
                       </div>
-                    </div>
-                  );
-                })}
+                    );
+                  })}
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
     </div>

@@ -60,7 +60,7 @@ export const ROLE_LABELS: Record<string, string> = {
   ADMIN: "مدير النظام",
   EXECUTIVE_DIRECTOR: "الإدارة التنفيذية",
   GENERAL_MANAGER: "المدير العام",
-  ADMINISTRATIVE_SECRETARIAT: "مساعد المدير",
+  ADMINISTRATIVE_SECRETARIAT: "مساعد إداري",
   STRATEGY: "الاستراتيجية",
   FINANCE: "المالية",
   GOVERNANCE: "الحوكمة",

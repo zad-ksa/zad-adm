@@ -319,6 +319,7 @@ model Task {
   completedAt   DateTime?
   proofUrl      String?
   proofPublicId String?
+  completionNote String?       @db.Text
   createdAt     DateTime     @default(now())
   updatedAt     DateTime     @updatedAt
   updates       TaskUpdate[]

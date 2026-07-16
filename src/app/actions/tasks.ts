@@ -1,4 +1,4 @@
-﻿"use server";
+"use server";
 
 import { prisma } from "@/lib/db";
 import { getSession } from "@/lib/auth";
@@ -142,7 +142,8 @@ export async function toggleTaskCompletionAction(
   taskId: string, 
   isCompleted: boolean,
   proofUrl?: string,
-  proofPublicId?: string
+  proofPublicId?: string,
+  completionNote?: string
 ) {
   try {
     const user = await getAuthenticatedUser();
@@ -177,6 +178,7 @@ export async function toggleTaskCompletionAction(
         completedAt: isCompleted ? new Date() : null,
         proofUrl: isCompleted ? proofUrl || null : null,
         proofPublicId: isCompleted ? proofPublicId || null : null,
+        completionNote: isCompleted ? completionNote || null : null,
       },
     });
 

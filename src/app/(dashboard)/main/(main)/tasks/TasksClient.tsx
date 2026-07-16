@@ -117,6 +117,7 @@ export default function TasksClient({
   // Proof upload state
   const [completingTaskId, setCompletingTaskId] = useState<string | null>(null);
   const [proofFile, setProofFile] = useState<File | null>(null);
+  const [completionNote, setCompletionNote] = useState<string>("");
   const [proofUploadError, setProofUploadError] = useState<string | null>(null);
   const [isUploadingProof, setIsUploadingProof] = useState(false);
 
@@ -541,7 +542,7 @@ ${combinedAchievements.length > 0 ? `
       }
 
       startTransition(async () => {
-        const res = await toggleTaskCompletionAction(completingTaskId, true, finalUrl, finalPublicId);
+        const res = await toggleTaskCompletionAction(completingTaskId, true, finalUrl, finalPublicId, completionNote);
         if (res.error) {
           setProofUploadError(res.error);
           showNotification("error", res.error);
@@ -556,6 +557,7 @@ ${combinedAchievements.length > 0 ? `
           showNotification("success", "تم نقل المهمة إلى المنجزات بنجاح");
           setCompletingTaskId(null);
           setProofFile(null);
+          setCompletionNote("");
           setProofUploadError(null);
         }
         setIsUploadingProof(false);
@@ -1054,6 +1056,21 @@ ${combinedAchievements.length > 0 ? `
             </div>
 
             <form onSubmit={handleProofSubmit} className="space-y-4">
+              <div>
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
+                  وصف ما تم إنجازه <span className="text-red-500">*</span>
+                </label>
+                <textarea
+                  required
+                  value={completionNote}
+                  onChange={(e) => setCompletionNote(e.target.value)}
+                  className="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-800 dark:text-slate-200 outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary resize-none"
+                  rows={3}
+                  placeholder="اكتب تفاصيل ما تم إنجازه هنا..."
+                  disabled={isUploadingProof}
+                />
+              </div>
+
               <div className="border-2 border-dashed border-slate-200 dark:border-slate-700 rounded-2xl p-6 text-center bg-slate-50 dark:bg-slate-900/50 relative hover:border-primary/50 transition-colors">
                 {proofFile ? (
                   <div className="flex flex-col items-center">
@@ -1120,6 +1137,7 @@ ${combinedAchievements.length > 0 ? `
                   onClick={() => {
                     setCompletingTaskId(null);
                     setProofFile(null);
+                    setCompletionNote("");
                     setProofUploadError(null);
                   }}
                   disabled={isUploadingProof}

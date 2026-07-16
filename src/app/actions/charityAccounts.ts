@@ -6,7 +6,7 @@ import { hash } from "bcryptjs";
 import { revalidatePath } from "next/cache";
 import { hasPermission } from "@/lib/permissions";
 
-export async function addCharityClientAccount(data: { name: string; phone: string; password: string; charityId: string; permissions?: string[] }) {
+export async function addCharityClientAccount(data: { name: string; phone: string; password: string; charityId: string }) {
   try {
     const session = await getSession();
     const canManage = hasPermission(session?.role || "", session?.permissions || [], "manage_charity_accounts");
@@ -37,7 +37,7 @@ export async function addCharityClientAccount(data: { name: string; phone: strin
         password: hashedPassword,
         role: "CHARITY_CLIENT",
         charityId: data.charityId,
-        permissions: data.permissions || [],
+        permissions: [],
         isActive: true,
       }
     });

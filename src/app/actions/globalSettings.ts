@@ -14,13 +14,6 @@ export interface NavTabSetting {
 
 const DEFAULT_CHARITY_NAV_TABS: NavTabSetting[] = [
   { id: "services", title: "الخدمات", status: "OPEN", section: "main" },
-  { id: "governance", title: "الحوكمة", status: "OPEN", section: "main" },
-  { id: "overview", title: "الرئيسية", status: "OPEN", section: "sub" },
-  { id: "strategy", title: "الاستراتيجية", status: "OPEN", section: "sub" },
-  { id: "programs", title: "البرامج والمشاريع", status: "OPEN", section: "sub" },
-  { id: "finance", title: "المالية", status: "OPEN", section: "sub" },
-  { id: "hr", title: "الموارد البشرية", status: "COMING_SOON", section: "sub" },
-  { id: "tasks", title: "المهام", status: "HIDDEN", section: "sub" },
 ];
 
 export async function getCharityGlobalNavSettings(): Promise<NavTabSetting[]> {

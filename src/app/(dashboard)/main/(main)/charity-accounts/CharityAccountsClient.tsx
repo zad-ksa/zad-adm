@@ -16,25 +16,10 @@ export default function CharityAccountsClient({ charities, accounts: initialAcco
     name: "",
     phone: "",
     password: "",
-    charityId: "",
-    permissions: [] as string[]
+    charityId: ""
   });
 
-  const availablePermissions = [
-    { id: "view_charity_strategy", label: "الاستراتيجية" },
-    { id: "view_charity_programs", label: "البرامج" },
-    { id: "view_charity_governance", label: "الحوكمة" },
-    { id: "view_charity_finance", label: "المالية" },
-    { id: "view_charity_tasks", label: "المهام" }
-  ];
 
-  const handleTogglePermission = (id: string) => {
-    setForm(prev => {
-      const perms = prev.permissions;
-      if (perms.includes(id)) return { ...prev, permissions: perms.filter(p => p !== id) };
-      return { ...prev, permissions: [...perms, id] };
-    });
-  };
 
   const handleAddAccount = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -173,25 +158,7 @@ export default function CharityAccountsClient({ charities, accounts: initialAcco
                 </div>
               </div>
 
-              <div className="pt-4 border-t border-slate-100 dark:border-slate-700/50">
-                <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-3">التبويبات المتاحة (الصلاحيات)</label>
-                <div className="grid grid-cols-2 gap-3">
-                  {availablePermissions.map(perm => (
-                    <label key={perm.id} className="flex items-center gap-2 cursor-pointer group">
-                      <div className={`w-5 h-5 rounded border flex items-center justify-center transition-colors ${form.permissions.includes(perm.id) ? 'bg-primary border-primary' : 'bg-slate-50 border-slate-300 dark:bg-slate-800 dark:border-slate-600'}`}>
-                        {form.permissions.includes(perm.id) && <CheckCircle2 className="w-3.5 h-3.5 text-white" />}
-                      </div>
-                      <span className="text-sm font-bold text-slate-600 dark:text-slate-400 group-hover:text-slate-800 dark:group-hover:text-slate-200">{perm.label}</span>
-                      <input 
-                        type="checkbox" 
-                        className="hidden"
-                        checked={form.permissions.includes(perm.id)}
-                        onChange={() => handleTogglePermission(perm.id)}
-                      />
-                    </label>
-                  ))}
-                </div>
-              </div>
+
               
               <div className="flex gap-3 pt-4">
                 <button type="submit" disabled={isPending} className="flex-1 bg-primary text-white py-3 rounded-xl font-bold shadow hover:bg-primary/90 transition-colors disabled:opacity-50">
@@ -214,7 +181,6 @@ export default function CharityAccountsClient({ charities, accounts: initialAcco
                 <th className="px-6 py-4">الجمعية</th>
                 <th className="px-6 py-4">الممثل</th>
                 <th className="px-6 py-4 text-left" dir="ltr">رقم الجمعية</th>
-                <th className="px-6 py-4">الصلاحيات</th>
                 <th className="px-6 py-4">تاريخ الإنشاء</th>
                 <th className="px-6 py-4">إجراءات</th>
               </tr>
@@ -230,16 +196,7 @@ export default function CharityAccountsClient({ charities, accounts: initialAcco
                   </td>
                   <td className="px-6 py-4 text-sm font-bold text-slate-600 dark:text-slate-300">{account.name}</td>
                   <td className="px-6 py-4 text-sm font-bold text-slate-500 dark:text-slate-400 text-left" dir="ltr">{account.phone}</td>
-                  <td className="px-6 py-4">
-                    <div className="flex flex-wrap gap-1 max-w-[200px]">
-                      {account.permissions.filter((p: string) => p.startsWith('view_charity_')).map((p: string) => (
-                        <span key={p} className="text-[10px] bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 px-2 py-0.5 rounded-md font-bold">
-                          {availablePermissions.find(ap => ap.id === p)?.label || p}
-                        </span>
-                      ))}
-                      {account.permissions.length === 0 && <span className="text-xs text-slate-400">-</span>}
-                    </div>
-                  </td>
+
                   <td className="px-6 py-4 text-xs font-bold text-slate-400">{new Date(account.createdAt).toLocaleDateString("en-GB")}</td>
                   <td className="px-6 py-4">
                     <button 
@@ -255,7 +212,7 @@ export default function CharityAccountsClient({ charities, accounts: initialAcco
               ))}
               {accounts.length === 0 && (
                 <tr>
-                  <td colSpan={6} className="px-6 py-12 text-center text-slate-400 font-bold">لا توجد حسابات جمعيات مسجلة</td>
+                  <td colSpan={5} className="px-6 py-12 text-center text-slate-400 font-bold">لا توجد حسابات جمعيات مسجلة</td>
                 </tr>
               )}
             </tbody>

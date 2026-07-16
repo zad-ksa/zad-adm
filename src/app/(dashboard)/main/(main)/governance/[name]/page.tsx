@@ -53,31 +53,7 @@ export default async function GovernancePage({
             هذه المساحة مخصصة لإدارة ومتابعة معايير الحوكمة والامتثال لجمعية <span className="font-bold text-slate-700 dark:text-slate-300">{decodedName}</span>.
           </p>
 
-          {session?.role === "CHARITY_CLIENT" && (
-            <div className="flex flex-wrap items-center justify-center gap-2">
-              <Link 
-                href={`/charity/${encodedName}/governance?tab=manual`}
-                className={`px-4 py-2 rounded-xl text-sm font-bold flex items-center gap-2 transition-colors ${activeTab === 'manual' ? 'bg-primary text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}
-              >
-                <FileText className="w-4 h-4" />
-                دليل الحوكمة
-              </Link>
-              <Link 
-                href={`/charity/${encodedName}/governance?tab=files`}
-                className={`px-4 py-2 rounded-xl text-sm font-bold flex items-center gap-2 transition-colors ${activeTab === 'files' ? 'bg-primary text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}
-              >
-                <FolderOpen className="w-4 h-4" />
-                الملفات والأنظمة
-              </Link>
-              <Link 
-                href={`/charity/${encodedName}/governance?tab=services`}
-                className={`px-4 py-2 rounded-xl text-sm font-bold flex items-center gap-2 transition-colors ${activeTab === 'services' ? 'bg-primary text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}
-              >
-                <LayoutDashboard className="w-4 h-4" />
-                خدمات المركز
-              </Link>
-            </div>
-          )}
+
         </div>
       </div>
       
@@ -127,9 +103,7 @@ async function GovernanceTabContent({
 
   return (
     <>
-      {session?.role === "CHARITY_CLIENT" && (
-        <CharityClientTimeline title="المخطط الزمني" stages={stages} />
-      )}
+
 
       {charity && activeTab === 'manual' && (
         <GovernanceManualViewer 

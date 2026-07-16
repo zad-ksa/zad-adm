@@ -65,9 +65,7 @@ export async function loginWithPassword(phone: string, password: string) {
     return { error: "حدث خطأ داخلي: " + (error.message || "Unknown error") };
   }
   
-  if (employee?.role === "CHARITY_CLIENT" && employee.charity) {
-    redirect(`/charity/${encodeURIComponent(employee.charity.name)}`);
-  }
+
   
   redirect("/main");
 }

@@ -59,7 +59,6 @@ export default async function StrategySurveysPage({ params }: { params: Promise<
   const decodedName = decodeURIComponent(name);
 
   const session = await getSession();
-  const isCharityClient = session?.role === "CHARITY_CLIENT";
   const isStrategyTeam = session?.role === "STRATEGY";
 
   const responses = await getCachedResponses(decodedName);
@@ -79,61 +78,6 @@ export default async function StrategySurveysPage({ params }: { params: Promise<
         orderBy: { createdAt: "desc" }
       })
     : [];
-
-  // --- CHARITY CLIENT DASHBOARD ---
-  if (isCharityClient) {
-    const dashboardData = await getCharityDashboardData(decodedName);
-    
-    return (
-      <div className="space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-500">
-        <CharityClientStrategyDashboard charityName={decodedName} data={dashboardData} />
-        
-        {dashboardData?.charity?.isReadinessVisible && (
-          <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 p-6 shadow-sm mt-8 transition-colors">
-             <div className="flex items-center gap-3 mb-8 border-b border-slate-200 dark:border-slate-700 pb-4">
-              <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center text-primary font-bold">
-                <ChartLineIcon />
-              </div>
-              <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-100 tracking-tight">
-                نتائج استبيان الجاهزية للتخطيط الاستراتيجي
-              </h2>
-            </div>
-
-            {hasReadiness ? (
-              <ReadinessResultsClient responses={responses} />
-            ) : (
-              <div className="bg-slate-50 dark:bg-slate-900/50 rounded-2xl p-12 text-center text-slate-500 dark:text-slate-400 border border-slate-100 dark:border-slate-700">
-                <FileEditIcon />
-                <p className="font-bold mt-4">لم يقم أي مشارك بتعبئة استبيان الجاهزية للتخطيط الاستراتيجي لهذه الجمعية بعد.</p>
-              </div>
-            )}
-          </div>
-        )}
-
-        {dashboardData?.charity?.isVisionMissionVisible && (
-          <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 p-6 shadow-sm mt-8 transition-colors">
-             <div className="flex items-center gap-3 mb-8 border-b border-slate-200 dark:border-slate-700 pb-4">
-              <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center text-primary font-bold animate-pulse">
-                <Sparkles className="w-5 h-5 text-primary" />
-              </div>
-              <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-100 tracking-tight">
-                نتائج استبيان الرؤية والرسالة والأثر
-              </h2>
-            </div>
-
-            {visionMissionResponses.length > 0 ? (
-              <VisionMissionResultsClient responses={visionMissionResponses} />
-            ) : (
-              <div className="bg-slate-50 dark:bg-slate-900/50 rounded-2xl p-12 text-center text-slate-500 dark:text-slate-400 border border-slate-100 dark:border-slate-700">
-                <FileEditIcon />
-                <p className="font-bold mt-4">لم يقم أي مشارك بتعبئة استبيان الرؤية والرسالة والأثر لهذه الجمعية بعد.</p>
-              </div>
-            )}
-          </div>
-        )}
-      </div>
-    );
-  }
 
   // --- DEFAULT VIEW (Admin, Strategy, etc.) ---
   return (

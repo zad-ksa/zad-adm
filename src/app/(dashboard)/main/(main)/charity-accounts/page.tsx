@@ -22,7 +22,7 @@ export default async function CharityAccountsPage() {
     select: { id: true, name: true }
   });
 
-  // Fetch all accounts with role CHARITY_CLIENT
+  // Fetch all charity user accounts
   const accounts = await prisma.charityUser.findMany({
     include: {
       charities: {

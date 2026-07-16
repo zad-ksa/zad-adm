@@ -22,8 +22,8 @@ export default async function middleware(request: NextRequest) {
 
   // Protection for portal routes
   if (pathname.startsWith("/portal/")) {
-    // Only CHARITY_CLIENT can access /portal
-    if (session && session.role !== "CHARITY_CLIENT") {
+    // Only CHARITY_USER can access /portal
+    if (session && session.userType !== "CHARITY_USER") {
       return NextResponse.redirect(new URL("/main", request.url));
     }
     // If not logged in, they will be caught by root layout or auth actions,

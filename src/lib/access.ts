@@ -20,7 +20,7 @@ export async function getAssignedCharityIds(
   role: string,
   permissions?: string[]
 ): Promise<string[] | null> {
-  if (isAdminRole(role) || role === "CHARITY_CLIENT" || permissions?.includes("developer_mode")) return null;
+  if (isAdminRole(role) || permissions?.includes("developer_mode")) return null;
   const rows = await prisma.employeeCharity.findMany({
     where: { employeeId },
     select: { charityId: true },

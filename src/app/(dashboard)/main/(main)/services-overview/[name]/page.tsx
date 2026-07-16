@@ -33,7 +33,6 @@ export default async function ServicesPage({ params }: { params: Promise<{ name:
   }
 
   const session = await getSession();
-  const isCharityClient = session?.role === "CHARITY_CLIENT";
   const isAdmin = ["ADMIN", "EXECUTIVE_DIRECTOR", "GENERAL_MANAGER", "ADMINISTRATIVE_SECRETARIAT"].includes(session?.role || "");
 
   const allServices = await prisma.service.findMany({
@@ -55,13 +54,13 @@ export default async function ServicesPage({ params }: { params: Promise<{ name:
   let governanceStages: any[] = [];
   let financeStages: any[] = [];
   
-  if (isAdmin || session?.role === "STRATEGY" || isCharityClient) {
+  if (isAdmin || session?.role === "STRATEGY") {
     strategicStages = strategicService?.stages || [];
   }
-  if (isAdmin || session?.role === "GOVERNANCE" || isCharityClient) {
+  if (isAdmin || session?.role === "GOVERNANCE") {
     governanceStages = governanceService?.stages || [];
   }
-  if (isAdmin || session?.role === "FINANCE" || isCharityClient) {
+  if (isAdmin || session?.role === "FINANCE") {
     financeStages = financeService?.stages || [];
   }
 

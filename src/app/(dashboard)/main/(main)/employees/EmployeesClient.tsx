@@ -139,7 +139,7 @@ export function EmployeesClient({
       }
 
       // Save charity assignments for non-admin roles
-      if (!AUTO_ADMIN_ROLES.includes(editRole) && editRole !== "CHARITY_CLIENT") {
+      if (!AUTO_ADMIN_ROLES.includes(editRole)) {
         await updateEmployeeCharities(editingEmployee.id, editCharityIds);
       }
 
@@ -483,7 +483,7 @@ export function EmployeesClient({
               </div>
 
               {/* Charity Assignment Section — shown only for non-admin roles */}
-              {!AUTO_ADMIN_ROLES.includes(editRole) && editRole !== "CHARITY_CLIENT" && allCharities.length > 0 && (
+              {!AUTO_ADMIN_ROLES.includes(editRole) && allCharities.length > 0 && (
                 <div className="pt-4 border-t border-slate-100 dark:border-slate-700">
                   <div className="flex items-center gap-2 mb-3">
                     <Building2 className="w-4 h-4 text-slate-500 dark:text-slate-400" />

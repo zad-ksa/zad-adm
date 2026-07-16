@@ -5,6 +5,14 @@ import { Plus, Trash2, ShieldAlert, CheckCircle2, AlertCircle, Building2, ArrowR
 import { addCharityClientAccount, deleteCharityClientAccount } from "@/app/actions/charityAccounts";
 import Link from "next/link";
 
+const titles = [
+  { value: "CHAIRMAN", label: "رئيس مجلس إدارة" },
+  { value: "CEO", label: "مدير تنفيذي" },
+  { value: "FULL_TIME", label: "موظف بدوام كامل" },
+  { value: "PART_TIME", label: "موظف بداوم جزئي" },
+  { value: "VOLUNTEER", label: "متطوع" },
+];
+
 export default function CharityAccountsClient({ charities, accounts: initialAccounts }: { charities: any[], accounts: any[] }) {
   const [accounts, setAccounts] = useState(initialAccounts);
   const [showModal, setShowModal] = useState(false);
@@ -15,8 +23,8 @@ export default function CharityAccountsClient({ charities, accounts: initialAcco
   const [form, setForm] = useState({
     name: "",
     phone: "",
-    password: "",
-    charityId: ""
+    title: "FULL_TIME",
+    charityIds: [] as string[]
   });
 
 
@@ -26,7 +34,7 @@ export default function CharityAccountsClient({ charities, accounts: initialAcco
     setErrorMsg(null);
     setSuccessMsg(null);
 
-    if (!form.name || !form.phone || !form.password || !form.charityId) {
+    if (!form.name || !form.phone || !form.title || form.charityIds.length === 0) {
       setErrorMsg("جميع الحقول مطلوبة");
       return;
     }
@@ -36,7 +44,6 @@ export default function CharityAccountsClient({ charities, accounts: initialAcco
       if (res.success) {
         setSuccessMsg("تم إضافة الحساب بنجاح");
         setShowModal(false);
-        // We can reload the page to get fresh data or optimally add it to local state:
         window.location.reload();
       } else {
         setErrorMsg(res.error || "حدث خطأ");
@@ -53,6 +60,16 @@ export default function CharityAccountsClient({ charities, accounts: initialAcco
         setAccounts(prev => prev.filter(a => a.id !== id));
       } else {
         alert(res.error || "حدث خطأ أثناء الحذف");
+      }
+    });
+  };
+
+  const toggleCharity = (id: string) => {
+    setForm(prev => {
+      if (prev.charityIds.includes(id)) {
+        return { ...prev, charityIds: prev.charityIds.filter(c => c !== id) };
+      } else {
+        return { ...prev, charityIds: [...prev.charityIds, id] };
       }
     });
   };
@@ -104,20 +121,6 @@ export default function CharityAccountsClient({ charities, accounts: initialAcco
             
             <form onSubmit={handleAddAccount} className="p-6 overflow-y-auto space-y-5">
               <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1.5">الجمعية</label>
-                  <select 
-                    required 
-                    value={form.charityId} 
-                    onChange={e => setForm({...form, charityId: e.target.value})}
-                    className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary font-bold"
-                  >
-                    <option value="">-- اختر الجمعية --</option>
-                    {charities.map(c => (
-                      <option key={c.id} value={c.id}>{c.name}</option>
-                    ))}
-                  </select>
-                </div>
                 
                 <div>
                   <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1.5">اسم الممثل</label>
@@ -132,36 +135,56 @@ export default function CharityAccountsClient({ charities, accounts: initialAcco
                 </div>
                 
                 <div>
-                  <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1.5">رقم الجمعية (للدخول)</label>
+                  <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1.5">رقم الجوال (للدخول)</label>
                   <input 
                     required 
-                    type="text" 
+                    type="tel" 
                     value={form.phone} 
                     onChange={e => setForm({...form, phone: e.target.value})}
-                    placeholder="مثال: 12345"
+                    placeholder="05XXXXXXXX"
                     className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary font-bold text-left"
                     dir="ltr"
                   />
                 </div>
-                
+
                 <div>
-                  <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1.5">كلمة المرور</label>
-                  <input 
+                  <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1.5">المسمى الوظيفي</label>
+                  <select 
                     required 
-                    type="text" 
-                    value={form.password} 
-                    onChange={e => setForm({...form, password: e.target.value})}
-                    placeholder="كلمة مرور قوية"
-                    className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary font-bold text-left"
-                    dir="ltr"
-                  />
+                    value={form.title} 
+                    onChange={e => setForm({...form, title: e.target.value})}
+                    className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary font-bold"
+                  >
+                    {titles.map(t => (
+                      <option key={t.value} value={t.value}>{t.label}</option>
+                    ))}
+                  </select>
                 </div>
+
+                <div>
+                  <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1.5">الجمعيات المرتبطة (يمكن اختيار أكثر من واحدة)</label>
+                  <div className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl p-3 max-h-48 overflow-y-auto space-y-2">
+                    {charities.map(c => (
+                      <label key={c.id} className="flex items-center gap-3 p-2 hover:bg-white dark:hover:bg-slate-800 rounded-lg cursor-pointer transition-colors">
+                        <input 
+                          type="checkbox" 
+                          checked={form.charityIds.includes(c.id)}
+                          onChange={() => toggleCharity(c.id)}
+                          className="w-4 h-4 rounded text-primary focus:ring-primary focus:ring-offset-0 border-slate-300"
+                        />
+                        <span className="text-sm font-bold text-slate-700 dark:text-slate-300">{c.name}</span>
+                      </label>
+                    ))}
+                  </div>
+                  {form.charityIds.length === 0 && (
+                    <p className="text-xs text-red-500 mt-1 font-bold">يجب اختيار جمعية واحدة على الأقل</p>
+                  )}
+                </div>
+
               </div>
 
-
-              
               <div className="flex gap-3 pt-4">
-                <button type="submit" disabled={isPending} className="flex-1 bg-primary text-white py-3 rounded-xl font-bold shadow hover:bg-primary/90 transition-colors disabled:opacity-50">
+                <button type="submit" disabled={isPending || form.charityIds.length === 0} className="flex-1 bg-primary text-white py-3 rounded-xl font-bold shadow hover:bg-primary/90 transition-colors disabled:opacity-50">
                   {isPending ? "جاري الحفظ..." : "حفظ الحساب"}
                 </button>
                 <button type="button" onClick={() => setShowModal(false)} disabled={isPending} className="flex-1 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 py-3 rounded-xl font-bold hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors">
@@ -178,9 +201,10 @@ export default function CharityAccountsClient({ charities, accounts: initialAcco
           <table className="w-full text-right whitespace-nowrap">
             <thead className="bg-slate-50 dark:bg-slate-800/50 border-b border-slate-100 dark:border-slate-700/50 text-slate-500 dark:text-slate-400 text-xs font-black uppercase">
               <tr>
-                <th className="px-6 py-4">الجمعية</th>
+                <th className="px-6 py-4">الجمعيات</th>
                 <th className="px-6 py-4">الممثل</th>
-                <th className="px-6 py-4 text-left" dir="ltr">رقم الجمعية</th>
+                <th className="px-6 py-4">المسمى الوظيفي</th>
+                <th className="px-6 py-4 text-left" dir="ltr">رقم الجوال</th>
                 <th className="px-6 py-4">تاريخ الإنشاء</th>
                 <th className="px-6 py-4">إجراءات</th>
               </tr>
@@ -188,13 +212,16 @@ export default function CharityAccountsClient({ charities, accounts: initialAcco
             <tbody className="divide-y divide-slate-100 dark:divide-slate-700/50">
               {accounts.map(account => (
                 <tr key={account.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition-colors">
-                  <td className="px-6 py-4 font-bold text-slate-800 dark:text-slate-100">
-                    <div className="flex items-center gap-2">
-                      <Building2 className="w-4 h-4 text-slate-400" />
-                      {account.charityName}
+                  <td className="px-6 py-4 font-bold text-slate-800 dark:text-slate-100 whitespace-normal min-w-[200px]">
+                    <div className="flex items-start gap-2">
+                      <Building2 className="w-4 h-4 text-slate-400 mt-1 shrink-0" />
+                      <span>{account.charityNames?.join("، ") || "غير محدد"}</span>
                     </div>
                   </td>
                   <td className="px-6 py-4 text-sm font-bold text-slate-600 dark:text-slate-300">{account.name}</td>
+                  <td className="px-6 py-4 text-sm font-bold text-slate-500 dark:text-slate-400">
+                    {titles.find(t => t.value === account.title)?.label || account.title}
+                  </td>
                   <td className="px-6 py-4 text-sm font-bold text-slate-500 dark:text-slate-400 text-left" dir="ltr">{account.phone}</td>
 
                   <td className="px-6 py-4 text-xs font-bold text-slate-400">{new Date(account.createdAt).toLocaleDateString("en-GB")}</td>
@@ -212,7 +239,7 @@ export default function CharityAccountsClient({ charities, accounts: initialAcco
               ))}
               {accounts.length === 0 && (
                 <tr>
-                  <td colSpan={5} className="px-6 py-12 text-center text-slate-400 font-bold">لا توجد حسابات جمعيات مسجلة</td>
+                  <td colSpan={6} className="px-6 py-12 text-center text-slate-400 font-bold">لا توجد حسابات جمعيات مسجلة</td>
                 </tr>
               )}
             </tbody>

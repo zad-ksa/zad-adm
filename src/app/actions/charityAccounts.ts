@@ -2,11 +2,11 @@
 
 import { prisma } from "@/lib/db";
 import { getSession } from "@/lib/auth";
-import { hash } from "bcryptjs";
 import { revalidatePath } from "next/cache";
 import { hasPermission } from "@/lib/permissions";
+import { CharityUserTitle } from "@prisma/client";
 
-export async function addCharityClientAccount(data: { name: string; phone: string; password: string; charityId: string }) {
+export async function addCharityClientAccount(data: { name: string; phone: string; title: string; charityIds: string[] }) {
   try {
     const session = await getSession();
     const canManage = hasPermission(session?.role || "", session?.permissions || [], "manage_charity_accounts");
@@ -15,12 +15,12 @@ export async function addCharityClientAccount(data: { name: string; phone: strin
       return { success: false, error: "غير مصرح لك بإجراء هذه العملية" };
     }
 
-    if (!data.name || !data.phone || !data.password || !data.charityId) {
+    if (!data.name || !data.phone || !data.title || !data.charityIds || data.charityIds.length === 0) {
       return { success: false, error: "جميع الحقول مطلوبة" };
     }
 
-    // Check if phone already exists
-    const existing = await prisma.employee.findUnique({
+    // Check if phone already exists in CharityUser
+    const existing = await prisma.charityUser.findUnique({
       where: { phone: data.phone }
     });
 
@@ -28,24 +28,21 @@ export async function addCharityClientAccount(data: { name: string; phone: strin
       return { success: false, error: "رقم الجوال مسجل مسبقاً" };
     }
 
-    const hashedPassword = await hash(data.password, 10);
-
-    const employee = await prisma.employee.create({
+    await prisma.charityUser.create({
       data: {
         name: data.name.trim(),
         phone: data.phone.trim(),
-        password: hashedPassword,
-        role: "CHARITY_CLIENT",
-        charityId: data.charityId,
-        permissions: [],
+        title: data.title as CharityUserTitle,
         isActive: true,
+        charities: {
+          create: data.charityIds.map(id => ({
+            charityId: id
+          }))
+        }
       }
     });
 
-    const charity = await prisma.charity.findUnique({ where: { id: data.charityId } });
-    if (charity) {
-      revalidatePath(`/charity/${encodeURIComponent(charity.name)}`);
-    }
+    revalidatePath("/main/charity-accounts");
 
     return { success: true };
   } catch (error: any) {
@@ -63,15 +60,7 @@ export async function deleteCharityClientAccount(accountId: string) {
       return { success: false, error: "غير مصرح لك بإجراء هذه العملية" };
     }
 
-    const employee = await prisma.employee.findUnique({
-      where: { id: accountId }
-    });
-
-    if (!employee || employee.role !== "CHARITY_CLIENT") {
-      return { success: false, error: "الحساب غير موجود أو غير صالح" };
-    }
-
-    await prisma.employee.delete({
+    await prisma.charityUser.delete({
       where: { id: accountId }
     });
 

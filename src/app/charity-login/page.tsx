@@ -1,8 +1,8 @@
 "use client";
 
 import { useState, useTransition, useEffect } from "react";
-import { loginCharityWithNumber } from "@/app/actions/authCharity";
-import { AlertCircle, Lock, Loader2, Building2, ArrowLeft, ShieldCheck } from "lucide-react";
+import { requestCharityOTP, verifyCharityOTP } from "@/app/actions/authCharity";
+import { AlertCircle, Lock, Loader2, Phone, ArrowLeft, ShieldCheck, KeyRound, Building2 } from "lucide-react";
 import ZadLogo from "@/components/ZadLogo";
 import Link from "next/link";
 import { Cairo } from "next/font/google";
@@ -10,8 +10,9 @@ import { Cairo } from "next/font/google";
 const cairo = Cairo({ subsets: ["arabic"], weight: ["700", "900"] });
 
 export default function CharityLoginPage() {
-  const [charityNumber, setCharityNumber] = useState("");
-  const [password, setPassword] = useState("");
+  const [step, setStep] = useState<1 | 2>(1);
+  const [phone, setPhone] = useState("");
+  const [otp, setOtp] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
@@ -22,18 +23,39 @@ export default function CharityLoginPage() {
     setIsMounted(true);
   }, []);
 
-  const handleLogin = async (e: React.FormEvent) => {
+  const handleRequestOTP = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
     setSuccess(null);
 
-    if (!charityNumber || !password) {
-      setError("يرجى إدخال جميع الحقول المطلوبة");
+    if (!phone) {
+      setError("يرجى إدخال رقم الجوال");
       return;
     }
 
     startTransition(async () => {
-      const result = await loginCharityWithNumber(charityNumber, password);
+      const result = await requestCharityOTP(phone);
+      if (result && result.error) {
+        setError(result.error);
+      } else {
+        setSuccess("تم إرسال رمز التحقق إلى جوالك");
+        setStep(2);
+      }
+    });
+  };
+
+  const handleVerifyOTP = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+    setSuccess(null);
+
+    if (!otp) {
+      setError("يرجى إدخال رمز التحقق");
+      return;
+    }
+
+    startTransition(async () => {
+      const result = await verifyCharityOTP(phone, otp);
       if (result && result.error) {
         setError(result.error);
       }
@@ -76,72 +98,109 @@ export default function CharityLoginPage() {
             </div>
           )}
 
-          <form onSubmit={handleLogin} className="space-y-5 animate-fade-in-up" style={{ animationDuration: '0.8s' }}>
-            <div className="space-y-1.5">
-              <label htmlFor="charityNumber" className="block text-sm font-bold text-slate-700">
-                رقم الجمعية
-              </label>
-              <div className="relative group">
-                <div className="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-primary transition-colors">
-                  <Building2 className="w-5 h-5" />
+          {step === 1 ? (
+            <form onSubmit={handleRequestOTP} className="space-y-5 animate-fade-in-up" style={{ animationDuration: '0.8s' }}>
+              <div className="space-y-1.5">
+                <label htmlFor="phone" className="block text-sm font-bold text-slate-700">
+                  رقم الجوال
+                </label>
+                <div className="relative group">
+                  <div className="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-primary transition-colors">
+                    <Phone className="w-5 h-5" />
+                  </div>
+                  <input
+                    id="phone"
+                    type="tel"
+                    required
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    className="w-full pl-4 pr-12 py-3.5 bg-slate-50 border-2 border-transparent focus:border-primary/20 focus:bg-white rounded-2xl text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-4 focus:ring-primary/10 sm:text-sm font-bold transition-all text-left shadow-sm hover:bg-slate-100"
+                    placeholder="05XXXXXXXX"
+                    dir="ltr"
+                  />
                 </div>
-                <input
-                  id="charityNumber"
-                  type="text"
-                  required
-                  value={charityNumber}
-                  onChange={(e) => setCharityNumber(e.target.value)}
-                  className="w-full pl-4 pr-12 py-3.5 bg-slate-50 border-2 border-transparent focus:border-primary/20 focus:bg-white rounded-2xl text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-4 focus:ring-primary/10 sm:text-sm font-bold transition-all text-left shadow-sm hover:bg-slate-100"
-                  placeholder="مثال: 12345"
-                  dir="ltr"
-                />
               </div>
-            </div>
 
-            <div className="space-y-1.5">
-              <label htmlFor="password" className="block text-sm font-bold text-slate-700">
-                كلمة المرور
-              </label>
-              <div className="relative group">
-                <div className="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-primary transition-colors">
-                  <Lock className="w-5 h-5" />
+              <button
+                type="submit"
+                disabled={isPending}
+                className="w-full relative group overflow-hidden bg-slate-900 text-white rounded-2xl py-4 text-sm font-bold shadow-lg shadow-slate-900/20 hover:shadow-xl hover:shadow-slate-900/30 transition-all active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed disabled:active:scale-100 mt-8 border border-slate-800"
+              >
+                <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-primary to-primary/80 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                
+                <div className="relative z-10 flex items-center justify-center gap-2">
+                  {isPending ? (
+                    <>
+                      <Loader2 className="w-5 h-5 animate-spin text-white/80" />
+                      <span>جاري الإرسال...</span>
+                    </>
+                  ) : (
+                    <>
+                      <span>طلب الرمز</span>
+                      <ArrowLeft className="w-4 h-4 opacity-70 group-hover:-translate-x-1 transition-transform" />
+                    </>
+                  )}
                 </div>
-                <input
-                  id="password"
-                  type="password"
-                  required
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="w-full pl-4 pr-12 py-3.5 bg-slate-50 border-2 border-transparent focus:border-primary/20 focus:bg-white rounded-2xl text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-4 focus:ring-primary/10 sm:text-sm font-bold transition-all text-left shadow-sm hover:bg-slate-100"
-                  placeholder="••••••••"
-                  dir="ltr"
-                />
+              </button>
+            </form>
+          ) : (
+            <form onSubmit={handleVerifyOTP} className="space-y-5 animate-fade-in-up" style={{ animationDuration: '0.8s' }}>
+              <div className="space-y-1.5">
+                <label htmlFor="otp" className="block text-sm font-bold text-slate-700">
+                  رمز التحقق (OTP)
+                </label>
+                <div className="relative group">
+                  <div className="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-primary transition-colors">
+                    <KeyRound className="w-5 h-5" />
+                  </div>
+                  <input
+                    id="otp"
+                    type="text"
+                    required
+                    value={otp}
+                    onChange={(e) => setOtp(e.target.value)}
+                    className="w-full pl-4 pr-12 py-3.5 bg-slate-50 border-2 border-transparent focus:border-primary/20 focus:bg-white rounded-2xl text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-4 focus:ring-primary/10 sm:text-sm font-bold transition-all text-center tracking-widest shadow-sm hover:bg-slate-100 text-2xl"
+                    placeholder="----"
+                    dir="ltr"
+                    maxLength={4}
+                  />
+                </div>
+                <p className="text-xs text-slate-500 text-center mt-2">مؤقتاً للبرمجة، استخدم الرمز 0000</p>
               </div>
-            </div>
 
-            <button
-              type="submit"
-              disabled={isPending}
-              className="w-full relative group overflow-hidden bg-slate-900 text-white rounded-2xl py-4 text-sm font-bold shadow-lg shadow-slate-900/20 hover:shadow-xl hover:shadow-slate-900/30 transition-all active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed disabled:active:scale-100 mt-8 border border-slate-800"
-            >
-              {/* Button gradient hover effect */}
-              <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-primary to-primary/80 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-              
-              <div className="relative z-10 flex items-center justify-center gap-2">
-                {isPending ? (
-                  <>
-                    <Loader2 className="w-5 h-5 animate-spin text-white/80" />
-                    <span>جاري التحقق...</span>
-                  </>
-                ) : (
-                  <>
-                    <span>تسجيل الدخول</span>
-                    <ArrowLeft className="w-4 h-4 opacity-70 group-hover:-translate-x-1 transition-transform" />
-                  </>
-                )}
+              <div className="flex gap-3 mt-8">
+                <button
+                  type="button"
+                  disabled={isPending}
+                  onClick={() => { setStep(1); setOtp(""); setSuccess(null); setError(null); }}
+                  className="w-1/3 flex items-center justify-center py-4 rounded-2xl text-slate-600 bg-slate-100 font-bold hover:bg-slate-200 transition-colors disabled:opacity-50"
+                >
+                  رجوع
+                </button>
+                <button
+                  type="submit"
+                  disabled={isPending}
+                  className="w-2/3 relative group overflow-hidden bg-slate-900 text-white rounded-2xl py-4 text-sm font-bold shadow-lg shadow-slate-900/20 hover:shadow-xl hover:shadow-slate-900/30 transition-all active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed disabled:active:scale-100 border border-slate-800"
+                >
+                  <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-primary to-primary/80 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                  
+                  <div className="relative z-10 flex items-center justify-center gap-2">
+                    {isPending ? (
+                      <>
+                        <Loader2 className="w-5 h-5 animate-spin text-white/80" />
+                        <span>جاري التحقق...</span>
+                      </>
+                    ) : (
+                      <>
+                        <span>تأكيد الدخول</span>
+                        <ShieldCheck className="w-4 h-4 opacity-70 group-hover:scale-110 transition-transform" />
+                      </>
+                    )}
+                  </div>
+                </button>
               </div>
-            </button>
-          </form>
+            </form>
+          )}
 
           <div className="mt-12 text-center animate-fade-in-up" style={{ animationDuration: '1s' }}>
             <p className="text-xs font-bold text-slate-400 flex items-center justify-center gap-1.5">

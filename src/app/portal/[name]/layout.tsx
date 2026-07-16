@@ -23,16 +23,29 @@ export default async function CharityLayout({
   });
   if (!charity) notFound();
 
-  // Access gate: restricted to CHARITY_CLIENT ONLY
-  if (session.role !== "CHARITY_CLIENT") {
+  // Access gate: restricted to CHARITY_USER ONLY
+  if (session.userType !== "CHARITY_USER") {
     redirect("/main");
   }
+
+  // Fetch charities for this user to pass to sidebar for quick switching
+  const user = await prisma.charityUser.findUnique({
+    where: { id: session.id },
+    include: { charities: { include: { charity: true } } }
+  });
+
+  const availableCharities = user?.charities.map(c => ({
+    id: c.charityId,
+    name: c.charity.name
+  })) || [];
 
   return (
     <CharityLayoutClient
       charityName={decodedName}
       logoUrl={charity.logoUrl || null}
       role={session.role}
+      userType={session.userType}
+      availableCharities={availableCharities}
       isDeveloper={session.isDeveloper}
       currentEmployeeId={session.originalId ? session.id : undefined}
     >

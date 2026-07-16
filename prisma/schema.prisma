@@ -63,6 +63,43 @@ model Charity {
   governanceProgress     GovernanceProgress[]
   donorAccounts          DonorAccount[]
   grantApplications      GrantApplication[]
+  charityUsers      CharityUserCharity[]
+}
+
+// ── حسابات وبوابة الجمعيات ──────────────────────────────────────────────────────────
+
+enum CharityUserTitle {
+  CHAIRMAN      // رئيس مجلس إدارة
+  CEO           // مدير تنفيذي
+  FULL_TIME     // موظف بدوام كامل
+  PART_TIME     // موظف بداوم جزئي
+  VOLUNTEER     // متطوع
+}
+
+model CharityUser {
+  id          String   @id @default(uuid())
+  name        String
+  phone       String   @unique
+  title       CharityUserTitle @default(FULL_TIME)
+  permissions String[] @default([]) 
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  charities   CharityUserCharity[]
+}
+
+model CharityUserCharity {
+  id            String   @id @default(uuid())
+  charityUserId String
+  charityId     String
+  user          CharityUser @relation(fields: [charityUserId], references: [id], onDelete: Cascade)
+  charity       Charity     @relation(fields: [charityId], references: [id], onDelete: Cascade)
+  assignedAt    DateTime @default(now())
+
+  @@unique([charityUserId, charityId])
+  @@index([charityUserId])
+  @@index([charityId])
 }
 
 model EmployeeNavSetting {

@@ -18,7 +18,6 @@ const ROLE_LABELS: Record<string, string> = {
   ADMINISTRATIVE_SECRETARIAT: "مساعد المدير",
   STRATEGY: "الاستراتيجية",
   FINANCE: "المالية",
-  CHARITY_CLIENT: "عميل جمعية",
 };
 
 type Employee = { id: string; name: string; role: string };

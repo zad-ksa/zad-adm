@@ -23,10 +23,11 @@ export default async function CharityAccountsPage() {
   });
 
   // Fetch all accounts with role CHARITY_CLIENT
-  const accounts = await prisma.employee.findMany({
-    where: { role: "CHARITY_CLIENT" },
+  const accounts = await prisma.charityUser.findMany({
     include: {
-      charity: { select: { name: true } }
+      charities: {
+        include: { charity: { select: { name: true, id: true } } }
+      }
     },
     orderBy: { createdAt: "desc" }
   });
@@ -38,8 +39,8 @@ export default async function CharityAccountsPage() {
         id: a.id,
         name: a.name,
         phone: a.phone,
-        charityName: a.charity?.name || "غير محدد",
-        permissions: a.permissions,
+        title: a.title,
+        charityNames: a.charities.map(c => c.charity.name),
         createdAt: a.createdAt.toISOString()
       }))} 
     />

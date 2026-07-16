@@ -11,6 +11,8 @@ export default function CharityLayoutClient({
   charityName,
   logoUrl,
   role,
+  userType,
+  availableCharities = [],
   isDeveloper,
   currentEmployeeId,
 }: {
@@ -18,6 +20,8 @@ export default function CharityLayoutClient({
   charityName: string;
   logoUrl: string | null;
   role?: string;
+  userType?: string;
+  availableCharities?: { id: string, name: string }[];
   isDeveloper?: boolean;
   currentEmployeeId?: string;
 }) {
@@ -40,6 +44,8 @@ export default function CharityLayoutClient({
         isOpen={isSidebarOpen} 
         setIsOpen={setIsSidebarOpen}
         role={role}
+        userType={userType}
+        availableCharities={availableCharities}
       />
       
       <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden relative">

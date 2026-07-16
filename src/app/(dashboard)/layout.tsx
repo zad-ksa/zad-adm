@@ -12,10 +12,9 @@ export default async function DashboardRootLayout({ children }: { children: Reac
     redirect("/");
   }
 
-  // If the user is a charity client, do not wrap in DashboardLayoutClient.
-  // Their layout wrapper (CharityLayoutClient) will be applied by their specific layout file.
-  if (session.role === "CHARITY_CLIENT") {
-    return <>{children}</>;
+  // Block CHARITY_USER from accessing the main Zad dashboard completely
+  if (session.userType === "CHARITY_USER") {
+    redirect("/charity-login");
   }
 
   // For employees, we wrap the dashboard with DashboardLayoutClient here.

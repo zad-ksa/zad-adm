@@ -63,7 +63,7 @@ export async function addEmployee(prevState: any, formData: FormData) {
         role: dbRole,
         permissions,
         isActive: true,
-        ...(charityIds.length > 0 && dbRole !== "ADMIN" && dbRole !== "CHARITY_CLIENT" && {
+        ...(charityIds.length > 0 && dbRole !== "ADMIN" && {
           assignedCharities: {
             create: charityIds.map((charityId) => ({ charityId })),
           },

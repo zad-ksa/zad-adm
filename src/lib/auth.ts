@@ -32,11 +32,25 @@ export const getSession = cache(async () => {
   try {
     const session = await decrypt(sessionCookie);
     
-    // Check if user is originally a developer
+    const { prisma } = await import("@/lib/db");
+    
+    if (session.userType === "CHARITY_USER") {
+      const charUser = await prisma.charityUser.findUnique({
+        where: { id: session.id },
+        select: { permissions: true, title: true, isActive: true }
+      });
+      if (charUser && charUser.isActive) {
+        session.permissions = charUser.permissions;
+        session.title = charUser.title;
+        return session;
+      } else {
+        return null; // inactive or deleted
+      }
+    }
+    
+    // Employee Logic
     const isDeveloper = session.permissions?.includes("developer_mode");
     session.isDeveloper = isDeveloper;
-    
-    const { prisma } = await import("@/lib/db");
     
     if (isDeveloper) {
       const overrideEmployeeId = cookieStore.get("dev_employee_override")?.value;
@@ -61,11 +75,13 @@ export const getSession = cache(async () => {
       // Sync real employee permissions for regular users dynamically
       const emp = await prisma.employee.findUnique({
         where: { id: session.id },
-        select: { permissions: true, role: true }
+        select: { permissions: true, role: true, isActive: true }
       });
-      if (emp) {
+      if (emp && emp.isActive) {
         session.permissions = emp.permissions;
         session.role = emp.role;
+      } else {
+        return null;
       }
     }
     

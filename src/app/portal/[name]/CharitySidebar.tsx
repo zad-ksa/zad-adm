@@ -71,12 +71,16 @@ export default function CharitySidebar({
   isOpen,
   setIsOpen,
   role,
+  userType,
+  availableCharities = [],
 }: {
   charityName: string;
   logoUrl: string | null;
   isOpen: boolean;
   setIsOpen: (v: boolean) => void;
   role?: string;
+  userType?: string;
+  availableCharities?: { id: string, name: string }[];
 }) {
   const pathname = usePathname();
   const [activePath, setActivePath] = useState(decodeURIComponent(pathname));
@@ -98,7 +102,7 @@ export default function CharitySidebar({
     }
   };
 
-  const isCharityClient = role === "CHARITY_CLIENT";
+  const isCharityUser = userType === "CHARITY_USER";
 
   const mainItems = [
     { id: "services", label: "الخدمات", href: `/portal/${encodeURIComponent(charityName)}/services`, exact: true, icon: Briefcase },
@@ -226,8 +230,19 @@ export default function CharitySidebar({
       </div>
 
       {/* Bottom Actions */}
-      <div className="shrink-0 px-2.5 py-2.5 border-t border-slate-100 dark:border-slate-700/50 dark:border-slate-800/80">
-        {!isCharityClient ? (
+      <div className="flex flex-col shrink-0 px-2.5 py-2.5 border-t border-slate-100 dark:border-slate-700/50 dark:border-slate-800/80 gap-1">
+        {isCharityUser && availableCharities.length > 1 && (
+          <Link
+            href="/select-charity"
+            title={!isOpen ? "تبديل الجمعية" : undefined}
+            className={`flex items-center ${isOpen ? "justify-start px-2.5" : "justify-center"} w-full py-2 text-slate-500 dark:text-slate-400 hover:bg-primary/5 hover:text-primary rounded-xl text-xs font-bold transition-all group`}
+          >
+            <Building2 className={`w-4 h-4 shrink-0 transition-all ${isOpen ? "ml-2.5" : "ml-0"} text-slate-400 group-hover:text-primary`} />
+            {isOpen && <span className="whitespace-nowrap">تبديل الجمعية</span>}
+          </Link>
+        )}
+
+        {!isCharityUser ? (
           <Link
             href="/main"
             title={!isOpen ? "العودة للوحة التحكم" : undefined}

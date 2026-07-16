@@ -1,20 +1,17 @@
 "use client";
 
-import { useState, useTransition, useRef, useEffect } from "react";
+import { useState, useTransition } from "react";
 import {
-  FileText, Plus, X, Lock, Globe, Trash2, Edit2,
-  Printer, Loader2, Sparkles, Eye, UserPlus, Check, ChevronDown,
-  ChevronRight, AlertCircle, CheckCircle2, Clock, User, BookOpen,
-  ClipboardList, LayoutTemplate, RefreshCw, Search, Filter, ArrowRight,
+  FileText, Plus, X, Lock, Globe, Eye, LayoutTemplate, Printer,
+  Edit2, Trash2, Search, Filter, ArrowRight
 } from "lucide-react";
-import {
-  createMeeting, updateMeeting, deleteMeeting,
-  upsertMeetingTasks, toggleMeetingTask, insertAiTasksIfEmpty, getTasksForMeeting,
-  checkDateConflict,
-} from "@/app/actions/meetings";
 import { useRouter } from "next/navigation";
+import { createMeeting, updateMeeting, deleteMeeting, insertAiTasksIfEmpty } from "@/app/actions/meetings";
+import { handlePrint, handlePreview } from "./utils/meetingPrint";
+import MeetingCard from "./components/MeetingCard";
+import MeetingFormModal from "./components/MeetingFormModal";
 
-type MeetingTask = {
+export type MeetingTask = {
   id: string;
   title: string;
   assignedToId: string | null;
@@ -23,7 +20,7 @@ type MeetingTask = {
   isDone: boolean;
 };
 
-type Meeting = {
+export type Meeting = {
   id: string;
   title: string;
   date: string | Date;
@@ -41,8 +38,8 @@ type Meeting = {
   meetingTasks: MeetingTask[];
 };
 
-type Charity = { id: string; name: string };
-type Employee = { id: string; name: string; role: string };
+export type Charity = { id: string; name: string };
+export type Employee = { id: string; name: string; role: string };
 
 type Props = {
   meetings: Meeting[];
@@ -66,565 +63,19 @@ const DEPARTMENTS = [
   { value: "الإسناد الحكومي", label: "الإسناد الحكومي" },
 ];
 
-const TIER1 = ["ADMIN", "EXECUTIVE_DIRECTOR", "ADMINISTRATIVE_SECRETARIAT"];
-
-const ROLE_LABELS: Record<string, string> = {
-  ADMIN: "مدير النظام",
-  EXECUTIVE_DIRECTOR: "إدارة تنفيذية",
-  GENERAL_MANAGER: "مدير عام",
-  ADMINISTRATIVE_SECRETARIAT: "إدارة تنفيذية",
-  STRATEGY: "الاستراتيجية",
-  FINANCE: "المالية",
-  GOVERNANCE: "الحوكمة",
-};
-
-function formatDate(d: string | Date) {
-  const dt = new Date(d);
-  const day = String(dt.getDate()).padStart(2, "0");
-  const month = String(dt.getMonth() + 1).padStart(2, "0");
-  const year = dt.getFullYear();
-  return `${year}-${month}-${day}`;
-}
-
-function canEditMeeting(meeting: Meeting, sessionId: string, isTier1: boolean) {
-  const creatorIsTier1 = TIER1.includes(meeting.createdBy.role);
-  if (creatorIsTier1 && !isTier1) return false;
-  return meeting.createdById === sessionId || isTier1;
-}
-
-// ── Markdown → HTML ───────────────────────────────────────────────────────────
-function mdToHtml(md: string): string {
-  const lines = md.split("\n");
-  const out: string[] = [];
-  let inTable = false;
-  let inUl = false;
-
-  for (const raw of lines) {
-    const line = raw.trimEnd();
-
-    if (/^\|(.+)\|$/.test(line)) {
-      const cells = line.split("|").slice(1, -1).map(c => c.trim());
-      if (cells.every(c => /^[-: ]+$/.test(c))) continue;
-      if (!inTable) { out.push("<table>"); inTable = true; }
-      if (inUl) { out.push("</ul>"); inUl = false; }
-      const isHeader = out[out.length - 1] === "<table>";
-      const tag = isHeader ? "th" : "td";
-      out.push(`<tr>${cells.map(c => `<${tag}>${applyInline(c)}</${tag}>`).join("")}</tr>`);
-      continue;
-    } else if (inTable) { out.push("</table>"); inTable = false; }
-
-    if (/^[-•*] (.+)$/.test(line)) {
-      const text = line.replace(/^[-•*] /, "");
-      if (!inUl) { out.push("<ul>"); inUl = true; }
-      out.push(`<li>${applyInline(text)}</li>`);
-      continue;
-    } else if (inUl) { out.push("</ul>"); inUl = false; }
-
-    if (/^# (.+)$/.test(line)) {
-      continue;
-    } else if (/^## (.+)$/.test(line)) {
-      out.push(`<h2 class="sec-title">${applyInline(line.replace(/^## /, ""))}</h2>`);
-    } else if (/^### (.+)$/.test(line)) {
-      out.push(`<h3 class="sub-title">${applyInline(line.replace(/^### /, ""))}</h3>`);
-    } else if (/^#{1,6} (.+)$/.test(line)) {
-      out.push(`<h4 class="sub-title">${applyInline(line.replace(/^#{1,6} /, ""))}</h4>`);
-    } else if (/^---+$/.test(line)) {
-      out.push("<hr>");
-    } else if (line === "") {
-      out.push("<br>");
-    } else if (/صدر هذا المحضر|محضر إلكتروني/.test(line)) {
-      // تجاهل — الـ footer يُضاف مرة واحدة ثابتة في buildLetterheadDoc
-      continue;
-    } else {
-      out.push(`<p>${applyInline(line)}</p>`);
-    }
-  }
-
-  if (inTable) out.push("</table>");
-  if (inUl) out.push("</ul>");
-  return out.join("\n");
-}
-
-function applyInline(text: string): string {
-  return text
-    .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
-    .replace(/\*(.+?)\*/g, "<em>$1</em>");
-}
-
-// ── مهام المحضر في المحتوى المعروض ───────────────────────────────────────────
-function injectTasksIntoHtml(html: string, tasks: MeetingTask[]): string {
-  if (tasks.length === 0) return html;
-  const rows = tasks.map(t => {
-    const assignee = t.assignedTo?.name || "—";
-    const status = t.isDone ? "✓ مكتملة" : "قيد التنفيذ";
-    const due = t.dueDays ? `${t.dueDays} يوم` : "—";
-    return `<tr><td>${t.title}</td><td>${assignee}</td><td>${due}</td><td style="color:${t.isDone ? "#10b981" : "#f59e0b"}">${status}</td></tr>`;
-  }).join("");
-  const table = `<h3 class="sub-title">المهام والتكليفات</h3><table><tr><th>المهمة</th><th>المكلف</th><th>المدة</th><th>الحالة</th></tr>${rows}</table>`;
-  // أضف الجدول قبل الفوتر أو في النهاية
-  if (html.includes('footer-note')) {
-    return html.replace(/(<p class="footer-note">)/, table + '\n$1');
-  }
-  return html + '\n' + table;
-}
-
-// ── Letterhead CSS (مشترك) ────────────────────────────────────────────────────
-const LETTERHEAD_CSS = `
-  @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap');
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  html, body { background: #888; font-family: 'Cairo', 'Segoe UI', Tahoma, sans-serif; direction: rtl; }
-  .page { position: relative; width: 210mm; height: 297mm; margin: 8mm auto; overflow: hidden; background: white; }
-  .page .letterhead { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: fill; z-index: 0; }
-  .page .number-area { position: absolute; top: 14mm; left: 12mm; font-size: 8.5pt; color: #111; z-index: 2; direction: ltr; letter-spacing: 1px; font-family: 'Courier New', monospace; }
-  .page .date-area { position: absolute; top: 19mm; left: 12mm; font-size: 8.5pt; color: #111; z-index: 2; direction: ltr; letter-spacing: 1px; font-family: 'Courier New', monospace; }
-  .page .content-area { position: absolute; top: 50mm; right: 17mm; left: 17mm; bottom: 55mm; z-index: 2; overflow: hidden; direction: rtl; text-align: right; font-size: 10.5pt; line-height: 1.55; color: #1a1a1a; }
-  .meeting-label { text-align: center; font-size: 9pt; font-weight: 600; color: #1a7a8a; margin-bottom: 2px; letter-spacing: 0.5px; }
-  .meeting-title { text-align: center; font-size: 13pt; font-weight: 700; color: #1a1a1a; margin-bottom: 10px; border-bottom: 1.5px solid #c8e8ed; padding-bottom: 6px; }
-  h2.sec-title { color: #1a7a8a; font-size: 12pt; font-weight: 700; text-align: center; margin: 8px 0 4px; padding-bottom: 2px; border-bottom: 1.5px solid #c8e8ed; }
-  h3.sub-title { color: #1a7a8a; font-size: 10.5pt; font-weight: 700; text-align: center; margin: 6px 0 3px; }
-  h4.sub-title { color: #1a7a8a; font-size: 10pt; font-weight: 700; margin: 5px 0 2px; }
-  p { margin: 2px 0; } br { display: block; margin: 1px 0; }
-  ul { list-style: disc; padding-right: 16px; margin: 2px 0 5px; }
-  li { margin-bottom: 2px; line-height: 1.45; }
-  hr { border: none; border-top: 1px solid #ddd; margin: 5px 0; }
-  p.footer-note { text-align: center; color: #64748b; font-size: 9pt; margin: 2px 0; }
-  strong { font-weight: 700; }
-  table { width: 100%; border-collapse: collapse; margin: 6px 0; font-size: 9.5pt; direction: rtl; }
-  th, td { border: 1px solid #a8d8e0; padding: 4px 8px; text-align: right; vertical-align: top; }
-  th { background-color: #ddf0f4; font-weight: 700; color: #1a7a8a; text-align: center; }
-  tr:nth-child(even) td { background-color: #f4fbfc; }
-  @page { size: A4; margin: 0; }
-  @media print { html, body { background: white !important; } .page { margin: 0 !important; page-break-after: always; -webkit-print-color-adjust: exact; print-color-adjust: exact; } .page:last-child { page-break-after: avoid; } }
-`;
-
-function buildLetterheadDoc(m: Meeting, forPrint: boolean, meetingNum?: number): string {
-  // حذف أي جداول مهام أضافها AI من formattedContent لتجنب التكرار مع injectTasksIntoHtml
-  const rawHtml = mdToHtml(m.formattedContent);
-  const cleanHtml = rawHtml.replace(/<h[23][^>]*>.*?(?:مهام|توصيات|تكليفات).*?<\/h[23]>\s*(<table[\s\S]*?<\/table>)/gi, "").replace(/<table[\s\S]*?<\/table>/gi, "");
-  const footer = `<p class="footer-note"><em>صدر هذا المحضر عن شركة زاد للخدمات التنموية</em></p><p class="footer-note"><em>محضر إلكتروني عبر موقع زاد</em></p>`;
-  const body = `<div class="meeting-label">محضر اجتماع</div><div class="meeting-title">${m.title}</div>\n` + injectTasksIntoHtml(cleanHtml, m.meetingTasks) + "\n" + footer;
-  const dateStr = formatDate(m.date);
-  const numStr = meetingNum ? `ZAD_M_${String(meetingNum).padStart(3, "0")}` : "";
-  const letterheadUrl = `${window.location.origin}/assets/letterhead.png`;
-
-  return `<!DOCTYPE html>
-<html lang="ar" dir="rtl">
-<head><meta charset="utf-8"><title>${m.title}</title>
-<style>${LETTERHEAD_CSS}</style>
-</head>
-<body>
-<div id="root"></div>
-<script>
-(function() {
-  var letterheadUrl = ${JSON.stringify(letterheadUrl)};
-  var dateStr = ${JSON.stringify(dateStr)};
-  var numStr = ${JSON.stringify(numStr)};
-  var shouldPrint = ${forPrint};
-  var tmp = document.createElement('div');
-  tmp.innerHTML = ${JSON.stringify(body)};
-  var nodes = Array.from(tmp.childNodes);
-  var PAGE_H = 1123, TOP_OFFSET = 189, BOT_OFFSET = 208;
-  var USABLE = PAGE_H - TOP_OFFSET - BOT_OFFSET;
-  var root = document.getElementById('root');
-
-  function newPage() {
-    var page = document.createElement('div');
-    page.className = 'page';
-    var img = document.createElement('img');
-    img.className = 'letterhead'; img.src = letterheadUrl;
-    page.appendChild(img);
-    if (numStr) {
-      var numDiv = document.createElement('div');
-      numDiv.className = 'number-area'; numDiv.textContent = numStr;
-      page.appendChild(numDiv);
-    }
-    var dateDiv = document.createElement('div');
-    dateDiv.className = 'date-area'; dateDiv.textContent = dateStr;
-    page.appendChild(dateDiv);
-    var ca = document.createElement('div');
-    ca.className = 'content-area';
-    page.appendChild(ca);
-    root.appendChild(page);
-    return ca;
-  }
-
-  // حاوية قياس مؤقتة — نفس عرض content-area بدون overflow:hidden حتى نحصل على الارتفاع الحقيقي
-  var probe = document.createElement('div');
-  probe.style.cssText = 'position:absolute;visibility:hidden;top:-9999px;right:0;width:176mm;font-family:Cairo,Segoe UI,Tahoma,sans-serif;font-size:10.5pt;line-height:1.55;direction:rtl;';
-  document.body.appendChild(probe);
-
-  var currentArea = newPage();
-  var usedHeight = 0;
-
-  function getHeight(el) {
-    probe.appendChild(el);
-    var h = el.offsetHeight || 20;
-    probe.removeChild(el);
-    return h;
-  }
-
-  function appendToPage(el) {
-    var h = getHeight(el);
-    if (usedHeight + h > USABLE && usedHeight > 0) {
-      currentArea = newPage(); usedHeight = 0;
-    }
-    currentArea.appendChild(el);
-    usedHeight += h;
-  }
-
-  nodes.forEach(function(node) {
-    if (node.nodeType === 3) {
-      if (node.textContent.trim()) {
-        var p = document.createElement('p');
-        p.textContent = node.textContent;
-        appendToPage(p);
-      }
-    } else if (node.nodeType === 1) {
-      appendToPage(node);
-    }
-  });
-
-  document.body.removeChild(probe);
-
-  if (shouldPrint) {
-    setTimeout(function() { window.print(); }, 1200);
-  }
-})();
-</script>
-</body></html>`;
-}
-
-// ── Letterhead actions ────────────────────────────────────────────────────────
-function handlePrint(m: Meeting, meetingNum?: number) {
-  const win = window.open("", "_blank");
-  if (!win) return;
-  win.document.write(buildLetterheadDoc(m, true, meetingNum));
-  win.document.close();
-}
-
-function handlePreview(m: Meeting, meetingNum?: number) {
-  const win = window.open("", "_blank");
-  if (!win) return;
-  win.document.write(buildLetterheadDoc(m, false, meetingNum));
-  win.document.close();
-}
-
-// ── Summary accordion on meeting card ────────────────────────────────────────
-function MeetingSummaryPanel({
-  meeting, isTier1, employees,
-}: {
-  meeting: Meeting;
-  isTier1: boolean;
-  employees: Employee[];
-}) {
-  const [open, setOpen] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [localTasks, setLocalTasks] = useState<MeetingTask[]>(meeting.meetingTasks);
-  const [editing, setEditing] = useState(false);
-  const [editTasks, setEditTasks] = useState<(Omit<MeetingTask, "assignedTo"> & { assignedTo: { id: string; name: string } | null })[]>([]);
-  const [saving, setSaving] = useState(false);
-  const [, startTransition] = useTransition();
-
-  const [summary, setSummary] = useState(meeting.summary || "");
-  // meeting.summary === null يعني لم يُحلَّل بعد، أما "" أو أي نص = تم التحليل
-  const alreadyExtracted = meeting.summary !== null || meeting.meetingTasks.length > 0;
-  const [extracted, setExtracted] = useState(alreadyExtracted);
-
-  const unassigned = localTasks.filter(t => !t.assignedToId).length;
-  const done = localTasks.filter(t => t.isDone).length;
-  const total = localTasks.length;
-  const pct = total > 0 ? Math.round((done / total) * 100) : 0;
-
-  async function loadSummary(force = false) {
-    if (loading) return;
-    if (extracted && !force) return;
-    if (force && !confirm("سيتم إعادة تحليل المحضر بالذكاء الاصطناعي وتحديث الملخص. هل تريد المتابعة؟")) return;
-    setLoading(true);
-    try {
-      const res = await fetch("/api/meetings/extract-tasks", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ formattedContent: meeting.formattedContent }),
-      });
-      const data = await res.json();
-      if (data.summary) setSummary(data.summary);
-      // احفظ الملخص دائماً — "" تعني "تم التحليل ولا يوجد ملخص"
-      await updateMeeting(meeting.id, { summary: data.summary || "" });
-      // احفظ المهام في DB
-      if (data.tasks?.length > 0) {
-        if (force) {
-          const toSave = (data.tasks as { title: string }[]).map(t => ({
-            id: undefined as string | undefined,
-            title: t.title,
-            assignedToId: null as string | null,
-            dueDays: null as number | null,
-            isDone: false,
-          }));
-          await upsertMeetingTasks(meeting.id, toSave);
-        } else {
-          await insertAiTasksIfEmpty(meeting.id, data.tasks as { title: string }[]);
-        }
-        // اجلب المهام المحفوظة من DB وحدّث الـ state المحلي
-        const saved = await getTasksForMeeting(meeting.id);
-        setLocalTasks(saved as MeetingTask[]);
-      }
-      setExtracted(true);
-    } catch { setExtracted(true); }
-    finally { setLoading(false); }
-  }
-
-  function openEdit() {
-    setEditTasks(localTasks.map(t => ({ ...t })));
-    setEditing(true);
-  }
-
-  function updateEditTask(i: number, field: string, val: any) {
-    setEditTasks(prev => prev.map((t, idx) => idx === i ? { ...t, [field]: val } : t));
-  }
-
-  async function saveEdit() {
-    setSaving(true);
-    try {
-      const toSave = editTasks.map(t => ({
-        id: t.id.startsWith("tmp_") ? undefined : t.id,
-        title: t.title,
-        assignedToId: t.assignedToId || null,
-        dueDays: t.dueDays || null,
-        isDone: t.isDone,
-      }));
-      await upsertMeetingTasks(meeting.id, toSave);
-      // تحديث محلي
-      const updated = editTasks.map(t => ({
-        ...t,
-        assignedTo: t.assignedToId
-          ? (employees.find(e => e.id === t.assignedToId) ? { id: t.assignedToId, name: employees.find(e => e.id === t.assignedToId)!.name } : null)
-          : null,
-      }));
-      setLocalTasks(updated);
-      setEditing(false);
-    } catch (e: any) { alert(e.message); }
-    finally { setSaving(false); }
-  }
-
-  function addEditRow() {
-    setEditTasks(prev => [...prev, { id: `tmp_${Date.now()}`, title: "", assignedToId: null, assignedTo: null, dueDays: null, isDone: false }]);
-  }
-
-  async function handleToggle(task: MeetingTask) {
-    if (task.id.startsWith("tmp_")) return; // مهمة غير محفوظة بعد
-    const updated = localTasks.map(t => t.id === task.id ? { ...t, isDone: !t.isDone } : t);
-    setLocalTasks(updated);
-    startTransition(async () => {
-      try { await toggleMeetingTask(task.id, !task.isDone); } catch {}
-    });
-  }
-
-  const handleOpen = () => {
-    const next = !open;
-    setOpen(next);
-    if (next && !extracted && !loading) loadSummary(false);
-  };
-
-  return (
-    <div className="border-t border-slate-100 dark:border-slate-700/50 mt-1">
-      {/* شريط الملخص الصغير — يظهر دائماً */}
-      <div className="flex items-center gap-2 pt-1 px-1">
-        <button
-          onClick={handleOpen}
-          className="flex items-center gap-1.5 text-[11px] font-bold text-slate-400 hover:text-primary transition-colors"
-        >
-          {open ? <ChevronDown className="w-3.5 h-3.5" /> : <ChevronRight className="w-3.5 h-3.5" />}
-          <span>الملخص والمهام</span>
-        </button>
-        {extracted && !loading && (
-          <button
-            onClick={() => loadSummary(true)}
-            title="إعادة تحليل المحضر بالذكاء الاصطناعي"
-            className="p-0.5 text-slate-300 hover:text-blue-500 transition-colors rounded"
-          >
-            <RefreshCw className="w-3 h-3" />
-          </button>
-        )}
-
-        {/* مؤشرات سريعة */}
-        <div className="flex items-center gap-2 flex-1">
-          {total > 0 && (
-            <>
-              <div className="flex items-center gap-1">
-                <div className="w-14 h-1.5 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
-                  <div className="h-full bg-emerald-500 rounded-full transition-all" style={{ width: `${pct}%` }} />
-                </div>
-                <span className="text-[10px] text-slate-500 font-bold">{pct}%</span>
-              </div>
-              <span className="text-[10px] text-slate-400">{done}/{total}</span>
-            </>
-          )}
-          {unassigned > 0 && !open && (
-            <span className="flex items-center gap-0.5 text-[10px] bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400 px-1.5 py-0.5 rounded-full font-bold">
-              <AlertCircle className="w-3 h-3" /> {unassigned} غير مكلفة
-            </span>
-          )}
-        </div>
-      </div>
-
-      {/* المحتوى المنسدل */}
-      {open && (
-        <div className="mt-2 space-y-3 pb-1">
-          {loading && (
-            <div className="flex items-center gap-2 text-xs text-slate-400 py-2">
-              <Loader2 className="w-3.5 h-3.5 animate-spin" />
-              <span>جاري تحليل المحضر بالذكاء الاصطناعي...</span>
-            </div>
-          )}
-
-          {/* الملخص */}
-          {summary && (
-            <div className="bg-blue-50/60 dark:bg-blue-900/10 border border-blue-100 dark:border-blue-800/30 rounded-xl p-3">
-              <div className="flex items-center gap-1.5 mb-1.5 text-[11px] font-bold text-blue-700 dark:text-blue-400">
-                <BookOpen className="w-3.5 h-3.5" /> الملخص التنفيذي
-              </div>
-              <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">{summary}</p>
-            </div>
-          )}
-
-          {/* قائمة المهام */}
-          {!editing ? (
-            <div className="space-y-1.5">
-              <div className="flex items-center justify-between">
-                <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 flex items-center gap-1">
-                  <ClipboardList className="w-3.5 h-3.5" /> المهام والتوصيات
-                </span>
-                {isTier1 && (
-                  <button onClick={openEdit} className="text-[10px] font-bold text-primary hover:underline flex items-center gap-1">
-                    <Edit2 className="w-3 h-3" /> تعديل التكليفات
-                  </button>
-                )}
-              </div>
-
-              {localTasks.length === 0 ? (
-                <p className="text-[11px] text-slate-400 italic py-1">
-                  {extracted ? "لا توجد مهام مسجلة" : "اضغط لتحليل المحضر"}
-                </p>
-              ) : (
-                <div className="space-y-1">
-                  {localTasks.map(task => (
-                    <div key={task.id} className={`flex items-start gap-2 p-2 rounded-lg text-xs border ${task.isDone ? "bg-emerald-50/40 dark:bg-emerald-900/10 border-emerald-100 dark:border-emerald-800/20" : task.assignedToId ? "bg-white dark:bg-slate-800/50 border-slate-100 dark:border-slate-700" : "bg-amber-50/50 dark:bg-amber-900/10 border-amber-100 dark:border-amber-800/20"}`}>
-                      <button
-                        onClick={() => isTier1 && handleToggle(task)}
-                        className={`mt-0.5 w-4 h-4 rounded border shrink-0 flex items-center justify-center transition-colors ${task.isDone ? "bg-emerald-500 border-emerald-500 text-white" : "border-slate-300 dark:border-slate-600"} ${isTier1 ? "cursor-pointer" : "cursor-default"}`}
-                      >
-                        {task.isDone && <Check className="w-2.5 h-2.5" />}
-                      </button>
-                      <div className="flex-1 min-w-0">
-                        <p className={`font-semibold leading-snug ${task.isDone ? "line-through text-slate-400" : "text-slate-700 dark:text-slate-200"}`}>{task.title}</p>
-                        <div className="flex items-center gap-2 mt-0.5 flex-wrap">
-                          {task.assignedTo ? (
-                            <span className="flex items-center gap-1 text-[10px] text-blue-600 dark:text-blue-400 font-bold">
-                              <User className="w-3 h-3" /> {task.assignedTo.name}
-                            </span>
-                          ) : (
-                            <span className="text-[10px] text-amber-600 dark:text-amber-400 font-bold flex items-center gap-1">
-                              <AlertCircle className="w-3 h-3" /> غير مكلف
-                            </span>
-                          )}
-                          {task.dueDays && (
-                            <span className="flex items-center gap-1 text-[10px] text-slate-400">
-                              <Clock className="w-3 h-3" /> {task.dueDays} يوم
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          ) : (
-            /* وضع التعديل */
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <span className="text-[11px] font-bold text-slate-600 dark:text-slate-300 flex items-center gap-1">
-                  <UserPlus className="w-3.5 h-3.5 text-blue-500" /> تعديل التكليفات
-                </span>
-                <button onClick={() => setEditing(false)} className="text-[10px] text-slate-400 hover:text-slate-600">إلغاء</button>
-              </div>
-
-              <div className="space-y-2 max-h-72 overflow-y-auto">
-                {editTasks.map((t, i) => (
-                  <div key={t.id} className="flex gap-2 items-start bg-slate-50 dark:bg-slate-800/50 rounded-xl p-2 border border-slate-100 dark:border-slate-700">
-                    <div className="flex-1 space-y-1.5">
-                      <input
-                        value={t.title}
-                        onChange={e => updateEditTask(i, "title", e.target.value)}
-                        placeholder="عنوان المهمة"
-                        className="w-full text-xs border border-slate-200 dark:border-slate-600 rounded-lg px-2 py-1.5 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-primary/50"
-                      />
-                      <div className="flex gap-1.5">
-                        <select
-                          value={t.assignedToId || ""}
-                          onChange={e => updateEditTask(i, "assignedToId", e.target.value || null)}
-                          className="flex-1 text-xs border border-slate-200 dark:border-slate-600 rounded-lg px-2 py-1.5 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-primary/50"
-                        >
-                          <option value="">— المكلف —</option>
-                          {employees.map(e => (
-                            <option key={e.id} value={e.id}>{e.name} ({ROLE_LABELS[e.role] || e.role})</option>
-                          ))}
-                        </select>
-                        <input
-                          type="number" min="1" max="365"
-                          value={t.dueDays || ""}
-                          onChange={e => updateEditTask(i, "dueDays", e.target.value ? parseInt(e.target.value) : null)}
-                          placeholder="أيام"
-                          className="w-20 text-xs border border-slate-200 dark:border-slate-600 rounded-lg px-2 py-1.5 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-primary/50"
-                          title="عدد أيام الإنجاز"
-                        />
-                      </div>
-                      <label className="flex items-center gap-1.5 text-[10px] text-slate-500 cursor-pointer">
-                        <input type="checkbox" checked={t.isDone} onChange={e => updateEditTask(i, "isDone", e.target.checked)} className="accent-emerald-500" />
-                        مكتملة
-                      </label>
-                    </div>
-                    <button onClick={() => setEditTasks(prev => prev.filter((_, idx) => idx !== i))} className="mt-1 p-1 text-slate-300 hover:text-red-500 transition-colors">
-                      <X className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
-                ))}
-              </div>
-
-              <button onClick={addEditRow} className="flex items-center gap-1 text-xs text-primary hover:text-primary/80 font-bold">
-                <Plus className="w-3.5 h-3.5" /> إضافة مهمة
-              </button>
-
-              <button
-                onClick={saveEdit}
-                disabled={saving}
-                className="w-full flex items-center justify-center gap-2 py-2 bg-primary hover:bg-primary/90 text-white rounded-xl text-xs font-bold transition-colors disabled:opacity-50"
-              >
-                {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" />}
-                حفظ التكليفات
-              </button>
-            </div>
-          )}
-        </div>
-      )}
-    </div>
-  );
-}
-
-// ── بطاقات الأقسام ────────────────────────────────────────────────────────────
 const CATEGORY_CARDS = [
-  { key: "all",                   label: "الكل",                   border: "border-slate-400 dark:border-slate-500",   text: "text-slate-600 dark:text-slate-300",   num: "text-slate-700 dark:text-slate-100" },
-  { key: "زاد",                   label: "إدارة زاد",               border: "border-blue-500",                          text: "text-blue-600 dark:text-blue-400",     num: "text-blue-700 dark:text-blue-300" },
-  { key: "التخطيط الاستراتيجي",   label: "التخطيط الاستراتيجي",    border: "border-indigo-500",                        text: "text-indigo-600 dark:text-indigo-400", num: "text-indigo-700 dark:text-indigo-300" },
-  { key: "الحوكمة",               label: "الحوكمة",                 border: "border-violet-500",                        text: "text-violet-600 dark:text-violet-400", num: "text-violet-700 dark:text-violet-300" },
-  { key: "تنمية الموارد المالية", label: "تنمية الموارد المالية",   border: "border-emerald-500",                       text: "text-emerald-600 dark:text-emerald-400", num: "text-emerald-700 dark:text-emerald-300" },
-  { key: "الإعلامية",             label: "الإعلامية",               border: "border-pink-500",                          text: "text-pink-600 dark:text-pink-400",     num: "text-pink-700 dark:text-pink-300" },
-  { key: "التقنية",               label: "التقنية",                 border: "border-cyan-500",                          text: "text-cyan-600 dark:text-cyan-400",     num: "text-cyan-700 dark:text-cyan-300" },
-  { key: "المالية",               label: "المالية",                 border: "border-amber-500",                         text: "text-amber-600 dark:text-amber-400",   num: "text-amber-700 dark:text-amber-300" },
-  { key: "التسويق",               label: "التسويق",                 border: "border-orange-500",                        text: "text-orange-600 dark:text-orange-400", num: "text-orange-700 dark:text-orange-300" },
-  { key: "خدمات المشاريع",        label: "خدمات المشاريع",          border: "border-teal-500",                          text: "text-teal-600 dark:text-teal-400",     num: "text-teal-700 dark:text-teal-300" },
-  { key: "الإدارية",              label: "الإدارية",                border: "border-rose-500",                          text: "text-rose-600 dark:text-rose-400",     num: "text-rose-700 dark:text-rose-300" },
-  { key: "الإسناد الحكومي",       label: "الإسناد الحكومي",         border: "border-sky-500",                           text: "text-sky-600 dark:text-sky-400",       num: "text-sky-700 dark:text-sky-300" },
+  { key: "all",                   label: "الكل",                   border: "border-slate-200 dark:border-slate-700",   text: "text-slate-600 dark:text-slate-300",   num: "text-slate-700 dark:text-slate-100" },
+  { key: "زاد",                   label: "إدارة زاد",               border: "border-primary/30",                          text: "text-primary dark:text-primary-foreground/80",     num: "text-primary dark:text-primary-foreground" },
+  { key: "التخطيط الاستراتيجي",   label: "التخطيط الاستراتيجي",    border: "border-indigo-500/30",                        text: "text-indigo-600 dark:text-indigo-400", num: "text-indigo-700 dark:text-indigo-300" },
+  { key: "الحوكمة",               label: "الحوكمة",                 border: "border-violet-500/30",                        text: "text-violet-600 dark:text-violet-400", num: "text-violet-700 dark:text-violet-300" },
+  { key: "تنمية الموارد المالية", label: "تنمية الموارد المالية",   border: "border-emerald-500/30",                       text: "text-emerald-600 dark:text-emerald-400", num: "text-emerald-700 dark:text-emerald-300" },
+  { key: "الإعلامية",             label: "الإعلامية",               border: "border-pink-500/30",                          text: "text-pink-600 dark:text-pink-400",     num: "text-pink-700 dark:text-pink-300" },
+  { key: "التقنية",               label: "التقنية",                 border: "border-cyan-500/30",                          text: "text-cyan-600 dark:text-cyan-400",     num: "text-cyan-700 dark:text-cyan-300" },
+  { key: "المالية",               label: "المالية",                 border: "border-amber-500/30",                         text: "text-amber-600 dark:text-amber-400",   num: "text-amber-700 dark:text-amber-300" },
+  { key: "التسويق",               label: "التسويق",                 border: "border-orange-500/30",                        text: "text-orange-600 dark:text-orange-400", num: "text-orange-700 dark:text-orange-300" },
+  { key: "خدمات المشاريع",        label: "خدمات المشاريع",          border: "border-teal-500/30",                          text: "text-teal-600 dark:text-teal-400",     num: "text-teal-700 dark:text-teal-300" },
+  { key: "الإدارية",              label: "الإدارية",                border: "border-rose-500/30",                          text: "text-rose-600 dark:text-rose-400",     num: "text-rose-700 dark:text-rose-300" },
+  { key: "الإسناد الحكومي",       label: "الإسناد الحكومي",         border: "border-sky-500/30",                           text: "text-sky-600 dark:text-sky-400",       num: "text-sky-700 dark:text-sky-300" },
 ];
 
 function getCategoryCount(meetings: Meeting[], key: string): number {
@@ -638,8 +89,8 @@ function CategorySelector({ meetings, onSelect }: { meetings: Meeting[]; onSelec
     <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-500" dir="rtl">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <div className="w-7 h-7 bg-blue-100 dark:bg-blue-900/30 rounded-lg flex items-center justify-center">
-            <FileText className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
+          <div className="w-7 h-7 bg-primary/10 dark:bg-primary/20 rounded-lg flex items-center justify-center">
+            <FileText className="w-3.5 h-3.5 text-primary" />
           </div>
           <div>
             <h1 className="text-base font-bold text-slate-800 dark:text-slate-100">محاضر الاجتماعات</h1>
@@ -669,7 +120,6 @@ function CategorySelector({ meetings, onSelect }: { meetings: Meeting[]; onSelec
   );
 }
 
-// ── Main component ─────────────────────────────────────────────────────────────
 export default function MeetingsClient({ meetings, charities, employees, sessionId, sessionRole, isTier1 }: Props) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
@@ -680,30 +130,17 @@ export default function MeetingsClient({ meetings, charities, employees, session
   const [editingId, setEditingId] = useState<string | null>(null);
   const [viewingMeeting, setViewingMeeting] = useState<Meeting | null>(null);
 
-  // Form fields
-  const [title, setTitle] = useState("");
-  const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
-  const [location, setLocation] = useState("");
-  const [charityId, setCharityId] = useState("");
-  const [attendees, setAttendees] = useState("");
-  const [rawNotes, setRawNotes] = useState("");
-  const [meetingContext, setMeetingContext] = useState(""); // "" | "زاد" | "service:اسم الخدمة"
-  const [isPrivate, setIsPrivate] = useState(false);
-  const [step, setStep] = useState<1 | 2>(1);
-  const [formattedContent, setFormattedContent] = useState("");
-  const [aiLoading, setAiLoading] = useState(false);
-  const [aiError, setAiError] = useState("");
-  const [error, setError] = useState("");
+  // Form edit initial data
+  const [formInitialData, setFormInitialData] = useState<any>(undefined);
 
   // ── تصفيات ────────────────────────────────────────────────────────────────
   const [searchQuery, setSearchQuery] = useState("");
-  const [filterContext, setFilterContext] = useState(""); // "" | "زاد" | "service:اسم"
-  const [filterCharityId, setFilterCharityId] = useState(""); // "" | charity.id
+  const [filterContext, setFilterContext] = useState(""); 
+  const [filterCharityId, setFilterCharityId] = useState(""); 
   const [filterPrivacy, setFilterPrivacy] = useState<"" | "private" | "public">("");
   const [filterPeriod, setFilterPeriod] = useState<"" | "today" | "week" | "month" | "quarter" | "year">("");
 
   const filteredMeetings = meetings.filter(m => {
-    // تصفية القسم المختار من لوحة الاختيار
     if (selectedCategory && selectedCategory !== "all") {
       if (selectedCategory === "زاد") {
         if (m.meetingContext !== "إدارة زاد") return false;
@@ -751,7 +188,6 @@ export default function MeetingsClient({ meetings, charities, employees, session
     return true;
   });
 
-  // ترقيم تلقائي: رتّب المحاضر حسب التاريخ تصاعدياً (الأقدم = 1)
   const sortedByDate = [...meetings].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
   const meetingNumberMap = new Map<string, number>(sortedByDate.map((m, i) => [m.id, i + 1]));
 
@@ -761,114 +197,84 @@ export default function MeetingsClient({ meetings, charities, employees, session
     setSearchQuery(""); setFilterContext(""); setFilterCharityId(""); setFilterPrivacy(""); setFilterPeriod("");
   }
 
-  function resetForm() {
-    setTitle(""); setDate(new Date().toISOString().slice(0, 10));
-    setLocation(""); setCharityId(""); setAttendees("");
-    setRawNotes(""); setMeetingContext(""); setIsPrivate(false);
-    setFormattedContent(""); setStep(1); setAiError(""); setError("");
-    setEditingId(null);
-  }
-
   function openCreate() {
-    resetForm();
+    setFormInitialData(undefined);
+    setEditingId(null);
     setShowModal(true);
   }
 
   function openEdit(m: Meeting) {
-    setTitle(m.title);
-    setDate(new Date(m.date).toISOString().slice(0, 10));
-    setLocation(m.location || "");
-    setAttendees(m.attendees || "");
-    setRawNotes(m.rawNotes);
-    // استعادة القيمتين المنفصلتين
-    setCharityId(m.charityId || "");
-    if (m.meetingContext) {
-      setMeetingContext(m.meetingContext === "إدارة زاد" ? "زاد" : `service:${m.meetingContext}`);
-    } else {
-      setMeetingContext("");
-    }
-    setIsPrivate(m.isPrivate); setFormattedContent(m.formattedContent);
-    setStep(1); setAiError(""); setError(""); setEditingId(m.id);
+    setFormInitialData({
+      title: m.title,
+      date: new Date(m.date).toISOString().slice(0, 10),
+      location: m.location || "",
+      attendees: m.attendees || "",
+      rawNotes: m.rawNotes,
+      charityId: m.charityId || "",
+      meetingContext: m.meetingContext ? (m.meetingContext === "إدارة زاد" ? "زاد" : `service:${m.meetingContext}`) : "",
+      isPrivate: m.isPrivate,
+      formattedContent: m.formattedContent
+    });
+    setEditingId(m.id);
     setShowModal(true);
   }
 
-  async function handleFormat() {
-    if (!rawNotes.trim()) { setAiError("أدخل الملاحظات أولاً"); return; }
-    setAiLoading(true); setAiError("");
-    try {
-      const res = await fetch("/api/meetings/format", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ rawNotes, title, date, attendees, location }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "فشل الطلب");
-      setFormattedContent(data.formatted);
-      setStep(2);
-    } catch (e: any) { setAiError(e.message || "حدث خطأ"); }
-    finally { setAiLoading(false); }
-  }
-
-  async function handleSave() {
-    if (!title.trim()) { setError("العنوان مطلوب"); return; }
-    if (!date) { setError("التاريخ مطلوب"); return; }
-    if (!formattedContent.trim()) { setError("المحضر المنسق مطلوب"); return; }
-    setError("");
-
-    // فك ترميز قيمة الـ dropdown
-    let resolvedCharityId = charityId || "";
+  async function handleSave(data: {
+    title: string;
+    date: string;
+    location: string;
+    charityId: string;
+    attendees: string;
+    rawNotes: string;
+    meetingContext: string;
+    isPrivate: boolean;
+    formattedContent: string;
+  }) {
+    let resolvedCharityId = data.charityId || "";
     let resolvedContext = "";
-    if (meetingContext.startsWith("service:")) {
-      resolvedContext = meetingContext.slice("service:".length);
-    } else if (meetingContext === "زاد") {
+    if (data.meetingContext.startsWith("service:")) {
+      resolvedContext = data.meetingContext.slice("service:".length);
+    } else if (data.meetingContext === "زاد") {
       resolvedContext = "إدارة زاد";
     }
 
-    // فحص تعارض التاريخ
-    const dateConflicts = await checkDateConflict(date, editingId || undefined);
-    if (dateConflicts.length > 0) {
-      const names = dateConflicts.map(c => `"${c.title}"`).join("، ");
-      const proceed = confirm(
-        `تنبيه: يوجد ${dateConflicts.length > 1 ? "محاضر أخرى" : "محضر آخر"} في نفس هذا التاريخ:\n${names}\n\nهل تريد المتابعة وحفظ المحضر على أي حال؟`
-      );
-      if (!proceed) return;
-    }
-
     startTransition(async () => {
-      try {
-        let savedId = editingId;
-        if (editingId) {
-          await updateMeeting(editingId, {
-            title, date, location: location || null,
-            charityId: resolvedCharityId || null,
-            meetingContext: resolvedContext || null,
-            attendees: attendees || null,
-            rawNotes, formattedContent, isPrivate,
-          });
-        } else {
-          const res = await createMeeting({ title, date, location, charityId: resolvedCharityId, meetingContext: resolvedContext, rawNotes, formattedContent, attendees, isPrivate });
-          savedId = res.id;
-        }
-        setShowModal(false);
-        resetForm();
-        // استخلاص الملخص والمهام تلقائياً في الخلفية بعد الحفظ
-        if (savedId) {
-          fetch("/api/meetings/extract-tasks", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ formattedContent }),
-          }).then(r => r.json()).then(async data => {
-            try {
-              await updateMeeting(savedId!, { summary: data.summary || "" });
-              if (data.tasks?.length > 0) {
-                await insertAiTasksIfEmpty(savedId!, data.tasks as { title: string }[]);
-              }
-            } catch {}
-          }).catch(() => {}).finally(() => { router.refresh(); });
-        } else {
-          router.refresh();
-        }
-      } catch (e: any) { setError(e.message || "حدث خطأ"); }
+      let savedId = editingId;
+      if (editingId) {
+        await updateMeeting(editingId, {
+          title: data.title, date: data.date, location: data.location || null,
+          charityId: resolvedCharityId || null,
+          meetingContext: resolvedContext || null,
+          attendees: data.attendees || null,
+          rawNotes: data.rawNotes, formattedContent: data.formattedContent, isPrivate: data.isPrivate,
+        });
+      } else {
+        const res = await createMeeting({
+          title: data.title, date: data.date, location: data.location,
+          charityId: resolvedCharityId, meetingContext: resolvedContext,
+          rawNotes: data.rawNotes, formattedContent: data.formattedContent,
+          attendees: data.attendees, isPrivate: data.isPrivate
+        });
+        savedId = res.id;
+      }
+      setShowModal(false);
+      
+      if (savedId) {
+        fetch("/api/meetings/extract-tasks", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ formattedContent: data.formattedContent }),
+        }).then(r => r.json()).then(async result => {
+          try {
+            await updateMeeting(savedId!, { summary: result.summary || "" });
+            if (result.tasks?.length > 0) {
+              await insertAiTasksIfEmpty(savedId!, result.tasks as { title: string }[]);
+            }
+          } catch {}
+        }).catch(() => {}).finally(() => { router.refresh(); });
+      } else {
+        router.refresh();
+      }
     });
   }
 
@@ -883,214 +289,34 @@ export default function MeetingsClient({ meetings, charities, employees, session
     });
   }
 
-  function renderModal() {
-    return (
-      <>
-        {/* View Modal — عرض نص المحضر */}
-        {viewingMeeting && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm" dir="rtl">
-            <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-2xl w-full max-w-3xl max-h-[90vh] flex flex-col">
-              <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100 dark:border-slate-800 shrink-0">
-                <div>
-                  <h2 className="font-bold text-slate-800 dark:text-slate-100 text-sm">{viewingMeeting.title}</h2>
-                  <p className="text-xs text-slate-400 mt-0.5">{formatDate(viewingMeeting.date)}{viewingMeeting.location ? ` · ${viewingMeeting.location}` : ""}</p>
-                </div>
-                <div className="flex gap-2">
-                  <button onClick={() => handlePreview(viewingMeeting, meetingNumberMap.get(viewingMeeting.id))} className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-teal-600 transition-colors" title="عرض بالكليشة">
-                    <LayoutTemplate className="w-4 h-4" />
-                  </button>
-                  <button onClick={() => handlePrint(viewingMeeting, meetingNumberMap.get(viewingMeeting.id))} className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 transition-colors" title="طباعة">
-                    <Printer className="w-4 h-4" />
-                  </button>
-                  <button onClick={() => setViewingMeeting(null)} className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 transition-colors">
-                    <X className="w-5 h-5" />
-                  </button>
-                </div>
-              </div>
-              <div className="flex-1 overflow-auto p-4">
-                <pre className="whitespace-pre-wrap font-sans text-sm leading-relaxed text-slate-700 dark:text-slate-200 text-right" dir="rtl">
-                  {viewingMeeting.formattedContent}
-                </pre>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Create/Edit Modal */}
-        {showModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm" dir="rtl">
-            <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-2xl w-full max-w-2xl max-h-[95vh] flex flex-col">
-              <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100 dark:border-slate-800 shrink-0">
-                <div className="flex items-center gap-2">
-                  <Sparkles className="w-4 h-4 text-blue-500" />
-                  <h2 className="font-bold text-slate-800 dark:text-slate-100">
-                    {editingId ? "تعديل المحضر" : "محضر اجتماع جديد"}
-                  </h2>
-                  {!editingId && (
-                    <div className="flex items-center gap-1 mr-2">
-                      <div className={`w-6 h-6 rounded-full text-[10px] font-bold flex items-center justify-center ${step === 1 ? "bg-blue-600 text-white" : "bg-blue-100 dark:bg-blue-900/40 text-blue-600"}`}>١</div>
-                      <div className="w-4 h-px bg-slate-200 dark:bg-slate-700" />
-                      <div className={`w-6 h-6 rounded-full text-[10px] font-bold flex items-center justify-center ${step === 2 ? "bg-blue-600 text-white" : "bg-slate-100 dark:bg-slate-800 text-slate-400"}`}>٢</div>
-                    </div>
-                  )}
-                </div>
-                <button onClick={() => { setShowModal(false); resetForm(); }} className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400">
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
-
-              <div className="flex-1 overflow-auto p-4 space-y-3">
-                {step === 1 && (
-                  <>
-                    <div className="grid grid-cols-2 gap-3">
-                      <div>
-                        <label className="text-xs font-bold text-slate-500 dark:text-slate-400 mb-1 block">عنوان الاجتماع *</label>
-                        <input value={title} onChange={e => setTitle(e.target.value)} placeholder="مثال: اجتماع فريق زاد الأسبوعي"
-                          className="w-full border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-sm bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500" />
-                      </div>
-                      <div>
-                        <label className="text-xs font-bold text-slate-500 dark:text-slate-400 mb-1 block">التاريخ *</label>
-                        <input type="date" value={date} onChange={e => setDate(e.target.value)} required
-                          className="w-full border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-sm bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500" />
-                      </div>
-                      <div>
-                        <label className="text-xs font-bold text-slate-500 dark:text-slate-400 mb-1 block">المكان</label>
-                        <input value={location} onChange={e => setLocation(e.target.value)} placeholder="مكتب زاد / أونلاين"
-                          className="w-full border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-sm bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500" />
-                      </div>
-                      <div>
-                        <label className="text-xs font-bold text-slate-500 dark:text-slate-400 mb-1 block">الحضور</label>
-                        <input value={attendees} onChange={e => setAttendees(e.target.value)} placeholder="محمد، أحمد، سارة..."
-                          className="w-full border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-sm bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500" />
-                      </div>
-                      <div>
-                        <label className="text-xs font-bold text-slate-500 dark:text-slate-400 mb-1 block">نوع / سياق الاجتماع</label>
-                        <select value={meetingContext} onChange={e => setMeetingContext(e.target.value)}
-                          className="w-full border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-sm bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500">
-                          <option value="">— اختر النوع —</option>
-                          <option value="زاد">إدارة زاد</option>
-                          <option disabled>── الأقسام ──</option>
-                          {DEPARTMENTS.map(d => <option key={d.value} value={`service:${d.value}`}>{d.label}</option>)}
-                        </select>
-                      </div>
-                      <div>
-                        <label className="text-xs font-bold text-slate-500 dark:text-slate-400 mb-1 block">الجمعية (اختياري)</label>
-                        <select value={charityId} onChange={e => setCharityId(e.target.value)}
-                          className="w-full border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-sm bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500">
-                          <option value="">— بدون جمعية —</option>
-                          {charities.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-                        </select>
-                      </div>
-                    </div>
-                    <div>
-                      <label className="text-xs font-bold text-slate-500 dark:text-slate-400 mb-1 block">
-                        ملاحظات الاجتماع الخام *
-                        <span className="font-normal text-slate-400 mr-1">— اكتب بحرية وبالعامية</span>
-                      </label>
-                      <textarea value={rawNotes} onChange={e => setRawNotes(e.target.value)} rows={8}
-                        placeholder="اكتب ملاحظاتك هنا بأي طريقة... مثلاً: ناقشنا موضوع الميزانية وقرر المدير زيادتها، واحمد راح يتابع مع الجمعية..."
-                        className="w-full border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-sm bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none" />
-                    </div>
-                    {aiError && <p className="text-xs text-red-500">{aiError}</p>}
-
-                    {editingId && (
-                      <div className="space-y-2 border-t border-slate-100 dark:border-slate-700 pt-3">
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <Sparkles className="w-3.5 h-3.5 text-blue-500 shrink-0" />
-                          <span className="text-xs font-bold text-slate-600 dark:text-slate-300">المحضر المنسق</span>
-                          <button
-                            onClick={handleFormat}
-                            disabled={aiLoading || !rawNotes.trim()}
-                            className="flex items-center gap-1.5 text-[11px] font-bold text-blue-600 hover:text-blue-700 border border-blue-200 dark:border-blue-700 hover:bg-blue-50 dark:hover:bg-blue-900/20 px-2.5 py-1 rounded-lg transition-colors disabled:opacity-40 mr-auto"
-                          >
-                            {aiLoading ? <Loader2 className="w-3 h-3 animate-spin" /> : <Sparkles className="w-3 h-3" />}
-                            إعادة الصياغة
-                          </button>
-                        </div>
-                        <textarea value={formattedContent} onChange={e => setFormattedContent(e.target.value)} rows={10}
-                          className="w-full border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-sm bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none leading-relaxed" dir="rtl" />
-                        {isTier1 && (
-                          <label className="flex items-center gap-2 cursor-pointer select-none">
-                            <input type="checkbox" checked={isPrivate} onChange={e => setIsPrivate(e.target.checked)} className="w-4 h-4 rounded accent-amber-500" />
-                            <Lock className="w-3.5 h-3.5 text-amber-500" />
-                            <span className="text-sm text-slate-600 dark:text-slate-300">خاص بالإدارة التنفيذية فقط</span>
-                          </label>
-                        )}
-                      </div>
-                    )}
-                    {error && <p className="text-xs text-red-500">{error}</p>}
-                  </>
-                )}
-
-                {step === 2 && !editingId && (
-                  <>
-                    <div className="flex items-center gap-2 mb-1 flex-wrap">
-                      <Sparkles className="w-4 h-4 text-blue-500 shrink-0" />
-                      <span className="text-xs font-bold text-slate-600 dark:text-slate-300">المحضر المنسق — يمكنك التعديل مباشرة</span>
-                      <button
-                        onClick={handleFormat}
-                        disabled={aiLoading || !rawNotes.trim()}
-                        className="flex items-center gap-1.5 text-[11px] font-bold text-blue-600 hover:text-blue-700 border border-blue-200 dark:border-blue-700 hover:bg-blue-50 dark:hover:bg-blue-900/20 px-2.5 py-1 rounded-lg transition-colors disabled:opacity-40 mr-auto"
-                      >
-                        {aiLoading ? <Loader2 className="w-3 h-3 animate-spin" /> : <Sparkles className="w-3 h-3" />}
-                        إعادة الصياغة
-                      </button>
-                    </div>
-                    <textarea value={formattedContent} onChange={e => setFormattedContent(e.target.value)} rows={15}
-                      className="w-full border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-sm bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none leading-relaxed" dir="rtl" />
-                    {isTier1 && (
-                      <label className="flex items-center gap-2 cursor-pointer select-none">
-                        <input type="checkbox" checked={isPrivate} onChange={e => setIsPrivate(e.target.checked)} className="w-4 h-4 rounded accent-amber-500" />
-                        <Lock className="w-3.5 h-3.5 text-amber-500" />
-                        <span className="text-sm text-slate-600 dark:text-slate-300">خاص بالإدارة التنفيذية فقط</span>
-                      </label>
-                    )}
-                    {error && <p className="text-xs text-red-500">{error}</p>}
-                  </>
-                )}
-              </div>
-
-              <div className="px-6 py-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between shrink-0">
-                {step === 2 && !editingId
-                  ? <button onClick={() => setStep(1)} className="text-sm text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 transition-colors">← العودة للملاحظات</button>
-                  : <div />}
-                <div className="flex gap-2">
-                  <button onClick={() => { setShowModal(false); resetForm(); }} className="px-4 py-2 text-sm text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 transition-colors">إلغاء</button>
-                  {step === 1 && !editingId && (
-                    <button onClick={handleFormat} disabled={aiLoading || !rawNotes.trim()}
-                      className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-white px-5 py-2 rounded-xl text-sm font-bold transition-colors">
-                      {aiLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
-                      {aiLoading ? "جاري الصياغة..." : "صياغة بالذكاء الاصطناعي"}
-                    </button>
-                  )}
-                  {(step === 2 || editingId) && (
-                    <button onClick={handleSave} disabled={isPending || !formattedContent.trim()}
-                      className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-white px-5 py-2 rounded-xl text-sm font-bold transition-colors">
-                      {isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
-                      {editingId ? "حفظ التعديلات" : "حفظ المحضر"}
-                    </button>
-                  )}
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-      </>
-    );
+  function formatDate(d: string | Date) {
+    const dt = new Date(d);
+    const day = String(dt.getDate()).padStart(2, "0");
+    const month = String(dt.getMonth() + 1).padStart(2, "0");
+    const year = dt.getFullYear();
+    return `${year}-${month}-${day}`;
   }
 
-  // عرض لوحة الاختيار إذا لم يتم اختيار قسم
   if (selectedCategory === null) {
     return (
-      <div>
+      <div className="space-y-3">
         <div className="flex justify-end mb-3">
-          <button onClick={openCreate} className="flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-lg text-xs font-bold transition-colors">
+          <button onClick={openCreate} className="flex items-center gap-1.5 bg-primary hover:bg-primary/95 text-white px-3 py-1.5 rounded-lg text-xs font-bold transition-colors shadow-sm">
             <Plus className="w-3.5 h-3.5" /> محضر جديد
           </button>
         </div>
         <CategorySelector meetings={meetings} onSelect={setSelectedCategory} />
-        {/* Modal الإنشاء متاح حتى من لوحة الاختيار */}
-        {showModal && renderModal()}
+        {showModal && (
+          <MeetingFormModal
+            editingId={editingId}
+            charities={charities}
+            departments={DEPARTMENTS}
+            isTier1={isTier1}
+            initialData={formInitialData}
+            onClose={() => setShowModal(false)}
+            onSave={handleSave}
+          />
+        )}
       </div>
     );
   }
@@ -1107,8 +333,8 @@ export default function MeetingsClient({ meetings, charities, employees, session
           >
             <ArrowRight className="w-4 h-4" />
           </button>
-          <div className="w-7 h-7 bg-blue-100 dark:bg-blue-900/30 rounded-lg flex items-center justify-center">
-            <FileText className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
+          <div className="w-7 h-7 bg-primary/10 dark:bg-primary/20 rounded-lg flex items-center justify-center">
+            <FileText className="w-3.5 h-3.5 text-primary" />
           </div>
           <div>
             <h1 className="text-base font-bold text-slate-800 dark:text-slate-100">
@@ -1117,7 +343,7 @@ export default function MeetingsClient({ meetings, charities, employees, session
             <p className="text-[11px] text-slate-500 dark:text-slate-400">{meetings.length} محضر</p>
           </div>
         </div>
-        <button onClick={openCreate} className="flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-lg text-xs font-bold transition-colors">
+        <button onClick={openCreate} className="flex items-center gap-1.5 bg-primary hover:bg-primary/95 text-white px-3 py-1.5 rounded-lg text-xs font-bold transition-colors shadow-sm">
           <Plus className="w-3.5 h-3.5" /> محضر جديد
         </button>
       </div>
@@ -1131,11 +357,11 @@ export default function MeetingsClient({ meetings, charities, employees, session
             value={searchQuery}
             onChange={e => setSearchQuery(e.target.value)}
             placeholder="بحث في عنوان المحضر أو المنشئ أو المكان..."
-            className="w-full border border-slate-200 dark:border-slate-700 rounded-lg pr-9 pl-3 py-1.5 text-xs bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            className="w-full border border-slate-200 dark:border-slate-700 rounded-lg pr-9 pl-3 py-1.5 text-xs bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-primary"
           />
         </div>
 
-        {/* صف الفلاتر — سطر أول: النوع والجمعية والخصوصية */}
+        {/* صف الفلاتر */}
         <div className="flex items-center gap-2 flex-wrap">
           <Filter className="w-3.5 h-3.5 text-slate-400 shrink-0" />
 
@@ -1143,7 +369,7 @@ export default function MeetingsClient({ meetings, charities, employees, session
           <select
             value={filterContext}
             onChange={e => setFilterContext(e.target.value)}
-            className={`border rounded-lg px-2 py-1 text-xs bg-slate-50 dark:bg-slate-900 focus:outline-none focus:ring-1 focus:ring-blue-500 transition-colors ${filterContext ? "border-blue-400 text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-900/20" : "border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200"}`}
+            className={`border rounded-lg px-2 py-1 text-xs bg-slate-50 dark:bg-slate-900 focus:outline-none focus:ring-1 focus:ring-primary transition-colors ${filterContext ? "border-primary/50 text-primary bg-primary/5" : "border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200"}`}
           >
             <option value="">كل الأنواع</option>
             <option value="ctx:زاد">إدارة زاد</option>
@@ -1156,7 +382,7 @@ export default function MeetingsClient({ meetings, charities, employees, session
             <select
               value={filterCharityId}
               onChange={e => setFilterCharityId(e.target.value)}
-              className={`border rounded-lg px-2 py-1 text-xs bg-slate-50 dark:bg-slate-900 focus:outline-none focus:ring-1 focus:ring-blue-500 transition-colors ${filterCharityId ? "border-blue-400 text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-900/20" : "border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200"}`}
+              className={`border rounded-lg px-2 py-1 text-xs bg-slate-50 dark:bg-slate-900 focus:outline-none focus:ring-1 focus:ring-primary transition-colors ${filterCharityId ? "border-primary/50 text-primary bg-primary/5" : "border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200"}`}
             >
               <option value="">كل الجمعيات</option>
               {charities.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
@@ -1167,7 +393,7 @@ export default function MeetingsClient({ meetings, charities, employees, session
           <select
             value={filterPrivacy}
             onChange={e => setFilterPrivacy(e.target.value as any)}
-            className={`border rounded-lg px-2 py-1 text-xs bg-slate-50 dark:bg-slate-900 focus:outline-none focus:ring-1 focus:ring-blue-500 transition-colors ${filterPrivacy ? "border-blue-400 text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-900/20" : "border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200"}`}
+            className={`border rounded-lg px-2 py-1 text-xs bg-slate-50 dark:bg-slate-900 focus:outline-none focus:ring-1 focus:ring-primary transition-colors ${filterPrivacy ? "border-primary/50 text-primary bg-primary/5" : "border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200"}`}
           >
             <option value="">عام وخاص</option>
             <option value="public">عام فقط</option>
@@ -1179,13 +405,13 @@ export default function MeetingsClient({ meetings, charities, employees, session
             <span className="text-[11px] text-slate-400">{filteredMeetings.length} من {meetings.length}</span>
             {activeFilters > 0 && (
               <button onClick={resetFilters} className="flex items-center gap-1 text-[11px] font-bold text-red-400 hover:text-red-600 transition-colors">
-                <X className="w-3 h-3" /> مسح
+                <X className="w-3.5 h-3.5" /> مسح
               </button>
             )}
           </div>
         </div>
 
-        {/* سطر ثانٍ: تصفية التاريخ كأزرار */}
+        {/* تصفية التاريخ */}
         <div className="flex items-center gap-1.5 flex-wrap pt-1 border-t border-slate-100 dark:border-slate-700/50">
           <span className="text-[10px] font-bold text-slate-400 shrink-0">الفترة:</span>
           {([
@@ -1201,7 +427,7 @@ export default function MeetingsClient({ meetings, charities, employees, session
               onClick={() => setFilterPeriod(opt.value)}
               className={`px-2.5 py-0.5 rounded-full text-[11px] font-bold transition-colors ${
                 filterPeriod === opt.value
-                  ? "bg-blue-600 text-white"
+                  ? "bg-primary text-white"
                   : "bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-600"
               }`}
             >
@@ -1221,69 +447,69 @@ export default function MeetingsClient({ meetings, charities, employees, session
         <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-700 p-10 text-center">
           <Search className="w-8 h-8 text-slate-300 dark:text-slate-600 mx-auto mb-2" />
           <p className="text-slate-400 dark:text-slate-500 text-sm">لا توجد محاضر تطابق التصفية الحالية</p>
-          <button onClick={resetFilters} className="mt-2 text-xs text-blue-500 hover:underline">مسح التصفية</button>
+          <button onClick={resetFilters} className="mt-2 text-xs text-primary hover:underline">مسح التصفية</button>
         </div>
       ) : (
         <div className="grid gap-1">
           {filteredMeetings.map(m => (
-            <div key={m.id} className="bg-white dark:bg-slate-800 rounded-lg border border-slate-100 dark:border-slate-700 px-3 py-1.5 hover:shadow-sm transition-shadow">
-              {/* صف المعلومات الرئيسية */}
-              <div className="flex items-center gap-2">
-                <div className="w-5 h-5 rounded flex items-center justify-center shrink-0">
-                  {m.isPrivate ? <Lock className="w-3 h-3 text-amber-500" /> : <Globe className="w-3 h-3 text-blue-500" />}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-1 flex-wrap">
-                    <span className="text-[10px] font-mono bg-slate-100 dark:bg-slate-700 text-slate-400 dark:text-slate-500 px-1.5 py-px rounded shrink-0">
-                      {`ZAD_M_${String(meetingNumberMap.get(m.id) ?? 0).padStart(3, "0")}`}
-                    </span>
-                    <span className="text-xs font-bold text-slate-800 dark:text-slate-100 truncate">{m.title}</span>
-                    {m.isPrivate && <span className="text-[10px] bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 px-1 py-px rounded-full font-bold">خاص</span>}
-                    {m.meetingContext && <span className="text-[10px] bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400 px-1 py-px rounded-full">{DEPARTMENTS.find(d => d.value === m.meetingContext)?.label ?? m.meetingContext}</span>}
-                    {m.charity && <span className="text-[10px] bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 px-1 py-px rounded-full">{m.charity.name}</span>}
-                  </div>
-                  <div className="text-[10px] text-slate-400 dark:text-slate-500 flex items-center gap-1.5">
-                    <span>{formatDate(m.date)}</span>
-                    {m.location && <span>· {m.location}</span>}
-                    <span>· {m.createdBy.name}</span>
-                  </div>
-                </div>
-                {/* أزرار الإجراءات */}
-                <div className="flex items-center gap-px shrink-0">
-                  <button onClick={() => setViewingMeeting(m)} className="p-1 rounded hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-400 hover:text-blue-600 transition-colors" title="عرض النص">
-                    <Eye className="w-3 h-3" />
-                  </button>
-                  <button onClick={() => handlePreview(m, meetingNumberMap.get(m.id))} className="p-1 rounded hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-400 hover:text-teal-600 transition-colors" title="عرض بالكليشة">
-                    <LayoutTemplate className="w-3 h-3" />
-                  </button>
-                  <button onClick={() => handlePrint(m, meetingNumberMap.get(m.id))} className="p-1 rounded hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-400 hover:text-slate-600 transition-colors" title="طباعة">
-                    <Printer className="w-3 h-3" />
-                  </button>
-                  {canEditMeeting(m, sessionId, isTier1) && (
-                    <button onClick={() => openEdit(m)} className="p-1 rounded hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-400 hover:text-blue-600 transition-colors" title="تعديل">
-                      <Edit2 className="w-3 h-3" />
-                    </button>
-                  )}
-                  {canEditMeeting(m, sessionId, isTier1) && (
-                    <button onClick={() => handleDelete(m.id)} disabled={isPending} className="p-1 rounded hover:bg-red-50 dark:hover:bg-red-900/20 text-slate-400 hover:text-red-500 transition-colors" title="حذف">
-                      <Trash2 className="w-3 h-3" />
-                    </button>
-                  )}
-                </div>
-              </div>
-
-              {/* لوحة الملخص والمهام */}
-              <MeetingSummaryPanel
-                meeting={m}
-                isTier1={isTier1}
-                employees={employees}
-              />
-            </div>
+            <MeetingCard
+              key={m.id}
+              meeting={m}
+              meetingNumber={meetingNumberMap.get(m.id) ?? 0}
+              sessionId={sessionId}
+              isTier1={isTier1}
+              employees={employees}
+              departments={DEPARTMENTS}
+              onView={setViewingMeeting}
+              onEdit={openEdit}
+              onDelete={handleDelete}
+              isPending={isPending}
+            />
           ))}
         </div>
       )}
 
-      {renderModal()}
+      {/* View Modal */}
+      {viewingMeeting && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm" dir="rtl">
+          <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-2xl w-full max-w-3xl max-h-[90vh] flex flex-col">
+            <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100 dark:border-slate-800 shrink-0">
+              <div>
+                <h2 className="font-bold text-slate-800 dark:text-slate-100 text-xs">{viewingMeeting.title}</h2>
+                <p className="text-[10px] text-slate-400 mt-0.5">{formatDate(viewingMeeting.date)}{viewingMeeting.location ? ` · ${viewingMeeting.location}` : ""}</p>
+              </div>
+              <div className="flex gap-2">
+                <button onClick={() => handlePreview(viewingMeeting, meetingNumberMap.get(viewingMeeting.id))} className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-primary transition-colors" title="عرض بالكليشة">
+                  <LayoutTemplate className="w-4 h-4" />
+                </button>
+                <button onClick={() => handlePrint(viewingMeeting, meetingNumberMap.get(viewingMeeting.id))} className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-primary transition-colors" title="طباعة">
+                  <Printer className="w-4 h-4" />
+                </button>
+                <button onClick={() => setViewingMeeting(null)} className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 transition-colors">
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+            </div>
+            <div className="flex-1 overflow-auto p-4">
+              <pre className="whitespace-pre-wrap font-sans text-xs leading-relaxed text-slate-700 dark:text-slate-200 text-right" dir="rtl">
+                {viewingMeeting.formattedContent}
+              </pre>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showModal && (
+        <MeetingFormModal
+          editingId={editingId}
+          charities={charities}
+          departments={DEPARTMENTS}
+          isTier1={isTier1}
+          initialData={formInitialData}
+          onClose={() => setShowModal(false)}
+          onSave={handleSave}
+        />
+      )}
     </div>
   );
 }

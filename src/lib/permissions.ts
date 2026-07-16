@@ -63,6 +63,7 @@ export const ROLE_LABELS: Record<string, string> = {
   ADMINISTRATIVE_SECRETARIAT: "مساعد المدير",
   STRATEGY: "الاستراتيجية",
   FINANCE: "المالية",
+  GOVERNANCE: "الحوكمة",
   CHARITY_CLIENT: "عميل جمعية",
 };
 

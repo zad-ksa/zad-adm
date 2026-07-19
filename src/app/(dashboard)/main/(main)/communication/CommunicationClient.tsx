@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useMemo } from "react";
-import { MessageSquare, User, Phone, Edit, Check, X, PhoneCall, Search, Building2, Briefcase } from "lucide-react";
+import { useState, useMemo, useEffect } from "react";
+import { MessageSquare, User, Phone, Edit, Check, X, PhoneCall, Search, Building2, ChevronRight, ChevronLeft } from "lucide-react";
 import { updateServiceResponsible, updateCharityContact } from "@/app/actions/communication";
 
 type UnifiedService = {
@@ -34,6 +34,7 @@ export default function CommunicationClient({ charities }: { charities: Charity[
   const [editName, setEditName] = useState("");
   const [editPhone, setEditPhone] = useState("");
   const [isSaving, setIsSaving] = useState(false);
+  const [columnOrder, setColumnOrder] = useState<{id: string, title: string, type: string}[]>([]);
 
   const uniqueServiceNames = useMemo(() => {
     const pillars = new Set<string>();
@@ -53,6 +54,41 @@ export default function CommunicationClient({ charities }: { charities: Charity[
     const customsArr = Array.from(customs).filter(name => !pillars.has(name));
     return [...pillarsArr, ...customsArr];
   }, [charities]);
+
+  useEffect(() => {
+    const baseCols = [
+      { id: 'ASSOCIATION', title: 'البريد الالكتروني ورقم الجوال', type: 'base' },
+      { id: 'CHAIRMAN', title: 'رئيس مجلس الإدارة', type: 'base' },
+      { id: 'CEO', title: 'المدير التنفيذي', type: 'base' }
+    ];
+    const serviceCols = uniqueServiceNames.map(name => ({ id: name, title: name, type: 'service' }));
+    const allCols = [...baseCols, ...serviceCols];
+
+    setColumnOrder(prev => {
+      if (prev.length === 0) return allCols;
+      
+      const prevIds = prev.map(p => p.id);
+      const allIds = allCols.map(a => a.id);
+      
+      const filteredPrev = prev.filter(p => allIds.includes(p.id));
+      const added = allCols.filter(a => !prevIds.includes(a.id));
+      
+      return [...filteredPrev, ...added];
+    });
+  }, [uniqueServiceNames]);
+
+  const moveColumn = (index: number, direction: number) => {
+    setColumnOrder(prev => {
+      const newOrder = [...prev];
+      const targetIndex = index + direction;
+      if (targetIndex >= 0 && targetIndex < newOrder.length) {
+        const temp = newOrder[index];
+        newOrder[index] = newOrder[targetIndex];
+        newOrder[targetIndex] = temp;
+      }
+      return newOrder;
+    });
+  };
 
   const filteredCharities = useMemo(() => {
     if (!searchQuery.trim()) return charities;
@@ -175,12 +211,27 @@ export default function CommunicationClient({ charities }: { charities: Charity[
             <thead className="bg-slate-50 dark:bg-slate-800/80 text-slate-600 dark:text-slate-300 border-b border-slate-200 dark:border-slate-700 sticky top-0 z-10 shadow-sm">
               <tr>
                 <th className="px-2 py-2 font-bold text-xs whitespace-nowrap bg-slate-50 dark:bg-slate-800 sticky right-0 z-20 border-l border-slate-200 dark:border-slate-700 shadow-[2px_0_5px_rgba(0,0,0,0.05)] w-48">الجمعية</th>
-                <th className="px-2 py-2 font-bold text-xs whitespace-nowrap border-l border-slate-200 dark:border-slate-700 text-center min-w-[150px]">البريد الالكتروني ورقم الجوال</th>
-                <th className="px-2 py-2 font-bold text-xs whitespace-nowrap border-l border-slate-200 dark:border-slate-700 text-center min-w-[150px]">رئيس مجلس الإدارة</th>
-                <th className="px-2 py-2 font-bold text-xs whitespace-nowrap border-l border-slate-200 dark:border-slate-700 text-center min-w-[150px]">المدير التنفيذي</th>
-                {uniqueServiceNames.map(name => (
-                  <th key={name} className="px-2 py-2 font-bold text-xs whitespace-nowrap border-l border-slate-200 dark:border-slate-700 text-center min-w-[150px]">
-                    {name}
+                {columnOrder.map((col, index) => (
+                  <th key={col.id} className="px-2 py-2 font-bold text-xs whitespace-nowrap border-l border-slate-200 dark:border-slate-700 text-center min-w-[150px] group/th hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors">
+                    <div className="flex items-center justify-between gap-1 w-full">
+                      <button 
+                        onClick={() => moveColumn(index, -1)} 
+                        disabled={index === 0}
+                        className="opacity-0 group-hover/th:opacity-100 p-1 hover:bg-slate-200 dark:hover:bg-slate-600 rounded text-slate-400 hover:text-primary transition-all disabled:invisible focus:opacity-100"
+                        title="تحريك لليمين"
+                      >
+                        <ChevronRight className="w-4 h-4" />
+                      </button>
+                      <span className="flex-1 text-center">{col.title}</span>
+                      <button 
+                        onClick={() => moveColumn(index, 1)} 
+                        disabled={index === columnOrder.length - 1}
+                        className="opacity-0 group-hover/th:opacity-100 p-1 hover:bg-slate-200 dark:hover:bg-slate-600 rounded text-slate-400 hover:text-primary transition-all disabled:invisible focus:opacity-100"
+                        title="تحريك لليسار"
+                      >
+                        <ChevronLeft className="w-4 h-4" />
+                      </button>
+                    </div>
                   </th>
                 ))}
               </tr>
@@ -211,190 +262,202 @@ export default function CommunicationClient({ charities }: { charities: Charity[
                       </div>
                     </td>
 
-                    {/* New Columns */}
-                    {[
-                      { type: 'ASSOCIATION' as const, name: charity.email, phone: charity.phone, namePlaceholder: "البريد الالكتروني", phonePlaceholder: "رقم الجوال" },
-                      { type: 'CHAIRMAN' as const, name: charity.chairmanName, phone: charity.chairmanPhone, namePlaceholder: "اسم رئيس مجلس الإدارة", phonePlaceholder: "رقم الجوال" },
-                      { type: 'CEO' as const, name: charity.ceoName, phone: charity.ceoPhone, namePlaceholder: "اسم المدير التنفيذي", phonePlaceholder: "رقم الجوال" }
-                    ].map((col) => {
-                      const isEditing = editingCharityContact?.charityId === charity.id && editingCharityContact.type === col.type;
+                    {/* Dynamic Ordered Columns */}
+                    {columnOrder.map((col) => {
+                      if (col.type === 'base') {
+                        const contactType = col.id as 'ASSOCIATION' | 'CHAIRMAN' | 'CEO';
+                        
+                        let name = "";
+                        let phone = "";
+                        let namePlaceholder = "";
+                        let phonePlaceholder = "رقم الجوال";
 
-                      return (
-                        <td key={col.type} className="px-2 py-1.5 align-middle border-l border-slate-200 dark:border-slate-700 bg-slate-50/20 dark:bg-slate-800/20">
-                          {isEditing ? (
-                            <div className="space-y-2 bg-slate-50 dark:bg-slate-800 p-2.5 rounded-lg border border-primary/30">
-                              <div className="relative">
-                                <User className="w-3 h-3 absolute right-2 top-2 text-slate-400" />
-                                <input 
-                                  type={col.type === 'ASSOCIATION' ? "email" : "text"} 
-                                  value={editName}
-                                  onChange={(e) => setEditName(e.target.value)}
-                                  placeholder={col.namePlaceholder}
-                                  dir={col.type === 'ASSOCIATION' ? "ltr" : "rtl"}
-                                  className="w-full pl-2 pr-7 py-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded text-[10px] font-bold outline-none focus:border-primary"
-                                />
-                              </div>
-                              <div className="relative">
-                                <Phone className="w-3 h-3 absolute left-2 top-2 text-slate-400" />
-                                <input 
-                                  type="text" 
-                                  value={editPhone}
-                                  onChange={(e) => setEditPhone(e.target.value)}
-                                  placeholder={col.phonePlaceholder}
-                                  dir="ltr"
-                                  className="w-full pl-7 pr-2 py-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded text-[10px] font-bold text-left outline-none focus:border-primary"
-                                />
-                              </div>
-                              <div className="flex gap-1">
-                                <button
-                                  onClick={() => handleSaveCharity(charity.id, col.type)}
-                                  disabled={isSaving}
-                                  className="flex-1 bg-primary hover:bg-primary/90 text-white py-1 rounded text-[10px] font-bold flex items-center justify-center gap-1 disabled:opacity-50"
-                                >
-                                  {isSaving ? "حفظ..." : <Check className="w-3 h-3" />}
-                                </button>
-                                <button
-                                  onClick={cancelEditing}
-                                  disabled={isSaving}
-                                  className="flex-1 bg-slate-200 hover:bg-slate-300 dark:bg-slate-700 text-slate-600 dark:text-slate-300 py-1 rounded text-[10px] font-bold flex items-center justify-center"
-                                >
-                                  <X className="w-3 h-3" />
-                                </button>
-                              </div>
-                            </div>
-                          ) : (
-                            <div className="group/cell relative flex flex-col items-center justify-center p-1 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800/80 transition-all text-center min-h-[56px]">
-                              {col.name || col.phone ? (
-                                <div className="space-y-1">
-                                  <p className="font-bold text-slate-700 dark:text-slate-200 break-words max-w-[180px]">
-                                    {col.name || <span className="text-slate-400 italic font-medium">الاسم غير محدد</span>}
-                                  </p>
-                                  {col.phone && (
-                                    <div className="flex items-center justify-center gap-1 text-[10px] font-bold text-slate-500">
-                                      <Phone className="w-2.5 h-2.5" />
-                                      <span dir="ltr">{col.phone}</span>
-                                    </div>
-                                  )}
+                        if (contactType === 'ASSOCIATION') {
+                          name = charity.email || ""; phone = charity.phone || ""; namePlaceholder = "البريد الالكتروني";
+                        } else if (contactType === 'CHAIRMAN') {
+                          name = charity.chairmanName || ""; phone = charity.chairmanPhone || ""; namePlaceholder = "اسم رئيس مجلس الإدارة";
+                        } else if (contactType === 'CEO') {
+                          name = charity.ceoName || ""; phone = charity.ceoPhone || ""; namePlaceholder = "اسم المدير التنفيذي";
+                        }
+
+                        const isEditing = editingCharityContact?.charityId === charity.id && editingCharityContact.type === contactType;
+
+                        return (
+                          <td key={col.id} className="px-2 py-1.5 align-middle border-l border-slate-200 dark:border-slate-700 bg-slate-50/20 dark:bg-slate-800/20">
+                            {isEditing ? (
+                              <div className="space-y-2 bg-slate-50 dark:bg-slate-800 p-2.5 rounded-lg border border-primary/30 min-w-[180px]">
+                                <div className="relative">
+                                  <User className="w-3 h-3 absolute right-2 top-2 text-slate-400" />
+                                  <input 
+                                    type={contactType === 'ASSOCIATION' ? "email" : "text"} 
+                                    value={editName}
+                                    onChange={(e) => setEditName(e.target.value)}
+                                    placeholder={namePlaceholder}
+                                    dir={contactType === 'ASSOCIATION' ? "ltr" : "rtl"}
+                                    className="w-full pl-2 pr-7 py-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded text-[10px] font-bold outline-none focus:border-primary"
+                                  />
                                 </div>
-                              ) : (
-                                <span className="text-slate-400 italic text-[11px] font-medium">لم يتم التعيين</span>
-                              )}
-
-                              {/* Hover controls */}
-                              <div className="opacity-0 group-hover/cell:opacity-100 absolute inset-0 bg-slate-50/90 dark:bg-slate-800/95 flex items-center justify-center gap-1.5 rounded-lg transition-all shadow-sm">
-                                {col.phone && (
+                                <div className="relative">
+                                  <Phone className="w-3 h-3 absolute left-2 top-2 text-slate-400" />
+                                  <input 
+                                    type="text" 
+                                    value={editPhone}
+                                    onChange={(e) => setEditPhone(e.target.value)}
+                                    placeholder={phonePlaceholder}
+                                    dir="ltr"
+                                    className="w-full pl-7 pr-2 py-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded text-[10px] font-bold text-left outline-none focus:border-primary"
+                                  />
+                                </div>
+                                <div className="flex gap-1">
                                   <button
-                                    onClick={(e) => openWhatsApp(col.phone!, e)}
-                                    className="p-1.5 bg-emerald-50 text-emerald-600 hover:bg-emerald-100 rounded-md transition-colors"
-                                    title="واتساب"
+                                    onClick={() => handleSaveCharity(charity.id, contactType)}
+                                    disabled={isSaving}
+                                    className="flex-1 bg-primary hover:bg-primary/90 text-white py-1 rounded text-[10px] font-bold flex items-center justify-center gap-1 disabled:opacity-50"
                                   >
-                                    <PhoneCall className="w-3.5 h-3.5" />
+                                    {isSaving ? "حفظ..." : <Check className="w-3 h-3" />}
                                   </button>
+                                  <button
+                                    onClick={cancelEditing}
+                                    disabled={isSaving}
+                                    className="flex-1 bg-slate-200 hover:bg-slate-300 dark:bg-slate-700 text-slate-600 dark:text-slate-300 py-1 rounded text-[10px] font-bold flex items-center justify-center"
+                                  >
+                                    <X className="w-3 h-3" />
+                                  </button>
+                                </div>
+                              </div>
+                            ) : (
+                              <div className="group/cell relative flex flex-col items-center justify-center p-1 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800/80 transition-all text-center min-h-[56px] min-w-[150px]">
+                                {name || phone ? (
+                                  <div className="space-y-1">
+                                    <p className="font-bold text-slate-700 dark:text-slate-200 break-words max-w-[180px]">
+                                      {name || <span className="text-slate-400 italic font-medium">الاسم غير محدد</span>}
+                                    </p>
+                                    {phone && (
+                                      <div className="flex items-center justify-center gap-1 text-[10px] font-bold text-slate-500">
+                                        <Phone className="w-2.5 h-2.5" />
+                                        <span dir="ltr">{phone}</span>
+                                      </div>
+                                    )}
+                                  </div>
+                                ) : (
+                                  <span className="text-slate-400 italic text-[11px] font-medium">لم يتم التعيين</span>
                                 )}
-                                <button
-                                  onClick={(e) => startEditingCharity(charity, col.type, e)}
-                                  className="p-1.5 bg-slate-100 text-slate-600 hover:bg-slate-200 hover:text-primary dark:bg-slate-700 dark:text-slate-300 dark:hover:bg-slate-600 rounded-md transition-colors"
-                                  title="تعديل"
-                                >
-                                  <Edit className="w-3.5 h-3.5" />
-                                </button>
-                              </div>
-                            </div>
-                          )}
-                        </td>
-                      );
-                    })}
 
-                    {/* Services Columns */}
-                    {uniqueServiceNames.map(svcName => {
-                      const service = charity.services.find(s => s.name === svcName);
-                      const isEditing = service && editingServiceId === service.id;
+                                {/* Hover controls */}
+                                <div className="opacity-0 group-hover/cell:opacity-100 absolute inset-0 bg-slate-50/90 dark:bg-slate-800/95 flex items-center justify-center gap-1.5 rounded-lg transition-all shadow-sm">
+                                  {phone && (
+                                    <button
+                                      onClick={(e) => openWhatsApp(phone!, e)}
+                                      className="p-1.5 bg-emerald-50 text-emerald-600 hover:bg-emerald-100 rounded-md transition-colors"
+                                      title="واتساب"
+                                    >
+                                      <PhoneCall className="w-3.5 h-3.5" />
+                                    </button>
+                                  )}
+                                  <button
+                                    onClick={(e) => startEditingCharity(charity, contactType, e)}
+                                    className="p-1.5 bg-slate-100 text-slate-600 hover:bg-slate-200 hover:text-primary dark:bg-slate-700 dark:text-slate-300 dark:hover:bg-slate-600 rounded-md transition-colors"
+                                    title="تعديل"
+                                  >
+                                    <Edit className="w-3.5 h-3.5" />
+                                  </button>
+                                </div>
+                              </div>
+                            )}
+                          </td>
+                        );
+                      } else {
+                        // Service Column
+                        const svcName = col.id;
+                        const service = charity.services.find(s => s.name === svcName);
+                        const isEditing = service && editingServiceId === service.id;
 
-                      return (
-                        <td key={svcName} className="px-2 py-1.5 align-middle border-l border-slate-200 dark:border-slate-700">
-                          {!service ? (
-                            <div className="text-center text-slate-300 dark:text-slate-700 py-4 select-none">—</div>
-                          ) : isEditing ? (
-                            <div className="space-y-2 bg-slate-50 dark:bg-slate-800 p-2.5 rounded-lg border border-primary/30">
-                              <div className="relative">
-                                <User className="w-3 h-3 absolute right-2 top-2 text-slate-400" />
-                                <input 
-                                  type="text" 
-                                  value={editName}
-                                  onChange={(e) => setEditName(e.target.value)}
-                                  placeholder="اسم المسؤول"
-                                  className="w-full pl-2 pr-7 py-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded text-[10px] font-bold outline-none focus:border-primary"
-                                />
+                        return (
+                          <td key={svcName} className="px-2 py-1.5 align-middle border-l border-slate-200 dark:border-slate-700">
+                            {!service ? (
+                              <div className="text-center text-slate-300 dark:text-slate-700 py-4 select-none min-w-[150px]">—</div>
+                            ) : isEditing ? (
+                              <div className="space-y-2 bg-slate-50 dark:bg-slate-800 p-2.5 rounded-lg border border-primary/30 min-w-[180px]">
+                                <div className="relative">
+                                  <User className="w-3 h-3 absolute right-2 top-2 text-slate-400" />
+                                  <input 
+                                    type="text" 
+                                    value={editName}
+                                    onChange={(e) => setEditName(e.target.value)}
+                                    placeholder="اسم المسؤول"
+                                    className="w-full pl-2 pr-7 py-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded text-[10px] font-bold outline-none focus:border-primary"
+                                  />
+                                </div>
+                                <div className="relative">
+                                  <Phone className="w-3 h-3 absolute left-2 top-2 text-slate-400" />
+                                  <input 
+                                    type="text" 
+                                    value={editPhone}
+                                    onChange={(e) => setEditPhone(e.target.value)}
+                                    placeholder="رقم التواصل"
+                                    dir="ltr"
+                                    className="w-full pl-7 pr-2 py-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded text-[10px] font-bold text-left outline-none focus:border-primary"
+                                  />
+                                </div>
+                                <div className="flex gap-1">
+                                  <button
+                                    onClick={() => handleSave(service.id)}
+                                    disabled={isSaving}
+                                    className="flex-1 bg-primary hover:bg-primary/90 text-white py-1 rounded text-[10px] font-bold flex items-center justify-center gap-1 disabled:opacity-50"
+                                  >
+                                    {isSaving ? "حفظ..." : <Check className="w-3 h-3" />}
+                                  </button>
+                                  <button
+                                    onClick={cancelEditing}
+                                    disabled={isSaving}
+                                    className="flex-1 bg-slate-200 hover:bg-slate-300 dark:bg-slate-700 text-slate-600 dark:text-slate-300 py-1 rounded text-[10px] font-bold flex items-center justify-center"
+                                  >
+                                    <X className="w-3 h-3" />
+                                  </button>
+                                </div>
                               </div>
-                              <div className="relative">
-                                <Phone className="w-3 h-3 absolute left-2 top-2 text-slate-400" />
-                                <input 
-                                  type="text" 
-                                  value={editPhone}
-                                  onChange={(e) => setEditPhone(e.target.value)}
-                                  placeholder="رقم التواصل"
-                                  dir="ltr"
-                                  className="w-full pl-7 pr-2 py-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded text-[10px] font-bold text-left outline-none focus:border-primary"
-                                />
-                              </div>
-                              <div className="flex gap-1">
-                                <button
-                                  onClick={() => handleSave(service.id)}
-                                  disabled={isSaving}
-                                  className="flex-1 bg-primary hover:bg-primary/90 text-white py-1 rounded text-[10px] font-bold flex items-center justify-center gap-1 disabled:opacity-50"
-                                >
-                                  {isSaving ? "حفظ..." : <Check className="w-3 h-3" />}
-                                </button>
-                                <button
-                                  onClick={cancelEditing}
-                                  disabled={isSaving}
-                                  className="flex-1 bg-slate-200 hover:bg-slate-300 dark:bg-slate-700 text-slate-600 dark:text-slate-300 py-1 rounded text-[10px] font-bold flex items-center justify-center"
-                                >
-                                  <X className="w-3 h-3" />
-                                </button>
-                              </div>
-                            </div>
-                          ) : (
-                            <div className="group/cell relative flex flex-col items-center justify-center p-1 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800/80 transition-all text-center min-h-[56px]">
-                              {service.responsibleName || service.responsiblePhone ? (
-                                <div className="space-y-1">
-                                  <p className="font-bold text-slate-700 dark:text-slate-200">
-                                    {service.responsibleName || <span className="text-slate-400 italic font-medium">الاسم غير محدد</span>}
-                                  </p>
+                            ) : (
+                              <div className="group/cell relative flex flex-col items-center justify-center p-1 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800/80 transition-all text-center min-h-[56px] min-w-[150px]">
+                                {service.responsibleName || service.responsiblePhone ? (
+                                  <div className="space-y-1">
+                                    <p className="font-bold text-slate-700 dark:text-slate-200">
+                                      {service.responsibleName || <span className="text-slate-400 italic font-medium">الاسم غير محدد</span>}
+                                    </p>
+                                    {service.responsiblePhone && (
+                                      <div className="flex items-center justify-center gap-1 text-[10px] font-bold text-slate-500">
+                                        <Phone className="w-2.5 h-2.5" />
+                                        <span dir="ltr">{service.responsiblePhone}</span>
+                                      </div>
+                                    )}
+                                  </div>
+                                ) : (
+                                  <span className="text-slate-400 italic text-[11px] font-medium">لم يتم التعيين</span>
+                                )}
+
+                                {/* Hover controls */}
+                                <div className="opacity-0 group-hover/cell:opacity-100 absolute inset-0 bg-slate-50/90 dark:bg-slate-800/95 flex items-center justify-center gap-1.5 rounded-lg transition-all shadow-sm">
                                   {service.responsiblePhone && (
-                                    <div className="flex items-center justify-center gap-1 text-[10px] font-bold text-slate-500">
-                                      <Phone className="w-2.5 h-2.5" />
-                                      <span dir="ltr">{service.responsiblePhone}</span>
-                                    </div>
+                                    <button
+                                      onClick={(e) => openWhatsApp(service.responsiblePhone!, e)}
+                                      className="p-1.5 bg-emerald-50 text-emerald-600 hover:bg-emerald-100 rounded-md transition-colors"
+                                      title="واتساب"
+                                    >
+                                      <PhoneCall className="w-3.5 h-3.5" />
+                                    </button>
                                   )}
-                                </div>
-                              ) : (
-                                <span className="text-slate-400 italic text-[11px] font-medium">لم يتم التعيين</span>
-                              )}
-
-                              {/* Hover controls */}
-                              <div className="opacity-0 group-hover/cell:opacity-100 absolute inset-0 bg-slate-50/90 dark:bg-slate-800/95 flex items-center justify-center gap-1.5 rounded-lg transition-all shadow-sm">
-                                {service.responsiblePhone && (
                                   <button
-                                    onClick={(e) => openWhatsApp(service.responsiblePhone!, e)}
-                                    className="p-1.5 bg-emerald-50 text-emerald-600 hover:bg-emerald-100 rounded-md transition-colors"
-                                    title="واتساب"
+                                    onClick={(e) => startEditing(service, e)}
+                                    className="p-1.5 bg-slate-100 text-slate-600 hover:bg-slate-200 hover:text-primary dark:bg-slate-700 dark:text-slate-300 dark:hover:bg-slate-600 rounded-md transition-colors"
+                                    title="تعديل"
                                   >
-                                    <PhoneCall className="w-3.5 h-3.5" />
+                                    <Edit className="w-3.5 h-3.5" />
                                   </button>
-                                )}
-                                <button
-                                  onClick={(e) => startEditing(service, e)}
-                                  className="p-1.5 bg-slate-100 text-slate-600 hover:bg-slate-200 hover:text-primary dark:bg-slate-700 dark:text-slate-300 dark:hover:bg-slate-600 rounded-md transition-colors"
-                                  title="تعديل"
-                                >
-                                  <Edit className="w-3.5 h-3.5" />
-                                </button>
+                                </div>
                               </div>
-                            </div>
-                          )}
-                        </td>
-                      );
+                            )}
+                          </td>
+                        );
+                      }
                     })}
                   </tr>
                 ))

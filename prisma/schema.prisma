@@ -50,6 +50,14 @@ model Charity {
   financeResponsibleName     String?
   financeResponsiblePhone    String?
 
+  // Contact Info
+  email                      String?
+  phone                      String?
+  chairmanName               String?
+  chairmanPhone              String?
+  ceoName                    String?
+  ceoPhone                   String?
+
   regulationVisibilities CharityRegulationVisibility[]
   employees              Employee[]
   assignedEmployees      EmployeeCharity[]             @relation("AssignedEmployees")

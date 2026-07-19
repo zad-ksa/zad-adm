@@ -27,6 +27,13 @@ export async function getCommunicationData() {
       return {
         id: charity.id,
         name: charity.name,
+        logoUrl: charity.logoUrl,
+        email: charity.email,
+        phone: charity.phone,
+        chairmanName: charity.chairmanName,
+        chairmanPhone: charity.chairmanPhone,
+        ceoName: charity.ceoName,
+        ceoPhone: charity.ceoPhone,
         services: unifiedServices
       };
     });
@@ -57,5 +64,30 @@ export async function updateServiceResponsible(
   } catch (error) {
     console.error("Error updating service responsible:", error);
     return { success: false, error: "حدث خطأ أثناء تحديث بيانات المسؤول" };
+  }
+}
+
+export async function updateCharityContact(
+  charityId: string,
+  data: {
+    email?: string | null;
+    phone?: string | null;
+    chairmanName?: string | null;
+    chairmanPhone?: string | null;
+    ceoName?: string | null;
+    ceoPhone?: string | null;
+  }
+) {
+  try {
+    await prisma.charity.update({
+      where: { id: charityId },
+      data,
+    });
+
+    revalidatePath("/main/communication");
+    return { success: true };
+  } catch (error) {
+    console.error("Error updating charity contact:", error);
+    return { success: false, error: "حدث خطأ أثناء تحديث بيانات الجمعية" };
   }
 }

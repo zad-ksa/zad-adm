@@ -1,9 +1,14 @@
 "use client";
 
 import { useState, useTransition, useEffect } from "react";
+import { useTheme } from "next-themes";
 import { loginWithPassword } from "@/app/actions/auth";
-import { AlertCircle, Phone, Lock, Loader2, Eye, EyeOff } from "@/components/Icons";
+import { AlertCircle, Lock, Loader2, Phone, ShieldCheck, Sun, Moon, Eye, EyeOff } from "lucide-react";
 import ZadLogo from "@/components/ZadLogo";
+import Link from "next/link";
+import { Cairo } from "next/font/google";
+
+const cairo = Cairo({ subsets: ["arabic"], weight: ["700", "900"] });
 
 export default function LoginPage() {
   const [phone, setPhone] = useState("");
@@ -12,9 +17,12 @@ export default function LoginPage() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
+  const [isMounted, setIsMounted] = useState(false);
+  const { theme, setTheme } = useTheme();
 
   useEffect(() => {
-    document.title = "تسجيل الدخول | زاد التنموية";
+    document.title = "بوابة أعضاء زاد | الدخول";
+    setIsMounted(true);
   }, []);
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -42,66 +50,77 @@ export default function LoginPage() {
     });
   };
 
-  return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col justify-center py-12 sm:px-6 lg:px-8 relative overflow-hidden" dir="rtl">
-      {/* Decorative blurred background circles for premium look */}
-      <div className="absolute top-0 -left-10 w-96 h-96 bg-primary/5 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2 pointer-events-none"></div>
-      <div className="absolute bottom-0 -right-10 w-96 h-96 bg-primary/5 rounded-full blur-3xl translate-x-1/2 translate-y-1/2 pointer-events-none"></div>
+  if (!isMounted) return null;
 
-      <div className="sm:mx-auto sm:w-full sm:max-w-md relative z-10">
-        <div className="flex justify-center mb-8 h-20 w-auto">
-          <ZadLogo isOpen={true} className="h-20 w-auto" />
-        </div>
-        <h1 className="mt-2 text-center text-3xl font-extrabold text-slate-900 dark:text-slate-100 tracking-tight">
-          تسجيل الدخول للنظام
-        </h1>
-        <p className="mt-2 text-center text-sm text-slate-500 dark:text-slate-400 font-medium">
-          بوابة الدخول الآمن لموظفي زاد التنموية
-        </p>
-      </div>
+  return (
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col justify-center py-12 sm:px-6 lg:px-8 relative overflow-hidden font-sans transition-colors duration-300" dir="rtl">
+      {/* Theme Toggle */}
+      <button
+        onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+        className="absolute top-6 left-6 p-2 rounded-full bg-white/50 dark:bg-white/10 hover:bg-white/80 dark:hover:bg-white/20 border border-slate-200 dark:border-white/10 text-slate-700 dark:text-slate-200 backdrop-blur-md transition-all shadow-sm z-50"
+        aria-label="Toggle Theme"
+      >
+        {theme === 'dark' ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+      </button>
+
+      {/* Premium Visual Background */}
+      <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-[0.03] dark:opacity-[0.05]"></div>
+      
+      {/* Animated Orbs */}
+      <div className="absolute -top-[20%] -left-[10%] w-[80%] h-[80%] rounded-full bg-primary/10 dark:bg-primary/15 blur-[120px] mix-blend-multiply dark:mix-blend-screen pointer-events-none animate-pulse" style={{ animationDuration: '8s' }}></div>
+      <div className="absolute bottom-[0%] right-[10%] w-[70%] h-[70%] rounded-full bg-emerald-500/5 dark:bg-emerald-500/10 blur-[100px] mix-blend-multiply dark:mix-blend-screen pointer-events-none"></div>
+      <div className="absolute top-[30%] right-[20%] w-[50%] h-[50%] rounded-full bg-indigo-500/5 dark:bg-indigo-500/10 blur-[80px] mix-blend-multiply dark:mix-blend-screen pointer-events-none" style={{ animationDuration: '10s' }}></div>
 
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md relative z-10 px-4 sm:px-0">
-        <div className="bg-white dark:bg-slate-900 py-8 px-4 shadow-sm border border-slate-200 dark:border-slate-800 sm:rounded-2xl sm:px-10">
+        <div className="bg-white/70 dark:bg-white/10 backdrop-blur-2xl py-8 px-6 sm:px-10 shadow-2xl border border-slate-200 dark:border-white/20 sm:rounded-3xl relative overflow-hidden transition-colors duration-300">
           
+          {/* Inner Glow */}
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[200%] h-32 bg-white/50 dark:bg-white/10 blur-3xl pointer-events-none"></div>
+
+          {/* Logo */}
+          <div className="flex justify-center mb-8 animate-fade-in-up">
+            <ZadLogo isOpen={true} className="h-16 w-auto drop-shadow-md dark:brightness-0 dark:invert transition-all" />
+          </div>
+          
+          <div className="mb-8 text-center animate-fade-in-up" style={{ animationDuration: '0.6s' }}>
+            <h1 className={`${cairo.className} text-2xl font-black text-slate-900 dark:text-white tracking-tight mb-2 transition-colors`}>
+              بوابة أعضاء زاد
+            </h1>
+            <p className="text-slate-600 dark:text-slate-300 font-medium text-xs leading-relaxed transition-colors">
+              بوابة الدخول الآمن لموظفي وأعضاء زاد التنموية.
+            </p>
+          </div>
+
           {error && (
-            <div className="bg-red-50 dark:bg-red-900/20 border border-red-100 dark:border-red-800/50 p-4 rounded-xl flex items-start mb-6">
-              <div className="flex-shrink-0">
-                <AlertCircle className="h-5 w-5 text-red-500" />
-              </div>
-              <div className="mr-3">
-                <p className="text-sm text-red-700 dark:text-red-400 font-bold">{error}</p>
-              </div>
+            <div className="mb-6 p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-200 flex items-start gap-3 animate-fade-in backdrop-blur-sm">
+              <AlertCircle className="w-5 h-5 shrink-0 mt-0.5 text-red-500 dark:text-red-400" />
+              <span className="text-sm font-bold text-red-700 dark:text-red-200">{error}</span>
             </div>
           )}
 
           {success && (
-            <div className="bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-100 dark:border-emerald-800/50 p-4 rounded-xl flex items-start mb-6">
-              <div className="flex-shrink-0 text-emerald-500">
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
-              </div>
-              <div className="mr-3">
-                <p className="text-sm text-emerald-800 dark:text-emerald-400 font-bold">{success}</p>
-              </div>
+            <div className="mb-6 p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-200 flex items-start gap-3 animate-fade-in backdrop-blur-sm">
+              <ShieldCheck className="w-5 h-5 shrink-0 mt-0.5 text-emerald-500 dark:text-emerald-400" />
+              <span className="text-sm font-bold text-emerald-700 dark:text-emerald-200">{success}</span>
             </div>
           )}
 
-          <form className="space-y-6" onSubmit={handleLogin}>
-            <div>
-              <label htmlFor="phone" className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">
+          <form onSubmit={handleLogin} className="space-y-6 animate-fade-in-up" style={{ animationDuration: '0.8s' }}>
+            <div className="space-y-3">
+              <label htmlFor="phone" className="block text-sm font-bold text-slate-700 dark:text-slate-200 transition-colors">
                 رقم الجوال
               </label>
-              <div className="mt-1 relative rounded-xl">
-                <div className="absolute inset-y-0 right-0 pr-3.5 flex items-center pointer-events-none">
-                  <Phone className="h-5 w-5 text-slate-400" />
+              <div className="relative group">
+                <div className="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-primary dark:group-focus-within:text-white transition-colors">
+                  <Phone className="w-5 h-5" />
                 </div>
                 <input
                   id="phone"
-                  name="phone"
                   type="tel"
                   required
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
-                  className="appearance-none block w-full pr-11 pl-4 py-3.5 border border-slate-200 dark:border-slate-700 rounded-xl bg-slate-50 dark:bg-slate-800 focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary/30 focus:bg-white dark:focus:bg-slate-900 text-slate-800 dark:text-slate-100 transition-all text-sm font-bold"
+                  className="w-full pl-4 pr-12 py-3.5 bg-white dark:bg-white/5 border border-slate-300 dark:border-white/10 focus:border-primary focus:dark:border-primary/50 focus:bg-white focus:dark:bg-white/10 rounded-xl text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/20 text-sm font-bold shadow-sm dark:shadow-inner backdrop-blur-sm transition-all text-left"
                   placeholder="05XXXXXXXX"
                   dir="ltr"
                   disabled={isPending}
@@ -109,22 +128,21 @@ export default function LoginPage() {
               </div>
             </div>
 
-            <div>
-              <label htmlFor="password" className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">
+            <div className="space-y-3">
+              <label htmlFor="password" className="block text-sm font-bold text-slate-700 dark:text-slate-200 transition-colors">
                 كلمة المرور
               </label>
-              <div className="mt-1 relative rounded-xl">
-                <div className="absolute inset-y-0 right-0 pr-3.5 flex items-center pointer-events-none">
-                  <Lock className="h-5 w-5 text-slate-400" />
+              <div className="relative group">
+                <div className="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-primary dark:group-focus-within:text-white transition-colors">
+                  <Lock className="w-5 h-5" />
                 </div>
                 <input
                   id="password"
-                  name="password"
                   type={showPassword ? "text" : "password"}
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="appearance-none block w-full pr-11 pl-12 py-3.5 border border-slate-200 dark:border-slate-700 rounded-xl bg-slate-50 dark:bg-slate-800 focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary/30 focus:bg-white dark:focus:bg-slate-900 text-slate-800 dark:text-slate-100 transition-all text-sm font-bold"
+                  className="w-full pl-12 pr-12 py-3.5 bg-white dark:bg-white/5 border border-slate-300 dark:border-white/10 focus:border-primary focus:dark:border-primary/50 focus:bg-white focus:dark:bg-white/10 rounded-xl text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/20 text-sm font-bold shadow-sm dark:shadow-inner backdrop-blur-sm transition-all text-left"
                   placeholder="••••••••"
                   dir="ltr"
                   disabled={isPending}
@@ -132,39 +150,53 @@ export default function LoginPage() {
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400 hover:text-slate-600 transition-colors focus:outline-none"
+                  className="absolute inset-y-0 left-0 pl-4 flex items-center text-slate-400 hover:text-slate-600 dark:hover:text-white transition-colors focus:outline-none"
                   disabled={isPending}
                   tabIndex={-1}
                 >
                   {showPassword ? (
-                    <EyeOff className="h-5 w-5" />
+                    <EyeOff className="w-5 h-5" />
                   ) : (
-                    <Eye className="h-5 w-5" />
+                    <Eye className="w-5 h-5" />
                   )}
                 </button>
               </div>
             </div>
 
-            <div>
-              <button
-                type="submit"
-                disabled={isPending}
-                className="w-full flex justify-center py-3.5 px-4 border border-transparent rounded-xl text-base font-bold text-white bg-primary hover:bg-primary/95 focus:outline-none focus:ring-4 focus:ring-primary/20 transition-all disabled:opacity-70 disabled:cursor-not-allowed select-none active:scale-[0.98] shadow-sm hover:shadow"
-              >
-                <span className="flex items-center gap-2">
-                  {isPending ? (
-                    <>
-                      <Loader2 className="w-5 h-5 animate-spin" />
-                      جاري التحقق وتسجيل الدخول...
-                    </>
-                  ) : (
-                    "تسجيل الدخول"
-                  )}
-                </span>
-              </button>
-            </div>
+            <button
+              type="submit"
+              disabled={isPending}
+              className="w-full relative group overflow-hidden bg-primary text-white rounded-xl py-4 text-sm font-bold shadow-lg shadow-primary/20 hover:shadow-xl hover:shadow-primary/30 transition-all active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed disabled:active:scale-100 mt-8 block"
+            >
+              <div className="absolute inset-0 w-full h-full bg-white/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+              
+              <div className="relative z-10 flex items-center justify-center gap-2">
+                {isPending ? (
+                  <>
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                    <span>جاري التحقق وتسجيل الدخول...</span>
+                  </>
+                ) : (
+                  <>
+                    <span>تسجيل الدخول</span>
+                    <ShieldCheck className="w-4 h-4 opacity-70 group-hover:scale-110 transition-transform" />
+                  </>
+                )}
+              </div>
+            </button>
           </form>
 
+          <div className="mt-8 pt-6 border-t border-slate-200 dark:border-white/10 text-center animate-fade-in-up transition-colors" style={{ animationDuration: '1s' }}>
+            <p className="text-sm font-bold text-slate-600 dark:text-slate-400 mb-4 transition-colors">
+              هل أنت ممثل لجمعية؟
+            </p>
+            <Link 
+              href="/charity-login"
+              className="inline-flex items-center justify-center w-full py-3.5 px-4 rounded-xl text-sm font-bold text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 border border-slate-200 dark:border-white/10 transition-all shadow-sm disabled:opacity-50"
+            >
+              الدخول إلى بوابة الجمعيات
+            </Link>
+          </div>
         </div>
       </div>
     </div>

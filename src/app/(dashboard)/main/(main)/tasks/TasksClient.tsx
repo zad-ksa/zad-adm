@@ -23,6 +23,7 @@ import {
   FileImage,
   Link as LinkIcon,
   Folder,
+  Repeat,
   Camera,
   Printer,
   ChevronDown,
@@ -42,6 +43,10 @@ import {
   updateTaskCharityAction,
   addTaskUpdateAction,
   deleteTaskUpdateAction,
+  createPermanentTaskAction,
+  updatePermanentTaskAction,
+  deletePermanentTaskAction,
+  reassignPermanentTaskAction,
 } from "@/app/actions/tasks";
 import { Charity, Employee, Session, Task, TaskUpdate, Achievement } from "@/types";
 import { ADMIN_ROLES } from "@/lib/constants";
@@ -50,6 +55,7 @@ import dynamic from "next/dynamic";
 
 const TaskFormModal = dynamic(() => import("@/components/tasks/TaskFormModal"), { ssr: false });
 const AchievementFormModal = dynamic(() => import("@/components/tasks/AchievementFormModal"), { ssr: false });
+const PermanentTaskFormModal = dynamic(() => import("@/components/tasks/PermanentTaskFormModal"), { ssr: false });
 const ConfirmModal = dynamic(() => import("@/components/ui/ConfirmModal"), { ssr: false });
 
 export default function TasksClient({
@@ -58,6 +64,7 @@ export default function TasksClient({
   charities,
   initialTasks,
   initialAchievements,
+  initialPermanentTasks,
   categories: initialCategories,
 }: {
   session: any;
@@ -65,16 +72,20 @@ export default function TasksClient({
   charities: Charity[];
   initialTasks: any[];
   initialAchievements: any[];
+  initialPermanentTasks: any[];
   categories: string[];
 }) {
   const [tasks, setTasks] = useState<Task[]>(initialTasks);
   const [achievements, setAchievements] = useState<Achievement[]>(initialAchievements);
+  const [permanentTasks, setPermanentTasks] = useState<any[]>(initialPermanentTasks);
   const [categories, setCategories] = useState<string[]>(initialCategories);
   const isDirectorOrAdmin = ADMIN_ROLES.includes(session.role);
   const [selectedEmployeeId, setSelectedEmployeeId] = useState<string>(session.id);
 
 
   const [showTaskForm, setShowTaskForm] = useState(false);
+  const [showPermanentTaskForm, setShowPermanentTaskForm] = useState(false);
+  const [editingPermanentTask, setEditingPermanentTask] = useState<any>(null);
   
   const [isFabOpen, setIsFabOpen] = useState(false);
   const [tasksSortBy, setTasksSortBy] = useState<"priority" | "date">("priority");
@@ -99,6 +110,7 @@ export default function TasksClient({
   const [editingTaskTitle, setEditingTaskTitle] = useState("");
   const [editingPriorityTaskId, setEditingPriorityTaskId] = useState<string | null>(null);
   const [editingAssigneeTaskId, setEditingAssigneeTaskId] = useState<string | null>(null);
+  const [editingAssigneePermanentTaskId, setEditingAssigneePermanentTaskId] = useState<string | null>(null);
   const [editingCharityTaskId, setEditingCharityTaskId] = useState<string | null>(null);
 
   useEffect(() => {
@@ -107,12 +119,15 @@ export default function TasksClient({
       if (!target.closest('.inline-dropdown-container')) {
         setEditingPriorityTaskId(null);
         setEditingAssigneeTaskId(null);
+        setEditingAssigneePermanentTaskId(null);
         setEditingCharityTaskId(null);
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
+
+
 
   // Proof upload state
   const [completingTaskId, setCompletingTaskId] = useState<string | null>(null);
@@ -129,7 +144,7 @@ export default function TasksClient({
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
 
   // Delete modal state
-  const [itemToDelete, setItemToDelete] = useState<{ id: string, type: 'task' | 'achievement' } | null>(null);
+  const [itemToDelete, setItemToDelete] = useState<{ id: string, type: 'task' | 'achievement' | 'permanentTask' } | null>(null);
 
   // Task updates state
   const [expandedTaskId, setExpandedTaskId] = useState<string | null>(null);
@@ -288,6 +303,11 @@ ${combinedAchievements.length > 0 ? `
   const filteredDirectAchievements = achievements.filter((a) => {
     if (visibleEmployeeId === "all") return true;
     return a.employeeId === visibleEmployeeId;
+  });
+
+  const filteredPermanentTasks = permanentTasks.filter((t) => {
+    if (visibleEmployeeId === "all") return true;
+    return t.assignedToId === visibleEmployeeId;
   });
 
   // Combine completed tasks and direct achievements for the Achievements list
@@ -581,6 +601,10 @@ ${combinedAchievements.length > 0 ? `
     setItemToDelete({ id: achievementId, type: 'achievement' });
   };
 
+  const handleDeletePermanentTask = (taskId: string) => {
+    setItemToDelete({ id: taskId, type: 'permanentTask' });
+  };
+
   const confirmDelete = () => {
     if (!itemToDelete) return;
     
@@ -593,13 +617,21 @@ ${combinedAchievements.length > 0 ? `
           setTasks((prev) => prev.filter((t) => t.id !== itemToDelete.id));
           showNotification("success", "تم حذف المهمة بنجاح");
         }
-      } else {
+      } else if (itemToDelete.type === 'achievement') {
         const res = await deleteAchievementAction(itemToDelete.id);
         if (res.error) {
           showNotification("error", res.error);
         } else {
           setAchievements((prev) => prev.filter((a) => a.id !== itemToDelete.id));
           showNotification("success", "تم حذف المنجز بنجاح");
+        }
+      } else if (itemToDelete.type === 'permanentTask') {
+        const res = await deletePermanentTaskAction(itemToDelete.id);
+        if (res.error) {
+          showNotification("error", res.error);
+        } else {
+          setPermanentTasks((prev) => prev.filter((t) => t.id !== itemToDelete.id));
+          showNotification("success", "تم حذف المهمة الدائمة بنجاح");
         }
       }
       setItemToDelete(null);
@@ -628,6 +660,78 @@ ${combinedAchievements.length > 0 ? `
     });
   };
 
+  const handleCreateOrUpdatePermanentTask = async (data: { title: string; description: string; recurrenceRate: string; assignedToId: string }) => {
+    startTransition(async () => {
+      if (editingPermanentTask) {
+        // Update
+        const res = await updatePermanentTaskAction(editingPermanentTask.id, {
+          title: data.title,
+          description: data.description,
+          recurrenceRate: data.recurrenceRate,
+        });
+
+        if (res.error) {
+          showNotification("error", res.error);
+        } else {
+          // If assignee changed, we call reassign action
+          if (editingPermanentTask.assignedToId !== data.assignedToId) {
+            const assignRes = await reassignPermanentTaskAction(editingPermanentTask.id, data.assignedToId);
+            if (assignRes.error) {
+              showNotification("error", assignRes.error);
+              return;
+            }
+          }
+          
+          setPermanentTasks(prev => prev.map(t => {
+            if (t.id === editingPermanentTask.id) {
+              return { 
+                ...t, 
+                title: data.title, 
+                description: data.description, 
+                recurrenceRate: data.recurrenceRate,
+                assignedToId: data.assignedToId,
+                assignedTo: employees.find(e => e.id === data.assignedToId) || t.assignedTo
+              };
+            }
+            return t;
+          }));
+          setShowPermanentTaskForm(false);
+          setEditingPermanentTask(null);
+          showNotification("success", "تم تعديل المهمة الدائمة بنجاح");
+        }
+      } else {
+        // Create
+        const res = await createPermanentTaskAction(data);
+        if (res.error) {
+          showNotification("error", res.error);
+        } else if (res.success && res.task) {
+          const newTask = {
+            ...res.task,
+            assignedTo: employees.find(e => e.id === data.assignedToId) || null
+          };
+          setPermanentTasks(prev => [newTask, ...prev]);
+          setShowPermanentTaskForm(false);
+          showNotification("success", "تم إضافة المهمة الدائمة بنجاح");
+        }
+      }
+    });
+  };
+
+  const handleUpdatePermanentTaskAssigneeInline = async (taskId: string, newAssigneeId: string) => {
+    startTransition(async () => {
+      const res = await reassignPermanentTaskAction(taskId, newAssigneeId);
+      if (res.error) {
+        showNotification("error", res.error);
+      } else {
+        setPermanentTasks((prev) =>
+          prev.map((t) => (t.id === taskId ? { ...t, assignedToId: newAssigneeId, assignedTo: employees.find(e => e.id === newAssigneeId) || t.assignedTo } : t))
+        );
+        setEditingAssigneePermanentTaskId(null);
+        showNotification("success", "تم نقل المهمة الدائمة بنجاح");
+      }
+    });
+  };
+
   return (
     <main className="flex-1 min-w-0 py-5 relative" dir="rtl">
       {/* Notifications */}
@@ -646,8 +750,8 @@ ${combinedAchievements.length > 0 ? `
 
       <ConfirmModal
         isOpen={itemToDelete !== null}
-        title={itemToDelete?.type === 'task' ? "حذف المهمة" : "حذف المنجز"}
-        message={itemToDelete?.type === 'task' ? "هل أنت متأكد من رغبتك في حذف هذه المهمة نهائياً؟ لا يمكن التراجع عن هذا الإجراء." : "هل أنت متأكد من رغبتك في حذف هذا المنجز نهائياً؟ لا يمكن التراجع عن هذا الإجراء."}
+        title={itemToDelete?.type === 'task' ? "حذف المهمة" : itemToDelete?.type === 'achievement' ? "حذف المنجز" : "حذف المهمة الدائمة"}
+        message={itemToDelete?.type === 'task' ? "هل أنت متأكد من رغبتك في حذف هذه المهمة نهائياً؟ لا يمكن التراجع عن هذا الإجراء." : itemToDelete?.type === 'achievement' ? "هل أنت متأكد من رغبتك في حذف هذا المنجز نهائياً؟ لا يمكن التراجع عن هذا الإجراء." : "هل أنت متأكد من رغبتك في حذف هذه المهمة الدائمة نهائياً؟ لا يمكن التراجع عن هذا الإجراء."}
         onConfirm={confirmDelete}
         onCancel={() => setItemToDelete(null)}
         isPending={isPending}
@@ -697,8 +801,8 @@ ${combinedAchievements.length > 0 ? `
         </div>
       </div>
 
-      {/* Main Grid: 2/3 Tasks + 1/3 Achievements */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 items-start">
+      {/* Main Grid: 2/4 Tasks + 1/4 Permanent + 1/4 Achievements */}
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 items-start">
 
         {/* Active Tasks Column — takes 2 cols */}
         <div className="lg:col-span-2 bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700/40 shadow-sm overflow-hidden">
@@ -963,6 +1067,100 @@ ${combinedAchievements.length > 0 ? `
           </div>
         </div>
 
+        {/* Permanent Tasks Column — 1 col */}
+        {(filteredPermanentTasks.length > 0 || isDirectorOrAdmin) && (
+          <div className="bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-100 dark:border-slate-700/30 relative">
+            <div className="flex items-center justify-between px-3 py-2.5 border-b border-slate-100 dark:border-slate-700/30">
+              <h3 className="font-bold text-slate-500 dark:text-slate-400 text-xs flex items-center gap-1.5">
+                <Repeat className="w-3.5 h-3.5 text-indigo-500 dark:text-indigo-400" />
+                المهام الدائمة
+                <span className="text-[9px] font-bold text-slate-400 bg-slate-200 dark:bg-slate-700 px-1.5 py-0.5 rounded-full">{filteredPermanentTasks.length}</span>
+              </h3>
+              {isDirectorOrAdmin && (
+                <button
+                  onClick={() => {
+                    setEditingPermanentTask(null);
+                    setShowPermanentTaskForm(true);
+                  }}
+                  className="text-[10px] font-bold bg-indigo-50 text-indigo-600 hover:bg-indigo-100 dark:bg-indigo-900/30 dark:text-indigo-400 dark:hover:bg-indigo-900/50 px-2 py-1 rounded-md flex items-center gap-1 transition-colors cursor-pointer"
+                >
+                  <Plus className="w-3 h-3" />
+                  إضافة
+                </button>
+              )}
+            </div>
+
+            <div className="divide-y divide-slate-100 dark:divide-slate-700/20 max-h-[76vh] overflow-y-auto pb-44">
+              {filteredPermanentTasks.map((t) => (
+                <div key={t.id} className="px-3 py-2.5 flex items-start gap-2 group hover:bg-slate-100/60 dark:hover:bg-slate-700/20 transition-colors relative">
+                  <Repeat className="w-3.5 h-3.5 text-indigo-400 dark:text-indigo-500 shrink-0 mt-0.5" />
+
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-medium text-slate-600 dark:text-slate-300 leading-snug break-words">{t.title}</p>
+                    {t.description && (
+                      <p className="text-[10px] text-slate-400 mt-1 line-clamp-2">{t.description}</p>
+                    )}
+                    <div className="flex flex-wrap items-center gap-1 mt-1">
+                      <span className="text-[9px] text-indigo-500/70 dark:text-indigo-400 font-medium">{t.recurrenceRate}</span>
+                      
+                      {isDirectorOrAdmin && t.assignedTo && (
+                        <div className="relative inline-dropdown-container mr-1">
+                          <button
+                            type="button"
+                            onClick={() => setEditingAssigneePermanentTaskId(editingAssigneePermanentTaskId === t.id ? null : t.id)}
+                            className="text-[9px] font-bold text-slate-500 hover:text-indigo-600 dark:text-slate-400 dark:hover:text-indigo-400 flex items-center gap-0.5 cursor-pointer transition-colors"
+                          >
+                            <User className="w-2.5 h-2.5" />
+                            {t.assignedTo.name}
+                          </button>
+                          {editingAssigneePermanentTaskId === t.id && (
+                            <div className="absolute top-full mt-1 right-0 bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-lg shadow-lg p-1.5 flex flex-col gap-0.5 z-50 w-36 max-h-44 overflow-y-auto">
+                              {employees.map(e => (
+                                <button key={e.id} onClick={() => handleUpdatePermanentTaskAssigneeInline(t.id, e.id)} className="text-[10px] font-bold px-2 py-1 rounded hover:bg-slate-50 dark:hover:bg-slate-700 text-right text-indigo-600 dark:text-indigo-300 flex items-center gap-1.5 cursor-pointer">
+                                  <User className="w-3 h-3" />{e.name}
+                                </button>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+                    {isDirectorOrAdmin && (
+                      <>
+                        <button
+                          onClick={() => {
+                            setEditingPermanentTask(t);
+                            setShowPermanentTaskForm(true);
+                          }}
+                          title="تعديل"
+                          className="p-0.5 text-slate-300 hover:text-indigo-500 rounded cursor-pointer transition-colors"
+                        >
+                          <Pencil className="w-3 h-3" />
+                        </button>
+                        <button
+                          onClick={() => handleDeletePermanentTask(t.id)}
+                          title="حذف"
+                          className="p-0.5 text-slate-300 hover:text-red-500 rounded cursor-pointer transition-colors"
+                        >
+                          <Trash2 className="w-3 h-3" />
+                        </button>
+                      </>
+                    )}
+                  </div>
+                </div>
+              ))}
+              {filteredPermanentTasks.length === 0 && (
+                <div className="text-center py-10 text-slate-400">
+                  <p className="text-[10px] font-medium">لا توجد مهام دائمة.</p>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
         {/* Achievements Column — 1 col, muted style */}
         <div className="bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-100 dark:border-slate-700/30 overflow-hidden">
           <div className="flex items-center justify-between px-3 py-2.5 border-b border-slate-100 dark:border-slate-700/30">
@@ -1216,6 +1414,22 @@ ${combinedAchievements.length > 0 ? `
               isFabOpen ? 'opacity-100 scale-100 translate-y-0' : 'opacity-0 scale-95 translate-y-4 pointer-events-none'
             }`}
           >
+            {isDirectorOrAdmin && (
+              <button
+                onClick={() => { 
+                  setEditingPermanentTask(null);
+                  setShowPermanentTaskForm(true); 
+                  setIsFabOpen(false); 
+                }}
+                className="bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:text-indigo-600 dark:hover:text-indigo-400 px-4 py-3 rounded-2xl shadow-xl hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 flex items-center justify-start gap-3 whitespace-nowrap border border-slate-100 dark:border-slate-700 font-bold w-max"
+              >
+                <div className="bg-indigo-100 dark:bg-indigo-900/40 p-2 rounded-xl text-indigo-600 dark:text-indigo-400">
+                  <Repeat className="w-5 h-5" />
+                </div>
+                <span>إضافة مهمة دائمة</span>
+              </button>
+            )}
+
             <button
               onClick={() => { setShowDirectAchievementForm(true); setIsFabOpen(false); }}
               className="bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:text-emerald-600 dark:hover:text-emerald-400 px-4 py-3 rounded-2xl shadow-xl hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 flex items-center justify-start gap-3 whitespace-nowrap border border-slate-100 dark:border-slate-700 font-bold w-max"
@@ -1272,6 +1486,18 @@ ${combinedAchievements.length > 0 ? `
         isUploading={isUploadingAchievementProof}
         categories={categories}
         onCategoriesChange={setCategories}
+      />
+
+      <PermanentTaskFormModal
+        isOpen={showPermanentTaskForm}
+        onClose={() => {
+          setShowPermanentTaskForm(false);
+          setEditingPermanentTask(null);
+        }}
+        onSubmit={handleCreateOrUpdatePermanentTask}
+        employees={employees}
+        isPending={isPending}
+        initialData={editingPermanentTask}
       />
     </main>
   );

@@ -282,6 +282,8 @@ model Employee {
   updatedAt            DateTime          @updatedAt
   assignedTasks        Task[]            @relation("AssignedTasks")
   createdTasks         Task[]            @relation("CreatedTasks")
+  assignedPermanentTasks PermanentTask[] @relation("AssignedPermanentTasks")
+  createdPermanentTasks  PermanentTask[] @relation("CreatedPermanentTasks")
   employeeAchievements Achievement[]     @relation("EmployeeAchievements")
   createdAchievements  Achievement[]     @relation("CreatedAchievements")
   assignedCharities    EmployeeCharity[] @relation("AssignedCharities")
@@ -711,4 +713,19 @@ model GlobalSetting {
   updatedAt DateTime @updatedAt
 
   @@index([key])
+}
+
+model PermanentTask {
+  id             String   @id @default(uuid())
+  title          String
+  description    String?  @db.Text
+  recurrenceRate String
+  assignedToId   String
+  assignedTo     Employee @relation("AssignedPermanentTasks", fields: [assignedToId], references: [id], onDelete: Cascade)
+  createdById    String
+  createdBy      Employee @relation("CreatedPermanentTasks", fields: [createdById], references: [id], onDelete: Cascade)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([assignedToId])
 }

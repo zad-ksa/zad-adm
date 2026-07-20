@@ -542,3 +542,139 @@ export async function deleteTaskUpdateAction(updateId: string) {
     return { error: error.message || "حدث خطأ أثناء حذف التحديث" };
   }
 }
+
+// ----------------------------------------------------------------------------------
+// Permanent Tasks Actions
+// ----------------------------------------------------------------------------------
+
+export async function createPermanentTaskAction(data: {
+  title: string;
+  description?: string;
+  recurrenceRate: string;
+  assignedToId: string;
+}) {
+  try {
+    const user = await getAuthenticatedUser();
+    
+    // Check role permissions:
+    // Only those who can manage tasks (Admin, Executive Director, Admin Sec) can create permanent tasks
+    const isDirectorOrAdmin = ["ADMIN", "EXECUTIVE_DIRECTOR", "GENERAL_MANAGER", "ADMINISTRATIVE_SECRETARIAT"].includes(user.role);
+    if (!isDirectorOrAdmin) {
+      return { error: "غير مصرح لك بإضافة مهام دائمة" };
+    }
+
+    const task = await prisma.permanentTask.create({
+      data: {
+        title: data.title,
+        description: data.description || null,
+        recurrenceRate: data.recurrenceRate,
+        assignedToId: data.assignedToId,
+        createdById: user.id,
+      },
+    });
+
+    revalidatePath("/main/tasks");
+    return { success: true, task };
+  } catch (error: any) {
+    return { error: error.message || "حدث خطأ أثناء إضافة المهمة الدائمة" };
+  }
+}
+
+export async function updatePermanentTaskAction(
+  taskId: string,
+  data: {
+    title: string;
+    description?: string;
+    recurrenceRate: string;
+  }
+) {
+  try {
+    const user = await getAuthenticatedUser();
+    
+    const isDirectorOrAdmin = ["ADMIN", "EXECUTIVE_DIRECTOR", "GENERAL_MANAGER", "ADMINISTRATIVE_SECRETARIAT"].includes(user.role);
+    if (!isDirectorOrAdmin) {
+      return { error: "غير مصرح لك بتعديل المهام الدائمة" };
+    }
+
+    const task = await prisma.permanentTask.findUnique({
+      where: { id: taskId },
+    });
+
+    if (!task) {
+      return { error: "المهمة الدائمة غير موجودة" };
+    }
+
+    await prisma.permanentTask.update({
+      where: { id: taskId },
+      data: {
+        title: data.title,
+        description: data.description || null,
+        recurrenceRate: data.recurrenceRate,
+      },
+    });
+
+    revalidatePath("/main/tasks");
+    return { success: true };
+  } catch (error: any) {
+    return { error: error.message || "حدث خطأ أثناء تعديل المهمة الدائمة" };
+  }
+}
+
+export async function deletePermanentTaskAction(taskId: string) {
+  try {
+    const user = await getAuthenticatedUser();
+    
+    const isDirectorOrAdmin = ["ADMIN", "EXECUTIVE_DIRECTOR", "GENERAL_MANAGER", "ADMINISTRATIVE_SECRETARIAT"].includes(user.role);
+    if (!isDirectorOrAdmin) {
+      return { error: "غير مصرح لك بحذف المهام الدائمة" };
+    }
+
+    const task = await prisma.permanentTask.findUnique({
+      where: { id: taskId },
+    });
+
+    if (!task) {
+      return { error: "المهمة الدائمة غير موجودة" };
+    }
+
+    await prisma.permanentTask.delete({
+      where: { id: taskId },
+    });
+
+    revalidatePath("/main/tasks");
+    return { success: true };
+  } catch (error: any) {
+    return { error: error.message || "حدث خطأ أثناء حذف المهمة الدائمة" };
+  }
+}
+
+export async function reassignPermanentTaskAction(taskId: string, newEmployeeId: string) {
+  try {
+    const user = await getAuthenticatedUser();
+    
+    const isDirectorOrAdmin = ["ADMIN", "EXECUTIVE_DIRECTOR", "GENERAL_MANAGER", "ADMINISTRATIVE_SECRETARIAT"].includes(user.role);
+    if (!isDirectorOrAdmin) {
+      return { error: "غير مصرح لك بنقل المهام الدائمة" };
+    }
+
+    const task = await prisma.permanentTask.findUnique({
+      where: { id: taskId },
+    });
+
+    if (!task) {
+      return { error: "المهمة الدائمة غير موجودة" };
+    }
+
+    await prisma.permanentTask.update({
+      where: { id: taskId },
+      data: {
+        assignedToId: newEmployeeId,
+      },
+    });
+
+    revalidatePath("/main/tasks");
+    return { success: true };
+  } catch (error: any) {
+    return { error: error.message || "حدث خطأ أثناء نقل المهمة الدائمة" };
+  }
+}

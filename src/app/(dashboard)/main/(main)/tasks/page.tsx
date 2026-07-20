@@ -40,6 +40,7 @@ export default async function TasksPage() {
   // Fetch initial tasks and achievements
   let initialTasks = [];
   let initialAchievements = [];
+  let initialPermanentTasks = [];
 
   if (isDirectorOrAdmin) {
     initialTasks = await prisma.task.findMany({
@@ -48,6 +49,12 @@ export default async function TasksPage() {
     });
     initialAchievements = await prisma.achievement.findMany({
       orderBy: { createdAt: "desc" },
+    });
+    initialPermanentTasks = await prisma.permanentTask.findMany({
+      orderBy: { createdAt: "desc" },
+      include: {
+        assignedTo: { select: { id: true, name: true, avatarUrl: true } }
+      }
     });
   } else {
     initialTasks = await prisma.task.findMany({
@@ -58,6 +65,13 @@ export default async function TasksPage() {
     initialAchievements = await prisma.achievement.findMany({
       where: { employeeId: session.id },
       orderBy: { createdAt: "desc" },
+    });
+    initialPermanentTasks = await prisma.permanentTask.findMany({
+      where: { assignedToId: session.id },
+      orderBy: { createdAt: "desc" },
+      include: {
+        assignedTo: { select: { id: true, name: true, avatarUrl: true } }
+      }
     });
   }
 
@@ -70,6 +84,7 @@ export default async function TasksPage() {
       charities={charities}
       initialTasks={initialTasks}
       initialAchievements={initialAchievements}
+      initialPermanentTasks={initialPermanentTasks as any}
       categories={categories}
     />
   );

@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, useTransition } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { User, ShieldAlert, Users, X, LogOut, LayoutDashboard, Building2, ClipboardList, ChevronRight, Edit, Eye, EyeOff, Camera, Loader2, AlertCircle, CheckCircle2, Newspaper, CheckSquare, Moon, Sun, LayoutGrid, FileText, Settings2, FileSignature, MessageSquare, Send, GitBranch } from "lucide-react";
+import { User, ShieldAlert, Users, X, LogOut, LayoutDashboard, Building2, ClipboardList, ChevronRight, Edit, Eye, EyeOff, Camera, Loader2, AlertCircle, CheckCircle2, Newspaper, CheckSquare, Moon, Sun, LayoutGrid, FileText, Settings2, FileSignature, MessageSquare, Send, GitBranch, Bell } from "lucide-react";
 import { useTheme } from "next-themes";
 import { logout } from "@/app/actions/auth";
 import { updateProfile } from "@/app/actions/profile";
@@ -13,8 +13,6 @@ import { hasPermission, ROLE_LABELS } from "@/lib/permissions";
 import { getSidebarCharities } from "@/app/actions/charity";
 import { ChevronDown, Target, Scale, DollarSign } from "lucide-react";
 import dynamic from "next/dynamic";
-
-const ProfileEditModal = dynamic(() => import("./ProfileEditModal"), { ssr: false });
 
 // --- Sub Tab Link Component ---
 function SubTabLink({ href, label, isActive, onClick }: { href: string, label: string, isActive: boolean, onClick?: () => void }) {
@@ -68,6 +66,7 @@ export default function EmployeeSidebar({
   isOpen,
   setIsOpen,
   unreadRequests = 0,
+  appNotifications,
 }: {
   session: any;
   isOpen: boolean;
@@ -210,55 +209,9 @@ export default function EmployeeSidebar({
 
       {/* Mobile Close Button */}
       <div className="lg:hidden absolute top-6 left-6 z-50">
-        <button onClick={() => setIsOpen(false)} className="text-slate-400 hover:text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 dark:bg-slate-800 dark:hover:bg-slate-700 dark:bg-slate-800 p-2 rounded-lg transition-colors">
+        <button onClick={() => setIsOpen(false)} className="text-slate-400 hover:text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 p-2 rounded-lg transition-colors">
           <X className="w-5 h-5" />
         </button>
-      </div>
-
-      {/* User Profile */}
-      <div className={`flex ${isOpen ? "flex-row items-center gap-2.5 px-4 py-3" : "flex-col items-center gap-2 px-2 py-3"} border-b border-slate-100 dark:border-slate-700/50 dark:border-slate-800 transition-all overflow-hidden shrink-0`}>
-        <button
-          type="button"
-          onClick={() => {
-            setIsEditModalOpen(true);
-          }}
-          className="group/avatar flex items-center justify-center focus:outline-none cursor-pointer shrink-0"
-          title="تعديل الملف الشخصي"
-        >
-          <div className={`relative overflow-hidden bg-primary/10 dark:bg-primary/20 text-primary border border-primary/20 rounded-xl flex items-center justify-center transition-all duration-300 ${isOpen ? "w-9 h-9" : "w-9 h-9"} group-hover/avatar:ring-2 group-hover/avatar:ring-primary/40`}>
-            {userState?.avatarUrl ? (
-              <Image src={userState.avatarUrl} alt="Avatar" fill className="object-cover" />
-            ) : (
-              <User className="w-4 h-4" />
-            )}
-            <div className="absolute inset-0 bg-slate-900/40 opacity-0 group-hover/avatar:opacity-100 transition-all duration-200 flex items-center justify-center text-white">
-              <Edit className="w-3.5 h-3.5" />
-            </div>
-          </div>
-        </button>
-
-        {isOpen && (
-          <div className="flex-1 min-w-0">
-            <h2 className="text-sm font-bold text-slate-800 dark:text-slate-100 truncate leading-tight" title={userState?.name}>{userState?.name}</h2>
-            <div className="mt-0.5 inline-flex items-center gap-1 px-1.5 py-0.5 bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-full text-[10px] text-slate-500 dark:text-slate-400 font-bold">
-              <ShieldAlert className="w-3 h-3 text-emerald-500 shrink-0" />
-              <span className="truncate">
-                {ROLE_LABELS[userState?.role] || "موظف"}
-              </span>
-            </div>
-          </div>
-        )}
-
-        {/* Theme Toggle */}
-        {mounted && (
-          <button
-            onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-            className="shrink-0 flex items-center justify-center w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:bg-primary hover:text-white hover:border-primary transition-all cursor-pointer"
-            title="تبديل الوضع الداكن/الفاتح"
-          >
-            {theme === "dark" ? <Sun className="w-3.5 h-3.5" /> : <Moon className="w-3.5 h-3.5" />}
-          </button>
-        )}
       </div>
 
       {/* Navigation */}
@@ -460,13 +413,6 @@ export default function EmployeeSidebar({
         </div>
       </div>
 
-      {/* Edit Profile Modal */}
-      <ProfileEditModal 
-        isOpen={isEditModalOpen} 
-        onClose={() => setIsEditModalOpen(false)} 
-        userState={userState} 
-        setUserState={setUserState} 
-      />
     </>
   );
 }

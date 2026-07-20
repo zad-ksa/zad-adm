@@ -2,9 +2,11 @@
 
 import { usePathname } from "next/navigation";
 import EmployeeSidebar from "@/components/EmployeeSidebar";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Menu } from "lucide-react";
 import { getUnreadNotificationsCount } from "@/app/actions/requests";
+import { getUnreadNotifications } from "@/app/actions/notifications";
+import FloatingHeader from "@/components/FloatingHeader";
 
 import DeveloperRoleSwitcher from "@/components/DeveloperRoleSwitcher";
 
@@ -12,6 +14,8 @@ export default function DashboardLayoutClient({ children, session, unreadRequest
   const pathname = usePathname();
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [unreadRequests, setUnreadRequests] = useState(initial);
+  const [appNotificationsData, setAppNotificationsData] = useState<{notifications: any[], count: number}>({ notifications: [], count: 0 });
+  const seenNotificationIds = useRef<Set<string>>(new Set());
 
   // Close sidebar on mobile when navigating
   useEffect(() => {
@@ -28,6 +32,32 @@ export default function DashboardLayoutClient({ children, session, unreadRequest
       try {
         const count = await getUnreadNotificationsCount();
         if (active) setUnreadRequests(count);
+
+        const appNotifsRes = await getUnreadNotifications();
+        if (active && appNotifsRes && !appNotifsRes.error) {
+          setAppNotificationsData({ notifications: appNotifsRes.notifications || [], count: appNotifsRes.count || 0 });
+          
+          if ("Notification" in window && Notification.permission === "granted") {
+            const notifs = appNotifsRes.notifications || [];
+            notifs.forEach((n: any) => {
+              if (!seenNotificationIds.current.has(n.id)) {
+                seenNotificationIds.current.add(n.id);
+                // Send push notification
+                const notification = new Notification(n.title, {
+                  body: n.message || "",
+                  icon: "/favicon.ico",
+                });
+                notification.onclick = () => {
+                  window.focus();
+                  notification.close();
+                };
+              }
+            });
+          } else {
+             const notifs = appNotifsRes.notifications || [];
+             notifs.forEach((n: any) => seenNotificationIds.current.add(n.id));
+          }
+        }
       } catch {}
     }
     
@@ -47,10 +77,20 @@ export default function DashboardLayoutClient({ children, session, unreadRequest
     };
   }, []);
 
+  useEffect(() => {
+    if (typeof window !== "undefined" && "Notification" in window) {
+      if (Notification.permission === "default") {
+        Notification.requestPermission();
+      }
+    }
+  }, []);
+
   return (
     <div className="flex h-[100dvh] bg-slate-50 dark:bg-slate-950 overflow-hidden print:h-auto print:overflow-visible print:block" dir="rtl">
       <EmployeeSidebar session={session} isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} unreadRequests={unreadRequests} />
       
+      <FloatingHeader session={session} appNotifications={appNotificationsData} />
+
       <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden relative print:overflow-visible print:h-auto print:block">
         {/* Mobile Header (Sticky & Blur) */}
         <div className="lg:hidden sticky top-0 bg-white/80 dark:bg-slate-900/80 backdrop-blur-lg border-b border-slate-200/80 dark:border-slate-800/80 h-16 flex items-center justify-between px-4 shrink-0 z-30 shadow-sm print:hidden">

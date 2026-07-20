@@ -287,6 +287,7 @@ model Employee {
   employeeAchievements Achievement[]     @relation("EmployeeAchievements")
   createdAchievements  Achievement[]     @relation("CreatedAchievements")
   assignedCharities    EmployeeCharity[] @relation("AssignedCharities")
+  appNotifications     AppNotification[]
   createdMeetings      Meeting[]         @relation("MeetingCreator")
   meetingTasksAssigned MeetingTask[]     @relation("MeetingTaskAssignee")
   navSetting           EmployeeNavSetting?
@@ -729,3 +730,17 @@ model PermanentTask {
 
   @@index([assignedToId])
 }
+
+model AppNotification {
+  id         String   @id @default(uuid())
+  employeeId String
+  employee   Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  title      String
+  message    String?  @db.Text
+  link       String?
+  isRead     Boolean  @default(false)
+  createdAt  DateTime @default(now())
+
+  @@index([employeeId, isRead])
+}
+

@@ -3,6 +3,7 @@
 import { prisma } from "@/lib/db";
 import { getSession } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
+import { createAppNotification } from "./notifications";
 import { v2 as cloudinary } from "cloudinary";
 
 cloudinary.config({
@@ -57,6 +58,15 @@ export async function createTaskAction(data: {
         priority: data.priority ?? 3,
       },
     });
+
+    if (finalAssignedToId !== user.id) {
+      await createAppNotification(
+        finalAssignedToId,
+        "مهمة جديدة",
+        `تم إسناد مهمة جديدة لك: ${data.title}`,
+        "/main/tasks"
+      );
+    }
 
     revalidatePath("/main/tasks");
     return { success: true, task };
@@ -129,6 +139,15 @@ export async function reassignTaskAction(taskId: string, newEmployeeId: string) 
         assignedToId: newEmployeeId,
       },
     });
+
+    if (newEmployeeId !== user.id) {
+      await createAppNotification(
+        newEmployeeId,
+        "إسناد مهمة",
+        `تم تحويل مهمة إليك: ${task.title}`,
+        "/main/tasks"
+      );
+    }
 
     revalidatePath("/main/tasks");
     return { success: true };
@@ -573,6 +592,15 @@ export async function createPermanentTaskAction(data: {
       },
     });
 
+    if (data.assignedToId !== user.id) {
+      await createAppNotification(
+        data.assignedToId,
+        "مهمة وظيفية جديدة",
+        `تم إسناد مهمة وظيفية جديدة لك: ${data.title}`,
+        "/main/tasks"
+      );
+    }
+
     revalidatePath("/main/tasks");
     return { success: true, task };
   } catch (error: any) {
@@ -671,6 +699,15 @@ export async function reassignPermanentTaskAction(taskId: string, newEmployeeId:
         assignedToId: newEmployeeId,
       },
     });
+
+    if (newEmployeeId !== user.id) {
+      await createAppNotification(
+        newEmployeeId,
+        "إسناد مهمة وظيفية",
+        `تم تحويل مهمة وظيفية إليك: ${task.title}`,
+        "/main/tasks"
+      );
+    }
 
     revalidatePath("/main/tasks");
     return { success: true };

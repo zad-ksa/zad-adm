@@ -4,6 +4,7 @@ import { prisma } from "@/lib/db";
 import { Prisma } from "@prisma/client";
 import { getSession } from "@/lib/auth";
 import { hasPermission } from "@/lib/permissions";
+import { createAppNotification } from "./notifications";
 import { revalidatePath } from "next/cache";
 
 // ── helpers ───────────────────────────────────────────────────────────────────
@@ -82,6 +83,12 @@ export async function createRequest(data: {
   if (firstStep) {
     if (firstStep.approverId !== session.id) {
       await notify(request.id, firstStep.approverId);
+      await createAppNotification(
+        firstStep.approverId,
+        "طلب جديد",
+        `تم رفع طلب جديد للمراجعة: ${request.title}`,
+        "/main/requests"
+      );
     }
   } else {
     const execs = await prisma.employee.findMany({
@@ -159,6 +166,12 @@ export async function reviewRequest(data: {
         },
       });
       await notify(data.requestId, nextStep.approverId);
+      await createAppNotification(
+        nextStep.approverId,
+        "طلب للمراجعة",
+        `تم تحويل طلب لمراجعتك: ${request.title}`,
+        "/main/requests"
+      );
     } else {
       // لا توجد خطوة تالية — اعتمد نهائياً
       await prisma.request.update({
@@ -171,6 +184,12 @@ export async function reviewRequest(data: {
         },
       });
       await notify(data.requestId, request.createdById);
+      await createAppNotification(
+        request.createdById,
+        "قبول طلب الاعتماد",
+        `تم اعتماد طلبك بشكل نهائي: ${request.title}`,
+        "/main/requests"
+      );
     }
   } else if (data.action === "APPROVED_FINAL") {
     await prisma.request.update({
@@ -183,6 +202,12 @@ export async function reviewRequest(data: {
       },
     });
     await notify(data.requestId, request.createdById);
+    await createAppNotification(
+      request.createdById,
+      "قبول طلب الاعتماد",
+      `تم اعتماد طلبك بشكل نهائي: ${request.title}`,
+      "/main/requests"
+    );
   } else if (data.action === "REJECTED") {
     await prisma.request.update({
       where: { id: data.requestId },

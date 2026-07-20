@@ -66,7 +66,6 @@ export default function EmployeeSidebar({
   isOpen,
   setIsOpen,
   unreadRequests = 0,
-  appNotifications,
 }: {
   session: any;
   isOpen: boolean;

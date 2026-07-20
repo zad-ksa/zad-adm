@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { toggleEmployeeStatus, updateEmployee, updateEmployeeCharities } from "./actions";
+import { toggleEmployeeStatus, updateEmployee, updateEmployeeCharities, deleteEmployee } from "./actions";
 import {
   UserCircle,
   ShieldAlert,
@@ -13,7 +13,7 @@ import {
   Phone,
   Key
 } from "@/components/Icons";
-import { Edit, ShieldCheck, Building2, UserPlus, ArrowRight } from "lucide-react";
+import { Edit, ShieldCheck, Building2, UserPlus, ArrowRight, Trash2 } from "lucide-react";
 import { AddEmployeeForm } from "@/components/AddEmployeeForm";
 import Link from "next/link";
 import { PERMISSION_GROUPS, ALL_PERMISSIONS, AUTO_ADMIN_ROLES, ROLE_LABELS } from "@/lib/permissions";
@@ -77,6 +77,19 @@ export function EmployeesClient({
         );
       } else {
         alert(res.error || "حدث خطأ أثناء تغيير الحالة");
+      }
+    });
+  };
+
+  const handleDelete = (id: string) => {
+    if (!confirm("هل أنت متأكد من رغبتك في حذف هذا الموظف نهائياً؟ قد لا تتمكن من استعادة البيانات.")) return;
+
+    startTransition(async () => {
+      const res = await deleteEmployee(id);
+      if (res.success) {
+        setEmployees(prev => prev.filter(emp => emp.id !== id));
+      } else {
+        alert(res.error || "حدث خطأ أثناء الحذف");
       }
     });
   };
@@ -282,6 +295,14 @@ export function EmployeesClient({
                         }`}
                       >
                         {emp.isActive ? "تعطيل" : "تفعيل"}
+                      </button>
+                      <button
+                        onClick={() => handleDelete(emp.id)}
+                        disabled={isPending || emp.id === session.id || emp.role === "ADMIN"}
+                        className="p-1.5 text-slate-500 dark:text-slate-400 hover:text-red-500 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+                        title="حذف الموظف"
+                      >
+                        <Trash2 className="w-4 h-4" />
                       </button>
                     </div>
                   </td>

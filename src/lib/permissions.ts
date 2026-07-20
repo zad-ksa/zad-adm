@@ -28,6 +28,7 @@ export const PERMISSION_GROUPS = [
       { id: "manage_contracts", label: "عرض العقود" },
       { id: "edit_contracts", label: "تعديل وإدارة العقود" },
       { id: "manage_employees", label: "إدارة الموظفين" },
+      { id: "delete_employees", label: "حذف الموظفين" },
       { id: "manage_tasks", label: "المهام والمنجزات" },
       { id: "manage_news", label: "الأخبار والإنجازات" },
       { id: "manage_surveys", label: "الاستبيانات المخصصة" },

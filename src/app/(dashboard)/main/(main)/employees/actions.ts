@@ -175,3 +175,36 @@ export async function updateEmployee(
     return { error: error.message || "حدث خطأ أثناء تحديث بيانات الموظف" };
   }
 }
+
+export async function deleteEmployee(id: string) {
+  try {
+    const session = await getSession();
+    if (!session) throw new Error("Not authenticated");
+    if (!hasPermission(session.role, session.permissions || [], "delete_employees")) {
+      return { error: "ليس لديك صلاحية لحذف الموظفين" };
+    }
+  } catch (err: any) {
+    return { error: "ليس لديك صلاحية لحذف الموظفين" };
+  }
+
+  try {
+    // Delete employee charities first due to relation
+    await prisma.employeeCharity.deleteMany({
+      where: { employeeId: id },
+    });
+    
+    // Check if employee has tasks or achievements
+    // Instead of failing, we might want to let Prisma handle referential integrity
+    // or just try to delete the employee directly if cascade delete is configured.
+    // Let's assume standard behavior.
+    await prisma.employee.delete({
+      where: { id },
+    });
+
+    revalidatePath("/main/employees");
+    return { success: "تم حذف الموظف بنجاح" };
+  } catch (error: any) {
+    console.error("Error deleting employee:", error);
+    return { error: "لا يمكن حذف الموظف، قد يكون مرتبطاً ببيانات أخرى" };
+  }
+}

@@ -56,7 +56,7 @@ export default function PermanentTaskFormModal({
         <div className="flex items-center justify-between mb-6 border-b border-slate-100 dark:border-slate-700/50 pb-4">
           <h2 className="text-lg font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
             <CheckSquare className="w-5 h-5 text-primary" />
-            {initialData ? "تعديل المهمة الدائمة" : "إضافة مهمة دائمة"}
+            {initialData ? "تعديل المهمة الوظيفية" : "إضافة مهمة وظيفية"}
           </h2>
           <button onClick={onClose} disabled={isPending} className="p-2 text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-xl transition-colors cursor-pointer">
             <X className="w-5 h-5" />
@@ -74,7 +74,7 @@ export default function PermanentTaskFormModal({
                 onChange={(e) => setTitle(e.target.value)}
                 disabled={isPending}
                 className="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl px-10 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-slate-800 dark:text-slate-100"
-                placeholder="أدخل اسم المهمة الدائمة..."
+                placeholder="أدخل اسم المهمة الوظيفية..."
               />
               <CheckSquare className="absolute right-3.5 top-3.5 w-4 h-4 text-slate-400" />
             </div>
@@ -146,7 +146,7 @@ export default function PermanentTaskFormModal({
               disabled={isPending || !title || !recurrenceRate || !assignedToId}
               className="px-6 py-2.5 rounded-xl bg-primary text-white font-bold hover:bg-primary/90 transition-colors shadow-sm disabled:opacity-50 text-sm cursor-pointer"
             >
-              {isPending ? "جاري الحفظ..." : "حفظ المهمة الدائمة"}
+              {isPending ? "جاري الحفظ..." : "حفظ المهمة الوظيفية"}
             </button>
           </div>
         </form>

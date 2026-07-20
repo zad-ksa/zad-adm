@@ -560,7 +560,7 @@ export async function createPermanentTaskAction(data: {
     // Only those who can manage tasks (Admin, Executive Director, Admin Sec) can create permanent tasks
     const isDirectorOrAdmin = ["ADMIN", "EXECUTIVE_DIRECTOR", "GENERAL_MANAGER", "ADMINISTRATIVE_SECRETARIAT"].includes(user.role);
     if (!isDirectorOrAdmin) {
-      return { error: "غير مصرح لك بإضافة مهام دائمة" };
+      return { error: "غير مصرح لك بإضافة مهام وظيفية" };
     }
 
     const task = await prisma.permanentTask.create({
@@ -576,7 +576,7 @@ export async function createPermanentTaskAction(data: {
     revalidatePath("/main/tasks");
     return { success: true, task };
   } catch (error: any) {
-    return { error: error.message || "حدث خطأ أثناء إضافة المهمة الدائمة" };
+    return { error: error.message || "حدث خطأ أثناء إضافة المهمة الوظيفية" };
   }
 }
 
@@ -593,7 +593,7 @@ export async function updatePermanentTaskAction(
     
     const isDirectorOrAdmin = ["ADMIN", "EXECUTIVE_DIRECTOR", "GENERAL_MANAGER", "ADMINISTRATIVE_SECRETARIAT"].includes(user.role);
     if (!isDirectorOrAdmin) {
-      return { error: "غير مصرح لك بتعديل المهام الدائمة" };
+      return { error: "غير مصرح لك بتعديل المهام الوظيفية" };
     }
 
     const task = await prisma.permanentTask.findUnique({
@@ -601,7 +601,7 @@ export async function updatePermanentTaskAction(
     });
 
     if (!task) {
-      return { error: "المهمة الدائمة غير موجودة" };
+      return { error: "المهمة الوظيفية غير موجودة" };
     }
 
     await prisma.permanentTask.update({
@@ -616,7 +616,7 @@ export async function updatePermanentTaskAction(
     revalidatePath("/main/tasks");
     return { success: true };
   } catch (error: any) {
-    return { error: error.message || "حدث خطأ أثناء تعديل المهمة الدائمة" };
+    return { error: error.message || "حدث خطأ أثناء تعديل المهمة الوظيفية" };
   }
 }
 
@@ -626,7 +626,7 @@ export async function deletePermanentTaskAction(taskId: string) {
     
     const isDirectorOrAdmin = ["ADMIN", "EXECUTIVE_DIRECTOR", "GENERAL_MANAGER", "ADMINISTRATIVE_SECRETARIAT"].includes(user.role);
     if (!isDirectorOrAdmin) {
-      return { error: "غير مصرح لك بحذف المهام الدائمة" };
+      return { error: "غير مصرح لك بحذف المهام الوظيفية" };
     }
 
     const task = await prisma.permanentTask.findUnique({
@@ -634,7 +634,7 @@ export async function deletePermanentTaskAction(taskId: string) {
     });
 
     if (!task) {
-      return { error: "المهمة الدائمة غير موجودة" };
+      return { error: "المهمة الوظيفية غير موجودة" };
     }
 
     await prisma.permanentTask.delete({
@@ -644,7 +644,7 @@ export async function deletePermanentTaskAction(taskId: string) {
     revalidatePath("/main/tasks");
     return { success: true };
   } catch (error: any) {
-    return { error: error.message || "حدث خطأ أثناء حذف المهمة الدائمة" };
+    return { error: error.message || "حدث خطأ أثناء حذف المهمة الوظيفية" };
   }
 }
 
@@ -654,7 +654,7 @@ export async function reassignPermanentTaskAction(taskId: string, newEmployeeId:
     
     const isDirectorOrAdmin = ["ADMIN", "EXECUTIVE_DIRECTOR", "GENERAL_MANAGER", "ADMINISTRATIVE_SECRETARIAT"].includes(user.role);
     if (!isDirectorOrAdmin) {
-      return { error: "غير مصرح لك بنقل المهام الدائمة" };
+      return { error: "غير مصرح لك بنقل المهام الوظيفية" };
     }
 
     const task = await prisma.permanentTask.findUnique({
@@ -662,7 +662,7 @@ export async function reassignPermanentTaskAction(taskId: string, newEmployeeId:
     });
 
     if (!task) {
-      return { error: "المهمة الدائمة غير موجودة" };
+      return { error: "المهمة الوظيفية غير موجودة" };
     }
 
     await prisma.permanentTask.update({
@@ -675,6 +675,6 @@ export async function reassignPermanentTaskAction(taskId: string, newEmployeeId:
     revalidatePath("/main/tasks");
     return { success: true };
   } catch (error: any) {
-    return { error: error.message || "حدث خطأ أثناء نقل المهمة الدائمة" };
+    return { error: error.message || "حدث خطأ أثناء نقل المهمة الوظيفية" };
   }
 }

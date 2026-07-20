@@ -631,7 +631,7 @@ ${combinedAchievements.length > 0 ? `
           showNotification("error", res.error);
         } else {
           setPermanentTasks((prev) => prev.filter((t) => t.id !== itemToDelete.id));
-          showNotification("success", "تم حذف المهمة الدائمة بنجاح");
+          showNotification("success", "تم حذف المهمة الوظيفية بنجاح");
         }
       }
       setItemToDelete(null);
@@ -697,7 +697,7 @@ ${combinedAchievements.length > 0 ? `
           }));
           setShowPermanentTaskForm(false);
           setEditingPermanentTask(null);
-          showNotification("success", "تم تعديل المهمة الدائمة بنجاح");
+          showNotification("success", "تم تعديل المهمة الوظيفية بنجاح");
         }
       } else {
         // Create
@@ -711,7 +711,7 @@ ${combinedAchievements.length > 0 ? `
           };
           setPermanentTasks(prev => [newTask, ...prev]);
           setShowPermanentTaskForm(false);
-          showNotification("success", "تم إضافة المهمة الدائمة بنجاح");
+          showNotification("success", "تم إضافة المهمة الوظيفية بنجاح");
         }
       }
     });
@@ -727,7 +727,7 @@ ${combinedAchievements.length > 0 ? `
           prev.map((t) => (t.id === taskId ? { ...t, assignedToId: newAssigneeId, assignedTo: employees.find(e => e.id === newAssigneeId) || t.assignedTo } : t))
         );
         setEditingAssigneePermanentTaskId(null);
-        showNotification("success", "تم نقل المهمة الدائمة بنجاح");
+        showNotification("success", "تم نقل المهمة الوظيفية بنجاح");
       }
     });
   };
@@ -750,8 +750,8 @@ ${combinedAchievements.length > 0 ? `
 
       <ConfirmModal
         isOpen={itemToDelete !== null}
-        title={itemToDelete?.type === 'task' ? "حذف المهمة" : itemToDelete?.type === 'achievement' ? "حذف المنجز" : "حذف المهمة الدائمة"}
-        message={itemToDelete?.type === 'task' ? "هل أنت متأكد من رغبتك في حذف هذه المهمة نهائياً؟ لا يمكن التراجع عن هذا الإجراء." : itemToDelete?.type === 'achievement' ? "هل أنت متأكد من رغبتك في حذف هذا المنجز نهائياً؟ لا يمكن التراجع عن هذا الإجراء." : "هل أنت متأكد من رغبتك في حذف هذه المهمة الدائمة نهائياً؟ لا يمكن التراجع عن هذا الإجراء."}
+        title={itemToDelete?.type === 'task' ? "حذف المهمة" : itemToDelete?.type === 'achievement' ? "حذف المنجز" : "حذف المهمة الوظيفية"}
+        message={itemToDelete?.type === 'task' ? "هل أنت متأكد من رغبتك في حذف هذه المهمة نهائياً؟ لا يمكن التراجع عن هذا الإجراء." : itemToDelete?.type === 'achievement' ? "هل أنت متأكد من رغبتك في حذف هذا المنجز نهائياً؟ لا يمكن التراجع عن هذا الإجراء." : "هل أنت متأكد من رغبتك في حذف هذه المهمة الوظيفية نهائياً؟ لا يمكن التراجع عن هذا الإجراء."}
         onConfirm={confirmDelete}
         onCancel={() => setItemToDelete(null)}
         isPending={isPending}
@@ -1073,7 +1073,7 @@ ${combinedAchievements.length > 0 ? `
             <div className="flex items-center justify-between px-3 py-2.5 border-b border-slate-100 dark:border-slate-700/30">
               <h3 className="font-bold text-slate-500 dark:text-slate-400 text-xs flex items-center gap-1.5">
                 <Repeat className="w-3.5 h-3.5 text-indigo-500 dark:text-indigo-400" />
-                المهام الدائمة
+                المهام الوظيفية
                 <span className="text-[9px] font-bold text-slate-400 bg-slate-200 dark:bg-slate-700 px-1.5 py-0.5 rounded-full">{filteredPermanentTasks.length}</span>
               </h3>
               {isDirectorOrAdmin && (
@@ -1085,7 +1085,7 @@ ${combinedAchievements.length > 0 ? `
                   className="text-[10px] font-bold bg-indigo-50 text-indigo-600 hover:bg-indigo-100 dark:bg-indigo-900/30 dark:text-indigo-400 dark:hover:bg-indigo-900/50 px-2 py-1 rounded-md flex items-center gap-1 transition-colors cursor-pointer"
                 >
                   <Plus className="w-3 h-3" />
-                  إضافة
+                  إضافة مهمة وظيفية
                 </button>
               )}
             </div>
@@ -1154,7 +1154,7 @@ ${combinedAchievements.length > 0 ? `
               ))}
               {filteredPermanentTasks.length === 0 && (
                 <div className="text-center py-10 text-slate-400">
-                  <p className="text-[10px] font-medium">لا توجد مهام دائمة.</p>
+                  <p className="text-[10px] font-medium">لا توجد مهام وظيفية.</p>
                 </div>
               )}
             </div>
@@ -1426,7 +1426,7 @@ ${combinedAchievements.length > 0 ? `
                 <div className="bg-indigo-100 dark:bg-indigo-900/40 p-2 rounded-xl text-indigo-600 dark:text-indigo-400">
                   <Repeat className="w-5 h-5" />
                 </div>
-                <span>إضافة مهمة دائمة</span>
+                <span>إضافة مهمة وظيفية</span>
               </button>
             )}
 

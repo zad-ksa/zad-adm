@@ -379,19 +379,7 @@ export default function EmployeeSidebar({
         })()}
       </div>
 
-      {/* Logout */}
-      <div className="shrink-0 px-2.5 py-2.5 border-t border-slate-100 dark:border-slate-700/50 dark:border-slate-800">
-        <form action={logout}>
-          <button
-            type="submit"
-            title={!isOpen ? "تسجيل الخروج" : undefined}
-            className={`flex items-center ${isOpen ? "justify-start px-2.5" : "justify-center"} w-full py-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-600 rounded-lg text-sm font-bold transition-colors group`}
-          >
-            <LogOut className={`w-4 h-4 shrink-0 transition-all ${isOpen ? "ml-2.5" : "ml-0"} text-red-400 group-hover:text-red-600`} />
-            {isOpen && <span className="whitespace-nowrap">تسجيل الخروج</span>}
-          </button>
-        </form>
-      </div>
+
     </div>
   );
 

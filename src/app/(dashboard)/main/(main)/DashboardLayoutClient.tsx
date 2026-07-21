@@ -89,7 +89,11 @@ export default function DashboardLayoutClient({ children, session, unreadRequest
     <div className="flex h-[100dvh] bg-slate-50 dark:bg-slate-950 overflow-hidden print:h-auto print:overflow-visible print:block" dir="rtl">
       <EmployeeSidebar session={session} isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} unreadRequests={unreadRequests} />
       
-      <FloatingHeader session={session} appNotifications={appNotificationsData} />
+      <FloatingHeader 
+        session={session} 
+        appNotifications={appNotificationsData} 
+        className="hidden lg:flex fixed top-4 left-8 z-40 items-center gap-2 bg-white/70 dark:bg-slate-900/70 backdrop-blur-md border border-slate-200/50 dark:border-slate-800/50 shadow-sm p-1.5 rounded-full print:hidden"
+      />
 
       <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden relative print:overflow-visible print:h-auto print:block">
         {/* Mobile Header (Sticky & Blur) */}
@@ -103,7 +107,11 @@ export default function DashboardLayoutClient({ children, session, unreadRequest
             </button>
             <span className="font-bold text-slate-800 dark:text-slate-100 text-lg">لوحة التحكم</span>
           </div>
-          {/* User profile pic can be added here optionally */}
+          <FloatingHeader 
+            session={session} 
+            appNotifications={appNotificationsData} 
+            className="flex items-center gap-1"
+          />
         </div>
         
         {/* Main Content Area */}

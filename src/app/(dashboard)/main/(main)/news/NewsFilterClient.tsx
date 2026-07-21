@@ -187,31 +187,20 @@ export default function NewsFilterClient({
       )}
 
       {/* Page Header */}
-      <div className="flex items-center justify-between mb-5">
+      <div className="flex items-center gap-4 mb-5">
         <div>
           <h1 className="text-xl font-bold text-slate-800 dark:text-slate-100">الأخبار والإنجازات</h1>
           <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">{filteredNews.length} خبر{hasFilters ? " (مفلتر)" : ""}</p>
         </div>
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => setShowFilters(v => !v)}
-            className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold border transition-colors ${hasFilters ? "bg-primary/10 text-primary border-primary/30" : "bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:border-slate-300"}`}
-          >
-            <Filter className="w-3.5 h-3.5" />
-            تصفية
-            {hasFilters && <span className="w-1.5 h-1.5 rounded-full bg-primary" />}
-            <ChevronDown className={`w-3 h-3 transition-transform ${showFilters ? "rotate-180" : ""}`} />
-          </button>
-          {isSecretariatOrAdmin && (
-            <button
-              onClick={() => setShowNewsForm(true)}
-              className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold bg-amber-600 hover:bg-amber-700 text-white transition-colors shadow-sm"
-            >
-              <Plus className="w-3.5 h-3.5" />
-              نشر خبر
-            </button>
-          )}
-        </div>
+        <button
+          onClick={() => setShowFilters(v => !v)}
+          className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold border transition-colors ${hasFilters ? "bg-primary/10 text-primary border-primary/30" : "bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:border-slate-300"}`}
+        >
+          <Filter className="w-3.5 h-3.5" />
+          تصفية
+          {hasFilters && <span className="w-1.5 h-1.5 rounded-full bg-primary" />}
+          <ChevronDown className={`w-3 h-3 transition-transform ${showFilters ? "rotate-180" : ""}`} />
+        </button>
       </div>
 
       {/* Collapsible Filters */}
@@ -341,6 +330,17 @@ export default function NewsFilterClient({
           </div>
         )}
       </div>
+
+      {/* Floating Action Button */}
+      {isSecretariatOrAdmin && (
+        <button
+          onClick={() => setShowNewsForm(true)}
+          title="نشر خبر"
+          className="fixed bottom-6 left-6 lg:bottom-8 lg:left-8 z-40 flex items-center justify-center w-14 h-14 bg-amber-600 hover:bg-amber-700 text-white rounded-full shadow-lg shadow-amber-600/30 transition-all hover:-translate-y-1 hover:shadow-xl hover:shadow-amber-600/40"
+        >
+          <Plus className="w-6 h-6" />
+        </button>
+      )}
 
       {/* Modal: Add News Form */}
       {isSecretariatOrAdmin && showNewsForm && (

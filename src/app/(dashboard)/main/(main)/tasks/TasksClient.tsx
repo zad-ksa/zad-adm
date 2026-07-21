@@ -758,22 +758,12 @@ ${combinedAchievements.length > 0 ? `
       />
 
       {/* Page Header */}
-      <div className="flex items-center justify-between gap-3 mb-5">
-        <h1 className="text-xl font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
-          <CheckSquare className="w-5 h-5 text-primary shrink-0" />
-          {isDirectorOrAdmin ? "المهام والمنجزات" : "مهامي"}
-        </h1>
-
-        <div className="flex items-center gap-2 shrink-0">
-          {/* Print */}
-          <button
-            onClick={handlePrint}
-            title="طباعة"
-            className="flex items-center gap-1.5 bg-white dark:bg-slate-800 px-3 py-1.5 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-500 dark:text-slate-400 hover:text-primary hover:border-primary/30 transition-all font-bold text-xs"
-          >
-            <Printer className="w-3.5 h-3.5" />
-            طباعة
-          </button>
+      <div className="flex flex-col sm:flex-row sm:items-center gap-4 mb-5">
+        <div className="flex flex-wrap items-center gap-3">
+          <h1 className="text-xl font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2 ml-2">
+            <CheckSquare className="w-5 h-5 text-primary shrink-0" />
+            {isDirectorOrAdmin ? "المهام والمنجزات" : "مهامي"}
+          </h1>
 
           {/* Employee Filter */}
           {isDirectorOrAdmin && (
@@ -798,6 +788,16 @@ ${combinedAchievements.length > 0 ? `
               </select>
             </div>
           )}
+
+          {/* Print */}
+          <button
+            onClick={handlePrint}
+            title="طباعة"
+            className="flex items-center gap-1.5 bg-white dark:bg-slate-800 px-3 py-1.5 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-500 dark:text-slate-400 hover:text-primary hover:border-primary/30 transition-all font-bold text-xs"
+          >
+            <Printer className="w-3.5 h-3.5" />
+            طباعة
+          </button>
         </div>
       </div>
 

@@ -13,9 +13,11 @@ const ProfileEditModal = dynamic(() => import("./ProfileEditModal"), { ssr: fals
 export default function FloatingHeader({
   session,
   appNotifications = { notifications: [], count: 0 },
+  className,
 }: {
   session: any;
   appNotifications?: { notifications: any[], count: number };
+  className?: string;
 }) {
   const [userState, setUserState] = useState(session);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -41,7 +43,7 @@ export default function FloatingHeader({
 
   return (
     <>
-      <div className="fixed top-4 left-4 lg:left-8 z-40 flex items-center gap-2 bg-white/70 dark:bg-slate-900/70 backdrop-blur-md border border-slate-200/50 dark:border-slate-800/50 shadow-sm p-1.5 rounded-full print:hidden">
+      <div className={className || "fixed top-4 left-4 lg:left-8 z-40 flex items-center gap-2 bg-white/70 dark:bg-slate-900/70 backdrop-blur-md border border-slate-200/50 dark:border-slate-800/50 shadow-sm p-1.5 rounded-full print:hidden"}>
         
         {/* Notifications */}
         <div className="relative" ref={notifRef}>

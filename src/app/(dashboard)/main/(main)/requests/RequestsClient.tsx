@@ -402,10 +402,6 @@ export default function RequestsClient({ requests: initial, isExec, sessionId, a
             className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-400 transition-colors" title="تحديث">
             <RefreshCw className={`w-3.5 h-3.5 ${loading ? "animate-spin" : ""}`} />
           </button>
-          <button onClick={() => setShowForm(true)}
-            className="flex items-center gap-1.5 bg-primary hover:bg-primary/90 text-white px-3 py-1.5 rounded-lg text-xs font-bold transition-colors">
-            <Plus className="w-3.5 h-3.5" /> طلب جديد
-          </button>
         </div>
       </div>
 
@@ -458,6 +454,15 @@ export default function RequestsClient({ requests: initial, isExec, sessionId, a
           ))}
         </div>
       )}
+
+      {/* Floating Action Button */}
+      <button 
+        onClick={() => setShowForm(true)}
+        className="fixed bottom-6 left-6 lg:bottom-8 lg:left-8 z-40 flex items-center gap-2 bg-primary hover:bg-primary/90 text-white px-5 py-3.5 rounded-full shadow-lg shadow-primary/30 transition-all hover:-translate-y-1 hover:shadow-xl hover:shadow-primary/40 font-bold"
+      >
+        <Plus className="w-5 h-5" />
+        <span className="text-sm">طلب جديد</span>
+      </button>
 
       {showForm && (
         <RequestForm onClose={() => setShowForm(false)}

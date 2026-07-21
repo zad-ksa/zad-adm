@@ -301,9 +301,6 @@ export default function MeetingsClient({ meetings, charities, employees, session
     return (
       <div className="space-y-3">
         <div className="flex justify-end mb-3">
-          <button onClick={openCreate} className="flex items-center gap-1.5 bg-primary hover:bg-primary/95 text-white px-3 py-1.5 rounded-lg text-xs font-bold transition-colors shadow-sm">
-            <Plus className="w-3.5 h-3.5" /> محضر جديد
-          </button>
         </div>
         <CategorySelector meetings={meetings} onSelect={setSelectedCategory} />
         {showModal && (
@@ -317,6 +314,15 @@ export default function MeetingsClient({ meetings, charities, employees, session
             onSave={handleSave}
           />
         )}
+
+        {/* Floating Action Button */}
+        <button 
+          onClick={openCreate}
+          className="fixed bottom-6 left-6 lg:bottom-8 lg:left-8 z-40 flex items-center gap-2 bg-primary hover:bg-primary/90 text-white px-5 py-3.5 rounded-full shadow-lg shadow-primary/30 transition-all hover:-translate-y-1 hover:shadow-xl hover:shadow-primary/40 font-bold"
+        >
+          <Plus className="w-5 h-5" />
+          <span className="text-sm">محضر جديد</span>
+        </button>
       </div>
     );
   }
@@ -343,9 +349,6 @@ export default function MeetingsClient({ meetings, charities, employees, session
             <p className="text-[11px] text-slate-500 dark:text-slate-400">{meetings.length} محضر</p>
           </div>
         </div>
-        <button onClick={openCreate} className="flex items-center gap-1.5 bg-primary hover:bg-primary/95 text-white px-3 py-1.5 rounded-lg text-xs font-bold transition-colors shadow-sm">
-          <Plus className="w-3.5 h-3.5" /> محضر جديد
-        </button>
       </div>
 
       {/* شريط التصفية */}
@@ -510,6 +513,15 @@ export default function MeetingsClient({ meetings, charities, employees, session
           onSave={handleSave}
         />
       )}
+
+      {/* Floating Action Button */}
+      <button 
+        onClick={openCreate}
+        className="fixed bottom-6 left-6 lg:bottom-8 lg:left-8 z-40 flex items-center gap-2 bg-primary hover:bg-primary/90 text-white px-5 py-3.5 rounded-full shadow-lg shadow-primary/30 transition-all hover:-translate-y-1 hover:shadow-xl hover:shadow-primary/40 font-bold"
+      >
+        <Plus className="w-5 h-5" />
+        <span className="text-sm">محضر جديد</span>
+      </button>
     </div>
   );
 }

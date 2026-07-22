@@ -251,13 +251,13 @@ export default function CurrentServicesCards({ services }: { services: Service[]
             
             <div className="p-6 flex flex-col h-full z-10 relative">
               <div className="flex justify-between items-start mb-6">
-                <h3 className="font-semibold text-slate-900 dark:text-slate-50 tracking-tight" style={{ fontSize: 'clamp(1rem, 2vw, 1.125rem)' }}>
+                <h3 className="font-semibold text-primary dark:text-primary tracking-tight" style={{ fontSize: 'clamp(1rem, 2vw, 1.125rem)' }}>
                   {service.name}
                 </h3>
                 <button 
                   onClick={() => setSelectedService(service)}
                   title="عرض الدليل الكامل للخدمة"
-                  className="shrink-0 p-2 text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800/80 rounded-lg transition-all duration-300 -mt-1 -mr-2"
+                  className="shrink-0 p-2 text-emerald-500 dark:text-emerald-400 hover:text-emerald-600 dark:hover:text-emerald-300 hover:bg-emerald-50 dark:hover:bg-emerald-950/30 rounded-lg transition-all duration-300 -mt-1 -mr-2"
                 >
                   <Info className="w-4 h-4" />
                 </button>

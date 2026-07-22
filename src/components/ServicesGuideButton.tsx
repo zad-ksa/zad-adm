@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
-import { BookOpen, X, ChevronDown } from "lucide-react";
+import { BookOpen, X, ChevronDown, CheckCircle2 } from "lucide-react";
 
 type Step = {
   id: string;
@@ -59,35 +59,35 @@ export default function ServicesGuideButton({
   };
 
   const modalContent = isOpen ? (
-    <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4 sm:p-6 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="bg-white dark:bg-slate-800 w-full max-w-4xl max-h-[90vh] rounded-2xl shadow-2xl flex flex-col overflow-hidden border border-slate-100 dark:border-slate-700 animate-in zoom-in-95 duration-300">
+    <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4 sm:p-6 bg-slate-950/60 backdrop-blur-md animate-in fade-in duration-300">
+      <div className="bg-white dark:bg-[#0A0A0A] w-full max-w-5xl max-h-[90vh] rounded-3xl shadow-2xl flex flex-col overflow-hidden border border-slate-200 dark:border-slate-800 animate-in zoom-in-95 duration-300 dark:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)]">
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-slate-100 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-900/50">
+        <div className="flex items-center justify-between p-6 md:p-8 border-b border-slate-100 dark:border-slate-800 shrink-0 bg-slate-50/50 dark:bg-[#0A0A0A]">
           <div className="flex items-center gap-4">
-            <div className="w-12 h-12 bg-primary/10 dark:bg-primary/20 rounded-xl flex items-center justify-center text-primary">
-              <BookOpen className="w-6 h-6" />
+            <div className="w-12 h-12 bg-white dark:bg-[#111] border border-slate-200 dark:border-slate-800 rounded-xl flex items-center justify-center text-emerald-500 dark:text-emerald-400 shadow-sm dark:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)]">
+              <BookOpen className="w-5 h-5" />
             </div>
             <div>
-              <h2 className="text-xl font-bold text-slate-800 dark:text-slate-100">
-                دليل الخدمات
+              <h2 className="font-bold text-primary dark:text-primary tracking-tight" style={{ fontSize: 'clamp(1.25rem, 2.5vw, 1.5rem)' }}>
+                دليل الخدمات الشامل
               </h2>
               <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
-                استعراض شامل لجميع الخدمات بمراحلها وخطواتها
+                استعراض مفصل لكافة المراحل والخطوات التابعة للجمعية
               </p>
             </div>
           </div>
           <button
             onClick={() => setIsOpen(false)}
-            className="w-10 h-10 rounded-full bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 flex items-center justify-center text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-600 transition-colors"
+            className="w-10 h-10 rounded-full bg-white dark:bg-[#111] border border-slate-200 dark:border-slate-800 flex items-center justify-center text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors shadow-sm"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
         {/* Content */}
-        <div id="service-guide-scroll-container" className="flex-1 overflow-y-auto p-6 bg-slate-50 dark:bg-slate-900/20 scroll-smooth">
+        <div id="service-guide-scroll-container" className="flex-1 overflow-y-auto p-6 md:p-8 bg-slate-50/50 dark:bg-[#050505] scroll-smooth custom-scrollbar">
           {sections.length === 0 ? (
-            <div className="text-center py-12 text-slate-500">
+            <div className="text-center py-12 text-slate-500 font-medium">
               لا توجد خدمات مسجلة
             </div>
           ) : (
@@ -100,17 +100,23 @@ export default function ServicesGuideButton({
                   <div
                     key={idx}
                     id={`service-guide-section-${idx}`}
-                    className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden shadow-sm transition-all"
+                    className="bg-white dark:bg-[#0A0A0A] rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-sm transition-all"
                   >
                     <button
                       onClick={() => handleSectionToggle(section.title, idx)}
-                      className="w-full flex items-center justify-between p-5 bg-slate-50/50 dark:bg-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-700/50 transition-colors"
+                      className={`w-full flex items-center justify-between p-6 transition-colors ${
+                        isExpanded ? 'bg-slate-50/80 dark:bg-[#0F0F0F] border-b border-slate-100 dark:border-slate-800/80' : 'bg-transparent hover:bg-slate-50/50 dark:hover:bg-[#111]'
+                      }`}
                     >
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center font-bold text-sm">
+                      <div className="flex items-center gap-4">
+                        <div className={`w-8 h-8 rounded-lg flex items-center justify-center font-bold text-sm shrink-0 border ${
+                          isExpanded 
+                            ? 'bg-slate-900 text-white border-slate-900 dark:bg-white dark:text-black dark:border-white' 
+                            : 'bg-white dark:bg-[#111] border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300'
+                        }`}>
                           {idx + 1}
                         </div>
-                        <h3 className="font-bold text-slate-800 dark:text-slate-100 text-lg">
+                        <h3 className="font-semibold tracking-tight text-primary dark:text-primary" style={{ fontSize: 'clamp(1rem, 1.5vw, 1.125rem)' }}>
                           {section.title}
                         </h3>
                       </div>
@@ -122,56 +128,55 @@ export default function ServicesGuideButton({
                     </button>
 
                     {isExpanded && (
-                      <div className="p-6 border-t border-slate-100 dark:border-slate-700">
-                        <div className="relative pl-4 pr-4">
-                          {/* Vertical Line */}
-                          <div className="absolute right-[27px] top-4 bottom-4 w-px bg-slate-200 dark:bg-slate-700"></div>
-
-                          <div className="space-y-8">
-                            {[...section.stages]
-                              .sort((a, b) => a.order - b.order)
-                              .map((stage, stageIdx) => (
-                                <div key={stage.id} className="relative z-10">
-                                  <div className="flex items-start gap-4">
-                                    <div className="w-6 h-6 rounded-full bg-white dark:bg-slate-800 border-2 border-primary flex items-center justify-center shrink-0 mt-1 shadow-sm">
-                                      <div className="w-2 h-2 rounded-full bg-primary" />
-                                    </div>
-                                    <div className="flex-1">
-                                      <h4 className="text-base font-bold text-slate-800 dark:text-slate-100">
-                                        {stage.name}
-                                      </h4>
-                                      {stage.description && (
-                                        <p className="text-sm text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">
-                                          {stage.description}
-                                        </p>
-                                      )}
-
-                                      {/* Steps */}
-                                      {stage.steps && stage.steps.length > 0 && (
-                                        <div className="mt-4 bg-slate-50 dark:bg-slate-900/50 rounded-xl p-4 border border-slate-100 dark:border-slate-700/50">
-                                          <h5 className="text-xs font-bold text-slate-400 dark:text-slate-500 mb-3 uppercase tracking-wider">
-                                            خطوات المرحلة
-                                          </h5>
-                                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                            {[...stage.steps]
-                                              .sort((a, b) => a.order - b.order)
-                                              .map((step) => (
-                                                <div
-                                                  key={step.id}
-                                                  className="flex items-center gap-2.5 text-sm font-medium text-slate-600 dark:text-slate-300"
-                                                >
-                                                  <div className="w-1.5 h-1.5 rounded-full bg-slate-300 dark:bg-slate-600 shrink-0" />
-                                                  <span>{step.name}</span>
-                                                </div>
-                                              ))}
-                                          </div>
-                                        </div>
-                                      )}
+                      <div className="p-6 md:p-8">
+                        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                          {[...section.stages]
+                            .sort((a, b) => a.order - b.order)
+                            .map((stage, stageIdx) => (
+                              <div key={stage.id} className="group relative flex flex-col rounded-2xl border bg-white dark:bg-[#111] border-slate-100 dark:border-slate-800 shadow-sm transition-all duration-300 hover:border-slate-300 dark:hover:border-slate-700 dark:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.02)] overflow-hidden">
+                                
+                                <div className="p-6 flex flex-col h-full z-10">
+                                  <div className="flex items-start justify-between gap-3 mb-4">
+                                    <div className="w-8 h-8 rounded-full border bg-slate-50 dark:bg-[#1A1A1A] border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 flex items-center justify-center shrink-0">
+                                      <span className="text-xs font-bold">{stageIdx + 1}</span>
                                     </div>
                                   </div>
+                                  
+                                  <h4 className="font-semibold tracking-tight text-primary dark:text-primary mb-2">
+                                    {stage.name}
+                                  </h4>
+                                  
+                                  {stage.description && (
+                                    <p className="text-[13px] font-medium text-slate-500 dark:text-slate-400 leading-relaxed mb-6 flex-1">
+                                      {stage.description}
+                                    </p>
+                                  )}
+
+                                  {/* Steps inside Bento Card */}
+                                  {stage.steps && stage.steps.length > 0 && (
+                                    <div className="mt-auto pt-4 border-t border-slate-100 dark:border-slate-800/80">
+                                      <h5 className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest mb-3">
+                                        خطوات المرحلة
+                                      </h5>
+                                      <ul className="space-y-2.5">
+                                        {[...stage.steps]
+                                          .sort((a, b) => a.order - b.order)
+                                          .map((step) => (
+                                            <li key={step.id} className="flex items-start gap-2.5">
+                                              <div className="w-4 h-4 rounded-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center shrink-0 mt-0.5">
+                                                <div className="w-1.5 h-1.5 rounded-full bg-slate-300 dark:bg-slate-500" />
+                                              </div>
+                                              <span className="text-[13px] font-medium text-slate-600 dark:text-slate-300 leading-snug">
+                                                {step.name}
+                                              </span>
+                                            </li>
+                                          ))}
+                                      </ul>
+                                    </div>
+                                  )}
                                 </div>
-                              ))}
-                          </div>
+                              </div>
+                            ))}
                         </div>
                       </div>
                     )}
@@ -189,7 +194,7 @@ export default function ServicesGuideButton({
     <>
       <button
         onClick={handleOpen}
-        className="flex items-center gap-2 px-4 py-2.5 text-sm font-bold bg-primary hover:bg-primary/90 text-white rounded-xl transition-all shadow-sm hover:shadow"
+        className="flex items-center gap-2 px-4 py-2 text-sm font-semibold bg-white dark:bg-[#111] hover:bg-slate-50 dark:hover:bg-[#1A1A1A] text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-800 rounded-lg transition-all shadow-sm dark:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)]"
       >
         <BookOpen className="w-4 h-4" />
         دليل الخدمات

@@ -22,8 +22,8 @@ function NavItem({ item, isActive, isOpen, onClick }: { item: any, isActive: boo
   const content = (
     <>
       {isActive && isOpen && <div className="absolute right-0 top-0 bottom-0 w-1 bg-white dark:bg-slate-800/20 rounded-l-full"></div>}
-      <item.icon className={`w-4 h-4 shrink-0 transition-all ml-0 ${isOpen ? "ml-2.5" : ""} ${isActive ? "text-white" : "text-slate-400 group-hover:text-primary"}`} />
-      {isOpen && <span className="whitespace-nowrap">{item.label || item.title}</span>}
+      <item.icon className={`w-4 h-4 shrink-0 transition-all ml-0 ${isOpen ? "ml-3" : ""} ${isActive ? "text-primary dark:text-primary" : "text-slate-400 group-hover:text-slate-700 dark:group-hover:text-slate-300"}`} />
+      {isOpen && <span className="whitespace-nowrap tracking-tight">{item.label || item.title}</span>}
 
       {item.comingSoon && isOpen && (
         <span className="mr-auto text-[9px] bg-slate-200 dark:bg-slate-700 text-slate-500 dark:text-slate-400 px-1.5 py-0.5 rounded font-extrabold">
@@ -55,9 +55,9 @@ function NavItem({ item, isActive, isOpen, onClick }: { item: any, isActive: boo
       href={item.href}
       onClick={onClick}
       title={!isOpen ? (item.label || item.title) : undefined}
-      className={`flex items-center ${isOpen ? "justify-start px-2.5" : "justify-center"} py-2 mb-0.5 rounded-xl text-xs font-bold transition-all group relative overflow-hidden ${isActive
-        ? "bg-primary text-white shadow-md shadow-primary/20"
-        : "text-slate-500 dark:text-slate-400 hover:bg-primary/5 hover:text-primary"
+      className={`flex items-center ${isOpen ? "justify-start px-3" : "justify-center"} py-2 mb-1 rounded-lg text-sm font-medium transition-all group relative overflow-hidden ${isActive
+        ? "bg-primary/5 dark:bg-primary/10 text-primary dark:text-primary shadow-sm dark:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.02)]"
+        : "text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-white/5 hover:text-slate-900 dark:hover:text-slate-200"
         }`}
     >
       {content}
@@ -111,18 +111,18 @@ export default function CharitySidebar({
   const subItems: any[] = [];
 
   const sidebarContent = (
-    <div className="bg-white dark:bg-slate-800 flex flex-col h-full border-l border-slate-200 dark:border-slate-700/80 shadow-[4px_0_24px_rgba(0,0,0,0.02)] relative transition-all duration-300">
+    <div className="bg-white dark:bg-[#0A0A0A] flex flex-col h-full border-l border-slate-200 dark:border-slate-800/80 shadow-sm relative transition-all duration-300">
 
       {/* Desktop Toggle Button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="hidden lg:flex absolute top-8 -left-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-400 hover:text-primary hover:border-primary/30 rounded-full w-6 h-6 items-center justify-center z-50 transition-all shadow-sm"
+        className="hidden lg:flex absolute top-8 -left-3 bg-white dark:bg-[#111] border border-slate-200 dark:border-slate-800 text-slate-400 hover:text-slate-900 dark:hover:text-white hover:border-slate-300 dark:hover:border-slate-700 rounded-md w-6 h-6 items-center justify-center z-50 transition-all shadow-sm dark:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)]"
       >
         <ChevronRight className={`w-4 h-4 transition-transform duration-300 ${!isOpen ? "rotate-180" : ""}`} />
       </button>
 
       {/* Header / Logo */}
-      <div className={`flex items-center ${isOpen ? "justify-start px-4" : "justify-center px-0"} h-14 border-b border-slate-100 dark:border-slate-700/50 dark:border-slate-800/80 shrink-0 transition-all`}>
+      <div className={`flex items-center ${isOpen ? "justify-start px-5" : "justify-center px-0"} h-16 border-b border-slate-100 dark:border-slate-800 shrink-0 transition-all`}>
         {isOpen ? (
           <div className="w-full h-full flex items-center py-2 relative pr-1">
             <ZadLogo isOpen={true} className="h-7 w-auto" />
@@ -142,7 +142,7 @@ export default function CharitySidebar({
       </div>
 
       {/* Charity Profile - Fixed at top */}
-      <div className={`flex ${isOpen ? "flex-row items-center px-4 gap-3" : "flex-col items-center px-2"} py-3 border-b border-slate-100 dark:border-slate-700/50 dark:border-slate-800/80 transition-all overflow-hidden shrink-0`}>
+      <div className={`flex ${isOpen ? "flex-row items-center px-5 gap-3" : "flex-col items-center px-2"} py-4 border-b border-slate-100 dark:border-slate-800 transition-all overflow-hidden shrink-0`}>
         {logoUrl ? (
           <div className={`rounded-xl overflow-hidden border border-slate-150 bg-white dark:bg-slate-800 flex items-center justify-center shrink-0 transition-all ${isOpen ? "w-9 h-9" : "w-8 h-8"}`}>
             <img src={logoUrl} alt={charityName} className="w-full h-full object-contain p-0.5" />
@@ -181,10 +181,10 @@ export default function CharitySidebar({
       </div>
 
       {/* Navigation */}
-      <div className="flex-1 overflow-y-auto custom-scrollbar px-2.5 py-3 space-y-0.5 flex flex-col relative">
+      <div className="flex-1 overflow-y-auto custom-scrollbar px-3 py-4 space-y-1 flex flex-col relative">
         {isOpen && mainItems.length > 0 && (
-          <div className="flex items-center justify-between px-2.5 mb-2">
-            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">التبويبات الرئيسية</span>
+          <div className="flex items-center justify-between px-3 mb-2">
+            <span className="text-[11px] font-medium text-slate-400 dark:text-slate-500 uppercase tracking-widest">الرئيسية</span>
           </div>
         )}
 
@@ -230,14 +230,14 @@ export default function CharitySidebar({
       </div>
 
       {/* Bottom Actions */}
-      <div className="flex flex-col shrink-0 px-2.5 py-2.5 border-t border-slate-100 dark:border-slate-700/50 dark:border-slate-800/80 gap-1">
+      <div className="flex flex-col shrink-0 px-3 py-3 border-t border-slate-100 dark:border-slate-800 gap-1">
         {isCharityUser && availableCharities.length > 1 && (
           <Link
             href="/select-charity"
             title={!isOpen ? "تبديل الجمعية" : undefined}
-            className={`flex items-center ${isOpen ? "justify-start px-2.5" : "justify-center"} w-full py-2 text-slate-500 dark:text-slate-400 hover:bg-primary/5 hover:text-primary rounded-xl text-xs font-bold transition-all group`}
+            className={`flex items-center ${isOpen ? "justify-start px-3" : "justify-center"} w-full py-2 text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-white/5 hover:text-slate-900 dark:hover:text-slate-200 rounded-lg text-sm font-medium transition-all group`}
           >
-            <Building2 className={`w-4 h-4 shrink-0 transition-all ${isOpen ? "ml-2.5" : "ml-0"} text-slate-400 group-hover:text-primary`} />
+            <Building2 className={`w-4 h-4 shrink-0 transition-all ${isOpen ? "ml-3" : "ml-0"} text-slate-400 group-hover:text-slate-700 dark:group-hover:text-slate-300`} />
             {isOpen && <span className="whitespace-nowrap">تبديل الجمعية</span>}
           </Link>
         )}
@@ -246,16 +246,16 @@ export default function CharitySidebar({
           <Link
             href="/main"
             title={!isOpen ? "العودة للوحة التحكم" : undefined}
-            className={`flex items-center ${isOpen ? "justify-start px-2.5" : "justify-center"} w-full py-2 text-slate-500 dark:text-slate-400 hover:bg-primary/5 hover:text-primary rounded-xl text-xs font-bold transition-all group`}
+            className={`flex items-center ${isOpen ? "justify-start px-3" : "justify-center"} w-full py-2 text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-white/5 hover:text-slate-900 dark:hover:text-slate-200 rounded-lg text-sm font-medium transition-all group`}
           >
-            <ArrowLeft className={`w-4 h-4 shrink-0 transition-all ${isOpen ? "ml-2.5" : "ml-0"} text-slate-400 group-hover:text-primary`} />
+            <ArrowLeft className={`w-4 h-4 shrink-0 transition-all ${isOpen ? "ml-3" : "ml-0"} text-slate-400 group-hover:text-slate-700 dark:group-hover:text-slate-300`} />
             {isOpen && <span className="whitespace-nowrap">العودة للوحة التحكم</span>}
           </Link>
         ) : (
           <button
             onClick={() => logout()}
             title={!isOpen ? "تسجيل الخروج" : undefined}
-            className={`flex items-center ${isOpen ? "justify-start px-2.5" : "justify-center"} w-full py-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-xl text-xs font-bold transition-all group`}
+            className={`flex items-center ${isOpen ? "justify-start px-3" : "justify-center"} w-full py-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 rounded-lg text-sm font-medium transition-all group`}
           >
             <LogOut className={`w-4 h-4 shrink-0 transition-all ${isOpen ? "ml-2.5" : "ml-0"}`} />
             {isOpen && <span className="whitespace-nowrap">تسجيل الخروج</span>}

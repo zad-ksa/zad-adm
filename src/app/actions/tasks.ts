@@ -213,10 +213,21 @@ export async function toggleTaskCompletionAction(
         proofUrl: isCompleted ? proofUrl || null : null,
         proofPublicId: isCompleted ? proofPublicId || null : null,
         completionNote: isCompleted ? completionNote || null : null,
+        status: isCompleted ? "COMPLETED" : "IN_PROGRESS",
       },
     });
 
+    if ((task as any).meetingTaskId) {
+      try {
+        await prisma.meetingTask.update({
+          where: { id: (task as any).meetingTaskId },
+          data: { isDone: isCompleted },
+        });
+      } catch (e) {}
+    }
+
     revalidatePath("/main/tasks");
+    revalidatePath("/main/meetings");
     return { success: true };
   } catch (error: any) {
     return { error: error.message || "حدث خطأ أثناء تحديث حالة المهمة" };
@@ -498,10 +509,21 @@ export async function updateTaskStatusAction(taskId: string, status: string) {
       where: { id: taskId },
       data: {
         status,
+        isCompleted: status === "COMPLETED",
       },
     });
 
+    if ((task as any).meetingTaskId) {
+      try {
+        await prisma.meetingTask.update({
+          where: { id: (task as any).meetingTaskId },
+          data: { isDone: status === "COMPLETED" },
+        });
+      } catch (e) {}
+    }
+
     revalidatePath("/main/tasks");
+    revalidatePath("/main/meetings");
     return { success: true };
   } catch (error: any) {
     return { error: error.message || "حدث خطأ أثناء تعديل حالة المهمة" };

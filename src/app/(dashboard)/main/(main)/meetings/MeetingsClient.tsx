@@ -3,11 +3,11 @@
 import { useState, useTransition } from "react";
 import {
   FileText, Plus, X, Lock, Globe, Eye, LayoutTemplate, Printer,
-  Edit2, Trash2, Search, Filter, ArrowRight
+  Edit2, Trash2, Search, Filter, ArrowRight, Download, Loader2
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { createMeeting, updateMeeting, deleteMeeting, insertAiTasksIfEmpty } from "@/app/actions/meetings";
-import { handlePrint, handlePreview } from "./utils/meetingPrint";
+import { handlePrint, handlePreview, downloadAllMeetingsZip } from "./utils/meetingPrint";
 import MeetingCard from "./components/MeetingCard";
 import MeetingFormModal from "./components/MeetingFormModal";
 
@@ -197,6 +197,20 @@ export default function MeetingsClient({ meetings, charities, employees, session
     setSearchQuery(""); setFilterContext(""); setFilterCharityId(""); setFilterPrivacy(""); setFilterPeriod("");
   }
 
+  const [isDownloadingAll, setIsDownloadingAll] = useState(false);
+  async function handleDownloadAll() {
+    if (meetings.length === 0 || isDownloadingAll) return;
+    setIsDownloadingAll(true);
+    try {
+      await downloadAllMeetingsZip(meetings, meetingNumberMap);
+    } catch (err) {
+      console.error(err);
+      alert("حدث خطأ أثناء تجهيز ملف التحميل. حاول مرة أخرى.");
+    } finally {
+      setIsDownloadingAll(false);
+    }
+  }
+
   function openCreate() {
     setFormInitialData(undefined);
     setEditingId(null);
@@ -301,6 +315,17 @@ export default function MeetingsClient({ meetings, charities, employees, session
     return (
       <div className="space-y-3">
         <div className="flex justify-end mb-3">
+          {meetings.length > 0 && (
+            <button
+              onClick={handleDownloadAll}
+              disabled={isDownloadingAll}
+              className="flex items-center gap-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:text-primary hover:border-primary/30 px-3.5 py-2 rounded-lg text-xs font-bold transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+              title="تحميل جميع المحاضر مضغوطة، مقسّمة في مجلدات حسب الخدمة"
+            >
+              {isDownloadingAll ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Download className="w-3.5 h-3.5" />}
+              {isDownloadingAll ? "جاري التجهيز..." : "تحميل جميع المحاضر"}
+            </button>
+          )}
         </div>
         <CategorySelector meetings={meetings} onSelect={setSelectedCategory} />
         {showModal && (
@@ -349,6 +374,17 @@ export default function MeetingsClient({ meetings, charities, employees, session
             <p className="text-[11px] text-slate-500 dark:text-slate-400">{meetings.length} محضر</p>
           </div>
         </div>
+        {meetings.length > 0 && (
+          <button
+            onClick={handleDownloadAll}
+            disabled={isDownloadingAll}
+            className="flex items-center gap-1.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:text-primary hover:border-primary/30 px-3 py-1.5 rounded-lg text-[11px] font-bold transition-colors disabled:opacity-60 disabled:cursor-not-allowed shrink-0"
+            title="تحميل جميع المحاضر مضغوطة، مقسّمة في مجلدات حسب الخدمة"
+          >
+            {isDownloadingAll ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Download className="w-3.5 h-3.5" />}
+            {isDownloadingAll ? "جاري التجهيز..." : "تحميل الكل"}
+          </button>
+        )}
       </div>
 
       {/* شريط التصفية */}

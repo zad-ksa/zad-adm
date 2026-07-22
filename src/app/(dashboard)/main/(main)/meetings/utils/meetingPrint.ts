@@ -109,7 +109,7 @@ const LETTERHEAD_CSS = `
   @media print { html, body { background: white !important; } .page { margin: 0 !important; page-break-after: always; -webkit-print-color-adjust: exact; print-color-adjust: exact; } .page:last-child { page-break-after: avoid; } }
 `;
 
-function buildLetterheadDoc(m: Meeting, forPrint: boolean, meetingNum?: number): string {
+export function buildLetterheadDoc(m: Meeting, forPrint: boolean, meetingNum?: number): string {
   const rawHtml = mdToHtml(m.formattedContent);
   const cleanHtml = rawHtml.replace(/<h[23][^>]*>.*?(?:مهام|توصيات|تكليفات).*?<\/h[23]>\s*(<table[\s\S]*?<\/table>)/gi, "").replace(/<table[\s\S]*?<\/table>/gi, "");
   const footer = `<p class="footer-note"><em>صدر هذا المحضر عن شركة زاد للخدمات التنموية</em></p><p class="footer-note"><em>محضر إلكتروني عبر موقع زاد</em></p>`;
@@ -243,4 +243,38 @@ export function handlePreview(m: Meeting, meetingNum?: number) {
   win.document.open();
   win.document.write(buildLetterheadDoc(m, false, meetingNum));
   win.document.close();
+}
+
+function sanitizeFileName(name: string): string {
+  const cleaned = name.replace(/[\\/:*?"<>|]/g, " ").replace(/\s+/g, " ").trim();
+  return (cleaned || "بدون عنوان").slice(0, 120);
+}
+
+// Downloads a ZIP with one folder per service (meetingContext), each containing
+// that service's meetings as printable letterhead HTML files named by number + title.
+export async function downloadAllMeetingsZip(
+  meetings: Meeting[],
+  meetingNumberMap: Map<string, number>
+) {
+  const { default: JSZip } = await import("jszip");
+  const zip = new JSZip();
+
+  for (const m of meetings) {
+    const folderName = sanitizeFileName(m.meetingContext || "بدون خدمة");
+    const num = meetingNumberMap.get(m.id);
+    const numStr = num ? `ZAD_M_${String(num).padStart(3, "0")}` : "";
+    const fileName = `${sanitizeFileName(`${numStr ? numStr + " - " : ""}${m.title}`)}.html`;
+    const html = buildLetterheadDoc(m, false, num);
+    zip.folder(folderName)?.file(fileName, html);
+  }
+
+  const blob = await zip.generateAsync({ type: "blob" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `محاضر الاجتماعات - ${new Date().toLocaleDateString("ar-SA")}.zip`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
 }

@@ -3,6 +3,7 @@ import { prisma } from "@/lib/db";
 import { Briefcase } from "lucide-react";
 import ServicesTimelineViewer from "@/components/ServicesTimelineViewer";
 import ServicesPrintButton from "@/components/ServicesPrintButton";
+import ServicesGuideButton from "@/components/ServicesGuideButton";
 import { getTimelineConfigs } from "@/app/actions/settings";
 
 export async function generateMetadata({ params }: { params: Promise<{ name: string }> }): Promise<Metadata> {
@@ -75,9 +76,17 @@ export default async function ServicesPage({ params }: { params: Promise<{ name:
               متابعة المراحل الزمنية لجمعية <span className="font-bold text-slate-700 dark:text-slate-300">{decodedName}</span> لمختلف الأقسام.
             </p>
           </div>
-          <div className="shrink-0">
+          <div className="shrink-0 flex items-center gap-2">
             <ServicesPrintButton
               charityName={decodedName}
+              sections={[
+                ...(strategicStages.length > 0 ? [{ title: strategyName, stages: strategicStages }] : []),
+                ...(governanceStages.length > 0 ? [{ title: governanceName, stages: governanceStages }] : []),
+                ...(financeStages.length > 0 ? [{ title: financeName, stages: financeStages }] : []),
+                ...customServices.map(svc => ({ title: svc.name, stages: svc.stages })),
+              ]}
+            />
+            <ServicesGuideButton
               sections={[
                 ...(strategicStages.length > 0 ? [{ title: strategyName, stages: strategicStages }] : []),
                 ...(governanceStages.length > 0 ? [{ title: governanceName, stages: governanceStages }] : []),

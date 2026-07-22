@@ -1,14 +1,7 @@
 "use client";
 
 import { formatDurationArabic } from "@/lib/dateUtils";
-import { Infinity } from "lucide-react";
-
-const CheckCircleIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
-    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
-    <polyline points="22 4 12 14.01 9 11.01" />
-  </svg>
-);
+import { Infinity, CheckCircle2 } from "lucide-react";
 
 export default function CharityClientTimeline({ 
   title, 
@@ -23,51 +16,65 @@ export default function CharityClientTimeline({
   const continuousStages = stages?.filter(s => s.isContinuous) || [];
 
   return (
-    <div className={embedded ? "" : "bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 p-6 shadow-sm"}>
-      {!embedded && <h3 className="font-bold text-xl text-slate-800 dark:text-slate-100 mb-8 border-b border-slate-100 dark:border-slate-700 pb-4">{title}</h3>}
+    <div className={embedded ? "w-full" : "w-full bg-white dark:bg-[#0A0A0A] rounded-3xl border border-slate-200 dark:border-slate-800 p-6 shadow-sm dark:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)]"}>
+      {!embedded && <h3 className="font-semibold text-slate-900 dark:text-slate-50 tracking-tight mb-6" style={{ fontSize: 'clamp(1.25rem, 3vw, 1.5rem)' }}>{title}</h3>}
       
       {sequentialStages.length > 0 ? (
-        <div className="relative pb-4">
-          <div className="flex flex-col md:flex-row gap-6 md:gap-2 justify-between relative z-10 flex-wrap">
+        <div className="mb-8">
+           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {sequentialStages.map((stage: any, idx: number) => {
               const isPast = sequentialStages.findIndex((s: any) => s.isCurrent) > idx;
               const isCurrent = stage.isCurrent;
-              const isNextCurrent = sequentialStages.findIndex((s: any) => s.isCurrent) === idx + 1;
-              const lineShouldBeColored = isPast || (isCurrent && false); // Line from past to current should be colored
-              
-              const calculatedDuration = formatDurationArabic(stage.startDate, stage.endDate);
-              const displayDuration = calculatedDuration || stage.duration;
+              const displayDuration = formatDurationArabic(stage.startDate, stage.endDate) || stage.duration;
               
               return (
-                <div key={stage.id} className="flex flex-row md:flex-col items-start md:items-center gap-3 group relative flex-1 min-w-[150px]">
-                  
-                  {/* Vertical line for mobile (hidden on last item) */}
-                  {idx !== sequentialStages.length - 1 && (
-                    <div className={`md:hidden w-1 h-full absolute right-6 top-6 -z-10 ${isPast ? 'bg-emerald-500' : 'bg-slate-100 dark:bg-slate-700'}`}></div>
+                <div key={stage.id} className={`group relative flex flex-col rounded-2xl border transition-all duration-500 overflow-hidden ${
+                  isCurrent 
+                    ? 'bg-white dark:bg-[#0F0F0F] border-primary/30 shadow-md dark:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)]' 
+                    : isPast 
+                      ? 'bg-slate-50/80 dark:bg-[#0A0A0A] border-slate-200 dark:border-slate-800/80 opacity-90 hover:opacity-100' 
+                      : 'bg-white dark:bg-[#0A0A0A] border-slate-100 dark:border-slate-800/50 opacity-70 hover:opacity-100'
+                }`}>
+                  {isCurrent && (
+                    <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-transparent pointer-events-none" />
                   )}
-
-                  {/* Horizontal line for desktop (hidden on last item) */}
-                  {idx !== sequentialStages.length - 1 && (
-                    <div className={`hidden md:block absolute top-6 right-1/2 w-[calc(100%+0.5rem)] h-1 -z-10 ${isPast ? 'bg-emerald-500' : 'bg-slate-100 dark:bg-slate-700'}`}></div>
-                  )}
                   
-                  <div className={`w-12 h-12 rounded-full border-4 flex items-center justify-center font-bold text-lg bg-white dark:bg-slate-800 shrink-0 transition-all duration-300 relative z-10
-                    ${isPast ? 'border-emerald-500 text-emerald-500' : 
-                      isCurrent ? 'border-primary text-primary scale-110 shadow-lg shadow-primary/20' : 
-                      'border-slate-200 dark:border-slate-600 text-slate-400 dark:text-slate-500'}`}
-                  >
-                    {isPast ? <CheckCircleIcon /> : (idx + 1)}
-                  </div>
-                  
-                  <div className={`flex-1 text-right md:text-center p-3 rounded-xl transition-all duration-300 ${isCurrent ? 'bg-primary/5 dark:bg-primary/10 border-primary/20 dark:border-primary/20 shadow-sm' : 'bg-transparent'} border border-transparent w-full`}>
-                    <h4 className={`font-bold text-sm lg:text-base ${isCurrent ? 'text-primary' : 'text-slate-700 dark:text-slate-300'}`}>{stage.name}</h4>
+                  <div className="p-6 flex flex-col h-full z-10">
+                    <div className="flex items-start justify-between gap-3 mb-4">
+                      <div className={`w-8 h-8 rounded-full border flex items-center justify-center shrink-0 shadow-sm transition-colors ${
+                        isPast ? 'bg-slate-100 dark:bg-[#111] border-slate-300 dark:border-slate-700 text-slate-600 dark:text-slate-400' : 
+                        isCurrent ? 'bg-primary border-primary text-white scale-105' : 
+                        'bg-white dark:bg-[#111] border-slate-200 dark:border-slate-800 text-slate-400'
+                      }`}>
+                        {isPast ? <CheckCircle2 className="w-4 h-4" /> : <span className="text-xs font-bold">{idx + 1}</span>}
+                      </div>
+                      
+                      {isCurrent && (
+                        <span className="text-[10px] font-bold px-2 py-1 rounded-md bg-primary text-white shadow-sm shrink-0">
+                          الحالية
+                        </span>
+                      )}
+                    </div>
+                    
+                    <h4 className={`font-semibold tracking-tight mb-2 ${
+                      isCurrent ? 'text-primary' : isPast ? 'text-slate-800 dark:text-slate-200' : 'text-slate-600 dark:text-slate-400'
+                    }`} style={{ fontSize: 'clamp(1rem, 1.5vw, 1.125rem)' }}>
+                      {stage.name}
+                    </h4>
+                    
                     {stage.description && (
-                      <p className="text-xs text-slate-500 dark:text-slate-400 mt-1.5 leading-relaxed break-words">{stage.description}</p>
+                      <p className="text-[13px] font-medium text-slate-500 dark:text-slate-400 leading-relaxed mb-4 flex-1">
+                        {stage.description}
+                      </p>
                     )}
+                    
                     {displayDuration && (
-                      <span className="inline-block bg-slate-100 dark:bg-slate-800/80 text-slate-600 dark:text-slate-300 text-xs px-2 py-0.5 rounded-md mt-2 font-medium border border-slate-200 dark:border-slate-700/50">المدة: {displayDuration}</span>
+                      <div className="mt-auto pt-4 border-t border-slate-100 dark:border-slate-800/80">
+                        <span className="inline-block text-[11px] font-medium text-slate-500 dark:text-slate-400 uppercase tracking-widest">
+                          المدة: {displayDuration}
+                        </span>
+                      </div>
                     )}
-                    {isCurrent && <span className="block mt-2 text-xs font-bold bg-primary text-white px-3 py-1 rounded-full w-max md:mx-auto">المرحلة الحالية</span>}
                   </div>
                 </div>
               );
@@ -75,43 +82,54 @@ export default function CharityClientTimeline({
           </div>
         </div>
       ) : (
-        <div className="text-center py-8 text-slate-500 dark:text-slate-400">
+        <div className="text-center py-8 text-slate-500 dark:text-slate-400 font-medium text-sm">
           لا توجد مراحل متسلسلة حالياً
         </div>
       )}
 
       {continuousStages.length > 0 && (
-        <div className="mt-8 pt-6 border-t border-slate-100 dark:border-slate-700">
-          <div className="relative pb-4">
-            <div className="flex flex-col md:flex-row gap-6 md:gap-2 justify-between relative z-10 flex-wrap">
-              {continuousStages.map((stage: any) => {
-                const isActive = stage.isActive !== false;
-                const calculatedDuration = formatDurationArabic(stage.startDate, stage.endDate);
-                const displayDuration = calculatedDuration || stage.duration;
-                
-                return (
-                  <div key={stage.id} className={`flex flex-row md:flex-col items-start md:items-center gap-3 group relative flex-1 min-w-[150px] ${!isActive ? "opacity-60 grayscale-[50%]" : ""}`}>
-                    
-                    <div className={`w-12 h-12 rounded-full border-4 flex items-center justify-center font-bold text-lg bg-white dark:bg-slate-800 shrink-0 transition-all duration-300 relative z-10
-                      ${isActive ? 'border-amber-500 text-amber-500 shadow-lg shadow-amber-500/20' : 
-                        'border-slate-200 dark:border-slate-600 text-slate-400 dark:text-slate-500'}`}
-                    >
-                      <Infinity className="w-6 h-6" />
+        <div className="pt-6 border-t border-slate-200 dark:border-slate-800/80">
+          <h3 className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-4 px-1">
+            الأنشطة الدائمة (Continuous)
+          </h3>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {continuousStages.map((stage: any) => {
+              const isActive = stage.isActive !== false;
+              const displayDuration = formatDurationArabic(stage.startDate, stage.endDate) || stage.duration;
+              
+              return (
+                <div key={stage.id} className={`group flex flex-col p-6 rounded-2xl border transition-all duration-300 relative overflow-hidden ${
+                  isActive 
+                    ? 'bg-white dark:bg-[#111] border-slate-200 dark:border-slate-700 shadow-sm dark:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)] hover:border-slate-300 dark:hover:border-slate-600' 
+                    : 'bg-slate-50/50 dark:bg-[#0A0A0A] border-slate-100 dark:border-slate-800/80 opacity-70 grayscale-[30%]'
+                }`}>
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className={`w-8 h-8 rounded-full border flex items-center justify-center shrink-0 ${
+                      isActive ? 'bg-amber-500/10 border-amber-500/20 text-amber-500' : 'bg-slate-100 dark:bg-[#111] border-slate-200 dark:border-slate-800 text-slate-400'
+                    }`}>
+                      <Infinity className="w-4 h-4" />
                     </div>
-                    
-                    <div className={`flex-1 text-right md:text-center p-3 rounded-xl transition-all duration-300 ${isActive ? 'bg-amber-500/5 dark:bg-amber-500/10 border-amber-500/20 shadow-sm' : 'bg-transparent'} border border-transparent w-full`}>
-                      <h4 className={`font-bold text-sm lg:text-base ${isActive ? 'text-amber-600 dark:text-amber-500' : 'text-slate-700 dark:text-slate-300'}`}>{stage.name}</h4>
-                      {stage.description && (
-                        <p className="text-xs text-slate-500 dark:text-slate-400 mt-1.5 leading-relaxed break-words">{stage.description}</p>
-                      )}
-                      {displayDuration && (
-                        <span className="inline-block bg-slate-100 dark:bg-slate-800/80 text-slate-600 dark:text-slate-300 text-xs px-2 py-0.5 rounded-md mt-2 font-medium border border-slate-200 dark:border-slate-700/50">المدة: {displayDuration}</span>
-                      )}
-                    </div>
+                    <h5 className={`font-semibold tracking-tight ${isActive ? 'text-slate-800 dark:text-slate-200' : 'text-slate-600 dark:text-slate-400'}`} style={{ fontSize: 'clamp(0.875rem, 1.5vw, 1rem)' }}>
+                      {stage.name}
+                    </h5>
                   </div>
-                );
-              })}
-            </div>
+                  
+                  {stage.description && (
+                    <p className="text-[13px] font-medium text-slate-500 dark:text-slate-400 leading-relaxed mb-4 flex-1">
+                      {stage.description}
+                    </p>
+                  )}
+                  
+                  {displayDuration && (
+                    <div className="mt-auto pt-4 border-t border-slate-100 dark:border-slate-800/80">
+                      <span className="inline-block text-[11px] font-medium text-slate-500 dark:text-slate-400 uppercase tracking-widest">
+                        المدة: {displayDuration}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
           </div>
         </div>
       )}

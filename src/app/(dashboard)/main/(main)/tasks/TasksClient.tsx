@@ -189,7 +189,7 @@ export default function TasksClient({
   const celebrateCompletion = () => {
     setShowCelebration(true);
     playSuccessSound();
-    setTimeout(() => setShowCelebration(false), 1600);
+    setTimeout(() => setShowCelebration(false), 2400);
   };
 
   const showNotification = (type: "success" | "error", message: string) => {
@@ -1582,7 +1582,7 @@ ${combinedAchievements.length > 0 ? `
               <Check className="w-16 h-16 text-white" strokeWidth={3} />
             </div>
             <span className="flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400 font-black text-sm bg-white dark:bg-slate-800 px-4 py-1.5 rounded-full shadow-lg">
-              <PartyPopper className="w-4 h-4" /> أحسنت! تم الإنجاز
+              <PartyPopper className="w-4 h-4" /> تم تسجيل الإنجاز!
             </span>
           </div>
         </div>

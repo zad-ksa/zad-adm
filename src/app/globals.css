@@ -149,8 +149,8 @@ body {
 
 @keyframes celebrate-fade {
   0% { opacity: 0; }
-  10% { opacity: 1; }
-  80% { opacity: 1; }
+  8% { opacity: 1; }
+  85% { opacity: 1; }
   100% { opacity: 0; }
 }
 
@@ -159,5 +159,5 @@ body {
 }
 
 @utility animate-celebrate-fade {
-  animation: celebrate-fade 1.6s ease-in-out both;
+  animation: celebrate-fade 2.4s ease-in-out both;
 }

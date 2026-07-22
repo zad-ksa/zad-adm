@@ -902,9 +902,7 @@ ${combinedAchievements.length > 0 ? `
                         onClick={() => handleToggleCompletion(task.id, true)}
                         title="تعليم كمنجز"
                         className="w-4 h-4 rounded border-2 border-slate-300 dark:border-slate-600 hover:border-emerald-500 flex items-center justify-center shrink-0 cursor-pointer mt-0.5 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 transition-colors"
-                      >
-                        <span className="opacity-0 group-hover:opacity-60 text-emerald-500 text-[9px] font-bold leading-none">✓</span>
-                      </button>
+                      />
                     )}
 
                     <div className="flex-1 min-w-0">

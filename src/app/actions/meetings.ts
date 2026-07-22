@@ -2,6 +2,7 @@
 import { prisma } from "@/lib/db";
 import { getSession } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
+import { createAppNotification } from "./notifications";
 
 const TIER1 = ["ADMIN", "EXECUTIVE_DIRECTOR", "ADMINISTRATIVE_SECRETARIAT"];
 const ALL_STAFF = [...TIER1, "GENERAL_MANAGER", "STRATEGY", "FINANCE", "GOVERNANCE"];
@@ -144,6 +145,7 @@ export async function upsertMeetingTasks(
   if (!session || !TIER1.includes(session.role)) throw new Error("غير مصرح");
 
   const meeting = await prisma.meeting.findUnique({ where: { id: meetingId } });
+  const oldTasks = await prisma.meetingTask.findMany({ where: { meetingId } });
 
   // حذف المهام المحذوفة (موجودة في DB لكن غير موجودة في القائمة الجديدة)
   const existingIds = tasks.filter(t => t.id).map(t => t.id!);
@@ -182,6 +184,16 @@ export async function upsertMeetingTasks(
             status: t.isDone ? "COMPLETED" : "NOT_STARTED",
           }
         });
+        
+        const oldMt = oldTasks.find(o => o.id === t.id);
+        if (oldMt?.assignedToId !== t.assignedToId && t.assignedToId !== session.id) {
+          await createAppNotification(
+            t.assignedToId,
+            "مهمة محضر جديدة",
+            `تم تكليفك بمهمة من المحضر: ${t.title}`,
+            "/main/tasks"
+          );
+        }
       } else {
         await prisma.task.deleteMany({ where: { meetingTaskId: t.id } });
       }
@@ -209,6 +221,15 @@ export async function upsertMeetingTasks(
             charityId: meeting?.charityId || null,
           }
         });
+
+        if (t.assignedToId !== session.id) {
+          await createAppNotification(
+            t.assignedToId,
+            "مهمة محضر جديدة",
+            `تم تكليفك بمهمة من المحضر: ${t.title}`,
+            "/main/tasks"
+          );
+        }
       }
     }
   }

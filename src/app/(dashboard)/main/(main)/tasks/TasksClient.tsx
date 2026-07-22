@@ -29,6 +29,8 @@ import {
   ChevronDown,
   MessageSquarePlus,
   Send,
+  History,
+  PartyPopper,
 } from "lucide-react";
 import {
   createTaskAction,
@@ -51,6 +53,7 @@ import {
 import { Charity, Employee, Session, Task, TaskUpdate, Achievement } from "@/types";
 import { ADMIN_ROLES } from "@/lib/constants";
 import { useImagePaste } from "@/hooks/useImagePaste";
+import { timeAgoArabic } from "@/lib/dateUtils";
 import dynamic from "next/dynamic";
 
 const TaskFormModal = dynamic(() => import("@/components/tasks/TaskFormModal"), { ssr: false });
@@ -150,6 +153,44 @@ export default function TasksClient({
   const [expandedTaskId, setExpandedTaskId] = useState<string | null>(null);
   const [newUpdateText, setNewUpdateText] = useState<Record<string, string>>({});
   const [isSubmittingUpdate, setIsSubmittingUpdate] = useState(false);
+
+  // Task detail modal state
+  const [detailTask, setDetailTask] = useState<Task | null>(null);
+
+  // Completion celebration
+  const [showCelebration, setShowCelebration] = useState(false);
+
+  const playSuccessSound = () => {
+    try {
+      const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
+      if (!AudioCtx) return;
+      const ctx = new AudioCtx();
+      const notes = [523.25, 659.25, 783.99]; // C5, E5, G5 — a bright little arpeggio
+      notes.forEach((freq, i) => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = "sine";
+        osc.frequency.value = freq;
+        const start = ctx.currentTime + i * 0.09;
+        gain.gain.setValueAtTime(0, start);
+        gain.gain.linearRampToValueAtTime(0.2, start + 0.02);
+        gain.gain.exponentialRampToValueAtTime(0.001, start + 0.35);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start(start);
+        osc.stop(start + 0.4);
+      });
+      setTimeout(() => ctx.close(), 900);
+    } catch {
+      // Sound is a nice-to-have; ignore if the browser blocks audio.
+    }
+  };
+
+  const celebrateCompletion = () => {
+    setShowCelebration(true);
+    playSuccessSound();
+    setTimeout(() => setShowCelebration(false), 1600);
+  };
 
   const showNotification = (type: "success" | "error", message: string) => {
     if (type === "success") {
@@ -320,8 +361,10 @@ ${combinedAchievements.length > 0 ? `
       isInternal: t.isInternal,
       date: t.completedAt ? new Date(t.completedAt) : new Date(t.createdAt),
       proofUrl: t.proofUrl,
+      completionNote: t.completionNote,
       createdById: t.createdById,
       assignedToId: t.assignedToId,
+      task: t,
     })),
     ...filteredDirectAchievements.map((a) => ({
       id: a.id,
@@ -331,8 +374,10 @@ ${combinedAchievements.length > 0 ? `
       isInternal: a.isInternal,
       date: new Date(a.createdAt),
       proofUrl: a.proofUrl,
+      completionNote: null as string | null | undefined,
       createdById: a.createdById,
       assignedToId: a.employeeId,
+      task: null as Task | null,
     })),
   ].sort((a, b) => b.date.getTime() - a.date.getTime());
 
@@ -395,7 +440,11 @@ ${combinedAchievements.length > 0 ? `
         showNotification("error", res.error);
       } else {
         setTasks((prev) =>
-          prev.map((t) => (t.id === taskId ? { ...t, assignedToId: newAssigneeId } : t))
+          prev.map((t) => (t.id === taskId ? {
+            ...t,
+            assignedToId: newAssigneeId,
+            updates: res.update ? [...(t.updates || []), res.update as TaskUpdate] : t.updates
+          } : t))
         );
         setEditingAssigneeTaskId(null);
         showNotification("success", "تم تحويل المهمة بنجاح");
@@ -570,11 +619,12 @@ ${combinedAchievements.length > 0 ? `
           setTasks((prev) =>
             prev.map((t) =>
               t.id === completingTaskId
-                ? { ...t, isCompleted: true, completedAt: new Date().toISOString(), proofUrl: finalUrl || null, proofPublicId: finalPublicId || null }
+                ? { ...t, isCompleted: true, completedAt: new Date().toISOString(), proofUrl: finalUrl || null, proofPublicId: finalPublicId || null, completionNote: completionNote || null }
                 : t
             )
           );
           showNotification("success", "تم نقل المهمة إلى المنجزات بنجاح");
+          celebrateCompletion();
           setCompletingTaskId(null);
           setProofFile(null);
           setCompletionNote("");
@@ -650,7 +700,11 @@ ${combinedAchievements.length > 0 ? `
       } else {
         setTasks((prev) =>
           prev.map((t) =>
-            t.id === reassigningTaskId ? { ...t, assignedToId: reassignToEmployeeId } : t
+            t.id === reassigningTaskId ? {
+              ...t,
+              assignedToId: reassignToEmployeeId,
+              updates: res.update ? [...(t.updates || []), res.update as TaskUpdate] : t.updates
+            } : t
           )
         );
         setReassigningTaskId(null);
@@ -872,7 +926,13 @@ ${combinedAchievements.length > 0 ? `
                           <button type="button" onClick={() => setEditingTaskId(null)} className="p-0.5 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded cursor-pointer"><X className="w-3 h-3" /></button>
                         </div>
                       ) : (
-                        <p className="text-sm font-semibold text-slate-800 dark:text-slate-100 leading-snug">{task.title}</p>
+                        <p
+                          onClick={() => setDetailTask(task)}
+                          title="عرض تفاصيل المهمة"
+                          className="text-sm font-semibold text-slate-800 dark:text-slate-100 leading-snug cursor-pointer hover:text-primary transition-colors"
+                        >
+                          {task.title}
+                        </p>
                       )}
 
                       {/* Badges */}
@@ -957,11 +1017,17 @@ ${combinedAchievements.length > 0 ? `
                           </button>
                         )}
 
-                        {/* Date */}
-                        <span className="text-[9px] text-slate-400 flex items-center gap-0.5 mr-auto">
+                        {/* Relative dates */}
+                        <span className="text-[9px] text-slate-400 dark:text-slate-500 flex items-center gap-0.5 mr-auto" title="تاريخ الإضافة">
                           <Calendar className="w-2.5 h-2.5" />
-                          {new Date(task.createdAt).toLocaleDateString("ar-SA")}
+                          أضيفت {timeAgoArabic(task.createdAt)}
                         </span>
+                        {task.updatedAt && (
+                          <span className="text-[9px] text-slate-400 dark:text-slate-500 flex items-center gap-0.5" title="آخر تحديث">
+                            <History className="w-2.5 h-2.5" />
+                            آخر تحديث {timeAgoArabic(task.updatedAt)}
+                          </span>
+                        )}
                       </div>
                     </div>
 
@@ -1183,7 +1249,18 @@ ${combinedAchievements.length > 0 ? `
                   <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 dark:text-emerald-500 shrink-0 mt-0.5" />
 
                   <div className="flex-1 min-w-0">
-                    <p className="text-xs font-medium text-slate-600 dark:text-slate-300 leading-snug truncate">{item.title}</p>
+                    <p
+                      onClick={() => item.task && setDetailTask(item.task)}
+                      title={item.task ? "عرض تفاصيل المهمة" : undefined}
+                      className={`text-xs font-medium text-slate-600 dark:text-slate-300 leading-snug truncate ${item.task ? "cursor-pointer hover:text-primary transition-colors" : ""}`}
+                    >
+                      {item.title}
+                    </p>
+                    {item.completionNote && (
+                      <p className="text-[10px] text-slate-400 dark:text-slate-500 leading-relaxed mt-0.5 whitespace-pre-wrap">
+                        {item.completionNote}
+                      </p>
+                    )}
                     <div className="flex flex-wrap items-center gap-1 mt-0.5">
                       {item.charityName && (
                         <span className="text-[9px] text-primary/70 dark:text-teal-500 font-medium">{item.charityName}</span>
@@ -1193,7 +1270,7 @@ ${combinedAchievements.length > 0 ? `
                       )}
                       <span className="text-[9px] text-slate-400 mr-auto flex items-center gap-0.5">
                         <Calendar className="w-2.5 h-2.5" />
-                        {item.date.toLocaleDateString("ar-SA")}
+                        {timeAgoArabic(item.date)}
                       </span>
                     </div>
                   </div>
@@ -1401,6 +1478,112 @@ ${combinedAchievements.length > 0 ? `
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Task Detail Modal */}
+      {detailTask && (() => {
+        const creator = employees.find(e => e.id === detailTask.createdById);
+        const assignee = employees.find(e => e.id === detailTask.assignedToId);
+        const detailUpdates = [...(detailTask.updates || [])].sort(
+          (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+        );
+        return (
+          <div className="fixed inset-0 z-[110] flex items-center justify-center p-4">
+            <div
+              className="absolute inset-0 bg-slate-950/65 backdrop-blur-md transition-opacity duration-300"
+              onClick={() => setDetailTask(null)}
+            />
+            <div className="bg-white dark:bg-slate-800 rounded-3xl border border-slate-100 dark:border-slate-700/50 shadow-2xl w-full max-w-lg overflow-hidden relative z-10 max-h-[85vh] flex flex-col" dir="rtl">
+              <div className="px-5 py-4 border-b border-slate-100 dark:border-slate-700/50 flex items-start justify-between gap-3 shrink-0">
+                <div>
+                  <h3 className="text-base font-bold text-slate-800 dark:text-slate-100 leading-snug">{detailTask.title}</h3>
+                  <p className="text-[11px] text-slate-400 dark:text-slate-500 mt-1">
+                    أضافها {creator?.name || "غير معروف"} · {timeAgoArabic(detailTask.createdAt)}
+                  </p>
+                </div>
+                <button onClick={() => setDetailTask(null)} className="p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors cursor-pointer shrink-0">
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+
+              <div className="p-5 overflow-y-auto space-y-4">
+                {/* Summary chips */}
+                <div className="flex flex-wrap items-center gap-1.5">
+                  {assignee && (
+                    <span className="inline-flex items-center gap-1 text-[10px] font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/20 px-2 py-1 rounded-lg">
+                      <User className="w-3 h-3" /> مسندة حاليًا إلى {assignee.name}
+                    </span>
+                  )}
+                  <span className="inline-flex items-center gap-1 text-[10px] font-bold text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-700/50 px-2 py-1 rounded-lg">
+                    {detailTask.isInternal ? <Briefcase className="w-3 h-3" /> : <Building2 className="w-3 h-3" />}
+                    {detailTask.isInternal ? "داخلية" : (detailTask.charityName || "متعاقدة")}
+                  </span>
+                  {detailTask.isCompleted && (
+                    <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/20 px-2 py-1 rounded-lg">
+                      <CheckCircle2 className="w-3 h-3" /> منجزة {timeAgoArabic(detailTask.completedAt)}
+                    </span>
+                  )}
+                </div>
+
+                {/* Completion note */}
+                {detailTask.isCompleted && detailTask.completionNote && (
+                  <div className="bg-emerald-50/60 dark:bg-emerald-900/10 border border-emerald-100 dark:border-emerald-800/30 rounded-xl p-3">
+                    <p className="text-[10px] font-bold text-emerald-700 dark:text-emerald-400 mb-1">وصف الإنجاز</p>
+                    <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed whitespace-pre-wrap">{detailTask.completionNote}</p>
+                    {detailTask.proofUrl && (
+                      <a href={detailTask.proofUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-600 dark:text-emerald-400 hover:underline mt-2">
+                        <LinkIcon className="w-3 h-3" /> عرض الشاهد
+                      </a>
+                    )}
+                  </div>
+                )}
+
+                {/* Timeline: updates + move history */}
+                <div>
+                  <p className="text-[11px] font-bold text-slate-500 dark:text-slate-400 mb-2 flex items-center gap-1.5">
+                    <History className="w-3.5 h-3.5" /> مسار المهمة والتحديثات
+                  </p>
+                  {detailUpdates.length > 0 ? (
+                    <div className="space-y-2.5 border-r-2 border-slate-100 dark:border-slate-700 pr-3">
+                      {detailUpdates.map((u) => {
+                        const author = employees.find(e => e.id === u.authorId);
+                        const isMove = u.content.startsWith("↔");
+                        return (
+                          <div key={u.id} className="relative">
+                            <span className={`absolute top-1 -right-[15px] w-2 h-2 rounded-full ${isMove ? "bg-indigo-400" : "bg-primary/60"}`} />
+                            <p className={`text-xs leading-relaxed ${isMove ? "text-indigo-600 dark:text-indigo-400 font-bold" : "text-slate-700 dark:text-slate-300"}`}>
+                              {u.content}
+                            </p>
+                            <p className="text-[9px] text-slate-400 dark:text-slate-500 mt-0.5">
+                              {author?.name || "—"} · {timeAgoArabic(u.createdAt)}
+                            </p>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <p className="text-[11px] text-slate-400 dark:text-slate-500">لا توجد تحديثات أو تحويلات مسجلة على هذه المهمة بعد.</p>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
+
+      {/* Completion Celebration */}
+      {showCelebration && (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center pointer-events-none animate-celebrate-fade">
+          <div className="absolute inset-0 bg-emerald-500/10 dark:bg-emerald-400/10" />
+          <div className="relative flex flex-col items-center gap-3 animate-celebrate-pop">
+            <div className="w-28 h-28 rounded-full bg-emerald-500 shadow-2xl shadow-emerald-500/40 flex items-center justify-center">
+              <Check className="w-16 h-16 text-white" strokeWidth={3} />
+            </div>
+            <span className="flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400 font-black text-sm bg-white dark:bg-slate-800 px-4 py-1.5 rounded-full shadow-lg">
+              <PartyPopper className="w-4 h-4" /> أحسنت! تم الإنجاز
+            </span>
           </div>
         </div>
       )}

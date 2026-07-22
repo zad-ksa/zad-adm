@@ -138,3 +138,26 @@ body {
 @utility animate-glow-pulse {
   animation: glow-pulse 3.5s ease-in-out infinite;
 }
+
+/* Task-completion celebration */
+@keyframes celebrate-pop {
+  0% { transform: scale(0.3) rotate(-8deg); opacity: 0; }
+  50% { transform: scale(1.15) rotate(4deg); opacity: 1; }
+  70% { transform: scale(0.95) rotate(-2deg); }
+  100% { transform: scale(1) rotate(0deg); opacity: 1; }
+}
+
+@keyframes celebrate-fade {
+  0% { opacity: 0; }
+  10% { opacity: 1; }
+  80% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+@utility animate-celebrate-pop {
+  animation: celebrate-pop 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+@utility animate-celebrate-fade {
+  animation: celebrate-fade 1.6s ease-in-out both;
+}

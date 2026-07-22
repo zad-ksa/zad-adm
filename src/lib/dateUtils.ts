@@ -1,3 +1,12 @@
+// "منذ يومين" style relative time, built on formatDurationArabic's pluralization.
+export function timeAgoArabic(dateStr?: string | Date | null): string {
+  if (!dateStr) return '';
+  const duration = formatDurationArabic(dateStr, new Date());
+  if (!duration) return '';
+  if (duration === 'نفس اليوم') return 'اليوم';
+  return `منذ ${duration}`;
+}
+
 export function formatDurationArabic(startDateStr?: string | Date | null, endDateStr?: string | Date | null): string {
   if (!startDateStr || !endDateStr) return '';
 

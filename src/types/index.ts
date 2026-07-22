@@ -22,6 +22,7 @@ export interface Task {
   updatedAt?: Date | string;
   proofUrl?: string | null;
   proofPublicId?: string | null;
+  completionNote?: string | null;
   updates?: TaskUpdate[];
 }
 

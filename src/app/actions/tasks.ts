@@ -133,6 +133,21 @@ export async function reassignTaskAction(taskId: string, newEmployeeId: string) 
       return { error: "المهمة غير موجودة" };
     }
 
+    let logUpdate = null;
+    if (task.assignedToId !== newEmployeeId) {
+      const [oldEmp, newEmp] = await Promise.all([
+        prisma.employee.findUnique({ where: { id: task.assignedToId }, select: { name: true } }),
+        prisma.employee.findUnique({ where: { id: newEmployeeId }, select: { name: true } }),
+      ]);
+      logUpdate = await prisma.taskUpdate.create({
+        data: {
+          taskId,
+          authorId: user.id,
+          content: `↔ تم نقل المهمة من "${oldEmp?.name || "غير معروف"}" إلى "${newEmp?.name || "غير معروف"}"`,
+        },
+      });
+    }
+
     await prisma.task.update({
       where: { id: taskId },
       data: {
@@ -150,7 +165,7 @@ export async function reassignTaskAction(taskId: string, newEmployeeId: string) 
     }
 
     revalidatePath("/main/tasks");
-    return { success: true };
+    return { success: true, update: logUpdate };
   } catch (error: any) {
     return { error: error.message || "حدث خطأ أثناء نقل المهمة" };
   }

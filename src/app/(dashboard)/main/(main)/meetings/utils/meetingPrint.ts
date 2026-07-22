@@ -118,6 +118,8 @@ function buildLetterheadDoc(m: Meeting, forPrint: boolean, meetingNum?: number):
   const numStr = meetingNum ? `ZAD_M_${String(meetingNum).padStart(3, "0")}` : "";
   const letterheadUrl = `${window.location.origin}/assets/letterhead.png`;
 
+  var safeBody = JSON.stringify(body).replace(/<\/(script)/ig, "<\\/$1");
+
   return `<!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head><meta charset="utf-8"><title>${m.title}</title>
@@ -132,7 +134,7 @@ function buildLetterheadDoc(m: Meeting, forPrint: boolean, meetingNum?: number):
   var numStr = ${JSON.stringify(numStr)};
   var shouldPrint = ${forPrint};
   var tmp = document.createElement('div');
-  tmp.innerHTML = ${JSON.stringify(body)};
+  tmp.innerHTML = ${safeBody};
   var nodes = Array.from(tmp.childNodes);
   var PAGE_H = 1123, TOP_OFFSET = 189, BOT_OFFSET = 208;
   var USABLE = PAGE_H - TOP_OFFSET - BOT_OFFSET;
@@ -205,15 +207,40 @@ function buildLetterheadDoc(m: Meeting, forPrint: boolean, meetingNum?: number):
 }
 
 export function handlePrint(m: Meeting, meetingNum?: number) {
-  const win = window.open("", "_blank");
-  if (!win) return;
-  win.document.write(buildLetterheadDoc(m, true, meetingNum));
-  win.document.close();
+  const iframe = document.createElement("iframe");
+  iframe.style.position = "fixed";
+  iframe.style.right = "0";
+  iframe.style.bottom = "0";
+  iframe.style.width = "0";
+  iframe.style.height = "0";
+  iframe.style.border = "0";
+  document.body.appendChild(iframe);
+
+  const doc = iframe.contentWindow?.document;
+  if (!doc) {
+    alert("تعذر فتح نافذة الطباعة. يرجى التحقق من إعدادات المتصفح.");
+    return;
+  }
+
+  doc.open();
+  doc.write(buildLetterheadDoc(m, true, meetingNum));
+  doc.close();
+
+  // Cleanup after printing is complete (the script inside handles window.print())
+  setTimeout(() => {
+    if (iframe.parentNode) {
+      iframe.parentNode.removeChild(iframe);
+    }
+  }, 5000);
 }
 
 export function handlePreview(m: Meeting, meetingNum?: number) {
   const win = window.open("", "_blank");
-  if (!win) return;
+  if (!win) {
+    alert("الرجاء السماح بفتح النوافذ المنبثقة (Popups) لعرض الكليشة.");
+    return;
+  }
+  win.document.open();
   win.document.write(buildLetterheadDoc(m, false, meetingNum));
   win.document.close();
 }

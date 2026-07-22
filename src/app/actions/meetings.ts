@@ -143,6 +143,8 @@ export async function upsertMeetingTasks(
   const session = await getSession();
   if (!session || !TIER1.includes(session.role)) throw new Error("غير مصرح");
 
+  const meeting = await prisma.meeting.findUnique({ where: { id: meetingId } });
+
   // حذف المهام المحذوفة (موجودة في DB لكن غير موجودة في القائمة الجديدة)
   const existingIds = tasks.filter(t => t.id).map(t => t.id!);
   await prisma.meetingTask.deleteMany({
@@ -160,8 +162,31 @@ export async function upsertMeetingTasks(
           isDone: t.isDone ?? false,
         },
       });
+
+      if (t.assignedToId) {
+        await prisma.task.upsert({
+          where: { meetingTaskId: t.id },
+          create: {
+            meetingTaskId: t.id,
+            title: t.title,
+            assignedToId: t.assignedToId,
+            createdById: session.id,
+            isInternal: true,
+            status: t.isDone ? "COMPLETED" : "NOT_STARTED",
+            priority: 2,
+            charityId: meeting?.charityId || null,
+          },
+          update: {
+            title: t.title,
+            assignedToId: t.assignedToId,
+            status: t.isDone ? "COMPLETED" : "NOT_STARTED",
+          }
+        });
+      } else {
+        await prisma.task.deleteMany({ where: { meetingTaskId: t.id } });
+      }
     } else {
-      await prisma.meetingTask.create({
+      const newMt = await prisma.meetingTask.create({
         data: {
           meetingId,
           title: t.title,
@@ -170,10 +195,26 @@ export async function upsertMeetingTasks(
           isDone: t.isDone ?? false,
         },
       });
+
+      if (t.assignedToId) {
+        await prisma.task.create({
+          data: {
+            meetingTaskId: newMt.id,
+            title: `[مهمة محضر] ${t.title}`,
+            assignedToId: t.assignedToId,
+            createdById: session.id,
+            isInternal: true,
+            status: t.isDone ? "COMPLETED" : "NOT_STARTED",
+            priority: 2,
+            charityId: meeting?.charityId || null,
+          }
+        });
+      }
     }
   }
 
   revalidatePath("/main/meetings");
+  revalidatePath("/main/tasks");
   return { success: true };
 }
 
@@ -218,7 +259,14 @@ export async function toggleMeetingTask(taskId: string, isDone: boolean) {
   const session = await getSession();
   if (!session || !TIER1.includes(session.role)) throw new Error("غير مصرح");
   await prisma.meetingTask.update({ where: { id: taskId }, data: { isDone } });
+  
+  await prisma.task.updateMany({
+    where: { meetingTaskId: taskId },
+    data: { status: isDone ? "COMPLETED" : "NOT_STARTED" }
+  });
+
   revalidatePath("/main/meetings");
+  revalidatePath("/main/tasks");
   return { success: true };
 }
 

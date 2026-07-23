@@ -19,6 +19,7 @@ export default function CharityAccountsClient({ charities, accounts: initialAcco
   const [isPending, startTransition] = useTransition();
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
+  const [accountToDelete, setAccountToDelete] = useState<any | null>(null);
 
   const [form, setForm] = useState({
     name: "",
@@ -51,15 +52,17 @@ export default function CharityAccountsClient({ charities, accounts: initialAcco
     });
   };
 
-  const handleDelete = async (id: string) => {
-    if (!confirm("هل أنت متأكد من حذف الحساب بشكل نهائي؟")) return;
+  const confirmDelete = async () => {
+    if (!accountToDelete) return;
     
     startTransition(async () => {
-      const res = await deleteCharityClientAccount(id);
+      const res = await deleteCharityClientAccount(accountToDelete.id);
       if (res.success) {
-        setAccounts(prev => prev.filter(a => a.id !== id));
+        setAccounts(prev => prev.filter(a => a.id !== accountToDelete.id));
+        setAccountToDelete(null);
       } else {
-        alert(res.error || "حدث خطأ أثناء الحذف");
+        setErrorMsg(res.error || "حدث خطأ أثناء الحذف");
+        setAccountToDelete(null);
       }
     });
   };
@@ -224,7 +227,7 @@ export default function CharityAccountsClient({ charities, accounts: initialAcco
                   <td className="px-6 py-4 text-xs font-bold text-slate-500 dark:text-slate-500">{new Date(account.createdAt).toLocaleDateString("en-GB")}</td>
                   <td className="px-6 py-4">
                     <button 
-                      onClick={() => handleDelete(account.id)}
+                      onClick={() => setAccountToDelete(account)}
                       disabled={isPending}
                       className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-xl transition-all opacity-0 group-hover:opacity-100 focus:opacity-100"
                       title="حذف الحساب"
@@ -243,6 +246,46 @@ export default function CharityAccountsClient({ charities, accounts: initialAcco
           </table>
         </div>
       </div>
+
+      {/* Modern Delete Confirmation Modal */}
+      {accountToDelete && (
+        <div className="fixed inset-0 z-[110] flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-slate-950/60 backdrop-blur-md" onClick={() => !isPending && setAccountToDelete(null)} />
+          <div className="bg-white dark:bg-slate-900 rounded-3xl border border-red-100 dark:border-red-900/30 shadow-[0_0_40px_rgba(239,68,68,0.1)] dark:shadow-[0_0_40px_rgba(239,68,68,0.15)] w-full max-w-md overflow-hidden relative z-10 flex flex-col p-8 text-center animate-fade-in-up">
+            
+            {/* Background Glow */}
+            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[200%] h-32 bg-red-500/10 dark:bg-red-500/5 blur-3xl pointer-events-none"></div>
+
+            <div className="w-16 h-16 bg-red-50 dark:bg-red-500/10 border border-red-100 dark:border-red-500/20 rounded-2xl flex items-center justify-center mx-auto mb-6 relative">
+              <Trash2 className="w-8 h-8 text-red-500 dark:text-red-400" />
+              <div className="absolute inset-0 bg-red-500/20 rounded-2xl animate-ping opacity-20 pointer-events-none"></div>
+            </div>
+
+            <h3 className="text-[clamp(1.25rem,2vw,1.5rem)] font-black text-slate-800 dark:text-slate-100 mb-2">تأكيد حذف الحساب</h3>
+            <p className="text-[clamp(0.875rem,1.5vw,1rem)] text-slate-500 dark:text-slate-400 mb-8 leading-relaxed">
+              هل أنت متأكد من رغبتك في حذف حساب <span className="font-bold text-slate-700 dark:text-slate-200">{accountToDelete.name}</span> بشكل نهائي؟ هذا الإجراء لا يمكن التراجع عنه.
+            </p>
+
+            <div className="flex gap-4">
+              <button 
+                onClick={confirmDelete}
+                disabled={isPending}
+                className="flex-1 bg-red-500 hover:bg-red-600 text-white py-3.5 rounded-xl font-bold shadow-lg shadow-red-500/20 hover:shadow-red-500/30 transition-all disabled:opacity-50 relative overflow-hidden group"
+              >
+                <div className="absolute inset-0 w-full h-full bg-white/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"></div>
+                {isPending ? "جاري الحذف..." : "نعم، احذف الحساب"}
+              </button>
+              <button 
+                onClick={() => setAccountToDelete(null)}
+                disabled={isPending}
+                className="flex-1 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 py-3.5 rounded-xl font-bold transition-all disabled:opacity-50"
+              >
+                إلغاء التراجع
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Floating Action Button for Adding Account */}
       <button

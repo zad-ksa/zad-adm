@@ -10,7 +10,8 @@ import {
   Moon,
   Sun,
   LogOut,
-  Briefcase
+  Briefcase,
+  Scale
 } from "lucide-react";
 import ZadLogo from "@/components/ZadLogo";
 import { useTheme } from "next-themes";
@@ -105,6 +106,7 @@ export default function CharitySidebar({
 
   const mainItems = [
     { id: "services", label: "الخدمات", href: `/portal/${encodeURIComponent(charityName)}/services`, exact: true, icon: Briefcase },
+    { id: "governance", label: "الحوكمة", href: `/portal/${encodeURIComponent(charityName)}/governance`, exact: true, icon: Scale },
   ];
 
   const subItems: any[] = [];

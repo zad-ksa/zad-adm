@@ -23,10 +23,62 @@ export default function CharityLoginPage() {
   const phoneRefs = useRef<(HTMLInputElement | null)[]>([]);
   const otpRefs = useRef<(HTMLInputElement | null)[]>([]);
 
+  const [validityTime, setValidityTime] = useState(300);
+  const [resendCooldown, setResendCooldown] = useState(30);
+  const [resendCount, setResendCount] = useState(0);
+
   useEffect(() => {
     document.title = "بوابة شركاء زاد | الدخول";
     setIsMounted(true);
   }, []);
+
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+    if (step === 2) {
+      interval = setInterval(() => {
+        setValidityTime((prev) => {
+          if (prev <= 1) {
+            setStep(1);
+            setOtpDigits(Array(4).fill(""));
+            setError("انتهت صلاحية الرمز، يرجى طلب رمز جديد");
+            return 300;
+          }
+          return prev - 1;
+        });
+        setResendCooldown((prev) => (prev > 0 ? prev - 1 : 0));
+      }, 1000);
+    }
+    return () => clearInterval(interval);
+  }, [step]);
+
+  const formatTime = (seconds: number) => {
+    const m = Math.floor(seconds / 60);
+    const s = seconds % 60;
+    return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+  };
+
+  const handleResendOTP = async () => {
+    if (resendCooldown > 0 || isPending) return;
+
+    setError(null);
+    setSuccess(null);
+    setOtpDigits(Array(4).fill(""));
+
+    const processedPhone = "0" + phone;
+
+    startTransition(async () => {
+      const result = await requestCharityOTP(processedPhone);
+      if (result && result.error) {
+        setError(result.error);
+      } else {
+        setSuccess("تم إعادة إرسال رمز التحقق إلى جوالك");
+        setValidityTime(300);
+        setResendCooldown(120);
+        setResendCount(prev => prev + 1);
+        otpRefs.current[0]?.focus();
+      }
+    });
+  };
 
   const handleOtpChange = (index: number, value: string) => {
     if (!/^\d*$/.test(value)) return;
@@ -38,7 +90,7 @@ export default function CharityLoginPage() {
         newOtpDigits[index + i] = digit;
       });
       setOtpDigits(newOtpDigits);
-      
+
       const nextIndex = Math.min(index + pastedDigits.length, 3);
       otpRefs.current[nextIndex]?.focus();
       return;
@@ -50,6 +102,11 @@ export default function CharityLoginPage() {
 
     if (value && index < 3) {
       otpRefs.current[index + 1]?.focus();
+    }
+
+    const enteredOtp = newOtpDigits.join("");
+    if (enteredOtp.length === 4) {
+      submitOTP(enteredOtp);
     }
   };
 
@@ -78,21 +135,22 @@ export default function CharityLoginPage() {
         setError(result.error);
       } else {
         setSuccess("تم إرسال رمز التحقق إلى جوالك");
+        setValidityTime(300);
+        setResendCooldown(30);
+        setResendCount(0);
         setStep(2);
       }
     });
   };
 
-  const handleVerifyOTP = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError(null);
-    setSuccess(null);
-
-    const enteredOtp = otpDigits.join("");
+  const submitOTP = (enteredOtp: string) => {
     if (enteredOtp.length !== 4) {
       setError("يرجى إدخال رمز التحقق كاملاً");
       return;
     }
+
+    setError(null);
+    setSuccess(null);
 
     const processedPhone = "0" + phone;
 
@@ -100,8 +158,15 @@ export default function CharityLoginPage() {
       const result = await verifyCharityOTP(processedPhone, enteredOtp);
       if (result && result.error) {
         setError(result.error);
+        setOtpDigits(Array(4).fill(""));
+        otpRefs.current[0]?.focus();
       }
     });
+  };
+
+  const handleVerifyOTP = async (e: React.FormEvent) => {
+    e.preventDefault();
+    submitOTP(otpDigits.join(""));
   };
 
   if (!isMounted) return null;
@@ -119,79 +184,64 @@ export default function CharityLoginPage() {
 
       {/* Premium Visual Background */}
       <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-[0.03] dark:opacity-[0.05]"></div>
-      
+
       {/* Animated Orbs */}
       <div className="absolute -top-[20%] -left-[10%] w-[80%] h-[80%] rounded-full bg-primary/10 dark:bg-primary/15 blur-[120px] mix-blend-multiply dark:mix-blend-screen pointer-events-none animate-pulse" style={{ animationDuration: '8s' }}></div>
       <div className="absolute bottom-[0%] right-[10%] w-[70%] h-[70%] rounded-full bg-emerald-500/5 dark:bg-emerald-500/10 blur-[100px] mix-blend-multiply dark:mix-blend-screen pointer-events-none"></div>
       <div className="absolute top-[30%] right-[20%] w-[50%] h-[50%] rounded-full bg-indigo-500/5 dark:bg-indigo-500/10 blur-[80px] mix-blend-multiply dark:mix-blend-screen pointer-events-none" style={{ animationDuration: '10s' }}></div>
 
       {/* Floating Glass Panels in Background */}
-      <div className="absolute top-[20%] left-[15%] w-32 h-32 bg-white/80 dark:bg-white border border-slate-200 dark:border-white/20 rounded-2xl backdrop-blur-md transform -rotate-12 animate-bounce shadow-xl dark:shadow-2xl flex items-center justify-center p-3" style={{ animationDuration: '12s' }}>
-        <img 
-          src="/assets/logos/شعار المركز الوطني.svg" 
-          alt="المركز الوطني لتنمية القطاع غير الربحي" 
-          className="w-full h-full object-contain"
-        />
-      </div>
       <div className="absolute bottom-[25%] right-[25%] w-24 h-24 bg-primary/10 dark:bg-primary/20 border border-primary/20 dark:border-primary/30 rounded-full backdrop-blur-md transform rotate-45 animate-pulse shadow-primary/10 dark:shadow-primary/20 shadow-xl dark:shadow-2xl" style={{ animationDuration: '7s' }}></div>
 
-      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md relative z-10 px-4 sm:px-0">
-        <div className="bg-white/70 dark:bg-white/10 backdrop-blur-2xl py-8 px-6 sm:px-10 shadow-2xl border border-slate-200 dark:border-white/20 sm:rounded-3xl relative overflow-hidden transition-colors duration-300">
-          
+      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-sm relative z-10 px-4 sm:px-0">
+        <div className="bg-white/70 dark:bg-white/10 backdrop-blur-2xl py-8 px-6 sm:px-8 shadow-2xl border border-slate-200 dark:border-white/20 sm:rounded-3xl relative overflow-hidden transition-colors duration-300">
+
           {/* Inner Glow */}
           <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[200%] h-32 bg-white/50 dark:bg-white/10 blur-3xl pointer-events-none"></div>
 
-          {/* Logos inside the floating box */}
-          <div className="flex items-center justify-center gap-5 mb-8 animate-fade-in-up">
-            <ZadLogo isOpen={true} className="h-14 w-auto drop-shadow-md dark:brightness-0 dark:invert transition-all" />
-            <div className="h-10 w-[1px] bg-slate-300 dark:bg-white/20"></div>
-            <div className="bg-white p-2 rounded-xl shadow-sm dark:shadow-none">
-              <img 
-                src="/assets/logos/شعار المركز الوطني.svg" 
-                alt="المركز الوطني لتنمية القطاع غير الربحي" 
-                className="h-10 w-auto object-contain"
-              />
-            </div>
+          {/* Logo */}
+          <div className="flex justify-center mb-6 animate-fade-in-up">
+            <ZadLogo isOpen={true} className="h-12 w-auto drop-shadow-md dark:brightness-0 dark:invert transition-all" />
           </div>
-          
-          <div className="mb-8 text-center animate-fade-in-up" style={{ animationDuration: '0.6s' }}>
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 dark:bg-primary/20 border border-primary/20 dark:border-primary/30 mb-3 shadow-sm dark:shadow-inner">
-              <span className="relative flex h-2 w-2">
+
+          <div className="mb-6 text-center animate-fade-in-up" style={{ animationDuration: '0.6s' }}>
+            <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-full bg-primary/10 dark:bg-primary/20 border border-primary/20 dark:border-primary/30 mb-3 shadow-sm dark:shadow-inner">
+              <span className="relative flex h-1.5 w-1.5">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
+                <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-primary"></span>
               </span>
-              <span className="text-primary dark:text-white text-[10px] font-bold tracking-widest uppercase">شراكة نحو التميز المؤسسي</span>
+              <span className="text-primary dark:text-white text-[9px] font-bold tracking-widest uppercase">تمكين نحو الأثر المستدام للجمعيات الأهلية</span>
             </div>
-            <h1 className={`${cairo.className} text-2xl font-black text-slate-900 dark:text-white tracking-tight mb-2 transition-colors`}>
-              بوابة الشركاء
+            <h1 className={`${cairo.className} text-xl font-black text-slate-900 dark:text-white tracking-tight mb-1.5 transition-colors`}>
+              بوابة الجمعيات
             </h1>
-            <p className="text-slate-600 dark:text-slate-300 font-medium text-xs leading-relaxed transition-colors">
-              أهلاً بك في مساحتك المخصصة كشريك لزاد التنموية.
+            <p className="text-slate-600 dark:text-slate-300 font-medium text-[11px] leading-relaxed transition-colors">
+              أهلاً بك في مساحتك المخصصة لإدارة الخدمات المقدمة من زاد التنموية.
             </p>
           </div>
 
           {error && (
-            <div className="mb-6 p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-200 flex items-start gap-3 animate-fade-in backdrop-blur-sm">
-              <AlertCircle className="w-5 h-5 shrink-0 mt-0.5 text-red-400" />
-              <span className="text-sm font-bold">{error}</span>
+            <div className="mb-6 p-4 rounded-xl bg-red-100 dark:bg-red-900/50 border border-red-200 dark:border-red-800/50 flex items-start gap-3 animate-fade-in backdrop-blur-sm">
+              <AlertCircle className="w-5 h-5 shrink-0 mt-0.5 text-red-600 dark:text-red-400" />
+              <span className="text-sm font-bold text-red-800 dark:text-red-100">{error}</span>
             </div>
           )}
 
           {success && (
-            <div className="mb-6 p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-200 flex items-start gap-3 animate-fade-in backdrop-blur-sm">
-              <ShieldCheck className="w-5 h-5 shrink-0 mt-0.5 text-emerald-400" />
-              <span className="text-sm font-bold">{success}</span>
+            <div className="mb-6 p-4 rounded-xl bg-emerald-100 dark:bg-emerald-900/50 border border-emerald-200 dark:border-emerald-800/50 flex items-start gap-3 animate-fade-in backdrop-blur-sm">
+              <ShieldCheck className="w-5 h-5 shrink-0 mt-0.5 text-emerald-600 dark:text-emerald-400" />
+              <span className="text-sm font-bold text-emerald-800 dark:text-emerald-100">{success}</span>
             </div>
           )}
 
           {step === 1 ? (
-            <form onSubmit={handleRequestOTP} className="space-y-6 animate-fade-in-up" style={{ animationDuration: '0.8s' }}>
-              <div className="space-y-3">
-                <label className="block text-sm font-bold text-slate-700 dark:text-slate-200 text-center transition-colors">
+            <form onSubmit={handleRequestOTP} className="space-y-5 animate-fade-in-up" style={{ animationDuration: '0.8s' }}>
+              <div className="space-y-2">
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-200 text-center transition-colors">
                   رقم الجوال
                 </label>
-                <div className="flex items-center justify-center gap-2 max-w-[360px] mx-auto" dir="ltr">
-                  <div className="flex items-center justify-center px-4 h-14 bg-white dark:bg-white/10 border border-slate-300 dark:border-white/20 rounded-xl text-slate-800 dark:text-white font-bold text-lg shadow-sm dark:shadow-inner backdrop-blur-sm shrink-0 transition-colors">
+                <div className="flex items-center justify-center gap-2 max-w-[320px] mx-auto" dir="ltr">
+                  <div className="flex items-center justify-center px-3 h-12 bg-white dark:bg-white/10 border border-slate-300 dark:border-white/20 rounded-xl text-slate-800 dark:text-white font-bold text-base shadow-sm dark:shadow-inner backdrop-blur-sm shrink-0 transition-colors">
                     +966
                   </div>
                   <input
@@ -200,7 +250,7 @@ export default function CharityLoginPage() {
                     maxLength={9}
                     value={phone}
                     onChange={(e) => setPhone(e.target.value.replace(/\D/g, ''))}
-                    className="flex-1 h-14 text-left pl-4 pr-4 bg-white dark:bg-white/5 border border-slate-300 dark:border-white/10 focus:border-primary focus:dark:border-primary/50 focus:bg-white focus:dark:bg-white/10 rounded-xl text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary/20 text-xl font-bold shadow-sm dark:shadow-inner backdrop-blur-sm transition-all tracking-[0.2em]"
+                    className="flex-1 h-12 text-left pl-3 pr-3 bg-white dark:bg-white/5 border border-slate-300 dark:border-white/10 focus:border-primary focus:dark:border-primary/50 focus:bg-white focus:dark:bg-white/10 rounded-xl text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary/20 text-lg font-bold shadow-sm dark:shadow-inner backdrop-blur-sm transition-all tracking-[0.2em]"
                     placeholder="5XXXXXXXX"
                   />
                 </div>
@@ -209,10 +259,10 @@ export default function CharityLoginPage() {
               <button
                 type="submit"
                 disabled={isPending}
-                className="w-full relative group overflow-hidden bg-primary text-white rounded-xl py-4 text-sm font-bold shadow-lg shadow-primary/20 hover:shadow-xl hover:shadow-primary/30 transition-all active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed disabled:active:scale-100 mt-8 max-w-[360px] mx-auto block"
+                className="w-full relative group overflow-hidden bg-primary text-white rounded-xl py-3 text-sm font-bold shadow-lg shadow-primary/20 hover:shadow-xl hover:shadow-primary/30 transition-all active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed disabled:active:scale-100 mt-6 max-w-[320px] mx-auto block"
               >
                 <div className="absolute inset-0 w-full h-full bg-white/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                
+
                 <div className="relative z-10 flex items-center justify-center gap-2">
                   {isPending ? (
                     <>
@@ -229,12 +279,12 @@ export default function CharityLoginPage() {
               </button>
             </form>
           ) : (
-            <form onSubmit={handleVerifyOTP} className="space-y-6 animate-fade-in-up" style={{ animationDuration: '0.8s' }}>
-              <div className="space-y-3">
-                <label className="block text-sm font-bold text-slate-700 dark:text-slate-200 text-center transition-colors">
+            <form onSubmit={handleVerifyOTP} className="space-y-5 animate-fade-in-up" style={{ animationDuration: '0.8s' }}>
+              <div className="space-y-2">
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-200 text-center transition-colors">
                   رمز التحقق (OTP)
                 </label>
-                <div className="flex items-center justify-center gap-3" dir="ltr">
+                <div className="flex items-center justify-center gap-2.5" dir="ltr">
                   {otpDigits.map((digit, index) => (
                     <input
                       key={index}
@@ -247,29 +297,46 @@ export default function CharityLoginPage() {
                       value={digit}
                       onChange={(e) => handleOtpChange(index, e.target.value)}
                       onKeyDown={(e) => handleOtpKeyDown(index, e)}
-                      className="w-16 h-16 text-center bg-white dark:bg-white/5 border border-slate-300 dark:border-white/10 focus:border-primary focus:dark:border-primary/50 focus:bg-white focus:dark:bg-white/10 rounded-2xl text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary/20 text-3xl font-bold shadow-sm dark:shadow-inner backdrop-blur-sm transition-all"
+                      className="w-14 h-14 text-center bg-white dark:bg-white/5 border border-slate-300 dark:border-white/10 focus:border-primary focus:dark:border-primary/50 focus:bg-white focus:dark:bg-white/10 rounded-2xl text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary/20 text-2xl font-bold shadow-sm dark:shadow-inner backdrop-blur-sm transition-all"
                     />
                   ))}
                 </div>
-                <p className="text-xs text-slate-500 dark:text-slate-400 text-center mt-3 transition-colors">مؤقتاً للبرمجة، استخدم الرمز 0000</p>
+
+                <div className="mt-5 flex flex-col items-center justify-center gap-2 animate-fade-in">
+                  <div className="text-xl font-bold text-slate-800 dark:text-slate-200 tracking-wider font-mono bg-slate-100 dark:bg-white/5 px-3 py-1.5 rounded-xl shadow-inner border border-slate-200 dark:border-white/10">
+                    {formatTime(validityTime)}
+                  </div>
+                  <div className="text-center mt-2">
+                    <p className="text-[11px] font-bold text-slate-500 dark:text-slate-400 transition-colors mb-1.5">لم يصل الرمز؟</p>
+                    <button
+                      type="button"
+                      onClick={handleResendOTP}
+                      disabled={resendCooldown > 0 || isPending}
+                      className="text-xs font-bold text-primary hover:text-primary/80 dark:text-primary/90 dark:hover:text-primary transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-1.5 mx-auto"
+                    >
+                      أعد إرسال الرمز {resendCooldown > 0 && <span className="font-mono text-[10px] bg-primary/10 dark:bg-primary/20 text-primary dark:text-white px-1.5 py-0.5 rounded-md">{formatTime(resendCooldown)}</span>}
+                    </button>
+                  </div>
+                </div>
+
               </div>
 
-              <div className="flex gap-3 mt-8 max-w-[360px] mx-auto">
+              <div className="flex gap-2.5 mt-6 max-w-[320px] mx-auto">
                 <button
                   type="button"
                   disabled={isPending}
                   onClick={() => { setStep(1); setOtpDigits(Array(4).fill("")); setSuccess(null); setError(null); }}
-                  className="w-1/3 flex items-center justify-center py-4 rounded-xl text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 border border-slate-200 dark:border-white/10 font-bold transition-all disabled:opacity-50"
+                  className="w-1/3 flex items-center justify-center py-3 rounded-xl text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 border border-slate-200 dark:border-white/10 font-bold text-sm transition-all disabled:opacity-50"
                 >
                   رجوع
                 </button>
                 <button
                   type="submit"
                   disabled={isPending}
-                  className="w-2/3 relative group overflow-hidden bg-primary text-white rounded-xl py-4 text-sm font-bold shadow-lg shadow-primary/20 hover:shadow-xl hover:shadow-primary/30 transition-all active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed disabled:active:scale-100"
+                  className="w-2/3 relative group overflow-hidden bg-primary text-white rounded-xl py-3 text-sm font-bold shadow-lg shadow-primary/20 hover:shadow-xl hover:shadow-primary/30 transition-all active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed disabled:active:scale-100"
                 >
                   <div className="absolute inset-0 w-full h-full bg-white/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                  
+
                   <div className="relative z-10 flex items-center justify-center gap-2">
                     {isPending ? (
                       <>

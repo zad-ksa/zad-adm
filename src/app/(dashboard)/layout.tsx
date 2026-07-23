@@ -12,7 +12,7 @@ export default async function DashboardRootLayout({ children }: { children: Reac
     redirect("/");
   }
 
-  // Block CHARITY_USER from accessing the main Zad dashboard completely
+  // Block CHARITY_USER from accessing the main Zad dashboard completely.
   if (session.userType === "CHARITY_USER") {
     redirect("/charity-login");
   }

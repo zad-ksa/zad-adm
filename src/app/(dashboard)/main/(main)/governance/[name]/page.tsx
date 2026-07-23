@@ -107,7 +107,8 @@ async function GovernanceTabContent({
 
       {charity && activeTab === 'manual' && (
         <GovernanceManualViewer 
-          charityId={charity.id} 
+          charityId={charity.id}
+          charityName={decodedName}
           initialSize={(charity.size as CharitySize) || null} 
           annualRevenue={charity.annualRevenue}
           progress={charity.governanceProgress}

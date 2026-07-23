@@ -13,6 +13,7 @@ export async function sendAuthenticaOTP(phone: string) {
   const payload = {
     method: "sms",
     phone: formattedPhone,
+    template_id: 5,
   };
 
   try {

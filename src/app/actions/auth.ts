@@ -5,6 +5,88 @@ import { encrypt } from "@/lib/auth";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { compare } from "bcryptjs";
+import { sendAuthenticaOTP, verifyAuthenticaOTP } from "@/lib/authentica";
+
+export async function requestEmployeeOTP(phone: string) {
+  try {
+    if (!phone) {
+      return { error: "يرجى إدخال رقم الجوال" };
+    }
+
+    const employee = await prisma.employee.findUnique({
+      where: { phone },
+    });
+
+    if (!employee) {
+      return { error: "رقم الجوال غير مسجل أو الحساب غير نشط" };
+    }
+
+    if (!employee.isActive) {
+      return { error: "الحساب غير نشط" };
+    }
+
+    const authenticaResult = await sendAuthenticaOTP(phone);
+    if (authenticaResult.error) {
+      return { error: authenticaResult.error };
+    }
+
+    return { success: true };
+  } catch (error: any) {
+    console.error("Employee OTP Request Error:", error);
+    return { error: "حدث خطأ داخلي أثناء إرسال الرمز" };
+  }
+}
+
+export async function verifyEmployeeOTP(phone: string, otp: string) {
+  try {
+    if (!phone || !otp) {
+      return { error: "يرجى إدخال البيانات المطلوبة" };
+    }
+
+    const authenticaResult = await verifyAuthenticaOTP(phone, otp);
+    if (authenticaResult.error) {
+      return { error: authenticaResult.error };
+    }
+
+    const employee = await prisma.employee.findUnique({
+      where: { phone },
+      include: { charity: true }
+    });
+
+    if (!employee || !employee.isActive) {
+      return { error: "الحساب غير موجود أو غير نشط" };
+    }
+
+    // Create JWT Session
+    const sessionData = {
+      id: employee.id,
+      name: employee.name,
+      phone: employee.phone,
+      role: employee.role,
+      permissions: employee.permissions,
+      navOrder: employee.navOrder || [],
+      avatarUrl: employee.avatarUrl,
+      charityId: employee.charityId,
+    };
+
+    const encryptedSession = await encrypt(sessionData);
+
+    const cookieStore = await cookies();
+    cookieStore.set("session", encryptedSession, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      path: "/",
+      maxAge: 60 * 60 * 24 * 30, // 30 days
+    });
+
+  } catch (error: any) {
+    console.error("Employee OTP Verify Error:", error);
+    return { error: "حدث خطأ داخلي أثناء التحقق من الرمز" };
+  }
+  
+  redirect("/main");
+}
 
 export async function loginWithPassword(phone: string, password: string) {
   let employee;

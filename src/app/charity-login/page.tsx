@@ -103,6 +103,11 @@ export default function CharityLoginPage() {
     if (value && index < 3) {
       otpRefs.current[index + 1]?.focus();
     }
+
+    const enteredOtp = newOtpDigits.join("");
+    if (enteredOtp.length === 4) {
+      submitOTP(enteredOtp);
+    }
   };
 
   const handleOtpKeyDown = (index: number, e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -138,16 +143,14 @@ export default function CharityLoginPage() {
     });
   };
 
-  const handleVerifyOTP = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError(null);
-    setSuccess(null);
-
-    const enteredOtp = otpDigits.join("");
+  const submitOTP = (enteredOtp: string) => {
     if (enteredOtp.length !== 4) {
       setError("يرجى إدخال رمز التحقق كاملاً");
       return;
     }
+
+    setError(null);
+    setSuccess(null);
 
     const processedPhone = "0" + phone;
 
@@ -155,8 +158,15 @@ export default function CharityLoginPage() {
       const result = await verifyCharityOTP(processedPhone, enteredOtp);
       if (result && result.error) {
         setError(result.error);
+        setOtpDigits(Array(4).fill(""));
+        otpRefs.current[0]?.focus();
       }
     });
+  };
+
+  const handleVerifyOTP = async (e: React.FormEvent) => {
+    e.preventDefault();
+    submitOTP(otpDigits.join(""));
   };
 
   if (!isMounted) return null;
@@ -226,16 +236,16 @@ export default function CharityLoginPage() {
           </div>
 
           {error && (
-            <div className="mb-6 p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-200 flex items-start gap-3 animate-fade-in backdrop-blur-sm">
-              <AlertCircle className="w-5 h-5 shrink-0 mt-0.5 text-red-400" />
-              <span className="text-sm font-bold">{error}</span>
+            <div className="mb-6 p-4 rounded-xl bg-red-100 dark:bg-red-900/50 border border-red-200 dark:border-red-800/50 flex items-start gap-3 animate-fade-in backdrop-blur-sm">
+              <AlertCircle className="w-5 h-5 shrink-0 mt-0.5 text-red-600 dark:text-red-400" />
+              <span className="text-sm font-bold text-red-800 dark:text-red-100">{error}</span>
             </div>
           )}
 
           {success && (
-            <div className="mb-6 p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-200 flex items-start gap-3 animate-fade-in backdrop-blur-sm">
-              <ShieldCheck className="w-5 h-5 shrink-0 mt-0.5 text-emerald-400" />
-              <span className="text-sm font-bold">{success}</span>
+            <div className="mb-6 p-4 rounded-xl bg-emerald-100 dark:bg-emerald-900/50 border border-emerald-200 dark:border-emerald-800/50 flex items-start gap-3 animate-fade-in backdrop-blur-sm">
+              <ShieldCheck className="w-5 h-5 shrink-0 mt-0.5 text-emerald-600 dark:text-emerald-400" />
+              <span className="text-sm font-bold text-emerald-800 dark:text-emerald-100">{success}</span>
             </div>
           )}
 

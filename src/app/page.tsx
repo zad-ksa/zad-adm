@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, useTransition, useEffect } from "react";
+import { useState, useTransition, useEffect, useRef } from "react";
 import { useTheme } from "next-themes";
-import { loginWithPassword } from "@/app/actions/auth";
-import { AlertCircle, Lock, Loader2, Phone, ShieldCheck, Sun, Moon, Eye, EyeOff } from "lucide-react";
+import { requestEmployeeOTP, verifyEmployeeOTP } from "@/app/actions/auth";
+import { AlertCircle, Lock, Loader2, Phone, ArrowLeft, ShieldCheck, Sun, Moon } from "lucide-react";
 import ZadLogo from "@/components/ZadLogo";
 import Link from "next/link";
 import { Cairo } from "next/font/google";
@@ -11,43 +11,166 @@ import { Cairo } from "next/font/google";
 const cairo = Cairo({ subsets: ["arabic"], weight: ["700", "900"] });
 
 export default function LoginPage() {
+  const [step, setStep] = useState<1 | 2>(1);
   const [phone, setPhone] = useState("");
-  const [password, setPassword] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
+  const [otpDigits, setOtpDigits] = useState<string[]>(Array(4).fill(""));
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
   const [isMounted, setIsMounted] = useState(false);
   const { theme, setTheme } = useTheme();
 
+  const phoneRefs = useRef<(HTMLInputElement | null)[]>([]);
+  const otpRefs = useRef<(HTMLInputElement | null)[]>([]);
+
+  const [validityTime, setValidityTime] = useState(300);
+  const [resendCooldown, setResendCooldown] = useState(30);
+  const [resendCount, setResendCount] = useState(0);
+
   useEffect(() => {
     document.title = "بوابة أعضاء زاد | الدخول";
     setIsMounted(true);
   }, []);
 
-  const handleLogin = async (e: React.FormEvent) => {
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+    if (step === 2) {
+      interval = setInterval(() => {
+        setValidityTime((prev) => {
+          if (prev <= 1) {
+            setStep(1);
+            setOtpDigits(Array(4).fill(""));
+            setError("انتهت صلاحية الرمز، يرجى طلب رمز جديد");
+            return 300;
+          }
+          return prev - 1;
+        });
+        setResendCooldown((prev) => (prev > 0 ? prev - 1 : 0));
+      }, 1000);
+    }
+    return () => clearInterval(interval);
+  }, [step]);
+
+  const formatTime = (seconds: number) => {
+    const m = Math.floor(seconds / 60);
+    const s = seconds % 60;
+    return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+  };
+
+  const handleResendOTP = async () => {
+    if (resendCooldown > 0 || isPending) return;
+    
+    setError(null);
+    setSuccess(null);
+    setOtpDigits(Array(4).fill(""));
+    
+    const processedPhone = "0" + phone;
+
+    startTransition(async () => {
+      const result = await requestEmployeeOTP(processedPhone);
+      if (result && result.error) {
+        setError(result.error);
+      } else {
+        setSuccess("تم إعادة إرسال رمز التحقق إلى جوالك");
+        setValidityTime(300);
+        setResendCooldown(120);
+        setResendCount(prev => prev + 1);
+        otpRefs.current[0]?.focus();
+      }
+    });
+  };
+
+  const submitOTP = (enteredOtp: string) => {
+    if (enteredOtp.length !== 4) {
+      setError("يرجى إدخال رمز التحقق كاملاً");
+      return;
+    }
+
+    setError(null);
+    setSuccess(null);
+
+    const processedPhone = "0" + phone;
+
+    startTransition(async () => {
+      const result = await verifyEmployeeOTP(processedPhone, enteredOtp);
+      if (result && result.error) {
+        setError(result.error);
+        setOtpDigits(Array(4).fill(""));
+        otpRefs.current[0]?.focus();
+      }
+    });
+  };
+
+  const handleOtpChange = (index: number, value: string) => {
+    if (!/^\d*$/.test(value)) return;
+
+    if (value.length > 1) {
+      const pastedDigits = value.slice(0, 4 - index).split("");
+      const newOtpDigits = [...otpDigits];
+      pastedDigits.forEach((digit, i) => {
+        newOtpDigits[index + i] = digit;
+      });
+      setOtpDigits(newOtpDigits);
+      
+      const nextIndex = Math.min(index + pastedDigits.length, 3);
+      otpRefs.current[nextIndex]?.focus();
+      
+      const enteredOtp = newOtpDigits.join("");
+      if (enteredOtp.length === 4) {
+        submitOTP(enteredOtp);
+      }
+      return;
+    }
+
+    const newOtpDigits = [...otpDigits];
+    newOtpDigits[index] = value;
+    setOtpDigits(newOtpDigits);
+
+    if (value && index < 3) {
+      otpRefs.current[index + 1]?.focus();
+    }
+
+    const enteredOtp = newOtpDigits.join("");
+    if (enteredOtp.length === 4) {
+      submitOTP(enteredOtp);
+    }
+  };
+
+  const handleOtpKeyDown = (index: number, e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Backspace' && !otpDigits[index] && index > 0) {
+      otpRefs.current[index - 1]?.focus();
+    }
+  };
+
+  const handleRequestOTP = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
     setSuccess(null);
 
-    // Basic validation for Saudi phone numbers
-    const cleanedPhone = phone.replace(/\D/g, "");
-    if (!cleanedPhone.startsWith("05") || cleanedPhone.length !== 10) {
-      setError("يرجى إدخال رقم جوال سعودي صحيح يبدأ بـ 05 ويتكون من 10 أرقام");
+    if (phone.length !== 9) {
+      setError("يرجى إدخال رقم الجوال كاملاً (9 أرقام بدون 0)");
       return;
     }
 
-    if (!password) {
-      setError("يرجى إدخال كلمة المرور");
-      return;
-    }
+    const processedPhone = "0" + phone;
 
     startTransition(async () => {
-      const result = await loginWithPassword(phone, password);
+      const result = await requestEmployeeOTP(processedPhone);
       if (result && result.error) {
         setError(result.error);
+      } else {
+        setSuccess("تم إرسال رمز التحقق إلى جوالك");
+        setValidityTime(300);
+        setResendCooldown(30);
+        setResendCount(0);
+        setStep(2);
       }
     });
+  };
+
+  const handleVerifyOTP = async (e: React.FormEvent) => {
+    e.preventDefault();
+    submitOTP(otpDigits.join(""));
   };
 
   if (!isMounted) return null;
@@ -92,99 +215,138 @@ export default function LoginPage() {
           </div>
 
           {error && (
-            <div className="mb-6 p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-200 flex items-start gap-3 animate-fade-in backdrop-blur-sm">
-              <AlertCircle className="w-5 h-5 shrink-0 mt-0.5 text-red-500 dark:text-red-400" />
-              <span className="text-sm font-bold text-red-700 dark:text-red-200">{error}</span>
+            <div className="mb-6 p-4 rounded-xl bg-red-100 dark:bg-red-900/50 border border-red-200 dark:border-red-800/50 flex items-start gap-3 animate-fade-in backdrop-blur-sm">
+              <AlertCircle className="w-5 h-5 shrink-0 mt-0.5 text-red-600 dark:text-red-400" />
+              <span className="text-sm font-bold text-red-800 dark:text-red-100">{error}</span>
             </div>
           )}
 
           {success && (
-            <div className="mb-6 p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-200 flex items-start gap-3 animate-fade-in backdrop-blur-sm">
-              <ShieldCheck className="w-5 h-5 shrink-0 mt-0.5 text-emerald-500 dark:text-emerald-400" />
-              <span className="text-sm font-bold text-emerald-700 dark:text-emerald-200">{success}</span>
+            <div className="mb-6 p-4 rounded-xl bg-emerald-100 dark:bg-emerald-900/50 border border-emerald-200 dark:border-emerald-800/50 flex items-start gap-3 animate-fade-in backdrop-blur-sm">
+              <ShieldCheck className="w-5 h-5 shrink-0 mt-0.5 text-emerald-600 dark:text-emerald-400" />
+              <span className="text-sm font-bold text-emerald-800 dark:text-emerald-100">{success}</span>
             </div>
           )}
 
-          <form onSubmit={handleLogin} className="space-y-6 animate-fade-in-up" style={{ animationDuration: '0.8s' }}>
-            <div className="space-y-3">
-              <label htmlFor="phone" className="block text-sm font-bold text-slate-700 dark:text-slate-200 transition-colors">
-                رقم الجوال
-              </label>
-              <div className="relative group">
-                <div className="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-primary dark:group-focus-within:text-white transition-colors">
-                  <Phone className="w-5 h-5" />
+          {step === 1 ? (
+            <form onSubmit={handleRequestOTP} className="space-y-6 animate-fade-in-up" style={{ animationDuration: '0.8s' }}>
+              <div className="space-y-3">
+                <label className="block text-sm font-bold text-slate-700 dark:text-slate-200 text-center transition-colors">
+                  رقم الجوال
+                </label>
+                <div className="flex items-center justify-center gap-2 max-w-[360px] mx-auto" dir="ltr">
+                  <div className="flex items-center justify-center px-4 h-14 bg-white dark:bg-white/10 border border-slate-300 dark:border-white/20 rounded-xl text-slate-800 dark:text-white font-bold text-lg shadow-sm dark:shadow-inner backdrop-blur-sm shrink-0 transition-colors">
+                    +966
+                  </div>
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    maxLength={9}
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value.replace(/\D/g, ''))}
+                    className="flex-1 h-14 text-left pl-4 pr-4 bg-white dark:bg-white/5 border border-slate-300 dark:border-white/10 focus:border-primary focus:dark:border-primary/50 focus:bg-white focus:dark:bg-white/10 rounded-xl text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary/20 text-xl font-bold shadow-sm dark:shadow-inner backdrop-blur-sm transition-all tracking-[0.2em]"
+                    placeholder="5XXXXXXXX"
+                  />
                 </div>
-                <input
-                  id="phone"
-                  type="tel"
-                  required
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  className="w-full pl-4 pr-12 py-3.5 bg-white dark:bg-white/5 border border-slate-300 dark:border-white/10 focus:border-primary focus:dark:border-primary/50 focus:bg-white focus:dark:bg-white/10 rounded-xl text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/20 text-sm font-bold shadow-sm dark:shadow-inner backdrop-blur-sm transition-all text-left"
-                  placeholder="05XXXXXXXX"
-                  dir="ltr"
-                  disabled={isPending}
-                />
               </div>
-            </div>
 
-            <div className="space-y-3">
-              <label htmlFor="password" className="block text-sm font-bold text-slate-700 dark:text-slate-200 transition-colors">
-                كلمة المرور
-              </label>
-              <div className="relative group">
-                <div className="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-primary dark:group-focus-within:text-white transition-colors">
-                  <Lock className="w-5 h-5" />
+              <button
+                type="submit"
+                disabled={isPending}
+                className="w-full relative group overflow-hidden bg-primary text-white rounded-xl py-4 text-sm font-bold shadow-lg shadow-primary/20 hover:shadow-xl hover:shadow-primary/30 transition-all active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed disabled:active:scale-100 mt-8 max-w-[360px] mx-auto block"
+              >
+                <div className="absolute inset-0 w-full h-full bg-white/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                
+                <div className="relative z-10 flex items-center justify-center gap-2">
+                  {isPending ? (
+                    <>
+                      <Loader2 className="w-5 h-5 animate-spin" />
+                      <span>جاري الإرسال...</span>
+                    </>
+                  ) : (
+                    <>
+                      <span>طلب الرمز</span>
+                      <ArrowLeft className="w-4 h-4 opacity-70 group-hover:-translate-x-1 transition-transform" />
+                    </>
+                  )}
                 </div>
-                <input
-                  id="password"
-                  type={showPassword ? "text" : "password"}
-                  required
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="w-full pl-12 pr-12 py-3.5 bg-white dark:bg-white/5 border border-slate-300 dark:border-white/10 focus:border-primary focus:dark:border-primary/50 focus:bg-white focus:dark:bg-white/10 rounded-xl text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/20 text-sm font-bold shadow-sm dark:shadow-inner backdrop-blur-sm transition-all text-left"
-                  placeholder="••••••••"
-                  dir="ltr"
-                  disabled={isPending}
-                />
+              </button>
+            </form>
+          ) : (
+            <form onSubmit={handleVerifyOTP} className="space-y-6 animate-fade-in-up" style={{ animationDuration: '0.8s' }}>
+              <div className="space-y-3">
+                <label className="block text-sm font-bold text-slate-700 dark:text-slate-200 text-center transition-colors">
+                  رمز التحقق (OTP)
+                </label>
+                <div className="flex items-center justify-center gap-3" dir="ltr">
+                  {otpDigits.map((digit, index) => (
+                    <input
+                      key={index}
+                      ref={(el) => {
+                        otpRefs.current[index] = el;
+                      }}
+                      type="text"
+                      inputMode="numeric"
+                      maxLength={4}
+                      value={digit}
+                      onChange={(e) => handleOtpChange(index, e.target.value)}
+                      onKeyDown={(e) => handleOtpKeyDown(index, e)}
+                      className="w-16 h-16 text-center bg-white dark:bg-white/5 border border-slate-300 dark:border-white/10 focus:border-primary focus:dark:border-primary/50 focus:bg-white focus:dark:bg-white/10 rounded-2xl text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary/20 text-3xl font-bold shadow-sm dark:shadow-inner backdrop-blur-sm transition-all"
+                    />
+                  ))}
+                </div>
+
+                <div className="mt-6 flex flex-col items-center justify-center gap-2 animate-fade-in">
+                  <div className="text-2xl font-bold text-slate-800 dark:text-slate-200 tracking-wider font-mono bg-slate-100 dark:bg-white/5 px-4 py-2 rounded-xl shadow-inner border border-slate-200 dark:border-white/10">
+                    {formatTime(validityTime)}
+                  </div>
+                  <div className="text-center mt-3">
+                    <p className="text-xs font-bold text-slate-500 dark:text-slate-400 transition-colors mb-2">لم يصل الرمز؟</p>
+                    <button
+                      type="button"
+                      onClick={handleResendOTP}
+                      disabled={resendCooldown > 0 || isPending}
+                      className="text-sm font-bold text-primary hover:text-primary/80 dark:text-primary/90 dark:hover:text-primary transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 mx-auto"
+                    >
+                      أعد إرسال الرمز {resendCooldown > 0 && <span className="font-mono text-xs bg-primary/10 dark:bg-primary/20 text-primary dark:text-white px-2 py-0.5 rounded-md">{formatTime(resendCooldown)}</span>}
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex gap-3 mt-8 max-w-[360px] mx-auto">
                 <button
                   type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute inset-y-0 left-0 pl-4 flex items-center text-slate-400 hover:text-slate-600 dark:hover:text-white transition-colors focus:outline-none"
                   disabled={isPending}
-                  tabIndex={-1}
+                  onClick={() => { setStep(1); setOtpDigits(Array(4).fill("")); setSuccess(null); setError(null); }}
+                  className="w-1/3 flex items-center justify-center py-4 rounded-xl text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 border border-slate-200 dark:border-white/10 font-bold transition-all disabled:opacity-50"
                 >
-                  {showPassword ? (
-                    <EyeOff className="w-5 h-5" />
-                  ) : (
-                    <Eye className="w-5 h-5" />
-                  )}
+                  رجوع
+                </button>
+                <button
+                  type="submit"
+                  disabled={isPending}
+                  className="w-2/3 relative group overflow-hidden bg-primary text-white rounded-xl py-4 text-sm font-bold shadow-lg shadow-primary/20 hover:shadow-xl hover:shadow-primary/30 transition-all active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed disabled:active:scale-100"
+                >
+                  <div className="absolute inset-0 w-full h-full bg-white/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                  
+                  <div className="relative z-10 flex items-center justify-center gap-2">
+                    {isPending ? (
+                      <>
+                        <Loader2 className="w-5 h-5 animate-spin" />
+                        <span>جاري التحقق...</span>
+                      </>
+                    ) : (
+                      <>
+                        <span>تأكيد الدخول</span>
+                        <ShieldCheck className="w-4 h-4 opacity-70 group-hover:scale-110 transition-transform" />
+                      </>
+                    )}
+                  </div>
                 </button>
               </div>
-            </div>
-
-            <button
-              type="submit"
-              disabled={isPending}
-              className="w-full relative group overflow-hidden bg-primary text-white rounded-xl py-4 text-sm font-bold shadow-lg shadow-primary/20 hover:shadow-xl hover:shadow-primary/30 transition-all active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed disabled:active:scale-100 mt-8 block"
-            >
-              <div className="absolute inset-0 w-full h-full bg-white/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-              
-              <div className="relative z-10 flex items-center justify-center gap-2">
-                {isPending ? (
-                  <>
-                    <Loader2 className="w-5 h-5 animate-spin" />
-                    <span>جاري التحقق وتسجيل الدخول...</span>
-                  </>
-                ) : (
-                  <>
-                    <span>تسجيل الدخول</span>
-                    <ShieldCheck className="w-4 h-4 opacity-70 group-hover:scale-110 transition-transform" />
-                  </>
-                )}
-              </div>
-            </button>
-          </form>
+            </form>
+          )}
 
           <div className="mt-8 pt-6 border-t border-slate-200 dark:border-white/10 text-center animate-fade-in-up transition-colors" style={{ animationDuration: '1s' }}>
             <p className="text-sm font-bold text-slate-600 dark:text-slate-400 mb-4 transition-colors">

@@ -314,7 +314,7 @@ export default function MeetingsClient({ meetings, charities, employees, session
   if (selectedCategory === null) {
     return (
       <div className="space-y-3">
-        <div className="flex justify-end mb-3">
+        <div className="flex justify-start mb-3">
           {meetings.length > 0 && (
             <button
               onClick={handleDownloadAll}
@@ -374,17 +374,6 @@ export default function MeetingsClient({ meetings, charities, employees, session
             <p className="text-[11px] text-slate-500 dark:text-slate-400">{meetings.length} محضر</p>
           </div>
         </div>
-        {meetings.length > 0 && (
-          <button
-            onClick={handleDownloadAll}
-            disabled={isDownloadingAll}
-            className="flex items-center gap-1.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:text-primary hover:border-primary/30 px-3 py-1.5 rounded-lg text-[11px] font-bold transition-colors disabled:opacity-60 disabled:cursor-not-allowed shrink-0"
-            title="تحميل جميع المحاضر مضغوطة، مقسّمة في مجلدات حسب الخدمة"
-          >
-            {isDownloadingAll ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Download className="w-3.5 h-3.5" />}
-            {isDownloadingAll ? "جاري التجهيز..." : "تحميل الكل"}
-          </button>
-        )}
       </div>
 
       {/* شريط التصفية */}

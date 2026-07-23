@@ -59,11 +59,11 @@ export default function CharityLoginPage() {
 
   const handleResendOTP = async () => {
     if (resendCooldown > 0 || isPending) return;
-    
+
     setError(null);
     setSuccess(null);
     setOtpDigits(Array(4).fill(""));
-    
+
     const processedPhone = "0" + phone;
 
     startTransition(async () => {
@@ -90,7 +90,7 @@ export default function CharityLoginPage() {
         newOtpDigits[index + i] = digit;
       });
       setOtpDigits(newOtpDigits);
-      
+
       const nextIndex = Math.min(index + pastedDigits.length, 3);
       otpRefs.current[nextIndex]?.focus();
       return;
@@ -174,7 +174,7 @@ export default function CharityLoginPage() {
 
       {/* Premium Visual Background */}
       <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-[0.03] dark:opacity-[0.05]"></div>
-      
+
       {/* Animated Orbs */}
       <div className="absolute -top-[20%] -left-[10%] w-[80%] h-[80%] rounded-full bg-primary/10 dark:bg-primary/15 blur-[120px] mix-blend-multiply dark:mix-blend-screen pointer-events-none animate-pulse" style={{ animationDuration: '8s' }}></div>
       <div className="absolute bottom-[0%] right-[10%] w-[70%] h-[70%] rounded-full bg-emerald-500/5 dark:bg-emerald-500/10 blur-[100px] mix-blend-multiply dark:mix-blend-screen pointer-events-none"></div>
@@ -182,9 +182,9 @@ export default function CharityLoginPage() {
 
       {/* Floating Glass Panels in Background */}
       <div className="absolute top-[20%] left-[15%] w-32 h-32 bg-white/80 dark:bg-white border border-slate-200 dark:border-white/20 rounded-2xl backdrop-blur-md transform -rotate-12 animate-bounce shadow-xl dark:shadow-2xl flex items-center justify-center p-3" style={{ animationDuration: '12s' }}>
-        <img 
-          src="/assets/logos/شعار المركز الوطني.svg" 
-          alt="المركز الوطني لتنمية القطاع غير الربحي" 
+        <img
+          src="/assets/logos/شعار المركز الوطني.svg"
+          alt="المركز الوطني لتنمية القطاع غير الربحي"
           className="w-full h-full object-contain"
         />
       </div>
@@ -192,7 +192,7 @@ export default function CharityLoginPage() {
 
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md relative z-10 px-4 sm:px-0">
         <div className="bg-white/70 dark:bg-white/10 backdrop-blur-2xl py-8 px-6 sm:px-10 shadow-2xl border border-slate-200 dark:border-white/20 sm:rounded-3xl relative overflow-hidden transition-colors duration-300">
-          
+
           {/* Inner Glow */}
           <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[200%] h-32 bg-white/50 dark:bg-white/10 blur-3xl pointer-events-none"></div>
 
@@ -201,14 +201,14 @@ export default function CharityLoginPage() {
             <ZadLogo isOpen={true} className="h-14 w-auto drop-shadow-md dark:brightness-0 dark:invert transition-all" />
             <div className="h-10 w-[1px] bg-slate-300 dark:bg-white/20"></div>
             <div className="bg-white p-2 rounded-xl shadow-sm dark:shadow-none">
-              <img 
-                src="/assets/logos/شعار المركز الوطني.svg" 
-                alt="المركز الوطني لتنمية القطاع غير الربحي" 
+              <img
+                src="/assets/logos/شعار المركز الوطني.svg"
+                alt="المركز الوطني لتنمية القطاع غير الربحي"
                 className="h-10 w-auto object-contain"
               />
             </div>
           </div>
-          
+
           <div className="mb-8 text-center animate-fade-in-up" style={{ animationDuration: '0.6s' }}>
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 dark:bg-primary/20 border border-primary/20 dark:border-primary/30 mb-3 shadow-sm dark:shadow-inner">
               <span className="relative flex h-2 w-2">
@@ -267,7 +267,7 @@ export default function CharityLoginPage() {
                 className="w-full relative group overflow-hidden bg-primary text-white rounded-xl py-4 text-sm font-bold shadow-lg shadow-primary/20 hover:shadow-xl hover:shadow-primary/30 transition-all active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed disabled:active:scale-100 mt-8 max-w-[360px] mx-auto block"
               >
                 <div className="absolute inset-0 w-full h-full bg-white/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                
+
                 <div className="relative z-10 flex items-center justify-center gap-2">
                   {isPending ? (
                     <>
@@ -341,7 +341,7 @@ export default function CharityLoginPage() {
                   className="w-2/3 relative group overflow-hidden bg-primary text-white rounded-xl py-4 text-sm font-bold shadow-lg shadow-primary/20 hover:shadow-xl hover:shadow-primary/30 transition-all active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed disabled:active:scale-100"
                 >
                   <div className="absolute inset-0 w-full h-full bg-white/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                  
+
                   <div className="relative z-10 flex items-center justify-center gap-2">
                     {isPending ? (
                       <>

@@ -90,33 +90,31 @@ export default function CharityAccountsClient({ charities, accounts: initialAcco
         </div>
       )}
 
-      <div className="flex flex-col sm:flex-row justify-between items-center gap-4 bg-white dark:bg-slate-800 p-6 rounded-3xl border border-slate-100 dark:border-slate-700/50 shadow-sm">
-        <div className="flex items-start gap-4">
-          <Link href="/main/admin" className="p-2 bg-slate-50 dark:bg-slate-900 text-slate-500 hover:text-primary rounded-xl transition-colors mt-0.5">
-            <ArrowRight className="w-5 h-5" />
-          </Link>
+      {/* Header section */}
+      <div className="px-6 pt-8 pb-6 border-b border-slate-200 dark:border-white/5 bg-white/80 dark:bg-black/20 backdrop-blur-3xl mb-6 -mx-4 sm:-mx-6 lg:-mx-8">
+        <div className="max-w-7xl mx-auto flex flex-col md:flex-row md:items-end justify-between gap-4 px-4 sm:px-6 lg:px-8">
           <div>
-            <h2 className="text-xl font-black text-slate-800 dark:text-slate-100 flex items-center gap-2">
-              <ShieldAlert className="w-6 h-6 text-primary" />
+            <Link href="/main/admin" className="flex items-center gap-2 text-primary hover:text-primary/80 font-bold text-xs mb-4 transition-colors w-fit bg-primary/5 hover:bg-primary/10 px-3 py-1.5 rounded-lg">
+              <ArrowRight className="w-3.5 h-3.5" />
+              العودة للوحة التحكم
+            </Link>
+            <h1 className="text-[clamp(1.25rem,2vw,1.75rem)] font-black text-primary tracking-tight mb-1 flex items-center gap-2">
+              <ShieldAlert className="w-6 h-6 opacity-90" />
               حسابات الجمعيات
-            </h2>
-            <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">إدارة حسابات مستخدمي الجمعيات والصلاحيات.</p>
+            </h1>
+            <p className="text-slate-500 dark:text-slate-400 text-[clamp(0.75rem,1vw,0.875rem)] tracking-tight max-w-2xl leading-relaxed">
+              إدارة حسابات مستخدمي الجمعيات المتعاقدة والصلاحيات الخاصة بهم في النظام.
+            </p>
           </div>
         </div>
-        <button 
-          onClick={() => setShowModal(true)} 
-          className="bg-primary text-white px-5 py-2.5 rounded-xl font-bold flex items-center gap-2 hover:bg-primary/90 transition-all shadow-sm whitespace-nowrap"
-        >
-          <Plus className="w-5 h-5" /> إضافة حساب جديد
-        </button>
       </div>
 
       {showModal && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-slate-950/60 backdrop-blur-sm" onClick={() => setShowModal(false)} />
-          <div className="bg-white dark:bg-slate-800 rounded-3xl border border-slate-100 dark:border-slate-700/50 shadow-2xl w-full max-w-lg overflow-hidden relative z-10 flex flex-col max-h-[90vh]">
-            <div className="px-6 py-5 border-b border-slate-100 dark:border-slate-700/50 flex justify-between items-center bg-slate-50/50 dark:bg-slate-800/50">
-              <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100">إضافة حساب جمعية</h3>
+          <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-white/10 shadow-2xl w-full max-w-lg overflow-hidden relative z-10 flex flex-col max-h-[90vh]">
+            <div className="px-6 py-5 border-b border-slate-200 dark:border-white/5 flex justify-between items-center bg-white dark:bg-slate-900">
+              <h3 className="text-lg font-bold text-primary">إضافة حساب جمعية</h3>
             </div>
             
             <form onSubmit={handleAddAccount} className="p-6 overflow-y-auto space-y-5">
@@ -196,40 +194,39 @@ export default function CharityAccountsClient({ charities, accounts: initialAcco
         </div>
       )}
 
-      <div className="bg-white dark:bg-slate-800 rounded-3xl border border-slate-100 dark:border-slate-700/50 shadow-sm overflow-hidden">
+      <div className="bg-white dark:bg-black rounded-3xl border border-slate-200 dark:border-white/10 shadow-sm overflow-hidden mb-20">
         <div className="overflow-x-auto">
           <table className="w-full text-right whitespace-nowrap">
-            <thead className="bg-slate-50 dark:bg-slate-800/50 border-b border-slate-100 dark:border-slate-700/50 text-slate-500 dark:text-slate-400 text-xs font-black uppercase">
+            <thead className="bg-slate-50 dark:bg-white/5 border-b border-slate-200 dark:border-white/5 text-slate-500 dark:text-slate-400 text-xs font-bold uppercase tracking-wider">
               <tr>
                 <th className="px-6 py-4">الجمعيات</th>
                 <th className="px-6 py-4">الممثل</th>
                 <th className="px-6 py-4">المسمى الوظيفي</th>
                 <th className="px-6 py-4 text-left" dir="ltr">رقم الجوال</th>
                 <th className="px-6 py-4">تاريخ الإنشاء</th>
-                <th className="px-6 py-4">إجراءات</th>
+                <th className="px-6 py-4 w-16"></th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100 dark:divide-slate-700/50">
+            <tbody className="divide-y divide-slate-200 dark:divide-white/5">
               {accounts.map(account => (
-                <tr key={account.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition-colors">
-                  <td className="px-6 py-4 font-bold text-slate-800 dark:text-slate-100 whitespace-normal min-w-[200px]">
+                <tr key={account.id} className="hover:bg-slate-50 dark:hover:bg-white/5 transition-colors group">
+                  <td className="px-6 py-4 font-bold text-primary whitespace-normal min-w-[200px]">
                     <div className="flex items-start gap-2">
-                      <Building2 className="w-4 h-4 text-slate-400 mt-1 shrink-0" />
+                      <Building2 className="w-4 h-4 text-primary/60 mt-1 shrink-0" />
                       <span>{account.charityNames?.join("، ") || "غير محدد"}</span>
                     </div>
                   </td>
-                  <td className="px-6 py-4 text-sm font-bold text-slate-600 dark:text-slate-300">{account.name}</td>
-                  <td className="px-6 py-4 text-sm font-bold text-slate-500 dark:text-slate-400">
+                  <td className="px-6 py-4 text-sm font-bold text-slate-800 dark:text-slate-200">{account.name}</td>
+                  <td className="px-6 py-4 text-sm font-bold text-slate-600 dark:text-slate-400">
                     {titles.find(t => t.value === account.title)?.label || account.title}
                   </td>
-                  <td className="px-6 py-4 text-sm font-bold text-slate-500 dark:text-slate-400 text-left" dir="ltr">{account.phone}</td>
-
-                  <td className="px-6 py-4 text-xs font-bold text-slate-400">{new Date(account.createdAt).toLocaleDateString("en-GB")}</td>
+                  <td className="px-6 py-4 text-sm font-bold text-slate-600 dark:text-slate-400 text-left" dir="ltr">{account.phone}</td>
+                  <td className="px-6 py-4 text-xs font-bold text-slate-500 dark:text-slate-500">{new Date(account.createdAt).toLocaleDateString("en-GB")}</td>
                   <td className="px-6 py-4">
                     <button 
                       onClick={() => handleDelete(account.id)}
                       disabled={isPending}
-                      className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
+                      className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-xl transition-all opacity-0 group-hover:opacity-100 focus:opacity-100"
                       title="حذف الحساب"
                     >
                       <Trash2 className="w-4 h-4" />
@@ -239,13 +236,25 @@ export default function CharityAccountsClient({ charities, accounts: initialAcco
               ))}
               {accounts.length === 0 && (
                 <tr>
-                  <td colSpan={6} className="px-6 py-12 text-center text-slate-400 font-bold">لا توجد حسابات جمعيات مسجلة</td>
+                  <td colSpan={6} className="px-6 py-16 text-center text-slate-500 dark:text-slate-400 font-medium">لا توجد حسابات جمعيات مسجلة</td>
                 </tr>
               )}
             </tbody>
           </table>
         </div>
       </div>
+
+      {/* Floating Action Button for Adding Account */}
+      <button
+        onClick={() => setShowModal(true)}
+        className="fixed bottom-8 left-8 z-50 bg-primary text-white p-4 rounded-full shadow-xl shadow-primary/30 hover:shadow-primary/50 hover:-translate-y-1 hover:scale-105 transition-all duration-300 flex items-center justify-center group"
+        title="إضافة حساب جمعية جديد"
+      >
+        <Plus className="w-6 h-6" />
+        <span className="max-w-0 overflow-hidden whitespace-nowrap font-bold text-sm group-hover:max-w-xs group-hover:mr-3 transition-all duration-300 ease-out">
+          إضافة حساب جديد
+        </span>
+      </button>
     </div>
   );
 }

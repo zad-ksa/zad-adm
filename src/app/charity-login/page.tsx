@@ -23,10 +23,62 @@ export default function CharityLoginPage() {
   const phoneRefs = useRef<(HTMLInputElement | null)[]>([]);
   const otpRefs = useRef<(HTMLInputElement | null)[]>([]);
 
+  const [validityTime, setValidityTime] = useState(300);
+  const [resendCooldown, setResendCooldown] = useState(30);
+  const [resendCount, setResendCount] = useState(0);
+
   useEffect(() => {
     document.title = "بوابة شركاء زاد | الدخول";
     setIsMounted(true);
   }, []);
+
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+    if (step === 2) {
+      interval = setInterval(() => {
+        setValidityTime((prev) => {
+          if (prev <= 1) {
+            setStep(1);
+            setOtpDigits(Array(4).fill(""));
+            setError("انتهت صلاحية الرمز، يرجى طلب رمز جديد");
+            return 300;
+          }
+          return prev - 1;
+        });
+        setResendCooldown((prev) => (prev > 0 ? prev - 1 : 0));
+      }, 1000);
+    }
+    return () => clearInterval(interval);
+  }, [step]);
+
+  const formatTime = (seconds: number) => {
+    const m = Math.floor(seconds / 60);
+    const s = seconds % 60;
+    return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+  };
+
+  const handleResendOTP = async () => {
+    if (resendCooldown > 0 || isPending) return;
+    
+    setError(null);
+    setSuccess(null);
+    setOtpDigits(Array(4).fill(""));
+    
+    const processedPhone = "0" + phone;
+
+    startTransition(async () => {
+      const result = await requestCharityOTP(processedPhone);
+      if (result && result.error) {
+        setError(result.error);
+      } else {
+        setSuccess("تم إعادة إرسال رمز التحقق إلى جوالك");
+        setValidityTime(300);
+        setResendCooldown(120);
+        setResendCount(prev => prev + 1);
+        otpRefs.current[0]?.focus();
+      }
+    });
+  };
 
   const handleOtpChange = (index: number, value: string) => {
     if (!/^\d*$/.test(value)) return;
@@ -78,6 +130,9 @@ export default function CharityLoginPage() {
         setError(result.error);
       } else {
         setSuccess("تم إرسال رمز التحقق إلى جوالك");
+        setValidityTime(300);
+        setResendCooldown(30);
+        setResendCount(0);
         setStep(2);
       }
     });
@@ -251,7 +306,24 @@ export default function CharityLoginPage() {
                     />
                   ))}
                 </div>
-                <p className="text-xs text-slate-500 dark:text-slate-400 text-center mt-3 transition-colors">مؤقتاً للبرمجة، استخدم الرمز 0000</p>
+
+                <div className="mt-6 flex flex-col items-center justify-center gap-2 animate-fade-in">
+                  <div className="text-2xl font-bold text-slate-800 dark:text-slate-200 tracking-wider font-mono bg-slate-100 dark:bg-white/5 px-4 py-2 rounded-xl shadow-inner border border-slate-200 dark:border-white/10">
+                    {formatTime(validityTime)}
+                  </div>
+                  <div className="text-center mt-3">
+                    <p className="text-xs font-bold text-slate-500 dark:text-slate-400 transition-colors mb-2">لم يصل الرمز؟</p>
+                    <button
+                      type="button"
+                      onClick={handleResendOTP}
+                      disabled={resendCooldown > 0 || isPending}
+                      className="text-sm font-bold text-primary hover:text-primary/80 dark:text-primary/90 dark:hover:text-primary transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 mx-auto"
+                    >
+                      أعد إرسال الرمز {resendCooldown > 0 && <span className="font-mono text-xs bg-primary/10 dark:bg-primary/20 text-primary dark:text-white px-2 py-0.5 rounded-md">{formatTime(resendCooldown)}</span>}
+                    </button>
+                  </div>
+                </div>
+
               </div>
 
               <div className="flex gap-3 mt-8 max-w-[360px] mx-auto">

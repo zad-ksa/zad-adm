@@ -4,6 +4,7 @@ import { prisma } from "@/lib/db";
 import { encrypt } from "@/lib/auth";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
+import { sendAuthenticaOTP, verifyAuthenticaOTP } from "@/lib/authentica";
 
 export async function requestCharityOTP(phone: string) {
   try {
@@ -23,8 +24,11 @@ export async function requestCharityOTP(phone: string) {
       return { error: "الحساب غير نشط، يرجى مراجعة إدارة زاد" };
     }
 
-    // In the future, integrate with Taqnyat or Unifonic here to send OTP via SMS.
-    // For now, OTP is hardcoded to "0000".
+    // Call Authentica to send OTP
+    const authenticaResult = await sendAuthenticaOTP(phone);
+    if (authenticaResult.error) {
+      return { error: authenticaResult.error };
+    }
 
     return { success: true };
   } catch (error: any) {
@@ -40,8 +44,12 @@ export async function verifyCharityOTP(phone: string, otp: string) {
       return { error: "يرجى إدخال البيانات المطلوبة" };
     }
 
-    if (otp !== "0000") {
-      return { error: "رمز التحقق غير صحيح" };
+    // In development or if specifically requested by user, we can leave 0000 backdoor, 
+    // but typically we should remove it for real integration. 
+    // For safety, let's just use Authentica directly.
+    const authenticaResult = await verifyAuthenticaOTP(phone, otp);
+    if (authenticaResult.error) {
+      return { error: authenticaResult.error };
     }
 
     const user = await prisma.charityUser.findUnique({

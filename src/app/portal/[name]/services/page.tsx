@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import { prisma } from "@/lib/db";
 import { Briefcase } from "lucide-react";
 import ServicesTimelineViewer from "@/components/ServicesTimelineViewer";
-import ServicesPrintButton from "@/components/ServicesPrintButton";
 import ServicesGuideButton from "@/components/ServicesGuideButton";
 import { getTimelineConfigs } from "@/app/actions/settings";
 
@@ -77,15 +76,7 @@ export default async function ServicesPage({ params }: { params: Promise<{ name:
             </div>
           </div>
           <div className="shrink-0 flex items-center gap-3">
-            <ServicesPrintButton
-              charityName={decodedName}
-              sections={[
-                ...(strategicStages.length > 0 ? [{ title: strategyName, stages: strategicStages }] : []),
-                ...(governanceStages.length > 0 ? [{ title: governanceName, stages: governanceStages }] : []),
-                ...(financeStages.length > 0 ? [{ title: financeName, stages: financeStages }] : []),
-                ...customServices.map(svc => ({ title: svc.name, stages: svc.stages })),
-              ]}
-            />
+
             <ServicesGuideButton
               sections={[
                 ...(strategicStages.length > 0 ? [{ title: strategyName, stages: strategicStages }] : []),

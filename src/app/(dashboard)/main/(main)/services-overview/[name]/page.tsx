@@ -8,7 +8,6 @@ import FinanceStagesManager from "@/app/(dashboard)/main/(main)/finance/[name]/F
 import GenericStagesManager from "@/components/GenericStagesManager";
 import CharityClientTimeline from "@/components/CharityClientTimeline";
 import ServicesManagerClient from "@/components/ServicesManagerClient";
-import ServicesPrintButton from "@/components/ServicesPrintButton";
 import ServicesGuideButton from "@/components/ServicesGuideButton";
 import { ServiceAccordionProvider } from "@/components/ServiceAccordionContext";
 import { getTimelineConfigs } from "@/app/actions/settings";
@@ -90,15 +89,7 @@ export default async function ServicesPage({ params }: { params: Promise<{ name:
             </p>
           </div>
           <div className="shrink-0 flex items-center gap-2">
-            <ServicesPrintButton
-              charityName={decodedName}
-              sections={[
-                ...(strategicStages.length > 0 ? [{ title: strategyName, stages: strategicStages }] : []),
-                ...(governanceStages.length > 0 ? [{ title: governanceName, stages: governanceStages }] : []),
-                ...(financeStages.length > 0 ? [{ title: financeName, stages: financeStages }] : []),
-                ...customServices.map(svc => ({ title: svc.name, stages: svc.stages })),
-              ]}
-            />
+
             <ServicesGuideButton
               sections={[
                 ...(strategicStages.length > 0 ? [{ title: strategyName, stages: strategicStages }] : []),

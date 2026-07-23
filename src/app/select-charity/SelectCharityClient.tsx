@@ -66,15 +66,15 @@ export default function SelectCharityClient({
       <div className="absolute bottom-[0%] right-[10%] w-[70%] h-[70%] rounded-full bg-emerald-500/5 dark:bg-emerald-500/10 blur-[100px] mix-blend-multiply dark:mix-blend-screen pointer-events-none"></div>
       <div className="absolute top-[30%] right-[20%] w-[50%] h-[50%] rounded-full bg-indigo-500/5 dark:bg-indigo-500/10 blur-[80px] mix-blend-multiply dark:mix-blend-screen pointer-events-none" style={{ animationDuration: '10s' }}></div>
 
-      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md relative z-10 px-4 sm:px-0">
-        <div className="bg-white/70 dark:bg-white/10 backdrop-blur-2xl py-8 px-6 sm:px-10 shadow-2xl border border-slate-200 dark:border-white/20 sm:rounded-3xl relative overflow-hidden transition-colors duration-300">
+      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-sm relative z-10 px-4 sm:px-0">
+        <div className="bg-white/70 dark:bg-white/10 backdrop-blur-2xl py-8 px-6 sm:px-8 shadow-2xl border border-slate-200 dark:border-white/20 sm:rounded-3xl relative overflow-hidden transition-colors duration-300">
           
           {/* Inner Glow */}
           <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[200%] h-32 bg-white/50 dark:bg-white/10 blur-3xl pointer-events-none"></div>
 
           {/* Logo */}
-          <div className="flex justify-center mb-8 animate-fade-in-up">
-            <ZadLogo isOpen={true} className="h-16 w-auto drop-shadow-md dark:brightness-0 dark:invert transition-all" />
+          <div className="flex justify-center mb-6 animate-fade-in-up">
+            <ZadLogo isOpen={true} className="h-12 w-auto drop-shadow-md dark:brightness-0 dark:invert transition-all" />
           </div>
           
           <div className="text-center mb-8 animate-fade-in-up" style={{ animationDuration: '0.6s' }}>

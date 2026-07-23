@@ -42,8 +42,6 @@ export default function GrantsClient({
   const [grantApprovalModal, setGrantApprovalModal] = useState<{ isOpen: boolean; grantId: string | null }>({ isOpen: false, grantId: null });
   const [approvalForm, setApprovalForm] = useState({
     amount: "",
-    installmentsCount: "",
-    installmentsNotes: "",
     beneficiariesCount: "",
     collectedAmount: ""
   });
@@ -97,8 +95,6 @@ export default function GrantsClient({
       const grant = grantApplications.find(g => g.id === id);
       setApprovalForm({
         amount: grant?.requestedAmount.toString() || "",
-        installmentsCount: grant?.installmentsCount?.toString() || "",
-        installmentsNotes: grant?.installmentsNotes || "",
         beneficiariesCount: grant?.beneficiariesCount?.toString() || "",
         collectedAmount: grant?.collectedAmount?.toString() || ""
       });
@@ -128,7 +124,6 @@ export default function GrantsClient({
     }
 
     const amountNum = Number(approvalForm.amount);
-    const instCount = approvalForm.installmentsCount ? Number(approvalForm.installmentsCount) : undefined;
     const benCount = approvalForm.beneficiariesCount ? Number(approvalForm.beneficiariesCount) : undefined;
     const collected = approvalForm.collectedAmount ? Number(approvalForm.collectedAmount) : undefined;
 
@@ -143,8 +138,8 @@ export default function GrantsClient({
         charityId,
         "APPROVED",
         amountNum,
-        instCount,
-        approvalForm.installmentsNotes,
+        null,
+        null,
         benCount,
         collected
       );
@@ -153,8 +148,8 @@ export default function GrantsClient({
         setGrantApplications((prev) => prev.map(g => g.id === grantApprovalModal.grantId ? {
           ...g,
           status: "APPROVED",
-          installmentsCount: instCount,
-          installmentsNotes: approvalForm.installmentsNotes,
+          installmentsCount: null,
+          installmentsNotes: null,
           beneficiariesCount: benCount,
           collectedAmount: collected
         } : g));
@@ -373,20 +368,7 @@ export default function GrantsClient({
                     <p className="text-sm font-black text-slate-700 dark:text-slate-200">{grant.beneficiariesCount.toLocaleString('en-US')}</p>
                   </div>
                 )}
-                {grant.installmentsCount != null && (
-                  <div>
-                    <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 mb-0.5">عدد الأقساط</p>
-                    <p className="text-sm font-black text-slate-700 dark:text-slate-200">{grant.installmentsCount}</p>
-                  </div>
-                )}
               </div>
-
-              {grant.installmentsNotes && (
-                <div className="bg-blue-50/50 dark:bg-blue-500/10 p-3 rounded-xl border border-blue-100 dark:border-blue-500/20">
-                  <p className="text-[10px] font-bold text-blue-400 dark:text-blue-300 mb-1">ملاحظات الأقساط:</p>
-                  <p className="text-xs font-bold text-blue-900 dark:text-blue-200 leading-relaxed">{grant.installmentsNotes}</p>
-                </div>
-              )}
 
               {grant.closureDate && (
                 <div className="bg-slate-100 dark:bg-slate-700 p-3 rounded-xl border border-slate-200 dark:border-slate-600 flex justify-between items-center">
@@ -495,28 +477,6 @@ export default function GrantsClient({
                       placeholder="اختياري"
                     />
                   </div>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-black text-slate-700 dark:text-slate-200 mb-1">عدد الأقساط</label>
-                  <input
-                    type="number" min="1"
-                    value={approvalForm.installmentsCount}
-                    onChange={(e) => setApprovalForm({...approvalForm, installmentsCount: e.target.value})}
-                    className="w-full bg-white dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-emerald-500 font-bold dark:text-slate-100"
-                    placeholder="مثال: 4"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-black text-slate-700 dark:text-slate-200 mb-1">ملاحظات الأقساط</label>
-                  <textarea
-                    rows={2}
-                    value={approvalForm.installmentsNotes}
-                    onChange={(e) => setApprovalForm({...approvalForm, installmentsNotes: e.target.value})}
-                    className="w-full bg-white dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-emerald-500 font-bold resize-none custom-scrollbar dark:text-slate-100"
-                    placeholder="أدخل أي ملاحظات حول جدولة الأقساط..."
-                  />
                 </div>
               </div>
             </div>

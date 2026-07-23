@@ -429,8 +429,8 @@ export async function updateGrantApplicationStatus(
   charityId: string, 
   status: string, 
   approvedAmount?: number,
-  installmentsCount?: number,
-  installmentsNotes?: string,
+  installmentsCount?: number | null,
+  installmentsNotes?: string | null,
   beneficiariesCount?: number,
   collectedAmount?: number,
   closureDate?: Date
@@ -462,12 +462,6 @@ export async function updateGrantApplicationStatus(
     );
 
     if (status === "APPROVED" && grant.status !== "APPROVED" && approvedAmount && approvedAmount > 0) {
-      queries.push(
-        prisma.charity.update({
-          where: { id: charityId },
-          data: { grants: charity.grants + approvedAmount }
-        })
-      );
       queries.push(
         prisma.financialLog.create({
           data: {

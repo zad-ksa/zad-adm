@@ -13,7 +13,8 @@ const getCachedDashboardData = async (assignedIds: string[] | null) => {
     allSurveys,
     allHexSurveys,
     allPrograms,
-    dbNewsItems
+    dbNewsItems,
+    allApprovedGrants
   ] = await Promise.all([
     prisma.charity.findMany({
       where: charityFilter,
@@ -23,7 +24,14 @@ const getCachedDashboardData = async (assignedIds: string[] | null) => {
     prisma.surveyResponse.findMany({ select: { id: true, charityName: true } }),
     prisma.hexagonalResponse.findMany({ select: { id: true, charityName: true } }),
     prisma.program.findMany({ select: { id: true, charityId: true, beneficiaries: true } }),
-    prisma.news.findMany({ take: 5, orderBy: { createdAt: "desc" } })
+    prisma.news.findMany({ take: 5, orderBy: { createdAt: "desc" } }),
+    prisma.grantApplication.findMany({
+      where: {
+        charityId: charityFilter ? { in: assignedIds as string[] } : undefined,
+        status: { in: ["APPROVED", "CLOSED"] }
+      },
+      select: { charityId: true, requestedAmount: true, beneficiariesCount: true }
+    })
   ]);
 
   // In-memory aggregations (much faster than unindexed DB groupBy)
@@ -69,17 +77,33 @@ const getCachedDashboardData = async (assignedIds: string[] | null) => {
   progMap.forEach((data, charityId) => {
     programsGrouped.push({
       charityId,
-      _count: { id: data.count },
-      _sum: { beneficiaries: data.ben }
+      _count: { id: data.count }
     });
   });
 
   const programsAgg = {
-    _count: { id: totalProgramsCount },
-    _sum: { beneficiaries: totalBeneficiariesSum }
+    _count: { id: totalProgramsCount }
   };
 
-  return { charities, surveyResponsesGrouped, hexagonalResponsesGrouped, programsGrouped, programsAgg, dbNewsItems };
+  // Group dynamic grants & beneficiaries
+  const grantsMap = new Map<string, { totalGrants: number, totalBeneficiaries: number }>();
+  let globalGrants = 0;
+  let globalBeneficiaries = 0;
+
+  allApprovedGrants.forEach(g => {
+    if (!grantsMap.has(g.charityId)) {
+      grantsMap.set(g.charityId, { totalGrants: 0, totalBeneficiaries: 0 });
+    }
+    const data = grantsMap.get(g.charityId)!;
+    
+    data.totalGrants += g.requestedAmount || 0;
+    data.totalBeneficiaries += g.beneficiariesCount || 0;
+    
+    globalGrants += g.requestedAmount || 0;
+    globalBeneficiaries += g.beneficiariesCount || 0;
+  });
+
+  return { charities, surveyResponsesGrouped, hexagonalResponsesGrouped, programsGrouped, programsAgg, dbNewsItems, grantsMap, globalGrants, globalBeneficiaries };
 };
 
 export const dynamic = "force-dynamic";
@@ -99,7 +123,10 @@ export default async function CharitiesDashboard() {
     hexagonalResponsesGrouped,
     programsGrouped,
     programsAgg,
-    dbNewsItems
+    dbNewsItems,
+    grantsMap,
+    globalGrants,
+    globalBeneficiaries
   } = await getCachedDashboardData(assignedIds);
 
   // Calculate surveys per charity FAST using grouped data
@@ -129,31 +156,28 @@ export default async function CharitiesDashboard() {
 
   // Calculate DB programs and beneficiaries per charity FAST using grouped data
   const dbCharityProgramsCount = new Map<string, number>();
-  const dbCharityBeneficiariesSum = new Map<string, number>();
 
   programsGrouped.forEach((prog) => {
     if (prog.charityId) {
       dbCharityProgramsCount.set(prog.charityId, prog._count.id);
-      dbCharityBeneficiariesSum.set(prog.charityId, prog._sum.beneficiaries || 0);
     }
   });
 
   const dbTotalPrograms = programsAgg._count.id;
-  const dbTotalBeneficiaries = programsAgg._sum.beneficiaries || 0;
 
   // Display stats based on real data only (no fallbacks)
-  const displayBeneficiaries = dbTotalBeneficiaries;
+  const displayBeneficiaries = globalBeneficiaries;
   const displayPrograms = dbTotalPrograms;
-  const displayGrants = charities.reduce((sum, c) => sum + (c.grants || 0), 0);
+  const displayGrants = globalGrants;
 
   // Map charities and calculate metrics
   const charitiesData = charities.map((charity) => {
     const dbProgsCount = dbCharityProgramsCount.get(charity.id) || 0;
-    const dbBenSum = dbCharityBeneficiariesSum.get(charity.id) || 0;
+    const grantData = grantsMap.get(charity.id) || { totalGrants: 0, totalBeneficiaries: 0 };
 
-    const displayGrants = charity.grants || 0;
+    const displayGrants = grantData.totalGrants;
     const displayPrograms = dbProgsCount;
-    const displayBeneficiaries = dbBenSum;
+    const displayBeneficiaries = grantData.totalBeneficiaries;
 
     return {
       ...charity,

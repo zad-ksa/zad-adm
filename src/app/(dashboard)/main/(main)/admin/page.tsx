@@ -60,6 +60,22 @@ export default async function AdminDashboardPage() {
           </Link>
         )}
 
+        {/* Charities Management */}
+        {can("manage_charities") && (
+          <Link href="/main/admin/manage-charities" className="group bg-slate-950 p-6 rounded-3xl shadow-sm border border-slate-800 hover:shadow-[0_0_20px_rgba(255,255,255,0.05)] hover:border-slate-700 transition-all overflow-hidden relative">
+            <div className="absolute -left-6 -bottom-6 w-24 h-24 bg-white/5 rounded-full group-hover:scale-150 transition-transform duration-500 pointer-events-none" />
+            <div className="w-12 h-12 bg-white/5 text-slate-100 rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform shadow-inner border border-white/10">
+              <Building2 className="w-6 h-6" />
+            </div>
+            <h3 className="text-lg font-bold text-white mb-2 tracking-tight">إدارة الجمعيات المتعاقدة</h3>
+            <p className="text-sm text-slate-400 mb-6 line-clamp-2 leading-relaxed">إضافة جمعيات جديدة، وتعديل أو حذف بيانات الجمعيات الحالية.</p>
+            <div className="flex items-center gap-2 text-white font-bold text-sm opacity-80 group-hover:opacity-100 transition-opacity">
+              <span>الدخول للإدارة</span>
+              <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
+            </div>
+          </Link>
+        )}
+
         {/* Employees Management */}
         {can("manage_employees") && (
           <Link href="/main/employees" className="group bg-white dark:bg-slate-800 p-6 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700/50 hover:shadow-xl hover:shadow-primary/5 hover:border-primary/20 transition-all overflow-hidden relative">

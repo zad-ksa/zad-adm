@@ -84,7 +84,89 @@ export async function addCharity(data: { name: string; establishmentDate?: strin
     return { success: true, data: charity };
   } catch (error: any) {
     console.error("Error adding charity:", error);
-    return { success: false, message: error.message || "ط­ط¯ط« ط®ط·ط£ ط£ط«ظ†ط§ط، ط§ظ„ط¥ط¶ط§ظپط©" };
+    return { success: false, message: error.message || "حدث خطأ أثناء الإضافة" };
+  }
+}
+
+export async function updateCharity(id: string, data: { name?: string; establishmentDate?: string; licenseNumber?: string; domain?: string; logoUrl?: string | null }) {
+  try {
+    const session = await getSession();
+    if (!session || !hasPermission(session.role, session.permissions, "manage_charities")) {
+      return { success: false, message: "غير مصرح" };
+    }
+
+    const currentCharity = await prisma.charity.findUnique({ where: { id } });
+    if (!currentCharity) return { success: false, message: "الجمعية غير موجودة" };
+    
+    let trimmedName = data.name ? data.name.trim() : currentCharity.name;
+
+    if (data.name && trimmedName.toLowerCase() !== currentCharity.name.toLowerCase()) {
+      const existing = await prisma.charity.findFirst({
+        where: { name: trimmedName, id: { not: id } }
+      });
+      if (existing) {
+        return { success: false, message: "هذا الاسم مستخدم لجمعية أخرى" };
+      }
+    }
+
+    const charity = await prisma.charity.update({
+      where: { id },
+      data: {
+        ...(data.name && { name: trimmedName }),
+        ...(data.establishmentDate !== undefined && { establishmentDate: data.establishmentDate }),
+        ...(data.licenseNumber !== undefined && { licenseNumber: data.licenseNumber }),
+        ...(data.domain !== undefined && { domain: data.domain }),
+        ...(data.logoUrl !== undefined && { logoUrl: data.logoUrl }),
+      }
+    });
+
+    if (data.name && trimmedName.toLowerCase() !== currentCharity.name.toLowerCase()) {
+      const oldName = currentCharity.name;
+      await prisma.surveyResponse.updateMany({
+        where: { charityName: oldName },
+        data: { charityName: trimmedName }
+      });
+      await prisma.hexagonalResponse.updateMany({
+        where: { charityName: oldName },
+        data: { charityName: trimmedName }
+      });
+      await prisma.performanceMetric.updateMany({
+        where: { charityName: oldName },
+        data: { charityName: trimmedName }
+      });
+      revalidatePath(`/charity/${encodeURIComponent(oldName)}`);
+      revalidatePath(`/charity/${encodeURIComponent(trimmedName)}`);
+    }
+
+    revalidatePath("/main");
+    return { success: true, data: charity };
+  } catch (error: any) {
+    console.error("Error updating charity:", error);
+    return { success: false, message: "حدث خطأ أثناء التحديث" };
+  }
+}
+
+export async function deleteCharity(id: string) {
+  try {
+    const session = await getSession();
+    if (!session || !hasPermission(session.role, session.permissions, "manage_charities")) {
+      return { success: false, message: "غير مصرح" };
+    }
+
+    // Try deleting. If it fails due to foreign key constraints, Prisma will throw an error
+    await prisma.charity.delete({
+      where: { id }
+    });
+
+    revalidatePath("/main");
+    return { success: true };
+  } catch (error: any) {
+    console.error("Error deleting charity:", error);
+    // Usually code P2003 indicates foreign key constraint failed
+    if (error.code === "P2003") {
+      return { success: false, message: "لا يمكن حذف الجمعية لوجود بيانات (عقود، منح، الخ) مرتبطة بها." };
+    }
+    return { success: false, message: "حدث خطأ أثناء الحذف" };
   }
 }
 
@@ -134,84 +216,7 @@ export async function bootstrapCharities() {
   }
 }
 
-export async function updateCharity(
-  oldName: string,
-  data: {
-    name: string;
-    establishmentDate?: string;
-    licenseNumber?: string;
-    domain?: string;
-    logoUrl?: string | null;
-  }
-) {
-  try {
-    const { name, establishmentDate, licenseNumber, domain, logoUrl } = data;
 
-    if (!name || !name.trim()) {
-      return { success: false, message: "ط§ط³ظ… ط§ظ„ط¬ظ…ط¹ظٹط© ظ…ط·ظ„ظˆط¨" };
-    }
-
-    const trimmedName = name.trim();
-
-    // 1. Check if name is being changed and if new name already exists
-    if (trimmedName.toLowerCase() !== oldName.toLowerCase()) {
-      const existing = await prisma.charity.findUnique({
-        where: { name: trimmedName }
-      });
-      if (existing) {
-        return { success: false, message: "ط¬ظ…ط¹ظٹط© ط¨ظ‡ط°ط§ ط§ظ„ط§ط³ظ… ظ…ظˆط¬ظˆط¯ط© ط¨ط§ظ„ظپط¹ظ„" };
-      }
-    }
-
-    // 2. Fetch the current charity record
-    const charity = await prisma.charity.findUnique({
-      where: { name: oldName }
-    });
-
-    if (!charity) {
-      return { success: false, message: "ط§ظ„ط¬ظ…ط¹ظٹط© ط؛ظٹط± ظ…ظˆط¬ظˆط¯ط©" };
-    }
-
-    // 4. Update the charity details
-    const updatedCharity = await prisma.charity.update({
-      where: { name: oldName },
-      data: {
-        name: trimmedName,
-        establishmentDate: establishmentDate || null,
-        licenseNumber: licenseNumber || null,
-        logoUrl: logoUrl,
-        domain: domain || null,
-      }
-    });
-
-    // 5. Cascade updates if the name changed to avoid broken references
-    if (trimmedName.toLowerCase() !== oldName.toLowerCase()) {
-      await prisma.surveyResponse.updateMany({
-        where: { charityName: oldName },
-        data: { charityName: trimmedName }
-      });
-
-      await prisma.hexagonalResponse.updateMany({
-        where: { charityName: oldName },
-        data: { charityName: trimmedName }
-      });
-
-      await prisma.performanceMetric.updateMany({
-        where: { charityName: oldName },
-        data: { charityName: trimmedName }
-      });
-    }
-
-    revalidatePath("/main");
-    revalidatePath(`/charity/${encodeURIComponent(oldName)}`);
-    revalidatePath(`/charity/${encodeURIComponent(trimmedName)}`);
-
-    return { success: true, name: trimmedName };
-  } catch (error: any) {
-    console.error("Error updating charity profile:", error);
-    return { success: false, message: error.message || "ط­ط¯ط« ط®ط·ط£ ط£ط«ظ†ط§ط، طھط­ط¯ظٹط« ط§ظ„ط¨ظٹط§ظ†ط§طھ" };
-  }
-}
 
 export async function addFinancialTransactionAction(
   charityId: string,

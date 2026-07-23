@@ -159,10 +159,10 @@ export default function ManageCharitiesClient({ initialCharities }: { initialCha
 
           {/* Dynamic Charity Blocks */}
           {charities.map((charity) => (
-            <div key={charity.id} className="col-span-1 bg-slate-50 dark:bg-black border border-slate-200 dark:border-white/10 hover:border-primary/30 rounded-3xl p-5 flex flex-col relative group transition-all duration-300 hover:shadow-[0_0_15px_rgba(0,0,0,0.03)] dark:hover:shadow-[0_0_15px_rgba(255,255,255,0.03)] hover:-translate-y-0.5">
+            <div key={charity.id} className="col-span-1 bg-white dark:bg-black border border-slate-200 dark:border-white/10 hover:border-primary/30 rounded-3xl p-5 flex flex-col relative group transition-all duration-300 hover:shadow-[0_4px_20px_rgba(0,0,0,0.05)] dark:hover:shadow-[0_0_15px_rgba(255,255,255,0.03)] hover:-translate-y-0.5">
               <div className="flex-1">
                 <div className="flex items-start justify-between mb-3">
-                  <div className="w-8 h-8 bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-lg flex items-center justify-center overflow-hidden relative shrink-0">
+                  <div className="w-8 h-8 bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-white/10 rounded-lg flex items-center justify-center overflow-hidden relative shrink-0">
                     {charity.logoUrl ? (
                       <Image 
                         src={charity.logoUrl} 

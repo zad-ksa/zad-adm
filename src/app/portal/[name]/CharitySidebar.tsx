@@ -238,7 +238,7 @@ export default function CharitySidebar({
           <Link
             href="/select-charity"
             title={!isOpen ? "تبديل الجمعية" : undefined}
-            className={`flex items-center ${isOpen ? "justify-start px-3" : "justify-center"} w-full py-2 text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-white/5 hover:text-slate-900 dark:hover:text-slate-200 rounded-lg text-sm font-medium transition-all group`}
+            className={`flex items-center ${isOpen ? "justify-start px-3" : "justify-center"} w-full py-2 text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-white/5 hover:text-slate-900 dark:hover:text-slate-200 rounded-lg text-[15px] font-medium transition-all group`}
           >
             <Building2 className={`w-4 h-4 shrink-0 transition-all ${isOpen ? "ml-3" : "ml-0"} text-slate-400 group-hover:text-slate-700 dark:group-hover:text-slate-300`} />
             {isOpen && <span className="whitespace-nowrap">تبديل الجمعية</span>}
@@ -249,7 +249,7 @@ export default function CharitySidebar({
           <Link
             href="/main"
             title={!isOpen ? "العودة للوحة التحكم" : undefined}
-            className={`flex items-center ${isOpen ? "justify-start px-3" : "justify-center"} w-full py-2 text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-white/5 hover:text-slate-900 dark:hover:text-slate-200 rounded-lg text-sm font-medium transition-all group`}
+            className={`flex items-center ${isOpen ? "justify-start px-3" : "justify-center"} w-full py-2 text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-white/5 hover:text-slate-900 dark:hover:text-slate-200 rounded-lg text-[15px] font-medium transition-all group`}
           >
             <ArrowLeft className={`w-4 h-4 shrink-0 transition-all ${isOpen ? "ml-3" : "ml-0"} text-slate-400 group-hover:text-slate-700 dark:group-hover:text-slate-300`} />
             {isOpen && <span className="whitespace-nowrap">العودة للوحة التحكم</span>}
@@ -258,7 +258,7 @@ export default function CharitySidebar({
           <button
             onClick={() => logout()}
             title={!isOpen ? "تسجيل الخروج" : undefined}
-            className={`flex items-center ${isOpen ? "justify-start px-3" : "justify-center"} w-full py-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 rounded-lg text-sm font-medium transition-all group`}
+            className={`flex items-center ${isOpen ? "justify-start px-3" : "justify-center"} w-full py-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 rounded-lg text-[15px] font-medium transition-all group`}
           >
             <LogOut className={`w-4 h-4 shrink-0 transition-all ${isOpen ? "ml-2.5" : "ml-0"}`} />
             {isOpen && <span className="whitespace-nowrap">تسجيل الخروج</span>}

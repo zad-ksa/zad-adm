@@ -73,35 +73,35 @@ export default function GovernanceManualViewer({
     {
       id: "MICRO",
       title: "الجمعيات متناهية الصغر",
-      desc: "إجمالي المصروفات السنوية لا يتجاوز 500 ألف ريال سعودي.",
+      desc: "إجمالي الإيرادات السنوية لا يتجاوز 500 ألف ريال سعودي.",
       icon: <Building className="w-5 h-5 text-slate-500 dark:text-slate-400 group-hover:text-primary transition-colors" />,
       features: ["معيار الامتثال والالتزام الأساسي", "مؤشرات الشفافية المبسطة"]
     },
     {
       id: "SMALL",
       title: "الجمعيات الصغيرة",
-      desc: "إجمالي المصروفات من 500 ألف إلى 2 مليون ريال سعودي.",
+      desc: "إجمالي الإيرادات من 500 ألف إلى 2 مليون ريال سعودي.",
       icon: <Building className="w-5 h-5 text-slate-500 dark:text-slate-400 group-hover:text-primary transition-colors" />,
       features: ["الامتثال والالتزام الأساسي", "الشفافية المبسطة"]
     },
     {
       id: "MEDIUM",
       title: "الجمعيات المتوسطة",
-      desc: "إجمالي المصروفات من 2 مليون إلى 8 مليون ريال سعودي.",
+      desc: "إجمالي الإيرادات من 2 مليون إلى 8 مليون ريال سعودي.",
       icon: <Landmark className="w-5 h-5 text-slate-500 dark:text-slate-400 group-hover:text-primary transition-colors" />,
       features: ["معيار السلامة المالية", "سياسات حوكمة متقدمة"]
     },
     {
       id: "LARGE",
       title: "الجمعيات الكبيرة",
-      desc: "إجمالي المصروفات من 8 مليون إلى 30 مليون ريال سعودي.",
+      desc: "إجمالي الإيرادات من 8 مليون إلى 30 مليون ريال سعودي.",
       icon: <TrendingUp className="w-5 h-5 text-slate-500 dark:text-slate-400 group-hover:text-primary transition-colors" />,
       features: ["مراجعة داخلية مستقلة إلزامية", "لجان منبثقة (مراجعة، مكافآت)"]
     },
     {
       id: "MEGA",
       title: "الجمعيات متناهية الكبر",
-      desc: "إجمالي المصروفات يتجاوز 30 مليون ريال سعودي.",
+      desc: "إجمالي الإيرادات يتجاوز 30 مليون ريال سعودي.",
       icon: <Gem className="w-5 h-5 text-slate-500 dark:text-slate-400 group-hover:text-primary transition-colors" />,
       features: ["حوكمة مؤسسية شاملة", "تدقيق مالي عالي المستوى"]
     }
@@ -177,16 +177,9 @@ export default function GovernanceManualViewer({
 
             <div className="relative z-10">
               <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-2 group-hover:text-primary transition-colors">{size.title}</h3>
-              <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed mb-4 min-h-[32px]">
+              <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed min-h-[32px]">
                 {size.desc}
               </p>
-              <ul className="space-y-2">
-                {size.features.map((feature, idx) => (
-                  <li key={idx} className="flex items-center gap-2 text-xs text-slate-600 dark:text-slate-300 font-medium">
-                    <CheckCircle2 className="w-3.5 h-3.5 text-primary shrink-0" /> {feature}
-                  </li>
-                ))}
-              </ul>
             </div>
           </button>
         ))}

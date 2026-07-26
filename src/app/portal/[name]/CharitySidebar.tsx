@@ -37,7 +37,7 @@ function NavItem({ item, isActive, isOpen, onClick }: { item: any, isActive: boo
     return (
       <div
         title={!isOpen ? `${item.label || item.title} (قريباً)` : undefined}
-        className={`flex items-center ${isOpen ? "justify-start px-2.5" : "justify-center"} py-1.5 rounded-lg text-slate-400 bg-slate-50/50 dark:bg-slate-900/30 cursor-not-allowed opacity-70 text-[13px] font-medium mb-0.5`}
+        className={`flex items-center ${isOpen ? "justify-start px-2.5" : "justify-center"} py-1.5 rounded-lg text-slate-400 bg-slate-50/50 dark:bg-slate-900/30 cursor-not-allowed opacity-70 text-[15px] font-medium mb-0.5`}
       >
         <item.icon className={`w-4 h-4 shrink-0 transition-all ${isOpen ? "ml-2.5" : "ml-0"} opacity-60`} />
         {isOpen && <span className="whitespace-nowrap tracking-tight leading-none pt-0.5">{item.label || item.title}</span>}
@@ -55,7 +55,7 @@ function NavItem({ item, isActive, isOpen, onClick }: { item: any, isActive: boo
       href={item.href}
       onClick={onClick}
       title={!isOpen ? (item.label || item.title) : undefined}
-      className={`flex items-center ${isOpen ? "justify-start px-2.5" : "justify-center"} py-1.5 mb-0.5 rounded-lg text-sm font-medium tracking-tight transition-all group relative overflow-hidden ${isActive
+      className={`flex items-center ${isOpen ? "justify-start px-2.5" : "justify-center"} py-1.5 mb-0.5 rounded-lg text-[15px] font-medium tracking-tight transition-all group relative overflow-hidden ${isActive
         ? "bg-primary/5 dark:bg-primary/10 text-primary dark:text-primary shadow-[inset_0_0_0_1px_rgba(var(--primary-rgb),0.1)] dark:shadow-[inset_0_0_0_1px_rgba(255,255,255,0.05)]"
         : "text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-white/5 hover:text-slate-900 dark:hover:text-slate-200"
         }`}
@@ -145,12 +145,12 @@ export default function CharitySidebar({
       {/* Charity Profile - Fixed at top */}
       <div className={`flex ${isOpen ? "flex-row items-center px-4 gap-3.5" : "flex-col items-center px-2"} py-4 border-b border-slate-100 dark:border-slate-800/80 transition-all overflow-hidden shrink-0`}>
         {logoUrl ? (
-          <div className={`rounded-full overflow-hidden ring-1 ring-slate-200 dark:ring-slate-800 bg-white dark:bg-black flex items-center justify-center shrink-0 transition-all shadow-sm ${isOpen ? "w-10 h-10" : "w-8 h-8"}`}>
+          <div className={`rounded-full overflow-hidden ring-1 ring-slate-200 dark:ring-slate-800 bg-white dark:bg-black flex items-center justify-center shrink-0 transition-all shadow-sm ${isOpen ? "w-12 h-12" : "w-10 h-10"}`}>
             <img src={logoUrl} alt={charityName} className="w-full h-full object-contain p-1" />
           </div>
         ) : (
-          <div className={`bg-gradient-to-br from-primary/10 to-primary/5 dark:from-primary/20 dark:to-primary/5 text-primary rounded-full ring-1 ring-primary/20 dark:ring-primary/30 flex items-center justify-center shrink-0 transition-all shadow-sm ${isOpen ? "w-10 h-10" : "w-8 h-8"}`}>
-            <Building2 className={isOpen ? "w-5 h-5" : "w-4 h-4"} />
+          <div className={`bg-gradient-to-br from-primary/10 to-primary/5 dark:from-primary/20 dark:to-primary/5 text-primary rounded-full ring-1 ring-primary/20 dark:ring-primary/30 flex items-center justify-center shrink-0 transition-all shadow-sm ${isOpen ? "w-12 h-12" : "w-10 h-10"}`}>
+            <Building2 className={isOpen ? "w-6 h-6" : "w-5 h-5"} />
           </div>
         )}
 

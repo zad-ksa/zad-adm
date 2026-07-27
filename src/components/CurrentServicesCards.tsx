@@ -211,30 +211,25 @@ export default function CurrentServicesCards({ services }: { services: Service[]
                   </span>
                   الخدمات الدائمة (Permanent Services)
                 </h3>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div className="flex flex-wrap gap-2 px-1">
                   {continuousStages.map((stage) => (
                     <div 
                       key={stage.id} 
-                      className={`flex flex-col p-5 rounded-2xl border transition-all duration-300 ${
+                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border transition-all duration-300 ${
                         stage.isActive 
-                          ? 'bg-white dark:bg-[#111] border-slate-200 dark:border-slate-700 shadow-sm dark:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)]' 
-                          : 'bg-slate-50/50 dark:bg-[#0A0A0A] border-slate-100 dark:border-slate-800/80 opacity-70'
+                          ? 'bg-emerald-500/10 border-emerald-500/20' 
+                          : 'bg-slate-50 dark:bg-[#111] border-slate-200 dark:border-slate-800 opacity-70'
                       }`}
                     >
-                      <h5 className={`font-semibold tracking-tight mb-2 flex items-center gap-2 ${stage.isActive ? 'text-emerald-700 dark:text-emerald-400' : 'text-slate-600 dark:text-slate-400'}`} style={{ fontSize: 'clamp(0.875rem, 1.5vw, 1rem)' }}>
-                        {stage.isActive && (
-                          <span className="relative flex h-1.5 w-1.5 shrink-0">
-                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-500 opacity-75"></span>
-                            <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500"></span>
-                          </span>
-                        )}
-                        {stage.name}
-                      </h5>
-                      {stage.description && (
-                        <p className="text-[13px] font-medium text-slate-500 dark:text-slate-500 leading-relaxed line-clamp-3">
-                          {stage.description}
-                        </p>
+                      {stage.isActive && (
+                        <span className="relative flex h-1.5 w-1.5 shrink-0">
+                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-500 opacity-75"></span>
+                          <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500"></span>
+                        </span>
                       )}
+                      <span className={`text-[11px] font-bold ${stage.isActive ? 'text-emerald-700 dark:text-emerald-400' : 'text-slate-600 dark:text-slate-400'}`}>
+                        {stage.name}
+                      </span>
                     </div>
                   ))}
                 </div>
@@ -262,20 +257,9 @@ export default function CurrentServicesCards({ services }: { services: Service[]
             
             <div className="p-6 flex flex-col h-full z-10 relative">
               <div className="flex justify-between items-start mb-6">
-                <div>
-                  <h3 className="font-semibold text-primary dark:text-primary tracking-tight" style={{ fontSize: 'clamp(1rem, 2vw, 1.125rem)' }}>
-                    {service.name}
-                  </h3>
-                  {activeContinuousStage && (
-                    <div className="mt-2.5 flex items-center gap-1.5 w-fit px-2.5 py-1 bg-emerald-500/10 border border-emerald-500/20 rounded-full">
-                      <span className="relative flex h-1.5 w-1.5 shrink-0">
-                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-500 opacity-75"></span>
-                        <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500"></span>
-                      </span>
-                      <span className="text-[10px] font-bold text-emerald-700 dark:text-emerald-400">{activeContinuousStage.name} (دائمة)</span>
-                    </div>
-                  )}
-                </div>
+                <h3 className="font-semibold text-primary dark:text-primary tracking-tight" style={{ fontSize: 'clamp(1rem, 2vw, 1.125rem)' }}>
+                  {service.name}
+                </h3>
                 <button 
                   onClick={() => setSelectedService(service)}
                   title="عرض الدليل الكامل للخدمة"
@@ -316,6 +300,18 @@ export default function CurrentServicesCards({ services }: { services: Service[]
               ) : (
                 <div className="flex-1 flex items-center justify-center py-6 text-center text-slate-400 text-sm font-medium">
                   لا توجد مراحل مسجلة لهذه الخدمة
+                </div>
+              )}
+
+              {activeContinuousStage && (
+                <div className="mt-4 pt-4 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-start">
+                  <div className="flex items-center gap-1.5 w-fit px-2.5 py-1 bg-emerald-500/10 border border-emerald-500/20 rounded-full">
+                    <span className="relative flex h-1.5 w-1.5 shrink-0">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-500 opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500"></span>
+                    </span>
+                    <span className="text-[10px] font-bold text-emerald-700 dark:text-emerald-400">{activeContinuousStage.name} (مرحلة دائمة نشطة)</span>
+                  </div>
                 </div>
               )}
             </div>

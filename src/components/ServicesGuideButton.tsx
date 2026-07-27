@@ -16,6 +16,8 @@ type Stage = {
   description?: string | null;
   order: number;
   steps?: Step[];
+  isContinuous?: boolean;
+  isActive?: boolean;
 };
 
 type TimelineSection = {
@@ -95,6 +97,8 @@ export default function ServicesGuideButton({
               {sections.map((section, idx) => {
                 const isExpanded = expandedSection === section.title;
                 if (section.stages.length === 0) return null;
+                const sequentialStages = [...section.stages].filter(s => !s.isContinuous).sort((a, b) => a.order - b.order);
+                const continuousStages = [...section.stages].filter(s => s.isContinuous).sort((a, b) => a.order - b.order);
 
                 return (
                   <div
@@ -129,10 +133,9 @@ export default function ServicesGuideButton({
 
                     {isExpanded && (
                       <div className="p-6 md:p-8">
-                        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-                          {[...section.stages]
-                            .sort((a, b) => a.order - b.order)
-                            .map((stage, stageIdx) => (
+                        {sequentialStages.length > 0 && (
+                          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                            {sequentialStages.map((stage, stageIdx) => (
                               <div key={stage.id} className="group relative flex flex-col rounded-2xl border bg-white dark:bg-[#111] border-slate-100 dark:border-slate-800 shadow-sm transition-all duration-300 hover:border-slate-300 dark:hover:border-slate-700 dark:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.02)] overflow-hidden">
                                 
                                 <div className="p-6 flex flex-col h-full z-10">
@@ -177,7 +180,42 @@ export default function ServicesGuideButton({
                                 </div>
                               </div>
                             ))}
-                        </div>
+                          </div>
+                        )}
+                        
+                        {continuousStages.length > 0 && (
+                          <div className="pt-6 mt-6 border-t border-slate-200 dark:border-slate-800">
+                            <h3 className="text-[11px] font-semibold text-emerald-600 dark:text-emerald-500 uppercase tracking-widest mb-4 px-1 flex items-center gap-2">
+                              <span className="relative flex h-2 w-2 shrink-0">
+                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-500 opacity-75"></span>
+                                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                              </span>
+                              الخدمات الدائمة (Permanent Services)
+                            </h3>
+                            <div className="flex flex-wrap gap-2 px-1">
+                              {continuousStages.map((stage) => (
+                                <div 
+                                  key={stage.id} 
+                                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border transition-all duration-300 ${
+                                    stage.isActive 
+                                      ? 'bg-emerald-500/10 border-emerald-500/20' 
+                                      : 'bg-slate-50 dark:bg-[#111] border-slate-200 dark:border-slate-800 opacity-70'
+                                  }`}
+                                >
+                                  {stage.isActive && (
+                                    <span className="relative flex h-1.5 w-1.5 shrink-0">
+                                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-500 opacity-75"></span>
+                                      <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500"></span>
+                                    </span>
+                                  )}
+                                  <span className={`text-[11px] font-bold ${stage.isActive ? 'text-emerald-700 dark:text-emerald-400' : 'text-slate-600 dark:text-slate-400'}`}>
+                                    {stage.name}
+                                  </span>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
                       </div>
                     )}
                   </div>

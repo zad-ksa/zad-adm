@@ -28,7 +28,7 @@ export default function CharityLoginPage() {
   const [resendCount, setResendCount] = useState(0);
 
   useEffect(() => {
-    document.title = "بوابة شركاء زاد | الدخول";
+    document.title = "بوابة الجمعيات";
     setIsMounted(true);
   }, []);
 

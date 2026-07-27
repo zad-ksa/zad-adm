@@ -2,10 +2,28 @@ import { Shield, BookOpen, AlertCircle, Scale, Building, Landmark, ChevronLeft, 
 import Link from "next/link";
 import { CharitySize } from "@/data/governanceManual";
 import AutoRedirectCharitySize from "@/components/AutoRedirectCharitySize";
+import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
 
-export default async function GovernancePage({ params }: { params: Promise<{ name: string }> }) {
+export default async function GovernancePage({ 
+  params,
+  searchParams
+}: { 
+  params: Promise<{ name: string }>;
+  searchParams: Promise<{ change_size?: string }>;
+}) {
   const { name } = await params;
   const charityName = decodeURIComponent(name);
+  const resolvedSearchParams = await searchParams;
+
+  if (!resolvedSearchParams.change_size) {
+    const cookieStore = await cookies();
+    const savedSize = cookieStore.get(`preferredCharitySize_${encodeURIComponent(charityName)}`)?.value;
+    
+    if (savedSize) {
+      redirect(`/portal/${encodeURIComponent(charityName)}/governance/standards?size=${savedSize}`);
+    }
+  }
 
   const sizes = [
     {

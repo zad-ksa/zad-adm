@@ -109,8 +109,8 @@ export default function CharitySidebar({
 
   const mainItems = [
     { id: "services", label: "الخدمات", href: `/portal/${encodeURIComponent(charityName)}/services`, exact: true, icon: Briefcase },
-    { id: "strategy", label: "الاستراتيجية", href: "#", comingSoon: true, icon: Target },
     { id: "governance", label: "الحوكمة", href: `/portal/${encodeURIComponent(charityName)}/governance`, exact: true, icon: Scale },
+    { id: "strategy", label: "الاستراتيجية", href: "#", comingSoon: true, icon: Target },
     { id: "finance", label: "تنمية الموارد المالية", href: "#", comingSoon: true, icon: Coins },
     { id: "hr", label: "الموارد البشرية", href: "#", comingSoon: true, icon: Users },
   ];

@@ -2,15 +2,15 @@
 
 import { useState, useTransition, useEffect, useRef } from "react";
 import { useTheme } from "next-themes";
-import { requestCharityOTP, verifyCharityOTP } from "@/app/actions/authCharity";
-import { AlertCircle, Lock, Loader2, Phone, ArrowLeft, ShieldCheck, KeyRound, Building2, Sun, Moon } from "lucide-react";
+import { requestEmployeeOTP, verifyEmployeeOTP } from "@/app/actions/auth";
+import { AlertCircle, Lock, Loader2, Phone, ArrowLeft, ShieldCheck, Sun, Moon } from "lucide-react";
 import ZadLogo from "@/components/ZadLogo";
 import Link from "next/link";
 import { Cairo } from "next/font/google";
 
 const cairo = Cairo({ subsets: ["arabic"], weight: ["700", "900"] });
 
-export default function CharityLoginPage() {
+export default function EmployeeLoginPage() {
   const [step, setStep] = useState<1 | 2>(1);
   const [phone, setPhone] = useState("");
   const [otpDigits, setOtpDigits] = useState<string[]>(Array(4).fill(""));
@@ -28,7 +28,7 @@ export default function CharityLoginPage() {
   const [resendCount, setResendCount] = useState(0);
 
   useEffect(() => {
-    document.title = "بوابة الجمعيات";
+    document.title = "بوابة أعضاء زاد | الدخول";
     setIsMounted(true);
   }, []);
 
@@ -62,15 +62,15 @@ export default function CharityLoginPage() {
 
   const handleResendOTP = async () => {
     if (resendCooldown > 0 || isPending) return;
-
+    
     setError(null);
     setSuccess(null);
     setOtpDigits(Array(4).fill(""));
-
+    
     const processedPhone = "0" + phone;
 
     startTransition(async () => {
-      const result = await requestCharityOTP(processedPhone);
+      const result = await requestEmployeeOTP(processedPhone);
       if (result && result.error) {
         setError(result.error);
       } else {
@@ -78,6 +78,27 @@ export default function CharityLoginPage() {
         setValidityTime(300);
         setResendCooldown(120);
         setResendCount(prev => prev + 1);
+        otpRefs.current[0]?.focus();
+      }
+    });
+  };
+
+  const submitOTP = (enteredOtp: string) => {
+    if (enteredOtp.length !== 4) {
+      setError("يرجى إدخال رمز التحقق كاملاً");
+      return;
+    }
+
+    setError(null);
+    setSuccess(null);
+
+    const processedPhone = "0" + phone;
+
+    startTransition(async () => {
+      const result = await verifyEmployeeOTP(processedPhone, enteredOtp);
+      if (result && result.error) {
+        setError(result.error);
+        setOtpDigits(Array(4).fill(""));
         otpRefs.current[0]?.focus();
       }
     });
@@ -93,9 +114,14 @@ export default function CharityLoginPage() {
         newOtpDigits[index + i] = digit;
       });
       setOtpDigits(newOtpDigits);
-
+      
       const nextIndex = Math.min(index + pastedDigits.length, 3);
       otpRefs.current[nextIndex]?.focus();
+      
+      const enteredOtp = newOtpDigits.join("");
+      if (enteredOtp.length === 4) {
+        submitOTP(enteredOtp);
+      }
       return;
     }
 
@@ -125,15 +151,14 @@ export default function CharityLoginPage() {
     setSuccess(null);
 
     if (phone.length !== 9) {
-      setError("يرجى إدخال رقم الجوال كاملاً (9 أرقام)");
+      setError("يرجى إدخال رقم الجوال كاملاً (9 أرقام بدون 0)");
       return;
     }
 
-    // Process the phone number to start with "0"
     const processedPhone = "0" + phone;
 
     startTransition(async () => {
-      const result = await requestCharityOTP(processedPhone);
+      const result = await requestEmployeeOTP(processedPhone);
       if (result && result.error) {
         setError(result.error);
       } else {
@@ -142,27 +167,6 @@ export default function CharityLoginPage() {
         setResendCooldown(30);
         setResendCount(0);
         setStep(2);
-      }
-    });
-  };
-
-  const submitOTP = (enteredOtp: string) => {
-    if (enteredOtp.length !== 4) {
-      setError("يرجى إدخال رمز التحقق كاملاً");
-      return;
-    }
-
-    setError(null);
-    setSuccess(null);
-
-    const processedPhone = "0" + phone;
-
-    startTransition(async () => {
-      const result = await verifyCharityOTP(processedPhone, enteredOtp);
-      if (result && result.error) {
-        setError(result.error);
-        setOtpDigits(Array(4).fill(""));
-        otpRefs.current[0]?.focus();
       }
     });
   };
@@ -187,18 +191,15 @@ export default function CharityLoginPage() {
 
       {/* Premium Visual Background */}
       <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-[0.03] dark:opacity-[0.05]"></div>
-
+      
       {/* Animated Orbs */}
       <div className="absolute -top-[20%] -left-[10%] w-[80%] h-[80%] rounded-full bg-primary/10 dark:bg-primary/15 blur-[120px] mix-blend-multiply dark:mix-blend-screen pointer-events-none animate-pulse" style={{ animationDuration: '8s' }}></div>
       <div className="absolute bottom-[0%] right-[10%] w-[70%] h-[70%] rounded-full bg-emerald-500/5 dark:bg-emerald-500/10 blur-[100px] mix-blend-multiply dark:mix-blend-screen pointer-events-none"></div>
       <div className="absolute top-[30%] right-[20%] w-[50%] h-[50%] rounded-full bg-indigo-500/5 dark:bg-indigo-500/10 blur-[80px] mix-blend-multiply dark:mix-blend-screen pointer-events-none" style={{ animationDuration: '10s' }}></div>
 
-      {/* Floating Glass Panels in Background */}
-      <div className="absolute bottom-[25%] right-[25%] w-24 h-24 bg-primary/10 dark:bg-primary/20 border border-primary/20 dark:border-primary/30 rounded-full backdrop-blur-md transform rotate-45 animate-pulse shadow-primary/10 dark:shadow-primary/20 shadow-xl dark:shadow-2xl" style={{ animationDuration: '7s' }}></div>
-
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-sm relative z-10 px-4 sm:px-0">
         <div className="bg-white/70 dark:bg-white/10 backdrop-blur-2xl py-8 px-6 sm:px-8 shadow-2xl border border-slate-200 dark:border-white/20 sm:rounded-3xl relative overflow-hidden transition-colors duration-300">
-
+          
           {/* Inner Glow */}
           <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[200%] h-32 bg-white/50 dark:bg-white/10 blur-3xl pointer-events-none"></div>
 
@@ -206,20 +207,13 @@ export default function CharityLoginPage() {
           <div className="flex justify-center mb-6 animate-fade-in-up">
             <ZadLogo isOpen={true} className="h-12 w-auto drop-shadow-md dark:brightness-0 dark:invert transition-all" />
           </div>
-
+          
           <div className="mb-6 text-center animate-fade-in-up" style={{ animationDuration: '0.6s' }}>
-            <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-full bg-primary/10 dark:bg-primary/20 border border-primary/20 dark:border-primary/30 mb-3 shadow-sm dark:shadow-inner">
-              <span className="relative flex h-1.5 w-1.5">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-primary"></span>
-              </span>
-              <span className="text-primary dark:text-white text-[9px] font-bold tracking-widest uppercase">تمكين نحو الأثر المستدام للجمعيات الأهلية</span>
-            </div>
             <h1 className={`${cairo.className} text-xl font-black text-slate-900 dark:text-white tracking-tight mb-1.5 transition-colors`}>
-              بوابة الجمعيات
+              بوابة أعضاء زاد
             </h1>
             <p className="text-slate-600 dark:text-slate-300 font-medium text-[11px] leading-relaxed transition-colors">
-              أهلاً بك في مساحتك المخصصة لإدارة الخدمات المقدمة من زاد التنموية.
+              بوابة الدخول الآمن لموظفي وأعضاء زاد التنموية.
             </p>
           </div>
 
@@ -265,7 +259,7 @@ export default function CharityLoginPage() {
                 className="w-full relative group overflow-hidden bg-primary text-white rounded-xl py-3 text-sm font-bold shadow-lg shadow-primary/20 hover:shadow-xl hover:shadow-primary/30 transition-all active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed disabled:active:scale-100 mt-6 max-w-[320px] mx-auto block"
               >
                 <div className="absolute inset-0 w-full h-full bg-white/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-
+                
                 <div className="relative z-10 flex items-center justify-center gap-2">
                   {isPending ? (
                     <>
@@ -321,7 +315,6 @@ export default function CharityLoginPage() {
                     </button>
                   </div>
                 </div>
-
               </div>
 
               <div className="flex gap-2.5 mt-6 max-w-[320px] mx-auto">
@@ -339,7 +332,7 @@ export default function CharityLoginPage() {
                   className="w-2/3 relative group overflow-hidden bg-primary text-white rounded-xl py-3 text-sm font-bold shadow-lg shadow-primary/20 hover:shadow-xl hover:shadow-primary/30 transition-all active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed disabled:active:scale-100"
                 >
                   <div className="absolute inset-0 w-full h-full bg-white/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-
+                  
                   <div className="relative z-10 flex items-center justify-center gap-2">
                     {isPending ? (
                       <>
@@ -359,18 +352,14 @@ export default function CharityLoginPage() {
           )}
 
           <div className="mt-8 pt-6 border-t border-slate-200 dark:border-white/10 text-center animate-fade-in-up transition-colors" style={{ animationDuration: '1s' }}>
-            <p className="text-xs font-bold text-slate-500 dark:text-slate-400 flex items-center justify-center gap-1.5 transition-colors mb-6">
-              <ShieldCheck className="w-4 h-4 text-emerald-500 dark:text-emerald-400" />
-              تم تطوير البوابة بأعلى معايير الأمان
-            </p>
             <p className="text-sm font-bold text-slate-600 dark:text-slate-400 mb-4 transition-colors">
-              هل أنت من موظفي زاد؟
+              هل أنت ممثل لجمعية؟
             </p>
             <Link 
-              href="/login"
+              href="/charity-login"
               className="inline-flex items-center justify-center w-full py-3.5 px-4 rounded-xl text-sm font-bold text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 border border-slate-200 dark:border-white/10 transition-all shadow-sm disabled:opacity-50"
             >
-              الانتقال الى بوابة دخول إدارة زاد
+              الدخول إلى بوابة الجمعيات
             </Link>
           </div>
         </div>

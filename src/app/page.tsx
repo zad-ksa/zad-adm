@@ -35,6 +35,9 @@ export default function LoginPage() {
   useEffect(() => {
     let interval: NodeJS.Timeout;
     if (step === 2) {
+      setTimeout(() => {
+        otpRefs.current[0]?.focus();
+      }, 100);
       interval = setInterval(() => {
         setValidityTime((prev) => {
           if (prev <= 1) {

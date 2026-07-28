@@ -82,6 +82,7 @@ enum CharityUserTitle {
   FULL_TIME     // موظف بدوام كامل
   PART_TIME     // موظف بداوم جزئي
   VOLUNTEER     // متطوع
+  SYSTEM_ADMIN  // مدير النظام
 }
 
 model CharityUser {

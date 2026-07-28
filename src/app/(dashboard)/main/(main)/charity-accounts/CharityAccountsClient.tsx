@@ -45,8 +45,10 @@ export default function CharityAccountsClient({ charities, accounts: initialAcco
       const res = await addCharityClientAccount(form);
       if (res.success) {
         setSuccessMsg("تم إضافة الحساب بنجاح");
+        if (res.account) {
+          setAccounts(prev => [res.account, ...prev]);
+        }
         setShowModal(false);
-        window.location.reload();
       } else {
         setErrorMsg(res.error || "حدث خطأ");
       }

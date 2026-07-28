@@ -28,7 +28,7 @@ export async function addCharityClientAccount(data: { name: string; phone: strin
       return { success: false, error: "رقم الجوال مسجل مسبقاً" };
     }
 
-    await prisma.charityUser.create({
+    const newAccount = await prisma.charityUser.create({
       data: {
         name: data.name.trim(),
         phone: data.phone.trim(),
@@ -39,12 +39,27 @@ export async function addCharityClientAccount(data: { name: string; phone: strin
             charityId: id
           }))
         }
+      },
+      include: {
+        charities: {
+          include: { charity: { select: { name: true } } }
+        }
       }
     });
 
     revalidatePath("/main/charity-accounts");
 
-    return { success: true };
+    return { 
+      success: true, 
+      account: {
+        id: newAccount.id,
+        name: newAccount.name,
+        phone: newAccount.phone,
+        title: newAccount.title,
+        charityNames: newAccount.charities.map(c => c.charity.name),
+        createdAt: newAccount.createdAt.toISOString()
+      }
+    };
   } catch (error: any) {
     console.error("Error creating charity account:", error);
     return { success: false, error: error.message || "حدث خطأ أثناء إنشاء الحساب" };

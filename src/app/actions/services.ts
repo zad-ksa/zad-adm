@@ -954,3 +954,18 @@ export async function toggleServiceComingSoon(name: string, department: string |
 
   return { success: true };
 }
+
+export async function toggleServiceComingSoonSingle(serviceId: string, isComingSoon: boolean) {
+  const session = await getSession();
+  if (!session) throw new Error("UNAUTHORIZED");
+  if (!["ADMIN", "EXECUTIVE_DIRECTOR", "GENERAL_MANAGER", "ADMINISTRATIVE_SECRETARIAT"].includes(session.role)) {
+    throw new Error("UNAUTHORIZED");
+  }
+
+  await (prisma.service as any).update({
+    where: { id: serviceId },
+    data: { isComingSoon }
+  });
+
+  return { success: true };
+}

@@ -28,7 +28,7 @@ import {
 import {
   setCurrentServiceStage, addServiceStage, updateServiceStage,
   deleteServiceStage, reorderServiceStages, unifyCharityStagesAction,
-  updateService, toggleActiveServiceStage, toggleCurrentServiceStage, toggleServiceComingSoon
+  updateService, toggleActiveServiceStage, toggleCurrentServiceStage, toggleServiceComingSoon, toggleServiceComingSoonSingle
 } from "@/app/actions/services";
 import {
   addStrategicStageStep, updateStrategicStageStep, deleteStrategicStageStep,
@@ -1078,9 +1078,19 @@ export default function ServicesOverviewClient({
     });
   };
 
-  const handleToggleComingSoon = (name: string, dept: string | null, currentState: boolean) => {
+  const [showComingSoonModal, setShowComingSoonModal] = useState(false);
+
+  const handleToggleComingSoonAll = (name: string, dept: string | null, isComingSoon: boolean) => {
     startServiceNameTransition(async () => {
-      await toggleServiceComingSoon(name, dept, !currentState);
+      await toggleServiceComingSoon(name, dept, isComingSoon);
+      router.refresh();
+    });
+  };
+
+  const handleToggleComingSoonSingle = (serviceId: string, isComingSoon: boolean) => {
+    startServiceNameTransition(async () => {
+      await toggleServiceComingSoonSingle(serviceId, isComingSoon);
+      router.refresh();
     });
   };
 
@@ -1311,22 +1321,13 @@ export default function ServicesOverviewClient({
                         {displayName}
                       </button>
                       {isAdmin && isSvc && (
-                        <div className="absolute -top-0.5 left-0 flex gap-0.5 opacity-0 group-hover/tab:opacity-100 transition-opacity">
-                          <button
-                            onClick={() => handleToggleComingSoon(displayName, svcInfo?.dept ?? null, !!svcInfo?.isComingSoon)}
-                            className={`p-0.5 hover:text-primary ${svcInfo?.isComingSoon ? "text-amber-500" : "text-slate-400"}`}
-                            title={svcInfo?.isComingSoon ? "إلغاء وضع قريباً" : "تفعيل وضع قريباً"}
-                          >
-                            <Clock className="w-2.5 h-2.5" />
-                          </button>
-                          <button
-                            onClick={() => { setEditingServiceId(svcId!); setEditingServiceName(displayName); }}
-                            className="p-0.5 text-slate-400 hover:text-primary"
-                            title="تعديل اسم الخدمة"
-                          >
-                            <Edit2 className="w-2.5 h-2.5" />
-                          </button>
-                        </div>
+                        <button
+                          onClick={() => { setEditingServiceId(svcId!); setEditingServiceName(displayName); }}
+                          className="absolute -top-0.5 left-0 opacity-0 group-hover/tab:opacity-100 transition-opacity p-0.5 text-slate-400 hover:text-primary"
+                          title="تعديل اسم الخدمة"
+                        >
+                          <Edit2 className="w-2.5 h-2.5" />
+                        </button>
                       )}
                       {isAdmin && isBuiltin && (
                         <button
@@ -1448,6 +1449,138 @@ export default function ServicesOverviewClient({
                 })}
               </div>
             )}
+          </div>
+
+          {/* Bottom Action Bar for Coming Soon status */}
+          {isAdmin && isGenericTab && genericSvcInfo && (
+            <div className="p-4 border-t border-slate-100 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-900/30 flex items-center justify-between flex-wrap gap-3 rounded-b-2xl">
+              <div className="flex items-center gap-2.5">
+                <div className={`p-2 rounded-xl ${genericSvcInfo.isComingSoon ? "bg-amber-500/10 text-amber-500" : "bg-slate-200/60 dark:bg-slate-700 text-slate-500"}`}>
+                  <Clock className="w-5 h-5" />
+                </div>
+                <div>
+                  <h4 className="font-bold text-sm text-slate-800 dark:text-slate-200">
+                    حالة الخدمة (قريباً): {genericSvcInfo.isComingSoon ? <span className="text-amber-600 dark:text-amber-400">مُفعلة شمولياً (قريباً)</span> : <span className="text-slate-500">محددة / غير مُفعلة</span>}
+                  </h4>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">
+                    يمكنك تحديد وتعميم هذه الخدمة كـ "قريباً" لجميع الجمعيات أو تخصيصها لجمعيات محددة فقط.
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowComingSoonModal(true)}
+                className="px-4 py-2 text-xs font-bold bg-amber-500 hover:bg-amber-600 text-white rounded-xl transition-all flex items-center gap-2 shadow-sm"
+              >
+                <Clock className="w-4 h-4" /> إدارة وضع (قريباً)
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Coming Soon Management Modal */}
+      {showComingSoonModal && isAdmin && isGenericTab && genericSvcInfo && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={() => setShowComingSoonModal(false)}></div>
+          <div className="relative bg-white dark:bg-slate-800 rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200 border border-slate-200 dark:border-slate-700" dir="rtl">
+            <div className="p-5 border-b border-slate-100 dark:border-slate-700 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-amber-500/10 text-amber-500 rounded-xl">
+                  <Clock className="w-6 h-6" />
+                </div>
+                <div>
+                  <h2 className="text-lg font-bold text-slate-800 dark:text-slate-100">
+                    تحديد حالة (قريباً) - {genericSvcInfo.name}
+                  </h2>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">
+                    التحكم في ظهور كلمة "قريباً" في بطاقات الجمعيات لهذه الخدمة
+                  </p>
+                </div>
+              </div>
+              <button onClick={() => setShowComingSoonModal(false)} className="p-1.5 text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="p-5 space-y-5 max-h-[70vh] overflow-y-auto">
+              {/* Option 1: All Charities */}
+              <div className="p-4 bg-slate-50 dark:bg-slate-900/50 rounded-xl border border-slate-200/80 dark:border-slate-700 space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="font-bold text-sm text-slate-800 dark:text-slate-200">التحكم الشامل (لكل الجمعيات)</span>
+                  <span className="text-xs px-2 py-0.5 bg-amber-500/10 text-amber-600 dark:text-amber-400 font-bold rounded-md">كل الجمعيات</span>
+                </div>
+                <p className="text-xs text-slate-500 dark:text-slate-400">
+                  تطبيق أو إلغاء حالة "قريباً" على كافة الجمعيات التي تحتوي على هذه الخدمة بضغطة واحدة.
+                </p>
+                <div className="flex gap-2 pt-1">
+                  <button
+                    disabled={isServiceNamePending}
+                    onClick={() => handleToggleComingSoonAll(genericSvcInfo.name, genericSvcInfo.dept, true)}
+                    className="flex-1 py-2 px-3 text-xs font-bold bg-amber-500 hover:bg-amber-600 text-white rounded-lg transition-colors flex items-center justify-center gap-1.5"
+                  >
+                    {isServiceNamePending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Clock className="w-3.5 h-3.5" />}
+                    تفعيل لجميع الجمعيات
+                  </button>
+                  <button
+                    disabled={isServiceNamePending}
+                    onClick={() => handleToggleComingSoonAll(genericSvcInfo.name, genericSvcInfo.dept, false)}
+                    className="flex-1 py-2 px-3 text-xs font-bold bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 rounded-lg transition-colors flex items-center justify-center gap-1.5"
+                  >
+                    {isServiceNamePending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <X className="w-3.5 h-3.5" />}
+                    إلغاء من جميع الجمعيات
+                  </button>
+                </div>
+              </div>
+
+              {/* Option 2: Specific Charity List */}
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="font-bold text-sm text-slate-800 dark:text-slate-200">تخصيص لجمعية محددة</span>
+                  <span className="text-xs text-slate-400 font-medium">العدد: {charitiesWithData.length}</span>
+                </div>
+                <div className="divide-y divide-slate-100 dark:divide-slate-700/60 border border-slate-200 dark:border-slate-700 rounded-xl overflow-hidden">
+                  {charitiesWithData.map(charity => {
+                    const svcs = allServices.filter(svc => svc.name === genericSvcInfo.name && svc.charityId === charity.id);
+                    const targetSvc = svcs[0];
+                    if (!targetSvc) return null;
+                    const isComing = (targetSvc as any).isComingSoon;
+
+                    return (
+                      <div key={charity.id} className="p-3 flex items-center justify-between bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-750 transition-colors">
+                        <div className="flex items-center gap-2.5">
+                          <div className="w-7 h-7 rounded-lg bg-primary/10 text-primary flex items-center justify-center text-xs font-bold">
+                            {charity.name.charAt(0)}
+                          </div>
+                          <span className="font-bold text-xs text-slate-700 dark:text-slate-200">{charity.name}</span>
+                        </div>
+
+                        <button
+                          disabled={isServiceNamePending}
+                          onClick={() => handleToggleComingSoonSingle(targetSvc.id, !isComing)}
+                          className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-colors flex items-center gap-1.5 ${
+                            isComing
+                              ? "bg-amber-500/15 text-amber-600 dark:text-amber-400 hover:bg-amber-500/25 border border-amber-500/30"
+                              : "bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-600"
+                          }`}
+                        >
+                          <Clock className="w-3.5 h-3.5" />
+                          {isComing ? "قريباً (مُفعل - اضغط للإلغاء)" : "تعيين كـ قريباً"}
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+
+            <div className="p-4 border-t border-slate-100 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50 flex justify-end">
+              <button
+                onClick={() => setShowComingSoonModal(false)}
+                className="px-4 py-2 text-xs font-bold bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 rounded-lg transition-colors"
+              >
+                إغلاق
+              </button>
+            </div>
           </div>
         </div>
       )}

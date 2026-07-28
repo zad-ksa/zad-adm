@@ -257,14 +257,18 @@ export async function createService(charityId: string, name: string, department:
   return service;
 }
 
-export async function updateService(id: string, name: string, department: string | null) {
+export async function updateService(id: string, name: string, department: string | null, isComingSoon?: boolean) {
   const session = await getSession();
   if (!session) throw new Error("UNAUTHORIZED");
   const svc = await prisma.service.findUnique({ where: { id }, select: { charityId: true } });
   if (svc) await assertCharityAccess(session.id, session.role, svc.charityId);
+  const dataToUpdate: any = { name, department };
+  if (isComingSoon !== undefined) {
+    dataToUpdate.isComingSoon = isComingSoon;
+  }
   const service = await prisma.service.update({
     where: { id },
-    data: { name, department },
+    data: dataToUpdate,
     include: { charity: true }
   });
   
@@ -933,5 +937,18 @@ export async function broadcastGanttWeek(
     }
   }
   revalidatePath('/main');
+  return { success: true };
+}
+
+export async function toggleServiceComingSoon(name: string, department: string | null, isComingSoon: boolean) {
+  const session = await getSession();
+  if (!session) throw new Error("UNAUTHORIZED");
+  if (session.role !== "ADMIN") throw new Error("UNAUTHORIZED");
+
+  await (prisma.service as any).updateMany({
+    where: { name, department: department || null },
+    data: { isComingSoon }
+  });
+
   return { success: true };
 }

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Info, X, CheckCircle2, Circle } from "lucide-react";
+import { Info, X, CheckCircle2, Circle, Clock } from "lucide-react";
 import { createPortal } from "react-dom";
 
 type Step = {
@@ -269,7 +269,14 @@ export default function CurrentServicesCards({ services }: { services: Service[]
                 </button>
               </div>
 
-              {currentStage ? (
+              {(service as any).isComingSoon ? (
+                <div className="flex flex-col gap-2 flex-1 items-center justify-center bg-amber-50/50 dark:bg-amber-950/20 border border-amber-100 dark:border-amber-900/30 rounded-xl p-4 transition-colors">
+                  <div className="flex items-center gap-2 font-bold text-amber-600 dark:text-amber-400" style={{ fontSize: 'clamp(1rem, 2vw, 1.25rem)' }}>
+                    <Clock className="w-5 h-5" />
+                    قريباً
+                  </div>
+                </div>
+              ) : currentStage ? (
                 <div className="flex flex-col gap-2 flex-1">
                   {/* Bento Box 1: Current Stage */}
                   <div className="bg-slate-50/80 dark:bg-[#111111] border border-slate-100 dark:border-slate-800/80 rounded-xl p-4 flex flex-col justify-center transition-colors group-hover:border-slate-200 dark:group-hover:border-slate-700">

@@ -449,6 +449,7 @@ model Service {
   department String?
   charityId  String
   charity    Charity        @relation(fields: [charityId], references: [id], onDelete: Cascade)
+  isComingSoon Boolean      @default(false)
   
   templateId String?
   template   ServiceTemplate? @relation(fields: [templateId], references: [id], onDelete: SetNull)

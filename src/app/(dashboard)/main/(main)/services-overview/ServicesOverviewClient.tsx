@@ -5,7 +5,7 @@ import {
   Check, Calendar, Printer, ChevronDown, ChevronRight,
   Briefcase, LayoutGrid, ChevronLeft, Edit2, X, Plus,
   Trash2, ArrowUp, ArrowDown, Loader2, Save, Layers,
-  AlertTriangle, AlertCircle, GanttChartSquare
+  AlertTriangle, AlertCircle, GanttChartSquare, Clock
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import GanttChart from "./GanttChart";
@@ -28,7 +28,7 @@ import {
 import {
   setCurrentServiceStage, addServiceStage, updateServiceStage,
   deleteServiceStage, reorderServiceStages, unifyCharityStagesAction,
-  updateService, toggleActiveServiceStage, toggleCurrentServiceStage
+  updateService, toggleActiveServiceStage, toggleCurrentServiceStage, toggleServiceComingSoon
 } from "@/app/actions/services";
 import {
   addStrategicStageStep, updateStrategicStageStep, deleteStrategicStageStep,
@@ -1078,6 +1078,12 @@ export default function ServicesOverviewClient({
     });
   };
 
+  const handleToggleComingSoon = (name: string, dept: string | null, currentState: boolean) => {
+    startServiceNameTransition(async () => {
+      await toggleServiceComingSoon(name, dept, !currentState);
+    });
+  };
+
   const handleSaveLogo = (charityId: string) => {
     startLogoTransition(async () => {
       let finalUrl: string | null = logoPreview;
@@ -1133,12 +1139,12 @@ export default function ServicesOverviewClient({
   const allServices: ServiceWithStages[] = (stagesData["SERVICES"] || []).filter((s: ServiceWithStages) => s.name?.trim());
 
   const uniqueServiceKeys = useMemo(() => {
-    const seen = new Map<string, { name: string; dept: string | null; id: string }>();
+    const seen = new Map<string, { name: string; dept: string | null; id: string; isComingSoon?: boolean }>();
     for (const svc of allServices) {
       // Group by name+dept so same service across charities shares one tab
       // But if name is empty, use id to avoid merging unrelated services
       const key = svc.name?.trim() ? `${svc.name}__${svc.department || ""}` : svc.id;
-      if (!seen.has(key)) seen.set(key, { name: svc.name, dept: svc.department ?? null, id: svc.id });
+      if (!seen.has(key)) seen.set(key, { name: svc.name, dept: svc.department ?? null, id: svc.id, isComingSoon: (svc as any).isComingSoon });
     }
     return Array.from(seen.values());
   }, [allServices]);
@@ -1305,13 +1311,22 @@ export default function ServicesOverviewClient({
                         {displayName}
                       </button>
                       {isAdmin && isSvc && (
-                        <button
-                          onClick={() => { setEditingServiceId(svcId!); setEditingServiceName(displayName); }}
-                          className="absolute -top-0.5 left-0 opacity-0 group-hover/tab:opacity-100 transition-opacity p-0.5 text-slate-400 hover:text-primary"
-                          title="تعديل اسم الخدمة"
-                        >
-                          <Edit2 className="w-2.5 h-2.5" />
-                        </button>
+                        <div className="absolute -top-0.5 left-0 flex gap-0.5 opacity-0 group-hover/tab:opacity-100 transition-opacity">
+                          <button
+                            onClick={() => handleToggleComingSoon(displayName, svcInfo?.dept ?? null, !!svcInfo?.isComingSoon)}
+                            className={`p-0.5 hover:text-primary ${svcInfo?.isComingSoon ? "text-amber-500" : "text-slate-400"}`}
+                            title={svcInfo?.isComingSoon ? "إلغاء وضع قريباً" : "تفعيل وضع قريباً"}
+                          >
+                            <Clock className="w-2.5 h-2.5" />
+                          </button>
+                          <button
+                            onClick={() => { setEditingServiceId(svcId!); setEditingServiceName(displayName); }}
+                            className="p-0.5 text-slate-400 hover:text-primary"
+                            title="تعديل اسم الخدمة"
+                          >
+                            <Edit2 className="w-2.5 h-2.5" />
+                          </button>
+                        </div>
                       )}
                       {isAdmin && isBuiltin && (
                         <button

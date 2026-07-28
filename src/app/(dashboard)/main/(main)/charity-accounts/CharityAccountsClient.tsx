@@ -11,6 +11,7 @@ const titles = [
   { value: "FULL_TIME", label: "موظف بدوام كامل" },
   { value: "PART_TIME", label: "موظف بداوم جزئي" },
   { value: "VOLUNTEER", label: "متطوع" },
+  { value: "SYSTEM_ADMIN", label: "حساب مدير النظام" },
 ];
 
 export default function CharityAccountsClient({ charities, accounts: initialAccounts }: { charities: any[], accounts: any[] }) {

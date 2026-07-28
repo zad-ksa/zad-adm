@@ -943,7 +943,9 @@ export async function broadcastGanttWeek(
 export async function toggleServiceComingSoon(name: string, department: string | null, isComingSoon: boolean) {
   const session = await getSession();
   if (!session) throw new Error("UNAUTHORIZED");
-  if (session.role !== "ADMIN") throw new Error("UNAUTHORIZED");
+  if (!["ADMIN", "EXECUTIVE_DIRECTOR", "GENERAL_MANAGER", "ADMINISTRATIVE_SECRETARIAT"].includes(session.role)) {
+    throw new Error("UNAUTHORIZED");
+  }
 
   await (prisma.service as any).updateMany({
     where: { name, department: department || null },

@@ -245,7 +245,7 @@ export default function CurrentServicesCards({ services }: { services: Service[]
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
       {services.map((service) => {
         const { currentStage, currentStep, allStepsDone, continuousStages } = getCurrentInfo(service);
-        const activeContinuousStage = continuousStages?.find(s => s.isActive);
+        const activeContinuousStages = continuousStages?.filter(s => s.isActive) || [];
         
         return (
           <div 
@@ -310,14 +310,21 @@ export default function CurrentServicesCards({ services }: { services: Service[]
                 </div>
               )}
 
-              {activeContinuousStage && (
-                <div className="mt-4 pt-4 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-start">
-                  <div className="flex items-center gap-1.5 w-fit px-2.5 py-1 bg-emerald-500/10 border border-emerald-500/20 rounded-full">
-                    <span className="relative flex h-1.5 w-1.5 shrink-0">
-                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-500 opacity-75"></span>
-                      <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500"></span>
-                    </span>
-                    <span className="text-[10px] font-bold text-emerald-700 dark:text-emerald-400">{activeContinuousStage.name} (مرحلة دائمة نشطة)</span>
+              {activeContinuousStages.length > 0 && (
+                <div className="mt-4 pt-4 border-t border-slate-100 dark:border-slate-800/80 flex flex-col gap-2">
+                  <div className="text-[11px] font-medium text-slate-500 dark:text-slate-400 uppercase tracking-widest">
+                    خدمات نشطة حاليا:
+                  </div>
+                  <div className="flex flex-wrap gap-1.5">
+                    {activeContinuousStages.map(stg => (
+                      <div key={stg.id} className="flex items-center gap-1.5 w-fit px-2.5 py-1 bg-emerald-500/10 border border-emerald-500/20 rounded-full">
+                        <span className="relative flex h-1.5 w-1.5 shrink-0">
+                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-500 opacity-75"></span>
+                          <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500"></span>
+                        </span>
+                        <span className="text-[11px] font-bold text-emerald-700 dark:text-emerald-400">{stg.name}</span>
+                      </div>
+                    ))}
                   </div>
                 </div>
               )}

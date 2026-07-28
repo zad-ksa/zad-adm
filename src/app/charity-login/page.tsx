@@ -355,11 +355,20 @@ export default function CharityLoginPage() {
             </form>
           )}
 
-          <div className="mt-10 pt-6 border-t border-slate-200 dark:border-white/10 text-center animate-fade-in-up transition-colors" style={{ animationDuration: '1s' }}>
-            <p className="text-xs font-bold text-slate-500 dark:text-slate-400 flex items-center justify-center gap-1.5 transition-colors">
+          <div className="mt-8 pt-6 border-t border-slate-200 dark:border-white/10 text-center animate-fade-in-up transition-colors" style={{ animationDuration: '1s' }}>
+            <p className="text-xs font-bold text-slate-500 dark:text-slate-400 flex items-center justify-center gap-1.5 transition-colors mb-6">
               <ShieldCheck className="w-4 h-4 text-emerald-500 dark:text-emerald-400" />
               تم تطوير البوابة بأعلى معايير الأمان
             </p>
+            <p className="text-sm font-bold text-slate-600 dark:text-slate-400 mb-4 transition-colors">
+              هل أنت من موظفي زاد؟
+            </p>
+            <Link 
+              href="/"
+              className="inline-flex items-center justify-center w-full py-3.5 px-4 rounded-xl text-sm font-bold text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 border border-slate-200 dark:border-white/10 transition-all shadow-sm disabled:opacity-50"
+            >
+              الانتقال الى بوابة دخول إدارة زاد
+            </Link>
           </div>
         </div>
       </div>

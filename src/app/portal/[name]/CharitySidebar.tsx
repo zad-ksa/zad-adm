@@ -29,7 +29,7 @@ function NavItem({ item, isActive, isOpen, onClick }: { item: any, isActive: boo
       {isOpen && <span className="whitespace-nowrap tracking-tight leading-none pt-0.5">{item.label || item.title}</span>}
 
       {item.comingSoon && isOpen && (
-        <span className="mr-auto text-[9px] bg-slate-200 dark:bg-slate-700 text-slate-500 dark:text-slate-400 px-1.5 py-0.5 rounded-sm font-extrabold tracking-tight">
+        <span className="mr-auto text-[10px] font-bold font-sans bg-slate-200/80 dark:bg-slate-700/80 text-slate-600 dark:text-slate-300 px-2 py-0.5 rounded-md border border-slate-300/50 dark:border-slate-600/50">
           قريباً
         </span>
       )}
@@ -45,7 +45,7 @@ function NavItem({ item, isActive, isOpen, onClick }: { item: any, isActive: boo
         <item.icon className={`w-4 h-4 shrink-0 transition-all ${isOpen ? "ml-2.5" : "ml-0"} opacity-60`} />
         {isOpen && <span className="whitespace-nowrap tracking-tight leading-none pt-0.5">{item.label || item.title}</span>}
         {isOpen && (
-          <span className="mr-auto text-[9px] bg-slate-200 dark:bg-slate-700 text-slate-500 dark:text-slate-400 px-1.5 py-0.5 rounded font-extrabold">
+          <span className="mr-auto text-[10px] font-bold font-sans bg-slate-200/80 dark:bg-slate-700/80 text-slate-600 dark:text-slate-300 px-2 py-0.5 rounded-md border border-slate-300/50 dark:border-slate-600/50">
             قريباً
           </span>
         )}

@@ -28,6 +28,8 @@ export default function CharityLayoutClient({
   const pathname = usePathname();
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
 
+
+
   // Close sidebar on mobile when navigating
   useEffect(() => {
     if (typeof window !== "undefined" && window.innerWidth < 1024) {

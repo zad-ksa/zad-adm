@@ -205,7 +205,7 @@ export default function CharitySidebar({
 
           return (
             <NavItem
-              key={item.href}
+              key={item.id}
               item={item}
               isActive={isActive}
               isOpen={isOpen}
@@ -228,7 +228,7 @@ export default function CharitySidebar({
 
           return (
             <NavItem
-              key={item.href}
+              key={item.id}
               item={item}
               isActive={isActive}
               isOpen={isOpen}

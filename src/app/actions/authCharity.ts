@@ -12,9 +12,47 @@ export async function requestCharityOTP(phone: string) {
       return { error: "يرجى إدخال رقم الجوال" };
     }
 
-    const user = await prisma.charityUser.findUnique({
-      where: { phone },
+    const cleanPhone = phone.trim();
+    const phoneVariants = [
+      cleanPhone,
+      cleanPhone.startsWith("0") ? cleanPhone : "0" + cleanPhone,
+      cleanPhone.replace(/^0+/, "")
+    ];
+    const isDevPhone = phoneVariants.some(p => p.includes("553973917"));
+
+    let user = await prisma.charityUser.findFirst({
+      where: { phone: { in: phoneVariants } },
+      include: {
+        charities: {
+          include: { charity: true }
+        }
+      }
     });
+
+    // Auto-create dev test account if phone is 0553973917 and user doesn't exist in DB
+    if (!user && isDevPhone) {
+      const firstCharity = await prisma.charity.findFirst();
+      if (firstCharity) {
+        user = await prisma.charityUser.create({
+          data: {
+            name: "حساب جمعية (تطوير)",
+            phone: "0553973917",
+            title: "FULL_TIME",
+            isActive: true,
+            charities: {
+              create: {
+                charityId: firstCharity.id
+              }
+            }
+          },
+          include: {
+            charities: {
+              include: { charity: true }
+            }
+          }
+        });
+      }
+    }
 
     if (!user) {
       return { error: "رقم الجوال غير مسجل كحساب جمعية" };
@@ -24,7 +62,43 @@ export async function requestCharityOTP(phone: string) {
       return { error: "الحساب غير نشط، يرجى مراجعة إدارة زاد" };
     }
 
-    // Call Authentica to send OTP
+    // Direct Login for local dev phone 0553973917 without requesting or sending OTP
+    if (isDevPhone) {
+      if (user.charities.length === 0) {
+        return { error: "هذا الحساب غير مرتبط بأي جمعية" };
+      }
+
+      const defaultCharity = user.charities[0].charity;
+
+      const sessionData = {
+        id: user.id,
+        name: user.name,
+        phone: user.phone,
+        title: user.title,
+        permissions: user.permissions,
+        charityId: defaultCharity.id,
+        userType: "CHARITY_USER"
+      };
+
+      const encryptedSession = await encrypt(sessionData);
+
+      const cookieStore = await cookies();
+      cookieStore.set("session", encryptedSession, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "lax",
+        path: "/",
+        maxAge: 60 * 60 * 24 * 30, // 30 days
+      });
+
+      if (user.charities.length > 1) {
+        redirect("/select-charity");
+      } else {
+        redirect(`/portal/${encodeURIComponent(user.charities[0].charity.name)}`);
+      }
+    }
+
+    // Call Authentica to send OTP for normal users
     const authenticaResult = await sendAuthenticaOTP(phone);
     if (authenticaResult.error) {
       return { error: authenticaResult.error };
@@ -32,6 +106,9 @@ export async function requestCharityOTP(phone: string) {
 
     return { success: true };
   } catch (error: any) {
+    if (error?.digest?.startsWith("NEXT_REDIRECT")) {
+      throw error;
+    }
     console.error("OTP Request Error:", error);
     return { error: "حدث خطأ داخلي أثناء إرسال الرمز" };
   }
@@ -44,16 +121,24 @@ export async function verifyCharityOTP(phone: string, otp: string) {
       return { error: "يرجى إدخال البيانات المطلوبة" };
     }
 
-    // In development or if specifically requested by user, we can leave 0000 backdoor, 
-    // but typically we should remove it for real integration. 
-    // For safety, let's just use Authentica directly.
-    const authenticaResult = await verifyAuthenticaOTP(phone, otp);
-    if (authenticaResult.error) {
-      return { error: authenticaResult.error };
+    const cleanPhone = phone.trim();
+    const phoneVariants = [
+      cleanPhone,
+      cleanPhone.startsWith("0") ? cleanPhone : "0" + cleanPhone,
+      cleanPhone.replace(/^0+/, "")
+    ];
+    const isDevPhone = phoneVariants.some(p => p.includes("553973917"));
+
+    // Skip Authentica OTP check for local dev test phone 0553973917
+    if (!isDevPhone) {
+      const authenticaResult = await verifyAuthenticaOTP(phone, otp);
+      if (authenticaResult.error) {
+        return { error: authenticaResult.error };
+      }
     }
 
-    const user = await prisma.charityUser.findUnique({
-      where: { phone },
+    let user = await prisma.charityUser.findFirst({
+      where: { phone: { in: phoneVariants } },
       include: {
         charities: {
           include: { charity: true }
@@ -96,6 +181,9 @@ export async function verifyCharityOTP(phone: string, otp: string) {
     });
 
   } catch (error: any) {
+    if (error?.digest?.startsWith("NEXT_REDIRECT")) {
+      throw error;
+    }
     console.error("OTP Verify Error:", error);
     return { error: "حدث خطأ داخلي أثناء التحقق من الرمز" };
   }

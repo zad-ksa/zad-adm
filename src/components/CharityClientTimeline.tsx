@@ -25,23 +25,23 @@ export default function CharityClientTimeline({
             {sequentialStages.map((stage: any, idx: number) => {
               const isPast = sequentialStages.findIndex((s: any) => s.isCurrent) > idx;
               const isCurrent = stage.isCurrent;
-              const isComingSoonCurrent = isCurrent && stage.isComingSoon;
+              const isComingSoon = stage.isComingSoon || stage.name?.includes('قريب');
               const displayDuration = formatDurationArabic(stage.startDate, stage.endDate) || stage.duration;
               
               return (
-                <div key={stage.id} className={`group relative flex flex-col rounded-2xl border transition-all duration-500 overflow-hidden ${
-                  isComingSoonCurrent
-                    ? 'bg-white dark:bg-[#0F0F0F] border-amber-500/30 shadow-md dark:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)]'
+                <div key={stage.id} className={`relative flex-1 bg-white dark:bg-[#0A0A0A] rounded-2xl p-5 md:p-6 shadow-sm border transition-all duration-300 hover:shadow-md hover:border-slate-300 dark:hover:border-slate-700 ${
+                  isComingSoon
+                    ? 'border-amber-400 dark:border-amber-700 bg-amber-50/70 dark:bg-amber-950/20 shadow-sm'
                     : isCurrent 
-                    ? 'bg-white dark:bg-[#0F0F0F] border-primary/30 shadow-md dark:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)]' 
-                    : isPast 
-                      ? 'bg-slate-50/80 dark:bg-[#0A0A0A] border-slate-200 dark:border-slate-800/80 opacity-90 hover:opacity-100' 
-                      : 'bg-white dark:bg-[#0A0A0A] border-slate-100 dark:border-slate-800/50 opacity-70 hover:opacity-100'
+                      ? 'border-primary/30 shadow-lg dark:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)]' 
+                      : isPast 
+                        ? 'border-slate-200 dark:border-slate-800/80 opacity-90 hover:opacity-100' 
+                        : 'border-slate-100 dark:border-slate-800/50 opacity-70 hover:opacity-100'
                 }`}>
-                  {isCurrent && !isComingSoonCurrent && (
+                  {isCurrent && !isComingSoon && (
                     <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-transparent pointer-events-none" />
                   )}
-                  {isComingSoonCurrent && (
+                  {isComingSoon && (
                     <div className="absolute inset-0 bg-gradient-to-br from-amber-500/5 via-transparent to-transparent pointer-events-none" />
                   )}
                   
@@ -49,14 +49,14 @@ export default function CharityClientTimeline({
                     <div className="flex items-start justify-between gap-3 mb-4">
                       <div className={`w-8 h-8 rounded-full border flex items-center justify-center shrink-0 shadow-sm transition-colors ${
                         isPast ? 'bg-slate-100 dark:bg-[#111] border-slate-300 dark:border-slate-700 text-slate-600 dark:text-slate-400' : 
-                        isComingSoonCurrent ? 'bg-amber-500 border-amber-500 text-white scale-105' :
+                        isComingSoon ? 'bg-amber-500 border-amber-500 text-white scale-105' :
                         isCurrent ? 'bg-primary border-primary text-white scale-105' : 
                         'bg-white dark:bg-[#111] border-slate-200 dark:border-slate-800 text-slate-400'
                       }`}>
                         {isPast ? <CheckCircle2 className="w-4 h-4" /> : <span className="text-xs font-bold">{idx + 1}</span>}
                       </div>
                       
-                      {isComingSoonCurrent ? (
+                      {isComingSoon ? (
                         <span className="text-[10px] font-bold px-2 py-1 rounded-md bg-amber-500 text-white shadow-sm shrink-0">
                           قريباً
                         </span>
@@ -68,7 +68,7 @@ export default function CharityClientTimeline({
                     </div>
                     
                     <h4 className={`font-semibold tracking-tight mb-2 ${
-                      isComingSoonCurrent ? 'text-amber-500' : isCurrent ? 'text-primary' : isPast ? 'text-slate-800 dark:text-slate-200' : 'text-slate-600 dark:text-slate-400'
+                      isComingSoon ? 'text-amber-500' : isCurrent ? 'text-primary' : isPast ? 'text-slate-800 dark:text-slate-200' : 'text-slate-600 dark:text-slate-400'
                     }`} style={{ fontSize: 'clamp(1rem, 1.5vw, 1.125rem)' }}>
                       {stage.name}
                     </h4>

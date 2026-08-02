@@ -183,6 +183,7 @@ function InlineTimeline({
   onUnifyClick?: () => void;
 }) {
   const [stages, setStages] = useState<Stage[]>(initialStages);
+  const router = useRouter();
 
   const [isEditing, setIsEditing] = useState(false);
   const [isPending, startTransition] = useTransition();
@@ -266,12 +267,12 @@ function InlineTimeline({
         }
       }));
 
-      // نعتمد على الدالة المركزية الجديدة في السيرفر لعمل التحديثات اللازمة
       if (newVal) {
         await actionSetCurrent(dept, serviceId, charityId, stageId);
       } else {
         await actionToggleCurrent(dept, stageId, false);
       }
+      router.refresh();
     });
   };
 
@@ -296,6 +297,7 @@ function InlineTimeline({
         : s));
       setEditingId(null);
       await actionUpdate(dept, id, editName, editDesc || null, start, end, editIsContinuous, durStr ?? undefined, editIsComingSoon);
+      router.refresh();
     });
   };
 

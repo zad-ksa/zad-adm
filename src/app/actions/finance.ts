@@ -64,8 +64,8 @@ export async function addFinanceStage(
   
   const charity = await prisma.charity.findUnique({ where: { id: charityId } });
   if (charity) {
-    revalidatePath(`/charity/${encodeURIComponent(charity.name)}`);
-    revalidatePath(`/charity/${encodeURIComponent(charity.name)}/finance`);
+    revalidatePath(`/portal/${encodeURIComponent(charity.name)}`);
+    revalidatePath(`/portal/${encodeURIComponent(charity.name)}/finance`);
   }
 }
 
@@ -99,8 +99,8 @@ export async function updateFinanceStage(
     include: { service: { include: { charity: true } } }
   });
   
-  revalidatePath(`/charity/${encodeURIComponent(stage.service.charity.name)}`);
-  revalidatePath(`/charity/${encodeURIComponent(stage.service.charity.name)}/finance`);
+  revalidatePath(`/portal/${encodeURIComponent(stage.service.charity.name)}`);
+  revalidatePath(`/portal/${encodeURIComponent(stage.service.charity.name)}/finance`);
 }
 
 export async function deleteFinanceStage(stageId: string) {
@@ -113,8 +113,8 @@ export async function deleteFinanceStage(stageId: string) {
     include: { service: { include: { charity: true } } }
   });
   
-  revalidatePath(`/charity/${encodeURIComponent(stage.service.charity.name)}`);
-  revalidatePath(`/charity/${encodeURIComponent(stage.service.charity.name)}/finance`);
+  revalidatePath(`/portal/${encodeURIComponent(stage.service.charity.name)}`);
+  revalidatePath(`/portal/${encodeURIComponent(stage.service.charity.name)}/finance`);
 }
 
 export async function toggleActiveFinanceStage(stageId: string, isActive: boolean) {
@@ -124,8 +124,8 @@ export async function toggleActiveFinanceStage(stageId: string, isActive: boolea
     include: { service: { include: { charity: true } } }
   });
   
-  revalidatePath(`/charity/${encodeURIComponent(stage.service.charity.name)}`);
-  revalidatePath(`/charity/${encodeURIComponent(stage.service.charity.name)}/finance`);
+  revalidatePath(`/portal/${encodeURIComponent(stage.service.charity.name)}`);
+  revalidatePath(`/portal/${encodeURIComponent(stage.service.charity.name)}/finance`);
 }
 
 export async function setCurrentFinanceStage(charityId: string, stageId: string) {
@@ -142,8 +142,8 @@ export async function setCurrentFinanceStage(charityId: string, stageId: string)
   });
 
   if (updatedStage) {
-    revalidatePath(`/charity/${encodeURIComponent(updatedStage.service.charity.name)}`);
-    revalidatePath(`/charity/${encodeURIComponent(updatedStage.service.charity.name)}/finance`);
+    revalidatePath(`/portal/${encodeURIComponent(updatedStage.service.charity.name)}`);
+    revalidatePath(`/portal/${encodeURIComponent(updatedStage.service.charity.name)}/finance`);
   }
 }
 
@@ -155,7 +155,7 @@ export async function toggleCurrentFinanceStage(stageId: string, isCurrent: bool
     data: { isCurrent },
     include: { service: { include: { charity: true } } }
   });
-  revalidatePath(`/charity/${encodeURIComponent(stage.service.charity.name)}/finance`);
+  revalidatePath(`/portal/${encodeURIComponent(stage.service.charity.name)}/finance`);
 }
 
 export async function reorderFinanceStages(charityId: string, stageIds: string[]) {
@@ -171,7 +171,7 @@ export async function reorderFinanceStages(charityId: string, stageIds: string[]
   
   const charity = await prisma.charity.findUnique({ where: { id: charityId } });
   if (charity) {
-    revalidatePath(`/charity/${encodeURIComponent(charity.name)}`);
-    revalidatePath(`/charity/${encodeURIComponent(charity.name)}/finance`);
+    revalidatePath(`/portal/${encodeURIComponent(charity.name)}`);
+    revalidatePath(`/portal/${encodeURIComponent(charity.name)}/finance`);
   }
 }

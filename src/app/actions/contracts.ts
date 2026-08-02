@@ -130,7 +130,7 @@ export async function toggleInstallmentPaid(id: string, isPaid: boolean) {
     await prisma.$transaction(queries);
 
     revalidatePath("/main/contracts");
-    revalidatePath(`/charity/${encodeURIComponent(installment.charity.name)}/finance`);
+    revalidatePath(`/portal/${encodeURIComponent(installment.charity.name)}/finance`);
     return { success: isPaid ? "تم تسجيل سداد القسط" : "تم إلغاء سداد القسط", installment: { ...installment, isPaid, paidDate } };
   } catch (error: any) {
     console.error("Error toggling installment status:", error);

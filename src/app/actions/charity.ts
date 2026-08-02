@@ -134,8 +134,8 @@ export async function updateCharity(id: string, data: { name?: string; establish
         where: { charityName: oldName },
         data: { charityName: trimmedName }
       });
-      revalidatePath(`/charity/${encodeURIComponent(oldName)}`);
-      revalidatePath(`/charity/${encodeURIComponent(trimmedName)}`);
+      revalidatePath(`/portal/${encodeURIComponent(oldName)}`);
+      revalidatePath(`/portal/${encodeURIComponent(trimmedName)}`);
     }
 
     revalidatePath("/main");
@@ -274,8 +274,8 @@ export async function addFinancialTransactionAction(
     ]);
 
     revalidatePath("/main");
-    revalidatePath(`/charity/${encodeURIComponent(charity.name)}`);
-    revalidatePath(`/charity/${encodeURIComponent(charity.name)}/finance`);
+    revalidatePath(`/portal/${encodeURIComponent(charity.name)}`);
+    revalidatePath(`/portal/${encodeURIComponent(charity.name)}/finance`);
 
     return { success: true, charity: updatedCharity, log };
   } catch (error: any) {
@@ -319,10 +319,10 @@ export async function updateTimelineConfig(
     });
 
     revalidatePath("/main");
-    revalidatePath(`/charity/${encodeURIComponent(charity.name)}/services`);
-    revalidatePath(`/charity/${encodeURIComponent(charity.name)}/strategy`);
-    revalidatePath(`/charity/${encodeURIComponent(charity.name)}/governance`);
-    revalidatePath(`/charity/${encodeURIComponent(charity.name)}/finance`);
+    revalidatePath(`/portal/${encodeURIComponent(charity.name)}/services`);
+    revalidatePath(`/portal/${encodeURIComponent(charity.name)}/strategy`);
+    revalidatePath(`/portal/${encodeURIComponent(charity.name)}/governance`);
+    revalidatePath(`/portal/${encodeURIComponent(charity.name)}/finance`);
 
     return { success: true };
   } catch (error: any) {
@@ -345,7 +345,7 @@ export async function updateCharityLogo(charityId: string, logoUrl: string | nul
     });
     revalidatePath("/main");
     revalidatePath("/main/charities");
-    revalidatePath(`/charity/${encodeURIComponent(charity.name)}`);
+    revalidatePath(`/portal/${encodeURIComponent(charity.name)}`);
     return { success: true };
   } catch (error: any) {
     return { success: false, message: error.message || "ط­ط¯ط« ط®ط·ط£" };
@@ -368,7 +368,7 @@ export async function addDonorAccount(charityId: string, donorName: string, user
     });
 
     const charity = await prisma.charity.findUnique({ where: { id: charityId } });
-    if (charity) revalidatePath(`/charity/${encodeURIComponent(charity.name)}/finance`);
+    if (charity) revalidatePath(`/portal/${encodeURIComponent(charity.name)}/finance`);
     
     return { success: true, account };
   } catch (error: any) {
@@ -387,7 +387,7 @@ export async function deleteDonorAccount(accountId: string, charityId: string) {
     });
 
     const charity = await prisma.charity.findUnique({ where: { id: charityId } });
-    if (charity) revalidatePath(`/charity/${encodeURIComponent(charity.name)}/finance`);
+    if (charity) revalidatePath(`/portal/${encodeURIComponent(charity.name)}/finance`);
     
     return { success: true };
   } catch (error: any) {
@@ -420,7 +420,7 @@ export async function addGrantApplication(
     });
 
     const charity = await prisma.charity.findUnique({ where: { id: charityId } });
-    if (charity) revalidatePath(`/charity/${encodeURIComponent(charity.name)}/resource-development/grants`);
+    if (charity) revalidatePath(`/portal/${encodeURIComponent(charity.name)}/resource-development/grants`);
     
     return { success: true, grant };
   } catch (error: any) {
@@ -481,8 +481,8 @@ export async function updateGrantApplicationStatus(
 
     await prisma.$transaction(queries);
 
-    revalidatePath(`/charity/${encodeURIComponent(charity.name)}/resource-development/grants`);
-    revalidatePath(`/charity/${encodeURIComponent(charity.name)}/finance`);
+    revalidatePath(`/portal/${encodeURIComponent(charity.name)}/resource-development/grants`);
+    revalidatePath(`/portal/${encodeURIComponent(charity.name)}/finance`);
     
     return { success: true, grant: { ...grant, ...updateData, status } };
   } catch (error: any) {
@@ -501,7 +501,7 @@ export async function deleteGrantApplication(grantId: string, charityId: string)
     });
 
     const charity = await prisma.charity.findUnique({ where: { id: charityId } });
-    if (charity) revalidatePath(`/charity/${encodeURIComponent(charity.name)}/finance`);
+    if (charity) revalidatePath(`/portal/${encodeURIComponent(charity.name)}/finance`);
     
     return { success: true };
   } catch (error: any) {

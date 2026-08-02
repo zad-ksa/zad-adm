@@ -249,9 +249,9 @@ export async function createService(charityId: string, name: string, department:
     include: { charity: true }
   });
   
-  revalidatePath(`/charity/${encodeURIComponent(service.charity.name)}/services`);
+  revalidatePath(`/portal/${encodeURIComponent(service.charity.name)}/services`);
   if (service.department) {
-    revalidatePath(`/charity/${encodeURIComponent(service.charity.name)}/${service.department.toLowerCase()}`);
+    revalidatePath(`/portal/${encodeURIComponent(service.charity.name)}/${service.department.toLowerCase()}`);
   }
   
   return service;
@@ -272,11 +272,11 @@ export async function updateService(id: string, name: string, department: string
     include: { charity: true }
   });
   
-  revalidatePath(`/charity/${encodeURIComponent(service.charity.name)}/services`);
-  revalidatePath(`/charity/${encodeURIComponent(service.charity.name)}/strategy`);
-  revalidatePath(`/charity/${encodeURIComponent(service.charity.name)}/governance`);
-  revalidatePath(`/charity/${encodeURIComponent(service.charity.name)}/finance`);
-  revalidatePath(`/charity/${encodeURIComponent(service.charity.name)}/programs`);
+  revalidatePath(`/portal/${encodeURIComponent(service.charity.name)}/services`);
+  revalidatePath(`/portal/${encodeURIComponent(service.charity.name)}/strategy`);
+  revalidatePath(`/portal/${encodeURIComponent(service.charity.name)}/governance`);
+  revalidatePath(`/portal/${encodeURIComponent(service.charity.name)}/finance`);
+  revalidatePath(`/portal/${encodeURIComponent(service.charity.name)}/programs`);
   
   return service;
 }
@@ -291,11 +291,11 @@ export async function deleteService(id: string) {
     include: { charity: true }
   });
   
-  revalidatePath(`/charity/${encodeURIComponent(service.charity.name)}/services`);
-  revalidatePath(`/charity/${encodeURIComponent(service.charity.name)}/strategy`);
-  revalidatePath(`/charity/${encodeURIComponent(service.charity.name)}/governance`);
-  revalidatePath(`/charity/${encodeURIComponent(service.charity.name)}/finance`);
-  revalidatePath(`/charity/${encodeURIComponent(service.charity.name)}/programs`);
+  revalidatePath(`/portal/${encodeURIComponent(service.charity.name)}/services`);
+  revalidatePath(`/portal/${encodeURIComponent(service.charity.name)}/strategy`);
+  revalidatePath(`/portal/${encodeURIComponent(service.charity.name)}/governance`);
+  revalidatePath(`/portal/${encodeURIComponent(service.charity.name)}/finance`);
+  revalidatePath(`/portal/${encodeURIComponent(service.charity.name)}/programs`);
   
   return service;
 }
@@ -335,9 +335,9 @@ export async function addServiceStage(
   });
   
   if (stage?.service?.charity) {
-    revalidatePath(`/charity/${encodeURIComponent(stage.service.charity.name)}/services`);
+    revalidatePath(`/portal/${encodeURIComponent(stage.service.charity.name)}/services`);
     if (stage.service.department) {
-      revalidatePath(`/charity/${encodeURIComponent(stage.service.charity.name)}/${stage.service.department.toLowerCase()}`);
+      revalidatePath(`/portal/${encodeURIComponent(stage.service.charity.name)}/${stage.service.department.toLowerCase()}`);
     }
   }
   
@@ -362,9 +362,9 @@ export async function updateServiceStage(
   });
   
   if (stage?.service?.charity) {
-    revalidatePath(`/charity/${encodeURIComponent(stage.service.charity.name)}/services`);
+    revalidatePath(`/portal/${encodeURIComponent(stage.service.charity.name)}/services`);
     if (stage.service.department) {
-      revalidatePath(`/charity/${encodeURIComponent(stage.service.charity.name)}/${stage.service.department.toLowerCase()}`);
+      revalidatePath(`/portal/${encodeURIComponent(stage.service.charity.name)}/${stage.service.department.toLowerCase()}`);
     }
   }
   
@@ -379,9 +379,9 @@ export async function toggleServiceStageComingSoon(stageId: string, isComingSoon
   });
 
   if (stage?.service?.charity) {
-    revalidatePath(`/charity/${encodeURIComponent(stage.service.charity.name)}/services`);
+    revalidatePath(`/portal/${encodeURIComponent(stage.service.charity.name)}/services`);
     if (stage.service.department) {
-      revalidatePath(`/charity/${encodeURIComponent(stage.service.charity.name)}/${stage.service.department.toLowerCase()}`);
+      revalidatePath(`/portal/${encodeURIComponent(stage.service.charity.name)}/${stage.service.department.toLowerCase()}`);
     }
   }
   return stage;
@@ -394,9 +394,9 @@ export async function deleteServiceStage(id: string) {
     include: { service: { include: { charity: true } } }
   });
   
-  revalidatePath(`/charity/${encodeURIComponent(stage.service.charity.name)}/services`);
+  revalidatePath(`/portal/${encodeURIComponent(stage.service.charity.name)}/services`);
   if (stage.service.department) {
-    revalidatePath(`/charity/${encodeURIComponent(stage.service.charity.name)}/${stage.service.department.toLowerCase()}`);
+    revalidatePath(`/portal/${encodeURIComponent(stage.service.charity.name)}/${stage.service.department.toLowerCase()}`);
   }
   
   if (stage.serviceId) {
@@ -414,9 +414,9 @@ export async function toggleActiveServiceStage(stageId: string, isActive: boolea
   });
 
   if (stage) {
-    revalidatePath(`/charity/${encodeURIComponent(stage.service.charity.name)}/services`);
+    revalidatePath(`/portal/${encodeURIComponent(stage.service.charity.name)}/services`);
     if (stage.service.department) {
-      revalidatePath(`/charity/${encodeURIComponent(stage.service.charity.name)}/${stage.service.department.toLowerCase()}`);
+      revalidatePath(`/portal/${encodeURIComponent(stage.service.charity.name)}/${stage.service.department.toLowerCase()}`);
     }
   }
 }
@@ -437,9 +437,9 @@ export async function reorderServiceStages(stageIds: string[]) {
   });
   
   if (stage) {
-    revalidatePath(`/charity/${encodeURIComponent(stage.service.charity.name)}/services`);
+    revalidatePath(`/portal/${encodeURIComponent(stage.service.charity.name)}/services`);
     if (stage.service.department) {
-      revalidatePath(`/charity/${encodeURIComponent(stage.service.charity.name)}/${stage.service.department.toLowerCase()}`);
+      revalidatePath(`/portal/${encodeURIComponent(stage.service.charity.name)}/${stage.service.department.toLowerCase()}`);
     }
   }
 }
@@ -651,10 +651,10 @@ export async function setCurrentServiceStage(serviceId: string, stageId: string)
   });
   
   if (stage) {
-    revalidatePath(`/charity/${encodeURIComponent(stage.service.charity.name)}/services`);
-    revalidatePath(`/charity/${encodeURIComponent(stage.service.charity.name)}`);
+    revalidatePath(`/portal/${encodeURIComponent(stage.service.charity.name)}/services`);
+    revalidatePath(`/portal/${encodeURIComponent(stage.service.charity.name)}`);
     if (stage.service.department) {
-      revalidatePath(`/charity/${encodeURIComponent(stage.service.charity.name)}/${stage.service.department.toLowerCase()}`);
+      revalidatePath(`/portal/${encodeURIComponent(stage.service.charity.name)}/${stage.service.department.toLowerCase()}`);
     }
   }
 }
@@ -675,7 +675,7 @@ export async function toggleCurrentServiceStage(stageId: string, isCurrent: bool
     await syncServiceProgress(stage.serviceId);
   }
   
-  revalidatePath(`/charity/${encodeURIComponent(stage.service.charity.name)}/services`);
+  revalidatePath(`/portal/${encodeURIComponent(stage.service.charity.name)}/services`);
 }
 
 const ADMIN_ROLES = ["ADMIN", "EXECUTIVE_DIRECTOR", "ADMINISTRATIVE_SECRETARIAT"];

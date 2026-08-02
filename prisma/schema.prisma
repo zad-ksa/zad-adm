@@ -267,6 +267,7 @@ enum Role {
   STRATEGY
   FINANCE
   CHARITY_CLIENT
+  ACCOUNTANT
 }
 
 model Employee {

@@ -24,6 +24,7 @@ interface Stage {
   isContinuous: boolean;
   isActive: boolean;
   isDone: boolean;
+  isComingSoon?: boolean;
   steps: Step[];
 }
 

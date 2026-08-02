@@ -116,14 +116,14 @@ export default function CurrentServicesCards({ services }: { services: Service[]
                   {sequentialStages.map((stage, idx) => {
                     const isPast = stage.isDone || (currentStageIndex > -1 && idx < currentStageIndex);
                     const isCurrent = idx === currentStageIndex && !stage.isDone;
-                    const isComingSoon = stage.isComingSoon;
+                    const isComingSoon = stage.isComingSoon || stage.name?.includes('قريب');
 
                     return (
                       <div 
                         key={stage.id} 
                         className={`group relative flex flex-col rounded-2xl border transition-all duration-500 overflow-hidden ${
                           isComingSoon
-                            ? 'bg-amber-50/70 dark:bg-amber-950/20 border-amber-300 dark:border-amber-800/60 shadow-sm'
+                            ? 'bg-amber-50/70 dark:bg-amber-950/20 border-amber-400 dark:border-amber-700 shadow-sm'
                             : isCurrent 
                               ? 'bg-white dark:bg-[#0F0F0F] border-primary/30 shadow-lg dark:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)]' 
                               : isPast 
@@ -132,7 +132,7 @@ export default function CurrentServicesCards({ services }: { services: Service[]
                         }`}
                       >
                         {isComingSoon ? (
-                          <div className="absolute inset-0 bg-gradient-to-br from-amber-500/5 via-transparent to-transparent pointer-events-none" />
+                          <div className="absolute inset-0 bg-gradient-to-br from-amber-500/10 via-transparent to-transparent pointer-events-none" />
                         ) : isCurrent ? (
                           <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-transparent pointer-events-none" />
                         ) : null}
@@ -150,7 +150,7 @@ export default function CurrentServicesCards({ services }: { services: Service[]
                               </div>
                               <div className="flex items-center gap-2 flex-wrap">
                                 <h4 className={`font-semibold tracking-tight ${
-                                  isComingSoon ? 'text-amber-700 dark:text-amber-400' :
+                                  isComingSoon ? 'text-amber-600 dark:text-amber-500' :
                                   isCurrent ? 'text-primary' : isPast ? 'text-slate-800 dark:text-slate-200' : 'text-slate-600 dark:text-slate-400'
                                 }`} style={{ fontSize: 'clamp(1rem, 1.5vw, 1.125rem)' }}>
                                   {stage.name}
@@ -294,7 +294,7 @@ export default function CurrentServicesCards({ services }: { services: Service[]
                 <div className="flex flex-col gap-2 flex-1">
                   {/* Bento Box 1: Current Stage */}
                   <div className={`border rounded-xl p-4 flex flex-col justify-center transition-colors ${
-                    currentStage.isComingSoon 
+                    (currentStage.isComingSoon || currentStage.name?.includes('قريب')) 
                       ? 'bg-amber-50/80 dark:bg-amber-950/30 border-amber-200 dark:border-amber-900/50' 
                       : 'bg-slate-50/80 dark:bg-[#111111] border-slate-100 dark:border-slate-800/80 group-hover:border-slate-200 dark:group-hover:border-slate-700'
                   }`}>
@@ -302,7 +302,7 @@ export default function CurrentServicesCards({ services }: { services: Service[]
                       <div className="text-[11px] font-medium text-slate-500 dark:text-slate-400 uppercase tracking-widest">
                         المرحلة الحالية
                       </div>
-                      {currentStage.isComingSoon && (
+                      {(currentStage.isComingSoon || currentStage.name?.includes('قريب')) && (
                         <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-md bg-amber-500 text-white shadow-sm">
                           <Clock className="w-3 h-3" />
                           قريباً
@@ -310,7 +310,7 @@ export default function CurrentServicesCards({ services }: { services: Service[]
                       )}
                     </div>
                     <div className={`font-semibold ${
-                      currentStage.isComingSoon ? 'text-amber-700 dark:text-amber-400' : 'text-slate-800 dark:text-slate-200'
+                      (currentStage.isComingSoon || currentStage.name?.includes('قريب')) ? 'text-amber-700 dark:text-amber-400' : 'text-slate-800 dark:text-slate-200'
                     }`} style={{ fontSize: 'clamp(0.875rem, 1.5vw, 1rem)' }}>
                       {currentStage.name}
                     </div>

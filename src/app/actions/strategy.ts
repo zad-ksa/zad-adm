@@ -91,8 +91,8 @@ export async function addStrategicStage(
 
   const charity = await prisma.charity.findUnique({ where: { id: charityId } });
   if (charity) {
-    revalidatePath(`/charity/${encodeURIComponent(charity.name)}`);
-    revalidatePath(`/charity/${encodeURIComponent(charity.name)}/strategy`);
+    revalidatePath(`/portal/${encodeURIComponent(charity.name)}`);
+    revalidatePath(`/portal/${encodeURIComponent(charity.name)}/strategy`);
   }
 }
 
@@ -128,8 +128,8 @@ export async function updateStrategicStage(
     include: { service: { include: { charity: true } } }
   });
 
-  revalidatePath(`/charity/${encodeURIComponent(stage.service.charity.name)}`);
-  revalidatePath(`/charity/${encodeURIComponent(stage.service.charity.name)}/strategy`);
+  revalidatePath(`/portal/${encodeURIComponent(stage.service.charity.name)}`);
+  revalidatePath(`/portal/${encodeURIComponent(stage.service.charity.name)}/strategy`);
 }
 
 export async function deleteStrategicStage(stageId: string) {
@@ -144,8 +144,8 @@ export async function deleteStrategicStage(stageId: string) {
     include: { service: { include: { charity: true } } }
   });
 
-  revalidatePath(`/charity/${encodeURIComponent(stage.service.charity.name)}`);
-  revalidatePath(`/charity/${encodeURIComponent(stage.service.charity.name)}/strategy`);
+  revalidatePath(`/portal/${encodeURIComponent(stage.service.charity.name)}`);
+  revalidatePath(`/portal/${encodeURIComponent(stage.service.charity.name)}/strategy`);
 }
 
 export async function toggleActiveStrategicStage(stageId: string, isActive: boolean) {
@@ -155,8 +155,8 @@ export async function toggleActiveStrategicStage(stageId: string, isActive: bool
     include: { service: { include: { charity: true } } }
   });
 
-  revalidatePath(`/charity/${encodeURIComponent(stage.service.charity.name)}`);
-  revalidatePath(`/charity/${encodeURIComponent(stage.service.charity.name)}/strategy`);
+  revalidatePath(`/portal/${encodeURIComponent(stage.service.charity.name)}`);
+  revalidatePath(`/portal/${encodeURIComponent(stage.service.charity.name)}/strategy`);
 }
 
 export async function setCurrentStrategicStage(charityId: string, stageId: string) {
@@ -175,8 +175,8 @@ export async function setCurrentStrategicStage(charityId: string, stageId: strin
   });
 
   if (updatedStage) {
-    revalidatePath(`/charity/${encodeURIComponent(updatedStage.service.charity.name)}`);
-    revalidatePath(`/charity/${encodeURIComponent(updatedStage.service.charity.name)}/strategy`);
+    revalidatePath(`/portal/${encodeURIComponent(updatedStage.service.charity.name)}`);
+    revalidatePath(`/portal/${encodeURIComponent(updatedStage.service.charity.name)}/strategy`);
   }
 }
 
@@ -189,7 +189,7 @@ export async function toggleCurrentStrategicStage(stageId: string, isCurrent: bo
     data: { isCurrent },
     include: { service: { include: { charity: true } } }
   });
-  revalidatePath(`/charity/${encodeURIComponent(stage.service.charity.name)}/strategy`);
+  revalidatePath(`/portal/${encodeURIComponent(stage.service.charity.name)}/strategy`);
 }
 
 export async function reorderStrategicStages(charityId: string, stageIds: string[]) {
@@ -206,8 +206,8 @@ export async function reorderStrategicStages(charityId: string, stageIds: string
 
   const charity = await prisma.charity.findUnique({ where: { id: charityId } });
   if (charity) {
-    revalidatePath(`/charity/${encodeURIComponent(charity.name)}`);
-    revalidatePath(`/charity/${encodeURIComponent(charity.name)}/strategy`);
+    revalidatePath(`/portal/${encodeURIComponent(charity.name)}`);
+    revalidatePath(`/portal/${encodeURIComponent(charity.name)}/strategy`);
   }
 }
 
@@ -216,7 +216,7 @@ export async function toggleReadinessVisibility(charityName: string, isVisible: 
     where: { name: charityName },
     data: { isReadinessVisible: isVisible }
   });
-  revalidatePath(`/charity/${encodeURIComponent(charityName)}/strategy`);
+  revalidatePath(`/portal/${encodeURIComponent(charityName)}/strategy`);
 }
 
 export async function togglePerformanceEditability(charityName: string, isEditable: boolean) {
@@ -224,8 +224,8 @@ export async function togglePerformanceEditability(charityName: string, isEditab
     where: { name: charityName },
     data: { isPerformanceEditable: isEditable }
   });
-  revalidatePath(`/charity/${encodeURIComponent(charityName)}/strategy`);
-  revalidatePath(`/charity/${encodeURIComponent(charityName)}/strategy/performance`);
+  revalidatePath(`/portal/${encodeURIComponent(charityName)}/strategy`);
+  revalidatePath(`/portal/${encodeURIComponent(charityName)}/strategy/performance`);
 }
 
 export async function toggleVisionMissionVisibility(charityName: string, isVisible: boolean) {
@@ -233,8 +233,8 @@ export async function toggleVisionMissionVisibility(charityName: string, isVisib
     where: { name: charityName },
     data: { isVisionMissionVisible: isVisible }
   });
-  revalidatePath(`/charity/${encodeURIComponent(charityName)}/strategy`);
-  revalidatePath(`/charity/${encodeURIComponent(charityName)}/strategy/vision-mission`);
+  revalidatePath(`/portal/${encodeURIComponent(charityName)}/strategy`);
+  revalidatePath(`/portal/${encodeURIComponent(charityName)}/strategy/vision-mission`);
 }
 
 export async function getCharityDashboardData(charityName: string) {

@@ -64,8 +64,8 @@ export async function addGovernanceStage(
 
   const charity = await prisma.charity.findUnique({ where: { id: charityId } });
   if (charity) {
-    revalidatePath(`/charity/${encodeURIComponent(charity.name)}`);
-    revalidatePath(`/charity/${encodeURIComponent(charity.name)}/governance`);
+    revalidatePath(`/portal/${encodeURIComponent(charity.name)}`);
+    revalidatePath(`/portal/${encodeURIComponent(charity.name)}/governance`);
   }
 }
 
@@ -99,8 +99,8 @@ export async function updateGovernanceStage(
     include: { service: { include: { charity: true } } }
   });
 
-  revalidatePath(`/charity/${encodeURIComponent(stage.service.charity.name)}`);
-  revalidatePath(`/charity/${encodeURIComponent(stage.service.charity.name)}/governance`);
+  revalidatePath(`/portal/${encodeURIComponent(stage.service.charity.name)}`);
+  revalidatePath(`/portal/${encodeURIComponent(stage.service.charity.name)}/governance`);
 }
 
 export async function deleteGovernanceStage(stageId: string) {
@@ -113,8 +113,8 @@ export async function deleteGovernanceStage(stageId: string) {
     include: { service: { include: { charity: true } } }
   });
 
-  revalidatePath(`/charity/${encodeURIComponent(stage.service.charity.name)}`);
-  revalidatePath(`/charity/${encodeURIComponent(stage.service.charity.name)}/governance`);
+  revalidatePath(`/portal/${encodeURIComponent(stage.service.charity.name)}`);
+  revalidatePath(`/portal/${encodeURIComponent(stage.service.charity.name)}/governance`);
 }
 
 export async function toggleActiveGovernanceStage(stageId: string, isActive: boolean) {
@@ -124,8 +124,8 @@ export async function toggleActiveGovernanceStage(stageId: string, isActive: boo
     include: { service: { include: { charity: true } } }
   });
 
-  revalidatePath(`/charity/${encodeURIComponent(stage.service.charity.name)}`);
-  revalidatePath(`/charity/${encodeURIComponent(stage.service.charity.name)}/governance`);
+  revalidatePath(`/portal/${encodeURIComponent(stage.service.charity.name)}`);
+  revalidatePath(`/portal/${encodeURIComponent(stage.service.charity.name)}/governance`);
 }
 
 export async function setCurrentGovernanceStage(charityId: string, stageId: string) {
@@ -142,8 +142,8 @@ export async function setCurrentGovernanceStage(charityId: string, stageId: stri
   });
 
   if (updatedStage) {
-    revalidatePath(`/charity/${encodeURIComponent(updatedStage.service.charity.name)}`);
-    revalidatePath(`/charity/${encodeURIComponent(updatedStage.service.charity.name)}/governance`);
+    revalidatePath(`/portal/${encodeURIComponent(updatedStage.service.charity.name)}`);
+    revalidatePath(`/portal/${encodeURIComponent(updatedStage.service.charity.name)}/governance`);
   }
 }
 
@@ -155,7 +155,7 @@ export async function toggleCurrentGovernanceStage(stageId: string, isCurrent: b
     data: { isCurrent },
     include: { service: { include: { charity: true } } }
   });
-  revalidatePath(`/charity/${encodeURIComponent(stage.service.charity.name)}/governance`);
+  revalidatePath(`/portal/${encodeURIComponent(stage.service.charity.name)}/governance`);
 }
 
 export async function reorderGovernanceStages(charityId: string, stageIds: string[]) {
@@ -171,8 +171,8 @@ export async function reorderGovernanceStages(charityId: string, stageIds: strin
 
   const charity = await prisma.charity.findUnique({ where: { id: charityId } });
   if (charity) {
-    revalidatePath(`/charity/${encodeURIComponent(charity.name)}`);
-    revalidatePath(`/charity/${encodeURIComponent(charity.name)}/governance`);
+    revalidatePath(`/portal/${encodeURIComponent(charity.name)}`);
+    revalidatePath(`/portal/${encodeURIComponent(charity.name)}/governance`);
   }
 }
 
@@ -224,7 +224,7 @@ export async function updateCharitySize(charityId: string, size: "MICRO" | "SMAL
       where: { id: charityId },
       data: { size },
     });
-    revalidatePath(`/charity/[name]/governance`);
+    revalidatePath(`/portal/[name]/governance`);
     return { success: true };
   } catch (error) {
     console.error("Failed to update charity size:", error);
@@ -244,7 +244,7 @@ export async function updateCharityRevenueAndSize(charityId: string, revenue: nu
       where: { id: charityId },
       data: { annualRevenue: revenue, size },
     });
-    revalidatePath(`/charity/[name]/governance`);
+    revalidatePath(`/portal/[name]/governance`);
     return { success: true, size, revenue };
   } catch (error) {
     console.error("Failed to update charity revenue:", error);
@@ -280,7 +280,7 @@ export async function updateGovernanceProgress(
         proofPublicId,
       },
     });
-    revalidatePath(`/charity/[name]/governance`);
+    revalidatePath(`/portal/[name]/governance`);
     return { success: true };
   } catch (error) {
     console.error("Failed to update governance progress:", error);

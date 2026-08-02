@@ -18,10 +18,10 @@ export async function addServiceStageStep(stageId: string, name: string) {
   const step = await prisma.serviceStageStep.create({ data: { stageId, name, order: (last?.order ?? -1) + 1 } });
   const stage = await prisma.serviceStage.findUnique({ where: { id: stageId }, include: { service: { include: { charity: true } } } });
   if (stage) {
-    revalidatePath(`/charity/${encodeURIComponent(stage.service.charity.name)}/services`);
-    revalidatePath(`/charity/${encodeURIComponent(stage.service.charity.name)}/strategy`);
-    revalidatePath(`/charity/${encodeURIComponent(stage.service.charity.name)}/governance`);
-    revalidatePath(`/charity/${encodeURIComponent(stage.service.charity.name)}/finance`);
+    revalidatePath(`/portal/${encodeURIComponent(stage.service.charity.name)}/services`);
+    revalidatePath(`/portal/${encodeURIComponent(stage.service.charity.name)}/strategy`);
+    revalidatePath(`/portal/${encodeURIComponent(stage.service.charity.name)}/governance`);
+    revalidatePath(`/portal/${encodeURIComponent(stage.service.charity.name)}/finance`);
   }
   return step;
 }
@@ -33,10 +33,10 @@ export async function updateServiceStageStep(stepId: string, data: { name?: stri
   if (data.isDone !== undefined) {
     await syncServiceProgress(step.stage.serviceId, { type: 'STEP', id: stepId, isDone: data.isDone });
   }
-  revalidatePath(`/charity/${encodeURIComponent(step.stage.service.charity.name)}/services`);
-  revalidatePath(`/charity/${encodeURIComponent(step.stage.service.charity.name)}/strategy`);
-  revalidatePath(`/charity/${encodeURIComponent(step.stage.service.charity.name)}/governance`);
-  revalidatePath(`/charity/${encodeURIComponent(step.stage.service.charity.name)}/finance`);
+  revalidatePath(`/portal/${encodeURIComponent(step.stage.service.charity.name)}/services`);
+  revalidatePath(`/portal/${encodeURIComponent(step.stage.service.charity.name)}/strategy`);
+  revalidatePath(`/portal/${encodeURIComponent(step.stage.service.charity.name)}/governance`);
+  revalidatePath(`/portal/${encodeURIComponent(step.stage.service.charity.name)}/finance`);
   return step;
 }
 
@@ -45,10 +45,10 @@ export async function deleteServiceStageStep(stepId: string) {
   const step = await prisma.serviceStageStep.findUnique({ where: { id: stepId }, include: { stage: { include: { service: { include: { charity: true } } } } } });
   await prisma.serviceStageStep.delete({ where: { id: stepId } });
   if (step) {
-    revalidatePath(`/charity/${encodeURIComponent(step.stage.service.charity.name)}/services`);
-    revalidatePath(`/charity/${encodeURIComponent(step.stage.service.charity.name)}/strategy`);
-    revalidatePath(`/charity/${encodeURIComponent(step.stage.service.charity.name)}/governance`);
-    revalidatePath(`/charity/${encodeURIComponent(step.stage.service.charity.name)}/finance`);
+    revalidatePath(`/portal/${encodeURIComponent(step.stage.service.charity.name)}/services`);
+    revalidatePath(`/portal/${encodeURIComponent(step.stage.service.charity.name)}/strategy`);
+    revalidatePath(`/portal/${encodeURIComponent(step.stage.service.charity.name)}/governance`);
+    revalidatePath(`/portal/${encodeURIComponent(step.stage.service.charity.name)}/finance`);
   }
 }
 
@@ -57,10 +57,10 @@ export async function reorderServiceStageSteps(stageId: string, orderedIds: stri
   await Promise.all(orderedIds.map((id, i) => prisma.serviceStageStep.update({ where: { id }, data: { order: i } })));
   const stage = await prisma.serviceStage.findUnique({ where: { id: stageId }, include: { service: { include: { charity: true } } } });
   if (stage) {
-    revalidatePath(`/charity/${encodeURIComponent(stage.service.charity.name)}/services`);
-    revalidatePath(`/charity/${encodeURIComponent(stage.service.charity.name)}/strategy`);
-    revalidatePath(`/charity/${encodeURIComponent(stage.service.charity.name)}/governance`);
-    revalidatePath(`/charity/${encodeURIComponent(stage.service.charity.name)}/finance`);
+    revalidatePath(`/portal/${encodeURIComponent(stage.service.charity.name)}/services`);
+    revalidatePath(`/portal/${encodeURIComponent(stage.service.charity.name)}/strategy`);
+    revalidatePath(`/portal/${encodeURIComponent(stage.service.charity.name)}/governance`);
+    revalidatePath(`/portal/${encodeURIComponent(stage.service.charity.name)}/finance`);
   }
 }
 

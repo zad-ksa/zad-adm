@@ -14,6 +14,7 @@ export const ROLE_LABELS: Record<string, string> = {
   ADMINISTRATIVE_SECRETARIAT: "مساعد المدير",
   STRATEGY: "الاستراتيجية",
   FINANCE: "المالية",
+  ACCOUNTANT: "محاسب",
 };
 
 // Task Statuses

@@ -66,6 +66,7 @@ export const ROLE_LABELS: Record<string, string> = {
   FINANCE: "المالية",
   GOVERNANCE: "الحوكمة",
   CHARITY_CLIENT: "عميل جمعية",
+  ACCOUNTANT: "محاسب",
 };
 
 /**

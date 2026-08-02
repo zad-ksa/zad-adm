@@ -58,55 +58,20 @@ export default async function ServicesOverviewPage() {
     charityId: s.service.charityId
   }));
 
-  if (canSee("STRATEGY")) {
-    const s = await prisma.serviceStage.findMany({
-      where: { service: { department: "STRATEGY", ...(serviceCharityFilter || {}) } },
-      orderBy: [{ service: { charityId: "asc" } }, { order: "asc" }],
-      include: { steps: { orderBy: { order: "asc" } }, service: { select: { charityId: true } } },
-    });
-    data["STRATEGY"] = mapStages(s);
-  }
 
-  if (canSee("GOVERNANCE")) {
-    const s = await prisma.serviceStage.findMany({
-      where: { service: { department: "GOVERNANCE", ...(serviceCharityFilter || {}) } },
-      orderBy: [{ service: { charityId: "asc" } }, { order: "asc" }],
-      include: { steps: { orderBy: { order: "asc" } }, service: { select: { charityId: true } } },
-    });
-    data["GOVERNANCE"] = mapStages(s);
-  }
-
-  if (canSee("FINANCE")) {
-    const s = await prisma.serviceStage.findMany({
-      where: { service: { department: "FINANCE", ...(serviceCharityFilter || {}) } },
-      orderBy: [{ service: { charityId: "asc" } }, { order: "asc" }],
-      include: { steps: { orderBy: { order: "asc" } }, service: { select: { charityId: true } } },
-    });
-    data["FINANCE"] = mapStages(s);
-  }
 
   // Generic (custom) services
   const isSpecialDept = BUILTIN_DEPTS.includes(role);
   if (isAdmin) {
     data["SERVICES"] = await prisma.service.findMany({
-      where: { 
-        ...serviceCharityFilter, 
-        OR: [
-          { department: { notIn: BUILTIN_DEPTS } },
-          { department: null }
-        ]
-      },
+      where: { ...serviceCharityFilter },
       include: { stages: { orderBy: { order: "asc" }, include: { steps: { orderBy: { order: "asc" } } } } },
       orderBy: { charityId: "asc" },
     });
   } else if (!isSpecialDept) {
     data["SERVICES"] = await prisma.service.findMany({
-      where: { 
-        OR: [
-          { department: role },
-          { department: null }
-        ],
-        ...(assignedIds !== null ? { charityId: { in: assignedIds } } : {}) 
+      where: {
+        ...(assignedIds !== null ? { charityId: { in: assignedIds } } : {})
       },
       include: { stages: { orderBy: { order: "asc" }, include: { steps: { orderBy: { order: "asc" } } } } },
       orderBy: { charityId: "asc" },

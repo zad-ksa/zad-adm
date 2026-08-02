@@ -25,39 +25,50 @@ export default function CharityClientTimeline({
             {sequentialStages.map((stage: any, idx: number) => {
               const isPast = sequentialStages.findIndex((s: any) => s.isCurrent) > idx;
               const isCurrent = stage.isCurrent;
+              const isComingSoonCurrent = isCurrent && stage.isComingSoon;
               const displayDuration = formatDurationArabic(stage.startDate, stage.endDate) || stage.duration;
               
               return (
                 <div key={stage.id} className={`group relative flex flex-col rounded-2xl border transition-all duration-500 overflow-hidden ${
-                  isCurrent 
+                  isComingSoonCurrent
+                    ? 'bg-white dark:bg-[#0F0F0F] border-amber-500/30 shadow-md dark:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)]'
+                    : isCurrent 
                     ? 'bg-white dark:bg-[#0F0F0F] border-primary/30 shadow-md dark:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)]' 
                     : isPast 
                       ? 'bg-slate-50/80 dark:bg-[#0A0A0A] border-slate-200 dark:border-slate-800/80 opacity-90 hover:opacity-100' 
                       : 'bg-white dark:bg-[#0A0A0A] border-slate-100 dark:border-slate-800/50 opacity-70 hover:opacity-100'
                 }`}>
-                  {isCurrent && (
+                  {isCurrent && !isComingSoonCurrent && (
                     <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-transparent pointer-events-none" />
+                  )}
+                  {isComingSoonCurrent && (
+                    <div className="absolute inset-0 bg-gradient-to-br from-amber-500/5 via-transparent to-transparent pointer-events-none" />
                   )}
                   
                   <div className="p-6 flex flex-col h-full z-10">
                     <div className="flex items-start justify-between gap-3 mb-4">
                       <div className={`w-8 h-8 rounded-full border flex items-center justify-center shrink-0 shadow-sm transition-colors ${
                         isPast ? 'bg-slate-100 dark:bg-[#111] border-slate-300 dark:border-slate-700 text-slate-600 dark:text-slate-400' : 
+                        isComingSoonCurrent ? 'bg-amber-500 border-amber-500 text-white scale-105' :
                         isCurrent ? 'bg-primary border-primary text-white scale-105' : 
                         'bg-white dark:bg-[#111] border-slate-200 dark:border-slate-800 text-slate-400'
                       }`}>
                         {isPast ? <CheckCircle2 className="w-4 h-4" /> : <span className="text-xs font-bold">{idx + 1}</span>}
                       </div>
                       
-                      {isCurrent && (
+                      {isComingSoonCurrent ? (
+                        <span className="text-[10px] font-bold px-2 py-1 rounded-md bg-amber-500 text-white shadow-sm shrink-0">
+                          قريباً
+                        </span>
+                      ) : isCurrent ? (
                         <span className="text-[10px] font-bold px-2 py-1 rounded-md bg-primary text-white shadow-sm shrink-0">
                           الحالية
                         </span>
-                      )}
+                      ) : null}
                     </div>
                     
                     <h4 className={`font-semibold tracking-tight mb-2 ${
-                      isCurrent ? 'text-primary' : isPast ? 'text-slate-800 dark:text-slate-200' : 'text-slate-600 dark:text-slate-400'
+                      isComingSoonCurrent ? 'text-amber-500' : isCurrent ? 'text-primary' : isPast ? 'text-slate-800 dark:text-slate-200' : 'text-slate-600 dark:text-slate-400'
                     }`} style={{ fontSize: 'clamp(1rem, 1.5vw, 1.125rem)' }}>
                       {stage.name}
                     </h4>

@@ -1,4 +1,4 @@
-"use server";
+ï»¿"use server";
 
 import { prisma } from "@/lib/db";
 import { getSession } from "@/lib/auth";
@@ -7,7 +7,7 @@ import { assertCharityAccess } from "@/lib/access";
 
 async function getAuthenticatedUser() {
   const session = await getSession();
-  if (!session || !session.id) throw new Error("ÛíÑ ãÕÑÍ áß ÈÅÌÑÇÁ åĞå ÇáÚãáíÉ");
+  if (!session || !session.id) throw new Error("ØºÙŠØ± Ù…ØµØ±Ø­ Ù„Ùƒ Ø¨Ø§Ù„ÙˆØµÙˆÙ„");
   return session;
 }
 
@@ -22,11 +22,11 @@ export async function addProgramAction(
     await assertCharityAccess(user.id, user.role, charityId);
 
     if (!name || !name.trim()) {
-      return { error: "íÑÌì ÅÏÎÇá ÇÓã ÇáÈÑäÇãÌ Ãæ ÇáãÔÑæÚ" };
+      return { error: "ÙŠØ¬Ø¨ Ø¥Ø¯Ø®Ø§Ù„ Ø§Ø³Ù… Ø§Ù„Ø¨Ø±Ù†Ø§Ù…Ø¬" };
     }
 
     if (beneficiaries === undefined || beneficiaries === null || isNaN(beneficiaries) || beneficiaries < 0) {
-      return { error: "íÑÌì ÅÏÎÇá ÚÏÏ ãÓÊİíÏíä ÕÍíÍ (ÑŞã ÃßÈÑ ãä Ãæ íÓÇæí 0)" };
+      return { error: "ÙŠØ¬Ø¨ Ø¥Ø¯Ø®Ø§Ù„ Ø¹Ø¯Ø¯ ØµØ­ÙŠØ­ Ù„Ù„Ù…Ø³ØªÙÙŠØ¯ÙŠÙ† (Ù„Ø§ ÙŠÙ…ÙƒÙ† Ø£Ù† ÙŠÙƒÙˆÙ† Ø£Ù‚Ù„ Ù…Ù† 0)" };
     }
 
     const charity = await prisma.charity.findUnique({
@@ -34,7 +34,7 @@ export async function addProgramAction(
     });
 
     if (!charity) {
-      return { error: "ÇáÌãÚíÉ ÛíÑ ãæÌæÏÉ" };
+      return { error: "Ø§Ù„Ø¬Ù…Ø¹ÙŠØ© ØºÙŠØ± Ù…ÙˆØ¬ÙˆØ¯Ø©" };
     }
 
     const program = await prisma.program.create({
@@ -45,13 +45,13 @@ export async function addProgramAction(
       },
     });
 
-    revalidatePath(`/portal/${encodeURIComponent(charity.name)}`);
-    revalidatePath(`/portal/${encodeURIComponent(charity.name)}/programs`);
+    revalidatePath(/portal/);
+    revalidatePath(/portal//programs);
     revalidatePath("/main");
     
     return { success: true, program };
   } catch (error: any) {
-    return { error: error.message || "ÍÏË ÎØÃ ÃËäÇÁ ÅÖÇİÉ ÇáÈÑäÇãÌ" };
+    return { error: error.message || "Ø­Ø¯Ø« Ø®Ø·Ø£ Ø£Ø«Ù†Ø§Ø¡ Ø¥Ø¶Ø§ÙØ© Ø§Ù„Ø¨Ø±Ù†Ø§Ù…Ø¬" };
   }
 }
 
@@ -66,7 +66,7 @@ export async function deleteProgramAction(programId: string) {
     });
 
     if (!program) {
-      return { error: "ÇáÈÑäÇãÌ ÛíÑ ãæÌæÏ" };
+      return { error: "Ø§Ù„Ø¨Ø±Ù†Ø§Ù…Ø¬ ØºÙŠØ± Ù…ÙˆØ¬ÙˆØ¯" };
     }
 
     await assertCharityAccess(user.id, user.role, program.charityId);
@@ -75,12 +75,12 @@ export async function deleteProgramAction(programId: string) {
       where: { id: programId },
     });
 
-    revalidatePath(`/portal/${encodeURIComponent(program.charity.name)}`);
-    revalidatePath(`/portal/${encodeURIComponent(program.charity.name)}/programs`);
+    revalidatePath(/portal/);
+    revalidatePath(/portal//programs);
     revalidatePath("/main");
 
     return { success: true };
   } catch (error: any) {
-    return { error: error.message || "ÍÏË ÎØÃ ÃËäÇÁ ÍĞİ ÇáÈÑäÇãÌ" };
+    return { error: error.message || "Ø­Ø¯Ø« Ø®Ø·Ø£ Ø£Ø«Ù†Ø§Ø¡ Ø­Ø°Ù Ø§Ù„Ø¨Ø±Ù†Ø§Ù…Ø¬" };
   }
 }

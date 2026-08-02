@@ -77,7 +77,8 @@ export async function updateFinanceStage(
   startDate?: string,
   endDate?: string,
   isContinuous: boolean = false,
-  isActive: boolean = true
+  isActive: boolean = true,
+  isComingSoon: boolean = false
 ) {
   const session = await getSession();
   if (!session) throw new Error("UNAUTHORIZED");
@@ -92,7 +93,8 @@ export async function updateFinanceStage(
       startDate: startDate ? new Date(startDate) : null,
       endDate: endDate ? new Date(endDate) : null,
       isContinuous,
-      isActive
+      isActive,
+      isComingSoon
     },
     include: { service: { include: { charity: true } } }
   });

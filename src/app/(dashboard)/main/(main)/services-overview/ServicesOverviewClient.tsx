@@ -63,6 +63,7 @@ type Stage = {
   isContinuous?: boolean | null;
   isActive?: boolean | null;
   duration?: string | null;
+  isComingSoon?: boolean;
   steps?: StageStep[];
 };
 
@@ -111,11 +112,11 @@ async function actionAdd(dept: DeptKey, serviceId: string, charityId: string, na
   if (dept === "FINANCE") return addFinanceStage(charityId, name, undefined, desc || undefined, start?.toISOString().split("T")[0], end?.toISOString().split("T")[0], isContinuous);
   return addServiceStage(serviceId, name, desc, start, end, isContinuous);
 }
-async function actionUpdate(dept: DeptKey, stageId: string, name: string, desc: string | null, start: Date | null, end: Date | null, isContinuous = false, duration?: string) {
-  if (dept === "STRATEGY") return updateStrategicStage(stageId, name, undefined, desc || undefined, start?.toISOString().split("T")[0], end?.toISOString().split("T")[0], isContinuous);
-  if (dept === "GOVERNANCE") return updateGovernanceStage(stageId, name, undefined, desc || undefined, start?.toISOString().split("T")[0], end?.toISOString().split("T")[0], isContinuous);
-  if (dept === "FINANCE") return updateFinanceStage(stageId, name, undefined, desc || undefined, start?.toISOString().split("T")[0], end?.toISOString().split("T")[0], isContinuous);
-  return updateServiceStage(stageId, name, desc, start, end, isContinuous, true, duration ?? null);
+async function actionUpdate(dept: DeptKey, stageId: string, name: string, desc: string | null, start: Date | null, end: Date | null, isContinuous = false, duration?: string, isComingSoon: boolean = false) {
+  if (dept === "STRATEGY") return updateStrategicStage(stageId, name, undefined, desc || undefined, start?.toISOString().split("T")[0], end?.toISOString().split("T")[0], isContinuous, true, isComingSoon);
+  if (dept === "GOVERNANCE") return updateGovernanceStage(stageId, name, undefined, desc || undefined, start?.toISOString().split("T")[0], end?.toISOString().split("T")[0], isContinuous, true, isComingSoon);
+  if (dept === "FINANCE") return updateFinanceStage(stageId, name, undefined, desc || undefined, start?.toISOString().split("T")[0], end?.toISOString().split("T")[0], isContinuous, true, isComingSoon);
+  return updateServiceStage(stageId, name, desc, start, end, isContinuous, true, duration ?? null, isComingSoon);
 }
 async function actionDelete(dept: DeptKey, stageId: string) {
   if (dept === "STRATEGY") return deleteStrategicStage(stageId);
@@ -204,6 +205,7 @@ function InlineTimeline({
   const [newEnd, setNewEnd] = useState("");
   const [newIsContinuous, setNewIsContinuous] = useState(false);
   const [editIsContinuous, setEditIsContinuous] = useState(false);
+  const [editIsComingSoon, setEditIsComingSoon] = useState(false);
 
   // Days-based duration
   const [editDays, setEditDays] = useState("");
@@ -218,6 +220,7 @@ function InlineTimeline({
     setEditStart(s.startDate ? new Date(s.startDate).toISOString().split("T")[0] : "");
     setEditEnd(s.endDate ? new Date(s.endDate).toISOString().split("T")[0] : "");
     setEditIsContinuous(!!s.isContinuous);
+    setEditIsComingSoon(!!s.isComingSoon);
     setEditDays("");
     setEditWorkDaysOnly(false);
   };
@@ -289,10 +292,10 @@ function InlineTimeline({
       }
 
       setStages(prev => prev.map(s => s.id === id
-        ? { ...s, name: editName, description: editDesc || null, startDate: start, endDate: end, isContinuous: editIsContinuous, duration: durStr ?? s.duration }
+        ? { ...s, name: editName, description: editDesc || null, startDate: start, endDate: end, isContinuous: editIsContinuous, isComingSoon: editIsComingSoon, duration: durStr ?? s.duration }
         : s));
       setEditingId(null);
-      await actionUpdate(dept, id, editName, editDesc || null, start, end, editIsContinuous, durStr ?? undefined);
+      await actionUpdate(dept, id, editName, editDesc || null, start, end, editIsContinuous, durStr ?? undefined, editIsComingSoon);
     });
   };
 
@@ -481,6 +484,7 @@ function InlineTimeline({
                       <div className={`font-semibold leading-tight flex items-center gap-1.5 flex-wrap ${active ? "text-amber-800 dark:text-amber-300" : "text-slate-500"}`}>
                         {stage.name}
                         <span className="text-[9px] text-amber-600 dark:text-amber-400 font-medium opacity-70">دائمة</span>
+                        {stage.isComingSoon && <span className="text-[9px] bg-purple-500 text-white px-1.5 py-0.5 rounded-full font-bold">قريباً</span>}
                       </div>
                       {stage.description && <p className="text-amber-700/70 dark:text-amber-400/60 mt-0.5 text-[11px]">{stage.description}</p>}
                       {(stage.startDate || stage.endDate) && (
@@ -526,6 +530,7 @@ function InlineTimeline({
                     <div className={`font-semibold leading-tight ${isCurrent ? "text-primary" : isCompleted ? "text-slate-500 dark:text-slate-400" : "text-slate-700 dark:text-slate-300"}`}>
                       {stage.name}
                       {isCurrent && <span className="mr-1.5 text-[10px] bg-primary text-white px-1.5 py-0.5 rounded-full font-bold">حالية</span>}
+                      {stage.isComingSoon && <span className="mr-1.5 text-[10px] bg-purple-500 text-white px-1.5 py-0.5 rounded-full font-bold">قريباً</span>}
                     </div>
                     {stage.description && <p className="text-slate-500 dark:text-slate-400 mt-0.5 text-[11px] break-words">{stage.description}</p>}
                     {(stage.startDate || stage.endDate) && (
@@ -658,6 +663,10 @@ function InlineTimeline({
                 <input type="checkbox" checked={editIsContinuous} onChange={e => setEditIsContinuous(e.target.checked)} className="w-3.5 h-3.5 accent-amber-500" />
                 <span>مرحلة دائمة (تعمل بالتوازي مع المراحل الأخرى)</span>
               </label>
+              <label className="flex items-center gap-2 cursor-pointer text-xs text-slate-600 dark:text-slate-300">
+                <input type="checkbox" checked={editIsComingSoon} onChange={e => setEditIsComingSoon(e.target.checked)} className="w-3.5 h-3.5 accent-purple-500" />
+                <span>المرحلة قريباً (Coming Soon)</span>
+              </label>
               <div className="flex gap-2">
                 <button onClick={() => handleUpdate(stage.id)} disabled={isPending || !editName.trim()}
                   className="flex-1 py-1.5 text-xs font-bold text-white bg-primary hover:bg-primary/90 rounded-lg flex items-center justify-center gap-1 disabled:opacity-60">
@@ -687,6 +696,7 @@ function InlineTimeline({
               <div className="flex-1 min-w-0">
                 <div className={`text-xs font-semibold truncate flex items-center gap-1 ${isContinuousSection ? "text-amber-700 dark:text-amber-300" : stage.isCurrent ? "text-primary" : "text-slate-700 dark:text-slate-300"}`}>
                   {stage.name}
+                  {stage.isComingSoon && <span className="text-[9px] bg-purple-500 text-white px-1.5 py-0.5 rounded-full font-bold">قريباً</span>}
                 </div>
                 {(stage.startDate || stage.endDate) && (
                   <div className="text-[10px] text-slate-400" dir="ltr">{fmtDate(stage.startDate)}{stage.startDate && stage.endDate ? "—" : ""}{fmtDate(stage.endDate)}</div>

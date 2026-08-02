@@ -3,7 +3,6 @@ import { prisma } from "@/lib/db";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import FinanceClient from "./FinanceClient";
-import FinanceStagesManager from "./FinanceStagesManager";
 
 import { getSession } from "@/lib/auth";
 

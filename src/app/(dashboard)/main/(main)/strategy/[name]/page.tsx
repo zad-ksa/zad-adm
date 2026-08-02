@@ -6,12 +6,10 @@ import ReadinessResultsClient from "./ReadinessResultsClient";
 import SurveyLinkManager from "@/components/SurveyLinkManager";
 import type { Metadata } from "next";
 import { Award, AlertTriangle, Sparkles, ShieldAlert, Key, Rocket } from "@/components/Icons";
-import StrategicStagesManager from "./StrategicStagesManager";
 import { ensureStagesForCharity, getCharityDashboardData } from "@/app/actions/strategy";
 import { getSession } from "@/lib/auth";
 import CharityClientStrategyDashboard from "@/components/CharityClientStrategyDashboard";
 import StrategyPermissionToggle from "@/components/StrategyPermissionToggle";
-import DepartmentServicesTimeline from "@/components/DepartmentServicesTimeline";
 import VisionMissionResultsClient from "./vision-mission/VisionMissionResultsClient";
 
 const getCachedResponses = async (charityName: string) => {
@@ -116,10 +114,6 @@ export default async function StrategySurveysPage({ params }: { params: Promise<
           </div>
         )}
       </div>
-
-      {charity && (
-        <DepartmentServicesTimeline charityId={charity.id} department="STRATEGY" />
-      )}
     </div>
   );
 }

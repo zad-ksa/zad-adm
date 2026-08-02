@@ -1,11 +1,9 @@
 import { Scale, FolderOpen, FileText, LayoutDashboard } from "lucide-react";
 import type { Metadata } from "next";
 import { prisma } from "@/lib/db";
-import GovernanceStagesManager from "./GovernanceStagesManager";
 import GovernanceFolders from "./GovernanceFolders";
 import GovernanceRegulationsManager from "./GovernanceRegulationsManager";
 import { getSession } from "@/lib/auth";
-import DepartmentServicesTimeline from "@/components/DepartmentServicesTimeline";
 import CharityClientTimeline from "@/components/CharityClientTimeline";
 import GovernanceManualViewer from "@/components/GovernanceManualViewer";
 import Link from "next/link";
@@ -122,7 +120,6 @@ async function GovernanceTabContent({
       {charity && activeTab === 'services' && (
         <div className="space-y-12">
           <GovernanceRegulationsManager charityId={charity.id} regulations={regulations} isAdmin={isAdmin} />
-          <DepartmentServicesTimeline charityId={charity.id} department="GOVERNANCE" />
         </div>
       )}
     </>

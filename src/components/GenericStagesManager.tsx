@@ -21,6 +21,7 @@ type ServiceStage = {
   isCurrent: boolean;
   isContinuous: boolean;
   isActive: boolean;
+  isComingSoon?: boolean;
   duration: string | null;
   steps?: StageStep[];
 };
@@ -318,7 +319,8 @@ export default function GenericStagesManager({
                 updates.endDate !== undefined ? updates.endDate : stage.endDate, 
                 updates.isContinuous !== undefined ? updates.isContinuous : stage.isContinuous, 
                 updates.isActive !== undefined ? updates.isActive : stage.isActive,
-                updates.duration !== undefined ? updates.duration : stage.duration
+                updates.duration !== undefined ? updates.duration : stage.duration,
+                updates.isComingSoon !== undefined ? updates.isComingSoon : (stage.isComingSoon || false)
               );
             });
           }}

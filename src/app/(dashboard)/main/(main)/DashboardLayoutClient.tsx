@@ -87,6 +87,13 @@ export default function DashboardLayoutClient({ children, session, unreadRequest
 
   return (
     <div className="flex h-[100dvh] bg-slate-50 dark:bg-slate-950 overflow-hidden print:h-auto print:overflow-visible print:block" dir="rtl">
+      {/* Beta Ribbon */}
+      <div className="fixed top-0 left-0 z-[100] w-32 h-32 overflow-hidden pointer-events-none print:hidden">
+        <div className="absolute top-6 -left-8 w-40 -rotate-45 bg-primary text-white font-bold text-xs py-1 text-center shadow-md">
+          إطلاق تجريبي
+        </div>
+      </div>
+
       <EmployeeSidebar session={session} isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} unreadRequests={unreadRequests} />
       
       <FloatingHeader 

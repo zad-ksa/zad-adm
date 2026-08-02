@@ -23,6 +23,7 @@ export type TimelineStage = {
   isCurrent: boolean;
   isContinuous: boolean;
   isActive: boolean;
+  isComingSoon?: boolean;
   duration?: string | null;
   steps?: StageStep[];
 };
@@ -558,6 +559,19 @@ export default function InteractiveTimelineEditor({
                 />
                 <label htmlFor="modal-continuous" className="text-sm font-medium text-amber-800 dark:text-amber-500 cursor-pointer">
                   تحويل إلى نشاط مستمر (لا يعتمد على التسلسل)
+                </label>
+              </div>
+
+              <div className="flex items-center gap-3 p-3 bg-orange-50 dark:bg-orange-950/20 rounded-xl border border-orange-200 dark:border-orange-900/30">
+                <input 
+                  type="checkbox" 
+                  id="modal-coming-soon"
+                  checked={selectedStage.isComingSoon || false}
+                  onChange={e => onUpdate(selectedStage.id, { isComingSoon: e.target.checked })}
+                  className="w-5 h-5 rounded border-orange-300 text-orange-600 focus:ring-orange-500 cursor-pointer"
+                />
+                <label htmlFor="modal-coming-soon" className="text-sm font-bold text-orange-700 dark:text-orange-400 cursor-pointer">
+                  تعيين هذه المرحلة كـ "قريباً" (تظهر باللون البرتقالي للجمعية)
                 </label>
               </div>
 

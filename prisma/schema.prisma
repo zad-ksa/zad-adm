@@ -475,6 +475,7 @@ model ServiceStage {
   isContinuous Boolean            @default(false)
   isActive     Boolean            @default(true)
   isDone       Boolean            @default(false)
+  isComingSoon Boolean            @default(false)
   
   templateId   String?
   

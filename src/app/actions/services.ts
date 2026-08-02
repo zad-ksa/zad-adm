@@ -308,7 +308,8 @@ export async function addServiceStage(
   endDate: Date | null = null,
   isContinuous: boolean = false,
   isActive: boolean = true,
-  duration: string | null = null
+  duration: string | null = null,
+  isComingSoon: boolean = false
 ) {
   const lastStage = await prisma.serviceStage.findFirst({
     where: { serviceId },
@@ -317,7 +318,7 @@ export async function addServiceStage(
   
   const newOrder = lastStage ? lastStage.order + 1 : 0;
   
-  const stage = await prisma.serviceStage.create({
+  const stage: any = await (prisma as any).serviceStage.create({
     data: {
       serviceId,
       name,
@@ -327,14 +328,17 @@ export async function addServiceStage(
       order: newOrder,
       isContinuous,
       isActive,
-      duration
+      duration,
+      isComingSoon
     },
     include: { service: { include: { charity: true } } }
   });
   
-  revalidatePath(`/charity/${encodeURIComponent(stage.service.charity.name)}/services`);
-  if (stage.service.department) {
-    revalidatePath(`/charity/${encodeURIComponent(stage.service.charity.name)}/${stage.service.department.toLowerCase()}`);
+  if (stage?.service?.charity) {
+    revalidatePath(`/charity/${encodeURIComponent(stage.service.charity.name)}/services`);
+    if (stage.service.department) {
+      revalidatePath(`/charity/${encodeURIComponent(stage.service.charity.name)}/${stage.service.department.toLowerCase()}`);
+    }
   }
   
   return stage;
@@ -348,19 +352,38 @@ export async function updateServiceStage(
   endDate: Date | null,
   isContinuous: boolean = false,
   isActive: boolean = true,
-  duration: string | null = null
+  duration: string | null = null,
+  isComingSoon: boolean = false
 ) {
-  const stage = await prisma.serviceStage.update({
+  const stage: any = await (prisma as any).serviceStage.update({
     where: { id },
-    data: { name, description, startDate, endDate, isContinuous, isActive, duration },
+    data: { name, description, startDate, endDate, isContinuous, isActive, duration, isComingSoon },
     include: { service: { include: { charity: true } } }
   });
   
-  revalidatePath(`/charity/${encodeURIComponent(stage.service.charity.name)}/services`);
-  if (stage.service.department) {
-    revalidatePath(`/charity/${encodeURIComponent(stage.service.charity.name)}/${stage.service.department.toLowerCase()}`);
+  if (stage?.service?.charity) {
+    revalidatePath(`/charity/${encodeURIComponent(stage.service.charity.name)}/services`);
+    if (stage.service.department) {
+      revalidatePath(`/charity/${encodeURIComponent(stage.service.charity.name)}/${stage.service.department.toLowerCase()}`);
+    }
   }
   
+  return stage;
+}
+
+export async function toggleServiceStageComingSoon(stageId: string, isComingSoon: boolean) {
+  const stage: any = await (prisma as any).serviceStage.update({
+    where: { id: stageId },
+    data: { isComingSoon },
+    include: { service: { include: { charity: true } } }
+  });
+
+  if (stage?.service?.charity) {
+    revalidatePath(`/charity/${encodeURIComponent(stage.service.charity.name)}/services`);
+    if (stage.service.department) {
+      revalidatePath(`/charity/${encodeURIComponent(stage.service.charity.name)}/${stage.service.department.toLowerCase()}`);
+    }
+  }
   return stage;
 }
 

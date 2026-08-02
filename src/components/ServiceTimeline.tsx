@@ -12,6 +12,7 @@ type ServiceStage = {
   endDate: Date | null;
   order: number;
   isCurrent: boolean;
+  isComingSoon?: boolean;
 };
 
 type Service = {
@@ -220,27 +221,36 @@ export default function ServiceTimeline({
                 {sortedStages.map((stage, index) => {
                   const isCurrent = stage.isCurrent;
                   const isCompleted = currentIndex !== -1 ? index < currentIndex : true;
+                  const isComingSoon = stage.isComingSoon;
 
                   return (
                     <div key={stage.id} className="flex-1 flex flex-row md:flex-col items-center md:text-center gap-4 md:gap-0 w-full md:w-auto">
                       
                       {/* Circle */}
                       <div className={`w-12 h-12 shrink-0 rounded-full flex items-center justify-center font-bold text-lg mb-0 md:mb-4 shadow-sm border-2 transition-colors z-10 ${
+                        isComingSoon ? "bg-amber-500 text-white border-amber-500 ring-4 ring-amber-500/20 scale-105" :
                         isCurrent ? "bg-white dark:bg-slate-800 text-primary border-primary ring-4 ring-primary/20 scale-110" :
                         isCompleted ? "bg-primary text-white border-primary" :
                         "bg-slate-50 dark:bg-slate-900 text-slate-400 border-slate-200 dark:border-slate-700"
                       }`}>
-                        {isCompleted ? <Check className="w-6 h-6" /> : (index + 1)}
+                        {isCompleted && !isComingSoon ? <Check className="w-6 h-6" /> : (index + 1)}
                       </div>
 
                       {/* Content */}
                       <div className={`flex-1 w-full p-4 md:p-0 rounded-xl md:bg-transparent md:border-0 border border-slate-100 dark:border-slate-700/50 ${
+                        isComingSoon ? 'bg-amber-50/80 dark:bg-amber-950/20 md:bg-transparent border-amber-200 dark:border-amber-900/50' :
                         isCurrent ? 'bg-primary/5 md:bg-transparent border-primary/20' : 'bg-slate-50 dark:bg-slate-900/50 md:bg-transparent'
                       }`}>
-                        <div className={`text-base font-bold transition-colors ${
+                        <div className={`text-base font-bold transition-colors inline-flex items-center gap-1.5 flex-wrap justify-center ${
+                          isComingSoon ? "text-amber-700 dark:text-amber-400" :
                           isCurrent ? "text-primary" : "text-slate-700 dark:text-slate-300"
                         }`}>
-                          {stage.name}
+                          <span>{stage.name}</span>
+                          {isComingSoon && (
+                            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500 text-white shadow-sm">
+                              قريباً
+                            </span>
+                          )}
                         </div>
                         
                         {(stage.startDate || stage.endDate) && (

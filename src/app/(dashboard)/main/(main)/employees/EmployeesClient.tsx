@@ -416,6 +416,7 @@ export function EmployeesClient({
                       <option value="ADMINISTRATIVE_SECRETARIAT">مساعد المدير</option>
                       <option value="STRATEGY">الاستراتيجية</option>
                       <option value="FINANCE">المالية</option>
+                      <option value="ACCOUNTANT">محاسب</option>
                       {editingEmployee.role === "ADMIN" && <option value="ADMIN">مدير النظام</option>}
                     </select>
                   </div>

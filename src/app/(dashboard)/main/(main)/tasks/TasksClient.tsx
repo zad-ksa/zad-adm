@@ -82,7 +82,7 @@ export default function TasksClient({
   const [achievements, setAchievements] = useState<Achievement[]>(initialAchievements);
   const [permanentTasks, setPermanentTasks] = useState<any[]>(initialPermanentTasks);
   const [categories, setCategories] = useState<string[]>(initialCategories);
-  const isDirectorOrAdmin = ADMIN_ROLES.includes(session.role);
+  const isDirectorOrAdmin = session.permissions?.includes("view_all_tasks") || session.permissions?.includes("developer_mode");
   const [selectedEmployeeId, setSelectedEmployeeId] = useState<string>(session.id);
 
 

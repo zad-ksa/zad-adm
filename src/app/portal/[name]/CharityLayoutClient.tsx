@@ -40,12 +40,7 @@ export default function CharityLayoutClient({
 
   return (
     <div className="flex h-[100dvh] bg-slate-50 dark:bg-slate-900/50 dark:bg-slate-950 overflow-hidden" dir="rtl">
-      {/* Beta Ribbon */}
-      <div className="fixed top-0 left-0 z-[100] w-32 h-32 overflow-hidden pointer-events-none print:hidden">
-        <div className="absolute top-6 -left-8 w-40 -rotate-45 bg-primary text-white font-bold text-xs py-1 text-center shadow-md">
-          إطلاق تجريبي
-        </div>
-      </div>
+
 
       <CharitySidebar 
         charityName={charityName} 

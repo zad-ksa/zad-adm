@@ -19,17 +19,20 @@ export const PERMISSION_GROUPS = [
     title: "صلاحيات النظام الخاصة",
     permissions: [
       { id: "developer_mode", label: "صلاحية المطور (الوصول الشامل)" },
+      { id: "view_all_charities", label: "الوصول الشامل لجميع الجمعيات" },
     ],
   },
   {
     title: "صلاحيات لوحة التحكم",
     permissions: [
+      { id: "view_charities", label: "عرض تبويب الجمعيات (القائمة الجانبية)" },
       { id: "manage_charity_accounts", label: "إدارة حسابات الجمعيات" },
       { id: "manage_contracts", label: "عرض العقود" },
       { id: "edit_contracts", label: "تعديل وإدارة العقود" },
       { id: "manage_employees", label: "إدارة الموظفين" },
       { id: "delete_employees", label: "حذف الموظفين" },
       { id: "manage_tasks", label: "المهام والمنجزات" },
+      { id: "view_all_tasks", label: "عرض وإدارة جميع مهام الموظفين" },
       { id: "manage_news", label: "الأخبار والإنجازات" },
       { id: "manage_surveys", label: "الاستبيانات المخصصة" },
       { id: "view_services_overview", label: "عرض الخدمات" },
@@ -71,7 +74,6 @@ export const ROLE_LABELS: Record<string, string> = {
 
 /**
  * Check if a user has a specific permission.
- * Admin roles automatically have all permissions.
  * Developer mode bypasses all permission checks.
  */
 export function hasPermission(
@@ -79,9 +81,7 @@ export function hasPermission(
   permissions: string[],
   required: string
 ): boolean {
-  if (AUTO_ADMIN_ROLES.includes(role)) return true;
   if (permissions.includes("developer_mode")) return true;
-  if (EXECUTIVE_ROLES.includes(role) && EXECUTIVE_AUTO_PERMISSIONS.includes(required)) return true;
   // manage_requests يشمل view_requests تلقائياً
   if (required === "view_requests" && permissions.includes("manage_requests")) return true;
   return permissions.includes(required);

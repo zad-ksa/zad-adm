@@ -12,7 +12,7 @@ export function isAdminRole(role: string): boolean {
 }
 
 /**
- * Returns null for admins (unrestricted access).
+ * Returns null for users with view_all_charities or developer_mode (unrestricted access).
  * Returns string[] for restricted employees — may be empty (no access).
  */
 export async function getAssignedCharityIds(
@@ -20,7 +20,7 @@ export async function getAssignedCharityIds(
   role: string,
   permissions?: string[]
 ): Promise<string[] | null> {
-  if (isAdminRole(role) || permissions?.includes("developer_mode")) return null;
+  if (permissions?.includes("view_all_charities") || permissions?.includes("developer_mode")) return null;
   const rows = await prisma.employeeCharity.findMany({
     where: { employeeId },
     select: { charityId: true },

@@ -7,15 +7,14 @@ import Image from "next/image";
 import { getSession } from "@/lib/auth";
 
 const getCachedStats = unstable_cache(
-  async (role: string, employeeId: string) => {
+  async (hasViewAllTasks: boolean, employeeId: string) => {
     const now = new Date();
     const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     const last7Days = new Date();
     last7Days.setDate(last7Days.getDate() - 7);
 
-    const isLimitedRole = role === "STRATEGY" || role === "FINANCE";
-    const employeeFilter = isLimitedRole ? { assignedToId: employeeId } : {};
-    const achievementFilter = isLimitedRole ? { employeeId } : {};
+    const employeeFilter = hasViewAllTasks ? {} : { assignedToId: employeeId };
+    const achievementFilter = hasViewAllTasks ? {} : { employeeId };
 
     const [
       charitiesCount,
@@ -110,8 +109,11 @@ const getCachedStats = unstable_cache(
   { revalidate: 60, tags: ['dashboard'] }
 );
 
+import { hasPermission } from "@/lib/permissions";
+
 const getDashboardStats = async (session: any) => {
-  return getCachedStats(session?.role || '', session?.id || '');
+  const hasViewAllTasks = hasPermission(session?.role || '', session?.permissions || [], "view_all_tasks");
+  return getCachedStats(hasViewAllTasks, session?.id || '');
 };
 
 export const dynamic = "force-dynamic";

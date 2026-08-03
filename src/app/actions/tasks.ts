@@ -2,6 +2,7 @@
 
 import { prisma } from "@/lib/db";
 import { getSession } from "@/lib/auth";
+import { hasPermission } from "@/lib/permissions";
 import { revalidatePath } from "next/cache";
 import { createAppNotification } from "./notifications";
 import { v2 as cloudinary } from "cloudinary";
@@ -33,7 +34,7 @@ export async function createTaskAction(data: {
     
     // Check role permissions:
     // Only ADMIN, EXECUTIVE_DIRECTOR and ADMINISTRATIVE_SECRETARIAT can assign tasks to other employees.
-    const isDirectorOrAdmin = ["ADMIN", "EXECUTIVE_DIRECTOR", "ADMINISTRATIVE_SECRETARIAT"].includes(user.role);
+    const isDirectorOrAdmin = hasPermission(user.role, user.permissions || [], "view_all_tasks");
     const finalAssignedToId = isDirectorOrAdmin ? data.assignedToId : user.id;
 
     let charityName = null;
@@ -88,7 +89,7 @@ export async function deleteTaskAction(taskId: string) {
       return { error: "المهمة غير موجودة" };
     }
 
-    const isDirectorOrAdmin = ["ADMIN", "EXECUTIVE_DIRECTOR", "ADMINISTRATIVE_SECRETARIAT"].includes(user.role);
+    const isDirectorOrAdmin = hasPermission(user.role, user.permissions || [], "view_all_tasks");
     // Standard employee can only delete tasks they created for themselves
     const isOwner = task.createdById === user.id && task.assignedToId === user.id;
 
@@ -120,7 +121,7 @@ export async function reassignTaskAction(taskId: string, newEmployeeId: string) 
   try {
     const user = await getAuthenticatedUser();
     
-    const isDirectorOrAdmin = ["ADMIN", "EXECUTIVE_DIRECTOR", "ADMINISTRATIVE_SECRETARIAT"].includes(user.role);
+    const isDirectorOrAdmin = hasPermission(user.role, user.permissions || [], "view_all_tasks");
     if (!isDirectorOrAdmin) {
       return { error: "غير مصرح لك بنقل المهام" };
     }
@@ -306,7 +307,7 @@ export async function deleteAchievementAction(achievementId: string) {
       return { error: "المنجز غير موجود" };
     }
 
-    const isDirectorOrAdmin = ["ADMIN", "EXECUTIVE_DIRECTOR", "ADMINISTRATIVE_SECRETARIAT"].includes(user.role);
+    const isDirectorOrAdmin = hasPermission(user.role, user.permissions || [], "view_all_tasks");
     const isOwner = achievement.createdById === user.id;
 
     if (!isDirectorOrAdmin && !isOwner) {
@@ -349,7 +350,7 @@ export async function updateTaskTitleAction(taskId: string, newTitle: string) {
       return { error: "المهمة غير موجودة" };
     }
 
-    const isDirectorOrAdmin = ["ADMIN", "EXECUTIVE_DIRECTOR", "ADMINISTRATIVE_SECRETARIAT"].includes(user.role);
+    const isDirectorOrAdmin = hasPermission(user.role, user.permissions || [], "view_all_tasks");
     // Standard employee can only edit tasks they created for themselves
     const isOwner = task.createdById === user.id && task.assignedToId === user.id;
 
@@ -384,7 +385,7 @@ export async function updateTaskPriorityAction(taskId: string, priority: number)
       return { error: "المهمة غير موجودة" };
     }
 
-    const isDirectorOrAdmin = ["ADMIN", "EXECUTIVE_DIRECTOR", "ADMINISTRATIVE_SECRETARIAT"].includes(user.role);
+    const isDirectorOrAdmin = hasPermission(user.role, user.permissions || [], "view_all_tasks");
     const isOwner = task.createdById === user.id && task.assignedToId === user.id;
 
     if (!isDirectorOrAdmin && !isOwner) {
@@ -563,7 +564,7 @@ export async function addTaskUpdateAction(taskId: string, content: string) {
     const task = await prisma.task.findUnique({ where: { id: taskId } });
     if (!task) return { error: "المهمة غير موجودة" };
 
-    const isDirectorOrAdmin = ["ADMIN", "EXECUTIVE_DIRECTOR", "GENERAL_MANAGER", "ADMINISTRATIVE_SECRETARIAT"].includes(user.role);
+    const isDirectorOrAdmin = hasPermission(user.role, user.permissions || [], "view_all_tasks");
     if (!isDirectorOrAdmin && task.assignedToId !== user.id) {
       return { error: "غير مصرح لك بإضافة تحديث لهذه المهمة" };
     }
@@ -586,7 +587,7 @@ export async function deleteTaskUpdateAction(updateId: string) {
     const update = await prisma.taskUpdate.findUnique({ where: { id: updateId } });
     if (!update) return { error: "التحديث غير موجود" };
 
-    const isDirectorOrAdmin = ["ADMIN", "EXECUTIVE_DIRECTOR", "GENERAL_MANAGER", "ADMINISTRATIVE_SECRETARIAT"].includes(user.role);
+    const isDirectorOrAdmin = hasPermission(user.role, user.permissions || [], "view_all_tasks");
     if (!isDirectorOrAdmin && update.authorId !== user.id) {
       return { error: "غير مصرح لك بحذف هذا التحديث" };
     }
@@ -614,7 +615,7 @@ export async function createPermanentTaskAction(data: {
     
     // Check role permissions:
     // Only those who can manage tasks (Admin, Executive Director, Admin Sec) can create permanent tasks
-    const isDirectorOrAdmin = ["ADMIN", "EXECUTIVE_DIRECTOR", "GENERAL_MANAGER", "ADMINISTRATIVE_SECRETARIAT"].includes(user.role);
+    const isDirectorOrAdmin = hasPermission(user.role, user.permissions || [], "view_all_tasks");
     if (!isDirectorOrAdmin) {
       return { error: "غير مصرح لك بإضافة مهام وظيفية" };
     }
@@ -656,7 +657,7 @@ export async function updatePermanentTaskAction(
   try {
     const user = await getAuthenticatedUser();
     
-    const isDirectorOrAdmin = ["ADMIN", "EXECUTIVE_DIRECTOR", "GENERAL_MANAGER", "ADMINISTRATIVE_SECRETARIAT"].includes(user.role);
+    const isDirectorOrAdmin = hasPermission(user.role, user.permissions || [], "view_all_tasks");
     if (!isDirectorOrAdmin) {
       return { error: "غير مصرح لك بتعديل المهام الوظيفية" };
     }
@@ -689,7 +690,7 @@ export async function deletePermanentTaskAction(taskId: string) {
   try {
     const user = await getAuthenticatedUser();
     
-    const isDirectorOrAdmin = ["ADMIN", "EXECUTIVE_DIRECTOR", "GENERAL_MANAGER", "ADMINISTRATIVE_SECRETARIAT"].includes(user.role);
+    const isDirectorOrAdmin = hasPermission(user.role, user.permissions || [], "view_all_tasks");
     if (!isDirectorOrAdmin) {
       return { error: "غير مصرح لك بحذف المهام الوظيفية" };
     }
@@ -717,7 +718,7 @@ export async function reassignPermanentTaskAction(taskId: string, newEmployeeId:
   try {
     const user = await getAuthenticatedUser();
     
-    const isDirectorOrAdmin = ["ADMIN", "EXECUTIVE_DIRECTOR", "GENERAL_MANAGER", "ADMINISTRATIVE_SECRETARIAT"].includes(user.role);
+    const isDirectorOrAdmin = hasPermission(user.role, user.permissions || [], "view_all_tasks");
     if (!isDirectorOrAdmin) {
       return { error: "غير مصرح لك بنقل المهام الوظيفية" };
     }

@@ -148,8 +148,11 @@ export default function EmployeeSidebar({
 
   navItems = [
     { label: "الرئيسية", href: "/main", icon: LayoutDashboard },
-    { label: "الجمعيات", href: "/main/charities", icon: Building2 },
   ];
+
+  if (can("view_charities")) {
+    navItems.push({ label: "الجمعيات", href: "/main/charities", icon: Building2 });
+  }
 
   if (can("view_services_overview")) {
     navItems.push({ label: "عرض الخدمات", href: "/main/services-overview", icon: LayoutGrid });
@@ -170,8 +173,7 @@ export default function EmployeeSidebar({
     navItems.push({ label: "محاضر الاجتماعات", href: "/main/meetings", icon: FileText });
   }
   if (can("manage_tasks")) {
-    const isManager = perms.includes("developer_mode") ||
-      hasPermission(role, perms, "manage_requests");
+    const isManager = can("view_all_tasks") || perms.includes("developer_mode");
     navItems.push({ label: isManager ? "المهام والمنجزات" : "مهامي", href: "/main/tasks", icon: CheckSquare });
   }
   navItems.push({ label: "الطلبات", href: "/main/requests", icon: Send, badge: unreadRequests });

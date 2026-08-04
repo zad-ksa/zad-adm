@@ -303,6 +303,7 @@ model Employee {
   delegatedLogs        RequestLog[]      @relation("LogDelegatee")
   currentlyReviewing   Request[]         @relation("CurrentReviewer")
   delegatedRequests    Request[]         @relation("DelegatedTo")
+  createdMeetingSchedules MeetingSchedule[] @relation("CreatedMeetingSchedules")
 }
 
 model EmployeeCharity {
@@ -753,3 +754,31 @@ model AppNotification {
   @@index([employeeId, isRead])
 }
 
+model MeetingSchedule {
+  id            String   @id @default(uuid())
+  title         String
+  slug          String   @unique
+  duration      Int      @default(30)
+  availableDays Json     // array of { date, startTime, endTime }
+  isActive      Boolean  @default(true)
+  createdById   String
+  createdBy     Employee @relation("CreatedMeetingSchedules", fields: [createdById], references: [id], onDelete: Cascade)
+  bookings      MeetingBooking[]
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([createdById])
+}
+
+model MeetingBooking {
+  id           String   @id @default(uuid())
+  scheduleId   String
+  schedule     MeetingSchedule @relation(fields: [scheduleId], references: [id], onDelete: Cascade)
+  charityName  String
+  date         String
+  startTime    String
+  createdAt    DateTime @default(now())
+
+  @@unique([scheduleId, date, startTime])
+  @@index([scheduleId])
+}

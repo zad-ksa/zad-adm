@@ -102,7 +102,7 @@ export default function EmployeeSidebar({
     const path = activePath;
 
     if (path === "/main") newGroup = "";
-    else if (path.startsWith("/main/charities") || path.startsWith("/main/contracts") || path.startsWith("/main/custom-surveys") || path.startsWith("/main/communication")) newGroup = "الجمعيات";
+    else if (path.startsWith("/main/charities") || path.startsWith("/main/contracts") || path.startsWith("/main/custom-surveys") || path.startsWith("/main/communication") || path.startsWith("/main/charity-meetings")) newGroup = "الجمعيات";
     else if (path.startsWith("/main/requests") || path.startsWith("/main/news") || path.startsWith("/main/meetings") || path.startsWith("/main/tasks")) newGroup = "زاد";
     else if (path.startsWith("/main/admin") || path.startsWith("/main/workflow-settings")) newGroup = "لوحة التحكم";
     else if (path.startsWith("/main/services-overview") || path.startsWith("/main/strategy") || path.startsWith("/main/governance") || path.startsWith("/main/finance") || path.startsWith("/main/resource-development") || path.startsWith("/main/programs")) {
@@ -165,6 +165,7 @@ export default function EmployeeSidebar({
   }
   if (can("manage_communication")) {
     navItems.push({ label: "التواصل", href: "/main/communication", icon: MessageSquare });
+    navItems.push({ label: "الاجتماعات", href: "/main/charity-meetings", icon: Users });
   }
   if (can("manage_news")) {
     navItems.push({ label: "الأخبار والإنجازات", href: "/main/news", icon: Newspaper });
@@ -371,7 +372,7 @@ export default function EmployeeSidebar({
               {isOpen && <div className="h-px bg-slate-100 dark:bg-slate-800 mx-2" />}
               {renderServicesGroup()}
               {isOpen && <div className="h-px bg-slate-100 dark:bg-slate-800 mx-2" />}
-              {renderGroup("الجمعيات", ["الجمعيات", "العقود", "الاستبيانات", "التواصل"])}
+              {renderGroup("الجمعيات", ["الجمعيات", "العقود", "الاستبيانات", "التواصل", "الاجتماعات"])}
               {isOpen && <div className="h-px bg-slate-100 dark:bg-slate-800 mx-2" />}
               {renderGroup("زاد", ["الطلبات", "الأخبار والإنجازات", "محاضر الاجتماعات", "المهام والمنجزات", "مهامي"])}
               {isOpen && <div className="h-px bg-slate-100 dark:bg-slate-800 mx-2" />}

@@ -1,35 +1,18 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState } from "react";
 import { Calendar, Clock, CheckCircle2, ChevronRight, Loader2 } from "lucide-react";
 import { bookMeetingSlot } from "@/app/actions/meeting-schedules";
 
-function generateTimeSlots(startTime: string, endTime: string, durationMinutes: number) {
-  const slots = [];
-  const [startH, startM] = startTime.split(':').map(Number);
-  const [endH, endM] = endTime.split(':').map(Number);
+function formatDateWithDayName(dateString: string) {
+  const date = new Date(dateString);
+  if (isNaN(date.getTime())) return dateString;
   
-  let current = new Date();
-  current.setHours(startH, startM, 0, 0);
-  
-  const end = new Date();
-  end.setHours(endH, endM, 0, 0);
-  
-  while (current < end) {
-    const hours = current.getHours().toString().padStart(2, '0');
-    const minutes = current.getMinutes().toString().padStart(2, '0');
-    const timeString = `${hours}:${minutes}`;
-    
-    slots.push(timeString);
-    
-    current.setMinutes(current.getMinutes() + durationMinutes);
-    // Don't add a slot if its end time would exceed the end time limit
-    if (current > end) {
-      slots.pop(); 
-    }
-  }
-  
-  return slots;
+  return new Intl.DateTimeFormat("ar-SA", {
+    weekday: "long",
+    day: "numeric",
+    month: "long"
+  }).format(date);
 }
 
 export default function BookMeetingClient({ schedule }: { schedule: any }) {
@@ -70,9 +53,9 @@ export default function BookMeetingClient({ schedule }: { schedule: any }) {
     const dayConfig = availableDays.find((d: any) => d.date === date);
     if (!dayConfig) return [];
     
-    const allSlots = generateTimeSlots(dayConfig.startTime, dayConfig.endTime, schedule.duration);
+    const allSlots = dayConfig.slots || [];
     
-    return allSlots.map(time => {
+    return allSlots.map((time: string) => {
       const isBooked = bookings.some((b: any) => b.date === date && b.startTime === time);
       return { time, isBooked };
     });
@@ -86,14 +69,8 @@ export default function BookMeetingClient({ schedule }: { schedule: any }) {
         </div>
         <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-4">تم حجز الموعد بنجاح!</h2>
         <p className="text-slate-600 dark:text-slate-400 mb-8 max-w-md mx-auto leading-relaxed">
-          شكراً لك، تم تسجيل الموعد الخاص بجمعية <span className="font-bold text-slate-800 dark:text-slate-200">{charityName}</span> في يوم <span className="font-bold text-slate-800 dark:text-slate-200">{selectedDate}</span> الساعة <span className="font-bold text-slate-800 dark:text-slate-200" dir="ltr">{selectedSlot}</span>.
+          شكراً لك، تم تسجيل الموعد الخاص بجمعية <span className="font-bold text-slate-800 dark:text-slate-200">{charityName}</span> في يوم <span className="font-bold text-slate-800 dark:text-slate-200">{selectedDate ? formatDateWithDayName(selectedDate) : ''}</span> الساعة <span className="font-bold text-slate-800 dark:text-slate-200" dir="ltr">{selectedSlot}</span>.
         </p>
-        <button 
-          onClick={() => window.location.reload()}
-          className="bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold px-6 py-3 rounded-xl transition-colors"
-        >
-          حجز موعد آخر
-        </button>
       </div>
     );
   }
@@ -139,7 +116,7 @@ export default function BookMeetingClient({ schedule }: { schedule: any }) {
                     : "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:border-primary/30 hover:bg-slate-50 dark:hover:bg-slate-800"
                 }`}
               >
-                <span>{day.date}</span>
+                <span>{formatDateWithDayName(day.date)}</span>
                 <ChevronRight className={`w-4 h-4 transition-transform ${selectedDate === day.date ? "" : "opacity-0 -translate-x-2"}`} />
               </button>
             ))}
@@ -157,26 +134,30 @@ export default function BookMeetingClient({ schedule }: { schedule: any }) {
             <div className="space-y-6 animate-in slide-in-from-left-4 duration-300">
               <div>
                 <h3 className="font-bold text-slate-800 dark:text-slate-200 mb-4 text-sm">
-                  الأوقات المتاحة ليوم {selectedDate}
+                  الأوقات المتاحة ليوم {formatDateWithDayName(selectedDate)}
                 </h3>
                 
                 <div className="grid grid-cols-3 sm:grid-cols-4 gap-3">
-                  {getDaySlots(selectedDate).map(({ time, isBooked }) => (
-                    <button
-                      key={time}
-                      disabled={isBooked}
-                      onClick={() => setSelectedSlot(time)}
-                      className={`py-2 rounded-xl text-sm font-bold font-mono transition-all border ${
-                        isBooked
-                          ? "bg-slate-100 dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-400 opacity-60 cursor-not-allowed line-through decoration-slate-300 dark:decoration-slate-600"
-                          : selectedSlot === time
-                            ? "bg-primary text-white border-primary shadow-md shadow-primary/20 scale-105"
-                            : "bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-primary hover:border-primary/40 hover:bg-primary/5"
-                      }`}
-                    >
-                      {time}
-                    </button>
-                  ))}
+                  {getDaySlots(selectedDate).length === 0 ? (
+                    <p className="col-span-full text-xs text-slate-400">لا يوجد أوقات متاحة في هذا اليوم.</p>
+                  ) : (
+                    getDaySlots(selectedDate).map(({ time, isBooked }: { time: string, isBooked: boolean }) => (
+                      <button
+                        key={time}
+                        disabled={isBooked}
+                        onClick={() => setSelectedSlot(time)}
+                        className={`py-2 rounded-xl text-sm font-bold font-mono transition-all border ${
+                          isBooked
+                            ? "bg-slate-100 dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-400 opacity-60 cursor-not-allowed line-through decoration-slate-300 dark:decoration-slate-600"
+                            : selectedSlot === time
+                              ? "bg-primary text-white border-primary shadow-md shadow-primary/20 scale-105"
+                              : "bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-primary hover:border-primary/40 hover:bg-primary/5"
+                        }`}
+                      >
+                        {time}
+                      </button>
+                    ))
+                  )}
                 </div>
               </div>
 

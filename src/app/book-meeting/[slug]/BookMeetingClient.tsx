@@ -63,12 +63,12 @@ export default function BookMeetingClient({ schedule }: { schedule: any }) {
 
   if (success) {
     return (
-      <div className="bg-white dark:bg-[#111] rounded-3xl p-8 md:p-12 border border-slate-200 dark:border-slate-800 shadow-sm text-center animate-in zoom-in-95 duration-500 max-w-2xl mx-auto mt-12">
-        <div className="w-20 h-20 bg-emerald-50 dark:bg-emerald-950/30 rounded-full flex items-center justify-center mx-auto mb-6 border border-emerald-100 dark:border-emerald-900/50">
-          <CheckCircle2 className="w-10 h-10 text-emerald-500" />
+      <div className="bg-white dark:bg-[#111] rounded-2xl p-8 md:p-10 border border-slate-200 dark:border-slate-800 shadow-sm text-center animate-in zoom-in-95 duration-500 max-w-2xl mx-auto mt-12">
+        <div className="w-16 h-16 bg-emerald-50 dark:bg-emerald-950/30 rounded-full flex items-center justify-center mx-auto mb-6 border border-emerald-100 dark:border-emerald-900/50">
+          <CheckCircle2 className="w-8 h-8 text-emerald-500" />
         </div>
-        <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-4">تم حجز الموعد بنجاح!</h2>
-        <p className="text-slate-600 dark:text-slate-400 mb-8 max-w-md mx-auto leading-relaxed">
+        <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-4">تم حجز الموعد بنجاح!</h2>
+        <p className="text-sm text-slate-600 dark:text-slate-400 mb-8 max-w-md mx-auto leading-relaxed">
           شكراً لك، تم تسجيل الموعد الخاص بجمعية <span className="font-bold text-slate-800 dark:text-slate-200">{charityName}</span> في يوم <span className="font-bold text-slate-800 dark:text-slate-200">{selectedDate ? formatDateWithDayName(selectedDate) : ''}</span> الساعة <span className="font-bold text-slate-800 dark:text-slate-200" dir="ltr">{selectedSlot}</span>.
         </p>
       </div>
@@ -76,20 +76,19 @@ export default function BookMeetingClient({ schedule }: { schedule: any }) {
   }
 
   return (
-    <div className="bg-white dark:bg-[#111] rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden animate-in fade-in duration-500">
+    <div className="bg-white dark:bg-[#111] rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden animate-in fade-in duration-500">
       
       {/* Intro Header */}
-      <div className="p-6 md:p-8 border-b border-slate-100 dark:border-slate-800 relative bg-slate-50/50 dark:bg-slate-900/20">
+      <div className="p-6 border-b border-slate-100 dark:border-slate-800 relative bg-slate-50/50 dark:bg-slate-900/20">
         <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full blur-3xl pointer-events-none" />
         <div className="relative z-10">
           <h2 
-            className="font-bold text-slate-900 dark:text-white tracking-tight mb-3"
-            style={{ fontSize: "clamp(1.5rem, 2.5vw, 2rem)", lineHeight: 1.2 }}
+            className="font-bold text-slate-900 dark:text-white tracking-tight mb-2 text-xl"
           >
             {schedule.title}
           </h2>
-          <div className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400 font-medium">
-            <Clock className="w-4 h-4" />
+          <div className="flex items-center gap-1.5 text-[12px] text-slate-500 dark:text-slate-400 font-medium">
+            <Clock className="w-3.5 h-3.5" />
             <span>مدة الاجتماع: {schedule.duration} دقيقة</span>
           </div>
         </div>

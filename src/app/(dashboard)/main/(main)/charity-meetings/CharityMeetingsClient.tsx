@@ -52,11 +52,11 @@ export default function CharityMeetingsClient({ initialSchedules }: { initialSch
 
       {/* Bento Grid for Schedules */}
       {schedules.length === 0 ? (
-        <div className="bg-white dark:bg-[#111] rounded-3xl p-12 border border-slate-200 dark:border-slate-800 text-center flex flex-col items-center justify-center min-h-[300px]">
-          <div className="w-16 h-16 bg-slate-50 dark:bg-slate-900 rounded-full flex items-center justify-center mb-4">
-            <Calendar className="w-8 h-8 text-slate-400" />
+        <div className="bg-white dark:bg-[#111] rounded-2xl p-8 border border-slate-200 dark:border-slate-800 text-center flex flex-col items-center justify-center min-h-[250px]">
+          <div className="w-12 h-12 bg-slate-50 dark:bg-slate-900 rounded-full flex items-center justify-center mb-4">
+            <Calendar className="w-6 h-6 text-slate-400" />
           </div>
-          <h3 className="text-xl font-bold text-slate-800 dark:text-slate-200 mb-2">لا توجد جداول اجتماعات</h3>
+          <h3 className="text-lg font-bold text-slate-800 dark:text-slate-200 mb-2">لا توجد جداول اجتماعات</h3>
           <p className="text-slate-500 dark:text-slate-400 max-w-md">
             قم بإنشاء جدول اجتماعات جديد وحدد الأوقات المتاحة لمشاركتها مع الجمعيات.
           </p>
@@ -66,7 +66,7 @@ export default function CharityMeetingsClient({ initialSchedules }: { initialSch
           {schedules.map(schedule => (
             <div 
               key={schedule.id}
-              className={`bg-white dark:bg-[#111] rounded-3xl p-6 border ${schedule.isActive ? 'border-slate-200 dark:border-slate-800 hover:ring-2 hover:ring-primary/20' : 'border-slate-200/50 dark:border-slate-800/50 opacity-75'} transition-all duration-300 flex flex-col h-full group relative overflow-hidden`}
+              className={`bg-white dark:bg-[#111] rounded-2xl p-5 border ${schedule.isActive ? 'border-slate-200 dark:border-slate-800 hover:ring-2 hover:ring-primary/20' : 'border-slate-200/50 dark:border-slate-800/50 opacity-75'} transition-all duration-300 flex flex-col h-full group relative overflow-hidden`}
             >
               {schedule.isActive && (
                 <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full blur-3xl pointer-events-none transition-opacity opacity-0 group-hover:opacity-100" />
@@ -74,10 +74,10 @@ export default function CharityMeetingsClient({ initialSchedules }: { initialSch
               
               <div className="flex items-start justify-between mb-4 relative z-10">
                 <div className="space-y-1">
-                  <h3 className="text-lg font-bold text-slate-900 dark:text-white group-hover:text-primary transition-colors">
+                  <h3 className="text-base font-bold text-slate-900 dark:text-white group-hover:text-primary transition-colors">
                     {schedule.title}
                   </h3>
-                  <div className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400 font-medium bg-slate-50 dark:bg-slate-900/50 w-fit px-2.5 py-1 rounded-lg">
+                  <div className="flex items-center gap-1.5 text-[11px] text-slate-500 dark:text-slate-400 font-medium bg-slate-50 dark:bg-slate-900/50 w-fit px-2.5 py-1 rounded-lg">
                     <Clock className="w-3.5 h-3.5" />
                     <span>المدة: {schedule.duration} دقيقة</span>
                   </div>

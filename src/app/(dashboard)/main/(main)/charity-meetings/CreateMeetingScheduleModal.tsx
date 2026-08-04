@@ -130,11 +130,11 @@ export default function CreateMeetingScheduleModal({
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6" dir="rtl">
       <div className="absolute inset-0 bg-slate-900/40 dark:bg-slate-950/60 backdrop-blur-sm transition-opacity" onClick={onClose} />
       
-      <div className="relative bg-white dark:bg-slate-900 w-full max-w-2xl rounded-3xl shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden flex flex-col max-h-[90vh] animate-in zoom-in-95 duration-300">
+      <div className="relative bg-white dark:bg-slate-900 w-full max-w-xl rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden flex flex-col max-h-[90vh] animate-in zoom-in-95 duration-300">
         <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full blur-3xl pointer-events-none" />
         
-        <div className="flex items-center justify-between p-6 border-b border-slate-100 dark:border-slate-800 relative z-10 shrink-0">
-          <h2 className="text-xl font-bold text-slate-900 dark:text-white">إنشاء جدول اجتماعات</h2>
+        <div className="flex items-center justify-between p-5 border-b border-slate-100 dark:border-slate-800 relative z-10 shrink-0">
+          <h2 className="text-lg font-bold text-slate-900 dark:text-white">إنشاء جدول اجتماعات</h2>
           <button 
             onClick={onClose}
             className="p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors"
@@ -284,7 +284,7 @@ export default function CreateMeetingScheduleModal({
           </form>
         </div>
 
-        <div className="p-6 border-t border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50 relative z-10 shrink-0 flex gap-3">
+        <div className="p-5 border-t border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50 relative z-10 shrink-0 flex gap-3">
           <button 
             type="submit" 
             form="create-schedule-form"

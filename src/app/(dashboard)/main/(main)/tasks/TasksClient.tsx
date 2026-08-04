@@ -52,6 +52,7 @@ import {
 } from "@/app/actions/tasks";
 import { Charity, Employee, Session, Task, TaskUpdate, Achievement } from "@/types";
 import { ADMIN_ROLES } from "@/lib/constants";
+import { ROLE_LABELS } from "@/lib/permissions";
 import { useImagePaste } from "@/hooks/useImagePaste";
 import { timeAgoArabic } from "@/lib/dateUtils";
 import dynamic from "next/dynamic";
@@ -830,12 +831,7 @@ ${combinedAchievements.length > 0 ? `
               >
                 {employees.map((emp) => (
                   <option key={emp.id} value={emp.id}>
-                    {emp.name} ({emp.role === "ADMIN" ? "مدير النظام" :
-                               emp.role === "EXECUTIVE_DIRECTOR" ? "إدارة تنفيذية" :
-                               emp.role === "GENERAL_MANAGER" ? "مدير عام" :
-                               emp.role === "ADMINISTRATIVE_SECRETARIAT" ? "إدارة تنفيذية" :
-                               emp.role === "STRATEGY" ? "الاستراتيجية" :
-                               emp.role === "FINANCE" ? "المالية" : "موظف"})
+                    {emp.name} ({ROLE_LABELS[emp.role] || "موظف"})
                   </option>
                 ))}
                 <option value="all">— كل الموظفين —</option>

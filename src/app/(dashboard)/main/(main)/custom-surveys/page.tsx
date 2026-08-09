@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { Plus, Edit2, Trash2, Eye, Copy, CheckCircle, Printer, RefreshCw } from "lucide-react";
+import { Plus, Edit2, Trash2, Eye, Copy, CheckCircle, Printer, RefreshCw, Files } from "lucide-react";
 import CircularLoader from "@/components/CircularLoader";
 
 interface Survey {
@@ -69,6 +69,21 @@ export default function SurveysPage() {
       }
     } catch (err) {
       console.error(err);
+    }
+  };
+
+  const handleDuplicate = async (id: string) => {
+    try {
+      const res = await fetch(`/api/custom-surveys/${id}/copy`, { method: "POST" });
+      if (res.ok) {
+        fetchSurveys();
+        alert("تم نسخ الاستبيان بنجاح");
+      } else {
+        alert("حدث خطأ أثناء نسخ الاستبيان");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("حدث خطأ أثناء نسخ الاستبيان");
     }
   };
 
@@ -227,6 +242,13 @@ export default function SurveysPage() {
                   title="نسخ الرابط"
                 >
                   {copiedId === survey.id ? <CheckCircle className="w-4 h-4 text-emerald-500" /> : <Copy className="w-4 h-4" />}
+                </button>
+                <button
+                  onClick={() => handleDuplicate(survey.id)}
+                  className="p-2 bg-white border border-slate-200 rounded-lg text-slate-500 hover:text-emerald-500 hover:border-emerald-200 shadow-sm dark:bg-slate-800 dark:border-slate-700 dark:text-slate-400 dark:hover:border-emerald-500/30"
+                  title="نسخ الاستبيان"
+                >
+                  <Files className="w-4 h-4" />
                 </button>
                 <button
                   onClick={() => handleDelete(survey.id)}

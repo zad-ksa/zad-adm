@@ -13,12 +13,7 @@ export default async function middleware(request: NextRequest) {
     }
   }
 
-  // Prevent logged-in users from seeing the login page (root "/") again
-  if (pathname === "/") {
-    if (session) {
-      return NextResponse.redirect(new URL("/main", request.url));
-    }
-  }
+  // Root path "/" is now the public landing page. We don't redirect logged-in users away from it.
 
   // Protection for portal routes
   if (pathname.startsWith("/portal/")) {

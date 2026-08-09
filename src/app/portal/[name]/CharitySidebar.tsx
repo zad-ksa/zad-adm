@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import {
   Building2,
   ChevronRight,
+  ChevronDown,
   X,
   ArrowLeft,
   Moon,
@@ -14,11 +15,12 @@ import {
   Scale,
   Target,
   Coins,
-  Users
+  Users,
+  ShieldCheck
 } from "lucide-react";
 import ZadLogo from "@/components/ZadLogo";
 import { useTheme } from "next-themes";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { logout } from "@/app/actions/auth";
 
 // --- Nav Item Component ---
@@ -89,6 +91,63 @@ export default function CharitySidebar({
   const [activePath, setActivePath] = useState(decodeURIComponent(pathname));
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [confirmModal, setConfirmModal] = useState<{ type: 'logout' | 'switch' | null, charityName?: string }>({ type: null });
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+      if (!target.closest('[data-profile-dropdown]')) {
+        setIsDropdownOpen(false);
+      }
+    };
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setIsDropdownOpen(false);
+      }
+    };
+    if (isDropdownOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+      document.addEventListener('keydown', handleEscape);
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('keydown', handleEscape);
+    };
+  }, [isDropdownOpen]);
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+      e.preventDefault();
+      // Find the currently open dropdown (desktop or mobile)
+      const openDropdowns = document.querySelectorAll('[data-profile-dropdown] [role="menu"]');
+      let visibleDropdown = null;
+      openDropdowns.forEach(menu => {
+        // Simple check if it's visible by checking parent offsetParent or bounding client rect
+        if (menu.getBoundingClientRect().width > 0) {
+          visibleDropdown = menu;
+        }
+      });
+      
+      if (!visibleDropdown) return;
+      
+      const focusableElements = visibleDropdown.querySelectorAll('button[role="menuitem"]');
+      if (!focusableElements || focusableElements.length === 0) return;
+      
+      const elementsArray = Array.from(focusableElements) as HTMLElement[];
+      const currentIndex = elementsArray.indexOf(document.activeElement as HTMLElement);
+      
+      let nextIndex = 0;
+      if (e.key === 'ArrowDown') {
+        nextIndex = currentIndex < elementsArray.length - 1 ? currentIndex + 1 : 0;
+      } else {
+        nextIndex = currentIndex > 0 ? currentIndex - 1 : elementsArray.length - 1;
+      }
+      
+      elementsArray[nextIndex]?.focus();
+    }
+  };
 
   useEffect(() => {
     setActivePath(decodeURIComponent(pathname));
@@ -149,42 +208,96 @@ export default function CharitySidebar({
       </div>
 
       {/* Charity Profile - Fixed at top */}
-      <div className={`flex ${isOpen ? "flex-row items-center px-4 gap-3.5" : "flex-col items-center px-2"} py-4 border-b border-slate-100 dark:border-slate-800/80 transition-all overflow-hidden shrink-0`}>
-        {logoUrl ? (
-          <div className={`rounded-full overflow-hidden ring-1 ring-slate-200 dark:ring-slate-800 bg-white dark:bg-black flex items-center justify-center shrink-0 transition-all shadow-sm ${isOpen ? "w-12 h-12" : "w-10 h-10"}`}>
-            <img src={logoUrl} alt={charityName} className="w-full h-full object-contain p-1" />
-          </div>
-        ) : (
-          <div className={`bg-gradient-to-br from-primary/10 to-primary/5 dark:from-primary/20 dark:to-primary/5 text-primary rounded-full ring-1 ring-primary/20 dark:ring-primary/30 flex items-center justify-center shrink-0 transition-all shadow-sm ${isOpen ? "w-12 h-12" : "w-10 h-10"}`}>
-            <Building2 className={isOpen ? "w-6 h-6" : "w-5 h-5"} />
-          </div>
-        )}
+      <div className="relative shrink-0" data-profile-dropdown>
+        <button
+          onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+          aria-expanded={isDropdownOpen}
+          aria-haspopup="menu"
+          className={`w-full flex ${isOpen ? "flex-row items-center px-4 gap-3.5" : "flex-col items-center px-2"} py-4 border-b border-slate-100 dark:border-slate-800/80 hover:bg-slate-50 dark:hover:bg-white/5 transition-all overflow-hidden cursor-pointer outline-none group focus-visible:ring-2 focus-visible:ring-primary`}
+        >
+          {logoUrl ? (
+            <div className={`rounded-full overflow-hidden ring-1 ring-slate-200 dark:ring-slate-800 bg-white dark:bg-black flex items-center justify-center shrink-0 transition-all shadow-sm ${isOpen ? "w-12 h-12" : "w-10 h-10"}`}>
+              <img src={logoUrl} alt={charityName} className="w-full h-full object-contain p-1" />
+            </div>
+          ) : (
+            <div className={`bg-gradient-to-br from-primary/10 to-primary/5 dark:from-primary/20 dark:to-primary/5 text-primary rounded-full ring-1 ring-primary/20 dark:ring-primary/30 flex items-center justify-center shrink-0 transition-all shadow-sm ${isOpen ? "w-12 h-12" : "w-10 h-10"}`}>
+              <Building2 className={isOpen ? "w-6 h-6" : "w-5 h-5"} />
+            </div>
+          )}
 
-        {isOpen && (
-          <div className="overflow-hidden fade-in flex-1 min-w-0 flex flex-col justify-center gap-1 mt-0.5">
-            <div className="flex items-start justify-between w-full gap-2">
-              <h2
-                className="font-semibold text-primary dark:text-primary tracking-tight truncate leading-snug flex-1 text-[13px] md:text-[14px]"
-                title={charityName}
-              >
-                {charityName}
-              </h2>
-              {mounted && (
-                <button
-                  onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-                  className="p-1 rounded-md bg-slate-50 border border-slate-200/60 dark:border-slate-700/50 dark:bg-slate-800 text-slate-400 dark:text-slate-400 hover:text-primary dark:hover:text-primary transition-colors cursor-pointer shrink-0 shadow-sm"
-                  title="تبديل الوضع الداكن/الفاتح"
-                >
-                  {theme === "dark" ? <Sun className="w-3 h-3" /> : <Moon className="w-3 h-3" />}
-                </button>
-              )}
-            </div>
-            <div className="flex items-center gap-1.5 opacity-80">
-              <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-              <span className="text-[10px] font-medium text-slate-500 dark:text-slate-400 tracking-tight leading-none pt-0.5">
-                ملف الجمعية
-              </span>
-            </div>
+          {isOpen && (
+            <>
+              <div className="overflow-hidden fade-in flex-1 min-w-0 flex flex-col justify-center gap-1 mt-0.5 text-right">
+                <div className="flex items-start justify-between w-full gap-2">
+                  <h2
+                    className="font-semibold text-primary dark:text-primary tracking-tight truncate leading-snug flex-1 text-[13px] md:text-[14px]"
+                    title={charityName}
+                  >
+                    {charityName}
+                  </h2>
+                  {mounted && (
+                    <div
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setTheme(theme === "dark" ? "light" : "dark");
+                      }}
+                      className="p-1 rounded-md bg-slate-50 border border-slate-200/60 dark:border-slate-700/50 dark:bg-slate-800 text-slate-400 dark:text-slate-400 hover:text-primary dark:hover:text-primary transition-colors cursor-pointer shrink-0 shadow-sm"
+                      title="تبديل الوضع الداكن/الفاتح"
+                    >
+                      {theme === "dark" ? <Sun className="w-3 h-3" /> : <Moon className="w-3 h-3" />}
+                    </div>
+                  )}
+                </div>
+                <div className="flex items-center gap-1.5 opacity-80">
+                  <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                  <span className="text-[10px] font-medium text-slate-500 dark:text-slate-400 tracking-tight leading-none pt-0.5">
+                    ملف الجمعية
+                  </span>
+                </div>
+              </div>
+              <ChevronDown className={`w-4 h-4 shrink-0 text-slate-400 group-hover:text-slate-600 dark:group-hover:text-slate-300 transition-transform duration-200 ${isDropdownOpen ? 'rotate-180' : ''}`} />
+            </>
+          )}
+        </button>
+
+        {/* Dropdown Menu */}
+        {isDropdownOpen && (
+          <div 
+            role="menu"
+            onKeyDown={handleKeyDown}
+            className={`absolute top-full mt-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-lg z-50 py-1.5 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200 ${isOpen ? 'right-4 left-4' : 'right-2 w-48'}`}
+          >
+            {isCharityUser && availableCharities.filter(c => c.name !== charityName).length > 0 && (
+              <>
+                {availableCharities.filter(c => c.name !== charityName).map((charity) => (
+                  <button
+                    key={charity.id}
+                    role="menuitem"
+                    onClick={() => {
+                      setIsDropdownOpen(false);
+                      setConfirmModal({ type: 'switch', charityName: charity.name });
+                    }}
+                    className="flex items-center justify-start w-full px-3 py-2 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/50 text-[14px] font-medium transition-colors text-right outline-none focus-visible:bg-slate-50 dark:focus-visible:bg-slate-800/50"
+                  >
+                    <Building2 className="w-4 h-4 shrink-0 ml-2.5 text-slate-400" />
+                    <span className="truncate">{charity.name}</span>
+                  </button>
+                ))}
+                <div className="h-px bg-slate-100 dark:bg-slate-800 my-1 mx-3" />
+              </>
+            )}
+            
+            <button
+              role="menuitem"
+              onClick={() => {
+                setIsDropdownOpen(false);
+                setConfirmModal({ type: 'logout' });
+              }}
+              className="flex items-center justify-start w-full px-3 py-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 text-[14px] font-medium transition-colors text-right outline-none focus-visible:bg-red-50 dark:focus-visible:bg-red-950/30"
+            >
+              <LogOut className="w-4 h-4 shrink-0 ml-2.5" />
+              <span>تسجيل الخروج</span>
+            </button>
           </div>
         )}
       </div>
@@ -240,18 +353,17 @@ export default function CharitySidebar({
 
       {/* Bottom Actions */}
       <div className="flex flex-col shrink-0 px-3 py-3 border-t border-slate-100 dark:border-slate-800 gap-1">
-        {isCharityUser && availableCharities.length > 1 && (
-          <Link
-            href="/select-charity"
-            title={!isOpen ? "تبديل الجمعية" : undefined}
-            className={`flex items-center ${isOpen ? "justify-start px-3" : "justify-center"} w-full py-2 text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-white/5 hover:text-slate-900 dark:hover:text-slate-200 rounded-lg text-[15px] font-medium transition-all group`}
-          >
-            <Building2 className={`w-4 h-4 shrink-0 transition-all ${isOpen ? "ml-3" : "ml-0"} text-slate-400 group-hover:text-slate-700 dark:group-hover:text-slate-300`} />
-            {isOpen && <span className="whitespace-nowrap">تبديل الجمعية</span>}
-          </Link>
-        )}
+        {/* Privacy Policy Link */}
+        <Link
+          href="/privacy-policy/charity"
+          title={!isOpen ? "سياسة الخصوصية" : undefined}
+          className={`flex items-center ${isOpen ? "justify-start px-3" : "justify-center"} w-full py-2 text-slate-400 dark:text-slate-500 hover:bg-slate-50 dark:hover:bg-white/5 hover:text-primary dark:hover:text-primary rounded-lg text-[15px] font-medium transition-all group`}
+        >
+          <ShieldCheck className={`w-4 h-4 shrink-0 transition-all ${isOpen ? "ml-3" : "ml-0"} text-slate-400 group-hover:text-primary`} />
+          {isOpen && <span className="whitespace-nowrap text-[13px]">سياسة الخصوصية</span>}
+        </Link>
 
-        {!isCharityUser ? (
+        {!isCharityUser && (
           <Link
             href="/main"
             title={!isOpen ? "العودة للوحة التحكم" : undefined}
@@ -260,15 +372,6 @@ export default function CharitySidebar({
             <ArrowLeft className={`w-4 h-4 shrink-0 transition-all ${isOpen ? "ml-3" : "ml-0"} text-slate-400 group-hover:text-slate-700 dark:group-hover:text-slate-300`} />
             {isOpen && <span className="whitespace-nowrap">العودة للوحة التحكم</span>}
           </Link>
-        ) : (
-          <button
-            onClick={() => logout()}
-            title={!isOpen ? "تسجيل الخروج" : undefined}
-            className={`flex items-center ${isOpen ? "justify-start px-3" : "justify-center"} w-full py-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 rounded-lg text-[15px] font-medium transition-all group`}
-          >
-            <LogOut className={`w-4 h-4 shrink-0 transition-all ${isOpen ? "ml-2.5" : "ml-0"}`} />
-            {isOpen && <span className="whitespace-nowrap">تسجيل الخروج</span>}
-          </button>
         )}
       </div>
     </div>
@@ -290,6 +393,55 @@ export default function CharitySidebar({
           {sidebarContent}
         </div>
       </div>
+
+      {/* Confirmation Modal */}
+      {confirmModal.type && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/60 backdrop-blur-sm p-4">
+          <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-xl w-full max-w-sm overflow-hidden border border-slate-200 dark:border-slate-800 animate-in fade-in zoom-in-95 duration-200">
+            <div className="p-6 text-center">
+              <div className="w-12 h-12 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center mx-auto mb-4">
+                {confirmModal.type === 'logout' ? (
+                  <LogOut className="w-6 h-6 text-red-500" />
+                ) : (
+                  <Building2 className="w-6 h-6 text-primary" />
+                )}
+              </div>
+              <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-2">
+                {confirmModal.type === 'logout' ? 'هل تريد تسجيل الخروج؟' : `هل تريد التبديل إلى ${confirmModal.charityName}؟`}
+              </h3>
+              <p className="text-sm text-slate-500 dark:text-slate-400 mb-6">
+                {confirmModal.type === 'logout' 
+                  ? 'سيتم تسجيل خروجك من الحساب الحالي.' 
+                  : 'سيتم تحويلك إلى لوحة اختيار الجمعيات.'}
+              </p>
+              <div className="flex gap-3 w-full">
+                <button
+                  onClick={() => setConfirmModal({ type: null })}
+                  className="flex-1 py-2.5 px-4 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 font-medium hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
+                >
+                  إلغاء
+                </button>
+                <button
+                  onClick={() => {
+                    if (confirmModal.type === 'logout') {
+                      logout();
+                    } else if (confirmModal.type === 'switch') {
+                      window.location.href = '/select-charity';
+                    }
+                  }}
+                  className={`flex-1 py-2.5 px-4 rounded-xl text-white font-medium transition-colors ${
+                    confirmModal.type === 'logout' 
+                      ? 'bg-red-500 hover:bg-red-600' 
+                      : 'bg-primary hover:bg-primary/90'
+                  }`}
+                >
+                  تأكيد
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }

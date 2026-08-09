@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, useTransition } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { User, ShieldAlert, Users, X, LogOut, LayoutDashboard, Building2, ClipboardList, ChevronRight, Edit, Eye, EyeOff, Camera, Loader2, AlertCircle, CheckCircle2, Newspaper, CheckSquare, Moon, Sun, LayoutGrid, FileText, Settings2, FileSignature, MessageSquare, Send, GitBranch, Bell } from "lucide-react";
+import { User, ShieldAlert, Users, X, LogOut, LayoutDashboard, Building2, ClipboardList, ChevronRight, Edit, Eye, EyeOff, Camera, Loader2, AlertCircle, CheckCircle2, Newspaper, CheckSquare, Moon, Sun, LayoutGrid, FileText, Settings2, FileSignature, MessageSquare, Send, GitBranch, Bell, ShieldCheck } from "lucide-react";
 import { useTheme } from "next-themes";
 import { logout } from "@/app/actions/auth";
 import { updateProfile } from "@/app/actions/profile";
@@ -382,6 +382,17 @@ export default function EmployeeSidebar({
         })()}
       </div>
 
+      {/* Privacy Policy Link */}
+      <div className="shrink-0 px-3 py-2 border-t border-slate-100 dark:border-slate-800">
+        <Link
+          href="/privacy-policy/employees"
+          title={!isOpen ? "سياسة الخصوصية" : undefined}
+          className={`flex items-center ${isOpen ? "justify-start px-2.5" : "justify-center"} py-1.5 rounded-lg text-[11px] font-medium text-slate-400 dark:text-slate-500 hover:text-primary dark:hover:text-primary hover:bg-primary/5 dark:hover:bg-primary/10 transition-all`}
+        >
+          <ShieldCheck className={`w-3.5 h-3.5 shrink-0 ${isOpen ? "ml-2" : ""}`} />
+          {isOpen && <span>سياسة الخصوصية</span>}
+        </Link>
+      </div>
 
     </div>
   );

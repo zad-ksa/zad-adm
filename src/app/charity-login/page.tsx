@@ -3,7 +3,7 @@
 import { useState, useTransition, useEffect, useRef } from "react";
 import { useTheme } from "next-themes";
 import { requestCharityOTP, verifyCharityOTP } from "@/app/actions/authCharity";
-import { AlertCircle, Lock, Loader2, Phone, ArrowLeft, ShieldCheck, KeyRound, Building2, Sun, Moon } from "lucide-react";
+import { AlertCircle, Lock, Loader2, Phone, ArrowLeft, ShieldCheck, KeyRound, Building2, Sun, Moon, Home } from "lucide-react";
 import ZadLogo from "@/components/ZadLogo";
 import Link from "next/link";
 import { Cairo } from "next/font/google";
@@ -184,6 +184,15 @@ export default function CharityLoginPage() {
       >
         {theme === 'dark' ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
       </button>
+
+      {/* Back to Home */}
+      <Link
+        href="/"
+        className="absolute top-6 right-6 flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-white/50 dark:bg-white/10 hover:bg-white/80 dark:hover:bg-white/20 border border-slate-200 dark:border-white/10 text-slate-700 dark:text-slate-200 backdrop-blur-md transition-all shadow-sm z-50 font-bold text-sm"
+      >
+        <Home className="w-4 h-4" />
+        الرئيسية
+      </Link>
 
       {/* Premium Visual Background */}
       <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-[0.03] dark:opacity-[0.05]"></div>
@@ -371,6 +380,13 @@ export default function CharityLoginPage() {
               className="inline-flex items-center justify-center w-full py-3.5 px-4 rounded-xl text-sm font-bold text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 border border-slate-200 dark:border-white/10 transition-all shadow-sm disabled:opacity-50"
             >
               الانتقال الى بوابة دخول إدارة زاد
+            </Link>
+            <Link
+              href="/privacy-policy/charity"
+              className="inline-flex items-center justify-center gap-1.5 mt-4 text-xs font-medium text-slate-400 dark:text-slate-500 hover:text-primary dark:hover:text-primary transition-colors"
+            >
+              <ShieldCheck className="w-3.5 h-3.5" />
+              سياسة الخصوصية
             </Link>
           </div>
         </div>

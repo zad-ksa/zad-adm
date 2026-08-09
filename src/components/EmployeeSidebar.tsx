@@ -13,6 +13,7 @@ import { hasPermission, ROLE_LABELS } from "@/lib/permissions";
 import { getSidebarCharities } from "@/app/actions/charity";
 import { ChevronDown, Target, Scale, DollarSign } from "lucide-react";
 import dynamic from "next/dynamic";
+import PrivacyPolicyModal from "@/components/PrivacyPolicyModal";
 
 // --- Sub Tab Link Component ---
 function SubTabLink({ href, label, isActive, onClick }: { href: string, label: string, isActive: boolean, onClick?: () => void }) {
@@ -86,6 +87,7 @@ export default function EmployeeSidebar({
   const [mounted, setMounted] = useState(false);
   const [expandedGroup, setExpandedGroup] = useState<string | null>(null);
   const [charities, setCharities] = useState<any[]>([]);
+  const [isPrivacyModalOpen, setIsPrivacyModalOpen] = useState(false);
   const [activePath, setActivePath] = useState(decodedPathname);
 
   useEffect(() => {
@@ -382,16 +384,16 @@ export default function EmployeeSidebar({
         })()}
       </div>
 
-      {/* Privacy Policy Link */}
+      {/* Privacy Policy Button */}
       <div className="shrink-0 px-3 py-2 border-t border-slate-100 dark:border-slate-800">
-        <Link
-          href="/privacy-policy/employees"
+        <button
+          onClick={() => setIsPrivacyModalOpen(true)}
           title={!isOpen ? "سياسة الخصوصية" : undefined}
-          className={`flex items-center ${isOpen ? "justify-start px-2.5" : "justify-center"} py-1.5 rounded-lg text-[11px] font-medium text-slate-400 dark:text-slate-500 hover:text-primary dark:hover:text-primary hover:bg-primary/5 dark:hover:bg-primary/10 transition-all`}
+          className={`w-full flex items-center ${isOpen ? "justify-start px-2.5" : "justify-center"} py-1.5 rounded-lg text-[11px] font-medium text-slate-400 dark:text-slate-500 hover:text-primary dark:hover:text-primary hover:bg-primary/5 dark:hover:bg-primary/10 transition-all`}
         >
           <ShieldCheck className={`w-3.5 h-3.5 shrink-0 ${isOpen ? "ml-2" : ""}`} />
           {isOpen && <span>سياسة الخصوصية</span>}
-        </Link>
+        </button>
       </div>
 
     </div>
@@ -399,6 +401,7 @@ export default function EmployeeSidebar({
 
   return (
     <>
+      <PrivacyPolicyModal isOpen={isPrivacyModalOpen} onClose={() => setIsPrivacyModalOpen(false)} />
       {/* Desktop Sidebar */}
       <aside 
         className={`hidden lg:block shrink-0 transition-all duration-300 ease-in-out h-screen z-20 print:hidden ${isOpen ? "w-56" : "w-16"}`}

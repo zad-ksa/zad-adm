@@ -36,16 +36,10 @@ export default function ServicesManagerClient({
   charityId,
   initialServices,
   isAdmin,
-  strategyTimelineName,
-  governanceTimelineName,
-  financeTimelineName,
 }: {
   charityId: string;
   initialServices: Service[];
   isAdmin: boolean;
-  strategyTimelineName: string;
-  governanceTimelineName: string;
-  financeTimelineName: string;
 }) {
   const router = useRouter();
   const [services, setServices] = useState<Service[]>(initialServices);
@@ -57,7 +51,7 @@ export default function ServicesManagerClient({
   const [serviceDepartment, setServiceDepartment] = useState("");
 
   const [isUnifyModalOpen, setIsUnifyModalOpen] = useState(false);
-  const [selectedSource, setSelectedSource] = useState("STRATEGY");
+  const [selectedSource, setSelectedSource] = useState(initialServices[0]?.id ? `CUSTOM_${initialServices[0].id}` : "");
 
   const openAddService = () => {
     setServiceName("");
@@ -211,9 +205,7 @@ export default function ServicesManagerClient({
                   disabled={isPending}
                   className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none transition-all dark:text-white disabled:opacity-50 text-sm"
                 >
-                  <option value="STRATEGY">{strategyTimelineName}</option>
-                  <option value="GOVERNANCE">{governanceTimelineName}</option>
-                  <option value="FINANCE">{financeTimelineName}</option>
+                  <option value="" disabled>اختر المخطط الزمني</option>
                   {initialServices.map(service => (
                     <option key={service.id} value={`CUSTOM_${service.id}`}>
                       {service.name} (مخطط مخصص)

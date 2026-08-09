@@ -2,15 +2,11 @@ import type { Metadata } from "next";
 import { prisma } from "@/lib/db";
 import { getSession } from "@/lib/auth";
 import { Briefcase } from "lucide-react";
-import StrategicStagesManager from "@/app/(dashboard)/main/(main)/strategy/[name]/StrategicStagesManager";
-import GovernanceStagesManager from "@/app/(dashboard)/main/(main)/governance/[name]/GovernanceStagesManager";
-import FinanceStagesManager from "@/app/(dashboard)/main/(main)/finance/[name]/FinanceStagesManager";
 import GenericStagesManager from "@/components/GenericStagesManager";
 import CharityClientTimeline from "@/components/CharityClientTimeline";
 import ServicesManagerClient from "@/components/ServicesManagerClient";
 import ServicesGuideButton from "@/components/ServicesGuideButton";
 import { ServiceAccordionProvider } from "@/components/ServiceAccordionContext";
-import { getTimelineConfigs } from "@/app/actions/settings";
 
 export async function generateMetadata({ params }: { params: Promise<{ name: string }> }): Promise<Metadata> {
   const { name } = await params;
@@ -46,30 +42,7 @@ export default async function ServicesPage({ params }: { params: Promise<{ name:
     orderBy: { createdAt: 'desc' }
   });
 
-  const strategicService = allServices.find(s => s.department === "STRATEGY");
-  const governanceService = allServices.find(s => s.department === "GOVERNANCE");
-  const financeService = allServices.find(s => s.department === "FINANCE");
 
-  let strategicStages: any[] = [];
-  let governanceStages: any[] = [];
-  let financeStages: any[] = [];
-  
-  if (isAdmin || session?.role === "STRATEGY") {
-    strategicStages = strategicService?.stages || [];
-  }
-  if (isAdmin || session?.role === "GOVERNANCE") {
-    governanceStages = governanceService?.stages || [];
-  }
-  if (isAdmin || session?.role === "FINANCE") {
-    financeStages = financeService?.stages || [];
-  }
-
-  const customServices = allServices.filter(s => !["STRATEGY", "GOVERNANCE", "FINANCE"].includes(s.department || ""));
-
-  const timelineNames = await getTimelineConfigs();
-  const strategyName = timelineNames["STRATEGY"] || "المخطط الزمني للتخطيط الاستراتيجي";
-  const governanceName = timelineNames["GOVERNANCE"] || "المخطط الزمني للحوكمة";
-  const financeName = timelineNames["FINANCE"] || "المخطط الزمني للمالية";
 
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -91,12 +64,7 @@ export default async function ServicesPage({ params }: { params: Promise<{ name:
           <div className="shrink-0 flex items-center gap-2">
 
             <ServicesGuideButton
-              sections={[
-                ...(strategicStages.length > 0 ? [{ title: strategyName, stages: strategicStages }] : []),
-                ...(governanceStages.length > 0 ? [{ title: governanceName, stages: governanceStages }] : []),
-                ...(financeStages.length > 0 ? [{ title: financeName, stages: financeStages }] : []),
-                ...customServices.map(svc => ({ title: svc.name, stages: svc.stages })),
-              ]}
+              sections={allServices.map(svc => ({ title: svc.name, stages: svc.stages }))}
             />
           </div>
         </div>
@@ -104,40 +72,12 @@ export default async function ServicesPage({ params }: { params: Promise<{ name:
 
       <ServicesManagerClient 
         charityId={charity.id} 
-        initialServices={customServices} 
+        initialServices={allServices} 
         isAdmin={isAdmin}
-        strategyTimelineName={strategyName}
-        governanceTimelineName={governanceName}
-        financeTimelineName={financeName}
       />
 
       <ServiceAccordionProvider>
-        {(isAdmin || session?.role === (charity.strategyTimelineDept || "STRATEGY")) && (
-          <StrategicStagesManager 
-            charityId={charity.id} 
-            initialStages={strategicStages}
-            timelineName={strategyName}
-            timelineDept={charity.strategyTimelineDept || "STRATEGY"}
-          />
-        )}
-        {(isAdmin || session?.role === (charity.governanceTimelineDept || "GOVERNANCE")) && (
-          <GovernanceStagesManager
-            charityId={charity.id}
-            initialStages={governanceStages}
-            timelineName={governanceName}
-            timelineDept={charity.governanceTimelineDept || "GOVERNANCE"}
-          />
-        )}
-        {(isAdmin || session?.role === (charity.financeTimelineDept || "FINANCE")) && (
-          <FinanceStagesManager
-            charityId={charity.id}
-            initialStages={financeStages}
-            timelineName={financeName}
-            timelineDept={charity.financeTimelineDept || "FINANCE"}
-          />
-        )}
-        
-        {customServices.map(service => (
+        {allServices.map(service => (
           (isAdmin || session?.role === service.department) && (
              <GenericStagesManager 
                key={service.id}

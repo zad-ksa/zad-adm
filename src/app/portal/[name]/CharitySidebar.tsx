@@ -122,7 +122,7 @@ export default function CharitySidebar({
       e.preventDefault();
       // Find the currently open dropdown (desktop or mobile)
       const openDropdowns = document.querySelectorAll('[data-profile-dropdown] [role="menu"]');
-      let visibleDropdown = null;
+      let visibleDropdown: Element | null = null;
       openDropdowns.forEach(menu => {
         // Simple check if it's visible by checking parent offsetParent or bounding client rect
         if (menu.getBoundingClientRect().width > 0) {

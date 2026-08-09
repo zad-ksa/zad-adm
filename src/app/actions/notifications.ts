@@ -9,9 +9,10 @@ export async function getUnreadNotifications() {
     if (!session) return { error: "غير مصرح" };
 
     const notifications = await prisma.appNotification.findMany({
-      where: { employeeId: session.id, isRead: false },
+      where: { employeeId: session.id },
       orderBy: { createdAt: "desc" },
-      take: 20, // Limit to recent 20 unread
+      take: 20, // Limit to recent 20
+
     });
 
     const count = await prisma.appNotification.count({
@@ -69,5 +70,35 @@ export async function createAppNotification(employeeId: string, title: string, m
     return { success: true };
   } catch (error: any) {
     return { error: error.message };
+  }
+}
+
+export async function deleteNotification(id: string) {
+  try {
+    const session = await getSession();
+    if (!session) return { error: "غير مصرح" };
+
+    await prisma.appNotification.deleteMany({
+      where: { id, employeeId: session.id },
+    });
+
+    return { success: true };
+  } catch (error: any) {
+    return { error: error.message || "حدث خطأ أثناء الحذف" };
+  }
+}
+
+export async function deleteAllNotifications() {
+  try {
+    const session = await getSession();
+    if (!session) return { error: "غير مصرح" };
+
+    await prisma.appNotification.deleteMany({
+      where: { employeeId: session.id },
+    });
+
+    return { success: true };
+  } catch (error: any) {
+    return { error: error.message || "حدث خطأ أثناء حذف الإشعارات" };
   }
 }

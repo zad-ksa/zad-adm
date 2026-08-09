@@ -36,12 +36,19 @@ export default function DashboardLayoutClient({ children, session, unreadRequest
         const appNotifsRes = await getUnreadNotifications();
         if (active && appNotifsRes && !appNotifsRes.error) {
           setAppNotificationsData({ notifications: appNotifsRes.notifications || [], count: appNotifsRes.count || 0 });
-          
           if ("Notification" in window && Notification.permission === "granted") {
             const notifs = appNotifsRes.notifications || [];
+            
+            // Get seen notifications from localStorage to persist across reloads
+            const storedSeen = JSON.parse(localStorage.getItem('seen_notifications') || '[]');
+            const seenSet = new Set(storedSeen);
+            
             notifs.forEach((n: any) => {
-              if (!seenNotificationIds.current.has(n.id)) {
+              if (n.isRead) return; // Don't notify for already read notifications
+              
+              if (!seenSet.has(n.id) && !seenNotificationIds.current.has(n.id)) {
                 seenNotificationIds.current.add(n.id);
+                seenSet.add(n.id);
                 // Send push notification
                 const notification = new Notification(n.title, {
                   body: n.message || "",
@@ -53,6 +60,10 @@ export default function DashboardLayoutClient({ children, session, unreadRequest
                 };
               }
             });
+            
+            // Save the last 100 seen IDs to localStorage
+            localStorage.setItem('seen_notifications', JSON.stringify(Array.from(seenSet).slice(-100)));
+            
           } else {
              const notifs = appNotifsRes.notifications || [];
              notifs.forEach((n: any) => seenNotificationIds.current.add(n.id));

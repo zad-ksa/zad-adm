@@ -25,7 +25,8 @@ export default function CharityClientTimeline({
             {sequentialStages.map((stage: any, idx: number) => {
               const isPast = sequentialStages.findIndex((s: any) => s.isCurrent) > idx;
               const isCurrent = stage.isCurrent;
-              const isComingSoon = stage.isComingSoon || stage.name?.includes('قريب');
+              // تظهر المرحلة بلون برتقالي ومكتوب عليها "قريباً" فقط إذا كانت هي المرحلة الحالية
+              const isComingSoon = (stage.isComingSoon || stage.name?.includes('قريب')) && isCurrent;
               const displayDuration = formatDurationArabic(stage.startDate, stage.endDate) || stage.duration;
               
               return (

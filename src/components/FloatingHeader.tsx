@@ -82,9 +82,24 @@ export default function FloatingHeader({
             <div className="absolute top-full left-0 mt-2 w-72 bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700/50 rounded-2xl shadow-xl shadow-black/10 z-[60] overflow-hidden flex flex-col max-h-[350px]" dir="rtl">
               <div className="px-4 py-3 border-b border-slate-100 dark:border-slate-700/50 bg-slate-50/50 dark:bg-slate-800/50 flex items-center justify-between shrink-0">
                 <span className="text-sm font-bold text-slate-700 dark:text-slate-200">الإشعارات</span>
-                {localCount > 0 && (
-                  <span className="text-xs bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400 px-2 py-0.5 rounded-full font-bold">{localCount}</span>
-                )}
+                <div className="flex items-center gap-3">
+                  {localCount > 0 && (
+                    <span className="text-xs bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400 px-2 py-0.5 rounded-full font-bold">{localCount}</span>
+                  )}
+                  {localNotifs.length > 0 && (
+                    <button
+                      onClick={async (e) => {
+                        e.stopPropagation();
+                        setLocalNotifs([]);
+                        setLocalCount(0);
+                        await deleteAllNotifications();
+                      }}
+                      className="text-[11px] font-bold text-red-500 hover:text-red-600 hover:underline"
+                    >
+                      مسح الكل
+                    </button>
+                  )}
+                </div>
               </div>
               <div className="overflow-y-auto custom-scrollbar flex-1 p-2">
                 {localNotifs.length === 0 ? (
@@ -109,22 +124,6 @@ export default function FloatingHeader({
                   ))
                 )}
               </div>
-              
-              {localNotifs.length > 0 && (
-                <div className="p-2 border-t border-slate-100 dark:border-slate-700/50 bg-slate-50/50 dark:bg-slate-800/50 shrink-0">
-                  <button
-                    onClick={async () => {
-                      setLocalNotifs([]);
-                      await deleteAllNotifications();
-                      setIsNotificationsOpen(false);
-                    }}
-                    className="w-full py-2 text-xs font-bold text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg flex items-center justify-center gap-1.5 transition-colors"
-                  >
-                    <Trash2 className="w-3.5 h-3.5" />
-                    حذف الكل
-                  </button>
-                </div>
-              )}
             </div>
           )}
         </div>

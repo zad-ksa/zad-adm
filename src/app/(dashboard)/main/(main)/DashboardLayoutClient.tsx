@@ -40,7 +40,9 @@ export default function DashboardLayoutClient({ children, session, unreadRequest
             const notifs = appNotifsRes.notifications || [];
             
             // Get seen notifications from localStorage to persist across reloads
-            const storedSeen = JSON.parse(localStorage.getItem('seen_notifications') || '[]');
+            const storedSeenStr = localStorage.getItem('seen_notifications');
+            const isFirstTime = storedSeenStr === null;
+            const storedSeen = JSON.parse(storedSeenStr || '[]');
             const seenSet = new Set(storedSeen);
             
             notifs.forEach((n: any) => {
@@ -49,15 +51,18 @@ export default function DashboardLayoutClient({ children, session, unreadRequest
               if (!seenSet.has(n.id) && !seenNotificationIds.current.has(n.id)) {
                 seenNotificationIds.current.add(n.id);
                 seenSet.add(n.id);
-                // Send push notification
-                const notification = new Notification(n.title, {
-                  body: n.message || "",
-                  icon: "/favicon.ico",
-                });
-                notification.onclick = () => {
-                  window.focus();
-                  notification.close();
-                };
+                
+                // Send push notification only if it's not the first time initializing the local storage
+                if (!isFirstTime) {
+                  const notification = new Notification(n.title, {
+                    body: n.message || "",
+                    icon: "/favicon.ico",
+                  });
+                  notification.onclick = () => {
+                    window.focus();
+                    notification.close();
+                  };
+                }
               }
             });
             

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import {
   Building2,
   ChevronRight,
@@ -19,6 +19,7 @@ import {
   ShieldCheck
 } from "lucide-react";
 import ZadLogo from "@/components/ZadLogo";
+import PrivacyPolicyModal from "@/components/PrivacyPolicyModal";
 import { useTheme } from "next-themes";
 import { useState, useEffect, useRef } from "react";
 import { logout } from "@/app/actions/auth";
@@ -88,10 +89,12 @@ export default function CharitySidebar({
   availableCharities?: { id: string, name: string }[];
 }) {
   const pathname = usePathname();
+  const router = useRouter();
   const [activePath, setActivePath] = useState(decodeURIComponent(pathname));
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [isPrivacyModalOpen, setIsPrivacyModalOpen] = useState(false);
   const [confirmModal, setConfirmModal] = useState<{ type: 'logout' | 'switch' | null, charityName?: string }>({ type: null });
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -347,15 +350,15 @@ export default function CharitySidebar({
 
       {/* Bottom Actions */}
       <div className="flex flex-col shrink-0 px-3 py-3 border-t border-slate-100 dark:border-slate-800 gap-1">
-        {/* Privacy Policy Link */}
-        <Link
-          href="/privacy-policy/charity"
+        {/* Privacy Policy Button */}
+        <button
+          onClick={() => setIsPrivacyModalOpen(true)}
           title={!isOpen ? "سياسة الخصوصية" : undefined}
           className={`flex items-center ${isOpen ? "justify-start px-3" : "justify-center"} w-full py-2 text-slate-400 dark:text-slate-500 hover:bg-slate-50 dark:hover:bg-white/5 hover:text-primary dark:hover:text-primary rounded-lg text-[15px] font-medium transition-all group`}
         >
           <ShieldCheck className={`w-4 h-4 shrink-0 transition-all ${isOpen ? "ml-3" : "ml-0"} text-slate-400 group-hover:text-primary`} />
           {isOpen && <span className="whitespace-nowrap text-[13px]">سياسة الخصوصية</span>}
-        </Link>
+        </button>
 
         {!isCharityUser && (
           <Link
@@ -373,6 +376,7 @@ export default function CharitySidebar({
 
   return (
     <>
+      <PrivacyPolicyModal isOpen={isPrivacyModalOpen} onClose={() => setIsPrivacyModalOpen(false)} />
       {/* Desktop Sidebar */}
       <aside
         className={`hidden lg:block shrink-0 transition-all duration-300 ease-in-out h-screen z-20 ${isOpen ? "w-64" : "w-16"}`}

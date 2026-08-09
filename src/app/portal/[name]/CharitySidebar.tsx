@@ -121,14 +121,8 @@ export default function CharitySidebar({
     if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
       e.preventDefault();
       // Find the currently open dropdown (desktop or mobile)
-      const openDropdowns = document.querySelectorAll('[data-profile-dropdown] [role="menu"]');
-      let visibleDropdown: Element | null = null;
-      openDropdowns.forEach(menu => {
-        // Simple check if it's visible by checking parent offsetParent or bounding client rect
-        if (menu.getBoundingClientRect().width > 0) {
-          visibleDropdown = menu;
-        }
-      });
+      const openDropdowns = Array.from(document.querySelectorAll('[data-profile-dropdown] [role="menu"]'));
+      const visibleDropdown = openDropdowns.find(menu => menu.getBoundingClientRect().width > 0);
       
       if (!visibleDropdown) return;
       

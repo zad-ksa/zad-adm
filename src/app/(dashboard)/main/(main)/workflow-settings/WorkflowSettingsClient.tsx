@@ -43,8 +43,8 @@ export default function WorkflowSettingsClient({
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500" dir="rtl">
       {/* Header */}
       <div className="flex items-center gap-3">
-        <div className="w-9 h-9 bg-indigo-100 dark:bg-indigo-900/30 rounded-xl flex items-center justify-center">
-          <GitBranch className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
+        <div className="w-9 h-9 bg-primary/10 dark:bg-primary/20 rounded-xl flex items-center justify-center">
+          <GitBranch className="w-5 h-5 text-primary" />
         </div>
         <div>
           <h1 className="text-base font-bold text-slate-800 dark:text-slate-100">سلاسل اعتماد الطلبات</h1>
@@ -85,8 +85,8 @@ export default function WorkflowSettingsClient({
           <div className="flex items-center gap-3 p-4">
             <button onClick={() => setExpandedChain(expandedChain === chain.id ? null : chain.id)}
               className="flex-1 flex items-center gap-3 text-right">
-              <div className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 ${chain.isActive ? "bg-indigo-100 dark:bg-indigo-900/30" : "bg-slate-100 dark:bg-slate-700"}`}>
-                <GitBranch className={`w-4 h-4 ${chain.isActive ? "text-indigo-600 dark:text-indigo-400" : "text-slate-400"}`} />
+              <div className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 ${chain.isActive ? "bg-primary/10 dark:bg-primary/20" : "bg-slate-100 dark:bg-slate-700"}`}>
+                <GitBranch className={`w-4 h-4 ${chain.isActive ? "text-primary" : "text-slate-400"}`} />
               </div>
               <div className="flex-1 min-w-0">
                 {editingName[chain.id] !== undefined ? (
@@ -94,7 +94,7 @@ export default function WorkflowSettingsClient({
                     value={editingName[chain.id]}
                     onChange={e => setEditingName(prev => ({ ...prev, [chain.id]: e.target.value }))}
                     onClick={e => e.stopPropagation()}
-                    className="text-sm font-bold bg-transparent border-b border-indigo-400 outline-none text-slate-800 dark:text-slate-100 w-48"
+                    className="text-sm font-bold bg-transparent border-b border-primary/50 outline-none text-slate-800 dark:text-slate-100 w-48"
                   />
                 ) : (
                   <p className="text-sm font-bold text-slate-800 dark:text-slate-100 truncate">{chain.name}</p>
@@ -130,7 +130,7 @@ export default function WorkflowSettingsClient({
                 </span>
               ) : (
                 <button onClick={() => run(() => setActiveChain(chain.id))} disabled={isPending}
-                  className="flex items-center gap-1 text-[10px] font-bold text-slate-500 hover:text-indigo-600 border border-slate-200 dark:border-slate-700 px-2 py-1 rounded-full hover:border-indigo-300 transition-colors">
+                  className="flex items-center gap-1 text-[10px] font-bold text-slate-500 hover:text-primary border border-slate-200 dark:border-slate-700 px-2 py-1 rounded-full hover:border-primary/50 transition-colors">
                   <Power className="w-3 h-3" /> تفعيل
                 </button>
               )}
@@ -157,13 +157,13 @@ export default function WorkflowSettingsClient({
               {/* خط سير بصري */}
               {chain.steps.length > 0 && (
                 <div className="relative">
-                  <div className="absolute right-[18px] top-6 bottom-6 w-px bg-indigo-200 dark:bg-indigo-800" />
+                  <div className="absolute right-[18px] top-6 bottom-6 w-px bg-primary/20 dark:bg-primary/20" />
                   <div className="space-y-2">
                     {chain.steps.map((step, idx) => (
                       <div key={step.id} className="flex items-center gap-3">
                         {/* رقم المستوى */}
-                        <div className="w-9 h-9 rounded-xl bg-indigo-100 dark:bg-indigo-900/40 border-2 border-indigo-200 dark:border-indigo-700 flex items-center justify-center shrink-0 z-10">
-                          <span className="text-xs font-black text-indigo-600 dark:text-indigo-400">{step.order}</span>
+                        <div className="w-9 h-9 rounded-xl bg-primary/10 dark:bg-primary/20 border-2 border-primary/20 dark:border-primary/30 flex items-center justify-center shrink-0 z-10">
+                          <span className="text-xs font-black text-primary">{step.order}</span>
                         </div>
                         {/* بيانات الشخص */}
                         <div className="flex-1 bg-slate-50 dark:bg-slate-700/50 rounded-xl px-3 py-2 flex items-center gap-2">
@@ -171,20 +171,20 @@ export default function WorkflowSettingsClient({
                             <p className="text-sm font-bold text-slate-800 dark:text-slate-100 truncate">{step.approver.name}</p>
                             <p className="text-[10px] text-slate-500 dark:text-slate-400">
                               {ROLE_LABELS[step.approver.role] || step.approver.role}
-                              {step.label && <span className="text-indigo-500"> · {step.label}</span>}
+                              {step.label && <span className="text-primary/70"> · {step.label}</span>}
                             </p>
                           </div>
                           {/* أزرار الترتيب */}
                           <div className="flex items-center gap-1 shrink-0">
                             {idx > 0 && (
                               <button onClick={() => run(() => reorderSteps(step.id, "up"))} disabled={isPending}
-                                className="p-1 rounded hover:bg-indigo-100 dark:hover:bg-indigo-900/40 text-slate-400 hover:text-indigo-600 transition-colors">
+                                className="p-1 rounded hover:bg-primary/10 dark:hover:bg-primary/20 text-slate-400 hover:text-primary transition-colors">
                                 <ArrowUp className="w-3.5 h-3.5" />
                               </button>
                             )}
                             {idx < chain.steps.length - 1 && (
                               <button onClick={() => run(() => reorderSteps(step.id, "down"))} disabled={isPending}
-                                className="p-1 rounded hover:bg-indigo-100 dark:hover:bg-indigo-900/40 text-slate-400 hover:text-indigo-600 transition-colors">
+                                className="p-1 rounded hover:bg-primary/10 dark:hover:bg-primary/20 text-slate-400 hover:text-primary transition-colors">
                                 <ArrowDown className="w-3.5 h-3.5" />
                               </button>
                             )}
@@ -206,15 +206,15 @@ export default function WorkflowSettingsClient({
               )}
 
               {/* إضافة خطوة */}
-              <div className="bg-indigo-50 dark:bg-indigo-900/20 rounded-xl p-3 border border-indigo-100 dark:border-indigo-800">
-                <p className="text-xs font-bold text-indigo-600 dark:text-indigo-400 mb-2 flex items-center gap-1">
+              <div className="bg-primary/5 dark:bg-primary/10 rounded-xl p-3 border border-primary/10 dark:border-primary/20">
+                <p className="text-xs font-bold text-primary mb-2 flex items-center gap-1">
                   <Plus className="w-3.5 h-3.5" /> إضافة مستوى جديد
                 </p>
                 <div className="flex gap-2">
                   <select
                     value={addingStep[chain.id]?.approverId || ""}
                     onChange={e => setAddingStep(prev => ({ ...prev, [chain.id]: { ...prev[chain.id], approverId: e.target.value } }))}
-                    className="flex-1 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-sm bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    className="flex-1 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-sm bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-primary/50">
                     <option value="">اختر الشخص...</option>
                     {employees.map(e => (
                       <option key={e.id} value={e.id}>{e.name} — {ROLE_LABELS[e.role] || e.role}</option>
@@ -224,11 +224,11 @@ export default function WorkflowSettingsClient({
                     value={addingStep[chain.id]?.label || ""}
                     onChange={e => setAddingStep(prev => ({ ...prev, [chain.id]: { ...prev[chain.id], label: e.target.value } }))}
                     placeholder="تسمية (اختياري)"
-                    className="w-32 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-sm bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+                    className="w-32 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-sm bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-primary/50" />
                   <button
                     disabled={!addingStep[chain.id]?.approverId || isPending}
                     onClick={() => run(() => addStep({ chainId: chain.id, approverId: addingStep[chain.id].approverId, label: addingStep[chain.id]?.label }))}
-                    className="flex items-center gap-1 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white px-3 py-2 rounded-xl text-xs font-bold transition-colors shrink-0">
+                    className="flex items-center gap-1 bg-primary hover:bg-primary/90 disabled:opacity-50 text-white px-3 py-2 rounded-xl text-xs font-bold transition-colors shrink-0">
                     {isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Plus className="w-3.5 h-3.5" />}
                     إضافة
                   </button>
@@ -245,10 +245,10 @@ export default function WorkflowSettingsClient({
         <div className="flex gap-2">
           <input value={newChainName} onChange={e => setNewChainName(e.target.value)}
             placeholder="اسم السلسلة... مثال: مسار المشتريات"
-            className="flex-1 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-sm bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+            className="flex-1 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-sm bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-primary/50" />
           <button disabled={!newChainName.trim() || isPending}
             onClick={() => run(async () => { await createChain(newChainName); setNewChainName(""); })}
-            className="flex items-center gap-1.5 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white px-4 py-2 rounded-xl text-sm font-bold transition-colors shrink-0">
+            className="flex items-center gap-1.5 bg-primary hover:bg-primary/90 disabled:opacity-50 text-white px-4 py-2 rounded-xl text-sm font-bold transition-colors shrink-0">
             {isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
             إنشاء
           </button>

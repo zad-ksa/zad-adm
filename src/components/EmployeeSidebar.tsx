@@ -311,20 +311,26 @@ export default function EmployeeSidebar({
                       
                       <div className={`overflow-hidden transition-all duration-300 ease-in-out ${expandedService === svc.id ? 'max-h-[1000px] opacity-100 mt-1 mb-2' : 'max-h-0 opacity-0'}`}>
                         <div className="mr-3 space-y-1 border-r-2 border-slate-100 dark:border-slate-800 pr-2">
-                          {charities.map(charity => {
-                            const charityKey = `${svc.id}-${charity.name}`;
-                            const isCharityExpanded = expandedCharity === charityKey;
-                            const toggleCharity = () => setExpandedCharity(prev => prev === charityKey ? null : charityKey);
-                            
-                            return (
-                              <div key={charity.id}>
-                                <button
-                                  onClick={toggleCharity}
-                                  className={`flex items-center justify-between w-full px-1.5 py-1.5 rounded-lg text-[11px] font-bold transition-all ${isCharityExpanded ? "text-primary bg-primary/5" : "text-slate-500 hover:text-primary hover:bg-slate-50 dark:hover:bg-slate-800"}`}
-                                >
-                                  <span className="truncate text-right">{charity.name}</span>
-                                  <ChevronDown className={`w-2.5 h-2.5 transition-transform shrink-0 ${isCharityExpanded ? 'rotate-180' : ''}`} />
-                                </button>
+                          {svc.id === "governance" ? (
+                            <>
+                              <SubTabLink href={`/main/governance?tab=manual`} label="دليل الحوكمة" isActive={activePath === `/main/governance` && (!currentTab || currentTab === 'manual')} onClick={() => handleLinkClick(`/main/governance?tab=manual`)} />
+                              <SubTabLink href={`/main/governance?tab=services`} label="خدمات المركز" isActive={activePath === `/main/governance` && currentTab === 'services'} onClick={() => handleLinkClick(`/main/governance?tab=services`)} />
+                            </>
+                          ) : (
+                            charities.map(charity => {
+                              const charityKey = `${svc.id}-${charity.name}`;
+                              const isCharityExpanded = expandedCharity === charityKey;
+                              const toggleCharity = () => setExpandedCharity(prev => prev === charityKey ? null : charityKey);
+                              
+                              return (
+                                <div key={charity.id}>
+                                  <button
+                                    onClick={toggleCharity}
+                                    className={`flex items-center justify-between w-full px-1.5 py-1.5 rounded-lg text-[11px] font-bold transition-all ${isCharityExpanded ? "text-primary bg-primary/5" : "text-slate-500 hover:text-primary hover:bg-slate-50 dark:hover:bg-slate-800"}`}
+                                  >
+                                    <span className="truncate text-right">{charity.name}</span>
+                                    <ChevronDown className={`w-2.5 h-2.5 transition-transform shrink-0 ${isCharityExpanded ? 'rotate-180' : ''}`} />
+                                  </button>
                                 
                                 <div className={`overflow-hidden transition-all duration-300 ease-in-out ${isCharityExpanded ? 'max-h-[500px] opacity-100 mt-1 mb-2' : 'max-h-0 opacity-0'}`}>
                                   <div className="mr-2 space-y-0.5 border-r-2 border-slate-100 dark:border-slate-800 pr-1.5">
@@ -334,13 +340,6 @@ export default function EmployeeSidebar({
                                         <SubTabLink href={`/main/strategy/${encodeURIComponent(charity.name)}/vision-mission`} label="استبيان الرؤية" isActive={activePath === `/main/strategy/${charity.name}/vision-mission`} onClick={() => handleLinkClick(`/main/strategy/${charity.name}/vision-mission`)} />
                                         <SubTabLink href={`/main/strategy/${encodeURIComponent(charity.name)}/hexagonal`} label="التحليل السداسي" isActive={activePath === `/main/strategy/${charity.name}/hexagonal`} onClick={() => handleLinkClick(`/main/strategy/${charity.name}/hexagonal`)} />
                                         <SubTabLink href={`/main/strategy/${encodeURIComponent(charity.name)}/performance`} label="مقياس الأداء" isActive={activePath === `/main/strategy/${charity.name}/performance`} onClick={() => handleLinkClick(`/main/strategy/${charity.name}/performance`)} />
-                                      </>
-                                    )}
-                                    {svc.id === "governance" && (
-                                      <>
-                                        <SubTabLink href={`/main/governance/${encodeURIComponent(charity.name)}?tab=manual`} label="دليل الحوكمة" isActive={activePath === `/main/governance/${charity.name}` && (!currentTab || currentTab === 'manual')} onClick={() => handleLinkClick(`/main/governance/${charity.name}?tab=manual`)} />
-                                        <SubTabLink href={`/main/governance/${encodeURIComponent(charity.name)}?tab=files`} label="الملفات والأنظمة" isActive={activePath === `/main/governance/${charity.name}` && currentTab === 'files'} onClick={() => handleLinkClick(`/main/governance/${charity.name}?tab=files`)} />
-                                        <SubTabLink href={`/main/governance/${encodeURIComponent(charity.name)}?tab=services`} label="خدمات المركز" isActive={activePath === `/main/governance/${charity.name}` && currentTab === 'services'} onClick={() => handleLinkClick(`/main/governance/${charity.name}?tab=services`)} />
                                       </>
                                     )}
                                     {svc.id === "resource-development" && (
@@ -358,7 +357,7 @@ export default function EmployeeSidebar({
                                 </div>
                               </div>
                             );
-                          })}
+                          }))}
                         </div>
                       </div>
                     </div>

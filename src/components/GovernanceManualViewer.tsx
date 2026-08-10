@@ -18,13 +18,13 @@ export default function GovernanceManualViewer({
   charityName,
   initialSize,
   annualRevenue,
-  progress,
+  progress = [],
 }: {
-  charityId: string;
-  charityName: string;
-  initialSize: CharitySize | null;
+  charityId?: string;
+  charityName?: string;
+  initialSize?: CharitySize | null;
   annualRevenue?: number | null;
-  progress: ProgressItem[];
+  progress?: ProgressItem[];
 }) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -35,22 +35,34 @@ export default function GovernanceManualViewer({
 
   useEffect(() => {
     if (initialSize && !forceSelect) {
-      router.replace(`/main/governance/${encodeURIComponent(charityName)}/standards?size=${initialSize}`);
+      if (charityName) {
+        router.replace(`/main/governance/${encodeURIComponent(charityName)}/standards?size=${initialSize}`);
+      } else {
+        router.replace(`/main/governance/standards?size=${initialSize}`);
+      }
     }
   }, [initialSize, forceSelect, charityName, router]);
 
   const navigateToStandards = (selectedSize: CharitySize) => {
-    router.push(`/main/governance/${encodeURIComponent(charityName)}/standards?size=${selectedSize}`);
+    if (charityName) {
+      router.push(`/main/governance/${encodeURIComponent(charityName)}/standards?size=${selectedSize}`);
+    } else {
+      router.push(`/main/governance/standards?size=${selectedSize}`);
+    }
   };
 
   const handleSizeSelect = async (selectedSize: CharitySize) => {
-    setIsUpdatingSize(true);
-    const res = await updateCharitySize(charityId, selectedSize);
-    if (res.success) {
-      navigateToStandards(selectedSize);
+    if (charityId) {
+      setIsUpdatingSize(true);
+      const res = await updateCharitySize(charityId, selectedSize);
+      if (res.success) {
+        navigateToStandards(selectedSize);
+      } else {
+        alert(res.error);
+        setIsUpdatingSize(false);
+      }
     } else {
-      alert(res.error);
-      setIsUpdatingSize(false);
+      navigateToStandards(selectedSize);
     }
   };
 
@@ -58,14 +70,25 @@ export default function GovernanceManualViewer({
     e.preventDefault();
     if (!revenueInput || isNaN(Number(revenueInput))) return;
     
-    setIsUpdatingSize(true);
-    const numRevenue = Number(revenueInput);
-    const res = await updateCharityRevenueAndSize(charityId, numRevenue);
-    if (res.success && res.size) {
-      navigateToStandards(res.size as CharitySize);
+    if (charityId) {
+      setIsUpdatingSize(true);
+      const numRevenue = Number(revenueInput);
+      const res = await updateCharityRevenueAndSize(charityId, numRevenue);
+      if (res.success && res.size) {
+        navigateToStandards(res.size as CharitySize);
+      } else {
+        alert(res.error);
+        setIsUpdatingSize(false);
+      }
     } else {
-      alert(res.error);
-      setIsUpdatingSize(false);
+      // Just estimate the size based on revenue locally
+      const numRevenue = Number(revenueInput);
+      let selectedSize: CharitySize = "MICRO";
+      if (numRevenue > 30000000) selectedSize = "MEGA";
+      else if (numRevenue >= 8000000) selectedSize = "LARGE";
+      else if (numRevenue >= 2000000) selectedSize = "MEDIUM";
+      else if (numRevenue >= 500000) selectedSize = "SMALL";
+      navigateToStandards(selectedSize);
     }
   };
 

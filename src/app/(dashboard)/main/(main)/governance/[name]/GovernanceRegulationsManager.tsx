@@ -25,7 +25,7 @@ export default function GovernanceRegulationsManager({
   regulations,
   isAdmin = false
 }: {
-  charityId: string;
+  charityId?: string;
   regulations: Regulation[];
   isAdmin?: boolean;
 }) {
@@ -53,6 +53,7 @@ export default function GovernanceRegulationsManager({
   };
 
   const handleToggle = async (regId: string, currentIsVisible: boolean) => {
+    if (!charityId) return;
     // تحديث واجهة المستخدم فورياً (Optimistic Update)
     setLocalRegulations(prev => prev.map(reg => {
       if (reg.id === regId) {
@@ -176,16 +177,18 @@ export default function GovernanceRegulationsManager({
                   <div className="flex items-center gap-1">
                     {isAdmin && (
                       <>
-                        <button
-                          onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleToggle(reg.id, isVisible); }}
-                          title={isVisible ? "إخفاء عن هذه الجمعية" : "إظهار لهذه الجمعية"}
-                          className={`p-2 rounded-lg transition-colors duration-500 ${isVisible
-                            ? "text-emerald-600 bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-900/20 dark:hover:bg-emerald-900/40 group-hover:bg-emerald-100 dark:group-hover:bg-emerald-800/50 group-hover:text-emerald-900 dark:group-hover:text-emerald-100 group-hover:hover:bg-emerald-200 dark:group-hover:hover:bg-emerald-700/50"
-                            : "text-slate-500 bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 group-hover:bg-slate-200 dark:group-hover:bg-slate-600 group-hover:text-emerald-800 dark:group-hover:text-emerald-200 group-hover:hover:bg-slate-300 dark:group-hover:hover:bg-slate-500"
-                            }`}
-                        >
-                          {isVisible ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
-                        </button>
+                        {charityId && (
+                          <button
+                            onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleToggle(reg.id, isVisible); }}
+                            title={isVisible ? "إخفاء عن هذه الجمعية" : "إظهار لهذه الجمعية"}
+                            className={`p-2 rounded-lg transition-colors duration-500 ${isVisible
+                              ? "text-emerald-600 bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-900/20 dark:hover:bg-emerald-900/40 group-hover:bg-emerald-100 dark:group-hover:bg-emerald-800/50 group-hover:text-emerald-900 dark:group-hover:text-emerald-100 group-hover:hover:bg-emerald-200 dark:group-hover:hover:bg-emerald-700/50"
+                              : "text-slate-500 bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 group-hover:bg-slate-200 dark:group-hover:bg-slate-600 group-hover:text-emerald-800 dark:group-hover:text-emerald-200 group-hover:hover:bg-slate-300 dark:group-hover:hover:bg-slate-500"
+                              }`}
+                          >
+                            {isVisible ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
+                          </button>
+                        )}
                         <button
                           onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleDelete(reg.id); }}
                           title="حذف الخدمة من النظام بالكامل"

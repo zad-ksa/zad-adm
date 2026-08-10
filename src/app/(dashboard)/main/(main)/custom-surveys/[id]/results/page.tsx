@@ -167,7 +167,7 @@ export default function SurveyResultsPage({ params }: { params: Promise<{ id: st
                               ? attachment
                               : attachment ? [attachment] : [];
 
-                            if (!answer && attachmentUrls.length === 0) return null;
+                            if (question.type !== "FILE" && !answer && attachmentUrls.length === 0) return null;
 
                             return (
                               <div key={question.id} className="flex flex-col gap-1">
@@ -183,6 +183,9 @@ export default function SurveyResultsPage({ params }: { params: Promise<{ id: st
                                           : answer}
                                   </p>
                                 )}
+                                {question.type === "FILE" && attachmentUrls.length === 0 && (
+                                  <p className="text-slate-500 text-sm italic dark:text-slate-400 mt-1">لم يتم إرفاق ملف</p>
+                                )}
                                 {attachmentUrls.length > 0 && (
                                   <div className="mt-2 flex flex-wrap gap-2">
                                     {attachmentUrls.map((url, i) => (
@@ -193,7 +196,8 @@ export default function SurveyResultsPage({ params }: { params: Promise<{ id: st
                                         rel="noopener noreferrer"
                                         className="inline-flex items-center gap-2 bg-primary/10 text-primary hover:bg-primary hover:text-white px-4 py-2 rounded-lg text-sm font-bold transition-colors dark:bg-primary/20"
                                       >
-                                        <Download className="w-4 h-4" /> تحميل المرفق {attachmentUrls.length > 1 ? i + 1 : ""}
+                                        <Download className="w-4 h-4" /> 
+                                        {question.type === "FILE" ? "تحميل المرفق" : "مرفق إضافي للسؤال"} {attachmentUrls.length > 1 ? i + 1 : ""}
                                       </a>
                                     ))}
                                   </div>

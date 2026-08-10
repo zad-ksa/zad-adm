@@ -257,12 +257,6 @@ export default function EmployeeSidebar({
           };
 
           const renderServicesGroup = () => {
-            const hasServicesAccess = can("view_services_overview") || can("manage_charities");
-            if (!hasServicesAccess) return null;
-
-            const isServicesCollapsed = expandedGroup !== "الخدمات";
-            const toggleServices = () => toggleGroup("الخدمات");
-
             const allServices = [
               { id: "strategy", label: "الاستراتيجية", icon: Target, required: "manage_strategy" },
               { id: "governance", label: "الحوكمة", icon: Scale, required: "manage_governance" },
@@ -271,7 +265,13 @@ export default function EmployeeSidebar({
             ];
 
             const services = allServices.filter(svc => can(svc.required));
-            if (services.length === 0) return null;
+            const hasOverviewAccess = can("view_services_overview");
+            const hasServicesAccess = hasOverviewAccess || can("manage_charities") || services.length > 0;
+            
+            if (!hasServicesAccess) return null;
+
+            const isServicesCollapsed = expandedGroup !== "الخدمات";
+            const toggleServices = () => toggleGroup("الخدمات");
 
             return (
               <div className="mb-2">
@@ -285,7 +285,7 @@ export default function EmployeeSidebar({
                   </button>
                 )}
                 <div className={`space-y-0.5 overflow-hidden transition-all duration-300 ease-in-out ${isOpen && isServicesCollapsed ? 'max-h-0 opacity-0' : 'max-h-[1500px] opacity-100'}`}>
-                  {isOpen && (
+                  {isOpen && hasOverviewAccess && (
                     <Link
                       href="/main/services-overview"
                       onClick={() => handleLinkClick("/main/services-overview")}

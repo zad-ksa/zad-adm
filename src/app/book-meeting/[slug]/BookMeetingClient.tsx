@@ -25,13 +25,27 @@ export default function BookMeetingClient({ schedule }: { schedule: any }) {
 
   const bookings = schedule.bookings || [];
   
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
+  const isSlotPassed = (dateStr: string, timeStr: string) => {
+    const now = new Date();
+    const [hours, minutes] = timeStr.split(':').map(Number);
+    const slotDate = new Date(dateStr);
+    slotDate.setHours(hours, minutes, 0, 0);
+    return slotDate.getTime() <= now.getTime();
+  };
+
+  const availableDaysConfig = schedule.availableDays || [];
   
-  const availableDays = (schedule.availableDays || []).filter((day: any) => {
+  const availableDays = availableDaysConfig.filter((day: any) => {
     const dayDate = new Date(day.date);
     dayDate.setHours(0, 0, 0, 0);
-    return dayDate.getTime() >= today.getTime();
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    if (dayDate.getTime() < today.getTime()) return false;
+    
+    const allSlots = day.slots || [];
+    const hasFutureSlot = allSlots.some((time: string) => !isSlotPassed(day.date, time));
+    return hasFutureSlot;
   });
 
   const handleBooking = async (e: React.FormEvent) => {
@@ -65,7 +79,8 @@ export default function BookMeetingClient({ schedule }: { schedule: any }) {
     
     return allSlots.map((time: string) => {
       const isBooked = bookings.some((b: any) => b.date === date && b.startTime === time);
-      return { time, isBooked };
+      const isPassed = isSlotPassed(date, time);
+      return { time, isBooked, isPassed };
     });
   };
 
@@ -148,13 +163,13 @@ export default function BookMeetingClient({ schedule }: { schedule: any }) {
                   {getDaySlots(selectedDate).length === 0 ? (
                     <p className="col-span-full text-xs text-slate-400">لا يوجد أوقات متاحة في هذا اليوم.</p>
                   ) : (
-                    getDaySlots(selectedDate).map(({ time, isBooked }: { time: string, isBooked: boolean }) => (
+                    getDaySlots(selectedDate).map(({ time, isBooked, isPassed }: { time: string, isBooked: boolean, isPassed?: boolean }) => (
                       <button
                         key={time}
-                        disabled={isBooked}
+                        disabled={isBooked || isPassed}
                         onClick={() => setSelectedSlot(time)}
                         className={`py-2 rounded-xl text-sm font-bold font-mono transition-all border ${
-                          isBooked
+                          isBooked || isPassed
                             ? "bg-slate-100 dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-400 opacity-60 cursor-not-allowed line-through decoration-slate-300 dark:decoration-slate-600"
                             : selectedSlot === time
                               ? "bg-primary text-white border-primary shadow-md shadow-primary/20 scale-105"

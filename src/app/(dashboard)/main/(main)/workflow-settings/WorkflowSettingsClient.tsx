@@ -11,14 +11,7 @@ import {
   addStep, removeStep, reorderSteps, updateStepLabel, updateChainName,
 } from "@/app/actions/workflow";
 
-const ROLE_LABELS: Record<string, string> = {
-  ADMIN: "مدير النظام",
-  EXECUTIVE_DIRECTOR: "الإدارة التنفيذية",
-  GENERAL_MANAGER: "المدير العام",
-  ADMINISTRATIVE_SECRETARIAT: "مساعد المدير",
-  STRATEGY: "الاستراتيجية",
-  FINANCE: "المالية",
-};
+import { ROLE_LABELS } from "@/lib/permissions";
 
 type Employee = { id: string; name: string; role: string };
 type Step = { id: string; order: number; label: string | null; approver: Employee };

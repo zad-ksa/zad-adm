@@ -20,7 +20,19 @@ export const metadata: Metadata = {
   description: "الشريك الاستراتيجي الموثوق لتمكين وتطوير القطاع غير الربحي",
 };
 
-export default function HomePage() {
+import { getSession } from "@/lib/auth";
+import { redirect } from "next/navigation";
+
+export default async function HomePage() {
+  const session = await getSession();
+  if (session) {
+    if (session.userType === "CHARITY_USER") {
+      redirect("/charity-client");
+    } else {
+      redirect("/main");
+    }
+  }
+
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col font-sans selection:bg-primary/20">
       {/* Shared Navbar */}

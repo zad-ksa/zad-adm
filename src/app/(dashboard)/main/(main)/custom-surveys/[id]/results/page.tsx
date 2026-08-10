@@ -124,27 +124,12 @@ export default function SurveyResultsPage({ params }: { params: Promise<{ id: st
             const answers = getParsedJson(response.answers);
             const attachments = getParsedJson(response.attachments);
 
-            // Resolve questions values handling both exact key match and index fallback (for modified surveys)
+            // Resolve questions values handling exact key match
             const getQuestionValue = (questionId: string) => {
-              if (answers[questionId] !== undefined) {
-                return {
-                  answer: answers[questionId],
-                  attachment: attachments[questionId]
-                };
-              }
-
-              // Fallback to match by index
-              const totalQuestionIndex = allQuestions.findIndex(q => q.id === questionId);
-              const oldQuestionId = totalQuestionIndex !== -1 ? Object.keys(answers)[totalQuestionIndex] : null;
-
-              if (oldQuestionId) {
-                return {
-                  answer: answers[oldQuestionId],
-                  attachment: attachments[oldQuestionId]
-                };
-              }
-
-              return { answer: undefined, attachment: undefined };
+              return {
+                answer: answers[questionId],
+                attachment: attachments[questionId]
+              };
             };
 
             return (

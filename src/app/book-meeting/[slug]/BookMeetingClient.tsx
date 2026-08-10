@@ -23,8 +23,16 @@ export default function BookMeetingClient({ schedule }: { schedule: any }) {
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState("");
 
-  const availableDays = schedule.availableDays || [];
   const bookings = schedule.bookings || [];
+  
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  
+  const availableDays = (schedule.availableDays || []).filter((day: any) => {
+    const dayDate = new Date(day.date);
+    dayDate.setHours(0, 0, 0, 0);
+    return dayDate.getTime() >= today.getTime();
+  });
 
   const handleBooking = async (e: React.FormEvent) => {
     e.preventDefault();

@@ -11,6 +11,7 @@ import {
   createRequest, reviewRequest, resubmitRequest, deleteRequest,
   getMyRequests, getAllRequests,
 } from "@/app/actions/requests";
+import { ROLE_LABELS } from "@/lib/constants";
 import { useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
 
@@ -104,14 +105,7 @@ const ACTION_CONFIG: Record<Action, { label: string; color: string; icon: any }>
   RESUBMITTED:   { label: "أُعيد إرساله",            color: "text-blue-400",    icon: RefreshCw },
 };
 
-const ROLE_LABELS: Record<string, string> = {
-  ADMIN: "مدير النظام",
-  EXECUTIVE_DIRECTOR: "الإدارة التنفيذية",
-  GENERAL_MANAGER: "المدير العام",
-  ADMINISTRATIVE_SECRETARIAT: "مساعد المدير",
-  STRATEGY: "الاستراتيجية",
-  FINANCE: "المالية",
-};
+
 
 function timeAgo(date: string | Date) {
   const diff = Date.now() - new Date(date).getTime();

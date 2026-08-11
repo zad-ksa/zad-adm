@@ -27,7 +27,7 @@ export default async function HomePage() {
   const session = await getSession();
   if (session) {
     if (session.userType === "CHARITY_USER") {
-      redirect("/charity-client");
+      redirect("/select-charity");
     } else {
       redirect("/main");
     }

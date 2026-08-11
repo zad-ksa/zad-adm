@@ -6,7 +6,7 @@ export default async function PublicPageLayout({ children }: { children: React.R
   
   if (session) {
     if (session.userType === "CHARITY_USER") {
-      redirect("/charity-client");
+      redirect("/select-charity");
     } else {
       redirect("/main");
     }

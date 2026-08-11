@@ -11,7 +11,7 @@ import { usePathname, useSearchParams } from "next/navigation";
 import ZadLogo from "@/components/ZadLogo";
 import { hasPermission, ROLE_LABELS } from "@/lib/permissions";
 import { getSidebarCharities } from "@/app/actions/charity";
-import { ChevronDown, Target, Scale, DollarSign } from "lucide-react";
+import { ChevronDown, Target, Scale, DollarSign, Mail } from "lucide-react";
 import dynamic from "next/dynamic";
 import PrivacyPolicyModal from "@/components/PrivacyPolicyModal";
 
@@ -67,11 +67,13 @@ export default function EmployeeSidebar({
   isOpen,
   setIsOpen,
   unreadRequests = 0,
+  unreadMails = 0,
 }: {
   session: any;
   isOpen: boolean;
   setIsOpen: (v: boolean) => void;
   unreadRequests?: number;
+  unreadMails?: number;
 }) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -105,7 +107,7 @@ export default function EmployeeSidebar({
 
     if (path === "/main") newGroup = "";
     else if (path.startsWith("/main/charities") || path.startsWith("/main/contracts") || path.startsWith("/main/custom-surveys") || path.startsWith("/main/communication") || path.startsWith("/main/charity-meetings")) newGroup = "الجمعيات";
-    else if (path.startsWith("/main/requests") || path.startsWith("/main/news") || path.startsWith("/main/meetings") || path.startsWith("/main/tasks")) newGroup = "زاد";
+    else if (path.startsWith("/main/requests") || path.startsWith("/main/news") || path.startsWith("/main/meetings") || path.startsWith("/main/tasks") || path.startsWith("/main/mail")) newGroup = "زاد";
     else if (path.startsWith("/main/admin") || path.startsWith("/main/workflow-settings")) newGroup = "لوحة التحكم";
     else if (path.startsWith("/main/services-overview") || path.startsWith("/main/strategy") || path.startsWith("/main/governance") || path.startsWith("/main/finance") || path.startsWith("/main/resource-development") || path.startsWith("/main/programs")) {
       newGroup = "الخدمات";
@@ -179,6 +181,7 @@ export default function EmployeeSidebar({
     const isManager = can("view_all_tasks") || perms.includes("developer_mode");
     navItems.push({ label: isManager ? "المهام والمنجزات" : "مهامي", href: "/main/tasks", icon: CheckSquare });
   }
+  navItems.push({ label: "البريد الداخلي", href: "/main/mail", icon: Mail, badge: unreadMails });
   navItems.push({ label: "الطلبات", href: "/main/requests", icon: Send, badge: unreadRequests });
   if (can("manage_employees") || can("manage_charities") || can("manage_charity_settings")) {
     navItems.push({ label: "لوحة التحكم", href: "/main/admin", icon: Settings2 });
@@ -375,7 +378,7 @@ export default function EmployeeSidebar({
               {isOpen && <div className="h-px bg-slate-100 dark:bg-slate-800 mx-2" />}
               {renderGroup("الجمعيات", ["الجمعيات", "العقود", "الاستبيانات", "التواصل", "الاجتماعات"])}
               {isOpen && <div className="h-px bg-slate-100 dark:bg-slate-800 mx-2" />}
-              {renderGroup("زاد", ["الطلبات", "الأخبار والإنجازات", "محاضر الاجتماعات", "المهام والمنجزات", "مهامي"])}
+              {renderGroup("زاد", ["البريد الداخلي", "الطلبات", "الأخبار والإنجازات", "محاضر الاجتماعات", "المهام والمنجزات", "مهامي"])}
               {isOpen && <div className="h-px bg-slate-100 dark:bg-slate-800 mx-2" />}
               {renderGroup("لوحة التحكم", ["لوحة التحكم", "سلاسل الاعتماد"])}
             </>

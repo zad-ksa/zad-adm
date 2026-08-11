@@ -26,8 +26,12 @@ export default async function DashboardRootLayout({ children }: { children: Reac
     });
   }
 
+  const unreadMails = await prisma.mailRecipient.count({
+    where: { employeeId: session.id, isRead: false, isDeleted: false },
+  });
+
   return (
-    <DashboardLayoutClient session={session} unreadRequests={unreadRequests}>
+    <DashboardLayoutClient session={session} unreadRequests={unreadRequests} unreadMails={unreadMails}>
       {children}
     </DashboardLayoutClient>
   );

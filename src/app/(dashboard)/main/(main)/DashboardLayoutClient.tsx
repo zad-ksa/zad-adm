@@ -10,10 +10,11 @@ import FloatingHeader from "@/components/FloatingHeader";
 
 import DeveloperRoleSwitcher from "@/components/DeveloperRoleSwitcher";
 
-export default function DashboardLayoutClient({ children, session, unreadRequests: initial = 0 }: { children: React.ReactNode, session: any, unreadRequests?: number }) {
+export default function DashboardLayoutClient({ children, session, unreadRequests: initial = 0, unreadMails: initialMails = 0 }: { children: React.ReactNode, session: any, unreadRequests?: number, unreadMails?: number }) {
   const pathname = usePathname();
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [unreadRequests, setUnreadRequests] = useState(initial);
+  const [unreadMails, setUnreadMails] = useState(initialMails);
   const [appNotificationsData, setAppNotificationsData] = useState<{notifications: any[], count: number}>({ notifications: [], count: 0 });
   const seenNotificationIds = useRef<Set<string>>(new Set());
 
@@ -105,7 +106,7 @@ export default function DashboardLayoutClient({ children, session, unreadRequest
     <div className="flex h-[100dvh] bg-slate-50 dark:bg-slate-950 overflow-hidden print:h-auto print:overflow-visible print:block" dir="rtl">
 
 
-      <EmployeeSidebar session={session} isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} unreadRequests={unreadRequests} />
+      <EmployeeSidebar session={session} isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} unreadRequests={unreadRequests} unreadMails={unreadMails} />
       
       <FloatingHeader 
         session={session} 

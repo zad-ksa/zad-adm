@@ -304,6 +304,8 @@ model Employee {
   currentlyReviewing   Request[]         @relation("CurrentReviewer")
   delegatedRequests    Request[]         @relation("DelegatedTo")
   createdMeetingSchedules MeetingSchedule[] @relation("CreatedMeetingSchedules")
+  sentMails         InternalMail[]    @relation("SentMails")
+  receivedMails     MailRecipient[]   @relation("ReceivedMails")
 }
 
 model EmployeeCharity {
@@ -781,4 +783,56 @@ model MeetingBooking {
 
   @@unique([scheduleId, date, startTime])
   @@index([scheduleId])
+}
+
+model InternalMail {
+  id            String           @id @default(uuid())
+  subject       String
+  body          String           @db.Text
+  senderId      String
+  sender        Employee         @relation("SentMails", fields: [senderId], references: [id], onDelete: Cascade)
+  
+  // للربط بسلسلة الردود
+  parentId      String?          // الرسالة الأصلية (في حال الرد)
+  parent        InternalMail?    @relation("MailThread", fields: [parentId], references: [id], onDelete: SetNull)
+  replies       InternalMail[]   @relation("MailThread")
+  
+  // حالة المرسل
+  isDeletedBySender Boolean      @default(false) // حذف من "المرسل"
+  
+  recipients    MailRecipient[]
+  attachments   MailAttachment[]
+  
+  createdAt     DateTime         @default(now())
+
+  @@index([senderId])
+  @@index([parentId])
+}
+
+model MailRecipient {
+  id            String       @id @default(uuid())
+  mailId        String
+  mail          InternalMail @relation(fields: [mailId], references: [id], onDelete: Cascade)
+  employeeId    String
+  employee      Employee     @relation("ReceivedMails", fields: [employeeId], references: [id], onDelete: Cascade)
+  
+  type          String       @default("TO")    // "TO" | "CC" | "BCC"
+  isRead        Boolean      @default(false)
+  isStarred     Boolean      @default(false)
+  isDeleted     Boolean      @default(false)   // سلة المهملات
+  
+  @@unique([mailId, employeeId])
+  @@index([employeeId, isDeleted, isRead])
+  @@index([mailId])
+}
+
+model MailAttachment {
+  id          String       @id @default(uuid())
+  mailId      String
+  mail        InternalMail @relation(fields: [mailId], references: [id], onDelete: Cascade)
+  fileUrl     String
+  fileName    String
+  fileSize    Int?
+
+  @@index([mailId])
 }

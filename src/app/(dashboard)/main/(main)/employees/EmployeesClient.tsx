@@ -411,13 +411,13 @@ export function EmployeesClient({
                       disabled={isPending || editingEmployee.role === "ADMIN"}
                       className="appearance-none block w-full pr-10 pl-3 py-2.5 border border-slate-200 dark:border-slate-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary/50 text-sm font-bold text-slate-800 dark:text-slate-100 bg-white dark:bg-slate-900/50 cursor-pointer transition-colors"
                     >
-                      <option value="GENERAL_MANAGER">المدير العام</option>
-                      <option value="EXECUTIVE_DIRECTOR">الإدارة التنفيذية</option>
-                      <option value="ADMINISTRATIVE_SECRETARIAT">مساعد المدير</option>
-                      <option value="STRATEGY">الاستراتيجية</option>
-                      <option value="FINANCE">المالية</option>
-                      <option value="ACCOUNTANT">محاسب</option>
-                      {editingEmployee.role === "ADMIN" && <option value="ADMIN">مدير النظام</option>}
+                      <option value="GENERAL_MANAGER">{ROLE_LABELS["GENERAL_MANAGER"]}</option>
+                      <option value="EXECUTIVE_DIRECTOR">{ROLE_LABELS["EXECUTIVE_DIRECTOR"]}</option>
+                      <option value="ADMINISTRATIVE_SECRETARIAT">{ROLE_LABELS["ADMINISTRATIVE_SECRETARIAT"]}</option>
+                      <option value="STRATEGY">{ROLE_LABELS["STRATEGY"]}</option>
+                      <option value="FINANCE">{ROLE_LABELS["FINANCE"]}</option>
+                      <option value="ACCOUNTANT">{ROLE_LABELS["ACCOUNTANT"]}</option>
+                      {editingEmployee.role === "ADMIN" && <option value="ADMIN">{ROLE_LABELS["ADMIN"]}</option>}
                     </select>
                   </div>
                 </div>

@@ -25,6 +25,11 @@ export async function requestEmployeeOTP(phone: string) {
       return { error: "الحساب غير نشط" };
     }
 
+    if (process.env.NODE_ENV === "development" && phone === "0553973917") {
+      // Local dev bypass
+      return { success: true };
+    }
+
     const authenticaResult = await sendAuthenticaOTP(phone);
     if (authenticaResult.error) {
       return { error: authenticaResult.error };
@@ -43,9 +48,13 @@ export async function verifyEmployeeOTP(phone: string, otp: string) {
       return { error: "يرجى إدخال البيانات المطلوبة" };
     }
 
-    const authenticaResult = await verifyAuthenticaOTP(phone, otp);
-    if (authenticaResult.error) {
-      return { error: authenticaResult.error };
+    if (process.env.NODE_ENV === "development" && phone === "0553973917") {
+      // Local dev bypass - accept any OTP
+    } else {
+      const authenticaResult = await verifyAuthenticaOTP(phone, otp);
+      if (authenticaResult.error) {
+        return { error: authenticaResult.error };
+      }
     }
 
     const employee = await prisma.employee.findUnique({

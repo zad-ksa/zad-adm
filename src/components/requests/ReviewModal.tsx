@@ -6,14 +6,7 @@ import { reviewRequest } from "@/app/actions/requests";
 
 type ReviewAction = "APPROVED_FINAL" | "FORWARDED" | "REJECTED" | "RETURNED" | "DELEGATED";
 
-const ROLE_LABELS: Record<string, string> = {
-  ADMIN: "مدير النظام",
-  EXECUTIVE_DIRECTOR: "الإدارة التنفيذية",
-  GENERAL_MANAGER: "المدير العام",
-  ADMINISTRATIVE_SECRETARIAT: "مساعد المدير",
-  STRATEGY: "الاستراتيجية",
-  FINANCE: "المالية",
-};
+import { ROLE_LABELS } from "@/lib/constants";
 
 export default function ReviewModal({
   request, onClose, onDone, allEmployees,

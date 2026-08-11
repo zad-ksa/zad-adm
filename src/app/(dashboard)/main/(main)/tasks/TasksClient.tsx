@@ -52,7 +52,7 @@ import {
 } from "@/app/actions/tasks";
 import { Charity, Employee, Session, Task, TaskUpdate, Achievement } from "@/types";
 import { ADMIN_ROLES } from "@/lib/constants";
-import { ROLE_LABELS } from "@/lib/permissions";
+import { useRoleLabels } from "@/components/RoleLabelsProvider";
 import { useImagePaste } from "@/hooks/useImagePaste";
 import { timeAgoArabic } from "@/lib/dateUtils";
 import dynamic from "next/dynamic";
@@ -79,6 +79,7 @@ export default function TasksClient({
   initialPermanentTasks: any[];
   categories: string[];
 }) {
+  const roleLabels = useRoleLabels();
   const [tasks, setTasks] = useState<Task[]>(initialTasks);
   const [achievements, setAchievements] = useState<Achievement[]>(initialAchievements);
   const [permanentTasks, setPermanentTasks] = useState<any[]>(initialPermanentTasks);
@@ -831,7 +832,7 @@ ${combinedAchievements.length > 0 ? `
               >
                 {employees.map((emp) => (
                   <option key={emp.id} value={emp.id}>
-                    {emp.name} ({ROLE_LABELS[emp.role] || "موظف"})
+                    {emp.name} ({roleLabels[emp.role] || "موظف"})
                   </option>
                 ))}
                 <option value="all">— كل الموظفين —</option>

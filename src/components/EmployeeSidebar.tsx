@@ -9,7 +9,8 @@ import { logout } from "@/app/actions/auth";
 import { updateProfile } from "@/app/actions/profile";
 import { usePathname, useSearchParams } from "next/navigation";
 import ZadLogo from "@/components/ZadLogo";
-import { hasPermission, ROLE_LABELS } from "@/lib/permissions";
+import { hasPermission } from "@/lib/permissions";
+import { useRoleLabels } from "@/components/RoleLabelsProvider";
 import { getSidebarCharities } from "@/app/actions/charity";
 import { ChevronDown, Target, Scale, DollarSign, Mail } from "lucide-react";
 import dynamic from "next/dynamic";
@@ -75,6 +76,7 @@ export default function EmployeeSidebar({
   unreadRequests?: number;
   unreadMails?: number;
 }) {
+  const roleLabels = useRoleLabels();
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const currentTab = searchParams.get("tab");

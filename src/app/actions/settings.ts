@@ -3,6 +3,7 @@
 import { prisma } from "@/lib/db";
 import { revalidatePath } from "next/cache";
 import { getSession } from "@/lib/auth";
+import { DEFAULT_ROLE_LABELS } from "@/lib/constants";
 
 const ADMIN_ROLES = ["ADMIN", "EXECUTIVE_DIRECTOR", "GENERAL_MANAGER", "ADMINISTRATIVE_SECRETARIAT"];
 
@@ -77,4 +78,40 @@ export async function reorderDefaultStages(timelineType: string, orderedIds: str
     )
   );
   return { success: true };
+}
+
+// ── Role Labels ─────────────────────────────────────────────────────────────
+
+export async function getRoleLabels(): Promise<Record<string, string>> {
+  try {
+    const setting = await prisma.globalSetting.findUnique({
+      where: { key: "role_labels" },
+    });
+
+    if (setting && setting.value) {
+      return setting.value as Record<string, string>;
+    }
+    
+    return DEFAULT_ROLE_LABELS;
+  } catch (error) {
+    console.error("Error fetching role labels:", error);
+    return DEFAULT_ROLE_LABELS;
+  }
+}
+
+export async function updateRoleLabels(labels: Record<string, string>) {
+  await assertAdmin();
+
+  try {
+    await prisma.globalSetting.upsert({
+      where: { key: "role_labels" },
+      update: { value: labels },
+      create: { key: "role_labels", value: labels },
+    });
+    
+    return { success: true };
+  } catch (error) {
+    console.error("Error updating role labels:", error);
+    throw new Error("حدث خطأ أثناء تحديث المسميات الوظيفية");
+  }
 }

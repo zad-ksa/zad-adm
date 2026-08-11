@@ -5,7 +5,7 @@ import { User, Bell, Moon, Sun, Edit, ShieldAlert, LogOut, Settings, Trash2 } fr
 import Image from "next/image";
 import { useTheme } from "next-themes";
 import { markNotificationAsRead, markAllNotificationsAsRead, deleteNotification, deleteAllNotifications } from "@/app/actions/notifications";
-import { ROLE_LABELS } from "@/lib/permissions";
+import { useRoleLabels } from "@/components/RoleLabelsProvider";
 import Link from "next/link";
 import { logout } from "@/app/actions/auth";
 
@@ -18,6 +18,7 @@ export default function FloatingHeader({
   appNotifications?: { notifications: any[], count: number };
   className?: string;
 }) {
+  const roleLabels = useRoleLabels();
   const [userState, setUserState] = useState(session);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
@@ -149,7 +150,7 @@ export default function FloatingHeader({
           >
             <div className="hidden md:flex flex-col items-end rtl:items-start mr-1">
               <span className="text-xs font-bold text-slate-800 dark:text-slate-100">{userState?.name}</span>
-              <span className="text-[9px] text-slate-500 dark:text-slate-400">{ROLE_LABELS[userState?.role] || "موظف"}</span>
+              <span className="text-[9px] text-slate-500 dark:text-slate-400">{roleLabels[userState?.role] || "موظف"}</span>
             </div>
             <div className="relative overflow-hidden bg-primary/10 text-primary border border-primary/20 rounded-full flex items-center justify-center transition-all duration-300 w-9 h-9 group-hover:ring-2 group-hover:ring-primary/40">
               {userState?.avatarUrl ? (

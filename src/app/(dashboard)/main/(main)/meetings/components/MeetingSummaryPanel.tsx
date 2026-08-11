@@ -9,7 +9,7 @@ import {
   updateMeeting, upsertMeetingTasks, insertAiTasksIfEmpty,
   getTasksForMeeting, toggleMeetingTask
 } from "@/app/actions/meetings";
-import { ROLE_LABELS } from "@/lib/permissions";
+import { useRoleLabels } from "@/components/RoleLabelsProvider";
 import { Meeting, MeetingTask, Employee } from "../MeetingsClient";
 
 type Props = {
@@ -21,6 +21,7 @@ type Props = {
 export default function MeetingSummaryPanel({
   meeting, isTier1, employees,
 }: Props) {
+  const roleLabels = useRoleLabels();
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [localTasks, setLocalTasks] = useState<MeetingTask[]>(meeting.meetingTasks);
@@ -264,7 +265,7 @@ export default function MeetingSummaryPanel({
                         >
                           <option value="">— المكلف —</option>
                           {employees.map(e => (
-                            <option key={e.id} value={e.id}>{e.name} ({ROLE_LABELS[e.role] || e.role})</option>
+                            <option key={e.id} value={e.id}>{e.name} ({roleLabels[e.role] || e.role})</option>
                           ))}
                         </select>
                         <input

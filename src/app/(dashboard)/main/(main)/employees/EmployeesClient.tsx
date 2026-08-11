@@ -16,7 +16,9 @@ import {
 import { Edit, ShieldCheck, Building2, UserPlus, ArrowRight, Trash2 } from "lucide-react";
 import { AddEmployeeForm } from "@/components/AddEmployeeForm";
 import Link from "next/link";
-import { PERMISSION_GROUPS, ALL_PERMISSIONS, AUTO_ADMIN_ROLES, ROLE_LABELS } from "@/lib/permissions";
+import { PERMISSION_GROUPS, ALL_PERMISSIONS, AUTO_ADMIN_ROLES } from "@/lib/permissions";
+import { useRoleLabels } from "@/components/RoleLabelsProvider";
+import { RoleLabelsSettingsModal } from "@/components/RoleLabelsSettingsModal";
 
 const roleBadgeStyles: Record<string, string> = {
   ADMIN: "bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300",
@@ -52,9 +54,11 @@ export function EmployeesClient({
   session: any;
   allCharities?: Charity[];
 }) {
+  const roleLabels = useRoleLabels();
   const [employees, setEmployees] = useState<Employee[]>(initialEmployees);
   const [editingEmployee, setEditingEmployee] = useState<Employee | null>(null);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
 
   const [editName, setEditName] = useState("");
@@ -197,13 +201,24 @@ export function EmployeesClient({
             </p>
           </div>
         </div>
-        <button
-          onClick={() => setIsAddModalOpen(true)}
-          className="inline-flex items-center justify-center gap-2 py-3 px-5 bg-primary hover:bg-primary/95 text-white rounded-xl shadow-md hover:shadow-lg font-bold text-sm transition-all hover:scale-[1.02] active:scale-[0.98] cursor-pointer shrink-0"
-        >
-          <UserPlus className="w-5 h-5" />
-          <span>إضافة موظف جديد</span>
-        </button>
+        <div className="flex items-center gap-3 shrink-0">
+          {session.role === "ADMIN" && (
+            <button
+              onClick={() => setIsSettingsModalOpen(true)}
+              className="inline-flex items-center justify-center gap-2 py-3 px-5 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 rounded-xl shadow-sm font-bold text-sm transition-all cursor-pointer"
+            >
+              <Edit className="w-5 h-5" />
+              <span className="hidden sm:inline">إعدادات المسميات</span>
+            </button>
+          )}
+          <button
+            onClick={() => setIsAddModalOpen(true)}
+            className="inline-flex items-center justify-center gap-2 py-3 px-5 bg-primary hover:bg-primary/95 text-white rounded-xl shadow-md hover:shadow-lg font-bold text-sm transition-all hover:scale-[1.02] active:scale-[0.98] cursor-pointer shrink-0"
+          >
+            <UserPlus className="w-5 h-5" />
+            <span>إضافة موظف جديد</span>
+          </button>
+        </div>
       </div>
 
       {/* Employees Table */}
@@ -242,7 +257,7 @@ export function EmployeesClient({
                       roleBadgeStyles[emp.role] || "bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300"
                     }`}>
                       <ShieldAlert className="w-3.5 h-3.5" />
-                      {ROLE_LABELS[emp.role] || emp.role}
+                      {roleLabels[emp.role] || emp.role}
                     </span>
                   </td>
                   <td className="px-4 py-2.5">
@@ -411,13 +426,13 @@ export function EmployeesClient({
                       disabled={isPending || editingEmployee.role === "ADMIN"}
                       className="appearance-none block w-full pr-10 pl-3 py-2.5 border border-slate-200 dark:border-slate-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary/50 text-sm font-bold text-slate-800 dark:text-slate-100 bg-white dark:bg-slate-900/50 cursor-pointer transition-colors"
                     >
-                      <option value="GENERAL_MANAGER">{ROLE_LABELS["GENERAL_MANAGER"]}</option>
-                      <option value="EXECUTIVE_DIRECTOR">{ROLE_LABELS["EXECUTIVE_DIRECTOR"]}</option>
-                      <option value="ADMINISTRATIVE_SECRETARIAT">{ROLE_LABELS["ADMINISTRATIVE_SECRETARIAT"]}</option>
-                      <option value="STRATEGY">{ROLE_LABELS["STRATEGY"]}</option>
-                      <option value="FINANCE">{ROLE_LABELS["FINANCE"]}</option>
-                      <option value="ACCOUNTANT">{ROLE_LABELS["ACCOUNTANT"]}</option>
-                      {editingEmployee.role === "ADMIN" && <option value="ADMIN">{ROLE_LABELS["ADMIN"]}</option>}
+                      <option value="GENERAL_MANAGER">{roleLabels["GENERAL_MANAGER"]}</option>
+                      <option value="EXECUTIVE_DIRECTOR">{roleLabels["EXECUTIVE_DIRECTOR"]}</option>
+                      <option value="ADMINISTRATIVE_SECRETARIAT">{roleLabels["ADMINISTRATIVE_SECRETARIAT"]}</option>
+                      <option value="STRATEGY">{roleLabels["STRATEGY"]}</option>
+                      <option value="FINANCE">{roleLabels["FINANCE"]}</option>
+                      <option value="ACCOUNTANT">{roleLabels["ACCOUNTANT"]}</option>
+                      {editingEmployee.role === "ADMIN" && <option value="ADMIN">{roleLabels["ADMIN"]}</option>}
                     </select>
                   </div>
                 </div>
@@ -619,6 +634,11 @@ export function EmployeesClient({
             </div>
           </div>
         </div>
+      )}
+
+      {/* Role Labels Settings Modal */}
+      {isSettingsModalOpen && (
+        <RoleLabelsSettingsModal onClose={() => setIsSettingsModalOpen(false)} />
       )}
     </div>
   );

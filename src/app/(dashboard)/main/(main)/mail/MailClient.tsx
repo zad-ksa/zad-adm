@@ -32,6 +32,7 @@ import {
   deletePermanently
 } from "@/app/actions/mail";
 import ComposeModal from "./ComposeModal";
+
 import Link from "next/link";
 
 interface MailClientProps {
@@ -237,8 +238,8 @@ export default function MailClient({ session, employees, initialTab }: MailClien
       {/* Main Content */}
       <div className="flex-1 flex flex-col bg-white">
         {/* Header Toolbar */}
-        <div className="relative h-16 border-b border-gray-100 flex items-center px-4 bg-white shrink-0">
-          <div className="flex items-center gap-3">
+        <div className="h-16 border-b border-gray-100 flex items-center justify-between px-4 bg-white shrink-0 gap-4">
+          <div className="flex items-center gap-3 shrink-0">
             <button 
               onClick={handleSelectAll}
               className="text-gray-400 hover:text-gray-600 transition-colors p-2"
@@ -291,16 +292,21 @@ export default function MailClient({ session, employees, initialTab }: MailClien
             )}
           </div>
           
-          <div className="absolute left-1/2 -translate-x-1/2 w-64 md:w-80">
-            <input 
-              type="text" 
-              placeholder="البحث في البريد..." 
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-gray-50 border-none rounded-full py-2 pr-10 pl-4 text-sm focus:ring-2 focus:ring-primary/10 focus:bg-white transition-all"
-            />
-            <Search className="w-4 h-4 text-gray-400 absolute right-3 top-2.5" />
+          <div className="flex-1 flex justify-center px-2">
+            <div className="relative w-full max-w-md">
+              <input 
+                type="text" 
+                placeholder="البحث في البريد..." 
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full bg-gray-50 border border-gray-200 rounded-full py-2.5 pr-10 pl-4 text-sm focus:ring-2 focus:ring-primary/20 focus:bg-white transition-all shadow-sm"
+              />
+              <Search className="w-4 h-4 text-gray-400 absolute right-4 top-3" />
+            </div>
           </div>
+
+          {/* Spacer block to avoid overlap with FloatingHeader on the left side in RTL */}
+          <div className="w-[140px] lg:w-[200px] shrink-0 pointer-events-none hidden sm:block"></div>
         </div>
 
         {/* Mail List */}

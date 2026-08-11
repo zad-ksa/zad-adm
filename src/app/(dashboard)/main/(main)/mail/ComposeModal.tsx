@@ -3,7 +3,7 @@
 import { useState, useRef } from "react";
 import { X, Paperclip, Send, Loader2 } from "lucide-react";
 import { sendMail } from "@/app/actions/mail";
-import { ROLE_LABELS } from "@/lib/constants";
+import { useRoleLabels } from "@/components/RoleLabelsProvider";
 
 interface ComposeModalProps {
   isOpen: boolean;
@@ -15,6 +15,7 @@ interface ComposeModalProps {
 }
 
 export default function ComposeModal({ isOpen, onClose, employees, onSuccess, replyTo, forwardMail }: ComposeModalProps) {
+  const roleLabels = useRoleLabels();
   const [toIds, setToIds] = useState<string[]>(replyTo ? [replyTo.senderId] : []);
   const [ccIds, setCcIds] = useState<string[]>([]);
   const [bccIds, setBccIds] = useState<string[]>([]);
@@ -144,7 +145,7 @@ export default function ComposeModal({ isOpen, onClose, employees, onSuccess, re
       >
         <option value="" disabled>{selectedIds.length === 0 ? placeholder : "إضافة موظف..."}</option>
         {employees.filter(e => !selectedIds.includes(e.id)).map(e => (
-          <option key={e.id} value={e.id}>{e.name} - {ROLE_LABELS[e.role] || e.role}</option>
+          <option key={e.id} value={e.id}>{e.name} - {roleLabels[e.role] || e.role}</option>
         ))}
       </select>
     </div>

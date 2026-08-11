@@ -6,8 +6,8 @@ export function hasAdminRole(role?: string | null): boolean {
   return ADMIN_ROLES.includes(role);
 }
 
-// Map roles to human-readable labels
-export const ROLE_LABELS: Record<string, string> = {
+// Map roles to human-readable labels (Fallback values)
+export const DEFAULT_ROLE_LABELS: Record<string, string> = {
   ADMIN: "مدير النظام",
   EXECUTIVE_DIRECTOR: "الإدارة التنفيذية",
   GENERAL_MANAGER: "المدير العام",

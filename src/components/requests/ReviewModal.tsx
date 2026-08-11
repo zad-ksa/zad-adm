@@ -6,13 +6,14 @@ import { reviewRequest } from "@/app/actions/requests";
 
 type ReviewAction = "APPROVED_FINAL" | "FORWARDED" | "REJECTED" | "RETURNED" | "DELEGATED";
 
-import { ROLE_LABELS } from "@/lib/constants";
+import { useRoleLabels } from "@/components/RoleLabelsProvider";
 
 export default function ReviewModal({
   request, onClose, onDone, allEmployees,
 }: {
   request: any; onClose: () => void; onDone: () => void; allEmployees: any[];
 }) {
+  const roleLabels = useRoleLabels();
 
   // الإجراء الافتراضي: تمرير إن كانت سلسلة، وإلا اعتماد
   const defaultAction: ReviewAction = request.chain ? "FORWARDED" : "APPROVED_FINAL";
@@ -100,7 +101,7 @@ export default function ReviewModal({
                 className="w-full border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-sm bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-purple-500">
                 <option value="">اختر شخصاً...</option>
                 {allEmployees.filter(e => e.id !== request.createdBy?.id).map(e => (
-                  <option key={e.id} value={e.id}>{e.name} — {ROLE_LABELS[e.role] || e.role}</option>
+                  <option key={e.id} value={e.id}>{e.name} — {roleLabels[e.role] || e.role}</option>
                 ))}
               </select>
             </div>

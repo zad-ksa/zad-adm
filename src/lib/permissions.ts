@@ -60,7 +60,7 @@ export const PERMISSION_GROUPS = [
 export const ALL_PERMISSIONS = PERMISSION_GROUPS.flatMap((g) => g.permissions);
 
 // Role display labels
-export { ROLE_LABELS } from "./constants";
+export { DEFAULT_ROLE_LABELS } from "./constants";
 
 /**
  * Check if a user has a specific permission.

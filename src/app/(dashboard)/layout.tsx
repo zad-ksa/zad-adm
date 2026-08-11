@@ -4,6 +4,8 @@ import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { hasPermission } from "@/lib/permissions";
 import DashboardLayoutClient from "@/app/(dashboard)/main/(main)/DashboardLayoutClient";
+import { getRoleLabels } from "@/app/actions/settings";
+import { RoleLabelsProvider } from "@/components/RoleLabelsProvider";
 
 export default async function DashboardRootLayout({ children }: { children: ReactNode }) {
   const session = await getSession();
@@ -30,9 +32,13 @@ export default async function DashboardRootLayout({ children }: { children: Reac
     where: { employeeId: session.id, isRead: false, isDeleted: false },
   });
 
+  const roleLabels = await getRoleLabels();
+
   return (
-    <DashboardLayoutClient session={session} unreadRequests={unreadRequests} unreadMails={unreadMails}>
-      {children}
-    </DashboardLayoutClient>
+    <RoleLabelsProvider labels={roleLabels}>
+      <DashboardLayoutClient session={session} unreadRequests={unreadRequests} unreadMails={unreadMails}>
+        {children}
+      </DashboardLayoutClient>
+    </RoleLabelsProvider>
   );
 }

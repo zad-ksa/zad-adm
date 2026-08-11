@@ -11,7 +11,7 @@ import {
   addStep, removeStep, reorderSteps, updateStepLabel, updateChainName,
 } from "@/app/actions/workflow";
 
-import { ROLE_LABELS } from "@/lib/permissions";
+import { useRoleLabels } from "@/components/RoleLabelsProvider";
 
 type Employee = { id: string; name: string; role: string };
 type Step = { id: string; order: number; label: string | null; approver: Employee };
@@ -20,6 +20,7 @@ type Chain = { id: string; name: string; isActive: boolean; steps: Step[] };
 export default function WorkflowSettingsClient({
   chains: initial, employees,
 }: { chains: Chain[]; employees: Employee[] }) {
+  const roleLabels = useRoleLabels();
   const [chains, setChains] = useState<Chain[]>(initial);
   const [newChainName, setNewChainName] = useState("");
   const [expandedChain, setExpandedChain] = useState<string | null>(initial[0]?.id ?? null);
@@ -170,7 +171,7 @@ export default function WorkflowSettingsClient({
                           <div className="flex-1 min-w-0">
                             <p className="text-sm font-bold text-slate-800 dark:text-slate-100 truncate">{step.approver.name}</p>
                             <p className="text-[10px] text-slate-500 dark:text-slate-400">
-                              {ROLE_LABELS[step.approver.role] || step.approver.role}
+                              {roleLabels[step.approver.role] || step.approver.role}
                               {step.label && <span className="text-primary/70"> · {step.label}</span>}
                             </p>
                           </div>
@@ -217,7 +218,7 @@ export default function WorkflowSettingsClient({
                     className="flex-1 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-sm bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-primary/50">
                     <option value="">اختر الشخص...</option>
                     {employees.map(e => (
-                      <option key={e.id} value={e.id}>{e.name} — {ROLE_LABELS[e.role] || e.role}</option>
+                      <option key={e.id} value={e.id}>{e.name} — {roleLabels[e.role] || e.role}</option>
                     ))}
                   </select>
                   <input

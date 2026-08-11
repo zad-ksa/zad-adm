@@ -11,7 +11,7 @@ import {
   createRequest, reviewRequest, resubmitRequest, deleteRequest,
   getMyRequests, getAllRequests,
 } from "@/app/actions/requests";
-import { ROLE_LABELS } from "@/lib/constants";
+import { useRoleLabels } from "@/components/RoleLabelsProvider";
 import { useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
 
@@ -176,6 +176,7 @@ function RequestCard({
   onReview: (r: Request) => void; onResubmit: (r: Request) => void;
   onDelete: (id: string) => void;
 }) {
+  const roleLabels = useRoleLabels();
   const [expanded, setExpanded] = useState(false);
   const status = STATUS_CONFIG[request.status];
   const priority = PRIORITY_CONFIG[request.priority];
@@ -224,7 +225,7 @@ function RequestCard({
               <span className="flex items-center gap-1 font-medium text-slate-500 dark:text-slate-400">
                 <User className="w-3 h-3" />
                 {request.createdBy.name}
-                <span className="opacity-70">({ROLE_LABELS[request.createdBy.role] || request.createdBy.role})</span>
+                <span className="opacity-70">({roleLabels[request.createdBy.role] || request.createdBy.role})</span>
               </span>
             )}
             <span className="flex items-center gap-1"><Calendar className="w-3 h-3" />{timeAgo(request.createdAt)}</span>

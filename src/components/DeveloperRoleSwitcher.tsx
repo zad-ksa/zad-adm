@@ -4,9 +4,10 @@ import { useState, useEffect } from "react";
 import { Eye, Settings, Shield, User, Briefcase, FileText, Activity, Database, Check, Loader2 } from "lucide-react";
 import { setDeveloperOverrideEmployee } from "@/app/actions/auth";
 import { getAllEmployees } from "@/app/actions/employeeSettings";
-import { ROLE_LABELS } from "@/lib/permissions";
+import { useRoleLabels } from "@/components/RoleLabelsProvider";
 
 export default function DeveloperRoleSwitcher({ currentEmployeeId, hideCharityClients = false }: { currentEmployeeId?: string, hideCharityClients?: boolean }) {
+  const roleLabels = useRoleLabels();
   const [isOpen, setIsOpen] = useState(false);
   const [isPending, setIsPending] = useState(false);
   const [employees, setEmployees] = useState<{id: string, name: string, role: string}[]>([]);
@@ -80,7 +81,7 @@ export default function DeveloperRoleSwitcher({ currentEmployeeId, hideCharityCl
                   >
                     <div className="flex flex-col items-start gap-0.5">
                       <span className="font-semibold">{emp.name}</span>
-                      <span className="text-[10px] opacity-70">{ROLE_LABELS[emp.role as keyof typeof ROLE_LABELS] || emp.role}</span>
+                      <span className="text-[10px] opacity-70">{roleLabels[emp.role] || emp.role}</span>
                     </div>
                     {currentEmployeeId === emp.id && <Check className="w-3.5 h-3.5" />}
                   </button>

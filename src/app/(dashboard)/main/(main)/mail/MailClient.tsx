@@ -237,7 +237,7 @@ export default function MailClient({ session, employees, initialTab }: MailClien
       {/* Main Content */}
       <div className="flex-1 flex flex-col bg-white">
         {/* Header Toolbar */}
-        <div className="h-16 border-b border-gray-100 flex items-center justify-between px-4 bg-white">
+        <div className="h-16 border-b border-gray-100 flex items-center justify-between pr-4 pl-40 lg:pl-56 bg-white shrink-0">
           <div className="flex items-center gap-3">
             <button 
               onClick={handleSelectAll}

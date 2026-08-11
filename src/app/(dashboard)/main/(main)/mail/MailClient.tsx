@@ -20,10 +20,10 @@ import {
   Mail as MailIcon,
   Trash
 } from "lucide-react";
-import { 
-  getInbox, 
-  getSentMails, 
-  getStarredMails, 
+import {
+  getInbox,
+  getSentMails,
+  getStarredMails,
   getTrashMails,
   markAsRead,
   toggleStar,
@@ -32,7 +32,6 @@ import {
   deletePermanently
 } from "@/app/actions/mail";
 import ComposeModal from "./ComposeModal";
-
 import Link from "next/link";
 
 interface MailClientProps {
@@ -45,7 +44,7 @@ export default function MailClient({ session, employees, initialTab }: MailClien
   const router = useRouter();
   const searchParams = useSearchParams();
   const currentTab = searchParams.get("tab") || initialTab;
-  
+
   const [mails, setMails] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isComposeOpen, setIsComposeOpen] = useState(false);
@@ -68,7 +67,7 @@ export default function MailClient({ session, employees, initialTab }: MailClien
       } else if (currentTab === "trash") {
         result = await getTrashMails(page);
       }
-      
+
       if (result) {
         setMails(result.mails);
         setTotalPages(result.totalPages);
@@ -113,7 +112,7 @@ export default function MailClient({ session, employees, initialTab }: MailClien
 
   const handleSelectMail = (e: React.MouseEvent, id: string) => {
     e.stopPropagation();
-    setSelectedMails(prev => 
+    setSelectedMails(prev =>
       prev.includes(id) ? prev.filter(mId => mId !== id) : [...prev, id]
     );
   };
@@ -129,7 +128,7 @@ export default function MailClient({ session, employees, initialTab }: MailClien
   const handleBulkTrash = async () => {
     if (!selectedMails.length) return;
     if (!confirm("هل أنت متأكد من نقل الرسائل المحددة إلى سلة المهملات؟")) return;
-    
+
     setIsLoading(true);
     for (const id of selectedMails) {
       const mailObj = mails.find(m => m.id === id);
@@ -143,7 +142,7 @@ export default function MailClient({ session, employees, initialTab }: MailClien
 
   const handleBulkRestore = async () => {
     if (!selectedMails.length) return;
-    
+
     setIsLoading(true);
     for (const id of selectedMails) {
       const mailObj = mails.find(m => m.id === id);
@@ -158,7 +157,7 @@ export default function MailClient({ session, employees, initialTab }: MailClien
   const handleBulkDelete = async () => {
     if (!selectedMails.length) return;
     if (!confirm("هل أنت متأكد من حذف الرسائل المحددة نهائياً؟ لا يمكن التراجع عن هذا الإجراء.")) return;
-    
+
     setIsLoading(true);
     for (const id of selectedMails) {
       const mailObj = mails.find(m => m.id === id);
@@ -174,8 +173,8 @@ export default function MailClient({ session, employees, initialTab }: MailClien
     const mailObj = m.mail || m;
     const searchLower = searchQuery.toLowerCase();
     return mailObj.subject.toLowerCase().includes(searchLower) ||
-           (mailObj.sender?.name?.toLowerCase().includes(searchLower)) ||
-           mailObj.body.toLowerCase().includes(searchLower);
+      (mailObj.sender?.name?.toLowerCase().includes(searchLower)) ||
+      mailObj.body.toLowerCase().includes(searchLower);
   });
 
   return (
@@ -195,39 +194,35 @@ export default function MailClient({ session, employees, initialTab }: MailClien
         <nav className="flex-1 px-3 space-y-1 overflow-y-auto">
           <button
             onClick={() => handleTabChange("inbox")}
-            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
-              currentTab === "inbox" ? "bg-primary/10 text-primary" : "text-gray-700 hover:bg-gray-100"
-            }`}
+            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${currentTab === "inbox" ? "bg-primary/10 text-primary" : "text-gray-700 hover:bg-gray-100"
+              }`}
           >
             <Inbox className={`w-5 h-5 ${currentTab === "inbox" ? "text-primary" : "text-gray-500"}`} />
             البريد الوارد
           </button>
-          
+
           <button
             onClick={() => handleTabChange("sent")}
-            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
-              currentTab === "sent" ? "bg-primary/10 text-primary" : "text-gray-700 hover:bg-gray-100"
-            }`}
+            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${currentTab === "sent" ? "bg-primary/10 text-primary" : "text-gray-700 hover:bg-gray-100"
+              }`}
           >
             <Send className={`w-5 h-5 ${currentTab === "sent" ? "text-primary" : "text-gray-500"}`} />
             البريد المرسل
           </button>
-          
+
           <button
             onClick={() => handleTabChange("starred")}
-            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
-              currentTab === "starred" ? "bg-primary/10 text-primary" : "text-gray-700 hover:bg-gray-100"
-            }`}
+            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${currentTab === "starred" ? "bg-primary/10 text-primary" : "text-gray-700 hover:bg-gray-100"
+              }`}
           >
             <Star className={`w-5 h-5 ${currentTab === "starred" ? "text-yellow-500" : "text-gray-500"}`} />
             المميزة بنجمة
           </button>
-          
+
           <button
             onClick={() => handleTabChange("trash")}
-            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
-              currentTab === "trash" ? "bg-primary/10 text-primary" : "text-gray-700 hover:bg-gray-100"
-            }`}
+            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${currentTab === "trash" ? "bg-primary/10 text-primary" : "text-gray-700 hover:bg-gray-100"
+              }`}
           >
             <Trash2 className={`w-5 h-5 ${currentTab === "trash" ? "text-primary" : "text-gray-500"}`} />
             سلة المهملات
@@ -240,7 +235,7 @@ export default function MailClient({ session, employees, initialTab }: MailClien
         {/* Header Toolbar */}
         <div className="h-16 border-b border-gray-100 flex items-center justify-between px-4 bg-white shrink-0 gap-4">
           <div className="flex items-center gap-3 shrink-0">
-            <button 
+            <button
               onClick={handleSelectAll}
               className="text-gray-400 hover:text-gray-600 transition-colors p-2"
               title="تحديد الكل"
@@ -251,18 +246,18 @@ export default function MailClient({ session, employees, initialTab }: MailClien
                 <Square className="w-5 h-5" />
               )}
             </button>
-            <button 
+            <button
               onClick={fetchMails}
               className="text-gray-400 hover:text-gray-600 transition-colors p-2"
               title="تحديث"
             >
               <RefreshCw className={`w-5 h-5 ${isLoading ? "animate-spin text-primary" : ""}`} />
             </button>
-            
+
             {selectedMails.length > 0 && (
               <div className="flex items-center gap-2 mr-2 pr-4 border-r border-gray-200">
                 {currentTab !== "trash" && (
-                  <button 
+                  <button
                     onClick={handleBulkTrash}
                     className="text-gray-500 hover:text-red-600 transition-colors p-2 rounded-lg hover:bg-red-50 flex items-center gap-1 text-sm font-medium"
                   >
@@ -272,14 +267,14 @@ export default function MailClient({ session, employees, initialTab }: MailClien
                 )}
                 {currentTab === "trash" && (
                   <>
-                    <button 
+                    <button
                       onClick={handleBulkRestore}
                       className="text-gray-500 hover:text-green-600 transition-colors p-2 rounded-lg hover:bg-green-50 flex items-center gap-1 text-sm font-medium"
                     >
                       <RefreshCw className="w-4 h-4" />
                       استرجاع
                     </button>
-                    <button 
+                    <button
                       onClick={handleBulkDelete}
                       className="text-gray-500 hover:text-red-600 transition-colors p-2 rounded-lg hover:bg-red-50 flex items-center gap-1 text-sm font-medium"
                     >
@@ -291,12 +286,12 @@ export default function MailClient({ session, employees, initialTab }: MailClien
               </div>
             )}
           </div>
-          
+
           <div className="flex-1 flex justify-center px-2">
             <div className="relative w-full max-w-md">
-              <input 
-                type="text" 
-                placeholder="البحث في البريد..." 
+              <input
+                type="text"
+                placeholder="البحث في البريد..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full bg-gray-50 border border-gray-200 rounded-full py-2.5 pr-10 pl-4 text-sm focus:ring-2 focus:ring-primary/20 focus:bg-white transition-all shadow-sm"
@@ -328,11 +323,11 @@ export default function MailClient({ session, employees, initialTab }: MailClien
                 const mail = item.mail || item; // Handle both MailRecipient and InternalMail
                 const isUnread = item.isRead === false;
                 const mailId = mail.id;
-                
+
                 // For inbox/trash/starred, show sender. For sent, show recipients.
                 let displayName = "";
                 let displayAvatar = null;
-                
+
                 if (currentTab === "sent") {
                   const recipients = mail.recipients || [];
                   if (recipients.length > 0) {
@@ -345,11 +340,10 @@ export default function MailClient({ session, employees, initialTab }: MailClien
                 }
 
                 return (
-                  <div 
+                  <div
                     key={item.id}
-                    className={`group flex items-center gap-4 px-4 py-3 hover:shadow-md cursor-pointer transition-all border-l-4 ${
-                      isUnread ? "bg-primary/5 border-primary" : "bg-white border-transparent hover:border-gray-300"
-                    }`}
+                    className={`group flex items-center gap-4 px-4 py-3 hover:shadow-md cursor-pointer transition-all border-l-4 ${isUnread ? "bg-primary/5 border-primary" : "bg-white border-transparent hover:border-gray-300"
+                      }`}
                     onClick={() => {
                       if (!isUnread) {
                         router.push(`/main/mail/${mailId}`);
@@ -369,21 +363,21 @@ export default function MailClient({ session, employees, initialTab }: MailClien
                           <Square className="w-5 h-5" />
                         )}
                       </div>
-                      
+
                       {currentTab !== "sent" && currentTab !== "trash" && (
-                        <button 
+                        <button
                           onClick={(e) => handleToggleStar(e, mailId)}
                           className="p-1"
                         >
                           <Star className={`w-5 h-5 ${item.isStarred ? "fill-yellow-400 text-yellow-400" : "text-gray-300 group-hover:text-gray-400"}`} />
                         </button>
                       )}
-                      
+
                       <div className="truncate font-medium text-gray-900 text-sm">
                         {displayName || "غير معروف"}
                       </div>
                     </div>
-                    
+
                     <div className="flex-1 min-w-0 flex items-center gap-2">
                       <div className={`truncate text-sm ${isUnread ? "font-bold text-gray-900" : "font-medium text-gray-700"}`}>
                         {mail.subject || "(بدون موضوع)"}
@@ -393,7 +387,7 @@ export default function MailClient({ session, employees, initialTab }: MailClien
                         {mail.body.replace(/<[^>]*>?/gm, '').substring(0, 100)}
                       </div>
                     </div>
-                    
+
                     <div className="flex items-center gap-4 shrink-0">
                       {mail.attachments && mail.attachments.length > 0 && (
                         <Paperclip className="w-4 h-4 text-gray-400" />
@@ -411,9 +405,9 @@ export default function MailClient({ session, employees, initialTab }: MailClien
       </div>
 
       {isComposeOpen && (
-        <ComposeModal 
-          isOpen={isComposeOpen} 
-          onClose={() => setIsComposeOpen(false)} 
+        <ComposeModal
+          isOpen={isComposeOpen}
+          onClose={() => setIsComposeOpen(false)}
           employees={employees}
           onSuccess={() => {
             setIsComposeOpen(false);

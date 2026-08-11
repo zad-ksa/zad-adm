@@ -14,18 +14,18 @@ export default async function EmployeesPage() {
     redirect("/main");
   }
 
-  const [employees, allCharities] = await Promise.all([
+  const [employees, allCharities, roleDefinitions] = await Promise.all([
     prisma.employee.findMany({
-
       orderBy: { createdAt: "desc" },
       include: { assignedCharities: { select: { charityId: true } } },
     }),
     prisma.charity.findMany({ select: { id: true, name: true }, orderBy: { name: "asc" } }),
+    prisma.roleDefinition.findMany({ orderBy: { createdAt: "asc" } })
   ]);
 
   return (
     <div dir="rtl">
-      <EmployeesClient employees={employees as any} session={session} allCharities={allCharities} />
+      <EmployeesClient employees={employees as any} session={session} allCharities={allCharities} roles={roleDefinitions} />
     </div>
   );
 }

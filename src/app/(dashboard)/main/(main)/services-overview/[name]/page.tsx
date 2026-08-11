@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { prisma } from "@/lib/db";
 import { getSession } from "@/lib/auth";
+import { isAdmin as checkIsAdmin, hasPermission } from "@/lib/permissions";
 import { Briefcase } from "lucide-react";
 import GenericStagesManager from "@/components/GenericStagesManager";
 import CharityClientTimeline from "@/components/CharityClientTimeline";
@@ -29,7 +30,7 @@ export default async function ServicesPage({ params }: { params: Promise<{ name:
   }
 
   const session = await getSession();
-  const isAdmin = ["ADMIN", "EXECUTIVE_DIRECTOR", "GENERAL_MANAGER", "ADMINISTRATIVE_SECRETARIAT"].includes(session?.role || "");
+  const isAdmin = checkIsAdmin(session?.role) || hasPermission(session?.role || "", session?.permissions || [], "manage_charity_settings");
 
   const allServices = await prisma.service.findMany({
     where: { charityId: charity.id },

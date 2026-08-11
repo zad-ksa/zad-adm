@@ -26,13 +26,8 @@ function formatDate(d: string | Date) {
   return `${year}-${month}-${day}`;
 }
 
-function TIER1_ROLES() {
-  return ["ADMIN", "EXECUTIVE_DIRECTOR", "ADMINISTRATIVE_SECRETARIAT"];
-}
-
 function canEditMeeting(meeting: Meeting, sessionId: string, isTier1: boolean) {
-  const creatorIsTier1 = TIER1_ROLES().includes(meeting.createdBy.role);
-  if (creatorIsTier1 && !isTier1) return false;
+  if (meeting.creatorIsTier1 && !isTier1) return false;
   return meeting.createdById === sessionId || isTier1;
 }
 

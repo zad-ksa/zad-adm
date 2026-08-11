@@ -83,7 +83,7 @@ export default function NewsFilterClient({
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
-  const isSecretariatOrAdmin = ["ADMIN", "ADMINISTRATIVE_SECRETARIAT", "EXECUTIVE_DIRECTOR"].includes(session?.role);
+  const isSecretariatOrAdmin = session?.role === "ADMIN" || !!session?.permissions?.includes("manage_news");
 
   const handleAddCategory = () => {
     if (!newCatName.trim()) return;

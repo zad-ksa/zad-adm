@@ -5,11 +5,13 @@ import { revalidatePath } from "next/cache";
 import { getSession } from "@/lib/auth";
 import { DEFAULT_ROLE_LABELS } from "@/lib/constants";
 
-const ADMIN_ROLES = ["ADMIN", "EXECUTIVE_DIRECTOR", "GENERAL_MANAGER", "ADMINISTRATIVE_SECRETARIAT"];
+import { isAdmin } from "@/lib/permissions";
 
 async function assertAdmin() {
   const session = await getSession();
-  if (!session || !ADMIN_ROLES.includes(session.role)) throw new Error("غير مصرح");
+  if (!session || !(isAdmin(session.role) || session.permissions?.includes("developer_mode"))) {
+    throw new Error("غير مصرح");
+  }
   return session;
 }
 
@@ -84,34 +86,20 @@ export async function reorderDefaultStages(timelineType: string, orderedIds: str
 
 export async function getRoleLabels(): Promise<Record<string, string>> {
   try {
-    const setting = await prisma.globalSetting.findUnique({
-      where: { key: "role_labels" },
+    const roles: { key: string; displayName: string }[] = await (prisma as any).roleDefinition.findMany({
+      select: { key: true, displayName: true }
     });
 
-    if (setting && setting.value) {
-      return setting.value as Record<string, string>;
+    if (roles.length > 0) {
+      return roles.reduce((acc: Record<string, string>, curr: { key: string; displayName: string }) => {
+        acc[curr.key] = curr.displayName;
+        return acc;
+      }, {} as Record<string, string>);
     }
     
     return DEFAULT_ROLE_LABELS;
   } catch (error) {
     console.error("Error fetching role labels:", error);
     return DEFAULT_ROLE_LABELS;
-  }
-}
-
-export async function updateRoleLabels(labels: Record<string, string>) {
-  await assertAdmin();
-
-  try {
-    await prisma.globalSetting.upsert({
-      where: { key: "role_labels" },
-      update: { value: labels },
-      create: { key: "role_labels", value: labels },
-    });
-    
-    return { success: true };
-  } catch (error) {
-    console.error("Error updating role labels:", error);
-    throw new Error("حدث خطأ أثناء تحديث المسميات الوظيفية");
   }
 }

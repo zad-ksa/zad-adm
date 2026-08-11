@@ -16,9 +16,15 @@ import {
 import { Edit, ShieldCheck, Building2, UserPlus, ArrowRight, Trash2 } from "lucide-react";
 import { AddEmployeeForm } from "@/components/AddEmployeeForm";
 import Link from "next/link";
-import { PERMISSION_GROUPS, ALL_PERMISSIONS, AUTO_ADMIN_ROLES } from "@/lib/permissions";
-import { useRoleLabels } from "@/components/RoleLabelsProvider";
-import { RoleLabelsSettingsModal } from "@/components/RoleLabelsSettingsModal";
+import { PERMISSION_GROUPS, ALL_PERMISSIONS, isAdmin } from "@/lib/permissions";
+
+interface RoleDefinition {
+  id: string;
+  key: string;
+  displayName: string;
+  permissions: string[];
+  isSystem: boolean;
+}
 
 const roleBadgeStyles: Record<string, string> = {
   ADMIN: "bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300",
@@ -49,16 +55,17 @@ export function EmployeesClient({
   employees: initialEmployees,
   session,
   allCharities = [],
+  roles = [],
 }: {
   employees: Employee[];
   session: any;
   allCharities?: Charity[];
+  roles?: RoleDefinition[];
 }) {
-  const roleLabels = useRoleLabels();
+  const roleLabels = roles.reduce((acc, curr) => ({ ...acc, [curr.key]: curr.displayName }), {} as Record<string, string>);
   const [employees, setEmployees] = useState<Employee[]>(initialEmployees);
   const [editingEmployee, setEditingEmployee] = useState<Employee | null>(null);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-  const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
 
   const [editName, setEditName] = useState("");
@@ -156,7 +163,7 @@ export function EmployeesClient({
       }
 
       // Save charity assignments for non-admin roles
-      if (!AUTO_ADMIN_ROLES.includes(editRole)) {
+      if (!isAdmin(editRole)) {
         await updateEmployeeCharities(editingEmployee.id, editCharityIds);
       }
 
@@ -181,7 +188,7 @@ export function EmployeesClient({
     });
   };
 
-  const isEditRoleAdmin = AUTO_ADMIN_ROLES.includes(editRole);
+  const isEditRoleAdmin = isAdmin(editRole);
 
   return (
     <div className="space-y-8" dir="rtl">
@@ -202,14 +209,14 @@ export function EmployeesClient({
           </div>
         </div>
         <div className="flex items-center gap-3 shrink-0">
-          {session.role === "ADMIN" && (
-            <button
-              onClick={() => setIsSettingsModalOpen(true)}
+          {(isAdmin(session.role) || session.permissions?.includes("manage_employees")) && (
+            <Link
+              href="/main/employees/roles"
               className="inline-flex items-center justify-center gap-2 py-3 px-5 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 rounded-xl shadow-sm font-bold text-sm transition-all cursor-pointer"
             >
-              <Edit className="w-5 h-5" />
-              <span className="hidden sm:inline">إعدادات المسميات</span>
-            </button>
+              <ShieldCheck className="w-5 h-5" />
+              <span className="hidden sm:inline">إدارة المسميات</span>
+            </Link>
           )}
           <button
             onClick={() => setIsAddModalOpen(true)}
@@ -272,7 +279,7 @@ export function EmployeesClient({
                   </td>
                   <td className="px-4 py-2.5">
                     <div className="flex flex-wrap gap-1 max-w-[280px]">
-                      {AUTO_ADMIN_ROLES.includes(emp.role) ? (
+                      {isAdmin(emp.role) ? (
                         <span className="inline-block text-[10px] font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-900/30 px-2 py-0.5 rounded">
                           جميع الصلاحيات (تلقائي)
                         </span>
@@ -422,17 +429,20 @@ export function EmployeesClient({
                     </div>
                     <select 
                       value={editRole}
-                      onChange={(e) => setEditRole(e.target.value)}
+                      onChange={(e) => {
+                        setEditRole(e.target.value);
+                        // Auto-assign default permissions of the selected role
+                        const selectedRoleDef = roles.find(r => r.key === e.target.value);
+                        if (selectedRoleDef && selectedRoleDef.permissions) {
+                          setEditPermissions(selectedRoleDef.permissions);
+                        }
+                      }}
                       disabled={isPending || editingEmployee.role === "ADMIN"}
                       className="appearance-none block w-full pr-10 pl-3 py-2.5 border border-slate-200 dark:border-slate-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary/50 text-sm font-bold text-slate-800 dark:text-slate-100 bg-white dark:bg-slate-900/50 cursor-pointer transition-colors"
                     >
-                      <option value="GENERAL_MANAGER">{roleLabels["GENERAL_MANAGER"]}</option>
-                      <option value="EXECUTIVE_DIRECTOR">{roleLabels["EXECUTIVE_DIRECTOR"]}</option>
-                      <option value="ADMINISTRATIVE_SECRETARIAT">{roleLabels["ADMINISTRATIVE_SECRETARIAT"]}</option>
-                      <option value="STRATEGY">{roleLabels["STRATEGY"]}</option>
-                      <option value="FINANCE">{roleLabels["FINANCE"]}</option>
-                      <option value="ACCOUNTANT">{roleLabels["ACCOUNTANT"]}</option>
-                      {editingEmployee.role === "ADMIN" && <option value="ADMIN">{roleLabels["ADMIN"]}</option>}
+                      {roles.map(r => (
+                        <option key={r.key} value={r.key}>{r.displayName}</option>
+                      ))}
                     </select>
                   </div>
                 </div>
@@ -520,7 +530,7 @@ export function EmployeesClient({
               </div>
 
               {/* Charity Assignment Section — shown only for non-admin roles */}
-              {!AUTO_ADMIN_ROLES.includes(editRole) && allCharities.length > 0 && (
+              {!isAdmin(editRole) && allCharities.length > 0 && (
                 <div className="pt-4 border-t border-slate-100 dark:border-slate-700">
                   <div className="flex items-center gap-2 mb-3">
                     <Building2 className="w-4 h-4 text-slate-500 dark:text-slate-400" />
@@ -630,16 +640,13 @@ export function EmployeesClient({
 
             {/* Modal Form Body */}
             <div className="flex-1 overflow-y-auto p-5">
-              <AddEmployeeForm allCharities={allCharities} onSuccess={() => setIsAddModalOpen(false)} />
+              <AddEmployeeForm allCharities={allCharities} roles={roles} onSuccess={() => setIsAddModalOpen(false)} />
             </div>
           </div>
         </div>
       )}
 
-      {/* Role Labels Settings Modal */}
-      {isSettingsModalOpen && (
-        <RoleLabelsSettingsModal onClose={() => setIsSettingsModalOpen(false)} />
-      )}
+      {/* Role Labels Settings Modal Removed */}
     </div>
   );
 }

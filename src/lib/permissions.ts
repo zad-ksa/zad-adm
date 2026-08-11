@@ -1,17 +1,20 @@
-// Admin roles that automatically have all permissions
-export const AUTO_ADMIN_ROLES = [
-  "ADMIN",
-];
+// ADMIN is the only role with automatic, unconditional access to everything.
+// Every other role (including former "admin-like" roles such as
+// EXECUTIVE_DIRECTOR / GENERAL_MANAGER / ADMINISTRATIVE_SECRETARIAT) must be
+// granted access explicitly through its permissions array / RoleDefinition,
+// otherwise edits to a role's permissions have no visible effect.
+export function isAdmin(role?: string | null): boolean {
+  return role === "ADMIN";
+}
 
-// Roles that automatically have executive-level permissions (manage_requests etc.)
-export const EXECUTIVE_ROLES = [
-  "EXECUTIVE_DIRECTOR",
-  "GENERAL_MANAGER",
-  "ADMINISTRATIVE_SECRETARIAT",
-];
+// "Tier 1" (elevated meeting authority) now follows the same rule: ADMIN, or
+// anyone explicitly granted "developer_mode" (full-access override), no
+// longer any hardcoded role list.
+export function isTier1(role?: string | null, permissions: string[] = []): boolean {
+  if (isAdmin(role)) return true;
+  return permissions.includes("developer_mode");
+}
 
-// Permissions granted automatically to EXECUTIVE_ROLES without explicit assignment
-const EXECUTIVE_AUTO_PERMISSIONS: string[] = [];
 
 // All available permissions grouped by category
 export const PERMISSION_GROUPS = [

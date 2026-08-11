@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { prisma } from "@/lib/db";
 import GovernanceRegulationsManager from "./[name]/GovernanceRegulationsManager";
 import { getSession } from "@/lib/auth";
+import { isAdmin as checkIsAdmin, hasPermission } from "@/lib/permissions";
 import GovernanceManualViewer from "@/components/GovernanceManualViewer";
 import { Suspense } from "react";
 import CircularLoader from "@/components/CircularLoader";
@@ -53,7 +54,7 @@ async function GovernanceTabContent({
   activeTab: string, 
   session: any 
 }) {
-  const isAdmin = ["ADMIN", "EXECUTIVE_DIRECTOR", "GENERAL_MANAGER"].includes(session?.role || "");
+  const isAdmin = checkIsAdmin(session?.role) || hasPermission(session?.role || "", session?.permissions || [], "manage_governance");
 
   const regulations = await prisma.regulation.findMany({
     orderBy: { createdAt: 'asc' },

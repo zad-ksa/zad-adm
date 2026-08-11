@@ -4,7 +4,7 @@ import { unstable_cache } from "next/cache";
 import { prisma } from "@/lib/db";
 import { revalidatePath } from "next/cache";
 import { getSession } from "@/lib/auth";
-import { hasPermission } from "@/lib/permissions";
+import { hasPermission, isAdmin } from "@/lib/permissions";
 import { processFirstGrant } from "./contracts";
 import { writeFile, mkdir } from "fs/promises";
 import { join } from "path";
@@ -333,9 +333,8 @@ export async function updateTimelineConfig(
 
 export async function updateCharityLogo(charityId: string, logoUrl: string | null) {
   const session = await getSession();
-  const adminRoles = ["ADMIN", "EXECUTIVE_DIRECTOR", "GENERAL_MANAGER", "ADMINISTRATIVE_SECRETARIAT"];
-  if (!session || !adminRoles.includes(session.role)) {
-    return { success: false, message: "ط؛ظٹط± ظ…طµط±ط­" };
+  if (!session || !(isAdmin(session.role) || hasPermission(session.role, session.permissions || [], "manage_charity_accounts"))) {
+    return { success: false, message: "غير مصرح" };
   }
   try {
     const charity = await prisma.charity.update({

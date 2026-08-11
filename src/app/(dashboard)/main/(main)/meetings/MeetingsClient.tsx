@@ -34,6 +34,7 @@ export type Meeting = {
   isPrivate: boolean;
   createdById: string;
   createdBy: { id: string; name: string; role: string };
+  creatorIsTier1: boolean;
   charity: { name: string } | null;
   meetingTasks: MeetingTask[];
 };

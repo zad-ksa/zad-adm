@@ -2,14 +2,15 @@ import { prisma } from "@/lib/db";
 import { getSession } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import ContractsClient from "./ContractsClient";
+import { isAdmin } from "@/lib/permissions";
 
 export default async function ContractsPage() {
   const session = await getSession();
-  if (!session || (!session.permissions?.includes("manage_contracts") && !session.permissions?.includes("developer_mode") && session.role !== "ADMIN")) {
+  if (!session || (!session.permissions?.includes("manage_contracts") && !session.permissions?.includes("developer_mode") && !isAdmin(session.role))) {
     redirect("/main");
   }
 
-  const canEdit = session.role === "ADMIN" || !!session.permissions?.includes("edit_contracts") || !!session.permissions?.includes("developer_mode");
+  const canEdit = isAdmin(session.role) || !!session.permissions?.includes("edit_contracts") || !!session.permissions?.includes("developer_mode");
 
   const charities = await prisma.charity.findMany({
     orderBy: { createdAt: "desc" },

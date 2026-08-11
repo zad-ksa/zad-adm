@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Check, X, Briefcase, Building2, User, Calendar, AlertCircle, Pencil, ArrowLeftRight, Trash2 } from "lucide-react";
 import { Task, Employee, Session } from "@/types";
 import { TASK_STATUS, TASK_PRIORITIES } from "@/lib/constants";
+import { isAdmin } from "@/lib/permissions";
 
 interface TaskCardProps {
   task: Task;
@@ -52,7 +53,7 @@ export default function TaskCard({
       className={`border ${isInProgress ? 'border-amber-200 dark:border-amber-700 bg-amber-50 dark:bg-amber-900/20 shadow-md shadow-amber-500/10' : 'border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 shadow-sm shadow-slate-500/10'} hover:border-primary/20 rounded-2xl p-4 transition-all duration-300 group relative flex flex-col justify-between gap-3`}
     >
       <div className="flex items-start gap-3">
-        {(session.role === "ADMIN" || task.assignedToId === session.id) && (
+        {(isAdmin(session.role) || task.assignedToId === session.id) && (
           <button
             onClick={() => onToggleCompletion(task.id, true)}
             title="تعليم كمنجز"

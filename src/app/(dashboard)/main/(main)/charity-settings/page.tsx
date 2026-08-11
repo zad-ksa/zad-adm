@@ -1,5 +1,6 @@
 // Refresh TS Server
 import { getSession } from "@/lib/auth";
+import { isAdmin } from "@/lib/permissions";
 import { redirect } from "next/navigation";
 import SettingsClient from "./SettingsClient";
 
@@ -14,10 +15,10 @@ export default async function CharitySettingsPage() {
   const session = await getSession();
   if (!session) redirect("/");
 
-  const isAdmin = ["ADMIN", "EXECUTIVE_DIRECTOR", "GENERAL_MANAGER", "ADMINISTRATIVE_SECRETARIAT"].includes(session.role);
+  const isAdminUser = isAdmin(session.role);
   const hasPerm = session.permissions?.includes("manage_charity_settings") || session.permissions?.includes("developer_mode");
 
-  if (!isAdmin && !hasPerm) {
+  if (!isAdminUser && !hasPerm) {
     redirect("/main");
   }
 

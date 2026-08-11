@@ -4,7 +4,7 @@ import { prisma } from "@/lib/db";
 import { revalidatePath } from "next/cache";
 import { getSession } from "@/lib/auth";
 import { assertCharityAccess } from "@/lib/access";
-import { hasPermission } from "@/lib/permissions";
+import { hasPermission, isAdmin } from "@/lib/permissions";
 
 export async function getAllServiceTemplates() {
   const session = await getSession();
@@ -678,14 +678,12 @@ export async function toggleCurrentServiceStage(stageId: string, isCurrent: bool
   revalidatePath(`/portal/${encodeURIComponent(stage.service.charity.name)}/services`);
 }
 
-const ADMIN_ROLES = ["ADMIN", "EXECUTIVE_DIRECTOR", "ADMINISTRATIVE_SECRETARIAT"];
-
 export async function unifyCharityStagesAction(sourceCharityId: string, timelineType: string, sourceServiceId?: string, targetCharityIds?: string[]) {
   const session = await getSession();
   if (!session) throw new Error("غير مصرح");
 
-  const isAdmin = ADMIN_ROLES.includes(session.role);
-  if (!isAdmin) {
+  const isUserAdmin = isAdmin(session.role) || hasPermission(session.role, session.permissions || [], "view_all_charities");
+  if (!isUserAdmin) {
     const assigned = await prisma.employeeCharity.findMany({
       where: { employeeId: session.id },
       select: { charityId: true },
@@ -966,7 +964,7 @@ export async function broadcastGanttWeek(
 export async function toggleServiceComingSoon(name: string, department: string | null, isComingSoon: boolean) {
   const session = await getSession();
   if (!session) throw new Error("UNAUTHORIZED");
-  if (!["ADMIN", "EXECUTIVE_DIRECTOR", "GENERAL_MANAGER", "ADMINISTRATIVE_SECRETARIAT"].includes(session.role)) {
+  if (!isAdmin(session.role) && !hasPermission(session.role, session.permissions || [], "manage_charity_settings")) {
     throw new Error("UNAUTHORIZED");
   }
 
@@ -981,7 +979,7 @@ export async function toggleServiceComingSoon(name: string, department: string |
 export async function toggleServiceComingSoonSingle(serviceId: string, isComingSoon: boolean) {
   const session = await getSession();
   if (!session) throw new Error("UNAUTHORIZED");
-  if (!["ADMIN", "EXECUTIVE_DIRECTOR", "GENERAL_MANAGER", "ADMINISTRATIVE_SECRETARIAT"].includes(session.role)) {
+  if (!isAdmin(session.role) && !hasPermission(session.role, session.permissions || [], "manage_charity_settings")) {
     throw new Error("UNAUTHORIZED");
   }
 

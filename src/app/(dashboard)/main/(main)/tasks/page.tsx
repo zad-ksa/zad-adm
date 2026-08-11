@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
 import TasksClient from "./TasksClient";
 import { getCategories } from "@/app/actions/categories";
-import { hasPermission, AUTO_ADMIN_ROLES } from "@/lib/permissions";
+import { hasPermission } from "@/lib/permissions";
 
 export const dynamic = "force-dynamic";
 

@@ -1,10 +1,3 @@
-// Roles that have admin or director level access
-export const ADMIN_ROLES = ["ADMIN", "EXECUTIVE_DIRECTOR", "GENERAL_MANAGER", "ADMINISTRATIVE_SECRETARIAT"];
-
-export function hasAdminRole(role?: string | null): boolean {
-  if (!role) return false;
-  return ADMIN_ROLES.includes(role);
-}
 
 // Map roles to human-readable labels (Fallback values)
 export const DEFAULT_ROLE_LABELS: Record<string, string> = {

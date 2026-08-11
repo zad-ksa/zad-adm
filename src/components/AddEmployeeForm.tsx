@@ -13,16 +13,23 @@ import {
   Loader2 
 } from "@/components/Icons";
 import { PERMISSION_GROUPS } from "@/lib/permissions";
-import { useRoleLabels } from "@/components/RoleLabelsProvider";
+
+interface RoleDefinition {
+  key: string;
+  displayName: string;
+  permissions: string[];
+}
 
 export function AddEmployeeForm({ 
   allCharities, 
+  roles = [],
   onSuccess 
 }: { 
   allCharities?: { id: string, name: string }[], 
+  roles?: RoleDefinition[],
   onSuccess?: () => void 
 }) {
-  const roleLabels = useRoleLabels();
+  const roleLabels = roles.reduce((acc, curr) => ({ ...acc, [curr.key]: curr.displayName }), {} as Record<string, string>);
   const [state, formAction, isPending] = useActionState(addEmployee, null);
   const formRef = useRef<HTMLFormElement>(null);
   const [selectedCharityIds, setSelectedCharityIds] = useState<string[]>([]);
@@ -94,12 +101,9 @@ export function AddEmployeeForm({
               <ShieldAlert className="h-5 w-5 text-slate-400 dark:text-slate-500" />
             </div>
             <select name="role" className="appearance-none block w-full pr-10 pl-3 py-2.5 bg-white dark:bg-slate-900/50 border border-slate-200 dark:border-slate-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary/50 sm:text-sm font-bold text-slate-800 dark:text-slate-100 cursor-pointer transition-colors">
-              <option value="GENERAL_MANAGER">{roleLabels["GENERAL_MANAGER"]}</option>
-              <option value="EXECUTIVE_DIRECTOR">{roleLabels["EXECUTIVE_DIRECTOR"]}</option>
-              <option value="ADMINISTRATIVE_SECRETARIAT">{roleLabels["ADMINISTRATIVE_SECRETARIAT"]}</option>
-              <option value="STRATEGY">{roleLabels["STRATEGY"]}</option>
-              <option value="FINANCE">{roleLabels["FINANCE"]}</option>
-              <option value="ACCOUNTANT">{roleLabels["ACCOUNTANT"]}</option>
+              {roles.map(r => (
+                <option key={r.key} value={r.key}>{r.displayName}</option>
+              ))}
             </select>
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
               <ChevronDownIcon className="h-4 w-4 text-slate-400 dark:text-slate-500" />

@@ -51,7 +51,7 @@ import {
   reassignPermanentTaskAction,
 } from "@/app/actions/tasks";
 import { Charity, Employee, Session, Task, TaskUpdate, Achievement } from "@/types";
-import { ADMIN_ROLES } from "@/lib/constants";
+import { isAdmin } from "@/lib/permissions";
 import { useRoleLabels } from "@/components/RoleLabelsProvider";
 import { useImagePaste } from "@/hooks/useImagePaste";
 import { timeAgoArabic } from "@/lib/dateUtils";
@@ -894,7 +894,7 @@ ${combinedAchievements.length > 0 ? `
                   {/* Main task row */}
                   <div className={`px-4 py-3 flex items-start gap-3 ${isInProgress ? "hover:bg-amber-50 dark:hover:bg-amber-900/20" : "hover:bg-slate-50/80 dark:hover:bg-slate-700/20"} transition-colors`}>
                     {/* Checkbox */}
-                    {(session.role === "ADMIN" || task.assignedToId === session.id) && (
+                    {(isAdmin(session.role) || task.assignedToId === session.id) && (
                       <button
                         onClick={() => handleToggleCompletion(task.id, true)}
                         title="تعليم كمنجز"
@@ -1237,7 +1237,7 @@ ${combinedAchievements.length > 0 ? `
               const assignedEmp = employees.find((e) => e.id === item.assignedToId);
               const isTask = item.type === "task";
               const canDeleteDirect = !isTask && (isDirectorOrAdmin || item.createdById === session.id);
-              const canUndoTask = isTask && (session.role === "ADMIN" || item.assignedToId === session.id);
+              const canUndoTask = isTask && (isAdmin(session.role) || item.assignedToId === session.id);
 
               return (
                 <div key={item.id} className="px-3 py-2.5 flex items-start gap-2 group hover:bg-slate-100/60 dark:hover:bg-slate-700/20 transition-colors">

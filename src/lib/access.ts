@@ -1,15 +1,6 @@
 import { prisma } from "@/lib/db";
+import { isAdmin } from "@/lib/permissions";
 
-const ADMIN_ROLES = [
-  "ADMIN",
-  "EXECUTIVE_DIRECTOR",
-  "ADMINISTRATIVE_SECRETARIAT",
-  "GENERAL_MANAGER",
-];
-
-export function isAdminRole(role: string): boolean {
-  return ADMIN_ROLES.includes(role);
-}
 
 /**
  * Returns null for users with view_all_charities or developer_mode (unrestricted access).

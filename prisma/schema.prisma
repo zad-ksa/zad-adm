@@ -259,15 +259,14 @@ model PerformanceMetric {
   @@unique([charityName, year])
 }
 
-enum Role {
-  ADMIN
-  EXECUTIVE_DIRECTOR
-  GENERAL_MANAGER
-  ADMINISTRATIVE_SECRETARIAT
-  STRATEGY
-  FINANCE
-  CHARITY_CLIENT
-  ACCOUNTANT
+model RoleDefinition {
+  id          String   @id @default(uuid())
+  key         String   @unique
+  displayName String
+  permissions String[] @default([])
+  isSystem    Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 }
 
 model Employee {
@@ -276,7 +275,7 @@ model Employee {
   phone                String            @unique
   password             String
   avatarUrl            String?
-  role                 Role              @default(STRATEGY)
+  role                 String            @default("STRATEGY")
   charityId            String? // For CHARITY_CLIENT accounts
   charity              Charity?          @relation(fields: [charityId], references: [id])
   permissions          String[]

@@ -1,13 +1,12 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { getSession } from "@/lib/auth";
+import { isTier1 } from "@/lib/permissions";
 import { NextRequest, NextResponse } from "next/server";
-
-const TIER1 = ["ADMIN", "EXECUTIVE_DIRECTOR", "ADMINISTRATIVE_SECRETARIAT"];
 
 export async function POST(req: NextRequest) {
   try {
     const session = await getSession();
-    if (!session || !TIER1.includes(session.role)) {
+    if (!session || !isTier1(session.role, session.permissions || [])) {
       return NextResponse.json({ error: "غير مصرح" }, { status: 401 });
     }
 

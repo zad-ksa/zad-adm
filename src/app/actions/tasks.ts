@@ -2,7 +2,7 @@
 
 import { prisma } from "@/lib/db";
 import { getSession } from "@/lib/auth";
-import { hasPermission } from "@/lib/permissions";
+import { hasPermission, isAdmin } from "@/lib/permissions";
 import { revalidatePath } from "next/cache";
 import { createAppNotification } from "./notifications";
 import { v2 as cloudinary } from "cloudinary";
@@ -415,8 +415,8 @@ export async function createNewsAction(data: {
 }) {
   try {
     const user = await getAuthenticatedUser();
-    
-    const isAuthorized = ["ADMIN", "ADMINISTRATIVE_SECRETARIAT"].includes(user.role);
+
+    const isAuthorized = isAdmin(user.role) || hasPermission(user.role, user.permissions || [], "manage_news");
     if (!isAuthorized) {
       throw new Error("غير مصرح لك بنشر الأخبار أو الإنجازات");
     }
@@ -458,8 +458,8 @@ export async function createNewsAction(data: {
 export async function deleteNewsAction(newsId: string) {
   try {
     const user = await getAuthenticatedUser();
-    
-    const isAuthorized = ["ADMIN", "ADMINISTRATIVE_SECRETARIAT"].includes(user.role);
+
+    const isAuthorized = isAdmin(user.role) || hasPermission(user.role, user.permissions || [], "manage_news");
     if (!isAuthorized) {
       throw new Error("غير مصرح لك بحذف الأخبار أو الإنجازات");
     }
@@ -535,8 +535,8 @@ export async function updateTaskStatusAction(taskId: string, status: string) {
 export async function updateTaskCharityAction(taskId: string, charityId: string | undefined, charityName: string | null, isInternal: boolean) {
   try {
     const user = await getAuthenticatedUser();
-    
-    if (user.role !== "ADMIN" && user.role !== "EXECUTIVE_DIRECTOR") {
+
+    if (!isAdmin(user.role) && !hasPermission(user.role, user.permissions || [], "view_all_tasks")) {
       return { error: "غير مصرح لك بتغيير جمعية المهمة" };
     }
 

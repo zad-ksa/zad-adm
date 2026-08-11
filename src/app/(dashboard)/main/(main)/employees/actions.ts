@@ -52,8 +52,10 @@ export async function addEmployee(prevState: any, formData: FormData) {
 
     const hashedPassword = await hash(password, 10);
 
-    const validRoles = ["EXECUTIVE_DIRECTOR", "GENERAL_MANAGER", "ADMINISTRATIVE_SECRETARIAT", "STRATEGY", "FINANCE", "ADMIN", "ACCOUNTANT"];
-    const dbRole = validRoles.includes(role) ? (role as any) : "STRATEGY";
+    // Validate role against RoleDefinition
+    const validRoles = await prisma.roleDefinition.findMany({ select: { key: true } });
+    const isValidRole = validRoles.some(r => r.key === role);
+    const dbRole = isValidRole ? role : "STRATEGY";
 
     await prisma.employee.create({
       data: {
@@ -150,6 +152,12 @@ export async function updateEmployee(
 
     if (existingEmployee) {
       return { error: "رقم الجوال مسجل لموظف آخر" };
+    }
+
+    const validRoles = await prisma.roleDefinition.findMany({ select: { key: true } });
+    const isValidRole = validRoles.some(r => r.key === data.role);
+    if (!isValidRole) {
+      return { error: "المسمى الوظيفي المحدد غير صالح" };
     }
 
     const updateData: any = {

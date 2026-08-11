@@ -3,27 +3,33 @@ import { prisma } from "@/lib/db";
 import { getSession } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
 import { createAppNotification } from "./notifications";
+import { isTier1 } from "@/lib/permissions";
 
-const TIER1 = ["ADMIN", "EXECUTIVE_DIRECTOR", "ADMINISTRATIVE_SECRETARIAT"];
-const ALL_STAFF = [...TIER1, "GENERAL_MANAGER", "STRATEGY", "FINANCE", "GOVERNANCE"];
+const ALL_STAFF = ["ADMIN", "EXECUTIVE_DIRECTOR", "ADMINISTRATIVE_SECRETARIAT", "GENERAL_MANAGER", "STRATEGY", "FINANCE", "GOVERNANCE"];
 
 export async function getMeetings() {
   const session = await getSession();
   if (!session || !ALL_STAFF.includes(session.role)) throw new Error("غير مصرح");
-  const isTier1 = TIER1.includes(session.role);
-  return prisma.meeting.findMany({
-    where: isTier1 ? {} : { isPrivate: false },
+  const userIsTier1 = isTier1(session.role, session.permissions || []);
+  const meetings = await prisma.meeting.findMany({
+    where: userIsTier1 ? {} : { isPrivate: false },
     include: {
-      createdBy: { select: { id: true, name: true, role: true } },
+      createdBy: { select: { id: true, name: true, role: true, permissions: true } },
       charity: { select: { name: true } },
       meetingTasks: {
         include: { assignedTo: { select: { id: true, name: true } } },
         orderBy: { createdAt: "asc" },
       },
     },
-    
+
     orderBy: { date: "desc" },
   });
+
+  return meetings.map(({ createdBy, ...meeting }) => ({
+    ...meeting,
+    createdBy: { id: createdBy.id, name: createdBy.name, role: createdBy.role },
+    creatorIsTier1: isTier1(createdBy.role, createdBy.permissions || []),
+  }));
 }
 
 export async function createMeeting(data: {
@@ -79,15 +85,15 @@ export async function updateMeeting(
 
   const meeting = await prisma.meeting.findUnique({
     where: { id },
-    include: { createdBy: { select: { role: true } } },
+    include: { createdBy: { select: { role: true, permissions: true } } },
   });
   if (!meeting) throw new Error("غير موجود");
 
-  const isTier1 = TIER1.includes(session.role);
-  const creatorIsTier1 = TIER1.includes(meeting.createdBy.role);
+  const userIsTier1 = isTier1(session.role, session.permissions || []);
+  const creatorIsTier1 = isTier1(meeting.createdBy.role, meeting.createdBy.permissions || []);
 
-  if (creatorIsTier1 && !isTier1) throw new Error("لا يمكنك تعديل محاضر الإدارة التنفيذية");
-  if (meeting.createdById !== session.id && !isTier1) throw new Error("غير مصرح");
+  if (creatorIsTier1 && !userIsTier1) throw new Error("لا يمكنك تعديل محاضر الإدارة التنفيذية");
+  if (meeting.createdById !== session.id && !userIsTier1) throw new Error("غير مصرح");
 
   const { date, ...rest } = data;
   await prisma.meeting.update({
@@ -120,15 +126,15 @@ export async function deleteMeeting(id: string) {
 
   const meeting = await prisma.meeting.findUnique({
     where: { id },
-    include: { createdBy: { select: { role: true } } },
+    include: { createdBy: { select: { role: true, permissions: true } } },
   });
   if (!meeting) throw new Error("غير موجود");
 
-  const isTier1 = TIER1.includes(session.role);
-  const creatorIsTier1 = TIER1.includes(meeting.createdBy.role);
+  const userIsTier1 = isTier1(session.role, session.permissions || []);
+  const creatorIsTier1 = isTier1(meeting.createdBy.role, meeting.createdBy.permissions || []);
 
-  if (creatorIsTier1 && !isTier1) throw new Error("لا يمكنك حذف محاضر الإدارة التنفيذية");
-  if (meeting.createdById !== session.id && !isTier1) throw new Error("غير مصرح");
+  if (creatorIsTier1 && !userIsTier1) throw new Error("لا يمكنك حذف محاضر الإدارة التنفيذية");
+  if (meeting.createdById !== session.id && !userIsTier1) throw new Error("غير مصرح");
 
   await prisma.meeting.delete({ where: { id } });
   revalidatePath("/main/meetings");
@@ -142,7 +148,7 @@ export async function upsertMeetingTasks(
   tasks: { id?: string; title: string; assignedToId?: string | null; dueDays?: number | null; isDone?: boolean }[]
 ) {
   const session = await getSession();
-  if (!session || !TIER1.includes(session.role)) throw new Error("غير مصرح");
+  if (!session || !isTier1(session.role, session.permissions || [])) throw new Error("غير مصرح");
 
   const meeting = await prisma.meeting.findUnique({ where: { id: meetingId } });
   const oldTasks = await prisma.meetingTask.findMany({ where: { meetingId } });
@@ -278,7 +284,7 @@ export async function getTasksForMeeting(meetingId: string) {
 
 export async function toggleMeetingTask(taskId: string, isDone: boolean) {
   const session = await getSession();
-  if (!session || !TIER1.includes(session.role)) throw new Error("غير مصرح");
+  if (!session || !isTier1(session.role, session.permissions || [])) throw new Error("غير مصرح");
   await prisma.meetingTask.update({ where: { id: taskId }, data: { isDone } });
   
   await prisma.task.updateMany({
@@ -295,7 +301,7 @@ export async function createTasksFromMeeting(
   tasks: { title: string; assignedToId: string }[]
 ) {
   const session = await getSession();
-  if (!session || !TIER1.includes(session.role)) throw new Error("غير مصرح");
+  if (!session || !isTier1(session.role, session.permissions || [])) throw new Error("غير مصرح");
   for (const t of tasks) {
     await prisma.task.create({
       data: {

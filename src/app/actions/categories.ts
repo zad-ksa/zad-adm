@@ -2,6 +2,7 @@
 
 import { prisma } from "@/lib/db";
 import { getSession } from "@/lib/auth";
+import { hasPermission, isAdmin as checkIsAdmin } from "@/lib/permissions";
 
 const DEFAULT_CATEGORIES = [
   "الاستراتيجية",
@@ -35,7 +36,7 @@ export async function addCategory(name: string): Promise<{ success?: string; err
   const session = await getSession();
   if (!session) return { error: "غير مصرح" };
 
-  const isAdmin = ["ADMIN", "EXECUTIVE_DIRECTOR", "ADMINISTRATIVE_SECRETARIAT"].includes(session.role);
+  const isAdmin = checkIsAdmin(session.role) || hasPermission(session.role, session.permissions || [], "manage_news");
   if (!isAdmin) return { error: "هذه الصلاحية للإدارة التنفيذية فقط" };
 
   const trimmed = name.trim();
@@ -54,7 +55,7 @@ export async function deleteCategory(name: string): Promise<{ success?: string; 
   const session = await getSession();
   if (!session) return { error: "غير مصرح" };
 
-  const isAdmin = ["ADMIN", "EXECUTIVE_DIRECTOR", "ADMINISTRATIVE_SECRETARIAT"].includes(session.role);
+  const isAdmin = checkIsAdmin(session.role) || hasPermission(session.role, session.permissions || [], "manage_news");
   if (!isAdmin) return { error: "هذه الصلاحية للإدارة التنفيذية فقط" };
 
   await prisma.achievementCategory.deleteMany({ where: { name } });

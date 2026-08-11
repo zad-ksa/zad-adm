@@ -1,6 +1,7 @@
 "use client";
 
 import { CheckCircle2, Sparkles, Building2, User, Calendar, Link as LinkIcon, Undo, Trash2 } from "lucide-react";
+import { isAdmin } from "@/lib/permissions";
 import { Achievement, Employee, Session } from "@/types";
 
 interface AchievementCardProps {
@@ -22,7 +23,7 @@ export default function AchievementCard({
 }: AchievementCardProps) {
   const isTask = item.type === "task";
   const canDeleteDirect = !isTask && (isDirectorOrAdmin || item.createdById === session.id);
-  const canUndoTask = isTask && (session.role === "ADMIN" || item.employeeId === session.id);
+  const canUndoTask = isTask && (isAdmin(session.role) || item.employeeId === session.id);
 
   return (
     <div 

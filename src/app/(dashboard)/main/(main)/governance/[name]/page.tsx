@@ -4,6 +4,7 @@ import { prisma } from "@/lib/db";
 import GovernanceFolders from "./GovernanceFolders";
 import GovernanceRegulationsManager from "./GovernanceRegulationsManager";
 import { getSession } from "@/lib/auth";
+import { isAdmin as checkIsAdmin, hasPermission } from "@/lib/permissions";
 import CharityClientTimeline from "@/components/CharityClientTimeline";
 import GovernanceManualViewer from "@/components/GovernanceManualViewer";
 import Link from "next/link";
@@ -78,7 +79,7 @@ async function GovernanceTabContent({
     }
   });
 
-  const isAdmin = ["ADMIN", "EXECUTIVE_DIRECTOR", "GENERAL_MANAGER"].includes(session?.role || "");
+  const isAdmin = checkIsAdmin(session?.role) || hasPermission(session?.role || "", session?.permissions || [], "manage_governance");
 
   let stages: any[] = [];
   let regulations: any[] = [];

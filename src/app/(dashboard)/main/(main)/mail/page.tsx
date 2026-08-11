@@ -5,11 +5,10 @@ import MailClient from "./MailClient";
 
 export const dynamic = "force-dynamic";
 
-export default async function MailPage({
-  searchParams,
-}: {
-  searchParams: { tab?: string; page?: string };
+export default async function MailPage(props: {
+  searchParams: Promise<{ tab?: string; page?: string }>;
 }) {
+  const searchParams = await props.searchParams;
   const session = await getSession();
 
   if (!session || !session.id) {

@@ -908,25 +908,25 @@ function buildPrintHtml(deptKey: string, deptLabel: string, selectedCharities: C
   const CSS = `
     @page{size:A4;margin:18mm}
     body{font-family:Arial,sans-serif;font-size:11pt;color:#1e293b;direction:rtl;margin:0}
-    h1{font-size:17pt;font-weight:bold;border-bottom:3px solid #0ea5e9;padding-bottom:8px;margin-bottom:4px}
+    h1{font-size:17pt;font-weight:bold;border-bottom:3px solid #0f766e;padding-bottom:8px;margin-bottom:4px}
     .print-date{color:#64748b;font-size:9pt;margin-bottom:20px}
     .charity-block{margin-bottom:36px;page-break-inside:avoid}
-    .charity-name{font-size:14pt;font-weight:bold;background:#f1f5f9;padding:7px 12px;border-radius:6px;border-right:4px solid #0ea5e9;margin-bottom:12px}
-    .section-label{font-size:11pt;font-weight:bold;color:#0ea5e9;margin:14px 0 6px;border-bottom:1px solid #e2e8f0;padding-bottom:3px}
+    .charity-name{font-size:14pt;font-weight:bold;background:#f0fdfa;padding:7px 12px;border-radius:6px;border-right:4px solid #0f766e;margin-bottom:12px}
+    .section-label{font-size:11pt;font-weight:bold;color:#0f766e;margin:14px 0 6px;border-bottom:1px solid #e2e8f0;padding-bottom:3px}
     table{width:100%;border-collapse:collapse;font-size:9pt;margin-bottom:6px}
-    th{background:#0ea5e9;color:#fff;padding:5px 8px;text-align:right}
+    th{background:#0f766e;color:#fff;padding:5px 8px;text-align:right}
     td{padding:4px 8px;border-bottom:1px solid #e2e8f0;vertical-align:top}
     tr:nth-child(even) td{background:#f8fafc}
     .steps-cell{font-size:8.5pt;color:#334155}
     .step-row{display:flex;align-items:flex-start;gap:5px;margin-bottom:3px}
     .step-check{width:11px;height:11px;border:1.5px solid #94a3b8;border-radius:2px;flex-shrink:0;margin-top:1px;display:inline-flex;align-items:center;justify-content:center}
-    .step-check.done{background:#10b981;border-color:#10b981}
+    .step-check.done{background:#0f766e;border-color:#0f766e}
     .step-check.done::after{content:"✓";color:#fff;font-size:7pt;line-height:1}
     .step-name{line-height:1.4}
-    .b-cur{background:#0ea5e9;color:#fff;font-size:8pt;padding:1px 6px;border-radius:10px}
-    .b-done{background:#10b981;color:#fff;font-size:8pt;padding:1px 6px;border-radius:10px}
-    .b-cont-active{background:#10b981;color:#fff;font-size:8pt;padding:1px 6px;border-radius:10px}
-    .b-cont-soon{background:#f59e0b;color:#fff;font-size:8pt;padding:1px 6px;border-radius:10px}
+    .b-cur{background:#fff;color:#0f766e;font-size:8pt;padding:0.5px 6px;border-radius:10px;border:1.5px solid #0f766e}
+    .b-done{background:#0f766e;color:#fff;font-size:8pt;padding:1px 6px;border-radius:10px}
+    .b-cont-active{background:#0f766e;color:#fff;font-size:8pt;padding:1px 6px;border-radius:10px}
+    .b-cont-soon{background:#ca8a04;color:#fff;font-size:8pt;padding:1px 6px;border-radius:10px}
   `;
 
   function renderStepsHtml(steps: StageStep[]): string {
@@ -1024,12 +1024,19 @@ export default function ServicesOverviewClient({
     if (!printModal) return;
     const selected = charities.filter(c => printSelected.has(c.id));
     const html = buildPrintHtml(printModal.deptKey, printModal.deptLabel, selected, stagesData, printModal.svcName);
+
+    const w = window.open("", "_blank", "width=900,height=700");
+    if (!w) {
+      alert("الرجاء السماح بفتح النوافذ المنبثقة (Popups) للطباعة.");
+      return;
+    }
+    w.document.open();
+    w.document.write(html);
+    w.document.close();
     setPrintModal(null);
-    const blob = new Blob([html], { type: "text/html;charset=utf-8" });
-    const url = URL.createObjectURL(blob);
-    const w = window.open(url, "_blank", "width=900,height=700");
-    if (w) setTimeout(() => { w.print(); URL.revokeObjectURL(url); }, 600);
-    else URL.revokeObjectURL(url);
+    w.onload = () => w.print();
+    // fallback in case onload doesn't fire reliably for document.write in some browsers
+    setTimeout(() => { try { w.print(); } catch {} }, 300);
   }
 
   // Local logo state to avoid router.refresh() on logo update
@@ -1800,7 +1807,7 @@ export default function ServicesOverviewClient({
           <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-2xl w-full max-w-md">
             <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100 dark:border-slate-800">
               <div className="flex items-center gap-2">
-                <Printer className="w-4 h-4 text-blue-500" />
+                <Printer className="w-4 h-4 text-primary" />
                 <h2 className="font-bold text-slate-800 dark:text-slate-100 text-sm">اختر الجمعيات للطباعة</h2>
               </div>
               <button onClick={() => setPrintModal(null)} className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400">
@@ -1817,7 +1824,7 @@ export default function ServicesOverviewClient({
                 <div className="flex gap-2">
                   <button
                     onClick={() => setPrintSelected(new Set(charities.map(c => c.id)))}
-                    className="text-[11px] font-bold text-blue-500 hover:text-blue-700"
+                    className="text-[11px] font-bold text-primary hover:text-primary/80"
                   >
                     تحديد الكل
                   </button>
@@ -1842,7 +1849,7 @@ export default function ServicesOverviewClient({
                       else next.delete(c.id);
                       setPrintSelected(next);
                     }}
-                    className="w-4 h-4 rounded accent-blue-500"
+                    className="w-4 h-4 rounded accent-primary"
                   />
                   <span className="text-sm font-semibold text-slate-700 dark:text-slate-200">{c.name}</span>
                 </label>
@@ -1856,7 +1863,7 @@ export default function ServicesOverviewClient({
               <button
                 onClick={executePrint}
                 disabled={printSelected.size === 0}
-                className="flex items-center gap-2 px-5 py-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-40 text-white rounded-xl text-sm font-bold transition-colors"
+                className="flex items-center gap-2 px-5 py-2 bg-primary hover:bg-primary/90 disabled:opacity-40 text-white rounded-xl text-sm font-bold transition-colors"
               >
                 <Printer className="w-4 h-4" />
                 طباعة ({printSelected.size})

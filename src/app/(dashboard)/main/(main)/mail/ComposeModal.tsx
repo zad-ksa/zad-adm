@@ -252,7 +252,7 @@ export default function ComposeModal({ isOpen, onClose, employees, onSuccess, re
         return emp ? (
           <div
             key={id}
-            className="h-6 px-2 bg-primary/[0.08] text-primary dark:bg-primary/15 dark:text-teal-300 rounded-full flex items-center gap-1 text-[length:var(--mail-fs-meta)] font-bold"
+            className="h-6 px-2 bg-primary/[0.08] text-primary dark:bg-primary/15 dark:text-teal-300 rounded-full flex items-center gap-1 text-[length:var(--mail-fs-meta)] font-medium"
           >
             {emp.name}
             <button type="button" onClick={() => setIds(selectedIds.filter((i) => i !== id))} className="text-primary/60 dark:text-teal-300/70 hover:text-primary dark:hover:text-teal-300">
@@ -293,7 +293,7 @@ export default function ComposeModal({ isOpen, onClose, employees, onSuccess, re
           onClick={() => setIsMinimized(false)}
           className="w-full h-12 px-4 flex items-center gap-3 bg-white dark:bg-slate-900 border border-slate-200/70 dark:border-slate-800 rounded-t-xl shadow-[var(--mail-shadow-modal)] text-right"
         >
-          <span className="flex-1 truncate text-[length:var(--mail-fs-nav)] font-bold text-slate-700 dark:text-slate-200">
+          <span className="flex-1 truncate text-[length:var(--mail-fs-nav)] font-medium text-slate-700 dark:text-slate-200">
             {subject || "رسالة جديدة"}
           </span>
           <span
@@ -329,7 +329,7 @@ export default function ComposeModal({ isOpen, onClose, employees, onSuccess, re
       >
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 bg-gradient-to-b from-white to-slate-50 dark:from-slate-900 dark:to-slate-950 border-b border-slate-200/70 dark:border-slate-800 shrink-0">
-          <h2 className="text-[length:var(--mail-fs-subject)] font-bold text-slate-900 dark:text-slate-100">{title}</h2>
+          <h2 className="text-[length:var(--mail-fs-subject)] font-semibold text-slate-900 dark:text-slate-100">{title}</h2>
           <div className="flex items-center gap-1">
             <button
               type="button"
@@ -359,7 +359,7 @@ export default function ComposeModal({ isOpen, onClose, employees, onSuccess, re
         </div>
 
         {errorMessage && (
-          <div className="mx-6 mt-4 flex items-center gap-2 px-4 py-3 rounded-xl bg-rose-500/[0.08] text-rose-600 dark:text-rose-400 text-[length:var(--mail-fs-nav)] font-bold shrink-0">
+          <div className="mx-6 mt-4 flex items-center gap-2 px-4 py-3 rounded-xl bg-rose-500/[0.08] text-rose-600 dark:text-rose-400 text-[length:var(--mail-fs-nav)] font-medium shrink-0">
             <AlertTriangle className="w-4 h-4 shrink-0" />
             {errorMessage}
           </div>
@@ -370,19 +370,19 @@ export default function ComposeModal({ isOpen, onClose, employees, onSuccess, re
           <div className="px-6 divide-y divide-slate-100 dark:divide-slate-800 shrink-0">
             {/* TO field */}
             <div className="py-3 flex items-start gap-4">
-              <div className="w-16 pt-1 text-[length:var(--mail-fs-nav)] font-bold text-slate-500 dark:text-slate-400">إلى</div>
+              <div className="w-16 pt-1 text-[length:var(--mail-fs-nav)] font-medium text-slate-500 dark:text-slate-400">إلى</div>
               <div className="flex-1 flex flex-col">
                 <div className="flex items-center justify-between min-h-10">
                   {renderEmployeeSelect(toIds, setToIds, "المستلمون...")}
 
                   <div className="flex gap-2 ms-2">
                     {!showCc && (
-                      <button type="button" onClick={() => setShowCc(true)} className="text-[length:var(--mail-fs-meta)] font-bold text-slate-500 dark:text-slate-400 hover:text-primary dark:hover:text-teal-300 px-2">
+                      <button type="button" onClick={() => setShowCc(true)} className="text-[length:var(--mail-fs-meta)] font-medium text-slate-500 dark:text-slate-400 hover:text-primary dark:hover:text-teal-300 px-2">
                         نسخة (Cc)
                       </button>
                     )}
                     {!showBcc && (
-                      <button type="button" onClick={() => setShowBcc(true)} className="text-[length:var(--mail-fs-meta)] font-bold text-slate-500 dark:text-slate-400 hover:text-primary dark:hover:text-teal-300 px-2">
+                      <button type="button" onClick={() => setShowBcc(true)} className="text-[length:var(--mail-fs-meta)] font-medium text-slate-500 dark:text-slate-400 hover:text-primary dark:hover:text-teal-300 px-2">
                         نسخة مخفية (Bcc)
                       </button>
                     )}
@@ -394,7 +394,7 @@ export default function ComposeModal({ isOpen, onClose, employees, onSuccess, re
             {/* CC field */}
             {showCc && (
               <div className="py-3 flex items-start gap-4">
-                <div className="w-16 pt-1 text-[length:var(--mail-fs-nav)] font-bold text-slate-500 dark:text-slate-400">نسخة</div>
+                <div className="w-16 pt-1 text-[length:var(--mail-fs-nav)] font-medium text-slate-500 dark:text-slate-400">نسخة</div>
                 <div className="flex-1 flex items-center min-h-10">{renderEmployeeSelect(ccIds, setCcIds, "نسخة إلى...")}</div>
               </div>
             )}
@@ -402,20 +402,20 @@ export default function ComposeModal({ isOpen, onClose, employees, onSuccess, re
             {/* BCC field */}
             {showBcc && (
               <div className="py-3 flex items-start gap-4">
-                <div className="w-16 pt-1 text-[length:var(--mail-fs-nav)] font-bold text-slate-500 dark:text-slate-400">نسخة مخفية</div>
+                <div className="w-16 pt-1 text-[length:var(--mail-fs-nav)] font-medium text-slate-500 dark:text-slate-400">نسخة مخفية</div>
                 <div className="flex-1 flex items-center min-h-10">{renderEmployeeSelect(bccIds, setBccIds, "نسخة مخفية إلى...")}</div>
               </div>
             )}
 
             {/* Subject field */}
             <div className="py-3 flex items-center gap-4">
-              <div className="w-16 text-[length:var(--mail-fs-nav)] font-bold text-slate-500 dark:text-slate-400">الموضوع</div>
+              <div className="w-16 text-[length:var(--mail-fs-nav)] font-medium text-slate-500 dark:text-slate-400">الموضوع</div>
               <input
                 type="text"
                 value={subject}
                 onChange={(e) => setSubject(e.target.value)}
                 placeholder="موضوع الرسالة"
-                className="flex-1 bg-transparent border-none focus:ring-0 outline-none text-[length:var(--mail-fs-subject-input)] font-bold text-slate-900 dark:text-slate-100 py-2 placeholder:text-slate-300 dark:placeholder:text-slate-600"
+                className="flex-1 bg-transparent border-none focus:ring-0 outline-none text-[length:var(--mail-fs-subject-input)] font-semibold text-slate-900 dark:text-slate-100 py-2 placeholder:text-slate-300 dark:placeholder:text-slate-600"
               />
             </div>
           </div>
@@ -427,7 +427,7 @@ export default function ComposeModal({ isOpen, onClose, employees, onSuccess, re
           {(attachments.length > 0 || (forwardMail && forwardMail.attachments?.length > 0)) && (
             <div className="px-6 py-3 bg-slate-50 dark:bg-slate-800/40 flex flex-wrap gap-2 shrink-0">
               {attachments.map((file, i) => (
-                <div key={i} className="flex items-center gap-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 px-3 py-1.5 rounded-xl text-[length:var(--mail-fs-meta)] font-bold text-slate-700 dark:text-slate-200">
+                <div key={i} className="flex items-center gap-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 px-3 py-1.5 rounded-xl text-[length:var(--mail-fs-meta)] font-medium text-slate-700 dark:text-slate-200">
                   <span className="truncate max-w-[150px]">{file.name}</span>
                   <button type="button" onClick={() => removeAttachment(i)} className="text-slate-400 dark:text-slate-500 hover:text-rose-500">
                     <X className="w-3 h-3" />
@@ -435,7 +435,7 @@ export default function ComposeModal({ isOpen, onClose, employees, onSuccess, re
                 </div>
               ))}
               {forwardMail?.attachments?.map((att: any, i: number) => (
-                <div key={`fwd-${i}`} className="flex items-center gap-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 px-3 py-1.5 rounded-xl text-[length:var(--mail-fs-meta)] font-bold text-slate-700 dark:text-slate-200">
+                <div key={`fwd-${i}`} className="flex items-center gap-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 px-3 py-1.5 rounded-xl text-[length:var(--mail-fs-meta)] font-medium text-slate-700 dark:text-slate-200">
                   <span className="truncate max-w-[150px]">{att.fileName}</span>
                   <span className="text-slate-400 dark:text-slate-500 font-normal">(مرفق مُعاد توجيهه)</span>
                 </div>
@@ -461,7 +461,7 @@ export default function ComposeModal({ isOpen, onClose, employees, onSuccess, re
           <button
             onClick={handleSubmit}
             disabled={isSubmitting || toIds.length === 0}
-            className="flex items-center gap-2 h-11 px-6 text-white bg-gradient-to-b from-[#17857c] via-primary to-[#0c645d] shadow-[var(--mail-shadow-cta)] hover:shadow-[var(--mail-shadow-cta-hover)] active:translate-y-px rounded-xl font-bold text-[length:var(--mail-fs-nav)] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex items-center gap-2 h-11 px-6 text-white bg-gradient-to-b from-[#17857c] via-primary to-[#0c645d] shadow-[var(--mail-shadow-cta)] hover:shadow-[var(--mail-shadow-cta-hover)] active:translate-y-px rounded-xl font-semibold text-[length:var(--mail-fs-nav)] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
             إرسال

@@ -99,16 +99,16 @@ export default function MailViewClient({ session, mail, employees }: MailViewCli
             className="h-9 px-3 flex items-center gap-2 text-slate-500 dark:text-slate-400 hover:text-primary dark:hover:text-teal-300 hover:bg-primary/[0.08] rounded-full transition-colors"
           >
             <ArrowRight className="w-4 h-4" />
-            <span className="text-[length:var(--mail-fs-nav)] font-bold">العودة</span>
+            <span className="text-[length:var(--mail-fs-nav)] font-medium">العودة</span>
           </button>
           {messages.length > 1 && (
             <>
-              <span className="h-6 px-2 rounded-full bg-primary/10 dark:bg-primary/15 text-primary dark:text-teal-300 text-[length:var(--mail-fs-meta)] font-black flex items-center">
+              <span className="h-6 px-2 rounded-full bg-primary/10 dark:bg-primary/15 text-primary dark:text-teal-300 text-[length:var(--mail-fs-meta)] font-semibold flex items-center">
                 {messages.length} رسائل
               </span>
               <button
                 onClick={() => (expanded.size >= messages.length ? collapseAll() : expandAll())}
-                className="text-[length:var(--mail-fs-meta)] font-bold text-slate-500 dark:text-slate-400 hover:text-primary dark:hover:text-teal-300 px-2"
+                className="text-[length:var(--mail-fs-meta)] font-medium text-slate-500 dark:text-slate-400 hover:text-primary dark:hover:text-teal-300 px-2"
               >
                 {expanded.size >= messages.length ? "طي الكل" : "توسيع الكل"}
               </button>
@@ -126,7 +126,7 @@ export default function MailViewClient({ session, mail, employees }: MailViewCli
       </div>
 
       {errorMessage && (
-        <div className="mx-4 sm:mx-6 mt-4 flex items-center gap-2 px-4 py-3 rounded-xl bg-rose-500/[0.08] text-rose-600 dark:text-rose-400 text-[length:var(--mail-fs-nav)] font-bold shrink-0">
+        <div className="mx-4 sm:mx-6 mt-4 flex items-center gap-2 px-4 py-3 rounded-xl bg-rose-500/[0.08] text-rose-600 dark:text-rose-400 text-[length:var(--mail-fs-nav)] font-medium shrink-0">
           <AlertTriangle className="w-4 h-4 shrink-0" />
           {errorMessage}
         </div>
@@ -135,7 +135,7 @@ export default function MailViewClient({ session, mail, employees }: MailViewCli
       {/* Mail content */}
       <div className="flex-1 overflow-y-auto p-4 sm:p-8">
         <div className="max-w-4xl mx-auto space-y-6">
-          <h1 className="text-[length:var(--mail-fs-h1)] tracking-[var(--mail-tracking-h1)] font-black text-slate-900 dark:text-slate-100">
+          <h1 className="text-[length:var(--mail-fs-h1)] tracking-[var(--mail-tracking-h1)] font-semibold text-slate-900 dark:text-slate-100">
             {mail.subject || "(بدون موضوع)"}
           </h1>
 
@@ -218,7 +218,7 @@ function ThreadMessageCard({
             <User className="w-3 h-3 text-primary dark:text-teal-300" />
           )}
         </div>
-        <span className="font-bold text-[length:var(--mail-fs-sender)] text-slate-800 dark:text-slate-200 shrink-0">
+        <span className="font-semibold text-[length:var(--mail-fs-sender)] text-slate-800 dark:text-slate-200 shrink-0">
           {message.sender?.name}
         </span>
         <span className="truncate text-[length:var(--mail-fs-snippet)] text-slate-400 dark:text-slate-500">
@@ -246,7 +246,7 @@ function ThreadMessageCard({
             )}
           </div>
           <div>
-            <div className="font-bold text-slate-900 dark:text-slate-100 text-[length:var(--mail-fs-sender)]">{message.sender?.name}</div>
+            <div className="font-semibold text-slate-900 dark:text-slate-100 text-[length:var(--mail-fs-sender)]">{message.sender?.name}</div>
             <div className="text-[length:var(--mail-fs-meta)] text-slate-500 dark:text-slate-400 flex items-center gap-2 flex-wrap mt-1">
               <span>إلى:</span>
               <span className="text-slate-600 dark:text-slate-300">{toRecipients.map((r: any) => r.employee.name).join("، ")}</span>
@@ -264,14 +264,14 @@ function ThreadMessageCard({
         <div className="flex items-center gap-2 shrink-0">
           <button
             onClick={onReply}
-            className="h-9 px-4 rounded-xl bg-primary/10 text-primary dark:bg-primary/15 dark:text-teal-300 hover:bg-primary hover:text-white dark:hover:bg-primary transition-colors flex items-center gap-2 font-bold text-[length:var(--mail-fs-meta)]"
+            className="h-9 px-4 rounded-xl bg-primary/10 text-primary dark:bg-primary/15 dark:text-teal-300 hover:bg-primary hover:text-white dark:hover:bg-primary transition-colors flex items-center gap-2 font-semibold text-[length:var(--mail-fs-meta)]"
           >
             <Reply className="w-3.5 h-3.5" />
             رد
           </button>
           <button
             onClick={onForward}
-            className="h-9 px-4 rounded-xl bg-slate-100/70 text-slate-600 dark:bg-slate-800/60 dark:text-slate-300 hover:bg-slate-200/70 dark:hover:bg-slate-700/60 transition-colors flex items-center gap-2 font-bold text-[length:var(--mail-fs-meta)]"
+            className="h-9 px-4 rounded-xl bg-slate-100/70 text-slate-600 dark:bg-slate-800/60 dark:text-slate-300 hover:bg-slate-200/70 dark:hover:bg-slate-700/60 transition-colors flex items-center gap-2 font-semibold text-[length:var(--mail-fs-meta)]"
           >
             <Forward className="w-3.5 h-3.5" />
             إعادة توجيه
@@ -290,7 +290,7 @@ function ThreadMessageCard({
 
       {message.attachments && message.attachments.length > 0 && (
         <div className="mt-6">
-          <h3 className="text-[length:var(--mail-fs-meta)] font-bold text-slate-600 dark:text-slate-300 mb-3 flex items-center gap-2">
+          <h3 className="text-[length:var(--mail-fs-meta)] font-medium text-slate-600 dark:text-slate-300 mb-3 flex items-center gap-2">
             <Paperclip className="w-3.5 h-3.5" />
             المرفقات ({message.attachments.length})
           </h3>
@@ -307,7 +307,7 @@ function ThreadMessageCard({
                   <Download className="w-4 h-4 text-primary dark:text-teal-300" />
                 </div>
                 <div>
-                  <div className="text-[length:var(--mail-fs-nav)] font-bold text-slate-900 dark:text-slate-100 truncate max-w-[200px]">{att.fileName}</div>
+                  <div className="text-[length:var(--mail-fs-nav)] font-medium text-slate-900 dark:text-slate-100 truncate max-w-[200px]">{att.fileName}</div>
                   {att.fileSize && (
                     <div className="text-[length:var(--mail-fs-meta)] text-slate-500 dark:text-slate-400 mt-0.5">
                       {(att.fileSize / 1024 / 1024).toFixed(2)} MB

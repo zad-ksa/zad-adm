@@ -202,7 +202,7 @@ export default function MailClient({ session, employees, initialTab }: MailClien
         <div className="p-4 flex">
           <button
             onClick={() => setIsComposeOpen(true)}
-            className="h-12 flex items-center justify-center gap-2 text-white bg-gradient-to-b from-[#17857c] via-primary to-[#0c645d] shadow-[var(--mail-shadow-cta)] hover:shadow-[var(--mail-shadow-cta-hover)] active:translate-y-px px-6 rounded-2xl font-bold text-[length:var(--mail-fs-nav)] transition-all"
+            className="h-12 flex items-center justify-center gap-2 text-white bg-gradient-to-b from-[#17857c] via-primary to-[#0c645d] shadow-[var(--mail-shadow-cta)] hover:shadow-[var(--mail-shadow-cta-hover)] active:translate-y-px px-6 rounded-2xl font-semibold text-[length:var(--mail-fs-nav)] transition-all"
           >
             <PenSquare className="w-4 h-4" />
             رسالة جديدة
@@ -216,10 +216,10 @@ export default function MailClient({ session, employees, initialTab }: MailClien
               <button
                 key={key}
                 onClick={() => handleTabChange(key)}
-                className={`w-full h-8 flex items-center gap-3 px-3 rounded-e-full text-[length:var(--mail-fs-nav)] font-bold transition-colors ${
+                className={`w-full h-8 flex items-center gap-3 px-3 rounded-e-full text-[length:var(--mail-fs-nav)] transition-colors ${
                   isActive
-                    ? "bg-primary/10 dark:bg-primary/15 text-primary dark:text-teal-300 shadow-[inset_0_0_0_1px_rgb(15_118_110_/_0.18)]"
-                    : "text-slate-600 dark:text-slate-400 hover:bg-primary/5 dark:hover:bg-primary/10 hover:text-primary dark:hover:text-teal-300"
+                    ? "font-semibold bg-primary/10 dark:bg-primary/15 text-primary dark:text-teal-300 shadow-[inset_0_0_0_1px_rgb(15_118_110_/_0.18)]"
+                    : "font-medium text-slate-600 dark:text-slate-400 hover:bg-primary/5 dark:hover:bg-primary/10 hover:text-primary dark:hover:text-teal-300"
                 }`}
               >
                 <Icon
@@ -263,7 +263,7 @@ export default function MailClient({ session, employees, initialTab }: MailClien
                 {currentTab !== "trash" && currentTab !== "drafts" && (
                   <button
                     onClick={() => setConfirmAction("trash")}
-                    className="h-8 px-3 rounded-lg text-rose-600 dark:text-rose-400 bg-rose-500/[0.08] hover:bg-rose-500/[0.14] shadow-[var(--mail-shadow-danger)] flex items-center gap-1.5 text-[length:var(--mail-fs-meta)] font-bold transition-colors"
+                    className="h-8 px-3 rounded-lg text-rose-600 dark:text-rose-400 bg-rose-500/[0.08] hover:bg-rose-500/[0.14] shadow-[var(--mail-shadow-danger)] flex items-center gap-1.5 text-[length:var(--mail-fs-meta)] font-semibold transition-colors"
                   >
                     <Trash2 className="w-3.5 h-3.5" />
                     نقل للمهملات
@@ -272,7 +272,7 @@ export default function MailClient({ session, employees, initialTab }: MailClien
                 {currentTab === "drafts" && (
                   <button
                     onClick={() => setConfirmAction("delete")}
-                    className="h-8 px-3 rounded-lg text-rose-600 dark:text-rose-400 bg-rose-500/[0.08] hover:bg-rose-500/[0.14] shadow-[var(--mail-shadow-danger)] flex items-center gap-1.5 text-[length:var(--mail-fs-meta)] font-bold transition-colors"
+                    className="h-8 px-3 rounded-lg text-rose-600 dark:text-rose-400 bg-rose-500/[0.08] hover:bg-rose-500/[0.14] shadow-[var(--mail-shadow-danger)] flex items-center gap-1.5 text-[length:var(--mail-fs-meta)] font-semibold transition-colors"
                   >
                     <Trash className="w-3.5 h-3.5" />
                     حذف المسودات
@@ -282,14 +282,14 @@ export default function MailClient({ session, employees, initialTab }: MailClien
                   <>
                     <button
                       onClick={handleBulkRestore}
-                      className="h-8 px-3 rounded-lg text-slate-600 dark:text-slate-300 bg-slate-100/70 dark:bg-slate-800/60 hover:bg-slate-200/70 dark:hover:bg-slate-700/60 flex items-center gap-1.5 text-[length:var(--mail-fs-meta)] font-bold transition-colors"
+                      className="h-8 px-3 rounded-lg text-slate-600 dark:text-slate-300 bg-slate-100/70 dark:bg-slate-800/60 hover:bg-slate-200/70 dark:hover:bg-slate-700/60 flex items-center gap-1.5 text-[length:var(--mail-fs-meta)] font-semibold transition-colors"
                     >
                       <RefreshCw className="w-3.5 h-3.5" />
                       استرجاع
                     </button>
                     <button
                       onClick={() => setConfirmAction("delete")}
-                      className="h-8 px-3 rounded-lg text-rose-600 dark:text-rose-400 bg-rose-500/[0.08] hover:bg-rose-500/[0.14] shadow-[var(--mail-shadow-danger)] flex items-center gap-1.5 text-[length:var(--mail-fs-meta)] font-bold transition-colors"
+                      className="h-8 px-3 rounded-lg text-rose-600 dark:text-rose-400 bg-rose-500/[0.08] hover:bg-rose-500/[0.14] shadow-[var(--mail-shadow-danger)] flex items-center gap-1.5 text-[length:var(--mail-fs-meta)] font-semibold transition-colors"
                     >
                       <Trash className="w-3.5 h-3.5" />
                       حذف نهائي
@@ -315,7 +315,7 @@ export default function MailClient({ session, employees, initialTab }: MailClien
 
           <div className="flex items-center gap-2 shrink-0">
             {total > 0 && (
-              <span className="hidden sm:inline text-[length:var(--mail-fs-meta)] font-bold text-slate-400 dark:text-slate-500 whitespace-nowrap">
+              <span className="hidden sm:inline text-[length:var(--mail-fs-meta)] font-medium text-slate-400 dark:text-slate-500 whitespace-nowrap">
                 {rangeStart}–{rangeEnd} من {total}
               </span>
             )}
@@ -347,7 +347,7 @@ export default function MailClient({ session, employees, initialTab }: MailClien
               <div className="w-20 h-20 bg-slate-50 dark:bg-slate-800/60 rounded-full flex items-center justify-center">
                 <MailIcon className="w-10 h-10 text-slate-300 dark:text-slate-600" />
               </div>
-              <p className="text-[length:var(--mail-fs-subject)] font-bold text-slate-500 dark:text-slate-400">لا توجد رسائل هنا</p>
+              <p className="text-[length:var(--mail-fs-subject)] font-medium text-slate-500 dark:text-slate-400">لا توجد رسائل هنا</p>
             </div>
           ) : (
             <ul role="list" className="divide-y divide-slate-100 dark:divide-slate-800/70">

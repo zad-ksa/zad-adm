@@ -122,15 +122,17 @@ body {
 
 /* ── Internal mail feature scope (Gmail-inspired redesign) ──────────────── */
 .mail-ui {
-  /* Type — Swiss hierarchy, fluid but tight (matches Gmail's actual desktop sizes) */
-  --mail-fs-nav:      clamp(0.75rem,  0.735rem + 0.08vw, 0.8125rem);   /* 12 → 13px */
-  --mail-fs-sender:   clamp(0.75rem,  0.735rem + 0.08vw, 0.8125rem);   /* 12 → 13px */
-  --mail-fs-subject:  clamp(0.75rem,  0.735rem + 0.08vw, 0.8125rem);   /* 12 → 13px */
-  --mail-fs-snippet:  clamp(0.75rem,  0.735rem + 0.08vw, 0.8125rem);   /* 12 → 13px, same as subject like Gmail */
-  --mail-fs-meta:     clamp(0.6875rem, 0.675rem + 0.06vw, 0.75rem);    /* 11 → 12px */
-  --mail-fs-h1:       clamp(1.25rem, 1.20rem + 0.25vw, 1.375rem);      /* 20 → 22px */
-  --mail-fs-body:     clamp(0.8125rem, 0.80rem + 0.06vw, 0.875rem);    /* 13 → 14px */
-  --mail-fs-subject-input: clamp(0.8125rem, 0.80rem + 0.06vw, 0.875rem); /* 13 → 14px */
+  /* Type — Swiss hierarchy, fluid but tight (matches Gmail's actual desktop sizes,
+     nudged down one notch since Cairo/Inter render visually larger than Gmail's
+     Roboto/Google Sans at the same nominal px) */
+  --mail-fs-nav:      clamp(0.6875rem, 0.675rem + 0.06vw, 0.75rem);    /* 11 → 12px */
+  --mail-fs-sender:   clamp(0.6875rem, 0.675rem + 0.06vw, 0.75rem);    /* 11 → 12px */
+  --mail-fs-subject:  clamp(0.6875rem, 0.675rem + 0.06vw, 0.75rem);    /* 11 → 12px */
+  --mail-fs-snippet:  clamp(0.6875rem, 0.675rem + 0.06vw, 0.75rem);    /* 11 → 12px, same as subject like Gmail */
+  --mail-fs-meta:     clamp(0.625rem, 0.615rem + 0.05vw, 0.6875rem);   /* 10 → 11px */
+  --mail-fs-h1:       clamp(1.1875rem, 1.14rem + 0.24vw, 1.3125rem);   /* 19 → 21px */
+  --mail-fs-body:     clamp(0.75rem, 0.74rem + 0.05vw, 0.8125rem);     /* 12 → 13px */
+  --mail-fs-subject-input: clamp(0.75rem, 0.74rem + 0.05vw, 0.8125rem); /* 12 → 13px */
   --mail-lh-body: 1.6;
   --mail-tracking-h1: -0.02em;
 

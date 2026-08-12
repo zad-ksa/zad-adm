@@ -28,12 +28,12 @@ export default function MailRow({
 }: MailRowProps) {
   const { isUnread } = item;
 
-  const rowClassName = `group grid grid-cols-[2rem_2rem_minmax(0,1fr)_auto] sm:grid-cols-[2rem_2rem_minmax(7.5rem,11rem)_minmax(0,1fr)_auto] items-center gap-4 min-h-10 px-4 py-2 border-s-[3px] transition-all relative w-full text-right ${
+  const rowClassName = `group grid grid-cols-[2rem_2rem_minmax(0,1fr)_auto] sm:grid-cols-[2rem_2rem_minmax(7.5rem,11rem)_minmax(0,1fr)_auto] items-center gap-4 min-h-10 px-4 py-2 border-s-4 transition-all relative w-full text-right ${
     isSelected
       ? "bg-secondary/[0.08] dark:bg-secondary/[0.14] shadow-[var(--mail-shadow-row-sel)] border-transparent"
       : isUnread
-        ? "border-s-primary bg-primary/[0.05] dark:bg-primary/[0.10] shadow-[var(--mail-shadow-unread)]"
-        : "border-transparent hover:bg-primary/[0.04] dark:hover:bg-primary/[0.07] hover:shadow-[var(--mail-shadow-row-hover)] hover:z-10"
+        ? "border-s-primary bg-white dark:bg-slate-900 shadow-[var(--mail-shadow-unread)] hover:bg-primary/[0.04] dark:hover:bg-primary/[0.08]"
+        : "border-transparent bg-slate-50/70 dark:bg-slate-800/30 hover:bg-primary/[0.04] dark:hover:bg-primary/[0.07] hover:shadow-[var(--mail-shadow-row-hover)] hover:z-10"
   }`;
 
   const content = (

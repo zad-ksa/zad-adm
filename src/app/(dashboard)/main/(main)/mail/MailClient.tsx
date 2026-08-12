@@ -9,36 +9,49 @@ import {
   Trash2,
   PenSquare,
   Search,
-  MoreVertical,
-  Paperclip,
-  Reply,
-  Forward,
-  Clock,
   CheckSquare,
   Square,
   RefreshCw,
   Mail as MailIcon,
-  Trash
+  Trash,
+  ChevronRight,
+  ChevronLeft,
+  FileText,
 } from "lucide-react";
 import {
   getInbox,
   getSentMails,
   getStarredMails,
   getTrashMails,
+  getDrafts,
   markAsRead,
   toggleStar,
   moveToTrash,
   restoreFromTrash,
-  deletePermanently
+  deletePermanently,
+  deleteDraft,
 } from "@/app/actions/mail";
 import ComposeModal from "./ComposeModal";
-import Link from "next/link";
+import ConfirmModal from "@/components/ui/ConfirmModal";
+import CircularLoader from "@/components/CircularLoader";
+import MailRow from "./MailRow";
+import { normalizeMailListItem, htmlToPlainText } from "./mailUtils";
 
 interface MailClientProps {
   session: any;
   employees: any[];
   initialTab: string;
 }
+
+const FOLDERS = [
+  { key: "inbox", label: "البريد الوارد", Icon: Inbox },
+  { key: "sent", label: "البريد المرسل", Icon: Send },
+  { key: "drafts", label: "المسودات", Icon: FileText },
+  { key: "starred", label: "المميزة بنجمة", Icon: Star, accent: "secondary" as const },
+  { key: "trash", label: "سلة المهملات", Icon: Trash2 },
+];
+
+type BulkAction = "trash" | "delete" | null;
 
 export default function MailClient({ session, employees, initialTab }: MailClientProps) {
   const router = useRouter();
@@ -50,8 +63,17 @@ export default function MailClient({ session, employees, initialTab }: MailClien
   const [isComposeOpen, setIsComposeOpen] = useState(false);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [total, setTotal] = useState(0);
   const [selectedMails, setSelectedMails] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
+  const [confirmAction, setConfirmAction] = useState<BulkAction>(null);
+  const [isBulkPending, setIsBulkPending] = useState(false);
+  const [editingDraft, setEditingDraft] = useState<any>(null);
+
+  const employeesById = employees.reduce((acc: Record<string, any>, e) => {
+    acc[e.id] = e;
+    return acc;
+  }, {});
 
   const fetchMails = async () => {
     setIsLoading(true);
@@ -62,6 +84,8 @@ export default function MailClient({ session, employees, initialTab }: MailClien
         result = await getInbox(page);
       } else if (currentTab === "sent") {
         result = await getSentMails(page);
+      } else if (currentTab === "drafts") {
+        result = await getDrafts(page);
       } else if (currentTab === "starred") {
         result = await getStarredMails(page);
       } else if (currentTab === "trash") {
@@ -71,6 +95,7 @@ export default function MailClient({ session, employees, initialTab }: MailClien
       if (result) {
         setMails(result.mails);
         setTotalPages(result.totalPages);
+        setTotal(result.total);
       }
     } catch (error) {
       console.error("Error fetching mails:", error);
@@ -81,6 +106,7 @@ export default function MailClient({ session, employees, initialTab }: MailClien
 
   useEffect(() => {
     fetchMails();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentTab, page]);
 
   const handleTabChange = (tab: string) => {
@@ -88,197 +114,184 @@ export default function MailClient({ session, employees, initialTab }: MailClien
     setPage(1);
   };
 
-  const handleToggleStar = async (e: React.MouseEvent, mailId: string) => {
-    e.preventDefault();
-    e.stopPropagation();
+  const handleOpenMail = (mailId: string, isUnread: boolean) => {
+    if (isUnread) {
+      markAsRead(mailId).catch((error) => console.error("Error marking mail as read:", error));
+    }
+  };
+
+  const handleOpenDraft = (mailId: string) => {
+    const draft = mails.find((m) => m.id === mailId);
+    if (draft) setEditingDraft(draft);
+  };
+
+  const handleToggleStar = async (mailId: string) => {
     try {
-      // Optimistic update
-      setMails(mails.map(m => {
-        if ((m.mailId && m.mailId === mailId) || m.id === mailId) {
-          return { ...m, isStarred: !m.isStarred };
-        }
-        return m;
-      }));
+      setMails((prev) =>
+        prev.map((m) => {
+          const rowMailId = m.mail?.id || m.id;
+          if (rowMailId === mailId) {
+            return { ...m, isStarred: !m.isStarred };
+          }
+          return m;
+        })
+      );
       await toggleStar(mailId);
-      // If we are in starred tab and unstarred, refresh
       if (currentTab === "starred") {
         fetchMails();
       }
     } catch (error) {
       console.error("Error toggling star:", error);
-      fetchMails(); // Revert on error
+      fetchMails();
     }
   };
 
-  const handleSelectMail = (e: React.MouseEvent, id: string) => {
-    e.stopPropagation();
-    setSelectedMails(prev =>
-      prev.includes(id) ? prev.filter(mId => mId !== id) : [...prev, id]
-    );
+  const handleToggleSelect = (rowId: string) => {
+    setSelectedMails((prev) => (prev.includes(rowId) ? prev.filter((id) => id !== rowId) : [...prev, rowId]));
   };
 
   const handleSelectAll = () => {
     if (selectedMails.length === mails.length) {
       setSelectedMails([]);
     } else {
-      setSelectedMails(mails.map(m => m.id));
+      setSelectedMails(mails.map((m) => m.id));
     }
   };
 
-  const handleBulkTrash = async () => {
-    if (!selectedMails.length) return;
-    if (!confirm("هل أنت متأكد من نقل الرسائل المحددة إلى سلة المهملات؟")) return;
+  const resolveMailId = (rowId: string) => {
+    const mailObj = mails.find((m) => m.id === rowId);
+    return mailObj?.mail?.id || mailObj?.id;
+  };
 
-    setIsLoading(true);
-    for (const id of selectedMails) {
-      const mailObj = mails.find(m => m.id === id);
-      const mailId = mailObj?.mailId || mailObj?.id; // Handle both MailRecipient and InternalMail
-      if (mailId) {
-        await moveToTrash(mailId);
+  const runBulkAction = async (action: (mailId: string) => Promise<any>) => {
+    setIsBulkPending(true);
+    try {
+      for (const rowId of selectedMails) {
+        const mailId = resolveMailId(rowId);
+        if (mailId) await action(mailId);
       }
+      await fetchMails();
+    } finally {
+      setIsBulkPending(false);
+      setConfirmAction(null);
     }
-    await fetchMails();
   };
 
-  const handleBulkRestore = async () => {
+  const handleBulkRestore = () => {
     if (!selectedMails.length) return;
-
-    setIsLoading(true);
-    for (const id of selectedMails) {
-      const mailObj = mails.find(m => m.id === id);
-      const mailId = mailObj?.mailId || mailObj?.id;
-      if (mailId) {
-        await restoreFromTrash(mailId);
-      }
-    }
-    await fetchMails();
+    runBulkAction(restoreFromTrash);
   };
 
-  const handleBulkDelete = async () => {
-    if (!selectedMails.length) return;
-    if (!confirm("هل أنت متأكد من حذف الرسائل المحددة نهائياً؟ لا يمكن التراجع عن هذا الإجراء.")) return;
-
-    setIsLoading(true);
-    for (const id of selectedMails) {
-      const mailObj = mails.find(m => m.id === id);
-      const mailId = mailObj?.mailId || mailObj?.id;
-      if (mailId) {
-        await deletePermanently(mailId);
-      }
-    }
-    await fetchMails();
-  };
-
-  const filteredMails = mails.filter(m => {
+  const filteredMails = mails.filter((m) => {
     const mailObj = m.mail || m;
     const searchLower = searchQuery.toLowerCase();
-    return mailObj.subject.toLowerCase().includes(searchLower) ||
-      (mailObj.sender?.name?.toLowerCase().includes(searchLower)) ||
-      mailObj.body.toLowerCase().includes(searchLower);
+    return (
+      mailObj.subject?.toLowerCase().includes(searchLower) ||
+      mailObj.sender?.name?.toLowerCase().includes(searchLower) ||
+      htmlToPlainText(mailObj.body || "").toLowerCase().includes(searchLower)
+    );
   });
 
+  const rangeStart = total === 0 ? 0 : (page - 1) * 20 + 1;
+  const rangeEnd = Math.min(page * 20, total);
+
   return (
-    <div className="flex h-[calc(100vh-100px)] bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-      {/* Sidebar */}
-      <div className="w-64 bg-gray-50 border-l border-gray-100 flex flex-col">
-        <div className="p-4">
+    <div className="mail-ui flex h-[calc(100dvh-8rem)] lg:h-[calc(100dvh-6rem)] bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/70 dark:border-slate-800 shadow-[var(--mail-shadow-card)] overflow-hidden">
+      {/* Folder rail */}
+      <div className="w-64 border-s border-slate-200/70 dark:border-slate-800 bg-gradient-to-b from-slate-50 via-white to-teal-50/60 dark:from-slate-900 dark:via-slate-950 dark:to-slate-950 flex flex-col shrink-0">
+        <div className="p-4 flex">
           <button
             onClick={() => setIsComposeOpen(true)}
-            className="w-full flex items-center justify-center gap-2 bg-primary hover:bg-primary/90 text-white py-3 px-4 rounded-xl font-medium transition-colors shadow-sm"
+            className="h-12 flex items-center justify-center gap-2 text-white bg-gradient-to-b from-[#17857c] via-primary to-[#0c645d] shadow-[var(--mail-shadow-cta)] hover:shadow-[var(--mail-shadow-cta-hover)] active:translate-y-px px-6 rounded-2xl font-bold text-[length:var(--mail-fs-nav)] transition-all"
           >
-            <PenSquare className="w-5 h-5" />
+            <PenSquare className="w-4 h-4" />
             رسالة جديدة
           </button>
         </div>
 
-        <nav className="flex-1 px-3 space-y-1 overflow-y-auto">
-          <button
-            onClick={() => handleTabChange("inbox")}
-            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${currentTab === "inbox" ? "bg-primary/10 text-primary" : "text-gray-700 hover:bg-gray-100"
-              }`}
-          >
-            <Inbox className={`w-5 h-5 ${currentTab === "inbox" ? "text-primary" : "text-gray-500"}`} />
-            البريد الوارد
-          </button>
-
-          <button
-            onClick={() => handleTabChange("sent")}
-            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${currentTab === "sent" ? "bg-primary/10 text-primary" : "text-gray-700 hover:bg-gray-100"
-              }`}
-          >
-            <Send className={`w-5 h-5 ${currentTab === "sent" ? "text-primary" : "text-gray-500"}`} />
-            البريد المرسل
-          </button>
-
-          <button
-            onClick={() => handleTabChange("starred")}
-            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${currentTab === "starred" ? "bg-primary/10 text-primary" : "text-gray-700 hover:bg-gray-100"
-              }`}
-          >
-            <Star className={`w-5 h-5 ${currentTab === "starred" ? "text-yellow-500" : "text-gray-500"}`} />
-            المميزة بنجمة
-          </button>
-
-          <button
-            onClick={() => handleTabChange("trash")}
-            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${currentTab === "trash" ? "bg-primary/10 text-primary" : "text-gray-700 hover:bg-gray-100"
-              }`}
-          >
-            <Trash2 className={`w-5 h-5 ${currentTab === "trash" ? "text-primary" : "text-gray-500"}`} />
-            سلة المهملات
-          </button>
+        <nav className="flex-1 px-2 space-y-1 overflow-y-auto">
+          {FOLDERS.map(({ key, label, Icon, accent }) => {
+            const isActive = currentTab === key;
+            return (
+              <button
+                key={key}
+                onClick={() => handleTabChange(key)}
+                className={`w-full h-8 flex items-center gap-3 px-3 rounded-e-full text-[length:var(--mail-fs-nav)] font-bold transition-colors ${
+                  isActive
+                    ? "bg-primary/10 dark:bg-primary/15 text-primary dark:text-teal-300 shadow-[inset_0_0_0_1px_rgb(15_118_110_/_0.18)]"
+                    : "text-slate-600 dark:text-slate-400 hover:bg-primary/5 dark:hover:bg-primary/10 hover:text-primary dark:hover:text-teal-300"
+                }`}
+              >
+                <Icon
+                  className={`w-4 h-4 ${
+                    isActive ? (accent === "secondary" ? "text-secondary dark:text-amber-400" : "text-primary dark:text-teal-300") : ""
+                  }`}
+                />
+                {label}
+              </button>
+            );
+          })}
         </nav>
       </div>
 
-      {/* Main Content */}
-      <div className="flex-1 flex flex-col bg-white">
-        {/* Header Toolbar */}
-        <div className="h-16 border-b border-gray-100 flex items-center justify-between px-4 bg-white shrink-0 gap-4">
-          <div className="flex items-center gap-3 shrink-0">
+      {/* Main content */}
+      <div className="flex-1 flex flex-col min-w-0">
+        {/* Toolbar */}
+        <div className="h-14 bg-gradient-to-b from-white to-slate-50 dark:from-slate-900 dark:to-slate-950 border-b border-slate-200/70 dark:border-slate-800 flex items-center justify-between px-4 gap-4 shrink-0">
+          <div className="flex items-center gap-1 shrink-0">
             <button
               onClick={handleSelectAll}
-              className="text-gray-400 hover:text-gray-600 transition-colors p-2"
+              className="w-8 h-8 flex items-center justify-center rounded-lg text-slate-400 dark:text-slate-500 hover:bg-primary/[0.08] hover:text-primary dark:hover:text-teal-300 transition-colors"
               title="تحديد الكل"
             >
               {selectedMails.length > 0 && selectedMails.length === mails.length ? (
-                <CheckSquare className="w-5 h-5 text-primary" />
+                <CheckSquare className="w-4 h-4 text-primary dark:text-teal-300" />
               ) : (
-                <Square className="w-5 h-5" />
+                <Square className="w-4 h-4" />
               )}
             </button>
             <button
               onClick={fetchMails}
-              className="text-gray-400 hover:text-gray-600 transition-colors p-2"
+              className="w-8 h-8 flex items-center justify-center rounded-lg text-slate-400 dark:text-slate-500 hover:bg-primary/[0.08] hover:text-primary dark:hover:text-teal-300 transition-colors"
               title="تحديث"
             >
-              <RefreshCw className={`w-5 h-5 ${isLoading ? "animate-spin text-primary" : ""}`} />
+              <RefreshCw className={`w-4 h-4 ${isLoading ? "animate-spin text-primary dark:text-teal-300" : ""}`} />
             </button>
 
             {selectedMails.length > 0 && (
-              <div className="flex items-center gap-2 mr-2 pr-4 border-r border-gray-200">
-                {currentTab !== "trash" && (
+              <div className="flex items-center gap-1 ms-2 ps-3 border-s border-slate-200 dark:border-slate-700">
+                {currentTab !== "trash" && currentTab !== "drafts" && (
                   <button
-                    onClick={handleBulkTrash}
-                    className="text-gray-500 hover:text-red-600 transition-colors p-2 rounded-lg hover:bg-red-50 flex items-center gap-1 text-sm font-medium"
+                    onClick={() => setConfirmAction("trash")}
+                    className="h-8 px-3 rounded-lg text-rose-600 dark:text-rose-400 bg-rose-500/[0.08] hover:bg-rose-500/[0.14] shadow-[var(--mail-shadow-danger)] flex items-center gap-1.5 text-[length:var(--mail-fs-meta)] font-bold transition-colors"
                   >
-                    <Trash2 className="w-4 h-4" />
+                    <Trash2 className="w-3.5 h-3.5" />
                     نقل للمهملات
+                  </button>
+                )}
+                {currentTab === "drafts" && (
+                  <button
+                    onClick={() => setConfirmAction("delete")}
+                    className="h-8 px-3 rounded-lg text-rose-600 dark:text-rose-400 bg-rose-500/[0.08] hover:bg-rose-500/[0.14] shadow-[var(--mail-shadow-danger)] flex items-center gap-1.5 text-[length:var(--mail-fs-meta)] font-bold transition-colors"
+                  >
+                    <Trash className="w-3.5 h-3.5" />
+                    حذف المسودات
                   </button>
                 )}
                 {currentTab === "trash" && (
                   <>
                     <button
                       onClick={handleBulkRestore}
-                      className="text-gray-500 hover:text-green-600 transition-colors p-2 rounded-lg hover:bg-green-50 flex items-center gap-1 text-sm font-medium"
+                      className="h-8 px-3 rounded-lg text-slate-600 dark:text-slate-300 bg-slate-100/70 dark:bg-slate-800/60 hover:bg-slate-200/70 dark:hover:bg-slate-700/60 flex items-center gap-1.5 text-[length:var(--mail-fs-meta)] font-bold transition-colors"
                     >
-                      <RefreshCw className="w-4 h-4" />
+                      <RefreshCw className="w-3.5 h-3.5" />
                       استرجاع
                     </button>
                     <button
-                      onClick={handleBulkDelete}
-                      className="text-gray-500 hover:text-red-600 transition-colors p-2 rounded-lg hover:bg-red-50 flex items-center gap-1 text-sm font-medium"
+                      onClick={() => setConfirmAction("delete")}
+                      className="h-8 px-3 rounded-lg text-rose-600 dark:text-rose-400 bg-rose-500/[0.08] hover:bg-rose-500/[0.14] shadow-[var(--mail-shadow-danger)] flex items-center gap-1.5 text-[length:var(--mail-fs-meta)] font-bold transition-colors"
                     >
-                      <Trash className="w-4 h-4" />
+                      <Trash className="w-3.5 h-3.5" />
                       حذف نهائي
                     </button>
                   </>
@@ -294,112 +307,63 @@ export default function MailClient({ session, employees, initialTab }: MailClien
                 placeholder="البحث في البريد..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full bg-gray-50 border border-gray-200 rounded-full py-2.5 pr-10 pl-4 text-sm focus:ring-2 focus:ring-primary/20 focus:bg-white transition-all shadow-sm"
+                className="w-full h-9 bg-slate-100/70 dark:bg-slate-800/60 border border-transparent rounded-full pe-10 ps-4 text-[length:var(--mail-fs-nav)] text-slate-700 dark:text-slate-200 focus:bg-white dark:focus:bg-slate-900 focus:border-primary/30 focus:shadow-[var(--mail-ring-focus)] outline-none transition-all"
               />
-              <Search className="w-4 h-4 text-gray-400 absolute right-4 top-3" />
+              <Search className="w-4 h-4 text-slate-400 dark:text-slate-500 absolute end-3 top-1/2 -translate-y-1/2" />
             </div>
           </div>
 
-          {/* Spacer block to avoid overlap with FloatingHeader on the left side in RTL */}
-          <div className="w-[140px] lg:w-[200px] shrink-0 pointer-events-none hidden sm:block"></div>
+          <div className="flex items-center gap-2 shrink-0">
+            {total > 0 && (
+              <span className="hidden sm:inline text-[length:var(--mail-fs-meta)] font-bold text-slate-400 dark:text-slate-500 whitespace-nowrap">
+                {rangeStart}–{rangeEnd} من {total}
+              </span>
+            )}
+            <button
+              onClick={() => setPage((p) => Math.max(1, p - 1))}
+              disabled={page <= 1}
+              className="w-8 h-8 flex items-center justify-center rounded-lg text-slate-400 dark:text-slate-500 hover:bg-primary/[0.08] hover:text-primary dark:hover:text-teal-300 disabled:opacity-30 disabled:hover:bg-transparent transition-colors"
+            >
+              <ChevronRight className="w-4 h-4" />
+            </button>
+            <button
+              onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+              disabled={page >= totalPages}
+              className="w-8 h-8 flex items-center justify-center rounded-lg text-slate-400 dark:text-slate-500 hover:bg-primary/[0.08] hover:text-primary dark:hover:text-teal-300 disabled:opacity-30 disabled:hover:bg-transparent transition-colors"
+            >
+              <ChevronLeft className="w-4 h-4" />
+            </button>
+            {/* Spacer to avoid overlap with the fixed FloatingHeader pill (top-4 left-4/left-8) */}
+            <div className="w-[140px] lg:w-[200px] shrink-0 pointer-events-none hidden sm:block" />
+          </div>
         </div>
 
-        {/* Mail List */}
+        {/* Mail list */}
         <div className="flex-1 overflow-y-auto">
           {isLoading ? (
-            <div className="flex justify-center items-center h-full">
-              <div className="w-8 h-8 border-4 border-primary/20 border-t-primary rounded-full animate-spin"></div>
-            </div>
+            <CircularLoader />
           ) : filteredMails.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-full text-gray-400 space-y-4">
-              <div className="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center">
-                <MailIcon className="w-10 h-10 text-gray-300" />
+            <div className="flex flex-col items-center justify-center h-full text-slate-400 dark:text-slate-600 gap-4">
+              <div className="w-20 h-20 bg-slate-50 dark:bg-slate-800/60 rounded-full flex items-center justify-center">
+                <MailIcon className="w-10 h-10 text-slate-300 dark:text-slate-600" />
               </div>
-              <p className="text-lg font-medium text-gray-500">لا توجد رسائل هنا</p>
+              <p className="text-[length:var(--mail-fs-subject)] font-bold text-slate-500 dark:text-slate-400">لا توجد رسائل هنا</p>
             </div>
           ) : (
-            <div className="divide-y divide-gray-100">
-              {filteredMails.map((item) => {
-                const mail = item.mail || item; // Handle both MailRecipient and InternalMail
-                const isUnread = item.isRead === false;
-                const mailId = mail.id;
-
-                // For inbox/trash/starred, show sender. For sent, show recipients.
-                let displayName = "";
-                let displayAvatar = null;
-
-                if (currentTab === "sent") {
-                  const recipients = mail.recipients || [];
-                  if (recipients.length > 0) {
-                    displayName = recipients.map((r: any) => r.employee.name).join(", ");
-                    displayAvatar = recipients[0].employee.avatarUrl;
-                  }
-                } else {
-                  displayName = mail.sender?.name;
-                  displayAvatar = mail.sender?.avatarUrl;
-                }
-
-                return (
-                  <div
-                    key={item.id}
-                    className={`group flex items-center gap-4 px-4 py-3 hover:shadow-md cursor-pointer transition-all border-l-4 ${isUnread ? "bg-primary/5 border-primary" : "bg-white border-transparent hover:border-gray-300"
-                      }`}
-                    onClick={() => {
-                      if (!isUnread) {
-                        router.push(`/main/mail/${mailId}`);
-                      } else {
-                        // Mark as read then navigate
-                        markAsRead(mailId).then(() => {
-                          router.push(`/main/mail/${mailId}`);
-                        });
-                      }
-                    }}
-                  >
-                    <div className="flex items-center gap-3 w-48 shrink-0">
-                      <div onClick={(e) => handleSelectMail(e, item.id)} className="p-2 cursor-pointer text-gray-400 hover:text-primary">
-                        {selectedMails.includes(item.id) ? (
-                          <CheckSquare className="w-5 h-5 text-primary" />
-                        ) : (
-                          <Square className="w-5 h-5" />
-                        )}
-                      </div>
-
-                      {currentTab !== "sent" && currentTab !== "trash" && (
-                        <button
-                          onClick={(e) => handleToggleStar(e, mailId)}
-                          className="p-1"
-                        >
-                          <Star className={`w-5 h-5 ${item.isStarred ? "fill-yellow-400 text-yellow-400" : "text-gray-300 group-hover:text-gray-400"}`} />
-                        </button>
-                      )}
-
-                      <div className="truncate font-medium text-gray-900 text-sm">
-                        {displayName || "غير معروف"}
-                      </div>
-                    </div>
-
-                    <div className="flex-1 min-w-0 flex items-center gap-2">
-                      <div className={`truncate text-sm ${isUnread ? "font-bold text-gray-900" : "font-medium text-gray-700"}`}>
-                        {mail.subject || "(بدون موضوع)"}
-                      </div>
-                      <span className="text-gray-400 mx-1">-</span>
-                      <div className="truncate text-sm text-gray-500 font-normal">
-                        {mail.body.replace(/<[^>]*>?/gm, '').substring(0, 100)}
-                      </div>
-                    </div>
-
-                    <div className="flex items-center gap-4 shrink-0">
-                      {mail.attachments && mail.attachments.length > 0 && (
-                        <Paperclip className="w-4 h-4 text-gray-400" />
-                      )}
-                      <div className={`text-xs whitespace-nowrap ${isUnread ? "font-bold text-primary" : "text-gray-500 font-medium"}`}>
-                        {new Intl.DateTimeFormat("ar-SA", { month: "short", day: "numeric" }).format(new Date(mail.createdAt))}
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
+            <ul role="list" className="divide-y divide-slate-100 dark:divide-slate-800/70">
+              {filteredMails.map((item) => (
+                <MailRow
+                  key={item.id}
+                  item={normalizeMailListItem(item, currentTab, employeesById)}
+                  isSelected={selectedMails.includes(item.id)}
+                  showStar={currentTab !== "sent" && currentTab !== "trash" && currentTab !== "drafts"}
+                  asButton={currentTab === "drafts"}
+                  onToggleSelect={handleToggleSelect}
+                  onToggleStar={handleToggleStar}
+                  onOpen={currentTab === "drafts" ? handleOpenDraft : handleOpenMail}
+                />
+              ))}
+            </ul>
           )}
         </div>
       </div>
@@ -411,12 +375,43 @@ export default function MailClient({ session, employees, initialTab }: MailClien
           employees={employees}
           onSuccess={() => {
             setIsComposeOpen(false);
-            if (currentTab === "sent") {
-              fetchMails();
-            }
+            fetchMails();
           }}
         />
       )}
+
+      {editingDraft && (
+        <ComposeModal
+          isOpen={!!editingDraft}
+          onClose={() => {
+            setEditingDraft(null);
+            fetchMails();
+          }}
+          employees={employees}
+          draft={editingDraft}
+          onSuccess={() => {
+            setEditingDraft(null);
+            fetchMails();
+          }}
+        />
+      )}
+
+      <ConfirmModal
+        isOpen={confirmAction !== null}
+        title={confirmAction === "delete" ? (currentTab === "drafts" ? "حذف المسودات" : "حذف الرسائل نهائياً") : "نقل الرسائل إلى المهملات"}
+        message={
+          confirmAction === "delete"
+            ? currentTab === "drafts"
+              ? "هل أنت متأكد من حذف المسودات المحددة؟ لا يمكن التراجع عن هذا الإجراء."
+              : "هل أنت متأكد من حذف الرسائل المحددة نهائياً؟ لا يمكن التراجع عن هذا الإجراء."
+            : "هل أنت متأكد من نقل الرسائل المحددة إلى سلة المهملات؟"
+        }
+        onCancel={() => setConfirmAction(null)}
+        onConfirm={() =>
+          runBulkAction(confirmAction === "delete" ? (currentTab === "drafts" ? deleteDraft : deletePermanently) : moveToTrash)
+        }
+        isPending={isBulkPending}
+      />
     </div>
   );
 }

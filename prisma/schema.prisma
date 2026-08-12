@@ -798,13 +798,21 @@ model InternalMail {
   
   // حالة المرسل
   isDeletedBySender Boolean      @default(false) // حذف من "المرسل"
-  
+
+  // المسودات — تُحفظ قبل الإرسال الفعلي ولا تملك MailRecipient بعد
+  isDraft       Boolean          @default(false)
+  draftToIds    String[]         @default([])
+  draftCcIds    String[]         @default([])
+  draftBccIds   String[]         @default([])
+
   recipients    MailRecipient[]
   attachments   MailAttachment[]
-  
+
   createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @default(now()) @updatedAt
 
   @@index([senderId])
+  @@index([senderId, isDraft])
   @@index([parentId])
 }
 

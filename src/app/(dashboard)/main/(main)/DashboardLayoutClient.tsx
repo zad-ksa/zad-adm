@@ -4,7 +4,7 @@ import { usePathname } from "next/navigation";
 import EmployeeSidebar from "@/components/EmployeeSidebar";
 import { useState, useEffect, useRef } from "react";
 import { Menu } from "lucide-react";
-import { getUnreadNotificationsCount } from "@/app/actions/requests";
+import { getUnreadNotificationsCount } from "@/app/actions/approvals";
 import { getUnreadNotifications } from "@/app/actions/notifications";
 import FloatingHeader from "@/components/FloatingHeader";
 

@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { X, Send, Link2, FileText, Trash2, AlertCircle, Loader2 } from "lucide-react";
-import { createRequest, resubmitRequest } from "@/app/actions/requests";
+import { createRequest, resubmitRequest } from "@/app/actions/approvals";
 
 type Priority = "LOW" | "MEDIUM" | "HIGH" | "URGENT";
 

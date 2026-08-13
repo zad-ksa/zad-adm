@@ -87,7 +87,7 @@ export async function createRequest(data: {
         firstStep.approverId,
         "طلب جديد",
         `تم رفع طلب جديد للمراجعة: ${request.title}`,
-        "/main/requests"
+        "/main/approvals"
       );
     }
   } else {
@@ -104,7 +104,7 @@ export async function createRequest(data: {
     }
   }
 
-  revalidatePath("/main/requests");
+  revalidatePath("/main/approvals");
   return request;
 }
 
@@ -170,7 +170,7 @@ export async function reviewRequest(data: {
         nextStep.approverId,
         "طلب للمراجعة",
         `تم تحويل طلب لمراجعتك: ${request.title}`,
-        "/main/requests"
+        "/main/approvals"
       );
     } else {
       // لا توجد خطوة تالية — اعتمد نهائياً
@@ -188,7 +188,7 @@ export async function reviewRequest(data: {
         request.createdById,
         "قبول طلب الاعتماد",
         `تم اعتماد طلبك بشكل نهائي: ${request.title}`,
-        "/main/requests"
+        "/main/approvals"
       );
     }
   } else if (data.action === "APPROVED_FINAL") {
@@ -206,7 +206,7 @@ export async function reviewRequest(data: {
       request.createdById,
       "قبول طلب الاعتماد",
       `تم اعتماد طلبك بشكل نهائي: ${request.title}`,
-      "/main/requests"
+      "/main/approvals"
     );
   } else if (data.action === "REJECTED") {
     await prisma.request.update({
@@ -250,7 +250,7 @@ export async function reviewRequest(data: {
     }
   }
 
-  revalidatePath("/main/requests");
+  revalidatePath("/main/approvals");
 }
 
 // ── إعادة إرسال طلب مرجع ─────────────────────────────────────────────────────
@@ -318,7 +318,7 @@ export async function resubmitRequest(data: {
     }
   }
 
-  revalidatePath("/main/requests");
+  revalidatePath("/main/approvals");
 }
 
 // ── حذف طلب ──────────────────────────────────────────────────────────────────
@@ -338,7 +338,7 @@ export async function deleteRequest(requestId: string) {
   if (!canDelete) throw new Error("غير مصرح بحذف هذا الطلب");
 
   await prisma.request.delete({ where: { id: requestId } });
-  revalidatePath("/main/requests");
+  revalidatePath("/main/approvals");
 }
 
 // ── جلب الطلبات (للـ polling في المكون) ──────────────────────────────────────
@@ -400,7 +400,7 @@ export async function markNotificationsRead() {
     where: { employeeId: session.id, isRead: false },
     data: { isRead: true },
   });
-  revalidatePath("/main/requests");
+  revalidatePath("/main/approvals");
 }
 
 export async function getUnreadNotificationsCount() {

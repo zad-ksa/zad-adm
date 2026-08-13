@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { X, ShieldCheck, ArrowRight, Check, CornerUpLeft, UserCheck, AlertCircle, Loader2 } from "lucide-react";
-import { reviewRequest } from "@/app/actions/requests";
+import { reviewRequest } from "@/app/actions/approvals";
 
 type ReviewAction = "APPROVED_FINAL" | "FORWARDED" | "REJECTED" | "RETURNED" | "DELEGATED";
 

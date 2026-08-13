@@ -10,13 +10,13 @@ import {
 import {
   createRequest, reviewRequest, resubmitRequest, deleteRequest,
   getMyRequests, getAllRequests,
-} from "@/app/actions/requests";
+} from "@/app/actions/approvals";
 import { useRoleLabels } from "@/components/RoleLabelsProvider";
 import { useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
 
-const RequestForm = dynamic(() => import("@/components/requests/RequestFormModal"), { ssr: false });
-const ReviewModal = dynamic(() => import("@/components/requests/ReviewModal"), { ssr: false });
+const RequestForm = dynamic(() => import("@/components/approvals/RequestFormModal"), { ssr: false });
+const ReviewModal = dynamic(() => import("@/components/approvals/ReviewModal"), { ssr: false });
 
 // ── الأقسام ───────────────────────────────────────────────────────────────────
 const CATEGORIES = [
@@ -385,7 +385,7 @@ export default function RequestsClient({ requests: initial, isExec, sessionId, a
           </div>
           <div>
             <h1 className="text-base font-bold text-slate-800 dark:text-slate-100">
-              {isExec ? "إدارة الطلبات" : "طلباتي"}
+              {isExec ? "إدارة الاعتمادات" : "اعتماداتي"}
             </h1>
             <p className="text-[11px] text-slate-500 dark:text-slate-400">
               {isExec ? `${requests.length} طلب · ${counts.PENDING} قيد المراجعة` : `${requests.length} طلب`}

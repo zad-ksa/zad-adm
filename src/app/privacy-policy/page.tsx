@@ -150,7 +150,7 @@ export default function PrivacyPolicyPage() {
         <div>
           <p className="text-slate-600 dark:text-slate-300 mb-3">نطبق الإجراءات التقنية والإدارية التالية لحماية بياناتكم:</p>
           <ul className="list-disc list-inside text-slate-600 dark:text-slate-300 space-y-2">
-            <li>تشفير كلمات مرور الجهات المانحة باستخدام خوارزميات التشفير المعتمدة (bcrypt)</li>
+            <li>تشفير كلمات مرور الجهات المانحة باستخدام خوارزميات التشفير المعتمدة (AES-256)</li>
             <li>تشفير جلسات المستخدم باستخدام رموز JWT الآمنة (HS256)</li>
             <li>استخدام ملفات تعريف ارتباط آمنة (httpOnly, secure, sameSite)</li>
             <li>نظام صلاحيات متعدد المستويات (RBAC) يعتمد على مبدأ أقل الامتيازات</li>

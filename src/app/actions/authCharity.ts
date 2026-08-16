@@ -18,7 +18,8 @@ export async function requestCharityOTP(phone: string) {
       cleanPhone.startsWith("0") ? cleanPhone : "0" + cleanPhone,
       cleanPhone.replace(/^0+/, "")
     ];
-    const isDevPhone = phoneVariants.some(p => p.includes("553973917"));
+    // Dev-only bypass — must never activate outside local development, regardless of the phone dialed.
+    const isDevPhone = process.env.NODE_ENV === "development" && phoneVariants.some(p => p.includes("553973917"));
 
     let user = await prisma.charityUser.findFirst({
       where: { phone: { in: phoneVariants } },
@@ -127,7 +128,8 @@ export async function verifyCharityOTP(phone: string, otp: string) {
       cleanPhone.startsWith("0") ? cleanPhone : "0" + cleanPhone,
       cleanPhone.replace(/^0+/, "")
     ];
-    const isDevPhone = phoneVariants.some(p => p.includes("553973917"));
+    // Dev-only bypass — must never activate outside local development, regardless of the phone dialed.
+    const isDevPhone = process.env.NODE_ENV === "development" && phoneVariants.some(p => p.includes("553973917"));
 
     // Skip Authentica OTP check for local dev test phone 0553973917
     if (!isDevPhone) {

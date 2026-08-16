@@ -5,6 +5,7 @@ import { prisma } from "@/lib/db";
 import { revalidatePath } from "next/cache";
 import { getSession } from "@/lib/auth";
 import { hasPermission, isAdmin } from "@/lib/permissions";
+import { encryptSecret } from "@/lib/encryption";
 import { processFirstGrant } from "./contracts";
 import { writeFile, mkdir } from "fs/promises";
 import { join } from "path";
@@ -354,25 +355,27 @@ export async function updateCharityLogo(charityId: string, logoUrl: string | nul
 export async function addDonorAccount(charityId: string, donorName: string, username: string, password: string, website?: string) {
   try {
     const session = await getSession();
-    if (!session || !session.id) return { success: false, message: "ط؛ظٹط± ظ…طµط±ط­" };
+    if (!session || !session.id) return { success: false, message: "غير مصرح" };
 
     const account = await (prisma as any).donorAccount.create({
       data: {
         charityId,
         donorName,
         username,
-        password,
+        password: encryptSecret(password),
         website: website || null,
       }
     });
 
     const charity = await prisma.charity.findUnique({ where: { id: charityId } });
     if (charity) revalidatePath(`/portal/${encodeURIComponent(charity.name)}/finance`);
-    
-    return { success: true, account };
+
+    // Return the plaintext password (not the encrypted DB value) so the client's
+    // optimistic UI update shows the real credential the user just typed.
+    return { success: true, account: { ...account, password } };
   } catch (error: any) {
     console.error("Error adding donor account:", error);
-    return { success: false, message: "ط­ط¯ط« ط®ط·ط£ ط£ط«ظ†ط§ط، ط¥ط¶ط§ظپط© ط­ط³ط§ط¨ ط§ظ„ط¬ظ‡ط© ط§ظ„ظ…ط§ظ†ط­ط©" };
+    return { success: false, message: "حدث خطأ أثناء إضافة حساب الجهة المانحة" };
   }
 }
 

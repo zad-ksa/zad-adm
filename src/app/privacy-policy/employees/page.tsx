@@ -93,7 +93,7 @@ export default function EmployeePrivacyPolicyPage() {
             <h4 className="font-bold text-slate-800 dark:text-slate-200 mb-2">3.4 بيانات حسابات الجهات المانحة:</h4>
             <ul className="list-disc list-inside text-slate-600 dark:text-slate-300 space-y-1">
               <li>اسم الجهة المانحة واسم المستخدم</li>
-              <li>كلمة المرور (تُخزّن مُشفّرة بخوارزمية bcrypt)</li>
+              <li>كلمة المرور (تُخزّن مُشفّرة بخوارزمية AES-256، وقابلة لفك التشفير للاستخدام في موقع الجهة المانحة فقط)</li>
               <li>رابط الموقع الإلكتروني</li>
             </ul>
           </div>
@@ -185,7 +185,7 @@ export default function EmployeePrivacyPolicyPage() {
           <p className="text-slate-600 dark:text-slate-300 mb-3">نطبق الإجراءات التالية لحماية بياناتكم:</p>
           <ul className="list-disc list-inside text-slate-600 dark:text-slate-300 space-y-2">
             <li>المصادقة عبر رمز التحقق (OTP) لكل عملية تسجيل دخول</li>
-            <li>تشفير كلمات مرور الجهات المانحة باستخدام bcrypt</li>
+            <li>تشفير كلمات مرور الجهات المانحة باستخدام AES-256</li>
             <li>تشفير جلسات المستخدم باستخدام JWT (خوارزمية HS256)</li>
             <li>ملفات تعريف ارتباط آمنة (httpOnly, secure, sameSite)</li>
             <li>نظام صلاحيات متعدد المستويات (RBAC) يعتمد على مبدأ أقل الامتيازات</li>

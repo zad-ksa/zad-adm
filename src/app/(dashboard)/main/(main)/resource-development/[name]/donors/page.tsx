@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import DonorsClient from "./DonorsClient";
 import { getSession } from "@/lib/auth";
+import { decryptSecret } from "@/lib/encryption";
 
 export const dynamic = "force-dynamic";
 
@@ -34,11 +35,16 @@ export default async function DonorsPage({ params }: { params: Promise<{ name: s
     notFound();
   }
 
+  const donorAccounts = charity.donorAccounts.map((account) => ({
+    ...account,
+    password: decryptSecret(account.password),
+  }));
+
   return (
     <DonorsClient
       charityId={charity.id}
       charityName={charity.name}
-      initialDonorAccounts={charity.donorAccounts}
+      initialDonorAccounts={donorAccounts}
       grantApplications={charity.grantApplications}
     />
   );

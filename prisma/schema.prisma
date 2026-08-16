@@ -72,6 +72,7 @@ model Charity {
   donorAccounts          DonorAccount[]
   grantApplications      GrantApplication[]
   charityUsers      CharityUserCharity[]
+  designRequests    DesignRequest[]
 }
 
 // ── حسابات وبوابة الجمعيات ──────────────────────────────────────────────────────────
@@ -96,6 +97,7 @@ model CharityUser {
   updatedAt   DateTime @updatedAt
   
   charities   CharityUserCharity[]
+  designRequests DesignRequest[] @relation("SubmittedDesignRequests")
 }
 
 model CharityUserCharity {
@@ -305,6 +307,8 @@ model Employee {
   createdMeetingSchedules MeetingSchedule[] @relation("CreatedMeetingSchedules")
   sentMails         InternalMail[]    @relation("SentMails")
   receivedMails     MailRecipient[]   @relation("ReceivedMails")
+  createdDesignRequests   DesignRequest[] @relation("CreatedDesignRequests")
+  completedDesignRequests DesignRequest[] @relation("CompletedDesignRequests")
 }
 
 model EmployeeCharity {
@@ -842,4 +846,59 @@ model MailAttachment {
   fileSize    Int?
 
   @@index([mailId])
+}
+
+// ── طلبات التصاميم ───────────────────────────────────────────────────────────
+
+enum DesignRequestStatus {
+  PENDING   // قيد التنفيذ / في الطابور
+  COMPLETED // منجز
+}
+
+model DesignRequest {
+  id          String              @id @default(uuid())
+  charityId   String
+  charity     Charity             @relation(fields: [charityId], references: [id], onDelete: Cascade)
+  title       String
+  description String?             @db.Text
+  status      DesignRequestStatus @default(PENDING)
+
+  // جدولة الطابور — تُحسب مرة واحدة عند الإنشاء ولا يُعاد حسابها أبداً بعد ذلك،
+  // حتى لو أُنجز طلب سابق قبل موعده. لا تُضف منطق إعادة جدولة هنا.
+  submittedAt            DateTime @default(now())
+  scheduledStartDate     DateTime
+  expectedCompletionDate DateTime
+
+  completedAt   DateTime?
+  completedById String?
+  completedBy   Employee? @relation("CompletedDesignRequests", fields: [completedById], references: [id], onDelete: SetNull)
+
+  // مصدر الطلب: أحد الحقلين فقط يكون مُعبّأً
+  charityUserId       String?
+  charityUser         CharityUser? @relation("SubmittedDesignRequests", fields: [charityUserId], references: [id], onDelete: SetNull)
+  createdByEmployeeId String?
+  createdByEmployee   Employee?    @relation("CreatedDesignRequests", fields: [createdByEmployeeId], references: [id], onDelete: SetNull)
+
+  attachments DesignRequestAttachment[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([charityId, status])
+  @@index([status])
+  @@index([scheduledStartDate])
+}
+
+model DesignRequestAttachment {
+  id           String        @id @default(uuid())
+  requestId    String
+  request      DesignRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
+  fileUrl      String
+  publicId     String
+  resourceType String        @default("raw") // "raw" | "image" | "video" — مطلوب لنجاح حذف الملف من Cloudinary
+  fileName     String
+  fileSize     Int?
+  createdAt    DateTime      @default(now())
+
+  @@index([requestId])
 }

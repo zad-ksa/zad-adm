@@ -11,7 +11,9 @@ export async function POST(request: Request) {
   try {
     const formData = await request.formData();
     const file = formData.get("file") as File;
-    
+    // Optional; defaults to the historical folder so existing callers are unaffected.
+    const folder = (formData.get("folder") as string) || "zad_charity_logos";
+
     if (!file) {
       return NextResponse.json({ error: "No file provided" }, { status: 400 });
     }
@@ -31,8 +33,8 @@ export async function POST(request: Request) {
       const resourceType = isMedia ? "auto" : "raw";
 
       cloudinary.uploader.upload_stream(
-        { 
-          folder: "zad_charity_logos", 
+        {
+          folder,
           resource_type: resourceType,
           // Cloudinary for raw files needs the extension in the public_id to serve it correctly
           public_id: nameWithoutExt.replace(/[^a-zA-Z0-9_-]/g, "_") + "_" + Date.now() + (ext && !isMedia ? `.${ext}` : ""),
@@ -44,9 +46,12 @@ export async function POST(request: Request) {
       ).end(buffer);
     });
 
-    return NextResponse.json({ 
+    return NextResponse.json({
       url: (result as any).secure_url,
       publicId: (result as any).public_id,
+      // Cloudinary needs the same resource_type back when deleting the asset,
+      // otherwise destroy() defaults to "image" and silently no-ops on raw files.
+      resourceType: (result as any).resource_type,
       name: file.name,
       size: file.size
     });

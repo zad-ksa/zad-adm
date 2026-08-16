@@ -99,28 +99,7 @@ export async function toggleEmployeeStatus(id: string, currentStatus: boolean) {
   }
 }
 
-export async function updateEmployeeCharities(
-  employeeId: string,
-  charityIds: string[]
-) {
-  try {
-    await checkManageEmployeesAuth();
-  } catch (err: any) {
-    throw new Error("FORBIDDEN");
-  }
 
-  await prisma.$transaction([
-    prisma.employeeCharity.deleteMany({ where: { employeeId } }),
-    ...(charityIds.length > 0
-      ? [prisma.employeeCharity.createMany({
-          data: charityIds.map((charityId) => ({ employeeId, charityId })),
-        })]
-      : []),
-  ]);
-
-  revalidatePath("/main/employees");
-  return { success: true };
-}
 
 export async function updateEmployee(
   id: string,
@@ -130,6 +109,7 @@ export async function updateEmployee(
     role: string;
     permissions: string[];
     password?: string;
+    charityIds?: string[];
   }
 ) {
   try {
@@ -169,6 +149,17 @@ export async function updateEmployee(
 
     if (data.password && data.password.trim() !== "") {
       updateData.password = await hash(data.password, 10);
+    }
+
+    if (data.charityIds && data.role !== "ADMIN") {
+      updateData.assignedCharities = {
+        deleteMany: {},
+        create: data.charityIds.map((charityId) => ({ charityId })),
+      };
+    } else if (data.role === "ADMIN") {
+      updateData.assignedCharities = {
+        deleteMany: {},
+      };
     }
 
     await prisma.employee.update({

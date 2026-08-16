@@ -1,0 +1,97 @@
+import { prisma } from "@/lib/db";
+import { getSession } from "@/lib/auth";
+import { redirect, notFound } from "next/navigation";
+import type { Metadata } from "next";
+import { Palette } from "lucide-react";
+import { formatCivilDate } from "@/lib/businessDays";
+import { getDesignRequestProgress } from "@/lib/designRequestProgress";
+import DesignRequestsPortalClient from "./DesignRequestsPortalClient";
+
+export const dynamic = "force-dynamic";
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ name: string }>;
+}): Promise<Metadata> {
+  const { name } = await params;
+  const decodedName = decodeURIComponent(name);
+  return { title: `طلبات التصاميم | ${decodedName}` };
+}
+
+export default async function DesignRequestsPortalPage({ params }: { params: Promise<{ name: string }> }) {
+  const { name } = await params;
+  const decodedName = decodeURIComponent(name);
+
+  const session = await getSession();
+  if (!session || session.userType !== "CHARITY_USER") redirect("/");
+
+  const charity = await prisma.charity.findUnique({
+    where: { name: decodedName },
+    select: { id: true, name: true },
+  });
+  if (!charity) notFound();
+
+  // Ownership check — the rest of the portal only verifies userType === CHARITY_USER
+  // without confirming session.charityId matches this charity. Design requests carry
+  // uploaded files and business data, so this page checks ownership explicitly.
+  if (session.charityId !== charity.id) notFound();
+
+  const requests = await prisma.designRequest.findMany({
+    where: { charityId: charity.id },
+    include: { attachments: true },
+    orderBy: { submittedAt: "desc" },
+  });
+
+  const items = requests.map((r) => {
+    const progress = getDesignRequestProgress({
+      scheduledStartDate: r.scheduledStartDate,
+      expectedCompletionDate: r.expectedCompletionDate,
+      status: r.status,
+    });
+    return {
+      request: {
+        id: r.id,
+        title: r.title,
+        description: r.description,
+        submittedAt: formatCivilDate(r.submittedAt),
+        scheduledStartDate: formatCivilDate(r.scheduledStartDate),
+        expectedCompletionDate:
+          progress.daysRemaining === 0 && !progress.isOverdue && r.status !== "COMPLETED"
+            ? "اليوم"
+            : formatCivilDate(r.expectedCompletionDate),
+        status: r.status,
+        attachments: r.attachments.map((a) => ({
+          id: a.id,
+          fileUrl: a.fileUrl,
+          fileName: a.fileName,
+          fileSize: a.fileSize,
+        })),
+      },
+      progress,
+    };
+  });
+
+  return (
+    <div className="design-requests-ui space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500" dir="rtl">
+      <div className="flex items-center gap-3 border-b border-slate-200 dark:border-slate-800 pb-6">
+        <div className="w-12 h-12 bg-white dark:bg-[#111] border border-slate-200 dark:border-slate-800 rounded-xl flex items-center justify-center shrink-0">
+          <Palette className="w-6 h-6 text-primary" />
+        </div>
+        <div>
+          <h1
+            className="font-bold text-primary dark:text-primary"
+            style={{ fontSize: "var(--dr-fs-h1)", letterSpacing: "var(--dr-tracking-h1)" }}
+          >
+            طلبات التصاميم
+          </h1>
+          <p className="text-slate-500 dark:text-slate-400" style={{ fontSize: "var(--dr-fs-meta)" }}>
+            {decodedName}
+          </p>
+        </div>
+      </div>
+
+      <DesignRequestsPortalClient charityId={charity.id} initialItems={items} />
+    </div>
+  );
+}

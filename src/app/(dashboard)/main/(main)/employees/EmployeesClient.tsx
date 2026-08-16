@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { toggleEmployeeStatus, updateEmployee, updateEmployeeCharities, deleteEmployee } from "./actions";
+import { toggleEmployeeStatus, updateEmployee, deleteEmployee } from "./actions";
 import {
   UserCircle,
   ShieldAlert,
@@ -155,16 +155,12 @@ export function EmployeesClient({
         role: editRole,
         permissions: editPermissions,
         password: editPassword || undefined,
+        charityIds: editCharityIds,
       });
 
       if (res.error) {
         setModalError(res.error);
         return;
-      }
-
-      // Save charity assignments for non-admin roles
-      if (!isAdmin(editRole)) {
-        await updateEmployeeCharities(editingEmployee.id, editCharityIds);
       }
 
       setModalSuccess(res.success || "تم تحديث البيانات بنجاح");

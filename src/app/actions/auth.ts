@@ -4,14 +4,12 @@ import { prisma } from "@/lib/db";
 import { encrypt, SESSION_MAX_AGE_SECONDS } from "@/lib/auth";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import { compare } from "bcryptjs";
 import { sendAuthenticaOTP, verifyAuthenticaOTP } from "@/lib/authentica";
 import { checkRateLimit } from "@/lib/rateLimit";
 import { logAudit } from "@/lib/auditLog";
 
 const OTP_REQUEST_LIMIT = { count: 3, windowMs: 15 * 60 * 1000 }; // 3 / 15 min
 const OTP_VERIFY_LIMIT = { count: 5, windowMs: 15 * 60 * 1000 }; // 5 / 15 min
-const PASSWORD_LOGIN_LIMIT = { count: 5, windowMs: 15 * 60 * 1000 }; // 5 / 15 min
 
 export async function requestEmployeeOTP(phone: string) {
   try {
@@ -123,85 +121,7 @@ export async function verifyEmployeeOTP(phone: string, otp: string) {
   redirect("/main");
 }
 
-export async function loginWithPassword(phone: string, password: string) {
-  let employee;
-  try {
-    if (!phone || !password) {
-      return { error: "يرجى إدخال رقم الجوال وكلمة المرور" };
-    }
 
-    const rl = checkRateLimit(`emp-pw-login:${phone}`, PASSWORD_LOGIN_LIMIT.count, PASSWORD_LOGIN_LIMIT.windowMs);
-    if (!rl.allowed) {
-      return { error: `عدد محاولات كبير، يرجى المحاولة بعد ${Math.ceil(rl.retryAfterSeconds / 60)} دقيقة` };
-    }
-
-    // 1. Verify employee exists and is active in database
-    employee = await prisma.employee.findUnique({
-      where: { phone },
-      include: { charity: true }
-    });
-
-    if (!employee) {
-      await logAudit({ actorType: "EMPLOYEE", action: "LOGIN_FAILED", metadata: { phone, reason: "not_found" } });
-      return { error: "رقم الجوال غير مسجل أو الحساب غير نشط" };
-    }
-
-    if (!employee.isActive) {
-      await logAudit({ actorType: "EMPLOYEE", actorId: employee.id, actorName: employee.name, action: "LOGIN_FAILED", metadata: { reason: "inactive" } });
-      return { error: "الحساب غير نشط" };
-    }
-
-    if (!employee.password) {
-      return { error: "هذا الحساب لا يملك كلمة مرور" };
-    }
-
-    // 2. Compare password
-    const isPasswordValid = await compare(password, employee.password);
-    if (!isPasswordValid) {
-      await logAudit({ actorType: "EMPLOYEE", actorId: employee.id, actorName: employee.name, action: "LOGIN_FAILED", metadata: { reason: "wrong_password" } });
-      return { error: "كلمة المرور غير صحيحة" };
-    }
-
-    // 3. Create JWT Session
-    const sessionData = {
-      id: employee.id,
-      name: employee.name,
-      phone: employee.phone,
-      role: employee.role,
-      permissions: employee.permissions,
-      navOrder: employee.navOrder || [],
-      avatarUrl: employee.avatarUrl,
-      charityId: employee.charityId,
-    };
-
-    const encryptedSession = await encrypt(sessionData);
-
-    const cookieStore = await cookies();
-    cookieStore.set("session", encryptedSession, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
-      path: "/",
-      maxAge: SESSION_MAX_AGE_SECONDS, // 24h, refreshed via sliding renewal in proxy.ts
-    });
-
-    await logAudit({
-      actorType: "EMPLOYEE",
-      actorId: employee.id,
-      actorName: employee.name,
-      action: "LOGIN_SUCCESS",
-      metadata: { method: "password" },
-    });
-
-  } catch (error: any) {
-    console.error("Login Error:", error);
-    return { error: "حدث خطأ داخلي: " + (error.message || "Unknown error") };
-  }
-  
-
-  
-  redirect("/main");
-}
 
 export async function logout() {
   const { getSession } = await import("@/lib/auth");

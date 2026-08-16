@@ -6,6 +6,7 @@ import { revalidatePath } from "next/cache";
 import { getSession } from "@/lib/auth";
 import { hasPermission, isAdmin } from "@/lib/permissions";
 import { encryptSecret } from "@/lib/encryption";
+import { logAudit } from "@/lib/auditLog";
 import { processFirstGrant } from "./contracts";
 import { writeFile, mkdir } from "fs/promises";
 import { join } from "path";
@@ -367,6 +368,16 @@ export async function addDonorAccount(charityId: string, donorName: string, user
       }
     });
 
+    await logAudit({
+      actorType: "EMPLOYEE",
+      actorId: session.id,
+      actorName: session.name,
+      action: "CREATE",
+      targetType: "DonorAccount",
+      targetId: account.id,
+      metadata: { donorName, charityId },
+    });
+
     const charity = await prisma.charity.findUnique({ where: { id: charityId } });
     if (charity) revalidatePath(`/portal/${encodeURIComponent(charity.name)}/finance`);
 
@@ -382,15 +393,27 @@ export async function addDonorAccount(charityId: string, donorName: string, user
 export async function deleteDonorAccount(accountId: string, charityId: string) {
   try {
     const session = await getSession();
-    if (!session || !session.id) return { success: false, message: "ط؛ظٹط± ظ…طµط±ط­" };
+    if (!session || !session.id) return { success: false, message: "غير مصرح" };
+
+    const target = await (prisma as any).donorAccount.findUnique({ where: { id: accountId }, select: { donorName: true } });
 
     await (prisma as any).donorAccount.delete({
       where: { id: accountId }
     });
 
+    await logAudit({
+      actorType: "EMPLOYEE",
+      actorId: session.id,
+      actorName: session.name,
+      action: "DELETE",
+      targetType: "DonorAccount",
+      targetId: accountId,
+      metadata: { donorName: target?.donorName, charityId },
+    });
+
     const charity = await prisma.charity.findUnique({ where: { id: charityId } });
     if (charity) revalidatePath(`/portal/${encodeURIComponent(charity.name)}/finance`);
-    
+
     return { success: true };
   } catch (error: any) {
     console.error("Error deleting donor account:", error);

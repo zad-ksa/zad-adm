@@ -902,3 +902,29 @@ model DesignRequestAttachment {
 
   @@index([requestId])
 }
+
+// ── سجل التدقيق (Audit Log) ─────────────────────────────────────────────────
+// لا توجد أي عملية تعديل أو حذف مبنية على هذا الجدول عمداً — السجلات للقراءة
+// فقط من داخل التطبيق، حماية لها من التلاعب.
+enum AuditActorType {
+  EMPLOYEE
+  CHARITY_USER
+  SYSTEM
+}
+
+model AuditLog {
+  id         String         @id @default(uuid())
+  actorType  AuditActorType
+  actorId    String?
+  actorName  String?
+  action     String         // "LOGIN_SUCCESS" | "LOGIN_FAILED" | "LOGOUT" | "PERMISSION_CHANGE" | "DELETE" | "CREATE" | "FILE_UPLOAD"
+  targetType String?        // e.g. "Employee", "RoleDefinition", "DonorAccount"
+  targetId   String?
+  metadata   Json?
+  ipAddress  String?
+  createdAt  DateTime       @default(now())
+
+  @@index([actorId])
+  @@index([action])
+  @@index([createdAt])
+}

@@ -1,16 +1,27 @@
 "use server";
 
 import { prisma } from "@/lib/db";
-import { encrypt } from "@/lib/auth";
+import { encrypt, SESSION_MAX_AGE_SECONDS } from "@/lib/auth";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { compare } from "bcryptjs";
 import { sendAuthenticaOTP, verifyAuthenticaOTP } from "@/lib/authentica";
+import { checkRateLimit } from "@/lib/rateLimit";
+import { logAudit } from "@/lib/auditLog";
+
+const OTP_REQUEST_LIMIT = { count: 3, windowMs: 15 * 60 * 1000 }; // 3 / 15 min
+const OTP_VERIFY_LIMIT = { count: 5, windowMs: 15 * 60 * 1000 }; // 5 / 15 min
+const PASSWORD_LOGIN_LIMIT = { count: 5, windowMs: 15 * 60 * 1000 }; // 5 / 15 min
 
 export async function requestEmployeeOTP(phone: string) {
   try {
     if (!phone) {
       return { error: "يرجى إدخال رقم الجوال" };
+    }
+
+    const rl = checkRateLimit(`emp-otp-req:${phone}`, OTP_REQUEST_LIMIT.count, OTP_REQUEST_LIMIT.windowMs);
+    if (!rl.allowed) {
+      return { error: `عدد محاولات كبير، يرجى المحاولة بعد ${Math.ceil(rl.retryAfterSeconds / 60)} دقيقة` };
     }
 
     const employee = await prisma.employee.findUnique({
@@ -48,11 +59,17 @@ export async function verifyEmployeeOTP(phone: string, otp: string) {
       return { error: "يرجى إدخال البيانات المطلوبة" };
     }
 
+    const rl = checkRateLimit(`emp-otp-verify:${phone}`, OTP_VERIFY_LIMIT.count, OTP_VERIFY_LIMIT.windowMs);
+    if (!rl.allowed) {
+      return { error: `عدد محاولات كبير، يرجى المحاولة بعد ${Math.ceil(rl.retryAfterSeconds / 60)} دقيقة` };
+    }
+
     if (process.env.NODE_ENV === "development" && phone === "0553973917") {
       // Local dev bypass - accept any OTP
     } else {
       const authenticaResult = await verifyAuthenticaOTP(phone, otp);
       if (authenticaResult.error) {
+        await logAudit({ actorType: "EMPLOYEE", action: "LOGIN_FAILED", metadata: { phone, reason: "invalid_otp" } });
         return { error: authenticaResult.error };
       }
     }
@@ -63,6 +80,7 @@ export async function verifyEmployeeOTP(phone: string, otp: string) {
     });
 
     if (!employee || !employee.isActive) {
+      await logAudit({ actorType: "EMPLOYEE", action: "LOGIN_FAILED", metadata: { phone, reason: "not_found_or_inactive" } });
       return { error: "الحساب غير موجود أو غير نشط" };
     }
 
@@ -86,14 +104,22 @@ export async function verifyEmployeeOTP(phone: string, otp: string) {
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",
       path: "/",
-      maxAge: 60 * 60 * 24 * 30, // 30 days
+      maxAge: SESSION_MAX_AGE_SECONDS, // 24h, refreshed via sliding renewal in proxy.ts
+    });
+
+    await logAudit({
+      actorType: "EMPLOYEE",
+      actorId: employee.id,
+      actorName: employee.name,
+      action: "LOGIN_SUCCESS",
+      metadata: { method: "otp" },
     });
 
   } catch (error: any) {
     console.error("Employee OTP Verify Error:", error);
     return { error: "حدث خطأ داخلي أثناء التحقق من الرمز" };
   }
-  
+
   redirect("/main");
 }
 
@@ -104,6 +130,11 @@ export async function loginWithPassword(phone: string, password: string) {
       return { error: "يرجى إدخال رقم الجوال وكلمة المرور" };
     }
 
+    const rl = checkRateLimit(`emp-pw-login:${phone}`, PASSWORD_LOGIN_LIMIT.count, PASSWORD_LOGIN_LIMIT.windowMs);
+    if (!rl.allowed) {
+      return { error: `عدد محاولات كبير، يرجى المحاولة بعد ${Math.ceil(rl.retryAfterSeconds / 60)} دقيقة` };
+    }
+
     // 1. Verify employee exists and is active in database
     employee = await prisma.employee.findUnique({
       where: { phone },
@@ -111,10 +142,12 @@ export async function loginWithPassword(phone: string, password: string) {
     });
 
     if (!employee) {
+      await logAudit({ actorType: "EMPLOYEE", action: "LOGIN_FAILED", metadata: { phone, reason: "not_found" } });
       return { error: "رقم الجوال غير مسجل أو الحساب غير نشط" };
     }
 
     if (!employee.isActive) {
+      await logAudit({ actorType: "EMPLOYEE", actorId: employee.id, actorName: employee.name, action: "LOGIN_FAILED", metadata: { reason: "inactive" } });
       return { error: "الحساب غير نشط" };
     }
 
@@ -125,6 +158,7 @@ export async function loginWithPassword(phone: string, password: string) {
     // 2. Compare password
     const isPasswordValid = await compare(password, employee.password);
     if (!isPasswordValid) {
+      await logAudit({ actorType: "EMPLOYEE", actorId: employee.id, actorName: employee.name, action: "LOGIN_FAILED", metadata: { reason: "wrong_password" } });
       return { error: "كلمة المرور غير صحيحة" };
     }
 
@@ -148,7 +182,15 @@ export async function loginWithPassword(phone: string, password: string) {
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",
       path: "/",
-      maxAge: 60 * 60 * 24 * 30, // 30 days
+      maxAge: SESSION_MAX_AGE_SECONDS, // 24h, refreshed via sliding renewal in proxy.ts
+    });
+
+    await logAudit({
+      actorType: "EMPLOYEE",
+      actorId: employee.id,
+      actorName: employee.name,
+      action: "LOGIN_SUCCESS",
+      metadata: { method: "password" },
     });
 
   } catch (error: any) {
@@ -162,6 +204,17 @@ export async function loginWithPassword(phone: string, password: string) {
 }
 
 export async function logout() {
+  const { getSession } = await import("@/lib/auth");
+  const session = await getSession();
+  if (session) {
+    await logAudit({
+      actorType: session.userType === "CHARITY_USER" ? "CHARITY_USER" : "EMPLOYEE",
+      actorId: session.id,
+      actorName: session.name,
+      action: "LOGOUT",
+    });
+  }
+
   const cookieStore = await cookies();
   cookieStore.delete("session");
   redirect("/");

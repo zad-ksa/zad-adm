@@ -1,15 +1,25 @@
 "use server";
 
 import { prisma } from "@/lib/db";
-import { encrypt } from "@/lib/auth";
+import { encrypt, SESSION_MAX_AGE_SECONDS } from "@/lib/auth";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { sendAuthenticaOTP, verifyAuthenticaOTP } from "@/lib/authentica";
+import { checkRateLimit } from "@/lib/rateLimit";
+import { logAudit } from "@/lib/auditLog";
+
+const OTP_REQUEST_LIMIT = { count: 3, windowMs: 15 * 60 * 1000 }; // 3 / 15 min
+const OTP_VERIFY_LIMIT = { count: 5, windowMs: 15 * 60 * 1000 }; // 5 / 15 min
 
 export async function requestCharityOTP(phone: string) {
   try {
     if (!phone) {
       return { error: "يرجى إدخال رقم الجوال" };
+    }
+
+    const rl = checkRateLimit(`charity-otp-req:${phone}`, OTP_REQUEST_LIMIT.count, OTP_REQUEST_LIMIT.windowMs);
+    if (!rl.allowed) {
+      return { error: `عدد محاولات كبير، يرجى المحاولة بعد ${Math.ceil(rl.retryAfterSeconds / 60)} دقيقة` };
     }
 
     const cleanPhone = phone.trim();
@@ -89,7 +99,7 @@ export async function requestCharityOTP(phone: string) {
         secure: process.env.NODE_ENV === "production",
         sameSite: "lax",
         path: "/",
-        maxAge: 60 * 60 * 24 * 30, // 30 days
+        maxAge: SESSION_MAX_AGE_SECONDS, // 24h, refreshed via sliding renewal in proxy.ts
       });
 
       if (user.charities.length > 1) {
@@ -122,6 +132,11 @@ export async function verifyCharityOTP(phone: string, otp: string) {
       return { error: "يرجى إدخال البيانات المطلوبة" };
     }
 
+    const rl = checkRateLimit(`charity-otp-verify:${phone.trim()}`, OTP_VERIFY_LIMIT.count, OTP_VERIFY_LIMIT.windowMs);
+    if (!rl.allowed) {
+      return { error: `عدد محاولات كبير، يرجى المحاولة بعد ${Math.ceil(rl.retryAfterSeconds / 60)} دقيقة` };
+    }
+
     const cleanPhone = phone.trim();
     const phoneVariants = [
       cleanPhone,
@@ -135,6 +150,7 @@ export async function verifyCharityOTP(phone: string, otp: string) {
     if (!isDevPhone) {
       const authenticaResult = await verifyAuthenticaOTP(phone, otp);
       if (authenticaResult.error) {
+        await logAudit({ actorType: "CHARITY_USER", action: "LOGIN_FAILED", metadata: { phone: cleanPhone, reason: "invalid_otp" } });
         return { error: authenticaResult.error };
       }
     }
@@ -149,6 +165,7 @@ export async function verifyCharityOTP(phone: string, otp: string) {
     });
 
     if (!user || !user.isActive) {
+      await logAudit({ actorType: "CHARITY_USER", action: "LOGIN_FAILED", metadata: { phone: cleanPhone, reason: "not_found_or_inactive" } });
       return { error: "الحساب غير موجود أو غير نشط" };
     }
 
@@ -179,7 +196,15 @@ export async function verifyCharityOTP(phone: string, otp: string) {
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",
       path: "/",
-      maxAge: 60 * 60 * 24 * 30, // 30 days
+      maxAge: SESSION_MAX_AGE_SECONDS, // 24h, refreshed via sliding renewal in proxy.ts
+    });
+
+    await logAudit({
+      actorType: "CHARITY_USER",
+      actorId: user.id,
+      actorName: user.name,
+      action: "LOGIN_SUCCESS",
+      metadata: { method: "otp", charityId: defaultCharity.id },
     });
 
   } catch (error: any) {
@@ -238,7 +263,7 @@ export async function selectCharitySession(charityId: string) {
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",
       path: "/",
-      maxAge: 60 * 60 * 24 * 30, // 30 days
+      maxAge: SESSION_MAX_AGE_SECONDS, // 24h, refreshed via sliding renewal in proxy.ts
     });
 
   } catch (error) {

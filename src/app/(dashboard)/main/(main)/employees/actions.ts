@@ -5,6 +5,7 @@ import { hash } from "bcryptjs";
 import { revalidatePath } from "next/cache";
 import { getSession } from "@/lib/auth";
 import { hasPermission } from "@/lib/permissions";
+import { logAudit } from "@/lib/auditLog";
 
 async function checkManageEmployeesAuth() {
   const session = await getSession();
@@ -140,6 +141,11 @@ export async function updateEmployee(
       return { error: "المسمى الوظيفي المحدد غير صالح" };
     }
 
+    const beforeEmployee = await prisma.employee.findUnique({
+      where: { id },
+      select: { name: true, role: true, permissions: true },
+    });
+
     const updateData: any = {
       name: data.name,
       phone: data.phone,
@@ -167,6 +173,28 @@ export async function updateEmployee(
       data: updateData,
     });
 
+    const roleChanged = beforeEmployee && beforeEmployee.role !== data.role;
+    const permissionsChanged =
+      beforeEmployee &&
+      JSON.stringify([...beforeEmployee.permissions].sort()) !== JSON.stringify([...data.permissions].sort());
+
+    if (roleChanged || permissionsChanged) {
+      const session = await getSession();
+      await logAudit({
+        actorType: "EMPLOYEE",
+        actorId: session?.id,
+        actorName: session?.name,
+        action: "PERMISSION_CHANGE",
+        targetType: "Employee",
+        targetId: id,
+        metadata: {
+          targetName: data.name,
+          before: { role: beforeEmployee?.role, permissions: beforeEmployee?.permissions },
+          after: { role: data.role, permissions: data.permissions },
+        },
+      });
+    }
+
     revalidatePath("/main/employees");
     return { success: "تم تحديث بيانات الموظف وصلاحياته بنجاح" };
   } catch (error: any) {
@@ -176,8 +204,9 @@ export async function updateEmployee(
 }
 
 export async function deleteEmployee(id: string) {
+  let session;
   try {
-    const session = await getSession();
+    session = await getSession();
     if (!session) throw new Error("Not authenticated");
     if (!hasPermission(session.role, session.permissions || [], "delete_employees")) {
       return { error: "ليس لديك صلاحية لحذف الموظفين" };
@@ -187,17 +216,29 @@ export async function deleteEmployee(id: string) {
   }
 
   try {
+    const target = await prisma.employee.findUnique({ where: { id }, select: { name: true } });
+
     // Delete employee charities first due to relation
     await prisma.employeeCharity.deleteMany({
       where: { employeeId: id },
     });
-    
+
     // Check if employee has tasks or achievements
     // Instead of failing, we might want to let Prisma handle referential integrity
     // or just try to delete the employee directly if cascade delete is configured.
     // Let's assume standard behavior.
     await prisma.employee.delete({
       where: { id },
+    });
+
+    await logAudit({
+      actorType: "EMPLOYEE",
+      actorId: session.id,
+      actorName: session.name,
+      action: "DELETE",
+      targetType: "Employee",
+      targetId: id,
+      metadata: { targetName: target?.name },
     });
 
     revalidatePath("/main/employees");

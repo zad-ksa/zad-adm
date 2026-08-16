@@ -10,11 +10,16 @@ function getSecretKey() {
   return new TextEncoder().encode(secretKey);
 }
 
+// Session lifetime: 24h, refreshed on every authenticated request via the
+// sliding-renewal logic in src/proxy.ts — active users never get logged out
+// mid-use, but an abandoned/stolen cookie expires within a day of last use.
+export const SESSION_MAX_AGE_SECONDS = 60 * 60 * 24;
+
 export async function encrypt(payload: any) {
   return await new SignJWT(payload)
     .setProtectedHeader({ alg: "HS256" })
     .setIssuedAt()
-    .setExpirationTime("30d")
+    .setExpirationTime("24h")
     .sign(getSecretKey());
 }
 

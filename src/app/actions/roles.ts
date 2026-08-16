@@ -4,6 +4,7 @@ import { prisma } from "@/lib/db";
 import { getSession } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
 import { hasPermission, isAdmin } from "@/lib/permissions";
+import { logAudit } from "@/lib/auditLog";
 
 // Utility for checking manage roles permission
 function canManageRoles(session: any) {
@@ -81,6 +82,18 @@ export async function updateRole(id: string, data: { displayName?: string; permi
         permissions: data.permissions !== undefined ? data.permissions : undefined,
       }
     });
+
+    if (data.permissions !== undefined) {
+      await logAudit({
+        actorType: "EMPLOYEE",
+        actorId: session.id,
+        actorName: session.name,
+        action: "PERMISSION_CHANGE",
+        targetType: "RoleDefinition",
+        targetId: id,
+        metadata: { roleKey: role.key, before: role.permissions, after: data.permissions },
+      });
+    }
 
     revalidatePath("/main/employees/roles");
     return { success: "تم تحديث المسمى بنجاح" };

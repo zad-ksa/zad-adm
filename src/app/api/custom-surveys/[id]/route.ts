@@ -1,6 +1,11 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
+import { requirePermission, authErrorResponse } from "@/lib/guards";
 
+// Deliberately public: the respondent page at /custom-survey/[id] loads the
+// survey structure through this handler before the visitor has any session.
+// The published link (slug) is the capability here, and it can be rotated via
+// the regenerate-link route. Every other handler below is staff-only.
 export async function GET(request: Request, context: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await context.params;
@@ -35,6 +40,12 @@ export async function GET(request: Request, context: { params: Promise<{ id: str
 }
 
 export async function PUT(request: Request, context: { params: Promise<{ id: string }> }) {
+  try {
+    await requirePermission("manage_surveys");
+  } catch (err) {
+    return authErrorResponse(err);
+  }
+
   try {
     const { id } = await context.params;
     const body = await request.json();
@@ -111,6 +122,12 @@ export async function PUT(request: Request, context: { params: Promise<{ id: str
 }
 
 export async function DELETE(request: Request, context: { params: Promise<{ id: string }> }) {
+  try {
+    await requirePermission("manage_surveys");
+  } catch (err) {
+    return authErrorResponse(err);
+  }
+
   try {
     const { id } = await context.params;
     await prisma.customSurvey.delete({

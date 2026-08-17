@@ -26,7 +26,25 @@ async function getStrategyService(charityId: string) {
   return service;
 }
 
+// Resolves a charity by name and applies the same access check the charityId
+// based actions in this file use. The visibility toggles below identify the
+// charity by name rather than id.
+async function assertCharityAccessByName(charityName: string) {
+  const session = await getSession();
+  if (!session) throw new Error("UNAUTHORIZED");
+  const charity = await prisma.charity.findUnique({
+    where: { name: charityName },
+    select: { id: true },
+  });
+  if (charity) await assertCharityAccess(session.id, session.role, charity.id);
+  return session;
+}
+
 export async function ensureStagesForCharity(charityId: string) {
+  const session = await getSession();
+  if (!session) throw new Error("UNAUTHORIZED");
+  await assertCharityAccess(session.id, session.role, charityId);
+
   const service = await getStrategyService(charityId);
   const existingStages = await prisma.serviceStage.findMany({ where: { serviceId: service.id } });
   if (existingStages.length > 0) return;
@@ -149,6 +167,11 @@ export async function deleteStrategicStage(stageId: string) {
 }
 
 export async function toggleActiveStrategicStage(stageId: string, isActive: boolean) {
+  const session = await getSession();
+  if (!session) throw new Error("UNAUTHORIZED");
+  const stageRef = await prisma.serviceStage.findUnique({ where: { id: stageId }, include: { service: true } });
+  if (stageRef) await assertCharityAccess(session.id, session.role, stageRef.service.charityId);
+
   const stage = await prisma.serviceStage.update({
     where: { id: stageId },
     data: { isActive },
@@ -212,6 +235,8 @@ export async function reorderStrategicStages(charityId: string, stageIds: string
 }
 
 export async function toggleReadinessVisibility(charityName: string, isVisible: boolean) {
+  await assertCharityAccessByName(charityName);
+
   await prisma.charity.update({
     where: { name: charityName },
     data: { isReadinessVisible: isVisible }
@@ -220,6 +245,8 @@ export async function toggleReadinessVisibility(charityName: string, isVisible: 
 }
 
 export async function togglePerformanceEditability(charityName: string, isEditable: boolean) {
+  await assertCharityAccessByName(charityName);
+
   await prisma.charity.update({
     where: { name: charityName },
     data: { isPerformanceEditable: isEditable }
@@ -229,6 +256,8 @@ export async function togglePerformanceEditability(charityName: string, isEditab
 }
 
 export async function toggleVisionMissionVisibility(charityName: string, isVisible: boolean) {
+  await assertCharityAccessByName(charityName);
+
   await prisma.charity.update({
     where: { name: charityName },
     data: { isVisionMissionVisible: isVisible }
@@ -238,6 +267,8 @@ export async function toggleVisionMissionVisibility(charityName: string, isVisib
 }
 
 export async function getCharityDashboardData(charityName: string) {
+  await assertCharityAccessByName(charityName);
+
   const charity = await prisma.charity.findUnique({
     where: { name: charityName },
     include: {

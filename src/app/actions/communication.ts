@@ -2,8 +2,18 @@
 
 import { prisma } from "@/lib/db";
 import { revalidatePath } from "next/cache";
+import { requirePermission } from "@/lib/guards";
 
+// Gated on the same permission the communication screen uses in
+// EmployeeSidebar. getCommunicationData in particular returns personal contact
+// details (chairman/CEO names and phone numbers) for every charity.
 export async function getCommunicationData() {
+  try {
+    await requirePermission("manage_communication");
+  } catch {
+    return { success: false, error: "غير مصرح" };
+  }
+
   try {
     const charities = await prisma.charity.findMany({
       include: {
@@ -51,6 +61,12 @@ export async function updateServiceResponsible(
   responsiblePhone: string | null
 ) {
   try {
+    await requirePermission("manage_communication");
+  } catch {
+    return { success: false, error: "غير مصرح" };
+  }
+
+  try {
     await prisma.service.update({
       where: { id: serviceId },
       data: {
@@ -78,6 +94,12 @@ export async function updateCharityContact(
     ceoPhone?: string | null;
   }
 ) {
+  try {
+    await requirePermission("manage_communication");
+  } catch {
+    return { success: false, error: "غير مصرح" };
+  }
+
   try {
     await prisma.charity.update({
       where: { id: charityId },

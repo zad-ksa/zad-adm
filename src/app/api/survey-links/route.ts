@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
-import { getSession } from "@/lib/auth";
+import { requirePermission, authErrorResponse } from "@/lib/guards";
 
 export async function GET(request: Request) {
   try {
@@ -47,11 +47,12 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
-    const session = await getSession();
-    if (!session) {
-      return NextResponse.json({ error: "غير مصرح" }, { status: 401 });
-    }
+    await requirePermission("manage_surveys");
+  } catch (err) {
+    return authErrorResponse(err);
+  }
 
+  try {
     const body = await request.json();
     const { charityName, surveyType, customQuestions } = body;
 
@@ -95,11 +96,12 @@ export async function POST(request: Request) {
 
 export async function PATCH(request: Request) {
   try {
-    const session = await getSession();
-    if (!session) {
-      return NextResponse.json({ error: "غير مصرح" }, { status: 401 });
-    }
+    await requirePermission("manage_surveys");
+  } catch (err) {
+    return authErrorResponse(err);
+  }
 
+  try {
     const body = await request.json();
     const { id, isActive } = body;
 

@@ -58,6 +58,18 @@ export async function markAllNotificationsAsRead() {
 }
 
 export async function createAppNotification(employeeId: string, title: string, message: string, link?: string) {
+  // Intended as an internal helper, but being exported from a "use server"
+  // file makes it a public endpoint — without this it accepted anonymous
+  // requests and could be used to push forged notifications to any employee.
+  // Every internal caller (approvals, designRequests) is already authenticated,
+  // so the guard is transparent to them.
+  try {
+    const session = await getSession();
+    if (!session) return { error: "غير مصرح" };
+  } catch {
+    return { error: "غير مصرح" };
+  }
+
   try {
     await prisma.appNotification.create({
       data: {

@@ -2,6 +2,7 @@
 
 import { prisma } from "@/lib/db";
 import { revalidatePath } from "next/cache";
+import { requirePermission } from "@/lib/guards";
 
 export type NavTabStatus = "OPEN" | "HIDDEN" | "COMING_SOON";
 
@@ -40,6 +41,14 @@ export async function getCharityGlobalNavSettings(): Promise<NavTabSetting[]> {
 }
 
 export async function updateCharityGlobalNavSettings(settings: NavTabSetting[]) {
+  // Writes a setting that affects the navigation of every charity portal.
+  // The read below stays open because portal layouts call it while rendering.
+  try {
+    await requirePermission("manage_charity_settings");
+  } catch {
+    return { success: false, error: "غير مصرح" };
+  }
+
   try {
     await prisma.globalSetting.upsert({
       where: { key: "CHARITY_PORTAL_NAV" },

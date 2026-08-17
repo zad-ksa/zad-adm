@@ -1,10 +1,17 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
+import { requirePermission, authErrorResponse } from "@/lib/guards";
 
 export async function POST(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  try {
+    await requirePermission("manage_surveys");
+  } catch (err) {
+    return authErrorResponse(err);
+  }
+
   try {
     const resolvedParams = await params;
     const { id } = resolvedParams;

@@ -11,9 +11,18 @@ cloudinary.config({
 
 export async function GET(request: Request) {
   try {
-    // Optionally secure this route with an authorization header
-    const authHeader = request.headers.get('authorization');
-    if (process.env.CRON_SECRET && authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+    // Fail closed: this route permanently deletes files from Cloudinary, so a
+    // missing CRON_SECRET must block the request rather than skip the check.
+    // (The previous `process.env.CRON_SECRET && ...` form disabled the guard
+    // entirely whenever the variable was unset, leaving the route public.)
+    const cronSecret = process.env.CRON_SECRET;
+    if (!cronSecret) {
+      console.error("Cleanup cron blocked: CRON_SECRET is not configured.");
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const authHeader = request.headers.get("authorization");
+    if (authHeader !== `Bearer ${cronSecret}`) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 

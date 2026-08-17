@@ -1,8 +1,15 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import crypto from "crypto";
+import { requirePermission, authErrorResponse } from "@/lib/guards";
 
 export async function PUT(request: Request, context: { params: Promise<{ id: string }> }) {
+  try {
+    await requirePermission("manage_surveys");
+  } catch (err) {
+    return authErrorResponse(err);
+  }
+
   try {
     const { id } = await context.params;
     

@@ -4,6 +4,7 @@ import { prisma } from "@/lib/db";
 import { revalidatePath } from "next/cache";
 import { getSession } from "@/lib/auth";
 import { assertCharityAccess } from "@/lib/access";
+import { requirePermission } from "@/lib/guards";
 import { syncServiceProgress } from "./services";
 
 async function getGovernanceService(charityId: string) {
@@ -118,6 +119,12 @@ export async function deleteGovernanceStage(stageId: string) {
 }
 
 export async function toggleActiveGovernanceStage(stageId: string, isActive: boolean) {
+  // Same guard as its siblings above — was previously reachable with no session.
+  const session = await getSession();
+  if (!session) throw new Error("UNAUTHORIZED");
+  const stageRef = await prisma.serviceStage.findUnique({ where: { id: stageId }, include: { service: true } });
+  if (stageRef) await assertCharityAccess(session.id, session.role, stageRef.service.charityId);
+
   const stage = await prisma.serviceStage.update({
     where: { id: stageId },
     data: { isActive },
@@ -176,7 +183,11 @@ export async function reorderGovernanceStages(charityId: string, stageIds: strin
   }
 }
 
+// Regulations are global (not charity-scoped), so there is no charity to check
+// access against — these gate on the governance permission instead.
 export async function addRegulation(title: string, category: string, link: string, description?: string) {
+  await requirePermission("manage_governance");
+
   await prisma.regulation.create({
     data: {
       title,
@@ -190,6 +201,8 @@ export async function addRegulation(title: string, category: string, link: strin
 }
 
 export async function deleteRegulation(regulationId: string) {
+  await requirePermission("manage_governance");
+
   await prisma.regulation.delete({
     where: { id: regulationId },
   });
@@ -198,6 +211,10 @@ export async function deleteRegulation(regulationId: string) {
 }
 
 export async function toggleRegulationVisibility(charityId: string, regulationId: string, isCurrentlyVisible: boolean) {
+  const session = await getSession();
+  if (!session) throw new Error("UNAUTHORIZED");
+  await assertCharityAccess(session.id, session.role, charityId);
+
   if (isCurrentlyVisible) {
     await prisma.charityRegulationVisibility.create({
       data: {
@@ -220,6 +237,10 @@ export async function toggleRegulationVisibility(charityId: string, regulationId
 
 export async function updateCharitySize(charityId: string, size: "MICRO" | "SMALL" | "MEDIUM" | "LARGE" | "MEGA") {
   try {
+    const session = await getSession();
+    if (!session) return { success: false, error: "غير مصرح" };
+    await assertCharityAccess(session.id, session.role, charityId);
+
     await prisma.charity.update({
       where: { id: charityId },
       data: { size },
@@ -234,6 +255,10 @@ export async function updateCharitySize(charityId: string, size: "MICRO" | "SMAL
 
 export async function updateCharityRevenueAndSize(charityId: string, revenue: number) {
   try {
+    const session = await getSession();
+    if (!session) return { success: false, error: "غير مصرح" };
+    await assertCharityAccess(session.id, session.role, charityId);
+
     let size: "MICRO" | "SMALL" | "MEDIUM" | "LARGE" | "MEGA" = "MEGA";
     if (revenue <= 500000) size = "MICRO";
     else if (revenue <= 2000000) size = "SMALL";
@@ -260,6 +285,10 @@ export async function updateGovernanceProgress(
   proofPublicId?: string
 ) {
   try {
+    const session = await getSession();
+    if (!session) return { success: false, error: "غير مصرح" };
+    await assertCharityAccess(session.id, session.role, charityId);
+
     await prisma.governanceProgress.upsert({
       where: {
         charityId_indicatorId: {

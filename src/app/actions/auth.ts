@@ -141,6 +141,22 @@ export async function logout() {
 }
 
 export async function setDeveloperOverrideEmployee(employeeId: string | null) {
+  // getSession() only honours this cookie for sessions holding developer_mode,
+  // but the action must enforce that itself rather than rely on a check living
+  // in another module — otherwise a future change to getSession turns this into
+  // a full privilege-escalation endpoint.
+  //
+  // originalId is accepted alongside developer_mode because while an override
+  // is active getSession() replaces session.permissions with the impersonated
+  // employee's — checking developer_mode alone would strand the developer in
+  // the impersonated identity with no way to call this action and reset.
+  const { getSession } = await import("@/lib/auth");
+  const session = await getSession();
+  const isDeveloper = session?.permissions?.includes("developer_mode") || !!session?.originalId;
+  if (!session || !isDeveloper) {
+    throw new Error("غير مصرح");
+  }
+
   const cookieStore = await cookies();
   if (employeeId) {
     cookieStore.set("dev_employee_override", employeeId, {

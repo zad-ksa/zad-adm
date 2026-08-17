@@ -2,6 +2,20 @@
 
 import { prisma } from "@/lib/db";
 import { revalidatePath } from "next/cache";
+import { requirePermission, requireAnyPermission } from "@/lib/guards";
+
+// Every action here mutates contractual/financial records, so each one guards
+// itself: server actions are directly reachable HTTP endpoints and are not
+// covered by the page-level protection in src/proxy.ts.
+//
+// "edit_contracts" mirrors the canEdit gate already used by the contracts page
+// (main/(main)/contracts/page.tsx), so no legitimate user loses access.
+//
+// The denial object is repeated inline rather than shared through a const on
+// purpose: TypeScript only pads *fresh* object literals returned from the same
+// function with optional undefined members, which is what keeps `res.error`
+// and `res.success` both accessible at the call sites. Returning a shared const
+// collapses that and breaks every caller's type-checking.
 
 export async function addInstallment(data: {
   charityId: string;
@@ -9,6 +23,12 @@ export async function addInstallment(data: {
   dueDate?: Date;
   isLinkedToFirstGrant?: boolean;
 }) {
+  try {
+    await requirePermission("edit_contracts");
+  } catch {
+    return { error: "ليس لديك صلاحية لإدارة العقود" };
+  }
+
   try {
     const installment = await prisma.contractInstallment.create({
       data: {
@@ -36,6 +56,12 @@ export async function updateInstallment(data: {
   isPaid?: boolean;
 }) {
   try {
+    await requirePermission("edit_contracts");
+  } catch {
+    return { error: "ليس لديك صلاحية لإدارة العقود" };
+  }
+
+  try {
     const installment = await prisma.contractInstallment.update({
       where: { id: data.id },
       data: {
@@ -56,6 +82,12 @@ export async function updateInstallment(data: {
 
 export async function deleteInstallment(id: string) {
   try {
+    await requirePermission("edit_contracts");
+  } catch {
+    return { error: "ليس لديك صلاحية لإدارة العقود" };
+  }
+
+  try {
     await prisma.contractInstallment.delete({
       where: { id },
     });
@@ -69,6 +101,14 @@ export async function deleteInstallment(id: string) {
 }
 
 export async function toggleInstallmentPaid(id: string, isPaid: boolean) {
+  // Reachable from two screens with different gates: the contracts screen
+  // (edit_contracts) and the charity finance screen (manage_finance).
+  try {
+    await requireAnyPermission(["edit_contracts", "manage_finance"]);
+  } catch {
+    return { error: "ليس لديك صلاحية لإدارة العقود" };
+  }
+
   try {
     const paidDate = isPaid ? new Date() : null;
     
@@ -140,6 +180,12 @@ export async function toggleInstallmentPaid(id: string, isPaid: boolean) {
 
 export async function processFirstGrant(charityId: string, grantDate: Date) {
   try {
+    await requirePermission("edit_contracts");
+  } catch {
+    return { error: "ليس لديك صلاحية لإدارة العقود" };
+  }
+
+  try {
     const installments = await prisma.contractInstallment.updateMany({
       where: { 
         charityId, 
@@ -164,6 +210,12 @@ export async function batchAddInstallments(data: {
   totalAmount: number;
   count: number;
 }) {
+  try {
+    await requirePermission("edit_contracts");
+  } catch {
+    return { error: "ليس لديك صلاحية لإدارة العقود" };
+  }
+
   try {
     if (data.count <= 0) return { error: "عدد الأقساط غير صالح" };
     

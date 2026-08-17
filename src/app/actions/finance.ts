@@ -118,6 +118,13 @@ export async function deleteFinanceStage(stageId: string) {
 }
 
 export async function toggleActiveFinanceStage(stageId: string, isActive: boolean) {
+  // Same guard as its siblings above — this was the only finance action
+  // reachable without a session.
+  const session = await getSession();
+  if (!session) throw new Error("UNAUTHORIZED");
+  const stageRef = await prisma.serviceStage.findUnique({ where: { id: stageId }, include: { service: true } });
+  if (stageRef) await assertCharityAccess(session.id, session.role, stageRef.service.charityId);
+
   const stage = await prisma.serviceStage.update({
     where: { id: stageId },
     data: { isActive },

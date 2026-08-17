@@ -1,7 +1,14 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
+import { requirePermission, authErrorResponse } from "@/lib/guards";
 
 export async function GET(request: Request) {
+  try {
+    await requirePermission("manage_surveys");
+  } catch (err) {
+    return authErrorResponse(err);
+  }
+
   try {
     const surveys = await prisma.customSurvey.findMany({
       orderBy: { createdAt: 'desc' },
@@ -20,6 +27,12 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
+  try {
+    await requirePermission("manage_surveys");
+  } catch (err) {
+    return authErrorResponse(err);
+  }
+
   try {
     const body = await request.json();
     const { title, introText } = body;

@@ -208,7 +208,35 @@ export async function getCharitiesForSelect() {
   return [];
 }
 
+// Stage-level actions below take a stageId/serviceId rather than a charityId,
+// so they resolve the owning charity first and then apply the same
+// assertCharityAccess check used by createService/updateService/deleteService.
+// All of their call sites live under (dashboard)/main, so this is an
+// employee-scoped guard.
+async function assertStageAccess(stageId: string) {
+  const session = await getSession();
+  if (!session) throw new Error("UNAUTHORIZED");
+  const stage = await prisma.serviceStage.findUnique({
+    where: { id: stageId },
+    include: { service: true },
+  });
+  if (stage) await assertCharityAccess(session.id, session.role, stage.service.charityId);
+  return session;
+}
+
+async function assertServiceAccess(serviceId: string) {
+  const session = await getSession();
+  if (!session) throw new Error("UNAUTHORIZED");
+  const service = await prisma.service.findUnique({ where: { id: serviceId } });
+  if (service) await assertCharityAccess(session.id, session.role, service.charityId);
+  return session;
+}
+
 export async function getServices(charityId: string, department?: string | null) {
+  const session = await getSession();
+  if (!session) throw new Error("UNAUTHORIZED");
+  await assertCharityAccess(session.id, session.role, charityId);
+
   const whereClause: any = { charityId };
   if (department !== undefined) {
     whereClause.department = department;
@@ -311,6 +339,8 @@ export async function addServiceStage(
   duration: string | null = null,
   isComingSoon: boolean = false
 ) {
+  await assertServiceAccess(serviceId);
+
   const lastStage = await prisma.serviceStage.findFirst({
     where: { serviceId },
     orderBy: { order: 'desc' }
@@ -355,6 +385,8 @@ export async function updateServiceStage(
   duration: string | null = null,
   isComingSoon: boolean = false
 ) {
+  await assertStageAccess(id);
+
   const stage: any = await (prisma as any).serviceStage.update({
     where: { id },
     data: { name, description, startDate, endDate, isContinuous, isActive, duration, isComingSoon },
@@ -372,6 +404,8 @@ export async function updateServiceStage(
 }
 
 export async function toggleServiceStageComingSoon(stageId: string, isComingSoon: boolean) {
+  await assertStageAccess(stageId);
+
   const stage: any = await (prisma as any).serviceStage.update({
     where: { id: stageId },
     data: { isComingSoon },
@@ -388,6 +422,8 @@ export async function toggleServiceStageComingSoon(stageId: string, isComingSoon
 }
 
 export async function deleteServiceStage(id: string) {
+  await assertStageAccess(id);
+
   const stage = await prisma.serviceStage.delete({
     where: { id },
 
@@ -407,6 +443,8 @@ export async function deleteServiceStage(id: string) {
 }
 
 export async function toggleActiveServiceStage(stageId: string, isActive: boolean) {
+  await assertStageAccess(stageId);
+
   const stage = await prisma.serviceStage.update({
     where: { id: stageId },
     data: { isActive },
@@ -423,7 +461,11 @@ export async function toggleActiveServiceStage(stageId: string, isActive: boolea
 
 export async function reorderServiceStages(stageIds: string[]) {
   if (stageIds.length === 0) return;
-  
+
+  // All ids belong to one service in every call site; checking the first is
+  // enough to establish charity access before the reorder loop.
+  await assertStageAccess(stageIds[0]);
+
   for (let i = 0; i < stageIds.length; i++) {
     await prisma.serviceStage.update({
       where: { id: stageIds[i] },
@@ -450,6 +492,11 @@ export async function syncServiceProgress(
   serviceId: string,
   actionOrForcedId?: SyncAction | string
 ) {
+  // Also called internally from finance.ts/governance.ts, but those callers
+  // already run inside an authenticated, charity-checked request, so the guard
+  // is a no-op for them and only blocks direct external invocation.
+  await assertServiceAccess(serviceId);
+
   const allStages = await prisma.serviceStage.findMany({
     where: { serviceId },
     orderBy: { order: 'asc' },

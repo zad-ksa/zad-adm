@@ -5,6 +5,7 @@ import { prisma } from "@/lib/db";
 import { revalidatePath } from "next/cache";
 import { getSession } from "@/lib/auth";
 import { hasPermission, isAdmin } from "@/lib/permissions";
+import { requirePermission } from "@/lib/guards";
 import { encryptSecret } from "@/lib/encryption";
 import { logAudit } from "@/lib/auditLog";
 import { processFirstGrant } from "./contracts";
@@ -52,6 +53,12 @@ export const getCharities = async () => {
   };
 
 export async function addCharity(data: { name: string; establishmentDate?: string; licenseNumber?: string; domain?: string; logoUrl?: string | null }) {
+  try {
+    await requirePermission("manage_charity_accounts");
+  } catch {
+    return { success: false, message: "ليس لديك صلاحية لإضافة جمعية" };
+  }
+
   try {
     const existing = await prisma.charity.findUnique({
       where: { name: data.name.trim() }
@@ -174,6 +181,12 @@ export async function deleteCharity(id: string) {
 
 // Temporary function to seed charities from existing survey responses
 export async function bootstrapCharities() {
+  try {
+    await requirePermission("manage_charity_accounts");
+  } catch {
+    return { success: false, message: "ليس لديك صلاحية لتنفيذ هذه العملية" };
+  }
+
   try {
     const surveys = await prisma.surveyResponse.findMany();
     const hexs = await prisma.hexagonalResponse.findMany();

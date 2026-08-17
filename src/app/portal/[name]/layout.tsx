@@ -39,6 +39,20 @@ export default async function CharityLayout({
     name: c.charity.name
   })) || [];
 
+  // Ownership gate: the check above only proves the visitor is *a* charity
+  // account, not that this charity is theirs — without this, any logged-in
+  // charity account could read another charity's portal by typing its name in
+  // the URL.
+  //
+  // Membership is tested against the full linked-charities list rather than
+  // session.charityId, because an account may be linked to several charities
+  // and switch between them (selectCharitySession); comparing the single
+  // session.charityId would lock those users out of their own other charities.
+  const isMember = availableCharities.some((c) => c.id === charity.id);
+  if (!isMember) {
+    notFound();
+  }
+
   return (
     <CharityLayoutClient
       charityName={decodedName}

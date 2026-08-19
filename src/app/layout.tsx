@@ -23,7 +23,25 @@ export const metadata: Metadata = {
     template: "%s | زاد التنموية",
     default: "زاد التنموية",
   },
-  description: "استبيان الجاهزية لأثر مستدام - إعداد زاد التنموية",
+  description: "شركة زاد الإدارة التنموية - الشريك الاستراتيجي الموثوق لتمكين وتطوير القطاع غير الربحي",
+  openGraph: {
+    title: {
+      template: "%s | زاد التنموية",
+      default: "زاد التنموية",
+    },
+    description: "شركة زاد الإدارة التنموية - الشريك الاستراتيجي الموثوق لتمكين وتطوير القطاع غير الربحي",
+    siteName: "زاد التنموية",
+    locale: "ar_SA",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: {
+      template: "%s | زاد التنموية",
+      default: "زاد التنموية",
+    },
+    description: "شركة زاد الإدارة التنموية - الشريك الاستراتيجي الموثوق لتمكين وتطوير القطاع غير الربحي",
+  },
 };
 
 export default function RootLayout({

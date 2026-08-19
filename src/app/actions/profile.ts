@@ -1,9 +1,28 @@
 "use server";
 
 import { prisma } from "@/lib/db";
-import { encrypt, decrypt } from "@/lib/auth";
+import { encrypt, getSession, SESSION_MAX_AGE_SECONDS } from "@/lib/auth";
 import { cookies } from "next/headers";
 import { hash } from "bcryptjs";
+
+// Both actions below previously decrypted the session cookie by hand instead of
+// calling getSession(). That skipped getSession's database check, so a
+// deactivated or deleted employee holding a still-valid cookie could keep
+// editing their profile and refreshing their session indefinitely.
+//
+// They also refuse to run while a developer override is active: both rewrite
+// the session cookie from the *current* session identity, which during
+// impersonation is the impersonated employee — writing that back would
+// permanently replace the developer's own identity (and their developer_mode)
+// in the cookie.
+async function requireRealEmployee() {
+  const session = await getSession();
+  if (!session || !session.id) return { error: "غير مصرح لك بإجراء هذا التعديل" as const };
+  if (session.originalId) {
+    return { error: "لا يمكن تعديل الملف الشخصي أثناء تفعيل وضع انتحال هوية موظف آخر" as const };
+  }
+  return { session };
+}
 
 export async function updateProfile(data: {
   name: string;
@@ -11,21 +30,9 @@ export async function updateProfile(data: {
   password?: string;
   avatarUrl?: string | null;
 }) {
-  const session = (await cookies()).get("session")?.value;
-  if (!session) {
-    return { error: "غير مصرح لك بإجراء هذا التعديل" };
-  }
-
-  let currentUser;
-  try {
-    currentUser = await decrypt(session);
-  } catch (e) {
-    return { error: "انتهت صلاحية الجلسة" };
-  }
-
-  if (!currentUser || !currentUser.id) {
-    return { error: "مستخدم غير صالح" };
-  }
+  const auth = await requireRealEmployee();
+  if ("error" in auth) return { error: auth.error };
+  const currentUser = auth.session;
 
   const { name, phone, password, avatarUrl } = data;
 
@@ -90,24 +97,16 @@ export async function updateProfile(data: {
     secure: process.env.NODE_ENV === "production",
     sameSite: "lax",
     path: "/",
-    maxAge: 60 * 60 * 24, // 1 day
+    maxAge: SESSION_MAX_AGE_SECONDS,
   });
 
   return { success: "تم تحديث الملف الشخصي بنجاح", user: sessionData };
 }
 
 export async function updateNavOrder(newOrder: string[]) {
-  const session = (await cookies()).get("session")?.value;
-  if (!session) return { error: "غير مصرح" };
-
-  let currentUser;
-  try {
-    currentUser = await decrypt(session);
-  } catch (e) {
-    return { error: "انتهت صلاحية الجلسة" };
-  }
-
-  if (!currentUser || !currentUser.id) return { error: "مستخدم غير صالح" };
+  const auth = await requireRealEmployee();
+  if ("error" in auth) return { error: auth.error };
+  const currentUser = auth.session;
 
   const updatedEmployee = await prisma.employee.update({
     where: { id: currentUser.id },
@@ -115,8 +114,12 @@ export async function updateNavOrder(newOrder: string[]) {
     data: { navOrder: newOrder },
   });
 
+  // Strip the JWT's own claims and getSession's derived flag before re-signing,
+  // so they are not baked into the new token as if they were session data.
+  const { exp, iat, nbf, isDeveloper, ...baseSession } = currentUser as Record<string, unknown>;
+
   const sessionData = {
-    ...currentUser,
+    ...baseSession,
     // @ts-ignore
     navOrder: updatedEmployee.navOrder || [],
   };
@@ -129,7 +132,7 @@ export async function updateNavOrder(newOrder: string[]) {
     secure: process.env.NODE_ENV === "production",
     sameSite: "lax",
     path: "/",
-    maxAge: 60 * 60 * 24, // 1 day
+    maxAge: SESSION_MAX_AGE_SECONDS,
   });
 
   return { success: true, navOrder: sessionData.navOrder };

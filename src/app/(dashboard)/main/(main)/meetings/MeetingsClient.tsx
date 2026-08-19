@@ -280,8 +280,13 @@ export default function MeetingsClient({ meetings, charities, employees, session
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ formattedContent: data.formattedContent }),
         }).then(r => r.json()).then(async result => {
+          // Don't record a failed extraction as a completed one — writing an
+          // empty summary marked the meeting analysed and hid the retry path.
+          if (result?.ok === false) return;
           try {
-            await updateMeeting(savedId!, { summary: result.summary || "" });
+            if (result.summary) {
+              await updateMeeting(savedId!, { summary: result.summary });
+            }
             if (result.tasks?.length > 0) {
               await insertAiTasksIfEmpty(savedId!, result.tasks as { title: string }[]);
             }

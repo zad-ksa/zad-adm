@@ -1,11 +1,6 @@
 import Anthropic from "@anthropic-ai/sdk";
-import { getSession } from "@/lib/auth";
 import { NextRequest, NextResponse } from "next/server";
-
-const ALL_STAFF = [
-  "ADMIN", "EXECUTIVE_DIRECTOR", "GENERAL_MANAGER",
-  "ADMINISTRATIVE_SECRETARIAT", "STRATEGY", "FINANCE", "GOVERNANCE"
-];
+import { requirePermission, authErrorResponse } from "@/lib/guards";
 
 const SYSTEM_PROMPT = `أنت مساعد متخصص في تنسيق محاضر اجتماعات شركة زاد للخدمات التنموية.
 مهمتك: تحويل الملاحظات الخام غير المنظمة إلى محضر اجتماع رسمي باللغة العربية الفصحى.
@@ -43,12 +38,21 @@ const SYSTEM_PROMPT = `أنت مساعد متخصص في تنسيق محاضر �
 - إذا لم يُذكر عنصر ما، احذف قسمه أو اكتب "لم يُحدد"`;
 
 export async function POST(req: NextRequest) {
+  // Was gated on a hardcoded role list, which meant edits to a role's
+  // permissions had no effect here and any newly created role was excluded.
+  // Resolution now goes through hasPermission() like the rest of the codebase.
+  //
+  // "manage_meetings" mirrors the gate on the meetings page itself, so anyone
+  // who can open that screen can format notes. The sibling extract-tasks route
+  // deliberately stays on the stricter isTier1 check — that is a separate,
+  // elevated capability, not an inconsistency to flatten.
   try {
-    const session = await getSession();
-    if (!session || !ALL_STAFF.includes(session.role)) {
-      return NextResponse.json({ error: "غير مصرح" }, { status: 401 });
-    }
+    await requirePermission("manage_meetings");
+  } catch (err) {
+    return authErrorResponse(err);
+  }
 
+  try {
     let body: any;
     try {
       body = await req.json();
@@ -79,13 +83,22 @@ ${rawNotes}
 
     const message = await client.messages.create({
       model: "claude-haiku-4-5-20251001",
-      max_tokens: 4096,
+      // A long محضر in Arabic blew past the old 4096 cap, and the cut-off text
+      // was then fed to task extraction — so late tasks were lost twice over.
+      max_tokens: 16000,
       messages: [{ role: "user", content: userMessage }],
       system: SYSTEM_PROMPT,
     });
 
-    const formatted = (message.content[0] as any).text;
-    return NextResponse.json({ formatted });
+    const textBlock = message.content.find((b) => b.type === "text");
+    const formatted = textBlock?.type === "text" ? textBlock.text : "";
+
+    if (!formatted) {
+      return NextResponse.json({ error: "لم يُنتج الذكاء الاصطناعي أي نص" }, { status: 502 });
+    }
+
+    // Surface the cut-off rather than silently handing back a half محضر.
+    return NextResponse.json({ formatted, truncated: message.stop_reason === "max_tokens" });
   } catch (err: any) {
     console.error("Meeting format error:", err);
     return NextResponse.json(

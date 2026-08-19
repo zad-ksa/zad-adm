@@ -3,6 +3,7 @@
 import { prisma } from "@/lib/db";
 import { revalidatePath } from "next/cache";
 import { requirePermission, requireAnyPermission } from "@/lib/guards";
+import { logAudit } from "@/lib/auditLog";
 
 // Every action here mutates contractual/financial records, so each one guards
 // itself: server actions are directly reachable HTTP endpoints and are not
@@ -23,8 +24,9 @@ export async function addInstallment(data: {
   dueDate?: Date;
   isLinkedToFirstGrant?: boolean;
 }) {
+  let actor;
   try {
-    await requirePermission("edit_contracts");
+    actor = await requirePermission("edit_contracts");
   } catch {
     return { error: "ليس لديك صلاحية لإدارة العقود" };
   }
@@ -38,6 +40,16 @@ export async function addInstallment(data: {
         isLinkedToFirstGrant: data.isLinkedToFirstGrant || false,
         isPaid: false,
       } as any,
+    });
+
+    await logAudit({
+      actorType: "EMPLOYEE",
+      actorId: actor?.id,
+      actorName: actor?.name,
+      action: "CREATE",
+      targetType: "ContractInstallment",
+      targetId: installment.id,
+      metadata: { charityId: data.charityId, amount: data.amount },
     });
 
     revalidatePath("/main/contracts");
@@ -55,8 +67,9 @@ export async function updateInstallment(data: {
   isLinkedToFirstGrant?: boolean;
   isPaid?: boolean;
 }) {
+  let actor;
   try {
-    await requirePermission("edit_contracts");
+    actor = await requirePermission("edit_contracts");
   } catch {
     return { error: "ليس لديك صلاحية لإدارة العقود" };
   }
@@ -72,6 +85,16 @@ export async function updateInstallment(data: {
       } as any,
     });
 
+    await logAudit({
+      actorType: "EMPLOYEE",
+      actorId: actor?.id,
+      actorName: actor?.name,
+      action: "UPDATE",
+      targetType: "ContractInstallment",
+      targetId: data.id,
+      metadata: { amount: data.amount, isPaid: data.isPaid },
+    });
+
     revalidatePath("/main/contracts");
     return { success: "تم تحديث القسط بنجاح", installment };
   } catch (error: any) {
@@ -81,8 +104,9 @@ export async function updateInstallment(data: {
 }
 
 export async function deleteInstallment(id: string) {
+  let actor;
   try {
-    await requirePermission("edit_contracts");
+    actor = await requirePermission("edit_contracts");
   } catch {
     return { error: "ليس لديك صلاحية لإدارة العقود" };
   }
@@ -90,6 +114,15 @@ export async function deleteInstallment(id: string) {
   try {
     await prisma.contractInstallment.delete({
       where: { id },
+    });
+
+    await logAudit({
+      actorType: "EMPLOYEE",
+      actorId: actor?.id,
+      actorName: actor?.name,
+      action: "DELETE",
+      targetType: "ContractInstallment",
+      targetId: id,
     });
 
     revalidatePath("/main/contracts");
@@ -103,8 +136,9 @@ export async function deleteInstallment(id: string) {
 export async function toggleInstallmentPaid(id: string, isPaid: boolean) {
   // Reachable from two screens with different gates: the contracts screen
   // (edit_contracts) and the charity finance screen (manage_finance).
+  let actor;
   try {
-    await requireAnyPermission(["edit_contracts", "manage_finance"]);
+    actor = await requireAnyPermission(["edit_contracts", "manage_finance"]);
   } catch {
     return { error: "ليس لديك صلاحية لإدارة العقود" };
   }
@@ -169,6 +203,22 @@ export async function toggleInstallmentPaid(id: string, isPaid: boolean) {
 
     await prisma.$transaction(queries);
 
+    // Money movement: this both flips the installment and writes a
+    // DISBURSEMENT financial log, so it is the highest-value action to trace.
+    await logAudit({
+      actorType: "EMPLOYEE",
+      actorId: actor?.id,
+      actorName: actor?.name,
+      action: isPaid ? "INSTALLMENT_MARKED_PAID" : "INSTALLMENT_MARKED_UNPAID",
+      targetType: "ContractInstallment",
+      targetId: id,
+      metadata: {
+        charityId: installment.charityId,
+        charityName: installment.charity.name,
+        amount: installment.amount,
+      },
+    });
+
     revalidatePath("/main/contracts");
     revalidatePath(`/portal/${encodeURIComponent(installment.charity.name)}/finance`);
     return { success: isPaid ? "تم تسجيل سداد القسط" : "تم إلغاء سداد القسط", installment: { ...installment, isPaid, paidDate } };
@@ -179,8 +229,9 @@ export async function toggleInstallmentPaid(id: string, isPaid: boolean) {
 }
 
 export async function processFirstGrant(charityId: string, grantDate: Date) {
+  let actor;
   try {
-    await requirePermission("edit_contracts");
+    actor = await requirePermission("edit_contracts");
   } catch {
     return { error: "ليس لديك صلاحية لإدارة العقود" };
   }
@@ -197,6 +248,15 @@ export async function processFirstGrant(charityId: string, grantDate: Date) {
       },
     });
 
+    await logAudit({
+      actorType: "EMPLOYEE",
+      actorId: actor?.id,
+      actorName: actor?.name,
+      action: "UPDATE",
+      targetType: "ContractInstallment",
+      metadata: { charityId, grantDate, affectedCount: installments.count, reason: "first_grant_scheduling" },
+    });
+
     revalidatePath("/main/contracts");
     return { success: `تم تحديد تواريخ الاستحقاق لعدد ${installments.count} قسط بناءً على تاريخ أول منحة.` };
   } catch (error: any) {
@@ -210,8 +270,9 @@ export async function batchAddInstallments(data: {
   totalAmount: number;
   count: number;
 }) {
+  let actor;
   try {
-    await requirePermission("edit_contracts");
+    actor = await requirePermission("edit_contracts");
   } catch {
     return { error: "ليس لديك صلاحية لإدارة العقود" };
   }
@@ -230,6 +291,15 @@ export async function batchAddInstallments(data: {
 
     await prisma.contractInstallment.createMany({
       data: installmentsData as any[],
+    });
+
+    await logAudit({
+      actorType: "EMPLOYEE",
+      actorId: actor?.id,
+      actorName: actor?.name,
+      action: "CREATE",
+      targetType: "ContractInstallment",
+      metadata: { charityId: data.charityId, totalAmount: data.totalAmount, count: data.count },
     });
 
     revalidatePath("/main/contracts");

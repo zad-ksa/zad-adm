@@ -66,6 +66,9 @@ export default function MeetingFormModal({
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "فشل الطلب");
       setFormattedContent(data.formatted);
+      if (data.truncated) {
+        setAiError("الملاحظات طويلة جداً وتم قطع المحضر — راجع النص وأكمل الناقص قبل الحفظ");
+      }
       setStep(2);
     } catch (e: any) { setAiError(e.message || "حدث خطأ"); }
     finally { setAiLoading(false); }
@@ -219,6 +222,7 @@ export default function MeetingFormModal({
               </div>
               <textarea value={formattedContent} onChange={e => setFormattedContent(e.target.value)} rows={15}
                 className="w-full border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-xs bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-primary resize-none leading-relaxed" dir="rtl" />
+              {aiError && <p className="text-xs text-amber-600 dark:text-amber-400 font-bold">{aiError}</p>}
               {isTier1 && (
                 <label className="flex items-center gap-2 cursor-pointer select-none">
                   <input type="checkbox" checked={isPrivate} onChange={e => setIsPrivate(e.target.checked)} className="w-4 h-4 rounded accent-amber-500" />

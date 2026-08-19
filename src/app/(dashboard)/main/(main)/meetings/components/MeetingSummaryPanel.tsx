@@ -31,8 +31,11 @@ export default function MeetingSummaryPanel({
   const [, startTransition] = useTransition();
 
   const [summary, setSummary] = useState(meeting.summary || "");
-  const alreadyExtracted = meeting.summary !== null || meeting.meetingTasks.length > 0;
+  // An empty stored summary means a previous analysis failed, not that the
+  // meeting was analysed and had nothing to say — retry it instead of latching.
+  const alreadyExtracted = !!meeting.summary || meeting.meetingTasks.length > 0;
   const [extracted, setExtracted] = useState(alreadyExtracted);
+  const [extractError, setExtractError] = useState("");
 
   const unassigned = localTasks.filter(t => !t.assignedToId).length;
   const done = localTasks.filter(t => t.isDone).length;
@@ -42,8 +45,10 @@ export default function MeetingSummaryPanel({
   async function loadSummary(force = false) {
     if (loading) return;
     if (extracted && !force) return;
-    if (force && !confirm("سيتم إعادة تحليل المحضر بالذكاء الاصطناعي وتحديث الملخص. هل تريد المتابعة؟")) return;
+    if (force && localTasks.length > 0 &&
+        !confirm("سيتم إعادة تحليل المحضر بالذكاء الاصطناعي واستبدال المهام الحالية. هل تريد المتابعة؟")) return;
     setLoading(true);
+    setExtractError("");
     try {
       const res = await fetch("/api/meetings/extract-tasks", {
         method: "POST",
@@ -51,10 +56,19 @@ export default function MeetingSummaryPanel({
         body: JSON.stringify({ formattedContent: meeting.formattedContent }),
       });
       const data = await res.json();
-      if (data.summary) setSummary(data.summary);
-      
-      await updateMeeting(meeting.id, { summary: data.summary || "" });
-      
+
+      // A failed analysis must stay retryable: latching `extracted` here is what
+      // made one failed run look like "this meeting has no tasks" forever.
+      if (!res.ok || data.ok === false) {
+        setExtractError(data.error || "تعذّر تحليل المحضر، حاول مرة أخرى");
+        return;
+      }
+
+      if (data.summary) {
+        setSummary(data.summary);
+        await updateMeeting(meeting.id, { summary: data.summary });
+      }
+
       if (data.tasks?.length > 0) {
         if (force) {
           const toSave = (data.tasks as { title: string }[]).map(t => ({
@@ -72,8 +86,13 @@ export default function MeetingSummaryPanel({
         const saved = await getTasksForMeeting(meeting.id);
         setLocalTasks(saved as MeetingTask[]);
       }
+      if (data.truncated) {
+        setExtractError("المحضر طويل، قد تكون بعض المهام ناقصة — أعد التحليل للتحقق");
+      }
       setExtracted(true);
-    } catch { setExtracted(true); }
+    } catch (e: any) {
+      setExtractError(e?.message || "تعذّر الاتصال بخدمة التحليل");
+    }
     finally { setLoading(false); }
   }
 
@@ -175,6 +194,17 @@ export default function MeetingSummaryPanel({
             <div className="flex items-center gap-2 text-xs text-slate-400 py-2">
               <Loader2 className="w-3.5 h-3.5 animate-spin" />
               <span>جاري تحليل المحضر بالذكاء الاصطناعي...</span>
+            </div>
+          )}
+
+          {extractError && !loading && (
+            <div className="flex items-center justify-between gap-2 text-[11px] bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-900/40 rounded-xl px-3 py-2">
+              <span className="flex items-center gap-1.5 font-bold">
+                <AlertCircle className="w-3.5 h-3.5 shrink-0" /> {extractError}
+              </span>
+              <button onClick={() => loadSummary(true)} className="font-bold underline shrink-0">
+                إعادة المحاولة
+              </button>
             </div>
           )}
 

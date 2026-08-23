@@ -94,6 +94,8 @@ export default function CharitySidebar({
   const [activePath, setActivePath] = useState(decodeURIComponent(pathname));
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
+  // Keeps the mobile drawer shut on first paint — see the drawer below.
+  const drawerOpen = isOpen && mounted;
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isPrivacyModalOpen, setIsPrivacyModalOpen] = useState(false);
   const [confirmModal, setConfirmModal] = useState<{ type: 'logout' | 'switch' | null, charityName?: string }>({ type: null });
@@ -386,10 +388,13 @@ export default function CharitySidebar({
         {sidebarContent}
       </aside>
 
-      {/* Mobile Drawer */}
-      <div className={`fixed inset-0 z-[60] lg:hidden transition-all duration-300 ${isOpen ? "visible" : "invisible pointer-events-none"}`}>
-        <div className={`absolute inset-0 bg-slate-950/60 backdrop-blur-sm transition-opacity duration-300 ${isOpen ? "opacity-100" : "opacity-0"}`} onClick={() => setIsOpen(false)} />
-        <div className={`absolute top-0 right-0 h-full w-72 max-w-[85vw] transform transition-transform duration-300 ease-in-out bg-white dark:bg-slate-800 shadow-2xl ${isOpen ? "translate-x-0" : "translate-x-full"}`}>
+      {/* Mobile Drawer.
+          `drawerOpen` rather than `isOpen`: the parent starts open so the
+          desktop rail renders at full width, which on a phone painted this
+          drawer and its backdrop before the parent's effect could close them. */}
+      <div className={`fixed inset-0 z-[60] lg:hidden transition-all duration-300 ${drawerOpen ? "visible" : "invisible pointer-events-none"}`}>
+        <div className={`absolute inset-0 bg-slate-950/60 backdrop-blur-sm transition-opacity duration-300 ${drawerOpen ? "opacity-100" : "opacity-0"}`} onClick={() => setIsOpen(false)} />
+        <div className={`absolute top-0 right-0 h-full w-72 max-w-[85vw] transform transition-transform duration-300 ease-in-out bg-white dark:bg-slate-800 shadow-2xl ${drawerOpen ? "translate-x-0" : "translate-x-full"}`}>
           {sidebarContent}
         </div>
       </div>

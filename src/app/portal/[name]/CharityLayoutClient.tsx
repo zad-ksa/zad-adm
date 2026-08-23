@@ -69,7 +69,7 @@ export default function CharityLayoutClient({
         </div>
         
         {/* Main Content Area */}
-        <main className="flex-1 overflow-y-auto w-full p-3 sm:p-4 lg:p-5 pb-20 lg:pb-5">
+        <main className="flex-1 overflow-y-auto w-full p-3 sm:p-4 lg:p-5 pb-20 lg:pb-5 safe-bottom">
           <div className="max-w-[1600px] mx-auto w-full">
             {children}
           </div>

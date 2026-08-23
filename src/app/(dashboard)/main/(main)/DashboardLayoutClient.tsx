@@ -12,6 +12,10 @@ import DeveloperRoleSwitcher from "@/components/DeveloperRoleSwitcher";
 
 export default function DashboardLayoutClient({ children, session, unreadRequests: initial = 0, unreadMails: initialMails = 0 }: { children: React.ReactNode, session: any, unreadRequests?: number, unreadMails?: number }) {
   const pathname = usePathname();
+  // Stays `true`: on desktop this is the expanded rail width, and starting it
+  // false would collapse the rail on first paint and shift the whole layout.
+  // The mobile flash it used to cause is handled inside EmployeeSidebar, which
+  // keeps its drawer closed until mount.
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [unreadRequests, setUnreadRequests] = useState(initial);
   const [unreadMails, setUnreadMails] = useState(initialMails);
@@ -134,7 +138,7 @@ export default function DashboardLayoutClient({ children, session, unreadRequest
         </div>
         
         {/* Main Content Area */}
-        <main className="flex-1 overflow-y-auto w-full p-4 sm:p-6 lg:p-8 pb-8 print:overflow-visible print:p-0 print:block">
+        <main className="flex-1 overflow-y-auto w-full p-4 sm:p-6 lg:p-8 pb-8 safe-bottom print:overflow-visible print:p-0 print:block">
           <div className="max-w-[1600px] mx-auto w-full">
             {children}
           </div>

@@ -31,6 +31,37 @@ body {
   html {
     font-size: 14px !important;
   }
+
+  /* حقول الإدخال مستثناة من التصغير أعلاه.
+     Safari على iOS يُكبّر الصفحة تلقائياً — ولا يعيدها — عند التركيز على أي حقل
+     خطه أصغر من 16 بكسل. مع جذر بحجم 14 بكسل يصبح text-xs نحو 10.5 بكسل، أي أن
+     معظم نماذج الموقع كانت تُشغّل هذا التكبير. الحل هنا بتثبيت الحجم بالبكسل بدل
+     تعطيل التكبير عبر user-scalable=no، لأن التعطيل يمنع ضعاف البصر من التكبير. */
+  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
+  textarea,
+  select {
+    font-size: 16px !important;
+  }
+}
+
+/* حواف الشاشة: تُترك للمتصفح في الوضع العادي، وتُراعى يدوياً بعد التثبيت كتطبيق
+   حيث لا يوجد شريط متصفح يحجز المساحة السفلية لشريط الإيماءات.
+   هامش لا حشو: أصناف pb-* من Tailwind تقع في طبقة (layer)، والقواعد خارج الطبقات
+   تتغلب عليها — فلو استُعمل padding-bottom هنا لألغى حشو العنصر الأصلي بالكامل. */
+.safe-bottom {
+  margin-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+/* لمسات تجعل السلوك أقرب للتطبيق منه للصفحة: لا وميض أزرق عند اللمس، ولا
+   ارتداد للصفحة كاملةً عند السحب عند حافة قائمة. */
+@media (display-mode: standalone) {
+  body {
+    overscroll-behavior-y: none;
+  }
+
+  * {
+    -webkit-tap-highlight-color: transparent;
+  }
 }
 
 /* Hide scrollbar for Chrome, Safari and Opera */

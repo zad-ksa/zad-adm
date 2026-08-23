@@ -15,6 +15,9 @@ export default function CharityLayoutClient({
   availableCharities = [],
   isDeveloper,
   currentEmployeeId,
+  permissions = [],
+  title,
+  isAdmin = false,
 }: {
   children: React.ReactNode;
   charityName: string;
@@ -24,6 +27,9 @@ export default function CharityLayoutClient({
   availableCharities?: { id: string, name: string }[];
   isDeveloper?: boolean;
   currentEmployeeId?: string;
+  permissions?: string[];
+  title?: string;
+  isAdmin?: boolean;
 }) {
   const pathname = usePathname();
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
@@ -50,6 +56,8 @@ export default function CharityLayoutClient({
         role={role}
         userType={userType}
         availableCharities={availableCharities}
+        permissions={permissions}
+        title={title}
       />
       
       <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden relative">
@@ -69,7 +77,7 @@ export default function CharityLayoutClient({
         </div>
         
         {/* Main Content Area */}
-        <main className="flex-1 overflow-y-auto w-full p-3 sm:p-4 lg:p-5 pb-20 lg:pb-5">
+        <main className="flex-1 overflow-y-auto w-full p-3 sm:p-4 lg:p-5 pb-20 lg:pb-5 safe-bottom">
           <div className="max-w-[1600px] mx-auto w-full">
             {children}
           </div>

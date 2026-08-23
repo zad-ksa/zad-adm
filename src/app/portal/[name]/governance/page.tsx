@@ -4,6 +4,7 @@ import { CharitySize } from "@/data/governanceManual";
 import AutoRedirectCharitySize from "@/components/AutoRedirectCharitySize";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
+import { requirePortalPermission } from "@/lib/portalAccess";
 
 export default async function GovernancePage({ 
   params,
@@ -15,6 +16,8 @@ export default async function GovernancePage({
   const { name } = await params;
   const charityName = decodeURIComponent(name);
   const resolvedSearchParams = await searchParams;
+
+  await requirePortalPermission(name, "view_governance");
 
   if (!resolvedSearchParams.change_size) {
     const cookieStore = await cookies();

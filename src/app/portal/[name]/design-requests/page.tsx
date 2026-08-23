@@ -6,6 +6,7 @@ import { Palette } from "lucide-react";
 import { formatCivilDate } from "@/lib/businessDays";
 import { getDesignRequestProgress } from "@/lib/designRequestProgress";
 import DesignRequestsPortalClient from "./DesignRequestsPortalClient";
+import { requirePortalPermission } from "@/lib/portalAccess";
 
 export const dynamic = "force-dynamic";
 
@@ -26,16 +27,10 @@ export default async function DesignRequestsPortalPage({ params }: { params: Pro
   const session = await getSession();
   if (!session || session.userType !== "CHARITY_USER") redirect("/");
 
-  const charity = await prisma.charity.findUnique({
-    where: { name: decodedName },
-    select: { id: true, name: true },
-  });
-  if (!charity) notFound();
-
-  // Ownership check — the rest of the portal only verifies userType === CHARITY_USER
-  // without confirming session.charityId matches this charity. Design requests carry
-  // uploaded files and business data, so this page checks ownership explicitly.
-  if (session.charityId !== charity.id) notFound();
+  // Ownership AND permission. Membership is resolved against the link table
+  // rather than session.charityId, so an account linked to several charities can
+  // still open this tab in each of them.
+  const { charity, can } = await requirePortalPermission(name, "view_design_requests");
 
   const requests = await prisma.designRequest.findMany({
     where: { charityId: charity.id },
@@ -91,7 +86,11 @@ export default async function DesignRequestsPortalPage({ params }: { params: Pro
         </div>
       </div>
 
-      <DesignRequestsPortalClient charityId={charity.id} initialItems={items} />
+      <DesignRequestsPortalClient
+        charityId={charity.id}
+        initialItems={items}
+        canCreate={can("create_design_requests")}
+      />
     </div>
   );
 }

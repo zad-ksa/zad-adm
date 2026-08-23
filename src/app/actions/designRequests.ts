@@ -1,6 +1,7 @@
 "use server";
 
 import { prisma } from "@/lib/db";
+import { hasCharityPermission } from "@/lib/charityPermissions";
 import { getSession } from "@/lib/auth";
 import { hasPermission, isAdmin } from "@/lib/permissions";
 import { revalidatePath } from "next/cache";
@@ -58,8 +59,21 @@ async function requireCharityMember(charityId: string) {
   const membership = await prisma.charityUserCharity.findUnique({
     where: { charityUserId_charityId: { charityUserId: session.id, charityId } },
   });
-  if (!membership) {
+  if (!membership || !membership.isActive) {
     throw new Error("غير مصرح لك بالوصول لهذه الجمعية");
+  }
+  return {
+    session,
+    permissions: membership.permissions as string[],
+    isAdmin: membership.isAdmin,
+  };
+}
+
+/** A charity member holding a specific permission in THIS charity. */
+async function requireCharityMemberPermission(charityId: string, permission: string) {
+  const { session, permissions, isAdmin } = await requireCharityMember(charityId);
+  if (!hasCharityPermission(isAdmin, permissions, permission)) {
+    throw new Error("غير مصرح لك بإجراء هذه العملية");
   }
   return session;
 }
@@ -127,7 +141,7 @@ async function notifyDesignStaff(charityName: string, title: string) {
 
 export async function createDesignRequestFromPortal(input: CreateDesignRequestInput) {
   try {
-    const session = await requireCharityMember(input.charityId);
+    const session = await requireCharityMemberPermission(input.charityId, "create_design_requests");
 
     if (!input.title?.trim()) return { error: "يرجى إدخال عنوان الطلب" };
     if (input.attachments.length > 10) return { error: "الحد الأقصى 10 مرفقات لكل طلب" };
@@ -250,7 +264,7 @@ export async function deleteDesignRequest(id: string) {
 }
 
 export async function getDesignRequestsForCharity(charityId: string) {
-  await requireCharityMember(charityId);
+  await requireCharityMemberPermission(charityId, "view_design_requests");
   return prisma.designRequest.findMany({
     where: { charityId },
     include: { attachments: true },

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
 import { hasPermission } from "@/lib/permissions";
+import { hasCharityPermission } from "@/lib/charityPermissions";
 import { prisma } from "@/lib/db";
 
 // Shared authorization guards for API routes and server actions.
@@ -79,6 +80,10 @@ export async function requireAnyPermission(permissions: string[]) {
  * switch between them (see selectCharitySession in actions/authCharity.ts) —
  * comparing session.charityId alone would lock those users out of their own
  * other charities.
+ *
+ * Returns the session together with the permissions held IN THIS CHARITY, so
+ * callers never have to reach for session.permissions (which is only the active
+ * charity's set and would be wrong for any other charityId).
  */
 export async function requireCharityMembership(charityId: string) {
   const session = await requireSession();
@@ -93,11 +98,38 @@ export async function requireCharityMembership(charityId: string) {
         charityId,
       },
     },
-    select: { charityId: true },
+    select: { charityId: true, permissions: true, isActive: true, isAdmin: true },
   });
 
-  if (!link) throw new AuthError(UNAUTHORIZED_MESSAGE, 403);
-  return session;
+  // An inactive link is not a membership: charity HR deactivating someone must
+  // cut off their access to THIS charity immediately, while leaving any other
+  // charity they serve untouched.
+  if (!link || !link.isActive) throw new AuthError(UNAUTHORIZED_MESSAGE, 403);
+
+  // `isAdmin` comes from the link, so administrator standing is scoped to this
+  // charity. Reading it from the account (as the old title check did) made one
+  // charity's promotion apply everywhere the person was a member.
+  return { session, permissions: link.permissions as string[], isAdmin: link.isAdmin };
+}
+
+/**
+ * A charity portal account that belongs to the given charity AND holds a
+ * permission *in that charity*.
+ *
+ * Permissions are read from the link row here rather than from the session, so
+ * the answer is scoped to the charity named in the argument — a user who is an
+ * admin of charity A gets no authority over charity B by passing B's id, and a
+ * permission revoked seconds ago takes effect on the very next request.
+ *
+ * Call this inside every server action and every RSC page, not only in the
+ * sidebar: hiding a nav item is cosmetic, the URL stays typeable.
+ */
+export async function requireCharityPermission(charityId: string, permission: string) {
+  const { session, permissions, isAdmin } = await requireCharityMembership(charityId);
+  if (!hasCharityPermission(isAdmin, permissions, permission)) {
+    throw new AuthError(UNAUTHORIZED_MESSAGE, 403);
+  }
+  return { session, permissions, isAdmin };
 }
 
 /** Converts a guard failure into a JSON response for API route handlers. */

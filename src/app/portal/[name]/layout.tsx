@@ -31,7 +31,12 @@ export default async function CharityLayout({
   // Fetch charities for this user to pass to sidebar for quick switching
   const user = await prisma.charityUser.findUnique({
     where: { id: session.id },
-    include: { charities: { include: { charity: true } } }
+    include: {
+      // Deactivated memberships are excluded here rather than filtered in the
+      // UI, so a deactivated employee neither sees the charity in the switcher
+      // nor passes the ownership gate below.
+      charities: { where: { isActive: true }, include: { charity: true } },
+    },
   });
 
   const availableCharities = user?.charities.map(c => ({
@@ -53,6 +58,11 @@ export default async function CharityLayout({
     notFound();
   }
 
+  // Permissions for THIS charity, not session.permissions — the session carries
+  // only the currently-selected charity's set, which is the wrong answer while
+  // the user is browsing a different one of their charities.
+  const membership = user?.charities.find((c) => c.charityId === charity.id);
+
   return (
     <CharityLayoutClient
       charityName={decodedName}
@@ -62,6 +72,9 @@ export default async function CharityLayout({
       availableCharities={availableCharities}
       isDeveloper={session.isDeveloper}
       currentEmployeeId={session.originalId ? session.id : undefined}
+      permissions={membership?.permissions ?? []}
+      title={session.title}
+      isAdmin={membership?.isAdmin ?? false}
     >
       {children}
     </CharityLayoutClient>

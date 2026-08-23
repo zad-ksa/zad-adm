@@ -25,12 +25,12 @@ model Charity {
   programs          Program[]
 
   // Financial fields
-  contractValue    Float             @default(0)
-  paidAmount       Float             @default(0)
-  grants           Float             @default(0)
-  financialLogs    FinancialLog[]
+  contractValue        Float                 @default(0)
+  paidAmount           Float                 @default(0)
+  grants               Float                 @default(0)
+  financialLogs        FinancialLog[]
   contractInstallments ContractInstallment[]
-  meetings         Meeting[]
+  meetings             Meeting[]
 
   // Timeline Configurations
   strategyTimelineName String? @default("التخطيط الاستراتيجي")
@@ -51,12 +51,12 @@ model Charity {
   financeResponsiblePhone    String?
 
   // Contact Info
-  email                      String?
-  phone                      String?
-  chairmanName               String?
-  chairmanPhone              String?
-  ceoName                    String?
-  ceoPhone                   String?
+  email         String?
+  phone         String?
+  chairmanName  String?
+  chairmanPhone String?
+  ceoName       String?
+  ceoPhone      String?
 
   regulationVisibilities CharityRegulationVisibility[]
   employees              Employee[]
@@ -71,42 +71,81 @@ model Charity {
   governanceProgress     GovernanceProgress[]
   donorAccounts          DonorAccount[]
   grantApplications      GrantApplication[]
-  charityUsers      CharityUserCharity[]
-  designRequests    DesignRequest[]
+  charityUsers           CharityUserCharity[]
+  designRequests         DesignRequest[]
+
+  // Attendance
+  workSites         CharityWorkSite[]
+  workSchedule      CharityWorkSchedule?
+  attendanceRecords AttendanceRecord[]
+
+  // Optional second factor for attendance: the public IPs / CIDR ranges of the
+  // charity's own network. Empty list = layer off. Browser GPS is trivially
+  // spoofable from DevTools; network origin is not, so this is the stronger of
+  // the two signals. See IpEnforcementMode for what a mismatch does.
+  allowedIpRanges String[]          @default([])
+  ipEnforcement   IpEnforcementMode @default(OFF)
 }
 
 // ── حسابات وبوابة الجمعيات ──────────────────────────────────────────────────────────
 
 enum CharityUserTitle {
-  CHAIRMAN      // رئيس مجلس إدارة
-  CEO           // مدير تنفيذي
-  FULL_TIME     // موظف بدوام كامل
-  PART_TIME     // موظف بداوم جزئي
-  VOLUNTEER     // متطوع
-  SYSTEM_ADMIN  // مدير النظام
+  CHAIRMAN // رئيس مجلس إدارة
+  CEO // مدير تنفيذي
+  FULL_TIME // موظف بدوام كامل
+  PART_TIME // موظف بداوم جزئي
+  VOLUNTEER // متطوع
+  SYSTEM_ADMIN // مدير النظام
 }
 
 model CharityUser {
-  id          String   @id @default(uuid())
+  id          String           @id @default(uuid())
   name        String
-  phone       String   @unique
+  phone       String           @unique
   title       CharityUserTitle @default(FULL_TIME)
-  permissions String[] @default([]) 
-  isActive    Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  
-  charities   CharityUserCharity[]
-  designRequests DesignRequest[] @relation("SubmittedDesignRequests")
+  permissions String[]         @default([])
+  isActive    Boolean          @default(true)
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+
+  charities         CharityUserCharity[]
+  designRequests    DesignRequest[]      @relation("SubmittedDesignRequests")
+  attendanceRecords AttendanceRecord[]
 }
 
 model CharityUserCharity {
-  id            String   @id @default(uuid())
+  id            String      @id @default(uuid())
   charityUserId String
   charityId     String
   user          CharityUser @relation(fields: [charityUserId], references: [id], onDelete: Cascade)
   charity       Charity     @relation(fields: [charityId], references: [id], onDelete: Cascade)
-  assignedAt    DateTime @default(now())
+  assignedAt    DateTime    @default(now())
+
+  // Permissions are scoped PER CHARITY, not per user. CharityUser.permissions
+  // (left on the model, now unused) could not express "HR manager in charity A,
+  // ordinary staff in charity B" — one array travelled with the account into
+  // every charity it was linked to, which is a privilege leak.
+  permissions String[] @default([])
+
+  // Membership is deactivated PER CHARITY, never by deleting the row and never
+  // via the account-wide CharityUser.isActive: an account may serve several
+  // charities, so charity A removing someone must not lock them out of charity
+  // B. Keeping the row (rather than deleting it) preserves who they were and
+  // what they held, alongside their attendance history.
+  isActive Boolean @default(true)
+
+  // Administrator OF THIS CHARITY — the blanket "may do anything here" flag.
+  //
+  // This lives on the link for the same reason `permissions` does. It used to be
+  // read from CharityUser.title == "SYSTEM_ADMIN", which is stored per ACCOUNT:
+  // an account serving two charities was therefore an administrator of both at
+  // once, and either charity could grant or revoke that standing for the other
+  // — charity B promoting a shared member handed them full authority over
+  // charity A, and demoting them stripped charity A of its administrator.
+  //
+  // The title stays on the account as a job label (CEO, chairman, volunteer …)
+  // and now carries no authority of its own.
+  isAdmin Boolean @default(false)
 
   @@unique([charityUserId, charityId])
   @@index([charityUserId])
@@ -172,7 +211,7 @@ model MeetingTask {
   isDone       Boolean   @default(false)
   createdAt    DateTime  @default(now())
 
-  task         Task?
+  task Task?
 
   @@index([meetingId])
 }
@@ -197,17 +236,17 @@ model DonorAccount {
   website   String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  
+
   @@index([charityId])
 }
 
 model GrantApplication {
-  id              String   @id @default(uuid())
-  charityId       String
-  charity         Charity  @relation(fields: [charityId], references: [id], onDelete: Cascade)
-  entityName      String   @default("غير محدد")
-  initiativeName  String
-  requestedAmount Float
+  id                 String    @id @default(uuid())
+  charityId          String
+  charity            Charity   @relation(fields: [charityId], references: [id], onDelete: Cascade)
+  entityName         String    @default("غير محدد")
+  initiativeName     String
+  requestedAmount    Float
   status             String    @default("PENDING") // "PENDING", "APPROVED", "REJECTED", "CLOSED"
   installmentsCount  Int?
   installmentsNotes  String?
@@ -215,8 +254,8 @@ model GrantApplication {
   collectedAmount    Float?
   closureDate        DateTime?
   createdAt          DateTime  @default(now())
-  updatedAt       DateTime @updatedAt
-  
+  updatedAt          DateTime  @updatedAt
+
   @@index([charityId])
 }
 
@@ -272,43 +311,43 @@ model RoleDefinition {
 }
 
 model Employee {
-  id                   String            @id @default(uuid())
-  name                 String
-  phone                String            @unique
-  password             String
-  avatarUrl            String?
-  role                 String            @default("STRATEGY")
-  charityId            String? // For CHARITY_CLIENT accounts
-  charity              Charity?          @relation(fields: [charityId], references: [id])
-  permissions          String[]
-  navOrder             String[]          @default([])
-  isActive             Boolean           @default(true)
-  createdAt            DateTime          @default(now())
-  updatedAt            DateTime          @updatedAt
-  assignedTasks        Task[]            @relation("AssignedTasks")
-  createdTasks         Task[]            @relation("CreatedTasks")
-  assignedPermanentTasks PermanentTask[] @relation("AssignedPermanentTasks")
-  createdPermanentTasks  PermanentTask[] @relation("CreatedPermanentTasks")
-  employeeAchievements Achievement[]     @relation("EmployeeAchievements")
-  createdAchievements  Achievement[]     @relation("CreatedAchievements")
-  assignedCharities    EmployeeCharity[] @relation("AssignedCharities")
-  appNotifications     AppNotification[]
-  createdMeetings      Meeting[]         @relation("MeetingCreator")
-  meetingTasksAssigned MeetingTask[]     @relation("MeetingTaskAssignee")
-  navSetting           EmployeeNavSetting?
-  createdRequests      Request[]         @relation("CreatedRequests")
-  reviewedRequests     Request[]         @relation("ReviewedRequests")
-  requestNotifications RequestNotification[] @relation("RequestNotifications")
-  workflowSteps        WorkflowStep[]    @relation("WorkflowStepApprover")
-  requestLogs          RequestLog[]      @relation("LogActor")
-  delegatedLogs        RequestLog[]      @relation("LogDelegatee")
-  currentlyReviewing   Request[]         @relation("CurrentReviewer")
-  delegatedRequests    Request[]         @relation("DelegatedTo")
-  createdMeetingSchedules MeetingSchedule[] @relation("CreatedMeetingSchedules")
-  sentMails         InternalMail[]    @relation("SentMails")
-  receivedMails     MailRecipient[]   @relation("ReceivedMails")
-  createdDesignRequests   DesignRequest[] @relation("CreatedDesignRequests")
-  completedDesignRequests DesignRequest[] @relation("CompletedDesignRequests")
+  id                      String                @id @default(uuid())
+  name                    String
+  phone                   String                @unique
+  password                String
+  avatarUrl               String?
+  role                    String                @default("STRATEGY")
+  charityId               String? // For CHARITY_CLIENT accounts
+  charity                 Charity?              @relation(fields: [charityId], references: [id])
+  permissions             String[]
+  navOrder                String[]              @default([])
+  isActive                Boolean               @default(true)
+  createdAt               DateTime              @default(now())
+  updatedAt               DateTime              @updatedAt
+  assignedTasks           Task[]                @relation("AssignedTasks")
+  createdTasks            Task[]                @relation("CreatedTasks")
+  assignedPermanentTasks  PermanentTask[]       @relation("AssignedPermanentTasks")
+  createdPermanentTasks   PermanentTask[]       @relation("CreatedPermanentTasks")
+  employeeAchievements    Achievement[]         @relation("EmployeeAchievements")
+  createdAchievements     Achievement[]         @relation("CreatedAchievements")
+  assignedCharities       EmployeeCharity[]     @relation("AssignedCharities")
+  appNotifications        AppNotification[]
+  createdMeetings         Meeting[]             @relation("MeetingCreator")
+  meetingTasksAssigned    MeetingTask[]         @relation("MeetingTaskAssignee")
+  navSetting              EmployeeNavSetting?
+  createdRequests         Request[]             @relation("CreatedRequests")
+  reviewedRequests        Request[]             @relation("ReviewedRequests")
+  requestNotifications    RequestNotification[] @relation("RequestNotifications")
+  workflowSteps           WorkflowStep[]        @relation("WorkflowStepApprover")
+  requestLogs             RequestLog[]          @relation("LogActor")
+  delegatedLogs           RequestLog[]          @relation("LogDelegatee")
+  currentlyReviewing      Request[]             @relation("CurrentReviewer")
+  delegatedRequests       Request[]             @relation("DelegatedTo")
+  createdMeetingSchedules MeetingSchedule[]     @relation("CreatedMeetingSchedules")
+  sentMails               InternalMail[]        @relation("SentMails")
+  receivedMails           MailRecipient[]       @relation("ReceivedMails")
+  createdDesignRequests   DesignRequest[]       @relation("CreatedDesignRequests")
+  completedDesignRequests DesignRequest[]       @relation("CompletedDesignRequests")
 }
 
 model EmployeeCharity {
@@ -325,25 +364,25 @@ model EmployeeCharity {
 }
 
 model Task {
-  id            String       @id @default(uuid())
-  title         String
-  assignedToId  String
-  assignedTo    Employee     @relation("AssignedTasks", fields: [assignedToId], references: [id], onDelete: Cascade)
-  createdById   String
-  createdBy     Employee     @relation("CreatedTasks", fields: [createdById], references: [id], onDelete: Cascade)
-  charityId     String?
-  charityName   String?
-  isInternal    Boolean      @default(false)
-  isCompleted   Boolean      @default(false)
-  status        String       @default("NOT_STARTED") // "NOT_STARTED", "IN_PROGRESS", "COMPLETED"
-  priority      Int          @default(3) // 1: High, 2: Medium, 3: Low
-  completedAt   DateTime?
-  proofUrl      String?
-  proofPublicId String?
-  completionNote String?       @db.Text
-  createdAt     DateTime     @default(now())
-  updatedAt     DateTime     @updatedAt
-  updates       TaskUpdate[]
+  id             String       @id @default(uuid())
+  title          String
+  assignedToId   String
+  assignedTo     Employee     @relation("AssignedTasks", fields: [assignedToId], references: [id], onDelete: Cascade)
+  createdById    String
+  createdBy      Employee     @relation("CreatedTasks", fields: [createdById], references: [id], onDelete: Cascade)
+  charityId      String?
+  charityName    String?
+  isInternal     Boolean      @default(false)
+  isCompleted    Boolean      @default(false)
+  status         String       @default("NOT_STARTED") // "NOT_STARTED", "IN_PROGRESS", "COMPLETED"
+  priority       Int          @default(3) // 1: High, 2: Medium, 3: Low
+  completedAt    DateTime?
+  proofUrl       String?
+  proofPublicId  String?
+  completionNote String?      @db.Text
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  updates        TaskUpdate[]
 
   meetingTaskId String?      @unique
   meetingTask   MeetingTask? @relation(fields: [meetingTaskId], references: [id], onDelete: Cascade)
@@ -426,71 +465,71 @@ model CharityRegulationVisibility {
 }
 
 model ServiceTemplate {
-  id         String         @id @default(uuid())
+  id         String                 @id @default(uuid())
   name       String
   department String?
   stages     ServiceStageTemplate[]
   services   Service[]
-  
-  createdAt  DateTime       @default(now())
-  updatedAt  DateTime       @updatedAt
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model ServiceStageTemplate {
-  id           String             @id @default(uuid())
-  name         String
-  description  String?
-  duration     String?
-  order        Int                @default(0)
-  
-  templateId   String
-  template     ServiceTemplate    @relation(fields: [templateId], references: [id], onDelete: Cascade)
-  
-  createdAt    DateTime           @default(now())
-  updatedAt    DateTime           @updatedAt
+  id          String  @id @default(uuid())
+  name        String
+  description String?
+  duration    String?
+  order       Int     @default(0)
+
+  templateId String
+  template   ServiceTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model Service {
-  id         String         @id @default(uuid())
-  name       String
-  department String?
-  charityId  String
-  charity    Charity        @relation(fields: [charityId], references: [id], onDelete: Cascade)
-  isComingSoon Boolean      @default(false)
-  
+  id           String  @id @default(uuid())
+  name         String
+  department   String?
+  charityId    String
+  charity      Charity @relation(fields: [charityId], references: [id], onDelete: Cascade)
+  isComingSoon Boolean @default(false)
+
   templateId String?
   template   ServiceTemplate? @relation(fields: [templateId], references: [id], onDelete: SetNull)
 
-  stages     ServiceStage[]
-  
+  stages ServiceStage[]
+
   responsibleName  String?
   responsiblePhone String?
 
-  createdAt  DateTime       @default(now())
-  updatedAt  DateTime       @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model ServiceStage {
-  id           String             @id @default(uuid())
+  id           String    @id @default(uuid())
   name         String
   description  String?
   startDate    DateTime?
   endDate      DateTime?
   duration     String?
-  order        Int                @default(0)
-  isCurrent    Boolean            @default(false)
-  isContinuous Boolean            @default(false)
-  isActive     Boolean            @default(true)
-  isDone       Boolean            @default(false)
-  isComingSoon Boolean            @default(false)
-  
-  templateId   String?
-  
-  serviceId    String
-  service      Service            @relation(fields: [serviceId], references: [id], onDelete: Cascade)
-  steps        ServiceStageStep[]
-  createdAt    DateTime           @default(now())
-  updatedAt    DateTime           @updatedAt
+  order        Int       @default(0)
+  isCurrent    Boolean   @default(false)
+  isContinuous Boolean   @default(false)
+  isActive     Boolean   @default(true)
+  isDone       Boolean   @default(false)
+  isComingSoon Boolean   @default(false)
+
+  templateId String?
+
+  serviceId String
+  service   Service            @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+  steps     ServiceStageStep[]
+  createdAt DateTime           @default(now())
+  updatedAt DateTime           @updatedAt
 }
 
 model ServiceStageStep {
@@ -591,28 +630,28 @@ model TimelineConfig {
 // ── نظام الطلبات ──────────────────────────────────────────────────────────────
 
 enum RequestStatus {
-  PENDING    // قيد المراجعة عند شخص معين
-  RETURNED   // مرجع للمرسل مع ملاحظات
-  APPROVED   // معتمد نهائياً
-  REJECTED   // مرفوض
-  DELEGATED  // محوّل للتنفيذ
+  PENDING // قيد المراجعة عند شخص معين
+  RETURNED // مرجع للمرسل مع ملاحظات
+  APPROVED // معتمد نهائياً
+  REJECTED // مرفوض
+  DELEGATED // محوّل للتنفيذ
 }
 
 enum RequestPriority {
-  LOW      // منخفضة
-  MEDIUM   // متوسطة
-  HIGH     // عالية
-  URGENT   // عاجل
+  LOW // منخفضة
+  MEDIUM // متوسطة
+  HIGH // عالية
+  URGENT // عاجل
 }
 
 enum RequestAction {
-  SUBMITTED      // رفع الطلب لأول مرة
-  FORWARDED      // تمرير للمستوى التالي
+  SUBMITTED // رفع الطلب لأول مرة
+  FORWARDED // تمرير للمستوى التالي
   APPROVED_FINAL // اعتماد نهائي
-  REJECTED       // رفض
-  RETURNED       // إرجاع للمرسل
-  DELEGATED      // تحويل التنفيذ لشخص آخر
-  RESUBMITTED    // إعادة إرسال بعد الإرجاع
+  REJECTED // رفض
+  RETURNED // إرجاع للمرسل
+  DELEGATED // تحويل التنفيذ لشخص آخر
+  RESUBMITTED // إعادة إرسال بعد الإرجاع
 }
 
 // سلسلة اعتماد — تُعرَّف من إعدادات الداشبورد
@@ -658,33 +697,33 @@ model RequestLog {
 }
 
 model Request {
-  id                String          @id @default(uuid())
+  id                String                @id @default(uuid())
   title             String
-  category          String?         // التصنيف: "زاد"، "الحوكمة"، إلخ
-  body              String?         @db.Text
+  category          String? // التصنيف: "زاد"، "الحوكمة"، إلخ
+  body              String?               @db.Text
   fileUrl           String?
-  attachments       Json?           // مصفوفة من المرفقات { url, name, size, publicId }
-  priority          RequestPriority @default(MEDIUM)
-  status            RequestStatus   @default(PENDING)
+  attachments       Json? // مصفوفة من المرفقات { url, name, size, publicId }
+  priority          RequestPriority       @default(MEDIUM)
+  status            RequestStatus         @default(PENDING)
   // المُرسِل
   createdById       String
-  createdBy         Employee        @relation("CreatedRequests", fields: [createdById], references: [id], onDelete: Cascade)
+  createdBy         Employee              @relation("CreatedRequests", fields: [createdById], references: [id], onDelete: Cascade)
   // Workflow — السلسلة الحالية والمستوى
   chainId           String?
-  chain             WorkflowChain?  @relation(fields: [chainId], references: [id], onDelete: SetNull)
-  currentStepOrder  Int             @default(1)
+  chain             WorkflowChain?        @relation(fields: [chainId], references: [id], onDelete: SetNull)
+  currentStepOrder  Int                   @default(1)
   currentReviewerId String?
-  currentReviewer   Employee?       @relation("CurrentReviewer", fields: [currentReviewerId], references: [id], onDelete: SetNull)
+  currentReviewer   Employee?             @relation("CurrentReviewer", fields: [currentReviewerId], references: [id], onDelete: SetNull)
   // تحويل التنفيذ
   delegatedToId     String?
-  delegatedTo       Employee?       @relation("DelegatedTo", fields: [delegatedToId], references: [id], onDelete: SetNull)
+  delegatedTo       Employee?             @relation("DelegatedTo", fields: [delegatedToId], references: [id], onDelete: SetNull)
   // للتوافق مع الكود القديم
   reviewedById      String?
-  reviewedBy        Employee?       @relation("ReviewedRequests", fields: [reviewedById], references: [id], onDelete: SetNull)
-  reviewNote        String?         @db.Text
+  reviewedBy        Employee?             @relation("ReviewedRequests", fields: [reviewedById], references: [id], onDelete: SetNull)
+  reviewNote        String?               @db.Text
   reviewedAt        DateTime?
-  createdAt         DateTime        @default(now())
-  updatedAt         DateTime        @updatedAt
+  createdAt         DateTime              @default(now())
+  updatedAt         DateTime              @updatedAt
   notifications     RequestNotification[]
   logs              RequestLog[]
 
@@ -707,16 +746,16 @@ model RequestNotification {
 }
 
 model ContractInstallment {
-  id                   String   @id @default(uuid())
+  id                   String    @id @default(uuid())
   amount               Float
   dueDate              DateTime?
-  isLinkedToFirstGrant Boolean  @default(false)
-  isPaid               Boolean  @default(false)
+  isLinkedToFirstGrant Boolean   @default(false)
+  isPaid               Boolean   @default(false)
   paidDate             DateTime?
   charityId            String
-  charity              Charity  @relation(fields: [charityId], references: [id], onDelete: Cascade)
-  createdAt            DateTime @default(now())
-  updatedAt            DateTime @updatedAt
+  charity              Charity   @relation(fields: [charityId], references: [id], onDelete: Cascade)
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
 
   @@index([charityId])
 }
@@ -760,60 +799,60 @@ model AppNotification {
 }
 
 model MeetingSchedule {
-  id            String   @id @default(uuid())
+  id            String           @id @default(uuid())
   title         String
-  slug          String   @unique
-  duration      Int      @default(30)
-  availableDays Json     // array of { date, startTime, endTime }
-  isActive      Boolean  @default(true)
+  slug          String           @unique
+  duration      Int              @default(30)
+  availableDays Json // array of { date, startTime, endTime }
+  isActive      Boolean          @default(true)
   createdById   String
-  createdBy     Employee @relation("CreatedMeetingSchedules", fields: [createdById], references: [id], onDelete: Cascade)
+  createdBy     Employee         @relation("CreatedMeetingSchedules", fields: [createdById], references: [id], onDelete: Cascade)
   bookings      MeetingBooking[]
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
 
   @@index([createdById])
 }
 
 model MeetingBooking {
-  id           String   @id @default(uuid())
-  scheduleId   String
-  schedule     MeetingSchedule @relation(fields: [scheduleId], references: [id], onDelete: Cascade)
-  charityName  String
-  date         String
-  startTime    String
-  createdAt    DateTime @default(now())
+  id          String          @id @default(uuid())
+  scheduleId  String
+  schedule    MeetingSchedule @relation(fields: [scheduleId], references: [id], onDelete: Cascade)
+  charityName String
+  date        String
+  startTime   String
+  createdAt   DateTime        @default(now())
 
   @@unique([scheduleId, date, startTime])
   @@index([scheduleId])
 }
 
 model InternalMail {
-  id            String           @id @default(uuid())
-  subject       String
-  body          String           @db.Text
-  senderId      String
-  sender        Employee         @relation("SentMails", fields: [senderId], references: [id], onDelete: Cascade)
-  
+  id       String   @id @default(uuid())
+  subject  String
+  body     String   @db.Text
+  senderId String
+  sender   Employee @relation("SentMails", fields: [senderId], references: [id], onDelete: Cascade)
+
   // للربط بسلسلة الردود
-  parentId      String?          // الرسالة الأصلية (في حال الرد)
-  parent        InternalMail?    @relation("MailThread", fields: [parentId], references: [id], onDelete: SetNull)
-  replies       InternalMail[]   @relation("MailThread")
-  
+  parentId String? // الرسالة الأصلية (في حال الرد)
+  parent   InternalMail?  @relation("MailThread", fields: [parentId], references: [id], onDelete: SetNull)
+  replies  InternalMail[] @relation("MailThread")
+
   // حالة المرسل
-  isDeletedBySender Boolean      @default(false) // حذف من "المرسل"
+  isDeletedBySender Boolean @default(false) // حذف من "المرسل"
 
   // المسودات — تُحفظ قبل الإرسال الفعلي ولا تملك MailRecipient بعد
-  isDraft       Boolean          @default(false)
-  draftToIds    String[]         @default([])
-  draftCcIds    String[]         @default([])
-  draftBccIds   String[]         @default([])
+  isDraft     Boolean  @default(false)
+  draftToIds  String[] @default([])
+  draftCcIds  String[] @default([])
+  draftBccIds String[] @default([])
 
-  recipients    MailRecipient[]
-  attachments   MailAttachment[]
+  recipients  MailRecipient[]
+  attachments MailAttachment[]
 
-  createdAt     DateTime         @default(now())
-  updatedAt     DateTime         @default(now()) @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
 
   @@index([senderId])
   @@index([senderId, isDraft])
@@ -821,29 +860,29 @@ model InternalMail {
 }
 
 model MailRecipient {
-  id            String       @id @default(uuid())
-  mailId        String
-  mail          InternalMail @relation(fields: [mailId], references: [id], onDelete: Cascade)
-  employeeId    String
-  employee      Employee     @relation("ReceivedMails", fields: [employeeId], references: [id], onDelete: Cascade)
-  
-  type          String       @default("TO")    // "TO" | "CC" | "BCC"
-  isRead        Boolean      @default(false)
-  isStarred     Boolean      @default(false)
-  isDeleted     Boolean      @default(false)   // سلة المهملات
-  
+  id         String       @id @default(uuid())
+  mailId     String
+  mail       InternalMail @relation(fields: [mailId], references: [id], onDelete: Cascade)
+  employeeId String
+  employee   Employee     @relation("ReceivedMails", fields: [employeeId], references: [id], onDelete: Cascade)
+
+  type      String  @default("TO") // "TO" | "CC" | "BCC"
+  isRead    Boolean @default(false)
+  isStarred Boolean @default(false)
+  isDeleted Boolean @default(false) // سلة المهملات
+
   @@unique([mailId, employeeId])
   @@index([employeeId, isDeleted, isRead])
   @@index([mailId])
 }
 
 model MailAttachment {
-  id          String       @id @default(uuid())
-  mailId      String
-  mail        InternalMail @relation(fields: [mailId], references: [id], onDelete: Cascade)
-  fileUrl     String
-  fileName    String
-  fileSize    Int?
+  id       String       @id @default(uuid())
+  mailId   String
+  mail     InternalMail @relation(fields: [mailId], references: [id], onDelete: Cascade)
+  fileUrl  String
+  fileName String
+  fileSize Int?
 
   @@index([mailId])
 }
@@ -851,7 +890,7 @@ model MailAttachment {
 // ── طلبات التصاميم ───────────────────────────────────────────────────────────
 
 enum DesignRequestStatus {
-  PENDING   // قيد التنفيذ / في الطابور
+  PENDING // قيد التنفيذ / في الطابور
   COMPLETED // منجز
 }
 
@@ -917,8 +956,8 @@ model AuditLog {
   actorType  AuditActorType
   actorId    String?
   actorName  String?
-  action     String         // "LOGIN_SUCCESS" | "LOGIN_FAILED" | "LOGOUT" | "PERMISSION_CHANGE" | "DELETE" | "CREATE" | "FILE_UPLOAD"
-  targetType String?        // e.g. "Employee", "RoleDefinition", "DonorAccount"
+  action     String // "LOGIN_SUCCESS" | "LOGIN_FAILED" | "LOGOUT" | "PERMISSION_CHANGE" | "DELETE" | "CREATE" | "FILE_UPLOAD"
+  targetType String? // e.g. "Employee", "RoleDefinition", "DonorAccount"
   targetId   String?
   metadata   Json?
   ipAddress  String?
@@ -927,4 +966,110 @@ model AuditLog {
   @@index([actorId])
   @@index([action])
   @@index([createdAt])
+}
+
+// ---------------------------------------------------------------------------
+// الحضور والانصراف — Attendance
+// ---------------------------------------------------------------------------
+
+enum AttendanceStatus {
+  PRESENT // حاضر
+  LATE // متأخر
+  EARLY_LEAVE // انصراف مبكر
+  ABSENT // غائب
+}
+
+/// How a mismatch against Charity.allowedIpRanges is handled.
+/// OFF   — layer disabled (also the effective behaviour when the list is empty).
+/// WARN  — check-in succeeds but is flagged isSuspicious for human review.
+/// BLOCK — check-in is refused unless the request comes from the charity network.
+enum IpEnforcementMode {
+  OFF
+  WARN
+  BLOCK
+}
+
+/// A physical location employees may check in from.
+model CharityWorkSite {
+  id           String   @id @default(uuid())
+  charityId    String
+  charity      Charity  @relation(fields: [charityId], references: [id], onDelete: Cascade)
+  name         String
+  latitude     Float
+  longitude    Float
+  radiusMeters Int      @default(150)
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  attendance AttendanceRecord[]
+
+  @@index([charityId, isActive])
+}
+
+/// Working hours/days for a charity. One row per charity.
+model CharityWorkSchedule {
+  id                      String   @id @default(uuid())
+  charityId               String   @unique
+  charity                 Charity  @relation(fields: [charityId], references: [id], onDelete: Cascade)
+  startTime               String   @default("08:00") // Riyadh local, "HH:MM"
+  endTime                 String   @default("16:00")
+  lateAfterMinutes        Int      @default(15)
+  earlyLeaveBeforeMinutes Int      @default(15)
+  workDays                Int[]    @default([0, 1, 2, 3, 4]) // Sunday(0)..Thursday(4)
+  updatedAt               DateTime @updatedAt
+}
+
+/// One row per employee per charity per civil (Riyadh) day.
+///
+/// The charity is part of the key, not just a column: an account may serve
+/// several charities, and each of them tracks that person's attendance
+/// independently. Keying on (employee, day) alone made one charity's check-in
+/// suppress every other charity's for the rest of the day.
+///
+/// The composite unique key is also what makes a duplicate check-in
+/// structurally impossible, rather than relying on application logic that two
+/// concurrent requests could race past.
+model AttendanceRecord {
+  id            String           @id @default(uuid())
+  charityUserId String
+  user          CharityUser      @relation(fields: [charityUserId], references: [id], onDelete: Cascade)
+  charityId     String
+  charity       Charity          @relation(fields: [charityId], references: [id], onDelete: Cascade)
+  workSiteId    String?
+  workSite      CharityWorkSite? @relation(fields: [workSiteId], references: [id], onDelete: SetNull)
+
+  /// UTC-midnight anchor of the Riyadh calendar day, computed on the SERVER.
+  /// Never taken from the client clock — that would let a user back-date an
+  /// attendance by changing their phone's date.
+  workDate DateTime
+
+  checkInAt       DateTime?
+  checkInLat      Float?
+  checkInLng      Float?
+  checkInAccuracy Float?
+  checkInDistance Float?
+
+  checkOutAt       DateTime?
+  checkOutLat      Float?
+  checkOutLng      Float?
+  checkOutAccuracy Float?
+  checkOutDistance Float?
+
+  status AttendanceStatus @default(PRESENT)
+
+  // Review / forensics trail
+  ipAddress        String?
+  userAgent        String?
+  isSuspicious     Boolean @default(false)
+  suspiciousReason String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([charityUserId, charityId, workDate])
+  @@index([charityId, workDate])
+  // Cross-charity, for the impossible-travel check, which deliberately looks at
+  // the person's movements everywhere rather than only within one charity.
+  @@index([charityUserId, workDate])
 }

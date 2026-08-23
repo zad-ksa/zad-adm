@@ -6,7 +6,22 @@ import { revalidatePath } from "next/cache";
 import { hasPermission } from "@/lib/permissions";
 import { CharityUserTitle } from "@prisma/client";
 
-export async function addCharityClientAccount(data: { name: string; phone: string; title: string; charityIds: string[] }) {
+export async function addCharityClientAccount(data: {
+  name: string;
+  phone: string;
+  title: string;
+  charityIds: string[];
+  /**
+   * Makes the account an administrator of every charity it is linked to here.
+   *
+   * This is how a charity gets its FIRST administrator — nobody inside it can
+   * appoint one before one exists. It used to be implied by the SYSTEM_ADMIN
+   * title, which sat on the account and therefore applied everywhere at once;
+   * the flag is written per link instead, so each charity can revoke it without
+   * touching the others.
+   */
+  isAdmin?: boolean;
+}) {
   try {
     const session = await getSession();
     const canManage = hasPermission(session?.role || "", session?.permissions || [], "manage_charity_accounts");
@@ -36,7 +51,8 @@ export async function addCharityClientAccount(data: { name: string; phone: strin
         isActive: true,
         charities: {
           create: data.charityIds.map(id => ({
-            charityId: id
+            charityId: id,
+            isAdmin: data.isAdmin === true
           }))
         }
       },

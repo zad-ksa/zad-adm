@@ -19,6 +19,7 @@ export default async function SelectCharityPage() {
     where: { id: session.id },
     include: {
       charities: {
+        where: { isActive: true },
         include: { charity: true }
       }
     }

@@ -15,9 +15,11 @@ type Item = {
 export default function DesignRequestsPortalClient({
   charityId,
   initialItems,
+  canCreate,
 }: {
   charityId: string;
   initialItems: Item[];
+  canCreate: boolean;
 }) {
   const router = useRouter();
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -64,7 +66,9 @@ export default function DesignRequestsPortalClient({
           </div>
         </div>
 
-        {/* Bento Box 2: Primary Action */}
+        {/* Bento Box 2: Primary Action — hidden without create_design_requests.
+            Cosmetic only; the server action re-checks the same permission. */}
+        {canCreate && (
         <div className="md:col-span-1 bg-white dark:bg-[#0A0A0A] border border-slate-200 dark:border-slate-800 rounded-3xl p-6 shadow-sm hover:shadow-md dark:shadow-none transition-shadow flex flex-col justify-center items-center text-center gap-4 group">
           <div className="w-12 h-12 rounded-full bg-primary/5 dark:bg-teal-500/5 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
             <Plus className="w-6 h-6 text-primary dark:text-teal-400" />
@@ -77,6 +81,7 @@ export default function DesignRequestsPortalClient({
             طلب تصميم جديد
           </button>
         </div>
+        )}
 
         {/* Bento Box 3: Tabs & Warning */}
         <div className="md:col-span-3 bg-white dark:bg-[#0A0A0A] border border-slate-200 dark:border-slate-800 rounded-2xl p-3 shadow-sm flex items-center justify-between gap-3 flex-wrap">
@@ -120,7 +125,7 @@ export default function DesignRequestsPortalClient({
         </div>
       )}
 
-      {isFormOpen && (
+      {isFormOpen && canCreate && (
         <NewDesignRequestForm
           charityId={charityId}
           onClose={() => setIsFormOpen(false)}

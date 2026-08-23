@@ -27,7 +27,12 @@ const securityHeaders = [
   { key: "X-Frame-Options", value: "DENY" },
   { key: "X-Content-Type-Options", value: "nosniff" },
   { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
-  { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=()" },
+  // geolocation=(self) — the attendance check-in reads navigator.geolocation.
+  // An empty allowlist here makes getCurrentPosition fail with a permission
+  // error in Chrome *before the user is ever prompted*, which looks exactly
+  // like a denied permission and is very hard to diagnose. Camera and
+  // microphone stay fully disabled; nothing in the app uses them.
+  { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=(self)" },
   // HSTS only makes sense over HTTPS (Vercel serves production over HTTPS by default).
   ...(isDev ? [] : [{ key: "Strict-Transport-Security", value: "max-age=63072000; includeSubDomains; preload" }]),
 ];

@@ -29,7 +29,7 @@ import { logout } from "@/app/actions/auth";
 function NavItem({ item, isActive, isOpen, onClick }: { item: any, isActive: boolean, isOpen: boolean, onClick?: () => void }) {
   const content = (
     <>
-      <item.icon className={`w-4 h-4 shrink-0 transition-all ml-0 ${isOpen ? "ml-2.5" : ""} ${isActive ? "text-primary dark:text-primary" : "text-slate-400 group-hover:text-slate-700 dark:group-hover:text-slate-300"}`} />
+      <item.icon className={`w-4 h-4 shrink-0 transition-colors duration-300 ml-0 ${isOpen ? "ml-2.5" : ""} ${isActive ? "text-primary dark:text-teal-400" : "text-slate-400 group-hover:text-primary dark:group-hover:text-teal-400"}`} />
       {isOpen && <span className="whitespace-nowrap tracking-tight leading-none pt-0.5">{item.label || item.title}</span>}
 
       {item.comingSoon && isOpen && (
@@ -62,9 +62,10 @@ function NavItem({ item, isActive, isOpen, onClick }: { item: any, isActive: boo
       href={item.href}
       onClick={onClick}
       title={!isOpen ? (item.label || item.title) : undefined}
-      className={`flex items-center ${isOpen ? "justify-start px-2.5" : "justify-center"} py-1.5 mb-0.5 rounded-lg text-[15px] font-medium tracking-tight transition-all group relative overflow-hidden ${isActive
-        ? "bg-primary/5 dark:bg-primary/10 text-primary dark:text-primary shadow-[inset_0_0_0_1px_rgba(var(--primary-rgb),0.1)] dark:shadow-[inset_0_0_0_1px_rgba(255,255,255,0.05)]"
-        : "text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-white/5 hover:text-slate-900 dark:hover:text-slate-200"
+      data-active={isActive}
+      className={`charity-nav-item flex items-center ${isOpen ? "justify-start px-2.5" : "justify-center"} py-1.5 mb-0.5 rounded-lg text-[15px] font-medium tracking-tight group relative overflow-hidden ${isActive
+        ? "bg-primary/[0.07] dark:bg-primary/[0.12] text-primary dark:text-teal-400 shadow-[inset_0_0_0_1px_rgb(15_118_110_/_.16)] dark:shadow-[inset_0_0_0_1px_rgb(45_212_191_/_.20)]"
+        : "text-slate-600 dark:text-slate-400 hover:bg-primary/[0.04] dark:hover:bg-teal-400/[0.05] hover:text-primary dark:hover:text-teal-400"
         }`}
     >
       {content}
@@ -80,6 +81,9 @@ export default function CharitySidebar({
   role,
   userType,
   availableCharities = [],
+  permissions = [],
+  title,
+  isAdmin = false,
 }: {
   charityName: string;
   logoUrl: string | null;
@@ -88,12 +92,17 @@ export default function CharitySidebar({
   role?: string;
   userType?: string;
   availableCharities?: { id: string, name: string }[];
+  permissions?: string[];
+  title?: string;
+  isAdmin?: boolean;
 }) {
   const pathname = usePathname();
   const router = useRouter();
   const [activePath, setActivePath] = useState(decodeURIComponent(pathname));
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
+  // Keeps the mobile drawer shut on first paint — see the drawer below.
+  const drawerOpen = isOpen && mounted;
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isPrivacyModalOpen, setIsPrivacyModalOpen] = useState(false);
   const [confirmModal, setConfirmModal] = useState<{ type: 'logout' | 'switch' | null, charityName?: string }>({ type: null });
@@ -164,14 +173,29 @@ export default function CharitySidebar({
 
   const isCharityUser = userType === "CHARITY_USER";
 
+  // Cosmetic only. Hiding a nav item does not protect the route — every page
+  // under /portal re-checks the same permission on the server (see lib/portalAccess.ts).
+  // A missing permission here just avoids showing a link that would 404.
+  const can = (permission: string) => isAdmin || permissions.includes(permission);
+
   const mainItems = [
-    { id: "services", label: "الخدمات", href: `/portal/${encodeURIComponent(charityName)}/services`, exact: true, icon: Briefcase },
-    { id: "governance", label: "الحوكمة", href: `/portal/${encodeURIComponent(charityName)}/governance`, exact: true, icon: Scale },
-    { id: "design-requests", label: "طلبات التصاميم", href: `/portal/${encodeURIComponent(charityName)}/design-requests`, exact: true, icon: Palette },
-    { id: "strategy", label: "الاستراتيجية", href: "#", comingSoon: true, icon: Target },
-    { id: "finance", label: "تنمية الموارد المالية", href: "#", comingSoon: true, icon: Coins },
-    { id: "hr", label: "الموارد البشرية", href: "#", comingSoon: true, icon: Users },
-  ];
+    { id: "services", label: "الخدمات", href: `/portal/${encodeURIComponent(charityName)}/services`, exact: true, icon: Briefcase, show: true },
+    { id: "governance", label: "الحوكمة", href: `/portal/${encodeURIComponent(charityName)}/governance`, exact: true, icon: Scale, show: true },
+    { id: "design-requests", label: "طلبات التصاميم", href: `/portal/${encodeURIComponent(charityName)}/design-requests`, exact: true, icon: Palette, show: true },
+    { id: "strategy", label: "الاستراتيجية", href: "#", comingSoon: true, icon: Target, show: true },
+    { id: "finance", label: "تنمية الموارد المالية", href: "#", comingSoon: true, icon: Coins, show: true },
+    // Every active member can record their own attendance, so HR is always
+    // reachable; the landing page inside it differs by permission.
+    {
+      id: "hr",
+      label: "الموارد البشرية",
+      href: can("manage_charity_users")
+        ? `/portal/${encodeURIComponent(charityName)}/hr`
+        : `/portal/${encodeURIComponent(charityName)}/hr/attendance`,
+      icon: Users,
+      show: true,
+    },
+  ].filter((item) => item.show);
 
   const subItems: any[] = [];
 
@@ -386,10 +410,13 @@ export default function CharitySidebar({
         {sidebarContent}
       </aside>
 
-      {/* Mobile Drawer */}
-      <div className={`fixed inset-0 z-[60] lg:hidden transition-all duration-300 ${isOpen ? "visible" : "invisible pointer-events-none"}`}>
-        <div className={`absolute inset-0 bg-slate-950/60 backdrop-blur-sm transition-opacity duration-300 ${isOpen ? "opacity-100" : "opacity-0"}`} onClick={() => setIsOpen(false)} />
-        <div className={`absolute top-0 right-0 h-full w-72 max-w-[85vw] transform transition-transform duration-300 ease-in-out bg-white dark:bg-slate-800 shadow-2xl ${isOpen ? "translate-x-0" : "translate-x-full"}`}>
+      {/* Mobile Drawer.
+          `drawerOpen` rather than `isOpen`: the parent starts open so the
+          desktop rail renders at full width, which on a phone painted this
+          drawer and its backdrop before the parent's effect could close them. */}
+      <div className={`fixed inset-0 z-[60] lg:hidden transition-all duration-300 ${drawerOpen ? "visible" : "invisible pointer-events-none"}`}>
+        <div className={`absolute inset-0 bg-slate-950/60 backdrop-blur-sm transition-opacity duration-300 ${drawerOpen ? "opacity-100" : "opacity-0"}`} onClick={() => setIsOpen(false)} />
+        <div className={`absolute top-0 right-0 h-full w-72 max-w-[85vw] transform transition-transform duration-300 ease-in-out bg-white dark:bg-slate-800 shadow-2xl ${drawerOpen ? "translate-x-0" : "translate-x-full"}`}>
           {sidebarContent}
         </div>
       </div>

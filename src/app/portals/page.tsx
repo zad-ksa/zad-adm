@@ -4,21 +4,31 @@ import { useTheme } from "next-themes";
 import Link from "next/link";
 import { Building2, Users, Sun, Moon, ArrowRight, ShieldCheck } from "lucide-react";
 import ZadLogo from "@/components/ZadLogo";
+import IosInstallHint from "@/components/IosInstallHint";
 import { Cairo } from "next/font/google";
-import { useEffect, useState } from "react";
+import { useEffect, useSyncExternalStore } from "react";
 
 const cairo = Cairo({ subsets: ["arabic"], weight: ["700", "900"] });
 
+// "Has this rendered in the browser yet?" — read as a store rather than set from
+// an effect, which keeps the server and client markup identical without tripping
+// the set-state-in-effect rule.
+const noopSubscribe = () => () => {};
+const onClient = () => true;
+const onServer = () => false;
+
 export default function PortalsSelectionPage() {
   const { theme, setTheme } = useTheme();
-  const [isMounted, setIsMounted] = useState(false);
+  const isMounted = useSyncExternalStore(noopSubscribe, onClient, onServer);
 
   useEffect(() => {
     document.title = "بوابة الدخول | زاد التنموية";
-    setIsMounted(true);
   }, []);
 
-  if (!isMounted) return null;
+  // No `if (!isMounted) return null` here. This route is the installed app's
+  // start_url, so returning null would make every launch open on a blank screen
+  // until hydration finished. Only the theme icon actually needs to wait for
+  // mount — `theme` is unknown on the server — so that is all that waits.
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col justify-center py-12 sm:px-6 lg:px-8 relative overflow-hidden font-sans transition-colors duration-300" dir="rtl">
@@ -28,7 +38,13 @@ export default function PortalsSelectionPage() {
         className="absolute top-6 left-6 p-2 rounded-full bg-white/50 dark:bg-white/10 hover:bg-white/80 dark:hover:bg-white/20 border border-slate-200 dark:border-white/10 text-slate-700 dark:text-slate-200 backdrop-blur-md transition-all shadow-sm z-50"
         aria-label="Toggle Theme"
       >
-        {theme === 'dark' ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+        {!isMounted ? (
+          <Moon className="w-5 h-5 opacity-0" />
+        ) : theme === 'dark' ? (
+          <Sun className="w-5 h-5" />
+        ) : (
+          <Moon className="w-5 h-5" />
+        )}
       </button>
 
       {/* Back to Home */}
@@ -109,6 +125,8 @@ export default function PortalsSelectionPage() {
           </Link>
 
         </div>
+
+        <IosInstallHint />
       </div>
     </div>
   );

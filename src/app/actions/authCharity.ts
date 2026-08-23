@@ -35,6 +35,9 @@ export async function requestCharityOTP(phone: string) {
       where: { phone: { in: phoneVariants } },
       include: {
         charities: {
+          // Deactivated memberships must not be able to log the user into that
+          // charity, nor count towards "is this account linked to anything".
+          where: { isActive: true },
           include: { charity: true }
         }
       }
@@ -86,7 +89,10 @@ export async function requestCharityOTP(phone: string) {
         name: user.name,
         phone: user.phone,
         title: user.title,
-        permissions: user.permissions,
+        // Permissions deliberately NOT stored in the cookie: they are per
+        // charity now, and getSession() reloads them from the active charity's
+        // link row on every request. Baking them in would only create a stale
+        // copy that survives a revocation until the next login.
         charityId: defaultCharity.id,
         userType: "CHARITY_USER"
       };
@@ -159,6 +165,9 @@ export async function verifyCharityOTP(phone: string, otp: string) {
       where: { phone: { in: phoneVariants } },
       include: {
         charities: {
+          // Deactivated memberships must not be able to log the user into that
+          // charity, nor count towards "is this account linked to anything".
+          where: { isActive: true },
           include: { charity: true }
         }
       }
@@ -183,7 +192,7 @@ export async function verifyCharityOTP(phone: string, otp: string) {
       name: user.name,
       phone: user.phone,
       title: user.title,
-      permissions: user.permissions,
+      // See note above: permissions are resolved per request, per charity.
       charityId: defaultCharity.id,
       userType: "CHARITY_USER"
     };
@@ -244,7 +253,7 @@ export async function selectCharitySession(charityId: string) {
       include: { charity: true }
     });
 
-    if (!link) {
+    if (!link || !link.isActive) {
       return { error: "ليس لديك صلاحية الوصول لهذه الجمعية" };
     }
 

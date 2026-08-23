@@ -11,7 +11,6 @@ const titles = [
   { value: "FULL_TIME", label: "موظف بدوام كامل" },
   { value: "PART_TIME", label: "موظف بداوم جزئي" },
   { value: "VOLUNTEER", label: "متطوع" },
-  { value: "SYSTEM_ADMIN", label: "حساب مدير النظام" },
 ];
 
 export default function CharityAccountsClient({ charities, accounts: initialAccounts }: { charities: any[], accounts: any[] }) {
@@ -26,7 +25,8 @@ export default function CharityAccountsClient({ charities, accounts: initialAcco
     name: "",
     phone: "",
     title: "FULL_TIME",
-    charityIds: [] as string[]
+    charityIds: [] as string[],
+    isAdmin: false
   });
 
 
@@ -183,6 +183,23 @@ export default function CharityAccountsClient({ charities, accounts: initialAcco
                   {form.charityIds.length === 0 && (
                     <p className="text-xs text-red-500 mt-1 font-bold">يجب اختيار جمعية واحدة على الأقل</p>
                   )}
+                </div>
+
+                <div>
+                  <label className="flex items-start gap-3 p-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={form.isAdmin}
+                      onChange={e => setForm({...form, isAdmin: e.target.checked})}
+                      className="w-4 h-4 mt-0.5 rounded text-primary focus:ring-primary focus:ring-offset-0 border-slate-300"
+                    />
+                    <span>
+                      <span className="block text-sm font-bold text-slate-700 dark:text-slate-300">مدير للجمعيات المختارة</span>
+                      <span className="block text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                        يملك كل الصلاحيات داخلها ويستطيع إدارة حساباتها. لكل جمعية مديرها؛ لا بد من مدير واحد على الأقل لكل جمعية.
+                      </span>
+                    </span>
+                  </label>
                 </div>
 
               </div>

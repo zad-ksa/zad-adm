@@ -6,6 +6,7 @@ import { Briefcase } from "lucide-react";
 import ServicesTimelineViewer from "@/components/ServicesTimelineViewer";
 import ServicesGuideButton from "@/components/ServicesGuideButton";
 import { getTimelineConfigs } from "@/app/actions/settings";
+import { requirePortalPermission } from "@/lib/portalAccess";
 
 export async function generateMetadata({ params }: { params: Promise<{ name: string }> }): Promise<Metadata> {
   const { name } = await params;
@@ -18,6 +19,10 @@ export async function generateMetadata({ params }: { params: Promise<{ name: str
 export default async function ServicesPage({ params }: { params: Promise<{ name: string }> }) {
   const { name } = await params;
   const decodedName = decodeURIComponent(name);
+
+  // Membership AND permission, both re-checked here: the layout only proves the
+  // visitor belongs to this charity, not that they may see this tab.
+  await requirePortalPermission(name, "view_services");
 
   const charity = await prisma.charity.findUnique({
     where: { name: decodedName },

@@ -65,12 +65,18 @@ async function main() {
       data: {
         name: "موظف جمعية (تطوير)",
         phone: "0553973917",
-        title: "SYSTEM_ADMIN",
-        permissions: ["manage_hr", "view_reports"],
+        // A job label with no authority of its own. Whether this account can
+        // do anything is decided by the membership below.
+        title: "CEO",
         isActive: true,
         charities: {
           create: {
-            charityId: charity.id
+            charityId: charity.id,
+            // Administrator OF THIS CHARITY — what makes the dev account
+            // actually usable. Before this it carried the old SYSTEM_ADMIN
+            // title plus two permission ids that do not exist
+            // ("manage_hr", "view_reports"), so it logged in with nothing.
+            isAdmin: true
           }
         }
       }
@@ -80,9 +86,7 @@ async function main() {
     // Ensure user has permissions and is linked to the dummy charity
     await prisma.charityUser.update({
       where: { id: charityUser.id },
-      data: {
-        permissions: Array.from(new Set([...charityUser.permissions, "manage_hr", "view_reports"]))
-      }
+      data: { isActive: true }
     });
 
     const link = await prisma.charityUserCharity.findFirst({
@@ -93,8 +97,14 @@ async function main() {
       await prisma.charityUserCharity.create({
         data: {
           charityUserId: charityUser.id,
-          charityId: charity.id
+          charityId: charity.id,
+          isAdmin: true
         }
+      });
+    } else if (!link.isAdmin) {
+      await prisma.charityUserCharity.update({
+        where: { id: link.id },
+        data: { isAdmin: true, isActive: true }
       });
     }
     console.log("✅ تم تحديث حساب الجمعية للتطوير");

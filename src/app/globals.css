@@ -31,6 +31,37 @@ body {
   html {
     font-size: 14px !important;
   }
+
+  /* حقول الإدخال مستثناة من التصغير أعلاه.
+     Safari على iOS يُكبّر الصفحة تلقائياً — ولا يعيدها — عند التركيز على أي حقل
+     خطه أصغر من 16 بكسل. مع جذر بحجم 14 بكسل يصبح text-xs نحو 10.5 بكسل، أي أن
+     معظم نماذج الموقع كانت تُشغّل هذا التكبير. الحل هنا بتثبيت الحجم بالبكسل بدل
+     تعطيل التكبير عبر user-scalable=no، لأن التعطيل يمنع ضعاف البصر من التكبير. */
+  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
+  textarea,
+  select {
+    font-size: 16px !important;
+  }
+}
+
+/* حواف الشاشة: تُترك للمتصفح في الوضع العادي، وتُراعى يدوياً بعد التثبيت كتطبيق
+   حيث لا يوجد شريط متصفح يحجز المساحة السفلية لشريط الإيماءات.
+   هامش لا حشو: أصناف pb-* من Tailwind تقع في طبقة (layer)، والقواعد خارج الطبقات
+   تتغلب عليها — فلو استُعمل padding-bottom هنا لألغى حشو العنصر الأصلي بالكامل. */
+.safe-bottom {
+  margin-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+/* لمسات تجعل السلوك أقرب للتطبيق منه للصفحة: لا وميض أزرق عند اللمس، ولا
+   ارتداد للصفحة كاملةً عند السحب عند حافة قائمة. */
+@media (display-mode: standalone) {
+  body {
+    overscroll-behavior-y: none;
+  }
+
+  * {
+    -webkit-tap-highlight-color: transparent;
+  }
 }
 
 /* Hide scrollbar for Chrome, Safari and Opera */
@@ -212,6 +243,245 @@ body {
   --dr-shadow-warn:       0 1px 8px -3px rgb(250 204 21 / .32);
   --dr-shadow-late:       0 1px 8px -3px rgb(251 113 133 / .30);
   --dr-ring-focus:        0 0 0 4px rgb(45 212 191 / .18);
+}
+
+/* ── HR feature scope (Vercel-inspired) ─────────────────────────────────── */
+.hr-ui {
+  /* Type — Swiss hierarchy, fluid. Every size is fluid so a 13" laptop and a
+     27" display both get comfortable measure without a media query. */
+  --hr-fs-eyebrow: clamp(0.625rem, 0.61rem + 0.06vw, 0.6875rem);   /* 10 → 11px */
+  --hr-fs-meta:    clamp(0.6875rem, 0.675rem + 0.06vw, 0.75rem);   /* 11 → 12px */
+  --hr-fs-body:    clamp(0.75rem, 0.74rem + 0.05vw, 0.8125rem);    /* 12 → 13px */
+  --hr-fs-h3:      clamp(0.8125rem, 0.79rem + 0.1vw, 0.9375rem);   /* 13 → 15px */
+  --hr-fs-h2:      clamp(0.9375rem, 0.9rem + 0.16vw, 1.0625rem);   /* 15 → 17px */
+  --hr-fs-h1:      clamp(1.125rem, 1.06rem + 0.3vw, 1.375rem);     /* 18 → 22px */
+  --hr-fs-stat:    clamp(1.375rem, 1.24rem + 0.6vw, 1.75rem);      /* 22 → 28px */
+  --hr-lh-body: 1.6;
+  --hr-tracking-h1: -0.022em;
+  --hr-tracking-stat: -0.03em;
+  --hr-tracking-eyebrow: 0.09em;
+
+  /* 8pt grid — every padding, gap and margin inside this scope resolves to one
+     of these six steps. Nothing in between (no 12px, no 20px). */
+  --hr-s1: 0.5rem;  /*  8px */
+  --hr-s2: 1rem;    /* 16px */
+  --hr-s3: 1.5rem;  /* 24px */
+  --hr-s4: 2rem;    /* 32px */
+  --hr-s5: 2.5rem;  /* 40px */
+  --hr-s6: 3rem;    /* 48px */
+
+  /* Surfaces — a barely-there vertical gradient reads as lit from above,
+     which is what gives a flat card depth without a drop shadow. */
+  --hr-surface:      linear-gradient(180deg, rgb(255 255 255) 0%, rgb(250 251 252) 100%);
+  --hr-surface-sunk: linear-gradient(180deg, rgb(248 250 252) 0%, rgb(245 248 250) 100%);
+  --hr-hairline:     linear-gradient(90deg, transparent, rgb(15 118 110 / .30), transparent);
+
+  /* Elevation — colored and translucent, never rgba(0,0,0,*). The inset ring is
+     the "border glow": it replaces a hard 1px border with a tinted edge. */
+  --hr-shadow-card:       inset 0 0 0 1px rgb(15 118 110 / .09), 0 1px 2px -1px rgb(15 118 110 / .10), 0 12px 32px -20px rgb(15 118 110 / .24);
+  --hr-shadow-card-hover: inset 0 0 0 1px rgb(15 118 110 / .18), 0 2px 6px -2px rgb(15 118 110 / .14), 0 16px 40px -22px rgb(15 118 110 / .34);
+  --hr-shadow-inset:      inset 0 0 0 1px rgb(15 118 110 / .08);
+  --hr-shadow-cta:        inset 0 1px 0 0 rgb(255 255 255 / .16), 0 6px 16px -6px rgb(15 118 110 / .50);
+  --hr-shadow-cta-hover:  inset 0 1px 0 0 rgb(255 255 255 / .22), 0 10px 26px -8px rgb(15 118 110 / .62);
+  --hr-shadow-ok:         inset 0 0 0 1px rgb(16 185 129 / .22), 0 2px 10px -4px rgb(16 185 129 / .24);
+  --hr-shadow-warn:       inset 0 0 0 1px rgb(202 138 4 / .24), 0 2px 10px -4px rgb(202 138 4 / .26);
+  --hr-shadow-danger:     inset 0 0 0 1px rgb(225 29 72 / .22), 0 2px 10px -4px rgb(225 29 72 / .24);
+  --hr-ring-focus:        0 0 0 4px rgb(15 118 110 / .14);
+
+  /* One easing for everything, so the whole page decelerates alike. */
+  --hr-ease: cubic-bezier(0.16, 1, 0.3, 1);
+
+  font-feature-settings: "tnum" 1, "cv05" 1;
+  scroll-behavior: smooth;
+}
+
+/* The sizes above are rem, and this file shrinks the root to 14px under 640px —
+   so on a phone every one of them landed 12.5% below the value its own comment
+   claims: body at 10.5px, meta (which is the entire reports table) at 9.6px,
+   eyebrows at 8.8px. Restating them in px here puts them out of the root's
+   reach and back at the intended size, which on a small screen is a floor
+   rather than a starting point. */
+@media (max-width: 640px) {
+  .hr-ui {
+    --hr-fs-eyebrow: 11px;
+    --hr-fs-meta: 12px;
+    --hr-fs-body: 13px;
+    --hr-fs-h3: 15px;
+    --hr-fs-h2: 17px;
+    --hr-fs-h1: 20px;
+    --hr-fs-stat: 24px;
+  }
+}
+
+.dark .hr-ui {
+  --hr-surface:      linear-gradient(180deg, rgb(13 15 20) 0%, rgb(9 11 15) 100%);
+  --hr-surface-sunk: linear-gradient(180deg, rgb(9 11 15) 0%, rgb(7 9 12) 100%);
+  --hr-hairline:     linear-gradient(90deg, transparent, rgb(45 212 191 / .32), transparent);
+
+  --hr-shadow-card:       inset 0 0 0 1px rgb(45 212 191 / .11), 0 1px 2px -1px rgb(15 118 110 / .30), 0 14px 36px -22px rgb(15 118 110 / .40);
+  --hr-shadow-card-hover: inset 0 0 0 1px rgb(45 212 191 / .22), 0 2px 8px -3px rgb(15 118 110 / .34), 0 18px 44px -24px rgb(15 118 110 / .52);
+  --hr-shadow-inset:      inset 0 0 0 1px rgb(45 212 191 / .10);
+  --hr-shadow-ok:         inset 0 0 0 1px rgb(52 211 153 / .24), 0 2px 12px -6px rgb(52 211 153 / .28);
+  --hr-shadow-warn:       inset 0 0 0 1px rgb(250 204 21 / .24), 0 2px 12px -6px rgb(250 204 21 / .26);
+  --hr-shadow-danger:     inset 0 0 0 1px rgb(251 113 133 / .24), 0 2px 12px -6px rgb(251 113 133 / .26);
+  --hr-ring-focus:        0 0 0 4px rgb(45 212 191 / .18);
+}
+
+/* Card — the single surface primitive. The ::before hairline along the top edge
+   is the Vercel tell: it catches "light" and separates the card from the page
+   far more cheaply than a heavy shadow would. */
+.hr-ui .hr-card {
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--hr-s2);
+  background: var(--hr-surface);
+  box-shadow: var(--hr-shadow-card);
+  transition:
+    box-shadow 0.4s var(--hr-ease),
+    transform 0.4s var(--hr-ease);
+}
+
+.hr-ui .hr-card::before {
+  content: "";
+  position: absolute;
+  inset-inline: 0;
+  top: 0;
+  height: 1px;
+  background: var(--hr-hairline);
+  opacity: 0.7;
+  transition: opacity 0.4s var(--hr-ease);
+  pointer-events: none;
+}
+
+.hr-ui .hr-card--interactive:hover {
+  box-shadow: var(--hr-shadow-card-hover);
+  transform: translateY(-2px);
+}
+
+.hr-ui .hr-card--interactive:hover::before {
+  opacity: 1;
+}
+
+.hr-ui .hr-card--sunk {
+  background: var(--hr-surface-sunk);
+  box-shadow: var(--hr-shadow-inset);
+}
+
+.hr-ui .hr-card--sunk::before {
+  display: none;
+}
+
+/* Eyebrow — small caps label above a heading. Letter-spaced because tiny type
+   set tight is unreadable. */
+.hr-ui .hr-eyebrow {
+  font-size: var(--hr-fs-eyebrow);
+  letter-spacing: var(--hr-tracking-eyebrow);
+  text-transform: uppercase;
+  font-weight: 600;
+}
+
+/* Focus ring — one definition, applied to every interactive element, so the
+   keyboard path through the page is consistent. */
+.hr-ui :is(button, a, input, select, textarea):focus-visible {
+  outline: none;
+  box-shadow: var(--hr-ring-focus);
+}
+
+/* Nav link — the underline grows from the inline-start edge rather than fading
+   in, which reads as deliberate rather than as a hover accident. */
+.hr-ui .hr-navlink {
+  position: relative;
+  transition:
+    color 0.3s var(--hr-ease),
+    background-color 0.3s var(--hr-ease);
+}
+
+.hr-ui .hr-navlink::after {
+  content: "";
+  position: absolute;
+  inset-inline-start: var(--hr-s2);
+  inset-inline-end: var(--hr-s2);
+  bottom: 0;
+  height: 1px;
+  background: currentColor;
+  transform: scaleX(0);
+  transform-origin: inline-start;
+  transition: transform 0.4s var(--hr-ease);
+}
+
+.hr-ui .hr-navlink:hover::after,
+.hr-ui .hr-navlink[data-active="true"]::after {
+  transform: scaleX(1);
+}
+
+/* Gradient hairline divider. A background image rather than border-image,
+   which needs no border-style plumbing and degrades to nothing if unsupported. */
+.hr-ui .hr-rule {
+  background-image: linear-gradient(90deg, rgb(15 118 110 / .20), transparent);
+  background-repeat: no-repeat;
+  background-position: bottom;
+  background-size: 100% 1px;
+}
+
+.dark .hr-ui .hr-rule {
+  background-image: linear-gradient(90deg, rgb(45 212 191 / .20), transparent);
+}
+
+/* Optically centres a leading icon against the first line of body text.
+   Uses the line box rather than a margin nudge, so it stays correct at every
+   clamp() step and never lands off the 8pt grid. */
+.hr-ui .hr-icon-lead {
+  display: flex;
+  align-items: center;
+  height: calc(var(--hr-fs-body) * var(--hr-lh-body));
+  flex-shrink: 0;
+}
+
+.hr-ui .hr-icon-lead--h3 {
+  height: calc(var(--hr-fs-h3) * 1.4);
+}
+
+/* Scroll-linked reveal. Progressive enhancement: browsers without
+   animation-timeline simply render the content already in place, and the
+   whole thing is skipped for anyone who asked for less motion. */
+@keyframes hr-reveal {
+  from {
+    opacity: 0;
+    transform: translateY(var(--hr-s2));
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  @supports (animation-timeline: view()) {
+    .hr-ui .hr-reveal {
+      animation: hr-reveal linear both;
+      animation-timeline: view();
+      animation-range: entry 0% entry 44%;
+    }
+  }
+}
+
+/* Sidebar nav hover — a teal wash plus a 2px inline nudge toward the content.
+   Scoped to the portal sidebar so the dashboard sidebar is untouched. */
+.charity-nav-item {
+  transition:
+    background-color 0.3s cubic-bezier(0.16, 1, 0.3, 1),
+    color 0.3s cubic-bezier(0.16, 1, 0.3, 1),
+    box-shadow 0.3s cubic-bezier(0.16, 1, 0.3, 1),
+    transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.charity-nav-item:not([data-active="true"]):hover {
+  transform: translateX(-2px); /* RTL: toward the content area */
+  box-shadow: inset 0 0 0 1px rgb(15 118 110 / .10);
+}
+
+.dark .charity-nav-item:not([data-active="true"]):hover {
+  box-shadow: inset 0 0 0 1px rgb(45 212 191 / .14);
 }
 
 /* Tiptap placeholder */

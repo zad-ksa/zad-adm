@@ -89,6 +89,12 @@ export default function EmployeeSidebar({
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
+  // The parent starts `isOpen` true so the desktop rail renders at full width.
+  // On a phone that used to mean the drawer and its dark backdrop painted first
+  // and slid away once the parent measured the window — a visible flash on every
+  // page load. Holding the drawer shut until mount removes it, and the desktop
+  // rail below is untouched so no layout shifts.
+  const drawerOpen = isOpen && mounted;
   const [expandedGroup, setExpandedGroup] = useState<string | null>(null);
   const [charities, setCharities] = useState<any[]>([]);
   const [isPrivacyModalOpen, setIsPrivacyModalOpen] = useState(false);
@@ -416,10 +422,15 @@ export default function EmployeeSidebar({
         {sidebarContent}
       </aside>
 
-      {/* Mobile Drawer */}
-      <div className={`fixed inset-0 z-[60] lg:hidden transition-all duration-300 print:hidden ${isOpen ? "visible" : "invisible pointer-events-none"}`}>
-        <div className={`absolute inset-0 bg-slate-950/60 backdrop-blur-sm transition-opacity duration-300 ${isOpen ? "opacity-100" : "opacity-0"}`} onClick={() => setIsOpen(false)} />
-        <div className={`absolute top-0 right-0 h-full w-56 max-w-[85vw] transform transition-transform duration-300 ease-in-out bg-white dark:bg-slate-800 shadow-2xl ${isOpen ? "translate-x-0" : "translate-x-full"}`}>
+      {/* Mobile Drawer.
+          Gated on `mounted` as well as `isOpen`: the parent starts `isOpen`
+          true so the desktop rail renders expanded, which used to make this
+          drawer and its dark backdrop appear on first paint and then slide away
+          once the parent's effect measured the window. The desktop rail above
+          is unaffected, so nothing shifts there. */}
+      <div className={`fixed inset-0 z-[60] lg:hidden transition-all duration-300 print:hidden ${drawerOpen ? "visible" : "invisible pointer-events-none"}`}>
+        <div className={`absolute inset-0 bg-slate-950/60 backdrop-blur-sm transition-opacity duration-300 ${drawerOpen ? "opacity-100" : "opacity-0"}`} onClick={() => setIsOpen(false)} />
+        <div className={`absolute top-0 right-0 h-full w-56 max-w-[85vw] transform transition-transform duration-300 ease-in-out bg-white dark:bg-slate-800 shadow-2xl ${drawerOpen ? "translate-x-0" : "translate-x-full"}`}>
           {sidebarContent}
         </div>
       </div>

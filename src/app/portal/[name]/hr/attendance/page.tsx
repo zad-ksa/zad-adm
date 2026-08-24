@@ -114,6 +114,7 @@ export default async function AttendancePage({ params }: { params: Promise<{ nam
           checkInAt: r.checkInAt?.toISOString() ?? null,
           checkOutAt: r.checkOutAt?.toISOString() ?? null,
           siteName: r.workSite?.name ?? null,
+          autoClosedAt: r.autoClosedAt?.toISOString() ?? null,
         }))}
       />
     </>

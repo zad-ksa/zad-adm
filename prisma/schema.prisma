@@ -1064,11 +1064,39 @@ model AttendanceRecord {
   isSuspicious     Boolean @default(false)
   suspiciousReason String?
 
+  /// Set when a manager entered or amended this row by hand, which is the only
+  /// way to record attendance the GPS could not confirm — a failed fix indoors
+  /// must not cost an employee a day they actually worked.
+  ///
+  /// Non-null is the flag as well as the timestamp: every screen that shows a
+  /// record must label it, because a hand-entered row carries no location
+  /// evidence at all and must never be mistaken for a verified check-in. The
+  /// coordinate columns stay null for exactly that reason.
+  manualAt     DateTime?
+  /// CharityUser who made the correction. Deliberately not a relation: the row
+  /// should survive that account being deleted, and the full actor detail lives
+  /// in the audit log.
+  manualById   String?
+  /// Required from the manager, and shown alongside the record.
+  manualReason String?
+
+  /// Set by the nightly job when a day ended with a check-in and no check-out.
+  ///
+  /// The job writes the schedule's end time into `checkOutAt` so the day stops
+  /// hanging open, but that time is an assumption, not an observation — this
+  /// column is what says so. Every screen showing the record must label it, and
+  /// it is also the signal the HR alert counts, so a manager can see who keeps
+  /// forgetting and correct the ones that matter.
+  autoClosedAt DateTime?
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@unique([charityUserId, charityId, workDate])
   @@index([charityId, workDate])
+  // Serves both the nightly sweep (find open days) and the HR alert (count
+  // auto-closed ones) without scanning the table.
+  @@index([charityId, autoClosedAt])
   // Cross-charity, for the impossible-travel check, which deliberately looks at
   // the person's movements everywhere rather than only within one charity.
   @@index([charityUserId, workDate])

@@ -403,6 +403,183 @@ async function detectSuspicious(input: {
 }
 
 // ---------------------------------------------------------------------------
+// Admin: correcting a record by hand
+// ---------------------------------------------------------------------------
+
+/** "YYYY-MM-DD" (a Riyadh civil day) → its UTC-midnight anchor. */
+function parseCivilDay(value: string): Date | null {
+  const m = /^(\d{4})-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/.exec(value.trim());
+  if (!m) return null;
+  const date = new Date(Date.UTC(Number(m[1]), Number(m[2]) - 1, Number(m[3])));
+  // Rejects the 31st of a 30-day month, which the regex alone accepts.
+  return date.getUTCDate() === Number(m[3]) ? date : null;
+}
+
+/** "HH:MM" Riyadh local on a given civil day → the instant it denotes. */
+function instantOn(workDate: Date, time: string): Date | null {
+  const m = /^([01]?\d|2[0-3]):([0-5]\d)$/.exec(time.trim());
+  if (!m) return null;
+  const minutes = Number(m[1]) * 60 + Number(m[2]);
+  // workDate is UTC midnight of the Riyadh day, so Riyadh 00:00 is three hours
+  // earlier in UTC.
+  return new Date(workDate.getTime() + minutes * 60_000 - 3 * 60 * 60 * 1000);
+}
+
+/**
+ * Records or amends one person's attendance for one day by hand.
+ *
+ * This exists because the GPS layer refuses honestly and often: a cold fix
+ * indoors, a denied permission, a dead battery at 8am. Without a way in, every
+ * one of those turns into an absence the employee cannot dispute and the
+ * manager cannot fix — which is how an attendance system stops being trusted.
+ *
+ * What it deliberately does NOT do is fake evidence. No coordinates, distance
+ * or accuracy are written; `manualAt` marks the row so every screen can say it
+ * was entered by a person rather than confirmed by a device. A reason is
+ * required and travels with the record, not just into the audit log.
+ *
+ * Clearing both times deletes the row rather than storing an empty one:
+ * absence is derived from the absence of a record (see reports/page.tsx), so a
+ * blank row would read as "present, times unknown".
+ */
+export async function correctAttendance(
+  charityId: string,
+  input: {
+    targetUserId: string;
+    workDate: string;
+    checkInAt: string | null;
+    checkOutAt: string | null;
+    reason: string;
+  }
+) {
+  try {
+    const { session } = await requireCharityPermission(charityId, "manage_attendance");
+
+    const reason = (input.reason || "").trim();
+    if (reason.length < 3) return fail("سبب التصحيح مطلوب");
+    if (reason.length > 300) return fail("سبب التصحيح طويل جداً");
+
+    const workDate = parseCivilDay(input.workDate || "");
+    if (!workDate) return fail("التاريخ غير صالح");
+    if (workDate > toCivilDate(new Date())) {
+      return fail("لا يمكن تسجيل حضور في يوم لم يأتِ بعد");
+    }
+
+    // Membership in THIS charity, checked from the link: a manager must not be
+    // able to write a record for someone who belongs to a different charity by
+    // passing their id.
+    const link = await prisma.charityUserCharity.findUnique({
+      where: {
+        charityUserId_charityId: { charityUserId: input.targetUserId, charityId },
+      },
+      select: { isActive: true, user: { select: { name: true } } },
+    });
+    if (!link) return fail("الموظف غير موجود في هذه الجمعية");
+
+    const checkInAt = input.checkInAt ? instantOn(workDate, input.checkInAt) : null;
+    const checkOutAt = input.checkOutAt ? instantOn(workDate, input.checkOutAt) : null;
+    if (input.checkInAt && !checkInAt) return fail("وقت الحضور غير صالح");
+    if (input.checkOutAt && !checkOutAt) return fail("وقت الانصراف غير صالح");
+    if (checkInAt && checkOutAt && checkOutAt <= checkInAt) {
+      return fail("وقت الانصراف يجب أن يكون بعد وقت الحضور");
+    }
+    if (checkOutAt && !checkInAt) {
+      return fail("لا يمكن تسجيل انصراف بلا حضور");
+    }
+
+    const now = new Date();
+
+    if (!checkInAt) {
+      const removed = await prisma.attendanceRecord.deleteMany({
+        where: { charityUserId: input.targetUserId, charityId, workDate },
+      });
+      if (removed.count === 0) return fail("لا يوجد سجل لحذفه في هذا اليوم");
+
+      await logAudit({
+        actorType: "CHARITY_USER",
+        actorId: session.id,
+        actorName: session.name,
+        action: "ATTENDANCE_CLEARED",
+        targetType: "CharityUser",
+        targetId: input.targetUserId,
+        metadata: { charityId, workDate: input.workDate, reason },
+      });
+      return { success: true as const, cleared: true };
+    }
+
+    const schedule = await loadSchedule(charityId);
+    const status: AttendanceStatus =
+      checkOutAt && isEarlyLeave(checkOutAt, schedule)
+        ? "EARLY_LEAVE"
+        : (classifyCheckIn(checkInAt, schedule) as AttendanceStatus);
+
+    await prisma.attendanceRecord.upsert({
+      where: {
+        charityUserId_charityId_workDate: {
+          charityUserId: input.targetUserId,
+          charityId,
+          workDate,
+        },
+      },
+      create: {
+        charityUserId: input.targetUserId,
+        charityId,
+        workDate,
+        checkInAt,
+        checkOutAt,
+        status,
+        manualAt: now,
+        manualById: session.id,
+        manualReason: reason,
+      },
+      update: {
+        checkInAt,
+        checkOutAt,
+        status,
+        manualAt: now,
+        manualById: session.id,
+        manualReason: reason,
+        // A hand-amended row carries no device evidence any more, so the
+        // location columns and the suspicion flags raised against them are
+        // cleared rather than left to describe a check-in that was overwritten.
+        checkInLat: null,
+        checkInLng: null,
+        checkInAccuracy: null,
+        checkInDistance: null,
+        checkOutLat: null,
+        checkOutLng: null,
+        checkOutAccuracy: null,
+        checkOutDistance: null,
+        workSiteId: null,
+        isSuspicious: false,
+        suspiciousReason: null,
+      },
+    });
+
+    await logAudit({
+      actorType: "CHARITY_USER",
+      actorId: session.id,
+      actorName: session.name,
+      action: "ATTENDANCE_CORRECTED",
+      targetType: "CharityUser",
+      targetId: input.targetUserId,
+      metadata: {
+        charityId,
+        workDate: input.workDate,
+        checkInAt: input.checkInAt,
+        checkOutAt: input.checkOutAt,
+        status,
+        reason,
+      },
+    });
+
+    return { success: true as const, cleared: false };
+  } catch (error) {
+    return refuse(error, "تعذّر حفظ التصحيح");
+  }
+}
+
+// ---------------------------------------------------------------------------
 // Admin: work sites, schedule, IP allow list
 // ---------------------------------------------------------------------------
 

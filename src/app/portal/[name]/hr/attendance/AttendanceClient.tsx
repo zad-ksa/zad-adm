@@ -11,6 +11,7 @@ import {
   LogOut,
   Loader2,
   MapPin,
+  MoonStar,
   Wifi,
 } from "lucide-react";
 import { checkIn, checkOut } from "@/app/actions/attendance";
@@ -24,7 +25,11 @@ type DayRecord = {
   siteName: string | null;
 };
 
-type MonthRecord = DayRecord & { workDate: string };
+type MonthRecord = DayRecord & {
+  workDate: string;
+  /** Non-null means the nightly job ended this day because no check-out came. */
+  autoClosedAt: string | null;
+};
 
 /** Riyadh wall-clock rendering of a stored instant, independent of the device. */
 function riyadhTime(iso: string | null): string {
@@ -314,6 +319,16 @@ export default function AttendanceClient({
         </div>
       </section>
 
+      {/* Days the nightly job had to close. Shown to the employee as well as
+          the manager: the person who forgot is the one who can say what time
+          they actually left. */}
+      {monthRecords.some((r) => r.autoClosedAt) && (
+        <Banner tone="warn" icon={MoonStar}>
+          {monthRecords.filter((r) => r.autoClosedAt).length} يوم لم تسجّل انصرافك فيه،
+          وأُغلق آلياً على وقت نهاية الدوام. راجع مسؤول الموارد البشرية لتصحيحه.
+        </Banner>
+      )}
+
       {/* ── Month log ────────────────────────────────────────────────────── */}
       <HrCard className="hr-reveal">
         <div className="p-6 pb-4">
@@ -351,6 +366,12 @@ export default function AttendanceClient({
                 >
                   {riyadhTime(r.checkInAt)} — {riyadhTime(r.checkOutAt)}
                 </span>
+                {r.autoClosedAt && (
+                  <Chip tone="warn">
+                    <MoonStar className="w-3 h-3" />
+                    أُغلق تلقائياً
+                  </Chip>
+                )}
                 <span className="mr-auto">
                   <Chip tone={statusTone[r.status] ?? "neutral"}>
                     {ATTENDANCE_STATUS_LABELS[r.status] ?? r.status}

@@ -168,7 +168,13 @@ export default async function AttendanceReportsPage({
           ipAddress: r.ipAddress,
           isSuspicious: r.isSuspicious,
           suspiciousReason: r.suspiciousReason,
+          manualAt: r.manualAt?.toISOString() ?? null,
+          manualReason: r.manualReason,
+          autoClosedAt: r.autoClosedAt?.toISOString() ?? null,
         }))}
+        staff={staff.map((s) => ({ id: s.user.id, name: s.user.name }))}
+        canCorrect={can("manage_attendance")}
+        charityId={charity.id}
       />
     </>
   );

@@ -8,6 +8,8 @@ import {
   Clock,
   Crosshair,
   Loader2,
+  Lock,
+  LockOpen,
   MapPin,
   Plus,
   Trash2,
@@ -19,8 +21,11 @@ import {
   saveIpPolicy,
   saveWorkSchedule,
   saveWorkSite,
+  setAttendanceOpen,
 } from "@/app/actions/attendance";
 import { ScheduleShape, WEEKDAY_LABELS } from "@/lib/attendanceTime";
+import HolidaysPanel, { type Holiday } from "./HolidaysPanel";
+import EmployeeLeavePanel, { type LeaveRow } from "./EmployeeLeavePanel";
 import {
   Banner,
   Chip,
@@ -52,6 +57,11 @@ const IP_MODES = [
 
 export default function AttendanceSettingsClient({
   charityId,
+  initialAttendanceOpen,
+  holidays,
+  leaves,
+  leaveStaff,
+  defaultAllowance,
   initialSites,
   initialSchedule,
   initialIpRanges,
@@ -59,6 +69,11 @@ export default function AttendanceSettingsClient({
   currentIp,
 }: {
   charityId: string;
+  initialAttendanceOpen: boolean;
+  holidays: Holiday[];
+  leaves: LeaveRow[];
+  leaveStaff: { id: string; name: string; allowance: number | null }[];
+  defaultAllowance: number;
   initialSites: Site[];
   initialSchedule: ScheduleShape;
   initialIpRanges: string[];
@@ -91,6 +106,26 @@ export default function AttendanceSettingsClient({
     setError(null);
     setNotice(message);
     startTransition(() => router.refresh());
+  }
+
+  /** Runs one server action under the shared busy/error/notice handling. */
+  async function act(
+    key: string,
+    call: () => Promise<{ success: true } | { success: false; error: string }>,
+    successMessage: string
+  ) {
+    setError(null);
+    setBusy(key);
+    try {
+      const res = await call();
+      if (!res.success) {
+        setError(res.error);
+        return;
+      }
+      done(successMessage);
+    } finally {
+      setBusy(null);
+    }
   }
 
   /**
@@ -212,6 +247,48 @@ export default function AttendanceSettingsClient({
           {notice}
         </Banner>
       )}
+
+      {/* The master switch, first on the page: nothing else here matters while
+          attendance is off, and it is the one setting staff feel immediately. */}
+      <HrCard className="p-6 hr-reveal">
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div className="min-w-0">
+            <p className="hr-eyebrow text-primary/60 dark:text-teal-400/60" style={fs.eyebrow}>
+              حالة التحضير
+            </p>
+            <h3 className="font-bold text-slate-900 dark:text-slate-50 mt-2" style={fs.h3}>
+              {initialAttendanceOpen ? "التحضير مفعّل" : "التحضير مغلق"}
+            </h3>
+            <p className="text-slate-400 dark:text-slate-500 mt-2 max-w-prose" style={fs.meta}>
+              {initialAttendanceOpen
+                ? "يستطيع الموظفون تسجيل حضورهم وانصرافهم. إغلاقه يوقف التسجيل، ولا تُحتسب أيام الإغلاق غياباً."
+                : "لا يستطيع أحد تسجيل حضوره حتى تفعّله. الأيام السابقة للتفعيل لا تُحتسب غياباً على أحد."}
+            </p>
+          </div>
+          <button
+            onClick={() =>
+              act("attendance-gate", () => setAttendanceOpen(charityId, !initialAttendanceOpen),
+                initialAttendanceOpen ? "تم إغلاق التحضير" : "تم تفعيل التحضير")
+            }
+            disabled={busy !== null}
+            style={fs.body}
+            className={
+              initialAttendanceOpen
+                ? `${ghostClass} shrink-0`
+                : `${ctaClass} shrink-0`
+            }
+          >
+            {busy === "attendance-gate" ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : initialAttendanceOpen ? (
+              <Lock className="w-4 h-4" />
+            ) : (
+              <LockOpen className="w-4 h-4" />
+            )}
+            {initialAttendanceOpen ? "إغلاق التحضير" : "تفعيل التحضير"}
+          </button>
+        </div>
+      </HrCard>
 
       {/* ── Bento: sites (7) beside schedule (5) ──────────────────────────── */}
       <section className="grid grid-cols-12 gap-4 hr-reveal">
@@ -504,6 +581,23 @@ export default function AttendanceSettingsClient({
               حفظ أوقات الدوام
             </button>
           </HrCard>
+        </div>
+      </section>
+
+      {/* Holidays and leave sit together: both are reasons a working day is not
+          counted, and a manager setting one usually wants to see the other. */}
+      <section className="grid grid-cols-12 gap-4">
+        <div className="col-span-12 lg:col-span-5">
+          <HolidaysPanel charityId={charityId} holidays={holidays} onChanged={done} />
+        </div>
+        <div className="col-span-12 lg:col-span-7">
+          <EmployeeLeavePanel
+            charityId={charityId}
+            staff={leaveStaff}
+            leaves={leaves}
+            defaultAllowance={defaultAllowance}
+            onChanged={done}
+          />
         </div>
       </section>
 

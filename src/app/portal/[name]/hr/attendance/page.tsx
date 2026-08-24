@@ -60,6 +60,24 @@ export default async function AttendancePage({ params }: { params: Promise<{ nam
       }
     : DEFAULT_SCHEDULE;
 
+  // Is today a charity holiday, or is this person on leave? Either way the
+  // screen should say so instead of inviting a check-in nobody needs.
+  const [todayHoliday, todayLeave] = await Promise.all([
+    prisma.charityHoliday.findFirst({
+      where: { charityId: charity.id, startDate: { lte: workDate }, endDate: { gte: workDate } },
+      select: { name: true },
+    }),
+    prisma.employeeLeave.findFirst({
+      where: {
+        charityId: charity.id,
+        charityUserId: session.id,
+        startDate: { lte: workDate },
+        endDate: { gte: workDate },
+      },
+      select: { type: true },
+    }),
+  ]);
+
   const month = currentRiyadhMonth(now);
   const monthRecords = await prisma.attendanceRecord.findMany({
     where: {
@@ -92,6 +110,9 @@ export default async function AttendancePage({ params }: { params: Promise<{ nam
 
       <AttendanceClient
         charityId={charity.id}
+        isAttendanceOpen={scheduleRow?.attendanceOpenedAt != null}
+        todayHolidayName={todayHoliday?.name ?? null}
+        todayLeaveType={todayLeave?.type ?? null}
         hasWorkSite={sites > 0}
         isWorkDay={isWorkDay(now, schedule)}
         schedule={schedule}

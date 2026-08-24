@@ -33,7 +33,12 @@ export default async function AttendanceSettingsPage({
   // decoration — this line is the protection.
   if (!can("manage_attendance")) notFound();
 
-  const [sites, scheduleRow, policy] = await Promise.all([
+  // Leave rows for the current calendar year: the balance is annual, and a
+  // manager editing leave needs to see what is already booked.
+  const yearStart = new Date(Date.UTC(new Date().getUTCFullYear(), 0, 1));
+  const yearEnd = new Date(Date.UTC(new Date().getUTCFullYear() + 1, 0, 1));
+
+  const [sites, scheduleRow, policy, holidays, leaves, staff] = await Promise.all([
     prisma.charityWorkSite.findMany({
       where: { charityId: charity.id },
       orderBy: { createdAt: "asc" },
@@ -42,6 +47,20 @@ export default async function AttendanceSettingsPage({
     prisma.charity.findUnique({
       where: { id: charity.id },
       select: { allowedIpRanges: true, ipEnforcement: true },
+    }),
+    prisma.charityHoliday.findMany({
+      where: { charityId: charity.id },
+      orderBy: { startDate: "desc" },
+    }),
+    prisma.employeeLeave.findMany({
+      where: { charityId: charity.id, startDate: { lt: yearEnd }, endDate: { gte: yearStart } },
+      include: { user: { select: { id: true, name: true } } },
+      orderBy: { startDate: "desc" },
+    }),
+    prisma.charityUserCharity.findMany({
+      where: { charityId: charity.id, isActive: true },
+      select: { annualLeaveDays: true, user: { select: { id: true, name: true } } },
+      orderBy: { assignedAt: "asc" },
     }),
   ]);
 
@@ -63,6 +82,28 @@ export default async function AttendanceSettingsPage({
 
       <AttendanceSettingsClient
         charityId={charity.id}
+        holidays={holidays.map((h) => ({
+          id: h.id,
+          name: h.name,
+          startDate: h.startDate.toISOString(),
+          endDate: h.endDate.toISOString(),
+        }))}
+        leaves={leaves.map((l) => ({
+          id: l.id,
+          userId: l.user.id,
+          userName: l.user.name,
+          type: l.type as string,
+          startDate: l.startDate.toISOString(),
+          endDate: l.endDate.toISOString(),
+          note: l.note,
+        }))}
+        leaveStaff={staff.map((m) => ({
+          id: m.user.id,
+          name: m.user.name,
+          allowance: m.annualLeaveDays,
+        }))}
+        defaultAllowance={scheduleRow?.annualLeaveDays ?? 21}
+        initialAttendanceOpen={scheduleRow?.attendanceOpenedAt != null}
         initialSites={sites.map((s) => ({
           id: s.id,
           name: s.name,

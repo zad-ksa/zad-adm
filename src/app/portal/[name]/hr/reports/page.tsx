@@ -6,6 +6,7 @@ import {
   civilDaysOfMonth,
   currentRiyadhMonth,
   elapsedWorkDays,
+  fallsWithin,
   toCivilDate,
   DEFAULT_SCHEDULE,
 } from "@/lib/attendanceTime";
@@ -43,7 +44,12 @@ export default async function AttendanceReportsPage({
   const month = monthParam && civilDaysOfMonth(monthParam) ? monthParam : currentRiyadhMonth();
   const range = civilDaysOfMonth(month)!;
 
-  const [records, staff, scheduleRow] = await Promise.all([
+  // The leave year is the calendar year the viewed month sits in — balance is
+  // an annual figure, so it must not be recomputed per month.
+  const yearStart = new Date(Date.UTC(Number(month.slice(0, 4)), 0, 1));
+  const yearEnd = new Date(Date.UTC(Number(month.slice(0, 4)) + 1, 0, 1));
+
+  const [records, staff, scheduleRow, holidays, leaves] = await Promise.all([
     prisma.attendanceRecord.findMany({
       where: { charityId: charity.id, workDate: { gte: range.start, lt: range.end } },
       include: {
@@ -54,10 +60,27 @@ export default async function AttendanceReportsPage({
     }),
     prisma.charityUserCharity.findMany({
       where: { charityId: charity.id, isActive: true },
-      select: { assignedAt: true, user: { select: { id: true, name: true } } },
+      select: {
+        assignedAt: true,
+        annualLeaveDays: true,
+        user: { select: { id: true, name: true } },
+      },
     }),
     prisma.charityWorkSchedule.findUnique({ where: { charityId: charity.id } }),
+    // Holidays overlapping the viewed month.
+    prisma.charityHoliday.findMany({
+      where: { charityId: charity.id, startDate: { lt: range.end }, endDate: { gte: range.start } },
+      orderBy: { startDate: "asc" },
+    }),
+    // The whole leave year, because the balance spans it — the month is filtered
+    // out of this set below for the per-month counts.
+    prisma.employeeLeave.findMany({
+      where: { charityId: charity.id, startDate: { lt: yearEnd }, endDate: { gte: yearStart } },
+      orderBy: { startDate: "asc" },
+    }),
   ]);
+
+  const defaultAllowance = scheduleRow?.annualLeaveDays ?? 21;
 
   const summary = new Map<
     string,
@@ -69,6 +92,12 @@ export default async function AttendanceReportsPage({
       earlyLeave: number;
       absent: number;
       suspicious: number;
+      /** Working days in the viewed month covered by this person's leave. */
+      leaveDays: number;
+      /** Annual allowance for this person in this charity. */
+      leaveAllowance: number;
+      /** ANNUAL leave days used across the whole leave year. */
+      leaveUsedThisYear: number;
     }
   >();
   for (const s of staff) {
@@ -80,6 +109,9 @@ export default async function AttendanceReportsPage({
       earlyLeave: 0,
       absent: 0,
       suspicious: 0,
+      leaveDays: 0,
+      leaveAllowance: s.annualLeaveDays ?? defaultAllowance,
+      leaveUsedThisYear: 0,
     });
   }
   for (const r of records) {
@@ -94,6 +126,9 @@ export default async function AttendanceReportsPage({
         earlyLeave: 0,
         absent: 0,
         suspicious: 0,
+        leaveDays: 0,
+        leaveAllowance: defaultAllowance,
+        leaveUsedThisYear: 0,
       };
     if (r.status === "LATE") entry.late += 1;
     else if (r.status === "EARLY_LEAVE") entry.earlyLeave += 1;
@@ -111,7 +146,36 @@ export default async function AttendanceReportsPage({
   // so every day since their last check-in would otherwise be reported as an
   // absence for someone who had already left.
   const workDays = scheduleRow?.workDays ?? DEFAULT_SCHEDULE.workDays;
-  const workingDays = elapsedWorkDays(range, workDays);
+
+  // Attendance closed means nothing to be absent from: nobody could have checked
+  // in, so nobody failed to. This is also what clears the absences that had
+  // accumulated for every working day before the charity switched attendance on.
+  const openedAt = scheduleRow?.attendanceOpenedAt ?? null;
+
+  // Charity-wide holidays drop out of the working days entirely, for everyone.
+  // Nobody was expected in, so nobody is absent — and the day is not leave
+  // either, so it must not draw down anyone's balance.
+  const holidayRanges = holidays.map((h) => ({ startDate: h.startDate, endDate: h.endDate }));
+
+  const workingDays = openedAt
+    ? elapsedWorkDays(range, workDays)
+        .filter((day) => day >= toCivilDate(openedAt))
+        .filter((day) => !fallsWithin(day, holidayRanges))
+    : [];
+
+  // Leave grouped by person, split into what the balance counts (ANNUAL, across
+  // the whole year) and what merely excuses absence (every type, this month).
+  const leaveByUser = new Map<string, typeof leaves>();
+  for (const l of leaves) {
+    const list = leaveByUser.get(l.charityUserId) ?? [];
+    list.push(l);
+    leaveByUser.set(l.charityUserId, list);
+  }
+
+  // Working days of the whole leave year, used for the annual balance. Holidays
+  // are excluded here too: leave that lands on Eid should not be charged.
+  const yearWorkingDays = elapsedWorkDays({ start: yearStart, end: yearEnd }, workDays, new Date(yearEnd))
+    .filter((day) => !fallsWithin(day, holidayRanges));
 
   const filedDays = new Map<string, Set<number>>();
   for (const r of records) {
@@ -130,8 +194,23 @@ export default async function AttendanceReportsPage({
     // as an absence would be the system's error, not theirs.
     const firstCountedDay = toCivilDate(s.assignedAt).getTime() + 24 * 60 * 60 * 1000;
 
-    entry.absent = workingDays.filter(
+    const myLeave = leaveByUser.get(s.user.id) ?? [];
+    const leaveRanges = myLeave.map((l) => ({ startDate: l.startDate, endDate: l.endDate }));
+
+    // Days on leave are neither present nor absent — they are accounted for.
+    const countable = workingDays.filter(
       (day) => day.getTime() >= firstCountedDay && !filed.has(day.getTime())
+    );
+    entry.leaveDays = countable.filter((day) => fallsWithin(day, leaveRanges)).length;
+    entry.absent = countable.length - entry.leaveDays;
+
+    // Only ANNUAL leave draws down the balance; sick and unpaid excuse the day
+    // without consuming the entitlement.
+    const annualRanges = myLeave
+      .filter((l) => l.type === "ANNUAL")
+      .map((l) => ({ startDate: l.startDate, endDate: l.endDate }));
+    entry.leaveUsedThisYear = yearWorkingDays.filter((day) =>
+      fallsWithin(day, annualRanges)
     ).length;
   }
 
@@ -154,6 +233,7 @@ export default async function AttendanceReportsPage({
       <AttendanceReportClient
         charityName={charity.name}
         month={month}
+        currentMonth={currentRiyadhMonth()}
         summary={Array.from(summary.values())}
         records={records.map((r) => ({
           id: r.id,

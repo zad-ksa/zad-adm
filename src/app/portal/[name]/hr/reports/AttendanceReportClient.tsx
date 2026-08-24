@@ -37,6 +37,10 @@ type SummaryRow = {
   /** Derived from the schedule, not stored — see reports/page.tsx. */
   absent: number;
   suspicious: number;
+  /** Working days this month covered by leave — neither present nor absent. */
+  leaveDays: number;
+  leaveAllowance: number;
+  leaveUsedThisYear: number;
 };
 
 type RecordRow = {
@@ -77,13 +81,26 @@ function civilDay(iso: string): string {
   }).format(new Date(iso));
 }
 
-/** Month options: the current month and the eleven before it. */
-function recentMonths(current: string): string[] {
-  const [year, month] = current.split("-").map(Number);
+/**
+ * Month options: the twelve months ending with the CURRENT one.
+ *
+ * Anchored on today rather than on the selection. Building the list from the
+ * selected month meant choosing an older month deleted every newer month from
+ * the picker, leaving no way back to the present without editing the URL.
+ *
+ * A selection older than the window is kept as an extra option, so a link to a
+ * distant month still shows which month it is looking at.
+ */
+function recentMonths(currentMonth: string, selected: string): string[] {
+  const [year, month] = currentMonth.split("-").map(Number);
   const out: string[] = [];
   for (let i = 0; i < 12; i++) {
     const d = new Date(Date.UTC(year, month - 1 - i, 1));
     out.push(`${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}`);
+  }
+  if (selected && !out.includes(selected)) {
+    out.push(selected);
+    out.sort().reverse();
   }
   return out;
 }
@@ -102,6 +119,7 @@ const tdClass = "px-4 py-4 align-top";
 export default function AttendanceReportClient({
   charityName,
   month,
+  currentMonth,
   summary,
   records,
   staff,
@@ -110,6 +128,8 @@ export default function AttendanceReportClient({
 }: {
   charityName: string;
   month: string;
+  /** Today's Riyadh month, from the server — the picker is anchored on it. */
+  currentMonth: string;
   summary: SummaryRow[];
   records: RecordRow[];
   staff: { id: string; name: string }[];
@@ -216,6 +236,7 @@ export default function AttendanceReportClient({
       // Summed across staff rather than counted from records: there IS no
       // record for a day someone did not come.
       absent: summary.reduce((total, row) => total + row.absent, 0),
+      leave: summary.reduce((total, row) => total + row.leaveDays, 0),
     }),
     [records, summary]
   );
@@ -298,7 +319,10 @@ export default function AttendanceReportClient({
             hint="أيام عمل مضت بلا تحضير"
           />
         </div>
-        <div className="col-span-12 lg:col-span-2">
+        <div className="col-span-6 lg:col-span-2">
+          <StatTile label="إجازات" value={totals.leave} hint="لا تُحتسب غياباً" />
+        </div>
+        <div className="col-span-12 lg:col-span-12">
           <StatTile
             label="يحتاج مراجعة"
             value={totals.suspicious}
@@ -319,7 +343,7 @@ export default function AttendanceReportClient({
               style={fs.body}
               dir="ltr"
             >
-              {recentMonths(month).map((m) => (
+              {recentMonths(currentMonth, month).map((m) => (
                 <option key={m} value={m}>
                   {m}
                 </option>
@@ -415,6 +439,18 @@ export default function AttendanceReportClient({
                         }
                       >
                         {row.absent} غياب
+                      </span>
+                      {row.leaveDays > 0 && (
+                        <span className="text-sky-600 dark:text-sky-400">
+                          {row.leaveDays} إجازة
+                        </span>
+                      )}
+                      <span
+                        className="text-slate-400 dark:text-slate-500"
+                        title="الرصيد السنوي المتبقي من الإجازات السنوية"
+                      >
+                        رصيد {Math.max(0, row.leaveAllowance - row.leaveUsedThisYear)} /{" "}
+                        {row.leaveAllowance}
                       </span>
                     </div>
                   </li>

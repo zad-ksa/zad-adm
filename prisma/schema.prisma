@@ -78,6 +78,8 @@ model Charity {
   workSites         CharityWorkSite[]
   workSchedule      CharityWorkSchedule?
   attendanceRecords AttendanceRecord[]
+  holidays          CharityHoliday[]
+  employeeLeaves    EmployeeLeave[]
 
   // Optional second factor for attendance: the public IPs / CIDR ranges of the
   // charity's own network. Empty list = layer off. Browser GPS is trivially
@@ -111,6 +113,7 @@ model CharityUser {
   charities         CharityUserCharity[]
   designRequests    DesignRequest[]      @relation("SubmittedDesignRequests")
   attendanceRecords AttendanceRecord[]
+  leaves            EmployeeLeave[]
 }
 
 model CharityUserCharity {
@@ -146,6 +149,10 @@ model CharityUserCharity {
   // The title stays on the account as a job label (CEO, chairman, volunteer …)
   // and now carries no authority of its own.
   isAdmin Boolean @default(false)
+
+  /// تجاوز رصيد الإجازة السنوية لهذا الموظف في هذه الجمعية. `null` يعني اتّباع
+  /// رصيد الجمعية الافتراضي. على الرابط لا على الحساب، فلكل جمعية رصيدها.
+  annualLeaveDays Int?
 
   @@unique([charityUserId, charityId])
   @@index([charityUserId])
@@ -1028,6 +1035,61 @@ model AuditLog {
 // الحضور والانصراف — Attendance
 // ---------------------------------------------------------------------------
 
+/// نوع إجازة الموظف. `ANNUAL` وحدها هي التي تُخصم من الرصيد السنوي — المرضية
+/// وغيرها تمنع احتساب الغياب لكنها لا تستهلك رصيداً.
+enum LeaveType {
+  ANNUAL // سنوية
+  SICK // مرضية
+  UNPAID // بدون راتب
+  OTHER // أخرى
+}
+
+/// إجازة تخصّ الجمعية كلها: عيد، يوم وطني، تعطيل استثنائي.
+///
+/// مدى لا يوم واحد، لأن العيد أيام لا يوم. اليوم المفرد يُخزَّن بـ start = end.
+/// التواريخ مراسٍ منتصف ليل UTC ليوم الرياض المدني، كسائر تواريخ الحضور.
+model CharityHoliday {
+  id        String   @id @default(uuid())
+  charityId String
+  charity   Charity  @relation(fields: [charityId], references: [id], onDelete: Cascade)
+  /// اسم الإجازة كما يظهر في التقرير — «عيد الفطر»، «اليوم الوطني».
+  name      String
+  startDate DateTime
+  endDate   DateTime
+
+  createdById   String?
+  createdByName String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([charityId, startDate])
+}
+
+/// إجازة موظف بعينه.
+///
+/// `charityId` جزء من السجل لا تفصيلاً: الموظف قد يخدم جمعيتين، وإجازته من
+/// إحداهما لا تعني غيابه مبرَّراً في الأخرى.
+model EmployeeLeave {
+  id            String      @id @default(uuid())
+  charityUserId String
+  user          CharityUser @relation(fields: [charityUserId], references: [id], onDelete: Cascade)
+  charityId     String
+  charity       Charity     @relation(fields: [charityId], references: [id], onDelete: Cascade)
+
+  type      LeaveType @default(ANNUAL)
+  startDate DateTime
+  endDate   DateTime
+  note      String?
+
+  createdById   String?
+  createdByName String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([charityId, startDate])
+  @@index([charityUserId, startDate])
+}
+
 enum AttendanceStatus {
   PRESENT // حاضر
   LATE // متأخر
@@ -1073,7 +1135,25 @@ model CharityWorkSchedule {
   lateAfterMinutes        Int      @default(15)
   earlyLeaveBeforeMinutes Int      @default(15)
   workDays                Int[]    @default([0, 1, 2, 3, 4]) // Sunday(0)..Thursday(4)
-  updatedAt               DateTime @updatedAt
+
+  /// متى فُتح التحضير في هذه الجمعية. `null` يعني مغلقاً — وهي الحالة الابتدائية.
+  ///
+  /// حقل واحد يؤدي دورين لأنهما في الحقيقة سؤال واحد:
+  ///  1. البوابة — لا يُقبل تسجيل حضور ما لم يفتحه صاحب صلاحية manage_attendance،
+  ///     فلا تبدأ جمعية بجمع بيانات موقع موظفيها لمجرد أن الميزة نُشرت.
+  ///  2. بداية احتساب الغياب — الغياب مشتقّ لا مخزَّن، ويُحسب من هذا التاريخ فقط.
+  ///     فالأيام التي سبقت الفتح لا تُحتسب غياباً على أحد، وهذا ما يمسح الغيابات
+  ///     الوهمية المتراكمة قبل التفعيل.
+  ///
+  /// الإغلاق يُعيده إلى `null`، أي يمسح خط البداية أيضاً: إعادة الفتح تبدأ
+  /// الاحتساب من جديد. مقصود — فترة الإغلاق ليست غياباً، ولا يصح أن تُحتسب.
+  attendanceOpenedAt DateTime?
+
+  /// رصيد الإجازة السنوية الافتراضي لكل موظف، بأيام العمل. يمكن تجاوزه لموظف
+  /// بعينه من CharityUserCharity.annualLeaveDays.
+  annualLeaveDays Int @default(21)
+
+  updatedAt DateTime @updatedAt
 }
 
 /// One row per employee per charity per civil (Riyadh) day.

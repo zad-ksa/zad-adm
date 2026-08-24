@@ -1,7 +1,7 @@
 "use server";
 
 import { prisma } from "@/lib/db";
-import { AttendanceStatus, IpEnforcementMode, Prisma } from "@prisma/client";
+import { AttendanceStatus, IpEnforcementMode, LeaveType, Prisma } from "@prisma/client";
 import { AuthError, requireCharityMembership, requireCharityPermission } from "@/lib/guards";
 import { getClientIp, logAudit } from "@/lib/auditLog";
 import { headers } from "next/headers";
@@ -44,6 +44,21 @@ function refuse(error: unknown, fallback: string) {
   if (error instanceof AuthError) return fail("غير مصرح لك بإجراء هذه العملية");
   console.error(fallback, error);
   return fail(fallback);
+}
+
+/**
+ * Whether this charity has switched attendance on, and since when.
+ *
+ * Closed is the default and the fallback: a charity with no schedule row at all
+ * has not configured anything, so it certainly has not opted into collecting
+ * its staff's location.
+ */
+async function loadAttendanceGate(charityId: string): Promise<Date | null> {
+  const row = await prisma.charityWorkSchedule.findUnique({
+    where: { charityId },
+    select: { attendanceOpenedAt: true },
+  });
+  return row?.attendanceOpenedAt ?? null;
 }
 
 async function loadSchedule(charityId: string): Promise<ScheduleShape> {
@@ -115,6 +130,13 @@ export async function checkIn(charityId: string, fix: GeoInput) {
     const parsed = readFix(fix);
     if (parsed.error !== undefined) return fail(parsed.error);
     const { lat, lng, accuracy } = parsed;
+
+    // The gate comes first: nothing about a closed charity's attendance should
+    // be computed, and no coordinates should even be looked at.
+    const openedAt = await loadAttendanceGate(charityId);
+    if (!openedAt) {
+      return fail("التحضير غير مفعّل في هذه الجمعية بعد. يرجى مراجعة مسؤول الموارد البشرية");
+    }
 
     const now = new Date();
     const workDate = toCivilDate(now);
@@ -770,5 +792,322 @@ export async function saveIpPolicy(
     return { success: true as const };
   } catch (error) {
     return refuse(error, "تعذّر حفظ إعدادات الشبكة");
+  }
+}
+
+/**
+ * Opens or closes attendance for the charity.
+ *
+ * Closed is where every charity starts. Turning it on is a deliberate act by
+ * someone holding manage_attendance, because from that moment the app begins
+ * asking staff for their location — that is not something to switch on for a
+ * charity merely because the feature shipped.
+ *
+ * Opening also sets the line from which absence is counted. Days before it are
+ * not absences: nobody could have checked in, so nobody failed to. Closing
+ * clears that line again, so a period with attendance switched off never counts
+ * against anyone.
+ */
+export async function setAttendanceOpen(charityId: string, open: boolean) {
+  try {
+    const { session } = await requireCharityPermission(charityId, "manage_attendance");
+
+    if (open) {
+      const sites = await prisma.charityWorkSite.count({
+        where: { charityId, isActive: true },
+      });
+      // Opening without a site would let staff tap "حضور" only to be told they
+      // are outside a work location that does not exist.
+      if (sites === 0) {
+        return fail("أضف موقع عمل واحداً على الأقل قبل تفعيل التحضير");
+      }
+    }
+
+    const openedAt = open ? new Date() : null;
+
+    await prisma.charityWorkSchedule.upsert({
+      where: { charityId },
+      create: { charityId, attendanceOpenedAt: openedAt },
+      update: { attendanceOpenedAt: openedAt },
+    });
+
+    await logAudit({
+      actorType: "CHARITY_USER",
+      actorId: session.id,
+      actorName: session.name,
+      action: open ? "ATTENDANCE_OPENED" : "ATTENDANCE_CLOSED",
+      metadata: { charityId, openedAt: openedAt?.toISOString() ?? null },
+    });
+
+    return { success: true as const };
+  } catch (error) {
+    return refuse(error, "تعذّر تغيير حالة التحضير");
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Admin: holidays and employee leave
+// ---------------------------------------------------------------------------
+
+type ParsedRange =
+  | { ok: false; error: string }
+  | { ok: true; startDate: Date; endDate: Date };
+
+/** Parses a civil-day pair, rejecting malformed dates and reversed ranges. */
+function parseRange(start: string, end: string | undefined): ParsedRange {
+  const startDate = parseCivilDay(start || "");
+  // An omitted end means a single day, which is the common case.
+  const endDate = end ? parseCivilDay(end) : startDate;
+  if (!startDate || !endDate) return { ok: false, error: "التاريخ غير صالح" };
+  if (endDate < startDate) {
+    return { ok: false, error: "تاريخ النهاية قبل تاريخ البداية" };
+  }
+  // Guards against a typo turning into a decade-long holiday.
+  const days = (endDate.getTime() - startDate.getTime()) / (24 * 60 * 60 * 1000);
+  if (days > 366) return { ok: false, error: "المدة تتجاوز سنة" };
+  return { ok: true, startDate, endDate };
+}
+
+/**
+ * A day the whole charity is off — Eid, national day, an exceptional closure.
+ *
+ * Stored per charity, so one charity's arrangement never silently excuses
+ * absence at another charity the same person serves.
+ */
+export async function saveCharityHoliday(
+  charityId: string,
+  input: { id?: string; name: string; startDate: string; endDate?: string }
+) {
+  try {
+    const { session } = await requireCharityPermission(charityId, "manage_attendance");
+
+    const name = (input.name || "").trim();
+    if (!name) return fail("اسم الإجازة مطلوب");
+    if (name.length > 80) return fail("اسم الإجازة طويل جداً");
+
+    const range = parseRange(input.startDate, input.endDate);
+    if (!range.ok) return fail(range.error);
+
+    if (input.id) {
+      // Scoped by charityId as well, so a crafted request cannot edit another
+      // charity's holiday by guessing its uuid.
+      const updated = await prisma.charityHoliday.updateMany({
+        where: { id: input.id, charityId },
+        data: { name, startDate: range.startDate, endDate: range.endDate },
+      });
+      if (updated.count === 0) return fail("الإجازة غير موجودة");
+    } else {
+      await prisma.charityHoliday.create({
+        data: {
+          charityId,
+          name,
+          startDate: range.startDate,
+          endDate: range.endDate,
+          createdById: session.id,
+          createdByName: session.name,
+        },
+      });
+    }
+
+    await logAudit({
+      actorType: "CHARITY_USER",
+      actorId: session.id,
+      actorName: session.name,
+      action: input.id ? "HOLIDAY_UPDATED" : "HOLIDAY_CREATED",
+      targetType: "CharityHoliday",
+      targetId: input.id,
+      metadata: { charityId, name, startDate: input.startDate, endDate: input.endDate ?? null },
+    });
+
+    return { success: true as const };
+  } catch (error) {
+    return refuse(error, "تعذّر حفظ الإجازة");
+  }
+}
+
+export async function deleteCharityHoliday(charityId: string, holidayId: string) {
+  try {
+    const { session } = await requireCharityPermission(charityId, "manage_attendance");
+
+    const removed = await prisma.charityHoliday.deleteMany({
+      where: { id: holidayId, charityId },
+    });
+    if (removed.count === 0) return fail("الإجازة غير موجودة");
+
+    await logAudit({
+      actorType: "CHARITY_USER",
+      actorId: session.id,
+      actorName: session.name,
+      action: "HOLIDAY_DELETED",
+      targetType: "CharityHoliday",
+      targetId: holidayId,
+      metadata: { charityId },
+    });
+
+    return { success: true as const };
+  } catch (error) {
+    return refuse(error, "تعذّر حذف الإجازة");
+  }
+}
+
+/**
+ * Leave for one person. Days inside it are never counted as absence, and
+ * ANNUAL leave also draws down that person's yearly balance.
+ *
+ * Membership is read from the link, so leave can only be recorded for someone
+ * who actually belongs to THIS charity.
+ */
+export async function saveEmployeeLeave(
+  charityId: string,
+  input: {
+    id?: string;
+    targetUserId: string;
+    type: string;
+    startDate: string;
+    endDate?: string;
+    note?: string;
+  }
+) {
+  try {
+    const { session } = await requireCharityPermission(charityId, "manage_attendance");
+
+    if (!Object.values(LeaveType).includes(input.type as LeaveType)) {
+      return fail("نوع الإجازة غير صالح");
+    }
+
+    const range = parseRange(input.startDate, input.endDate);
+    if (!range.ok) return fail(range.error);
+
+    const link = await prisma.charityUserCharity.findUnique({
+      where: {
+        charityUserId_charityId: { charityUserId: input.targetUserId, charityId },
+      },
+      select: { id: true },
+    });
+    if (!link) return fail("الموظف غير موجود في هذه الجمعية");
+
+    const note = (input.note || "").trim() || null;
+    if (note && note.length > 300) return fail("الملاحظة طويلة جداً");
+
+    const data = {
+      type: input.type as LeaveType,
+      startDate: range.startDate,
+      endDate: range.endDate,
+      note,
+    };
+
+    if (input.id) {
+      const updated = await prisma.employeeLeave.updateMany({
+        where: { id: input.id, charityId },
+        data,
+      });
+      if (updated.count === 0) return fail("الإجازة غير موجودة");
+    } else {
+      await prisma.employeeLeave.create({
+        data: {
+          ...data,
+          charityUserId: input.targetUserId,
+          charityId,
+          createdById: session.id,
+          createdByName: session.name,
+        },
+      });
+    }
+
+    await logAudit({
+      actorType: "CHARITY_USER",
+      actorId: session.id,
+      actorName: session.name,
+      action: input.id ? "EMPLOYEE_LEAVE_UPDATED" : "EMPLOYEE_LEAVE_CREATED",
+      targetType: "CharityUser",
+      targetId: input.targetUserId,
+      metadata: {
+        charityId,
+        type: input.type,
+        startDate: input.startDate,
+        endDate: input.endDate ?? null,
+      },
+    });
+
+    return { success: true as const };
+  } catch (error) {
+    return refuse(error, "تعذّر حفظ الإجازة");
+  }
+}
+
+export async function deleteEmployeeLeave(charityId: string, leaveId: string) {
+  try {
+    const { session } = await requireCharityPermission(charityId, "manage_attendance");
+
+    const removed = await prisma.employeeLeave.deleteMany({
+      where: { id: leaveId, charityId },
+    });
+    if (removed.count === 0) return fail("الإجازة غير موجودة");
+
+    await logAudit({
+      actorType: "CHARITY_USER",
+      actorId: session.id,
+      actorName: session.name,
+      action: "EMPLOYEE_LEAVE_DELETED",
+      targetType: "EmployeeLeave",
+      targetId: leaveId,
+      metadata: { charityId },
+    });
+
+    return { success: true as const };
+  } catch (error) {
+    return refuse(error, "تعذّر حذف الإجازة");
+  }
+}
+
+/** The charity-wide annual leave allowance, and any per-member override. */
+export async function saveLeaveAllowance(
+  charityId: string,
+  input: { annualLeaveDays: number; overrides?: { userId: string; days: number | null }[] }
+) {
+  try {
+    const { session } = await requireCharityPermission(charityId, "manage_attendance");
+
+    const days = Math.round(Number(input.annualLeaveDays));
+    if (!Number.isFinite(days) || days < 0 || days > 365) {
+      return fail("رصيد الإجازة يجب أن يكون بين 0 و 365 يوماً");
+    }
+
+    for (const override of input.overrides || []) {
+      if (override.days === null || override.days === undefined) continue;
+      const value = Math.round(Number(override.days));
+      if (!Number.isFinite(value) || value < 0 || value > 365) {
+        return fail("رصيد الموظف يجب أن يكون بين 0 و 365 يوماً");
+      }
+    }
+
+    await prisma.charityWorkSchedule.upsert({
+      where: { charityId },
+      create: { charityId, annualLeaveDays: days },
+      update: { annualLeaveDays: days },
+    });
+
+    for (const override of input.overrides || []) {
+      const value =
+        override.days === null || override.days === undefined
+          ? null
+          : Math.round(Number(override.days));
+      await prisma.charityUserCharity.updateMany({
+        where: { charityUserId: override.userId, charityId },
+        data: { annualLeaveDays: value },
+      });
+    }
+
+    await logAudit({
+      actorType: "CHARITY_USER",
+      actorId: session.id,
+      actorName: session.name,
+      action: "LEAVE_ALLOWANCE_UPDATED",
+      metadata: { charityId, annualLeaveDays: days, overrides: input.overrides?.length ?? 0 },
+    });
+
+    return { success: true as const };
+  } catch (error) {
+    return refuse(error, "تعذّر حفظ رصيد الإجازات");
   }
 }

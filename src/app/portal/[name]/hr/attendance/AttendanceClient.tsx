@@ -10,12 +10,19 @@ import {
   LogIn,
   LogOut,
   Loader2,
+  CalendarOff,
+  Lock,
   MapPin,
   MoonStar,
   Wifi,
 } from "lucide-react";
 import { checkIn, checkOut } from "@/app/actions/attendance";
-import { ATTENDANCE_STATUS_LABELS, ScheduleShape, WEEKDAY_LABELS } from "@/lib/attendanceTime";
+import {
+  ATTENDANCE_STATUS_LABELS,
+  LEAVE_TYPE_LABELS,
+  ScheduleShape,
+  WEEKDAY_LABELS,
+} from "@/lib/attendanceTime";
 import { Banner, Chip, HrCard, SectionHead, fs } from "../ui";
 
 type DayRecord = {
@@ -92,6 +99,9 @@ function readPosition(): Promise<{ latitude: number; longitude: number; accuracy
 
 export default function AttendanceClient({
   charityId,
+  isAttendanceOpen,
+  todayHolidayName,
+  todayLeaveType,
   hasWorkSite,
   isWorkDay,
   schedule,
@@ -100,6 +110,12 @@ export default function AttendanceClient({
   monthRecords,
 }: {
   charityId: string;
+  /** Closed until a manager switches it on — see setAttendanceOpen. */
+  isAttendanceOpen: boolean;
+  /** Set when today is a charity-wide day off. */
+  todayHolidayName: string | null;
+  /** Set when this person is on leave today. */
+  todayLeaveType: string | null;
   hasWorkSite: boolean;
   isWorkDay: boolean;
   schedule: ScheduleShape;
@@ -146,10 +162,27 @@ export default function AttendanceClient({
 
   return (
     <div className="space-y-6">
-      {!hasWorkSite && (
-        <Banner tone="warn" icon={AlertTriangle}>
-          لم يتم تحديد موقع العمل بعد. يرجى مراجعة مدير النظام في الجمعية.
+      {/* The gate outranks every other notice: when attendance is closed there
+          is nothing to fix about work sites or anything else. */}
+      {!isAttendanceOpen ? (
+        <Banner tone="warn" icon={Lock}>
+          التحضير غير مفعّل في هذه الجمعية بعد. سيبدأ تسجيل الحضور فور تفعيله من مسؤول
+          الموارد البشرية.
         </Banner>
+      ) : todayHolidayName ? (
+        <Banner tone="ok" icon={CalendarOff}>
+          اليوم إجازة: {todayHolidayName}. لا حاجة لتسجيل الحضور، ولا يُحتسب غياباً.
+        </Banner>
+      ) : todayLeaveType ? (
+        <Banner tone="ok" icon={CalendarOff}>
+          أنت في إجازة {LEAVE_TYPE_LABELS[todayLeaveType] ?? ""} اليوم. لا يُحتسب غياباً.
+        </Banner>
+      ) : (
+        !hasWorkSite && (
+          <Banner tone="warn" icon={AlertTriangle}>
+            لم يتم تحديد موقع العمل بعد. يرجى مراجعة مدير النظام في الجمعية.
+          </Banner>
+        )
       )}
       {error && (
         <Banner tone="danger" icon={AlertTriangle}>
@@ -188,7 +221,7 @@ export default function AttendanceClient({
             {!hasCheckedIn ? (
               <button
                 onClick={() => submit("in")}
-                disabled={!hasWorkSite || busy !== null || isPending}
+                disabled={!isAttendanceOpen || !hasWorkSite || busy !== null || isPending}
                 style={fs.h3}
                 className="w-full flex items-center justify-center gap-2 py-6 rounded-2xl font-bold text-white
                            bg-gradient-to-b from-[#17857c] via-primary to-[#0c645d]

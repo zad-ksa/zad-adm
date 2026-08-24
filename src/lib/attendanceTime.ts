@@ -145,11 +145,41 @@ export function elapsedWorkDays(
   return days;
 }
 
+/** An inclusive span of civil days, as UTC-midnight anchors. */
+export type CivilRange = { startDate: Date; endDate: Date };
+
+/**
+ * Whether a civil day falls inside any of the given ranges.
+ *
+ * Ranges are inclusive at both ends: a holiday recorded as 20th–23rd covers the
+ * 23rd. Eid is days, not a day, so a single date would have forced managers to
+ * enter four rows and get one of them wrong.
+ */
+export function fallsWithin(day: Date, ranges: CivilRange[]): boolean {
+  const t = day.getTime();
+  return ranges.some((r) => t >= r.startDate.getTime() && t <= r.endDate.getTime());
+}
+
+/** Working days in the ranges that also fall in `[from, to)` and on a work day. */
+export function countWorkDaysInRanges(
+  ranges: CivilRange[],
+  workingDays: Date[]
+): number {
+  return workingDays.filter((day) => fallsWithin(day, ranges)).length;
+}
+
 /** Current Riyadh civil month as "YYYY-MM". */
 export function currentRiyadhMonth(now: Date = new Date()): string {
   const shifted = new Date(now.getTime() + RIYADH_OFFSET_MS);
   return `${shifted.getUTCFullYear()}-${String(shifted.getUTCMonth() + 1).padStart(2, "0")}`;
 }
+
+export const LEAVE_TYPE_LABELS: Record<string, string> = {
+  ANNUAL: "سنوية",
+  SICK: "مرضية",
+  UNPAID: "بدون راتب",
+  OTHER: "أخرى",
+};
 
 export const ATTENDANCE_STATUS_LABELS: Record<string, string> = {
   PRESENT: "حاضر",

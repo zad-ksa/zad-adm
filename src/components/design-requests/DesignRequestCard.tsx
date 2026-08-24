@@ -8,6 +8,7 @@ import {
   Building2,
   Palette,
   CalendarPlus,
+  FileCheck2,
 } from "lucide-react";
 import { useState, type ReactNode } from "react";
 import type { DesignRequestProgress } from "@/lib/designRequestProgress";
@@ -31,6 +32,8 @@ export type DesignRequestCardData = {
   /** Why the deadline moved. Shown to the charity, newest last. */
   extensions?: { id: string; days: number; reason: string; createdAt: string }[];
   attachments: { id: string; fileUrl: string; fileName: string; fileSize: number | null }[];
+  /** Finished files from Zad, attached on delivery. Kept after completion. */
+  deliverables?: { id: string; fileUrl: string; fileName: string; fileSize: number | null }[];
 };
 
 export default function DesignRequestCard({
@@ -180,6 +183,38 @@ export default function DesignRequestCard({
                 </span>
               </a>
             ))}
+          </div>
+        )}
+
+        {/* The delivered files, set apart from the brief: after completion this
+            is the only attachment block left, and it is what the charity came
+            back for. */}
+        {request.deliverables && request.deliverables.length > 0 && (
+          <div className="pt-4 border-t border-slate-100 dark:border-slate-800/60 space-y-2">
+            <p
+              className="flex items-center gap-1.5 font-bold text-primary dark:text-teal-300"
+              style={{ fontSize: "var(--dr-fs-eyebrow)" }}
+            >
+              <FileCheck2 className="w-3.5 h-3.5 shrink-0" />
+              الملفات النهائية
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {request.deliverables.map((att) => (
+                <a
+                  key={att.id}
+                  href={att.fileUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-primary/30 bg-primary/[0.05] dark:bg-primary/10 hover:bg-primary/[0.1] transition-colors"
+                  style={{ fontSize: "var(--dr-fs-meta)" }}
+                >
+                  <Download className="w-3.5 h-3.5 text-primary dark:text-teal-300 shrink-0" />
+                  <span className="font-bold text-primary dark:text-teal-300 truncate max-w-[140px]">
+                    {att.fileName}
+                  </span>
+                </a>
+              ))}
+            </div>
           </div>
         )}
 

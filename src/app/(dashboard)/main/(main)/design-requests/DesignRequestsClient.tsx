@@ -2,7 +2,7 @@
 
 import { useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { Palette, Plus, Filter, AlertTriangle, Loader2 } from "lucide-react";
+import { Palette, Plus, Filter, AlertTriangle, Loader2, Paperclip } from "lucide-react";
 import DesignRequestCard, { type DesignRequestCardData } from "@/components/design-requests/DesignRequestCard";
 import { markDesignRequestComplete, deleteDesignRequest } from "@/app/actions/designRequests";
 import type { DesignRequestProgress } from "@/lib/designRequestProgress";
@@ -10,6 +10,7 @@ import StaffNewDesignRequestModal from "./StaffNewDesignRequestModal";
 import StaffRescheduleDesignRequestModal from "./StaffRescheduleDesignRequestModal";
 import StaffRescheduleCharityQueueModal from "./StaffRescheduleCharityQueueModal";
 import StaffExtendDesignRequestModal from "./StaffExtendDesignRequestModal";
+import { uploadDesignRequestFiles } from "@/components/design-requests/uploadDesignRequestFiles";
 import DesignTypesModal, { type DesignTypeRow } from "./DesignTypesModal";
 
 type RequestItem = DesignRequestCardData & { charityId: string; status: "PENDING" | "COMPLETED" };
@@ -31,6 +32,7 @@ export default function DesignRequestsClient({
   const [isComposeOpen, setIsComposeOpen] = useState(false);
   const [confirmingId, setConfirmingId] = useState<string | null>(null);
   const [isCompleting, setIsCompleting] = useState(false);
+  const [deliverables, setDeliverables] = useState<File[]>([]);
   const [reschedulingId, setReschedulingId] = useState<string | null>(null);
   const [isQueueRescheduleOpen, setIsQueueRescheduleOpen] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
@@ -53,11 +55,20 @@ export default function DesignRequestsClient({
     if (!confirmingId) return;
     setIsCompleting(true);
     try {
-      const res = await markDesignRequestComplete(confirmingId);
-      if (res.error) alert(res.error);
+      // Uploaded only now, at the moment of delivery — an abandoned dialog
+      // should not leave orphaned files in storage.
+      const uploaded = deliverables.length ? await uploadDesignRequestFiles(deliverables) : [];
+      const res = await markDesignRequestComplete(confirmingId, uploaded);
+      if (res.error) {
+        alert(res.error);
+        return;
+      }
+      setDeliverables([]);
+      setConfirmingId(null);
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "تعذّر رفع الملفات");
     } finally {
       setIsCompleting(false);
-      setConfirmingId(null);
       startTransition(() => router.refresh());
     }
   };
@@ -294,12 +305,56 @@ export default function DesignRequestsClient({
             <h3 className="font-bold text-slate-900 dark:text-slate-100 mb-2" style={{ fontSize: "var(--dr-fs-title)" }}>
               إنهاء طلب التصميم
             </h3>
-            <p className="text-slate-500 dark:text-slate-400 mb-6" style={{ fontSize: "var(--dr-fs-body)" }}>
-              سيتم وضع الطلب كمُنجز، وحذف مرفقاته نهائيًا من التخزين. هل تريد المتابعة؟
+            <p className="text-slate-500 dark:text-slate-400 mb-4" style={{ fontSize: "var(--dr-fs-body)" }}>
+              سيتم وضع الطلب كمُنجز، وحذف ملفات الجمعية المرفقة مع الطلب من التخزين. أما
+              الملفات النهائية التي ترفعها هنا فتبقى وتظهر للجمعية.
             </p>
+
+            <div className="mb-6 text-right">
+              <label
+                className="flex items-center justify-center gap-2 h-11 rounded-xl border-2 border-dashed border-slate-200 dark:border-slate-700 hover:border-primary/40 cursor-pointer text-slate-500 dark:text-slate-400 hover:text-primary dark:hover:text-teal-300 transition-colors font-bold"
+                style={{ fontSize: "var(--dr-fs-meta)" }}
+              >
+                <Paperclip className="w-4 h-4" />
+                إرفاق الملف النهائي (اختياري)
+                <input
+                  type="file"
+                  multiple
+                  onChange={(e) =>
+                    setDeliverables((prev) => [...prev, ...Array.from(e.target.files || [])])
+                  }
+                  className="hidden"
+                />
+              </label>
+              {deliverables.length > 0 && (
+                <div className="mt-2 flex flex-wrap gap-2">
+                  {deliverables.map((file, i) => (
+                    <span
+                      key={i}
+                      className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-primary/[0.06] text-primary dark:text-teal-300"
+                      style={{ fontSize: "var(--dr-fs-eyebrow)" }}
+                    >
+                      <span className="truncate max-w-[120px]">{file.name}</span>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setDeliverables((prev) => prev.filter((_, idx) => idx !== i))
+                        }
+                        className="text-primary/60 hover:text-primary"
+                      >
+                        ×
+                      </button>
+                    </span>
+                  ))}
+                </div>
+              )}
+            </div>
             <div className="flex items-center gap-3">
               <button
-                onClick={() => setConfirmingId(null)}
+                onClick={() => {
+                  setConfirmingId(null);
+                  setDeliverables([]);
+                }}
                 disabled={isCompleting}
                 className="flex-1 h-10 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 font-bold transition-colors disabled:opacity-50"
                 style={{ fontSize: "var(--dr-fs-meta)" }}

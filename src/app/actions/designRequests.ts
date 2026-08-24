@@ -255,13 +255,34 @@ export async function createDesignRequestByStaff(input: CreateDesignRequestInput
   }
 }
 
-export async function markDesignRequestComplete(id: string) {
+/**
+ * Marks a request delivered, optionally with the finished files attached.
+ *
+ * The deliverables are what the charity came for, so they are stored as
+ * DELIVERABLE and survive — while the charity's own BRIEF files are still
+ * cleared from storage, because those were inputs whose purpose has ended.
+ * Scoping the delete by kind is the whole reason the kind exists; deleting
+ * every attachment here would erase the delivery along with the brief.
+ *
+ * Attaching is optional: plenty of work is handed over outside the system, and
+ * refusing to close the request without a file would just push staff to upload
+ * a placeholder.
+ */
+export async function markDesignRequestComplete(
+  id: string,
+  deliverables: DesignRequestAttachmentInput[] = []
+) {
   try {
     const session = await requireDesignStaff();
 
+    if (deliverables.length > 10) return { error: "الحد الأقصى 10 ملفات" };
+
     const request = await prisma.designRequest.findUnique({
       where: { id },
-      include: { attachments: true, charity: { select: { name: true } } },
+      include: {
+        attachments: { where: { kind: "BRIEF" } },
+        charity: { select: { name: true } },
+      },
     });
     if (!request) return { error: "الطلب غير موجود" };
     if (request.status === "COMPLETED") return { success: true };
@@ -276,7 +297,14 @@ export async function markDesignRequestComplete(id: string) {
     }
 
     await prisma.$transaction([
-      prisma.designRequestAttachment.deleteMany({ where: { requestId: id } }),
+      prisma.designRequestAttachment.deleteMany({ where: { requestId: id, kind: "BRIEF" } }),
+      ...(deliverables.length
+        ? [
+            prisma.designRequestAttachment.createMany({
+              data: deliverables.map((d) => ({ ...d, requestId: id, kind: "DELIVERABLE" as const })),
+            }),
+          ]
+        : []),
       prisma.designRequest.update({
         where: { id },
         data: { status: "COMPLETED", completedAt: new Date(), completedById: session.id },

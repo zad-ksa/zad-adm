@@ -65,12 +65,24 @@ export default async function DesignRequestsPage() {
           reason: e.reason,
           createdAt: formatCivilDateTime(e.createdAt),
         })),
-        attachments: r.attachments.map((a) => ({
-          id: a.id,
-          fileUrl: a.fileUrl,
-          fileName: a.fileName,
-          fileSize: a.fileSize,
-        })),
+        // Split by kind: the brief is what the charity sent, the deliverables
+        // are what Zad handed back. They read very differently on the card.
+        attachments: r.attachments
+          .filter((a) => a.kind === "BRIEF")
+          .map((a) => ({
+            id: a.id,
+            fileUrl: a.fileUrl,
+            fileName: a.fileName,
+            fileSize: a.fileSize,
+          })),
+        deliverables: r.attachments
+          .filter((a) => a.kind === "DELIVERABLE")
+          .map((a) => ({
+            id: a.id,
+            fileUrl: a.fileUrl,
+            fileName: a.fileName,
+            fileSize: a.fileSize,
+          })),
       },
       progress,
     };

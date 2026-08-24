@@ -991,18 +991,30 @@ model DesignRequestExtension {
   @@index([requestId, createdAt])
 }
 
+/// ما الذي يمثّله المرفق — وهو ما يقرّر مصيره عند إنهاء الطلب.
+enum DesignAttachmentKind {
+  /// ملفات الجمعية المرفقة مع الطلب. تُحذف من التخزين عند الإنهاء، لأنها مواد
+  /// إدخال انتهى الغرض منها ولا داعي لإبقائها تستهلك مساحة.
+  BRIEF
+  /// الملف النهائي الذي يرفعه موظف زاد عند التسليم. يبقى — فهو ناتج العمل،
+  /// والجمعية تحتاج تنزيله بعد الإنهاء لا قبله.
+  DELIVERABLE
+}
+
 model DesignRequestAttachment {
-  id           String        @id @default(uuid())
+  id           String               @id @default(uuid())
   requestId    String
-  request      DesignRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
+  request      DesignRequest        @relation(fields: [requestId], references: [id], onDelete: Cascade)
+  kind         DesignAttachmentKind @default(BRIEF)
   fileUrl      String
   publicId     String
-  resourceType String        @default("raw") // "raw" | "image" | "video" — مطلوب لنجاح حذف الملف من Cloudinary
+  resourceType String               @default("raw") // "raw" | "image" | "video" — مطلوب لنجاح حذف الملف من Cloudinary
   fileName     String
   fileSize     Int?
-  createdAt    DateTime      @default(now())
+  createdAt    DateTime             @default(now())
 
   @@index([requestId])
+  @@index([requestId, kind])
 }
 
 // ── سجل التدقيق (Audit Log) ─────────────────────────────────────────────────

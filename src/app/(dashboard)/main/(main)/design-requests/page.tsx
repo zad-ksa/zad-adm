@@ -19,14 +19,22 @@ export default async function DesignRequestsPage() {
     redirect("/main");
   }
 
-  const [charities, requests] = await Promise.all([
+  const [charities, requests, designTypes] = await Promise.all([
     prisma.charity.findMany({ select: { id: true, name: true }, orderBy: { name: "asc" } }),
     prisma.designRequest.findMany({
       include: {
         charity: { select: { id: true, name: true } },
         attachments: true,
+        types: { select: { id: true, name: true } },
+        extensions: { orderBy: { createdAt: "asc" } },
       },
       orderBy: [{ scheduledStartDate: "asc" }, { submittedAt: "asc" }],
+    }),
+    // Inactive types are included here: the management panel has to show them
+    // to allow reactivating one, unlike the submission form.
+    prisma.designType.findMany({
+      orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
+      select: { id: true, name: true, workingDays: true, isActive: true },
     }),
   ]);
 
@@ -48,6 +56,15 @@ export default async function DesignRequestsPage() {
         charityId: r.charity.id,
         charityName: r.charity.name,
         status: r.status,
+        types: r.types.map((t) => ({ id: t.id, name: t.name })),
+        totalWorkingDays: r.baseWorkingDays + r.addedDays,
+        addedDays: r.addedDays,
+        extensions: r.extensions.map((e) => ({
+          id: e.id,
+          days: e.days,
+          reason: e.reason,
+          createdAt: formatCivilDateTime(e.createdAt),
+        })),
         attachments: r.attachments.map((a) => ({
           id: a.id,
           fileUrl: a.fileUrl,
@@ -59,5 +76,11 @@ export default async function DesignRequestsPage() {
     };
   });
 
-  return <DesignRequestsClient initialItems={items} charities={charities} />;
+  return (
+    <DesignRequestsClient
+      initialItems={items}
+      charities={charities}
+      designTypes={designTypes}
+    />
+  );
 }

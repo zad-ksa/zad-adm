@@ -9,6 +9,8 @@ import type { DesignRequestProgress } from "@/lib/designRequestProgress";
 import StaffNewDesignRequestModal from "./StaffNewDesignRequestModal";
 import StaffRescheduleDesignRequestModal from "./StaffRescheduleDesignRequestModal";
 import StaffRescheduleCharityQueueModal from "./StaffRescheduleCharityQueueModal";
+import StaffExtendDesignRequestModal from "./StaffExtendDesignRequestModal";
+import DesignTypesModal, { type DesignTypeRow } from "./DesignTypesModal";
 
 type RequestItem = DesignRequestCardData & { charityId: string; status: "PENDING" | "COMPLETED" };
 type Item = { request: RequestItem; progress: DesignRequestProgress };
@@ -16,9 +18,11 @@ type Item = { request: RequestItem; progress: DesignRequestProgress };
 export default function DesignRequestsClient({
   initialItems,
   charities,
+  designTypes,
 }: {
   initialItems: Item[];
   charities: { id: string; name: string }[];
+  designTypes: DesignTypeRow[];
 }) {
   const router = useRouter();
   const [, startTransition] = useTransition();
@@ -30,6 +34,8 @@ export default function DesignRequestsClient({
   const [reschedulingId, setReschedulingId] = useState<string | null>(null);
   const [isQueueRescheduleOpen, setIsQueueRescheduleOpen] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [extendingId, setExtendingId] = useState<string | null>(null);
+  const [isTypesOpen, setIsTypesOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 
   const filtered = useMemo(() => {
@@ -144,6 +150,15 @@ export default function DesignRequestsClient({
           </div>
 
           <div className="flex items-center gap-2">
+            <button
+              onClick={() => setIsTypesOpen(true)}
+              title="تعديل أنواع التصاميم ومدد تنفيذها"
+              className="h-10 px-4 flex items-center gap-2 rounded-xl bg-slate-100 text-slate-600 dark:bg-[#111] dark:text-slate-400 border border-transparent dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 transition-colors font-bold"
+              style={{ fontSize: "var(--dr-fs-meta)" }}
+            >
+              <Palette className="w-4 h-4" />
+              أنواع التصاميم
+            </button>
             {charityFilter && tab === "PENDING" && (
               <button
                 onClick={() => setIsQueueRescheduleOpen(true)}
@@ -208,6 +223,14 @@ export default function DesignRequestsClient({
                       جدولة
                     </button>
                     <button
+                      onClick={() => setExtendingId(it.request.id)}
+                      title="إضافة أيام دون تغيير تاريخ البدء"
+                      className="flex-1 h-9 rounded-xl bg-slate-100 text-slate-600 dark:bg-[#111] dark:text-slate-400 border border-transparent dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 transition-colors font-bold"
+                      style={{ fontSize: "var(--dr-fs-meta)" }}
+                    >
+                      +أيام
+                    </button>
+                    <button
                       onClick={() => setDeletingId(it.request.id)}
                       className="flex-1 h-9 rounded-xl bg-rose-50 text-rose-600 dark:bg-rose-500/10 dark:text-rose-400 hover:bg-rose-500 hover:text-white dark:hover:bg-rose-500 dark:hover:text-[#0A0A0A] transition-colors font-bold"
                       style={{ fontSize: "var(--dr-fs-meta)" }}
@@ -222,9 +245,35 @@ export default function DesignRequestsClient({
         </div>
       )}
 
+      {isTypesOpen && (
+        <DesignTypesModal
+          initialTypes={designTypes}
+          onClose={() => setIsTypesOpen(false)}
+          onChanged={() => router.refresh()}
+        />
+      )}
+
+      {extendingId !== null && (() => {
+        const target = initialItems.find((it) => it.request.id === extendingId);
+        if (!target) return null;
+        return (
+          <StaffExtendDesignRequestModal
+            requestId={extendingId}
+            currentDays={target.request.totalWorkingDays ?? 0}
+            expectedCompletionDate={target.request.expectedCompletionDate}
+            onClose={() => setExtendingId(null)}
+            onSuccess={() => {
+              setExtendingId(null);
+              router.refresh();
+            }}
+          />
+        );
+      })()}
+
       {isComposeOpen && (
         <StaffNewDesignRequestModal
           charities={charities}
+          designTypes={designTypes.filter((t) => t.isActive)}
           onClose={() => setIsComposeOpen(false)}
           onSuccess={() => {
             setIsComposeOpen(false);

@@ -1,7 +1,15 @@
 "use client";
 
-import { Paperclip, Download, Calendar, CalendarCheck, Building2 } from "lucide-react";
-import type { ReactNode } from "react";
+import {
+  Paperclip,
+  Download,
+  Calendar,
+  CalendarCheck,
+  Building2,
+  Palette,
+  CalendarPlus,
+} from "lucide-react";
+import { useState, type ReactNode } from "react";
 import type { DesignRequestProgress } from "@/lib/designRequestProgress";
 import DesignRequestCountdownBadge from "./DesignRequestCountdownBadge";
 
@@ -15,6 +23,13 @@ export type DesignRequestCardData = {
   expectedCompletionDate: string;
   /** Staff view only. */
   charityName?: string;
+  /** Chosen design types, for display. */
+  types?: { id: string; name: string }[];
+  /** Business days promised: the types' total plus anything staff added. */
+  totalWorkingDays?: number;
+  addedDays?: number;
+  /** Why the deadline moved. Shown to the charity, newest last. */
+  extensions?: { id: string; days: number; reason: string; createdAt: string }[];
   attachments: { id: string; fileUrl: string; fileName: string; fileSize: number | null }[];
 };
 
@@ -27,6 +42,12 @@ export default function DesignRequestCard({
   progress: DesignRequestProgress;
   actions?: ReactNode;
 }) {
+  const [expanded, setExpanded] = useState(false);
+
+  // A rough threshold rather than measuring the rendered box: the clamp is two
+  // lines, and anything under this reliably fits in them at every card width.
+  const isLongDescription = (request.description?.length ?? 0) > 110;
+
   return (
     <div className="design-requests-ui group flex flex-col h-full rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0A0A0A] p-5 shadow-sm hover:shadow-md dark:shadow-none hover:border-primary/40 dark:hover:border-teal-500/40 transition-all duration-300">
       <div className="flex items-start justify-between gap-4">
@@ -47,18 +68,78 @@ export default function DesignRequestCard({
             {request.title}
           </h3>
           {request.description && (
-            <p
-              className="text-slate-500 dark:text-slate-400 line-clamp-2"
-              style={{ fontSize: "var(--dr-fs-body)" }}
-            >
-              {request.description}
-            </p>
+            <div>
+              <p
+                className={`text-slate-500 dark:text-slate-400 whitespace-pre-line ${
+                  expanded ? "" : "line-clamp-2"
+                }`}
+                style={{ fontSize: "var(--dr-fs-body)" }}
+              >
+                {request.description}
+              </p>
+              {/* Only offered when the text is actually long enough to be cut.
+                  A "show more" that reveals nothing is worse than none. */}
+              {isLongDescription && (
+                <button
+                  type="button"
+                  onClick={() => setExpanded((v) => !v)}
+                  className="mt-1 font-bold text-primary dark:text-teal-300 hover:underline"
+                  style={{ fontSize: "var(--dr-fs-eyebrow)" }}
+                >
+                  {expanded ? "عرض أقل" : "عرض المزيد"}
+                </button>
+              )}
+            </div>
           )}
         </div>
         <div className="shrink-0">
           <DesignRequestCountdownBadge progress={progress} />
         </div>
       </div>
+
+      {request.types && request.types.length > 0 && (
+        <div className="mt-3 flex flex-wrap items-center gap-1.5">
+          <Palette className="w-3 h-3 text-slate-400 dark:text-slate-500 shrink-0" />
+          {request.types.map((t) => (
+            <span
+              key={t.id}
+              className="px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300"
+              style={{ fontSize: "var(--dr-fs-eyebrow)" }}
+            >
+              {t.name}
+            </span>
+          ))}
+        </div>
+      )}
+
+      {request.extensions && request.extensions.length > 0 && (
+        <div className="mt-3 rounded-xl bg-amber-500/[0.07] px-3 py-2.5 space-y-2">
+          <p
+            className="flex items-center gap-1.5 font-bold text-amber-700 dark:text-amber-400"
+            style={{ fontSize: "var(--dr-fs-eyebrow)" }}
+          >
+            <CalendarPlus className="w-3 h-3 shrink-0" />
+            تم تمديد موعد التسليم
+          </p>
+          {request.extensions.map((ext) => (
+            <div key={ext.id} className="flex items-start gap-2">
+              <span
+                className="shrink-0 px-1.5 py-0.5 rounded bg-amber-500/15 text-amber-700 dark:text-amber-400 font-bold tabular-nums"
+                style={{ fontSize: "var(--dr-fs-eyebrow)" }}
+              >
+                +{ext.days}
+              </span>
+              <span
+                className="text-slate-600 dark:text-slate-300 whitespace-pre-line"
+                style={{ fontSize: "var(--dr-fs-eyebrow)" }}
+              >
+                {ext.reason}
+                <span className="text-slate-400 dark:text-slate-500"> — {ext.createdAt}</span>
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
 
       <div className="mt-auto pt-6 flex flex-col gap-4">
         <div
@@ -73,6 +154,12 @@ export default function DesignRequestCard({
             <CalendarCheck className="w-4 h-4 text-primary dark:text-teal-400 shrink-0" />
             <span className="text-primary dark:text-teal-400">التسليم المتوقع:</span>{" "}
             <span className="font-bold text-slate-900 dark:text-slate-100">{request.expectedCompletionDate}</span>
+            {typeof request.totalWorkingDays === "number" && (
+              <span className="text-slate-400 dark:text-slate-500 tabular-nums">
+                ({request.totalWorkingDays} يوم عمل
+                {request.addedDays ? ` منها ${request.addedDays} مضافة` : ""})
+              </span>
+            )}
           </span>
         </div>
 

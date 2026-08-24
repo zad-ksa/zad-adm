@@ -76,7 +76,55 @@ export function formatCivilDate(d: Date | string): string {
   }).format(date);
 }
 
-export function computeDesignRequestDates(submittedAt: Date, baseTailDate?: Date): { scheduledStartDate: Date; expectedCompletionDate: Date } {
+/**
+ * Duration used only when a caller does not name one.
+ *
+ * No submission path relies on this any more — choosing a design type is
+ * required, and the duration comes from the types themselves. It stays as the
+ * parameter default so that the arithmetic below has a defined shape, and it
+ * matches what every request created before design types existed was given.
+ */
+export const DEFAULT_DESIGN_WORKING_DAYS = 3;
+
+/**
+ * Adds `days` business days to a start instant, in Riyadh terms.
+ *
+ * Extracted from computeDesignRequestDates so that extending an existing
+ * request re-runs the *same* arithmetic from the *same* start — the whole point
+ * of an extension is that only the duration moves.
+ */
+export function addDesignBusinessDays(scheduledStartDate: Date, days: number): Date {
+  const RIYADH_OFFSET_MS = 3 * 60 * 60 * 1000;
+  const startRiyadh = new Date(scheduledStartDate.getTime() + RIYADH_OFFSET_MS);
+
+  const completionRiyadh = new Date(startRiyadh);
+  let added = 0;
+  while (added < Math.max(1, days)) {
+    completionRiyadh.setUTCDate(completionRiyadh.getUTCDate() + 1);
+    if (completionRiyadh.getUTCDay() !== 5 && completionRiyadh.getUTCDay() !== 6) {
+      added++;
+    }
+  }
+
+  // Landing exactly on 10:00 means the work would finish at the START of the
+  // following day; pull it back to 18:00 of the previous business day so the
+  // promise reads as "end of the Nth day".
+  if (completionRiyadh.getUTCHours() === 10 && completionRiyadh.getUTCMinutes() === 0) {
+    completionRiyadh.setUTCDate(completionRiyadh.getUTCDate() - 1);
+    while (completionRiyadh.getUTCDay() === 5 || completionRiyadh.getUTCDay() === 6) {
+      completionRiyadh.setUTCDate(completionRiyadh.getUTCDate() - 1);
+    }
+    completionRiyadh.setUTCHours(18, 0, 0, 0);
+  }
+
+  return new Date(completionRiyadh.getTime() - RIYADH_OFFSET_MS);
+}
+
+export function computeDesignRequestDates(
+  submittedAt: Date,
+  baseTailDate?: Date,
+  workingDays: number = DEFAULT_DESIGN_WORKING_DAYS
+): { scheduledStartDate: Date; expectedCompletionDate: Date } {
   const RIYADH_OFFSET_MS = 3 * 60 * 60 * 1000;
   
   let scheduledStartDateRiyadh: Date;
@@ -114,32 +162,13 @@ export function computeDesignRequestDates(submittedAt: Date, baseTailDate?: Date
     }
   }
   
-  // expectedCompletionDate is exactly 3 business days later from scheduledStartDateRiyadh.
-  let expectedCompletionRiyadh = new Date(scheduledStartDateRiyadh);
-  let daysAdded = 0;
-  while (daysAdded < 3) {
-    expectedCompletionRiyadh.setUTCDate(expectedCompletionRiyadh.getUTCDate() + 1);
-    if (expectedCompletionRiyadh.getUTCDay() !== 5 && expectedCompletionRiyadh.getUTCDay() !== 6) {
-      daysAdded++;
-    }
-  }
-
-  // If the calculated completion time is exactly 10:00 AM, shift it back to the end of the PREVIOUS business day (18:00 PM).
-  // This satisfies the requirement: "if pushed to next day morning, finish at the end of the 3rd day, not start of 4th day".
-  if (expectedCompletionRiyadh.getUTCHours() === 10 && expectedCompletionRiyadh.getUTCMinutes() === 0) {
-    // shift back 1 business day
-    expectedCompletionRiyadh.setUTCDate(expectedCompletionRiyadh.getUTCDate() - 1);
-    while (expectedCompletionRiyadh.getUTCDay() === 5 || expectedCompletionRiyadh.getUTCDay() === 6) {
-      expectedCompletionRiyadh.setUTCDate(expectedCompletionRiyadh.getUTCDate() - 1);
-    }
-    // Set to 18:00 PM
-    expectedCompletionRiyadh.setUTCHours(18, 0, 0, 0);
-  }
-  
-  // Convert back to UTC by subtracting the offset
   const scheduledStartDate = new Date(scheduledStartDateRiyadh.getTime() - RIYADH_OFFSET_MS);
-  const expectedCompletionDate = new Date(expectedCompletionRiyadh.getTime() - RIYADH_OFFSET_MS);
-  
+
+  // The duration now comes from the request's design types rather than a fixed
+  // three; addDesignBusinessDays holds the arithmetic so an extension later
+  // reproduces it exactly.
+  const expectedCompletionDate = addDesignBusinessDays(scheduledStartDate, workingDays);
+
   return { scheduledStartDate, expectedCompletionDate };
 }
 

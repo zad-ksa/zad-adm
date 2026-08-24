@@ -894,6 +894,28 @@ enum DesignRequestStatus {
   COMPLETED // منجز
 }
 
+/// نوع التصميم وعدد أيام العمل الخاصة به — يديره موظف زاد من صفحة طلبات التصاميم.
+///
+/// تعديل `workingDays` لاحقاً لا يمسّ الطلبات القائمة إطلاقاً: مواعيدها محسوبة
+/// ومجمّدة عند الإنشاء (انظر DesignRequest أدناه)، وعدد الأيام المستعمل وقتها
+/// محفوظ في `baseWorkingDays`. النوع الجديد يسري على الطلبات الجديدة وحدها.
+model DesignType {
+  id          String  @id @default(uuid())
+  name        String  @unique
+  workingDays Int
+  /// يُعطَّل ولا يُحذف: الطلبات السابقة تشير إليه، وسجلّها يجب أن يظل قادراً على
+  /// قول أي نوع كانت.
+  isActive    Boolean @default(true)
+  sortOrder   Int     @default(0)
+
+  requests DesignRequest[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([isActive, sortOrder])
+}
+
 model DesignRequest {
   id          String              @id @default(uuid())
   charityId   String
@@ -901,6 +923,18 @@ model DesignRequest {
   title       String
   description String?             @db.Text
   status      DesignRequestStatus @default(PENDING)
+
+  /// أنواع التصميم المختارة. يجوز اختيار أكثر من نوع، ومجموع أيامها هو
+  /// `baseWorkingDays`.
+  types DesignType[]
+
+  /// عدد أيام العمل المستعمل فعلاً عند حساب الموعد، مثبَّتاً وقت الإنشاء.
+  /// وجوده يجعل الموعد قابلاً للتفسير بعد شهور، ويحمي الطلب من تعديل لاحق على
+  /// أيام النوع.
+  baseWorkingDays Int @default(3)
+  /// أيام أضافها موظف زاد بعد الرفع. تُزاد على المدة ولا تمسّ تاريخ البدء —
+  /// فصلها عن `baseWorkingDays` هو ما يُبقي الأصل والتمديد مقروءين معاً.
+  addedDays Int @default(0)
 
   // جدولة الطابور — تُحسب مرة واحدة عند الإنشاء ولا يُعاد حسابها أبداً بعد ذلك،
   // حتى لو أُنجز طلب سابق قبل موعده. لا تُضف منطق إعادة جدولة هنا.
@@ -919,6 +953,7 @@ model DesignRequest {
   createdByEmployee   Employee?    @relation("CreatedDesignRequests", fields: [createdByEmployeeId], references: [id], onDelete: SetNull)
 
   attachments DesignRequestAttachment[]
+  extensions  DesignRequestExtension[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -926,6 +961,27 @@ model DesignRequest {
   @@index([charityId, status])
   @@index([status])
   @@index([scheduledStartDate])
+}
+
+/// سبب كل تمديد على حدة — لا حقل واحد يُكتب فوقه.
+///
+/// الجمعية ترى هذه القائمة في صفحة طلباتها، فهي تفسير موعد التسليم لا مجرد
+/// أثر داخلي: الطلب الذي تأخّر مرتين له سببان، ودمجهما في نص واحد يخفي أن
+/// التأخير حدث مرتين.
+model DesignRequestExtension {
+  id        String        @id @default(uuid())
+  requestId String
+  request   DesignRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
+  /// أيام العمل المضافة في هذه المرة تحديداً.
+  days      Int
+  reason    String        @db.Text
+  /// موظف زاد الذي أضافها. تُترك بلا علاقة حتى يبقى السبب ظاهراً للجمعية حتى
+  /// لو حُذف الحساب لاحقاً.
+  createdById   String?
+  createdByName String?
+  createdAt     DateTime @default(now())
+
+  @@index([requestId, createdAt])
 }
 
 model DesignRequestAttachment {

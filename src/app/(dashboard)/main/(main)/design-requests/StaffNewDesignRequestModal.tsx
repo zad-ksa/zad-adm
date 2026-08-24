@@ -3,14 +3,19 @@
 import { useState } from "react";
 import { X, Paperclip, Send, Loader2, AlertTriangle } from "lucide-react";
 import { createDesignRequestByStaff } from "@/app/actions/designRequests";
+import DesignTypePicker, {
+  type DesignTypeOption,
+} from "@/components/design-requests/DesignTypePicker";
 import { uploadDesignRequestFiles } from "@/components/design-requests/uploadDesignRequestFiles";
 
 export default function StaffNewDesignRequestModal({
   charities,
+  designTypes,
   onClose,
   onSuccess,
 }: {
   charities: { id: string; name: string }[];
+  designTypes: DesignTypeOption[];
   onClose: () => void;
   onSuccess: () => void;
 }) {
@@ -19,6 +24,7 @@ export default function StaffNewDesignRequestModal({
   const [description, setDescription] = useState("");
   const [startDate, setStartDate] = useState("");
   const [files, setFiles] = useState<File[]>([]);
+  const [typeIds, setTypeIds] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -28,12 +34,20 @@ export default function StaffNewDesignRequestModal({
 
     if (!charityId) return setError("يرجى اختيار الجمعية");
     if (!title.trim()) return setError("يرجى إدخال عنوان الطلب");
+    if (typeIds.length === 0) return setError("يرجى اختيار نوع التصميم");
 
     setIsSubmitting(true);
     try {
       const attachments = await uploadDesignRequestFiles(files);
       const parsedStartDate = startDate ? new Date(startDate) : undefined;
-      const res = await createDesignRequestByStaff({ charityId, title, description, attachments, startDate: parsedStartDate });
+      const res = await createDesignRequestByStaff({
+        charityId,
+        title,
+        description,
+        attachments,
+        typeIds,
+        startDate: parsedStartDate,
+      });
       if (res.error) {
         setError(res.error);
         return;
@@ -129,6 +143,16 @@ export default function StaffNewDesignRequestModal({
               style={{ fontSize: "var(--dr-fs-body)" }}
             />
           </div>
+
+          <DesignTypePicker
+            options={designTypes}
+            selected={typeIds}
+            onToggle={(id) =>
+              setTypeIds((prev) =>
+                prev.includes(id) ? prev.filter((t) => t !== id) : [...prev, id]
+              )
+            }
+          />
 
           <div>
             <label

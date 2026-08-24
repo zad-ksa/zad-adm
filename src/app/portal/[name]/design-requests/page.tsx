@@ -32,9 +32,21 @@ export default async function DesignRequestsPortalPage({ params }: { params: Pro
   // still open this tab in each of them.
   const { charity, can } = await requirePortalPermission(name, "view_design_requests");
 
+  // The catalogue the submission form offers. Read here rather than in the
+  // client so the form has its options on first paint.
+  const designTypes = await prisma.designType.findMany({
+    where: { isActive: true },
+    orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
+    select: { id: true, name: true, workingDays: true },
+  });
+
   const requests = await prisma.designRequest.findMany({
     where: { charityId: charity.id },
-    include: { attachments: true },
+    include: {
+      attachments: true,
+      types: { select: { id: true, name: true } },
+      extensions: { orderBy: { createdAt: "asc" } },
+    },
     orderBy: { submittedAt: "desc" },
   });
 
@@ -56,6 +68,15 @@ export default async function DesignRequestsPortalPage({ params }: { params: Pro
             ? "اليوم"
             : formatCivilDate(r.expectedCompletionDate),
         status: r.status,
+        types: r.types.map((t) => ({ id: t.id, name: t.name })),
+        totalWorkingDays: r.baseWorkingDays + r.addedDays,
+        addedDays: r.addedDays,
+        extensions: r.extensions.map((e) => ({
+          id: e.id,
+          days: e.days,
+          reason: e.reason,
+          createdAt: formatCivilDate(e.createdAt),
+        })),
         attachments: r.attachments.map((a) => ({
           id: a.id,
           fileUrl: a.fileUrl,
@@ -90,6 +111,7 @@ export default async function DesignRequestsPortalPage({ params }: { params: Pro
         charityId={charity.id}
         initialItems={items}
         canCreate={can("create_design_requests")}
+        designTypes={designTypes}
       />
     </div>
   );

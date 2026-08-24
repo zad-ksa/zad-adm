@@ -6,6 +6,7 @@ import { Plus, Info, Palette } from "lucide-react";
 import DesignRequestCard, { type DesignRequestCardData } from "@/components/design-requests/DesignRequestCard";
 import type { DesignRequestProgress } from "@/lib/designRequestProgress";
 import NewDesignRequestForm from "./NewDesignRequestForm";
+import type { DesignTypeOption } from "@/components/design-requests/DesignTypePicker";
 
 type Item = {
   request: DesignRequestCardData & { status: "PENDING" | "COMPLETED" };
@@ -16,10 +17,12 @@ export default function DesignRequestsPortalClient({
   charityId,
   initialItems,
   canCreate,
+  designTypes,
 }: {
   charityId: string;
   initialItems: Item[];
   canCreate: boolean;
+  designTypes: DesignTypeOption[];
 }) {
   const router = useRouter();
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -128,6 +131,7 @@ export default function DesignRequestsPortalClient({
       {isFormOpen && canCreate && (
         <NewDesignRequestForm
           charityId={charityId}
+          designTypes={designTypes}
           onClose={() => setIsFormOpen(false)}
           onSuccess={() => {
             setIsFormOpen(false);

@@ -4,19 +4,25 @@ import { useState } from "react";
 import { X, Paperclip, Send, Loader2, AlertTriangle } from "lucide-react";
 import { createDesignRequestFromPortal } from "@/app/actions/designRequests";
 import { uploadDesignRequestFiles } from "@/components/design-requests/uploadDesignRequestFiles";
+import DesignTypePicker, {
+  type DesignTypeOption,
+} from "@/components/design-requests/DesignTypePicker";
 
 export default function NewDesignRequestForm({
   charityId,
+  designTypes,
   onClose,
   onSuccess,
 }: {
   charityId: string;
+  designTypes: DesignTypeOption[];
   onClose: () => void;
   onSuccess: () => void;
 }) {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [files, setFiles] = useState<File[]>([]);
+  const [typeIds, setTypeIds] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -25,12 +31,19 @@ export default function NewDesignRequestForm({
     setError(null);
 
     if (!title.trim()) return setError("يرجى إدخال عنوان الطلب");
+    if (typeIds.length === 0) return setError("يرجى اختيار نوع التصميم");
     if (files.length > 10) return setError("الحد الأقصى 10 مرفقات لكل طلب");
 
     setIsSubmitting(true);
     try {
       const attachments = await uploadDesignRequestFiles(files);
-      const res = await createDesignRequestFromPortal({ charityId, title, description, attachments });
+      const res = await createDesignRequestFromPortal({
+        charityId,
+        title,
+        description,
+        attachments,
+        typeIds,
+      });
       if (res.error) {
         setError(res.error);
         return;
@@ -62,13 +75,6 @@ export default function NewDesignRequestForm({
         </div>
 
         <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto px-6 py-4 space-y-4">
-          <p
-            className="rounded-xl bg-primary/5 dark:bg-primary/10 text-primary dark:text-teal-300 px-4 py-3 font-bold"
-            style={{ fontSize: "var(--dr-fs-meta)" }}
-          >
-            يستغرق تنفيذ طلب التصميم حتى 3 أيام عمل (الأحد – الخميس) من بداية دوره في الطابور.
-          </p>
-
           {error && (
             <div
               className="flex items-center gap-2 px-4 py-3 rounded-xl bg-rose-500/[0.08] text-rose-600 dark:text-rose-400 font-bold"
@@ -95,6 +101,16 @@ export default function NewDesignRequestForm({
               style={{ fontSize: "var(--dr-fs-body)" }}
             />
           </div>
+
+          <DesignTypePicker
+            options={designTypes}
+            selected={typeIds}
+            onToggle={(id) =>
+              setTypeIds((prev) =>
+                prev.includes(id) ? prev.filter((t) => t !== id) : [...prev, id]
+              )
+            }
+          />
 
           <div>
             <label

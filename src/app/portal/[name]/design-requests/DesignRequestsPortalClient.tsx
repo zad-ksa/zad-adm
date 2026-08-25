@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Plus, Info, Palette } from "lucide-react";
 import DesignRequestCard, { type DesignRequestCardData } from "@/components/design-requests/DesignRequestCard";
+import EditDesignRequestModal from "@/components/design-requests/EditDesignRequestModal";
 import type { DesignRequestProgress } from "@/lib/designRequestProgress";
 import NewDesignRequestForm from "./NewDesignRequestForm";
 import type { DesignTypeOption } from "@/components/design-requests/DesignTypePicker";
@@ -26,6 +27,7 @@ export default function DesignRequestsPortalClient({
 }) {
   const router = useRouter();
   const [isFormOpen, setIsFormOpen] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [tab, setTab] = useState<"PENDING" | "COMPLETED">("PENDING");
 
   const pendingCount = initialItems.filter((it) => it.request.status === "PENDING").length;
@@ -123,10 +125,47 @@ export default function DesignRequestsPortalClient({
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
           {filtered.map((it) => (
-            <DesignRequestCard key={it.request.id} request={it.request} progress={it.progress} />
+            <DesignRequestCard
+              key={it.request.id}
+              request={it.request}
+              progress={it.progress}
+              actions={
+                // Editing is for a brief still being worked on; a delivered
+                // request has none left to edit.
+                canCreate && it.request.status === "PENDING" ? (
+                  <button
+                    onClick={() => setEditingId(it.request.id)}
+                    className="h-9 px-4 rounded-xl bg-slate-100 text-slate-600 dark:bg-[#111] dark:text-slate-400 border border-transparent dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 transition-colors font-bold"
+                    style={{ fontSize: "var(--dr-fs-meta)" }}
+                  >
+                    تعديل
+                  </button>
+                ) : undefined
+              }
+            />
           ))}
         </div>
       )}
+
+      {editingId !== null && (() => {
+        const target = initialItems.find((it) => it.request.id === editingId);
+        if (!target) return null;
+        return (
+          <EditDesignRequestModal
+            request={{
+              id: target.request.id,
+              title: target.request.title,
+              description: target.request.description,
+              attachments: target.request.attachments,
+            }}
+            onClose={() => setEditingId(null)}
+            onSuccess={() => {
+              setEditingId(null);
+              router.refresh();
+            }}
+          />
+        );
+      })()}
 
       {isFormOpen && canCreate && (
         <NewDesignRequestForm

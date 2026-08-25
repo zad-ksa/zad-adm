@@ -12,6 +12,7 @@ import StaffRescheduleCharityQueueModal from "./StaffRescheduleCharityQueueModal
 import StaffExtendDesignRequestModal from "./StaffExtendDesignRequestModal";
 import { uploadDesignRequestFiles } from "@/components/design-requests/uploadDesignRequestFiles";
 import DesignTypesModal, { type DesignTypeRow } from "./DesignTypesModal";
+import EditDesignRequestModal from "@/components/design-requests/EditDesignRequestModal";
 
 type RequestItem = DesignRequestCardData & { charityId: string; status: "PENDING" | "COMPLETED" };
 type Item = { request: RequestItem; progress: DesignRequestProgress };
@@ -37,6 +38,7 @@ export default function DesignRequestsClient({
   const [isQueueRescheduleOpen, setIsQueueRescheduleOpen] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [extendingId, setExtendingId] = useState<string | null>(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [isTypesOpen, setIsTypesOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 
@@ -218,32 +220,44 @@ export default function DesignRequestsClient({
               progress={it.progress}
               actions={
                 it.request.status === "PENDING" ? (
-                  <div className="flex items-center gap-2 w-full mt-2">
+                  // Five actions now. flex-wrap with a sensible minimum keeps
+                  // them readable on a narrow card instead of crushing each to a
+                  // few pixels; basis-0 lets them still share a row when there is
+                  // room.
+                  <div className="flex flex-wrap items-center gap-2 w-full mt-2">
                     <button
                       onClick={() => setConfirmingId(it.request.id)}
-                      className="flex-1 h-9 rounded-xl bg-primary/10 text-primary dark:bg-teal-500/10 dark:text-teal-400 hover:bg-primary hover:text-white dark:hover:bg-teal-500 dark:hover:text-[#0A0A0A] transition-colors font-bold"
+                      className="flex-1 min-w-[72px] h-9 rounded-xl bg-primary/10 text-primary dark:bg-teal-500/10 dark:text-teal-400 hover:bg-primary hover:text-white dark:hover:bg-teal-500 dark:hover:text-[#0A0A0A] transition-colors font-bold"
                       style={{ fontSize: "var(--dr-fs-meta)" }}
                     >
                       إنهاء
                     </button>
                     <button
                       onClick={() => setReschedulingId(it.request.id)}
-                      className="flex-1 h-9 rounded-xl bg-slate-100 text-slate-600 dark:bg-[#111] dark:text-slate-400 border border-transparent dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 transition-colors font-bold"
+                      className="flex-1 min-w-[72px] h-9 rounded-xl bg-slate-100 text-slate-600 dark:bg-[#111] dark:text-slate-400 border border-transparent dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 transition-colors font-bold"
                       style={{ fontSize: "var(--dr-fs-meta)" }}
                     >
                       جدولة
                     </button>
                     <button
+                      onClick={() => setEditingId(it.request.id)}
+                      title="تعديل الوصف والمرفقات"
+                      className="flex-1 min-w-[72px] h-9 rounded-xl bg-slate-100 text-slate-600 dark:bg-[#111] dark:text-slate-400 border border-transparent dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 transition-colors font-bold"
+                      style={{ fontSize: "var(--dr-fs-meta)" }}
+                    >
+                      تعديل
+                    </button>
+                    <button
                       onClick={() => setExtendingId(it.request.id)}
                       title="إضافة أيام دون تغيير تاريخ البدء"
-                      className="flex-1 h-9 rounded-xl bg-slate-100 text-slate-600 dark:bg-[#111] dark:text-slate-400 border border-transparent dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 transition-colors font-bold"
+                      className="flex-1 min-w-[72px] h-9 rounded-xl bg-slate-100 text-slate-600 dark:bg-[#111] dark:text-slate-400 border border-transparent dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 transition-colors font-bold"
                       style={{ fontSize: "var(--dr-fs-meta)" }}
                     >
                       +أيام
                     </button>
                     <button
                       onClick={() => setDeletingId(it.request.id)}
-                      className="flex-1 h-9 rounded-xl bg-rose-50 text-rose-600 dark:bg-rose-500/10 dark:text-rose-400 hover:bg-rose-500 hover:text-white dark:hover:bg-rose-500 dark:hover:text-[#0A0A0A] transition-colors font-bold"
+                      className="flex-1 min-w-[72px] h-9 rounded-xl bg-rose-50 text-rose-600 dark:bg-rose-500/10 dark:text-rose-400 hover:bg-rose-500 hover:text-white dark:hover:bg-rose-500 dark:hover:text-[#0A0A0A] transition-colors font-bold"
                       style={{ fontSize: "var(--dr-fs-meta)" }}
                     >
                       حذف
@@ -255,6 +269,26 @@ export default function DesignRequestsClient({
           ))}
         </div>
       )}
+
+      {editingId !== null && (() => {
+        const target = initialItems.find((it) => it.request.id === editingId);
+        if (!target) return null;
+        return (
+          <EditDesignRequestModal
+            request={{
+              id: target.request.id,
+              title: target.request.title,
+              description: target.request.description,
+              attachments: target.request.attachments,
+            }}
+            onClose={() => setEditingId(null)}
+            onSuccess={() => {
+              setEditingId(null);
+              router.refresh();
+            }}
+          />
+        );
+      })()}
 
       {isTypesOpen && (
         <DesignTypesModal

@@ -640,3 +640,136 @@ export async function extendDesignRequestDays(id: string, extraDays: number, rea
     return { error: error instanceof Error ? error.message : "تعذّر تمديد الطلب" };
   }
 }
+
+/**
+ * Edits a pending request's description and its attachments.
+ *
+ * Open to both sides on purpose: the charity that raised it and the Zad staff
+ * working on it. A brief that cannot be corrected after submitting is a brief
+ * that gets deleted and re-raised, which loses the queue position the charity
+ * has already waited for.
+ *
+ * PENDING only. Once a request is delivered its brief is history — and the
+ * BRIEF files are removed from storage at completion anyway, so there would be
+ * nothing left to edit.
+ *
+ * Deliverables are untouchable here: `kind: "BRIEF"` scopes every attachment
+ * operation, so a charity cannot delete the finished files Zad handed them and
+ * staff cannot lose them by editing the brief.
+ *
+ * Title, type and dates are deliberately out of scope. The type determines the
+ * promised duration and the queue is already built on it; changing it silently
+ * would move a date the charity was given.
+ */
+export async function updateDesignRequestDetails(input: {
+  requestId: string;
+  description?: string;
+  /** Ids of existing BRIEF attachments to remove. */
+  removeAttachmentIds?: string[];
+  /** Newly uploaded files to add as BRIEF. */
+  addAttachments?: DesignRequestAttachmentInput[];
+}) {
+  try {
+    const request = await prisma.designRequest.findUnique({
+      where: { id: input.requestId },
+      select: {
+        id: true,
+        status: true,
+        charityId: true,
+        charity: { select: { name: true } },
+        attachments: { where: { kind: "BRIEF" }, select: { id: true, publicId: true, resourceType: true } },
+      },
+    });
+    if (!request) return { error: "الطلب غير موجود" };
+    if (request.status !== "PENDING") {
+      return { error: "لا يمكن تعديل طلب منجز" };
+    }
+
+    // Either side may edit, so try the staff gate and fall back to the charity
+    // one. Both throw on failure, which is why this is a try/catch rather than
+    // a boolean — and why the charity check is scoped to the request's OWN
+    // charity, not whichever charity the caller claims.
+    let actor: { type: "EMPLOYEE" | "CHARITY_USER"; id: string; name: string };
+    try {
+      const session = await requireDesignStaff();
+      actor = { type: "EMPLOYEE", id: session.id, name: session.name };
+    } catch {
+      const session = await requireCharityMemberPermission(
+        request.charityId,
+        "create_design_requests"
+      );
+      actor = { type: "CHARITY_USER", id: session.id, name: session.name };
+    }
+
+    const removeIds = (input.removeAttachmentIds || []).filter(Boolean);
+    const adding = input.addAttachments || [];
+
+    // Only this request's own BRIEF attachments can be removed — an id from
+    // somewhere else simply does not match and is ignored rather than deleted.
+    const removable = request.attachments.filter((a) => removeIds.includes(a.id));
+
+    const remaining = request.attachments.length - removable.length + adding.length;
+    if (remaining > 10) return { error: "الحد الأقصى 10 مرفقات لكل طلب" };
+
+    // Storage first, and best-effort: a Cloudinary failure must not block the
+    // edit, but a row deleted without its file would orphan the file forever
+    // with nothing left pointing at it.
+    for (const att of removable) {
+      try {
+        await cloudinary.uploader.destroy(att.publicId, {
+          resource_type: att.resourceType || "raw",
+        });
+      } catch (err) {
+        console.error("Failed to delete design-request attachment from Cloudinary", att.publicId, err);
+      }
+    }
+
+    const description =
+      input.description === undefined ? undefined : input.description.trim() || null;
+
+    await prisma.$transaction([
+      ...(removable.length
+        ? [
+            prisma.designRequestAttachment.deleteMany({
+              where: { id: { in: removable.map((a) => a.id) }, requestId: request.id, kind: "BRIEF" },
+            }),
+          ]
+        : []),
+      ...(adding.length
+        ? [
+            prisma.designRequestAttachment.createMany({
+              data: adding.map((a) => ({ ...a, requestId: request.id, kind: "BRIEF" as const })),
+            }),
+          ]
+        : []),
+      prisma.designRequest.update({
+        where: { id: request.id },
+        data: description === undefined ? {} : { description },
+      }),
+    ]);
+
+    await logAudit({
+      actorType: actor.type,
+      actorId: actor.id,
+      actorName: actor.name,
+      action: "DESIGN_REQUEST_EDITED",
+      targetType: "DesignRequest",
+      targetId: request.id,
+      metadata: {
+        charityId: request.charityId,
+        descriptionChanged: description !== undefined,
+        removed: removable.length,
+        added: adding.length,
+      },
+    });
+
+    revalidatePath("/main/design-requests");
+    revalidatePath(`/portal/${encodeURIComponent(request.charity.name)}/design-requests`);
+    return { success: true };
+  } catch (error) {
+    console.error("Error editing design request:", error);
+    return {
+      error: error instanceof Error ? error.message : "تعذّر حفظ التعديل",
+    };
+  }
+}

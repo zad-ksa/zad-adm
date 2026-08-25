@@ -322,10 +322,10 @@ export default function ComposeModal({ isOpen, onClose, employees, onSuccess, re
   }
 
   return (
-    <div className="mail-ui fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-slate-950/60 backdrop-blur-sm">
+    <div className="mail-ui fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-6 bg-slate-950/60 backdrop-blur-sm">
       <div
         dir="rtl"
-        className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/70 dark:border-slate-800 shadow-[var(--mail-shadow-modal)] w-full max-w-3xl h-[85vh] sm:h-[680px] max-h-[90vh] flex flex-col overflow-hidden"
+        className="bg-white dark:bg-slate-900 rounded-t-2xl sm:rounded-2xl border border-slate-200/70 dark:border-slate-800 shadow-[var(--mail-shadow-modal)] w-full sm:max-w-3xl h-[92dvh] sm:h-[680px] sm:max-h-[90vh] flex flex-col overflow-hidden"
       >
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 bg-gradient-to-b from-white to-slate-50 dark:from-slate-900 dark:to-slate-950 border-b border-slate-200/70 dark:border-slate-800 shrink-0">
@@ -369,7 +369,7 @@ export default function ComposeModal({ isOpen, onClose, employees, onSuccess, re
         <div className="flex-1 flex flex-col min-h-0">
           <div className="px-6 divide-y divide-slate-100 dark:divide-slate-800 shrink-0">
             {/* TO field */}
-            <div className="py-3 flex items-start gap-4">
+            <div className="py-2 sm:py-3 flex items-start gap-2 sm:gap-4">
               <div className="w-16 pt-1 text-[length:var(--mail-fs-nav)] font-medium text-slate-500 dark:text-slate-400">إلى</div>
               <div className="flex-1 flex flex-col">
                 <div className="flex items-center justify-between min-h-10">
@@ -393,7 +393,7 @@ export default function ComposeModal({ isOpen, onClose, employees, onSuccess, re
 
             {/* CC field */}
             {showCc && (
-              <div className="py-3 flex items-start gap-4">
+              <div className="py-2 sm:py-3 flex items-start gap-2 sm:gap-4">
                 <div className="w-16 pt-1 text-[length:var(--mail-fs-nav)] font-medium text-slate-500 dark:text-slate-400">نسخة</div>
                 <div className="flex-1 flex items-center min-h-10">{renderEmployeeSelect(ccIds, setCcIds, "نسخة إلى...")}</div>
               </div>
@@ -401,14 +401,14 @@ export default function ComposeModal({ isOpen, onClose, employees, onSuccess, re
 
             {/* BCC field */}
             {showBcc && (
-              <div className="py-3 flex items-start gap-4">
+              <div className="py-2 sm:py-3 flex items-start gap-2 sm:gap-4">
                 <div className="w-16 pt-1 text-[length:var(--mail-fs-nav)] font-medium text-slate-500 dark:text-slate-400">نسخة مخفية</div>
                 <div className="flex-1 flex items-center min-h-10">{renderEmployeeSelect(bccIds, setBccIds, "نسخة مخفية إلى...")}</div>
               </div>
             )}
 
             {/* Subject field */}
-            <div className="py-3 flex items-center gap-4">
+            <div className="py-2 sm:py-3 flex items-center gap-2 sm:gap-4">
               <div className="w-16 text-[length:var(--mail-fs-nav)] font-medium text-slate-500 dark:text-slate-400">الموضوع</div>
               <input
                 type="text"

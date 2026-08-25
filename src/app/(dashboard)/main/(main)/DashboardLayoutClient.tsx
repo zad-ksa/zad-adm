@@ -12,11 +12,9 @@ import DeveloperRoleSwitcher from "@/components/DeveloperRoleSwitcher";
 
 export default function DashboardLayoutClient({ children, session, unreadRequests: initial = 0, unreadMails: initialMails = 0 }: { children: React.ReactNode, session: any, unreadRequests?: number, unreadMails?: number }) {
   const pathname = usePathname();
-  // Stays `true`: on desktop this is the expanded rail width, and starting it
-  // false would collapse the rail on first paint and shift the whole layout.
-  // The mobile flash it used to cause is handled inside EmployeeSidebar, which
-  // keeps its drawer closed until mount.
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  // Mobile drawer only — the desktop rail is pinned open and no longer reads
+  // this. It starts closed, which is also what a phone should show on load.
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [unreadRequests, setUnreadRequests] = useState(initial);
   const [unreadMails, setUnreadMails] = useState(initialMails);
   const [appNotificationsData, setAppNotificationsData] = useState<{notifications: any[], count: number}>({ notifications: [], count: 0 });
@@ -112,13 +110,22 @@ export default function DashboardLayoutClient({ children, session, unreadRequest
 
       <EmployeeSidebar session={session} isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} unreadRequests={unreadRequests} unreadMails={unreadMails} />
       
-      <FloatingHeader 
-        session={session} 
-        appNotifications={appNotificationsData} 
-        className="hidden lg:flex fixed top-4 left-8 z-40 items-center gap-2 bg-white/70 dark:bg-slate-900/70 backdrop-blur-md border border-slate-200/50 dark:border-slate-800/50 shadow-sm p-1.5 rounded-full print:hidden"
-      />
-
       <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden relative print:overflow-visible print:h-auto print:block">
+        {/* Desktop top bar.
+
+            Was a floating pill at top-4 left-8, which overlapped whatever was
+            underneath it — the mail toolbar had to reserve 200px of dead space
+            just to dodge it. As a flex sibling above <main> it occupies its own
+            row instead, so nothing has to make room for it and no offset needs
+            keeping in sync. */}
+        <div className="hidden lg:flex h-14 shrink-0 items-center justify-end gap-2 px-6 bg-white/80 dark:bg-slate-900/80 backdrop-blur-lg border-b border-slate-200/80 dark:border-slate-800/80 z-30 print:hidden">
+          <FloatingHeader
+            session={session}
+            appNotifications={appNotificationsData}
+            className="flex items-center gap-2"
+          />
+        </div>
+
         {/* Mobile Header (Sticky & Blur) */}
         <div className="lg:hidden sticky top-0 bg-white/80 dark:bg-slate-900/80 backdrop-blur-lg border-b border-slate-200/80 dark:border-slate-800/80 h-16 flex items-center justify-between px-4 shrink-0 z-30 shadow-sm print:hidden">
           <div className="flex items-center gap-3">

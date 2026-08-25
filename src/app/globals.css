@@ -180,6 +180,24 @@ body {
   --mail-ring-focus:       0 0 0 4px rgb(15 118 110 / .14);
 }
 
+/* الأحجام أعلاه بالـ rem، وهذا الملف يصغّر الجذر إلى 14 بكسل تحت 640 —
+   فاسم المرسل والموضوع كانا يخرجان بـ 9.6 بكسل على الهاتف بدل 11.
+   إعادة تعريفها بالبكسل تُخرجها من متناول تصغير الجذر. والأحجام هنا أكبر من
+   نظيرتها على سطح المكتب عمداً: الشاشة الصغيرة تُقرأ من مسافة أبعد نسبياً
+   وبإصبع لا بمؤشر. */
+@media (max-width: 640px) {
+  .mail-ui {
+    --mail-fs-nav:           13px;
+    --mail-fs-sender:        14px;
+    --mail-fs-subject:       14px;
+    --mail-fs-snippet:       13px;
+    --mail-fs-meta:          12px;
+    --mail-fs-body:          15px;
+    --mail-fs-subject-input: 16px;
+    --mail-fs-h1:            19px;
+  }
+}
+
 .dark .mail-ui {
   --mail-shadow-card:      0 1px 2px -1px rgb(15 118 110 / .30), 0 14px 36px -18px rgb(15 118 110 / .30);
   --mail-shadow-row-hover: inset 0 0 0 1px rgb(45 212 191 / .16), 0 2px 12px -6px rgb(15 118 110 / .40);

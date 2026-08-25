@@ -148,8 +148,11 @@ export default function FloatingHeader({
             className="group flex items-center gap-2 pl-1 pr-1.5 focus:outline-none cursor-pointer"
             title="الحساب التعريفي"
           >
-            <div className="hidden md:flex flex-col items-end rtl:items-start mr-1">
-              <span className="text-xs font-bold text-slate-800 dark:text-slate-100">{userState?.name}</span>
+            {/* lg and up only: below that this sits inside the narrow mobile
+               header next to the hamburger, where a name and a role label
+               would push the whole row out of the screen. */}
+            <div className="hidden lg:flex flex-col items-end rtl:items-start mr-1 max-w-[160px]">
+              <span className="text-xs font-bold text-slate-800 dark:text-slate-100 truncate w-full text-left rtl:text-right">{userState?.name}</span>
               <span className="text-[9px] text-slate-500 dark:text-slate-400">{roleLabels[userState?.role] || "موظف"}</span>
             </div>
             <div className="relative overflow-hidden bg-primary/10 text-primary border border-primary/20 rounded-full flex items-center justify-center transition-all duration-300 w-9 h-9 group-hover:ring-2 group-hover:ring-primary/40">

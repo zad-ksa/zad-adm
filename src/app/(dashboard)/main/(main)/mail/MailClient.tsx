@@ -196,13 +196,13 @@ export default function MailClient({ session, employees, initialTab }: MailClien
   const rangeEnd = Math.min(page * 20, total);
 
   return (
-    <div className="mail-ui flex h-[calc(100dvh-8rem)] lg:h-[calc(100dvh-6rem)] bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/70 dark:border-slate-800 shadow-[var(--mail-shadow-card)] overflow-hidden">
+    <div className="mail-ui flex h-[calc(100dvh-6rem)] sm:h-[calc(100dvh-7rem)] lg:h-[calc(100dvh-7.5rem)] bg-white dark:bg-slate-900 rounded-xl sm:rounded-2xl border border-slate-200/70 dark:border-slate-800 shadow-[var(--mail-shadow-card)] overflow-hidden">
       {/* Folder rail */}
-      <div className="w-64 border-s border-slate-200/70 dark:border-slate-800 bg-gradient-to-b from-slate-50 via-white to-teal-50/60 dark:from-slate-900 dark:via-slate-950 dark:to-slate-950 flex flex-col shrink-0">
-        <div className="p-4 flex">
+      <div className="hidden lg:flex w-52 border-s border-slate-200/70 dark:border-slate-800 bg-gradient-to-b from-slate-50 via-white to-teal-50/60 dark:from-slate-900 dark:via-slate-950 dark:to-slate-950 flex-col shrink-0">
+        <div className="p-2.5 flex">
           <button
             onClick={() => setIsComposeOpen(true)}
-            className="h-12 flex items-center justify-center gap-2 text-white bg-gradient-to-b from-[#17857c] via-primary to-[#0c645d] shadow-[var(--mail-shadow-cta)] hover:shadow-[var(--mail-shadow-cta-hover)] active:translate-y-px px-6 rounded-2xl font-semibold text-[length:var(--mail-fs-nav)] transition-all"
+            className="h-12 flex items-center justify-center gap-2 text-white bg-gradient-to-b from-[#17857c] via-primary to-[#0c645d] shadow-[var(--mail-shadow-cta)] hover:shadow-[var(--mail-shadow-cta-hover)] active:translate-y-px px-4 rounded-2xl font-semibold text-[length:var(--mail-fs-nav)] transition-all"
           >
             <PenSquare className="w-4 h-4" />
             رسالة جديدة
@@ -216,7 +216,7 @@ export default function MailClient({ session, employees, initialTab }: MailClien
               <button
                 key={key}
                 onClick={() => handleTabChange(key)}
-                className={`w-full h-8 flex items-center gap-3 px-3 rounded-e-full text-[length:var(--mail-fs-nav)] transition-colors ${
+                className={`w-full h-8 flex items-center gap-2.5 px-2.5 rounded-e-full text-[length:var(--mail-fs-nav)] transition-colors ${
                   isActive
                     ? "font-semibold bg-primary/10 dark:bg-primary/15 text-primary dark:text-teal-300 shadow-[inset_0_0_0_1px_rgb(15_118_110_/_0.18)]"
                     : "font-medium text-slate-600 dark:text-slate-400 hover:bg-primary/5 dark:hover:bg-primary/10 hover:text-primary dark:hover:text-teal-300"
@@ -237,11 +237,20 @@ export default function MailClient({ session, employees, initialTab }: MailClien
       {/* Main content */}
       <div className="flex-1 flex flex-col min-w-0">
         {/* Toolbar */}
-        <div className="h-14 bg-gradient-to-b from-white to-slate-50 dark:from-slate-900 dark:to-slate-950 border-b border-slate-200/70 dark:border-slate-800 flex items-center justify-between px-4 gap-4 shrink-0">
+        <div className="h-12 bg-gradient-to-b from-white to-slate-50 dark:from-slate-900 dark:to-slate-950 border-b border-slate-200/70 dark:border-slate-800 flex items-center justify-between px-2 sm:px-4 gap-2 sm:gap-4 shrink-0">
           <div className="flex items-center gap-1 shrink-0">
+            {/* Compose lives in the rail on desktop; on mobile the rail is gone,
+                so it takes the first slot in the toolbar. */}
+            <button
+              onClick={() => setIsComposeOpen(true)}
+              className="lg:hidden w-9 h-9 flex items-center justify-center rounded-lg text-white bg-gradient-to-b from-[#17857c] via-primary to-[#0c645d] shadow-[var(--mail-shadow-cta)] active:translate-y-px transition-all"
+              title="رسالة جديدة"
+            >
+              <PenSquare className="w-4 h-4" />
+            </button>
             <button
               onClick={handleSelectAll}
-              className="w-8 h-8 flex items-center justify-center rounded-lg text-slate-400 dark:text-slate-500 hover:bg-primary/[0.08] hover:text-primary dark:hover:text-teal-300 transition-colors"
+              className="hidden sm:flex w-8 h-8 items-center justify-center rounded-lg text-slate-400 dark:text-slate-500 hover:bg-primary/[0.08] hover:text-primary dark:hover:text-teal-300 transition-colors"
               title="تحديد الكل"
             >
               {selectedMails.length > 0 && selectedMails.length === mails.length ? (
@@ -333,9 +342,34 @@ export default function MailClient({ session, employees, initialTab }: MailClien
             >
               <ChevronLeft className="w-4 h-4" />
             </button>
-            {/* Spacer to avoid overlap with the fixed FloatingHeader pill (top-4 left-4/left-8) */}
-            <div className="w-[140px] lg:w-[200px] shrink-0 pointer-events-none hidden sm:block" />
           </div>
+        </div>
+
+        {/* Folders on mobile: a scrolling strip, since the rail is hidden.
+            Horizontal scroll rather than wrap so it stays one row tall. */}
+        <div className="lg:hidden flex items-center gap-1.5 px-2 py-1.5 border-b border-slate-200/70 dark:border-slate-800 overflow-x-auto no-scrollbar">
+          {FOLDERS.map(({ key, label, Icon, accent }) => {
+            const isActive = currentTab === key;
+            return (
+              <button
+                key={key}
+                onClick={() => handleTabChange(key)}
+                aria-pressed={isActive}
+                className={`shrink-0 h-8 px-3 flex items-center gap-1.5 rounded-full text-[length:var(--mail-fs-nav)] font-semibold transition-colors ${
+                  isActive
+                    ? "bg-primary text-white"
+                    : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300"
+                }`}
+              >
+                <Icon
+                  className={`w-3.5 h-3.5 ${
+                    !isActive && accent === "secondary" ? "text-secondary dark:text-amber-400" : ""
+                  }`}
+                />
+                {label}
+              </button>
+            );
+          })}
         </div>
 
         {/* Mail list */}

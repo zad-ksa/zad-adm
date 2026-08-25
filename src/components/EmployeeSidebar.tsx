@@ -27,37 +27,34 @@ function SubTabLink({ href, label, isActive, onClick }: { href: string, label: s
 }
 
 // --- Nav Item Component ---
-function NavItem({ item, isActive, isOpen, onClick }: { item: any, isActive: boolean, isOpen: boolean, onClick?: () => void }) {
+function NavItem({ item, isActive, onClick }: { item: any, isActive: boolean, onClick?: () => void }) {
   return (
     <div className="relative group">
       <Link
         href={item.href}
         onClick={onClick}
-        title={!isOpen ? item.label : undefined}
-        className={`flex items-center ${isOpen ? "justify-start px-2.5" : "justify-center"} py-2 rounded-lg text-[11px] font-bold transition-all group relative ${
+        className={`flex items-center justify-start px-2.5 py-2 rounded-lg text-[11px] font-bold transition-all group relative ${
           isActive
             ? "bg-primary text-white shadow-sm shadow-primary/20"
             : "text-slate-500 dark:text-slate-400 hover:bg-primary/5 dark:hover:bg-primary/10 hover:text-primary dark:hover:text-primary"
         }`}
       >
         <div className="relative shrink-0">
-          <item.icon className={`w-4 h-4 transition-all ${isOpen ? "ml-2.5" : "ml-0"} ${isActive ? "text-white" : "text-slate-400 group-hover:text-primary"}`} />
+          <item.icon className={`w-4 h-4 ml-2.5 transition-all ${isActive ? "text-white" : "text-slate-400 group-hover:text-primary"}`} />
           {item.badge > 0 && (
             <span className="absolute -top-1.5 -right-1.5 min-w-[14px] h-3.5 flex items-center justify-center bg-red-500 text-white text-[9px] font-black rounded-full px-0.5 leading-none">
               {item.badge > 99 ? "99+" : item.badge}
             </span>
           )}
         </div>
-        {isOpen && (
-          <span className="flex-1 flex items-center justify-between whitespace-nowrap">
-            {item.label}
-            {item.badge > 0 && (
-              <span className="mr-1 min-w-[18px] h-4 flex items-center justify-center bg-red-500 text-white text-[10px] font-black rounded-full px-1">
-                {item.badge > 99 ? "99+" : item.badge}
-              </span>
-            )}
-          </span>
-        )}
+        <span className="flex-1 flex items-center justify-between whitespace-nowrap">
+          {item.label}
+          {item.badge > 0 && (
+            <span className="mr-1 min-w-[18px] h-4 flex items-center justify-center bg-red-500 text-white text-[10px] font-black rounded-full px-1">
+              {item.badge > 99 ? "99+" : item.badge}
+            </span>
+          )}
+        </span>
       </Link>
     </div>
   );
@@ -88,13 +85,11 @@ export default function EmployeeSidebar({
   const [userState, setUserState] = useState(session);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const { theme, setTheme } = useTheme();
-  const [mounted, setMounted] = useState(false);
-  // The parent starts `isOpen` true so the desktop rail renders at full width.
-  // On a phone that used to mean the drawer and its dark backdrop painted first
-  // and slid away once the parent measured the window — a visible flash on every
-  // page load. Holding the drawer shut until mount removes it, and the desktop
-  // rail below is untouched so no layout shifts.
-  const drawerOpen = isOpen && mounted;
+  // The desktop rail is pinned open — there is no collapse control any more, so
+  // the nav always renders with its labels. Kept as a named constant rather
+  // than deleting every branch it guards: restoring a collapsible rail is then
+  // one line, and the diff for pinning it stays reviewable.
+  const isExpanded = true;
   const [expandedGroup, setExpandedGroup] = useState<string | null>(null);
   const [charities, setCharities] = useState<any[]>([]);
   const [isPrivacyModalOpen, setIsPrivacyModalOpen] = useState(false);
@@ -105,8 +100,6 @@ export default function EmployeeSidebar({
   }, [decodedPathname]);
 
   useEffect(() => {
-    if (!isOpen) return;
-    
     let newGroup: string | null = expandedGroup;
     let newService: string | null = expandedService;
     let newCharity: string | null = expandedCharity;
@@ -134,7 +127,7 @@ export default function EmployeeSidebar({
     if (newGroup !== null) setExpandedGroup(newGroup);
     if (newService !== null) setExpandedService(newService);
     if (newCharity !== null) setExpandedCharity(newCharity);
-  }, [isOpen, activePath]);
+  }, [activePath]);
 
   const handleLinkClick = (href: string) => {
     setActivePath(href);
@@ -144,7 +137,6 @@ export default function EmployeeSidebar({
   };
 
   useEffect(() => {
-    setMounted(true);
     getSidebarCharities().then(res => setCharities(res || []));
   }, []);
 
@@ -204,25 +196,11 @@ export default function EmployeeSidebar({
   const sidebarContent = (
     <div className="bg-white dark:bg-slate-900 flex flex-col h-full border-l border-slate-200 dark:border-slate-800 shadow-[4px_0_24px_rgba(0,0,0,0.02)] relative transition-all duration-300">
       
-      {/* Desktop Toggle Button */}
-      <button 
-        onClick={() => setIsOpen(!isOpen)} 
-        className="hidden lg:flex absolute top-8 -left-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-400 hover:text-primary hover:border-primary/30 rounded-full w-6 h-6 items-center justify-center z-50 transition-all shadow-sm cursor-pointer"
-      >
-        <ChevronRight className={`w-4 h-4 transition-transform duration-300 ${!isOpen ? "rotate-180" : ""}`} />
-      </button>
-
       {/* Header / Logo */}
-      <div className={`flex items-center ${isOpen ? "justify-start px-5" : "justify-center px-0"} h-14 border-b border-slate-100 dark:border-slate-700/50 dark:border-slate-800 shrink-0 transition-all`}>
-        {isOpen ? (
-          <div className="w-full h-full flex items-center relative pr-1">
-            <ZadLogo isOpen={true} className="h-8 w-auto" />
-          </div>
-        ) : (
-          <div className="w-9 h-9 flex items-center justify-center">
-            <ZadLogo isOpen={false} className="h-7 w-auto" />
-          </div>
-        )}
+      <div className="flex items-center justify-start px-5 h-14 border-b border-slate-100 dark:border-slate-700/50 dark:border-slate-800 shrink-0">
+        <div className="w-full h-full flex items-center relative pr-1">
+          <ZadLogo isOpen={true} className="h-8 w-auto" />
+        </div>
       </div>
 
       {/* Mobile Close Button */}
@@ -251,7 +229,7 @@ export default function EmployeeSidebar({
 
             return (
               <div className="mb-2">
-                {isOpen && title && (
+                {isExpanded && title && (
                   <button
                     onClick={() => toggleGroup(title)}
                     className="flex items-center justify-between w-full px-2 mb-2 group cursor-pointer outline-none"
@@ -260,10 +238,10 @@ export default function EmployeeSidebar({
                     <ChevronRight className={`w-3.5 h-3.5 text-slate-400 group-hover:text-primary transition-transform duration-200 ${isCollapsed ? 'rotate-180' : 'rotate-90'}`} />
                   </button>
                 )}
-                <div className={`space-y-0.5 overflow-hidden transition-all duration-300 ease-in-out ${isOpen && isCollapsed ? 'max-h-0 opacity-0' : 'max-h-[500px] opacity-100'}`}>
+                <div className={`space-y-0.5 overflow-hidden transition-all duration-300 ease-in-out ${isExpanded && isCollapsed ? 'max-h-0 opacity-0' : 'max-h-[500px] opacity-100'}`}>
                   {items.map((item) => {
                     const isActive = activePath.startsWith(item.href) && (item.href !== "/main" || activePath === "/main");
-                    return <NavItem key={item.href} item={item} isActive={isActive} isOpen={isOpen} onClick={() => handleLinkClick(item.href)} />;
+                    return <NavItem key={item.href} item={item} isActive={isActive} onClick={() => handleLinkClick(item.href)} />;
                   })}
                 </div>
               </div>
@@ -289,7 +267,7 @@ export default function EmployeeSidebar({
 
             return (
               <div className="mb-2">
-                {isOpen && (
+                {isExpanded && (
                   <button 
                     onClick={toggleServices}
                     className="flex items-center justify-between w-full px-2 mb-2 group cursor-pointer outline-none"
@@ -298,8 +276,8 @@ export default function EmployeeSidebar({
                     <ChevronRight className={`w-3.5 h-3.5 text-slate-400 group-hover:text-primary transition-transform duration-200 ${isServicesCollapsed ? 'rotate-180' : 'rotate-90'}`} />
                   </button>
                 )}
-                <div className={`space-y-0.5 overflow-hidden transition-all duration-300 ease-in-out ${isOpen && isServicesCollapsed ? 'max-h-0 opacity-0' : 'max-h-[1500px] opacity-100'}`}>
-                  {isOpen && hasOverviewAccess && (
+                <div className={`space-y-0.5 overflow-hidden transition-all duration-300 ease-in-out ${isExpanded && isServicesCollapsed ? 'max-h-0 opacity-0' : 'max-h-[1500px] opacity-100'}`}>
+                  {isExpanded && hasOverviewAccess && (
                     <Link
                       href="/main/services-overview"
                       onClick={() => handleLinkClick("/main/services-overview")}
@@ -310,7 +288,7 @@ export default function EmployeeSidebar({
                     </Link>
                   )}
                   
-                  {isOpen && services.map(svc => (
+                  {isExpanded && services.map(svc => (
                     <div key={svc.id} className="relative mt-1">
                       <button 
                         onClick={() => { setExpandedCharity(null); setExpandedService(prev => prev === svc.id ? null : svc.id); }}
@@ -384,13 +362,13 @@ export default function EmployeeSidebar({
           return (
             <>
               {renderGroup("", ["الرئيسية"])}
-              {isOpen && <div className="h-px bg-slate-100 dark:bg-slate-800 mx-2" />}
+              {isExpanded && <div className="h-px bg-slate-100 dark:bg-slate-800 mx-2" />}
               {renderServicesGroup()}
-              {isOpen && <div className="h-px bg-slate-100 dark:bg-slate-800 mx-2" />}
+              {isExpanded && <div className="h-px bg-slate-100 dark:bg-slate-800 mx-2" />}
               {renderGroup("الجمعيات", ["الجمعيات", "العقود", "الاستبيانات", "التواصل", "الاجتماعات", "طلبات التصاميم"])}
-              {isOpen && <div className="h-px bg-slate-100 dark:bg-slate-800 mx-2" />}
+              {isExpanded && <div className="h-px bg-slate-100 dark:bg-slate-800 mx-2" />}
               {renderGroup("زاد", ["البريد الداخلي", "الاعتمادات", "الأخبار والإنجازات", "محاضر الاجتماعات", "المهام والمنجزات", "مهامي"])}
-              {isOpen && <div className="h-px bg-slate-100 dark:bg-slate-800 mx-2" />}
+              {isExpanded && <div className="h-px bg-slate-100 dark:bg-slate-800 mx-2" />}
               {renderGroup("لوحة التحكم", ["لوحة التحكم", "سلاسل الاعتماد"])}
             </>
           );
@@ -401,11 +379,11 @@ export default function EmployeeSidebar({
       <div className="shrink-0 px-3 py-2 border-t border-slate-100 dark:border-slate-800">
         <button
           onClick={() => setIsPrivacyModalOpen(true)}
-          title={!isOpen ? "سياسة الخصوصية" : undefined}
-          className={`w-full flex items-center ${isOpen ? "justify-start px-2.5" : "justify-center"} py-1.5 rounded-lg text-[11px] font-medium text-slate-400 dark:text-slate-500 hover:text-primary dark:hover:text-primary hover:bg-primary/5 dark:hover:bg-primary/10 transition-all`}
+          title={!isExpanded ? "سياسة الخصوصية" : undefined}
+          className={`w-full flex items-center ${isExpanded ? "justify-start px-2.5" : "justify-center"} py-1.5 rounded-lg text-[11px] font-medium text-slate-400 dark:text-slate-500 hover:text-primary dark:hover:text-primary hover:bg-primary/5 dark:hover:bg-primary/10 transition-all`}
         >
-          <ShieldCheck className={`w-3.5 h-3.5 shrink-0 ${isOpen ? "ml-2" : ""}`} />
-          {isOpen && <span>سياسة الخصوصية</span>}
+          <ShieldCheck className={`w-3.5 h-3.5 shrink-0 ${isExpanded ? "ml-2" : ""}`} />
+          {isExpanded && <span>سياسة الخصوصية</span>}
         </button>
       </div>
 
@@ -417,20 +395,16 @@ export default function EmployeeSidebar({
       <PrivacyPolicyModal isOpen={isPrivacyModalOpen} onClose={() => setIsPrivacyModalOpen(false)} />
       {/* Desktop Sidebar */}
       <aside 
-        className={`hidden lg:block shrink-0 transition-all duration-300 ease-in-out h-screen z-20 print:hidden ${isOpen ? "w-56" : "w-16"}`}
+        className="hidden lg:block shrink-0 w-56 h-screen z-20 print:hidden"
       >
         {sidebarContent}
       </aside>
 
-      {/* Mobile Drawer.
-          Gated on `mounted` as well as `isOpen`: the parent starts `isOpen`
-          true so the desktop rail renders expanded, which used to make this
-          drawer and its dark backdrop appear on first paint and then slide away
-          once the parent's effect measured the window. The desktop rail above
-          is unaffected, so nothing shifts there. */}
-      <div className={`fixed inset-0 z-[60] lg:hidden transition-all duration-300 print:hidden ${drawerOpen ? "visible" : "invisible pointer-events-none"}`}>
-        <div className={`absolute inset-0 bg-slate-950/60 backdrop-blur-sm transition-opacity duration-300 ${drawerOpen ? "opacity-100" : "opacity-0"}`} onClick={() => setIsOpen(false)} />
-        <div className={`absolute top-0 right-0 h-full w-56 max-w-[85vw] transform transition-transform duration-300 ease-in-out bg-white dark:bg-slate-800 shadow-2xl ${drawerOpen ? "translate-x-0" : "translate-x-full"}`}>
+      {/* Mobile Drawer. `isOpen` now means only this — the desktop rail above
+          is pinned — so it starts closed and the hamburger is what opens it. */}
+      <div className={`fixed inset-0 z-[60] lg:hidden transition-all duration-300 print:hidden ${isOpen ? "visible" : "invisible pointer-events-none"}`}>
+        <div className={`absolute inset-0 bg-slate-950/60 backdrop-blur-sm transition-opacity duration-300 ${isOpen ? "opacity-100" : "opacity-0"}`} onClick={() => setIsOpen(false)} />
+        <div className={`absolute top-0 right-0 h-full w-56 max-w-[85vw] transform transition-transform duration-300 ease-in-out bg-white dark:bg-slate-800 shadow-2xl ${isOpen ? "translate-x-0" : "translate-x-full"}`}>
           {sidebarContent}
         </div>
       </div>

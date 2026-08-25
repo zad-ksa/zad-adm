@@ -92,7 +92,7 @@ export default function MailViewClient({ session, mail, employees }: MailViewCli
   return (
     <div className="mail-ui flex h-[calc(100dvh-8rem)] lg:h-[calc(100dvh-6rem)] bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/70 dark:border-slate-800 shadow-[var(--mail-shadow-card)] overflow-hidden flex-col">
       {/* Header / Toolbar */}
-      <div className="h-14 bg-gradient-to-b from-white to-slate-50 dark:from-slate-900 dark:to-slate-950 border-b border-slate-200/70 dark:border-slate-800 flex items-center justify-between px-4 sm:px-6 shrink-0">
+      <div className="h-12 bg-gradient-to-b from-white to-slate-50 dark:from-slate-900 dark:to-slate-950 border-b border-slate-200/70 dark:border-slate-800 flex items-center justify-between px-2 sm:px-6 gap-2 shrink-0">
         <div className="flex items-center gap-2">
           <button
             onClick={() => router.back()}
@@ -133,8 +133,10 @@ export default function MailViewClient({ session, mail, employees }: MailViewCli
       )}
 
       {/* Mail content */}
-      <div className="flex-1 overflow-y-auto p-4 sm:p-8">
-        <div className="max-w-4xl mx-auto space-y-6">
+      {/* The body is the point of this screen — p-8 around it on a laptop was
+          two inches of nothing on each side. */}
+      <div className="flex-1 overflow-y-auto p-3 sm:p-6">
+        <div className="max-w-4xl mx-auto space-y-4">
           <h1 className="text-[length:var(--mail-fs-h1)] tracking-[var(--mail-tracking-h1)] font-semibold text-slate-900 dark:text-slate-100">
             {mail.subject || "(بدون موضوع)"}
           </h1>
@@ -235,7 +237,7 @@ function ThreadMessageCard({
   }
 
   return (
-    <div className="rounded-xl border border-primary/15 dark:border-primary/25 bg-white dark:bg-slate-900 shadow-[var(--mail-shadow-card)] p-4 sm:p-6">
+    <div className="rounded-xl border border-primary/15 dark:border-primary/25 bg-white dark:bg-slate-900 shadow-[var(--mail-shadow-card)] p-3 sm:p-5">
       <div className="flex items-start justify-between flex-wrap gap-4">
         <button onClick={onToggle} className="flex items-center gap-4 text-right">
           <div className="w-10 h-10 rounded-full bg-primary/10 dark:bg-primary/20 flex items-center justify-center shrink-0 overflow-hidden">

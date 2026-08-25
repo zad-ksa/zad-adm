@@ -24,41 +24,51 @@ export default async function RequestsPage() {
   // workflow chain and therefore no named approver.
   const canManage = hasPermission(session.role, session.permissions || [], "manage_requests");
 
-  // علّم إشعاراتك مقروءة
-  await prisma.requestNotification.updateMany({
-    where: { employeeId: session.id, isRead: false },
-    data: { isRead: true },
-  });
+  // Everything below is independent of everything else below, so it goes out at
+  // once.
+  //
+  // These used to be three awaits in a row. The database is in ap-southeast-2,
+  // so each costs a full round trip, and the page could not send a single byte
+  // until the last returned — 2.2 seconds during which the browser still showed
+  // the PREVIOUS page, because loading.tsx cannot appear before the server
+  // starts streaming. Run together, the wait is the slowest one, not their sum.
+  //
+  // Marking notifications read is a side effect, not an input: nothing rendered
+  // here depends on it, so it has no business delaying the render.
+  const [requests, allEmployees] = await Promise.all([
+    prisma.request.findMany({
+      ...RELATION_JOIN,
+      where: visibleRequestFilter(session.id, canManage),
+      include: REQUEST_INCLUDE,
+    }),
+    prisma.employee.findMany({
+      where: { isActive: true },
+      select: { id: true, name: true, role: true },
+      orderBy: { name: "asc" },
+    }),
+    prisma.requestNotification.updateMany({
+      where: { employeeId: session.id, isRead: false },
+      data: { isRead: true },
+    }),
+  ]);
 
-  const requests = await prisma.request.findMany({
-    ...RELATION_JOIN,
-    where: visibleRequestFilter(session.id, canManage),
-    include: REQUEST_INCLUDE,
-  });
   const sorted = sortRequests(requests);
 
-  // The delegation picker only means anything to someone who actually has a
-  // request to act on, so it is fetched on that condition rather than on a role.
+  // The employee list is fetched unconditionally above — 12 rows, and asking for
+  // it conditionally cost a second sequential round trip — but it is only handed
+  // to the client when there is actually something to delegate.
   const hasSomethingToReview = sorted.some(
     (r) =>
       r.status === "PENDING" &&
       (r.currentReviewerId === session.id || (r.currentReviewerId === null && canManage))
   );
 
-  const allEmployees = hasSomethingToReview
-    ? await prisma.employee.findMany({
-        where: { isActive: true },
-        select: { id: true, name: true, role: true },
-        orderBy: { name: "asc" },
-      })
-    : [];
-
   return (
     <RequestsClient
       requests={sorted as any}
       canManage={canManage}
       sessionId={session.id}
-      allEmployees={allEmployees as any}
+      allEmployees={hasSomethingToReview ? (allEmployees as any) : []}
     />
   );
 }

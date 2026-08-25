@@ -9,9 +9,10 @@ import {
 } from "lucide-react";
 import {
   createRequest, reviewRequest, resubmitRequest, deleteRequest,
-  getMyRequests, getAllRequests,
+  getVisibleRequestsAndMarkRead,
 } from "@/app/actions/approvals";
 import { useRoleLabels } from "@/components/RoleLabelsProvider";
+import { DECIDED_ACTION_NAMES } from "@/lib/requestDecisions";
 import { useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
 
@@ -74,7 +75,8 @@ type Request = {
 
 type Props = {
   requests: Request[];
-  isExec: boolean;
+  /** Only the fallback approver for requests with no chain — not "sees all". */
+  canManage: boolean;
   sessionId: string;
   allEmployees: Employee[];
 };
@@ -127,7 +129,7 @@ function RequestTimeline({ logs }: { logs: RequestLog[] }) {
   if (logs.length === 0) return null;
   return (
     <div className="mt-2">
-      <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2 flex items-center gap-1">
+      <p className="text-[11px] sm:text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2 flex items-center gap-1">
         <GitBranch className="w-3 h-3" /> خط سير الطلب
       </p>
       <div className="relative">
@@ -151,9 +153,9 @@ function RequestTimeline({ logs }: { logs: RequestLog[] }) {
                 <div className="flex-1 min-w-0 pb-1">
                   <div className="flex items-center gap-1.5 flex-wrap">
                     <span className="text-xs font-bold text-slate-700 dark:text-slate-200">{log.actor.name}</span>
-                    <span className={`text-[10px] font-bold ${cfg.color}`}>{cfg.label}</span>
-                    {log.delegatedTo && <span className="text-[10px] text-purple-500 font-bold">→ {log.delegatedTo.name}</span>}
-                    <span className="text-[10px] text-slate-400 dark:text-slate-500 mr-auto">{timeAgo(log.createdAt)}</span>
+                    <span className={`text-[11px] sm:text-[10px] font-bold ${cfg.color}`}>{cfg.label}</span>
+                    {log.delegatedTo && <span className="text-[11px] sm:text-[10px] text-purple-500 font-bold">→ {log.delegatedTo.name}</span>}
+                    <span className="text-[11px] sm:text-[10px] text-slate-400 dark:text-slate-500 mr-auto">{timeAgo(log.createdAt)}</span>
                   </div>
                   {log.note && (
                     <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-slate-800/60 rounded-lg px-2 py-1">{log.note}</p>
@@ -170,9 +172,9 @@ function RequestTimeline({ logs }: { logs: RequestLog[] }) {
 
 // ── بطاقة الطلب ───────────────────────────────────────────────────────────────
 function RequestCard({
-  request, isExec, sessionId, allEmployees, onReview, onResubmit, onDelete,
+  request, canManage, sessionId, allEmployees, onReview, onResubmit, onDelete,
 }: {
-  request: Request; isExec: boolean; sessionId: string; allEmployees: Employee[];
+  request: Request; canManage: boolean; sessionId: string; allEmployees: Employee[];
   onReview: (r: Request) => void; onResubmit: (r: Request) => void;
   onDelete: (id: string) => void;
 }) {
@@ -183,14 +185,20 @@ function RequestCard({
   const StatusIcon = status.icon;
 
   const isOwner = request.createdBy ? request.createdBy.id === sessionId : true;
-  const canDelete = isExec || (isOwner && ["PENDING", "RETURNED"].includes(request.status));
+  // Mirrors deleteRequest exactly. A button that always fails is worse than no
+  // button, and the two used to disagree: this showed delete to every manager.
+  const canDelete =
+    (isOwner && ["PENDING", "RETURNED"].includes(request.status)) ||
+    (request.status === "PENDING" && request.currentReviewerId === sessionId) ||
+    (request.status === "PENDING" && request.currentReviewerId === null && canManage);
 
+  // The chain names the reviewer; a title does not. The unassigned case falls
+  // back to manage_requests so a chainless request is not stuck forever.
   const isCurrentReviewer =
-    request.status === "PENDING" && isExec && (
-      request.currentReviewerId === null
-        ? true
-        : request.currentReviewerId === sessionId
-    );
+    request.status === "PENDING" &&
+    (request.currentReviewerId === null
+      ? canManage
+      : request.currentReviewerId === sessionId);
 
   const catInfo = CATEGORIES.find(c => c.key === request.category);
   const attachments = typeof request.attachments === 'string' ? JSON.parse(request.attachments) : request.attachments;
@@ -207,21 +215,21 @@ function RequestCard({
         <div className="flex-1 min-w-0">
           <div className="flex items-start gap-2 flex-wrap">
             <span className="text-sm font-bold text-slate-800 dark:text-slate-100 leading-snug">{request.title}</span>
-            <span className={`shrink-0 flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full ${status.bg} ${status.color}`}>
+            <span className={`shrink-0 flex items-center gap-1 text-[11px] sm:text-[10px] font-bold px-2 py-0.5 rounded-full ${status.bg} ${status.color}`}>
               <StatusIcon className="w-3 h-3" />{status.label}
             </span>
-            <span className={`shrink-0 text-[10px] font-bold px-2 py-0.5 rounded-full ${priority.bg} ${priority.color}`}>
+            <span className={`shrink-0 text-[11px] sm:text-[10px] font-bold px-2 py-0.5 rounded-full ${priority.bg} ${priority.color}`}>
               {priority.label}
             </span>
             {catInfo && (
-              <span className={`shrink-0 text-[10px] font-bold px-2 py-0.5 rounded-full border ${catInfo.bg} ${catInfo.color} ${catInfo.border}`}>
+              <span className={`shrink-0 text-[11px] sm:text-[10px] font-bold px-2 py-0.5 rounded-full border ${catInfo.bg} ${catInfo.color} ${catInfo.border}`}>
                 {catInfo.label}
               </span>
             )}
           </div>
 
-          <div className="flex items-center gap-2 mt-1 flex-wrap text-[10px] text-slate-400 dark:text-slate-500">
-            {isExec && request.createdBy && (
+          <div className="flex items-center gap-2 mt-1 flex-wrap text-[11px] sm:text-[10px] text-slate-400 dark:text-slate-500">
+            {!isOwner && request.createdBy && (
               <span className="flex items-center gap-1 font-medium text-slate-500 dark:text-slate-400">
                 <User className="w-3 h-3" />
                 {request.createdBy.name}
@@ -254,7 +262,7 @@ function RequestCard({
               <ShieldCheck className="w-3 h-3" /> مراجعة
             </button>
           )}
-          {!isExec && request.status === "RETURNED" && isOwner && (
+          {request.status === "RETURNED" && isOwner && (
             <button onClick={() => onResubmit(request)}
               className="flex items-center gap-1 text-xs font-bold bg-amber-500 hover:bg-amber-600 text-white px-2.5 py-1.5 rounded-lg transition-colors">
               <RefreshCw className="w-3 h-3" /> تعديل وإعادة إرسال
@@ -294,7 +302,7 @@ function RequestCard({
                     <ExternalLink className="w-3.5 h-3.5 shrink-0" />
                     <span className="truncate">{att.name || "ملف مرفق"}</span>
                   </div>
-                  {att.size && <span className="text-[10px] text-primary/70 shrink-0 font-normal">{(att.size / 1024 / 1024).toFixed(2)} MB</span>}
+                  {att.size && <span className="text-[11px] sm:text-[10px] text-primary/70 shrink-0 font-normal">{(att.size / 1024 / 1024).toFixed(2)} MB</span>}
                 </a>
               ))}
             </div>
@@ -326,26 +334,51 @@ function RequestCard({
 }
 
 // ── المكون الرئيسي ────────────────────────────────────────────────────────────
-export default function RequestsClient({ requests: initial, isExec, sessionId, allEmployees }: Props) {
+export default function RequestsClient({ requests: initial, canManage, sessionId, allEmployees }: Props) {
   const [requests, setRequests] = useState<Request[]>(initial);
   const [showForm, setShowForm] = useState(false);
   const [resubmitReq, setResubmitReq] = useState<Request | null>(null);
   const [reviewingReq, setReviewingReq] = useState<Request | null>(null);
   const [filterStatus, setFilterStatus] = useState<Status | "ALL">("PENDING");
+  // Opens on whichever lane has work in it. Someone who approves nothing should
+  // land on their own requests, not on an empty approvals list.
+  const [tab, setTab] = useState<"AWAITING" | "MINE" | "DECIDED">(() =>
+    initial.some(
+      (r) =>
+        r.status === "PENDING" &&
+        (r.currentReviewerId === null ? canManage : r.currentReviewerId === sessionId)
+    )
+      ? "AWAITING"
+      : "MINE"
+  );
   const [loading, setLoading] = useState(false);
 
-  // جلب البيانات الحية مباشرة من server action
+  // جلب البيانات الحية مباشرة من server action.
+  // يُعلّم الإشعارات مقروءة معها: القارئ ينظر إلى الطلبات نفسها التي يعدّها
+  // العدّاد، فبقاؤه مضيئاً بلا معنى.
   const fetchRequests = useCallback(async () => {
     try {
-      const fresh = isExec ? await getAllRequests() : await getMyRequests();
+      const fresh = await getVisibleRequestsAndMarkRead();
       setRequests(fresh as any);
     } catch {}
-  }, [isExec]);
+  }, []);
 
-  // polling كل 15 ثانية للإشعارات والتحديثات
+  // Polling every 15s — but only while the tab is actually being looked at.
+  // A tab left open used to call the server 5,760 times a day to redraw a list
+  // nobody was reading. Refetches once on return so the pause is invisible.
   useEffect(() => {
-    const interval = setInterval(fetchRequests, 15000);
-    return () => clearInterval(interval);
+    const tick = () => {
+      if (!document.hidden) fetchRequests();
+    };
+    const interval = setInterval(tick, 15000);
+    const onVisible = () => {
+      if (!document.hidden) fetchRequests();
+    };
+    document.addEventListener("visibilitychange", onVisible);
+    return () => {
+      clearInterval(interval);
+      document.removeEventListener("visibilitychange", onVisible);
+    };
   }, [fetchRequests]);
 
   async function handleAction(fn: () => Promise<void>) {
@@ -365,30 +398,55 @@ export default function RequestsClient({ requests: initial, isExec, sessionId, a
     await handleAction(() => deleteRequest(id));
   }
 
-  const filtered = filterStatus === "ALL" ? requests : requests.filter(r => r.status === filterStatus);
+  // Two lanes, because they are two different jobs: things waiting on ME to
+  // act, and things I raised and am waiting on someone else for. Mixing them
+  // into one list is what made it hard to see what actually needed doing.
+  const awaitingMe = requests.filter(
+    (r) =>
+      r.status === "PENDING" &&
+      (r.currentReviewerId === null ? canManage : r.currentReviewerId === sessionId)
+  );
+  const mine = requests.filter((r) => r.createdBy?.id === sessionId);
+
+  // Requests that ENDED at me — approved, sent back, or refused. Forwarding up the
+  // chain is not deciding it, so those stay out. Read from the log so every step
+  // of a chain is covered, not just whoever happened to be last. Anything still
+  // waiting on me belongs in the first lane, not here.
+  const decided = requests.filter(
+    (r) =>
+      !awaitingMe.some((a) => a.id === r.id) &&
+      (r.logs || []).some(
+        (l) => l.actor?.id === sessionId && DECIDED_ACTION_NAMES.includes(l.action)
+      )
+  );
+
+  const lane = tab === "AWAITING" ? awaitingMe : tab === "MINE" ? mine : decided;
+  const filtered = filterStatus === "ALL" ? lane : lane.filter(r => r.status === filterStatus);
   const counts = {
-    ALL:      requests.length,
-    PENDING:  requests.filter(r => r.status === "PENDING").length,
-    RETURNED: requests.filter(r => r.status === "RETURNED").length,
-    APPROVED: requests.filter(r => r.status === "APPROVED").length,
-    REJECTED: requests.filter(r => r.status === "REJECTED").length,
-    DELEGATED:requests.filter(r => r.status === "DELEGATED").length,
+    ALL:      lane.length,
+    PENDING:  lane.filter(r => r.status === "PENDING").length,
+    RETURNED: lane.filter(r => r.status === "RETURNED").length,
+    APPROVED: lane.filter(r => r.status === "APPROVED").length,
+    REJECTED: lane.filter(r => r.status === "REJECTED").length,
+    DELEGATED:lane.filter(r => r.status === "DELEGATED").length,
   };
 
   return (
     <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-500" dir="rtl">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 bg-primary/10 rounded-lg flex items-center justify-center">
+      <div className="flex items-center justify-between gap-3 flex-wrap">
+        <div className="flex items-center gap-2 min-w-0">
+          <div className="w-8 h-8 bg-primary/10 rounded-lg flex items-center justify-center shrink-0">
             <Send className="w-4 h-4 text-primary" />
           </div>
           <div>
             <h1 className="text-base font-bold text-slate-800 dark:text-slate-100">
-              {isExec ? "إدارة الاعتمادات" : "اعتماداتي"}
+              الاعتمادات
             </h1>
             <p className="text-[11px] text-slate-500 dark:text-slate-400">
-              {isExec ? `${requests.length} طلب · ${counts.PENDING} قيد المراجعة` : `${requests.length} طلب`}
+              {awaitingMe.length > 0
+                ? `${awaitingMe.length} بانتظار اعتمادك · ${mine.length} من طلباتك`
+                : `${mine.length} من طلباتك`}
             </p>
           </div>
         </div>
@@ -400,8 +458,8 @@ export default function RequestsClient({ requests: initial, isExec, sessionId, a
         </div>
       </div>
 
-      {/* فلاتر الحالة */}
-      <div className="flex items-center gap-1.5 flex-wrap">
+      {/* فلاتر الحالة — تمرير أفقي بدل الانكسار على ثلاثة صفوف في الجوال */}
+      <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar -mx-1 px-1">
         {([
           { key: "PENDING",  label: "قيد المراجعة" },
           { key: "ALL",      label: "الكل" },
@@ -410,14 +468,14 @@ export default function RequestsClient({ requests: initial, isExec, sessionId, a
           { key: "DELEGATED",label: "محوّل" },
           { key: "REJECTED", label: "مرفوض" },
         ] as const).map(opt => (
-          <button key={opt.key} onClick={() => setFilterStatus(opt.key)}
-            className={`flex items-center gap-1 px-3 py-1 rounded-full text-[11px] font-bold transition-colors ${
+          <button key={opt.key} onClick={() => setFilterStatus(opt.key)} aria-pressed={filterStatus === opt.key}
+            className={`shrink-0 flex items-center gap-1 px-3 py-1 rounded-full text-[11px] font-bold transition-colors ${
               filterStatus === opt.key ? "bg-primary text-white"
               : "bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-600"
             }`}>
             {opt.label}
             {counts[opt.key] > 0 && (
-              <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${filterStatus === opt.key ? "bg-white/20 text-white" : "bg-slate-200 dark:bg-slate-600"}`}>
+              <span className={`text-[11px] sm:text-[10px] px-1.5 py-0.5 rounded-full ${filterStatus === opt.key ? "bg-white/20 text-white" : "bg-slate-200 dark:bg-slate-600"}`}>
                 {counts[opt.key]}
               </span>
             )}
@@ -425,23 +483,100 @@ export default function RequestsClient({ requests: initial, isExec, sessionId, a
         ))}
       </div>
 
+      {/* Lane switch. Kept above the status filter because it changes WHOSE
+          requests are being filtered, not just which of them. */}
+      {/* Scrolls sideways rather than wrapping: a tab bar that reflows onto a
+          second row stops reading as one control, and on a 360px screen these
+          three plus their counters do not fit. */}
+      <div className="flex items-center gap-2 overflow-x-auto no-scrollbar -mx-1 px-1">
+        <button
+          onClick={() => setTab("AWAITING")}
+          aria-pressed={tab === "AWAITING"}
+          className={`shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-colors ${
+            tab === "AWAITING"
+              ? "bg-primary text-white"
+              : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700"
+          }`}
+        >
+          <ShieldCheck className="w-3.5 h-3.5" />
+          بانتظار اعتمادي
+          {awaitingMe.length > 0 && (
+            <span
+              className={`px-1.5 rounded ${
+                tab === "AWAITING" ? "bg-white/20" : "bg-primary/10 text-primary"
+              }`}
+            >
+              {awaitingMe.length}
+            </span>
+          )}
+        </button>
+        <button
+          onClick={() => setTab("MINE")}
+          aria-pressed={tab === "MINE"}
+          className={`shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-colors ${
+            tab === "MINE"
+              ? "bg-primary text-white"
+              : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700"
+          }`}
+        >
+          <Send className="w-3.5 h-3.5" />
+          طلباتي
+          <span
+            className={`px-1.5 rounded ${
+              tab === "MINE" ? "bg-white/20" : "bg-slate-200 dark:bg-slate-700"
+            }`}
+          >
+            {mine.length}
+          </span>
+        </button>
+        {decided.length > 0 && (
+          <button
+            onClick={() => setTab("DECIDED")}
+            aria-pressed={tab === "DECIDED"}
+            className={`shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-colors ${
+              tab === "DECIDED"
+                ? "bg-primary text-white"
+                : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700"
+            }`}
+          >
+            <Check className="w-3.5 h-3.5" />
+            اعتمدتها
+            <span
+              className={`px-1.5 rounded ${
+                tab === "DECIDED" ? "bg-white/20" : "bg-slate-200 dark:bg-slate-700"
+              }`}
+            >
+              {decided.length}
+            </span>
+          </button>
+        )}
+      </div>
+
       {/* قائمة الطلبات */}
       {filtered.length === 0 ? (
         <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 p-16 text-center">
           <Send className="w-10 h-10 text-slate-300 dark:text-slate-600 mx-auto mb-3" />
           <p className="text-slate-400 dark:text-slate-500 text-sm">
-            {filterStatus === "ALL" ? (isExec ? "لا توجد طلبات بعد" : "لم ترفع أي طلب بعد") : "لا توجد طلبات بهذه الحالة"}
+            {filterStatus !== "ALL"
+              ? "لا توجد طلبات بهذه الحالة"
+              : tab === "AWAITING"
+                ? "لا شيء بانتظار اعتمادك"
+                : tab === "DECIDED"
+                  ? "لم تعتمد أي طلب بعد"
+                  : "لم ترفع أي طلب بعد"}
           </p>
-          {filterStatus === "ALL" && (
+          {filterStatus === "ALL" && tab === "MINE" && (
             <button onClick={() => setShowForm(true)} className="mt-3 text-xs text-primary hover:underline font-bold">
               ارفع طلبك الأول
             </button>
           )}
         </div>
       ) : (
-        <div className="space-y-2">
+        // pb-24: the floating button sits over the last card otherwise, and on a
+        // phone the last card is the one you just scrolled to.
+        <div className="space-y-2 pb-24 lg:pb-0">
           {filtered.map(r => (
-            <RequestCard key={r.id} request={r} isExec={isExec} sessionId={sessionId}
+            <RequestCard key={r.id} request={r} canManage={canManage} sessionId={sessionId}
               allEmployees={allEmployees}
               onReview={req => setReviewingReq(req)}
               onResubmit={req => setResubmitReq(req)}
@@ -453,7 +588,7 @@ export default function RequestsClient({ requests: initial, isExec, sessionId, a
       {/* Floating Action Button */}
       <button 
         onClick={() => setShowForm(true)}
-        className="fixed bottom-6 left-6 lg:bottom-8 lg:left-8 z-40 flex items-center gap-2 bg-primary hover:bg-primary/90 text-white px-5 py-3.5 rounded-full shadow-lg shadow-primary/30 transition-all hover:-translate-y-1 hover:shadow-xl hover:shadow-primary/40 font-bold"
+        className="fixed bottom-6 left-6 lg:bottom-8 lg:left-8 z-40 flex items-center gap-2 bg-primary hover:bg-primary/90 text-white px-5 py-3.5 rounded-full shadow-lg shadow-primary/30 transition-all hover:-translate-y-1 hover:shadow-xl hover:shadow-primary/40 font-bold safe-bottom"
       >
         <Plus className="w-5 h-5" />
         <span className="text-sm">طلب جديد</span>

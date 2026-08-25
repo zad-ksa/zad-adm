@@ -66,8 +66,11 @@ export default function ReviewModal({
   const selectedAction = actions.find(a => a.value === action)!;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm" dir="rtl">
-      <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-2xl w-full max-w-md flex flex-col max-h-[90vh]">
+    <div
+      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-slate-950/60 backdrop-blur-sm"
+      dir="rtl"
+    >
+      <div className="bg-white dark:bg-slate-900 rounded-t-2xl sm:rounded-2xl border border-slate-200 dark:border-slate-700 shadow-2xl w-full sm:max-w-md flex flex-col max-h-[92dvh] sm:max-h-[90vh]">
         <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100 dark:border-slate-800 shrink-0">
           <h2 className="font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
             <ShieldCheck className="w-4 h-4 text-primary" /> مراجعة الطلب

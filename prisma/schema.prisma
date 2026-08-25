@@ -1,5 +1,14 @@
 generator client {
   provider = "prisma-client-js"
+
+  /// relationJoins: يجعل findMany مع include استعلاماً واحداً بـ LATERAL JOIN
+  /// بدل استعلام منفصل لكل علاقة.
+  ///
+  /// قياس فعلي على صفحة الاعتمادات: الاستدعاء الواحد كان يتحوّل إلى 9 رحلات
+  /// إلى القاعدة. زمن SQL نفسه 0.17 مللي، لكن القاعدة في سيدني فالرحلة الواحدة
+  /// تكلّف مئات المللي — والتسع تُضرب في ذلك. بعد التفعيل: رحلة واحدة،
+  /// والوسيط نزل من 1564 مللي إلى 319.
+  previewFeatures = ["relationJoins"]
 }
 
 datasource db {
@@ -701,6 +710,8 @@ model RequestLog {
   createdAt     DateTime      @default(now())
 
   @@index([requestId])
+  /// يخدم مسار «اعتمدتها»: البحث عن الطلبات التي اتخذ فيها موظف بعينه قراراً.
+  @@index([actorId, action])
 }
 
 model Request {
@@ -737,6 +748,9 @@ model Request {
   @@index([createdById])
   @@index([status])
   @@index([currentReviewerId])
+  /// يخدم شرط الرؤية { status: DELEGATED, delegatedToId } — كان مسحاً كاملاً
+  /// للجدول في كل تحميل وكل استطلاع.
+  @@index([delegatedToId])
 }
 
 model RequestNotification {

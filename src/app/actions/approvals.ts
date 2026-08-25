@@ -4,6 +4,12 @@ import { prisma } from "@/lib/db";
 import { Prisma } from "@prisma/client";
 import { getSession } from "@/lib/auth";
 import { hasPermission } from "@/lib/permissions";
+import {
+  REQUEST_INCLUDE,
+  RELATION_JOIN,
+  sortRequests,
+  visibleRequestFilter,
+} from "@/lib/requestQuery";
 import { createAppNotification } from "./notifications";
 import { revalidatePath } from "next/cache";
 
@@ -116,9 +122,6 @@ export async function reviewRequest(data: {
   delegatedToId?: string; // مطلوب عند DELEGATED
 }) {
   const session = await requireSession();
-  if (!isExec(session.role, session.permissions || [])) {
-    throw new Error("غير مصرح");
-  }
 
   const request = await prisma.request.findUnique({
     where: { id: data.requestId },
@@ -128,6 +131,20 @@ export async function reviewRequest(data: {
   });
   if (!request) throw new Error("الطلب غير موجود");
   if (request.status !== "PENDING") throw new Error("لا يمكن مراجعة طلب غير قيد المراجعة");
+
+  // Authority comes from the workflow, not from a job title: the person the
+  // chain named for THIS step is the one who may act, whatever permissions they
+  // hold. The manage_requests holder is only a fallback for a request with no
+  // chain at all, which otherwise has no approver and would never move.
+  //
+  // Checked here and not only in the page, because hiding a button is not a
+  // permission — this action is callable directly.
+  const isNamedReviewer = request.currentReviewerId === session.id;
+  const isUnassignedFallback =
+    request.currentReviewerId === null && isExec(session.role, session.permissions || []);
+  if (!isNamedReviewer && !isUnassignedFallback) {
+    throw new Error("هذا الطلب ليس بانتظار اعتمادك");
+  }
 
   // الملاحظات إلزامية فقط عند الإرجاع أو الرفض
   if ((data.action === "RETURNED" || data.action === "REJECTED") && !data.note?.trim()) {
@@ -181,6 +198,12 @@ export async function reviewRequest(data: {
           reviewedById: session.id,
           reviewNote: data.note?.trim() || null,
           reviewedAt: new Date(),
+          // Terminal: nobody is deciding this any more, so the desk is empty.
+          // Leaving the last reviewer here made the column mean two different
+          // things at once — «who must act» while pending, «who acted last»
+          // afterwards — and every query that read it honestly got the wrong
+          // answer for completed requests.
+          currentReviewerId: null,
         },
       });
       await notify(data.requestId, request.createdById);
@@ -199,6 +222,12 @@ export async function reviewRequest(data: {
         reviewedById: session.id,
         reviewNote: data.note?.trim() || null,
         reviewedAt: new Date(),
+        // Terminal: nobody is deciding this any more, so the desk is empty.
+        // Leaving the last reviewer here made the column mean two different
+        // things at once — «who must act» while pending, «who acted last»
+        // afterwards — and every query that read it honestly got the wrong
+        // answer for completed requests.
+        currentReviewerId: null,
       },
     });
     await notify(data.requestId, request.createdById);
@@ -216,6 +245,8 @@ export async function reviewRequest(data: {
         reviewedById: session.id,
         reviewNote: data.note?.trim() || null,
         reviewedAt: new Date(),
+        // Terminal, like an approval — the desk is empty.
+        currentReviewerId: null,
       },
     });
     await notify(data.requestId, request.createdById);
@@ -241,6 +272,9 @@ export async function reviewRequest(data: {
         reviewNote: data.note?.trim() || null,
         reviewedAt: new Date(),
         delegatedToId: data.delegatedToId,
+        // Handed to the delegate: delegatedToId is now who holds it, and no one
+        // is being asked to decide.
+        currentReviewerId: null,
       },
     });
     // أشعر المحوَّل إليه والمرسل الأصلي
@@ -327,15 +361,25 @@ export async function deleteRequest(requestId: string) {
 
   const existing = await prisma.request.findUnique({
     where: { id: requestId },
-    select: { createdById: true, status: true },
+    select: { createdById: true, status: true, currentReviewerId: true },
   });
   if (!existing) throw new Error("الطلب غير موجود");
 
-  const canDelete =
-    (existing.createdById === session.id && ["PENDING", "RETURNED"].includes(existing.status)) ||
+  // Deleting follows the same rule as seeing: a request you cannot open is not
+  // one you may destroy. manage_requests alone used to be enough for ANY
+  // request in the company — which, now that the page hides most of them, meant
+  // a manager could delete 47 requests they were not even shown.
+  const isOwnerWhileEditable =
+    existing.createdById === session.id && ["PENDING", "RETURNED"].includes(existing.status);
+  const isHolder = existing.status === "PENDING" && existing.currentReviewerId === session.id;
+  const isUnassignedFallback =
+    existing.status === "PENDING" &&
+    existing.currentReviewerId === null &&
     isExec(session.role, session.permissions || []);
 
-  if (!canDelete) throw new Error("غير مصرح بحذف هذا الطلب");
+  if (!isOwnerWhileEditable && !isHolder && !isUnassignedFallback) {
+    throw new Error("غير مصرح بحذف هذا الطلب");
+  }
 
   await prisma.request.delete({ where: { id: requestId } });
   revalidatePath("/main/approvals");
@@ -343,52 +387,32 @@ export async function deleteRequest(requestId: string) {
 
 // ── جلب الطلبات (للـ polling في المكون) ──────────────────────────────────────
 
-const REQUEST_INCLUDE = {
-  createdBy: { select: { id: true, name: true, role: true, avatarUrl: true } },
-  reviewedBy: { select: { id: true, name: true } },
-  currentReviewer: { select: { id: true, name: true, role: true } },
-  delegatedTo: { select: { id: true, name: true, role: true } },
-  chain: { select: { id: true, name: true } },
-  logs: {
-    include: {
-      actor: { select: { id: true, name: true, role: true, avatarUrl: true } },
-      delegatedTo: { select: { id: true, name: true, role: true } },
-    },
-    orderBy: { createdAt: "asc" as const },
-  },
-} as const;
-
-const PRIORITY_ORDER: Record<string, number> = { URGENT: 0, HIGH: 1, MEDIUM: 2, LOW: 3 };
-
-function sortRequests(requests: any[]) {
-  return requests.sort((a: any, b: any) => {
-    if (a.status === "PENDING" && b.status !== "PENDING") return -1;
-    if (b.status === "PENDING" && a.status !== "PENDING") return 1;
-    if (a.status === "PENDING" && b.status === "PENDING") {
-      const pa = PRIORITY_ORDER[a.priority] ?? 3;
-      const pb = PRIORITY_ORDER[b.priority] ?? 3;
-      if (pa !== pb) return pa - pb;
-      return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
-    }
-    return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-  });
-}
-
-export async function getMyRequests() {
+/**
+ * Everything this person may see — what they raised, what is sitting with
+ * them, and what they personally decided — and clears the unread badge.
+ *
+ * Shares visibleRequestFilter with the approvals page, so the 15-second poll
+ * can never return a different set from the one the page rendered.
+ *
+ * Marking read happens here rather than only on page load: the poll used to
+ * fetch requests without touching notifications, so the sidebar counter stayed
+ * lit while the reader was looking straight at what it was counting.
+ */
+export async function getVisibleRequestsAndMarkRead() {
   const session = await requireSession();
   if (!canViewRequests(session.role, session.permissions || [])) return [];
-  const requests = await prisma.request.findMany({
-    where: { createdById: session.id },
-    include: REQUEST_INCLUDE,
-    orderBy: { createdAt: "desc" },
-  });
-  return requests;
-}
 
-export async function getAllRequests() {
-  const session = await requireSession();
-  if (!isExec(session.role, session.permissions || [])) throw new Error("غير مصرح");
-  const requests = await prisma.request.findMany({ include: REQUEST_INCLUDE });
+  const [requests] = await Promise.all([
+    prisma.request.findMany({
+      ...RELATION_JOIN,
+      where: visibleRequestFilter(session.id, isExec(session.role, session.permissions || [])),
+      include: REQUEST_INCLUDE,
+    }),
+    prisma.requestNotification.updateMany({
+      where: { employeeId: session.id, isRead: false },
+      data: { isRead: true },
+    }),
+  ]);
   return sortRequests(requests);
 }
 

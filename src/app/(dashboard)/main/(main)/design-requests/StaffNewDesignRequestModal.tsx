@@ -6,6 +6,7 @@ import { createDesignRequestByStaff } from "@/app/actions/designRequests";
 import DesignTypePicker, {
   type DesignTypeOption,
 } from "@/components/design-requests/DesignTypePicker";
+import { ACCEPT_ATTRIBUTE, DESIGN_MAX_BYTES } from "@/lib/uploadLimits";
 import { uploadDesignRequestFiles } from "@/components/design-requests/uploadDesignRequestFiles";
 
 export default function StaffNewDesignRequestModal({
@@ -35,6 +36,8 @@ export default function StaffNewDesignRequestModal({
     if (!charityId) return setError("يرجى اختيار الجمعية");
     if (!title.trim()) return setError("يرجى إدخال عنوان الطلب");
     if (typeIds.length === 0) return setError("يرجى اختيار نوع التصميم");
+    // The charity-side form has always capped this; the staff form did not.
+    if (files.length > 10) return setError("الحد الأقصى 10 مرفقات لكل طلب");
 
     setIsSubmitting(true);
     try {
@@ -183,7 +186,16 @@ export default function StaffNewDesignRequestModal({
               <input
                 type="file"
                 multiple
-                onChange={(e) => setFiles((prev) => [...prev, ...Array.from(e.target.files || [])])}
+                accept={ACCEPT_ATTRIBUTE}
+                onChange={(e) => {
+                  const picked = Array.from(e.target.files || []);
+                  const tooBig = picked.filter((f) => f.size > DESIGN_MAX_BYTES);
+                  if (tooBig.length) {
+                    setError(`تجاوز الحد (100 ميجابايت): ${tooBig.map((f) => f.name).join("، ")}`);
+                  }
+                  setFiles((prev) => [...prev, ...picked.filter((f) => f.size <= DESIGN_MAX_BYTES)]);
+                  e.target.value = "";
+                }}
                 className="hidden"
               />
             </label>

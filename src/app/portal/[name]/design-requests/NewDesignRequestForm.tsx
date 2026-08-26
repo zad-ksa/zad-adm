@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { X, Paperclip, Send, Loader2, AlertTriangle } from "lucide-react";
 import { createDesignRequestFromPortal } from "@/app/actions/designRequests";
+import { ACCEPT_ATTRIBUTE, DESIGN_MAX_BYTES } from "@/lib/uploadLimits";
 import { uploadDesignRequestFiles } from "@/components/design-requests/uploadDesignRequestFiles";
 import DesignTypePicker, {
   type DesignTypeOption,
@@ -145,7 +146,16 @@ export default function NewDesignRequestForm({
               <input
                 type="file"
                 multiple
-                onChange={(e) => setFiles((prev) => [...prev, ...Array.from(e.target.files || [])])}
+                accept={ACCEPT_ATTRIBUTE}
+                onChange={(e) => {
+                  const picked = Array.from(e.target.files || []);
+                  const tooBig = picked.filter((f) => f.size > DESIGN_MAX_BYTES);
+                  if (tooBig.length) {
+                    setError(`تجاوز الحد (100 ميجابايت): ${tooBig.map((f) => f.name).join("، ")}`);
+                  }
+                  setFiles((prev) => [...prev, ...picked.filter((f) => f.size <= DESIGN_MAX_BYTES)]);
+                  e.target.value = "";
+                }}
                 className="hidden"
               />
             </label>

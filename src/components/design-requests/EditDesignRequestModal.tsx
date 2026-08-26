@@ -4,6 +4,7 @@ import { useState } from "react";
 import { X, Paperclip, Loader2, AlertTriangle, Save, Trash2 } from "lucide-react";
 import { updateDesignRequestDetails } from "@/app/actions/designRequests";
 import { uploadDesignRequestFiles } from "./uploadDesignRequestFiles";
+import { ACCEPT_ATTRIBUTE, DESIGN_MAX_BYTES } from "@/lib/uploadLimits";
 
 export type EditableRequest = {
   id: string;
@@ -210,7 +211,16 @@ export default function EditDesignRequestModal({
               <input
                 type="file"
                 multiple
-                onChange={(e) => setFiles((prev) => [...prev, ...Array.from(e.target.files || [])])}
+                accept={ACCEPT_ATTRIBUTE}
+                onChange={(e) => {
+                  const picked = Array.from(e.target.files || []);
+                  const tooBig = picked.filter((f) => f.size > DESIGN_MAX_BYTES);
+                  if (tooBig.length) {
+                    setError(`تجاوز الحد (100 ميجابايت): ${tooBig.map((f) => f.name).join("، ")}`);
+                  }
+                  setFiles((prev) => [...prev, ...picked.filter((f) => f.size <= DESIGN_MAX_BYTES)]);
+                  e.target.value = "";
+                }}
                 className="hidden"
               />
             </label>

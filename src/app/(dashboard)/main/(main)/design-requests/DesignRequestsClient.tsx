@@ -10,6 +10,7 @@ import StaffNewDesignRequestModal from "./StaffNewDesignRequestModal";
 import StaffRescheduleDesignRequestModal from "./StaffRescheduleDesignRequestModal";
 import StaffRescheduleCharityQueueModal from "./StaffRescheduleCharityQueueModal";
 import StaffExtendDesignRequestModal from "./StaffExtendDesignRequestModal";
+import { ACCEPT_ATTRIBUTE, DESIGN_MAX_BYTES } from "@/lib/uploadLimits";
 import { uploadDesignRequestFiles } from "@/components/design-requests/uploadDesignRequestFiles";
 import DesignTypesModal, { type DesignTypeRow } from "./DesignTypesModal";
 import EditDesignRequestModal from "@/components/design-requests/EditDesignRequestModal";
@@ -354,9 +355,21 @@ export default function DesignRequestsClient({
                 <input
                   type="file"
                   multiple
-                  onChange={(e) =>
-                    setDeliverables((prev) => [...prev, ...Array.from(e.target.files || [])])
-                  }
+                  accept={ACCEPT_ATTRIBUTE}
+                  onChange={(e) => {
+                    const picked = Array.from(e.target.files || []);
+                    const tooBig = picked.filter((f) => f.size > DESIGN_MAX_BYTES);
+                    if (tooBig.length) {
+                      // This panel has no inline error slot, and dropping the
+                      // file without a word is how attachments go missing.
+                      alert(`تجاوز الحد (100 ميجابايت): ${tooBig.map((f) => f.name).join("، ")}`);
+                    }
+                    setDeliverables((prev) => [
+                      ...prev,
+                      ...picked.filter((f) => f.size <= DESIGN_MAX_BYTES),
+                    ]);
+                    e.target.value = "";
+                  }}
                   className="hidden"
                 />
               </label>

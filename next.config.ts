@@ -15,7 +15,12 @@ const CSP = [
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data: blob: https://res.cloudinary.com",
   "font-src 'self' data:",
-  "connect-src 'self' https://res.cloudinary.com",
+  // api.cloudinary.com is the UPLOAD host and is a different origin from the
+  // res.cloudinary.com that serves files back. Design-request attachments go
+  // straight from the browser to Cloudinary — the serverless request body limit
+  // makes anything larger than a few MB impossible through our own API — and
+  // without this entry the browser blocks that upload before it leaves.
+  "connect-src 'self' https://res.cloudinary.com https://api.cloudinary.com",
   "frame-ancestors 'none'",
   "base-uri 'self'",
   "form-action 'self'",

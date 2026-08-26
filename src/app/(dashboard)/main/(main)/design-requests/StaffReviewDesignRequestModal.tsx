@@ -177,8 +177,8 @@ export default function StaffReviewDesignRequestModal({
                 className="rounded-xl bg-slate-100 dark:bg-slate-800/60 text-slate-500 dark:text-slate-400 px-4 py-3 leading-relaxed"
                 style={{ fontSize: "var(--dr-fs-meta)" }}
               >
-                الموعد الظاهر للجمعية الآن تقديري — الطلب لا يحجز مكاناً في الطابور قبل الاعتماد.
-                عند الاعتماد يُحسب الموعد على الطابور كما هو الآن ويصبح مؤكداً.
+                الموعد الظاهر للجمعية الآن تقديري — الطلب لا يحجز دوره قبل الاعتماد.
+                عند الاعتماد يُحسب الموعد على ترتيب التنفيذ كما هو الآن ويصبح مؤكداً.
               </p>
             </>
           ) : (
@@ -240,7 +240,7 @@ export default function StaffReviewDesignRequestModal({
         title={mode === "approve" ? "اعتماد الطلب" : "رفض الطلب"}
         message={
           mode === "approve"
-            ? `سيدخل الطلب الطابور بـ${parsedDays} من أيام العمل، ويُثبَّت موعد التسليم ويظهر للجمعية. هل تريد المتابعة؟`
+            ? `سيأخذ الطلب دوره بـ${parsedDays} من أيام العمل، ويُثبَّت موعد التسليم ويظهر للجمعية. هل تريد المتابعة؟`
             : "سيُرفض الطلب ويظهر السبب للجمعية في تبويب «المرفوضة». هل تريد المتابعة؟"
         }
         isPending={isSubmitting}

@@ -19,6 +19,19 @@ export type DesignTypeOption = { id: string; name: string; workingDays: number }
  * until one is chosen there is no honest number to show and the panel says so
  * instead of quoting a figure the request may never get.
  */
+/**
+ * Wording rule for the execution queue, applied across all design-request UI:
+ *
+ *   "دور"           — one request's own slot   ("يأخذ الطلب دوره")
+ *   "ترتيب التنفيذ" — the whole ordered set    ("إعادة ترتيب التنفيذ")
+ *
+ * They are not synonyms; they name the part and the whole. Neither reads well
+ * in the other's sentences — "إعادة جدولة الدور" and "يدخل الطلب ترتيب
+ * التنفيذ" are both wrong — which is exactly why the split holds.
+ *
+ * The English identifiers (queue, rescheduleCharityQueue) are left alone: they
+ * are correct technical terms and no user reads them.
+ */
 export default function DesignTypePicker({
   options,
   selected,
@@ -107,7 +120,7 @@ export default function DesignTypePicker({
           style={{ fontSize: "var(--dr-fs-meta)" }}
         >
           مدة التنفيذ: {totalDays} {totalDays === 1 ? "يوم عمل" : "أيام عمل"} (الأحد – الخميس)
-          من بداية دور الطلب في الطابور
+          من بداية دور الطلب
         </p>
       )}
     </div>

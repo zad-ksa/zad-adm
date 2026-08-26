@@ -113,7 +113,7 @@ export default function EditDesignRequestModal({
             className="rounded-xl bg-slate-100 dark:bg-slate-800/60 text-slate-500 dark:text-slate-400 px-4 py-3"
             style={{ fontSize: "var(--dr-fs-meta)" }}
           >
-            التعديل لا يغيّر نوع التصميم ولا موعد التسليم ولا ترتيب الطلب في الطابور.
+            التعديل لا يغيّر نوع التصميم ولا موعد التسليم ولا دور الطلب في التنفيذ.
           </p>
 
           {error && (

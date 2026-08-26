@@ -137,7 +137,7 @@ export default function DesignRequestsPortalClient({
           
           <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-amber-50 dark:bg-amber-500/10 border border-amber-100 dark:border-amber-500/20 text-amber-700 dark:text-amber-400">
             <Info className="w-3.5 h-3.5 shrink-0" />
-            <span style={{ fontSize: "var(--dr-fs-meta)" }}>الطلبات تنفذ كطابور متسلسل (الطلب تلو الآخر)</span>
+            <span style={{ fontSize: "var(--dr-fs-meta)" }}>الطلبات تُنفَّذ بالترتيب، طلباً تلو الآخر</span>
           </div>
         </div>
       </div>

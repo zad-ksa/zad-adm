@@ -73,7 +73,7 @@ export default function StaffNewDesignRequestModal({
         setError(res.error);
         return;
       }
-      onSuccess("تم إنشاء الطلب وإدخاله الطابور");
+      onSuccess("تم إنشاء الطلب وحجز دوره");
     } catch (err: any) {
       setError(err.message || "حدث خطأ أثناء إضافة الطلب");
     } finally {
@@ -267,7 +267,7 @@ export default function StaffNewDesignRequestModal({
       <ConfirmModal
         isOpen={isConfirmOpen}
         title="إنشاء الطلب"
-        message="سيدخل الطلب الطابور مباشرة ويظهر للجمعية بموعد تسليم مؤكد. هل تريد المتابعة؟"
+        message="سيأخذ الطلب دوره مباشرة ويظهر للجمعية بموعد تسليم مؤكد. هل تريد المتابعة؟"
         isPending={isSubmitting}
         onCancel={() => setIsConfirmOpen(false)}
         onConfirm={runSubmit}

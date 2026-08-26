@@ -49,7 +49,7 @@ export default function StaffRescheduleCharityQueueModal({
       >
         <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 dark:border-slate-800 shrink-0">
           <h2 className="font-bold text-slate-900 dark:text-slate-100" style={{ fontSize: "var(--dr-fs-title)" }}>
-            إعادة جدولة طابور {charityName}
+            إعادة ترتيب تنفيذ {charityName}
           </h2>
           <button
             onClick={onClose}
@@ -67,7 +67,7 @@ export default function StaffRescheduleCharityQueueModal({
                 تحذير: سيتم إعادة حساب تواريخ جميع الطلبات
               </p>
               <p className="text-amber-600/80 dark:text-amber-400/80" style={{ fontSize: "var(--dr-fs-meta)" }}>
-                سيتم ترتيب جميع الطلبات "قيد التنفيذ" لهذه الجمعية كطابور متسلسل بناءً على التاريخ الذي تحدده أدناه. كل طلب سيستغرق 3 أيام عمل لينتهي ويبدأ الطلب الذي يليه مباشرة.
+                سيتم ترتيب جميع الطلبات "قيد التنفيذ" لهذه الجمعية ترتيباً متسلسلاً بناءً على التاريخ الذي تحدده أدناه. كل طلب سيستغرق 3 أيام عمل لينتهي ويبدأ الطلب الذي يليه مباشرة.
               </p>
             </div>
           </div>
@@ -87,7 +87,7 @@ export default function StaffRescheduleCharityQueueModal({
               className="block font-bold text-slate-500 dark:text-slate-400 mb-2"
               style={{ fontSize: "var(--dr-fs-meta)" }}
             >
-              تاريخ ووقت انطلاق الطابور
+              تاريخ ووقت بداية التنفيذ
             </label>
             <input
               type="datetime-local"
@@ -107,7 +107,7 @@ export default function StaffRescheduleCharityQueueModal({
             style={{ fontSize: "var(--dr-fs-meta)" }}
           >
             {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
-            إعادة جدولة الطابور بالكامل
+            إعادة الترتيب بالكامل
           </button>
         </div>
       </div>

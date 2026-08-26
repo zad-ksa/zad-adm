@@ -659,7 +659,7 @@ export async function rescheduleCharityQueue(charityId: string, startDate: Date)
     );
   } catch (error: any) {
     console.error("Error rescheduling charity queue:", error);
-    return { error: error.message || "حدث خطأ أثناء إعادة جدولة طابور الجمعية" };
+    return { error: error.message || "حدث خطأ أثناء إعادة ترتيب تنفيذ الجمعية" };
   }
 }
 

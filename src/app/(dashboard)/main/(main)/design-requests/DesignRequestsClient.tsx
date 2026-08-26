@@ -230,7 +230,7 @@ export default function DesignRequestsClient({
                 className="h-10 px-4 rounded-xl bg-amber-50 text-amber-600 dark:bg-amber-400/10 dark:text-amber-400 border border-amber-200/50 dark:border-amber-400/20 hover:bg-amber-100 dark:hover:bg-amber-400/20 transition-colors font-bold"
                 style={{ fontSize: "var(--dr-fs-meta)" }}
               >
-                إعادة جدولة الطابور
+                إعادة ترتيب التنفيذ
               </button>
             )}
             <div className="relative">

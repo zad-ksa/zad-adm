@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import {
   ArrowRight,
   Reply,
+  ReplyAll,
   Forward,
   Trash2,
   Paperclip,
@@ -17,7 +18,7 @@ import ComposeModal from "../ComposeModal";
 import ConfirmModal from "@/components/ui/ConfirmModal";
 import { moveToTrash } from "@/app/actions/mail";
 import Image from "next/image";
-import { formatMailDate, htmlToPlainText } from "../mailUtils";
+import { formatMailDate, htmlToPlainText, splitQuotedHtml } from "../mailUtils";
 
 interface MailViewClientProps {
   session: any;
@@ -25,11 +26,14 @@ interface MailViewClientProps {
   employees: any[];
 }
 
+type RecipientRow = { employeeId: string; type: string; employee: { name: string } };
+
 type ThreadMessage = {
   id: string;
   senderId: string;
   sender: any;
-  recipients: any[];
+  recipients: RecipientRow[];
+  subject: string;
   body: string;
   attachments: any[];
   createdAt: string | Date;
@@ -37,7 +41,7 @@ type ThreadMessage = {
 
 export default function MailViewClient({ session, mail, employees }: MailViewClientProps) {
   const router = useRouter();
-  const [replyTarget, setReplyTarget] = useState<ThreadMessage | null>(null);
+  const [replyTarget, setReplyTarget] = useState<{ message: ThreadMessage; all: boolean } | null>(null);
   const [forwardTarget, setForwardTarget] = useState<ThreadMessage | null>(null);
   const [isConfirmDeleteOpen, setIsConfirmDeleteOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -50,11 +54,14 @@ export default function MailViewClient({ session, mail, employees }: MailViewCli
         senderId: mail.senderId,
         sender: mail.sender,
         recipients: mail.recipients,
+        subject: mail.subject,
         body: mail.body,
         attachments: mail.attachments,
         createdAt: mail.createdAt,
       },
-      ...(mail.replies || []),
+      // Replies inherit the thread's subject so a reply-to-a-reply is titled
+      // from the conversation rather than from an empty field.
+      ...(mail.replies || []).map((r: ThreadMessage) => ({ ...r, subject: r.subject || mail.subject })),
     ],
     [mail]
   );
@@ -90,7 +97,7 @@ export default function MailViewClient({ session, mail, employees }: MailViewCli
   };
 
   return (
-    <div className="mail-ui flex h-[calc(100dvh-8rem)] lg:h-[calc(100dvh-6rem)] bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/70 dark:border-slate-800 shadow-[var(--mail-shadow-card)] overflow-hidden flex-col">
+    <div className="mail-ui flex h-[calc(100dvh-6rem)] sm:h-[calc(100dvh-7rem)] lg:h-[calc(100dvh-7.5rem)] bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/70 dark:border-slate-800 shadow-[var(--mail-shadow-card)] overflow-hidden flex-col">
       {/* Header / Toolbar */}
       <div className="h-12 bg-gradient-to-b from-white to-slate-50 dark:from-slate-900 dark:to-slate-950 border-b border-slate-200/70 dark:border-slate-800 flex items-center justify-between px-2 sm:px-6 gap-2 shrink-0">
         <div className="flex items-center gap-2">
@@ -148,8 +155,10 @@ export default function MailViewClient({ session, mail, employees }: MailViewCli
                 message={message}
                 isExpanded={expanded.has(message.id)}
                 onToggle={() => toggleExpanded(message.id)}
-                onReply={() => setReplyTarget(message)}
+                onReply={() => setReplyTarget({ message, all: false })}
+                onReplyAll={() => setReplyTarget({ message, all: true })}
                 onForward={() => setForwardTarget(message)}
+                currentUserId={session?.id}
               />
             ))}
           </div>
@@ -161,7 +170,9 @@ export default function MailViewClient({ session, mail, employees }: MailViewCli
           isOpen={!!replyTarget}
           onClose={() => setReplyTarget(null)}
           employees={employees}
-          replyTo={replyTarget}
+          replyTo={replyTarget.message}
+          replyAll={replyTarget.all}
+          currentUserId={session?.id}
           onSuccess={() => {
             setReplyTarget(null);
             router.refresh();
@@ -175,6 +186,7 @@ export default function MailViewClient({ session, mail, employees }: MailViewCli
           onClose={() => setForwardTarget(null)}
           employees={employees}
           forwardMail={forwardTarget}
+          currentUserId={session?.id}
           onSuccess={() => setForwardTarget(null)}
         />
       )}
@@ -196,16 +208,31 @@ function ThreadMessageCard({
   isExpanded,
   onToggle,
   onReply,
+  onReplyAll,
   onForward,
+  currentUserId,
 }: {
   message: ThreadMessage;
   isExpanded: boolean;
   onToggle: () => void;
   onReply: () => void;
+  onReplyAll: () => void;
   onForward: () => void;
+  currentUserId?: string;
 }) {
-  const toRecipients = (message.recipients || []).filter((r: any) => r.type === "TO");
-  const ccRecipients = (message.recipients || []).filter((r: any) => r.type === "CC");
+  const toRecipients: RecipientRow[] = (message.recipients || []).filter((r: RecipientRow) => r.type === "TO");
+  const ccRecipients: RecipientRow[] = (message.recipients || []).filter((r: RecipientRow) => r.type === "CC");
+
+  // "Reply all" only earns its place when there is somebody else to include.
+  const otherPeople = [...toRecipients, ...ccRecipients].filter(
+    (r: RecipientRow) => r.employeeId !== currentUserId && r.employeeId !== message.senderId
+  );
+  const canReplyAll = otherPeople.length > 0;
+
+  // The quoted history is split off the body so it collapses behind a control,
+  // instead of repeating the whole conversation under every reply.
+  const [mainBody, quotedBody] = splitQuotedHtml(message.body || "");
+  const [showQuoted, setShowQuoted] = useState(false);
 
   if (!isExpanded) {
     return (
@@ -224,7 +251,7 @@ function ThreadMessageCard({
           {message.sender?.name}
         </span>
         <span className="truncate text-[length:var(--mail-fs-snippet)] text-slate-400 dark:text-slate-500">
-          {htmlToPlainText(message.body).slice(0, 140)}
+          {htmlToPlainText(mainBody).slice(0, 140)}
         </span>
         <span className="flex-1" />
         {message.attachments?.length > 0 && <Paperclip className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500 shrink-0" />}
@@ -251,12 +278,12 @@ function ThreadMessageCard({
             <div className="font-semibold text-slate-900 dark:text-slate-100 text-[length:var(--mail-fs-sender)]">{message.sender?.name}</div>
             <div className="text-[length:var(--mail-fs-meta)] text-slate-500 dark:text-slate-400 flex items-center gap-2 flex-wrap mt-1">
               <span>إلى:</span>
-              <span className="text-slate-600 dark:text-slate-300">{toRecipients.map((r: any) => r.employee.name).join("، ")}</span>
+              <span className="text-slate-600 dark:text-slate-300">{toRecipients.map((r) => r.employee.name).join("، ")}</span>
               {ccRecipients.length > 0 && (
                 <>
                   <span className="mx-1">|</span>
                   <span>نسخة:</span>
-                  <span className="text-slate-600 dark:text-slate-300">{ccRecipients.map((r: any) => r.employee.name).join("، ")}</span>
+                  <span className="text-slate-600 dark:text-slate-300">{ccRecipients.map((r) => r.employee.name).join("، ")}</span>
                 </>
               )}
             </div>
@@ -271,6 +298,16 @@ function ThreadMessageCard({
             <Reply className="w-3.5 h-3.5" />
             رد
           </button>
+          {canReplyAll && (
+            <button
+              onClick={onReplyAll}
+              title={`رد على الكل (${otherPeople.length + 1})`}
+              className="h-9 px-4 rounded-xl bg-primary/10 text-primary dark:bg-primary/15 dark:text-teal-300 hover:bg-primary hover:text-white dark:hover:bg-primary transition-colors flex items-center gap-2 font-semibold text-[length:var(--mail-fs-meta)]"
+            >
+              <ReplyAll className="w-3.5 h-3.5" />
+              رد على الكل
+            </button>
+          )}
           <button
             onClick={onForward}
             className="h-9 px-4 rounded-xl bg-slate-100/70 text-slate-600 dark:bg-slate-800/60 dark:text-slate-300 hover:bg-slate-200/70 dark:hover:bg-slate-700/60 transition-colors flex items-center gap-2 font-semibold text-[length:var(--mail-fs-meta)]"
@@ -288,7 +325,23 @@ function ThreadMessageCard({
 
       <hr className="my-4 border-slate-100 dark:border-slate-800" />
 
-      <div className="mail-prose text-slate-800 dark:text-slate-200" dangerouslySetInnerHTML={{ __html: message.body }} />
+      <div className="mail-prose text-slate-800 dark:text-slate-200" dangerouslySetInnerHTML={{ __html: mainBody }} />
+
+      {quotedBody && (
+        <div className="mt-2">
+          <button
+            onClick={() => setShowQuoted((v) => !v)}
+            aria-expanded={showQuoted}
+            title={showQuoted ? "إخفاء النص المقتبس" : "إظهار النص المقتبس"}
+            className="h-6 px-2 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:bg-primary/[0.08] hover:text-primary dark:hover:text-teal-300 transition-colors leading-none tracking-widest"
+          >
+            •••
+          </button>
+          {showQuoted && (
+            <div className="mail-prose text-slate-800 dark:text-slate-200 mt-2" dangerouslySetInnerHTML={{ __html: quotedBody }} />
+          )}
+        </div>
+      )}
 
       {message.attachments && message.attachments.length > 0 && (
         <div className="mt-6">

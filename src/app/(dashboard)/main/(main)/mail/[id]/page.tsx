@@ -15,12 +15,17 @@ export default async function MailViewPage(props: { params: Promise<{ id: string
   }
 
   try {
-    const mail = await getMailById(params.id);
-    
-    const employees = await prisma.employee.findMany({
-      where: { isActive: true },
-      select: { id: true, name: true, role: true, avatarUrl: true },
-    });
+    // The employee list is only needed to populate the reply/forward pickers —
+    // it does not depend on the mail. Awaiting it after getMailById cost a
+    // second full round trip to ap-southeast-2 before the page could render.
+    const [mail, employees] = await Promise.all([
+      getMailById(params.id),
+      prisma.employee.findMany({
+        where: { isActive: true },
+        select: { id: true, name: true, role: true, avatarUrl: true },
+        orderBy: { name: "asc" },
+      }),
+    ]);
 
     return <MailViewClient session={session} mail={mail} employees={employees} />;
   } catch (error) {

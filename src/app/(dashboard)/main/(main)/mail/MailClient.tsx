@@ -35,7 +35,7 @@ import ComposeModal from "./ComposeModal";
 import ConfirmModal from "@/components/ui/ConfirmModal";
 import CircularLoader from "@/components/CircularLoader";
 import MailRow from "./MailRow";
-import { normalizeMailListItem, htmlToPlainText } from "./mailUtils";
+import { normalizeMailListItem } from "./mailUtils";
 
 interface MailClientProps {
   session: any;
@@ -66,6 +66,7 @@ export default function MailClient({ session, employees, initialTab }: MailClien
   const [total, setTotal] = useState(0);
   const [selectedMails, setSelectedMails] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
+  const [appliedSearch, setAppliedSearch] = useState("");
   const [confirmAction, setConfirmAction] = useState<BulkAction>(null);
   const [isBulkPending, setIsBulkPending] = useState(false);
   const [editingDraft, setEditingDraft] = useState<any>(null);
@@ -81,15 +82,15 @@ export default function MailClient({ session, employees, initialTab }: MailClien
     try {
       let result;
       if (currentTab === "inbox") {
-        result = await getInbox(page);
+        result = await getInbox(page, 20, appliedSearch);
       } else if (currentTab === "sent") {
-        result = await getSentMails(page);
+        result = await getSentMails(page, 20, appliedSearch);
       } else if (currentTab === "drafts") {
-        result = await getDrafts(page);
+        result = await getDrafts(page, 20, appliedSearch);
       } else if (currentTab === "starred") {
-        result = await getStarredMails(page);
+        result = await getStarredMails(page, 20, appliedSearch);
       } else if (currentTab === "trash") {
-        result = await getTrashMails(page);
+        result = await getTrashMails(page, 20, appliedSearch);
       }
 
       if (result) {
@@ -107,11 +108,25 @@ export default function MailClient({ session, employees, initialTab }: MailClien
   useEffect(() => {
     fetchMails();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentTab, page]);
+  }, [currentTab, page, appliedSearch]);
+
+  // Search used to run as a client-side filter over whichever 20 rows the
+  // current page happened to hold, so anything older than the first page was
+  // unfindable. It is a real query now; this debounce keeps it from firing on
+  // every keystroke, and resets to page 1 because the result set changed.
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setAppliedSearch(searchQuery.trim());
+      setPage(1);
+    }, 350);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
 
   const handleTabChange = (tab: string) => {
     router.push(`/main/mail?tab=${tab}`);
     setPage(1);
+    setSearchQuery("");
+    setAppliedSearch("");
   };
 
   const handleOpenMail = (mailId: string, isUnread: boolean) => {
@@ -181,16 +196,6 @@ export default function MailClient({ session, employees, initialTab }: MailClien
     if (!selectedMails.length) return;
     runBulkAction(restoreFromTrash);
   };
-
-  const filteredMails = mails.filter((m) => {
-    const mailObj = m.mail || m;
-    const searchLower = searchQuery.toLowerCase();
-    return (
-      mailObj.subject?.toLowerCase().includes(searchLower) ||
-      mailObj.sender?.name?.toLowerCase().includes(searchLower) ||
-      htmlToPlainText(mailObj.body || "").toLowerCase().includes(searchLower)
-    );
-  });
 
   const rangeStart = total === 0 ? 0 : (page - 1) * 20 + 1;
   const rangeEnd = Math.min(page * 20, total);
@@ -376,16 +381,18 @@ export default function MailClient({ session, employees, initialTab }: MailClien
         <div className="flex-1 overflow-y-auto">
           {isLoading ? (
             <CircularLoader />
-          ) : filteredMails.length === 0 ? (
+          ) : mails.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-full text-slate-400 dark:text-slate-600 gap-4">
               <div className="w-20 h-20 bg-slate-50 dark:bg-slate-800/60 rounded-full flex items-center justify-center">
                 <MailIcon className="w-10 h-10 text-slate-300 dark:text-slate-600" />
               </div>
-              <p className="text-[length:var(--mail-fs-subject)] font-medium text-slate-500 dark:text-slate-400">لا توجد رسائل هنا</p>
+              <p className="text-[length:var(--mail-fs-subject)] font-medium text-slate-500 dark:text-slate-400">
+                {appliedSearch ? `لا نتائج للبحث عن «${appliedSearch}»` : "لا توجد رسائل هنا"}
+              </p>
             </div>
           ) : (
             <ul role="list" className="divide-y divide-slate-100 dark:divide-slate-800/70">
-              {filteredMails.map((item) => (
+              {mails.map((item) => (
                 <MailRow
                   key={item.id}
                   item={normalizeMailListItem(item, currentTab, employeesById)}

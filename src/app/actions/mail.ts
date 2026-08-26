@@ -35,6 +35,28 @@ function buildRecipientsData(data: { toIds: string[]; ccIds?: string[]; bccIds?:
   return recipientsData;
 }
 
+/**
+ * Free-text filter over an `InternalMail`. Matches the subject, the body and
+ * the name of whoever is on the other side of the message.
+ *
+ * The body is stored as sanitized HTML, so a Latin query can in principle hit a
+ * tag name rather than prose. Arabic queries — effectively all of them here —
+ * cannot, and stripping tags in SQL would cost a sequential scan, so the raw
+ * column is searched as-is.
+ */
+function mailSearchFilter(query: string, side: "sender" | "recipients") {
+  const q = query.trim();
+  if (!q) return undefined;
+
+  const text = { contains: q, mode: "insensitive" as const };
+  const person =
+    side === "sender"
+      ? { sender: { name: text } }
+      : { recipients: { some: { employee: { name: text } } } };
+
+  return { OR: [{ subject: text }, { body: text }, person] };
+}
+
 export async function sendMail(data: {
   subject: string;
   body: string;
@@ -82,9 +104,12 @@ export async function sendMail(data: {
         draftCcIds: [],
         draftBccIds: [],
         recipients: { create: recipientsData },
-        attachments: data.attachments?.length ? { create: data.attachments } : undefined,
       },
     });
+
+    // The draft already carries rows for everything the composer uploaded, so
+    // creating them again here would double every attachment on the sent mail.
+    await syncAttachments(mail.id, data.attachments ?? []);
 
     revalidatePath("/main/mail");
     return mail;
@@ -111,6 +136,48 @@ export async function sendMail(data: {
   return mail;
 }
 
+type AttachmentInput = { fileUrl: string; fileName: string; fileSize?: number | null };
+
+/**
+ * Brings a mail's attachment rows in line with the set the composer holds.
+ *
+ * The composer uploads files as they are chosen and then sends the complete
+ * desired set on every save, so this reconciles rather than appends: rows whose
+ * file is no longer listed are dropped, and listed files without a row are
+ * created. Appending instead would duplicate every attachment on each autosave
+ * tick, and again when the draft is finally sent.
+ *
+ * Files are identified by `fileUrl` because that is the only stable identifier
+ * shared between an uploaded file and the row created for it.
+ */
+async function syncAttachments(mailId: string, desired: AttachmentInput[] | undefined) {
+  if (!desired) return;
+
+  const urls = desired.map((a) => a.fileUrl);
+
+  await prisma.mailAttachment.deleteMany({
+    where: { mailId, fileUrl: { notIn: urls.length ? urls : ["__none__"] } },
+  });
+
+  const existing = await prisma.mailAttachment.findMany({
+    where: { mailId },
+    select: { fileUrl: true },
+  });
+  const have = new Set(existing.map((e) => e.fileUrl));
+
+  const missing = desired.filter((a) => !have.has(a.fileUrl));
+  if (missing.length) {
+    await prisma.mailAttachment.createMany({
+      data: missing.map((a) => ({
+        mailId,
+        fileUrl: a.fileUrl,
+        fileName: a.fileName,
+        fileSize: a.fileSize ?? null,
+      })),
+    });
+  }
+}
+
 /**
  * Creates or updates a draft. Drafts have no MailRecipient rows yet — the
  * chosen recipients are stashed on the InternalMail row itself (draftToIds/
@@ -123,6 +190,7 @@ export async function saveDraft(data: {
   toIds: string[];
   ccIds?: string[];
   bccIds?: string[];
+  attachments?: AttachmentInput[];
 }) {
   const user = await getAuthenticatedUser();
   const cleanBody = sanitizeMailHtml(data.body);
@@ -133,7 +201,7 @@ export async function saveDraft(data: {
       throw new Error("غير مصرح لك بتعديل هذه المسودة");
     }
 
-    return prisma.internalMail.update({
+    const updated = await prisma.internalMail.update({
       where: { id: data.id },
       data: {
         subject: data.subject,
@@ -143,9 +211,11 @@ export async function saveDraft(data: {
         draftBccIds: data.bccIds || [],
       },
     });
+    await syncAttachments(updated.id, data.attachments);
+    return updated;
   }
 
-  return prisma.internalMail.create({
+  const created = await prisma.internalMail.create({
     data: {
       subject: data.subject,
       body: cleanBody,
@@ -156,21 +226,38 @@ export async function saveDraft(data: {
       draftBccIds: data.bccIds || [],
     },
   });
+  await syncAttachments(created.id, data.attachments);
+  return created;
 }
 
-export async function getDrafts(page = 1, limit = 20) {
+export async function getDrafts(page = 1, limit = 20, search = "") {
   const user = await getAuthenticatedUser();
   const skip = (page - 1) * limit;
+  // A draft has no MailRecipient rows yet (recipients live in draftToIds), so
+  // there is no name to join against — subject and body only.
+  const q = search.trim();
+  const where = {
+    senderId: user.id,
+    isDraft: true,
+    ...(q
+      ? {
+          OR: [
+            { subject: { contains: q, mode: "insensitive" as const } },
+            { body: { contains: q, mode: "insensitive" as const } },
+          ],
+        }
+      : {}),
+  };
 
   const [mails, total] = await Promise.all([
     prisma.internalMail.findMany({
-      where: { senderId: user.id, isDraft: true },
+      where,
       include: { attachments: true },
       orderBy: { updatedAt: "desc" },
       skip,
       take: limit,
     }),
-    prisma.internalMail.count({ where: { senderId: user.id, isDraft: true } }),
+    prisma.internalMail.count({ where }),
   ]);
 
   return { mails, total, totalPages: Math.ceil(total / limit) };
@@ -189,16 +276,19 @@ export async function deleteDraft(id: string) {
   return { success: true };
 }
 
-export async function getInbox(page = 1, limit = 20) {
+export async function getInbox(page = 1, limit = 20, search = "") {
   const user = await getAuthenticatedUser();
   const skip = (page - 1) * limit;
+  const mailFilter = mailSearchFilter(search, "sender");
+  const where = {
+    employeeId: user.id,
+    isDeleted: false,
+    ...(mailFilter ? { mail: mailFilter } : {}),
+  };
 
   const [mails, total] = await Promise.all([
     prisma.mailRecipient.findMany({
-      where: {
-        employeeId: user.id,
-        isDeleted: false,
-      },
+      where,
       include: {
         mail: {
           include: {
@@ -217,27 +307,27 @@ export async function getInbox(page = 1, limit = 20) {
       skip,
       take: limit,
     }),
-    prisma.mailRecipient.count({
-      where: {
-        employeeId: user.id,
-        isDeleted: false,
-      },
-    }),
+    prisma.mailRecipient.count({ where }),
   ]);
 
   return { mails, total, totalPages: Math.ceil(total / limit) };
 }
 
-export async function getSentMails(page = 1, limit = 20) {
+export async function getSentMails(page = 1, limit = 20, search = "") {
   const user = await getAuthenticatedUser();
   const skip = (page - 1) * limit;
+  // On the sent side the sender is always you, so the useful name to match is
+  // the recipient's.
+  const where = {
+    senderId: user.id,
+    isDeletedBySender: false,
+    isDraft: false,
+    ...(mailSearchFilter(search, "recipients") ?? {}),
+  };
 
   const [mails, total] = await Promise.all([
     prisma.internalMail.findMany({
-      where: {
-        senderId: user.id,
-        isDeletedBySender: false,
-      },
+      where,
       include: {
         recipients: {
           include: {
@@ -254,28 +344,26 @@ export async function getSentMails(page = 1, limit = 20) {
       skip,
       take: limit,
     }),
-    prisma.internalMail.count({
-      where: {
-        senderId: user.id,
-        isDeletedBySender: false,
-      },
-    }),
+    prisma.internalMail.count({ where }),
   ]);
 
   return { mails, total, totalPages: Math.ceil(total / limit) };
 }
 
-export async function getStarredMails(page = 1, limit = 20) {
+export async function getStarredMails(page = 1, limit = 20, search = "") {
   const user = await getAuthenticatedUser();
   const skip = (page - 1) * limit;
+  const mailFilter = mailSearchFilter(search, "sender");
+  const where = {
+    employeeId: user.id,
+    isStarred: true,
+    isDeleted: false,
+    ...(mailFilter ? { mail: mailFilter } : {}),
+  };
 
   const [mails, total] = await Promise.all([
     prisma.mailRecipient.findMany({
-      where: {
-        employeeId: user.id,
-        isStarred: true,
-        isDeleted: false,
-      },
+      where,
       include: {
         mail: {
           include: {
@@ -294,28 +382,25 @@ export async function getStarredMails(page = 1, limit = 20) {
       skip,
       take: limit,
     }),
-    prisma.mailRecipient.count({
-      where: {
-        employeeId: user.id,
-        isStarred: true,
-        isDeleted: false,
-      },
-    }),
+    prisma.mailRecipient.count({ where }),
   ]);
 
   return { mails, total, totalPages: Math.ceil(total / limit) };
 }
 
-export async function getTrashMails(page = 1, limit = 20) {
+export async function getTrashMails(page = 1, limit = 20, search = "") {
   const user = await getAuthenticatedUser();
   const skip = (page - 1) * limit;
+  const mailFilter = mailSearchFilter(search, "sender");
+  const where = {
+    employeeId: user.id,
+    isDeleted: true,
+    ...(mailFilter ? { mail: mailFilter } : {}),
+  };
 
   const [mails, total] = await Promise.all([
     prisma.mailRecipient.findMany({
-      where: {
-        employeeId: user.id,
-        isDeleted: true,
-      },
+      where,
       include: {
         mail: {
           include: {
@@ -334,12 +419,7 @@ export async function getTrashMails(page = 1, limit = 20) {
       skip,
       take: limit,
     }),
-    prisma.mailRecipient.count({
-      where: {
-        employeeId: user.id,
-        isDeleted: true,
-      },
-    }),
+    prisma.mailRecipient.count({ where }),
   ]);
 
   return { mails, total, totalPages: Math.ceil(total / limit) };
@@ -381,6 +461,24 @@ function canViewMail(m: { senderId: string; recipients: { employeeId: string }[]
   return m.senderId === userId || m.recipients.some((r) => r.employeeId === userId);
 }
 
+/**
+ * Drops blind-copy rows the viewer is not entitled to see.
+ *
+ * The view already rendered only TO and CC, but it filtered on the client: the
+ * BCC names still travelled in the RSC payload and were readable from devtools
+ * by anyone on the thread. Blind copy has to be blind at the source, so the
+ * rows are removed here — only the sender, and the blind-copied person
+ * themselves, keep them.
+ */
+function stripHiddenBcc<T extends { senderId: string; recipients: { employeeId: string; type: string }[] }>(
+  m: T,
+  userId: string
+): T {
+  if (m.senderId === userId) return m;
+  m.recipients = m.recipients.filter((r) => r.type !== "BCC" || r.employeeId === userId);
+  return m;
+}
+
 export async function getMailById(id: string) {
   const user = await getAuthenticatedUser();
 
@@ -410,6 +508,9 @@ export async function getMailById(id: string) {
   // Only surface replies the current user is actually a sender/recipient of —
   // getMailById previously returned every reply on the thread unfiltered.
   mail.replies = mail.replies.filter((r) => canViewMail(r, user.id));
+
+  stripHiddenBcc(mail, user.id);
+  mail.replies.forEach((r) => stripHiddenBcc(r, user.id));
 
   mail.body = sanitizeMailHtml(mail.body);
   mail.replies.forEach((r) => {

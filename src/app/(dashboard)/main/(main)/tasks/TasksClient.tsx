@@ -49,6 +49,7 @@ import {
   updatePermanentTaskAction,
   deletePermanentTaskAction,
   reassignPermanentTaskAction,
+  getTasksForEmployee,
 } from "@/app/actions/tasks";
 import { Charity, Employee, Session, Task, TaskUpdate, Achievement } from "@/types";
 import { isAdmin } from "@/lib/permissions";
@@ -69,6 +70,7 @@ export default function TasksClient({
   initialTasks,
   initialAchievements,
   initialPermanentTasks,
+  initialArchiveHasMore,
   categories: initialCategories,
 }: {
   session: any;
@@ -77,6 +79,7 @@ export default function TasksClient({
   initialTasks: any[];
   initialAchievements: any[];
   initialPermanentTasks: any[];
+  initialArchiveHasMore: boolean;
   categories: string[];
 }) {
   const roleLabels = useRoleLabels();
@@ -86,6 +89,62 @@ export default function TasksClient({
   const [categories, setCategories] = useState<string[]>(initialCategories);
   const isDirectorOrAdmin = session.permissions?.includes("view_all_tasks") || session.permissions?.includes("developer_mode");
   const [selectedEmployeeId, setSelectedEmployeeId] = useState<string>(session.id);
+
+  // The archive — completed tasks and standalone achievements — is the only
+  // part of this page that grows without limit, so it is the only part that
+  // pages. Active and permanent tasks arrive complete.
+  //
+  // Paging it forced the employee filter onto the server: a limit applied
+  // before a client-side filter truncates the wrong rows, so filtering in the
+  // browser over a partial list would quietly hide people's work.
+  const [archivePage, setArchivePage] = useState(1);
+  const [archiveHasMore, setArchiveHasMore] = useState(initialArchiveHasMore);
+  const [isLoadingScope, setIsLoadingScope] = useState(false);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+
+  // Reloads everything for a different employee. Lives in the picker's change
+  // handler rather than an effect so it fires on the user's action only, and
+  // never on a re-render.
+  const handleScopeChange = async (employeeId: string) => {
+    setSelectedEmployeeId(employeeId);
+    setIsLoadingScope(true);
+    try {
+      const data = await getTasksForEmployee(employeeId, 1);
+      setTasks([...data.activeTasks, ...data.completedTasks] as Task[]);
+      setAchievements(data.achievements as Achievement[]);
+      setPermanentTasks(data.permanentTasks);
+      setArchivePage(1);
+      setArchiveHasMore(data.archiveHasMore);
+    } catch {
+      showNotification("error", "تعذّر تحميل مهام هذا الموظف");
+    } finally {
+      setIsLoadingScope(false);
+    }
+  };
+
+  const handleLoadMoreArchive = async () => {
+    setIsLoadingMore(true);
+    try {
+      const next = archivePage + 1;
+      const data = await getTasksForEmployee(selectedEmployeeId, next);
+      // Appended, never replaced — and de-duplicated by id, because a task
+      // completed while the list is open shifts the offsets underneath us.
+      setTasks((prev) => {
+        const seen = new Set(prev.map((t) => t.id));
+        return [...prev, ...(data.completedTasks as Task[]).filter((t) => !seen.has(t.id))];
+      });
+      setAchievements((prev) => {
+        const seen = new Set(prev.map((a) => a.id));
+        return [...prev, ...(data.achievements as Achievement[]).filter((a) => !seen.has(a.id))];
+      });
+      setArchivePage(next);
+      setArchiveHasMore(data.archiveHasMore);
+    } catch {
+      showNotification("error", "تعذّر تحميل المزيد");
+    } finally {
+      setIsLoadingMore(false);
+    }
+  };
 
 
   const [showTaskForm, setShowTaskForm] = useState(false);
@@ -827,8 +886,9 @@ ${combinedAchievements.length > 0 ? `
               <User className="w-3.5 h-3.5 text-slate-400 shrink-0" />
               <select
                 value={selectedEmployeeId}
-                onChange={(e) => setSelectedEmployeeId(e.target.value)}
-                className="text-xs font-bold text-slate-700 dark:text-slate-200 bg-transparent border-none outline-none cursor-pointer [&>option]:bg-white [&>option]:dark:bg-slate-800"
+                onChange={(e) => handleScopeChange(e.target.value)}
+                disabled={isLoadingScope}
+                className="text-xs font-bold text-slate-700 dark:text-slate-200 bg-transparent border-none outline-none cursor-pointer disabled:opacity-50 [&>option]:bg-white [&>option]:dark:bg-slate-800"
               >
                 {employees.map((emp) => (
                   <option key={emp.id} value={emp.id}>
@@ -1291,9 +1351,24 @@ ${combinedAchievements.length > 0 ? `
               );
             })}
 
-            {combinedAchievements.length === 0 && (
+            {combinedAchievements.length === 0 && !isLoadingScope && (
               <div className="text-center py-10 text-slate-400">
                 <p className="text-[10px] font-medium">لا توجد منجزات.</p>
+              </div>
+            )}
+
+            {/* The archive is the one list here that grows without limit, so it
+                arrives a page at a time. Everything already loaded stays on
+                screen — nothing is ever replaced by paging. */}
+            {archiveHasMore && (
+              <div className="pt-3 text-center">
+                <button
+                  onClick={handleLoadMoreArchive}
+                  disabled={isLoadingMore}
+                  className="h-9 px-5 rounded-xl text-[11px] font-bold text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 hover:bg-primary/10 hover:text-primary dark:hover:text-teal-300 transition-colors disabled:opacity-50"
+                >
+                  {isLoadingMore ? "جارٍ التحميل…" : "عرض منجزات أقدم"}
+                </button>
               </div>
             )}
           </div>

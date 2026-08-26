@@ -21,8 +21,19 @@ export default async function ServicesOverviewPage() {
     redirect("/main");
   }
 
-  let timelineNames: Record<string, string> = {};
-  try { timelineNames = await getTimelineConfigs(); } catch (e) { console.error("[ServicesOverview] getTimelineConfigs error:", e); }
+  const role = session.role;
+  const isAdmin = isUserAdmin(role) || session.permissions?.includes("developer_mode");
+
+  // The timeline labels have nothing to do with which charities this user may
+  // see, so the two go out together instead of one after the other.
+  const [timelineNames, assignedIds] = await Promise.all([
+    getTimelineConfigs().catch((e) => {
+      console.error("[ServicesOverview] getTimelineConfigs error:", e);
+      return {} as Record<string, string>;
+    }),
+    isAdmin ? Promise.resolve(null) : getAssignedCharityIds(session.id, role, session.permissions),
+  ]);
+
   const DEPT_LABELS: Record<string, string> = {
     STRATEGY: timelineNames["STRATEGY"] || "التخطيط الاستراتيجي",
     GOVERNANCE: timelineNames["GOVERNANCE"] || "الحوكمة",
@@ -30,53 +41,38 @@ export default async function ServicesOverviewPage() {
     PROGRAMS: "البرامج والمشاريع",
   };
 
-  const role = session.role;
-  const isAdmin = isUserAdmin(role) || session.permissions?.includes("developer_mode");
-
-  const assignedIds = isAdmin ? null : await getAssignedCharityIds(session.id, role, session.permissions);
   const charityFilter = assignedIds !== null ? { id: { in: assignedIds } } : undefined;
   const serviceCharityFilter = assignedIds !== null ? { charityId: { in: assignedIds } } : undefined;
 
-  const charities = await prisma.charity.findMany({
-    where: charityFilter,
-    orderBy: { name: "asc" },
-    select: {
-      id: true,
-      name: true,
-      logoUrl: true,
-      strategyTimelineName: true,
-      governanceTimelineName: true,
-      financeTimelineName: true,
-    },
-  });
+  // The two branches this replaced built the same filter by different routes —
+  // an admin has assignedIds === null, so serviceCharityFilter is undefined for
+  // them either way. All that actually differed was whether to run the query.
+  const wantsServices = isAdmin || !BUILTIN_DEPTS.includes(role);
+
+  const [charities, services] = await Promise.all([
+    prisma.charity.findMany({
+      where: charityFilter,
+      orderBy: { name: "asc" },
+      select: {
+        id: true,
+        name: true,
+        logoUrl: true,
+        strategyTimelineName: true,
+        governanceTimelineName: true,
+        financeTimelineName: true,
+      },
+    }),
+    wantsServices
+      ? prisma.service.findMany({
+          where: { ...serviceCharityFilter },
+          include: { stages: { orderBy: { order: "asc" }, include: { steps: { orderBy: { order: "asc" } } } } },
+          orderBy: { charityId: "asc" },
+        })
+      : Promise.resolve(null),
+  ]);
 
   const data: Record<string, any[]> = {};
-  const canSee = (dept: string) => isAdmin || role === dept;
-
-  const mapStages = (stages: any[]) => stages.map(s => ({
-    ...s,
-    charityId: s.service.charityId
-  }));
-
-
-
-  // Generic (custom) services
-  const isSpecialDept = BUILTIN_DEPTS.includes(role);
-  if (isAdmin) {
-    data["SERVICES"] = await prisma.service.findMany({
-      where: { ...serviceCharityFilter },
-      include: { stages: { orderBy: { order: "asc" }, include: { steps: { orderBy: { order: "asc" } } } } },
-      orderBy: { charityId: "asc" },
-    });
-  } else if (!isSpecialDept) {
-    data["SERVICES"] = await prisma.service.findMany({
-      where: {
-        ...(assignedIds !== null ? { charityId: { in: assignedIds } } : {})
-      },
-      include: { stages: { orderBy: { order: "asc" }, include: { steps: { orderBy: { order: "asc" } } } } },
-      orderBy: { charityId: "asc" },
-    });
-  }
+  if (services) data["SERVICES"] = services;
 
   const editableTabs = {
     STRATEGY: isAdmin || hasPermission(session.role, session.permissions || [], "manage_strategy") || role === "STRATEGY",

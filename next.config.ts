@@ -42,6 +42,18 @@ const nextConfig: NextConfig = {
     serverActions: {
       bodySizeLimit: "50mb",
     },
+    // Client-side router cache. Without this, `dynamic` defaults to 0 — every
+    // page segment is refetched from ap-southeast-2 on every visit, so leaving
+    // a tab and coming straight back paid a full round trip for data that was
+    // seconds old. All 46 dashboard routes are dynamic, so none were ever reused.
+    //
+    // 30s is deliberately short, and mutations do not depend on it: the server
+    // actions call revalidatePath, which invalidates this cache immediately.
+    // It only covers plain back-and-forth navigation.
+    staleTimes: {
+      dynamic: 30,
+      static: 180,
+    },
   },
   images: {
     remotePatterns: [

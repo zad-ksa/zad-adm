@@ -21,6 +21,92 @@ async function getAuthenticatedUser() {
   return session;
 }
 
+/**
+ * How many archived rows one "load more" brings in, per table.
+ *
+ * The archive view merges completed tasks with standalone achievements and
+ * sorts the result by date, so a page is not exactly ARCHIVE_PAGE_SIZE items —
+ * it is that many from each table. That is why the UI offers "load more"
+ * rather than numbered pages: with an append-only list the merge stays correct
+ * no matter how the two tables interleave, which numbered pages over a merged
+ * ordering could not guarantee without a shared cursor.
+ */
+const ARCHIVE_PAGE_SIZE = 20;
+
+const TASK_INCLUDE = { updates: { orderBy: { createdAt: "asc" as const } } };
+const PERMANENT_INCLUDE = { assignedTo: { select: { id: true, name: true, avatarUrl: true } } };
+
+/**
+ * Everything the tasks page shows for one employee — or for everybody, when
+ * `employeeId` is "all".
+ *
+ * The page used to load every task, achievement and permanent task that had
+ * ever been created, then throw most of it away in the browser: the view is
+ * filtered by employee client-side and opens on the signed-in user, so a
+ * director was shipped 146 tasks to look at their own dozen. Filtering here
+ * instead is both smaller and the only way pagination can be correct — a limit
+ * applied before a client-side filter truncates the wrong rows.
+ *
+ * Active tasks and permanent tasks are returned in full and deliberately not
+ * paginated. They are the working set: bounded in practice because they leave
+ * it by being completed, and the header counters are only right if all of them
+ * are present. What grows without limit is the archive, and that is what pages.
+ */
+export async function getTasksForEmployee(employeeId: string, archivePage = 1) {
+  const user = await getAuthenticatedUser();
+
+  const canViewAll = hasPermission(user.role, user.permissions || [], "view_all_tasks");
+
+  // Without view_all_tasks the only readable scope is your own, whatever the
+  // client asks for. This is the authorization boundary for this action.
+  const scope = canViewAll ? employeeId : user.id;
+  const taskWhere = scope === "all" ? {} : { assignedToId: scope };
+  const achievementWhere = scope === "all" ? {} : { employeeId: scope };
+
+  const skip = (archivePage - 1) * ARCHIVE_PAGE_SIZE;
+  // One extra row per table answers "is there another page?" without a count().
+  const take = ARCHIVE_PAGE_SIZE + 1;
+
+  const [activeTasks, permanentTasks, completedPlusOne, achievementsPlusOne] = await Promise.all([
+    prisma.task.findMany({
+      where: { ...taskWhere, isCompleted: false },
+      orderBy: { createdAt: "desc" },
+      include: TASK_INCLUDE,
+    }),
+    prisma.permanentTask.findMany({
+      where: taskWhere,
+      orderBy: { createdAt: "desc" },
+      include: PERMANENT_INCLUDE,
+    }),
+    prisma.task.findMany({
+      where: { ...taskWhere, isCompleted: true },
+      orderBy: [{ completedAt: "desc" }, { createdAt: "desc" }],
+      skip,
+      take,
+      include: TASK_INCLUDE,
+    }),
+    prisma.achievement.findMany({
+      where: achievementWhere,
+      orderBy: { createdAt: "desc" },
+      skip,
+      take,
+    }),
+  ]);
+
+  const completedTasks = completedPlusOne.slice(0, ARCHIVE_PAGE_SIZE);
+  const achievements = achievementsPlusOne.slice(0, ARCHIVE_PAGE_SIZE);
+
+  return {
+    activeTasks,
+    permanentTasks,
+    completedTasks,
+    achievements,
+    archivePage,
+    archiveHasMore:
+      completedPlusOne.length > ARCHIVE_PAGE_SIZE || achievementsPlusOne.length > ARCHIVE_PAGE_SIZE,
+  };
+}
+
 // 1. Create a new task
 export async function createTaskAction(data: {
   title: string;

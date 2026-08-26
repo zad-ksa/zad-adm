@@ -23,15 +23,18 @@ const getCachedNews = async () => {
   };
 
 export default async function NewsDashboard() {
-  const charities = await getCharities();
-  const session = await getSession();
+  // None of the three depends on the other two, so they go out together. The
+  // permission check still gates what is rendered — it just no longer forces
+  // two round trips to ap-southeast-2 to queue behind each other.
+  const [charities, session, dbNewsItems] = await Promise.all([
+    getCharities(),
+    getSession(),
+    getCachedNews(),
+  ]);
 
   if (!session || !hasPermission(session.role, session.permissions || [], "manage_news")) {
     redirect("/main");
   }
-
-  // Fetch news from the database
-  const dbNewsItems = await getCachedNews();
 
   const formattedDbNews = dbNewsItems.map((news) => {
     const charity = charities.find((c) => c.name.trim().toLowerCase() === news.charityName.trim().toLowerCase());

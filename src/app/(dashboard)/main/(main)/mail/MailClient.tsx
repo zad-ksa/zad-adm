@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useState, useEffect, useRef } from "react";
+import { useSearchParams } from "next/navigation";
 import {
   Inbox,
   Send,
@@ -41,6 +41,8 @@ interface MailClientProps {
   session: any;
   employees: any[];
   initialTab: string;
+  /** First page of `initialTab`, rendered on the server — see page.tsx. */
+  initialMails: { mails: any[]; total: number; totalPages: number };
 }
 
 const FOLDERS = [
@@ -53,17 +55,16 @@ const FOLDERS = [
 
 type BulkAction = "trash" | "delete" | null;
 
-export default function MailClient({ session, employees, initialTab }: MailClientProps) {
-  const router = useRouter();
+export default function MailClient({ session, employees, initialTab, initialMails }: MailClientProps) {
   const searchParams = useSearchParams();
   const currentTab = searchParams.get("tab") || initialTab;
 
-  const [mails, setMails] = useState<any[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [mails, setMails] = useState<any[]>(initialMails.mails);
+  const [isLoading, setIsLoading] = useState(false);
   const [isComposeOpen, setIsComposeOpen] = useState(false);
   const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  const [total, setTotal] = useState(0);
+  const [totalPages, setTotalPages] = useState(initialMails.totalPages);
+  const [total, setTotal] = useState(initialMails.total);
   const [selectedMails, setSelectedMails] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [appliedSearch, setAppliedSearch] = useState("");
@@ -76,7 +77,13 @@ export default function MailClient({ session, employees, initialTab }: MailClien
     return acc;
   }, {});
 
+  // Clicking through folders quickly fires overlapping requests, and without a
+  // guard the slowest one wins and paints the wrong folder's mail. Each request
+  // carries a token; only the newest is allowed to write to state.
+  const requestToken = useRef(0);
+
   const fetchMails = async () => {
+    const token = ++requestToken.current;
     setIsLoading(true);
     setSelectedMails([]);
     try {
@@ -93,6 +100,8 @@ export default function MailClient({ session, employees, initialTab }: MailClien
         result = await getTrashMails(page, 20, appliedSearch);
       }
 
+      if (token !== requestToken.current) return; // superseded while in flight
+
       if (result) {
         setMails(result.mails);
         setTotalPages(result.totalPages);
@@ -101,11 +110,21 @@ export default function MailClient({ session, employees, initialTab }: MailClien
     } catch (error) {
       console.error("Error fetching mails:", error);
     } finally {
-      setIsLoading(false);
+      if (token === requestToken.current) setIsLoading(false);
     }
   };
 
+  // The server already sent page 1 of `initialTab` with no search applied,
+  // which is exactly the state this component mounts in — fetching again on
+  // mount would ask for bytes we are already holding and turn opening the mail
+  // page into two round trips to ap-southeast-2 instead of one.
+  const isInitialState = useRef(true);
+
   useEffect(() => {
+    if (isInitialState.current) {
+      isInitialState.current = false;
+      return;
+    }
     fetchMails();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentTab, page, appliedSearch]);
@@ -122,11 +141,32 @@ export default function MailClient({ session, employees, initialTab }: MailClien
     return () => clearTimeout(timer);
   }, [searchQuery]);
 
+  /**
+   * Switching folders is a different query on the same screen, not a different
+   * page — so it no longer navigates.
+   *
+   * router.push() made it a real navigation: an RSC round trip to
+   * ap-southeast-2, and because the page is force-dynamic it suspended, which
+   * fired (main)/loading.tsx and blanked the entire mail interface to a spinner
+   * before rebuilding it. Clicking "Sent" cost a full page transition.
+   *
+   * history.pushState updates the URL without any of that, and Next documents
+   * it as integrating with the router — useSearchParams below stays in sync, so
+   * currentTab still comes from the URL and Back/Forward still move between
+   * folders. What changes is that only the list area reloads; the rail, the
+   * toolbar and the shell stay on screen.
+   */
   const handleTabChange = (tab: string) => {
-    router.push(`/main/mail?tab=${tab}`);
-    setPage(1);
-    setSearchQuery("");
-    setAppliedSearch("");
+    if (tab === currentTab) return;
+    // Only touch what is actually off its default. Setting page/search
+    // unconditionally would change state in this render and the URL in the
+    // next, so the fetch effect would run twice and fire a request that is
+    // immediately superseded. In the common case — page 1, no search — this
+    // leaves the URL change as the single trigger.
+    if (page !== 1) setPage(1);
+    if (searchQuery) setSearchQuery("");
+    if (appliedSearch) setAppliedSearch("");
+    window.history.pushState(null, "", `/main/mail?tab=${tab}`);
   };
 
   const handleOpenMail = (mailId: string, isUnread: boolean) => {

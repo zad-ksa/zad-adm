@@ -72,33 +72,35 @@ async function GovernanceTabContent({
   activeTab: string, 
   session: any 
 }) {
-  const charity = await prisma.charity.findUnique({
-    where: { name: decodedName },
-    include: {
-      governanceProgress: true
-    }
-  });
+  // Regulations are not scoped to the charity, so they do not have to wait for
+  // it — and only two of the three tabs render them. The default "manual" tab
+  // was paying a round trip for a list it never showed.
+  const needsRegulations = activeTab === "files" || activeTab === "services";
+
+  const [charity, regulations] = await Promise.all([
+    prisma.charity.findUnique({
+      where: { name: decodedName },
+      include: {
+        governanceProgress: true
+      }
+    }),
+    needsRegulations
+      ? prisma.regulation.findMany({
+          orderBy: { createdAt: 'asc' },
+          include: {
+            charityVisibilities: true
+          }
+        })
+      : Promise.resolve([]),
+  ]);
+
+  // Two further queries used to run here, chained: a Service lookup followed by
+  // its ServiceStage rows. The result was assigned to a `stages` variable that
+  // nothing on this page ever read, so both round trips were pure waste and are
+  // gone. If a stages view is wanted here later it should be fetched by the
+  // component that renders it.
 
   const isAdmin = checkIsAdmin(session?.role) || hasPermission(session?.role || "", session?.permissions || [], "manage_governance");
-
-  let stages: any[] = [];
-  let regulations: any[] = [];
-  if (charity) {
-    const svc = await prisma.service.findFirst({ where: { charityId: charity.id, department: "GOVERNANCE" } });
-    if (svc) {
-      stages = await prisma.serviceStage.findMany({
-        where: { serviceId: svc.id },
-        orderBy: { order: 'asc' },
-      });
-    }
-    
-    regulations = await prisma.regulation.findMany({
-      orderBy: { createdAt: 'asc' },
-      include: {
-        charityVisibilities: true
-      }
-    });
-  }
 
   return (
     <>

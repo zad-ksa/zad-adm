@@ -61,8 +61,12 @@ export default async function CharityFinancePage({ params }: { params: Promise<{
   const { name } = await params;
   const decodedName = decodeURIComponent(name);
 
-  const charity = await getCachedFinanceData(decodedName);
-  const session = await getSession();
+  // Independent of each other — the session says nothing about which charity
+  // this is, and vice versa.
+  const [charity, session] = await Promise.all([
+    getCachedFinanceData(decodedName),
+    getSession(),
+  ]);
 
 
 

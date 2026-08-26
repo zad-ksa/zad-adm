@@ -56,26 +56,28 @@ export default async function StrategySurveysPage({ params }: { params: Promise<
   const { name } = await params;
   const decodedName = decodeURIComponent(name);
 
-  const session = await getSession();
-  const isStrategyTeam = session?.role === "STRATEGY";
+  // Three round trips to ap-southeast-2 that were waiting on each other for no
+  // reason: none of the three reads the result of the other two.
+  const [session, responses, charity] = await Promise.all([
+    getSession(),
+    getCachedResponses(decodedName),
+    prisma.charity.findUnique({ where: { name: decodedName } }),
+  ]);
 
-  const responses = await getCachedResponses(decodedName);
+  const isStrategyTeam = session?.role === "STRATEGY";
   const hasReadiness = responses.length > 0;
 
-  const charity = await prisma.charity.findUnique({
-    where: { name: decodedName },
-  });
-
-  if (charity) {
-    await ensureStagesForCharity(charity.id);
-  }
-
-  const visionMissionResponses = charity 
-    ? await prisma.visionMissionResponse.findMany({
-        where: { charityId: charity.id },
-        orderBy: { createdAt: "desc" }
-      })
-    : [];
+  // ensureStagesForCharity seeds rows this page does not read, so it runs
+  // alongside the query that follows rather than in front of it.
+  const [, visionMissionResponses] = charity
+    ? await Promise.all([
+        ensureStagesForCharity(charity.id),
+        prisma.visionMissionResponse.findMany({
+          where: { charityId: charity.id },
+          orderBy: { createdAt: "desc" },
+        }),
+      ])
+    : [null, []];
 
   // --- DEFAULT VIEW (Admin, Strategy, etc.) ---
   return (

@@ -14,8 +14,18 @@ import { ACCEPT_ATTRIBUTE, DESIGN_MAX_BYTES } from "@/lib/uploadLimits";
 import { uploadDesignRequestFiles } from "@/components/design-requests/uploadDesignRequestFiles";
 import DesignTypesModal, { type DesignTypeRow } from "./DesignTypesModal";
 import EditDesignRequestModal from "@/components/design-requests/EditDesignRequestModal";
+import StaffReviewDesignRequestModal from "./StaffReviewDesignRequestModal";
+import SuccessToast from "@/components/ui/SuccessToast";
+import ConfirmModal from "@/components/ui/ConfirmModal";
 
-type RequestItem = DesignRequestCardData & { charityId: string; status: "PENDING" | "COMPLETED" };
+type DesignStatus = "UNDER_REVIEW" | "PENDING" | "COMPLETED" | "REJECTED";
+
+type RequestItem = DesignRequestCardData & {
+  charityId: string;
+  status: DesignStatus;
+  /** Set only on rejected rows — shown so staff can see what was told to the charity. */
+  rejectionReason?: string | null;
+};
 type Item = { request: RequestItem; progress: DesignRequestProgress };
 
 export default function DesignRequestsClient({
@@ -30,11 +40,20 @@ export default function DesignRequestsClient({
   const router = useRouter();
   const [, startTransition] = useTransition();
   const [charityFilter, setCharityFilter] = useState("");
-  const [tab, setTab] = useState<"PENDING" | "COMPLETED">("PENDING");
+  // Review first: it is the only tab with work that blocks somebody else.
+  const [tab, setTab] = useState<DesignStatus>("UNDER_REVIEW");
+  const [reviewingId, setReviewingId] = useState<string | null>(null);
   const [isComposeOpen, setIsComposeOpen] = useState(false);
   const [confirmingId, setConfirmingId] = useState<string | null>(null);
   const [isCompleting, setIsCompleting] = useState(false);
   const [deliverables, setDeliverables] = useState<File[]>([]);
+  // This panel had no error slot at all, so an oversized file was dropped with
+  // only a browser alert() — which is easy to dismiss without reading.
+  const [deliverableError, setDeliverableError] = useState<string | null>(null);
+  const [toast, setToast] = useState<string | null>(null);
+  // The deliverables dialog is a form, not a question — so the question comes
+  // after it, the same as everywhere else here.
+  const [isCompleteConfirmOpen, setIsCompleteConfirmOpen] = useState(false);
   const [reschedulingId, setReschedulingId] = useState<string | null>(null);
   const [isQueueRescheduleOpen, setIsQueueRescheduleOpen] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
@@ -50,26 +69,44 @@ export default function DesignRequestsClient({
     });
   }, [initialItems, charityFilter, tab]);
 
+  const reviewCount = initialItems.filter((it) => it.request.status === "UNDER_REVIEW").length;
   const pendingCount = initialItems.filter((it) => it.request.status === "PENDING").length;
   const completedCount = initialItems.filter((it) => it.request.status === "COMPLETED").length;
   const overdueCount = initialItems.filter((it) => it.request.status === "PENDING" && it.progress.isOverdue).length;
 
-  const handleComplete = async () => {
+  const handleComplete = () => {
     if (!confirmingId) return;
+    setDeliverableError(null);
+    setIsCompleteConfirmOpen(true);
+  };
+
+  const runComplete = async () => {
+    if (!confirmingId) return;
+    setIsCompleteConfirmOpen(false);
     setIsCompleting(true);
     try {
       // Uploaded only now, at the moment of delivery — an abandoned dialog
       // should not leave orphaned files in storage.
-      const uploaded = deliverables.length ? await uploadDesignRequestFiles(deliverables) : [];
+      let uploaded;
+      try {
+        uploaded = deliverables.length ? await uploadDesignRequestFiles(deliverables) : [];
+      } catch (uploadErr) {
+        // Shown above the attach control rather than in an alert(), so the
+        // reason stays on screen next to the files it is about.
+        setDeliverableError(uploadErr instanceof Error ? uploadErr.message : "تعذّر رفع الملفات");
+        return;
+      }
+
       const res = await markDesignRequestComplete(confirmingId, uploaded);
       if (res.error) {
-        alert(res.error);
+        setDeliverableError(res.error);
         return;
       }
       setDeliverables([]);
       setConfirmingId(null);
+      setToast("تم إنهاء الطلب وتسليمه للجمعية");
     } catch (err) {
-      alert(err instanceof Error ? err.message : "تعذّر رفع الملفات");
+      setDeliverableError(err instanceof Error ? err.message : "تعذّر إنهاء الطلب");
     } finally {
       setIsCompleting(false);
       startTransition(() => router.refresh());
@@ -147,18 +184,32 @@ export default function DesignRequestsClient({
         {/* Bento Box 3: Filters & Tabs */}
         <div className="md:col-span-3 bg-white dark:bg-[#0A0A0A] border border-slate-200 dark:border-slate-800 rounded-2xl p-3 shadow-sm flex items-center justify-between gap-3 flex-wrap">
           <div className="flex items-center gap-1 bg-slate-50 dark:bg-[#111] border border-slate-100 dark:border-slate-800/80 rounded-xl p-1">
-            {(["PENDING", "COMPLETED"] as const).map((t) => (
+            {(
+              [
+                { key: "UNDER_REVIEW" as const, label: "قيد الانتظار", count: reviewCount },
+                { key: "PENDING" as const, label: "الطلبات الحالية", count: 0 },
+                { key: "COMPLETED" as const, label: "الطلبات المنجزة", count: 0 },
+                { key: "REJECTED" as const, label: "المرفوضة", count: 0 },
+              ]
+            ).map(({ key, label, count }) => (
               <button
-                key={t}
-                onClick={() => setTab(t)}
-                className={`h-9 px-5 rounded-lg font-bold transition-all duration-300 ${
-                  tab === t
+                key={key}
+                onClick={() => setTab(key)}
+                className={`h-9 px-4 rounded-lg font-bold transition-all duration-300 flex items-center gap-1.5 ${
+                  tab === key
                     ? "bg-white dark:bg-[#222] text-primary dark:text-teal-300 shadow-sm border border-slate-200/50 dark:border-slate-700/50"
                     : "text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300 hover:bg-black/5 dark:hover:bg-white/5"
                 }`}
                 style={{ fontSize: "var(--dr-fs-meta)" }}
               >
-                {t === "PENDING" ? `الطلبات الحالية` : `الطلبات المنجزة`}
+                {label}
+                {/* Only the review queue carries a badge: it is the only count
+                    that represents someone waiting on us. */}
+                {count > 0 && (
+                  <span className="min-w-[18px] h-[18px] px-1 flex items-center justify-center rounded-full bg-amber-500 text-white text-[10px] font-black">
+                    {count}
+                  </span>
+                )}
               </button>
             ))}
           </div>
@@ -220,7 +271,35 @@ export default function DesignRequestsClient({
               request={it.request}
               progress={it.progress}
               actions={
-                it.request.status === "PENDING" ? (
+                it.request.status === "UNDER_REVIEW" ? (
+                  <div className="flex flex-wrap items-center gap-2 w-full mt-2">
+                    <button
+                      onClick={() => setReviewingId(it.request.id)}
+                      className="flex-1 min-w-[120px] h-9 rounded-xl bg-amber-500 text-white hover:bg-amber-600 transition-colors font-bold"
+                      style={{ fontSize: "var(--dr-fs-meta)" }}
+                    >
+                      مراجعة الطلب
+                    </button>
+                    <button
+                      onClick={() => setEditingId(it.request.id)}
+                      title="تعديل الوصف والمرفقات"
+                      className="flex-1 min-w-[72px] h-9 rounded-xl bg-slate-100 text-slate-600 dark:bg-[#111] dark:text-slate-400 border border-transparent dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 transition-colors font-bold"
+                      style={{ fontSize: "var(--dr-fs-meta)" }}
+                    >
+                      تعديل
+                    </button>
+                  </div>
+                ) : it.request.status === "REJECTED" ? (
+                  it.request.rejectionReason ? (
+                    <div
+                      className="w-full mt-2 px-3 py-2 rounded-xl bg-rose-500/[0.06] text-rose-600 dark:text-rose-400 leading-relaxed"
+                      style={{ fontSize: "var(--dr-fs-meta)" }}
+                    >
+                      <span className="font-bold">سبب الرفض: </span>
+                      {it.request.rejectionReason}
+                    </div>
+                  ) : null
+                ) : it.request.status === "PENDING" ? (
                   // Five actions now. flex-wrap with a sensible minimum keeps
                   // them readable on a narrow card instead of crushing each to a
                   // few pixels; basis-0 lets them still share a row when there is
@@ -283,13 +362,48 @@ export default function DesignRequestsClient({
               attachments: target.request.attachments,
             }}
             onClose={() => setEditingId(null)}
-            onSuccess={() => {
+            onSuccess={(message) => {
               setEditingId(null);
+              setToast(message);
               router.refresh();
             }}
           />
         );
       })()}
+
+      {reviewingId && (() => {
+        const item = initialItems.find((it) => it.request.id === reviewingId);
+        if (!item) return null;
+        return (
+          <StaffReviewDesignRequestModal
+            requestId={reviewingId}
+            title={item.request.title}
+            charityName={item.request.charityName ?? ""}
+            suggestedDays={item.request.totalWorkingDays ?? 3}
+            onClose={() => setReviewingId(null)}
+            onDone={(message) => {
+              setReviewingId(null);
+              setToast(message);
+              startTransition(() => router.refresh());
+            }}
+          />
+        );
+      })()}
+
+      <ConfirmModal
+        isOpen={isCompleteConfirmOpen}
+        title="إنهاء الطلب"
+        message={
+          deliverables.length > 0
+            ? `سيُسلَّم الطلب للجمعية مع ${deliverables.length} من الملفات، وتُحذف مرفقات الطلب الأصلية نهائياً. هل تريد المتابعة؟`
+            : "سيُسلَّم الطلب للجمعية بدون ملفات نهائية، وتُحذف مرفقات الطلب الأصلية نهائياً. هل تريد المتابعة؟"
+        }
+        isPending={isCompleting}
+        onCancel={() => setIsCompleteConfirmOpen(false)}
+        onConfirm={runComplete}
+      />
+
+      <SuccessToast message={toast} onDismiss={() => setToast(null)} />
 
       {isTypesOpen && (
         <DesignTypesModal
@@ -321,8 +435,9 @@ export default function DesignRequestsClient({
           charities={charities}
           designTypes={designTypes.filter((t) => t.isActive)}
           onClose={() => setIsComposeOpen(false)}
-          onSuccess={() => {
+          onSuccess={(message) => {
             setIsComposeOpen(false);
+            setToast(message);
             router.refresh();
           }}
         />
@@ -346,6 +461,15 @@ export default function DesignRequestsClient({
             </p>
 
             <div className="mb-6 text-right">
+              {deliverableError && (
+                <div
+                  className="flex items-start gap-2 mb-2 px-3 py-2 rounded-lg bg-rose-500/[0.08] text-rose-600 dark:text-rose-400 font-bold"
+                  style={{ fontSize: "var(--dr-fs-meta)" }}
+                >
+                  <AlertTriangle className="w-3.5 h-3.5 shrink-0 mt-px" />
+                  <span>{deliverableError}</span>
+                </div>
+              )}
               <label
                 className="flex items-center justify-center gap-2 h-11 rounded-xl border-2 border-dashed border-slate-200 dark:border-slate-700 hover:border-primary/40 cursor-pointer text-slate-500 dark:text-slate-400 hover:text-primary dark:hover:text-teal-300 transition-colors font-bold"
                 style={{ fontSize: "var(--dr-fs-meta)" }}
@@ -359,11 +483,11 @@ export default function DesignRequestsClient({
                   onChange={(e) => {
                     const picked = Array.from(e.target.files || []);
                     const tooBig = picked.filter((f) => f.size > DESIGN_MAX_BYTES);
-                    if (tooBig.length) {
-                      // This panel has no inline error slot, and dropping the
-                      // file without a word is how attachments go missing.
-                      alert(`تجاوز الحد (100 ميجابايت): ${tooBig.map((f) => f.name).join("، ")}`);
-                    }
+                    setDeliverableError(
+                      tooBig.length
+                        ? `تجاوز الحد (100 ميجابايت): ${tooBig.map((f) => f.name).join("، ")}`
+                        : null
+                    );
                     setDeliverables((prev) => [
                       ...prev,
                       ...picked.filter((f) => f.size <= DESIGN_MAX_BYTES),
@@ -401,6 +525,7 @@ export default function DesignRequestsClient({
                 onClick={() => {
                   setConfirmingId(null);
                   setDeliverables([]);
+                  setDeliverableError(null);
                 }}
                 disabled={isCompleting}
                 className="flex-1 h-10 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 font-bold transition-colors disabled:opacity-50"

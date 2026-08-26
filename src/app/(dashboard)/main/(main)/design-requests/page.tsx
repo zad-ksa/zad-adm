@@ -56,6 +56,7 @@ export default async function DesignRequestsPage() {
         charityId: r.charity.id,
         charityName: r.charity.name,
         status: r.status,
+        rejectionReason: r.rejectionReason,
         types: r.types.map((t) => ({ id: t.id, name: t.name })),
         totalWorkingDays: r.baseWorkingDays + r.addedDays,
         addedDays: r.addedDays,

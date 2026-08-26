@@ -4,6 +4,7 @@ import { useState } from "react";
 import { X, Paperclip, Loader2, AlertTriangle, Save, Trash2 } from "lucide-react";
 import { updateDesignRequestDetails } from "@/app/actions/designRequests";
 import { uploadDesignRequestFiles } from "./uploadDesignRequestFiles";
+import ConfirmModal from "@/components/ui/ConfirmModal";
 import { ACCEPT_ATTRIBUTE, DESIGN_MAX_BYTES } from "@/lib/uploadLimits";
 
 export type EditableRequest = {
@@ -30,13 +31,17 @@ export default function EditDesignRequestModal({
 }: {
   request: EditableRequest;
   onClose: () => void;
-  onSuccess: () => void;
+  onSuccess: (message: string) => void;
 }) {
   const [description, setDescription] = useState(request.description ?? "");
   const [removed, setRemoved] = useState<string[]>([]);
   const [files, setFiles] = useState<File[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isConfirmOpen, setIsConfirmOpen] = useState(false);
+  // Attachment problems render beside the picker rather than in the banner at
+  // the top of the modal, which scrolls out of view.
+  const [fileError, setFileError] = useState<string | null>(null);
 
   const kept = request.attachments.filter((a) => !removed.includes(a.id));
   const totalAfter = kept.length + files.length;
@@ -44,15 +49,26 @@ export default function EditDesignRequestModal({
   const descriptionChanged = description.trim() !== (request.description ?? "").trim();
   const hasChanges = descriptionChanged || removed.length > 0 || files.length > 0;
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
-    if (totalAfter > 10) return setError("الحد الأقصى 10 مرفقات لكل طلب");
+    setFileError(null);
+    if (totalAfter > 10) return setFileError("الحد الأقصى 10 مرفقات لكل طلب");
+    setIsConfirmOpen(true);
+  };
 
+  const runSubmit = async () => {
+    setIsConfirmOpen(false);
     setIsSubmitting(true);
     try {
       // Uploaded only on save, so an abandoned edit leaves nothing behind.
-      const uploaded = files.length ? await uploadDesignRequestFiles(files) : [];
+      let uploaded;
+      try {
+        uploaded = files.length ? await uploadDesignRequestFiles(files) : [];
+      } catch (uploadErr) {
+        setFileError(uploadErr instanceof Error ? uploadErr.message : "تعذّر رفع المرفقات");
+        return;
+      }
       const res = await updateDesignRequestDetails({
         requestId: request.id,
         description: descriptionChanged ? description : undefined,
@@ -63,7 +79,7 @@ export default function EditDesignRequestModal({
         setError(res.error);
         return;
       }
-      onSuccess();
+      onSuccess("تم حفظ التعديل");
     } catch (err) {
       setError(err instanceof Error ? err.message : "حدث خطأ أثناء حفظ التعديل");
     } finally {
@@ -193,6 +209,15 @@ export default function EditDesignRequestModal({
           </div>
 
           <div>
+            {fileError && (
+              <div
+                className="flex items-start gap-2 mb-2 px-3 py-2 rounded-lg bg-rose-500/[0.08] text-rose-600 dark:text-rose-400 font-bold"
+                style={{ fontSize: "var(--dr-fs-meta)" }}
+              >
+                <AlertTriangle className="w-3.5 h-3.5 shrink-0 mt-px" />
+                <span>{fileError}</span>
+              </div>
+            )}
             <label
               className="block font-bold text-slate-500 dark:text-slate-400 mb-2"
               style={{ fontSize: "var(--dr-fs-meta)" }}
@@ -215,9 +240,11 @@ export default function EditDesignRequestModal({
                 onChange={(e) => {
                   const picked = Array.from(e.target.files || []);
                   const tooBig = picked.filter((f) => f.size > DESIGN_MAX_BYTES);
-                  if (tooBig.length) {
-                    setError(`تجاوز الحد (100 ميجابايت): ${tooBig.map((f) => f.name).join("، ")}`);
-                  }
+                  setFileError(
+                    tooBig.length
+                      ? `تجاوز الحد (100 ميجابايت): ${tooBig.map((f) => f.name).join("، ")}`
+                      : null
+                  );
                   setFiles((prev) => [...prev, ...picked.filter((f) => f.size <= DESIGN_MAX_BYTES)]);
                   e.target.value = "";
                 }}
@@ -266,6 +293,19 @@ export default function EditDesignRequestModal({
           </button>
         </div>
       </div>
+
+      <ConfirmModal
+        isOpen={isConfirmOpen}
+        title="حفظ التعديل"
+        message={
+          removed.length > 0
+            ? `سيتم حفظ التعديل وحذف ${removed.length} من المرفقات نهائياً. هل تريد المتابعة؟`
+            : "سيتم حفظ التعديل على الطلب. هل تريد المتابعة؟"
+        }
+        isPending={isSubmitting}
+        onCancel={() => setIsConfirmOpen(false)}
+        onConfirm={runSubmit}
+      />
     </div>
   );
 }

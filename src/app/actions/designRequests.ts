@@ -144,10 +144,15 @@ async function createDesignRequest(params: {
   createdByEmployeeId?: string;
   startDate?: Date;
   typeIds?: string[];
+  status: "PENDING" | "UNDER_REVIEW";
 }) {
   return prisma.$transaction(
     async (tx) => {
       const submittedAt = params.startDate || new Date();
+      // For an UNDER_REVIEW request these dates are only an estimate: the row
+      // is not counted by computeSchedule, so it holds no place in the queue,
+      // and approveDesignRequest recomputes them against the queue as it stands
+      // at that moment.
       const { ids: typeIds, workingDays } = await resolveTypes(tx, params.typeIds);
       const { scheduledStartDate, expectedCompletionDate } = await computeSchedule(
         tx,
@@ -159,6 +164,7 @@ async function createDesignRequest(params: {
       return tx.designRequest.create({
         data: {
           charityId: params.charityId,
+          status: params.status,
           title: params.title.trim(),
           description: params.description?.trim() || null,
           submittedAt,
@@ -213,6 +219,9 @@ export async function createDesignRequestFromPortal(input: CreateDesignRequestIn
       attachments: input.attachments,
       typeIds: input.typeIds,
       charityUserId: session.id,
+      // Charity submissions wait for a member of staff to confirm the timeline
+      // (or reject with a reason) before they enter the queue.
+      status: "UNDER_REVIEW",
     });
 
     await notifyDesignStaff(charity.name, input.title.trim());
@@ -243,6 +252,8 @@ export async function createDesignRequestByStaff(input: CreateDesignRequestInput
       attachments: input.attachments,
       typeIds: input.typeIds,
       createdByEmployeeId: session.id,
+      // No review step: a member of staff creating the request is the approval.
+      status: "PENDING",
       startDate: input.startDate,
     });
 
@@ -268,6 +279,208 @@ export async function createDesignRequestByStaff(input: CreateDesignRequestInput
  * refusing to close the request without a file would just push staff to upload
  * a placeholder.
  */
+/**
+ * Approves a charity's request and commits it to the queue.
+ *
+ * The dates the charity saw on submission were an estimate — an UNDER_REVIEW
+ * row is invisible to computeSchedule, so it never held a slot. The schedule is
+ * therefore computed here, against the queue as it stands now, which is what
+ * makes the confirmed date honest: requests approved while this one waited are
+ * already ahead of it.
+ *
+ * `workingDaysOverride` lets the reviewer disagree with the total the chosen
+ * design types imply. It is written to `baseWorkingDays` rather than to
+ * `addedDays`, because this is the original estimate being corrected before any
+ * commitment was made — `addedDays` means an extension of a promise already
+ * given, and conflating the two would make the extension history misleading.
+ */
+export async function approveDesignRequest(id: string, workingDaysOverride?: number) {
+  try {
+    const session = await requireDesignStaff();
+
+    if (workingDaysOverride !== undefined) {
+      if (!Number.isInteger(workingDaysOverride) || workingDaysOverride < 1 || workingDaysOverride > 365) {
+        return { error: "عدد الأيام يجب أن يكون رقماً صحيحاً بين 1 و365" };
+      }
+    }
+
+    const result = await prisma.$transaction(
+      async (tx) => {
+        const request = await tx.designRequest.findUnique({
+          where: { id },
+          select: { id: true, status: true, charityId: true, submittedAt: true, baseWorkingDays: true },
+        });
+        if (!request) return { error: "الطلب غير موجود" };
+        if (request.status !== "UNDER_REVIEW") return { error: "هذا الطلب ليس قيد المراجعة" };
+
+        const workingDays = workingDaysOverride ?? request.baseWorkingDays;
+
+        const { scheduledStartDate, expectedCompletionDate } = await computeSchedule(
+          tx,
+          request.charityId,
+          new Date(),
+          workingDays
+        );
+
+        await tx.designRequest.update({
+          where: { id },
+          data: {
+            status: "PENDING",
+            baseWorkingDays: workingDays,
+            scheduledStartDate,
+            expectedCompletionDate,
+            reviewedAt: new Date(),
+            reviewedById: session.id,
+            rejectionReason: null,
+          },
+        });
+
+        return { success: true as const };
+      },
+      { isolationLevel: "Serializable" }
+    );
+
+    if ("error" in result) return result;
+
+    revalidatePath("/main/design-requests");
+    revalidatePath("/portal", "layout");
+    return { success: true };
+  } catch (error) {
+    console.error("Error approving design request:", error);
+    return { error: error instanceof Error ? error.message : "حدث خطأ أثناء اعتماد الطلب" };
+  }
+}
+
+/**
+ * Rejects a request with a written reason the charity will read.
+ *
+ * The reason is required, not optional: a rejection the charity cannot act on
+ * is worse than none, because they resubmit the same thing.
+ */
+export async function rejectDesignRequest(id: string, reason: string) {
+  try {
+    const session = await requireDesignStaff();
+
+    const trimmed = (reason || "").trim();
+    if (trimmed.length < 5) return { error: "يرجى كتابة سبب الرفض (5 أحرف على الأقل)" };
+    if (trimmed.length > 2000) return { error: "سبب الرفض طويل جداً" };
+
+    const request = await prisma.designRequest.findUnique({
+      where: { id },
+      select: { status: true },
+    });
+    if (!request) return { error: "الطلب غير موجود" };
+    if (request.status !== "UNDER_REVIEW") return { error: "هذا الطلب ليس قيد المراجعة" };
+
+    await prisma.designRequest.update({
+      where: { id },
+      data: {
+        status: "REJECTED",
+        rejectionReason: trimmed,
+        reviewedAt: new Date(),
+        reviewedById: session.id,
+      },
+    });
+
+    revalidatePath("/main/design-requests");
+    revalidatePath("/portal", "layout");
+    return { success: true };
+  } catch (error) {
+    console.error("Error rejecting design request:", error);
+    return { error: error instanceof Error ? error.message : "حدث خطأ أثناء رفض الطلب" };
+  }
+}
+
+/**
+ * Sends a rejected request back for review after the charity has fixed it.
+ *
+ * This reopens the existing row rather than creating a copy. Cloning looked
+ * simpler, but the attachments live in Cloudinary and a copy would leave two
+ * rows pointing at the same files — and completing one request destroys its
+ * BRIEF attachments, which would silently break the other. Reopening also keeps
+ * the charity's list free of a dead rejected twin for every retry.
+ *
+ * The cost is that the old rejection reason is cleared: the request is no
+ * longer rejected, so displaying it would be wrong, and there is no history
+ * table for design requests to move it into.
+ */
+export async function resubmitDesignRequest(input: {
+  requestId: string;
+  title: string;
+  description?: string;
+  typeIds?: string[];
+  /** Ids of existing BRIEF attachments to drop. */
+  removeAttachmentIds?: string[];
+  /** Newly uploaded files to add. */
+  addAttachments?: DesignRequestAttachmentInput[];
+}) {
+  try {
+    const existing = await prisma.designRequest.findUnique({
+      where: { id: input.requestId },
+      select: { id: true, charityId: true, status: true, charity: { select: { name: true } } },
+    });
+    if (!existing) return { error: "الطلب غير موجود" };
+
+    await requireCharityMemberPermission(existing.charityId, "create_design_requests");
+
+    // Only a rejected request can be resubmitted. Without this, the same button
+    // could be used to drag an approved request back out of the queue.
+    if (existing.status !== "REJECTED") return { error: "لا يمكن إعادة رفع هذا الطلب" };
+
+    if (!input.title?.trim()) return { error: "يرجى إدخال عنوان الطلب" };
+
+    const keptCount = await prisma.designRequestAttachment.count({
+      where: { requestId: input.requestId, kind: "BRIEF", id: { notIn: input.removeAttachmentIds ?? [] } },
+    });
+    if (keptCount + (input.addAttachments?.length ?? 0) > 10) {
+      return { error: "الحد الأقصى 10 مرفقات لكل طلب" };
+    }
+
+    await prisma.$transaction(
+      async (tx) => {
+        const { ids: typeIds, workingDays } = await resolveTypes(tx, input.typeIds);
+
+        if (input.removeAttachmentIds?.length) {
+          await tx.designRequestAttachment.deleteMany({
+            where: { requestId: input.requestId, kind: "BRIEF", id: { in: input.removeAttachmentIds } },
+          });
+        }
+
+        await tx.designRequest.update({
+          where: { id: input.requestId },
+          data: {
+            title: input.title.trim(),
+            description: input.description?.trim() || null,
+            baseWorkingDays: workingDays,
+            // set, not connect: the charity may have changed which types apply.
+            types: { set: typeIds.map((typeId: string) => ({ id: typeId })) },
+            status: "UNDER_REVIEW",
+            rejectionReason: null,
+            reviewedAt: null,
+            reviewedById: null,
+            // Resubmitting restarts the clock, so the queue estimate is taken
+            // from now rather than from the original submission months ago.
+            submittedAt: new Date(),
+            attachments: input.addAttachments?.length
+              ? { create: input.addAttachments.map((a) => ({ ...a })) }
+              : undefined,
+          },
+        });
+      },
+      { isolationLevel: "Serializable" }
+    );
+
+    await notifyDesignStaff(existing.charity.name, input.title.trim());
+
+    revalidatePath("/main/design-requests");
+    revalidatePath(`/portal/${encodeURIComponent(existing.charity.name)}/design-requests`);
+    return { success: true };
+  } catch (error) {
+    console.error("Error resubmitting design request:", error);
+    return { error: error instanceof Error ? error.message : "حدث خطأ أثناء إعادة رفع الطلب" };
+  }
+}
+
 export async function markDesignRequestComplete(
   id: string,
   deliverables: DesignRequestAttachmentInput[] = []

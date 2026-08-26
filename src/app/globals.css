@@ -249,7 +249,7 @@ body {
   --dr-shadow-cta-hover:  inset 0 1px 0 0 rgb(255 255 255 / .18), 0 10px 26px -8px rgb(15 118 110 / .62);
   --dr-shadow-ok:         0 1px 6px -2px rgb(16 185 129 / .28);
   --dr-shadow-warn:       0 1px 6px -2px rgb(202 138 4 / .32);
-  --dr-shadow-late:       0 1px 6px -2px rgb(225 29 72 / .28);
+  --dr-shadow-past:       0 1px 6px -2px rgb(15 23 42 / .35);
   --dr-ring-focus:        0 0 0 4px rgb(15 118 110 / .14);
 }
 
@@ -259,7 +259,7 @@ body {
   --dr-shadow-soft:       inset 0 0 0 1px rgb(45 212 191 / .12), 0 2px 12px -6px rgb(15 118 110 / .34);
   --dr-shadow-ok:         0 1px 8px -3px rgb(52 211 153 / .34);
   --dr-shadow-warn:       0 1px 8px -3px rgb(250 204 21 / .32);
-  --dr-shadow-late:       0 1px 8px -3px rgb(251 113 133 / .30);
+  --dr-shadow-past:       0 1px 8px -3px rgb(0 0 0 / .55);
   --dr-ring-focus:        0 0 0 4px rgb(45 212 191 / .18);
 }
 

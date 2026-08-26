@@ -68,7 +68,10 @@ export default async function DesignRequestsPortalPage({ params }: { params: Pro
             ? "اليوم"
             : formatCivilDate(r.expectedCompletionDate),
         status: r.status,
+        rejectionReason: r.rejectionReason,
         types: r.types.map((t) => ({ id: t.id, name: t.name })),
+        // Ids on their own, for prefilling the resubmit form's type picker.
+        typeIds: r.types.map((t) => t.id),
         totalWorkingDays: r.baseWorkingDays + r.addedDays,
         addedDays: r.addedDays,
         extensions: r.extensions.map((e) => ({

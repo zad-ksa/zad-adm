@@ -7,6 +7,7 @@ import DesignTypePicker, {
   type DesignTypeOption,
 } from "@/components/design-requests/DesignTypePicker";
 import { ACCEPT_ATTRIBUTE, DESIGN_MAX_BYTES } from "@/lib/uploadLimits";
+import ConfirmModal from "@/components/ui/ConfirmModal";
 import { uploadDesignRequestFiles } from "@/components/design-requests/uploadDesignRequestFiles";
 
 export default function StaffNewDesignRequestModal({
@@ -18,30 +19,47 @@ export default function StaffNewDesignRequestModal({
   charities: { id: string; name: string }[];
   designTypes: DesignTypeOption[];
   onClose: () => void;
-  onSuccess: () => void;
+  onSuccess: (message: string) => void;
 }) {
   const [charityId, setCharityId] = useState("");
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [startDate, setStartDate] = useState("");
   const [files, setFiles] = useState<File[]>([]);
+  // See NewDesignRequestForm: attachment errors belong beside the picker.
+  const [fileError, setFileError] = useState<string | null>(null);
+  const [isConfirmOpen, setIsConfirmOpen] = useState(false);
   const [typeIds, setTypeIds] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  // Validate first so the dialog never asks about a submission that would be
+  // refused anyway.
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+    setFileError(null);
 
     if (!charityId) return setError("يرجى اختيار الجمعية");
     if (!title.trim()) return setError("يرجى إدخال عنوان الطلب");
     if (typeIds.length === 0) return setError("يرجى اختيار نوع التصميم");
     // The charity-side form has always capped this; the staff form did not.
-    if (files.length > 10) return setError("الحد الأقصى 10 مرفقات لكل طلب");
+    if (files.length > 10) return setFileError("الحد الأقصى 10 مرفقات لكل طلب");
 
+    setIsConfirmOpen(true);
+  };
+
+  const runSubmit = async () => {
+    setIsConfirmOpen(false);
     setIsSubmitting(true);
     try {
-      const attachments = await uploadDesignRequestFiles(files);
+      let attachments;
+      try {
+        attachments = await uploadDesignRequestFiles(files);
+      } catch (uploadErr) {
+        setFileError(uploadErr instanceof Error ? uploadErr.message : "تعذّر رفع المرفقات");
+        return;
+      }
       const parsedStartDate = startDate ? new Date(startDate) : undefined;
       const res = await createDesignRequestByStaff({
         charityId,
@@ -55,7 +73,7 @@ export default function StaffNewDesignRequestModal({
         setError(res.error);
         return;
       }
-      onSuccess();
+      onSuccess("تم إنشاء الطلب وإدخاله الطابور");
     } catch (err: any) {
       setError(err.message || "حدث خطأ أثناء إضافة الطلب");
     } finally {
@@ -174,6 +192,15 @@ export default function StaffNewDesignRequestModal({
           </div>
 
           <div>
+            {fileError && (
+              <div
+                className="flex items-start gap-2 mb-2 px-3 py-2 rounded-lg bg-rose-500/[0.08] text-rose-600 dark:text-rose-400 font-bold"
+                style={{ fontSize: "var(--dr-fs-meta)" }}
+              >
+                <AlertTriangle className="w-3.5 h-3.5 shrink-0 mt-px" />
+                <span>{fileError}</span>
+              </div>
+            )}
             <label
               className="block font-bold text-slate-500 dark:text-slate-400 mb-2"
               style={{ fontSize: "var(--dr-fs-meta)" }}
@@ -190,9 +217,11 @@ export default function StaffNewDesignRequestModal({
                 onChange={(e) => {
                   const picked = Array.from(e.target.files || []);
                   const tooBig = picked.filter((f) => f.size > DESIGN_MAX_BYTES);
-                  if (tooBig.length) {
-                    setError(`تجاوز الحد (100 ميجابايت): ${tooBig.map((f) => f.name).join("، ")}`);
-                  }
+                  setFileError(
+                    tooBig.length
+                      ? `تجاوز الحد (100 ميجابايت): ${tooBig.map((f) => f.name).join("، ")}`
+                      : null
+                  );
                   setFiles((prev) => [...prev, ...picked.filter((f) => f.size <= DESIGN_MAX_BYTES)]);
                   e.target.value = "";
                 }}
@@ -234,6 +263,15 @@ export default function StaffNewDesignRequestModal({
           </button>
         </div>
       </div>
+
+      <ConfirmModal
+        isOpen={isConfirmOpen}
+        title="إنشاء الطلب"
+        message="سيدخل الطلب الطابور مباشرة ويظهر للجمعية بموعد تسليم مؤكد. هل تريد المتابعة؟"
+        isPending={isSubmitting}
+        onCancel={() => setIsConfirmOpen(false)}
+        onConfirm={runSubmit}
+      />
     </div>
   );
 }

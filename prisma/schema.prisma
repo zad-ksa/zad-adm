@@ -364,6 +364,7 @@ model Employee {
   receivedMails           MailRecipient[]       @relation("ReceivedMails")
   createdDesignRequests   DesignRequest[]       @relation("CreatedDesignRequests")
   completedDesignRequests DesignRequest[]       @relation("CompletedDesignRequests")
+  reviewedDesignRequests  DesignRequest[]       @relation("ReviewedDesignRequests")
 }
 
 model EmployeeCharity {
@@ -913,6 +914,10 @@ model MailAttachment {
 enum DesignRequestStatus {
   PENDING // قيد التنفيذ / في الطابور
   COMPLETED // منجز
+  // ملحقتان في الآخر عمداً: إضافة قيمة لنوع تعداد في Postgres عملية رخيصة،
+  // أما إعادة ترتيب القيم فتستلزم إعادة بناء النوع على بيانات حيّة.
+  UNDER_REVIEW // قيد المراجعة — رفعته الجمعية وينتظر اعتماد موظف زاد
+  REJECTED // مرفوض مع سبب مكتوب
 }
 
 /// نوع التصميم وعدد أيام العمل الخاصة به — يديره موظف زاد من صفحة طلبات التصاميم.
@@ -955,7 +960,7 @@ model DesignRequest {
   baseWorkingDays Int @default(3)
   /// أيام أضافها موظف زاد بعد الرفع. تُزاد على المدة ولا تمسّ تاريخ البدء —
   /// فصلها عن `baseWorkingDays` هو ما يُبقي الأصل والتمديد مقروءين معاً.
-  addedDays Int @default(0)
+  addedDays       Int @default(0)
 
   // جدولة الطابور — تُحسب مرة واحدة عند الإنشاء ولا يُعاد حسابها أبداً بعد ذلك،
   // حتى لو أُنجز طلب سابق قبل موعده. لا تُضف منطق إعادة جدولة هنا.
@@ -966,6 +971,17 @@ model DesignRequest {
   completedAt   DateTime?
   completedById String?
   completedBy   Employee? @relation("CompletedDesignRequests", fields: [completedById], references: [id], onDelete: SetNull)
+
+  // ── المراجعة قبل دخول الطابور ──────────────────────────────────────────
+  // طلب الجمعية يبدأ UNDER_REVIEW ولا يحجز مكاناً في الطابور، لأن
+  // computeSchedule لا يحسب إلا صفوف PENDING. عند الاعتماد يُعاد حساب الموعد
+  // على الطابور كما هو لحظتَها لا كما كان وقت الرفع — وهذا هو معنى «تأكيد
+  // الموعد»: ما رأته الجمعية عند الرفع تقدير، وما بعد الاعتماد التزام.
+  reviewedAt      DateTime?
+  reviewedById    String?
+  reviewedBy      Employee? @relation("ReviewedDesignRequests", fields: [reviewedById], references: [id], onDelete: SetNull)
+  /// سبب الرفض كما كتبه الموظف. تراه الجمعية في تبويب «المرفوضة».
+  rejectionReason String?   @db.Text
 
   // مصدر الطلب: أحد الحقلين فقط يكون مُعبّأً
   charityUserId       String?
@@ -990,17 +1006,17 @@ model DesignRequest {
 /// أثر داخلي: الطلب الذي تأخّر مرتين له سببان، ودمجهما في نص واحد يخفي أن
 /// التأخير حدث مرتين.
 model DesignRequestExtension {
-  id        String        @id @default(uuid())
-  requestId String
-  request   DesignRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
+  id            String        @id @default(uuid())
+  requestId     String
+  request       DesignRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
   /// أيام العمل المضافة في هذه المرة تحديداً.
-  days      Int
-  reason    String        @db.Text
+  days          Int
+  reason        String        @db.Text
   /// موظف زاد الذي أضافها. تُترك بلا علاقة حتى يبقى السبب ظاهراً للجمعية حتى
   /// لو حُذف الحساب لاحقاً.
   createdById   String?
   createdByName String?
-  createdAt     DateTime @default(now())
+  createdAt     DateTime      @default(now())
 
   @@index([requestId, createdAt])
 }
@@ -1153,14 +1169,14 @@ model CharityWorkSite {
 
 /// Working hours/days for a charity. One row per charity.
 model CharityWorkSchedule {
-  id                      String   @id @default(uuid())
-  charityId               String   @unique
-  charity                 Charity  @relation(fields: [charityId], references: [id], onDelete: Cascade)
-  startTime               String   @default("08:00") // Riyadh local, "HH:MM"
-  endTime                 String   @default("16:00")
-  lateAfterMinutes        Int      @default(15)
-  earlyLeaveBeforeMinutes Int      @default(15)
-  workDays                Int[]    @default([0, 1, 2, 3, 4]) // Sunday(0)..Thursday(4)
+  id                      String  @id @default(uuid())
+  charityId               String  @unique
+  charity                 Charity @relation(fields: [charityId], references: [id], onDelete: Cascade)
+  startTime               String  @default("08:00") // Riyadh local, "HH:MM"
+  endTime                 String  @default("16:00")
+  lateAfterMinutes        Int     @default(15)
+  earlyLeaveBeforeMinutes Int     @default(15)
+  workDays                Int[]   @default([0, 1, 2, 3, 4]) // Sunday(0)..Thursday(4)
 
   /// متى فُتح التحضير في هذه الجمعية. `null` يعني مغلقاً — وهي الحالة الابتدائية.
   ///

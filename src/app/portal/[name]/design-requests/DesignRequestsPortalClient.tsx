@@ -6,11 +6,18 @@ import { Plus, Info, Palette } from "lucide-react";
 import DesignRequestCard, { type DesignRequestCardData } from "@/components/design-requests/DesignRequestCard";
 import EditDesignRequestModal from "@/components/design-requests/EditDesignRequestModal";
 import type { DesignRequestProgress } from "@/lib/designRequestProgress";
+import SuccessToast from "@/components/ui/SuccessToast";
 import NewDesignRequestForm from "./NewDesignRequestForm";
 import type { DesignTypeOption } from "@/components/design-requests/DesignTypePicker";
 
 type Item = {
-  request: DesignRequestCardData & { status: "PENDING" | "COMPLETED" };
+  request: DesignRequestCardData & {
+    status: "UNDER_REVIEW" | "PENDING" | "COMPLETED" | "REJECTED";
+    /** Written by staff when rejecting; this is what the charity reads. */
+    rejectionReason?: string | null;
+    /** Selected design types, for prefilling a resubmission. */
+    typeIds?: string[];
+  };
   progress: DesignRequestProgress;
 };
 
@@ -28,8 +35,13 @@ export default function DesignRequestsPortalClient({
   const router = useRouter();
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [tab, setTab] = useState<"PENDING" | "COMPLETED">("PENDING");
+  type PortalTab = "UNDER_REVIEW" | "PENDING" | "COMPLETED" | "REJECTED";
+  const [tab, setTab] = useState<PortalTab>("PENDING");
+  const [resubmitId, setResubmitId] = useState<string | null>(null);
+  const [toast, setToast] = useState<string | null>(null);
 
+  const reviewCount = initialItems.filter((it) => it.request.status === "UNDER_REVIEW").length;
+  const rejectedCount = initialItems.filter((it) => it.request.status === "REJECTED").length;
   const pendingCount = initialItems.filter((it) => it.request.status === "PENDING").length;
   const completedCount = initialItems.filter((it) => it.request.status === "COMPLETED").length;
   const filtered = initialItems.filter((it) => it.request.status === tab);
@@ -91,7 +103,14 @@ export default function DesignRequestsPortalClient({
         {/* Bento Box 3: Tabs & Warning */}
         <div className="md:col-span-3 bg-white dark:bg-[#0A0A0A] border border-slate-200 dark:border-slate-800 rounded-2xl p-3 shadow-sm flex items-center justify-between gap-3 flex-wrap">
           <div className="flex items-center gap-1 bg-slate-50 dark:bg-[#111] border border-slate-100 dark:border-slate-800/80 rounded-xl p-1">
-            {(["PENDING", "COMPLETED"] as const).map((t) => (
+            {(
+              [
+                { key: "PENDING" as const, label: "الطلبات الحالية", count: 0 },
+                { key: "UNDER_REVIEW" as const, label: "قيد المراجعة", count: reviewCount },
+                { key: "COMPLETED" as const, label: "الطلبات المنجزة", count: 0 },
+                { key: "REJECTED" as const, label: "المرفوضة", count: rejectedCount },
+              ]
+            ).map(({ key: t, label, count }) => (
               <button
                 key={t}
                 onClick={() => setTab(t)}
@@ -102,7 +121,16 @@ export default function DesignRequestsPortalClient({
                 }`}
                 style={{ fontSize: "var(--dr-fs-meta)" }}
               >
-                {t === "PENDING" ? `الطلبات الحالية` : `الطلبات المنجزة`}
+                {label}
+                {count > 0 && (
+                  <span
+                    className={`inline-flex min-w-[18px] h-[18px] px-1 ms-1.5 items-center justify-center rounded-full text-[10px] font-black text-white ${
+                      t === "REJECTED" ? "bg-rose-500" : "bg-amber-500"
+                    }`}
+                  >
+                    {count}
+                  </span>
+                )}
               </button>
             ))}
           </div>
@@ -130,7 +158,33 @@ export default function DesignRequestsPortalClient({
               request={it.request}
               progress={it.progress}
               actions={
-                // Editing is for a brief still being worked on; a delivered
+                it.request.status === "REJECTED" ? (
+                  <div className="w-full mt-2 space-y-2">
+                    <div
+                      className="px-3 py-2.5 rounded-xl bg-rose-500/[0.06] text-rose-600 dark:text-rose-400 leading-relaxed"
+                      style={{ fontSize: "var(--dr-fs-meta)" }}
+                    >
+                      <span className="font-bold">سبب الرفض: </span>
+                      {it.request.rejectionReason || "لم يُذكر سبب."}
+                    </div>
+                    {canCreate && (
+                      <button
+                        onClick={() => setResubmitId(it.request.id)}
+                        className="w-full h-9 rounded-xl bg-primary/10 text-primary dark:bg-teal-500/10 dark:text-teal-400 hover:bg-primary hover:text-white dark:hover:bg-teal-500 dark:hover:text-[#0A0A0A] transition-colors font-bold"
+                        style={{ fontSize: "var(--dr-fs-meta)" }}
+                      >
+                        إعادة رفع الطلب
+                      </button>
+                    )}
+                  </div>
+                ) : it.request.status === "UNDER_REVIEW" ? (
+                  <div
+                    className="w-full mt-2 px-3 py-2.5 rounded-xl bg-amber-500/[0.08] text-amber-700 dark:text-amber-400 leading-relaxed"
+                    style={{ fontSize: "var(--dr-fs-meta)" }}
+                  >
+                    قيد المراجعة — سيتم الرد خلال 24 ساعة. الموعد الظاهر تقديري حتى الاعتماد.
+                  </div>
+                ) : // Editing is for a brief still being worked on; a delivered
                 // request has none left to edit.
                 canCreate && it.request.status === "PENDING" ? (
                   <button
@@ -159,8 +213,9 @@ export default function DesignRequestsPortalClient({
               attachments: target.request.attachments,
             }}
             onClose={() => setEditingId(null)}
-            onSuccess={() => {
+            onSuccess={(message) => {
               setEditingId(null);
+              setToast(message);
               router.refresh();
             }}
           />
@@ -172,12 +227,42 @@ export default function DesignRequestsPortalClient({
           charityId={charityId}
           designTypes={designTypes}
           onClose={() => setIsFormOpen(false)}
-          onSuccess={() => {
+          onSuccess={(message) => {
             setIsFormOpen(false);
+            setToast(message);
             router.refresh();
           }}
         />
       )}
+
+      {/* Same form, prefilled — a rejected request is edited and sent back
+          through review rather than retyped from scratch. */}
+      {resubmitId && canCreate && (() => {
+        const target = initialItems.find((it) => it.request.id === resubmitId);
+        if (!target) return null;
+        return (
+          <NewDesignRequestForm
+            charityId={charityId}
+            designTypes={designTypes}
+            resubmit={{
+              id: target.request.id,
+              title: target.request.title,
+              description: target.request.description,
+              typeIds: target.request.typeIds ?? [],
+              rejectionReason: target.request.rejectionReason,
+              attachments: target.request.attachments ?? [],
+            }}
+            onClose={() => setResubmitId(null)}
+            onSuccess={(message) => {
+              setResubmitId(null);
+              setToast(message);
+              router.refresh();
+            }}
+          />
+        );
+      })()}
+
+      <SuccessToast message={toast} onDismiss={() => setToast(null)} />
     </div>
   );
 }

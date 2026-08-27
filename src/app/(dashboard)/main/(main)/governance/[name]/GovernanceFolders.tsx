@@ -108,7 +108,11 @@ export default function GovernanceFolders({ charityId, regulations, isAdmin }: a
       saveItems([...items, newItem]);
     } catch (err) {
       console.error(err);
-      alert("حدث خطأ أثناء رفع الملف، يرجى المحاولة مرة أخرى.");
+      // The reason Cloudinary gave — size, type, signature — rather than one
+      // sentence covering every possible failure. The app allows up to 100MB
+      // and Cloudinary applies its own ceiling on top, so a rejection here has
+      // to say which it was.
+      alert(err instanceof Error ? err.message : "حدث خطأ أثناء رفع الملف، يرجى المحاولة مرة أخرى.");
     } finally {
       setIsUploading(false);
       e.target.value = "";

@@ -14,19 +14,22 @@
 export const MB = 1024 * 1024;
 
 /**
- * The 10MB ceiling is not ours to choose: it is the per-file maximum on the
- * Cloudinary account, measured directly against it — 9.5MB uploads, 10.5MB
- * comes back "File size too large. Maximum is 10485760". The plan is Free.
+ * 100MB per file.
  *
- * So no number written here can raise it. Setting these to 100MB, as they were
- * at first, would have recreated exactly the bug this whole change was meant to
- * remove: a limit the interface promises and the infrastructure refuses. Going
- * higher needs a paid Cloudinary plan, and then these numbers can follow.
+ * Cloudinary enforces its own per-file maximum, and it varies by resource type
+ * and plan — a raw upload was observed being refused above 10MB with "File size
+ * too large. Maximum is 10485760". This number is therefore the ceiling the app
+ * applies, not a guarantee Cloudinary will accept everything under it.
  *
- * Avatars and logos stay well under it deliberately — a 10MB profile picture is
+ * That is workable because rejections are no longer silent: every upload path
+ * now surfaces the message Cloudinary returns, verbatim, next to the file it
+ * concerns. A file this app allows but Cloudinary refuses fails loudly and
+ * says why, instead of vanishing from the attachment list the way it used to.
+ *
+ * Avatars and logos stay far below it deliberately — a huge profile picture is
  * a mistake worth catching early, not a requirement worth supporting.
  */
-const CLOUDINARY_MAX_BYTES = 10 * MB;
+const CLOUDINARY_MAX_BYTES = 100 * MB;
 
 export const UPLOAD_PURPOSES = {
   design_request: { folder: "zad_design_requests", maxBytes: CLOUDINARY_MAX_BYTES },
@@ -45,7 +48,7 @@ export function maxBytesFor(purpose: UploadPurpose): number {
   return UPLOAD_PURPOSES[purpose].maxBytes;
 }
 
-/** For messages: "10 ميجابايت". */
+/** For messages: "100 ميجابايت". */
 export function maxLabelFor(purpose: UploadPurpose): string {
   return `${Math.round(maxBytesFor(purpose) / MB)} ميجابايت`;
 }

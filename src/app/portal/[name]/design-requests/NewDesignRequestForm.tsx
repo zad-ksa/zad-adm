@@ -4,11 +4,15 @@ import { useState } from "react";
 import { X, Paperclip, Send, Loader2, AlertTriangle, Info, Trash2 } from "lucide-react";
 import { createDesignRequestFromPortal, resubmitDesignRequest } from "@/app/actions/designRequests";
 import ConfirmModal from "@/components/ui/ConfirmModal";
-import { ACCEPT_ATTRIBUTE, DESIGN_MAX_BYTES } from "@/lib/uploadLimits";
+import { ACCEPT_ATTRIBUTE, maxBytesFor, maxLabelFor } from "@/lib/uploadPurposes";
 import { uploadDesignRequestFiles } from "@/components/design-requests/uploadDesignRequestFiles";
 import DesignTypePicker, {
+
   type DesignTypeOption,
 } from "@/components/design-requests/DesignTypePicker";
+
+const DESIGN_MAX = maxBytesFor("design_request");
+const DESIGN_MAX_LABEL = maxLabelFor("design_request");
 
 /** A rejected request being sent back for review, prefilled into this form. */
 export type ResubmitTarget = {
@@ -295,13 +299,13 @@ export default function NewDesignRequestForm({
                 accept={ACCEPT_ATTRIBUTE}
                 onChange={(e) => {
                   const picked = Array.from(e.target.files || []);
-                  const tooBig = picked.filter((f) => f.size > DESIGN_MAX_BYTES);
+                  const tooBig = picked.filter((f) => f.size > DESIGN_MAX);
                   setFileError(
                     tooBig.length
-                      ? `تجاوز الحد (100 ميجابايت): ${tooBig.map((f) => f.name).join("، ")}`
+                      ? `تجاوز الحد (${DESIGN_MAX_LABEL}): ${tooBig.map((f) => f.name).join("، ")}`
                       : null
                   );
-                  setFiles((prev) => [...prev, ...picked.filter((f) => f.size <= DESIGN_MAX_BYTES)]);
+                  setFiles((prev) => [...prev, ...picked.filter((f) => f.size <= DESIGN_MAX)]);
                   e.target.value = "";
                 }}
                 className="hidden"

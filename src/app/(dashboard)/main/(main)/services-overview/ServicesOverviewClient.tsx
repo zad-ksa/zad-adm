@@ -1,5 +1,6 @@
 "use client";
 
+import { uploadFile } from "@/lib/clientUpload";
 import { useState, useMemo, useTransition, useRef } from "react";
 import {
   Check, Calendar, Printer, ChevronDown, ChevronRight,
@@ -1118,14 +1119,10 @@ export default function ServicesOverviewClient({
       let finalUrl: string | null = logoPreview;
       if (logoFile) {
         try {
-          const fd = new FormData();
-          fd.append("file", logoFile);
-          const res = await fetch("/api/upload", { method: "POST", body: fd });
-          if (!res.ok) throw new Error();
-          const data = await res.json();
+          const data = await uploadFile(logoFile, "charity_logo");
           finalUrl = data.url;
-        } catch {
-          setLogoError("فشل رفع الصورة، يرجى المحاولة مرة أخرى");
+        } catch (err) {
+          setLogoError(err instanceof Error ? err.message : "فشل رفع الصورة");
           return;
         }
       }

@@ -165,15 +165,23 @@ export default function CustomSurveyPage({ params }: { params: Promise<{ id: str
           method: "POST",
           body: formData,
         });
-        const data = await res.json();
-        if (data.url) uploadedUrls.push(data.url);
+        const data = await res.json().catch(() => null);
+        // A rejected upload used to be dropped here without a word: the check
+        // was `if (data.url)`, so a 401 or a size rejection simply produced no
+        // URL and the respondent submitted the survey believing the file was
+        // attached. This is the one upload path still going through
+        // /api/upload — the page is public and signed tickets need a session.
+        if (!res.ok || !data?.url) {
+          throw new Error(data?.error || `تعذّر رفع ${file.name}`);
+        }
+        uploadedUrls.push(data.url);
       }
       if (uploadedUrls.length > 0) {
         setAttachments(prev => ({ ...prev, [questionId]: [...(prev[questionId] || []), ...uploadedUrls] }));
       }
     } catch (err) {
       console.error("Upload failed", err);
-      alert("فشل رفع الملف. يرجى المحاولة مرة أخرى.");
+      alert(err instanceof Error ? err.message : "فشل رفع الملف. يرجى المحاولة مرة أخرى.");
     } finally {
       setUploadingFiles(prev => ({ ...prev, [questionId]: false }));
     }

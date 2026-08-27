@@ -1,5 +1,7 @@
 "use client";
 
+import { uploadFiles } from "@/lib/clientUpload";
+import { ACCEPT_ATTRIBUTE, maxBytesFor, maxLabelFor } from "@/lib/uploadPurposes";
 import { useState, useTransition } from "react";
 import { X, Send, Link2, FileText, Trash2, AlertCircle, Loader2 } from "lucide-react";
 import { createRequest, resubmitRequest } from "@/app/actions/approvals";
@@ -27,6 +29,12 @@ const PRIORITY_CONFIG: Record<Priority, { label: string; color: string; bg: stri
   LOW:    { label: "منخفضة",  color: "text-slate-500 dark:text-slate-400",   bg: "bg-slate-50 dark:bg-slate-800",     border: "border-slate-300 dark:border-slate-600",  icon: "🟢" },
 };
 
+// Resolved once from the shared table, so the label the user reads and the
+// check the code runs can never disagree the way the old "50MB" text and the
+// server's 25MB limit did.
+const MAX_BYTES = maxBytesFor("approval_attachment");
+const MAX_LABEL = maxLabelFor("approval_attachment");
+
 export default function RequestForm({
   initial, onClose, onDone, isResubmit, requestId,
 }: {
@@ -42,47 +50,48 @@ export default function RequestForm({
   const [error, setError] = useState("");
   const [isPending, startTransition] = useTransition();
   const [isUploading, setIsUploading] = useState(false);
+  const [uploadStatus, setUploadStatus] = useState("");
 
   async function handleFileUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const files = Array.from(e.target.files || []);
     if (!files.length) return;
 
-    const MAX_SIZE = 50 * 1024 * 1024;
-    const validFiles = files.filter(f => f.size <= MAX_SIZE);
-    if (validFiles.length !== files.length) {
-      alert("بعض الملفات تجاوزت الحد المسموح (50 ميجابايت).");
+    // Oversized files are no longer filtered out with the rest uploaded anyway:
+    // that dropped attachments behind a single alert() that was easy to miss,
+    // and the request went out incomplete. Nothing uploads unless every file
+    // is acceptable.
+    const tooBig = files.filter((f) => f.size > MAX_BYTES);
+    if (tooBig.length) {
+      setError(`تجاوز الحد (${MAX_LABEL}): ${tooBig.map((f) => f.name).join("، ")}`);
+      return;
     }
-    if (!validFiles.length) return;
+    if (!files.length) return;
 
     setIsUploading(true);
     setError("");
-    const newAttachments = [...attachments];
 
     try {
-      for (const file of validFiles) {
-        const formData = new FormData();
-        formData.append("file", file);
-        
-        const res = await fetch("/api/upload", {
-          method: "POST",
-          body: formData,
-        });
-
-        if (!res.ok) throw new Error("فشل رفع الملف " + file.name);
-        
-        const data = await res.json();
-        newAttachments.push({
-          name: data.name || file.name,
-          url: data.url,
-          publicId: data.publicId,
-          size: data.size || file.size,
-        });
-      }
-      setAttachments(newAttachments);
-    } catch (err: any) {
-      setError(err.message);
+      // Straight to Cloudinary. This used to POST to /api/upload, so the bytes
+      // crossed a serverless function whose request body the platform caps at a
+      // few megabytes — the 50MB this form promised was fiction, even a 6MB file
+      // failed, and the real reason never reached the user.
+      const uploaded = await uploadFiles(files, "approval_attachment", (p) =>
+        setUploadStatus(
+          p.total > 1
+            ? `جارٍ رفع ${p.index} من ${p.total}: ${p.fileName}${p.percent !== null ? ` — ${p.percent}%` : ""}`
+            : `جارٍ الرفع${p.percent !== null ? ` — ${p.percent}%` : ""}`
+        )
+      );
+      setAttachments([
+        ...attachments,
+        ...uploaded.map((u) => ({ name: u.name, url: u.url, publicId: u.publicId, size: u.size })),
+      ]);
+    } catch (err) {
+      // The precise reason from Cloudinary, not a generic "upload failed".
+      setError(err instanceof Error ? err.message : "فشل رفع الملف");
     } finally {
       setIsUploading(false);
+      setUploadStatus("");
     }
   }
 
@@ -167,12 +176,14 @@ export default function RequestForm({
           </div>
           <div>
             <label className="text-xs font-bold text-slate-500 dark:text-slate-400 mb-1.5 flex items-center gap-1">
-              <Link2 className="w-3 h-3" /> المرفقات (بحد أقصى 50MB للملف)
+              <Link2 className="w-3 h-3" /> المرفقات (بحد أقصى {MAX_LABEL} للملف)
             </label>
             <div className="space-y-2">
-              <input type="file" multiple onChange={handleFileUpload} disabled={isUploading || isPending}
+              <input type="file" multiple accept={ACCEPT_ATTRIBUTE} onChange={handleFileUpload} disabled={isUploading || isPending}
                 className="w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-bold file:bg-primary/10 file:text-primary hover:file:bg-primary/20 transition-colors cursor-pointer" />
-              {isUploading && <p className="text-xs text-primary animate-pulse">جاري الرفع...</p>}
+              {isUploading && (
+                <p className="text-xs text-primary animate-pulse">{uploadStatus || "جاري الرفع..."}</p>
+              )}
               
               {attachments.length > 0 && (
                 <div className="space-y-1.5 mt-2">

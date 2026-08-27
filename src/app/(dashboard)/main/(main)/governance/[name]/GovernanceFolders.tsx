@@ -1,5 +1,6 @@
 "use client";
 
+import { uploadFile } from "@/lib/clientUpload";
 import { useState, useEffect } from "react";
 import { ArrowRight, Folder as FolderIcon, User, FolderPlus, FileUp, Trash2, FileImage, FileText, Loader2 } from "lucide-react";
 import GovernanceRegulationsManager from "./GovernanceRegulationsManager";
@@ -89,20 +90,12 @@ export default function GovernanceFolders({ charityId, regulations, isAdmin }: a
     }
 
     setIsUploading(true);
-    const formData = new FormData();
-    formData.append("file", file);
 
     try {
-      const response = await fetch("/api/upload", {
-        method: "POST",
-        body: formData,
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to upload");
-      }
-
-      const data = await response.json();
+      // Direct to Cloudinary: /api/upload put the bytes through a serverless
+      // function, whose request body the platform caps far below the size
+      // this route claimed to accept.
+      const data = await uploadFile(file, "governance_file");
       const newItem: FolderItem = {
         id: `file-${Date.now()}`,
         name: file.name,

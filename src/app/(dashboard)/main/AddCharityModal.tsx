@@ -1,5 +1,6 @@
 ﻿"use client";
 
+import { uploadFile } from "@/lib/clientUpload";
 import { useState, useRef } from "react";
 import { addCharity } from "@/app/actions/charity";
 import { Image as ImageIcon } from "lucide-react";
@@ -46,17 +47,10 @@ export default function AddCharityModal({ onClose, onSuccess }: { onClose: () =>
     let uploadedLogoUrl = null;
     if (selectedFile) {
       try {
-        const uploadData = new FormData();
-        uploadData.append("file", selectedFile);
-        const uploadRes = await fetch("/api/upload", {
-          method: "POST",
-          body: uploadData,
-        });
-        if (!uploadRes.ok) throw new Error("Upload failed");
-        const data = await uploadRes.json();
+        const data = await uploadFile(selectedFile, "charity_logo");
         uploadedLogoUrl = data.url;
       } catch (err) {
-        setError("فشل رفع الشعار، يرجى المحاولة مرة أخرى");
+        setError(err instanceof Error ? err.message : "فشل رفع الشعار");
         setLoading(false);
         return;
       }

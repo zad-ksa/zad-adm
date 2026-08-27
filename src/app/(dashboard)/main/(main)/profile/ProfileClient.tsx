@@ -1,5 +1,6 @@
 "use client";
 
+import { uploadFile } from "@/lib/clientUpload";
 import { useState, useRef, useTransition, useEffect } from "react";
 import { User, Camera, Loader2, AlertCircle, CheckCircle2, Eye, EyeOff, UserCircle } from "lucide-react";
 import { updateProfile } from "@/app/actions/profile";
@@ -51,17 +52,12 @@ export default function ProfileClient({ session }: { session: any }) {
       let uploadedAvatarUrl = newAvatar;
       if (selectedAvatarFile) {
         try {
-          const uploadData = new FormData();
-          uploadData.append("file", selectedAvatarFile);
-          const uploadRes = await fetch("/api/upload", {
-            method: "POST",
-            body: uploadData,
-          });
-          if (!uploadRes.ok) throw new Error("Upload failed");
-          const data = await uploadRes.json();
+          const data = await uploadFile(selectedAvatarFile, "avatar");
           uploadedAvatarUrl = data.url;
         } catch (err) {
-          setModalError("فشل رفع الصورة الشخصية، يرجى المحاولة مرة أخرى");
+          // The real reason — wrong type, too large — instead of one generic
+          // sentence for every possible failure.
+          setModalError(err instanceof Error ? err.message : "فشل رفع الصورة الشخصية");
           return;
         }
       }

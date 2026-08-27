@@ -5,7 +5,10 @@ import { X, Paperclip, Loader2, AlertTriangle, Save, Trash2 } from "lucide-react
 import { updateDesignRequestDetails } from "@/app/actions/designRequests";
 import { uploadDesignRequestFiles } from "./uploadDesignRequestFiles";
 import ConfirmModal from "@/components/ui/ConfirmModal";
-import { ACCEPT_ATTRIBUTE, DESIGN_MAX_BYTES } from "@/lib/uploadLimits";
+import { ACCEPT_ATTRIBUTE, maxBytesFor, maxLabelFor } from "@/lib/uploadPurposes";
+
+const DESIGN_MAX = maxBytesFor("design_request");
+const DESIGN_MAX_LABEL = maxLabelFor("design_request");
 
 export type EditableRequest = {
   id: string;
@@ -239,13 +242,13 @@ export default function EditDesignRequestModal({
                 accept={ACCEPT_ATTRIBUTE}
                 onChange={(e) => {
                   const picked = Array.from(e.target.files || []);
-                  const tooBig = picked.filter((f) => f.size > DESIGN_MAX_BYTES);
+                  const tooBig = picked.filter((f) => f.size > DESIGN_MAX);
                   setFileError(
                     tooBig.length
-                      ? `تجاوز الحد (100 ميجابايت): ${tooBig.map((f) => f.name).join("، ")}`
+                      ? `تجاوز الحد (${DESIGN_MAX_LABEL}): ${tooBig.map((f) => f.name).join("، ")}`
                       : null
                   );
-                  setFiles((prev) => [...prev, ...picked.filter((f) => f.size <= DESIGN_MAX_BYTES)]);
+                  setFiles((prev) => [...prev, ...picked.filter((f) => f.size <= DESIGN_MAX)]);
                   e.target.value = "";
                 }}
                 className="hidden"

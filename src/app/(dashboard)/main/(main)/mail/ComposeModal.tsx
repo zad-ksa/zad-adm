@@ -6,6 +6,8 @@ import { X, Paperclip, Send, Loader2, AlertTriangle, Minus, Maximize2, Trash2, C
 import { sendMail, saveDraft, deleteDraft } from "@/app/actions/mail";
 import { useRoleLabels } from "@/components/RoleLabelsProvider";
 import { isHtmlBody, htmlToPlainText } from "./mailUtils";
+import { uploadFile } from "@/lib/clientUpload";
+import { maxBytesFor, maxLabelFor } from "@/lib/uploadPurposes";
 
 const MailRichTextEditor = dynamic(() => import("./MailRichTextEditor"), {
   ssr: false,
@@ -26,7 +28,10 @@ interface ComposeModalProps {
   currentUserId?: string; // so reply-all does not address you back to yourself
 }
 
-const MAX_ATTACHMENT_BYTES = 25 * 1024 * 1024; // mirrors /api/upload
+// Resolved from the shared table rather than restated here — the old copy
+// said 25MB while the platform actually rejected anything over a few.
+const MAX_ATTACHMENT_BYTES = maxBytesFor("mail_attachment");
+const MAX_ATTACHMENT_LABEL = maxLabelFor("mail_attachment");
 
 /**
  * An attachment as the composer sees it. Files are uploaded the moment they are
@@ -38,6 +43,8 @@ type AttachmentItem = {
   fileName: string;
   fileSize: number;
   status: "uploading" | "done" | "error";
+  /** 0–100 while uploading; large files need visible progress. */
+  percent?: number;
   fileUrl?: string;
   error?: string;
 };
@@ -245,20 +252,18 @@ export default function ComposeModal({ isOpen, onClose, employees, onSuccess, re
    */
   const uploadOne = async (key: string, file: File) => {
     try {
-      const formData = new FormData();
-      formData.append("file", file);
-      formData.append("folder", "zad_mail_attachments");
-
-      const response = await fetch("/api/upload", { method: "POST", body: formData });
-      const data = await response.json().catch(() => null);
-
-      if (!response.ok) {
-        patchAttachment(key, { status: "error", error: data?.error || "تعذّر رفع الملف" });
-        return;
-      }
-      patchAttachment(key, { status: "done", fileUrl: data.url, error: undefined });
-    } catch {
-      patchAttachment(key, { status: "error", error: "تعذّر الاتصال بالخادم" });
+      // Straight to Cloudinary now, so the ceiling is the one advertised
+      // rather than the serverless request-body limit that silently
+      // truncated it.
+      const data = await uploadFile(file, "mail_attachment", (percent) =>
+        patchAttachment(key, { percent })
+      );
+      patchAttachment(key, { status: "done", fileUrl: data.url, percent: 100, error: undefined });
+    } catch (err) {
+      patchAttachment(key, {
+        status: "error",
+        error: err instanceof Error ? err.message : "تعذّر رفع الملف",
+      });
     }
   };
 
@@ -279,7 +284,7 @@ export default function ComposeModal({ isOpen, onClose, employees, onSuccess, re
           // Checked here as well as on the server so an oversized file fails
           // instantly instead of after a long doomed upload.
           status: tooBig ? "error" : "uploading",
-          error: tooBig ? "حجم الملف يتجاوز 25 ميجابايت" : undefined,
+          error: tooBig ? `حجم الملف يتجاوز ${MAX_ATTACHMENT_LABEL}` : undefined,
         },
       ]);
 
@@ -565,7 +570,14 @@ export default function ComposeModal({ isOpen, onClose, employees, onSuccess, re
                   }`}
                   title={att.error || att.fileName}
                 >
-                  {att.status === "uploading" && <Loader2 className="w-3 h-3 animate-spin text-primary dark:text-teal-300 shrink-0" />}
+                  {att.status === "uploading" && (
+                    <>
+                      <Loader2 className="w-3 h-3 animate-spin text-primary dark:text-teal-300 shrink-0" />
+                      {att.percent !== undefined && (
+                        <span className="text-primary dark:text-teal-300 shrink-0">{att.percent}%</span>
+                      )}
+                    </>
+                  )}
                   {att.status === "done" && <Check className="w-3 h-3 text-primary dark:text-teal-300 shrink-0" />}
                   {att.status === "error" && <AlertTriangle className="w-3 h-3 shrink-0" />}
 

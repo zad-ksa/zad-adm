@@ -6,9 +6,12 @@ import { createDesignRequestByStaff } from "@/app/actions/designRequests";
 import DesignTypePicker, {
   type DesignTypeOption,
 } from "@/components/design-requests/DesignTypePicker";
-import { ACCEPT_ATTRIBUTE, DESIGN_MAX_BYTES } from "@/lib/uploadLimits";
+import { ACCEPT_ATTRIBUTE, maxBytesFor, maxLabelFor } from "@/lib/uploadPurposes";
 import ConfirmModal from "@/components/ui/ConfirmModal";
 import { uploadDesignRequestFiles } from "@/components/design-requests/uploadDesignRequestFiles";
+
+const DESIGN_MAX = maxBytesFor("design_request");
+const DESIGN_MAX_LABEL = maxLabelFor("design_request");
 
 export default function StaffNewDesignRequestModal({
   charities,
@@ -216,13 +219,13 @@ export default function StaffNewDesignRequestModal({
                 accept={ACCEPT_ATTRIBUTE}
                 onChange={(e) => {
                   const picked = Array.from(e.target.files || []);
-                  const tooBig = picked.filter((f) => f.size > DESIGN_MAX_BYTES);
+                  const tooBig = picked.filter((f) => f.size > DESIGN_MAX);
                   setFileError(
                     tooBig.length
-                      ? `تجاوز الحد (100 ميجابايت): ${tooBig.map((f) => f.name).join("، ")}`
+                      ? `تجاوز الحد (${DESIGN_MAX_LABEL}): ${tooBig.map((f) => f.name).join("، ")}`
                       : null
                   );
-                  setFiles((prev) => [...prev, ...picked.filter((f) => f.size <= DESIGN_MAX_BYTES)]);
+                  setFiles((prev) => [...prev, ...picked.filter((f) => f.size <= DESIGN_MAX)]);
                   e.target.value = "";
                 }}
                 className="hidden"

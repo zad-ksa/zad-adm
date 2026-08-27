@@ -10,13 +10,16 @@ import StaffNewDesignRequestModal from "./StaffNewDesignRequestModal";
 import StaffRescheduleDesignRequestModal from "./StaffRescheduleDesignRequestModal";
 import StaffRescheduleCharityQueueModal from "./StaffRescheduleCharityQueueModal";
 import StaffExtendDesignRequestModal from "./StaffExtendDesignRequestModal";
-import { ACCEPT_ATTRIBUTE, DESIGN_MAX_BYTES } from "@/lib/uploadLimits";
+import { ACCEPT_ATTRIBUTE, maxBytesFor, maxLabelFor } from "@/lib/uploadPurposes";
 import { uploadDesignRequestFiles } from "@/components/design-requests/uploadDesignRequestFiles";
 import DesignTypesModal, { type DesignTypeRow } from "./DesignTypesModal";
 import EditDesignRequestModal from "@/components/design-requests/EditDesignRequestModal";
 import StaffReviewDesignRequestModal from "./StaffReviewDesignRequestModal";
 import SuccessToast from "@/components/ui/SuccessToast";
 import ConfirmModal from "@/components/ui/ConfirmModal";
+
+const DESIGN_MAX = maxBytesFor("design_request");
+const DESIGN_MAX_LABEL = maxLabelFor("design_request");
 
 type DesignStatus = "UNDER_REVIEW" | "PENDING" | "COMPLETED" | "REJECTED";
 
@@ -503,15 +506,15 @@ export default function DesignRequestsClient({
                   accept={ACCEPT_ATTRIBUTE}
                   onChange={(e) => {
                     const picked = Array.from(e.target.files || []);
-                    const tooBig = picked.filter((f) => f.size > DESIGN_MAX_BYTES);
+                    const tooBig = picked.filter((f) => f.size > DESIGN_MAX);
                     setDeliverableError(
                       tooBig.length
-                        ? `تجاوز الحد (100 ميجابايت): ${tooBig.map((f) => f.name).join("، ")}`
+                        ? `تجاوز الحد (${DESIGN_MAX_LABEL}): ${tooBig.map((f) => f.name).join("، ")}`
                         : null
                     );
                     setDeliverables((prev) => [
                       ...prev,
-                      ...picked.filter((f) => f.size <= DESIGN_MAX_BYTES),
+                      ...picked.filter((f) => f.size <= DESIGN_MAX),
                     ]);
                     e.target.value = "";
                   }}

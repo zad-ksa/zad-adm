@@ -3,13 +3,30 @@ import { prisma } from "@/lib/db";
 import { getSession } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
 import { createAppNotification } from "./notifications";
-import { isTier1 } from "@/lib/permissions";
+import { isTier1, hasPermission } from "@/lib/permissions";
 
-const ALL_STAFF = ["ADMIN", "EXECUTIVE_DIRECTOR", "ADMINISTRATIVE_SECRETARIAT", "GENERAL_MANAGER", "STRATEGY", "FINANCE", "GOVERNANCE"];
+/**
+ * Gate on the permission, not on a hand-written list of roles.
+ *
+ * This file used to keep its own ALL_STAFF array and check membership in it.
+ * The sidebar and the page both gate the meetings screen on manage_meetings,
+ * so granting that permission to an employee whose role was not in the array —
+ * an ACCOUNTANT, say — showed them the tab, let them open the page, and then
+ * threw from getMeetings, which took the whole page down with it. Three places
+ * decided the same question by two different rules.
+ *
+ * The array also predates roles becoming data. Every role added since from the
+ * roles screen (ACCOUNTANT, DESIGNER) fell outside it automatically, so this
+ * would have recurred with each new one.
+ */
+function canManageMeetings(session: { role?: string | null; permissions?: string[] } | null) {
+  if (!session) return false;
+  return hasPermission(session.role ?? "", session.permissions || [], "manage_meetings");
+}
 
 export async function getMeetings() {
   const session = await getSession();
-  if (!session || !ALL_STAFF.includes(session.role)) throw new Error("غير مصرح");
+  if (!canManageMeetings(session)) throw new Error("غير مصرح");
   const userIsTier1 = isTier1(session.role, session.permissions || []);
   const meetings = await prisma.meeting.findMany({
     where: userIsTier1 ? {} : { isPrivate: false },
@@ -45,7 +62,7 @@ export async function createMeeting(data: {
   isPrivate: boolean;
 }) {
   const session = await getSession();
-  if (!session || !ALL_STAFF.includes(session.role)) throw new Error("غير مصرح");
+  if (!canManageMeetings(session)) throw new Error("غير مصرح");
   const meeting = await prisma.meeting.create({
     data: {
       title: data.title,

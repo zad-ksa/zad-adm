@@ -46,6 +46,9 @@ export default async function DesignRequestsPage() {
     });
 
     return {
+      // Milliseconds, not the formatted string above: the current-requests tab
+      // is ordered by how soon delivery is due, and "١٥ سبتمبر" does not sort.
+      expectedCompletionAt: r.expectedCompletionDate.getTime(),
       request: {
         id: r.id,
         title: r.title,

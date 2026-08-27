@@ -26,7 +26,12 @@ type RequestItem = DesignRequestCardData & {
   /** Set only on rejected rows — shown so staff can see what was told to the charity. */
   rejectionReason?: string | null;
 };
-type Item = { request: RequestItem; progress: DesignRequestProgress };
+type Item = {
+  request: RequestItem;
+  progress: DesignRequestProgress;
+  /** Raw due date in ms, for ordering — see page.tsx. */
+  expectedCompletionAt: number;
+};
 
 export default function DesignRequestsClient({
   initialItems,
@@ -40,8 +45,7 @@ export default function DesignRequestsClient({
   const router = useRouter();
   const [, startTransition] = useTransition();
   const [charityFilter, setCharityFilter] = useState("");
-  // Review first: it is the only tab with work that blocks somebody else.
-  const [tab, setTab] = useState<DesignStatus>("UNDER_REVIEW");
+  const [tab, setTab] = useState<DesignStatus>("PENDING");
   const [reviewingId, setReviewingId] = useState<string | null>(null);
   const [isComposeOpen, setIsComposeOpen] = useState(false);
   const [confirmingId, setConfirmingId] = useState<string | null>(null);
@@ -63,10 +67,19 @@ export default function DesignRequestsClient({
   const [isDeleting, setIsDeleting] = useState(false);
 
   const filtered = useMemo(() => {
-    return initialItems.filter((it) => {
+    const rows = initialItems.filter((it) => {
       if (charityFilter && it.request.charityId !== charityFilter) return false;
       return it.request.status === tab;
     });
+
+    // Soonest delivery on top — which also floats anything already past its
+    // date to the very top, since those have the earliest dates of all. The
+    // other tabs keep the server's ordering: a completed or rejected request
+    // has no urgency left to rank by.
+    if (tab === "PENDING") {
+      return [...rows].sort((a, b) => a.expectedCompletionAt - b.expectedCompletionAt);
+    }
+    return rows;
   }, [initialItems, charityFilter, tab]);
 
   const reviewCount = initialItems.filter((it) => it.request.status === "UNDER_REVIEW").length;
@@ -186,12 +199,12 @@ export default function DesignRequestsClient({
           <div className="flex items-center gap-1 bg-slate-50 dark:bg-[#111] border border-slate-100 dark:border-slate-800/80 rounded-xl p-1">
             {(
               [
-                { key: "UNDER_REVIEW" as const, label: "قيد الانتظار", count: reviewCount },
-                { key: "PENDING" as const, label: "الطلبات الحالية", count: 0 },
-                { key: "COMPLETED" as const, label: "الطلبات المنجزة", count: 0 },
-                { key: "REJECTED" as const, label: "المرفوضة", count: 0 },
+                { key: "PENDING" as const, label: "الطلبات الحالية", count: pendingCount, urgent: false },
+                { key: "UNDER_REVIEW" as const, label: "قيد الانتظار", count: reviewCount, urgent: true },
+                { key: "COMPLETED" as const, label: "الطلبات المنجزة", count: 0, urgent: false },
+                { key: "REJECTED" as const, label: "المرفوضة", count: 0, urgent: false },
               ]
-            ).map(({ key, label, count }) => (
+            ).map(({ key, label, count, urgent }) => (
               <button
                 key={key}
                 onClick={() => setTab(key)}
@@ -203,10 +216,18 @@ export default function DesignRequestsClient({
                 style={{ fontSize: "var(--dr-fs-meta)" }}
               >
                 {label}
-                {/* Only the review queue carries a badge: it is the only count
-                    that represents someone waiting on us. */}
+                {/* Amber only on the review queue: that number is work waiting
+                    on us, while the current-requests count is just how many
+                    are in flight. Same badge in two colours would flatten the
+                    difference. */}
                 {count > 0 && (
-                  <span className="min-w-[18px] h-[18px] px-1 flex items-center justify-center rounded-full bg-amber-500 text-white text-[10px] font-black">
+                  <span
+                    className={`min-w-[18px] h-[18px] px-1 flex items-center justify-center rounded-full text-[10px] font-black ${
+                      urgent
+                        ? "bg-amber-500 text-white"
+                        : "bg-slate-200 text-slate-600 dark:bg-slate-700 dark:text-slate-200"
+                    }`}
+                  >
                     {count}
                   </span>
                 )}

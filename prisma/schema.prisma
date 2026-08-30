@@ -365,6 +365,7 @@ model Employee {
   createdDesignRequests   DesignRequest[]       @relation("CreatedDesignRequests")
   completedDesignRequests DesignRequest[]       @relation("CompletedDesignRequests")
   reviewedDesignRequests  DesignRequest[]       @relation("ReviewedDesignRequests")
+  knowledgeNodes          KnowledgeNode[]       @relation("KnowledgeNodes")
 }
 
 model EmployeeCharity {
@@ -907,6 +908,47 @@ model MailAttachment {
   fileSize Int?
 
   @@index([mailId])
+}
+
+enum KnowledgeNodeKind {
+  FOLDER
+  FILE
+}
+
+/// عقدة في «شجرة المعرف»: مجلد أو ملف.
+///
+/// شجرة واحدة عامة لموظفي زاد، غير تابعة لجمعية — الجذر هو الصفوف التي
+/// `parentId` فيها null، والتعشيش بلا حدّ تمامًا كمتصفح الملفات.
+///
+/// النسخة السابقة من هذه الفكرة كانت تحفظ في `localStorage`، فكانت المجلدات
+/// موجودة في متصفح من أنشأها وحده ولا يراها زملاؤه. الجدول هنا هو الفرق
+/// الجوهري بين الفكرتين، لا الواجهة.
+model KnowledgeNode {
+  id       String            @id @default(uuid())
+  name     String
+  kind     KnowledgeNodeKind
+
+  /// null للعقد في الجذر. الحذف متتالٍ: حذف مجلد يحذف ذريته كلها في
+  /// قاعدة البيانات، ويبقى على الإجراء أن يزيل ملفاتها من Cloudinary قبل ذلك.
+  parentId String?
+  parent   KnowledgeNode?  @relation("KnowledgeTree", fields: [parentId], references: [id], onDelete: Cascade)
+  children KnowledgeNode[] @relation("KnowledgeTree")
+
+  // ── حقول الملفات وحدها؛ كلها null للمجلد ──────────────────────────────
+  fileUrl      String?
+  /// يلزم لحذف الأصل من Cloudinary لاحقًا.
+  publicId     String?
+  /// Cloudinary يحتاج النوع نفسه عند الحذف، وإلا افترض "image" ولم يحذف شيئًا.
+  resourceType String?
+  fileSize     Int?
+
+  createdById String?
+  createdBy   Employee? @relation("KnowledgeNodes", fields: [createdById], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([parentId])
 }
 
 // ── طلبات التصاميم ───────────────────────────────────────────────────────────

@@ -36,7 +36,7 @@ export const UPLOAD_PURPOSES = {
   design_deliverable: { folder: "zad_design_requests", maxBytes: CLOUDINARY_MAX_BYTES },
   mail_attachment: { folder: "zad_mail_attachments", maxBytes: CLOUDINARY_MAX_BYTES },
   approval_attachment: { folder: "zad_approvals", maxBytes: CLOUDINARY_MAX_BYTES },
-  governance_file: { folder: "zad_governance", maxBytes: CLOUDINARY_MAX_BYTES },
+  knowledge_file: { folder: "zad_knowledge_tree", maxBytes: CLOUDINARY_MAX_BYTES },
   service_file: { folder: "zad_services", maxBytes: CLOUDINARY_MAX_BYTES },
   avatar: { folder: "zad_avatars", maxBytes: 5 * MB },
   charity_logo: { folder: "zad_charity_logos", maxBytes: 5 * MB },

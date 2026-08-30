@@ -45,6 +45,7 @@ export const PERMISSION_GROUPS = [
       { id: "view_requests", label: "الاعتمادات (رفع طلب ومتابعته)" },
       { id: "manage_requests", label: "إدارة الاعتمادات (اعتماد / رفض / إرجاع)" },
       { id: "manage_workflow", label: "إعداد سلاسل اعتماد الطلبات" },
+      { id: "manage_knowledge_tree", label: "شجرة المعرفة" },
     ],
   },
   {

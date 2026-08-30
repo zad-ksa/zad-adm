@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, useTransition } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { User, ShieldAlert, Users, X, LogOut, LayoutDashboard, Building2, ClipboardList, ChevronRight, Edit, Eye, EyeOff, Camera, Loader2, AlertCircle, CheckCircle2, Newspaper, CheckSquare, Moon, Sun, LayoutGrid, FileText, Settings2, FileSignature, MessageSquare, Send, GitBranch, Bell, ShieldCheck } from "lucide-react";
+import { User, ShieldAlert, Users, X, LogOut, LayoutDashboard, Building2, ClipboardList, ChevronRight, Edit, Eye, EyeOff, Camera, Loader2, AlertCircle, CheckCircle2, Newspaper, CheckSquare, Moon, Sun, LayoutGrid, FileText, Settings2, FileSignature, MessageSquare, Send, GitBranch, Bell, ShieldCheck, FolderTree } from "lucide-react";
 import { useTheme } from "next-themes";
 import { logout } from "@/app/actions/auth";
 import { updateProfile } from "@/app/actions/profile";
@@ -110,7 +110,7 @@ export default function EmployeeSidebar({
     else if (path.startsWith("/main/charities") || path.startsWith("/main/contracts") || path.startsWith("/main/custom-surveys") || path.startsWith("/main/communication") || path.startsWith("/main/charity-meetings") || path.startsWith("/main/design-requests")) newGroup = "الجمعيات";
     else if (path.startsWith("/main/approvals") || path.startsWith("/main/news") || path.startsWith("/main/meetings") || path.startsWith("/main/tasks") || path.startsWith("/main/mail")) newGroup = "زاد";
     else if (path.startsWith("/main/admin") || path.startsWith("/main/workflow-settings")) newGroup = "لوحة التحكم";
-    else if (path.startsWith("/main/services-overview") || path.startsWith("/main/strategy") || path.startsWith("/main/governance") || path.startsWith("/main/finance") || path.startsWith("/main/resource-development") || path.startsWith("/main/programs")) {
+    else if (path.startsWith("/main/services-overview") || path.startsWith("/main/knowledge-tree") || path.startsWith("/main/strategy") || path.startsWith("/main/governance") || path.startsWith("/main/finance") || path.startsWith("/main/resource-development") || path.startsWith("/main/programs")) {
       newGroup = "الخدمات";
       const parts = path.split('/');
       if (parts.length >= 4) {
@@ -258,7 +258,8 @@ export default function EmployeeSidebar({
 
             const services = allServices.filter(svc => can(svc.required));
             const hasOverviewAccess = can("view_services_overview");
-            const hasServicesAccess = hasOverviewAccess || can("manage_charities") || services.length > 0;
+            const hasKnowledgeTree = can("manage_knowledge_tree");
+            const hasServicesAccess = hasOverviewAccess || hasKnowledgeTree || can("manage_charities") || services.length > 0;
             
             if (!hasServicesAccess) return null;
 
@@ -285,6 +286,17 @@ export default function EmployeeSidebar({
                     >
                       <LayoutGrid className="w-3.5 h-3.5 ml-2" />
                       <span>الكل</span>
+                    </Link>
+                  )}
+
+                  {isExpanded && hasKnowledgeTree && (
+                    <Link
+                      href="/main/knowledge-tree"
+                      onClick={() => handleLinkClick("/main/knowledge-tree")}
+                      className={`flex items-center w-full px-2.5 py-1.5 rounded-lg text-[11px] font-bold transition-all group mt-1 ${activePath === "/main/knowledge-tree" ? "bg-primary/10 text-primary" : "text-slate-500 hover:bg-primary/5 hover:text-primary"}`}
+                    >
+                      <FolderTree className="w-3.5 h-3.5 ml-2" />
+                      <span>شجرة المعرفة</span>
                     </Link>
                   )}
                   

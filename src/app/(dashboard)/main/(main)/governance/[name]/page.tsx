@@ -1,7 +1,6 @@
 import { Scale, FolderOpen, FileText, LayoutDashboard } from "lucide-react";
 import type { Metadata } from "next";
 import { prisma } from "@/lib/db";
-import GovernanceFolders from "./GovernanceFolders";
 import GovernanceRegulationsManager from "./GovernanceRegulationsManager";
 import { getSession } from "@/lib/auth";
 import { isAdmin as checkIsAdmin, hasPermission } from "@/lib/permissions";
@@ -75,7 +74,7 @@ async function GovernanceTabContent({
   // Regulations are not scoped to the charity, so they do not have to wait for
   // it — and only two of the three tabs render them. The default "manual" tab
   // was paying a round trip for a list it never showed.
-  const needsRegulations = activeTab === "files" || activeTab === "services";
+  const needsRegulations = activeTab === "services";
 
   const [charity, regulations] = await Promise.all([
     prisma.charity.findUnique({
@@ -116,9 +115,6 @@ async function GovernanceTabContent({
         />
       )}
 
-      {charity && activeTab === 'files' && (
-        <GovernanceFolders charityId={charity.id} regulations={regulations} isAdmin={isAdmin} />
-      )}
       
       {charity && activeTab === 'services' && (
         <div className="space-y-12">

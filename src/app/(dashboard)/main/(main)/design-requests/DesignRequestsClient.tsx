@@ -16,18 +16,30 @@ import DesignTypesModal, { type DesignTypeRow } from "./DesignTypesModal";
 import EditDesignRequestModal from "@/components/design-requests/EditDesignRequestModal";
 import StaffReviewDesignRequestModal from "./StaffReviewDesignRequestModal";
 import SuccessToast from "@/components/ui/SuccessToast";
+import UploadProgress from "@/components/ui/UploadProgress";
+import type { UploadProgress as Progress } from "@/lib/clientUpload";
 import ConfirmModal from "@/components/ui/ConfirmModal";
 
 const DESIGN_MAX = maxBytesFor("design_request");
 const DESIGN_MAX_LABEL = maxLabelFor("design_request");
 
-type DesignStatus = "UNDER_REVIEW" | "PENDING" | "COMPLETED" | "REJECTED";
+type DesignStatus =
+  | "UNDER_REVIEW"
+  | "PENDING"
+  | "AWAITING_REVIEW"
+  | "REVISION_REQUESTED"
+  | "COMPLETED"
+  | "REJECTED";
 
 type RequestItem = DesignRequestCardData & {
   charityId: string;
   status: DesignStatus;
   /** Set only on rejected rows — shown so staff can see what was told to the charity. */
   rejectionReason?: string | null;
+  /** What the charity asked to change when sending a delivery back. */
+  revisionNotes?: string | null;
+  /** Settled by the deadline rather than by the charity. */
+  autoApproved?: boolean;
 };
 type Item = {
   request: RequestItem;
@@ -40,10 +52,13 @@ export default function DesignRequestsClient({
   initialItems,
   charities,
   designTypes,
+  canDelete,
 }: {
   initialItems: Item[];
   charities: { id: string; name: string }[];
   designTypes: DesignTypeRow[];
+  /** Holder of delete_design_requests — a separate permission from managing. */
+  canDelete: boolean;
 }) {
   const router = useRouter();
   const [, startTransition] = useTransition();
@@ -61,6 +76,12 @@ export default function DesignRequestsClient({
   // The deliverables dialog is a form, not a question — so the question comes
   // after it, the same as everywhere else here.
   const [isCompleteConfirmOpen, setIsCompleteConfirmOpen] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState<Progress | null>(null);
+
+  // Finishing means "send to the charity" the first time and "approve outright"
+  // after a revision round — the dialog has to say which.
+  const completingIsRevision =
+    initialItems.find((it) => it.request.id === confirmingId)?.request.status === "REVISION_REQUESTED";
   const [reschedulingId, setReschedulingId] = useState<string | null>(null);
   const [isQueueRescheduleOpen, setIsQueueRescheduleOpen] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
@@ -79,13 +100,15 @@ export default function DesignRequestsClient({
     // date to the very top, since those have the earliest dates of all. The
     // other tabs keep the server's ordering: a completed or rejected request
     // has no urgency left to rank by.
-    if (tab === "PENDING") {
+    if (tab === "PENDING" || tab === "REVISION_REQUESTED") {
       return [...rows].sort((a, b) => a.expectedCompletionAt - b.expectedCompletionAt);
     }
     return rows;
   }, [initialItems, charityFilter, tab]);
 
   const reviewCount = initialItems.filter((it) => it.request.status === "UNDER_REVIEW").length;
+  const revisionCount = initialItems.filter((it) => it.request.status === "REVISION_REQUESTED").length;
+  const awaitingCharityCount = initialItems.filter((it) => it.request.status === "AWAITING_REVIEW").length;
   const pendingCount = initialItems.filter((it) => it.request.status === "PENDING").length;
   const completedCount = initialItems.filter((it) => it.request.status === "COMPLETED").length;
   const overdueCount = initialItems.filter((it) => it.request.status === "PENDING" && it.progress.isOverdue).length;
@@ -105,7 +128,7 @@ export default function DesignRequestsClient({
       // should not leave orphaned files in storage.
       let uploaded;
       try {
-        uploaded = deliverables.length ? await uploadDesignRequestFiles(deliverables) : [];
+        uploaded = deliverables.length ? await uploadDesignRequestFiles(deliverables, setUploadProgress) : [];
       } catch (uploadErr) {
         // Shown above the attach control rather than in an alert(), so the
         // reason stays on screen next to the files it is about.
@@ -120,10 +143,11 @@ export default function DesignRequestsClient({
       }
       setDeliverables([]);
       setConfirmingId(null);
-      setToast("تم إنهاء الطلب وتسليمه للجمعية");
+      setToast(completingIsRevision ? "تم اعتماد الطلب نهائياً" : "تم التسليم — بانتظار مراجعة الجمعية خلال 24 ساعة");
     } catch (err) {
       setDeliverableError(err instanceof Error ? err.message : "تعذّر إنهاء الطلب");
     } finally {
+      setUploadProgress(null);
       setIsCompleting(false);
       startTransition(() => router.refresh());
     }
@@ -203,7 +227,9 @@ export default function DesignRequestsClient({
             {(
               [
                 { key: "PENDING" as const, label: "الطلبات الحالية", count: pendingCount, urgent: false },
+                { key: "REVISION_REQUESTED" as const, label: "قيد التعديل", count: revisionCount, urgent: true },
                 { key: "UNDER_REVIEW" as const, label: "قيد الانتظار", count: reviewCount, urgent: true },
+                { key: "AWAITING_REVIEW" as const, label: "بانتظار الجمعية", count: awaitingCharityCount, urgent: false },
                 { key: "COMPLETED" as const, label: "الطلبات المنجزة", count: 0, urgent: false },
                 { key: "REJECTED" as const, label: "المرفوضة", count: 0, urgent: false },
               ]
@@ -295,7 +321,31 @@ export default function DesignRequestsClient({
               request={it.request}
               progress={it.progress}
               actions={
-                it.request.status === "UNDER_REVIEW" ? (
+                it.request.status === "REVISION_REQUESTED" ? (
+                  <div className="w-full mt-2 space-y-2">
+                    <div
+                      className="px-3 py-2.5 rounded-xl bg-amber-500/[0.08] text-amber-700 dark:text-amber-400 leading-relaxed"
+                      style={{ fontSize: "var(--dr-fs-meta)" }}
+                    >
+                      <span className="font-bold">ملاحظات الجمعية: </span>
+                      {it.request.revisionNotes || "—"}
+                    </div>
+                    <button
+                      onClick={() => setConfirmingId(it.request.id)}
+                      className="w-full h-9 rounded-xl bg-primary/10 text-primary dark:bg-teal-500/10 dark:text-teal-400 hover:bg-primary hover:text-white dark:hover:bg-teal-500 dark:hover:text-[#0A0A0A] transition-colors font-bold"
+                      style={{ fontSize: "var(--dr-fs-meta)" }}
+                    >
+                      تسليم التعديل (اعتماد نهائي)
+                    </button>
+                  </div>
+                ) : it.request.status === "AWAITING_REVIEW" ? (
+                  <div
+                    className="w-full mt-2 px-3 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800/60 text-slate-500 dark:text-slate-400 leading-relaxed"
+                    style={{ fontSize: "var(--dr-fs-meta)" }}
+                  >
+                    سُلّم وبانتظار ردّ الجمعية. يُعتمد تلقائياً بعد 24 ساعة.
+                  </div>
+                ) : it.request.status === "UNDER_REVIEW" ? (
                   <div className="flex flex-wrap items-center gap-2 w-full mt-2">
                     <button
                       onClick={() => setReviewingId(it.request.id)}
@@ -359,14 +409,18 @@ export default function DesignRequestsClient({
                     >
                       +أيام
                     </button>
-                    <button
-                      onClick={() => setDeletingId(it.request.id)}
-                      className="flex-1 min-w-[72px] h-9 rounded-xl bg-rose-50 text-rose-600 dark:bg-rose-500/10 dark:text-rose-400 hover:bg-rose-500 hover:text-white dark:hover:bg-rose-500 dark:hover:text-[#0A0A0A] transition-colors font-bold"
-                      style={{ fontSize: "var(--dr-fs-meta)" }}
-                    >
-                      حذف
-                    </button>
                   </div>
+                ) : undefined
+              }
+              footer={
+                canDelete ? (
+                  <button
+                    onClick={() => setDeletingId(it.request.id)}
+                    className="w-full h-8 mt-2 rounded-lg text-rose-500/80 dark:text-rose-400/70 hover:text-white hover:bg-rose-500 dark:hover:bg-rose-500 dark:hover:text-[#0A0A0A] transition-colors font-bold"
+                    style={{ fontSize: "var(--dr-fs-eyebrow)" }}
+                  >
+                    حذف الطلب نهائياً
+                  </button>
                 ) : undefined
               }
             />
@@ -416,12 +470,14 @@ export default function DesignRequestsClient({
 
       <ConfirmModal
         isOpen={isCompleteConfirmOpen}
-        title="إنهاء الطلب"
+        title={completingIsRevision ? "تسليم التعديل" : "إنهاء الطلب"}
         message={
-          deliverables.length > 0
-            ? `سيُسلَّم الطلب للجمعية مع ${deliverables.length} من الملفات، وتُحذف مرفقات الطلب الأصلية نهائياً. هل تريد المتابعة؟`
-            : "سيُسلَّم الطلب للجمعية بدون ملفات نهائية، وتُحذف مرفقات الطلب الأصلية نهائياً. هل تريد المتابعة؟"
+          completingIsRevision
+            ? "هذا تسليم بعد التعديل، فيُعتمد الطلب نهائياً مباشرة وتُحذف مرفقاته الأصلية. هل تريد المتابعة؟"
+            : "سيذهب الطلب للجمعية لمراجعته خلال 24 ساعة، والمرفقات تبقى كما هي حتى الاعتماد النهائي. هل تريد المتابعة؟"
         }
+        confirmLabel={completingIsRevision ? "تسليم واعتماد" : "تسليم للجمعية"}
+        tone="primary"
         isPending={isCompleting}
         onCancel={() => setIsCompleteConfirmOpen(false)}
         onConfirm={runComplete}
@@ -485,6 +541,8 @@ export default function DesignRequestsClient({
             </p>
 
             <div className="mb-6 text-right">
+              <UploadProgress progress={uploadProgress} />
+
               {deliverableError && (
                 <div
                   className="flex items-start gap-2 mb-2 px-3 py-2 rounded-lg bg-rose-500/[0.08] text-rose-600 dark:text-rose-400 font-bold"
@@ -607,7 +665,7 @@ export default function DesignRequestsClient({
               حذف الطلب
             </h3>
             <p className="text-slate-500 dark:text-slate-400 mb-6" style={{ fontSize: "var(--dr-fs-body)" }}>
-              هل أنت متأكد من رغبتك في حذف هذا الطلب نهائيًا؟ سيتم حذف المرفقات ولن يمكنك التراجع عن هذا الإجراء.
+              سيُحذف الطلب وكل ملفاته نهائياً — مرفقات الجمعية والملفات النهائية معاً — من التخزين ومن السجل. لا يمكن التراجع.
             </p>
             <div className="flex items-center gap-3">
               <button

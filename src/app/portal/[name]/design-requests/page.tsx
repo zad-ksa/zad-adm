@@ -55,6 +55,8 @@ export default async function DesignRequestsPortalPage({ params }: { params: Pro
       scheduledStartDate: r.scheduledStartDate,
       expectedCompletionDate: r.expectedCompletionDate,
       status: r.status,
+      deliveredAt: r.deliveredAt,
+      revisionRequestedAt: r.revisionRequestedAt,
     });
     return {
       request: {
@@ -69,6 +71,8 @@ export default async function DesignRequestsPortalPage({ params }: { params: Pro
             : formatCivilDate(r.expectedCompletionDate),
         status: r.status,
         rejectionReason: r.rejectionReason,
+        revisionNotes: r.revisionNotes,
+        autoApproved: r.autoApproved,
         types: r.types.map((t) => ({ id: t.id, name: t.name })),
         // Ids on their own, for prefilling the resubmit form's type picker.
         typeIds: r.types.map((t) => t.id),

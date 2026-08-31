@@ -8,6 +8,8 @@ import DesignTypePicker, {
 } from "@/components/design-requests/DesignTypePicker";
 import { ACCEPT_ATTRIBUTE, maxBytesFor, maxLabelFor } from "@/lib/uploadPurposes";
 import ConfirmModal from "@/components/ui/ConfirmModal";
+import UploadProgress from "@/components/ui/UploadProgress";
+import type { UploadProgress as Progress } from "@/lib/clientUpload";
 import { uploadDesignRequestFiles } from "@/components/design-requests/uploadDesignRequestFiles";
 
 const DESIGN_MAX = maxBytesFor("design_request");
@@ -25,6 +27,7 @@ export default function StaffNewDesignRequestModal({
   onSuccess: (message: string) => void;
 }) {
   const [charityId, setCharityId] = useState("");
+  const ZAD = "__zad__";
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [startDate, setStartDate] = useState("");
@@ -32,6 +35,7 @@ export default function StaffNewDesignRequestModal({
   // See NewDesignRequestForm: attachment errors belong beside the picker.
   const [fileError, setFileError] = useState<string | null>(null);
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState<Progress | null>(null);
   const [typeIds, setTypeIds] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -43,7 +47,7 @@ export default function StaffNewDesignRequestModal({
     setError(null);
     setFileError(null);
 
-    if (!charityId) return setError("يرجى اختيار الجمعية");
+    if (!charityId) return setError("يرجى اختيار الجهة");
     if (!title.trim()) return setError("يرجى إدخال عنوان الطلب");
     if (typeIds.length === 0) return setError("يرجى اختيار نوع التصميم");
     // The charity-side form has always capped this; the staff form did not.
@@ -58,14 +62,15 @@ export default function StaffNewDesignRequestModal({
     try {
       let attachments;
       try {
-        attachments = await uploadDesignRequestFiles(files);
+        attachments = await uploadDesignRequestFiles(files, setUploadProgress);
       } catch (uploadErr) {
         setFileError(uploadErr instanceof Error ? uploadErr.message : "تعذّر رفع المرفقات");
         return;
       }
       const parsedStartDate = startDate ? new Date(startDate) : undefined;
       const res = await createDesignRequestByStaff({
-        charityId,
+        // null tells the server this is a Zad-company request, not a charity one.
+        charityId: charityId === ZAD ? null : charityId,
         title,
         description,
         attachments,
@@ -80,6 +85,7 @@ export default function StaffNewDesignRequestModal({
     } catch (err: any) {
       setError(err.message || "حدث خطأ أثناء إضافة الطلب");
     } finally {
+      setUploadProgress(null);
       setIsSubmitting(false);
     }
   };
@@ -103,6 +109,8 @@ export default function StaffNewDesignRequestModal({
         </div>
 
         <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto px-6 py-4 space-y-4">
+          <UploadProgress progress={uploadProgress} />
+
           {error && (
             <div
               className="flex items-center gap-2 px-4 py-3 rounded-xl bg-rose-500/[0.08] text-rose-600 dark:text-rose-400 font-bold"
@@ -126,7 +134,8 @@ export default function StaffNewDesignRequestModal({
               className="w-full h-11 px-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 font-bold text-slate-700 dark:text-slate-200 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none [&>option]:dark:bg-slate-800"
               style={{ fontSize: "var(--dr-fs-body)" }}
             >
-              <option value="">اختر الجمعية...</option>
+              <option value="">اختر الجهة...</option>
+              <option value={ZAD}>— شركة زاد —</option>
               {charities.map((c) => (
                 <option key={c.id} value={c.id}>
                   {c.name}
@@ -271,6 +280,8 @@ export default function StaffNewDesignRequestModal({
         isOpen={isConfirmOpen}
         title="إنشاء الطلب"
         message="سيأخذ الطلب دوره مباشرة ويظهر للجمعية بموعد تسليم مؤكد. هل تريد المتابعة؟"
+        confirmLabel="إنشاء الطلب"
+        tone="primary"
         isPending={isSubmitting}
         onCancel={() => setIsConfirmOpen(false)}
         onConfirm={runSubmit}

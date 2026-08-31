@@ -243,6 +243,8 @@ export default function StaffReviewDesignRequestModal({
             ? `سيأخذ الطلب دوره بـ${parsedDays} من أيام العمل، ويُثبَّت موعد التسليم ويظهر للجمعية. هل تريد المتابعة؟`
             : "سيُرفض الطلب ويظهر السبب للجمعية في تبويب «المرفوضة». هل تريد المتابعة؟"
         }
+        confirmLabel={mode === "approve" ? "اعتماد الطلب" : "رفض الطلب"}
+        tone={mode === "approve" ? "primary" : "danger"}
         isPending={isSubmitting}
         onCancel={() => setIsConfirmOpen(false)}
         onConfirm={mode === "approve" ? runApprove : runReject}

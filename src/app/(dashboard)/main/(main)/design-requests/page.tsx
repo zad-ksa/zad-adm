@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/db";
 import { getSession } from "@/lib/auth";
+import { ZAD_COMPANY_LABEL } from "@/lib/designRequestProgress";
 import { redirect } from "next/navigation";
 import { hasPermission } from "@/lib/permissions";
 import { formatCivilDateTime } from "@/lib/businessDays";
@@ -14,6 +15,13 @@ export default async function DesignRequestsPage() {
     session &&
     session.userType !== "CHARITY_USER" &&
     hasPermission(session.role, session.permissions || [], "manage_design_requests");
+
+  // Separate from managing: destroying a request and its files is its own
+  // authority. Passed down so the button and the action agree.
+  const canDelete =
+    !!session &&
+    session.userType !== "CHARITY_USER" &&
+    hasPermission(session.role, session.permissions || [], "delete_design_requests");
 
   if (!canAccess) {
     redirect("/main");
@@ -43,6 +51,8 @@ export default async function DesignRequestsPage() {
       scheduledStartDate: r.scheduledStartDate,
       expectedCompletionDate: r.expectedCompletionDate,
       status: r.status,
+      deliveredAt: r.deliveredAt,
+      revisionRequestedAt: r.revisionRequestedAt,
     });
 
     return {
@@ -56,10 +66,13 @@ export default async function DesignRequestsPage() {
         submittedAt: formatCivilDateTime(r.submittedAt),
         scheduledStartDate: formatCivilDateTime(r.scheduledStartDate),
         expectedCompletionDate: formatCivilDateTime(r.expectedCompletionDate),
-        charityId: r.charity.id,
-        charityName: r.charity.name,
+        // null means the request belongs to Zad itself, not to a charity.
+        charityId: r.charity?.id ?? "",
+        charityName: r.charity?.name ?? ZAD_COMPANY_LABEL,
         status: r.status,
         rejectionReason: r.rejectionReason,
+        revisionNotes: r.revisionNotes,
+        autoApproved: r.autoApproved,
         types: r.types.map((t) => ({ id: t.id, name: t.name })),
         totalWorkingDays: r.baseWorkingDays + r.addedDays,
         addedDays: r.addedDays,
@@ -97,6 +110,7 @@ export default async function DesignRequestsPage() {
       initialItems={items}
       charities={charities}
       designTypes={designTypes}
+      canDelete={canDelete}
     />
   );
 }

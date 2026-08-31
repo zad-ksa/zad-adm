@@ -7,16 +7,29 @@ import DesignRequestCard, { type DesignRequestCardData } from "@/components/desi
 import EditDesignRequestModal from "@/components/design-requests/EditDesignRequestModal";
 import type { DesignRequestProgress } from "@/lib/designRequestProgress";
 import SuccessToast from "@/components/ui/SuccessToast";
+import ConfirmModal from "@/components/ui/ConfirmModal";
+import RequestRevisionModal from "@/components/design-requests/RequestRevisionModal";
+import { approveDeliveryByCharity } from "@/app/actions/designRequests";
 import NewDesignRequestForm from "./NewDesignRequestForm";
 import type { DesignTypeOption } from "@/components/design-requests/DesignTypePicker";
 
 type Item = {
   request: DesignRequestCardData & {
-    status: "UNDER_REVIEW" | "PENDING" | "COMPLETED" | "REJECTED";
+    status:
+      | "UNDER_REVIEW"
+      | "PENDING"
+      | "AWAITING_REVIEW"
+      | "REVISION_REQUESTED"
+      | "COMPLETED"
+      | "REJECTED";
     /** Written by staff when rejecting; this is what the charity reads. */
     rejectionReason?: string | null;
     /** Selected design types, for prefilling a resubmission. */
     typeIds?: string[];
+    /** Notes this charity sent back with a delivery. */
+    revisionNotes?: string | null;
+    /** Settled by the deadline rather than by this charity. */
+    autoApproved?: boolean;
   };
   progress: DesignRequestProgress;
 };
@@ -35,12 +48,17 @@ export default function DesignRequestsPortalClient({
   const router = useRouter();
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
-  type PortalTab = "UNDER_REVIEW" | "PENDING" | "COMPLETED" | "REJECTED";
+  type PortalTab = "AWAITING_REVIEW" | "UNDER_REVIEW" | "PENDING" | "REVISION_REQUESTED" | "COMPLETED" | "REJECTED";
   const [tab, setTab] = useState<PortalTab>("PENDING");
   const [resubmitId, setResubmitId] = useState<string | null>(null);
   const [toast, setToast] = useState<string | null>(null);
+  const [revisionFor, setRevisionFor] = useState<string | null>(null);
+  const [approvingId, setApprovingId] = useState<string | null>(null);
+  const [isApproving, setIsApproving] = useState(false);
 
   const reviewCount = initialItems.filter((it) => it.request.status === "UNDER_REVIEW").length;
+  const awaitingYouCount = initialItems.filter((it) => it.request.status === "AWAITING_REVIEW").length;
+  const revisionCount = initialItems.filter((it) => it.request.status === "REVISION_REQUESTED").length;
   const rejectedCount = initialItems.filter((it) => it.request.status === "REJECTED").length;
   const pendingCount = initialItems.filter((it) => it.request.status === "PENDING").length;
   const completedCount = initialItems.filter((it) => it.request.status === "COMPLETED").length;
@@ -105,7 +123,9 @@ export default function DesignRequestsPortalClient({
           <div className="flex items-center gap-1 bg-slate-50 dark:bg-[#111] border border-slate-100 dark:border-slate-800/80 rounded-xl p-1">
             {(
               [
+                { key: "AWAITING_REVIEW" as const, label: "بانتظار مراجعتك", count: awaitingYouCount },
                 { key: "PENDING" as const, label: "الطلبات الحالية", count: 0 },
+                { key: "REVISION_REQUESTED" as const, label: "قيد التعديل", count: revisionCount },
                 { key: "UNDER_REVIEW" as const, label: "قيد المراجعة", count: reviewCount },
                 { key: "COMPLETED" as const, label: "الطلبات المنجزة", count: 0 },
                 { key: "REJECTED" as const, label: "المرفوضة", count: rejectedCount },
@@ -158,7 +178,34 @@ export default function DesignRequestsPortalClient({
               request={it.request}
               progress={it.progress}
               actions={
-                it.request.status === "REJECTED" ? (
+                it.request.status === "AWAITING_REVIEW" ? (
+                  canCreate ? (
+                    <div className="w-full mt-2 space-y-2">
+                      <button
+                        onClick={() => setApprovingId(it.request.id)}
+                        className="w-full h-10 rounded-xl text-white bg-gradient-to-b from-[#17857c] via-primary to-[#0c645d] shadow-[var(--dr-shadow-cta)] hover:shadow-[var(--dr-shadow-cta-hover)] active:translate-y-px transition-all font-bold"
+                        style={{ fontSize: "var(--dr-fs-meta)" }}
+                      >
+                        اعتماد نهائي
+                      </button>
+                      <button
+                        onClick={() => setRevisionFor(it.request.id)}
+                        className="w-full h-8 rounded-lg text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800/60 transition-colors font-medium"
+                        style={{ fontSize: "var(--dr-fs-eyebrow)" }}
+                      >
+                        لديّ ملاحظات
+                      </button>
+                    </div>
+                  ) : null
+                ) : it.request.status === "REVISION_REQUESTED" ? (
+                  <div
+                    className="w-full mt-2 px-3 py-2.5 rounded-xl bg-amber-500/[0.08] text-amber-700 dark:text-amber-400 leading-relaxed"
+                    style={{ fontSize: "var(--dr-fs-meta)" }}
+                  >
+                    <span className="font-bold">ملاحظاتك: </span>
+                    {it.request.revisionNotes || "—"}
+                  </div>
+                ) : it.request.status === "REJECTED" ? (
                   <div className="w-full mt-2 space-y-2">
                     <div
                       className="px-3 py-2.5 rounded-xl bg-rose-500/[0.06] text-rose-600 dark:text-rose-400 leading-relaxed"
@@ -261,6 +308,44 @@ export default function DesignRequestsPortalClient({
           />
         );
       })()}
+
+      {revisionFor && (() => {
+        const target = initialItems.find((it) => it.request.id === revisionFor);
+        if (!target) return null;
+        return (
+          <RequestRevisionModal
+            requestId={target.request.id}
+            title={target.request.title}
+            attachments={target.request.attachments ?? []}
+            onClose={() => setRevisionFor(null)}
+            onSuccess={(message) => {
+              setRevisionFor(null);
+              setToast(message);
+              router.refresh();
+            }}
+          />
+        );
+      })()}
+
+      <ConfirmModal
+        isOpen={!!approvingId}
+        title="اعتماد نهائي"
+        message="سيُعتمد التسليم نهائياً وتُحذف مرفقات الطلب الأصلية من التخزين، وتبقى الملفات النهائية. لا يمكن التراجع ولا طلب تعديل بعدها."
+        confirmLabel="اعتماد نهائي"
+        tone="primary"
+        isPending={isApproving}
+        onCancel={() => setApprovingId(null)}
+        onConfirm={async () => {
+          if (!approvingId) return;
+          setIsApproving(true);
+          const res = await approveDeliveryByCharity(approvingId);
+          setIsApproving(false);
+          setApprovingId(null);
+          if (res.error) return setToast(res.error);
+          setToast("تم اعتماد التسليم نهائياً");
+          router.refresh();
+        }}
+      />
 
       <SuccessToast message={toast} onDismiss={() => setToast(null)} />
     </div>

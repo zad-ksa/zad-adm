@@ -5,6 +5,22 @@ import { toCivilDate, countBusinessDaysBetween } from "./businessDays";
  * reads the same green as the days before it, and a passed deadline is black.
  * Keeping variants nothing can produce only invites someone to style them.
  */
+/**
+ * How long the charity has to answer a delivery, and how long Zad has to
+ * revise once it is sent back. Both windows are the same 24 hours.
+ */
+/**
+ * What a request with no charity is called wherever a name is shown.
+ *
+ * Lives here, not beside the actions that use it: a "use server" file may only
+ * export async functions, and a plain const in one breaks the whole module —
+ * with an error naming some unrelated export, which is a genuinely misleading
+ * way to find out.
+ */
+export const ZAD_COMPANY_LABEL = "شركة زاد";
+
+export const REVIEW_WINDOW_MS = 24 * 60 * 60 * 1000;
+
 export type DesignRequestColor = "green" | "black" | "neutral";
 
 export type DesignRequestProgress = {
@@ -59,7 +75,17 @@ function remainingLabel(days: number): string {
 export function getDesignRequestProgress(args: {
   scheduledStartDate: Date | string;
   expectedCompletionDate: Date | string;
-  status?: "UNDER_REVIEW" | "PENDING" | "COMPLETED" | "REJECTED";
+  status?:
+    | "UNDER_REVIEW"
+    | "PENDING"
+    | "COMPLETED"
+    | "REJECTED"
+    | "AWAITING_REVIEW"
+    | "REVISION_REQUESTED";
+  /** For AWAITING_REVIEW: when it was delivered. */
+  deliveredAt?: Date | string | null;
+  /** For REVISION_REQUESTED: when the charity sent it back. */
+  revisionRequestedAt?: Date | string | null;
   /** Injectable for testing; defaults to now. */
   now?: Date;
 }): DesignRequestProgress {
@@ -86,6 +112,50 @@ export function getDesignRequestProgress(args: {
       isOverdue: false,
       isCompleted: false,
       label: "قيد المراجعة",
+    };
+  }
+
+  // The two review windows are measured in HOURS off a fixed instant, not in
+  // business days off a schedule — 24 hours means 24 hours, including a Friday.
+  // So they are handled here rather than falling through to the day arithmetic
+  // below, which would answer a different question entirely.
+  if (args.status === "AWAITING_REVIEW" || args.status === "REVISION_REQUESTED") {
+    const startedRaw =
+      args.status === "AWAITING_REVIEW" ? args.deliveredAt : args.revisionRequestedAt;
+    const started = startedRaw ? new Date(startedRaw) : null;
+    const now = args.now ?? new Date();
+
+    const isReview = args.status === "AWAITING_REVIEW";
+    const waiting = isReview ? "بانتظار مراجعة الجمعية" : "قيد التعديل";
+
+    if (!started) {
+      return { color: "neutral", businessDaysElapsed: 0, daysRemaining: 0, isOverdue: false, isCompleted: false, label: waiting };
+    }
+
+    const msLeft = started.getTime() + REVIEW_WINDOW_MS - now.getTime();
+
+    if (msLeft <= 0) {
+      // Past the window. For a delivery this is a gap of at most an hour before
+      // the cron settles it; for a revision it is genuinely late, and reads the
+      // same as any other overdue request.
+      return {
+        color: isReview ? "neutral" : "black",
+        businessDaysElapsed: 0,
+        daysRemaining: 0,
+        isOverdue: !isReview,
+        isCompleted: false,
+        label: isReview ? "انتهت مهلة المراجعة" : "مضى وقت التسليم",
+      };
+    }
+
+    const hoursLeft = Math.ceil(msLeft / (60 * 60 * 1000));
+    return {
+      color: "green",
+      businessDaysElapsed: 0,
+      daysRemaining: 0,
+      isOverdue: false,
+      isCompleted: false,
+      label: `${waiting} — ${hoursLeft === 1 ? "ساعة واحدة" : hoursLeft === 2 ? "ساعتان" : `${hoursLeft} ساعة`}`,
     };
   }
 

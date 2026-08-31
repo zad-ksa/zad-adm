@@ -4,6 +4,8 @@ import { useState } from "react";
 import { X, Paperclip, Send, Loader2, AlertTriangle, Info, Trash2 } from "lucide-react";
 import { createDesignRequestFromPortal, resubmitDesignRequest } from "@/app/actions/designRequests";
 import ConfirmModal from "@/components/ui/ConfirmModal";
+import UploadProgress from "@/components/ui/UploadProgress";
+import type { UploadProgress as Progress } from "@/lib/clientUpload";
 import { ACCEPT_ATTRIBUTE, maxBytesFor, maxLabelFor } from "@/lib/uploadPurposes";
 import { uploadDesignRequestFiles } from "@/components/design-requests/uploadDesignRequestFiles";
 import DesignTypePicker, {
@@ -47,6 +49,7 @@ export default function NewDesignRequestForm({
   // only applied on submit, so cancelling really cancels.
   const [removedAttachmentIds, setRemovedAttachmentIds] = useState<string[]>([]);
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState<Progress | null>(null);
   // Attachment problems get their own slot next to the file picker; the shared
   // `error` banner sits at the top of the form, out of view once the user has
   // scrolled down to attach something.
@@ -81,7 +84,7 @@ export default function NewDesignRequestForm({
     try {
       let attachments;
       try {
-        attachments = await uploadDesignRequestFiles(files);
+        attachments = await uploadDesignRequestFiles(files, setUploadProgress);
       } catch (uploadErr) {
         setFileError(uploadErr instanceof Error ? uploadErr.message : "تعذّر رفع المرفقات");
         return;
@@ -116,6 +119,7 @@ export default function NewDesignRequestForm({
     } catch (err: any) {
       setError(err.message || "حدث خطأ أثناء إرسال الطلب");
     } finally {
+      setUploadProgress(null);
       setIsSubmitting(false);
     }
   };
@@ -164,6 +168,8 @@ export default function NewDesignRequestForm({
               {resubmit.rejectionReason}
             </div>
           )}
+
+          <UploadProgress progress={uploadProgress} />
 
           {error && (
             <div
@@ -355,6 +361,8 @@ export default function NewDesignRequestForm({
             ? "سيعود الطلب إلى قائمة المراجعة لدى فريق زاد، ويُحذف سبب الرفض السابق. هل تريد المتابعة؟"
             : "سيُرسل الطلب إلى فريق زاد للمراجعة خلال 24 ساعة. هل تريد المتابعة؟"
         }
+        confirmLabel={isResubmit ? "إعادة الرفع" : "إرسال الطلب"}
+        tone="primary"
         isPending={isSubmitting}
         onCancel={() => setIsConfirmOpen(false)}
         onConfirm={runSubmit}

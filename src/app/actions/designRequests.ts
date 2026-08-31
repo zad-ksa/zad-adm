@@ -8,6 +8,7 @@ import { hasPermission, isAdmin } from "@/lib/permissions";
 import { revalidatePath } from "next/cache";
 import { createAppNotification } from "./notifications";
 import { logAudit } from "@/lib/auditLog";
+import { REVIEW_WINDOW_MS, ZAD_COMPANY_LABEL } from "@/lib/designRequestProgress";
 import { v2 as cloudinary } from "cloudinary";
 import {
   toCivilDate,
@@ -34,7 +35,8 @@ export type DesignRequestAttachmentInput = {
 };
 
 export type CreateDesignRequestInput = {
-  charityId: string;
+  /** null = the request belongs to Zad itself rather than a charity. */
+  charityId: string | null;
   title: string;
   description?: string;
   attachments: DesignRequestAttachmentInput[];
@@ -44,6 +46,26 @@ export type CreateDesignRequestInput = {
 };
 
 // ── guards ──────────────────────────────────────────────────────────────────
+
+/**
+ * Deleting is separated from managing on purpose.
+ *
+ * Every other action on a request can be walked back — a rejection can be
+ * resubmitted, a schedule can be moved. Deleting destroys the brief, the
+ * delivered files and the record of what was agreed, all at once and from
+ * storage as well as the database. That is not the same authority as running
+ * the queue day to day, so it is not the same permission.
+ */
+async function requireDesignDeletePermission() {
+  const session = await getSession();
+  if (!session || session.userType === "CHARITY_USER") {
+    throw new Error("غير مصرح");
+  }
+  if (!hasPermission(session.role, session.permissions || [], "delete_design_requests")) {
+    throw new Error("غير مصرح لك بحذف طلبات التصاميم");
+  }
+  return session;
+}
 
 async function requireDesignStaff() {
   const session = await getSession();
@@ -90,9 +112,10 @@ async function requireCharityMemberPermission(charityId: string, permission: str
 
 // ── scheduling ──────────────────────────────────────────────────────────────
 
+
 async function computeSchedule(
   tx: any,
-  charityId: string,
+  charityId: string | null,
   submittedAt: Date,
   workingDays: number
 ) {
@@ -136,7 +159,7 @@ async function resolveTypes(tx: Prisma.TransactionClient, typeIds: string[] | un
 }
 
 async function createDesignRequest(params: {
-  charityId: string;
+  charityId: string | null;
   title: string;
   description?: string;
   attachments: DesignRequestAttachmentInput[];
@@ -204,16 +227,21 @@ async function notifyDesignStaff(charityName: string, title: string) {
 
 export async function createDesignRequestFromPortal(input: CreateDesignRequestInput) {
   try {
-    const session = await requireCharityMemberPermission(input.charityId, "create_design_requests");
+    // The Zad-company option exists only on the staff form; a charity
+    // cannot raise a request that belongs to nobody.
+    const charityId = input.charityId;
+    if (!charityId) return { error: "يرجى اختيار الجمعية" };
+
+    const session = await requireCharityMemberPermission(charityId, "create_design_requests");
 
     if (!input.title?.trim()) return { error: "يرجى إدخال عنوان الطلب" };
     if (input.attachments.length > 10) return { error: "الحد الأقصى 10 مرفقات لكل طلب" };
 
-    const charity = await prisma.charity.findUnique({ where: { id: input.charityId }, select: { name: true } });
+    const charity = await prisma.charity.findUnique({ where: { id: charityId }, select: { name: true } });
     if (!charity) return { error: "الجمعية غير موجودة" };
 
     const created = await createDesignRequest({
-      charityId: input.charityId,
+      charityId,
       title: input.title,
       description: input.description,
       attachments: input.attachments,
@@ -227,7 +255,7 @@ export async function createDesignRequestFromPortal(input: CreateDesignRequestIn
     await notifyDesignStaff(charity.name, input.title.trim());
 
     revalidatePath("/main/design-requests");
-    revalidatePath(`/portal/${encodeURIComponent(charity.name)}/design-requests`);
+    revalidateCharityPortal(charity?.name);
     return { success: true, id: created.id };
   } catch (error: any) {
     console.error("Error creating design request from portal:", error);
@@ -240,10 +268,15 @@ export async function createDesignRequestByStaff(input: CreateDesignRequestInput
     const session = await requireDesignStaff();
 
     if (!input.title?.trim()) return { error: "يرجى إدخال عنوان الطلب" };
-    if (!input.charityId) return { error: "يرجى اختيار الجمعية" };
+    // Only checked for undefined: null is a real choice here (Zad company),
+    // and a falsy test would reject exactly the option this adds.
+    if (input.charityId === undefined) return { error: "يرجى اختيار الجهة" };
 
-    const charity = await prisma.charity.findUnique({ where: { id: input.charityId }, select: { name: true } });
-    if (!charity) return { error: "الجمعية غير موجودة" };
+    // No lookup for a Zad-company request — there is nothing to look up.
+    const charity = input.charityId
+      ? await prisma.charity.findUnique({ where: { id: input.charityId }, select: { name: true } })
+      : null;
+    if (input.charityId && !charity) return { error: "الجمعية غير موجودة" };
 
     const created = await createDesignRequest({
       charityId: input.charityId,
@@ -258,7 +291,7 @@ export async function createDesignRequestByStaff(input: CreateDesignRequestInput
     });
 
     revalidatePath("/main/design-requests");
-    revalidatePath(`/portal/${encodeURIComponent(charity.name)}/design-requests`);
+    revalidateCharityPortal(charity?.name);
     return { success: true, id: created.id };
   } catch (error: any) {
     console.error("Error creating design request by staff:", error);
@@ -421,6 +454,7 @@ export async function resubmitDesignRequest(input: {
     });
     if (!existing) return { error: "الطلب غير موجود" };
 
+    if (!existing.charityId) return { error: "هذا الطلب لا يتبع جمعية" };
     await requireCharityMemberPermission(existing.charityId, "create_design_requests");
 
     // Only a rejected request can be resubmitted. Without this, the same button
@@ -470,15 +504,200 @@ export async function resubmitDesignRequest(input: {
       { isolationLevel: "Serializable" }
     );
 
-    await notifyDesignStaff(existing.charity.name, input.title.trim());
+    await notifyDesignStaff(existing.charity?.name ?? ZAD_COMPANY_LABEL, input.title.trim());
 
     revalidatePath("/main/design-requests");
-    revalidatePath(`/portal/${encodeURIComponent(existing.charity.name)}/design-requests`);
+    revalidateCharityPortal(existing.charity?.name);
     return { success: true };
   } catch (error) {
     console.error("Error resubmitting design request:", error);
     return { error: error instanceof Error ? error.message : "حدث خطأ أثناء إعادة رفع الطلب" };
   }
+}
+
+/**
+ * Deletes a request's BRIEF attachments from Cloudinary and from the database.
+ *
+ * The single place this happens. It used to sit inside "mark complete", which
+ * made delivery irreversible the instant a designer pressed the button — before
+ * the charity had seen anything. Now it is only reached once the delivery is
+ * genuinely final: approved by the charity, approved automatically after the
+ * deadline, or delivered after the one permitted revision round.
+ *
+ * The DELIVERABLE files are never touched — they are what the charity keeps.
+ */
+async function purgeBriefAttachments(requestId: string) {
+  const briefs = await prisma.designRequestAttachment.findMany({
+    where: { requestId, kind: "BRIEF" },
+    select: { id: true, publicId: true, resourceType: true },
+  });
+
+  // Best effort per file: one asset that refuses to delete must not leave the
+  // request stuck half-finalised.
+  for (const att of briefs) {
+    try {
+      await cloudinary.uploader.destroy(att.publicId, { resource_type: att.resourceType || "raw" });
+    } catch (err) {
+      console.error("Failed to delete design-request attachment from Cloudinary", att.publicId, err);
+    }
+  }
+
+  await prisma.designRequestAttachment.deleteMany({ where: { requestId, kind: "BRIEF" } });
+}
+
+/** A Zad-company request has no portal to revalidate. */
+function revalidateCharityPortal(charityName: string | null | undefined) {
+  if (!charityName) return;
+  revalidatePath(`/portal/${encodeURIComponent(charityName)}/design-requests`);
+}
+
+
+/**
+ * The charity signs off on a delivery. This is the point of no return: the
+ * brief attachments go, and only the delivered files remain.
+ */
+export async function approveDeliveryByCharity(id: string) {
+  try {
+    const request = await prisma.designRequest.findUnique({
+      where: { id },
+      select: { id: true, charityId: true, status: true, charity: { select: { name: true } } },
+    });
+    if (!request) return { error: "الطلب غير موجود" };
+    if (!request.charityId) return { error: "هذا الطلب لا يتبع جمعية" };
+
+    await requireCharityMemberPermission(request.charityId, "create_design_requests");
+
+    if (request.status !== "AWAITING_REVIEW") return { error: "هذا الطلب ليس بانتظار مراجعتك" };
+
+    await prisma.designRequest.update({
+      where: { id },
+      data: { status: "COMPLETED", completedAt: new Date() },
+    });
+    await purgeBriefAttachments(id);
+
+    revalidatePath("/main/design-requests");
+    revalidateCharityPortal(request.charity?.name);
+    return { success: true };
+  } catch (error) {
+    console.error("Error approving delivery:", error);
+    return { error: error instanceof Error ? error.message : "حدث خطأ أثناء الاعتماد" };
+  }
+}
+
+/**
+ * The charity sends the delivery back once, with notes.
+ *
+ * Allowed exactly once — the next delivery from Zad is final. That is why the
+ * guard is on AWAITING_REVIEW alone: a request that has already been through a
+ * revision round never returns to that state, so it can never be sent back
+ * twice without any extra bookkeeping.
+ *
+ * Attachments may be pruned and added here, the same as when resubmitting a
+ * rejected request — the charity is re-briefing, not just commenting.
+ */
+export async function requestDesignRevision(input: {
+  requestId: string;
+  notes: string;
+  removeAttachmentIds?: string[];
+  addAttachments?: DesignRequestAttachmentInput[];
+}) {
+  try {
+    const request = await prisma.designRequest.findUnique({
+      where: { id: input.requestId },
+      select: { id: true, charityId: true, status: true, charity: { select: { name: true } } },
+    });
+    if (!request) return { error: "الطلب غير موجود" };
+    if (!request.charityId) return { error: "هذا الطلب لا يتبع جمعية" };
+
+    await requireCharityMemberPermission(request.charityId, "create_design_requests");
+
+    if (request.status !== "AWAITING_REVIEW") return { error: "لا يمكن طلب التعديل على هذا الطلب" };
+
+    const notes = (input.notes || "").trim();
+    if (notes.length < 5) return { error: "يرجى كتابة ملاحظات التعديل (5 أحرف على الأقل)" };
+    if (notes.length > 2000) return { error: "الملاحظات طويلة جداً" };
+
+    const remove = input.removeAttachmentIds ?? [];
+    if (remove.length) {
+      // Removed for real, storage included — the charity is saying these are
+      // no longer part of the brief.
+      const gone = await prisma.designRequestAttachment.findMany({
+        where: { requestId: input.requestId, kind: "BRIEF", id: { in: remove } },
+        select: { publicId: true, resourceType: true },
+      });
+      for (const att of gone) {
+        try {
+          await cloudinary.uploader.destroy(att.publicId, { resource_type: att.resourceType || "raw" });
+        } catch (err) {
+          console.error("Failed to delete design-request attachment from Cloudinary", att.publicId, err);
+        }
+      }
+      await prisma.designRequestAttachment.deleteMany({
+        where: { requestId: input.requestId, kind: "BRIEF", id: { in: remove } },
+      });
+    }
+
+    await prisma.designRequest.update({
+      where: { id: input.requestId },
+      data: {
+        status: "REVISION_REQUESTED",
+        revisionRequestedAt: new Date(),
+        revisionNotes: notes,
+        attachments: input.addAttachments?.length
+          ? { create: input.addAttachments.map((a) => ({ ...a, kind: "BRIEF" as const })) }
+          : undefined,
+      },
+    });
+
+    revalidatePath("/main/design-requests");
+    revalidateCharityPortal(request.charity?.name);
+    return { success: true };
+  } catch (error) {
+    console.error("Error requesting revision:", error);
+    return { error: error instanceof Error ? error.message : "حدث خطأ أثناء طلب التعديل" };
+  }
+}
+
+/**
+ * Finalises every delivery whose 24-hour review window has passed.
+ *
+ * Called by the hourly cron. Lives here rather than in the route so it shares
+ * purgeBriefAttachments with the manual paths — three ways to finalise a
+ * request, one implementation of what finalising means.
+ *
+ * Each request is settled on its own: one charity whose Cloudinary assets
+ * refuse to delete must not stop the rest of the sweep.
+ */
+export async function finalizeExpiredDeliveries() {
+  const cutoff = new Date(Date.now() - REVIEW_WINDOW_MS);
+
+  const due = await prisma.designRequest.findMany({
+    where: { status: "AWAITING_REVIEW", deliveredAt: { lt: cutoff } },
+    select: { id: true, charity: { select: { name: true } } },
+  });
+
+  let approved = 0;
+  for (const request of due) {
+    try {
+      // Re-checked in the update itself: a charity approving in the same
+      // minute this runs should win, and the status filter here means the
+      // second writer changes nothing.
+      const res = await prisma.designRequest.updateMany({
+        where: { id: request.id, status: "AWAITING_REVIEW" },
+        data: { status: "COMPLETED", completedAt: new Date(), autoApproved: true },
+      });
+      if (res.count === 0) continue;
+
+      await purgeBriefAttachments(request.id);
+      revalidateCharityPortal(request.charity?.name);
+      approved++;
+    } catch (err) {
+      console.error("Failed to auto-approve design request", request.id, err);
+    }
+  }
+
+  if (approved) revalidatePath("/main/design-requests");
+  return { checked: due.length, approved };
 }
 
 export async function markDesignRequestComplete(
@@ -500,17 +719,15 @@ export async function markDesignRequestComplete(
     if (!request) return { error: "الطلب غير موجود" };
     if (request.status === "COMPLETED") return { success: true };
 
-    // Best-effort — never blocks marking the request complete.
-    for (const att of request.attachments) {
-      try {
-        await cloudinary.uploader.destroy(att.publicId, { resource_type: att.resourceType || "raw" });
-      } catch (err) {
-        console.error("Failed to delete design-request attachment from Cloudinary", att.publicId, err);
-      }
-    }
+    // Where the delivery lands depends on whether this is the first one.
+    //
+    // First time: the charity gets 24 hours to look at it, so nothing is
+    // deleted and the request waits in AWAITING_REVIEW. After a revision round:
+    // the charity has already had its say and revision is allowed once, so this
+    // delivery is final and the brief attachments go now.
+    const isRevisionDelivery = request.status === "REVISION_REQUESTED";
 
     await prisma.$transaction([
-      prisma.designRequestAttachment.deleteMany({ where: { requestId: id, kind: "BRIEF" } }),
       ...(deliverables.length
         ? [
             prisma.designRequestAttachment.createMany({
@@ -520,12 +737,18 @@ export async function markDesignRequestComplete(
         : []),
       prisma.designRequest.update({
         where: { id },
-        data: { status: "COMPLETED", completedAt: new Date(), completedById: session.id },
+        data: isRevisionDelivery
+          ? { status: "COMPLETED", completedAt: new Date(), completedById: session.id }
+          : { status: "AWAITING_REVIEW", deliveredAt: new Date(), completedById: session.id },
       }),
     ]);
 
+    // After the transaction, so a failed Cloudinary call cannot leave the
+    // request unchanged while its files are already gone.
+    if (isRevisionDelivery) await purgeBriefAttachments(id);
+
     revalidatePath("/main/design-requests");
-    revalidatePath(`/portal/${encodeURIComponent(request.charity.name)}/design-requests`);
+    revalidateCharityPortal(request.charity?.name);
     return { success: true };
   } catch (error: any) {
     console.error("Error completing design request:", error);
@@ -533,10 +756,17 @@ export async function markDesignRequestComplete(
   }
 }
 
+/**
+ * Removes a request and every file that belongs to it.
+ *
+ * `attachments` is fetched unfiltered — both the BRIEF the charity sent and
+ * the DELIVERABLE Zad produced. Deleting only one kind would leave the other
+ * orphaned in Cloudinary with no row left pointing at it, which is unbillable
+ * storage nobody can ever find again.
+ */
 export async function deleteDesignRequest(id: string) {
   try {
-    const session = await requireDesignStaff();
-    void session;
+    await requireDesignDeletePermission();
 
     const request = await prisma.designRequest.findUnique({
       where: { id },
@@ -555,7 +785,7 @@ export async function deleteDesignRequest(id: string) {
     await prisma.designRequest.delete({ where: { id } });
 
     revalidatePath("/main/design-requests");
-    revalidatePath(`/portal/${encodeURIComponent(request.charity.name)}/design-requests`);
+    revalidateCharityPortal(request.charity?.name);
     return { success: true };
   } catch (error: any) {
     console.error("Error deleting design request:", error);
@@ -595,7 +825,7 @@ export async function rescheduleDesignRequest(id: string, newStartDate: Date) {
     });
 
     revalidatePath("/main/design-requests");
-    revalidatePath(`/portal/${encodeURIComponent(request.charity.name)}/design-requests`);
+    revalidateCharityPortal(request.charity?.name);
     return { success: true };
   } catch (error: any) {
     console.error("Error rescheduling design request:", error);
@@ -652,7 +882,7 @@ export async function rescheduleCharityQueue(charityId: string, startDate: Date)
         }
 
         revalidatePath("/main/design-requests");
-        revalidatePath(`/portal/${encodeURIComponent(charity.name)}/design-requests`);
+        revalidateCharityPortal(charity?.name);
         return { success: true };
       },
       { isolationLevel: "Serializable" }
@@ -846,7 +1076,7 @@ export async function extendDesignRequestDays(id: string, extraDays: number, rea
     });
 
     revalidatePath("/main/design-requests");
-    revalidatePath(`/portal/${encodeURIComponent(request.charity.name)}/design-requests`);
+    revalidateCharityPortal(request.charity?.name);
     return { success: true };
   } catch (error) {
     console.error("Error extending design request:", error);
@@ -907,6 +1137,7 @@ export async function updateDesignRequestDetails(input: {
       const session = await requireDesignStaff();
       actor = { type: "EMPLOYEE", id: session.id, name: session.name };
     } catch {
+      if (!request.charityId) throw new Error("هذا الطلب لا يتبع جمعية");
       const session = await requireCharityMemberPermission(
         request.charityId,
         "create_design_requests"
@@ -977,7 +1208,7 @@ export async function updateDesignRequestDetails(input: {
     });
 
     revalidatePath("/main/design-requests");
-    revalidatePath(`/portal/${encodeURIComponent(request.charity.name)}/design-requests`);
+    revalidateCharityPortal(request.charity?.name);
     return { success: true };
   } catch (error) {
     console.error("Error editing design request:", error);

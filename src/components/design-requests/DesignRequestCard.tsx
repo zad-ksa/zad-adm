@@ -40,10 +40,19 @@ export default function DesignRequestCard({
   request,
   progress,
   actions,
+  footer,
 }: {
   request: DesignRequestCardData;
   progress: DesignRequestProgress;
   actions?: ReactNode;
+  /**
+   * Rendered below the status actions and separated from them.
+   *
+   * For things that apply whatever state the request is in — deleting it,
+   * today — so they do not have to be repeated inside every status branch,
+   * which is how the delete button ended up available on one tab only.
+   */
+  footer?: ReactNode;
 }) {
   const [expanded, setExpanded] = useState(false);
 
@@ -223,6 +232,8 @@ export default function DesignRequestCard({
             {actions}
           </div>
         )}
+
+        {footer && <div className={actions ? "" : "pt-4 border-t border-slate-100 dark:border-slate-800/60"}>{footer}</div>}
       </div>
     </div>
   );

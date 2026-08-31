@@ -1,65 +1,58 @@
 "use client";
 
 import { useState } from "react";
-import { X, Paperclip, Loader2, AlertTriangle, Save, Trash2 } from "lucide-react";
-import { updateDesignRequestDetails } from "@/app/actions/designRequests";
+import { X, Paperclip, Loader2, AlertTriangle, Trash2, Send } from "lucide-react";
+import { requestDesignRevision } from "@/app/actions/designRequests";
 import { uploadDesignRequestFiles } from "./uploadDesignRequestFiles";
+import { ACCEPT_ATTRIBUTE, maxBytesFor, maxLabelFor } from "@/lib/uploadPurposes";
 import ConfirmModal from "@/components/ui/ConfirmModal";
 import UploadProgress from "@/components/ui/UploadProgress";
 import type { UploadProgress as Progress } from "@/lib/clientUpload";
-import { ACCEPT_ATTRIBUTE, maxBytesFor, maxLabelFor } from "@/lib/uploadPurposes";
 
-const DESIGN_MAX = maxBytesFor("design_request");
-const DESIGN_MAX_LABEL = maxLabelFor("design_request");
-
-export type EditableRequest = {
-  id: string;
-  title: string;
-  description: string | null;
-  attachments: { id: string; fileUrl: string; fileName: string; fileSize: number | null }[];
-};
+const MAX_BYTES = maxBytesFor("design_request");
+const MAX_LABEL = maxLabelFor("design_request");
 
 /**
- * Edits a pending request's brief — its description and its attachments.
+ * The charity sends a delivery back with notes — once.
  *
- * Used by both the charity portal and the Zad dashboard, because the rules are
- * the same on both sides; only the server decides who may call it.
+ * This is a re-brief, not a comment box: alongside the notes the charity can
+ * drop attachments that no longer apply and add new ones, because "change this"
+ * usually comes with a new reference file.
  *
- * Removals are staged, not applied on click: a file is only detached when the
- * whole edit is saved. Deleting from Cloudinary the moment someone taps a bin
- * icon would make "cancel" a lie.
+ * The modal states plainly that this is the only round. After Zad delivers
+ * again the request is approved outright, so a charity that saves half its
+ * notes for "next time" would never get to give them.
  */
-export default function EditDesignRequestModal({
-  request,
+export default function RequestRevisionModal({
+  requestId,
+  title,
+  attachments,
   onClose,
   onSuccess,
 }: {
-  request: EditableRequest;
+  requestId: string;
+  title: string;
+  attachments: { id: string; fileName: string }[];
   onClose: () => void;
   onSuccess: (message: string) => void;
 }) {
-  const [description, setDescription] = useState(request.description ?? "");
+  const [notes, setNotes] = useState("");
   const [removed, setRemoved] = useState<string[]>([]);
   const [files, setFiles] = useState<File[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [fileError, setFileError] = useState<string | null>(null);
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
   const [uploadProgress, setUploadProgress] = useState<Progress | null>(null);
-  // Attachment problems render beside the picker rather than in the banner at
-  // the top of the modal, which scrolls out of view.
-  const [fileError, setFileError] = useState<string | null>(null);
 
-  const kept = request.attachments.filter((a) => !removed.includes(a.id));
-  const totalAfter = kept.length + files.length;
-
-  const descriptionChanged = description.trim() !== (request.description ?? "").trim();
-  const hasChanges = descriptionChanged || removed.length > 0 || files.length > 0;
+  const kept = attachments.filter((a) => !removed.includes(a.id));
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
     setFileError(null);
-    if (totalAfter > 10) return setFileError("الحد الأقصى 10 مرفقات لكل طلب");
+    if (notes.trim().length < 5) return setError("يرجى كتابة ملاحظات التعديل (5 أحرف على الأقل)");
+    if (kept.length + files.length > 10) return setFileError("الحد الأقصى 10 مرفقات لكل طلب");
     setIsConfirmOpen(true);
   };
 
@@ -67,7 +60,6 @@ export default function EditDesignRequestModal({
     setIsConfirmOpen(false);
     setIsSubmitting(true);
     try {
-      // Uploaded only on save, so an abandoned edit leaves nothing behind.
       let uploaded;
       try {
         uploaded = files.length ? await uploadDesignRequestFiles(files, setUploadProgress) : [];
@@ -75,19 +67,17 @@ export default function EditDesignRequestModal({
         setFileError(uploadErr instanceof Error ? uploadErr.message : "تعذّر رفع المرفقات");
         return;
       }
-      const res = await updateDesignRequestDetails({
-        requestId: request.id,
-        description: descriptionChanged ? description : undefined,
+
+      const res = await requestDesignRevision({
+        requestId,
+        notes,
         removeAttachmentIds: removed,
         addAttachments: uploaded,
       });
-      if (res.error) {
-        setError(res.error);
-        return;
-      }
-      onSuccess("تم حفظ التعديل");
+      if (res.error) return setError(res.error);
+      onSuccess("تم إرسال الملاحظات، وأمام زاد 24 ساعة للتعديل");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "حدث خطأ أثناء حفظ التعديل");
+      setError(err instanceof Error ? err.message : "حدث خطأ أثناء إرسال الملاحظات");
     } finally {
       setUploadProgress(null);
       setIsSubmitting(false);
@@ -98,18 +88,18 @@ export default function EditDesignRequestModal({
     <div className="design-requests-ui fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-6 bg-slate-950/60 backdrop-blur-sm">
       <div
         dir="rtl"
-        className="bg-white dark:bg-[#0A0A0A] rounded-t-2xl sm:rounded-2xl border border-slate-200 dark:border-slate-800 shadow-[var(--dr-shadow-card)] w-full sm:max-w-lg max-h-[92dvh] sm:max-h-[90vh] flex flex-col overflow-hidden"
+        className="bg-white dark:bg-[#0A0A0A] rounded-t-2xl sm:rounded-2xl border border-slate-200 dark:border-slate-800 shadow-[var(--dr-shadow-card)] w-full sm:max-w-lg max-h-[92dvh] flex flex-col overflow-hidden"
       >
         <div className="flex items-center justify-between gap-3 px-6 py-4 border-b border-slate-100 dark:border-slate-800 shrink-0">
           <h2
             className="font-bold text-slate-900 dark:text-slate-100 truncate"
             style={{ fontSize: "var(--dr-fs-title)" }}
           >
-            تعديل: {request.title}
+            ملاحظات على: {title}
           </h2>
           <button
             onClick={onClose}
-            className="shrink-0 w-8 h-8 flex items-center justify-center text-slate-400 dark:text-slate-500 hover:bg-primary/[0.08] hover:text-primary dark:hover:text-teal-300 rounded-full transition-colors"
+            className="shrink-0 w-8 h-8 flex items-center justify-center text-slate-400 hover:bg-primary/[0.08] hover:text-primary dark:hover:text-teal-300 rounded-full transition-colors"
           >
             <X className="w-4 h-4" />
           </button>
@@ -117,21 +107,23 @@ export default function EditDesignRequestModal({
 
         <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto px-6 py-4 space-y-4">
           <p
-            className="rounded-xl bg-slate-100 dark:bg-slate-800/60 text-slate-500 dark:text-slate-400 px-4 py-3"
+            className="rounded-xl bg-amber-500/[0.08] text-amber-700 dark:text-amber-400 px-4 py-3 leading-relaxed"
             style={{ fontSize: "var(--dr-fs-meta)" }}
           >
-            التعديل لا يغيّر نوع التصميم ولا موعد التسليم ولا دور الطلب في التنفيذ.
+            <span className="font-bold">التعديل متاح مرة واحدة.</span>{" "}
+            أمام فريق زاد 24 ساعة لتنفيذ ملاحظاتك، وبعد تسليمها يُعتمد الطلب نهائياً — فاذكر كل
+            ما تريد تغييره الآن.
           </p>
 
           <UploadProgress progress={uploadProgress} />
 
           {error && (
             <div
-              className="flex items-center gap-2 px-4 py-3 rounded-xl bg-rose-500/[0.08] text-rose-600 dark:text-rose-400 font-bold"
+              className="flex items-start gap-2 px-4 py-3 rounded-xl bg-rose-500/[0.08] text-rose-600 dark:text-rose-400 font-bold"
               style={{ fontSize: "var(--dr-fs-meta)" }}
             >
-              <AlertTriangle className="w-4 h-4 shrink-0" />
-              {error}
+              <AlertTriangle className="w-4 h-4 shrink-0 mt-px" />
+              <span>{error}</span>
             </div>
           )}
 
@@ -140,36 +132,28 @@ export default function EditDesignRequestModal({
               className="block font-bold text-slate-500 dark:text-slate-400 mb-2"
               style={{ fontSize: "var(--dr-fs-meta)" }}
             >
-              تفاصيل الطلب
+              ما الذي تريد تعديله؟
             </label>
             <textarea
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              rows={4}
-              placeholder="اشرح ما تحتاج تصميمه بالتفصيل..."
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              rows={5}
+              placeholder="اشرح التعديلات المطلوبة بالتفصيل..."
               className="w-full px-3 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none resize-none placeholder:text-slate-400 dark:placeholder:text-slate-600"
               style={{ fontSize: "var(--dr-fs-body)" }}
             />
           </div>
 
-          <div>
-            <label
-              className="block font-bold text-slate-500 dark:text-slate-400 mb-2"
-              style={{ fontSize: "var(--dr-fs-meta)" }}
-            >
-              المرفقات الحالية
-            </label>
-
-            {request.attachments.length === 0 ? (
-              <p
-                className="text-slate-400 dark:text-slate-600"
+          {attachments.length > 0 && (
+            <div>
+              <label
+                className="block font-bold text-slate-500 dark:text-slate-400 mb-2"
                 style={{ fontSize: "var(--dr-fs-meta)" }}
               >
-                لا توجد مرفقات.
-              </p>
-            ) : (
+                مرفقات الطلب الحالية
+              </label>
               <div className="space-y-1.5">
-                {request.attachments.map((att) => {
+                {attachments.map((att) => {
                   const isRemoved = removed.includes(att.id);
                   return (
                     <div
@@ -182,18 +166,15 @@ export default function EditDesignRequestModal({
                       style={{ fontSize: "var(--dr-fs-meta)" }}
                     >
                       <Paperclip className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                      <a
-                        href={att.fileUrl}
-                        target="_blank"
-                        rel="noreferrer"
+                      <span
                         className={`flex-1 truncate font-bold ${
                           isRemoved
                             ? "line-through text-rose-500 dark:text-rose-400"
-                            : "text-slate-700 dark:text-slate-300 hover:text-primary"
+                            : "text-slate-700 dark:text-slate-300"
                         }`}
                       >
                         {att.fileName}
-                      </a>
+                      </span>
                       <button
                         type="button"
                         onClick={() =>
@@ -202,11 +183,9 @@ export default function EditDesignRequestModal({
                           )
                         }
                         className={`shrink-0 font-bold ${
-                          isRemoved
-                            ? "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
-                            : "text-slate-400 hover:text-rose-500"
+                          isRemoved ? "text-slate-500 hover:text-slate-700" : "text-slate-400 hover:text-rose-500"
                         }`}
-                        title={isRemoved ? "تراجع عن الحذف" : "حذف عند الحفظ"}
+                        title={isRemoved ? "تراجع عن الحذف" : "حذف عند الإرسال"}
                       >
                         {isRemoved ? "تراجع" : <Trash2 className="w-3.5 h-3.5" />}
                       </button>
@@ -214,8 +193,8 @@ export default function EditDesignRequestModal({
                   );
                 })}
               </div>
-            )}
-          </div>
+            </div>
+          )}
 
           <div>
             {fileError && (
@@ -232,9 +211,6 @@ export default function EditDesignRequestModal({
               style={{ fontSize: "var(--dr-fs-meta)" }}
             >
               إضافة مرفقات
-              <span className="font-normal text-slate-400 mr-1">
-                — {totalAfter} من 10
-              </span>
             </label>
             <label
               className="flex items-center justify-center gap-2 h-11 rounded-xl border-2 border-dashed border-slate-200 dark:border-slate-700 hover:border-primary/40 cursor-pointer text-slate-500 dark:text-slate-400 hover:text-primary dark:hover:text-teal-300 transition-colors font-bold"
@@ -248,13 +224,13 @@ export default function EditDesignRequestModal({
                 accept={ACCEPT_ATTRIBUTE}
                 onChange={(e) => {
                   const picked = Array.from(e.target.files || []);
-                  const tooBig = picked.filter((f) => f.size > DESIGN_MAX);
+                  const tooBig = picked.filter((f) => f.size > MAX_BYTES);
                   setFileError(
                     tooBig.length
-                      ? `تجاوز الحد (${DESIGN_MAX_LABEL}): ${tooBig.map((f) => f.name).join("، ")}`
+                      ? `تجاوز الحد (${MAX_LABEL}): ${tooBig.map((f) => f.name).join("، ")}`
                       : null
                   );
-                  setFiles((prev) => [...prev, ...picked.filter((f) => f.size <= DESIGN_MAX)]);
+                  setFiles((prev) => [...prev, ...picked.filter((f) => f.size <= MAX_BYTES)]);
                   e.target.value = "";
                 }}
                 className="hidden"
@@ -286,32 +262,29 @@ export default function EditDesignRequestModal({
         <div className="flex items-center justify-end gap-2 px-6 py-4 border-t border-slate-100 dark:border-slate-800 shrink-0">
           <button
             onClick={onClose}
-            className="h-11 px-4 rounded-xl font-bold text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+            disabled={isSubmitting}
+            className="h-11 px-4 rounded-xl font-bold text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors disabled:opacity-50"
             style={{ fontSize: "var(--dr-fs-meta)" }}
           >
             إلغاء
           </button>
           <button
             onClick={handleSubmit}
-            disabled={isSubmitting || !hasChanges || totalAfter > 10}
-            className="h-11 px-6 flex items-center gap-2 text-white bg-gradient-to-b from-[#17857c] via-primary to-[#0c645d] shadow-[var(--dr-shadow-cta)] hover:shadow-[var(--dr-shadow-cta-hover)] active:translate-y-px rounded-xl font-bold transition-all disabled:opacity-50"
+            disabled={isSubmitting}
+            className="h-11 px-6 flex items-center gap-2 text-white bg-amber-600 hover:bg-amber-700 active:translate-y-px rounded-xl font-bold transition-all disabled:opacity-50"
             style={{ fontSize: "var(--dr-fs-meta)" }}
           >
-            {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-            حفظ التعديل
+            {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+            إرسال الملاحظات
           </button>
         </div>
       </div>
 
       <ConfirmModal
         isOpen={isConfirmOpen}
-        title="حفظ التعديل"
-        message={
-          removed.length > 0
-            ? `سيتم حفظ التعديل وحذف ${removed.length} من المرفقات نهائياً. هل تريد المتابعة؟`
-            : "سيتم حفظ التعديل على الطلب. هل تريد المتابعة؟"
-        }
-        confirmLabel="حفظ التعديل"
+        title="إرسال الملاحظات"
+        message="سيعود الطلب إلى فريق زاد للتعديل خلال 24 ساعة، وبعد تسليمه يُعتمد نهائياً. التعديل متاح مرة واحدة فقط — هل تريد المتابعة؟"
+        confirmLabel="إرسال الملاحظات"
         tone="primary"
         isPending={isSubmitting}
         onCancel={() => setIsConfirmOpen(false)}

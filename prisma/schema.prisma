@@ -960,6 +960,8 @@ enum DesignRequestStatus {
   // أما إعادة ترتيب القيم فتستلزم إعادة بناء النوع على بيانات حيّة.
   UNDER_REVIEW // قيد المراجعة — رفعته الجمعية وينتظر اعتماد موظف زاد
   REJECTED // مرفوض مع سبب مكتوب
+  AWAITING_REVIEW // سُلّم وبانتظار ردّ الجمعية خلال 24 ساعة
+  REVISION_REQUESTED // أعادته الجمعية بملاحظات، وزاد تعدّل خلال 24 ساعة
 }
 
 /// نوع التصميم وعدد أيام العمل الخاصة به — يديره موظف زاد من صفحة طلبات التصاميم.
@@ -986,8 +988,13 @@ model DesignType {
 
 model DesignRequest {
   id          String              @id @default(uuid())
-  charityId   String
-  charity     Charity             @relation(fields: [charityId], references: [id], onDelete: Cascade)
+  /// null تعني أن الطلب لشركة زاد نفسها لا لجمعية.
+  ///
+  /// اخترنا الغياب على سجل جمعية وهمي باسم «شركة زاد»، لأن السجل الوهمي يظهر
+  /// في كل قائمة جمعيات في الموقع — الحوكمة والاستراتيجية والعقود والموارد
+  /// البشرية — ويحتاج استثناءً في كل واحدة منها.
+  charityId   String?
+  charity     Charity?            @relation(fields: [charityId], references: [id], onDelete: Cascade)
   title       String
   description String?             @db.Text
   status      DesignRequestStatus @default(PENDING)
@@ -1019,6 +1026,24 @@ model DesignRequest {
   // computeSchedule لا يحسب إلا صفوف PENDING. عند الاعتماد يُعاد حساب الموعد
   // على الطابور كما هو لحظتَها لا كما كان وقت الرفع — وهذا هو معنى «تأكيد
   // الموعد»: ما رأته الجمعية عند الرفع تقدير، وما بعد الاعتماد التزام.
+  // ── مراجعة الجمعية بعد التسليم ─────────────────────────────────────────
+  // «إنهاء» لم يعد نهائياً: الطلب يذهب للجمعية 24 ساعة والمرفقات تبقى. الحذف
+  // من Cloudinary لا يقع إلا عند الاعتماد النهائي — يدوياً أو تلقائياً أو بعد
+  // جولة التعديل الوحيدة.
+  //
+  // الحالتان AWAITING_REVIEW و REVISION_REQUESTED خارج ترتيب التنفيذ بحكم
+  // البناء: computeSchedule لا يحسب إلا صفوف PENDING.
+
+  /// متى سُلّم — منه تُحسب مهلة الـ24 ساعة الممنوحة للجمعية.
+  deliveredAt         DateTime?
+  /// متى أعادته الجمعية — منه تُحسب مهلة التعديل.
+  revisionRequestedAt DateTime?
+  /// ملاحظات الجمعية. حقل واحد لا جدول، لأن التعديل مسموح مرة واحدة فقط
+  /// فلا تاريخ جولات يُحفظ.
+  revisionNotes       String?   @db.Text
+  /// اعتُمد بمرور المهلة لا بفعل الجمعية — يُعرض للطرفين.
+  autoApproved        Boolean   @default(false)
+
   reviewedAt      DateTime?
   reviewedById    String?
   reviewedBy      Employee? @relation("ReviewedDesignRequests", fields: [reviewedById], references: [id], onDelete: SetNull)

@@ -24,6 +24,39 @@ function canManageMeetings(session: { role?: string | null; permissions?: string
   return hasPermission(session.role ?? "", session.permissions || [], "manage_meetings");
 }
 
+/**
+ * May this person change this meeting — its content or its tasks?
+ *
+ * The tasks used to demand isTier1 (the ADMIN role or developer_mode) with no
+ * ownership escape at all, so four of the six people holding manage_meetings
+ * were told «غير مصرح» on the minutes they had written themselves. Meanwhile
+ * the meeting body used a different, ownership-based rule — two answers to one
+ * question, and the tasks half of the screen refused what the other half
+ * allowed.
+ *
+ * The rule kept is the ownership one, because it is the one that was written
+ * deliberately: your own minutes are yours, an executive's minutes are theirs.
+ * Tasks now follow the meeting they belong to.
+ */
+async function requireMeetingEditAccess(meetingId: string) {
+  const session = await getSession();
+  if (!canManageMeetings(session)) throw new Error("غير مصرح");
+
+  const meeting = await prisma.meeting.findUnique({
+    where: { id: meetingId },
+    include: { createdBy: { select: { role: true, permissions: true } } },
+  });
+  if (!meeting) throw new Error("غير موجود");
+
+  const userIsTier1 = isTier1(session!.role, session!.permissions || []);
+  const creatorIsTier1 = isTier1(meeting.createdBy.role, meeting.createdBy.permissions || []);
+
+  if (creatorIsTier1 && !userIsTier1) throw new Error("لا يمكنك تعديل محاضر الإدارة التنفيذية");
+  if (meeting.createdById !== session!.id && !userIsTier1) throw new Error("غير مصرح");
+
+  return { session: session!, meeting };
+}
+
 export async function getMeetings() {
   const session = await getSession();
   if (!canManageMeetings(session)) throw new Error("غير مصرح");
@@ -165,7 +198,7 @@ export async function upsertMeetingTasks(
   tasks: { id?: string; title: string; assignedToId?: string | null; dueDays?: number | null; isDone?: boolean }[]
 ) {
   const session = await getSession();
-  if (!session || !isTier1(session.role, session.permissions || [])) throw new Error("غير مصرح");
+  await requireMeetingEditAccess(meetingId);
 
   const meeting = await prisma.meeting.findUnique({ where: { id: meetingId } });
   const oldTasks = await prisma.meetingTask.findMany({ where: { meetingId } });
@@ -300,8 +333,14 @@ export async function getTasksForMeeting(meetingId: string) {
 }
 
 export async function toggleMeetingTask(taskId: string, isDone: boolean) {
-  const session = await getSession();
-  if (!session || !isTier1(session.role, session.permissions || [])) throw new Error("غير مصرح");
+  // Ticking a task is an edit of its meeting, so it answers to the same rule
+  // — which means finding the meeting the task belongs to first.
+  const task = await prisma.meetingTask.findUnique({
+    where: { id: taskId },
+    select: { meetingId: true },
+  });
+  if (!task) throw new Error("غير موجود");
+  await requireMeetingEditAccess(task.meetingId);
   await prisma.meetingTask.update({ where: { id: taskId }, data: { isDone } });
   
   await prisma.task.updateMany({
@@ -317,8 +356,11 @@ export async function toggleMeetingTask(taskId: string, isDone: boolean) {
 export async function createTasksFromMeeting(
   tasks: { title: string; assignedToId: string }[]
 ) {
+  // Not tied to one meeting — it turns a list into ordinary internal tasks —
+  // so it answers to the meetings permission itself rather than to the
+  // per-meeting ownership rule.
   const session = await getSession();
-  if (!session || !isTier1(session.role, session.permissions || [])) throw new Error("غير مصرح");
+  if (!canManageMeetings(session)) throw new Error("غير مصرح");
   for (const t of tasks) {
     await prisma.task.create({
       data: {

@@ -10,16 +10,25 @@ import { finalizeExpiredDeliveries } from "@/app/actions/designRequests";
  * sits delivered forever, its brief attachments never released from storage and
  * its status never settling.
  *
- * Runs HOURLY, not daily. The window is 24 hours, and a once-a-day sweep would
- * approve somewhere between 24 and 48 hours after delivery depending on what
- * time the designer happened to press the button — so half the charities would
- * get a different deal from the one the interface promised them.
+ * Runs once a day, at 01:00 Riyadh.
+ *
+ * Hourly would be the honest match for a 24-hour window: a daily sweep
+ * finalises somewhere between 24 and 48 hours after delivery, depending on
+ * what time the designer pressed the button. It is daily because Vercel's
+ * Hobby plan permits one cron run per day, and an hourly schedule makes the
+ * whole deployment fail — the feature working late beats the site not
+ * deploying at all.
+ *
+ * The lateness only ever favours the charity: it keeps the request open
+ * longer, and approving or returning it stays possible right up to the sweep.
+ * If the schedule ever matters more than the plan, raise the plan or call
+ * this route from an external scheduler with the same CRON_SECRET.
  *
  * Deliberately does NOT touch REVISION_REQUESTED. That clock is on Zad, not on
  * the charity, and auto-approving there would reward us for missing our own
  * deadline. Those simply show as overdue.
  *
- * Schedule: `0 * * * *` — see vercel.json.
+ * Schedule: `0 22 * * *` — see vercel.json.
  */
 export async function GET(request: Request) {
   try {

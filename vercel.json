@@ -6,7 +6,7 @@
     },
     {
       "path": "/api/cron/design-auto-approve",
-      "schedule": "0 * * * *"
+      "schedule": "0 22 * * *"
     }
   ]
 }

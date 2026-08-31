@@ -186,7 +186,7 @@ export default function DesignRequestCard({
               </span>
               {request.wasReviewed && (
                 <span className="text-slate-400 dark:text-slate-500">
-                  ({request.autoApproved ? "اعتماد تلقائي بعد 24 ساعة" : "باعتماد الجمعية"})
+                  ({request.autoApproved ? "اعتماد تلقائي — لم تردّ الجمعية" : "باعتماد الجمعية"})
                 </span>
               )}
             </span>

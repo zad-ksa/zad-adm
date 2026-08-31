@@ -1,4 +1,6 @@
 import type { Metadata } from "next";
+import { CHARITY_ATTENDANCE_ENABLED } from "@/lib/featureFlags";
+import { redirect } from "next/navigation";
 import { CalendarCheck } from "lucide-react";
 import { prisma } from "@/lib/db";
 import { DEFAULT_SCHEDULE, currentRiyadhMonth, isWorkDay, toCivilDate } from "@/lib/attendanceTime";
@@ -19,6 +21,12 @@ export async function generateMetadata({
 }
 
 export default async function AttendancePage({ params }: { params: Promise<{ name: string }> }) {
+  // Attendance is on hold for charities — see CHARITY_ATTENDANCE_ENABLED.
+  // Hiding the tab is not enough: this URL is bookmarkable and typeable.
+  if (!CHARITY_ATTENDANCE_ENABLED) {
+    const { name } = await params;
+    redirect(`/portal/${encodeURIComponent(decodeURIComponent(name))}/hr`);
+  }
   const { name } = await params;
   const { charity, session, can } = await resolveCharityPortal(name);
 

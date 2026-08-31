@@ -44,8 +44,8 @@ export async function POST(req: NextRequest) {
   //
   // "manage_meetings" mirrors the gate on the meetings page itself, so anyone
   // who can open that screen can format notes. The sibling extract-tasks route
-  // deliberately stays on the stricter isTier1 check — that is a separate,
-  // elevated capability, not an inconsistency to flatten.
+  // now uses the same permission: keeping it on isTier1 meant the people who
+  // write the minutes could not extract tasks from them.
   try {
     await requirePermission("manage_meetings");
   } catch (err) {

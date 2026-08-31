@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { CHARITY_ATTENDANCE_ENABLED } from "@/lib/featureFlags";
 import { redirect } from "next/navigation";
 import { Users } from "lucide-react";
 import { prisma } from "@/lib/db";
@@ -25,8 +26,16 @@ export default async function HrStaffPage({ params }: { params: Promise<{ name: 
 
   // Someone who can only record their own attendance lands on the check-in
   // screen instead of an empty "not allowed" page — that IS their HR page.
+  //
+  // Unless attendance is on hold, in which case that page bounces straight back
+  // here and the two redirects chase each other forever. With nothing left in HR
+  // for them, the portal home is the honest destination.
   if (!can("manage_charity_users")) {
-    redirect(`/portal/${encodeURIComponent(charity.name)}/hr/attendance`);
+    redirect(
+      CHARITY_ATTENDANCE_ENABLED
+        ? `/portal/${encodeURIComponent(charity.name)}/hr/attendance`
+        : `/portal/${encodeURIComponent(charity.name)}`
+    );
   }
 
   const links = await prisma.charityUserCharity.findMany({

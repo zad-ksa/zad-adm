@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
-import { notFound } from "next/navigation";
+import { CHARITY_ATTENDANCE_ENABLED } from "@/lib/featureFlags";
+import { notFound, redirect } from "next/navigation";
 import { Settings } from "lucide-react";
 import { prisma } from "@/lib/db";
 import { getClientIp } from "@/lib/auditLog";
@@ -26,6 +27,12 @@ export default async function AttendanceSettingsPage({
 }: {
   params: Promise<{ name: string }>;
 }) {
+  // Attendance is on hold for charities — see CHARITY_ATTENDANCE_ENABLED.
+  // Hiding the tab is not enough: this URL is bookmarkable and typeable.
+  if (!CHARITY_ATTENDANCE_ENABLED) {
+    const { name } = await params;
+    redirect(`/portal/${encodeURIComponent(decodeURIComponent(name))}/hr`);
+  }
   const { name } = await params;
   const { charity, can } = await resolveCharityPortal(name);
 

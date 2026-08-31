@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import { CHARITY_ATTENDANCE_ENABLED } from "@/lib/featureFlags";
 import {
   Building2,
   ChevronRight,
@@ -184,16 +185,18 @@ export default function CharitySidebar({
     { id: "design-requests", label: "طلبات التصاميم", href: `/portal/${encodeURIComponent(charityName)}/design-requests`, exact: true, icon: Palette, show: true },
     { id: "strategy", label: "الاستراتيجية", href: "#", comingSoon: true, icon: Target, show: true },
     { id: "finance", label: "تنمية الموارد المالية", href: "#", comingSoon: true, icon: Coins, show: true },
-    // Every active member can record their own attendance, so HR is always
-    // reachable; the landing page inside it differs by permission.
+    // HR used to be reachable by everyone, because every member could record
+    // their own attendance. With attendance on hold the only thing left inside
+    // is managing employees, so it now shows for the people who can do that —
+    // otherwise members would open an empty section.
     {
       id: "hr",
       label: "الموارد البشرية",
-      href: can("manage_charity_users")
-        ? `/portal/${encodeURIComponent(charityName)}/hr`
-        : `/portal/${encodeURIComponent(charityName)}/hr/attendance`,
+      href: CHARITY_ATTENDANCE_ENABLED && !can("manage_charity_users")
+        ? `/portal/${encodeURIComponent(charityName)}/hr/attendance`
+        : `/portal/${encodeURIComponent(charityName)}/hr`,
       icon: Users,
-      show: true,
+      show: CHARITY_ATTENDANCE_ENABLED || can("manage_charity_users"),
     },
   ].filter((item) => item.show);
 

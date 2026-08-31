@@ -1,6 +1,5 @@
 import Anthropic from "@anthropic-ai/sdk";
-import { getSession } from "@/lib/auth";
-import { isTier1 } from "@/lib/permissions";
+import { requirePermission, authErrorResponse } from "@/lib/guards";
 import { NextRequest, NextResponse } from "next/server";
 
 type ExtractedTask = { title: string; assigneeName: string | null };
@@ -99,12 +98,27 @@ function parseResult(raw: string): ExtractResult | null {
 }
 
 export async function POST(req: NextRequest) {
+  // Gated on manage_meetings, the same permission as the meetings page, the
+  // format route beside it, and the actions that store what this returns.
+  //
+  // It was on isTier1 — the ADMIN role or developer_mode — and a comment in
+  // the sibling route defended that as a deliberately elevated capability.
+  // In practice it was neither elevated nor deliberate in effect: four of the
+  // six people holding manage_meetings, including the executive director who
+  // had written the minutes himself, were refused on their own meetings. A
+  // capability nobody but two accounts can reach is not a tier, it is a bug
+  // with a rationale attached.
+  //
+  // Extraction only reads notes the caller can already open and proposes
+  // tasks they can already write by hand, so it grants nothing the page did
+  // not grant already.
   try {
-    const session = await getSession();
-    if (!session || !isTier1(session.role, session.permissions || [])) {
-      return NextResponse.json({ error: "غير مصرح" }, { status: 401 });
-    }
+    await requirePermission("manage_meetings");
+  } catch (err) {
+    return authErrorResponse(err);
+  }
 
+  try {
     let body: any;
     try { body = await req.json(); } catch {
       return NextResponse.json({ error: "طلب غير صالح" }, { status: 400 });

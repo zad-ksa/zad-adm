@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { CalendarCheck, ChartColumn, Settings, Users } from "lucide-react";
 import { fs } from "./ui";
+import { CHARITY_ATTENDANCE_ENABLED } from "@/lib/featureFlags";
 
 /**
  * Sub-navigation for the HR section.
@@ -30,11 +31,28 @@ export default function HrNav({
   const pathname = decodeURIComponent(usePathname());
   const base = decodeURIComponent(`/portal/${encodeURIComponent(charityName)}/hr`);
 
+  // Attendance, its reports and its settings are one feature and go together;
+  // the employees tab is a different job that happens to share this screen.
   const tabs = [
-    { href: `${base}/attendance`, label: "تسجيل الحضور", icon: CalendarCheck, show: true },
+    {
+      href: `${base}/attendance`,
+      label: "تسجيل الحضور",
+      icon: CalendarCheck,
+      show: CHARITY_ATTENDANCE_ENABLED,
+    },
     { href: base, label: "الموظفون", icon: Users, show: canManageUsers, exact: true },
-    { href: `${base}/reports`, label: "التقارير", icon: ChartColumn, show: canViewReports },
-    { href: `${base}/settings`, label: "الإعدادات", icon: Settings, show: canManageAttendance },
+    {
+      href: `${base}/reports`,
+      label: "التقارير",
+      icon: ChartColumn,
+      show: CHARITY_ATTENDANCE_ENABLED && canViewReports,
+    },
+    {
+      href: `${base}/settings`,
+      label: "الإعدادات",
+      icon: Settings,
+      show: CHARITY_ATTENDANCE_ENABLED && canManageAttendance,
+    },
   ].filter((t) => t.show);
 
   if (tabs.length <= 1) return null;

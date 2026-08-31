@@ -94,6 +94,88 @@ export async function listKnowledgeFolder(parentId: string | null): Promise<Fold
   }
 }
 
+export type KnowledgeSearchRow = KnowledgeNodeRow & {
+  /** Folder containing the hit — a result is useless without knowing where it lives. */
+  parentName: string | null;
+};
+
+/**
+ * Searches the folder you are standing in and everything beneath it.
+ *
+ * One recursive CTE rather than a query per level. The iterative version would
+ * cost a round trip for every level of depth, on every keystroke — and depth is
+ * exactly what the user cannot see or predict when they type.
+ *
+ * Scope is the current folder: at the root that is the whole tree, inside a
+ * folder it is that subtree only. Searching globally from inside a folder would
+ * answer a question nobody asked.
+ */
+export async function searchKnowledgeTree(scopeId: string | null, query: string) {
+  try {
+    await requireKnowledgeAccess();
+
+    const q = query.trim();
+    if (q.length < 2) return { ok: true as const, rows: [] as KnowledgeSearchRow[] };
+
+    // Escaped so a name containing % or _ is searched literally rather than as
+    // a wildcard — otherwise typing "%" lists the entire subtree.
+    const pattern = `%${q.replace(/[\%_]/g, (c) => "\\" + c)}%`;
+
+    const rows = await prisma.$queryRaw<
+      {
+        id: string;
+        name: string;
+        kind: "FOLDER" | "FILE";
+        parentId: string | null;
+        fileUrl: string | null;
+        fileSize: number | null;
+        createdAt: Date;
+        parentName: string | null;
+        createdByName: string | null;
+        childCount: number;
+      }[]
+    >`
+      WITH RECURSIVE subtree AS (
+        SELECT n.* FROM "KnowledgeNode" n
+         WHERE (${scopeId}::text IS NULL AND n."parentId" IS NULL)
+            OR n."parentId" = ${scopeId}::text
+        UNION ALL
+        SELECT c.* FROM "KnowledgeNode" c
+          JOIN subtree s ON c."parentId" = s.id
+      )
+      SELECT s.id, s.name, s.kind::text AS kind, s."parentId",
+             s."fileUrl", s."fileSize", s."createdAt",
+             p.name AS "parentName",
+             e.name AS "createdByName",
+             (SELECT COUNT(*)::int FROM "KnowledgeNode" k WHERE k."parentId" = s.id) AS "childCount"
+        FROM subtree s
+        LEFT JOIN "KnowledgeNode" p ON p.id = s."parentId"
+        LEFT JOIN "Employee" e ON e.id = s."createdById"
+       WHERE s.name ILIKE ${pattern} ESCAPE '\'
+       ORDER BY s.kind ASC, s.name ASC
+       LIMIT 200
+    `;
+
+    return {
+      ok: true as const,
+      rows: rows.map((r) => ({
+        id: r.id,
+        name: r.name,
+        kind: r.kind,
+        parentId: r.parentId,
+        fileUrl: r.fileUrl,
+        fileSize: r.fileSize,
+        createdAt: r.createdAt.toISOString(),
+        createdByName: r.createdByName,
+        childCount: r.childCount,
+        parentName: r.parentName,
+      })),
+    };
+  } catch (error) {
+    return { ok: false as const, error: error instanceof Error ? error.message : "تعذّر البحث" };
+  }
+}
+
 /** Walks up from a folder to the root so the UI can render a breadcrumb. */
 async function buildPath(id: string | null): Promise<{ id: string; name: string }[]> {
   const path: { id: string; name: string }[] = [];

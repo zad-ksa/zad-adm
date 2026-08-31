@@ -37,7 +37,7 @@ const CATEGORIES = [
 // ── Types ─────────────────────────────────────────────────────────────────────
 type Priority = "LOW" | "MEDIUM" | "HIGH" | "URGENT";
 type Status = "PENDING" | "RETURNED" | "APPROVED" | "REJECTED" | "DELEGATED";
-type Action = "SUBMITTED" | "FORWARDED" | "APPROVED_FINAL" | "REJECTED" | "RETURNED" | "DELEGATED" | "RESUBMITTED";
+type Action = "SUBMITTED" | "FORWARDED" | "FORWARDED_DOWN" | "APPROVED_FINAL" | "REJECTED" | "RETURNED" | "DELEGATED" | "RESUBMITTED";
 
 type Employee = { id: string; name: string; role: string; avatarUrl?: string | null };
 
@@ -99,7 +99,8 @@ const STATUS_CONFIG: Record<Status, { label: string; color: string; bg: string; 
 
 const ACTION_CONFIG: Record<Action, { label: string; color: string; icon: any }> = {
   SUBMITTED:     { label: "رُفع الطلب",             color: "text-blue-500",    icon: Send },
-  FORWARDED:     { label: "مُرِّر للمستوى التالي",  color: "text-indigo-500",  icon: ArrowRight },
+  FORWARDED:      { label: "مُرِّر للمستوى الأعلى", color: "text-indigo-500",  icon: ArrowRight },
+  FORWARDED_DOWN: { label: "مُرِّر للمستوى الأدنى", color: "text-sky-500",     icon: ArrowRight },
   APPROVED_FINAL:{ label: "اعتُمد نهائياً",          color: "text-emerald-500", icon: CheckCircle2 },
   REJECTED:      { label: "رُفض",                   color: "text-red-500",     icon: X },
   RETURNED:      { label: "أُرجع للتعديل",           color: "text-amber-500",   icon: CornerUpLeft },
@@ -146,6 +147,7 @@ function RequestTimeline({ logs }: { logs: RequestLog[] }) {
                   log.action === "RETURNED"       ? "bg-amber-100 dark:bg-amber-900/40" :
                   log.action === "DELEGATED"      ? "bg-purple-100 dark:bg-purple-900/40" :
                   log.action === "FORWARDED"      ? "bg-indigo-100 dark:bg-indigo-900/40" :
+                  log.action === "FORWARDED_DOWN" ? "bg-sky-100 dark:bg-sky-900/40" :
                   "bg-blue-100 dark:bg-blue-900/40"
                 }`}>
                   <Icon className={`w-3.5 h-3.5 ${cfg.color}`} />

@@ -1,10 +1,10 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { X, ShieldCheck, ArrowRight, Check, CornerUpLeft, UserCheck, AlertCircle, Loader2 } from "lucide-react";
+import { X, ShieldCheck, ArrowUp, ArrowDown, Check, CornerUpLeft, UserCheck, AlertCircle, Loader2 } from "lucide-react";
 import { reviewRequest } from "@/app/actions/approvals";
 
-type ReviewAction = "APPROVED_FINAL" | "FORWARDED" | "REJECTED" | "RETURNED" | "DELEGATED";
+type ReviewAction = "APPROVED_FINAL" | "FORWARDED" | "FORWARDED_DOWN" | "REJECTED" | "RETURNED" | "DELEGATED";
 
 import { useRoleLabels } from "@/components/RoleLabelsProvider";
 
@@ -15,17 +15,47 @@ export default function ReviewModal({
 }) {
   const roleLabels = useRoleLabels();
 
-  // الإجراء الافتراضي: تمرير إن كانت سلسلة، وإلا اعتماد
-  const defaultAction: ReviewAction = request.chain ? "FORWARDED" : "APPROVED_FINAL";
+  // Who sits either side of this step in the chain.
+  //
+  // "Forward up" used to be offered even at the top, where the server turned
+  // it into a silent final approval — the reviewer picked "pass it on" and
+  // closed the request instead. Each direction is now offered only when
+  // there is somebody in it, and named, so nobody has to remember the chain
+  // to know where the request is going.
+  const steps: { order: number; approver: { id: string; name: string } }[] =
+    request.chain?.steps ?? [];
+  const nextApprover = steps.find((s) => s.order === request.currentStepOrder + 1)?.approver;
+  const prevApprover = steps.find((s) => s.order === request.currentStepOrder - 1)?.approver;
+
+  // Forwarding up stays the default while there is someone above; otherwise
+  // the person at the top lands on the action they actually need.
+  const defaultAction: ReviewAction = nextApprover ? "FORWARDED" : "APPROVED_FINAL";
   const [action, setAction] = useState<ReviewAction>(defaultAction);
   const [note, setNote] = useState("");
   const [delegatedToId, setDelegatedToId] = useState("");
   const [error, setError] = useState("");
   const [isPending, startTransition] = useTransition();
 
-  // الإجراءات المتاحة — التمرير فقط إذا توجد سلسلة
+  // الإجراءات المتاحة — كل اتجاه يظهر فقط إذا كان فيه أحد
   const actions: { value: ReviewAction; label: string; icon: any; color: string; desc: string }[] = [
-    ...(request.chain ? [{ value: "FORWARDED" as ReviewAction, label: "تمرير للأعلى", icon: ArrowRight, color: "indigo", desc: "إرسال للمستوى التالي في السلسلة" }] : []),
+    ...(nextApprover
+      ? [{
+          value: "FORWARDED" as ReviewAction,
+          label: `تمرير للأعلى — ${nextApprover.name}`,
+          icon: ArrowUp,
+          color: "indigo",
+          desc: `إرسال للمستوى الأعلى: ${nextApprover.name}`,
+        }]
+      : []),
+    ...(prevApprover
+      ? [{
+          value: "FORWARDED_DOWN" as ReviewAction,
+          label: `تمرير للأسفل — ${prevApprover.name}`,
+          icon: ArrowDown,
+          color: "sky",
+          desc: `إعادة الطلب للمستوى الأدنى: ${prevApprover.name}`,
+        }]
+      : []),
     { value: "APPROVED_FINAL", label: "اعتماد نهائي", icon: Check, color: "emerald", desc: "اعتماد الطلب وإغلاقه" },
     { value: "RETURNED", label: "إرجاع للتعديل", icon: CornerUpLeft, color: "amber", desc: "إرجاع للمرسل مع ملاحظات" },
     { value: "REJECTED", label: "رفض", icon: X, color: "red", desc: "رفض الطلب نهائياً" },
@@ -53,6 +83,7 @@ export default function ReviewModal({
 
   const colorMap: Record<string, string> = {
     indigo:  "bg-indigo-50 dark:bg-indigo-900/20 border-indigo-400 text-indigo-700 dark:text-indigo-300 ring-indigo-300 dark:ring-indigo-700",
+    sky:     "bg-sky-50 dark:bg-sky-900/20 border-sky-400 text-sky-700 dark:text-sky-300 ring-sky-300 dark:ring-sky-700",
     emerald: "bg-emerald-50 dark:bg-emerald-900/20 border-emerald-400 text-emerald-700 dark:text-emerald-300 ring-emerald-300 dark:ring-emerald-700",
     amber:   "bg-amber-50 dark:bg-amber-900/20 border-amber-400 text-amber-700 dark:text-amber-300 ring-amber-300 dark:ring-amber-700",
     red:     "bg-red-50 dark:bg-red-900/20 border-red-400 text-red-700 dark:text-red-300 ring-red-300 dark:ring-red-700",

@@ -14,7 +14,19 @@ export const REQUEST_INCLUDE = {
   reviewedBy: { select: { id: true, name: true } },
   currentReviewer: { select: { id: true, name: true, role: true } },
   delegatedTo: { select: { id: true, name: true, role: true } },
-  chain: { select: { id: true, name: true } },
+  // Steps come with the chain now: the review modal names the person above
+  // and below the current step, and cannot do that from an id alone. A chain
+  // is a handful of rows, so this costs almost nothing.
+  chain: {
+    select: {
+      id: true,
+      name: true,
+      steps: {
+        select: { order: true, label: true, approver: { select: { id: true, name: true } } },
+        orderBy: { order: "asc" as const },
+      },
+    },
+  },
   logs: {
     include: {
       actor: { select: { id: true, name: true, role: true, avatarUrl: true } },

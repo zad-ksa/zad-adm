@@ -117,7 +117,7 @@ export async function createRequest(data: {
 // ── مراجعة طلب ────────────────────────────────────────────────────────────────
 export async function reviewRequest(data: {
   requestId: string;
-  action: "APPROVED_FINAL" | "FORWARDED" | "REJECTED" | "RETURNED" | "DELEGATED";
+  action: "APPROVED_FINAL" | "FORWARDED" | "FORWARDED_DOWN" | "REJECTED" | "RETURNED" | "DELEGATED";
   note?: string;
   delegatedToId?: string; // مطلوب عند DELEGATED
 }) {
@@ -190,31 +190,43 @@ export async function reviewRequest(data: {
         "/main/approvals"
       );
     } else {
-      // لا توجد خطوة تالية — اعتمد نهائياً
-      await prisma.request.update({
-        where: { id: data.requestId },
-        data: {
-          status: "APPROVED",
-          reviewedById: session.id,
-          reviewNote: data.note?.trim() || null,
-          reviewedAt: new Date(),
-          // Terminal: nobody is deciding this any more, so the desk is empty.
-          // Leaving the last reviewer here made the column mean two different
-          // things at once — «who must act» while pending, «who acted last»
-          // afterwards — and every query that read it honestly got the wrong
-          // answer for completed requests.
-          currentReviewerId: null,
-        },
-      });
-      await notify(data.requestId, request.createdById);
-      await createAppNotification(
-        request.createdById,
-        "قبول طلب الاعتماد",
-        `تم اعتماد طلبك بشكل نهائي: ${request.title}`,
-        "/main/approvals"
-      );
+      // Unreachable from the UI, which stops offering "forward up" at the top
+      // of the chain. Kept as a refusal rather than the silent final approval
+      // it used to be: choosing "pass this upwards" and getting "approved and
+      // closed" is not a thing anyone asked for, and the person at the top has
+      // an explicit "final approval" button for that.
+      throw new Error("أنت أعلى مستوى في السلسلة — استخدم الاعتماد النهائي");
     }
-  } else if (data.action === "APPROVED_FINAL") {
+  }
+
+  if (data.action === "FORWARDED_DOWN") {
+    const prevStep = request.chain?.steps.find(
+      (s) => s.order === request.currentStepOrder - 1
+    );
+
+    if (!prevStep) {
+      throw new Error("أنت أدنى مستوى في السلسلة — لا يوجد من تمرّر إليه");
+    }
+
+    await prisma.request.update({
+      where: { id: data.requestId },
+      data: {
+        currentStepOrder: prevStep.order,
+        currentReviewerId: prevStep.approverId,
+        reviewedById: session.id,
+        reviewedAt: new Date(),
+      },
+    });
+    await notify(data.requestId, prevStep.approverId);
+    await createAppNotification(
+      prevStep.approverId,
+      "طلب للمراجعة",
+      `تم تمرير طلب لمراجعتك: ${request.title}`,
+      "/main/approvals"
+    );
+  }
+
+  if (data.action === "APPROVED_FINAL") {
     await prisma.request.update({
       where: { id: data.requestId },
       data: {

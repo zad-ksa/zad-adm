@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
 import {
   Folder,
   FolderPlus,
@@ -15,6 +15,11 @@ import {
   FileText,
   FileImage,
   FileArchive,
+  Search,
+  X,
+  LayoutGrid,
+  List,
+  ArrowUpDown,
 } from "lucide-react";
 import {
   listKnowledgeFolder,
@@ -22,7 +27,9 @@ import {
   addKnowledgeFiles,
   renameKnowledgeNode,
   deleteKnowledgeNode,
+  searchKnowledgeTree,
   type KnowledgeNodeRow,
+  type KnowledgeSearchRow,
 } from "@/app/actions/knowledgeTree";
 import { uploadFiles } from "@/lib/clientUpload";
 import { ACCEPT_ATTRIBUTE, formatBytes, maxBytesFor, maxLabelFor } from "@/lib/uploadPurposes";
@@ -31,6 +38,62 @@ import SuccessToast from "@/components/ui/SuccessToast";
 
 const MAX_BYTES = maxBytesFor("knowledge_file");
 const MAX_LABEL = maxLabelFor("knowledge_file");
+
+type ViewMode = "grid" | "list";
+type SortKey = "name" | "date" | "size";
+
+/**
+ * View and sort are per-device preferences, not per-account: the same person
+ * wants a dense list on a laptop and cards on a phone. localStorage keeps each
+ * device on what it was left, and nothing has to reach the server to find out.
+ */
+const VIEW_KEY = "zad_kt_view";
+const SORT_KEY = "zad_kt_sort";
+
+function readStored<T extends string>(key: string, fallback: T, allowed: readonly T[]): T {
+  if (typeof window === "undefined") return fallback;
+  try {
+    const v = window.localStorage.getItem(key) as T | null;
+    return v && allowed.includes(v) ? v : fallback;
+  } catch {
+    // Private windows and blocked site data throw on access, not on read.
+    return fallback;
+  }
+}
+
+/**
+ * A preference kept in localStorage.
+ *
+ * Read through useSyncExternalStore rather than by setting state in an effect:
+ * the server has no localStorage, so the stored value has to arrive as a
+ * snapshot React knows differs between server and client. Setting it from an
+ * effect instead paints the default first and then jumps — which is what the
+ * lint rule against setState-in-effect is pointing at.
+ */
+function useStoredChoice<T extends string>(
+  key: string,
+  fallback: T,
+  allowed: readonly T[]
+): [T, (v: T) => void] {
+  const [override, setOverride] = useState<T | null>(null);
+
+  const stored = useSyncExternalStore(
+    () => () => {}, // nothing outside this component changes it
+    () => readStored(key, fallback, allowed),
+    () => fallback // server render
+  );
+
+  const set = (v: T) => {
+    setOverride(v);
+    try {
+      window.localStorage.setItem(key, v);
+    } catch {
+      // Storage can be blocked; the choice still applies for this session.
+    }
+  };
+
+  return [override ?? stored, set];
+}
 
 function iconFor(name: string) {
   const ext = name.slice(name.lastIndexOf(".") + 1).toLowerCase();
@@ -68,6 +131,25 @@ export default function KnowledgeTreeClient() {
   const [isDeleting, setIsDeleting] = useState(false);
 
   const [uploadStatus, setUploadStatus] = useState("");
+
+  const [search, setSearch] = useState("");
+  const [searchResults, setSearchResults] = useState<KnowledgeSearchRow[]>([]);
+  // Which query the results in hand answer. Comparing it with what is typed is
+  // what "still searching" means, so no flag has to be flipped as the effect
+  // starts.
+  const [resultsFor, setResultsFor] = useState<string | null>(null);
+
+  const [view, chooseView] = useStoredChoice<ViewMode>(VIEW_KEY, "grid", ["grid", "list"] as const);
+  const [sort, setSortKey] = useStoredChoice<SortKey>(SORT_KEY, "name", ["name", "date", "size"] as const);
+  const [sortAsc, setSortAsc] = useState(true);
+
+  // Clicking the active column flips direction, the way every file browser
+  // behaves; clicking a different one starts ascending.
+  const chooseSort = (k: SortKey) => {
+    if (k === sort) { setSortAsc((a) => !a); return; }
+    setSortKey(k);
+    setSortAsc(true);
+  };
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const load = useCallback(async (folderId: string | null) => {
@@ -157,8 +239,41 @@ export default function KnowledgeTreeClient() {
     refresh();
   };
 
-  const folders = rows.filter((r) => r.kind === "FOLDER");
-  const files = rows.filter((r) => r.kind === "FILE");
+  // Debounced: the query walks a recursive CTE, and firing it per keystroke
+  // would run it a dozen times to answer the last one.
+  // Search mode is derived from what is typed rather than stored in a flag, so
+  // clearing the box restores the folder listing with no state change at all.
+  const query = search.trim();
+  const isSearchMode = query.length >= 2;
+  const isSearching = isSearchMode && resultsFor !== query;
+
+  useEffect(() => {
+    if (query.length < 2) return;
+    // Debounced: the query walks a recursive CTE, and firing it per keystroke
+    // would run it a dozen times to answer the last one.
+    const timer = setTimeout(async () => {
+      const res = await searchKnowledgeTree(currentId, query);
+      if (res.ok) setSearchResults(res.rows);
+      else { setError(res.error); setSearchResults([]); }
+      setResultsFor(query);
+    }, 350);
+    return () => clearTimeout(timer);
+  }, [query, currentId]);
+
+  const displayed: (KnowledgeNodeRow & { parentName?: string | null })[] =
+    isSearchMode ? searchResults : rows;
+
+  const sorted = [...displayed].sort((a, b) => {
+    // Folders always lead, whichever column is sorted — the same rule every
+    // file browser follows, and the reason a folder never hides among files.
+    if (a.kind !== b.kind) return a.kind === "FOLDER" ? -1 : 1;
+    let cmp = 0;
+    if (sort === "name") cmp = a.name.localeCompare(b.name, "ar");
+    else if (sort === "date") cmp = a.createdAt.localeCompare(b.createdAt);
+    else cmp = (a.fileSize ?? 0) - (b.fileSize ?? 0);
+    return sortAsc ? cmp : -cmp;
+  });
+
 
   return (
     <div className="space-y-4" dir="rtl">
@@ -227,6 +342,78 @@ export default function KnowledgeTreeClient() {
         <p className="text-xs font-bold text-primary dark:text-teal-300 animate-pulse px-1">{uploadStatus}</p>
       )}
 
+      <div className="flex items-center gap-2 flex-wrap">
+        <div className="relative flex-1 min-w-[200px]">
+          <Search className="w-4 h-4 text-slate-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+          <input
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder={currentId ? "بحث في هذا المجلد وما بداخله…" : "بحث في الشجرة كلها…"}
+            className="w-full h-9 ps-9 pe-9 rounded-xl bg-slate-100/70 dark:bg-slate-800/60 border border-transparent focus:bg-white dark:focus:bg-slate-900 focus:border-primary/30 outline-none text-sm transition-all"
+          />
+          {search && (
+            <button
+              onClick={() => setSearch("")}
+              aria-label="مسح البحث"
+              className="absolute left-2 top-1/2 -translate-y-1/2 w-6 h-6 flex items-center justify-center rounded-lg text-slate-400 hover:text-slate-600"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+          )}
+        </div>
+
+        <div className="flex items-center gap-1 bg-slate-100/70 dark:bg-slate-800/60 rounded-xl p-1">
+          {([
+            { key: "name" as SortKey, label: "الاسم" },
+            { key: "date" as SortKey, label: "التاريخ" },
+            { key: "size" as SortKey, label: "الحجم" },
+          ]).map(({ key, label }) => (
+            <button
+              key={key}
+              onClick={() => chooseSort(key)}
+              title={sort === key ? (sortAsc ? "تصاعدي — اضغط للعكس" : "تنازلي — اضغط للعكس") : `ترتيب حسب ${label}`}
+              className={`h-7 px-2.5 rounded-lg text-xs font-bold flex items-center gap-1 transition-colors ${
+                sort === key
+                  ? "bg-white dark:bg-slate-700 text-primary dark:text-teal-300 shadow-sm"
+                  : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
+              }`}
+            >
+              {label}
+              {sort === key && <ArrowUpDown className={`w-3 h-3 ${sortAsc ? "" : "rotate-180"}`} />}
+            </button>
+          ))}
+        </div>
+
+        <div className="flex items-center gap-1 bg-slate-100/70 dark:bg-slate-800/60 rounded-xl p-1">
+          {([
+            { key: "grid" as ViewMode, Icon: LayoutGrid, label: "عرض شبكي" },
+            { key: "list" as ViewMode, Icon: List, label: "عرض قائمة" },
+          ]).map(({ key, Icon, label }) => (
+            <button
+              key={key}
+              onClick={() => chooseView(key)}
+              title={label}
+              aria-pressed={view === key}
+              className={`w-7 h-7 flex items-center justify-center rounded-lg transition-colors ${
+                view === key
+                  ? "bg-white dark:bg-slate-700 text-primary dark:text-teal-300 shadow-sm"
+                  : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
+              }`}
+            >
+              <Icon className="w-3.5 h-3.5" />
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {isSearchMode && (
+        <p className="text-xs font-bold text-slate-500 dark:text-slate-400 px-1">
+          {isSearching
+            ? "جارٍ البحث…"
+            : `${sorted.length} نتيجة ${currentId ? "في هذا المجلد وما بداخله" : "في الشجرة"}`}
+        </p>
+      )}
+
       {error && (
         <div className="flex items-start gap-2 px-4 py-3 rounded-xl bg-rose-500/[0.08] text-rose-600 dark:text-rose-400 font-bold text-xs">
           <AlertTriangle className="w-4 h-4 shrink-0 mt-px" />
@@ -264,23 +451,37 @@ export default function KnowledgeTreeClient() {
         <div className="flex items-center justify-center py-16">
           <Loader2 className="w-6 h-6 animate-spin text-primary" />
         </div>
-      ) : rows.length === 0 ? (
+      ) : sorted.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-16 gap-3 text-slate-400 dark:text-slate-600">
           <Folder className="w-12 h-12 text-slate-300 dark:text-slate-700" />
           <p className="font-bold text-sm">
-            {currentId === null ? "لا توجد مجلدات بعد — ابدأ بإنشاء مجلد" : "هذا المجلد فارغ"}
+            {isSearchMode
+              ? `لا نتائج لـ«${search.trim()}»`
+              : currentId === null
+                ? "لا توجد مجلدات بعد — ابدأ بإنشاء مجلد"
+                : "هذا المجلد فارغ"}
           </p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-          {[...folders, ...files].map((row) => {
+        <div
+          className={
+            view === "grid"
+              ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3"
+              : "flex flex-col divide-y divide-slate-100 dark:divide-slate-800 border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden"
+          }
+        >
+          {sorted.map((row) => {
             const Icon = row.kind === "FOLDER" ? Folder : iconFor(row.name);
             const isRenaming = renamingId === row.id;
 
             return (
               <div
                 key={row.id}
-                className="group bg-white dark:bg-[#0A0A0A] border border-slate-200 dark:border-slate-800 rounded-xl p-3 flex items-center gap-3 hover:border-primary/40 transition-colors"
+                className={
+                  view === "grid"
+                    ? "group bg-white dark:bg-[#0A0A0A] border border-slate-200 dark:border-slate-800 rounded-xl p-3 flex items-center gap-3 hover:border-primary/40 transition-colors"
+                    : "group bg-white dark:bg-[#0A0A0A] px-3 py-2 flex items-center gap-3 hover:bg-primary/[0.03] dark:hover:bg-primary/[0.06] transition-colors"
+                }
               >
                 <button
                   onClick={() => row.kind === "FOLDER" && setCurrentId(row.id)}
@@ -321,6 +522,7 @@ export default function KnowledgeTreeClient() {
                       : row.fileSize
                         ? formatBytes(row.fileSize)
                         : "ملف"}
+                    {isSearchMode && row.parentName ? ` · في: ${row.parentName}` : ""}
                     {row.createdByName ? ` · ${row.createdByName}` : ""}
                   </p>
                 </div>

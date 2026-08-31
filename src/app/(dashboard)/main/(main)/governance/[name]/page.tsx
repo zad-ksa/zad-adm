@@ -20,10 +20,10 @@ export async function generateMetadata({ params }: { params: Promise<{ name: str
 import { Suspense } from "react";
 import CircularLoader from "@/components/CircularLoader";
 
-export default async function GovernancePage({ 
-  params, 
-  searchParams 
-}: { 
+export default async function GovernancePage({
+  params,
+  searchParams
+}: {
   params: Promise<{ name: string }>;
   searchParams: Promise<{ tab?: string }>;
 }) {
@@ -39,7 +39,7 @@ export default async function GovernancePage({
     <div className="space-y-6">
       <div className="bg-white dark:bg-slate-800 rounded-2xl p-6 border border-slate-100 dark:border-slate-700 shadow-sm relative overflow-hidden transition-colors">
         <div className="absolute top-0 left-0 w-48 h-48 bg-primary/5 dark:bg-primary/10 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2 pointer-events-none"></div>
-        
+
         <div className="relative z-10 text-center py-6">
           <div className="w-14 h-14 bg-primary/10 dark:bg-primary/20 rounded-full flex items-center justify-center text-primary mx-auto mb-4">
             <Scale className="w-7 h-7" />
@@ -54,7 +54,7 @@ export default async function GovernancePage({
 
         </div>
       </div>
-      
+
       <Suspense key={activeTab} fallback={<div className="py-12"><CircularLoader /></div>}>
         <GovernanceTabContent decodedName={decodedName} activeTab={activeTab} session={session} />
       </Suspense>
@@ -62,14 +62,14 @@ export default async function GovernancePage({
   );
 }
 
-async function GovernanceTabContent({ 
-  decodedName, 
-  activeTab, 
-  session 
-}: { 
-  decodedName: string, 
-  activeTab: string, 
-  session: any 
+async function GovernanceTabContent({
+  decodedName,
+  activeTab,
+  session
+}: {
+  decodedName: string,
+  activeTab: string,
+  session: any
 }) {
   // Regulations are not scoped to the charity, so they do not have to wait for
   // it — and only two of the three tabs render them. The default "manual" tab
@@ -85,11 +85,11 @@ async function GovernanceTabContent({
     }),
     needsRegulations
       ? prisma.regulation.findMany({
-          orderBy: { createdAt: 'asc' },
-          include: {
-            charityVisibilities: true
-          }
-        })
+        orderBy: { createdAt: 'asc' },
+        include: {
+          charityVisibilities: true
+        }
+      })
       : Promise.resolve([]),
   ]);
 
@@ -106,16 +106,16 @@ async function GovernanceTabContent({
 
 
       {charity && activeTab === 'manual' && (
-        <GovernanceManualViewer 
+        <GovernanceManualViewer
           charityId={charity.id}
           charityName={decodedName}
-          initialSize={(charity.size as CharitySize) || null} 
+          initialSize={(charity.size as CharitySize) || null}
           annualRevenue={charity.annualRevenue}
           progress={charity.governanceProgress}
         />
       )}
 
-      
+
       {charity && activeTab === 'services' && (
         <div className="space-y-12">
           <GovernanceRegulationsManager charityId={charity.id} regulations={regulations} isAdmin={isAdmin} />

@@ -22,6 +22,21 @@ export type DesignRequestCardData = {
   submittedAt: string;
   scheduledStartDate: string;
   expectedCompletionDate: string;
+  /** When it was actually finalised — charity sign-off or the 24h auto-approval. */
+  completedAt?: string | null;
+  /** When it was rejected. */
+  rejectedAt?: string | null;
+  /** Finalised by the deadline passing rather than by the charity acting. */
+  autoApproved?: boolean;
+  /**
+   * Whether this request went through the charity review cycle at all.
+   *
+   * Requests completed before that cycle existed were finished by Zad
+   * directly, and nothing records who signed them off — so they show the
+   * date alone rather than claiming an approval that never happened.
+   */
+  wasReviewed?: boolean;
+  status?: string;
   /** Staff view only. */
   charityName?: string;
   /** Chosen design types, for display. */
@@ -162,17 +177,40 @@ export default function DesignRequestCard({
             <Calendar className="w-4 h-4 text-slate-400 dark:text-slate-500 shrink-0" />
             <span>الرفع:</span> <span className="font-bold text-slate-700 dark:text-slate-200">{request.submittedAt}</span>
           </span>
-          <span className="flex items-center gap-2">
-            <CalendarCheck className="w-4 h-4 text-primary dark:text-teal-400 shrink-0" />
-            <span className="text-primary dark:text-teal-400">التسليم المتوقع:</span>{" "}
-            <span className="font-bold text-slate-900 dark:text-slate-100">{request.expectedCompletionDate}</span>
-            {typeof request.totalWorkingDays === "number" && (
-              <span className="text-slate-400 dark:text-slate-500 tabular-nums">
-                ({request.totalWorkingDays} يوم عمل
-                {request.addedDays ? ` منها ${request.addedDays} مضافة` : ""})
+          {request.status === "COMPLETED" ? (
+            <span className="flex items-center gap-2">
+              <CalendarCheck className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+              <span className="text-emerald-700 dark:text-emerald-400">تاريخ الإنجاز:</span>{" "}
+              <span className="font-bold text-slate-900 dark:text-slate-100">
+                {request.completedAt ?? "—"}
               </span>
-            )}
-          </span>
+              {request.wasReviewed && (
+                <span className="text-slate-400 dark:text-slate-500">
+                  ({request.autoApproved ? "اعتماد تلقائي بعد 24 ساعة" : "باعتماد الجمعية"})
+                </span>
+              )}
+            </span>
+          ) : request.status === "REJECTED" ? (
+            <span className="flex items-center gap-2">
+              <CalendarCheck className="w-4 h-4 text-rose-500 shrink-0" />
+              <span className="text-rose-600 dark:text-rose-400">تاريخ الرفض:</span>{" "}
+              <span className="font-bold text-slate-900 dark:text-slate-100">
+                {request.rejectedAt ?? "—"}
+              </span>
+            </span>
+          ) : (
+            <span className="flex items-center gap-2">
+              <CalendarCheck className="w-4 h-4 text-primary dark:text-teal-400 shrink-0" />
+              <span className="text-primary dark:text-teal-400">وقت التسليم:</span>{" "}
+              <span className="font-bold text-slate-900 dark:text-slate-100">{request.expectedCompletionDate}</span>
+              {typeof request.totalWorkingDays === "number" && (
+                <span className="text-slate-400 dark:text-slate-500 tabular-nums">
+                  ({request.totalWorkingDays} يوم عمل
+                  {request.addedDays ? ` منها ${request.addedDays} مضافة` : ""})
+                </span>
+              )}
+            </span>
+          )}
         </div>
 
         {request.attachments.length > 0 && (

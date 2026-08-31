@@ -73,6 +73,15 @@ export default async function DesignRequestsPage() {
         rejectionReason: r.rejectionReason,
         revisionNotes: r.revisionNotes,
         autoApproved: r.autoApproved,
+        // deliveredAt is only ever set by the review cycle, so its absence
+        // marks a request finished under the old flow.
+        wasReviewed: !!r.deliveredAt,
+        // Formatted here like every other date on the card — the component
+        // must never format, or the server and the browser disagree.
+        completedAt: r.completedAt ? formatCivilDateTime(r.completedAt) : null,
+        // reviewedAt is stamped by both approve and reject; only a REJECTED
+        // row displays it, and there it can only mean the refusal.
+        rejectedAt: r.reviewedAt ? formatCivilDateTime(r.reviewedAt) : null,
         types: r.types.map((t) => ({ id: t.id, name: t.name })),
         totalWorkingDays: r.baseWorkingDays + r.addedDays,
         addedDays: r.addedDays,

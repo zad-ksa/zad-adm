@@ -109,7 +109,7 @@ export default function StaffExtendDesignRequestModal({
             className="flex items-center justify-between px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-800/60"
             style={{ fontSize: "var(--dr-fs-meta)" }}
           >
-            <span className="text-slate-500 dark:text-slate-400">التسليم الحالي</span>
+            <span className="text-slate-500 dark:text-slate-400">وقت التسليم الحالي</span>
             <span className="font-bold text-slate-800 dark:text-slate-100">
               {expectedCompletionDate}
             </span>

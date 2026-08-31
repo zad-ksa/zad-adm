@@ -73,6 +73,11 @@ export default async function DesignRequestsPortalPage({ params }: { params: Pro
         rejectionReason: r.rejectionReason,
         revisionNotes: r.revisionNotes,
         autoApproved: r.autoApproved,
+        // deliveredAt is only ever set by the review cycle, so its absence
+        // marks a request finished under the old flow.
+        wasReviewed: !!r.deliveredAt,
+        completedAt: r.completedAt ? formatCivilDate(r.completedAt) : null,
+        rejectedAt: r.reviewedAt ? formatCivilDate(r.reviewedAt) : null,
         types: r.types.map((t) => ({ id: t.id, name: t.name })),
         // Ids on their own, for prefilling the resubmit form's type picker.
         typeIds: r.types.map((t) => t.id),

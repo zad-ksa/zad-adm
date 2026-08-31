@@ -325,7 +325,15 @@ export default function KnowledgeTreeClient() {
                   </p>
                 </div>
 
-                <div className="flex items-center gap-1 shrink-0 opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity">
+                {/* Always visible.
+
+                    These were opacity-0 until hover, which is a desktop-mouse
+                    convention: on a phone or tablet there is no hover, so
+                    rename and delete could never be reached at all. Even with
+                    a mouse it hid the only way to remove anything behind a
+                    gesture nobody is told about. Muted colours keep the card
+                    calm without hiding what it can do. */}
+                <div className="flex items-center gap-1 shrink-0">
                   {row.kind === "FILE" && row.fileUrl && (
                     <a
                       href={row.fileUrl}
@@ -347,7 +355,7 @@ export default function KnowledgeTreeClient() {
                   <button
                     onClick={() => setDeleting(row)}
                     title="حذف"
-                    className="w-8 h-8 flex items-center justify-center rounded-lg text-slate-400 hover:text-rose-500 hover:bg-rose-500/5"
+                    className="w-8 h-8 flex items-center justify-center rounded-lg text-rose-400/70 dark:text-rose-400/60 hover:text-white hover:bg-rose-500 transition-colors"
                   >
                     <Trash2 className="w-3.5 h-3.5" />
                   </button>

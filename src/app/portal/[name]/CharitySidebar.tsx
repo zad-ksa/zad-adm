@@ -185,10 +185,10 @@ export default function CharitySidebar({
     { id: "design-requests", label: "طلبات التصاميم", href: `/portal/${encodeURIComponent(charityName)}/design-requests`, exact: true, icon: Palette, show: true },
     { id: "strategy", label: "الاستراتيجية", href: "#", comingSoon: true, icon: Target, show: true },
     { id: "finance", label: "تنمية الموارد المالية", href: "#", comingSoon: true, icon: Coins, show: true },
-    // HR used to be reachable by everyone, because every member could record
-    // their own attendance. With attendance on hold the only thing left inside
-    // is managing employees, so it now shows for the people who can do that —
-    // otherwise members would open an empty section.
+    // Always visible, like every other section here. Where it lands depends on
+    // the feature flag: with attendance on hold the only page left inside is
+    // the employees list, so everyone goes straight there rather than to a
+    // check-in screen that would just bounce back.
     {
       id: "hr",
       label: "الموارد البشرية",
@@ -196,7 +196,7 @@ export default function CharitySidebar({
         ? `/portal/${encodeURIComponent(charityName)}/hr/attendance`
         : `/portal/${encodeURIComponent(charityName)}/hr`,
       icon: Users,
-      show: CHARITY_ATTENDANCE_ENABLED || can("manage_charity_users"),
+      show: true,
     },
   ].filter((item) => item.show);
 

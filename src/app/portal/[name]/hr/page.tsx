@@ -27,14 +27,34 @@ export default async function HrStaffPage({ params }: { params: Promise<{ name: 
   // Someone who can only record their own attendance lands on the check-in
   // screen instead of an empty "not allowed" page — that IS their HR page.
   //
-  // Unless attendance is on hold, in which case that page bounces straight back
-  // here and the two redirects chase each other forever. With nothing left in HR
-  // for them, the portal home is the honest destination.
+  // While attendance is on hold that page redirects back here, so sending them
+  // there would put the two pages in an endless loop. They stay and read why
+  // the section is empty instead — the sidebar link is shown to everyone, and a
+  // link that throws you out is worse than one that explains itself.
   if (!can("manage_charity_users")) {
-    redirect(
-      CHARITY_ATTENDANCE_ENABLED
-        ? `/portal/${encodeURIComponent(charity.name)}/hr/attendance`
-        : `/portal/${encodeURIComponent(charity.name)}`
+    if (CHARITY_ATTENDANCE_ENABLED) {
+      redirect(`/portal/${encodeURIComponent(charity.name)}/hr/attendance`);
+    }
+    return (
+      <>
+        <HrPageHeader
+          icon={Users}
+          eyebrow="الموارد البشرية"
+          title="الموظفون"
+          context={charity.name}
+        />
+        <div
+          className="rounded-2xl border border-slate-200/70 dark:border-slate-700/60
+                     bg-white/60 dark:bg-slate-900/40 px-6 py-10 text-center"
+        >
+          <p className="text-slate-600 dark:text-slate-300 text-[15px] leading-relaxed">
+            لا تملك صلاحية إدارة الموظفين.
+          </p>
+          <p className="mt-1.5 text-slate-400 dark:text-slate-500 text-sm">
+            راجع مدير الجمعية لمنحك الصلاحية.
+          </p>
+        </div>
+      </>
     );
   }
 

@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useEffect, use } from "react";
+import { useState, useEffect, useRef, use } from "react";
 import { useRouter } from "next/navigation";
+import { createSurveyUploadTicket } from "@/app/actions/surveyUpload";
 import { UploadCloud, CheckCircle2, AlertCircle, X, Paperclip } from "lucide-react";
 import ProgressBar from "@/components/ProgressBar";
 import DatePicker from "react-multi-date-picker";
@@ -78,6 +79,11 @@ export default function CustomSurveyPage({ params }: { params: Promise<{ id: str
   const [charityName, setCharityName] = useState("");
   
   const [currentSectionIndex, setCurrentSectionIndex] = useState(0);
+  // Scrolled to when the section changes. Top-of-page put the survey header
+  // and the progress bar back on screen and left the first question below
+  // the fold, so every section began with the respondent scrolling.
+  const firstQuestionRef = useRef<HTMLDivElement | null>(null);
+  const hasChangedSection = useRef(false);
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [attachments, setAttachments] = useState<Record<string, string[]>>({});
   const [uploadingFiles, setUploadingFiles] = useState<Record<string, boolean>>({});
@@ -111,6 +117,15 @@ export default function CustomSurveyPage({ params }: { params: Promise<{ id: str
     }
   };
 
+  // Land on the first question of the section just opened.
+  //
+  // Guarded by hasChangedSection so arriving at the survey does not yank the
+  // page past its own introduction before the respondent has read it.
+  useEffect(() => {
+    if (!hasChangedSection.current) return;
+    firstQuestionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, [currentSectionIndex]);
+
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-50">
@@ -134,6 +149,7 @@ export default function CustomSurveyPage({ params }: { params: Promise<{ id: str
   }
 
   const currentSection = survey.sections[currentSectionIndex];
+
   const isLastSection = currentSectionIndex === survey.sections.length - 1;
 
   // Validation
@@ -159,22 +175,40 @@ export default function CustomSurveyPage({ params }: { params: Promise<{ id: str
     try {
       const uploadedUrls: string[] = [];
       for (const file of files) {
-        const formData = new FormData();
-        formData.append("file", file);
-        const res = await fetch("/api/upload", {
-          method: "POST",
-          body: formData,
-        });
-        const data = await res.json().catch(() => null);
-        // A rejected upload used to be dropped here without a word: the check
-        // was `if (data.url)`, so a 401 or a size rejection simply produced no
-        // URL and the respondent submitted the survey believing the file was
-        // attached. This is the one upload path still going through
-        // /api/upload — the page is public and signed tickets need a session.
-        if (!res.ok || !data?.url) {
-          throw new Error(data?.error || `تعذّر رفع ${file.name}`);
+        // Straight to Cloudinary with a ticket the survey itself authorises.
+        //
+        // This used to POST to /api/upload, which demands a session — so a
+        // respondent, who by design has no account, was told «غير مصرح».
+        // Worse, the failure was swallowed and the survey was submitted as
+        // though the file had gone with it.
+        const { ticket, error } = await createSurveyUploadTicket(
+          resolvedParams.id,
+          file.name,
+          file.size
+        );
+        if (error || !ticket) {
+          throw new Error(error || `تعذّر رفع ${file.name}`);
         }
-        uploadedUrls.push(data.url);
+
+        const form = new FormData();
+        form.append("file", file);
+        form.append("api_key", ticket.apiKey);
+        form.append("timestamp", String(ticket.timestamp));
+        form.append("signature", ticket.signature);
+        form.append("folder", ticket.folder);
+        form.append("public_id", ticket.publicId);
+
+        const res = await fetch(
+          `https://api.cloudinary.com/v1_1/${ticket.cloudName}/${ticket.resourceType}/upload`,
+          { method: "POST", body: form }
+        );
+        const data = await res.json().catch(() => null);
+        if (!res.ok || !data?.secure_url) {
+          // Cloudinary's own reason, so «too large» and «wrong type» do not
+          // arrive as the same shrug.
+          throw new Error(data?.error?.message || `تعذّر رفع ${file.name}`);
+        }
+        uploadedUrls.push(data.secure_url);
       }
       if (uploadedUrls.length > 0) {
         setAttachments(prev => ({ ...prev, [questionId]: [...(prev[questionId] || []), ...uploadedUrls] }));
@@ -219,15 +253,15 @@ export default function CustomSurveyPage({ params }: { params: Promise<{ id: str
         setIsSubmitting(false);
       }
     } else {
+      hasChangedSection.current = true;
       setCurrentSectionIndex(prev => prev + 1);
-      window.scrollTo({ top: 0, behavior: "smooth" });
     }
   };
 
   const handlePrev = () => {
     if (currentSectionIndex > 0) {
+      hasChangedSection.current = true;
       setCurrentSectionIndex(prev => prev - 1);
-      window.scrollTo({ top: 0, behavior: "smooth" });
     }
   };
 
@@ -277,7 +311,11 @@ export default function CustomSurveyPage({ params }: { params: Promise<{ id: str
 
             <div className="space-y-6">
               {currentSection.questions.map((question, index) => (
-                <div key={question.id} className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
+                <div
+                  key={question.id}
+                  ref={index === 0 ? firstQuestionRef : undefined}
+                  className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm scroll-mt-6"
+                >
                   <div className="flex gap-4">
                     <div className="w-8 h-8 rounded-full bg-slate-100 text-slate-600 flex items-center justify-center font-bold shrink-0">
                       {index + 1}

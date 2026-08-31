@@ -14,6 +14,22 @@
 export const MB = 1024 * 1024;
 
 /**
+ * A signed Cloudinary upload ticket.
+ *
+ * Shared so the public survey path can mint one without importing from a
+ * "use server" module that also carries session-bound helpers.
+ */
+export type UploadTicket = {
+  cloudName: string;
+  apiKey: string;
+  timestamp: number;
+  signature: string;
+  folder: string;
+  publicId: string;
+  resourceType: "auto" | "raw";
+};
+
+/**
  * 100MB per file.
  *
  * Cloudinary enforces its own per-file maximum, and it varies by resource type

@@ -175,13 +175,103 @@ export function buildLetterheadDoc(m: Meeting, forPrint: boolean, meetingNum?: n
     return h;
   }
 
-  function appendToPage(el) {
+  function place(el, h) {
+    currentArea.appendChild(el);
+    usedHeight += h;
+  }
+
+  // Splits a table across pages, row by row, repeating the header on each.
+  //
+  // Without this a table is one indivisible node: it is measured whole, moved
+  // whole to a fresh page when it does not fit, and then CLIPPED by the
+  // content-area overflow:hidden. Nothing warns — the rows past the page edge
+  // simply vanish, which is how a meeting with twenty tasks printed twelve.
+  //
+  // The header clone stays inside the same tbody rather than moving to a thead,
+  // so the tr:nth-child striping keeps landing on the same rows it did before.
+  function appendTable(table) {
+    var all = Array.prototype.slice.call(table.rows);
+    if (all.length < 2) { appendAtomic(table); return; }
+
+    var header = all[0];
+    var bodyRows = all.slice(1);
+    var i = 0;
+
+    while (i < bodyRows.length) {
+      var chunk = document.createElement("table");
+      var tbody = document.createElement("tbody");
+      chunk.appendChild(tbody);
+      tbody.appendChild(header.cloneNode(true));
+
+      var placed = 0;
+      var avail = USABLE - usedHeight;
+
+      while (i < bodyRows.length) {
+        tbody.appendChild(bodyRows[i].cloneNode(true));
+        var h = getHeight(chunk);
+
+        if (h <= avail) { placed++; i++; continue; }
+
+        // Does not fit. Keep it anyway if the page is empty and this is the
+        // first row — a single row taller than a whole page cannot be split,
+        // and dropping it would be the very bug this function exists to fix.
+        if (placed === 0 && usedHeight === 0) { placed++; i++; }
+        else { tbody.removeChild(tbody.lastChild); }
+        break;
+      }
+
+      if (placed === 0) {
+        // Not even the header plus one row fits in what is left of this page.
+        currentArea = newPage(); usedHeight = 0;
+        continue;
+      }
+
+      place(chunk, getHeight(chunk));
+      if (i < bodyRows.length) { currentArea = newPage(); usedHeight = 0; }
+    }
+  }
+
+  // Same treatment for lists, which overflow the same way once a section of
+  // recommendations runs long.
+  function appendList(list) {
+    var items = Array.prototype.slice.call(list.children);
+    if (items.length < 2) { appendAtomic(list); return; }
+
+    var i = 0;
+    while (i < items.length) {
+      var chunk = document.createElement(list.tagName);
+      var placed = 0;
+      var avail = USABLE - usedHeight;
+
+      while (i < items.length) {
+        chunk.appendChild(items[i].cloneNode(true));
+        if (getHeight(chunk) <= avail) { placed++; i++; continue; }
+        if (placed === 0 && usedHeight === 0) { placed++; i++; }
+        else { chunk.removeChild(chunk.lastChild); }
+        break;
+      }
+
+      if (placed === 0) { currentArea = newPage(); usedHeight = 0; continue; }
+
+      place(chunk, getHeight(chunk));
+      if (i < items.length) { currentArea = newPage(); usedHeight = 0; }
+    }
+  }
+
+  // Anything with no natural seam to cut along: moved whole to the next page.
+  function appendAtomic(el) {
     var h = getHeight(el);
     if (usedHeight + h > USABLE && usedHeight > 0) {
       currentArea = newPage(); usedHeight = 0;
     }
-    currentArea.appendChild(el);
-    usedHeight += h;
+    place(el, h);
+  }
+
+  function appendToPage(el) {
+    var tag = el.tagName;
+    if (tag === "TABLE") appendTable(el);
+    else if (tag === "UL" || tag === "OL") appendList(el);
+    else appendAtomic(el);
   }
 
   nodes.forEach(function(node) {

@@ -19,6 +19,7 @@ import SuccessToast from "@/components/ui/SuccessToast";
 import UploadProgress from "@/components/ui/UploadProgress";
 import type { UploadProgress as Progress } from "@/lib/clientUpload";
 import ConfirmModal from "@/components/ui/ConfirmModal";
+import CopyDeliveryNotice from "@/components/design-requests/CopyDeliveryNotice";
 
 const DESIGN_MAX = maxBytesFor("design_request");
 const DESIGN_MAX_LABEL = maxLabelFor("design_request");
@@ -339,11 +340,22 @@ export default function DesignRequestsClient({
                     </button>
                   </div>
                 ) : it.request.status === "AWAITING_REVIEW" ? (
-                  <div
-                    className="w-full mt-2 px-3 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800/60 text-slate-500 dark:text-slate-400 leading-relaxed"
-                    style={{ fontSize: "var(--dr-fs-meta)" }}
-                  >
-                    سُلّم وبانتظار ردّ الجمعية. يُعتمد تلقائياً إن لم تردّ خلال 24 ساعة.
+                  <div className="w-full mt-2 space-y-2">
+                    <div
+                      className="px-3 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800/60 text-slate-500 dark:text-slate-400 leading-relaxed"
+                      style={{ fontSize: "var(--dr-fs-meta)" }}
+                    >
+                      سُلّم وبانتظار ردّ الجمعية. يُعتمد تلقائياً إن لم تردّ خلال 24 ساعة.
+                    </div>
+
+                    {/* The platform does not notify the charity itself yet, so
+                        someone still sends the message by hand. This keeps the
+                        24-hour clause in it matching what the deadline job
+                        actually does. */}
+                    <CopyDeliveryNotice
+                      charityName={it.request.charityName || ""}
+                      requestTitle={it.request.title}
+                    />
                   </div>
                 ) : it.request.status === "UNDER_REVIEW" ? (
                   <div className="flex flex-wrap items-center gap-2 w-full mt-2">

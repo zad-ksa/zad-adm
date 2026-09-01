@@ -12,6 +12,7 @@ import {
   Check, 
   Loader2 
 } from "@/components/Icons";
+import { Mail } from "lucide-react";
 import { PERMISSION_GROUPS } from "@/lib/permissions";
 
 interface RoleDefinition {
@@ -84,13 +85,31 @@ export function AddEmployeeForm({
           </div>
         </div>
 
+        {/* Email login is optional: leave both blank and the account signs in
+            with phone + OTP, exactly as every account did before. Filling one
+            without the other is refused by the action — half a credential
+            opens nothing but looks like it should. */}
         <div>
-          <label className="block text-sm font-medium text-slate-700 dark:text-slate-200 mb-2">كلمة المرور الافتراضية</label>
+          <label className="block text-sm font-medium text-slate-700 dark:text-slate-200 mb-2">
+            البريد الإلكتروني <span className="text-slate-400 font-normal">(اختياري — للدخول بكلمة المرور)</span>
+          </label>
+          <div className="relative">
+            <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+              <Mail className="h-5 w-5 text-slate-400 dark:text-slate-500" />
+            </div>
+            <input name="email" type="email" dir="ltr" placeholder="name@example.com" className="appearance-none block w-full pr-10 pl-3 py-2.5 bg-white dark:bg-slate-900/50 border border-slate-200 dark:border-slate-600 text-slate-800 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary/50 sm:text-sm text-right transition-colors" />
+          </div>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-slate-700 dark:text-slate-200 mb-2">
+            كلمة المرور <span className="text-slate-400 font-normal">(مطلوبة مع البريد فقط)</span>
+          </label>
           <div className="relative">
             <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
               <Key className="h-5 w-5 text-slate-400 dark:text-slate-500" />
             </div>
-            <input name="password" type="text" required dir="ltr" className="appearance-none block w-full pr-10 pl-3 py-2.5 bg-white dark:bg-slate-900/50 border border-slate-200 dark:border-slate-600 text-slate-800 dark:text-slate-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary/50 sm:text-sm text-right transition-colors" />
+            <input name="password" type="text" dir="ltr" placeholder="٨ أحرف على الأقل" className="appearance-none block w-full pr-10 pl-3 py-2.5 bg-white dark:bg-slate-900/50 border border-slate-200 dark:border-slate-600 text-slate-800 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary/50 sm:text-sm text-right transition-colors" />
           </div>
         </div>
 

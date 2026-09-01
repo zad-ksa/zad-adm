@@ -113,6 +113,10 @@ model CharityUser {
   id          String           @id @default(uuid())
   name        String
   phone       String           @unique
+  /// Login email and bcrypt hash — both optional, both meaningless alone.
+  /// See the note on Employee.email.
+  email       String?          @unique
+  password    String?
   title       CharityUserTitle @default(FULL_TIME)
   permissions String[]         @default([])
   isActive    Boolean          @default(true)
@@ -330,7 +334,11 @@ model Employee {
   id                      String                @id @default(uuid())
   name                    String
   phone                   String                @unique
-  password                String
+  /// Login email. Optional on purpose: an account without one still signs in
+  /// with phone + OTP exactly as before, so no migration can lock anyone out.
+  email                   String?               @unique
+  /// bcrypt hash. null means this person has not set up email login yet.
+  password                String?
   avatarUrl               String?
   role                    String                @default("STRATEGY")
   charityId               String? // For CHARITY_CLIENT accounts
@@ -927,9 +935,9 @@ enum KnowledgeNodeKind {
 /// موجودة في متصفح من أنشأها وحده ولا يراها زملاؤه. الجدول هنا هو الفرق
 /// الجوهري بين الفكرتين، لا الواجهة.
 model KnowledgeNode {
-  id       String            @id @default(uuid())
-  name     String
-  kind     KnowledgeNodeKind
+  id   String            @id @default(uuid())
+  name String
+  kind KnowledgeNodeKind
 
   /// null للعقد في الجذر. الحذف متتالٍ: حذف مجلد يحذف ذريته كلها في
   /// قاعدة البيانات، ويبقى على الإجراء أن يزيل ملفاتها من Cloudinary قبل ذلك.

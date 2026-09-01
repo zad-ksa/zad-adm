@@ -2,12 +2,22 @@
 
 import { uploadFile } from "@/lib/clientUpload";
 import { useState, useRef, useTransition, useEffect } from "react";
-import { User, Camera, Loader2, AlertCircle, CheckCircle2, Eye, EyeOff, UserCircle } from "lucide-react";
+import { User, Camera, Loader2, AlertCircle, CheckCircle2, Eye, EyeOff, UserCircle, Mail } from "lucide-react";
 import { updateProfile } from "@/app/actions/profile";
 import { useRouter } from "next/navigation";
 
-export default function ProfileClient({ session }: { session: any }) {
+export default function ProfileClient({
+  session,
+  initialEmail,
+  hasPassword,
+}: {
+  session: any;
+  initialEmail: string;
+  /** Whether a hash is already stored — decides what the password field promises. */
+  hasPassword: boolean;
+}) {
   const [name, setName] = useState(session?.name || "");
+  const [email, setEmail] = useState(initialEmail);
   const [phone, setPhone] = useState(session?.phone || "");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -65,6 +75,7 @@ export default function ProfileClient({ session }: { session: any }) {
       const res = await updateProfile({
         name,
         phone,
+        email: email.trim() || null,
         password: password || undefined,
         avatarUrl: uploadedAvatarUrl,
       });
@@ -171,7 +182,30 @@ export default function ProfileClient({ session }: { session: any }) {
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm font-bold text-slate-700 dark:text-slate-300 block">كلمة المرور (اختياري)</label>
+              <label className="text-sm font-bold text-slate-700 dark:text-slate-300 block">
+                البريد الإلكتروني
+              </label>
+              <div className="relative">
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  disabled={isPending}
+                  className="w-full px-4 py-2.5 pl-11 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all text-slate-800 dark:text-slate-100 font-bold text-left disabled:opacity-60"
+                  placeholder="name@example.com"
+                  dir="ltr"
+                />
+                <Mail className="absolute inset-y-0 left-0 ml-3 my-auto w-5 h-5 text-slate-400" />
+              </div>
+              <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+                يستعمل للدخول بكلمة المرور. وتركه فارغًا يبقيك على الدخول برقم الجوال ورمز التحقق.
+              </p>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-bold text-slate-700 dark:text-slate-300 block">
+                {hasPassword ? "كلمة مرور جديدة (اختياري)" : "كلمة المرور"}
+              </label>
               <div className="relative">
                 <input
                   type={showPassword ? "text" : "password"}
@@ -179,7 +213,7 @@ export default function ProfileClient({ session }: { session: any }) {
                   onChange={(e) => setPassword(e.target.value)}
                   disabled={isPending}
                   className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all text-slate-800 dark:text-slate-100 font-bold text-left disabled:opacity-60"
-                  placeholder="اتركها فارغة إذا لم ترد التغيير"
+                  placeholder={hasPassword ? "اتركها فارغة إذا لم ترد التغيير" : "٨ أحرف على الأقل"}
                   dir="ltr"
                 />
                 <button

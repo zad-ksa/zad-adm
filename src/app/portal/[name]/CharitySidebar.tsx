@@ -18,7 +18,8 @@ import {
   Coins,
   Users,
   ShieldCheck,
-  Palette
+  Palette,
+  KeyRound
 } from "lucide-react";
 import ZadLogo from "@/components/ZadLogo";
 import PrivacyPolicyModal from "@/components/PrivacyPolicyModal";
@@ -313,6 +314,20 @@ export default function CharitySidebar({
               </>
             )}
             
+            {/* Signing-in details belong to the person, not the charity, so they
+                live in the account menu rather than among the sections. */}
+            <Link
+              role="menuitem"
+              href={`/portal/${encodeURIComponent(charityName)}/profile`}
+              onClick={() => setIsDropdownOpen(false)}
+              className="flex items-center justify-start w-full px-3 py-2 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-white/5 text-[14px] font-medium transition-colors text-right outline-none focus-visible:bg-slate-50 dark:focus-visible:bg-white/5"
+            >
+              <KeyRound className="w-4 h-4 shrink-0 ml-2.5" />
+              <span>بيانات الدخول</span>
+            </Link>
+
+            <div className="h-px bg-slate-100 dark:bg-slate-800 my-1 mx-3" />
+
             <button
               role="menuitem"
               onClick={() => {

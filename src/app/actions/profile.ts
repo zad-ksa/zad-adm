@@ -3,7 +3,7 @@
 import { prisma } from "@/lib/db";
 import { encrypt, getSession, SESSION_MAX_AGE_SECONDS } from "@/lib/auth";
 import { cookies } from "next/headers";
-import { hash } from "bcryptjs";
+import { hashPassword, normalizeEmail, validateCredentialPair } from "@/lib/password";
 
 // Both actions below previously decrypted the session cookie by hand instead of
 // calling getSession(). That skipped getSession's database check, so a
@@ -27,6 +27,13 @@ async function requireRealEmployee() {
 export async function updateProfile(data: {
   name: string;
   phone: string;
+  /**
+   * The login address, set by its owner rather than by an administrator.
+   *
+   * Undefined means «leave it alone» — older callers that do not know about
+   * this field must not silently wipe it. null means «remove email login».
+   */
+  email?: string | null;
   password?: string;
   avatarUrl?: string | null;
 }) {
@@ -34,7 +41,7 @@ export async function updateProfile(data: {
   if ("error" in auth) return { error: auth.error };
   const currentUser = auth.session;
 
-  const { name, phone, password, avatarUrl } = data;
+  const { name, phone, email: emailInput, password, avatarUrl } = data;
 
   if (!name || !phone) {
     return { error: "الاسم ورقم الجوال مطلوبان" };
@@ -58,6 +65,31 @@ export async function updateProfile(data: {
     return { error: "رقم الجوال مسجل لموظف آخر" };
   }
 
+  // Whether half a credential is acceptable depends on what is already
+  // stored: typing only a new password is fine once an address exists.
+  const current = await prisma.employee.findUnique({
+    where: { id: currentUser.id },
+    select: { email: true, password: true },
+  });
+
+  const emailProvided = emailInput !== undefined;
+  const wantsEmail = !!emailInput?.trim();
+
+  const pairProblem = validateCredentialPair(emailInput, password, {
+    hasExistingEmail: !!current?.email,
+    hasExistingPassword: !!current?.password,
+  });
+  if (pairProblem) return { error: pairProblem };
+
+  const email = wantsEmail ? normalizeEmail(emailInput!) : null;
+
+  if (email && email !== current?.email) {
+    const takenBy = await prisma.employee.findFirst({
+      where: { email, id: { not: currentUser.id } },
+    });
+    if (takenBy) return { error: "البريد الإلكتروني مسجل لموظف آخر" };
+  }
+
   // Update object
   const updateData: any = {
     name,
@@ -65,8 +97,14 @@ export async function updateProfile(data: {
     avatarUrl
   };
 
+  if (emailProvided) {
+    updateData.email = email;
+    // Removing the address retires email login, so the hash goes with it.
+    if (!email) updateData.password = null;
+  }
+
   if (password && password.trim() !== "") {
-    updateData.password = await hash(password, 10);
+    updateData.password = await hashPassword(password.trim());
   }
 
   // Update database

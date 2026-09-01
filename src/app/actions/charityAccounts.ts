@@ -5,12 +5,20 @@ import { getSession } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
 import { hasPermission } from "@/lib/permissions";
 import { CharityUserTitle } from "@prisma/client";
+import { hashPassword, normalizeEmail, validateCredentialPair } from "@/lib/password";
 
 export async function addCharityClientAccount(data: {
   name: string;
   phone: string;
   title: string;
   charityIds: string[];
+  /**
+   * Optional email login. Left blank, the account signs in with phone + OTP
+   * like every account did before, and its owner can set these themselves
+   * later from the portal. Supplying one without the other is refused.
+   */
+  email?: string | null;
+  password?: string;
   /**
    * Makes the account an administrator of every charity it is linked to here.
    *
@@ -43,10 +51,24 @@ export async function addCharityClientAccount(data: {
       return { success: false, error: "رقم الجوال مسجل مسبقاً" };
     }
 
+    const pairProblem = validateCredentialPair(data.email, data.password);
+    if (pairProblem) return { success: false, error: pairProblem };
+
+    const email = data.email?.trim() ? normalizeEmail(data.email) : null;
+
+    if (email) {
+      const emailTaken = await prisma.charityUser.findUnique({ where: { email } });
+      if (emailTaken) {
+        return { success: false, error: "البريد الإلكتروني مسجل مسبقاً" };
+      }
+    }
+
     const newAccount = await prisma.charityUser.create({
       data: {
         name: data.name.trim(),
         phone: data.phone.trim(),
+        email,
+        password: email ? await hashPassword(data.password!.trim()) : null,
         title: data.title as CharityUserTitle,
         isActive: true,
         charities: {

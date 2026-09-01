@@ -5,11 +5,19 @@ import { encrypt, SESSION_MAX_AGE_SECONDS } from "@/lib/auth";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { sendAuthenticaOTP, verifyAuthenticaOTP } from "@/lib/authentica";
-import { checkRateLimit } from "@/lib/rateLimit";
+import { checkRateLimit, peekRateLimit, recordFailure, clearRateLimit } from "@/lib/rateLimit";
+import { verifyPassword, normalizeEmail } from "@/lib/password";
 import { logAudit } from "@/lib/auditLog";
 
 const OTP_REQUEST_LIMIT = { count: 3, windowMs: 15 * 60 * 1000 }; // 3 / 15 min
-const OTP_VERIFY_LIMIT = { count: 5, windowMs: 15 * 60 * 1000 }; // 5 / 15 min
+const OTP_VERIFY_LIMIT = { count: 5, windowMs: 15 * 60 * 1000 }; // 5 wrong codes / 15 min
+const PASSWORD_LIMIT = { count: 5, windowMs: 15 * 60 * 1000 }; // 5 wrong passwords / 15 min
+
+/** Every counter that a completed sign-in should wipe, for one phone. */
+function clearPhoneCounters(phone: string) {
+  clearRateLimit(`emp-otp-req:${phone}`);
+  clearRateLimit(`emp-otp-verify:${phone}`);
+}
 
 export async function requestEmployeeOTP(phone: string) {
   try {
@@ -57,7 +65,9 @@ export async function verifyEmployeeOTP(phone: string, otp: string) {
       return { error: "يرجى إدخال البيانات المطلوبة" };
     }
 
-    const rl = checkRateLimit(`emp-otp-verify:${phone}`, OTP_VERIFY_LIMIT.count, OTP_VERIFY_LIMIT.windowMs);
+    // Read-only: a correct code must not consume an attempt. See rateLimit.ts.
+    const verifyKey = `emp-otp-verify:${phone}`;
+    const rl = peekRateLimit(verifyKey, OTP_VERIFY_LIMIT.count);
     if (!rl.allowed) {
       return { error: `عدد محاولات كبير، يرجى المحاولة بعد ${Math.ceil(rl.retryAfterSeconds / 60)} دقيقة` };
     }
@@ -67,6 +77,7 @@ export async function verifyEmployeeOTP(phone: string, otp: string) {
     } else {
       const authenticaResult = await verifyAuthenticaOTP(phone, otp);
       if (authenticaResult.error) {
+        recordFailure(verifyKey, OTP_VERIFY_LIMIT.windowMs);
         await logAudit({ actorType: "EMPLOYEE", action: "LOGIN_FAILED", metadata: { phone, reason: "invalid_otp" } });
         return { error: authenticaResult.error };
       }
@@ -78,9 +89,15 @@ export async function verifyEmployeeOTP(phone: string, otp: string) {
     });
 
     if (!employee || !employee.isActive) {
+      recordFailure(verifyKey, OTP_VERIFY_LIMIT.windowMs);
       await logAudit({ actorType: "EMPLOYEE", action: "LOGIN_FAILED", metadata: { phone, reason: "not_found_or_inactive" } });
       return { error: "الحساب غير موجود أو غير نشط" };
     }
+
+    // Signed in — the code was right, so nothing is owed. Both the request
+    // and the verify counters go, which is what lets someone sign in and out
+    // repeatedly without ever meeting the 3-requests-per-15-minutes wall.
+    clearPhoneCounters(phone);
 
     // Create JWT Session
     const sessionData = {
@@ -121,6 +138,96 @@ export async function verifyEmployeeOTP(phone: string, otp: string) {
   redirect("/main");
 }
 
+
+
+/**
+ * Sign in with email and password — the second door, beside phone + OTP.
+ *
+ * Deliberately indistinguishable from outside: unknown address, wrong
+ * password and deactivated account all return the same sentence, and the
+ * bcrypt comparison runs even when no account matched (see password.ts), so
+ * neither the wording nor the timing reveals which emails are registered.
+ */
+export async function loginWithEmployeeEmail(emailInput: string, password: string) {
+  let destination: string | null = null;
+  try {
+    if (!emailInput || !password) {
+      return { error: "يرجى إدخال البريد الإلكتروني وكلمة المرور" };
+    }
+
+    const email = normalizeEmail(emailInput);
+    const key = `emp-login-pw:${email}`;
+
+    // Read-only. A correct password consumes nothing, so signing in and out
+    // repeatedly can never lock the account.
+    const rl = peekRateLimit(key, PASSWORD_LIMIT.count);
+    if (!rl.allowed) {
+      return { error: `عدد محاولات كبير، يرجى المحاولة بعد ${Math.ceil(rl.retryAfterSeconds / 60)} دقيقة` };
+    }
+
+    const employee = await prisma.employee.findUnique({ where: { email } });
+
+    // One sentence for every failure. Splitting it into «البريد غير مسجل» and
+    // «كلمة المرور خاطئة» would turn this form into a directory of who works
+    // here.
+    const GENERIC = "البريد الإلكتروني أو كلمة المرور غير صحيحة";
+
+    const ok = await verifyPassword(password, employee?.password ?? null);
+    if (!employee || !ok) {
+      recordFailure(key, PASSWORD_LIMIT.windowMs);
+      await logAudit({ actorType: "EMPLOYEE", action: "LOGIN_FAILED", metadata: { email, reason: employee ? "bad_password" : "unknown_email" } });
+      return { error: GENERIC };
+    }
+
+    if (!employee.isActive) {
+      recordFailure(key, PASSWORD_LIMIT.windowMs);
+      await logAudit({ actorType: "EMPLOYEE", actorId: employee.id, action: "LOGIN_FAILED", metadata: { email, reason: "inactive" } });
+      return { error: "الحساب غير نشط" };
+    }
+
+    clearRateLimit(key);
+    clearPhoneCounters(employee.phone);
+
+    // The same session cookie the OTP path builds — byte for byte the same
+    // shape, so getSession, proxy.ts and every guard behave identically
+    // whichever door was used.
+    const sessionData = {
+      id: employee.id,
+      name: employee.name,
+      phone: employee.phone,
+      role: employee.role,
+      permissions: employee.permissions,
+      navOrder: employee.navOrder || [],
+      avatarUrl: employee.avatarUrl,
+      charityId: employee.charityId,
+    };
+
+    const cookieStore = await cookies();
+    cookieStore.set("session", await encrypt(sessionData), {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      path: "/",
+      maxAge: SESSION_MAX_AGE_SECONDS,
+    });
+
+    await logAudit({
+      actorType: "EMPLOYEE",
+      actorId: employee.id,
+      actorName: employee.name,
+      action: "LOGIN_SUCCESS",
+      metadata: { method: "password" },
+    });
+
+    destination = "/main";
+  } catch (error: any) {
+    if (error?.digest?.startsWith("NEXT_REDIRECT")) throw error;
+    console.error("Employee password login error:", error);
+    return { error: "حدث خطأ داخلي أثناء تسجيل الدخول" };
+  }
+
+  redirect(destination);
+}
 
 
 export async function logout() {

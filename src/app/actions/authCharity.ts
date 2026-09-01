@@ -5,11 +5,19 @@ import { encrypt, SESSION_MAX_AGE_SECONDS } from "@/lib/auth";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { sendAuthenticaOTP, verifyAuthenticaOTP } from "@/lib/authentica";
-import { checkRateLimit } from "@/lib/rateLimit";
+import { checkRateLimit, peekRateLimit, recordFailure, clearRateLimit } from "@/lib/rateLimit";
+import { verifyPassword, normalizeEmail } from "@/lib/password";
 import { logAudit } from "@/lib/auditLog";
 
 const OTP_REQUEST_LIMIT = { count: 3, windowMs: 15 * 60 * 1000 }; // 3 / 15 min
-const OTP_VERIFY_LIMIT = { count: 5, windowMs: 15 * 60 * 1000 }; // 5 / 15 min
+const OTP_VERIFY_LIMIT = { count: 5, windowMs: 15 * 60 * 1000 }; // 5 wrong codes / 15 min
+const PASSWORD_LIMIT = { count: 5, windowMs: 15 * 60 * 1000 }; // 5 wrong passwords / 15 min
+
+/** Every counter a completed sign-in wipes, for one phone. */
+function clearPhoneCounters(phone: string) {
+  clearRateLimit(`charity-otp-req:${phone}`);
+  clearRateLimit(`charity-otp-verify:${phone}`);
+}
 
 export async function requestCharityOTP(phone: string) {
   try {
@@ -138,7 +146,9 @@ export async function verifyCharityOTP(phone: string, otp: string) {
       return { error: "يرجى إدخال البيانات المطلوبة" };
     }
 
-    const rl = checkRateLimit(`charity-otp-verify:${phone.trim()}`, OTP_VERIFY_LIMIT.count, OTP_VERIFY_LIMIT.windowMs);
+    // Read-only: a correct code must not consume an attempt. See rateLimit.ts.
+    const verifyKey = `charity-otp-verify:${phone.trim()}`;
+    const rl = peekRateLimit(verifyKey, OTP_VERIFY_LIMIT.count);
     if (!rl.allowed) {
       return { error: `عدد محاولات كبير، يرجى المحاولة بعد ${Math.ceil(rl.retryAfterSeconds / 60)} دقيقة` };
     }
@@ -156,6 +166,7 @@ export async function verifyCharityOTP(phone: string, otp: string) {
     if (!isDevPhone) {
       const authenticaResult = await verifyAuthenticaOTP(phone, otp);
       if (authenticaResult.error) {
+        recordFailure(verifyKey, OTP_VERIFY_LIMIT.windowMs);
         await logAudit({ actorType: "CHARITY_USER", action: "LOGIN_FAILED", metadata: { phone: cleanPhone, reason: "invalid_otp" } });
         return { error: authenticaResult.error };
       }
@@ -174,9 +185,14 @@ export async function verifyCharityOTP(phone: string, otp: string) {
     });
 
     if (!user || !user.isActive) {
+      recordFailure(verifyKey, OTP_VERIFY_LIMIT.windowMs);
       await logAudit({ actorType: "CHARITY_USER", action: "LOGIN_FAILED", metadata: { phone: cleanPhone, reason: "not_found_or_inactive" } });
       return { error: "الحساب غير موجود أو غير نشط" };
     }
+
+    // Signed in — nothing is owed. Clearing the request counter too is what
+    // lets someone sign in and out repeatedly without meeting the wall.
+    clearPhoneCounters(cleanPhone);
 
     if (user.charities.length === 0) {
       return { error: "هذا الحساب غير مرتبط بأي جمعية" };
@@ -230,6 +246,108 @@ export async function verifyCharityOTP(phone: string, otp: string) {
   } else {
     redirect(`/portal/${encodeURIComponent(userWithCharities.charities[0].charity.name)}`);
   }
+}
+
+/**
+ * Sign in with email and password — the second door for charity accounts.
+ *
+ * Mirrors loginWithEmployeeEmail: one generic failure sentence, a bcrypt
+ * comparison that runs even for unknown addresses, and failure-only counting
+ * so repeated legitimate sign-ins never lock anyone out.
+ *
+ * It ends where the OTP path ends — the charity picker when the account serves
+ * several, the portal itself when it serves one.
+ */
+export async function loginWithCharityEmail(emailInput: string, password: string) {
+  let destination: string | null = null;
+  try {
+    if (!emailInput || !password) {
+      return { error: "يرجى إدخال البريد الإلكتروني وكلمة المرور" };
+    }
+
+    const email = normalizeEmail(emailInput);
+    const key = `charity-login-pw:${email}`;
+
+    const rl = peekRateLimit(key, PASSWORD_LIMIT.count);
+    if (!rl.allowed) {
+      return { error: `عدد محاولات كبير، يرجى المحاولة بعد ${Math.ceil(rl.retryAfterSeconds / 60)} دقيقة` };
+    }
+
+    const user = await prisma.charityUser.findUnique({
+      where: { email },
+      include: {
+        charities: {
+          // Deactivated memberships must not let anyone into that charity, nor
+          // count towards «is this account linked to anything» — same rule the
+          // OTP path applies.
+          where: { isActive: true },
+          include: { charity: true },
+        },
+      },
+    });
+
+    const GENERIC = "البريد الإلكتروني أو كلمة المرور غير صحيحة";
+
+    const ok = await verifyPassword(password, user?.password ?? null);
+    if (!user || !ok) {
+      recordFailure(key, PASSWORD_LIMIT.windowMs);
+      await logAudit({ actorType: "CHARITY_USER", action: "LOGIN_FAILED", metadata: { email, reason: user ? "bad_password" : "unknown_email" } });
+      return { error: GENERIC };
+    }
+
+    if (!user.isActive) {
+      recordFailure(key, PASSWORD_LIMIT.windowMs);
+      await logAudit({ actorType: "CHARITY_USER", actorId: user.id, action: "LOGIN_FAILED", metadata: { email, reason: "inactive" } });
+      return { error: "الحساب غير نشط، يرجى مراجعة إدارة زاد" };
+    }
+
+    if (user.charities.length === 0) {
+      return { error: "هذا الحساب غير مرتبط بأي جمعية" };
+    }
+
+    clearRateLimit(key);
+    clearPhoneCounters(user.phone);
+
+    const defaultCharity = user.charities[0].charity;
+
+    const sessionData = {
+      id: user.id,
+      name: user.name,
+      phone: user.phone,
+      title: user.title,
+      // Permissions are per charity and reloaded per request — see the OTP path.
+      charityId: defaultCharity.id,
+      userType: "CHARITY_USER",
+    };
+
+    const cookieStore = await cookies();
+    cookieStore.set("session", await encrypt(sessionData), {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      path: "/",
+      maxAge: SESSION_MAX_AGE_SECONDS,
+    });
+
+    await logAudit({
+      actorType: "CHARITY_USER",
+      actorId: user.id,
+      actorName: user.name,
+      action: "LOGIN_SUCCESS",
+      metadata: { method: "password", charityId: defaultCharity.id },
+    });
+
+    destination =
+      user.charities.length > 1
+        ? "/select-charity"
+        : `/portal/${encodeURIComponent(defaultCharity.name)}`;
+  } catch (error: any) {
+    if (error?.digest?.startsWith("NEXT_REDIRECT")) throw error;
+    console.error("Charity password login error:", error);
+    return { error: "حدث خطأ داخلي أثناء تسجيل الدخول" };
+  }
+
+  redirect(destination);
 }
 
 export async function selectCharitySession(charityId: string) {

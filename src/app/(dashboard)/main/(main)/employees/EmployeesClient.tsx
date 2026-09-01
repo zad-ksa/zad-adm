@@ -13,7 +13,7 @@ import {
   Phone,
   Key
 } from "@/components/Icons";
-import { Edit, ShieldCheck, Building2, UserPlus, ArrowRight, Trash2 } from "lucide-react";
+import { Edit, ShieldCheck, Building2, UserPlus, ArrowRight, Trash2, Mail } from "lucide-react";
 import { AddEmployeeForm } from "@/components/AddEmployeeForm";
 import Link from "next/link";
 import { PERMISSION_GROUPS, ALL_PERMISSIONS, isAdmin } from "@/lib/permissions";
@@ -44,6 +44,8 @@ interface Employee {
   id: string;
   name: string;
   phone: string;
+  /// null means this account has not set up email login and signs in by OTP.
+  email?: string | null;
   role: string;
   permissions: string[];
   isActive: boolean;
@@ -71,6 +73,7 @@ export function EmployeesClient({
   const [editName, setEditName] = useState("");
   const [editPhone, setEditPhone] = useState("");
   const [editPassword, setEditPassword] = useState("");
+  const [editEmail, setEditEmail] = useState("");
   const [editRole, setEditRole] = useState("");
   const [editPermissions, setEditPermissions] = useState<string[]>([]);
   const [editCharityIds, setEditCharityIds] = useState<string[]>([]);
@@ -112,6 +115,7 @@ export function EmployeesClient({
     setEditRole(emp.role);
     setEditPermissions(emp.permissions);
     setEditPassword("");
+    setEditEmail(emp.email || "");
     setEditCharityIds(emp.assignedCharities?.map((c) => c.charityId) ?? []);
     setModalError(null);
     setModalSuccess(null);
@@ -154,6 +158,7 @@ export function EmployeesClient({
         phone: editPhone,
         role: editRole,
         permissions: editPermissions,
+        email: editEmail.trim() || null,
         password: editPassword || undefined,
         charityIds: editCharityIds,
       });
@@ -171,6 +176,7 @@ export function EmployeesClient({
                 ...emp,
                 name: editName,
                 phone: editPhone,
+                email: editEmail.trim() || null,
                 role: editRole,
                 permissions: editPermissions,
                 assignedCharities: editCharityIds.map((id) => ({ charityId: id })),
@@ -232,6 +238,9 @@ export function EmployeesClient({
               <tr>
                 <th className="px-4 py-2.5 text-sm font-bold text-slate-500 dark:text-slate-400">الموظف</th>
                 <th className="px-4 py-2.5 text-sm font-bold text-slate-500 dark:text-slate-400">رقم الجوال</th>
+                {/* Which accounts still sign in by OTP only — the list of who is
+                    left to reach, readable at a glance instead of guessed at. */}
+                <th className="px-4 py-2.5 text-sm font-bold text-slate-500 dark:text-slate-400">الدخول بالبريد</th>
                 <th className="px-4 py-2.5 text-sm font-bold text-slate-500 dark:text-slate-400">نوع الحساب</th>
                 <th className="px-4 py-2.5 text-sm font-bold text-slate-500 dark:text-slate-400">الحالة</th>
                 <th className="px-4 py-2.5 text-sm font-bold text-slate-500 dark:text-slate-400">الصلاحيات</th>
@@ -254,6 +263,22 @@ export function EmployeesClient({
                   </td>
                   <td className="px-4 py-2.5 text-sm text-slate-600 dark:text-slate-300 font-bold" dir="ltr">
                     {emp.phone}
+                  </td>
+                  <td className="px-4 py-2.5">
+                    {emp.email ? (
+                      <span
+                        className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold max-w-[200px] bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400"
+                        title={emp.email}
+                      >
+                        <Mail className="w-3.5 h-3.5 shrink-0" />
+                        <span className="truncate" dir="ltr">{emp.email}</span>
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-slate-100 dark:bg-slate-700/60 text-slate-500 dark:text-slate-400">
+                        <X className="w-3.5 h-3.5" />
+                        لم يُضبط
+                      </span>
+                    )}
                   </td>
                   <td className="px-4 py-2.5">
                     <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold ${
@@ -328,7 +353,7 @@ export function EmployeesClient({
               ))}
               {employees.length === 0 && (
                 <tr>
-                  <td colSpan={6} className="px-6 py-8 text-center text-slate-400 dark:text-slate-500 font-medium text-sm">
+                  <td colSpan={7} className="px-6 py-8 text-center text-slate-400 dark:text-slate-500 font-medium text-sm">
                     لا يوجد موظفين حالياً
                   </td>
                 </tr>
@@ -440,6 +465,26 @@ export function EmployeesClient({
                         <option key={r.key} value={r.key}>{r.displayName}</option>
                       ))}
                     </select>
+                  </div>
+                </div>
+
+                {/* Email — the login address. Clearing it retires email login
+                    for this account and drops the stored hash with it. */}
+                <div>
+                  <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-2">البريد الإلكتروني (للدخول)</label>
+                  <div className="relative">
+                    <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                      <Mail className="h-4 w-4 text-slate-400 dark:text-slate-500" />
+                    </div>
+                    <input
+                      type="email"
+                      value={editEmail}
+                      onChange={(e) => setEditEmail(e.target.value)}
+                      disabled={isPending}
+                      dir="ltr"
+                      placeholder="اتركه فارغًا للدخول بالجوال فقط"
+                      className="placeholder:text-slate-300 dark:placeholder:text-slate-600 appearance-none block w-full pr-10 pl-3 py-2.5 border border-slate-200 dark:border-slate-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary/50 text-sm font-medium text-slate-800 dark:text-slate-100 bg-white dark:bg-slate-900/50 text-right transition-colors"
+                    />
                   </div>
                 </div>
 

@@ -10,6 +10,7 @@ import {
 import { logAudit } from "@/lib/auditLog";
 import { checkRateLimit } from "@/lib/rateLimit";
 import { normalizeSaudiPhone, saudiPhoneVariants } from "@/lib/phone";
+import { hashPassword, normalizeEmail, validateCredentialPair } from "@/lib/password";
 
 /**
  * Staff administration inside a single charity.
@@ -205,6 +206,9 @@ export async function createCharityStaff(
     phone: string;
     title: string;
     permissions: string[];
+    /** Optional email login — see addCharityClientAccount. */
+    email?: string | null;
+    password?: string;
     isAdmin?: boolean;
     confirmedExisting?: boolean;
   }
@@ -281,10 +285,24 @@ export async function createCharityStaff(
     // --- new person ------------------------------------------------------
     if (!name) return fail("الاسم مطلوب");
 
+    // Only on the new-person branch: the existing-person branch above
+    // deliberately writes nothing to the account itself, because that account
+    // belongs to the person and to whatever other charity they serve.
+    const pairProblem = validateCredentialPair(data.email, data.password);
+    if (pairProblem) return fail(pairProblem);
+
+    const email = data.email?.trim() ? normalizeEmail(data.email) : null;
+    if (email) {
+      const emailTaken = await prisma.charityUser.findUnique({ where: { email } });
+      if (emailTaken) return fail("البريد الإلكتروني مسجل مسبقاً");
+    }
+
     const created = await prisma.charityUser.create({
       data: {
         name,
         phone: canonical,
+        email,
+        password: email ? await hashPassword(data.password!.trim()) : null,
         title: data.title as CharityUserTitle,
         isActive: true,
         charities: {

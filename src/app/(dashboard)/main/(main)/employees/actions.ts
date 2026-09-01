@@ -1,7 +1,7 @@
 "use server";
 
 import { prisma } from "@/lib/db";
-import { hash } from "bcryptjs";
+import { hashPassword, normalizeEmail, validateCredentialPair } from "@/lib/password";
 import { revalidatePath } from "next/cache";
 import { getSession } from "@/lib/auth";
 import { hasPermission } from "@/lib/permissions";
@@ -25,6 +25,7 @@ export async function addEmployee(prevState: any, formData: FormData) {
   const name = formData.get("name") as string;
   const phone = formData.get("phone") as string;
   const password = formData.get("password") as string;
+  const emailInput = (formData.get("email") as string) || "";
   const role = formData.get("role") as string;
   
   // Extract permissions
@@ -38,9 +39,18 @@ export async function addEmployee(prevState: any, formData: FormData) {
     }
   });
 
-  if (!name || !phone || !password) {
-    return { error: "يرجى تعبئة الحقول المطلوبة: الاسم، الجوال، وكلمة المرور" };
+  if (!name || !phone) {
+    return { error: "يرجى تعبئة الحقول المطلوبة: الاسم ورقم الجوال" };
   }
+
+  // Email login is optional — an account created without it still signs in
+  // with phone + OTP. What is NOT allowed is half of it: an address with no
+  // password opens nothing, and a password with no address cannot be reached,
+  // yet either one would leave its owner believing email login was set up.
+  const pairProblem = validateCredentialPair(emailInput, password);
+  if (pairProblem) return { error: pairProblem };
+
+  const email = emailInput.trim() ? normalizeEmail(emailInput) : null;
 
   try {
     const existingEmployee = await prisma.employee.findUnique({
@@ -51,7 +61,14 @@ export async function addEmployee(prevState: any, formData: FormData) {
       return { error: "رقم الجوال مسجل مسبقاً" };
     }
 
-    const hashedPassword = await hash(password, 10);
+    if (email) {
+      const existingEmail = await prisma.employee.findUnique({ where: { email } });
+      if (existingEmail) {
+        return { error: "البريد الإلكتروني مسجل مسبقاً" };
+      }
+    }
+
+    const hashedPassword = email ? await hashPassword(password) : null;
 
     // Validate role against RoleDefinition
     const validRoles = await prisma.roleDefinition.findMany({ select: { key: true } });
@@ -62,6 +79,7 @@ export async function addEmployee(prevState: any, formData: FormData) {
       data: {
         name,
         phone,
+        email,
         password: hashedPassword,
         role: dbRole,
         permissions,
@@ -109,6 +127,7 @@ export async function updateEmployee(
     phone: string;
     role: string;
     permissions: string[];
+    email?: string | null;
     password?: string;
     charityIds?: string[];
   }
@@ -135,6 +154,31 @@ export async function updateEmployee(
       return { error: "رقم الجوال مسجل لموظف آخر" };
     }
 
+    // What the account already holds decides whether half a pair is enough:
+    // typing only a new password is fine when an address is already stored.
+    const current = await prisma.employee.findUnique({
+      where: { id },
+      select: { email: true, password: true },
+    });
+
+    const emailProvided = data.email !== undefined;
+    const wantsEmail = !!data.email?.trim();
+
+    const pairProblem = validateCredentialPair(data.email, data.password, {
+      hasExistingEmail: !!current?.email,
+      hasExistingPassword: !!current?.password,
+    });
+    if (pairProblem) return { error: pairProblem };
+
+    const email = wantsEmail ? normalizeEmail(data.email!) : null;
+
+    if (email && email !== current?.email) {
+      const takenBy = await prisma.employee.findFirst({
+        where: { email, id: { not: id } },
+      });
+      if (takenBy) return { error: "البريد الإلكتروني مسجل لموظف آخر" };
+    }
+
     const validRoles = await prisma.roleDefinition.findMany({ select: { key: true } });
     const isValidRole = validRoles.some(r => r.key === data.role);
     if (!isValidRole) {
@@ -153,8 +197,15 @@ export async function updateEmployee(
       permissions: data.permissions,
     };
 
+    if (emailProvided) {
+      updateData.email = email;
+      // Clearing the address retires the login, so the hash goes with it —
+      // a password nothing can reach is dead weight in the table.
+      if (!email) updateData.password = null;
+    }
+
     if (data.password && data.password.trim() !== "") {
-      updateData.password = await hash(data.password, 10);
+      updateData.password = await hashPassword(data.password.trim());
     }
 
     if (data.charityIds && data.role !== "ADMIN") {

@@ -220,6 +220,10 @@ export default function StaffManagerClient({
   const [form, setForm] = useState({
     name: "",
     phone: "",
+    // Optional email login. Left blank, the account signs in by phone + OTP
+    // and its owner can set these later themselves from «بيانات الدخول».
+    email: "",
+    password: "",
     title: "FULL_TIME",
     permissions: [] as string[],
     isAdmin: false,
@@ -330,7 +334,7 @@ export default function StaffManagerClient({
 
   function resetAddForm() {
     lookupSeq.current++; // discard anything still in flight
-    setForm({ name: "", phone: "", title: "FULL_TIME", permissions: [], isAdmin: false });
+    setForm({ name: "", phone: "", email: "", password: "", title: "FULL_TIME", permissions: [], isAdmin: false });
     setPhoneState({ kind: "idle" });
     setIsAdding(false);
   }
@@ -640,6 +644,38 @@ export default function StaffManagerClient({
                 )}
               </div>
             </Field>
+
+            {!isExisting && (
+              <>
+                <Field
+                  label="البريد الإلكتروني (اختياري)"
+                  className="col-span-12 sm:col-span-6"
+                  hint="للدخول بكلمة المرور بدل رمز التحقق. اتركه فارغًا ليضبطه الموظف بنفسه لاحقًا."
+                >
+                  <input
+                    type="email"
+                    value={form.email}
+                    onChange={(e) => setForm({ ...form, email: e.target.value })}
+                    className={inputClass}
+                    style={fs.body}
+                    placeholder="name@example.com"
+                    dir="ltr"
+                  />
+                </Field>
+
+                <Field label="كلمة المرور" className="col-span-12 sm:col-span-6">
+                  <input
+                    type="text"
+                    value={form.password}
+                    onChange={(e) => setForm({ ...form, password: e.target.value })}
+                    className={inputClass}
+                    style={fs.body}
+                    placeholder="٨ أحرف على الأقل — مع البريد فقط"
+                    dir="ltr"
+                  />
+                </Field>
+              </>
+            )}
           </div>
 
           {actorIsAdmin && (

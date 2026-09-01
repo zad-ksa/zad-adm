@@ -24,6 +24,10 @@ export default function CharityAccountsClient({ charities, accounts: initialAcco
   const [form, setForm] = useState({
     name: "",
     phone: "",
+    // Optional: leave both blank and the account signs in by phone + OTP.
+    // Its owner can set them later themselves from the portal.
+    email: "",
+    password: "",
     title: "FULL_TIME",
     charityIds: [] as string[],
     isAdmin: false
@@ -37,7 +41,7 @@ export default function CharityAccountsClient({ charities, accounts: initialAcco
     setSuccessMsg(null);
 
     if (!form.name || !form.phone || !form.title || form.charityIds.length === 0) {
-      setErrorMsg("جميع الحقول مطلوبة");
+      setErrorMsg("الاسم والجوال والمسمى والجمعية مطلوبة");
       return;
     }
 
@@ -149,6 +153,37 @@ export default function CharityAccountsClient({ charities, accounts: initialAcco
                     className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary font-bold text-left"
                     dir="ltr"
                   />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1.5">
+                    البريد الإلكتروني <span className="text-slate-400 font-medium">(اختياري)</span>
+                  </label>
+                  <input
+                    type="email"
+                    value={form.email}
+                    onChange={e => setForm({...form, email: e.target.value})}
+                    placeholder="name@example.com"
+                    className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary font-bold text-left"
+                    dir="ltr"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1.5">
+                    كلمة المرور <span className="text-slate-400 font-medium">(مع البريد فقط)</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={form.password}
+                    onChange={e => setForm({...form, password: e.target.value})}
+                    placeholder="٨ أحرف على الأقل"
+                    className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary font-bold text-left"
+                    dir="ltr"
+                  />
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1.5 leading-relaxed">
+                    اتركهما فارغين ليدخل الحساب برقم الجوال ورمز التحقق، ويضبطهما صاحبه لاحقًا بنفسه.
+                  </p>
                 </div>
 
                 <div>

@@ -3,6 +3,7 @@ import { redirect, notFound } from "next/navigation";
 import CharityLayoutClient from "./CharityLayoutClient";
 import { prisma } from "@/lib/db";
 import { getSession } from "@/lib/auth";
+import SetEmailBanner from "@/components/SetEmailBanner";
 
 export default async function CharityLayout({
   children,
@@ -63,6 +64,9 @@ export default async function CharityLayout({
   // the user is browsing a different one of their charities.
   const membership = user?.charities.find((c) => c.charityId === charity.id);
 
+  // Same reminder as the Zad dashboard, pointing at the portal's own screen.
+  const needsEmail = !user?.email;
+
   return (
     <CharityLayoutClient
       charityName={decodedName}
@@ -76,6 +80,11 @@ export default async function CharityLayout({
       title={session.title}
       isAdmin={membership?.isAdmin ?? false}
     >
+      {needsEmail && (
+        <div className="mb-4">
+          <SetEmailBanner href={`/portal/${encodeURIComponent(decodedName)}/profile`} />
+        </div>
+      )}
       {children}
     </CharityLayoutClient>
   );

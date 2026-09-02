@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import ZadLogo from "@/components/ZadLogo";
 import SectionShell from "@/components/landing/SectionShell";
+import { LANDING_FONT_VARS_CLASSNAME, landingFontStack } from "@/app/landingFonts";
 import {
   DEFAULT_CONTENT,
   type LandingConfig,
@@ -93,7 +94,8 @@ export default function LandingView({ config }: { config: LandingConfig }) {
 
   return (
     <div
-      className={`min-h-screen ${P.page} flex flex-col font-sans selection:bg-primary/20 ${dark ? "dark" : ""}`}
+      className={`min-h-screen ${P.page} flex flex-col selection:bg-primary/20 ${LANDING_FONT_VARS_CLASSNAME} ${dark ? "dark" : ""}`}
+      style={{ fontFamily: landingFontStack(config.fontFamily) }}
       dir="rtl"
       data-landing-theme={config.theme}
     >

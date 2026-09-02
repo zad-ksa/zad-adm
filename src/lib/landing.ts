@@ -114,8 +114,57 @@ export interface SectionConfig {
  *  تخصيص خلفية/نص أي فقرة على حدة يبقى فوق هذا الاختيار. */
 export type LandingTheme = "light" | "dark";
 
+/** خط الواجهة كلها. خطوط عربية احترافية/إبداعية — لا خطوط النسخ والرقعة التقليدية.
+ *  التعريف الفعلي عبر next/font في src/app/landingFonts.ts (استضافة ذاتية، متوافق مع CSP). */
+export type LandingFontKey =
+  | "cairo"
+  | "tajawal"
+  | "almarai"
+  | "ibm"
+  | "readex"
+  | "messiri"
+  | "reem"
+  | "changa";
+
+export const LANDING_FONT_KEYS: LandingFontKey[] = [
+  "cairo",
+  "tajawal",
+  "almarai",
+  "ibm",
+  "readex",
+  "messiri",
+  "reem",
+  "changa",
+];
+
+export const LANDING_FONT_LABELS: Record<LandingFontKey, string> = {
+  cairo: "كايرو",
+  tajawal: "تجوّل",
+  almarai: "المراعي",
+  ibm: "IBM Plex عربي",
+  readex: "ريدكس برو",
+  messiri: "المسيري",
+  reem: "ريم كوفي",
+  changa: "شنقا",
+};
+
+/** وصف موجز لكل خط يظهر في المحرّر. */
+export const LANDING_FONT_HINTS: Record<LandingFontKey, string> = {
+  cairo: "عصري متوازن — الافتراضي",
+  tajawal: "هندسي نظيف واحترافي",
+  almarai: "حديث واضح للعناوين والنصوص",
+  ibm: "مؤسسي دقيق",
+  readex: "معاصر مريح للقراءة",
+  messiri: "أنيق بلمسة خطية إبداعية",
+  reem: "كوفي هندسي جريء",
+  changa: "عريض حديث للعناوين",
+};
+
+export const DEFAULT_LANDING_FONT: LandingFontKey = "cairo";
+
 export interface LandingConfig {
   theme: LandingTheme;
+  fontFamily: LandingFontKey;
   sections: Record<SectionKey, SectionConfig>;
 }
 
@@ -267,7 +316,7 @@ export function makeDefaultLandingConfig(): LandingConfig {
       style: defaultStyle(),
     };
   }
-  return { theme: "light", sections };
+  return { theme: "light", fontFamily: DEFAULT_LANDING_FONT, sections };
 }
 
 export const DEFAULT_LANDING_CONFIG: LandingConfig = makeDefaultLandingConfig();
@@ -343,6 +392,9 @@ export function normalizeLandingConfig(raw: unknown): LandingConfig {
   const out = makeDefaultLandingConfig();
   if (isObj(raw) && (raw.theme === "light" || raw.theme === "dark")) {
     out.theme = raw.theme;
+  }
+  if (isObj(raw) && LANDING_FONT_KEYS.includes(raw.fontFamily as LandingFontKey)) {
+    out.fontFamily = raw.fontFamily as LandingFontKey;
   }
   const rawSections = isObj(raw) && isObj(raw.sections) ? raw.sections : {};
   for (const key of SECTION_ORDER) {

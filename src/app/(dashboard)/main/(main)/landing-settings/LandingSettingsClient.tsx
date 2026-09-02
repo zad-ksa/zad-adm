@@ -24,6 +24,7 @@ import {
   ArrowDown,
   Moon,
   Sun,
+  Type,
 } from "lucide-react";
 import { updateLandingConfig } from "@/app/actions/landing";
 import { uploadFile, type UploadProgress as Progress } from "@/lib/clientUpload";
@@ -32,6 +33,9 @@ import SuccessToast from "@/components/ui/SuccessToast";
 import {
   ANIMATION_LABELS,
   DEFAULT_CONTENT,
+  LANDING_FONT_HINTS,
+  LANDING_FONT_KEYS,
+  LANDING_FONT_LABELS,
   LANDING_PREVIEW_MESSAGE,
   makeDefaultLandingConfig,
   SECTION_LABELS,
@@ -39,6 +43,7 @@ import {
   type AnimationType,
   type BackgroundType,
   type LandingConfig,
+  type LandingFontKey,
   type LandingTheme,
   type LinkItem,
   type SectionKey,
@@ -529,6 +534,20 @@ export default function LandingSettingsClient({ initialConfig }: { initialConfig
             value={draft.theme}
             onChange={(v) => update((d) => void (d.theme = v))}
           />
+        </div>
+
+        {/* خط الواجهة كلها */}
+        <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2.5 space-y-2">
+          <div className="flex items-center gap-2 text-xs font-bold text-slate-700 dark:text-slate-200">
+            <Type className="w-4 h-4" />
+            خط الواجهة كاملةً
+          </div>
+          <SegButtons<LandingFontKey>
+            options={LANDING_FONT_KEYS.map((k) => ({ value: k, label: LANDING_FONT_LABELS[k] }))}
+            value={draft.fontFamily}
+            onChange={(v) => update((d) => void (d.fontFamily = v))}
+          />
+          <p className="text-[11px] text-slate-400">{LANDING_FONT_HINTS[draft.fontFamily]}</p>
         </div>
 
         {error && (

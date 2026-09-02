@@ -12,7 +12,7 @@ import ZadLogo from "@/components/ZadLogo";
 import { hasPermission } from "@/lib/permissions";
 import { useRoleLabels } from "@/components/RoleLabelsProvider";
 import { getSidebarCharities } from "@/app/actions/charity";
-import { ChevronDown, Target, Scale, DollarSign, Mail, Palette } from "lucide-react";
+import { ChevronDown, Target, Scale, DollarSign, Mail, Palette, LayoutTemplate } from "lucide-react";
 import dynamic from "next/dynamic";
 import PrivacyPolicyModal from "@/components/PrivacyPolicyModal";
 
@@ -109,7 +109,7 @@ export default function EmployeeSidebar({
     if (path === "/main") newGroup = "";
     else if (path.startsWith("/main/charities") || path.startsWith("/main/contracts") || path.startsWith("/main/custom-surveys") || path.startsWith("/main/communication") || path.startsWith("/main/charity-meetings") || path.startsWith("/main/design-requests")) newGroup = "الجمعيات";
     else if (path.startsWith("/main/approvals") || path.startsWith("/main/news") || path.startsWith("/main/meetings") || path.startsWith("/main/tasks") || path.startsWith("/main/mail")) newGroup = "زاد";
-    else if (path.startsWith("/main/admin") || path.startsWith("/main/workflow-settings")) newGroup = "لوحة التحكم";
+    else if (path.startsWith("/main/admin") || path.startsWith("/main/workflow-settings") || path.startsWith("/main/landing-settings")) newGroup = "لوحة التحكم";
     else if (path.startsWith("/main/services-overview") || path.startsWith("/main/knowledge-tree") || path.startsWith("/main/strategy") || path.startsWith("/main/governance") || path.startsWith("/main/finance") || path.startsWith("/main/resource-development") || path.startsWith("/main/programs")) {
       newGroup = "الخدمات";
       const parts = path.split('/');
@@ -186,11 +186,14 @@ export default function EmployeeSidebar({
   }
   navItems.push({ label: "البريد الداخلي", href: "/main/mail", icon: Mail, badge: unreadMails });
   navItems.push({ label: "الاعتمادات", href: "/main/approvals", icon: Send, badge: unreadRequests });
-  if (can("manage_employees") || can("manage_charities") || can("manage_charity_settings")) {
+  if (can("manage_employees") || can("manage_charities") || can("manage_charity_settings") || can("manage_landing")) {
     navItems.push({ label: "لوحة التحكم", href: "/main/admin", icon: Settings2 });
   }
   if (can("manage_workflow")) {
     navItems.push({ label: "سلاسل الاعتماد", href: "/main/workflow-settings", icon: GitBranch });
+  }
+  if (can("manage_landing")) {
+    navItems.push({ label: "الواجهة الرئيسية", href: "/main/landing-settings", icon: LayoutTemplate });
   }
 
   const sidebarContent = (
@@ -381,7 +384,7 @@ export default function EmployeeSidebar({
               {isExpanded && <div className="h-px bg-slate-100 dark:bg-slate-800 mx-2" />}
               {renderGroup("زاد", ["البريد الداخلي", "الاعتمادات", "الأخبار والإنجازات", "محاضر الاجتماعات", "المهام والمنجزات", "مهامي"])}
               {isExpanded && <div className="h-px bg-slate-100 dark:bg-slate-800 mx-2" />}
-              {renderGroup("لوحة التحكم", ["لوحة التحكم", "سلاسل الاعتماد"])}
+              {renderGroup("لوحة التحكم", ["لوحة التحكم", "سلاسل الاعتماد", "الواجهة الرئيسية"])}
             </>
           );
         })()}

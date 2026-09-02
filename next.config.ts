@@ -9,7 +9,7 @@ const isDev = process.env.NODE_ENV !== "production";
 // shipping (risk: a wrong strict CSP can silently break hydration site-wide).
 // This baseline still blocks framing, external script/object injection, and
 // restricts network/asset origins to what the app actually uses.
-const CSP = [
+const cspParts = (frameAncestors: string) => [
   "default-src 'self'",
   `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""}`,
   "style-src 'self' 'unsafe-inline'",
@@ -21,15 +21,20 @@ const CSP = [
   // makes anything larger than a few MB impossible through our own API — and
   // without this entry the browser blocks that upload before it leaves.
   "connect-src 'self' https://res.cloudinary.com https://api.cloudinary.com",
-  "frame-ancestors 'none'",
+  frameAncestors,
   "base-uri 'self'",
   "form-action 'self'",
   "object-src 'none'",
 ].join("; ");
 
-const securityHeaders = [
-  { key: "Content-Security-Policy", value: CSP },
-  { key: "X-Frame-Options", value: "DENY" },
+const CSP = cspParts("frame-ancestors 'none'");
+
+// /landing-preview is rendered inside a same-origin <iframe> by the landing-page
+// editor at /main/landing-settings. X-Frame-Options: DENY blocks even same-origin
+// framing, so that one route relaxes to SAMEORIGIN / frame-ancestors 'self'.
+const CSP_SAMEORIGIN_FRAME = cspParts("frame-ancestors 'self'");
+
+const commonSecurityHeaders = [
   { key: "X-Content-Type-Options", value: "nosniff" },
   { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
   // geolocation=(self) — the attendance check-in reads navigator.geolocation.
@@ -40,6 +45,18 @@ const securityHeaders = [
   { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=(self)" },
   // HSTS only makes sense over HTTPS (Vercel serves production over HTTPS by default).
   ...(isDev ? [] : [{ key: "Strict-Transport-Security", value: "max-age=63072000; includeSubDomains; preload" }]),
+];
+
+const securityHeaders = [
+  { key: "Content-Security-Policy", value: CSP },
+  { key: "X-Frame-Options", value: "DENY" },
+  ...commonSecurityHeaders,
+];
+
+const previewSecurityHeaders = [
+  { key: "Content-Security-Policy", value: CSP_SAMEORIGIN_FRAME },
+  { key: "X-Frame-Options", value: "SAMEORIGIN" },
+  ...commonSecurityHeaders,
 ];
 
 const nextConfig: NextConfig = {
@@ -73,8 +90,13 @@ const nextConfig: NextConfig = {
   async headers() {
     return [
       {
-        source: "/:path*",
+        // كل المسارات عدا معاينة الواجهة الرئيسية الداخلية.
+        source: "/((?!landing-preview).*)",
         headers: securityHeaders,
+      },
+      {
+        source: "/landing-preview",
+        headers: previewSecurityHeaders,
       },
     ];
   },

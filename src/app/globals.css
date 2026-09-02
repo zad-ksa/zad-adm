@@ -552,3 +552,129 @@ body {
 @utility animate-celebrate-fade {
   animation: celebrate-fade 2.4s ease-in-out both;
 }
+
+/* ── تأثيرات خلفية الواجهة الرئيسية (لا نهائية، CSS خالص) ──────────────────────
+   تُستهلك من src/components/landing/SectionShell.tsx. كل طبقة زينة aria-hidden
+   ومطلقة داخل الفقرة خلف المحتوى (z-0)، والمحتوى فوقها (z-10).
+   المتغيّرات: --anim-duration (ثوانٍ)، --anim-a و--anim-b (لونان). */
+.landing-anim {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 0;
+}
+.landing-anim > * { position: absolute; }
+
+/* تدرّج متحرك */
+@keyframes landing-gradient-shift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+.landing-anim--gradient-shift {
+  background-image: linear-gradient(120deg, var(--anim-a), var(--anim-b), var(--anim-a));
+  background-size: 300% 300%;
+  animation: landing-gradient-shift var(--anim-duration, 18s) ease-in-out infinite;
+}
+
+/* أضواء شمالية — بقعتان ضبابيتان تدوران وتتنفّسان */
+@keyframes landing-aurora-a {
+  0%   { transform: translate(-10%, -20%) rotate(0deg) scale(1); }
+  50%  { transform: translate(15%, 10%) rotate(180deg) scale(1.25); }
+  100% { transform: translate(-10%, -20%) rotate(360deg) scale(1); }
+}
+@keyframes landing-aurora-b {
+  0%   { transform: translate(20%, 25%) rotate(0deg) scale(1.1); }
+  50%  { transform: translate(-15%, -10%) rotate(-160deg) scale(0.85); }
+  100% { transform: translate(20%, 25%) rotate(-360deg) scale(1.1); }
+}
+.landing-anim--aurora::before,
+.landing-anim--aurora::after {
+  content: "";
+  width: 70%;
+  height: 70%;
+  border-radius: 9999px;
+  filter: blur(80px);
+  opacity: 0.55;
+}
+.landing-anim--aurora::before {
+  top: 0; inset-inline-start: 0;
+  background: var(--anim-a);
+  animation: landing-aurora-a var(--anim-duration, 18s) linear infinite;
+}
+.landing-anim--aurora::after {
+  bottom: 0; inset-inline-end: 0;
+  background: var(--anim-b);
+  animation: landing-aurora-b calc(var(--anim-duration, 18s) * 1.3) linear infinite;
+}
+
+/* فقاعات طافية */
+@keyframes landing-blob-a {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33%  { transform: translate(6%, -8%) scale(1.15); }
+  66%  { transform: translate(-5%, 6%) scale(0.9); }
+}
+@keyframes landing-blob-b {
+  0%, 100% { transform: translate(0, 0) scale(1.05); }
+  40%  { transform: translate(-8%, 8%) scale(0.85); }
+  70%  { transform: translate(7%, -6%) scale(1.2); }
+}
+.landing-anim--floating-blobs::before,
+.landing-anim--floating-blobs::after {
+  content: "";
+  width: 45%;
+  height: 45%;
+  border-radius: 9999px;
+  filter: blur(60px);
+  opacity: 0.45;
+}
+.landing-anim--floating-blobs::before {
+  top: -8%; inset-inline-start: -6%;
+  background: var(--anim-a);
+  animation: landing-blob-a var(--anim-duration, 18s) ease-in-out infinite;
+}
+.landing-anim--floating-blobs::after {
+  bottom: -10%; inset-inline-end: -8%;
+  background: var(--anim-b);
+  animation: landing-blob-b calc(var(--anim-duration, 18s) * 1.25) ease-in-out infinite;
+}
+
+/* نقاط منجرفة */
+@keyframes landing-drift {
+  from { background-position: 0 0, 0 0; }
+  to   { background-position: 240px 140px, 240px 140px; }
+}
+.landing-anim--drifting-dots {
+  background-image:
+    radial-gradient(var(--anim-a) 1.5px, transparent 1.6px),
+    radial-gradient(var(--anim-b) 1.5px, transparent 1.6px);
+  background-size: 40px 40px, 40px 40px;
+  background-position: 0 0, 20px 20px;
+  opacity: 0.5;
+  animation: landing-drift var(--anim-duration, 18s) linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .landing-anim,
+  .landing-anim::before,
+  .landing-anim::after { animation: none !important; }
+}
+
+/* تحكّم نص الفقرة — يُطبَّق عبر سمات data على غلاف الفقرة (SectionShell).
+   منتقيات السمات هذه تتغلّب على أصناف Tailwind دون الحاجة لتعديل كل عنصر. */
+[data-ls-hc] :is(h1, h2, h3, h4) { color: var(--sec-heading) !important; }
+[data-ls-bc] :is(p, li) { color: var(--sec-body) !important; }
+
+[data-ls-align="center"] :is(h1, h2, h3, h4, p, ul, ol, li) { text-align: center; }
+[data-ls-align="right"] :is(h1, h2, h3, h4, p, ul, ol, li) { text-align: right; }
+[data-ls-align="left"] :is(h1, h2, h3, h4, p, ul, ol, li) { text-align: left; }
+
+/* الحجم — لا يُفعَّل إلا عند تغيير المقياس عن 1، وحينها تتولّى القاعدة حجم
+   العناوين/النص في تلك الفقرة بوحدات em نسبةً لجذر 1rem مضروبةً بالمقياس. */
+[data-ls-hscale] :is(h1, h2, h3, h4) { line-height: 1.2; }
+[data-ls-hscale] h1 { font-size: calc(2.5em * var(--sec-heading-scale, 1)); }
+[data-ls-hscale] h2 { font-size: calc(1.85em * var(--sec-heading-scale, 1)); }
+[data-ls-hscale] h3 { font-size: calc(1.4em * var(--sec-heading-scale, 1)); }
+[data-ls-hscale] h4 { font-size: calc(1.15em * var(--sec-heading-scale, 1)); }
+[data-ls-bscale] :is(p, li) { font-size: calc(1em * var(--sec-body-scale, 1)); line-height: 1.75; }

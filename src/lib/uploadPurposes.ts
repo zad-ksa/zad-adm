@@ -56,6 +56,7 @@ export const UPLOAD_PURPOSES = {
   service_file: { folder: "zad_services", maxBytes: CLOUDINARY_MAX_BYTES },
   avatar: { folder: "zad_avatars", maxBytes: 5 * MB },
   charity_logo: { folder: "zad_charity_logos", maxBytes: 5 * MB },
+  landing_bg: { folder: "zad_landing", maxBytes: 10 * MB },
 } as const;
 
 export type UploadPurpose = keyof typeof UPLOAD_PURPOSES;
@@ -85,7 +86,7 @@ export const MEDIA_EXTENSIONS = ["jpg", "jpeg", "png", "gif", "webp", "mp4", "we
 export const IMAGE_EXTENSIONS = ["jpg", "jpeg", "png", "gif", "webp"] as const;
 
 /** Purposes that must be an image — enforced when the ticket is minted. */
-export const IMAGE_ONLY_PURPOSES: UploadPurpose[] = ["avatar", "charity_logo"];
+export const IMAGE_ONLY_PURPOSES: UploadPurpose[] = ["avatar", "charity_logo", "landing_bg"];
 
 /** Ready for an <input type="file" accept="..."> attribute. */
 export const ACCEPT_ATTRIBUTE = ALLOWED_EXTENSIONS.map((e) => `.${e}`).join(",");

@@ -22,6 +22,8 @@ import {
   Trash2,
   ArrowUp,
   ArrowDown,
+  Moon,
+  Sun,
 } from "lucide-react";
 import { updateLandingConfig } from "@/app/actions/landing";
 import { uploadFile, type UploadProgress as Progress } from "@/lib/clientUpload";
@@ -37,6 +39,7 @@ import {
   type AnimationType,
   type BackgroundType,
   type LandingConfig,
+  type LandingTheme,
   type LinkItem,
   type SectionKey,
   type TitledItem,
@@ -510,6 +513,22 @@ export default function LandingSettingsClient({ initialConfig }: { initialConfig
           >
             <ExternalLink className="w-4 h-4" /> فتح الموقع
           </a>
+        </div>
+
+        {/* ثيم الواجهة كلها */}
+        <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2.5 flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2 text-xs font-bold text-slate-700 dark:text-slate-200">
+            {draft.theme === "dark" ? <Moon className="w-4 h-4" /> : <Sun className="w-4 h-4" />}
+            وضع الواجهة كاملةً
+          </div>
+          <SegButtons<LandingTheme>
+            options={[
+              { value: "light", label: "فاتح" },
+              { value: "dark", label: "داكن" },
+            ]}
+            value={draft.theme}
+            onChange={(v) => update((d) => void (d.theme = v))}
+          />
         </div>
 
         {error && (

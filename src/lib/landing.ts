@@ -110,7 +110,12 @@ export interface SectionConfig {
   style: SectionStyle;
 }
 
+/** ثيم الواجهة كلها — يتحكم بألوان الأسطح والنصوص الافتراضية لكل الفقرات.
+ *  تخصيص خلفية/نص أي فقرة على حدة يبقى فوق هذا الاختيار. */
+export type LandingTheme = "light" | "dark";
+
 export interface LandingConfig {
+  theme: LandingTheme;
   sections: Record<SectionKey, SectionConfig>;
 }
 
@@ -262,7 +267,7 @@ export function makeDefaultLandingConfig(): LandingConfig {
       style: defaultStyle(),
     };
   }
-  return { sections };
+  return { theme: "light", sections };
 }
 
 export const DEFAULT_LANDING_CONFIG: LandingConfig = makeDefaultLandingConfig();
@@ -336,6 +341,9 @@ function mergeText(raw: unknown): TextStyle {
  */
 export function normalizeLandingConfig(raw: unknown): LandingConfig {
   const out = makeDefaultLandingConfig();
+  if (isObj(raw) && (raw.theme === "light" || raw.theme === "dark")) {
+    out.theme = raw.theme;
+  }
   const rawSections = isObj(raw) && isObj(raw.sections) ? raw.sections : {};
   for (const key of SECTION_ORDER) {
     const rs = rawSections[key];

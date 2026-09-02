@@ -47,10 +47,39 @@ function listField<T>(content: Record<string, unknown>, key: SectionKey, name: s
 }
 
 /**
+ * ألوان الأسطح/النصوص الافتراضية لكل الفقرات، حسب ثيم الواجهة. لا تُبنى على متغيّر
+ * Tailwind `dark:` عمداً: الصفحة العامة قد تحمل `html.dark` من نظام الزائر، بينما
+ * هذا الاختيار يخصّ المسؤول ويجب أن يكون قاطعاً. تخصيص خلفية/نص فقرة على حدة يبقى
+ * فوق هذه القيم (SectionShell + قواعد [data-ls-*] بأولوية !important).
+ */
+function palette(dark: boolean) {
+  return {
+    page: dark ? "bg-slate-950" : "bg-slate-50",
+    headerBar: dark
+      ? "border-slate-800 bg-slate-950/80"
+      : "border-slate-200 bg-white/80",
+    navText: dark ? "text-slate-300" : "text-slate-600",
+    heroShell: dark ? "bg-slate-950 border-slate-800" : "bg-white border-slate-100",
+    surfaceMuted: dark ? "bg-slate-950" : "bg-slate-50",
+    card: dark ? "bg-slate-900 border-slate-800" : "bg-white border-slate-100",
+    cardMuted: dark ? "bg-slate-900 border-slate-800" : "bg-slate-50 border-slate-100",
+    heading: dark ? "text-slate-100" : "text-slate-900",
+    body: dark ? "text-slate-300" : "text-slate-600",
+    bodyStrong: dark ? "text-slate-200" : "text-slate-700",
+    secondaryCta: dark
+      ? "text-slate-100 bg-slate-900 hover:bg-slate-800 border-slate-700"
+      : "text-slate-700 bg-white hover:bg-slate-50 border-slate-200",
+  };
+}
+
+/**
  * عرض الواجهة الرئيسية بالكامل من الإعداد. مكوّن عرض صِرف بلا "use client"
  * وبلا جلب بيانات — يُستدعى من الصفحة العامة ومن صفحة المعاينة الحية.
  */
 export default function LandingView({ config }: { config: LandingConfig }) {
+  const dark = config.theme === "dark";
+  const P = palette(dark);
+
   const navbar = sec(config, "navbar");
   const hero = sec(config, "hero");
   const intro = sec(config, "intro");
@@ -63,10 +92,14 @@ export default function LandingView({ config }: { config: LandingConfig }) {
   const navLinks = listField<LinkItem>(navbar.content, "navbar", "links");
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col font-sans selection:bg-primary/20" dir="rtl">
+    <div
+      className={`min-h-screen ${P.page} flex flex-col font-sans selection:bg-primary/20 ${dark ? "dark" : ""}`}
+      dir="rtl"
+      data-landing-theme={config.theme}
+    >
       {/* الشريط العلوي */}
       {navbar.enabled && (
-        <header className="sticky top-0 z-50 w-full border-b border-slate-200 bg-white/80 backdrop-blur-md">
+        <header className={`sticky top-0 z-50 w-full border-b ${P.headerBar} backdrop-blur-md`}>
           <SectionShell style={navbar.style} className="overflow-hidden">
             <div className="container mx-auto px-4 h-20 flex items-center justify-between">
               <div className="flex items-center gap-2">
@@ -75,7 +108,7 @@ export default function LandingView({ config }: { config: LandingConfig }) {
                 </Link>
               </div>
 
-              <nav className="hidden md:flex items-center gap-8 text-sm font-medium text-slate-600">
+              <nav className={`hidden md:flex items-center gap-8 text-sm font-medium ${P.navText}`}>
                 {navLinks.map((l, i) => (
                   <Link key={i} href={l.href} className="hover:text-primary transition-colors">
                     {l.label}
@@ -103,7 +136,7 @@ export default function LandingView({ config }: { config: LandingConfig }) {
           <section className="relative">
             <SectionShell
               style={hero.style}
-              className="bg-white py-16 md:py-24 border-b border-slate-100 text-center overflow-hidden"
+              className={`${P.heroShell} py-16 md:py-24 border-b text-center overflow-hidden`}
             >
               <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-primary/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3 pointer-events-none" />
               <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-secondary/5 rounded-full blur-3xl translate-y-1/3 -translate-x-1/3 pointer-events-none" />
@@ -117,12 +150,12 @@ export default function LandingView({ config }: { config: LandingConfig }) {
                   {field<string>(hero.content, "hero", "badge")}
                 </div>
 
-                <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-slate-900 leading-[1.2] mb-6 tracking-tight max-w-4xl mx-auto">
+                <h1 className={`text-4xl md:text-5xl lg:text-6xl font-bold ${P.heading} leading-[1.2] mb-6 tracking-tight max-w-4xl mx-auto`}>
                   {field<string>(hero.content, "hero", "titleLine1")} <br className="hidden md:block" />
                   <span className="text-primary">{field<string>(hero.content, "hero", "titleLine2")}</span>
                 </h1>
 
-                <p className="text-lg md:text-xl text-slate-600 mb-10 leading-relaxed max-w-2xl mx-auto">
+                <p className={`text-lg md:text-xl ${P.body} mb-10 leading-relaxed max-w-2xl mx-auto`}>
                   {field<string>(hero.content, "hero", "subtitle")}
                 </p>
 
@@ -136,7 +169,7 @@ export default function LandingView({ config }: { config: LandingConfig }) {
                   </Link>
                   <Link
                     href="#about"
-                    className="w-full sm:w-auto flex items-center justify-center px-8 py-3.5 text-base font-medium text-slate-700 bg-white hover:bg-slate-50 border border-slate-200 rounded-xl transition-colors"
+                    className={`w-full sm:w-auto flex items-center justify-center px-8 py-3.5 text-base font-medium border rounded-xl transition-colors ${P.secondaryCta}`}
                   >
                     {field<string>(hero.content, "hero", "secondaryCtaLabel")}
                   </Link>
@@ -149,16 +182,16 @@ export default function LandingView({ config }: { config: LandingConfig }) {
         {/* مقدمة + من نحن */}
         {(intro.enabled || whoweare.enabled) && (
           <section id="about" className="relative">
-            <SectionShell style={intro.style} className="py-20 bg-slate-50 overflow-hidden">
+            <SectionShell style={intro.style} className={`py-20 ${P.surfaceMuted} overflow-hidden`}>
               <div className="container mx-auto px-4">
                 <div className="max-w-4xl mx-auto space-y-16">
                   {intro.enabled && (
-                    <div className="bg-white p-8 md:p-12 rounded-3xl shadow-sm border border-slate-100">
-                      <h2 className="text-2xl font-bold text-slate-900 mb-6 flex items-center gap-3">
+                    <div className={`${P.card} border p-8 md:p-12 rounded-3xl shadow-sm`}>
+                      <h2 className={`text-2xl font-bold ${P.heading} mb-6 flex items-center gap-3`}>
                         <span className="w-2 h-8 bg-primary rounded-full block"></span>
                         {field<string>(intro.content, "intro", "title")}
                       </h2>
-                      <div className="space-y-4 text-slate-700 leading-relaxed text-lg">
+                      <div className={`space-y-4 ${P.bodyStrong} leading-relaxed text-lg`}>
                         {listField<string>(intro.content, "intro", "paragraphs").map((p, i) => (
                           <p key={i}>{p}</p>
                         ))}
@@ -168,10 +201,10 @@ export default function LandingView({ config }: { config: LandingConfig }) {
 
                   {whoweare.enabled && (
                     <div>
-                      <h2 className="text-3xl font-bold text-slate-900 mb-6 text-center">
+                      <h2 className={`text-3xl font-bold ${P.heading} mb-6 text-center`}>
                         {field<string>(whoweare.content, "whoweare", "title")}
                       </h2>
-                      <p className="text-xl text-center text-slate-600 leading-relaxed bg-white p-8 rounded-3xl border border-primary/10 relative shadow-sm">
+                      <p className={`text-xl text-center ${P.body} leading-relaxed ${P.card} p-8 rounded-3xl border relative shadow-sm`}>
                         <span className="absolute -top-4 -right-4 text-6xl text-primary/10 font-serif">&quot;</span>
                         {field<string>(whoweare.content, "whoweare", "body")}
                         <span className="absolute -bottom-10 -left-4 text-6xl text-primary/10 font-serif">&quot;</span>
@@ -218,11 +251,11 @@ export default function LandingView({ config }: { config: LandingConfig }) {
         {/* قيمنا */}
         {values.enabled && (
           <section id="values" className="relative">
-            <SectionShell style={values.style} className="py-24 bg-white overflow-hidden">
+            <SectionShell style={values.style} className={`py-24 ${dark ? "bg-slate-950" : "bg-white"} overflow-hidden`}>
               <div className="container mx-auto px-4">
                 <div className="text-center max-w-2xl mx-auto mb-16">
-                  <h2 className="text-3xl font-bold text-slate-900 mb-4">{field<string>(values.content, "values", "title")}</h2>
-                  <p className="text-slate-600 text-lg">{field<string>(values.content, "values", "subtitle")}</p>
+                  <h2 className={`text-3xl font-bold ${P.heading} mb-4`}>{field<string>(values.content, "values", "title")}</h2>
+                  <p className={`${P.body} text-lg`}>{field<string>(values.content, "values", "subtitle")}</p>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-6xl mx-auto">
@@ -231,13 +264,13 @@ export default function LandingView({ config }: { config: LandingConfig }) {
                     return (
                       <div
                         key={idx}
-                        className="bg-slate-50 p-8 rounded-3xl border border-slate-100 text-center hover:-translate-y-1 hover:shadow-lg transition-all duration-300"
+                        className={`${P.cardMuted} border p-8 rounded-3xl text-center hover:-translate-y-1 hover:shadow-lg transition-all duration-300`}
                       >
                         <div className="w-16 h-16 mx-auto bg-primary/10 text-primary rounded-full flex items-center justify-center mb-6">
                           <Icon className="w-8 h-8" />
                         </div>
-                        <h3 className="text-xl font-bold text-slate-900 mb-3">{item.title}</h3>
-                        <p className="text-slate-600 text-sm">{item.description}</p>
+                        <h3 className={`text-xl font-bold ${P.heading} mb-3`}>{item.title}</h3>
+                        <p className={`${P.body} text-sm`}>{item.description}</p>
                       </div>
                     );
                   })}
@@ -250,11 +283,11 @@ export default function LandingView({ config }: { config: LandingConfig }) {
         {/* الأهداف وما يميزنا */}
         {gf.enabled && (
           <section className="relative">
-            <SectionShell style={gf.style} className="py-24 bg-slate-50 border-t border-slate-100 overflow-hidden">
+            <SectionShell style={gf.style} className={`py-24 ${P.surfaceMuted} border-t ${dark ? "border-slate-800" : "border-slate-100"} overflow-hidden`}>
               <div className="container mx-auto px-4">
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 max-w-6xl mx-auto">
                   <div>
-                    <h2 className="text-3xl font-bold text-slate-900 mb-8 flex items-center gap-3">
+                    <h2 className={`text-3xl font-bold ${P.heading} mb-8 flex items-center gap-3`}>
                       <Target className="w-8 h-8 text-primary" />
                       {field<string>(gf.content, "goalsfeatures", "goalsTitle")}
                     </h2>
@@ -262,19 +295,19 @@ export default function LandingView({ config }: { config: LandingConfig }) {
                       {listField<string>(gf.content, "goalsfeatures", "goals").map((goal, idx) => (
                         <li
                           key={idx}
-                          className="flex gap-4 items-start bg-white p-4 rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition-shadow"
+                          className={`flex gap-4 items-start ${P.card} border p-4 rounded-2xl shadow-sm hover:shadow-md transition-shadow`}
                         >
                           <div className="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center shrink-0 font-bold">
                             {idx + 1}
                           </div>
-                          <p className="text-slate-700 pt-1 font-medium">{goal}</p>
+                          <p className={`${P.bodyStrong} pt-1 font-medium`}>{goal}</p>
                         </li>
                       ))}
                     </ul>
                   </div>
 
                   <div>
-                    <h2 className="text-3xl font-bold text-slate-900 mb-8 flex items-center gap-3">
+                    <h2 className={`text-3xl font-bold ${P.heading} mb-8 flex items-center gap-3`}>
                       <Star className="w-8 h-8 text-secondary" />
                       {field<string>(gf.content, "goalsfeatures", "featuresTitle")}
                     </h2>
@@ -282,10 +315,10 @@ export default function LandingView({ config }: { config: LandingConfig }) {
                       {listField<TitledItem>(gf.content, "goalsfeatures", "features").map((f, idx) => (
                         <div
                           key={idx}
-                          className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm hover:shadow-md transition-shadow"
+                          className={`${P.card} border p-6 rounded-3xl shadow-sm hover:shadow-md transition-shadow`}
                         >
                           <h4 className="font-bold text-primary text-xl mb-2">{f.title}</h4>
-                          <p className="text-slate-600 leading-relaxed text-sm">{f.description}</p>
+                          <p className={`${P.body} leading-relaxed text-sm`}>{f.description}</p>
                         </div>
                       ))}
                     </div>

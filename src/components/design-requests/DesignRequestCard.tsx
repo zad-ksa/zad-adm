@@ -88,9 +88,13 @@ export default function DesignRequestCard({
               <span>{request.charityName}</span>
             </div>
           )}
+          {/* Wraps rather than truncating: the title is what identifies the
+              request, and a cut one leaves two designs for the same charity
+              looking identical. The card grows instead — the grid stretches
+              its row to match, so the cards beside it stay aligned. */}
           <h3
-            className="font-bold text-slate-900 dark:text-slate-100 truncate"
-            style={{ fontSize: "var(--dr-fs-title)" }}
+            className="font-bold text-slate-900 dark:text-slate-100 break-words leading-snug"
+            style={{ fontSize: "var(--dr-fs-title)", textWrap: "balance" }}
           >
             {request.title}
           </h3>

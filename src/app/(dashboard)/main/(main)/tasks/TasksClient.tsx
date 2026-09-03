@@ -26,6 +26,10 @@ import {
   Repeat,
   Camera,
   Printer,
+  Copy,
+  ClipboardCheck,
+  FileText as FileTextIcon,
+  Paperclip,
   ChevronDown,
   MessageSquarePlus,
   Send,
@@ -57,6 +61,9 @@ import { useRoleLabels } from "@/components/RoleLabelsProvider";
 import { useImagePaste } from "@/hooks/useImagePaste";
 import { timeAgoArabic } from "@/lib/dateUtils";
 import dynamic from "next/dynamic";
+
+import { uploadFile } from "@/lib/clientUpload";
+import { copyToClipboard } from "@/lib/clipboard";
 
 const TaskFormModal = dynamic(() => import("@/components/tasks/TaskFormModal"), { ssr: false });
 const AchievementFormModal = dynamic(() => import("@/components/tasks/AchievementFormModal"), { ssr: false });
@@ -196,6 +203,8 @@ export default function TasksClient({
   // Proof upload state
   const [completingTaskId, setCompletingTaskId] = useState<string | null>(null);
   const [proofFile, setProofFile] = useState<File | null>(null);
+  const [isUploadingTaskAttachment, setIsUploadingTaskAttachment] = useState(false);
+  const [copyState, setCopyState] = useState<"idle" | "copied" | "failed">("idle");
   const [completionNote, setCompletionNote] = useState<string>("");
   const [proofUploadError, setProofUploadError] = useState<string | null>(null);
   const [isUploadingProof, setIsUploadingProof] = useState(false);
@@ -294,6 +303,48 @@ export default function TasksClient({
           : t
       ));
     }
+  };
+
+  /**
+   * The open tasks of whoever is selected, as a message to paste into WhatsApp.
+   *
+   * Built from the same filtered list the screen is showing, so what gets
+   * copied is what the sender is looking at — including the employee filter.
+   * Completed tasks are left out: this is a list of what is still owed.
+   */
+  const buildTasksMessage = () => {
+    const who =
+      visibleEmployeeId === "all"
+        ? "كل الموظفين"
+        : employees.find((e) => e.id === visibleEmployeeId)?.name || "";
+
+    const priorityMark = (n: number) => (n === 1 ? " (عالية)" : n === 2 ? " (متوسطة)" : "");
+
+    const lines = filteredActiveTasks.map((t, i) => {
+      const scope = t.isInternal ? "داخلية" : t.charityName || "—";
+      const owner =
+        visibleEmployeeId === "all"
+          ? " — " + (employees.find((e) => e.id === t.assignedToId)?.name || "—")
+          : "";
+      const state = t.status === "IN_PROGRESS" ? " • جارية" : "";
+      return (i + 1) + ". " + t.title + priorityMark(t.priority ?? 3) + "\n   [" + scope + "]" + owner + state;
+    });
+
+    if (lines.length === 0) return "لا توجد مهام مفتوحة لـ" + who + ".";
+
+    return [
+      "مهام " + who + " المفتوحة (" + lines.length + ")",
+      "",
+      ...lines,
+      "",
+      "— زاد التنموية",
+    ].join("\n");
+  };
+
+  const handleCopyTasks = async () => {
+    const ok = await copyToClipboard(buildTasksMessage());
+    setCopyState(ok ? "copied" : "failed");
+    setTimeout(() => setCopyState("idle"), 2200);
   };
 
   const handlePrint = () => {
@@ -536,8 +587,28 @@ ${combinedAchievements.length > 0 ? `
   };
 
   // Handle task creation
-  const handleCreateTask = async (data: { title: string; assigneeId: string; charityId: string; priority: number }) => {
+  const handleCreateTask = async (data: { title: string; assigneeId: string; charityId: string; priority: number; attachment: File | null }) => {
     if (!data.title.trim()) return;
+
+    // The image goes straight from the browser to Cloudinary against a signed
+    // ticket, before the task row exists. Sending it through the server action
+    // instead would meet the few-megabyte body limit on the first phone photo.
+    let attachmentUrl: string | undefined;
+    let attachmentPublicId: string | undefined;
+
+    if (data.attachment) {
+      setIsUploadingTaskAttachment(true);
+      try {
+        const up = await uploadFile(data.attachment, "task_attachment");
+        attachmentUrl = up.url;
+        attachmentPublicId = up.publicId;
+      } catch (err: any) {
+        setIsUploadingTaskAttachment(false);
+        showNotification("error", err?.message || "فشل رفع المرفق");
+        return;
+      }
+      setIsUploadingTaskAttachment(false);
+    }
 
     startTransition(async () => {
       const isInternal = data.charityId === "internal";
@@ -547,6 +618,8 @@ ${combinedAchievements.length > 0 ? `
         charityId: isInternal ? undefined : data.charityId,
         isInternal,
         priority: data.priority,
+        attachmentUrl,
+        attachmentPublicId,
       });
 
       if (res.error) {
@@ -900,6 +973,23 @@ ${combinedAchievements.length > 0 ? `
             </div>
           )}
 
+          {/* Copy the open tasks as a message */}
+          <button
+            onClick={handleCopyTasks}
+            title="نسخ مهام الموظف كرسالة نصية"
+            aria-live="polite"
+            className={`flex items-center gap-1.5 px-3 py-1.5 border rounded-lg transition-all font-bold text-xs ${
+              copyState === "copied"
+                ? "bg-emerald-50 dark:bg-emerald-900/20 border-emerald-200 dark:border-emerald-800/50 text-emerald-600 dark:text-emerald-400"
+                : copyState === "failed"
+                  ? "bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800/50 text-red-600 dark:text-red-400"
+                  : "bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:text-primary hover:border-primary/30"
+            }`}
+          >
+            {copyState === "copied" ? <ClipboardCheck className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+            {copyState === "copied" ? "تم النسخ" : copyState === "failed" ? "تعذّر النسخ" : "نسخ المهام"}
+          </button>
+
           {/* Print */}
           <button
             onClick={handlePrint}
@@ -992,6 +1082,33 @@ ${combinedAchievements.length > 0 ? `
 
                       {/* Badges */}
                       <div className="flex flex-wrap items-center gap-1 mt-1">
+                        {/* Came from a meeting. Orange, and deliberately first:
+                            it changes how the task should be read — it was
+                            assigned in a room, and its meeting still tracks it. */}
+                        {task.meetingTaskId && (
+                          <span
+                            title="مهمة صادرة من محضر اجتماع"
+                            className="inline-flex items-center gap-1 text-[9px] font-bold px-1.5 py-0.5 rounded bg-orange-50 text-orange-600 dark:bg-orange-500/15 dark:text-orange-400"
+                          >
+                            <FileTextIcon className="w-2.5 h-2.5" />
+                            من المحضر
+                          </span>
+                        )}
+
+                        {/* The brief image, if one was attached at creation. */}
+                        {task.attachmentUrl && (
+                          <a
+                            href={task.attachmentUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            title="عرض مرفق المهمة"
+                            className="inline-flex items-center gap-1 text-[9px] font-bold px-1.5 py-0.5 rounded bg-sky-50 text-sky-600 hover:bg-sky-100 dark:bg-sky-500/15 dark:text-sky-400 transition-colors"
+                          >
+                            <Paperclip className="w-2.5 h-2.5" />
+                            مرفق
+                          </a>
+                        )}
+
                         {/* Priority */}
                         <div className="relative inline-dropdown-container">
                           <button

@@ -114,6 +114,9 @@ export async function createTaskAction(data: {
   charityId?: string;
   isInternal: boolean;
   priority?: number;
+  /** Optional image describing the task, uploaded before this call. */
+  attachmentUrl?: string;
+  attachmentPublicId?: string;
 }) {
   try {
     const user = await getAuthenticatedUser();
@@ -141,6 +144,8 @@ export async function createTaskAction(data: {
         charityId: data.isInternal ? null : (data.charityId || null),
         charityName: data.isInternal ? null : charityName,
         isInternal: data.isInternal,
+        attachmentUrl: data.attachmentUrl || null,
+        attachmentPublicId: data.attachmentPublicId || null,
         isCompleted: false,
         priority: data.priority ?? 3,
       },

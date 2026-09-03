@@ -229,6 +229,7 @@ export default function AchievementFormModal({
             <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-2 flex items-center gap-1">
               <UploadCloud className="w-3.5 h-3.5 text-slate-400" />
               شاهد الإنجاز (صورة)
+              <span className="font-medium text-slate-400">— اختياري</span>
             </label>
             <div className="border-2 border-dashed border-slate-200 dark:border-slate-700 rounded-xl p-4 text-center bg-slate-50 dark:bg-slate-900/50 relative hover:border-emerald-500/50 transition-colors">
               {proofFile ? (
@@ -249,7 +250,7 @@ export default function AchievementFormModal({
                 <div className="space-y-3">
                   <div className="flex items-center justify-center gap-2">
                     <FileImage className="w-5 h-5 text-slate-400" />
-                    <span className="text-xs font-bold text-slate-600 dark:text-slate-300">أرفق شاهد الإنجاز كإثبات</span>
+                    <span className="text-xs font-bold text-slate-600 dark:text-slate-300">أرفق شاهدًا إن أردت</span>
                   </div>
                   <div className="flex gap-2 justify-center">
                     <label className="flex items-center justify-center gap-1.5 px-3 py-2 bg-emerald-600 text-white text-[11px] font-bold rounded-lg cursor-pointer hover:bg-emerald-700 transition-all shadow-sm">
@@ -296,7 +297,7 @@ export default function AchievementFormModal({
             </button>
             <button
               type="submit"
-              disabled={isUploading || !title.trim() || !proofFile}
+              disabled={isUploading || !title.trim()}
               className="px-6 py-2.5 rounded-xl bg-emerald-600 text-white hover:bg-emerald-700 font-bold transition-all text-xs flex items-center gap-2 cursor-pointer disabled:opacity-75 disabled:cursor-not-allowed shadow-sm"
             >
               {isUploading ? "جاري الرفع والحفظ..." : (

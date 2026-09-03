@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { Check, Copy } from "lucide-react";
+import { copyToClipboard } from "@/lib/clipboard";
 
 /**
  * Copies the delivery notice for one request, ready to paste into WhatsApp or
@@ -27,35 +28,6 @@ export function deliveryNoticeText(charityName: string, requestTitle: string): s
     "الفريق الإعلامي",
     "شركة زاد التنموية",
   ].join("\n");
-}
-
-async function copyToClipboard(text: string): Promise<boolean> {
-  // The async Clipboard API needs a secure context. That holds in production
-  // and on localhost, but not on a plain-http staging host — hence the fallback,
-  // so the button is not silently dead exactly where it gets tested.
-  try {
-    if (navigator.clipboard && window.isSecureContext) {
-      await navigator.clipboard.writeText(text);
-      return true;
-    }
-  } catch {
-    // Denied or unavailable — fall through.
-  }
-
-  try {
-    const area = document.createElement("textarea");
-    area.value = text;
-    area.setAttribute("readonly", "");
-    area.style.position = "fixed";
-    area.style.opacity = "0";
-    document.body.appendChild(area);
-    area.select();
-    const ok = document.execCommand("copy");
-    document.body.removeChild(area);
-    return ok;
-  } catch {
-    return false;
-  }
 }
 
 export default function CopyDeliveryNotice({

@@ -23,6 +23,11 @@ export interface Task {
   proofUrl?: string | null;
   proofPublicId?: string | null;
   completionNote?: string | null;
+  /** An image attached when the task was created — the brief, not the proof. */
+  attachmentUrl?: string | null;
+  attachmentPublicId?: string | null;
+  /** Set when this task was generated from a meeting's minutes. */
+  meetingTaskId?: string | null;
   updates?: TaskUpdate[];
 }
 

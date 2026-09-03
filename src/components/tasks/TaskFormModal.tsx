@@ -1,13 +1,13 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { X, Plus, UserPlus, FolderPlus } from "lucide-react";
+import { X, Plus, UserPlus, FolderPlus, Camera, UploadCloud, FileImage } from "lucide-react";
 import { Employee, Charity } from "@/types";
 
 interface TaskFormModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (data: { title: string; assigneeId: string; charityId: string; priority: number }) => void;
+  onSubmit: (data: { title: string; assigneeId: string; charityId: string; priority: number; attachment: File | null }) => void;
   isDirectorOrAdmin: boolean;
   employees: Employee[];
   charities: Charity[];
@@ -29,6 +29,7 @@ export default function TaskFormModal({
   const [assigneeId, setAssigneeId] = useState(currentUserId);
   const [charityId, setCharityId] = useState("internal");
   const [priority, setPriority] = useState<number>(3);
+  const [attachment, setAttachment] = useState<File | null>(null);
 
   useEffect(() => {
     if (isOpen) {
@@ -36,6 +37,7 @@ export default function TaskFormModal({
       setAssigneeId(currentUserId);
       setCharityId("internal");
       setPriority(3);
+      setAttachment(null);
     }
   }, [isOpen, currentUserId]);
 
@@ -43,7 +45,7 @@ export default function TaskFormModal({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSubmit({ title, assigneeId, charityId, priority });
+    onSubmit({ title, assigneeId, charityId, priority, attachment });
     // Don't reset state here, let the parent close the modal on success
   };
 
@@ -142,6 +144,58 @@ export default function TaskFormModal({
                 <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
                 <span className="text-sm font-bold">منخفضة</span>
               </label>
+            </div>
+          </div>
+
+          {/* Optional image. Uploaded straight to Cloudinary by the parent, not
+              posted through a route — a server action body is capped at a few
+              megabytes and a phone photo goes past that easily. */}
+          <div>
+            <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-2">
+              مرفق (صورة) <span className="font-medium text-slate-400">— اختياري</span>
+            </label>
+            <div className="border-2 border-dashed border-slate-200 dark:border-slate-700 rounded-xl p-3 text-center bg-slate-50 dark:bg-slate-900/50 hover:border-primary/50 transition-colors">
+              {attachment ? (
+                <div className="flex items-center justify-center gap-2">
+                  <FileImage className="w-5 h-5 text-primary shrink-0" />
+                  <span className="text-xs font-bold text-slate-800 dark:text-slate-100 truncate max-w-[200px]">
+                    {attachment.name}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setAttachment(null)}
+                    className="text-xs text-red-500 hover:text-red-600 font-bold cursor-pointer mr-2"
+                  >
+                    إزالة
+                  </button>
+                </div>
+              ) : (
+                <div className="flex gap-2 justify-center">
+                  <label className="flex items-center justify-center gap-1.5 px-3 py-2 bg-primary text-white text-[11px] font-bold rounded-lg cursor-pointer hover:bg-primary/90 transition-all shadow-sm">
+                    <Camera className="w-3.5 h-3.5" />
+                    كاميرا الجوال
+                    <input
+                      type="file"
+                      accept="image/*"
+                      capture="environment"
+                      onChange={(e) => setAttachment(e.target.files?.[0] || null)}
+                      className="hidden"
+                      disabled={isPending}
+                    />
+                  </label>
+                  <label className="flex items-center justify-center gap-1.5 px-3 py-2 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 text-[11px] font-bold rounded-lg cursor-pointer hover:bg-slate-200 dark:hover:bg-slate-700 transition-all border border-slate-200 dark:border-slate-700">
+                    <UploadCloud className="w-3.5 h-3.5" />
+                    المعرض
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => setAttachment(e.target.files?.[0] || null)}
+                      className="hidden"
+                      disabled={isPending}
+                    />
+                  </label>
+                </div>
+              )}
             </div>
           </div>
 

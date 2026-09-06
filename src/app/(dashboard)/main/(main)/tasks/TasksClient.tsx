@@ -1115,35 +1115,12 @@ ${combinedAchievements.length > 0 ? `
                         </p>
                       )}
 
-                      {/* Badges */}
+                      {/* Badges — الشارات الثابتة الوجود (الأولوية/الجهة/المسؤول) دائماً
+                          أولاً وبنفس الترتيب بين كل المهام، ثم الشارات الاختيارية
+                          (من محضر/مرفق/تحديثات) بعدها. قبل هذا الترتيب كانت الشارات
+                          الاختيارية تسبق الثابتة في الكود، فحين تغيب إحداها لمهمة ما
+                          تنزلق كل الشارات التالية مكانها وتبدو غير منظمة بين مهمة وأخرى. */}
                       <div className="flex flex-wrap items-center gap-1 mt-1">
-                        {/* Came from a meeting. Orange, and deliberately first:
-                            it changes how the task should be read — it was
-                            assigned in a room, and its meeting still tracks it. */}
-                        {task.meetingTaskId && (
-                          <span
-                            title="مهمة صادرة من محضر اجتماع"
-                            className="inline-flex items-center gap-1 text-[9px] font-bold px-1.5 py-0.5 rounded bg-orange-50 text-orange-600 dark:bg-orange-500/15 dark:text-orange-400"
-                          >
-                            <FileTextIcon className="w-2.5 h-2.5" />
-                            من المحضر
-                          </span>
-                        )}
-
-                        {/* The brief image, if one was attached at creation. */}
-                        {task.attachmentUrl && (
-                          <a
-                            href={task.attachmentUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            title="عرض مرفق المهمة"
-                            className="inline-flex items-center gap-1 text-[9px] font-bold px-1.5 py-0.5 rounded bg-sky-50 text-sky-600 hover:bg-sky-100 dark:bg-sky-500/15 dark:text-sky-400 transition-colors"
-                          >
-                            <Paperclip className="w-2.5 h-2.5" />
-                            مرفق
-                          </a>
-                        )}
-
                         {/* Priority */}
                         <div className="relative inline-dropdown-container">
                           <button
@@ -1210,6 +1187,32 @@ ${combinedAchievements.length > 0 ? `
                               </div>
                             )}
                           </div>
+                        )}
+
+                        {/* Came from a meeting — لا يزال باللون البرتقالي المميّز، لكنه
+                            بعد الشارات الثابتة الآن فلا يزيحها. */}
+                        {task.meetingTaskId && (
+                          <span
+                            title="مهمة صادرة من محضر اجتماع"
+                            className="inline-flex items-center gap-1 text-[9px] font-bold px-1.5 py-0.5 rounded bg-orange-50 text-orange-600 dark:bg-orange-500/15 dark:text-orange-400"
+                          >
+                            <FileTextIcon className="w-2.5 h-2.5" />
+                            من المحضر
+                          </span>
+                        )}
+
+                        {/* The brief image, if one was attached at creation. */}
+                        {task.attachmentUrl && (
+                          <a
+                            href={task.attachmentUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            title="عرض مرفق المهمة"
+                            className="inline-flex items-center gap-1 text-[9px] font-bold px-1.5 py-0.5 rounded bg-sky-50 text-sky-600 hover:bg-sky-100 dark:bg-sky-500/15 dark:text-sky-400 transition-colors"
+                          >
+                            <Paperclip className="w-2.5 h-2.5" />
+                            مرفق
+                          </a>
                         )}
 
                         {/* Updates count badge — click to toggle */}

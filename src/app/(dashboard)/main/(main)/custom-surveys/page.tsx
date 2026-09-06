@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { Plus, Edit2, Trash2, Eye, Copy, CheckCircle, Printer, RefreshCw, Files } from "lucide-react";
+import { Plus, Edit2, Trash2, Eye, Copy, CheckCircle, Printer, RefreshCw, Files, LayoutGrid, List } from "lucide-react";
 import CircularLoader from "@/components/CircularLoader";
 
 interface Survey {
@@ -16,15 +16,37 @@ interface Survey {
   };
 }
 
+type ViewMode = "cards" | "list";
+
+// تفضيل عرض شخصي بحت (بطاقات/قائمة) لا يستحق حقلاً في قاعدة البيانات ولا مزامنة
+// بين الأجهزة — يُحفظ محلياً في متصفح كل مستخدم ويُقرأ عند فتح الصفحة.
+const VIEW_MODE_STORAGE_KEY = "zad_custom_surveys_view_mode";
+
 export default function SurveysPage() {
   const [surveys, setSurveys] = useState<Survey[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [isCreating, setIsCreating] = useState(false);
+  const [viewMode, setViewMode] = useState<ViewMode>("cards");
 
   useEffect(() => {
     fetchSurveys();
+    try {
+      const saved = localStorage.getItem(VIEW_MODE_STORAGE_KEY);
+      if (saved === "cards" || saved === "list") setViewMode(saved);
+    } catch {
+      /* localStorage غير متاح — يبقى العرض الافتراضي (بطاقات) */
+    }
   }, []);
+
+  const changeViewMode = (mode: ViewMode) => {
+    setViewMode(mode);
+    try {
+      localStorage.setItem(VIEW_MODE_STORAGE_KEY, mode);
+    } catch {
+      /* تجاهل — التفضيل لن يُحفظ لكن التبديل الحالي يعمل */
+    }
+  };
 
   const fetchSurveys = async () => {
     setIsLoading(true);
@@ -142,18 +164,48 @@ export default function SurveysPage() {
           <h1 className="text-2xl font-bold text-slate-800 dark:text-slate-100">إدارة الاستبيانات المخصصة</h1>
           <p className="text-slate-500 mt-1 dark:text-slate-400">قم بإنشاء وتعديل الاستبيانات ومتابعة الردود</p>
         </div>
-        <button
-          onClick={handleCreate}
-          disabled={isCreating}
-          className="bg-primary text-white px-5 py-2.5 rounded-xl font-bold flex items-center gap-2 hover:bg-primary/90 transition-all shadow-lg shadow-primary/20 disabled:opacity-50"
-        >
-          {isCreating ? (
-            <div className="w-5 h-5 border-2 border-white/50 border-t-white rounded-full animate-spin"></div>
-          ) : (
-            <Plus className="w-5 h-5" />
-          )}
-          إنشاء استبيان جديد
-        </button>
+        <div className="flex items-center gap-3">
+          {/* تفضيل طريقة العرض — بطاقات أو قائمة، يُحفظ لهذا المستخدم في متصفحه */}
+          <div className="flex items-center gap-1 p-1 bg-slate-100 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700">
+            <button
+              onClick={() => changeViewMode("cards")}
+              title="عرض بطاقات"
+              aria-pressed={viewMode === "cards"}
+              className={`p-2 rounded-lg transition-all ${
+                viewMode === "cards"
+                  ? "bg-white text-primary shadow-sm dark:bg-slate-700"
+                  : "text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+              }`}
+            >
+              <LayoutGrid className="w-4 h-4" />
+            </button>
+            <button
+              onClick={() => changeViewMode("list")}
+              title="عرض قائمة"
+              aria-pressed={viewMode === "list"}
+              className={`p-2 rounded-lg transition-all ${
+                viewMode === "list"
+                  ? "bg-white text-primary shadow-sm dark:bg-slate-700"
+                  : "text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+              }`}
+            >
+              <List className="w-4 h-4" />
+            </button>
+          </div>
+
+          <button
+            onClick={handleCreate}
+            disabled={isCreating}
+            className="bg-primary text-white px-5 py-2.5 rounded-xl font-bold flex items-center gap-2 hover:bg-primary/90 transition-all shadow-lg shadow-primary/20 disabled:opacity-50"
+          >
+            {isCreating ? (
+              <div className="w-5 h-5 border-2 border-white/50 border-t-white rounded-full animate-spin"></div>
+            ) : (
+              <Plus className="w-5 h-5" />
+            )}
+            إنشاء استبيان جديد
+          </button>
+        </div>
       </div>
 
       {surveys.length === 0 ? (
@@ -170,7 +222,7 @@ export default function SurveysPage() {
             إنشاء استبيان
           </button>
         </div>
-      ) : (
+      ) : viewMode === "cards" ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {surveys.map((survey) => (
             <div key={survey.id} className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm hover:shadow-md transition-all relative group flex flex-col h-full dark:bg-slate-800 dark:border-slate-700">
@@ -257,6 +309,95 @@ export default function SurveysPage() {
                 >
                   <Trash2 className="w-4 h-4" />
                 </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div className="bg-white border border-slate-200 rounded-2xl shadow-sm divide-y divide-slate-100 dark:bg-slate-800 dark:border-slate-700 dark:divide-slate-700">
+          {surveys.map((survey) => (
+            <div key={survey.id} className="flex flex-col sm:flex-row sm:items-center gap-3 p-4">
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <h3 className="font-bold text-sm text-slate-800 dark:text-slate-100 truncate">{survey.title}</h3>
+                  <span className={`shrink-0 px-2 py-0.5 rounded-full text-[10px] font-bold border ${survey.isActive ? 'bg-emerald-50 text-emerald-600 border-emerald-100 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/20' : 'bg-slate-50 text-slate-500 border-slate-200 dark:bg-slate-900/50 dark:text-slate-400 dark:border-slate-700'}`}>
+                    {survey.isActive ? 'فعّال' : 'غير فعّال'}
+                  </span>
+                </div>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                  تاريخ الإنشاء: {new Date(survey.createdAt).toLocaleDateString('ar-SA')}
+                </p>
+              </div>
+
+              <div className="flex items-center gap-4 shrink-0">
+                <div className="text-center px-2">
+                  <span className="block text-base font-black text-primary leading-none">{survey._count.responses}</span>
+                  <span className="text-[10px] text-slate-500 dark:text-slate-400">ردود</span>
+                </div>
+
+                <button
+                  onClick={() => handleToggleActive(survey.id, survey.isActive)}
+                  className={`text-xs font-bold px-3 py-1.5 rounded-lg transition-all whitespace-nowrap ${
+                    survey.isActive
+                      ? "bg-amber-100 text-amber-700 hover:bg-amber-200 dark:bg-amber-500/10 dark:text-amber-400 dark:hover:bg-amber-500/20"
+                      : "bg-emerald-100 text-emerald-700 hover:bg-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400 dark:hover:bg-emerald-500/20"
+                  }`}
+                >
+                  {survey.isActive ? "تعطيل الرابط" : "تفعيل الرابط"}
+                </button>
+
+                <div className="flex items-center gap-1 flex-wrap">
+                  <Link
+                    href={`/main/custom-surveys/${survey.id}/edit`}
+                    className="p-2 bg-slate-100 text-slate-700 hover:bg-slate-200 hover:text-slate-900 rounded-lg transition-all dark:bg-slate-700 dark:text-slate-300 dark:hover:bg-slate-600 dark:hover:text-slate-100"
+                    title="تعديل"
+                  >
+                    <Edit2 className="w-4 h-4" />
+                  </Link>
+                  <Link
+                    href={`/main/custom-surveys/${survey.id}/results`}
+                    className="p-2 bg-primary/10 text-primary hover:bg-primary hover:text-white rounded-lg transition-all"
+                    title="النتائج"
+                  >
+                    <Eye className="w-4 h-4" />
+                  </Link>
+                  <Link
+                    href={`/main/custom-surveys/${survey.id}/print`}
+                    target="_blank"
+                    className="p-2 bg-slate-100 text-slate-700 hover:bg-slate-200 hover:text-slate-900 rounded-lg transition-all dark:bg-slate-700 dark:text-slate-300 dark:hover:bg-slate-600 dark:hover:text-slate-100"
+                    title="طباعة الاستبيان"
+                  >
+                    <Printer className="w-4 h-4" />
+                  </Link>
+                  <button
+                    onClick={() => handleRegenerateLink(survey.id)}
+                    className="p-2 bg-white border border-slate-200 rounded-lg text-slate-500 hover:text-amber-500 hover:border-amber-500/30 shadow-sm dark:bg-slate-800 dark:border-slate-700 dark:text-slate-400"
+                    title="توليد رابط جديد (إلغاء القديم)"
+                  >
+                    <RefreshCw className="w-4 h-4" />
+                  </button>
+                  <button
+                    onClick={() => copyLink(survey.id, survey.slug)}
+                    className="p-2 bg-white border border-slate-200 rounded-lg text-slate-500 hover:text-primary hover:border-primary/30 shadow-sm dark:bg-slate-800 dark:border-slate-700 dark:text-slate-400"
+                    title="نسخ الرابط"
+                  >
+                    {copiedId === survey.id ? <CheckCircle className="w-4 h-4 text-emerald-500" /> : <Copy className="w-4 h-4" />}
+                  </button>
+                  <button
+                    onClick={() => handleDuplicate(survey.id)}
+                    className="p-2 bg-white border border-slate-200 rounded-lg text-slate-500 hover:text-emerald-500 hover:border-emerald-200 shadow-sm dark:bg-slate-800 dark:border-slate-700 dark:text-slate-400 dark:hover:border-emerald-500/30"
+                    title="نسخ الاستبيان"
+                  >
+                    <Files className="w-4 h-4" />
+                  </button>
+                  <button
+                    onClick={() => handleDelete(survey.id)}
+                    className="p-2 bg-white border border-slate-200 rounded-lg text-slate-500 hover:text-red-500 hover:border-red-200 shadow-sm dark:bg-slate-800 dark:border-slate-700 dark:text-slate-400 dark:hover:border-red-500/30"
+                    title="حذف"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
               </div>
             </div>
           ))}

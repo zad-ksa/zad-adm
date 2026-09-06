@@ -1424,7 +1424,7 @@ ${combinedAchievements.length > 0 ? `
                     <p
                       onClick={() => item.task && setDetailTask(item.task)}
                       title={item.task ? "عرض تفاصيل المهمة" : undefined}
-                      className={`text-xs font-medium text-slate-600 dark:text-slate-300 leading-snug truncate ${item.task ? "cursor-pointer hover:text-primary transition-colors" : ""}`}
+                      className={`text-xs font-medium text-slate-600 dark:text-slate-300 leading-snug break-words ${item.task ? "cursor-pointer hover:text-primary transition-colors" : ""}`}
                     >
                       {item.title}
                     </p>

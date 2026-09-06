@@ -1,10 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Plus, Info, Palette } from "lucide-react";
+import { Plus, Info, Palette, ListOrdered } from "lucide-react";
 import DesignRequestCard, { type DesignRequestCardData } from "@/components/design-requests/DesignRequestCard";
 import EditDesignRequestModal from "@/components/design-requests/EditDesignRequestModal";
+import DesignRequestLogModal from "@/components/design-requests/DesignRequestLogModal";
+import QueueOrderModal, { type QueueRow } from "@/components/design-requests/QueueOrderModal";
 import type { DesignRequestProgress } from "@/lib/designRequestProgress";
 import SuccessToast from "@/components/ui/SuccessToast";
 import ConfirmModal from "@/components/ui/ConfirmModal";
@@ -31,16 +33,20 @@ type Item = {
     /** Settled by the deadline rather than by this charity. */
     autoApproved?: boolean;
   };
+  /** Raw due date in ms, for ordering — "١٥ سبتمبر" does not sort. */
+  expectedCompletionAt: number;
   progress: DesignRequestProgress;
 };
 
 export default function DesignRequestsPortalClient({
   charityId,
+  charityName,
   initialItems,
   canCreate,
   designTypes,
 }: {
   charityId: string;
+  charityName: string;
   initialItems: Item[];
   canCreate: boolean;
   designTypes: DesignTypeOption[];
@@ -48,6 +54,8 @@ export default function DesignRequestsPortalClient({
   const router = useRouter();
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [logRequestId, setLogRequestId] = useState<string | null>(null);
+  const [isQueueOpen, setIsQueueOpen] = useState(false);
   type PortalTab = "AWAITING_REVIEW" | "UNDER_REVIEW" | "PENDING" | "REVISION_REQUESTED" | "COMPLETED" | "REJECTED";
   const [tab, setTab] = useState<PortalTab>("PENDING");
   const [resubmitId, setResubmitId] = useState<string | null>(null);
@@ -62,7 +70,43 @@ export default function DesignRequestsPortalClient({
   const rejectedCount = initialItems.filter((it) => it.request.status === "REJECTED").length;
   const pendingCount = initialItems.filter((it) => it.request.status === "PENDING").length;
   const completedCount = initialItems.filter((it) => it.request.status === "COMPLETED").length;
-  const filtered = initialItems.filter((it) => it.request.status === tab);
+  const filtered = useMemo(() => {
+    const rows = initialItems.filter((it) => it.request.status === tab);
+
+    // Started first, then whatever is due soonest. What is under way is what
+    // someone is working on today, so it belongs at the top whatever its date;
+    // the rest is a waiting list, and a waiting list is only useful in
+    // deadline order. The other tabs keep the server's ordering — a completed
+    // or rejected request has no urgency left to rank by.
+    if (tab !== "PENDING") return rows;
+
+    return [...rows].sort((a, b) => {
+      const aStarted = a.request.startedAt ? 1 : 0;
+      const bStarted = b.request.startedAt ? 1 : 0;
+      if (aStarted !== bStarted) return bStarted - aStarted;
+      return a.expectedCompletionAt - b.expectedCompletionAt;
+    });
+  }, [initialItems, tab]);
+
+  // Only what has not been started can move, which is what makes handing this
+  // to the charity safe: it can decide what comes next among its own designs,
+  // and can never disturb work already under way.
+  const queueRows: QueueRow[] = useMemo(
+    () =>
+      initialItems
+        .filter((it) => it.request.status === "PENDING")
+        .sort((a, b) => a.expectedCompletionAt - b.expectedCompletionAt)
+        .map((it) => ({
+          id: it.request.id,
+          title: it.request.title,
+          scheduledStartDate: it.request.scheduledStartDate,
+          expectedCompletionDate: it.request.expectedCompletionDate,
+          totalWorkingDays: it.request.totalWorkingDays,
+          startedAt: it.request.startedAt,
+          startedByName: it.request.startedByName,
+        })),
+    [initialItems]
+  );
 
   return (
     <div className="design-requests-ui space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500" dir="rtl">
@@ -115,6 +159,20 @@ export default function DesignRequestsPortalClient({
           >
             طلب تصميم جديد
           </button>
+
+          {/* Which of your own designs comes next is your call. Offered only
+              when there is more than one waiting — reordering a queue of one
+              is a button that does nothing. */}
+          {queueRows.filter((r) => !r.startedAt).length > 1 && (
+            <button
+              onClick={() => setIsQueueOpen(true)}
+              className="w-full h-9 flex items-center justify-center gap-1.5 rounded-xl bg-slate-100 text-slate-600 dark:bg-[#111] dark:text-slate-400 border border-transparent dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 transition-colors font-bold"
+              style={{ fontSize: "var(--dr-fs-meta)" }}
+            >
+              <ListOrdered className="w-3.5 h-3.5" />
+              ترتيب التنفيذ
+            </button>
+          )}
         </div>
         )}
 
@@ -177,6 +235,7 @@ export default function DesignRequestsPortalClient({
               key={it.request.id}
               request={it.request}
               progress={it.progress}
+              onOpenLog={() => setLogRequestId(it.request.id)}
               actions={
                 it.request.status === "AWAITING_REVIEW" ? (
                   canCreate ? (
@@ -232,8 +291,10 @@ export default function DesignRequestsPortalClient({
                     قيد المراجعة — سيتم الرد خلال 24 ساعة. الموعد الظاهر تقديري حتى الاعتماد.
                   </div>
                 ) : // Editing is for a brief still being worked on; a delivered
-                // request has none left to edit.
-                canCreate && it.request.status === "PENDING" ? (
+                // request has none left to edit — and neither has one a designer
+                // has already started, where the card itself explains why and
+                // names who to call instead.
+                canCreate && it.request.status === "PENDING" && !it.request.startedAt ? (
                   <button
                     onClick={() => setEditingId(it.request.id)}
                     className="h-9 px-4 rounded-xl bg-slate-100 text-slate-600 dark:bg-[#111] dark:text-slate-400 border border-transparent dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 transition-colors font-bold"
@@ -246,6 +307,23 @@ export default function DesignRequestsPortalClient({
             />
           ))}
         </div>
+      )}
+
+      {isQueueOpen && (
+        <QueueOrderModal
+          charityId={charityId}
+          charityName={charityName}
+          rows={queueRows}
+          onClose={() => setIsQueueOpen(false)}
+          onSuccess={() => {
+            setIsQueueOpen(false);
+            router.refresh();
+          }}
+        />
+      )}
+
+      {logRequestId !== null && (
+        <DesignRequestLogModal requestId={logRequestId} onClose={() => setLogRequestId(null)} />
       )}
 
       {editingId !== null && (() => {

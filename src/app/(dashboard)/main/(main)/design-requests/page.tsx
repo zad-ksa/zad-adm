@@ -32,6 +32,7 @@ export default async function DesignRequestsPage() {
     prisma.designRequest.findMany({
       include: {
         charity: { select: { id: true, name: true } },
+        startedBy: { select: { name: true } },
         attachments: true,
         types: { select: { id: true, name: true } },
         extensions: { orderBy: { createdAt: "asc" } },
@@ -73,6 +74,10 @@ export default async function DesignRequestsPage() {
         rejectionReason: r.rejectionReason,
         revisionNotes: r.revisionNotes,
         autoApproved: r.autoApproved,
+        // Formatted on the server like every other date here — the card must
+        // never format one, or the server and the browser disagree.
+        startedAt: r.startedAt ? formatCivilDateTime(r.startedAt) : null,
+        startedByName: r.startedBy?.name ?? null,
         // deliveredAt is only ever set by the review cycle, so its absence
         // marks a request finished under the old flow.
         wasReviewed: !!r.deliveredAt,

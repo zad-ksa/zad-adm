@@ -372,6 +372,7 @@ model Employee {
   receivedMails           MailRecipient[]       @relation("ReceivedMails")
   createdDesignRequests   DesignRequest[]       @relation("CreatedDesignRequests")
   completedDesignRequests DesignRequest[]       @relation("CompletedDesignRequests")
+  startedDesignRequests   DesignRequest[]       @relation("StartedDesignRequests")
   reviewedDesignRequests  DesignRequest[]       @relation("ReviewedDesignRequests")
   knowledgeNodes          KnowledgeNode[]       @relation("KnowledgeNodes")
 }
@@ -1035,6 +1036,16 @@ model DesignRequest {
   scheduledStartDate     DateTime
   expectedCompletionDate DateTime
 
+  /// When a Zad designer actually picked this up.
+  ///
+  /// Null means it is still only queued — and that is exactly the window in
+  /// which the charity may still edit its own brief. Once work has begun,
+  /// editing the brief underneath the designer is how two people end up
+  /// building different things, so the portal closes it and says who to call.
+  startedAt   DateTime?
+  startedById String?
+  startedBy   Employee? @relation("StartedDesignRequests", fields: [startedById], references: [id], onDelete: SetNull)
+
   completedAt   DateTime?
   completedById String?
   completedBy   Employee? @relation("CompletedDesignRequests", fields: [completedById], references: [id], onDelete: SetNull)
@@ -1076,6 +1087,7 @@ model DesignRequest {
 
   attachments DesignRequestAttachment[]
   extensions  DesignRequestExtension[]
+  events      DesignRequestEvent[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -1107,6 +1119,49 @@ model DesignRequestExtension {
 }
 
 /// ما الذي يمثّله المرفق — وهو ما يقرّر مصيره عند إنهاء الطلب.
+/// What happened to a design request, in order, from submission to sign-off.
+///
+/// Separate from AuditLog on purpose: that table is a security record read by
+/// administrators, while this one is shown to the charity that owns the
+/// request. Different audience, different retention, different wording.
+model DesignRequestEvent {
+  id        String        @id @default(uuid())
+  requestId String
+  request   DesignRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
+
+  kind DesignEventKind
+
+  /// Who did it, copied rather than joined. The account may later be renamed
+  /// or deleted, and a history that rewrites itself is not a history.
+  actorType AuditActorType?
+  actorId   String?
+  actorName String?
+
+  /// Shown under the entry: a reason, a note, or what changed.
+  note String? @db.Text
+
+  createdAt DateTime @default(now())
+
+  @@index([requestId, createdAt])
+}
+
+enum DesignEventKind {
+  CREATED // رفع الطلب
+  APPROVED // اعتماد زاد للطلب ودخوله الطابور
+  REJECTED // رفض مع سبب
+  RESUBMITTED // إعادة رفع بعد الرفض
+  EDITED // تعديل الوصف أو المرفقات
+  RESCHEDULED // تغيير تاريخ البدء لهذا الطلب وحده
+  QUEUE_REORDERED // إعادة ترتيب طابور الجمعية
+  EXTENDED // تمديد المدة
+  STARTED // بدء التنفيذ
+  DELIVERED // تسليم أولي بانتظار رد الجمعية
+  REVISION_REQUESTED // ملاحظات من الجمعية
+  CHARITY_APPROVED // اعتماد الجمعية للتسليم
+  AUTO_APPROVED // اعتماد تلقائي بعد ٢٤ ساعة
+  COMPLETED // إغلاق نهائي
+}
+
 enum DesignAttachmentKind {
   /// ملفات الجمعية المرفقة مع الطلب. تُحذف من التخزين عند الإنهاء، لأنها مواد
   /// إدخال انتهى الغرض منها ولا داعي لإبقائها تستهلك مساحة.

@@ -9,6 +9,9 @@ import {
   Palette,
   CalendarPlus,
   FileCheck2,
+  ListOrdered,
+  Hammer,
+  History,
 } from "lucide-react";
 import { useState, type ReactNode } from "react";
 import type { DesignRequestProgress } from "@/lib/designRequestProgress";
@@ -28,6 +31,13 @@ export type DesignRequestCardData = {
   rejectedAt?: string | null;
   /** Finalised by the deadline passing rather than by the charity acting. */
   autoApproved?: boolean;
+  /** When a designer picked it up. Null means it is still only queued. */
+  startedAt?: string | null;
+  /** Who picked it up — shown so nobody has to ask. */
+  startedByName?: string | null;
+  /** 1-based place in this charity's execution queue, when it is queued. */
+  queuePosition?: number | null;
+  queueTotal?: number | null;
   /**
    * Whether this request went through the charity review cycle at all.
    *
@@ -56,10 +66,16 @@ export default function DesignRequestCard({
   progress,
   actions,
   footer,
+  onOpenLog,
 }: {
   request: DesignRequestCardData;
   progress: DesignRequestProgress;
   actions?: ReactNode;
+  /**
+   * Opens this request's history. Given to both dashboards, because the
+   * charity has the same right to know who moved its delivery date.
+   */
+  onOpenLog?: () => void;
   /**
    * Rendered below the status actions and separated from them.
    *
@@ -92,12 +108,25 @@ export default function DesignRequestCard({
               request, and a cut one leaves two designs for the same charity
               looking identical. The card grows instead — the grid stretches
               its row to match, so the cards beside it stay aligned. */}
-          <h3
-            className="font-bold text-slate-900 dark:text-slate-100 break-words leading-snug"
-            style={{ fontSize: "var(--dr-fs-title)", textWrap: "balance" }}
-          >
-            {request.title}
-          </h3>
+          <div className="flex items-start gap-2">
+            <h3
+              className="font-bold text-slate-900 dark:text-slate-100 break-words leading-snug min-w-0 flex-1"
+              style={{ fontSize: "var(--dr-fs-title)", textWrap: "balance" }}
+            >
+              {request.title}
+            </h3>
+            {onOpenLog && (
+              <button
+                type="button"
+                onClick={onOpenLog}
+                title="سجل الطلب"
+                aria-label="سجل الطلب"
+                className="shrink-0 mt-0.5 p-1 rounded-md text-slate-300 hover:text-primary dark:text-slate-600 dark:hover:text-teal-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+              >
+                <History className="w-3.5 h-3.5" />
+              </button>
+            )}
+          </div>
           {request.description && (
             <div>
               <p
@@ -215,7 +244,43 @@ export default function DesignRequestCard({
               )}
             </span>
           )}
+
+          {/* Where it sits in the queue. Only while it is still waiting —
+              once a designer has it, the position is no longer the answer to
+              "when does mine get done". */}
+          {request.status === "PENDING" && !request.startedAt && request.queuePosition ? (
+            <span className="flex items-center gap-2">
+              <ListOrdered className="w-4 h-4 text-slate-400 shrink-0" />
+              <span className="text-slate-500 dark:text-slate-400">الترتيب في التنفيذ:</span>{" "}
+              <span className="font-bold text-slate-900 dark:text-slate-100 tabular-nums">
+                {request.queuePosition}
+                {request.queueTotal ? ` من ${request.queueTotal}` : ""}
+              </span>
+            </span>
+          ) : null}
         </div>
+
+        {/* Work has begun. The fact alone, and what to do about it.
+
+            Deliberately without the timestamp or the designer's name: the
+            reader's question here is "can I still change this", not "who has
+            it and since when". Both are recorded and both are in the request
+            log, one click away, for anyone who does want to know. */}
+        {request.startedAt && request.status === "PENDING" && (
+          <div
+            className="mt-3 px-3 py-2.5 rounded-xl bg-indigo-500/[0.07] text-indigo-700 dark:text-indigo-300 leading-relaxed"
+            style={{ fontSize: "var(--dr-fs-meta)" }}
+          >
+            <span className="inline-flex items-center gap-1.5 font-bold">
+              <Hammer className="w-3.5 h-3.5 shrink-0" />
+              جاري العمل على الطلب
+            </span>
+            <span className="text-indigo-600/80 dark:text-indigo-300/80">
+              {" "}— في حال هناك ملاحظات وتعديلات على الطلب يرجى التواصل مع المسؤول
+              من شركة زاد.
+            </span>
+          </div>
+        )}
 
         {request.attachments.length > 0 && (
           <div className="flex flex-wrap gap-2 pt-4 border-t border-slate-100 dark:border-slate-800/60">

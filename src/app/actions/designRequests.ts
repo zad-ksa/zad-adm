@@ -1,13 +1,15 @@
 "use server";
 
 import { prisma } from "@/lib/db";
-import type { Prisma } from "@prisma/client";
+import { Prisma } from "@prisma/client";
 import { hasCharityPermission } from "@/lib/charityPermissions";
 import { getSession } from "@/lib/auth";
 import { hasPermission, isAdmin } from "@/lib/permissions";
 import { revalidatePath } from "next/cache";
 import { createAppNotification } from "./notifications";
 import { logAudit } from "@/lib/auditLog";
+import { logDesignEvent, logDesignEvents, SYSTEM_ACTOR } from "@/lib/designRequestLog";
+import type { DesignEventActor } from "@/lib/designRequestLog";
 import { REVIEW_WINDOW_MS, ZAD_COMPANY_LABEL } from "@/lib/designRequestProgress";
 import { v2 as cloudinary } from "cloudinary";
 import {
@@ -16,6 +18,7 @@ import {
   addBusinessDays,
   computeDesignRequestDates,
   addDesignBusinessDays,
+  formatCivilDate,
 } from "@/lib/businessDays";
 
 cloudinary.config({
@@ -25,6 +28,11 @@ cloudinary.config({
 });
 
 const REQUEST_DURATION_DAYS = 3;
+
+/** The signed-in person, in the shape the request log stores. */
+function staffActor(session: { id: string; name: string }): DesignEventActor {
+  return { type: "EMPLOYEE", id: session.id, name: session.name };
+}
 
 export type DesignRequestAttachmentInput = {
   fileUrl: string;
@@ -254,6 +262,13 @@ export async function createDesignRequestFromPortal(input: CreateDesignRequestIn
 
     await notifyDesignStaff(charity.name, input.title.trim());
 
+    await logDesignEvent({
+      requestId: created.id,
+      kind: "CREATED",
+      actor: { type: "CHARITY_USER", id: session.id, name: session.name },
+      note: "بانتظار اعتماد زاد للجدولة",
+    });
+
     revalidatePath("/main/design-requests");
     revalidateCharityPortal(charity?.name);
     return { success: true, id: created.id };
@@ -288,6 +303,13 @@ export async function createDesignRequestByStaff(input: CreateDesignRequestInput
       // No review step: a member of staff creating the request is the approval.
       status: "PENDING",
       startDate: input.startDate,
+    });
+
+    await logDesignEvent({
+      requestId: created.id,
+      kind: "CREATED",
+      actor: staffActor(session),
+      note: "أُنشئ من قبل فريق زاد ودخل الطابور مباشرة",
     });
 
     revalidatePath("/main/design-requests");
@@ -368,6 +390,16 @@ export async function approveDesignRequest(id: string, workingDaysOverride?: num
           },
         });
 
+        await logDesignEvent(
+          {
+            requestId: id,
+            kind: "APPROVED",
+            actor: staffActor(session),
+            note: `المدة ${workingDays} يوم عمل`,
+          },
+          tx
+        );
+
         return { success: true as const };
       },
       { isolationLevel: "Serializable" }
@@ -415,6 +447,13 @@ export async function rejectDesignRequest(id: string, reason: string) {
       },
     });
 
+    await logDesignEvent({
+      requestId: id,
+      kind: "REJECTED",
+      actor: staffActor(session),
+      note: trimmed,
+    });
+
     revalidatePath("/main/design-requests");
     revalidatePath("/portal", "layout");
     return { success: true };
@@ -455,7 +494,7 @@ export async function resubmitDesignRequest(input: {
     if (!existing) return { error: "الطلب غير موجود" };
 
     if (!existing.charityId) return { error: "هذا الطلب لا يتبع جمعية" };
-    await requireCharityMemberPermission(existing.charityId, "create_design_requests");
+    const session = await requireCharityMemberPermission(existing.charityId, "create_design_requests");
 
     // Only a rejected request can be resubmitted. Without this, the same button
     // could be used to drag an approved request back out of the queue.
@@ -505,6 +544,12 @@ export async function resubmitDesignRequest(input: {
     );
 
     await notifyDesignStaff(existing.charity?.name ?? ZAD_COMPANY_LABEL, input.title.trim());
+
+    await logDesignEvent({
+      requestId: input.requestId,
+      kind: "RESUBMITTED",
+      actor: { type: "CHARITY_USER", id: session.id, name: session.name },
+    });
 
     revalidatePath("/main/design-requests");
     revalidateCharityPortal(existing.charity?.name);
@@ -565,7 +610,7 @@ export async function approveDeliveryByCharity(id: string) {
     if (!request) return { error: "الطلب غير موجود" };
     if (!request.charityId) return { error: "هذا الطلب لا يتبع جمعية" };
 
-    await requireCharityMemberPermission(request.charityId, "create_design_requests");
+    const session = await requireCharityMemberPermission(request.charityId, "create_design_requests");
 
     if (request.status !== "AWAITING_REVIEW") return { error: "هذا الطلب ليس بانتظار مراجعتك" };
 
@@ -574,6 +619,12 @@ export async function approveDeliveryByCharity(id: string) {
       data: { status: "COMPLETED", completedAt: new Date() },
     });
     await purgeBriefAttachments(id);
+
+    await logDesignEvent({
+      requestId: id,
+      kind: "CHARITY_APPROVED",
+      actor: { type: "CHARITY_USER", id: session.id, name: session.name },
+    });
 
     revalidatePath("/main/design-requests");
     revalidateCharityPortal(request.charity?.name);
@@ -609,7 +660,7 @@ export async function requestDesignRevision(input: {
     if (!request) return { error: "الطلب غير موجود" };
     if (!request.charityId) return { error: "هذا الطلب لا يتبع جمعية" };
 
-    await requireCharityMemberPermission(request.charityId, "create_design_requests");
+    const session = await requireCharityMemberPermission(request.charityId, "create_design_requests");
 
     if (request.status !== "AWAITING_REVIEW") return { error: "لا يمكن طلب التعديل على هذا الطلب" };
 
@@ -647,6 +698,13 @@ export async function requestDesignRevision(input: {
           ? { create: input.addAttachments.map((a) => ({ ...a, kind: "BRIEF" as const })) }
           : undefined,
       },
+    });
+
+    await logDesignEvent({
+      requestId: input.requestId,
+      kind: "REVISION_REQUESTED",
+      actor: { type: "CHARITY_USER", id: session.id, name: session.name },
+      note: notes,
     });
 
     revalidatePath("/main/design-requests");
@@ -689,6 +747,14 @@ export async function finalizeExpiredDeliveries() {
       if (res.count === 0) continue;
 
       await purgeBriefAttachments(request.id);
+
+      await logDesignEvent({
+        requestId: request.id,
+        kind: "AUTO_APPROVED",
+        actor: SYSTEM_ACTOR,
+        note: "مرّت ٢٤ ساعة دون ردّ من الجمعية",
+      });
+
       revalidateCharityPortal(request.charity?.name);
       approved++;
     } catch (err) {
@@ -746,6 +812,17 @@ export async function markDesignRequestComplete(
     // After the transaction, so a failed Cloudinary call cannot leave the
     // request unchanged while its files are already gone.
     if (isRevisionDelivery) await purgeBriefAttachments(id);
+
+    // A second delivery closes the request outright; a first one starts the
+    // charity's 24-hour window. The log has to say which of the two happened.
+    await logDesignEvent({
+      requestId: id,
+      kind: isRevisionDelivery ? "COMPLETED" : "DELIVERED",
+      actor: staffActor(session),
+      note: isRevisionDelivery
+        ? "تسليم التعديل — اعتماد نهائي"
+        : "بانتظار ردّ الجمعية خلال ٢٤ ساعة",
+    });
 
     revalidatePath("/main/design-requests");
     revalidateCharityPortal(request.charity?.name);
@@ -805,7 +882,6 @@ export async function getDesignRequestsForCharity(charityId: string) {
 export async function rescheduleDesignRequest(id: string, newStartDate: Date) {
   try {
     const session = await requireDesignStaff();
-    void session;
 
     const request = await prisma.designRequest.findUnique({
       where: { id },
@@ -822,6 +898,13 @@ export async function rescheduleDesignRequest(id: string, newStartDate: Date) {
         scheduledStartDate,
         expectedCompletionDate,
       },
+    });
+
+    await logDesignEvent({
+      requestId: id,
+      kind: "RESCHEDULED",
+      actor: staffActor(session),
+      note: `بدء ${formatCivilDate(scheduledStartDate)} · تسليم ${formatCivilDate(expectedCompletionDate)}`,
     });
 
     revalidatePath("/main/design-requests");
@@ -891,6 +974,271 @@ export async function rescheduleCharityQueue(charityId: string, startDate: Date)
     console.error("Error rescheduling charity queue:", error);
     return { error: error.message || "حدث خطأ أثناء إعادة ترتيب تنفيذ الجمعية" };
   }
+}
+
+/**
+ * A designer picks the request up.
+ *
+ * Two things follow, and the second is the point of the button. The card starts
+ * saying work is under way — so nobody starts it twice — and the charity loses
+ * the ability to edit its own brief, because changing the brief underneath a
+ * designer mid-execution is how two people end up building different things.
+ *
+ * Only a PENDING request can be started: one still under review has not been
+ * scheduled, and one already delivered is past this point.
+ */
+export async function startDesignRequest(id: string) {
+  try {
+    const session = await requireDesignStaff();
+
+    const request = await prisma.designRequest.findUnique({
+      where: { id },
+      select: {
+        id: true,
+        status: true,
+        startedAt: true,
+        startedBy: { select: { name: true } },
+        charity: { select: { name: true } },
+      },
+    });
+    if (!request) return { error: "الطلب غير موجود" };
+
+    // Not an error worth undoing anything for — say who has it and stop.
+    if (request.startedAt) {
+      return {
+        error: request.startedBy?.name
+          ? `بدأ العمل على هذا الطلب بالفعل — ${request.startedBy.name}`
+          : "بدأ العمل على هذا الطلب بالفعل",
+      };
+    }
+
+    if (request.status !== "PENDING") {
+      return { error: "لا يمكن بدء التنفيذ إلا على طلب معتمد في الطابور" };
+    }
+
+    await prisma.designRequest.update({
+      where: { id },
+      data: { startedAt: new Date(), startedById: session.id },
+    });
+
+    await logDesignEvent({
+      requestId: id,
+      kind: "STARTED",
+      actor: staffActor(session),
+    });
+
+    await logAudit({
+      actorType: "EMPLOYEE",
+      actorId: session.id,
+      actorName: session.name,
+      action: "DESIGN_REQUEST_STARTED",
+      targetType: "DesignRequest",
+      targetId: id,
+    });
+
+    revalidatePath("/main/design-requests");
+    revalidateCharityPortal(request.charity?.name);
+    return { success: true };
+  } catch (error: any) {
+    console.error("Error starting design request:", error);
+    return { error: error.message || "تعذّر بدء التنفيذ" };
+  }
+}
+
+/**
+ * The queue for one charity, in the order staff just arranged it.
+ *
+ * Order is not stored in a column. The schedule IS the order: each request
+ * starts where the previous one finishes, so writing the dates in sequence
+ * writes the order too, and there is no second source of truth to drift from
+ * the first.
+ *
+ * Only requests that have NOT been started can move. One already under a
+ * designer's hand has a start date that actually happened, and shuffling it
+ * would rewrite history rather than plan; those keep their place and the ones
+ * behind them queue up after the last of them.
+ *
+ * A charity may arrange its OWN queue — which of its designs matters most this
+ * week is its call, not Zad's, and the constraint that keeps this safe is the
+ * one already here: nothing that has been started can move, so reordering can
+ * never disturb work in progress. It can only change what comes next, and only
+ * within that charity's own designs.
+ *
+ * The Zad company queue (charityId null) has no charity to own it, so it stays
+ * with staff.
+ */
+export async function reorderCharityQueue(input: {
+  /** null for the Zad company queue, which has no charity row. */
+  charityId: string | null;
+  /** Ids of the not-yet-started requests, in their new order. */
+  orderedIds: string[];
+}) {
+  try {
+    const charity = input.charityId
+      ? await prisma.charity.findUnique({ where: { id: input.charityId }, select: { name: true } })
+      : null;
+    if (input.charityId && !charity) return { error: "الجمعية غير موجودة" };
+
+    // Staff first, then the owning charity. Scoped to input.charityId rather
+    // than to whatever charity the caller claims, so membership in one charity
+    // grants nothing over another's queue.
+    let actor: DesignEventActor;
+    try {
+      const session = await requireDesignStaff();
+      actor = staffActor(session);
+    } catch (staffErr) {
+      if (!input.charityId) throw staffErr;
+      const session = await requireCharityMemberPermission(
+        input.charityId,
+        "create_design_requests"
+      );
+      actor = { type: "CHARITY_USER", id: session.id, name: session.name };
+    }
+
+    if (!Array.isArray(input.orderedIds) || input.orderedIds.length === 0) {
+      return { error: "لا توجد طلبات لإعادة ترتيبها" };
+    }
+
+    return await prisma.$transaction(
+      async (tx) => {
+        const pending = await tx.designRequest.findMany({
+          where: { charityId: input.charityId, status: "PENDING" },
+          orderBy: { scheduledStartDate: "asc" },
+          select: {
+            id: true,
+            submittedAt: true,
+            startedAt: true,
+            baseWorkingDays: true,
+            addedDays: true,
+            expectedCompletionDate: true,
+          },
+        });
+
+        const started = pending.filter((r) => r.startedAt);
+        const movable = pending.filter((r) => !r.startedAt);
+        const movableById = new Map(movable.map((r) => [r.id, r]));
+
+        // The submitted order must name exactly the movable set. A mismatch
+        // means the screen was looking at a stale queue — someone started a
+        // request, or a new one arrived — and applying it anyway would schedule
+        // against a picture that is no longer true.
+        const requested = input.orderedIds.filter((id) => movableById.has(id));
+        if (requested.length !== movable.length || new Set(requested).size !== movable.length) {
+          return { error: "تغيّر الطابور منذ فتح النافذة، يرجى تحديث الصفحة" };
+        }
+
+        // Work queues up behind whatever is already under way.
+        let tail: Date | undefined = started.length
+          ? started.reduce(
+              (latest, r) => (r.expectedCompletionDate > latest ? r.expectedCompletionDate : latest),
+              started[0].expectedCompletionDate
+            )
+          : undefined;
+
+        // Dates first, with no database round trip in the loop — the chaining
+        // is pure arithmetic and each step only needs the previous tail.
+        const schedule: { id: string; start: Date; finish: Date }[] = [];
+        for (let i = 0; i < requested.length; i++) {
+          const req = movableById.get(requested[i])!;
+          const days = req.baseWorkingDays + req.addedDays;
+
+          // The head of the queue may start now rather than waiting on a tail;
+          // everything after it begins where its predecessor ends.
+          const dates = computeDesignRequestDates(
+            tail ? req.submittedAt : new Date(),
+            tail,
+            days
+          );
+          tail = dates.expectedCompletionDate;
+
+          schedule.push({
+            id: req.id,
+            start: dates.scheduledStartDate,
+            finish: dates.expectedCompletionDate,
+          });
+        }
+
+        // Then ONE statement rather than one per request.
+        //
+        // The loop used to await an update per row. The database is in
+        // ap-southeast-2, so thirteen rows — a real queue, measured — spent
+        // 6.4 s on round trips and blew the 5 s interactive-transaction budget
+        // before reaching the end. The reorder failed and rolled back, on the
+        // queues long enough to be worth reordering.
+        await tx.$executeRaw`
+          UPDATE "DesignRequest" AS d
+             SET "scheduledStartDate"     = v.start,
+                 "expectedCompletionDate" = v.finish,
+                 "updatedAt"              = NOW()
+            FROM (VALUES ${Prisma.join(
+                    schedule.map(
+                      (u) => Prisma.sql`(${u.id}, ${u.start}::timestamp, ${u.finish}::timestamp)`
+                    )
+                  )}) AS v(id, start, finish)
+           WHERE d.id = v.id`;
+
+        // One line per request, so each design's own history records the move
+        // and its new dates — not just the queue as a whole.
+        await logDesignEvents(
+          requested.map((id, i) => ({
+            requestId: id,
+            kind: "QUEUE_REORDERED" as const,
+            actor,
+            note: `الترتيب ${i + 1} من ${requested.length}`,
+          })),
+          tx
+        );
+
+        revalidatePath("/main/design-requests");
+        revalidateCharityPortal(charity?.name);
+        return { success: true as const };
+      },
+      // Headroom over the 5 s default: the reads, the bulk write and the log
+      // all cross a region boundary, and a reorder that times out half way is
+      // the one failure this must not have.
+      { isolationLevel: "Serializable", timeout: 20_000, maxWait: 10_000 }
+    );
+  } catch (error: any) {
+    console.error("Error reordering charity queue:", error);
+    return { error: error.message || "تعذّرت إعادة ترتيب الطابور" };
+  }
+}
+
+/**
+ * One request's history, oldest first.
+ *
+ * Readable by design staff and by the charity that owns the request — it is
+ * their design, and "who changed my delivery date" is a fair question to be
+ * able to answer without asking anyone.
+ */
+export async function getDesignRequestLog(requestId: string) {
+  const request = await prisma.designRequest.findUnique({
+    where: { id: requestId },
+    select: { id: true, charityId: true, title: true },
+  });
+  if (!request) return { error: "الطلب غير موجود" as const };
+
+  try {
+    await requireDesignStaff();
+  } catch {
+    if (!request.charityId) return { error: "غير مصرح" as const };
+    await requireCharityMemberPermission(request.charityId, "view_design_requests");
+  }
+
+  const events = await prisma.designRequestEvent.findMany({
+    where: { requestId },
+    orderBy: { createdAt: "asc" },
+    select: {
+      id: true,
+      kind: true,
+      actorType: true,
+      actorName: true,
+      note: true,
+      createdAt: true,
+    },
+  });
+
+  return { success: true as const, title: request.title, events };
 }
 
 // ── أنواع التصاميم ──────────────────────────────────────────────────────────
@@ -1075,6 +1423,13 @@ export async function extendDesignRequestDays(id: string, extraDays: number, rea
       },
     });
 
+    await logDesignEvent({
+      requestId: id,
+      kind: "EXTENDED",
+      actor: staffActor(session),
+      note: `+${days} يوم عمل — ${trimmedReason}`,
+    });
+
     revalidatePath("/main/design-requests");
     revalidateCharityPortal(request.charity?.name);
     return { success: true };
@@ -1106,6 +1461,8 @@ export async function extendDesignRequestDays(id: string, extraDays: number, rea
  */
 export async function updateDesignRequestDetails(input: {
   requestId: string;
+  /** The request's name. Undefined leaves it alone. */
+  title?: string;
   description?: string;
   /** Ids of existing BRIEF attachments to remove. */
   removeAttachmentIds?: string[];
@@ -1119,6 +1476,7 @@ export async function updateDesignRequestDetails(input: {
         id: true,
         status: true,
         charityId: true,
+        startedAt: true,
         charity: { select: { name: true } },
         attachments: { where: { kind: "BRIEF" }, select: { id: true, publicId: true, resourceType: true } },
       },
@@ -1143,6 +1501,17 @@ export async function updateDesignRequestDetails(input: {
         "create_design_requests"
       );
       actor = { type: "CHARITY_USER", id: session.id, name: session.name };
+
+      // Staff may still edit a request they are working on — they are the ones
+      // holding it. The charity may not: changing the brief underneath a
+      // designer mid-execution is how two people end up building different
+      // things. The message names the way out rather than just refusing.
+      if (request.startedAt) {
+        return {
+          error:
+            "الطلب جاري العمل عليه حالياً، وللتعديل يرجى التواصل مع المسؤول من شركة زاد",
+        };
+      }
     }
 
     const removeIds = (input.removeAttachmentIds || []).filter(Boolean);
@@ -1171,6 +1540,17 @@ export async function updateDesignRequestDetails(input: {
     const description =
       input.description === undefined ? undefined : input.description.trim() || null;
 
+    // A request with no name is unreadable in every list it appears in, so an
+    // empty title is refused rather than quietly stored as null the way an
+    // empty description is.
+    let title: string | undefined;
+    if (input.title !== undefined) {
+      const trimmed = input.title.trim();
+      if (!trimmed) return { error: "عنوان الطلب مطلوب" };
+      if (trimmed.length > 200) return { error: "عنوان الطلب طويل جداً" };
+      title = trimmed;
+    }
+
     await prisma.$transaction([
       ...(removable.length
         ? [
@@ -1186,9 +1566,14 @@ export async function updateDesignRequestDetails(input: {
             }),
           ]
         : []),
+      // An empty object is a valid no-op update — the transaction still needs
+      // its third statement when only attachments changed.
       prisma.designRequest.update({
         where: { id: request.id },
-        data: description === undefined ? {} : { description },
+        data: {
+          ...(title === undefined ? {} : { title }),
+          ...(description === undefined ? {} : { description }),
+        },
       }),
     ]);
 
@@ -1201,10 +1586,25 @@ export async function updateDesignRequestDetails(input: {
       targetId: request.id,
       metadata: {
         charityId: request.charityId,
+        titleChanged: title !== undefined,
         descriptionChanged: description !== undefined,
         removed: removable.length,
         added: adding.length,
       },
+    });
+
+    await logDesignEvent({
+      requestId: request.id,
+      kind: "EDITED",
+      actor,
+      note: [
+        title !== undefined ? "العنوان" : null,
+        description !== undefined ? "الوصف" : null,
+        removable.length ? `حذف ${removable.length} مرفق` : null,
+        adding.length ? `إضافة ${adding.length} مرفق` : null,
+      ]
+        .filter(Boolean)
+        .join(" · ") || null,
     });
 
     revalidatePath("/main/design-requests");

@@ -20,7 +20,7 @@ export type EditableRequest = {
 };
 
 /**
- * Edits a pending request's brief — its description and its attachments.
+ * Edits a pending request's brief — its name, description and attachments.
  *
  * Used by both the charity portal and the Zad dashboard, because the rules are
  * the same on both sides; only the server decides who may call it.
@@ -38,6 +38,7 @@ export default function EditDesignRequestModal({
   onClose: () => void;
   onSuccess: (message: string) => void;
 }) {
+  const [title, setTitle] = useState(request.title);
   const [description, setDescription] = useState(request.description ?? "");
   const [removed, setRemoved] = useState<string[]>([]);
   const [files, setFiles] = useState<File[]>([]);
@@ -52,8 +53,9 @@ export default function EditDesignRequestModal({
   const kept = request.attachments.filter((a) => !removed.includes(a.id));
   const totalAfter = kept.length + files.length;
 
+  const titleChanged = title.trim() !== request.title.trim();
   const descriptionChanged = description.trim() !== (request.description ?? "").trim();
-  const hasChanges = descriptionChanged || removed.length > 0 || files.length > 0;
+  const hasChanges = titleChanged || descriptionChanged || removed.length > 0 || files.length > 0;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -77,6 +79,7 @@ export default function EditDesignRequestModal({
       }
       const res = await updateDesignRequestDetails({
         requestId: request.id,
+        title: titleChanged ? title : undefined,
         description: descriptionChanged ? description : undefined,
         removeAttachmentIds: removed,
         addAttachments: uploaded,
@@ -134,6 +137,24 @@ export default function EditDesignRequestModal({
               {error}
             </div>
           )}
+
+          <div>
+            <label
+              className="block font-bold text-slate-500 dark:text-slate-400 mb-2"
+              style={{ fontSize: "var(--dr-fs-meta)" }}
+            >
+              اسم الطلب
+            </label>
+            <input
+              type="text"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              maxLength={200}
+              placeholder="مثال: تصميم هوية الحملة الشتوية"
+              className="w-full px-3 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none placeholder:text-slate-400 dark:placeholder:text-slate-600"
+              style={{ fontSize: "var(--dr-fs-body)" }}
+            />
+          </div>
 
           <div>
             <label

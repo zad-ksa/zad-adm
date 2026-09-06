@@ -4,7 +4,7 @@ import { useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Palette, Plus, Filter, AlertTriangle, Loader2, Paperclip } from "lucide-react";
 import DesignRequestCard, { type DesignRequestCardData } from "@/components/design-requests/DesignRequestCard";
-import { markDesignRequestComplete, deleteDesignRequest } from "@/app/actions/designRequests";
+import { markDesignRequestComplete, deleteDesignRequest, startDesignRequest } from "@/app/actions/designRequests";
 import type { DesignRequestProgress } from "@/lib/designRequestProgress";
 import StaffNewDesignRequestModal from "./StaffNewDesignRequestModal";
 import StaffRescheduleDesignRequestModal from "./StaffRescheduleDesignRequestModal";
@@ -20,6 +20,8 @@ import UploadProgress from "@/components/ui/UploadProgress";
 import type { UploadProgress as Progress } from "@/lib/clientUpload";
 import ConfirmModal from "@/components/ui/ConfirmModal";
 import CopyDeliveryNotice from "@/components/design-requests/CopyDeliveryNotice";
+import DesignRequestLogModal from "@/components/design-requests/DesignRequestLogModal";
+import QueueOrderModal, { type QueueRow } from "@/components/design-requests/QueueOrderModal";
 
 const DESIGN_MAX = maxBytesFor("design_request");
 const DESIGN_MAX_LABEL = maxLabelFor("design_request");
@@ -84,6 +86,9 @@ export default function DesignRequestsClient({
   const completingIsRevision =
     initialItems.find((it) => it.request.id === confirmingId)?.request.status === "REVISION_REQUESTED";
   const [reschedulingId, setReschedulingId] = useState<string | null>(null);
+  const [logRequestId, setLogRequestId] = useState<string | null>(null);
+  const [startingId, setStartingId] = useState<string | null>(null);
+  const [queueFor, setQueueFor] = useState<{ charityId: string | null; charityName: string } | null>(null);
   const [isQueueRescheduleOpen, setIsQueueRescheduleOpen] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [extendingId, setExtendingId] = useState<string | null>(null);
@@ -102,7 +107,17 @@ export default function DesignRequestsClient({
     // other tabs keep the server's ordering: a completed or rejected request
     // has no urgency left to rank by.
     if (tab === "PENDING" || tab === "REVISION_REQUESTED") {
-      return [...rows].sort((a, b) => a.expectedCompletionAt - b.expectedCompletionAt);
+      // Started first, then whatever is due soonest.
+      //
+      // What is under way is what someone is accountable for today, so it
+      // belongs at the top whatever its date; the rest is a waiting list, and
+      // the only useful order for a waiting list is by deadline.
+      return [...rows].sort((a, b) => {
+        const aStarted = a.request.startedAt ? 1 : 0;
+        const bStarted = b.request.startedAt ? 1 : 0;
+        if (aStarted !== bStarted) return bStarted - aStarted;
+        return a.expectedCompletionAt - b.expectedCompletionAt;
+      });
     }
     return rows;
   }, [initialItems, charityFilter, tab]);
@@ -113,6 +128,42 @@ export default function DesignRequestsClient({
   const pendingCount = initialItems.filter((it) => it.request.status === "PENDING").length;
   const completedCount = initialItems.filter((it) => it.request.status === "COMPLETED").length;
   const overdueCount = initialItems.filter((it) => it.request.status === "PENDING" && it.progress.isOverdue).length;
+
+  /**
+   * Picking a request up. Beyond the badge, this is what closes the charity's
+   * ability to edit the brief — so it is a deliberate button, not a side
+   * effect of opening the card.
+   */
+  const handleStart = (id: string) => {
+    setStartingId(id);
+    startTransition(async () => {
+      const res = await startDesignRequest(id);
+      setStartingId(null);
+      if ("error" in res && res.error) {
+        setDeliverableError(res.error);
+        return;
+      }
+      router.refresh();
+    });
+  };
+
+  /**
+   * The queue for one entity: every request that is scheduled but not yet
+   * delivered, in start-date order — which IS the execution order.
+   */
+  const queueRowsFor = (charityId: string): QueueRow[] =>
+    initialItems
+      .filter((it) => it.request.status === "PENDING" && it.request.charityId === charityId)
+      .sort((a, b) => a.expectedCompletionAt - b.expectedCompletionAt)
+      .map((it) => ({
+        id: it.request.id,
+        title: it.request.title,
+        scheduledStartDate: it.request.scheduledStartDate,
+        expectedCompletionDate: it.request.expectedCompletionDate,
+        totalWorkingDays: it.request.totalWorkingDays,
+        startedAt: it.request.startedAt,
+        startedByName: it.request.startedByName,
+      }));
 
   const handleComplete = () => {
     if (!confirmingId) return;
@@ -321,6 +372,7 @@ export default function DesignRequestsClient({
               key={it.request.id}
               request={it.request}
               progress={it.progress}
+              onOpenLog={() => setLogRequestId(it.request.id)}
               actions={
                 it.request.status === "REVISION_REQUESTED" ? (
                   <div className="w-full mt-2 space-y-2">
@@ -391,6 +443,19 @@ export default function DesignRequestsClient({
                   // few pixels; basis-0 lets them still share a row when there is
                   // room.
                   <div className="flex flex-wrap items-center gap-2 w-full mt-2">
+                    {/* Starting comes before finishing, and only once. After
+                        that the slot shows who has it instead of a dead button. */}
+                    {!it.request.startedAt ? (
+                      <button
+                        onClick={() => handleStart(it.request.id)}
+                        disabled={startingId === it.request.id}
+                        className="flex-1 min-w-[92px] h-9 rounded-xl bg-indigo-500/10 text-indigo-600 dark:bg-indigo-500/15 dark:text-indigo-400 hover:bg-indigo-500 hover:text-white dark:hover:bg-indigo-500 dark:hover:text-white transition-colors font-bold disabled:opacity-60 flex items-center justify-center gap-1.5"
+                        style={{ fontSize: "var(--dr-fs-meta)" }}
+                      >
+                        {startingId === it.request.id && <Loader2 className="w-3 h-3 animate-spin" />}
+                        بدء التصميم
+                      </button>
+                    ) : null}
                     <button
                       onClick={() => setConfirmingId(it.request.id)}
                       className="flex-1 min-w-[72px] h-9 rounded-xl bg-primary/10 text-primary dark:bg-teal-500/10 dark:text-teal-400 hover:bg-primary hover:text-white dark:hover:bg-teal-500 dark:hover:text-[#0A0A0A] transition-colors font-bold"
@@ -398,8 +463,15 @@ export default function DesignRequestsClient({
                     >
                       إنهاء
                     </button>
+                    {/* Scheduling is a queue-level decision, not a per-request
+                        one: moving this design moves everything behind it. */}
                     <button
-                      onClick={() => setReschedulingId(it.request.id)}
+                      onClick={() =>
+                        setQueueFor({
+                          charityId: it.request.charityId || null,
+                          charityName: it.request.charityName || "",
+                        })
+                      }
                       className="flex-1 min-w-[72px] h-9 rounded-xl bg-slate-100 text-slate-600 dark:bg-[#111] dark:text-slate-400 border border-transparent dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 transition-colors font-bold"
                       style={{ fontSize: "var(--dr-fs-meta)" }}
                     >
@@ -639,6 +711,23 @@ export default function DesignRequestsClient({
             </div>
           </div>
         </div>
+      )}
+
+      {logRequestId !== null && (
+        <DesignRequestLogModal requestId={logRequestId} onClose={() => setLogRequestId(null)} />
+      )}
+
+      {queueFor !== null && (
+        <QueueOrderModal
+          charityId={queueFor.charityId}
+          charityName={queueFor.charityName}
+          rows={queueRowsFor(queueFor.charityId || "")}
+          onClose={() => setQueueFor(null)}
+          onSuccess={() => {
+            setQueueFor(null);
+            router.refresh();
+          }}
+        />
       )}
 
       {reschedulingId !== null && (

@@ -46,9 +46,19 @@ export default async function DesignRequestsPortalPage({ params }: { params: Pro
       attachments: true,
       types: { select: { id: true, name: true } },
       extensions: { orderBy: { createdAt: "asc" } },
+      startedBy: { select: { name: true } },
     },
     orderBy: { submittedAt: "desc" },
   });
+
+  // The execution queue, exactly as Zad arranged it. The schedule IS the
+  // order — each request starts where the previous one ends — so sorting the
+  // queued rows by start date reproduces the sequence without storing it
+  // twice and letting the two copies drift apart.
+  const queued = requests
+    .filter((r) => r.status === "PENDING")
+    .sort((a, b) => a.scheduledStartDate.getTime() - b.scheduledStartDate.getTime());
+  const queueOrder = new Map(queued.map((r, i) => [r.id, i + 1]));
 
   const items = requests.map((r) => {
     const progress = getDesignRequestProgress({
@@ -59,6 +69,9 @@ export default async function DesignRequestsPortalPage({ params }: { params: Pro
       revisionRequestedAt: r.revisionRequestedAt,
     });
     return {
+      // Milliseconds, not the formatted string below: the queue is ordered by
+      // how soon delivery is due, and "١٥ سبتمبر" does not sort.
+      expectedCompletionAt: r.expectedCompletionDate.getTime(),
       request: {
         id: r.id,
         title: r.title,
@@ -73,6 +86,10 @@ export default async function DesignRequestsPortalPage({ params }: { params: Pro
         rejectionReason: r.rejectionReason,
         revisionNotes: r.revisionNotes,
         autoApproved: r.autoApproved,
+        startedAt: r.startedAt ? formatCivilDate(r.startedAt) : null,
+        startedByName: r.startedBy?.name ?? null,
+        queuePosition: queueOrder.get(r.id) ?? null,
+        queueTotal: queued.length || null,
         // deliveredAt is only ever set by the review cycle, so its absence
         // marks a request finished under the old flow.
         wasReviewed: !!r.deliveredAt,
@@ -133,6 +150,7 @@ export default async function DesignRequestsPortalPage({ params }: { params: Pro
 
       <DesignRequestsPortalClient
         charityId={charity.id}
+        charityName={charity.name}
         initialItems={items}
         canCreate={can("create_design_requests")}
         designTypes={designTypes}

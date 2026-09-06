@@ -155,6 +155,9 @@ export default function TasksClient({
 
 
   const [showTaskForm, setShowTaskForm] = useState(false);
+  // المهام الوظيفية والمنجزات لم تعودا عمودين دائمين على الشاشة — تُفتحان كنافذة
+  // عند الطلب فقط، حتى لا تشتّتا النظر عن المهام الحالية.
+  const [openSidePanel, setOpenSidePanel] = useState<"permanent" | "achievements" | null>(null);
   const [showPermanentTaskForm, setShowPermanentTaskForm] = useState(false);
   const [editingPermanentTask, setEditingPermanentTask] = useState<any>(null);
   
@@ -999,14 +1002,46 @@ ${combinedAchievements.length > 0 ? `
             <Printer className="w-3.5 h-3.5" />
             طباعة
           </button>
+
+          {/* المهام الوظيفية والمنجزات لم تعد أعمدة دائمة إلى جانب المهام الحالية —
+              كانت الشاشة المقسّمة لثلاثة أعمدة تشتّت النظر عن المهام الحالية، وهي
+              الأهم. صارتا بطاقتين بارزتين تُفتحان كنافذة عند الحاجة فقط. */}
+          {(filteredPermanentTasks.length > 0 || isDirectorOrAdmin) && (
+            <button
+              onClick={() => setOpenSidePanel("permanent")}
+              title="المهام الوظيفية"
+              className="relative flex items-center gap-1.5 bg-indigo-50 dark:bg-indigo-900/20 px-3 py-1.5 border border-indigo-200 dark:border-indigo-800/50 rounded-lg text-indigo-600 dark:text-indigo-400 hover:bg-indigo-100 dark:hover:bg-indigo-900/40 transition-all font-bold text-xs"
+            >
+              <Repeat className="w-3.5 h-3.5" />
+              المهام الوظيفية
+              {filteredPermanentTasks.length > 0 && (
+                <span className="min-w-[16px] h-4 px-1 rounded-full bg-indigo-600 text-white text-[9px] font-black flex items-center justify-center">
+                  {filteredPermanentTasks.length}
+                </span>
+              )}
+            </button>
+          )}
+
+          <button
+            onClick={() => setOpenSidePanel("achievements")}
+            title="المنجزات"
+            className="relative flex items-center gap-1.5 bg-emerald-50 dark:bg-emerald-900/20 px-3 py-1.5 border border-emerald-200 dark:border-emerald-800/50 rounded-lg text-emerald-600 dark:text-emerald-400 hover:bg-emerald-100 dark:hover:bg-emerald-900/40 transition-all font-bold text-xs"
+          >
+            <CheckCircle2 className="w-3.5 h-3.5" />
+            المنجزات
+            {combinedAchievements.length > 0 && (
+              <span className="min-w-[16px] h-4 px-1 rounded-full bg-emerald-600 text-white text-[9px] font-black flex items-center justify-center">
+                {combinedAchievements.length}
+              </span>
+            )}
+          </button>
         </div>
       </div>
 
-      {/* Main Grid: 2/4 Tasks + 1/4 Permanent + 1/4 Achievements */}
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 items-start">
+      {/* المهام الحالية — بكامل عرض الشاشة الآن */}
+      <div className="space-y-4">
 
-        {/* Active Tasks Column — takes 2 cols */}
-        <div className="lg:col-span-2 bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700/40 shadow-sm overflow-hidden">
+        <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700/40 shadow-sm overflow-hidden">
           <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100 dark:border-slate-700/40">
             <h3 className="font-bold text-slate-800 dark:text-slate-100 text-sm flex items-center gap-2">
               <span className="w-2 h-4 bg-amber-400 dark:bg-amber-500 rounded-full"></span>
@@ -1305,30 +1340,46 @@ ${combinedAchievements.length > 0 ? `
           </div>
         </div>
 
-        {/* Permanent Tasks Column — 1 col */}
-        {(filteredPermanentTasks.length > 0 || isDirectorOrAdmin) && (
-          <div className="bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-100 dark:border-slate-700/30 relative">
-            <div className="flex items-center justify-between px-3 py-2.5 border-b border-slate-100 dark:border-slate-700/30">
-              <h3 className="font-bold text-slate-500 dark:text-slate-400 text-xs flex items-center gap-1.5">
-                <Repeat className="w-3.5 h-3.5 text-indigo-500 dark:text-indigo-400" />
+      </div>
+
+      {/* المهام الوظيفية — نافذة تُفتح من الزر البارز في رأس الصفحة، بدل عمود
+          دائم كان يشارك الشاشة مع المهام الحالية ويشتّت النظر عنها. */}
+      {openSidePanel === "permanent" && (filteredPermanentTasks.length > 0 || isDirectorOrAdmin) && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+          <div
+            className="absolute inset-0 bg-slate-950/65 backdrop-blur-md transition-opacity duration-300"
+            onClick={() => setOpenSidePanel(null)}
+          />
+          <div className="bg-white dark:bg-slate-800 rounded-3xl border border-slate-100 dark:border-slate-700/50 shadow-2xl w-full max-w-lg overflow-hidden relative z-10 max-h-[85vh] flex flex-col" dir="rtl">
+            <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100 dark:border-slate-700/40 shrink-0">
+              <h3 className="font-bold text-slate-800 dark:text-slate-100 text-sm flex items-center gap-1.5">
+                <Repeat className="w-4 h-4 text-indigo-500 dark:text-indigo-400" />
                 المهام الوظيفية
-                <span className="text-[9px] font-bold text-slate-400 bg-slate-200 dark:bg-slate-700 px-1.5 py-0.5 rounded-full">{filteredPermanentTasks.length}</span>
+                <span className="text-[10px] font-bold text-slate-400 bg-slate-100 dark:bg-slate-700 px-1.5 py-0.5 rounded-full">{filteredPermanentTasks.length}</span>
               </h3>
-              {isDirectorOrAdmin && (
+              <div className="flex items-center gap-2 shrink-0">
+                {isDirectorOrAdmin && (
+                  <button
+                    onClick={() => {
+                      setEditingPermanentTask(null);
+                      setShowPermanentTaskForm(true);
+                    }}
+                    className="text-[10px] font-bold bg-indigo-50 text-indigo-600 hover:bg-indigo-100 dark:bg-indigo-900/30 dark:text-indigo-400 dark:hover:bg-indigo-900/50 px-2 py-1 rounded-md flex items-center gap-1 transition-colors cursor-pointer"
+                  >
+                    <Plus className="w-3 h-3" />
+                    إضافة مهمة وظيفية
+                  </button>
+                )}
                 <button
-                  onClick={() => {
-                    setEditingPermanentTask(null);
-                    setShowPermanentTaskForm(true);
-                  }}
-                  className="text-[10px] font-bold bg-indigo-50 text-indigo-600 hover:bg-indigo-100 dark:bg-indigo-900/30 dark:text-indigo-400 dark:hover:bg-indigo-900/50 px-2 py-1 rounded-md flex items-center gap-1 transition-colors cursor-pointer"
+                  onClick={() => setOpenSidePanel(null)}
+                  className="p-1.5 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-500 dark:text-slate-400 rounded-full transition-colors cursor-pointer"
                 >
-                  <Plus className="w-3 h-3" />
-                  إضافة مهمة وظيفية
+                  <X className="w-4 h-4" />
                 </button>
-              )}
+              </div>
             </div>
 
-            <div className="divide-y divide-slate-100 dark:divide-slate-700/20 max-h-[76vh] overflow-y-auto pb-44">
+            <div className="divide-y divide-slate-100 dark:divide-slate-700/20 overflow-y-auto flex-1">
               {filteredPermanentTasks.map((t) => (
                 <div key={t.id} className="px-3 py-2.5 flex items-start gap-2 group hover:bg-slate-100/60 dark:hover:bg-slate-700/20 transition-colors relative">
                   <Repeat className="w-3.5 h-3.5 text-indigo-400 dark:text-indigo-500 shrink-0 mt-0.5" />
@@ -1397,19 +1448,32 @@ ${combinedAchievements.length > 0 ? `
               )}
             </div>
           </div>
-        )}
+        </div>
+      )}
 
-        {/* Achievements Column — 1 col, muted style */}
-        <div className="bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-100 dark:border-slate-700/30 overflow-hidden">
-          <div className="flex items-center justify-between px-3 py-2.5 border-b border-slate-100 dark:border-slate-700/30">
-            <h3 className="font-bold text-slate-500 dark:text-slate-400 text-xs flex items-center gap-1.5">
-              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 dark:text-emerald-400" />
-              المنجزات
-              <span className="text-[9px] font-bold text-slate-400 bg-slate-200 dark:bg-slate-700 px-1.5 py-0.5 rounded-full">{combinedAchievements.length}</span>
-            </h3>
-          </div>
+      {/* المنجزات — نافذة تُفتح من الزر البارز في رأس الصفحة، لنفس السبب. */}
+      {openSidePanel === "achievements" && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+          <div
+            className="absolute inset-0 bg-slate-950/65 backdrop-blur-md transition-opacity duration-300"
+            onClick={() => setOpenSidePanel(null)}
+          />
+          <div className="bg-white dark:bg-slate-800 rounded-3xl border border-slate-100 dark:border-slate-700/50 shadow-2xl w-full max-w-lg overflow-hidden relative z-10 max-h-[85vh] flex flex-col" dir="rtl">
+            <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100 dark:border-slate-700/40 shrink-0">
+              <h3 className="font-bold text-slate-800 dark:text-slate-100 text-sm flex items-center gap-1.5">
+                <CheckCircle2 className="w-4 h-4 text-emerald-500 dark:text-emerald-400" />
+                المنجزات
+                <span className="text-[10px] font-bold text-slate-400 bg-slate-100 dark:bg-slate-700 px-1.5 py-0.5 rounded-full">{combinedAchievements.length}</span>
+              </h3>
+              <button
+                onClick={() => setOpenSidePanel(null)}
+                className="p-1.5 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-500 dark:text-slate-400 rounded-full transition-colors cursor-pointer shrink-0"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
 
-          <div className="divide-y divide-slate-100 dark:divide-slate-700/20 max-h-[76vh] overflow-y-auto">
+            <div className="divide-y divide-slate-100 dark:divide-slate-700/20 overflow-y-auto flex-1">
             {combinedAchievements.map((item) => {
               const assignedEmp = employees.find((e) => e.id === item.assignedToId);
               const isTask = item.type === "task";
@@ -1490,8 +1554,8 @@ ${combinedAchievements.length > 0 ? `
             )}
           </div>
         </div>
-
       </div>
+      )}
 
       {/* Task Proof Upload Modal */}
       {completingTaskId && (

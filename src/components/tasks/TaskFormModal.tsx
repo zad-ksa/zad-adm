@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { X, Plus, UserPlus, FolderPlus, Camera, UploadCloud, FileImage } from "lucide-react";
+import { X, Plus, UserPlus, FolderPlus, Camera, UploadCloud, FileImage, ClipboardPaste } from "lucide-react";
 import { Employee, Charity } from "@/types";
 
 interface TaskFormModalProps {
@@ -40,6 +40,37 @@ export default function TaskFormModal({
       setAttachment(null);
     }
   }, [isOpen, currentUserId]);
+
+  // يلتقط لصق صورة (Ctrl+V) من أي مكان داخل النافذة — حتى لو لم يكن التركيز على
+  // منطقة المرفق نفسها. مُعلَّق على document لا على عنصر داخل النافذة، لأن حدث
+  // paste يصعد من العنصر المُركَّز فقط، وقد لا يكون أي عنصر داخل النافذة مُركَّزاً.
+  // لا يمسّ لصق النص العادي في حقل العنوان: لا يتدخّل إلا حين تحتوي الحافظة على
+  // صورة فعلاً.
+  useEffect(() => {
+    if (!isOpen || isPending) return;
+
+    function handlePaste(e: ClipboardEvent) {
+      const items = e.clipboardData?.items;
+      if (!items) return;
+      for (const item of Array.from(items)) {
+        if (item.type.startsWith("image/")) {
+          const file = item.getAsFile();
+          if (file) {
+            e.preventDefault();
+            const ext = file.type.split("/")[1] || "png";
+            // الصور الملصوقة تصل غالباً باسم عام مثل "image.png" — اسم أوضح
+            // يجعلها مميّزة في قائمة المرفقات بدل تكرار نفس الاسم دائماً.
+            const named = new File([file], `صورة-ملصوقة-${Date.now()}.${ext}`, { type: file.type });
+            setAttachment(named);
+          }
+          break;
+        }
+      }
+    }
+
+    document.addEventListener("paste", handlePaste);
+    return () => document.removeEventListener("paste", handlePaste);
+  }, [isOpen, isPending]);
 
   if (!isOpen) return null;
 
@@ -170,30 +201,36 @@ export default function TaskFormModal({
                   </button>
                 </div>
               ) : (
-                <div className="flex gap-2 justify-center">
-                  <label className="flex items-center justify-center gap-1.5 px-3 py-2 bg-primary text-white text-[11px] font-bold rounded-lg cursor-pointer hover:bg-primary/90 transition-all shadow-sm">
-                    <Camera className="w-3.5 h-3.5" />
-                    كاميرا الجوال
-                    <input
-                      type="file"
-                      accept="image/*"
-                      capture="environment"
-                      onChange={(e) => setAttachment(e.target.files?.[0] || null)}
-                      className="hidden"
-                      disabled={isPending}
-                    />
-                  </label>
-                  <label className="flex items-center justify-center gap-1.5 px-3 py-2 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 text-[11px] font-bold rounded-lg cursor-pointer hover:bg-slate-200 dark:hover:bg-slate-700 transition-all border border-slate-200 dark:border-slate-700">
-                    <UploadCloud className="w-3.5 h-3.5" />
-                    المعرض
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={(e) => setAttachment(e.target.files?.[0] || null)}
-                      className="hidden"
-                      disabled={isPending}
-                    />
-                  </label>
+                <div className="space-y-2">
+                  <div className="flex gap-2 justify-center">
+                    <label className="flex items-center justify-center gap-1.5 px-3 py-2 bg-primary text-white text-[11px] font-bold rounded-lg cursor-pointer hover:bg-primary/90 transition-all shadow-sm">
+                      <Camera className="w-3.5 h-3.5" />
+                      كاميرا الجوال
+                      <input
+                        type="file"
+                        accept="image/*"
+                        capture="environment"
+                        onChange={(e) => setAttachment(e.target.files?.[0] || null)}
+                        className="hidden"
+                        disabled={isPending}
+                      />
+                    </label>
+                    <label className="flex items-center justify-center gap-1.5 px-3 py-2 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 text-[11px] font-bold rounded-lg cursor-pointer hover:bg-slate-200 dark:hover:bg-slate-700 transition-all border border-slate-200 dark:border-slate-700">
+                      <UploadCloud className="w-3.5 h-3.5" />
+                      المعرض
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => setAttachment(e.target.files?.[0] || null)}
+                        className="hidden"
+                        disabled={isPending}
+                      />
+                    </label>
+                  </div>
+                  <p className="flex items-center justify-center gap-1.5 text-[10px] font-bold text-slate-400">
+                    <ClipboardPaste className="w-3 h-3" />
+                    أو الصق صورة من الحافظة (Ctrl+V)
+                  </p>
                 </div>
               )}
             </div>

@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { AlertTriangle, Loader2, X } from "lucide-react";
 import { getDesignRequestLog } from "@/app/actions/designRequests";
+import LinkifiedText from "@/components/ui/LinkifiedText";
 import { DESIGN_EVENT_LABEL, type DesignEventKind } from "@/lib/designEventLabels";
 
 /**
@@ -144,8 +145,8 @@ export default function DesignRequestLogModal({
                     {DESIGN_EVENT_LABEL[e.kind] ?? e.kind}
                   </p>
                   {e.note && (
-                    <p className="mt-0.5 text-[12px] text-slate-600 dark:text-slate-400 leading-relaxed break-words">
-                      {e.note}
+                    <p className="mt-0.5 text-[12px] text-slate-600 dark:text-slate-400 leading-relaxed break-words whitespace-pre-line">
+                      <LinkifiedText text={e.note} />
                     </p>
                   )}
                   <p className="mt-1 text-[11px] text-slate-400 dark:text-slate-500">

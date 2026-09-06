@@ -768,12 +768,17 @@ export async function finalizeExpiredDeliveries() {
 
 export async function markDesignRequestComplete(
   id: string,
-  deliverables: DesignRequestAttachmentInput[] = []
+  deliverables: DesignRequestAttachmentInput[] = [],
+  /** Free-text note from whoever is delivering — shown to the charity. */
+  note?: string
 ) {
   try {
     const session = await requireDesignStaff();
 
     if (deliverables.length > 10) return { error: "الحد الأقصى 10 ملفات" };
+
+    const trimmedNote = note?.trim() || null;
+    if (trimmedNote && trimmedNote.length > 2000) return { error: "الملاحظة طويلة جداً" };
 
     const request = await prisma.designRequest.findUnique({
       where: { id },
@@ -804,8 +809,18 @@ export async function markDesignRequestComplete(
       prisma.designRequest.update({
         where: { id },
         data: isRevisionDelivery
-          ? { status: "COMPLETED", completedAt: new Date(), completedById: session.id }
-          : { status: "AWAITING_REVIEW", deliveredAt: new Date(), completedById: session.id },
+          ? {
+              status: "COMPLETED",
+              completedAt: new Date(),
+              completedById: session.id,
+              completionNote: trimmedNote,
+            }
+          : {
+              status: "AWAITING_REVIEW",
+              deliveredAt: new Date(),
+              completedById: session.id,
+              completionNote: trimmedNote,
+            },
       }),
     ]);
 
@@ -819,9 +834,13 @@ export async function markDesignRequestComplete(
       requestId: id,
       kind: isRevisionDelivery ? "COMPLETED" : "DELIVERED",
       actor: staffActor(session),
-      note: isRevisionDelivery
-        ? "تسليم التعديل — اعتماد نهائي"
-        : "بانتظار ردّ الجمعية خلال ٢٤ ساعة",
+      // The phase explains what happened; the free text, when there is one,
+      // is what staff actually wanted the charity — or the next reader of
+      // this log — to know about it.
+      note:
+        (isRevisionDelivery
+          ? "تسليم التعديل — اعتماد نهائي"
+          : "بانتظار ردّ الجمعية خلال ٢٤ ساعة") + (trimmedNote ? ` — ${trimmedNote}` : ""),
     });
 
     revalidatePath("/main/design-requests");

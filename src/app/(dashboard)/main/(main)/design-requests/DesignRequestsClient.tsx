@@ -20,6 +20,7 @@ import UploadProgress from "@/components/ui/UploadProgress";
 import type { UploadProgress as Progress } from "@/lib/clientUpload";
 import ConfirmModal from "@/components/ui/ConfirmModal";
 import CopyDeliveryNotice from "@/components/design-requests/CopyDeliveryNotice";
+import LinkifiedText from "@/components/ui/LinkifiedText";
 import DesignRequestLogModal from "@/components/design-requests/DesignRequestLogModal";
 import QueueOrderModal, { type QueueRow } from "@/components/design-requests/QueueOrderModal";
 
@@ -72,6 +73,9 @@ export default function DesignRequestsClient({
   const [confirmingId, setConfirmingId] = useState<string | null>(null);
   const [isCompleting, setIsCompleting] = useState(false);
   const [deliverables, setDeliverables] = useState<File[]>([]);
+  // What staff want the charity — or the next reader of the log — to know
+  // about this hand-off. Optional: most deliveries need no explanation.
+  const [completionNote, setCompletionNote] = useState("");
   // This panel had no error slot at all, so an oversized file was dropped with
   // only a browser alert() — which is easy to dismiss without reading.
   const [deliverableError, setDeliverableError] = useState<string | null>(null);
@@ -188,12 +192,13 @@ export default function DesignRequestsClient({
         return;
       }
 
-      const res = await markDesignRequestComplete(confirmingId, uploaded);
+      const res = await markDesignRequestComplete(confirmingId, uploaded, completionNote);
       if (res.error) {
         setDeliverableError(res.error);
         return;
       }
       setDeliverables([]);
+      setCompletionNote("");
       setConfirmingId(null);
       setToast(completingIsRevision ? "تم اعتماد الطلب نهائياً" : "تم التسليم — بانتظار مراجعة الجمعية خلال 24 ساعة");
     } catch (err) {
@@ -377,11 +382,15 @@ export default function DesignRequestsClient({
                 it.request.status === "REVISION_REQUESTED" ? (
                   <div className="w-full mt-2 space-y-2">
                     <div
-                      className="px-3 py-2.5 rounded-xl bg-amber-500/[0.08] text-amber-700 dark:text-amber-400 leading-relaxed"
+                      className="px-3 py-2.5 rounded-xl bg-amber-500/[0.08] text-amber-700 dark:text-amber-400 leading-relaxed whitespace-pre-line"
                       style={{ fontSize: "var(--dr-fs-meta)" }}
                     >
                       <span className="font-bold">ملاحظات الجمعية: </span>
-                      {it.request.revisionNotes || "—"}
+                      {it.request.revisionNotes ? (
+                        <LinkifiedText text={it.request.revisionNotes} />
+                      ) : (
+                        "—"
+                      )}
                     </div>
                     <button
                       onClick={() => setConfirmingId(it.request.id)}
@@ -685,12 +694,29 @@ export default function DesignRequestsClient({
                   ))}
                 </div>
               )}
+
+              <label
+                className="block text-right mt-3 text-slate-500 dark:text-slate-400 font-bold"
+                style={{ fontSize: "var(--dr-fs-eyebrow)" }}
+              >
+                ملاحظة للجمعية (اختياري)
+              </label>
+              <textarea
+                value={completionNote}
+                onChange={(e) => setCompletionNote(e.target.value)}
+                rows={2}
+                maxLength={2000}
+                placeholder="مثال: تم استخدام الألوان المعتمدة في الهوية السابقة..."
+                className="w-full mt-1 px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 text-right focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none resize-none placeholder:text-slate-400 dark:placeholder:text-slate-600"
+                style={{ fontSize: "var(--dr-fs-meta)" }}
+              />
             </div>
             <div className="flex items-center gap-3">
               <button
                 onClick={() => {
                   setConfirmingId(null);
                   setDeliverables([]);
+                  setCompletionNote("");
                   setDeliverableError(null);
                 }}
                 disabled={isCompleting}

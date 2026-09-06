@@ -16,6 +16,7 @@ import {
 import { useState, type ReactNode } from "react";
 import type { DesignRequestProgress } from "@/lib/designRequestProgress";
 import DesignRequestCountdownBadge from "./DesignRequestCountdownBadge";
+import LinkifiedText from "@/components/ui/LinkifiedText";
 
 export type DesignRequestCardData = {
   id: string;
@@ -27,6 +28,12 @@ export type DesignRequestCardData = {
   expectedCompletionDate: string;
   /** When it was actually finalised — charity sign-off or the 24h auto-approval. */
   completedAt?: string | null;
+  /**
+   * Free-text note staff left on the current hand-off — the first delivery
+   * (while AWAITING_REVIEW) or the final one (once COMPLETED). A later
+   * delivery replaces the earlier note; the full history is in the log.
+   */
+  completionNote?: string | null;
   /** When it was rejected. */
   rejectedAt?: string | null;
   /** Finalised by the deadline passing rather than by the charity acting. */
@@ -244,6 +251,20 @@ export default function DesignRequestCard({
               )}
             </span>
           )}
+
+          {/* Staff's note on the current hand-off. Shown while the request is
+              still with the charity for review, and again once closed — a later
+              delivery replaces the note, same as it replaces the files. */}
+          {(request.status === "AWAITING_REVIEW" || request.status === "COMPLETED") &&
+            request.completionNote && (
+              <span className="flex items-start gap-2">
+                <FileCheck2 className="w-4 h-4 text-slate-400 shrink-0 mt-0.5" />
+                <span className="leading-relaxed">
+                  <span className="text-slate-600 dark:text-slate-300 font-bold">ملاحظة التسليم: </span>
+                  <LinkifiedText text={request.completionNote} className="whitespace-pre-line" />
+                </span>
+              </span>
+            )}
 
           {/* Where it sits in the queue. Only while it is still waiting —
               once a designer has it, the position is no longer the answer to

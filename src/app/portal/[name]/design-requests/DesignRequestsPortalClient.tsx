@@ -11,6 +11,7 @@ import type { DesignRequestProgress } from "@/lib/designRequestProgress";
 import SuccessToast from "@/components/ui/SuccessToast";
 import ConfirmModal from "@/components/ui/ConfirmModal";
 import RequestRevisionModal from "@/components/design-requests/RequestRevisionModal";
+import LinkifiedText from "@/components/ui/LinkifiedText";
 import { approveDeliveryByCharity } from "@/app/actions/designRequests";
 import NewDesignRequestForm from "./NewDesignRequestForm";
 import type { DesignTypeOption } from "@/components/design-requests/DesignTypePicker";
@@ -258,11 +259,15 @@ export default function DesignRequestsPortalClient({
                   ) : null
                 ) : it.request.status === "REVISION_REQUESTED" ? (
                   <div
-                    className="w-full mt-2 px-3 py-2.5 rounded-xl bg-amber-500/[0.08] text-amber-700 dark:text-amber-400 leading-relaxed"
+                    className="w-full mt-2 px-3 py-2.5 rounded-xl bg-amber-500/[0.08] text-amber-700 dark:text-amber-400 leading-relaxed whitespace-pre-line"
                     style={{ fontSize: "var(--dr-fs-meta)" }}
                   >
                     <span className="font-bold">ملاحظاتك: </span>
-                    {it.request.revisionNotes || "—"}
+                    {it.request.revisionNotes ? (
+                      <LinkifiedText text={it.request.revisionNotes} />
+                    ) : (
+                      "—"
+                    )}
                   </div>
                 ) : it.request.status === "REJECTED" ? (
                   <div className="w-full mt-2 space-y-2">

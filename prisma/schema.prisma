@@ -1046,9 +1046,15 @@ model DesignRequest {
   startedById String?
   startedBy   Employee? @relation("StartedDesignRequests", fields: [startedById], references: [id], onDelete: SetNull)
 
-  completedAt   DateTime?
-  completedById String?
-  completedBy   Employee? @relation("CompletedDesignRequests", fields: [completedById], references: [id], onDelete: SetNull)
+  completedAt    DateTime?
+  completedById  String?
+  completedBy    Employee? @relation("CompletedDesignRequests", fields: [completedById], references: [id], onDelete: SetNull)
+  /// Free-text note staff may leave when delivering — either the first
+  /// hand-off (to AWAITING_REVIEW) or the final one after a revision round.
+  /// A second delivery overwrites the first: it describes the CURRENT
+  /// hand-off, and the full history of what was said at each one already
+  /// lives in DesignRequestEvent.
+  completionNote String?   @map("completionNotes") @db.Text
 
   // ── المراجعة قبل دخول الطابور ──────────────────────────────────────────
   // طلب الجمعية يبدأ UNDER_REVIEW ولا يحجز مكاناً في الطابور، لأن

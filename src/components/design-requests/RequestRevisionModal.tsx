@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { X, Paperclip, Loader2, AlertTriangle, Trash2, Send } from "lucide-react";
+import { X, Paperclip, Loader2, AlertTriangle, Trash2, Send, Plus } from "lucide-react";
 import { requestDesignRevision } from "@/app/actions/designRequests";
 import { uploadDesignRequestFiles } from "./uploadDesignRequestFiles";
 import { ACCEPT_ATTRIBUTE, maxBytesFor, maxLabelFor } from "@/lib/uploadPurposes";
@@ -36,7 +36,11 @@ export default function RequestRevisionModal({
   onClose: () => void;
   onSuccess: (message: string) => void;
 }) {
-  const [notes, setNotes] = useState("");
+  // Three short notes rather than one long one: a numbered list of separate
+  // points is easier to act on than a paragraph, and 180 characters keeps
+  // each point to roughly what fits without scrolling. Starts with one field;
+  // "إضافة ملاحظة أخرى" reveals the next, up to three, then hides itself.
+  const [noteFields, setNoteFields] = useState<string[]>([""]);
   const [removed, setRemoved] = useState<string[]>([]);
   const [files, setFiles] = useState<File[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -47,11 +51,16 @@ export default function RequestRevisionModal({
 
   const kept = attachments.filter((a) => !removed.includes(a.id));
 
+  // Joined into one string for the server, which stores and shows it as a
+  // single note — the three-field split is an input convenience, not a
+  // structural change to what gets saved.
+  const combinedNotes = noteFields.map((n) => n.trim()).filter(Boolean).join("\n\n");
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
     setFileError(null);
-    if (notes.trim().length < 5) return setError("يرجى كتابة ملاحظات التعديل (5 أحرف على الأقل)");
+    if (combinedNotes.length < 5) return setError("يرجى كتابة ملاحظات التعديل (5 أحرف على الأقل)");
     if (kept.length + files.length > 10) return setFileError("الحد الأقصى 10 مرفقات لكل طلب");
     setIsConfirmOpen(true);
   };
@@ -70,7 +79,7 @@ export default function RequestRevisionModal({
 
       const res = await requestDesignRevision({
         requestId,
-        notes,
+        notes: combinedNotes,
         removeAttachmentIds: removed,
         addAttachments: uploaded,
       });
@@ -107,12 +116,11 @@ export default function RequestRevisionModal({
 
         <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto px-6 py-4 space-y-4">
           <p
-            className="rounded-xl bg-amber-500/[0.08] text-amber-700 dark:text-amber-400 px-4 py-3 leading-relaxed"
+            className="rounded-xl bg-slate-100 dark:bg-slate-800/60 text-slate-600 dark:text-slate-300 font-bold px-4 py-3 leading-relaxed"
             style={{ fontSize: "var(--dr-fs-meta)" }}
           >
-            <span className="font-bold">التعديل متاح مرة واحدة.</span>{" "}
-            أمام فريق زاد 24 ساعة لتنفيذ ملاحظاتك، وبعد تسليمها يُعتمد الطلب نهائياً — فاذكر كل
-            ما تريد تغييره الآن.
+            يمكنكم طلب حتى ثلاث تعديلات كحد أقصى، يجب أن تكون محددة وواضحة لنتمكن من
+            تنفيذها.
           </p>
 
           <UploadProgress progress={uploadProgress} />
@@ -127,21 +135,60 @@ export default function RequestRevisionModal({
             </div>
           )}
 
-          <div>
-            <label
-              className="block font-bold text-slate-500 dark:text-slate-400 mb-2"
-              style={{ fontSize: "var(--dr-fs-meta)" }}
-            >
-              ما الذي تريد تعديله؟
-            </label>
-            <textarea
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-              rows={5}
-              placeholder="اشرح التعديلات المطلوبة بالتفصيل..."
-              className="w-full px-3 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none resize-none placeholder:text-slate-400 dark:placeholder:text-slate-600"
-              style={{ fontSize: "var(--dr-fs-body)" }}
-            />
+          <div className="space-y-3">
+            {["الملاحظة الأولى", "الملاحظة الثانية", "الملاحظة الثالثة"].slice(0, noteFields.length).map((label, i) => (
+              <div key={i}>
+                <div className="flex items-center justify-between mb-2">
+                  <label
+                    className="block font-bold text-slate-500 dark:text-slate-400"
+                    style={{ fontSize: "var(--dr-fs-meta)" }}
+                  >
+                    {label}
+                  </label>
+                  {/* At least one field must stay — there is no "no notes" state
+                      for a revision request. */}
+                  {noteFields.length > 1 && (
+                    <button
+                      type="button"
+                      onClick={() => setNoteFields((prev) => prev.filter((_, idx) => idx !== i))}
+                      title="حذف هذه الملاحظة"
+                      className="text-slate-400 hover:text-rose-500 dark:hover:text-rose-400 transition-colors"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  )}
+                </div>
+                <textarea
+                  value={noteFields[i]}
+                  onChange={(e) =>
+                    setNoteFields((prev) => prev.map((v, idx) => (idx === i ? e.target.value.slice(0, 180) : v)))
+                  }
+                  rows={2}
+                  maxLength={180}
+                  placeholder={
+                    i === 0
+                      ? "اشرح التعديل المطلوب بالتفصيل..."
+                      : "تعديل إضافي..."
+                  }
+                  className="w-full px-3 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none resize-none placeholder:text-slate-400 dark:placeholder:text-slate-600"
+                  style={{ fontSize: "var(--dr-fs-body)" }}
+                />
+              </div>
+            ))}
+
+            {/* Reveals the next field, up to three, then hides — there is no
+                fourth note. */}
+            {noteFields.length < 3 && (
+              <button
+                type="button"
+                onClick={() => setNoteFields((prev) => [...prev, ""])}
+                className="flex items-center gap-1.5 text-primary dark:text-teal-400 hover:underline font-bold"
+                style={{ fontSize: "var(--dr-fs-meta)" }}
+              >
+                <Plus className="w-3.5 h-3.5" />
+                إضافة ملاحظة أخرى
+              </button>
+            )}
           </div>
 
           {attachments.length > 0 && (

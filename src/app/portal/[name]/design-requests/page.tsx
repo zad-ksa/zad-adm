@@ -86,6 +86,7 @@ export default async function DesignRequestsPortalPage({ params }: { params: Pro
         rejectionReason: r.rejectionReason,
         revisionNotes: r.revisionNotes,
         autoApproved: r.autoApproved,
+        completionNote: r.completionNote,
         startedAt: r.startedAt ? formatCivilDate(r.startedAt) : null,
         startedByName: r.startedBy?.name ?? null,
         queuePosition: queueOrder.get(r.id) ?? null,

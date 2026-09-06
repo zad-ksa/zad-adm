@@ -74,6 +74,7 @@ export default async function DesignRequestsPage() {
         rejectionReason: r.rejectionReason,
         revisionNotes: r.revisionNotes,
         autoApproved: r.autoApproved,
+        completionNote: r.completionNote,
         // Formatted on the server like every other date here — the card must
         // never format one, or the server and the browser disagree.
         startedAt: r.startedAt ? formatCivilDateTime(r.startedAt) : null,

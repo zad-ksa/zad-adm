@@ -1,9 +1,45 @@
 "use client";
 
-import { useState, useTransition } from "react";
-import { X, Sparkles, Loader2, Lock } from "lucide-react";
+import { useEffect, useRef, useState, useTransition } from "react";
+import { X, Sparkles, Loader2, Lock, FileClock } from "lucide-react";
 import { checkDateConflict } from "@/app/actions/meetings";
+import { timeAgoArabic } from "@/lib/dateUtils";
 import { Charity, Employee } from "../MeetingsClient";
+
+// مسودة محضر جديد لم يُحفظ بعد — محلية في متصفح هذا المستخدم فقط (لا خادم، لا
+// جدول جديد). تُحفظ تلقائياً عند إغلاق النافذة (بالزر أو بإغلاق التبويب/تحديث
+// الصفحة) طالما كُتب فيها شيء، وتُقرأ عند فتح "محضر اجتماع جديد" التالي.
+// لا تُستخدم أبداً عند تعديل محضر موجود — لذلك لا خطر من استرجاعها فوق تعديل جارٍ.
+const DRAFT_STORAGE_KEY = "zad_meeting_draft_v1";
+
+type MeetingDraft = {
+  title: string;
+  date: string;
+  location: string;
+  charityId: string;
+  attendees: string;
+  rawNotes: string;
+  meetingContext: string;
+  isPrivate: boolean;
+  formattedContent: string;
+  step: 1 | 2;
+  savedAt: number;
+};
+
+function readMeetingDraft(): MeetingDraft | null {
+  try {
+    const raw = localStorage.getItem(DRAFT_STORAGE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    return parsed && typeof parsed.title === "string" ? (parsed as MeetingDraft) : null;
+  } catch {
+    return null;
+  }
+}
+
+function hasMeaningfulContent(d: { title: string; rawNotes: string; formattedContent: string }) {
+  return !!(d.title.trim() || d.rawNotes.trim() || d.formattedContent.trim());
+}
 
 type Props = {
   editingId: string | null;
@@ -40,19 +76,96 @@ export default function MeetingFormModal({
 }: Props) {
   const [isPending, startTransition] = useTransition();
 
-  const [title, setTitle] = useState(initialData?.title || "");
-  const [date, setDate] = useState(initialData?.date || new Date().toISOString().slice(0, 10));
-  const [location, setLocation] = useState(initialData?.location || "");
-  const [charityId, setCharityId] = useState(initialData?.charityId || "");
-  const [attendees, setAttendees] = useState(initialData?.attendees || "");
-  const [rawNotes, setRawNotes] = useState(initialData?.rawNotes || "");
-  const [meetingContext, setMeetingContext] = useState(initialData?.meetingContext || "");
-  const [isPrivate, setIsPrivate] = useState(initialData?.isPrivate || false);
-  const [step, setStep] = useState<1 | 2>(1);
-  const [formattedContent, setFormattedContent] = useState(initialData?.formattedContent || "");
+  // لا مسودة إطلاقاً عند تعديل محضر موجود — editingId و initialData يُضبطان معاً
+  // دائماً في الصفحة الأم (انظر openEdit)، فقراءتها هنا تخصّ "محضر جديد" فقط.
+  const [draft] = useState<MeetingDraft | null>(() => (editingId ? null : readMeetingDraft()));
+  const [draftDismissed, setDraftDismissed] = useState(false);
+  const showDraftBanner = !editingId && !!draft && !draftDismissed;
+
+  const [title, setTitle] = useState(initialData?.title || draft?.title || "");
+  const [date, setDate] = useState(initialData?.date || draft?.date || new Date().toISOString().slice(0, 10));
+  const [location, setLocation] = useState(initialData?.location || draft?.location || "");
+  const [charityId, setCharityId] = useState(initialData?.charityId || draft?.charityId || "");
+  const [attendees, setAttendees] = useState(initialData?.attendees || draft?.attendees || "");
+  const [rawNotes, setRawNotes] = useState(initialData?.rawNotes || draft?.rawNotes || "");
+  const [meetingContext, setMeetingContext] = useState(initialData?.meetingContext || draft?.meetingContext || "");
+  const [isPrivate, setIsPrivate] = useState(initialData?.isPrivate || draft?.isPrivate || false);
+  const [step, setStep] = useState<1 | 2>(draft?.step || 1);
+  const [formattedContent, setFormattedContent] = useState(initialData?.formattedContent || draft?.formattedContent || "");
   const [aiLoading, setAiLoading] = useState(false);
   const [aiError, setAiError] = useState("");
   const [error, setError] = useState("");
+
+  // مرجع بآخر قيم النموذج، يُحدَّث كل تصيير — لتجنّب قراءة قيم قديمة (stale
+  // closure) داخل مستمعي beforeunload/pagehide ودالة تنظيف useEffect أدناه.
+  const latestRef = useRef({
+    title, date, location, charityId, attendees, rawNotes, meetingContext, isPrivate, formattedContent, step,
+  });
+  useEffect(() => {
+    latestRef.current = {
+      title, date, location, charityId, attendees, rawNotes, meetingContext, isPrivate, formattedContent, step,
+    };
+  });
+
+  // يصير true بمجرد أن يضغط المستخدم "حفظ" فعلياً — فلا تُكتب مسودة فوق محضر
+  // بصدد الحفظ، ولا تبقى مسودة قديمة تظهر من جديد في المرة القادمة.
+  const savingRef = useRef(false);
+
+  useEffect(() => {
+    if (editingId) return; // لا مسودات أثناء التعديل
+
+    function persistDraft() {
+      if (savingRef.current) {
+        try {
+          localStorage.removeItem(DRAFT_STORAGE_KEY);
+        } catch {
+          /* تجاهل */
+        }
+        return;
+      }
+      const s = latestRef.current;
+      try {
+        if (hasMeaningfulContent(s)) {
+          localStorage.setItem(DRAFT_STORAGE_KEY, JSON.stringify({ ...s, savedAt: Date.now() }));
+        } else {
+          localStorage.removeItem(DRAFT_STORAGE_KEY);
+        }
+      } catch {
+        /* localStorage غير متاح — لا شيء يُفعل */
+      }
+    }
+
+    // يغطي إغلاق التبويب أو تحديث الصفحة، حيث لا يُضمَن تشغيل دالة تنظيف
+    // useEffect العادية.
+    window.addEventListener("pagehide", persistDraft);
+    window.addEventListener("beforeunload", persistDraft);
+
+    return () => {
+      window.removeEventListener("pagehide", persistDraft);
+      window.removeEventListener("beforeunload", persistDraft);
+      // يغطي إغلاق النافذة من داخل التطبيق (زر X أو "إلغاء" أو نجاح الحفظ).
+      persistDraft();
+    };
+  }, [editingId]);
+
+  function discardDraft() {
+    try {
+      localStorage.removeItem(DRAFT_STORAGE_KEY);
+    } catch {
+      /* تجاهل */
+    }
+    setDraftDismissed(true);
+    setTitle("");
+    setDate(new Date().toISOString().slice(0, 10));
+    setLocation("");
+    setCharityId("");
+    setAttendees("");
+    setRawNotes("");
+    setMeetingContext("");
+    setIsPrivate(false);
+    setFormattedContent("");
+    setStep(1);
+  }
 
   async function handleFormat() {
     if (!rawNotes.trim()) { setAiError("أدخل الملاحظات أولاً"); return; }
@@ -90,12 +203,19 @@ export default function MeetingFormModal({
       if (!proceed) return;
     }
 
+    // يُعلَّم قبل الحفظ الفعلي لا بعده: onSave يستدعي startTransition في الأصل
+    // ويعيد التحكم فوراً، فانتظار نتيجتها هنا لا يضمن اكتمال الحفظ في القاعدة
+    // بعد. المهم عملياً أن المستخدم ضغط "حفظ" فلا تُقترح عليه مسودته القديمة
+    // مجدداً حتى لو تأخر الحفظ أو فشل لاحقاً.
+    savingRef.current = true;
+
     startTransition(async () => {
       try {
         await onSave({
           title, date, location, charityId, attendees, rawNotes, meetingContext, isPrivate, formattedContent
         });
       } catch (e: any) {
+        savingRef.current = false;
         setError(e.message || "حدث خطأ أثناء الحفظ");
       }
     });
@@ -124,6 +244,22 @@ export default function MeetingFormModal({
         </div>
 
         <div className="flex-1 overflow-auto p-4 space-y-3">
+          {showDraftBanner && (
+            <div className="flex items-center gap-2 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800/50 rounded-xl px-3 py-2">
+              <FileClock className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0" />
+              <p className="flex-1 text-[11px] font-bold text-amber-700 dark:text-amber-400">
+                تم استرجاع مسودة محضر لم تُحفظ{draft?.savedAt ? ` (${timeAgoArabic(new Date(draft.savedAt))})` : ""}
+              </p>
+              <button
+                type="button"
+                onClick={discardDraft}
+                className="text-[10px] font-bold text-amber-700 dark:text-amber-400 hover:underline shrink-0"
+              >
+                تجاهل وابدأ من جديد
+              </button>
+            </div>
+          )}
+
           {step === 1 && (
             <>
               <div className="grid grid-cols-2 gap-3">

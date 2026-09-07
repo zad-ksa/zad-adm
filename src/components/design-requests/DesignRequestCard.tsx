@@ -74,6 +74,7 @@ export default function DesignRequestCard({
   actions,
   footer,
   onOpenLog,
+  variant = "card",
 }: {
   request: DesignRequestCardData;
   progress: DesignRequestProgress;
@@ -91,15 +92,28 @@ export default function DesignRequestCard({
    * which is how the delete button ended up available on one tab only.
    */
   footer?: ReactNode;
+  /**
+   * "card" (default, unchanged) sits in a grid and stretches to match its row.
+   * "list" is a denser single-column row — same content, tighter padding, and
+   * the metadata block wraps inline instead of stacking one fact per line.
+   * Opt-in only: the charity portal renders this same component and must keep
+   * getting exactly the "card" markup it always has.
+   */
+  variant?: "card" | "list";
 }) {
   const [expanded, setExpanded] = useState(false);
+  const isList = variant === "list";
 
   // A rough threshold rather than measuring the rendered box: the clamp is two
   // lines, and anything under this reliably fits in them at every card width.
   const isLongDescription = (request.description?.length ?? 0) > 110;
 
   return (
-    <div className="design-requests-ui group flex flex-col h-full rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0A0A0A] p-5 shadow-sm hover:shadow-md dark:shadow-none hover:border-primary/40 dark:hover:border-teal-500/40 transition-all duration-300">
+    <div
+      className={`design-requests-ui group flex flex-col rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0A0A0A] shadow-sm hover:shadow-md dark:shadow-none hover:border-primary/40 dark:hover:border-teal-500/40 transition-all duration-300 ${
+        isList ? "p-4" : "h-full p-5"
+      }`}
+    >
       <div className="flex items-start justify-between gap-4">
         <div className="min-w-0 flex-1 space-y-1">
           {request.charityName && (
@@ -208,9 +222,9 @@ export default function DesignRequestCard({
         </div>
       )}
 
-      <div className="mt-auto pt-6 flex flex-col gap-4">
+      <div className={`flex flex-col ${isList ? "pt-3 gap-3" : "mt-auto pt-6 gap-4"}`}>
         <div
-          className="flex flex-col gap-2 text-slate-500 dark:text-slate-400"
+          className={`text-slate-500 dark:text-slate-400 ${isList ? "flex flex-wrap gap-x-4 gap-y-1.5" : "flex flex-col gap-2"}`}
           style={{ fontSize: "var(--dr-fs-meta)" }}
         >
           <span className="flex items-center gap-2">

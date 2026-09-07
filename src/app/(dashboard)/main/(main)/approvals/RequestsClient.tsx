@@ -119,7 +119,7 @@ const ACTION_CONFIG: Record<Action, { label: string; color: string; icon: any }>
 // شبكة الأعمدة المشتركة بين رأس الجدول وكل صف — نفس التوزيع بالحرف في الاثنين
 // هو ما يجعلها تصطف كجدول فعلي بدل تكديس كل شيء فوق بعضه. لا تظهر إلا من
 // lg فأعلى؛ الجوال يبقى على تخطيط البطاقة المرن الحالي.
-const TABLE_GRID_COLS = "lg:grid-cols-[28px_minmax(0,2fr)_112px_88px_132px_minmax(160px,1fr)_92px_128px]";
+const TABLE_GRID_COLS = "lg:grid-cols-[minmax(0,2fr)_112px_88px_132px_minmax(160px,1fr)_92px_128px]";
 
 function timeAgo(date: string | Date) {
   const diff = Date.now() - new Date(date).getTime();
@@ -270,9 +270,6 @@ function RequestCard({
       {/* صف الجدول — سطح المكتب (lg فأعلى). كل معلومة في عمودها الثابت، بنفس
           توزيع رأس الجدول أعلى القائمة، فلا شيء يزدحم فوق شيء آخر. */}
       <div className={`hidden lg:grid ${TABLE_GRID_COLS} items-center gap-3 px-3 py-2.5`}>
-        <div className={`flex items-center justify-center w-6 h-6 rounded-md shrink-0 ${priority.bg}`} title={priority.label}>
-          <span className="text-xs">{priority.icon}</span>
-        </div>
         <span className="min-w-0 truncate text-sm font-bold text-slate-800 dark:text-slate-100">{request.title}</span>
         <span className={`inline-flex w-fit items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full ${status.bg} ${status.color}`}>
           <StatusIcon className="w-3 h-3" />{status.label}
@@ -300,10 +297,6 @@ function RequestCard({
       {/* بطاقة الجوال — دون lg. نفس المعلومات، مكدّسة بمرونة لأن الشاشة أضيق
           من أن تحتمل جدولاً حقيقياً. */}
       <div className="lg:hidden flex items-start gap-3 p-3">
-        <div className={`mt-0.5 flex items-center justify-center w-7 h-7 rounded-lg shrink-0 ${priority.bg}`}>
-          <span className="text-sm">{priority.icon}</span>
-        </div>
-
         <div className="flex-1 min-w-0">
           <div className="flex items-start gap-2 flex-wrap">
             <span className="text-sm font-bold text-slate-800 dark:text-slate-100 leading-snug">{request.title}</span>
@@ -664,7 +657,6 @@ export default function RequestsClient({ requests: initial, canManage, canReview
         <div className="space-y-2 pb-24 lg:pb-0">
           {/* رأس الجدول — لسطح المكتب فقط، بنفس أعمدة كل صف بالحرف. */}
           <div className={`hidden lg:grid ${TABLE_GRID_COLS} items-center gap-3 px-3 pb-1 text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider`}>
-            <span />
             <span>العنوان</span>
             <span>الحالة</span>
             <span>الأولوية</span>

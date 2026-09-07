@@ -8,7 +8,7 @@ import { markDesignRequestComplete, deleteDesignRequest, startDesignRequest } fr
 import type { DesignRequestProgress } from "@/lib/designRequestProgress";
 import StaffNewDesignRequestModal from "./StaffNewDesignRequestModal";
 import StaffRescheduleDesignRequestModal from "./StaffRescheduleDesignRequestModal";
-import StaffRescheduleCharityQueueModal from "./StaffRescheduleCharityQueueModal";
+import { rescheduleCharityQueue } from "@/app/actions/designRequests";
 import StaffExtendDesignRequestModal from "./StaffExtendDesignRequestModal";
 import { ACCEPT_ATTRIBUTE, maxBytesFor, maxLabelFor } from "@/lib/uploadPurposes";
 import { uploadDesignRequestFiles } from "@/components/design-requests/uploadDesignRequestFiles";
@@ -108,6 +108,7 @@ export default function DesignRequestsClient({
   const [editingId, setEditingId] = useState<string | null>(null);
   const [isTypesOpen, setIsTypesOpen] = useState(false);
   const [ganttNow, setGanttNow] = useState<number | null>(null);
+  const [isCompacting, setIsCompacting] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [viewMode, setViewMode] = useState<ViewMode>("cards");
 
@@ -225,6 +226,33 @@ export default function DesignRequestsClient({
         })),
     [initialItems]
   );
+
+  /**
+   * Closes the gaps in the filtered charity's queue.
+   *
+   * No date to pick: the anchor is the first queued request's own start, so
+   * the request that was next stays next and starts when it already would.
+   * All this removes is the empty time behind it.
+   */
+  const handleCompactQueue = () => {
+    if (!charityFilter) return;
+    setIsCompacting(true);
+    startTransition(async () => {
+      const res = await rescheduleCharityQueue(charityFilter);
+      setIsCompacting(false);
+      setIsQueueRescheduleOpen(false);
+      if ("error" in res && res.error) {
+        setDeliverableError(res.error);
+        return;
+      }
+      setToast(
+        "moved" in res && typeof res.moved === "number"
+          ? `أُعيد ترتيب ${res.moved} طلباً بدءاً من وقت أول طلب في الدور`
+          : "أُعيد ترتيب الدور"
+      );
+      router.refresh();
+    });
+  };
 
   const handleComplete = () => {
     if (!confirmingId) return;
@@ -869,17 +897,18 @@ export default function DesignRequestsClient({
         />
       )}
 
-      {isQueueRescheduleOpen && charityFilter && (
-        <StaffRescheduleCharityQueueModal
-          charityId={charityFilter}
-          charityName={charities.find((c) => c.id === charityFilter)?.name || ""}
-          onClose={() => setIsQueueRescheduleOpen(false)}
-          onSuccess={() => {
-            setIsQueueRescheduleOpen(false);
-            router.refresh();
-          }}
-        />
-      )}
+      <ConfirmModal
+        isOpen={isQueueRescheduleOpen && !!charityFilter}
+        title="إعادة ترتيب الدور"
+        message={`ستُرصّ طلبات ${
+          charities.find((c) => c.id === charityFilter)?.name || "الجهة"
+        } بدءاً من وقت أول طلب في الدور، فيبدأ كل طلب حين ينتهي الذي قبله وتُغلق الفترات الفارغة. الطلبات الجاري العمل عليها لا تتحرك.`}
+        confirmLabel="إعادة الترتيب"
+        tone="primary"
+        isPending={isCompacting}
+        onCancel={() => setIsQueueRescheduleOpen(false)}
+        onConfirm={handleCompactQueue}
+      />
 
       {deletingId !== null && (
         <div className="design-requests-ui fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm">

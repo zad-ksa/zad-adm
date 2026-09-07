@@ -70,6 +70,11 @@ const AchievementFormModal = dynamic(() => import("@/components/tasks/Achievemen
 const PermanentTaskFormModal = dynamic(() => import("@/components/tasks/PermanentTaskFormModal"), { ssr: false });
 const ConfirmModal = dynamic(() => import("@/components/ui/ConfirmModal"), { ssr: false });
 
+// شبكة أعمدة المهام الحالية — نفس أسلوب جدول الاعتمادات: رأس وصفوف بنفس
+// التوزيع بالحرف، فتصطف كل المهام تحت بعضها بانتظام على سطح المكتب. الجوال
+// يبقى على تخطيط البطاقة المرن الحالي.
+const TASKS_TABLE_GRID_COLS = "lg:grid-cols-[24px_minmax(0,2fr)_92px_92px_120px_130px_100px_150px]";
+
 export default function TasksClient({
   session,
   employees,
@@ -1058,6 +1063,18 @@ ${combinedAchievements.length > 0 ? `
             </select>
           </div>
 
+          {/* رأس الجدول — سطح المكتب فقط، بنفس أعمدة كل صف بالحرف. */}
+          <div className={`hidden lg:grid ${TASKS_TABLE_GRID_COLS} items-center gap-3 px-4 pt-2 pb-1.5 text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider border-b border-slate-100 dark:border-slate-700/40`}>
+            <span />
+            <span>العنوان</span>
+            <span>الأولوية</span>
+            <span>الحالة</span>
+            <span>الجهة</span>
+            <span>المسؤول</span>
+            <span>التاريخ</span>
+            <span className="text-left pl-1">إجراءات</span>
+          </div>
+
           <div className="max-h-[76vh] overflow-y-auto">
             {filteredActiveTasks.map((task, index) => {
               const assignedEmp = employees.find((e) => e.id === task.assignedToId);
@@ -1076,121 +1093,125 @@ ${combinedAchievements.length > 0 ? `
                       : ""
                   }`}
                 >
-                  {/* Main task row */}
-                  <div className={`px-4 py-3 flex items-start gap-3 ${isInProgress ? "hover:bg-amber-50 dark:hover:bg-amber-900/20" : "hover:bg-slate-50/80 dark:hover:bg-slate-700/20"} transition-colors`}>
-                    {/* Checkbox */}
-                    {(isAdmin(session.role) || task.assignedToId === session.id) && (
-                      <button
-                        onClick={() => handleToggleCompletion(task.id, true)}
-                        title="تعليم كمنجز"
-                        className="w-4 h-4 rounded border-2 border-slate-300 dark:border-slate-600 hover:border-emerald-500 flex items-center justify-center shrink-0 cursor-pointer mt-0.5 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 transition-colors"
-                      />
-                    )}
-
-                    <div className="flex-1 min-w-0">
-                      {/* Title */}
-                      {editingTaskId === task.id ? (
-                        <div className="flex items-center gap-1.5">
+                  {/* عناصر مشتركة بين صف الجدول (سطح المكتب) وبطاقة الجوال — لا تُكتب
+                      مرتين، فتبقى منطقيّاً واحدة دائماً مهما اختلف مكان عرضها. */}
+                  {(() => {
+                    const titleNode =
+                      editingTaskId === task.id ? (
+                        <div className="flex items-center gap-1.5" onClick={(e) => e.stopPropagation()}>
                           <input
                             type="text"
                             value={editingTaskTitle}
                             onChange={(e) => setEditingTaskTitle(e.target.value)}
-                            className="flex-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded px-2 py-0.5 text-xs outline-none focus:ring-2 focus:ring-primary/20 text-slate-800 dark:text-slate-100 font-bold"
+                            className="flex-1 min-w-0 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded px-2 py-0.5 text-xs outline-none focus:ring-2 focus:ring-primary/20 text-slate-800 dark:text-slate-100 font-bold"
                             onKeyDown={(e) => {
                               if (e.key === "Enter") handleUpdateTaskTitle(task.id);
                               if (e.key === "Escape") setEditingTaskId(null);
                             }}
                             autoFocus
                           />
-                          <button type="button" onClick={() => handleUpdateTaskTitle(task.id)} disabled={isPending} className="p-0.5 text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 rounded cursor-pointer"><Check className="w-3 h-3" /></button>
-                          <button type="button" onClick={() => setEditingTaskId(null)} className="p-0.5 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded cursor-pointer"><X className="w-3 h-3" /></button>
+                          <button type="button" onClick={() => handleUpdateTaskTitle(task.id)} disabled={isPending} className="p-0.5 text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 rounded cursor-pointer shrink-0"><Check className="w-3 h-3" /></button>
+                          <button type="button" onClick={() => setEditingTaskId(null)} className="p-0.5 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded cursor-pointer shrink-0"><X className="w-3 h-3" /></button>
                         </div>
                       ) : (
                         <p
                           onClick={() => setDetailTask(task)}
                           title="عرض تفاصيل المهمة"
-                          className="text-sm font-semibold text-slate-800 dark:text-slate-100 leading-snug cursor-pointer hover:text-primary transition-colors"
+                          className="text-sm font-semibold text-slate-800 dark:text-slate-100 leading-snug cursor-pointer hover:text-primary transition-colors lg:truncate"
                         >
                           {task.title}
                         </p>
-                      )}
+                      );
 
-                      {/* Badges — الشارات الثابتة الوجود (الأولوية/الجهة/المسؤول) دائماً
-                          أولاً وبنفس الترتيب بين كل المهام، ثم الشارات الاختيارية
-                          (من محضر/مرفق/تحديثات) بعدها. قبل هذا الترتيب كانت الشارات
-                          الاختيارية تسبق الثابتة في الكود، فحين تغيب إحداها لمهمة ما
-                          تنزلق كل الشارات التالية مكانها وتبدو غير منظمة بين مهمة وأخرى. */}
-                      <div className="flex flex-wrap items-center gap-1 mt-1">
-                        {/* Priority */}
-                        <div className="relative inline-dropdown-container">
-                          <button
-                            type="button"
-                            onClick={() => canEdit && setEditingPriorityTaskId(editingPriorityTaskId === task.id ? null : task.id)}
-                            disabled={!canEdit}
-                            className={`inline-flex items-center gap-1 text-[9px] font-bold px-1.5 py-0.5 rounded transition-colors ${
-                              task.priority === 1 ? 'bg-red-50 text-red-600 hover:bg-red-100 dark:bg-red-900/20 dark:text-red-400' :
-                              task.priority === 2 ? 'bg-amber-50 text-amber-600 hover:bg-amber-100 dark:bg-amber-900/20 dark:text-amber-400' :
-                              'bg-slate-100 text-slate-500 hover:bg-slate-200 dark:bg-slate-700/50 dark:text-slate-400'
-                            }`}
-                          >
-                            <span className={`w-1.5 h-1.5 rounded-full ${task.priority === 1 ? 'bg-red-500' : task.priority === 2 ? 'bg-amber-500' : 'bg-slate-400'}`}></span>
-                            {task.priority === 1 ? 'عالية' : task.priority === 2 ? 'متوسطة' : 'منخفضة'}
-                          </button>
-                          {editingPriorityTaskId === task.id && (
-                            <div className="absolute top-full mt-1 right-0 bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-lg shadow-lg p-1.5 flex flex-col gap-0.5 z-50 w-28">
-                              <button onClick={() => handleUpdateTaskPriority(task.id, 1)} className="text-[10px] font-bold px-2 py-1 rounded hover:bg-slate-50 dark:hover:bg-slate-700 text-right text-red-600 flex items-center gap-1.5 cursor-pointer"><span className="w-1.5 h-1.5 rounded-full bg-red-500"></span>عالية</button>
-                              <button onClick={() => handleUpdateTaskPriority(task.id, 2)} className="text-[10px] font-bold px-2 py-1 rounded hover:bg-slate-50 dark:hover:bg-slate-700 text-right text-amber-600 flex items-center gap-1.5 cursor-pointer"><span className="w-1.5 h-1.5 rounded-full bg-amber-500"></span>متوسطة</button>
-                              <button onClick={() => handleUpdateTaskPriority(task.id, 3)} className="text-[10px] font-bold px-2 py-1 rounded hover:bg-slate-50 dark:hover:bg-slate-700 text-right text-slate-500 flex items-center gap-1.5 cursor-pointer"><span className="w-1.5 h-1.5 rounded-full bg-slate-400"></span>منخفضة</button>
-                            </div>
-                          )}
-                        </div>
-
-                        {/* Charity */}
-                        <div className="relative inline-dropdown-container">
-                          <button
-                            type="button"
-                            onClick={() => isDirectorOrAdmin && setEditingCharityTaskId(editingCharityTaskId === task.id ? null : task.id)}
-                            disabled={!isDirectorOrAdmin}
-                            className={`inline-flex items-center gap-1 text-[9px] font-bold px-1.5 py-0.5 rounded transition-colors ${
-                              task.isInternal ? 'text-slate-400 bg-slate-100 dark:bg-slate-700/50' : 'text-primary bg-primary/5 hover:bg-primary/10'
-                            }`}
-                          >
-                            {task.isInternal ? <Briefcase className="w-2.5 h-2.5" /> : <Building2 className="w-2.5 h-2.5" />}
-                            {task.isInternal ? "داخلية" : (task.charityName || "متعاقدة")}
-                          </button>
-                          {editingCharityTaskId === task.id && (
-                            <div className="absolute top-full mt-1 right-0 bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-lg shadow-lg p-1.5 flex flex-col gap-0.5 z-50 w-44 max-h-44 overflow-y-auto">
-                              <button onClick={() => handleUpdateTaskCharity(task.id, "internal")} className="text-[10px] font-bold px-2 py-1 rounded hover:bg-slate-50 dark:hover:bg-slate-700 text-right text-slate-600 dark:text-slate-300 flex items-center gap-1.5 cursor-pointer"><Briefcase className="w-3 h-3" />داخلية</button>
-                              {charities.map(c => (
-                                <button key={c.id} onClick={() => handleUpdateTaskCharity(task.id, c.id)} className="text-[10px] font-bold px-2 py-1 rounded hover:bg-slate-50 dark:hover:bg-slate-700 text-right text-primary flex items-center gap-1.5 cursor-pointer"><Building2 className="w-3 h-3" />{c.name}</button>
-                              ))}
-                            </div>
-                          )}
-                        </div>
-
-                        {/* Assignee */}
-                        {isDirectorOrAdmin && assignedEmp && (
-                          <div className="relative inline-dropdown-container">
-                            <button
-                              type="button"
-                              onClick={() => setEditingAssigneeTaskId(editingAssigneeTaskId === task.id ? null : task.id)}
-                              className="inline-flex items-center gap-1 text-[9px] font-bold text-indigo-500 dark:text-indigo-400 bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-900/20 px-1.5 py-0.5 rounded cursor-pointer transition-colors"
-                            >
-                              <User className="w-2.5 h-2.5" />
-                              {assignedEmp.name}
-                            </button>
-                            {editingAssigneeTaskId === task.id && (
-                              <div className="absolute top-full mt-1 right-0 bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-lg shadow-lg p-1.5 flex flex-col gap-0.5 z-50 w-44 max-h-44 overflow-y-auto">
-                                {employees.map(e => (
-                                  <button key={e.id} onClick={() => handleUpdateTaskAssigneeInline(task.id, e.id)} className="text-[10px] font-bold px-2 py-1 rounded hover:bg-slate-50 dark:hover:bg-slate-700 text-right text-indigo-600 dark:text-indigo-300 flex items-center gap-1.5 cursor-pointer"><User className="w-3 h-3" />{e.name}</button>
-                                ))}
-                              </div>
-                            )}
+                    // الشارات الثابتة الوجود (الأولوية/الجهة/المسؤول) — عمود مستقل لكل
+                    // منها في الجدول، وفي بطاقة الجوال تبقى مجموعة أولاً بنفس الترتيب.
+                    const priorityNode = (
+                      <div className="relative inline-dropdown-container">
+                        <button
+                          type="button"
+                          onClick={() => canEdit && setEditingPriorityTaskId(editingPriorityTaskId === task.id ? null : task.id)}
+                          disabled={!canEdit}
+                          className={`inline-flex items-center gap-1 text-[9px] font-bold px-1.5 py-0.5 rounded transition-colors ${
+                            task.priority === 1 ? 'bg-red-50 text-red-600 hover:bg-red-100 dark:bg-red-900/20 dark:text-red-400' :
+                            task.priority === 2 ? 'bg-amber-50 text-amber-600 hover:bg-amber-100 dark:bg-amber-900/20 dark:text-amber-400' :
+                            'bg-slate-100 text-slate-500 hover:bg-slate-200 dark:bg-slate-700/50 dark:text-slate-400'
+                          }`}
+                        >
+                          <span className={`w-1.5 h-1.5 rounded-full ${task.priority === 1 ? 'bg-red-500' : task.priority === 2 ? 'bg-amber-500' : 'bg-slate-400'}`}></span>
+                          {task.priority === 1 ? 'عالية' : task.priority === 2 ? 'متوسطة' : 'منخفضة'}
+                        </button>
+                        {editingPriorityTaskId === task.id && (
+                          <div className="absolute top-full mt-1 right-0 bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-lg shadow-lg p-1.5 flex flex-col gap-0.5 z-50 w-28">
+                            <button onClick={() => handleUpdateTaskPriority(task.id, 1)} className="text-[10px] font-bold px-2 py-1 rounded hover:bg-slate-50 dark:hover:bg-slate-700 text-right text-red-600 flex items-center gap-1.5 cursor-pointer"><span className="w-1.5 h-1.5 rounded-full bg-red-500"></span>عالية</button>
+                            <button onClick={() => handleUpdateTaskPriority(task.id, 2)} className="text-[10px] font-bold px-2 py-1 rounded hover:bg-slate-50 dark:hover:bg-slate-700 text-right text-amber-600 flex items-center gap-1.5 cursor-pointer"><span className="w-1.5 h-1.5 rounded-full bg-amber-500"></span>متوسطة</button>
+                            <button onClick={() => handleUpdateTaskPriority(task.id, 3)} className="text-[10px] font-bold px-2 py-1 rounded hover:bg-slate-50 dark:hover:bg-slate-700 text-right text-slate-500 flex items-center gap-1.5 cursor-pointer"><span className="w-1.5 h-1.5 rounded-full bg-slate-400"></span>منخفضة</button>
                           </div>
                         )}
+                      </div>
+                    );
 
-                        {/* Came from a meeting — لا يزال باللون البرتقالي المميّز، لكنه
-                            بعد الشارات الثابتة الآن فلا يزيحها. */}
+                    const charityNode = (
+                      <div className="relative inline-dropdown-container">
+                        <button
+                          type="button"
+                          onClick={() => isDirectorOrAdmin && setEditingCharityTaskId(editingCharityTaskId === task.id ? null : task.id)}
+                          disabled={!isDirectorOrAdmin}
+                          className={`inline-flex items-center gap-1 text-[9px] font-bold px-1.5 py-0.5 rounded transition-colors ${
+                            task.isInternal ? 'text-slate-400 bg-slate-100 dark:bg-slate-700/50' : 'text-primary bg-primary/5 hover:bg-primary/10'
+                          }`}
+                        >
+                          {task.isInternal ? <Briefcase className="w-2.5 h-2.5" /> : <Building2 className="w-2.5 h-2.5" />}
+                          {task.isInternal ? "داخلية" : (task.charityName || "متعاقدة")}
+                        </button>
+                        {editingCharityTaskId === task.id && (
+                          <div className="absolute top-full mt-1 right-0 bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-lg shadow-lg p-1.5 flex flex-col gap-0.5 z-50 w-44 max-h-44 overflow-y-auto">
+                            <button onClick={() => handleUpdateTaskCharity(task.id, "internal")} className="text-[10px] font-bold px-2 py-1 rounded hover:bg-slate-50 dark:hover:bg-slate-700 text-right text-slate-600 dark:text-slate-300 flex items-center gap-1.5 cursor-pointer"><Briefcase className="w-3 h-3" />داخلية</button>
+                            {charities.map(c => (
+                              <button key={c.id} onClick={() => handleUpdateTaskCharity(task.id, c.id)} className="text-[10px] font-bold px-2 py-1 rounded hover:bg-slate-50 dark:hover:bg-slate-700 text-right text-primary flex items-center gap-1.5 cursor-pointer"><Building2 className="w-3 h-3" />{c.name}</button>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    );
+
+                    const assigneeNode = isDirectorOrAdmin && assignedEmp ? (
+                      <div className="relative inline-dropdown-container">
+                        <button
+                          type="button"
+                          onClick={() => setEditingAssigneeTaskId(editingAssigneeTaskId === task.id ? null : task.id)}
+                          className="inline-flex items-center gap-1 text-[9px] font-bold text-indigo-500 dark:text-indigo-400 bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-900/20 px-1.5 py-0.5 rounded cursor-pointer transition-colors"
+                        >
+                          <User className="w-2.5 h-2.5" />
+                          {assignedEmp.name}
+                        </button>
+                        {editingAssigneeTaskId === task.id && (
+                          <div className="absolute top-full mt-1 right-0 bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-lg shadow-lg p-1.5 flex flex-col gap-0.5 z-50 w-44 max-h-44 overflow-y-auto">
+                            {employees.map(e => (
+                              <button key={e.id} onClick={() => handleUpdateTaskAssigneeInline(task.id, e.id)} className="text-[10px] font-bold px-2 py-1 rounded hover:bg-slate-50 dark:hover:bg-slate-700 text-right text-indigo-600 dark:text-indigo-300 flex items-center gap-1.5 cursor-pointer"><User className="w-3 h-3" />{e.name}</button>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    ) : null;
+
+                    // الحالة — "ابدأ/جاري" زر وشارة حالة في آن، عمود مستقل بالجدول.
+                    const statusNode = canEdit ? (
+                      <button
+                        type="button"
+                        onClick={() => handleUpdateTaskStatus(task.id, task.status === "IN_PROGRESS" ? "NOT_STARTED" : "IN_PROGRESS")}
+                        className={`px-2 py-1 rounded text-[10px] font-bold transition-colors cursor-pointer ${task.status === "IN_PROGRESS" ? "text-amber-600 bg-amber-100 hover:bg-amber-200 dark:bg-amber-900/40 dark:text-amber-400" : "text-slate-500 bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:text-slate-300"}`}
+                      >
+                        {task.status === "IN_PROGRESS" ? "جاري" : "ابدأ"}
+                      </button>
+                    ) : (
+                      <span className="text-[10px] text-slate-300 dark:text-slate-600">
+                        {task.status === "IN_PROGRESS" ? "جاري" : "—"}
+                      </span>
+                    );
+
+                    // مؤشرات اختيارية — من محضر / مرفق / عدد التحديثات.
+                    const indicatorsNode = (
+                      <>
                         {task.meetingTaskId && (
                           <span
                             title="مهمة صادرة من محضر اجتماع"
@@ -1200,85 +1221,150 @@ ${combinedAchievements.length > 0 ? `
                             من المحضر
                           </span>
                         )}
-
-                        {/* The brief image, if one was attached at creation. */}
                         {task.attachmentUrl && (
                           <a
                             href={task.attachmentUrl}
                             target="_blank"
                             rel="noopener noreferrer"
                             title="عرض مرفق المهمة"
+                            onClick={(e) => e.stopPropagation()}
                             className="inline-flex items-center gap-1 text-[9px] font-bold px-1.5 py-0.5 rounded bg-sky-50 text-sky-600 hover:bg-sky-100 dark:bg-sky-500/15 dark:text-sky-400 transition-colors"
                           >
                             <Paperclip className="w-2.5 h-2.5" />
                             مرفق
                           </a>
                         )}
-
-                        {/* Updates count badge — click to toggle */}
                         {updates.length > 0 && (
                           <button
                             type="button"
-                            onClick={() => setExpandedTaskId(expandedTaskId === task.id ? null : task.id)}
+                            onClick={(e) => { e.stopPropagation(); setExpandedTaskId(expandedTaskId === task.id ? null : task.id); }}
                             className="inline-flex items-center gap-1 text-[9px] font-bold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 hover:bg-blue-100 dark:hover:bg-blue-900/40 px-1.5 py-0.5 rounded transition-colors cursor-pointer"
                           >
                             <MessageSquarePlus className="w-2.5 h-2.5" />
                             {updates.length} تحديث
                           </button>
                         )}
+                      </>
+                    );
+                    const hasIndicators = !!(task.meetingTaskId || task.attachmentUrl || updates.length > 0);
 
-                        {/* Relative dates */}
-                        <span className="text-[9px] text-slate-400 dark:text-slate-500 flex items-center gap-0.5 mr-auto" title="تاريخ الإضافة">
-                          <Calendar className="w-2.5 h-2.5" />
-                          أضيفت {timeAgoArabic(task.createdAt)}
-                        </span>
-                        {task.updatedAt && (
-                          <span className="text-[9px] text-slate-400 dark:text-slate-500 flex items-center gap-0.5" title="آخر تحديث">
-                            <History className="w-2.5 h-2.5" />
-                            آخر تحديث {timeAgoArabic(task.updatedAt)}
-                          </span>
-                        )}
-                      </div>
-                    </div>
+                    const checkboxNode = (isAdmin(session.role) || task.assignedToId === session.id) ? (
+                      <button
+                        onClick={() => handleToggleCompletion(task.id, true)}
+                        title="تعليم كمنجز"
+                        className="w-4 h-4 rounded border-2 border-slate-300 dark:border-slate-600 hover:border-emerald-500 flex items-center justify-center shrink-0 cursor-pointer hover:bg-emerald-50 dark:hover:bg-emerald-900/20 transition-colors"
+                      />
+                    ) : null;
 
-                    {/* Actions */}
-                    <div className="flex items-center gap-1 shrink-0">
-                      {canAddUpdate && (
-                        <button
-                          type="button"
-                          onClick={() => setExpandedTaskId(expandedTaskId === task.id ? null : task.id)}
-                          title="تحديثات المهمة"
-                          className={`p-1.5 rounded-lg transition-colors cursor-pointer ${expandedTaskId === task.id ? "text-blue-600 bg-blue-100 dark:bg-blue-900/30" : "text-slate-400 hover:text-blue-600 dark:text-slate-500 dark:hover:text-blue-400 hover:bg-slate-100 dark:hover:bg-slate-700"}`}
-                        >
-                          <MessageSquarePlus className="w-4 h-4" />
-                        </button>
-                      )}
-                      {canEdit && (
-                        <button
-                          type="button"
-                          onClick={() => handleUpdateTaskStatus(task.id, task.status === "IN_PROGRESS" ? "NOT_STARTED" : "IN_PROGRESS")}
-                          className={`px-2 py-1 rounded text-[10px] font-bold transition-colors cursor-pointer ${task.status === "IN_PROGRESS" ? "text-amber-600 bg-amber-100 hover:bg-amber-200 dark:bg-amber-900/40 dark:text-amber-400" : "text-slate-500 bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:text-slate-300"}`}
-                        >
-                          {task.status === "IN_PROGRESS" ? "جاري" : "ابدأ"}
-                        </button>
-                      )}
-                      {canEdit && (
-                        <button type="button" onClick={() => { setEditingTaskId(task.id); setEditingTaskTitle(task.title); }} title="تعديل" className="p-1.5 text-slate-400 hover:text-primary dark:text-slate-500 dark:hover:text-primary rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors cursor-pointer">
-                          <Pencil className="w-4 h-4" />
-                        </button>
-                      )}
-                      {isDirectorOrAdmin && (
-                        <button type="button" onClick={() => { setReassigningTaskId(task.id); setReassignToEmployeeId(task.assignedToId); }} title="نقل" className="p-1.5 text-slate-400 hover:text-indigo-500 dark:text-slate-500 dark:hover:text-indigo-400 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors cursor-pointer">
-                          <ArrowLeftRight className="w-4 h-4" />
-                        </button>
-                      )}
-                      {canDelete && (
-                        <button type="button" onClick={() => handleDeleteTask(task.id)} title="حذف" className="p-1.5 text-slate-400 hover:text-red-500 dark:text-slate-500 dark:hover:text-red-400 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors cursor-pointer">
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      )}
-                    </div>
-                  </div>
+                    return (
+                      <>
+                        {/* صف الجدول — سطح المكتب. كل معلومة في عمودها الثابت. */}
+                        <div className={`hidden lg:grid ${TASKS_TABLE_GRID_COLS} items-center gap-3 px-4 py-2 ${isInProgress ? "hover:bg-amber-50 dark:hover:bg-amber-900/20" : "hover:bg-slate-50/80 dark:hover:bg-slate-700/20"} transition-colors`}>
+                          <div className="flex justify-center">{checkboxNode}</div>
+
+                          <div className="min-w-0">
+                            {titleNode}
+                            {hasIndicators && (
+                              <div className="flex flex-wrap items-center gap-1 mt-1">{indicatorsNode}</div>
+                            )}
+                          </div>
+
+                          {priorityNode}
+                          {statusNode}
+                          {charityNode}
+                          {assigneeNode || <span className="text-[10px] text-slate-300 dark:text-slate-600">—</span>}
+
+                          <div className="text-[10px] text-slate-400 dark:text-slate-500 leading-tight">
+                            <div>{timeAgoArabic(task.createdAt)}</div>
+                            {task.updatedAt && <div className="opacity-70">تحديث {timeAgoArabic(task.updatedAt)}</div>}
+                          </div>
+
+                          <div className="flex items-center gap-1 shrink-0 justify-start">
+                            {canAddUpdate && (
+                              <button
+                                type="button"
+                                onClick={() => setExpandedTaskId(expandedTaskId === task.id ? null : task.id)}
+                                title="تحديثات المهمة"
+                                className={`p-1.5 rounded-lg transition-colors cursor-pointer ${expandedTaskId === task.id ? "text-blue-600 bg-blue-100 dark:bg-blue-900/30" : "text-slate-400 hover:text-blue-600 dark:text-slate-500 dark:hover:text-blue-400 hover:bg-slate-100 dark:hover:bg-slate-700"}`}
+                              >
+                                <MessageSquarePlus className="w-4 h-4" />
+                              </button>
+                            )}
+                            {canEdit && (
+                              <button type="button" onClick={() => { setEditingTaskId(task.id); setEditingTaskTitle(task.title); }} title="تعديل" className="p-1.5 text-slate-400 hover:text-primary dark:text-slate-500 dark:hover:text-primary rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors cursor-pointer">
+                                <Pencil className="w-4 h-4" />
+                              </button>
+                            )}
+                            {isDirectorOrAdmin && (
+                              <button type="button" onClick={() => { setReassigningTaskId(task.id); setReassignToEmployeeId(task.assignedToId); }} title="نقل" className="p-1.5 text-slate-400 hover:text-indigo-500 dark:text-slate-500 dark:hover:text-indigo-400 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors cursor-pointer">
+                                <ArrowLeftRight className="w-4 h-4" />
+                              </button>
+                            )}
+                            {canDelete && (
+                              <button type="button" onClick={() => handleDeleteTask(task.id)} title="حذف" className="p-1.5 text-slate-400 hover:text-red-500 dark:text-slate-500 dark:hover:text-red-400 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors cursor-pointer">
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* بطاقة الجوال — دون lg. نفس التخطيط المرن الذي كان قائماً دائماً. */}
+                        <div className={`lg:hidden px-4 py-3 flex items-start gap-3 ${isInProgress ? "hover:bg-amber-50 dark:hover:bg-amber-900/20" : "hover:bg-slate-50/80 dark:hover:bg-slate-700/20"} transition-colors`}>
+                          {checkboxNode && <div className="mt-0.5">{checkboxNode}</div>}
+
+                          <div className="flex-1 min-w-0">
+                            {titleNode}
+
+                            <div className="flex flex-wrap items-center gap-1 mt-1">
+                              {priorityNode}
+                              {charityNode}
+                              {assigneeNode}
+                              {indicatorsNode}
+                              <span className="text-[9px] text-slate-400 dark:text-slate-500 flex items-center gap-0.5 mr-auto" title="تاريخ الإضافة">
+                                <Calendar className="w-2.5 h-2.5" />
+                                أضيفت {timeAgoArabic(task.createdAt)}
+                              </span>
+                              {task.updatedAt && (
+                                <span className="text-[9px] text-slate-400 dark:text-slate-500 flex items-center gap-0.5" title="آخر تحديث">
+                                  <History className="w-2.5 h-2.5" />
+                                  آخر تحديث {timeAgoArabic(task.updatedAt)}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+
+                          <div className="flex items-center gap-1 shrink-0">
+                            {canAddUpdate && (
+                              <button
+                                type="button"
+                                onClick={() => setExpandedTaskId(expandedTaskId === task.id ? null : task.id)}
+                                title="تحديثات المهمة"
+                                className={`p-1.5 rounded-lg transition-colors cursor-pointer ${expandedTaskId === task.id ? "text-blue-600 bg-blue-100 dark:bg-blue-900/30" : "text-slate-400 hover:text-blue-600 dark:text-slate-500 dark:hover:text-blue-400 hover:bg-slate-100 dark:hover:bg-slate-700"}`}
+                              >
+                                <MessageSquarePlus className="w-4 h-4" />
+                              </button>
+                            )}
+                            {canEdit && statusNode}
+                            {canEdit && (
+                              <button type="button" onClick={() => { setEditingTaskId(task.id); setEditingTaskTitle(task.title); }} title="تعديل" className="p-1.5 text-slate-400 hover:text-primary dark:text-slate-500 dark:hover:text-primary rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors cursor-pointer">
+                                <Pencil className="w-4 h-4" />
+                              </button>
+                            )}
+                            {isDirectorOrAdmin && (
+                              <button type="button" onClick={() => { setReassigningTaskId(task.id); setReassignToEmployeeId(task.assignedToId); }} title="نقل" className="p-1.5 text-slate-400 hover:text-indigo-500 dark:text-slate-500 dark:hover:text-indigo-400 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors cursor-pointer">
+                                <ArrowLeftRight className="w-4 h-4" />
+                              </button>
+                            )}
+                            {canDelete && (
+                              <button type="button" onClick={() => handleDeleteTask(task.id)} title="حذف" className="p-1.5 text-slate-400 hover:text-red-500 dark:text-slate-500 dark:hover:text-red-400 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors cursor-pointer">
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      </>
+                    );
+                  })()}
 
                   {/* Updates section — toggled by icon button */}
                   {(updates.length > 0 || canAddUpdate) && expandedTaskId === task.id && (

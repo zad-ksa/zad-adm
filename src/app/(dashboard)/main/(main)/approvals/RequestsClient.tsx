@@ -119,7 +119,7 @@ const ACTION_CONFIG: Record<Action, { label: string; color: string; icon: any }>
 // شبكة الأعمدة المشتركة بين رأس الجدول وكل صف — نفس التوزيع بالحرف في الاثنين
 // هو ما يجعلها تصطف كجدول فعلي بدل تكديس كل شيء فوق بعضه. لا تظهر إلا من
 // lg فأعلى؛ الجوال يبقى على تخطيط البطاقة المرن الحالي.
-const TABLE_GRID_COLS = "lg:grid-cols-[minmax(0,2fr)_112px_88px_132px_minmax(160px,1fr)_92px_128px]";
+const TABLE_GRID_COLS = "lg:grid-cols-[minmax(0,2fr)_88px_112px_132px_140px_140px_92px_128px]";
 
 function timeAgo(date: string | Date) {
   const diff = Date.now() - new Date(date).getTime();
@@ -217,28 +217,40 @@ function RequestCard({
   const attachments = typeof request.attachments === 'string' ? JSON.parse(request.attachments) : request.attachments;
   const hasDetails = !!(request.body || request.fileUrl || (Array.isArray(attachments) && attachments.length > 0) || request.reviewNote || request.logs.length > 0);
 
-  // من / عند مَن الطلب الآن — سطر واحد يلخّص الجهة المسؤولة الحالية، يظهر في
-  // عمود "المسؤول / الجهة" بالجدول وفي بطاقة الجوال معاً، بدل تكرار الشرط
-  // أربع مرات في مكانين مختلفين.
-  const whoNode =
-    request.status === "DELEGATED" && request.delegatedTo ? (
-      // مُحوَّل للتنفيذ — أهم ما يُعرف عنه الآن هو مَن ينفّذه.
-      <span className="flex items-center gap-1 text-purple-500 dark:text-purple-400 font-bold">
-        <UserCheck className="w-3 h-3 shrink-0" /> ينفذه: {request.delegatedTo.name}
+  // مَن رفعه — عمود قائم بذاته الآن، يظهر دائماً بلا انتظار فتح الطلب.
+  const raisedByNode = request.createdBy ? (
+    <span className="flex items-center gap-1 min-w-0">
+      <User className="w-3 h-3 shrink-0 text-slate-400" />
+      <span className="truncate font-medium text-slate-600 dark:text-slate-300">
+        {isOwner ? "أنت" : request.createdBy.name}
       </span>
-    ) : !isOwner && request.createdBy ? (
-      // ليس طلبي — أهم ما أعرفه هو مَن رفعه.
-      <span className="flex items-center gap-1 font-medium text-slate-500 dark:text-slate-400">
-        <User className="w-3 h-3 shrink-0" />
-        {request.createdBy.name}
-        <span className="opacity-70">({roleLabels[request.createdBy.role] || request.createdBy.role})</span>
+      {!isOwner && (
+        <span className="shrink-0 opacity-70">({roleLabels[request.createdBy.role] || request.createdBy.role})</span>
+      )}
+    </span>
+  ) : (
+    <span className="text-slate-300 dark:text-slate-600">—</span>
+  );
+
+  // عند مَن هو الآن — عمود ثانٍ منفصل، لأنه سؤال مختلف عن "مَن رفعه": الأول لا
+  // يتغيّر أبداً، والثاني هو بالضبط ما يجيب عليه سير العمل الحالي.
+  // في بطاقة الجوال (بلا رأس جدول يسمّي الأعمدة) لا تُعرض "—" فارغة، بخلاف
+  // الجدول حيث الخانة الفارغة جزء من الاصطفاف.
+  const hasCurrentHolder =
+    (request.status === "DELEGATED" && !!request.delegatedTo) ||
+    (request.status === "PENDING" && !!request.currentReviewer);
+  const withNode =
+    request.status === "DELEGATED" && request.delegatedTo ? (
+      <span className="flex items-center gap-1 min-w-0 text-purple-500 dark:text-purple-400 font-bold">
+        <UserCheck className="w-3 h-3 shrink-0" /> <span className="truncate">{request.delegatedTo.name}</span>
       </span>
     ) : request.status === "PENDING" && request.currentReviewer ? (
-      // طلبي أنا وما زال قيد المراجعة — أهم ما أريد معرفته هو عند مَن هو الآن.
-      <span className="flex items-center gap-1 text-primary font-bold">
-        <ChevronRight className="w-3 h-3 shrink-0" /> عند: {request.currentReviewer.name}
+      <span className="flex items-center gap-1 min-w-0 text-primary font-bold">
+        <ChevronRight className="w-3 h-3 shrink-0" /> <span className="truncate">{request.currentReviewer.name}</span>
       </span>
-    ) : null;
+    ) : (
+      <span className="text-slate-300 dark:text-slate-600">—</span>
+    );
 
   const actionsNode = (
     <div className="flex items-center gap-1 shrink-0" onClick={e => e.stopPropagation()}>
@@ -271,19 +283,20 @@ function RequestCard({
           توزيع رأس الجدول أعلى القائمة، فلا شيء يزدحم فوق شيء آخر. */}
       <div className={`hidden lg:grid ${TABLE_GRID_COLS} items-center gap-3 px-3 py-2.5`}>
         <span className="min-w-0 truncate text-sm font-bold text-slate-800 dark:text-slate-100">{request.title}</span>
-        <span className={`inline-flex w-fit items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full ${status.bg} ${status.color}`}>
-          <StatusIcon className="w-3 h-3" />{status.label}
-        </span>
         <span className={`inline-flex w-fit text-[10px] font-bold px-2 py-0.5 rounded-full ${priority.bg} ${priority.color}`}>
           {priority.label}
+        </span>
+        <span className={`inline-flex w-fit items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full ${status.bg} ${status.color}`}>
+          <StatusIcon className="w-3 h-3" />{status.label}
         </span>
         {catInfo ? (
           <span className={`inline-flex w-fit truncate text-[10px] font-bold px-2 py-0.5 rounded-full border ${catInfo.bg} ${catInfo.color} ${catInfo.border}`}>
             {catInfo.label}
           </span>
         ) : <span className="text-slate-300 dark:text-slate-600">—</span>}
+        <div className="min-w-0 text-[11px]">{raisedByNode}</div>
         <div className="min-w-0 text-[11px] leading-tight space-y-0.5">
-          {whoNode || <span className="text-slate-300 dark:text-slate-600">—</span>}
+          {withNode}
           {request.chain && (
             <span className="flex items-center gap-1 text-indigo-400 truncate">
               <GitBranch className="w-3 h-3 shrink-0" /> <span className="truncate">{request.chain.name}</span>
@@ -314,7 +327,8 @@ function RequestCard({
           </div>
 
           <div className="flex items-center gap-2 mt-1 flex-wrap text-[11px] sm:text-[10px] text-slate-400 dark:text-slate-500">
-            {whoNode}
+            {raisedByNode}
+            {hasCurrentHolder && withNode}
             <span className="flex items-center gap-1"><Calendar className="w-3 h-3" />{timeAgo(request.createdAt)}</span>
             {request.chain && (
               <span className="flex items-center gap-1 text-indigo-400">
@@ -658,10 +672,11 @@ export default function RequestsClient({ requests: initial, canManage, canReview
           {/* رأس الجدول — لسطح المكتب فقط، بنفس أعمدة كل صف بالحرف. */}
           <div className={`hidden lg:grid ${TABLE_GRID_COLS} items-center gap-3 px-3 pb-1 text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider`}>
             <span>العنوان</span>
-            <span>الحالة</span>
             <span>الأولوية</span>
+            <span>الحالة</span>
             <span>القسم</span>
-            <span>المسؤول / الجهة</span>
+            <span>رفعه</span>
+            <span>عند الآن</span>
             <span>التاريخ</span>
             <span className="text-left pl-1">إجراءات</span>
           </div>

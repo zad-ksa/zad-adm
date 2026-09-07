@@ -1,8 +1,8 @@
 "use client";
 
-import { useMemo, useState, useTransition } from "react";
+import { useEffect, useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { Palette, Plus, Filter, AlertTriangle, Loader2, Paperclip } from "lucide-react";
+import { Palette, Plus, Filter, AlertTriangle, Loader2, Paperclip, LayoutGrid, List } from "lucide-react";
 import DesignRequestCard, { type DesignRequestCardData } from "@/components/design-requests/DesignRequestCard";
 import { markDesignRequestComplete, deleteDesignRequest, startDesignRequest } from "@/app/actions/designRequests";
 import type { DesignRequestProgress } from "@/lib/designRequestProgress";
@@ -52,6 +52,12 @@ type Item = {
   expectedCompletionAt: number;
 };
 
+type ViewMode = "cards" | "list";
+
+// تفضيل عرض شخصي بحت (بطاقات/قائمة) — يُحفظ محلياً في متصفح كل مستخدم، بلا
+// حقل جديد في قاعدة البيانات. نفس النمط المتّبع في صفحة الاستبيانات المخصصة.
+const VIEW_MODE_STORAGE_KEY = "zad_design_requests_view_mode";
+
 export default function DesignRequestsClient({
   initialItems,
   charities,
@@ -99,6 +105,25 @@ export default function DesignRequestsClient({
   const [editingId, setEditingId] = useState<string | null>(null);
   const [isTypesOpen, setIsTypesOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [viewMode, setViewMode] = useState<ViewMode>("cards");
+
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(VIEW_MODE_STORAGE_KEY);
+      if (saved === "cards" || saved === "list") setViewMode(saved);
+    } catch {
+      /* localStorage غير متاح — يبقى العرض الافتراضي (بطاقات) */
+    }
+  }, []);
+
+  const changeViewMode = (mode: ViewMode) => {
+    setViewMode(mode);
+    try {
+      localStorage.setItem(VIEW_MODE_STORAGE_KEY, mode);
+    } catch {
+      /* تجاهل — التبديل الحالي يعمل حتى لو تعذّر حفظ التفضيل */
+    }
+  };
 
   const filtered = useMemo(() => {
     const rows = initialItems.filter((it) => {
@@ -322,6 +347,33 @@ export default function DesignRequestsClient({
           </div>
 
           <div className="flex items-center gap-2">
+            {/* تفضيل العرض — بطاقات أو قائمة، يُحفظ لهذا المستخدم في متصفحه */}
+            <div className="flex items-center gap-1 p-1 bg-slate-50 dark:bg-[#111] border border-slate-100 dark:border-slate-800/80 rounded-xl">
+              <button
+                onClick={() => changeViewMode("cards")}
+                title="عرض بطاقات"
+                aria-pressed={viewMode === "cards"}
+                className={`p-2 rounded-lg transition-all ${
+                  viewMode === "cards"
+                    ? "bg-white dark:bg-[#222] text-primary dark:text-teal-300 shadow-sm"
+                    : "text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+                }`}
+              >
+                <LayoutGrid className="w-4 h-4" />
+              </button>
+              <button
+                onClick={() => changeViewMode("list")}
+                title="عرض قائمة"
+                aria-pressed={viewMode === "list"}
+                className={`p-2 rounded-lg transition-all ${
+                  viewMode === "list"
+                    ? "bg-white dark:bg-[#222] text-primary dark:text-teal-300 shadow-sm"
+                    : "text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+                }`}
+              >
+                <List className="w-4 h-4" />
+              </button>
+            </div>
             <button
               onClick={() => setIsTypesOpen(true)}
               title="تعديل أنواع التصاميم ومدد تنفيذها"
@@ -371,12 +423,13 @@ export default function DesignRequestsClient({
           </p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+        <div className={viewMode === "cards" ? "grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4" : "flex flex-col gap-3"}>
           {filtered.map((it) => (
             <DesignRequestCard
               key={it.request.id}
               request={it.request}
               progress={it.progress}
+              variant={viewMode === "list" ? "list" : "card"}
               onOpenLog={() => setLogRequestId(it.request.id)}
               actions={
                 it.request.status === "REVISION_REQUESTED" ? (

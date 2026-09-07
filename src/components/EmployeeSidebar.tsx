@@ -12,7 +12,7 @@ import ZadLogo from "@/components/ZadLogo";
 import { hasPermission } from "@/lib/permissions";
 import { useRoleLabels } from "@/components/RoleLabelsProvider";
 import { getSidebarCharities } from "@/app/actions/charity";
-import { ChevronDown, Target, Scale, DollarSign, Mail, Palette, LayoutTemplate } from "lucide-react";
+import { ChevronDown, Target, Scale, DollarSign, Mail, Palette } from "lucide-react";
 import dynamic from "next/dynamic";
 import PrivacyPolicyModal from "@/components/PrivacyPolicyModal";
 
@@ -192,9 +192,9 @@ export default function EmployeeSidebar({
   if (can("manage_workflow")) {
     navItems.push({ label: "سلاسل الاعتماد", href: "/main/workflow-settings", icon: GitBranch });
   }
-  if (can("manage_landing")) {
-    navItems.push({ label: "الواجهة الرئيسية", href: "/main/landing-settings", icon: LayoutTemplate });
-  }
+  // التحكم في الواجهة الرئيسية مقصود ألا يكون له رابط في القائمة الجانبية —
+  // بطاقته في /main/admin (لوحة التحكم) هي المدخل الوحيد له، فلا يتكرر الوصول
+  // لنفس الصفحة بطريقتين.
 
   const sidebarContent = (
     <div className="bg-white dark:bg-slate-900 flex flex-col h-full border-l border-slate-200 dark:border-slate-800 shadow-[4px_0_24px_rgba(0,0,0,0.02)] relative transition-all duration-300">
@@ -384,7 +384,7 @@ export default function EmployeeSidebar({
               {isExpanded && <div className="h-px bg-slate-100 dark:bg-slate-800 mx-2" />}
               {renderGroup("زاد", ["البريد الداخلي", "الاعتمادات", "الأخبار والإنجازات", "محاضر الاجتماعات", "المهام والمنجزات", "مهامي"])}
               {isExpanded && <div className="h-px bg-slate-100 dark:bg-slate-800 mx-2" />}
-              {renderGroup("لوحة التحكم", ["لوحة التحكم", "سلاسل الاعتماد", "الواجهة الرئيسية"])}
+              {renderGroup("لوحة التحكم", ["لوحة التحكم", "سلاسل الاعتماد"])}
             </>
           );
         })()}

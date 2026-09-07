@@ -116,6 +116,11 @@ const ACTION_CONFIG: Record<Action, { label: string; color: string; icon: any }>
 
 
 
+// شبكة الأعمدة المشتركة بين رأس الجدول وكل صف — نفس التوزيع بالحرف في الاثنين
+// هو ما يجعلها تصطف كجدول فعلي بدل تكديس كل شيء فوق بعضه. لا تظهر إلا من
+// lg فأعلى؛ الجوال يبقى على تخطيط البطاقة المرن الحالي.
+const TABLE_GRID_COLS = "lg:grid-cols-[28px_minmax(0,2fr)_112px_88px_132px_minmax(160px,1fr)_92px_128px]";
+
 function timeAgo(date: string | Date) {
   const diff = Date.now() - new Date(date).getTime();
   const mins = Math.floor(diff / 60000);
@@ -212,10 +217,89 @@ function RequestCard({
   const attachments = typeof request.attachments === 'string' ? JSON.parse(request.attachments) : request.attachments;
   const hasDetails = !!(request.body || request.fileUrl || (Array.isArray(attachments) && attachments.length > 0) || request.reviewNote || request.logs.length > 0);
 
+  // من / عند مَن الطلب الآن — سطر واحد يلخّص الجهة المسؤولة الحالية، يظهر في
+  // عمود "المسؤول / الجهة" بالجدول وفي بطاقة الجوال معاً، بدل تكرار الشرط
+  // أربع مرات في مكانين مختلفين.
+  const whoNode =
+    request.status === "DELEGATED" && request.delegatedTo ? (
+      // مُحوَّل للتنفيذ — أهم ما يُعرف عنه الآن هو مَن ينفّذه.
+      <span className="flex items-center gap-1 text-purple-500 dark:text-purple-400 font-bold">
+        <UserCheck className="w-3 h-3 shrink-0" /> ينفذه: {request.delegatedTo.name}
+      </span>
+    ) : !isOwner && request.createdBy ? (
+      // ليس طلبي — أهم ما أعرفه هو مَن رفعه.
+      <span className="flex items-center gap-1 font-medium text-slate-500 dark:text-slate-400">
+        <User className="w-3 h-3 shrink-0" />
+        {request.createdBy.name}
+        <span className="opacity-70">({roleLabels[request.createdBy.role] || request.createdBy.role})</span>
+      </span>
+    ) : request.status === "PENDING" && request.currentReviewer ? (
+      // طلبي أنا وما زال قيد المراجعة — أهم ما أريد معرفته هو عند مَن هو الآن.
+      <span className="flex items-center gap-1 text-primary font-bold">
+        <ChevronRight className="w-3 h-3 shrink-0" /> عند: {request.currentReviewer.name}
+      </span>
+    ) : null;
+
+  const actionsNode = (
+    <div className="flex items-center gap-1 shrink-0" onClick={e => e.stopPropagation()}>
+      {isCurrentReviewer && (
+        <button onClick={() => onReview(request)}
+          className="flex items-center gap-1 text-xs font-bold bg-primary hover:bg-primary/90 text-white px-2.5 py-1.5 rounded-lg transition-colors">
+          <ShieldCheck className="w-3 h-3" /> مراجعة
+        </button>
+      )}
+      {request.status === "RETURNED" && isOwner && (
+        <button onClick={() => onResubmit(request)}
+          className="flex items-center gap-1 text-xs font-bold bg-amber-500 hover:bg-amber-600 text-white px-2.5 py-1.5 rounded-lg transition-colors">
+          <RefreshCw className="w-3 h-3" /> تعديل وإعادة إرسال
+        </button>
+      )}
+      {canDelete && (
+        <button onClick={() => onDelete(request.id)}
+          className="p-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 text-slate-400 hover:text-red-500 transition-colors" title="حذف">
+          <Trash2 className="w-3.5 h-3.5" />
+        </button>
+      )}
+    </div>
+  );
+
   return (
     <div className={`bg-white dark:bg-slate-800 rounded-xl border-r-4 ${priority.border} border border-slate-100 dark:border-slate-700 transition-shadow hover:shadow-sm ${hasDetails ? "cursor-pointer" : ""}`}
       onClick={hasDetails ? () => setExpanded(v => !v) : undefined}>
-      <div className="flex items-start gap-3 p-3">
+
+      {/* صف الجدول — سطح المكتب (lg فأعلى). كل معلومة في عمودها الثابت، بنفس
+          توزيع رأس الجدول أعلى القائمة، فلا شيء يزدحم فوق شيء آخر. */}
+      <div className={`hidden lg:grid ${TABLE_GRID_COLS} items-center gap-3 px-3 py-2.5`}>
+        <div className={`flex items-center justify-center w-6 h-6 rounded-md shrink-0 ${priority.bg}`} title={priority.label}>
+          <span className="text-xs">{priority.icon}</span>
+        </div>
+        <span className="min-w-0 truncate text-sm font-bold text-slate-800 dark:text-slate-100">{request.title}</span>
+        <span className={`inline-flex w-fit items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full ${status.bg} ${status.color}`}>
+          <StatusIcon className="w-3 h-3" />{status.label}
+        </span>
+        <span className={`inline-flex w-fit text-[10px] font-bold px-2 py-0.5 rounded-full ${priority.bg} ${priority.color}`}>
+          {priority.label}
+        </span>
+        {catInfo ? (
+          <span className={`inline-flex w-fit truncate text-[10px] font-bold px-2 py-0.5 rounded-full border ${catInfo.bg} ${catInfo.color} ${catInfo.border}`}>
+            {catInfo.label}
+          </span>
+        ) : <span className="text-slate-300 dark:text-slate-600">—</span>}
+        <div className="min-w-0 text-[11px] leading-tight space-y-0.5">
+          {whoNode || <span className="text-slate-300 dark:text-slate-600">—</span>}
+          {request.chain && (
+            <span className="flex items-center gap-1 text-indigo-400 truncate">
+              <GitBranch className="w-3 h-3 shrink-0" /> <span className="truncate">{request.chain.name}</span>
+            </span>
+          )}
+        </div>
+        <span className="text-[11px] text-slate-400 dark:text-slate-500 tabular-nums">{timeAgo(request.createdAt)}</span>
+        {actionsNode}
+      </div>
+
+      {/* بطاقة الجوال — دون lg. نفس المعلومات، مكدّسة بمرونة لأن الشاشة أضيق
+          من أن تحتمل جدولاً حقيقياً. */}
+      <div className="lg:hidden flex items-start gap-3 p-3">
         <div className={`mt-0.5 flex items-center justify-center w-7 h-7 rounded-lg shrink-0 ${priority.bg}`}>
           <span className="text-sm">{priority.icon}</span>
         </div>
@@ -237,52 +321,17 @@ function RequestCard({
           </div>
 
           <div className="flex items-center gap-2 mt-1 flex-wrap text-[11px] sm:text-[10px] text-slate-400 dark:text-slate-500">
-            {!isOwner && request.createdBy && (
-              <span className="flex items-center gap-1 font-medium text-slate-500 dark:text-slate-400">
-                <User className="w-3 h-3" />
-                {request.createdBy.name}
-                <span className="opacity-70">({roleLabels[request.createdBy.role] || request.createdBy.role})</span>
-              </span>
-            )}
+            {whoNode}
             <span className="flex items-center gap-1"><Calendar className="w-3 h-3" />{timeAgo(request.createdAt)}</span>
-            {request.status === "PENDING" && request.currentReviewer && (
-              <span className="flex items-center gap-1 text-primary font-bold">
-                <ChevronRight className="w-3 h-3" /> عند: {request.currentReviewer.name}
-              </span>
-            )}
             {request.chain && (
               <span className="flex items-center gap-1 text-indigo-400">
                 <GitBranch className="w-3 h-3" /> {request.chain.name}
               </span>
             )}
-            {request.status === "DELEGATED" && request.delegatedTo && (
-              <span className="flex items-center gap-1 text-purple-500 font-bold">
-                <UserCheck className="w-3 h-3" /> ينفذه: {request.delegatedTo.name}
-              </span>
-            )}
           </div>
         </div>
 
-        <div className="flex items-center gap-1 shrink-0" onClick={e => e.stopPropagation()}>
-          {isCurrentReviewer && (
-            <button onClick={() => onReview(request)}
-              className="flex items-center gap-1 text-xs font-bold bg-primary hover:bg-primary/90 text-white px-2.5 py-1.5 rounded-lg transition-colors">
-              <ShieldCheck className="w-3 h-3" /> مراجعة
-            </button>
-          )}
-          {request.status === "RETURNED" && isOwner && (
-            <button onClick={() => onResubmit(request)}
-              className="flex items-center gap-1 text-xs font-bold bg-amber-500 hover:bg-amber-600 text-white px-2.5 py-1.5 rounded-lg transition-colors">
-              <RefreshCw className="w-3 h-3" /> تعديل وإعادة إرسال
-            </button>
-          )}
-          {canDelete && (
-            <button onClick={() => onDelete(request.id)}
-              className="p-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 text-slate-400 hover:text-red-500 transition-colors" title="حذف">
-              <Trash2 className="w-3.5 h-3.5" />
-            </button>
-          )}
-        </div>
+        {actionsNode}
       </div>
 
       {hasDetails && expanded && (
@@ -613,6 +662,17 @@ export default function RequestsClient({ requests: initial, canManage, canReview
         // pb-24: the floating button sits over the last card otherwise, and on a
         // phone the last card is the one you just scrolled to.
         <div className="space-y-2 pb-24 lg:pb-0">
+          {/* رأس الجدول — لسطح المكتب فقط، بنفس أعمدة كل صف بالحرف. */}
+          <div className={`hidden lg:grid ${TABLE_GRID_COLS} items-center gap-3 px-3 pb-1 text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider`}>
+            <span />
+            <span>العنوان</span>
+            <span>الحالة</span>
+            <span>الأولوية</span>
+            <span>القسم</span>
+            <span>المسؤول / الجهة</span>
+            <span>التاريخ</span>
+            <span className="text-left pl-1">إجراءات</span>
+          </div>
           {filtered.map(r => (
             <RequestCard key={r.id} request={r} canManage={canManage} sessionId={sessionId}
               allEmployees={allEmployees}

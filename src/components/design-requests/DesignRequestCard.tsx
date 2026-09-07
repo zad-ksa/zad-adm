@@ -13,6 +13,7 @@ import {
   CalendarClock,
   Hammer,
   History,
+  ChevronDown,
 } from "lucide-react";
 import { useState, type ReactNode } from "react";
 import type { DesignRequestProgress } from "@/lib/designRequestProgress";
@@ -95,19 +96,65 @@ export default function DesignRequestCard({
   footer?: ReactNode;
   /**
    * "card" (default, unchanged) sits in a grid and stretches to match its row.
-   * "list" is a denser single-column row — same content, tighter padding, and
-   * the metadata block wraps inline instead of stacking one fact per line.
-   * Opt-in only: the charity portal renders this same component and must keep
-   * getting exactly the "card" markup it always has.
+   * "list" collapses each request to a single line — badge, charity, title —
+   * that expands in place to the full detail (same content as "card") when
+   * clicked. Opt-in only: the charity portal renders this same component and
+   * must keep getting exactly the "card" markup it always has.
    */
   variant?: "card" | "list";
 }) {
   const [expanded, setExpanded] = useState(false);
   const isList = variant === "list";
+  // Only meaningful in list mode — a card is always "open". Resets to closed
+  // whenever the underlying request changes identity (key changes on the
+  // component), which is what keeps a freshly-completed request from staying
+  // expanded when it re-sorts into a different tab.
+  const [rowOpen, setRowOpen] = useState(false);
+  const isCollapsedRow = isList && !rowOpen;
 
   // A rough threshold rather than measuring the rendered box: the clamp is two
   // lines, and anything under this reliably fits in them at every card width.
   const isLongDescription = (request.description?.length ?? 0) > 110;
+
+  if (isCollapsedRow) {
+    return (
+      <button
+        type="button"
+        onClick={() => setRowOpen(true)}
+        className="design-requests-ui group w-full flex items-center gap-2.5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0A0A0A] px-4 py-2.5 shadow-sm hover:shadow-md dark:shadow-none hover:border-primary/40 dark:hover:border-teal-500/40 transition-all duration-300 text-right cursor-pointer"
+      >
+        <ChevronDown className="w-4 h-4 text-slate-300 dark:text-slate-600 shrink-0 -rotate-90 group-hover:text-primary dark:group-hover:text-teal-400 transition-colors" />
+        {request.charityName && (
+          <span
+            className="hidden sm:flex items-center gap-1 text-primary dark:text-teal-300 font-bold shrink-0"
+            style={{ fontSize: "var(--dr-fs-eyebrow)" }}
+          >
+            <Building2 className="w-3 h-3" />
+            {request.charityName}
+          </span>
+        )}
+        <span
+          className="flex-1 min-w-0 truncate font-bold text-slate-900 dark:text-slate-100"
+          style={{ fontSize: "var(--dr-fs-title)" }}
+        >
+          {request.title}
+        </span>
+        {/* الأيام المتبقية مع المرفقات معاً على الطرف الآخر من العنوان، لا
+            مزدحمة مع الجمعية والعنوان على نفس الجانب. */}
+        <DesignRequestCountdownBadge progress={progress} />
+        {request.attachments.length > 0 && (
+          <span
+            className="hidden sm:flex items-center gap-1 text-slate-400 dark:text-slate-500 shrink-0"
+            style={{ fontSize: "var(--dr-fs-eyebrow)" }}
+            title={`${request.attachments.length} مرفق`}
+          >
+            <Paperclip className="w-3 h-3" />
+            {request.attachments.length}
+          </span>
+        )}
+      </button>
+    );
+  }
 
   return (
     <div
@@ -115,6 +162,17 @@ export default function DesignRequestCard({
         isList ? "p-4" : "h-full p-5"
       }`}
     >
+      {isList && (
+        <button
+          type="button"
+          onClick={() => setRowOpen(false)}
+          className="flex items-center gap-1.5 mb-2 text-slate-400 hover:text-primary dark:text-slate-500 dark:hover:text-teal-400 font-bold transition-colors cursor-pointer"
+          style={{ fontSize: "var(--dr-fs-eyebrow)" }}
+        >
+          <ChevronDown className="w-3.5 h-3.5" />
+          طيّ
+        </button>
+      )}
       <div className="flex items-start justify-between gap-4">
         <div className="min-w-0 flex-1 space-y-1">
           {request.charityName && (

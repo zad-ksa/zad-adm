@@ -935,63 +935,113 @@ export async function rescheduleDesignRequest(id: string, newStartDate: Date) {
   }
 }
 
-export async function rescheduleCharityQueue(charityId: string, startDate: Date) {
+/**
+ * Closes the gaps in one charity's queue, without moving its head.
+ *
+ * The anchor is the FIRST queued request's own start date — not a date somebody
+ * types. That is the only anchor that cannot surprise anyone: the request that
+ * was next stays next, and starts when it was already going to start. Everything
+ * behind it is re-chained end-to-start, which is what removes the holes left by a
+ * middle request being finished early or deleted.
+ *
+ * Two things this deliberately preserves:
+ *   - Each request keeps its OWN duration (its types plus any extension). The
+ *     previous version passed none, so every request was re-scheduled as the
+ *     default three days and a five-day design silently became a three-day one.
+ *   - A request already under a designer keeps its dates exactly. Its start
+ *     actually happened; re-deriving it would be rewriting history, so the
+ *     queue re-chains around it instead.
+ */
+export async function rescheduleCharityQueue(charityId: string | null) {
   try {
     const session = await requireDesignStaff();
-    void session;
 
-    const charity = await prisma.charity.findUnique({ where: { id: charityId }, select: { name: true } });
-    if (!charity) return { error: "الجمعية غير موجودة" };
+    const charity = charityId
+      ? await prisma.charity.findUnique({ where: { id: charityId }, select: { name: true } })
+      : null;
+    if (charityId && !charity) return { error: "الجمعية غير موجودة" };
 
-    return prisma.$transaction(
+    return await prisma.$transaction(
       async (tx) => {
-        // Fetch all PENDING requests for this charity, ordered by submittedAt
+        // Ordered by the schedule itself, because the schedule IS the order.
         const requests = await tx.designRequest.findMany({
           where: { charityId, status: "PENDING" },
-          orderBy: { submittedAt: "asc" },
+          orderBy: { scheduledStartDate: "asc" },
+          select: {
+            id: true,
+            startedAt: true,
+            submittedAt: true,
+            baseWorkingDays: true,
+            addedDays: true,
+            scheduledStartDate: true,
+            expectedCompletionDate: true,
+          },
         });
 
-        let currentTail: Date | undefined = undefined;
+        if (requests.length === 0) return { error: "لا توجد طلبات في الدور" as const };
 
-        for (let i = 0; i < requests.length; i++) {
-          const req = requests[i];
-          
-          // The first request uses the startDate. 
-          // The subsequent requests use the currentTail (which is the expectedCompletionDate of the previous request).
-          // But wait, computeDesignRequestDates takes `submittedAt` and `baseTailDate`.
-          // If we pass `req.submittedAt` and `currentTail`, it handles it correctly!
-          // BUT for the first request, we want it to start EXACTLY at `startDate` regardless of its original `submittedAt`.
-          // So for the first request, we pass `startDate` as `submittedAt` and NO tail.
-          
-          let dates;
-          if (i === 0) {
-            dates = computeDesignRequestDates(startDate);
-          } else {
-            dates = computeDesignRequestDates(req.submittedAt, currentTail);
+        // The head of the queue defines the anchor and does not move.
+        let tail: Date = requests[0].scheduledStartDate;
+
+        const schedule: { id: string; start: Date; finish: Date }[] = [];
+
+        for (const req of requests) {
+          if (req.startedAt) {
+            // Under way — left exactly where it is; the rest queue behind it.
+            tail =
+              req.expectedCompletionDate > tail ? req.expectedCompletionDate : tail;
+            continue;
           }
 
-          currentTail = dates.expectedCompletionDate;
+          const days = req.baseWorkingDays + req.addedDays;
+          const dates = computeDesignRequestDates(req.submittedAt, tail, days);
+          tail = dates.expectedCompletionDate;
 
-          await tx.designRequest.update({
-            where: { id: req.id },
-            data: {
-              scheduledStartDate: dates.scheduledStartDate,
-              expectedCompletionDate: dates.expectedCompletionDate,
-              // We could also update submittedAt to startDate for the first one, but let's just leave submittedAt as is
-              // because submittedAt is meant to be the real submission date.
-            },
+          schedule.push({
+            id: req.id,
+            start: dates.scheduledStartDate,
+            finish: dates.expectedCompletionDate,
           });
         }
 
+        if (schedule.length === 0) {
+          return { error: "كل الطلبات في الدور قيد التنفيذ بالفعل" as const };
+        }
+
+        // One statement, not one per request. The loop used to await an update
+        // per row against a database in ap-southeast-2, which spent the whole
+        // interactive-transaction budget on round trips before finishing.
+        await tx.$executeRaw`
+          UPDATE "DesignRequest" AS d
+             SET "scheduledStartDate"     = v.start,
+                 "expectedCompletionDate" = v.finish,
+                 "updatedAt"              = NOW()
+            FROM (VALUES ${Prisma.join(
+                    schedule.map(
+                      (u) => Prisma.sql`(${u.id}, ${u.start}::timestamp, ${u.finish}::timestamp)`
+                    )
+                  )}) AS v(id, start, finish)
+           WHERE d.id = v.id`;
+
+        await logDesignEvents(
+          schedule.map((u, i) => ({
+            requestId: u.id,
+            kind: "QUEUE_REORDERED" as const,
+            actor: staffActor(session),
+            note: `رصّ الدور — الترتيب ${i + 1} من ${schedule.length}`,
+          })),
+          tx
+        );
+
         revalidatePath("/main/design-requests");
         revalidateCharityPortal(charity?.name);
-        return { success: true };
+        return { success: true as const, moved: schedule.length };
       },
-      { isolationLevel: "Serializable" }
+      { isolationLevel: "Serializable", timeout: 20_000, maxWait: 10_000 }
     );
   } catch (error: any) {
-    console.error("Error rescheduling charity queue:", error);
-    return { error: error.message || "حدث خطأ أثناء إعادة ترتيب تنفيذ الجمعية" };
+    console.error("Error compacting charity queue:", error);
+    return { error: error.message || "تعذّرت إعادة ترتيب الدور" };
   }
 }
 

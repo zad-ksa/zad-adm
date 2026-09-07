@@ -31,6 +31,7 @@ import {
   deletePermanently,
   deleteDraft,
 } from "@/app/actions/mail";
+import { notifyMailUnreadChanged } from "@/lib/mailBadge";
 import ComposeModal from "./ComposeModal";
 import ConfirmModal from "@/components/ui/ConfirmModal";
 import CircularLoader from "@/components/CircularLoader";
@@ -171,7 +172,11 @@ export default function MailClient({ session, employees, initialTab, initialMail
 
   const handleOpenMail = (mailId: string, isUnread: boolean) => {
     if (isUnread) {
-      markAsRead(mailId).catch((error) => console.error("Error marking mail as read:", error));
+      markAsRead(mailId)
+        // The sidebar badge is rendered by a layout that does not re-render
+        // on navigation, so it has to be told rather than left to notice.
+        .then(notifyMailUnreadChanged)
+        .catch((error) => console.error("Error marking mail as read:", error));
     }
   };
 

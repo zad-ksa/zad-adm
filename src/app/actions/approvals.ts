@@ -417,7 +417,14 @@ export async function getVisibleRequestsAndMarkRead() {
   const [requests] = await Promise.all([
     prisma.request.findMany({
       ...RELATION_JOIN,
-      where: visibleRequestFilter(session.id, isExec(session.role, session.permissions || [])),
+      where: visibleRequestFilter(session.id, {
+        canManage: isExec(session.role, session.permissions || []),
+        canReviewAll: hasPermission(
+          session.role,
+          session.permissions || [],
+          "review_all_requests"
+        ),
+      }),
       include: REQUEST_INCLUDE,
     }),
     prisma.requestNotification.updateMany({

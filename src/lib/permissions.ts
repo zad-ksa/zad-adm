@@ -45,6 +45,7 @@ export const PERMISSION_GROUPS = [
       { id: "delete_design_requests", label: "حذف طلبات التصاميم نهائياً" },
       { id: "view_requests", label: "الاعتمادات (رفع طلب ومتابعته)" },
       { id: "manage_requests", label: "إدارة الاعتمادات (اعتماد / رفض / إرجاع)" },
+      { id: "review_all_requests", label: "متابعة جميع الاعتمادات وأين وصلت (اطّلاع فقط)" },
       { id: "manage_workflow", label: "إعداد سلاسل اعتماد الطلبات" },
       { id: "manage_knowledge_tree", label: "شجرة المعرفة" },
       { id: "manage_landing", label: "التحكم في الواجهة الرئيسية" },
@@ -81,5 +82,7 @@ export function hasPermission(
   if (permissions.includes("developer_mode")) return true;
   // manage_requests يشمل view_requests تلقائياً
   if (required === "view_requests" && permissions.includes("manage_requests")) return true;
+  // review_all_requests كذلك: من يتابع كل الطلبات لا بد أن يفتح الصفحة أصلاً.
+  if (required === "view_requests" && permissions.includes("review_all_requests")) return true;
   return permissions.includes(required);
 }

@@ -61,11 +61,22 @@ export const RELATION_JOIN = { relationLoadStrategy: "join" } as const;
  *
  * `canManage` adds nothing but the chainless-request fallback: a request with no
  * workflow has no named approver, and without this it could never be actioned.
+ *
+ * `canReviewAll` is the one thing that does lift the scope, and it is a
+ * permission of its own rather than a side effect of managing: seeing every
+ * request in the company is a different job from approving the ones sent to
+ * you, and it was deliberately taken away from manage_requests. Whoever holds
+ * it reads everything; the per-request action gates are untouched, so they
+ * still cannot approve anything that was not routed to them.
  */
 export function visibleRequestFilter(
   employeeId: string,
-  canManage: boolean
+  { canManage, canReviewAll = false }: { canManage: boolean; canReviewAll?: boolean }
 ): Prisma.RequestWhereInput {
+  // An empty filter is every row — which is exactly what this permission
+  // means, and cheaper than an OR that would match them all anyway.
+  if (canReviewAll) return {};
+
   return {
     OR: [
       { createdById: employeeId },

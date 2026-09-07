@@ -5,7 +5,7 @@ import {
   Plus, X, Send, Loader2, AlertCircle, CheckCircle2, Clock,
   FileText, Link2, ExternalLink, Trash2,
   RefreshCw, MessageSquare, CornerUpLeft, Check, ShieldCheck,
-  User, Calendar, ArrowRight, GitBranch, UserCheck, ChevronRight,
+  User, Calendar, ArrowRight, GitBranch, UserCheck, ChevronRight, Eye,
 } from "lucide-react";
 import {
   createRequest, reviewRequest, resubmitRequest, deleteRequest,
@@ -77,6 +77,12 @@ type Props = {
   requests: Request[];
   /** Only the fallback approver for requests with no chain — not "sees all". */
   canManage: boolean;
+  /**
+   * Holder of review_all_requests: reads every request in the company and
+   * where it currently sits, in a lane of its own. Grants no authority over
+   * any of them — the per-request action gates are unchanged.
+   */
+  canReviewAll: boolean;
   sessionId: string;
   allEmployees: Employee[];
 };
@@ -336,7 +342,7 @@ function RequestCard({
 }
 
 // ── المكون الرئيسي ────────────────────────────────────────────────────────────
-export default function RequestsClient({ requests: initial, canManage, sessionId, allEmployees }: Props) {
+export default function RequestsClient({ requests: initial, canManage, canReviewAll, sessionId, allEmployees }: Props) {
   const [requests, setRequests] = useState<Request[]>(initial);
   const [showForm, setShowForm] = useState(false);
   const [resubmitReq, setResubmitReq] = useState<Request | null>(null);
@@ -344,7 +350,7 @@ export default function RequestsClient({ requests: initial, canManage, sessionId
   const [filterStatus, setFilterStatus] = useState<Status | "ALL">("PENDING");
   // Opens on whichever lane has work in it. Someone who approves nothing should
   // land on their own requests, not on an empty approvals list.
-  const [tab, setTab] = useState<"AWAITING" | "MINE" | "DECIDED">(() =>
+  const [tab, setTab] = useState<"AWAITING" | "MINE" | "DECIDED" | "ALL">(() =>
     initial.some(
       (r) =>
         r.status === "PENDING" &&
@@ -422,7 +428,14 @@ export default function RequestsClient({ requests: initial, canManage, sessionId
       )
   );
 
-  const lane = tab === "AWAITING" ? awaitingMe : tab === "MINE" ? mine : decided;
+  // Everything, for whoever is watching the pipeline rather than working it.
+  // Deliberately its own lane: mixing the company's requests into "awaiting my
+  // approval" is exactly what would make the list stop telling you what needs
+  // doing — which is the reason the lanes were split in the first place.
+  const all = canReviewAll ? requests : [];
+
+  const lane =
+    tab === "AWAITING" ? awaitingMe : tab === "MINE" ? mine : tab === "DECIDED" ? decided : all;
   const filtered = filterStatus === "ALL" ? lane : lane.filter(r => r.status === filterStatus);
   const counts = {
     ALL:      lane.length,
@@ -552,6 +565,27 @@ export default function RequestsClient({ requests: initial, canManage, sessionId
             </span>
           </button>
         )}
+        {canReviewAll && (
+          <button
+            onClick={() => setTab("ALL")}
+            aria-pressed={tab === "ALL"}
+            className={`shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-colors ${
+              tab === "ALL"
+                ? "bg-primary text-white"
+                : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700"
+            }`}
+          >
+            <Eye className="w-3.5 h-3.5" />
+            متابعة الطلبات
+            <span
+              className={`px-1.5 rounded ${
+                tab === "ALL" ? "bg-white/20" : "bg-slate-200 dark:bg-slate-700"
+              }`}
+            >
+              {all.length}
+            </span>
+          </button>
+        )}
       </div>
 
       {/* قائمة الطلبات */}
@@ -565,7 +599,9 @@ export default function RequestsClient({ requests: initial, canManage, sessionId
                 ? "لا شيء بانتظار اعتمادك"
                 : tab === "DECIDED"
                   ? "لم تعتمد أي طلب بعد"
-                  : "لم ترفع أي طلب بعد"}
+                  : tab === "ALL"
+                    ? "لا توجد طلبات في النظام"
+                    : "لم ترفع أي طلب بعد"}
           </p>
           {filterStatus === "ALL" && tab === "MINE" && (
             <button onClick={() => setShowForm(true)} className="mt-3 text-xs text-primary hover:underline font-bold">

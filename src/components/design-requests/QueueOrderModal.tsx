@@ -104,6 +104,11 @@ export default function QueueOrderModal({
 }) {
   const locked = useMemo(() => rows.filter((r) => r.startedAt), [rows]);
   const [order, setOrder] = useState<QueueRow[]>(() => rows.filter((r) => !r.startedAt));
+
+  // Nothing to swap with. Saving a queue of one would still recompute its
+  // dates from today and quietly move a delivery the charity was promised,
+  // so the modal drops to a read-only view of the schedule instead.
+  const canReorder = order.length > 1;
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -180,8 +185,9 @@ export default function QueueOrderModal({
 
         <div className="p-5 overflow-y-auto space-y-4">
           <p className="text-[12px] leading-relaxed text-slate-600 dark:text-slate-400 bg-slate-50 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800 rounded-xl p-3">
-            رتّب الطلبات بالسحب. كل طلب يبدأ حين ينتهي الذي قبله، فتتغيّر مواعيد
-            البدء والتسليم تبعاً للترتيب فور الحفظ.
+            {canReorder
+              ? "رتّب الطلبات بالسحب. كل طلب يبدأ حين ينتهي الذي قبله، فتتغيّر مواعيد البدء والتسليم تبعاً للترتيب فور الحفظ."
+              : "مواعيد البدء والتسليم كما هي مجدولة الآن. ويظهر الترتيب قابلاً للتغيير حين يكون في الطابور أكثر من طلب."}
           </p>
 
           {locked.length > 0 && (
@@ -219,6 +225,32 @@ export default function QueueOrderModal({
               <p className="text-[12px] text-slate-400 dark:text-slate-500 py-6 text-center">
                 لا توجد طلبات لم تبدأ بعد لهذه الجهة.
               </p>
+            ) : !canReorder ? (
+              // A drag handle and two arrows on a single row are controls that
+              // do nothing — the list is just the schedule, read.
+              <ul className="space-y-2">
+                {order.map((row, i) => (
+                  <li
+                    key={row.id}
+                    className="flex items-start gap-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0d0d0d] p-3"
+                  >
+                    <span className="mt-0.5 shrink-0 w-6 h-6 rounded-lg bg-primary/10 text-primary dark:bg-teal-500/15 dark:text-teal-400 grid place-items-center text-[11px] font-black tabular-nums">
+                      {i + 1}
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-[13px] font-bold text-slate-900 dark:text-slate-100 break-words leading-snug">
+                        {row.title}
+                      </p>
+                      <p className="mt-0.5 text-[11px] text-slate-500 dark:text-slate-400 tabular-nums">
+                        {row.scheduledStartDate} ← {row.expectedCompletionDate}
+                        {typeof row.totalWorkingDays === "number"
+                          ? ` · ${row.totalWorkingDays} يوم عمل`
+                          : ""}
+                      </p>
+                    </div>
+                  </li>
+                ))}
+              </ul>
             ) : (
               <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
                 <SortableContext items={order.map((r) => r.id)} strategy={verticalListSortingStrategy}>
@@ -273,8 +305,9 @@ export default function QueueOrderModal({
             disabled={isSubmitting}
             className="h-9 px-4 rounded-xl text-[12px] font-bold text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors disabled:opacity-50"
           >
-            إلغاء
+            {canReorder ? "إلغاء" : "إغلاق"}
           </button>
+          {canReorder && (
           <button
             type="button"
             onClick={handleSave}
@@ -284,6 +317,7 @@ export default function QueueOrderModal({
             {isSubmitting && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
             حفظ الترتيب
           </button>
+          )}
         </footer>
       </div>
     </div>

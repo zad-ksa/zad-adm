@@ -10,6 +10,7 @@ import {
   CalendarPlus,
   FileCheck2,
   ListOrdered,
+  CalendarClock,
   Hammer,
   History,
 } from "lucide-react";
@@ -142,7 +143,10 @@ export default function DesignRequestCard({
                 }`}
                 style={{ fontSize: "var(--dr-fs-body)" }}
               >
-                {request.description}
+                {/* A brief often IS a link — a reference, a folder, a previous
+                    design — and pasting it as dead text means retyping it into
+                    the address bar by hand. */}
+                <LinkifiedText text={request.description} />
               </p>
               {/* Only offered when the text is actually long enough to be cut.
                   A "show more" that reveals nothing is worse than none. */}
@@ -217,6 +221,23 @@ export default function DesignRequestCard({
             <Calendar className="w-4 h-4 text-slate-400 dark:text-slate-500 shrink-0" />
             <span>الرفع:</span> <span className="font-bold text-slate-700 dark:text-slate-200">{request.submittedAt}</span>
           </span>
+
+          {/* When the work is due to START.
+
+              The card carried this date all along and never showed it, so it
+              could say when a design was requested and when it lands but not
+              when anyone picks it up — which is the question a charity waiting
+              in a queue actually asks. Dropped once work has begun: a planned
+              start is only news until it happens. */}
+          {request.status === "PENDING" && !request.startedAt && (
+            <span className="flex items-center gap-2">
+              <CalendarClock className="w-4 h-4 text-slate-400 dark:text-slate-500 shrink-0" />
+              <span>بدء التنفيذ:</span>{" "}
+              <span className="font-bold text-slate-700 dark:text-slate-200">
+                {request.scheduledStartDate}
+              </span>
+            </span>
+          )}
           {request.status === "COMPLETED" ? (
             <span className="flex items-center gap-2">
               <CalendarCheck className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />

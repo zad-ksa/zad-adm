@@ -24,6 +24,13 @@ export default async function RequestsPage() {
   // workflow chain and therefore no named approver.
   const canManage = hasPermission(session.role, session.permissions || [], "manage_requests");
 
+  // Watching the whole pipeline, without gaining any power over it.
+  const canReviewAll = hasPermission(
+    session.role,
+    session.permissions || [],
+    "review_all_requests"
+  );
+
   // Everything below is independent of everything else below, so it goes out at
   // once.
   //
@@ -38,7 +45,7 @@ export default async function RequestsPage() {
   const [requests, allEmployees] = await Promise.all([
     prisma.request.findMany({
       ...RELATION_JOIN,
-      where: visibleRequestFilter(session.id, canManage),
+      where: visibleRequestFilter(session.id, { canManage, canReviewAll }),
       include: REQUEST_INCLUDE,
     }),
     prisma.employee.findMany({
@@ -67,6 +74,7 @@ export default async function RequestsPage() {
     <RequestsClient
       requests={sorted as any}
       canManage={canManage}
+      canReviewAll={canReviewAll}
       sessionId={session.id}
       allEmployees={hasSomethingToReview ? (allEmployees as any) : []}
     />

@@ -6,6 +6,8 @@ import { useState, useEffect, useRef } from "react";
 import { Menu } from "lucide-react";
 import { getUnreadNotificationsCount } from "@/app/actions/approvals";
 import { getUnreadNotifications } from "@/app/actions/notifications";
+import { getUnreadCount as getUnreadMailCount } from "@/app/actions/mail";
+import { MAIL_UNREAD_EVENT } from "@/lib/mailBadge";
 import FloatingHeader from "@/components/FloatingHeader";
 
 import DeveloperRoleSwitcher from "@/components/DeveloperRoleSwitcher";
@@ -27,6 +29,41 @@ export default function DashboardLayoutClient({ children, session, unreadRequest
     }
   }, [pathname]);
 
+  /**
+   * The badge used to be seeded once by the server layout and never touched
+   * again. Layouts persist across client navigation, so reading every message
+   * left the old number sitting in the sidebar until a full page reload.
+   *
+   * Two triggers cover it: every navigation (so it is right the moment you
+   * leave the mail screen) and an event the mail screen fires when it marks
+   * something read (so it is right while you are still on it).
+   *
+   * `alive` matters more than it looks: navigating twice quickly starts two
+   * requests, and without the guard the slower one can land last and paint a
+   * count that was already out of date when it was asked for.
+   */
+  useEffect(() => {
+    let alive = true;
+
+    const refresh = async () => {
+      try {
+        const count = await getUnreadMailCount();
+        if (alive) setUnreadMails(count);
+      } catch {
+        // A failed count leaves the previous badge in place, which is better
+        // than blanking it and claiming there is no unread mail.
+      }
+    };
+
+    void refresh();
+    window.addEventListener(MAIL_UNREAD_EVENT, refresh);
+
+    return () => {
+      alive = false;
+      window.removeEventListener(MAIL_UNREAD_EVENT, refresh);
+    };
+  }, [pathname]);
+
   // polling للإشعارات كل 60 ثانية (يتوقف إذا كان التبويب في الخلفية)
   useEffect(() => {
     let active = true;
@@ -35,6 +72,11 @@ export default function DashboardLayoutClient({ children, session, unreadRequest
       try {
         const count = await getUnreadNotificationsCount();
         if (active) setUnreadRequests(count);
+
+        // Same 60s tick as the approvals badge: cheap, and it keeps the mail
+        // count honest even if a message is read in another tab.
+        const mailCount = await getUnreadMailCount();
+        if (active) setUnreadMails(mailCount);
 
         const appNotifsRes = await getUnreadNotifications();
         if (active && appNotifsRes && !appNotifsRes.error) {

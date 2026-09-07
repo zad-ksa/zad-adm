@@ -161,17 +161,22 @@ export default function DesignRequestsPortalClient({
             طلب تصميم جديد
           </button>
 
-          {/* Which of your own designs comes next is your call. Offered only
-              when there is more than one waiting — reordering a queue of one
-              is a button that does nothing. */}
-          {queueRows.filter((r) => !r.startedAt).length > 1 && (
+          {/* Shown whenever anything is scheduled at all, not only when there
+              are two to swap.
+
+              It was gated on "more than one waiting", on the reasoning that a
+              queue of one cannot be reordered. True — but it made the schedule
+              itself invisible to seven of the eight charities, which have one
+              request queued or none. Seeing when your design starts and lands
+              is the point; rearranging it is the extra. */}
+          {queueRows.length > 0 && (
             <button
               onClick={() => setIsQueueOpen(true)}
               className="w-full h-9 flex items-center justify-center gap-1.5 rounded-xl bg-slate-100 text-slate-600 dark:bg-[#111] dark:text-slate-400 border border-transparent dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 transition-colors font-bold"
               style={{ fontSize: "var(--dr-fs-meta)" }}
             >
               <ListOrdered className="w-3.5 h-3.5" />
-              ترتيب التنفيذ
+              جدولة التنفيذ
             </button>
           )}
         </div>
@@ -300,13 +305,27 @@ export default function DesignRequestsPortalClient({
                 // has already started, where the card itself explains why and
                 // names who to call instead.
                 canCreate && it.request.status === "PENDING" && !it.request.startedAt ? (
-                  <button
-                    onClick={() => setEditingId(it.request.id)}
-                    className="h-9 px-4 rounded-xl bg-slate-100 text-slate-600 dark:bg-[#111] dark:text-slate-400 border border-transparent dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 transition-colors font-bold"
-                    style={{ fontSize: "var(--dr-fs-meta)" }}
-                  >
-                    تعديل
-                  </button>
+                  <div className="flex flex-wrap items-center gap-2 w-full mt-2">
+                    <button
+                      onClick={() => setEditingId(it.request.id)}
+                      className="flex-1 min-w-[72px] h-9 rounded-xl bg-slate-100 text-slate-600 dark:bg-[#111] dark:text-slate-400 border border-transparent dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 transition-colors font-bold"
+                      style={{ fontSize: "var(--dr-fs-meta)" }}
+                    >
+                      تعديل
+                    </button>
+                    {/* Reordering is a queue-level decision, so this opens the same
+                        modal as the one above the list — reached from the card
+                        because that is where you are looking when you decide this
+                        design should come sooner. */}
+                    <button
+                      onClick={() => setIsQueueOpen(true)}
+                      className="flex-1 min-w-[96px] h-9 flex items-center justify-center gap-1.5 rounded-xl bg-slate-100 text-slate-600 dark:bg-[#111] dark:text-slate-400 border border-transparent dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 transition-colors font-bold"
+                      style={{ fontSize: "var(--dr-fs-meta)" }}
+                    >
+                      <ListOrdered className="w-3.5 h-3.5" />
+                      إعادة الترتيب
+                    </button>
+                  </div>
                 ) : undefined
               }
             />

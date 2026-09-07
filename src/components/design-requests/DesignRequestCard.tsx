@@ -124,7 +124,6 @@ export default function DesignRequestCard({
         className="design-requests-ui group w-full flex items-center gap-2.5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0A0A0A] px-4 py-2.5 shadow-sm hover:shadow-md dark:shadow-none hover:border-primary/40 dark:hover:border-teal-500/40 transition-all duration-300 text-right cursor-pointer"
       >
         <ChevronDown className="w-4 h-4 text-slate-300 dark:text-slate-600 shrink-0 -rotate-90 group-hover:text-primary dark:group-hover:text-teal-400 transition-colors" />
-        <DesignRequestCountdownBadge progress={progress} />
         {request.charityName && (
           <span
             className="hidden sm:flex items-center gap-1 text-primary dark:text-teal-300 font-bold shrink-0"
@@ -140,6 +139,9 @@ export default function DesignRequestCard({
         >
           {request.title}
         </span>
+        {/* الأيام المتبقية مع المرفقات معاً على الطرف الآخر من العنوان، لا
+            مزدحمة مع الجمعية والعنوان على نفس الجانب. */}
+        <DesignRequestCountdownBadge progress={progress} />
         {request.attachments.length > 0 && (
           <span
             className="hidden sm:flex items-center gap-1 text-slate-400 dark:text-slate-500 shrink-0"

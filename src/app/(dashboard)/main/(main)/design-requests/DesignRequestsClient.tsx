@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { Palette, Plus, Filter, AlertTriangle, Loader2, Paperclip, LayoutGrid, List } from "lucide-react";
+import { Palette, Plus, Filter, AlertTriangle, Loader2, Paperclip, LayoutGrid, List, CalendarRange } from "lucide-react";
 import DesignRequestCard, { type DesignRequestCardData } from "@/components/design-requests/DesignRequestCard";
 import { markDesignRequestComplete, deleteDesignRequest, startDesignRequest } from "@/app/actions/designRequests";
 import type { DesignRequestProgress } from "@/lib/designRequestProgress";
@@ -23,6 +23,7 @@ import CopyDeliveryNotice from "@/components/design-requests/CopyDeliveryNotice"
 import LinkifiedText from "@/components/ui/LinkifiedText";
 import DesignRequestLogModal from "@/components/design-requests/DesignRequestLogModal";
 import QueueOrderModal, { type QueueRow } from "@/components/design-requests/QueueOrderModal";
+import DesignGanttModal, { type GanttItem } from "./DesignGanttModal";
 
 const DESIGN_MAX = maxBytesFor("design_request");
 const DESIGN_MAX_LABEL = maxLabelFor("design_request");
@@ -50,6 +51,8 @@ type Item = {
   progress: DesignRequestProgress;
   /** Raw due date in ms, for ordering — see page.tsx. */
   expectedCompletionAt: number;
+  /** Raw scheduled start in ms — the Gantt needs a span, not two labels. */
+  scheduledStartAt: number;
 };
 
 type ViewMode = "cards" | "list";
@@ -104,6 +107,7 @@ export default function DesignRequestsClient({
   const [extendingId, setExtendingId] = useState<string | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [isTypesOpen, setIsTypesOpen] = useState(false);
+  const [ganttNow, setGanttNow] = useState<number | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [viewMode, setViewMode] = useState<ViewMode>("cards");
 
@@ -193,6 +197,34 @@ export default function DesignRequestsClient({
         startedAt: it.request.startedAt,
         startedByName: it.request.startedByName,
       }));
+
+  /**
+   * Everything with a real place on the calendar.
+   *
+   * Drawn from initialItems rather than the current tab: the chart exists to
+   * show the whole schedule at once, and filtering it by the open lane would
+   * make it a second view of the same list. UNDER_REVIEW and REJECTED are out
+   * — one has provisional dates it may never keep, the other has no work.
+   */
+  const ganttItems: GanttItem[] = useMemo(
+    () =>
+      initialItems
+        .filter((it) =>
+          ["PENDING", "REVISION_REQUESTED", "AWAITING_REVIEW", "COMPLETED"].includes(
+            it.request.status
+          )
+        )
+        .map((it) => ({
+          id: it.request.id,
+          title: it.request.title,
+          charityName: it.request.charityName || "",
+          status: it.request.status,
+          startedAt: it.request.startedAt ?? null,
+          startMs: it.scheduledStartAt,
+          endMs: it.expectedCompletionAt,
+        })),
+    [initialItems]
+  );
 
   const handleComplete = () => {
     if (!confirmingId) return;
@@ -374,6 +406,15 @@ export default function DesignRequestsClient({
                 <List className="w-4 h-4" />
               </button>
             </div>
+            <button
+              onClick={() => setGanttNow(Date.now())}
+              title="عرض جميع التصاميم على خط زمني، كل جمعية في سطر"
+              className="h-10 px-4 flex items-center gap-2 rounded-xl bg-slate-100 text-slate-600 dark:bg-[#111] dark:text-slate-400 border border-transparent dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 transition-colors font-bold"
+              style={{ fontSize: "var(--dr-fs-meta)" }}
+            >
+              <CalendarRange className="w-4 h-4" />
+              المخطط الزمني
+            </button>
             <button
               onClick={() => setIsTypesOpen(true)}
               title="تعديل أنواع التصاميم ومدد تنفيذها"
@@ -790,6 +831,14 @@ export default function DesignRequestsClient({
             </div>
           </div>
         </div>
+      )}
+
+      {ganttNow !== null && (
+        <DesignGanttModal
+          items={ganttItems}
+          now={ganttNow}
+          onClose={() => setGanttNow(null)}
+        />
       )}
 
       {logRequestId !== null && (

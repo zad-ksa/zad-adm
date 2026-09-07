@@ -60,6 +60,9 @@ export default async function DesignRequestsPage() {
       // Milliseconds, not the formatted string above: the current-requests tab
       // is ordered by how soon delivery is due, and "١٥ سبتمبر" does not sort.
       expectedCompletionAt: r.expectedCompletionDate.getTime(),
+      // The Gantt view needs a real scale, not two formatted strings — it
+      // positions every bar by where its span falls on a shared timeline.
+      scheduledStartAt: r.scheduledStartDate.getTime(),
       request: {
         id: r.id,
         title: r.title,

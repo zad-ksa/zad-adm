@@ -71,8 +71,8 @@ export default async function AttendancePage({ params }: { params: Promise<{ nam
   // Is today a charity holiday, or is this person on leave? Either way the
   // screen should say so instead of inviting a check-in nobody needs.
   const [todayHoliday, todayLeave] = await Promise.all([
-    prisma.charityHoliday.findFirst({
-      where: { charityId: charity.id, startDate: { lte: workDate }, endDate: { gte: workDate } },
+    prisma.holiday.findFirst({
+      where: { scope: "GLOBAL", startDate: { lte: workDate }, endDate: { gte: workDate } },
       select: { name: true },
     }),
     prisma.employeeLeave.findFirst({

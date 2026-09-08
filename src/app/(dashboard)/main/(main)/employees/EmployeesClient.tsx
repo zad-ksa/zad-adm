@@ -13,7 +13,7 @@ import {
   Phone,
   Key
 } from "@/components/Icons";
-import { Edit, ShieldCheck, Building2, UserPlus, ArrowRight, Trash2, Mail } from "lucide-react";
+import { Edit, ShieldCheck, Building2, UserPlus, ArrowRight, Trash2, Mail, CalendarDays } from "lucide-react";
 import { AddEmployeeForm } from "@/components/AddEmployeeForm";
 import Link from "next/link";
 import { PERMISSION_GROUPS, ALL_PERMISSIONS, isAdmin } from "@/lib/permissions";
@@ -48,6 +48,9 @@ interface Employee {
   email?: string | null;
   role: string;
   permissions: string[];
+  /// Days of annual leave this employee is entitled to; the attendance
+  /// system spends this balance and nothing else does.
+  annualLeaveDays?: number;
   isActive: boolean;
   createdAt: Date | string;
   assignedCharities?: { charityId: string }[];
@@ -76,6 +79,7 @@ export function EmployeesClient({
   const [editEmail, setEditEmail] = useState("");
   const [editRole, setEditRole] = useState("");
   const [editPermissions, setEditPermissions] = useState<string[]>([]);
+  const [editLeaveDays, setEditLeaveDays] = useState("21");
   const [editCharityIds, setEditCharityIds] = useState<string[]>([]);
   const [modalError, setModalError] = useState<string | null>(null);
   const [modalSuccess, setModalSuccess] = useState<string | null>(null);
@@ -116,6 +120,7 @@ export function EmployeesClient({
     setEditPermissions(emp.permissions);
     setEditPassword("");
     setEditEmail(emp.email || "");
+    setEditLeaveDays(String(emp.annualLeaveDays ?? 21));
     setEditCharityIds(emp.assignedCharities?.map((c) => c.charityId) ?? []);
     setModalError(null);
     setModalSuccess(null);
@@ -152,6 +157,11 @@ export function EmployeesClient({
     setModalError(null);
     setModalSuccess(null);
 
+    const leaveDays =
+      editLeaveDays.trim() === "" || Number.isNaN(Number(editLeaveDays))
+        ? undefined
+        : Number(editLeaveDays);
+
     startTransition(async () => {
       const res = await updateEmployee(editingEmployee.id, {
         name: editName,
@@ -160,6 +170,7 @@ export function EmployeesClient({
         permissions: editPermissions,
         email: editEmail.trim() || null,
         password: editPassword || undefined,
+        annualLeaveDays: leaveDays,
         charityIds: editCharityIds,
       });
 
@@ -177,6 +188,7 @@ export function EmployeesClient({
                 name: editName,
                 phone: editPhone,
                 email: editEmail.trim() || null,
+                annualLeaveDays: leaveDays ?? emp.annualLeaveDays,
                 role: editRole,
                 permissions: editPermissions,
                 assignedCharities: editCharityIds.map((id) => ({ charityId: id })),
@@ -502,6 +514,27 @@ export function EmployeesClient({
                       disabled={isPending}
                       placeholder="اتركها فارغة لعدم التغيير"
                       className="placeholder:text-slate-300 dark:placeholder:text-slate-600 appearance-none block w-full pr-10 pl-3 py-2.5 border border-slate-200 dark:border-slate-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary/50 text-sm font-medium text-slate-800 dark:text-slate-100 bg-white dark:bg-slate-900/50 text-right transition-colors" 
+                    />
+                  </div>
+                </div>
+
+                {/* Annual leave balance — read by the attendance system when it
+                    works out how much of the year an employee has left. */}
+                <div>
+                  <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-2">رصيد الإجازات السنوية (يوماً)</label>
+                  <div className="relative">
+                    <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                      <CalendarDays className="h-4 w-4 text-slate-400 dark:text-slate-500" />
+                    </div>
+                    <input
+                      type="number"
+                      min={0}
+                      max={365}
+                      value={editLeaveDays}
+                      onChange={(e) => setEditLeaveDays(e.target.value)}
+                      disabled={isPending}
+                      dir="ltr"
+                      className="appearance-none block w-full pr-10 pl-3 py-2.5 border border-slate-200 dark:border-slate-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary/50 text-sm font-medium text-slate-800 dark:text-slate-100 bg-white dark:bg-slate-900/50 text-right transition-colors"
                     />
                   </div>
                 </div>

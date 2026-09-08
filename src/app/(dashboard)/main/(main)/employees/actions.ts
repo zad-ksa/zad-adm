@@ -27,6 +27,11 @@ export async function addEmployee(prevState: any, formData: FormData) {
   const password = formData.get("password") as string;
   const emailInput = (formData.get("email") as string) || "";
   const role = formData.get("role") as string;
+  // Annual leave lives on the person because seniority and contract change
+  // it; one company-wide number would be a lie on the first exception.
+  const leaveRaw = Number(formData.get("annualLeaveDays"));
+  const annualLeaveDays =
+    Number.isInteger(leaveRaw) && leaveRaw >= 0 && leaveRaw <= 365 ? leaveRaw : 21;
   
   // Extract permissions
   const permissions: string[] = [];
@@ -81,6 +86,7 @@ export async function addEmployee(prevState: any, formData: FormData) {
         phone,
         email,
         password: hashedPassword,
+        annualLeaveDays,
         role: dbRole,
         permissions,
         isActive: true,
@@ -129,6 +135,7 @@ export async function updateEmployee(
     permissions: string[];
     email?: string | null;
     password?: string;
+    annualLeaveDays?: number;
     charityIds?: string[];
   }
 ) {
@@ -196,6 +203,16 @@ export async function updateEmployee(
       role: data.role as any,
       permissions: data.permissions,
     };
+
+    // Undefined means "leave it alone" — an older caller that does not know
+    // about this field must not silently reset somebody's balance to 21.
+    if (data.annualLeaveDays !== undefined) {
+      const days = data.annualLeaveDays;
+      if (!Number.isInteger(days) || days < 0 || days > 365) {
+        return { error: "رصيد الإجازات يجب أن يكون بين 0 و365 يوماً" };
+      }
+      updateData.annualLeaveDays = days;
+    }
 
     if (emailProvided) {
       updateData.email = email;

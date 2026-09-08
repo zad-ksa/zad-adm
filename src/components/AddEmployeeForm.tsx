@@ -12,7 +12,7 @@ import {
   Check, 
   Loader2 
 } from "@/components/Icons";
-import { Mail } from "lucide-react";
+import { Mail, CalendarDays } from "lucide-react";
 import { PERMISSION_GROUPS } from "@/lib/permissions";
 
 interface RoleDefinition {
@@ -110,6 +110,26 @@ export function AddEmployeeForm({
               <Key className="h-5 w-5 text-slate-400 dark:text-slate-500" />
             </div>
             <input name="password" type="text" dir="ltr" placeholder="٨ أحرف على الأقل" className="appearance-none block w-full pr-10 pl-3 py-2.5 bg-white dark:bg-slate-900/50 border border-slate-200 dark:border-slate-600 text-slate-800 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary/50 sm:text-sm text-right transition-colors" />
+          </div>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-slate-700 dark:text-slate-200 mb-2">
+            رصيد الإجازات السنوية <span className="text-slate-400 font-normal">(يوماً)</span>
+          </label>
+          <div className="relative">
+            <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+              <CalendarDays className="h-5 w-5 text-slate-400 dark:text-slate-500" />
+            </div>
+            <input
+              name="annualLeaveDays"
+              type="number"
+              min={0}
+              max={365}
+              defaultValue={21}
+              dir="ltr"
+              className="appearance-none block w-full pr-10 pl-3 py-2.5 bg-white dark:bg-slate-900/50 border border-slate-200 dark:border-slate-600 text-slate-800 dark:text-slate-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary/50 sm:text-sm text-right transition-colors"
+            />
           </div>
         </div>
 

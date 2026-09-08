@@ -8,6 +8,7 @@ import { getUnreadNotificationsCount } from "@/app/actions/approvals";
 import { getUnreadNotifications } from "@/app/actions/notifications";
 import { getUnreadCount as getUnreadMailCount } from "@/app/actions/mail";
 import { MAIL_UNREAD_EVENT } from "@/lib/mailBadge";
+import { getCurrentPermissions } from "@/app/actions/sessionSync";
 import FloatingHeader from "@/components/FloatingHeader";
 
 import DeveloperRoleSwitcher from "@/components/DeveloperRoleSwitcher";
@@ -19,6 +20,16 @@ export default function DashboardLayoutClient({ children, session, unreadRequest
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [unreadRequests, setUnreadRequests] = useState(initial);
   const [unreadMails, setUnreadMails] = useState(initialMails);
+
+  /**
+   * The live role and permissions, replacing the layout's frozen copy.
+   *
+   * A layout does not re-render on client navigation, so `session` here is a
+   * snapshot from the last full page load. Granting a permission changed
+   * nothing on screen until the person reloaded — which is why it looked like
+   * you had to log out and back in.
+   */
+  const [liveAccess, setLiveAccess] = useState<{ role: string; permissions: string[] } | null>(null);
   const [appNotificationsData, setAppNotificationsData] = useState<{notifications: any[], count: number}>({ notifications: [], count: 0 });
   const seenNotificationIds = useRef<Set<string>>(new Set());
 
@@ -56,6 +67,16 @@ export default function DashboardLayoutClient({ children, session, unreadRequest
     };
 
     void refresh();
+    // Permissions too: a change made while you were on another screen shows
+    // up on your next click rather than on your next login.
+    void (async () => {
+      try {
+        const access = await getCurrentPermissions();
+        if (alive && access) setLiveAccess(access);
+      } catch {
+        // Keep whatever the menu already shows; the server re-checks anyway.
+      }
+    })();
     window.addEventListener(MAIL_UNREAD_EVENT, refresh);
 
     return () => {
@@ -77,6 +98,9 @@ export default function DashboardLayoutClient({ children, session, unreadRequest
         // count honest even if a message is read in another tab.
         const mailCount = await getUnreadMailCount();
         if (active) setUnreadMails(mailCount);
+
+        const access = await getCurrentPermissions();
+        if (active && access) setLiveAccess(access);
 
         const appNotifsRes = await getUnreadNotifications();
         if (active && appNotifsRes && !appNotifsRes.error) {
@@ -150,7 +174,16 @@ export default function DashboardLayoutClient({ children, session, unreadRequest
     <div className="flex h-[100dvh] bg-slate-50 dark:bg-slate-950 overflow-hidden print:h-auto print:overflow-visible print:block" dir="rtl">
 
 
-      <EmployeeSidebar session={session} isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} unreadRequests={unreadRequests} unreadMails={unreadMails} />
+      {/* The session object with its permissions and role replaced by whatever
+          the server last said. Everything else about it — id, name, avatar —
+          does not change under you mid-visit. */}
+      <EmployeeSidebar
+        session={liveAccess ? { ...session, ...liveAccess } : session}
+        isOpen={isSidebarOpen}
+        setIsOpen={setIsSidebarOpen}
+        unreadRequests={unreadRequests}
+        unreadMails={unreadMails}
+      />
       
       <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden relative print:overflow-visible print:h-auto print:block">
         {/* Desktop top bar.

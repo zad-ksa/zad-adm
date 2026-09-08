@@ -87,7 +87,6 @@ model Charity {
   workSites         CharityWorkSite[]
   workSchedule      CharityWorkSchedule?
   attendanceRecords AttendanceRecord[]
-  holidays          CharityHoliday[]
   employeeLeaves    EmployeeLeave[]
 
   // Optional second factor for attendance: the public IPs / CIDR ranges of the
@@ -331,21 +330,42 @@ model RoleDefinition {
 }
 
 model Employee {
-  id                      String                @id @default(uuid())
-  name                    String
-  phone                   String                @unique
+  id          String   @id @default(uuid())
+  name        String
+  phone       String   @unique
   /// Login email. Optional on purpose: an account without one still signs in
   /// with phone + OTP exactly as before, so no migration can lock anyone out.
-  email                   String?               @unique
+  email       String?  @unique
   /// bcrypt hash. null means this person has not set up email login yet.
-  password                String?
-  avatarUrl               String?
-  role                    String                @default("STRATEGY")
-  charityId               String? // For CHARITY_CLIENT accounts
-  charity                 Charity?              @relation(fields: [charityId], references: [id])
-  permissions             String[]
-  navOrder                String[]              @default([])
-  isActive                Boolean               @default(true)
+  password    String?
+  avatarUrl   String?
+  role        String   @default("STRATEGY")
+  charityId   String? // For CHARITY_CLIENT accounts
+  charity     Charity? @relation(fields: [charityId], references: [id])
+  permissions String[]
+  navOrder    String[] @default([])
+  isActive    Boolean  @default(true)
+
+  // ── التحضير ───────────────────────────────────────────────────────────
+  /// Which shift this person works. Null falls back to the default group —
+  /// see zadAttendance.ts. A single field rather than a join table because a
+  /// person has ONE working day at a time; two rows would leave "which one
+  /// applies?" with no answer.
+  shiftGroupId String?
+  shiftGroup   ZadShiftGroup? @relation(fields: [shiftGroupId], references: [id], onDelete: SetNull)
+
+  /// Annual leave entitlement in days. On the person, not the company:
+  /// seniority and contract change it, and one company-wide number would be
+  /// a lie on the first exception.
+  annualLeaveDays Int @default(21)
+
+  /// Lets this person record attendance from outside every work site.
+  /// The geofence is mandatory by default; this is the deliberate, per-person
+  /// exemption rather than a hole in the rule.
+  remoteWorkAllowed Boolean @default(false)
+
+  zadAttendance           ZadAttendanceRecord[]
+  zadLeaves               ZadEmployeeLeave[]
   createdAt               DateTime              @default(now())
   updatedAt               DateTime              @updatedAt
   assignedTasks           Task[]                @relation("AssignedTasks")
@@ -1236,23 +1256,6 @@ enum LeaveType {
 ///
 /// مدى لا يوم واحد، لأن العيد أيام لا يوم. اليوم المفرد يُخزَّن بـ start = end.
 /// التواريخ مراسٍ منتصف ليل UTC ليوم الرياض المدني، كسائر تواريخ الحضور.
-model CharityHoliday {
-  id        String   @id @default(uuid())
-  charityId String
-  charity   Charity  @relation(fields: [charityId], references: [id], onDelete: Cascade)
-  /// اسم الإجازة كما يظهر في التقرير — «عيد الفطر»، «اليوم الوطني».
-  name      String
-  startDate DateTime
-  endDate   DateTime
-
-  createdById   String?
-  createdByName String?
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-
-  @@index([charityId, startDate])
-}
-
 /// إجازة موظف بعينه.
 ///
 /// `charityId` جزء من السجل لا تفصيلاً: الموظف قد يخدم جمعيتين، وإجازته من
@@ -1354,6 +1357,165 @@ model CharityWorkSchedule {
 /// The composite unique key is also what makes a duplicate check-in
 /// structurally impossible, rather than relying on application logic that two
 /// concurrent requests could race past.
+/// أوقات دوام مجموعة من الموظفين.
+///
+/// Groups rather than one company schedule, because part-time and shift work
+/// are ordinary. Everything that is genuinely company-wide — the attendance
+/// gate and the IP policy — lives in ZadAttendanceSettings instead, so the
+/// two do not get edited as if they were one thing.
+model ZadShiftGroup {
+  id                      String @id @default(uuid())
+  name                    String @unique
+  startTime               String @default("08:00") // Riyadh local, "HH:MM"
+  endTime                 String @default("16:00")
+  lateAfterMinutes        Int    @default(15)
+  earlyLeaveBeforeMinutes Int    @default(15)
+  workDays                Int[]  @default([0, 1, 2, 3, 4]) // Sunday(0)..Thursday(4)
+
+  /// Where anyone unassigned lands. Exactly one row may hold it — enforced by
+  /// a partial unique index, since Prisma cannot express "unique where true".
+  isDefault Boolean @default(false)
+
+  members   Employee[]
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+}
+
+/// إعدادات التحضير على مستوى الشركة — صفّ واحد.
+model ZadAttendanceSettings {
+  id String @id @default("singleton")
+
+  /// Null means attendance has never been switched on; nothing may be
+  /// recorded before it is.
+  attendanceOpenedAt DateTime?
+
+  allowedIpRanges String[]          @default([])
+  ipEnforcement   IpEnforcementMode @default(OFF)
+
+  updatedAt DateTime @updatedAt
+}
+
+model ZadWorkSite {
+  id           String  @id @default(uuid())
+  name         String
+  latitude     Float
+  longitude    Float
+  radiusMeters Int     @default(150)
+  isActive     Boolean @default(true)
+
+  attendance ZadAttendanceRecord[]
+  createdAt  DateTime              @default(now())
+  updatedAt  DateTime              @updatedAt
+
+  @@index([isActive])
+}
+
+model ZadAttendanceRecord {
+  id         String       @id @default(uuid())
+  employeeId String
+  employee   Employee     @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  workSiteId String?
+  workSite   ZadWorkSite? @relation(fields: [workSiteId], references: [id], onDelete: SetNull)
+
+  workDate DateTime
+
+  checkInAt       DateTime?
+  checkInLat      Float?
+  checkInLng      Float?
+  checkInAccuracy Float?
+  checkInDistance Float?
+
+  checkOutAt       DateTime?
+  checkOutLat      Float?
+  checkOutLng      Float?
+  checkOutAccuracy Float?
+  checkOutDistance Float?
+
+  status AttendanceStatus @default(PRESENT)
+
+  /// Recorded away from any work site, under remoteWorkAllowed.
+  isRemote Boolean @default(false)
+
+  ipAddress        String?
+  userAgent        String?
+  isSuspicious     Boolean @default(false)
+  suspiciousReason String?
+
+  manualAt     DateTime?
+  manualById   String?
+  manualReason String?
+
+  /// Set by the nightly sweep on a day that was opened and never closed. Every
+  /// screen renders it as "أُغلق تلقائياً", so the time reads as the assumption
+  /// it is rather than an observed departure.
+  autoClosedAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // No nullable column in this key, so it actually prevents a second row for
+  // the same day — unlike the charity table, where a NULL would slip through.
+  @@unique([employeeId, workDate])
+  @@index([workDate])
+  @@index([employeeId, workDate])
+  @@index([autoClosedAt])
+}
+
+model ZadEmployeeLeave {
+  id         String   @id @default(uuid())
+  employeeId String
+  employee   Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+
+  type      LeaveType @default(ANNUAL)
+  startDate DateTime
+  endDate   DateTime
+  note      String?
+
+  createdById   String?
+  createdByName String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([employeeId, startDate])
+}
+
+/// التقويم — عطل رسمية وإغلاقات، لكل الجهات.
+///
+/// Deliberately has no charityId: one calendar serves Zad and, when charity
+/// attendance returns, the charities too. It replaces CharityHoliday, which
+/// was per-charity and held no rows.
+///
+/// A holiday of either scope is a non-working day and is never deducted from
+/// anyone's leave balance. Only a personal ZadEmployeeLeave of type ANNUAL is.
+model Holiday {
+  id        String   @id @default(uuid())
+  name      String
+  startDate DateTime
+  endDate   DateTime
+
+  /// GLOBAL  — official, shown to everyone including charities later.
+  /// COMPANY — a Zad-only closure, kept out of the shared calendar.
+  ///
+  /// The two behave identically in every calculation. The field exists so a
+  /// Zad closure cannot leak into eight charities' calendars — a difference
+  /// of audience, not of arithmetic, which is why it is a field and not a
+  /// second table whose two counting rules would drift apart.
+  scope HolidayScope @default(GLOBAL)
+
+  createdById   String?
+  createdByName String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([startDate])
+  @@index([scope, startDate])
+}
+
+enum HolidayScope {
+  GLOBAL // عطلة رسمية — للجميع
+  COMPANY // إغلاق خاص بزاد
+}
+
 model AttendanceRecord {
   id            String           @id @default(uuid())
   charityUserId String

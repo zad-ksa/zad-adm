@@ -888,19 +888,21 @@ export async function saveCharityHoliday(
     const range = parseRange(input.startDate, input.endDate);
     if (!range.ok) return fail(range.error);
 
+    // The calendar is shared now: one row, read by Zad and by every charity.
+    // A charity therefore writes GLOBAL entries only — a closure that means
+    // something to one charity alone has no business in everybody's calendar,
+    // and COMPANY scope is reserved for Zad's own closures.
     if (input.id) {
-      // Scoped by charityId as well, so a crafted request cannot edit another
-      // charity's holiday by guessing its uuid.
-      const updated = await prisma.charityHoliday.updateMany({
-        where: { id: input.id, charityId },
+      const updated = await prisma.holiday.updateMany({
+        where: { id: input.id, scope: "GLOBAL" },
         data: { name, startDate: range.startDate, endDate: range.endDate },
       });
       if (updated.count === 0) return fail("الإجازة غير موجودة");
     } else {
-      await prisma.charityHoliday.create({
+      await prisma.holiday.create({
         data: {
-          charityId,
           name,
+          scope: "GLOBAL",
           startDate: range.startDate,
           endDate: range.endDate,
           createdById: session.id,
@@ -914,7 +916,7 @@ export async function saveCharityHoliday(
       actorId: session.id,
       actorName: session.name,
       action: input.id ? "HOLIDAY_UPDATED" : "HOLIDAY_CREATED",
-      targetType: "CharityHoliday",
+      targetType: "Holiday",
       targetId: input.id,
       metadata: { charityId, name, startDate: input.startDate, endDate: input.endDate ?? null },
     });
@@ -929,8 +931,9 @@ export async function deleteCharityHoliday(charityId: string, holidayId: string)
   try {
     const { session } = await requireCharityPermission(charityId, "manage_attendance");
 
-    const removed = await prisma.charityHoliday.deleteMany({
-      where: { id: holidayId, charityId },
+    const removed = await prisma.holiday.deleteMany({
+      // GLOBAL only: a charity may not delete a Zad-internal closure.
+      where: { id: holidayId, scope: "GLOBAL" },
     });
     if (removed.count === 0) return fail("الإجازة غير موجودة");
 
@@ -939,7 +942,7 @@ export async function deleteCharityHoliday(charityId: string, holidayId: string)
       actorId: session.id,
       actorName: session.name,
       action: "HOLIDAY_DELETED",
-      targetType: "CharityHoliday",
+      targetType: "Holiday",
       targetId: holidayId,
       metadata: { charityId },
     });

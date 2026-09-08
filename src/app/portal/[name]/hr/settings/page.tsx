@@ -55,8 +55,8 @@ export default async function AttendanceSettingsPage({
       where: { id: charity.id },
       select: { allowedIpRanges: true, ipEnforcement: true },
     }),
-    prisma.charityHoliday.findMany({
-      where: { charityId: charity.id },
+    prisma.holiday.findMany({
+      where: { scope: "GLOBAL" },
       orderBy: { startDate: "desc" },
     }),
     prisma.employeeLeave.findMany({

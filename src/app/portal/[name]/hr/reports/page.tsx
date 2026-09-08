@@ -75,8 +75,8 @@ export default async function AttendanceReportsPage({
     }),
     prisma.charityWorkSchedule.findUnique({ where: { charityId: charity.id } }),
     // Holidays overlapping the viewed month.
-    prisma.charityHoliday.findMany({
-      where: { charityId: charity.id, startDate: { lt: range.end }, endDate: { gte: range.start } },
+    prisma.holiday.findMany({
+      where: { scope: "GLOBAL", startDate: { lt: range.end }, endDate: { gte: range.start } },
       orderBy: { startDate: "asc" },
     }),
     // The whole leave year, because the balance spans it — the month is filtered

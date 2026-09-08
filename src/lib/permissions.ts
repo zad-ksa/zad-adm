@@ -48,6 +48,10 @@ export const PERMISSION_GROUPS = [
       { id: "review_all_requests", label: "متابعة جميع الاعتمادات وأين وصلت (اطّلاع فقط)" },
       { id: "manage_workflow", label: "إعداد سلاسل اعتماد الطلبات" },
       { id: "manage_knowledge_tree", label: "شجرة المعرفة" },
+      // تحضير موظفي زاد. تسجيل الحضور نفسه ليس صلاحية — كل موظف نشط
+      // يسجّل حضوره؛ هاتان لمن يضبط النظام ومن يقرأ سجلات الآخرين.
+      { id: "manage_zad_attendance", label: "إدارة تحضير موظفي زاد (المواقع والدوام والتقويم والإجازات)" },
+      { id: "view_zad_attendance_reports", label: "عرض تقارير حضور جميع موظفي زاد" },
       { id: "manage_landing", label: "التحكم في الواجهة الرئيسية" },
     ],
   },

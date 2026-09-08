@@ -23,6 +23,7 @@ import {
   ScheduleShape,
   WEEKDAY_LABELS,
 } from "@/lib/attendanceTime";
+import { readPosition } from "@/lib/readPosition";
 import { Banner, Chip, HrCard, SectionHead, fs } from "../ui";
 
 type DayRecord = {
@@ -63,39 +64,6 @@ const statusTone: Record<string, "primary" | "warn" | "danger" | "neutral"> = {
   EARLY_LEAVE: "warn",
   ABSENT: "danger",
 };
-
-/**
- * Wraps getCurrentPosition in a promise and turns every failure mode into a
- * message that says what to actually do about it. `enableHighAccuracy` asks for
- * the GPS rather than a coarse network fix; the long timeout is deliberate,
- * since a cold GPS start indoors genuinely takes that long.
- */
-function readPosition(): Promise<{ latitude: number; longitude: number; accuracy: number }> {
-  return new Promise((resolve, reject) => {
-    if (typeof navigator === "undefined" || !navigator.geolocation) {
-      reject(new Error("متصفحك لا يدعم تحديد الموقع"));
-      return;
-    }
-    navigator.geolocation.getCurrentPosition(
-      (position) =>
-        resolve({
-          latitude: position.coords.latitude,
-          longitude: position.coords.longitude,
-          accuracy: position.coords.accuracy,
-        }),
-      (error) => {
-        if (error.code === error.PERMISSION_DENIED) {
-          reject(new Error("تم رفض إذن الموقع. فعّل الإذن من إعدادات المتصفح ثم أعد المحاولة"));
-        } else if (error.code === error.TIMEOUT) {
-          reject(new Error("استغرق تحديد الموقع وقتاً طويلاً. تأكد من تفعيل GPS وحاول مرة أخرى"));
-        } else {
-          reject(new Error("تعذّر تحديد موقعك. تأكد من تفعيل خدمة الموقع وحاول مرة أخرى"));
-        }
-      },
-      { enableHighAccuracy: true, timeout: 20000, maximumAge: 0 }
-    );
-  });
-}
 
 export default function AttendanceClient({
   charityId,

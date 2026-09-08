@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, useTransition } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { User, ShieldAlert, Users, X, LogOut, LayoutDashboard, Building2, ClipboardList, ChevronRight, Edit, Eye, EyeOff, Camera, Loader2, AlertCircle, CheckCircle2, Newspaper, CheckSquare, Moon, Sun, LayoutGrid, FileText, Settings2, FileSignature, MessageSquare, Send, GitBranch, Bell, ShieldCheck, FolderTree } from "lucide-react";
+import { User, ShieldAlert, Users, X, LogOut, LayoutDashboard, Building2, ClipboardList, ChevronRight, Edit, Eye, EyeOff, Camera, Loader2, AlertCircle, CheckCircle2, Newspaper, CheckSquare, Moon, Sun, LayoutGrid, FileText, Settings2, FileSignature, MessageSquare, Send, GitBranch, Bell, ShieldCheck, FolderTree, Clock } from "lucide-react";
 import { useTheme } from "next-themes";
 import { logout } from "@/app/actions/auth";
 import { updateProfile } from "@/app/actions/profile";
@@ -108,7 +108,7 @@ export default function EmployeeSidebar({
 
     if (path === "/main") newGroup = "";
     else if (path.startsWith("/main/charities") || path.startsWith("/main/contracts") || path.startsWith("/main/custom-surveys") || path.startsWith("/main/communication") || path.startsWith("/main/charity-meetings") || path.startsWith("/main/design-requests")) newGroup = "الجمعيات";
-    else if (path.startsWith("/main/approvals") || path.startsWith("/main/news") || path.startsWith("/main/meetings") || path.startsWith("/main/tasks") || path.startsWith("/main/mail")) newGroup = "زاد";
+    else if (path.startsWith("/main/approvals") || path.startsWith("/main/news") || path.startsWith("/main/meetings") || path.startsWith("/main/tasks") || path.startsWith("/main/mail") || path.startsWith("/main/attendance")) newGroup = "زاد";
     else if (path.startsWith("/main/admin") || path.startsWith("/main/workflow-settings") || path.startsWith("/main/landing-settings")) newGroup = "لوحة التحكم";
     else if (path.startsWith("/main/services-overview") || path.startsWith("/main/knowledge-tree") || path.startsWith("/main/strategy") || path.startsWith("/main/governance") || path.startsWith("/main/finance") || path.startsWith("/main/resource-development") || path.startsWith("/main/programs")) {
       newGroup = "الخدمات";
@@ -144,6 +144,8 @@ export default function EmployeeSidebar({
     setUserState(session);
   }, [session]);
 
+  // Adding an entry here is only half the job: renderGroup below picks items
+  // out by label, so a label that appears in no group is dropped in silence.
   let navItems: { label: string; href: string; icon: any; badge?: number }[] = [];
 
   const role = userState?.role || "";
@@ -184,6 +186,9 @@ export default function EmployeeSidebar({
     const isManager = can("view_all_tasks") || perms.includes("developer_mode");
     navItems.push({ label: isManager ? "المهام والمنجزات" : "مهامي", href: "/main/tasks", icon: CheckSquare });
   }
+  // لكل موظف: تسجيل حضورك ليس امتيازاً. أما ضبط النظام وقراءة سجلات
+  // الآخرين فخلف صلاحيتيهما داخل الصفحة نفسها.
+  navItems.push({ label: "التحضير", href: "/main/attendance", icon: Clock });
   navItems.push({ label: "البريد الداخلي", href: "/main/mail", icon: Mail, badge: unreadMails });
   navItems.push({ label: "الاعتمادات", href: "/main/approvals", icon: Send, badge: unreadRequests });
   if (can("manage_employees") || can("manage_charities") || can("manage_charity_settings") || can("manage_landing")) {
@@ -382,7 +387,7 @@ export default function EmployeeSidebar({
               {isExpanded && <div className="h-px bg-slate-100 dark:bg-slate-800 mx-2" />}
               {renderGroup("الجمعيات", ["الجمعيات", "العقود", "الاستبيانات", "التواصل", "الاجتماعات", "طلبات التصاميم"])}
               {isExpanded && <div className="h-px bg-slate-100 dark:bg-slate-800 mx-2" />}
-              {renderGroup("زاد", ["البريد الداخلي", "الاعتمادات", "الأخبار والإنجازات", "محاضر الاجتماعات", "المهام والمنجزات", "مهامي"])}
+              {renderGroup("زاد", ["التحضير", "البريد الداخلي", "الاعتمادات", "الأخبار والإنجازات", "محاضر الاجتماعات", "المهام والمنجزات", "مهامي"])}
               {isExpanded && <div className="h-px bg-slate-100 dark:bg-slate-800 mx-2" />}
               {renderGroup("لوحة التحكم", ["لوحة التحكم", "سلاسل الاعتماد"])}
             </>

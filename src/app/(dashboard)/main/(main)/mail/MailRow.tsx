@@ -138,16 +138,37 @@ export default function MailRow({
           )}
           {date}
         </div>
+        {item.toLabel && (
+          <span
+            className="truncate text-[length:var(--mail-fs-meta)] text-slate-400 dark:text-slate-500"
+            title={`إلى: ${item.toLabel}`}
+          >
+            إلى: {item.toLabel}
+          </span>
+        )}
         <span className="truncate">{subject}</span>
         <span className="truncate text-[length:var(--mail-fs-snippet)] text-slate-400 dark:text-slate-500">
           {item.snippet}
         </span>
       </div>
 
-      {/* Desktop: the original dense single line. */}
-      <div className="hidden sm:flex min-w-0 items-center gap-2">
-        {avatar}
-        {senderName}
+      {/* Desktop: the original dense single line — plus a second, smaller line
+          naming the visible (TO) recipient when it differs from "you", so a
+          Bcc'd reader sees "from X — to Y" instead of a bare sender that reads
+          as if the message were addressed to them. */}
+      <div className="hidden sm:flex min-w-0 flex-col justify-center gap-0.5">
+        <div className="flex items-center gap-2 min-w-0">
+          {avatar}
+          {senderName}
+        </div>
+        {item.toLabel && (
+          <span
+            className="truncate text-[length:var(--mail-fs-meta)] text-slate-400 dark:text-slate-500 ps-8"
+            title={`إلى: ${item.toLabel}`}
+          >
+            إلى: {item.toLabel}
+          </span>
+        )}
       </div>
 
       <div className="hidden sm:flex min-w-0 items-center gap-2">

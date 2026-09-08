@@ -302,6 +302,15 @@ export async function getInbox(page = 1, limit = 20, search = "") {
               select: { id: true, name: true, avatarUrl: true, role: true },
             },
             attachments: true,
+            // للعمود "إلى" في قائمة البريد — يُغربَل بـ stripHiddenBcc أدناه فلا
+            // يرى مستلم عادي (أو مَن نُسخ إليه خفيةً) غيرَه من أسماء النسخة المخفية.
+            recipients: {
+              select: {
+                type: true,
+                employeeId: true,
+                employee: { select: { id: true, name: true } },
+              },
+            },
           },
         },
       },
@@ -315,6 +324,9 @@ export async function getInbox(page = 1, limit = 20, search = "") {
     }),
     prisma.mailRecipient.count({ where }),
   ]);
+
+  // نسخة مخفية تخصّ غيرك تبقى مخفية حتى في قائمة الوارد، لا في صفحة الرسالة وحدها.
+  for (const row of mails) stripHiddenBcc(row.mail, user.id);
 
   return { mails, total, totalPages: Math.ceil(total / limit) };
 }
@@ -377,6 +389,15 @@ export async function getStarredMails(page = 1, limit = 20, search = "") {
               select: { id: true, name: true, avatarUrl: true, role: true },
             },
             attachments: true,
+            // للعمود "إلى" في قائمة البريد — يُغربَل بـ stripHiddenBcc أدناه فلا
+            // يرى مستلم عادي (أو مَن نُسخ إليه خفيةً) غيرَه من أسماء النسخة المخفية.
+            recipients: {
+              select: {
+                type: true,
+                employeeId: true,
+                employee: { select: { id: true, name: true } },
+              },
+            },
           },
         },
       },
@@ -390,6 +411,8 @@ export async function getStarredMails(page = 1, limit = 20, search = "") {
     }),
     prisma.mailRecipient.count({ where }),
   ]);
+
+  for (const row of mails) stripHiddenBcc(row.mail, user.id);
 
   return { mails, total, totalPages: Math.ceil(total / limit) };
 }
@@ -414,6 +437,15 @@ export async function getTrashMails(page = 1, limit = 20, search = "") {
               select: { id: true, name: true, avatarUrl: true, role: true },
             },
             attachments: true,
+            // للعمود "إلى" في قائمة البريد — يُغربَل بـ stripHiddenBcc أدناه فلا
+            // يرى مستلم عادي (أو مَن نُسخ إليه خفيةً) غيرَه من أسماء النسخة المخفية.
+            recipients: {
+              select: {
+                type: true,
+                employeeId: true,
+                employee: { select: { id: true, name: true } },
+              },
+            },
           },
         },
       },
@@ -427,6 +459,8 @@ export async function getTrashMails(page = 1, limit = 20, search = "") {
     }),
     prisma.mailRecipient.count({ where }),
   ]);
+
+  for (const row of mails) stripHiddenBcc(row.mail, user.id);
 
   return { mails, total, totalPages: Math.ceil(total / limit) };
 }

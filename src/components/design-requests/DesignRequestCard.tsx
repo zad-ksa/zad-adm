@@ -20,6 +20,14 @@ import type { DesignRequestProgress } from "@/lib/designRequestProgress";
 import DesignRequestCountdownBadge from "./DesignRequestCountdownBadge";
 import LinkifiedText from "@/components/ui/LinkifiedText";
 
+/**
+ * أعمدة صف عرض القائمة على سطح المكتب — تُصدَّر لأن رأس الجدول (في
+ * DesignRequestsClient) يحتاج التوزيع نفسه بالحرف ليصطف مع كل صف.
+ * لا تظهر إلا من lg فأعلى؛ الجوال يبقى على السطر المرن أدناه.
+ */
+export const DESIGN_REQUEST_LIST_GRID_COLS =
+  "lg:grid-cols-[130px_minmax(0,2fr)_150px_96px_140px_64px_20px]";
+
 export type DesignRequestCardData = {
   id: string;
   title: string;
@@ -117,41 +125,99 @@ export default function DesignRequestCard({
   const isLongDescription = (request.description?.length ?? 0) > 110;
 
   if (isCollapsedRow) {
+    const typesLabel = request.types && request.types.length > 0 ? request.types.map((t) => t.name).join("، ") : "—";
+    const chevron = (
+      <ChevronDown className="w-4 h-4 text-slate-300 dark:text-slate-600 shrink-0 -rotate-90 group-hover:text-primary dark:group-hover:text-teal-400 transition-colors" />
+    );
+
     return (
       <button
         type="button"
         onClick={() => setRowOpen(true)}
-        className="design-requests-ui group w-full flex items-center gap-2.5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0A0A0A] px-4 py-2.5 shadow-sm hover:shadow-md dark:shadow-none hover:border-primary/40 dark:hover:border-teal-500/40 transition-all duration-300 text-right cursor-pointer"
+        className="design-requests-ui group w-full rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0A0A0A] shadow-sm hover:shadow-md dark:shadow-none hover:border-primary/40 dark:hover:border-teal-500/40 transition-all duration-300 text-right cursor-pointer"
       >
-        <ChevronDown className="w-4 h-4 text-slate-300 dark:text-slate-600 shrink-0 -rotate-90 group-hover:text-primary dark:group-hover:text-teal-400 transition-colors" />
-        {request.charityName && (
+        {/* صف الجدول — سطح المكتب. كل معلومة في عمودها الثابت، ورأس الجدول في
+            DesignRequestsClient يطابقها بالحرف. */}
+        <div className={`hidden lg:grid ${DESIGN_REQUEST_LIST_GRID_COLS} items-center gap-3 px-4 py-2.5`}>
           <span
-            className="hidden sm:flex items-center gap-1 text-primary dark:text-teal-300 font-bold shrink-0"
+            title={request.charityName}
+            className="min-w-0 truncate flex items-center gap-1 text-primary dark:text-teal-300 font-bold"
             style={{ fontSize: "var(--dr-fs-eyebrow)" }}
           >
-            <Building2 className="w-3 h-3" />
-            {request.charityName}
+            {request.charityName && <Building2 className="w-3 h-3 shrink-0" />}
+            {request.charityName || "—"}
           </span>
-        )}
-        <span
-          className="flex-1 min-w-0 truncate font-bold text-slate-900 dark:text-slate-100"
-          style={{ fontSize: "var(--dr-fs-title)" }}
-        >
-          {request.title}
-        </span>
-        {/* الأيام المتبقية مع المرفقات معاً على الطرف الآخر من العنوان، لا
-            مزدحمة مع الجمعية والعنوان على نفس الجانب. */}
-        <DesignRequestCountdownBadge progress={progress} />
-        {request.attachments.length > 0 && (
+
           <span
-            className="hidden sm:flex items-center gap-1 text-slate-400 dark:text-slate-500 shrink-0"
-            style={{ fontSize: "var(--dr-fs-eyebrow)" }}
-            title={`${request.attachments.length} مرفق`}
+            title={request.title}
+            className="min-w-0 truncate font-bold text-slate-900 dark:text-slate-100"
+            style={{ fontSize: "var(--dr-fs-title)" }}
           >
-            <Paperclip className="w-3 h-3" />
-            {request.attachments.length}
+            {request.title}
           </span>
-        )}
+
+          <span
+            title={typesLabel}
+            className="min-w-0 truncate text-slate-500 dark:text-slate-400"
+            style={{ fontSize: "var(--dr-fs-meta)" }}
+          >
+            {typesLabel}
+          </span>
+
+          <span className="text-slate-400 dark:text-slate-500 tabular-nums" style={{ fontSize: "var(--dr-fs-meta)" }}>
+            {request.submittedAt}
+          </span>
+
+          <div className="w-fit">
+            <DesignRequestCountdownBadge progress={progress} />
+          </div>
+
+          {request.attachments.length > 0 ? (
+            <span
+              className="flex items-center gap-1 text-slate-400 dark:text-slate-500"
+              style={{ fontSize: "var(--dr-fs-eyebrow)" }}
+              title={`${request.attachments.length} مرفق`}
+            >
+              <Paperclip className="w-3 h-3" />
+              {request.attachments.length}
+            </span>
+          ) : <span className="text-slate-300 dark:text-slate-600">—</span>}
+
+          {chevron}
+        </div>
+
+        {/* سطر الجوال — دون lg. مضغوط ومرن كما كان. */}
+        <div className="lg:hidden flex items-center gap-2.5 px-4 py-2.5">
+          {chevron}
+          {request.charityName && (
+            <span
+              className="hidden sm:flex items-center gap-1 text-primary dark:text-teal-300 font-bold shrink-0"
+              style={{ fontSize: "var(--dr-fs-eyebrow)" }}
+            >
+              <Building2 className="w-3 h-3" />
+              {request.charityName}
+            </span>
+          )}
+          <span
+            className="flex-1 min-w-0 truncate font-bold text-slate-900 dark:text-slate-100"
+            style={{ fontSize: "var(--dr-fs-title)" }}
+          >
+            {request.title}
+          </span>
+          {/* الأيام المتبقية مع المرفقات معاً على الطرف الآخر من العنوان، لا
+              مزدحمة مع الجمعية والعنوان على نفس الجانب. */}
+          <DesignRequestCountdownBadge progress={progress} />
+          {request.attachments.length > 0 && (
+            <span
+              className="hidden sm:flex items-center gap-1 text-slate-400 dark:text-slate-500 shrink-0"
+              style={{ fontSize: "var(--dr-fs-eyebrow)" }}
+              title={`${request.attachments.length} مرفق`}
+            >
+              <Paperclip className="w-3 h-3" />
+              {request.attachments.length}
+            </span>
+          )}
+        </div>
       </button>
     );
   }

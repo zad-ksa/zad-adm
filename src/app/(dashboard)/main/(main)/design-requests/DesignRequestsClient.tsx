@@ -3,7 +3,10 @@
 import { useEffect, useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Palette, Plus, Filter, AlertTriangle, Loader2, Paperclip, LayoutGrid, List, CalendarRange } from "lucide-react";
-import DesignRequestCard, { type DesignRequestCardData } from "@/components/design-requests/DesignRequestCard";
+import DesignRequestCard, {
+  DESIGN_REQUEST_LIST_GRID_COLS,
+  type DesignRequestCardData,
+} from "@/components/design-requests/DesignRequestCard";
 import { markDesignRequestComplete, deleteDesignRequest, startDesignRequest } from "@/app/actions/designRequests";
 import type { DesignRequestProgress } from "@/lib/designRequestProgress";
 import StaffNewDesignRequestModal from "./StaffNewDesignRequestModal";
@@ -493,6 +496,21 @@ export default function DesignRequestsClient({
         </div>
       ) : (
         <div className={viewMode === "cards" ? "grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4" : "flex flex-col gap-3"}>
+          {/* رأس الجدول — سطح المكتب فقط في عرض القائمة، بنفس أعمدة كل صف بالحرف. */}
+          {viewMode === "list" && (
+            <div
+              className={`hidden lg:grid ${DESIGN_REQUEST_LIST_GRID_COLS} items-center gap-3 px-4 pb-1 text-slate-400 dark:text-slate-500 font-bold uppercase tracking-wider`}
+              style={{ fontSize: "var(--dr-fs-eyebrow)" }}
+            >
+              <span>الجمعية</span>
+              <span>العنوان</span>
+              <span>النوع</span>
+              <span>الرفع</span>
+              <span>وقت التسليم</span>
+              <span>مرفقات</span>
+              <span />
+            </div>
+          )}
           {filtered.map((it) => (
             <DesignRequestCard
               key={it.request.id}

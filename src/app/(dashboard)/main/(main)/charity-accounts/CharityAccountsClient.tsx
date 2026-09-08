@@ -3,6 +3,10 @@
 import { useState, useTransition } from "react";
 import { Plus, Trash2, ShieldAlert, CheckCircle2, AlertCircle, Building2, ArrowRight } from "lucide-react";
 import { addCharityClientAccount, deleteCharityClientAccount } from "@/app/actions/charityAccounts";
+import {
+  CHARITY_PERMISSION_GROUPS,
+  ALL_CHARITY_PERMISSION_IDS,
+} from "@/lib/charityPermissions";
 import Link from "next/link";
 
 const titles = [
@@ -30,7 +34,8 @@ export default function CharityAccountsClient({ charities, accounts: initialAcco
     password: "",
     title: "FULL_TIME",
     charityIds: [] as string[],
-    isAdmin: false
+    isAdmin: false,
+    permissions: [] as string[],
   });
 
 
@@ -93,7 +98,10 @@ export default function CharityAccountsClient({ charities, accounts: initialAcco
         </div>
       )}
       
-      {errorMsg && (
+      {/* Only while no dialog is covering it. A refusal rendered here with the
+          modal open lands behind it, so the form appears to do nothing — the
+          same message is repeated inside the modal instead. */}
+      {errorMsg && !showModal && (
         <div className="bg-red-50 text-red-600 p-4 rounded-xl flex items-center font-bold text-sm">
           <AlertCircle className="w-5 h-5 ml-2" />
           {errorMsg}
@@ -128,6 +136,13 @@ export default function CharityAccountsClient({ charities, accounts: initialAcco
             </div>
             
             <form onSubmit={handleAddAccount} className="p-6 overflow-y-auto space-y-5">
+              {errorMsg && (
+                <div className="bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 p-3 rounded-xl flex items-start gap-2 font-bold text-sm">
+                  <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+                  <span>{errorMsg}</span>
+                </div>
+              )}
+
               <div className="space-y-4">
                 
                 <div>
@@ -235,6 +250,80 @@ export default function CharityAccountsClient({ charities, accounts: initialAcco
                       </span>
                     </span>
                   </label>
+                </div>
+
+                {/* What the account may do. An administrator is not shown a list
+                    to tick: the flag already carries every permission, and
+                    drawing checkboxes beside it would suggest the two could
+                    disagree. */}
+                <div>
+                  <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">
+                    الصلاحيات داخل الجمعية
+                  </label>
+
+                  {form.isAdmin ? (
+                    <p className="text-xs text-primary dark:text-teal-400 bg-primary/[0.06] dark:bg-teal-400/[0.06] rounded-xl p-3 leading-relaxed font-bold">
+                      مدير الجمعية يملك جميع الصلاحيات تلقائياً — بما يُضاف منها لاحقاً.
+                    </p>
+                  ) : (
+                    <div className="space-y-3">
+                      {CHARITY_PERMISSION_GROUPS.map((group) => (
+                        <div key={group.title}>
+                          <p className="text-[11px] font-bold text-slate-400 dark:text-slate-500 mb-1.5">
+                            {group.title}
+                          </p>
+                          <div className="grid sm:grid-cols-2 gap-1.5">
+                            {group.permissions.map((permission) => {
+                              const checked = form.permissions.includes(permission.id);
+                              return (
+                                <label
+                                  key={permission.id}
+                                  className={`flex items-start gap-2 p-2.5 rounded-xl border cursor-pointer transition-colors text-xs font-bold ${
+                                    checked
+                                      ? "border-primary/40 bg-primary/[0.06] text-primary dark:text-teal-400"
+                                      : "border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:border-slate-300 dark:hover:border-slate-600"
+                                  }`}
+                                >
+                                  <input
+                                    type="checkbox"
+                                    checked={checked}
+                                    onChange={() =>
+                                      setForm({
+                                        ...form,
+                                        permissions: checked
+                                          ? form.permissions.filter((x) => x !== permission.id)
+                                          : [...form.permissions, permission.id],
+                                      })
+                                    }
+                                    className="w-3.5 h-3.5 mt-0.5 rounded text-primary focus:ring-primary focus:ring-offset-0 border-slate-300"
+                                  />
+                                  <span>{permission.label}</span>
+                                </label>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      ))}
+
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setForm({
+                            ...form,
+                            permissions:
+                              form.permissions.length === ALL_CHARITY_PERMISSION_IDS.length
+                                ? []
+                                : [...ALL_CHARITY_PERMISSION_IDS],
+                          })
+                        }
+                        className="text-[11px] font-bold text-primary dark:text-teal-400 hover:underline"
+                      >
+                        {form.permissions.length === ALL_CHARITY_PERMISSION_IDS.length
+                          ? "إلغاء تحديد الكل"
+                          : "تحديد الكل"}
+                      </button>
+                    </div>
+                  )}
                 </div>
 
               </div>

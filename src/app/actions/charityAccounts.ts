@@ -4,6 +4,7 @@ import { prisma } from "@/lib/db";
 import { getSession } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
 import { hasPermission } from "@/lib/permissions";
+import { ALL_CHARITY_PERMISSION_IDS } from "@/lib/charityPermissions";
 import { CharityUserTitle } from "@prisma/client";
 import { hashPassword, normalizeEmail, validateCredentialPair } from "@/lib/password";
 
@@ -29,6 +30,15 @@ export async function addCharityClientAccount(data: {
    * touching the others.
    */
   isAdmin?: boolean;
+  /**
+   * What the account may do inside every charity it is linked to here.
+   *
+   * Ignored when isAdmin is set: an administrator already passes every
+   * permission check by standing, and storing a copy of the whole list
+   * beside that would be a second source of truth — one that silently falls
+   * behind the day a new permission is added to the catalogue.
+   */
+  permissions?: string[];
 }) {
   try {
     const session = await getSession();
@@ -41,6 +51,15 @@ export async function addCharityClientAccount(data: {
     if (!data.name || !data.phone || !data.title || !data.charityIds || data.charityIds.length === 0) {
       return { success: false, error: "جميع الحقول مطلوبة" };
     }
+
+    // Re-checked here rather than trusted from the form: the client sends
+    // whatever it likes regardless of which checkboxes it drew.
+    const requested = data.isAdmin === true ? [] : data.permissions ?? [];
+    const unknown = requested.filter((x) => !ALL_CHARITY_PERMISSION_IDS.includes(x));
+    if (unknown.length > 0) {
+      return { success: false, error: "صلاحية غير معروفة" };
+    }
+    const permissions = [...new Set(requested)];
 
     // Check if phone already exists in CharityUser
     const existing = await prisma.charityUser.findUnique({
@@ -74,7 +93,8 @@ export async function addCharityClientAccount(data: {
         charities: {
           create: data.charityIds.map(id => ({
             charityId: id,
-            isAdmin: data.isAdmin === true
+            isAdmin: data.isAdmin === true,
+            permissions
           }))
         }
       },

@@ -6,6 +6,7 @@ import { AuthError, requireCharityPermission } from "@/lib/guards";
 import {
   ALL_CHARITY_PERMISSION_IDS,
   grantableCharityPermissions,
+  sanitizeCharityPermissions,
 } from "@/lib/charityPermissions";
 import { logAudit } from "@/lib/auditLog";
 import { checkRateLimit } from "@/lib/rateLimit";
@@ -80,18 +81,21 @@ function validateGrant(
     return { error: "لا يمكن تعيين مدير للجمعية إلا من قِبل مدير" };
   }
 
-  const unknown = requestedPermissions.filter(
-    (p) => !ALL_CHARITY_PERMISSION_IDS.includes(p)
-  );
+  // Retired ids arrive here on every save of a membership created before the
+  // retirement — the editor seeds its draft from what is stored. They are
+  // dropped, not refused; only an id nobody ever defined is an error.
+  const cleaned = sanitizeCharityPermissions(requestedPermissions);
+
+  const unknown = cleaned.filter((p) => !ALL_CHARITY_PERMISSION_IDS.includes(p));
   if (unknown.length > 0) return { error: "صلاحية غير معروفة" };
 
   const grantable = new Set(grantableCharityPermissions(actorIsAdmin, actorPermissions));
-  const notGrantable = requestedPermissions.filter((p) => !grantable.has(p));
+  const notGrantable = cleaned.filter((p) => !grantable.has(p));
   if (notGrantable.length > 0) {
     return { error: "لا يمكنك منح صلاحية لا تملكها" };
   }
 
-  return { permissions: Array.from(new Set(requestedPermissions)), isAdmin: requestedIsAdmin };
+  return { permissions: cleaned, isAdmin: requestedIsAdmin };
 }
 
 export async function listCharityStaff(charityId: string) {

@@ -20,6 +20,7 @@ import {
   CHARITY_PERMISSION_GROUPS,
   CHARITY_USER_TITLES,
   charityTitleLabel,
+  sanitizeCharityPermissions,
 } from "@/lib/charityPermissions";
 import { normalizeSaudiPhone } from "@/lib/phone";
 import {
@@ -214,6 +215,10 @@ export default function StaffManagerClient({
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
+  // Separate from `error`, which is drawn at the top of the PAGE. A failure
+  // while saving permissions used to land there — behind the open dialog —
+  // so the save appeared to do nothing at all.
+  const [editError, setEditError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
 
   const [isAdding, setIsAdding] = useState(false);
@@ -397,12 +402,12 @@ export default function StaffManagerClient({
 
   async function submitEdit() {
     if (!editing) return;
-    setError(null);
+    setEditError(null);
     setBusy(true);
     try {
       const res = await updateCharityStaff(charityId, editing.id, editDraft);
       if (!res.success) {
-        setError(res.error);
+        setEditError(res.error);
         return;
       }
       setEditing(null);
@@ -776,10 +781,15 @@ export default function StaffManagerClient({
                         setEditing(member);
                         setEditDraft({
                           title: member.title,
-                          permissions: member.permissions,
+                          // Retired ids can still be sitting in a membership
+                          // created before they were retired; seeding the draft
+                          // with them would show a permission that no longer
+                          // exists and send it straight back on save.
+                          permissions: sanitizeCharityPermissions(member.permissions),
                           isAdmin: member.isAdmin,
                         });
                         setError(null);
+                        setEditError(null);
                       }}
                       disabled={locked || busy || isPending}
                       title={isSelf ? "لا يمكنك تعديل صلاحياتك بنفسك" : undefined}
@@ -866,13 +876,31 @@ export default function StaffManagerClient({
                 />
               )}
 
-              <PermissionEditor
-                selected={editDraft.permissions}
-                grantable={grantable}
-                onToggle={(id) =>
-                  setEditDraft({ ...editDraft, permissions: toggleIn(editDraft.permissions, id) })
-                }
-              />
+              {/* An administrator is not offered a list to tick: the flag already
+                  carries every permission, including ones added later, so drawing
+                  checkboxes beside it would imply the two could disagree. */}
+              {editDraft.isAdmin ? (
+                <p
+                  className="rounded-xl px-4 py-3 leading-relaxed font-medium text-primary dark:text-teal-400 bg-primary/[0.06] dark:bg-teal-400/[0.06]"
+                  style={fs.body}
+                >
+                  مدير الجمعية يملك جميع الصلاحيات تلقائياً — بما يُضاف منها لاحقاً.
+                </p>
+              ) : (
+                <PermissionEditor
+                  selected={editDraft.permissions}
+                  grantable={grantable}
+                  onToggle={(id) =>
+                    setEditDraft({ ...editDraft, permissions: toggleIn(editDraft.permissions, id) })
+                  }
+                />
+              )}
+
+              {editError && (
+                <Banner tone="danger" icon={AlertTriangle}>
+                  {editError}
+                </Banner>
+              )}
 
               <div className="flex flex-wrap gap-2">
                 <button onClick={submitEdit} disabled={busy} className={ctaClass} style={fs.body}>

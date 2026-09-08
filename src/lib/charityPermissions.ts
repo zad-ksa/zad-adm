@@ -76,6 +76,34 @@ export const ALL_CHARITY_PERMISSION_IDS: string[] = ALL_CHARITY_PERMISSIONS.map(
   (p) => p.id
 );
 
+/**
+ * Ids that existed once and no longer do.
+ *
+ * They are still sitting in stored permission arrays on live memberships, and
+ * something has to decide what happens when one of those rows is saved again.
+ * Rejecting them as "unknown" was the first answer and it was wrong: it made
+ * every existing member unsavable the moment a permission was retired — you
+ * could open the editor, change nothing, and be told the data you were handed
+ * is invalid.
+ *
+ * So a retired id is DROPPED silently, while a genuinely unrecognised one is
+ * still refused. The difference matters: one is our own history, the other is
+ * a client sending something nobody ever defined.
+ */
+export const RETIRED_CHARITY_PERMISSION_IDS: string[] = [
+  // Merged into view_design_requests.
+  "create_design_requests",
+  // Never gated anything; see the note in the groups above.
+  "view_hr",
+];
+
+/** Strips retired ids and de-duplicates. Does not judge the rest. */
+export function sanitizeCharityPermissions(ids: string[] | null | undefined): string[] {
+  return [...new Set(ids || [])].filter(
+    (id) => !RETIRED_CHARITY_PERMISSION_IDS.includes(id)
+  );
+}
+
 export function charityPermissionLabel(id: string): string {
   return ALL_CHARITY_PERMISSIONS.find((p) => p.id === id)?.label ?? id;
 }

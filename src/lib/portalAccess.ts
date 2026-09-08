@@ -1,4 +1,4 @@
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { AuthError, requireCharityMembership } from "@/lib/guards";
 import { hasCharityPermission } from "@/lib/charityPermissions";
@@ -46,9 +46,25 @@ export async function resolveCharityPortal(nameParam: string) {
   };
 }
 
-/** Same, but refuses outright when the permission is missing. */
+/**
+ * Same, but a member without this permission is sent to the portal's own
+ * "no access" screen instead of a 404.
+ *
+ * It used to be notFound(), which was wrong twice over. The section exists —
+ * saying otherwise to someone whose colleague uses it daily just reads as a
+ * broken link. And 404 renders outside the portal layout, so it arrived with
+ * no sidebar: there was no way to reach any other tab from it.
+ *
+ * Non-membership is still notFound(), one level up in resolveCharityPortal.
+ * That distinction is the point: an outsider is told nothing, a member is
+ * told exactly what they are missing and where they may go instead.
+ */
 export async function requirePortalPermission(nameParam: string, permission: string) {
   const access = await resolveCharityPortal(nameParam);
-  if (!access.can(permission)) notFound();
+  if (!access.can(permission)) {
+    redirect(
+      `/portal/${encodeURIComponent(access.charity.name)}/no-access?need=${encodeURIComponent(permission)}`
+    );
+  }
   return access;
 }

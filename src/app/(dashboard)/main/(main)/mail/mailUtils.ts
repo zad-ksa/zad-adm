@@ -4,6 +4,17 @@ export type MailListItem = {
   subject: string;
   snippet: string;
   displayName: string;
+  /**
+   * مَن كانت الرسالة موجّهة إليه ظاهرياً (TO) — يظهر بجانب اسم المرسل في الوارد
+   * والمميّزة وسلة المهملات فقط. غائب في المرسل/المسودات لأن اسم المستلم هناك هو
+   * displayName نفسه أصلاً.
+   *
+   * الغرض: مستلم بالنسخة المخفية (BCC) يرى في صندوق وارده "من فلان — إلى علّان"،
+   * لا "من فلان" وحدها التي توحي بأن الرسالة موجَّهة إليه هو تحديداً بينما هي في
+   * الحقيقة موجَّهة لشخص آخر ونُسخت إليه خفيةً. القيمة مبنية على `recipients` بعد
+   * أن غربلته stripHiddenBcc في مصدر البيانات، فلا تحمل أسماء نسخة مخفية أخرى.
+   */
+  toLabel: string | null;
   avatarUrl: string | null;
   isUnread: boolean;
   isStarred: boolean;
@@ -27,6 +38,7 @@ export function normalizeMailListItem(
 
   let displayName = "غير معروف";
   let avatarUrl: string | null = null;
+  let toLabel: string | null = null;
 
   if (tab === "sent") {
     const recipients = mail.recipients || [];
@@ -40,6 +52,12 @@ export function normalizeMailListItem(
   } else {
     displayName = mail.sender?.name || "غير معروف";
     avatarUrl = mail.sender?.avatarUrl || null;
+
+    const toNames = (mail.recipients || [])
+      .filter((r: any) => r.type === "TO")
+      .map((r: any) => r.employee?.name)
+      .filter(Boolean);
+    toLabel = toNames.length > 0 ? toNames.join("، ") : null;
   }
 
   return {
@@ -48,6 +66,7 @@ export function normalizeMailListItem(
     subject: mail.subject || "(بدون موضوع)",
     snippet: htmlToPlainText(mail.body || ""),
     displayName,
+    toLabel,
     avatarUrl,
     isUnread: tab !== "sent" && tab !== "drafts" && item.isRead === false,
     isStarred: !!item.isStarred,

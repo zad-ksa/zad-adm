@@ -373,6 +373,32 @@ export default function ComposeModal({ isOpen, onClose, employees, onSuccess, re
     e.target.value = ""; // so picking the same file twice in a row still fires
   };
 
+  // Ctrl+V يرفق صورة أو أي ملف كان في الحافظة (نسخته من مستكشف الملفات مثلاً) —
+  // بنفس مسار "إرفاق ملف" تماماً. على مستوى document لا عنصر بعينه، لأن حدث
+  // paste يصعد من العنصر المُركَّز فقط وقد لا يكون أي عنصر داخل النافذة مُركَّزاً.
+  // لا يمسّ لصق النص العادي في الموضوع أو المحرر: لا يتدخّل ولا يستدعي
+  // preventDefault إلا حين تحتوي الحافظة فعلاً على ملف.
+  useEffect(() => {
+    function handlePaste(e: ClipboardEvent) {
+      const items = e.clipboardData?.items;
+      if (!items) return;
+      const files: File[] = [];
+      for (const item of Array.from(items)) {
+        if (item.kind === "file") {
+          const file = item.getAsFile();
+          if (file) files.push(file);
+        }
+      }
+      if (files.length > 0) {
+        e.preventDefault();
+        addFiles(files);
+      }
+    }
+    document.addEventListener("paste", handlePaste);
+    return () => document.removeEventListener("paste", handlePaste);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const removeAttachment = (key: string) => {
     markEdited();
     setAttachments((prev) => prev.filter((a) => a.key !== key));
@@ -610,7 +636,7 @@ export default function ComposeModal({ isOpen, onClose, employees, onSuccess, re
               type="button"
               onClick={() => fileInputRef.current?.click()}
               className="w-9 h-9 flex items-center justify-center text-slate-500 dark:text-slate-400 hover:bg-primary/[0.08] hover:text-primary dark:hover:text-teal-300 rounded-full transition-colors"
-              title="إرفاق ملف"
+              title="إرفاق ملف — أو الصق صورة/ملف مباشرة بـ Ctrl+V"
             >
               <Paperclip className="w-4 h-4" />
             </button>

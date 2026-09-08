@@ -304,7 +304,9 @@ export default function ComposeModal({ isOpen, onClose, employees, onSuccess, re
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMessage(null);
-    if (toIds.length === 0) {
+    // Any of the three counts. A blind-copy-only message needs nobody in the
+    // open — that is the whole point of it.
+    if (toIds.length + ccIds.length + bccIds.length === 0) {
       setErrorMessage("يجب تحديد مستلم واحد على الأقل");
       return;
     }
@@ -637,7 +639,7 @@ export default function ComposeModal({ isOpen, onClose, employees, onSuccess, re
 
           <button
             onClick={handleSubmit}
-            disabled={isSubmitting || toIds.length === 0 || uploadingCount > 0 || failedCount > 0}
+            disabled={isSubmitting || toIds.length + ccIds.length + bccIds.length === 0 || uploadingCount > 0 || failedCount > 0}
             className="flex items-center gap-2 h-11 px-6 text-white bg-gradient-to-b from-[#17857c] via-primary to-[#0c645d] shadow-[var(--mail-shadow-cta)] hover:shadow-[var(--mail-shadow-cta-hover)] active:translate-y-px rounded-xl font-semibold text-[length:var(--mail-fs-nav)] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}

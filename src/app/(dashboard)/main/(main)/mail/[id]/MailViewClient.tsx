@@ -223,6 +223,31 @@ function ThreadMessageCard({
   const toRecipients: RecipientRow[] = (message.recipients || []).filter((r: RecipientRow) => r.type === "TO");
   const ccRecipients: RecipientRow[] = (message.recipients || []).filter((r: RecipientRow) => r.type === "CC");
 
+  /**
+   * Blind copies. The server has already stripped every row the viewer may
+   * not see (stripHiddenBcc), so what arrives here is either the whole list —
+   * because this is the sender's own copy — or the viewer's single row.
+   */
+  const bccRecipients: RecipientRow[] = (message.recipients || []).filter(
+    (r: RecipientRow) => r.type === "BCC"
+  );
+  const isSender = message.senderId === currentUserId;
+
+  /**
+   * Who to name on the "إلى" line.
+   *
+   * A blind-copy-only message has no visible recipient at all, and the line
+   * used to render as a bare "إلى:" followed by nothing. For the reader the
+   * honest answer is their own name — as far as they can tell, and as far as
+   * this message is willing to say, they are the only one who got it.
+   */
+  const addressedTo =
+    toRecipients.length > 0
+      ? toRecipients.map((r) => r.employee.name)
+      : bccRecipients
+          .filter((r) => r.employeeId === currentUserId)
+          .map((r) => r.employee.name);
+
   // "Reply all" only earns its place when there is somebody else to include.
   const otherPeople = [...toRecipients, ...ccRecipients].filter(
     (r: RecipientRow) => r.employeeId !== currentUserId && r.employeeId !== message.senderId
@@ -278,12 +303,26 @@ function ThreadMessageCard({
             <div className="font-semibold text-slate-900 dark:text-slate-100 text-[length:var(--mail-fs-sender)]">{message.sender?.name}</div>
             <div className="text-[length:var(--mail-fs-meta)] text-slate-500 dark:text-slate-400 flex items-center gap-2 flex-wrap mt-1">
               <span>إلى:</span>
-              <span className="text-slate-600 dark:text-slate-300">{toRecipients.map((r) => r.employee.name).join("، ")}</span>
+              <span className="text-slate-600 dark:text-slate-300">
+                {addressedTo.length > 0 ? addressedTo.join("، ") : "—"}
+              </span>
               {ccRecipients.length > 0 && (
                 <>
                   <span className="mx-1">|</span>
                   <span>نسخة:</span>
                   <span className="text-slate-600 dark:text-slate-300">{ccRecipients.map((r) => r.employee.name).join("، ")}</span>
+                </>
+              )}
+              {/* Only ever the sender: a recipient's copy contains their own
+                  row and nobody else's, and naming them back to themselves
+                  here would just repeat the line above. */}
+              {isSender && bccRecipients.length > 0 && (
+                <>
+                  <span className="mx-1">|</span>
+                  <span>نسخة مخفية:</span>
+                  <span className="text-slate-600 dark:text-slate-300">
+                    {bccRecipients.map((r) => r.employee.name).join("، ")}
+                  </span>
                 </>
               )}
             </div>

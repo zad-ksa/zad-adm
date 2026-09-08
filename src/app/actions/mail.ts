@@ -69,11 +69,17 @@ export async function sendMail(data: {
 }) {
   const user = await getAuthenticatedUser();
 
-  if (!data.toIds || data.toIds.length === 0) {
+  const recipientsData = buildRecipientsData(data);
+
+  // At least one recipient of ANY kind, rather than specifically a TO.
+  //
+  // A blind-copy-only message is a real thing to want: one notice, sent to
+  // thirty people, each of whom sees it addressed to them alone and cannot
+  // see the other twenty-nine. Demanding a visible recipient forced the
+  // sender to put somebody in the open just to satisfy the form.
+  if (recipientsData.length === 0) {
     throw new Error("يجب تحديد مستلم واحد على الأقل");
   }
-
-  const recipientsData = buildRecipientsData(data);
   const cleanBody = sanitizeMailHtml(data.body);
 
   // Anchor every reply to the thread root so multi-level replies stay in one conversation

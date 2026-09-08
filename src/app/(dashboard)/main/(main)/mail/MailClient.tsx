@@ -83,10 +83,18 @@ export default function MailClient({ session, employees, initialTab, initialMail
   // carries a token; only the newest is allowed to write to state.
   const requestToken = useRef(0);
 
-  const fetchMails = async () => {
+  /**
+   * `quiet` is what makes a background refresh bearable: no spinner and no
+   * clearing of the selection. A poll that flashed the skeleton every thirty
+   * seconds and dropped whatever you had ticked would be worse than the
+   * staleness it fixes.
+   */
+  const fetchMails = async ({ quiet = false }: { quiet?: boolean } = {}) => {
     const token = ++requestToken.current;
-    setIsLoading(true);
-    setSelectedMails([]);
+    if (!quiet) {
+      setIsLoading(true);
+      setSelectedMails([]);
+    }
     try {
       let result;
       if (currentTab === "inbox") {
@@ -111,7 +119,7 @@ export default function MailClient({ session, employees, initialTab, initialMail
     } catch (error) {
       console.error("Error fetching mails:", error);
     } finally {
-      if (token === requestToken.current) setIsLoading(false);
+      if (!quiet && token === requestToken.current) setIsLoading(false);
     }
   };
 
@@ -127,6 +135,42 @@ export default function MailClient({ session, employees, initialTab, initialMail
       return;
     }
     fetchMails();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentTab, page, appliedSearch]);
+
+  /**
+   * New mail arrives on its own; the list did not.
+   *
+   * It fetched on tab, page and search changes and on the refresh button —
+   * so a message that landed while you sat on the inbox stayed invisible
+   * until you reloaded. The sidebar badge, which polls, would meanwhile say
+   * you had one. Badge and list disagreeing is what sends someone to F5.
+   *
+   * Inbox only: sent, drafts and trash change solely by your own action, and
+   * polling them would be a query per thirty seconds asking nothing.
+   *
+   * Paused while the tab is hidden, and caught up the moment it is looked at
+   * again — the same shape the approvals screen already uses.
+   */
+  useEffect(() => {
+    if (currentTab !== "inbox") return;
+
+    const tick = () => {
+      if (document.hidden) return;
+      fetchMails({ quiet: true });
+      // Keep the badge in step with the list it counts, rather than letting
+      // its own slower poll disagree with what is on screen.
+      notifyMailUnreadChanged();
+    };
+
+    const interval = setInterval(tick, 30_000);
+    document.addEventListener("visibilitychange", tick);
+    return () => {
+      clearInterval(interval);
+      document.removeEventListener("visibilitychange", tick);
+    };
+    // fetchMails closes over the current tab, page and search — the deps that
+    // matter are exactly those, and it is redefined with them each render.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentTab, page, appliedSearch]);
 
@@ -310,7 +354,7 @@ export default function MailClient({ session, employees, initialTab, initialMail
               )}
             </button>
             <button
-              onClick={fetchMails}
+              onClick={() => fetchMails()}
               className="w-8 h-8 flex items-center justify-center rounded-lg text-slate-400 dark:text-slate-500 hover:bg-primary/[0.08] hover:text-primary dark:hover:text-teal-300 transition-colors"
               title="تحديث"
             >

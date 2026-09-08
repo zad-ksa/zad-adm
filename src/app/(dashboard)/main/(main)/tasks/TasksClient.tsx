@@ -1116,7 +1116,7 @@ ${combinedAchievements.length > 0 ? `
                       ) : (
                         <p
                           onClick={() => setDetailTask(task)}
-                          title="عرض تفاصيل المهمة"
+                          title={task.title}
                           className="text-sm font-semibold text-slate-800 dark:text-slate-100 leading-snug cursor-pointer hover:text-primary transition-colors lg:truncate"
                         >
                           {task.title}

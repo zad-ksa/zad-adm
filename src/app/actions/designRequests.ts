@@ -240,7 +240,7 @@ export async function createDesignRequestFromPortal(input: CreateDesignRequestIn
     const charityId = input.charityId;
     if (!charityId) return { error: "يرجى اختيار الجمعية" };
 
-    const session = await requireCharityMemberPermission(charityId, "create_design_requests");
+    const session = await requireCharityMemberPermission(charityId, "view_design_requests");
 
     if (!input.title?.trim()) return { error: "يرجى إدخال عنوان الطلب" };
     if (input.attachments.length > 10) return { error: "الحد الأقصى 10 مرفقات لكل طلب" };
@@ -494,7 +494,7 @@ export async function resubmitDesignRequest(input: {
     if (!existing) return { error: "الطلب غير موجود" };
 
     if (!existing.charityId) return { error: "هذا الطلب لا يتبع جمعية" };
-    const session = await requireCharityMemberPermission(existing.charityId, "create_design_requests");
+    const session = await requireCharityMemberPermission(existing.charityId, "view_design_requests");
 
     // Only a rejected request can be resubmitted. Without this, the same button
     // could be used to drag an approved request back out of the queue.
@@ -610,7 +610,7 @@ export async function approveDeliveryByCharity(id: string) {
     if (!request) return { error: "الطلب غير موجود" };
     if (!request.charityId) return { error: "هذا الطلب لا يتبع جمعية" };
 
-    const session = await requireCharityMemberPermission(request.charityId, "create_design_requests");
+    const session = await requireCharityMemberPermission(request.charityId, "view_design_requests");
 
     if (request.status !== "AWAITING_REVIEW") return { error: "هذا الطلب ليس بانتظار مراجعتك" };
 
@@ -660,7 +660,7 @@ export async function requestDesignRevision(input: {
     if (!request) return { error: "الطلب غير موجود" };
     if (!request.charityId) return { error: "هذا الطلب لا يتبع جمعية" };
 
-    const session = await requireCharityMemberPermission(request.charityId, "create_design_requests");
+    const session = await requireCharityMemberPermission(request.charityId, "view_design_requests");
 
     if (request.status !== "AWAITING_REVIEW") return { error: "لا يمكن طلب التعديل على هذا الطلب" };
 
@@ -1159,7 +1159,7 @@ export async function reorderCharityQueue(input: {
       if (!input.charityId) throw staffErr;
       const session = await requireCharityMemberPermission(
         input.charityId,
-        "create_design_requests"
+        "view_design_requests"
       );
       actor = { type: "CHARITY_USER", id: session.id, name: session.name };
     }
@@ -1567,7 +1567,7 @@ export async function updateDesignRequestDetails(input: {
       if (!request.charityId) throw new Error("هذا الطلب لا يتبع جمعية");
       const session = await requireCharityMemberPermission(
         request.charityId,
-        "create_design_requests"
+        "view_design_requests"
       );
       actor = { type: "CHARITY_USER", id: session.id, name: session.name };
 

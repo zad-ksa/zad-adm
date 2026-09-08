@@ -153,7 +153,10 @@ export default async function DesignRequestsPortalPage({ params }: { params: Pro
         charityId={charity.id}
         charityName={charity.name}
         initialItems={items}
-        canCreate={can("create_design_requests")}
+        // Always true here: the page above already required this exact
+        // permission. Kept as a prop rather than inlined, so the client keeps
+        // reading a capability rather than assuming one.
+        canCreate={can("view_design_requests")}
         designTypes={designTypes}
       />
     </div>

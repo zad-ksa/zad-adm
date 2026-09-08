@@ -146,7 +146,7 @@ export default function DesignRequestsPortalClient({
           </div>
         </div>
 
-        {/* Bento Box 2: Primary Action — hidden without create_design_requests.
+        {/* Bento Box 2: Primary Action — hidden without view_design_requests.
             Cosmetic only; the server action re-checks the same permission. */}
         {canCreate && (
         <div className="md:col-span-1 bg-white dark:bg-[#0A0A0A] border border-slate-200 dark:border-slate-800 rounded-3xl p-6 shadow-sm hover:shadow-md dark:shadow-none transition-shadow flex flex-col justify-center items-center text-center gap-4 group">

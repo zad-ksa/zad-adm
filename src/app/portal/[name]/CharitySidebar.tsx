@@ -180,10 +180,18 @@ export default function CharitySidebar({
   // A missing permission here just avoids showing a link that would 404.
   const can = (permission: string) => isAdmin || permissions.includes(permission);
 
+  // Each tab now shows only to someone who may open it. It used to be `show:
+  // true` across the board, so every member saw every section and found out
+  // which ones were theirs by clicking into a refusal.
   const mainItems = [
-    { id: "services", label: "الخدمات", href: `/portal/${encodeURIComponent(charityName)}/services`, exact: true, icon: Briefcase, show: true },
-    { id: "governance", label: "الحوكمة", href: `/portal/${encodeURIComponent(charityName)}/governance`, exact: true, icon: Scale, show: true },
-    { id: "design-requests", label: "طلبات التصاميم", href: `/portal/${encodeURIComponent(charityName)}/design-requests`, exact: true, icon: Palette, show: true },
+    { id: "services", label: "الخدمات", href: `/portal/${encodeURIComponent(charityName)}/services`, exact: true, icon: Briefcase, show: can("view_services") },
+    { id: "governance", label: "الحوكمة", href: `/portal/${encodeURIComponent(charityName)}/governance`, exact: true, icon: Scale, show: can("view_governance") },
+    // Viewing and raising a design request are one permission — see
+    // charityPermissions.ts.
+    { id: "design-requests", label: "طلبات التصاميم", href: `/portal/${encodeURIComponent(charityName)}/design-requests`, exact: true, icon: Palette, show: can("view_design_requests") },
+    // No permission gates these two: they lead nowhere yet. Adding a checkbox
+    // for a page that does not exist would tell whoever grants it that they had
+    // controlled access to something — the mistake documented on `view_hr`.
     { id: "strategy", label: "الاستراتيجية", href: "#", comingSoon: true, icon: Target, show: true },
     { id: "finance", label: "تنمية الموارد المالية", href: "#", comingSoon: true, icon: Coins, show: true },
     // Always visible, like every other section here. Where it lands depends on

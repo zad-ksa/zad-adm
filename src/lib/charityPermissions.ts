@@ -48,8 +48,15 @@ export const CHARITY_PERMISSION_GROUPS: CharityPermissionGroup[] = [
     permissions: [
       { id: "view_services", label: "الخدمات" },
       { id: "view_governance", label: "الحوكمة" },
-      { id: "view_design_requests", label: "عرض طلبات التصاميم" },
-      { id: "create_design_requests", label: "رفع طلب تصميم" },
+      // Seeing the design requests and raising one are a single permission.
+      // They were two, and every membership that held either held both — the
+      // split described a distinction nobody was making, while giving whoever
+      // grants permissions two checkboxes to keep in step by hand.
+      //
+      // `create_design_requests` is retired. Values still sitting in older
+      // memberships are inert and drop on the next save, the same way the old
+      // `view_hr` value does.
+      { id: "view_design_requests", label: "طلبات التصاميم (عرض ورفع)" },
       // No `view_hr` here. Nothing reads it: the HR section is open to every
       // active member because recording your own attendance is not a privilege,
       // and the screens inside it gate themselves on manage_charity_users,

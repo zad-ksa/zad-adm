@@ -119,7 +119,10 @@ const ACTION_CONFIG: Record<Action, { label: string; color: string; icon: any }>
 // شبكة الأعمدة المشتركة بين رأس الجدول وكل صف — نفس التوزيع بالحرف في الاثنين
 // هو ما يجعلها تصطف كجدول فعلي بدل تكديس كل شيء فوق بعضه. لا تظهر إلا من
 // lg فأعلى؛ الجوال يبقى على تخطيط البطاقة المرن الحالي.
-const TABLE_GRID_COLS = "lg:grid-cols-[minmax(0,3fr)_84px_108px_118px_128px_128px_86px_130px]";
+// عمود "رفعه" يحمل اسماً كاملاً + المسمى الوظيفي بين قوسين، وهو أطول محتوى ثابت
+// في الصف بعد العنوان — فأخذ نصيباً أكبر على حساب "القسم" الذي يبقى فارغاً "—"
+// في أغلب الطلبات فعلياً.
+const TABLE_GRID_COLS = "lg:grid-cols-[minmax(0,3fr)_84px_104px_84px_170px_128px_82px_130px]";
 
 function timeAgo(date: string | Date) {
   const diff = Date.now() - new Date(date).getTime();

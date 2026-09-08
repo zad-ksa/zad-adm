@@ -119,7 +119,7 @@ const ACTION_CONFIG: Record<Action, { label: string; color: string; icon: any }>
 // شبكة الأعمدة المشتركة بين رأس الجدول وكل صف — نفس التوزيع بالحرف في الاثنين
 // هو ما يجعلها تصطف كجدول فعلي بدل تكديس كل شيء فوق بعضه. لا تظهر إلا من
 // lg فأعلى؛ الجوال يبقى على تخطيط البطاقة المرن الحالي.
-const TABLE_GRID_COLS = "lg:grid-cols-[minmax(0,2fr)_88px_112px_132px_140px_140px_92px_128px]";
+const TABLE_GRID_COLS = "lg:grid-cols-[minmax(0,3fr)_84px_108px_118px_128px_128px_86px_130px]";
 
 function timeAgo(date: string | Date) {
   const diff = Date.now() - new Date(date).getTime();
@@ -221,7 +221,7 @@ function RequestCard({
   const raisedByNode = request.createdBy ? (
     <span className="flex items-center gap-1 min-w-0">
       <User className="w-3 h-3 shrink-0 text-slate-400" />
-      <span className="truncate font-medium text-slate-600 dark:text-slate-300">
+      <span title={isOwner ? "أنت" : request.createdBy.name} className="truncate font-medium text-slate-600 dark:text-slate-300">
         {isOwner ? "أنت" : request.createdBy.name}
       </span>
       {!isOwner && (
@@ -242,11 +242,11 @@ function RequestCard({
   const withNode =
     request.status === "DELEGATED" && request.delegatedTo ? (
       <span className="flex items-center gap-1 min-w-0 text-purple-500 dark:text-purple-400 font-bold">
-        <UserCheck className="w-3 h-3 shrink-0" /> <span className="truncate">{request.delegatedTo.name}</span>
+        <UserCheck className="w-3 h-3 shrink-0" /> <span title={request.delegatedTo.name} className="truncate">{request.delegatedTo.name}</span>
       </span>
     ) : request.status === "PENDING" && request.currentReviewer ? (
       <span className="flex items-center gap-1 min-w-0 text-primary font-bold">
-        <ChevronRight className="w-3 h-3 shrink-0" /> <span className="truncate">{request.currentReviewer.name}</span>
+        <ChevronRight className="w-3 h-3 shrink-0" /> <span title={request.currentReviewer.name} className="truncate">{request.currentReviewer.name}</span>
       </span>
     ) : (
       <span className="text-slate-300 dark:text-slate-600">—</span>
@@ -282,7 +282,7 @@ function RequestCard({
       {/* صف الجدول — سطح المكتب (lg فأعلى). كل معلومة في عمودها الثابت، بنفس
           توزيع رأس الجدول أعلى القائمة، فلا شيء يزدحم فوق شيء آخر. */}
       <div className={`hidden lg:grid ${TABLE_GRID_COLS} items-center gap-3 px-3 py-2.5`}>
-        <span className="min-w-0 truncate text-sm font-bold text-slate-800 dark:text-slate-100">{request.title}</span>
+        <span title={request.title} className="min-w-0 truncate text-sm font-bold text-slate-800 dark:text-slate-100">{request.title}</span>
         <span className={`inline-flex w-fit text-[10px] font-bold px-2 py-0.5 rounded-full ${priority.bg} ${priority.color}`}>
           {priority.label}
         </span>
@@ -290,7 +290,7 @@ function RequestCard({
           <StatusIcon className="w-3 h-3" />{status.label}
         </span>
         {catInfo ? (
-          <span className={`inline-flex w-fit truncate text-[10px] font-bold px-2 py-0.5 rounded-full border ${catInfo.bg} ${catInfo.color} ${catInfo.border}`}>
+          <span title={catInfo.label} className={`inline-flex w-fit max-w-full truncate text-[10px] font-bold px-2 py-0.5 rounded-full border ${catInfo.bg} ${catInfo.color} ${catInfo.border}`}>
             {catInfo.label}
           </span>
         ) : <span className="text-slate-300 dark:text-slate-600">—</span>}
@@ -299,7 +299,7 @@ function RequestCard({
           {withNode}
           {request.chain && (
             <span className="flex items-center gap-1 text-indigo-400 truncate">
-              <GitBranch className="w-3 h-3 shrink-0" /> <span className="truncate">{request.chain.name}</span>
+              <GitBranch className="w-3 h-3 shrink-0" /> <span title={request.chain.name} className="truncate">{request.chain.name}</span>
             </span>
           )}
         </div>

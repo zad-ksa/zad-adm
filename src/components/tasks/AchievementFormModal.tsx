@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition, useCallback } from "react";
+import { useState, useTransition, useCallback, useEffect } from "react";
 import { X, Sparkles, FolderPlus, Folder, Calendar, UploadCloud, FileImage, Camera, Plus, Trash2, Loader2, ClipboardPaste } from "lucide-react";
 import { Charity } from "@/types";
 import { addCategory, deleteCategory } from "@/app/actions/categories";
@@ -43,6 +43,24 @@ export default function AchievementFormModal({
     setProofFile(file);
   }, []);
   useImagePaste(handlePastedImage, isOpen);
+
+  // النافذة تبقى مثبَّتة دائماً في الشجرة (isOpen يتحكم بالعرض فقط لا بالتركيب)،
+  // فحقولها لا تُصفَّر تلقائياً بين فتحة وأخرى كما يحدث مع مكوّن يُفكَّك ويُعاد
+  // تركيبه. من هنا كان مَن ينشر إنجازاً ثم يفتح النافذة لإنجاز آخر يجد نفس ما
+  // كتبه سابقاً — تُصفَّر الحقول صراحةً كل مرة تُفتح فيها.
+  useEffect(() => {
+    if (isOpen) {
+      setTitle("");
+      setCharityId("internal");
+      setCategory(categories[0] || "الاستراتيجية");
+      setDate("");
+      setProofFile(null);
+      setShowAddCat(false);
+      setNewCatName("");
+      setCatError(null);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen]);
 
   if (!isOpen) return null;
 

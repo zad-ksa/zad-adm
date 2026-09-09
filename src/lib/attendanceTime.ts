@@ -168,6 +168,25 @@ export function countWorkDaysInRanges(
   return workingDays.filter((day) => fallsWithin(day, ranges)).length;
 }
 
+/** "YYYY-MM-DD" → the UTC-midnight anchor of that Riyadh day, or null. */
+export function parseCivilDay(value: string): Date | null {
+  const m = /^(\d{4})-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/.exec(value.trim());
+  if (!m) return null;
+  const date = new Date(Date.UTC(Number(m[1]), Number(m[2]) - 1, Number(m[3])));
+  // Rejects the 31st of a 30-day month, which the regex alone accepts.
+  return date.getUTCDate() === Number(m[3]) ? date : null;
+}
+
+/** "HH:MM" Riyadh local on a given civil day → the instant it denotes. */
+export function instantOn(workDate: Date, time: string): Date | null {
+  const m = /^([01]?\d|2[0-3]):([0-5]\d)$/.exec(time.trim());
+  if (!m) return null;
+  const minutes = Number(m[1]) * 60 + Number(m[2]);
+  // workDate is UTC midnight of the Riyadh day, so Riyadh 00:00 is three hours
+  // earlier in UTC.
+  return new Date(workDate.getTime() + minutes * 60_000 - RIYADH_OFFSET_MS);
+}
+
 /** Current Riyadh civil month as "YYYY-MM". */
 export function currentRiyadhMonth(now: Date = new Date()): string {
   const shifted = new Date(now.getTime() + RIYADH_OFFSET_MS);

@@ -13,6 +13,7 @@ import {
   LogOut,
   MapPin,
   MoonStar,
+  PenLine,
   Wifi,
 } from "lucide-react";
 import { zadCheckIn, zadCheckOut } from "@/app/actions/zadAttendance";
@@ -33,6 +34,8 @@ type MonthRecord = {
   isRemote: boolean;
   /** Non-null means the nightly sweep ended this day because no check-out came. */
   autoClosedAt: string | null;
+  manualAt: string | null;
+  manualReason: string | null;
 };
 
 /** Riyadh wall-clock, independent of whatever the device's clock is set to. */
@@ -271,6 +274,17 @@ export default function MyAttendanceClient({
                       {r.autoClosedAt && (
                         <span className="mr-1.5 text-[10px] text-amber-600 dark:text-amber-400 font-bold">
                           <MoonStar className="w-3 h-3 inline" /> أُغلق تلقائياً
+                        </span>
+                      )}
+                      {/* Entered by an administrator, not confirmed by a device.
+                          The reason travels with it so the day is not a silent
+                          rewrite of what happened. */}
+                      {r.manualAt && (
+                        <span
+                          className="mr-1.5 text-[10px] text-slate-500 dark:text-slate-400 font-bold"
+                          title={r.manualReason ?? undefined}
+                        >
+                          <PenLine className="w-3 h-3 inline" /> أُدخل يدوياً
                         </span>
                       )}
                     </td>

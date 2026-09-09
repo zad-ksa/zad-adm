@@ -14,7 +14,13 @@ import {
   isValidCoordinate,
   normalizeIp,
 } from "@/lib/geo";
-import { classifyCheckIn, isEarlyLeave, toCivilDate } from "@/lib/attendanceTime";
+import {
+  classifyCheckIn,
+  instantOn,
+  isEarlyLeave,
+  parseCivilDay,
+  toCivilDate,
+} from "@/lib/attendanceTime";
 import {
   SETTINGS_ID,
   loadAttendanceGate,
@@ -536,6 +542,204 @@ export async function deleteShiftGroup(groupId: string) {
   }
 }
 
+/**
+ * Move the default flag to another group.
+ *
+ * Two statements in one transaction, and the order is forced: a partial unique
+ * index (ZadShiftGroup_one_default … WHERE "isDefault") permits exactly one
+ * true row, so the old default must be cleared before the new one is set.
+ * Setting first would violate the index mid-transaction.
+ *
+ * This is a bigger change than it looks. Everyone with no explicit group
+ * follows whichever group holds this flag, so moving it moves their working
+ * hours — which is why the screen names the number of people affected before
+ * asking.
+ */
+/**
+ * Records or amends one employee's attendance for one day by hand.
+ *
+ * This exists because the GPS layer refuses honestly and often: a cold fix
+ * indoors, a denied permission, a dead battery at 8am, a phone left at home.
+ * Without a way in, every one of those becomes an absence the employee cannot
+ * dispute and the administrator cannot fix — which is how an attendance system
+ * stops being believed.
+ *
+ * What it deliberately does NOT do is fake evidence. No coordinates, distance
+ * or accuracy are ever written by this path, and `manualAt` marks the row so
+ * every screen can say a person entered it rather than a device confirmed it.
+ * A reason is required and is stored on the record itself, not only in the
+ * audit log — the person reading the row a year from now is the one who needs
+ * it.
+ *
+ * The status is derived from the times using that employee's own schedule,
+ * exactly as a real check-in would be. An administrator fixing a forgotten
+ * morning does not get to decide that 10:40 was on time.
+ *
+ * Clearing the check-in deletes the row rather than storing an empty one:
+ * absence is derived from the absence of a record, so a blank row would read
+ * as "present, times unknown".
+ */
+export async function correctZadAttendance(input: {
+  employeeId: string;
+  workDate: string;
+  checkInAt: string | null;
+  checkOutAt: string | null;
+  reason: string;
+}) {
+  try {
+    const session = await requireAttendanceAdmin();
+
+    const reason = (input.reason || "").trim();
+    if (reason.length < 3) return fail("سبب التعديل مطلوب");
+    if (reason.length > 300) return fail("سبب التعديل طويل جداً");
+
+    const workDate = parseCivilDay(input.workDate || "");
+    if (!workDate) return fail("التاريخ غير صالح");
+    if (workDate > toCivilDate(new Date())) {
+      return fail("لا يمكن تسجيل حضور في يوم لم يأتِ بعد");
+    }
+
+    const employee = await prisma.employee.findUnique({
+      where: { id: input.employeeId },
+      select: { id: true, name: true, isActive: true },
+    });
+    if (!employee) return fail("الموظف غير موجود");
+
+    const checkInAt = input.checkInAt ? instantOn(workDate, input.checkInAt) : null;
+    const checkOutAt = input.checkOutAt ? instantOn(workDate, input.checkOutAt) : null;
+    if (input.checkInAt && !checkInAt) return fail("وقت الحضور غير صالح");
+    if (input.checkOutAt && !checkOutAt) return fail("وقت الانصراف غير صالح");
+    if (checkOutAt && !checkInAt) return fail("لا يمكن تسجيل انصراف بلا حضور");
+    if (checkInAt && checkOutAt && checkOutAt <= checkInAt) {
+      return fail("وقت الانصراف يجب أن يكون بعد وقت الحضور");
+    }
+
+    const now = new Date();
+
+    if (!checkInAt) {
+      const removed = await prisma.zadAttendanceRecord.deleteMany({
+        where: { employeeId: employee.id, workDate },
+      });
+      if (removed.count === 0) return fail("لا يوجد سجل لحذفه في هذا اليوم");
+
+      await logAudit({
+        actorType: "EMPLOYEE",
+        actorId: session.id,
+        actorName: session.name,
+        action: "ZAD_ATTENDANCE_CLEARED",
+        targetType: "Employee",
+        targetId: employee.id,
+        metadata: { workDate: input.workDate, reason, employeeName: employee.name },
+      });
+
+      revalidatePath("/main/attendance");
+      return { success: true as const, cleared: true };
+    }
+
+    const schedule = await loadEmployeeSchedule(employee.id);
+    const status: AttendanceStatus =
+      checkOutAt && isEarlyLeave(checkOutAt, schedule)
+        ? "EARLY_LEAVE"
+        : (classifyCheckIn(checkInAt, schedule) as AttendanceStatus);
+
+    await prisma.zadAttendanceRecord.upsert({
+      where: { employeeId_workDate: { employeeId: employee.id, workDate } },
+      create: {
+        employeeId: employee.id,
+        workDate,
+        checkInAt,
+        checkOutAt,
+        status,
+        manualAt: now,
+        manualById: session.id,
+        manualReason: reason,
+      },
+      update: {
+        checkInAt,
+        checkOutAt,
+        status,
+        manualAt: now,
+        manualById: session.id,
+        manualReason: reason,
+        // A hand-amended row carries no device evidence any more, so the
+        // location columns, the site link, the auto-close mark and the
+        // suspicion raised against them are cleared rather than left to
+        // describe a check-in that has been overwritten.
+        checkInLat: null,
+        checkInLng: null,
+        checkInAccuracy: null,
+        checkInDistance: null,
+        checkOutLat: null,
+        checkOutLng: null,
+        checkOutAccuracy: null,
+        checkOutDistance: null,
+        workSiteId: null,
+        isRemote: false,
+        autoClosedAt: null,
+        isSuspicious: false,
+        suspiciousReason: null,
+      },
+    });
+
+    await logAudit({
+      actorType: "EMPLOYEE",
+      actorId: session.id,
+      actorName: session.name,
+      action: "ZAD_ATTENDANCE_CORRECTED",
+      targetType: "Employee",
+      targetId: employee.id,
+      metadata: {
+        workDate: input.workDate,
+        checkInAt: input.checkInAt,
+        checkOutAt: input.checkOutAt,
+        status,
+        reason,
+        employeeName: employee.name,
+      },
+    });
+
+    revalidatePath("/main/attendance");
+    return { success: true as const };
+  } catch (error) {
+    return refuse(error, "تعذّر حفظ التعديل");
+  }
+}
+
+export async function setDefaultShiftGroup(groupId: string) {
+  try {
+    const session = await requireAttendanceAdmin();
+
+    const group = await prisma.zadShiftGroup.findUnique({
+      where: { id: groupId },
+      select: { id: true, name: true, isDefault: true },
+    });
+    if (!group) return fail("المجموعة غير موجودة");
+    if (group.isDefault) return { success: true as const };
+
+    await prisma.$transaction(async (tx) => {
+      await tx.zadShiftGroup.updateMany({
+        where: { isDefault: true },
+        data: { isDefault: false },
+      });
+      await tx.zadShiftGroup.update({ where: { id: groupId }, data: { isDefault: true } });
+    }, { timeout: 20_000, maxWait: 15_000 });
+
+    await logAudit({
+      actorType: "EMPLOYEE",
+      actorId: session.id,
+      actorName: session.name,
+      action: "ZAD_SHIFT_GROUP_SET_DEFAULT",
+      targetId: groupId,
+      metadata: { name: group.name },
+    });
+
+    revalidatePath("/main/attendance");
+    return { success: true as const };
+  } catch (error) {
+    return refuse(error, "تعذّر تعيين المجموعة الافتراضية");
+  }
+}
+
 export async function assignEmployeesToGroup(groupId: string | null, employeeIds: string[]) {
   try {
     const session = await requireAttendanceAdmin();
@@ -597,6 +801,43 @@ export async function setZadAttendanceOpen(open: boolean) {
     return { success: true as const };
   } catch (error) {
     return refuse(error, "تعذّر تغيير حالة التحضير");
+  }
+}
+
+/**
+ * The public address this request arrived from, as the server sees it.
+ *
+ * Deliberately not an external "what is my IP" service. Enforcement compares
+ * against whatever `getClientIp` reads out of the proxy headers on a check-in,
+ * and an outside service can legitimately answer with a different address —
+ * a second egress IP, a corporate proxy, IPv6 versus IPv4. Reading it here
+ * means the number an administrator adds to the allow list is the exact number
+ * that will later be matched, rather than one that merely ought to be.
+ *
+ * It is normalised the same way too, so an IPv4-mapped IPv6 form or a trailing
+ * port does not get stored as an entry that can never match.
+ */
+export async function readNetworkOrigin() {
+  try {
+    await requireAttendanceAdmin();
+
+    const raw = await getClientIp();
+    const ip = normalizeIp(raw);
+    if (!ip) {
+      return fail("تعذّرت قراءة عنوان الشبكة من هذا الطلب");
+    }
+
+    const settings = await loadSettings();
+    return {
+      success: true as const,
+      ip,
+      // Whether it would pass today's list — an empty list allows everything,
+      // which is the same answer isIpAllowed gives enforcement.
+      allowed: isIpAllowed(ip, settings.allowedIpRanges),
+      hasRanges: settings.allowedIpRanges.length > 0,
+    };
+  } catch (error) {
+    return refuse(error, "تعذّرت قراءة عنوان الشبكة");
   }
 }
 

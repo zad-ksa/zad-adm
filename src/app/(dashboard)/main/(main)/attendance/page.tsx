@@ -6,6 +6,8 @@ import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { toCivilDate, civilDaysOfMonth, currentRiyadhMonth } from "@/lib/attendanceTime";
 import { loadAttendanceGate, loadEmployeeSchedule, isDeductible } from "@/lib/zadAttendance";
+import { hasPermission } from "@/lib/permissions";
+import AttendanceTabs from "./AttendanceTabs";
 import MyAttendanceClient from "./MyAttendanceClient";
 
 export const metadata: Metadata = { title: "التحضير | زاد التنموية" };
@@ -41,7 +43,7 @@ export default async function AttendancePage() {
     prisma.zadAttendanceRecord.findMany({
       where: {
         employeeId: session.id,
-        ...(monthRange ? { workDate: { gte: monthRange.start, lte: monthRange.end } } : {}),
+        ...(monthRange ? { workDate: { gte: monthRange.start, lt: monthRange.end } } : {}),
       },
       orderBy: { workDate: "desc" },
       select: {
@@ -51,6 +53,8 @@ export default async function AttendancePage() {
         checkOutAt: true,
         isRemote: true,
         autoClosedAt: true,
+        manualAt: true,
+        manualReason: true,
         workSite: { select: { name: true } },
       },
     }),
@@ -74,6 +78,10 @@ export default async function AttendancePage() {
     siteName: r.workSite?.name ?? null,
     isRemote: r.isRemote,
     autoClosedAt: r.autoClosedAt?.toISOString() ?? null,
+    // The employee is the person with the most right to know that a day of
+    // theirs was written by someone else, and on what grounds.
+    manualAt: r.manualAt?.toISOString() ?? null,
+    manualReason: r.manualReason,
   }));
 
   const today = rows.find((r) => r.workDate === workDate.toISOString()) ?? null;
@@ -95,6 +103,15 @@ export default async function AttendancePage() {
           حضورك وانصرافك ورصيد إجازاتك
         </p>
       </header>
+
+      <AttendanceTabs
+        canManage={hasPermission(session.role, session.permissions || [], "manage_zad_attendance")}
+        canViewReports={hasPermission(
+          session.role,
+          session.permissions || [],
+          "view_zad_attendance_reports"
+        )}
+      />
 
       <MyAttendanceClient
         isOpen={openedAt !== null}

@@ -2,7 +2,7 @@
 
 import { Fragment, useState } from "react";
 import { useRouter } from "next/navigation";
-import { AlertTriangle, ChevronDown, Download, MoonStar, Wifi } from "lucide-react";
+import { AlertTriangle, ChevronDown, Download, Lock, MoonStar, PenLine, Wifi } from "lucide-react";
 import { ATTENDANCE_STATUS_LABELS } from "@/lib/attendanceTime";
 import { copyToClipboard } from "@/lib/clipboard";
 
@@ -14,6 +14,8 @@ type Day = {
   isRemote: boolean;
   autoClosedAt: string | null;
   suspiciousReason: string | null;
+  manualAt: string | null;
+  manualReason: string | null;
 };
 
 type Row = {
@@ -36,10 +38,18 @@ const time = (iso: string | null) =>
     : "—";
 
 const date = (iso: string) =>
-  new Intl.DateTimeFormat("ar-SA", { day: "numeric", month: "short", weekday: "short", timeZone: "Asia/Riyadh" })
+  new Intl.DateTimeFormat("ar-SA-u-ca-gregory", { day: "numeric", month: "short", weekday: "short", timeZone: "Asia/Riyadh" })
     .format(new Date(iso));
 
-export default function ReportClient({ month, rows }: { month: string; rows: Row[] }) {
+export default function ReportClient({
+  month,
+  rows,
+  countingFrom,
+}: {
+  month: string;
+  rows: Row[];
+  countingFrom: string | null;
+}) {
   const router = useRouter();
   const [openFor, setOpenFor] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
@@ -69,6 +79,16 @@ export default function ReportClient({ month, rows }: { month: string; rows: Row
 
   return (
     <div className="space-y-4" dir="rtl">
+      {!countingFrom && (
+        <div className="flex items-start gap-2.5 rounded-2xl bg-slate-100 dark:bg-slate-800/60 text-slate-600 dark:text-slate-300 px-4 py-3 text-[13px] leading-relaxed">
+          <Lock className="w-4 h-4 shrink-0 mt-0.5" />
+          <span>
+            نظام التحضير غير مفعّل بعد، فلا يُحتسب غياب على أحد. الأرقام هنا تبقى أصفاراً حتى
+            تفعّله من الإعدادات.
+          </span>
+        </div>
+      )}
+
       <div className="flex items-center justify-between gap-3 flex-wrap">
         <input
           type="month"
@@ -177,6 +197,14 @@ export default function ReportClient({ month, rows }: { month: string; rows: Row
                                     <MoonStar className="w-3 h-3" /> أُغلق تلقائياً
                                   </span>
                                 )}
+                                {d.manualAt && (
+                                  <span
+                                    className="text-slate-500 dark:text-slate-400 font-bold inline-flex items-center gap-1"
+                                    title={d.manualReason ?? undefined}
+                                  >
+                                    <PenLine className="w-3 h-3" /> أُدخل يدوياً
+                                  </span>
+                                )}
                                 {d.suspiciousReason && (
                                   <span className="text-amber-600 dark:text-amber-400">{d.suspiciousReason}</span>
                                 )}
@@ -195,8 +223,10 @@ export default function ReportClient({ month, rows }: { month: string; rows: Row
       </div>
 
       <p className="text-[11px] text-slate-400 dark:text-slate-500 leading-relaxed">
-        الغياب يُحسب على أيام العمل التي مضت في مجموعة كل موظف، بعد استبعاد العطل الرسمية
-        وإجازاته وأي يوم عليه سجل. واليوم الجاري لا يُحسب غياباً على أحد.
+        الغياب يُحسب على أيام العمل التي مضت في مجموعة كل موظف
+        {countingFrom && <> منذ تفعيل النظام في {date(countingFrom)}</>}، بعد استبعاد العطل
+        الرسمية وإجازاته وأي يوم عليه سجل. واليوم الجاري لا يُحسب غياباً على أحد، وكذلك أي يوم
+        سبق التفعيل.
       </p>
     </div>
   );

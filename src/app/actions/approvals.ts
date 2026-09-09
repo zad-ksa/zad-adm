@@ -412,8 +412,19 @@ export async function deleteRequest(requestId: string) {
  */
 export async function getVisibleRequestsAndMarkRead() {
   const session = await requireSession();
-  if (!canViewRequests(session.role, session.permissions || [])) return [];
 
+  // No view_requests gate here, deliberately.
+  //
+  // The approvals page has none either: visibility is decided per request by
+  // visibleRequestFilter — your own requests, ones waiting on you, ones
+  // delegated to you, ones you personally decided. A blanket permission check
+  // in front of that made this action answer [] for anyone lacking
+  // view_requests, while the page rendered their requests normally. The list
+  // therefore appeared on load and emptied itself fifteen seconds later, and
+  // came back only by leaving and re-entering.
+  //
+  // Removing it leaks nothing: the filter, not the permission, is the
+  // authorization, and it is the same filter the page uses.
   const [requests] = await Promise.all([
     prisma.request.findMany({
       ...RELATION_JOIN,
@@ -438,7 +449,11 @@ export async function getVisibleRequestsAndMarkRead() {
 // ── إشعارات ──────────────────────────────────────────────────────────────────
 export async function markNotificationsRead() {
   const session = await requireSession();
-  if (!canViewRequests(session.role, session.permissions || [])) return;
+
+  // Same reasoning: the rows updated are keyed to this employee's own id, and
+  // getUnreadNotificationsCount counts them with no permission check at all.
+  // Gating only the clearing left anyone without view_requests with a badge
+  // that lit up and could never be put out.
   await prisma.requestNotification.updateMany({
     where: { employeeId: session.id, isRead: false },
     data: { isRead: true },

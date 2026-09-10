@@ -1,16 +1,18 @@
 "use client";
 
-import { useState, useTransition, useEffect, useCallback } from "react";
+import { useState, useTransition, useEffect, useCallback, useMemo } from "react";
 import {
   Plus, X, Send, Loader2, AlertCircle, CheckCircle2, Clock,
   FileText, Link2, ExternalLink, Trash2,
   RefreshCw, MessageSquare, CornerUpLeft, Check, ShieldCheck,
   User, Calendar, ArrowRight, GitBranch, UserCheck, ChevronRight, Eye,
+  BellRing, Copy, ClipboardCheck,
 } from "lucide-react";
 import {
   createRequest, reviewRequest, resubmitRequest, deleteRequest,
   getVisibleRequestsAndMarkRead,
 } from "@/app/actions/approvals";
+import { copyToClipboard } from "@/lib/clipboard";
 import { useRoleLabels } from "@/components/RoleLabelsProvider";
 import { DECIDED_ACTION_NAMES } from "@/lib/requestDecisions";
 import { useRouter } from "next/navigation";
@@ -123,6 +125,27 @@ const ACTION_CONFIG: Record<Action, { label: string; color: string; icon: any }>
 // في الصف بعد العنوان — فأخذ نصيباً أكبر على حساب "القسم" الذي يبقى فارغاً "—"
 // في أغلب الطلبات فعلياً.
 const TABLE_GRID_COLS = "lg:grid-cols-[minmax(0,3fr)_84px_104px_84px_170px_128px_82px_130px]";
+
+/** صياغة عربية لعدد طلبات الاعتماد المعلقة. */
+function pendingRequestsPhrase(n: number): string {
+  if (n === 1) return "طلب اعتماد واحد";
+  if (n === 2) return "طلبَي اعتماد";
+  if (n >= 3 && n <= 10) return `${n} طلبات اعتماد`;
+  return `${n} طلب اعتماد`;
+}
+
+/** نص رسمي مختصر يُنسخ ويُرسل عبر وسيلة تواصل أخرى لتذكير المراجِع. */
+function buildReminderMessage(name: string, count: number): string {
+  return [
+    `الأستاذ/ ${name} — حفظه الله،`,
+    "السلام عليكم ورحمة الله وبركاته،",
+    "",
+    `نفيدكم بوجود ${pendingRequestsPhrase(count)} بانتظار مراجعتكم على منصة زاد،`,
+    "ونأمل التكرم باتخاذ الإجراء اللازم بشأنها في أقرب وقت ممكن.",
+    "",
+    "ولكم جزيل الشكر والتقدير.",
+  ].join("\n");
+}
 
 function timeAgo(date: string | Date) {
   const diff = Date.now() - new Date(date).getTime();
@@ -402,6 +425,7 @@ function RequestCard({
 
 // ── المكون الرئيسي ────────────────────────────────────────────────────────────
 export default function RequestsClient({ requests: initial, canManage, canReviewAll, sessionId, allEmployees }: Props) {
+  const roleLabels = useRoleLabels();
   const [requests, setRequests] = useState<Request[]>(initial);
   const [showForm, setShowForm] = useState(false);
   const [resubmitReq, setResubmitReq] = useState<Request | null>(null);
@@ -419,6 +443,12 @@ export default function RequestsClient({ requests: initial, canManage, canReview
       : "MINE"
   );
   const [loading, setLoading] = useState(false);
+
+  // تذكير المراجعين: نافذة تُظهر مَن لديهم طلبات معلّقة بانتظار قرارهم، لاختيار
+  // أحدهم ونسخ رسالة رسمية مختصرة تُرسَل له عبر وسيلة تواصل أخرى.
+  const [reminderOpen, setReminderOpen] = useState(false);
+  const [reminderTargetId, setReminderTargetId] = useState<string | null>(null);
+  const [reminderCopied, setReminderCopied] = useState(false);
 
   // جلب البيانات الحية مباشرة من server action.
   // يُعلّم الإشعارات مقروءة معها: القارئ ينظر إلى الطلبات نفسها التي يعدّها
@@ -475,6 +505,39 @@ export default function RequestsClient({ requests: initial, canManage, canReview
   );
   const mine = requests.filter((r) => r.createdBy?.id === sessionId);
 
+  // مَن يقف عندهم قرارُ طلبٍ معلَّق الآن — مجمَّعين مع عددهم، وبلا نفسي.
+  // من الطلبات المحمّلة أصلاً: صاحب صلاحية "متابعة الكل" يراهم جميعاً، وغيره
+  // يرى مَن تقف عندهم طلباته هو.
+  const pendingByReviewer = useMemo(() => {
+    const map = new Map<string, { employee: Employee; count: number }>();
+    for (const r of requests) {
+      if (r.status !== "PENDING" || !r.currentReviewer || r.currentReviewer.id === sessionId) continue;
+      const entry = map.get(r.currentReviewer.id);
+      if (entry) entry.count += 1;
+      else map.set(r.currentReviewer.id, { employee: r.currentReviewer, count: 1 });
+    }
+    return [...map.values()].sort((a, b) => b.count - a.count || a.employee.name.localeCompare(b.employee.name, "ar"));
+  }, [requests, sessionId]);
+
+  const reminderTarget = pendingByReviewer.find((p) => p.employee.id === reminderTargetId) || null;
+  const reminderMessage = reminderTarget
+    ? buildReminderMessage(reminderTarget.employee.name, reminderTarget.count)
+    : "";
+
+  const closeReminder = () => {
+    setReminderOpen(false);
+    setReminderTargetId(null);
+    setReminderCopied(false);
+  };
+
+  const handleCopyReminder = async () => {
+    const ok = await copyToClipboard(reminderMessage);
+    if (ok) {
+      setReminderCopied(true);
+      setTimeout(() => setReminderCopied(false), 2500);
+    }
+  };
+
   // Requests that ENDED at me — approved, sent back, or refused. Forwarding up the
   // chain is not deciding it, so those stay out. Read from the log so every step
   // of a chain is covered, not just whoever happened to be last. Anything still
@@ -525,6 +588,18 @@ export default function RequestsClient({ requests: initial, canManage, canReview
           </div>
         </div>
         <div className="flex items-center gap-2">
+          <button
+            onClick={() => { setReminderTargetId(null); setReminderCopied(false); setReminderOpen(true); }}
+            className="relative p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-400 hover:text-primary dark:hover:text-teal-300 transition-colors"
+            title="تذكير المراجعين بالطلبات المعلّقة"
+          >
+            <BellRing className="w-4 h-4" />
+            {pendingByReviewer.length > 0 && (
+              <span className="absolute -top-0.5 -left-0.5 min-w-[15px] h-[15px] px-0.5 rounded-full bg-amber-500 text-white text-[9px] font-black flex items-center justify-center">
+                {pendingByReviewer.length}
+              </span>
+            )}
+          </button>
           <button onClick={fetchRequests} disabled={loading}
             className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-400 transition-colors" title="تحديث">
             <RefreshCw className={`w-3.5 h-3.5 ${loading ? "animate-spin" : ""}`} />
@@ -715,6 +790,86 @@ export default function RequestsClient({ requests: initial, canManage, canReview
         <ReviewModal request={reviewingReq} allEmployees={allEmployees}
           onClose={() => setReviewingReq(null)}
           onDone={() => handleAction(async () => {})} />
+      )}
+
+      {reminderOpen && (
+        <div className="fixed inset-0 z-[110] flex items-center justify-center p-4" dir="rtl">
+          <div className="absolute inset-0 bg-slate-950/60 backdrop-blur-sm" onClick={closeReminder} />
+          <div className="relative z-10 w-full max-w-md bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-2xl max-h-[85vh] flex flex-col overflow-hidden">
+            <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100 dark:border-slate-800 shrink-0">
+              <h3 className="text-sm font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
+                <BellRing className="w-4 h-4 text-amber-500" />
+                {reminderTarget ? "رسالة تذكير جاهزة للنسخ" : "من لديهم طلبات معلّقة"}
+              </h3>
+              <button
+                onClick={reminderTarget ? () => { setReminderTargetId(null); setReminderCopied(false); } : closeReminder}
+                className="p-1.5 rounded-lg text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-600 dark:hover:text-slate-200 transition-colors"
+                title={reminderTarget ? "رجوع للقائمة" : "إغلاق"}
+              >
+                {reminderTarget ? <ChevronRight className="w-4 h-4" /> : <X className="w-4 h-4" />}
+              </button>
+            </div>
+
+            {!reminderTarget ? (
+              <div className="overflow-y-auto p-2">
+                {pendingByReviewer.length === 0 ? (
+                  <p className="text-xs text-slate-400 dark:text-slate-500 text-center py-10">
+                    لا يوجد أحد لديه طلبات معلّقة بانتظار قراره حالياً.
+                  </p>
+                ) : (
+                  <ul className="space-y-1">
+                    {pendingByReviewer.map(({ employee, count }) => (
+                      <li key={employee.id}>
+                        <button
+                          onClick={() => { setReminderTargetId(employee.id); setReminderCopied(false); }}
+                          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors text-right"
+                        >
+                          <span className="w-8 h-8 rounded-full bg-primary/10 dark:bg-primary/20 flex items-center justify-center shrink-0">
+                            <User className="w-4 h-4 text-primary dark:text-teal-300" />
+                          </span>
+                          <span className="flex-1 min-w-0">
+                            <span className="block text-xs font-bold text-slate-800 dark:text-slate-100 truncate">{employee.name}</span>
+                            <span className="block text-[10px] text-slate-400 dark:text-slate-500 truncate">
+                              {roleLabels[employee.role] || employee.role}
+                            </span>
+                          </span>
+                          <span className="shrink-0 min-w-[20px] h-5 px-1.5 rounded-full bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-400 text-[10px] font-black flex items-center justify-center">
+                            {count}
+                          </span>
+                          <ChevronRight className="w-4 h-4 text-slate-300 dark:text-slate-600 rotate-180 shrink-0" />
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            ) : (
+              <div className="p-4 space-y-3 overflow-y-auto">
+                <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
+                  <span className="font-bold text-slate-700 dark:text-slate-200">{reminderTarget.employee.name}</span>
+                  <span>— {pendingRequestsPhrase(reminderTarget.count)} معلّقة</span>
+                </div>
+                <textarea
+                  readOnly
+                  value={reminderMessage}
+                  rows={8}
+                  onFocus={(e) => e.currentTarget.select()}
+                  className="w-full bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2.5 text-xs leading-relaxed text-slate-700 dark:text-slate-200 outline-none resize-none whitespace-pre-wrap"
+                />
+                <button
+                  onClick={handleCopyReminder}
+                  className={`w-full h-10 rounded-xl font-bold text-xs flex items-center justify-center gap-2 transition-colors ${
+                    reminderCopied
+                      ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-400"
+                      : "bg-primary text-white hover:bg-primary/90"
+                  }`}
+                >
+                  {reminderCopied ? <><ClipboardCheck className="w-4 h-4" /> تم النسخ</> : <><Copy className="w-4 h-4" /> نسخ الرسالة</>}
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
       )}
     </div>
   );

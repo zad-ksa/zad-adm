@@ -571,8 +571,37 @@ export default function DesignRequestsClient({
                       className="px-3 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800/60 text-slate-500 dark:text-slate-400 leading-relaxed"
                       style={{ fontSize: "var(--dr-fs-meta)" }}
                     >
-                      سُلّم وبانتظار ردّ الجمعية. يُعتمد تلقائياً إن لم تردّ خلال 24 ساعة.
+                      {it.request.revisionNotes
+                        ? "رُدّ على ملاحظات الجمعية وبانتظار ردّها. يُعتمد تلقائياً إن لم تردّ خلال 24 ساعة."
+                        : "سُلّم وبانتظار ردّ الجمعية. يُعتمد تلقائياً إن لم تردّ خلال 24 ساعة."}
                     </div>
+
+                    {/* What was said to the charity, kept on the card: the next
+                        person to pick this up needs to know a round already
+                        happened and what was answered. */}
+                    {it.request.completionNote && (
+                      <div className="px-3 py-2.5 rounded-xl bg-primary/[0.06] dark:bg-teal-500/10">
+                        <p
+                          className="font-bold text-primary dark:text-teal-400 mb-2"
+                          style={{ fontSize: "var(--dr-fs-meta)" }}
+                        >
+                          {it.request.revisionNotes ? "ردّكم على ملاحظات الجمعية" : "ملاحظة التسليم"}
+                        </p>
+                        <RevisionNotesList notes={it.request.completionNote} tone="staff" />
+                      </div>
+                    )}
+
+                    {it.request.revisionNotes && (
+                      <div className="px-3 py-2.5 rounded-xl bg-amber-500/[0.08]">
+                        <p
+                          className="font-bold text-amber-700 dark:text-amber-400 mb-2"
+                          style={{ fontSize: "var(--dr-fs-meta)" }}
+                        >
+                          ملاحظات الجمعية السابقة
+                        </p>
+                        <RevisionNotesList notes={it.request.revisionNotes} />
+                      </div>
+                    )}
 
                     {/* The platform does not notify the charity itself yet, so
                         someone still sends the message by hand. This keeps the

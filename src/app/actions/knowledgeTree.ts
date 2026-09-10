@@ -23,7 +23,32 @@ async function requireKnowledgeAccess() {
   const session = await getSession();
   if (!session || session.userType === "CHARITY_USER") throw new Error("غير مصرح");
   if (!hasPermission(session.role, session.permissions || [], "manage_knowledge_tree")) {
-    throw new Error("غير مصرح لك بالوصول إلى شجرة المعرفة");
+    throw new Error("غير مصرح لك بالوصول إلى مكتبة النماذج");
+  }
+  return session;
+}
+
+/**
+ * Reading the library, which charities may do and staff may do with the
+ * permission.
+ *
+ * Kept separate from requireKnowledgeAccess rather than made into a flag on it:
+ * the four mutations below must never be reachable by a charity account, and a
+ * boolean parameter is one wrong default away from making them so. Two named
+ * guards cannot be got wrong by omission — a mutation that forgets to say which
+ * it wants does not compile.
+ *
+ * A charity member needs no permission of their own. The library is read-only
+ * reference material shared with every charity, and gating it behind a checkbox
+ * that every membership would then be given describes a distinction nobody is
+ * making.
+ */
+async function requireKnowledgeRead() {
+  const session = await getSession();
+  if (!session) throw new Error("غير مصرح");
+  if (session.userType === "CHARITY_USER") return session;
+  if (!hasPermission(session.role, session.permissions || [], "manage_knowledge_tree")) {
+    throw new Error("غير مصرح لك بالوصول إلى مكتبة النماذج");
   }
   return session;
 }
@@ -60,7 +85,7 @@ type FolderListing =
 
 export async function listKnowledgeFolder(parentId: string | null): Promise<FolderListing> {
   try {
-    await requireKnowledgeAccess();
+    await requireKnowledgeRead();
 
     const [nodes, path] = await Promise.all([
       prisma.knowledgeNode.findMany({
@@ -112,7 +137,7 @@ export type KnowledgeSearchRow = KnowledgeNodeRow & {
  */
 export async function searchKnowledgeTree(scopeId: string | null, query: string) {
   try {
-    await requireKnowledgeAccess();
+    await requireKnowledgeRead();
 
     const q = query.trim();
     if (q.length < 2) return { ok: true as const, rows: [] as KnowledgeSearchRow[] };

@@ -6,7 +6,7 @@ import { FolderTree } from "lucide-react";
 import KnowledgeTreeClient from "./KnowledgeTreeClient";
 
 export const metadata: Metadata = {
-  title: "شجرة المعرفة | زاد التنموية",
+  title: "مكتبة النماذج | زاد التنموية",
 };
 
 export const dynamic = "force-dynamic";
@@ -27,9 +27,9 @@ export default async function KnowledgeTreePage() {
           <FolderTree className="w-5 h-5" />
         </div>
         <div className="min-w-0">
-          <h2 className="text-lg font-bold text-slate-800 dark:text-slate-100 leading-tight">شجرة المعرفة</h2>
+          <h2 className="text-lg font-bold text-slate-800 dark:text-slate-100 leading-tight">مكتبة النماذج</h2>
           <p className="text-xs text-slate-500 dark:text-slate-400">
-            مساحة مشتركة — ما تضيفه هنا يراه كل من يملك الصلاحية
+            مساحة مشتركة — ما تضيفه هنا يراه كل من يملك الصلاحية، والجمعيات تراه للتحميل فقط
           </p>
         </div>
       </div>

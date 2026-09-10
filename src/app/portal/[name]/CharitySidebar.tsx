@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { CHARITY_ATTENDANCE_ENABLED } from "@/lib/featureFlags";
-import {
+import { FolderOpen,
   Building2,
   ChevronRight,
   ChevronDown,
@@ -189,6 +189,9 @@ export default function CharitySidebar({
     // Viewing and raising a design request are one permission — see
     // charityPermissions.ts.
     { id: "design-requests", label: "طلبات التصاميم", href: `/portal/${encodeURIComponent(charityName)}/design-requests`, exact: true, icon: Palette, show: can("view_design_requests") },
+    // No permission: the library is reference material shared with every
+    // charity, and it is read-only on the server whoever opens it.
+    { id: "templates", label: "مكتبة النماذج", href: `/portal/${encodeURIComponent(charityName)}/templates`, exact: true, icon: FolderOpen, show: true },
     // No permission gates these two: they lead nowhere yet. Adding a checkbox
     // for a page that does not exist would tell whoever grants it that they had
     // controlled access to something — the mistake documented on `view_hr`.

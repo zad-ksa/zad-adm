@@ -304,7 +304,7 @@ export default function EmployeeSidebar({
                       className={`flex items-center w-full px-2.5 py-1.5 rounded-lg text-[11px] font-bold transition-all group mt-1 ${activePath === "/main/knowledge-tree" ? "bg-primary/10 text-primary" : "text-slate-500 hover:bg-primary/5 hover:text-primary"}`}
                     >
                       <FolderTree className="w-3.5 h-3.5 ml-2" />
-                      <span>شجرة المعرفة</span>
+                      <span>مكتبة النماذج</span>
                     </Link>
                   )}
                   

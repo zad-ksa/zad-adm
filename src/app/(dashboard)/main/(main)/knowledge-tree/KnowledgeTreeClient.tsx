@@ -289,7 +289,7 @@ export default function KnowledgeTreeClient() {
             }`}
           >
             <Home className="w-3.5 h-3.5" />
-            شجرة المعرفة
+            مكتبة النماذج
           </button>
           {path.map((p, i) => (
             <span key={p.id} className="flex items-center gap-1 min-w-0">

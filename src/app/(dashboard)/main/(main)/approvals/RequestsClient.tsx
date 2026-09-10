@@ -6,7 +6,7 @@ import {
   FileText, Link2, ExternalLink, Trash2,
   RefreshCw, MessageSquare, CornerUpLeft, Check, ShieldCheck,
   User, Calendar, ArrowRight, GitBranch, UserCheck, ChevronRight, Eye,
-  BellRing, Copy, ClipboardCheck,
+  BellRing, Copy, ClipboardCheck, Search,
 } from "lucide-react";
 import {
   createRequest, reviewRequest, resubmitRequest, deleteRequest,
@@ -429,7 +429,12 @@ export default function RequestsClient({ requests: initial, canManage, canReview
   const [showForm, setShowForm] = useState(false);
   const [resubmitReq, setResubmitReq] = useState<Request | null>(null);
   const [reviewingReq, setReviewingReq] = useState<Request | null>(null);
-  const [filterStatus, setFilterStatus] = useState<Status | "ALL">("PENDING");
+  // فلاتر تُطبَّق داخل المسار المختار. الحالة الافتراضية "الكل" لأن المسار نفسه
+  // صار هو ما يضيّق القائمة؛ إجبارها على "قيد المراجعة" كان يخفي طلبات ويربك.
+  const [filterStatus, setFilterStatus] = useState<Status | "ALL">("ALL");
+  const [filterPriority, setFilterPriority] = useState<Priority | "ALL">("ALL");
+  const [filterCategory, setFilterCategory] = useState<string>("ALL");
+  const [search, setSearch] = useState("");
   // Opens on whichever lane has work in it. Someone who approves nothing should
   // land on their own requests, not on an empty approvals list.
   const [tab, setTab] = useState<"AWAITING" | "MINE" | "DECIDED" | "ALL">(() =>
@@ -557,14 +562,54 @@ export default function RequestsClient({ requests: initial, canManage, canReview
 
   const lane =
     tab === "AWAITING" ? awaitingMe : tab === "MINE" ? mine : tab === "DECIDED" ? decided : all;
-  const filtered = filterStatus === "ALL" ? lane : lane.filter(r => r.status === filterStatus);
+
+  // المسارات كبيانات — تُرسم كمجموعة أزرار واحدة، وتخفي ما لا يخصّ المستخدم.
+  const lanes = (
+    [
+      { key: "AWAITING", label: "بانتظار اعتمادي", icon: ShieldCheck, count: awaitingMe.length, show: true },
+      { key: "MINE",     label: "طلباتي",           icon: Send,       count: mine.length,       show: true },
+      { key: "DECIDED",  label: "اعتمدتها",         icon: Check,      count: decided.length,    show: decided.length > 0 },
+      { key: "ALL",      label: "متابعة الطلبات",   icon: Eye,        count: all.length,        show: canReviewAll },
+    ] as const
+  ).filter((l) => l.show);
+
+  // البحث: مطابقة نصية على كل ما يميّز الطلب — عنوانه، نصّه، قسمه، ومَن رفعه أو
+  // يقف عنده الآن أو اسم سلسلة اعتماده.
+  const q = search.trim().toLowerCase();
+  const matchesSearch = (r: Request) =>
+    !q ||
+    [r.title, r.body, r.category, r.createdBy?.name, r.currentReviewer?.name, r.delegatedTo?.name, r.chain?.name]
+      .filter(Boolean)
+      .join(" ")
+      .toLowerCase()
+      .includes(q);
+
+  // كل فلاتر المسار عدا الحالة — حتى تعكس أعداد قائمة الحالة ما سيظهر فعلاً.
+  const preStatus = lane.filter(
+    (r) =>
+      (filterPriority === "ALL" || r.priority === filterPriority) &&
+      (filterCategory === "ALL" || r.category === filterCategory) &&
+      matchesSearch(r)
+  );
+  const filtered = filterStatus === "ALL" ? preStatus : preStatus.filter((r) => r.status === filterStatus);
   const counts = {
-    ALL:      lane.length,
-    PENDING:  lane.filter(r => r.status === "PENDING").length,
-    RETURNED: lane.filter(r => r.status === "RETURNED").length,
-    APPROVED: lane.filter(r => r.status === "APPROVED").length,
-    REJECTED: lane.filter(r => r.status === "REJECTED").length,
-    DELEGATED:lane.filter(r => r.status === "DELEGATED").length,
+    ALL:      preStatus.length,
+    PENDING:  preStatus.filter(r => r.status === "PENDING").length,
+    RETURNED: preStatus.filter(r => r.status === "RETURNED").length,
+    APPROVED: preStatus.filter(r => r.status === "APPROVED").length,
+    REJECTED: preStatus.filter(r => r.status === "REJECTED").length,
+    DELEGATED:preStatus.filter(r => r.status === "DELEGATED").length,
+  };
+
+  // الأقسام الظاهرة في قائمة التصفية = ما يوجد فعلاً في هذا المسار فقط.
+  const laneCategories = CATEGORIES.filter((c) => lane.some((r) => r.category === c.key));
+  const anyFilter =
+    filterStatus !== "ALL" || filterPriority !== "ALL" || filterCategory !== "ALL" || q !== "";
+  const clearFilters = () => {
+    setSearch("");
+    setFilterStatus("ALL");
+    setFilterPriority("ALL");
+    setFilterCategory("ALL");
   };
 
   return (
@@ -606,119 +651,110 @@ export default function RequestsClient({ requests: initial, canManage, canReview
         </div>
       </div>
 
-      {/* فلاتر الحالة — تمرير أفقي بدل الانكسار على ثلاثة صفوف في الجوال */}
-      <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar -mx-1 px-1">
-        {([
-          { key: "PENDING",  label: "قيد المراجعة" },
-          { key: "ALL",      label: "الكل" },
-          { key: "RETURNED", label: "مرجع" },
-          { key: "APPROVED", label: "معتمد" },
-          { key: "DELEGATED",label: "محوّل" },
-          { key: "REJECTED", label: "مرفوض" },
-        ] as const).map(opt => (
-          <button key={opt.key} onClick={() => setFilterStatus(opt.key)} aria-pressed={filterStatus === opt.key}
-            className={`shrink-0 flex items-center gap-1 px-3 py-1 rounded-full text-[11px] font-bold transition-colors ${
-              filterStatus === opt.key ? "bg-primary text-white"
-              : "bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-600"
-            }`}>
-            {opt.label}
-            {counts[opt.key] > 0 && (
-              <span className={`text-[11px] sm:text-[10px] px-1.5 py-0.5 rounded-full ${filterStatus === opt.key ? "bg-white/20 text-white" : "bg-slate-200 dark:bg-slate-600"}`}>
-                {counts[opt.key]}
-              </span>
-            )}
-          </button>
-        ))}
+      {/* المسار: أي مجموعة طلبات أنظر إليها — تحكّم رئيسي، لذا هو مجموعة أزرار
+          مدمجة (segmented) بمظهر مميّز عن فلاتر البحث أسفله حتى لا يختلطا. */}
+      <div className="inline-flex max-w-full items-center gap-1 p-1 rounded-xl bg-slate-100 dark:bg-slate-800/60 overflow-x-auto no-scrollbar">
+        {lanes.map((l) => {
+          const Icon = l.icon;
+          const active = tab === l.key;
+          return (
+            <button
+              key={l.key}
+              onClick={() => setTab(l.key)}
+              aria-pressed={active}
+              className={`shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-colors ${
+                active
+                  ? "bg-white dark:bg-slate-900 text-primary shadow-sm"
+                  : "text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"
+              }`}
+            >
+              <Icon className="w-3.5 h-3.5" />
+              {l.label}
+              {l.count > 0 && (
+                <span
+                  className={`px-1.5 rounded-full text-[10px] ${
+                    active ? "bg-primary/10 text-primary" : "bg-slate-200 dark:bg-slate-700"
+                  }`}
+                >
+                  {l.count}
+                </span>
+              )}
+            </button>
+          );
+        })}
       </div>
 
-      {/* Lane switch. Kept above the status filter because it changes WHOSE
-          requests are being filtered, not just which of them. */}
-      {/* Scrolls sideways rather than wrapping: a tab bar that reflows onto a
-          second row stops reading as one control, and on a 360px screen these
-          three plus their counters do not fit. */}
-      <div className="flex items-center gap-2 overflow-x-auto no-scrollbar -mx-1 px-1">
-        <button
-          onClick={() => setTab("AWAITING")}
-          aria-pressed={tab === "AWAITING"}
-          className={`shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-colors ${
-            tab === "AWAITING"
-              ? "bg-primary text-white"
-              : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700"
-          }`}
-        >
-          <ShieldCheck className="w-3.5 h-3.5" />
-          بانتظار اعتمادي
-          {awaitingMe.length > 0 && (
-            <span
-              className={`px-1.5 rounded ${
-                tab === "AWAITING" ? "bg-white/20" : "bg-primary/10 text-primary"
-              }`}
+      {/* بحث + تصفية داخل المسار المختار */}
+      <div className="flex flex-wrap items-center gap-2">
+        <div className="relative flex-1 min-w-[190px]">
+          <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400 pointer-events-none" />
+          <input
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="ابحث بالعنوان أو النص أو اسم مقدّم الطلب أو المراجِع…"
+            className="w-full h-9 pe-9 ps-8 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs text-slate-700 dark:text-slate-200 placeholder:text-slate-400 outline-none focus:border-primary"
+          />
+          {search && (
+            <button
+              onClick={() => setSearch("")}
+              className="absolute left-2 top-1/2 -translate-y-1/2 p-1 rounded text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+              title="مسح البحث"
             >
-              {awaitingMe.length}
-            </span>
+              <X className="w-3 h-3" />
+            </button>
           )}
-        </button>
-        <button
-          onClick={() => setTab("MINE")}
-          aria-pressed={tab === "MINE"}
-          className={`shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-colors ${
-            tab === "MINE"
-              ? "bg-primary text-white"
-              : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700"
-          }`}
+        </div>
+
+        <select
+          value={filterStatus}
+          onChange={(e) => setFilterStatus(e.target.value as Status | "ALL")}
+          className="h-9 px-2 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-bold text-slate-600 dark:text-slate-300 outline-none focus:border-primary"
         >
-          <Send className="w-3.5 h-3.5" />
-          طلباتي
-          <span
-            className={`px-1.5 rounded ${
-              tab === "MINE" ? "bg-white/20" : "bg-slate-200 dark:bg-slate-700"
-            }`}
+          <option value="ALL">كل الحالات ({counts.ALL})</option>
+          <option value="PENDING">قيد المراجعة ({counts.PENDING})</option>
+          <option value="RETURNED">مرجع للتعديل ({counts.RETURNED})</option>
+          <option value="APPROVED">معتمد ({counts.APPROVED})</option>
+          <option value="DELEGATED">محوّل للتنفيذ ({counts.DELEGATED})</option>
+          <option value="REJECTED">مرفوض ({counts.REJECTED})</option>
+        </select>
+
+        <select
+          value={filterPriority}
+          onChange={(e) => setFilterPriority(e.target.value as Priority | "ALL")}
+          className="h-9 px-2 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-bold text-slate-600 dark:text-slate-300 outline-none focus:border-primary"
+        >
+          <option value="ALL">كل الأولويات</option>
+          <option value="URGENT">عاجل</option>
+          <option value="HIGH">عالية</option>
+          <option value="MEDIUM">متوسطة</option>
+          <option value="LOW">منخفضة</option>
+        </select>
+
+        {laneCategories.length > 0 && (
+          <select
+            value={filterCategory}
+            onChange={(e) => setFilterCategory(e.target.value)}
+            className="h-9 px-2 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-bold text-slate-600 dark:text-slate-300 outline-none focus:border-primary"
           >
-            {mine.length}
-          </span>
-        </button>
-        {decided.length > 0 && (
+            <option value="ALL">كل الأقسام</option>
+            {laneCategories.map((c) => (
+              <option key={c.key} value={c.key}>{c.label}</option>
+            ))}
+          </select>
+        )}
+
+        {anyFilter && (
           <button
-            onClick={() => setTab("DECIDED")}
-            aria-pressed={tab === "DECIDED"}
-            className={`shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-colors ${
-              tab === "DECIDED"
-                ? "bg-primary text-white"
-                : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700"
-            }`}
+            onClick={clearFilters}
+            className="h-9 px-3 rounded-lg text-xs font-bold text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center gap-1 transition-colors"
           >
-            <Check className="w-3.5 h-3.5" />
-            اعتمدتها
-            <span
-              className={`px-1.5 rounded ${
-                tab === "DECIDED" ? "bg-white/20" : "bg-slate-200 dark:bg-slate-700"
-              }`}
-            >
-              {decided.length}
-            </span>
+            <X className="w-3 h-3" /> مسح
           </button>
         )}
-        {canReviewAll && (
-          <button
-            onClick={() => setTab("ALL")}
-            aria-pressed={tab === "ALL"}
-            className={`shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-colors ${
-              tab === "ALL"
-                ? "bg-primary text-white"
-                : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700"
-            }`}
-          >
-            <Eye className="w-3.5 h-3.5" />
-            متابعة الطلبات
-            <span
-              className={`px-1.5 rounded ${
-                tab === "ALL" ? "bg-white/20" : "bg-slate-200 dark:bg-slate-700"
-              }`}
-            >
-              {all.length}
-            </span>
-          </button>
-        )}
+
+        <span className="text-[11px] text-slate-400 dark:text-slate-500 ms-auto tabular-nums">
+          {filtered.length} من {lane.length}
+        </span>
       </div>
 
       {/* قائمة الطلبات */}
@@ -726,8 +762,8 @@ export default function RequestsClient({ requests: initial, canManage, canReview
         <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 p-16 text-center">
           <Send className="w-10 h-10 text-slate-300 dark:text-slate-600 mx-auto mb-3" />
           <p className="text-slate-400 dark:text-slate-500 text-sm">
-            {filterStatus !== "ALL"
-              ? "لا توجد طلبات بهذه الحالة"
+            {anyFilter
+              ? "لا توجد طلبات مطابقة للبحث أو التصفية"
               : tab === "AWAITING"
                 ? "لا شيء بانتظار اعتمادك"
                 : tab === "DECIDED"
@@ -736,11 +772,15 @@ export default function RequestsClient({ requests: initial, canManage, canReview
                     ? "لا توجد طلبات في النظام"
                     : "لم ترفع أي طلب بعد"}
           </p>
-          {filterStatus === "ALL" && tab === "MINE" && (
+          {anyFilter ? (
+            <button onClick={clearFilters} className="mt-3 text-xs text-primary hover:underline font-bold">
+              مسح البحث والتصفية
+            </button>
+          ) : tab === "MINE" ? (
             <button onClick={() => setShowForm(true)} className="mt-3 text-xs text-primary hover:underline font-bold">
               ارفع طلبك الأول
             </button>
-          )}
+          ) : null}
         </div>
       ) : (
         // pb-24: the floating button sits over the last card otherwise, and on a

@@ -23,7 +23,6 @@ import UploadProgress from "@/components/ui/UploadProgress";
 import type { UploadProgress as Progress } from "@/lib/clientUpload";
 import ConfirmModal from "@/components/ui/ConfirmModal";
 import CopyDeliveryNotice from "@/components/design-requests/CopyDeliveryNotice";
-import LinkifiedText from "@/components/ui/LinkifiedText";
 import DesignRequestLogModal from "@/components/design-requests/DesignRequestLogModal";
 import { RevisionNotesList } from "@/components/design-requests/RevisionNotesList";
 import ReturnRevisionModal from "@/components/design-requests/ReturnRevisionModal";

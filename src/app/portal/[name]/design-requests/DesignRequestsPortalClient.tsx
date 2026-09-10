@@ -11,7 +11,6 @@ import type { DesignRequestProgress } from "@/lib/designRequestProgress";
 import SuccessToast from "@/components/ui/SuccessToast";
 import ConfirmModal from "@/components/ui/ConfirmModal";
 import RequestRevisionModal from "@/components/design-requests/RequestRevisionModal";
-import LinkifiedText from "@/components/ui/LinkifiedText";
 import { RevisionNotesList } from "@/components/design-requests/RevisionNotesList";
 import { approveDeliveryByCharity } from "@/app/actions/designRequests";
 import NewDesignRequestForm from "./NewDesignRequestForm";

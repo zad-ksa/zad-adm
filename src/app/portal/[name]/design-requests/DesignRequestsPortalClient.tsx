@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Plus, Info, Palette, ListOrdered } from "lucide-react";
+import { Plus, Info, Palette, ListOrdered, Trash2 } from "lucide-react";
 import DesignRequestCard, { type DesignRequestCardData } from "@/components/design-requests/DesignRequestCard";
 import EditDesignRequestModal from "@/components/design-requests/EditDesignRequestModal";
 import DesignRequestLogModal from "@/components/design-requests/DesignRequestLogModal";
@@ -12,7 +12,7 @@ import SuccessToast from "@/components/ui/SuccessToast";
 import ConfirmModal from "@/components/ui/ConfirmModal";
 import RequestRevisionModal from "@/components/design-requests/RequestRevisionModal";
 import { RevisionNotesList } from "@/components/design-requests/RevisionNotesList";
-import { approveDeliveryByCharity } from "@/app/actions/designRequests";
+import { approveDeliveryByCharity, deleteDesignRequest } from "@/app/actions/designRequests";
 import NewDesignRequestForm from "./NewDesignRequestForm";
 import type { DesignTypeOption } from "@/components/design-requests/DesignTypePicker";
 
@@ -64,6 +64,8 @@ export default function DesignRequestsPortalClient({
   const [revisionFor, setRevisionFor] = useState<string | null>(null);
   const [approvingId, setApprovingId] = useState<string | null>(null);
   const [isApproving, setIsApproving] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const reviewCount = initialItems.filter((it) => it.request.status === "UNDER_REVIEW").length;
   const awaitingYouCount = initialItems.filter((it) => it.request.status === "AWAITING_REVIEW").length;
@@ -330,11 +332,37 @@ export default function DesignRequestsPortalClient({
                     )}
                   </div>
                 ) : it.request.status === "UNDER_REVIEW" ? (
-                  <div
-                    className="w-full mt-2 px-3 py-2.5 rounded-xl bg-amber-500/[0.08] text-amber-700 dark:text-amber-400 leading-relaxed"
-                    style={{ fontSize: "var(--dr-fs-meta)" }}
-                  >
-                    قيد المراجعة — سيتم الرد خلال 24 ساعة. الموعد الظاهر تقديري حتى الاعتماد.
+                  <div className="w-full mt-2 space-y-2">
+                    <div
+                      className="px-3 py-2.5 rounded-xl bg-amber-500/[0.08] text-amber-700 dark:text-amber-400 leading-relaxed"
+                      style={{ fontSize: "var(--dr-fs-meta)" }}
+                    >
+                      قيد المراجعة — سيتم الرد خلال 24 ساعة. الموعد الظاهر تقديري حتى الاعتماد.
+                    </div>
+                    {/* Editable while it waits: nothing has been scheduled or
+                        started, so the brief is still entirely yours. */}
+                    {canCreate && (
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => setEditingId(it.request.id)}
+                          className="flex-1 h-9 rounded-xl bg-slate-100 text-slate-600 dark:bg-[#111] dark:text-slate-400 border border-transparent dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 transition-colors font-bold"
+                          style={{ fontSize: "var(--dr-fs-meta)" }}
+                        >
+                          تعديل الطلب
+                        </button>
+                        {/* Withdrawing is only offered here. One step later the
+                            request has a promised date and a place in the queue. */}
+                        <button
+                          onClick={() => setDeletingId(it.request.id)}
+                          title="حذف الطلب"
+                          className="shrink-0 h-9 px-3 rounded-xl bg-rose-500/[0.08] text-rose-600 dark:text-rose-400 hover:bg-rose-500 hover:text-white transition-colors font-bold flex items-center gap-1.5"
+                          style={{ fontSize: "var(--dr-fs-meta)" }}
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                          حذف
+                        </button>
+                      </div>
+                    )}
                   </div>
                 ) : // Editing is for a brief still being worked on; a delivered
                 // request has none left to edit — and neither has one a designer
@@ -464,6 +492,26 @@ export default function DesignRequestsPortalClient({
           />
         );
       })()}
+
+      <ConfirmModal
+        isOpen={!!deletingId}
+        title="حذف الطلب"
+        message="سيُحذف الطلب ومرفقاته نهائياً ولا يمكن التراجع. الحذف متاح ما دام الطلب قيد المراجعة ولم يُعتمد بعد."
+        confirmLabel="حذف الطلب"
+        tone="danger"
+        isPending={isDeleting}
+        onCancel={() => setDeletingId(null)}
+        onConfirm={async () => {
+          if (!deletingId) return;
+          setIsDeleting(true);
+          const res = await deleteDesignRequest(deletingId);
+          setIsDeleting(false);
+          setDeletingId(null);
+          if (res.error) return setToast(res.error);
+          setToast("حُذف الطلب");
+          router.refresh();
+        }}
+      />
 
       <ConfirmModal
         isOpen={!!approvingId}

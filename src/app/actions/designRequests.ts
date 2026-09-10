@@ -944,13 +944,28 @@ export async function markDesignRequestComplete(
  */
 export async function deleteDesignRequest(id: string) {
   try {
-    await requireDesignDeletePermission();
-
+    // Read first, because who may delete this depends on what it is.
     const request = await prisma.designRequest.findUnique({
       where: { id },
       include: { attachments: true, charity: { select: { name: true } } },
     });
     if (!request) return { error: "الطلب غير موجود" };
+
+    // Staff may delete any request. A charity may withdraw only its own, and
+    // only while it is still UNDER_REVIEW — before Zad has accepted it, it
+    // holds no place in the queue, no date has been promised and no designer
+    // has touched it, so withdrawing costs nobody anything. One step later it
+    // is a scheduled commitment and pulling it silently would move every
+    // request behind it.
+    try {
+      await requireDesignDeletePermission();
+    } catch {
+      if (request.status !== "UNDER_REVIEW" || request.startedAt) {
+        return { error: "لا يمكن حذف الطلب بعد اعتماده — يرجى التواصل مع المسؤول من شركة زاد" };
+      }
+      if (!request.charityId) throw new Error("هذا الطلب لا يتبع جمعية");
+      await requireCharityMemberPermission(request.charityId, "view_design_requests");
+    }
 
     for (const att of request.attachments) {
       try {
@@ -1633,8 +1648,12 @@ export async function updateDesignRequestDetails(input: {
       },
     });
     if (!request) return { error: "الطلب غير موجود" };
-    if (request.status !== "PENDING") {
-      return { error: "لا يمكن تعديل طلب منجز" };
+    // UNDER_REVIEW is editable too, and is the safest state there is to edit
+    // in: the request holds no place in the queue (computeSchedule counts only
+    // PENDING rows), no date has been committed, and no designer has it. It is
+    // still purely the charity's own brief.
+    if (request.status !== "PENDING" && request.status !== "UNDER_REVIEW") {
+      return { error: "لا يمكن تعديل الطلب في حالته الحالية" };
     }
 
     // Either side may edit, so try the staff gate and fall back to the charity

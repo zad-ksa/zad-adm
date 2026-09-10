@@ -22,6 +22,46 @@ const RequestForm = dynamic(() => import("@/components/approvals/RequestFormModa
 const ReviewModal = dynamic(() => import("@/components/approvals/ReviewModal"), { ssr: false });
 
 // ── الأقسام ───────────────────────────────────────────────────────────────────
+/**
+ * Copies one block of text and says so.
+ *
+ * The confirmation is the point: a clipboard write is silent, and without it
+ * people press twice and paste once, or paste nothing and never know why.
+ */
+function CopyTextButton({ text, title }: { text: string; title: string }) {
+  const [copied, setCopied] = useState(false);
+
+  return (
+    <button
+      type="button"
+      title={title}
+      onClick={async (e) => {
+        // The card header toggles on click; this button lives inside it.
+        e.stopPropagation();
+        if (await copyToClipboard(text)) {
+          setCopied(true);
+          setTimeout(() => setCopied(false), 2000);
+        }
+      }}
+      className={`shrink-0 h-7 px-2 rounded-lg text-[11px] font-bold inline-flex items-center gap-1 transition-colors ${
+        copied
+          ? "text-emerald-600 dark:text-emerald-400 bg-emerald-500/10"
+          : "text-slate-400 hover:text-primary hover:bg-primary/10 dark:hover:text-teal-400"
+      }`}
+    >
+      {copied ? (
+        <>
+          <ClipboardCheck className="w-3.5 h-3.5" /> نُسخ
+        </>
+      ) : (
+        <>
+          <Copy className="w-3.5 h-3.5" /> نسخ
+        </>
+      )}
+    </button>
+  );
+}
+
 const CATEGORIES = [
   { key: "زاد",                   label: "إدارة زاد",               color: "text-blue-600 dark:text-blue-400",       bg: "bg-blue-50 dark:bg-blue-900/20",       border: "border-blue-400" },
   { key: "التخطيط الاستراتيجي",   label: "التخطيط الاستراتيجي",    color: "text-indigo-600 dark:text-indigo-400",   bg: "bg-indigo-50 dark:bg-indigo-900/20",   border: "border-indigo-400" },
@@ -370,9 +410,12 @@ function RequestCard({
         <div className="px-4 pb-4 space-y-3 border-t border-slate-100 dark:border-slate-700/50 pt-3">
           {request.body && (
             <div className="bg-slate-50 dark:bg-slate-800/50 rounded-xl p-3">
-              <p className="text-xs font-bold text-slate-500 dark:text-slate-400 mb-1 flex items-center gap-1">
-                <FileText className="w-3 h-3" /> نص الطلب
-              </p>
+              <div className="flex items-center justify-between gap-2 mb-1">
+                <p className="text-xs font-bold text-slate-500 dark:text-slate-400 flex items-center gap-1">
+                  <FileText className="w-3 h-3" /> نص الطلب
+                </p>
+                <CopyTextButton text={request.body} title="نسخ نص الطلب" />
+              </div>
               <p className="text-sm text-slate-700 dark:text-slate-200 leading-relaxed whitespace-pre-wrap">{request.body}</p>
             </div>
           )}

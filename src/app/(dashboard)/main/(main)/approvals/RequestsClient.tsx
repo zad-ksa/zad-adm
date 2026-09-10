@@ -477,6 +477,7 @@ export default function RequestsClient({ requests: initial, canManage, canReview
   const [filterStatus, setFilterStatus] = useState<Status | "ALL">("ALL");
   const [filterPriority, setFilterPriority] = useState<Priority | "ALL">("ALL");
   const [filterCategory, setFilterCategory] = useState<string>("ALL");
+  const [filterPerson, setFilterPerson] = useState<string>("ALL");
   const [search, setSearch] = useState("");
   // Opens on whichever lane has work in it. Someone who approves nothing should
   // land on their own requests, not on an empty approvals list.
@@ -627,11 +628,31 @@ export default function RequestsClient({ requests: initial, canManage, canReview
       .toLowerCase()
       .includes(q);
 
+  // الأشخاص الظاهرون في قائمة التصفية = مَن رفع طلباً في هذا المسار أو يقف عنده
+  // الآن (المراجِع الحالي أو مَن حُوِّل له التنفيذ). فلتر واحد يغطي الدورين معاً.
+  const lanePeople = useMemo(() => {
+    const map = new Map<string, Employee>();
+    for (const r of lane) {
+      for (const e of [r.createdBy, r.currentReviewer, r.delegatedTo]) {
+        if (e && !map.has(e.id)) map.set(e.id, e);
+      }
+    }
+    return [...map.values()].sort((a, b) => a.name.localeCompare(b.name, "ar"));
+  }, [lane]);
+  // عند تبديل المسار قد يختفي الشخص المختار — نتجاهله بدل إظهار قائمة فارغة.
+  const effectivePerson = lanePeople.some((p) => p.id === filterPerson) ? filterPerson : "ALL";
+  const matchesPerson = (r: Request) =>
+    effectivePerson === "ALL" ||
+    r.createdBy?.id === effectivePerson ||
+    r.currentReviewer?.id === effectivePerson ||
+    r.delegatedTo?.id === effectivePerson;
+
   // كل فلاتر المسار عدا الحالة — حتى تعكس أعداد قائمة الحالة ما سيظهر فعلاً.
   const preStatus = lane.filter(
     (r) =>
       (filterPriority === "ALL" || r.priority === filterPriority) &&
       (filterCategory === "ALL" || r.category === filterCategory) &&
+      matchesPerson(r) &&
       matchesSearch(r)
   );
   const filtered = filterStatus === "ALL" ? preStatus : preStatus.filter((r) => r.status === filterStatus);
@@ -647,12 +668,17 @@ export default function RequestsClient({ requests: initial, canManage, canReview
   // الأقسام الظاهرة في قائمة التصفية = ما يوجد فعلاً في هذا المسار فقط.
   const laneCategories = CATEGORIES.filter((c) => lane.some((r) => r.category === c.key));
   const anyFilter =
-    filterStatus !== "ALL" || filterPriority !== "ALL" || filterCategory !== "ALL" || q !== "";
+    filterStatus !== "ALL" ||
+    filterPriority !== "ALL" ||
+    filterCategory !== "ALL" ||
+    effectivePerson !== "ALL" ||
+    q !== "";
   const clearFilters = () => {
     setSearch("");
     setFilterStatus("ALL");
     setFilterPriority("ALL");
     setFilterCategory("ALL");
+    setFilterPerson("ALL");
   };
 
   return (
@@ -782,6 +808,20 @@ export default function RequestsClient({ requests: initial, canManage, canReview
             <option value="ALL">كل الأقسام</option>
             {laneCategories.map((c) => (
               <option key={c.key} value={c.key}>{c.label}</option>
+            ))}
+          </select>
+        )}
+
+        {lanePeople.length > 0 && (
+          <select
+            value={effectivePerson}
+            onChange={(e) => setFilterPerson(e.target.value)}
+            className="h-9 px-2 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-bold text-slate-600 dark:text-slate-300 outline-none focus:border-primary max-w-[170px]"
+            title="تصفية بمن رفع الطلب أو يقف عنده الآن"
+          >
+            <option value="ALL">كل الأشخاص</option>
+            {lanePeople.map((p) => (
+              <option key={p.id} value={p.id}>{p.name}</option>
             ))}
           </select>
         )}

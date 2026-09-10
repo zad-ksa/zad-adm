@@ -180,6 +180,17 @@ export default function SurveyResultsPage({ params }: { params: Promise<{ id: st
   const selectedRespondent =
     parsedResponses.find((r) => r.id === selectedRespondentId) || parsedResponses[0] || null;
 
+  // المسمّى الظاهر للمشارك: أول إجابة نصية له — ففي أغلب الاستبيانات يكون السؤال
+  // الأول هو "اسمك الكريم". ثم اسم الجمعية المحفوظ، ثم رقم تسلسلي.
+  const respondentLabel = (response: (typeof parsedResponses)[number], index: number): string => {
+    for (const { q } of flatQuestions) {
+      const t = resolveAnswerText(q, response.answers[q.id]).trim();
+      if (t) return t;
+    }
+    return (response.charityName || "").trim() || `مشارك ${index + 1}`;
+  };
+  const respondentIndex = (id: string) => parsedResponses.findIndex((r) => r.id === id);
+
   // ── عرض إجابات مشارك واحد (يُعاد استخدامه في "سرد" و"حسب المشارك") ──────────
   const renderRespondentAnswers = (response: (typeof parsedResponses)[number]) => {
     const getValue = (questionId: string) => ({
@@ -328,7 +339,7 @@ export default function SurveyResultsPage({ params }: { params: Promise<{ id: st
           {/* ── سرد: كل الردود واحداً تلو الآخر (السلوك القديم) ─────────────── */}
           {viewMode === "list" && (
             <div className="space-y-6">
-              {parsedResponses.map((response) => (
+              {parsedResponses.map((response, rIdx) => (
                 <div
                   key={response.id}
                   className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm dark:bg-slate-800 dark:border-slate-700"
@@ -338,7 +349,7 @@ export default function SurveyResultsPage({ params }: { params: Promise<{ id: st
                       <User className="w-6 h-6" />
                     </div>
                     <div>
-                      <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100">{response.charityName}</h3>
+                      <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100">{respondentLabel(response, rIdx)}</h3>
                       <p className="text-sm text-slate-500 dark:text-slate-400">
                         تاريخ المشاركة: {fmtDate(response.createdAt)}
                       </p>
@@ -358,7 +369,7 @@ export default function SurveyResultsPage({ params }: { params: Promise<{ id: st
                   المشاركون ({parsedResponses.length})
                 </p>
                 <ul className="space-y-1">
-                  {parsedResponses.map((r) => {
+                  {parsedResponses.map((r, i) => {
                     const active = (selectedRespondent?.id || "") === r.id;
                     return (
                       <li key={r.id}>
@@ -370,7 +381,7 @@ export default function SurveyResultsPage({ params }: { params: Promise<{ id: st
                               : "hover:bg-slate-50 dark:hover:bg-slate-700/50 text-slate-700 dark:text-slate-300"
                           }`}
                         >
-                          <span className="block text-xs font-bold truncate">{r.charityName || "مشارك"}</span>
+                          <span className="block text-xs font-bold truncate">{respondentLabel(r, i)}</span>
                           <span className="block text-[10px] text-slate-400 dark:text-slate-500 truncate">
                             {fmtDate(r.createdAt)}
                           </span>
@@ -390,7 +401,7 @@ export default function SurveyResultsPage({ params }: { params: Promise<{ id: st
                       </div>
                       <div className="min-w-0">
                         <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100 truncate">
-                          {selectedRespondent.charityName}
+                          {respondentLabel(selectedRespondent, respondentIndex(selectedRespondent.id))}
                         </h3>
                         <p className="text-sm text-slate-500 dark:text-slate-400">
                           تاريخ المشاركة: {fmtDate(selectedRespondent.createdAt)}
@@ -411,7 +422,7 @@ export default function SurveyResultsPage({ params }: { params: Promise<{ id: st
             <div className="space-y-4">
               {flatQuestions.map(({ q, sectionTitle, sectionIdx, isFollowUp }, idx) => {
                 const rawAnswers = parsedResponses
-                  .map((r) => ({ name: r.charityName || "مشارك", raw: r.answers[q.id] }))
+                  .map((r, i) => ({ name: respondentLabel(r, i), raw: r.answers[q.id] }))
                   .filter((x) => x.raw !== undefined && x.raw !== null && x.raw !== "");
 
                 const isChoice = CHOICE_TYPES.has(q.type);
@@ -523,8 +534,8 @@ export default function SurveyResultsPage({ params }: { params: Promise<{ id: st
                       className={rIdx % 2 ? "bg-slate-50/40 dark:bg-slate-900/20" : ""}
                     >
                       <td className="sticky right-0 z-10 bg-inherit align-top px-3 py-2 border-b border-l border-slate-100 dark:border-slate-700 font-bold text-slate-700 dark:text-slate-200 min-w-[160px]">
-                        <span className="block truncate max-w-[150px]" title={r.charityName}>
-                          {r.charityName || "مشارك"}
+                        <span className="block truncate max-w-[150px]" title={respondentLabel(r, rIdx)}>
+                          {respondentLabel(r, rIdx)}
                         </span>
                         <span className="block text-[10px] font-normal text-slate-400 dark:text-slate-500">
                           {fmtDate(r.createdAt)}

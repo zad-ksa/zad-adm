@@ -18,7 +18,7 @@ import {
   assignEmployeesToGroup,
   setDefaultShiftGroup,
 } from "@/app/actions/zadAttendance";
-import { WEEKDAY_LABELS } from "@/lib/attendanceTime";
+import { WEEKDAY_LABELS, formatClock12 } from "@/lib/attendanceTime";
 import { BTN, CARD, Feedback, GHOST, INPUT, useSettingsAction } from "../shared";
 
 type Group = {
@@ -26,8 +26,6 @@ type Group = {
   name: string;
   startTime: string;
   endTime: string;
-  lateAfterMinutes: number;
-  earlyLeaveBeforeMinutes: number;
   workDays: number[];
   isDefault: boolean;
 };
@@ -51,8 +49,6 @@ const emptyForm = {
   name: "",
   startTime: "08:00",
   endTime: "16:00",
-  lateAfterMinutes: "15",
-  earlyLeaveBeforeMinutes: "15",
   workDays: [0, 1, 2, 3, 4] as number[],
 };
 
@@ -95,8 +91,6 @@ export default function GroupsClient({
       name: g.name,
       startTime: g.startTime,
       endTime: g.endTime,
-      lateAfterMinutes: String(g.lateAfterMinutes),
-      earlyLeaveBeforeMinutes: String(g.earlyLeaveBeforeMinutes),
       workDays: g.workDays,
     });
   };
@@ -115,8 +109,6 @@ export default function GroupsClient({
           name: form.name,
           startTime: form.startTime,
           endTime: form.endTime,
-          lateAfterMinutes: Number(form.lateAfterMinutes),
-          earlyLeaveBeforeMinutes: Number(form.earlyLeaveBeforeMinutes),
           workDays: form.workDays,
         }),
       editingId ? "حُفظت المجموعة" : "أُضيفت المجموعة"
@@ -193,37 +185,6 @@ export default function GroupsClient({
         })}
       </div>
 
-      <div className="grid sm:grid-cols-2 gap-2">
-        <label className="flex items-center justify-between gap-2 text-[12px] text-slate-500 dark:text-slate-400">
-          يُعدّ متأخراً بعد
-          <span className="flex items-center gap-1.5">
-            <input
-              className={`${INPUT} w-20 text-center`}
-              type="number"
-              min={0}
-              dir="ltr"
-              value={form.lateAfterMinutes}
-              onChange={(e) => setForm({ ...form, lateAfterMinutes: e.target.value })}
-            />
-            دقيقة
-          </span>
-        </label>
-        <label className="flex items-center justify-between gap-2 text-[12px] text-slate-500 dark:text-slate-400">
-          انصراف مبكر قبل
-          <span className="flex items-center gap-1.5">
-            <input
-              className={`${INPUT} w-20 text-center`}
-              type="number"
-              min={0}
-              dir="ltr"
-              value={form.earlyLeaveBeforeMinutes}
-              onChange={(e) => setForm({ ...form, earlyLeaveBeforeMinutes: e.target.value })}
-            />
-            دقيقة
-          </span>
-        </label>
-      </div>
-
       <div className="flex items-center gap-2">
         <button className={BTN} disabled={busy || !form.name.trim()} onClick={submit}>
           <Check className="w-3.5 h-3.5" /> {editingId ? "حفظ التعديل" : "إضافة المجموعة"}
@@ -284,7 +245,7 @@ export default function GroupsClient({
                       )}
                     </p>
                     <p className="mt-0.5 text-[12px] text-slate-500 dark:text-slate-400 tabular-nums" dir="ltr">
-                      {g.startTime} – {g.endTime}
+                      {formatClock12(g.startTime)} – {formatClock12(g.endTime)}
                       <span className="text-slate-400"> · {hours} ساعات</span>
                     </p>
                   </div>
@@ -306,7 +267,7 @@ export default function GroupsClient({
                           disabled={busy}
                           onClick={() => {
                             const ok = window.confirm(
-                              `تعيين «${g.name}» افتراضية سينقل ${unassignedCount} موظفاً غير مُسنَد إلى دوامها (${g.startTime}–${g.endTime}). أيام الحضور الماضية لا تتغيّر. متابعة؟`
+                              `تعيين «${g.name}» افتراضية سينقل ${unassignedCount} موظفاً غير مُسنَد إلى دوامها (${formatClock12(g.startTime)} – ${formatClock12(g.endTime)}). أيام الحضور الماضية لا تتغيّر. متابعة؟`
                             );
                             if (ok) run(() => setDefaultShiftGroup(g.id), "عُيّنت المجموعة الافتراضية");
                           }}
@@ -366,7 +327,7 @@ export default function GroupsClient({
                     );
                   })}
                   <span className="mr-auto text-[11px] text-slate-400 tabular-nums">
-                    تأخير بعد {g.lateAfterMinutes}د
+                    {g.workDays.length} أيام عمل
                   </span>
                 </div>
 

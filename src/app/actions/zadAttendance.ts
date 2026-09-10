@@ -14,27 +14,16 @@ import {
   isValidCoordinate,
   normalizeIp,
 } from "@/lib/geo";
-import {
-  classifyCheckIn,
-  instantOn,
-  isEarlyLeave,
-  parseCivilDay,
-  toCivilDate,
-} from "@/lib/attendanceTime";
-import {
-  SETTINGS_ID,
-  loadAttendanceGate,
-  loadEmployeeSchedule,
-  loadSettings,
-} from "@/lib/zadAttendance";
+import { instantOn, parseCivilDay, toCivilDate } from "@/lib/attendanceTime";
+import { SETTINGS_ID, loadAttendanceGate, loadSettings } from "@/lib/zadAttendance";
 
 /**
  * Attendance for Zad's own employees.
  *
  * THE INVARIANT, inherited deliberately from the charity implementation: the
  * client sends raw sensor output and nothing else — latitude, longitude,
- * accuracy. Which site, how far, inside or outside, which civil day, present or
- * late, suspicious or not: every one of those is computed here, from the
+ * accuracy. Which site, how far, inside or outside, which civil day, left early
+ * or not, suspicious or not: every one of those is computed here, from the
  * server's clock, the server's view of the request IP, and stored settings.
  *
  * The moment a derived value starts arriving from the browser, spoofing the
@@ -177,14 +166,15 @@ export async function zadCheckIn(fix: GeoInput) {
     const now = new Date();
     const workDate = toCivilDate(now);
 
-    const [existing, sites, settings, schedule, employee] = await Promise.all([
+    const [existing, sites, settings, employee] = await Promise.all([
       prisma.zadAttendanceRecord.findUnique({
         where: { employeeId_workDate: { employeeId: session.id, workDate } },
         select: { id: true, checkInAt: true },
       }),
       prisma.zadWorkSite.findMany({ where: { isActive: true } }),
       loadSettings(),
-      loadEmployeeSchedule(session.id),
+      // No schedule here: a day is no longer graded, so neither check-in nor
+      // check-out needs to know the shift's hours.
       prisma.employee.findUnique({
         where: { id: session.id },
         select: { remoteWorkAllowed: true },
@@ -240,7 +230,10 @@ export async function zadCheckIn(fix: GeoInput) {
       ...(await detectSuspicious({ employeeId: session.id, lat, lng, at: now, workDate })),
     ].filter(Boolean) as string[];
 
-    const status = classifyCheckIn(now, schedule);
+    // Arriving is arriving: Zad attendance records that someone came, not how
+    // late. Early departure is still recorded — it is a shorter day, which is a
+    // different fact from a later start.
+    const status: AttendanceStatus = "PRESENT";
 
     try {
       await prisma.zadAttendanceRecord.create({
@@ -305,13 +298,12 @@ export async function zadCheckOut(fix: GeoInput) {
     const now = new Date();
     const workDate = toCivilDate(now);
 
-    const [record, sites, settings, schedule, employee] = await Promise.all([
+    const [record, sites, settings, employee] = await Promise.all([
       prisma.zadAttendanceRecord.findUnique({
         where: { employeeId_workDate: { employeeId: session.id, workDate } },
       }),
       prisma.zadWorkSite.findMany({ where: { isActive: true } }),
       loadSettings(),
-      loadEmployeeSchedule(session.id),
       prisma.employee.findUnique({
         where: { id: session.id },
         select: { remoteWorkAllowed: true },
@@ -339,11 +331,10 @@ export async function zadCheckOut(fix: GeoInput) {
       }
     }
 
-    // Leaving before the scheduled end downgrades the day — but never upgrades
-    // it. Someone already marked LATE stays LATE; the morning happened.
-    const early = isEarlyLeave(now, schedule);
-    const status: AttendanceStatus =
-      early && record.status === "PRESENT" ? "EARLY_LEAVE" : record.status;
+    // A day is no longer graded at all: neither a late arrival nor an early
+    // departure changes it. Attendance records that someone was here and when,
+    // and the times themselves say the rest to whoever reads them.
+    const status: AttendanceStatus = record.status;
 
     await prisma.zadAttendanceRecord.update({
       where: { id: record.id },
@@ -366,7 +357,7 @@ export async function zadCheckOut(fix: GeoInput) {
     });
 
     revalidatePath("/main/attendance");
-    return { success: true as const, data: { status, early } };
+    return { success: true as const, data: { status } };
   } catch (error) {
     return refuse(error, "تعذّر تسجيل الانصراف");
   }
@@ -451,8 +442,6 @@ export async function saveShiftGroup(input: {
   name: string;
   startTime: string;
   endTime: string;
-  lateAfterMinutes: number;
-  earlyLeaveBeforeMinutes: number;
   workDays: number[];
 }) {
   try {
@@ -476,8 +465,6 @@ export async function saveShiftGroup(input: {
       name,
       startTime: input.startTime,
       endTime: input.endTime,
-      lateAfterMinutes: Math.max(0, Math.round(input.lateAfterMinutes)),
-      earlyLeaveBeforeMinutes: Math.max(0, Math.round(input.earlyLeaveBeforeMinutes)),
       workDays,
     };
 
@@ -636,11 +623,7 @@ export async function correctZadAttendance(input: {
       return { success: true as const, cleared: true };
     }
 
-    const schedule = await loadEmployeeSchedule(employee.id);
-    const status: AttendanceStatus =
-      checkOutAt && isEarlyLeave(checkOutAt, schedule)
-        ? "EARLY_LEAVE"
-        : (classifyCheckIn(checkInAt, schedule) as AttendanceStatus);
+    const status: AttendanceStatus = "PRESENT";
 
     await prisma.zadAttendanceRecord.upsert({
       where: { employeeId_workDate: { employeeId: employee.id, workDate } },

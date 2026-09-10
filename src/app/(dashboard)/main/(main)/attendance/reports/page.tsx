@@ -120,8 +120,6 @@ export default async function AttendanceReportsPage({
       name: employee.name,
       groupName: employee.shiftGroup?.name ?? "الافتراضية",
       present: mine.filter((r) => r.status === "PRESENT").length,
-      late: mine.filter((r) => r.status === "LATE").length,
-      earlyLeave: mine.filter((r) => r.status === "EARLY_LEAVE").length,
       remote: mine.filter((r) => r.isRemote).length,
       absent,
       suspicious: mine.filter((r) => r.isSuspicious).length,

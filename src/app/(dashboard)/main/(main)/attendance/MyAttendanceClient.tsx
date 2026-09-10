@@ -22,6 +22,7 @@ import {
   ATTENDANCE_STATUS_LABELS,
   LEAVE_TYPE_LABELS,
   WEEKDAY_LABELS,
+  formatClock12,
   type ScheduleShape,
 } from "@/lib/attendanceTime";
 
@@ -41,9 +42,10 @@ type MonthRecord = {
 /** Riyadh wall-clock, independent of whatever the device's clock is set to. */
 function riyadhTime(iso: string | null): string {
   if (!iso) return "—";
-  return new Intl.DateTimeFormat("ar-SA", {
+  return new Intl.DateTimeFormat("en-US", {
     hour: "2-digit",
     minute: "2-digit",
+    hour12: true,
     timeZone: "Asia/Riyadh",
   }).format(new Date(iso));
 }
@@ -59,8 +61,6 @@ function riyadhDate(iso: string): string {
 
 const TONE: Record<string, string> = {
   PRESENT: "text-emerald-600 dark:text-emerald-400 bg-emerald-500/10",
-  LATE: "text-amber-600 dark:text-amber-400 bg-amber-500/10",
-  EARLY_LEAVE: "text-amber-600 dark:text-amber-400 bg-amber-500/10",
   ABSENT: "text-rose-600 dark:text-rose-400 bg-rose-500/10",
 };
 
@@ -69,7 +69,7 @@ export default function MyAttendanceClient({
   schedule,
   today,
   month,
-  leaveBalance,
+  myLeaves,
   remoteAllowed,
   hasSites,
 }: {
@@ -78,7 +78,7 @@ export default function MyAttendanceClient({
   schedule: ScheduleShape & { groupName: string };
   today: MonthRecord | null;
   month: MonthRecord[];
-  leaveBalance: { total: number; used: number; remaining: number; entries: { type: string; startDate: string; endDate: string }[] };
+  myLeaves: { type: string; startDate: string; endDate: string }[];
   remoteAllowed: boolean;
   hasSites: boolean;
 }) {
@@ -152,18 +152,21 @@ export default function MyAttendanceClient({
           <div>
             <p className="text-[11px] font-bold text-slate-400 dark:text-slate-500">اليوم</p>
             <p className="mt-1 text-[15px] font-black text-slate-900 dark:text-slate-100">
-              {today?.checkInAt ? riyadhTime(today.checkInAt) : "لم تسجّل حضورك بعد"}
+              {today?.checkInAt ? <bdi>{riyadhTime(today.checkInAt)}</bdi> : "لم تسجّل حضورك بعد"}
               {today?.checkOutAt && (
                 <span className="text-slate-400 dark:text-slate-500 font-bold">
                   {" ← "}
-                  {riyadhTime(today.checkOutAt)}
+                  <bdi>{riyadhTime(today.checkOutAt)}</bdi>
                 </span>
               )}
             </p>
             <p className="mt-1.5 flex items-center gap-2 flex-wrap text-[12px] text-slate-500 dark:text-slate-400">
               <span className="inline-flex items-center gap-1">
                 <Clock className="w-3.5 h-3.5" />
-                {schedule.groupName} · {schedule.startTime}–{schedule.endTime}
+                {schedule.groupName} ·{" "}
+                <span dir="ltr">
+                  {formatClock12(schedule.startTime)} – {formatClock12(schedule.endTime)}
+                </span>
               </span>
               {today?.siteName && (
                 <span className="inline-flex items-center gap-1">
@@ -213,30 +216,6 @@ export default function MyAttendanceClient({
         </p>
       </div>
 
-      {/* رصيد الإجازات */}
-      <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5">
-        <p className="text-[11px] font-bold text-slate-400 dark:text-slate-500 mb-3">رصيد الإجازات السنوية</p>
-        <div className="flex items-center gap-6 flex-wrap">
-          {[
-            { label: "الرصيد", value: leaveBalance.total },
-            { label: "المستهلك", value: leaveBalance.used },
-            { label: "المتبقي", value: leaveBalance.remaining },
-          ].map((s) => (
-            <div key={s.label}>
-              <p className="text-[11px] text-slate-400 dark:text-slate-500">{s.label}</p>
-              <p className="text-[18px] font-black text-slate-900 dark:text-slate-100 tabular-nums">
-                {s.value}
-                <span className="text-[11px] font-bold text-slate-400 mr-1">يوم</span>
-              </p>
-            </div>
-          ))}
-        </div>
-        {/* الأنواع الأخرى تُسجَّل ولا تُخصم — يُقال صراحةً كي لا يُظنّ الرصيد خاطئاً. */}
-        <p className="mt-3 text-[11px] text-slate-400 dark:text-slate-500">
-          تُخصم الإجازات السنوية فقط؛ المرضية وغيرها تُسجَّل ولا تُخصم، والعطل الرسمية لا تُحتسب على أحد.
-        </p>
-      </div>
-
       {/* سجل الشهر */}
       <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 overflow-hidden">
         <p className="px-5 py-3 text-[11px] font-bold text-slate-400 dark:text-slate-500 border-b border-slate-100 dark:border-slate-800">
@@ -264,10 +243,10 @@ export default function MyAttendanceClient({
                   <tr key={r.workDate} className="border-t border-slate-100 dark:border-slate-800/60">
                     <td className="py-2 px-4 text-slate-700 dark:text-slate-300">{riyadhDate(r.workDate)}</td>
                     <td className="py-2 px-4 tabular-nums text-slate-700 dark:text-slate-300">
-                      {riyadhTime(r.checkInAt)}
+                      <bdi>{riyadhTime(r.checkInAt)}</bdi>
                     </td>
                     <td className="py-2 px-4 tabular-nums text-slate-700 dark:text-slate-300">
-                      {riyadhTime(r.checkOutAt)}
+                      <bdi>{riyadhTime(r.checkOutAt)}</bdi>
                       {/* The nightly sweep supplied this time; it is an assumption,
                           and saying so is the difference between a record and a
                           claim about when somebody left. */}
@@ -306,11 +285,11 @@ export default function MyAttendanceClient({
         )}
       </div>
 
-      {leaveBalance.entries.length > 0 && (
+      {myLeaves.length > 0 && (
         <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5">
           <p className="text-[11px] font-bold text-slate-400 dark:text-slate-500 mb-3">إجازاتي هذا العام</p>
           <ul className="space-y-1.5">
-            {leaveBalance.entries.map((e, i) => (
+            {myLeaves.map((e, i) => (
               <li key={i} className="text-[12px] text-slate-600 dark:text-slate-300 flex items-center gap-2">
                 <span className="font-bold">{LEAVE_TYPE_LABELS[e.type] ?? e.type}</span>
                 <span className="text-slate-400 tabular-nums">

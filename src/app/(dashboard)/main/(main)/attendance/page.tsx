@@ -5,17 +5,12 @@ import { redirect } from "next/navigation";
 import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { toCivilDate, civilDaysOfMonth, currentRiyadhMonth } from "@/lib/attendanceTime";
-import { loadAttendanceGate, loadEmployeeSchedule, isDeductible } from "@/lib/zadAttendance";
+import { loadAttendanceGate, loadEmployeeSchedule } from "@/lib/zadAttendance";
 import { hasPermission } from "@/lib/permissions";
 import AttendanceTabs from "./AttendanceTabs";
 import MyAttendanceClient from "./MyAttendanceClient";
 
 export const metadata: Metadata = { title: "التحضير | زاد التنموية" };
-
-/** Whole days in an inclusive range, counted the way a person counts them. */
-function daysInclusive(start: Date, end: Date): number {
-  return Math.floor((end.getTime() - start.getTime()) / 86_400_000) + 1;
-}
 
 /**
  * Every Zad employee sees this — recording your own attendance is not a
@@ -38,7 +33,7 @@ export default async function AttendancePage() {
     loadEmployeeSchedule(session.id),
     prisma.employee.findUnique({
       where: { id: session.id },
-      select: { annualLeaveDays: true, remoteWorkAllowed: true },
+      select: { remoteWorkAllowed: true },
     }),
     prisma.zadAttendanceRecord.findMany({
       where: {
@@ -86,21 +81,12 @@ export default async function AttendancePage() {
 
   const today = rows.find((r) => r.workDate === workDate.toISOString()) ?? null;
 
-  // Only ANNUAL spends the balance. Sick and unpaid leave are recorded and cost
-  // nothing, and a holiday of either scope belongs to nobody, so it cannot be
-  // charged to anybody — see zadAttendance.ts.
-  const used = leaves
-    .filter((l) => isDeductible(l.type))
-    .reduce((sum, l) => sum + daysInclusive(l.startDate, l.endDate), 0);
-
-  const total = employee?.annualLeaveDays ?? 21;
-
   return (
     <main className="flex-1 min-w-0 py-4" dir="rtl">
       <header className="mb-5">
         <h1 className="text-xl font-black text-slate-900 dark:text-slate-100">التحضير</h1>
         <p className="mt-0.5 text-[13px] text-slate-500 dark:text-slate-400">
-          حضورك وانصرافك ورصيد إجازاتك
+          حضورك وانصرافك هذا الشهر
         </p>
       </header>
 
@@ -118,16 +104,11 @@ export default async function AttendancePage() {
         schedule={{ ...schedule, groupName: group?.shiftGroup?.name ?? "الدوام الافتراضي" }}
         today={today}
         month={rows}
-        leaveBalance={{
-          total,
-          used,
-          remaining: Math.max(0, total - used),
-          entries: leaves.map((l) => ({
-            type: l.type,
-            startDate: l.startDate.toISOString(),
-            endDate: l.endDate.toISOString(),
-          })),
-        }}
+        myLeaves={leaves.map((l) => ({
+          type: l.type,
+          startDate: l.startDate.toISOString(),
+          endDate: l.endDate.toISOString(),
+        }))}
         remoteAllowed={employee?.remoteWorkAllowed ?? false}
         hasSites={siteCount > 0}
       />

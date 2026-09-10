@@ -23,8 +23,6 @@ type Row = {
   name: string;
   groupName: string;
   present: number;
-  late: number;
-  earlyLeave: number;
   remote: number;
   absent: number;
   suspicious: number;
@@ -33,8 +31,12 @@ type Row = {
 
 const time = (iso: string | null) =>
   iso
-    ? new Intl.DateTimeFormat("ar-SA", { hour: "2-digit", minute: "2-digit", timeZone: "Asia/Riyadh" })
-        .format(new Date(iso))
+    ? new Intl.DateTimeFormat("en-US", {
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: true,
+        timeZone: "Asia/Riyadh",
+      }).format(new Date(iso))
     : "—";
 
 const date = (iso: string) =>
@@ -57,18 +59,17 @@ export default function ReportClient({
   const totals = rows.reduce(
     (acc, r) => ({
       present: acc.present + r.present,
-      late: acc.late + r.late,
       absent: acc.absent + r.absent,
       remote: acc.remote + r.remote,
     }),
-    { present: 0, late: 0, absent: 0, remote: 0 }
+    { present: 0, absent: 0, remote: 0 }
   );
 
   /** CSV rather than a print sheet: this is a table people take into a spreadsheet. */
   const exportCsv = async () => {
-    const header = ["الموظف", "المجموعة", "حاضر", "متأخر", "انصراف مبكر", "عن بُعد", "غياب"];
+    const header = ["الموظف", "المجموعة", "حاضر", "عن بُعد", "غياب"];
     const lines = rows.map((r) =>
-      [r.name, r.groupName, r.present, r.late, r.earlyLeave, r.remote, r.absent].join(",")
+      [r.name, r.groupName, r.present, r.remote, r.absent].join(",")
     );
     // A BOM, so Excel opens Arabic as UTF-8 instead of mojibake.
     const csv = "﻿" + [header.join(","), ...lines].join("\n");
@@ -109,7 +110,6 @@ export default function ReportClient({
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
         {[
           { label: "حاضر", value: totals.present },
-          { label: "متأخر", value: totals.late },
           { label: "عن بُعد", value: totals.remote },
           { label: "غياب", value: totals.absent },
         ].map((s) => (
@@ -131,8 +131,6 @@ export default function ReportClient({
                 <th className="py-2.5 px-4 font-bold">الموظف</th>
                 <th className="py-2.5 px-3 font-bold">المجموعة</th>
                 <th className="py-2.5 px-3 font-bold">حاضر</th>
-                <th className="py-2.5 px-3 font-bold">متأخر</th>
-                <th className="py-2.5 px-3 font-bold">مبكر</th>
                 <th className="py-2.5 px-3 font-bold">عن بُعد</th>
                 <th className="py-2.5 px-3 font-bold">غياب</th>
                 <th className="py-2.5 px-3 font-bold w-8"></th>
@@ -158,8 +156,6 @@ export default function ReportClient({
                     </td>
                     <td className="py-2.5 px-3 text-slate-500 dark:text-slate-400">{r.groupName}</td>
                     <td className="py-2.5 px-3 tabular-nums text-emerald-600 dark:text-emerald-400">{r.present}</td>
-                    <td className="py-2.5 px-3 tabular-nums text-amber-600 dark:text-amber-400">{r.late}</td>
-                    <td className="py-2.5 px-3 tabular-nums text-amber-600 dark:text-amber-400">{r.earlyLeave}</td>
                     <td className="py-2.5 px-3 tabular-nums text-indigo-600 dark:text-indigo-400">{r.remote}</td>
                     <td className="py-2.5 px-3 tabular-nums text-rose-600 dark:text-rose-400">{r.absent}</td>
                     <td className="py-2.5 px-3">
@@ -173,7 +169,7 @@ export default function ReportClient({
 
                   {openFor === r.employeeId && (
                     <tr>
-                      <td colSpan={8} className="bg-slate-50 dark:bg-slate-800/30 px-4 py-3">
+                      <td colSpan={6} className="bg-slate-50 dark:bg-slate-800/30 px-4 py-3">
                         {r.days.length === 0 ? (
                           <p className="text-[12px] text-slate-400">لا أيام مسجّلة هذا الشهر.</p>
                         ) : (
@@ -182,7 +178,7 @@ export default function ReportClient({
                               <li key={d.workDate} className="flex items-center gap-3 flex-wrap text-[12px]">
                                 <span className="text-slate-600 dark:text-slate-300 w-24">{date(d.workDate)}</span>
                                 <span className="tabular-nums text-slate-500 dark:text-slate-400">
-                                  {time(d.checkInAt)} ← {time(d.checkOutAt)}
+                                  <bdi>{time(d.checkInAt)}</bdi> ← <bdi>{time(d.checkOutAt)}</bdi>
                                 </span>
                                 <span className="text-slate-500 dark:text-slate-400">
                                   {ATTENDANCE_STATUS_LABELS[d.status] ?? d.status}

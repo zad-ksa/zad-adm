@@ -47,6 +47,28 @@ export function isValidTimeString(value: string): boolean {
   return parseTimeToMinutes(value) !== null;
 }
 
+/**
+ * "HH:MM" → "08:00 AM" / "04:30 PM", for display only.
+ *
+ * Schedules are stored as 24-hour wall-clock strings because that is what
+ * `<input type="time">` reads and writes, and what comparisons are done on.
+ * This converts one for reading; it must never be fed back into a form value
+ * or a stored column.
+ *
+ * Built by hand rather than through Intl: these are wall-clock strings, not
+ * instants, and turning one into a Date to format it invites a timezone to
+ * shift it by three hours.
+ */
+export function formatClock12(value: string): string {
+  const minutes = parseTimeToMinutes(value);
+  if (minutes === null) return value;
+  const h24 = Math.floor(minutes / 60);
+  const mm = String(minutes % 60).padStart(2, "0");
+  const period = h24 < 12 ? "AM" : "PM";
+  const h12 = h24 % 12 === 0 ? 12 : h24 % 12;
+  return `${String(h12).padStart(2, "0")}:${mm} ${period}`;
+}
+
 export const WEEKDAY_LABELS = [
   "الأحد",
   "الإثنين",

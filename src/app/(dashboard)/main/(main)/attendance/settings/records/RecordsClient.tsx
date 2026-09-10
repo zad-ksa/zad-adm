@@ -13,7 +13,11 @@ import {
   X,
 } from "lucide-react";
 import { correctZadAttendance } from "@/app/actions/zadAttendance";
-import { ATTENDANCE_STATUS_LABELS, LEAVE_TYPE_LABELS } from "@/lib/attendanceTime";
+import {
+  ATTENDANCE_STATUS_LABELS,
+  LEAVE_TYPE_LABELS,
+  formatClock12,
+} from "@/lib/attendanceTime";
 import { BTN, Feedback, GHOST, INPUT, useSettingsAction } from "../shared";
 
 type DayRecord = {
@@ -52,8 +56,6 @@ const clock = (iso: string | null) => {
 
 const STATUS_TONE: Record<string, string> = {
   PRESENT: "text-emerald-600 dark:text-emerald-400",
-  LATE: "text-amber-600 dark:text-amber-400",
-  EARLY_LEAVE: "text-amber-600 dark:text-amber-400",
   ABSENT: "text-rose-600 dark:text-rose-400",
 };
 
@@ -132,7 +134,11 @@ export default function RecordsClient({
           className="h-9 px-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-[12px] text-slate-600 dark:text-slate-300"
         />
         <span className="text-[11px] text-slate-400 tabular-nums">
-          دوام «{schedule.groupName}» {schedule.startTime}–{schedule.endTime} · {recorded} يوم
+          دوام «{schedule.groupName}»{" "}
+          <span dir="ltr">
+            {formatClock12(schedule.startTime)} – {formatClock12(schedule.endTime)}
+          </span>{" "}
+          · {recorded} يوم
           مسجّل
           {corrected > 0 && ` · ${corrected} معدّل يدوياً`}
         </span>

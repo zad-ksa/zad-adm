@@ -37,7 +37,7 @@ export default async function ShiftGroupsPage() {
   return (
     <SettingsShell
       title="مجموعات الدوام"
-      description="لكل مجموعة أوقاتها وأيام عملها، والتأخير يُقاس بها. تعديل مجموعة يسري على الأيام القادمة ولا يُعيد تصنيف ما مضى."
+      description="لكل مجموعة أوقاتها وأيام عملها. تعديل مجموعة يسري على الأيام القادمة ولا يُعيد تصنيف ما مضى."
       canViewReports={hasPermission(
         session.role,
         session.permissions || [],
@@ -50,8 +50,6 @@ export default async function ShiftGroupsPage() {
           name: g.name,
           startTime: g.startTime,
           endTime: g.endTime,
-          lateAfterMinutes: g.lateAfterMinutes,
-          earlyLeaveBeforeMinutes: g.earlyLeaveBeforeMinutes,
           workDays: g.workDays,
           isDefault: g.isDefault,
         }))}

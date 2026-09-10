@@ -126,12 +126,11 @@ const ACTION_CONFIG: Record<Action, { label: string; color: string; icon: any }>
 // في أغلب الطلبات فعلياً.
 const TABLE_GRID_COLS = "lg:grid-cols-[minmax(0,3fr)_84px_104px_84px_170px_128px_82px_130px]";
 
-/** صياغة عربية لعدد طلبات الاعتماد المعلقة. */
+/** صياغة عربية لعدد طلبات الاعتماد المعلقة — بالأرقام دائماً، فصيغ المثنى
+ *  ("طلبَي") تُربك بعض القرّاء. */
 function pendingRequestsPhrase(n: number): string {
-  if (n === 1) return "طلب اعتماد واحد";
-  if (n === 2) return "طلبَي اعتماد";
-  if (n >= 3 && n <= 10) return `${n} طلبات اعتماد`;
-  return `${n} طلب اعتماد`;
+  const noun = n >= 3 && n <= 10 ? "طلبات اعتماد" : "طلب اعتماد";
+  return `${n} ${noun}`;
 }
 
 /** نص رسمي مختصر يُنسخ ويُرسل عبر وسيلة تواصل أخرى لتذكير المراجِع. */

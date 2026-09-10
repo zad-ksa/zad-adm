@@ -42,6 +42,10 @@ const TONE: Record<DesignEventKind, string> = {
   CHARITY_APPROVED: "bg-emerald-500",
   AUTO_APPROVED: "bg-emerald-500",
   COMPLETED: "bg-emerald-500",
+  // Returned still open: amber, like the charity's own revision request.
+  // Closed with notes: rose, because the request ended without the change.
+  REVISION_RETURNED: "bg-amber-500",
+  CLOSED_WITH_NOTES: "bg-rose-500",
 };
 
 const ACTOR_LABEL: Record<string, string> = {

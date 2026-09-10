@@ -25,6 +25,8 @@ import ConfirmModal from "@/components/ui/ConfirmModal";
 import CopyDeliveryNotice from "@/components/design-requests/CopyDeliveryNotice";
 import LinkifiedText from "@/components/ui/LinkifiedText";
 import DesignRequestLogModal from "@/components/design-requests/DesignRequestLogModal";
+import { RevisionNotesList } from "@/components/design-requests/RevisionNotesList";
+import ReturnRevisionModal from "@/components/design-requests/ReturnRevisionModal";
 import QueueOrderModal, { type QueueRow } from "@/components/design-requests/QueueOrderModal";
 import DesignGanttModal, { type GanttItem } from "./DesignGanttModal";
 
@@ -83,6 +85,9 @@ export default function DesignRequestsClient({
   const [reviewingId, setReviewingId] = useState<string | null>(null);
   const [isComposeOpen, setIsComposeOpen] = useState(false);
   const [confirmingId, setConfirmingId] = useState<string | null>(null);
+  const [returningTo, setReturningTo] = useState<
+    { id: string; title: string; notes: string | null } | null
+  >(null);
   const [isCompleting, setIsCompleting] = useState(false);
   const [deliverables, setDeliverables] = useState<File[]>([]);
   // What staff want the charity — or the next reader of the log — to know
@@ -376,7 +381,7 @@ export default function DesignRequestsClient({
                 { key: "UNDER_REVIEW" as const, label: "قيد الانتظار", count: reviewCount, urgent: true },
                 { key: "AWAITING_REVIEW" as const, label: "بانتظار الجمعية", count: awaitingCharityCount, urgent: false },
                 { key: "COMPLETED" as const, label: "الطلبات المنجزة", count: 0, urgent: false },
-                { key: "REJECTED" as const, label: "المرفوضة", count: 0, urgent: false },
+                { key: "REJECTED" as const, label: "المُعادة للتعديل", count: 0, urgent: false },
               ]
             ).map(({ key, label, count, urgent }) => (
               <button
@@ -521,24 +526,44 @@ export default function DesignRequestsClient({
               actions={
                 it.request.status === "REVISION_REQUESTED" ? (
                   <div className="w-full mt-2 space-y-2">
-                    <div
-                      className="px-3 py-2.5 rounded-xl bg-amber-500/[0.08] text-amber-700 dark:text-amber-400 leading-relaxed whitespace-pre-line"
-                      style={{ fontSize: "var(--dr-fs-meta)" }}
-                    >
-                      <span className="font-bold">ملاحظات الجمعية: </span>
+                    <div className="px-3 py-2.5 rounded-xl bg-amber-500/[0.08]">
+                      <p
+                        className="font-bold text-amber-700 dark:text-amber-400 mb-2"
+                        style={{ fontSize: "var(--dr-fs-meta)" }}
+                      >
+                        ملاحظات الجمعية
+                      </p>
                       {it.request.revisionNotes ? (
-                        <LinkifiedText text={it.request.revisionNotes} />
+                        <RevisionNotesList notes={it.request.revisionNotes} />
                       ) : (
-                        "—"
+                        <span className="text-amber-700 dark:text-amber-400">—</span>
                       )}
                     </div>
-                    <button
-                      onClick={() => setConfirmingId(it.request.id)}
-                      className="w-full h-9 rounded-xl bg-primary/10 text-primary dark:bg-teal-500/10 dark:text-teal-400 hover:bg-primary hover:text-white dark:hover:bg-teal-500 dark:hover:text-[#0A0A0A] transition-colors font-bold"
-                      style={{ fontSize: "var(--dr-fs-meta)" }}
-                    >
-                      تسليم التعديل (اعتماد نهائي)
-                    </button>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => setConfirmingId(it.request.id)}
+                        className="flex-1 h-9 rounded-xl bg-primary/10 text-primary dark:bg-teal-500/10 dark:text-teal-400 hover:bg-primary hover:text-white dark:hover:bg-teal-500 dark:hover:text-[#0A0A0A] transition-colors font-bold"
+                        style={{ fontSize: "var(--dr-fs-meta)" }}
+                      >
+                        تسليم التعديل (اعتماد نهائي)
+                      </button>
+                      {/* The other half of the decision: answer the notes
+                          without a new delivery, and say whether the request
+                          stays open for another round. */}
+                      <button
+                        onClick={() =>
+                          setReturningTo({
+                            id: it.request.id,
+                            title: it.request.title,
+                            notes: it.request.revisionNotes ?? null,
+                          })
+                        }
+                        className="flex-1 h-9 rounded-xl bg-amber-500/10 text-amber-600 dark:bg-amber-500/15 dark:text-amber-400 hover:bg-amber-500 hover:text-white dark:hover:bg-amber-500 dark:hover:text-white transition-colors font-bold"
+                        style={{ fontSize: "var(--dr-fs-meta)" }}
+                      >
+                        ردّ بملاحظات
+                      </button>
+                    </div>
                   </div>
                 ) : it.request.status === "AWAITING_REVIEW" ? (
                   <div className="w-full mt-2 space-y-2">
@@ -582,7 +607,7 @@ export default function DesignRequestsClient({
                       className="w-full mt-2 px-3 py-2 rounded-xl bg-rose-500/[0.06] text-rose-600 dark:text-rose-400 leading-relaxed"
                       style={{ fontSize: "var(--dr-fs-meta)" }}
                     >
-                      <span className="font-bold">سبب الرفض: </span>
+                      <span className="font-bold">ملاحظات الإعادة: </span>
                       {it.request.rejectionReason}
                     </div>
                   ) : null
@@ -715,6 +740,20 @@ export default function DesignRequestsClient({
         onCancel={() => setIsCompleteConfirmOpen(false)}
         onConfirm={runComplete}
       />
+
+      {returningTo && (
+        <ReturnRevisionModal
+          requestId={returningTo.id}
+          title={returningTo.title}
+          charityNotes={returningTo.notes}
+          onClose={() => setReturningTo(null)}
+          onDone={(message) => {
+            setReturningTo(null);
+            setToast(message);
+            startTransition(() => router.refresh());
+          }}
+        />
+      )}
 
       <SuccessToast message={toast} onDismiss={() => setToast(null)} />
 

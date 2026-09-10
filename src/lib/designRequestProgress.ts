@@ -166,7 +166,7 @@ export function getDesignRequestProgress(args: {
       daysRemaining: 0,
       isOverdue: false,
       isCompleted: false,
-      label: "مرفوض",
+      label: "مُعاد للتعديل",
     };
   }
 

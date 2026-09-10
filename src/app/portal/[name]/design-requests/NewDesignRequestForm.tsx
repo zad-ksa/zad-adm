@@ -153,7 +153,7 @@ export default function NewDesignRequestForm({
             <Info className="w-4 h-4 shrink-0 mt-px" />
             <span>
               <span className="font-bold">سيتم مراجعة الطلب خلال 24 ساعة.</span>{" "}
-              بعد الاعتماد يُثبَّت موعد التسليم ويأخذ الطلب دوره، وإن لم يُقبل ستجد سبب الرفض في تبويب «المرفوضة».
+              بعد الاعتماد يُثبَّت موعد التسليم ويأخذ الطلب دوره، وإن احتاج تعديلاً ستجد ملاحظات فريق زاد في تبويب «المُعادة للتعديل».
             </span>
           </div>
 
@@ -164,7 +164,7 @@ export default function NewDesignRequestForm({
               className="px-4 py-3 rounded-xl bg-rose-500/[0.06] text-rose-600 dark:text-rose-400 leading-relaxed"
               style={{ fontSize: "var(--dr-fs-meta)" }}
             >
-              <span className="font-bold">سبب الرفض السابق: </span>
+              <span className="font-bold">ملاحظات فريق زاد: </span>
               {resubmit.rejectionReason}
             </div>
           )}
@@ -358,7 +358,7 @@ export default function NewDesignRequestForm({
         title={isResubmit ? "إعادة رفع الطلب" : "إرسال الطلب"}
         message={
           isResubmit
-            ? "سيعود الطلب إلى قائمة المراجعة لدى فريق زاد، ويُحذف سبب الرفض السابق. هل تريد المتابعة؟"
+            ? "سيعود الطلب إلى قائمة المراجعة لدى فريق زاد، وتُحذف الملاحظات السابقة. هل تريد المتابعة؟"
             : "سيُرسل الطلب إلى فريق زاد للمراجعة خلال 24 ساعة. هل تريد المتابعة؟"
         }
         confirmLabel={isResubmit ? "إعادة الرفع" : "إرسال الطلب"}

@@ -167,8 +167,8 @@ export default function RequestRevisionModal({
                   maxLength={180}
                   placeholder={
                     i === 0
-                      ? "اشرح التعديل المطلوب بالتفصيل..."
-                      : "تعديل إضافي..."
+                      ? "اكتب ملاحظة واضحة ومحددة..."
+                      : "ملاحظة إضافية..."
                   }
                   className="w-full px-3 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none resize-none placeholder:text-slate-400 dark:placeholder:text-slate-600"
                   style={{ fontSize: "var(--dr-fs-body)" }}

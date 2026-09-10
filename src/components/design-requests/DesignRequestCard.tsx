@@ -14,6 +14,7 @@ import {
   Hammer,
   History,
   ChevronDown,
+  AlertTriangle,
 } from "lucide-react";
 import { useState, type ReactNode } from "react";
 import type { DesignRequestProgress } from "@/lib/designRequestProgress";
@@ -44,6 +45,8 @@ export type DesignRequestCardData = {
    * delivery replaces the earlier note; the full history is in the log.
    */
   completionNote?: string | null;
+  /// أُغلق بملاحظات زاد دون تنفيذ تعديلات الجمعية — نهاية أخرى غير التسليم.
+  closedWithNotes?: boolean | null;
   /** When it was rejected. */
   rejectedAt?: string | null;
   /** Finalised by the deadline passing rather than by the charity acting. */
@@ -392,7 +395,7 @@ export default function DesignRequestCard({
           ) : request.status === "REJECTED" ? (
             <span className="flex items-center gap-2">
               <CalendarCheck className="w-4 h-4 text-rose-500 shrink-0" />
-              <span className="text-rose-600 dark:text-rose-400">تاريخ الرفض:</span>{" "}
+              <span className="text-rose-600 dark:text-rose-400">تاريخ الإعادة:</span>{" "}
               <span className="font-bold text-slate-900 dark:text-slate-100">
                 {request.rejectedAt ?? "—"}
               </span>
@@ -414,8 +417,22 @@ export default function DesignRequestCard({
           {/* Staff's note on the current hand-off. Shown while the request is
               still with the charity for review, and again once closed — a later
               delivery replaces the note, same as it replaces the files. */}
-          {(request.status === "AWAITING_REVIEW" || request.status === "COMPLETED") &&
-            request.completionNote && (
+          {request.status === "COMPLETED" &&
+            request.completionNote &&
+            (request.closedWithNotes ? (
+              // A request that ended without the change being made. Saying
+              // "ملاحظة التسليم" here would describe a delivery that never
+              // happened, which is the one thing the charity must not be told.
+              <span className="flex items-start gap-2">
+                <AlertTriangle className="w-4 h-4 text-rose-500 shrink-0 mt-0.5" />
+                <span className="leading-relaxed">
+                  <span className="text-rose-600 dark:text-rose-400 font-bold">
+                    أُغلق الطلب بملاحظات فريق زاد:{" "}
+                  </span>
+                  <LinkifiedText text={request.completionNote} className="whitespace-pre-line" />
+                </span>
+              </span>
+            ) : (
               <span className="flex items-start gap-2">
                 <FileCheck2 className="w-4 h-4 text-slate-400 shrink-0 mt-0.5" />
                 <span className="leading-relaxed">
@@ -423,7 +440,7 @@ export default function DesignRequestCard({
                   <LinkifiedText text={request.completionNote} className="whitespace-pre-line" />
                 </span>
               </span>
-            )}
+            ))}
 
           {/* Where it sits in the queue. Only while it is still waiting —
               once a designer has it, the position is no longer the answer to

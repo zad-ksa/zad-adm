@@ -12,6 +12,7 @@ import SuccessToast from "@/components/ui/SuccessToast";
 import ConfirmModal from "@/components/ui/ConfirmModal";
 import RequestRevisionModal from "@/components/design-requests/RequestRevisionModal";
 import LinkifiedText from "@/components/ui/LinkifiedText";
+import { RevisionNotesList } from "@/components/design-requests/RevisionNotesList";
 import { approveDeliveryByCharity } from "@/app/actions/designRequests";
 import NewDesignRequestForm from "./NewDesignRequestForm";
 import type { DesignTypeOption } from "@/components/design-requests/DesignTypePicker";
@@ -192,7 +193,7 @@ export default function DesignRequestsPortalClient({
                 { key: "REVISION_REQUESTED" as const, label: "قيد التعديل", count: revisionCount },
                 { key: "UNDER_REVIEW" as const, label: "قيد المراجعة", count: reviewCount },
                 { key: "COMPLETED" as const, label: "الطلبات المنجزة", count: 0 },
-                { key: "REJECTED" as const, label: "المرفوضة", count: rejectedCount },
+                { key: "REJECTED" as const, label: "المُعادة للتعديل", count: rejectedCount },
               ]
             ).map(({ key: t, label, count }) => (
               <button
@@ -244,8 +245,41 @@ export default function DesignRequestsPortalClient({
               onOpenLog={() => setLogRequestId(it.request.id)}
               actions={
                 it.request.status === "AWAITING_REVIEW" ? (
-                  canCreate ? (
-                    <div className="w-full mt-2 space-y-2">
+                  <div className="w-full mt-2 space-y-2">
+                    {/* Zad's note, as a panel rather than a line in the detail
+                        list. After a reply round this is the whole message —
+                        what was done, what was not, and why — and the charity
+                        is about to approve or push back on the strength of it. */}
+                    {it.request.completionNote && (
+                      <div className="rounded-xl bg-primary/[0.06] dark:bg-teal-500/10 px-3 py-2.5">
+                        <p
+                          className="font-bold text-primary dark:text-teal-400 mb-2"
+                          style={{ fontSize: "var(--dr-fs-meta)" }}
+                        >
+                          {it.request.revisionNotes
+                            ? "ردّ فريق زاد على ملاحظاتكم"
+                            : "ملاحظات فريق زاد"}
+                        </p>
+                        <RevisionNotesList notes={it.request.completionNote} tone="staff" />
+                      </div>
+                    )}
+
+                    {/* And what you asked for, kept in view beside the reply —
+                        judging an answer means seeing the question. */}
+                    {it.request.revisionNotes && (
+                      <div className="rounded-xl bg-amber-500/[0.08] px-3 py-2.5">
+                        <p
+                          className="font-bold text-amber-700 dark:text-amber-400 mb-2"
+                          style={{ fontSize: "var(--dr-fs-meta)" }}
+                        >
+                          ملاحظاتكم السابقة
+                        </p>
+                        <RevisionNotesList notes={it.request.revisionNotes} />
+                      </div>
+                    )}
+
+                    {canCreate && (
+                      <>
                       <button
                         onClick={() => setApprovingId(it.request.id)}
                         className="w-full h-10 rounded-xl text-white bg-gradient-to-b from-[#17857c] via-primary to-[#0c645d] shadow-[var(--dr-shadow-cta)] hover:shadow-[var(--dr-shadow-cta-hover)] active:translate-y-px transition-all font-bold"
@@ -258,20 +292,23 @@ export default function DesignRequestsPortalClient({
                         className="w-full h-8 rounded-lg text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800/60 transition-colors font-medium"
                         style={{ fontSize: "var(--dr-fs-eyebrow)" }}
                       >
-                        لديّ ملاحظات
+                        {it.request.revisionNotes ? "لديّ ملاحظات أخرى" : "لديّ ملاحظات"}
                       </button>
-                    </div>
-                  ) : null
+                      </>
+                    )}
+                  </div>
                 ) : it.request.status === "REVISION_REQUESTED" ? (
-                  <div
-                    className="w-full mt-2 px-3 py-2.5 rounded-xl bg-amber-500/[0.08] text-amber-700 dark:text-amber-400 leading-relaxed whitespace-pre-line"
-                    style={{ fontSize: "var(--dr-fs-meta)" }}
-                  >
-                    <span className="font-bold">ملاحظاتك: </span>
+                  <div className="w-full mt-2 px-3 py-2.5 rounded-xl bg-amber-500/[0.08]">
+                    <p
+                      className="font-bold text-amber-700 dark:text-amber-400 mb-2"
+                      style={{ fontSize: "var(--dr-fs-meta)" }}
+                    >
+                      ملاحظاتك
+                    </p>
                     {it.request.revisionNotes ? (
-                      <LinkifiedText text={it.request.revisionNotes} />
+                      <RevisionNotesList notes={it.request.revisionNotes} />
                     ) : (
-                      "—"
+                      <span className="text-amber-700 dark:text-amber-400">—</span>
                     )}
                   </div>
                 ) : it.request.status === "REJECTED" ? (
@@ -280,7 +317,7 @@ export default function DesignRequestsPortalClient({
                       className="px-3 py-2.5 rounded-xl bg-rose-500/[0.06] text-rose-600 dark:text-rose-400 leading-relaxed"
                       style={{ fontSize: "var(--dr-fs-meta)" }}
                     >
-                      <span className="font-bold">سبب الرفض: </span>
+                      <span className="font-bold">ملاحظات فريق زاد: </span>
                       {it.request.rejectionReason || "لم يُذكر سبب."}
                     </div>
                     {canCreate && (

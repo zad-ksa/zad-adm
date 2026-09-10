@@ -1098,6 +1098,11 @@ model DesignRequest {
   revisionNotes       String?   @db.Text
   /// اعتُمد بمرور المهلة لا بفعل الجمعية — يُعرض للطرفين.
   autoApproved        Boolean   @default(false)
+  /// أغلقه موظف زاد بملاحظاته دون تنفيذ تعديلات الجمعية.
+  ///
+  /// COMPLETED وحدها لا تفرّق بين تسليم اعتُمد وطلب أُقفل بملاحظة، والجمعية
+  /// أحقّ الناس بمعرفة أيّ النهايتين وقعت لطلبها.
+  closedWithNotes     Boolean   @default(false)
 
   reviewedAt      DateTime?
   reviewedById    String?
@@ -1186,6 +1191,8 @@ enum DesignEventKind {
   CHARITY_APPROVED // اعتماد الجمعية للتسليم
   AUTO_APPROVED // اعتماد تلقائي بعد ٢٤ ساعة
   COMPLETED // إغلاق نهائي
+  REVISION_RETURNED // أعاد زاد الطلب للجمعية بملاحظات والطلب ما زال مفتوحاً
+  CLOSED_WITH_NOTES // أغلقه زاد بملاحظاته دون تنفيذ التعديلات
 }
 
 enum DesignAttachmentKind {

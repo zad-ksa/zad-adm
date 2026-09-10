@@ -23,14 +23,16 @@ export type DesignEventKind =
   | "REVISION_REQUESTED"
   | "CHARITY_APPROVED"
   | "AUTO_APPROVED"
-  | "COMPLETED";
+  | "COMPLETED"
+  | "REVISION_RETURNED"
+  | "CLOSED_WITH_NOTES";
 
 /** Arabic label per event, used by both dashboards. */
 export const DESIGN_EVENT_LABEL: Record<DesignEventKind, string> = {
   CREATED: "رُفع الطلب",
   APPROVED: "اعتُمد الطلب ودخل الطابور",
-  REJECTED: "رُفض الطلب",
-  RESUBMITTED: "أُعيد رفع الطلب بعد الرفض",
+  REJECTED: "أُعيد الطلب مع ملاحظات",
+  RESUBMITTED: "أعادت الجمعية رفع الطلب بعد التعديل",
   EDITED: "عُدِّل الطلب",
   RESCHEDULED: "أُعيدت جدولة الطلب",
   QUEUE_REORDERED: "أُعيد ترتيب طابور الجمعية",
@@ -41,4 +43,6 @@ export const DESIGN_EVENT_LABEL: Record<DesignEventKind, string> = {
   CHARITY_APPROVED: "اعتمدته الجمعية",
   AUTO_APPROVED: "اعتُمد تلقائياً بعد ٢٤ ساعة",
   COMPLETED: "أُغلق نهائياً",
+  REVISION_RETURNED: "أعاد فريق زاد الطلب بملاحظات",
+  CLOSED_WITH_NOTES: "أُغلق الطلب بملاحظات فريق زاد",
 };

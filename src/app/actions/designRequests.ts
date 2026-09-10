@@ -427,8 +427,8 @@ export async function rejectDesignRequest(id: string, reason: string) {
     const session = await requireDesignStaff();
 
     const trimmed = (reason || "").trim();
-    if (trimmed.length < 5) return { error: "يرجى كتابة سبب الرفض (5 أحرف على الأقل)" };
-    if (trimmed.length > 2000) return { error: "سبب الرفض طويل جداً" };
+    if (trimmed.length < 5) return { error: "يرجى كتابة الملاحظات (5 أحرف على الأقل)" };
+    if (trimmed.length > 2000) return { error: "الملاحظات طويلة جداً" };
 
     const request = await prisma.designRequest.findUnique({
       where: { id },
@@ -459,7 +459,7 @@ export async function rejectDesignRequest(id: string, reason: string) {
     return { success: true };
   } catch (error) {
     console.error("Error rejecting design request:", error);
-    return { error: error instanceof Error ? error.message : "حدث خطأ أثناء رفض الطلب" };
+    return { error: error instanceof Error ? error.message : "حدث خطأ أثناء إعادة الطلب" };
   }
 }
 
@@ -764,6 +764,88 @@ export async function finalizeExpiredDeliveries() {
 
   if (approved) revalidatePath("/main/design-requests");
   return { checked: due.length, approved };
+}
+
+/**
+ * Zad's answer to the charity's revision notes, when the answer is not a new
+ * delivery.
+ *
+ * Two endings, and the difference matters to the charity:
+ *
+ *   close = false — the request goes back to AWAITING_REVIEW with Zad's note
+ *     attached and a fresh 24-hour window. The charity reads the reply and may
+ *     send notes again, so a disagreement is no longer a dead end after one
+ *     round.
+ *
+ *   close = true — the request is finished as COMPLETED, but flagged
+ *     closedWithNotes so it is not confused with a delivery that was accepted.
+ *     The note is what the charity is owed: why its edits were not carried out.
+ *
+ * Brief attachments are deliberately NOT purged on close. Final delivery
+ * destroys them because the work was handed over and accepted; here it was
+ * not, and taking the charity's own source files away from a request that
+ * ended in disagreement is a loss it cannot undo.
+ */
+export async function returnRevisionToCharity(input: {
+  requestId: string;
+  notes: string;
+  close: boolean;
+}) {
+  try {
+    const session = await requireDesignStaff();
+
+    const notes = (input.notes || "").trim();
+    if (notes.length < 5) return { error: "يرجى كتابة الملاحظات (5 أحرف على الأقل)" };
+    if (notes.length > 2000) return { error: "الملاحظات طويلة جداً" };
+
+    const request = await prisma.designRequest.findUnique({
+      where: { id: input.requestId },
+      select: { id: true, status: true, charity: { select: { name: true } } },
+    });
+    if (!request) return { error: "الطلب غير موجود" };
+    if (request.status !== "REVISION_REQUESTED") {
+      return { error: "هذا الطلب ليس بانتظار ردّ على ملاحظات الجمعية" };
+    }
+
+    const now = new Date();
+
+    await prisma.designRequest.update({
+      where: { id: input.requestId },
+      data: input.close
+        ? {
+            status: "COMPLETED",
+            closedWithNotes: true,
+            completedAt: now,
+            completedById: session.id,
+            completionNote: notes,
+          }
+        : {
+            status: "AWAITING_REVIEW",
+            closedWithNotes: false,
+            // A new window opens: the charity is being asked to look again,
+            // and the deadline it is measured against has to start now rather
+            // than at the original hand-off, which is already in the past.
+            deliveredAt: now,
+            revisionRequestedAt: null,
+            completedById: session.id,
+            completionNote: notes,
+          },
+    });
+
+    await logDesignEvent({
+      requestId: input.requestId,
+      kind: input.close ? "CLOSED_WITH_NOTES" : "REVISION_RETURNED",
+      actor: staffActor(session),
+      note: notes,
+    });
+
+    revalidatePath("/main/design-requests");
+    revalidateCharityPortal(request.charity?.name);
+    return { success: true };
+  } catch (error) {
+    console.error("Error returning design revision:", error);
+    return { error: error instanceof Error ? error.message : "حدث خطأ أثناء إعادة الطلب" };
+  }
 }
 
 export async function markDesignRequestComplete(

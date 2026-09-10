@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { X, Loader2, AlertTriangle, Check, Ban } from "lucide-react";
+import { X, Loader2, AlertTriangle, Check, Undo2 } from "lucide-react";
 import { approveDesignRequest, rejectDesignRequest } from "@/app/actions/designRequests";
 import ConfirmModal from "@/components/ui/ConfirmModal";
 
@@ -69,7 +69,7 @@ export default function StaffReviewDesignRequestModal({
 
   const handleReject = () => {
     setError(null);
-    if (reason.trim().length < 5) return setError("يرجى كتابة سبب الرفض (5 أحرف على الأقل)");
+    if (reason.trim().length < 5) return setError("يرجى كتابة الملاحظات (5 أحرف على الأقل)");
     setIsConfirmOpen(true);
   };
 
@@ -79,9 +79,9 @@ export default function StaffReviewDesignRequestModal({
     try {
       const res = await rejectDesignRequest(requestId, reason);
       if (res.error) return setError(res.error);
-      onDone("تم رفض الطلب وإبلاغ الجمعية بالسبب");
+      onDone("أُعيد الطلب إلى الجمعية مع الملاحظات");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "حدث خطأ أثناء الرفض");
+      setError(err instanceof Error ? err.message : "حدث خطأ أثناء إعادة الطلب");
     } finally {
       setIsSubmitting(false);
     }
@@ -117,7 +117,7 @@ export default function StaffReviewDesignRequestModal({
           <div className="flex items-center gap-1 bg-slate-50 dark:bg-[#111] border border-slate-100 dark:border-slate-800/80 rounded-xl p-1">
             {([
               { key: "approve" as const, label: "اعتماد", Icon: Check },
-              { key: "reject" as const, label: "رفض", Icon: Ban },
+              { key: "reject" as const, label: "إعادة مع ملاحظات", Icon: Undo2 },
             ]).map(({ key, label, Icon }) => (
               <button
                 key={key}
@@ -187,14 +187,14 @@ export default function StaffReviewDesignRequestModal({
                 className="block font-bold text-slate-500 dark:text-slate-400 mb-2"
                 style={{ fontSize: "var(--dr-fs-meta)" }}
               >
-                سبب الرفض
-                <span className="font-normal text-slate-400 mr-1">— تقرؤه الجمعية</span>
+                ملاحظات الإعادة
+                <span className="font-normal text-slate-400 mr-1">— تقرؤها الجمعية</span>
               </label>
               <textarea
                 value={reason}
                 onChange={(e) => setReason(e.target.value)}
                 rows={5}
-                placeholder="اشرح للجمعية سبب الرفض وما الذي يلزم لإعادة الرفع..."
+                placeholder="اكتب ما يلزم تعديله في الطلب قبل إعادة رفعه..."
                 className="w-full px-3 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none resize-none placeholder:text-slate-400 dark:placeholder:text-slate-600"
                 style={{ fontSize: "var(--dr-fs-body)" }}
               />
@@ -225,11 +225,11 @@ export default function StaffReviewDesignRequestModal({
             <button
               onClick={handleReject}
               disabled={isSubmitting}
-              className="h-11 px-6 flex items-center gap-2 text-white bg-rose-600 hover:bg-rose-700 active:translate-y-px rounded-xl font-bold transition-all disabled:opacity-50"
+              className="h-11 px-6 flex items-center gap-2 text-white bg-amber-600 hover:bg-amber-700 active:translate-y-px rounded-xl font-bold transition-all disabled:opacity-50"
               style={{ fontSize: "var(--dr-fs-meta)" }}
             >
-              {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Ban className="w-4 h-4" />}
-              رفض الطلب
+              {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Undo2 className="w-4 h-4" />}
+              إعادة مع ملاحظات
             </button>
           )}
         </div>
@@ -237,14 +237,14 @@ export default function StaffReviewDesignRequestModal({
 
       <ConfirmModal
         isOpen={isConfirmOpen}
-        title={mode === "approve" ? "اعتماد الطلب" : "رفض الطلب"}
+        title={mode === "approve" ? "اعتماد الطلب" : "إعادة الطلب مع ملاحظات"}
         message={
           mode === "approve"
             ? `سيأخذ الطلب دوره بـ${parsedDays} من أيام العمل، ويُثبَّت موعد التسليم ويظهر للجمعية. هل تريد المتابعة؟`
-            : "سيُرفض الطلب ويظهر السبب للجمعية في تبويب «المرفوضة». هل تريد المتابعة؟"
+            : "سيعود الطلب إلى الجمعية مع ملاحظاتك في تبويب «المُعادة للتعديل»، ويمكنها تعديله وإعادة رفعه. هل تريد المتابعة؟"
         }
-        confirmLabel={mode === "approve" ? "اعتماد الطلب" : "رفض الطلب"}
-        tone={mode === "approve" ? "primary" : "danger"}
+        confirmLabel={mode === "approve" ? "اعتماد الطلب" : "إعادة مع ملاحظات"}
+        tone="primary"
         isPending={isSubmitting}
         onCancel={() => setIsConfirmOpen(false)}
         onConfirm={mode === "approve" ? runApprove : runReject}

@@ -3,14 +3,18 @@
 import { prisma } from "@/lib/db";
 import { getSession } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
-import { hasPermission, isAdmin } from "@/lib/permissions";
+import { hasPermission, isAdmin, sanitizePermissions } from "@/lib/permissions";
 import { logAudit } from "@/lib/auditLog";
 
 // Utility for checking manage roles permission
 function canManageRoles(session: any) {
   return session && (
     isAdmin(session.role) ||
-    hasPermission(session.role, session.permissions || [], "manage_employees")
+    hasPermission(session.role, session.permissions || [], "manage_employees") ||
+    // The permissions admin page edits the same RoleDefinition rows from a
+    // different screen, so its permission has to open the same actions —
+    // otherwise the page renders controls whose every click is refused.
+    hasPermission(session.role, session.permissions || [], "manage_permissions")
   );
 }
 
@@ -50,7 +54,7 @@ export async function createRole(data: { key: string; displayName: string; permi
       data: {
         key: cleanKey,
         displayName: data.displayName,
-        permissions: data.permissions || [],
+        permissions: sanitizePermissions(data.permissions),
         isSystem: false, // Custom roles are never system by default
       }
     });
@@ -79,7 +83,8 @@ export async function updateRole(id: string, data: { displayName?: string; permi
       where: { id },
       data: {
         displayName: data.displayName !== undefined ? data.displayName : undefined,
-        permissions: data.permissions !== undefined ? data.permissions : undefined,
+        permissions:
+          data.permissions !== undefined ? sanitizePermissions(data.permissions) : undefined,
       }
     });
 
@@ -115,7 +120,7 @@ export async function syncRolePermissions(id: string) {
 
     const result = await prisma.employee.updateMany({
       where: { role: role.key },
-      data: { permissions: role.permissions },
+      data: { permissions: sanitizePermissions(role.permissions) },
     });
 
     revalidatePath("/main/employees");

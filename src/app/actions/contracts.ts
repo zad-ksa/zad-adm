@@ -9,7 +9,7 @@ import { logAudit } from "@/lib/auditLog";
 // itself: server actions are directly reachable HTTP endpoints and are not
 // covered by the page-level protection in src/proxy.ts.
 //
-// "edit_contracts" mirrors the canEdit gate already used by the contracts page
+// "manage_contracts" mirrors the canEdit gate already used by the contracts page
 // (main/(main)/contracts/page.tsx), so no legitimate user loses access.
 //
 // The denial object is repeated inline rather than shared through a const on
@@ -26,7 +26,7 @@ export async function addInstallment(data: {
 }) {
   let actor;
   try {
-    actor = await requirePermission("edit_contracts");
+    actor = await requirePermission("manage_contracts");
   } catch {
     return { error: "ليس لديك صلاحية لإدارة العقود" };
   }
@@ -69,7 +69,7 @@ export async function updateInstallment(data: {
 }) {
   let actor;
   try {
-    actor = await requirePermission("edit_contracts");
+    actor = await requirePermission("manage_contracts");
   } catch {
     return { error: "ليس لديك صلاحية لإدارة العقود" };
   }
@@ -106,7 +106,7 @@ export async function updateInstallment(data: {
 export async function deleteInstallment(id: string) {
   let actor;
   try {
-    actor = await requirePermission("edit_contracts");
+    actor = await requirePermission("manage_contracts");
   } catch {
     return { error: "ليس لديك صلاحية لإدارة العقود" };
   }
@@ -135,10 +135,10 @@ export async function deleteInstallment(id: string) {
 
 export async function toggleInstallmentPaid(id: string, isPaid: boolean) {
   // Reachable from two screens with different gates: the contracts screen
-  // (edit_contracts) and the charity finance screen (manage_finance).
+  // (manage_contracts) and the charity finance screen (manage_finance).
   let actor;
   try {
-    actor = await requireAnyPermission(["edit_contracts", "manage_finance"]);
+    actor = await requireAnyPermission(["manage_contracts", "manage_finance"]);
   } catch {
     return { error: "ليس لديك صلاحية لإدارة العقود" };
   }
@@ -231,7 +231,7 @@ export async function toggleInstallmentPaid(id: string, isPaid: boolean) {
 export async function processFirstGrant(charityId: string, grantDate: Date) {
   let actor;
   try {
-    actor = await requirePermission("edit_contracts");
+    actor = await requirePermission("manage_contracts");
   } catch {
     return { error: "ليس لديك صلاحية لإدارة العقود" };
   }
@@ -272,7 +272,7 @@ export async function batchAddInstallments(data: {
 }) {
   let actor;
   try {
-    actor = await requirePermission("edit_contracts");
+    actor = await requirePermission("manage_contracts");
   } catch {
     return { error: "ليس لديك صلاحية لإدارة العقود" };
   }

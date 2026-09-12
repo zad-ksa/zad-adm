@@ -16,7 +16,7 @@ import {
 import { Edit, ShieldCheck, Building2, UserPlus, ArrowRight, Trash2, Mail, CalendarDays } from "lucide-react";
 import { AddEmployeeForm } from "@/components/AddEmployeeForm";
 import Link from "next/link";
-import { PERMISSION_GROUPS, ALL_PERMISSIONS, isAdmin } from "@/lib/permissions";
+import { PERMISSION_GROUPS, ALL_PERMISSIONS, IMPLIES, isAdmin } from "@/lib/permissions";
 
 interface RoleDefinition {
   id: string;
@@ -572,13 +572,27 @@ export function EmployeesClient({
                         </div>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                           {group.permissions.map((perm) => {
-                            const isChecked = isEditRoleAdmin || editPermissions.includes(perm.id);
+                            const chosen = editPermissions.includes(perm.id);
+                            // Granted by another permission the employee already
+                            // holds. Shown ticked and locked rather than left
+                            // blank: an unticked box that is nonetheless in
+                            // force is the thing this screen must never show.
+                            const impliedBy = editPermissions.find(
+                              (held) => held !== perm.id && IMPLIES[held]?.includes(perm.id)
+                            );
+                            const isChecked = isEditRoleAdmin || chosen || !!impliedBy;
+                            const locked = isEditRoleAdmin || (!chosen && !!impliedBy);
                             return (
                               <button
                                 key={perm.id}
                                 type="button"
                                 onClick={() => handlePermissionToggle(perm.id)}
-                                disabled={isPending || isEditRoleAdmin}
+                                disabled={isPending || locked}
+                                title={
+                                  impliedBy && !chosen
+                                    ? `ممنوحة تلقائياً مع «${ALL_PERMISSIONS.find((x) => x.id === impliedBy)?.label ?? impliedBy}»`
+                                    : undefined
+                                }
                                 className={`flex items-center gap-3 p-2.5 rounded-xl border text-right transition-all cursor-pointer ${
                                   isChecked 
                                     ? "border-primary bg-primary/5 dark:bg-primary/10 text-primary dark:text-primary" 
@@ -592,7 +606,16 @@ export function EmployeesClient({
                                 }`}>
                                   {isChecked && <Check className="w-3 h-3 text-white" />}
                                 </div>
-                                <span className="text-xs font-bold">{perm.label}</span>
+                                <span className="text-xs font-bold">
+                                  {perm.label}
+                                  {impliedBy && !chosen && (
+                                    <span className="block font-normal text-[10px] text-slate-400 mt-0.5">
+                                      تلقائياً مع «
+                                      {ALL_PERMISSIONS.find((x) => x.id === impliedBy)?.label ?? impliedBy}
+                                      »
+                                    </span>
+                                  )}
+                                </span>
                               </button>
                             );
                           })}

@@ -10,7 +10,7 @@ export default async function ContractsPage() {
     redirect("/main");
   }
 
-  const canEdit = isAdmin(session.role) || !!session.permissions?.includes("edit_contracts") || !!session.permissions?.includes("developer_mode");
+  const canEdit = isAdmin(session.role) || !!session.permissions?.includes("manage_contracts") || !!session.permissions?.includes("developer_mode");
 
   const charities = await prisma.charity.findMany({
     orderBy: { createdAt: "desc" },

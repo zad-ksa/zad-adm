@@ -1,7 +1,7 @@
 import { getSession } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { Building2, Users, ShieldAlert, ArrowLeft, Layers, LayoutTemplate } from "lucide-react";
+import { ShieldCheck, Building2, Users, ShieldAlert, ArrowLeft, Layers, LayoutTemplate } from "lucide-react";
 import { hasPermission } from "@/lib/permissions";
 
 export default async function AdminDashboardPage() {
@@ -12,9 +12,13 @@ export default async function AdminDashboardPage() {
   const perms = session.permissions || [];
   const can = (p: string) => hasPermission(role, perms, p);
 
+  // Every permission with a card below must appear here, or its holder is
+  // sent away from the page that carries their own entry point.
   if (
     !can("manage_charities") &&
     !can("manage_employees") &&
+    !can("manage_charity_accounts") &&
+    !can("manage_permissions") &&
     !can("manage_charity_settings") &&
     !can("manage_landing")
   ) {
@@ -91,6 +95,22 @@ export default async function AdminDashboardPage() {
             <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100 mb-2">إدارة الموظفين</h3>
             <p className="text-sm text-slate-500 dark:text-slate-400 mb-6 line-clamp-2">إدارة حسابات موظفي زاد التنموية، وتحديد أدوارهم وصلاحياتهم داخل النظام.</p>
             <div className="flex items-center gap-2 text-purple-600 font-bold text-sm">
+              <span>الدخول للإدارة</span>
+              <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
+            </div>
+          </Link>
+        )}
+
+        {/* Permissions administration */}
+        {can("manage_permissions") && (
+          <Link href="/main/admin/permissions" className="group bg-white dark:bg-slate-800 p-6 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700/50 hover:shadow-xl hover:shadow-primary/5 hover:border-primary/20 transition-all overflow-hidden relative">
+            <div className="absolute -left-6 -bottom-6 w-24 h-24 bg-primary/5 rounded-full group-hover:scale-150 transition-transform duration-500 pointer-events-none" />
+            <div className="w-12 h-12 bg-teal-50 dark:bg-teal-900/20 text-teal-600 dark:text-teal-400 rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 group-hover:-rotate-3 transition-transform shadow-inner">
+              <ShieldCheck className="w-6 h-6" />
+            </div>
+            <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100 mb-2">إدارة الصلاحيات</h3>
+            <p className="text-sm text-slate-500 dark:text-slate-400 mb-6 line-clamp-2">استعراض كل صلاحية ومن يملكها، وإنشاء مجموعات صلاحيات باسم واحد.</p>
+            <div className="flex items-center gap-2 text-teal-600 font-bold text-sm">
               <span>الدخول للإدارة</span>
               <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
             </div>

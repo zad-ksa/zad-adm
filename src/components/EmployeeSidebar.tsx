@@ -191,7 +191,17 @@ export default function EmployeeSidebar({
   navItems.push({ label: "التحضير", href: "/main/attendance", icon: Clock });
   navItems.push({ label: "البريد الداخلي", href: "/main/mail", icon: Mail, badge: unreadMails });
   navItems.push({ label: "الاعتمادات", href: "/main/approvals", icon: Send, badge: unreadRequests });
-  if (can("manage_employees") || can("manage_charities") || can("manage_charity_settings") || can("manage_landing")) {
+  // Kept in step with the gate on /main/admin itself: a tab that leads to a
+  // redirect is worse than no tab, and a permission whose only entry point is
+  // behind a tab it does not reveal is worse still.
+  if (
+    can("manage_employees") ||
+    can("manage_charities") ||
+    can("manage_charity_accounts") ||
+    can("manage_permissions") ||
+    can("manage_charity_settings") ||
+    can("manage_landing")
+  ) {
     navItems.push({ label: "لوحة التحكم", href: "/main/admin", icon: Settings2 });
   }
   if (can("manage_workflow")) {

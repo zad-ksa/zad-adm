@@ -4,7 +4,7 @@ import { prisma } from "@/lib/db";
 import { hashPassword, normalizeEmail, validateCredentialPair } from "@/lib/password";
 import { revalidatePath } from "next/cache";
 import { getSession } from "@/lib/auth";
-import { hasPermission } from "@/lib/permissions";
+import { hasPermission, sanitizePermissions } from "@/lib/permissions";
 import { logAudit } from "@/lib/auditLog";
 
 async function checkManageEmployeesAuth() {
@@ -88,7 +88,7 @@ export async function addEmployee(prevState: any, formData: FormData) {
         password: hashedPassword,
         annualLeaveDays,
         role: dbRole,
-        permissions,
+        permissions: sanitizePermissions(permissions),
         isActive: true,
         ...(charityIds.length > 0 && dbRole !== "ADMIN" && {
           assignedCharities: {
@@ -201,7 +201,7 @@ export async function updateEmployee(
       name: data.name,
       phone: data.phone,
       role: data.role as any,
-      permissions: data.permissions,
+      permissions: sanitizePermissions(data.permissions),
     };
 
     // Undefined means "leave it alone" — an older caller that does not know

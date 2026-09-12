@@ -60,7 +60,7 @@ export async function requirePermission(permission: string) {
  * An employee holding at least one of several permissions. Used where the same
  * action is legitimately reachable from two screens gated differently — e.g.
  * toggleInstallmentPaid is called from both the contracts screen
- * (edit_contracts) and the charity finance screen (manage_finance); requiring
+ * (manage_contracts) and the charity finance screen (manage_finance); requiring
  * only one of them would lock out the other screen's users.
  */
 export async function requireAnyPermission(permissions: string[]) {

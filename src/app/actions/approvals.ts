@@ -100,8 +100,14 @@ export async function createRequest(data: {
     const execs = await prisma.employee.findMany({
       where: {
         isActive: true,
-        role: { in: ["EXECUTIVE_DIRECTOR", "GENERAL_MANAGER", "ADMINISTRATIVE_SECRETARIAT", "ADMIN"] },
         id: { not: session.id },
+        // الصلاحية نفسها التي تمنح رؤية الطلب بلا سلسلة والقرار فيه.
+        // ADMIN يمرّ بدوره كما في hasPermission، وdeveloper_mode تجاوز شامل.
+        OR: [
+          { role: "ADMIN" },
+          { permissions: { has: "manage_requests" } },
+          { permissions: { has: "developer_mode" } },
+        ],
       },
       select: { id: true },
     });
@@ -354,8 +360,14 @@ export async function resubmitRequest(data: {
     const execs = await prisma.employee.findMany({
       where: {
         isActive: true,
-        role: { in: ["EXECUTIVE_DIRECTOR", "GENERAL_MANAGER", "ADMINISTRATIVE_SECRETARIAT", "ADMIN"] },
         id: { not: session.id },
+        // الصلاحية نفسها التي تمنح رؤية الطلب بلا سلسلة والقرار فيه.
+        // ADMIN يمرّ بدوره كما في hasPermission، وdeveloper_mode تجاوز شامل.
+        OR: [
+          { role: "ADMIN" },
+          { permissions: { has: "manage_requests" } },
+          { permissions: { has: "developer_mode" } },
+        ],
       },
       select: { id: true },
     });

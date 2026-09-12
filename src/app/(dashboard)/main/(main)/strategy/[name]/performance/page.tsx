@@ -1,4 +1,5 @@
 import { getPerformanceMetric } from "@/app/actions/performance";
+import { hasPermission } from "@/lib/permissions";
 import PerformanceTable from "@/components/PerformanceTable";
 import type { Metadata } from "next";
 import { prisma } from "@/lib/db";
@@ -32,7 +33,11 @@ export default async function CharityPerformancePage({ params, searchParams }: {
   const quarter = searchParamsObj?.quarter || "Q1";
 
   const session = await getSession();
-  const isStrategyTeam = session?.role === "STRATEGY";
+  const canManageStrategy = hasPermission(
+    session?.role || "",
+    session?.permissions || [],
+    "manage_strategy"
+  );
 
   const charity = await prisma.charity.findUnique({
     where: { name: decodedName },
@@ -44,7 +49,7 @@ export default async function CharityPerformancePage({ params, searchParams }: {
   return (
     <div className="transition-colors">
       
-      {isStrategyTeam && charity && (
+      {canManageStrategy && charity && (
         <StrategyPermissionToggle
           charityName={decodedName}
           type="performance"

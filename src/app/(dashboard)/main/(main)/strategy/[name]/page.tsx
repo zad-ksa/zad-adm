@@ -1,4 +1,5 @@
 import { unstable_cache } from "next/cache";
+import { hasPermission } from "@/lib/permissions";
 import { prisma } from "@/lib/db";
 import Link from "next/link";
 import { surveyData } from "@/data/surveyData";
@@ -64,7 +65,13 @@ export default async function StrategySurveysPage({ params }: { params: Promise<
     prisma.charity.findUnique({ where: { name: decodedName } }),
   ]);
 
-  const isStrategyTeam = session?.role === "STRATEGY";
+  // كان بالدور STRATEGY وحده، فكان مفتاحاً لا تكافئه أي صلاحية: تمنح
+  // manage_strategy فلا يظهر، وتغيّر الدور فيظهر. صار بالصلاحية.
+  const canManageStrategy = hasPermission(
+    session?.role || "",
+    session?.permissions || [],
+    "manage_strategy"
+  );
   const hasReadiness = responses.length > 0;
 
   // ensureStagesForCharity seeds rows this page does not read, so it runs
@@ -86,7 +93,7 @@ export default async function StrategySurveysPage({ params }: { params: Promise<
         <SurveyLinkManager charityName={decodedName} surveyType="READINESS" />
       </div>
 
-      {isStrategyTeam && charity && (
+      {canManageStrategy && charity && (
         <StrategyPermissionToggle
           charityName={decodedName}
           type="readiness"

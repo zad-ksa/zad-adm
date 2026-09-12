@@ -11,8 +11,6 @@ export const metadata: Metadata = {
   title: "عرض الخدمات | زاد التنموية",
 };
 
-const BUILTIN_DEPTS = ["STRATEGY", "GOVERNANCE", "FINANCE"];
-
 export default async function ServicesOverviewPage() {
   const session = await getSession();
   if (!session) redirect("/");
@@ -47,8 +45,6 @@ export default async function ServicesOverviewPage() {
   // The two branches this replaced built the same filter by different routes —
   // an admin has assignedIds === null, so serviceCharityFilter is undefined for
   // them either way. All that actually differed was whether to run the query.
-  const wantsServices = isAdmin || !BUILTIN_DEPTS.includes(role);
-
   const [charities, services] = await Promise.all([
     prisma.charity.findMany({
       where: charityFilter,
@@ -62,23 +58,21 @@ export default async function ServicesOverviewPage() {
         financeTimelineName: true,
       },
     }),
-    wantsServices
-      ? prisma.service.findMany({
-          where: { ...serviceCharityFilter },
-          include: { stages: { orderBy: { order: "asc" }, include: { steps: { orderBy: { order: "asc" } } } } },
-          orderBy: { charityId: "asc" },
-        })
-      : Promise.resolve(null),
+    prisma.service.findMany({
+      where: { ...serviceCharityFilter },
+      include: { stages: { orderBy: { order: "asc" }, include: { steps: { orderBy: { order: "asc" } } } } },
+      orderBy: { charityId: "asc" },
+    }),
   ]);
 
   const data: Record<string, any[]> = {};
   if (services) data["SERVICES"] = services;
 
   const editableTabs = {
-    STRATEGY: isAdmin || hasPermission(session.role, session.permissions || [], "manage_strategy") || role === "STRATEGY",
-    GOVERNANCE: isAdmin || hasPermission(session.role, session.permissions || [], "manage_governance") || role === "GOVERNANCE",
-    FINANCE: isAdmin || hasPermission(session.role, session.permissions || [], "manage_finance") || role === "FINANCE",
-    SERVICES: isAdmin || hasPermission(session.role, session.permissions || [], "manage_programs") || role === "PROGRAMS",
+    STRATEGY: isAdmin || hasPermission(session.role, session.permissions || [], "manage_strategy"),
+    GOVERNANCE: isAdmin || hasPermission(session.role, session.permissions || [], "manage_governance"),
+    FINANCE: isAdmin || hasPermission(session.role, session.permissions || [], "manage_finance"),
+    SERVICES: isAdmin || hasPermission(session.role, session.permissions || [], "manage_programs"),
   };
 
   return (

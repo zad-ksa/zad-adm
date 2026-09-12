@@ -19,8 +19,6 @@ export default async function VisionMissionDashboardPage({ params }: { params: P
   const decodedName = decodeURIComponent(name);
 
   const session = await getSession();
-  const isStrategyTeam = session?.role === "STRATEGY";
-  const isAdmin = ["ADMIN", "EXECUTIVE_DIRECTOR", "GENERAL_MANAGER"].includes(session?.role || "");
 
   const charity = await prisma.charity.findUnique({
     where: { name: decodedName },

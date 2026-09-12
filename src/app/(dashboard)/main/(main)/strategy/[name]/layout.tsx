@@ -12,7 +12,6 @@ export default async function StrategyLayout({
   const { name } = await params;
   const decodedName = decodeURIComponent(name);
   const session = await getSession();
-  const isAdmin = ["ADMIN", "EXECUTIVE_DIRECTOR", "GENERAL_MANAGER"].includes(session?.role || "");
 
   return (
     <div className="flex flex-col h-full">

@@ -266,7 +266,7 @@ export default function EmployeeLoginPage() {
                 type="button"
                 onClick={() => { setMethod(tab.id); setError(null); setSuccess(null); }}
                 aria-pressed={method === tab.id}
-                className={`flex items-center justify-center gap-1.5 py-2.5 px-2 rounded-xl text-[11px] font-bold transition-all ${
+                className={`flex items-center justify-center gap-1.5 py-2.5 px-2 rounded-xl text-[11px] font-bold transition-all outline-none focus-visible:ring-2 focus-visible:ring-primary/40 ${
                   method === tab.id
                     ? "bg-white dark:bg-white/10 text-primary dark:text-white shadow-sm border border-slate-200 dark:border-white/10"
                     : "text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"

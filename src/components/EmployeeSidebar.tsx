@@ -199,7 +199,7 @@ export default function EmployeeSidebar({
     can("manage_charities") ||
     can("manage_charity_accounts") ||
     can("manage_permissions") ||
-    can("manage_charity_settings") ||
+    can("manage_services") ||
     can("manage_landing")
   ) {
     navItems.push({ label: "لوحة التحكم", href: "/main/admin", icon: Settings2 });

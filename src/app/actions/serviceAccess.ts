@@ -34,9 +34,12 @@ async function requireGrantAuthority() {
   if (!session?.id || session.userType === "CHARITY_USER") throw new Error("غير مصرح");
   const perms = session.permissions || [];
   const allowed =
-    hasPermission(session.role, perms, "manage_charity_settings") ||
+    hasPermission(session.role, perms, "manage_services") ||
     hasPermission(session.role, perms, "manage_charities") ||
-    hasPermission(session.role, perms, "manage_employees");
+    hasPermission(session.role, perms, "manage_employees") ||
+    // صفحة إدارة الصلاحيات تضع الخدمات في المجموعات، فتحتاج قراءة أسمائها
+    // ومنحها — ولو حُجبت لرسمت مُنتقياً كل نقرةٍ فيه مرفوضة.
+    hasPermission(session.role, perms, "manage_permissions");
   if (!allowed) throw new Error("غير مصرح لك بإدارة صلاحيات الخدمات");
   return session;
 }
@@ -61,14 +64,40 @@ export async function listServiceNames(): Promise<string[]> {
  * Returning null rather than the full list of names is what makes "no grants"
  * mean "everything": a caller that gets null must not filter at all, and cannot
  * mistake an empty array for it.
+ *
+ * ثلاثة مصادر تجتمع، كما تجتمع الصلاحيات في الجلسة: منحٌ مباشر للموظف، وما
+ * تفتحه مجموعاته، وما تفتحه مجموعات مسمّاه. والاتحاد لا التقاطع — المنح يزيد
+ * ولا ينقص، فمجموعةٌ تفتح خدمةً لا تُغلق خدمةً مُنحت من قبل.
+ *
+ * وخلوّ المصادر الثلاثة جميعاً هو وحده «بلا تقييد». مجموعةٌ بلا خدمات لا تُقيّد
+ * حاملها في شيء: العبرة بالاتحاد الناتج لا بوجود المجموعة.
  */
 export async function getEmployeeServiceNames(employeeId: string): Promise<string[] | null> {
-  const rows = await prisma.employeeServiceAccess.findMany({
-    where: { employeeId },
-    select: { serviceName: true },
+  const [rows, employee] = await Promise.all([
+    prisma.employeeServiceAccess.findMany({
+      where: { employeeId },
+      select: { serviceName: true },
+    }),
+    prisma.employee.findUnique({ where: { id: employeeId }, select: { role: true } }),
+  ]);
+
+  const bundles = await prisma.permissionBundle.findMany({
+    where: {
+      services: { isEmpty: false },
+      OR: [
+        { employees: { some: { employeeId } } },
+        ...(employee?.role ? [{ roles: { some: { role: { key: employee.role } } } }] : []),
+      ],
+    },
+    select: { services: true },
   });
-  if (rows.length === 0) return null;
-  return [...new Set(rows.map((r) => r.serviceName))];
+
+  const names = new Set([
+    ...rows.map((r) => r.serviceName),
+    ...bundles.flatMap((b) => b.services),
+  ]);
+  if (names.size === 0) return null;
+  return [...names];
 }
 
 /** The whole picture for the two granting screens: name → granted employee ids. */

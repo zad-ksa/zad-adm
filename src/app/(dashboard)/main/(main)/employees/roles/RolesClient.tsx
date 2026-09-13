@@ -4,7 +4,9 @@ import { useState, useTransition } from "react";
 import Link from "next/link";
 import { ArrowRight, Plus, Shield, Loader2, Edit, Trash2, ShieldAlert, Check, X, ShieldCheck, RefreshCw } from "lucide-react";
 import { createRole, updateRole, deleteRole, syncRolePermissions } from "@/app/actions/roles";
+import { setRoleBundles } from "@/app/actions/permissionBundles";
 import { PERMISSION_GROUPS } from "@/lib/permissions";
+import { Layers } from "lucide-react";
 
 interface RoleDefinition {
   id: string;
@@ -14,9 +16,24 @@ interface RoleDefinition {
   isSystem: boolean;
   createdAt: Date | string;
   employeeCount?: number;
+  /** مجموعات الصلاحيات المربوطة بالمسمى — تسري على حامليه حيّاً. */
+  bundleIds?: string[];
 }
 
-export default function RolesClient({ roles: initialRoles }: { roles: RoleDefinition[] }) {
+interface Bundle {
+  id: string;
+  name: string;
+  description: string | null;
+  permissions: string[];
+}
+
+export default function RolesClient({
+  roles: initialRoles,
+  bundles = [],
+}: {
+  roles: RoleDefinition[];
+  bundles?: Bundle[];
+}) {
   const [roles, setRoles] = useState<RoleDefinition[]>(initialRoles);
   const [isPending, startTransition] = useTransition();
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -26,12 +43,14 @@ export default function RolesClient({ roles: initialRoles }: { roles: RoleDefini
   const [key, setKey] = useState("");
   const [displayName, setDisplayName] = useState("");
   const [permissions, setPermissions] = useState<string[]>([]);
+  const [bundleIds, setBundleIds] = useState<string[]>([]);
   const [error, setError] = useState<string | null>(null);
 
   const openAddModal = () => {
     setKey("");
     setDisplayName("");
     setPermissions([]);
+    setBundleIds([]);
     setError(null);
     setIsAddModalOpen(true);
   };
@@ -41,6 +60,7 @@ export default function RolesClient({ roles: initialRoles }: { roles: RoleDefini
     setKey(role.key);
     setDisplayName(role.displayName);
     setPermissions(role.permissions || []);
+    setBundleIds(role.bundleIds || []);
     setError(null);
   };
 
@@ -75,7 +95,14 @@ export default function RolesClient({ roles: initialRoles }: { roles: RoleDefini
         if (res.error) {
           setError(res.error);
         } else {
-          setRoles(prev => prev.map(r => r.id === editingRole.id ? { ...r, displayName, permissions } : r));
+          // المجموعات جدولٌ آخر وفعلٌ آخر: updateRole لا يعرفها، ونفس الربط
+          // يُقرأ من صفحة «إدارة الصلاحيات».
+          const linked = await setRoleBundles(editingRole.id, bundleIds);
+          if (!linked.success) {
+            setError(linked.error);
+            return;
+          }
+          setRoles(prev => prev.map(r => r.id === editingRole.id ? { ...r, displayName, permissions, bundleIds } : r));
           closeModal();
         }
       });
@@ -85,14 +112,23 @@ export default function RolesClient({ roles: initialRoles }: { roles: RoleDefini
         if (res.error) {
           setError(res.error);
         } else {
+          // الربط بعد الإنشاء لا قبله: المسمى الجديد لا معرّف له قبل أن يُنشأ.
+          if (res.id && bundleIds.length) {
+            const linked = await setRoleBundles(res.id, bundleIds);
+            if (!linked.success) {
+              setError(linked.error);
+              return;
+            }
+          }
           // Temporarily add to UI, waiting for revalidatePath to refresh
           setRoles(prev => [...prev, {
-            id: Date.now().toString(),
+            id: res.id ?? Date.now().toString(),
             key: key.toUpperCase().replace(/\s+/g, '_'),
             displayName,
             permissions,
             isSystem: false,
-            createdAt: new Date()
+            createdAt: new Date(),
+            bundleIds,
           }]);
           closeModal();
         }
@@ -216,6 +252,15 @@ export default function RolesClient({ roles: initialRoles }: { roles: RoleDefini
             <div className="mt-2 text-[11px] text-slate-400 dark:text-slate-500 font-medium">
               {role.employeeCount ?? 0} موظف يحمل هذا المسمى
             </div>
+            {(role.bundleIds?.length ?? 0) > 0 && (
+              <div className="mt-2 flex flex-wrap gap-1.5">
+                {(role.bundleIds ?? []).map(id => (
+                  <span key={id} className="text-[10px] font-bold px-2 py-1 rounded-lg bg-primary/10 text-primary dark:text-teal-300">
+                    {bundles.find(b => b.id === id)?.name ?? id}
+                  </span>
+                ))}
+              </div>
+            )}
           </div>
         ))}
       </div>
@@ -271,8 +316,73 @@ export default function RolesClient({ roles: initialRoles }: { roles: RoleDefini
                 </div>
               </div>
 
+              {/* مجموعات الصلاحيات: الطريق الحيّ. تُنشأ في «إدارة الصلاحيات»
+                  وتُربط هنا، فتسري على كل من يحمل المسمى في جلسته التالية بلا
+                  أن يُلمَس صفّه — بخلاف «الصلاحيات الافتراضية» أدناه. */}
+              <div className="border-t border-slate-100 dark:border-slate-700 pt-4 mb-6">
+                <div className="flex items-center justify-between mb-1">
+                  <h4 className="text-sm font-bold text-slate-700 dark:text-slate-200 flex items-center gap-2">
+                    <Layers className="w-4 h-4 text-primary" />
+                    مجموعات الصلاحيات
+                  </h4>
+                  {bundles.length > 0 && (
+                    <span className="text-[10px] font-bold text-slate-400 tabular-nums">
+                      {bundleIds.length} من {bundles.length}
+                    </span>
+                  )}
+                </div>
+
+                {bundles.length === 0 ? (
+                  <p className="text-[11px] text-slate-400 leading-relaxed">
+                    لا مجموعات بعد — تُنشأ من «لوحة التحكم ← إدارة الصلاحيات»، ثم تُربط بالمسمى من هنا.
+                  </p>
+                ) : (
+                  <>
+                    <p className="text-[11px] text-slate-400 mb-3 leading-relaxed">
+                      تسري على كل من يحمل هذا المسمى بلا مزامنة، ولا تدهس ما مُنح للموظف مباشرةً.
+                    </p>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      {bundles.map(b => {
+                        const on = bundleIds.includes(b.id);
+                        return (
+                          <button
+                            key={b.id}
+                            type="button"
+                            onClick={() => setBundleIds(prev => on ? prev.filter(x => x !== b.id) : [...prev, b.id])}
+                            disabled={isPending}
+                            className={`flex items-start gap-2.5 p-2.5 rounded-xl border text-right transition-colors ${
+                              on
+                                ? "border-primary bg-primary/5 dark:bg-primary/10"
+                                : "border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800/50"
+                            }`}
+                          >
+                            <span className={`w-4 h-4 mt-0.5 rounded border flex items-center justify-center shrink-0 ${
+                              on ? "bg-primary border-primary text-white" : "border-slate-300 dark:border-slate-600"
+                            }`}>
+                              {on && <Check className="w-3 h-3" />}
+                            </span>
+                            <span className="min-w-0">
+                              <span className={`block text-xs font-bold ${on ? "text-primary dark:text-teal-300" : "text-slate-700 dark:text-slate-200"}`}>
+                                {b.name}
+                              </span>
+                              <span className="block text-[10px] text-slate-400 mt-0.5 leading-relaxed">
+                                {b.permissions.length} صلاحية{b.description ? ` · ${b.description}` : ""}
+                              </span>
+                            </span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </>
+                )}
+              </div>
+
               <div className="border-t border-slate-100 dark:border-slate-700 pt-4">
-                <h4 className="text-sm font-bold text-slate-700 dark:text-slate-200 mb-4">الصلاحيات الافتراضية للمسمى</h4>
+                <h4 className="text-sm font-bold text-slate-700 dark:text-slate-200 mb-1">الصلاحيات الافتراضية للمسمى</h4>
+                <p className="text-[11px] text-slate-400 mb-4 leading-relaxed">
+                  قالبٌ لا يصل الموظف إلا بزرّ «مزامنة» على البطاقة، وهو يستبدل صلاحياته كلها بهذه.
+                  للمنح الحيّ استخدم المجموعات أعلاه.
+                </p>
                 {editingRole?.key === "ADMIN" ? (
                   <div className="bg-emerald-50 text-emerald-700 p-3 rounded-xl text-sm font-bold">هذا الدور لديه جميع الصلاحيات تلقائياً.</div>
                 ) : (

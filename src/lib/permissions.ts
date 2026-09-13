@@ -22,7 +22,6 @@ export const PERMISSION_GROUPS = [
     title: "صلاحيات النظام الخاصة",
     permissions: [
       { id: "developer_mode", label: "صلاحية المطور (الوصول الشامل)" },
-      { id: "view_all_charities", label: "الوصول الشامل لجميع الجمعيات" },
     ],
   },
   {
@@ -44,7 +43,6 @@ export const PERMISSION_GROUPS = [
       { id: "view_all_tasks", label: "عرض وإدارة جميع مهام الموظفين" },
       { id: "manage_news", label: "الأخبار والإنجازات" },
       { id: "manage_surveys", label: "الاستبيانات المخصصة" },
-      { id: "view_services_overview", label: "عرض الخدمات" },
       { id: "manage_meetings", label: "محاضر الاجتماعات" },
       { id: "manage_communication", label: "إدارة التواصل" },
       { id: "manage_design_requests", label: "طلبات التصاميم" },
@@ -69,7 +67,11 @@ export const PERMISSION_GROUPS = [
   {
     title: "صلاحيات صفحة الجمعية",
     permissions: [
-      { id: "manage_charity_settings", label: "إعدادات تبويبات الجمعيات" },
+      // كانت مُسمّاة «إعدادات تبويبات الجمعيات»، وهو وسمٌ لم يصف شيئاً مما
+      // تفعله: صفحة تبويبات الجمعيات كانت تستدعيها، لكن خمسة عشر إجراءً في
+      // services.ts وبطاقة «إدارة الخدمات» في لوحة التحكم هي عملُها الحقيقي.
+      // حُذفت الصفحة وبقيت القدرة، فصار الاسم يطابق الفعل.
+      { id: "manage_services", label: "إدارة الخدمات (المراحل والخطوات والتعميم)" },
       { id: "manage_strategy", label: "الاستراتيجية" },
       { id: "manage_governance", label: "الحوكمة" },
       { id: "manage_programs", label: "البرامج والمشاريع" },
@@ -105,6 +107,18 @@ export const RETIRED_PERMISSION_IDS: string[] = [
   "edit_contracts",
   // Never gated anything; see the note in the groups above.
   "manage_hr",
+  // لا قيمة لها لذاتها: لا تفتح إلا تبويباً لا معنى له بلا خدمةٍ يراها صاحبه.
+  // صارت تُستنتج في getSession لمن مُنح خدمةً — مباشرةً أو بمجموعة — فلا
+  // تُمنح ولا تُنزع بيد أحد. وهي المُعرّف الوحيد المتقاعد الذي يظل الكود
+  // يفحصه، لأنها تُضاف بعد التنقية لا قبلها.
+  "view_services_overview",
+  // «الوصول الشامل لجميع الجمعيات»: أُلغيت بطلب المالك. الوصول يُحدَّد
+  // بالجمعيات المسنَدة للموظف، وdeveloper_mode وحدها تبقى تجاوزاً شاملاً.
+  "view_all_charities",
+  // أُعيدت تسميتها إلى manage_services لأن وسمها لم يصف عملها. المُعرّف
+  // القديم يُنزع من المصفوفات المخزّنة عند أول حفظ، والجديد مُنح لحامليه
+  // في هجرةٍ سابقة للنشر.
+  "manage_charity_settings",
 ];
 
 /** Strips retired ids and de-duplicates. Does not judge the rest. */
@@ -132,18 +146,13 @@ export const IMPLIES: Record<string, string[]> = {
   // Whoever configures attendance reads its reports.
   manage_zad_attendance: ["view_zad_attendance_reports"],
   // Both of these act on charities, so both need the tab that leads there.
-  manage_charity_settings: ["view_charities"],
+  manage_services: ["view_charities"],
   manage_charities: ["view_charities"],
   // A destructive action implies the ordinary one it destroys from.
   delete_employees: ["manage_employees"],
   delete_design_requests: ["manage_design_requests"],
   // Seeing everyone's tasks implies having the tasks screen at all.
   view_all_tasks: ["manage_tasks"],
-  // manage_programs has no page of its own and no entry in the sidebar's
-  // service list. Its entire effect is the SERVICES tab being editable inside
-  // /main/services-overview — so without access to that page, granting it
-  // changed nothing at all, which is the worst thing a permission can do.
-  manage_programs: ["view_services_overview"],
 };
 
 /** Everything a stored array actually grants, once implications are applied. */

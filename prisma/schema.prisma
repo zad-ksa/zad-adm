@@ -324,10 +324,62 @@ model RoleDefinition {
   id          String   @id @default(uuid())
   key         String   @unique
   displayName String
+  /// قالبٌ يُنسخ بفعلٍ صريح («مزامنة») فيدهس صلاحيات الموظف. ليس حيّاً: الجلسة
+  /// لا تقرأه، ولذلك لا يكفي وحده لوصف ما يستطيعه صاحب المسمى. المجموعات أدناه
+  /// هي الطريق الحيّ.
   permissions String[] @default([])
   isSystem    Boolean  @default(false)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+
+  bundles RoleBundle[]
+}
+
+/// مجموعة صلاحيات باسمٍ حرّ — اختصارٌ لعدّة صلاحيات، لا مسمّى وظيفي.
+///
+/// الفرق عن RoleDefinition جوهري لا تسمويّ:
+///   • المسمى واحدٌ للموظف، والمجموعات عدّة.
+///   • المسمى يُنسخ نسخاً عند المزامنة، والمجموعة تُقرأ حيّةً عند كل جلسة —
+///     فتعديل المجموعة يسري على حامليها في اللحظة، بلا مزامنةٍ ولا دهس.
+///   • المسمى يصف الوظيفة، والمجموعة تصف قدرةً («مسؤول التحضير» مثلاً) قد
+///     يحملها أصحاب مسمّياتٍ شتّى.
+model PermissionBundle {
+  id          String   @id @default(uuid())
+  name        String   @unique
+  description String?
+  permissions String[] @default([])
+  /// أسماء الخدمات التي تفتحها المجموعة في «عرض الخدمات». بالاسم لا بالمعرّف،
+  /// لأن الخدمة الواحدة صفوفٌ عدّة — اسمٌ واحد في كل جمعية — وهو المفتاح الذي
+  /// يستعمله EmployeeServiceAccess أصلاً.
+  services    String[] @default([])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  employees EmployeeBundle[]
+  roles     RoleBundle[]
+}
+
+/// منح مجموعة لموظف بعينه. المفتاح مركّب، فالمنح الواحد لا يتكرّر.
+model EmployeeBundle {
+  employeeId String
+  bundleId   String
+  employee   Employee         @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  bundle     PermissionBundle @relation(fields: [bundleId], references: [id], onDelete: Cascade)
+  grantedAt  DateTime         @default(now())
+
+  @@id([employeeId, bundleId])
+  @@index([bundleId])
+}
+
+/// ربط مجموعة بمسمّى وظيفي: يسري على كل من يحمل المسمى، حيّاً بلا مزامنة.
+model RoleBundle {
+  roleId   String
+  bundleId String
+  role     RoleDefinition   @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  bundle   PermissionBundle @relation(fields: [bundleId], references: [id], onDelete: Cascade)
+
+  @@id([roleId, bundleId])
+  @@index([bundleId])
 }
 
 model Employee {
@@ -377,6 +429,7 @@ model Employee {
   createdAchievements     Achievement[]         @relation("CreatedAchievements")
   assignedCharities       EmployeeCharity[]     @relation("AssignedCharities")
   serviceAccess           EmployeeServiceAccess[]
+  bundles                 EmployeeBundle[]
   appNotifications        AppNotification[]
   createdMeetings         Meeting[]             @relation("MeetingCreator")
   meetingTasksAssigned    MeetingTask[]         @relation("MeetingTaskAssignee")

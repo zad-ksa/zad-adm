@@ -9,7 +9,7 @@ import { hasPermission, isAdmin } from "@/lib/permissions";
 export async function getAllServiceTemplates() {
   const session = await getSession();
   if (!session) throw new Error("UNAUTHORIZED");
-  if (!hasPermission(session.role, session.permissions, "manage_charity_settings") && !hasPermission(session.role, session.permissions, "manage_charities")) {
+  if (!hasPermission(session.role, session.permissions, "manage_services") && !hasPermission(session.role, session.permissions, "manage_charities")) {
     throw new Error("UNAUTHORIZED");
   }
 
@@ -24,7 +24,7 @@ export async function getAllServiceTemplates() {
 export async function createServiceTemplate(name: string, department: string | null, charityIds?: string[]) {
   const session = await getSession();
   if (!session) throw new Error("UNAUTHORIZED");
-  if (!hasPermission(session.role, session.permissions, "manage_charity_settings") && !hasPermission(session.role, session.permissions, "manage_charities")) {
+  if (!hasPermission(session.role, session.permissions, "manage_services") && !hasPermission(session.role, session.permissions, "manage_charities")) {
     throw new Error("UNAUTHORIZED");
   }
 
@@ -52,7 +52,7 @@ export async function createServiceTemplate(name: string, department: string | n
 export async function updateServiceTemplate(id: string, name: string, department: string | null) {
   const session = await getSession();
   if (!session) throw new Error("UNAUTHORIZED");
-  if (!hasPermission(session.role, session.permissions, "manage_charity_settings") && !hasPermission(session.role, session.permissions, "manage_charities")) {
+  if (!hasPermission(session.role, session.permissions, "manage_services") && !hasPermission(session.role, session.permissions, "manage_charities")) {
     throw new Error("UNAUTHORIZED");
   }
 
@@ -73,7 +73,7 @@ export async function updateServiceTemplate(id: string, name: string, department
 export async function deleteServiceTemplate(id: string) {
   const session = await getSession();
   if (!session) throw new Error("UNAUTHORIZED");
-  if (!hasPermission(session.role, session.permissions, "manage_charity_settings") && !hasPermission(session.role, session.permissions, "manage_charities")) {
+  if (!hasPermission(session.role, session.permissions, "manage_services") && !hasPermission(session.role, session.permissions, "manage_charities")) {
     throw new Error("UNAUTHORIZED");
   }
 
@@ -92,7 +92,7 @@ export async function deleteServiceTemplate(id: string) {
 export async function getServicesForManagement() {
   const session = await getSession();
   if (!session) throw new Error("UNAUTHORIZED");
-  if (!hasPermission(session.role, session.permissions, "manage_charity_settings") && !hasPermission(session.role, session.permissions, "manage_charities")) {
+  if (!hasPermission(session.role, session.permissions, "manage_services") && !hasPermission(session.role, session.permissions, "manage_charities")) {
     throw new Error("UNAUTHORIZED");
   }
 
@@ -144,7 +144,7 @@ export async function getServicesForManagement() {
 export async function addServiceToCharities(name: string, department: string | null, charityIds: string[]) {
   const session = await getSession();
   if (!session) throw new Error("UNAUTHORIZED");
-  if (!hasPermission(session.role, session.permissions, "manage_charity_settings") && !hasPermission(session.role, session.permissions, "manage_charities")) {
+  if (!hasPermission(session.role, session.permissions, "manage_services") && !hasPermission(session.role, session.permissions, "manage_charities")) {
     throw new Error("UNAUTHORIZED");
   }
 
@@ -168,7 +168,7 @@ export async function addServiceToCharities(name: string, department: string | n
 export async function renameServiceGlobally(oldName: string, newName: string, newDepartment: string | null) {
   const session = await getSession();
   if (!session) throw new Error("UNAUTHORIZED");
-  if (!hasPermission(session.role, session.permissions, "manage_charity_settings") && !hasPermission(session.role, session.permissions, "manage_charities")) {
+  if (!hasPermission(session.role, session.permissions, "manage_services") && !hasPermission(session.role, session.permissions, "manage_charities")) {
     throw new Error("UNAUTHORIZED");
   }
 
@@ -185,7 +185,7 @@ export async function renameServiceGlobally(oldName: string, newName: string, ne
 export async function deleteServiceGlobally(name: string) {
   const session = await getSession();
   if (!session) throw new Error("UNAUTHORIZED");
-  if (!hasPermission(session.role, session.permissions, "manage_charity_settings") && !hasPermission(session.role, session.permissions, "manage_charities")) {
+  if (!hasPermission(session.role, session.permissions, "manage_services") && !hasPermission(session.role, session.permissions, "manage_charities")) {
     throw new Error("UNAUTHORIZED");
   }
 
@@ -199,7 +199,7 @@ export async function getCharitiesForSelect() {
   const session = await getSession();
   if (!session) throw new Error("UNAUTHORIZED");
   
-  if (hasPermission(session.role, session.permissions, "manage_charities") || hasPermission(session.role, session.permissions, "manage_charity_settings")) {
+  if (hasPermission(session.role, session.permissions, "manage_charities") || hasPermission(session.role, session.permissions, "manage_services")) {
     return await prisma.charity.findMany({
       select: { id: true, name: true },
       orderBy: { createdAt: 'desc' }
@@ -729,7 +729,7 @@ export async function unifyCharityStagesAction(sourceCharityId: string, timeline
   const session = await getSession();
   if (!session) throw new Error("غير مصرح");
 
-  const isUserAdmin = isAdmin(session.role) || hasPermission(session.role, session.permissions || [], "view_all_charities");
+  const isUserAdmin = isAdmin(session.role);
   if (!isUserAdmin) {
     const assigned = await prisma.employeeCharity.findMany({
       where: { employeeId: session.id },
@@ -1011,7 +1011,7 @@ export async function broadcastGanttWeek(
 export async function toggleServiceComingSoon(name: string, department: string | null, isComingSoon: boolean) {
   const session = await getSession();
   if (!session) throw new Error("UNAUTHORIZED");
-  if (!isAdmin(session.role) && !hasPermission(session.role, session.permissions || [], "manage_charity_settings")) {
+  if (!isAdmin(session.role) && !hasPermission(session.role, session.permissions || [], "manage_services")) {
     throw new Error("UNAUTHORIZED");
   }
 
@@ -1026,7 +1026,7 @@ export async function toggleServiceComingSoon(name: string, department: string |
 export async function toggleServiceComingSoonSingle(serviceId: string, isComingSoon: boolean) {
   const session = await getSession();
   if (!session) throw new Error("UNAUTHORIZED");
-  if (!isAdmin(session.role) && !hasPermission(session.role, session.permissions || [], "manage_charity_settings")) {
+  if (!isAdmin(session.role) && !hasPermission(session.role, session.permissions || [], "manage_services")) {
     throw new Error("UNAUTHORIZED");
   }
 

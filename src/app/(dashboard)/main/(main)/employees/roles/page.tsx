@@ -19,18 +19,30 @@ export default async function RolesPage() {
     redirect("/main");
   }
 
-  const [roles, employeeCounts] = await Promise.all([
+  const [roles, employeeCounts, bundles] = await Promise.all([
     prisma.roleDefinition.findMany({
       orderBy: [
         { isSystem: 'desc' },
         { createdAt: 'asc' }
-      ]
+      ],
+      include: { bundles: { select: { bundleId: true } } },
     }),
     prisma.employee.groupBy({ by: ['role'], _count: { role: true } }),
+    // مجموعات الصلاحيات المُنشأة في «إدارة الصلاحيات». تُربط بالمسمى فتسري
+    // على كل من يحمله حيّاً — بخلاف «الصلاحيات الافتراضية» أدناه، وهي قالبٌ
+    // لا يصل الموظف إلا بمزامنةٍ صريحة تدهس ما كان له.
+    prisma.permissionBundle.findMany({
+      orderBy: { name: 'asc' },
+      select: { id: true, name: true, description: true, permissions: true },
+    }),
   ]);
 
   const countsByRole = Object.fromEntries(employeeCounts.map(c => [c.role, c._count.role]));
-  const rolesWithCounts = roles.map(r => ({ ...r, employeeCount: countsByRole[r.key] || 0 }));
+  const rolesWithCounts = roles.map(r => ({
+    ...r,
+    employeeCount: countsByRole[r.key] || 0,
+    bundleIds: r.bundles.map(b => b.bundleId),
+  }));
 
-  return <RolesClient roles={rolesWithCounts} />;
+  return <RolesClient roles={rolesWithCounts} bundles={bundles} />;
 }

@@ -19,7 +19,7 @@ export default async function AdminDashboardPage() {
     !can("manage_employees") &&
     !can("manage_charity_accounts") &&
     !can("manage_permissions") &&
-    !can("manage_charity_settings") &&
+    !can("manage_services") &&
     !can("manage_landing")
   ) {
     redirect("/main");
@@ -37,22 +37,6 @@ export default async function AdminDashboardPage() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         
-        {/* Charity Settings */}
-        {can("manage_charity_settings") && (
-          <Link href="/main/charity-settings" className="group bg-white dark:bg-slate-800 p-6 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700/50 hover:shadow-xl hover:shadow-primary/5 hover:border-primary/20 transition-all overflow-hidden relative">
-            <div className="absolute -left-6 -bottom-6 w-24 h-24 bg-primary/5 rounded-full group-hover:scale-150 transition-transform duration-500 pointer-events-none" />
-            <div className="w-12 h-12 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 group-hover:-rotate-3 transition-transform shadow-inner">
-              <Building2 className="w-6 h-6" />
-            </div>
-            <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100 mb-2">إعدادات الجمعيات</h3>
-            <p className="text-sm text-slate-500 dark:text-slate-400 mb-6 line-clamp-2">إعداد القوائم والأهداف المرتبطة بملفات الجمعيات.</p>
-            <div className="flex items-center gap-2 text-primary font-bold text-sm">
-              <span>الدخول للإعدادات</span>
-              <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
-            </div>
-          </Link>
-        )}
-
         {/* Charity Accounts Management */}
         {can("manage_charity_accounts") && (
           <Link href="/main/charity-accounts" className="group bg-white dark:bg-slate-800 p-6 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700/50 hover:shadow-xl hover:shadow-primary/5 hover:border-primary/20 transition-all overflow-hidden relative">
@@ -118,7 +102,7 @@ export default async function AdminDashboardPage() {
         )}
 
         {/* Services Management */}
-        {(can("manage_charities") || can("manage_charity_settings")) && (
+        {(can("manage_charities") || can("manage_services")) && (
           <Link href="/main/manage-services" className="group bg-white dark:bg-slate-800 p-6 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700/50 hover:shadow-xl hover:shadow-primary/5 hover:border-primary/20 transition-all overflow-hidden relative">
             <div className="absolute -left-6 -bottom-6 w-24 h-24 bg-primary/5 rounded-full group-hover:scale-150 transition-transform duration-500 pointer-events-none" />
             <div className="w-12 h-12 bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400 rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 group-hover:rotate-3 transition-transform shadow-inner">

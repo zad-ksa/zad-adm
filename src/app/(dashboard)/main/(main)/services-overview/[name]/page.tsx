@@ -31,7 +31,7 @@ export default async function ServicesPage({ params }: { params: Promise<{ name:
   }
 
   const session = await getSession();
-  const isAdmin = checkIsAdmin(session?.role) || hasPermission(session?.role || "", session?.permissions || [], "manage_charity_settings");
+  const isAdmin = checkIsAdmin(session?.role) || hasPermission(session?.role || "", session?.permissions || [], "manage_services");
 
   // مسار الجمعية لا بوابة عليه: كل من سجّل الدخول يصل الصفحة. فالمنح هنا
   // صريحٌ لا ضمني — عكس «عرض الخدمات» حيث غياب المنح يعني بلا تقييد، لأن

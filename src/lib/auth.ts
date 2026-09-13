@@ -1,6 +1,11 @@
 import { jwtVerify, SignJWT } from "jose";
 import { cookies } from "next/headers";
 import { cache } from "react";
+import { sanitizePermissions } from "@/lib/permissions";
+// نوعٌ فقط: يُمحى عند الترجمة فلا يُسحَب Prisma إلى حزمة proxy.ts، وهي التي
+// تستورد decrypt/encrypt من هذا الملف. ولهذا السبب نفسه يبقى prisma استيراداً
+// ديناميكياً داخل getSession.
+import type { PrismaClient } from "@prisma/client";
 
 function getSecretKey() {
   const secretKey = process.env.JWT_SECRET;
@@ -29,6 +34,49 @@ export async function decrypt(input: string): Promise<any> {
   });
   return payload;
 }
+
+/**
+ * صلاحيات المجموعات: ما يصل الموظف من مجموعاته ومن مجموعات مسمّاه الوظيفي.
+ *
+ * تُقرأ في كل جلسة ولا تُنسخ إلى Employee.permissions — وهذا الفرق كلّه بينها
+ * وبين «مزامنة» المسمى، التي تنسخ نسخاً فتدهس ما كان للموظف ولا تسري على
+ * تعديلٍ لاحق. تعديل المجموعة يسري على حامليها في اللحظة.
+ *
+ * استعلامٌ واحد للاثنين: OR على الجدولين أرخص من نداءين، وgetSession مُغلَّفة
+ * بـcache فلا تتكرّر في الطلب الواحد.
+ */
+async function resolveBundles(
+  prisma: PrismaClient,
+  employeeId: string,
+  roleKey?: string | null
+): Promise<{ permissions: string[]; hasServices: boolean }> {
+  const rows = await prisma.permissionBundle.findMany({
+    where: {
+      OR: [
+        { employees: { some: { employeeId } } },
+        ...(roleKey ? [{ roles: { some: { role: { key: roleKey } } } }] : []),
+      ],
+    },
+    select: { permissions: true, services: true },
+  });
+  return {
+    permissions: rows.flatMap((r) => r.permissions),
+    hasServices: rows.some((r) => r.services.length > 0),
+  };
+}
+
+/**
+ * «عرض الخدمات» لا تُمنح، بل تُستنتج.
+ *
+ * لم تكن لها قيمة لذاتها: تفتح تبويباً لا معنى له لمن لا خدمةَ له فيه، وكان
+ * يمكن أن تُمنح بلا خدمة فيرى صاحبها صفحةً فارغة، أو تُنسى مع منح خدمةٍ فلا
+ * يرى ما مُنح. فصارت تابعةً للخدمة: من مُنح خدمةً — مباشرةً أو بمجموعةٍ له أو
+ * لمسمّاه — فُتح له التبويب، ومن لا فلا.
+ *
+ * وتُضاف بعد sanitizePermissions لا قبلها: المُعرّف متقاعد، فالتنقية تنزعه من
+ * المصفوفات المخزّنة — وهذا هو المقصود، أن لا يبقى مُنحاً بيد أحد.
+ */
+const SERVICES_TAB = "view_services_overview";
 
 export const getSession = cache(async () => {
   const cookieStore = await cookies();
@@ -88,7 +136,10 @@ export const getSession = cache(async () => {
       if (overrideEmployeeId && overrideEmployeeId !== "DEVELOPER_RESET") {
         const emp = await prisma.employee.findUnique({
           where: { id: overrideEmployeeId },
-          select: { id: true, name: true, role: true, permissions: true, charityId: true, avatarUrl: true }
+          select: {
+            id: true, name: true, role: true, permissions: true, charityId: true, avatarUrl: true,
+            _count: { select: { serviceAccess: true } },
+          }
         });
         
         if (emp) {
@@ -97,7 +148,12 @@ export const getSession = cache(async () => {
           session.id = emp.id;
           session.name = emp.name;
           session.role = emp.role;
-          session.permissions = emp.permissions;
+          // مجموعات الموظف المُنتحَل شخصيّته، لا مجموعات المطوّر: الانتحال
+          // يعني أن يرى ما يراه هو بالضبط.
+          const impersonated = await resolveBundles(prisma, emp.id, emp.role);
+          const merged = sanitizePermissions([...emp.permissions, ...impersonated.permissions]);
+          if (emp._count.serviceAccess > 0 || impersonated.hasServices) merged.push(SERVICES_TAB);
+          session.permissions = merged;
           session.charityId = emp.charityId;
           session.avatarUrl = emp.avatarUrl;
         }
@@ -106,10 +162,20 @@ export const getSession = cache(async () => {
       // Sync real employee permissions for regular users dynamically
       const emp = await prisma.employee.findUnique({
         where: { id: session.id },
-        select: { permissions: true, role: true, isActive: true }
+        select: {
+          permissions: true,
+          role: true,
+          isActive: true,
+          // العدّ في الاستعلام نفسه: منحُ خدمةٍ واحد هو ما يفتح تبويب الخدمات،
+          // ونداءٌ ثانٍ في كل طلبٍ من أجل رقمٍ واحد ثمنٌ لا داعي له.
+          _count: { select: { serviceAccess: true } },
+        },
       });
       if (emp && emp.isActive) {
-        session.permissions = emp.permissions;
+        const bundles = await resolveBundles(prisma, session.id, emp.role);
+        const merged = sanitizePermissions([...emp.permissions, ...bundles.permissions]);
+        if (emp._count.serviceAccess > 0 || bundles.hasServices) merged.push(SERVICES_TAB);
+        session.permissions = merged;
         session.role = emp.role;
       } else {
         return null;

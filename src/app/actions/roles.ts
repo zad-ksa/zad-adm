@@ -50,17 +50,20 @@ export async function createRole(data: { key: string; displayName: string; permi
       return { error: "المعرف موجود مسبقاً" };
     }
 
-    await prisma.roleDefinition.create({
+    // المعرّف يُرجَع لأن ربط مجموعات الصلاحيات بالمسمى يقع بعد إنشائه،
+    // والمسمى الجديد لا معرّف له قبل أن يُنشأ.
+    const created = await prisma.roleDefinition.create({
       data: {
         key: cleanKey,
         displayName: data.displayName,
         permissions: sanitizePermissions(data.permissions),
         isSystem: false, // Custom roles are never system by default
-      }
+      },
+      select: { id: true },
     });
 
     revalidatePath("/main/employees/roles");
-    return { success: "تمت إضافة المسمى بنجاح" };
+    return { success: "تمت إضافة المسمى بنجاح", id: created.id };
   } catch (error: any) {
     console.error("Create role error:", error);
     return { error: "حدث خطأ أثناء الإضافة" };

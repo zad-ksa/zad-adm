@@ -197,6 +197,72 @@ async function main() {
     const untouched = nextFreeName(new Set(["غيره"]), "مجلد-آخر");
     check(untouched === "مجلد-آخر", "الاسم غير المأخوذ يبقى كما هو");
 
+    // ── ٤) النسخ: الأصل في Cloudinary يُشارَك ولا يُضاعَف ──────────────────
+    console.log("");
+    console.log("④ النسخ ومشاركة الأصل");
+
+    const mkFile = async (name, parentId, publicId) => {
+      const r = await client.query(
+        `INSERT INTO "KnowledgeNode" (id, name, kind, "parentId", "fileUrl", "publicId", "resourceType", "fileSize", "createdAt", "updatedAt")
+         VALUES (gen_random_uuid()::text, $1, 'FILE', $2, $3, $4, 'raw', 1024, NOW(), NOW())
+         RETURNING id`,
+        [name, parentId, "https://res.cloudinary.com/" + publicId, publicId]
+      );
+      return r.rows[0].id;
+    };
+
+    const pid = "zad_knowledge_tree/تحقّق-" + Date.now();
+    const original = await mkFile("نموذج.pdf", other, pid);
+    const copy = await mkFile("نموذج.pdf", a, pid);
+
+    const shared = await client.query(
+      'SELECT COUNT(*)::int AS n FROM "KnowledgeNode" WHERE "publicId" = $1',
+      [pid]
+    );
+    check(shared.rows[0].n === 2, "صفّان يشيران إلى أصل واحد — لا قيد يمنع ذلك");
+
+    // قاعدة الحذف: لا يُهلَك الأصل ما دام صفٌّ خارج المحذوف يشير إليه.
+    const stillReferenced = await client.query(
+      'SELECT COUNT(*)::int AS n FROM "KnowledgeNode" WHERE "publicId" = $1 AND id <> ALL($2)',
+      [pid, [copy]]
+    );
+    check(
+      stillReferenced.rows[0].n === 1,
+      "حذف النسخة لا يُهلك الأصل — النسخة الأخرى ما زالت تشير إليه"
+    );
+
+    await client.query('DELETE FROM "KnowledgeNode" WHERE id = $1', [copy]);
+    const lastOne = await client.query(
+      'SELECT COUNT(*)::int AS n FROM "KnowledgeNode" WHERE "publicId" = $1 AND id <> ALL($2)',
+      [pid, [original]]
+    );
+    check(lastOne.rows[0].n === 0, "حذف آخر صفّ يُهلك الأصل — لا مرجع بعده");
+
+    // نسخةٌ عميقة: مستوى بمستوى، ليسبق الأبُ ابنَه فلا يسقط المفتاح الأجنبي.
+    const deepRoot = await mk("جذر-عميق", "FOLDER", null);
+    const deepMid = await mk("وسط", "FOLDER", deepRoot);
+    await mkFile("ورقة.pdf", deepMid, pid + "-deep");
+
+    const newRoot = await mk("جذر-عميق (2)", "FOLDER", other);
+    const newMid = await mk("وسط", "FOLDER", newRoot);
+    await mkFile("ورقة.pdf", newMid, pid + "-deep");
+
+    const shape = await client.query(
+      `SELECT (SELECT COUNT(*)::int FROM "KnowledgeNode" WHERE "parentId" = $1) AS midkids,
+              (SELECT COUNT(*)::int FROM "KnowledgeNode" WHERE "parentId" = $2) AS rootkids`,
+      [newMid, newRoot]
+    );
+    check(
+      shape.rows[0].midkids === 1 && shape.rows[0].rootkids === 1,
+      "النسخة العميقة تحفظ الشكل: جذر ← وسط ← ورقة"
+    );
+
+    const originalIntact = await client.query(
+      'SELECT COUNT(*)::int AS n FROM "KnowledgeNode" WHERE "parentId" = $1',
+      [deepMid]
+    );
+    check(originalIntact.rows[0].n === 1, "الأصل لم يُمَسّ بعد النسخ");
+
     await client.query("ROLLBACK");
 
     const after = await client.query('SELECT COUNT(*)::int AS n FROM "KnowledgeNode"');

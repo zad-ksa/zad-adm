@@ -23,6 +23,10 @@ import {
   Check,
   FolderInput,
   CornerUpLeft,
+  Copy,
+  Scissors,
+  ClipboardPaste,
+  CheckCheck,
 } from "lucide-react";
 import {
   listTemplateFolder,
@@ -32,6 +36,7 @@ import {
   deleteTemplateNode,
   searchTemplateLibrary,
   moveTemplateNodes,
+  copyTemplateNodes,
   type TemplateNodeRow,
   type TemplateSearchRow,
 } from "@/app/actions/templateLibrary";
@@ -173,6 +178,14 @@ export default function TemplateLibraryClient() {
   const bandBase = useRef<Set<string>>(new Set());
   /** هل تحرّك الإطار فعلاً؟ نقرةٌ ساكنة تُلغي التحديد، وسحبةٌ لا. */
   const didBand = useRef(false);
+
+  // ── الحافظة ───────────────────────────────────────────────────────────────
+  /**
+   * ما نُسخ أو قُصّ، وبأي نيّة. تحمل معرّفات لا مسارات، فالتنقّل بين المجلدات
+   * بعد النسخ لا يُبطلها — وهو أصل الفكرة: تنسخ هنا وتلصق هناك.
+   */
+  const [clipboard, setClipboard] = useState<{ mode: "copy" | "cut"; ids: string[] } | null>(null);
+  const [isPasting, setIsPasting] = useState(false);
 
   const [view, chooseView] = useStoredChoice<ViewMode>(VIEW_KEY, "grid", ["grid", "list"] as const);
   const [sort, setSortKey] = useStoredChoice<SortKey>(SORT_KEY, "name", ["name", "date", "size"] as const);
@@ -347,24 +360,25 @@ export default function TemplateLibraryClient() {
     setAnchorId(id);
   };
 
-  // الاختصارات مربوطةٌ بمفتاحٍ نصّي لقائمة المعروض لا بالمصفوفة: المصفوفة
-  // جديدة في كل رسم، فربط التأثير بها يعيد تسجيل المستمع بلا سبب.
-  const idsKey = sorted.map((r) => r.id).join(",");
+  /**
+   * الفتح: نقرتان. المجلد يُدخَل، والملف يُفتح في تبويب جديد.
+   *
+   * منفصلٌ عن التحديد لأنهما فعلان مختلفان بإيماءتين مختلفتين — وهو الفرق
+   * الذي كان مفقوداً: النقرة الواحدة على الاسم كانت تفتح المجلد، فمن أراد
+   * تحديده لينقله وجد نفسه داخله.
+   */
+  const openRow = (row: TemplateNodeRow) => {
+    if (row.kind === "FOLDER") {
+      setCurrentId(row.id);
+      return;
+    }
+    if (row.fileUrl) window.open(row.fileUrl, "_blank", "noopener,noreferrer");
+  };
 
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      const t = e.target as HTMLElement | null;
-      // لا يُسرَق Ctrl+A من حقل بحث أو إعادة تسمية.
-      if (t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA" || t.isContentEditable)) return;
-      if (e.key === "Escape") { setSelected(new Set()); setAnchorId(null); }
-      if ((e.key === "a" || e.key === "A") && (e.ctrlKey || e.metaKey)) {
-        e.preventDefault();
-        setSelected(new Set(idsKey ? idsKey.split(",") : []));
-      }
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [idsKey]);
+  // الاختصارات مربوطةٌ بمفاتيح نصّية لا بالمجموعات نفسها: المجموعة جديدة في
+  // كل رسم، فربط التأثير بها يعيد تسجيل المستمع بلا سبب.
+  const idsKey = sorted.map((r) => r.id).join(",");
+  const selectedKey = [...selected].join(",");
 
   // ── النقل ─────────────────────────────────────────────────────────────────
 
@@ -382,6 +396,102 @@ export default function TemplateLibraryClient() {
     );
     refresh();
   };
+
+  // ── النسخ والقص واللصق ────────────────────────────────────────────────────
+
+  const remember = (mode: "copy" | "cut", ids: string[]) => {
+    if (!ids.length) return;
+    setClipboard({ mode, ids });
+    setToast(mode === "copy" ? `نُسخ ${ids.length} عنصر` : `قُصّ ${ids.length} عنصر`);
+  };
+
+  /**
+   * اللصق في المجلد المعروض الآن.
+   *
+   * القصّ نقلٌ واللصق نسخٌ — فعلان مختلفان في الخادم لأنهما مختلفان في المعنى،
+   * لا فرعان من فعل واحد بعلَم. ولأنهما مختلفان، لا يمكن جمع النداءين في تعبير
+   * واحد: نتيجة كلٍّ منهما شكلٌ آخر، والفصل هنا هو ما يجعل TypeScript يحرس أن
+   * نقرأ من كلٍّ ما فيه فعلاً.
+   *
+   * وuseCallback لا زينة: هذه الدالة في قائمة اعتماد مستمع لوحة المفاتيح، فلو
+   * تجدّدت في كل رسم لأُعيد تسجيل المستمع في كل رسم.
+   */
+  const paste = useCallback(async () => {
+    if (!clipboard?.ids.length) return;
+    setError(null);
+    setIsPasting(true);
+    try {
+      if (clipboard.mode === "cut") {
+        const res = await moveTemplateNodes(clipboard.ids, currentId);
+        if (res.error) return setError(res.error);
+        // القصّ يُفرغ الحافظة: العنصر انتقل، ولصقه ثانية لا معنى له — وهو ما
+        // يفعله مستعرض الملفات بالضبط.
+        setClipboard(null);
+        setToast(
+          res.moved
+            ? `تم نقل ${res.moved} عنصر` +
+                (res.renamed ? ` — أُعيدت تسمية ${res.renamed} لتشابه الأسماء` : "")
+            : "العناصر في مكانها أصلاً"
+        );
+      } else {
+        const res = await copyTemplateNodes(clipboard.ids, currentId);
+        if (res.error) return setError(res.error);
+        // الحافظة تبقى بعد النسخ: اللصق في مجلدين أمرٌ معتاد.
+        setToast(`تم لصق ${res.copied} عنصر`);
+      }
+      load(currentId);
+    } finally {
+      setIsPasting(false);
+    }
+  }, [clipboard, currentId, load]);
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      const t = e.target as HTMLElement | null;
+      // لا تُسرَق الاختصارات من حقل بحث أو إعادة تسمية.
+      if (t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA" || t.isContentEditable)) return;
+
+      if (e.key === "Escape") {
+        // Escape يُلغي التحديد ويُبطل قصّاً معلّقاً، كما في مستعرض الملفات.
+        setSelected(new Set());
+        setAnchorId(null);
+        setClipboard(null);
+        return;
+      }
+
+      if (!e.ctrlKey && !e.metaKey) return;
+
+      // بالموضع الفيزيائي للمفتاح (e.code) لا بالحرف الذي يُنتجه (e.key):
+      // على تخطيط لوحة عربي يعطي مفتاح C الحرف «ح»، فمطابقة الحرف تُسقِط
+      // الاختصارات كلها عن كل من يكتب بالعربية — وهم أهل هذه المنصة.
+      const picked = selectedKey ? selectedKey.split(",") : [];
+      switch (e.code) {
+        case "KeyA":
+          e.preventDefault();
+          setSelected(new Set(idsKey ? idsKey.split(",") : []));
+          break;
+        case "KeyC":
+          // بلا تحديد لا نعترض: Ctrl+C يبقى نسخَ نصٍّ عاديّاً.
+          if (!picked.length) return;
+          e.preventDefault();
+          remember("copy", picked);
+          break;
+        case "KeyX":
+          if (!picked.length) return;
+          e.preventDefault();
+          remember("cut", picked);
+          break;
+        case "KeyV":
+          e.preventDefault();
+          paste();
+          break;
+        default:
+          return;
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [idsKey, selectedKey, paste]);
 
   /** إفلاتٌ على مجلد أو على درجة في المسار. targetId: null يعني الجذر. */
   const dropOn = (targetId: string | null) => {
@@ -428,11 +538,30 @@ export default function TemplateLibraryClient() {
   // ── إطار التحديد بالفأرة ──────────────────────────────────────────────────
 
   /**
+   * أقرب سلفٍ يتدحرج فعلاً.
+   *
+   * لا يُفترض أنه النافذة: قشرة لوحة التحكم h-[100dvh] overflow-hidden،
+   * والمتدحرج هو <main> بداخلها. وشرط scrollHeight > clientHeight يستبعد
+   * حاويةً وضعها overflow: auto ولا شيء فيها ليتدحرج.
+   */
+  const scrollerOf = (el: HTMLElement | null): HTMLElement | null => {
+    let node = el?.parentElement ?? null;
+    while (node) {
+      const overflowY = getComputedStyle(node).overflowY;
+      if ((overflowY === "auto" || overflowY === "scroll") && node.scrollHeight > node.clientHeight) {
+        return node;
+      }
+      node = node.parentElement;
+    }
+    return null;
+  };
+
+  /**
    * سحبةٌ على الفراغ تُحدّد كل ما يمسّه الإطار، كما في مستعرض الملفات.
    *
    * تبدأ من الفراغ وحده: السحبة من فوق عنصر نقلٌ لا تحديد، وهذا الفرق هو ما
-   * يجعل الإيماءتين تتعايشان على السطح نفسه. ولذلك يحمل السطح والشبكة داخله
-   * سمة data-surface، وهي التي يُعرَف بها أن الضغط بدأ من فراغٍ لا من بطاقة.
+   * يجعل الإيماءتين تتعايشان على السطح نفسه. ولذلك يحمل السطح وما فيه سمة
+   * data-surface، وهي التي يُعرَف بها أن الضغط بدأ من فراغٍ لا من بطاقة.
    */
   const beginBand = (e: React.MouseEvent<HTMLDivElement>) => {
     didBand.current = false;
@@ -441,51 +570,90 @@ export default function TemplateLibraryClient() {
     const surface = surfaceRef.current;
     if (!surface) return;
 
-    // إحداثيات الصفحة لا النافذة: لو تدحرجت الصفحة أثناء السحب، لانزلق الإطار
-    // عن العناصر لو كان مقيساً بالنافذة.
-    const start = { x: e.pageX, y: e.pageY };
+    /**
+     * القياس بإحداثيات السطح نفسه، لا النافذة ولا الصفحة.
+     *
+     * في هذه المنصة لا تتدحرج النافذة: القشرة h-[100dvh] overflow-hidden
+     * والذي يتدحرج هو <main>، فـwindow.scrollY صفرٌ دائماً وكان القياس به
+     * يعمل بالمصادفة وحدها. وصندوق السطح يتحرّك مع الدحرجة، فنقطةٌ ثابتة في
+     * المحتوى تبقى عند إحداثيٍّ واحد — وهذا بعينه ما يجعل الإطار يتمدّد حين
+     * تنزل الصفحة والمؤشّر واقف.
+     */
+    const at = (clientX: number, clientY: number) => {
+      const box = surface.getBoundingClientRect();
+      return { x: clientX - box.left, y: clientY - box.top };
+    };
+
+    const start = at(e.clientX, e.clientY);
     bandStart.current = start;
     bandBase.current = e.ctrlKey || e.metaKey ? new Set(selected) : new Set();
     e.preventDefault(); // يمنع تحديد النص أثناء السحب
 
-    const onMove = (ev: MouseEvent) => {
-      if (!bandStart.current) return;
-      const dx = Math.abs(ev.pageX - start.x);
-      const dy = Math.abs(ev.pageY - start.y);
+    const scroller = scrollerOf(surface);
+    let client = { x: e.clientX, y: e.clientY };
+    let raf = 0;
+
+    const draw = () => {
+      const now = at(client.x, client.y);
+      const dx = Math.abs(now.x - start.x);
+      const dy = Math.abs(now.y - start.y);
       // عتبة: نقرةٌ فيها رجفة يد ليست سحبة، وبدونها يبتلع الإطار كل نقرة.
       if (!didBand.current && dx < 4 && dy < 4) return;
       didBand.current = true;
 
-      const left = Math.min(start.x, ev.pageX);
-      const top = Math.min(start.y, ev.pageY);
-      const width = dx;
-      const height = dy;
+      const left = Math.min(start.x, now.x);
+      const top = Math.min(start.y, now.y);
+      setBand({ left, top, width: dx, height: dy });
 
       const box = surface.getBoundingClientRect();
-      setBand({
-        left: left - (box.left + window.scrollX),
-        top: top - (box.top + window.scrollY),
-        width,
-        height,
-      });
-
       const hits = new Set(bandBase.current);
       for (const [id, node] of rowRefs.current) {
         const r = node.getBoundingClientRect();
-        const x1 = r.left + window.scrollX;
-        const y1 = r.top + window.scrollY;
+        const x1 = r.left - box.left;
+        const y1 = r.top - box.top;
         // تماسٌّ لا احتواء: مستعرض الملفات يحدّد ما يمسّه الإطار ولو بطرفه،
         // ولا يشترط أن يحيط به.
-        if (x1 < left + width && x1 + r.width > left && y1 < top + height && y1 + r.height > top) {
+        if (x1 < left + dx && x1 + r.width > left && y1 < top + dy && y1 + r.height > top) {
           hits.add(id);
         }
       }
       setSelected(hits);
     };
 
+    /**
+     * دحرجةٌ تلقائية عند الحدّ.
+     *
+     * بدونها ينتهي التحديد عند آخر صفٍّ تراه العين: يد المستخدم تصل أسفل
+     * الشاشة فلا شيء يتحرّك. والخطوة تتناسب مع قربه من الحدّ فتُسرِع كلّما
+     * دنا، والرسم لا يُعاد إلا إذا تدحرجت الحاوية فعلاً — وإلا أعدنا الرسم
+     * ستّين مرّة في الثانية ولا شيء تغيّر.
+     */
+    const EDGE = 64;
+    const tick = () => {
+      if (!bandStart.current) return;
+      if (scroller) {
+        const box = scroller.getBoundingClientRect();
+        const past = client.y - (box.bottom - EDGE);
+        const before = box.top + EDGE - client.y;
+        const step = past > 0 ? Math.min(28, Math.ceil(past / 2)) : before > 0 ? -Math.min(28, Math.ceil(before / 2)) : 0;
+        if (step !== 0) {
+          const was = scroller.scrollTop;
+          scroller.scrollTop = was + step;
+          if (scroller.scrollTop !== was) draw();
+        }
+      }
+      raf = requestAnimationFrame(tick);
+    };
+
+    const onMove = (ev: MouseEvent) => {
+      client = { x: ev.clientX, y: ev.clientY };
+      draw();
+    };
+
     const onUp = () => {
       window.removeEventListener("mousemove", onMove);
       window.removeEventListener("mouseup", onUp);
+      cancelAnimationFrame(raf);
       bandStart.current = null;
       setBand(null);
     };
@@ -494,6 +662,7 @@ export default function TemplateLibraryClient() {
     // كان المستمع على السطح لبقي الإطار معلّقاً عند أول خروج.
     window.addEventListener("mousemove", onMove);
     window.addEventListener("mouseup", onUp);
+    raf = requestAnimationFrame(tick);
   };
 
   /** نقرةٌ على الفراغ تُلغي التحديد — إلا إذا كانت نهاية سحبة إطار. */
@@ -515,6 +684,12 @@ export default function TemplateLibraryClient() {
   ];
 
   const dragCount = dragIds?.length ?? 0;
+
+  // زرٌّ في الشريط الأعلى. ارتفاعه ارتفاع «مجلد جديد» بعينه، لأن أدوات
+  // التحديد تحلّ محلّ أزرار الإنشاء في الشريط نفسه: لو اختلف الارتفاع لقفز
+  // الشريط والقائمةُ تحته عند كل تحديد.
+  const TOOL_BTN =
+    "h-9 px-3 rounded-xl bg-slate-100 dark:bg-[#111] text-slate-600 dark:text-slate-300 border border-transparent dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 transition-colors font-bold text-xs flex items-center gap-1.5";
 
   return (
     <div className="space-y-4" dir="rtl">
@@ -561,22 +736,83 @@ export default function TemplateLibraryClient() {
           ))}
         </div>
 
-        <div className="flex items-center gap-2 shrink-0">
-          <button
-            onClick={() => setIsCreatingFolder(true)}
-            className="h-9 px-3 rounded-xl bg-slate-100 dark:bg-[#111] text-slate-600 dark:text-slate-300 border border-transparent dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 transition-colors font-bold text-xs flex items-center gap-1.5"
-          >
-            <FolderPlus className="w-4 h-4" />
-            مجلد جديد
-          </button>
-          <button
-            onClick={() => fileInputRef.current?.click()}
-            disabled={!!uploadStatus}
-            className="h-9 px-3 rounded-xl text-white bg-gradient-to-b from-[#17857c] via-primary to-[#0c645d] hover:shadow-md active:translate-y-px transition-all font-bold text-xs flex items-center gap-1.5 disabled:opacity-50"
-          >
-            {uploadStatus ? <Loader2 className="w-4 h-4 animate-spin" /> : <FileUp className="w-4 h-4" />}
-            رفع ملفات
-          </button>
+        {/* مجموعةٌ واحدة لحالتين: أزرار الإنشاء حين لا شيء محدَّد، وأدوات
+            التحديد حين يُحدَّد — في هذا الشريط نفسه، فلا ينزل شريطٌ ثالث فجأةً
+            يدفع القائمة تحته. والمسار على يمينه يبقى في الحالتين، فهو موضعٌ
+            يُفلَت عليه المحدَّد للنقل إلى الأعلى. */}
+        <div className="flex items-center gap-2 shrink-0 flex-wrap justify-end">
+          {selected.size > 0 ? (
+            <>
+              <span
+                title="اسحب المحدَّد إلى مجلد أو إلى درجة في المسار — أو انقله من «نقل إلى»"
+                className="h-9 px-2.5 rounded-xl bg-primary/10 border border-primary/25 text-primary dark:text-teal-300 text-xs font-bold flex items-center gap-1.5"
+              >
+                {isMoving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" />}
+                {isMoving ? "جارٍ النقل…" : `${selected.size} محدَّد`}
+              </span>
+
+              {/* الاختصارات لا وجود لها على اللمس، فلا بدّ من زرّين. */}
+              <button onClick={() => remember("copy", [...selected])} title="نسخ (Ctrl+C)" className={TOOL_BTN}>
+                <Copy className="w-4 h-4" />
+                <span className="hidden sm:inline">نسخ</span>
+              </button>
+              <button onClick={() => remember("cut", [...selected])} title="قص (Ctrl+X)" className={TOOL_BTN}>
+                <Scissors className="w-4 h-4" />
+                <span className="hidden sm:inline">قص</span>
+              </button>
+
+              <label className="flex items-center gap-1.5 text-xs font-bold text-slate-500">
+                <FolderInput className="w-4 h-4" />
+                <select
+                  value=""
+                  disabled={isMoving || moveTargets.length === 0}
+                  onChange={(e) => {
+                    const v = e.target.value;
+                    if (!v) return;
+                    move([...selected], v === ROOT_TARGET ? null : v);
+                    e.target.value = "";
+                  }}
+                  className="h-9 px-2 rounded-xl bg-slate-100 dark:bg-[#111] border border-transparent dark:border-slate-800 focus:border-primary/40 outline-none text-xs font-bold disabled:opacity-50 max-w-[180px]"
+                >
+                  <option value="">نقل إلى…</option>
+                  {moveTargets.map((t) => (
+                    <option key={t.id ?? ROOT_TARGET} value={t.id ?? ROOT_TARGET}>
+                      {t.label}
+                    </option>
+                  ))}
+                </select>
+              </label>
+
+              <button
+                onClick={() => setSelected(new Set(sorted.map((r) => r.id)))}
+                title="تحديد الكل (Ctrl+A)"
+                className={TOOL_BTN}
+              >
+                <CheckCheck className="w-4 h-4" />
+                <span className="hidden sm:inline">تحديد الكل</span>
+              </button>
+              <button onClick={clearSelection} title="إلغاء التحديد (Esc)" className={TOOL_BTN}>
+                <X className="w-4 h-4" />
+                <span className="hidden sm:inline">إلغاء</span>
+              </button>
+            </>
+          ) : (
+            <>
+              <button onClick={() => setIsCreatingFolder(true)} className={TOOL_BTN}>
+                <FolderPlus className="w-4 h-4" />
+                مجلد جديد
+              </button>
+              <button
+                onClick={() => fileInputRef.current?.click()}
+                disabled={!!uploadStatus}
+                className="h-9 px-3 rounded-xl text-white bg-gradient-to-b from-[#17857c] via-primary to-[#0c645d] hover:shadow-md active:translate-y-px transition-all font-bold text-xs flex items-center gap-1.5 disabled:opacity-50"
+              >
+                {uploadStatus ? <Loader2 className="w-4 h-4 animate-spin" /> : <FileUp className="w-4 h-4" />}
+                رفع ملفات
+              </button>
+            </>
+          )}
+
           <input
             ref={fileInputRef}
             type="file"
@@ -588,6 +824,23 @@ export default function TemplateLibraryClient() {
               e.target.value = "";
             }}
           />
+
+          {/* اللصق معروضٌ في الحالتين: فعلٌ على المجلد المعروض لا على
+              المحدَّد — تنسخ، ثم تدخل مجلداً لا شيء محدَّد فيه، فتلصق. */}
+          {clipboard && clipboard.ids.length > 0 && (
+            <button
+              onClick={paste}
+              disabled={isPasting}
+              title="لصق في هذا المجلد (Ctrl+V)"
+              className="h-9 px-3 rounded-xl bg-primary/10 text-primary dark:text-teal-300 border border-primary/30 hover:bg-primary/15 transition-colors font-bold text-xs flex items-center gap-1.5 disabled:opacity-50"
+            >
+              {isPasting ? <Loader2 className="w-4 h-4 animate-spin" /> : <ClipboardPaste className="w-4 h-4" />}
+              لصق {clipboard.ids.length}
+              <span className="text-[10px] font-medium opacity-70">
+                {clipboard.mode === "cut" ? "مقصوص" : "منسوخ"}
+              </span>
+            </button>
+          )}
         </div>
       </div>
 
@@ -659,297 +912,261 @@ export default function TemplateLibraryClient() {
         </div>
       </div>
 
-      {/* شريط التحديد — لا يظهر إلا وثمّة محدَّد، فلا يزحم الصفحة في الأصل. */}
-      {selected.size > 0 && (
-        <div className="sticky top-2 z-10 flex items-center gap-2 flex-wrap bg-white/95 dark:bg-[#0A0A0A]/95 backdrop-blur border border-primary/30 rounded-xl px-3 py-2 shadow-sm">
-          <span className="text-xs font-bold text-primary dark:text-teal-300 flex items-center gap-1.5">
-            {isMoving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" />}
-            {isMoving ? "جارٍ النقل…" : `${selected.size} محدَّد`}
-          </span>
+      {/* السطح الذي تبدأ منه سحبة التحديد: من تحت خانة البحث مباشرةً إلى
+          حدّي الصفحة وإلى أسفلها.
 
-          <span className="text-[11px] text-slate-400 hidden sm:inline">
-            اسحبها إلى مجلد — أو انقلها من هنا
-          </span>
+          -mt-4 يأكل فرجة space-y-4 التي يضعها الأب، وpt-4 يردّها شكلاً —
+          فتصير الفرجة نفسها جزءاً من السطح بدل أن تكون هامشاً ميتاً فوقه.
+          و-mx-* تُلغي حشو <main> فيمتدّ السطح من حدٍّ إلى حدّ، ولا يتوقّف
+          عند حدود القائمة. فأيّ فراغ تراه تحت البحث تبدأ منه السحبة. */}
+      <div
+        ref={surfaceRef}
+        data-surface=""
+        onMouseDown={beginBand}
+        onClick={handleSurfaceClick}
+        className="relative -mt-4 pt-4 -mx-4 px-4 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8 min-h-[65vh] pb-16"
+      >
+        <div data-surface="" className="space-y-4">
+          {isSearchMode && (
+            <p className="text-xs font-bold text-slate-500 dark:text-slate-400 px-1">
+              {isSearching
+                ? "جارٍ البحث…"
+                : `${sorted.length} نتيجة ${currentId ? "في هذا المجلد وما بداخله" : "في المكتبة"}`}
+            </p>
+          )}
 
-          <div className="flex items-center gap-2 ms-auto">
-            <label className="flex items-center gap-1.5 text-xs font-bold text-slate-500">
-              <FolderInput className="w-3.5 h-3.5" />
-              <select
-                value=""
-                disabled={isMoving || moveTargets.length === 0}
-                onChange={(e) => {
-                  const v = e.target.value;
-                  if (!v) return;
-                  move([...selected], v === ROOT_TARGET ? null : v);
-                  e.target.value = "";
+          {error && (
+            <div className="flex items-start gap-2 px-4 py-3 rounded-xl bg-rose-500/[0.08] text-rose-600 dark:text-rose-400 font-bold text-xs">
+              <AlertTriangle className="w-4 h-4 shrink-0 mt-px" />
+              <span>{error}</span>
+            </div>
+          )}
+
+          {isCreatingFolder && (
+            <div className="flex items-center gap-2 bg-white dark:bg-[#0A0A0A] border border-slate-200 dark:border-slate-800 rounded-xl p-2">
+              <Folder className="w-4 h-4 text-amber-500 shrink-0 ms-1" />
+              <input
+                autoFocus
+                value={newFolderName}
+                onChange={(e) => setNewFolderName(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") handleCreateFolder();
+                  if (e.key === "Escape") { setIsCreatingFolder(false); setNewFolderName(""); }
                 }}
-                className="h-8 px-2 rounded-lg bg-slate-100 dark:bg-slate-800 border border-transparent focus:border-primary/40 outline-none text-xs font-bold disabled:opacity-50 max-w-[190px]"
+                placeholder="اسم المجلد"
+                className="flex-1 h-9 px-3 rounded-lg bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-sm outline-none focus:border-primary"
+              />
+              <button onClick={handleCreateFolder} className="h-9 px-4 rounded-lg bg-primary text-white text-xs font-bold">
+                إنشاء
+              </button>
+              <button
+                onClick={() => { setIsCreatingFolder(false); setNewFolderName(""); }}
+                className="h-9 px-3 rounded-lg text-slate-500 text-xs font-bold hover:bg-slate-100 dark:hover:bg-slate-800"
               >
-                <option value="">نقل إلى…</option>
-                {moveTargets.map((t) => (
-                  <option key={t.id ?? ROOT_TARGET} value={t.id ?? ROOT_TARGET}>
-                    {t.label}
-                  </option>
-                ))}
-              </select>
-            </label>
+                إلغاء
+              </button>
+            </div>
+          )}
 
-            <button
-              onClick={() => setSelected(new Set(sorted.map((r) => r.id)))}
-              className="h-8 px-2.5 rounded-lg text-xs font-bold text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800"
+          {isLoading ? (
+            <div className="flex items-center justify-center py-16">
+              <Loader2 className="w-6 h-6 animate-spin text-primary" />
+            </div>
+          ) : sorted.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-16 gap-3 text-slate-400 dark:text-slate-600">
+              <Folder className="w-12 h-12 text-slate-300 dark:text-slate-700" />
+              <p className="font-bold text-sm">
+                {isSearchMode
+                  ? `لا نتائج لـ«${search.trim()}»`
+                  : currentId === null
+                    ? "لا توجد مجلدات بعد — ابدأ بإنشاء مجلد"
+                    : "هذا المجلد فارغ"}
+              </p>
+            </div>
+          ) : (
+            <div
+              data-surface=""
+              className={
+                view === "grid"
+                  ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3"
+                  : "flex flex-col divide-y divide-slate-100 dark:divide-slate-800 border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden"
+              }
             >
-              تحديد الكل
-            </button>
-            <button
-              onClick={clearSelection}
-              className="h-8 px-2.5 rounded-lg text-xs font-bold text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center gap-1"
-            >
-              <X className="w-3.5 h-3.5" />
-              إلغاء
-            </button>
-          </div>
-        </div>
-      )}
+              {sorted.map((row) => {
+                const Icon = row.kind === "FOLDER" ? Folder : iconFor(row.name);
+                const isRenaming = renamingId === row.id;
+                const isSelected = selected.has(row.id);
+                const isDragging = !!dragIds?.includes(row.id);
+                const isDropHere = dropTarget === row.id;
+                // المقصوص يبهت حتى يُلصَق: إشارةٌ أنه في الحافظة، لا أنه اختفى.
+                const isCut = clipboard?.mode === "cut" && clipboard.ids.includes(row.id);
+                // مجلدٌ محمولٌ الآن ليس هدفاً لنفسه.
+                const canAccept = row.kind === "FOLDER" && !!dragIds && !dragIds.includes(row.id);
 
-      {isSearchMode && (
-        <p className="text-xs font-bold text-slate-500 dark:text-slate-400 px-1">
-          {isSearching
-            ? "جارٍ البحث…"
-            : `${sorted.length} نتيجة ${currentId ? "في هذا المجلد وما بداخله" : "في المكتبة"}`}
-        </p>
-      )}
-
-      {error && (
-        <div className="flex items-start gap-2 px-4 py-3 rounded-xl bg-rose-500/[0.08] text-rose-600 dark:text-rose-400 font-bold text-xs">
-          <AlertTriangle className="w-4 h-4 shrink-0 mt-px" />
-          <span>{error}</span>
-        </div>
-      )}
-
-      {isCreatingFolder && (
-        <div className="flex items-center gap-2 bg-white dark:bg-[#0A0A0A] border border-slate-200 dark:border-slate-800 rounded-xl p-2">
-          <Folder className="w-4 h-4 text-amber-500 shrink-0 ms-1" />
-          <input
-            autoFocus
-            value={newFolderName}
-            onChange={(e) => setNewFolderName(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") handleCreateFolder();
-              if (e.key === "Escape") { setIsCreatingFolder(false); setNewFolderName(""); }
-            }}
-            placeholder="اسم المجلد"
-            className="flex-1 h-9 px-3 rounded-lg bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-sm outline-none focus:border-primary"
-          />
-          <button onClick={handleCreateFolder} className="h-9 px-4 rounded-lg bg-primary text-white text-xs font-bold">
-            إنشاء
-          </button>
-          <button
-            onClick={() => { setIsCreatingFolder(false); setNewFolderName(""); }}
-            className="h-9 px-3 rounded-lg text-slate-500 text-xs font-bold hover:bg-slate-100 dark:hover:bg-slate-800"
-          >
-            إلغاء
-          </button>
-        </div>
-      )}
-
-      {isLoading ? (
-        <div className="flex items-center justify-center py-16">
-          <Loader2 className="w-6 h-6 animate-spin text-primary" />
-        </div>
-      ) : sorted.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-16 gap-3 text-slate-400 dark:text-slate-600">
-          <Folder className="w-12 h-12 text-slate-300 dark:text-slate-700" />
-          <p className="font-bold text-sm">
-            {isSearchMode
-              ? `لا نتائج لـ«${search.trim()}»`
-              : currentId === null
-                ? "لا توجد مجلدات بعد — ابدأ بإنشاء مجلد"
-                : "هذا المجلد فارغ"}
-          </p>
-        </div>
-      ) : (
-        <div
-          ref={surfaceRef}
-          data-surface=""
-          onMouseDown={beginBand}
-          onClick={handleSurfaceClick}
-          // الفراغ أسفل القائمة ليس حشواً: في عرض القائمة تملأ الصفوف العرض
-          // كلَّه، فلا يبقى موضعٌ تبدأ منه سحبة الإطار لولاه.
-          className="relative min-h-[300px] pb-10"
-        >
-          <div
-            data-surface=""
-            className={
-              view === "grid"
-                ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3"
-                : "flex flex-col divide-y divide-slate-100 dark:divide-slate-800 border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden"
-            }
-          >
-            {sorted.map((row) => {
-              const Icon = row.kind === "FOLDER" ? Folder : iconFor(row.name);
-              const isRenaming = renamingId === row.id;
-              const isSelected = selected.has(row.id);
-              const isDragging = !!dragIds?.includes(row.id);
-              const isDropHere = dropTarget === row.id;
-              // مجلدٌ محمولٌ الآن ليس هدفاً لنفسه.
-              const canAccept = row.kind === "FOLDER" && !!dragIds && !dragIds.includes(row.id);
-
-              return (
-                <div
-                  key={row.id}
-                  ref={(el) => {
-                    if (!el) return;
-                    rowRefs.current.set(row.id, el);
-                    // تنظيفٌ صريح: صفٌّ خرج من العرض لا يبقى صندوقه في الخريطة،
-                    // وإلا حدّده الإطار وهو غير معروض أصلاً.
-                    return () => { rowRefs.current.delete(row.id); };
-                  }}
-                  draggable={!isRenaming}
-                  onDragStart={(e) => beginDrag(e, row.id)}
-                  onDragEnd={() => { setDragIds(null); setDropTarget(null); }}
-                  onDragOver={canAccept ? (e) => allowDrop(e, row.id) : undefined}
-                  onDragLeave={canAccept ? (e) => leaveDrop(e, row.id) : undefined}
-                  onDrop={canAccept ? (e) => { e.preventDefault(); dropOn(row.id); } : undefined}
-                  onClick={(e) => handlePick(e, row.id)}
-                  className={[
-                    view === "grid"
-                      ? "group rounded-xl p-3 flex items-center gap-3 border transition-colors"
-                      : "group px-3 py-2 flex items-center gap-3 border-0 transition-colors",
-                    isDropHere
-                      ? "bg-primary/10 border-primary ring-2 ring-primary/30"
-                      : isSelected
-                        ? "bg-primary/[0.06] dark:bg-primary/10 border-primary/50"
-                        : "bg-white dark:bg-[#0A0A0A] border-slate-200 dark:border-slate-800 hover:border-primary/40",
-                    isDragging ? "opacity-40" : "",
-                    "cursor-default select-none",
-                  ].join(" ")}
-                >
-                  {/* مربّع التحديد ظاهر دائماً: على اللمس لا وجود لـCtrl ولا
-                      Shift، فبدونه لا سبيل إلى تحديد أكثر من عنصر. */}
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handlePick({ shiftKey: e.shiftKey, ctrlKey: true, metaKey: false }, row.id);
+                return (
+                  <div
+                    key={row.id}
+                    ref={(el) => {
+                      if (!el) return;
+                      rowRefs.current.set(row.id, el);
+                      // تنظيفٌ صريح: صفٌّ خرج من العرض لا يبقى صندوقه في الخريطة،
+                      // وإلا حدّده الإطار وهو غير معروض أصلاً.
+                      return () => { rowRefs.current.delete(row.id); };
                     }}
-                    role="checkbox"
-                    aria-checked={isSelected}
-                    aria-label={isSelected ? `إلغاء تحديد ${row.name}` : `تحديد ${row.name}`}
-                    className={`shrink-0 w-5 h-5 rounded-md border flex items-center justify-center transition-colors ${
-                      isSelected
-                        ? "bg-primary border-primary text-white"
-                        : "border-slate-300 dark:border-slate-600 text-transparent hover:border-primary"
-                    }`}
+                    draggable={!isRenaming}
+                    onDragStart={(e) => beginDrag(e, row.id)}
+                    onDragEnd={() => { setDragIds(null); setDropTarget(null); }}
+                    onDragOver={canAccept ? (e) => allowDrop(e, row.id) : undefined}
+                    onDragLeave={canAccept ? (e) => leaveDrop(e, row.id) : undefined}
+                    onDrop={canAccept ? (e) => { e.preventDefault(); dropOn(row.id); } : undefined}
+                    onClick={(e) => handlePick(e, row.id)}
+                    onDoubleClick={() => openRow(row)}
+                    className={[
+                      view === "grid"
+                        ? "group rounded-xl p-3 flex items-center gap-3 border transition-colors"
+                        : "group px-3 py-2 flex items-center gap-3 border-0 transition-colors",
+                      isDropHere
+                        ? "bg-primary/10 border-primary ring-2 ring-primary/30"
+                        : isSelected
+                          ? "bg-primary/[0.06] dark:bg-primary/10 border-primary/50"
+                          : "bg-white dark:bg-[#0A0A0A] border-slate-200 dark:border-slate-800 hover:border-primary/40",
+                      isDragging ? "opacity-40" : isCut ? "opacity-60" : "",
+                      // touch-action: manipulation يُلغي انتظار المتصفح
+                      // للنقرة الثانية كإيماءة تكبير على اللمس، فتصل النقرتان
+                      // إلى الصفّ بدل أن تُفهَما تكبيراً.
+                      "cursor-default select-none [touch-action:manipulation]",
+                    ].join(" ")}
                   >
-                    <Check className="w-3 h-3" />
-                  </button>
-
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      if (e.shiftKey || e.ctrlKey || e.metaKey) return handlePick(e, row.id);
-                      if (row.kind === "FOLDER") setCurrentId(row.id);
-                      else handlePick(e, row.id);
-                    }}
-                    className="shrink-0 w-10 h-10 rounded-lg bg-slate-50 dark:bg-[#111] flex items-center justify-center"
-                  >
-                    <Icon
-                      className={`w-5 h-5 ${row.kind === "FOLDER" ? "text-amber-500" : "text-primary dark:text-teal-300"}`}
-                    />
-                  </button>
-
-                  <div className="min-w-0 flex-1">
-                    {isRenaming ? (
-                      <input
-                        autoFocus
-                        value={renameValue}
-                        onClick={(e) => e.stopPropagation()}
-                        onChange={(e) => setRenameValue(e.target.value)}
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter") handleRename(row.id);
-                          if (e.key === "Escape") setRenamingId(null);
-                        }}
-                        onBlur={() => handleRename(row.id)}
-                        className="w-full h-8 px-2 rounded-lg bg-slate-50 dark:bg-slate-900 border border-primary text-sm outline-none"
-                      />
-                    ) : (
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          if (e.shiftKey || e.ctrlKey || e.metaKey) return handlePick(e, row.id);
-                          if (row.kind === "FOLDER") setCurrentId(row.id);
-                          else handlePick(e, row.id);
-                        }}
-                        className="block w-full text-right truncate text-sm font-bold text-slate-800 dark:text-slate-100 hover:text-primary"
-                        title={row.name}
-                      >
-                        {row.name}
-                      </button>
-                    )}
-                    <p className="text-[10px] text-slate-400 truncate mt-0.5">
-                      {row.kind === "FOLDER"
-                        ? `${row.childCount} عنصر`
-                        : row.fileSize
-                          ? formatBytes(row.fileSize)
-                          : "ملف"}
-                      {isSearchMode && row.parentName ? ` · في: ${row.parentName}` : ""}
-                      {row.createdByName ? ` · ${row.createdByName}` : ""}
-                    </p>
-                  </div>
-
-                  {/* Always visible.
-
-                      These were opacity-0 until hover, which is a desktop-mouse
-                      convention: on a phone or tablet there is no hover, so
-                      rename and delete could never be reached at all. Even with
-                      a mouse it hid the only way to remove anything behind a
-                      gesture nobody is told about. Muted colours keep the card
-                      calm without hiding what it can do. */}
-                  <div className="flex items-center gap-1 shrink-0">
-                    {row.kind === "FILE" && row.fileUrl && (
-                      <a
-                        href={row.fileUrl}
-                        target="_blank"
-                        rel="noreferrer"
-                        title="فتح"
-                        draggable={false}
-                        onClick={(e) => e.stopPropagation()}
-                        className="w-8 h-8 flex items-center justify-center rounded-lg text-slate-400 hover:text-primary hover:bg-primary/5"
-                      >
-                        <Download className="w-3.5 h-3.5" />
-                      </a>
-                    )}
+                    {/* مربّع التحديد ظاهر دائماً: على اللمس لا وجود لـCtrl ولا
+                        Shift، فبدونه لا سبيل إلى تحديد أكثر من عنصر. */}
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
-                        setRenamingId(row.id);
-                        setRenameValue(row.name);
+                        handlePick({ shiftKey: e.shiftKey, ctrlKey: true, metaKey: false }, row.id);
                       }}
-                      title="إعادة تسمية"
-                      className="w-8 h-8 flex items-center justify-center rounded-lg text-slate-400 hover:text-primary hover:bg-primary/5"
+                      onDoubleClick={(e) => e.stopPropagation()}
+                      role="checkbox"
+                      aria-checked={isSelected}
+                      aria-label={isSelected ? `إلغاء تحديد ${row.name}` : `تحديد ${row.name}`}
+                      className={`shrink-0 w-5 h-5 rounded-md border flex items-center justify-center transition-colors ${
+                        isSelected
+                          ? "bg-primary border-primary text-white"
+                          : "border-slate-300 dark:border-slate-600 text-transparent hover:border-primary"
+                      }`}
                     >
-                      <Pencil className="w-3.5 h-3.5" />
+                      <Check className="w-3 h-3" />
                     </button>
-                    <button
-                      onClick={(e) => { e.stopPropagation(); setDeleting(row); }}
-                      title="حذف"
-                      className="w-8 h-8 flex items-center justify-center rounded-lg text-rose-400/70 dark:text-rose-400/60 hover:text-white hover:bg-rose-500 transition-colors"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
 
-          {band && (
-            <div
-              className="absolute z-20 pointer-events-none rounded-[2px] border border-primary/70 bg-primary/20"
-              style={{ left: band.left, top: band.top, width: band.width, height: band.height }}
-            />
+                    <button
+                      onClick={(e) => { e.stopPropagation(); handlePick(e, row.id); }}
+                      onDoubleClick={(e) => { e.stopPropagation(); openRow(row); }}
+                      // الأيقونة والاسم كلاهما يُشير إلى العنصر نفسه، فلا داعي
+                      // لموضعَي تبويب لشيء واحد.
+                      tabIndex={-1}
+                      aria-hidden
+                      className="shrink-0 w-10 h-10 rounded-lg bg-slate-50 dark:bg-[#111] flex items-center justify-center"
+                    >
+                      <Icon
+                        className={`w-5 h-5 ${row.kind === "FOLDER" ? "text-amber-500" : "text-primary dark:text-teal-300"}`}
+                      />
+                    </button>
+
+                    <div className="min-w-0 flex-1">
+                      {isRenaming ? (
+                        <input
+                          autoFocus
+                          value={renameValue}
+                          onClick={(e) => e.stopPropagation()}
+                          onDoubleClick={(e) => e.stopPropagation()}
+                          onChange={(e) => setRenameValue(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter") handleRename(row.id);
+                            if (e.key === "Escape") setRenamingId(null);
+                          }}
+                          onBlur={() => handleRename(row.id)}
+                          className="w-full h-8 px-2 rounded-lg bg-slate-50 dark:bg-slate-900 border border-primary text-sm outline-none"
+                        />
+                      ) : (
+                        <button
+                          onClick={(e) => { e.stopPropagation(); handlePick(e, row.id); }}
+                          onDoubleClick={(e) => { e.stopPropagation(); openRow(row); }}
+                          // لا نقرتين في لوحة المفاتيح: Enter هو «افتح» لمن
+                          // يتنقّل بالتبويب، وإلا صار الفتح حكراً على الفأرة.
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter") { e.preventDefault(); openRow(row); }
+                          }}
+                          className="block w-full text-right truncate text-sm font-bold text-slate-800 dark:text-slate-100 hover:text-primary"
+                          title={row.kind === "FOLDER" ? `${row.name} — نقرتان للدخول` : `${row.name} — نقرتان للفتح`}
+                        >
+                          {row.name}
+                        </button>
+                      )}
+                      <p className="text-[10px] text-slate-400 truncate mt-0.5">
+                        {row.kind === "FOLDER"
+                          ? `${row.childCount} عنصر`
+                          : row.fileSize
+                            ? formatBytes(row.fileSize)
+                            : "ملف"}
+                        {isSearchMode && row.parentName ? ` · في: ${row.parentName}` : ""}
+                        {row.createdByName ? ` · ${row.createdByName}` : ""}
+                      </p>
+                    </div>
+
+                    {/* Always visible.
+
+                        These were opacity-0 until hover, which is a desktop-mouse
+                        convention: on a phone or tablet there is no hover, so
+                        rename and delete could never be reached at all. Even with
+                        a mouse it hid the only way to remove anything behind a
+                        gesture nobody is told about. Muted colours keep the card
+                        calm without hiding what it can do. */}
+                    <div className="flex items-center gap-1 shrink-0" onDoubleClick={(e) => e.stopPropagation()}>
+                      {row.kind === "FILE" && row.fileUrl && (
+                        <a
+                          href={row.fileUrl}
+                          target="_blank"
+                          rel="noreferrer"
+                          title="فتح"
+                          draggable={false}
+                          onClick={(e) => e.stopPropagation()}
+                          className="w-8 h-8 flex items-center justify-center rounded-lg text-slate-400 hover:text-primary hover:bg-primary/5"
+                        >
+                          <Download className="w-3.5 h-3.5" />
+                        </a>
+                      )}
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setRenamingId(row.id);
+                          setRenameValue(row.name);
+                        }}
+                        title="إعادة تسمية"
+                        className="w-8 h-8 flex items-center justify-center rounded-lg text-slate-400 hover:text-primary hover:bg-primary/5"
+                      >
+                        <Pencil className="w-3.5 h-3.5" />
+                      </button>
+                      <button
+                        onClick={(e) => { e.stopPropagation(); setDeleting(row); }}
+                        title="حذف"
+                        className="w-8 h-8 flex items-center justify-center rounded-lg text-rose-400/70 dark:text-rose-400/60 hover:text-white hover:bg-rose-500 transition-colors"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
           )}
         </div>
-      )}
+
+        {band && (
+          <div
+            className="absolute z-20 pointer-events-none rounded-[2px] border border-primary/70 bg-primary/20"
+            style={{ left: band.left, top: band.top, width: band.width, height: band.height }}
+          />
+        )}
+      </div>
 
       {/* شارة السحب: كم يتحرّك وإلى أين يُفلَت. ظلّ المتصفح الافتراضي يُظهر
           البطاقة المسحوبة وحدها، فلا يُعرف من تحديدٍ نصفه خارج الشاشة كم

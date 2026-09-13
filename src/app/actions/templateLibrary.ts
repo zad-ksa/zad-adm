@@ -5,6 +5,7 @@ import { getSession } from "@/lib/auth";
 import { hasPermission } from "@/lib/permissions";
 import { revalidatePath } from "next/cache";
 import { v2 as cloudinary } from "cloudinary";
+import { randomUUID } from "crypto";
 
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
@@ -331,6 +332,12 @@ export async function renameTemplateNode(id: string, name: string) {
  * so every descendant file is collected first and its asset destroyed. The old
  * localStorage version skipped this entirely and left every uploaded file
  * stranded in storage forever.
+ *
+ * An asset is destroyed only when no row outside this delete still points at it.
+ * Copying a file shares its publicId rather than duplicating the bytes, so the
+ * unconditional destroy this function used to do would have emptied every other
+ * copy of a template the moment one of them was deleted — a row still listed,
+ * still clickable, and downloading nothing.
  */
 export async function deleteTemplateNode(id: string) {
   try {
@@ -342,14 +349,22 @@ export async function deleteTemplateNode(id: string) {
     });
     if (!node) return { error: "العنصر غير موجود" };
 
-    const files: { publicId: string | null; resourceType: string | null }[] =
-      node.kind === "FILE" ? [node] : await collectDescendantFiles(id);
+    const doomed =
+      node.kind === "FILE"
+        ? { files: [node], ids: [node.id] }
+        : await collectDescendants(id);
+    const doomedIds = [node.id, ...doomed.ids];
 
     // Best effort, and before the rows go: if a destroy fails we have still lost
     // nothing recoverable, whereas deleting the rows first would leave an asset
     // no record points at.
-    for (const f of files) {
+    for (const f of doomed.files) {
       if (!f.publicId) continue;
+      // نسخةٌ أخرى خارج المحذوف تشير إلى الأصل نفسه؟ إذن الأصل ليس لنا لنهلكه.
+      const others = await prisma.templateNode.count({
+        where: { publicId: f.publicId, id: { notIn: doomedIds } },
+      });
+      if (others > 0) continue;
       try {
         await cloudinary.uploader.destroy(f.publicId, { resource_type: f.resourceType || "raw" });
       } catch (err) {
@@ -366,9 +381,17 @@ export async function deleteTemplateNode(id: string) {
   }
 }
 
-/** Every file at any depth under a folder, found breadth-first. */
-async function collectDescendantFiles(rootId: string) {
+/**
+ * Everything under a folder, breadth-first: the files whose assets may need
+ * destroying, and every id in the subtree.
+ *
+ * The ids matter as much as the files now: whether an asset may be destroyed is
+ * decided by whether any row OUTSIDE this delete still points at it, and that
+ * question cannot be asked without knowing exactly which rows are going.
+ */
+async function collectDescendants(rootId: string) {
   const files: { publicId: string | null; resourceType: string | null }[] = [];
+  const ids: string[] = [];
   let frontier = [rootId];
 
   for (let depth = 0; frontier.length && depth < 50; depth++) {
@@ -379,12 +402,13 @@ async function collectDescendantFiles(rootId: string) {
     if (!children.length) break;
 
     for (const c of children) {
+      ids.push(c.id);
       if (c.kind === "FILE") files.push({ publicId: c.publicId, resourceType: c.resourceType });
     }
     frontier = children.filter((c) => c.kind === "FOLDER").map((c) => c.id);
   }
 
-  return files;
+  return { files, ids };
 }
 
 /**
@@ -513,5 +537,136 @@ export async function moveTemplateNodes(ids: string[], targetId: string | null) 
     };
   } catch (error) {
     return { error: error instanceof Error ? error.message : "تعذّر النقل" };
+  }
+}
+
+/** سقفٌ لعملية لصقٍ واحدة: مجلدٌ ضخم لا يُنسخ في معاملة واحدة بلا حدّ. */
+const COPY_MAX_NODES = 500;
+
+/**
+ * Copies things into a folder — the paste half of Ctrl+C.
+ *
+ * Two decisions carry this:
+ *
+ *   1. **The subtree is read whole before anything is written.** Copying a
+ *      folder into one of its own descendants is a legitimate thing to ask for,
+ *      and a copy that walked the tree as it wrote would find the rows it had
+ *      just created and copy those too, forever. A snapshot cannot grow while
+ *      it is being used, so the case needs no prohibition — unlike a move,
+ *      where the same shape genuinely severs the branch.
+ *   2. **A copied file shares its publicId; the bytes are not duplicated.** The
+ *      row is what the library shows, and the asset behind it is immutable —
+ *      nothing here ever edits a file in place, only replaces the row. Two rows
+ *      over one asset therefore cannot disagree, and the alternative would have
+ *      Cloudinary re-fetch and re-store every megabyte to produce a second copy
+ *      of bytes identical to the first. deleteTemplateNode is what makes this
+ *      safe: it destroys an asset only when no row outside the delete points at
+ *      it any more.
+ */
+export async function copyTemplateNodes(ids: string[], targetId: string | null) {
+  try {
+    const session = await requireLibraryAccess();
+
+    const unique = [...new Set(ids)].filter(Boolean);
+    if (!unique.length) return { success: true as const, copied: 0 };
+
+    if (targetId) {
+      const target = await prisma.templateNode.findUnique({
+        where: { id: targetId },
+        select: { kind: true },
+      });
+      if (!target) return { error: "المجلد المقصود غير موجود" };
+      if (target.kind !== "FOLDER") return { error: "لا يمكن النسخ داخل ملف" };
+    }
+
+    const pick = {
+      id: true,
+      name: true,
+      kind: true,
+      parentId: true,
+      fileUrl: true,
+      publicId: true,
+      resourceType: true,
+      fileSize: true,
+    } as const;
+
+    const roots = await prisma.templateNode.findMany({ where: { id: { in: unique } }, select: pick });
+    if (!roots.length) return { error: "العناصر غير موجودة" };
+
+    // ── اللقطة: مستوى بعد مستوى، ليُكتب الأب قبل ابنه لاحقاً ────────────────
+    const levels: (typeof roots)[] = [roots];
+    let total = roots.length;
+    let frontier = roots.filter((n) => n.kind === "FOLDER").map((n) => n.id);
+
+    for (let depth = 0; frontier.length && depth < 50; depth++) {
+      const children = await prisma.templateNode.findMany({
+        where: { parentId: { in: frontier } },
+        select: pick,
+      });
+      if (!children.length) break;
+      total += children.length;
+      if (total > COPY_MAX_NODES) {
+        return { error: `النسخة أكبر من أن تُنفَّذ دفعة واحدة (أكثر من ${COPY_MAX_NODES} عنصر)` };
+      }
+      levels.push(children);
+      frontier = children.filter((c) => c.kind === "FOLDER").map((c) => c.id);
+    }
+
+    // ── الأسماء في المقصد: الجذور وحدها هي التي تصطدم ───────────────────────
+    const siblings = await prisma.templateNode.findMany({
+      where: { parentId: targetId },
+      select: { name: true, kind: true },
+    });
+    const takenFolders = new Set(siblings.filter((s) => s.kind === "FOLDER").map((s) => s.name));
+    const takenFiles = new Set(siblings.filter((s) => s.kind === "FILE").map((s) => s.name));
+
+    // نسخةٌ باسم أصلها في المجلد نفسه لا تُميَّز عنه بشيء — ولذلك يُرقَّم
+    // الملف هنا أيضاً، وإن كان الرفع يسمح بتكرار أسماء الملفات.
+    const freeName = (name: string, kind: "FOLDER" | "FILE") => {
+      const taken = kind === "FOLDER" ? takenFolders : takenFiles;
+      let candidate = name;
+      for (let i = 2; taken.has(candidate) && i < 1000; i++) {
+        const suffix = ` (${i})`;
+        candidate = cleanName(name.slice(0, NAME_MAX - suffix.length) + suffix);
+      }
+      taken.add(candidate);
+      return candidate;
+    };
+
+    const rootIds = new Set(roots.map((n) => n.id));
+    const newIdOf = new Map<string, string>();
+    for (const level of levels) for (const n of level) newIdOf.set(n.id, randomUUID());
+
+    const plan = levels.map((level) =>
+      level.map((n) => ({
+        id: newIdOf.get(n.id)!,
+        name: rootIds.has(n.id) ? freeName(n.name, n.kind) : n.name,
+        kind: n.kind,
+        // الجذر يهبط في المقصد، وما دونه يتبع أباه المنسوخ.
+        parentId: rootIds.has(n.id) ? targetId : newIdOf.get(n.parentId!) ?? targetId,
+        fileUrl: n.fileUrl,
+        publicId: n.publicId,
+        resourceType: n.resourceType,
+        fileSize: n.fileSize,
+        createdById: session.id,
+      }))
+    );
+
+    await prisma.$transaction(
+      async (tx) => {
+        // مستوى بمستوى: المفتاح الأجنبي يُفحص عند كل صف، فالأب يجب أن يكون
+        // في الجدول قبل ابنه.
+        for (const level of plan) {
+          await tx.templateNode.createMany({ data: level });
+        }
+      },
+      { timeout: 20_000, maxWait: 15_000 }
+    );
+
+    revalidatePath("/main/template-library");
+    revalidatePath("/portal/[name]/templates", "page");
+    return { success: true as const, copied: total };
+  } catch (error) {
+    return { error: error instanceof Error ? error.message : "تعذّر النسخ" };
   }
 }

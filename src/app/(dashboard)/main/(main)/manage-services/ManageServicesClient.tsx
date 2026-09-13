@@ -3,17 +3,9 @@
 import { useState, useTransition, useMemo } from "react";
 import { Plus, Edit, Trash2, Layers, Search, CheckCircle2, AlertCircle, Building2, ChevronDown, ChevronUp, X, Check, ArrowRight } from "lucide-react";
 import { addServiceToCharities, renameServiceGlobally, deleteServiceGlobally } from "@/app/actions/services";
+import { setServiceEmployees } from "@/app/actions/serviceAccess";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-
-const DEPARTMENTS = [
-  { value: "", label: "لا يتبع لأي قسم (خدمة عامة)" },
-  { value: "STRATEGY", label: "الاستراتيجية" },
-  { value: "GOVERNANCE", label: "الحوكمة" },
-  { value: "FINANCE", label: "المالية" },
-  { value: "PROGRAMS", label: "البرامج والمشاريع" },
-  { value: "HR", label: "الموارد البشرية" }
-];
 
 type CharityItem = { id: string; name: string };
 
@@ -28,9 +20,13 @@ type ServiceGroup = {
 export default function ManageServicesClient({
   initialServices,
   charities,
+  employees,
+  accessMap,
 }: {
   initialServices: ServiceGroup[];
   charities: CharityItem[];
+  employees: { id: string; name: string }[];
+  accessMap: Record<string, string[]>;
 }) {
   const router = useRouter();
   const [services, setServices] = useState<ServiceGroup[]>(initialServices);
@@ -43,6 +39,8 @@ export default function ManageServicesClient({
   const [modalState, setModalState] = useState<{isOpen: boolean, mode: "add" | "edit", originalName: string | null}>({ isOpen: false, mode: "add", originalName: null });
   const [form, setForm] = useState({ name: "", department: "" });
   const [selectedCharityIds, setSelectedCharityIds] = useState<string[]>([]);
+  // من يصل إلى الخدمة المفتوحة للتعديل. فارغة = مفتوحة للجميع.
+  const [grantedIds, setGrantedIds] = useState<string[]>([]);
   
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
@@ -67,12 +65,14 @@ export default function ManageServicesClient({
 
   const openEdit = (svc: ServiceGroup) => {
     setForm({ name: svc.name, department: svc.department || "" });
+    setGrantedIds(accessMap[svc.name] ?? []);
     setModalState({ isOpen: true, mode: "edit", originalName: svc.name });
   };
 
   const closeModal = () => {
     setModalState({ isOpen: false, mode: "add", originalName: null });
     setSelectedCharityIds([]);
+    setGrantedIds([]);
   };
 
   const toggleCharity = (id: string) => {
@@ -96,6 +96,12 @@ export default function ManageServicesClient({
         if (modalState.mode === "edit" && modalState.originalName) {
           // تعديل الاسم عند كل الجمعيات
           await renameServiceGlobally(modalState.originalName, form.name, form.department || null);
+          // بعد إعادة التسمية، لأن المنح مفتاحه الاسم — والاسم قد تغيّر للتوّ.
+          const granted = await setServiceEmployees(form.name, grantedIds);
+          if (!granted.success) {
+            showNotification("error", granted.error);
+            return;
+          }
           setServices(prev => prev.map(s => 
             s.name === modalState.originalName 
               ? { ...s, name: form.name, department: form.department || null } 
@@ -271,7 +277,9 @@ export default function ManageServicesClient({
                   <div className="flex items-center justify-between gap-2 mb-2.5">
                     <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-extrabold ${activeColor.bg} ${activeColor.text}`}>
                       <span className={`w-1 h-1 rounded-full ${activeColor.dot}`} />
-                      {DEPARTMENTS.find(d => d.value === svc.department)?.label || "خدمة عامة"}
+                      {(accessMap[svc.name]?.length ?? 0) === 0
+                        ? "مفتوحة للجميع"
+                        : `${accessMap[svc.name].length} موظف مصرَّح`}
                     </span>
                     
                     {/* Action buttons */}
@@ -386,17 +394,43 @@ export default function ManageServicesClient({
                   />
                 </div>
 
-                <div>
-                  <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">القسم التابع له</label>
-                  <select
-                    value={form.department} onChange={e => setForm({...form, department: e.target.value})}
-                    className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all dark:text-white text-sm font-bold"
-                  >
-                    {DEPARTMENTS.map(d => (
-                       <option key={d.value} value={d.value}>{d.label}</option>
-                    ))}
-                  </select>
-                </div>
+                {/* كان هنا «القسم التابع له». حُذف لأنه لم يكن تصنيفاً: قيمته
+                    تُقارَن بدور الموظف (session.role === service.department) —
+                    أي صلاحية مقنّعة، وكانت null في الخدمات الاثنتين والسبعين
+                    كلها فلم تمنح أحداً شيئاً يوماً. مكانه الآن منحٌ صريح. */}
+                {modalState.mode === "edit" && (
+                  <div>
+                    <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">
+                      الموظفون الذين يصلون إلى هذه الخدمة
+                    </label>
+                    <div className="max-h-48 overflow-y-auto rounded-xl border border-slate-200 dark:border-slate-700 divide-y divide-slate-100 dark:divide-slate-700/60">
+                      {employees.length === 0 && (
+                        <p className="px-3 py-3 text-xs text-slate-400">لا موظفون نشطون.</p>
+                      )}
+                      {employees.map(emp => {
+                        const on = grantedIds.includes(emp.id);
+                        return (
+                          <button
+                            key={emp.id}
+                            type="button"
+                            onClick={() => setGrantedIds(prev => on ? prev.filter(x => x !== emp.id) : [...prev, emp.id])}
+                            className={`w-full px-3 py-2 flex items-center gap-2.5 text-right transition-colors ${on ? "bg-primary/5 dark:bg-primary/10" : "hover:bg-slate-50 dark:hover:bg-slate-700/40"}`}
+                          >
+                            <span className={`w-4 h-4 rounded border flex items-center justify-center shrink-0 ${on ? "bg-primary border-primary text-white" : "border-slate-300 dark:border-slate-600"}`}>
+                              {on && <Check className="w-3 h-3" />}
+                            </span>
+                            <span className="text-xs font-bold text-slate-700 dark:text-slate-200">{emp.name}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                    <p className="mt-2 text-[11px] text-slate-400 leading-relaxed">
+                      {grantedIds.length === 0
+                        ? "لم يُحدَّد أحد — الخدمة ظاهرة لكل من يملك «عرض الخدمات»، في حدود جمعياته المُسندة."
+                        : `مقصورة على ${grantedIds.length} موظفاً، كلٌّ في حدود جمعياته المُسندة.`}
+                    </p>
+                  </div>
+                )}
 
                 {/* Charity Selection — only for new services */}
                 {modalState.mode === "add" && (

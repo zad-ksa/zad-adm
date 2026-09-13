@@ -13,9 +13,10 @@ import {
   Phone,
   Key
 } from "@/components/Icons";
-import { Edit, ShieldCheck, Building2, UserPlus, ArrowRight, Trash2, Mail, CalendarDays } from "lucide-react";
+import { Edit, ShieldCheck, Building2, UserPlus, ArrowRight, Trash2, Mail, CalendarDays, Layers } from "lucide-react";
 import { AddEmployeeForm } from "@/components/AddEmployeeForm";
 import Link from "next/link";
+import { setEmployeeServices } from "@/app/actions/serviceAccess";
 import { PERMISSION_GROUPS, ALL_PERMISSIONS, IMPLIES, isAdmin } from "@/lib/permissions";
 
 interface RoleDefinition {
@@ -51,6 +52,8 @@ interface Employee {
   /// Days of annual leave this employee is entitled to; the attendance
   /// system spends this balance and nothing else does.
   annualLeaveDays?: number;
+  /// منح الوصول للخدمات. فارغة = بلا تقييد، يرى كل خدمات جمعياته.
+  serviceAccess?: { serviceName: string }[];
   isActive: boolean;
   createdAt: Date | string;
   assignedCharities?: { charityId: string }[];
@@ -61,11 +64,13 @@ export function EmployeesClient({
   session,
   allCharities = [],
   roles = [],
+  allServiceNames = [],
 }: {
   employees: Employee[];
   session: any;
   allCharities?: Charity[];
   roles?: RoleDefinition[];
+  allServiceNames?: string[];
 }) {
   const roleLabels = roles.reduce((acc, curr) => ({ ...acc, [curr.key]: curr.displayName }), {} as Record<string, string>);
   const [employees, setEmployees] = useState<Employee[]>(initialEmployees);
@@ -81,6 +86,8 @@ export function EmployeesClient({
   const [editPermissions, setEditPermissions] = useState<string[]>([]);
   const [editLeaveDays, setEditLeaveDays] = useState("21");
   const [editCharityIds, setEditCharityIds] = useState<string[]>([]);
+  // أسماء الخدمات المتاحة له. فارغة = بلا تقييد.
+  const [editServiceNames, setEditServiceNames] = useState<string[]>([]);
   const [modalError, setModalError] = useState<string | null>(null);
   const [modalSuccess, setModalSuccess] = useState<string | null>(null);
 
@@ -122,6 +129,7 @@ export function EmployeesClient({
     setEditEmail(emp.email || "");
     setEditLeaveDays(String(emp.annualLeaveDays ?? 21));
     setEditCharityIds(emp.assignedCharities?.map((c) => c.charityId) ?? []);
+    setEditServiceNames(emp.serviceAccess?.map((a) => a.serviceName) ?? []);
     setModalError(null);
     setModalSuccess(null);
   };
@@ -179,6 +187,14 @@ export function EmployeesClient({
         return;
       }
 
+      // جدول منفصل، وفعل منفصل — updateEmployee لا يعرف المنح ولا ينبغي أن
+      // يعرفه: نفس المنح يُحرَّر من صفحة إدارة الخدمات كذلك.
+      const svc = await setEmployeeServices(editingEmployee.id, editServiceNames);
+      if (!svc.success) {
+        setModalError(svc.error);
+        return;
+      }
+
       setModalSuccess(res.success || "تم تحديث البيانات بنجاح");
       setEmployees((prev) =>
         prev.map((emp) =>
@@ -192,6 +208,7 @@ export function EmployeesClient({
                 role: editRole,
                 permissions: editPermissions,
                 assignedCharities: editCharityIds.map((id) => ({ charityId: id })),
+                serviceAccess: editServiceNames.map((serviceName) => ({ serviceName })),
               }
             : emp
         )
@@ -683,6 +700,60 @@ export function EmployeesClient({
                       بدون تخصيص، لن يتمكن الموظف من الوصول إلى أي جمعية
                     </p>
                   )}
+                </div>
+              )}
+
+              {/* Service access — read together with the charities above,
+                  because what an employee sees is the two intersected. */}
+              {!isAdmin(editRole) && allServiceNames.length > 0 && (
+                <div className="pt-4 border-t border-slate-100 dark:border-slate-700">
+                  <div className="flex items-center gap-2 mb-3">
+                    <Layers className="w-4 h-4 text-slate-500 dark:text-slate-400" />
+                    <h4 className="text-sm font-bold text-slate-700 dark:text-slate-200">الخدمات المتاحة</h4>
+                    <span className="text-[11px] text-slate-400 dark:text-slate-500 font-medium mr-auto">
+                      {editServiceNames.length === 0
+                        ? "الكل"
+                        : `${editServiceNames.length} / ${allServiceNames.length}`}
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    {allServiceNames.map((name) => {
+                      const on = editServiceNames.includes(name);
+                      return (
+                        <button
+                          key={name}
+                          type="button"
+                          disabled={isPending}
+                          onClick={() =>
+                            setEditServiceNames((prev) =>
+                              on ? prev.filter((x) => x !== name) : [...prev, name]
+                            )
+                          }
+                          className={`flex items-center gap-3 p-2.5 rounded-xl border text-right transition-all ${
+                            on
+                              ? "border-primary bg-primary/5 dark:bg-primary/10 text-primary"
+                              : "border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700/50"
+                          }`}
+                        >
+                          <span
+                            className={`w-4 h-4 rounded border flex items-center justify-center shrink-0 ${
+                              on
+                                ? "bg-primary border-primary text-white"
+                                : "border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800"
+                            }`}
+                          >
+                            {on && <Check className="w-3 h-3" />}
+                          </span>
+                          <span className="text-xs font-bold">{name}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                  <p className="mt-2 text-[11px] text-slate-400 dark:text-slate-500 leading-relaxed">
+                    {editServiceNames.length === 0
+                      ? "بلا تحديد: يرى كل خدمات جمعياته أعلاه، ولا يعدّل مراحل خدمةٍ من داخل صفحة الجمعية."
+                      : "يرى الخدمات المحددة وحدها ويعدّل مراحلها، في حدود جمعياته أعلاه."}
+                  </p>
                 </div>
               )}
 

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { prisma } from "@/lib/db";
 import { getSession } from "@/lib/auth";
 import { isAdmin as checkIsAdmin, hasPermission } from "@/lib/permissions";
+import { getEmployeeServiceNames } from "@/app/actions/serviceAccess";
 import { Briefcase } from "lucide-react";
 import GenericStagesManager from "@/components/GenericStagesManager";
 import CharityClientTimeline from "@/components/CharityClientTimeline";
@@ -31,6 +32,17 @@ export default async function ServicesPage({ params }: { params: Promise<{ name:
 
   const session = await getSession();
   const isAdmin = checkIsAdmin(session?.role) || hasPermission(session?.role || "", session?.permissions || [], "manage_charity_settings");
+
+  // مسار الجمعية لا بوابة عليه: كل من سجّل الدخول يصل الصفحة. فالمنح هنا
+  // صريحٌ لا ضمني — عكس «عرض الخدمات» حيث غياب المنح يعني بلا تقييد، لأن
+  // ذاك التبويب محجوبٌ بصلاحية وبنطاق الجمعيات المسنَدة.
+  //
+  // وهذا يحفظ ما كان: الشرط القديم (session.role === service.department) كان
+  // ميتاً — department كانت null في الخدمات الاثنتين والسبعين كلها — فلم يرَ
+  // مُدير المراحل أحدٌ غير الإداري. يراه الآن الإداري ومن مُنِح الخدمة.
+  const allowedServiceNames = isAdmin || !session?.id
+    ? null
+    : (await getEmployeeServiceNames(session.id)) ?? [];
 
   const allServices = await prisma.service.findMany({
     where: { charityId: charity.id },
@@ -79,7 +91,7 @@ export default async function ServicesPage({ params }: { params: Promise<{ name:
 
       <ServiceAccordionProvider>
         {allServices.map(service => (
-          (isAdmin || session?.role === service.department) && (
+          (isAdmin || allowedServiceNames?.includes(service.name)) && (
              <GenericStagesManager 
                key={service.id}
                service={service}

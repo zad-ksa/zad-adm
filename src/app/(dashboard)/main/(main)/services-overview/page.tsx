@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { Metadata } from "next";
 import ServicesOverviewClient from "./ServicesOverviewClient";
 import { getAssignedCharityIds } from "@/lib/access";
+import { getEmployeeServiceNames } from "@/app/actions/serviceAccess";
 import { getTimelineConfigs } from "@/app/actions/settings";
 import { hasPermission, isAdmin as isUserAdmin } from "@/lib/permissions";
 
@@ -24,12 +25,15 @@ export default async function ServicesOverviewPage() {
 
   // The timeline labels have nothing to do with which charities this user may
   // see, so the two go out together instead of one after the other.
-  const [timelineNames, assignedIds] = await Promise.all([
+  const [timelineNames, assignedIds, allowedServiceNames] = await Promise.all([
     getTimelineConfigs().catch((e) => {
       console.error("[ServicesOverview] getTimelineConfigs error:", e);
       return {} as Record<string, string>;
     }),
     isAdmin ? Promise.resolve(null) : getAssignedCharityIds(session.id, role, session.permissions),
+    // null = بلا تقييد. الإداري لا يُقيَّد، ومن لا منحة له لا يُقيَّد أيضاً —
+    // التقييد يبدأ عند أول منحة، فإضافة الجدول لا تُفرغ صفحة أحد.
+    isAdmin ? Promise.resolve(null) : getEmployeeServiceNames(session.id),
   ]);
 
   const DEPT_LABELS: Record<string, string> = {
@@ -59,7 +63,10 @@ export default async function ServicesOverviewPage() {
       },
     }),
     prisma.service.findMany({
-      where: { ...serviceCharityFilter },
+      where: {
+        ...serviceCharityFilter,
+        ...(allowedServiceNames ? { name: { in: allowedServiceNames } } : {}),
+      },
       include: { stages: { orderBy: { order: "asc" }, include: { steps: { orderBy: { order: "asc" } } } } },
       orderBy: { charityId: "asc" },
     }),

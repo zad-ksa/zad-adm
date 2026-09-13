@@ -70,6 +70,7 @@ model Charity {
   regulationVisibilities CharityRegulationVisibility[]
   employees              Employee[]
   assignedEmployees      EmployeeCharity[]             @relation("AssignedEmployees")
+  serviceAccessGrants    EmployeeServiceAccess[]
   isReadinessVisible     Boolean                       @default(false)
   isVisionMissionVisible Boolean                       @default(false)
   isPerformanceEditable  Boolean                       @default(false)
@@ -375,6 +376,7 @@ model Employee {
   employeeAchievements    Achievement[]         @relation("EmployeeAchievements")
   createdAchievements     Achievement[]         @relation("CreatedAchievements")
   assignedCharities       EmployeeCharity[]     @relation("AssignedCharities")
+  serviceAccess           EmployeeServiceAccess[]
   appNotifications        AppNotification[]
   createdMeetings         Meeting[]             @relation("MeetingCreator")
   meetingTasksAssigned    MeetingTask[]         @relation("MeetingTaskAssignee")
@@ -395,6 +397,34 @@ model Employee {
   startedDesignRequests   DesignRequest[]       @relation("StartedDesignRequests")
   reviewedDesignRequests  DesignRequest[]       @relation("ReviewedDesignRequests")
   knowledgeNodes          KnowledgeNode[]       @relation("KnowledgeNodes")
+}
+
+/// من يرى أي خدمة في «عرض الخدمات».
+///
+/// المفتاح هو اسم الخدمة لا معرّف صفّها: الخدمة الواحدة في الواجهة مجموعة صفوف
+/// (صفٌّ لكل جمعية — تسعة أسماء × ثماني جمعيات اليوم)، ومعرّفات الصفوف تتغيّر
+/// عند التوحيد بشهادة تعليقات الكود نفسه. الاسم هو ما يجمع به كلا الجانبين.
+///
+/// وغياب أي صفّ لموظف يعني «بلا تقييد» — يرى كل خدمات جمعياته المُسندة. هذا هو
+/// نفس اصطلاح getAssignedCharityIds الذي يُرجع null بمعنى بلا تقييد، وهو ما
+/// يجعل إضافة هذا الجدول لا تكسر أحداً: التقييد يبدأ عند أول منحة.
+model EmployeeServiceAccess {
+  id          String   @id @default(uuid())
+  employeeId  String
+  employee    Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+
+  serviceName String
+
+  /// null = هذه الخدمة في كل جمعيات الموظف المُسندة، وهي الحالة الشائعة.
+  /// وقيمة = هذه الخدمة في هذه الجمعية وحدها — لمن أراد نطاقاً أضيق من إسناده.
+  charityId   String?
+  charity     Charity? @relation(fields: [charityId], references: [id], onDelete: Cascade)
+
+  grantedAt   DateTime @default(now())
+
+  @@unique([employeeId, serviceName, charityId])
+  @@index([employeeId])
+  @@index([serviceName])
 }
 
 model EmployeeCharity {

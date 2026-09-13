@@ -3,8 +3,8 @@ export const dynamic = "force-dynamic";
 import type { Metadata } from "next";
 import { FolderOpen } from "lucide-react";
 import { resolveCharityPortal } from "@/lib/portalAccess";
-import { listKnowledgeFolder } from "@/app/actions/knowledgeTree";
-import TemplatesLibraryClient from "./TemplatesLibraryClient";
+import { listTemplateFolder } from "@/app/actions/templateLibrary";
+import TemplateLibraryReaderClient from "./TemplateLibraryReaderClient";
 
 export const metadata: Metadata = { title: "مكتبة النماذج" };
 
@@ -18,7 +18,7 @@ export const metadata: Metadata = { title: "مكتبة النماذج" };
  * what.
  *
  * Read-only is enforced on the server, not by hiding buttons: the four
- * mutations in knowledgeTree.ts keep a guard that rejects every CHARITY_USER
+ * mutations in templateLibrary.ts keep a guard that rejects every CHARITY_USER
  * account outright, so there is no request this screen could be persuaded to
  * send that would change anything.
  */
@@ -30,7 +30,7 @@ export default async function TemplatesPage({
   const { name } = await params;
   await resolveCharityPortal(name);
 
-  const listing = await listKnowledgeFolder(null);
+  const listing = await listTemplateFolder(null);
 
   return (
     <div className="space-y-4" dir="rtl">
@@ -48,7 +48,7 @@ export default async function TemplatesPage({
         </div>
       </div>
 
-      <TemplatesLibraryClient
+      <TemplateLibraryReaderClient
         initialRows={listing.ok ? listing.rows : []}
         initialPath={listing.ok ? listing.path : []}
       />

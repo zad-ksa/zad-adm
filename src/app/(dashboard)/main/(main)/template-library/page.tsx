@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import { hasPermission } from "@/lib/permissions";
 import type { Metadata } from "next";
 import { FolderTree } from "lucide-react";
-import KnowledgeTreeClient from "./KnowledgeTreeClient";
+import TemplateLibraryClient from "./TemplateLibraryClient";
 
 export const metadata: Metadata = {
   title: "مكتبة النماذج | زاد التنموية",
@@ -11,7 +11,7 @@ export const metadata: Metadata = {
 
 export const dynamic = "force-dynamic";
 
-export default async function KnowledgeTreePage() {
+export default async function TemplateLibraryPage() {
   const session = await getSession();
 
   // Gated on the permission the sidebar uses, so the tab and the page can never
@@ -34,7 +34,7 @@ export default async function KnowledgeTreePage() {
         </div>
       </div>
 
-      <KnowledgeTreeClient />
+      <TemplateLibraryClient />
     </div>
   );
 }

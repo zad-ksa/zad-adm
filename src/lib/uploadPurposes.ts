@@ -52,7 +52,10 @@ export const UPLOAD_PURPOSES = {
   design_deliverable: { folder: "zad_design_requests", maxBytes: CLOUDINARY_MAX_BYTES },
   mail_attachment: { folder: "zad_mail_attachments", maxBytes: CLOUDINARY_MAX_BYTES },
   approval_attachment: { folder: "zad_approvals", maxBytes: CLOUDINARY_MAX_BYTES },
-  knowledge_file: { folder: "zad_knowledge_tree", maxBytes: CLOUDINARY_MAX_BYTES },
+  // اسم المجلد في Cloudinary بقي "zad_knowledge_tree" بعد أن صارت الميزة
+  // «مكتبة النماذج»: الروابط المحفوظة تحمل المجلد في متنها، فتغييره يفرّق
+  // ملفات المكتبة على مجلدين ولا يصلح القديم منها.
+  template_file: { folder: "zad_knowledge_tree", maxBytes: CLOUDINARY_MAX_BYTES },
   service_file: { folder: "zad_services", maxBytes: CLOUDINARY_MAX_BYTES },
   task_attachment: { folder: "zad_task_attachments", maxBytes: CLOUDINARY_MAX_BYTES },
   avatar: { folder: "zad_avatars", maxBytes: 5 * MB },

@@ -87,6 +87,13 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  // المسار القديم /main/knowledge-tree صار /main/template-library. من حفظ
+  // الرابط أو تركه في تبويب مفتوح يصل الصفحة بدل 404.
+  async redirects() {
+    return [
+      { source: "/main/knowledge-tree", destination: "/main/template-library", permanent: true },
+    ];
+  },
   async headers() {
     return [
       {

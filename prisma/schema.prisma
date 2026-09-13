@@ -396,7 +396,7 @@ model Employee {
   completedDesignRequests DesignRequest[]       @relation("CompletedDesignRequests")
   startedDesignRequests   DesignRequest[]       @relation("StartedDesignRequests")
   reviewedDesignRequests  DesignRequest[]       @relation("ReviewedDesignRequests")
-  knowledgeNodes          KnowledgeNode[]       @relation("KnowledgeNodes")
+  templateNodes           TemplateNode[]        @relation("TemplateNodes")
 }
 
 /// من يرى أي خدمة في «عرض الخدمات».
@@ -979,12 +979,17 @@ model MailAttachment {
   @@index([mailId])
 }
 
-enum KnowledgeNodeKind {
+/// اسم النوع في القاعدة بقي "KnowledgeNodeKind": إعادة تسمية نوع تعداد في
+/// Postgres عملية DDL على بيانات حيّة، ولا تشتري شيئاً — @@map يجعل الشيفرة
+/// تقرأ بالاسم الجديد والقاعدة تبقى كما هي.
+enum TemplateNodeKind {
   FOLDER
   FILE
+
+  @@map("KnowledgeNodeKind")
 }
 
-/// عقدة في «شجرة المعرف»: مجلد أو ملف.
+/// عقدة في «مكتبة النماذج»: مجلد أو ملف.
 ///
 /// شجرة واحدة عامة لموظفي زاد، غير تابعة لجمعية — الجذر هو الصفوف التي
 /// `parentId` فيها null، والتعشيش بلا حدّ تمامًا كمتصفح الملفات.
@@ -992,16 +997,16 @@ enum KnowledgeNodeKind {
 /// النسخة السابقة من هذه الفكرة كانت تحفظ في `localStorage`، فكانت المجلدات
 /// موجودة في متصفح من أنشأها وحده ولا يراها زملاؤه. الجدول هنا هو الفرق
 /// الجوهري بين الفكرتين، لا الواجهة.
-model KnowledgeNode {
-  id   String            @id @default(uuid())
+model TemplateNode {
+  id   String           @id @default(uuid())
   name String
-  kind KnowledgeNodeKind
+  kind TemplateNodeKind
 
   /// null للعقد في الجذر. الحذف متتالٍ: حذف مجلد يحذف ذريته كلها في
   /// قاعدة البيانات، ويبقى على الإجراء أن يزيل ملفاتها من Cloudinary قبل ذلك.
   parentId String?
-  parent   KnowledgeNode?  @relation("KnowledgeTree", fields: [parentId], references: [id], onDelete: Cascade)
-  children KnowledgeNode[] @relation("KnowledgeTree")
+  parent   TemplateNode?  @relation("TemplateLibrary", fields: [parentId], references: [id], onDelete: Cascade)
+  children TemplateNode[] @relation("TemplateLibrary")
 
   // ── حقول الملفات وحدها؛ كلها null للمجلد ──────────────────────────────
   fileUrl      String?
@@ -1012,12 +1017,15 @@ model KnowledgeNode {
   fileSize     Int?
 
   createdById String?
-  createdBy   Employee? @relation("KnowledgeNodes", fields: [createdById], references: [id], onDelete: SetNull)
+  createdBy   Employee? @relation("TemplateNodes", fields: [createdById], references: [id], onDelete: SetNull)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@index([parentId])
+  /// الجدول نفسه لم يُعَد تسميته — الاسم الجديد في الشيفرة وحدها، فلا هجرة
+  /// ولا لحظة يكون فيها الجدول باسمٍ والشيفرة المنشورة باسمٍ آخر.
+  @@map("KnowledgeNode")
 }
 
 // ── طلبات التصاميم ───────────────────────────────────────────────────────────

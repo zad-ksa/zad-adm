@@ -110,7 +110,7 @@ export default function EmployeeSidebar({
     else if (path.startsWith("/main/charities") || path.startsWith("/main/contracts") || path.startsWith("/main/custom-surveys") || path.startsWith("/main/communication") || path.startsWith("/main/charity-meetings") || path.startsWith("/main/design-requests")) newGroup = "الجمعيات";
     else if (path.startsWith("/main/approvals") || path.startsWith("/main/news") || path.startsWith("/main/meetings") || path.startsWith("/main/tasks") || path.startsWith("/main/mail") || path.startsWith("/main/attendance")) newGroup = "زاد";
     else if (path.startsWith("/main/admin") || path.startsWith("/main/workflow-settings") || path.startsWith("/main/landing-settings")) newGroup = "لوحة التحكم";
-    else if (path.startsWith("/main/services-overview") || path.startsWith("/main/knowledge-tree") || path.startsWith("/main/strategy") || path.startsWith("/main/governance") || path.startsWith("/main/finance") || path.startsWith("/main/resource-development") || path.startsWith("/main/programs")) {
+    else if (path.startsWith("/main/services-overview") || path.startsWith("/main/template-library") || path.startsWith("/main/strategy") || path.startsWith("/main/governance") || path.startsWith("/main/finance") || path.startsWith("/main/resource-development") || path.startsWith("/main/programs")) {
       newGroup = "الخدمات";
       const parts = path.split('/');
       if (parts.length >= 4) {
@@ -276,8 +276,8 @@ export default function EmployeeSidebar({
 
             const services = allServices.filter(svc => can(svc.required));
             const hasOverviewAccess = can("view_services_overview");
-            const hasKnowledgeTree = can("manage_knowledge_tree");
-            const hasServicesAccess = hasOverviewAccess || hasKnowledgeTree || can("manage_charities") || services.length > 0;
+            const hasTemplateLibrary = can("manage_knowledge_tree");
+            const hasServicesAccess = hasOverviewAccess || hasTemplateLibrary || can("manage_charities") || services.length > 0;
             
             if (!hasServicesAccess) return null;
 
@@ -307,11 +307,11 @@ export default function EmployeeSidebar({
                     </Link>
                   )}
 
-                  {isExpanded && hasKnowledgeTree && (
+                  {isExpanded && hasTemplateLibrary && (
                     <Link
-                      href="/main/knowledge-tree"
-                      onClick={() => handleLinkClick("/main/knowledge-tree")}
-                      className={`flex items-center w-full px-2.5 py-1.5 rounded-lg text-[11px] font-bold transition-all group mt-1 ${activePath === "/main/knowledge-tree" ? "bg-primary/10 text-primary" : "text-slate-500 hover:bg-primary/5 hover:text-primary"}`}
+                      href="/main/template-library"
+                      onClick={() => handleLinkClick("/main/template-library")}
+                      className={`flex items-center w-full px-2.5 py-1.5 rounded-lg text-[11px] font-bold transition-all group mt-1 ${activePath === "/main/template-library" ? "bg-primary/10 text-primary" : "text-slate-500 hover:bg-primary/5 hover:text-primary"}`}
                     >
                       <FolderTree className="w-3.5 h-3.5 ml-2" />
                       <span>مكتبة النماذج</span>

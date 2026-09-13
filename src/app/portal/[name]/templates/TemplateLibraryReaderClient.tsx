@@ -12,11 +12,11 @@ import {
   X,
 } from "lucide-react";
 import {
-  listKnowledgeFolder,
-  searchKnowledgeTree,
-  type KnowledgeNodeRow,
-  type KnowledgeSearchRow,
-} from "@/app/actions/knowledgeTree";
+  listTemplateFolder,
+  searchTemplateLibrary,
+  type TemplateNodeRow,
+  type TemplateSearchRow,
+} from "@/app/actions/templateLibrary";
 
 /**
  * The templates library, as a charity sees it: browse and download, nothing else.
@@ -38,20 +38,20 @@ const fmtSize = (bytes: number | null) => {
   return `${(bytes / 1048576).toFixed(1)} ميقا`;
 };
 
-export default function TemplatesLibraryClient({
+export default function TemplateLibraryReaderClient({
   initialRows,
   initialPath,
 }: {
-  initialRows: KnowledgeNodeRow[];
+  initialRows: TemplateNodeRow[];
   initialPath: Crumb[];
 }) {
-  const [rows, setRows] = useState<KnowledgeNodeRow[]>(initialRows);
+  const [rows, setRows] = useState<TemplateNodeRow[]>(initialRows);
   const [path, setPath] = useState<Crumb[]>(initialPath);
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
 
   const [query, setQuery] = useState("");
-  const [results, setResults] = useState<KnowledgeSearchRow[] | null>(null);
+  const [results, setResults] = useState<TemplateSearchRow[] | null>(null);
   const [searching, setSearching] = useState(false);
 
   const open = (id: string | null) => {
@@ -59,7 +59,7 @@ export default function TemplatesLibraryClient({
     setResults(null);
     setQuery("");
     startTransition(async () => {
-      const res = await listKnowledgeFolder(id);
+      const res = await listTemplateFolder(id);
       if (!res.ok) {
         setError(res.error);
         return;
@@ -80,7 +80,7 @@ export default function TemplatesLibraryClient({
     try {
       // Scoped to the folder in view: searching from inside a folder searches
       // that folder, which is what a person standing in it expects.
-      const res = await searchKnowledgeTree(path.at(-1)?.id ?? null, q);
+      const res = await searchTemplateLibrary(path.at(-1)?.id ?? null, q);
       if (!res.ok) {
         setError(res.error);
         return;
@@ -91,7 +91,7 @@ export default function TemplatesLibraryClient({
     }
   };
 
-  const shown: (KnowledgeNodeRow & { parentName?: string | null })[] = results ?? rows;
+  const shown: (TemplateNodeRow & { parentName?: string | null })[] = results ?? rows;
   const isSearch = results !== null;
 
   return (

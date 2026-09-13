@@ -208,7 +208,7 @@ export default function EmployeeLoginPage() {
   if (!isMounted) return null;
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col justify-center py-12 sm:px-6 lg:px-8 relative overflow-hidden font-sans transition-colors duration-300" dir="rtl">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex items-center justify-center px-4 py-6 relative overflow-hidden font-sans transition-colors duration-300" dir="rtl">
       {/* Theme Toggle */}
       <button
         onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
@@ -235,19 +235,19 @@ export default function EmployeeLoginPage() {
       <div className="absolute bottom-[0%] right-[10%] w-[70%] h-[70%] rounded-full bg-emerald-500/5 dark:bg-emerald-500/10 blur-[100px] mix-blend-multiply dark:mix-blend-screen pointer-events-none"></div>
       <div className="absolute top-[30%] right-[20%] w-[50%] h-[50%] rounded-full bg-indigo-500/5 dark:bg-indigo-500/10 blur-[80px] mix-blend-multiply dark:mix-blend-screen pointer-events-none" style={{ animationDuration: '10s' }}></div>
 
-      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-sm relative z-10 px-4 sm:px-0">
-        <div className="bg-white/70 dark:bg-white/10 backdrop-blur-2xl py-8 px-6 sm:px-8 shadow-2xl border border-slate-200 dark:border-white/20 sm:rounded-3xl relative overflow-hidden transition-colors duration-300">
-          
+      <div className="w-full max-w-sm relative z-10">
+        <div className="bg-white/70 dark:bg-white/10 backdrop-blur-2xl py-6 px-6 sm:px-7 shadow-2xl border border-slate-200 dark:border-white/20 rounded-3xl relative overflow-hidden transition-colors duration-300">
+
           {/* Inner Glow */}
           <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[200%] h-32 bg-white/50 dark:bg-white/10 blur-3xl pointer-events-none"></div>
 
           {/* Logo */}
-          <div className="flex justify-center mb-6 animate-fade-in-up">
-            <ZadLogo isOpen={true} className="h-12 w-auto drop-shadow-md dark:brightness-0 dark:invert transition-all" />
+          <div className="flex justify-center mb-4 animate-fade-in-up">
+            <ZadLogo isOpen={true} className="h-9 w-auto dark:brightness-0 dark:invert transition-all" />
           </div>
-          
-          <div className="mb-6 text-center animate-fade-in-up" style={{ animationDuration: '0.6s' }}>
-            <h1 className={`${cairo.className} text-xl font-black text-slate-900 dark:text-white tracking-tight mb-1.5 transition-colors`}>
+
+          <div className="mb-5 text-center animate-fade-in-up" style={{ animationDuration: '0.6s' }}>
+            <h1 className={`${cairo.className} text-lg font-black text-slate-900 dark:text-white tracking-tight mb-1 transition-colors`}>
               بوابة أعضاء زاد
             </h1>
             <p className="text-slate-600 dark:text-slate-300 font-medium text-[11px] leading-relaxed transition-colors">
@@ -256,7 +256,7 @@ export default function EmployeeLoginPage() {
           </div>
 
           {/* Which door — remembered per device, see useLoginMethod. */}
-          <div className="mb-6 grid grid-cols-2 gap-1 p-1 rounded-2xl bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10">
+          <div className="mb-5 grid grid-cols-2 gap-1 p-1 rounded-2xl bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10">
             {([
               { id: "email" as const, label: "البريد وكلمة المرور", icon: Mail },
               { id: "otp" as const, label: "الجوال ورمز التحقق", icon: Phone },
@@ -278,22 +278,22 @@ export default function EmployeeLoginPage() {
             ))}
           </div>
           {error && (
-            <div className="mb-6 p-4 rounded-xl bg-red-100 dark:bg-red-900/50 border border-red-200 dark:border-red-800/50 flex items-start gap-3 animate-fade-in backdrop-blur-sm">
-              <AlertCircle className="w-5 h-5 shrink-0 mt-0.5 text-red-600 dark:text-red-400" />
+            <div className="mb-4 p-3 rounded-xl bg-red-100 dark:bg-red-900/50 border border-red-200 dark:border-red-800/50 flex items-start gap-2.5 animate-fade-in backdrop-blur-sm">
+              <AlertCircle className="w-4.5 h-4.5 shrink-0 mt-0.5 text-red-600 dark:text-red-400" />
               <span className="text-sm font-bold text-red-800 dark:text-red-100">{error}</span>
             </div>
           )}
 
           {success && (
-            <div className="mb-6 p-4 rounded-xl bg-emerald-100 dark:bg-emerald-900/50 border border-emerald-200 dark:border-emerald-800/50 flex items-start gap-3 animate-fade-in backdrop-blur-sm">
-              <ShieldCheck className="w-5 h-5 shrink-0 mt-0.5 text-emerald-600 dark:text-emerald-400" />
+            <div className="mb-4 p-3 rounded-xl bg-emerald-100 dark:bg-emerald-900/50 border border-emerald-200 dark:border-emerald-800/50 flex items-start gap-2.5 animate-fade-in backdrop-blur-sm">
+              <ShieldCheck className="w-4.5 h-4.5 shrink-0 mt-0.5 text-emerald-600 dark:text-emerald-400" />
               <span className="text-sm font-bold text-emerald-800 dark:text-emerald-100">{success}</span>
             </div>
           )}
 
           {method === "email" ? (
-            <form onSubmit={handlePasswordLogin} className="space-y-4 animate-fade-in-up" style={{ animationDuration: "0.8s" }}>
-              <div className="space-y-2">
+            <form onSubmit={handlePasswordLogin} className="space-y-3.5 animate-fade-in-up" style={{ animationDuration: "0.8s" }}>
+              <div className="space-y-1.5">
                 <label className="block text-xs font-bold text-slate-700 dark:text-slate-200 transition-colors">
                   البريد الإلكتروني
                 </label>
@@ -303,12 +303,12 @@ export default function EmployeeLoginPage() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   dir="ltr"
-                  className="w-full h-12 px-3 bg-white dark:bg-white/5 border border-slate-300 dark:border-white/10 focus:border-primary focus:dark:border-primary/50 rounded-xl text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary/20 text-sm font-bold shadow-sm dark:shadow-inner backdrop-blur-sm transition-all text-left"
+                  className="w-full h-11 px-3 bg-white dark:bg-white/5 border border-slate-300 dark:border-white/10 focus:border-primary focus:dark:border-primary/50 rounded-xl text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary/20 text-sm font-bold shadow-sm dark:shadow-inner backdrop-blur-sm transition-all text-left"
                   placeholder="name@example.com"
                 />
               </div>
 
-              <div className="space-y-2">
+              <div className="space-y-1.5">
                 <label className="block text-xs font-bold text-slate-700 dark:text-slate-200 transition-colors">
                   كلمة المرور
                 </label>
@@ -319,7 +319,7 @@ export default function EmployeeLoginPage() {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     dir="ltr"
-                    className="w-full h-12 pl-11 pr-3 bg-white dark:bg-white/5 border border-slate-300 dark:border-white/10 focus:border-primary focus:dark:border-primary/50 rounded-xl text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary/20 text-sm font-bold shadow-sm dark:shadow-inner backdrop-blur-sm transition-all text-left"
+                    className="w-full h-11 pl-11 pr-3 bg-white dark:bg-white/5 border border-slate-300 dark:border-white/10 focus:border-primary focus:dark:border-primary/50 rounded-xl text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary/20 text-sm font-bold shadow-sm dark:shadow-inner backdrop-blur-sm transition-all text-left"
                     placeholder="••••••••"
                   />
                   <button
@@ -336,7 +336,7 @@ export default function EmployeeLoginPage() {
               <button
                 type="submit"
                 disabled={isPending}
-                className="w-full relative group overflow-hidden bg-primary text-white rounded-xl py-3 text-sm font-bold shadow-lg shadow-primary/20 hover:shadow-xl hover:shadow-primary/30 transition-all active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed disabled:active:scale-100 mt-6"
+                className="w-full relative group overflow-hidden bg-primary text-white rounded-xl py-2.5 text-sm font-bold shadow-lg shadow-primary/20 hover:shadow-xl hover:shadow-primary/30 transition-all active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed disabled:active:scale-100 mt-5"
               >
                 <div className="absolute inset-0 w-full h-full bg-white/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                 <div className="relative z-10 flex items-center justify-center gap-2">
@@ -367,13 +367,13 @@ export default function EmployeeLoginPage() {
               </p>
             </form>
           ) : step === 1 ? (
-            <form onSubmit={handleRequestOTP} className="space-y-5 animate-fade-in-up" style={{ animationDuration: '0.8s' }}>
-              <div className="space-y-2">
+            <form onSubmit={handleRequestOTP} className="space-y-4 animate-fade-in-up" style={{ animationDuration: '0.8s' }}>
+              <div className="space-y-1.5">
                 <label className="block text-xs font-bold text-slate-700 dark:text-slate-200 text-center transition-colors">
                   رقم الجوال
                 </label>
                 <div className="flex items-center justify-center gap-2 max-w-[320px] mx-auto" dir="ltr">
-                  <div className="flex items-center justify-center px-3 h-12 bg-white dark:bg-white/10 border border-slate-300 dark:border-white/20 rounded-xl text-slate-800 dark:text-white font-bold text-base shadow-sm dark:shadow-inner backdrop-blur-sm shrink-0 transition-colors">
+                  <div className="flex items-center justify-center px-3 h-11 bg-white dark:bg-white/10 border border-slate-300 dark:border-white/20 rounded-xl text-slate-800 dark:text-white font-bold text-base shadow-sm dark:shadow-inner backdrop-blur-sm shrink-0 transition-colors">
                     +966
                   </div>
                   <input
@@ -382,7 +382,7 @@ export default function EmployeeLoginPage() {
                     maxLength={9}
                     value={phone}
                     onChange={(e) => setPhone(e.target.value.replace(/\D/g, ''))}
-                    className="flex-1 h-12 text-left pl-3 pr-3 bg-white dark:bg-white/5 border border-slate-300 dark:border-white/10 focus:border-primary focus:dark:border-primary/50 focus:bg-white focus:dark:bg-white/10 rounded-xl text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary/20 text-lg font-bold shadow-sm dark:shadow-inner backdrop-blur-sm transition-all tracking-[0.2em]"
+                    className="flex-1 h-11 text-left pl-3 pr-3 bg-white dark:bg-white/5 border border-slate-300 dark:border-white/10 focus:border-primary focus:dark:border-primary/50 focus:bg-white focus:dark:bg-white/10 rounded-xl text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary/20 text-lg font-bold shadow-sm dark:shadow-inner backdrop-blur-sm transition-all tracking-[0.2em]"
                     placeholder="5XXXXXXXX"
                   />
                 </div>
@@ -391,7 +391,7 @@ export default function EmployeeLoginPage() {
               <button
                 type="submit"
                 disabled={isPending}
-                className="w-full relative group overflow-hidden bg-primary text-white rounded-xl py-3 text-sm font-bold shadow-lg shadow-primary/20 hover:shadow-xl hover:shadow-primary/30 transition-all active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed disabled:active:scale-100 mt-6 max-w-[320px] mx-auto block"
+                className="w-full relative group overflow-hidden bg-primary text-white rounded-xl py-2.5 text-sm font-bold shadow-lg shadow-primary/20 hover:shadow-xl hover:shadow-primary/30 transition-all active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed disabled:active:scale-100 mt-5 max-w-[320px] mx-auto block"
               >
                 <div className="absolute inset-0 w-full h-full bg-white/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                 
@@ -411,8 +411,8 @@ export default function EmployeeLoginPage() {
               </button>
             </form>
           ) : (
-            <form onSubmit={handleVerifyOTP} className="space-y-5 animate-fade-in-up" style={{ animationDuration: '0.8s' }}>
-              <div className="space-y-2">
+            <form onSubmit={handleVerifyOTP} className="space-y-4 animate-fade-in-up" style={{ animationDuration: '0.8s' }}>
+              <div className="space-y-1.5">
                 <label className="block text-xs font-bold text-slate-700 dark:text-slate-200 text-center transition-colors">
                   رمز التحقق (OTP)
                 </label>
@@ -429,16 +429,16 @@ export default function EmployeeLoginPage() {
                       value={digit}
                       onChange={(e) => handleOtpChange(index, e.target.value)}
                       onKeyDown={(e) => handleOtpKeyDown(index, e)}
-                      className="w-14 h-14 text-center bg-white dark:bg-white/5 border border-slate-300 dark:border-white/10 focus:border-primary focus:dark:border-primary/50 focus:bg-white focus:dark:bg-white/10 rounded-2xl text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary/20 text-2xl font-bold shadow-sm dark:shadow-inner backdrop-blur-sm transition-all"
+                      className="w-12 h-12 text-center bg-white dark:bg-white/5 border border-slate-300 dark:border-white/10 focus:border-primary focus:dark:border-primary/50 focus:bg-white focus:dark:bg-white/10 rounded-2xl text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary/20 text-2xl font-bold shadow-sm dark:shadow-inner backdrop-blur-sm transition-all"
                     />
                   ))}
                 </div>
 
-                <div className="mt-5 flex flex-col items-center justify-center gap-2 animate-fade-in">
+                <div className="mt-4 flex flex-col items-center justify-center gap-2 animate-fade-in">
                   <div className="text-xl font-bold text-slate-800 dark:text-slate-200 tracking-wider font-mono bg-slate-100 dark:bg-white/5 px-3 py-1.5 rounded-xl shadow-inner border border-slate-200 dark:border-white/10">
                     {formatTime(validityTime)}
                   </div>
-                  <div className="text-center mt-2">
+                  <div className="text-center mt-1.5">
                     <p className="text-[11px] font-bold text-slate-500 dark:text-slate-400 transition-colors mb-1.5">لم يصل الرمز؟</p>
                     <button
                       type="button"
@@ -452,19 +452,19 @@ export default function EmployeeLoginPage() {
                 </div>
               </div>
 
-              <div className="flex gap-2.5 mt-6 max-w-[320px] mx-auto">
+              <div className="flex gap-2.5 mt-5 max-w-[320px] mx-auto">
                 <button
                   type="button"
                   disabled={isPending}
                   onClick={() => { setStep(1); setOtpDigits(Array(4).fill("")); setSuccess(null); setError(null); }}
-                  className="w-1/3 flex items-center justify-center py-3 rounded-xl text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 border border-slate-200 dark:border-white/10 font-bold text-sm transition-all disabled:opacity-50"
+                  className="w-1/3 flex items-center justify-center py-2.5 rounded-xl text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 border border-slate-200 dark:border-white/10 font-bold text-sm transition-all disabled:opacity-50"
                 >
                   رجوع
                 </button>
                 <button
                   type="submit"
                   disabled={isPending}
-                  className="w-2/3 relative group overflow-hidden bg-primary text-white rounded-xl py-3 text-sm font-bold shadow-lg shadow-primary/20 hover:shadow-xl hover:shadow-primary/30 transition-all active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed disabled:active:scale-100"
+                  className="w-2/3 relative group overflow-hidden bg-primary text-white rounded-xl py-2.5 text-sm font-bold shadow-lg shadow-primary/20 hover:shadow-xl hover:shadow-primary/30 transition-all active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed disabled:active:scale-100"
                 >
                   <div className="absolute inset-0 w-full h-full bg-white/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                   
@@ -486,19 +486,19 @@ export default function EmployeeLoginPage() {
             </form>
           )}
 
-          <div className="mt-8 pt-6 border-t border-slate-200 dark:border-white/10 text-center animate-fade-in-up transition-colors" style={{ animationDuration: '1s' }}>
-            <p className="text-sm font-bold text-slate-600 dark:text-slate-400 mb-4 transition-colors">
+          <div className="mt-6 pt-5 border-t border-slate-200 dark:border-white/10 text-center animate-fade-in-up transition-colors" style={{ animationDuration: '1s' }}>
+            <p className="text-sm font-bold text-slate-600 dark:text-slate-400 mb-3 transition-colors">
               هل أنت ممثل لجمعية؟
             </p>
-            <Link 
+            <Link
               href="/charity-login"
-              className="inline-flex items-center justify-center w-full py-3.5 px-4 rounded-xl text-sm font-bold text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 border border-slate-200 dark:border-white/10 transition-all shadow-sm disabled:opacity-50"
+              className="inline-flex items-center justify-center w-full py-3 px-4 rounded-xl text-sm font-bold text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 border border-slate-200 dark:border-white/10 transition-all shadow-sm disabled:opacity-50"
             >
               الدخول إلى بوابة الجمعيات
             </Link>
             <Link
               href="/privacy-policy/employees"
-              className="inline-flex items-center justify-center gap-1.5 mt-4 text-xs font-medium text-slate-400 dark:text-slate-500 hover:text-primary dark:hover:text-primary transition-colors"
+              className="inline-flex items-center justify-center gap-1.5 mt-3 text-xs font-medium text-slate-400 dark:text-slate-500 hover:text-primary dark:hover:text-primary transition-colors"
             >
               <ShieldCheck className="w-3.5 h-3.5" />
               سياسة الخصوصية

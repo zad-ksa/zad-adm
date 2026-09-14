@@ -4,7 +4,7 @@ import { prisma } from "@/lib/db";
 import { encrypt, SESSION_MAX_AGE_SECONDS } from "@/lib/auth";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import { sendAuthenticaOTP, verifyAuthenticaOTP, authenticaFailureReason } from "@/lib/authentica";
+import { sendAuthenticaOTP, verifyAuthenticaOTP } from "@/lib/authentica";
 import { checkRateLimit, peekRateLimit, recordFailure, clearRateLimit } from "@/lib/rateLimit";
 import { verifyPassword, normalizeEmail } from "@/lib/password";
 import { logAudit } from "@/lib/auditLog";
@@ -49,20 +49,6 @@ export async function requestEmployeeOTP(phone: string) {
 
     const authenticaResult = await sendAuthenticaOTP(phone);
     if (authenticaResult.error) {
-      // خطوة الإرسال لم تكن تُسجَّل، فحين فشلت لماهر المحمادي لم يبقَ في
-      // المنصة أثرٌ واحد يقول لماذا. الآن يُحفظ رمز المزوّد ونصّه الخام.
-      await logAudit({
-        actorType: "EMPLOYEE",
-        actorId: employee.id,
-        actorName: employee.name,
-        action: "OTP_SEND_FAILED",
-        metadata: {
-          phone,
-          reason: authenticaFailureReason(authenticaResult.status),
-          status: authenticaResult.status,
-          providerMessage: authenticaResult.providerMessage,
-        },
-      });
       return { error: authenticaResult.error };
     }
 
@@ -92,17 +78,7 @@ export async function verifyEmployeeOTP(phone: string, otp: string) {
       const authenticaResult = await verifyAuthenticaOTP(phone, otp);
       if (authenticaResult.error) {
         recordFailure(verifyKey, OTP_VERIFY_LIMIT.windowMs);
-        // كل فشلٍ هنا كان «invalid_otp» حتى لو كان المزوّد هو المنهار.
-        await logAudit({
-          actorType: "EMPLOYEE",
-          action: "LOGIN_FAILED",
-          metadata: {
-            phone,
-            reason: authenticaFailureReason(authenticaResult.status),
-            status: authenticaResult.status,
-            providerMessage: authenticaResult.providerMessage,
-          },
-        });
+        await logAudit({ actorType: "EMPLOYEE", action: "LOGIN_FAILED", metadata: { phone, reason: "invalid_otp" } });
         return { error: authenticaResult.error };
       }
     }

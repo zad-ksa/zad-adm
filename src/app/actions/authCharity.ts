@@ -4,7 +4,7 @@ import { prisma } from "@/lib/db";
 import { encrypt, SESSION_MAX_AGE_SECONDS } from "@/lib/auth";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import { sendAuthenticaOTP, verifyAuthenticaOTP } from "@/lib/authentica";
+import { sendAuthenticaOTP, verifyAuthenticaOTP, authenticaFailureReason } from "@/lib/authentica";
 import { checkRateLimit, peekRateLimit, recordFailure, clearRateLimit } from "@/lib/rateLimit";
 import { verifyPassword, normalizeEmail } from "@/lib/password";
 import { logAudit } from "@/lib/auditLog";
@@ -126,6 +126,19 @@ export async function requestCharityOTP(phone: string) {
     // Call Authentica to send OTP for normal users
     const authenticaResult = await sendAuthenticaOTP(phone);
     if (authenticaResult.error) {
+      // الإرسال لم يكن يُسجَّل؛ الآن يُحفظ رمز المزوّد ونصّه الخام.
+      await logAudit({
+        actorType: "CHARITY_USER",
+        actorId: user?.id ?? null,
+        actorName: user?.name ?? null,
+        action: "OTP_SEND_FAILED",
+        metadata: {
+          phone: cleanPhone,
+          reason: authenticaFailureReason(authenticaResult.status),
+          status: authenticaResult.status,
+          providerMessage: authenticaResult.providerMessage,
+        },
+      });
       return { error: authenticaResult.error };
     }
 
@@ -167,7 +180,17 @@ export async function verifyCharityOTP(phone: string, otp: string) {
       const authenticaResult = await verifyAuthenticaOTP(phone, otp);
       if (authenticaResult.error) {
         recordFailure(verifyKey, OTP_VERIFY_LIMIT.windowMs);
-        await logAudit({ actorType: "CHARITY_USER", action: "LOGIN_FAILED", metadata: { phone: cleanPhone, reason: "invalid_otp" } });
+        // كل فشلٍ هنا كان «invalid_otp» حتى لو كان المزوّد هو المنهار.
+        await logAudit({
+          actorType: "CHARITY_USER",
+          action: "LOGIN_FAILED",
+          metadata: {
+            phone: cleanPhone,
+            reason: authenticaFailureReason(authenticaResult.status),
+            status: authenticaResult.status,
+            providerMessage: authenticaResult.providerMessage,
+          },
+        });
         return { error: authenticaResult.error };
       }
     }

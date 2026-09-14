@@ -3,8 +3,9 @@
 import { prisma } from "@/lib/db";
 import { revalidatePath } from "next/cache";
 import { getSession } from "@/lib/auth";
-import { assertCharityAccess } from "@/lib/access";
+import { assertCharityAccess, getAssignedCharityIds } from "@/lib/access";
 import { hasPermission, isAdmin } from "@/lib/permissions";
+import { getEmployeeServiceNames } from "@/app/actions/serviceAccess";
 
 export async function getAllServiceTemplates() {
   const session = await getSession();
@@ -1008,26 +1009,58 @@ export async function broadcastGanttWeek(
   return { success: true };
 }
 
-export async function toggleServiceComingSoon(name: string, department: string | null, isComingSoon: boolean) {
+/**
+ * «قريباً» تتبع منح الخدمة، لا manage_services.
+ *
+ * من مُنح خدمةً يعدّلها ويعدّل مراحلها ويجعلها «قريباً» — في جمعياته المسنَدة
+ * وحدها. كانت محروسةً بـmanage_services على الخادم وبالإداري وحده في الواجهة،
+ * فلم يكن يصلها حاملُ أيٍّ منهما من الواجهة إلا الإداري.
+ *
+ * يُرجع نطاق الجمعيات التي يجوز فيها التغيير (null = كلها، للإداري والمطوّر)،
+ * أو null إن لم يَجُز أصلاً. ومن لا منح له لا يجوز له — وإن كان «بلا تقييد» في
+ * العرض: غياب المنح يوسّع ما يُرى ولا يفتح ما يُعدَّل، كما في صفحة الجمعية.
+ */
+async function comingSoonScope(serviceName: string): Promise<{ charityIds: string[] | null } | null> {
   const session = await getSession();
-  if (!session) throw new Error("UNAUTHORIZED");
-  if (!isAdmin(session.role) && !hasPermission(session.role, session.permissions || [], "manage_services")) {
-    throw new Error("UNAUTHORIZED");
-  }
+  if (!session || session.userType === "CHARITY_USER") return null;
+  const perms = session.permissions || [];
+  if (isAdmin(session.role) || perms.includes("developer_mode")) return { charityIds: null };
 
-  await (prisma.service as any).updateMany({
-    where: { name, department: department || null },
+  const granted = await getEmployeeServiceNames(session.id);
+  if (!granted?.includes(serviceName)) return null;
+
+  return { charityIds: await getAssignedCharityIds(session.id, session.role, perms) };
+}
+
+export async function toggleServiceComingSoon(name: string, department: string | null, isComingSoon: boolean) {
+  const scope = await comingSoonScope(name);
+  if (!scope) throw new Error("UNAUTHORIZED");
+
+  // «لكل الجمعيات» تعني جمعياته هو لغير الإداري: الحصر في شرط التحديث نفسه،
+  // فلا تمتدّ حالةٌ غيّرها موظفٌ إلى جمعيةٍ لا وصول له إليها.
+  const result = await (prisma.service as any).updateMany({
+    where: {
+      name,
+      department: department || null,
+      ...(scope.charityIds ? { charityId: { in: scope.charityIds } } : {}),
+    },
     data: { isComingSoon }
   });
 
-  return { success: true };
+  return { success: true, updated: result.count };
 }
 
 export async function toggleServiceComingSoonSingle(serviceId: string, isComingSoon: boolean) {
-  const session = await getSession();
-  if (!session) throw new Error("UNAUTHORIZED");
-  if (!isAdmin(session.role) && !hasPermission(session.role, session.permissions || [], "manage_services")) {
-    throw new Error("UNAUTHORIZED");
+  const service = await prisma.service.findUnique({
+    where: { id: serviceId },
+    select: { name: true, charityId: true },
+  });
+  if (!service) throw new Error("NOT_FOUND");
+
+  const scope = await comingSoonScope(service.name);
+  if (!scope) throw new Error("UNAUTHORIZED");
+  if (scope.charityIds && !(service.charityId && scope.charityIds.includes(service.charityId))) {
+    throw new Error("FORBIDDEN");
   }
 
   await (prisma.service as any).update({

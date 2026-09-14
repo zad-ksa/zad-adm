@@ -1480,7 +1480,10 @@ export default function ServicesOverviewClient({
           </div>
 
           {/* Bottom Action Bar for Coming Soon status */}
-          {isAdmin && isGenericTab && genericSvcInfo && (
+          {/* يتبع canEdit — منح الخدمة النشطة — لا isAdmin: من مُنح الخدمة
+              يجعلها «قريباً» في جمعياته. وكان isAdmin هنا مدير النظام والمطوّر
+              وحدهما، فلم يصلها حاملُ manage_services وإن قبله الخادم. */}
+          {canEdit && isGenericTab && genericSvcInfo && (
             <div className="p-4 border-t border-slate-100 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-900/30 flex items-center justify-between flex-wrap gap-3 rounded-b-2xl">
               <div className="flex items-center gap-2.5">
                 <div className={`p-2 rounded-xl ${genericSvcInfo.isComingSoon ? "bg-amber-500/10 text-amber-500" : "bg-slate-200/60 dark:bg-slate-700 text-slate-500"}`}>
@@ -1507,7 +1510,7 @@ export default function ServicesOverviewClient({
       )}
 
       {/* Coming Soon Management Modal */}
-      {showComingSoonModal && isAdmin && isGenericTab && genericSvcInfo && (
+      {showComingSoonModal && canEdit && isGenericTab && genericSvcInfo && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={() => setShowComingSoonModal(false)}></div>
           <div className="relative bg-white dark:bg-slate-800 rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200 border border-slate-200 dark:border-slate-700" dir="rtl">
@@ -1534,8 +1537,8 @@ export default function ServicesOverviewClient({
               {/* Option 1: All Charities */}
               <div className="p-4 bg-slate-50 dark:bg-slate-900/50 rounded-xl border border-slate-200/80 dark:border-slate-700 space-y-3">
                 <div className="flex items-center justify-between">
-                  <span className="font-bold text-sm text-slate-800 dark:text-slate-200">التحكم الشامل (لكل الجمعيات)</span>
-                  <span className="text-xs px-2 py-0.5 bg-amber-500/10 text-amber-600 dark:text-amber-400 font-bold rounded-md">كل الجمعيات</span>
+                  <span className="font-bold text-sm text-slate-800 dark:text-slate-200">{isAdmin ? "التحكم الشامل (لكل الجمعيات)" : "التحكم الشامل (لجمعياتك)"}</span>
+                  <span className="text-xs px-2 py-0.5 bg-amber-500/10 text-amber-600 dark:text-amber-400 font-bold rounded-md">{isAdmin ? "كل الجمعيات" : "جمعياتك"}</span>
                 </div>
                 <p className="text-xs text-slate-500 dark:text-slate-400">
                   تطبيق أو إلغاء حالة "قريباً" على كافة الجمعيات التي تحتوي على هذه الخدمة بضغطة واحدة.
@@ -1547,7 +1550,7 @@ export default function ServicesOverviewClient({
                     className="flex-1 py-2 px-3 text-xs font-bold bg-amber-500 hover:bg-amber-600 text-white rounded-lg transition-colors flex items-center justify-center gap-1.5"
                   >
                     {isServiceNamePending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Clock className="w-3.5 h-3.5" />}
-                    تفعيل لجميع الجمعيات
+                    {isAdmin ? "تفعيل لجميع الجمعيات" : "تفعيل لجمعياتك"}
                   </button>
                   <button
                     disabled={isServiceNamePending}
@@ -1555,7 +1558,7 @@ export default function ServicesOverviewClient({
                     className="flex-1 py-2 px-3 text-xs font-bold bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 rounded-lg transition-colors flex items-center justify-center gap-1.5"
                   >
                     {isServiceNamePending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <X className="w-3.5 h-3.5" />}
-                    إلغاء من جميع الجمعيات
+                    {isAdmin ? "إلغاء من جميع الجمعيات" : "إلغاء من جمعياتك"}
                   </button>
                 </div>
               </div>

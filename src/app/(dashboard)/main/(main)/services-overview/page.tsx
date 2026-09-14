@@ -79,8 +79,12 @@ export default async function ServicesOverviewPage() {
     STRATEGY: isAdmin || hasPermission(session.role, session.permissions || [], "manage_strategy"),
     GOVERNANCE: isAdmin || hasPermission(session.role, session.permissions || [], "manage_governance"),
     FINANCE: isAdmin || hasPermission(session.role, session.permissions || [], "manage_finance"),
-    SERVICES: isAdmin || hasPermission(session.role, session.permissions || [], "manage_programs"),
   };
+
+  // تعديل الخدمات العامّة يتبع منح الخدمة نفسها، كما في صفحة الجمعية — لا
+  // صلاحيةً واحدة تفتح الخدمات كلها. null للإداري = كل الخدمات. ومن لا منح
+  // له لا يعدّل شيئاً (ولا يصل الصفحة أصلاً، فتبويبها يُستنتج من المنح).
+  const editableServiceNames: string[] | null = isAdmin ? null : allowedServiceNames ?? [];
 
   return (
     <ServicesOverviewClient
@@ -88,6 +92,7 @@ export default async function ServicesOverviewPage() {
       stagesData={data}
       isAdmin={isAdmin}
       editableTabs={editableTabs}
+      editableServiceNames={editableServiceNames}
       role={role}
       deptLabels={DEPT_LABELS}
       allowedCharityIds={assignedIds}

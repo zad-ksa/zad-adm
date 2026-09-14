@@ -1000,12 +1000,14 @@ ${body}</body></html>`;
 
 // ── Main Export ─────────────────────────────────────────────────────
 export default function ServicesOverviewClient({
-  charities, stagesData, isAdmin, editableTabs, role, deptLabels, allowedCharityIds,
+  charities, stagesData, isAdmin, editableTabs, editableServiceNames, role, deptLabels, allowedCharityIds,
 }: {
   charities: Charity[];
   stagesData: Record<string, any[]>;
   isAdmin: boolean;
   editableTabs: Record<string, boolean>;
+  /** الخدمات العامّة التي يعدّلها المستخدم. null = كلها (الإداري). */
+  editableServiceNames: string[] | null;
   role: string;
   deptLabels: Record<string, string>;
   allowedCharityIds: string[] | null;
@@ -1192,8 +1194,6 @@ export default function ServicesOverviewClient({
   const genericSvcId = isGenericTab ? activeTab.replace("SVC:", "") : null;
   const activeLabel = tabs.find(t => t.key === activeTab)?.label || "";
 
-  // Derive canEdit based on active tab
-  const canEdit = editableTabs[isGenericTab ? 'SERVICES' : activeTab] || false;
   // Look up by id first, fall back to matching by label (handles id drift after re-render)
   const genericSvcInfo = genericSvcId
     ? (uniqueServiceKeys.find(s => s.id === genericSvcId) ?? uniqueServiceKeys.find(s => s.name === activeLabel) ?? null)
@@ -1237,6 +1237,18 @@ export default function ServicesOverviewClient({
     const withIds = new Set(charitiesWithData.map(c => c.id));
     return charities.filter(c => !withIds.has(c.id));
   }, [charities, charitiesWithData]);
+
+  // بعد useMemo لا قبله: قراءة genericSvcInfo.name قبلها تجعل مُترجِم React
+  // يستنتج تبعيةً أدقّ من المُعلنة فيرفض الحفظ اليدوي.
+  //
+  // التبويب العام يُحكَم بالخدمة النشطة نفسها لا بمفتاحٍ واحد لكل الخدمات:
+  // من مُنح «التقنية» يعدّل «التقنية» ويشاهد غيرها. وهي القاعدة ذاتها في صفحة
+  // الجمعية، فلا تفترق الصفحتان مرّةً أخرى. والتبويبات المدمجة (الاستراتيجية
+  // والحوكمة والمالية) باقية على صلاحياتها.
+  const canEdit = isGenericTab
+    ? editableServiceNames === null ||
+      (!!genericSvcInfo && editableServiceNames.includes(genericSvcInfo.name))
+    : editableTabs[activeTab] || false;
 
   // Extra charities manually added to view (empty timeline)
   const [extraCharityIds, setExtraCharityIds] = useState<string[]>([]);

@@ -134,7 +134,7 @@ export async function requestCharityOTP(phone: string) {
         action: "OTP_SEND_FAILED",
         metadata: {
           phone: cleanPhone,
-          reason: authenticaFailureReason(authenticaResult.status),
+          reason: authenticaFailureReason(authenticaResult.status, "send"),
           status: authenticaResult.status,
           providerMessage: authenticaResult.providerMessage,
         },

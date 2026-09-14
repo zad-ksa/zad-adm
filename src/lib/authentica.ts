@@ -77,11 +77,12 @@ function userMessage(kind: Kind, status: number | null, providerMessage: string 
  * يفرّق بين ما يقع على المستخدم (رمزٌ خاطئ) وما يقع على المزوّد (عطلٌ أو
  * انقطاع) — وهو ما لم يكن السجلّ يفرّق بينه، فكان كل فشلٍ «invalid_otp».
  */
-export function authenticaFailureReason(status: number | null) {
+export function authenticaFailureReason(status: number | null, kind: Kind = "verify") {
   if (status === null) return "provider_unreachable";
   if (status >= 500) return "provider_error";
   if (status === 429) return "provider_rate_limited";
-  return "invalid_otp";
+  // 4xx عند الإرسال ليس رمزاً خاطئاً — لا رمز بعدُ — بل رقمٌ رفضه المزوّد.
+  return kind === "send" ? "provider_rejected" : "invalid_otp";
 }
 
 /**

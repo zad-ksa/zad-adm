@@ -58,7 +58,7 @@ export async function requestEmployeeOTP(phone: string) {
         action: "OTP_SEND_FAILED",
         metadata: {
           phone,
-          reason: authenticaFailureReason(authenticaResult.status),
+          reason: authenticaFailureReason(authenticaResult.status, "send"),
           status: authenticaResult.status,
           providerMessage: authenticaResult.providerMessage,
         },

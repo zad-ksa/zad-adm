@@ -4,7 +4,7 @@ import { prisma } from "@/lib/db";
 import { AddEmployeeForm } from "@/components/AddEmployeeForm";
 import { EmployeesClient } from "./EmployeesClient";
 import { Users } from "lucide-react";
-import { hasPermission } from "@/lib/permissions";
+import { hasPermission, sanitizePermissions } from "@/lib/permissions";
 
 export default async function EmployeesPage() {
   const session = await getSession();
@@ -28,10 +28,16 @@ export default async function EmployeesPage() {
     prisma.service.findMany({ select: { name: true }, distinct: ["name"], orderBy: { name: "asc" } }),
   ]);
 
+  // المصفوفات المخزّنة قد تحمل مُعرّفات متقاعدة إلى أن يُحفظ الموظف مرّةً
+  // أخرى — updateEmployee يُنقّيها عند الحفظ، لكن الصفوف التي لم تُحفظ بعد
+  // تبقى كما كانت. والتنقية هنا تجعل الشاشة كلها — الرقائق ونافذة التعديل —
+  // تعمل على ما يعني شيئاً اليوم، لا على أثرٍ من أمس.
+  const shown = employees.map((e) => ({ ...e, permissions: sanitizePermissions(e.permissions) }));
+
   return (
     <div dir="rtl">
       <EmployeesClient
-        employees={employees as any}
+        employees={shown as any}
         session={session}
         allCharities={allCharities}
         roles={roleDefinitions}

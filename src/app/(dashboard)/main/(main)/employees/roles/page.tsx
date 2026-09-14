@@ -2,7 +2,7 @@ import { getSession } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import RolesClient from "./RolesClient";
 import { prisma } from "@/lib/db";
-import { hasPermission, isAdmin } from "@/lib/permissions";
+import { hasPermission, isAdmin, sanitizePermissions } from "@/lib/permissions";
 
 export const dynamic = "force-dynamic";
 
@@ -40,6 +40,8 @@ export default async function RolesPage() {
   const countsByRole = Object.fromEntries(employeeCounts.map(c => [c.role, c._count.role]));
   const rolesWithCounts = roles.map(r => ({
     ...r,
+    // بلا تنقية يعدّ «٣ صلاحيات افتراضية» ومنها متقاعدةٌ لا تمنح شيئاً.
+    permissions: sanitizePermissions(r.permissions),
     employeeCount: countsByRole[r.key] || 0,
     bundleIds: r.bundles.map(b => b.bundleId),
   }));

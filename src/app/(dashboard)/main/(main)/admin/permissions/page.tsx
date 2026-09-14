@@ -4,7 +4,12 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/db";
-import { hasPermission, ALL_PERMISSION_IDS, DEFAULT_ROLE_LABELS } from "@/lib/permissions";
+import {
+  hasPermission,
+  ALL_PERMISSION_IDS,
+  DEFAULT_ROLE_LABELS,
+  sanitizePermissions,
+} from "@/lib/permissions";
 import PermissionsAdminClient from "./PermissionsAdminClient";
 
 export const metadata: Metadata = { title: "إدارة الصلاحيات | زاد التنموية" };
@@ -146,7 +151,8 @@ export default async function PermissionsAdminPage() {
           DEFAULT_ROLE_LABELS[e.role as keyof typeof DEFAULT_ROLE_LABELS] ??
           e.role,
         bundleIds: e.bundles.map((x) => x.bundleId),
-        directCount: e.permissions.length,
+        // المتقاعدات لا تُعَدّ: عددٌ يشملها يَعِد بأكثر مما يُمنح.
+        directCount: sanitizePermissions(e.permissions).length,
       }))}
       roles={roles.map((r) => ({
         id: r.id,

@@ -334,14 +334,18 @@ export function EmployeesClient({
                           جميع الصلاحيات (تلقائي)
                         </span>
                       ) : emp.permissions.length > 0 ? (
-                        emp.permissions.map(permId => {
-                          const label = ALL_PERMISSIONS.find(p => p.id === permId)?.label || permId;
-                          return (
-                            <span key={permId} className="inline-block text-[10px] font-bold text-indigo-700 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-900/30 px-2 py-0.5 rounded">
-                              {label}
+                        // مُعرّفٌ بلا وسم يُسقَط ولا يُطبع خاماً: كان السطر
+                        // يعرض «view_services_overview» بنصّه لأن البحث عن
+                        // وسمه يفشل — ومُعرّفٌ إنجليزيّ في شاشة موارد بشرية
+                        // ليس معلومةً لأحد.
+                        emp.permissions
+                          .map(permId => ALL_PERMISSIONS.find(p => p.id === permId))
+                          .filter((p): p is { id: string; label: string } => !!p)
+                          .map(perm => (
+                            <span key={perm.id} className="inline-block text-[10px] font-bold text-indigo-700 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-900/30 px-2 py-0.5 rounded">
+                              {perm.label}
                             </span>
-                          );
-                        })
+                          ))
                       ) : (
                         <span className="text-xs text-slate-400 dark:text-slate-500 font-medium">لا توجد صلاحيات مخصصة</span>
                       )}

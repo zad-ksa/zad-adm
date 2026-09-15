@@ -44,6 +44,26 @@ async function requireGrantAuthority() {
   return session;
 }
 
+/**
+ * المنح من جهة الموظف — نافذة تعديله في «إدارة الموظفين».
+ *
+ * بلا manage_services: حاملها لا يصل صفحة الموظفين أصلاً (بوّابتها
+ * manage_employees)، وليس من شأنه أن يصلها. يكفيه منح الخدمة للموظفين من
+ * جهة الخدمة في «إدارة الخدمات». وكان الحارس المشترك يقبلها هنا فيفتح الفعل
+ * لنداءٍ مباشر من خارج الصفحة.
+ */
+async function requireEmployeeGrantAuthority() {
+  const session = await getSession();
+  if (!session?.id || session.userType === "CHARITY_USER") throw new Error("غير مصرح");
+  const perms = session.permissions || [];
+  const allowed =
+    hasPermission(session.role, perms, "manage_employees") ||
+    hasPermission(session.role, perms, "manage_charities") ||
+    hasPermission(session.role, perms, "manage_permissions");
+  if (!allowed) throw new Error("غير مصرح لك بمنح الخدمات من إدارة الموظفين");
+  return session;
+}
+
 function fail(error: string) {
   return { success: false as const, error };
 }
@@ -164,7 +184,7 @@ export async function setServiceEmployees(serviceName: string, employeeIds: stri
 /** From the employee side: exactly these services are open to this employee. */
 export async function setEmployeeServices(employeeId: string, serviceNames: string[]) {
   try {
-    await requireGrantAuthority();
+    await requireEmployeeGrantAuthority();
 
     const employee = await prisma.employee.findUnique({
       where: { id: employeeId },

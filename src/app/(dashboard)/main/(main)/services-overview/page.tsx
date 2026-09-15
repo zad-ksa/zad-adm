@@ -86,6 +86,9 @@ export default async function ServicesOverviewPage() {
   // له لا يعدّل شيئاً (ولا يصل الصفحة أصلاً، فتبويبها يُستنتج من المنح).
   const editableServiceNames: string[] | null = isAdmin ? null : allowedServiceNames ?? [];
 
+  // «إدارة الخدمات» في «الكل»: إضافة خدمة (زرّ «+» بين التبويبات) وتعديل اسمها.
+  const canManageServices = hasPermission(session.role, session.permissions || [], "manage_services");
+
   return (
     <ServicesOverviewClient
       charities={charities}
@@ -93,6 +96,7 @@ export default async function ServicesOverviewPage() {
       isAdmin={isAdmin}
       editableTabs={editableTabs}
       editableServiceNames={editableServiceNames}
+      canManageServices={canManageServices}
       role={role}
       deptLabels={DEPT_LABELS}
       allowedCharityIds={assignedIds}

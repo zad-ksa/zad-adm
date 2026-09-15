@@ -13,7 +13,9 @@ export default async function CharityAccountsPage() {
   const can = (p: string) => hasPermission(role, perms, p);
 
   // Must have admin capabilities
-  if (!can("manage_charity_accounts") && !can("manage_employees") && !can("manage_services")) {
+  // manage_services نُزعت من هنا: صارت محصورةً في إضافة الخدمات وتسميتها
+  // وحذفها ومنحها، ولا صلة لها بحسابات الجمعيات.
+  if (!can("manage_charity_accounts") && !can("manage_employees")) {
     redirect("/main");
   }
 

@@ -92,19 +92,27 @@ export default function ManageServicesClient({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     startTransition(async () => {
+      // الاسم مقصوصاً، كما يحفظه الخادم — وإلا بحث منح الخدمة عن اسمٍ بفراغٍ
+      // لا وجود له.
+      const name = form.name.trim();
       try {
         if (modalState.mode === "edit" && modalState.originalName) {
           // تعديل الاسم عند كل الجمعيات
-          await renameServiceGlobally(modalState.originalName, form.name, form.department || null);
+          const renamed = await renameServiceGlobally(modalState.originalName, name, form.department || null);
+          // الاسم المأخوذ يُرجَع خطأً قيمةً — «توجد خدمة بهذا الاسم».
+          if (renamed?.error) {
+            showNotification("error", renamed.error);
+            return;
+          }
           // بعد إعادة التسمية، لأن المنح مفتاحه الاسم — والاسم قد تغيّر للتوّ.
-          const granted = await setServiceEmployees(form.name, grantedIds);
+          const granted = await setServiceEmployees(name, grantedIds);
           if (!granted.success) {
             showNotification("error", granted.error);
             return;
           }
           setServices(prev => prev.map(s => 
             s.name === modalState.originalName 
-              ? { ...s, name: form.name, department: form.department || null } 
+              ? { ...s, name, department: form.department || null } 
               : s
           ));
           showNotification("success", "تم تعديل الخدمة عند جميع الجمعيات بنجاح");
@@ -114,14 +122,18 @@ export default function ManageServicesClient({
             showNotification("error", "يرجى تحديد جمعية واحدة على الأقل");
             return;
           }
-          await addServiceToCharities(form.name, form.department || null, selectedCharityIds);
+          const added = await addServiceToCharities(name, form.department || null, selectedCharityIds);
+          if (added?.error) {
+            showNotification("error", added.error);
+            return;
+          }
           
           const newCharities = selectedCharityIds
             .map(cId => charities.find(c => c.id === cId))
             .filter(Boolean) as CharityItem[];
 
           setServices(prev => [{
-            name: form.name,
+            name,
             department: form.department || null,
             charityCount: selectedCharityIds.length,
             charities: newCharities,

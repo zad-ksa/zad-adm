@@ -22,15 +22,6 @@ type Service = {
   stages: ServiceStage[];
 };
 
-const DEPARTMENTS = [
-  { value: "", label: "لا يتبع لأي قسم" },
-  { value: "STRATEGY", label: "الاستراتيجية" },
-  { value: "GOVERNANCE", label: "الحوكمة" },
-  { value: "FINANCE", label: "المالية" },
-  { value: "PROGRAMS", label: "البرامج والمشاريع" },
-  { value: "HR", label: "الموارد البشرية" }
-];
-
 /**
  * لوحة صفحة الجمعية: زرّان لكلٍّ منهما حكمه، لا شرطٌ واحد لهما معاً.
  *
@@ -56,7 +47,8 @@ export default function ServicesManagerClient({
   // Modals state
   const [isServiceModalOpen, setIsServiceModalOpen] = useState(false);
   const [serviceName, setServiceName] = useState("");
-  const [serviceDepartment, setServiceDepartment] = useState("");
+  /** رفض الخادم للاسم («توجد خدمة بهذا الاسم») يُعرض تحت الحقل، لا في alert. */
+  const [serviceError, setServiceError] = useState<string | null>(null);
 
   const [isUnifyModalOpen, setIsUnifyModalOpen] = useState(false);
   const [selectedSource, setSelectedSource] = useState(unifiableServices[0]?.id ? `CUSTOM_${unifiableServices[0].id}` : "");
@@ -65,7 +57,7 @@ export default function ServicesManagerClient({
 
   const openAddService = () => {
     setServiceName("");
-    setServiceDepartment("");
+    setServiceError(null);
     setIsServiceModalOpen(true);
   };
 
@@ -73,7 +65,11 @@ export default function ServicesManagerClient({
     e.preventDefault();
     startTransition(async () => {
       try {
-        await createService(charityId, serviceName, serviceDepartment || null);
+        const res = await createService(charityId, serviceName.trim(), null);
+        if (res?.error) {
+          setServiceError(res.error);
+          return;
+        }
         setIsServiceModalOpen(false);
         router.refresh();
       } catch (error: any) {
@@ -150,25 +146,21 @@ export default function ServicesManagerClient({
                   type="text"
                   required
                   value={serviceName}
-                  onChange={e => setServiceName(e.target.value)}
-                  className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all dark:text-white text-sm"
+                  onChange={e => { setServiceName(e.target.value); setServiceError(null); }}
+                  aria-invalid={!!serviceError}
+                  className={`w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border rounded-xl focus:ring-2 outline-none transition-all dark:text-white text-sm ${
+                    serviceError
+                      ? "border-red-400 focus:ring-red-200 focus:border-red-400"
+                      : "border-slate-200 dark:border-slate-700 focus:ring-primary focus:border-primary"
+                  }`}
                   placeholder="مثال: خدمة الإسناد الإداري..."
                 />
-              </div>
-              <div>
-                <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">القسم التابع له</label>
-                <select
-                  value={serviceDepartment}
-                  onChange={e => setServiceDepartment(e.target.value)}
-                  className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all dark:text-white text-sm"
-                >
-                  {DEPARTMENTS.map(d => (
-                     <option key={d.value} value={d.value}>{d.label}</option>
-                  ))}
-                </select>
-                <p className="text-xs text-slate-500 mt-2">
-                  في حال اختيار قسم معين، ستظهر هذه الخدمة في أعلى صفحة القسم التابع له (بحد أقصى خدمة واحدة للقسم).
-                </p>
+                {serviceError && (
+                  <p className="mt-2 text-xs font-bold text-red-600 dark:text-red-400 flex items-center gap-1.5">
+                    <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                    {serviceError}
+                  </p>
+                )}
               </div>
               <div className="flex gap-3 pt-4 border-t border-slate-100 dark:border-slate-700">
                 <button

@@ -41,7 +41,8 @@ export default async function ServicesPage({ params }: { params: Promise<{ name:
   // مدير النظام: مراحل الخدمة وتعميمها يتبعان منحها وحده، وإضافة خدمةٍ جديدة
   // لـmanage_services.
   const grantedNames = session?.id ? (await getEmployeeServiceNames(session.id)) ?? [] : [];
-  const canAddService = hasPermission(session?.role || "", session?.permissions || [], "manage_services");
+  // «إدارة الخدمات»: إضافة خدمة، وتعديل اسمها، وحذفها من هذه الجمعية.
+  const canManageServices = hasPermission(session?.role || "", session?.permissions || [], "manage_services");
 
   const allServices = await prisma.service.findMany({
     where: { charityId: charity.id },
@@ -86,7 +87,7 @@ export default async function ServicesPage({ params }: { params: Promise<{ name:
       <ServicesManagerClient
         charityId={charity.id}
         unifiableServices={grantedServices}
-        canAddService={canAddService}
+        canAddService={canManageServices}
       />
 
       <ServiceAccordionProvider>
@@ -94,6 +95,7 @@ export default async function ServicesPage({ params }: { params: Promise<{ name:
           <GenericStagesManager
             key={service.id}
             service={service}
+            canManageService={canManageServices}
           />
         ))}
       </ServiceAccordionProvider>

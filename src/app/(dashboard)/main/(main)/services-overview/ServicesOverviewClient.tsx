@@ -29,7 +29,7 @@ import {
 import {
   setCurrentServiceStage, addServiceStage, updateServiceStage,
   deleteServiceStage, reorderServiceStages, unifyCharityStagesAction,
-  updateService, toggleActiveServiceStage, toggleCurrentServiceStage, toggleServiceComingSoon, toggleServiceComingSoonSingle
+  renameServiceGlobally, addServiceToCharities, toggleActiveServiceStage, toggleCurrentServiceStage, toggleServiceComingSoon, toggleServiceComingSoonSingle
 } from "@/app/actions/services";
 import {
   addStrategicStageStep, updateStrategicStageStep, deleteStrategicStageStep,
@@ -1000,7 +1000,7 @@ ${body}</body></html>`;
 
 // ── Main Export ─────────────────────────────────────────────────────
 export default function ServicesOverviewClient({
-  charities, stagesData, isAdmin, editableTabs, editableServiceNames, role, deptLabels, allowedCharityIds,
+  charities, stagesData, isAdmin, editableTabs, editableServiceNames, canManageServices, role, deptLabels, allowedCharityIds,
 }: {
   charities: Charity[];
   stagesData: Record<string, any[]>;
@@ -1008,6 +1008,8 @@ export default function ServicesOverviewClient({
   editableTabs: Record<string, boolean>;
   /** الخدمات العامّة التي يعدّلها المستخدم. null = كلها (الإداري). */
   editableServiceNames: string[] | null;
+  /** «إدارة الخدمات»: زرّ «+» للإضافة، وتعديل اسم الخدمة من تبويبها. */
+  canManageServices: boolean;
   role: string;
   deptLabels: Record<string, string>;
   allowedCharityIds: string[] | null;
@@ -1051,6 +1053,15 @@ export default function ServicesOverviewClient({
   const [editingServiceName, setEditingServiceName] = useState("");
   const [serviceNames, setServiceNames] = useState<Record<string, string>>({});
   const [isServiceNamePending, startServiceNameTransition] = useTransition();
+  /** رفض الخادم لاسمٍ عند التسمية («توجد خدمة بهذا الاسم»). */
+  const [serviceNameError, setServiceNameError] = useState<string | null>(null);
+
+  // إضافة خدمة من «الكل»
+  const [showAddService, setShowAddService] = useState(false);
+  const [newServiceName, setNewServiceName] = useState("");
+  const [newServiceCharityIds, setNewServiceCharityIds] = useState<string[]>([]);
+  const [addServiceError, setAddServiceError] = useState<string | null>(null);
+  const [isAddingService, startAddService] = useTransition();
 
   // Builtin tab name editing (STRATEGY/GOVERNANCE/FINANCE)
   const [editingBuiltinTab, setEditingBuiltinTab] = useState<string | null>(null);
@@ -1091,12 +1102,54 @@ export default function ServicesOverviewClient({
     setLogoError(null);
   };
 
-  const handleSaveServiceName = (svcId: string, dept: string | null) => {
-    if (!editingServiceName.trim()) return;
-    startServiceNameTransition(async () => {
-      setServiceNames(prev => ({ ...prev, [svcId]: editingServiceName.trim() }));
+  // كانت تستدعي updateService على صفّ الخدمة في جمعيةٍ واحدة، فتقسم الخدمة إلى
+  // اسمين (اسمٌ جديد في جمعية، والقديم في البقية) وتسقط منوحاتها — بلا فحص
+  // تكرار. الآن تسمّي الخدمة في كل الجمعيات معاً، والخادم يرفض الاسم المأخوذ.
+  const handleSaveServiceName = (svcId: string, dept: string | null, currentName: string) => {
+    const name = editingServiceName.trim();
+    if (!name) return;
+    if (name === currentName) {
       setEditingServiceId(null);
-      await updateService(svcId, editingServiceName.trim(), dept);
+      return;
+    }
+    setServiceNameError(null);
+    startServiceNameTransition(async () => {
+      const res = await renameServiceGlobally(currentName, name, dept);
+      if (res?.error) {
+        setServiceNameError(res.error);
+        return;
+      }
+      setServiceNames(prev => ({ ...prev, [svcId]: name }));
+      setEditingServiceId(null);
+      router.refresh();
+    });
+  };
+
+  const openAddService = () => {
+    setNewServiceName("");
+    // الجمعيات المعروضة في الصفحة — وهي لغير الإداري جمعياته المسنَدة.
+    setNewServiceCharityIds(charities.map(c => c.id));
+    setAddServiceError(null);
+    setShowAddService(true);
+  };
+
+  const handleAddService = (e: { preventDefault: () => void }) => {
+    e.preventDefault();
+    const name = newServiceName.trim();
+    if (!name) return;
+    if (newServiceCharityIds.length === 0) {
+      setAddServiceError("يرجى تحديد جمعية واحدة على الأقل");
+      return;
+    }
+    setAddServiceError(null);
+    startAddService(async () => {
+      const res = await addServiceToCharities(name, null, newServiceCharityIds);
+      if (res?.error) {
+        setAddServiceError(res.error);
+        return;
+      }
+      setShowAddService(false);
+      router.refresh();
     });
   };
 
@@ -1307,12 +1360,12 @@ export default function ServicesOverviewClient({
                         value={editingServiceName}
                         onChange={e => setEditingServiceName(e.target.value)}
                         onKeyDown={e => {
-                          if (e.key === "Enter") handleSaveServiceName(svcId!, svcInfo?.dept ?? null);
+                          if (e.key === "Enter") handleSaveServiceName(svcId!, svcInfo?.dept ?? null, displayName);
                           if (e.key === "Escape") setEditingServiceId(null);
                         }}
                         className="text-xs font-bold border border-primary/40 rounded px-2 py-1 outline-none focus:ring-1 focus:ring-primary/30 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 w-28"
                       />
-                      <button onClick={() => handleSaveServiceName(svcId!, svcInfo?.dept ?? null)} disabled={isServiceNamePending}
+                      <button onClick={() => handleSaveServiceName(svcId!, svcInfo?.dept ?? null, displayName)} disabled={isServiceNamePending}
                         className="p-1 text-primary hover:bg-primary/10 rounded">
                         {isServiceNamePending ? <Loader2 className="w-3 h-3 animate-spin" /> : <Save className="w-3 h-3" />}
                       </button>
@@ -1348,9 +1401,9 @@ export default function ServicesOverviewClient({
                         }`}>
                         {displayName}
                       </button>
-                      {isAdmin && isSvc && (
+                      {canManageServices && isSvc && (
                         <button
-                          onClick={() => { setEditingServiceId(svcId!); setEditingServiceName(displayName); }}
+                          onClick={() => { setEditingServiceId(svcId!); setEditingServiceName(displayName); setServiceNameError(null); }}
                           className="absolute -top-0.5 left-0 opacity-0 group-hover/tab:opacity-100 transition-opacity p-0.5 text-slate-400 hover:text-primary"
                           title="تعديل اسم الخدمة"
                         >
@@ -1371,7 +1424,27 @@ export default function ServicesOverviewClient({
                 </div>
               );
             })}
+            {canManageServices && (
+              <button
+                onClick={openAddService}
+                title="إضافة خدمة جديدة"
+                aria-label="إضافة خدمة جديدة"
+                className="px-3.5 py-3 shrink-0 flex items-center text-slate-400 hover:text-primary hover:bg-primary/5 border-b-2 border-transparent -mb-px transition-colors"
+              >
+                <Plus className="w-4 h-4" />
+              </button>
+            )}
           </div>
+
+          {serviceNameError && (
+            <div className="px-4 py-2 text-xs font-bold text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-950/20 border-b border-red-100 dark:border-red-900/30 flex items-center gap-1.5">
+              <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+              {serviceNameError}
+              <button onClick={() => setServiceNameError(null)} className="mr-auto p-0.5 text-red-400 hover:text-red-600" aria-label="إغلاق">
+                <X className="w-3 h-3" />
+              </button>
+            </div>
+          )}
 
           {/* Stats bar */}
           <div className="flex items-center justify-between gap-3 px-4 py-2.5 border-b border-slate-100 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-900/30">
@@ -1510,6 +1583,96 @@ export default function ServicesOverviewClient({
       )}
 
       {/* Coming Soon Management Modal */}
+      {showAddService && canManageServices && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" dir="rtl">
+          <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={() => setShowAddService(false)}></div>
+          <form
+            onSubmit={handleAddService}
+            className="relative bg-white dark:bg-slate-800 rounded-2xl w-full max-w-md shadow-2xl overflow-hidden border border-slate-200 dark:border-slate-700"
+          >
+            <div className="p-4 border-b border-slate-100 dark:border-slate-700">
+              <h2 className="text-base font-bold text-slate-800 dark:text-slate-100">إضافة خدمة جديدة</h2>
+            </div>
+            <div className="p-4 space-y-4">
+              <div>
+                <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">اسم الخدمة</label>
+                <input
+                  autoFocus
+                  type="text"
+                  value={newServiceName}
+                  onChange={e => { setNewServiceName(e.target.value); setAddServiceError(null); }}
+                  aria-invalid={!!addServiceError}
+                  placeholder="مثال: خدمة الإسناد الإداري..."
+                  className={`w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border rounded-xl focus:ring-2 outline-none transition-all dark:text-white text-sm ${
+                    addServiceError
+                      ? "border-red-400 focus:ring-red-200 focus:border-red-400"
+                      : "border-slate-200 dark:border-slate-700 focus:ring-primary focus:border-primary"
+                  }`}
+                />
+                {addServiceError && (
+                  <p className="mt-2 text-xs font-bold text-red-600 dark:text-red-400 flex items-center gap-1.5">
+                    <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                    {addServiceError}
+                  </p>
+                )}
+              </div>
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <label className="text-sm font-bold text-slate-700 dark:text-slate-300">
+                    الجمعيات <span className="text-xs font-medium text-slate-400">({newServiceCharityIds.length} من {charities.length})</span>
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => setNewServiceCharityIds(newServiceCharityIds.length === charities.length ? [] : charities.map(c => c.id))}
+                    className="text-[11px] font-bold text-primary hover:text-primary/80"
+                  >
+                    {newServiceCharityIds.length === charities.length ? "إلغاء الكل" : "تحديد الكل"}
+                  </button>
+                </div>
+                <div className="max-h-48 overflow-y-auto rounded-xl border border-slate-200 dark:border-slate-700 divide-y divide-slate-100 dark:divide-slate-700/60">
+                  {charities.map(c => {
+                    const on = newServiceCharityIds.includes(c.id);
+                    return (
+                      <button
+                        key={c.id}
+                        type="button"
+                        onClick={() => setNewServiceCharityIds(prev => on ? prev.filter(x => x !== c.id) : [...prev, c.id])}
+                        className={`w-full flex items-center gap-3 px-3 py-2 text-right text-xs font-bold transition-colors ${
+                          on ? "bg-primary/5 dark:bg-primary/10 text-primary" : "text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700/40"
+                        }`}
+                      >
+                        <span className={`w-4 h-4 rounded border flex items-center justify-center shrink-0 ${
+                          on ? "bg-primary border-primary text-white" : "border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800"
+                        }`}>
+                          {on && <Check className="w-3 h-3" />}
+                        </span>
+                        {c.name}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+            <div className="flex gap-3 p-4 border-t border-slate-100 dark:border-slate-700">
+              <button
+                type="submit"
+                disabled={isAddingService || !newServiceName.trim()}
+                className="flex-1 bg-primary hover:bg-primary/90 text-white py-2 rounded-xl font-bold transition-colors disabled:opacity-50 text-sm"
+              >
+                {isAddingService ? "جاري الحفظ..." : "إضافة"}
+              </button>
+              <button
+                type="button"
+                onClick={() => setShowAddService(false)}
+                className="flex-1 bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 py-2 rounded-xl font-bold transition-colors text-sm"
+              >
+                إلغاء
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
+
       {showComingSoonModal && canEdit && isGenericTab && genericSvcInfo && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={() => setShowComingSoonModal(false)}></div>

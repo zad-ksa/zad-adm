@@ -142,6 +142,32 @@ export async function getServicesForManagement() {
 }
 
 // إضافة خدمة جديدة لجمعيات محددة
+/** رسالة تعارض الاسم — واحدةٌ في مواضع الإضافة وإعادة التسمية كلها. */
+const DUPLICATE_SERVICE_NAME = "توجد خدمة بهذا الاسم";
+
+/**
+ * اسم الخدمة فريد: خدمةٌ واحدة لكل اسم، تتوزّع صفوفها على الجمعيات.
+ *
+ * لا يمكن فرضه قيداً فريداً في القاعدة، لأن صفوف الخدمة الواحدة تتشارك الاسم
+ * عمداً (اسمٌ واحد في ثماني جمعيات). فيُفرض هنا، عند كل إنشاءٍ وإعادة تسمية.
+ * والمقارنة بلا تمييزٍ لحالة الأحرف وبعد القصّ، وإلا مرّ «Technology» بجوار
+ * «technology» خدمتين يظنّهما الناس واحدة ولا يشملهما منحٌ واحد.
+ *
+ * exceptName: عند إعادة التسمية، الخدمة نفسها لا تعارض نفسها.
+ */
+async function serviceNameTaken(name: string, exceptName?: string) {
+  const found = await prisma.service.findFirst({
+    where: {
+      name: { equals: name, mode: "insensitive" },
+      ...(exceptName ? { NOT: { name: exceptName } } : {}),
+    },
+    select: { id: true },
+  });
+  return !!found;
+}
+
+// الأخطاء المتوقَّعة (اسمٌ مكرّر أو فارغ) تُرجَع قيمةً ولا تُرمى، كما يوصي
+// توثيق Next: الخطأ المرمي من فعل الخادم لا يُضمن وصول نصّه إلى المستخدم.
 export async function addServiceToCharities(name: string, department: string | null, charityIds: string[]) {
   const session = await getSession();
   if (!session) throw new Error("UNAUTHORIZED");
@@ -150,11 +176,15 @@ export async function addServiceToCharities(name: string, department: string | n
   }
 
   if (!charityIds || charityIds.length === 0) {
-    throw new Error("يرجى تحديد جمعية واحدة على الأقل");
+    return { error: "يرجى تحديد جمعية واحدة على الأقل" };
   }
 
+  const cleanName = (name || "").trim();
+  if (!cleanName) return { error: "اسم الخدمة مطلوب" };
+  if (await serviceNameTaken(cleanName)) return { error: DUPLICATE_SERVICE_NAME };
+
   const servicesToCreate = charityIds.map(cId => ({
-    name: name.trim(),
+    name: cleanName,
     department,
     charityId: cId,
   }));
@@ -173,9 +203,15 @@ export async function renameServiceGlobally(oldName: string, newName: string, ne
     throw new Error("UNAUTHORIZED");
   }
 
+  const cleanName = (newName || "").trim();
+  if (!cleanName) return { error: "اسم الخدمة مطلوب" };
+  // تسمية خدمةٍ باسم خدمةٍ أخرى كانت تدمجهما بصمت: تصير صفوفهما اسماً واحداً
+  // في «إدارة الخدمات»، ويسري منح إحداهما على الأخرى.
+  if (await serviceNameTaken(cleanName, oldName)) return { error: DUPLICATE_SERVICE_NAME };
+
   const result = await prisma.service.updateMany({
     where: { name: oldName },
-    data: { name: newName.trim(), department: newDepartment }
+    data: { name: cleanName, department: newDepartment }
   });
 
   revalidatePath('/main/manage-services');
@@ -263,6 +299,16 @@ export async function createService(charityId: string, name: string, department:
     throw new Error("غير مصرح لك بإضافة خدمة جديدة");
   }
   await assertCharityAccess(session.id, session.role, charityId);
+
+  // الخدمة تُجمَع في «إدارة الخدمات» ويُمنح الوصول إليها بالاسم حرفاً بحرف،
+  // فالاسم يُقصّ هنا كما يُقصّ في addServiceToCharities — وإلا صارت «الإدارية »
+  // بفراغٍ زائد خدمةً منفصلة لا تشملها منوحات «الإدارية».
+  name = (name || "").trim();
+  if (!name) return { error: "اسم الخدمة مطلوب" };
+
+  // الاسم فريد في النظام كله، لا في الجمعية وحدها: خدمةٌ بهذا الاسم في أي
+  // جمعية تُرفض إضافتها هنا، ويُخبَر الموظف.
+  if (await serviceNameTaken(name)) return { error: DUPLICATE_SERVICE_NAME };
   // Enforce max 1 timeline per department (unless no department)
   if (department && department !== "NONE") {
     const existingService = await prisma.service.findFirst({
@@ -287,15 +333,30 @@ export async function createService(charityId: string, name: string, department:
   if (service.department) {
     revalidatePath(`/portal/${encodeURIComponent(service.charity.name)}/${service.department.toLowerCase()}`);
   }
-  
-  return service;
+  // الخدمة الجديدة تظهر في «إدارة الخدمات» فوراً، لا بعد انقضاء ذاكرة التنقّل.
+  revalidatePath("/main/manage-services");
+  revalidatePath(`/main/services-overview/${encodeURIComponent(service.charity.name)}`);
+
+  return { success: true as const, id: service.id };
 }
 
 export async function updateService(id: string, name: string, department: string | null, isComingSoon?: boolean) {
   const session = await getSession();
   if (!session) throw new Error("UNAUTHORIZED");
-  const svc = await prisma.service.findUnique({ where: { id }, select: { charityId: true } });
+  // تعديل اسم الخدمة من أفعال «إدارة الخدمات» وحدها. كان حارسه الجمعية المسنَدة
+  // فقط، فكان كل من مُنح الخدمة يستطيع تسميتها في جمعيته — فتنقسم الخدمة إلى
+  // اسمين وتسقط منوحاتها. والواجهات صارت تسمّي عبر renameServiceGlobally؛ وهذا
+  // الحارس لمن ينادي الفعل مباشرةً.
+  if (!hasPermission(session.role, session.permissions || [], "manage_services")) {
+    throw new Error("غير مصرح لك بتعديل الخدمة");
+  }
+  const svc = await prisma.service.findUnique({ where: { id }, select: { charityId: true, name: true } });
   if (svc) await assertCharityAccess(session.id, session.role, svc.charityId);
+  name = (name || "").trim();
+  if (!name) throw new Error("اسم الخدمة مطلوب");
+  if (svc && name !== svc.name && (await serviceNameTaken(name, svc.name))) {
+    throw new Error(DUPLICATE_SERVICE_NAME);
+  }
   const dataToUpdate: any = { name, department };
   if (isComingSoon !== undefined) {
     dataToUpdate.isComingSoon = isComingSoon;
@@ -318,6 +379,11 @@ export async function updateService(id: string, name: string, department: string
 export async function deleteService(id: string) {
   const session = await getSession();
   if (!session) throw new Error("UNAUTHORIZED");
+  // حذف الخدمة من جمعيةٍ من أفعال «إدارة الخدمات» وحدها؛ كان حارسه الجمعية
+  // المسنَدة فقط، فكان يحذفها كلُّ من مُنحها.
+  if (!hasPermission(session.role, session.permissions || [], "manage_services")) {
+    throw new Error("غير مصرح لك بحذف الخدمة");
+  }
   const svc = await prisma.service.findUnique({ where: { id }, select: { charityId: true } });
   if (svc) await assertCharityAccess(session.id, session.role, svc.charityId);
   const service = await prisma.service.delete({

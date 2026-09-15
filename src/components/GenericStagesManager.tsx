@@ -5,7 +5,7 @@ import { Sparkles, Check, X, Edit2, Trash2, Plus, ArrowUp, ArrowDown, Loader2, S
 import { useRouter } from "next/navigation";
 import CharityClientTimeline from "@/components/CharityClientTimeline";
 import InteractiveTimelineEditor from "@/components/InteractiveTimelineEditor";
-import { addServiceStage, updateServiceStage, deleteServiceStage, setCurrentServiceStage, reorderServiceStages, updateService, deleteService, toggleActiveServiceStage } from "@/app/actions/services";
+import { addServiceStage, updateServiceStage, deleteServiceStage, setCurrentServiceStage, reorderServiceStages, renameServiceGlobally, deleteService, toggleActiveServiceStage } from "@/app/actions/services";
 import { addServiceStageStep, updateServiceStageStep, deleteServiceStageStep } from "@/app/actions/stageSteps";
 import { useServiceAccordion } from "@/components/ServiceAccordionContext";
 
@@ -33,10 +33,16 @@ type Service = {
   stages: ServiceStage[];
 };
 
-export default function GenericStagesManager({ 
-  service
-}: { 
-  service: Service
+export default function GenericStagesManager({
+  service,
+  canManageService = false,
+}: {
+  service: Service;
+  /**
+   * «إدارة الخدمات»: زرّ الإعدادات — تعديل اسم الخدمة وحذفها من هذه الجمعية.
+   * كان مرئياً لكل من يرى مُدير المراحل، أي لكل من مُنح الخدمة.
+   */
+  canManageService?: boolean;
 }) {
   const [stages, setStages] = useState<ServiceStage[]>(service.stages);
   const router = useRouter();
@@ -64,7 +70,8 @@ export default function GenericStagesManager({
 
   const [isEditingConfig, setIsEditingConfig] = useState(false);
   const [configName, setConfigName] = useState(service.name);
-  const [configDept, setConfigDept] = useState(service.department || "NONE");
+  /** رفض الخادم للاسم («توجد خدمة بهذا الاسم»). القسم أُزيل كما أُزيل من بقية الصفحات. */
+  const [configError, setConfigError] = useState<string | null>(null);
 
   // Sort locally by order
   const sortedStages = [...stages].sort((a, b) => a.order - b.order);
@@ -174,19 +181,33 @@ export default function GenericStagesManager({
     });
   };
 
+  // كانت updateService على صفّ هذه الجمعية وحده، فتقسم الخدمة إلى اسمين وتسقط
+  // منوحاتها. الآن تسمّي الخدمة في كل الجمعيات، والخادم يرفض الاسم المأخوذ.
   const handleConfigUpdate = () => {
-    if (!configName.trim()) return;
-    startTransition(async () => {
-      await updateService(service.id, configName, configDept === "NONE" ? null : configDept);
+    const name = configName.trim();
+    if (!name) return;
+    if (name === service.name) {
       setIsEditingConfig(false);
+      return;
+    }
+    setConfigError(null);
+    startTransition(async () => {
+      const res = await renameServiceGlobally(service.name, name, service.department ?? null);
+      if (res?.error) {
+        setConfigError(res.error);
+        return;
+      }
+      setIsEditingConfig(false);
+      router.refresh();
     });
   };
 
   const handleDeleteService = () => {
-    if (!confirm(`هل أنت متأكد من حذف المخطط الزمني "${configName}" وجميع مراحله؟ لا يمكن التراجع عن هذا الإجراء.`)) return;
+    if (!confirm(`هل أنت متأكد من حذف خدمة "${configName}" وجميع مراحلها من هذه الجمعية؟ تبقى الخدمة في الجمعيات الأخرى. لا يمكن التراجع عن هذا الإجراء.`)) return;
     startTransition(async () => {
       try {
         await deleteService(service.id);
+        router.refresh();
       } catch (error) {
         console.error(error);
         alert("حدث خطأ أثناء الحذف");
@@ -217,11 +238,11 @@ export default function GenericStagesManager({
             <Sparkles className="w-4 h-4 text-primary" />
             خدمة: {configName}
           </h3>
-          {isExpanded && (
+          {isExpanded && canManageService && (
             <button
               onClick={(e) => { e.stopPropagation(); setIsEditingConfig(!isEditingConfig); }}
               className="p-1 text-slate-400 hover:text-primary bg-white dark:bg-slate-800 hover:bg-primary/10 rounded transition-colors border border-slate-200 dark:border-slate-700"
-              title="إعدادات المخطط"
+              title="إعدادات الخدمة"
             >
               <Settings className="w-3.5 h-3.5" />
             </button>
@@ -239,45 +260,37 @@ export default function GenericStagesManager({
 
       {isExpanded && (
         <div className="flex flex-col">
-          {isEditingConfig && (
+          {isEditingConfig && canManageService && (
         <div className="p-3 border-b border-slate-100 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/30">
-          <h4 className="font-bold text-xs mb-3 text-slate-700 dark:text-slate-300">إعدادات المخطط الزمني</h4>
-          <div className="flex flex-col sm:flex-row gap-4 mb-4">
-            <div className="flex-1">
-              <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-1">اسم المخطط</label>
-              <input 
-                type="text" 
-                value={configName} 
-                onChange={e => setConfigName(e.target.value)} 
-                className="w-full border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary/50 outline-none"
-              />
-            </div>
-            <div className="flex-1">
-              <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-1">القسم التابع له</label>
-              <select 
-                value={configDept} 
-                onChange={e => setConfigDept(e.target.value)} 
-                className="w-full border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary/50 outline-none"
-              >
-                <option value="PROGRAMS">البرامج والمشاريع</option>
-                <option value="HR">الموارد البشرية</option>
-                <option value="ADMINISTRATIVE_SECRETARIAT">السكرتارية الإدارية</option>
-                <option value="GENERAL_MANAGER">الإدارة العامة</option>
-                <option value="NONE">لا ينتمي لقسم محدد (يظهر للكل)</option>
-              </select>
-            </div>
+          <h4 className="font-bold text-xs mb-3 text-slate-700 dark:text-slate-300">إعدادات الخدمة</h4>
+          <div className="mb-4">
+            <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-1">اسم الخدمة</label>
+            <input
+              type="text"
+              value={configName}
+              onChange={e => { setConfigName(e.target.value); setConfigError(null); }}
+              aria-invalid={!!configError}
+              className={`w-full border bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 rounded-lg px-3 py-2 text-sm focus:ring-2 outline-none ${
+                configError ? "border-red-400 focus:ring-red-200" : "border-slate-200 dark:border-slate-600 focus:ring-primary/50"
+              }`}
+            />
+            {configError ? (
+              <p className="mt-1.5 text-xs font-bold text-red-600 dark:text-red-400">{configError}</p>
+            ) : (
+              <p className="mt-1.5 text-[11px] text-slate-400">تعديل الاسم يسري على الخدمة في كل الجمعيات.</p>
+            )}
           </div>
           <div className="flex justify-between items-center mt-2">
             <div className="flex gap-2">
               <button onClick={handleConfigUpdate} className="flex items-center gap-1.5 px-4 py-2 text-white bg-primary hover:bg-primary/90 rounded-lg text-sm font-bold" disabled={isPending}>
-                {isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />} حفظ الإعدادات
+                {isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />} حفظ
               </button>
-              <button onClick={() => { setIsEditingConfig(false); setConfigName(service.name); setConfigDept(service.department || "NONE"); }} className="flex items-center gap-1.5 px-4 py-2 text-slate-600 bg-slate-200 hover:bg-slate-300 dark:bg-slate-700 dark:hover:bg-slate-600 dark:text-slate-300 rounded-lg text-sm font-bold" disabled={isPending}>
+              <button onClick={() => { setIsEditingConfig(false); setConfigName(service.name); setConfigError(null); }} className="flex items-center gap-1.5 px-4 py-2 text-slate-600 bg-slate-200 hover:bg-slate-300 dark:bg-slate-700 dark:hover:bg-slate-600 dark:text-slate-300 rounded-lg text-sm font-bold" disabled={isPending}>
                 إلغاء
               </button>
             </div>
             <button onClick={handleDeleteService} className="flex items-center gap-1.5 px-4 py-2 text-red-600 bg-red-100 hover:bg-red-200 dark:bg-red-900/30 dark:hover:bg-red-900/50 dark:text-red-400 rounded-lg text-sm font-bold transition-colors" disabled={isPending}>
-              <Trash2 className="w-4 h-4" /> حذف المخطط
+              <Trash2 className="w-4 h-4" /> حذف من هذه الجمعية
             </button>
           </div>
         </div>

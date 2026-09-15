@@ -32,6 +32,14 @@ export const PERMISSION_GROUPS = [
       // granted it — and the "إدارة الجمعيات المتعاقدة" page was reachable only
       // by a developer_mode holder, not even by the ADMIN account.
       { id: "manage_charities", label: "إضافة وتعديل وحذف الجمعيات المتعاقدة" },
+      // «إدارة الخدمات» في لوحة التحكم لا في صفحة الجمعية: ما بقي لها بعد أن صار
+      // تحرير المراحل وتعميمها و«قريباً» تبعاً لمنح الخدمة هو صفحة «إدارة
+      // الخدمات» في لوحة التحكم وزرّ «إضافة خدمة جديدة». والمُعرّف بقي
+      // manage_services لأنه قيمةٌ محفوظة في مصفوفات حامليها.
+      //
+      // وقبل ذلك كانت مُسمّاة «إعدادات تبويبات الجمعيات» بمُعرّف
+      // manage_charity_settings، وهو وسمٌ لم يصف شيئاً مما تفعله.
+      { id: "manage_services", label: "إدارة الخدمات" },
       { id: "manage_charity_accounts", label: "إدارة حسابات الجمعيات" },
       // edit_contracts merged in here. The pair was never granted apart, and
       // the names were inverted: manage_ meant "view" while edit_ meant
@@ -67,11 +75,6 @@ export const PERMISSION_GROUPS = [
   {
     title: "صلاحيات صفحة الجمعية",
     permissions: [
-      // كانت مُسمّاة «إعدادات تبويبات الجمعيات»، وهو وسمٌ لم يصف شيئاً مما
-      // تفعله: صفحة تبويبات الجمعيات كانت تستدعيها، لكن خمسة عشر إجراءً في
-      // services.ts وبطاقة «إدارة الخدمات» في لوحة التحكم هي عملُها الحقيقي.
-      // حُذفت الصفحة وبقيت القدرة، فصار الاسم يطابق الفعل.
-      { id: "manage_services", label: "إدارة الخدمات (المراحل والخطوات والتعميم)" },
       { id: "manage_strategy", label: "الاستراتيجية" },
       { id: "manage_governance", label: "الحوكمة" },
       { id: "manage_programs", label: "البرامج والمشاريع" },

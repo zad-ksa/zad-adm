@@ -17,8 +17,11 @@ export const getSidebarCharities = async () => {
     const session = await getSession();
     if (!session || !session.id) return [];
 
-    // If admin or has full manage_charities permission, return all
-    if (hasPermission(session.role, session.permissions, "manage_charities")) {
+    // النطاق نفسه الذي تفرضه getAssignedCharityIds في بقية الموقع: developer_mode
+    // وحدها ترى كل الجمعيات، والبقية جمعياتهم المسنَدة. كانت manage_charities هنا
+    // تعرض الجمعيات كلها تحت أقسام «الخدمات» — «وصولٌ لجميع الجمعيات» خفيّ بعد
+    // حذف view_all_charities، ولا شأن لإدارة بيانات الجمعيات به.
+    if (session.permissions?.includes("developer_mode")) {
       return await prisma.charity.findMany({
         orderBy: { createdAt: "desc" },
       });
@@ -54,7 +57,10 @@ export const getCharities = async () => {
 
 export async function addCharity(data: { name: string; establishmentDate?: string; licenseNumber?: string; domain?: string; logoUrl?: string | null }) {
   try {
-    await requirePermission("manage_charity_accounts");
+    // «إضافة وتعديل وحذف الجمعيات المتعاقدة». كانت هنا manage_charity_accounts
+    // (حسابات دخول ممثلي الجمعيات)، فكان حامل manage_charities يُرفض في الإضافة
+    // وحدها، ويضيف جمعيةً من لا يستطيع تعديلها ولا حذفها.
+    await requirePermission("manage_charities");
   } catch {
     return { success: false, message: "ليس لديك صلاحية لإضافة جمعية" };
   }
@@ -65,7 +71,7 @@ export async function addCharity(data: { name: string; establishmentDate?: strin
     });
 
     if (existing) {
-      return { success: false, message: "ظ‡ط°ظ‡ ط§ظ„ط¬ظ…ط¹ظٹط© ظ…ظˆط¬ظˆط¯ط© ظ…ط³ط¨ظ‚ط§ظ‹" };
+      return { success: false, message: "هذه الجمعية موجودة مسبقاً" };
     }
 
     const charity = await prisma.charity.create({

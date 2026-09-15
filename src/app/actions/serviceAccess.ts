@@ -35,7 +35,6 @@ async function requireGrantAuthority() {
   const perms = session.permissions || [];
   const allowed =
     hasPermission(session.role, perms, "manage_services") ||
-    hasPermission(session.role, perms, "manage_charities") ||
     hasPermission(session.role, perms, "manage_employees") ||
     // صفحة إدارة الصلاحيات تضع الخدمات في المجموعات، فتحتاج قراءة أسمائها
     // ومنحها — ولو حُجبت لرسمت مُنتقياً كل نقرةٍ فيه مرفوضة.
@@ -47,10 +46,10 @@ async function requireGrantAuthority() {
 /**
  * المنح من جهة الموظف — نافذة تعديله في «إدارة الموظفين».
  *
- * بلا manage_services: حاملها لا يصل صفحة الموظفين أصلاً (بوّابتها
- * manage_employees)، وليس من شأنه أن يصلها. يكفيه منح الخدمة للموظفين من
- * جهة الخدمة في «إدارة الخدمات». وكان الحارس المشترك يقبلها هنا فيفتح الفعل
- * لنداءٍ مباشر من خارج الصفحة.
+ * بلا manage_services ولا manage_charities: حاملاهما لا يصلان صفحة الموظفين
+ * أصلاً (بوّابتها manage_employees)، وليس من شأنهما أن يصلاها. يكفي حامل
+ * manage_services منحُ الخدمة من جهة الخدمة في «إدارة الخدمات»، وmanage_charities
+ * لا شأن لها بالخدمات. وكان الحارس يقبلهما هنا فيفتح الفعل لنداءٍ مباشر.
  */
 async function requireEmployeeGrantAuthority() {
   const session = await getSession();
@@ -58,7 +57,6 @@ async function requireEmployeeGrantAuthority() {
   const perms = session.permissions || [];
   const allowed =
     hasPermission(session.role, perms, "manage_employees") ||
-    hasPermission(session.role, perms, "manage_charities") ||
     hasPermission(session.role, perms, "manage_permissions");
   if (!allowed) throw new Error("غير مصرح لك بمنح الخدمات من إدارة الموظفين");
   return session;

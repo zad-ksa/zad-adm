@@ -277,7 +277,7 @@ export default function EmployeeSidebar({
             const services = allServices.filter(svc => can(svc.required));
             const hasOverviewAccess = can("view_services_overview");
             const hasTemplateLibrary = can("manage_knowledge_tree");
-            const hasServicesAccess = hasOverviewAccess || hasTemplateLibrary || can("manage_charities") || services.length > 0;
+            const hasServicesAccess = hasOverviewAccess || hasTemplateLibrary || services.length > 0;
             
             if (!hasServicesAccess) return null;
 

@@ -4,6 +4,7 @@ import Link from "next/link";
 import AddCharityButton from "./AddCharityButton";
 import { getSession } from "@/lib/auth";
 import { getAssignedCharityIds } from "@/lib/access";
+import { hasPermission } from "@/lib/permissions";
 
 const getCachedDashboardData = async (assignedIds: string[] | null) => {
   const charityFilter = assignedIds !== null ? { id: { in: assignedIds } } : undefined;
@@ -116,6 +117,8 @@ export const metadata: Metadata = {
 export default async function CharitiesDashboard() {
   const session = await getSession();
   const assignedIds = session ? await getAssignedCharityIds(session.id, session.role, session.permissions) : [];
+  // الصفحة تُفتح بـview_charities (عرض فقط)، والإضافة لـmanage_charities — والخادم يفرضها.
+  const canManageCharities = !!session && hasPermission(session.role, session.permissions || [], "manage_charities");
 
   const {
     charities,
@@ -210,7 +213,7 @@ export default async function CharitiesDashboard() {
           <h1 className="text-lg font-bold text-slate-800 dark:text-slate-100 mb-1">إدارة الجمعيات</h1>
           <p className="text-slate-600 dark:text-slate-300">نظرة عامة على الجمعيات المتعاقد معها</p>
         </div>
-        <AddCharityButton />
+        {canManageCharities && <AddCharityButton />}
       </div>
 
       {/* Cards Grid */}

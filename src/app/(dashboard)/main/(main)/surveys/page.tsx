@@ -5,6 +5,8 @@ import CopyLinkButton from "@/components/CopyLinkButton";
 import type { Metadata } from "next";
 import { getCharities, bootstrapCharities } from "@/app/actions/charity";
 import ApproveCharityButton from "@/app/(dashboard)/main/ApproveCharityButton";
+import { getSession } from "@/lib/auth";
+import { hasPermission } from "@/lib/permissions";
 
 
 
@@ -125,6 +127,9 @@ export const metadata: Metadata = {
 };
 
 export default async function SurveysDashboard() {
+  // التفعيل يُنشئ جمعية عبر addCharity، وحارسها manage_charities؛ فبدونها زرٌّ يُرفض دائماً.
+  const session = await getSession();
+  const canManageCharities = !!session && hasPermission(session.role, session.permissions || [], "manage_charities");
   const c = await getCharities();
   if (c.length === 0) {
     await bootstrapCharities();
@@ -206,11 +211,15 @@ export default async function SurveysDashboard() {
                         })}
                       </td>
                       <td className="p-4 text-center flex justify-center items-center">
-                        <ApproveCharityButton
-                          name={pending.name}
-                          establishmentDate={pending.establishmentDate}
-                          licenseNumber={pending.licenseNumber}
-                        />
+                        {canManageCharities ? (
+                          <ApproveCharityButton
+                            name={pending.name}
+                            establishmentDate={pending.establishmentDate}
+                            licenseNumber={pending.licenseNumber}
+                          />
+                        ) : (
+                          <span className="text-slate-400 text-xs">-</span>
+                        )}
                       </td>
                     </tr>
                   ))}

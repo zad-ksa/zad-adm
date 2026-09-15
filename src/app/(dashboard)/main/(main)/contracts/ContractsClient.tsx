@@ -1,9 +1,8 @@
 "use client";
 
-import React, { useState, useTransition } from "react";
+import React, { useState } from "react";
 import { FileSignature, Calendar, DollarSign, AlertCircle, CheckCircle2, TrendingUp, Users, Settings, Loader2 } from "lucide-react";
 import ManageInstallmentsModal from "./ManageInstallmentsModal";
-import { toggleInstallmentPaid } from "@/app/actions/contracts";
 
 type Installment = {
   id: string;
@@ -48,13 +47,6 @@ export default function ContractsClient({
   canEdit
 }: Props) {
   const [selectedCharityId, setSelectedCharityId] = useState<string | null>(null);
-  const [isPending, startTransition] = useTransition();
-
-  const handleQuickPay = (id: string) => {
-    startTransition(async () => {
-      await toggleInstallmentPaid(id, true);
-    });
-  };
 
   return (
     <div className="space-y-6">

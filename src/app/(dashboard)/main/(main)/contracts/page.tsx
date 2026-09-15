@@ -2,17 +2,23 @@ import { prisma } from "@/lib/db";
 import { getSession } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import ContractsClient from "./ContractsClient";
-import { isAdmin } from "@/lib/permissions";
+import { hasPermission } from "@/lib/permissions";
+import { getAssignedCharityIds } from "@/lib/access";
 
 export default async function ContractsPage() {
   const session = await getSession();
-  if (!session || (!session.permissions?.includes("manage_contracts") && !session.permissions?.includes("developer_mode") && !isAdmin(session.role))) {
+  if (!session || !hasPermission(session.role, session.permissions || [], "manage_contracts")) {
     redirect("/main");
   }
 
-  const canEdit = isAdmin(session.role) || !!session.permissions?.includes("manage_contracts") || !!session.permissions?.includes("developer_mode");
+  // كان canEdit شرطاً مستقلاً مطابقاً للبوابة حرفياً؛ فمن يرى الصفحة يديرها.
+  const canEdit = true;
+
+  // الجمعيات المسنَدة وحدها، كبقية الموقع؛ developer_mode بلا قيد.
+  const assignedIds = await getAssignedCharityIds(session.id, session.role, session.permissions);
 
   const charities = await prisma.charity.findMany({
+    where: assignedIds === null ? undefined : { id: { in: assignedIds } },
     orderBy: { createdAt: "desc" },
     include: {
       contractInstallments: {

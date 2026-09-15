@@ -1,10 +1,12 @@
 import { unstable_cache } from "next/cache";
 import { prisma } from "@/lib/db";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import type { Metadata } from "next";
 import FinanceClient from "./FinanceClient";
 
 import { getSession } from "@/lib/auth";
+import { hasPermission } from "@/lib/permissions";
+import { getAssignedCharityIds } from "@/lib/access";
 
 export const dynamic = "force-dynamic";
 
@@ -61,12 +63,19 @@ export default async function CharityFinancePage({ params }: { params: Promise<{
   const { name } = await params;
   const decodedName = decodeURIComponent(name);
 
-  // Independent of each other — the session says nothing about which charity
-  // this is, and vice versa.
-  const [charity, session] = await Promise.all([
-    getCachedFinanceData(decodedName),
-    getSession(),
-  ]);
+  // كانت الصفحة بلا بوابة: من يكتب الرابط يرى المالية ويسجّل سداد الأقساط.
+  // البوابة قبل جلب البيانات، لأن الجلب قد يُنشئ الجمعية من استبيانها.
+  const session = await getSession();
+  if (!session || !hasPermission(session.role, session.permissions || [], "manage_finance")) {
+    redirect("/main");
+  }
+
+  const charity = await getCachedFinanceData(decodedName);
+
+  const assignedIds = await getAssignedCharityIds(session.id, session.role, session.permissions);
+  if (assignedIds !== null && !assignedIds.includes(charity!.id)) {
+    redirect("/main");
+  }
 
 
 

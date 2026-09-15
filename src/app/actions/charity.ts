@@ -8,7 +8,6 @@ import { hasPermission, isAdmin } from "@/lib/permissions";
 import { requirePermission } from "@/lib/guards";
 import { encryptSecret } from "@/lib/encryption";
 import { logAudit } from "@/lib/auditLog";
-import { processFirstGrant } from "./contracts";
 import { writeFile, mkdir } from "fs/promises";
 import { join } from "path";
 
@@ -239,71 +238,9 @@ export async function bootstrapCharities() {
 
 
 
-export async function addFinancialTransactionAction(
-  charityId: string,
-  type: "CONTRACT_UPDATE" | "PAID_UPDATE" | "ADD_GRANT" | "DISBURSEMENT",
-  amount: number,
-  notes?: string
-) {
-  try {
-    const session = await getSession();
-    if (!session || !session.id) {
-      return { success: false, message: "ط؛ظٹط± ظ…طµط±ط­ ظ„ظƒ ط¨ط¥ط¬ط±ط§ط، ظ‡ط°ظ‡ ط§ظ„ط¹ظ…ظ„ظٹط©" };
-    }
-
-    if (amount < 0 || isNaN(amount)) {
-      return { success: false, message: "ظٹط¬ط¨ ط£ظ† ظٹظƒظˆظ† ط§ظ„ظ…ط¨ظ„ط؛ ط±ظ‚ظ…ط§ظ‹ ظ…ظˆط¬ط¨ط§ظ‹ ط£ظƒط¨ط± ظ…ظ† ط£ظˆ ظٹط³ط§ظˆظٹ 0" };
-    }
-
-    const charity = await prisma.charity.findUnique({
-      where: { id: charityId }
-    });
-
-    if (!charity) {
-      return { success: false, message: "ط§ظ„ط¬ظ…ط¹ظٹط© ط؛ظٹط± ظ…ظˆط¬ظˆط¯ط©" };
-    }
-
-    let updatedData: any = {};
-    if (type === "CONTRACT_UPDATE") {
-      updatedData.contractValue = amount;
-    } else if (type === "PAID_UPDATE") {
-      updatedData.paidAmount = amount;
-    } else if (type === "ADD_GRANT") {
-      updatedData.grants = charity.grants + amount;
-      // Trigger processFirstGrant
-      await processFirstGrant(charityId, new Date());
-    } else if (type === "DISBURSEMENT") {
-      updatedData.paidAmount = charity.paidAmount + amount;
-    } else {
-      return { success: false, message: "ظ†ظˆط¹ ط§ظ„ط¹ظ…ظ„ظٹط© ط؛ظٹط± طµط§ظ„ط­" };
-    }
-
-    // Perform database transaction to ensure both charity update and log insertion are atomic
-    const [updatedCharity, log] = await prisma.$transaction([
-      prisma.charity.update({
-        where: { id: charityId },
-        data: updatedData
-      }),
-      prisma.financialLog.create({
-        data: {
-          charityId,
-          type,
-          amount,
-          notes: notes ? notes.trim() : null
-        }
-      })
-    ]);
-
-    revalidatePath("/main");
-    revalidatePath(`/portal/${encodeURIComponent(charity.name)}`);
-    revalidatePath(`/portal/${encodeURIComponent(charity.name)}/finance`);
-
-    return { success: true, charity: updatedCharity, log };
-  } catch (error: any) {
-    console.error("Error adding financial transaction:", error);
-    return { success: false, message: error.message || "ط­ط¯ط« ط®ط·ط£ ط£ط«ظ†ط§ط، ط¥ط¬ط±ط§ط، ط§ظ„ط¹ظ…ظ„ظٹط© ط§ظ„ظ…ط§ظ„ظٹط©" };
-  }
-}
+// addFinancialTransactionAction أُزيلت: كانت تعدّل قيمة العقد والمدفوع والمنح
+// بحارس جلسةٍ وحده، من نموذجٍ في صفحة المالية لم يعد يُعرض (activeAction لا
+// يُضبط إلا null). آخر استعمالٍ لها في الإنتاج ٤ يونيو.
 
 export async function updateTimelineConfig(
   charityId: string,
@@ -510,7 +447,8 @@ export async function updateGrantApplicationStatus(
       })
     );
 
-    if (status === "APPROVED" && grant.status !== "APPROVED" && approvedAmount && approvedAmount > 0) {
+    const isNewApproval = status === "APPROVED" && grant.status !== "APPROVED";
+    if (isNewApproval && approvedAmount && approvedAmount > 0) {
       queries.push(
         prisma.financialLog.create({
           data: {
@@ -523,7 +461,34 @@ export async function updateGrantApplicationStatus(
       );
     }
 
-    await prisma.$transaction(queries);
+    // أقساط العقد «المرتبطة بأول منحة» ولا تاريخ لها تستحقّ يوم اعتماد المنحة.
+    // كانت processFirstGrant تفعل ذلك من نموذجٍ ماليٍّ أُزيل من الواجهة، فبقيت
+    // هذه الأقساط «بانتظار المنحة الأولى» مهما اعتُمد من منح.
+    if (isNewApproval) {
+      queries.push(
+        prisma.contractInstallment.updateMany({
+          where: { charityId, isLinkedToFirstGrant: true, dueDate: null },
+          data: { dueDate: new Date() },
+        })
+      );
+    }
+
+    const results = await prisma.$transaction(queries);
+
+    if (isNewApproval) {
+      const scheduled = results[results.length - 1] as { count: number };
+      if (scheduled.count > 0) {
+        await logAudit({
+          actorType: "EMPLOYEE",
+          actorId: session.id,
+          actorName: session.name,
+          action: "UPDATE",
+          targetType: "ContractInstallment",
+          metadata: { charityId, grantId, affectedCount: scheduled.count, reason: "first_grant_scheduling" },
+        });
+        revalidatePath("/main/contracts");
+      }
+    }
 
     revalidatePath(`/portal/${encodeURIComponent(charity.name)}/resource-development/grants`);
     revalidatePath(`/portal/${encodeURIComponent(charity.name)}/finance`);

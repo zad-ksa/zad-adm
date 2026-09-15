@@ -44,7 +44,7 @@ export const PERMISSION_GROUPS = [
       // edit_contracts merged in here. The pair was never granted apart, and
       // the names were inverted: manage_ meant "view" while edit_ meant
       // "manage". One permission, named for what it actually does.
-      { id: "manage_contracts", label: "العقود (عرض وإدارة)" },
+      { id: "manage_contracts", label: "العقود" },
       { id: "manage_employees", label: "إدارة الموظفين" },
       { id: "delete_employees", label: "حذف الموظفين" },
       { id: "manage_tasks", label: "المهام والمنجزات" },

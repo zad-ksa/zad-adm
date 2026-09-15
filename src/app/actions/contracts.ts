@@ -4,6 +4,7 @@ import { prisma } from "@/lib/db";
 import { revalidatePath } from "next/cache";
 import { requirePermission, requireAnyPermission } from "@/lib/guards";
 import { logAudit } from "@/lib/auditLog";
+import { getAssignedCharityIds } from "@/lib/access";
 
 // Every action here mutates contractual/financial records, so each one guards
 // itself: server actions are directly reachable HTTP endpoints and are not
@@ -17,6 +18,20 @@ import { logAudit } from "@/lib/auditLog";
 // function with optional undefined members, which is what keeps `res.error`
 // and `res.success` both accessible at the call sites. Returning a shared const
 // collapses that and breaks every caller's type-checking.
+
+const OUT_OF_SCOPE = "هذه الجمعية غير مسندة إليك";
+
+/**
+ * العقود تتبع جمعيات الموظف المسنَدة كبقية الموقع؛ developer_mode وحدها بلا قيد.
+ * كانت الصفحة تعرض الجمعيات كلها، والأفعال تقبل أي جمعيةٍ أو قسط.
+ */
+async function charityInScope(
+  actor: { id: string; role: string; permissions?: string[] },
+  charityId: string
+) {
+  const assigned = await getAssignedCharityIds(actor.id, actor.role, actor.permissions);
+  return assigned === null || assigned.includes(charityId);
+}
 
 export async function addInstallment(data: {
   charityId: string;
@@ -32,6 +47,8 @@ export async function addInstallment(data: {
   }
 
   try {
+    if (!(await charityInScope(actor, data.charityId))) return { error: OUT_OF_SCOPE };
+
     const installment = await prisma.contractInstallment.create({
       data: {
         charityId: data.charityId,
@@ -75,6 +92,10 @@ export async function updateInstallment(data: {
   }
 
   try {
+    const existing = await prisma.contractInstallment.findUnique({ where: { id: data.id }, select: { charityId: true } });
+    if (!existing) return { error: "القسط غير موجود" };
+    if (!(await charityInScope(actor, existing.charityId))) return { error: OUT_OF_SCOPE };
+
     const installment = await prisma.contractInstallment.update({
       where: { id: data.id },
       data: {
@@ -112,6 +133,10 @@ export async function deleteInstallment(id: string) {
   }
 
   try {
+    const existing = await prisma.contractInstallment.findUnique({ where: { id }, select: { charityId: true } });
+    if (!existing) return { error: "القسط غير موجود" };
+    if (!(await charityInScope(actor, existing.charityId))) return { error: OUT_OF_SCOPE };
+
     await prisma.contractInstallment.delete({
       where: { id },
     });
@@ -152,6 +177,7 @@ export async function toggleInstallmentPaid(id: string, isPaid: boolean) {
     });
 
     if (!installment || !installment.charity) return { error: "القسط أو الجمعية غير موجودة" };
+    if (!(await charityInScope(actor, installment.charityId))) return { error: OUT_OF_SCOPE };
 
     const queries: any[] = [];
 
@@ -228,42 +254,9 @@ export async function toggleInstallmentPaid(id: string, isPaid: boolean) {
   }
 }
 
-export async function processFirstGrant(charityId: string, grantDate: Date) {
-  let actor;
-  try {
-    actor = await requirePermission("manage_contracts");
-  } catch {
-    return { error: "ليس لديك صلاحية لإدارة العقود" };
-  }
-
-  try {
-    const installments = await prisma.contractInstallment.updateMany({
-      where: { 
-        charityId, 
-        isLinkedToFirstGrant: true,
-        dueDate: null
-      } as any,
-      data: {
-        dueDate: grantDate,
-      },
-    });
-
-    await logAudit({
-      actorType: "EMPLOYEE",
-      actorId: actor?.id,
-      actorName: actor?.name,
-      action: "UPDATE",
-      targetType: "ContractInstallment",
-      metadata: { charityId, grantDate, affectedCount: installments.count, reason: "first_grant_scheduling" },
-    });
-
-    revalidatePath("/main/contracts");
-    return { success: `تم تحديد تواريخ الاستحقاق لعدد ${installments.count} قسط بناءً على تاريخ أول منحة.` };
-  } catch (error: any) {
-    console.error("Error processing first grant:", error);
-    return { error: "حدث خطأ أثناء معالجة ارتباط أول منحة." };
-  }
-}
+// processFirstGrant أُزيلت: نداؤها الوحيد كان في نموذجٍ ماليٍّ لا تعرضه الواجهة،
+// فلم تُجدوَل أقساط «أول منحة» قطّ. الجدولة الآن عند اعتماد المنحة، في
+// updateGrantApplicationStatus (actions/charity.ts).
 
 export async function batchAddInstallments(data: {
   charityId: string;
@@ -279,6 +272,7 @@ export async function batchAddInstallments(data: {
 
   try {
     if (data.count <= 0) return { error: "عدد الأقساط غير صالح" };
+    if (!(await charityInScope(actor, data.charityId))) return { error: OUT_OF_SCOPE };
     
     const amountPerInstallment = data.totalAmount / data.count;
     const installmentsData = Array.from({ length: data.count }).map(() => ({

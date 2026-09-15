@@ -16,10 +16,6 @@ import {
   Check,
   X
 } from "lucide-react";
-import {
-  addFinancialTransactionAction
-} from "@/app/actions/charity";
-import { updateCharityRevenueAndSize } from "@/app/actions/governance";
 import { toggleInstallmentPaid } from "@/app/actions/contracts";
 
 interface FinancialLog {
@@ -49,8 +45,6 @@ interface Charity {
   annualRevenue?: number | null;
 }
 
-type ActionType = "CONTRACT_UPDATE" | "PAID_UPDATE" | "DISBURSEMENT" | "UPDATE_REVENUE";
-
 export default function FinanceClient({
   charity,
   initialLogs,
@@ -69,10 +63,6 @@ export default function FinanceClient({
     grants: charity.grants || 0,
     annualRevenue: charity.annualRevenue || 0,
   });
-
-  const [activeAction, setActiveAction] = useState<ActionType | null>(null);
-  const [amount, setAmount] = useState<number | "">("");
-  const [notes, setNotes] = useState("");
 
   const [isPending, startTransition] = useTransition();
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
@@ -93,50 +83,6 @@ export default function FinanceClient({
   };
 
   const remainingAmount = Math.max(0, currentFinance.contractValue - currentFinance.paidAmount);
-
-  const handleSubmitTransaction = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!activeAction || amount === "") return;
-
-    if (activeAction === "DISBURSEMENT" && Number(amount) + currentFinance.paidAmount > currentFinance.contractValue) {
-      if (!confirm("تنبيه: مبلغ الصرف هذا سيجعل إجمالي المدفوع يتجاوز قيمة العقد. هل تريد الاستمرار؟")) {
-        return;
-      }
-    }
-
-    startTransition(async () => {
-      if (activeAction === "UPDATE_REVENUE") {
-        const res = await updateCharityRevenueAndSize(charity.id, Number(amount));
-        if (res.success) {
-          setCurrentFinance(prev => ({ ...prev, annualRevenue: res.revenue || 0 }));
-          setAmount("");
-          setNotes("");
-          setActiveAction(null);
-          showNotification("success", "تم تحديث الإيراد السنوي بنجاح");
-        } else {
-          showNotification("error", res.error || "حدث خطأ");
-        }
-        return;
-      }
-
-      const res = await addFinancialTransactionAction(charity.id, activeAction, Number(amount), notes);
-      if (res.success && res.charity && res.log) {
-        setCurrentFinance(prev => ({
-          ...prev,
-          contractValue: res.charity.contractValue,
-          paidAmount: res.charity.paidAmount,
-          grants: res.charity.grants,
-        }));
-        setLogs((prev) => [res.log as unknown as FinancialLog, ...prev]);
-        setAmount("");
-        setNotes("");
-        setActiveAction(null);
-        showNotification("success", "تم تسجيل العملية المالية بنجاح");
-      } else {
-        showNotification("error", res.message || "حدث خطأ");
-      }
-    });
-  };
 
   const promptToggleInstallment = (id: string, isPaid: boolean) => {
     setInstallmentModal({ isOpen: true, id, isPaid });

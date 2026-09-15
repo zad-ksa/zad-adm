@@ -1,50 +1,70 @@
 import { getSession } from "@/lib/auth";
 import { redirect } from "next/navigation";
-import RolesClient from "./RolesClient";
 import { prisma } from "@/lib/db";
-import { hasPermission, isAdmin, sanitizePermissions } from "@/lib/permissions";
+import { hasPermission, sanitizePermissions } from "@/lib/permissions";
+import { consoleFontClass } from "@/components/console/fonts";
+import RolesClient from "./RolesClient";
+import type { RoleBundle, RoleRow } from "./types";
 
 export const dynamic = "force-dynamic";
 
 export default async function RolesPage() {
   const session = await getSession();
 
-  // Verify access exactly like the button in EmployeesClient
-  const hasAccess = session && (
-    isAdmin(session.role) ||
-    hasPermission(session.role, session.permissions || [], "manage_employees")
-  );
-
-  if (!hasAccess) {
+  // hasPermission يمرّر مدير النظام، فهي بوابة زرّ الصفحة نفسها في «الموظفين».
+  if (!session || !hasPermission(session.role, session.permissions || [], "manage_employees")) {
     redirect("/main");
   }
 
-  const [roles, employeeCounts, bundles] = await Promise.all([
+  const [roles, employees, bundleRows] = await Promise.all([
     prisma.roleDefinition.findMany({
-      orderBy: [
-        { isSystem: 'desc' },
-        { createdAt: 'asc' }
-      ],
-      include: { bundles: { select: { bundleId: true } } },
+      orderBy: [{ isSystem: "desc" }, { createdAt: "asc" }],
+      select: {
+        id: true,
+        key: true,
+        displayName: true,
+        permissions: true,
+        isSystem: true,
+        bundles: { select: { bundleId: true } },
+      },
     }),
-    prisma.employee.groupBy({ by: ['role'], _count: { role: true } }),
-    // مجموعات الصلاحيات المُنشأة في «إدارة الصلاحيات». تُربط بالمسمى فتسري
-    // على كل من يحمله حيّاً — بخلاف «الصلاحيات الافتراضية» أدناه، وهي قالبٌ
-    // لا يصل الموظف إلا بمزامنةٍ صريحة تدهس ما كان له.
+    // الموقوفون معدودون: deleteRole يرفض الحذف بوجود أي موظف يحمل المسمى.
+    prisma.employee.findMany({ select: { name: true, role: true }, orderBy: { name: "asc" } }),
+    // مجموعات الصلاحيات المُنشأة في «الصلاحيات». تُربط بالمسمى فتسري على كل من
+    // يحمله حيّاً — بخلاف القالب الافتراضي الذي لا يصل إلا بمزامنةٍ صريحة.
     prisma.permissionBundle.findMany({
-      orderBy: { name: 'asc' },
-      select: { id: true, name: true, description: true, permissions: true },
+      orderBy: { name: "asc" },
+      select: { id: true, name: true, description: true, permissions: true, services: true },
     }),
   ]);
 
-  const countsByRole = Object.fromEntries(employeeCounts.map(c => [c.role, c._count.role]));
-  const rolesWithCounts = roles.map(r => ({
-    ...r,
-    // بلا تنقية يعدّ «٣ صلاحيات افتراضية» ومنها متقاعدةٌ لا تمنح شيئاً.
+  const membersOf = new Map<string, string[]>();
+  for (const e of employees) {
+    const list = membersOf.get(e.role) ?? [];
+    list.push(e.name);
+    membersOf.set(e.role, list);
+  }
+
+  const rows: RoleRow[] = roles.map((r) => ({
+    id: r.id,
+    key: r.key,
+    displayName: r.displayName,
+    isSystem: r.isSystem,
+    // بلا تنقية يعدّ القالب صلاحياتٍ متقاعدة لا تمنح شيئاً.
     permissions: sanitizePermissions(r.permissions),
-    employeeCount: countsByRole[r.key] || 0,
-    bundleIds: r.bundles.map(b => b.bundleId),
+    bundleIds: r.bundles.map((b) => b.bundleId),
+    members: membersOf.get(r.key) ?? [],
   }));
 
-  return <RolesClient roles={rolesWithCounts} bundles={bundles} />;
+  const bundles: RoleBundle[] = bundleRows.map((b) => ({ ...b, permissions: sanitizePermissions(b.permissions) }));
+
+  return (
+    <div dir="rtl" className={`${consoleFontClass} mx-auto w-full max-w-6xl`}>
+      <RolesClient
+        roles={rows}
+        bundles={bundles}
+        canManagePermissions={hasPermission(session.role, session.permissions || [], "manage_permissions")}
+      />
+    </div>
+  );
 }

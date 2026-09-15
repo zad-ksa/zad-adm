@@ -4,8 +4,11 @@ import { prisma } from "@/lib/db";
 import { hashPassword, normalizeEmail, validateCredentialPair } from "@/lib/password";
 import { revalidatePath } from "next/cache";
 import { getSession } from "@/lib/auth";
-import { hasPermission, sanitizePermissions } from "@/lib/permissions";
+import { hasPermission, isAdmin, sanitizePermissions } from "@/lib/permissions";
 import { logAudit } from "@/lib/auditLog";
+import type { Prisma } from "@prisma/client";
+import { listServiceNames } from "@/app/actions/serviceAccess";
+import type { EmployeeInput } from "./types";
 
 async function checkManageEmployeesAuth() {
   const session = await getSession();
@@ -13,94 +16,156 @@ async function checkManageEmployeesAuth() {
   if (!hasPermission(session.role, session.permissions || [], "manage_employees")) {
     throw new Error("FORBIDDEN");
   }
+  return session;
 }
 
-export async function addEmployee(prevState: any, formData: FormData) {
+/**
+ * المجموعات والخدمات تُتحقَّق قبل الكتابة: مجموعةٌ حُذفت أو خدمةٌ أُعيدت تسميتها
+ * تُرفض برسالة، ولا تُحفظ صامتةً فيظنّ المدير أنه منح شيئاً لا يفتح شيئاً.
+ * undefined = لا تمسّ هذا الجزء.
+ */
+async function checkAccess(
+  bundleIds?: string[],
+  serviceNames?: string[]
+): Promise<{ error: string } | { bundleIds?: string[]; serviceNames?: string[] }> {
+  const out: { bundleIds?: string[]; serviceNames?: string[] } = {};
+
+  if (bundleIds !== undefined) {
+    const ids = [...new Set(bundleIds.filter(Boolean))];
+    if (ids.length) {
+      const found = await prisma.permissionBundle.count({ where: { id: { in: ids } } });
+      if (found !== ids.length) return { error: "إحدى مجموعات الصلاحيات لم تعد موجودة، أعد فتح النافذة" };
+    }
+    out.bundleIds = ids;
+  }
+
+  if (serviceNames !== undefined) {
+    const names = [...new Set(serviceNames.map((n) => n.trim()).filter(Boolean))];
+    if (names.length) {
+      const known = await listServiceNames();
+      const unknown = names.find((n) => !known.includes(n));
+      if (unknown) return { error: `خدمة غير موجودة: ${unknown}` };
+    }
+    out.serviceNames = names;
+  }
+
+  return out;
+}
+
+/**
+ * إضافة موظف ببياناته وصلاحياته ومجموعاته وخدماته في معاملةٍ واحدة.
+ *
+ * كانت الإضافة نموذجاً يرسل FormData بلا مجموعات ولا خدمات، فكان الموظف الجديد
+ * يُفتح مرّةً ثانية للتعديل ليُمنح ما يلزمه.
+ */
+export async function createEmployee(input: EmployeeInput) {
+  let session;
   try {
-    await checkManageEmployeesAuth();
-  } catch (err: any) {
+    session = await checkManageEmployeesAuth();
+  } catch {
     return { error: "ليس لديك صلاحية لإدارة الموظفين" };
   }
 
-  const name = formData.get("name") as string;
-  const phone = formData.get("phone") as string;
-  const password = formData.get("password") as string;
-  const emailInput = (formData.get("email") as string) || "";
-  const role = formData.get("role") as string;
-  // Annual leave lives on the person because seniority and contract change
-  // it; one company-wide number would be a lie on the first exception.
-  const leaveRaw = Number(formData.get("annualLeaveDays"));
-  const annualLeaveDays =
-    Number.isInteger(leaveRaw) && leaveRaw >= 0 && leaveRaw <= 365 ? leaveRaw : 21;
-  
-  // Extract permissions
-  const permissions: string[] = [];
-  const charityIds: string[] = [];
-  formData.forEach((value, key) => {
-    if (key.startsWith("permission_") && value === "on") {
-      permissions.push(key.replace("permission_", ""));
-    } else if (key.startsWith("charity_") && value === "on") {
-      charityIds.push(key.replace("charity_", ""));
-    }
-  });
-
+  const name = (input.name || "").trim();
+  const phone = (input.phone || "").trim();
   if (!name || !phone) {
     return { error: "يرجى تعبئة الحقول المطلوبة: الاسم ورقم الجوال" };
   }
 
   // Email login is optional — an account created without it still signs in
-  // with phone + OTP. What is NOT allowed is half of it: an address with no
-  // password opens nothing, and a password with no address cannot be reached,
-  // yet either one would leave its owner believing email login was set up.
+  // with phone + OTP. What is NOT allowed is half of it.
+  const emailInput = input.email || "";
+  const password = input.password || "";
   const pairProblem = validateCredentialPair(emailInput, password);
   if (pairProblem) return { error: pairProblem };
-
   const email = emailInput.trim() ? normalizeEmail(emailInput) : null;
 
-  try {
-    const existingEmployee = await prisma.employee.findUnique({
-      where: { phone },
-    });
+  const days = input.annualLeaveDays ?? 21;
+  if (!Number.isInteger(days) || days < 0 || days > 365) {
+    return { error: "رصيد الإجازات يجب أن يكون بين 0 و365 يوماً" };
+  }
 
-    if (existingEmployee) {
-      return { error: "رقم الجوال مسجل مسبقاً" };
-    }
+  try {
+    const phoneTaken = await prisma.employee.findUnique({ where: { phone }, select: { id: true } });
+    if (phoneTaken) return { error: "رقم الجوال مسجل مسبقاً" };
 
     if (email) {
-      const existingEmail = await prisma.employee.findUnique({ where: { email } });
-      if (existingEmail) {
-        return { error: "البريد الإلكتروني مسجل مسبقاً" };
-      }
+      const emailTaken = await prisma.employee.findUnique({ where: { email }, select: { id: true } });
+      if (emailTaken) return { error: "البريد الإلكتروني مسجل مسبقاً" };
     }
 
+    const role = await prisma.roleDefinition.findUnique({ where: { key: input.role }, select: { key: true } });
+    if (!role) return { error: "المسمى الوظيفي المحدد غير صالح" };
+
+    const adminRole = isAdmin(role.key);
+    const checked = await checkAccess(
+      adminRole ? undefined : input.bundleIds,
+      adminRole ? undefined : input.serviceNames
+    );
+    if ("error" in checked) return { error: checked.error };
+
+    const permissions = sanitizePermissions(input.permissions);
+    const charityIds = adminRole ? [] : [...new Set(input.charityIds ?? [])];
     const hashedPassword = email ? await hashPassword(password) : null;
 
-    // Validate role against RoleDefinition
-    const validRoles = await prisma.roleDefinition.findMany({ select: { key: true } });
-    const isValidRole = validRoles.some(r => r.key === role);
-    const dbRole = isValidRole ? role : "STRATEGY";
-
-    await prisma.employee.create({
-      data: {
-        name,
-        phone,
-        email,
-        password: hashedPassword,
-        annualLeaveDays,
-        role: dbRole,
-        permissions: sanitizePermissions(permissions),
-        isActive: true,
-        ...(charityIds.length > 0 && dbRole !== "ADMIN" && {
-          assignedCharities: {
-            create: charityIds.map((charityId) => ({ charityId })),
+    const created = await prisma.$transaction(
+      async (tx) => {
+        const employee = await tx.employee.create({
+          data: {
+            name,
+            phone,
+            email,
+            password: hashedPassword,
+            annualLeaveDays: days,
+            role: role.key,
+            permissions,
+            isActive: true,
+            ...(charityIds.length > 0 && {
+              assignedCharities: { create: charityIds.map((charityId) => ({ charityId })) },
+            }),
           },
-        }),
+          select: { id: true },
+        });
+        if (checked.bundleIds?.length) {
+          await tx.employeeBundle.createMany({
+            data: checked.bundleIds.map((bundleId) => ({ employeeId: employee.id, bundleId })),
+          });
+        }
+        if (checked.serviceNames?.length) {
+          await tx.employeeServiceAccess.createMany({
+            data: checked.serviceNames.map((serviceName) => ({ employeeId: employee.id, serviceName })),
+          });
+        }
+        return employee;
       },
-    });
+      { timeout: 20_000, maxWait: 15_000 }
+    );
+
+    if (permissions.length || checked.bundleIds?.length || checked.serviceNames?.length) {
+      await logAudit({
+        actorType: "EMPLOYEE",
+        actorId: session.id,
+        actorName: session.name,
+        action: "PERMISSION_CHANGE",
+        targetType: "Employee",
+        targetId: created.id,
+        metadata: {
+          targetName: name,
+          created: true,
+          after: {
+            role: role.key,
+            permissions,
+            bundles: checked.bundleIds ?? [],
+            services: checked.serviceNames ?? [],
+          },
+        },
+      });
+    }
 
     revalidatePath("/main/employees");
-    return { success: "تمت إضافة الموظف بنجاح" };
+    return { success: `تمت إضافة ${name}` };
   } catch (error) {
+    console.error("Error creating employee:", error);
     return { error: "حدث خطأ أثناء إضافة الموظف" };
   }
 }
@@ -108,7 +173,7 @@ export async function addEmployee(prevState: any, formData: FormData) {
 export async function toggleEmployeeStatus(id: string, currentStatus: boolean) {
   try {
     await checkManageEmployeesAuth();
-  } catch (err: any) {
+  } catch {
     return { error: "ليس لديك صلاحية لإدارة الموظفين" };
   }
 
@@ -124,24 +189,17 @@ export async function toggleEmployeeStatus(id: string, currentStatus: boolean) {
   }
 }
 
-
-
-export async function updateEmployee(
-  id: string,
-  data: {
-    name: string;
-    phone: string;
-    role: string;
-    permissions: string[];
-    email?: string | null;
-    password?: string;
-    annualLeaveDays?: number;
-    charityIds?: string[];
-  }
-) {
+/**
+ * تعديل الموظف: بياناته وصلاحياته ومجموعاته وخدماته في معاملةٍ واحدة.
+ *
+ * كانت الخدمات تُحفظ بفعلٍ ثانٍ بعد نجاح هذا، فإن فشل الثاني بقي الموظف
+ * نصف محفوظ ورأى المدير رسالة خطأ عن تعديلٍ وقع أغلبه.
+ */
+export async function updateEmployee(id: string, data: EmployeeInput) {
+  let session;
   try {
-    await checkManageEmployeesAuth();
-  } catch (err: any) {
+    session = await checkManageEmployeesAuth();
+  } catch {
     return { error: "ليس لديك صلاحية لإدارة الموظفين" };
   }
 
@@ -192,16 +250,31 @@ export async function updateEmployee(
       return { error: "المسمى الوظيفي المحدد غير صالح" };
     }
 
+    const adminRole = isAdmin(data.role);
+    const checked = await checkAccess(
+      adminRole ? undefined : data.bundleIds,
+      adminRole ? undefined : data.serviceNames
+    );
+    if ("error" in checked) return { error: checked.error };
+
     const beforeEmployee = await prisma.employee.findUnique({
       where: { id },
-      select: { name: true, role: true, permissions: true },
+      select: {
+        name: true,
+        role: true,
+        permissions: true,
+        bundles: { select: { bundleId: true } },
+        serviceAccess: { select: { serviceName: true } },
+      },
     });
 
-    const updateData: any = {
+    const cleanPermissions = sanitizePermissions(data.permissions);
+
+    const updateData: Prisma.EmployeeUncheckedUpdateInput = {
       name: data.name,
       phone: data.phone,
-      role: data.role as any,
-      permissions: sanitizePermissions(data.permissions),
+      role: data.role,
+      permissions: cleanPermissions,
     };
 
     // Undefined means "leave it alone" — an older caller that does not know
@@ -236,38 +309,69 @@ export async function updateEmployee(
       };
     }
 
-    await prisma.employee.update({
-      where: { id },
-      data: updateData,
-    });
+    await prisma.$transaction(
+      async (tx) => {
+        await tx.employee.update({ where: { id }, data: updateData });
+        if (checked.bundleIds !== undefined) {
+          await tx.employeeBundle.deleteMany({ where: { employeeId: id } });
+          if (checked.bundleIds.length) {
+            await tx.employeeBundle.createMany({
+              data: checked.bundleIds.map((bundleId) => ({ employeeId: id, bundleId })),
+            });
+          }
+        }
+        if (checked.serviceNames !== undefined) {
+          await tx.employeeServiceAccess.deleteMany({ where: { employeeId: id } });
+          if (checked.serviceNames.length) {
+            await tx.employeeServiceAccess.createMany({
+              data: checked.serviceNames.map((serviceName) => ({ employeeId: id, serviceName })),
+            });
+          }
+        }
+      },
+      { timeout: 20_000, maxWait: 15_000 }
+    );
 
-    const roleChanged = beforeEmployee && beforeEmployee.role !== data.role;
-    const permissionsChanged =
-      beforeEmployee &&
-      JSON.stringify([...beforeEmployee.permissions].sort()) !== JSON.stringify([...data.permissions].sort());
+    const sorted = (xs: string[]) => JSON.stringify([...xs].sort());
+    const beforeBundles = beforeEmployee?.bundles.map((b) => b.bundleId) ?? [];
+    const beforeServices = [...new Set(beforeEmployee?.serviceAccess.map((s) => s.serviceName) ?? [])];
 
-    if (roleChanged || permissionsChanged) {
-      const session = await getSession();
+    const roleChanged = !!beforeEmployee && beforeEmployee.role !== data.role;
+    const permissionsChanged = !!beforeEmployee && sorted(beforeEmployee.permissions) !== sorted(cleanPermissions);
+    const bundlesChanged = checked.bundleIds !== undefined && sorted(beforeBundles) !== sorted(checked.bundleIds);
+    const servicesChanged = checked.serviceNames !== undefined && sorted(beforeServices) !== sorted(checked.serviceNames);
+
+    if (roleChanged || permissionsChanged || bundlesChanged || servicesChanged) {
       await logAudit({
         actorType: "EMPLOYEE",
-        actorId: session?.id,
-        actorName: session?.name,
+        actorId: session.id,
+        actorName: session.name,
         action: "PERMISSION_CHANGE",
         targetType: "Employee",
         targetId: id,
         metadata: {
           targetName: data.name,
-          before: { role: beforeEmployee?.role, permissions: beforeEmployee?.permissions },
-          after: { role: data.role, permissions: data.permissions },
+          before: {
+            role: beforeEmployee?.role,
+            permissions: beforeEmployee?.permissions,
+            bundles: beforeBundles,
+            services: beforeServices,
+          },
+          after: {
+            role: data.role,
+            permissions: cleanPermissions,
+            bundles: checked.bundleIds ?? beforeBundles,
+            services: checked.serviceNames ?? beforeServices,
+          },
         },
       });
     }
 
     revalidatePath("/main/employees");
-    return { success: "تم تحديث بيانات الموظف وصلاحياته بنجاح" };
-  } catch (error: any) {
+    return { success: `تم حفظ تغييرات ${data.name}` };
+  } catch (error) {
     console.error("Error updating employee:", error);
-    return { error: error.message || "حدث خطأ أثناء تحديث بيانات الموظف" };
+    return { error: "حدث خطأ أثناء تحديث بيانات الموظف" };
   }
 }
 
@@ -279,7 +383,7 @@ export async function deleteEmployee(id: string) {
     if (!hasPermission(session.role, session.permissions || [], "delete_employees")) {
       return { error: "ليس لديك صلاحية لحذف الموظفين" };
     }
-  } catch (err: any) {
+  } catch {
     return { error: "ليس لديك صلاحية لحذف الموظفين" };
   }
 
@@ -311,7 +415,7 @@ export async function deleteEmployee(id: string) {
 
     revalidatePath("/main/employees");
     return { success: "تم حذف الموظف بنجاح" };
-  } catch (error: any) {
+  } catch (error) {
     console.error("Error deleting employee:", error);
     return { error: "لا يمكن حذف الموظف، قد يكون مرتبطاً ببيانات أخرى" };
   }

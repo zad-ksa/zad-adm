@@ -678,3 +678,17 @@ body {
 [data-ls-hscale] h3 { font-size: calc(1.4em * var(--sec-heading-scale, 1)); }
 [data-ls-hscale] h4 { font-size: calc(1.15em * var(--sec-heading-scale, 1)); }
 [data-ls-bscale] :is(p, li) { font-size: calc(1em * var(--sec-body-scale, 1)); line-height: 1.75; }
+
+/* ── صفحة الموظفين: دخول اللوحة الجانبية والنوافذ والقوائم. ── */
+@keyframes zad-sheet-in {
+  from { opacity: 0; transform: translateX(-24px); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes zad-pop-in {
+  from { opacity: 0; transform: translateY(4px) scale(0.98); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes zad-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}

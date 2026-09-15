@@ -86,7 +86,8 @@ export function EmployeesClient({
   const [editPermissions, setEditPermissions] = useState<string[]>([]);
   const [editLeaveDays, setEditLeaveDays] = useState("21");
   const [editCharityIds, setEditCharityIds] = useState<string[]>([]);
-  // أسماء الخدمات المتاحة له. فارغة = بلا تقييد.
+  // أسماء الخدمات الممنوحة له. فارغة = لا خدمات: لا تبويب «عرض الخدمات» ولا
+  // تعديل مراحل — المنح هو ما يفتحهما، لا غيابه.
   const [editServiceNames, setEditServiceNames] = useState<string[]>([]);
   const [modalError, setModalError] = useState<string | null>(null);
   const [modalSuccess, setModalSuccess] = useState<string | null>(null);
@@ -714,11 +715,27 @@ export function EmployeesClient({
                   <div className="flex items-center gap-2 mb-3">
                     <Layers className="w-4 h-4 text-slate-500 dark:text-slate-400" />
                     <h4 className="text-sm font-bold text-slate-700 dark:text-slate-200">الخدمات المتاحة</h4>
+                    {/* كان هنا «الكل» حين يكون التحديد فارغاً — وصفٌ صار
+                        معكوساً: غياب المنح اليوم لا يفتح شيئاً. */}
                     <span className="text-[11px] text-slate-400 dark:text-slate-500 font-medium mr-auto">
                       {editServiceNames.length === 0
-                        ? "الكل"
+                        ? "لا شيء"
                         : `${editServiceNames.length} / ${allServiceNames.length}`}
                     </span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (editServiceNames.length === allServiceNames.length) {
+                          setEditServiceNames([]);
+                        } else {
+                          setEditServiceNames([...allServiceNames]);
+                        }
+                      }}
+                      disabled={isPending}
+                      className="text-[10px] font-bold text-primary hover:text-primary/80 transition-colors cursor-pointer mr-2 disabled:opacity-50"
+                    >
+                      {editServiceNames.length === allServiceNames.length ? "إلغاء الكل" : "تحديد الكل"}
+                    </button>
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                     {allServiceNames.map((name) => {
@@ -755,8 +772,8 @@ export function EmployeesClient({
                   </div>
                   <p className="mt-2 text-[11px] text-slate-400 dark:text-slate-500 leading-relaxed">
                     {editServiceNames.length === 0
-                      ? "بلا تحديد: يرى كل خدمات جمعياته أعلاه، ولا يعدّل مراحل خدمةٍ من داخل صفحة الجمعية."
-                      : "يرى الخدمات المحددة وحدها ويعدّل مراحلها، في حدود جمعياته أعلاه."}
+                      ? "بلا تحديد: لا يظهر له تبويب «عرض الخدمات»، ولا يعدّل مراحل أي خدمة."
+                      : "يرى الخدمات المحددة ويعدّل مراحلها ويجعلها «قريباً» ويعمّمها، في حدود جمعياته أعلاه."}
                   </p>
                 </div>
               )}

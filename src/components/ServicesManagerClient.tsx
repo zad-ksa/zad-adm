@@ -1,10 +1,9 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { Plus, Map, Layers, AlertTriangle, AlertCircle } from "lucide-react";
-import { createService, deleteService, unifyCharityStagesAction } from "@/app/actions/services";
+import { Plus, Layers, AlertTriangle, AlertCircle } from "lucide-react";
+import { createService, unifyCharityStagesAction } from "@/app/actions/services";
 import { useRouter } from "next/navigation";
-import ServiceTimeline from "./ServiceTimeline";
 
 type ServiceStage = {
   id: string;
@@ -32,17 +31,26 @@ const DEPARTMENTS = [
   { value: "HR", label: "الموارد البشرية" }
 ];
 
+/**
+ * لوحة صفحة الجمعية: زرّان لكلٍّ منهما حكمه، لا شرطٌ واحد لهما معاً.
+ *
+ * كانت اللوحة كلها تُرسم لـisAdmin (مدير النظام || manage_services)، فكانت
+ * الإضافة والتعميم قدرةً واحدة. الآن:
+ *   • «إضافة خدمة جديدة» لحامل manage_services.
+ *   • «التعميم» لمن مُنح خدمةً واحدة على الأقل في هذه الجمعية، ويعمّم خدماته
+ *     الممنوحة وحدها، على الجمعيات المسنَدة إليه وحدها — والخادم يفرض الأمرين.
+ */
 export default function ServicesManagerClient({
   charityId,
-  initialServices,
-  isAdmin,
+  unifiableServices,
+  canAddService,
 }: {
   charityId: string;
-  initialServices: Service[];
-  isAdmin: boolean;
+  /** خدمات هذه الجمعية الممنوحة للموظف — مصادر التعميم الجائزة له. */
+  unifiableServices: Service[];
+  canAddService: boolean;
 }) {
   const router = useRouter();
-  const [services, setServices] = useState<Service[]>(initialServices);
   const [isPending, startTransition] = useTransition();
 
   // Modals state
@@ -51,7 +59,9 @@ export default function ServicesManagerClient({
   const [serviceDepartment, setServiceDepartment] = useState("");
 
   const [isUnifyModalOpen, setIsUnifyModalOpen] = useState(false);
-  const [selectedSource, setSelectedSource] = useState(initialServices[0]?.id ? `CUSTOM_${initialServices[0].id}` : "");
+  const [selectedSource, setSelectedSource] = useState(unifiableServices[0]?.id ? `CUSTOM_${unifiableServices[0].id}` : "");
+
+  const canUnify = unifiableServices.length > 0;
 
   const openAddService = () => {
     setServiceName("");
@@ -65,6 +75,7 @@ export default function ServicesManagerClient({
       try {
         await createService(charityId, serviceName, serviceDepartment || null);
         setIsServiceModalOpen(false);
+        router.refresh();
       } catch (error: any) {
         console.error("Error saving service", error);
         alert(error.message || "حدث خطأ أثناء حفظ الخدمة");
@@ -74,10 +85,10 @@ export default function ServicesManagerClient({
 
   const handleUnifySubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     let sourceTimelineType = selectedSource;
     let sourceServiceId: string | undefined = undefined;
-    
+
     if (selectedSource.startsWith("CUSTOM_")) {
       sourceTimelineType = "CUSTOM";
       sourceServiceId = selectedSource.replace("CUSTOM_", "");
@@ -95,49 +106,53 @@ export default function ServicesManagerClient({
     });
   };
 
-  if (!isAdmin) return null;
+  if (!canAddService && !canUnify) return null;
 
   return (
     <>
       <div className="flex justify-end gap-3 mb-6">
-        <button
-          onClick={() => setIsUnifyModalOpen(true)}
-          disabled={isPending}
-          className="flex items-center gap-2 bg-white hover:bg-slate-50 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 px-3.5 py-1.5 rounded-lg text-sm font-semibold transition-colors shadow-sm disabled:opacity-50"
-        >
-          <Layers className="w-4 h-4 text-amber-500" />
-          تعميم مراحل قسم على الجمعيات
-        </button>
-        <button
-          onClick={openAddService}
-          disabled={isPending}
-          className="flex items-center gap-2 bg-slate-800 hover:bg-slate-700 dark:bg-slate-700 dark:hover:bg-slate-600 text-white px-3.5 py-1.5 rounded-lg text-sm font-semibold transition-colors shadow-sm disabled:opacity-50"
-        >
-          <Plus className="w-4 h-4" />
-          إضافة مخطط زمني جديد
-        </button>
+        {canUnify && (
+          <button
+            onClick={() => setIsUnifyModalOpen(true)}
+            disabled={isPending}
+            className="flex items-center gap-2 bg-white hover:bg-slate-50 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 px-3.5 py-1.5 rounded-lg text-sm font-semibold transition-colors shadow-sm disabled:opacity-50"
+          >
+            <Layers className="w-4 h-4 text-amber-500" />
+            تعميم مراحل خدمة على الجمعيات
+          </button>
+        )}
+        {canAddService && (
+          <button
+            onClick={openAddService}
+            disabled={isPending}
+            className="flex items-center gap-2 bg-slate-800 hover:bg-slate-700 dark:bg-slate-700 dark:hover:bg-slate-600 text-white px-3.5 py-1.5 rounded-lg text-sm font-semibold transition-colors shadow-sm disabled:opacity-50"
+          >
+            <Plus className="w-4 h-4" />
+            إضافة خدمة جديدة
+          </button>
+        )}
       </div>
 
       {/* Add Service Modal */}
-      {isServiceModalOpen && (
+      {isServiceModalOpen && canAddService && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={() => setIsServiceModalOpen(false)}></div>
           <div className="relative bg-white dark:bg-slate-800 rounded-2xl w-full max-w-md shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200 border border-slate-200 dark:border-slate-700">
             <div className="p-4 border-b border-slate-100 dark:border-slate-700">
               <h2 className="text-base font-bold text-slate-800 dark:text-slate-100">
-                إضافة مخطط زمني جديد
+                إضافة خدمة جديدة
               </h2>
             </div>
             <form onSubmit={handleServiceSubmit} className="p-4 space-y-3">
               <div>
-                <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">اسم المخطط</label>
+                <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">اسم الخدمة</label>
                 <input
                   type="text"
                   required
                   value={serviceName}
                   onChange={e => setServiceName(e.target.value)}
                   className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all dark:text-white text-sm"
-                  placeholder="مثال: المخطط الزمني للبرامج..."
+                  placeholder="مثال: خدمة الإسناد الإداري..."
                 />
               </div>
               <div>
@@ -152,7 +167,7 @@ export default function ServicesManagerClient({
                   ))}
                 </select>
                 <p className="text-xs text-slate-500 mt-2">
-                  في حال اختيار قسم معين، سيظهر هذا المخطط الزمني في أعلى صفحة القسم التابع له (بحد أقصى مخطط واحد للقسم).
+                  في حال اختيار قسم معين، ستظهر هذه الخدمة في أعلى صفحة القسم التابع له (بحد أقصى خدمة واحدة للقسم).
                 </p>
               </div>
               <div className="flex gap-3 pt-4 border-t border-slate-100 dark:border-slate-700">
@@ -177,7 +192,7 @@ export default function ServicesManagerClient({
       )}
 
       {/* Unify Stages Modal */}
-      {isUnifyModalOpen && (
+      {isUnifyModalOpen && canUnify && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={() => setIsUnifyModalOpen(false)}></div>
           <div className="relative bg-white dark:bg-slate-800 rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200 border border-slate-200 dark:border-slate-700" dir="rtl">
@@ -187,17 +202,17 @@ export default function ServicesManagerClient({
               </div>
               <div>
                 <h2 className="text-base font-bold text-slate-800 dark:text-slate-100">
-                  تعميم مراحل القسم على الجمعيات الأخرى
+                  تعميم مراحل الخدمة على الجمعيات الأخرى
                 </h2>
                 <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
-                  نسخ مراحل قسم محدد من هذه الجمعية وتعميمها على نفس القسم في كافة الجمعيات الأخرى
+                  نسخ مراحل خدمة من هذه الجمعية وتعميمها على الخدمة نفسها في الجمعيات الأخرى التي لك وصولٌ إليها
                 </p>
               </div>
             </div>
             <form onSubmit={handleUnifySubmit} className="p-4 space-y-4">
               <div>
                 <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">
-                  المخطط الزمني المصدر (الذي سيتم نسخ المراحل منه):
+                  الخدمة المصدر (التي ستُنسخ مراحلها):
                 </label>
                 <select
                   value={selectedSource}
@@ -205,10 +220,10 @@ export default function ServicesManagerClient({
                   disabled={isPending}
                   className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none transition-all dark:text-white disabled:opacity-50 text-sm"
                 >
-                  <option value="" disabled>اختر المخطط الزمني</option>
-                  {initialServices.map(service => (
+                  <option value="" disabled>اختر الخدمة</option>
+                  {unifiableServices.map(service => (
                     <option key={service.id} value={`CUSTOM_${service.id}`}>
-                      {service.name} (مخطط مخصص)
+                      {service.name}
                     </option>
                   ))}
                 </select>
@@ -220,7 +235,7 @@ export default function ServicesManagerClient({
                 <div className="space-y-1">
                   <h4 className="text-sm font-bold text-red-800 dark:text-red-400">تنبيه هام جداً وإجراء غير قابل للتراجع</h4>
                   <p className="text-xs text-red-700/90 dark:text-red-300/80 leading-relaxed">
-                    عند إتمام هذه العملية، سيتم <strong>حذف كافة المراحل الحالية للقسم المختار</strong> في جميع الجمعيات الأخرى نهائياً، وسيتم <strong>إنشاء نسخ متطابقة</strong> من مراحل هذا القسم لهذه الجمعيات.
+                    عند إتمام هذه العملية، سيتم <strong>حذف كافة المراحل الحالية للخدمة المختارة</strong> في الجمعيات الأخرى التي لك وصولٌ إليها نهائياً، وسيتم <strong>إنشاء نسخ متطابقة</strong> من مراحل هذه الخدمة لتلك الجمعيات.
                   </p>
                 </div>
               </div>
@@ -228,7 +243,7 @@ export default function ServicesManagerClient({
               <div className="flex gap-3 pt-4 border-t border-slate-100 dark:border-slate-700">
                 <button
                   type="submit"
-                  disabled={isPending}
+                  disabled={isPending || !selectedSource}
                   className="flex-1 bg-red-600 hover:bg-red-700 dark:bg-red-700 dark:hover:bg-red-600 text-white py-2 rounded-xl font-bold transition-colors disabled:opacity-50 flex items-center justify-center gap-2 text-sm"
                 >
                   {isPending ? "جاري تعميم المراحل..." : "تأكيد التعميم وتطبيق المراحل"}

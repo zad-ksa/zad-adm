@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { prisma } from "@/lib/db";
 import { getSession } from "@/lib/auth";
-import { isAdmin as checkIsAdmin, hasPermission } from "@/lib/permissions";
+import { hasPermission } from "@/lib/permissions";
 import { getEmployeeServiceNames } from "@/app/actions/serviceAccess";
 import { Briefcase } from "lucide-react";
 import GenericStagesManager from "@/components/GenericStagesManager";
@@ -31,18 +31,17 @@ export default async function ServicesPage({ params }: { params: Promise<{ name:
   }
 
   const session = await getSession();
-  const isAdmin = checkIsAdmin(session?.role) || hasPermission(session?.role || "", session?.permissions || [], "manage_services");
 
   // مسار الجمعية لا بوابة عليه: كل من سجّل الدخول يصل الصفحة. فالمنح هنا
-  // صريحٌ لا ضمني — عكس «عرض الخدمات» حيث غياب المنح يعني بلا تقييد، لأن
-  // ذاك التبويب محجوبٌ بصلاحية وبنطاق الجمعيات المسنَدة.
+  // صريحٌ لا ضمني — عكس «عرض الخدمات» حيث غياب المنح يعني بلا تقييد في
+  // العرض، لأن ذاك التبويب محجوبٌ بصلاحية وبنطاق الجمعيات المسنَدة.
   //
-  // وهذا يحفظ ما كان: الشرط القديم (session.role === service.department) كان
-  // ميتاً — department كانت null في الخدمات الاثنتين والسبعين كلها — فلم يرَ
-  // مُدير المراحل أحدٌ غير الإداري. يراه الآن الإداري ومن مُنِح الخدمة.
-  const allowedServiceNames = isAdmin || !session?.id
-    ? null
-    : (await getEmployeeServiceNames(session.id)) ?? [];
+  // وكان هنا isAdmin = مدير النظام || manage_services، يفتح مُدير المراحل
+  // واللوحة لكل خدمات الجمعية. حُذف ذلك «الوصول لجميع الخدمات» للجميع ومنهم
+  // مدير النظام: مراحل الخدمة وتعميمها يتبعان منحها وحده، وإضافة خدمةٍ جديدة
+  // لـmanage_services.
+  const grantedNames = session?.id ? (await getEmployeeServiceNames(session.id)) ?? [] : [];
+  const canAddService = hasPermission(session?.role || "", session?.permissions || [], "manage_services");
 
   const allServices = await prisma.service.findMany({
     where: { charityId: charity.id },
@@ -55,7 +54,8 @@ export default async function ServicesPage({ params }: { params: Promise<{ name:
     orderBy: { createdAt: 'desc' }
   });
 
-
+  // ما يعدّل مراحله الموظف ويعمّمها: خدمات هذه الجمعية الممنوحة له.
+  const grantedServices = allServices.filter((svc) => grantedNames.includes(svc.name));
 
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -83,20 +83,18 @@ export default async function ServicesPage({ params }: { params: Promise<{ name:
         </div>
       </div>
 
-      <ServicesManagerClient 
-        charityId={charity.id} 
-        initialServices={allServices} 
-        isAdmin={isAdmin}
+      <ServicesManagerClient
+        charityId={charity.id}
+        unifiableServices={grantedServices}
+        canAddService={canAddService}
       />
 
       <ServiceAccordionProvider>
-        {allServices.map(service => (
-          (isAdmin || allowedServiceNames?.includes(service.name)) && (
-             <GenericStagesManager 
-               key={service.id}
-               service={service}
-             />
-          )
+        {grantedServices.map(service => (
+          <GenericStagesManager
+            key={service.id}
+            service={service}
+          />
         ))}
       </ServiceAccordionProvider>
     </div>

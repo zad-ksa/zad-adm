@@ -257,6 +257,11 @@ export async function getServices(charityId: string, department?: string | null)
 export async function createService(charityId: string, name: string, department: string | null) {
   const session = await getSession();
   if (!session) throw new Error("UNAUTHORIZED");
+  // «إضافة خدمة جديدة» تبقى تحت manage_services وحدها. كان حارسها الجمعية
+  // المسنَدة فقط، فالواجهة كانت الحاجز الوحيد أمام من لا يملكها.
+  if (!hasPermission(session.role, session.permissions || [], "manage_services")) {
+    throw new Error("غير مصرح لك بإضافة خدمة جديدة");
+  }
   await assertCharityAccess(session.id, session.role, charityId);
   // Enforce max 1 timeline per department (unless no department)
   if (department && department !== "NONE") {
@@ -729,6 +734,20 @@ export async function toggleCurrentServiceStage(stageId: string, isCurrent: bool
 export async function unifyCharityStagesAction(sourceCharityId: string, timelineType: string, sourceServiceId?: string, targetCharityIds?: string[]) {
   const session = await getSession();
   if (!session) throw new Error("غير مصرح");
+
+  // تعميم مراحل خدمةٍ يتبع منحها، كتعديل مراحلها و«قريباً»: من مُنح الخدمة
+  // يعمّمها، ومن لم يُمنحها لا يعمّمها. والحصر في الجمعيات المسنَدة يليه أدناه
+  // كما كان. ومدير النظام والمطوّر مستثنيان، كما في «الكل».
+  //
+  // المخططات المدمجة (الاستراتيجية والحوكمة والمالية) بلا sourceServiceId،
+  // فلا تمرّ من هنا ويبقى حكمها كما هو.
+  if (sourceServiceId && !isAdmin(session.role) && !(session.permissions || []).includes("developer_mode")) {
+    const source = await prisma.service.findUnique({ where: { id: sourceServiceId }, select: { name: true } });
+    const granted = await getEmployeeServiceNames(session.id);
+    if (!source || !granted?.includes(source.name)) {
+      throw new Error("لا يمكنك تعميم مراحل خدمةٍ لم تُمنح لك");
+    }
+  }
 
   const isUserAdmin = isAdmin(session.role);
   if (!isUserAdmin) {

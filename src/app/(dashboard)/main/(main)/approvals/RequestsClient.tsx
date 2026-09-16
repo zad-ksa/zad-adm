@@ -118,7 +118,8 @@ type Request = {
 type Props = {
   requests: Request[];
   /** Only the fallback approver for requests with no chain — not "sees all". */
-  canManage: boolean;
+  /** سلسلة اعتماد نشطة ولها خطوة أولى: شرط رفع أي طلب. */
+  hasActiveChain: boolean;
   /**
    * Holder of review_all_requests: reads every request in the company and
    * where it currently sits, in a lane of its own. Grants no authority over
@@ -250,9 +251,9 @@ function RequestTimeline({ logs }: { logs: RequestLog[] }) {
 
 // ── بطاقة الطلب ───────────────────────────────────────────────────────────────
 function RequestCard({
-  request, canManage, sessionId, allEmployees, onReview, onResubmit, onDelete,
+  request, sessionId, allEmployees, onReview, onResubmit, onDelete,
 }: {
-  request: Request; canManage: boolean; sessionId: string; allEmployees: Employee[];
+  request: Request; sessionId: string; allEmployees: Employee[];
   onReview: (r: Request) => void; onResubmit: (r: Request) => void;
   onDelete: (id: string) => void;
 }) {
@@ -267,16 +268,10 @@ function RequestCard({
   // button, and the two used to disagree: this showed delete to every manager.
   const canDelete =
     (isOwner && ["PENDING", "RETURNED"].includes(request.status)) ||
-    (request.status === "PENDING" && request.currentReviewerId === sessionId) ||
-    (request.status === "PENDING" && request.currentReviewerId === null && canManage);
+    (request.status === "PENDING" && request.currentReviewerId === sessionId);
 
-  // The chain names the reviewer; a title does not. The unassigned case falls
-  // back to manage_requests so a chainless request is not stuck forever.
-  const isCurrentReviewer =
-    request.status === "PENDING" &&
-    (request.currentReviewerId === null
-      ? canManage
-      : request.currentReviewerId === sessionId);
+  // السلسلة تسمّي المُراجع، ولا مسمّى ولا صلاحية تفعل.
+  const isCurrentReviewer = request.status === "PENDING" && request.currentReviewerId === sessionId;
 
   const catInfo = CATEGORIES.find(c => c.key === request.category);
   const attachments = typeof request.attachments === 'string' ? JSON.parse(request.attachments) : request.attachments;
@@ -466,7 +461,7 @@ function RequestCard({
 }
 
 // ── المكون الرئيسي ────────────────────────────────────────────────────────────
-export default function RequestsClient({ requests: initial, canManage, canReviewAll, sessionId, allEmployees }: Props) {
+export default function RequestsClient({ requests: initial, hasActiveChain, canReviewAll, sessionId, allEmployees }: Props) {
   const roleLabels = useRoleLabels();
   const [requests, setRequests] = useState<Request[]>(initial);
   const [showForm, setShowForm] = useState(false);
@@ -482,11 +477,7 @@ export default function RequestsClient({ requests: initial, canManage, canReview
   // Opens on whichever lane has work in it. Someone who approves nothing should
   // land on their own requests, not on an empty approvals list.
   const [tab, setTab] = useState<"AWAITING" | "MINE" | "DECIDED" | "ALL">(() =>
-    initial.some(
-      (r) =>
-        r.status === "PENDING" &&
-        (r.currentReviewerId === null ? canManage : r.currentReviewerId === sessionId)
-    )
+    initial.some((r) => r.status === "PENDING" && r.currentReviewerId === sessionId)
       ? "AWAITING"
       : "MINE"
   );
@@ -546,11 +537,7 @@ export default function RequestsClient({ requests: initial, canManage, canReview
   // Two lanes, because they are two different jobs: things waiting on ME to
   // act, and things I raised and am waiting on someone else for. Mixing them
   // into one list is what made it hard to see what actually needed doing.
-  const awaitingMe = requests.filter(
-    (r) =>
-      r.status === "PENDING" &&
-      (r.currentReviewerId === null ? canManage : r.currentReviewerId === sessionId)
-  );
+  const awaitingMe = requests.filter((r) => r.status === "PENDING" && r.currentReviewerId === sessionId);
   const mine = requests.filter((r) => r.createdBy?.id === sessionId);
 
   // مَن يقف عندهم قرارُ طلبٍ معلَّق الآن — مجمَّعين مع عددهم، وبلا نفسي.
@@ -881,7 +868,7 @@ export default function RequestsClient({ requests: initial, canManage, canReview
             <span className="text-left pl-1">إجراءات</span>
           </div>
           {filtered.map(r => (
-            <RequestCard key={r.id} request={r} canManage={canManage} sessionId={sessionId}
+            <RequestCard key={r.id} request={r} sessionId={sessionId}
               allEmployees={allEmployees}
               onReview={req => setReviewingReq(req)}
               onResubmit={req => setResubmitReq(req)}
@@ -900,11 +887,11 @@ export default function RequestsClient({ requests: initial, canManage, canReview
       </button>
 
       {showForm && (
-        <RequestForm onClose={() => setShowForm(false)}
+        <RequestForm hasActiveChain={hasActiveChain} onClose={() => setShowForm(false)}
           onDone={() => handleAction(async () => {})} />
       )}
       {resubmitReq && (
-        <RequestForm initial={resubmitReq} requestId={resubmitReq.id} isResubmit
+        <RequestForm initial={resubmitReq} requestId={resubmitReq.id} isResubmit hasActiveChain={hasActiveChain}
           onClose={() => setResubmitReq(null)}
           onDone={() => handleAction(async () => {})} />
       )}

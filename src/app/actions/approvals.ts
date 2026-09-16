@@ -15,12 +15,6 @@ import { revalidatePath } from "next/cache";
 
 // ── helpers ───────────────────────────────────────────────────────────────────
 
-function canViewRequests(role: string, permissions: string[]) {
-  return hasPermission(role, permissions, "view_requests");
-}
-function isExec(role: string, permissions: string[]) {
-  return hasPermission(role, permissions, "manage_requests");
-}
 
 async function requireSession() {
   const session = await getSession();
@@ -46,10 +40,9 @@ export async function createRequest(data: {
   attachments?: any[];
   priority: "LOW" | "MEDIUM" | "HIGH" | "URGENT";
 }) {
+  // رفع الطلب لكل موظف: الصفحة تعرض له طلباته وما هو عنده، وسلسلة الاعتماد
+  // هي التي تقرّر من يبتّ فيه.
   const session = await requireSession();
-  if (!canViewRequests(session.role, session.permissions || [])) {
-    throw new Error("غير مصرح");
-  }
 
   // هل يوجد workflow نشط؟
   const chain = await prisma.workflowChain.findFirst({
@@ -57,7 +50,10 @@ export async function createRequest(data: {
     include: { steps: { orderBy: { order: "asc" } } },
   });
 
+  // لا طلب بلا سلسلة: كان الطلب حينها يُنشأ بلا مُراجع، ولا ينقذه إلا حامل
+  // «إدارة الاعتمادات». وقد حُذفت تلك الصلاحية، فصار وجود السلسلة شرطاً.
   const firstStep = chain?.steps[0] ?? null;
+  if (!firstStep) throw new Error("لا توجد سلسلة اعتماد نشطة حالياً، راجع مسؤول النظام");
 
   const request = await prisma.request.create({
     data: {
@@ -71,7 +67,7 @@ export async function createRequest(data: {
       createdById: session.id,
       chainId: chain?.id ?? null,
       currentStepOrder: 1,
-      currentReviewerId: firstStep?.approverId ?? null,
+      currentReviewerId: firstStep.approverId,
     },
   });
 
@@ -85,35 +81,15 @@ export async function createRequest(data: {
     },
   });
 
-  // إشعار: إذا وُجد workflow → أشعر الخطوة الأولى فقط؛ وإلا أشعر كل الإدارة
-  if (firstStep) {
-    if (firstStep.approverId !== session.id) {
-      await notify(request.id, firstStep.approverId);
-      await createAppNotification(
-        firstStep.approverId,
-        "طلب جديد",
-        `تم رفع طلب جديد للمراجعة: ${request.title}`,
-        "/main/approvals"
-      );
-    }
-  } else {
-    const execs = await prisma.employee.findMany({
-      where: {
-        isActive: true,
-        id: { not: session.id },
-        // الصلاحية نفسها التي تمنح رؤية الطلب بلا سلسلة والقرار فيه.
-        // ADMIN يمرّ بدوره كما في hasPermission، وdeveloper_mode تجاوز شامل.
-        OR: [
-          { role: "ADMIN" },
-          { permissions: { has: "manage_requests" } },
-          { permissions: { has: "developer_mode" } },
-        ],
-      },
-      select: { id: true },
-    });
-    for (const e of execs) {
-      await notify(request.id, e.id);
-    }
+  // إشعار صاحب الخطوة الأولى.
+  if (firstStep.approverId !== session.id) {
+    await notify(request.id, firstStep.approverId);
+    await createAppNotification(
+      firstStep.approverId,
+      "طلب جديد",
+      `تم رفع طلب جديد للمراجعة: ${request.title}`,
+      "/main/approvals"
+    );
   }
 
   revalidatePath("/main/approvals");
@@ -138,17 +114,9 @@ export async function reviewRequest(data: {
   if (!request) throw new Error("الطلب غير موجود");
   if (request.status !== "PENDING") throw new Error("لا يمكن مراجعة طلب غير قيد المراجعة");
 
-  // Authority comes from the workflow, not from a job title: the person the
-  // chain named for THIS step is the one who may act, whatever permissions they
-  // hold. The manage_requests holder is only a fallback for a request with no
-  // chain at all, which otherwise has no approver and would never move.
-  //
-  // Checked here and not only in the page, because hiding a button is not a
-  // permission — this action is callable directly.
-  const isNamedReviewer = request.currentReviewerId === session.id;
-  const isUnassignedFallback =
-    request.currentReviewerId === null && isExec(session.role, session.permissions || []);
-  if (!isNamedReviewer && !isUnassignedFallback) {
+  // السلطة من السلسلة لا من المسمى ولا من صلاحية: من سمّته السلسلة لهذه
+  // الخطوة هو من يبتّ. ويُفحص هنا لا في الصفحة وحدها، فإخفاء زرٍّ ليس تصريحاً.
+  if (request.currentReviewerId !== session.id) {
     throw new Error("هذا الطلب ليس بانتظار اعتمادك");
   }
 
@@ -325,6 +293,8 @@ export async function resubmitRequest(data: {
   if (existing.status !== "RETURNED") throw new Error("لا يمكن إعادة إرسال هذا الطلب");
 
   const firstStep = existing.chain?.steps[0] ?? null;
+  // نفس شرط الرفع: لا إعادة إرسال إلى لا أحد.
+  if (!firstStep) throw new Error("لا توجد سلسلة اعتماد نشطة حالياً، راجع مسؤول النظام");
 
   await prisma.request.update({
     where: { id: data.requestId },
@@ -340,7 +310,7 @@ export async function resubmitRequest(data: {
       reviewNote: null,
       reviewedAt: null,
       currentStepOrder: 1,
-      currentReviewerId: firstStep?.approverId ?? null,
+      currentReviewerId: firstStep.approverId,
     },
   });
 
@@ -353,28 +323,8 @@ export async function resubmitRequest(data: {
     },
   });
 
-  // إعادة الإشعار
-  if (firstStep) {
-    await notify(data.requestId, firstStep.approverId);
-  } else {
-    const execs = await prisma.employee.findMany({
-      where: {
-        isActive: true,
-        id: { not: session.id },
-        // الصلاحية نفسها التي تمنح رؤية الطلب بلا سلسلة والقرار فيه.
-        // ADMIN يمرّ بدوره كما في hasPermission، وdeveloper_mode تجاوز شامل.
-        OR: [
-          { role: "ADMIN" },
-          { permissions: { has: "manage_requests" } },
-          { permissions: { has: "developer_mode" } },
-        ],
-      },
-      select: { id: true },
-    });
-    for (const e of execs) {
-      await notify(data.requestId, e.id);
-    }
-  }
+  // إعادة الإشعار لصاحب الخطوة الأولى.
+  await notify(data.requestId, firstStep.approverId);
 
   revalidatePath("/main/approvals");
 }
@@ -389,19 +339,12 @@ export async function deleteRequest(requestId: string) {
   });
   if (!existing) throw new Error("الطلب غير موجود");
 
-  // Deleting follows the same rule as seeing: a request you cannot open is not
-  // one you may destroy. manage_requests alone used to be enough for ANY
-  // request in the company — which, now that the page hides most of them, meant
-  // a manager could delete 47 requests they were not even shown.
+  // الحذف يتبع الرؤية: طلبٌ لا تفتحه لا تهدمه.
   const isOwnerWhileEditable =
     existing.createdById === session.id && ["PENDING", "RETURNED"].includes(existing.status);
   const isHolder = existing.status === "PENDING" && existing.currentReviewerId === session.id;
-  const isUnassignedFallback =
-    existing.status === "PENDING" &&
-    existing.currentReviewerId === null &&
-    isExec(session.role, session.permissions || []);
 
-  if (!isOwnerWhileEditable && !isHolder && !isUnassignedFallback) {
+  if (!isOwnerWhileEditable && !isHolder) {
     throw new Error("غير مصرح بحذف هذا الطلب");
   }
 
@@ -425,23 +368,13 @@ export async function deleteRequest(requestId: string) {
 export async function getVisibleRequestsAndMarkRead() {
   const session = await requireSession();
 
-  // No view_requests gate here, deliberately.
-  //
-  // The approvals page has none either: visibility is decided per request by
-  // visibleRequestFilter — your own requests, ones waiting on you, ones
-  // delegated to you, ones you personally decided. A blanket permission check
-  // in front of that made this action answer [] for anyone lacking
-  // view_requests, while the page rendered their requests normally. The list
-  // therefore appeared on load and emptied itself fifteen seconds later, and
-  // came back only by leaving and re-entering.
-  //
-  // Removing it leaks nothing: the filter, not the permission, is the
-  // authorization, and it is the same filter the page uses.
+  // لا بوابة صلاحية هنا ولا في الصفحة: الرؤية تُقرَّر لكل طلبٍ على حدة في
+  // visibleRequestFilter — طلباتك، وما ينتظرك، وما فُوِّض إليك، وما بتَتَّ فيه.
+  // المرشِّح هو التصريح، لا صلاحيةٌ شاملة أمامه.
   const [requests] = await Promise.all([
     prisma.request.findMany({
       ...RELATION_JOIN,
       where: visibleRequestFilter(session.id, {
-        canManage: isExec(session.role, session.permissions || []),
         canReviewAll: hasPermission(
           session.role,
           session.permissions || [],
@@ -462,10 +395,8 @@ export async function getVisibleRequestsAndMarkRead() {
 export async function markNotificationsRead() {
   const session = await requireSession();
 
-  // Same reasoning: the rows updated are keyed to this employee's own id, and
-  // getUnreadNotificationsCount counts them with no permission check at all.
-  // Gating only the clearing left anyone without view_requests with a badge
-  // that lit up and could never be put out.
+  // للسبب نفسه: الصفوف المُحدَّثة مرتبطة بمعرّف هذا الموظف وحده، وعدّادها
+  // يُحسب بلا فحص صلاحية أصلاً.
   await prisma.requestNotification.updateMany({
     where: { employeeId: session.id, isRead: false },
     data: { isRead: true },

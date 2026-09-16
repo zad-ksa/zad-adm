@@ -30,7 +30,7 @@ export default async function WorkSitesPage() {
       canViewReports={hasPermission(
         session.role,
         session.permissions || [],
-        "view_zad_attendance_reports"
+        "manage_zad_attendance"
       )}
     >
       <SitesClient

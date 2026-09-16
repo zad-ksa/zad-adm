@@ -71,7 +71,7 @@ export const RELATION_JOIN = { relationLoadStrategy: "join" } as const;
  */
 export function visibleRequestFilter(
   employeeId: string,
-  { canManage, canReviewAll = false }: { canManage: boolean; canReviewAll?: boolean }
+  { canReviewAll = false }: { canReviewAll?: boolean }
 ): Prisma.RequestWhereInput {
   // An empty filter is every row — which is exactly what this permission
   // means, and cheaper than an OR that would match them all anyway.
@@ -83,7 +83,6 @@ export function visibleRequestFilter(
       { status: "PENDING", currentReviewerId: employeeId },
       { status: "DELEGATED", delegatedToId: employeeId },
       { logs: { some: { actorId: employeeId, action: { in: DECIDED_ACTIONS } } } },
-      ...(canManage ? [{ status: "PENDING" as const, currentReviewerId: null }] : []),
     ],
   };
 }

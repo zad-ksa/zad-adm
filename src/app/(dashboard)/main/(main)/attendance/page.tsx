@@ -95,7 +95,7 @@ export default async function AttendancePage() {
         canViewReports={hasPermission(
           session.role,
           session.permissions || [],
-          "view_zad_attendance_reports"
+          "manage_zad_attendance"
         )}
       />
 

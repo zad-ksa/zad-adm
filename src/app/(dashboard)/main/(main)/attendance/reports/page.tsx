@@ -44,7 +44,7 @@ export default async function AttendanceReportsPage({
   const session = await getSession();
   if (!session) redirect("/");
   if (session.userType === "CHARITY_USER") redirect("/charity-login");
-  if (!hasPermission(session.role, session.permissions || [], "view_zad_attendance_reports")) {
+  if (!hasPermission(session.role, session.permissions || [], "manage_zad_attendance")) {
     redirect("/main/attendance");
   }
 

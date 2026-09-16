@@ -27,7 +27,7 @@ export default async function NetworkPolicyPage() {
       canViewReports={hasPermission(
         session.role,
         session.permissions || [],
-        "view_zad_attendance_reports"
+        "manage_zad_attendance"
       )}
     >
       <NetworkClient ipRanges={settings.allowedIpRanges} ipMode={settings.ipEnforcement} />

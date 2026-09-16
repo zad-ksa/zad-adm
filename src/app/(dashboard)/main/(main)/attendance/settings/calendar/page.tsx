@@ -90,7 +90,7 @@ export default async function HolidayCalendarPage({
       canViewReports={hasPermission(
         session.role,
         session.permissions || [],
-        "view_zad_attendance_reports"
+        "manage_zad_attendance"
       )}
     >
       <CalendarClient

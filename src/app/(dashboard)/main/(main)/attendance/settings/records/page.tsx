@@ -61,7 +61,7 @@ export default async function RecordsPage({
         canViewReports={hasPermission(
           session.role,
           session.permissions || [],
-          "view_zad_attendance_reports"
+          "manage_zad_attendance"
         )}
       >
         <p className="text-[13px] text-slate-500 dark:text-slate-400">لا يوجد موظفون نشطون.</p>
@@ -176,7 +176,7 @@ export default async function RecordsPage({
       canViewReports={hasPermission(
         session.role,
         session.permissions || [],
-        "view_zad_attendance_reports"
+        "manage_zad_attendance"
       )}
     >
       <RecordsClient

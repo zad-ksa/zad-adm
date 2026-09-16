@@ -1,0 +1,39 @@
+{
+  "employees": [
+    {
+      "id": "605f3942-6ed5-4cbd-9656-36264c233162",
+      "name": "مدير النظام",
+      "permissions": [
+        "manage_zad_attendance",
+        "view_zad_attendance_reports"
+      ]
+    },
+    {
+      "id": "cf1b9f72-839e-4219-bcd7-a68852947a17",
+      "name": "خالد شلبي",
+      "permissions": [
+        "developer_mode",
+        "view_charities",
+        "manage_charity_accounts",
+        "manage_contracts",
+        "manage_employees",
+        "delete_employees",
+        "view_all_tasks",
+        "manage_news",
+        "manage_surveys",
+        "manage_meetings",
+        "manage_communication",
+        "manage_workflow",
+        "manage_design_requests",
+        "manage_knowledge_tree",
+        "manage_zad_attendance",
+        "view_zad_attendance_reports",
+        "manage_landing",
+        "delete_design_requests",
+        "manage_services"
+      ]
+    }
+  ],
+  "roles": [],
+  "bundles": []
+}

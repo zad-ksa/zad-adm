@@ -27,10 +27,9 @@ export default function ReviewModal({
   const nextApprover = steps.find((s) => s.order === request.currentStepOrder + 1)?.approver;
   const prevApprover = steps.find((s) => s.order === request.currentStepOrder - 1)?.approver;
 
-  // Forwarding up stays the default while there is someone above; otherwise
-  // the person at the top lands on the action they actually need.
-  const defaultAction: ReviewAction = nextApprover ? "FORWARDED" : "APPROVED_FINAL";
-  const [action, setAction] = useState<ReviewAction>(defaultAction);
+  // بلا اختيارٍ افتراضي: القرار في طلبٍ ليس شيئاً يقع بنقرةٍ واحدة. كان «تمرير
+  // للأعلى» محدَّداً سلفاً، فمن ضغط «تأكيد» ماضياً مرّر الطلب وهو لم يقصد شيئاً.
+  const [action, setAction] = useState<ReviewAction | null>(null);
   const [note, setNote] = useState("");
   const [delegatedToId, setDelegatedToId] = useState("");
   const [error, setError] = useState("");
@@ -66,6 +65,9 @@ export default function ReviewModal({
   const noteRequired = action === "RETURNED" || action === "REJECTED";
 
   function handleSubmit() {
+    if (!action) {
+      setError("اختر الإجراء أولاً"); return;
+    }
     if (noteRequired && !note.trim()) {
       setError("يجب ذكر السبب أو الملاحظات"); return;
     }
@@ -91,10 +93,13 @@ export default function ReviewModal({
   };
   const btnMap: Record<string, string> = {
     indigo: "bg-indigo-600 hover:bg-indigo-700", emerald: "bg-emerald-600 hover:bg-emerald-700",
+    // «sky» لون «تمرير للأسفل»، وكان ناقصاً من هذا الجدول: فيخرج صنف الزرّ
+    // undefined فيُرسم بلا خلفية — أي بلا زرّ تأكيد يُرى.
+    sky: "bg-sky-600 hover:bg-sky-700",
     amber: "bg-amber-500 hover:bg-amber-600", red: "bg-red-600 hover:bg-red-700",
     purple: "bg-purple-600 hover:bg-purple-700",
   };
-  const selectedAction = actions.find(a => a.value === action)!;
+  const selectedAction = actions.find(a => a.value === action);
 
   return (
     <div
@@ -154,8 +159,11 @@ export default function ReviewModal({
         </div>
         <div className="px-5 py-4 border-t border-slate-100 dark:border-slate-800 flex justify-end gap-2 shrink-0">
           <button onClick={onClose} className="px-4 py-2 text-sm text-slate-500 hover:text-slate-700 dark:hover:text-slate-300">إلغاء</button>
-          <button onClick={handleSubmit} disabled={isPending}
-            className={`flex items-center gap-2 disabled:opacity-50 text-white px-5 py-2 rounded-xl text-sm font-bold transition-colors ${btnMap[selectedAction?.color || "emerald"]}`}>
+          <button onClick={handleSubmit} disabled={isPending || !action}
+            title={action ? undefined : "اختر الإجراء أولاً"}
+            className={`flex items-center gap-2 disabled:opacity-60 text-white px-5 py-2 rounded-xl text-sm font-bold transition-colors ${
+              selectedAction ? btnMap[selectedAction.color] ?? "bg-primary hover:bg-primary/90" : "bg-slate-400 dark:bg-slate-600"
+            }`}>
             {isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <ShieldCheck className="w-4 h-4" />}
             {isPending ? "جاري الحفظ..." : "تأكيد"}
           </button>

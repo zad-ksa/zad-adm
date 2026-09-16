@@ -17,13 +17,6 @@ export default async function RequestsPage() {
     redirect("/main");
   }
 
-  // Seeing everything is no longer what a permission buys. A request is visible
-  // to the person who raised it, to whoever it is sitting with, and to anyone
-  // who personally decided it — nobody else, whatever their title. What
-  // manage_requests still grants is the fallback for a request that has no
-  // workflow chain and therefore no named approver.
-  const canManage = hasPermission(session.role, session.permissions || [], "manage_requests");
-
   // Watching the whole pipeline, without gaining any power over it.
   const canReviewAll = hasPermission(
     session.role,
@@ -42,10 +35,10 @@ export default async function RequestsPage() {
   //
   // Marking notifications read is a side effect, not an input: nothing rendered
   // here depends on it, so it has no business delaying the render.
-  const [requests, allEmployees] = await Promise.all([
+  const [requests, allEmployees, , activeChain] = await Promise.all([
     prisma.request.findMany({
       ...RELATION_JOIN,
-      where: visibleRequestFilter(session.id, { canManage, canReviewAll }),
+      where: visibleRequestFilter(session.id, { canReviewAll }),
       include: REQUEST_INCLUDE,
     }),
     prisma.employee.findMany({
@@ -57,7 +50,15 @@ export default async function RequestsPage() {
       where: { employeeId: session.id, isRead: false },
       data: { isRead: true },
     }),
+    // لا طلب بلا سلسلة: الخادم يرفض الرفع، والواجهة تقول السبب بدل أن تُفشل
+    // الإرسال بعد تعبئة النموذج.
+    prisma.workflowChain.findFirst({
+      where: { isActive: true },
+      select: { steps: { select: { id: true }, take: 1 } },
+    }),
   ]);
+
+  const hasActiveChain = (activeChain?.steps.length ?? 0) > 0;
 
   const sorted = sortRequests(requests);
 
@@ -67,13 +68,13 @@ export default async function RequestsPage() {
   const hasSomethingToReview = sorted.some(
     (r) =>
       r.status === "PENDING" &&
-      (r.currentReviewerId === session.id || (r.currentReviewerId === null && canManage))
+      r.currentReviewerId === session.id
   );
 
   return (
     <RequestsClient
       requests={sorted as any}
-      canManage={canManage}
+      hasActiveChain={hasActiveChain}
       canReviewAll={canReviewAll}
       sessionId={session.id}
       allEmployees={hasSomethingToReview ? (allEmployees as any) : []}

@@ -54,8 +54,6 @@ export const PERMISSION_GROUPS = [
       { id: "manage_communication", label: "إدارة التواصل" },
       { id: "manage_design_requests", label: "طلبات التصاميم" },
       { id: "delete_design_requests", label: "حذف طلبات التصاميم نهائياً" },
-      { id: "view_requests", label: "الاعتمادات (رفع طلب ومتابعته)" },
-      { id: "manage_requests", label: "إدارة الاعتمادات (اعتماد / إرجاع)" },
       { id: "review_all_requests", label: "متابعة جميع الاعتمادات وأين وصلت (اطّلاع فقط)" },
       { id: "manage_workflow", label: "إعداد سلاسل اعتماد الطلبات" },
       // المعرّف بقي "manage_knowledge_tree" لأنه قيمة محفوظة في
@@ -65,8 +63,7 @@ export const PERMISSION_GROUPS = [
       { id: "manage_knowledge_tree", label: "مكتبة النماذج (إضافة وتعديل)" },
       // تحضير موظفي زاد. تسجيل الحضور نفسه ليس صلاحية — كل موظف نشط
       // يسجّل حضوره؛ هاتان لمن يضبط النظام ومن يقرأ سجلات الآخرين.
-      { id: "manage_zad_attendance", label: "إدارة تحضير موظفي زاد (المواقع والدوام والتقويم والإجازات)" },
-      { id: "view_zad_attendance_reports", label: "عرض تقارير حضور جميع موظفي زاد" },
+      { id: "manage_zad_attendance", label: "إدارة تحضير موظفي زاد" },
       { id: "manage_landing", label: "التحكم في الواجهة الرئيسية" },
       { id: "manage_permissions", label: "إدارة الصلاحيات ومجموعاتها" },
     ],
@@ -129,6 +126,16 @@ export const RETIRED_PERMISSION_IDS: string[] = [
   // «المهام والمنجزات»: مهامُ الموظف ليست امتيازاً يُمنح. صار التبويب لكل
   // موظف، و«عرض جميع مهام الموظفين» وحدها ترفع السقف إلى مهام الآخرين.
   "manage_tasks",
+  // «الاعتمادات (رفع طلب ومتابعته)»: التبويب والصفحة كانا مفتوحين للجميع أصلاً،
+  // ولم تكن تحرس إلا رفع الطلب وعدّاد إشعاراته. ورفع طلبٍ ليس امتيازاً يُمنح،
+  // فصار لكل موظف. والاعتماد ومتابعة الجميع بصلاحيتيهما كما كانا.
+  "view_requests",
+  // «إدارة الاعتمادات»: لم تكن تعني إلا البتّ في طلبٍ بلا سلسلة اعتماد. وصار
+  // وجود السلسلة شرطاً للرفع، فلا يوجد طلبٌ يتيم تُنقذه.
+  "manage_requests",
+  // «عرض تقارير حضور جميع موظفي زاد»: ضُمّت إلى إدارة التحضير — من يضبط النظام
+  // يقرأ تقاريره، وحاملاها كانا هما حاملي الإدارة نفسها.
+  "view_zad_attendance_reports",
 ];
 
 /**
@@ -164,11 +171,6 @@ export function sanitizePermissions(ids: string[] | null | undefined): string[] 
  * one fewer checkbox to keep in step by hand.
  */
 export const IMPLIES: Record<string, string[]> = {
-  // Deciding a request means being able to open the page that lists them.
-  manage_requests: ["view_requests"],
-  review_all_requests: ["view_requests"],
-  // Whoever configures attendance reads its reports.
-  manage_zad_attendance: ["view_zad_attendance_reports"],
   // Both of these act on charities, so both need the tab that leads there.
   manage_services: ["view_charities"],
   manage_charities: ["view_charities"],

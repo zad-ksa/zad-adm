@@ -8,6 +8,7 @@ import {
   ALL_PERMISSIONS,
   IMPLIES,
   PERMISSION_GROUPS,
+  SERVICE_LINKED_PERMISSION_IDS,
   effectivePermissions,
   isAdmin,
   sanitizePermissions,
@@ -36,12 +37,12 @@ type PermissionItem = { id: string; label: string };
 
 const LABEL = new Map(ALL_PERMISSIONS.map((p) => [p.id, p.label]));
 
-// صلاحيات صفحة الجمعية تُعرض في تبويب «الجمعيات والخدمات»: كلها تعمل داخل
-// جمعيات الموظف المسندة، فمكانها بجوار تلك الجمعيات لا بين صلاحيات لوحة التحكم.
-const CHARITY_GROUP_TITLE = "صلاحيات صفحة الجمعية";
-const CHARITY_PERMISSIONS: PermissionItem[] =
-  PERMISSION_GROUPS.find((g) => g.title === CHARITY_GROUP_TITLE)?.permissions ?? [];
-const ACCESS_GROUPS = PERMISSION_GROUPS.filter((g) => g.title !== CHARITY_GROUP_TITLE);
+// صلاحيات أقسام الجمعية (الاستراتيجية والحوكمة والمالية) لا تُمنح من هنا ولا
+// من أي مُنتقٍ: تُربط بخدمةٍ في صفحة «الصلاحيات» فينالها من مُنح تلك الخدمة.
+const GRANTABLE_GROUPS = PERMISSION_GROUPS.map((g) => ({
+  title: g.title,
+  permissions: g.permissions.filter((p) => !SERVICE_LINKED_PERMISSION_IDS.includes(p.id)),
+})).filter((g) => g.permissions.length > 0);
 
 /**
  * لوحة جانبية واحدة للإضافة والتعديل.
@@ -254,15 +255,14 @@ export function EmployeeSheet({
     });
 
   const q = permQuery.trim();
-  const groups = ACCESS_GROUPS.map((g) => ({
+  const groups = GRANTABLE_GROUPS.map((g) => ({
     title: g.title,
     items: g.permissions.filter((p) => !q || p.label.includes(q)),
   })).filter((g) => g.items.length > 0);
 
-  const charityPerms = groupSelection(CHARITY_PERMISSIONS);
   const freeServices = allServiceNames.filter((s) => !granted.roleServices.has(s));
   const allServicesOn = freeServices.length > 0 && freeServices.every(serviceOn);
-  const accessCount = granted.effective.filter((id) => !CHARITY_PERMISSIONS.some((p) => p.id === id)).length;
+  const accessCount = granted.effective.filter((id) => !SERVICE_LINKED_PERMISSION_IDS.includes(id)).length;
 
   return (
     <Sheet
@@ -553,7 +553,7 @@ export function EmployeeSheet({
             <section className="space-y-3">
               <SectionHeader
                 title="الصلاحيات الفردية"
-                description="تُمنح للموظف مباشرةً. ما تمنحه مجموعةٌ يظهر مع اسمها، وإزالته تحوّل المجموعة إلى اختيارٍ جزئي. صلاحيات صفحة الجمعية في تبويب «الجمعيات والخدمات»."
+                description="تُمنح للموظف مباشرةً. ما تمنحه مجموعةٌ يظهر مع اسمها، وإزالته تحوّل المجموعة إلى اختيارٍ جزئي."
               />
               <SearchField value={permQuery} onChange={setPermQuery} placeholder="ابحث في الصلاحيات" label="بحث في الصلاحيات" />
 
@@ -613,28 +613,6 @@ export function EmployeeSheet({
               </div>
               {charityIds.length === 0 && <Note tone="warn">بلا جمعيات لن يصل الموظف إلى أي جمعية.</Note>}
             </section>
-
-            {CHARITY_PERMISSIONS.length > 0 && (
-              <section className="space-y-3">
-                <SectionHeader
-                  title="صلاحيات صفحة الجمعية"
-                  description="الأقسام التي يعمل عليها الموظف داخل جمعياته المسندة."
-                  action={
-                    charityPerms.free.length > 0 ? (
-                      <SelectAll
-                        count={charityPerms.onCount}
-                        total={CHARITY_PERMISSIONS.length}
-                        allOn={charityPerms.allOn}
-                        onClick={charityPerms.toggleAll}
-                      />
-                    ) : undefined
-                  }
-                />
-                <div className="grid gap-x-2 rounded-lg border border-slate-200 p-1.5 sm:grid-cols-2 dark:border-slate-800">
-                  {permissionRows(CHARITY_PERMISSIONS)}
-                </div>
-              </section>
-            )}
 
             <section className="space-y-3">
               <SectionHeader

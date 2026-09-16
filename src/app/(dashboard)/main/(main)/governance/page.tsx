@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { prisma } from "@/lib/db";
 import GovernanceRegulationsManager from "./[name]/GovernanceRegulationsManager";
 import { getSession } from "@/lib/auth";
+import { requireSection } from "@/lib/sectionGuard";
 import { isAdmin as checkIsAdmin, hasPermission } from "@/lib/permissions";
 import GovernanceManualViewer from "@/components/GovernanceManualViewer";
 import { Suspense } from "react";
@@ -20,6 +21,7 @@ export default async function GeneralGovernancePage({
   const { tab } = await searchParams;
   const activeTab = tab || "manual"; // Default to manual
 
+  await requireSection("manage_governance");
   const session = await getSession();
 
   return (

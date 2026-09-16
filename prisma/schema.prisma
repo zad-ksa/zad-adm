@@ -1685,3 +1685,19 @@ model AttendanceRecord {
   // the person's movements everywhere rather than only within one charity.
   @@index([charityUserId, workDate])
 }
+
+/// ربط صلاحية بخدمة: من مُنح الخدمة نال الصلاحية في جلسته التالية.
+///
+/// يُحرَّر يدوياً من لوحة الصلاحية في صفحة «الصلاحيات» وحدها، لا في الكود —
+/// فالخدمات تُنشأ وتُسمّى وتُحذف يدوياً، وربطٌ ثابتٌ في الشيفرة ينكسر بصمت.
+/// ويُخزَّن بالاسم لا بالمعرّف: الخدمة الواحدة صفٌّ في كل جمعية، والاسم هو
+/// المفتاح الذي يستعمله EmployeeServiceAccess أصلاً. إعادة التسمية العامّة
+/// تُحدّث هذه الصفوف، وحذف الخدمة يحذفها.
+model PermissionServiceLink {
+  permissionId String
+  serviceName  String
+  createdAt    DateTime @default(now())
+
+  @@id([permissionId, serviceName])
+  @@index([serviceName])
+}

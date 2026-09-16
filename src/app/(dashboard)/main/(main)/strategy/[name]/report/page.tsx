@@ -1,4 +1,5 @@
 import { getPerformanceMetric } from "@/app/actions/performance";
+import { requireCharitySection } from "@/lib/sectionGuard";
 import StrategicReportClient from "./StrategicReportClient";
 import type { Metadata } from "next";
 
@@ -15,6 +16,8 @@ export async function generateMetadata({ params }: { params: Promise<{ name: str
 export default async function StrategicReportPage({ params, searchParams }: { params: Promise<{ name: string }>, searchParams: Promise<{ year?: string, quarter?: string }> }) {
   const { name } = await params;
   const decodedName = decodeURIComponent(name);
+
+  await requireCharitySection("manage_strategy", decodedName);
   
   const searchParamsObj = await searchParams;
   const year = searchParamsObj?.year ? parseInt(searchParamsObj.year) : new Date().getFullYear();

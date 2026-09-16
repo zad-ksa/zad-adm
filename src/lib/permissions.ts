@@ -77,7 +77,9 @@ export const PERMISSION_GROUPS = [
     permissions: [
       { id: "manage_strategy", label: "الاستراتيجية" },
       { id: "manage_governance", label: "الحوكمة" },
-      { id: "manage_programs", label: "البرامج والمشاريع" },
+      // قسمان مستقلان لا قسمٌ واحد: «تنمية الموارد» خدمتها غير خدمة «المالية»،
+      // وكانت صلاحيةٌ واحدة تفتحهما معاً فيُمنح أحدهما من أراد الآخر.
+      { id: "manage_resource_development", label: "تنمية الموارد المالية" },
       { id: "manage_finance", label: "المالية" },
       // No manage_hr. It was offered for months, granted to four people, and
       // checked by not one line in the project — so granting it opened nothing
@@ -122,6 +124,23 @@ export const RETIRED_PERMISSION_IDS: string[] = [
   // القديم يُنزع من المصفوفات المخزّنة عند أول حفظ، والجديد مُنح لحامليه
   // في هجرةٍ سابقة للنشر.
   "manage_charity_settings",
+  // «البرامج والمشاريع»: لم تكن تُفحص في موضعٍ واحد من الموقع، وصفحتها التي لا
+  // رابط إليها حُذفت معها. منحها وسحبها كانا سواءً.
+  "manage_programs",
+];
+
+/**
+ * صلاحيات أقسام الجمعية: لا تُمنح بيد أحد.
+ *
+ * تُربط بخدمةٍ في صفحة «الصلاحيات» فينالها من مُنح تلك الخدمة، في جمعياته
+ * المسنَدة وحدها. ولذلك تُخفى من مُنتقيات الموظف والمسمى والمجموعة — وإلا
+ * كان لها طريقان يتنازعان — وتبقى في الكتالوج ليُحرَّر ربطها.
+ */
+export const SERVICE_LINKED_PERMISSION_IDS: string[] = [
+  "manage_strategy",
+  "manage_governance",
+  "manage_resource_development",
+  "manage_finance",
 ];
 
 /** Strips retired ids and de-duplicates. Does not judge the rest. */

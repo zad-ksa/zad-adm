@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/db";
+import { requireCharitySection } from "@/lib/sectionGuard";
 import type { Metadata } from "next";
 import StrategicStagesManager from "../StrategicStagesManager";
 import { ensureStagesForCharity } from "@/app/actions/strategy";
@@ -16,6 +17,8 @@ export async function generateMetadata({ params }: { params: Promise<{ name: str
 export default async function StrategicStagesPage({ params }: { params: Promise<{ name: string }> }) {
   const { name } = await params;
   const decodedName = decodeURIComponent(name);
+
+  await requireCharitySection("manage_strategy", decodedName);
 
   const charity = await prisma.charity.findUnique({
     where: { name: decodedName },

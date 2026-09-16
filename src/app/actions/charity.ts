@@ -5,6 +5,7 @@ import { prisma } from "@/lib/db";
 import { revalidatePath } from "next/cache";
 import { getSession } from "@/lib/auth";
 import { hasPermission, isAdmin } from "@/lib/permissions";
+import { getAssignedCharityIds } from "@/lib/access";
 import { requirePermission } from "@/lib/guards";
 import { encryptSecret } from "@/lib/encryption";
 import { logAudit } from "@/lib/auditLog";
@@ -309,10 +310,27 @@ export async function updateCharityLogo(charityId: string, logoUrl: string | nul
   }
 }
 
+/**
+ * أفعال «تنمية الموارد المالية»: الجهات المانحة والمنح.
+ *
+ * كان حارسها تسجيل الدخول وحده — أي موظفٍ ينادي الفعل مباشرةً فيكتب في أي
+ * جمعية. وصارت بصلاحية القسم، وهي تُنال بمنح خدمته، وفي الجمعيات المسنَدة له.
+ */
+async function requireResourceDevelopment(charityId: string) {
+  const session = await getSession();
+  if (!session?.id || session.userType === "CHARITY_USER") return null;
+  if (!hasPermission(session.role, session.permissions || [], "manage_resource_development")) return null;
+
+  const assigned = await getAssignedCharityIds(session.id, session.role, session.permissions);
+  if (assigned !== null && !assigned.includes(charityId)) return null;
+
+  return session;
+}
+
 export async function addDonorAccount(charityId: string, donorName: string, username: string, password: string, website?: string) {
   try {
-    const session = await getSession();
-    if (!session || !session.id) return { success: false, message: "غير مصرح" };
+    const session = await requireResourceDevelopment(charityId);
+    if (!session) return { success: false, message: "غير مصرح" };
 
     const account = await (prisma as any).donorAccount.create({
       data: {
@@ -348,8 +366,8 @@ export async function addDonorAccount(charityId: string, donorName: string, user
 
 export async function deleteDonorAccount(accountId: string, charityId: string) {
   try {
-    const session = await getSession();
-    if (!session || !session.id) return { success: false, message: "غير مصرح" };
+    const session = await requireResourceDevelopment(charityId);
+    if (!session) return { success: false, message: "غير مصرح" };
 
     const target = await (prisma as any).donorAccount.findUnique({ where: { id: accountId }, select: { donorName: true } });
 
@@ -385,8 +403,8 @@ export async function addGrantApplication(
   status: string = "PENDING"
 ) {
   try {
-    const session = await getSession();
-    if (!session || !session.id) return { success: false, message: "غير مصرح" };
+    const session = await requireResourceDevelopment(charityId);
+    if (!session) return { success: false, message: "غير مصرح" };
 
     if (requestedAmount <= 0) return { success: false, message: "المبلغ غير صالح" };
 
@@ -422,8 +440,8 @@ export async function updateGrantApplicationStatus(
   closureDate?: Date
 ) {
   try {
-    const session = await getSession();
-    if (!session || !session.id) return { success: false, message: "غير مصرح" };
+    const session = await requireResourceDevelopment(charityId);
+    if (!session) return { success: false, message: "غير مصرح" };
 
     const charity = await prisma.charity.findUnique({ where: { id: charityId } });
     if (!charity) return { success: false, message: "الجمعية غير موجودة" };
@@ -502,8 +520,8 @@ export async function updateGrantApplicationStatus(
 
 export async function deleteGrantApplication(grantId: string, charityId: string) {
   try {
-    const session = await getSession();
-    if (!session || !session.id) return { success: false, message: "غير مصرح" };
+    const session = await requireResourceDevelopment(charityId);
+    if (!session) return { success: false, message: "غير مصرح" };
 
     await (prisma as any).grantApplication.delete({
       where: { id: grantId }

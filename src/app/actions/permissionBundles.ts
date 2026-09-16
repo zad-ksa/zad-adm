@@ -487,3 +487,56 @@ export async function setRoleBundles(roleId: string, bundleIds: string[]) {
     return fail("تعذّر حفظ مجموعات المسمى");
   }
 }
+
+/**
+ * ربط صلاحية بخدمات: من مُنح إحداها نال الصلاحية في جلسته التالية.
+ *
+ * يُحرَّر من لوحة الصلاحية في هذه الصفحة وحدها. استبدالٌ لا إضافة، وفي معاملةٍ
+ * واحدة. والصلاحية المجهولة والخدمة غير الموجودة تُرفضان برسالة، فلا يُحفظ
+ * ربطٌ لا يفتح شيئاً.
+ */
+export async function setPermissionServices(permissionId: string, serviceNames: string[]) {
+  try {
+    const session = await requireBundleAuthority();
+
+    if (!ALL_PERMISSION_IDS.includes(permissionId)) return fail("صلاحية غير معروفة");
+
+    const svc = await checkServices(serviceNames || []);
+    if (!svc.ok) return fail(`خدمة غير موجودة: ${svc.bad}`);
+
+    const before = await prisma.permissionServiceLink.findMany({
+      where: { permissionId },
+      select: { serviceName: true },
+    });
+
+    await prisma.$transaction(
+      async (tx) => {
+        await tx.permissionServiceLink.deleteMany({ where: { permissionId } });
+        if (svc.names.length) {
+          await tx.permissionServiceLink.createMany({
+            data: svc.names.map((serviceName) => ({ permissionId, serviceName })),
+          });
+        }
+      },
+      { timeout: 20_000, maxWait: 15_000 }
+    );
+
+    await logAudit({
+      actorType: "EMPLOYEE",
+      actorId: session.id,
+      actorName: session.name,
+      action: "PERMISSION_CHANGE",
+      targetType: "PermissionServiceLink",
+      targetId: permissionId,
+      metadata: { permission: permissionId, before: before.map((b) => b.serviceName), after: svc.names },
+    });
+
+    revalidate();
+    return { success: true as const };
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "";
+    if (message.startsWith("غير مصرح")) return fail(message);
+    console.error("setPermissionServices failed", error);
+    return fail("تعذّر حفظ ربط الصلاحية بالخدمات");
+  }
+}

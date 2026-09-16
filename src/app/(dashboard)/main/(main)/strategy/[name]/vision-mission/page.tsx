@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/db";
+import { requireCharitySection } from "@/lib/sectionGuard";
 import { getSession } from "@/lib/auth";
 import SurveyLinkManager from "@/components/SurveyLinkManager";
 import StrategyPermissionToggle from "@/components/StrategyPermissionToggle";
@@ -17,6 +18,8 @@ export async function generateMetadata({ params }: { params: Promise<{ name: str
 export default async function VisionMissionDashboardPage({ params }: { params: Promise<{ name: string }> }) {
   const { name } = await params;
   const decodedName = decodeURIComponent(name);
+
+  await requireCharitySection("manage_strategy", decodedName);
 
   const session = await getSession();
 

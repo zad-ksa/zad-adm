@@ -41,7 +41,7 @@ export default async function PermissionsAdminPage({
   const { tab } = await searchParams;
   const initialTab: PermissionsTab = PERMISSIONS_TABS.includes(tab as PermissionsTab) ? (tab as PermissionsTab) : "bundles";
 
-  const [employees, roles, bundleRows, serviceRows, directAccess] = await Promise.all([
+  const [employees, roles, bundleRows, serviceRows, directAccess, links] = await Promise.all([
     prisma.employee.findMany({
       where: { isActive: true },
       select: {
@@ -73,7 +73,21 @@ export default async function PermissionsAdminPage({
     // المفتاح — الخدمة الواحدة صفٌّ في كل جمعية، وكلها اسمٌ واحد.
     prisma.service.findMany({ select: { name: true }, distinct: ["name"], orderBy: { name: "asc" } }),
     prisma.employeeServiceAccess.findMany({ select: { employeeId: true, serviceName: true } }),
+    prisma.permissionServiceLink.findMany({ select: { permissionId: true, serviceName: true } }),
   ]);
+
+  // ربط الصلاحيات بالخدمات — يُحرَّر من لوحة الصلاحية. ويُحسب هنا كما تحسبه
+  // الجلسة تماماً، وإلا عرضت الصفحة حامليها ناقصين.
+  const permissionsByService = new Map<string, string[]>();
+  const linkedServices: Record<string, string[]> = {};
+  for (const link of links) {
+    const holders = permissionsByService.get(link.serviceName) ?? [];
+    holders.push(link.permissionId);
+    permissionsByService.set(link.serviceName, holders);
+    const services = linkedServices[link.permissionId] ?? [];
+    services.push(link.serviceName);
+    linkedServices[link.permissionId] = services;
+  }
 
   const bundles = bundleRows.map((b) => ({ ...b, permissions: sanitizePermissions(b.permissions) }));
 
@@ -113,11 +127,14 @@ export default async function PermissionsAdminPage({
     return set;
   };
 
-  const scopes = employees.map((e) => ({
-    employee: e,
-    permissions: new Set(effectivePermissions([...permissionSetOf(e)])),
-    services: serviceSetOf(e),
-  }));
+  const scopes = employees.map((e) => {
+    const services = serviceSetOf(e);
+    const permissions = permissionSetOf(e);
+    for (const name of services) {
+      for (const id of permissionsByService.get(name) ?? []) permissions.add(id);
+    }
+    return { employee: e, permissions: new Set(effectivePermissions([...permissions])), services };
+  });
 
   const serviceNames = serviceRows.map((s) => s.name).filter((n) => n.trim() !== "");
   const services = serviceNames.map((name) => ({
@@ -143,6 +160,7 @@ export default async function PermissionsAdminPage({
         adminNames={employees.filter((e) => e.role === "ADMIN").map((e) => e.name)}
         services={services}
         serviceNames={serviceNames}
+        linkedServices={linkedServices}
         canManageEmployees={hasPermission(session.role, session.permissions || [], "manage_employees")}
         employees={scopes.map(({ employee: e, permissions, services: svc }) => ({
           id: e.id,

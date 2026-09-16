@@ -270,7 +270,7 @@ export default function EmployeeSidebar({
             const allServices = [
               { id: "strategy", label: "الاستراتيجية", icon: Target, required: "manage_strategy" },
               { id: "governance", label: "الحوكمة", icon: Scale, required: "manage_governance" },
-              { id: "resource-development", label: "تنمية الموارد المالية", icon: Users, required: "manage_finance" },
+              { id: "resource-development", label: "تنمية الموارد المالية", icon: Users, required: "manage_resource_development" },
               { id: "finance", label: "المالية", icon: DollarSign, required: "manage_finance" },
             ];
 

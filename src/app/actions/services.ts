@@ -214,6 +214,13 @@ export async function renameServiceGlobally(oldName: string, newName: string, ne
     data: { name: cleanName, department: newDepartment }
   });
 
+  // الربط بالصلاحيات مفتاحه الاسم، فيتبع التسمية — وإلا صار ربطاً إلى خدمةٍ
+  // لا وجود لها، فتسقط الصلاحية عن حامليها بلا أثرٍ ظاهر.
+  await prisma.permissionServiceLink.updateMany({
+    where: { serviceName: oldName },
+    data: { serviceName: cleanName },
+  });
+
   revalidatePath('/main/manage-services');
   return { success: true, updatedCount: result.count };
 }
@@ -227,6 +234,8 @@ export async function deleteServiceGlobally(name: string) {
   }
 
   const result = await prisma.service.deleteMany({ where: { name } });
+  // ولا يبقى ربطٌ لصلاحيةٍ بخدمةٍ محذوفة.
+  await prisma.permissionServiceLink.deleteMany({ where: { serviceName: name } });
 
   revalidatePath('/main/manage-services');
   return { success: true, deletedCount: result.count };

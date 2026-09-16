@@ -1,4 +1,5 @@
 import { Scale, FolderOpen, FileText, LayoutDashboard } from "lucide-react";
+import { requireCharitySection } from "@/lib/sectionGuard";
 import type { Metadata } from "next";
 import { prisma } from "@/lib/db";
 import GovernanceRegulationsManager from "./GovernanceRegulationsManager";
@@ -30,6 +31,8 @@ export default async function GovernancePage({
   const { name } = await params;
   const { tab } = await searchParams;
   const decodedName = decodeURIComponent(name);
+
+  await requireCharitySection("manage_governance", decodedName);
   const activeTab = tab || "manual"; // Default to manual
   const encodedName = encodeURIComponent(decodedName);
 

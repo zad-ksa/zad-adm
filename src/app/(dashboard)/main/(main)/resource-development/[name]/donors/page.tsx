@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/db";
+import { requireCharitySection } from "@/lib/sectionGuard";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import DonorsClient from "./DonorsClient";
@@ -18,6 +19,8 @@ export async function generateMetadata({ params }: { params: Promise<{ name: str
 export default async function DonorsPage({ params }: { params: Promise<{ name: string }> }) {
   const { name } = await params;
   const decodedName = decodeURIComponent(name);
+
+  await requireCharitySection("manage_resource_development", decodedName);
 
   const charity = await prisma.charity.findUnique({
     where: { name: decodedName },

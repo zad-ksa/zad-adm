@@ -5,7 +5,7 @@ import type { ReactNode } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Briefcase, KeyRound, Layers, Pencil, Plus, ShieldCheck, Trash2, Users } from "lucide-react";
-import { ALL_PERMISSIONS, IMPLIES, PERMISSION_GROUPS } from "@/lib/permissions";
+import { ALL_PERMISSIONS, IMPLIES, PERMISSION_GROUPS, SERVICE_LINKED_PERMISSION_IDS } from "@/lib/permissions";
 import { deleteBundle } from "@/app/actions/permissionBundles";
 import { Avatar, AvatarStack, Badge, Count, Dot, IconTile, MONO, NameList, Note, SectionHeader, btn, cx } from "@/components/console/ui";
 import {
@@ -33,6 +33,7 @@ import {
   useToast,
 } from "@/components/console/overlays";
 import { BundleSheet } from "./BundleSheet";
+import { PermissionSheet } from "./PermissionSheet";
 import { EmployeeBundlesSheet } from "./EmployeeBundlesSheet";
 import type { BundleRow, PermEmployee, PermissionsTab, RoleRow, ServiceRow } from "./types";
 
@@ -65,6 +66,7 @@ export default function PermissionsAdminClient({
   employees,
   roles,
   bundles,
+  linkedServices,
   canManageEmployees,
 }: {
   initialTab: PermissionsTab;
@@ -76,6 +78,8 @@ export default function PermissionsAdminClient({
   employees: PermEmployee[];
   roles: RoleRow[];
   bundles: BundleRow[];
+  /** لكل صلاحية: الخدمات التي تمنحها تلقائياً. */
+  linkedServices: Record<string, string[]>;
   canManageEmployees: boolean;
 }) {
   const router = useRouter();
@@ -542,7 +546,10 @@ export default function PermissionsAdminClient({
                   return (
                     <tr key={p.id} onClick={() => setDetail({ kind: "permission", id: p.id })} className={rowClass}>
                       <td className="px-4 py-3">
-                        <p className="text-[13.5px] font-medium text-slate-900 dark:text-slate-100">{p.label}</p>
+                        <p className="flex items-center gap-2 text-[13.5px] font-medium text-slate-900 dark:text-slate-100">
+                          {p.label}
+                          {SERVICE_LINKED_PERMISSION_IDS.includes(p.id) && <Badge tone="brand">بالخدمة</Badge>}
+                        </p>
                         <p className={cx(MONO, "text-[12px] text-slate-400")} dir="ltr">
                           {p.id}
                         </p>
@@ -711,29 +718,23 @@ export default function PermissionsAdminClient({
       )}
 
       {detailPermission && (
-        <DetailSheet
-          title={detailPermission.label}
-          subtitle={detailPermission.id}
-          icon={<KeyRound className="size-4" />}
+        <PermissionSheet
+          key={detailPermission.id}
+          permission={detailPermission}
+          holders={holders[detailPermission.id] ?? []}
+          viaBundles={viaBundles[detailPermission.id] ?? []}
+          adminNames={adminNames}
+          serviceNames={serviceNames}
+          linked={linkedServices[detailPermission.id] ?? []}
+          implies={(IMPLIES[detailPermission.id] ?? []).map(labelOf)}
+          carriedBy={carriedBy(detailPermission.id).map(labelOf)}
           onClose={() => setDetail(null)}
-        >
-          <NameList
-            title="من يملكها"
-            description="بعد جمع ما مُنح مباشرةً، وما جاء عبر المجموعات ومجموعات المسمى، وما يُمنح تلقائياً."
-            names={holders[detailPermission.id] ?? []}
-            empty="لا يملكها أحد."
-          />
-          {adminNames.length > 0 && <Note tone="brand">ومدير النظام ({adminNames.join("، ")}) يمرّ بلا شرط.</Note>}
-          <ChipList title="المجموعات التي تمنحها" tone="brand" items={viaBundles[detailPermission.id] ?? []} empty="لا تمنحها أي مجموعة." />
-          <ChipList title="تمنح معها تلقائياً" items={(IMPLIES[detailPermission.id] ?? []).map(labelOf)} empty="لا شيء." />
-          <ChipList title="تُمنح تلقائياً مع" items={carriedBy(detailPermission.id).map(labelOf)} empty="لا شيء." />
-          <p className="text-[12.5px] text-slate-500">
-            الشرح التفصيلي لما تسمح به في{" "}
-            <span className={MONO} dir="ltr">
-              docs/دليل-الصلاحيات.md
-            </span>
-          </p>
-        </DetailSheet>
+          onSaved={(text) => {
+            setDetail(null);
+            setToast({ tone: "ok", text });
+            router.refresh();
+          }}
+        />
       )}
 
       {detailService && (
@@ -773,12 +774,9 @@ function DetailSheet({
       leading={<IconTile>{icon}</IconTile>}
       onClose={onClose}
       footer={
-        <>
-          <span className="text-[12.5px] text-slate-500">للاطلاع — تُمنح من المجموعات أو من الموظفين.</span>
-          <button type="button" onClick={onClose} className={btn.secondary}>
-            إغلاق
-          </button>
-        </>
+        <button type="button" onClick={onClose} className={cx(btn.secondary, "ms-auto")}>
+          إغلاق
+        </button>
       }
     >
       <div className="space-y-8">{children}</div>

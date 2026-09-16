@@ -5,7 +5,13 @@ import Link from "next/link";
 import { LoaderCircle, RefreshCw, ShieldCheck, Trash2 } from "lucide-react";
 import { createRole, updateRole } from "@/app/actions/roles";
 import { setRoleBundles } from "@/app/actions/permissionBundles";
-import { ALL_PERMISSIONS, IMPLIES, PERMISSION_GROUPS, effectivePermissions } from "@/lib/permissions";
+import {
+  ALL_PERMISSIONS,
+  IMPLIES,
+  PERMISSION_GROUPS,
+  SERVICE_LINKED_PERMISSION_IDS,
+  effectivePermissions,
+} from "@/lib/permissions";
 import {
   Badge,
   Field,
@@ -108,9 +114,12 @@ export function RoleSheet({
   };
 
   const q = permQuery.trim();
+  // صلاحيات أقسام الجمعية تُنال بربط الخدمة وحده، فلا تُعرض هنا.
   const groups = PERMISSION_GROUPS.map((g) => ({
     title: g.title,
-    items: g.permissions.filter((p) => !q || p.label.includes(q) || p.id.includes(q)),
+    items: g.permissions.filter(
+      (p) => !SERVICE_LINKED_PERMISSION_IDS.includes(p.id) && (!q || p.label.includes(q) || p.id.includes(q))
+    ),
   })).filter((g) => g.items.length > 0);
 
   const members = role?.members ?? [];

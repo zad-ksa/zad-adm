@@ -1,4 +1,5 @@
 import { getPerformanceMetric } from "@/app/actions/performance";
+import { requireCharitySection } from "@/lib/sectionGuard";
 import { hasPermission } from "@/lib/permissions";
 import PerformanceTable from "@/components/PerformanceTable";
 import type { Metadata } from "next";
@@ -27,6 +28,8 @@ const MetricIcon = () => (
 export default async function CharityPerformancePage({ params, searchParams }: { params: Promise<{ name: string }>, searchParams: Promise<{ year?: string, quarter?: string }> }) {
   const { name } = await params;
   const decodedName = decodeURIComponent(name);
+
+  await requireCharitySection("manage_strategy", decodedName);
   
   const searchParamsObj = await searchParams;
   const year = searchParamsObj?.year ? parseInt(searchParamsObj.year) : new Date().getFullYear();

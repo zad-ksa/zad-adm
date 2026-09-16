@@ -3,7 +3,13 @@
 import { useMemo, useState, useTransition } from "react";
 import Link from "next/link";
 import { Layers, LoaderCircle, Trash2 } from "lucide-react";
-import { ALL_PERMISSIONS, IMPLIES, PERMISSION_GROUPS, effectivePermissions } from "@/lib/permissions";
+import {
+  ALL_PERMISSIONS,
+  IMPLIES,
+  PERMISSION_GROUPS,
+  SERVICE_LINKED_PERMISSION_IDS,
+  effectivePermissions,
+} from "@/lib/permissions";
 import { createBundle, deleteBundle, setBundleEmployees, updateBundle } from "@/app/actions/permissionBundles";
 import {
   Badge,
@@ -120,9 +126,12 @@ export function BundleSheet({
   };
 
   const q = permQuery.trim();
+  // صلاحيات أقسام الجمعية تُنال بربط الخدمة وحده، فلا تُعرض هنا.
   const groups = PERMISSION_GROUPS.map((g) => ({
     title: g.title,
-    items: g.permissions.filter((p) => !q || p.label.includes(q) || p.id.includes(q)),
+    items: g.permissions.filter(
+      (p) => !SERVICE_LINKED_PERMISSION_IDS.includes(p.id) && (!q || p.label.includes(q) || p.id.includes(q))
+    ),
   })).filter((g) => g.items.length > 0);
 
   const hq = holderQuery.trim();

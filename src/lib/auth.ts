@@ -49,7 +49,7 @@ async function resolveBundles(
   prisma: PrismaClient,
   employeeId: string,
   roleKey?: string | null
-): Promise<{ permissions: string[]; hasServices: boolean }> {
+): Promise<{ permissions: string[]; services: string[] }> {
   const rows = await prisma.permissionBundle.findMany({
     where: {
       OR: [
@@ -61,8 +61,25 @@ async function resolveBundles(
   });
   return {
     permissions: rows.flatMap((r) => r.permissions),
-    hasServices: rows.some((r) => r.services.length > 0),
+    services: rows.flatMap((r) => r.services),
   };
+}
+
+/**
+ * الصلاحيات المربوطة بخدمةٍ مُنحت للموظف.
+ *
+ * الربط بيانٌ يُحرَّر من صفحة «الصلاحيات»، لا ثابتٌ في الشيفرة: الخدمات تُنشأ
+ * وتُسمّى وتُحذف يدوياً، وارتباطٌ مكتوبٌ في الكود ينكسر بصمتٍ عند أول تسمية.
+ * والمفتاح هو الاسم كما في EmployeeServiceAccess — إعادة التسمية العامّة
+ * تُحدّث الصفوف، والحذف يحذفها.
+ */
+async function resolveServicePermissions(prisma: PrismaClient, serviceNames: string[]): Promise<string[]> {
+  if (serviceNames.length === 0) return [];
+  const rows = await prisma.permissionServiceLink.findMany({
+    where: { serviceName: { in: serviceNames } },
+    select: { permissionId: true },
+  });
+  return rows.map((r) => r.permissionId);
 }
 
 /**
@@ -138,7 +155,7 @@ export const getSession = cache(async () => {
           where: { id: overrideEmployeeId },
           select: {
             id: true, name: true, role: true, permissions: true, charityId: true, avatarUrl: true,
-            _count: { select: { serviceAccess: true } },
+            serviceAccess: { select: { serviceName: true } },
           }
         });
         
@@ -151,8 +168,16 @@ export const getSession = cache(async () => {
           // مجموعات الموظف المُنتحَل شخصيّته، لا مجموعات المطوّر: الانتحال
           // يعني أن يرى ما يراه هو بالضبط.
           const impersonated = await resolveBundles(prisma, emp.id, emp.role);
-          const merged = sanitizePermissions([...emp.permissions, ...impersonated.permissions]);
-          if (emp._count.serviceAccess > 0 || impersonated.hasServices) merged.push(SERVICES_TAB);
+          const impersonatedServices = [
+            ...new Set([...emp.serviceAccess.map((s) => s.serviceName), ...impersonated.services]),
+          ];
+          const impersonatedLinked = await resolveServicePermissions(prisma, impersonatedServices);
+          const merged = sanitizePermissions([
+            ...emp.permissions,
+            ...impersonated.permissions,
+            ...impersonatedLinked,
+          ]);
+          if (impersonatedServices.length > 0) merged.push(SERVICES_TAB);
           session.permissions = merged;
           session.charityId = emp.charityId;
           session.avatarUrl = emp.avatarUrl;
@@ -166,15 +191,17 @@ export const getSession = cache(async () => {
           permissions: true,
           role: true,
           isActive: true,
-          // العدّ في الاستعلام نفسه: منحُ خدمةٍ واحد هو ما يفتح تبويب الخدمات،
-          // ونداءٌ ثانٍ في كل طلبٍ من أجل رقمٍ واحد ثمنٌ لا داعي له.
-          _count: { select: { serviceAccess: true } },
+          // الأسماء لا العدد: منحُ خدمةٍ يفتح تبويب الخدمات، ويمنح أيضاً ما
+          // رُبط بها من صلاحيات في PermissionServiceLink.
+          serviceAccess: { select: { serviceName: true } },
         },
       });
       if (emp && emp.isActive) {
         const bundles = await resolveBundles(prisma, session.id, emp.role);
-        const merged = sanitizePermissions([...emp.permissions, ...bundles.permissions]);
-        if (emp._count.serviceAccess > 0 || bundles.hasServices) merged.push(SERVICES_TAB);
+        const services = [...new Set([...emp.serviceAccess.map((s) => s.serviceName), ...bundles.services])];
+        const linked = await resolveServicePermissions(prisma, services);
+        const merged = sanitizePermissions([...emp.permissions, ...bundles.permissions, ...linked]);
+        if (services.length > 0) merged.push(SERVICES_TAB);
         session.permissions = merged;
         session.role = emp.role;
       } else {

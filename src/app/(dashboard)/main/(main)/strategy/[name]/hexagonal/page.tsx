@@ -1,4 +1,5 @@
 import { unstable_cache } from "next/cache";
+import { requireCharitySection } from "@/lib/sectionGuard";
 import { prisma } from "@/lib/db";
 import Link from "next/link";
 import type { Metadata } from "next";
@@ -47,6 +48,8 @@ const getCachedHexResponses = async (charityName: string) => {
 export default async function HexagonalSurveysPage({ params }: { params: Promise<{ name: string }> }) {
   const { name } = await params;
   const decodedName = decodeURIComponent(name);
+
+  await requireCharitySection("manage_strategy", decodedName);
 
   const hexagonalResponses = await getCachedHexResponses(decodedName);
 

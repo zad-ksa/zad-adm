@@ -1,4 +1,5 @@
 import { unstable_cache } from "next/cache";
+import { requireCharitySection } from "@/lib/sectionGuard";
 import { hasPermission } from "@/lib/permissions";
 import { prisma } from "@/lib/db";
 import Link from "next/link";
@@ -56,6 +57,8 @@ const FileEditIcon = () => (
 export default async function StrategySurveysPage({ params }: { params: Promise<{ name: string }> }) {
   const { name } = await params;
   const decodedName = decodeURIComponent(name);
+
+  await requireCharitySection("manage_strategy", decodedName);
 
   // Three round trips to ap-southeast-2 that were waiting on each other for no
   // reason: none of the three reads the result of the other two.

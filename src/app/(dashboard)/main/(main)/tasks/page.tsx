@@ -4,15 +4,15 @@ import { prisma } from "@/lib/db";
 import TasksClient from "./TasksClient";
 import { getCategories } from "@/app/actions/categories";
 import { getTasksForEmployee } from "@/app/actions/tasks";
-import { hasPermission } from "@/lib/permissions";
 
 export const dynamic = "force-dynamic";
 
 export default async function TasksPage() {
   const session = await getSession();
 
-  // Reject access if user doesn't have manage_tasks permission
-  if (!session || !hasPermission(session.role, session.permissions || [], "manage_tasks")) {
+  // لكل موظف مهامه: الصفحة تفتح على مهام صاحبها، فلا صلاحية عليها. و«عرض
+  // جميع مهام الموظفين» تُقرأ داخل الصفحة وأفعالها فترفع السقف إلى مهام غيره.
+  if (!session) {
     redirect("/main");
   }
 

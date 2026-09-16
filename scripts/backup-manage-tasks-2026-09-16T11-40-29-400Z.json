@@ -1,0 +1,212 @@
+{
+  "employees": [
+    {
+      "id": "ba345ea7-a589-43df-8b1c-03fc5f1be921",
+      "name": "سند العتيبي",
+      "permissions": [
+        "manage_tasks",
+        "view_requests"
+      ]
+    },
+    {
+      "id": "296eb5ae-775d-40da-a9b9-51960804a03f",
+      "name": "حسن السيد",
+      "permissions": [
+        "manage_tasks",
+        "view_charities",
+        "manage_meetings",
+        "manage_services"
+      ]
+    },
+    {
+      "id": "f907fc7c-f304-4259-b962-4787f5cf657f",
+      "name": "ماهر المحمادي",
+      "permissions": [
+        "manage_contracts",
+        "manage_employees",
+        "manage_tasks",
+        "manage_news",
+        "manage_surveys",
+        "manage_meetings",
+        "manage_communication",
+        "view_requests",
+        "manage_requests",
+        "manage_workflow",
+        "review_all_requests",
+        "manage_knowledge_tree",
+        "view_all_tasks",
+        "view_charities",
+        "delete_employees",
+        "manage_charity_accounts",
+        "manage_design_requests",
+        "manage_services"
+      ]
+    },
+    {
+      "id": "5965c3af-7d7e-41d6-a0d4-4a6f5b2ed867",
+      "name": "احمد شعبان",
+      "permissions": [
+        "manage_tasks",
+        "view_requests",
+        "manage_design_requests",
+        "manage_knowledge_tree",
+        "view_charities",
+        "manage_charity_accounts",
+        "manage_contracts",
+        "manage_employees",
+        "delete_employees",
+        "view_all_tasks",
+        "manage_news",
+        "manage_surveys",
+        "manage_meetings",
+        "manage_communication",
+        "manage_requests",
+        "manage_workflow",
+        "manage_landing",
+        "manage_services"
+      ]
+    },
+    {
+      "id": "662976e7-7290-4f0e-8761-e6c6149f1119",
+      "name": "محمد النمري",
+      "permissions": [
+        "manage_employees",
+        "manage_tasks",
+        "manage_news",
+        "manage_surveys",
+        "manage_meetings",
+        "manage_contracts",
+        "manage_communication",
+        "manage_requests",
+        "view_requests",
+        "manage_workflow",
+        "manage_charity_accounts",
+        "delete_employees",
+        "view_charities",
+        "view_all_tasks",
+        "manage_design_requests",
+        "manage_knowledge_tree",
+        "manage_landing",
+        "developer_mode",
+        "review_all_requests",
+        "manage_services"
+      ]
+    },
+    {
+      "id": "8328b40a-d60f-4269-bab9-9195c793d58c",
+      "name": "فاضل الحطامي",
+      "permissions": [
+        "manage_tasks",
+        "view_requests",
+        "manage_design_requests"
+      ]
+    },
+    {
+      "id": "df9eab5a-0c4a-46dc-b59a-fae487232372",
+      "name": "عبدالعزيز باقلاقل",
+      "permissions": [
+        "manage_tasks",
+        "manage_design_requests",
+        "view_requests"
+      ]
+    },
+    {
+      "id": "97f58b91-6735-4aa3-aa38-a34fe5b77ba3",
+      "name": "محمد مشعل العتيبي",
+      "permissions": [
+        "manage_tasks",
+        "manage_meetings",
+        "manage_news"
+      ]
+    },
+    {
+      "id": "0e40eb9a-8ec6-4731-a8d0-2ed745c454c0",
+      "name": "عبدالرحمن حمدان",
+      "permissions": [
+        "manage_tasks"
+      ]
+    },
+    {
+      "id": "cf1b9f72-839e-4219-bcd7-a68852947a17",
+      "name": "خالد شلبي",
+      "permissions": [
+        "developer_mode",
+        "view_charities",
+        "manage_charity_accounts",
+        "manage_contracts",
+        "manage_employees",
+        "delete_employees",
+        "manage_tasks",
+        "view_all_tasks",
+        "manage_news",
+        "manage_surveys",
+        "manage_meetings",
+        "manage_communication",
+        "view_requests",
+        "manage_workflow",
+        "manage_requests",
+        "manage_design_requests",
+        "manage_knowledge_tree",
+        "manage_zad_attendance",
+        "view_zad_attendance_reports",
+        "manage_landing",
+        "delete_design_requests",
+        "manage_services"
+      ]
+    }
+  ],
+  "roles": [
+    {
+      "id": "1780e25f-ca00-4e27-8820-b363278c7bbc",
+      "key": "DESIGNER",
+      "permissions": [
+        "manage_design_requests",
+        "view_requests",
+        "manage_tasks"
+      ]
+    },
+    {
+      "id": "882fb492-283e-4501-bc7b-987757718e70",
+      "key": "STRATEGY",
+      "permissions": [
+        "view_requests",
+        "manage_tasks"
+      ]
+    },
+    {
+      "id": "383cac88-7b5f-432e-8e99-39448fcee884",
+      "key": "ADMINISTRATIVE_SECRETARIAT",
+      "permissions": [
+        "manage_tasks",
+        "view_requests"
+      ]
+    },
+    {
+      "id": "5561521f-a488-4663-8ad3-72b3896cfad2",
+      "key": "EXECUTIVE_DIRECTOR",
+      "permissions": [
+        "view_charities",
+        "manage_charity_accounts",
+        "manage_contracts",
+        "edit_contracts",
+        "manage_employees",
+        "delete_employees",
+        "manage_tasks",
+        "view_all_tasks",
+        "manage_news",
+        "manage_surveys",
+        "view_services_overview",
+        "manage_meetings",
+        "manage_communication",
+        "view_requests",
+        "manage_requests",
+        "manage_workflow",
+        "manage_charity_settings",
+        "manage_hr",
+        "view_all_charities",
+        "manage_services"
+      ]
+    }
+  ],
+  "bundles": []
+}

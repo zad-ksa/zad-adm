@@ -182,7 +182,8 @@ export default function EmployeeSidebar({
   if (can("manage_meetings")) {
     navItems.push({ label: "محاضر الاجتماعات", href: "/main/meetings", icon: FileText });
   }
-  if (can("manage_tasks")) {
+  // لكل موظف بلا استثناء: مهامه هو. والوسم يتبدّل لمن يرى مهام الجميع.
+  {
     const isManager = can("view_all_tasks") || perms.includes("developer_mode");
     navItems.push({ label: isManager ? "المهام والمنجزات" : "مهامي", href: "/main/tasks", icon: CheckSquare });
   }

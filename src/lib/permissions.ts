@@ -47,7 +47,6 @@ export const PERMISSION_GROUPS = [
       { id: "manage_contracts", label: "العقود" },
       { id: "manage_employees", label: "إدارة الموظفين" },
       { id: "delete_employees", label: "حذف الموظفين" },
-      { id: "manage_tasks", label: "المهام والمنجزات" },
       { id: "view_all_tasks", label: "عرض وإدارة جميع مهام الموظفين" },
       { id: "manage_news", label: "الأخبار والإنجازات" },
       { id: "manage_surveys", label: "الاستبيانات المخصصة" },
@@ -127,6 +126,9 @@ export const RETIRED_PERMISSION_IDS: string[] = [
   // «البرامج والمشاريع»: لم تكن تُفحص في موضعٍ واحد من الموقع، وصفحتها التي لا
   // رابط إليها حُذفت معها. منحها وسحبها كانا سواءً.
   "manage_programs",
+  // «المهام والمنجزات»: مهامُ الموظف ليست امتيازاً يُمنح. صار التبويب لكل
+  // موظف، و«عرض جميع مهام الموظفين» وحدها ترفع السقف إلى مهام الآخرين.
+  "manage_tasks",
 ];
 
 /**
@@ -173,8 +175,6 @@ export const IMPLIES: Record<string, string[]> = {
   // A destructive action implies the ordinary one it destroys from.
   delete_employees: ["manage_employees"],
   delete_design_requests: ["manage_design_requests"],
-  // Seeing everyone's tasks implies having the tasks screen at all.
-  view_all_tasks: ["manage_tasks"],
 };
 
 /** Everything a stored array actually grants, once implications are applied. */

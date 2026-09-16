@@ -19,7 +19,7 @@ export async function generateMetadata({ params }: { params: Promise<{ name: str
 }
 
 const getCachedFinanceData = async (charityName: string) => {
-    let charityData = await (prisma.charity as any).findUnique({
+    let charityData = await prisma.charity.findUnique({
       where: { name: charityName },
       include: {
         financialLogs: {

@@ -91,7 +91,7 @@ export default function GanttChart({
       const start = addDays(lastSunday, i * 7);
       const end = addDays(start, 4); // Thursday
       end.setHours(23, 59, 59, 999);
-      let label = i === 0 ? "الأسبوع الماضي" : i === 1 ? "الأسبوع الحالي" : `الأسبوع ${i}`;
+      const label = i === 0 ? "الأسبوع الماضي" : i === 1 ? "الأسبوع الحالي" : `الأسبوع ${i}`;
       arr.push({ start, end, label, isCurrent: i === 1 });
     }
     return arr;

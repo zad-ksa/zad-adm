@@ -74,7 +74,7 @@ export default function ReadinessResultsClient({ responses }: { responses: any[]
       
       const questionsData = section.questions.map((q) => {
         let qTotalScore = 0;
-        let qMaxScore = Math.max(...q.options.map((o: any) => o.score));
+        const qMaxScore = Math.max(...q.options.map((o: any) => o.score));
         maxSecScore += qMaxScore;
 
         includedResponses.forEach((res) => {

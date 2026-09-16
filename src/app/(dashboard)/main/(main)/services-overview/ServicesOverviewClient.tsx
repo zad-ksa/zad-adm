@@ -140,7 +140,7 @@ async function actionToggleActive(dept: DeptKey, stageId: string, isActive: bool
 
 // ── Date calculation helpers ────────────────────────────────────────
 function addDays(date: Date, days: number, workOnly: boolean): Date {
-  let d = new Date(date);
+  const d = new Date(date);
   let added = 0;
   while (added < days) {
     d.setDate(d.getDate() + 1);
@@ -618,7 +618,7 @@ function InlineTimeline({
   const editContinuous = sorted.filter(s => s.isContinuous);
 
   function renderEditItem(stage: Stage, idx: number, isContinuousSection: boolean) {
-    const contSortedList = isContinuousSection ? editContinuous : editRegular; // eslint-disable-line @typescript-eslint/no-unused-vars
+    const contSortedList = isContinuousSection ? editContinuous : editRegular;  
     return (
       <div key={stage.id} className={`rounded-lg border p-2 ${isContinuousSection ? "border-amber-200 dark:border-amber-800/40 bg-amber-50/40 dark:bg-amber-900/10" : stage.isCurrent ? "border-primary/30 bg-primary/5" : "border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50"}`}>
           {editingId === stage.id ? (

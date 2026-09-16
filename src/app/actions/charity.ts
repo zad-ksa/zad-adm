@@ -84,7 +84,7 @@ export async function addCharity(data: { name: string; establishmentDate?: strin
       }
     });
 
-    const templates = await (prisma as any).serviceTemplate.findMany();
+    const templates = await prisma.serviceTemplate.findMany();
     if (templates.length > 0) {
       const servicesToCreate = templates.map((t: any) => ({
         name: t.name,
@@ -113,7 +113,7 @@ export async function updateCharity(id: string, data: { name?: string; establish
     const currentCharity = await prisma.charity.findUnique({ where: { id } });
     if (!currentCharity) return { success: false, message: "الجمعية غير موجودة" };
     
-    let trimmedName = data.name ? data.name.trim() : currentCharity.name;
+    const trimmedName = data.name ? data.name.trim() : currentCharity.name;
 
     if (data.name && trimmedName.toLowerCase() !== currentCharity.name.toLowerCase()) {
       const existing = await prisma.charity.findFirst({
@@ -332,7 +332,7 @@ export async function addDonorAccount(charityId: string, donorName: string, user
     const session = await requireResourceDevelopment(charityId);
     if (!session) return { success: false, message: "غير مصرح" };
 
-    const account = await (prisma as any).donorAccount.create({
+    const account = await prisma.donorAccount.create({
       data: {
         charityId,
         donorName,
@@ -369,9 +369,9 @@ export async function deleteDonorAccount(accountId: string, charityId: string) {
     const session = await requireResourceDevelopment(charityId);
     if (!session) return { success: false, message: "غير مصرح" };
 
-    const target = await (prisma as any).donorAccount.findUnique({ where: { id: accountId }, select: { donorName: true } });
+    const target = await prisma.donorAccount.findUnique({ where: { id: accountId }, select: { donorName: true } });
 
-    await (prisma as any).donorAccount.delete({
+    await prisma.donorAccount.delete({
       where: { id: accountId }
     });
 
@@ -408,7 +408,7 @@ export async function addGrantApplication(
 
     if (requestedAmount <= 0) return { success: false, message: "المبلغ غير صالح" };
 
-    const grant = await (prisma as any).grantApplication.create({
+    const grant = await prisma.grantApplication.create({
       data: {
         charityId,
         initiativeName,
@@ -446,7 +446,7 @@ export async function updateGrantApplicationStatus(
     const charity = await prisma.charity.findUnique({ where: { id: charityId } });
     if (!charity) return { success: false, message: "الجمعية غير موجودة" };
 
-    const grant = await (prisma as any).grantApplication.findUnique({ where: { id: grantId } });
+    const grant = await prisma.grantApplication.findUnique({ where: { id: grantId } });
     if (!grant) return { success: false, message: "المنحة غير موجودة" };
 
     const queries: any[] = [];
@@ -459,7 +459,7 @@ export async function updateGrantApplicationStatus(
     if (closureDate !== undefined) updateData.closureDate = closureDate;
 
     queries.push(
-      (prisma as any).grantApplication.update({
+      prisma.grantApplication.update({
         where: { id: grantId },
         data: updateData
       })
@@ -523,7 +523,7 @@ export async function deleteGrantApplication(grantId: string, charityId: string)
     const session = await requireResourceDevelopment(charityId);
     if (!session) return { success: false, message: "غير مصرح" };
 
-    await (prisma as any).grantApplication.delete({
+    await prisma.grantApplication.delete({
       where: { id: grantId }
     });
 

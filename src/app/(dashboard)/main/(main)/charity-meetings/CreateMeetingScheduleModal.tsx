@@ -9,7 +9,7 @@ function generateTimeSlots(startTime: string, endTime: string, durationMinutes: 
   const [startH, startM] = startTime.split(':').map(Number);
   const [endH, endM] = endTime.split(':').map(Number);
   
-  let current = new Date();
+  const current = new Date();
   current.setHours(startH, startM, 0, 0);
   
   const end = new Date();
@@ -69,7 +69,7 @@ export default function CreateMeetingScheduleModal({
     }
 
     const newDays = [];
-    let current = new Date(start);
+    const current = new Date(start);
     while (current <= end) {
       newDays.push({
         date: current.toISOString().split('T')[0],

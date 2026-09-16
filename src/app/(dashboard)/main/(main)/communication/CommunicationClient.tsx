@@ -270,7 +270,7 @@ export default function CommunicationClient({ charities }: { charities: Charity[
                         let name = "";
                         let phone = "";
                         let namePlaceholder = "";
-                        let phonePlaceholder = "رقم الجوال";
+                        const phonePlaceholder = "رقم الجوال";
 
                         if (contactType === 'ASSOCIATION') {
                           name = charity.email || ""; phone = charity.phone || ""; namePlaceholder = "البريد الالكتروني";

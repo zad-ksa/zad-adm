@@ -118,7 +118,7 @@ export function buildLetterheadDoc(m: Meeting, forPrint: boolean, meetingNum?: n
   const numStr = meetingNum ? `ZAD_M_${String(meetingNum).padStart(3, "0")}` : "";
   const letterheadUrl = `${window.location.origin}/assets/letterhead.png`;
 
-  var safeBody = JSON.stringify(body).replace(/<\/(script)/ig, "<\\/$1");
+  const safeBody = JSON.stringify(body).replace(/<\/(script)/ig, "<\\/$1");
 
   return `<!DOCTYPE html>
 <html lang="ar" dir="rtl">

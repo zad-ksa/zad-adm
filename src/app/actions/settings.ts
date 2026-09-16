@@ -86,7 +86,7 @@ export async function reorderDefaultStages(timelineType: string, orderedIds: str
 
 export async function getRoleLabels(): Promise<Record<string, string>> {
   try {
-    const roles: { key: string; displayName: string }[] = await (prisma as any).roleDefinition.findMany({
+    const roles: { key: string; displayName: string }[] = await prisma.roleDefinition.findMany({
       select: { key: true, displayName: true }
     });
 

@@ -595,7 +595,7 @@ export default function VisionMissionResultsClient({ responses }: { responses: R
                   <h3 className="font-bold text-sm mb-3 text-black">س: {qGroup.title}</h3>
                   <div className="space-y-2 pr-4 border-r-2 border-gray-300">
                     {responses.map((res) => {
-                      let answer = qGroup.id === "q5" 
+                      const answer = qGroup.id === "q5" 
                         ? res.answers?.vision?.q5_points 
                         : qGroup.id === "q11"
                         ? [...(res.answers?.vision?.q11 || []), res.answers?.vision?.q11_other].filter(Boolean)

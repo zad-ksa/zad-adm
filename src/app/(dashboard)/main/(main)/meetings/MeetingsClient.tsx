@@ -245,7 +245,7 @@ export default function MeetingsClient({ meetings, charities, employees, session
     isPrivate: boolean;
     formattedContent: string;
   }) {
-    let resolvedCharityId = data.charityId || "";
+    const resolvedCharityId = data.charityId || "";
     let resolvedContext = "";
     if (data.meetingContext.startsWith("service:")) {
       resolvedContext = data.meetingContext.slice("service:".length);

@@ -195,7 +195,7 @@ export async function verifyCharityOTP(phone: string, otp: string) {
       }
     }
 
-    let user = await prisma.charityUser.findFirst({
+    const user = await prisma.charityUser.findFirst({
       where: { phone: { in: phoneVariants } },
       include: {
         charities: {

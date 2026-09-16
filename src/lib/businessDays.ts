@@ -147,7 +147,7 @@ export function computeDesignRequestDates(
       scheduledStartDateRiyadh = new Date(riyadhTime);
     } else {
       // Move to next business day start (10:00 AM)
-      let startDayRiyadh = new Date(riyadhTime);
+      const startDayRiyadh = new Date(riyadhTime);
       if (isBizDay && hour < 10) {
         // Today at 10 AM
       } else {

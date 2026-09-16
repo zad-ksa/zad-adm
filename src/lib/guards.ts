@@ -98,7 +98,15 @@ export async function requireCharityMembership(charityId: string) {
         charityId,
       },
     },
-    select: { charityId: true, permissions: true, isActive: true, isAdmin: true },
+    select: {
+      id: true,
+      charityId: true,
+      permissions: true,
+      isActive: true,
+      isAdmin: true,
+      // تفويض الخدمات: منه تُشتقّ تبويبات البوابة المربوطة بخدمات.
+      services: { select: { serviceName: true } },
+    },
   });
 
   // An inactive link is not a membership: charity HR deactivating someone must
@@ -109,7 +117,13 @@ export async function requireCharityMembership(charityId: string) {
   // `isAdmin` comes from the link, so administrator standing is scoped to this
   // charity. Reading it from the account (as the old title check did) made one
   // charity's promotion apply everywhere the person was a member.
-  return { session, permissions: link.permissions as string[], isAdmin: link.isAdmin };
+  return {
+    session,
+    membershipId: link.id,
+    permissions: link.permissions as string[],
+    isAdmin: link.isAdmin,
+    services: link.services.map((s) => s.serviceName),
+  };
 }
 
 /**

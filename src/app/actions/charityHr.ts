@@ -5,6 +5,7 @@ import { CharityUserTitle } from "@prisma/client";
 import { AuthError, requireCharityPermission } from "@/lib/guards";
 import {
   ALL_CHARITY_PERMISSION_IDS,
+  SERVICE_LINKED_CHARITY_PERMISSION_IDS,
   grantableCharityPermissions,
   sanitizeCharityPermissions,
 } from "@/lib/charityPermissions";
@@ -66,6 +67,44 @@ async function countOtherActiveAdmins(charityId: string, excludeUserId: string) 
  * The requested title is validated as a label only. It confers nothing, so no
  * title needs guarding — `isAdmin` is the whole of the authority question now.
  */
+/**
+ * خدمات هذه الجمعية بأسمائها. التفويض لا يتجاوزها: خدمةٌ ليست في الجمعية لا
+ * تُفوَّض لأحد فيها، وخدمةٌ حُذفت تسقط بحذف صفوفها.
+ */
+async function checkCharityServices(
+  charityId: string,
+  names: string[]
+): Promise<{ names: string[] } | { error: string }> {
+  const wanted = [...new Set(names.map((n) => (n || "").trim()).filter(Boolean))];
+  if (wanted.length === 0) return { names: [] };
+
+  const rows = await prisma.service.findMany({
+    where: { charityId, name: { in: wanted } },
+    select: { name: true },
+    distinct: ["name"],
+  });
+  const known = new Set(rows.map((r) => r.name));
+  const missing = wanted.find((n) => !known.has(n));
+  if (missing) return { error: `خدمة غير موجودة في الجمعية: ${missing}` };
+  return { names: wanted };
+}
+
+/** خدمات زاد المقدَّمة لهذه الجمعية — قائمة التفويض في شاشة الموظفين. */
+export async function listCharityServices(charityId: string) {
+  try {
+    await requireCharityPermission(charityId, "manage_charity_users");
+    const rows = await prisma.service.findMany({
+      where: { charityId },
+      select: { name: true },
+      distinct: ["name"],
+      orderBy: { name: "asc" },
+    });
+    return { success: true as const, data: rows.map((r) => r.name).filter((n) => n.trim() !== "") };
+  } catch (error) {
+    return refuse(error, "تعذّر تحميل خدمات الجمعية");
+  }
+}
+
 function validateGrant(
   actorIsAdmin: boolean,
   actorPermissions: string[],
@@ -84,7 +123,11 @@ function validateGrant(
   // Retired ids arrive here on every save of a membership created before the
   // retirement — the editor seeds its draft from what is stored. They are
   // dropped, not refused; only an id nobody ever defined is an error.
-  const cleaned = sanitizeCharityPermissions(requestedPermissions);
+  // وتبويبات البوابة تُسقَط كذلك: صارت تُنال بتفويض الخدمة، فلا يمنحها مُنتقٍ.
+  // والمخزّن منها لا يُمَسّ — يُعاد إدراجه عند الحفظ حتى يُربط التبويب بخدمته.
+  const cleaned = sanitizeCharityPermissions(requestedPermissions).filter(
+    (p) => !SERVICE_LINKED_CHARITY_PERMISSION_IDS.includes(p)
+  );
 
   const unknown = cleaned.filter((p) => !ALL_CHARITY_PERMISSION_IDS.includes(p));
   if (unknown.length > 0) return { error: "صلاحية غير معروفة" };
@@ -106,6 +149,7 @@ export async function listCharityStaff(charityId: string) {
       where: { charityId },
       include: {
         user: { select: { id: true, name: true, phone: true, title: true, isActive: true } },
+        services: { select: { serviceName: true } },
       },
       orderBy: { assignedAt: "asc" },
     });
@@ -118,6 +162,7 @@ export async function listCharityStaff(charityId: string) {
         phone: l.user.phone,
         title: l.user.title as string,
         permissions: l.permissions,
+        services: l.services.map((s) => s.serviceName),
         isAdmin: l.isAdmin,
         isActive: l.isActive,
         // Zad-level suspension, distinct from this charity's own deactivation.
@@ -210,6 +255,8 @@ export async function createCharityStaff(
     phone: string;
     title: string;
     permissions: string[];
+    /** الخدمات المفوَّض لها العضو في هذه الجمعية. */
+    services?: string[];
     /** Optional email login — see addCharityClientAccount. */
     email?: string | null;
     password?: string;
@@ -236,6 +283,10 @@ export async function createCharityStaff(
       data.isAdmin === true
     );
     if ("error" in grant) return fail(grant.error);
+
+    const checkedServices = await checkCharityServices(charityId, data.services || []);
+    if ("error" in checkedServices) return fail(checkedServices.error);
+    const services = checkedServices.names;
 
     const existing = await prisma.charityUser.findFirst({
       where: { phone: { in: saudiPhoneVariants(canonical) } },
@@ -269,6 +320,14 @@ export async function createCharityStaff(
               isAdmin: grant.isAdmin,
             },
           });
+
+      // التفويض في هذه الجمعية وحدها — استبدالاً لا إضافة.
+      await prisma.charityMemberService.deleteMany({ where: { membershipId: link.id } });
+      if (services.length > 0) {
+        await prisma.charityMemberService.createMany({
+          data: services.map((serviceName) => ({ membershipId: link.id, serviceName })),
+        });
+      }
 
       await logAudit({
         actorType: "CHARITY_USER",
@@ -313,8 +372,19 @@ export async function createCharityStaff(
           create: { charityId, permissions: grant.permissions, isAdmin: grant.isAdmin },
         },
       },
-      select: { id: true, name: true },
+      select: {
+        id: true,
+        name: true,
+        charities: { where: { charityId }, select: { id: true } },
+      },
     });
+
+    const membershipId = created.charities[0]?.id;
+    if (membershipId && services.length > 0) {
+      await prisma.charityMemberService.createMany({
+        data: services.map((serviceName) => ({ membershipId, serviceName })),
+      });
+    }
 
     await logAudit({
       actorType: "CHARITY_USER",
@@ -327,6 +397,7 @@ export async function createCharityStaff(
         charityId,
         title: data.title,
         permissions: grant.permissions,
+        services,
         isAdmin: grant.isAdmin,
       },
     });
@@ -347,7 +418,7 @@ export async function createCharityStaff(
 export async function updateCharityStaff(
   charityId: string,
   targetUserId: string,
-  data: { title: string; permissions: string[]; isAdmin?: boolean }
+  data: { title: string; permissions: string[]; services?: string[]; isAdmin?: boolean }
 ) {
   try {
     const {
@@ -362,7 +433,7 @@ export async function updateCharityStaff(
 
     const link = await prisma.charityUserCharity.findUnique({
       where: { charityUserId_charityId: { charityUserId: targetUserId, charityId } },
-      select: { id: true, isAdmin: true, user: { select: { title: true } } },
+      select: { id: true, isAdmin: true, permissions: true, user: { select: { title: true } } },
     });
     if (!link) return fail("الموظف غير موجود في هذه الجمعية");
 
@@ -382,6 +453,18 @@ export async function updateCharityStaff(
       data.isAdmin === true
     );
     if ("error" in grant) return fail(grant.error);
+
+    let services: string[] | null = null;
+    if (data.services !== undefined) {
+      const checked = await checkCharityServices(charityId, data.services);
+      if ("error" in checked) return fail(checked.error);
+      services = checked.names;
+    }
+
+    // تبويبات البوابة المخزّنة تبقى كما هي حتى يُربط التبويب بخدمةٍ عند زاد،
+    // فلا ينقطع وصولٌ قائم في منتصف الطريق.
+    const preserved = link.permissions.filter((p) => SERVICE_LINKED_CHARITY_PERMISSION_IDS.includes(p));
+    const permissions = [...new Set([...grant.permissions, ...preserved])];
 
     // Removing the last administrator would leave the charity unable to manage
     // its own accounts, recoverable only by Zad staff.
@@ -418,8 +501,20 @@ export async function updateCharityStaff(
         : []),
       prisma.charityUserCharity.update({
         where: { id: link.id },
-        data: { permissions: grant.permissions, isAdmin: grant.isAdmin },
+        data: { permissions, isAdmin: grant.isAdmin },
       }),
+      ...(services === null
+        ? []
+        : [
+            prisma.charityMemberService.deleteMany({ where: { membershipId: link.id } }),
+            ...(services.length > 0
+              ? [
+                  prisma.charityMemberService.createMany({
+                    data: services.map((serviceName) => ({ membershipId: link.id, serviceName })),
+                  }),
+                ]
+              : []),
+          ]),
     ]);
 
     await logAudit({
@@ -429,7 +524,7 @@ export async function updateCharityStaff(
       action: "PERMISSION_CHANGE",
       targetType: "CharityUser",
       targetId: targetUserId,
-      metadata: { charityId, permissions: grant.permissions, isAdmin: grant.isAdmin },
+      metadata: { charityId, permissions, services, isAdmin: grant.isAdmin },
     });
 
     return { success: true as const };

@@ -48,6 +48,8 @@ type Staff = {
   phone: string;
   title: string;
   permissions: string[];
+  /** الخدمات المفوَّض لها في هذه الجمعية. */
+  services: string[];
   isActive: boolean;
   /** Administrator of THIS charity — per membership, not per account. */
   isAdmin: boolean;
@@ -91,6 +93,68 @@ const LOOKUP_DEBOUNCE_MS = 400;
  * during render is a brand-new type on every keystroke, so React unmounts and
  * remounts the whole subtree and the focused control loses focus mid-edit.
  */
+/**
+ * الخدمات المفوَّض لها العضو.
+ *
+ * تبويبات البوابة تُربط بخدمات من صفحة «الصلاحيات» عند زاد، فلا يرى العضو
+ * التبويب إلا إن فُوِّض خدمته. ومدير الجمعية مرتبطٌ بها جميعاً بلا اختيار.
+ *
+ * ومثل PermissionEditor: في نطاق الوحدة لا داخل المكوّن، وإلا فقد الحقل تركيزه
+ * مع كل ضغطة مفتاح.
+ */
+function ServiceEditor({
+  services,
+  selected,
+  onToggle,
+}: {
+  services: string[];
+  selected: string[];
+  onToggle: (name: string) => void;
+}) {
+  return (
+    <div>
+      <p className="hr-eyebrow text-slate-400 dark:text-slate-500 mb-2" style={fs.eyebrow}>
+        الخدمات المفوَّض لها
+      </p>
+      {services.length === 0 ? (
+        <p className="text-slate-400 dark:text-slate-500" style={fs.meta}>
+          لا توجد خدمات مقدَّمة لهذه الجمعية بعد.
+        </p>
+      ) : (
+        <div className="grid sm:grid-cols-2 gap-2">
+          {services.map((name) => {
+            const checked = selected.includes(name);
+            return (
+              <button
+                key={name}
+                type="button"
+                onClick={() => onToggle(name)}
+                aria-pressed={checked}
+                style={fs.body}
+                className={`flex items-center gap-2 px-4 py-2 rounded-xl text-right
+                            transition-[box-shadow,color,background-color] duration-300 ${
+                              checked
+                                ? "text-primary dark:text-teal-400 bg-primary/[0.06] shadow-[inset_0_0_0_1px_rgb(15_118_110_/_.28)]"
+                                : "text-slate-500 dark:text-slate-400 shadow-[inset_0_0_0_1px_rgb(100_116_139_/_.16)]"
+                            }`}
+              >
+                <span
+                  className={`w-4 h-4 rounded-md flex items-center justify-center shrink-0 transition-colors duration-300 ${
+                    checked ? "bg-primary dark:bg-teal-500" : "shadow-[inset_0_0_0_1px_rgb(100_116_139_/_.32)]"
+                  }`}
+                >
+                  {checked && <Check className="w-2 h-2 text-white" strokeWidth={4} />}
+                </span>
+                <span className="truncate">{name}</span>
+              </button>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function PermissionEditor({
   selected,
   grantable,
@@ -204,12 +268,15 @@ export default function StaffManagerClient({
   currentUserId,
   actorIsAdmin,
   grantablePermissions,
+  charityServices,
   initialStaff,
 }: {
   charityId: string;
   currentUserId: string;
   actorIsAdmin: boolean;
   grantablePermissions: string[];
+  /** خدمات زاد المقدَّمة لهذه الجمعية — قائمة التفويض. */
+  charityServices: string[];
   initialStaff: Staff[];
 }) {
   const router = useRouter();
@@ -231,6 +298,7 @@ export default function StaffManagerClient({
     password: "",
     title: "FULL_TIME",
     permissions: [] as string[],
+    services: [] as string[],
     isAdmin: false,
   });
   const [phoneState, setPhoneState] = useState<PhoneState>({ kind: "idle" });
@@ -240,6 +308,7 @@ export default function StaffManagerClient({
   const [editDraft, setEditDraft] = useState({
     title: "FULL_TIME",
     permissions: [] as string[],
+    services: [] as string[],
     isAdmin: false,
   });
 
@@ -339,7 +408,7 @@ export default function StaffManagerClient({
 
   function resetAddForm() {
     lookupSeq.current++; // discard anything still in flight
-    setForm({ name: "", phone: "", email: "", password: "", title: "FULL_TIME", permissions: [], isAdmin: false });
+    setForm({ name: "", phone: "", email: "", password: "", title: "FULL_TIME", permissions: [], services: [], isAdmin: false });
     setPhoneState({ kind: "idle" });
     setIsAdding(false);
   }
@@ -696,6 +765,14 @@ export default function StaffManagerClient({
             onToggle={(id) => setForm({ ...form, permissions: toggleIn(form.permissions, id) })}
           />
 
+          {!form.isAdmin && (
+            <ServiceEditor
+              services={charityServices}
+              selected={form.services}
+              onToggle={(name) => setForm({ ...form, services: toggleIn(form.services, name) })}
+            />
+          )}
+
           <div className="flex flex-wrap gap-2">
             <button
               onClick={submitCreate}
@@ -765,9 +842,16 @@ export default function StaffManagerClient({
                         {member.phone}
                       </span>
                       <span>{charityTitleLabel(member.title)}</span>
+                      {!member.isAdmin && (
+                        <span>
+                          {member.services.length > 0
+                            ? `${member.services.length} خدمة مفوَّضة`
+                            : "بلا خدمات"}
+                        </span>
+                      )}
                       <span>
                         {member.isAdmin
-                          ? "جميع الصلاحيات"
+                          ? "جميع الصلاحيات والخدمات"
                           : member.permissions.length > 0
                             ? `${member.permissions.length} صلاحية`
                             : "بدون صلاحيات إدارية"}
@@ -786,6 +870,7 @@ export default function StaffManagerClient({
                           // with them would show a permission that no longer
                           // exists and send it straight back on save.
                           permissions: sanitizeCharityPermissions(member.permissions),
+                          services: member.services,
                           isAdmin: member.isAdmin,
                         });
                         setError(null);
@@ -887,13 +972,22 @@ export default function StaffManagerClient({
                   مدير الجمعية يملك جميع الصلاحيات تلقائياً — بما يُضاف منها لاحقاً.
                 </p>
               ) : (
-                <PermissionEditor
-                  selected={editDraft.permissions}
-                  grantable={grantable}
-                  onToggle={(id) =>
-                    setEditDraft({ ...editDraft, permissions: toggleIn(editDraft.permissions, id) })
-                  }
-                />
+                <>
+                  <PermissionEditor
+                    selected={editDraft.permissions}
+                    grantable={grantable}
+                    onToggle={(id) =>
+                      setEditDraft({ ...editDraft, permissions: toggleIn(editDraft.permissions, id) })
+                    }
+                  />
+                  <ServiceEditor
+                    services={charityServices}
+                    selected={editDraft.services}
+                    onToggle={(name) =>
+                      setEditDraft({ ...editDraft, services: toggleIn(editDraft.services, name) })
+                    }
+                  />
+                </>
               )}
 
               {editError && (

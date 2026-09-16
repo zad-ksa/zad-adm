@@ -67,6 +67,7 @@ export default function PermissionsAdminClient({
   roles,
   bundles,
   linkedServices,
+  charityPermissions,
   canManageEmployees,
 }: {
   initialTab: PermissionsTab;
@@ -80,6 +81,8 @@ export default function PermissionsAdminClient({
   bundles: BundleRow[];
   /** لكل صلاحية: الخدمات التي تمنحها تلقائياً. */
   linkedServices: Record<string, string[]>;
+  /** تبويبات بوابة الجمعيات — تُربط بخدمات من هنا، ولا تُمنح يدوياً. */
+  charityPermissions: { id: string; label: string }[];
   canManageEmployees: boolean;
 }) {
   const router = useRouter();
@@ -173,7 +176,19 @@ export default function PermissionsAdminClient({
   const shownServices = services.filter((s) => !sq || s.name.includes(sq));
 
   const menuBundle = bundles.find((b) => b.id === menu.anchor?.id) ?? null;
-  const detailPermission = detail?.kind === "permission" ? (ALL_PERMISSIONS.find((p) => p.id === detail.id) ?? null) : null;
+  const detailPermission =
+    detail?.kind === "permission"
+      ? (ALL_PERMISSIONS.find((p) => p.id === detail.id) ??
+         charityPermissions.find((p) => p.id === detail.id) ??
+         null)
+      : null;
+
+  // تبويبات البوابة تتبع التصفية نفسها: بحثٌ بالاسم أو المعرّف، و«بلا حامل».
+  const charityRows = charityPermissions.filter(
+    (p) =>
+      (!cq || p.label.includes(cq) || p.id.includes(cq)) &&
+      (catalogFilter === "all" || (holders[p.id] ?? []).length === 0)
+  );
   const detailService = detail?.kind === "service" ? (services.find((s) => s.name === detail.name) ?? null) : null;
 
   const showing = (shown: number, total: number) =>
@@ -532,6 +547,54 @@ export default function PermissionsAdminClient({
                 <Th className="hidden lg:table-cell">تمنح معها</Th>
               </tr>
             </thead>
+            {charityRows.length > 0 && (
+              <tbody className={tbodyClass}>
+                <tr className="bg-slate-50/60 dark:bg-slate-950/30">
+                  <td colSpan={4} className="px-4 py-2 text-[12px] font-medium text-slate-500 dark:text-slate-400">
+                    تبويبات بوابة الجمعيات <span className={cx(MONO, "text-slate-400")}>{charityRows.length}</span>
+                  </td>
+                </tr>
+                {charityRows.map((p) => {
+                  const who = holders[p.id] ?? [];
+                  const linked = linkedServices[p.id] ?? [];
+                  return (
+                    <tr key={p.id} onClick={() => setDetail({ kind: "permission", id: p.id })} className={rowClass}>
+                      <td className="px-4 py-3">
+                        <p className="flex items-center gap-2 text-[13.5px] font-medium text-slate-900 dark:text-slate-100">
+                          {p.label}
+                          <Badge tone="gold">بوابة الجمعيات</Badge>
+                        </p>
+                        <p className={cx(MONO, "text-[12px] text-slate-400")} dir="ltr">
+                          {p.id}
+                        </p>
+                      </td>
+                      <td className="hidden px-4 py-3 sm:table-cell">
+                        {who.length === 0 ? (
+                          <Badge tone="warn">لا أحد</Badge>
+                        ) : (
+                          <span className={cx(MONO, "text-[13px] text-slate-600 dark:text-slate-300")}>{who.length}</span>
+                        )}
+                      </td>
+                      <td className="hidden px-4 py-3 md:table-cell">
+                        {linked.length === 0 ? (
+                          <Badge tone="warn">بلا ربط</Badge>
+                        ) : (
+                          <span className="flex flex-wrap gap-1">
+                            {linked.map((name) => (
+                              <Badge key={name} tone="brand">
+                                {name}
+                              </Badge>
+                            ))}
+                          </span>
+                        )}
+                      </td>
+                      <td className="hidden px-4 py-3 text-[13px] text-slate-500 lg:table-cell">—</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            )}
+
             {catalogGroups.map((g) => (
               <tbody key={g.title} className={tbodyClass}>
                 <tr className="bg-slate-50/60 dark:bg-slate-950/30">

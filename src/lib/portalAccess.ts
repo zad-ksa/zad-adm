@@ -1,7 +1,10 @@
 import { notFound, redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { AuthError, requireCharityMembership } from "@/lib/guards";
-import { hasCharityPermission } from "@/lib/charityPermissions";
+import {
+  SERVICE_LINKED_CHARITY_PERMISSION_IDS,
+  hasCharityPermission,
+} from "@/lib/charityPermissions";
 
 /**
  * Resolves the charity named in a /portal/[name] URL together with the visitor's
@@ -25,11 +28,13 @@ export async function resolveCharityPortal(nameParam: string) {
   let session: any;
   let permissions: string[];
   let isAdmin: boolean;
+  let services: string[] = [];
   try {
     const membership = await requireCharityMembership(charity.id);
     session = membership.session;
     permissions = membership.permissions;
     isAdmin = membership.isAdmin;
+    services = membership.services;
   } catch (error) {
     // Non-members get the same answer as a non-existent charity, so the portal
     // never confirms which charities exist to someone who is not in them.
@@ -37,12 +42,37 @@ export async function resolveCharityPortal(nameParam: string) {
     throw error;
   }
 
+  // ربط التبويبات بالخدمات يُحرَّر عند زاد. وما لم يُربط تبويبٌ بخدمة، يبقى على
+  // صلاحيته المخزّنة كما كان — فالربط يُفعّل تدريجياً بلا انقطاع.
+  const links = await prisma.permissionServiceLink.findMany({
+    where: { permissionId: { in: SERVICE_LINKED_CHARITY_PERMISSION_IDS } },
+    select: { permissionId: true, serviceName: true },
+  });
+  const linkedServices = new Map<string, string[]>();
+  for (const link of links) {
+    const list = linkedServices.get(link.permissionId) ?? [];
+    list.push(link.serviceName);
+    linkedServices.set(link.permissionId, list);
+  }
+  const delegated = new Set(services);
+
+  const can = (permission: string) => {
+    // مدير الجمعية مرتبطٌ بكل خدماتها، فلا تفويض عليه.
+    if (isAdmin) return true;
+    const needed = linkedServices.get(permission);
+    if (!needed || needed.length === 0) {
+      return hasCharityPermission(isAdmin, permissions, permission);
+    }
+    return needed.some((name) => delegated.has(name));
+  };
+
   return {
     charity,
     session,
     permissions,
     isAdmin,
-    can: (permission: string) => hasCharityPermission(isAdmin, permissions, permission),
+    services,
+    can,
   };
 }
 

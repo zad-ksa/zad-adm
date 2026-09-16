@@ -62,9 +62,19 @@ export default async function HrStaffPage({ params }: { params: Promise<{ name: 
     where: { charityId: charity.id },
     include: {
       user: { select: { id: true, name: true, phone: true, title: true, isActive: true } },
+      services: { select: { serviceName: true } },
     },
     orderBy: { assignedAt: "asc" },
   });
+
+  // خدمات زاد المقدَّمة لهذه الجمعية: منها يُفوَّض الأعضاء.
+  const serviceRows = await prisma.service.findMany({
+    where: { charityId: charity.id },
+    select: { name: true },
+    distinct: ["name"],
+    orderBy: { name: "asc" },
+  });
+  const charityServices = serviceRows.map((s) => s.name).filter((n) => n.trim() !== "");
 
   const staff = links.map((l) => ({
     id: l.user.id,
@@ -72,6 +82,7 @@ export default async function HrStaffPage({ params }: { params: Promise<{ name: 
     phone: l.user.phone,
     title: l.user.title as string,
     permissions: l.permissions,
+    services: l.services.map((s) => s.serviceName),
     isActive: l.isActive,
     isAdmin: l.isAdmin,
     isAccountActive: l.user.isActive,
@@ -101,6 +112,9 @@ export default async function HrStaffPage({ params }: { params: Promise<{ name: 
         // the editor. The same rule is enforced again in the action, because a
         // client can send whatever it likes regardless of what it was shown.
         grantablePermissions={grantableCharityPermissions(isAdmin, permissions)}
+        // خدمات زاد المقدَّمة لهذه الجمعية: منها يُفوَّض العضو، ومن التفويض
+        // تُشتقّ تبويبات البوابة المربوطة بخدمات.
+        charityServices={charityServices}
         initialStaff={staff}
       />
     </>

@@ -167,6 +167,9 @@ model CharityUserCharity {
   /// رصيد الجمعية الافتراضي. على الرابط لا على الحساب، فلكل جمعية رصيدها.
   annualLeaveDays Int?
 
+  /// الخدمات المفوَّض لها هذا العضو في هذه الجمعية.
+  services CharityMemberService[]
+
   @@unique([charityUserId, charityId])
   @@index([charityUserId])
   @@index([charityId])
@@ -1699,5 +1702,21 @@ model PermissionServiceLink {
   createdAt    DateTime @default(now())
 
   @@id([permissionId, serviceName])
+  @@index([serviceName])
+}
+
+/// تفويض عضو الجمعية بخدمةٍ من خدمات زاد.
+///
+/// تبويبات البوابة تُربط بخدمات من صفحة «الصلاحيات» عند زاد (PermissionServiceLink)،
+/// فلا يرى التبويب إلا من فُوِّض خدمته. ومدير الجمعية يمرّ بلا تفويض.
+/// ويُخزَّن بالاسم لا بالمعرّف، كبقية منوحات الخدمات في النظام.
+model CharityMemberService {
+  membershipId String
+  serviceName  String
+  grantedAt    DateTime @default(now())
+
+  membership CharityUserCharity @relation(fields: [membershipId], references: [id], onDelete: Cascade)
+
+  @@id([membershipId, serviceName])
   @@index([serviceName])
 }

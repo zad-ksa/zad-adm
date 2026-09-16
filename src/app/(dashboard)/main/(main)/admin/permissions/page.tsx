@@ -11,6 +11,7 @@ import {
   effectivePermissions,
   sanitizePermissions,
 } from "@/lib/permissions";
+import { CHARITY_PAGE_PERMISSIONS } from "@/lib/charityPermissions";
 import { consoleFontClass } from "@/components/console/fonts";
 import PermissionsAdminClient from "./PermissionsAdminClient";
 import { PERMISSIONS_TABS, type PermissionsTab } from "./types";
@@ -143,12 +144,39 @@ export default async function PermissionsAdminPage({
     bundles: bundles.filter((b) => b.services.includes(name)).map((b) => b.name),
   }));
 
+  // تبويبات بوابة الجمعيات: تُربط بخدمة من هنا، ويُحسب حاملوها بمنطق البوابة
+  // نفسه — مدير الجمعية، أو مفوَّض خدمةٍ مربوطة، أو صاحب الصلاحية المخزّنة ما
+  // دام التبويب بلا ربط.
+  const memberships = await prisma.charityUserCharity.findMany({
+    where: { isActive: true },
+    select: {
+      isAdmin: true,
+      permissions: true,
+      user: { select: { name: true } },
+      charity: { select: { name: true } },
+      services: { select: { serviceName: true } },
+    },
+  });
+
   const holders: Record<string, string[]> = {};
   // أيّ مجموعةٍ تمنح كل صلاحية: يفرّق بين ما مُنح لشخصٍ بعينه وما جاءه بمجموعة.
   const viaBundles: Record<string, string[]> = {};
   for (const id of ALL_PERMISSION_IDS) {
     holders[id] = scopes.filter((s) => s.permissions.has(id)).map((s) => s.employee.name);
     viaBundles[id] = bundles.filter((b) => b.permissions.includes(id)).map((b) => b.name);
+  }
+
+  for (const permission of CHARITY_PAGE_PERMISSIONS) {
+    const needed = linkedServices[permission.id] ?? [];
+    holders[permission.id] = memberships
+      .filter((m) => {
+        if (m.isAdmin) return true;
+        if (needed.length === 0) return m.permissions.includes(permission.id);
+        const delegated = new Set(m.services.map((s) => s.serviceName));
+        return needed.some((name) => delegated.has(name));
+      })
+      .map((m) => `${m.user.name} — ${m.charity.name}`);
+    viaBundles[permission.id] = [];
   }
 
   return (
@@ -161,6 +189,7 @@ export default async function PermissionsAdminPage({
         services={services}
         serviceNames={serviceNames}
         linkedServices={linkedServices}
+        charityPermissions={CHARITY_PAGE_PERMISSIONS}
         canManageEmployees={hasPermission(session.role, session.permissions || [], "manage_employees")}
         employees={scopes.map(({ employee: e, permissions, services: svc }) => ({
           id: e.id,

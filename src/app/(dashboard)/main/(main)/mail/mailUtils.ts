@@ -5,6 +5,13 @@ export type MailListItem = {
   snippet: string;
   displayName: string;
   /**
+   * النص الكامل غير المختصر لأسماء المستلمين، يُعرض في tooltip عند المرور
+   * بالفأرة. يختلف عن displayName فقط في تبويب "المرسل" حين يكون هناك أكثر
+   * من مستلمَين — عندها displayName يلخّص القائمة إلى "فلان وN آخرين" بدل
+   * سرد كل الأسماء التي كانت تُقصّ بشكل غير مفهوم في العمود الضيق.
+   */
+  displayNameTitle?: string;
+  /**
    * مَن كانت الرسالة موجّهة إليه ظاهرياً (TO) — يظهر بجانب اسم المرسل في الوارد
    * والمميّزة وسلة المهملات فقط. غائب في المرسل/المسودات لأن اسم المستلم هناك هو
    * displayName نفسه أصلاً.
@@ -37,15 +44,22 @@ export function normalizeMailListItem(
   const mail = item.mail || item;
 
   let displayName = "غير معروف";
+  let displayNameTitle: string | undefined;
   let avatarUrl: string | null = null;
   let toLabel: string | null = null;
 
   if (tab === "sent") {
     const recipients = mail.recipients || [];
-    if (recipients.length > 0) {
-      displayName = recipients.map((r: any) => r.employee?.name).filter(Boolean).join("، ");
-      avatarUrl = recipients[0].employee?.avatarUrl || null;
+    const names = recipients.map((r: any) => r.employee?.name).filter(Boolean);
+    if (names.length === 1) {
+      displayName = names[0];
+    } else if (names.length === 2) {
+      displayName = `${names[0]} و${names[1]}`;
+    } else if (names.length > 2) {
+      displayName = `${names[0]} و${names.length - 1} آخرين`;
+      displayNameTitle = names.join("، ");
     }
+    avatarUrl = recipients[0]?.employee?.avatarUrl || null;
   } else if (tab === "drafts") {
     const names = (mail.draftToIds || []).map((id: string) => employeesById?.[id]?.name).filter(Boolean);
     displayName = names.length > 0 ? names.join("، ") : "بدون مستلمين";
@@ -66,6 +80,7 @@ export function normalizeMailListItem(
     subject: mail.subject || "(بدون موضوع)",
     snippet: htmlToPlainText(mail.body || ""),
     displayName,
+    displayNameTitle,
     toLabel,
     avatarUrl,
     isUnread: tab !== "sent" && tab !== "drafts" && item.isRead === false,

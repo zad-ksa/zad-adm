@@ -161,6 +161,7 @@ export function buildLetterheadDoc(m: Meeting, forPrint: boolean, meetingNum?: n
     return ca;
   }
 
+  function runLayout() {
   var probe = document.createElement('div');
   probe.style.cssText = 'position:absolute;visibility:hidden;top:-9999px;right:0;width:176mm;font-family:Cairo,Segoe UI,Tahoma,sans-serif;font-size:10.5pt;line-height:1.55;direction:rtl;';
   document.body.appendChild(probe);
@@ -289,8 +290,35 @@ export function buildLetterheadDoc(m: Meeting, forPrint: boolean, meetingNum?: n
   document.body.removeChild(probe);
 
   if (shouldPrint) {
-    setTimeout(function() { window.print(); }, 1200);
+    setTimeout(function() { window.print(); }, 300);
   }
+  }
+
+  // Cairo loads via @import, and nothing on the page asks for it until this
+  // script runs — #root starts empty, so the browser has not even begun
+  // fetching it yet. Measuring against the probe immediately measures with
+  // the fallback font (Segoe UI/Tahoma), which wraps Arabic text at
+  // different widths than Cairo. Page breaks get decided on those wrong
+  // heights, then the real Cairo text reflows taller or shorter inside the
+  // already-fixed, already-clipped content-area — the same meeting prints
+  // clean sometimes and drops or blanks a row other times, purely depending
+  // on how fast the font happened to load that time. Forcing every weight
+  // actually used (400 body, 600 label, 700 titles/headers) to finish
+  // loading before measuring anything removes that race.
+  var fontsReady = (document.fonts && document.fonts.ready)
+    ? Promise.all(['400', '600', '700'].map(function(w) {
+        return document.fonts.load(w + ' 12px Cairo').catch(function() {});
+      })).then(function() { return document.fonts.ready; })
+    : Promise.resolve();
+
+  var started = false;
+  function start() {
+    if (started) return;
+    started = true;
+    runLayout();
+  }
+  fontsReady.then(start, start);
+  setTimeout(start, 1500);
 })();
 </script>
 </body></html>`;

@@ -96,6 +96,7 @@ export default function MailRow({
       className={`truncate text-[length:var(--mail-fs-sender)] ${
         isUnread ? "font-bold text-slate-900 dark:text-white" : "font-medium text-slate-700 dark:text-slate-300"
       }`}
+      title={item.displayNameTitle}
     >
       {item.displayName}
     </span>

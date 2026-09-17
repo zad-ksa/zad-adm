@@ -2,8 +2,9 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { Plus, Edit2, Trash2, Eye, Copy, CheckCircle, Printer, RefreshCw, Files, LayoutGrid, List } from "lucide-react";
+import { Plus, Edit2, Trash2, Eye, Copy, CheckCircle, Printer, RefreshCw, Files, LayoutGrid, List, AlertTriangle, X } from "lucide-react";
 import CircularLoader from "@/components/CircularLoader";
+import ConfirmModal from "@/components/ui/ConfirmModal";
 
 interface Survey {
   id: string;
@@ -18,6 +19,26 @@ interface Survey {
 
 type ViewMode = "cards" | "list";
 
+type Notice = { tone: "error" | "ok"; text: string } | null;
+
+/**
+ * لماذا فشل الطلب — بعبارةٍ تقول للمستخدم ما يفعله.
+ *
+ * كانت كل هذه العمليات تبتلع الفشل: `if (res.ok)` بلا else، فإن انتهت الجلسة
+ * أو سُحبت الصلاحية دار الزرّ ثم سكت، فيظنّ صاحبه أن الصفحة معطّلة.
+ */
+async function explainFailure(res: Response, fallback: string) {
+  if (res.status === 401) return "انتهت الجلسة — سجّل الدخول من جديد ثم أعد المحاولة";
+  if (res.status === 403) return "ليس لديك صلاحية «الاستبيانات المخصصة»";
+  try {
+    const data = await res.json();
+    if (data?.error) return `${fallback}: ${data.error}`;
+  } catch {
+    /* ردٌّ بلا JSON — يكفي الرمز */
+  }
+  return `${fallback} (رمز ${res.status})`;
+}
+
 // تفضيل عرض شخصي بحت (بطاقات/قائمة) لا يستحق حقلاً في قاعدة البيانات ولا مزامنة
 // بين الأجهزة — يُحفظ محلياً في متصفح كل مستخدم ويُقرأ عند فتح الصفحة.
 const VIEW_MODE_STORAGE_KEY = "zad_custom_surveys_view_mode";
@@ -28,6 +49,15 @@ export default function SurveysPage() {
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [isCreating, setIsCreating] = useState(false);
   const [viewMode, setViewMode] = useState<ViewMode>("cards");
+  const [notice, setNotice] = useState<Notice>(null);
+  // الحذف يمرّ بنافذةٍ مصمَّمة لا بـconfirm المتصفح: النافذة تسمّي الاستبيان
+  // وتقول كم رداً سيذهب معه، وconfirm لا يفعل شيئاً من ذلك.
+  const [pendingDelete, setPendingDelete] = useState<Survey | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+  // وتوليد الرابط كذلك: يُبطل الرابط القديم عند كل من وُزِّع عليهم، فلا يُترك
+  // لسؤالٍ عابرٍ من المتصفح.
+  const [pendingRegenerate, setPendingRegenerate] = useState<Survey | null>(null);
+  const [isRegenerating, setIsRegenerating] = useState(false);
 
   useEffect(() => {
     fetchSurveys();
@@ -52,10 +82,16 @@ export default function SurveysPage() {
     setIsLoading(true);
     try {
       const res = await fetch("/api/custom-surveys");
+      if (!res.ok) {
+        setNotice({ tone: "error", text: await explainFailure(res, "تعذّر تحميل الاستبيانات") });
+        return;
+      }
       const data = await res.json();
-      setSurveys(data);
+      // ردٌّ غير مصفوفة كان يُمرَّر كما هو فتنفجر القائمة عند الرسم.
+      setSurveys(Array.isArray(data) ? data : []);
     } catch (err) {
       console.error(err);
+      setNotice({ tone: "error", text: "تعذّر الاتصال بالخادم أثناء تحميل الاستبيانات" });
     } finally {
       setIsLoading(false);
     }
@@ -72,40 +108,53 @@ export default function SurveysPage() {
           introText: "شركاؤنا في العطاء، نرحب برغبتكم في الانضمام لأسرة زاد التنموية. يهدف هذا الاستبيان لمساعدتنا في فهم واقع جمعيتكم بدقة، لنتمكن من تصميم رحلة تمكين مخصصة نحو تحقيق أثر مستدام."
         })
       });
-      if (res.ok) {
-        fetchSurveys();
+      if (!res.ok) {
+        setNotice({ tone: "error", text: await explainFailure(res, "تعذّر إنشاء الاستبيان") });
+        return;
       }
+      setNotice({ tone: "ok", text: "تم إنشاء استبيان جديد" });
+      fetchSurveys();
     } catch (err) {
       console.error(err);
+      setNotice({ tone: "error", text: "تعذّر الاتصال بالخادم أثناء إنشاء الاستبيان" });
     } finally {
       setIsCreating(false);
     }
   };
 
-  const handleDelete = async (id: string) => {
-    if (!confirm("هل أنت متأكد من حذف هذا الاستبيان؟")) return;
+  const confirmDelete = async () => {
+    if (!pendingDelete) return;
+    const id = pendingDelete.id;
+    setIsDeleting(true);
     try {
       const res = await fetch(`/api/custom-surveys/${id}`, { method: "DELETE" });
-      if (res.ok) {
-        setSurveys(surveys.filter(s => s.id !== id));
+      if (!res.ok) {
+        setNotice({ tone: "error", text: await explainFailure(res, "تعذّر حذف الاستبيان") });
+        return;
       }
+      setSurveys(surveys.filter(s => s.id !== id));
+      setNotice({ tone: "ok", text: `حُذف «${pendingDelete.title}»` });
+      setPendingDelete(null);
     } catch (err) {
       console.error(err);
+      setNotice({ tone: "error", text: "تعذّر الاتصال بالخادم أثناء الحذف" });
+    } finally {
+      setIsDeleting(false);
     }
   };
 
   const handleDuplicate = async (id: string) => {
     try {
       const res = await fetch(`/api/custom-surveys/${id}/copy`, { method: "POST" });
-      if (res.ok) {
-        fetchSurveys();
-        alert("تم نسخ الاستبيان بنجاح");
-      } else {
-        alert("حدث خطأ أثناء نسخ الاستبيان");
+      if (!res.ok) {
+        setNotice({ tone: "error", text: await explainFailure(res, "تعذّر نسخ الاستبيان") });
+        return;
       }
+      setNotice({ tone: "ok", text: "نُسخ الاستبيان" });
+      fetchSurveys();
     } catch (err) {
       console.error(err);
-      alert("حدث خطأ أثناء نسخ الاستبيان");
+      setNotice({ tone: "error", text: "تعذّر الاتصال بالخادم أثناء النسخ" });
     }
   };
 
@@ -116,11 +165,17 @@ export default function SurveysPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ isActive: !currentStatus })
       });
-      if (res.ok) {
-        setSurveys(surveys.map(s => s.id === id ? { ...s, isActive: !currentStatus } : s));
+      if (!res.ok) {
+        setNotice({
+          tone: "error",
+          text: await explainFailure(res, currentStatus ? "تعذّر إيقاف الاستبيان" : "تعذّر تفعيل الاستبيان"),
+        });
+        return;
       }
+      setSurveys(surveys.map(s => s.id === id ? { ...s, isActive: !currentStatus } : s));
     } catch (err) {
       console.error(err);
+      setNotice({ tone: "error", text: "تعذّر الاتصال بالخادم أثناء تغيير الحالة" });
     }
   };
 
@@ -131,21 +186,27 @@ export default function SurveysPage() {
     setTimeout(() => setCopiedId(null), 2000);
   };
 
-  const handleRegenerateLink = async (id: string) => {
-    if (!confirm("تحذير: توليد رابط جديد سيلغي الرابط القديم ولن يعود صالحاً. هل أنت متأكد؟")) return;
+  const confirmRegenerate = async () => {
+    if (!pendingRegenerate) return;
+    const id = pendingRegenerate.id;
+    setIsRegenerating(true);
     try {
       const res = await fetch(`/api/custom-surveys/${id}/regenerate-link`, {
         method: "PUT",
       });
-      if (res.ok) {
-        const updatedSurvey = await res.json();
-        setSurveys(surveys.map(s => s.id === id ? { ...s, slug: updatedSurvey.slug } : s));
-        alert("تم توليد الرابط الجديد بنجاح!");
-      } else {
-        alert("فشل توليد الرابط الجديد.");
+      if (!res.ok) {
+        setNotice({ tone: "error", text: await explainFailure(res, "تعذّر توليد الرابط الجديد") });
+        return;
       }
+      const updatedSurvey = await res.json();
+      setSurveys(surveys.map(s => s.id === id ? { ...s, slug: updatedSurvey.slug } : s));
+      setNotice({ tone: "ok", text: "تم توليد الرابط الجديد — الرابط القديم لم يعد صالحاً" });
+      setPendingRegenerate(null);
     } catch (err) {
       console.error(err);
+      setNotice({ tone: "error", text: "تعذّر الاتصال بالخادم أثناء توليد الرابط" });
+    } finally {
+      setIsRegenerating(false);
     }
   };
 
@@ -207,6 +268,31 @@ export default function SurveysPage() {
           </button>
         </div>
       </div>
+
+      {notice && (
+        <div
+          role={notice.tone === "error" ? "alert" : "status"}
+          className={`mb-6 flex items-start gap-2.5 rounded-xl border px-4 py-3 text-sm font-bold ${
+            notice.tone === "error"
+              ? "border-red-200 bg-red-50 text-red-700 dark:border-red-900/40 dark:bg-red-900/20 dark:text-red-300"
+              : "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-900/40 dark:bg-emerald-900/20 dark:text-emerald-300"
+          }`}
+        >
+          {notice.tone === "error" ? (
+            <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
+          ) : (
+            <CheckCircle className="w-4 h-4 shrink-0 mt-0.5" />
+          )}
+          <span className="flex-1">{notice.text}</span>
+          <button
+            onClick={() => setNotice(null)}
+            aria-label="إغلاق"
+            className="p-0.5 opacity-70 hover:opacity-100"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+      )}
 
       {surveys.length === 0 ? (
         <div className="bg-white border border-slate-200 rounded-2xl p-12 text-center shadow-sm dark:bg-slate-800 dark:border-slate-700">
@@ -282,7 +368,7 @@ export default function SurveysPage() {
               {/* Top Right Actions */}
               <div className="absolute top-4 left-4 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                 <button
-                  onClick={() => handleRegenerateLink(survey.id)}
+                  onClick={() => setPendingRegenerate(survey)}
                   className="p-2 bg-white border border-slate-200 rounded-lg text-slate-500 hover:text-amber-500 hover:border-amber-500/30 shadow-sm dark:bg-slate-800 dark:border-slate-700 dark:text-slate-400"
                   title="توليد رابط جديد (إلغاء القديم)"
                 >
@@ -303,7 +389,7 @@ export default function SurveysPage() {
                   <Files className="w-4 h-4" />
                 </button>
                 <button
-                  onClick={() => handleDelete(survey.id)}
+                  onClick={() => setPendingDelete(survey)}
                   className="p-2 bg-white border border-slate-200 rounded-lg text-slate-500 hover:text-red-500 hover:border-red-200 shadow-sm dark:bg-slate-800 dark:border-slate-700 dark:text-slate-400 dark:hover:border-red-500/30"
                   title="حذف"
                 >
@@ -370,7 +456,7 @@ export default function SurveysPage() {
                     <Printer className="w-4 h-4" />
                   </Link>
                   <button
-                    onClick={() => handleRegenerateLink(survey.id)}
+                    onClick={() => setPendingRegenerate(survey)}
                     className="p-2 bg-white border border-slate-200 rounded-lg text-slate-500 hover:text-amber-500 hover:border-amber-500/30 shadow-sm dark:bg-slate-800 dark:border-slate-700 dark:text-slate-400"
                     title="توليد رابط جديد (إلغاء القديم)"
                   >
@@ -391,7 +477,7 @@ export default function SurveysPage() {
                     <Files className="w-4 h-4" />
                   </button>
                   <button
-                    onClick={() => handleDelete(survey.id)}
+                    onClick={() => setPendingDelete(survey)}
                     className="p-2 bg-white border border-slate-200 rounded-lg text-slate-500 hover:text-red-500 hover:border-red-200 shadow-sm dark:bg-slate-800 dark:border-slate-700 dark:text-slate-400 dark:hover:border-red-500/30"
                     title="حذف"
                   >
@@ -403,6 +489,38 @@ export default function SurveysPage() {
           ))}
         </div>
       )}
+
+      <ConfirmModal
+        isOpen={!!pendingDelete}
+        title="حذف الاستبيان"
+        message={
+          pendingDelete
+            ? `سيُحذف «${pendingDelete.title}»${
+                pendingDelete._count.responses > 0
+                  ? ` ومعه ${pendingDelete._count.responses} رداً مسجّلاً`
+                  : ""
+              }، ويبطل رابطه. لا يمكن التراجع عن هذا الإجراء.`
+            : ""
+        }
+        confirmLabel="حذف الاستبيان"
+        isPending={isDeleting}
+        onCancel={() => !isDeleting && setPendingDelete(null)}
+        onConfirm={confirmDelete}
+      />
+
+      <ConfirmModal
+        isOpen={!!pendingRegenerate}
+        title="توليد رابط جديد"
+        message={
+          pendingRegenerate
+            ? `سيُبطل رابط «${pendingRegenerate.title}» الحالي فوراً، ومن يفتحه بعد ذلك لن يصل إلى الاستبيان. الردود المسجّلة لا تتأثر.`
+            : ""
+        }
+        confirmLabel="توليد الرابط"
+        isPending={isRegenerating}
+        onCancel={() => !isRegenerating && setPendingRegenerate(null)}
+        onConfirm={confirmRegenerate}
+      />
     </div>
   );
 }

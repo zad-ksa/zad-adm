@@ -292,7 +292,7 @@ export default function DesignRequestsClient({
       setDeliverables([]);
       setCompletionNote("");
       setConfirmingId(null);
-      setToast(completingIsRevision ? "تم اعتماد الطلب نهائياً" : "تم التسليم — بانتظار مراجعة الجمعية خلال 24 ساعة");
+      setToast(completingIsRevision ? "تم اعتماد الطلب نهائياً" : "تم التسليم — بانتظار مراجعة الجمعية خلال يوم عمل");
     } catch (err) {
       setDeliverableError(err instanceof Error ? err.message : "تعذّر إنهاء الطلب");
     } finally {
@@ -571,8 +571,8 @@ export default function DesignRequestsClient({
                       style={{ fontSize: "var(--dr-fs-meta)" }}
                     >
                       {it.request.revisionNotes
-                        ? "رُدّ على ملاحظات الجمعية وبانتظار ردّها. يُعتمد تلقائياً إن لم تردّ خلال 24 ساعة."
-                        : "سُلّم وبانتظار ردّ الجمعية. يُعتمد تلقائياً إن لم تردّ خلال 24 ساعة."}
+                        ? "رُدّ على ملاحظات الجمعية وبانتظار ردّها. يُعتمد تلقائياً إن لم تردّ خلال يوم عمل."
+                        : "سُلّم وبانتظار ردّ الجمعية. يُعتمد تلقائياً إن لم تردّ خلال يوم عمل."}
                     </div>
 
                     {/* What was said to the charity, kept on the card: the next
@@ -604,7 +604,7 @@ export default function DesignRequestsClient({
 
                     {/* The platform does not notify the charity itself yet, so
                         someone still sends the message by hand. This keeps the
-                        24-hour clause in it matching what the deadline job
+                        working-day clause in it matching what the deadline job
                         actually does. */}
                     <CopyDeliveryNotice
                       charityName={it.request.charityName || ""}
@@ -760,7 +760,7 @@ export default function DesignRequestsClient({
         message={
           completingIsRevision
             ? "هذا تسليم بعد التعديل، فيُعتمد الطلب نهائياً مباشرة وتُحذف مرفقاته الأصلية. هل تريد المتابعة؟"
-            : "سيذهب الطلب للجمعية لمراجعته خلال 24 ساعة، والمرفقات تبقى كما هي حتى الاعتماد النهائي. هل تريد المتابعة؟"
+            : "سيذهب الطلب للجمعية لمراجعته خلال يوم عمل، والمرفقات تبقى كما هي حتى الاعتماد النهائي. هل تريد المتابعة؟"
         }
         confirmLabel={completingIsRevision ? "تسليم واعتماد" : "تسليم للجمعية"}
         tone="primary"

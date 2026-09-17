@@ -497,7 +497,11 @@ const MAIL_THREAD_INCLUDE = {
   },
 } as const;
 
-function canViewMail(m: { senderId: string; recipients: { employeeId: string }[] }, userId: string) {
+// المرسِل والمستلم قد يكونان فارغين: البريد قد يكون من عضو جمعية أو إليه.
+function canViewMail(
+  m: { senderId: string | null; recipients: { employeeId: string | null }[] },
+  userId: string
+) {
   return m.senderId === userId || m.recipients.some((r) => r.employeeId === userId);
 }
 
@@ -510,7 +514,9 @@ function canViewMail(m: { senderId: string; recipients: { employeeId: string }[]
  * rows are removed here — only the sender, and the blind-copied person
  * themselves, keep them.
  */
-function stripHiddenBcc<T extends { senderId: string; recipients: { employeeId: string; type: string }[] }>(
+function stripHiddenBcc<
+  T extends { senderId: string | null; recipients: { employeeId: string | null; type: string }[] },
+>(
   m: T,
   userId: string
 ): T {

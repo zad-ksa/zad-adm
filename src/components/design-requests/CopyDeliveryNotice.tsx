@@ -10,7 +10,7 @@ import { copyToClipboard } from "@/lib/clipboard";
  *
  * The wording is the media team's own, kept verbatim; only the charity name and
  * the request title are filled in. It is deliberately a template here rather
- * than something the sender retypes each time — the 24-hour clause has to match
+ * than something the sender retypes each time — the deadline clause has to match
  * what the platform actually does, and a hand-typed message drifts from it.
  */
 
@@ -21,7 +21,7 @@ export function deliveryNoticeText(charityName: string, requestTitle: string): s
     "",
     `نفيدكم بأنه قد تم إنجاز التصميم الخاص بطلبكم: (${requestTitle}).`,
     "",
-    "نأمل منكم التكرم بالاطلاع عليه من خلال المنصة واعتماده، أو سيتم اعتماده تلقائياً بعد مضي 24 ساعة.",
+    "نأمل منكم التكرم بالاطلاع عليه من خلال المنصة واعتماده، أو سيتم اعتماده تلقائياً بعد مضي يوم عمل.",
     "",
     "شاكرين لكم حسن تعاونكم.",
     "",

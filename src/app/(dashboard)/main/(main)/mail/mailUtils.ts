@@ -48,7 +48,15 @@ export function normalizeMailListItem(
   let avatarUrl: string | null = null;
   let toLabel: string | null = null;
 
-  if (tab === "sent") {
+  if (tab === "sent" && mail.charity) {
+    // بريدٌ إلى جمعية يُعرَّف بجمعيته وخدمته لا بأسماء من وصلهم: هكذا أُرسل باسم
+    // الخدمة، وهكذا يقرؤه الطرف الآخر. وأسماء المفوَّضين تبقى في التلميح لمن أراد.
+    displayName = mail.charity.name;
+    const members = (mail.recipients || []).map((r: any) => r.charityUser?.name).filter(Boolean);
+    displayNameTitle = [mail.serviceName ? `زاد | ${mail.serviceName}` : null, members.join("، ")]
+      .filter(Boolean)
+      .join(" — ");
+  } else if (tab === "sent") {
     const recipients = mail.recipients || [];
     const names = recipients.map((r: any) => r.employee?.name).filter(Boolean);
     if (names.length === 1) {
@@ -61,10 +69,23 @@ export function normalizeMailListItem(
     }
     avatarUrl = recipients[0]?.employee?.avatarUrl || null;
   } else if (tab === "drafts") {
-    const names = (mail.draftToIds || []).map((id: string) => employeesById?.[id]?.name).filter(Boolean);
-    displayName = names.length > 0 ? names.join("، ") : "بدون مستلمين";
+    const charityCount = (mail.draftCharityIds || []).length;
+    if (charityCount > 0) {
+      // أسماء الجمعيات ليست في صفّ المسودة، وجلبها لسطرٍ في قائمة لا يستحق
+      // استعلاماً — العدد والخدمة يكفيان لتمييز المسودة حتى تُفتح.
+      const label = charityCount === 1 ? "جمعية واحدة" : `${charityCount} جمعيات`;
+      displayName = mail.serviceName ? `${label} — ${mail.serviceName}` : label;
+    } else {
+      const names = (mail.draftToIds || []).map((id: string) => employeesById?.[id]?.name).filter(Boolean);
+      displayName = names.length > 0 ? names.join("، ") : "بدون مستلمين";
+    }
   } else {
-    displayName = mail.sender?.name || "غير معروف";
+    // مرسِلٌ من جمعية: الاسم وحده لا يكفي، فيسبقه اسم جمعيته ليُعرف من أين جاء.
+    displayName = mail.senderCharityUser
+      ? mail.charity
+        ? `${mail.charity.name} | ${mail.senderCharityUser.name}`
+        : mail.senderCharityUser.name
+      : mail.sender?.name || "غير معروف";
     avatarUrl = mail.sender?.avatarUrl || null;
 
     const toNames = (mail.recipients || [])

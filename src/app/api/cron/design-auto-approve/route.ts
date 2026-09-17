@@ -5,16 +5,17 @@ import { finalizeExpiredDeliveries } from "@/app/actions/designRequests";
 /**
  * Approves deliveries the charity never answered.
  *
- * A delivered request waits 24 hours for the charity to either sign off or send
- * it back with notes. Silence is treated as acceptance — otherwise a request
+ * A delivered request waits ONE WORKING DAY — eight working hours, counted only
+ * inside Sunday–Thursday 08:00–16:00 Riyadh — for the charity to either sign off
+ * or send it back with notes. Silence is treated as acceptance — otherwise a request
  * sits delivered forever, its brief attachments never released from storage and
  * its status never settling.
  *
  * Runs once a day, at 01:00 Riyadh.
  *
- * Hourly would be the honest match for a 24-hour window: a daily sweep
- * finalises somewhere between 24 and 48 hours after delivery, depending on
- * what time the designer pressed the button. It is daily because Vercel's
+ * Hourly would be the honest match for the window: a daily sweep finalises up to
+ * a day after the deadline itself passes, depending on what time the designer
+ * pressed the button. It is daily because Vercel's
  * Hobby plan permits one cron run per day, and an hourly schedule makes the
  * whole deployment fail — the feature working late beats the site not
  * deploying at all.

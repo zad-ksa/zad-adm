@@ -10,7 +10,11 @@ import { createAppNotification } from "./notifications";
 import { logAudit } from "@/lib/auditLog";
 import { logDesignEvent, logDesignEvents, SYSTEM_ACTOR } from "@/lib/designRequestLog";
 import type { DesignEventActor } from "@/lib/designRequestLog";
-import { REVIEW_WINDOW_MS, ZAD_COMPANY_LABEL } from "@/lib/designRequestProgress";
+import {
+  REVIEW_WINDOW_WORK_MINUTES,
+  ZAD_COMPANY_LABEL,
+  reviewDeadline,
+} from "@/lib/designRequestProgress";
 import { v2 as cloudinary } from "cloudinary";
 import {
   toCivilDate,
@@ -717,7 +721,7 @@ export async function requestDesignRevision(input: {
 }
 
 /**
- * Finalises every delivery whose 24-hour review window has passed.
+ * Finalises every delivery whose review window — one working day — has passed.
  *
  * Called by the hourly cron. Lives here rather than in the route so it shares
  * purgeBriefAttachments with the manual paths — three ways to finalise a
@@ -727,12 +731,21 @@ export async function requestDesignRevision(input: {
  * refuse to delete must not stop the rest of the sweep.
  */
 export async function finalizeExpiredDeliveries() {
-  const cutoff = new Date(Date.now() - REVIEW_WINDOW_MS);
+  const now = new Date();
 
-  const due = await prisma.designRequest.findMany({
-    where: { status: "AWAITING_REVIEW", deliveredAt: { lt: cutoff } },
-    select: { id: true, charity: { select: { name: true } } },
+  // مرشِّحٌ رخيص يبقي الاستعلام على الفهرس: مهلةُ يوم عملٍ لا تنقضي قبل ثماني
+  // ساعاتٍ تقويمية مهما كان وقت التسليم، فما هو أحدث منها ليس مرشحاً أصلاً.
+  const earliest = new Date(now.getTime() - REVIEW_WINDOW_WORK_MINUTES * 60_000);
+
+  const candidates = await prisma.designRequest.findMany({
+    where: { status: "AWAITING_REVIEW", deliveredAt: { lt: earliest } },
+    select: { id: true, deliveredAt: true, charity: { select: { name: true } } },
   });
+
+  // والفصل النهائي بساعات العمل: تسليمٌ مساء الخميس لا تنقضي مهلته في العطلة.
+  const due = candidates.filter(
+    (r) => r.deliveredAt && reviewDeadline(r.deliveredAt) <= now
+  );
 
   let approved = 0;
   for (const request of due) {
@@ -752,7 +765,7 @@ export async function finalizeExpiredDeliveries() {
         requestId: request.id,
         kind: "AUTO_APPROVED",
         actor: SYSTEM_ACTOR,
-        note: "مرّت ٢٤ ساعة دون ردّ من الجمعية",
+        note: "مضى يوم عمل دون ردّ من الجمعية",
       });
 
       revalidateCharityPortal(request.charity?.name);
@@ -763,7 +776,7 @@ export async function finalizeExpiredDeliveries() {
   }
 
   if (approved) revalidatePath("/main/design-requests");
-  return { checked: due.length, approved };
+  return { checked: candidates.length, due: due.length, approved };
 }
 
 /**
@@ -773,7 +786,7 @@ export async function finalizeExpiredDeliveries() {
  * Two endings, and the difference matters to the charity:
  *
  *   close = false — the request goes back to AWAITING_REVIEW with Zad's note
- *     attached and a fresh 24-hour window. The charity reads the reply and may
+ *     attached and a fresh working-day window. The charity reads the reply and may
  *     send notes again, so a disagreement is no longer a dead end after one
  *     round.
  *
@@ -874,7 +887,7 @@ export async function markDesignRequestComplete(
 
     // Where the delivery lands depends on whether this is the first one.
     //
-    // First time: the charity gets 24 hours to look at it, so nothing is
+    // First time: the charity gets one working day to look at it, so nothing is
     // deleted and the request waits in AWAITING_REVIEW. After a revision round:
     // the charity has already had its say and revision is allowed once, so this
     // delivery is final and the brief attachments go now.
@@ -911,7 +924,7 @@ export async function markDesignRequestComplete(
     if (isRevisionDelivery) await purgeBriefAttachments(id);
 
     // A second delivery closes the request outright; a first one starts the
-    // charity's 24-hour window. The log has to say which of the two happened.
+    // charity's review window. The log has to say which of the two happened.
     await logDesignEvent({
       requestId: id,
       kind: isRevisionDelivery ? "COMPLETED" : "DELIVERED",

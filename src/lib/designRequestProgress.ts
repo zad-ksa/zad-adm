@@ -1,14 +1,12 @@
 import { toCivilDate, countBusinessDaysBetween } from "./businessDays";
+import { addWorkingMinutes, workingMinutesBetween, WORK_DAY_MINUTES } from "./workingHours";
 
 /**
  * "yellow" and "red" are gone rather than left unused: the delivery day now
  * reads the same green as the days before it, and a passed deadline is black.
  * Keeping variants nothing can produce only invites someone to style them.
  */
-/**
- * How long the charity has to answer a delivery, and how long Zad has to
- * revise once it is sent back. Both windows are the same 24 hours.
- */
+
 /**
  * What a request with no charity is called wherever a name is shown.
  *
@@ -19,7 +17,21 @@ import { toCivilDate, countBusinessDaysBetween } from "./businessDays";
  */
 export const ZAD_COMPANY_LABEL = "شركة زاد";
 
-export const REVIEW_WINDOW_MS = 24 * 60 * 60 * 1000;
+/**
+ * مهلة الردّ على تسليم — للجمعية أن تعتمد أو تُبدي ملاحظاتها، ولزاد أن تردّ
+ * على الملاحظات. وهي **يوم عمل واحد** في الحالتين.
+ *
+ * كانت ٢٤ ساعةً تقويمية من لحظة التسليم، فتمضي في الليل وفي الجمعة والسبت:
+ * تسليمٌ الخميس الساعة ٣م تنقضي مهلته الجمعة ٣م فيُعتمد تلقائياً قبل أن
+ * يفتحه أحد. والعدّاد الآن يجري في الدوام وحده ويتوقف خارجه.
+ */
+export const REVIEW_WINDOW_WORK_MINUTES = WORK_DAY_MINUTES;
+
+/** متى تنقضي مهلة الردّ على تسليمٍ سُلّم في هذه اللحظة. */
+export function reviewDeadline(started: Date | string): Date {
+  const from = typeof started === "string" ? new Date(started) : started;
+  return addWorkingMinutes(from, REVIEW_WINDOW_WORK_MINUTES);
+}
 
 export type DesignRequestColor = "green" | "black" | "neutral";
 
@@ -65,6 +77,14 @@ export type DesignRequestProgress = {
  * Arabic counts days by four cases, not two: one, a dual, a small plural for
  * 3–10, and a singular again from 11. "متبقي 2 أيام عمل" is simply wrong.
  */
+/** الباقي من مهلة الردّ، بساعات العمل. */
+function remainingWorkLabel(hours: number): string {
+  if (hours <= 1) return "أقل من ساعة عمل";
+  if (hours === 2) return "متبقي ساعتا عمل";
+  if (hours <= 10) return `متبقي ${hours} ساعات عمل`;
+  return `متبقي ${hours} ساعة عمل`;
+}
+
 function remainingLabel(days: number): string {
   if (days === 1) return "متبقي يوم عمل";
   if (days === 2) return "متبقي يومان";
@@ -115,10 +135,8 @@ export function getDesignRequestProgress(args: {
     };
   }
 
-  // The two review windows are measured in HOURS off a fixed instant, not in
-  // business days off a schedule — 24 hours means 24 hours, including a Friday.
-  // So they are handled here rather than falling through to the day arithmetic
-  // below, which would answer a different question entirely.
+  // المهلتان تُقاسان بساعات **العمل** من لحظةٍ بعينها، لا بأيام العمل من جدول.
+  // فتُعالجان هنا لا في حساب الأيام أدناه، لأنه يجيب عن سؤالٍ آخر.
   if (args.status === "AWAITING_REVIEW" || args.status === "REVISION_REQUESTED") {
     const startedRaw =
       args.status === "AWAITING_REVIEW" ? args.deliveredAt : args.revisionRequestedAt;
@@ -132,9 +150,9 @@ export function getDesignRequestProgress(args: {
       return { color: "neutral", businessDaysElapsed: 0, daysRemaining: 0, isOverdue: false, isCompleted: false, label: waiting };
     }
 
-    const msLeft = started.getTime() + REVIEW_WINDOW_MS - now.getTime();
+    const deadline = reviewDeadline(started);
 
-    if (msLeft <= 0) {
+    if (now >= deadline) {
       // Past the window. For a delivery this is a gap of at most an hour before
       // the cron settles it; for a revision it is genuinely late, and reads the
       // same as any other overdue request.
@@ -148,14 +166,18 @@ export function getDesignRequestProgress(args: {
       };
     }
 
-    const hoursLeft = Math.ceil(msLeft / (60 * 60 * 1000));
+    // الباقي بساعات العمل لا بساعات الساعة: مساء الخميس لا يبقى منه شيء،
+    // والرقم المعروض هو ما يملكه الطرف فعلاً قبل الانقضاء.
+    const minutesLeft = workingMinutesBetween(now, deadline);
+    const hoursLeft = Math.ceil(minutesLeft / 60);
+
     return {
       color: "green",
       businessDaysElapsed: 0,
       daysRemaining: 0,
       isOverdue: false,
       isCompleted: false,
-      label: `${waiting} — ${hoursLeft === 1 ? "ساعة واحدة" : hoursLeft === 2 ? "ساعتان" : `${hoursLeft} ساعة`}`,
+      label: `${waiting} — ${remainingWorkLabel(hoursLeft)}`,
     };
   }
 

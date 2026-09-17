@@ -2,8 +2,15 @@
 
 import { useEffect, useRef, useState } from "react";
 import dynamic from "next/dynamic";
-import { X, Paperclip, Send, Loader2, AlertTriangle, Minus, Maximize2, Trash2, Check, RotateCw } from "lucide-react";
-import { sendMail, saveDraft, deleteDraft } from "@/app/actions/mail";
+import { X, Paperclip, Send, Loader2, AlertTriangle, Minus, Maximize2, Trash2, Check, RotateCw, Users, Building2, Undo2, ShieldCheck } from "lucide-react";
+import {
+  sendMail,
+  saveDraft,
+  deleteDraft,
+  sendMailToCharities,
+  getCharityMailOptions,
+  replyToCharityMail,
+} from "@/app/actions/mail";
 import { useRoleLabels } from "@/components/RoleLabelsProvider";
 import { isHtmlBody, htmlToPlainText } from "./mailUtils";
 import { uploadFile } from "@/lib/clientUpload";
@@ -20,7 +27,11 @@ interface ComposeModalProps {
   isOpen: boolean;
   onClose: () => void;
   employees: any[];
-  onSuccess: () => void;
+  /**
+   * تُستدعى بعد الإرسال، ومعها ما يحتاجه المُنادي ليعرف أين ذهبت الرسالة:
+   * `pending` تعني أنها وقفت عند معمِّدها ولن تظهر في «المُرسَل».
+   */
+  onSuccess: (result?: { pending?: boolean }) => void;
   replyTo?: any; // Mail object if it's a reply
   replyAll?: boolean; // Reply keeps the original TO/CC instead of just the sender
   forwardMail?: any; // Mail object if it's a forward
@@ -91,11 +102,24 @@ function buildQuoteHtml(source: any, kind: "reply" | "forward"): string {
 
 type RecipientRow = { employeeId: string; type: string };
 
+/** جمعيةٌ مسنَدة، ومعها عدد المفوَّضين فيها بكل خدمة. */
+type CharityOption = { id: string; name: string; counts: Record<string, number> };
+type CharityMailOptions = { services: string[]; needsApproval: string[]; charities: CharityOption[] };
+
+function recipientsLabel(n: number) {
+  if (n === 0) return "لا مستلم";
+  if (n === 1) return "مستلم واحد";
+  if (n === 2) return "مستلمان";
+  return `${n} مستلمين`;
+}
+
 function initialReplyRecipients(replyTo: any, replyAll: boolean, currentUserId?: string) {
   if (!replyTo) return { to: [] as string[], cc: [] as string[] };
 
   const isMe = (id: string) => id === currentUserId;
-  const to = [replyTo.senderId].filter((id) => !isMe(id));
+  // senderId فارغ حين يكون المرسِل عضو جمعية، فيُسقَط: صفُّ مستلمٍ بلا موظف
+  // كان سيُرفض من قاعدة البيانات بعد أن كُتبت الرسالة كاملة.
+  const to = [replyTo.senderId].filter((id): id is string => !!id && !isMe(id));
 
   if (!replyAll) return { to, cc: [] as string[] };
 
@@ -126,6 +150,21 @@ export default function ComposeModal({ isOpen, onClose, employees, onSuccess, re
 
   const [showCc, setShowCc] = useState((draft?.draftCcIds?.length || 0) > 0 || initialRecipients.cc.length > 0);
   const [showBcc, setShowBcc] = useState((draft?.draftBccIds?.length || 0) > 0);
+
+  // الردّ وإعادة التوجيه يتبعان رسالتهما، فلا وجه لتبديل الجهة فيهما.
+  const canAddressCharities = !replyTo && !forwardMail;
+  // ردٌّ على بريدٍ جاء من جمعية: الطرف مُثبَّت — العضو نفسه، في جمعيته، وباسم
+  // الخدمة التي جاء إليها البريد. فلا مُنتقيات ولا نسخ.
+  const charityReply = replyTo?.senderCharityUser ? replyTo : null;
+  const [audience, setAudienceRaw] = useState<"EMPLOYEES" | "CHARITIES">(
+    (draft?.draftCharityIds?.length || 0) > 0 ? "CHARITIES" : "EMPLOYEES"
+  );
+  const [charityIds, setCharityIdsRaw] = useState<string[]>(draft?.draftCharityIds || []);
+  const [serviceName, setServiceNameRaw] = useState<string>(draft?.serviceName || "");
+  const [charityOptions, setCharityOptions] = useState<CharityMailOptions | null>(null);
+  const [optionsFailed, setOptionsFailed] = useState(false);
+  // الطلب مرةٌ واحدة لكل نافذة: مرجعٌ لا حالة، فتعليم الطلب لا يُعيد الرسم.
+  const optionsRequestedRef = useRef(false);
 
   const initialSubject = draft
     ? draft.subject || ""
@@ -172,6 +211,17 @@ export default function ComposeModal({ isOpen, onClose, employees, onSuccess, re
   const setBccIds = (ids: string[]) => { markEdited(); setBccIdsRaw(ids); };
   const setSubject = (v: string) => { markEdited(); setSubjectRaw(v); };
   const setBody = (v: string) => { markEdited(); setBodyRaw(v); };
+  const setCharityIds = (ids: string[]) => { markEdited(); setCharityIdsRaw(ids); };
+  const setServiceName = (v: string) => { markEdited(); setServiceNameRaw(v); };
+  const setAudience = (v: "EMPLOYEES" | "CHARITIES") => { markEdited(); setAudienceRaw(v); };
+
+  const toCharities = audience === "CHARITIES";
+  const availableServices = charityOptions?.services ?? [];
+  const charityList = charityOptions?.charities ?? [];
+  const selectedCharities = charityList.filter((c) => charityIds.includes(c.id));
+  // خدمةٌ لها معمِّد: الرسالة تُحفظ منتظرة ولا تصل الجمعية حتى تُعتمد.
+  const willAwaitApproval =
+    toCharities && !!serviceName && (charityOptions?.needsApproval ?? []).includes(serviceName);
 
   const flushSave = async () => {
     if (autosaveTimerRef.current) {
@@ -179,8 +229,15 @@ export default function ComposeModal({ isOpen, onClose, employees, onSuccess, re
       autosaveTimerRef.current = null;
     }
     if (isDoneRef.current || !hasEditedRef.current) return;
+    // المسودة لا تحفظ مستلماً من جمعية، فحفظ هذا الردّ ينتج مسودةً بلا وجهة.
+    if (charityReply) return;
     const uploaded = attachments.filter((a) => a.status === "done");
-    const hasContent = subject.trim() || htmlToPlainText(body).trim() || toIds.length > 0 || uploaded.length > 0;
+    const hasContent =
+      subject.trim() ||
+      htmlToPlainText(body).trim() ||
+      toIds.length > 0 ||
+      charityIds.length > 0 ||
+      uploaded.length > 0;
     if (!hasContent) return;
 
     setSaveState("saving");
@@ -197,6 +254,9 @@ export default function ComposeModal({ isOpen, onClose, employees, onSuccess, re
           fileName: a.fileName,
           fileSize: a.fileSize,
         })),
+        // الجهة المحفوظة هي الظاهرة الآن، فلا تعود المسودة بجمعياتٍ تُرك اختيارها.
+        charityIds: toCharities ? charityIds : [],
+        serviceName: toCharities ? serviceName || null : null,
       });
       draftIdRef.current = saved.id;
       setSaveState("saved");
@@ -217,7 +277,7 @@ export default function ComposeModal({ isOpen, onClose, employees, onSuccess, re
       if (autosaveTimerRef.current) clearTimeout(autosaveTimerRef.current);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [subject, body, toIds, ccIds, bccIds, attachments]);
+  }, [subject, body, toIds, ccIds, bccIds, attachments, audience, charityIds, serviceName]);
 
   // The unmount cleanup below runs with the closure it was created with, which
   // would be the very first render's — saving an empty draft over a written
@@ -235,6 +295,27 @@ export default function ComposeModal({ isOpen, onClose, employees, onSuccess, re
       flushSaveRef.current();
     };
   }, []);
+
+  // الجمعيات والخدمات تُجلب عند الحاجة إليها لا مع كل فتح للنافذة: أكثر البريد
+  // داخليٌّ بين الموظفين، ولا وجه لاستعلامٍ لا يُقرأ.
+  useEffect(() => {
+    if (!isOpen || !toCharities || optionsRequestedRef.current) return;
+    optionsRequestedRef.current = true;
+    let cancelled = false;
+    getCharityMailOptions()
+      .then((data) => {
+        if (cancelled) return;
+        setCharityOptions(data);
+        // خدمةٌ واحدة لا اختيار فيها، فتُثبَّت ولا يُسأل عنها.
+        if (data.services.length === 1) setServiceNameRaw(data.services[0]);
+      })
+      .catch(() => {
+        if (!cancelled) setOptionsFailed(true);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [isOpen, toCharities]);
 
   if (!isOpen) return null;
 
@@ -304,9 +385,30 @@ export default function ComposeModal({ isOpen, onClose, employees, onSuccess, re
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMessage(null);
-    // Any of the three counts. A blind-copy-only message needs nobody in the
-    // open — that is the whole point of it.
-    if (toIds.length + ccIds.length + bccIds.length === 0) {
+
+    if (charityReply) {
+      // لا شرط على المستلم: هو معروفٌ من الرسالة الأصلية.
+    } else if (toCharities) {
+      if (charityIds.length === 0) {
+        setErrorMessage("اختر جمعيةً واحدة على الأقل");
+        return;
+      }
+      if (!serviceName) {
+        setErrorMessage("اختر الخدمة التي يتبع لها البريد");
+        return;
+      }
+      // جمعيةٌ لم تُفوِّض أحداً بهذه الخدمة لا مستلم لها — يُقال ذلك قبل الإرسال
+      // لا بعده، والخادم يرفضه كذلك.
+      const empty = selectedCharities.filter((c) => (c.counts[serviceName] ?? 0) === 0);
+      if (empty.length > 0) {
+        setErrorMessage(
+          `لا أحد مفوَّض بـ«${serviceName}» في: ${empty.map((c) => c.name).join("، ")}`
+        );
+        return;
+      }
+    } else if (toIds.length + ccIds.length + bccIds.length === 0) {
+      // Any of the three counts. A blind-copy-only message needs nobody in the
+      // open — that is the whole point of it.
       setErrorMessage("يجب تحديد مستلم واحد على الأقل");
       return;
     }
@@ -326,22 +428,46 @@ export default function ComposeModal({ isOpen, onClose, employees, onSuccess, re
         .filter((a) => a.status === "done")
         .map((a) => ({ fileUrl: a.fileUrl as string, fileName: a.fileName, fileSize: a.fileSize }));
 
-      await sendMail({
-        subject: subject || "(بدون موضوع)",
-        body,
-        toIds,
-        ccIds,
-        bccIds,
-        attachments: uploadedAttachments,
-        parentId: replyTo?.id || undefined,
-        draftId: draftIdRef.current,
-      });
+      let sendResult: { pending?: boolean } | undefined;
+
+      if (charityReply) {
+        await replyToCharityMail({
+          parentId: charityReply.id,
+          subject: subject || "(بدون موضوع)",
+          body,
+          attachments: uploadedAttachments,
+        });
+      } else if (toCharities) {
+        sendResult = await sendMailToCharities({
+          subject: subject || "(بدون موضوع)",
+          body,
+          charityIds,
+          serviceName,
+          attachments: uploadedAttachments,
+          draftId: draftIdRef.current,
+        });
+      } else {
+        await sendMail({
+          subject: subject || "(بدون موضوع)",
+          body,
+          toIds,
+          ccIds,
+          bccIds,
+          attachments: uploadedAttachments,
+          parentId: replyTo?.id || undefined,
+          draftId: draftIdRef.current,
+        });
+      }
 
       isDoneRef.current = true;
-      onSuccess();
+      onSuccess(sendResult);
     } catch (error) {
       console.error("Error sending mail:", error);
-      setErrorMessage("حدث خطأ أثناء إرسال الرسالة");
+      // سبب الرفض من الخادم مفيد: «لا تملك هذه الخدمة»، «ليست مسنَدة إليك» —
+      // وابتلاعه في عبارةٍ عامة يترك المرسِل يخمّن.
+      setErrorMessage(
+        error instanceof Error && error.message ? error.message : "حدث خطأ أثناء إرسال الرسالة"
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -527,10 +653,169 @@ export default function ComposeModal({ isOpen, onClose, employees, onSuccess, re
           </div>
         )}
 
+        {/* رسالةٌ أُرجعت من معمِّدها: سببُ الإرجاع يُقرأ هنا لا في مكانٍ آخر،
+            فهو أول ما يحتاجه من يفتح المسودة. */}
+        {draft?.returnNote && (
+          <div className="mx-6 mt-4 flex items-start gap-2 px-4 py-3 rounded-xl bg-amber-500/[0.10] text-amber-800 dark:text-amber-300 text-[length:var(--mail-fs-nav)] font-medium shrink-0">
+            <Undo2 className="w-4 h-4 shrink-0 mt-0.5" />
+            <span>
+              أُرجعت هذه الرسالة إليك: {draft.returnNote}
+            </span>
+          </div>
+        )}
+
         {/* Form Content */}
         <div className="flex-1 flex flex-col min-h-0">
           <div className="px-6 divide-y divide-slate-100 dark:divide-slate-800 shrink-0">
+            {/* ردٌّ إلى جمعية: الطرف مُثبَّت، يُعرض ولا يُختار */}
+            {charityReply && (
+              <div className="py-2 sm:py-3 flex items-center gap-2 sm:gap-4">
+                <div className="w-16 text-[length:var(--mail-fs-nav)] font-medium text-slate-500 dark:text-slate-400">إلى</div>
+                <span className="h-7 px-3 inline-flex items-center rounded-full bg-primary/[0.08] text-primary dark:bg-primary/15 dark:text-teal-300 text-[length:var(--mail-fs-meta)] font-medium">
+                  {charityReply.charity?.name}
+                  {charityReply.senderCharityUser?.name ? ` | ${charityReply.senderCharityUser.name}` : ""}
+                </span>
+              </div>
+            )}
+
+            {/* الجهة المخاطَبة — موظفو زاد أو جمعية. الاختيار أولاً لأنه يغيّر
+                بقية الحقول: لا نسخة ولا نسخة مخفية في بريد الجمعيات، بل خدمةٌ
+                يخرج البريد باسمها. */}
+            {canAddressCharities && !charityReply && (
+              <div className="py-2 sm:py-3 flex items-center gap-2 sm:gap-4">
+                <div className="w-16 text-[length:var(--mail-fs-nav)] font-medium text-slate-500 dark:text-slate-400">الجهة</div>
+                <div className="flex items-center p-0.5 gap-0.5 rounded-xl bg-slate-100 dark:bg-slate-800/60">
+                  {([
+                    { key: "EMPLOYEES" as const, label: "موظفو زاد", Icon: Users },
+                    { key: "CHARITIES" as const, label: "جمعية", Icon: Building2 },
+                  ]).map(({ key, label, Icon }) => (
+                    <button
+                      key={key}
+                      type="button"
+                      onClick={() => setAudience(key)}
+                      className={`flex items-center gap-1.5 h-8 px-3 rounded-[10px] text-[length:var(--mail-fs-meta)] font-medium transition-colors ${
+                        audience === key
+                          ? "bg-white dark:bg-slate-900 text-primary dark:text-teal-300 shadow-sm"
+                          : "text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"
+                      }`}
+                    >
+                      <Icon className="w-3.5 h-3.5" />
+                      {label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* الخدمة — هوية البريد عند الجمعية: «زاد | خدمة كذا» */}
+            {toCharities && (
+              <div className="py-2 sm:py-3 flex items-start gap-2 sm:gap-4">
+                <div className="w-16 pt-1 text-[length:var(--mail-fs-nav)] font-medium text-slate-500 dark:text-slate-400">الخدمة</div>
+                <div className="flex-1 flex items-center min-h-10">
+                  {!charityOptions && !optionsFailed ? (
+                    <span className="flex items-center gap-2 text-[length:var(--mail-fs-nav)] text-slate-400 dark:text-slate-500">
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                      جارٍ جلب خدماتك وجمعياتك…
+                    </span>
+                  ) : optionsFailed ? (
+                    <span className="text-[length:var(--mail-fs-nav)] text-rose-600 dark:text-rose-400">تعذّر جلب الخدمات — أغلق النافذة وأعد المحاولة</span>
+                  ) : availableServices.length === 0 ? (
+                    <span className="text-[length:var(--mail-fs-nav)] text-rose-600 dark:text-rose-400">
+                      لم تُمنح أي خدمة، فلا يمكنك مراسلة الجمعيات — راجع مسؤول النظام
+                    </span>
+                  ) : availableServices.length === 1 ? (
+                    // خدمةٌ واحدة: تُعرض مثبَّتة، فلا قائمةَ بخيارٍ واحد.
+                    <span className="h-7 px-3 inline-flex items-center rounded-full bg-primary/[0.08] text-primary dark:bg-primary/15 dark:text-teal-300 text-[length:var(--mail-fs-meta)] font-medium">
+                      زاد | {availableServices[0]}
+                    </span>
+                  ) : (
+                    <select
+                      value={serviceName}
+                      onChange={(e) => setServiceName(e.target.value)}
+                      className="flex-1 bg-transparent border-none focus:ring-0 outline-none text-[length:var(--mail-fs-nav)] text-slate-700 dark:text-slate-200 [&>option]:dark:bg-slate-800"
+                    >
+                      <option value="" disabled>
+                        اختر الخدمة التي يتبع لها البريد…
+                      </option>
+                      {availableServices.map((name) => (
+                        <option key={name} value={name}>
+                          {name}
+                        </option>
+                      ))}
+                    </select>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* الجمعيات — المسنَدة إليك وحدها، ومع كل واحدة عدد من سيستلم */}
+            {toCharities && (
+              <div className="py-2 sm:py-3 flex items-start gap-2 sm:gap-4">
+                <div className="w-16 pt-1 text-[length:var(--mail-fs-nav)] font-medium text-slate-500 dark:text-slate-400">الجمعيات</div>
+                <div className="flex-1 flex flex-col gap-1.5 min-h-10 justify-center">
+                  <div className="flex flex-wrap gap-2 items-center w-full">
+                    {selectedCharities.map((c) => {
+                      const n = serviceName ? c.counts[serviceName] ?? 0 : 0;
+                      return (
+                        <div
+                          key={c.id}
+                          className={`h-6 px-2 rounded-full flex items-center gap-1 text-[length:var(--mail-fs-meta)] font-medium ${
+                            serviceName && n === 0
+                              ? "bg-rose-500/[0.10] text-rose-600 dark:text-rose-400"
+                              : "bg-primary/[0.08] text-primary dark:bg-primary/15 dark:text-teal-300"
+                          }`}
+                        >
+                          {c.name}
+                          {serviceName && <span className="opacity-70">· {recipientsLabel(n)}</span>}
+                          <button
+                            type="button"
+                            onClick={() => setCharityIds(charityIds.filter((id) => id !== c.id))}
+                            className="opacity-60 hover:opacity-100"
+                          >
+                            <X className="w-3 h-3" />
+                          </button>
+                        </div>
+                      );
+                    })}
+                    <select
+                      className="flex-1 bg-transparent border-none focus:ring-0 outline-none text-[length:var(--mail-fs-nav)] min-w-[150px] text-slate-700 dark:text-slate-200 [&>option]:dark:bg-slate-800"
+                      value=""
+                      onChange={(e) => {
+                        if (e.target.value && !charityIds.includes(e.target.value)) {
+                          setCharityIds([...charityIds, e.target.value]);
+                        }
+                      }}
+                    >
+                      <option value="" disabled>
+                        {charityList.length === 0
+                          ? "لا جمعيات مسنَدة إليك"
+                          : charityIds.length === 0
+                            ? "اختر الجمعية…"
+                            : "إضافة جمعية…"}
+                      </option>
+                      {charityList
+                        .filter((c) => !charityIds.includes(c.id))
+                        .map((c) => (
+                          <option key={c.id} value={c.id}>
+                            {c.name}
+                            {serviceName ? ` — ${recipientsLabel(c.counts[serviceName] ?? 0)}` : ""}
+                          </option>
+                        ))}
+                    </select>
+                  </div>
+                  {charityIds.length > 1 && (
+                    // يُقال صراحةً: فلا يظنّ المرسِل أنه بعث رسالةً واحدة يرى
+                    // مستلموها بعضهم، ولا يُفاجأ بصفوفٍ عدّة في «المُرسَل».
+                    <p className="text-[length:var(--mail-fs-meta)] text-slate-400 dark:text-slate-500">
+                      تُرسَل رسالةٌ مستقلة لكل جمعية — فلا ترى جمعيةٌ مستلمي الأخرى.
+                    </p>
+                  )}
+                </div>
+              </div>
+            )}
+
             {/* TO field */}
+            {!toCharities && !charityReply && (
             <div className="py-2 sm:py-3 flex items-start gap-2 sm:gap-4">
               <div className="w-16 pt-1 text-[length:var(--mail-fs-nav)] font-medium text-slate-500 dark:text-slate-400">إلى</div>
               <div className="flex-1 flex flex-col">
@@ -552,9 +837,10 @@ export default function ComposeModal({ isOpen, onClose, employees, onSuccess, re
                 </div>
               </div>
             </div>
+            )}
 
             {/* CC field */}
-            {showCc && (
+            {!toCharities && !charityReply && showCc && (
               <div className="py-2 sm:py-3 flex items-start gap-2 sm:gap-4">
                 <div className="w-16 pt-1 text-[length:var(--mail-fs-nav)] font-medium text-slate-500 dark:text-slate-400">نسخة</div>
                 <div className="flex-1 flex items-center min-h-10">{renderEmployeeSelect(ccIds, setCcIds, "نسخة إلى...")}</div>
@@ -562,7 +848,7 @@ export default function ComposeModal({ isOpen, onClose, employees, onSuccess, re
             )}
 
             {/* BCC field */}
-            {showBcc && (
+            {!toCharities && !charityReply && showBcc && (
               <div className="py-2 sm:py-3 flex items-start gap-2 sm:gap-4">
                 <div className="w-16 pt-1 text-[length:var(--mail-fs-nav)] font-medium text-slate-500 dark:text-slate-400">نسخة مخفية</div>
                 <div className="flex-1 flex items-center min-h-10">{renderEmployeeSelect(bccIds, setBccIds, "نسخة مخفية إلى...")}</div>
@@ -646,6 +932,13 @@ export default function ComposeModal({ isOpen, onClose, employees, onSuccess, re
 
             {/* Closing this window saves silently; without a marker there was no
                 way to tell whether it was safe to close. */}
+            {willAwaitApproval && (
+              <span className="flex items-center gap-1.5 text-[length:var(--mail-fs-meta)] text-amber-700 dark:text-amber-400">
+                <ShieldCheck className="w-3.5 h-3.5" />
+                تقف عند معمِّد «{serviceName}» قبل أن تصل الجمعية
+              </span>
+            )}
+
             {saveState !== "idle" && (
               <span className="flex items-center gap-1.5 text-[length:var(--mail-fs-meta)] text-slate-400 dark:text-slate-500">
                 {saveState === "saving" ? (
@@ -665,11 +958,20 @@ export default function ComposeModal({ isOpen, onClose, employees, onSuccess, re
 
           <button
             onClick={handleSubmit}
-            disabled={isSubmitting || toIds.length + ccIds.length + bccIds.length === 0 || uploadingCount > 0 || failedCount > 0}
+            disabled={
+              isSubmitting ||
+              uploadingCount > 0 ||
+              failedCount > 0 ||
+              (charityReply
+                ? false
+                : toCharities
+                  ? charityIds.length === 0 || !serviceName
+                  : toIds.length + ccIds.length + bccIds.length === 0)
+            }
             className="flex items-center gap-2 h-11 px-6 text-white bg-gradient-to-b from-[#17857c] via-primary to-[#0c645d] shadow-[var(--mail-shadow-cta)] hover:shadow-[var(--mail-shadow-cta-hover)] active:translate-y-px rounded-xl font-semibold text-[length:var(--mail-fs-nav)] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
-            إرسال
+            {willAwaitApproval ? "إرسال للتعميد" : "إرسال"}
           </button>
         </div>
       </div>

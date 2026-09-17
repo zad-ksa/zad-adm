@@ -19,7 +19,8 @@ import { FolderOpen,
   Users,
   ShieldCheck,
   Palette,
-  KeyRound
+  KeyRound,
+  Mail
 } from "lucide-react";
 import ZadLogo from "@/components/ZadLogo";
 import PrivacyPolicyModal from "@/components/PrivacyPolicyModal";
@@ -38,6 +39,17 @@ function NavItem({ item, isActive, isOpen, onClick }: { item: any, isActive: boo
         <span className="mr-auto text-[10px] font-bold font-sans bg-slate-200/80 dark:bg-slate-700/80 text-slate-600 dark:text-slate-300 px-2 py-0.5 rounded-md border border-slate-300/50 dark:border-slate-600/50">
           قريباً
         </span>
+      )}
+
+      {/* البريد غير المقروء — يُعرض مطوياً كذلك، فالنقطة وحدها تكفي إشارةً */}
+      {!item.comingSoon && item.badge > 0 && (
+        isOpen ? (
+          <span className="mr-auto min-w-5 h-5 px-1.5 inline-flex items-center justify-center rounded-full bg-primary text-white text-[10px] font-bold">
+            {item.badge}
+          </span>
+        ) : (
+          <span className="absolute top-1 left-1 w-2 h-2 rounded-full bg-primary" />
+        )
       )}
     </>
   );
@@ -86,6 +98,7 @@ export default function CharitySidebar({
   permissions = [],
   title,
   isAdmin = false,
+  unreadMail = 0,
 }: {
   charityName: string;
   logoUrl: string | null;
@@ -97,6 +110,7 @@ export default function CharitySidebar({
   permissions?: string[];
   title?: string;
   isAdmin?: boolean;
+  unreadMail?: number;
 }) {
   const pathname = usePathname();
   const router = useRouter();
@@ -192,6 +206,9 @@ export default function CharitySidebar({
     // No permission: the library is reference material shared with every
     // charity, and it is read-only on the server whoever opens it.
     { id: "templates", label: "مكتبة النماذج", href: `/portal/${encodeURIComponent(charityName)}/templates`, exact: true, icon: FolderOpen, show: true },
+    // بلا صلاحية كذلك: لكل عضوٍ صندوق بريد يصله سواء فُتح التبويب أو لم يُفتح،
+    // وإخفاؤه لا يمنع وصول البريد بل يمنع قراءته.
+    { id: "mail", label: "البريد", href: `/portal/${encodeURIComponent(charityName)}/mail`, exact: true, icon: Mail, show: true, badge: unreadMail },
     // No permission gates these two: they lead nowhere yet. Adding a checkbox
     // for a page that does not exist would tell whoever grants it that they had
     // controlled access to something — the mistake documented on `view_hr`.

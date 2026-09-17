@@ -26,7 +26,19 @@ interface MailViewClientProps {
   employees: any[];
 }
 
-type RecipientRow = { employeeId: string; type: string; employee: { name: string } };
+type RecipientRow = {
+  employeeId: string | null;
+  type: string;
+  employee?: { name: string } | null;
+  /** الطرف الآخر قد يكون عضو جمعية، فأحد الحقلين مملوء والآخر فارغ. */
+  charityUserId?: string | null;
+  charityUser?: { name: string } | null;
+};
+
+/** اسم المستلم أياً كانت جهته. بلا هذا كان صفّ عضو الجمعية يُقرأ كـ undefined.name. */
+function partyName(r: RecipientRow) {
+  return r.employee?.name || r.charityUser?.name || "—";
+}
 
 type ThreadMessage = {
   id: string;
@@ -37,6 +49,10 @@ type ThreadMessage = {
   body: string;
   attachments: any[];
   createdAt: string | Date;
+  /** هوية البريد بين زاد وجمعية: الجمعية الطرف، والخدمة التي خرج باسمها. */
+  senderCharityUser?: { id: string; name: string } | null;
+  charity?: { id: string; name: string } | null;
+  serviceName?: string | null;
 };
 
 export default function MailViewClient({ session, mail, employees }: MailViewClientProps) {
@@ -58,6 +74,9 @@ export default function MailViewClient({ session, mail, employees }: MailViewCli
         body: mail.body,
         attachments: mail.attachments,
         createdAt: mail.createdAt,
+        senderCharityUser: mail.senderCharityUser,
+        charity: mail.charity,
+        serviceName: mail.serviceName,
       },
       // Replies inherit the thread's subject so a reply-to-a-reply is titled
       // from the conversation rather than from an empty field.
@@ -243,20 +262,29 @@ function ThreadMessageCard({
    */
   const addressedTo =
     toRecipients.length > 0
-      ? toRecipients.map((r) => r.employee.name)
+      ? toRecipients.map(partyName)
       : bccRecipients
           .filter((r) => r.employeeId === currentUserId)
-          .map((r) => r.employee.name);
+          .map(partyName);
 
   // "Reply all" only earns its place when there is somebody else to include.
   const otherPeople = [...toRecipients, ...ccRecipients].filter(
     (r: RecipientRow) => r.employeeId !== currentUserId && r.employeeId !== message.senderId
   );
-  const canReplyAll = otherPeople.length > 0;
+  // بريدٌ من جمعية يعود إلى مرسِله وحده: «الردّ على الكل» فيه يعني مراسلة بقية
+  // موظفي الخدمة لا الجمعية، وهو غير ما يقوله الزر.
+  const canReplyAll = otherPeople.length > 0 && !message.senderCharityUser;
 
   // The quoted history is split off the body so it collapses behind a control,
   // instead of repeating the whole conversation under every reply.
   const [mainBody, quotedBody] = splitQuotedHtml(message.body || "");
+
+  // الطرف الذي كتب الرسالة: موظف زاد، أو عضو جمعيةٍ يُسبق اسمه باسم جمعيته.
+  const senderLabel = message.senderCharityUser
+    ? message.charity
+      ? message.charity.name + " | " + message.senderCharityUser.name
+      : message.senderCharityUser.name
+    : message.sender?.name || "غير معروف";
   const [showQuoted, setShowQuoted] = useState(false);
 
   if (!isExpanded) {
@@ -273,7 +301,7 @@ function ThreadMessageCard({
           )}
         </div>
         <span className="font-semibold text-[length:var(--mail-fs-sender)] text-slate-800 dark:text-slate-200 shrink-0">
-          {message.sender?.name}
+          {senderLabel}
         </span>
         <span className="truncate text-[length:var(--mail-fs-snippet)] text-slate-400 dark:text-slate-500">
           {htmlToPlainText(mainBody).slice(0, 140)}
@@ -300,17 +328,29 @@ function ThreadMessageCard({
             )}
           </div>
           <div>
-            <div className="font-semibold text-slate-900 dark:text-slate-100 text-[length:var(--mail-fs-sender)]">{message.sender?.name}</div>
+            <div className="font-semibold text-slate-900 dark:text-slate-100 text-[length:var(--mail-fs-sender)] flex items-center gap-2 flex-wrap">
+              {senderLabel}
+              {/* البريد بين زاد والجمعيات يخرج باسم خدمةٍ لا باسم كاتبه، فتُذكر الخدمة صراحةً. */}
+              {message.serviceName && (
+                <span className="h-6 px-2 inline-flex items-center rounded-full bg-primary/[0.08] text-primary dark:bg-primary/15 dark:text-teal-300 text-[length:var(--mail-fs-meta)] font-medium">
+                  زاد | {message.serviceName}
+                </span>
+              )}
+            </div>
             <div className="text-[length:var(--mail-fs-meta)] text-slate-500 dark:text-slate-400 flex items-center gap-2 flex-wrap mt-1">
               <span>إلى:</span>
               <span className="text-slate-600 dark:text-slate-300">
-                {addressedTo.length > 0 ? addressedTo.join("، ") : "—"}
+                {message.charity && message.recipients?.some((r) => r.charityUserId)
+                  ? message.charity.name + (addressedTo.length > 0 ? " — " + addressedTo.join("، ") : "")
+                  : addressedTo.length > 0
+                    ? addressedTo.join("، ")
+                    : "—"}
               </span>
               {ccRecipients.length > 0 && (
                 <>
                   <span className="mx-1">|</span>
                   <span>نسخة:</span>
-                  <span className="text-slate-600 dark:text-slate-300">{ccRecipients.map((r) => r.employee.name).join("، ")}</span>
+                  <span className="text-slate-600 dark:text-slate-300">{ccRecipients.map(partyName).join("، ")}</span>
                 </>
               )}
               {/* Only ever the sender: a recipient's copy contains their own
@@ -321,7 +361,7 @@ function ThreadMessageCard({
                   <span className="mx-1">|</span>
                   <span>نسخة مخفية:</span>
                   <span className="text-slate-600 dark:text-slate-300">
-                    {bccRecipients.map((r) => r.employee.name).join("، ")}
+                    {bccRecipients.map(partyName).join("، ")}
                   </span>
                 </>
               )}

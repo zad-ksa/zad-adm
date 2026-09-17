@@ -67,6 +67,17 @@ export default async function CharityLayout({
   // Same reminder as the Zad dashboard, pointing at the portal's own screen.
   const needsEmail = !user?.email;
 
+  // عدّاد البريد لجمعية هذه الصفحة وحدها: عضوٌ في جمعيتين لا يُنقل إليه عدّاد
+  // الأخرى، ولا يفتح بريداً ليس في نطاق ما يتصفّح.
+  const unreadMail = await prisma.mailRecipient.count({
+    where: {
+      charityUserId: session.id,
+      charityId: charity.id,
+      isRead: false,
+      isDeleted: false,
+    },
+  });
+
   return (
     <CharityLayoutClient
       charityName={decodedName}
@@ -79,6 +90,7 @@ export default async function CharityLayout({
       permissions={membership?.permissions ?? []}
       title={session.title}
       isAdmin={membership?.isAdmin ?? false}
+      unreadMail={unreadMail}
     >
       {needsEmail && (
         <div className="mb-4">

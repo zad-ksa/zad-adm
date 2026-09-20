@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition, useEffect, useCallback, useMemo } from "react";
+import Select from "@/components/console/Select";
 import {
   Plus, X, Send, Loader2, AlertCircle, CheckCircle2, Clock,
   FileText, Link2, ExternalLink, Trash2,
@@ -761,30 +762,32 @@ export default function RequestsClient({ requests: initial, hasActiveChain, canR
           )}
         </div>
 
-        <select
+        <Select
           value={filterStatus}
-          onChange={(e) => setFilterStatus(e.target.value as Status | "ALL")}
-          className="h-9 px-2 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-bold text-slate-600 dark:text-slate-300 outline-none focus:border-primary"
-        >
-          <option value="ALL">كل الحالات ({counts.ALL})</option>
-          <option value="PENDING">قيد المراجعة ({counts.PENDING})</option>
-          <option value="RETURNED">مرجع للتعديل ({counts.RETURNED})</option>
-          <option value="APPROVED">معتمد ({counts.APPROVED})</option>
-          <option value="DELEGATED">محوّل للتنفيذ ({counts.DELEGATED})</option>
-          <option value="REJECTED">مرفوض ({counts.REJECTED})</option>
-        </select>
+          onSelect={(v) => setFilterStatus(v as Status | "ALL")}
+          placeholder="كل الحالات"
+          options={[
+            { value: "ALL", label: `كل الحالات (${counts.ALL})` },
+            { value: "PENDING", label: `قيد المراجعة (${counts.PENDING})` },
+            { value: "RETURNED", label: `مرجع للتعديل (${counts.RETURNED})` },
+            { value: "APPROVED", label: `معتمد (${counts.APPROVED})` },
+            { value: "DELEGATED", label: `محوّل للتنفيذ (${counts.DELEGATED})` },
+            { value: "REJECTED", label: `مرفوض (${counts.REJECTED})` },
+          ]}
+        />
 
-        <select
+        <Select
           value={filterPriority}
-          onChange={(e) => setFilterPriority(e.target.value as Priority | "ALL")}
-          className="h-9 px-2 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-bold text-slate-600 dark:text-slate-300 outline-none focus:border-primary"
-        >
-          <option value="ALL">كل الأولويات</option>
-          <option value="URGENT">عاجل</option>
-          <option value="HIGH">عالية</option>
-          <option value="MEDIUM">متوسطة</option>
-          <option value="LOW">منخفضة</option>
-        </select>
+          onSelect={(v) => setFilterPriority(v as Priority | "ALL")}
+          placeholder="كل الأولويات"
+          options={[
+            { value: "ALL", label: "كل الأولويات" },
+            { value: "URGENT", label: "عاجل" },
+            { value: "HIGH", label: "عالية" },
+            { value: "MEDIUM", label: "متوسطة" },
+            { value: "LOW", label: "منخفضة" },
+          ]}
+        />
 
         {laneCategories.length > 0 && (
           <select

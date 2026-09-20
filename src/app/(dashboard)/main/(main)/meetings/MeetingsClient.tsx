@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import Select from "@/components/console/Select";
 import {
   FileText, Plus, X, Lock, Globe, Eye, LayoutTemplate, Printer,
   Edit2, Trash2, Search, Filter, ArrowRight, Download, Loader2
@@ -400,39 +401,45 @@ export default function MeetingsClient({ meetings, charities, employees, session
           <Filter className="w-3.5 h-3.5 text-slate-400 shrink-0" />
 
           {/* نوع / سياق الاجتماع */}
-          <select
+          <Select
             value={filterContext}
-            onChange={e => setFilterContext(e.target.value)}
-            className={`border rounded-lg px-2 py-1 text-xs bg-slate-50 dark:bg-slate-900 focus:outline-none focus:ring-1 focus:ring-primary transition-colors ${filterContext ? "border-primary/50 text-primary bg-primary/5" : "border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200"}`}
-          >
-            <option value="">كل الأنواع</option>
-            <option value="ctx:زاد">إدارة زاد</option>
-            <option disabled>── الأقسام ──</option>
-            {DEPARTMENTS.map(d => <option key={d.value} value={`ctx:service:${d.value}`}>{d.label}</option>)}
-          </select>
+            onSelect={setFilterContext}
+            placeholder="كل الأنواع"
+            options={[
+              { value: "", label: "كل الأنواع" },
+              { value: "ctx:زاد", label: "إدارة زاد" },
+              { value: "__sep_departments", label: "الأقسام", disabled: true },
+              ...DEPARTMENTS.map(d => ({ value: `ctx:service:${d.value}`, label: d.label })),
+            ]}
+            className={`[&>button]:h-8 ${filterContext ? "[&>button]:border-primary/50 [&>button]:text-primary" : ""}`}
+          />
 
           {/* الجمعية */}
           {charities.length > 0 && (
-            <select
+            <Select
               value={filterCharityId}
-              onChange={e => setFilterCharityId(e.target.value)}
-              className={`border rounded-lg px-2 py-1 text-xs bg-slate-50 dark:bg-slate-900 focus:outline-none focus:ring-1 focus:ring-primary transition-colors ${filterCharityId ? "border-primary/50 text-primary bg-primary/5" : "border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200"}`}
-            >
-              <option value="">كل الجمعيات</option>
-              {charities.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-            </select>
+              onSelect={setFilterCharityId}
+              placeholder="كل الجمعيات"
+              options={[
+                { value: "", label: "كل الجمعيات" },
+                ...charities.map(c => ({ value: c.id, label: c.name })),
+              ]}
+              className={`[&>button]:h-8 ${filterCharityId ? "[&>button]:border-primary/50 [&>button]:text-primary" : ""}`}
+            />
           )}
 
           {/* الخصوصية */}
-          <select
+          <Select
             value={filterPrivacy}
-            onChange={e => setFilterPrivacy(e.target.value as any)}
-            className={`border rounded-lg px-2 py-1 text-xs bg-slate-50 dark:bg-slate-900 focus:outline-none focus:ring-1 focus:ring-primary transition-colors ${filterPrivacy ? "border-primary/50 text-primary bg-primary/5" : "border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200"}`}
-          >
-            <option value="">عام وخاص</option>
-            <option value="public">عام فقط</option>
-            <option value="private">خاص فقط</option>
-          </select>
+            onSelect={(v) => setFilterPrivacy(v as "" | "public" | "private")}
+            placeholder="عام وخاص"
+            options={[
+              { value: "", label: "عام وخاص" },
+              { value: "public", label: "عام فقط" },
+              { value: "private", label: "خاص فقط" },
+            ]}
+            className={`[&>button]:h-8 ${filterPrivacy ? "[&>button]:border-primary/50 [&>button]:text-primary" : ""}`}
+          />
 
           {/* عدد النتائج + مسح */}
           <div className="flex items-center gap-1.5 mr-auto">

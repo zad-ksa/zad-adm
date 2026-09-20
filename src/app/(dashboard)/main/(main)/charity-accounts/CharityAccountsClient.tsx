@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import Select from "@/components/console/Select";
 import { Plus, Trash2, ShieldAlert, CheckCircle2, AlertCircle, Building2, ArrowRight } from "lucide-react";
 import { addCharityClientAccount, deleteCharityClientAccount } from "@/app/actions/charityAccounts";
 import {
@@ -203,16 +204,14 @@ export default function CharityAccountsClient({ charities, accounts: initialAcco
 
                 <div>
                   <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1.5">المسمى الوظيفي</label>
-                  <select 
-                    required 
-                    value={form.title} 
-                    onChange={e => setForm({...form, title: e.target.value})}
-                    className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary font-bold"
-                  >
-                    {titles.map(t => (
-                      <option key={t.value} value={t.value}>{t.label}</option>
-                    ))}
-                  </select>
+                  <Select
+                    variant="soft"
+                    value={form.title}
+                    onSelect={(v) => setForm({ ...form, title: v })}
+                    placeholder="اختر المسمى"
+                    options={titles.map(t => ({ value: t.value, label: t.label }))}
+                    className="w-full [&>button]:w-full [&>button]:justify-between"
+                  />
                 </div>
 
                 <div>

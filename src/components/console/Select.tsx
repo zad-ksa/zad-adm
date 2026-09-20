@@ -4,7 +4,13 @@ import { useCallback, useEffect, useId, useLayoutEffect, useRef, useState } from
 import { createPortal } from "react-dom";
 import { Check, ChevronDown, Search } from "lucide-react";
 
-export type SelectOption = { value: string; label: string; hint?: string };
+export type SelectOption = {
+  value: string;
+  label: string;
+  hint?: string;
+  /** عنوانُ مجموعةٍ لا خيار: يُعرض ولا يُختار ولا تقف عليه الأسهم. */
+  disabled?: boolean;
+};
 
 /**
  * صيغتان لشكلٍ واحد: console لشاشات الإدارة الكثيفة (زوايا ضيّقة)، وsoft للشاشات
@@ -150,6 +156,8 @@ export default function Select({
   const showSearch = options.length > searchThreshold;
   const q = query.trim();
   const shown = q ? options.filter((o) => o.label.includes(q)) : options;
+  // الفواصل لا تُعدّ خيارات: التنقّل يقفز فوقها.
+  const selectableAt = (i: number) => !shown[i]?.disabled;
   const clampedActive = Math.min(activeIndex, Math.max(0, shown.length - 1));
 
   /**
@@ -174,7 +182,14 @@ export default function Select({
       const step = e.key === "ArrowDown" ? 1 : -1;
       // يلتفّ من آخر القائمة إلى أولها: أقصر طريقٍ إلى الخيار الأخير سهمٌ
       // واحدٌ لأعلى، لا عشرون لأسفل.
-      setActiveIndex((i) => (Math.min(i, shown.length - 1) + step + shown.length) % shown.length);
+      setActiveIndex((i) => {
+        let next = Math.min(i, shown.length - 1);
+        for (let hop = 0; hop < shown.length; hop++) {
+          next = (next + step + shown.length) % shown.length;
+          if (selectableAt(next)) break;
+        }
+        return next;
+      });
       return;
     }
 
@@ -187,7 +202,7 @@ export default function Select({
     if (e.key === "Enter") {
       e.preventDefault();
       const option = shown[clampedActive];
-      if (option) {
+      if (option && !option.disabled) {
         onSelect(option.value);
         setIsOpen(false);
         triggerRef.current?.focus();
@@ -243,7 +258,15 @@ export default function Select({
               {shown.length === 0 ? (
                 <p className="px-3 py-2 text-[13px] text-slate-400 dark:text-slate-500">لا نتيجة</p>
               ) : (
-                shown.map((option, index) => (
+                shown.map((option, index) =>
+                  option.disabled ? (
+                    <p
+                      key={option.value}
+                      className="px-3 pb-1 pt-2 text-[11px] font-semibold text-slate-400 dark:text-slate-500"
+                    >
+                      {option.label}
+                    </p>
+                  ) : (
                   <button
                     key={option.value}
                     id={`${listId}-${index}`}
@@ -280,7 +303,8 @@ export default function Select({
                       </span>
                     )}
                   </button>
-                ))
+                  )
+                )
               )}
             </div>
           </div>,

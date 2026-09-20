@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition, useEffect, useCallback } from "react";
+import Select from "@/components/console/Select";
 import {
   CheckSquare,
   Plus,
@@ -965,19 +966,20 @@ ${combinedAchievements.length > 0 ? `
           {isDirectorOrAdmin && (
             <div className="flex items-center gap-2 bg-white dark:bg-slate-800 px-3 py-1.5 border border-slate-200 dark:border-slate-700 rounded-lg">
               <User className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-              <select
+              <Select
                 value={selectedEmployeeId}
-                onChange={(e) => handleScopeChange(e.target.value)}
+                onSelect={handleScopeChange}
                 disabled={isLoadingScope}
-                className="text-xs font-bold text-slate-700 dark:text-slate-200 bg-transparent border-none outline-none cursor-pointer disabled:opacity-50 [&>option]:bg-white [&>option]:dark:bg-slate-800"
-              >
-                {employees.map((emp) => (
-                  <option key={emp.id} value={emp.id}>
-                    {emp.name} ({roleLabels[emp.role] || "موظف"})
-                  </option>
-                ))}
-                <option value="all">— كل الموظفين —</option>
-              </select>
+                placeholder="اختر موظفاً"
+                options={[
+                  ...employees.map((emp) => ({
+                    value: emp.id,
+                    label: emp.name,
+                    hint: roleLabels[emp.role] || "موظف",
+                  })),
+                  { value: "all", label: "— كل الموظفين —" },
+                ]}
+              />
             </div>
           )}
 
@@ -1053,14 +1055,15 @@ ${combinedAchievements.length > 0 ? `
               المهام الحالية
               <span className="text-[10px] font-bold text-slate-400 bg-slate-100 dark:bg-slate-700 px-1.5 py-0.5 rounded-full">{filteredActiveTasks.length}</span>
             </h3>
-            <select
+            <Select
               value={tasksSortBy}
-              onChange={(e) => setTasksSortBy(e.target.value as "priority" | "date")}
-              className="text-[10px] font-bold bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-md px-2 py-1 text-slate-500 dark:text-slate-400 outline-none cursor-pointer [&>option]:bg-white [&>option]:dark:bg-slate-800"
-            >
-              <option value="priority">الأولوية</option>
-              <option value="date">التاريخ</option>
-            </select>
+              onSelect={(v) => setTasksSortBy(v as "priority" | "date")}
+              placeholder="الترتيب"
+              options={[
+                { value: "priority", label: "الأولوية" },
+                { value: "date", label: "التاريخ" },
+              ]}
+            />
           </div>
 
           {/* رأس الجدول — سطح المكتب فقط، بنفس أعمدة كل صف بالحرف. */}

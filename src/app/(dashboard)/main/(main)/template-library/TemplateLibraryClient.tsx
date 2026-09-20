@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
+import Select from "@/components/console/Select";
 import {
   Folder,
   FolderPlus,
@@ -763,24 +764,17 @@ export default function TemplateLibraryClient() {
 
               <label className="flex items-center gap-1.5 text-xs font-bold text-slate-500">
                 <FolderInput className="w-4 h-4" />
-                <select
-                  value=""
-                  disabled={isMoving || moveTargets.length === 0}
-                  onChange={(e) => {
-                    const v = e.target.value;
-                    if (!v) return;
-                    move([...selected], v === ROOT_TARGET ? null : v);
-                    e.target.value = "";
-                  }}
-                  className="h-9 px-2 rounded-xl bg-slate-100 dark:bg-[#111] border border-transparent dark:border-slate-800 focus:border-primary/40 outline-none text-xs font-bold disabled:opacity-50 max-w-[180px]"
-                >
-                  <option value="">نقل إلى…</option>
-                  {moveTargets.map((t) => (
-                    <option key={t.id ?? ROOT_TARGET} value={t.id ?? ROOT_TARGET}>
-                      {t.label}
-                    </option>
-                  ))}
-                </select>
+                <Select
+                  disabled={isMoving}
+                  onSelect={(v) => move([...selected], v === ROOT_TARGET ? null : v)}
+                  placeholder="نقل إلى…"
+                  emptyLabel="لا وجهة متاحة"
+                  options={moveTargets.map((t) => ({
+                    value: t.id ?? ROOT_TARGET,
+                    label: t.label,
+                  }))}
+                  className="max-w-[180px]"
+                />
               </label>
 
               <button

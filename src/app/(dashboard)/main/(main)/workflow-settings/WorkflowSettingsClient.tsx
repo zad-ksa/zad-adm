@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import Select from "@/components/console/Select";
 import {
   Plus, Trash2, ArrowUp, ArrowDown, Check, X, GitBranch,
   ChevronDown, ChevronUp, Loader2, AlertCircle, Power, PowerOff, Edit2, Save,
@@ -212,15 +213,13 @@ export default function WorkflowSettingsClient({
                   <Plus className="w-3.5 h-3.5" /> إضافة مستوى جديد
                 </p>
                 <div className="flex gap-2">
-                  <select
+                  <Select
                     value={addingStep[chain.id]?.approverId || ""}
-                    onChange={e => setAddingStep(prev => ({ ...prev, [chain.id]: { ...prev[chain.id], approverId: e.target.value } }))}
-                    className="flex-1 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-sm bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-primary/50">
-                    <option value="">اختر الشخص...</option>
-                    {employees.map(e => (
-                      <option key={e.id} value={e.id}>{e.name} — {roleLabels[e.role] || e.role}</option>
-                    ))}
-                  </select>
+                    onSelect={(v) => setAddingStep(prev => ({ ...prev, [chain.id]: { ...prev[chain.id], approverId: v } }))}
+                    placeholder="اختر الشخص…"
+                    options={employees.map(e => ({ value: e.id, label: e.name, hint: roleLabels[e.role] || e.role }))}
+                    className="flex-1 [&>button]:w-full [&>button]:justify-between"
+                  />
                   <input
                     value={addingStep[chain.id]?.label || ""}
                     onChange={e => setAddingStep(prev => ({ ...prev, [chain.id]: { ...prev[chain.id], label: e.target.value } }))}

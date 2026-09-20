@@ -29,6 +29,7 @@ import {
   field,
   toggleIn,
 } from "@/components/console/ui";
+import Select from "@/components/console/Select";
 import { SearchField, Tabs } from "@/components/console/layout";
 import { FooterStatus, Sheet } from "@/components/console/overlays";
 
@@ -346,19 +347,14 @@ export function EmployeeSheet({
             <SectionHeader title="الوظيفة" />
             <div className="grid gap-4 sm:grid-cols-2">
               <Field id="emp-role" label="المسمى الوظيفي">
-                <select
-                  id="emp-role"
+                <Select
                   value={role}
-                  onChange={(e) => changeRole(e.target.value)}
+                  onSelect={changeRole}
                   disabled={employee?.role === "ADMIN"}
-                  className={cx(field, "cursor-pointer")}
-                >
-                  {roles.map((r) => (
-                    <option key={r.key} value={r.key}>
-                      {r.displayName}
-                    </option>
-                  ))}
-                </select>
+                  placeholder="اختر المسمى"
+                  options={roles.map((r) => ({ value: r.key, label: r.displayName }))}
+                  className="w-full [&>button]:w-full [&>button]:justify-between"
+                />
               </Field>
               <Field id="emp-leave" label="رصيد الإجازات السنوية" hint="بالأيام.">
                 <input

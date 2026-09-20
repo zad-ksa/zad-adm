@@ -8,7 +8,8 @@ import { toggleEmployeeStatus, deleteEmployee } from "./actions";
 import { isAdmin } from "@/lib/permissions";
 import { EmployeeSheet } from "./EmployeeSheet";
 import type { BundleOption, CharityOption, EmployeeRow, RoleOption } from "./types";
-import { Avatar, Badge, Count, Dot, MONO, btn, cx, field } from "@/components/console/ui";
+import { Avatar, Badge, Count, Dot, MONO, btn, cx } from "@/components/console/ui";
+import Select from "@/components/console/Select";
 import {
   EmptyState,
   PageHeader,
@@ -179,19 +180,16 @@ export function EmployeesClient({
         />
         <div className="flex items-center gap-2">
           <Segmented options={STATUS_OPTIONS} value={status} onChange={setStatus} label="الحالة" />
-          <select
+          <Select
             value={roleFilter}
-            onChange={(e) => setRoleFilter(e.target.value)}
-            aria-label="المسمى الوظيفي"
-            className={cx(field, "w-auto min-w-40 cursor-pointer")}
-          >
-            <option value="all">كل المسميات</option>
-            {roles.map((r) => (
-              <option key={r.key} value={r.key}>
-                {r.displayName}
-              </option>
-            ))}
-          </select>
+            onSelect={setRoleFilter}
+            placeholder="كل المسميات"
+            options={[
+              { value: "all", label: "كل المسميات" },
+              ...roles.map((r) => ({ value: r.key, label: r.displayName })),
+            ]}
+            className="min-w-40"
+          />
         </div>
         {filtered && (
           <button type="button" onClick={clearFilters} className={cx(btn.ghost, "md:ms-auto")}>

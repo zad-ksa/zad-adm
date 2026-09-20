@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useTransition } from "react";
+import Select from "@/components/console/Select";
 import Link from "next/link";
 import {
   Calendar,
@@ -211,29 +212,33 @@ export default function NewsFilterClient({
               <label className="block text-[11px] font-bold text-slate-400 dark:text-slate-500 mb-1 flex items-center gap-1">
                 <Building2 className="w-3 h-3" />الجمعية
               </label>
-              <select
+              <Select
                 value={selectedCharity}
-                onChange={e => setSelectedCharity(e.target.value)}
-                className="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-xs outline-none focus:ring-2 focus:ring-primary/20 text-slate-800 dark:text-slate-100 font-bold cursor-pointer"
-              >
-                <option value="all">كل الجمعيات</option>
-                <option value="إدارة زاد">إدارة زاد</option>
-                <option value="عدة جمعيات">عدة جمعيات</option>
-                {charities.map(c => <option key={c.id} value={c.name}>{c.name}</option>)}
-              </select>
+                onSelect={setSelectedCharity}
+                placeholder="كل الجمعيات"
+                options={[
+                  { value: "all", label: "كل الجمعيات" },
+                  { value: "إدارة زاد", label: "إدارة زاد" },
+                  { value: "عدة جمعيات", label: "عدة جمعيات" },
+                  ...charities.map((c) => ({ value: c.name, label: c.name })),
+                ]}
+                className="w-full [&>button]:w-full [&>button]:justify-between"
+              />
             </div>
             <div>
               <label className="block text-[11px] font-bold text-slate-400 dark:text-slate-500 mb-1 flex items-center gap-1">
                 <Folder className="w-3 h-3" />القسم
               </label>
-              <select
+              <Select
                 value={selectedCategory}
-                onChange={e => setSelectedCategory(e.target.value)}
-                className="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-xs outline-none focus:ring-2 focus:ring-primary/20 text-slate-800 dark:text-slate-100 font-bold cursor-pointer"
-              >
-                <option value="all">كل الأقسام</option>
-                {categories.map(cat => <option key={cat} value={cat}>{cat}</option>)}
-              </select>
+                onSelect={setSelectedCategory}
+                placeholder="كل الأقسام"
+                options={[
+                  { value: "all", label: "كل الأقسام" },
+                  ...categories.map((cat: string) => ({ value: cat, label: cat })),
+                ]}
+                className="w-full [&>button]:w-full [&>button]:justify-between"
+              />
             </div>
             <div>
               <label className="block text-[11px] font-bold text-slate-400 dark:text-slate-500 mb-1 flex items-center gap-1">

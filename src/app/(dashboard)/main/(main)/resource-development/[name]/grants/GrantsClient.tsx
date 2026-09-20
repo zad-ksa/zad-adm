@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import Select from "@/components/console/Select";
 import { FileText, Plus, Trash2, CheckCircle2, AlertCircle, TrendingUp, Check, X, Calendar, Edit, HandCoins } from "lucide-react";
 import { addGrantApplication, updateGrantApplicationStatus, deleteGrantApplication } from "@/app/actions/charity";
 
@@ -67,6 +68,14 @@ export default function GrantsClient({
 
   const handleAddGrant = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // كان المتصفّح يمنع الإرسال بـrequired على القائمة الأصلية. والقائمة الجديدة
+    // زرٌّ لا حقلٌ في النموذج، فالتحقق ينتقل إلى هنا صريحاً.
+    if (!grantForm.entityName.trim()) {
+      showNotification("error", "اختر الجهة المانحة");
+      return;
+    }
+
     startTransition(async () => {
       const res = await addGrantApplication(charityId, grantForm.initiative, Number(grantForm.amount), grantForm.entityName, grantForm.status);
       if (res.success && res.grant) {
@@ -288,12 +297,14 @@ export default function GrantsClient({
           <div className="md:col-span-1">
             <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-1.5">الجهة المانحة</label>
             {donorAccounts.length > 0 ? (
-              <select required value={grantForm.entityName} onChange={e => setGrantForm({...grantForm, entityName: e.target.value})} className="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary font-bold dark:text-slate-100">
-                <option value="">اختر الجهة...</option>
-                {donorAccounts.map(d => (
-                  <option key={d.id} value={d.donorName}>{d.donorName}</option>
-                ))}
-              </select>
+              <Select
+                variant="soft"
+                value={grantForm.entityName}
+                onSelect={(v) => setGrantForm({ ...grantForm, entityName: v })}
+                placeholder="اختر الجهة…"
+                options={donorAccounts.map(d => ({ value: d.donorName, label: d.donorName }))}
+                className="w-full [&>button]:w-full [&>button]:justify-between"
+              />
             ) : (
               <input required type="text" placeholder="اكتب اسم الجهة" value={grantForm.entityName} onChange={e => setGrantForm({...grantForm, entityName: e.target.value})} className="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary font-bold dark:text-slate-100" />
             )}
@@ -308,11 +319,18 @@ export default function GrantsClient({
           </div>
           <div className="md:col-span-1">
             <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-1.5">حالة الطلب الأولية</label>
-            <select value={grantForm.status} onChange={e => setGrantForm({...grantForm, status: e.target.value})} className="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary font-bold text-slate-700 dark:text-slate-200">
-              <option value="PENDING">قيد المعالجة (مرفوعة)</option>
-              <option value="APPROVED">مقبولة</option>
-              <option value="REJECTED">مرفوضة</option>
-            </select>
+            <Select
+              variant="soft"
+              value={grantForm.status}
+              onSelect={(v) => setGrantForm({ ...grantForm, status: v })}
+              placeholder="حالة المنحة"
+              options={[
+                { value: "PENDING", label: "قيد المعالجة (مرفوعة)" },
+                { value: "APPROVED", label: "مقبولة" },
+                { value: "REJECTED", label: "مرفوضة" },
+              ]}
+              className="w-full [&>button]:w-full [&>button]:justify-between"
+            />
           </div>
           <div className="md:col-span-1">
             <button type="submit" disabled={isPending} className="w-full bg-primary text-white py-2.5 rounded-xl font-bold shadow hover:bg-primary/90 disabled:opacity-50 h-[42px] flex items-center justify-center gap-2">
@@ -380,21 +398,25 @@ export default function GrantsClient({
 
             <div className="bg-slate-50 dark:bg-slate-900/50 p-4 border-t border-slate-100 dark:border-slate-700">
               <div className="flex gap-2">
-                <select
+                <Select
+                  variant="soft"
                   value={grant.status}
-                  onChange={(e) => handleStatusChangeRequest(grant.id, e.target.value as any)}
-                  className={`flex-1 text-xs font-bold px-3 py-2.5 rounded-xl border-none outline-none appearance-none cursor-pointer focus:ring-2 focus:ring-primary/20 ${
-                    grant.status === "APPROVED" ? "bg-emerald-100 dark:bg-emerald-500/20 text-emerald-800 dark:text-emerald-300" :
-                    grant.status === "REJECTED" ? "bg-red-100 dark:bg-red-500/20 text-red-800 dark:text-red-300" :
-                    grant.status === "CLOSED" ? "bg-slate-200 dark:bg-slate-600 text-slate-800 dark:text-slate-200" :
-                    "bg-amber-100 dark:bg-amber-500/20 text-amber-800 dark:text-amber-300"
+                  onSelect={(v) => handleStatusChangeRequest(grant.id, v as "PENDING" | "APPROVED" | "REJECTED")}
+                  placeholder="الحالة"
+                  options={[
+                    { value: "PENDING", label: "قيد المعالجة (مرفوعة)" },
+                    { value: "APPROVED", label: "قبول المنحة" },
+                    { value: "REJECTED", label: "رفض المنحة" },
+                  ]}
+                  // لون الحالة يبقى على الزرّ نفسه: الشارة الملوّنة هي ما يُقرأ من
+                  // بعيد في القائمة، لا نصّها.
+                  className={`flex-1 [&>button]:w-full [&>button]:justify-between [&>button]:border-transparent [&>button]:font-bold ${
+                    grant.status === "APPROVED" ? "[&>button]:bg-emerald-100 dark:[&>button]:bg-emerald-500/20 [&>button]:text-emerald-800 dark:[&>button]:text-emerald-300" :
+                    grant.status === "REJECTED" ? "[&>button]:bg-red-100 dark:[&>button]:bg-red-500/20 [&>button]:text-red-800 dark:[&>button]:text-red-300" :
+                    grant.status === "CLOSED" ? "[&>button]:bg-slate-200 dark:[&>button]:bg-slate-600 [&>button]:text-slate-800 dark:[&>button]:text-slate-200" :
+                    "[&>button]:bg-amber-100 dark:[&>button]:bg-amber-500/20 [&>button]:text-amber-800 dark:[&>button]:text-amber-300"
                   }`}
-                >
-                  <option value="PENDING">قيد المعالجة (مرفوعة)</option>
-                  <option value="APPROVED">قبول المنحة</option>
-                  <option value="CLOSED" disabled>مغلقة</option>
-                  <option value="REJECTED">رفض المنحة</option>
-                </select>
+                />
 
                 {grant.status === "APPROVED" && (
                   <button

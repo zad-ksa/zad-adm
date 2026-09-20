@@ -1,3 +1,0 @@
-module.exports=[479286,a=>{"use strict";var b=a.i(907997);a.s(["default",0,function({children:a}){return(0,b.jsx)(b.Fragment,{children:a})},"metadata",0,{title:"التحليل السداسي | زاد التنموية",description:"التحليل السداسي للجمعيات الأهلية - إعداد زاد التنموية",openGraph:{title:"التحليل السداسي | زاد التنموية",description:"التحليل السداسي للجمعيات الأهلية - إعداد زاد التنموية",siteName:"زاد التنموية",locale:"ar_SA",type:"website"},twitter:{card:"summary_large_image",title:"التحليل السداسي | زاد التنموية",description:"التحليل السداسي للجمعيات الأهلية - إعداد زاد التنموية"}}])},67990,a=>{a.n(a.i(479286))}];
-
-//# sourceMappingURL=src_app_hexagonal_layout_tsx_02jha.i._.js.map

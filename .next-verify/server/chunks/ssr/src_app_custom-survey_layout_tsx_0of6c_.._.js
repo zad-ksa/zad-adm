@@ -1,3 +1,0 @@
-module.exports=[125933,a=>{"use strict";var b=a.i(907997);a.s(["default",0,function({children:a}){return(0,b.jsx)(b.Fragment,{children:a})},"metadata",0,{title:"الاستبيانات المخصصة | زاد التنموية",description:"الاستبيانات المخصصة للجمعيات الأهلية - إعداد زاد التنموية",openGraph:{title:"الاستبيانات المخصصة | زاد التنموية",description:"الاستبيانات المخصصة للجمعيات الأهلية - إعداد زاد التنموية",siteName:"زاد التنموية",locale:"ar_SA",type:"website"},twitter:{card:"summary_large_image",title:"الاستبيانات المخصصة | زاد التنموية",description:"الاستبيانات المخصصة للجمعيات الأهلية - إعداد زاد التنموية"}}])},942492,a=>{a.n(a.i(125933))}];
-
-//# sourceMappingURL=src_app_custom-survey_layout_tsx_0of6c_.._.js.map

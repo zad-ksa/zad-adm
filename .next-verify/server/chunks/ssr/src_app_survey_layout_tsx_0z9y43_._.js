@@ -1,3 +1,0 @@
-module.exports=[685475,a=>{"use strict";var b=a.i(907997);a.s(["default",0,function({children:a}){return(0,b.jsx)(b.Fragment,{children:a})},"metadata",0,{title:"استبيان الجاهزية | زاد التنموية",description:"استبيان الجاهزية لأثر مستدام - إعداد زاد التنموية",openGraph:{title:"استبيان الجاهزية | زاد التنموية",description:"استبيان الجاهزية لأثر مستدام - إعداد زاد التنموية",siteName:"زاد التنموية",locale:"ar_SA",type:"website"},twitter:{card:"summary_large_image",title:"استبيان الجاهزية | زاد التنموية",description:"استبيان الجاهزية لأثر مستدام - إعداد زاد التنموية"}}])},433005,a=>{a.n(a.i(685475))}];
-
-//# sourceMappingURL=src_app_survey_layout_tsx_0z9y43_._.js.map

@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { Check, ChevronDown, Search } from "lucide-react";
 
 export type BrandSelectOption = { value: string; label: string; hint?: string };
@@ -13,9 +14,22 @@ export type BrandSelectOption = { value: string; label: string; hint?: string };
  * وقائمةٌ عاديّان، فيتبعان ألوان الهوية وخطّها وزواياها في الوضعين الفاتح
  * والداكن.
  *
+ * **واللوحة تُرسم في جسم الصفحة لا داخل الزرّ.** الحاويات التي تعيش فيها هذه
+ * القوائم مقصوصةٌ بـ`overflow-hidden` أو قابلةٌ للتمرير، فالعنصر المُطلَق داخلها
+ * يُقصّ عند حافّتها ولا يُرى إلا نصفه. ومكانها يُحسب من موضع الزرّ على الشاشة،
+ * فإن ضاق ما تحته انقلبت فوقه، وإن ضاق الاثنان قُصّ ارتفاعها لا حوافّها.
+ *
  * وتُغلق بالمفتاح Escape وبالنقر خارجها، وتُبحَث حين تطول — فقائمة عشرين اسماً
  * بلا بحثٍ أبطأ من كتابة حرفين.
  */
+
+/** أدنى ارتفاعٍ يستحق الفتح إلى الأسفل؛ دونه يُنظر إلى ما فوق الزرّ. */
+const MIN_PANEL_SPACE = 180;
+const MAX_PANEL_HEIGHT = 280;
+const GAP = 6;
+
+type Position = { left: number; width: number; top?: number; bottom?: number; maxHeight: number };
+
 export default function BrandSelect({
   options,
   onSelect,
@@ -23,7 +37,6 @@ export default function BrandSelect({
   emptyLabel = "لا خيارات",
   disabled = false,
   searchThreshold = 8,
-  align = "start",
   className = "",
 }: {
   options: BrandSelectOption[];
@@ -34,31 +47,73 @@ export default function BrandSelect({
   disabled?: boolean;
   /** يظهر حقل البحث عند تجاوز هذا العدد. */
   searchThreshold?: number;
-  align?: "start" | "end";
   className?: string;
 }) {
   const [isOpen, setIsOpen] = useState(false);
   const [query, setQuery] = useState("");
-  const rootRef = useRef<HTMLDivElement>(null);
+  const [position, setPosition] = useState<Position | null>(null);
+
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
   const searchRef = useRef<HTMLInputElement>(null);
+
+  const place = useCallback(() => {
+    const trigger = triggerRef.current;
+    if (!trigger) return;
+
+    const rect = trigger.getBoundingClientRect();
+    const width = Math.min(Math.max(rect.width, 208), 288);
+    // محاذاةٌ يمنى: الواجهة كلها RTL، فحافّة القائمة اليمنى على حافّة الزرّ اليمنى.
+    const left = Math.min(Math.max(8, rect.right - width), window.innerWidth - width - 8);
+
+    const below = window.innerHeight - rect.bottom - GAP - 8;
+    const above = rect.top - GAP - 8;
+
+    // تنقلب فوق الزرّ حين يضيق ما تحته ويتّسع ما فوقه — وهو حال آخر صفٍّ في الصفحة.
+    if (below < MIN_PANEL_SPACE && above > below) {
+      setPosition({
+        left,
+        width,
+        bottom: window.innerHeight - rect.top + GAP,
+        maxHeight: Math.min(MAX_PANEL_HEIGHT, above),
+      });
+      return;
+    }
+
+    setPosition({ left, width, top: rect.bottom + GAP, maxHeight: Math.min(MAX_PANEL_HEIGHT, below) });
+  }, []);
+
+  // القياس قبل الرسم: لوحةٌ تظهر في مكانٍ ثم تقفز إلى مكانها الصحيح أسوأ من انتظارها.
+  useLayoutEffect(() => {
+    if (isOpen) place();
+  }, [isOpen, place]);
 
   useEffect(() => {
     if (!isOpen) return;
 
     const onPointerDown = (e: MouseEvent) => {
-      if (!rootRef.current?.contains(e.target as Node)) setIsOpen(false);
+      const target = e.target as Node;
+      if (triggerRef.current?.contains(target) || panelRef.current?.contains(target)) return;
+      setIsOpen(false);
     };
     const onKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") setIsOpen(false);
     };
+    // التمرير يحرّك الزرّ لا اللوحة، فتُعاد المحاذاة معه. و`capture` ليُسمع تمرير
+    // الحاويات الداخلية كما يُسمع تمرير الصفحة.
+    const onReflow = () => place();
 
     document.addEventListener("mousedown", onPointerDown);
     document.addEventListener("keydown", onKeyDown);
+    window.addEventListener("scroll", onReflow, true);
+    window.addEventListener("resize", onReflow);
     return () => {
       document.removeEventListener("mousedown", onPointerDown);
       document.removeEventListener("keydown", onKeyDown);
+      window.removeEventListener("scroll", onReflow, true);
+      window.removeEventListener("resize", onReflow);
     };
-  }, [isOpen]);
+  }, [isOpen, place]);
 
   useEffect(() => {
     if (isOpen) searchRef.current?.focus();
@@ -69,9 +124,72 @@ export default function BrandSelect({
   const q = query.trim();
   const shown = q ? options.filter((o) => o.label.includes(q)) : options;
 
+  const panel =
+    isOpen && !isEmpty && position && typeof document !== "undefined"
+      ? createPortal(
+          <div
+            ref={panelRef}
+            role="listbox"
+            dir="rtl"
+            style={{
+              position: "fixed",
+              left: position.left,
+              width: position.width,
+              top: position.top,
+              bottom: position.bottom,
+              maxHeight: position.maxHeight,
+            }}
+            className="z-[120] flex flex-col rounded-xl border border-slate-200/80 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-[0_12px_32px_-12px_rgb(15_23_42_/_0.28)] overflow-hidden animate-[zad-pop-in_120ms_ease-out]"
+          >
+            {showSearch && (
+              <div className="flex items-center gap-2 px-3 h-9 border-b border-slate-100 dark:border-slate-800 shrink-0">
+                <Search className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                <input
+                  ref={searchRef}
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  placeholder="بحث…"
+                  className="flex-1 bg-transparent border-none outline-none text-[13px] text-slate-700 dark:text-slate-200 placeholder:text-slate-400"
+                />
+              </div>
+            )}
+
+            <div className="flex-1 overflow-y-auto py-1">
+              {shown.length === 0 ? (
+                <p className="px-3 py-2 text-[13px] text-slate-400 dark:text-slate-500">لا نتيجة</p>
+              ) : (
+                shown.map((option) => (
+                  <button
+                    key={option.value}
+                    type="button"
+                    role="option"
+                    aria-selected={false}
+                    onClick={() => {
+                      onSelect(option.value);
+                      setIsOpen(false);
+                    }}
+                    className="w-full px-3 py-2 flex items-center gap-2 text-right text-[13px] text-slate-700 dark:text-slate-200 hover:bg-primary/[0.07] dark:hover:bg-primary/[0.15] hover:text-primary dark:hover:text-teal-300 transition-colors group"
+                  >
+                    <Check className="w-3.5 h-3.5 shrink-0 opacity-0 group-hover:opacity-100 text-primary dark:text-teal-300" />
+                    <span className="flex-1 truncate">{option.label}</span>
+                    {option.hint && (
+                      <span className="text-[11px] text-slate-400 dark:text-slate-500 shrink-0">
+                        {option.hint}
+                      </span>
+                    )}
+                  </button>
+                ))
+              )}
+            </div>
+          </div>,
+          document.body
+        )
+      : null;
+
   return (
-    <div ref={rootRef} className={`relative ${className}`} dir="rtl">
+    <div className={`relative ${className}`} dir="rtl">
       <button
+        ref={triggerRef}
         type="button"
         disabled={disabled || isEmpty}
         onClick={() => {
@@ -95,55 +213,7 @@ export default function BrandSelect({
         />
       </button>
 
-      {isOpen && !isEmpty && (
-        <div
-          role="listbox"
-          className={`absolute z-40 mt-1.5 min-w-[13rem] max-w-[18rem] rounded-xl border border-slate-200/80 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-[0_12px_32px_-12px_rgb(15_23_42_/_0.28)] overflow-hidden animate-[zad-pop-in_120ms_ease-out] ${
-            align === "end" ? "left-0" : "right-0"
-          }`}
-        >
-          {showSearch && (
-            <div className="flex items-center gap-2 px-3 h-9 border-b border-slate-100 dark:border-slate-800">
-              <Search className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-              <input
-                ref={searchRef}
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                placeholder="بحث…"
-                className="flex-1 bg-transparent border-none outline-none text-[13px] text-slate-700 dark:text-slate-200 placeholder:text-slate-400"
-              />
-            </div>
-          )}
-
-          <div className="max-h-56 overflow-y-auto py-1">
-            {shown.length === 0 ? (
-              <p className="px-3 py-2 text-[13px] text-slate-400 dark:text-slate-500">لا نتيجة</p>
-            ) : (
-              shown.map((option) => (
-                <button
-                  key={option.value}
-                  type="button"
-                  role="option"
-                  aria-selected={false}
-                  onClick={() => {
-                    onSelect(option.value);
-                    setIsOpen(false);
-                  }}
-                  className="w-full px-3 py-2 flex items-center gap-2 text-right text-[13px] text-slate-700 dark:text-slate-200 hover:bg-primary/[0.07] dark:hover:bg-primary/[0.15] hover:text-primary dark:hover:text-teal-300 transition-colors group"
-                >
-                  <Check className="w-3.5 h-3.5 shrink-0 opacity-0 group-hover:opacity-100 text-primary dark:text-teal-300" />
-                  <span className="flex-1 truncate">{option.label}</span>
-                  {option.hint && (
-                    <span className="text-[11px] text-slate-400 dark:text-slate-500 shrink-0">
-                      {option.hint}
-                    </span>
-                  )}
-                </button>
-              ))
-            )}
-          </div>
-        </div>
-      )}
+      {panel}
     </div>
   );
 }

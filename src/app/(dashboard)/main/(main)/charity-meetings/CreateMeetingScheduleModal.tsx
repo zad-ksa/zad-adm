@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { X, Calendar, Clock, Loader2, Trash2, Wand2 } from "lucide-react";
 import { createMeetingSchedule } from "@/app/actions/meeting-schedules";
+import { formatClock12 } from "@/lib/attendanceTime";
 
 function generateTimeSlots(startTime: string, endTime: string, durationMinutes: number) {
   const slots = [];
@@ -264,7 +265,7 @@ export default function CreateMeetingScheduleModal({
                               className="group flex items-center gap-1.5 px-3 py-1.5 bg-primary/10 hover:bg-red-50 dark:hover:bg-red-950/30 text-primary hover:text-red-600 rounded-lg text-sm font-bold font-mono transition-colors border border-primary/20 hover:border-red-200 dark:hover:border-red-900/50"
                               title="حذف هذا الموعد"
                             >
-                              <span>{slot}</span>
+                              <span dir="ltr">{formatClock12(slot)}</span>
                               <X className="w-3.5 h-3.5 opacity-50 group-hover:opacity-100" />
                             </button>
                           ))}

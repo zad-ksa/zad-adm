@@ -2,6 +2,7 @@ import { prisma } from "@/lib/db";
 import { notFound } from "next/navigation";
 import { Calendar, Clock, ChevronRight, User } from "lucide-react";
 import Link from "next/link";
+import { formatClock12 } from "@/lib/attendanceTime";
 
 export default async function CharityMeetingBookingsPage({
   params
@@ -113,7 +114,7 @@ export default async function CharityMeetingBookingsPage({
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-2 text-slate-600 dark:text-slate-300">
                         <Clock className="w-4 h-4 text-slate-400" />
-                        <span dir="ltr" className="inline-block font-mono bg-slate-100 dark:bg-slate-900 px-2 py-0.5 rounded">{booking.startTime}</span>
+                        <span dir="ltr" className="inline-block font-mono bg-slate-100 dark:bg-slate-900 px-2 py-0.5 rounded">{formatClock12(booking.startTime)}</span>
                       </div>
                     </td>
                     <td className="px-6 py-4 text-xs text-slate-400 dark:text-slate-500">

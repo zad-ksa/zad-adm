@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Calendar, Clock, CheckCircle2, ChevronRight, Loader2 } from "lucide-react";
 import { bookMeetingSlot } from "@/app/actions/meeting-schedules";
+import { formatClock12 } from "@/lib/attendanceTime";
 
 function formatDateWithDayName(dateString: string) {
   const date = new Date(dateString);
@@ -92,7 +93,7 @@ export default function BookMeetingClient({ schedule }: { schedule: any }) {
         </div>
         <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-4">تم حجز الموعد بنجاح!</h2>
         <p className="text-sm text-slate-600 dark:text-slate-400 mb-8 max-w-md mx-auto leading-relaxed">
-          شكراً لك، تم تسجيل الموعد الخاص بجمعية <span className="font-bold text-slate-800 dark:text-slate-200">{charityName}</span> في يوم <span className="font-bold text-slate-800 dark:text-slate-200">{selectedDate ? formatDateWithDayName(selectedDate) : ''}</span> الساعة <span className="font-bold text-slate-800 dark:text-slate-200" dir="ltr">{selectedSlot}</span>.
+          شكراً لك، تم تسجيل الموعد الخاص بجمعية <span className="font-bold text-slate-800 dark:text-slate-200">{charityName}</span> في يوم <span className="font-bold text-slate-800 dark:text-slate-200">{selectedDate ? formatDateWithDayName(selectedDate) : ''}</span> الساعة <span className="font-bold text-slate-800 dark:text-slate-200" dir="ltr">{selectedSlot ? formatClock12(selectedSlot) : ''}</span>.
         </p>
       </div>
     );
@@ -168,6 +169,7 @@ export default function BookMeetingClient({ schedule }: { schedule: any }) {
                         key={time}
                         disabled={isBooked || isPassed}
                         onClick={() => setSelectedSlot(time)}
+                        dir="ltr"
                         className={`py-2 rounded-xl text-sm font-bold font-mono transition-all border ${
                           isBooked || isPassed
                             ? "bg-slate-100 dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-400 opacity-60 cursor-not-allowed line-through decoration-slate-300 dark:decoration-slate-600"
@@ -176,7 +178,7 @@ export default function BookMeetingClient({ schedule }: { schedule: any }) {
                               : "bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-primary hover:border-primary/40 hover:bg-primary/5"
                         }`}
                       >
-                        {time}
+                        {formatClock12(time)}
                       </button>
                     ))
                   )}

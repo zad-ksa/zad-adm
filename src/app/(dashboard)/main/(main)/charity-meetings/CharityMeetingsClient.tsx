@@ -6,6 +6,7 @@ import { createMeetingSchedule, toggleMeetingScheduleActive, deleteMeetingSchedu
 import CreateMeetingScheduleModal from "./CreateMeetingScheduleModal";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { formatClock12 } from "@/lib/attendanceTime";
 
 export default function CharityMeetingsClient({ initialSchedules }: { initialSchedules: any[] }) {
   const [schedules, setSchedules] = useState(initialSchedules);
@@ -153,7 +154,7 @@ export default function CharityMeetingsClient({ initialSchedules }: { initialSch
                         <span className="font-semibold text-slate-700 dark:text-slate-300 truncate max-w-[100px]">{booking.charityName}</span>
                         <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400 font-medium font-mono">
                           <span>{booking.date}</span>
-                          <span>{booking.startTime}</span>
+                          <span dir="ltr">{formatClock12(booking.startTime)}</span>
                         </div>
                       </div>
                     ))}

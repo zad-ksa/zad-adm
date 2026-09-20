@@ -1,5 +1,6 @@
 import { Metadata } from "next";
 import { getMeetingSchedules } from "@/app/actions/meeting-schedules";
+import { prisma } from "@/lib/db";
 import CharityMeetingsClient from "./CharityMeetingsClient";
 
 export const metadata: Metadata = {
@@ -7,7 +8,10 @@ export const metadata: Metadata = {
 };
 
 export default async function CharityMeetingsPage() {
-  const { data: schedules } = await getMeetingSchedules();
+  const [{ data: schedules }, charities] = await Promise.all([
+    getMeetingSchedules(),
+    prisma.charity.findMany({ select: { id: true, name: true }, orderBy: { name: "asc" } }),
+  ]);
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500 pb-12" dir="rtl">
@@ -30,7 +34,7 @@ export default async function CharityMeetingsPage() {
       </div>
 
       {/* Main Content Area */}
-      <CharityMeetingsClient initialSchedules={schedules || []} />
+      <CharityMeetingsClient initialSchedules={schedules || []} charities={charities} />
     </div>
   );
 }

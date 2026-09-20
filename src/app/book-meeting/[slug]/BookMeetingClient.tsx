@@ -1,8 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { Calendar, Clock, CheckCircle2, ChevronRight, Loader2 } from "lucide-react";
-import { bookMeetingSlot } from "@/app/actions/meeting-schedules";
+import { Calendar, Clock, CheckCircle2, ChevronRight, Loader2, MessageSquareText } from "lucide-react";
+import { bookMeetingSlot, submitAlternativeRequest } from "@/app/actions/meeting-schedules";
 import { formatClock12 } from "@/lib/attendanceTime";
 
 function formatDateWithDayName(dateString: string) {
@@ -23,6 +23,14 @@ export default function BookMeetingClient({ schedule }: { schedule: any }) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState("");
+
+  const [showAltForm, setShowAltForm] = useState(false);
+  const [altCharityName, setAltCharityName] = useState("");
+  const [altMessage, setAltMessage] = useState("");
+  const [altPhone, setAltPhone] = useState("");
+  const [altSubmitting, setAltSubmitting] = useState(false);
+  const [altSuccess, setAltSuccess] = useState(false);
+  const [altError, setAltError] = useState("");
 
   const bookings = schedule.bookings || [];
   
@@ -72,6 +80,27 @@ export default function BookMeetingClient({ schedule }: { schedule: any }) {
     }
   };
 
+  const handleAltSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setAltError("");
+    setAltSubmitting(true);
+
+    const res = await submitAlternativeRequest({
+      scheduleId: schedule.id,
+      charityName: altCharityName,
+      message: altMessage,
+      contactPhone: altPhone.trim() || undefined,
+    });
+
+    if (res.error) {
+      setAltError(res.error);
+      setAltSubmitting(false);
+    } else {
+      setAltSuccess(true);
+      setAltSubmitting(false);
+    }
+  };
+
   const getDaySlots = (date: string) => {
     const dayConfig = availableDays.find((d: any) => d.date === date);
     if (!dayConfig) return [];
@@ -94,6 +123,20 @@ export default function BookMeetingClient({ schedule }: { schedule: any }) {
         <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-4">تم حجز الموعد بنجاح!</h2>
         <p className="text-sm text-slate-600 dark:text-slate-400 mb-8 max-w-md mx-auto leading-relaxed">
           شكراً لك، تم تسجيل الموعد الخاص بجمعية <span className="font-bold text-slate-800 dark:text-slate-200">{charityName}</span> في يوم <span className="font-bold text-slate-800 dark:text-slate-200">{selectedDate ? formatDateWithDayName(selectedDate) : ''}</span> الساعة <span className="font-bold text-slate-800 dark:text-slate-200" dir="ltr">{selectedSlot ? formatClock12(selectedSlot) : ''}</span>.
+        </p>
+      </div>
+    );
+  }
+
+  if (altSuccess) {
+    return (
+      <div className="bg-white dark:bg-[#111] rounded-2xl p-8 md:p-10 border border-slate-200 dark:border-slate-800 shadow-sm text-center animate-in zoom-in-95 duration-500 max-w-2xl mx-auto mt-12">
+        <div className="w-16 h-16 bg-emerald-50 dark:bg-emerald-950/30 rounded-full flex items-center justify-center mx-auto mb-6 border border-emerald-100 dark:border-emerald-900/50">
+          <CheckCircle2 className="w-8 h-8 text-emerald-500" />
+        </div>
+        <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-4">تم استلام طلبكم بنجاح!</h2>
+        <p className="text-sm text-slate-600 dark:text-slate-400 mb-8 max-w-md mx-auto leading-relaxed">
+          شكراً لكم، تم إبلاغ الفريق المختص بالموعد المقترح من جمعية <span className="font-bold text-slate-800 dark:text-slate-200">{altCharityName}</span>، وسيتم التأكيد عليكم في أقرب فرصة أو التواصل معكم لتحديد أفضل موعد يناسب الطرفين.
         </p>
       </div>
     );
@@ -222,6 +265,77 @@ export default function BookMeetingClient({ schedule }: { schedule: any }) {
           )}
         </div>
       </div>
+
+      {schedule.allowAlternativeRequest && (
+        <div className="border-t border-slate-100 dark:border-slate-800 p-6 bg-slate-50/50 dark:bg-slate-900/20">
+          {!showAltForm ? (
+            <button
+              type="button"
+              onClick={() => setShowAltForm(true)}
+              className="w-full flex items-center justify-center gap-2 text-sm font-bold text-primary hover:underline"
+            >
+              <MessageSquareText className="w-4 h-4" />
+              لا يناسبكم أي من الأوقات أعلاه؟ اقترحوا موعداً آخر
+            </button>
+          ) : (
+            <form onSubmit={handleAltSubmit} className="space-y-4 animate-in fade-in duration-300">
+              <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+                في حال تعذر عليكم أي من الأوقات المحددة أعلاه، يمكنكم اقتراح موعد آخر يناسبكم، وسيتم التأكيد عليكم في أقرب فرصة أو التواصل معكم لتحديد أفضل موعد للطرفين.
+              </p>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-1.5">اسم الجمعية</label>
+                <input
+                  type="text"
+                  required
+                  value={altCharityName}
+                  onChange={(e) => setAltCharityName(e.target.value)}
+                  placeholder="أدخل اسم الجمعية هنا..."
+                  className="w-full px-4 py-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all text-sm font-medium"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-1.5">الموعد المقترح / ملاحظات</label>
+                <textarea
+                  required
+                  value={altMessage}
+                  onChange={(e) => setAltMessage(e.target.value)}
+                  rows={3}
+                  placeholder="مثال: يوم الثلاثاء القادم بعد الساعة 5 مساءً"
+                  className="w-full px-4 py-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all text-sm font-medium resize-none"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-1.5">رقم للتواصل (اختياري)</label>
+                <input
+                  type="tel"
+                  value={altPhone}
+                  onChange={(e) => setAltPhone(e.target.value)}
+                  placeholder="05xxxxxxxx"
+                  dir="ltr"
+                  className="w-full px-4 py-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all text-sm font-medium text-right"
+                />
+              </div>
+
+              {altError && (
+                <div className="text-xs font-bold text-red-500 bg-red-50 dark:bg-red-950/30 px-3 py-2 rounded-lg">
+                  {altError}
+                </div>
+              )}
+
+              <button
+                type="submit"
+                disabled={altSubmitting || !altCharityName.trim() || !altMessage.trim()}
+                className="w-full bg-primary text-white py-3.5 rounded-xl font-bold hover:bg-primary/90 hover:-translate-y-0.5 transition-all shadow-md shadow-primary/20 active:translate-y-0 disabled:opacity-70 disabled:hover:translate-y-0 flex items-center justify-center gap-2"
+              >
+                {altSubmitting ? <Loader2 className="w-5 h-5 animate-spin" /> : "إرسال الطلب"}
+              </button>
+            </form>
+          )}
+        </div>
+      )}
     </div>
   );
 }

@@ -58,6 +58,7 @@ export default function CreateMeetingScheduleModal({
   
   const [generatedDays, setGeneratedDays] = useState<{ date: string; slots: string[] }[]>([]);
   const [hasGenerated, setHasGenerated] = useState(false);
+  const [allowAlternativeRequest, setAllowAlternativeRequest] = useState(false);
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
@@ -126,13 +127,14 @@ export default function CreateMeetingScheduleModal({
       duration,
       slug,
       availableDays: finalDays, // Save the slots directly
+      allowAlternativeRequest,
     });
 
     if (res.error) {
       setError(res.error);
       setIsSubmitting(false);
     } else if (res.success) {
-      onCreated({ ...res.schedule, bookings: [] });
+      onCreated({ ...res.schedule, bookings: [], alternativeRequests: [] });
     }
   };
 
@@ -247,6 +249,23 @@ export default function CreateMeetingScheduleModal({
                 توليد الأوقات
               </button>
             </div>
+
+            <label className="flex items-start gap-3 bg-slate-50 dark:bg-slate-950 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={allowAlternativeRequest}
+                onChange={(e) => setAllowAlternativeRequest(e.target.checked)}
+                className="mt-1 w-4 h-4 accent-primary shrink-0"
+              />
+              <span className="text-sm">
+                <span className="block font-bold text-slate-800 dark:text-slate-200">
+                  السماح باقتراح موعد بديل
+                </span>
+                <span className="block text-xs text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">
+                  في حال تفعيله، تظهر للجمعية على صفحة الحجز إمكانية طلب موعد آخر إن لم يناسبها أي من الأوقات المحددة أعلاه، ليتم التأكيد عليها أو التواصل معها لاحقاً.
+                </span>
+              </span>
+            </label>
 
             {hasGenerated && (
               <div className="space-y-4 animate-in fade-in duration-300">

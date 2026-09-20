@@ -128,6 +128,13 @@ export default function CharityMeetingsClient({
                 </div>
               </div>
 
+              {schedule.alternativeRequests && schedule.alternativeRequests.length > 0 && (
+                <div className="flex items-center gap-2 text-xs font-bold text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/30 border border-amber-100 dark:border-amber-900/40 rounded-xl px-3 py-2 mb-4 relative z-10">
+                  <MessageSquareText className="w-3.5 h-3.5 shrink-0" />
+                  <span>{schedule.alternativeRequests.length} طلب موعد بديل بانتظار المتابعة</span>
+                </div>
+              )}
+
               {/* Footer Actions */}
               <div className="flex items-center gap-2 pt-4 border-t border-slate-100 dark:border-slate-800 relative z-10">
                 <button 

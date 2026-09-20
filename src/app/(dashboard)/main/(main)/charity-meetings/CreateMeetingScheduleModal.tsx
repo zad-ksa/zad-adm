@@ -3,7 +3,16 @@
 import { useState } from "react";
 import { X, Calendar, Clock, Loader2, Trash2, Wand2 } from "lucide-react";
 import { createMeetingSchedule } from "@/app/actions/meeting-schedules";
-import { formatClock12 } from "@/lib/attendanceTime";
+import { formatClock12, WEEKDAY_LABELS } from "@/lib/attendanceTime";
+
+// Reads the weekday straight off the Y-M-D numbers via Date.UTC, so the name
+// always matches the printed "YYYY-MM-DD" regardless of the browser's own
+// timezone (a plain `new Date(dateStr).getDay()` can land on the wrong day
+// for anyone west of UTC, since a bare date string parses as UTC midnight).
+function weekdayName(dateStr: string): string {
+  const [y, m, d] = dateStr.split('-').map(Number);
+  return WEEKDAY_LABELS[new Date(Date.UTC(y, m - 1, d)).getUTCDay()];
+}
 
 function generateTimeSlots(startTime: string, endTime: string, durationMinutes: number) {
   const slots = [];
@@ -250,7 +259,7 @@ export default function CreateMeetingScheduleModal({
                     <div key={dIdx} className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4">
                       <div className="font-bold text-slate-700 dark:text-slate-300 mb-3 text-sm flex items-center gap-2">
                         <Calendar className="w-4 h-4 text-slate-400" />
-                        {day.date}
+                        {weekdayName(day.date)} - {day.date}
                       </div>
                       
                       {day.slots.length === 0 ? (

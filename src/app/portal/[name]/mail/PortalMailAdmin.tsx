@@ -33,6 +33,7 @@ export type PendingPortalMail = {
   approvalState: string;
   returnNote: string | null;
   draftCharityUserIds: string[];
+  parentId: string | null;
   senderCharityUser: { id: string; name: string } | null;
   attachments: { id: string; fileName: string }[];
 };

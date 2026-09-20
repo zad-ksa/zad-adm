@@ -56,6 +56,7 @@ type MailShape = {
     charityUser: Party;
   }[];
   replies?: MailShape[];
+  parentId?: string | null;
 };
 
 type InboxRow = { id: string; isRead: boolean; isStarred: boolean; mail: MailShape };
@@ -67,9 +68,20 @@ type InboxRow = { id: string; isRead: boolean; isStarred: boolean; mail: MailSha
  * هكذا أُرسل باسم الخدمة، وهكذا يُردّ عليه — والشخص خلفها قد يتغيّر غداً.
  */
 function inboxParty(mail: MailShape) {
+  return authorLabel(mail);
+}
+
+/**
+ * كاتب الرسالة كما يُعرض: عضو الجمعية باسمه، وموظف زاد باسمه مع خدمته.
+ *
+ * محادثة الخدمة يشترك فيها الفريقان، فالخدمة وحدها لا تكفي: يلزم أن يعرف
+ * الفريق مَن ردّ منه ومَن ردّ من زاد.
+ */
+function authorLabel(mail: MailShape) {
   if (mail.senderCharityUser) return mail.senderCharityUser.name;
-  if (mail.serviceName) return `زاد | ${mail.serviceName}`;
-  return mail.sender?.name || "زاد";
+  const name = mail.sender?.name;
+  if (mail.serviceName) return name ? `${name} — زاد | ${mail.serviceName}` : `زاد | ${mail.serviceName}`;
+  return name || "زاد";
 }
 
 function sentParty(mail: MailShape) {
@@ -180,9 +192,9 @@ export default function PortalMailClient({
   };
 
   const startReply = (mail: MailShape) => {
-    // الردّ يعود من حيث جاء: خدمةٌ في زاد، أو زميلٌ في الجمعية.
+    // محادثة الخدمة يُردّ فيها على الفريقين؛ ومراسلة الزملاء على كاتبها.
     setReplyTarget(
-      mail.senderCharityUserId
+      !mail.serviceName && mail.senderCharityUserId
         ? {
             parentId: mail.id,
             subject: mail.subject,
@@ -342,7 +354,7 @@ export default function PortalMailClient({
                 >
                   <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400 mb-2">
                     <span className="font-medium text-slate-700 dark:text-slate-300">
-                      {reply.senderCharityUser?.name || (reply.serviceName ? `زاد | ${reply.serviceName}` : reply.sender?.name)}
+                      {authorLabel(reply)}
                     </span>
                     <span>·</span>
                     <span>{formatDate(reply.createdAt)}</span>
@@ -438,6 +450,8 @@ export default function PortalMailClient({
                   kind: mail.addressedAs === "SERVICE" ? "SERVICE" : "COLLEAGUES",
                   toIds: mail.draftCharityUserIds,
                   serviceName: mail.serviceName ?? "",
+                  // الردّ المُرجَع يعود ردّاً في سلسلته، لا رسالةً جديدة.
+                  parentId: mail.parentId ?? null,
                 });
               }}
             />

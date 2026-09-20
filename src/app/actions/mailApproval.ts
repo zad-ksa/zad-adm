@@ -6,13 +6,14 @@ import { sanitizeMailHtml } from "@/lib/sanitizeMail";
 import { requireEmployee, requirePermission } from "@/lib/guards";
 import { getAssignedCharityIds } from "@/lib/access";
 import { listServiceNames } from "@/app/actions/serviceAccess";
+import { serviceConversationRecipients } from "@/lib/serviceTeams";
 
 /**
  * تعميد البريد الصادر من زاد إلى الجمعيات.
  *
- * الفكرة: بريدٌ يخرج باسم خدمةٍ لا باسم شخص، فمن يملك الخدمة له أن يشترط أن
- * يقرأه قبل أن يصل. والتعميد **اختياري لكل خدمة**: خدمةٌ بلا معمِّدين يخرج
- * بريدها مباشرةً كما كان، فلا ينقطع شيء عند النشر.
+ * الفكرة: بريدٌ يخرج باسم خدمةٍ لا باسم شخص، فلا يصل جمعيةً قبل أن يقرأه معمِّد
+ * تلك الخدمة. والتعميد **إلزامي**: خدمةٌ بلا معمِّد لا يُرسَل بريدها إلى الجمعيات
+ * أصلاً — لا يُحفظ منتظراً عند لا أحد، بل يُرفض ويُقال للمرسِل لماذا.
  *
  * والحالة محفوظة على الرسالة نفسها (`approvalState`) لا في جدولٍ موازٍ: الرسالة
  * المنتظرة **لا صفوف استلام لها بعد**، فلا يمكن أن تُقرأ بالخطأ من أي استعلام
@@ -50,6 +51,14 @@ export async function setMailApprovers(serviceName: string, employeeIds: string[
   if (ids.length > 0) {
     const found = await prisma.employee.count({ where: { id: { in: ids }, isActive: true } });
     if (found !== ids.length) throw new Error("أحد الموظفين غير موجود أو موقوف");
+  } else {
+    // التعميد إلزامي، فإزالة آخر معمِّدٍ تُعلّق كل ما ينتظره عند لا أحد.
+    const waiting = await prisma.internalMail.count({
+      where: { serviceName: name, approvalState: "PENDING" },
+    });
+    if (waiting > 0) {
+      throw new Error(`لا يمكن إزالة آخر معمِّد: ${waiting} رسالة تنتظر تعميد «${name}». عيّن بديلاً أولاً`);
+    }
   }
 
   await prisma.$transaction([
@@ -74,22 +83,39 @@ export async function getMyApproverServices(): Promise<string[]> {
 }
 
 /**
- * هل يحتاج بريد هذه الخدمة تعميداً من هذا المرسِل؟
+ * كيف يمرّ بريد هذه الخدمة من هذا المرسِل إلى الجمعيات:
  *
- * المعمِّد لا يعمّد نفسه: اشتراط ذلك يوقف بريده على زميلٍ له نفس الصلاحية، أو
- * يوقفه على نفسه إن كان وحده — وكلاهما عبثٌ لا حماية.
+ *   NO_APPROVER — لا معمِّد للخدمة، فلا يُرسل. والإرسال يُرفض قبل أن يُنشأ شيء.
+ *   SELF        — المرسِل نفسه معمِّدٌ لها: يخرج معتمداً باسمه. اشتراط معمِّدٍ
+ *                 آخر يوقف بريده على زميلٍ بنفس الصلاحية، أو على نفسه إن كان
+ *                 وحده — عبثٌ لا حماية. والاعتماد يُسجَّل عليه للتدقيق.
+ *   PENDING     — يُحفظ منتظراً بلا صفوف استلام حتى يعتمده معمِّد.
  */
-export async function serviceNeedsApproval(serviceName: string, senderId: string) {
+export async function resolveApprovalRoute(
+  serviceName: string,
+  senderId: string
+): Promise<"NO_APPROVER" | "SELF" | "PENDING"> {
   // كل دالةٍ مُصدَّرة هنا مدخلٌ HTTP قائمٌ بذاته، فتحرس نفسها ولو كان نداؤها
   // الوحيد من فعلٍ محروسٍ أصلاً.
   await requireEmployee();
 
   const approvers = await prisma.mailApprover.findMany({
-    where: { serviceName },
+    where: { serviceName, employee: { isActive: true } },
     select: { employeeId: true },
   });
-  if (approvers.length === 0) return false;
-  return !approvers.some((a) => a.employeeId === senderId);
+  if (approvers.length === 0) return "NO_APPROVER";
+  if (approvers.some((a) => a.employeeId === senderId)) return "SELF";
+  return "PENDING";
+}
+
+/** الرسالة التي تُقال حين لا معمِّد — واحدة في كل موضع يُرفض فيه الإرسال. */
+function noApproverMessage(serviceName: string) {
+  return `لا يوجد معمِّد لخدمة «${serviceName}» — لا يُرسل بريدٌ إلى الجمعيات بلا تعميد. راجع مسؤول النظام`;
+}
+
+export async function getNoApproverMessage(serviceName: string) {
+  await requireEmployee();
+  return noApproverMessage(serviceName);
 }
 
 /**
@@ -147,6 +173,7 @@ async function requireApprovalAuthority(mailId: string) {
       serviceName: true,
       charityId: true,
       approvalState: true,
+      draftCharityUserIds: true,
     },
   });
   if (!mail || mail.approvalState !== "PENDING") throw new Error("الرسالة ليست بانتظار التعميد");
@@ -178,18 +205,13 @@ async function requireApprovalAuthority(mailId: string) {
 export async function approveMail(mailId: string, edits?: { subject?: string; body?: string }) {
   const { user, mail } = await requireApprovalAuthority(mailId);
 
-  const delegations = await prisma.charityMemberService.findMany({
-    where: {
-      serviceName: mail.serviceName as string,
-      membership: { isActive: true, charityId: mail.charityId as string },
-    },
-    select: { membership: { select: { charityUserId: true } } },
+  // تُحسب من الفريقين لحظة الاعتماد لا لحظة الكتابة: بينهما قد يُفوَّض عضوٌ أو
+  // يُسحب تفويضه. والكاتب يُستثنى من فريقه، فلا تصله رسالته.
+  const recipients = await serviceConversationRecipients({
+    serviceName: mail.serviceName as string,
+    charityId: mail.charityId as string,
+    author: { kind: "EMPLOYEE", id: mail.senderId as string },
   });
-
-  const recipientIds = [...new Set(delegations.map((d) => d.membership.charityUserId))];
-  if (recipientIds.length === 0) {
-    throw new Error(`لا أحد مفوَّض بخدمة «${mail.serviceName}» في هذه الجمعية — تعذّر التسليم`);
-  }
 
   await prisma.internalMail.update({
     where: { id: mail.id },
@@ -200,18 +222,13 @@ export async function approveMail(mailId: string, edits?: { subject?: string; bo
       approvedById: user.id,
       approvedAt: new Date(),
       returnNote: null,
-      recipients: {
-        create: recipientIds.map((charityUserId) => ({
-          charityUserId,
-          charityId: mail.charityId as string,
-          type: "TO",
-        })),
-      },
+      draftCharityUserIds: [],
+      recipients: { create: recipients },
     },
   });
 
   revalidatePath("/main/mail");
-  return { success: true, delivered: recipientIds.length };
+  return { success: true, delivered: recipients.length };
 }
 
 /**

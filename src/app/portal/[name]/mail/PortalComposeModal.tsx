@@ -65,6 +65,8 @@ export type ResendTarget = {
   kind: "COLLEAGUES" | "SERVICE";
   toIds: string[];
   serviceName: string;
+  /** ردٌّ أُرجع: يبقى معلّقاً بسلسلته عند إعادة الإرسال. */
+  parentId: string | null;
 };
 
 export default function PortalComposeModal({
@@ -182,7 +184,7 @@ export default function PortalComposeModal({
         kind,
         toIds: kind === "COLLEAGUES" ? toIds : undefined,
         serviceName: kind === "SERVICE" ? serviceName : undefined,
-        parentId: replyTarget?.parentId,
+        parentId: replyTarget?.parentId ?? resendTarget?.parentId ?? undefined,
         resendOf: resendTarget?.id,
         attachments: attachments
           .filter((a) => a.status === "done")

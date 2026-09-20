@@ -94,8 +94,8 @@ function buildQuoteHtml(source: any, kind: "reply" | "forward"): string {
   const date = new Date(source.createdAt).toLocaleString("ar-SA");
   const head =
     kind === "reply"
-      ? `في ${date}، كتب ${source.sender?.name || ""}:`
-      : `--- رسالة معاد توجيهها --- من: ${source.sender?.name || ""}، التاريخ: ${date}، الموضوع: ${source.subject || ""}`;
+      ? `في ${date}، كتب ${source.sender?.name || source.senderCharityUser?.name || ""}:`
+      : `--- رسالة معاد توجيهها --- من: ${source.sender?.name || source.senderCharityUser?.name || ""}، التاريخ: ${date}، الموضوع: ${source.subject || ""}`;
 
   return `<p></p><div class="mail-quote"><p class="mail-quote-head">${escapeHtml(head)}</p><blockquote>${safeBody}</blockquote></div>`;
 }
@@ -104,7 +104,13 @@ type RecipientRow = { employeeId: string; type: string };
 
 /** جمعيةٌ مسنَدة، ومعها عدد المفوَّضين فيها بكل خدمة. */
 type CharityOption = { id: string; name: string; counts: Record<string, number> };
-type CharityMailOptions = { services: string[]; needsApproval: string[]; charities: CharityOption[] };
+type CharityMailOptions = {
+  services: string[];
+  needsApproval: string[];
+  /** خدماتٌ بلا معمِّد: لا يخرج بريدها إلى الجمعيات. */
+  noApprover: string[];
+  charities: CharityOption[];
+};
 
 function recipientsLabel(n: number) {
   if (n === 0) return "لا مستلم";
@@ -153,9 +159,15 @@ export default function ComposeModal({ isOpen, onClose, employees, onSuccess, re
 
   // الردّ وإعادة التوجيه يتبعان رسالتهما، فلا وجه لتبديل الجهة فيهما.
   const canAddressCharities = !replyTo && !forwardMail;
-  // ردٌّ على بريدٍ جاء من جمعية: الطرف مُثبَّت — العضو نفسه، في جمعيته، وباسم
-  // الخدمة التي جاء إليها البريد. فلا مُنتقيات ولا نسخ.
-  const charityReply = replyTo?.senderCharityUser ? replyTo : null;
+  // ردٌّ في محادثة خدمةٍ مع جمعية — على رسالةٍ منها أو من زميلٍ في زاد، أو ردٌّ
+  // أرجعه المعمِّد فعاد مسودة. الطرف مُثبَّت: فريق الخدمة في الجمعية، وزملاء
+  // الكاتب نسخة. فلا مُنتقيات ولا نسخ يدوية.
+  const charityReply: { id: string; charityName: string; serviceName: string } | null =
+    replyTo?.charity && replyTo?.serviceName
+      ? { id: replyTo.id, charityName: replyTo.charity.name, serviceName: replyTo.serviceName }
+      : draft?.parentId && draft?.charityId && draft?.serviceName
+        ? { id: draft.parentId, charityName: draft.charity?.name ?? "", serviceName: draft.serviceName }
+        : null;
   const [audience, setAudienceRaw] = useState<"EMPLOYEES" | "CHARITIES">(
     (draft?.draftCharityIds?.length || 0) > 0 ? "CHARITIES" : "EMPLOYEES"
   );
@@ -215,13 +227,17 @@ export default function ComposeModal({ isOpen, onClose, employees, onSuccess, re
   const setServiceName = (v: string) => { markEdited(); setServiceNameRaw(v); };
   const setAudience = (v: "EMPLOYEES" | "CHARITIES") => { markEdited(); setAudienceRaw(v); };
 
-  const toCharities = audience === "CHARITIES";
+  // الردّ في محادثة خدمةٍ ليس «رسالةً جديدة إلى جمعيات»، ولو فُتح من مسودةٍ تحمل جمعية.
+  const toCharities = audience === "CHARITIES" && !charityReply;
   const availableServices = charityOptions?.services ?? [];
   const charityList = charityOptions?.charities ?? [];
   const selectedCharities = charityList.filter((c) => charityIds.includes(c.id));
   // خدمةٌ لها معمِّد: الرسالة تُحفظ منتظرة ولا تصل الجمعية حتى تُعتمد.
   const willAwaitApproval =
     toCharities && !!serviceName && (charityOptions?.needsApproval ?? []).includes(serviceName);
+  // التعميد إلزامي: خدمةٌ بلا معمِّد لا يُرسل بريدها، فيُمنع الزر ويُقال السبب.
+  const serviceLacksApprover =
+    toCharities && !!serviceName && (charityOptions?.noApprover ?? []).includes(serviceName);
 
   const flushSave = async () => {
     if (autosaveTimerRef.current) {
@@ -397,6 +413,12 @@ export default function ComposeModal({ isOpen, onClose, employees, onSuccess, re
         setErrorMessage("اختر الخدمة التي يتبع لها البريد");
         return;
       }
+      if (serviceLacksApprover) {
+        setErrorMessage(
+          `لا يوجد معمِّد لخدمة «${serviceName}» — لا يُرسل بريدٌ إلى الجمعيات بلا تعميد. راجع مسؤول النظام`
+        );
+        return;
+      }
       // جمعيةٌ لم تُفوِّض أحداً بهذه الخدمة لا مستلم لها — يُقال ذلك قبل الإرسال
       // لا بعده، والخادم يرفضه كذلك.
       const empty = selectedCharities.filter((c) => (c.counts[serviceName] ?? 0) === 0);
@@ -431,11 +453,13 @@ export default function ComposeModal({ isOpen, onClose, employees, onSuccess, re
       let sendResult: { pending?: boolean } | undefined;
 
       if (charityReply) {
-        await replyToCharityMail({
+        sendResult = await replyToCharityMail({
           parentId: charityReply.id,
           subject: subject || "(بدون موضوع)",
           body,
           attachments: uploadedAttachments,
+          // ردٌّ مُرجَع أُعيد فتحه من المسودات: تُزال المسودة بعد إرساله.
+          draftId: draft ? draftIdRef.current : undefined,
         });
       } else if (toCharities) {
         sendResult = await sendMailToCharities({
@@ -672,8 +696,10 @@ export default function ComposeModal({ isOpen, onClose, employees, onSuccess, re
               <div className="py-2 sm:py-3 flex items-center gap-2 sm:gap-4">
                 <div className="w-16 text-[length:var(--mail-fs-nav)] font-medium text-slate-500 dark:text-slate-400">إلى</div>
                 <span className="h-7 px-3 inline-flex items-center rounded-full bg-primary/[0.08] text-primary dark:bg-primary/15 dark:text-teal-300 text-[length:var(--mail-fs-meta)] font-medium">
-                  {charityReply.charity?.name}
-                  {charityReply.senderCharityUser?.name ? ` | ${charityReply.senderCharityUser.name}` : ""}
+                  {charityReply.charityName} — مفوَّضو «{charityReply.serviceName}»
+                </span>
+                <span className="text-[length:var(--mail-fs-meta)] text-slate-400 dark:text-slate-500">
+                  ويصل زملاءك في الخدمة نسخةً
                 </span>
               </div>
             )}
@@ -932,6 +958,13 @@ export default function ComposeModal({ isOpen, onClose, employees, onSuccess, re
 
             {/* Closing this window saves silently; without a marker there was no
                 way to tell whether it was safe to close. */}
+            {serviceLacksApprover && (
+              <span className="flex items-center gap-1.5 text-[length:var(--mail-fs-meta)] text-rose-600 dark:text-rose-400">
+                <AlertTriangle className="w-3.5 h-3.5" />
+                لا معمِّد لخدمة «{serviceName}» — لا يُرسل
+              </span>
+            )}
+
             {willAwaitApproval && (
               <span className="flex items-center gap-1.5 text-[length:var(--mail-fs-meta)] text-amber-700 dark:text-amber-400">
                 <ShieldCheck className="w-3.5 h-3.5" />
@@ -965,7 +998,7 @@ export default function ComposeModal({ isOpen, onClose, employees, onSuccess, re
               (charityReply
                 ? false
                 : toCharities
-                  ? charityIds.length === 0 || !serviceName
+                  ? charityIds.length === 0 || !serviceName || serviceLacksApprover
                   : toIds.length + ccIds.length + bccIds.length === 0)
             }
             className="flex items-center gap-2 h-11 px-6 text-white bg-gradient-to-b from-[#17857c] via-primary to-[#0c645d] shadow-[var(--mail-shadow-cta)] hover:shadow-[var(--mail-shadow-cta-hover)] active:translate-y-px rounded-xl font-semibold text-[length:var(--mail-fs-nav)] transition-all disabled:opacity-50 disabled:cursor-not-allowed"

@@ -192,8 +192,13 @@ export default function MailViewClient({ session, mail, employees }: MailViewCli
           replyTo={replyTarget.message}
           replyAll={replyTarget.all}
           currentUserId={session?.id}
-          onSuccess={() => {
+          onSuccess={(result) => {
             setReplyTarget(null);
+            // ردٌّ إلى جمعية وقف عند معمِّده: مكانه تبويب الانتظار، لا هذه الصفحة.
+            if (result?.pending) {
+              router.push("/main/mail?tab=approvals");
+              return;
+            }
             router.refresh();
           }}
         />
@@ -271,9 +276,8 @@ function ThreadMessageCard({
   const otherPeople = [...toRecipients, ...ccRecipients].filter(
     (r: RecipientRow) => r.employeeId !== currentUserId && r.employeeId !== message.senderId
   );
-  // بريدٌ من جمعية يعود إلى مرسِله وحده: «الردّ على الكل» فيه يعني مراسلة بقية
-  // موظفي الخدمة لا الجمعية، وهو غير ما يقوله الزر.
-  const canReplyAll = otherPeople.length > 0 && !message.senderCharityUser;
+  // في محادثة الخدمة «ردّ» يصل الفريقين كاملين أصلاً، فلا معنى لزرٍّ ثانٍ.
+  const canReplyAll = otherPeople.length > 0 && !(message.charity && message.serviceName);
 
   // The quoted history is split off the body so it collapses behind a control,
   // instead of repeating the whole conversation under every reply.

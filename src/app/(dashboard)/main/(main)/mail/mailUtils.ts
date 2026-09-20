@@ -92,7 +92,8 @@ export function normalizeMailListItem(
       .filter((r: any) => r.type === "TO")
       .map((r: any) => r.employee?.name)
       .filter(Boolean);
-    toLabel = toNames.length > 0 ? toNames.join("، ") : null;
+    // رسالةٌ من زميلٍ إلى جمعية وصلتك نسخةً: «إلى» هي الجمعية لا أسماء أعضائها.
+    toLabel = toNames.length > 0 ? toNames.join("، ") : mail.charity?.name ?? null;
   }
 
   return {

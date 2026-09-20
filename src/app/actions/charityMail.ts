@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { sanitizeMailHtml } from "@/lib/sanitizeMail";
 import { requireCharityMembership } from "@/lib/guards";
 import { hasCharityPermission } from "@/lib/charityPermissions";
+import { isDelivered, serviceConversationRecipients } from "@/lib/serviceTeams";
 
 type AttachmentInput = { fileUrl: string; fileName: string; fileSize?: number | null };
 
@@ -199,23 +200,22 @@ export async function getPortalUnreadCount(charityName: string) {
 export async function getPortalMail(charityName: string, mailId: string) {
   const ctx = await requirePortalContext(charityName);
 
-  const mail = await prisma.internalMail.findUnique({
-    where: { id: mailId },
-    include: {
-      ...PORTAL_MAIL_INCLUDE,
-      replies: { include: PORTAL_MAIL_INCLUDE, orderBy: { createdAt: "asc" as const } },
-    },
-  });
-  if (!mail || mail.charityId !== ctx.charity.id) throw new Error("غير مصرح");
+  const include = {
+    ...PORTAL_MAIL_INCLUDE,
+    replies: { include: PORTAL_MAIL_INCLUDE, orderBy: { createdAt: "asc" as const } },
+  };
 
-  const isSender = mail.senderCharityUserId === ctx.session.id;
-  const isRecipient = mail.recipients.some((r) => r.charityUserId === ctx.session.id);
+  const requested = await prisma.internalMail.findUnique({ where: { id: mailId }, include });
+  if (!requested || requested.charityId !== ctx.charity.id) throw new Error("غير مصرح");
+
+  const isSender = requested.senderCharityUserId === ctx.session.id;
+  const isRecipient = requested.recipients.some((r) => r.charityUserId === ctx.session.id);
   if (!isSender && !isRecipient) throw new Error("غير مصرح");
 
   if (isRecipient) {
     await prisma.mailRecipient.updateMany({
       where: {
-        mailId: mail.id,
+        mailId: requested.id,
         charityUserId: ctx.session.id,
         charityId: ctx.charity.id,
         isRead: false,
@@ -224,7 +224,25 @@ export async function getPortalMail(charityName: string, mailId: string) {
     });
   }
 
-  return mail;
+  // كل ردٍّ معلّقٌ بجذر السلسلة، فتُعرض المحادثة من أولها أياً كانت الرسالة
+  // المفتوحة. والجذر يُشترط أن يكون في جمعية الصفحة كذلك.
+  const root = requested.parentId
+    ? await prisma.internalMail.findUnique({ where: { id: requested.parentId }, include })
+    : requested;
+  const mail = root && root.charityId === ctx.charity.id ? root : requested;
+
+  // محادثة الخدمة للفريق كله: كل ردٍّ سُلّم يظهر لأعضائه. ومراسلة الزملاء تبقى
+  // لأطرافها: لا يرى العضو فيها إلا ما كتبه أو وصله.
+  const isTeamThread = !!mail.serviceName;
+  mail.replies = mail.replies.filter(
+    (r) =>
+      isDelivered(r) &&
+      (isTeamThread ||
+        r.senderCharityUserId === ctx.session.id ||
+        r.recipients.some((x) => x.charityUserId === ctx.session.id))
+  );
+
+  return { ...mail, openedId: requested.id };
 }
 
 /** نقل الوارد إلى المهملات — صفّي أنا، في هذه الجمعية. */
@@ -236,55 +254,6 @@ export async function deletePortalMail(charityName: string, mailId: string) {
   });
   revalidatePath(`/portal/${encodeURIComponent(ctx.charity.name)}/mail`);
   return { success: true };
-}
-
-/**
- * موظفو زاد الحاملون لخدمةٍ ما — مستلمو البريد الموجَّه إليها.
- *
- * ثلاثة مصادر كما في getEmployeeServiceNames: منحٌ مباشر، ومجموعةٌ للموظف،
- * ومجموعةٌ لمسمّاه. والمنح المباشر قد يكون مقصوراً على جمعيةٍ بعينها، فيُقبل
- * منه ما كان عامّاً أو كان لهذه الجمعية.
- *
- * و«بلا منح = بلا تقييد» لا تنطبق هنا: تلك قاعدة عرضٍ لا قاعدة تسليم، ولو
- * طُبّقت لوصل بريد الجمعية كل موظفٍ لم يُمنح شيئاً.
- */
-async function employeesHoldingService(serviceName: string, charityId: string): Promise<string[]> {
-  const [direct, bundles] = await Promise.all([
-    prisma.employeeServiceAccess.findMany({
-      where: { serviceName, OR: [{ charityId: null }, { charityId }] },
-      select: { employeeId: true },
-    }),
-    prisma.permissionBundle.findMany({
-      where: { services: { has: serviceName } },
-      select: {
-        employees: { select: { employeeId: true } },
-        roles: { select: { role: { select: { key: true } } } },
-      },
-    }),
-  ]);
-
-  const ids = new Set<string>(direct.map((r) => r.employeeId));
-  for (const bundle of bundles) {
-    for (const e of bundle.employees) ids.add(e.employeeId);
-  }
-
-  const roleKeys = [...new Set(bundles.flatMap((b) => b.roles.map((r) => r.role.key)))];
-  if (roleKeys.length > 0) {
-    const byRole = await prisma.employee.findMany({
-      where: { role: { in: roleKeys } },
-      select: { id: true },
-    });
-    for (const e of byRole) ids.add(e.id);
-  }
-
-  if (ids.size === 0) return [];
-
-  // الموقوفون لا يستقبلون: صندوقٌ لا يفتحه أحد.
-  const active = await prisma.employee.findMany({
-    where: { id: { in: [...ids] }, isActive: true },
-    select: { id: true },
-  });
-  return active.map((e) => e.id);
 }
 
 /**
@@ -360,12 +329,12 @@ export async function sendPortalMail(
       : ctx.services;
     if (!allowed.includes(name)) throw new Error("لست مفوَّضاً بهذه الخدمة");
 
-    const employeeIds = await employeesHoldingService(name, ctx.charity.id);
-    if (employeeIds.length === 0) {
-      throw new Error(`لا يوجد موظف مسؤول عن «${name}» حالياً — راجع إدارة زاد`);
-    }
-
-    recipientsData = employeeIds.map((employeeId) => ({ employeeId, type: "TO" }));
+    // موظفو زاد الحاملون للخدمة في «إلى»، وزملاء الكاتب المفوَّضون بها في «نسخة».
+    recipientsData = await serviceConversationRecipients({
+      serviceName: name,
+      charityId: ctx.charity.id,
+      author: { kind: "CHARITY_USER", id: ctx.session.id },
+    });
     addressedAs = "SERVICE";
     serviceName = name;
   }
@@ -386,9 +355,10 @@ export async function sendPortalMail(
       approvalState: needsApproval ? "PENDING" : "NONE",
       // الرسالة المنتظرة بلا صفوف استلام، فلا تُقرأ قبل أن تُعتمد. ومن كان
       // مقصوداً بها يُحفظ هنا حتى تُخلق صفوفه عند الاعتماد.
-      draftCharityUserIds: needsApproval
-        ? recipientsData.map((r) => r.charityUserId).filter((id): id is string => !!id)
-        : [],
+      draftCharityUserIds:
+        needsApproval && addressedAs === "PERSON"
+          ? recipientsData.map((r) => r.charityUserId).filter((id): id is string => !!id)
+          : [],
       recipients: needsApproval ? undefined : { create: recipientsData },
       attachments: attachments.length
         ? {
@@ -585,11 +555,11 @@ export async function approvePortalMail(
   let recipientsData: { employeeId?: string; charityUserId?: string; charityId?: string; type: string }[];
 
   if (mail.addressedAs === "SERVICE") {
-    const employeeIds = await employeesHoldingService(mail.serviceName ?? "", ctx.charity.id);
-    if (employeeIds.length === 0) {
-      throw new Error(`لا يوجد موظف مسؤول عن «${mail.serviceName}» حالياً — تعذّر التسليم`);
-    }
-    recipientsData = employeeIds.map((employeeId) => ({ employeeId, type: "TO" }));
+    recipientsData = await serviceConversationRecipients({
+      serviceName: mail.serviceName ?? "",
+      charityId: ctx.charity.id,
+      author: { kind: "CHARITY_USER", id: mail.senderCharityUserId as string },
+    });
   } else {
     // العضوية تُراجَع الآن: من خرج من الجمعية بين الكتابة والتعميد لا يستلم.
     const members = await prisma.charityUserCharity.findMany({

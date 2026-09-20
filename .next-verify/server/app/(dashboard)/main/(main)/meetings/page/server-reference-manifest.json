@@ -1,0 +1,377 @@
+{
+  "node": {
+    "006aa0ab7d532a52a86b838281616c6464d5d8b76e": {
+      "workers": {
+        "app/(dashboard)/main/(main)/meetings/page": {
+          "moduleId": 531442,
+          "async": true,
+          "exportedName": "getSidebarCharities",
+          "filename": "src/app/actions/charity.ts"
+        }
+      },
+      "exportedName": "getSidebarCharities",
+      "filename": "src/app/actions/charity.ts"
+    },
+    "00cbc5d13ce818aac36a89ef14e75553170b36c0b7": {
+      "workers": {
+        "app/(dashboard)/main/(main)/meetings/page": {
+          "moduleId": 531442,
+          "async": true,
+          "exportedName": "getUnreadNotificationsCount",
+          "filename": "src/app/actions/approvals.ts"
+        }
+      },
+      "exportedName": "getUnreadNotificationsCount",
+      "filename": "src/app/actions/approvals.ts"
+    },
+    "00a94e1686eae252a35ad64dfc188afb2137489f5f": {
+      "workers": {
+        "app/(dashboard)/main/(main)/meetings/page": {
+          "moduleId": 531442,
+          "async": true,
+          "exportedName": "getUnreadNotifications",
+          "filename": "src/app/actions/notifications.ts"
+        }
+      },
+      "exportedName": "getUnreadNotifications",
+      "filename": "src/app/actions/notifications.ts"
+    },
+    "0034bdd5e5d3df1c1ae1fa6a3973f10d38d7e86f76": {
+      "workers": {
+        "app/(dashboard)/main/(main)/meetings/page": {
+          "moduleId": 531442,
+          "async": true,
+          "exportedName": "getUnreadCount",
+          "filename": "src/app/actions/mail.ts"
+        }
+      },
+      "exportedName": "getUnreadCount",
+      "filename": "src/app/actions/mail.ts"
+    },
+    "0063fc528ac4ee276d30066384cccb2fa037917755": {
+      "workers": {
+        "app/(dashboard)/main/(main)/meetings/page": {
+          "moduleId": 531442,
+          "async": true,
+          "exportedName": "getCurrentPermissions",
+          "filename": "src/app/actions/sessionSync.ts"
+        }
+      },
+      "exportedName": "getCurrentPermissions",
+      "filename": "src/app/actions/sessionSync.ts"
+    },
+    "004033f9d97b910aa055d157d6ad6a2a51cf03ecd1": {
+      "workers": {
+        "app/(dashboard)/main/(main)/meetings/page": {
+          "moduleId": 531442,
+          "async": true,
+          "exportedName": "markAllNotificationsAsRead",
+          "filename": "src/app/actions/notifications.ts"
+        }
+      },
+      "exportedName": "markAllNotificationsAsRead",
+      "filename": "src/app/actions/notifications.ts"
+    },
+    "40844589e1b0431097179ca8f269ee9c90b210f951": {
+      "workers": {
+        "app/(dashboard)/main/(main)/meetings/page": {
+          "moduleId": 531442,
+          "async": true,
+          "exportedName": "deleteNotification",
+          "filename": "src/app/actions/notifications.ts"
+        }
+      },
+      "exportedName": "deleteNotification",
+      "filename": "src/app/actions/notifications.ts"
+    },
+    "0044977b2b3c3157937419a12cad26b3d80b6d8c7e": {
+      "workers": {
+        "app/(dashboard)/main/(main)/meetings/page": {
+          "moduleId": 531442,
+          "async": true,
+          "exportedName": "deleteAllNotifications",
+          "filename": "src/app/actions/notifications.ts"
+        }
+      },
+      "exportedName": "deleteAllNotifications",
+      "filename": "src/app/actions/notifications.ts"
+    },
+    "0029747156a3b44cf036d139813f2c8c61bc058462": {
+      "workers": {
+        "app/(dashboard)/main/(main)/meetings/page": {
+          "moduleId": 531442,
+          "async": true,
+          "exportedName": "logout",
+          "filename": "src/app/actions/auth.ts"
+        }
+      },
+      "exportedName": "logout",
+      "filename": "src/app/actions/auth.ts"
+    },
+    "403d204a1729ce56e7f4316fcff188fa598815129d": {
+      "workers": {
+        "app/(dashboard)/main/(main)/meetings/page": {
+          "moduleId": 531442,
+          "async": true,
+          "exportedName": "setDeveloperOverrideEmployee",
+          "filename": "src/app/actions/auth.ts"
+        }
+      },
+      "exportedName": "setDeveloperOverrideEmployee",
+      "filename": "src/app/actions/auth.ts"
+    },
+    "00091b4928a3eefa05609d494d08a9746847e75e61": {
+      "workers": {
+        "app/(dashboard)/main/(main)/meetings/page": {
+          "moduleId": 531442,
+          "async": true,
+          "exportedName": "getAllEmployees",
+          "filename": "src/app/actions/employeeSettings.ts"
+        }
+      },
+      "exportedName": "getAllEmployees",
+      "filename": "src/app/actions/employeeSettings.ts"
+    },
+    "00c8055d540bfd8914408f1cdd08a3ac3e9930de3c": {
+      "workers": {
+        "app/(dashboard)/main/(main)/meetings/page": {
+          "moduleId": 531442,
+          "async": true,
+          "exportedName": "getTimelineConfigs",
+          "filename": "src/app/actions/settings.ts"
+        }
+      },
+      "exportedName": "getTimelineConfigs",
+      "filename": "src/app/actions/settings.ts"
+    },
+    "00e64c19ef83bdda9c09781ab382c4c6933bd6ade3": {
+      "workers": {
+        "app/(dashboard)/main/(main)/meetings/page": {
+          "moduleId": 531442,
+          "async": true,
+          "exportedName": "getRoleLabels",
+          "filename": "src/app/actions/settings.ts"
+        }
+      },
+      "exportedName": "getRoleLabels",
+      "filename": "src/app/actions/settings.ts"
+    },
+    "40300e1616cd0c325ebec9b61ba146d6bac44c8c41": {
+      "workers": {
+        "app/(dashboard)/main/(main)/meetings/page": {
+          "moduleId": 531442,
+          "async": true,
+          "exportedName": "deleteDefaultStage",
+          "filename": "src/app/actions/settings.ts"
+        }
+      },
+      "exportedName": "deleteDefaultStage",
+      "filename": "src/app/actions/settings.ts"
+    },
+    "40fc6874c530ec6d471d464f626fceb472a7784b9e": {
+      "workers": {
+        "app/(dashboard)/main/(main)/meetings/page": {
+          "moduleId": 531442,
+          "async": true,
+          "exportedName": "getDefaultStages",
+          "filename": "src/app/actions/settings.ts"
+        }
+      },
+      "exportedName": "getDefaultStages",
+      "filename": "src/app/actions/settings.ts"
+    },
+    "6048b8f03104ba199ad0c285e9cf9ea831eaf6051d": {
+      "workers": {
+        "app/(dashboard)/main/(main)/meetings/page": {
+          "moduleId": 531442,
+          "async": true,
+          "exportedName": "updateTimelineDisplayName",
+          "filename": "src/app/actions/settings.ts"
+        }
+      },
+      "exportedName": "updateTimelineDisplayName",
+      "filename": "src/app/actions/settings.ts"
+    },
+    "60b3022b1cad365b687af845c1a0faaee35d1606bc": {
+      "workers": {
+        "app/(dashboard)/main/(main)/meetings/page": {
+          "moduleId": 531442,
+          "async": true,
+          "exportedName": "reorderDefaultStages",
+          "filename": "src/app/actions/settings.ts"
+        }
+      },
+      "exportedName": "reorderDefaultStages",
+      "filename": "src/app/actions/settings.ts"
+    },
+    "701abe77bcf2f7e3b6cead43874a02d5c5901d28e7": {
+      "workers": {
+        "app/(dashboard)/main/(main)/meetings/page": {
+          "moduleId": 531442,
+          "async": true,
+          "exportedName": "addDefaultStage",
+          "filename": "src/app/actions/settings.ts"
+        }
+      },
+      "exportedName": "addDefaultStage",
+      "filename": "src/app/actions/settings.ts"
+    },
+    "70355e60170f6cfd27abf09e5524c3e6d000c9338a": {
+      "workers": {
+        "app/(dashboard)/main/(main)/meetings/page": {
+          "moduleId": 531442,
+          "async": true,
+          "exportedName": "updateDefaultStage",
+          "filename": "src/app/actions/settings.ts"
+        }
+      },
+      "exportedName": "updateDefaultStage",
+      "filename": "src/app/actions/settings.ts"
+    },
+    "009ead457cf13812f9c2c64fd4f46fc454c55f8d77": {
+      "workers": {
+        "app/(dashboard)/main/(main)/meetings/page": {
+          "moduleId": 531442,
+          "async": true,
+          "exportedName": "getMeetings",
+          "filename": "src/app/actions/meetings.ts"
+        }
+      },
+      "exportedName": "getMeetings",
+      "filename": "src/app/actions/meetings.ts"
+    },
+    "4047632681f2259ff6fdcb8410300b86da16584553": {
+      "workers": {
+        "app/(dashboard)/main/(main)/meetings/page": {
+          "moduleId": 531442,
+          "async": true,
+          "exportedName": "getTasksForMeeting",
+          "filename": "src/app/actions/meetings.ts"
+        }
+      },
+      "exportedName": "getTasksForMeeting",
+      "filename": "src/app/actions/meetings.ts"
+    },
+    "40548d83f22d3b5943043bdc1a656aa2c16f4b2075": {
+      "workers": {
+        "app/(dashboard)/main/(main)/meetings/page": {
+          "moduleId": 531442,
+          "async": true,
+          "exportedName": "createMeeting",
+          "filename": "src/app/actions/meetings.ts"
+        }
+      },
+      "exportedName": "createMeeting",
+      "filename": "src/app/actions/meetings.ts"
+    },
+    "406865b3c3aab98c22a5482e98297d2c9e84a70db5": {
+      "workers": {
+        "app/(dashboard)/main/(main)/meetings/page": {
+          "moduleId": 531442,
+          "async": true,
+          "exportedName": "deleteMeeting",
+          "filename": "src/app/actions/meetings.ts"
+        }
+      },
+      "exportedName": "deleteMeeting",
+      "filename": "src/app/actions/meetings.ts"
+    },
+    "40c414b3031b1bd9905b9dc513a7235df282c24b9a": {
+      "workers": {
+        "app/(dashboard)/main/(main)/meetings/page": {
+          "moduleId": 531442,
+          "async": true,
+          "exportedName": "createTasksFromMeeting",
+          "filename": "src/app/actions/meetings.ts"
+        }
+      },
+      "exportedName": "createTasksFromMeeting",
+      "filename": "src/app/actions/meetings.ts"
+    },
+    "601d0d4c6cbef407f4d06361f4cd79d2e81730927f": {
+      "workers": {
+        "app/(dashboard)/main/(main)/meetings/page": {
+          "moduleId": 531442,
+          "async": true,
+          "exportedName": "upsertMeetingTasks",
+          "filename": "src/app/actions/meetings.ts"
+        }
+      },
+      "exportedName": "upsertMeetingTasks",
+      "filename": "src/app/actions/meetings.ts"
+    },
+    "601ee2e36c2067003960b2b1a590728121e3412fe3": {
+      "workers": {
+        "app/(dashboard)/main/(main)/meetings/page": {
+          "moduleId": 531442,
+          "async": true,
+          "exportedName": "updateMeeting",
+          "filename": "src/app/actions/meetings.ts"
+        }
+      },
+      "exportedName": "updateMeeting",
+      "filename": "src/app/actions/meetings.ts"
+    },
+    "60659ff6c12cf5ba9b741958387d5a6eca61d7ba62": {
+      "workers": {
+        "app/(dashboard)/main/(main)/meetings/page": {
+          "moduleId": 531442,
+          "async": true,
+          "exportedName": "checkDateConflict",
+          "filename": "src/app/actions/meetings.ts"
+        }
+      },
+      "exportedName": "checkDateConflict",
+      "filename": "src/app/actions/meetings.ts"
+    },
+    "6066060b7be44502ed01ccf8193759e71f7207f0ee": {
+      "workers": {
+        "app/(dashboard)/main/(main)/meetings/page": {
+          "moduleId": 531442,
+          "async": true,
+          "exportedName": "insertAiTasksIfEmpty",
+          "filename": "src/app/actions/meetings.ts"
+        }
+      },
+      "exportedName": "insertAiTasksIfEmpty",
+      "filename": "src/app/actions/meetings.ts"
+    },
+    "60d9df17cc2dd77a98b432d3f952dc3f87852863b8": {
+      "workers": {
+        "app/(dashboard)/main/(main)/meetings/page": {
+          "moduleId": 531442,
+          "async": true,
+          "exportedName": "toggleMeetingTask",
+          "filename": "src/app/actions/meetings.ts"
+        }
+      },
+      "exportedName": "toggleMeetingTask",
+      "filename": "src/app/actions/meetings.ts"
+    },
+    "40ac76d4080f9393d9a2211e4a705ef5d035799b64": {
+      "workers": {
+        "app/(dashboard)/main/(main)/meetings/page": {
+          "moduleId": 531442,
+          "async": true,
+          "exportedName": "markNotificationAsRead",
+          "filename": "src/app/actions/notifications.ts"
+        }
+      },
+      "exportedName": "markNotificationAsRead",
+      "filename": "src/app/actions/notifications.ts"
+    },
+    "7842e042c0e7e9cdb9a11957567ecb761f3312aa09": {
+      "workers": {
+        "app/(dashboard)/main/(main)/meetings/page": {
+          "moduleId": 531442,
+          "async": true,
+          "exportedName": "createAppNotification",
+          "filename": "src/app/actions/notifications.ts"
+        }
+      },
+      "exportedName": "createAppNotification",
+      "filename": "src/app/actions/notifications.ts"
+    }
+  },
+  "edge": {}
+}

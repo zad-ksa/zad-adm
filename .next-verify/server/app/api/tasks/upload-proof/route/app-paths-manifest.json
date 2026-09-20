@@ -1,0 +1,3 @@
+{
+  "/api/tasks/upload-proof/route": "app/api/tasks/upload-proof/route.js"
+}

@@ -1,0 +1,209 @@
+{
+  "node": {
+    "0029747156a3b44cf036d139813f2c8c61bc058462": {
+      "workers": {
+        "app/portal/[name]/mail/page": {
+          "moduleId": 612513,
+          "async": true,
+          "exportedName": "logout",
+          "filename": "src/app/actions/auth.ts"
+        }
+      },
+      "exportedName": "logout",
+      "filename": "src/app/actions/auth.ts"
+    },
+    "403d204a1729ce56e7f4316fcff188fa598815129d": {
+      "workers": {
+        "app/portal/[name]/mail/page": {
+          "moduleId": 612513,
+          "async": true,
+          "exportedName": "setDeveloperOverrideEmployee",
+          "filename": "src/app/actions/auth.ts"
+        }
+      },
+      "exportedName": "setDeveloperOverrideEmployee",
+      "filename": "src/app/actions/auth.ts"
+    },
+    "00091b4928a3eefa05609d494d08a9746847e75e61": {
+      "workers": {
+        "app/portal/[name]/mail/page": {
+          "moduleId": 612513,
+          "async": true,
+          "exportedName": "getAllEmployees",
+          "filename": "src/app/actions/employeeSettings.ts"
+        }
+      },
+      "exportedName": "getAllEmployees",
+      "filename": "src/app/actions/employeeSettings.ts"
+    },
+    "40c9d5d8e8c1086f67039f9e6a70285016d4498805": {
+      "workers": {
+        "app/portal/[name]/mail/page": {
+          "moduleId": 612513,
+          "async": true,
+          "exportedName": "getPortalUnreadCount",
+          "filename": "src/app/actions/charityMail.ts"
+        }
+      },
+      "exportedName": "getPortalUnreadCount",
+      "filename": "src/app/actions/charityMail.ts"
+    },
+    "4049a685b622fb2436786733803f8bd02ba2d1006e": {
+      "workers": {
+        "app/portal/[name]/mail/page": {
+          "moduleId": 612513,
+          "async": true,
+          "exportedName": "getCharityMailSettings",
+          "filename": "src/app/actions/charityMail.ts"
+        }
+      },
+      "exportedName": "getCharityMailSettings",
+      "filename": "src/app/actions/charityMail.ts"
+    },
+    "4084a64024529d630e8e6eaaf95ee508607c2127a5": {
+      "workers": {
+        "app/portal/[name]/mail/page": {
+          "moduleId": 612513,
+          "async": true,
+          "exportedName": "getPortalMailOptions",
+          "filename": "src/app/actions/charityMail.ts"
+        }
+      },
+      "exportedName": "getPortalMailOptions",
+      "filename": "src/app/actions/charityMail.ts"
+    },
+    "4091768845010a8a87bd9d88fb655b103f62baf34f": {
+      "workers": {
+        "app/portal/[name]/mail/page": {
+          "moduleId": 612513,
+          "async": true,
+          "exportedName": "getPortalPendingMails",
+          "filename": "src/app/actions/charityMail.ts"
+        }
+      },
+      "exportedName": "getPortalPendingMails",
+      "filename": "src/app/actions/charityMail.ts"
+    },
+    "603e5b2c2cf7aaf57858e8777727e13b711d680a55": {
+      "workers": {
+        "app/portal/[name]/mail/page": {
+          "moduleId": 612513,
+          "async": true,
+          "exportedName": "getPortalMail",
+          "filename": "src/app/actions/charityMail.ts"
+        }
+      },
+      "exportedName": "getPortalMail",
+      "filename": "src/app/actions/charityMail.ts"
+    },
+    "607825309e6f4556529d694f3793dc8143c8b4e290": {
+      "workers": {
+        "app/portal/[name]/mail/page": {
+          "moduleId": 612513,
+          "async": true,
+          "exportedName": "deletePortalMail",
+          "filename": "src/app/actions/charityMail.ts"
+        }
+      },
+      "exportedName": "deletePortalMail",
+      "filename": "src/app/actions/charityMail.ts"
+    },
+    "60a5e00ae5fbba2cf9c171e8564b7e24fb6c655740": {
+      "workers": {
+        "app/portal/[name]/mail/page": {
+          "moduleId": 612513,
+          "async": true,
+          "exportedName": "setCharityMailApprovers",
+          "filename": "src/app/actions/charityMail.ts"
+        }
+      },
+      "exportedName": "setCharityMailApprovers",
+      "filename": "src/app/actions/charityMail.ts"
+    },
+    "60b72a0c512577c895df4222b35f52bf44aa7f8076": {
+      "workers": {
+        "app/portal/[name]/mail/page": {
+          "moduleId": 612513,
+          "async": true,
+          "exportedName": "setCharityMailApproval",
+          "filename": "src/app/actions/charityMail.ts"
+        }
+      },
+      "exportedName": "setCharityMailApproval",
+      "filename": "src/app/actions/charityMail.ts"
+    },
+    "60d8efcd46e0bb31931a9ad003c278289c9d436fc3": {
+      "workers": {
+        "app/portal/[name]/mail/page": {
+          "moduleId": 612513,
+          "async": true,
+          "exportedName": "sendPortalMail",
+          "filename": "src/app/actions/charityMail.ts"
+        }
+      },
+      "exportedName": "sendPortalMail",
+      "filename": "src/app/actions/charityMail.ts"
+    },
+    "70e8029a4009ba19930abddf4390549354844274db": {
+      "workers": {
+        "app/portal/[name]/mail/page": {
+          "moduleId": 612513,
+          "async": true,
+          "exportedName": "returnPortalMail",
+          "filename": "src/app/actions/charityMail.ts"
+        }
+      },
+      "exportedName": "returnPortalMail",
+      "filename": "src/app/actions/charityMail.ts"
+    },
+    "70e813ef96aaadf7dc04ac986af0eec41a86e50311": {
+      "workers": {
+        "app/portal/[name]/mail/page": {
+          "moduleId": 612513,
+          "async": true,
+          "exportedName": "approvePortalMail",
+          "filename": "src/app/actions/charityMail.ts"
+        }
+      },
+      "exportedName": "approvePortalMail",
+      "filename": "src/app/actions/charityMail.ts"
+    },
+    "782b2502d34b9d0530c409167f1fdb4afeb42fa076": {
+      "workers": {
+        "app/portal/[name]/mail/page": {
+          "moduleId": 612513,
+          "async": true,
+          "exportedName": "getPortalSent",
+          "filename": "src/app/actions/charityMail.ts"
+        }
+      },
+      "exportedName": "getPortalSent",
+      "filename": "src/app/actions/charityMail.ts"
+    },
+    "782f9bb1499d15eb84b5ec5e3d26c9edfb161c8241": {
+      "workers": {
+        "app/portal/[name]/mail/page": {
+          "moduleId": 612513,
+          "async": true,
+          "exportedName": "getPortalInbox",
+          "filename": "src/app/actions/charityMail.ts"
+        }
+      },
+      "exportedName": "getPortalInbox",
+      "filename": "src/app/actions/charityMail.ts"
+    },
+    "70a457766cabd1f292a1077b0ae1da6a730bd4ccdf": {
+      "workers": {
+        "app/portal/[name]/mail/page": {
+          "moduleId": 612513,
+          "async": true,
+          "exportedName": "createUploadTicket",
+          "filename": "src/app/actions/uploadTicket.ts"
+        }
+      },
+      "exportedName": "createUploadTicket",
+      "filename": "src/app/actions/uploadTicket.ts"
+    }
+  },
+  "edge": {}
+}

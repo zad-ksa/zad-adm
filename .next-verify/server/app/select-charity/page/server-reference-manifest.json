@@ -1,0 +1,17 @@
+{
+  "node": {
+    "4045e41183c7e85c62fdd85ef55d2fc88c6b436384": {
+      "workers": {
+        "app/select-charity/page": {
+          "moduleId": 709148,
+          "async": true,
+          "exportedName": "selectCharitySession",
+          "filename": "src/app/actions/authCharity.ts"
+        }
+      },
+      "exportedName": "selectCharitySession",
+      "filename": "src/app/actions/authCharity.ts"
+    }
+  },
+  "edge": {}
+}

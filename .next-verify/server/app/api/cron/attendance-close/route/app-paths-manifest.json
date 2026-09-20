@@ -1,0 +1,3 @@
+{
+  "/api/cron/attendance-close/route": "app/api/cron/attendance-close/route.js"
+}

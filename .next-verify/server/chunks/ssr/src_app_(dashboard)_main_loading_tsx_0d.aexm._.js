@@ -1,0 +1,3 @@
+module.exports=[398232,a=>{"use strict";var b=a.i(907997),c=a.i(422042);a.s(["default",0,function(){return(0,b.jsxs)("div",{className:"flex h-[80vh] w-full flex-col items-center justify-center space-y-4",children:[(0,b.jsx)(c.default,{}),(0,b.jsx)("span",{className:"text-sm font-bold text-slate-500 animate-pulse",children:"جاري تحميل البيانات..."})]})}])},686644,a=>{a.n(a.i(398232))}];
+
+//# sourceMappingURL=src_app_%28dashboard%29_main_loading_tsx_0d.aexm._.js.map

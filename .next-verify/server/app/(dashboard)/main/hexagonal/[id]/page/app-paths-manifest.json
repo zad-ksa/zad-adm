@@ -1,0 +1,3 @@
+{
+  "/(dashboard)/main/hexagonal/[id]/page": "app/(dashboard)/main/hexagonal/[id]/page.js"
+}

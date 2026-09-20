@@ -1,0 +1,3 @@
+{
+  "/api/cron/design-auto-approve/route": "app/api/cron/design-auto-approve/route.js"
+}

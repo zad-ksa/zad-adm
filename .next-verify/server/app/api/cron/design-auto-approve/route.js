@@ -1,0 +1,10 @@
+var R=require("../../../../chunks/[turbopack]_runtime.js")("server/app/api/cron/design-auto-approve/route.js")
+R.c("server/chunks/[root-of-the-server]__0hc3s4r._.js")
+R.c("server/chunks/_0zq_6-a._.js")
+R.c("server/chunks/_08mgfak._.js")
+R.c("server/chunks/node_modules_0yp5rs5._.js")
+R.c("server/chunks/[root-of-the-server]__0v8bdq7._.js")
+R.c("server/chunks/_0cnt~jo._.js")
+R.c("server/chunks/_next-internal_server_app_api_cron_design-auto-approve_route_actions_0mba8vw.js")
+R.m(483695)
+module.exports=R.m(483695).exports

@@ -1,0 +1,3 @@
+{
+  "/(dashboard)/main/(main)/custom-surveys/[id]/results/page": "app/(dashboard)/main/(main)/custom-surveys/[id]/results/page.js"
+}

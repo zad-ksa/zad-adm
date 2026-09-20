@@ -1,0 +1,3 @@
+module.exports=[477010,a=>{"use strict";var b=a.i(572131),c=a.i(50944);a.s(["default",0,function({charityName:a}){let d=(0,c.useRouter)(),e=(0,c.useSearchParams)();return(0,b.useEffect)(()=>{let b=e.get("change_size"),c=localStorage.getItem(`preferredCharitySize_${a}`);c&&!b&&d.replace(`/portal/${encodeURIComponent(a)}/governance/standards?size=${c}`)},[a,d,e]),null}])}];
+
+//# sourceMappingURL=src_components_AutoRedirectCharitySize_tsx_0uux1pr._.js.map

@@ -1,0 +1,821 @@
+{
+  "node": {
+    "006aa0ab7d532a52a86b838281616c6464d5d8b76e": {
+      "workers": {
+        "app/(dashboard)/main/(main)/strategy/[name]/stages/page": {
+          "moduleId": 16854,
+          "async": true,
+          "exportedName": "getSidebarCharities",
+          "filename": "src/app/actions/charity.ts"
+        }
+      },
+      "exportedName": "getSidebarCharities",
+      "filename": "src/app/actions/charity.ts"
+    },
+    "00cbc5d13ce818aac36a89ef14e75553170b36c0b7": {
+      "workers": {
+        "app/(dashboard)/main/(main)/strategy/[name]/stages/page": {
+          "moduleId": 16854,
+          "async": true,
+          "exportedName": "getUnreadNotificationsCount",
+          "filename": "src/app/actions/approvals.ts"
+        }
+      },
+      "exportedName": "getUnreadNotificationsCount",
+      "filename": "src/app/actions/approvals.ts"
+    },
+    "00a94e1686eae252a35ad64dfc188afb2137489f5f": {
+      "workers": {
+        "app/(dashboard)/main/(main)/strategy/[name]/stages/page": {
+          "moduleId": 16854,
+          "async": true,
+          "exportedName": "getUnreadNotifications",
+          "filename": "src/app/actions/notifications.ts"
+        }
+      },
+      "exportedName": "getUnreadNotifications",
+      "filename": "src/app/actions/notifications.ts"
+    },
+    "0034bdd5e5d3df1c1ae1fa6a3973f10d38d7e86f76": {
+      "workers": {
+        "app/(dashboard)/main/(main)/strategy/[name]/stages/page": {
+          "moduleId": 16854,
+          "async": true,
+          "exportedName": "getUnreadCount",
+          "filename": "src/app/actions/mail.ts"
+        }
+      },
+      "exportedName": "getUnreadCount",
+      "filename": "src/app/actions/mail.ts"
+    },
+    "0063fc528ac4ee276d30066384cccb2fa037917755": {
+      "workers": {
+        "app/(dashboard)/main/(main)/strategy/[name]/stages/page": {
+          "moduleId": 16854,
+          "async": true,
+          "exportedName": "getCurrentPermissions",
+          "filename": "src/app/actions/sessionSync.ts"
+        }
+      },
+      "exportedName": "getCurrentPermissions",
+      "filename": "src/app/actions/sessionSync.ts"
+    },
+    "004033f9d97b910aa055d157d6ad6a2a51cf03ecd1": {
+      "workers": {
+        "app/(dashboard)/main/(main)/strategy/[name]/stages/page": {
+          "moduleId": 16854,
+          "async": true,
+          "exportedName": "markAllNotificationsAsRead",
+          "filename": "src/app/actions/notifications.ts"
+        }
+      },
+      "exportedName": "markAllNotificationsAsRead",
+      "filename": "src/app/actions/notifications.ts"
+    },
+    "40844589e1b0431097179ca8f269ee9c90b210f951": {
+      "workers": {
+        "app/(dashboard)/main/(main)/strategy/[name]/stages/page": {
+          "moduleId": 16854,
+          "async": true,
+          "exportedName": "deleteNotification",
+          "filename": "src/app/actions/notifications.ts"
+        }
+      },
+      "exportedName": "deleteNotification",
+      "filename": "src/app/actions/notifications.ts"
+    },
+    "0044977b2b3c3157937419a12cad26b3d80b6d8c7e": {
+      "workers": {
+        "app/(dashboard)/main/(main)/strategy/[name]/stages/page": {
+          "moduleId": 16854,
+          "async": true,
+          "exportedName": "deleteAllNotifications",
+          "filename": "src/app/actions/notifications.ts"
+        }
+      },
+      "exportedName": "deleteAllNotifications",
+      "filename": "src/app/actions/notifications.ts"
+    },
+    "0029747156a3b44cf036d139813f2c8c61bc058462": {
+      "workers": {
+        "app/(dashboard)/main/(main)/strategy/[name]/stages/page": {
+          "moduleId": 16854,
+          "async": true,
+          "exportedName": "logout",
+          "filename": "src/app/actions/auth.ts"
+        }
+      },
+      "exportedName": "logout",
+      "filename": "src/app/actions/auth.ts"
+    },
+    "403d204a1729ce56e7f4316fcff188fa598815129d": {
+      "workers": {
+        "app/(dashboard)/main/(main)/strategy/[name]/stages/page": {
+          "moduleId": 16854,
+          "async": true,
+          "exportedName": "setDeveloperOverrideEmployee",
+          "filename": "src/app/actions/auth.ts"
+        }
+      },
+      "exportedName": "setDeveloperOverrideEmployee",
+      "filename": "src/app/actions/auth.ts"
+    },
+    "00091b4928a3eefa05609d494d08a9746847e75e61": {
+      "workers": {
+        "app/(dashboard)/main/(main)/strategy/[name]/stages/page": {
+          "moduleId": 16854,
+          "async": true,
+          "exportedName": "getAllEmployees",
+          "filename": "src/app/actions/employeeSettings.ts"
+        }
+      },
+      "exportedName": "getAllEmployees",
+      "filename": "src/app/actions/employeeSettings.ts"
+    },
+    "00c8055d540bfd8914408f1cdd08a3ac3e9930de3c": {
+      "workers": {
+        "app/(dashboard)/main/(main)/strategy/[name]/stages/page": {
+          "moduleId": 16854,
+          "async": true,
+          "exportedName": "getTimelineConfigs",
+          "filename": "src/app/actions/settings.ts"
+        }
+      },
+      "exportedName": "getTimelineConfigs",
+      "filename": "src/app/actions/settings.ts"
+    },
+    "00e64c19ef83bdda9c09781ab382c4c6933bd6ade3": {
+      "workers": {
+        "app/(dashboard)/main/(main)/strategy/[name]/stages/page": {
+          "moduleId": 16854,
+          "async": true,
+          "exportedName": "getRoleLabels",
+          "filename": "src/app/actions/settings.ts"
+        }
+      },
+      "exportedName": "getRoleLabels",
+      "filename": "src/app/actions/settings.ts"
+    },
+    "40300e1616cd0c325ebec9b61ba146d6bac44c8c41": {
+      "workers": {
+        "app/(dashboard)/main/(main)/strategy/[name]/stages/page": {
+          "moduleId": 16854,
+          "async": true,
+          "exportedName": "deleteDefaultStage",
+          "filename": "src/app/actions/settings.ts"
+        }
+      },
+      "exportedName": "deleteDefaultStage",
+      "filename": "src/app/actions/settings.ts"
+    },
+    "40fc6874c530ec6d471d464f626fceb472a7784b9e": {
+      "workers": {
+        "app/(dashboard)/main/(main)/strategy/[name]/stages/page": {
+          "moduleId": 16854,
+          "async": true,
+          "exportedName": "getDefaultStages",
+          "filename": "src/app/actions/settings.ts"
+        }
+      },
+      "exportedName": "getDefaultStages",
+      "filename": "src/app/actions/settings.ts"
+    },
+    "6048b8f03104ba199ad0c285e9cf9ea831eaf6051d": {
+      "workers": {
+        "app/(dashboard)/main/(main)/strategy/[name]/stages/page": {
+          "moduleId": 16854,
+          "async": true,
+          "exportedName": "updateTimelineDisplayName",
+          "filename": "src/app/actions/settings.ts"
+        }
+      },
+      "exportedName": "updateTimelineDisplayName",
+      "filename": "src/app/actions/settings.ts"
+    },
+    "60b3022b1cad365b687af845c1a0faaee35d1606bc": {
+      "workers": {
+        "app/(dashboard)/main/(main)/strategy/[name]/stages/page": {
+          "moduleId": 16854,
+          "async": true,
+          "exportedName": "reorderDefaultStages",
+          "filename": "src/app/actions/settings.ts"
+        }
+      },
+      "exportedName": "reorderDefaultStages",
+      "filename": "src/app/actions/settings.ts"
+    },
+    "701abe77bcf2f7e3b6cead43874a02d5c5901d28e7": {
+      "workers": {
+        "app/(dashboard)/main/(main)/strategy/[name]/stages/page": {
+          "moduleId": 16854,
+          "async": true,
+          "exportedName": "addDefaultStage",
+          "filename": "src/app/actions/settings.ts"
+        }
+      },
+      "exportedName": "addDefaultStage",
+      "filename": "src/app/actions/settings.ts"
+    },
+    "70355e60170f6cfd27abf09e5524c3e6d000c9338a": {
+      "workers": {
+        "app/(dashboard)/main/(main)/strategy/[name]/stages/page": {
+          "moduleId": 16854,
+          "async": true,
+          "exportedName": "updateDefaultStage",
+          "filename": "src/app/actions/settings.ts"
+        }
+      },
+      "exportedName": "updateDefaultStage",
+      "filename": "src/app/actions/settings.ts"
+    },
+    "7ff014dced590a7d5f7920bbc9cf081cbbdd444b86": {
+      "workers": {
+        "app/(dashboard)/main/(main)/strategy/[name]/stages/page": {
+          "moduleId": 16854,
+          "async": true,
+          "exportedName": "addStrategicStage",
+          "filename": "src/app/actions/strategy.ts"
+        }
+      },
+      "exportedName": "addStrategicStage",
+      "filename": "src/app/actions/strategy.ts"
+    },
+    "7fc311663da31687bd20e5f43a893d45e0a14d9be8": {
+      "workers": {
+        "app/(dashboard)/main/(main)/strategy/[name]/stages/page": {
+          "moduleId": 16854,
+          "async": true,
+          "exportedName": "updateStrategicStage",
+          "filename": "src/app/actions/strategy.ts"
+        }
+      },
+      "exportedName": "updateStrategicStage",
+      "filename": "src/app/actions/strategy.ts"
+    },
+    "402d979eef4481d78ecd782b3f6f06cd6f92088363": {
+      "workers": {
+        "app/(dashboard)/main/(main)/strategy/[name]/stages/page": {
+          "moduleId": 16854,
+          "async": true,
+          "exportedName": "deleteStrategicStage",
+          "filename": "src/app/actions/strategy.ts"
+        }
+      },
+      "exportedName": "deleteStrategicStage",
+      "filename": "src/app/actions/strategy.ts"
+    },
+    "6096049f8720147ed474945c9d1d93bb9022dd634e": {
+      "workers": {
+        "app/(dashboard)/main/(main)/strategy/[name]/stages/page": {
+          "moduleId": 16854,
+          "async": true,
+          "exportedName": "setCurrentStrategicStage",
+          "filename": "src/app/actions/strategy.ts"
+        }
+      },
+      "exportedName": "setCurrentStrategicStage",
+      "filename": "src/app/actions/strategy.ts"
+    },
+    "606949d74b2216c3c8cbb9f39900fc643e68d9328f": {
+      "workers": {
+        "app/(dashboard)/main/(main)/strategy/[name]/stages/page": {
+          "moduleId": 16854,
+          "async": true,
+          "exportedName": "reorderStrategicStages",
+          "filename": "src/app/actions/strategy.ts"
+        }
+      },
+      "exportedName": "reorderStrategicStages",
+      "filename": "src/app/actions/strategy.ts"
+    },
+    "604a458a1eca8c5e0e7e981102e835349fc97f7b1e": {
+      "workers": {
+        "app/(dashboard)/main/(main)/strategy/[name]/stages/page": {
+          "moduleId": 16854,
+          "async": true,
+          "exportedName": "toggleActiveStrategicStage",
+          "filename": "src/app/actions/strategy.ts"
+        }
+      },
+      "exportedName": "toggleActiveStrategicStage",
+      "filename": "src/app/actions/strategy.ts"
+    },
+    "7f14b21fd14d801040435483a5d74114cff607f509": {
+      "workers": {
+        "app/(dashboard)/main/(main)/strategy/[name]/stages/page": {
+          "moduleId": 16854,
+          "async": true,
+          "exportedName": "addStrategicStageStep",
+          "filename": "src/app/actions/stageSteps.ts"
+        }
+      },
+      "exportedName": "addStrategicStageStep",
+      "filename": "src/app/actions/stageSteps.ts"
+    },
+    "7f01d9de73e3195b7eb5d87462be5ad213a97aeb4a": {
+      "workers": {
+        "app/(dashboard)/main/(main)/strategy/[name]/stages/page": {
+          "moduleId": 16854,
+          "async": true,
+          "exportedName": "updateStrategicStageStep",
+          "filename": "src/app/actions/stageSteps.ts"
+        }
+      },
+      "exportedName": "updateStrategicStageStep",
+      "filename": "src/app/actions/stageSteps.ts"
+    },
+    "7fed9b083abe47eb58fd1246206ad7fe32f5d2cd36": {
+      "workers": {
+        "app/(dashboard)/main/(main)/strategy/[name]/stages/page": {
+          "moduleId": 16854,
+          "async": true,
+          "exportedName": "deleteStrategicStageStep",
+          "filename": "src/app/actions/stageSteps.ts"
+        }
+      },
+      "exportedName": "deleteStrategicStageStep",
+      "filename": "src/app/actions/stageSteps.ts"
+    },
+    "78b96ba63a4481bdc61e09058c353f9b1d33064fe2": {
+      "workers": {
+        "app/(dashboard)/main/(main)/strategy/[name]/stages/page": {
+          "moduleId": 16854,
+          "async": true,
+          "exportedName": "updateTimelineConfig",
+          "filename": "src/app/actions/charity.ts"
+        }
+      },
+      "exportedName": "updateTimelineConfig",
+      "filename": "src/app/actions/charity.ts"
+    },
+    "402a296277be6acd1db1d18b6014c237dd36735bdd": {
+      "workers": {
+        "app/(dashboard)/main/(main)/strategy/[name]/stages/page": {
+          "moduleId": 16854,
+          "async": true,
+          "exportedName": "getCharityDashboardData",
+          "filename": "src/app/actions/strategy.ts"
+        }
+      },
+      "exportedName": "getCharityDashboardData",
+      "filename": "src/app/actions/strategy.ts"
+    },
+    "404b772422da7bfa9179dfea8d88d6a3d5eff43c69": {
+      "workers": {
+        "app/(dashboard)/main/(main)/strategy/[name]/stages/page": {
+          "moduleId": 16854,
+          "async": true,
+          "exportedName": "ensureStagesForCharity",
+          "filename": "src/app/actions/strategy.ts"
+        }
+      },
+      "exportedName": "ensureStagesForCharity",
+      "filename": "src/app/actions/strategy.ts"
+    },
+    "6047b57a719b4ea7c933027b83a6a049042dc82070": {
+      "workers": {
+        "app/(dashboard)/main/(main)/strategy/[name]/stages/page": {
+          "moduleId": 16854,
+          "async": true,
+          "exportedName": "togglePerformanceEditability",
+          "filename": "src/app/actions/strategy.ts"
+        }
+      },
+      "exportedName": "togglePerformanceEditability",
+      "filename": "src/app/actions/strategy.ts"
+    },
+    "605897d2ee2bf97b4a6f1688c98da5541f708a87a1": {
+      "workers": {
+        "app/(dashboard)/main/(main)/strategy/[name]/stages/page": {
+          "moduleId": 16854,
+          "async": true,
+          "exportedName": "toggleVisionMissionVisibility",
+          "filename": "src/app/actions/strategy.ts"
+        }
+      },
+      "exportedName": "toggleVisionMissionVisibility",
+      "filename": "src/app/actions/strategy.ts"
+    },
+    "607c8ecca5a0c15eeafbbeb6af67ab0a938b493f57": {
+      "workers": {
+        "app/(dashboard)/main/(main)/strategy/[name]/stages/page": {
+          "moduleId": 16854,
+          "async": true,
+          "exportedName": "toggleReadinessVisibility",
+          "filename": "src/app/actions/strategy.ts"
+        }
+      },
+      "exportedName": "toggleReadinessVisibility",
+      "filename": "src/app/actions/strategy.ts"
+    },
+    "60d1722c63a17b33ff1e1308262600924395c3f2c3": {
+      "workers": {
+        "app/(dashboard)/main/(main)/strategy/[name]/stages/page": {
+          "moduleId": 16854,
+          "async": true,
+          "exportedName": "toggleCurrentStrategicStage",
+          "filename": "src/app/actions/strategy.ts"
+        }
+      },
+      "exportedName": "toggleCurrentStrategicStage",
+      "filename": "src/app/actions/strategy.ts"
+    },
+    "00ab24a18c3f9e5cad44ed0384e00d690318c21069": {
+      "workers": {
+        "app/(dashboard)/main/(main)/strategy/[name]/stages/page": {
+          "moduleId": 16854,
+          "async": true,
+          "exportedName": "getCharitiesForSelect",
+          "filename": "src/app/actions/services.ts"
+        }
+      },
+      "exportedName": "getCharitiesForSelect",
+      "filename": "src/app/actions/services.ts"
+    },
+    "00b894d7aab48f13c77d751bec2a755114aee9bec0": {
+      "workers": {
+        "app/(dashboard)/main/(main)/strategy/[name]/stages/page": {
+          "moduleId": 16854,
+          "async": true,
+          "exportedName": "getServicesForManagement",
+          "filename": "src/app/actions/services.ts"
+        }
+      },
+      "exportedName": "getServicesForManagement",
+      "filename": "src/app/actions/services.ts"
+    },
+    "00c9655bdbcf603ecd7d7c8173c10b01849b7b978c": {
+      "workers": {
+        "app/(dashboard)/main/(main)/strategy/[name]/stages/page": {
+          "moduleId": 16854,
+          "async": true,
+          "exportedName": "getAllServiceTemplates",
+          "filename": "src/app/actions/services.ts"
+        }
+      },
+      "exportedName": "getAllServiceTemplates",
+      "filename": "src/app/actions/services.ts"
+    },
+    "401728ae4cb5778c9279dff4d7076d5cd26e39b260": {
+      "workers": {
+        "app/(dashboard)/main/(main)/strategy/[name]/stages/page": {
+          "moduleId": 16854,
+          "async": true,
+          "exportedName": "deleteServiceStage",
+          "filename": "src/app/actions/services.ts"
+        }
+      },
+      "exportedName": "deleteServiceStage",
+      "filename": "src/app/actions/services.ts"
+    },
+    "4050365674e2e2afc71b85bff2d6e732a4890dc15d": {
+      "workers": {
+        "app/(dashboard)/main/(main)/strategy/[name]/stages/page": {
+          "moduleId": 16854,
+          "async": true,
+          "exportedName": "deleteServiceTemplate",
+          "filename": "src/app/actions/services.ts"
+        }
+      },
+      "exportedName": "deleteServiceTemplate",
+      "filename": "src/app/actions/services.ts"
+    },
+    "4089fd6bb9dd1f843920a975a02cbdca352081e7ad": {
+      "workers": {
+        "app/(dashboard)/main/(main)/strategy/[name]/stages/page": {
+          "moduleId": 16854,
+          "async": true,
+          "exportedName": "reorderServiceStages",
+          "filename": "src/app/actions/services.ts"
+        }
+      },
+      "exportedName": "reorderServiceStages",
+      "filename": "src/app/actions/services.ts"
+    },
+    "40b8f820fb70f91c468400fec5afc1ab44e1d23967": {
+      "workers": {
+        "app/(dashboard)/main/(main)/strategy/[name]/stages/page": {
+          "moduleId": 16854,
+          "async": true,
+          "exportedName": "deleteService",
+          "filename": "src/app/actions/services.ts"
+        }
+      },
+      "exportedName": "deleteService",
+      "filename": "src/app/actions/services.ts"
+    },
+    "40dcd1d1f338866cc9de2d2c2a3e8968991ed16579": {
+      "workers": {
+        "app/(dashboard)/main/(main)/strategy/[name]/stages/page": {
+          "moduleId": 16854,
+          "async": true,
+          "exportedName": "deleteServiceGlobally",
+          "filename": "src/app/actions/services.ts"
+        }
+      },
+      "exportedName": "deleteServiceGlobally",
+      "filename": "src/app/actions/services.ts"
+    },
+    "6006dce5ed05bcbda9ed3dc12ca933cd4150b48213": {
+      "workers": {
+        "app/(dashboard)/main/(main)/strategy/[name]/stages/page": {
+          "moduleId": 16854,
+          "async": true,
+          "exportedName": "getServices",
+          "filename": "src/app/actions/services.ts"
+        }
+      },
+      "exportedName": "getServices",
+      "filename": "src/app/actions/services.ts"
+    },
+    "60439356771e187b85a06cfd9970ad1f6deb6cff35": {
+      "workers": {
+        "app/(dashboard)/main/(main)/strategy/[name]/stages/page": {
+          "moduleId": 16854,
+          "async": true,
+          "exportedName": "toggleServiceStageComingSoon",
+          "filename": "src/app/actions/services.ts"
+        }
+      },
+      "exportedName": "toggleServiceStageComingSoon",
+      "filename": "src/app/actions/services.ts"
+    },
+    "606d28cb2475f18a9e92499dfff4c899f23e599f51": {
+      "workers": {
+        "app/(dashboard)/main/(main)/strategy/[name]/stages/page": {
+          "moduleId": 16854,
+          "async": true,
+          "exportedName": "toggleActiveServiceStage",
+          "filename": "src/app/actions/services.ts"
+        }
+      },
+      "exportedName": "toggleActiveServiceStage",
+      "filename": "src/app/actions/services.ts"
+    },
+    "60986c3748a8872551b8e8812beaaf2bfd4a8739bd": {
+      "workers": {
+        "app/(dashboard)/main/(main)/strategy/[name]/stages/page": {
+          "moduleId": 16854,
+          "async": true,
+          "exportedName": "toggleCurrentServiceStage",
+          "filename": "src/app/actions/services.ts"
+        }
+      },
+      "exportedName": "toggleCurrentServiceStage",
+      "filename": "src/app/actions/services.ts"
+    },
+    "60c6214824f9093fe4401eedc8f922a6329bbf0f9d": {
+      "workers": {
+        "app/(dashboard)/main/(main)/strategy/[name]/stages/page": {
+          "moduleId": 16854,
+          "async": true,
+          "exportedName": "toggleServiceComingSoonSingle",
+          "filename": "src/app/actions/services.ts"
+        }
+      },
+      "exportedName": "toggleServiceComingSoonSingle",
+      "filename": "src/app/actions/services.ts"
+    },
+    "60d4f38f2ce40ba81306c4e2f944e44a3e4206697c": {
+      "workers": {
+        "app/(dashboard)/main/(main)/strategy/[name]/stages/page": {
+          "moduleId": 16854,
+          "async": true,
+          "exportedName": "syncServiceProgress",
+          "filename": "src/app/actions/services.ts"
+        }
+      },
+      "exportedName": "syncServiceProgress",
+      "filename": "src/app/actions/services.ts"
+    },
+    "60f73837b2f1ef7606fc106093de93128065831172": {
+      "workers": {
+        "app/(dashboard)/main/(main)/strategy/[name]/stages/page": {
+          "moduleId": 16854,
+          "async": true,
+          "exportedName": "setCurrentServiceStage",
+          "filename": "src/app/actions/services.ts"
+        }
+      },
+      "exportedName": "setCurrentServiceStage",
+      "filename": "src/app/actions/services.ts"
+    },
+    "7004a20eca4691477e897e1cfcf894ed805bb49f2c": {
+      "workers": {
+        "app/(dashboard)/main/(main)/strategy/[name]/stages/page": {
+          "moduleId": 16854,
+          "async": true,
+          "exportedName": "updateServiceTemplate",
+          "filename": "src/app/actions/services.ts"
+        }
+      },
+      "exportedName": "updateServiceTemplate",
+      "filename": "src/app/actions/services.ts"
+    },
+    "704d79340ed145103bad28ab551d991c6017371200": {
+      "workers": {
+        "app/(dashboard)/main/(main)/strategy/[name]/stages/page": {
+          "moduleId": 16854,
+          "async": true,
+          "exportedName": "createServiceTemplate",
+          "filename": "src/app/actions/services.ts"
+        }
+      },
+      "exportedName": "createServiceTemplate",
+      "filename": "src/app/actions/services.ts"
+    },
+    "7071f88046b52bc05988af742451060b60a28f0080": {
+      "workers": {
+        "app/(dashboard)/main/(main)/strategy/[name]/stages/page": {
+          "moduleId": 16854,
+          "async": true,
+          "exportedName": "toggleServiceComingSoon",
+          "filename": "src/app/actions/services.ts"
+        }
+      },
+      "exportedName": "toggleServiceComingSoon",
+      "filename": "src/app/actions/services.ts"
+    },
+    "70bbfdf38dda5714e5b3ca279b01e281fb39e47167": {
+      "workers": {
+        "app/(dashboard)/main/(main)/strategy/[name]/stages/page": {
+          "moduleId": 16854,
+          "async": true,
+          "exportedName": "addServiceToCharities",
+          "filename": "src/app/actions/services.ts"
+        }
+      },
+      "exportedName": "addServiceToCharities",
+      "filename": "src/app/actions/services.ts"
+    },
+    "70cae8518a7e6d8fc77222fd668a337520bcf3303f": {
+      "workers": {
+        "app/(dashboard)/main/(main)/strategy/[name]/stages/page": {
+          "moduleId": 16854,
+          "async": true,
+          "exportedName": "renameServiceGlobally",
+          "filename": "src/app/actions/services.ts"
+        }
+      },
+      "exportedName": "renameServiceGlobally",
+      "filename": "src/app/actions/services.ts"
+    },
+    "70f432495e7108ca05f1d4f5ba69296deb918bef57": {
+      "workers": {
+        "app/(dashboard)/main/(main)/strategy/[name]/stages/page": {
+          "moduleId": 16854,
+          "async": true,
+          "exportedName": "createService",
+          "filename": "src/app/actions/services.ts"
+        }
+      },
+      "exportedName": "createService",
+      "filename": "src/app/actions/services.ts"
+    },
+    "70fa2843e8c02dde57f4b4f33f9e13ea7bfaef91d9": {
+      "workers": {
+        "app/(dashboard)/main/(main)/strategy/[name]/stages/page": {
+          "moduleId": 16854,
+          "async": true,
+          "exportedName": "toggleGanttItemCompletion",
+          "filename": "src/app/actions/services.ts"
+        }
+      },
+      "exportedName": "toggleGanttItemCompletion",
+      "filename": "src/app/actions/services.ts"
+    },
+    "787b8c19f507610397692a85e9ddb89ba44f72cfc5": {
+      "workers": {
+        "app/(dashboard)/main/(main)/strategy/[name]/stages/page": {
+          "moduleId": 16854,
+          "async": true,
+          "exportedName": "unifyCharityStagesAction",
+          "filename": "src/app/actions/services.ts"
+        }
+      },
+      "exportedName": "unifyCharityStagesAction",
+      "filename": "src/app/actions/services.ts"
+    },
+    "78827fc078154691e807101c9da706538f584916a4": {
+      "workers": {
+        "app/(dashboard)/main/(main)/strategy/[name]/stages/page": {
+          "moduleId": 16854,
+          "async": true,
+          "exportedName": "updateService",
+          "filename": "src/app/actions/services.ts"
+        }
+      },
+      "exportedName": "updateService",
+      "filename": "src/app/actions/services.ts"
+    },
+    "7ccd8a4e3d6dcda8d6864d1db01dba7826ad9a7f3c": {
+      "workers": {
+        "app/(dashboard)/main/(main)/strategy/[name]/stages/page": {
+          "moduleId": 16854,
+          "async": true,
+          "exportedName": "assignGanttDates",
+          "filename": "src/app/actions/services.ts"
+        }
+      },
+      "exportedName": "assignGanttDates",
+      "filename": "src/app/actions/services.ts"
+    },
+    "7f6ebebc6d281c6330efb6fa2fb303d9b9bf03d81f": {
+      "workers": {
+        "app/(dashboard)/main/(main)/strategy/[name]/stages/page": {
+          "moduleId": 16854,
+          "async": true,
+          "exportedName": "broadcastGanttWeek",
+          "filename": "src/app/actions/services.ts"
+        }
+      },
+      "exportedName": "broadcastGanttWeek",
+      "filename": "src/app/actions/services.ts"
+    },
+    "7fb5096871dd89b668caa9d6d2af8273eb286806dc": {
+      "workers": {
+        "app/(dashboard)/main/(main)/strategy/[name]/stages/page": {
+          "moduleId": 16854,
+          "async": true,
+          "exportedName": "addServiceStage",
+          "filename": "src/app/actions/services.ts"
+        }
+      },
+      "exportedName": "addServiceStage",
+      "filename": "src/app/actions/services.ts"
+    },
+    "7fe0aac937f68e8f4aa860da563b679f11f69fa6a3": {
+      "workers": {
+        "app/(dashboard)/main/(main)/strategy/[name]/stages/page": {
+          "moduleId": 16854,
+          "async": true,
+          "exportedName": "updateServiceStage",
+          "filename": "src/app/actions/services.ts"
+        }
+      },
+      "exportedName": "updateServiceStage",
+      "filename": "src/app/actions/services.ts"
+    },
+    "001c91ed3ea37d84db744bba33d7cf8ce9e72f9b7f": {
+      "workers": {
+        "app/(dashboard)/main/(main)/strategy/[name]/stages/page": {
+          "moduleId": 16854,
+          "async": true,
+          "exportedName": "listServiceNames",
+          "filename": "src/app/actions/serviceAccess.ts"
+        }
+      },
+      "exportedName": "listServiceNames",
+      "filename": "src/app/actions/serviceAccess.ts"
+    },
+    "00df922b48e80fab491f3de89f62ea3f2c350ef6cf": {
+      "workers": {
+        "app/(dashboard)/main/(main)/strategy/[name]/stages/page": {
+          "moduleId": 16854,
+          "async": true,
+          "exportedName": "getServiceAccessMap",
+          "filename": "src/app/actions/serviceAccess.ts"
+        }
+      },
+      "exportedName": "getServiceAccessMap",
+      "filename": "src/app/actions/serviceAccess.ts"
+    },
+    "4086468d2179ca1dde1193cbdeead0737632b2118c": {
+      "workers": {
+        "app/(dashboard)/main/(main)/strategy/[name]/stages/page": {
+          "moduleId": 16854,
+          "async": true,
+          "exportedName": "getEmployeeServiceNames",
+          "filename": "src/app/actions/serviceAccess.ts"
+        }
+      },
+      "exportedName": "getEmployeeServiceNames",
+      "filename": "src/app/actions/serviceAccess.ts"
+    },
+    "6020b9d741065aa0f5918b8f979a931354125b85f5": {
+      "workers": {
+        "app/(dashboard)/main/(main)/strategy/[name]/stages/page": {
+          "moduleId": 16854,
+          "async": true,
+          "exportedName": "setServiceEmployees",
+          "filename": "src/app/actions/serviceAccess.ts"
+        }
+      },
+      "exportedName": "setServiceEmployees",
+      "filename": "src/app/actions/serviceAccess.ts"
+    },
+    "60b38194940fd7c11018145d1b6b155ad1ee432f6c": {
+      "workers": {
+        "app/(dashboard)/main/(main)/strategy/[name]/stages/page": {
+          "moduleId": 16854,
+          "async": true,
+          "exportedName": "setEmployeeServices",
+          "filename": "src/app/actions/serviceAccess.ts"
+        }
+      },
+      "exportedName": "setEmployeeServices",
+      "filename": "src/app/actions/serviceAccess.ts"
+    }
+  },
+  "edge": {}
+}

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Select from "@/components/console/Select";
 import { Plus, Link as LinkIcon, FileText, Scale, Cpu, Eye, EyeOff, Trash2, Building } from "lucide-react";
 import { addRegulation, deleteRegulation, toggleRegulationVisibility } from "@/app/actions/governance";
 
@@ -257,15 +258,18 @@ export default function GovernanceRegulationsManager({
                 <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
                   القسم
                 </label>
-                <select
+                <Select
+                  variant="soft"
                   value={newReg.category}
-                  onChange={e => setNewReg({ ...newReg, category: e.target.value })}
-                  className="w-full px-4 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all dark:text-white"
-                >
-                  <option value="الإشراف والحوكمة">الإشراف والحوكمة</option>
-                  <option value="التحول الرقمي">التحول الرقمي</option>
-                  <option value="القطاع غير الربحي">القطاع غير الربحي</option>
-                </select>
+                  onSelect={(v) => setNewReg({ ...newReg, category: v })}
+                  placeholder="اختر التصنيف"
+                  options={[
+                    { value: "الإشراف والحوكمة", label: "الإشراف والحوكمة" },
+                    { value: "التحول الرقمي", label: "التحول الرقمي" },
+                    { value: "القطاع غير الربحي", label: "القطاع غير الربحي" },
+                  ]}
+                  className="w-full [&>button]:w-full [&>button]:justify-between"
+                />
               </div>
 
               <div>

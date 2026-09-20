@@ -790,30 +790,28 @@ export default function RequestsClient({ requests: initial, hasActiveChain, canR
         />
 
         {laneCategories.length > 0 && (
-          <select
+          <Select
             value={filterCategory}
-            onChange={(e) => setFilterCategory(e.target.value)}
-            className="h-9 px-2 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-bold text-slate-600 dark:text-slate-300 outline-none focus:border-primary"
-          >
-            <option value="ALL">كل الأقسام</option>
-            {laneCategories.map((c) => (
-              <option key={c.key} value={c.key}>{c.label}</option>
-            ))}
-          </select>
+            onSelect={setFilterCategory}
+            placeholder="كل الأقسام"
+            options={[
+              { value: "ALL", label: "كل الأقسام" },
+              ...laneCategories.map((c) => ({ value: c.key, label: c.label })),
+            ]}
+          />
         )}
 
         {lanePeople.length > 0 && (
-          <select
+          <Select
             value={effectivePerson}
-            onChange={(e) => setFilterPerson(e.target.value)}
-            className="h-9 px-2 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-bold text-slate-600 dark:text-slate-300 outline-none focus:border-primary max-w-[170px]"
-            title="تصفية بمن رفع الطلب أو يقف عنده الآن"
-          >
-            <option value="ALL">كل الأشخاص</option>
-            {lanePeople.map((p) => (
-              <option key={p.id} value={p.id}>{p.name}</option>
-            ))}
-          </select>
+            onSelect={setFilterPerson}
+            placeholder="كل الأشخاص"
+            className="max-w-[170px]"
+            options={[
+              { value: "ALL", label: "كل الأشخاص" },
+              ...lanePeople.map((p) => ({ value: p.id, label: p.name })),
+            ]}
+          />
         )}
 
         {anyFilter && (

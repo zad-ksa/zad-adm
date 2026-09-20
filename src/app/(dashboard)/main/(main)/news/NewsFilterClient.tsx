@@ -387,14 +387,14 @@ export default function NewsFilterClient({
               <div>
                 <label className="block text-[11px] font-bold text-slate-500 dark:text-slate-400 mb-1.5">القسم المعني</label>
                 <div className="flex gap-2">
-                  <select
+                  <Select
+                    variant="soft"
                     value={newsCategory}
-                    onChange={e => setNewsCategory(e.target.value)}
-                    required
-                    className="flex-1 bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-xs outline-none focus:ring-2 focus:ring-amber-500/20 text-slate-800 dark:text-slate-100 font-bold cursor-pointer"
-                  >
-                    {categories.map(cat => <option key={cat} value={cat}>{cat}</option>)}
-                  </select>
+                    onSelect={setNewsCategory}
+                    placeholder="اختر القسم"
+                    options={categories.map((cat: string) => ({ value: cat, label: cat }))}
+                    className="flex-1 [&>button]:w-full [&>button]:justify-between"
+                  />
                   <button
                     type="button"
                     onClick={() => { setShowAddCat(v => !v); setCatError(null); setNewCatName(""); }}

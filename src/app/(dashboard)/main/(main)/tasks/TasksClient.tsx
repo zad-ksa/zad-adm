@@ -1790,19 +1790,14 @@ ${combinedAchievements.length > 0 ? `
             </div>
 
             <form onSubmit={handleReassignTask} className="space-y-4">
-              <select
+              <Select
+                variant="soft"
                 value={reassignToEmployeeId}
-                onChange={(e) => setReassignToEmployeeId(e.target.value)}
-                required
-                className="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-100 dark:border-slate-700/50 dark:border-slate-800/80 rounded-xl px-4 py-3 text-sm outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary/30 focus:bg-white dark:focus:bg-slate-800 text-slate-800 dark:text-slate-100 transition-all font-bold cursor-pointer [&>option]:bg-white [&>option]:dark:bg-slate-800 [&>option]:text-slate-700 [&>option]:dark:text-slate-200"
-              >
-                <option value="" disabled>اختر الموظف...</option>
-                {employees.map((emp) => (
-                  <option key={emp.id} value={emp.id}>
-                    {emp.name}
-                  </option>
-                ))}
-              </select>
+                onSelect={setReassignToEmployeeId}
+                placeholder="اختر الموظف…"
+                options={employees.map((emp) => ({ value: emp.id, label: emp.name }))}
+                className="w-full [&>button]:w-full [&>button]:justify-between"
+              />
 
               <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-100 dark:border-slate-700/50 dark:border-slate-800/80">
                 <button

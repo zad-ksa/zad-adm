@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition, useEffect } from "react";
+import Select from "@/components/console/Select";
 import { Coins, Check, X, Edit2, Trash2, Plus, ArrowUp, ArrowDown, Loader2, Settings, ChevronDown, ChevronUp, Eye, EyeOff, Activity } from "lucide-react";
 import { useRouter } from "next/navigation";
 import CharityClientTimeline from "@/components/CharityClientTimeline";
@@ -240,18 +241,21 @@ export default function FinanceStagesManager({
             </div>
             <div className="flex-1">
               <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-1">القسم التابع له</label>
-              <select 
-                value={configDept} 
-                onChange={e => setConfigDept(e.target.value)} 
-                className="w-full border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-amber-500/50 outline-none"
-              >
-                <option value="STRATEGY">التخطيط الاستراتيجي</option>
-                <option value="GOVERNANCE">الحوكمة</option>
-                <option value="FINANCE">المالية</option>
-                <option value="ADMINISTRATIVE_SECRETARIAT">السكرتارية الإدارية</option>
-                <option value="GENERAL_MANAGER">الإدارة العامة</option>
-                <option value="NONE">لا ينتمي لقسم محدد (يظهر للكل)</option>
-              </select>
+              <Select
+                variant="soft"
+                value={configDept}
+                onSelect={setConfigDept}
+                placeholder="اختر القسم"
+                options={[
+                  { value: "STRATEGY", label: "التخطيط الاستراتيجي" },
+                  { value: "GOVERNANCE", label: "الحوكمة" },
+                  { value: "FINANCE", label: "المالية" },
+                  { value: "ADMINISTRATIVE_SECRETARIAT", label: "السكرتارية الإدارية" },
+                  { value: "GENERAL_MANAGER", label: "الإدارة العامة" },
+                  { value: "NONE", label: "لا ينتمي لقسم محدد (يظهر للكل)" },
+                ]}
+                className="w-full [&>button]:w-full [&>button]:justify-between"
+              />
             </div>
           </div>
           <div className="flex gap-2">

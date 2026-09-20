@@ -22,7 +22,7 @@ import {
   setCharityMailApprovers,
 } from "@/app/actions/charityMail";
 import { htmlToPlainText } from "@/app/(dashboard)/main/(main)/mail/mailUtils";
-import BrandSelect from "@/components/ui/BrandSelect";
+import Select from "@/components/console/Select";
 
 export type PendingPortalMail = {
   id: string;
@@ -482,7 +482,8 @@ export function PortalMailSettingsPanel({ charityName }: { charityName: string }
                 </span>
               );
             })}
-            <BrandSelect
+            <Select
+                  variant="soft"
               placeholder={approverIds.length === 0 ? "تعيين معمِّد…" : "إضافة معمِّد…"}
               emptyLabel={members.length === 0 ? "لا أعضاء في الجمعية" : "كل الأعضاء معمِّدون"}
               options={members

@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { AlertTriangle, Check, LoaderCircle, ShieldCheck, X } from "lucide-react";
 import { getMailApproverSettings, setMailApprovers } from "@/app/actions/mailApproval";
-import BrandSelect from "@/components/ui/BrandSelect";
+import Select from "@/components/console/Select";
 
 type EmployeeOption = { id: string; name: string; role: string };
 
@@ -142,7 +142,8 @@ export default function MailSettingsPanel() {
 
                 {/* المرشَّحون: من مُنحوا هذه الخدمة وحدهم. ومن مُنحها كلهم معمِّدون
                     بالفعل، فلا يبقى في القائمة أحد. */}
-                <BrandSelect
+                <Select
+                  variant="soft"
                   placeholder={ids.length === 0 ? "تعيين معمِّد…" : "إضافة معمِّد…"}
                   emptyLabel={
                     candidates.length === 0 && (eligible[name] ?? []).length === 0

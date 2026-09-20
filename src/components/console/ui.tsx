@@ -305,3 +305,182 @@ export function Count({ n, unit }: { n: number; unit: string }) {
 export function Dot() {
   return <span aria-hidden className="size-0.5 rounded-full bg-slate-300 dark:bg-slate-600" />;
 }
+
+// ── ما كان ناقصاً في العُدّة ───────────────────────────────────────────────
+// هذه العناصر أُضيفت لتغطّي ما كانت كل شاشةٍ تكتبه بيدها: ٥٨ ملفاً تدور فيها
+// دائرةُ انتظارٍ مرسومة يدوياً، وبطاقاتُ مؤشراتٍ بستة ألوان، وجداولُ تُمرَّر
+// أفقياً على الهاتف. وكلها هنا بلا حالة ولا تأثيرات، فتبقى قابلة للعرض على
+// الخادم ولا تُحوِّل صفحةً إلى مكوّن عميل.
+
+/** دائرة انتظار. المقاس بالبكسل لا بالأصناف، فلا يتأثر بتصغير الجذر في الجوال. */
+export function Spinner({ size = 16, className }: { size?: number; className?: string }) {
+  return (
+    <span
+      role="status"
+      aria-label="جارٍ التحميل"
+      style={{ width: size, height: size, borderWidth: Math.max(2, Math.round(size / 8)) }}
+      className={cx(
+        "inline-block animate-spin rounded-full border-slate-200 border-t-primary dark:border-slate-700 dark:border-t-teal-300",
+        className
+      )}
+    />
+  );
+}
+
+/**
+ * هيكل انتظار — مستطيلٌ نابض مكان المحتوى القادم.
+ *
+ * يُفضَّل على دائرة الانتظار حين يكون شكل المحتوى معروفاً (صفوف جدول، بطاقات):
+ * الصفحة لا تقفز حين يصل المحتوى، لأن مكانه محجوزٌ بالمقاس نفسه.
+ */
+export function Skeleton({ className }: { className?: string }) {
+  return <span className={cx("block animate-pulse rounded-md bg-slate-100 dark:bg-slate-800", className)} />;
+}
+
+/** صفوف انتظارٍ بعدد الصفوف المتوقّعة — تُستعمل داخل TableShell قبل وصول البيانات. */
+export function SkeletonRows({ rows = 5, cols = 4 }: { rows?: number; cols?: number }) {
+  return (
+    <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+      {Array.from({ length: rows }).map((_, r) => (
+        <tr key={r}>
+          {Array.from({ length: cols }).map((_, c) => (
+            <td key={c} className="px-4 py-3">
+              <Skeleton className={cx("h-3.5", c === 0 ? "w-40" : "w-20")} />
+            </td>
+          ))}
+        </tr>
+      ))}
+    </tbody>
+  );
+}
+
+/**
+ * بطاقة مؤشّر — رقمٌ واحد بعنوانه.
+ *
+ * `tone` دلالةٌ لا زينة: `brand` للمحايد، و`good`/`warn`/`bad` للحالات. ولهذا لا
+ * يوجد فيها لونٌ حرّ: بطاقاتٌ بستة ألوان لا تحمل معنى هي ما جعل الرئيسية ولوحة
+ * التحكم تبدوان من مشروعين.
+ */
+const METRIC_TONE = {
+  brand: "bg-primary/10 text-primary dark:bg-primary/20 dark:text-teal-300",
+  good: "bg-emerald-50 text-emerald-600 dark:bg-emerald-900/20 dark:text-emerald-400",
+  warn: "bg-amber-50 text-amber-600 dark:bg-amber-900/20 dark:text-amber-400",
+  bad: "bg-rose-50 text-rose-600 dark:bg-rose-900/20 dark:text-rose-400",
+  muted: "bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400",
+} as const;
+
+export function MetricCard({
+  label,
+  value,
+  hint,
+  icon,
+  tone = "brand",
+}: {
+  label: string;
+  value: ReactNode;
+  hint?: string;
+  icon?: ReactNode;
+  tone?: keyof typeof METRIC_TONE;
+}) {
+  return (
+    <div className="flex items-center gap-3 rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900">
+      {icon && (
+        <span className={cx("flex size-9 shrink-0 items-center justify-center rounded-lg", METRIC_TONE[tone])}>
+          {icon}
+        </span>
+      )}
+      <div className="min-w-0">
+        <p className="truncate text-[13px] text-slate-500 dark:text-slate-400">{label}</p>
+        <p className={cx(MONO, "text-[20px] font-semibold leading-tight text-slate-900 dark:text-slate-100")}>
+          {value}
+        </p>
+        {hint && <p className="mt-0.5 truncate text-[12px] text-slate-400 dark:text-slate-500">{hint}</p>}
+      </div>
+    </div>
+  );
+}
+
+/**
+ * بطاقة انتقال — مدخلٌ إلى شاشةٍ أخرى، كبطاقات «لوحة التحكم».
+ *
+ * بلا ميلٍ عند المرور ولا دوائر تتضاعف: الوجهة شاشة إدارةٍ كثيفة، فلا تُبشَّر
+ * ببطاقةٍ تسويقية. والحركة الوحيدة سهمٌ ينزلق — إشارةُ اتجاهٍ لا زخرفة.
+ */
+export function NavCard({
+  href,
+  title,
+  description,
+  icon,
+  tone = "brand",
+}: {
+  href: string;
+  title: string;
+  description: string;
+  icon?: ReactNode;
+  tone?: keyof typeof METRIC_TONE;
+}) {
+  return (
+    <a
+      href={href}
+      className={cx(
+        "group flex flex-col gap-3 rounded-xl border border-slate-200 bg-white p-5 transition-colors",
+        "hover:border-primary/30 hover:bg-slate-50/70 dark:border-slate-800 dark:bg-slate-900 dark:hover:bg-slate-800/50",
+        "outline-none focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-slate-900"
+      )}
+    >
+      {icon && (
+        <span className={cx("flex size-10 items-center justify-center rounded-lg", METRIC_TONE[tone])}>{icon}</span>
+      )}
+      <span className="text-[15px] font-semibold text-slate-900 dark:text-slate-100">{title}</span>
+      <span className="text-[13px] leading-5 text-slate-500 dark:text-slate-400">{description}</span>
+      <span className="mt-auto inline-flex items-center gap-1.5 pt-1 text-[13px] font-medium text-primary dark:text-teal-300">
+        الدخول
+        <span aria-hidden className="transition-transform group-hover:-translate-x-0.5">
+          ←
+        </span>
+      </span>
+    </a>
+  );
+}
+
+/**
+ * صفٌّ مكدّس للهاتف — بديل صفّ الجدول تحت `sm`.
+ *
+ * جدول العُدّة يُمرَّر أفقياً على الشاشة الصغيرة، والتمرير الأفقي يُخفي أعمدةً لا
+ * يعرف القارئ أنها هناك. فيُعرض الجدول `hidden sm:table` وتُعرض هذه البطاقات
+ * `sm:hidden`: كل عمودٍ سطرٌ باسمه وقيمته.
+ */
+export function RecordCard({
+  title,
+  fields,
+  actions,
+  onClick,
+}: {
+  title: ReactNode;
+  fields: { label: string; value: ReactNode }[];
+  actions?: ReactNode;
+  onClick?: () => void;
+}) {
+  return (
+    <div
+      onClick={onClick}
+      className={cx(
+        "rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900",
+        onClick && "cursor-pointer transition-colors hover:bg-slate-50 dark:hover:bg-slate-800/50"
+      )}
+    >
+      <div className="flex items-start justify-between gap-2">
+        <div className="min-w-0 text-[14px] font-semibold text-slate-900 dark:text-slate-100">{title}</div>
+        {actions}
+      </div>
+      <dl className="mt-2 space-y-1">
+        {fields.map((f) => (
+          <div key={f.label} className="flex items-baseline justify-between gap-3">
+            <dt className="shrink-0 text-[12px] text-slate-400 dark:text-slate-500">{f.label}</dt>
+            <dd className="min-w-0 truncate text-[13px] text-slate-700 dark:text-slate-200">{f.value}</dd>
+          </div>
+        ))}
+      </dl>
+    </div>
+  );
+}

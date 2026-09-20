@@ -4,7 +4,13 @@ import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react
 import { createPortal } from "react-dom";
 import { Check, ChevronDown, Search } from "lucide-react";
 
-export type BrandSelectOption = { value: string; label: string; hint?: string };
+export type SelectOption = { value: string; label: string; hint?: string };
+
+/**
+ * صيغتان لشكلٍ واحد: console لشاشات الإدارة الكثيفة (زوايا ضيّقة)، وsoft للشاشات
+ * المريحة كالبريد والبوابة. المنطق واحد — فلا يتكرر مكوّنٌ لأن مظهره اختلف.
+ */
+export type SelectVariant = "console" | "soft";
 
 /**
  * قائمةٌ منسدلة بهوية الموقع.
@@ -30,16 +36,17 @@ const GAP = 6;
 
 type Position = { left: number; width: number; top?: number; bottom?: number; maxHeight: number };
 
-export default function BrandSelect({
+export default function Select({
   options,
   onSelect,
   placeholder,
   emptyLabel = "لا خيارات",
   disabled = false,
   searchThreshold = 8,
+  variant = "console",
   className = "",
 }: {
-  options: BrandSelectOption[];
+  options: SelectOption[];
   onSelect: (value: string) => void;
   placeholder: string;
   /** ما يُقال حين لا خيار — سببٌ لا فراغ. */
@@ -47,6 +54,7 @@ export default function BrandSelect({
   disabled?: boolean;
   /** يظهر حقل البحث عند تجاوز هذا العدد. */
   searchThreshold?: number;
+  variant?: SelectVariant;
   className?: string;
 }) {
   const [isOpen, setIsOpen] = useState(false);
@@ -119,6 +127,9 @@ export default function BrandSelect({
     if (isOpen) searchRef.current?.focus();
   }, [isOpen]);
 
+  // الفرق بين الصيغتين زوايا لا منطق.
+  const radius = variant === "console" ? { trigger: "rounded-md", panel: "rounded-lg" } : { trigger: "rounded-xl", panel: "rounded-xl" };
+
   const isEmpty = options.length === 0;
   const showSearch = options.length > searchThreshold;
   const q = query.trim();
@@ -139,7 +150,7 @@ export default function BrandSelect({
               bottom: position.bottom,
               maxHeight: position.maxHeight,
             }}
-            className="z-[120] flex flex-col rounded-xl border border-slate-200/80 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-[0_12px_32px_-12px_rgb(15_23_42_/_0.28)] overflow-hidden animate-[zad-pop-in_120ms_ease-out]"
+            className={`z-[120] flex flex-col ${radius.panel} border border-slate-200/80 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-[0_12px_32px_-12px_rgb(15_23_42_/_0.28)] overflow-hidden animate-[zad-pop-in_120ms_ease-out]`}
           >
             {showSearch && (
               <div className="flex items-center gap-2 px-3 h-9 border-b border-slate-100 dark:border-slate-800 shrink-0">
@@ -199,7 +210,7 @@ export default function BrandSelect({
         }}
         aria-haspopup="listbox"
         aria-expanded={isOpen}
-        className={`h-9 px-3 inline-flex items-center gap-2 rounded-xl border bg-white dark:bg-slate-900 text-[13px] font-medium transition-colors ${
+        className={`h-9 px-3 inline-flex items-center gap-2 ${radius.trigger} border bg-white dark:bg-slate-900 text-[13px] font-medium transition-colors ${
           isEmpty || disabled
             ? "border-slate-200 dark:border-slate-800 text-slate-400 dark:text-slate-600 cursor-not-allowed"
             : isOpen

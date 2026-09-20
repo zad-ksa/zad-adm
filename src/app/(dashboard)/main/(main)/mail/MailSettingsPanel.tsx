@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { AlertTriangle, Check, LoaderCircle, ShieldCheck, X } from "lucide-react";
 import { getMailApproverSettings, setMailApprovers } from "@/app/actions/mailApproval";
+import BrandSelect from "@/components/ui/BrandSelect";
 
 type EmployeeOption = { id: string; name: string; role: string };
 
@@ -17,6 +18,8 @@ export default function MailSettingsPanel() {
   const [services, setServices] = useState<string[]>([]);
   const [employees, setEmployees] = useState<EmployeeOption[]>([]);
   const [byService, setByService] = useState<Record<string, string[]>>({});
+  // مرشَّحو كل خدمة: من مُنحوها وحدهم.
+  const [eligible, setEligible] = useState<Record<string, string[]>>({});
   const [isLoading, setIsLoading] = useState(true);
   const [savingService, setSavingService] = useState<string | null>(null);
   const [savedService, setSavedService] = useState<string | null>(null);
@@ -29,6 +32,7 @@ export default function MailSettingsPanel() {
         if (cancelled) return;
         setServices(data.services);
         setEmployees(data.employees);
+        setEligible(data.eligible);
         const map: Record<string, string[]> = {};
         for (const name of data.services) map[name] = [];
         for (const row of data.approvers) {
@@ -100,6 +104,8 @@ export default function MailSettingsPanel() {
       <div className="rounded-xl border border-slate-200 dark:border-slate-800 divide-y divide-slate-100 dark:divide-slate-800 overflow-hidden">
         {services.map((name) => {
           const ids = byService[name] ?? [];
+          const holders = eligible[name] ?? [];
+          const candidates = employees.filter((e) => holders.includes(e.id) && !ids.includes(e.id));
           return (
             <div key={name} className="p-4 flex flex-col sm:flex-row sm:items-start gap-3 bg-white dark:bg-slate-900">
               <div className="sm:w-56 shrink-0">
@@ -134,26 +140,18 @@ export default function MailSettingsPanel() {
                   );
                 })}
 
-                <select
-                  value=""
-                  onChange={(e) => {
-                    if (e.target.value && !ids.includes(e.target.value)) {
-                      save(name, [...ids, e.target.value]);
-                    }
-                  }}
-                  className="h-8 px-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-[length:var(--mail-fs-meta)] text-slate-600 dark:text-slate-300 outline-none focus:border-primary [&>option]:dark:bg-slate-800"
-                >
-                  <option value="" disabled>
-                    {ids.length === 0 ? "تعيين معمِّد…" : "إضافة معمِّد…"}
-                  </option>
-                  {employees
-                    .filter((e) => !ids.includes(e.id))
-                    .map((e) => (
-                      <option key={e.id} value={e.id}>
-                        {e.name}
-                      </option>
-                    ))}
-                </select>
+                {/* المرشَّحون: من مُنحوا هذه الخدمة وحدهم. ومن مُنحها كلهم معمِّدون
+                    بالفعل، فلا يبقى في القائمة أحد. */}
+                <BrandSelect
+                  placeholder={ids.length === 0 ? "تعيين معمِّد…" : "إضافة معمِّد…"}
+                  emptyLabel={
+                    candidates.length === 0 && (eligible[name] ?? []).length === 0
+                      ? "لا موظف مُنح هذه الخدمة"
+                      : "كل من مُنح الخدمة معمِّد"
+                  }
+                  options={candidates.map((e) => ({ value: e.id, label: e.name }))}
+                  onSelect={(id) => save(name, [...ids, id])}
+                />
               </div>
             </div>
           );

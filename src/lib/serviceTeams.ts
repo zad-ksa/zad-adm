@@ -30,11 +30,14 @@ export type ServiceRecipientRow = {
  *
  * و«بلا منح = بلا تقييد» لا تنطبق هنا: تلك قاعدة عرضٍ لا قاعدة تسليم، ولو
  * طُبّقت لوصل بريد الجمعية كل موظفٍ لم يُمنح شيئاً.
+ *
+ * وبلا `charityId` تُعيد حاملي الخدمة أينما كانت: هذا سؤال «من يملك الخدمة
+ * أصلاً؟» لا «من يستلم بريد هذه الجمعية؟» — وعليه يقوم اختيار معمِّديها.
  */
-export async function zadServiceTeam(serviceName: string, charityId: string): Promise<string[]> {
+export async function zadServiceTeam(serviceName: string, charityId?: string): Promise<string[]> {
   const [direct, bundles] = await Promise.all([
     prisma.employeeServiceAccess.findMany({
-      where: { serviceName, OR: [{ charityId: null }, { charityId }] },
+      where: charityId ? { serviceName, OR: [{ charityId: null }, { charityId }] } : { serviceName },
       select: { employeeId: true },
     }),
     prisma.permissionBundle.findMany({

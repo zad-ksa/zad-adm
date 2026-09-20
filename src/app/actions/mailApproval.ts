@@ -6,7 +6,7 @@ import { sanitizeMailHtml } from "@/lib/sanitizeMail";
 import { requireEmployee, requirePermission } from "@/lib/guards";
 import { getAssignedCharityIds } from "@/lib/access";
 import { listServiceNames } from "@/app/actions/serviceAccess";
-import { serviceConversationRecipients } from "@/lib/serviceTeams";
+import { serviceConversationRecipients, zadServiceTeam } from "@/lib/serviceTeams";
 
 /**
  * تعميد البريد الصادر من زاد إلى الجمعيات.
@@ -20,7 +20,13 @@ import { serviceConversationRecipients } from "@/lib/serviceTeams";
  * صندوق، وهو أقوى من الاعتماد على شرطٍ يُنسى في واحدٍ من الاستعلامات.
  */
 
-/** من يعتمد بريد خدمةٍ ما — بالاسم لا بالمسمّى الوظيفي ولا بالدور. */
+/**
+ * من يعتمد بريد خدمةٍ ما — بالاسم لا بالمسمّى الوظيفي ولا بالدور.
+ *
+ * والمرشَّحون لكل خدمة هم **من مُنحوها** وحدهم: البريد يخرج باسم الخدمة، فمن لا
+ * يملكها لا يعمّد ما يُنسب إليها. وعرض كل الموظفين كان يدعو إلى تعيينٍ خاطئ ثم
+ * إلى رفضٍ عند الحفظ.
+ */
 export async function getMailApproverSettings() {
   await requirePermission("manage_mail_settings");
 
@@ -34,7 +40,13 @@ export async function getMailApproverSettings() {
     prisma.mailApprover.findMany({ select: { serviceName: true, employeeId: true } }),
   ]);
 
-  return { services, employees, approvers };
+  const holders = await Promise.all(services.map((name) => zadServiceTeam(name)));
+  const eligible: Record<string, string[]> = {};
+  services.forEach((name, i) => {
+    eligible[name] = holders[i];
+  });
+
+  return { services, employees, approvers, eligible };
 }
 
 /** استبدالٌ كامل لمعمِّدي خدمةٍ واحدة — القائمة المعروضة هي القائمة المحفوظة. */
@@ -51,6 +63,12 @@ export async function setMailApprovers(serviceName: string, employeeIds: string[
   if (ids.length > 0) {
     const found = await prisma.employee.count({ where: { id: { in: ids }, isActive: true } });
     if (found !== ids.length) throw new Error("أحد الموظفين غير موجود أو موقوف");
+
+    // لا يعمّد الخدمةَ إلا من مُنحها: الحارس هنا لا في المُنتقي وحده.
+    const holders = await zadServiceTeam(name);
+    if (ids.some((id) => !holders.includes(id))) {
+      throw new Error(`لا يُعيَّن معمِّداً لـ«${name}» إلا من مُنح هذه الخدمة`);
+    }
   } else {
     // التعميد إلزامي، فإزالة آخر معمِّدٍ تُعلّق كل ما ينتظره عند لا أحد.
     const waiting = await prisma.internalMail.count({

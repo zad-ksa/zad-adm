@@ -22,6 +22,7 @@ import {
   setCharityMailApprovers,
 } from "@/app/actions/charityMail";
 import { htmlToPlainText } from "@/app/(dashboard)/main/(main)/mail/mailUtils";
+import BrandSelect from "@/components/ui/BrandSelect";
 
 export type PendingPortalMail = {
   id: string;
@@ -481,26 +482,14 @@ export function PortalMailSettingsPanel({ charityName }: { charityName: string }
                 </span>
               );
             })}
-            <select
-              value=""
-              onChange={(e) => {
-                if (e.target.value && !approverIds.includes(e.target.value)) {
-                  saveApprovers([...approverIds, e.target.value]);
-                }
-              }}
-              className="h-8 px-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs text-slate-600 dark:text-slate-300 outline-none focus:border-primary [&>option]:dark:bg-slate-800"
-            >
-              <option value="" disabled>
-                {approverIds.length === 0 ? "تعيين معمِّد…" : "إضافة معمِّد…"}
-              </option>
-              {members
+            <BrandSelect
+              placeholder={approverIds.length === 0 ? "تعيين معمِّد…" : "إضافة معمِّد…"}
+              emptyLabel={members.length === 0 ? "لا أعضاء في الجمعية" : "كل الأعضاء معمِّدون"}
+              options={members
                 .filter((m) => !approverIds.includes(m.id))
-                .map((m) => (
-                  <option key={m.id} value={m.id}>
-                    {m.name}
-                  </option>
-                ))}
-            </select>
+                .map((m) => ({ value: m.id, label: m.name }))}
+              onSelect={(id) => saveApprovers([...approverIds, id])}
+            />
           </div>
           {approverIds.length === 0 && (
             <p className="text-xs text-slate-400 dark:text-slate-500">

@@ -17,6 +17,8 @@ import {
   ChevronRight,
   ChevronLeft,
   FileText,
+  ShieldCheck,
+  Settings2,
 } from "lucide-react";
 import {
   getInbox,
@@ -37,6 +39,8 @@ import ConfirmModal from "@/components/ui/ConfirmModal";
 import CircularLoader from "@/components/CircularLoader";
 import MailRow from "./MailRow";
 import { normalizeMailListItem } from "./mailUtils";
+import MailApprovalsPanel from "./MailApprovalsPanel";
+import MailSettingsPanel from "./MailSettingsPanel";
 
 interface MailClientProps {
   session: any;
@@ -44,9 +48,21 @@ interface MailClientProps {
   initialTab: string;
   /** First page of `initialTab`, rendered on the server — see page.tsx. */
   initialMails: { mails: any[]; total: number; totalPages: number };
+  /** يظهر تبويب «بانتظار التعميد» لمن يعمّد، أو لمن له بريدٌ موقوف. */
+  showApprovals: boolean;
+  pendingCount: number;
+  canManageMailSettings: boolean;
 }
 
-const FOLDERS = [
+type Folder = {
+  key: string;
+  label: string;
+  Icon: typeof Inbox;
+  accent?: "secondary";
+  badge?: number;
+};
+
+const BASE_FOLDERS: Folder[] = [
   { key: "inbox", label: "البريد الوارد", Icon: Inbox },
   { key: "sent", label: "البريد المرسل", Icon: Send },
   { key: "drafts", label: "المسودات", Icon: FileText },
@@ -54,11 +70,40 @@ const FOLDERS = [
   { key: "trash", label: "سلة المهملات", Icon: Trash2 },
 ];
 
+/** تبويبان لا يعرضان قائمة بريد، بل شاشةً خاصة بهما. */
+const PANEL_TABS = ["approvals", "settings"];
+
 type BulkAction = "trash" | "delete" | null;
 
-export default function MailClient({ session, employees, initialTab, initialMails }: MailClientProps) {
+export default function MailClient({
+  session,
+  employees,
+  initialTab,
+  initialMails,
+  showApprovals,
+  pendingCount,
+  canManageMailSettings,
+}: MailClientProps) {
   const searchParams = useSearchParams();
   const currentTab = searchParams.get("tab") || initialTab;
+  const isPanelTab = PANEL_TABS.includes(currentTab);
+
+  // أول رسالةٍ تقف على التعميد تُظهر التبويب فوراً: الخادم حسبه قبل أن توجد،
+  // ولو انتُظر تحديث الصفحة لبدت الرسالة وكأنها اختفت.
+  const [approvalsVisible, setApprovalsVisible] = useState(showApprovals);
+
+  // «بانتظار التعميد» بعد «المُرسَل» مباشرةً: هو المرحلة التي تسبقه.
+  // و«إعدادات البريد» في آخر القائمة تحت سلة المهملات، كإعداداتٍ لا كصندوق.
+  const FOLDERS: Folder[] = [
+    ...BASE_FOLDERS.slice(0, 2),
+    ...(approvalsVisible
+      ? [{ key: "approvals", label: "بانتظار التعميد", Icon: ShieldCheck, badge: pendingCount }]
+      : []),
+    ...BASE_FOLDERS.slice(2),
+    ...(canManageMailSettings
+      ? [{ key: "settings", label: "إعدادات البريد", Icon: Settings2 }]
+      : []),
+  ];
 
   const [mails, setMails] = useState<any[]>(initialMails.mails);
   const [isLoading, setIsLoading] = useState(false);
@@ -90,6 +135,7 @@ export default function MailClient({ session, employees, initialTab, initialMail
    * staleness it fixes.
    */
   const fetchMails = async ({ quiet = false }: { quiet?: boolean } = {}) => {
+    if (PANEL_TABS.includes(currentTab)) return;
     const token = ++requestToken.current;
     if (!quiet) {
       setIsLoading(true);
@@ -304,7 +350,7 @@ export default function MailClient({ session, employees, initialTab, initialMail
         </div>
 
         <nav className="flex-1 px-2 space-y-1 overflow-y-auto">
-          {FOLDERS.map(({ key, label, Icon, accent }) => {
+          {FOLDERS.map(({ key, label, Icon, accent, badge }) => {
             const isActive = currentTab === key;
             return (
               <button
@@ -322,6 +368,11 @@ export default function MailClient({ session, employees, initialTab, initialMail
                   }`}
                 />
                 {label}
+                {badge ? (
+                  <span className="ms-auto h-5 min-w-5 px-1.5 inline-flex items-center justify-center rounded-full bg-primary text-white text-[10px] font-bold">
+                    {badge}
+                  </span>
+                ) : null}
               </button>
             );
           })}
@@ -330,7 +381,9 @@ export default function MailClient({ session, employees, initialTab, initialMail
 
       {/* Main content */}
       <div className="flex-1 flex flex-col min-w-0">
-        {/* Toolbar */}
+        {/* Toolbar — بحثٌ وترقيمٌ وأفعالٌ جماعية، لا معنى لها في شاشتَي
+            التعميد والإعدادات. */}
+        {!isPanelTab && (
         <div className="h-12 bg-gradient-to-b from-white to-slate-50 dark:from-slate-900 dark:to-slate-950 border-b border-slate-200/70 dark:border-slate-800 flex items-center justify-between px-2 sm:px-4 gap-2 sm:gap-4 shrink-0">
           <div className="flex items-center gap-1 shrink-0">
             {/* Compose lives in the rail on desktop; on mobile the rail is gone,
@@ -438,6 +491,7 @@ export default function MailClient({ session, employees, initialTab, initialMail
             </button>
           </div>
         </div>
+        )}
 
         {/* Folders on mobile: a scrolling strip, since the rail is hidden.
             Horizontal scroll rather than wrap so it stays one row tall. */}
@@ -466,7 +520,10 @@ export default function MailClient({ session, employees, initialTab, initialMail
           })}
         </div>
 
-        {/* Mail list */}
+        {isPanelTab ? (
+          currentTab === "approvals" ? <MailApprovalsPanel /> : <MailSettingsPanel />
+        ) : (
+        /* Mail list */
         <div className="flex-1 overflow-y-auto">
           {isLoading ? (
             <CircularLoader />
@@ -496,6 +553,7 @@ export default function MailClient({ session, employees, initialTab, initialMail
             </ul>
           )}
         </div>
+        )}
       </div>
 
       {isComposeOpen && (
@@ -503,8 +561,13 @@ export default function MailClient({ session, employees, initialTab, initialMail
           isOpen={isComposeOpen}
           onClose={() => setIsComposeOpen(false)}
           employees={employees}
-          onSuccess={() => {
+          onSuccess={(result) => {
             setIsComposeOpen(false);
+            if (result?.pending) {
+              setApprovalsVisible(true);
+              handleTabChange("approvals");
+              return;
+            }
             fetchMails();
           }}
         />

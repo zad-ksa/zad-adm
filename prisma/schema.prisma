@@ -82,6 +82,10 @@ model Charity {
   donorAccounts          DonorAccount[]
   grantApplications      GrantApplication[]
   charityUsers           CharityUserCharity[]
+  mails                  InternalMail[]               @relation("CharityMails")
+  /// تعميد الصادر من هذه الجمعية: لكل جمعية أن تُفعّله أو تُرسل بلا تعميد.
+  mailRequiresApproval   Boolean                      @default(false)
+  mailApprovers          CharityMailApprover[]
   designRequests         DesignRequest[]
 
   // Attendance
@@ -124,6 +128,9 @@ model CharityUser {
   updatedAt   DateTime         @updatedAt
 
   charities         CharityUserCharity[]
+  sentMails         InternalMail[]       @relation("CharitySentMails")
+  receivedMails     MailRecipient[]      @relation("CharityReceivedMails")
+  mailApprovals     CharityMailApprover[]
   designRequests    DesignRequest[]      @relation("SubmittedDesignRequests")
   attendanceRecords AttendanceRecord[]
   leaves            EmployeeLeave[]
@@ -453,6 +460,7 @@ model Employee {
   startedDesignRequests   DesignRequest[]       @relation("StartedDesignRequests")
   reviewedDesignRequests  DesignRequest[]       @relation("ReviewedDesignRequests")
   templateNodes           TemplateNode[]        @relation("TemplateNodes")
+  mailApprovals     MailApprover[]
 }
 
 /// من يرى أي خدمة في «عرض الخدمات».
@@ -998,8 +1006,38 @@ model InternalMail {
   id       String   @id @default(uuid())
   subject  String
   body     String   @db.Text
-  senderId String
-  sender   Employee @relation("SentMails", fields: [senderId], references: [id], onDelete: Cascade)
+  /// المرسِل موظف زاد. يصير فارغاً حين يكون المرسِل عضو جمعية.
+  senderId String?
+  sender   Employee? @relation("SentMails", fields: [senderId], references: [id], onDelete: Cascade)
+
+  /// "EMPLOYEE" أو "CHARITY_USER" — أيّ الحقلين أعلاه هو المرسِل.
+  senderKind String @default("EMPLOYEE")
+
+  senderCharityUserId String?
+  senderCharityUser   CharityUser? @relation("CharitySentMails", fields: [senderCharityUserId], references: [id], onDelete: Cascade)
+
+  /// الخدمة التي أُرسل البريد باسمها (من زاد) أو إليها (من جمعية) — بالاسم لا
+  /// بالمعرّف، كبقية منوحات الخدمات: الخدمة الواحدة صفٌّ في كل جمعية.
+  serviceName String?
+
+  /// الجمعية الطرف الآخر — للعرض والتصفية.
+  charityId String?
+  charity   Charity? @relation("CharityMails", fields: [charityId], references: [id], onDelete: SetNull)
+
+  /// كيف عُنون البريد: "PERSON" أو "CHARITY" أو "SERVICE". منه تُبنى الترويسة
+  /// الظاهرة للجمعية: «زاد | خدمة الإعلامية».
+  addressedAs String @default("PERSON")
+
+  /// التعميد: "NONE" بلا تعميد · "PENDING" بانتظار · "APPROVED" معتمد ·
+  /// "RETURNED" أُرجع لصاحبه. والبريد المنتظر لا مستلمين له بعد.
+  approvalState String @default("NONE")
+  /// المعمِّد — موظف زاد أو عضو جمعية. بلا علاقةٍ مُصرَّحة: أثرٌ للتدقيق لا
+  /// يُستعلم عنه من الجهة الأخرى.
+  approvedById            String?
+  approvedByCharityUserId String?
+  approvedAt              DateTime?
+  /// ملاحظة المعمِّد حين يُرجع البريد إلى مسودات صاحبه.
+  returnNote String?
 
   // للربط بسلسلة الردود
   parentId String? // الرسالة الأصلية (في حال الرد)
@@ -1014,6 +1052,9 @@ model InternalMail {
   draftToIds  String[] @default([])
   draftCcIds  String[] @default([])
   draftBccIds String[] @default([])
+  /// مستلمو المسودة من غير موظفي زاد: أعضاء جمعيات، أو جمعياتٌ بكاملها.
+  draftCharityUserIds String[] @default([])
+  draftCharityIds     String[] @default([])
 
   recipients  MailRecipient[]
   attachments MailAttachment[]
@@ -1030,16 +1071,26 @@ model MailRecipient {
   id         String       @id @default(uuid())
   mailId     String
   mail       InternalMail @relation(fields: [mailId], references: [id], onDelete: Cascade)
-  employeeId String
-  employee   Employee     @relation("ReceivedMails", fields: [employeeId], references: [id], onDelete: Cascade)
+  /// المستلم: أحد الحقلين مملوء والآخر فارغ.
+  employeeId String?
+  employee   Employee?    @relation("ReceivedMails", fields: [employeeId], references: [id], onDelete: Cascade)
+
+  charityUserId String?
+  charityUser   CharityUser? @relation("CharityReceivedMails", fields: [charityUserId], references: [id], onDelete: Cascade)
+  /// جمعية المستلم حين يكون عضو جمعية — نطاق الصندوق.
+  charityId String?
 
   type      String  @default("TO") // "TO" | "CC" | "BCC"
   isRead    Boolean @default(false)
   isStarred Boolean @default(false)
   isDeleted Boolean @default(false) // سلة المهملات
 
+  // القيدان يعملان معاً بلا تعارض: Postgres يعدّ كل NULL مميّزاً، فصفوف أعضاء
+  // الجمعيات (employeeId فارغ) لا تصطدم بالقيد الأول، والعكس.
   @@unique([mailId, employeeId])
+  @@unique([mailId, charityUserId])
   @@index([employeeId, isDeleted, isRead])
+  @@index([charityUserId, isDeleted, isRead])
   @@index([mailId])
 }
 
@@ -1738,4 +1789,35 @@ model CharityMemberService {
 
   @@id([membershipId, serviceName])
   @@index([serviceName])
+}
+
+/// معمِّد بريد خدمةٍ في زاد.
+///
+/// البريد الصادر من زاد إلى جمعيةٍ باسم خدمةٍ لها معمِّد لا يُسلَّم حتى يعتمده.
+/// ونطاقه جمعياته المسنَدة وحدها، فلا يرى بريد جمعيةٍ ليست له.
+model MailApprover {
+  employeeId  String
+  serviceName String
+  createdAt   DateTime @default(now())
+
+  employee Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+
+  @@id([employeeId, serviceName])
+  @@index([serviceName])
+}
+
+/// معمِّد البريد الصادر من جمعية.
+///
+/// يعمل فقط حين تُفعّل الجمعية Charity.mailRequiresApproval، ونطاقه صادر
+/// جمعيته كله — لا يُقسَّم بالخدمات كجهة زاد.
+model CharityMailApprover {
+  charityUserId String
+  charityId     String
+  createdAt     DateTime @default(now())
+
+  user    CharityUser @relation(fields: [charityUserId], references: [id], onDelete: Cascade)
+  charity Charity     @relation(fields: [charityId], references: [id], onDelete: Cascade)
+
+  @@id([charityUserId, charityId])
+  @@index([charityId])
 }

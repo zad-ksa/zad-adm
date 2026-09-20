@@ -4,6 +4,11 @@ import { prisma } from "@/lib/db";
 import { getSession } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
 import { sanitizeMailHtml } from "@/lib/sanitizeMail";
+import { getEmployeeServiceNames, listServiceNames } from "@/app/actions/serviceAccess";
+import { getAssignedCharityIds } from "@/lib/access";
+import { getNoApproverMessage, resolveApprovalRoute } from "@/app/actions/mailApproval";
+import { isDelivered, serviceConversationRecipients } from "@/lib/serviceTeams";
+import { CHARITY_MAIL_ENABLED } from "@/lib/featureFlags";
 
 async function getAuthenticatedUser() {
   const session = await getSession();
@@ -49,12 +54,25 @@ function mailSearchFilter(query: string, side: "sender" | "recipients") {
   if (!q) return undefined;
 
   const text = { contains: q, mode: "insensitive" as const };
-  const person =
+  // الطرف الآخر قد يكون موظفاً أو عضو جمعية، والبريد من زاد يُعرف باسم خدمته
+  // وجمعيته لا باسم شخص — فالبحث يشمل الثلاثة وإلا بحث المستخدم عمّا يراه فلا يجده.
+  const people =
     side === "sender"
-      ? { sender: { name: text } }
-      : { recipients: { some: { employee: { name: text } } } };
+      ? [{ sender: { name: text } }, { senderCharityUser: { name: text } }]
+      : [
+          { recipients: { some: { employee: { name: text } } } },
+          { recipients: { some: { charityUser: { name: text } } } },
+        ];
 
-  return { OR: [{ subject: text }, { body: text }, person] };
+  return {
+    OR: [
+      { subject: text },
+      { body: text },
+      { serviceName: text },
+      { charity: { name: text } },
+      ...people,
+    ],
+  };
 }
 
 export async function sendMail(data: {
@@ -188,6 +206,10 @@ async function syncAttachments(mailId: string, desired: AttachmentInput[] | unde
  * Creates or updates a draft. Drafts have no MailRecipient rows yet — the
  * chosen recipients are stashed on the InternalMail row itself (draftToIds/
  * draftCcIds/draftBccIds) until the draft is actually sent via sendMail.
+ *
+ * ومسودة البريد إلى الجمعيات تُحفظ كذلك: الجمعيات في draftCharityIds والخدمة
+ * في serviceName. وبلا هذا كان إغلاق النافذة يُبقي النص ويُسقط المُرسَل إليهم
+ * صامتاً، فيُعاد فتح المسودة ناقصةً دون أن يُنبَّه صاحبها.
  */
 export async function saveDraft(data: {
   id?: string;
@@ -197,6 +219,8 @@ export async function saveDraft(data: {
   ccIds?: string[];
   bccIds?: string[];
   attachments?: AttachmentInput[];
+  charityIds?: string[];
+  serviceName?: string | null;
 }) {
   const user = await getAuthenticatedUser();
   const cleanBody = sanitizeMailHtml(data.body);
@@ -215,6 +239,9 @@ export async function saveDraft(data: {
         draftToIds: data.toIds || [],
         draftCcIds: data.ccIds || [],
         draftBccIds: data.bccIds || [],
+        draftCharityIds: data.charityIds || [],
+        serviceName: data.serviceName ?? null,
+        addressedAs: (data.charityIds || []).length > 0 ? "CHARITY" : "PERSON",
       },
     });
     await syncAttachments(updated.id, data.attachments);
@@ -230,6 +257,9 @@ export async function saveDraft(data: {
       draftToIds: data.toIds || [],
       draftCcIds: data.ccIds || [],
       draftBccIds: data.bccIds || [],
+      draftCharityIds: data.charityIds || [],
+      serviceName: data.serviceName ?? null,
+      addressedAs: (data.charityIds || []).length > 0 ? "CHARITY" : "PERSON",
     },
   });
   await syncAttachments(created.id, data.attachments);
@@ -258,7 +288,7 @@ export async function getDrafts(page = 1, limit = 20, search = "") {
   const [mails, total] = await Promise.all([
     prisma.internalMail.findMany({
       where,
-      include: { attachments: true },
+      include: { attachments: true, charity: { select: { id: true, name: true } } },
       orderBy: { updatedAt: "desc" },
       skip,
       take: limit,
@@ -301,6 +331,10 @@ export async function getInbox(page = 1, limit = 20, search = "") {
             sender: {
               select: { id: true, name: true, avatarUrl: true, role: true },
             },
+            // بريدٌ من جمعية: مرسِله عضوٌ لا موظف. وبريدٌ من زاد إلى جمعية: يُعرض
+            // باسم خدمته وجمعيته لا باسم كاتبه.
+            senderCharityUser: { select: { id: true, name: true } },
+            charity: { select: { id: true, name: true } },
             attachments: true,
             // للعمود "إلى" في قائمة البريد — يُغربَل بـ stripHiddenBcc أدناه فلا
             // يرى مستلم عادي (أو مَن نُسخ إليه خفيةً) غيرَه من أسماء النسخة المخفية.
@@ -309,6 +343,9 @@ export async function getInbox(page = 1, limit = 20, search = "") {
                 type: true,
                 employeeId: true,
                 employee: { select: { id: true, name: true } },
+                charityUserId: true,
+                charityUser: { select: { id: true, name: true } },
+                charityId: true,
               },
             },
           },
@@ -340,6 +377,8 @@ export async function getSentMails(page = 1, limit = 20, search = "") {
     senderId: user.id,
     isDeletedBySender: false,
     isDraft: false,
+    // الموقوف على التعميد لم يُرسل بعد، فمكانه «بانتظار التعميد» لا «المُرسَل».
+    approvalState: { not: "PENDING" },
     ...(mailSearchFilter(search, "recipients") ?? {}),
   };
 
@@ -352,8 +391,10 @@ export async function getSentMails(page = 1, limit = 20, search = "") {
             employee: {
               select: { id: true, name: true, avatarUrl: true },
             },
+            charityUser: { select: { id: true, name: true } },
           },
         },
+        charity: { select: { id: true, name: true } },
         attachments: true,
       },
       orderBy: {
@@ -388,6 +429,10 @@ export async function getStarredMails(page = 1, limit = 20, search = "") {
             sender: {
               select: { id: true, name: true, avatarUrl: true, role: true },
             },
+            // بريدٌ من جمعية: مرسِله عضوٌ لا موظف. وبريدٌ من زاد إلى جمعية: يُعرض
+            // باسم خدمته وجمعيته لا باسم كاتبه.
+            senderCharityUser: { select: { id: true, name: true } },
+            charity: { select: { id: true, name: true } },
             attachments: true,
             // للعمود "إلى" في قائمة البريد — يُغربَل بـ stripHiddenBcc أدناه فلا
             // يرى مستلم عادي (أو مَن نُسخ إليه خفيةً) غيرَه من أسماء النسخة المخفية.
@@ -396,6 +441,9 @@ export async function getStarredMails(page = 1, limit = 20, search = "") {
                 type: true,
                 employeeId: true,
                 employee: { select: { id: true, name: true } },
+                charityUserId: true,
+                charityUser: { select: { id: true, name: true } },
+                charityId: true,
               },
             },
           },
@@ -436,6 +484,10 @@ export async function getTrashMails(page = 1, limit = 20, search = "") {
             sender: {
               select: { id: true, name: true, avatarUrl: true, role: true },
             },
+            // بريدٌ من جمعية: مرسِله عضوٌ لا موظف. وبريدٌ من زاد إلى جمعية: يُعرض
+            // باسم خدمته وجمعيته لا باسم كاتبه.
+            senderCharityUser: { select: { id: true, name: true } },
+            charity: { select: { id: true, name: true } },
             attachments: true,
             // للعمود "إلى" في قائمة البريد — يُغربَل بـ stripHiddenBcc أدناه فلا
             // يرى مستلم عادي (أو مَن نُسخ إليه خفيةً) غيرَه من أسماء النسخة المخفية.
@@ -444,6 +496,9 @@ export async function getTrashMails(page = 1, limit = 20, search = "") {
                 type: true,
                 employeeId: true,
                 employee: { select: { id: true, name: true } },
+                charityUserId: true,
+                charityUser: { select: { id: true, name: true } },
+                charityId: true,
               },
             },
           },
@@ -469,11 +524,14 @@ const MAIL_THREAD_INCLUDE = {
   sender: {
     select: { id: true, name: true, avatarUrl: true, role: true },
   },
+  senderCharityUser: { select: { id: true, name: true } },
+  charity: { select: { id: true, name: true } },
   recipients: {
     include: {
       employee: {
         select: { id: true, name: true, avatarUrl: true, role: true },
       },
+      charityUser: { select: { id: true, name: true } },
     },
   },
   attachments: true,
@@ -482,11 +540,14 @@ const MAIL_THREAD_INCLUDE = {
       sender: {
         select: { id: true, name: true, avatarUrl: true, role: true },
       },
+      senderCharityUser: { select: { id: true, name: true } },
+      charity: { select: { id: true, name: true } },
       recipients: {
         include: {
           employee: {
             select: { id: true, name: true, avatarUrl: true, role: true },
           },
+          charityUser: { select: { id: true, name: true } },
         },
       },
       attachments: true,
@@ -553,7 +614,8 @@ export async function getMailById(id: string) {
 
   // Only surface replies the current user is actually a sender/recipient of —
   // getMailById previously returned every reply on the thread unfiltered.
-  mail.replies = mail.replies.filter((r) => canViewMail(r, user.id));
+  // ولا ما لم يُسلَّم بعد: ردٌّ ينتظر التعميد أو أُرجع يبدو في السلسلة كأنه وصل.
+  mail.replies = mail.replies.filter((r) => isDelivered(r) && canViewMail(r, user.id));
 
   stripHiddenBcc(mail, user.id);
   mail.replies.forEach((r) => stripHiddenBcc(r, user.id));
@@ -712,4 +774,312 @@ export async function getUnreadCount() {
   });
 
   return count;
+}
+
+/**
+ * ما يحتاجه موظف زاد ليراسل جمعية: جمعياته المسنَدة، وخدماته الممنوحة، وعدد
+ * من سيستلم في كل جمعية عن كل خدمة.
+ *
+ * العدد ليس زينة: «إلى جمعية» تتوسّع إلى المفوَّضين بتلك الخدمة فيها وحدهم،
+ * فجمعيةٌ لم تُفوِّض أحداً بعدُ لا مستلم لها — ومن حق المرسِل أن يعرف ذلك قبل أن
+ * يكتب، لا بعد أن يضغط «إرسال».
+ *
+ * والقائمتان مقصورتان: الجمعيات على المسنَدة إليه، والخدمات على الممنوحة له.
+ */
+export async function getCharityMailOptions() {
+  if (!CHARITY_MAIL_ENABLED) throw new Error("غير مصرح");
+  const user = await getAuthenticatedUser();
+  if (user.userType === "CHARITY_USER") throw new Error("غير مصرح");
+
+  // null من getEmployeeServiceNames تعني «بلا تقييد» لا «بلا خدمة» — وهو العُرف
+  // نفسه في كل منح الخدمات، فيُترجَم هنا إلى جميع الخدمات.
+  const granted = await getEmployeeServiceNames(user.id);
+  const services = granted ?? (await listServiceNames());
+
+  const assigned = await getAssignedCharityIds(user.id, user.role, user.permissions);
+  const charities = await prisma.charity.findMany({
+    where: assigned === null ? undefined : { id: { in: assigned } },
+    select: { id: true, name: true },
+    orderBy: { name: "asc" },
+  });
+
+  type CharityOption = { id: string; name: string; counts: Record<string, number> };
+
+  // حال التعميد لكل خدمة يُقال للمرسِل قبل أن يكتب: خدمةٌ بلا معمِّد لا يخرج
+  // بريدها، وخدمةٌ لها معمِّدٌ غيره يقف بريدها عنده.
+  const approverRows = await prisma.mailApprover.findMany({
+    where: { serviceName: { in: services }, employee: { isActive: true } },
+    select: { serviceName: true, employeeId: true },
+  });
+  const noApprover = services.filter((name) => !approverRows.some((r) => r.serviceName === name));
+  const needsApproval = services.filter(
+    (name) =>
+      approverRows.some((r) => r.serviceName === name) &&
+      !approverRows.some((r) => r.serviceName === name && r.employeeId === user.id)
+  );
+
+  if (services.length === 0 || charities.length === 0) {
+    return { services, needsApproval, noApprover, charities: [] as CharityOption[] };
+  }
+
+  // المفوَّضون لكل (جمعية، خدمة) في استعلامٍ واحد، لا استعلامٍ لكل خلية.
+  const rows = await prisma.charityMemberService.findMany({
+    where: {
+      serviceName: { in: services },
+      membership: { isActive: true, charityId: { in: charities.map((c) => c.id) } },
+    },
+    select: { serviceName: true, membership: { select: { charityId: true } } },
+  });
+
+  const counts = new Map<string, number>();
+  for (const row of rows) {
+    const key = row.membership.charityId + "|" + row.serviceName;
+    counts.set(key, (counts.get(key) ?? 0) + 1);
+  }
+
+  return {
+    services,
+    needsApproval,
+    noApprover,
+    charities: charities.map<CharityOption>((c) => ({
+      id: c.id,
+      name: c.name,
+      counts: Object.fromEntries(
+        services.map((name) => [name, counts.get(c.id + "|" + name) ?? 0])
+      ),
+    })),
+  };
+}
+
+/**
+ * بريدٌ من زاد إلى جمعيات — رسالةٌ مستقلة لكل جمعية.
+ *
+ * الجمع في رسالةٍ واحدة يجعل قائمة المستلمين مشتركة، فترى جمعيةٌ أسماء أعضاء
+ * أخرى، ويجمعهم ردٌّ واحد. والفصل عند الإنشاء يجعل ذلك مستحيلاً بالبنية لا
+ * بالحذر في الواجهة.
+ *
+ * ويصل البريد المفوَّضين بالخدمة في تلك الجمعية وحدهم، ويظهر لهم باسم الخدمة
+ * «زاد | خدمة كذا» لا باسم كاتبه — والكاتب محفوظ في senderId للتدقيق وللردّ.
+ */
+export async function sendMailToCharities(data: {
+  subject: string;
+  body: string;
+  charityIds: string[];
+  serviceName: string;
+  attachments?: AttachmentInput[];
+  draftId?: string;
+}) {
+  if (!CHARITY_MAIL_ENABLED) throw new Error("غير مصرح");
+  const user = await getAuthenticatedUser();
+  if (user.userType === "CHARITY_USER") throw new Error("غير مصرح");
+
+  const charityIds = [...new Set((data.charityIds ?? []).filter(Boolean))];
+  if (charityIds.length === 0) throw new Error("اختر جمعيةً واحدة على الأقل");
+  if (!data.serviceName) throw new Error("اختر الخدمة التي يتبع لها البريد");
+
+  // الخدمة هي هوية البريد عند الجمعية، فمن لا خدمة له لا اسم له عندها.
+  const granted = await getEmployeeServiceNames(user.id);
+  const services = granted ?? (await listServiceNames());
+  if (services.length === 0) {
+    throw new Error("لا يمكنك مراسلة الجمعيات قبل أن تُمنح خدمة");
+  }
+  if (!services.includes(data.serviceName)) {
+    throw new Error("لا تملك هذه الخدمة");
+  }
+
+  // التحقق من الإسناد على الخادم لا في المُنتقي وحده: المُنتقي يُرشد، والحارس يمنع.
+  const assigned = await getAssignedCharityIds(user.id, user.role, user.permissions);
+  if (assigned !== null && charityIds.some((id) => !assigned.includes(id))) {
+    throw new Error("إحدى الجمعيات ليست مسنَدة إليك");
+  }
+
+  const charities = await prisma.charity.findMany({
+    where: { id: { in: charityIds } },
+    select: { id: true, name: true },
+    orderBy: { name: "asc" },
+  });
+  if (charities.length !== charityIds.length) throw new Error("إحدى الجمعيات غير موجودة");
+
+  // مستلمو كل جمعية: مفوَّضوها بالخدمة، ومعهم في «نسخة» زملاء المرسِل في زاد
+  // الحاملون لها — فالمحادثة للفريقين لا لشخصين. تُحسب قبل الإنشاء لتُرفض
+  // الجمعيات الخالية من مفوَّضين دفعةً واحدة، ولا يُنشأ لغيرها شيء.
+  const byCharity = new Map<string, Awaited<ReturnType<typeof serviceConversationRecipients>>>();
+  const empty: string[] = [];
+  for (const charity of charities) {
+    try {
+      byCharity.set(
+        charity.id,
+        await serviceConversationRecipients({
+          serviceName: data.serviceName,
+          charityId: charity.id,
+          author: { kind: "EMPLOYEE", id: user.id },
+        })
+      );
+    } catch {
+      empty.push(charity.name);
+    }
+  }
+
+  // بريدٌ بلا مستلم يُرفض ولا يُبتلع صامتاً.
+  if (empty.length > 0) {
+    throw new Error(`لا أحد مفوَّض بخدمة «${data.serviceName}» في: ${empty.join("، ")}`);
+  }
+
+  const cleanBody = sanitizeMailHtml(data.body);
+  const attachments = data.attachments ?? [];
+
+  // التعميد إلزامي: بلا معمِّدٍ لا إرسال. والمنتظر يُحفظ **بلا صفوف استلام**،
+  // فلا يمكن أن يُقرأ قبل أن يُعتمد. والمعمِّد نفسه يخرج بريده معتمداً باسمه.
+  const route = await resolveApprovalRoute(data.serviceName, user.id);
+  if (route === "NO_APPROVER") throw new Error(await getNoApproverMessage(data.serviceName));
+  const needsApproval = route === "PENDING";
+
+  const mailIds = await prisma.$transaction(async (tx) => {
+    const ids: string[] = [];
+
+    for (const charity of charities) {
+      const mail = await tx.internalMail.create({
+        data: {
+          subject: data.subject,
+          body: cleanBody,
+          senderId: user.id,
+          senderKind: "EMPLOYEE",
+          serviceName: data.serviceName,
+          charityId: charity.id,
+          addressedAs: "CHARITY",
+          approvalState: needsApproval ? "PENDING" : "APPROVED",
+          approvedById: needsApproval ? null : user.id,
+          approvedAt: needsApproval ? null : new Date(),
+          // صفوف الأعضاء تحمل جمعيتها — نطاق الصندوق — فلا تظهر لصاحبها في جمعيةٍ أخرى.
+          recipients: needsApproval ? undefined : { create: byCharity.get(charity.id) ?? [] },
+          attachments: attachments.length
+            ? {
+                create: attachments.map((a) => ({
+                  fileUrl: a.fileUrl,
+                  fileName: a.fileName,
+                  fileSize: a.fileSize ?? null,
+                })),
+              }
+            : undefined,
+        },
+        select: { id: true },
+      });
+      ids.push(mail.id);
+    }
+
+    // المسودة الواحدة أنتجت رسائل عدّة، فلا تُحوَّل إلى إحداها بل تُزال.
+    if (data.draftId) {
+      const draft = await tx.internalMail.findUnique({
+        where: { id: data.draftId },
+        select: { senderId: true, isDraft: true },
+      });
+      if (draft?.isDraft && draft.senderId === user.id) {
+        await tx.internalMail.delete({ where: { id: data.draftId } });
+      }
+    }
+
+    return ids;
+  });
+
+  revalidatePath("/main/mail");
+  return { count: mailIds.length, mailIds, pending: needsApproval };
+}
+
+/**
+ * ردّ موظف زاد في محادثة خدمةٍ مع جمعية.
+ *
+ * المحادثة للفريقين: فالردّ يصل **كل** المفوَّضين بالخدمة في الجمعية، ويصل
+ * زملاء الكاتب في زاد نسخةً، ويبقى منسوباً إلى كاتبه. ولأيّ عضوٍ في الفريق أن
+ * يردّ — على رسالةٍ من الجمعية أو من زميلٍ له — ما دامت وصلته أو كتبها.
+ *
+ * والردّ بريدٌ من زاد إلى جمعية كغيره، فيمرّ بالتعميد الإلزامي نفسه.
+ *
+ * `draftId`: ردٌّ أرجعه المعمِّد فعاد مسودة، ثم أُعيد إرساله — تُزال المسودة
+ * بعد أن يحلّ محلها الردّ الجديد.
+ */
+export async function replyToCharityMail(data: {
+  parentId: string;
+  subject: string;
+  body: string;
+  attachments?: AttachmentInput[];
+  draftId?: string;
+}) {
+  if (!CHARITY_MAIL_ENABLED) throw new Error("غير مصرح");
+  const user = await getAuthenticatedUser();
+  if (user.userType === "CHARITY_USER") throw new Error("غير مصرح");
+
+  const parent = await prisma.internalMail.findUnique({
+    where: { id: data.parentId },
+    select: {
+      id: true,
+      parentId: true,
+      senderId: true,
+      charityId: true,
+      serviceName: true,
+      recipients: { select: { employeeId: true } },
+    },
+  });
+  if (!parent?.charityId || !parent.serviceName) throw new Error("غير مصرح");
+
+  // من كتب الرسالة أو وصلته — ولا يكفي معرّفها وحده.
+  const isParty =
+    parent.senderId === user.id || parent.recipients.some((r) => r.employeeId === user.id);
+  if (!isParty) throw new Error("غير مصرح");
+
+  const route = await resolveApprovalRoute(parent.serviceName, user.id);
+  if (route === "NO_APPROVER") throw new Error(await getNoApproverMessage(parent.serviceName));
+  const needsApproval = route === "PENDING";
+
+  // يُحسب المستلمون حتى للمنتظر: جمعيةٌ لم يبق فيها مفوَّض تُعرف الآن، لا
+  // بعد أن يعتمد المعمِّد ردّاً لا يصل أحداً.
+  const recipients = await serviceConversationRecipients({
+    serviceName: parent.serviceName,
+    charityId: parent.charityId,
+    author: { kind: "EMPLOYEE", id: user.id },
+  });
+
+  const mail = await prisma.$transaction(async (tx) => {
+    const created = await tx.internalMail.create({
+      data: {
+        subject: data.subject || "(بدون موضوع)",
+        body: sanitizeMailHtml(data.body),
+        senderId: user.id,
+        senderKind: "EMPLOYEE",
+        serviceName: parent.serviceName,
+        charityId: parent.charityId,
+        addressedAs: "CHARITY",
+        // كل ردٍّ يُعلَّق بجذر السلسلة، فتبقى المحادثة واحدة مهما تعدّدت الردود.
+        parentId: parent.parentId ?? parent.id,
+        approvalState: needsApproval ? "PENDING" : "APPROVED",
+        approvedById: needsApproval ? null : user.id,
+        approvedAt: needsApproval ? null : new Date(),
+        recipients: needsApproval ? undefined : { create: recipients },
+        attachments: data.attachments?.length
+          ? {
+              create: data.attachments.map((a) => ({
+                fileUrl: a.fileUrl,
+                fileName: a.fileName,
+                fileSize: a.fileSize ?? null,
+              })),
+            }
+          : undefined,
+      },
+      select: { id: true },
+    });
+
+    if (data.draftId) {
+      const draft = await tx.internalMail.findUnique({
+        where: { id: data.draftId },
+        select: { senderId: true, isDraft: true },
+      });
+      if (draft?.isDraft && draft.senderId === user.id) {
+        await tx.internalMail.delete({ where: { id: data.draftId } });
+      }
+    }
+
+    return created;
+  });
+
+  revalidatePath("/main/mail");
+  return { ...mail, pending: needsApproval };
 }

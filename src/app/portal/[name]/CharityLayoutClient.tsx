@@ -5,6 +5,8 @@ import CharitySidebar from "./CharitySidebar";
 import { useState, useEffect } from "react";
 import { Menu } from "lucide-react";
 import DeveloperRoleSwitcher from "@/components/DeveloperRoleSwitcher";
+import { MAIL_UNREAD_EVENT } from "@/lib/mailBadge";
+import { getPortalUnreadCount } from "@/app/actions/charityMail";
 
 export default function CharityLayoutClient({
   children,
@@ -18,6 +20,7 @@ export default function CharityLayoutClient({
   permissions = [],
   title,
   isAdmin = false,
+  unreadMail = 0,
 }: {
   children: React.ReactNode;
   charityName: string;
@@ -30,9 +33,30 @@ export default function CharityLayoutClient({
   permissions?: string[];
   title?: string;
   isAdmin?: boolean;
+  unreadMail?: number;
 }) {
   const pathname = usePathname();
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+
+  // الشريط يبقى مركّباً عبر التنقّل، فلا يُعاد رسمه حين تُقرأ رسالة. وصفحة
+  // البريد تقول «تغيّر شيء»، فيُعاد قراءة العدد الذي يعرف كيف يجلبه.
+  const [unread, setUnread] = useState(unreadMail);
+  useEffect(() => {
+    let active = true;
+    const refresh = () => {
+      getPortalUnreadCount(charityName)
+        .then((count) => {
+          if (active) setUnread(count);
+        })
+        // فشل الجلب يُبقي آخر عددٍ معروف: أصدق من تصفيره وادّعاء أن لا جديد.
+        .catch(() => {});
+    };
+    window.addEventListener(MAIL_UNREAD_EVENT, refresh);
+    return () => {
+      active = false;
+      window.removeEventListener(MAIL_UNREAD_EVENT, refresh);
+    };
+  }, [charityName]);
 
 
 
@@ -57,6 +81,7 @@ export default function CharityLayoutClient({
         userType={userType}
         availableCharities={availableCharities}
         permissions={permissions}
+        unreadMail={unread}
         title={title}
       />
       

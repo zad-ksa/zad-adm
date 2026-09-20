@@ -38,6 +38,9 @@ export type CharityPermissionGroup = { title: string; permissions: CharityPermis
 
 const MANAGE_PERMISSIONS: CharityPermissionDef[] = [
   { id: "manage_charity_users", label: "إدارة حسابات موظفي الجمعية" },
+  // تعميد الصادر من الجمعية: تفعيله من عدمه، وتعيين من يعمّد. والتعميد نفسه
+  // لا يحتاجها — المعمِّد يُعيَّن بالاسم كما في جهة زاد.
+  { id: "manage_charity_mail", label: "إعدادات البريد الداخلي" },
 ];
 
 /**

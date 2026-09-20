@@ -60,6 +60,11 @@ const previewSecurityHeaders = [
 ];
 
 const nextConfig: NextConfig = {
+  // مجلّد البناء. `next build` و`next dev` يكتبان في `.next` نفسه، فبناءٌ
+  // للتحقق أثناء عمل خادم التطوير يمسح تحته ملفّات التوجيه فتصير كل صفحة 404
+  // حتى يُعاد تشغيله. وبهذا المتغيّر يبني المتحقِّق في مجلّدٍ آخر:
+  //   NEXT_BUILD_DIR=.next-verify npx next build
+  distDir: process.env.NEXT_BUILD_DIR || ".next",
   experimental: {
     serverActions: {
       bodySizeLimit: "50mb",

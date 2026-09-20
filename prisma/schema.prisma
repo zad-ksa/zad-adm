@@ -947,17 +947,21 @@ model AppNotification {
 }
 
 model MeetingSchedule {
-  id            String           @id @default(uuid())
-  title         String
-  slug          String           @unique
-  duration      Int              @default(30)
-  availableDays Json // array of { date, startTime, endTime }
-  isActive      Boolean          @default(true)
-  createdById   String
-  createdBy     Employee         @relation("CreatedMeetingSchedules", fields: [createdById], references: [id], onDelete: Cascade)
-  bookings      MeetingBooking[]
-  createdAt     DateTime         @default(now())
-  updatedAt     DateTime         @updatedAt
+  id                      String                      @id @default(uuid())
+  title                   String
+  slug                    String                      @unique
+  duration                Int                         @default(30)
+  availableDays           Json // array of { date, startTime, endTime }
+  isActive                Boolean                     @default(true)
+  // يظهر للجمعية على صفحة الحجز العامة خيار "لا يناسبني أي من هذه الأوقات"
+  // فقط حين يفعّله منشئ الجدول لهذا الجدول تحديداً.
+  allowAlternativeRequest Boolean                     @default(false)
+  createdById             String
+  createdBy               Employee                    @relation("CreatedMeetingSchedules", fields: [createdById], references: [id], onDelete: Cascade)
+  bookings                MeetingBooking[]
+  alternativeRequests     MeetingAlternativeRequest[]
+  createdAt               DateTime                    @default(now())
+  updatedAt               DateTime                    @updatedAt
 
   @@index([createdById])
 }
@@ -972,6 +976,21 @@ model MeetingBooking {
   createdAt   DateTime        @default(now())
 
   @@unique([scheduleId, date, startTime])
+  @@index([scheduleId])
+}
+
+// طلب تواصل من جمعية تعذّرت عليها كل الأوقات المتاحة في الجدول — لا يحجز
+// موعداً فعلياً، فهو منفصل عن MeetingBooking وبلا قيد تفرّد على الوقت
+// (النص حرّ: تاريخ مقترح أو مجرد ملاحظة)، بانتظار متابعة يدوية من الموظف.
+model MeetingAlternativeRequest {
+  id           String          @id @default(uuid())
+  scheduleId   String
+  schedule     MeetingSchedule @relation(fields: [scheduleId], references: [id], onDelete: Cascade)
+  charityName  String
+  message      String          @db.Text
+  contactPhone String?
+  createdAt    DateTime        @default(now())
+
   @@index([scheduleId])
 }
 

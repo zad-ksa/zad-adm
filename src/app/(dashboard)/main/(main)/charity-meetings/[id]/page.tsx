@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/db";
 import { notFound } from "next/navigation";
-import { Calendar, Clock, ChevronRight, User } from "lucide-react";
+import { Calendar, Clock, ChevronRight, User, MessageSquareText, Phone } from "lucide-react";
 import Link from "next/link";
 import { formatClock12 } from "@/lib/attendanceTime";
 
@@ -19,6 +19,9 @@ export default async function CharityMeetingBookingsPage({
           { date: 'desc' },
           { startTime: 'asc' }
         ]
+      },
+      alternativeRequests: {
+        orderBy: { createdAt: 'desc' }
       }
     }
   });
@@ -127,6 +130,53 @@ export default async function CharityMeetingBookingsPage({
           </div>
         )}
       </div>
+
+      {/* Alternative Time Requests */}
+      {schedule.allowAlternativeRequest && (
+        <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden">
+          <div className="p-6 border-b border-slate-100 dark:border-slate-700/50 flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-amber-50 dark:bg-amber-950/30 flex items-center justify-center text-amber-500">
+              <MessageSquareText className="w-5 h-5" />
+            </div>
+            <div>
+              <h2 className="font-bold text-slate-800 dark:text-slate-100 text-lg">طلبات مواعيد بديلة</h2>
+              <p className="text-xs text-slate-500 dark:text-slate-400">
+                جمعيات لم يناسبها أي من الأوقات المتاحة — إجمالي الطلبات: {schedule.alternativeRequests.length}
+              </p>
+            </div>
+          </div>
+
+          {schedule.alternativeRequests.length === 0 ? (
+            <div className="p-12 text-center text-slate-500 dark:text-slate-400">
+              <MessageSquareText className="w-12 h-12 mx-auto mb-3 opacity-20" />
+              <p className="font-medium text-lg">لا توجد طلبات مواعيد بديلة حتى الآن</p>
+            </div>
+          ) : (
+            <div className="divide-y divide-slate-100 dark:divide-slate-700/50">
+              {schedule.alternativeRequests.map((req) => (
+                <div key={req.id} className="p-6 flex flex-col sm:flex-row sm:items-start gap-4">
+                  <div className="sm:w-56 shrink-0 space-y-1.5">
+                    <div className="flex items-center gap-2 font-bold text-slate-800 dark:text-slate-200">
+                      <User className="w-4 h-4 text-slate-400" />
+                      {req.charityName}
+                    </div>
+                    {req.contactPhone && (
+                      <div dir="ltr" className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400 justify-end sm:justify-start">
+                        <Phone className="w-3.5 h-3.5" />
+                        {req.contactPhone}
+                      </div>
+                    )}
+                    <p className="text-xs text-slate-400 dark:text-slate-500">{formatDate(req.createdAt)}</p>
+                  </div>
+                  <p className="flex-1 text-sm text-slate-600 dark:text-slate-300 leading-relaxed bg-slate-50 dark:bg-slate-900/50 rounded-xl p-3">
+                    {req.message}
+                  </p>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }

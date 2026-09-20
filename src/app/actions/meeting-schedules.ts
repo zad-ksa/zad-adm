@@ -9,6 +9,7 @@ export async function createMeetingSchedule(data: {
   duration: number;
   availableDays: any;
   slug: string;
+  allowAlternativeRequest?: boolean;
 }) {
   try {
     const session = await getSession();
@@ -23,6 +24,7 @@ export async function createMeetingSchedule(data: {
         slug: data.slug,
         duration: data.duration,
         availableDays: data.availableDays,
+        allowAlternativeRequest: !!data.allowAlternativeRequest,
         createdById: session.id,
       }
     });
@@ -43,7 +45,8 @@ export async function getMeetingSchedules() {
       where: { createdById: session.id },
       orderBy: { createdAt: 'desc' },
       include: {
-        bookings: true
+        bookings: true,
+        alternativeRequests: true,
       }
     });
 
@@ -95,6 +98,34 @@ export async function bookMeetingSlot(data: {
     return { success: true, booking };
   } catch (error: any) {
     if (error.code === 'P2002') return { error: "عذراً، تم حجز هذا الموعد للتو" };
+    return { error: error.message };
+  }
+}
+
+export async function submitAlternativeRequest(data: {
+  scheduleId: string;
+  charityName: string;
+  message: string;
+  contactPhone?: string;
+}) {
+  try {
+    const schedule = await prisma.meetingSchedule.findUnique({ where: { id: data.scheduleId } });
+    if (!schedule || !schedule.isActive || !schedule.allowAlternativeRequest) {
+      return { error: "هذا الخيار غير متاح لهذا الجدول" };
+    }
+
+    const request = await prisma.meetingAlternativeRequest.create({
+      data: {
+        scheduleId: data.scheduleId,
+        charityName: data.charityName,
+        message: data.message,
+        contactPhone: data.contactPhone || null,
+      }
+    });
+
+    revalidatePath("/main/charity-meetings");
+    return { success: true, request };
+  } catch (error: any) {
     return { error: error.message };
   }
 }

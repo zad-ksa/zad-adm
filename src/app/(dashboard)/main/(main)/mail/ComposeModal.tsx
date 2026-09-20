@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import Select from "@/components/console/Select";
 import dynamic from "next/dynamic";
 import { X, Paperclip, Send, Loader2, AlertTriangle, Minus, Maximize2, Trash2, Check, RotateCw, Users, Building2, Undo2, ShieldCheck } from "lucide-react";
 import {
@@ -575,26 +576,16 @@ export default function ComposeModal({ isOpen, onClose, employees, onSuccess, re
           </div>
         ) : null;
       })}
-      <select
-        className="flex-1 bg-transparent border-none focus:ring-0 outline-none text-[length:var(--mail-fs-nav)] min-w-[150px] text-slate-700 dark:text-slate-200 [&>option]:dark:bg-slate-800"
-        value=""
-        onChange={(e) => {
-          if (e.target.value && !selectedIds.includes(e.target.value)) {
-            setIds([...selectedIds, e.target.value]);
-          }
-        }}
-      >
-        <option value="" disabled>
-          {selectedIds.length === 0 ? placeholder : "إضافة موظف..."}
-        </option>
-        {employees
+      <Select
+        variant="soft"
+        onSelect={(id) => setIds([...selectedIds, id])}
+        placeholder={selectedIds.length === 0 ? placeholder : "إضافة موظف…"}
+        emptyLabel="لا مزيد من الموظفين"
+        options={employees
           .filter((e) => !selectedIds.includes(e.id))
-          .map((e) => (
-            <option key={e.id} value={e.id}>
-              {e.name} - {roleLabels[e.role] || e.role}
-            </option>
-          ))}
-      </select>
+          .map((e) => ({ value: e.id, label: e.name, hint: roleLabels[e.role] || e.role }))}
+        className="flex-1 min-w-[150px]"
+      />
     </div>
   );
 
@@ -757,20 +748,14 @@ export default function ComposeModal({ isOpen, onClose, employees, onSuccess, re
                       زاد | {availableServices[0]}
                     </span>
                   ) : (
-                    <select
+                    <Select
+                      variant="soft"
                       value={serviceName}
-                      onChange={(e) => setServiceName(e.target.value)}
-                      className="flex-1 bg-transparent border-none focus:ring-0 outline-none text-[length:var(--mail-fs-nav)] text-slate-700 dark:text-slate-200 [&>option]:dark:bg-slate-800"
-                    >
-                      <option value="" disabled>
-                        اختر الخدمة التي يتبع لها البريد…
-                      </option>
-                      {availableServices.map((name) => (
-                        <option key={name} value={name}>
-                          {name}
-                        </option>
-                      ))}
-                    </select>
+                      onSelect={setServiceName}
+                      placeholder="اختر الخدمة التي يتبع لها البريد…"
+                      options={availableServices.map((name) => ({ value: name, label: name }))}
+                      className="flex-1"
+                    />
                   )}
                 </div>
               </div>
@@ -805,31 +790,21 @@ export default function ComposeModal({ isOpen, onClose, employees, onSuccess, re
                         </div>
                       );
                     })}
-                    <select
-                      className="flex-1 bg-transparent border-none focus:ring-0 outline-none text-[length:var(--mail-fs-nav)] min-w-[150px] text-slate-700 dark:text-slate-200 [&>option]:dark:bg-slate-800"
-                      value=""
-                      onChange={(e) => {
-                        if (e.target.value && !charityIds.includes(e.target.value)) {
-                          setCharityIds([...charityIds, e.target.value]);
-                        }
-                      }}
-                    >
-                      <option value="" disabled>
-                        {charityList.length === 0
-                          ? "لا جمعيات مسنَدة إليك"
-                          : charityIds.length === 0
-                            ? "اختر الجمعية…"
-                            : "إضافة جمعية…"}
-                      </option>
-                      {charityList
+                    <Select
+                      variant="soft"
+                      onSelect={(id) => setCharityIds([...charityIds, id])}
+                      placeholder={charityIds.length === 0 ? "اختر الجمعية…" : "إضافة جمعية…"}
+                      emptyLabel="لا جمعيات مسنَدة إليك"
+                      options={charityList
                         .filter((c) => !charityIds.includes(c.id))
-                        .map((c) => (
-                          <option key={c.id} value={c.id}>
-                            {c.name}
-                            {serviceName ? ` — ${recipientsLabel(c.counts[serviceName] ?? 0)}` : ""}
-                          </option>
-                        ))}
-                    </select>
+                        .map((c) => ({
+                          value: c.id,
+                          label: c.name,
+                          // عدد من سيستلم تلميحٌ بجانب الاسم، لا نصٌّ ملصوقٌ به.
+                          hint: serviceName ? recipientsLabel(c.counts[serviceName] ?? 0) : undefined,
+                        }))}
+                      className="flex-1 min-w-[150px]"
+                    />
                   </div>
                   {charityIds.length > 1 && (
                     // يُقال صراحةً: فلا يظنّ المرسِل أنه بعث رسالةً واحدة يرى

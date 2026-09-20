@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
+import Select from "@/components/console/Select";
 import dynamic from "next/dynamic";
 import {
   X,
@@ -284,30 +285,16 @@ export default function PortalComposeModal({
                           </span>
                         ) : null;
                       })}
-                      <select
-                        value=""
-                        onChange={(e) => {
-                          if (e.target.value && !toIds.includes(e.target.value)) {
-                            setToIds([...toIds, e.target.value]);
-                          }
-                        }}
-                        className="flex-1 bg-transparent border-none outline-none text-sm min-w-[150px] text-slate-700 dark:text-slate-200 [&>option]:dark:bg-slate-800"
-                      >
-                        <option value="" disabled>
-                          {colleagues.length === 0
-                            ? "لا زملاء في هذه الجمعية بعد"
-                            : toIds.length === 0
-                              ? "اختر المستلمين…"
-                              : "إضافة مستلم…"}
-                        </option>
-                        {colleagues
+                      <Select
+                        variant="soft"
+                        onSelect={(id) => setToIds([...toIds, id])}
+                        placeholder={toIds.length === 0 ? "اختر المستلمين…" : "إضافة مستلم…"}
+                        emptyLabel="لا زملاء في هذه الجمعية بعد"
+                        options={colleagues
                           .filter((c) => !toIds.includes(c.id))
-                          .map((c) => (
-                            <option key={c.id} value={c.id}>
-                              {c.name}
-                            </option>
-                          ))}
-                      </select>
+                          .map((c) => ({ value: c.id, label: c.name }))}
+                        className="flex-1 min-w-[150px]"
+                      />
                     </div>
                   </div>
                 ) : (
@@ -324,20 +311,14 @@ export default function PortalComposeModal({
                           زاد | {services[0]}
                         </span>
                       ) : (
-                        <select
+                        <Select
+                          variant="soft"
                           value={serviceName}
-                          onChange={(e) => setServiceName(e.target.value)}
-                          className="flex-1 bg-transparent border-none outline-none text-sm text-slate-700 dark:text-slate-200 [&>option]:dark:bg-slate-800"
-                        >
-                          <option value="" disabled>
-                            اختر الخدمة…
-                          </option>
-                          {services.map((name) => (
-                            <option key={name} value={name}>
-                              {name}
-                            </option>
-                          ))}
-                        </select>
+                          onSelect={setServiceName}
+                          placeholder="اختر الخدمة…"
+                          options={services.map((name) => ({ value: name, label: name }))}
+                          className="flex-1"
+                        />
                       )}
                     </div>
                   </div>

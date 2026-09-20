@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { CHARITY_ATTENDANCE_ENABLED } from "@/lib/featureFlags";
+import { CHARITY_ATTENDANCE_ENABLED, CHARITY_MAIL_ENABLED } from "@/lib/featureFlags";
 import { FolderOpen,
   Building2,
   ChevronRight,
@@ -208,7 +208,11 @@ export default function CharitySidebar({
     { id: "templates", label: "مكتبة النماذج", href: `/portal/${encodeURIComponent(charityName)}/templates`, exact: true, icon: FolderOpen, show: true },
     // بلا صلاحية كذلك: لكل عضوٍ صندوق بريد يصله سواء فُتح التبويب أو لم يُفتح،
     // وإخفاؤه لا يمنع وصول البريد بل يمنع قراءته.
-    { id: "mail", label: "البريد", href: `/portal/${encodeURIComponent(charityName)}/mail`, exact: true, icon: Mail, show: true, badge: unreadMail },
+    // البريد مبنيٌّ ومُقفَل بعلَم CHARITY_MAIL_ENABLED: يظهر «قريباً» بلا رابط،
+    // وصفحته تردّ من يكتب عنوانها. ويعود تبويباً عاملاً بقلب العلَم وحده.
+    CHARITY_MAIL_ENABLED
+      ? { id: "mail", label: "البريد", href: `/portal/${encodeURIComponent(charityName)}/mail`, exact: true, icon: Mail, show: true, badge: unreadMail }
+      : { id: "mail", label: "البريد", href: "#", comingSoon: true, icon: Mail, show: true },
     // No permission gates these two: they lead nowhere yet. Adding a checkbox
     // for a page that does not exist would tell whoever grants it that they had
     // controlled access to something — the mistake documented on `view_hr`.

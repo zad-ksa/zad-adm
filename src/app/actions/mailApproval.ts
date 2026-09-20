@@ -7,6 +7,7 @@ import { requireEmployee, requirePermission } from "@/lib/guards";
 import { getAssignedCharityIds } from "@/lib/access";
 import { listServiceNames } from "@/app/actions/serviceAccess";
 import { serviceConversationRecipients, zadServiceTeam } from "@/lib/serviceTeams";
+import { CHARITY_MAIL_ENABLED } from "@/lib/featureFlags";
 
 /**
  * تعميد البريد الصادر من زاد إلى الجمعيات.
@@ -28,6 +29,7 @@ import { serviceConversationRecipients, zadServiceTeam } from "@/lib/serviceTeam
  * إلى رفضٍ عند الحفظ.
  */
 export async function getMailApproverSettings() {
+  if (!CHARITY_MAIL_ENABLED) throw new Error("غير مصرح");
   await requirePermission("manage_mail_settings");
 
   const [services, employees, approvers] = await Promise.all([
@@ -51,6 +53,7 @@ export async function getMailApproverSettings() {
 
 /** استبدالٌ كامل لمعمِّدي خدمةٍ واحدة — القائمة المعروضة هي القائمة المحفوظة. */
 export async function setMailApprovers(serviceName: string, employeeIds: string[]) {
+  if (!CHARITY_MAIL_ENABLED) throw new Error("غير مصرح");
   await requirePermission("manage_mail_settings");
 
   const name = (serviceName ?? "").trim();
@@ -144,6 +147,10 @@ export async function getNoApproverMessage(serviceName: string) {
  * `mine`: بريدي أنا الموقوف عند غيري — لأعرف أين وقف بدل أن أظنّه أُرسل.
  */
 export async function getPendingApprovalMails() {
+  // مُقفَل: قائمةٌ فارغة لا خطأ — الصفحة تُحمّلها مع كل فتحٍ للبريد الداخلي،
+  // وخطأٌ هنا يُسقط شاشةً تعمل.
+  if (!CHARITY_MAIL_ENABLED) return { toApprove: [], mine: [] };
+
   const user = await requireEmployee();
 
   const services = await getMyApproverServices();
@@ -179,6 +186,7 @@ export async function getPendingApprovalMails() {
 
 /** المعمِّد يتصرف في هذه الرسالة؟ نطاقه خدمته وجمعياته المسنَدة. */
 async function requireApprovalAuthority(mailId: string) {
+  if (!CHARITY_MAIL_ENABLED) throw new Error("غير مصرح");
   const user = await requireEmployee();
 
   const mail = await prisma.internalMail.findUnique({

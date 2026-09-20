@@ -8,6 +8,7 @@ import { getEmployeeServiceNames, listServiceNames } from "@/app/actions/service
 import { getAssignedCharityIds } from "@/lib/access";
 import { getNoApproverMessage, resolveApprovalRoute } from "@/app/actions/mailApproval";
 import { isDelivered, serviceConversationRecipients } from "@/lib/serviceTeams";
+import { CHARITY_MAIL_ENABLED } from "@/lib/featureFlags";
 
 async function getAuthenticatedUser() {
   const session = await getSession();
@@ -786,6 +787,7 @@ export async function getUnreadCount() {
  * والقائمتان مقصورتان: الجمعيات على المسنَدة إليه، والخدمات على الممنوحة له.
  */
 export async function getCharityMailOptions() {
+  if (!CHARITY_MAIL_ENABLED) throw new Error("غير مصرح");
   const user = await getAuthenticatedUser();
   if (user.userType === "CHARITY_USER") throw new Error("غير مصرح");
 
@@ -867,6 +869,7 @@ export async function sendMailToCharities(data: {
   attachments?: AttachmentInput[];
   draftId?: string;
 }) {
+  if (!CHARITY_MAIL_ENABLED) throw new Error("غير مصرح");
   const user = await getAuthenticatedUser();
   if (user.userType === "CHARITY_USER") throw new Error("غير مصرح");
 
@@ -1001,6 +1004,7 @@ export async function replyToCharityMail(data: {
   attachments?: AttachmentInput[];
   draftId?: string;
 }) {
+  if (!CHARITY_MAIL_ENABLED) throw new Error("غير مصرح");
   const user = await getAuthenticatedUser();
   if (user.userType === "CHARITY_USER") throw new Error("غير مصرح");
 

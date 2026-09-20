@@ -15,6 +15,7 @@ import { useRoleLabels } from "@/components/RoleLabelsProvider";
 import { isHtmlBody, htmlToPlainText } from "./mailUtils";
 import { uploadFile } from "@/lib/clientUpload";
 import { maxBytesFor, maxLabelFor } from "@/lib/uploadPurposes";
+import { CHARITY_MAIL_ENABLED } from "@/lib/featureFlags";
 
 const MailRichTextEditor = dynamic(() => import("./MailRichTextEditor"), {
   ssr: false,
@@ -157,8 +158,9 @@ export default function ComposeModal({ isOpen, onClose, employees, onSuccess, re
   const [showCc, setShowCc] = useState((draft?.draftCcIds?.length || 0) > 0 || initialRecipients.cc.length > 0);
   const [showBcc, setShowBcc] = useState((draft?.draftBccIds?.length || 0) > 0);
 
-  // الردّ وإعادة التوجيه يتبعان رسالتهما، فلا وجه لتبديل الجهة فيهما.
-  const canAddressCharities = !replyTo && !forwardMail;
+  // الردّ وإعادة التوجيه يتبعان رسالتهما، فلا وجه لتبديل الجهة فيهما. والبريد
+  // إلى الجمعيات مُقفَل بعلَمه، فلا يظهر مبدِّل الجهة أصلاً.
+  const canAddressCharities = CHARITY_MAIL_ENABLED && !replyTo && !forwardMail;
   // ردٌّ في محادثة خدمةٍ مع جمعية — على رسالةٍ منها أو من زميلٍ في زاد، أو ردٌّ
   // أرجعه المعمِّد فعاد مسودة. الطرف مُثبَّت: فريق الخدمة في الجمعية، وزملاء
   // الكاتب نسخة. فلا مُنتقيات ولا نسخ يدوية.

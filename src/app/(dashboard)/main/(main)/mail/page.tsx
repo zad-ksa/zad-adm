@@ -5,6 +5,7 @@ import MailClient from "./MailClient";
 import { getInbox, getSentMails, getDrafts, getStarredMails, getTrashMails } from "@/app/actions/mail";
 import { getPendingApprovalMails } from "@/app/actions/mailApproval";
 import { hasPermission } from "@/lib/permissions";
+import { CHARITY_MAIL_ENABLED } from "@/lib/featureFlags";
 
 const PAGE_SIZE = 20;
 
@@ -68,11 +69,10 @@ export default async function MailPage(props: {
   // `tab` here only decides what the FIRST paint shows. Switching folders
   // afterwards is handled entirely in the client (see handleTabChange) and does
   // not re-run this page, so there is nothing to key on.
-  const canManageMailSettings = hasPermission(
-    session.role,
-    session.permissions || [],
-    "manage_mail_settings"
-  );
+  // تبويبا التعميد وإعداداته لا معنى لهما ما دام بريد الجمعيات مُقفَلاً.
+  const canManageMailSettings =
+    CHARITY_MAIL_ENABLED &&
+    hasPermission(session.role, session.permissions || [], "manage_mail_settings");
 
   return (
     <MailClient
@@ -80,7 +80,7 @@ export default async function MailPage(props: {
       employees={employees}
       initialTab={tab}
       initialMails={initialMails}
-      showApprovals={pending.toApprove.length > 0 || pending.mine.length > 0}
+      showApprovals={CHARITY_MAIL_ENABLED && (pending.toApprove.length > 0 || pending.mine.length > 0)}
       pendingCount={pending.toApprove.length}
       canManageMailSettings={canManageMailSettings}
     />

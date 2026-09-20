@@ -6,6 +6,7 @@ import { sanitizeMailHtml } from "@/lib/sanitizeMail";
 import { requireCharityMembership } from "@/lib/guards";
 import { hasCharityPermission } from "@/lib/charityPermissions";
 import { isDelivered, serviceConversationRecipients } from "@/lib/serviceTeams";
+import { CHARITY_MAIL_ENABLED } from "@/lib/featureFlags";
 
 type AttachmentInput = { fileUrl: string; fileName: string; fileSize?: number | null };
 
@@ -26,6 +27,10 @@ type AttachmentInput = { fileUrl: string; fileName: string; fileSize?: number | 
  * ما تراه عينه، فهو المرجع.
  */
 async function requirePortalContext(charityName: string) {
+  // كل فعلٍ في هذا الملف يمرّ من هنا، فقفلٌ واحدٌ يكفي: لا يُفتح البريد بنداءٍ
+  // مباشر ما دام العلَم مطفأً.
+  if (!CHARITY_MAIL_ENABLED) throw new Error("غير مصرح");
+
   const name = decodeURIComponent(charityName);
   const charity = await prisma.charity.findUnique({
     where: { name },

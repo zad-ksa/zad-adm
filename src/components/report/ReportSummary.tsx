@@ -1,6 +1,7 @@
 ﻿"use client";
 
 import React, { useEffect, useState } from 'react';
+import { Spinner } from "@/components/console/ui";
 import { Axis } from './types';
 import { calcCharityPerf, calcAxisPerf, getReportClassification, isCharityPostponed, isAxisPostponed } from './logic';
 
@@ -100,7 +101,7 @@ export default function ReportSummary({ axes, quarter, year = new Date().getFull
             {mounted ? (
               <GaugeChart totalPerf={totalPerf} isPostponed={isPostponed} />
             ) : (
-              <div className="w-24 h-24 rounded-full border-4 border-slate-100 border-t-primary animate-spin" />
+              <Spinner size={96} />
             )}
           </div>
 

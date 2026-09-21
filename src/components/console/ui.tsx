@@ -312,17 +312,33 @@ export function Dot() {
 // أفقياً على الهاتف. وكلها هنا بلا حالة ولا تأثيرات، فتبقى قابلة للعرض على
 // الخادم ولا تُحوِّل صفحةً إلى مكوّن عميل.
 
-/** دائرة انتظار. المقاس بالبكسل لا بالأصناف، فلا يتأثر بتصغير الجذر في الجوال. */
-export function Spinner({ size = 16, className }: { size?: number; className?: string }) {
+/**
+ * دائرة انتظار. المقاس بالبكسل لا بالأصناف، فلا يتأثر بتصغير الجذر في الجوال.
+ *
+ * و`tone` ضرورةٌ لا زينة: الدائرة داخل زرٍّ بلون الهوية تختفي إن كانت بلونه،
+ * فتُقلب بيضاء. وكل حلقةٍ مرسومة يدوياً في المشروع كانت تحلّ هذا بنفسها.
+ */
+const SPINNER_TONE = {
+  brand: "border-slate-200 border-t-primary dark:border-slate-700 dark:border-t-teal-300",
+  onPrimary: "border-white/40 border-t-white",
+  muted: "border-slate-200 border-t-slate-400 dark:border-slate-700 dark:border-t-slate-500",
+} as const;
+
+export function Spinner({
+  size = 16,
+  tone = "brand",
+  className,
+}: {
+  size?: number;
+  tone?: keyof typeof SPINNER_TONE;
+  className?: string;
+}) {
   return (
     <span
       role="status"
       aria-label="جارٍ التحميل"
       style={{ width: size, height: size, borderWidth: Math.max(2, Math.round(size / 8)) }}
-      className={cx(
-        "inline-block animate-spin rounded-full border-slate-200 border-t-primary dark:border-slate-700 dark:border-t-teal-300",
-        className
-      )}
+      className={cx("inline-block animate-spin rounded-full", SPINNER_TONE[tone], className)}
     />
   );
 }

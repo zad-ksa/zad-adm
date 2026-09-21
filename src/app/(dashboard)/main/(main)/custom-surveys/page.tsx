@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { Spinner } from "@/components/console/ui";
 import Link from "next/link";
 import { Plus, Edit2, Trash2, Eye, Copy, CheckCircle, Printer, RefreshCw, Files, LayoutGrid, List, AlertTriangle, X } from "lucide-react";
 import CircularLoader from "@/components/CircularLoader";
@@ -260,7 +261,7 @@ export default function SurveysPage() {
             className="bg-primary text-white px-5 py-2.5 rounded-xl font-bold flex items-center gap-2 hover:bg-primary/90 transition-all shadow-lg shadow-primary/20 disabled:opacity-50"
           >
             {isCreating ? (
-              <div className="w-5 h-5 border-2 border-white/50 border-t-white rounded-full animate-spin"></div>
+              <Spinner size={20} tone="onPrimary" />
             ) : (
               <Plus className="w-5 h-5" />
             )}

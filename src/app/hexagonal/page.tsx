@@ -1,6 +1,7 @@
 ﻿"use client";
 
 import { useState, useEffect } from "react";
+import { Spinner } from "@/components/console/ui";
 import Select from "@/components/console/Select";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
@@ -715,7 +716,7 @@ export default function HexagonalSurvey() {
                 }`}
             >
               <div className="text-center transform transition-all duration-350 scale-100">
-                <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+                <Spinner size={48} className="mx-auto mb-4" />
                 <h2 className="text-xl font-bold text-slate-800">جاري الانتقال للسؤال التالي...</h2>
               </div>
             </div>
@@ -785,7 +786,7 @@ export default function HexagonalSurvey() {
                       : "bg-slate-200 text-slate-400 cursor-not-allowed"
                     }`}
                 >
-                  {isSubmitting && <div className="w-5 h-5 border-2 border-white/50 border-t-white rounded-full animate-spin" />}
+                  {isSubmitting && <Spinner size={20} tone="onPrimary" />}
                   <span>{isLastQuestion ? "إنهاء وإرسال التحليل" : "السؤال التالي"}</span>
                   {!isSubmitting && <ArrowLeft className="w-5 h-5 transition-transform group-hover:-translate-x-1" />}
                 </button>

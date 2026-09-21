@@ -1,6 +1,7 @@
 ﻿"use client";
 
 import React, { useState, useEffect } from 'react';
+import { Spinner } from "@/components/console/ui";
 import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts';
 import { Axis, ReportData } from './types';
 import { calcAxisPerf, isAxisPostponed, getReportClassification } from './logic';
@@ -86,7 +87,7 @@ export default function ReportDimensionsChart({ axes, quarter, reportData, setRe
                       </PieChart>
                     </ResponsiveContainer>
                   ) : (
-                    <div className="w-24 h-24 rounded-full border-4 border-slate-100 border-t-indigo-500 animate-spin" />
+                    <Spinner size={96} />
                   )}
 
                   <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">

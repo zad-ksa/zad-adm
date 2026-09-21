@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { Spinner } from "@/components/console/ui";
 import { useRouter } from "next/navigation";
 import { Eye, Award, CheckCircle, ChevronLeft, ChevronRight, Target, Users, BookOpen, ShieldAlert, Sparkles, AlertTriangle, Printer } from "lucide-react";
 import ProgressBar from "@/components/ProgressBar";
@@ -228,7 +229,7 @@ export default function VisionMissionSurveyPage() {
   if (loading) {
     return (
       <div className="min-h-screen flex flex-col justify-center items-center bg-slate-50 dark:bg-slate-900 transition-colors">
-        <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin mb-4" />
+        <Spinner size={48} className="mb-4" />
         <p className="text-slate-500 dark:text-slate-400 font-bold">جاري تحميل الاستبيان...</p>
       </div>
     );
@@ -787,7 +788,7 @@ export default function VisionMissionSurveyPage() {
                   disabled={!isStepValid() || isSubmitting}
                   className="bg-primary hover:bg-primary/95 disabled:bg-slate-200 disabled:text-slate-400 text-white font-bold px-8 py-3 rounded-xl transition-all flex items-center justify-center gap-2 cursor-pointer shadow-md"
                 >
-                  {isSubmitting && <div className="w-5 h-5 border-2 border-white/50 border-t-white rounded-full animate-spin" />}
+                  {isSubmitting && <Spinner size={20} tone="onPrimary" />}
                   إنهاء وإرسال الاستبيان
                 </button>
               </div>

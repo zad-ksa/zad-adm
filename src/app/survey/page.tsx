@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { Spinner } from "@/components/console/ui";
 import { useRouter } from "next/navigation";
 import ProgressBar from "@/components/ProgressBar";
 import QuestionCard from "@/components/QuestionCard";
@@ -151,7 +152,7 @@ export default function Home() {
               }`}
             >
               <div className="text-center transform transition-all duration-300 scale-100">
-                <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+                <Spinner size={48} className="mx-auto mb-4" />
                 <h2 className="text-xl font-bold text-slate-800">جاري الانتقال للمحور التالي...</h2>
               </div>
             </div>
@@ -200,7 +201,7 @@ export default function Home() {
                       : "bg-slate-200 text-slate-400 cursor-not-allowed"
                   }`}
                 >
-                  {isSubmitting && <div className="w-5 h-5 border-2 border-white/50 border-t-white rounded-full animate-spin" />}
+                  {isSubmitting && <Spinner size={20} tone="onPrimary" />}
                   {isLastSection ? "إنهاء وإرسال التقييم" : "المحور التالي"}
                 </button>
               </div>

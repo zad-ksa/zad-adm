@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, use } from "react";
+import { Spinner } from "@/components/console/ui";
 import { useRouter } from "next/navigation";
 import { createSurveyUploadTicket } from "@/app/actions/surveyUpload";
 import { UploadCloud, CheckCircle2, AlertCircle, X, Paperclip } from "lucide-react";
@@ -129,7 +130,7 @@ export default function CustomSurveyPage({ params }: { params: Promise<{ id: str
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-50">
-        <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+        <Spinner size={48} />
       </div>
     );
   }
@@ -439,7 +440,7 @@ export default function CustomSurveyPage({ params }: { params: Promise<{ id: str
                             <label className="flex flex-col items-center justify-center gap-3 border-2 border-dashed rounded-2xl p-8 cursor-pointer transition-all border-slate-300 hover:border-primary/50 hover:bg-primary/5 text-slate-500 hover:text-primary">
                               {uploadingFiles[question.id] ? (
                                 <div className="flex flex-col items-center gap-2 text-primary font-bold">
-                                  <div className="w-8 h-8 border-3 border-primary/30 border-t-primary rounded-full animate-spin" />
+                                  <Spinner size={32} />
                                   <span>جاري رفع الملفات...</span>
                                 </div>
                               ) : (
@@ -489,7 +490,7 @@ export default function CustomSurveyPage({ params }: { params: Promise<{ id: str
                           <label className="flex items-center justify-center gap-2 border-2 border-dashed rounded-xl p-6 cursor-pointer transition-colors border-slate-300 hover:border-primary/50 hover:bg-primary/5 text-slate-500 hover:text-primary">
                             {uploadingFiles[question.id] ? (
                               <div className="flex items-center gap-2 text-primary font-bold">
-                                <div className="w-5 h-5 border-2 border-primary/30 border-t-primary rounded-full animate-spin" /> جاري الرفع...
+                                <Spinner size={20} /> جاري الرفع...
                               </div>
                             ) : (
                               <>
@@ -525,7 +526,7 @@ export default function CustomSurveyPage({ params }: { params: Promise<{ id: str
                   allCurrentRequiredAnswered && !isSubmitting ? "bg-primary hover:bg-primary/95" : "bg-slate-200 text-slate-400 cursor-not-allowed"
                 }`}
               >
-                {isSubmitting && <div className="w-5 h-5 border-2 border-white/50 border-t-white rounded-full animate-spin" />}
+                {isSubmitting && <Spinner size={20} tone="onPrimary" />}
                 {isLastSection ? "إنهاء وإرسال" : "المحور التالي"}
               </button>
             </div>

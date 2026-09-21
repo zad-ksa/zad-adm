@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState, useTransition } from "react";
+import Select from "@/components/console/Select";
 import { useRouter } from "next/navigation";
 import {
   AlertTriangle,
@@ -637,18 +638,14 @@ export default function StaffManagerClient({
 
             {/* Title */}
             <Field label="المسمى الوظيفي" className="col-span-12 sm:col-span-4">
-              <select
+              <Select
+                variant="soft"
                 value={form.title}
-                onChange={(e) => setForm({ ...form, title: e.target.value })}
-                className={inputClass}
-                style={fs.body}
-              >
-                {titleOptions.map((t) => (
-                  <option key={t.id} value={t.id}>
-                    {t.label}
-                  </option>
-                ))}
-              </select>
+                onSelect={(v) => setForm({ ...form, title: v })}
+                placeholder="اختر المسمى"
+                options={titleOptions.map((t) => ({ value: t.id, label: t.label }))}
+                className="w-full [&>button]:w-full [&>button]:justify-between"
+              />
             </Field>
 
             {/* The alert sits directly above the name field, which is exactly
@@ -940,18 +937,14 @@ export default function StaffManagerClient({
               />
 
               <Field label="المسمى الوظيفي" hint="مسمى تعريفي فقط، لا يمنح أي صلاحية.">
-                <select
+                <Select
+                  variant="soft"
                   value={editDraft.title}
-                  onChange={(e) => setEditDraft({ ...editDraft, title: e.target.value })}
-                  className={inputClass}
-                  style={fs.body}
-                >
-                  {titleOptions.map((t) => (
-                    <option key={t.id} value={t.id}>
-                      {t.label}
-                    </option>
-                  ))}
-                </select>
+                  onSelect={(v) => setEditDraft({ ...editDraft, title: v })}
+                  placeholder="اختر المسمى"
+                  options={titleOptions.map((t) => ({ value: t.id, label: t.label }))}
+                  className="w-full [&>button]:w-full [&>button]:justify-between"
+                />
               </Field>
 
               {actorIsAdmin && (

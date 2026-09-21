@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState, useTransition } from "react";
+import Select from "@/components/console/Select";
 import { useRouter } from "next/navigation";
 import {
   AlertTriangle,
@@ -336,19 +337,14 @@ export default function AttendanceReportClient({
       <HrCard className="p-4">
         <div className="grid grid-cols-12 gap-4 items-end">
           <Field label="الشهر" className="col-span-12 sm:col-span-3">
-            <select
+            <Select
+              variant="soft"
               value={month}
-              onChange={(e) => router.push(`?month=${e.target.value}`)}
-              className={`${inputClass} tabular-nums`}
-              style={fs.body}
-              dir="ltr"
-            >
-              {recentMonths(currentMonth, month).map((m) => (
-                <option key={m} value={m}>
-                  {m}
-                </option>
-              ))}
-            </select>
+              onSelect={(v) => router.push(`?month=${v}`)}
+              placeholder="الشهر"
+              options={recentMonths(currentMonth, month).map((m) => ({ value: m, label: m }))}
+              className="w-full [&>button]:w-full [&>button]:justify-between"
+            />
           </Field>
 
           <Field label="بحث باسم الموظف" className="col-span-12 sm:col-span-5">
@@ -629,24 +625,20 @@ export default function AttendanceReportClient({
 
             {!draft.locked && (
               <Field label="الموظف">
-                <select
+                <Select
+                  variant="soft"
                   value={draft.targetUserId}
-                  onChange={(e) =>
+                  onSelect={(v) =>
                     setDraft({
                       ...draft,
-                      targetUserId: e.target.value,
-                      userName: staff.find((m) => m.id === e.target.value)?.name ?? "",
+                      targetUserId: v,
+                      userName: staff.find((m) => m.id === v)?.name ?? "",
                     })
                   }
-                  className={inputClass}
-                  style={fs.body}
-                >
-                  {staff.map((m) => (
-                    <option key={m.id} value={m.id}>
-                      {m.name}
-                    </option>
-                  ))}
-                </select>
+                  placeholder="اختر الموظف"
+                  options={staff.map((m) => ({ value: m.id, label: m.name }))}
+                  className="w-full [&>button]:w-full [&>button]:justify-between"
+                />
               </Field>
             )}
 

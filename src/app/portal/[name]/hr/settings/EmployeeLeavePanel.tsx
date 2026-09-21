@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Select from "@/components/console/Select";
 import { CalendarHeart, Loader2, Plus, Trash2, X } from "lucide-react";
 import {
   saveEmployeeLeave,
@@ -192,32 +193,24 @@ export default function EmployeeLeavePanel({
         <div className="px-6 pb-4 space-y-3">
           <div className="grid sm:grid-cols-2 gap-3">
             <Field label="الموظف">
-              <select
+              <Select
+                variant="soft"
                 value={form.targetUserId}
-                onChange={(e) => setForm({ ...form, targetUserId: e.target.value })}
-                className={inputClass}
-                style={fs.body}
-              >
-                {staff.map((member) => (
-                  <option key={member.id} value={member.id}>
-                    {member.name}
-                  </option>
-                ))}
-              </select>
+                onSelect={(v) => setForm({ ...form, targetUserId: v })}
+                placeholder="اختر الموظف"
+                options={staff.map((member) => ({ value: member.id, label: member.name }))}
+                className="w-full [&>button]:w-full [&>button]:justify-between"
+              />
             </Field>
             <Field label="نوع الإجازة">
-              <select
+              <Select
+                variant="soft"
                 value={form.type}
-                onChange={(e) => setForm({ ...form, type: e.target.value })}
-                className={inputClass}
-                style={fs.body}
-              >
-                {Object.entries(LEAVE_TYPE_LABELS).map(([id, label]) => (
-                  <option key={id} value={id}>
-                    {label}
-                  </option>
-                ))}
-              </select>
+                onSelect={(v) => setForm({ ...form, type: v })}
+                placeholder="نوع الإجازة"
+                options={Object.entries(LEAVE_TYPE_LABELS).map(([id, label]) => ({ value: id, label }))}
+                className="w-full [&>button]:w-full [&>button]:justify-between"
+              />
             </Field>
           </div>
           <div className="grid grid-cols-2 gap-3">

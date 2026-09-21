@@ -1,6 +1,7 @@
 ﻿"use client";
 
 import { useTransition } from "react";
+import { confirmAction } from "@/components/console/confirmBus";
 import { notify } from "@/components/console/toastBus";
 import { addCharity } from "@/app/actions/charity";
 
@@ -17,8 +18,8 @@ export default function ApproveCharityButton({
 }: ApproveCharityButtonProps) {
   const [isPending, startTransition] = useTransition();
 
-  const handleApprove = () => {
-    if (confirm(`هل أنت متأكد من تفعيل وإضافة جمعية "${name}" كجمعية متعاقد معها؟`)) {
+  const handleApprove = async () => {
+    if (await confirmAction({ title: `تفعيل جمعية "${name}"؟`, message: "تُضاف كجمعية متعاقد معها.", confirmLabel: "تفعيل وإضافة", tone: "primary" })) {
       startTransition(async () => {
         const result = await addCharity({
           name,

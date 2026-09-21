@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { confirmAction } from "@/components/console/confirmBus";
 import Select from "@/components/console/Select";
 import { FileText, Plus, Trash2, CheckCircle2, AlertCircle, TrendingUp, Check, X, Calendar, Edit, HandCoins } from "lucide-react";
 import { addGrantApplication, updateGrantApplicationStatus, deleteGrantApplication } from "@/app/actions/charity";
@@ -359,8 +360,8 @@ export default function GrantsClient({
                     {grant.entityName || "جهة غير محددة"}
                   </p>
                 </div>
-                <button onClick={() => {
-                  if (confirm("هل أنت متأكد من الحذف؟")) startTransition(() => {
+                <button onClick={async () => {
+                  if (await confirmAction({ title: "حذف هذه المنحة؟", confirmLabel: "حذف" })) startTransition(() => {
                     deleteGrantApplication(grant.id, charityId);
                     setGrantApplications(prev => prev.filter(g => g.id !== grant.id));
                   });

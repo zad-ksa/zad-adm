@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { confirmAction } from "@/components/console/confirmBus";
 import { Building2, Plus, Trash2, ExternalLink, Copy, CheckCircle2, AlertCircle } from "lucide-react";
 import { addDonorAccount, deleteDonorAccount } from "@/app/actions/charity";
 
@@ -127,8 +128,8 @@ export default function DonorsClient({
             const submittedProjectsCount = grantApplications.filter((g: any) => g.entityName === account.donorName).length;
             return (
             <div key={account.id} className="bg-white dark:bg-slate-800 rounded-xl p-4 border border-slate-200 dark:border-slate-700 shadow-sm hover:shadow-md transition-shadow relative group">
-              <button onClick={() => {
-                if (confirm("هل أنت متأكد من الحذف؟")) startTransition(() => {
+              <button onClick={async () => {
+                if (await confirmAction({ title: "حذف حساب الجهة المانحة؟", confirmLabel: "حذف" })) startTransition(() => {
                   deleteDonorAccount(account.id, charityId);
                   setDonorAccounts(prev => prev.filter(a => a.id !== account.id));
                 });

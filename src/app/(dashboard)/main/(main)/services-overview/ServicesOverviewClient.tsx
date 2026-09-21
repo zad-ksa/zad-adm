@@ -1,6 +1,7 @@
 "use client";
 
 import { uploadFile } from "@/lib/clientUpload";
+import { confirmAction } from "@/components/console/confirmBus";
 import { notify } from "@/components/console/toastBus";
 import { useState, useMemo, useTransition, useRef } from "react";
 import {
@@ -370,8 +371,8 @@ function InlineTimeline({
     });
   };
 
-  const handleDelete = (id: string) => {
-    if (!confirm("حذف هذه المرحلة؟")) return;
+  const handleDelete = async (id: string) => {
+    if (!(await confirmAction({ title: "حذف هذه المرحلة؟" }))) return;
     startTransition(async () => {
       setStages(prev => prev.filter(s => s.id !== id));
       await actionDelete(dept, id);

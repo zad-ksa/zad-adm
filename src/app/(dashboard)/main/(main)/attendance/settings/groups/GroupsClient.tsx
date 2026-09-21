@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { confirmAction } from "@/components/console/confirmBus";
 import Select from "@/components/console/Select";
 import {
   Check,
@@ -266,10 +267,13 @@ export default function GroupsClient({
                           className="h-7 w-7 rounded-lg text-slate-400 hover:text-primary hover:bg-primary/10 transition-colors inline-flex items-center justify-center"
                           title="اجعلها الافتراضية"
                           disabled={busy}
-                          onClick={() => {
-                            const ok = window.confirm(
-                              `تعيين «${g.name}» افتراضية سينقل ${unassignedCount} موظفاً غير مُسنَد إلى دوامها (${formatClock12(g.startTime)} – ${formatClock12(g.endTime)}). أيام الحضور الماضية لا تتغيّر. متابعة؟`
-                            );
+                          onClick={async () => {
+                            const ok = await confirmAction({
+                              title: `تعيين «${g.name}» افتراضية؟`,
+                              message: `سينقل ${unassignedCount} موظفاً غير مُسنَد إلى دوامها (${formatClock12(g.startTime)} – ${formatClock12(g.endTime)}). أيام الحضور الماضية لا تتغيّر.`,
+                              confirmLabel: "تعيينها افتراضية",
+                              tone: "primary",
+                            });
                             if (ok) run(() => setDefaultShiftGroup(g.id), "عُيّنت المجموعة الافتراضية");
                           }}
                         >

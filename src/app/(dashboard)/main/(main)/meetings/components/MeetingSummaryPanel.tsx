@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { confirmAction } from "@/components/console/confirmBus";
 import { notify } from "@/components/console/toastBus";
 import Select from "@/components/console/Select";
 import {
@@ -47,8 +48,17 @@ export default function MeetingSummaryPanel({
   async function loadSummary(force = false) {
     if (loading) return;
     if (extracted && !force) return;
-    if (force && localTasks.length > 0 &&
-        !confirm("سيتم إعادة تحليل المحضر بالذكاء الاصطناعي واستبدال المهام الحالية. هل تريد المتابعة؟")) return;
+    if (
+      force &&
+      localTasks.length > 0 &&
+      !(await confirmAction({
+        title: "إعادة تحليل المحضر؟",
+        message: "يُعاد التحليل بالذكاء الاصطناعي وتُستبدل المهام الحالية.",
+        confirmLabel: "إعادة التحليل",
+        tone: "primary",
+      }))
+    )
+      return;
     setLoading(true);
     setExtractError("");
     try {

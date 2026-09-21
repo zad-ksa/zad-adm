@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { confirmAction } from "@/components/console/confirmBus";
 import { Plus, Calendar, Clock, Copy, CheckCircle2, Trash2, Power, ExternalLink, MessageSquareText } from "lucide-react";
 import { createMeetingSchedule, toggleMeetingScheduleActive, deleteMeetingSchedule } from "@/app/actions/meeting-schedules";
 import CreateMeetingScheduleModal from "./CreateMeetingScheduleModal";
@@ -38,7 +39,7 @@ export default function CharityMeetingsClient({
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm("هل أنت متأكد من حذف هذا الجدول؟ ستفقد جميع المواعيد المحجوزة.")) return;
+    if (!(await confirmAction({ title: "هل أنت متأكد من حذف هذا الجدول؟ ستفقد جميع المواعيد المحجوزة." }))) return;
     const res = await deleteMeetingSchedule(id);
     if (res.success) {
       setSchedules(prev => prev.filter(s => s.id !== id));

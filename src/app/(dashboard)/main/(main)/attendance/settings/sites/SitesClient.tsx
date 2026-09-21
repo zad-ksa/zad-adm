@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { confirmAction } from "@/components/console/confirmBus";
 import {
   Check,
   Crosshair,
@@ -423,14 +424,13 @@ export default function SitesClient({ sites }: { sites: Site[] }) {
                       className="h-7 w-7 rounded-lg text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-900/20 transition-colors inline-flex items-center justify-center"
                       title="تعطيل الموقع"
                       disabled={busy}
-                      onClick={() => {
-                        if (
-                          window.confirm(
-                            `تعطيل «${s.name}»؟ لن يُقبل تحضير من نطاقه بعد ذلك. السجلات السابقة تبقى كما هي.`
-                          )
-                        ) {
-                          run(() => deleteZadWorkSite(s.id), "عُطّل الموقع");
-                        }
+                      onClick={async () => {
+                        const ok = await confirmAction({
+                          title: `تعطيل «${s.name}»؟`,
+                          message: "لن يُقبل تحضير من نطاقه بعد ذلك. السجلات السابقة تبقى كما هي.",
+                          confirmLabel: "تعطيل الموقع",
+                        });
+                        if (ok) run(() => deleteZadWorkSite(s.id), "عُطّل الموقع");
                       }}
                     >
                       <Trash2 className="w-3.5 h-3.5" />

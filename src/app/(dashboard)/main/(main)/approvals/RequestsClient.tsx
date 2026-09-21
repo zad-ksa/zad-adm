@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition, useEffect, useCallback, useMemo } from "react";
+import { confirmAction } from "@/components/console/confirmBus";
 import { notify } from "@/components/console/toastBus";
 import Select from "@/components/console/Select";
 import {
@@ -532,7 +533,7 @@ export default function RequestsClient({ requests: initial, hasActiveChain, canR
   }
 
   async function handleDelete(id: string) {
-    if (!confirm("هل تريد حذف هذا الطلب؟")) return;
+    if (!(await confirmAction({ title: "هل تريد حذف هذا الطلب؟" }))) return;
     await handleAction(() => deleteRequest(id));
   }
 

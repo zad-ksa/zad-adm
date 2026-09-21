@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useTransition } from "react";
+import { confirmAction } from "@/components/console/confirmBus";
 import Select from "@/components/console/Select";
 import Link from "next/link";
 import {
@@ -151,7 +152,7 @@ export default function NewsFilterClient({
   };
 
   const handleDeleteNews = async (newsId: string) => {
-    if (!confirm("هل أنت متأكد من رغبتك في حذف هذا الخبر؟")) return;
+    if (!(await confirmAction({ title: "هل أنت متأكد من رغبتك في حذف هذا الخبر؟" }))) return;
     startTransition(async () => {
       const res = await deleteNewsAction(newsId);
       if (res.error) { showNotification("error", res.error); }

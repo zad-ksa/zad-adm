@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback } from "react";
+import { promptAction } from "@/components/console/promptBus";
 import Select from "@/components/console/Select";
 import { useEditor, useEditorState, EditorContent, type Editor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
@@ -108,10 +109,15 @@ function EditorToolbar({ editor }: { editor: Editor }) {
   // Link is the one control that needs a value, and a modal for it would be
   // heavier than the feature deserves. The prompt is seeded with the existing
   // href so the same button edits as well as creates.
-  const handleLink = useCallback(() => {
+  const handleLink = useCallback(async () => {
     const previous = editor.getAttributes("link").href || "";
-    const input = window.prompt("رابط الصفحة:", previous);
-    if (input === null) return; // cancelled — leave the selection alone
+    const input = await promptAction({
+      title: "رابط الصفحة",
+      placeholder: "example.com",
+      defaultValue: previous,
+      confirmLabel: previous ? "تحديث الرابط" : "إضافة الرابط",
+    });
+    if (input === null) return; // أُلغي — يُترك التحديد كما هو
 
     const href = input.trim();
     if (!href) {

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition, useEffect } from "react";
+import { confirmAction } from "@/components/console/confirmBus";
 import { notify } from "@/components/console/toastBus";
 import { Sparkles, Check, X, Edit2, Trash2, Plus, ArrowUp, ArrowDown, Loader2, Settings, ChevronDown, ChevronUp, Eye, EyeOff, Activity } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -203,8 +204,8 @@ export default function GenericStagesManager({
     });
   };
 
-  const handleDeleteService = () => {
-    if (!confirm(`هل أنت متأكد من حذف خدمة "${configName}" وجميع مراحلها من هذه الجمعية؟ تبقى الخدمة في الجمعيات الأخرى. لا يمكن التراجع عن هذا الإجراء.`)) return;
+  const handleDeleteService = async () => {
+    if (!(await confirmAction({ title: `هل أنت متأكد من حذف خدمة "${configName}" وجميع مراحلها من هذه الجمعية؟ تبقى الخدمة في الجمعيات الأخرى. لا يمكن التراجع عن هذا الإجراء.` }))) return;
     startTransition(async () => {
       try {
         await deleteService(service.id);

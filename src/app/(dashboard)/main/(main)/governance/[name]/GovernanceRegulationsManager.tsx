@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { confirmAction } from "@/components/console/confirmBus";
 import Select from "@/components/console/Select";
 import { Plus, Link as LinkIcon, FileText, Scale, Cpu, Eye, EyeOff, Trash2, Building } from "lucide-react";
 import { addRegulation, deleteRegulation, toggleRegulationVisibility } from "@/app/actions/governance";
@@ -79,7 +80,7 @@ export default function GovernanceRegulationsManager({
   };
 
   const handleDelete = async (regId: string) => {
-    if (confirm("هل أنت متأكد من حذف هذه الخدمة من النظام بشكل نهائي لجميع الجمعيات؟")) {
+    if (await confirmAction({ title: "حذف هذه اللائحة نهائياً؟", message: "تُحذف من النظام لجميع الجمعيات، ولا يمكن التراجع.", confirmLabel: "حذف اللائحة" })) {
       // تحديث واجهة المستخدم فورياً
       setLocalRegulations(prev => prev.filter(reg => reg.id !== regId));
       try {

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { confirmAction } from "@/components/console/confirmBus";
 import Select from "@/components/console/Select";
 import { CalendarHeart, Loader2, Plus, Trash2, X } from "lucide-react";
 import {
@@ -91,7 +92,7 @@ export default function EmployeeLeavePanel({
   }
 
   async function remove(leave: LeaveRow) {
-    if (!confirm(`حذف إجازة ${leave.userName}؟`)) return;
+    if (!(await confirmAction({ title: `حذف إجازة ${leave.userName}؟` }))) return;
     setError(null);
     setBusy(leave.id);
     try {

@@ -31,7 +31,8 @@ export function ConfirmDialog({
   /** تُترك فارغة حين يتحكّم المُنادي بالعرض بشرطٍ خارجي. */
   isOpen?: boolean;
   title: string;
-  message: string;
+  /** تفصيلٌ تحت العنوان. يُترك فارغاً حين يكون السؤال كافياً بنفسه. */
+  message?: string;
   confirmLabel?: string;
   /** `danger` أحمر ويُنذر، و`primary` لون الفعل العادي. */
   tone?: "danger" | "primary";
@@ -59,7 +60,7 @@ export function ConfirmDialog({
         >
           <div className="space-y-2 p-5">
             <h2 className="text-[16px] font-semibold">{title}</h2>
-            <p className="text-[13.5px] leading-6 text-slate-500 dark:text-slate-400">{message}</p>
+            {message && <p className="text-[13.5px] leading-6 text-slate-500 dark:text-slate-400">{message}</p>}
           </div>
           <div className="flex justify-end gap-2 border-t border-slate-100 bg-slate-50/70 px-5 py-3 dark:border-slate-800 dark:bg-slate-950/40">
             <button type="button" onClick={onCancel} disabled={isPending} className={btn.secondary}>
@@ -108,7 +109,7 @@ export function ConfirmDialog({
         </div>
 
         <h3 className="mb-2 text-lg font-bold text-slate-800 dark:text-slate-100">{title}</h3>
-        <p className="mb-6 text-sm text-slate-500 dark:text-slate-400">{message}</p>
+        {message && <p className="mb-6 text-sm text-slate-500 dark:text-slate-400">{message}</p>}
 
         <div className="flex w-full items-center gap-3">
           <button

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { confirmAction } from "@/components/console/confirmBus";
 import Select from "@/components/console/Select";
 import {
   Plus, Trash2, ArrowUp, ArrowDown, Check, X, GitBranch,
@@ -139,7 +140,7 @@ export default function WorkflowSettingsClient({
 
               {/* حذف */}
               {!chain.isActive && (
-                <button onClick={() => { if (confirm("حذف هذه السلسلة؟")) run(() => deleteChain(chain.id)); }}
+                <button onClick={async () => { if (await confirmAction({ title: "حذف هذه السلسلة؟", confirmLabel: "حذف" })) run(() => deleteChain(chain.id)); }}
                   disabled={isPending}
                   className="p-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 text-slate-400 hover:text-red-500 transition-colors">
                   <Trash2 className="w-3.5 h-3.5" />
@@ -190,7 +191,7 @@ export default function WorkflowSettingsClient({
                                 <ArrowDown className="w-3.5 h-3.5" />
                               </button>
                             )}
-                            <button onClick={() => { if (confirm("حذف هذه الخطوة؟")) run(() => removeStep(step.id)); }}
+                            <button onClick={async () => { if (await confirmAction({ title: "حذف هذه الخطوة؟", confirmLabel: "حذف" })) run(() => removeStep(step.id)); }}
                               disabled={isPending}
                               className="p-1 rounded hover:bg-red-50 dark:hover:bg-red-900/20 text-slate-400 hover:text-red-500 transition-colors">
                               <Trash2 className="w-3.5 h-3.5" />

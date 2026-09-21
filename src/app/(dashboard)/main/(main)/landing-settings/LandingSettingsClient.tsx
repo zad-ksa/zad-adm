@@ -27,6 +27,7 @@ import {
   Type,
 } from "lucide-react";
 import { updateLandingConfig } from "@/app/actions/landing";
+import { confirmAction } from "@/components/console/confirmBus";
 import { uploadFile, type UploadProgress as Progress } from "@/lib/clientUpload";
 import UploadProgress from "@/components/ui/UploadProgress";
 import { Toast } from "@/components/console/Toast";
@@ -465,8 +466,8 @@ export default function LandingSettingsClient({ initialConfig }: { initialConfig
     });
   };
 
-  const resetSection = (key: SectionKey) => {
-    if (!confirm(`إرجاع فقرة «${SECTION_LABELS[key]}» إلى الوضع الافتراضي؟`)) return;
+  const resetSection = async (key: SectionKey) => {
+    if (!(await confirmAction({ title: `إرجاع فقرة «${SECTION_LABELS[key]}» إلى الوضع الافتراضي؟` }))) return;
     update((d) => {
       d.sections[key] = makeDefaultLandingConfig().sections[key];
     });

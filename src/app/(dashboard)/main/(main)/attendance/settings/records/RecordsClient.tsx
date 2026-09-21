@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { confirmAction } from "@/components/console/confirmBus";
 import Select from "@/components/console/Select";
 import { useRouter } from "next/navigation";
 import {
@@ -275,14 +276,13 @@ export default function RecordsClient({
                       <button
                         className="h-9 px-3 rounded-xl text-[12px] font-bold text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-900/20 hover:bg-rose-100 dark:hover:bg-rose-900/30 disabled:opacity-50 transition-colors inline-flex items-center gap-1.5"
                         disabled={busy || form.reason.trim().length < 3}
-                        onClick={() => {
-                          if (
-                            window.confirm(
-                              `حذف سجل ${dayLabel(d.date)} نهائياً؟ سيُحتسب اليوم غياباً إن كان يوم عمل.`
-                            )
-                          ) {
-                            save(d.date, true);
-                          }
+                        onClick={async () => {
+                          const ok = await confirmAction({
+                            title: `حذف سجل ${dayLabel(d.date)} نهائياً؟`,
+                            message: "سيُحتسب اليوم غياباً إن كان يوم عمل.",
+                            confirmLabel: "حذف السجل",
+                          });
+                          if (ok) save(d.date, true);
                         }}
                       >
                         <Trash2 className="w-3.5 h-3.5" /> حذف السجل

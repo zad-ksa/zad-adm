@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { confirmAction } from "@/components/console/confirmBus";
 import { notify } from "@/components/console/toastBus";
 import Select from "@/components/console/Select";
 import {
@@ -301,7 +302,7 @@ export default function MeetingsClient({ meetings, charities, employees, session
   }
 
   async function handleDelete(id: string) {
-    if (!confirm("هل تريد حذف هذا المحضر؟")) return;
+    if (!(await confirmAction({ title: "هل تريد حذف هذا المحضر؟" }))) return;
     startTransition(async () => {
       try {
         await deleteMeeting(id);

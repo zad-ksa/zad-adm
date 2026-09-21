@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import ToastHost from "@/components/console/ToastHost";
+import DialogHost from "@/components/console/DialogHost";
 import { Inter, Cairo } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
 
@@ -90,6 +91,7 @@ export default function RootLayout({
           {/* مُضيف التنبيهات: يُركَّب مرةً في الجذر فيخدم اللوحة والبوابة
               والصفحات العامة معاً. انظر console/toastBus.ts */}
           <ToastHost />
+          <DialogHost />
           <Analytics />
         </ThemeProvider>
       </body>

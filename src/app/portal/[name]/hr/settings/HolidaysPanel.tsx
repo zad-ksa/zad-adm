@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { confirmAction } from "@/components/console/confirmBus";
 import { CalendarOff, Loader2, Plus, Trash2, X } from "lucide-react";
 import { saveCharityHoliday, deleteCharityHoliday } from "@/app/actions/attendance";
 import { Chip, Field, HrCard, SectionHead, ctaClass, fs, ghostClass, inputClass } from "../ui";
@@ -80,7 +81,7 @@ export default function HolidaysPanel({
   }
 
   async function remove(holiday: Holiday) {
-    if (!confirm(`حذف «${holiday.name}»؟`)) return;
+    if (!(await confirmAction({ title: `حذف «${holiday.name}»؟` }))) return;
     setError(null);
     setBusy(holiday.id);
     try {

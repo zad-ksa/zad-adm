@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState, useTransition } from "react";
+import { confirmAction } from "@/components/console/confirmBus";
 import { notify } from "@/components/console/toastBus";
 import { X, Edit, Printer, Check, Plus, Info, Edit2, Trash2 } from "lucide-react";
 import { assignGanttDates, toggleGanttItemCompletion, addServiceStage, updateServiceStage, deleteServiceStage, broadcastGanttWeek } from "@/app/actions/services";
@@ -299,7 +300,7 @@ export default function GanttChart({
   };
 
   const handleDeleteItem = async (id: string, type: 'stage'|'step') => {
-    if (!confirm("هل أنت متأكد من الحذف؟") || !modalState) return;
+    if (!modalState || !(await confirmAction({ title: "حذف هذا العنصر؟", confirmLabel: "حذف" }))) return;
     startTransition(async () => {
       if (type === 'stage') {
         await deleteServiceStage(id);

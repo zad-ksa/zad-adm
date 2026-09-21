@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition, useMemo } from "react";
+import { confirmAction } from "@/components/console/confirmBus";
 import { Plus, Edit, Trash2, Layers, Search, CheckCircle2, AlertCircle, Building2, ChevronDown, ChevronUp, X, Check, ArrowRight } from "lucide-react";
 import { addServiceToCharities, renameServiceGlobally, deleteServiceGlobally } from "@/app/actions/services";
 import { setServiceEmployees } from "@/app/actions/serviceAccess";
@@ -149,8 +150,8 @@ export default function ManageServicesClient({
     });
   };
 
-  const handleDelete = (name: string, count: number) => {
-    if (!confirm(`تحذير: سيتم حذف خدمة "${name}" من ${count} جمعية! هل أنت متأكد؟`)) return;
+  const handleDelete = async (name: string, count: number) => {
+    if (!(await confirmAction({ title: `تحذير: سيتم حذف خدمة "${name}" من ${count} جمعية! هل أنت متأكد؟` }))) return;
     startTransition(async () => {
       try {
         await deleteServiceGlobally(name);

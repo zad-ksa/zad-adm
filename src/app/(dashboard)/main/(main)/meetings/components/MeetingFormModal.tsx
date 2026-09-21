@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, useTransition } from "react";
+import { confirmAction } from "@/components/console/confirmBus";
 import Select from "@/components/console/Select";
 import { X, Sparkles, Loader2, Lock, FileClock } from "lucide-react";
 import { checkDateConflict } from "@/app/actions/meetings";
@@ -198,9 +199,12 @@ export default function MeetingFormModal({
     const dateConflicts = await checkDateConflict(date, editingId || undefined);
     if (dateConflicts.length > 0) {
       const names = dateConflicts.map(c => `"${c.title}"`).join("، ");
-      const proceed = confirm(
-        `تنبيه: يوجد ${dateConflicts.length > 1 ? "محاضر أخرى" : "محضر آخر"} في نفس هذا التاريخ:\n${names}\n\nهل تريد المتابعة وحفظ المحضر على أي حال؟`
-      );
+      const proceed = await confirmAction({
+        title: `يوجد ${dateConflicts.length > 1 ? "محاضر أخرى" : "محضر آخر"} في نفس التاريخ`,
+        message: `${names} — هل تريد المتابعة وحفظ المحضر على أي حال؟`,
+        confirmLabel: "حفظ على أي حال",
+        tone: "primary",
+      });
       if (!proceed) return;
     }
 

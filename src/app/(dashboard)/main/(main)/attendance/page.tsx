@@ -1,6 +1,7 @@
 export const dynamic = "force-dynamic";
 
 import type { Metadata } from "next";
+import { PageHeader } from "@/components/console/layout";
 import { redirect } from "next/navigation";
 import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/db";
@@ -83,12 +84,9 @@ export default async function AttendancePage() {
 
   return (
     <main className="flex-1 min-w-0 py-4" dir="rtl">
-      <header className="mb-5">
-        <h1 className="text-xl font-black text-slate-900 dark:text-slate-100">التحضير</h1>
-        <p className="mt-0.5 text-[13px] text-slate-500 dark:text-slate-400">
-          حضورك وانصرافك هذا الشهر
-        </p>
-      </header>
+      <div className="mb-5">
+        <PageHeader title="التحضير" description="حضورك وانصرافك هذا الشهر" />
+      </div>
 
       <AttendanceTabs
         canManage={hasPermission(session.role, session.permissions || [], "manage_zad_attendance")}

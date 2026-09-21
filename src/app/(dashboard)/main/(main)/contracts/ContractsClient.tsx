@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import { PageHeader } from "@/components/console/layout";
 import { FileSignature, Calendar, DollarSign, AlertCircle, CheckCircle2, TrendingUp, Users, Settings, Loader2 } from "lucide-react";
 import ManageInstallmentsModal from "./ManageInstallmentsModal";
 
@@ -50,18 +51,11 @@ export default function ContractsClient({
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
-            <FileSignature className="w-7 h-7 text-primary" />
-            إدارة العقود
-          </h1>
-          <p className="text-slate-500 dark:text-slate-400 mt-1 text-sm">
-            لوحة تحكم شاملة لمتابعة العقود، تفاصيلها، والأقساط المستحقة للجمعيات.
-          </p>
-        </div>
-      </div>
+      <PageHeader
+        icon={<FileSignature className="w-6 h-6" />}
+        title="إدارة العقود"
+        description="لوحة تحكم شاملة لمتابعة العقود، تفاصيلها، والأقساط المستحقة للجمعيات."
+      />
 
       {/* Dashboard Stats */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">

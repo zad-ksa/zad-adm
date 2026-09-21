@@ -1,14 +1,14 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { PageHeader } from "@/components/console/layout";
 import Select from "@/components/console/Select";
-import { Plus, Trash2, ShieldAlert, CheckCircle2, AlertCircle, Building2, ArrowRight } from "lucide-react";
+import { Plus, Trash2, ShieldAlert, CheckCircle2, AlertCircle, Building2 } from "lucide-react";
 import { addCharityClientAccount, deleteCharityClientAccount } from "@/app/actions/charityAccounts";
 import {
   CHARITY_PERMISSION_GROUPS,
   ALL_CHARITY_PERMISSION_IDS,
 } from "@/lib/charityPermissions";
-import Link from "next/link";
 
 const titles = [
   { value: "CHAIRMAN", label: "رئيس مجلس إدارة" },
@@ -109,22 +109,14 @@ export default function CharityAccountsClient({ charities, accounts: initialAcco
         </div>
       )}
 
-      {/* Header section */}
-      <div className="px-6 pt-8 pb-6 border-b border-slate-200 dark:border-white/5 bg-white/80 dark:bg-black/20 backdrop-blur-3xl mb-6 -mx-4 sm:-mx-6 lg:-mx-8">
-        <div className="max-w-7xl mx-auto flex flex-col md:flex-row md:items-end justify-between gap-4 px-4 sm:px-6 lg:px-8">
-          <div>
-            <Link href="/main/admin" className="flex items-center gap-2 text-primary hover:text-primary/80 font-bold text-xs mb-4 transition-colors w-fit bg-primary/5 hover:bg-primary/10 px-3 py-1.5 rounded-lg">
-              <ArrowRight className="w-3.5 h-3.5" />
-              العودة للوحة التحكم
-            </Link>
-            <h1 className="text-[clamp(1.25rem,2vw,1.75rem)] font-black text-primary tracking-tight mb-1 flex items-center gap-2">
-              <ShieldAlert className="w-6 h-6 opacity-90" />
-              حسابات الجمعيات
-            </h1>
-            <p className="text-slate-500 dark:text-slate-400 text-[clamp(0.75rem,1vw,0.875rem)] tracking-tight max-w-2xl leading-relaxed">
-              إدارة حسابات مستخدمي الجمعيات المتعاقدة والصلاحيات الخاصة بهم في النظام.
-            </p>
-          </div>
+      <div className="mb-6">
+        <div>
+          <PageHeader
+            crumbs={[{ label: "لوحة التحكم", href: "/main/admin" }, { label: "حسابات الجمعيات" }]}
+            icon={<ShieldAlert className="w-6 h-6" />}
+            title="حسابات الجمعيات"
+            description="إدارة حسابات مستخدمي الجمعيات المتعاقدة والصلاحيات الخاصة بهم في النظام."
+          />
         </div>
       </div>
 

@@ -1,4 +1,5 @@
 import { unstable_cache } from "next/cache";
+import { PageHeader } from "@/components/console/layout";
 import { prisma } from "@/lib/db";
 import type { Metadata } from "next";
 import Link from "next/link";
@@ -130,8 +131,7 @@ export default async function MainDashboard() {
   return (
     <main className="flex-1 min-w-0 py-4">
       <div className="mb-4">
-        <h1 className="text-xl font-bold text-slate-800 dark:text-slate-100 mb-1">نظرة عامة</h1>
-        <p className="text-sm text-slate-600 dark:text-slate-300">ملخص سريع لبيانات وإنجازات الشركة</p>
+        <PageHeader title="نظرة عامة" description="ملخص سريع لبيانات وإنجازات الشركة" />
       </div>
 
       {/* Cards Grid */}

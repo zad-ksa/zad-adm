@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/db";
+import { PageHeader } from "@/components/console/layout";
 import type { Metadata } from "next";
 import Link from "next/link";
 import AddCharityButton from "./AddCharityButton";
@@ -208,12 +209,12 @@ export default async function CharitiesDashboard() {
 
   return (
     <main className="flex-1 min-w-0 py-5">
-      <div className="mb-5 flex justify-between items-center flex-wrap gap-3">
-        <div>
-          <h1 className="text-lg font-bold text-slate-800 dark:text-slate-100 mb-1">إدارة الجمعيات</h1>
-          <p className="text-slate-600 dark:text-slate-300">نظرة عامة على الجمعيات المتعاقد معها</p>
-        </div>
-        {canManageCharities && <AddCharityButton />}
+      <div className="mb-5">
+        <PageHeader
+          title="إدارة الجمعيات"
+          description="نظرة عامة على الجمعيات المتعاقد معها"
+          actions={canManageCharities ? <AddCharityButton /> : undefined}
+        />
       </div>
 
       {/* Cards Grid */}

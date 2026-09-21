@@ -1,6 +1,7 @@
 "use client";
 
 import { uploadFile } from "@/lib/clientUpload";
+import { PageHeader } from "@/components/console/layout";
 import { confirmAction } from "@/components/console/confirmBus";
 import { notify } from "@/components/console/toastBus";
 import { useState, useMemo, useTransition, useRef } from "react";
@@ -1325,18 +1326,11 @@ export default function ServicesOverviewClient({
 
   return (
     <div className="space-y-5 animate-in fade-in slide-in-from-bottom-4 duration-500">
-      {/* Header */}
-      <div className="bg-white dark:bg-slate-800 rounded-2xl p-4 border border-slate-100 dark:border-slate-700 shadow-sm">
-        <div className="flex items-center gap-3">
-          <div className="w-9 h-9 bg-primary/10 rounded-xl flex items-center justify-center text-primary shrink-0">
-            <LayoutGrid className="w-4 h-4" />
-          </div>
-          <div>
-            <h1 className="text-base font-bold text-slate-800 dark:text-slate-100">عرض الخدمات عبر الجمعيات</h1>
-            <p className="text-xs text-slate-500 dark:text-slate-400">اختر قسماً لمشاهدة حالته في جميع الجمعيات دفعة واحدة</p>
-          </div>
-        </div>
-      </div>
+      <PageHeader
+        icon={<LayoutGrid className="w-6 h-6" />}
+        title="عرض الخدمات عبر الجمعيات"
+        description="اختر قسماً لمشاهدة حالته في جميع الجمعيات دفعة واحدة"
+      />
 
       {tabs.length > 0 && (
         <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm overflow-hidden">

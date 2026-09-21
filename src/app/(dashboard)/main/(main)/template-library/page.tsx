@@ -1,4 +1,5 @@
 import { getSession } from "@/lib/auth";
+import { PageHeader } from "@/components/console/layout";
 import { redirect } from "next/navigation";
 import { hasPermission } from "@/lib/permissions";
 import type { Metadata } from "next";
@@ -22,17 +23,11 @@ export default async function TemplateLibraryPage() {
 
   return (
     <div className="space-y-4" dir="rtl">
-      <div className="flex items-center gap-3">
-        <div className="w-10 h-10 rounded-xl bg-primary/10 dark:bg-primary/20 flex items-center justify-center text-primary shrink-0">
-          <FolderTree className="w-5 h-5" />
-        </div>
-        <div className="min-w-0">
-          <h2 className="text-lg font-bold text-slate-800 dark:text-slate-100 leading-tight">مكتبة النماذج</h2>
-          <p className="text-xs text-slate-500 dark:text-slate-400">
-            مساحة مشتركة — ما تضيفه هنا يراه كل من يملك الصلاحية، والجمعيات تراه للتحميل فقط
-          </p>
-        </div>
-      </div>
+      <PageHeader
+        icon={<FolderTree className="w-6 h-6" />}
+        title="مكتبة النماذج"
+        description="مساحة مشتركة — ما تضيفه هنا يراه كل من يملك الصلاحية، والجمعيات تراه للتحميل فقط"
+      />
 
       <TemplateLibraryClient />
     </div>

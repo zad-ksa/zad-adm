@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition, useEffect, useCallback } from "react";
+import { PageHeader } from "@/components/console/layout";
 import Select from "@/components/console/Select";
 import {
   CheckSquare,
@@ -955,13 +956,12 @@ ${combinedAchievements.length > 0 ? `
       />
 
       {/* Page Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center gap-4 mb-5">
+      <div className="mb-5">
+        <PageHeader
+          icon={<CheckSquare className="w-6 h-6" />}
+          title={isDirectorOrAdmin ? "المهام والمنجزات" : "مهامي"}
+          actions={
         <div className="flex flex-wrap items-center gap-3">
-          <h1 className="text-xl font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2 ml-2">
-            <CheckSquare className="w-5 h-5 text-primary shrink-0" />
-            {isDirectorOrAdmin ? "المهام والمنجزات" : "مهامي"}
-          </h1>
-
           {/* Employee Filter */}
           {isDirectorOrAdmin && (
             <div className="flex items-center gap-2 bg-white dark:bg-slate-800 px-3 py-1.5 border border-slate-200 dark:border-slate-700 rounded-lg">
@@ -1043,6 +1043,8 @@ ${combinedAchievements.length > 0 ? `
             )}
           </button>
         </div>
+          }
+        />
       </div>
 
       {/* المهام الحالية — بكامل عرض الشاشة الآن */}

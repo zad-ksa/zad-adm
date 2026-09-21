@@ -1,6 +1,7 @@
 "use client";
 
 import { uploadFile } from "@/lib/clientUpload";
+import { PageHeader } from "@/components/console/layout";
 import { useState, useRef, useTransition, useEffect } from "react";
 import { User, Camera, Loader2, AlertCircle, CheckCircle2, Eye, EyeOff, UserCircle, Mail } from "lucide-react";
 import { updateProfile } from "@/app/actions/profile";
@@ -92,12 +93,8 @@ export default function ProfileClient({
 
   return (
     <main className="flex-1 min-w-0 py-4 relative" dir="rtl">
-      {/* Page Header */}
-      <div className="flex items-center gap-3 mb-5">
-        <h1 className="text-xl font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
-          <UserCircle className="w-5 h-5 text-primary shrink-0" />
-          الملف الشخصي
-        </h1>
+      <div className="mb-5">
+        <PageHeader icon={<UserCircle className="w-6 h-6" />} title="الملف الشخصي" />
       </div>
 
       <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700/50 shadow-sm w-full max-w-2xl mx-auto overflow-hidden font-sans mt-8">

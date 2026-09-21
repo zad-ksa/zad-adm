@@ -1,9 +1,10 @@
 "use client";
 
 import { useState, useEffect, use, useRef } from "react";
+import { PageHeader } from "@/components/console/layout";
 import Select from "@/components/console/Select";
 import { useRouter } from "next/navigation";
-import { Plus, Trash2, Save, ArrowRight, ArrowUp, ArrowDown, Settings, Loader2, AlertCircle, CheckCircle, Printer } from "lucide-react";
+import { Plus, Trash2, Save, ArrowUp, ArrowDown, Settings, Loader2, AlertCircle, CheckCircle, Printer } from "lucide-react";
 import Link from "next/link";
 
 interface FollowUpQuestion {
@@ -278,14 +279,16 @@ export default function EditSurveyPage({ params }: { params: Promise<{ id: strin
 
   return (
     <div className="p-8 max-w-5xl mx-auto pb-32 dark:bg-slate-900">
-      <div className="flex items-center justify-between mb-8">
-        <div className="flex items-center gap-4">
-          <Link href="/main/custom-surveys" className="text-slate-400 hover:text-slate-800 transition-colors dark:text-slate-500 dark:hover:text-slate-100">
-            <ArrowRight className="w-6 h-6" />
-          </Link>
-          <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
-            <h1 className="text-2xl font-bold text-slate-800 dark:text-slate-100">تعديل الاستبيان المخصص</h1>
-
+      <div className="mb-8">
+        <PageHeader
+          crumbs={[
+            { label: "الاستبيانات المخصصة", href: "/main/custom-surveys" },
+            { label: "تعديل الاستبيان" },
+          ]}
+          title="تعديل الاستبيان"
+          description={survey.title}
+          actions={
+        <div className="flex flex-wrap items-center gap-3">
             {/* مؤشر الحفظ التلقائي */}
             <div className="flex items-center gap-1.5 text-xs font-bold">
               {saveStatus === "saving" && (
@@ -312,10 +315,7 @@ export default function EditSurveyPage({ params }: { params: Promise<{ id: strin
                 </span>
               )}
             </div>
-          </div>
-        </div>
 
-        <div className="flex items-center gap-3">
           <Link
             href={`/main/custom-surveys/${resolvedParams.id}/print`}
             target="_blank"
@@ -357,6 +357,8 @@ export default function EditSurveyPage({ params }: { params: Promise<{ id: strin
             </button>
           )}
         </div>
+          }
+        />
       </div>
 
       <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm mb-8 space-y-6 dark:bg-slate-800 dark:border-slate-700">

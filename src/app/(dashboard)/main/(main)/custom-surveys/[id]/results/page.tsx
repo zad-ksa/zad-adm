@@ -1,9 +1,8 @@
 "use client";
 
 import { useState, useEffect, use, useMemo } from "react";
-import Link from "next/link";
+import { PageHeader } from "@/components/console/layout";
 import {
-  ArrowRight,
   Download,
   FileText,
   User,
@@ -293,16 +292,14 @@ export default function SurveyResultsPage({ params }: { params: Promise<{ id: st
   return (
     <div className="p-8 max-w-7xl mx-auto pb-32 dark:bg-slate-900" dir="rtl">
       <div className="flex items-center gap-4 mb-6">
-        <Link
-          href="/main/custom-surveys"
-          className="text-slate-400 hover:text-slate-800 transition-colors dark:text-slate-500 dark:hover:text-slate-100"
-        >
-          <ArrowRight className="w-6 h-6" />
-        </Link>
-        <div>
-          <h1 className="text-2xl font-bold text-slate-800 dark:text-slate-100">نتائج الاستبيان: {survey.title}</h1>
-          <p className="text-slate-500 mt-1 dark:text-slate-400">إجمالي الردود المستلمة: {responses.length}</p>
-        </div>
+        <PageHeader
+          crumbs={[
+            { label: "الاستبيانات المخصصة", href: "/main/custom-surveys" },
+            { label: "نتائج الاستبيان" },
+          ]}
+          title="نتائج الاستبيان"
+          description={`${survey.title} · إجمالي الردود المستلمة: ${responses.length}`}
+        />
       </div>
 
       {responses.length === 0 ? (

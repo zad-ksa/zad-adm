@@ -1,4 +1,5 @@
 import { unstable_cache } from "next/cache";
+import { PageHeader } from "@/components/console/layout";
 import { prisma } from "@/lib/db";
 import Link from "next/link";
 import CopyLinkButton from "@/components/CopyLinkButton";
@@ -139,15 +140,17 @@ export default async function SurveysDashboard() {
 
   return (
     <main className="flex-1 min-w-0 py-8">
-      <div className="mb-8 flex flex-col xl:flex-row justify-between items-start xl:items-end gap-6">
-        <div>
-          <h1 className="text-3xl font-bold text-slate-800 dark:text-slate-100 mb-2">الاستبيانات المعبأة</h1>
-          <p className="text-slate-600 dark:text-slate-300">قائمة بالجمعيات وإحصائيات استبيانات الجاهزية والتحليل السداسي</p>
-        </div>
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
-          <CopyLinkButton />
-          <CopyLinkButton path="/hexagonal" label="رابط التحليل السداسي" />
-        </div>
+      <div className="mb-8">
+        <PageHeader
+          title="الاستبيانات المعبأة"
+          description="قائمة بالجمعيات وإحصائيات استبيانات الجاهزية والتحليل السداسي"
+          actions={
+            <>
+              <CopyLinkButton />
+              <CopyLinkButton path="/hexagonal" label="رابط التحليل السداسي" />
+            </>
+          }
+        />
       </div>
 
       {pendingCharitiesList.length > 0 && (

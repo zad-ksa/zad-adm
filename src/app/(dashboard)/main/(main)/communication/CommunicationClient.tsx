@@ -183,14 +183,12 @@ export default function CommunicationClient({ charities }: { charities: Charity[
 
   return (
     <div className="p-6 max-w-7xl mx-auto w-full font-sans animate-in fade-in slide-in-from-bottom-4 duration-500">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 bg-white dark:bg-slate-900 p-6 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800">
+      <div className="mb-6">
         <PageHeader
           icon={<MessageSquare className="w-6 h-6" />}
           title="مصفوفة التواصل والخدمات"
           description="عرض وإدارة مسؤولي التواصل لكل خدمة/مسار للجمعيات في جدول تفاعلي موحد"
-        />
-
-        {/* Search */}
+          actions={
         <div className="relative w-full md:w-80">
           <Search className="w-4 h-4 absolute right-3 top-2.5 text-slate-400" />
           <input
@@ -201,6 +199,8 @@ export default function CommunicationClient({ charities }: { charities: Charity[
             className="w-full pl-3 pr-10 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-xs font-bold focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all"
           />
         </div>
+          }
+        />
       </div>
 
       <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 overflow-hidden">

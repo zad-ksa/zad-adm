@@ -295,10 +295,10 @@ export default function SurveyResultsPage({ params }: { params: Promise<{ id: st
         <PageHeader
           crumbs={[
             { label: "الاستبيانات المخصصة", href: "/main/custom-surveys" },
-            { label: survey.title },
+            { label: "نتائج الاستبيان" },
           ]}
-          title={`نتائج الاستبيان: ${survey.title}`}
-          description={`إجمالي الردود المستلمة: ${responses.length}`}
+          title="نتائج الاستبيان"
+          description={`${survey.title} · إجمالي الردود المستلمة: ${responses.length}`}
         />
       </div>
 

@@ -1,10 +1,11 @@
 "use client";
 
 import { useEffect, useMemo, useState, useTransition } from "react";
+import { PageHeader } from "@/components/console/layout";
 import { notify } from "@/components/console/toastBus";
 import Select from "@/components/console/Select";
 import { useRouter } from "next/navigation";
-import { Palette, Plus, Filter, AlertTriangle, Loader2, Paperclip, LayoutGrid, List, CalendarRange } from "lucide-react";
+import { Palette, Filter, AlertTriangle, Loader2, Paperclip, LayoutGrid, List, CalendarRange } from "lucide-react";
 import DesignRequestCard, {
   DESIGN_REQUEST_LIST_GRID_COLS,
   type DesignRequestCardData,
@@ -319,57 +320,37 @@ export default function DesignRequestsClient({
 
   return (
     <div className="design-requests-ui space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500" dir="rtl">
-      {/* Bento Grid Header */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {/* Bento Box 1: Stats */}
-        <div className="md:col-span-2 bg-white dark:bg-[#0A0A0A] border border-slate-200 dark:border-slate-800 rounded-3xl p-6 shadow-sm hover:shadow-md dark:shadow-none transition-shadow flex flex-col justify-between">
-          <div className="flex items-center gap-4 mb-6">
-            <div className="w-12 h-12 rounded-2xl bg-primary/10 dark:bg-teal-500/10 flex items-center justify-center shrink-0 border border-primary/10 dark:border-teal-500/20">
-              <Palette className="w-6 h-6 text-primary dark:text-teal-400" />
-            </div>
-            <div>
-              <h1
-                className="font-bold text-slate-900 dark:text-slate-100"
-                style={{ fontSize: "var(--dr-fs-h1)", letterSpacing: "var(--dr-tracking-h1)" }}
+      <PageHeader
+        icon={<Palette className="w-6 h-6" />}
+        title="طلبات التصاميم"
+        description="إدارة ومتابعة طلبات التصميم للجمعيات"
+        actions={
+              <button
+                onClick={() => setIsComposeOpen(true)}
+                className="h-10 px-5 flex items-center justify-center gap-2 text-white bg-gradient-to-b from-[#17857c] via-primary to-[#0c645d] shadow-[var(--dr-shadow-cta)] hover:shadow-[var(--dr-shadow-cta-hover)] active:translate-y-px rounded-xl font-bold transition-all"
+                style={{ fontSize: "var(--dr-fs-body)" }}
               >
-                طلبات التصاميم
-              </h1>
-              <p className="text-slate-500 dark:text-slate-400 mt-1" style={{ fontSize: "var(--dr-fs-body)" }}>
-                إدارة ومتابعة طلبات التصميم للجمعيات
-              </p>
-            </div>
-          </div>
-          
-          <div className="flex items-center gap-3 flex-wrap">
-            <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-50 dark:bg-[#111] border border-slate-100 dark:border-slate-800/80">
-              <span className="w-2 h-2 rounded-full bg-primary dark:bg-teal-400"></span>
-              <span className="text-slate-600 dark:text-slate-300 font-bold" style={{ fontSize: "var(--dr-fs-meta)" }}>{pendingCount} قيد التنفيذ</span>
-            </div>
-            {overdueCount > 0 && (
-              <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-rose-50 dark:bg-rose-500/10 border border-rose-100 dark:border-rose-500/20">
-                <span className="w-2 h-2 rounded-full bg-rose-500 animate-pulse"></span>
-                <span className="text-rose-600 dark:text-rose-400 font-bold" style={{ fontSize: "var(--dr-fs-meta)" }}>{overdueCount} متأخر</span>
-              </div>
-            )}
-            <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-50 dark:bg-[#111] border border-slate-100 dark:border-slate-800/80">
-              <span className="w-2 h-2 rounded-full bg-slate-400 dark:bg-slate-500"></span>
-              <span className="text-slate-600 dark:text-slate-300 font-bold" style={{ fontSize: "var(--dr-fs-meta)" }}>{completedCount} منجز</span>
-            </div>
-          </div>
-        </div>
+                طلب تصميم جديد
+              </button>
+        }
+      />
 
-        {/* Bento Box 2: Primary Action */}
-        <div className="md:col-span-1 bg-white dark:bg-[#0A0A0A] border border-slate-200 dark:border-slate-800 rounded-3xl p-6 shadow-sm hover:shadow-md dark:shadow-none transition-shadow flex flex-col justify-center items-center text-center gap-4 group">
-          <div className="w-12 h-12 rounded-full bg-primary/5 dark:bg-teal-500/5 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-            <Plus className="w-6 h-6 text-primary dark:text-teal-400" />
+      <div className="grid grid-cols-1 gap-4">
+        <div className="flex items-center gap-3 flex-wrap">
+          <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-50 dark:bg-[#111] border border-slate-100 dark:border-slate-800/80">
+            <span className="w-2 h-2 rounded-full bg-primary dark:bg-teal-400"></span>
+            <span className="text-slate-600 dark:text-slate-300 font-bold" style={{ fontSize: "var(--dr-fs-meta)" }}>{pendingCount} قيد التنفيذ</span>
           </div>
-          <button
-            onClick={() => setIsComposeOpen(true)}
-            className="w-full h-12 flex items-center justify-center gap-2 text-white bg-gradient-to-b from-[#17857c] via-primary to-[#0c645d] shadow-[var(--dr-shadow-cta)] hover:shadow-[var(--dr-shadow-cta-hover)] active:translate-y-px rounded-xl font-bold transition-all"
-            style={{ fontSize: "var(--dr-fs-body)" }}
-          >
-            طلب تصميم جديد
-          </button>
+          {overdueCount > 0 && (
+            <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-rose-50 dark:bg-rose-500/10 border border-rose-100 dark:border-rose-500/20">
+              <span className="w-2 h-2 rounded-full bg-rose-500 animate-pulse"></span>
+              <span className="text-rose-600 dark:text-rose-400 font-bold" style={{ fontSize: "var(--dr-fs-meta)" }}>{overdueCount} متأخر</span>
+            </div>
+          )}
+          <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-50 dark:bg-[#111] border border-slate-100 dark:border-slate-800/80">
+            <span className="w-2 h-2 rounded-full bg-slate-400 dark:bg-slate-500"></span>
+            <span className="text-slate-600 dark:text-slate-300 font-bold" style={{ fontSize: "var(--dr-fs-meta)" }}>{completedCount} منجز</span>
+          </div>
         </div>
 
         {/* Bento Box 3: Filters & Tabs */}

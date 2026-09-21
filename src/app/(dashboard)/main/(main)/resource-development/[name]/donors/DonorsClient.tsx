@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { PageHeader } from "@/components/console/layout";
+import { charityCrumbs } from "@/lib/crumbs";
 import { confirmAction } from "@/components/console/confirmBus";
 import { Building2, Plus, Trash2, ExternalLink, Copy, CheckCircle2, AlertCircle } from "lucide-react";
 import { addDonorAccount, deleteDonorAccount } from "@/app/actions/charity";
@@ -80,14 +81,10 @@ export default function DonorsClient({
         </div>
       )}
 
-      {/* Header */}
-      <div className="bg-white dark:bg-slate-800 rounded-xl p-4 border border-slate-100 dark:border-slate-700 shadow-sm relative overflow-hidden">
-        <div className="absolute top-0 left-0 w-64 h-64 bg-primary/5 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2 pointer-events-none"></div>
-        <div className="relative flex flex-col sm:flex-row justify-between items-center gap-3">
           <PageHeader
-            crumbs={[{ label: charityName }, { label: "حسابات المانحين" }]}
+            crumbs={charityCrumbs(charityName, { label: "الجهات المانحة" })}
             icon={<Building2 className="w-6 h-6" />}
-            title="حسابات المانحين"
+            title="الجهات المانحة"
             description="إدارة بيانات الدخول للجهات المانحة"
             actions={
               <button onClick={() => setShowAddDonor(!showAddDonor)} className="bg-primary text-white px-4 py-2 rounded-lg font-bold flex items-center gap-1.5 hover:bg-primary/90 shadow-sm whitespace-nowrap text-sm">
@@ -95,8 +92,6 @@ export default function DonorsClient({
               </button>
             }
           />
-        </div>
-      </div>
 
       <div className="space-y-4">
         {showAddDonor && (

@@ -186,7 +186,7 @@ export default function ManageServicesClient({
       )}
 
       <PageHeader
-        crumbs={[{ label: "لوحة التحكم", href: "/main/admin" }, { label: "الخدمات" }]}
+        crumbs={[{ label: "لوحة التحكم", href: "/main/admin" }, { label: "إدارة الخدمات" }]}
         icon={<Layers className="w-6 h-6" />}
         title="إدارة الخدمات"
         description="الخدمات الحالية المقدمة للجمعيات — أضف، عدّل أو احذف"

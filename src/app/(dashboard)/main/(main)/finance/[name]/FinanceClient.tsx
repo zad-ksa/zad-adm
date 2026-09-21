@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { PageHeader } from "@/components/console/layout";
+import { charityCrumbs } from "@/lib/crumbs";
 import {
   Coins,
   Wallet,
@@ -141,12 +142,8 @@ export default function FinanceClient({
         </div>
       )}
 
-      {/* Header */}
-      <div className="bg-white dark:bg-slate-800 rounded-xl p-4 border border-slate-100 dark:border-slate-700 shadow-sm relative overflow-hidden">
-        <div className="absolute top-0 left-0 w-64 h-64 bg-primary/5 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2 pointer-events-none"></div>
-        <div className="relative flex flex-col lg:flex-row justify-between items-center gap-3">
           <PageHeader
-            crumbs={[{ label: charity.name }, { label: "الوضع المالي" }]}
+            crumbs={charityCrumbs(charity.name, { label: "الوضع المالي" })}
             icon={
               charity.logoUrl ? (
                 <span className="block w-7 h-7 overflow-hidden rounded-md border border-slate-200 dark:border-slate-700">
@@ -159,8 +156,6 @@ export default function FinanceClient({
             title="الوضع المالي"
             description="الإدارة المالية والسجل المالي للمشروع"
           />
-        </div>
-      </div>
 
       <div className="space-y-5">
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">

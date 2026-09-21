@@ -133,7 +133,11 @@ export default async function AttendanceSettingsPage() {
   return (
     <main className="flex-1 min-w-0 py-4" dir="rtl">
       <div className="mb-4">
-        <PageHeader title="التحضير" />
+        <PageHeader
+          crumbs={[{ label: "التحضير", href: "/main/attendance" }, { label: "الإعدادات" }]}
+          title="الإعدادات"
+          description="الدوام ومجموعاته، ومواقع العمل، والإجازات والعطل، وسجلات الحضور."
+        />
       </div>
 
       <AttendanceTabs

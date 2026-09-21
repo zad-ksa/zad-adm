@@ -25,7 +25,7 @@ export default async function LandingSettingsPage() {
   return (
     <div className="space-y-6" dir="rtl">
       <PageHeader
-          crumbs={[{ label: "لوحة التحكم", href: "/main/admin" }, { label: "الواجهة الرئيسية" }]}
+          crumbs={[{ label: "لوحة التحكم", href: "/main/admin" }, { label: "التحكم في الواجهة الرئيسية" }]}
           title="التحكم في الواجهة الرئيسية"
           description="تحكّم في نصوص كل فقرة من الصفحة الرئيسية العامة وخلفيتها (لون / تدرّج / صورة) وتأثيرها الحركي وألوان وأحجام النص — مع معاينة حية قبل الحفظ."
       />

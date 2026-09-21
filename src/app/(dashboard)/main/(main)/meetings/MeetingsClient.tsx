@@ -89,13 +89,14 @@ function getCategoryCount(meetings: Meeting[], key: string): number {
   return meetings.filter(m => m.meetingContext === key).length;
 }
 
-function CategorySelector({ meetings, onSelect }: { meetings: Meeting[]; onSelect: (key: string) => void }) {
+function CategorySelector({ meetings, onSelect, actions }: { meetings: Meeting[]; onSelect: (key: string) => void; actions?: React.ReactNode }) {
   return (
     <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-500" dir="rtl">
       <PageHeader
         icon={<FileText className="w-6 h-6" />}
         title="محاضر الاجتماعات"
         description="اختر القسم للعرض"
+        actions={actions}
       />
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
         {CATEGORY_CARDS.map(cat => {
@@ -318,20 +319,23 @@ export default function MeetingsClient({ meetings, charities, employees, session
   if (selectedCategory === null) {
     return (
       <div className="space-y-3">
-        <div className="flex justify-start mb-3">
-          {meetings.length > 0 && (
-            <button
-              onClick={handleDownloadAll}
-              disabled={isDownloadingAll}
-              className="flex items-center gap-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:text-primary hover:border-primary/30 px-3.5 py-2 rounded-lg text-xs font-bold transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
-              title="تحميل جميع المحاضر مضغوطة، مقسّمة في مجلدات حسب الخدمة"
-            >
-              {isDownloadingAll ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Download className="w-3.5 h-3.5" />}
-              {isDownloadingAll ? "جاري التجهيز..." : "تحميل جميع المحاضر"}
-            </button>
-          )}
-        </div>
-        <CategorySelector meetings={meetings} onSelect={setSelectedCategory} />
+        <CategorySelector
+          meetings={meetings}
+          onSelect={setSelectedCategory}
+          actions={
+            meetings.length > 0 ? (
+              <button
+                onClick={handleDownloadAll}
+                disabled={isDownloadingAll}
+                className="flex items-center gap-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:text-primary hover:border-primary/30 px-3.5 py-2 rounded-lg text-xs font-bold transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                title="تحميل جميع المحاضر مضغوطة، مقسّمة في مجلدات حسب الخدمة"
+              >
+                {isDownloadingAll ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Download className="w-3.5 h-3.5" />}
+                {isDownloadingAll ? "جاري التجهيز..." : "تحميل جميع المحاضر"}
+              </button>
+            ) : undefined
+          }
+        />
         {showModal && (
           <MeetingFormModal
             editingId={editingId}
@@ -356,21 +360,19 @@ export default function MeetingsClient({ meetings, charities, employees, session
     );
   }
 
+  const categoryTitle =
+    selectedCategory === "all" ? "كل المحاضر" : selectedCategory === "زاد" ? "إدارة زاد" : selectedCategory;
+
   return (
     <div className="space-y-3 animate-in fade-in slide-in-from-bottom-4 duration-500" dir="rtl">
       <PageHeader
+        crumbs={[
+          { label: "محاضر الاجتماعات", onClick: () => setSelectedCategory(null) },
+          { label: categoryTitle },
+        ]}
         icon={<FileText className="w-6 h-6" />}
-        title={selectedCategory === "all" ? "كل المحاضر" : selectedCategory === "زاد" ? "إدارة زاد" : selectedCategory!}
+        title={categoryTitle}
         description={`${meetings.length} محضر`}
-        actions={
-          <button
-            onClick={() => setSelectedCategory(null)}
-            className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-400 hover:text-slate-600 transition-colors"
-            title="رجوع لاختيار القسم"
-          >
-            <ArrowRight className="w-4 h-4" />
-          </button>
-        }
       />
 
       {/* شريط التصفية */}

@@ -109,9 +109,8 @@ export default function CharityAccountsClient({ charities, accounts: initialAcco
         </div>
       )}
 
-      {/* Header section */}
-      <div className="px-6 pt-8 pb-6 border-b border-slate-200 dark:border-white/5 bg-white/80 dark:bg-black/20 backdrop-blur-3xl mb-6 -mx-4 sm:-mx-6 lg:-mx-8">
-        <div className="max-w-7xl mx-auto flex flex-col md:flex-row md:items-end justify-between gap-4 px-4 sm:px-6 lg:px-8">
+      <div className="mb-6">
+        <div>
           <PageHeader
             crumbs={[{ label: "لوحة التحكم", href: "/main/admin" }, { label: "حسابات الجمعيات" }]}
             icon={<ShieldAlert className="w-6 h-6" />}

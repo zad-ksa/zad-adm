@@ -1,7 +1,8 @@
 import { governanceManuals, CharitySize } from "@/data/governanceManual";
-import { Scale, ChevronRight, FileText, CheckCircle2 } from "lucide-react";
-import Link from "next/link";
+import { Scale, FileText, CheckCircle2 } from "lucide-react";
 import { redirect } from "next/navigation";
+import { PageHeader } from "@/components/console/layout";
+import { charityCrumbs } from "@/lib/crumbs";
 
 export default async function DashboardGovernanceStandardsPage({ 
   params,
@@ -33,36 +34,17 @@ export default async function DashboardGovernanceStandardsPage({
   return (
     <div className="min-h-full bg-[#FAFAFA] dark:bg-[#0A0A0A] p-4 md:p-8 selection:bg-primary/20 selection:text-primary rounded-3xl" dir="rtl">
       
-      {/* Navigation Header */}
-      <div className="max-w-5xl mx-auto mb-8">
-        <Link 
-          href={`/main/governance/${encodeURIComponent(charityName)}?change_size=true`}
-          className="inline-flex items-center gap-2 text-sm font-medium text-slate-500 hover:text-primary transition-colors bg-white dark:bg-slate-900 px-4 py-2 rounded-xl ring-1 ring-slate-200 dark:ring-slate-800 shadow-sm"
-        >
-          <ChevronRight className="w-4 h-4" />
-          العودة لإعدادات الحوكمة
-        </Link>
-      </div>
-
-      {/* Header Section */}
-      <div className="mb-12 max-w-5xl mx-auto space-y-6">
-        <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/5 dark:bg-primary/10 border border-primary/10 dark:border-primary/20 text-primary">
-          <Scale className="w-4 h-4" />
-          <span className="text-xs font-semibold tracking-widest uppercase">
-            معايير وشواهد {sizeLabels[sizeParam]}
-          </span>
-        </div>
-        
-        <h1 
-          className="font-bold text-slate-900 dark:text-white tracking-tight"
-          style={{ fontSize: "clamp(2rem, 3vw, 2.5rem)", lineHeight: 1.2 }}
-        >
-          المعايير والممارسات المعتمدة
-        </h1>
-        
-        <p className="text-slate-500 dark:text-slate-400 max-w-2xl font-medium leading-relaxed text-sm md:text-base">
-          توضح هذه الصفحة المعايير الأساسية، والممارسات الدقيقة، والشواهد المطلوبة لإثبات الامتثال، مصممة للإدارة العليا للجمعية.
-        </p>
+      <div className="max-w-5xl mx-auto mb-12">
+        <PageHeader
+          crumbs={charityCrumbs(
+            charityName,
+            { label: "الحوكمة", href: `/main/governance/${encodeURIComponent(charityName)}?change_size=true` },
+            { label: "المعايير والممارسات المعتمدة" }
+          )}
+          icon={<Scale className="w-6 h-6" />}
+          title="المعايير والممارسات المعتمدة"
+          description={`معايير وشواهد ${sizeLabels[sizeParam]} — المعايير الأساسية، والممارسات الدقيقة، والشواهد المطلوبة لإثبات الامتثال، مصممة للإدارة العليا للجمعية.`}
+        />
       </div>
 
       {/* Main Content */}

@@ -6,6 +6,16 @@ import { MONO, cx, field } from "./ui";
 // هيكل صفحات الإدارة: الترويسة، والأرقام، والتبويبات، والجداول، والحالات الفارغة.
 
 /**
+ * حلقةٌ في مسار التنقّل. `href` لصفحةٍ أب، و`onClick` لعرضٍ أبٍ داخل الصفحة
+ * نفسها (قسمٌ اختير من شبكة بطاقات مثلاً) — فالعودة في الحالين من المكان نفسه
+ * وبالشكل نفسه. والأخيرة بلا أيٍّ منهما: هي الصفحة الحالية.
+ */
+export type Crumb = { label: string; href?: string; onClick?: () => void };
+
+const crumbLinkClass =
+  "rounded-sm transition-colors outline-none hover:text-slate-900 focus-visible:ring-2 focus-visible:ring-primary/40 dark:hover:text-slate-100";
+
+/**
  * ترويسة الصفحة — عنوانٌ واحدٌ بمقاسٍ واحد في كل أقسام اللوحة.
  *
  * كان في المشروع سبعة مقاساتٍ لهذا العنصر نفسه (من `text-base` إلى
@@ -22,7 +32,7 @@ export function PageHeader({
   description,
   actions,
 }: {
-  crumbs?: { label: string; href?: string }[];
+  crumbs?: Crumb[];
   icon?: ReactNode;
   title: string;
   description?: ReactNode;
@@ -41,9 +51,13 @@ export function PageHeader({
                   </span>
                 )}
                 {c.href ? (
-                  <Link href={c.href} className="transition-colors hover:text-slate-900 dark:hover:text-slate-100">
+                  <Link href={c.href} className={crumbLinkClass}>
                     {c.label}
                   </Link>
+                ) : c.onClick ? (
+                  <button type="button" onClick={c.onClick} className={crumbLinkClass}>
+                    {c.label}
+                  </button>
                 ) : (
                   <span className="text-slate-900 dark:text-slate-100">{c.label}</span>
                 )}

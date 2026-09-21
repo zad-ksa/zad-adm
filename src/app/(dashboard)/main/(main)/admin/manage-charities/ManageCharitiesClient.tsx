@@ -112,11 +112,10 @@ export default function ManageCharitiesClient({ initialCharities }: { initialCha
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-200 pb-16 font-sans selection:bg-primary/20 selection:text-primary dark:selection:bg-primary/20 dark:selection:text-primary" dir="rtl">
-      {/* Header section */}
-      <div className="px-6 pt-8 pb-6 border-b border-slate-200 dark:border-white/5 bg-white/80 dark:bg-black/20 backdrop-blur-3xl">
-        <div className="max-w-7xl mx-auto flex flex-col md:flex-row md:items-end justify-between gap-4">
+      <div className="px-6 pt-8">
+        <div className="max-w-7xl mx-auto">
           <PageHeader
-            crumbs={[{ label: "لوحة التحكم", href: "/main/admin" }, { label: "الجمعيات المتعاقدة" }]}
+            crumbs={[{ label: "لوحة التحكم", href: "/main/admin" }, { label: "إدارة الجمعيات المتعاقدة" }]}
             icon={<Building2 className="w-6 h-6" />}
             title="إدارة الجمعيات المتعاقدة"
             description="منصة التحكم المركزية لإضافة وتعديل وحذف ملفات الجمعيات في زاد."

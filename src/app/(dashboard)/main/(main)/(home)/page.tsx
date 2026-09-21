@@ -1,9 +1,9 @@
 import { unstable_cache } from "next/cache";
 import { StatStrip, PageHeader } from "@/components/console/layout";
+import { MONO } from "@/components/console/ui";
+import ActivityList from "./ActivityList";
 import { prisma } from "@/lib/db";
 import type { Metadata } from "next";
-import Link from "next/link";
-import Image from "next/image";
 
 import { getSession } from "@/lib/auth";
 
@@ -146,197 +146,71 @@ export default async function MainDashboard() {
       </div>
 
       {/* نسبة الإنجاز الشاملة */}
-      <div className="bg-white dark:bg-slate-800 rounded-xl p-3 border border-slate-100 dark:border-slate-700 shadow-sm mb-4">
-        <div className="flex items-center justify-between mb-1.5">
-          <h2 className="text-sm font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
-            <span className="w-2 h-4 bg-emerald-500 rounded-full"></span>
-            نسبة إنجاز المهام الإجمالية
-          </h2>
-          <span className="text-sm font-bold text-emerald-600 dark:text-emerald-400">{stats.completionPercentage}%</span>
+      <section className="mb-4 rounded-lg border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900">
+        <div className="mb-2 flex items-center justify-between gap-3">
+          <h2 className="text-[14px] font-semibold text-slate-900 dark:text-slate-100">نسبة إنجاز المهام الإجمالية</h2>
+          <span className={`${MONO} text-[14px] font-semibold text-emerald-700 dark:text-emerald-400`}>
+            {stats.completionPercentage}%
+          </span>
         </div>
-        <div className="w-full bg-slate-100 dark:bg-slate-700 rounded-full h-2 mb-1.5 overflow-hidden">
-          <div className="bg-emerald-500 h-2 rounded-full transition-all duration-1000" style={{ width: `${stats.completionPercentage}%` }}></div>
+        <div
+          role="progressbar"
+          aria-valuenow={stats.completionPercentage}
+          aria-valuemin={0}
+          aria-valuemax={100}
+          aria-label="نسبة إنجاز المهام"
+          className="h-2 w-full overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800"
+        >
+          <div className="h-full rounded-full bg-emerald-500 transition-all duration-1000" style={{ width: `${stats.completionPercentage}%` }} />
         </div>
-        <p className="text-xs text-slate-500 dark:text-slate-400">
+        <p className="mt-2 text-[12.5px] text-slate-500 dark:text-slate-400">
           تم إنجاز {stats.completedTasks} مهمة من أصل {stats.totalTasks} مهام مسجلة.
         </p>
-      </div>
+      </section>
 
-      {/* Three Column Section: Tasks & Achievements */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+        <ActivityList
+          title="أبرز المهام العاجلة"
+          moreHref="/main/tasks"
+          empty="لا توجد مهام عاجلة حالياً."
+          items={stats.urgentTasks.map((task) => ({
+            id: task.id,
+            title: task.title,
+            date: task.createdAt,
+            badge: { tone: "danger", label: "عاجلة" },
+            person: task.assignedTo,
+          }))}
+        />
 
-        {/* Urgent Tasks Column */}
-        <div className="space-y-3">
-          <div className="flex items-center justify-between">
-            <h2 className="text-sm font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
-              <span className="w-2 h-4 bg-rose-500 rounded-full"></span>
-              أبرز المهام العاجلة
-            </h2>
-            <Link
-              href="/main/tasks"
-              className="text-xs font-bold text-primary dark:text-primary bg-primary/5 dark:bg-primary/10 hover:bg-primary/10 dark:hover:bg-primary/20 px-3 py-1.5 rounded-lg transition-all duration-300 flex items-center gap-1 shrink-0"
-            >
-              عرض الكل
-              <svg className="w-3.5 h-3.5 transition-transform duration-300 transform hover:-translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-              </svg>
-            </Link>
-          </div>
+        <ActivityList
+          title="المهام الجاري تنفيذها"
+          moreHref="/main/tasks"
+          empty="لا توجد مهام جاري تنفيذها حالياً."
+          items={stats.inProgressTasks.map((task) => ({
+            id: task.id,
+            title: task.title,
+            date: task.updatedAt,
+            badge: { tone: "warn", label: "جاري التنفيذ" },
+            person: task.assignedTo,
+          }))}
+        />
 
-          <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-700 p-3 shadow-sm divide-y divide-slate-100 dark:divide-slate-700">
-            {stats.urgentTasks.map((task, idx) => (
-              <div key={task.id} className={`group ${idx > 0 ? "pt-3" : ""} ${idx < stats.urgentTasks.length - 1 ? "pb-3" : ""}`}>
-                <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
-                  <span className="inline-block text-[10px] font-bold text-rose-700 dark:text-rose-400 bg-rose-50 dark:bg-rose-900/20 px-2 py-0.5 rounded-md">
-                    عاجلة
-                  </span>
-                  <div className="flex items-center gap-1.5 text-[10px] text-slate-400 dark:text-slate-500 font-bold">
-                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                    </svg>
-                    {new Date(task.createdAt).toLocaleDateString("ar-SA")}
-                  </div>
-                </div>
-                <h4 className="font-bold text-slate-800 dark:text-slate-100 text-sm mb-1.5 group-hover:text-primary dark:group-hover:text-primary transition-colors duration-300">
-                  {task.title}
-                </h4>
-                <div className="flex items-center gap-2 mt-2">
-                  {task.assignedTo?.avatarUrl ? (
-                    <Image src={task.assignedTo.avatarUrl} alt={task.assignedTo.name} width={24} height={24} className="w-6 h-6 rounded-full object-cover border border-slate-200 dark:border-slate-700" />
-                  ) : (
-                    <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center text-primary text-xs font-bold border border-primary/20">
-                      {task.assignedTo?.name?.charAt(0) || '?'}
-                    </div>
-                  )}
-                  <span className="text-xs text-slate-600 dark:text-slate-400 font-medium">{task.assignedTo?.name || "غير محدد"}</span>
-                </div>
-              </div>
-            ))}
-
-            {stats.urgentTasks.length === 0 && (
-              <div className="text-center py-8 text-slate-400 dark:text-slate-500">
-                <p className="text-xs font-semibold">لا توجد مهام عاجلة حالياً.</p>
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* In Progress Tasks Column */}
-        <div className="space-y-3">
-          <div className="flex items-center justify-between">
-            <h2 className="text-sm font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
-              <span className="w-2 h-4 bg-amber-400 dark:bg-amber-500 rounded-full"></span>
-              المهام الجاري تنفيذها
-            </h2>
-            <Link
-              href="/main/tasks"
-              className="text-xs font-bold text-primary dark:text-primary bg-primary/5 dark:bg-primary/10 hover:bg-primary/10 dark:hover:bg-primary/20 px-3 py-1.5 rounded-lg transition-all duration-300 flex items-center gap-1 shrink-0"
-            >
-              عرض الكل
-              <svg className="w-3.5 h-3.5 transition-transform duration-300 transform hover:-translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-              </svg>
-            </Link>
-          </div>
-
-          <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-700 p-3 shadow-sm divide-y divide-slate-100 dark:divide-slate-700">
-            {stats.inProgressTasks.map((task, idx) => (
-              <div key={task.id} className={`group ${idx > 0 ? "pt-3" : ""} ${idx < stats.inProgressTasks.length - 1 ? "pb-3" : ""}`}>
-                <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
-                  <span className="inline-block text-[10px] font-bold text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 px-2 py-0.5 rounded-md border border-amber-200 dark:border-amber-700/50">
-                    جاري التنفيذ
-                  </span>
-                  <div className="flex items-center gap-1.5 text-[10px] text-slate-400 dark:text-slate-500 font-bold">
-                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                    </svg>
-                    {new Date(task.updatedAt).toLocaleDateString("ar-SA")}
-                  </div>
-                </div>
-                <h4 className="font-bold text-slate-800 dark:text-slate-100 text-sm mb-1.5 group-hover:text-primary dark:group-hover:text-primary transition-colors duration-300">
-                  {task.title}
-                </h4>
-                <div className="flex items-center gap-2 mt-2">
-                  {task.assignedTo?.avatarUrl ? (
-                    <Image src={task.assignedTo.avatarUrl} alt={task.assignedTo.name} width={24} height={24} className="w-6 h-6 rounded-full object-cover border border-slate-200 dark:border-slate-700" />
-                  ) : (
-                    <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center text-primary text-xs font-bold border border-primary/20">
-                      {task.assignedTo?.name?.charAt(0) || '?'}
-                    </div>
-                  )}
-                  <span className="text-xs text-slate-600 dark:text-slate-400 font-medium">{task.assignedTo?.name || "غير محدد"}</span>
-                </div>
-              </div>
-            ))}
-
-            {stats.inProgressTasks.length === 0 && (
-              <div className="text-center py-8 text-slate-400 dark:text-slate-500">
-                <p className="text-xs font-semibold">لا توجد مهام جاري تنفيذها حالياً.</p>
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Achievements Column */}
-        <div className="space-y-3">
-          <div className="flex items-center justify-between">
-            <h2 className="text-sm font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
-              <span className="w-2 h-4 bg-emerald-400 dark:bg-emerald-500 rounded-full"></span>
-              أبرز ما تم إنجازه
-            </h2>
-          </div>
-
-          <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-700 p-3 shadow-sm divide-y divide-slate-100 dark:divide-slate-700">
-            {stats.combinedActivities.map((activity, idx) => (
-              <div key={activity.id} className={`group ${idx > 0 ? "pt-3" : ""} ${idx < stats.combinedActivities.length - 1 ? "pb-3" : ""}`}>
-                <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
-                  <div className="flex items-center gap-2">
-                    {activity.type === 'achievement' ? (
-                      <span className="inline-block text-[10px] font-bold text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/30 px-2 py-0.5 rounded-md border border-amber-200 dark:border-amber-700/50">
-                        إنجاز
-                      </span>
-                    ) : (
-                      <span className="inline-block text-[10px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/30 px-2 py-0.5 rounded-md border border-emerald-200 dark:border-emerald-700/50">
-                        مهمة منجزة
-                      </span>
-                    )}
-                    {activity.charityName && (
-                      <span className="inline-block text-[10px] font-bold text-primary dark:text-primary bg-primary/5 dark:bg-primary/10 px-2 py-0.5 rounded-md">
-                        {activity.charityName}
-                      </span>
-                    )}
-                  </div>
-                  <div className="flex items-center gap-1.5 text-[10px] text-slate-400 dark:text-slate-500 font-bold">
-                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                    </svg>
-                    {new Date(activity.date).toLocaleDateString("ar-SA")}
-                  </div>
-                </div>
-                <h4 className="font-bold text-slate-800 dark:text-slate-100 text-sm mb-1.5 group-hover:text-primary dark:group-hover:text-primary transition-colors duration-300">
-                  {activity.title}
-                </h4>
-                <div className="flex items-center gap-2 mt-2">
-                  {activity.person?.avatarUrl ? (
-                    <Image src={activity.person.avatarUrl} alt={activity.person.name} width={24} height={24} className="w-6 h-6 rounded-full object-cover border border-slate-200 dark:border-slate-700" />
-                  ) : (
-                    <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold border ${activity.type === 'achievement' ? 'bg-amber-50 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 border-amber-200 dark:border-amber-700/50' : 'bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 border-emerald-200 dark:border-emerald-700/50'}`}>
-                      {activity.person?.name?.charAt(0) || '?'}
-                    </div>
-                  )}
-                  <span className="text-xs text-slate-600 dark:text-slate-400 font-medium">بواسطة: {activity.person?.name || "غير محدد"}</span>
-                </div>
-              </div>
-            ))}
-
-            {stats.combinedActivities.length === 0 && (
-              <div className="text-center py-8 text-slate-400 dark:text-slate-500">
-                <p className="text-xs font-semibold">لا توجد إنجازات أو مهام منجزة مسجلة مؤخراً.</p>
-              </div>
-            )}
-          </div>
-        </div>
-
+        <ActivityList
+          title="أبرز ما تم إنجازه"
+          empty="لا توجد إنجازات أو مهام منجزة مسجلة مؤخراً."
+          items={stats.combinedActivities.map((activity) => ({
+            id: activity.id,
+            title: activity.title,
+            date: activity.date,
+            badge:
+              activity.type === "achievement"
+                ? { tone: "gold", label: "إنجاز" }
+                : { tone: "good", label: "مهمة منجزة" },
+            tag: activity.charityName || undefined,
+            person: activity.person,
+            personPrefix: "بواسطة: ",
+          }))}
+        />
       </div>
     </main>
   );

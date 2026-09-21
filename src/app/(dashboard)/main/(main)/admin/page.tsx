@@ -1,9 +1,61 @@
 import { getSession } from "@/lib/auth";
 import { PageHeader } from "@/components/console/layout";
+import { NavCard } from "@/components/console/ui";
 import { redirect } from "next/navigation";
-import Link from "next/link";
-import { ShieldCheck, Building2, Users, ShieldAlert, ArrowLeft, Layers, LayoutTemplate } from "lucide-react";
+import { ShieldCheck, Building2, Users, ShieldAlert, Layers, LayoutTemplate } from "lucide-react";
 import { hasPermission } from "@/lib/permissions";
+
+/**
+ * مداخل لوحة التحكم.
+ *
+ * كانت ست بطاقاتٍ بستة ألوان (زمرّدي، ولون الهوية، وبنفسجي، وتركوازي،
+ * وكهرماني، ووردي) ودوائر تتضاعف وأيقوناتٍ تميل عند المرور — ألوانٌ لا تقول
+ * شيئاً عن حالة. صارت بطاقة انتقالٍ واحدة من العُدّة بلون الهوية.
+ */
+const ENTRIES = [
+  {
+    permission: "manage_charity_accounts",
+    href: "/main/charity-accounts",
+    title: "حسابات الجمعيات",
+    description: "إنشاء حسابات دخول مخصصة لممثلي الجمعيات وتحديد الصلاحيات المتاحة لهم.",
+    icon: ShieldAlert,
+  },
+  {
+    permission: "manage_charities",
+    href: "/main/admin/manage-charities",
+    title: "إدارة الجمعيات المتعاقدة",
+    description: "إضافة جمعيات جديدة، وتعديل أو حذف بيانات الجمعيات الحالية.",
+    icon: Building2,
+  },
+  {
+    permission: "manage_employees",
+    href: "/main/employees",
+    title: "الموظفون",
+    description: "إدارة حسابات موظفي زاد التنموية، وتحديد أدوارهم وصلاحياتهم داخل النظام.",
+    icon: Users,
+  },
+  {
+    permission: "manage_permissions",
+    href: "/main/admin/permissions",
+    title: "الصلاحيات",
+    description: "استعراض كل صلاحية ومن يملكها، وإنشاء مجموعات صلاحيات باسم واحد.",
+    icon: ShieldCheck,
+  },
+  {
+    permission: "manage_services",
+    href: "/main/manage-services",
+    title: "إدارة الخدمات",
+    description: "إدارة المخططات الزمنية والخدمات الإضافية المرتبطة بجميع الجمعيات.",
+    icon: Layers,
+  },
+  {
+    permission: "manage_landing",
+    href: "/main/landing-settings",
+    title: "التحكم في الواجهة الرئيسية",
+    description: "تعديل نصوص وخلفيات وألوان وتأثيرات كل فقرة في الصفحة الرئيسية العامة للموقع.",
+    icon: LayoutTemplate,
+  },
+] as const;
 
 export default async function AdminDashboardPage() {
   const session = await getSession();
@@ -15,16 +67,8 @@ export default async function AdminDashboardPage() {
 
   // Every permission with a card below must appear here, or its holder is
   // sent away from the page that carries their own entry point.
-  if (
-    !can("manage_charities") &&
-    !can("manage_employees") &&
-    !can("manage_charity_accounts") &&
-    !can("manage_permissions") &&
-    !can("manage_services") &&
-    !can("manage_landing")
-  ) {
-    redirect("/main");
-  }
+  const visible = ENTRIES.filter((e) => can(e.permission));
+  if (visible.length === 0) redirect("/main");
 
   return (
     <div className="space-y-6 animate-fade-in pb-10" dir="rtl">
@@ -34,104 +78,10 @@ export default async function AdminDashboardPage() {
         description="إدارة النظام والجمعيات وحسابات المستخدمين."
       />
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        
-        {/* Charity Accounts Management */}
-        {can("manage_charity_accounts") && (
-          <Link href="/main/charity-accounts" className="group bg-white dark:bg-slate-800 p-6 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700/50 hover:shadow-xl hover:shadow-primary/5 hover:border-primary/20 transition-all overflow-hidden relative">
-            <div className="absolute -left-6 -bottom-6 w-24 h-24 bg-primary/5 rounded-full group-hover:scale-150 transition-transform duration-500 pointer-events-none" />
-            <div className="w-12 h-12 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 group-hover:rotate-3 transition-transform shadow-inner">
-              <ShieldAlert className="w-6 h-6" />
-            </div>
-            <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100 mb-2">إدارة حسابات الجمعيات</h3>
-            <p className="text-sm text-slate-500 dark:text-slate-400 mb-6 line-clamp-2">إنشاء حسابات دخول مخصصة لممثلي الجمعيات وتحديد الصلاحيات المتاحة لهم.</p>
-            <div className="flex items-center gap-2 text-emerald-600 font-bold text-sm">
-              <span>الدخول للإدارة</span>
-              <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
-            </div>
-          </Link>
-        )}
-
-        {/* Charities Management */}
-        {can("manage_charities") && (
-          <Link href="/main/admin/manage-charities" className="group bg-white dark:bg-slate-800 p-6 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700/50 hover:shadow-xl hover:shadow-primary/5 hover:border-primary/20 transition-all overflow-hidden relative">
-            <div className="absolute -left-6 -bottom-6 w-24 h-24 bg-primary/5 rounded-full group-hover:scale-150 transition-transform duration-500 pointer-events-none" />
-            <div className="w-12 h-12 bg-primary/5 dark:bg-primary/10 text-primary rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 group-hover:-rotate-3 transition-transform shadow-inner">
-              <Building2 className="w-6 h-6" />
-            </div>
-            <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100 mb-2">إدارة الجمعيات المتعاقدة</h3>
-            <p className="text-sm text-slate-500 dark:text-slate-400 mb-6 line-clamp-2">إضافة جمعيات جديدة، وتعديل أو حذف بيانات الجمعيات الحالية.</p>
-            <div className="flex items-center gap-2 text-primary font-bold text-sm">
-              <span>الدخول للإدارة</span>
-              <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
-            </div>
-          </Link>
-        )}
-
-        {/* Employees Management */}
-        {can("manage_employees") && (
-          <Link href="/main/employees" className="group bg-white dark:bg-slate-800 p-6 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700/50 hover:shadow-xl hover:shadow-primary/5 hover:border-primary/20 transition-all overflow-hidden relative">
-            <div className="absolute -left-6 -bottom-6 w-24 h-24 bg-primary/5 rounded-full group-hover:scale-150 transition-transform duration-500 pointer-events-none" />
-            <div className="w-12 h-12 bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400 rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 group-hover:-rotate-3 transition-transform shadow-inner">
-              <Users className="w-6 h-6" />
-            </div>
-            <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100 mb-2">إدارة الموظفين</h3>
-            <p className="text-sm text-slate-500 dark:text-slate-400 mb-6 line-clamp-2">إدارة حسابات موظفي زاد التنموية، وتحديد أدوارهم وصلاحياتهم داخل النظام.</p>
-            <div className="flex items-center gap-2 text-purple-600 font-bold text-sm">
-              <span>الدخول للإدارة</span>
-              <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
-            </div>
-          </Link>
-        )}
-
-        {/* Permissions administration */}
-        {can("manage_permissions") && (
-          <Link href="/main/admin/permissions" className="group bg-white dark:bg-slate-800 p-6 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700/50 hover:shadow-xl hover:shadow-primary/5 hover:border-primary/20 transition-all overflow-hidden relative">
-            <div className="absolute -left-6 -bottom-6 w-24 h-24 bg-primary/5 rounded-full group-hover:scale-150 transition-transform duration-500 pointer-events-none" />
-            <div className="w-12 h-12 bg-teal-50 dark:bg-teal-900/20 text-teal-600 dark:text-teal-400 rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 group-hover:-rotate-3 transition-transform shadow-inner">
-              <ShieldCheck className="w-6 h-6" />
-            </div>
-            <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100 mb-2">إدارة الصلاحيات</h3>
-            <p className="text-sm text-slate-500 dark:text-slate-400 mb-6 line-clamp-2">استعراض كل صلاحية ومن يملكها، وإنشاء مجموعات صلاحيات باسم واحد.</p>
-            <div className="flex items-center gap-2 text-teal-600 font-bold text-sm">
-              <span>الدخول للإدارة</span>
-              <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
-            </div>
-          </Link>
-        )}
-
-        {/* Services Management */}
-        {can("manage_services") && (
-          <Link href="/main/manage-services" className="group bg-white dark:bg-slate-800 p-6 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700/50 hover:shadow-xl hover:shadow-primary/5 hover:border-primary/20 transition-all overflow-hidden relative">
-            <div className="absolute -left-6 -bottom-6 w-24 h-24 bg-primary/5 rounded-full group-hover:scale-150 transition-transform duration-500 pointer-events-none" />
-            <div className="w-12 h-12 bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400 rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 group-hover:rotate-3 transition-transform shadow-inner">
-              <Layers className="w-6 h-6" />
-            </div>
-            <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100 mb-2">إدارة الخدمات</h3>
-            <p className="text-sm text-slate-500 dark:text-slate-400 mb-6 line-clamp-2">إدارة المخططات الزمنية والخدمات الإضافية المرتبطة بجميع الجمعيات.</p>
-            <div className="flex items-center gap-2 text-amber-600 font-bold text-sm">
-              <span>الدخول للإدارة</span>
-              <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
-            </div>
-          </Link>
-        )}
-
-        {/* Landing Page Control */}
-        {can("manage_landing") && (
-          <Link href="/main/landing-settings" className="group bg-white dark:bg-slate-800 p-6 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700/50 hover:shadow-xl hover:shadow-primary/5 hover:border-primary/20 transition-all overflow-hidden relative">
-            <div className="absolute -left-6 -bottom-6 w-24 h-24 bg-primary/5 rounded-full group-hover:scale-150 transition-transform duration-500 pointer-events-none" />
-            <div className="w-12 h-12 bg-rose-50 dark:bg-rose-900/20 text-rose-600 dark:text-rose-400 rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 group-hover:-rotate-3 transition-transform shadow-inner">
-              <LayoutTemplate className="w-6 h-6" />
-            </div>
-            <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100 mb-2">التحكم في الواجهة الرئيسية</h3>
-            <p className="text-sm text-slate-500 dark:text-slate-400 mb-6 line-clamp-2">تعديل نصوص وخلفيات وألوان وتأثيرات كل فقرة في الصفحة الرئيسية العامة للموقع.</p>
-            <div className="flex items-center gap-2 text-rose-600 font-bold text-sm">
-              <span>الدخول للتحكم</span>
-              <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
-            </div>
-          </Link>
-        )}
-
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+        {visible.map(({ href, title, description, icon: Icon }) => (
+          <NavCard key={href} href={href} title={title} description={description} icon={<Icon className="size-5" />} />
+        ))}
       </div>
     </div>
   );

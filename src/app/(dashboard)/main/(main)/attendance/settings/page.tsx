@@ -1,6 +1,7 @@
 export const dynamic = "force-dynamic";
 
 import type { Metadata } from "next";
+import { PageHeader } from "@/components/console/layout";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, CalendarDays, Clock, MapPin, PenLine, Users, Wifi } from "lucide-react";
@@ -131,9 +132,9 @@ export default async function AttendanceSettingsPage() {
 
   return (
     <main className="flex-1 min-w-0 py-4" dir="rtl">
-      <header className="mb-4">
-        <h1 className="text-xl font-black text-slate-900 dark:text-slate-100">التحضير</h1>
-      </header>
+      <div className="mb-4">
+        <PageHeader title="التحضير" />
+      </div>
 
       <AttendanceTabs
         canManage

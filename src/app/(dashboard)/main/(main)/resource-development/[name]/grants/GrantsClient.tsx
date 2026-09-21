@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { PageHeader } from "@/components/console/layout";
 import { confirmAction } from "@/components/console/confirmBus";
 import Select from "@/components/console/Select";
 import { FileText, Plus, Trash2, CheckCircle2, AlertCircle, TrendingUp, Check, X, Calendar, Edit, HandCoins } from "lucide-react";
@@ -237,15 +238,12 @@ export default function GrantsClient({
       <div className="bg-white dark:bg-slate-800 rounded-xl p-4 border border-slate-100 dark:border-slate-700 shadow-sm relative overflow-hidden">
         <div className="absolute top-0 left-0 w-64 h-64 bg-primary/5 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2 pointer-events-none"></div>
         <div className="relative flex flex-col lg:flex-row justify-between items-start lg:items-center gap-5">
-          <div className="flex items-center gap-3 w-full lg:w-auto">
-            <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center text-primary border border-primary/20 shrink-0">
-              <FileText className="w-5 h-5" />
-            </div>
-            <div>
-              <h1 className="text-base font-black text-slate-800 dark:text-slate-100 mb-0.5">{charityName} - إدارة المنح</h1>
-              <p className="text-slate-500 dark:text-slate-400 text-[11px] font-bold">متابعة دقيقة لطلبات المنح ومراحل الاعتماد والإغلاق</p>
-            </div>
-          </div>
+          <PageHeader
+            crumbs={[{ label: charityName }, { label: "إدارة المنح" }]}
+            icon={<FileText className="w-6 h-6" />}
+            title="إدارة المنح"
+            description="متابعة دقيقة لطلبات المنح ومراحل الاعتماد والإغلاق"
+          />
 
           <div className="flex gap-3 flex-wrap">
             <div className="bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-400 px-4 py-2 rounded-xl flex items-center gap-2 border border-amber-100 dark:border-amber-500/20 shadow-sm">

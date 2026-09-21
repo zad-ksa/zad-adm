@@ -1,4 +1,5 @@
 import { ReactNode } from "react";
+import { PageHeader } from "@/components/console/layout";
 import StrategyTabs from "./StrategyTabs";
 import { getSession } from "@/lib/auth";
 
@@ -15,9 +16,12 @@ export default async function StrategyLayout({
 
   return (
     <div className="flex flex-col h-full">
-      <div className="mb-6 print:hidden transition-colors">
-        <h1 className="text-3xl font-bold text-slate-800 dark:text-slate-100 mb-2 transition-colors">الاستراتيجية</h1>
-        <p className="text-slate-500 dark:text-slate-400 transition-colors">البيانات الاستراتيجية، الأداء، ونتائج التحليلات الخاصة بالجمعية.</p>
+      <div className="mb-6 print:hidden">
+        <PageHeader
+          crumbs={[{ label: decodedName }, { label: "الاستراتيجية" }]}
+          title="الاستراتيجية"
+          description="البيانات الاستراتيجية، الأداء، ونتائج التحليلات الخاصة بالجمعية."
+        />
       </div>
 
       {/* <div className="print:hidden">

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { PageHeader } from "@/components/console/layout";
 import { ArrowRight } from "lucide-react";
 import AttendanceTabs from "../AttendanceTabs";
 
@@ -23,9 +24,9 @@ export default function SettingsShell({
 }) {
   return (
     <main className="flex-1 min-w-0 py-4" dir="rtl">
-      <header className="mb-4">
-        <h1 className="text-xl font-black text-slate-900 dark:text-slate-100">التحضير</h1>
-      </header>
+      <div className="mb-4">
+        <PageHeader title="التحضير" />
+      </div>
 
       <AttendanceTabs canManage canViewReports={canViewReports} />
 

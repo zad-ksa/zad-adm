@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { PageHeader } from "@/components/console/layout";
 import { Spinner } from "@/components/console/ui";
 import Link from "next/link";
 import { Plus, Edit2, Trash2, Eye, Copy, CheckCircle, Printer, RefreshCw, Files, LayoutGrid, List, AlertTriangle, X } from "lucide-react";
@@ -221,11 +222,11 @@ export default function SurveysPage() {
 
   return (
     <div className="p-8 max-w-7xl mx-auto dark:bg-slate-900">
-      <div className="flex items-center justify-between mb-8">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-800 dark:text-slate-100">إدارة الاستبيانات المخصصة</h1>
-          <p className="text-slate-500 mt-1 dark:text-slate-400">قم بإنشاء وتعديل الاستبيانات ومتابعة الردود</p>
-        </div>
+      <div className="mb-8">
+        <PageHeader
+          title="إدارة الاستبيانات المخصصة"
+          description="قم بإنشاء وتعديل الاستبيانات ومتابعة الردود"
+          actions={
         <div className="flex items-center gap-3">
           {/* تفضيل طريقة العرض — بطاقات أو قائمة، يُحفظ لهذا المستخدم في متصفحه */}
           <div className="flex items-center gap-1 p-1 bg-slate-100 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700">
@@ -268,6 +269,8 @@ export default function SurveysPage() {
             إنشاء استبيان جديد
           </button>
         </div>
+          }
+        />
       </div>
 
       {notice && (

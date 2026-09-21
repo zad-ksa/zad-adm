@@ -5,13 +5,25 @@ import { MONO, cx, field } from "./ui";
 
 // هيكل صفحات الإدارة: الترويسة، والأرقام، والتبويبات، والجداول، والحالات الفارغة.
 
+/**
+ * ترويسة الصفحة — عنوانٌ واحدٌ بمقاسٍ واحد في كل أقسام اللوحة.
+ *
+ * كان في المشروع سبعة مقاساتٍ لهذا العنصر نفسه (من `text-base` إلى
+ * `clamp(2rem,3vw,2.5rem)`) وثلاثة أوزان. والمقاس هنا ٢٦ بكسل، وهو
+ * `--fs-page` في سُلّم الخطّ المُعلَن.
+ *
+ * `crumbs` اختياري: صفحةٌ بلا أبٍ لا تُخترع لها مسارٌ وهمي.
+ * `icon` للأقسام التي تُعرِّف نفسها بأيقونة، و`actions` لأزرار اليمين.
+ */
 export function PageHeader({
   crumbs,
+  icon,
   title,
   description,
   actions,
 }: {
-  crumbs: { label: string; href?: string }[];
+  crumbs?: { label: string; href?: string }[];
+  icon?: ReactNode;
   title: string;
   description?: ReactNode;
   actions?: ReactNode;
@@ -19,25 +31,34 @@ export function PageHeader({
   return (
     <header className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
       <div className="min-w-0 space-y-1.5">
-        <nav aria-label="مسار التنقل" className="flex items-center gap-1.5 text-[13px] text-slate-500 dark:text-slate-400">
-          {crumbs.map((c, i) => (
-            <span key={c.label} className="flex items-center gap-1.5">
-              {i > 0 && (
-                <span aria-hidden className="text-slate-300 dark:text-slate-700">
-                  /
-                </span>
-              )}
-              {c.href ? (
-                <Link href={c.href} className="transition-colors hover:text-slate-900 dark:hover:text-slate-100">
-                  {c.label}
-                </Link>
-              ) : (
-                <span className="text-slate-900 dark:text-slate-100">{c.label}</span>
-              )}
+        {crumbs && crumbs.length > 0 && (
+          <nav aria-label="مسار التنقل" className="flex items-center gap-1.5 text-[13px] text-slate-500 dark:text-slate-400">
+            {crumbs.map((c, i) => (
+              <span key={c.label} className="flex items-center gap-1.5">
+                {i > 0 && (
+                  <span aria-hidden className="text-slate-300 dark:text-slate-700">
+                    /
+                  </span>
+                )}
+                {c.href ? (
+                  <Link href={c.href} className="transition-colors hover:text-slate-900 dark:hover:text-slate-100">
+                    {c.label}
+                  </Link>
+                ) : (
+                  <span className="text-slate-900 dark:text-slate-100">{c.label}</span>
+                )}
+              </span>
+            ))}
+          </nav>
+        )}
+        <h1 className="flex items-center gap-2.5 text-[26px] font-semibold leading-tight tracking-tight">
+          {icon && (
+            <span aria-hidden className="shrink-0 text-primary dark:text-teal-300">
+              {icon}
             </span>
-          ))}
-        </nav>
-        <h1 className="text-[26px] font-semibold leading-tight tracking-tight">{title}</h1>
+          )}
+          <span className="min-w-0">{title}</span>
+        </h1>
         {description && <p className="max-w-2xl text-[14px] leading-6 text-slate-500 dark:text-slate-400">{description}</p>}
       </div>
       {actions && <div className="flex flex-wrap items-center gap-2">{actions}</div>}

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { PageHeader } from "@/components/console/layout";
 import { confirmAction } from "@/components/console/confirmBus";
 import { notify } from "@/components/console/toastBus";
 import Select from "@/components/console/Select";
@@ -91,17 +92,11 @@ function getCategoryCount(meetings: Meeting[], key: string): number {
 function CategorySelector({ meetings, onSelect }: { meetings: Meeting[]; onSelect: (key: string) => void }) {
   return (
     <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-500" dir="rtl">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <div className="w-7 h-7 bg-primary/10 dark:bg-primary/20 rounded-lg flex items-center justify-center">
-            <FileText className="w-3.5 h-3.5 text-primary" />
-          </div>
-          <div>
-            <h1 className="text-base font-bold text-slate-800 dark:text-slate-100">محاضر الاجتماعات</h1>
-            <p className="text-[11px] text-slate-500 dark:text-slate-400">اختر القسم للعرض</p>
-          </div>
-        </div>
-      </div>
+      <PageHeader
+        icon={<FileText className="w-6 h-6" />}
+        title="محاضر الاجتماعات"
+        description="اختر القسم للعرض"
+      />
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
         {CATEGORY_CARDS.map(cat => {
           const count = getCategoryCount(meetings, cat.key);
@@ -363,27 +358,20 @@ export default function MeetingsClient({ meetings, charities, employees, session
 
   return (
     <div className="space-y-3 animate-in fade-in slide-in-from-bottom-4 duration-500" dir="rtl">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
+      <PageHeader
+        icon={<FileText className="w-6 h-6" />}
+        title={selectedCategory === "all" ? "كل المحاضر" : selectedCategory === "زاد" ? "إدارة زاد" : selectedCategory!}
+        description={`${meetings.length} محضر`}
+        actions={
           <button
             onClick={() => setSelectedCategory(null)}
-            className="p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-400 hover:text-slate-600 transition-colors"
-            title="رجوع"
+            className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-400 hover:text-slate-600 transition-colors"
+            title="رجوع لاختيار القسم"
           >
             <ArrowRight className="w-4 h-4" />
           </button>
-          <div className="w-7 h-7 bg-primary/10 dark:bg-primary/20 rounded-lg flex items-center justify-center">
-            <FileText className="w-3.5 h-3.5 text-primary" />
-          </div>
-          <div>
-            <h1 className="text-base font-bold text-slate-800 dark:text-slate-100">
-              {selectedCategory === "all" ? "كل المحاضر" : selectedCategory === "زاد" ? "إدارة زاد" : selectedCategory}
-            </h1>
-            <p className="text-[11px] text-slate-500 dark:text-slate-400">{meetings.length} محضر</p>
-          </div>
-        </div>
-      </div>
+        }
+      />
 
       {/* شريط التصفية */}
       <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-700 p-3 space-y-2">

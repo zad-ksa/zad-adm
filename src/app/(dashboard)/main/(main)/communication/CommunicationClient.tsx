@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
+import { PageHeader } from "@/components/console/layout";
 import { notify } from "@/components/console/toastBus";
 import { MessageSquare, User, Phone, Edit, Check, X, PhoneCall, Search, Building2, ChevronRight, ChevronLeft } from "lucide-react";
 import { updateServiceResponsible, updateCharityContact } from "@/app/actions/communication";
@@ -183,15 +184,11 @@ export default function CommunicationClient({ charities }: { charities: Charity[
   return (
     <div className="p-6 max-w-7xl mx-auto w-full font-sans animate-in fade-in slide-in-from-bottom-4 duration-500">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 bg-white dark:bg-slate-900 p-6 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800">
-        <div className="flex items-center gap-4">
-          <div className="w-12 h-12 rounded-xl bg-primary/10 text-primary flex items-center justify-center shrink-0">
-            <MessageSquare className="w-6 h-6" />
-          </div>
-          <div>
-            <h1 className="text-xl font-bold text-slate-800 dark:text-slate-100">مصفوفة التواصل والخدمات</h1>
-            <p className="text-xs text-slate-500 mt-1 font-medium">عرض وإدارة مسؤولي التواصل لكل خدمة/مسار للجمعيات في جدول تفاعلي موحد</p>
-          </div>
-        </div>
+        <PageHeader
+          icon={<MessageSquare className="w-6 h-6" />}
+          title="مصفوفة التواصل والخدمات"
+          description="عرض وإدارة مسؤولي التواصل لكل خدمة/مسار للجمعيات في جدول تفاعلي موحد"
+        />
 
         {/* Search */}
         <div className="relative w-full md:w-80">

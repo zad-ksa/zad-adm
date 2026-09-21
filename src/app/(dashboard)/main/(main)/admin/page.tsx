@@ -1,4 +1,5 @@
 import { getSession } from "@/lib/auth";
+import { PageHeader } from "@/components/console/layout";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { ShieldCheck, Building2, Users, ShieldAlert, ArrowLeft, Layers, LayoutTemplate } from "lucide-react";
@@ -27,13 +28,11 @@ export default async function AdminDashboardPage() {
 
   return (
     <div className="space-y-6 animate-fade-in pb-10" dir="rtl">
-      <div>
-        <h1 className="text-2xl font-black text-slate-800 dark:text-slate-100 flex items-center gap-3">
-          <ShieldAlert className="w-8 h-8 text-primary" />
-          لوحة التحكم
-        </h1>
-        <p className="text-slate-500 dark:text-slate-400 mt-2">إدارة النظام والجمعيات وحسابات المستخدمين.</p>
-      </div>
+      <PageHeader
+        icon={<ShieldAlert className="w-6 h-6" />}
+        title="لوحة التحكم"
+        description="إدارة النظام والجمعيات وحسابات المستخدمين."
+      />
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         

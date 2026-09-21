@@ -1,12 +1,12 @@
 "use client";
 
 import { useState, useTransition, useMemo } from "react";
+import { PageHeader } from "@/components/console/layout";
 import { confirmAction } from "@/components/console/confirmBus";
-import { Plus, Edit, Trash2, Layers, Search, CheckCircle2, AlertCircle, Building2, ChevronDown, ChevronUp, X, Check, ArrowRight } from "lucide-react";
+import { Plus, Edit, Trash2, Layers, Search, CheckCircle2, AlertCircle, Building2, ChevronDown, ChevronUp, X, Check } from "lucide-react";
 import { addServiceToCharities, renameServiceGlobally, deleteServiceGlobally } from "@/app/actions/services";
 import { setServiceEmployees } from "@/app/actions/serviceAccess";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
 
 type CharityItem = { id: string; name: string };
 
@@ -185,33 +185,21 @@ export default function ManageServicesClient({
         </div>
       )}
 
-      {/* Header */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white dark:bg-slate-800 p-6 rounded-3xl border border-slate-100 dark:border-slate-700/50 shadow-sm">
-        <div>
-          <h1 className="text-xl font-black text-slate-800 dark:text-slate-100 flex items-center gap-2.5">
-            <Link 
-              href="/main/admin" 
-              className="p-1.5 hover:bg-slate-100 dark:hover:bg-slate-700/50 rounded-xl transition-all text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 flex items-center justify-center"
-              title="العودة للوحة التحكم"
-            >
-              <ArrowRight className="w-5 h-5" />
-            </Link>
-            <span className="text-slate-200 dark:text-slate-700 text-lg">|</span>
-            <Layers className="w-5 h-5 text-primary shrink-0" />
-            إدارة الخدمات
-          </h1>
-          <p className="text-sm text-slate-500 dark:text-slate-400 mt-1 mr-11">
-            الخدمات الحالية المقدمة للجمعيات — أضف، عدّل أو احذف
-          </p>
-        </div>
-        <button
-          onClick={openAdd}
-          className="bg-primary hover:bg-primary/90 text-white px-5 py-2.5 rounded-xl font-bold flex items-center gap-2 shadow-lg shadow-primary/20 transition-all active:scale-95 text-sm"
-        >
-          <Plus className="w-4 h-4" />
-          إضافة خدمة جديدة
-        </button>
-      </div>
+      <PageHeader
+        crumbs={[{ label: "لوحة التحكم", href: "/main/admin" }, { label: "الخدمات" }]}
+        icon={<Layers className="w-6 h-6" />}
+        title="إدارة الخدمات"
+        description="الخدمات الحالية المقدمة للجمعيات — أضف، عدّل أو احذف"
+        actions={
+          <button
+            onClick={openAdd}
+            className="bg-primary hover:bg-primary/90 text-white px-5 py-2.5 rounded-xl font-bold flex items-center gap-2 shadow-lg shadow-primary/20 transition-all active:scale-95 text-sm"
+          >
+            <Plus className="w-4 h-4" />
+            إضافة خدمة جديدة
+          </button>
+        }
+      />
 
       {/* Search */}
       <div className="bg-white dark:bg-slate-800 p-4 rounded-2xl border border-slate-100 dark:border-slate-700/50 shadow-sm">

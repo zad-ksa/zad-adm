@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { PageHeader } from "@/components/console/layout";
 import { confirmAction } from "@/components/console/confirmBus";
 import Select from "@/components/console/Select";
 import {
@@ -44,16 +45,11 @@ export default function WorkflowSettingsClient({
 
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500" dir="rtl">
-      {/* Header */}
-      <div className="flex items-center gap-3">
-        <div className="w-9 h-9 bg-primary/10 dark:bg-primary/20 rounded-xl flex items-center justify-center">
-          <GitBranch className="w-5 h-5 text-primary" />
-        </div>
-        <div>
-          <h1 className="text-base font-bold text-slate-800 dark:text-slate-100">سلاسل اعتماد الطلبات</h1>
-          <p className="text-xs text-slate-500 dark:text-slate-400">حدد الترتيب الهرمي الذي تمر به الطلبات قبل اعتمادها</p>
-        </div>
-      </div>
+      <PageHeader
+        icon={<GitBranch className="w-6 h-6" />}
+        title="سلاسل اعتماد الطلبات"
+        description="حدد الترتيب الهرمي الذي تمر به الطلبات قبل اعتمادها"
+      />
 
       {error && (
         <div className="flex items-center gap-2 text-sm text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl px-4 py-2.5">

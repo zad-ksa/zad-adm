@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition, useEffect, useCallback, useMemo } from "react";
+import { PageHeader } from "@/components/console/layout";
 import { confirmAction } from "@/components/console/confirmBus";
 import { notify } from "@/components/console/toastBus";
 import Select from "@/components/console/Select";
@@ -673,23 +674,15 @@ export default function RequestsClient({ requests: initial, hasActiveChain, canR
 
   return (
     <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-500" dir="rtl">
-      {/* Header */}
-      <div className="flex items-center justify-between gap-3 flex-wrap">
-        <div className="flex items-center gap-2 min-w-0">
-          <div className="w-8 h-8 bg-primary/10 rounded-lg flex items-center justify-center shrink-0">
-            <Send className="w-4 h-4 text-primary" />
-          </div>
-          <div>
-            <h1 className="text-base font-bold text-slate-800 dark:text-slate-100">
-              الاعتمادات
-            </h1>
-            <p className="text-[11px] text-slate-500 dark:text-slate-400">
-              {awaitingMe.length > 0
-                ? `${awaitingMe.length} بانتظار اعتمادك · ${mine.length} من طلباتك`
-                : `${mine.length} من طلباتك`}
-            </p>
-          </div>
-        </div>
+      <PageHeader
+        icon={<Send className="w-6 h-6" />}
+        title="الاعتمادات"
+        description={
+          awaitingMe.length > 0
+            ? `${awaitingMe.length} بانتظار اعتمادك · ${mine.length} من طلباتك`
+            : `${mine.length} من طلباتك`
+        }
+        actions={
         <div className="flex items-center gap-2">
           <button
             onClick={() => { setReminderTargetId(null); setReminderCopied(false); setReminderOpen(true); }}
@@ -708,7 +701,8 @@ export default function RequestsClient({ requests: initial, hasActiveChain, canR
             <RefreshCw className={`w-3.5 h-3.5 ${loading ? "animate-spin" : ""}`} />
           </button>
         </div>
-      </div>
+        }
+      />
 
       {/* المسار: أي مجموعة طلبات أنظر إليها — تحكّم رئيسي، لذا هو مجموعة أزرار
           مدمجة (segmented) بمظهر مميّز عن فلاتر البحث أسفله حتى لا يختلطا. */}

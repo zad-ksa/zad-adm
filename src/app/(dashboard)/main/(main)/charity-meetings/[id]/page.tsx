@@ -1,7 +1,7 @@
 import { prisma } from "@/lib/db";
+import { PageHeader } from "@/components/console/layout";
 import { notFound } from "next/navigation";
-import { Calendar, Clock, ChevronRight, User, MessageSquareText, Phone } from "lucide-react";
-import Link from "next/link";
+import { Calendar, Clock, User, MessageSquareText, Phone } from "lucide-react";
 import { formatClock12 } from "@/lib/attendanceTime";
 
 export default async function CharityMeetingBookingsPage({
@@ -52,16 +52,14 @@ export default async function CharityMeetingBookingsPage({
     <div className="space-y-6" dir="rtl">
       {/* Header */}
       <div className="flex items-center gap-4 mb-6">
-        <Link 
-          href="/main/charity-meetings"
-          className="p-2 rounded-xl bg-white dark:bg-slate-800 text-slate-500 hover:text-primary transition-colors border border-slate-200 dark:border-slate-700 shadow-sm"
-        >
-          <ChevronRight className="w-5 h-5" />
-        </Link>
-        <div>
-          <h1 className="text-2xl font-bold text-slate-800 dark:text-slate-100">{schedule.title}</h1>
-          <p className="text-sm text-slate-500 dark:text-slate-400">جدول المواعيد المحجوزة</p>
-        </div>
+        <PageHeader
+          crumbs={[
+            { label: "اجتماعات الجمعيات", href: "/main/charity-meetings" },
+            { label: schedule.title },
+          ]}
+          title={schedule.title}
+          description="جدول المواعيد المحجوزة"
+        />
       </div>
 
       {/* Bookings Table */}

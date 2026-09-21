@@ -44,7 +44,7 @@ import {
 import { uploadFiles } from "@/lib/clientUpload";
 import { ACCEPT_ATTRIBUTE, formatBytes, maxBytesFor, maxLabelFor } from "@/lib/uploadPurposes";
 import { ConfirmDialog } from "@/components/console/ConfirmDialog";
-import SuccessToast from "@/components/ui/SuccessToast";
+import { Toast } from "@/components/console/Toast";
 
 const MAX_BYTES = maxBytesFor("template_file");
 const MAX_LABEL = maxLabelFor("template_file");
@@ -1187,7 +1187,7 @@ export default function TemplateLibraryClient() {
         onConfirm={handleDelete}
       />
 
-      <SuccessToast message={toast} onDismiss={() => setToast(null)} />
+      <Toast toast={toast ? { tone: "ok", text: toast } : null} onDismiss={() => setToast(null)} />
     </div>
   );
 }

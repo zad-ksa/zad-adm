@@ -8,7 +8,7 @@ import EditDesignRequestModal from "@/components/design-requests/EditDesignReque
 import DesignRequestLogModal from "@/components/design-requests/DesignRequestLogModal";
 import QueueOrderModal, { type QueueRow } from "@/components/design-requests/QueueOrderModal";
 import type { DesignRequestProgress } from "@/lib/designRequestProgress";
-import SuccessToast from "@/components/ui/SuccessToast";
+import { Toast } from "@/components/console/Toast";
 import { ConfirmDialog } from "@/components/console/ConfirmDialog";
 import RequestRevisionModal from "@/components/design-requests/RequestRevisionModal";
 import { RevisionNotesList } from "@/components/design-requests/RevisionNotesList";
@@ -533,7 +533,7 @@ export default function DesignRequestsPortalClient({
         }}
       />
 
-      <SuccessToast message={toast} onDismiss={() => setToast(null)} />
+      <Toast toast={toast ? { tone: "ok", text: toast } : null} onDismiss={() => setToast(null)} />
     </div>
   );
 }

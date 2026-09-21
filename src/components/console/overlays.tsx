@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import type { MouseEvent, ReactNode } from "react";
-import { CircleCheck, Ellipsis, TriangleAlert, X } from "lucide-react";
+import { Ellipsis, TriangleAlert, X } from "lucide-react";
 import { btn, cx } from "./ui";
 
 // الطبقات العائمة لصفحات الإدارة: اللوحة الجانبية، والتأكيد، والإشعار، وقائمة الصف.
@@ -99,35 +99,7 @@ export function FooterStatus({ error, children }: { error: string | null; childr
 // ConfirmDialog انتقل إلى console/ConfirmDialog.tsx: حوارٌ واحدٌ بصيغتين
 // بدل تطبيقين متوازيين.
 
-export type ToastMessage = { tone: "ok" | "error"; text: string } | null;
-
-/** إشعارٌ يختفي وحده بعد ثوانٍ. */
-export function useToast() {
-  const [toast, setToast] = useState<ToastMessage>(null);
-  useEffect(() => {
-    if (!toast) return;
-    const timer = setTimeout(() => setToast(null), 3500);
-    return () => clearTimeout(timer);
-  }, [toast]);
-  return [toast, setToast] as const;
-}
-
-export function Toast({ toast }: { toast: ToastMessage }) {
-  if (!toast) return null;
-  return (
-    <div
-      role="status"
-      className="fixed bottom-5 left-5 z-[70] flex max-w-sm items-center gap-2.5 rounded-lg border border-slate-200 bg-white px-4 py-3 text-[13.5px] text-slate-900 shadow-[0_8px_30px_rgb(15_23_42/0.12)] motion-safe:animate-[zad-pop-in_160ms_ease-out] dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100"
-    >
-      {toast.tone === "ok" ? (
-        <CircleCheck className="size-4 shrink-0 text-primary dark:text-teal-300" />
-      ) : (
-        <TriangleAlert className="size-4 shrink-0 text-red-500" />
-      )}
-      <span>{toast.text}</span>
-    </div>
-  );
-}
+// التنبيه انتقل إلى console/Toast.tsx: واحدٌ بثلاث نبرات بدل تطبيقين.
 
 export type MenuAnchor = { id: string; top: number; left: number };
 

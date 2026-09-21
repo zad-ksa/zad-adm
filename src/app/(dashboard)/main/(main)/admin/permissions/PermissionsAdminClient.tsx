@@ -21,7 +21,8 @@ import {
   tbodyClass,
   theadRowClass,
 } from "@/components/console/layout";
-import { MenuItem, MenuSeparator, RowMenu, RowMenuTrigger, Sheet, Toast, useRowMenu, useToast } from "@/components/console/overlays";
+import { MenuItem, MenuSeparator, RowMenu, RowMenuTrigger, Sheet, useRowMenu } from "@/components/console/overlays";
+import { Toast, useToast } from "@/components/console/Toast";
 import { ConfirmDialog } from "@/components/console/ConfirmDialog";
 import { BundleSheet } from "./BundleSheet";
 import { PermissionSheet } from "./PermissionSheet";
@@ -89,7 +90,7 @@ export default function PermissionsAdminClient({
   const [member, setMember] = useState<PermEmployee | null>(null);
   const [detail, setDetail] = useState<Detail>(null);
   const [removing, setRemoving] = useState<BundleRow | null>(null);
-  const [toast, setToast] = useToast();
+  const { toast, setToast } = useToast();
   const menu = useRowMenu();
 
   const nameOf = useMemo(() => new Map(employees.map((e) => [e.id, e.name])), [employees]);
@@ -804,7 +805,7 @@ export default function PermissionsAdminClient({
         </DetailSheet>
       )}
 
-      <Toast toast={toast} />
+      <Toast toast={toast} onDismiss={() => setToast(null)} />
     </div>
   );
 }

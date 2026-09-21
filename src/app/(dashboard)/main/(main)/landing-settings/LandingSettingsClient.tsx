@@ -29,7 +29,7 @@ import {
 import { updateLandingConfig } from "@/app/actions/landing";
 import { uploadFile, type UploadProgress as Progress } from "@/lib/clientUpload";
 import UploadProgress from "@/components/ui/UploadProgress";
-import SuccessToast from "@/components/ui/SuccessToast";
+import { Toast } from "@/components/console/Toast";
 import {
   ANIMATION_LABELS,
   DEFAULT_CONTENT,
@@ -667,7 +667,7 @@ export default function LandingSettingsClient({ initialConfig }: { initialConfig
         </div>
       </div>
 
-      <SuccessToast message={toast} onDismiss={() => setToast(null)} />
+      <Toast toast={toast ? { tone: "ok", text: toast } : null} onDismiss={() => setToast(null)} />
     </div>
   );
 }

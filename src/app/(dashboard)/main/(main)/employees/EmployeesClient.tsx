@@ -21,7 +21,8 @@ import {
   tbodyClass,
   theadRowClass,
 } from "@/components/console/layout";
-import { MenuItem, MenuSeparator, RowMenu, RowMenuTrigger, Toast, useRowMenu, useToast } from "@/components/console/overlays";
+import { MenuItem, MenuSeparator, RowMenu, RowMenuTrigger, useRowMenu } from "@/components/console/overlays";
+import { Toast, useToast } from "@/components/console/Toast";
 import { ConfirmDialog } from "@/components/console/ConfirmDialog";
 
 type StatusFilter = "all" | "active" | "inactive";
@@ -62,7 +63,7 @@ export function EmployeesClient({
   const [roleFilter, setRoleFilter] = useState("all");
   const [sheet, setSheet] = useState<SheetState>(null);
   const [confirm, setConfirm] = useState<ConfirmState>(null);
-  const [toast, setToast] = useToast();
+  const { toast, setToast } = useToast();
   const menu = useRowMenu();
 
   const roleByKey = useMemo(() => new Map(roles.map((r) => [r.key, r])), [roles]);
@@ -438,7 +439,7 @@ export function EmployeesClient({
         />
       )}
 
-      <Toast toast={toast} />
+      <Toast toast={toast} onDismiss={() => setToast(null)} />
     </div>
   );
 }

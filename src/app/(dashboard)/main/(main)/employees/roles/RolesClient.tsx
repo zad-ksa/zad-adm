@@ -18,7 +18,8 @@ import {
   tbodyClass,
   theadRowClass,
 } from "@/components/console/layout";
-import { MenuItem, MenuSeparator, RowMenu, RowMenuTrigger, Toast, useRowMenu, useToast } from "@/components/console/overlays";
+import { MenuItem, MenuSeparator, RowMenu, RowMenuTrigger, useRowMenu } from "@/components/console/overlays";
+import { Toast, useToast } from "@/components/console/Toast";
 import { ConfirmDialog } from "@/components/console/ConfirmDialog";
 import { RoleSheet } from "./RoleSheet";
 import type { RoleBundle, RoleRow } from "./types";
@@ -51,7 +52,7 @@ export default function RolesClient({
   const [kind, setKind] = useState<KindFilter>("all");
   const [sheet, setSheet] = useState<{ role: RoleRow | null } | null>(null);
   const [confirm, setConfirm] = useState<ConfirmState>(null);
-  const [toast, setToast] = useToast();
+  const { toast, setToast } = useToast();
   const menu = useRowMenu();
 
   const bundleNameOf = useMemo(() => new Map(bundles.map((b) => [b.id, b.name])), [bundles]);
@@ -323,7 +324,7 @@ export default function RolesClient({
         />
       )}
 
-      <Toast toast={toast} />
+      <Toast toast={toast} onDismiss={() => setToast(null)} />
     </div>
   );
 }

@@ -19,7 +19,7 @@ import { uploadDesignRequestFiles } from "@/components/design-requests/uploadDes
 import DesignTypesModal, { type DesignTypeRow } from "./DesignTypesModal";
 import EditDesignRequestModal from "@/components/design-requests/EditDesignRequestModal";
 import StaffReviewDesignRequestModal from "./StaffReviewDesignRequestModal";
-import SuccessToast from "@/components/ui/SuccessToast";
+import { Toast } from "@/components/console/Toast";
 import UploadProgress from "@/components/ui/UploadProgress";
 import type { UploadProgress as Progress } from "@/lib/clientUpload";
 import { ConfirmDialog } from "@/components/console/ConfirmDialog";
@@ -782,7 +782,7 @@ export default function DesignRequestsClient({
         />
       )}
 
-      <SuccessToast message={toast} onDismiss={() => setToast(null)} />
+      <Toast toast={toast ? { tone: "ok", text: toast } : null} onDismiss={() => setToast(null)} />
 
       {isTypesOpen && (
         <DesignTypesModal

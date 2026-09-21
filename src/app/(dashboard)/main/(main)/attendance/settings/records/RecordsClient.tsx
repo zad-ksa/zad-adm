@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Select from "@/components/console/Select";
 import { useRouter } from "next/navigation";
 import {
   AlertTriangle,
@@ -115,17 +116,12 @@ export default function RecordsClient({
 
       {/* Who and when */}
       <div className="flex items-center gap-2 flex-wrap">
-        <select
-          className={`${INPUT} w-auto`}
+        <Select
           value={selectedId}
-          onChange={(e) => go(e.target.value, month)}
-        >
-          {employees.map((e) => (
-            <option key={e.id} value={e.id}>
-              {e.name}
-            </option>
-          ))}
-        </select>
+          onSelect={(v) => go(v, month)}
+          placeholder="اختر الموظف"
+          options={employees.map((e) => ({ value: e.id, label: e.name }))}
+        />
         <input
           type="month"
           value={month}

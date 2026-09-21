@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Select from "@/components/console/Select";
 import {
   AlertTriangle,
   CalendarOff,
@@ -329,29 +330,20 @@ export default function LeavesClient({
           </div>
 
           <div className="grid sm:grid-cols-4 gap-2">
-            <select
-              className={INPUT}
+            <Select
               value={draft.employeeId}
-              onChange={(e) => setDraft({ ...draft, employeeId: e.target.value })}
-            >
-              <option value="">اختر الموظف</option>
-              {employees.map((e) => (
-                <option key={e.id} value={e.id}>
-                  {e.name}
-                </option>
-              ))}
-            </select>
-            <select
-              className={INPUT}
+              onSelect={(v) => setDraft({ ...draft, employeeId: v })}
+              placeholder="اختر الموظف"
+              options={employees.map((e) => ({ value: e.id, label: e.name }))}
+              className="[&>button]:w-full [&>button]:justify-between"
+            />
+            <Select
               value={draft.type}
-              onChange={(e) => setDraft({ ...draft, type: e.target.value })}
-            >
-              {Object.entries(LEAVE_TYPE_LABELS).map(([k, v]) => (
-                <option key={k} value={k}>
-                  {v}
-                </option>
-              ))}
-            </select>
+              onSelect={(v) => setDraft({ ...draft, type: v })}
+              placeholder="نوع الإجازة"
+              options={Object.entries(LEAVE_TYPE_LABELS).map(([k, v]) => ({ value: k, label: v }))}
+              className="[&>button]:w-full [&>button]:justify-between"
+            />
             <input
               className={INPUT}
               type="date"

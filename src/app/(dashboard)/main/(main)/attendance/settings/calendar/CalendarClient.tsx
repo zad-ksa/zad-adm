@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Select from "@/components/console/Select";
 import { useRouter } from "next/navigation";
 import { ChevronLeft, ChevronRight, Plus, Trash2, X } from "lucide-react";
 import { saveHoliday, deleteHoliday } from "@/app/actions/zadCalendar";
@@ -400,14 +401,15 @@ export default function CalendarClient({
               value={draft.name}
               onChange={(e) => setDraft({ ...draft, name: e.target.value })}
             />
-            <select
-              className={`${INPUT} sm:w-auto`}
+            <Select
               value={draft.scope}
-              onChange={(e) => setDraft({ ...draft, scope: e.target.value })}
-            >
-              <option value="GLOBAL">رسمية (للجميع)</option>
-              <option value="COMPANY">خاصة بزاد</option>
-            </select>
+              onSelect={(v) => setDraft({ ...draft, scope: v })}
+              placeholder="النطاق"
+              options={[
+                { value: "GLOBAL", label: "رسمية (للجميع)" },
+                { value: "COMPANY", label: "خاصة بزاد" },
+              ]}
+            />
             <button
               className={BTN}
               disabled={busy || !draft.name.trim()}

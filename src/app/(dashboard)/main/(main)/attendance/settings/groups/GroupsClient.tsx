@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Select from "@/components/console/Select";
 import {
   Check,
   Clock,
@@ -385,21 +386,15 @@ export default function GroupsClient({
             <span className="text-[12px] font-bold text-slate-700 dark:text-slate-200 tabular-nums">
               {picked.size} محدَّد
             </span>
-            <select
-              className={`${INPUT} w-auto`}
+            <Select
               value={bulkTarget}
-              onChange={(e) => setBulkTarget(e.target.value)}
-            >
-              <option value="">اختر المجموعة…</option>
-              <option value="__default__">
-                {defaultGroup ? `الافتراضية (${defaultGroup.name})` : "الافتراضية"}
-              </option>
-              {others.map((g) => (
-                <option key={g.id} value={g.id}>
-                  {g.name}
-                </option>
-              ))}
-            </select>
+              onSelect={setBulkTarget}
+              placeholder="اختر المجموعة…"
+              options={[
+                { value: "__default__", label: defaultGroup ? `الافتراضية (${defaultGroup.name})` : "الافتراضية" },
+                ...others.map((g) => ({ value: g.id, label: g.name })),
+              ]}
+            />
             <button
               className={BTN}
               disabled={busy || !bulkTarget}
@@ -454,23 +449,21 @@ export default function GroupsClient({
                     يتبع {groupNameFor(e)}
                   </span>
                 )}
-                <select
-                  className="text-[12px] px-2 py-1 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300"
-                  value={!e.shiftGroupId || e.shiftGroupId === defaultGroup?.id ? "" : e.shiftGroupId}
+                <Select
+                  value={!e.shiftGroupId || e.shiftGroupId === defaultGroup?.id ? "__default__" : e.shiftGroupId}
                   disabled={busy}
-                  onChange={(ev) =>
-                    run(() => assignEmployeesToGroup(ev.target.value || null, [e.id]), "تم الإسناد")
+                  onSelect={(v) =>
+                    run(
+                      () => assignEmployeesToGroup(v === "__default__" ? null : v, [e.id]),
+                      "تم الإسناد"
+                    )
                   }
-                >
-                  <option value="">
-                    {defaultGroup ? `الافتراضية (${defaultGroup.name})` : "الافتراضية"}
-                  </option>
-                  {others.map((g) => (
-                    <option key={g.id} value={g.id}>
-                      {g.name}
-                    </option>
-                  ))}
-                </select>
+                  placeholder="المجموعة"
+                  options={[
+                    { value: "__default__", label: defaultGroup ? `الافتراضية (${defaultGroup.name})` : "الافتراضية" },
+                    ...others.map((g) => ({ value: g.id, label: g.name })),
+                  ]}
+                />
               </span>
             </div>
           ))}

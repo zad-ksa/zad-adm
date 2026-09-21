@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import ToastHost from "@/components/console/ToastHost";
 import { Inter, Cairo } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
 
@@ -86,6 +87,9 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           {children}
+          {/* مُضيف التنبيهات: يُركَّب مرةً في الجذر فيخدم اللوحة والبوابة
+              والصفحات العامة معاً. انظر console/toastBus.ts */}
+          <ToastHost />
           <Analytics />
         </ThemeProvider>
       </body>

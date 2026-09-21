@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition, useEffect } from "react";
+import { notify } from "@/components/console/toastBus";
 import { Sparkles, Check, X, Edit2, Trash2, Plus, ArrowUp, ArrowDown, Loader2, Settings, ChevronDown, ChevronUp, Eye, EyeOff, Activity } from "lucide-react";
 import { useRouter } from "next/navigation";
 import CharityClientTimeline from "@/components/CharityClientTimeline";
@@ -210,7 +211,7 @@ export default function GenericStagesManager({
         router.refresh();
       } catch (error) {
         console.error(error);
-        alert("حدث خطأ أثناء الحذف");
+        notify("error", "حدث خطأ أثناء الحذف");
       }
     });
   };

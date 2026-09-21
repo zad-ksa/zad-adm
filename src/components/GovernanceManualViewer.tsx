@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { notify } from "@/components/console/toastBus";
 import { updateCharitySize, updateCharityRevenueAndSize } from "@/app/actions/governance";
 import { CharitySize } from "@/data/governanceManual";
 import { Building, CheckCircle2, Landmark, TrendingUp, Gem, Loader2, Calculator } from "lucide-react";
@@ -58,7 +59,7 @@ export default function GovernanceManualViewer({
       if (res.success) {
         navigateToStandards(selectedSize);
       } else {
-        alert(res.error);
+        notify("error", res.error || "حدث خطأ");
         setIsUpdatingSize(false);
       }
     } else {
@@ -77,7 +78,7 @@ export default function GovernanceManualViewer({
       if (res.success && res.size) {
         navigateToStandards(res.size as CharitySize);
       } else {
-        alert(res.error);
+        notify("error", res.error || "حدث خطأ");
         setIsUpdatingSize(false);
       }
     } else {

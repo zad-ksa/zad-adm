@@ -1,6 +1,7 @@
 ﻿"use client";
 
 import { useTransition } from "react";
+import { notify } from "@/components/console/toastBus";
 import { addCharity } from "@/app/actions/charity";
 
 interface ApproveCharityButtonProps {
@@ -25,7 +26,7 @@ export default function ApproveCharityButton({
           licenseNumber,
         });
         if (!result.success) {
-          alert(result.message || "حدث خطأ أثناء تفعيل الجمعية");
+          notify("error", result.message || "حدث خطأ أثناء تفعيل الجمعية");
         }
       });
     }

@@ -1,4 +1,5 @@
 import { Meeting, MeetingTask } from "../MeetingsClient";
+import { notify } from "@/components/console/toastBus";
 
 function formatDate(d: string | Date) {
   const dt = new Date(d);
@@ -336,7 +337,7 @@ export function handlePrint(m: Meeting, meetingNum?: number) {
 
   const doc = iframe.contentWindow?.document;
   if (!doc) {
-    alert("تعذر فتح نافذة الطباعة. يرجى التحقق من إعدادات المتصفح.");
+    notify("error", "تعذر فتح نافذة الطباعة. يرجى التحقق من إعدادات المتصفح.");
     return;
   }
 
@@ -355,7 +356,7 @@ export function handlePrint(m: Meeting, meetingNum?: number) {
 export function handlePreview(m: Meeting, meetingNum?: number) {
   const win = window.open("", "_blank");
   if (!win) {
-    alert("الرجاء السماح بفتح النوافذ المنبثقة (Popups) لعرض الكليشة.");
+    notify("error", "الرجاء السماح بفتح النوافذ المنبثقة (Popups) لعرض الكليشة.");
     return;
   }
   win.document.open();

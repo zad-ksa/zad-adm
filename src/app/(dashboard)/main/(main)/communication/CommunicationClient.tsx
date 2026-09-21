@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
+import { notify } from "@/components/console/toastBus";
 import { MessageSquare, User, Phone, Edit, Check, X, PhoneCall, Search, Building2, ChevronRight, ChevronLeft } from "lucide-react";
 import { updateServiceResponsible, updateCharityContact } from "@/app/actions/communication";
 
@@ -147,7 +148,7 @@ export default function CommunicationClient({ charities }: { charities: Charity[
     if (res.success) {
       setEditingServiceId(null);
     } else {
-      alert(res.error || "حدث خطأ");
+      notify("error", res.error || "حدث خطأ");
     }
   };
 
@@ -166,7 +167,7 @@ export default function CommunicationClient({ charities }: { charities: Charity[
     if (res.success) {
       setEditingCharityContact(null);
     } else {
-      alert(res.error || "حدث خطأ");
+      notify("error", res.error || "حدث خطأ");
     }
   };
 

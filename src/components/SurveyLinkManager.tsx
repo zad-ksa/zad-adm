@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { notify } from "@/components/console/toastBus";
 
 export default function SurveyLinkManager({ charityName, surveyType }: { charityName: string, surveyType: "READINESS" | "HEXAGONAL" | "VISION_MISSION" }) {
   const [activeLink, setActiveLink] = useState<{ id: string; isActive: boolean } | null>(null);
@@ -47,7 +48,7 @@ export default function SurveyLinkManager({ charityName, surveyType }: { charity
         setActiveLink(data);
       } else {
         const errData = await res.json().catch(() => ({}));
-        alert(`حدث خطأ: ${errData.error || "تأكد من إعداد المفاتيح"}`);
+        notify("error", `حدث خطأ: ${errData.error || "تأكد من إعداد المفاتيح"}`);
       }
     } catch (e) {
       console.error(e);

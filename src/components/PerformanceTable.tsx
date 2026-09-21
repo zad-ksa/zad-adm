@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition, useEffect, Fragment } from "react";
+import { notify } from "@/components/console/toastBus";
 import Select from "@/components/console/Select";
 import { savePerformanceMetric } from "@/app/actions/performance";
 import { useRouter } from "next/navigation";
@@ -466,12 +467,12 @@ export default function PerformanceTable({
 
       const res = await savePerformanceMetric(charityName, year, updatedAxes);
       if (res.success) {
-        alert("تم الحفظ بنجاح");
+        notify("ok", "تم الحفظ بنجاح");
       } else {
-        alert(`حدث خطأ أثناء الحفظ: ${res.error}`);
+        notify("error", `حدث خطأ أثناء الحفظ: ${res.error}`);
       }
     } catch (e: any) {
-      alert(`حدث خطأ أثناء الحفظ: ${e?.message || String(e)}`);
+      notify("error", `حدث خطأ أثناء الحفظ: ${e?.message || String(e)}`);
     } finally {
       setIsSaving(false);
     }

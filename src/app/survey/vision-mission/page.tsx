@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { notify } from "@/components/console/toastBus";
 import { Spinner } from "@/components/console/ui";
 import { useRouter } from "next/navigation";
 import { Eye, Award, CheckCircle, ChevronLeft, ChevronRight, Target, Users, BookOpen, ShieldAlert, Sparkles, AlertTriangle, Printer } from "lucide-react";
@@ -216,11 +217,11 @@ export default function VisionMissionSurveyPage() {
         router.push("/results?type=vision-mission");
       } else {
         const errData = await res.json().catch(() => ({}));
-        alert(`حدث خطأ أثناء حفظ التقييم: ${errData.error || "خطأ غير معروف"}`);
+        notify("error", `حدث خطأ أثناء حفظ التقييم: ${errData.error || "خطأ غير معروف"}`);
       }
     } catch (e) {
       console.error(e);
-      alert("حدث خطأ في الاتصال بالخادم.");
+      notify("error", "حدث خطأ في الاتصال بالخادم.");
     } finally {
       setIsSubmitting(false);
     }

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { notify } from "@/components/console/toastBus";
 import Select from "@/components/console/Select";
 import { Plus, Layers, AlertTriangle, AlertCircle } from "lucide-react";
 import { createService, unifyCharityStagesAction } from "@/app/actions/services";
@@ -75,7 +76,7 @@ export default function ServicesManagerClient({
         router.refresh();
       } catch (error: any) {
         console.error("Error saving service", error);
-        alert(error.message || "حدث خطأ أثناء حفظ الخدمة");
+        notify("error", error.message || "حدث خطأ أثناء حفظ الخدمة");
       }
     });
   };
@@ -98,7 +99,7 @@ export default function ServicesManagerClient({
         router.refresh();
       } catch (error: any) {
         console.error("Error unifying stages", error);
-        alert(error.message || "حدث خطأ أثناء توحيد المراحل");
+        notify("error", error.message || "حدث خطأ أثناء توحيد المراحل");
       }
     });
   };

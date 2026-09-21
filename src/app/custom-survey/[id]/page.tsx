@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, use } from "react";
+import { notify } from "@/components/console/toastBus";
 import { Spinner } from "@/components/console/ui";
 import { useRouter } from "next/navigation";
 import { createSurveyUploadTicket } from "@/app/actions/surveyUpload";
@@ -216,7 +217,7 @@ export default function CustomSurveyPage({ params }: { params: Promise<{ id: str
       }
     } catch (err) {
       console.error("Upload failed", err);
-      alert(err instanceof Error ? err.message : "فشل رفع الملف. يرجى المحاولة مرة أخرى.");
+      notify("error", err instanceof Error ? err.message : "فشل رفع الملف. يرجى المحاولة مرة أخرى.");
     } finally {
       setUploadingFiles(prev => ({ ...prev, [questionId]: false }));
     }
@@ -245,11 +246,11 @@ export default function CustomSurveyPage({ params }: { params: Promise<{ id: str
         if (res.ok) {
           setIsSuccess(true);
         } else {
-          alert("حدث خطأ أثناء إرسال البيانات.");
+          notify("error", "حدث خطأ أثناء إرسال البيانات.");
         }
       } catch (err) {
         console.error(err);
-        alert("حدث خطأ في الاتصال.");
+        notify("error", "حدث خطأ في الاتصال.");
       } finally {
         setIsSubmitting(false);
       }

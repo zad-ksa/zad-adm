@@ -1,6 +1,7 @@
 "use client";
 
 import { uploadFile } from "@/lib/clientUpload";
+import { notify } from "@/components/console/toastBus";
 import { useState, useMemo, useTransition, useRef } from "react";
 import {
   Check, Calendar, Printer, ChevronDown, ChevronRight,
@@ -1032,7 +1033,7 @@ export default function ServicesOverviewClient({
 
     const w = window.open("", "_blank", "width=900,height=700");
     if (!w) {
-      alert("الرجاء السماح بفتح النوافذ المنبثقة (Popups) للطباعة.");
+      notify("error", "الرجاء السماح بفتح النوافذ المنبثقة (Popups) للطباعة.");
       return;
     }
     w.document.open();
@@ -1211,7 +1212,7 @@ export default function ServicesOverviewClient({
         // activeTab is label-based now — survives key changes after refresh automatically
       } catch (error: any) {
         console.error("Error unifying stages", error);
-        alert(error.message || "حدث خطأ أثناء تعميم المراحل");
+        notify("error", error.message || "حدث خطأ أثناء تعميم المراحل");
       }
     });
   };

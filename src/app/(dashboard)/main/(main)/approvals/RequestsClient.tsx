@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition, useEffect, useCallback, useMemo } from "react";
+import { notify } from "@/components/console/toastBus";
 import Select from "@/components/console/Select";
 import {
   Plus, X, Send, Loader2, AlertCircle, CheckCircle2, Clock,
@@ -524,7 +525,7 @@ export default function RequestsClient({ requests: initial, hasActiveChain, canR
       await fn();
       await fetchRequests();
     } catch (e: any) {
-      alert(e.message);
+      notify("error", e.message);
     } finally {
       setLoading(false);
     }

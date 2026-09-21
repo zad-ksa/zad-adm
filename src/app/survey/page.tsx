@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { notify } from "@/components/console/toastBus";
 import { Spinner } from "@/components/console/ui";
 import { useRouter } from "next/navigation";
 import ProgressBar from "@/components/ProgressBar";
@@ -93,12 +94,12 @@ export default function Home() {
           router.push("/results?type=survey");
         } else {
           const errData = await res.json().catch(() => ({}));
-          alert(`حدث خطأ أثناء إرسال البيانات:\n${errData.details || errData.error || "خطأ غير معروف"}`);
+          notify("error", `حدث خطأ أثناء إرسال البيانات:\n${errData.details || errData.error || "خطأ غير معروف"}`);
           setIsSubmitting(false);
         }
       } catch (err: any) {
         console.error(err);
-        alert(`حدث خطأ في الاتصال:\n${err.message || String(err)}`);
+        notify("error", `حدث خطأ في الاتصال:\n${err.message || String(err)}`);
         setIsSubmitting(false);
       }
     } else {

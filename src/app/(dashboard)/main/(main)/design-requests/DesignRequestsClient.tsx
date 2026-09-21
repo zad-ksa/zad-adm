@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState, useTransition } from "react";
+import { notify } from "@/components/console/toastBus";
 import Select from "@/components/console/Select";
 import { useRouter } from "next/navigation";
 import { Palette, Plus, Filter, AlertTriangle, Loader2, Paperclip, LayoutGrid, List, CalendarRange } from "lucide-react";
@@ -308,7 +309,7 @@ export default function DesignRequestsClient({
     setIsDeleting(true);
     try {
       const res = await deleteDesignRequest(deletingId);
-      if (res.error) alert(res.error);
+      if (res.error) notify("error", res.error);
     } finally {
       setIsDeleting(false);
       setDeletingId(null);

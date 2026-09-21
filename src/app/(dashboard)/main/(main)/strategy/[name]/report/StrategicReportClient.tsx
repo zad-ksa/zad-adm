@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from 'react';
+import { notify } from "@/components/console/toastBus";
 import ReportHeader from '@/components/report/ReportHeader';
 import ReportSummary from '@/components/report/ReportSummary';
 import ReportDimensionsChart from '@/components/report/ReportDimensionsChart';
@@ -109,13 +110,13 @@ export default function StrategicReportClient({ charityName, year, quarter, init
       
       const res = await savePerformanceMetric(charityName, year, newData);
       if (res?.success) {
-        alert("تم حفظ التقرير بنجاح!");
+        notify("ok", "تم حفظ التقرير بنجاح!");
       } else {
-        alert("حدث خطأ أثناء الحفظ: " + (res?.error || "خطأ غير معروف"));
+        notify("error", "حدث خطأ أثناء الحفظ: " + (res?.error || "خطأ غير معروف"));
       }
     } catch (error) {
       console.error(error);
-      alert("حدث خطأ أثناء الاتصال بالخادم.");
+      notify("error", "حدث خطأ أثناء الاتصال بالخادم.");
     } finally {
       setIsSaving(false);
     }

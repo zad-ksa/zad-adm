@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { notify } from "@/components/console/toastBus";
 import Select from "@/components/console/Select";
 import {
   ChevronDown, ChevronRight, RefreshCw, AlertCircle, Loader2, BookOpen,
@@ -126,7 +127,7 @@ export default function MeetingSummaryPanel({
       }));
       setLocalTasks(updated);
       setEditing(false);
-    } catch (e: any) { alert(e.message); }
+    } catch (e: any) { notify("error", e.message); }
     finally { setSaving(false); }
   }
 

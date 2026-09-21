@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { notify } from "@/components/console/toastBus";
 import Select from "@/components/console/Select";
 import {
   FileText, Plus, X, Lock, Globe, Eye, LayoutTemplate, Printer,
@@ -207,7 +208,7 @@ export default function MeetingsClient({ meetings, charities, employees, session
       await downloadAllMeetingsZip(meetings, meetingNumberMap);
     } catch (err) {
       console.error(err);
-      alert("حدث خطأ أثناء تجهيز ملف التحميل. حاول مرة أخرى.");
+      notify("error", "حدث خطأ أثناء تجهيز ملف التحميل. حاول مرة أخرى.");
     } finally {
       setIsDownloadingAll(false);
     }
@@ -306,7 +307,7 @@ export default function MeetingsClient({ meetings, charities, employees, session
         await deleteMeeting(id);
         router.refresh();
       }
-      catch (e: any) { alert(e.message); }
+      catch (e: any) { notify("error", e.message); }
     });
   }
 

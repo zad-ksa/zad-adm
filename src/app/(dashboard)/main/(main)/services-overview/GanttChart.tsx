@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState, useTransition } from "react";
+import { notify } from "@/components/console/toastBus";
 import { X, Edit, Printer, Check, Plus, Info, Edit2, Trash2 } from "lucide-react";
 import { assignGanttDates, toggleGanttItemCompletion, addServiceStage, updateServiceStage, deleteServiceStage, broadcastGanttWeek } from "@/app/actions/services";
 import { addServiceStageStep, updateServiceStageStep, deleteServiceStageStep } from "@/app/actions/stageSteps";
@@ -235,7 +236,7 @@ export default function GanttChart({
         router.refresh();
       } catch(e) {
         console.error(e);
-        alert("حدث خطأ أثناء الحفظ");
+        notify("error", "حدث خطأ أثناء الحفظ");
       }
     });
   };

@@ -4,7 +4,8 @@ import { useEffect, useRef, useState } from "react";
 import { ConfirmDialog } from "./ConfirmDialog";
 import { subscribeToConfirms, type ConfirmRequest } from "./confirmBus";
 import { subscribeToPrompts, type PromptRequest } from "./promptBus";
-import { btn, cx, field } from "./ui";
+import { btn, field } from "./ui";
+import { Dialog } from "./Dialog";
 
 /**
  * مُضيف الحوارات — يُركَّب مرةً واحدة في جذر التطبيق.
@@ -33,10 +34,7 @@ export default function DialogHost() {
     []
   );
 
-  // التركيز على الحقل فور ظهوره: الطلب سؤالٌ، ومن يُسأل يكتب فوراً.
-  useEffect(() => {
-    if (promptRequest) inputRef.current?.focus();
-  }, [promptRequest]);
+  // التركيز على الحقل فور ظهوره يتولّاه Dialog عبر initialFocusRef.
 
   const answerConfirm = (ok: boolean) => {
     confirmRequest?.resolve(ok);
@@ -63,54 +61,33 @@ export default function DialogHost() {
       )}
 
       {promptRequest && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4" dir="rtl">
-          <div
-            className="absolute inset-0 bg-slate-950/50 backdrop-blur-sm"
-            onClick={() => answerPrompt(null)}
-          />
-          <form
-            role="dialog"
-            aria-modal="true"
-            aria-label={promptRequest.title}
-            onSubmit={(e) => {
-              e.preventDefault();
-              answerPrompt(value);
-            }}
-            className="relative z-10 w-full max-w-sm overflow-hidden rounded-2xl border border-slate-100 bg-white p-6 shadow-2xl dark:border-slate-700/50 dark:bg-slate-800"
-          >
-            <h3 className="mb-1 text-lg font-bold text-slate-800 dark:text-slate-100">
-              {promptRequest.title}
-            </h3>
-            {promptRequest.message && (
-              <p className="mb-3 text-sm text-slate-500 dark:text-slate-400">{promptRequest.message}</p>
-            )}
-
-            <input
-              ref={inputRef}
-              value={value}
-              onChange={(e) => setValue(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Escape") answerPrompt(null);
-              }}
-              placeholder={promptRequest.placeholder}
-              aria-label={promptRequest.label ?? promptRequest.title}
-              className={cx(field, "mt-2")}
-            />
-
-            <div className="mt-5 flex items-center gap-3">
-              <button
-                type="button"
-                onClick={() => answerPrompt(null)}
-                className={cx(btn.secondary, "flex-1")}
-              >
+        <Dialog
+          size="sm"
+          title={promptRequest.title}
+          description={promptRequest.message}
+          onClose={() => answerPrompt(null)}
+          onSubmit={() => answerPrompt(value)}
+          initialFocusRef={inputRef}
+          footer={
+            <>
+              <button type="button" onClick={() => answerPrompt(null)} className={btn.secondary}>
                 إلغاء
               </button>
-              <button type="submit" className={cx(btn.primary, "flex-1")}>
+              <button type="submit" className={btn.primary}>
                 {promptRequest.confirmLabel ?? "حفظ"}
               </button>
-            </div>
-          </form>
-        </div>
+            </>
+          }
+        >
+          <input
+            ref={inputRef}
+            value={value}
+            onChange={(e) => setValue(e.target.value)}
+            placeholder={promptRequest.placeholder}
+            aria-label={promptRequest.label ?? promptRequest.title}
+            className={field}
+          />
+        </Dialog>
       )}
     </>
   );

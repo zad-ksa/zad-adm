@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition, useEffect, Fragment } from "react";
+import Select from "@/components/console/Select";
 import { savePerformanceMetric } from "@/app/actions/performance";
 import { useRouter } from "next/navigation";
 
@@ -486,25 +487,25 @@ export default function PerformanceTable({
       {/* Controls */}
       <div className="flex flex-col md:flex-row gap-4 justify-between items-center bg-white dark:bg-slate-800 p-4 rounded-xl border border-slate-100 dark:border-slate-700 shadow-sm shrink-0 transition-colors">
         <div className="flex gap-4">
-          <select
-            value={year}
-            onChange={(e) => handlePeriodChange(parseInt(e.target.value), quarter)}
-            className="px-4 py-2.5 rounded-xl border border-slate-100 dark:border-slate-700 font-bold bg-slate-50 dark:bg-slate-900 text-slate-700 dark:text-slate-200 outline-none focus:ring-2 focus:ring-primary/20 transition-all hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
-          >
-            {[2023, 2024, 2025, 2026, 2027].map(y => (
-              <option key={y} value={y}>{y}</option>
-            ))}
-          </select>
-          <select
+          <Select
+            variant="soft"
+            value={String(year)}
+            onSelect={(v) => handlePeriodChange(parseInt(v), quarter)}
+            placeholder="السنة"
+            options={[2023, 2024, 2025, 2026, 2027].map((y) => ({ value: String(y), label: String(y) }))}
+          />
+          <Select
+            variant="soft"
             value={quarter}
-            onChange={(e) => handlePeriodChange(year, e.target.value)}
-            className="px-4 py-2.5 rounded-xl border border-slate-100 dark:border-slate-700 font-bold bg-slate-50 dark:bg-slate-900 text-slate-700 dark:text-slate-200 outline-none focus:ring-2 focus:ring-primary/20 transition-all hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
-          >
-            <option value="Q1">الربع الأول</option>
-            <option value="Q2">الربع الثاني</option>
-            <option value="Q3">الربع الثالث</option>
-            <option value="Q4">الربع الرابع</option>
-          </select>
+            onSelect={(v) => handlePeriodChange(year, v)}
+            placeholder="الربع"
+            options={[
+              { value: "Q1", label: "الربع الأول" },
+              { value: "Q2", label: "الربع الثاني" },
+              { value: "Q3", label: "الربع الثالث" },
+              { value: "Q4", label: "الربع الرابع" },
+            ]}
+          />
         </div>
 
         <div className="flex flex-wrap items-center gap-3">

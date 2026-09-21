@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition, useCallback, useEffect } from "react";
+import Select from "@/components/console/Select";
 import { X, Sparkles, FolderPlus, Folder, Calendar, UploadCloud, FileImage, Camera, Plus, Trash2, Loader2, ClipboardPaste } from "lucide-react";
 import { Charity } from "@/types";
 import { addCategory, deleteCategory } from "@/app/actions/categories";
@@ -67,6 +68,8 @@ export default function AchievementFormModal({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!title.trim()) return;
+    // كان المتصفّح يمنع الإرسال بلا قسمٍ عبر required على القائمة الأصلية.
+    if (!category) return;
     onSubmit({ title, charityId, category, date, proofFile });
   };
 
@@ -139,16 +142,17 @@ export default function AchievementFormModal({
               <FolderPlus className="w-3.5 h-3.5 text-slate-400" />
               الجهة التابعة لها الإنجاز
             </label>
-            <select
+            <Select
+              variant="soft"
               value={charityId}
-              onChange={(e) => setCharityId(e.target.value)}
-              className="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-sm outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500/30 text-slate-800 dark:text-slate-100 transition-all font-bold cursor-pointer [&>option]:bg-white [&>option]:dark:bg-slate-800"
-            >
-              <option value="internal">إنجاز داخلي لشركة زاد</option>
-              {charities.map((ch) => (
-                <option key={ch.id} value={ch.id}>{ch.name}</option>
-              ))}
-            </select>
+              onSelect={setCharityId}
+              placeholder="الجهة"
+              options={[
+                { value: "internal", label: "إنجاز داخلي لشركة زاد" },
+                ...charities.map((ch) => ({ value: ch.id, label: ch.name })),
+              ]}
+              className="w-full [&>button]:w-full [&>button]:justify-between"
+            />
           </div>
 
           {isDirectorOrAdmin && (
@@ -160,16 +164,14 @@ export default function AchievementFormModal({
 
               {/* Select + Add button row */}
               <div className="flex gap-2">
-                <select
+                <Select
+                  variant="soft"
                   value={category}
-                  onChange={(e) => setCategory(e.target.value)}
-                  required
-                  className="flex-1 bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-sm outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500/30 text-slate-800 dark:text-slate-100 transition-all font-bold cursor-pointer [&>option]:bg-white [&>option]:dark:bg-slate-800"
-                >
-                  {categories.map((cat) => (
-                    <option key={cat} value={cat}>{cat}</option>
-                  ))}
-                </select>
+                  onSelect={setCategory}
+                  placeholder="اختر القسم"
+                  options={categories.map((cat: string) => ({ value: cat, label: cat }))}
+                  className="flex-1 [&>button]:w-full [&>button]:justify-between"
+                />
                 <button
                   type="button"
                   onClick={() => { setShowAddCat(v => !v); setCatError(null); setNewCatName(""); }}

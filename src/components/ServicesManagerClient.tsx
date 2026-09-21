@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import Select from "@/components/console/Select";
 import { Plus, Layers, AlertTriangle, AlertCircle } from "lucide-react";
 import { createService, unifyCharityStagesAction } from "@/app/actions/services";
 import { useRouter } from "next/navigation";
@@ -206,19 +207,15 @@ export default function ServicesManagerClient({
                 <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">
                   الخدمة المصدر (التي ستُنسخ مراحلها):
                 </label>
-                <select
+                <Select
+                  variant="soft"
                   value={selectedSource}
-                  onChange={e => setSelectedSource(e.target.value)}
+                  onSelect={setSelectedSource}
                   disabled={isPending}
-                  className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none transition-all dark:text-white disabled:opacity-50 text-sm"
-                >
-                  <option value="" disabled>اختر الخدمة</option>
-                  {unifiableServices.map(service => (
-                    <option key={service.id} value={`CUSTOM_${service.id}`}>
-                      {service.name}
-                    </option>
-                  ))}
-                </select>
+                  placeholder="اختر الخدمة"
+                  options={unifiableServices.map(service => ({ value: `CUSTOM_${service.id}`, label: service.name }))}
+                  className="w-full [&>button]:w-full [&>button]:justify-between"
+                />
               </div>
 
               {/* Warning box */}

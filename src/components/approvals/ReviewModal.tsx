@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import Select from "@/components/console/Select";
 import { X, ShieldCheck, ArrowUp, ArrowDown, Check, CornerUpLeft, UserCheck, AlertCircle, Loader2 } from "lucide-react";
 import { reviewRequest } from "@/app/actions/approvals";
 
@@ -136,13 +137,16 @@ export default function ReviewModal({
           {action === "DELEGATED" && (
             <div>
               <label className="text-xs font-bold text-slate-500 dark:text-slate-400 mb-1.5 block">الشخص المحوَّل إليه *</label>
-              <select value={delegatedToId} onChange={e => setDelegatedToId(e.target.value)}
-                className="w-full border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-sm bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-purple-500">
-                <option value="">اختر شخصاً...</option>
-                {allEmployees.filter(e => e.id !== request.createdBy?.id).map(e => (
-                  <option key={e.id} value={e.id}>{e.name} — {roleLabels[e.role] || e.role}</option>
-                ))}
-              </select>
+              <Select
+                variant="soft"
+                value={delegatedToId}
+                onSelect={setDelegatedToId}
+                placeholder="اختر شخصاً…"
+                options={allEmployees
+                  .filter(e => e.id !== request.createdBy?.id)
+                  .map(e => ({ value: e.id, label: e.name, hint: roleLabels[e.role] || e.role }))}
+                className="w-full [&>button]:w-full [&>button]:justify-between"
+              />
             </div>
           )}
 

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Select from "@/components/console/Select";
 import { X, Plus, UserPlus, FolderPlus, Camera, UploadCloud, FileImage, ClipboardPaste } from "lucide-react";
 import { Employee, Charity } from "@/types";
 
@@ -124,17 +125,14 @@ export default function TaskFormModal({
                 <UserPlus className="w-3.5 h-3.5 text-slate-400" />
                 إسناد المهمة إلى الموظف
               </label>
-              <select
+              <Select
+                variant="soft"
                 value={assigneeId}
-                onChange={(e) => setAssigneeId(e.target.value)}
-                className="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-sm outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary/30 text-slate-800 dark:text-slate-100 transition-all font-bold cursor-pointer [&>option]:bg-white [&>option]:dark:bg-slate-800 [&>option]:text-slate-700 [&>option]:dark:text-slate-200"
-              >
-                {employees.map((emp) => (
-                  <option key={emp.id} value={emp.id}>
-                    {emp.name}
-                  </option>
-                ))}
-              </select>
+                onSelect={setAssigneeId}
+                placeholder="اختر الموظف"
+                options={employees.map((emp) => ({ value: emp.id, label: emp.name }))}
+                className="w-full [&>button]:w-full [&>button]:justify-between"
+              />
             </div>
           )}
 
@@ -143,18 +141,17 @@ export default function TaskFormModal({
               <FolderPlus className="w-3.5 h-3.5 text-slate-400" />
               الجهة التابعة لها المهمة
             </label>
-            <select
+            <Select
+              variant="soft"
               value={charityId}
-              onChange={(e) => setCharityId(e.target.value)}
-              className="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-sm outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary/30 text-slate-800 dark:text-slate-100 transition-all font-bold cursor-pointer [&>option]:bg-white [&>option]:dark:bg-slate-800 [&>option]:text-slate-700 [&>option]:dark:text-slate-200"
-            >
-              <option value="internal">مهام داخلية في شركة زاد</option>
-              {charities.map((ch) => (
-                <option key={ch.id} value={ch.id}>
-                  {ch.name}
-                </option>
-              ))}
-            </select>
+              onSelect={setCharityId}
+              placeholder="الجهة"
+              options={[
+                { value: "internal", label: "مهام داخلية في شركة زاد" },
+                ...charities.map((ch) => ({ value: ch.id, label: ch.name })),
+              ]}
+              className="w-full [&>button]:w-full [&>button]:justify-between"
+            />
           </div>
 
           <div>

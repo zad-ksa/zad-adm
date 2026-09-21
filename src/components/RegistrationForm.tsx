@@ -1,5 +1,6 @@
 ﻿import { useState, useEffect } from "react";
 import { Building2, UserCircle, ClipboardList, ArrowLeft, ChevronDownIcon } from "@/components/Icons";
+import Select from "@/components/console/Select";
 
 export interface RegistrationData {
   charityName: string;
@@ -36,6 +37,8 @@ export default function RegistrationForm({ onComplete, prefilledCharityName, pre
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    // كان المتصفّح يمنع الإرسال بلا صفةٍ عبر required على القائمة الأصلية.
+    if (!formData.authorizedTitle) return;
     onComplete(formData);
   };
 
@@ -97,20 +100,20 @@ export default function RegistrationForm({ onComplete, prefilledCharityName, pre
         <div>
           <label className="block text-sm font-bold text-slate-700 mb-2">صفة معبي الاستبيان</label>
           <div className="relative">
-            <select
-              required
-              name="authorizedTitle"
+            <Select
+              variant="soft"
               value={formData.authorizedTitle}
-              onChange={handleChange}
-              className="w-full pr-11 pl-10 py-3 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:border-primary transition-all outline-none text-slate-800 appearance-none font-medium"
-            >
-              <option value="" disabled>اختر الصفة...</option>
-              <option value="عضو جمعية عمومية">عضو جمعية عمومية</option>
-              <option value="عضو مجلس إدارة">عضو مجلس إدارة</option>
-              <option value="موظف بدوام كامل">موظف بدوام كامل</option>
-              <option value="موظف بدوام جزئي">موظف بدوام جزئي</option>
-              <option value="متطوع">متطوع</option>
-            </select>
+              onSelect={(v) => handleChange({ target: { name: "authorizedTitle", value: v } } as React.ChangeEvent<HTMLInputElement>)}
+              placeholder="اختر الصفة…"
+              options={[
+                { value: "عضو جمعية عمومية", label: "عضو جمعية عمومية" },
+                { value: "عضو مجلس إدارة", label: "عضو مجلس إدارة" },
+                { value: "موظف بدوام كامل", label: "موظف بدوام كامل" },
+                { value: "موظف بدوام جزئي", label: "موظف بدوام جزئي" },
+                { value: "متطوع", label: "متطوع" },
+              ]}
+              className="w-full [&>button]:w-full [&>button]:justify-between [&>button]:py-3 [&>button]:h-auto"
+            />
             <div className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
               <UserCircle className="w-5 h-5" />
             </div>

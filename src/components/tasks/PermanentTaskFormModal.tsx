@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Select from "@/components/console/Select";
 import { X, CheckSquare, AlignLeft, Repeat, User } from "lucide-react";
 import { Employee } from "@/types";
 
@@ -46,6 +47,8 @@ export default function PermanentTaskFormModal({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    // كان المتصفّح يمنع الإرسال بلا مكلَّف عبر required على القائمة الأصلية.
+    if (!assignedToId) return;
     onSubmit({ title, description, recurrenceRate, assignedToId });
   };
 
@@ -114,20 +117,15 @@ export default function PermanentTaskFormModal({
           <div>
             <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-2">الموظف المسؤول</label>
             <div className="relative">
-              <select
-                required
+              <Select
+                variant="soft"
                 value={assignedToId}
-                onChange={(e) => setAssignedToId(e.target.value)}
+                onSelect={setAssignedToId}
                 disabled={isPending}
-                className="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl px-10 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-slate-800 dark:text-slate-100 appearance-none cursor-pointer [&>option]:bg-white [&>option]:text-slate-800 [&>option]:dark:bg-slate-800 [&>option]:dark:text-slate-200"
-              >
-                <option value="" disabled>اختر الموظف...</option>
-                {employees.map((emp) => (
-                  <option key={emp.id} value={emp.id}>
-                    {emp.name}
-                  </option>
-                ))}
-              </select>
+                placeholder="اختر الموظف…"
+                options={employees.map((emp) => ({ value: emp.id, label: emp.name }))}
+                className="w-full [&>button]:w-full [&>button]:justify-between [&>button]:py-3 [&>button]:h-auto"
+              />
               <User className="absolute right-3.5 top-3.5 w-4 h-4 text-slate-400" />
             </div>
           </div>

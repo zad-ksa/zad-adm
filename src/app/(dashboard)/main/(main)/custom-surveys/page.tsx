@@ -5,7 +5,7 @@ import { Spinner } from "@/components/console/ui";
 import Link from "next/link";
 import { Plus, Edit2, Trash2, Eye, Copy, CheckCircle, Printer, RefreshCw, Files, LayoutGrid, List, AlertTriangle, X } from "lucide-react";
 import CircularLoader from "@/components/CircularLoader";
-import ConfirmModal from "@/components/ui/ConfirmModal";
+import { ConfirmDialog } from "@/components/console/ConfirmDialog";
 
 interface Survey {
   id: string;
@@ -491,7 +491,7 @@ export default function SurveysPage() {
         </div>
       )}
 
-      <ConfirmModal
+      <ConfirmDialog
         isOpen={!!pendingDelete}
         title="حذف الاستبيان"
         message={
@@ -509,7 +509,7 @@ export default function SurveysPage() {
         onConfirm={confirmDelete}
       />
 
-      <ConfirmModal
+      <ConfirmDialog
         isOpen={!!pendingRegenerate}
         title="توليد رابط جديد"
         message={

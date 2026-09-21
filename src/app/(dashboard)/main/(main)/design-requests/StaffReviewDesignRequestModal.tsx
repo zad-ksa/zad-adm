@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { X, Loader2, AlertTriangle, Check, Undo2 } from "lucide-react";
 import { approveDesignRequest, rejectDesignRequest } from "@/app/actions/designRequests";
-import ConfirmModal from "@/components/ui/ConfirmModal";
+import { ConfirmDialog } from "@/components/console/ConfirmDialog";
 
 /**
  * The review step a charity's request passes through before it enters the queue.
@@ -235,7 +235,7 @@ export default function StaffReviewDesignRequestModal({
         </div>
       </div>
 
-      <ConfirmModal
+      <ConfirmDialog
         isOpen={isConfirmOpen}
         title={mode === "approve" ? "اعتماد الطلب" : "إعادة الطلب مع ملاحظات"}
         message={

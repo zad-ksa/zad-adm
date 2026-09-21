@@ -4,7 +4,7 @@ import { useState } from "react";
 import { X, Paperclip, Loader2, AlertTriangle, Save, Trash2 } from "lucide-react";
 import { updateDesignRequestDetails } from "@/app/actions/designRequests";
 import { uploadDesignRequestFiles } from "./uploadDesignRequestFiles";
-import ConfirmModal from "@/components/ui/ConfirmModal";
+import { ConfirmDialog } from "@/components/console/ConfirmDialog";
 import UploadProgress from "@/components/ui/UploadProgress";
 import type { UploadProgress as Progress } from "@/lib/clientUpload";
 import { ACCEPT_ATTRIBUTE, maxBytesFor, maxLabelFor } from "@/lib/uploadPurposes";
@@ -324,7 +324,7 @@ export default function EditDesignRequestModal({
         </div>
       </div>
 
-      <ConfirmModal
+      <ConfirmDialog
         isOpen={isConfirmOpen}
         title="حفظ التعديل"
         message={

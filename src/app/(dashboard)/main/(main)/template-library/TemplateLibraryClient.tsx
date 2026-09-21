@@ -43,7 +43,7 @@ import {
 } from "@/app/actions/templateLibrary";
 import { uploadFiles } from "@/lib/clientUpload";
 import { ACCEPT_ATTRIBUTE, formatBytes, maxBytesFor, maxLabelFor } from "@/lib/uploadPurposes";
-import ConfirmModal from "@/components/ui/ConfirmModal";
+import { ConfirmDialog } from "@/components/console/ConfirmDialog";
 import SuccessToast from "@/components/ui/SuccessToast";
 
 const MAX_BYTES = maxBytesFor("template_file");
@@ -1172,7 +1172,7 @@ export default function TemplateLibraryClient() {
         </div>
       )}
 
-      <ConfirmModal
+      <ConfirmDialog
         isOpen={!!deleting}
         title={deleting?.kind === "FOLDER" ? "حذف المجلد" : "حذف الملف"}
         message={

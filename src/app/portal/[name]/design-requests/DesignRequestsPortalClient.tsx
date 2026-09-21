@@ -9,7 +9,7 @@ import DesignRequestLogModal from "@/components/design-requests/DesignRequestLog
 import QueueOrderModal, { type QueueRow } from "@/components/design-requests/QueueOrderModal";
 import type { DesignRequestProgress } from "@/lib/designRequestProgress";
 import SuccessToast from "@/components/ui/SuccessToast";
-import ConfirmModal from "@/components/ui/ConfirmModal";
+import { ConfirmDialog } from "@/components/console/ConfirmDialog";
 import RequestRevisionModal from "@/components/design-requests/RequestRevisionModal";
 import { RevisionNotesList } from "@/components/design-requests/RevisionNotesList";
 import { approveDeliveryByCharity, deleteDesignRequest } from "@/app/actions/designRequests";
@@ -493,7 +493,7 @@ export default function DesignRequestsPortalClient({
         );
       })()}
 
-      <ConfirmModal
+      <ConfirmDialog
         isOpen={!!deletingId}
         title="حذف الطلب"
         message="سيُحذف الطلب ومرفقاته نهائياً ولا يمكن التراجع. الحذف متاح ما دام الطلب قيد المراجعة ولم يُعتمد بعد."
@@ -513,7 +513,7 @@ export default function DesignRequestsPortalClient({
         }}
       />
 
-      <ConfirmModal
+      <ConfirmDialog
         isOpen={!!approvingId}
         title="اعتماد نهائي"
         message="سيُعتمد التسليم نهائياً وتُحذف مرفقات الطلب الأصلية من التخزين، وتبقى الملفات النهائية. لا يمكن التراجع ولا طلب تعديل بعدها."

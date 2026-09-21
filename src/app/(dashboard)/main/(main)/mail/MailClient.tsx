@@ -35,7 +35,7 @@ import {
 } from "@/app/actions/mail";
 import { notifyMailUnreadChanged } from "@/lib/mailBadge";
 import ComposeModal from "./ComposeModal";
-import ConfirmModal from "@/components/ui/ConfirmModal";
+import { ConfirmDialog } from "@/components/console/ConfirmDialog";
 import CircularLoader from "@/components/CircularLoader";
 import MailRow from "./MailRow";
 import { normalizeMailListItem } from "./mailUtils";
@@ -589,7 +589,7 @@ export default function MailClient({
         />
       )}
 
-      <ConfirmModal
+      <ConfirmDialog
         isOpen={confirmAction !== null}
         title={confirmAction === "delete" ? (currentTab === "drafts" ? "حذف المسودات" : "حذف الرسائل نهائياً") : "نقل الرسائل إلى المهملات"}
         message={

@@ -22,7 +22,7 @@ import StaffReviewDesignRequestModal from "./StaffReviewDesignRequestModal";
 import SuccessToast from "@/components/ui/SuccessToast";
 import UploadProgress from "@/components/ui/UploadProgress";
 import type { UploadProgress as Progress } from "@/lib/clientUpload";
-import ConfirmModal from "@/components/ui/ConfirmModal";
+import { ConfirmDialog } from "@/components/console/ConfirmDialog";
 import CopyDeliveryNotice from "@/components/design-requests/CopyDeliveryNotice";
 import DesignRequestLogModal from "@/components/design-requests/DesignRequestLogModal";
 import { RevisionNotesList } from "@/components/design-requests/RevisionNotesList";
@@ -753,7 +753,7 @@ export default function DesignRequestsClient({
         );
       })()}
 
-      <ConfirmModal
+      <ConfirmDialog
         isOpen={isCompleteConfirmOpen}
         title={completingIsRevision ? "تسليم التعديل" : "إنهاء الطلب"}
         message={
@@ -981,7 +981,7 @@ export default function DesignRequestsClient({
         />
       )}
 
-      <ConfirmModal
+      <ConfirmDialog
         isOpen={isQueueRescheduleOpen && !!charityFilter}
         title="إعادة ترتيب الدور"
         message={`ستُرصّ طلبات ${

@@ -8,7 +8,7 @@ import DesignTypePicker, {
   type DesignTypeOption,
 } from "@/components/design-requests/DesignTypePicker";
 import { ACCEPT_ATTRIBUTE, maxBytesFor, maxLabelFor } from "@/lib/uploadPurposes";
-import ConfirmModal from "@/components/ui/ConfirmModal";
+import { ConfirmDialog } from "@/components/console/ConfirmDialog";
 import UploadProgress from "@/components/ui/UploadProgress";
 import type { UploadProgress as Progress } from "@/lib/clientUpload";
 import { uploadDesignRequestFiles } from "@/components/design-requests/uploadDesignRequestFiles";
@@ -274,7 +274,7 @@ export default function StaffNewDesignRequestModal({
         </div>
       </div>
 
-      <ConfirmModal
+      <ConfirmDialog
         isOpen={isConfirmOpen}
         title="إنشاء الطلب"
         message="سيأخذ الطلب دوره مباشرة ويظهر للجمعية بموعد تسليم مؤكد. هل تريد المتابعة؟"

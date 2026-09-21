@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import type { MouseEvent, ReactNode } from "react";
-import { CircleCheck, Ellipsis, LoaderCircle, TriangleAlert, X } from "lucide-react";
+import { CircleCheck, Ellipsis, TriangleAlert, X } from "lucide-react";
 import { btn, cx } from "./ui";
 
 // الطبقات العائمة لصفحات الإدارة: اللوحة الجانبية، والتأكيد، والإشعار، وقائمة الصف.
@@ -96,52 +96,8 @@ export function FooterStatus({ error, children }: { error: string | null; childr
   );
 }
 
-export function ConfirmDialog({
-  title,
-  body,
-  confirmLabel,
-  tone = "danger",
-  busy = false,
-  onConfirm,
-  onCancel,
-}: {
-  title: string;
-  body: string;
-  confirmLabel: string;
-  tone?: "danger" | "primary";
-  busy?: boolean;
-  onConfirm: () => void;
-  onCancel: () => void;
-}) {
-  return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
-      <div
-        className="absolute inset-0 bg-slate-950/40 backdrop-blur-[2px] motion-safe:animate-[zad-fade-in_150ms_ease-out]"
-        onClick={() => !busy && onCancel()}
-      />
-      <div
-        role="alertdialog"
-        aria-modal="true"
-        aria-label={title}
-        className="relative w-full max-w-md overflow-hidden rounded-xl border border-slate-200 bg-white text-slate-900 shadow-2xl motion-safe:animate-[zad-pop-in_160ms_ease-out] dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100"
-      >
-        <div className="space-y-2 p-5">
-          <h2 className="text-[16px] font-semibold">{title}</h2>
-          <p className="text-[13.5px] leading-6 text-slate-500 dark:text-slate-400">{body}</p>
-        </div>
-        <div className="flex justify-end gap-2 border-t border-slate-100 bg-slate-50/70 px-5 py-3 dark:border-slate-800 dark:bg-slate-950/40">
-          <button type="button" onClick={onCancel} disabled={busy} className={btn.secondary}>
-            إلغاء
-          </button>
-          <button type="button" onClick={onConfirm} disabled={busy} className={tone === "danger" ? btn.danger : btn.primary}>
-            {busy && <LoaderCircle className="size-4 animate-spin" />}
-            {confirmLabel}
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-}
+// ConfirmDialog انتقل إلى console/ConfirmDialog.tsx: حوارٌ واحدٌ بصيغتين
+// بدل تطبيقين متوازيين.
 
 export type ToastMessage = { tone: "ok" | "error"; text: string } | null;
 

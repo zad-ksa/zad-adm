@@ -25,7 +25,7 @@ import {
   deletePortalMail,
 } from "@/app/actions/charityMail";
 import { htmlToPlainText } from "@/app/(dashboard)/main/(main)/mail/mailUtils";
-import ConfirmModal from "@/components/ui/ConfirmModal";
+import { ConfirmDialog } from "@/components/console/ConfirmDialog";
 import { notifyMailUnreadChanged } from "@/lib/mailBadge";
 import PortalComposeModal, { type ReplyTarget, type ResendTarget } from "./PortalComposeModal";
 import {
@@ -541,7 +541,7 @@ export default function PortalMailClient({
         />
       )}
 
-      <ConfirmModal
+      <ConfirmDialog
         isOpen={!!deleteTarget}
         title="نقل الرسالة إلى المهملات"
         message={`سيتم إخفاء «${deleteTarget?.subject || "(بدون موضوع)"}» من صندوق الوارد.`}

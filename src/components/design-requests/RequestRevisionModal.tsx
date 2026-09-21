@@ -5,7 +5,7 @@ import { X, Paperclip, Loader2, AlertTriangle, Trash2, Send, Plus } from "lucide
 import { requestDesignRevision } from "@/app/actions/designRequests";
 import { uploadDesignRequestFiles } from "./uploadDesignRequestFiles";
 import { ACCEPT_ATTRIBUTE, maxBytesFor, maxLabelFor } from "@/lib/uploadPurposes";
-import ConfirmModal from "@/components/ui/ConfirmModal";
+import { ConfirmDialog } from "@/components/console/ConfirmDialog";
 import UploadProgress from "@/components/ui/UploadProgress";
 import type { UploadProgress as Progress } from "@/lib/clientUpload";
 
@@ -327,7 +327,7 @@ export default function RequestRevisionModal({
         </div>
       </div>
 
-      <ConfirmModal
+      <ConfirmDialog
         isOpen={isConfirmOpen}
         title="إرسال الملاحظات"
         message="سيعود الطلب إلى فريق زاد للتعديل خلال 24 ساعة، وبعد تسليمه يُعتمد نهائياً. التعديل متاح مرة واحدة فقط — هل تريد المتابعة؟"

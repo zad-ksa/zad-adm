@@ -18,16 +18,8 @@ import {
   tbodyClass,
   theadRowClass,
 } from "@/components/console/layout";
-import {
-  ConfirmDialog,
-  MenuItem,
-  MenuSeparator,
-  RowMenu,
-  RowMenuTrigger,
-  Toast,
-  useRowMenu,
-  useToast,
-} from "@/components/console/overlays";
+import { MenuItem, MenuSeparator, RowMenu, RowMenuTrigger, Toast, useRowMenu, useToast } from "@/components/console/overlays";
+import { ConfirmDialog } from "@/components/console/ConfirmDialog";
 import { RoleSheet } from "./RoleSheet";
 import type { RoleBundle, RoleRow } from "./types";
 
@@ -313,18 +305,19 @@ export default function RolesClient({
 
       {confirm && (
         <ConfirmDialog
+          variant="console"
           title={
             confirm.kind === "sync"
               ? `مزامنة قالب «${confirm.role.displayName}»؟`
               : `حذف «${confirm.role.displayName}»؟`
           }
-          body={
+          message={
             confirm.kind === "sync"
               ? `تُستبدل الصلاحيات المباشرة لـ${confirm.role.members.length} موظف يحملون هذا المسمى بقالبه المحفوظ (${confirm.role.permissions.length} صلاحية)، ويُلغى أي تخصيصٍ سابق لها. مجموعاتهم وخدماتهم وجمعياتهم لا تُمسّ.`
               : "يُحذف المسمى وروابط مجموعاته، ولا يمكن التراجع."
           }
           confirmLabel={confirm.kind === "sync" ? "مزامنة" : "حذف المسمى"}
-          busy={isPending}
+          isPending={isPending}
           onConfirm={runConfirm}
           onCancel={() => setConfirm(null)}
         />

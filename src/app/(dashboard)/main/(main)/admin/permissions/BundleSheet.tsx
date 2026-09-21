@@ -26,7 +26,8 @@ import {
   toggleIn,
 } from "@/components/console/ui";
 import { SearchField, Tabs } from "@/components/console/layout";
-import { ConfirmDialog, FooterStatus, Sheet } from "@/components/console/overlays";
+import { FooterStatus, Sheet } from "@/components/console/overlays";
+import { ConfirmDialog } from "@/components/console/ConfirmDialog";
 import type { BundleRow, PermEmployee, RoleRow } from "./types";
 
 type Tab = "details" | "permissions" | "services" | "holders";
@@ -375,12 +376,13 @@ export function BundleSheet({
 
       {confirmDelete && bundle && (
         <ConfirmDialog
+          variant="console"
           title={`حذف «${bundle.name}»؟`}
-          body={`تُسحب صلاحياتها وخدماتها عن ${bundle.employeeIds.length} موظف${
+          message={`تُسحب صلاحياتها وخدماتها عن ${bundle.employeeIds.length} موظف${
             bundle.roleIds.length ? ` و${bundle.roleIds.length} مسمى` : ""
           }. ما مُنح لكل موظف مباشرةً لا يُمسّ، ولا يمكن التراجع.`}
           confirmLabel="حذف المجموعة"
-          busy={isPending}
+          isPending={isPending}
           onConfirm={remove}
           onCancel={() => setConfirmDelete(false)}
         />

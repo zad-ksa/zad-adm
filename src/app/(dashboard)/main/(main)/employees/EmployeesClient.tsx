@@ -21,16 +21,8 @@ import {
   tbodyClass,
   theadRowClass,
 } from "@/components/console/layout";
-import {
-  ConfirmDialog,
-  MenuItem,
-  MenuSeparator,
-  RowMenu,
-  RowMenuTrigger,
-  Toast,
-  useRowMenu,
-  useToast,
-} from "@/components/console/overlays";
+import { MenuItem, MenuSeparator, RowMenu, RowMenuTrigger, Toast, useRowMenu, useToast } from "@/components/console/overlays";
+import { ConfirmDialog } from "@/components/console/ConfirmDialog";
 
 type StatusFilter = "all" | "active" | "inactive";
 type SheetState = { mode: "add" } | { mode: "edit"; employee: EmployeeRow } | null;
@@ -405,6 +397,7 @@ export function EmployeesClient({
 
       {confirm && (
         <ConfirmDialog
+          variant="console"
           title={
             confirm.kind === "delete"
               ? `حذف ${confirm.employee.name} نهائياً؟`
@@ -412,7 +405,7 @@ export function EmployeesClient({
                 ? `إيقاف حساب ${confirm.employee.name}؟`
                 : `تفعيل حساب ${confirm.employee.name}؟`
           }
-          body={
+          message={
             confirm.kind === "delete"
               ? "يُحذف الحساب وإسناداته ولا يمكن التراجع. إن كان مرتبطاً بمهام أو سجلات فقد يُرفض الحذف، وإيقاف الحساب هو البديل الآمن."
               : confirm.employee.isActive
@@ -421,7 +414,7 @@ export function EmployeesClient({
           }
           confirmLabel={confirm.kind === "delete" ? "حذف الموظف" : confirm.employee.isActive ? "إيقاف الحساب" : "تفعيل الحساب"}
           tone={confirm.kind === "delete" || confirm.employee.isActive ? "danger" : "primary"}
-          busy={isPending}
+          isPending={isPending}
           onConfirm={runConfirm}
           onCancel={() => setConfirm(null)}
         />

@@ -15,7 +15,7 @@ import {
   AlertTriangle,
 } from "lucide-react";
 import ComposeModal from "../ComposeModal";
-import ConfirmModal from "@/components/ui/ConfirmModal";
+import { ConfirmDialog } from "@/components/console/ConfirmDialog";
 import { moveToTrash } from "@/app/actions/mail";
 import Image from "next/image";
 import { formatMailDate, htmlToPlainText, splitQuotedHtml } from "../mailUtils";
@@ -215,7 +215,7 @@ export default function MailViewClient({ session, mail, employees }: MailViewCli
         />
       )}
 
-      <ConfirmModal
+      <ConfirmDialog
         isOpen={isConfirmDeleteOpen}
         title="نقل إلى المهملات"
         message="هل أنت متأكد من نقل هذه الرسالة إلى المهملات؟"

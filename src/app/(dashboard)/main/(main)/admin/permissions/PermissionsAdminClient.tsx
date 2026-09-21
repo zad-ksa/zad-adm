@@ -21,17 +21,8 @@ import {
   tbodyClass,
   theadRowClass,
 } from "@/components/console/layout";
-import {
-  ConfirmDialog,
-  MenuItem,
-  MenuSeparator,
-  RowMenu,
-  RowMenuTrigger,
-  Sheet,
-  Toast,
-  useRowMenu,
-  useToast,
-} from "@/components/console/overlays";
+import { MenuItem, MenuSeparator, RowMenu, RowMenuTrigger, Sheet, Toast, useRowMenu, useToast } from "@/components/console/overlays";
+import { ConfirmDialog } from "@/components/console/ConfirmDialog";
 import { BundleSheet } from "./BundleSheet";
 import { PermissionSheet } from "./PermissionSheet";
 import { EmployeeBundlesSheet } from "./EmployeeBundlesSheet";
@@ -746,12 +737,13 @@ export default function PermissionsAdminClient({
 
       {removing && (
         <ConfirmDialog
+          variant="console"
           title={`حذف «${removing.name}»؟`}
-          body={`تُسحب صلاحياتها وخدماتها عن ${removing.employeeIds.length} موظف${
+          message={`تُسحب صلاحياتها وخدماتها عن ${removing.employeeIds.length} موظف${
             removing.roleIds.length ? ` و${removing.roleIds.length} مسمى` : ""
           }. ما مُنح لكل موظف مباشرةً لا يُمسّ، ولا يمكن التراجع.`}
           confirmLabel="حذف المجموعة"
-          busy={isPending}
+          isPending={isPending}
           onConfirm={confirmRemove}
           onCancel={() => setRemoving(null)}
         />

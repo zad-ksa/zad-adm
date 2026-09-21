@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { X, Paperclip, Send, Loader2, AlertTriangle, Info, Trash2 } from "lucide-react";
 import { createDesignRequestFromPortal, resubmitDesignRequest } from "@/app/actions/designRequests";
-import ConfirmModal from "@/components/ui/ConfirmModal";
+import { ConfirmDialog } from "@/components/console/ConfirmDialog";
 import UploadProgress from "@/components/ui/UploadProgress";
 import type { UploadProgress as Progress } from "@/lib/clientUpload";
 import { ACCEPT_ATTRIBUTE, maxBytesFor, maxLabelFor } from "@/lib/uploadPurposes";
@@ -353,7 +353,7 @@ export default function NewDesignRequestForm({
         </div>
       </div>
 
-      <ConfirmModal
+      <ConfirmDialog
         isOpen={isConfirmOpen}
         title={isResubmit ? "إعادة رفع الطلب" : "إرسال الطلب"}
         message={

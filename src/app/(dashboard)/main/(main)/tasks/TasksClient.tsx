@@ -69,7 +69,7 @@ import { copyToClipboard } from "@/lib/clipboard";
 const TaskFormModal = dynamic(() => import("@/components/tasks/TaskFormModal"), { ssr: false });
 const AchievementFormModal = dynamic(() => import("@/components/tasks/AchievementFormModal"), { ssr: false });
 const PermanentTaskFormModal = dynamic(() => import("@/components/tasks/PermanentTaskFormModal"), { ssr: false });
-const ConfirmModal = dynamic(() => import("@/components/ui/ConfirmModal"), { ssr: false });
+const ConfirmDialog = dynamic(() => import("@/components/console/ConfirmDialog"), { ssr: false });
 
 // شبكة أعمدة المهام الحالية — نفس أسلوب جدول الاعتمادات: رأس وصفوف بنفس
 // التوزيع بالحرف، فتصطف كل المهام تحت بعضها بانتظام على سطح المكتب. الجوال
@@ -945,7 +945,7 @@ ${combinedAchievements.length > 0 ? `
         </div>
       )}
 
-      <ConfirmModal
+      <ConfirmDialog
         isOpen={itemToDelete !== null}
         title={itemToDelete?.type === 'task' ? "حذف المهمة" : itemToDelete?.type === 'achievement' ? "حذف المنجز" : "حذف المهمة الوظيفية"}
         message={itemToDelete?.type === 'task' ? "هل أنت متأكد من رغبتك في حذف هذه المهمة نهائياً؟ لا يمكن التراجع عن هذا الإجراء." : itemToDelete?.type === 'achievement' ? "هل أنت متأكد من رغبتك في حذف هذا المنجز نهائياً؟ لا يمكن التراجع عن هذا الإجراء." : "هل أنت متأكد من رغبتك في حذف هذه المهمة الوظيفية نهائياً؟ لا يمكن التراجع عن هذا الإجراء."}

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Select from "@/components/console/Select";
 import { X, Copy, CheckCircle2 } from "lucide-react";
 
 function buildMessage(charityName: string, scheduleTitle: string, link: string): string {
@@ -63,18 +64,14 @@ export default function CopyMessageModal({
         <div className="flex-1 overflow-y-auto custom-scrollbar p-6 space-y-4">
           <div className="space-y-2">
             <label className="block text-sm font-bold text-slate-700 dark:text-slate-300">الجمعية</label>
-            <select
+            <Select
+              variant="soft"
               value={charityId}
-              onChange={(e) => handleSelectCharity(e.target.value)}
-              className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all text-sm font-medium [&>option]:dark:bg-slate-950"
-            >
-              <option value="">اختر الجمعية...</option>
-              {charities.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.name}
-                </option>
-              ))}
-            </select>
+              onSelect={handleSelectCharity}
+              placeholder="اختر الجمعية…"
+              options={charities.map((c) => ({ value: c.id, label: c.name }))}
+              className="w-full [&>button]:w-full [&>button]:justify-between"
+            />
           </div>
 
           {message && (

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Select from "@/components/console/Select";
 import { X, Paperclip, Send, Loader2, AlertTriangle } from "lucide-react";
 import { createDesignRequestByStaff } from "@/app/actions/designRequests";
 import DesignTypePicker, {
@@ -128,20 +129,17 @@ export default function StaffNewDesignRequestModal({
             >
               الجمعية
             </label>
-            <select
+            <Select
+              variant="soft"
               value={charityId}
-              onChange={(e) => setCharityId(e.target.value)}
-              className="w-full h-11 px-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 font-bold text-slate-700 dark:text-slate-200 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none [&>option]:dark:bg-slate-800"
-              style={{ fontSize: "var(--dr-fs-body)" }}
-            >
-              <option value="">اختر الجهة...</option>
-              <option value={ZAD}>— شركة زاد —</option>
-              {charities.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.name}
-                </option>
-              ))}
-            </select>
+              onSelect={setCharityId}
+              placeholder="اختر الجهة…"
+              options={[
+                { value: ZAD, label: "— شركة زاد —" },
+                ...charities.map((c) => ({ value: c.id, label: c.name })),
+              ]}
+              className="w-full [&>button]:w-full [&>button]:h-11 [&>button]:justify-between"
+            />
           </div>
 
           <div>

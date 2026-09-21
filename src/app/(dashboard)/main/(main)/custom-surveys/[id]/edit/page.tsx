@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, use, useRef } from "react";
+import Select from "@/components/console/Select";
 import { useRouter } from "next/navigation";
 import { Plus, Trash2, Save, ArrowRight, ArrowUp, ArrowDown, Settings, Loader2, AlertCircle, CheckCircle, Printer } from "lucide-react";
 import Link from "next/link";
@@ -446,18 +447,20 @@ export default function EditSurveyPage({ params }: { params: Promise<{ id: strin
                         placeholder="نص السؤال..."
                         className="flex-1 bg-white border border-slate-200 rounded-lg px-3 py-2 outline-none focus:border-primary/50 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-100"
                       />
-                      <select
+                      <Select
+                        variant="soft"
                         value={question.type}
-                        onChange={(e) => updateQuestion(sIndex, qIndex, { type: e.target.value })}
-                        className="bg-white border border-slate-200 rounded-lg px-3 py-2 outline-none focus:border-primary/50 text-sm font-bold text-slate-700 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-300"
-                      >
-                        <option value="TEXT">نصي</option>
-                        <option value="YES_NO">نعم / لا</option>
-                        <option value="OPTIONS">خيارات متعددة (خيار واحد)</option>
-                        <option value="MULTI_OPTIONS">خيارات متعددة (متعدد الاختيار)</option>
-                        <option value="HIJRI_DATE">تاريخ هجري</option>
-                        <option value="FILE">رفع ملف</option>
-                      </select>
+                        onSelect={(v) => updateQuestion(sIndex, qIndex, { type: v })}
+                        placeholder="نوع السؤال"
+                        options={[
+                          { value: "TEXT", label: "نصي" },
+                          { value: "YES_NO", label: "نعم / لا" },
+                          { value: "OPTIONS", label: "خيارات متعددة (خيار واحد)" },
+                          { value: "MULTI_OPTIONS", label: "خيارات متعددة (متعدد الاختيار)" },
+                          { value: "HIJRI_DATE", label: "تاريخ هجري" },
+                          { value: "FILE", label: "رفع ملف" },
+                        ]}
+                      />
                     </div>
                     {(question.type === "OPTIONS" || question.type === "MULTI_OPTIONS") && (
                       <div className="space-y-2 bg-white p-4 rounded-xl border border-slate-200 dark:bg-slate-800 dark:border-slate-700">

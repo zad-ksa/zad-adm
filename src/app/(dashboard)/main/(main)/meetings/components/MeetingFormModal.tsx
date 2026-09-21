@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, useTransition } from "react";
+import Select from "@/components/console/Select";
 import { X, Sparkles, Loader2, Lock, FileClock } from "lucide-react";
 import { checkDateConflict } from "@/app/actions/meetings";
 import { timeAgoArabic } from "@/lib/dateUtils";
@@ -285,21 +286,32 @@ export default function MeetingFormModal({
                 </div>
                 <div>
                   <label className="text-xs font-bold text-slate-500 dark:text-slate-400 mb-1 block">نوع / سياق الاجتماع</label>
-                  <select value={meetingContext} onChange={e => setMeetingContext(e.target.value)}
-                    className="w-full border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-xs bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-primary">
-                    <option value="">— اختر النوع —</option>
-                    <option value="زاد">إدارة زاد</option>
-                    <option disabled>── الأقسام ──</option>
-                    {departments.map(d => <option key={d.value} value={`service:${d.value}`}>{d.label}</option>)}
-                  </select>
+                  <Select
+                    variant="soft"
+                    value={meetingContext}
+                    onSelect={setMeetingContext}
+                    placeholder="— اختر النوع —"
+                    options={[
+                      { value: "زاد", label: "إدارة زاد" },
+                      { value: "__sep_departments", label: "الأقسام", disabled: true },
+                      ...departments.map(d => ({ value: `service:${d.value}`, label: d.label })),
+                    ]}
+                    className="w-full [&>button]:w-full [&>button]:justify-between"
+                  />
                 </div>
                 <div>
                   <label className="text-xs font-bold text-slate-500 dark:text-slate-400 mb-1 block">الجمعية (اختياري)</label>
-                  <select value={charityId} onChange={e => setCharityId(e.target.value)}
-                    className="w-full border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-xs bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-primary">
-                    <option value="">— بدون جمعية —</option>
-                    {charities.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-                  </select>
+                  <Select
+                    variant="soft"
+                    value={charityId}
+                    onSelect={setCharityId}
+                    placeholder="— بدون جمعية —"
+                    options={[
+                      { value: "", label: "— بدون جمعية —" },
+                      ...charities.map(c => ({ value: c.id, label: c.name })),
+                    ]}
+                    className="w-full [&>button]:w-full [&>button]:justify-between"
+                  />
                 </div>
               </div>
               <div>

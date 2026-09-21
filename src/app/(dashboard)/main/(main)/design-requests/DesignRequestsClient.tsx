@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState, useTransition } from "react";
+import Select from "@/components/console/Select";
 import { useRouter } from "next/navigation";
 import { Palette, Plus, Filter, AlertTriangle, Loader2, Paperclip, LayoutGrid, List, CalendarRange } from "lucide-react";
 import DesignRequestCard, {
@@ -470,19 +471,17 @@ export default function DesignRequestsClient({
             )}
             <div className="relative">
               <Filter className="w-4 h-4 text-slate-400 dark:text-slate-500 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
-              <select
+              <Select
+                variant="soft"
                 value={charityFilter}
-                onChange={(e) => setCharityFilter(e.target.value)}
-                className="h-10 pl-3 pr-9 rounded-xl bg-slate-50 dark:bg-[#111] border border-slate-200 dark:border-slate-800 font-bold text-slate-700 dark:text-slate-200 focus:ring-2 focus:ring-primary/20 dark:focus:ring-teal-500/20 focus:border-primary dark:focus:border-teal-500 outline-none transition-all appearance-none [&>option]:dark:bg-[#111]"
-                style={{ fontSize: "var(--dr-fs-meta)" }}
-              >
-                <option value="">كل الجمعيات</option>
-                {charities.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.name}
-                  </option>
-                ))}
-              </select>
+                onSelect={setCharityFilter}
+                placeholder="كل الجمعيات"
+                options={[
+                  { value: "", label: "كل الجمعيات" },
+                  ...charities.map((c) => ({ value: c.id, label: c.name })),
+                ]}
+                className="[&>button]:h-10"
+              />
             </div>
           </div>
         </div>

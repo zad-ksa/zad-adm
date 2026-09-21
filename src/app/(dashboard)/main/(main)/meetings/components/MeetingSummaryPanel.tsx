@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import Select from "@/components/console/Select";
 import {
   ChevronDown, ChevronRight, RefreshCw, AlertCircle, Loader2, BookOpen,
   ClipboardList, Edit2, Check, X, User, Clock, UserPlus, Plus
@@ -288,16 +289,21 @@ export default function MeetingSummaryPanel({
                         className="w-full text-xs border border-slate-200 dark:border-slate-600 rounded-lg px-2 py-1.5 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-primary/50"
                       />
                       <div className="flex gap-1.5">
-                        <select
-                           value={t.assignedToId || ""}
-                           onChange={e => updateEditTask(i, "assignedToId", e.target.value || null)}
-                           className="flex-1 text-xs border border-slate-200 dark:border-slate-600 rounded-lg px-2 py-1.5 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-primary/50"
-                        >
-                          <option value="">— المكلف —</option>
-                          {employees.map(e => (
-                            <option key={e.id} value={e.id}>{e.name} ({roleLabels[e.role] || e.role})</option>
-                          ))}
-                        </select>
+                        <Select
+                          variant="soft"
+                          value={t.assignedToId || ""}
+                          onSelect={(v) => updateEditTask(i, "assignedToId", v || null)}
+                          placeholder="— المكلف —"
+                          options={[
+                            { value: "", label: "— بلا مكلَّف —" },
+                            ...employees.map(e => ({
+                              value: e.id,
+                              label: e.name,
+                              hint: roleLabels[e.role] || e.role,
+                            })),
+                          ]}
+                          className="flex-1 [&>button]:w-full [&>button]:justify-between"
+                        />
                         <input
                           type="number" min="1" max="365"
                           value={t.dueDays || ""}

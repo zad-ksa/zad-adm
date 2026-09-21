@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback } from "react";
+import Select from "@/components/console/Select";
 import { useEditor, useEditorState, EditorContent, type Editor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import { TextStyle, FontSize } from "@tiptap/extension-text-style";
@@ -195,25 +196,20 @@ function EditorToolbar({ editor }: { editor: Editor }) {
 
       <Divider />
 
-      <select
+      <Select
+        variant="soft"
         value={currentFontSize}
-        onChange={(e) => {
-          const size = e.target.value;
+        onSelect={(size) => {
           if (size) {
             editor.chain().focus().setFontSize(size).run();
           } else {
             editor.chain().focus().unsetFontSize().run();
           }
         }}
-        title="حجم الخط"
-        className="h-8 px-2 rounded-lg bg-transparent text-[length:var(--mail-fs-meta)] font-bold text-slate-600 dark:text-slate-300 outline-none cursor-pointer shrink-0 [&>option]:dark:bg-slate-800"
-      >
-        {FONT_SIZES.map((f) => (
-          <option key={f.label} value={f.value}>
-            {f.label}
-          </option>
-        ))}
-      </select>
+        placeholder="حجم الخط"
+        options={FONT_SIZES.map((f) => ({ value: f.value, label: f.label }))}
+        className="shrink-0 [&>button]:h-8"
+      />
 
       <ToolbarButton
         title="إزالة التنسيق"

@@ -1,18 +1,14 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { PageHeader } from "@/components/console/layout";
+import { StatStrip, PageHeader } from "@/components/console/layout";
 import { charityCrumbs } from "@/lib/crumbs";
 import {
-  Coins,
-  Wallet,
-  TrendingUp,
   CheckCircle2,
   AlertCircle,
   CircleDollarSign,
   Calendar,
   Layers,
-  HandCoins,
   History,
   MessageSquare,
   Check,
@@ -158,72 +154,20 @@ export default function FinanceClient({
           />
 
       <div className="space-y-5">
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-          <div className="bg-white dark:bg-slate-800 rounded-xl p-4 border border-slate-100 dark:border-slate-700 shadow-sm flex items-center gap-3 hover:shadow-md transition-all relative overflow-hidden group">
-            <div className="absolute top-0 right-0 w-1.5 h-full bg-indigo-500 group-hover:w-2.5 transition-all"></div>
-            <div className="w-8 h-8 bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 rounded-lg flex items-center justify-center shrink-0 shadow-inner">
-              <TrendingUp className="w-4 h-4" />
-            </div>
-            <div>
-              <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 mb-0.5">الإيراد السنوي</p>
-              <h3 className="text-base font-black text-slate-800 dark:text-slate-100">
-                {currentFinance.annualRevenue ? currentFinance.annualRevenue.toLocaleString('en-US') : "0"} <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500">ريال</span>
-              </h3>
-            </div>
-          </div>
-
-          <div className="bg-white dark:bg-slate-800 rounded-xl p-4 border border-slate-100 dark:border-slate-700 shadow-sm flex items-center gap-3 hover:shadow-md transition-all relative overflow-hidden group">
-            <div className="absolute top-0 right-0 w-1.5 h-full bg-blue-500 group-hover:w-2.5 transition-all"></div>
-            <div className="w-8 h-8 bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 rounded-lg flex items-center justify-center shrink-0 shadow-inner">
-              <Coins className="w-4 h-4" />
-            </div>
-            <div>
-              <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 mb-0.5">قيمة العقد</p>
-              <h3 className="text-base font-black text-slate-800 dark:text-slate-100">
-                {currentFinance.contractValue.toLocaleString('en-US')} <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500">ريال</span>
-              </h3>
-            </div>
-          </div>
-
-          <div className="bg-white dark:bg-slate-800 rounded-xl p-4 border border-slate-100 dark:border-slate-700 shadow-sm flex items-center gap-3 hover:shadow-md transition-all relative overflow-hidden group">
-            <div className="absolute top-0 right-0 w-1.5 h-full bg-emerald-500 group-hover:w-2.5 transition-all"></div>
-            <div className="w-8 h-8 bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 rounded-lg flex items-center justify-center shrink-0 shadow-inner">
-              <HandCoins className="w-4 h-4" />
-            </div>
-            <div>
-              <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 mb-0.5">إجمالي المنح</p>
-              <h3 className="text-base font-black text-slate-800 dark:text-slate-100">
-                {currentFinance.grants.toLocaleString('en-US')} <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500">ريال</span>
-              </h3>
-            </div>
-          </div>
-
-          <div className="bg-white dark:bg-slate-800 rounded-xl p-4 border border-slate-100 dark:border-slate-700 shadow-sm flex items-center gap-3 hover:shadow-md transition-all relative overflow-hidden group">
-            <div className="absolute top-0 right-0 w-1.5 h-full bg-purple-500 group-hover:w-2.5 transition-all"></div>
-            <div className="w-8 h-8 bg-purple-50 dark:bg-purple-500/10 text-purple-600 dark:text-purple-400 rounded-lg flex items-center justify-center shrink-0 shadow-inner">
-              <Wallet className="w-4 h-4" />
-            </div>
-            <div>
-              <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 mb-0.5">المبلغ المدفوع</p>
-              <h3 className="text-base font-black text-slate-800 dark:text-slate-100">
-                {currentFinance.paidAmount.toLocaleString('en-US')} <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500">ريال</span>
-              </h3>
-            </div>
-          </div>
-
-          <div className="bg-white dark:bg-slate-800 rounded-xl p-4 border border-slate-100 dark:border-slate-700 shadow-sm flex items-center gap-3 hover:shadow-md transition-all relative overflow-hidden group">
-            <div className="absolute top-0 right-0 w-1.5 h-full bg-amber-500 group-hover:w-2.5 transition-all"></div>
-            <div className="w-8 h-8 bg-amber-50 dark:bg-amber-500/10 text-amber-600 dark:text-amber-400 rounded-lg flex items-center justify-center shrink-0 shadow-inner">
-              <TrendingUp className="w-4 h-4" />
-            </div>
-            <div>
-              <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 mb-0.5">المبلغ المتبقي</p>
-              <h3 className="text-base font-black text-slate-800 dark:text-slate-100">
-                {remainingAmount.toLocaleString('en-US')} <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500">ريال</span>
-              </h3>
-            </div>
-          </div>
-        </div>
+        <StatStrip
+          items={[
+            { label: "الإيراد السنوي", value: (currentFinance.annualRevenue || 0).toLocaleString("en-US"), unit: "ريال" },
+            { label: "قيمة العقد", value: currentFinance.contractValue.toLocaleString("en-US"), unit: "ريال" },
+            { label: "إجمالي المنح", value: currentFinance.grants.toLocaleString("en-US"), unit: "ريال" },
+            { label: "المبلغ المدفوع", value: currentFinance.paidAmount.toLocaleString("en-US"), unit: "ريال", dot: "active" },
+            {
+              label: "المبلغ المتبقي",
+              value: remainingAmount.toLocaleString("en-US"),
+              unit: "ريال",
+              dot: remainingAmount > 0 ? "warn" : undefined,
+            },
+          ]}
+        />
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 items-start">
           {/* Installments Card */}

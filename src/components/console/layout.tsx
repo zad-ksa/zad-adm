@@ -80,41 +80,80 @@ export function PageHeader({
   );
 }
 
+/**
+ * رقمٌ في شريط الملخّص.
+ *
+ * اللون هنا حالةٌ لا زينة: `dot` أخضر للمنجز/النشط، وكهرماني لما ينتظر،
+ * وأحمر لما تأخّر — ولا لون لرقمٍ لا يقول شيئاً عن حالة. و`unit` وحدةٌ صغيرة
+ * بجانب الرقم («ريال») كي لا تُكتب بمقاس الرقم نفسه.
+ */
 export type Stat = {
   label: string;
   value: number | string;
-  hint?: string;
-  dot?: "active" | "muted" | "warn";
+  unit?: string;
+  hint?: ReactNode;
+  dot?: "active" | "muted" | "warn" | "danger";
   selected?: boolean;
   onClick?: () => void;
+  href?: string;
 };
 
-export function StatStrip({ items }: { items: Stat[] }) {
+const STAT_DOT = {
+  active: "bg-emerald-500",
+  warn: "bg-amber-500",
+  danger: "bg-red-500",
+  muted: "bg-slate-400",
+} as const;
+
+// الأعمدة تتبع عدد الأرقام: خمسةٌ في شبكةٍ من أربعة تترك رقماً يتيماً في سطر.
+const STAT_COLS: Record<number, string> = {
+  1: "grid-cols-1",
+  2: "grid-cols-2",
+  3: "grid-cols-2 sm:grid-cols-3",
+  4: "grid-cols-2 lg:grid-cols-4",
+  5: "grid-cols-2 sm:grid-cols-3 lg:grid-cols-5",
+  6: "grid-cols-2 sm:grid-cols-3 lg:grid-cols-6",
+};
+
+const statCellClass =
+  "p-4 text-right transition-colors outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary/40";
+
+export function StatStrip({ items, label = "ملخص" }: { items: Stat[]; label?: string }) {
   return (
     <section
-      aria-label="ملخص"
-      className="grid grid-cols-2 gap-px overflow-hidden rounded-lg border border-slate-200 bg-slate-200 lg:grid-cols-4 dark:border-slate-800 dark:bg-slate-800"
+      aria-label={label}
+      className={cx(
+        "grid gap-px overflow-hidden rounded-lg border border-slate-200 bg-slate-200 dark:border-slate-800 dark:bg-slate-800",
+        STAT_COLS[items.length] ?? STAT_COLS[4]
+      )}
     >
       {items.map((s) => {
         const body = (
           <>
             <span className="flex items-center gap-2 text-[13px] text-slate-500 dark:text-slate-400">
-              {s.dot && (
-                <span
-                  className={cx(
-                    "size-1.5 rounded-full",
-                    s.dot === "active" ? "bg-emerald-500" : s.dot === "warn" ? "bg-amber-500" : "bg-slate-400"
-                  )}
-                />
-              )}
+              {s.dot && <span className={cx("size-1.5 shrink-0 rounded-full", STAT_DOT[s.dot])} />}
               {s.label}
             </span>
-            <span className={cx(MONO, "mt-1 block text-[28px] font-semibold leading-none tracking-tight text-slate-900 dark:text-slate-100")}>
-              {s.value}
+            <span className="mt-1 flex items-baseline gap-1.5">
+              <span className={cx(MONO, "text-[28px] font-semibold leading-none tracking-tight text-slate-900 dark:text-slate-100")}>
+                {s.value}
+              </span>
+              {s.unit && <span className="text-[13px] text-slate-500 dark:text-slate-400">{s.unit}</span>}
             </span>
             {s.hint && <span className="mt-2 block text-[12px] text-slate-500">{s.hint}</span>}
           </>
         );
+        if (s.href) {
+          return (
+            <Link
+              key={s.label}
+              href={s.href}
+              className={cx(statCellClass, "bg-white hover:bg-slate-50 dark:bg-slate-900 dark:hover:bg-slate-800/60")}
+            >
+              {body}
+            </Link>
+          );
+        }
         return s.onClick ? (
           <button
             key={s.label}
@@ -122,7 +161,7 @@ export function StatStrip({ items }: { items: Stat[] }) {
             onClick={s.onClick}
             aria-pressed={!!s.selected}
             className={cx(
-              "p-4 text-right transition-colors outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary/40",
+              statCellClass,
               s.selected
                 ? "bg-slate-50 dark:bg-slate-800/70"
                 : "bg-white hover:bg-slate-50 dark:bg-slate-900 dark:hover:bg-slate-800/60"

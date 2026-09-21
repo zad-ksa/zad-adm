@@ -1,8 +1,8 @@
 "use client";
 
 import React, { useState } from "react";
-import { PageHeader } from "@/components/console/layout";
-import { FileSignature, Calendar, DollarSign, AlertCircle, CheckCircle2, TrendingUp, Users, Settings, Loader2 } from "lucide-react";
+import { StatStrip, PageHeader } from "@/components/console/layout";
+import { FileSignature, Calendar, DollarSign, AlertCircle, CheckCircle2, Users, Settings, Loader2 } from "lucide-react";
 import ManageInstallmentsModal from "./ManageInstallmentsModal";
 
 type Installment = {
@@ -57,72 +57,20 @@ export default function ContractsClient({
         description="لوحة تحكم شاملة لمتابعة العقود، تفاصيلها، والأقساط المستحقة للجمعيات."
       />
 
-      {/* Dashboard Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-sm">
-          <div className="flex justify-between items-start">
-            <div>
-              <p className="text-xs font-bold text-slate-500 dark:text-slate-400 mb-1">إجمالي العقود</p>
-              <h3 className="text-2xl font-bold text-slate-800 dark:text-slate-100">{totalContractsCount}</h3>
-            </div>
-            <div className="w-10 h-10 rounded-xl bg-blue-50 dark:bg-blue-900/20 text-blue-500 flex items-center justify-center">
-              <FileSignature className="w-5 h-5" />
-            </div>
-          </div>
-          <div className="mt-4 flex items-center text-xs font-bold text-slate-500 dark:text-slate-400">
-            <span className="text-emerald-500 ml-1">{activeContractsCount} نشط</span>
-            من إجمالي العقود
-          </div>
-        </div>
-
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-sm">
-          <div className="flex justify-between items-start">
-            <div>
-              <p className="text-xs font-bold text-slate-500 dark:text-slate-400 mb-1">القيمة الإجمالية للعقود</p>
-              <h3 className="text-2xl font-bold text-slate-800 dark:text-slate-100">{totalValue.toLocaleString()} ر.س</h3>
-            </div>
-            <div className="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-900/20 text-emerald-500 flex items-center justify-center">
-              <DollarSign className="w-5 h-5" />
-            </div>
-          </div>
-          <div className="mt-4 flex items-center text-xs font-bold text-slate-500 dark:text-slate-400">
-            <TrendingUp className="w-3 h-3 text-emerald-500 ml-1" />
-            نمو مستمر في الشراكات
-          </div>
-        </div>
-
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-sm">
-          <div className="flex justify-between items-start">
-            <div>
-              <p className="text-xs font-bold text-slate-500 dark:text-slate-400 mb-1">إجمالي المبالغ المسددة</p>
-              <h3 className="text-2xl font-bold text-slate-800 dark:text-slate-100">{totalPaidValue.toLocaleString()} ر.س</h3>
-            </div>
-            <div className="w-10 h-10 rounded-xl bg-blue-50 dark:bg-blue-900/20 text-blue-500 flex items-center justify-center">
-              <CheckCircle2 className="w-5 h-5" />
-            </div>
-          </div>
-          <div className="mt-4 flex items-center text-xs font-bold text-slate-500 dark:text-slate-400">
-            مجموع الأقساط المحصلة فعلياً
-          </div>
-        </div>
-
-
-
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-sm">
-          <div className="flex justify-between items-start">
-            <div>
-              <p className="text-xs font-bold text-slate-500 dark:text-slate-400 mb-1">قيمة مستحقات الشهر</p>
-              <h3 className="text-2xl font-bold text-red-500">{dueAmountThisMonth.toLocaleString()} ر.س</h3>
-            </div>
-            <div className="w-10 h-10 rounded-xl bg-red-50 dark:bg-red-900/20 text-red-500 flex items-center justify-center">
-              <Calendar className="w-5 h-5" />
-            </div>
-          </div>
-          <div className="mt-4 flex items-center text-xs font-bold text-slate-500 dark:text-slate-400">
-            المبالغ المطلوبة خلال الشهر الحالي
-          </div>
-        </div>
-      </div>
+      <StatStrip
+        items={[
+          { label: "إجمالي العقود", value: totalContractsCount, hint: `${activeContractsCount} نشط`, dot: "active" },
+          { label: "القيمة الإجمالية للعقود", value: totalValue.toLocaleString(), unit: "ر.س" },
+          { label: "إجمالي المبالغ المسددة", value: totalPaidValue.toLocaleString(), unit: "ر.س", hint: "مجموع الأقساط المحصلة فعلياً" },
+          {
+            label: "قيمة مستحقات الشهر",
+            value: dueAmountThisMonth.toLocaleString(),
+            unit: "ر.س",
+            hint: "المبالغ المطلوبة خلال الشهر الحالي",
+            dot: dueAmountThisMonth > 0 ? "danger" : undefined,
+          },
+        ]}
+      />
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Main Contracts List */}

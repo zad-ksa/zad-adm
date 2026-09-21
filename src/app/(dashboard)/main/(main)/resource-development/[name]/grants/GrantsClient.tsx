@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { PageHeader } from "@/components/console/layout";
+import { StatStrip, PageHeader } from "@/components/console/layout";
 import { charityCrumbs } from "@/lib/crumbs";
 import { confirmAction } from "@/components/console/confirmBus";
 import Select from "@/components/console/Select";
@@ -240,32 +240,15 @@ export default function GrantsClient({
             icon={<FileText className="w-6 h-6" />}
             title="المنح"
             description="متابعة دقيقة لطلبات المنح ومراحل الاعتماد والإغلاق"
-            actions={
-          <div className="flex gap-3 flex-wrap">
-            <div className="bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-400 px-4 py-2 rounded-xl flex items-center gap-2 border border-amber-100 dark:border-amber-500/20 shadow-sm">
-              <div className="bg-amber-100 dark:bg-amber-500/20 p-1 rounded-md shrink-0"><FileText className="w-3.5 h-3.5" /></div>
-              <div className="flex flex-col">
-                <span className="text-[10px] font-bold opacity-80">المنح المرفوعة (قيد المعالجة)</span>
-                <span className="text-sm font-black">{pendingGrants.length}</span>
-              </div>
-            </div>
-            <div className="bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 px-4 py-2 rounded-xl flex items-center gap-2 border border-emerald-100 dark:border-emerald-500/20 shadow-sm">
-              <div className="bg-emerald-100 dark:bg-emerald-500/20 p-1 rounded-md shrink-0"><CheckCircle2 className="w-3.5 h-3.5" /></div>
-              <div className="flex flex-col">
-                <span className="text-[10px] font-bold opacity-80">المنح المقبولة (النشطة)</span>
-                <span className="text-sm font-black">{approvedGrants.length}</span>
-              </div>
-            </div>
-            <div className="bg-slate-50 dark:bg-slate-700 text-slate-700 dark:text-slate-300 px-4 py-2 rounded-xl flex items-center gap-2 border border-slate-200 dark:border-slate-600 shadow-sm">
-              <div className="bg-slate-200 dark:bg-slate-600 p-1 rounded-md shrink-0"><Check className="w-3.5 h-3.5" /></div>
-              <div className="flex flex-col">
-                <span className="text-[10px] font-bold opacity-80">المنح المغلقة</span>
-                <span className="text-sm font-black">{closedGrants.length}</span>
-              </div>
-            </div>
-          </div>
-            }
           />
+
+      <StatStrip
+        items={[
+          { label: "المنح المرفوعة (قيد المعالجة)", value: pendingGrants.length, dot: "warn" },
+          { label: "المنح المقبولة (النشطة)", value: approvedGrants.length, dot: "active" },
+          { label: "المنح المغلقة", value: closedGrants.length, dot: "muted" },
+        ]}
+      />
 
       <div className="flex justify-between items-center bg-white dark:bg-slate-800 p-2 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700 overflow-x-auto">
         <div className="flex gap-1">

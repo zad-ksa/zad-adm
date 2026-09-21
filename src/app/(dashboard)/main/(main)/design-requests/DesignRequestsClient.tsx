@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState, useTransition } from "react";
-import { PageHeader } from "@/components/console/layout";
+import { StatStrip, PageHeader } from "@/components/console/layout";
 import { notify } from "@/components/console/toastBus";
 import Select from "@/components/console/Select";
 import { useRouter } from "next/navigation";
@@ -336,22 +336,13 @@ export default function DesignRequestsClient({
       />
 
       <div className="grid grid-cols-1 gap-4">
-        <div className="flex items-center gap-3 flex-wrap">
-          <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-50 dark:bg-[#111] border border-slate-100 dark:border-slate-800/80">
-            <span className="w-2 h-2 rounded-full bg-primary dark:bg-teal-400"></span>
-            <span className="text-slate-600 dark:text-slate-300 font-bold" style={{ fontSize: "var(--dr-fs-meta)" }}>{pendingCount} قيد التنفيذ</span>
-          </div>
-          {overdueCount > 0 && (
-            <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-rose-50 dark:bg-rose-500/10 border border-rose-100 dark:border-rose-500/20">
-              <span className="w-2 h-2 rounded-full bg-rose-500 animate-pulse"></span>
-              <span className="text-rose-600 dark:text-rose-400 font-bold" style={{ fontSize: "var(--dr-fs-meta)" }}>{overdueCount} متأخر</span>
-            </div>
-          )}
-          <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-50 dark:bg-[#111] border border-slate-100 dark:border-slate-800/80">
-            <span className="w-2 h-2 rounded-full bg-slate-400 dark:bg-slate-500"></span>
-            <span className="text-slate-600 dark:text-slate-300 font-bold" style={{ fontSize: "var(--dr-fs-meta)" }}>{completedCount} منجز</span>
-          </div>
-        </div>
+        <StatStrip
+          items={[
+            { label: "قيد التنفيذ", value: pendingCount, dot: "warn" },
+            { label: "متأخر", value: overdueCount, dot: overdueCount > 0 ? "danger" : "muted" },
+            { label: "منجز", value: completedCount, dot: "active" },
+          ]}
+        />
 
         {/* Bento Box 3: Filters & Tabs */}
         <div className="md:col-span-3 bg-white dark:bg-[#0A0A0A] border border-slate-200 dark:border-slate-800 rounded-2xl p-3 shadow-sm flex items-center justify-between gap-3 flex-wrap">

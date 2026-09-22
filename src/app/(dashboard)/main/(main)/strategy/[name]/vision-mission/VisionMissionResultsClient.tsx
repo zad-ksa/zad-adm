@@ -1,7 +1,9 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { Users, Eye, Target, BookOpen, User, Calendar, MessageSquare, Award, Clock, X, FileText, CheckCircle } from "lucide-react";
+import { Users, Eye, Target, BookOpen, User, Calendar, MessageSquare, Award, Clock, FileText, CheckCircle } from "lucide-react";
+import { Dialog } from "@/components/console/Dialog";
+import { btn } from "@/components/console/ui";
 
 type ResponseItem = {
   id: string;
@@ -408,33 +410,25 @@ export default function VisionMissionResultsClient({ responses }: { responses: R
 
       {/* -------------------- INDIVIDUAL RESPONSE MODAL -------------------- */}
       {selectedResponse && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/55 backdrop-blur-sm animate-in fade-in duration-250">
-          <div className="bg-white dark:bg-slate-800 rounded-3xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden" onClick={(e) => e.stopPropagation()}>
-            
-            {/* Modal Header */}
-            <div className="p-6 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-primary/10 text-primary flex items-center justify-center">
-                  <User className="w-5 h-5" />
-                </div>
-                <div>
-                  <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100">{selectedResponse.respondentName}</h3>
-                  <p className="text-xs text-slate-400 font-medium">{selectedResponse.respondentTitle}</p>
-                </div>
-              </div>
-              <button
+        <Dialog
+size="xl"
+title={<>{selectedResponse.respondentName}</>}
+description={<>{selectedResponse.respondentTitle}</>}
+onClose={() => setSelectedResponse(null)}
+closeOnBackdrop={false}
+footer={
+<>
+<button type="button"
                 onClick={() => setSelectedResponse(null)}
-                className="text-slate-400 hover:text-slate-600 bg-slate-50 hover:bg-slate-100 dark:bg-slate-700 dark:hover:bg-slate-600 rounded-full p-1.5 transition-colors cursor-pointer"
+                className={btn.secondary}
               >
-                <X className="w-5 h-5" />
+                إغلاق النافذة
               </button>
-            </div>
-
-            {/* Modal Body */}
-            <div className="flex-1 p-6 overflow-y-auto custom-scrollbar space-y-8">
-              
-              {/* Category Impact */}
-              <div className="space-y-4">
+</>
+}
+>
+<div className="space-y-8">
+<div className="space-y-4">
                 <h4 className="font-extrabold text-slate-800 dark:text-slate-200 text-sm flex items-center gap-2 border-r-4 border-primary pr-2">
                   المحور الأول: الفئات والأثر
                 </h4>
@@ -448,9 +442,7 @@ export default function VisionMissionResultsClient({ responses }: { responses: R
                   ))}
                 </div>
               </div>
-
-              {/* Vision section */}
-              <div className="space-y-4 border-t border-slate-100 dark:border-slate-800 pt-6">
+<div className="space-y-4 border-t border-slate-100 dark:border-slate-800 pt-6">
                 <h4 className="font-extrabold text-slate-800 dark:text-slate-200 text-sm flex items-center gap-2 border-r-4 border-amber-500 pr-2">
                   المحور الثاني: رؤية الجمعية
                 </h4>
@@ -489,9 +481,7 @@ export default function VisionMissionResultsClient({ responses }: { responses: R
                   })}
                 </div>
               </div>
-
-              {/* Mission section */}
-              <div className="space-y-4 border-t border-slate-100 dark:border-slate-800 pt-6">
+<div className="space-y-4 border-t border-slate-100 dark:border-slate-800 pt-6">
                 <h4 className="font-extrabold text-slate-800 dark:text-slate-200 text-sm flex items-center gap-2 border-r-4 border-indigo-500 pr-2">
                   المحور الثالث: رسالة الجمعية
                 </h4>
@@ -519,21 +509,8 @@ export default function VisionMissionResultsClient({ responses }: { responses: R
                   })}
                 </div>
               </div>
-
-            </div>
-
-            {/* Modal Footer */}
-            <div className="p-4 border-t border-slate-100 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50 flex justify-end">
-              <button
-                onClick={() => setSelectedResponse(null)}
-                className="bg-slate-200 hover:bg-slate-300 dark:bg-slate-750 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold py-2 px-6 rounded-xl text-xs transition-colors cursor-pointer"
-              >
-                إغلاق النافذة
-              </button>
-            </div>
-
-          </div>
-        </div>
+</div>
+</Dialog>
       )}
 
       </div>

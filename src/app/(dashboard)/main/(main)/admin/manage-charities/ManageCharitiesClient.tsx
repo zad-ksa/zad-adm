@@ -2,8 +2,9 @@
 
 import { useState, useTransition } from "react";
 import { btn, cx, MONO } from "@/components/console/ui";
+import { Dialog } from "@/components/console/Dialog";
 import { EmptyState, PageHeader } from "@/components/console/layout";
-import { Building2, Plus, Edit2, Trash2, Globe, Calendar, FileText, Loader2, X, AlertTriangle, ShieldCheck } from "lucide-react";
+import { Building2, Plus, Edit2, Trash2, Globe, Calendar, FileText, Loader2, AlertTriangle, ShieldCheck } from "lucide-react";
 import { addCharity, updateCharity, deleteCharity } from "@/app/actions/charity";
 import Image from "next/image";
 
@@ -204,49 +205,58 @@ export default function ManageCharitiesClient({ initialCharities }: { initialCha
 
       {/* Minimalistic Vercel-Style Modal */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
-          <div className="absolute inset-0 bg-slate-900/40 dark:bg-black/60 backdrop-blur-sm" onClick={closeModal}></div>
-          <div className="relative bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 shadow-2xl dark:shadow-[0_0_60px_rgba(0,0,0,0.5)] rounded-3xl w-full max-w-lg p-8 animate-in fade-in zoom-in-95 duration-200">
-            
-            <button onClick={closeModal} disabled={isPending} className="absolute top-6 left-6 text-slate-400 hover:text-slate-700 dark:text-slate-500 dark:hover:text-white transition-colors disabled:opacity-50">
-              <X className="w-5 h-5" />
-            </button>
-
-            {modalMode === "DELETE" ? (
-              <form onSubmit={handleSubmit}>
-                <div className="w-12 h-12 bg-red-50 dark:bg-red-500/10 border border-red-100 dark:border-red-500/20 rounded-2xl flex items-center justify-center mb-6">
-                  <AlertTriangle className="w-6 h-6 text-red-500" />
-                </div>
-                <h2 className="text-xl font-bold text-slate-900 dark:text-white tracking-tight mb-2">حذف الجمعية</h2>
-                <p className="text-slate-500 dark:text-slate-400 text-sm leading-relaxed mb-6">
+        modalMode === "DELETE" ? (
+        <Dialog
+          role="alertdialog"
+          size="sm"
+          icon={<AlertTriangle className="size-4" />}
+          title="حذف الجمعية"
+          onClose={closeModal}
+          busy={isPending}
+          onSubmit={handleSubmit}
+          footer={
+            <>
+              <button type="button" onClick={closeModal} disabled={isPending} className={btn.secondary}>
+                إلغاء
+              </button>
+              <button type="submit" disabled={isPending} className={btn.danger}>
+                {isPending ? <Loader2 className="size-4 animate-spin" /> : "تأكيد الحذف"}
+              </button>
+            </>
+          }
+        >
+          <div className="space-y-4">
+            <p className="text-slate-500 dark:text-slate-400 text-sm leading-relaxed">
                   هل أنت متأكد من رغبتك في حذف <strong className="text-slate-900 dark:text-white">{selectedCharity?.name}</strong>؟ هذا الإجراء لا يمكن التراجع عنه. قد تفشل العملية إذا كانت الجمعية مرتبطة ببيانات مالية أو مشاريع قائمة.
                 </p>
-                
-                {error && <div className="mb-6 p-4 rounded-xl bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/20 text-red-600 dark:text-red-400 text-sm font-bold flex items-center gap-2"><AlertTriangle className="w-4 h-4"/>{error}</div>}
-                {success && <div className="mb-6 p-4 rounded-xl bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-sm font-bold flex items-center gap-2"><ShieldCheck className="w-4 h-4"/>{success}</div>}
-
-                <div className="flex gap-4">
-                  <button type="submit" disabled={isPending} className="flex-1 bg-red-500 hover:bg-red-600 text-white py-3 rounded-xl font-bold text-sm transition-colors flex items-center justify-center disabled:opacity-50">
-                    {isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : "تأكيد الحذف"}
-                  </button>
-                  <button type="button" onClick={closeModal} disabled={isPending} className="flex-1 bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 text-slate-700 dark:text-white py-3 rounded-xl font-bold text-sm transition-colors border border-slate-200 dark:border-white/10 disabled:opacity-50">
-                    إلغاء
-                  </button>
-                </div>
-              </form>
-            ) : (
-              <form onSubmit={handleSubmit} className="space-y-6">
-                <div>
-                  <h2 className="text-xl font-bold text-primary tracking-tight mb-1">
-                    {modalMode === "ADD" ? "إضافة جمعية جديدة" : "تعديل بيانات الجمعية"}
-                  </h2>
-                  <p className="text-slate-500 dark:text-slate-400 text-sm">أدخل البيانات الأساسية للجمعية أدناه.</p>
-                </div>
-
-                {error && <div className="p-4 rounded-xl bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/20 text-red-600 dark:text-red-400 text-sm font-bold flex items-center gap-2"><AlertTriangle className="w-4 h-4"/>{error}</div>}
-                {success && <div className="p-4 rounded-xl bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-sm font-bold flex items-center gap-2"><ShieldCheck className="w-4 h-4"/>{success}</div>}
-
-                <div className="space-y-4">
+            {error && <div className="p-4 rounded-xl bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/20 text-red-600 dark:text-red-400 text-sm font-bold flex items-center gap-2"><AlertTriangle className="w-4 h-4"/>{error}</div>}
+            {success && <div className="p-4 rounded-xl bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-sm font-bold flex items-center gap-2"><ShieldCheck className="w-4 h-4"/>{success}</div>}
+          </div>
+        </Dialog>
+      ) : (
+        <Dialog
+          title={modalMode === "ADD" ? "إضافة جمعية جديدة" : "تعديل بيانات الجمعية"}
+          description="أدخل البيانات الأساسية للجمعية أدناه."
+          onClose={closeModal}
+          busy={isPending}
+          onSubmit={handleSubmit}
+          closeOnBackdrop={false}
+          footer={
+            <>
+              <button type="button" onClick={closeModal} disabled={isPending} className={btn.secondary}>
+                إلغاء
+              </button>
+              <button type="submit" disabled={isPending} className={btn.primary}>
+                {isPending && <Loader2 className="size-4 animate-spin" />}
+                {modalMode === "ADD" ? "إضافة وتسجيل" : "حفظ التعديلات"}
+              </button>
+            </>
+          }
+        >
+          <div className="space-y-4">
+            {error && <div className="p-4 rounded-xl bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/20 text-red-600 dark:text-red-400 text-sm font-bold flex items-center gap-2"><AlertTriangle className="w-4 h-4"/>{error}</div>}
+            {success && <div className="p-4 rounded-xl bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-sm font-bold flex items-center gap-2"><ShieldCheck className="w-4 h-4"/>{success}</div>}
+            <div className="space-y-4">
                   <div>
                     <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-2">اسم الجمعية *</label>
                     <input
@@ -297,17 +307,9 @@ export default function ManageCharitiesClient({ initialCharities }: { initialCha
                     />
                   </div>
                 </div>
-
-                <div className="pt-2">
-                  <button type="submit" disabled={isPending} className="w-full bg-primary hover:bg-primary/90 text-white py-3 rounded-xl font-bold text-sm transition-colors flex items-center justify-center gap-2 disabled:opacity-50 shadow-md shadow-primary/20">
-                    {isPending && <Loader2 className="w-4 h-4 animate-spin" />}
-                    {modalMode === "ADD" ? "إضافة وتسجيل" : "حفظ التعديلات"}
-                  </button>
-                </div>
-              </form>
-            )}
           </div>
-        </div>
+        </Dialog>
+      )
       )}
     </div>
   );

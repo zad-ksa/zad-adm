@@ -679,7 +679,7 @@ export default function PerformanceTable({
                       const isOddGoal = currentGoalIndex % 2 !== 0;
 
                       return (
-                        <>
+                        <Fragment key={goal.id}>
                           {goal.indicators.length === 0 ? (
                             <tr
                               key={goal.id}
@@ -909,7 +909,7 @@ export default function PerformanceTable({
                             </tr>
                           );
                         })}
-                      </>
+                      </Fragment>
                     );
                   })}
                 </Fragment>

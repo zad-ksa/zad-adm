@@ -85,10 +85,10 @@ function KPI({
     <div className={CARD}>
       <div className="flex items-center gap-2 text-slate-400 dark:text-slate-500">
         <Icon className="w-3.5 h-3.5" />
-        <p className="text-[11px] font-bold">{text}</p>
+        <p className="text-caption font-semibold">{text}</p>
       </div>
       <p
-        className={`mt-1.5 text-[22px] font-black tabular-nums ${
+        className={`mt-1.5 text-stat font-semibold tabular-nums ${
           tone ?? "text-slate-900 dark:text-slate-100"
         }`}
       >
@@ -211,7 +211,7 @@ export default function LeavesClient({
       {/* ── من هو خارج الدوام اليوم ───────────────────────────────────── */}
       {outToday.length > 0 && (
         <div className={CARD}>
-          <p className="text-[13px] font-black text-slate-900 dark:text-slate-100 mb-3">
+          <p className="text-body font-semibold text-slate-900 dark:text-slate-100 mb-3">
             خارج الدوام اليوم
           </p>
           <div className="flex flex-wrap gap-2">
@@ -220,16 +220,16 @@ export default function LeavesClient({
                 key={l.id}
                 className="inline-flex items-center gap-2 rounded-xl bg-slate-50 dark:bg-slate-800/60 pr-1.5 pl-3 py-1.5"
               >
-                <span className="w-6 h-6 rounded-full bg-white dark:bg-slate-900 text-[10px] font-bold text-slate-500 dark:text-slate-300 inline-flex items-center justify-center">
+                <span className="w-6 h-6 rounded-full bg-white dark:bg-slate-900 text-caption font-semibold text-slate-500 dark:text-slate-300 inline-flex items-center justify-center">
                   {initials(l.employeeName)}
                 </span>
-                <span className="text-[12px] font-bold text-slate-700 dark:text-slate-200">
+                <span className="text-meta font-semibold text-slate-700 dark:text-slate-200">
                   {l.employeeName}
                 </span>
-                <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${typeOf(l.type).chip}`}>
+                <span className={`text-caption font-semibold px-1.5 py-0.5 rounded ${typeOf(l.type).chip}`}>
                   {label(l.type)}
                 </span>
-                <span className="text-[11px] text-slate-400 tabular-nums">
+                <span className="text-caption text-slate-400 tabular-nums">
                   حتى {dayLabel(l.endDate)}
                 </span>
               </span>
@@ -241,10 +241,10 @@ export default function LeavesClient({
       {/* ── شريط الفريق ───────────────────────────────────────────────── */}
       <div className={CARD}>
         <div className="flex items-center justify-between gap-3 mb-3 flex-wrap">
-          <p className="text-[13px] font-black text-slate-900 dark:text-slate-100">
+          <p className="text-body font-semibold text-slate-900 dark:text-slate-100">
             من سيغيب خلال {horizonDays} يوماً
           </p>
-          <div className="flex items-center gap-3 flex-wrap text-[10px] text-slate-400">
+          <div className="flex items-center gap-3 flex-wrap text-caption text-slate-400">
             {Object.keys(TYPE).map((t) => (
               <span key={t} className="inline-flex items-center gap-1">
                 <span className={`w-2 h-2 rounded-sm ${typeOf(t).bar}`} /> {label(t)}
@@ -254,7 +254,7 @@ export default function LeavesClient({
         </div>
 
         {inHorizon.length === 0 ? (
-          <p className="text-[12px] text-slate-400 dark:text-slate-500">
+          <p className="text-meta text-slate-400 dark:text-slate-500">
             لا إجازات مسجّلة في هذه المدة.
           </p>
         ) : (
@@ -265,7 +265,7 @@ export default function LeavesClient({
                 {strip.map((d, i) => (
                   <div key={d.key} className="flex-1 text-center">
                     <span
-                      className={`text-[9px] tabular-nums ${
+                      className={`text-caption tabular-nums ${
                         i % 5 === 0 ? "text-slate-400" : "text-transparent"
                       }`}
                     >
@@ -277,7 +277,7 @@ export default function LeavesClient({
 
               {inHorizon.map((e) => (
                 <div key={e.id} className="flex items-center gap-px mb-1">
-                  <span className="w-28 shrink-0 text-[11px] font-bold text-slate-600 dark:text-slate-300 truncate pl-2">
+                  <span className="w-28 shrink-0 text-caption font-semibold text-slate-600 dark:text-slate-300 truncate pl-2">
                     {e.name}
                   </span>
                   {strip.map((d) => {
@@ -317,7 +317,7 @@ export default function LeavesClient({
       {adding ? (
         <div className="rounded-xl border border-primary/30 dark:border-teal-500/30 bg-primary/[0.03] dark:bg-teal-500/5 p-5 space-y-3">
           <div className="flex items-center justify-between gap-3">
-            <p className="text-[13px] font-black text-slate-900 dark:text-slate-100">تسجيل إجازة</p>
+            <p className="text-body font-semibold text-slate-900 dark:text-slate-100">تسجيل إجازة</p>
             <button
               className="text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition-colors"
               onClick={() => {
@@ -372,8 +372,8 @@ export default function LeavesClient({
           {/* What this will actually do, before it does it. */}
           {draftDays > 0 && (
             <div className="rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 px-4 py-3 space-y-1.5">
-              <p className="text-[12px] text-slate-600 dark:text-slate-300">
-                <span className="font-bold tabular-nums">{draftDays}</span>{" "}
+              <p className="text-meta text-slate-600 dark:text-slate-300">
+                <span className="font-semibold tabular-nums">{draftDays}</span>{" "}
                 {draftDays === 1 ? "يوم" : "أيام"}
                 {draftDeducts ? (
                   <span className="text-slate-400"> تُخصم من الرصيد</span>
@@ -383,7 +383,7 @@ export default function LeavesClient({
               </p>
               {draftEmployee && draftDeducts && (
                 <p
-                  className={`text-[12px] font-bold tabular-nums ${
+                  className={`text-meta font-semibold tabular-nums ${
                     (draftAfter ?? 0) < 0
                       ? "text-rose-600 dark:text-rose-400"
                       : "text-slate-700 dark:text-slate-200"
@@ -394,7 +394,7 @@ export default function LeavesClient({
                 </p>
               )}
               {draftHolidays.length > 0 && (
-                <p className="text-[11px] text-amber-600 dark:text-amber-400">
+                <p className="text-caption text-amber-600 dark:text-amber-400">
                   تتقاطع مع: {draftHolidays.map((h) => h.name).join("، ")} — أيام العطل تُخصم ضمن
                   المدة كما أُدخلت.
                 </p>
@@ -447,7 +447,7 @@ export default function LeavesClient({
       <div className="relative">
         <Search className="w-3.5 h-3.5 text-slate-400 absolute top-1/2 -translate-y-1/2 right-3" />
         <input
-          className="h-9 w-full sm:w-72 pr-9 pl-3 rounded-lg bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-[12px] text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none"
+          className="h-9 w-full sm:w-72 pr-9 pl-3 rounded-lg bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-meta text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none"
           placeholder="ابحث باسم الموظف"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
@@ -457,9 +457,9 @@ export default function LeavesClient({
       {/* ── الأرصدة ───────────────────────────────────────────────────── */}
       <div className="rounded-xl border border-slate-200 dark:border-slate-800 overflow-hidden">
         <div className="px-4 py-3 border-b border-slate-100 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-900/60">
-          <p className="text-[13px] font-black text-slate-900 dark:text-slate-100">
+          <p className="text-body font-semibold text-slate-900 dark:text-slate-100">
             الأرصدة
-            <span className="mr-2 text-[11px] font-normal text-slate-400">
+            <span className="mr-2 text-caption font-normal text-slate-400">
               مرتّبة بالأقل رصيداً أولاً
             </span>
           </p>
@@ -467,7 +467,7 @@ export default function LeavesClient({
 
         <div className="divide-y divide-slate-100 dark:divide-slate-800">
           {shownEmployees.length === 0 && (
-            <p className="px-4 py-6 text-center text-[12px] text-slate-400">لا نتائج.</p>
+            <p className="px-4 py-6 text-center text-meta text-slate-400">لا نتائج.</p>
           )}
           {shownEmployees.map((e) => {
             const left = remaining(e);
@@ -480,12 +480,12 @@ export default function LeavesClient({
                 key={e.id}
                 className="px-4 py-3 bg-white dark:bg-slate-900 flex items-center gap-4 flex-wrap"
               >
-                <span className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 text-[11px] font-bold text-slate-500 dark:text-slate-300 inline-flex items-center justify-center shrink-0">
+                <span className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 text-caption font-semibold text-slate-500 dark:text-slate-300 inline-flex items-center justify-center shrink-0">
                   {initials(e.name)}
                 </span>
 
                 <div className="min-w-[9rem] flex-1">
-                  <p className="text-[13px] font-bold text-slate-800 dark:text-slate-200 truncate">
+                  <p className="text-body font-semibold text-slate-800 dark:text-slate-200 truncate">
                     {e.name}
                   </p>
                   <div className="mt-1.5 h-1.5 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden">
@@ -496,14 +496,14 @@ export default function LeavesClient({
                       style={{ width: `${pct}%` }}
                     />
                   </div>
-                  <p className="mt-1 text-[10px] text-slate-400 tabular-nums">
+                  <p className="mt-1 text-caption text-slate-400 tabular-nums">
                     استهلك {e.usedLeaveDays} من {e.annualLeaveDays}
                   </p>
                 </div>
 
                 <div className="text-center shrink-0">
                   <p
-                    className={`text-[18px] font-black tabular-nums ${
+                    className={`text-section font-semibold tabular-nums ${
                       left < 0
                         ? "text-rose-600 dark:text-rose-400"
                         : left <= 3
@@ -513,10 +513,10 @@ export default function LeavesClient({
                   >
                     {left}
                   </p>
-                  <p className="text-[10px] text-slate-400">متبقٍ</p>
+                  <p className="text-caption text-slate-400">متبقٍ</p>
                 </div>
 
-                <label className="flex items-center gap-1.5 text-[11px] text-slate-500 dark:text-slate-400 shrink-0">
+                <label className="flex items-center gap-1.5 text-caption text-slate-500 dark:text-slate-400 shrink-0">
                   الرصيد
                   <input
                     type="number"
@@ -525,7 +525,7 @@ export default function LeavesClient({
                     defaultValue={e.annualLeaveDays}
                     dir="ltr"
                     disabled={busy}
-                    className="w-16 px-2 py-1 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-[12px] text-center text-slate-900 dark:text-slate-100"
+                    className="w-16 px-2 py-1 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-meta text-center text-slate-900 dark:text-slate-100"
                     onBlur={(ev) => {
                       const v = Number(ev.target.value);
                       if (v !== e.annualLeaveDays) {
@@ -535,7 +535,7 @@ export default function LeavesClient({
                   />
                 </label>
 
-                <label className="flex items-center gap-1.5 text-[11px] text-slate-500 dark:text-slate-400 cursor-pointer shrink-0">
+                <label className="flex items-center gap-1.5 text-caption text-slate-500 dark:text-slate-400 cursor-pointer shrink-0">
                   <input
                     type="checkbox"
                     checked={e.remoteWorkAllowed}
@@ -556,16 +556,16 @@ export default function LeavesClient({
       {/* ── السجل ─────────────────────────────────────────────────────── */}
       <div className="rounded-xl border border-slate-200 dark:border-slate-800 overflow-hidden">
         <div className="px-4 py-3 border-b border-slate-100 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-900/60 flex items-center justify-between gap-3 flex-wrap">
-          <p className="text-[13px] font-black text-slate-900 dark:text-slate-100">
+          <p className="text-body font-semibold text-slate-900 dark:text-slate-100">
             سجل هذا العام
-            <span className="mr-2 text-[11px] font-normal text-slate-400 tabular-nums">
+            <span className="mr-2 text-caption font-normal text-slate-400 tabular-nums">
               {shownLeaves.length}
             </span>
           </p>
           <div className="flex items-center gap-1 flex-wrap">
             <button
               onClick={() => setTypeFilter("")}
-              className={`h-7 px-2.5 rounded-lg text-[11px] font-bold transition-colors ${
+              className={`h-7 px-2.5 rounded-lg text-caption font-semibold transition-colors ${
                 typeFilter === ""
                   ? "bg-primary text-white"
                   : "text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"
@@ -577,7 +577,7 @@ export default function LeavesClient({
               <button
                 key={t}
                 onClick={() => setTypeFilter(typeFilter === t ? "" : t)}
-                className={`h-7 px-2.5 rounded-lg text-[11px] font-bold transition-colors ${
+                className={`h-7 px-2.5 rounded-lg text-caption font-semibold transition-colors ${
                   typeFilter === t
                     ? "bg-primary text-white"
                     : "text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"
@@ -591,7 +591,7 @@ export default function LeavesClient({
 
         <div className="divide-y divide-slate-100 dark:divide-slate-800">
           {shownLeaves.length === 0 && (
-            <p className="px-4 py-6 text-center text-[12px] text-slate-400">لا إجازات مسجّلة.</p>
+            <p className="px-4 py-6 text-center text-meta text-slate-400">لا إجازات مسجّلة.</p>
           )}
           {shownLeaves.map((l) => (
             <div
@@ -599,13 +599,13 @@ export default function LeavesClient({
               className="px-4 py-2.5 bg-white dark:bg-slate-900 flex items-center gap-3 flex-wrap"
             >
               <span className={`w-1 h-8 rounded-full shrink-0 ${typeOf(l.type).bar}`} />
-              <span className="text-[13px] font-bold text-slate-800 dark:text-slate-200 min-w-[7rem]">
+              <span className="text-body font-semibold text-slate-800 dark:text-slate-200 min-w-[7rem]">
                 {l.employeeName}
               </span>
-              <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${typeOf(l.type).chip}`}>
+              <span className={`text-caption font-semibold px-1.5 py-0.5 rounded ${typeOf(l.type).chip}`}>
                 {label(l.type)}
               </span>
-              <span className="text-[12px] text-slate-500 dark:text-slate-400 tabular-nums">
+              <span className="text-meta text-slate-500 dark:text-slate-400 tabular-nums">
                 {l.startDate === l.endDate
                   ? dayLabel(l.startDate)
                   : `${dayLabel(l.startDate)} ← ${dayLabel(l.endDate)}`}
@@ -628,7 +628,7 @@ export default function LeavesClient({
         </div>
       </div>
 
-      <p className="text-[11px] text-slate-400 dark:text-slate-500 leading-relaxed">
+      <p className="text-caption text-slate-400 dark:text-slate-500 leading-relaxed">
         تُخصم السنوية وحدها من الرصيد؛ المرضية وبدون راتب وغيرها تُسجَّل ولا تُخصم. والمدة تُحسب
         بالأيام الكاملة كما أُدخلت، بما فيها العطل الواقعة داخلها.
       </p>

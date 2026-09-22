@@ -21,7 +21,7 @@ export default function GateCard({ isOpen, siteCount }: { isOpen: boolean; siteC
       <div className={CARD}>
         <div className="flex items-start justify-between gap-4 flex-wrap">
           <div>
-            <p className="text-[14px] font-black text-slate-900 dark:text-slate-100 flex items-center gap-2">
+            <p className="text-body font-semibold text-slate-900 dark:text-slate-100 flex items-center gap-2">
               {isOpen ? (
                 <Unlock className="w-4 h-4 text-emerald-500" />
               ) : (
@@ -29,13 +29,13 @@ export default function GateCard({ isOpen, siteCount }: { isOpen: boolean; siteC
               )}
               {isOpen ? "التحضير مفعّل" : "التحضير غير مفعّل"}
             </p>
-            <p className="mt-1 text-[12px] text-slate-500 dark:text-slate-400 leading-relaxed max-w-lg">
+            <p className="mt-1 text-meta text-slate-500 dark:text-slate-400 leading-relaxed max-w-lg">
               {isOpen
                 ? "الموظفون يسجّلون حضورهم وانصرافهم الآن."
                 : "لا يُسجَّل حضور ولا غياب حتى تفعّله."}
             </p>
             {siteCount === 0 && (
-              <p className="mt-2 text-[12px] font-bold text-amber-600 dark:text-amber-400 leading-relaxed max-w-lg">
+              <p className="mt-2 text-meta font-semibold text-amber-600 dark:text-amber-400 leading-relaxed max-w-lg">
                 لا يوجد موقع عمل واحد بعد. التفعيل الآن يرفض كل محاولة تحضير ويسجّل الأيام غياباً —
                 أضف موقعاً أولاً.
               </p>

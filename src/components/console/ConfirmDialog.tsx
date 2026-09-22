@@ -71,8 +71,8 @@ export function ConfirmDialog({
           className="relative w-full max-w-md overflow-hidden rounded-xl border border-slate-200 bg-white text-slate-900 shadow-2xl motion-safe:animate-[zad-pop-in_160ms_ease-out] dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100"
         >
           <div className="space-y-2 p-5">
-            <h2 className="text-[16px] font-semibold">{title}</h2>
-            {message && <p className="text-[13.5px] leading-6 text-slate-500 dark:text-slate-400">{message}</p>}
+            <h2 className="text-title font-semibold">{title}</h2>
+            {message && <p className="text-body leading-6 text-slate-500 dark:text-slate-400">{message}</p>}
           </div>
           <div className="flex justify-end gap-2 border-t border-slate-100 bg-slate-50/70 px-5 py-3 dark:border-slate-800 dark:bg-slate-950/40">
             <button ref={cancelRef} type="button" onClick={onCancel} disabled={isPending} className={btn.secondary}>
@@ -124,8 +124,8 @@ export function ConfirmDialog({
           )}
         </div>
 
-        <h3 className="mb-2 text-lg font-bold text-slate-800 dark:text-slate-100">{title}</h3>
-        {message && <p className="mb-6 text-sm text-slate-500 dark:text-slate-400">{message}</p>}
+        <h3 className="mb-2 text-section font-semibold text-slate-800 dark:text-slate-100">{title}</h3>
+        {message && <p className="mb-6 text-caption text-slate-500 dark:text-slate-400">{message}</p>}
 
         <div className="flex w-full items-center gap-3">
           <button
@@ -133,7 +133,7 @@ export function ConfirmDialog({
             type="button"
             onClick={onCancel}
             disabled={isPending}
-            className="flex-1 rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-bold text-slate-600 transition-colors hover:bg-slate-50 disabled:opacity-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-700/50"
+            className="flex-1 rounded-xl border border-slate-200 px-4 py-2.5 text-caption font-semibold text-slate-600 transition-colors hover:bg-slate-50 disabled:opacity-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-700/50"
           >
             إلغاء
           </button>
@@ -143,7 +143,7 @@ export function ConfirmDialog({
             onClick={onConfirm}
             disabled={isPending}
             className={cx(
-              "flex flex-1 items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-bold text-white transition-colors disabled:opacity-50",
+              "flex flex-1 items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-caption font-semibold text-white transition-colors disabled:opacity-50",
               isDanger ? "bg-red-600 hover:bg-red-700" : "bg-primary hover:bg-primary/90"
             )}
           >

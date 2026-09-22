@@ -115,10 +115,10 @@ export default function NetworkClient({
       <div className={CARD}>
         <div className="flex items-start justify-between gap-4 flex-wrap">
           <div className="min-w-0">
-            <p className="text-[13px] font-black text-slate-900 dark:text-slate-100 flex items-center gap-2">
+            <p className="text-body font-semibold text-slate-900 dark:text-slate-100 flex items-center gap-2">
               <Globe className="w-4 h-4 text-slate-400" /> الشبكة المتصل بها الآن
             </p>
-            <p className="mt-1 text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed max-w-lg">
+            <p className="mt-1 text-caption text-slate-500 dark:text-slate-400 leading-relaxed max-w-lg">
               نفّذ القراءة وأنت متصل بشبكة المكتب. العنوان يُقرأ من الخادم نفسه — وهو العنوان
               ذاته الذي سيُقارَن عند كل تحضير، لا ما تقوله خدمة خارجية.
             </p>
@@ -134,19 +134,19 @@ export default function NetworkClient({
         </div>
 
         {readError && (
-          <p className="mt-3 text-[12px] font-bold text-rose-600 dark:text-rose-400">{readError}</p>
+          <p className="mt-3 text-meta font-semibold text-rose-600 dark:text-rose-400">{readError}</p>
         )}
 
         {origin && (
           <div className="mt-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 px-4 py-3 flex items-center justify-between gap-3 flex-wrap">
             <div className="min-w-0">
               <p
-                className="text-[15px] font-black text-slate-900 dark:text-slate-100 tabular-nums truncate"
+                className="text-title font-semibold text-slate-900 dark:text-slate-100 tabular-nums truncate"
                 dir="ltr"
               >
                 {origin}
               </p>
-              <p className="mt-0.5 text-[11px] text-slate-500 dark:text-slate-400">
+              <p className="mt-0.5 text-caption text-slate-500 dark:text-slate-400">
                 {ranges.length === 0
                   ? "لا توجد قائمة بعد — كل العناوين مقبولة حالياً."
                   : originCovered
@@ -165,15 +165,15 @@ export default function NetworkClient({
 
       {/* ── القائمة ───────────────────────────────────────────────────── */}
       <div className={CARD}>
-        <p className="text-[13px] font-black text-slate-900 dark:text-slate-100 mb-3">
+        <p className="text-body font-semibold text-slate-900 dark:text-slate-100 mb-3">
           العناوين المسموح بها
-          <span className="mr-2 text-[11px] font-normal text-slate-400 tabular-nums">
+          <span className="mr-2 text-caption font-normal text-slate-400 tabular-nums">
             {ranges.length}
           </span>
         </p>
 
         {ranges.length === 0 ? (
-          <p className="text-[12px] text-slate-400 dark:text-slate-500 mb-3">
+          <p className="text-meta text-slate-400 dark:text-slate-500 mb-3">
             القائمة فارغة — الطبقة معطّلة فعلياً مهما كان النمط المختار.
           </p>
         ) : (
@@ -187,16 +187,16 @@ export default function NetworkClient({
                 >
                   <span className="flex items-center gap-2 min-w-0">
                     <span
-                      className="text-[12px] font-bold text-slate-700 dark:text-slate-200 tabular-nums truncate"
+                      className="text-meta font-semibold text-slate-700 dark:text-slate-200 tabular-nums truncate"
                       dir="ltr"
                     >
                       {r}
                     </span>
                     {r.includes("/") && (
-                      <span className="text-[10px] text-slate-400 shrink-0">نطاق</span>
+                      <span className="text-caption text-slate-400 shrink-0">نطاق</span>
                     )}
                     {covers && (
-                      <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 shrink-0">
+                      <span className="text-caption font-semibold text-emerald-600 dark:text-emerald-400 shrink-0">
                         يشمل عنوانك
                       </span>
                     )}
@@ -234,18 +234,18 @@ export default function NetworkClient({
           </button>
         </div>
         {entry.trim() !== "" && !entryValid && (
-          <p className="mt-1.5 text-[11px] font-bold text-rose-600 dark:text-rose-400">
+          <p className="mt-1.5 text-caption font-semibold text-rose-600 dark:text-rose-400">
             صيغة غير صالحة. اكتب عنواناً كاملاً أو نطاقاً بصيغة CIDR.
           </p>
         )}
         {duplicate && (
-          <p className="mt-1.5 text-[11px] text-slate-400">هذا العنوان موجود في القائمة.</p>
+          <p className="mt-1.5 text-caption text-slate-400">هذا العنوان موجود في القائمة.</p>
         )}
       </div>
 
       {/* ── النمط ─────────────────────────────────────────────────────── */}
       <div className={CARD}>
-        <p className="text-[13px] font-black text-slate-900 dark:text-slate-100 mb-3">
+        <p className="text-body font-semibold text-slate-900 dark:text-slate-100 mb-3">
           ماذا يحدث لمن يحضر من خارج الشبكة؟
         </p>
 
@@ -264,7 +264,7 @@ export default function NetworkClient({
                 }`}
               >
                 <p
-                  className={`text-[13px] font-black flex items-center gap-1.5 ${
+                  className={`text-body font-semibold flex items-center gap-1.5 ${
                     on ? m.tone : "text-slate-700 dark:text-slate-200"
                   }`}
                 >
@@ -272,7 +272,7 @@ export default function NetworkClient({
                   {m.label}
                   {on && <Check className="w-3.5 h-3.5 mr-auto" />}
                 </p>
-                <p className="mt-1.5 text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">
+                <p className="mt-1.5 text-caption text-slate-500 dark:text-slate-400 leading-relaxed">
                   {m.body}
                 </p>
               </button>
@@ -281,7 +281,7 @@ export default function NetworkClient({
         </div>
 
         {blockWithoutList && (
-          <div className="mt-3 flex items-start gap-2.5 rounded-xl bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400 px-4 py-3 text-[12px] leading-relaxed">
+          <div className="mt-3 flex items-start gap-2.5 rounded-xl bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400 px-4 py-3 text-meta leading-relaxed">
             <TriangleAlert className="w-4 h-4 shrink-0 mt-0.5" />
             <span>
               «منع» بقائمة فارغة لا يمنع شيئاً — الطبقة تُعطَّل تلقائياً حين لا يوجد عنوان واحد.
@@ -291,7 +291,7 @@ export default function NetworkClient({
         )}
 
         {lockout && (
-          <div className="mt-3 flex items-start gap-2.5 rounded-xl bg-rose-50 dark:bg-rose-900/20 text-rose-700 dark:text-rose-400 px-4 py-3 text-[12px] leading-relaxed font-bold">
+          <div className="mt-3 flex items-start gap-2.5 rounded-xl bg-rose-50 dark:bg-rose-900/20 text-rose-700 dark:text-rose-400 px-4 py-3 text-meta leading-relaxed font-semibold">
             <TriangleAlert className="w-4 h-4 shrink-0 mt-0.5" />
             <span>
               عنوانك الحالي <span dir="ltr">{origin}</span> ليس ضمن القائمة. الحفظ بنمط «منع» سيرفض
@@ -325,10 +325,10 @@ export default function NetworkClient({
             <X className="w-3.5 h-3.5" /> تراجع
           </button>
         )}
-        {!dirty && <span className="text-[11px] text-slate-400">لا تغييرات غير محفوظة.</span>}
+        {!dirty && <span className="text-caption text-slate-400">لا تغييرات غير محفوظة.</span>}
       </div>
 
-      <p className="text-[11px] text-slate-400 dark:text-slate-500 leading-relaxed">
+      <p className="text-caption text-slate-400 dark:text-slate-500 leading-relaxed">
         هذه طبقة ثانية فوق الموقع الجغرافي، وليست بديلاً عنه. لا تفعّلها إلا إذا كان لمكتبك عنوان
         IP ثابت — العنوان المتغيّر يجعلها ترفض موظفين حاضرين فعلاً. ومن سُمح له بالعمل عن بُعد لا
         تسري عليه هذه الطبقة أصلاً.

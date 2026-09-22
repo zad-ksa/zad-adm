@@ -78,7 +78,7 @@ export function Toast({ toast, onDismiss }: { toast: ToastMessage; onDismiss?: (
       )}
     >
       <Icon className={cx("mt-px size-5 shrink-0", color)} />
-      <span className="flex-1 text-[13.5px] font-bold leading-relaxed text-slate-800 dark:text-slate-100">
+      <span className="flex-1 text-body font-semibold leading-relaxed text-slate-800 dark:text-slate-100">
         {toast.text}
       </span>
       {onDismiss && (

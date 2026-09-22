@@ -83,7 +83,7 @@ export default function ReportClient({
   return (
     <div className="space-y-4" dir="rtl">
       {!countingFrom && (
-        <div className="flex items-start gap-2.5 rounded-xl bg-slate-100 dark:bg-slate-800/60 text-slate-600 dark:text-slate-300 px-4 py-3 text-[13px] leading-relaxed">
+        <div className="flex items-start gap-2.5 rounded-xl bg-slate-100 dark:bg-slate-800/60 text-slate-600 dark:text-slate-300 px-4 py-3 text-body leading-relaxed">
           <Lock className="w-4 h-4 shrink-0 mt-0.5" />
           <span>
             نظام التحضير غير مفعّل بعد، فلا يُحتسب غياب على أحد. الأرقام هنا تبقى أصفاراً حتى
@@ -98,7 +98,7 @@ export default function ReportClient({
           value={month}
           dir="ltr"
           onChange={(e) => router.push(`/main/attendance/reports?month=${e.target.value}`)}
-          className="px-3 py-2 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-[13px] text-slate-900 dark:text-slate-100"
+          className="px-3 py-2 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-body text-slate-900 dark:text-slate-100"
         />
         <button
           onClick={exportCsv}
@@ -119,15 +119,15 @@ export default function ReportClient({
             key={s.label}
             className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-4 py-3"
           >
-            <p className="text-[11px] text-slate-400 dark:text-slate-500">{s.label}</p>
-            <p className="text-[18px] font-black text-slate-900 dark:text-slate-100 tabular-nums">{s.value}</p>
+            <p className="text-caption text-slate-400 dark:text-slate-500">{s.label}</p>
+            <p className="text-section font-semibold text-slate-900 dark:text-slate-100 tabular-nums">{s.value}</p>
           </div>
         ))}
       </div>
 
       <div className={tableFrameClass}>
         <div className="overflow-x-auto">
-          <table className="w-full text-[12px]">
+          <table className="w-full text-meta">
             <thead>
               <tr className={theadRowClass}>
                 <th className={thClass}>الموظف</th>
@@ -145,7 +145,7 @@ export default function ReportClient({
                     onClick={() => setOpenFor(openFor === r.employeeId ? null : r.employeeId)}
                     className="cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/40"
                   >
-                    <td className={cx(tdClass, "font-bold text-slate-800 dark:text-slate-200")}>
+                    <td className={cx(tdClass, "font-semibold text-slate-800 dark:text-slate-200")}>
                       {r.name}
                       {r.suspicious > 0 && (
                         <span
@@ -173,11 +173,11 @@ export default function ReportClient({
                     <tr>
                       <td colSpan={6} className={cx(tdClass, "bg-slate-50 dark:bg-slate-800/30")}>
                         {r.days.length === 0 ? (
-                          <p className="text-[12px] text-slate-400">لا أيام مسجّلة هذا الشهر.</p>
+                          <p className="text-meta text-slate-400">لا أيام مسجّلة هذا الشهر.</p>
                         ) : (
                           <ul className="space-y-1">
                             {r.days.map((d) => (
-                              <li key={d.workDate} className="flex items-center gap-3 flex-wrap text-[12px]">
+                              <li key={d.workDate} className="flex items-center gap-3 flex-wrap text-meta">
                                 <span className="text-slate-600 dark:text-slate-300 w-24">{date(d.workDate)}</span>
                                 <span className="tabular-nums text-slate-500 dark:text-slate-400">
                                   <bdi>{time(d.checkInAt)}</bdi> ← <bdi>{time(d.checkOutAt)}</bdi>
@@ -186,18 +186,18 @@ export default function ReportClient({
                                   {ATTENDANCE_STATUS_LABELS[d.status] ?? d.status}
                                 </span>
                                 {d.isRemote && (
-                                  <span className="text-indigo-600 dark:text-indigo-400 font-bold inline-flex items-center gap-1">
+                                  <span className="text-indigo-600 dark:text-indigo-400 font-semibold inline-flex items-center gap-1">
                                     <Wifi className="w-3 h-3" /> عن بُعد
                                   </span>
                                 )}
                                 {d.autoClosedAt && (
-                                  <span className="text-amber-600 dark:text-amber-400 font-bold inline-flex items-center gap-1">
+                                  <span className="text-amber-600 dark:text-amber-400 font-semibold inline-flex items-center gap-1">
                                     <MoonStar className="w-3 h-3" /> أُغلق تلقائياً
                                   </span>
                                 )}
                                 {d.manualAt && (
                                   <span
-                                    className="text-slate-500 dark:text-slate-400 font-bold inline-flex items-center gap-1"
+                                    className="text-slate-500 dark:text-slate-400 font-semibold inline-flex items-center gap-1"
                                     title={d.manualReason ?? undefined}
                                   >
                                     <PenLine className="w-3 h-3" /> أُدخل يدوياً
@@ -220,7 +220,7 @@ export default function ReportClient({
         </div>
       </div>
 
-      <p className="text-[11px] text-slate-400 dark:text-slate-500 leading-relaxed">
+      <p className="text-caption text-slate-400 dark:text-slate-500 leading-relaxed">
         الغياب يُحسب على أيام العمل التي مضت في مجموعة كل موظف
         {countingFrom && <> منذ تفعيل النظام في {date(countingFrom)}</>}، بعد استبعاد العطل
         الرسمية وإجازاته وأي يوم عليه سجل. واليوم الجاري لا يُحسب غياباً على أحد، وكذلك أي يوم

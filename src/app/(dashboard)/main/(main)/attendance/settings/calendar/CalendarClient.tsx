@@ -168,18 +168,18 @@ export default function CalendarClient({
           <button
             onClick={() => goto(shiftMonth(month, compact ? -12 : -1))}
             aria-label={compact ? "السنة السابقة" : "الشهر السابق"}
-            className="h-8 w-8 rounded-lg border border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-slate-100 transition-colors inline-flex items-center justify-center"
+            className={btn.icon}
           >
             <ChevronRight className="w-4 h-4" />
           </button>
           <button
             onClick={() => goto(shiftMonth(month, compact ? 12 : 1))}
             aria-label={compact ? "السنة التالية" : "الشهر التالي"}
-            className="h-8 w-8 rounded-lg border border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-slate-100 transition-colors inline-flex items-center justify-center"
+            className={btn.icon}
           >
             <ChevronLeft className="w-4 h-4" />
           </button>
-          <h3 className="mr-2 text-[15px] font-black text-slate-900 dark:text-slate-100 tabular-nums">
+          <h3 className="mr-2 text-title font-semibold text-slate-900 dark:text-slate-100 tabular-nums">
             {compact ? year : monthYear(month)}
           </h3>
         </div>
@@ -220,7 +220,7 @@ export default function CalendarClient({
             >
               <button
                 onClick={() => goto(spec.month, "month")}
-                className="mb-2 text-[12px] font-black text-slate-700 dark:text-slate-200 hover:text-primary transition-colors"
+                className="mb-2 text-meta font-semibold text-slate-700 dark:text-slate-200 hover:text-primary transition-colors"
               >
                 {monthName(spec.month)}
               </button>
@@ -229,7 +229,7 @@ export default function CalendarClient({
                 {INITIALS.map((letter, i) => (
                   <div
                     key={i}
-                    className={`text-center text-[9px] font-bold pb-1 ${
+                    className={`text-center text-caption font-semibold pb-1 ${
                       workDays.includes(i)
                         ? "text-slate-400 dark:text-slate-500"
                         : "text-slate-300 dark:text-slate-700"
@@ -248,13 +248,13 @@ export default function CalendarClient({
                       type="button"
                       onClick={() => pick(d.key)}
                       title={d.marks.map((h) => h.name).join(" · ") || undefined}
-                      className={`aspect-square rounded flex items-center justify-center text-[10px] tabular-nums transition-colors ${
+                      className={`aspect-square rounded flex items-center justify-center text-caption tabular-nums transition-colors ${
                         inSelection(d.key)
-                          ? "bg-primary text-white font-black"
+                          ? "bg-primary text-white font-semibold"
                           : d.isToday
-                            ? "ring-1 ring-primary text-primary font-black"
+                            ? "ring-1 ring-primary text-primary font-semibold"
                             : d.marks.length > 0
-                              ? `${scopeOf(d.marks[0].scope).tint} font-bold`
+                              ? `${scopeOf(d.marks[0].scope).tint} font-semibold`
                               : d.isWorkDay
                                 ? "text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800"
                                 : "text-slate-300 dark:text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-800"
@@ -276,7 +276,7 @@ export default function CalendarClient({
             {WEEKDAY_LABELS.map((label, i) => (
               <div
                 key={label}
-                className={`bg-slate-50 dark:bg-slate-900 py-2 text-center text-[11px] font-bold ${
+                className={`bg-slate-50 dark:bg-slate-900 py-2 text-center text-caption font-semibold ${
                   workDays.includes(i)
                     ? "text-slate-500 dark:text-slate-400"
                     : "text-slate-300 dark:text-slate-600"
@@ -303,11 +303,11 @@ export default function CalendarClient({
                 }`}
               >
                 <span
-                  className={`inline-flex items-center justify-center tabular-nums text-[12px] leading-none ${
+                  className={`inline-flex items-center justify-center tabular-nums text-meta leading-none ${
                     d.isToday
-                      ? "h-6 w-6 rounded-full bg-primary text-white font-black"
+                      ? "h-6 w-6 rounded-full bg-primary text-white font-semibold"
                       : d.inMonth
-                        ? "font-bold text-slate-700 dark:text-slate-200"
+                        ? "font-semibold text-slate-700 dark:text-slate-200"
                         : "text-slate-300 dark:text-slate-700"
                   }`}
                 >
@@ -330,7 +330,7 @@ export default function CalendarClient({
                         <span
                           key={h.id}
                           title={h.name}
-                          className={`block truncate rounded px-1.5 py-0.5 text-[10px] font-bold ${
+                          className={`block truncate rounded px-1.5 py-0.5 text-caption font-semibold ${
                             scopeOf(h.scope).chip
                           }`}
                         >
@@ -338,7 +338,7 @@ export default function CalendarClient({
                         </span>
                       ))}
                       {d.marks.length > 2 && (
-                        <span className="text-[10px] text-slate-400 px-1.5">
+                        <span className="text-caption text-slate-400 px-1.5">
                           +{d.marks.length - 2}
                         </span>
                       )}
@@ -352,7 +352,7 @@ export default function CalendarClient({
       )}
 
       {/* Legend */}
-      <div className="flex items-center gap-4 flex-wrap text-[11px] text-slate-500 dark:text-slate-400">
+      <div className="flex items-center gap-4 flex-wrap text-caption text-slate-500 dark:text-slate-400">
         <span className="inline-flex items-center gap-1.5">
           <span className={`w-2 h-2 rounded-full ${SCOPE.GLOBAL.dot}`} /> {SCOPE.GLOBAL.label}
         </span>
@@ -371,7 +371,7 @@ export default function CalendarClient({
       {selection ? (
         <div className="rounded-xl border border-primary/30 dark:border-teal-500/30 bg-primary/[0.03] dark:bg-teal-500/5 p-4">
           <div className="flex items-center justify-between gap-3 mb-3 flex-wrap">
-            <p className="text-[12px] font-bold text-slate-700 dark:text-slate-200">
+            <p className="text-meta font-semibold text-slate-700 dark:text-slate-200">
               {selection.start === selection.end
                 ? dayLabel(selection.start)
                 : `${dayLabel(selection.start)} ← ${dayLabel(selection.end)}`}
@@ -389,7 +389,7 @@ export default function CalendarClient({
                 setSelection(null);
                 setAnchor(null);
               }}
-              className="text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition-colors inline-flex items-center gap-1 text-[11px] font-bold"
+              className="text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition-colors inline-flex items-center gap-1 text-caption font-semibold"
             >
               <X className="w-3.5 h-3.5" /> إلغاء التحديد
             </button>
@@ -437,7 +437,7 @@ export default function CalendarClient({
           </div>
         </div>
       ) : (
-        <p className="text-[12px] text-slate-400 dark:text-slate-500">
+        <p className="text-meta text-slate-400 dark:text-slate-500">
           انقر يوماً لإضافة مناسبة، أو يومين لتحديد مدة.
         </p>
       )}
@@ -447,16 +447,16 @@ export default function CalendarClient({
         <div className="rounded-xl border border-slate-200 dark:border-slate-800 divide-y divide-slate-100 dark:divide-slate-800">
           {listed.map((h) => (
             <div key={h.id} className="flex items-center justify-between gap-3 px-4 py-2.5">
-              <span className="text-[12px] text-slate-700 dark:text-slate-300 min-w-0">
+              <span className="text-meta text-slate-700 dark:text-slate-300 min-w-0">
                 <span className={`inline-block w-2 h-2 rounded-full ml-2 ${scopeOf(h.scope).dot}`} />
-                <span className="font-bold">{h.name}</span>
+                <span className="font-semibold">{h.name}</span>
                 <span className="text-slate-400 tabular-nums">
                   {" · "}
                   {h.startDate === h.endDate
                     ? dayLabel(h.startDate)
                     : `${dayLabel(h.startDate)} ← ${dayLabel(h.endDate)}`}
                 </span>
-                <span className="mr-1.5 text-[10px] text-slate-400">{scopeOf(h.scope).label}</span>
+                <span className="mr-1.5 text-caption text-slate-400">{scopeOf(h.scope).label}</span>
               </span>
               <button
                 className="text-slate-400 hover:text-rose-500 transition-colors shrink-0"

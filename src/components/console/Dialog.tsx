@@ -140,6 +140,7 @@ export function Dialog({
   bodyClassName,
   closeOnBackdrop = true,
   scopeClassName,
+  flush = false,
 }: {
   /** يُترك فارغاً حين يتحكّم المُنادي بالعرض بشرطٍ خارجي. */
   open?: boolean;
@@ -166,6 +167,8 @@ export function Dialog({
    * في جذر الصفحة خارج غلاف شاشتها، فبدونه تضيع مقاسات الخطّ المعرَّفة عليه.
    */
   scopeClassName?: string;
+  /** جسمٌ بلا حشوة — لمحتوى له تخطيطه الكامل العرض (مخطط، جدول). */
+  flush?: boolean;
 }) {
   const panelRef = useRef<HTMLElement>(null);
   const titleId = useId();
@@ -215,7 +218,7 @@ export function Dialog({
         </div>
       </header>
 
-      <div className={cx("min-h-0 flex-1 overflow-y-auto px-5 py-5", bodyClassName)}>{children}</div>
+      <div className={cx("min-h-0 flex-1 overflow-y-auto", !flush && "px-5 py-5", bodyClassName)}>{children}</div>
 
       {footer && (
         <footer className="flex shrink-0 flex-wrap items-center justify-end gap-2 border-t border-slate-200 bg-slate-50/70 px-5 py-3 dark:border-slate-800 dark:bg-slate-950/40">

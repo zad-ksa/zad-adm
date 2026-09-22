@@ -1,7 +1,8 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { CalendarRange, Table2, X } from "lucide-react";
+import { CalendarRange, Table2 } from "lucide-react";
+import { Dialog } from "@/components/console/Dialog";
 
 /**
  * Every scheduled design on one timeline, a row per charity.
@@ -118,15 +119,19 @@ export default function DesignGanttModal({
   const nowPct = scale ? ((now - scale.min) / scale.span) * 100 : null;
 
   return (
-    <div className="design-requests-ui fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-slate-950/60 backdrop-blur-sm">
-      <div
-        dir="rtl"
-        className="dr-gantt bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-[var(--dr-shadow-card)] w-full max-w-5xl max-h-[90vh] flex flex-col"
-      >
-        {/* The palette lives on the root as tokens so light/dark swap in one
+    <Dialog
+size="2xl"
+flush
+scopeClassName="design-requests-ui dr-gantt"
+title="المخطط الزمني للتصاميم"
+description="كل جمعية وأمامها تصاميمها من بدء التنفيذ إلى التسليم"
+onClose={onClose}
+>
+<div>
+{/* The palette lives on the root as tokens so light/dark swap in one
             place, and both scopes are declared: the media query covers the OS
             setting, the data-theme scope covers the in-app toggle. */}
-        <style>{`
+<style>{`
           .dr-gantt {
             --g-surface: #ffffff;
             --g-grid: #e8e8e5;
@@ -172,28 +177,8 @@ export default function DesignGanttModal({
             outline: none;
           }
         `}</style>
-
-        <header className="flex items-start justify-between gap-4 p-5 border-b border-slate-100 dark:border-slate-800 shrink-0">
-          <div className="min-w-0">
-            <h2 className="text-[15px] font-black text-slate-900 dark:text-slate-100">
-              المخطط الزمني للتصاميم
-            </h2>
-            <p className="mt-0.5 text-[12px] text-slate-500 dark:text-slate-400">
-              كل جمعية وأمامها تصاميمها من بدء التنفيذ إلى التسليم
-            </p>
-          </div>
-          <button
-            type="button"
-            onClick={onClose}
-            aria-label="إغلاق"
-            className="shrink-0 p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-          >
-            <X className="w-4 h-4" />
-          </button>
-        </header>
-
-        {/* Filters and the view switch, one row above the chart. */}
-        <div className="flex items-center justify-between gap-3 flex-wrap px-5 py-3 border-b border-slate-100 dark:border-slate-800 shrink-0">
+{/* Filters and the view switch, one row above the chart. */}
+<div className="flex items-center justify-between gap-3 flex-wrap px-5 py-3 border-b border-slate-100 dark:border-slate-800 shrink-0">
           <div className="flex items-center gap-4 flex-wrap">
             {LANES.map((lane) => (
               <span key={lane.key} className="flex items-center gap-1.5 text-[11px] text-slate-600 dark:text-slate-300">
@@ -226,8 +211,7 @@ export default function DesignGanttModal({
             </button>
           </div>
         </div>
-
-        <div className="flex-1 overflow-auto p-5">
+<div className="flex-1 overflow-auto p-5">
           {rows.length === 0 || !scale ? (
             <p className="py-16 text-center text-[12px] text-slate-400 dark:text-slate-500">
               لا توجد تصاميم مجدولة لعرضها.
@@ -356,9 +340,8 @@ export default function DesignGanttModal({
             </div>
           )}
         </div>
-
-        {/* Tooltip: the design's name, which is what the pointer is asking for. */}
-        {hovered && (
+{/* Tooltip: the design's name, which is what the pointer is asking for. */}
+{hovered && (
           <div
             className="fixed z-[60] pointer-events-none rounded-lg px-3 py-2 shadow-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 max-w-[260px]"
             style={{
@@ -381,7 +364,7 @@ export default function DesignGanttModal({
             </p>
           </div>
         )}
-      </div>
-    </div>
+</div>
+</Dialog>
   );
 }

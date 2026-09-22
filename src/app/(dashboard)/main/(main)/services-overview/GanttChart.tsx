@@ -607,16 +607,16 @@ footer={
 
       {/* Edit Modal */}
       {modalState && (
-        <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
-          <div className="bg-white dark:bg-slate-800 rounded-3xl w-full max-w-2xl shadow-2xl overflow-hidden flex flex-col max-h-[85vh] animate-in zoom-in-95 duration-200">
-            <div className="p-5 border-b border-slate-100 dark:border-slate-700">
-              <h3 className="text-xl font-black text-slate-800 dark:text-slate-100">
-                تعديل نقاط الأسبوع ({formatDate(modalState.weekStart)} - {formatDate(modalState.weekEnd)})
-              </h3>
-              <p className="text-sm text-slate-500 mt-1">جمعية: {modalState.charityName}</p>
-            </div>
-            
-            <div className="flex-1 overflow-auto p-5 bg-slate-50 dark:bg-slate-900">
+        <Dialog
+size="lg"
+title={<>تعديل نقاط الأسبوع ({formatDate(modalState.weekStart)} – {formatDate(modalState.weekEnd)})</>}
+description={<>جمعية: {modalState.charityName}</>}
+onClose={() => setModalState(null)}
+busy={isPending}
+closeOnBackdrop={false}
+>
+<div className="space-y-4">
+<div className="rounded-xl bg-slate-50 p-4 dark:bg-slate-900">
               {modalState.stages.length === 0 && !isAddingStage ? (
                 <div className="text-center text-slate-500 py-8">لا توجد مراحل مسجلة لهذه الجمعية في هذا المسار.</div>
               ) : (
@@ -763,8 +763,7 @@ footer={
                 </div>
               )}
             </div>
-            
-            <div className="p-5 border-t border-slate-100 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 flex flex-col gap-3 shrink-0">
+<div className="flex flex-col gap-3 border-t border-slate-100 pt-4 dark:border-slate-700">
               <div className="bg-white dark:bg-slate-800 p-4 rounded-xl border border-slate-200 dark:border-slate-700">
                 <label className="flex items-center gap-2 font-bold text-slate-700 dark:text-slate-200 cursor-pointer w-fit">
                   <div className="relative flex items-center justify-center">
@@ -815,8 +814,8 @@ footer={
                 </button>
               </div>
             </div>
-          </div>
-        </div>
+</div>
+</Dialog>
       )}
     </div>
   );

@@ -31,6 +31,8 @@ import { RevisionNotesList } from "@/components/design-requests/RevisionNotesLis
 import ReturnRevisionModal from "@/components/design-requests/ReturnRevisionModal";
 import QueueOrderModal, { type QueueRow } from "@/components/design-requests/QueueOrderModal";
 import DesignGanttModal, { type GanttItem } from "./DesignGanttModal";
+import { Dialog } from "@/components/console/Dialog";
+import { btn } from "@/components/console/ui";
 
 const DESIGN_MAX = maxBytesFor("design_request");
 const DESIGN_MAX_LABEL = maxLabelFor("design_request");
@@ -796,23 +798,47 @@ export default function DesignRequestsClient({
       )}
 
       {confirmingId !== null && (
-        <div className="design-requests-ui fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm">
-          <div
-            dir="rtl"
-            className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-[var(--dr-shadow-card)] w-full max-w-sm p-6 text-center"
-          >
-            <div className="mx-auto w-12 h-12 rounded-full bg-primary/10 dark:bg-primary/15 flex items-center justify-center mb-4">
-              <AlertTriangle className="w-6 h-6 text-primary dark:text-teal-300" />
-            </div>
-            <h3 className="font-bold text-slate-900 dark:text-slate-100 mb-2" style={{ fontSize: "var(--dr-fs-title)" }}>
-              إنهاء طلب التصميم
-            </h3>
-            <p className="text-slate-500 dark:text-slate-400 mb-4" style={{ fontSize: "var(--dr-fs-body)" }}>
-              سيتم وضع الطلب كمُنجز، وحذف ملفات الجمعية المرفقة مع الطلب من التخزين. أما
-              الملفات النهائية التي ترفعها هنا فتبقى وتظهر للجمعية.
-            </p>
-
-            <div className="mb-6 text-right">
+        <Dialog
+size="sm"
+scopeClassName="design-requests-ui"
+icon={<AlertTriangle className="size-4" />}
+title="إنهاء طلب التصميم"
+description="سيتم وضع الطلب كمُنجز، وحذف ملفات الجمعية المرفقة مع الطلب من التخزين. أما الملفات النهائية التي ترفعها هنا فتبقى وتظهر للجمعية."
+onClose={() => {
+  setConfirmingId(null);
+  setDeliverables([]);
+  setCompletionNote("");
+  setDeliverableError(null);
+}}
+busy={isCompleting}
+closeOnBackdrop={false}
+footer={<>
+<button type="button"
+                onClick={() => {
+                  setConfirmingId(null);
+                  setDeliverables([]);
+                  setCompletionNote("");
+                  setDeliverableError(null);
+                }}
+                disabled={isCompleting}
+                className={btn.secondary}
+                style={{ fontSize: "var(--dr-fs-meta)" }}
+              >
+                إلغاء
+              </button>
+              <button type="button"
+                onClick={handleComplete}
+                disabled={isCompleting}
+                className={btn.primary}
+                style={{ fontSize: "var(--dr-fs-meta)" }}
+              >
+                {isCompleting && <Loader2 className="w-4 h-4 animate-spin" />}
+                إنهاء الطلب
+              </button>
+</>}
+>
+<div>
+<div className="text-right">
               <UploadProgress progress={uploadProgress} />
 
               {deliverableError && (
@@ -890,32 +916,8 @@ export default function DesignRequestsClient({
                 style={{ fontSize: "var(--dr-fs-meta)" }}
               />
             </div>
-            <div className="flex items-center gap-3">
-              <button
-                onClick={() => {
-                  setConfirmingId(null);
-                  setDeliverables([]);
-                  setCompletionNote("");
-                  setDeliverableError(null);
-                }}
-                disabled={isCompleting}
-                className="flex-1 h-10 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 font-bold transition-colors disabled:opacity-50"
-                style={{ fontSize: "var(--dr-fs-meta)" }}
-              >
-                إلغاء
-              </button>
-              <button
-                onClick={handleComplete}
-                disabled={isCompleting}
-                className="flex-1 h-10 flex items-center justify-center gap-2 rounded-xl text-white bg-gradient-to-b from-[#17857c] via-primary to-[#0c645d] shadow-[var(--dr-shadow-cta)] font-bold transition-all disabled:opacity-60"
-                style={{ fontSize: "var(--dr-fs-meta)" }}
-              >
-                {isCompleting && <Loader2 className="w-4 h-4 animate-spin" />}
-                إنهاء الطلب
-              </button>
-            </div>
-          </div>
-        </div>
+</div>
+</Dialog>
       )}
 
       {ganttNow !== null && (

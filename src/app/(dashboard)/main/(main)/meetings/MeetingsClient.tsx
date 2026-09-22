@@ -14,6 +14,7 @@ import { createMeeting, updateMeeting, deleteMeeting, insertAiTasksIfEmpty } fro
 import { handlePrint, handlePreview, downloadAllMeetingsZip } from "./utils/meetingPrint";
 import MeetingCard from "./components/MeetingCard";
 import MeetingFormModal from "./components/MeetingFormModal";
+import { Dialog } from "@/components/console/Dialog";
 
 export type MeetingTask = {
   id: string;
@@ -504,32 +505,29 @@ export default function MeetingsClient({ meetings, charities, employees, session
 
       {/* View Modal */}
       {viewingMeeting && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm" dir="rtl">
-          <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-2xl w-full max-w-3xl max-h-[90vh] flex flex-col">
-            <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100 dark:border-slate-800 shrink-0">
-              <div>
-                <h2 className="font-bold text-slate-800 dark:text-slate-100 text-xs">{viewingMeeting.title}</h2>
-                <p className="text-[10px] text-slate-400 mt-0.5">{formatDate(viewingMeeting.date)}{viewingMeeting.location ? ` · ${viewingMeeting.location}` : ""}</p>
-              </div>
-              <div className="flex gap-2">
-                <button onClick={() => handlePreview(viewingMeeting, meetingNumberMap.get(viewingMeeting.id))} className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-primary transition-colors" title="عرض بالكليشة">
+        <Dialog
+size="xl"
+title={viewingMeeting.title}
+description={<>{formatDate(viewingMeeting.date)}{viewingMeeting.location ? ` · ${viewingMeeting.location}` : ""}</>}
+onClose={() => setViewingMeeting(null)}
+closeOnBackdrop={false}
+headerAction={<>
+<button onClick={() => handlePreview(viewingMeeting, meetingNumberMap.get(viewingMeeting.id))} className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-primary transition-colors" title="عرض بالكليشة">
                   <LayoutTemplate className="w-4 h-4" />
                 </button>
-                <button onClick={() => handlePrint(viewingMeeting, meetingNumberMap.get(viewingMeeting.id))} className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-primary transition-colors" title="طباعة">
+<button onClick={() => handlePrint(viewingMeeting, meetingNumberMap.get(viewingMeeting.id))} className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-primary transition-colors" title="طباعة">
                   <Printer className="w-4 h-4" />
                 </button>
-                <button onClick={() => setViewingMeeting(null)} className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 transition-colors">
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
-            </div>
-            <div className="flex-1 overflow-auto p-4">
+</>}
+>
+<div>
+<div className="flex-1 overflow-auto p-4">
               <pre className="whitespace-pre-wrap font-sans text-xs leading-relaxed text-slate-700 dark:text-slate-200 text-right" dir="rtl">
                 {viewingMeeting.formattedContent}
               </pre>
             </div>
-          </div>
-        </div>
+</div>
+</Dialog>
       )}
 
       {showModal && (

@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useEffect, use, useMemo } from "react";
-import { PageHeader } from "@/components/console/layout";
+import { PageHeader, theadRowClass, tbodyClass } from "@/components/console/layout";
+import { cx } from "@/components/console/ui";
 import {
   Download,
   FileText,
@@ -503,18 +504,18 @@ export default function SurveyResultsPage({ params }: { params: Promise<{ id: st
 
           {/* ── جدول: صف لكل مشارك، عمود لكل سؤال ─────────────────────────── */}
           {viewMode === "table" && (
-            <div className="bg-white border border-slate-200 rounded-2xl shadow-sm dark:bg-slate-800 dark:border-slate-700 overflow-x-auto">
+            <div className="overflow-x-auto rounded-lg border border-slate-200 bg-white shadow-[0_1px_2px_rgb(15_23_42/0.04)] dark:border-slate-800 dark:bg-slate-900">
               <table className="w-full border-collapse text-xs">
                 <thead>
-                  <tr className="bg-slate-50 dark:bg-slate-900/50">
-                    <th className="sticky right-0 z-10 bg-slate-50 dark:bg-slate-900/50 text-right font-bold text-slate-600 dark:text-slate-300 px-3 py-2.5 border-b border-l border-slate-200 dark:border-slate-700 min-w-[160px]">
+                  <tr className={theadRowClass}>
+                    <th className="text-[12.5px] font-medium text-slate-500 dark:text-slate-400 sticky right-0 z-10 h-10 min-w-[160px] whitespace-nowrap border-l border-slate-200 bg-slate-50 px-3 text-right dark:border-slate-800 dark:bg-slate-900">
                       المشارك
                     </th>
                     {flatQuestions.map(({ q, isFollowUp }, idx) => (
                       <th
                         key={`${q.id}-${idx}`}
                         title={q.text}
-                        className="text-right font-bold text-slate-500 dark:text-slate-400 px-3 py-2.5 border-b border-slate-200 dark:border-slate-700 min-w-[180px] max-w-[240px]"
+                        className="text-[12.5px] font-medium text-slate-500 dark:text-slate-400 min-w-[180px] max-w-[240px] px-3 py-2.5 text-right"
                       >
                         <span className="line-clamp-2">
                           {isFollowUp && "↳ "}
@@ -524,13 +525,13 @@ export default function SurveyResultsPage({ params }: { params: Promise<{ id: st
                     ))}
                   </tr>
                 </thead>
-                <tbody>
+                <tbody className={tbodyClass}>
                   {parsedResponses.map((r, rIdx) => (
                     <tr
                       key={r.id}
-                      className={rIdx % 2 ? "bg-slate-50/40 dark:bg-slate-900/20" : ""}
+                      className={rIdx % 2 ? "bg-slate-50/60 dark:bg-slate-800/30" : ""}
                     >
-                      <td className="sticky right-0 z-10 bg-inherit align-top px-3 py-2 border-b border-l border-slate-100 dark:border-slate-700 font-bold text-slate-700 dark:text-slate-200 min-w-[160px]">
+                      <td className={cx("sticky right-0 z-10 min-w-[160px] border-l border-slate-200 px-3 py-2 align-top font-bold text-slate-700 dark:border-slate-800 dark:text-slate-200", rIdx % 2 ? "bg-slate-50 dark:bg-slate-900" : "bg-white dark:bg-slate-900")}>
                         <span className="block truncate max-w-[150px]" title={respondentLabel(r, rIdx)}>
                           {respondentLabel(r, rIdx)}
                         </span>
@@ -546,7 +547,7 @@ export default function SurveyResultsPage({ params }: { params: Promise<{ id: st
                         return (
                           <td
                             key={`${q.id}-${idx}`}
-                            className="align-top px-3 py-2 border-b border-slate-100 dark:border-slate-700 text-slate-700 dark:text-slate-200"
+                            className="px-3 py-2 align-top text-slate-700 dark:text-slate-200"
                           >
                             {text && <span className="whitespace-pre-wrap break-words">{text}</span>}
                             {urls.length > 0 && (

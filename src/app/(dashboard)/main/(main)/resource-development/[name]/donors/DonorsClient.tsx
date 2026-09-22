@@ -6,6 +6,7 @@ import { charityCrumbs } from "@/lib/crumbs";
 import { confirmAction } from "@/components/console/confirmBus";
 import { Building2, Plus, Trash2, ExternalLink, Copy, CheckCircle2, AlertCircle } from "lucide-react";
 import { addDonorAccount, deleteDonorAccount } from "@/app/actions/charity";
+import { btn, cx } from "@/components/console/ui";
 
 interface DonorAccount {
   id: string;
@@ -87,7 +88,7 @@ export default function DonorsClient({
             title="الجهات المانحة"
             description="إدارة بيانات الدخول للجهات المانحة"
             actions={
-              <button onClick={() => setShowAddDonor(!showAddDonor)} className="bg-primary text-white px-4 py-2 rounded-lg font-bold flex items-center gap-1.5 hover:bg-primary/90 shadow-sm whitespace-nowrap text-sm">
+              <button onClick={() => setShowAddDonor(!showAddDonor)} className={cx(btn.primary, "whitespace-nowrap")}>
                 <Plus className="w-4 h-4" /> إضافة حساب
               </button>
             }
@@ -112,7 +113,7 @@ export default function DonorsClient({
               <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-1">رابط الموقع (اختياري)</label>
               <input type="url" value={donorForm.website} onChange={e => setDonorForm({...donorForm, website: e.target.value})} className="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary font-bold dark:text-slate-100" />
             </div>
-            <button type="submit" disabled={isPending} className="w-full bg-primary text-white py-2.5 rounded-xl font-bold shadow hover:bg-primary/90 disabled:opacity-50 h-[42px]">
+            <button type="submit" disabled={isPending} className={cx(btn.primary, "w-full")}>
               حفظ الحساب
             </button>
           </form>

@@ -45,6 +45,7 @@ import { uploadFiles } from "@/lib/clientUpload";
 import { ACCEPT_ATTRIBUTE, formatBytes, maxBytesFor, maxLabelFor } from "@/lib/uploadPurposes";
 import { ConfirmDialog } from "@/components/console/ConfirmDialog";
 import { Toast } from "@/components/console/Toast";
+import { btn } from "@/components/console/ui";
 
 const MAX_BYTES = maxBytesFor("template_file");
 const MAX_LABEL = maxLabelFor("template_file");
@@ -799,7 +800,7 @@ export default function TemplateLibraryClient() {
               <button
                 onClick={() => fileInputRef.current?.click()}
                 disabled={!!uploadStatus}
-                className="h-9 px-3 rounded-xl text-white bg-gradient-to-b from-[#17857c] via-primary to-[#0c645d] hover:shadow-md active:translate-y-px transition-all font-bold text-xs flex items-center gap-1.5 disabled:opacity-50"
+                className={btn.primary}
               >
                 {uploadStatus ? <Loader2 className="w-4 h-4 animate-spin" /> : <FileUp className="w-4 h-4" />}
                 رفع ملفات
@@ -950,12 +951,12 @@ export default function TemplateLibraryClient() {
                 placeholder="اسم المجلد"
                 className="flex-1 h-9 px-3 rounded-lg bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-sm outline-none focus:border-primary"
               />
-              <button onClick={handleCreateFolder} className="h-9 px-4 rounded-lg bg-primary text-white text-xs font-bold">
+              <button onClick={handleCreateFolder} className={btn.primary}>
                 إنشاء
               </button>
               <button
                 onClick={() => { setIsCreatingFolder(false); setNewFolderName(""); }}
-                className="h-9 px-3 rounded-lg text-slate-500 text-xs font-bold hover:bg-slate-100 dark:hover:bg-slate-800"
+                className={btn.ghost}
               >
                 إلغاء
               </button>

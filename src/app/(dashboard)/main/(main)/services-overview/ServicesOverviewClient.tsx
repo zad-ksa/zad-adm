@@ -43,7 +43,7 @@ import {
 import { updateCharityLogo } from "@/app/actions/charity";
 import { updateTimelineDisplayName } from "@/app/actions/settings";
 import { Dialog } from "@/components/console/Dialog";
-import { btn } from "@/components/console/ui";
+import { btn, cx } from "@/components/console/ui";
 
 type Charity = {
   id: string;
@@ -677,10 +677,10 @@ function InlineTimeline({
               </label>
               <div className="flex gap-2">
                 <button onClick={() => handleUpdate(stage.id)} disabled={isPending || !editName.trim()}
-                  className="flex-1 py-1.5 text-xs font-bold text-white bg-primary hover:bg-primary/90 rounded-lg flex items-center justify-center gap-1 disabled:opacity-60">
+                  className={cx(btn.primary, "flex-1 justify-center")}>
                   {isPending ? <Loader2 className="w-3 h-3 animate-spin" /> : <Save className="w-3 h-3" />} حفظ
                 </button>
-                <button onClick={() => setEditingId(null)} className="px-3 py-1.5 text-xs font-bold text-slate-500 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 rounded-lg transition-colors">إلغاء</button>
+                <button onClick={() => setEditingId(null)} className={btn.secondary}>إلغاء</button>
               </div>
             </div>
           ) : (
@@ -810,10 +810,10 @@ function InlineTimeline({
           </label>
           <div className="flex gap-2">
             <button onClick={handleAdd} disabled={isPending || !newName.trim()}
-              className="flex-1 py-1.5 text-xs font-bold text-white bg-primary hover:bg-primary/90 rounded-lg flex items-center justify-center gap-1 disabled:opacity-60">
+              className={cx(btn.primary, "flex-1 justify-center")}>
               {isPending ? <Loader2 className="w-3 h-3 animate-spin" /> : <Plus className="w-3 h-3" />} إضافة
             </button>
-            <button onClick={() => setIsAdding(false)} className="px-3 py-1.5 text-xs font-bold text-slate-500 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 rounded-lg transition-colors">إلغاء</button>
+            <button onClick={() => setIsAdding(false)} className={btn.secondary}>إلغاء</button>
           </div>
         </div>
       ) : (
@@ -1455,7 +1455,7 @@ export default function ServicesOverviewClient({
                 <div className="relative">
                   <button
                     onClick={() => setShowAddCharity(v => !v)}
-                    className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-600 dark:text-slate-300 rounded-lg transition-colors"
+                    className={btn.secondary}
                   >
                     <Plus className="w-3.5 h-3.5" /> فتح خطة جمعية
                   </button>
@@ -1479,11 +1479,11 @@ export default function ServicesOverviewClient({
               )}
               <button
                 onClick={() => setShowGantt(true)}
-                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 rounded-lg transition-colors">
+                className={btn.secondary}>
                 <GanttChartSquare className="w-3.5 h-3.5" /> غانت
               </button>
               <button onClick={() => openPrintModal(activeTab, activeLabel, charitiesWithData, isGenericTab ? genericSvcInfo?.name : undefined)}
-                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 rounded-lg transition-colors">
+                className={btn.secondary}>
                 <Printer className="w-3.5 h-3.5" /> طباعة
               </button>
             </div>
@@ -1903,7 +1903,7 @@ busy={isLogoPending}
                 <button
                   onClick={() => handleSaveLogo(logoEditCharityId)}
                   disabled={isLogoPending}
-                  className="flex-1 py-2 text-xs font-bold text-white bg-primary hover:bg-primary/90 rounded-lg flex items-center justify-center gap-1.5 disabled:opacity-60"
+                  className={cx(btn.primary, "flex-1 justify-center")}
                 >
                   {isLogoPending ? <Loader2 className="w-3 h-3 animate-spin" /> : <Save className="w-3 h-3" />}
                   {isLogoPending ? "جاري الرفع..." : "حفظ"}
@@ -1917,7 +1917,7 @@ busy={isLogoPending}
                     حذف
                   </button>
                 )}
-                <button onClick={() => setLogoEditCharityId(null)} disabled={isLogoPending} className="px-3 py-2 text-xs font-bold text-slate-500 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 rounded-lg transition-colors disabled:opacity-50">
+                <button onClick={() => setLogoEditCharityId(null)} disabled={isLogoPending} className={btn.secondary}>
                   إلغاء
                 </button>
               </div>

@@ -4,6 +4,7 @@ import { useState, useEffect, use } from "react";
 import { Printer, Loader2, ArrowRight } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
+import { btn } from "@/components/console/ui";
 
 interface Question {
   id: string;
@@ -84,7 +85,7 @@ export default function PrintSurveyPage({ params }: { params: Promise<{ id: stri
           </div>
           <button
             onClick={handlePrint}
-            className="bg-primary text-white px-6 py-2.5 rounded-xl font-bold flex items-center gap-2 hover:bg-primary/90 transition-all shadow-md active:scale-95 cursor-pointer"
+            className={btn.primary}
           >
             <Printer className="w-5 h-5" />
             طباعة الآن

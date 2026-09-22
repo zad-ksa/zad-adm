@@ -15,6 +15,7 @@ import { handlePrint, handlePreview, downloadAllMeetingsZip } from "./utils/meet
 import MeetingCard from "./components/MeetingCard";
 import MeetingFormModal from "./components/MeetingFormModal";
 import { Dialog } from "@/components/console/Dialog";
+import { btn } from "@/components/console/ui";
 
 export type MeetingTask = {
   id: string;
@@ -328,7 +329,7 @@ export default function MeetingsClient({ meetings, charities, employees, session
               <button
                 onClick={handleDownloadAll}
                 disabled={isDownloadingAll}
-                className="flex items-center gap-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:text-primary hover:border-primary/30 px-3.5 py-2 rounded-lg text-xs font-bold transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                className={btn.secondary}
                 title="تحميل جميع المحاضر مضغوطة، مقسّمة في مجلدات حسب الخدمة"
               >
                 {isDownloadingAll ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Download className="w-3.5 h-3.5" />}

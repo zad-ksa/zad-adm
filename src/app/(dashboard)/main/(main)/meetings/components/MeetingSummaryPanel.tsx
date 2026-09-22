@@ -14,6 +14,7 @@ import {
 } from "@/app/actions/meetings";
 import { useRoleLabels } from "@/components/RoleLabelsProvider";
 import { Meeting, MeetingTask, Employee } from "../MeetingsClient";
+import { btn, cx } from "@/components/console/ui";
 
 type Props = {
   meeting: Meeting;
@@ -343,7 +344,7 @@ export default function MeetingSummaryPanel({
               <button
                 onClick={saveEdit}
                 disabled={saving}
-                className="w-full bg-primary hover:bg-primary/95 text-white py-2 rounded-xl text-xs font-bold transition-all disabled:opacity-50 flex items-center justify-center gap-1"
+                className={cx(btn.primary, "w-full justify-center")}
               >
                 {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : null}
                 حفظ التكليفات

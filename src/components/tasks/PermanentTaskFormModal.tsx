@@ -5,6 +5,7 @@ import Select from "@/components/console/Select";
 import { CheckSquare, AlignLeft, Repeat, User } from "lucide-react";
 import { Employee } from "@/types";
 import { Dialog } from "@/components/console/Dialog";
+import { btn } from "@/components/console/ui";
 
 interface PermanentTaskFormModalProps {
   isOpen: boolean;
@@ -128,14 +129,14 @@ busy={isPending}
               type="button"
               onClick={onClose}
               disabled={isPending}
-              className="px-5 py-2.5 rounded-xl text-slate-500 font-bold hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors text-sm cursor-pointer"
+              className={btn.ghost}
             >
               إلغاء
             </button>
             <button
               type="submit"
               disabled={isPending || !title || !recurrenceRate || !assignedToId}
-              className="px-6 py-2.5 rounded-xl bg-primary text-white font-bold hover:bg-primary/90 transition-colors shadow-sm disabled:opacity-50 text-sm cursor-pointer"
+              className={btn.primary}
             >
               {isPending ? "جاري الحفظ..." : "حفظ المهمة الوظيفية"}
             </button>

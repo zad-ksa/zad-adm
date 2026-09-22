@@ -111,7 +111,7 @@ export default function VisionMissionResultsClient({ responses }: { responses: R
       <div className="flex justify-end print:hidden mb-4">
         <button
           onClick={() => window.print()}
-          className="bg-primary text-white px-4 py-2 rounded-xl font-bold hover:bg-primary/95 transition-all text-xs flex items-center gap-2 cursor-pointer shadow-sm"
+          className={btn.primary}
         >
           <FileText className="w-4 h-4" />
           طباعة التقرير

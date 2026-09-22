@@ -1006,7 +1006,7 @@ ${combinedAchievements.length > 0 ? `
           <button
             onClick={handlePrint}
             title="طباعة"
-            className="flex items-center gap-1.5 bg-white dark:bg-slate-800 px-3 py-1.5 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-500 dark:text-slate-400 hover:text-primary hover:border-primary/30 transition-all font-bold text-xs"
+            className={btn.secondary}
           >
             <Printer className="w-3.5 h-3.5" />
             طباعة
@@ -1613,7 +1613,7 @@ onClose={() => setOpenSidePanel(null)}
                 <button
                   onClick={handleLoadMoreArchive}
                   disabled={isLoadingMore}
-                  className="h-9 px-5 rounded-xl text-[11px] font-bold text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 hover:bg-primary/10 hover:text-primary dark:hover:text-teal-300 transition-colors disabled:opacity-50"
+                  className={btn.secondary}
                 >
                   {isLoadingMore ? "جارٍ التحميل…" : "عرض منجزات أقدم"}
                 </button>

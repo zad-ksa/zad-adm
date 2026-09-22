@@ -21,6 +21,7 @@ import {
 import { createNewsAction, deleteNewsAction } from "@/app/actions/tasks";
 import { addCategory, deleteCategory } from "@/app/actions/categories";
 import { Dialog } from "@/components/console/Dialog";
+import { btn } from "@/components/console/ui";
 
 interface NewsItem {
   id: string;
@@ -467,7 +468,7 @@ onClose={() => setShowNewsForm(false)}
               {/* Actions */}
               <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-100 dark:border-slate-700/50">
                 <button type="button" onClick={() => { setShowNewsForm(false); setNewsTitle(""); setNewsDescription(""); setNewsDate(""); setSelectedCharityNames([]); }}
-                  className="px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700/50 font-bold text-xs cursor-pointer">
+                  className={btn.secondary}>
                   إلغاء
                 </button>
                 <button type="submit" disabled={isPending || selectedCharityNames.length === 0 || !newsTitle.trim()}

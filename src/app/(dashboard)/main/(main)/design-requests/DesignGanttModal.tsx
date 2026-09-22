@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { CalendarRange, Table2 } from "lucide-react";
 import { Dialog } from "@/components/console/Dialog";
+import { btn } from "@/components/console/ui";
 
 /**
  * Every scheduled design on one timeline, a row per charity.
@@ -259,7 +260,7 @@ onClose={onClose}
             <button
               type="button"
               onClick={() => setAsTable((v) => !v)}
-              className="flex items-center gap-1.5 h-8 px-3 rounded-lg text-[11px] font-bold bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
+              className={btn.secondary}
             >
               {asTable ? <CalendarRange className="w-3.5 h-3.5" /> : <Table2 className="w-3.5 h-3.5" />}
               {asTable ? "المخطط" : "جدول"}

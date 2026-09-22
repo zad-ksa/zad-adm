@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { AlertTriangle, ChevronDown, Download, Lock, MoonStar, PenLine, Wifi } from "lucide-react";
 import { ATTENDANCE_STATUS_LABELS } from "@/lib/attendanceTime";
 import { copyToClipboard } from "@/lib/clipboard";
+import { btn } from "@/components/console/ui";
 
 type Day = {
   workDate: string;
@@ -100,7 +101,7 @@ export default function ReportClient({
         />
         <button
           onClick={exportCsv}
-          className="h-9 px-4 rounded-xl text-[12px] font-bold bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors inline-flex items-center gap-1.5"
+          className={btn.secondary}
         >
           <Download className="w-3.5 h-3.5" />
           {copied ? "نُسخ الجدول" : "نسخ كجدول"}

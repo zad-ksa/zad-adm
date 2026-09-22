@@ -7,6 +7,7 @@ import { Charity } from "@/types";
 import { addCategory, deleteCategory } from "@/app/actions/categories";
 import { useImagePaste } from "@/hooks/useImagePaste";
 import { Dialog } from "@/components/console/Dialog";
+import { btn } from "@/components/console/ui";
 
 interface AchievementFormModalProps {
   isOpen: boolean;
@@ -293,7 +294,7 @@ onClose={onClose}
               type="button"
               onClick={onClose}
               disabled={isUploading}
-              className="px-5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700/50 font-bold transition-all text-xs cursor-pointer"
+              className={btn.secondary}
             >
               إلغاء
             </button>

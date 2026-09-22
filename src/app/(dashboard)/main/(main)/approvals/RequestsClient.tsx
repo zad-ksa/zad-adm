@@ -815,7 +815,7 @@ export default function RequestsClient({ requests: initial, hasActiveChain, canR
         {anyFilter && (
           <button
             onClick={clearFilters}
-            className="h-9 px-3 rounded-lg text-xs font-bold text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center gap-1 transition-colors"
+            className={btn.ghost}
           >
             <X className="w-3 h-3" /> مسح
           </button>

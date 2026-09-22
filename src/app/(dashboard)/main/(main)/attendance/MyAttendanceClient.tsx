@@ -25,6 +25,7 @@ import {
   formatClock12,
   type ScheduleShape,
 } from "@/lib/attendanceTime";
+import { btn } from "@/components/console/ui";
 
 type MonthRecord = {
   workDate: string;
@@ -193,7 +194,7 @@ export default function MyAttendanceClient({
               type="button"
               onClick={() => run("in")}
               disabled={!canCheckIn || busy !== null}
-              className="h-11 px-5 rounded-xl font-bold text-[13px] text-white bg-primary hover:bg-primary/90 disabled:opacity-40 disabled:pointer-events-none transition-colors flex items-center gap-2"
+              className={btn.primary}
             >
               {busy === "in" ? <Loader2 className="w-4 h-4 animate-spin" /> : <LogIn className="w-4 h-4" />}
               حضور
@@ -202,7 +203,7 @@ export default function MyAttendanceClient({
               type="button"
               onClick={() => run("out")}
               disabled={!canCheckOut || busy !== null}
-              className="h-11 px-5 rounded-xl font-bold text-[13px] text-slate-700 dark:text-slate-200 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 disabled:opacity-40 disabled:pointer-events-none transition-colors flex items-center gap-2"
+              className={btn.secondary}
             >
               {busy === "out" ? <Loader2 className="w-4 h-4 animate-spin" /> : <LogOut className="w-4 h-4" />}
               انصراف

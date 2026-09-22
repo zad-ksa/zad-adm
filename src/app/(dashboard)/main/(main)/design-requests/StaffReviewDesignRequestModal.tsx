@@ -1,9 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { X, Loader2, AlertTriangle, Check, Undo2 } from "lucide-react";
+import { Loader2, AlertTriangle, Check, Undo2 } from "lucide-react";
 import { approveDesignRequest, rejectDesignRequest } from "@/app/actions/designRequests";
 import { ConfirmDialog } from "@/components/console/ConfirmDialog";
+import { Dialog } from "@/components/console/Dialog";
+import { btn } from "@/components/console/ui";
 
 /**
  * The review step a charity's request passes through before it enters the queue.
@@ -88,32 +90,48 @@ export default function StaffReviewDesignRequestModal({
   };
 
   return (
-    <div className="design-requests-ui fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-6 bg-slate-950/60 backdrop-blur-sm">
-      <div
-        dir="rtl"
-        className="bg-white dark:bg-[#0A0A0A] rounded-t-2xl sm:rounded-2xl border border-slate-200 dark:border-slate-800 shadow-[var(--dr-shadow-card)] w-full sm:max-w-lg max-h-[92dvh] flex flex-col overflow-hidden"
-      >
-        <div className="flex items-center justify-between gap-3 px-6 py-4 border-b border-slate-100 dark:border-slate-800 shrink-0">
-          <div className="min-w-0">
-            <h2
-              className="font-bold text-slate-900 dark:text-slate-100 truncate"
-              style={{ fontSize: "var(--dr-fs-title)" }}
-            >
-              مراجعة الطلب
-            </h2>
-            <p className="text-slate-500 dark:text-slate-400 truncate" style={{ fontSize: "var(--dr-fs-meta)" }}>
-              {charityName} — {title}
-            </p>
-          </div>
-          <button
+    <>
+<Dialog
+scopeClassName="design-requests-ui"
+title="مراجعة الطلب"
+description={<>{charityName} —  {title}</>}
+onClose={onClose}
+closeOnBackdrop={false}
+footer={
+<>
+<button type="button"
             onClick={onClose}
-            className="shrink-0 w-8 h-8 flex items-center justify-center text-slate-400 hover:bg-primary/[0.08] hover:text-primary dark:hover:text-teal-300 rounded-full transition-colors"
+            disabled={isSubmitting}
+            className={btn.secondary}
+            
           >
-            <X className="w-4 h-4" />
+            إلغاء
           </button>
-        </div>
-
-        <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4">
+          {mode === "approve" ? (
+            <button type="button"
+              onClick={handleApprove}
+              disabled={isSubmitting}
+              className={btn.primary}
+              
+            >
+              {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
+              {daysChanged ? `اعتماد بـ${parsedDays || "?"} أيام` : "اعتماد وتأكيد الموعد"}
+            </button>
+          ) : (
+            <button type="button"
+              onClick={handleReject}
+              disabled={isSubmitting}
+              className={btn.primary}
+              
+            >
+              {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Undo2 className="w-4 h-4" />}
+              إعادة مع ملاحظات
+            </button>
+          )}
+</>
+}
+>
+<div className="space-y-4">
           <div className="flex items-center gap-1 bg-slate-50 dark:bg-[#111] border border-slate-100 dark:border-slate-800/80 rounded-xl p-1">
             {([
               { key: "approve" as const, label: "اعتماد", Icon: Check },
@@ -201,41 +219,8 @@ export default function StaffReviewDesignRequestModal({
             </div>
           )}
         </div>
-
-        <div className="flex items-center justify-end gap-2 px-6 py-4 border-t border-slate-100 dark:border-slate-800 shrink-0">
-          <button
-            onClick={onClose}
-            disabled={isSubmitting}
-            className="h-11 px-4 rounded-xl font-bold text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors disabled:opacity-50"
-            style={{ fontSize: "var(--dr-fs-meta)" }}
-          >
-            إلغاء
-          </button>
-          {mode === "approve" ? (
-            <button
-              onClick={handleApprove}
-              disabled={isSubmitting}
-              className="h-11 px-6 flex items-center gap-2 text-white bg-gradient-to-b from-[#17857c] via-primary to-[#0c645d] shadow-[var(--dr-shadow-cta)] hover:shadow-[var(--dr-shadow-cta-hover)] active:translate-y-px rounded-xl font-bold transition-all disabled:opacity-50"
-              style={{ fontSize: "var(--dr-fs-meta)" }}
-            >
-              {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
-              {daysChanged ? `اعتماد بـ${parsedDays || "?"} أيام` : "اعتماد وتأكيد الموعد"}
-            </button>
-          ) : (
-            <button
-              onClick={handleReject}
-              disabled={isSubmitting}
-              className="h-11 px-6 flex items-center gap-2 text-white bg-amber-600 hover:bg-amber-700 active:translate-y-px rounded-xl font-bold transition-all disabled:opacity-50"
-              style={{ fontSize: "var(--dr-fs-meta)" }}
-            >
-              {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Undo2 className="w-4 h-4" />}
-              إعادة مع ملاحظات
-            </button>
-          )}
-        </div>
-      </div>
-
-      <ConfirmDialog
+</Dialog>
+<ConfirmDialog
         isOpen={isConfirmOpen}
         title={mode === "approve" ? "اعتماد الطلب" : "إعادة الطلب مع ملاحظات"}
         message={
@@ -249,6 +234,6 @@ export default function StaffReviewDesignRequestModal({
         onCancel={() => setIsConfirmOpen(false)}
         onConfirm={mode === "approve" ? runApprove : runReject}
       />
-    </div>
+</>
   );
 }

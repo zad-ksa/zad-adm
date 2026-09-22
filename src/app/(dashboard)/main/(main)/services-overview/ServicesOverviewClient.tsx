@@ -42,6 +42,8 @@ import {
 } from "@/app/actions/stageSteps";
 import { updateCharityLogo } from "@/app/actions/charity";
 import { updateTimelineDisplayName } from "@/app/actions/settings";
+import { Dialog } from "@/components/console/Dialog";
+import { btn } from "@/components/console/ui";
 
 type Charity = {
   id: string;
@@ -1580,17 +1582,31 @@ export default function ServicesOverviewClient({
 
       {/* Coming Soon Management Modal */}
       {showAddService && canManageServices && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" dir="rtl">
-          <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={() => setShowAddService(false)}></div>
-          <form
-            onSubmit={handleAddService}
-            className="relative bg-white dark:bg-slate-800 rounded-2xl w-full max-w-md shadow-2xl overflow-hidden border border-slate-200 dark:border-slate-700"
-          >
-            <div className="p-4 border-b border-slate-100 dark:border-slate-700">
-              <h2 className="text-base font-bold text-slate-800 dark:text-slate-100">إضافة خدمة جديدة</h2>
-            </div>
-            <div className="p-4 space-y-4">
-              <div>
+        <Dialog
+title="إضافة خدمة جديدة"
+onClose={() => setShowAddService(false)}
+onSubmit={handleAddService}
+footer={
+<>
+<button
+                type="button"
+                onClick={() => setShowAddService(false)}
+                className={btn.secondary}
+              >
+                إلغاء
+              </button>
+<button
+                type="submit"
+                disabled={isAddingService || !newServiceName.trim()}
+                className={btn.primary}
+              >
+                {isAddingService ? "جاري الحفظ..." : "إضافة"}
+              </button>
+</>
+}
+>
+<div className="space-y-4">
+<div>
                 <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">اسم الخدمة</label>
                 <input
                   autoFocus
@@ -1612,7 +1628,7 @@ export default function ServicesOverviewClient({
                   </p>
                 )}
               </div>
-              <div>
+<div>
                 <div className="flex items-center justify-between mb-2">
                   <label className="text-sm font-bold text-slate-700 dark:text-slate-300">
                     الجمعيات <span className="text-xs font-medium text-slate-400">({newServiceCharityIds.length} من {charities.length})</span>
@@ -1648,51 +1664,27 @@ export default function ServicesOverviewClient({
                   })}
                 </div>
               </div>
-            </div>
-            <div className="flex gap-3 p-4 border-t border-slate-100 dark:border-slate-700">
-              <button
-                type="submit"
-                disabled={isAddingService || !newServiceName.trim()}
-                className="flex-1 bg-primary hover:bg-primary/90 text-white py-2 rounded-xl font-bold transition-colors disabled:opacity-50 text-sm"
-              >
-                {isAddingService ? "جاري الحفظ..." : "إضافة"}
-              </button>
-              <button
-                type="button"
-                onClick={() => setShowAddService(false)}
-                className="flex-1 bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 py-2 rounded-xl font-bold transition-colors text-sm"
-              >
-                إلغاء
-              </button>
-            </div>
-          </form>
-        </div>
+</div>
+</Dialog>
       )}
 
       {showComingSoonModal && canEdit && isGenericTab && genericSvcInfo && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={() => setShowComingSoonModal(false)}></div>
-          <div className="relative bg-white dark:bg-slate-800 rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200 border border-slate-200 dark:border-slate-700" dir="rtl">
-            <div className="p-5 border-b border-slate-100 dark:border-slate-700 flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-amber-500/10 text-amber-500 rounded-xl">
-                  <Clock className="w-6 h-6" />
-                </div>
-                <div>
-                  <h2 className="text-lg font-bold text-slate-800 dark:text-slate-100">
-                    تحديد حالة (قريباً) - {genericSvcInfo.name}
-                  </h2>
-                  <p className="text-xs text-slate-500 dark:text-slate-400">
-                    التحكم في ظهور كلمة "قريباً" في بطاقات الجمعيات لهذه الخدمة
-                  </p>
-                </div>
-              </div>
-              <button onClick={() => setShowComingSoonModal(false)} className="p-1.5 text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg">
-                <X className="w-5 h-5" />
+        <Dialog
+title={<>تحديد حالة (قريباً) -  {genericSvcInfo.name}</>}
+description={<>التحكم في ظهور كلمة "قريباً" في بطاقات الجمعيات لهذه الخدمة</>}
+onClose={() => setShowComingSoonModal(false)}
+footer={
+<>
+<button type="button"
+                onClick={() => setShowComingSoonModal(false)}
+                className={btn.secondary}
+              >
+                إغلاق
               </button>
-            </div>
-
-            <div className="p-5 space-y-5 max-h-[70vh] overflow-y-auto">
+</>
+}
+>
+<div className="space-y-5">
               {/* Option 1: All Charities */}
               <div className="p-4 bg-slate-50 dark:bg-slate-900/50 rounded-xl border border-slate-200/80 dark:border-slate-700 space-y-3">
                 <div className="flex items-center justify-between">
@@ -1762,17 +1754,7 @@ export default function ServicesOverviewClient({
                 </div>
               </div>
             </div>
-
-            <div className="p-4 border-t border-slate-100 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50 flex justify-end">
-              <button
-                onClick={() => setShowComingSoonModal(false)}
-                className="px-4 py-2 text-xs font-bold bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 rounded-lg transition-colors"
-              >
-                إغلاق
-              </button>
-            </div>
-          </div>
-        </div>
+</Dialog>
       )}
 
       {tabs.length === 0 && (
@@ -1783,28 +1765,42 @@ export default function ServicesOverviewClient({
 
       {/* Unify Stages Modal */}
       {unifyCharity && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={() => setUnifyCharity(null)}></div>
-          <div className="relative bg-white dark:bg-slate-800 rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200 border border-slate-200 dark:border-slate-700" dir="rtl">
-            <div className="p-6 border-b border-slate-100 dark:border-slate-700 flex items-center gap-3">
-              <div className="p-2 bg-amber-50 dark:bg-amber-950/30 text-amber-500 rounded-lg">
-                <AlertTriangle className="w-6 h-6" />
-              </div>
-              <div>
-                <h2 className="text-xl font-bold text-slate-800 dark:text-slate-100">
-                  تعميم مراحل {unifyCharity.departmentLabel}
-                </h2>
-                {unifyCharity.sourceTimelineType === "CUSTOM" && !unifyCharity.sourceServiceId && (
-                  <p className="text-xs text-red-500 font-bold mt-1">هذه الجمعية ليس لديها خدمة "{unifyCharity.departmentLabel}" بعد — لا يمكن التعميم منها</p>
-                )}
-                <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
-                  نسخ مراحل قسم "{unifyCharity.departmentLabel}" من جمعية {unifyCharity.name} وتعميمها على كافة الجمعيات الأخرى
-                </p>
-              </div>
-            </div>
-            <form onSubmit={handleUnifySubmit} className="p-6 space-y-5">
-              {/* Target charities selector */}
-              {(() => {
+        <Dialog
+icon={<AlertTriangle className="size-4" />}
+title={<>تعميم مراحل {unifyCharity.departmentLabel}</>}
+description={
+  <>
+    {unifyCharity.sourceTimelineType === "CUSTOM" && !unifyCharity.sourceServiceId && (
+      <span className="mb-1 block font-bold text-red-600 dark:text-red-400">
+        هذه الجمعية ليس لديها خدمة "{unifyCharity.departmentLabel}" بعد — لا يمكن التعميم منها
+      </span>
+    )}
+    نسخ مراحل قسم "{unifyCharity.departmentLabel}" من جمعية {unifyCharity.name} وتعميمها على كافة الجمعيات الأخرى
+  </>
+}
+onClose={() => setUnifyCharity(null)}
+onSubmit={handleUnifySubmit}
+footer={<>
+<button
+                  type="button"
+                  onClick={() => { setUnifyCharity(null); setUnifyTargetIds([]); }}
+                  disabled={isUnifyPending}
+                  className={btn.secondary}
+                >
+                  إلغاء
+                </button>
+<button
+                  type="submit"
+                  disabled={isUnifyPending || unifyTargetIds.length === 0 || (unifyCharity.sourceTimelineType === "CUSTOM" && !unifyCharity.sourceServiceId)}
+                  className={btn.danger}
+                >
+                  {isUnifyPending ? "جاري التعميم..." : `تعميم على ${unifyTargetIds.length} جمعية`}
+                </button>
+</>}
+>
+<div className="space-y-5">
+{/* Target charities selector */}
+{(() => {
                 const otherCharities = charities.filter(c =>
                   c.id !== unifyCharity.id &&
                   (allowedCharityIds === null || allowedCharityIds.includes(c.id))
@@ -1844,49 +1840,26 @@ export default function ServicesOverviewClient({
                   </div>
                 );
               })()}
-
-              {/* Warning box */}
-              <div className="p-4 bg-red-50 dark:bg-red-950/20 border border-red-100 dark:border-red-900/30 rounded-xl flex gap-3">
+{/* Warning box */}
+<div className="p-4 bg-red-50 dark:bg-red-950/20 border border-red-100 dark:border-red-900/30 rounded-xl flex gap-3">
                 <AlertCircle className="w-5 h-5 text-red-500 shrink-0 mt-0.5" />
                 <p className="text-xs text-red-700/90 dark:text-red-300/80 leading-relaxed">
                   سيتم <strong>حذف المراحل الحالية</strong> للجمعيات المحددة واستبدالها بمراحل جمعية <strong>{unifyCharity.name}</strong>. هذا الإجراء غير قابل للتراجع.
                 </p>
               </div>
-
-              <div className="flex gap-3 pt-2 border-t border-slate-100 dark:border-slate-700">
-                <button
-                  type="submit"
-                  disabled={isUnifyPending || unifyTargetIds.length === 0 || (unifyCharity.sourceTimelineType === "CUSTOM" && !unifyCharity.sourceServiceId)}
-                  className="flex-1 bg-red-600 hover:bg-red-700 dark:bg-red-700 dark:hover:bg-red-600 text-white py-3 rounded-xl font-bold transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
-                >
-                  {isUnifyPending ? "جاري التعميم..." : `تعميم على ${unifyTargetIds.length} جمعية`}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => { setUnifyCharity(null); setUnifyTargetIds([]); }}
-                  disabled={isUnifyPending}
-                  className="flex-1 bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 py-3 rounded-xl font-bold transition-colors disabled:opacity-50"
-                >
-                  إلغاء
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
+</div>
+</Dialog>
       )}
 
       {/* Logo edit modal */}
       {logoEditCharityId && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={() => !isLogoPending && setLogoEditCharityId(null)} />
-          <div className="relative bg-white dark:bg-slate-800 rounded-2xl w-full max-w-sm shadow-2xl border border-slate-200 dark:border-slate-700 animate-in zoom-in-95 duration-200" dir="rtl">
-            <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100 dark:border-slate-700">
-              <h3 className="text-sm font-bold text-slate-800 dark:text-slate-100">تغيير شعار الجمعية</h3>
-              <button onClick={() => setLogoEditCharityId(null)} disabled={isLogoPending} className="p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg">
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-            <div className="p-5 space-y-4">
+        <Dialog
+size="sm"
+title="تغيير شعار الجمعية"
+onClose={() => setLogoEditCharityId(null)}
+busy={isLogoPending}
+>
+<div className="space-y-4">
               {/* Preview */}
               <div className="flex justify-center">
                 <button
@@ -1949,8 +1922,7 @@ export default function ServicesOverviewClient({
                 </button>
               </div>
             </div>
-          </div>
-        </div>
+</Dialog>
       )}
 
       {/* Backdrop for dropdown */}
@@ -1974,19 +1946,27 @@ export default function ServicesOverviewClient({
 
       {/* Print charity selection modal */}
       {printModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm" dir="rtl">
-          <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-2xl w-full max-w-md">
-            <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100 dark:border-slate-800">
-              <div className="flex items-center gap-2">
-                <Printer className="w-4 h-4 text-primary" />
-                <h2 className="font-bold text-slate-800 dark:text-slate-100 text-sm">اختر الجمعيات للطباعة</h2>
-              </div>
-              <button onClick={() => setPrintModal(null)} className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400">
-                <X className="w-4 h-4" />
+        <Dialog
+title="اختر الجمعيات للطباعة"
+onClose={() => setPrintModal(null)}
+closeOnBackdrop={false}
+footer={
+<>
+<button type="button" onClick={() => setPrintModal(null)} className={btn.secondary}>
+                إلغاء
               </button>
-            </div>
-
-            <div className="p-4 space-y-2 max-h-72 overflow-y-auto">
+              <button type="button"
+                onClick={executePrint}
+                disabled={printSelected.size === 0}
+                className={btn.primary}
+              >
+                <Printer className="w-4 h-4" />
+                طباعة ({printSelected.size})
+              </button>
+</>
+}
+>
+<div className="space-y-2">
               {/* تحديد الكل / إلغاء الكل */}
               <div className="flex items-center justify-between mb-3 pb-2 border-b border-slate-100 dark:border-slate-800">
                 <span className="text-xs text-slate-500 dark:text-slate-400">
@@ -2026,22 +2006,7 @@ export default function ServicesOverviewClient({
                 </label>
               ))}
             </div>
-
-            <div className="flex items-center justify-end gap-2 px-5 py-4 border-t border-slate-100 dark:border-slate-800">
-              <button onClick={() => setPrintModal(null)} className="px-4 py-2 text-sm text-slate-500 hover:text-slate-700 transition-colors">
-                إلغاء
-              </button>
-              <button
-                onClick={executePrint}
-                disabled={printSelected.size === 0}
-                className="flex items-center gap-2 px-5 py-2 bg-primary hover:bg-primary/90 disabled:opacity-40 text-white rounded-xl text-sm font-bold transition-colors"
-              >
-                <Printer className="w-4 h-4" />
-                طباعة ({printSelected.size})
-              </button>
-            </div>
-          </div>
-        </div>
+</Dialog>
       )}
     </div>
   );

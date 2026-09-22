@@ -21,6 +21,8 @@ import { useRoleLabels } from "@/components/RoleLabelsProvider";
 import { DECIDED_ACTION_NAMES } from "@/lib/requestDecisions";
 import { useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
+import { Dialog } from "@/components/console/Dialog";
+import { btn } from "@/components/console/ui";
 
 const RequestForm = dynamic(() => import("@/components/approvals/RequestFormModal"), { ssr: false });
 const ReviewModal = dynamic(() => import("@/components/approvals/ReviewModal"), { ssr: false });
@@ -899,24 +901,25 @@ export default function RequestsClient({ requests: initial, hasActiveChain, canR
       )}
 
       {reminderOpen && (
-        <div className="fixed inset-0 z-[110] flex items-center justify-center p-4" dir="rtl">
-          <div className="absolute inset-0 bg-slate-950/60 backdrop-blur-sm" onClick={closeReminder} />
-          <div className="relative z-10 w-full max-w-md bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-2xl max-h-[85vh] flex flex-col overflow-hidden">
-            <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100 dark:border-slate-800 shrink-0">
-              <h3 className="text-sm font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
-                <BellRing className="w-4 h-4 text-amber-500" />
-                {reminderTarget ? "رسالة تذكير جاهزة للنسخ" : "من لديهم طلبات معلّقة"}
-              </h3>
-              <button
-                onClick={reminderTarget ? () => { setReminderTargetId(null); setReminderCopied(false); } : closeReminder}
-                className="p-1.5 rounded-lg text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-600 dark:hover:text-slate-200 transition-colors"
-                title={reminderTarget ? "رجوع للقائمة" : "إغلاق"}
-              >
-                {reminderTarget ? <ChevronRight className="w-4 h-4" /> : <X className="w-4 h-4" />}
-              </button>
-            </div>
-
-            {!reminderTarget ? (
+        <Dialog
+icon={<BellRing className="size-4" />}
+title={reminderTarget ? "رسالة تذكير جاهزة للنسخ" : "من لديهم طلبات معلّقة"}
+onClose={closeReminder}
+headerAction={
+  reminderTarget ? (
+    <button
+      type="button"
+      onClick={() => { setReminderTargetId(null); setReminderCopied(false); }}
+      className={btn.ghost}
+      title="رجوع للقائمة"
+    >
+      <ChevronRight className="size-4" />
+      القائمة
+    </button>
+  ) : undefined
+}
+>
+{!reminderTarget ? (
               <div className="overflow-y-auto p-2">
                 {pendingByReviewer.length === 0 ? (
                   <p className="text-xs text-slate-400 dark:text-slate-500 text-center py-10">
@@ -974,8 +977,7 @@ export default function RequestsClient({ requests: initial, hasActiveChain, canR
                 </button>
               </div>
             )}
-          </div>
-        </div>
+</Dialog>
       )}
     </div>
   );

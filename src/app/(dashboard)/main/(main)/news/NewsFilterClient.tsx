@@ -11,17 +11,16 @@ import {
   Building2,
   RotateCcw,
   Plus,
-  Newspaper,
   CheckCircle2,
   AlertCircle,
   Trash2,
-  X,
   Loader2,
   Filter,
   ChevronDown
 } from "lucide-react";
 import { createNewsAction, deleteNewsAction } from "@/app/actions/tasks";
 import { addCategory, deleteCategory } from "@/app/actions/categories";
+import { Dialog } from "@/components/console/Dialog";
 
 interface NewsItem {
   id: string;
@@ -353,19 +352,11 @@ export default function NewsFilterClient({
 
       {/* Modal: Add News Form */}
       {isSecretariatOrAdmin && showNewsForm && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-slate-950/60 backdrop-blur-sm" onClick={() => setShowNewsForm(false)} />
-          <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700/50 shadow-2xl w-full max-w-md relative z-10 p-5 max-h-[90vh] overflow-y-auto" dir="rtl">
-            <div className="flex items-center justify-between mb-4 pb-3 border-b border-slate-100 dark:border-slate-700/50">
-              <h3 className="text-base font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
-                <Newspaper className="w-4 h-4 text-amber-600" />نشر خبر أو إنجاز
-              </h3>
-              <button onClick={() => setShowNewsForm(false)} className="p-1.5 rounded-lg text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors">
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-
-            <form onSubmit={handleCreateNews} className="space-y-4">
+        <Dialog
+title="نشر خبر أو إنجاز"
+onClose={() => setShowNewsForm(false)}
+>
+<form onSubmit={handleCreateNews} className="space-y-4">
               {/* Charities */}
               <div>
                 <label className="block text-[11px] font-bold text-slate-500 dark:text-slate-400 mb-1.5">الجمعيات المعنية</label>
@@ -485,8 +476,7 @@ export default function NewsFilterClient({
                 </button>
               </div>
             </form>
-          </div>
-        </div>
+</Dialog>
       )}
     </main>
   );

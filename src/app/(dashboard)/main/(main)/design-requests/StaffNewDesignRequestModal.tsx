@@ -3,6 +3,8 @@
 import { useState } from "react";
 import Select from "@/components/console/Select";
 import { X, Paperclip, Send, Loader2, AlertTriangle } from "lucide-react";
+import { Dialog } from "@/components/console/Dialog";
+import { btn } from "@/components/console/ui";
 import { createDesignRequestByStaff } from "@/app/actions/designRequests";
 import DesignTypePicker, {
   type DesignTypeOption,
@@ -92,24 +94,27 @@ export default function StaffNewDesignRequestModal({
   };
 
   return (
-    <div className="design-requests-ui fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-slate-950/60 backdrop-blur-sm">
-      <div
-        dir="rtl"
-        className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-[var(--dr-shadow-card)] w-full max-w-lg max-h-[90vh] flex flex-col overflow-hidden"
-      >
-        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 dark:border-slate-800 shrink-0">
-          <h2 className="font-bold text-slate-900 dark:text-slate-100" style={{ fontSize: "var(--dr-fs-title)" }}>
-            طلب تصميم جديد
-          </h2>
-          <button
-            onClick={onClose}
-            className="w-8 h-8 flex items-center justify-center text-slate-400 dark:text-slate-500 hover:bg-primary/[0.08] hover:text-primary dark:hover:text-teal-300 rounded-full transition-colors"
-          >
-            <X className="w-4 h-4" />
+    <>
+    <Dialog
+      scopeClassName="design-requests-ui"
+      title="طلب تصميم جديد"
+      onClose={onClose}
+      busy={isSubmitting}
+      onSubmit={handleSubmit}
+      closeOnBackdrop={false}
+      footer={
+        <>
+          <button type="button" onClick={onClose} disabled={isSubmitting} className={btn.secondary}>
+            إلغاء
           </button>
-        </div>
-
-        <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto px-6 py-4 space-y-4">
+          <button type="submit" disabled={isSubmitting} className={btn.primary}>
+            {isSubmitting ? <Loader2 className="size-4 animate-spin" /> : <Send className="size-4" />}
+            إضافة الطلب
+          </button>
+        </>
+      }
+    >
+        <div className="space-y-4">
           <UploadProgress progress={uploadProgress} />
 
           {error && (
@@ -259,20 +264,8 @@ export default function StaffNewDesignRequestModal({
               </div>
             )}
           </div>
-        </form>
-
-        <div className="flex items-center justify-end gap-2 px-6 py-4 border-t border-slate-100 dark:border-slate-800 shrink-0">
-          <button
-            onClick={handleSubmit}
-            disabled={isSubmitting}
-            className="h-11 px-6 flex items-center gap-2 text-white bg-gradient-to-b from-[#17857c] via-primary to-[#0c645d] shadow-[var(--dr-shadow-cta)] hover:shadow-[var(--dr-shadow-cta-hover)] active:translate-y-px rounded-xl font-bold transition-all disabled:opacity-50"
-            style={{ fontSize: "var(--dr-fs-meta)" }}
-          >
-            {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
-            إضافة الطلب
-          </button>
         </div>
-      </div>
+    </Dialog>
 
       <ConfirmDialog
         isOpen={isConfirmOpen}
@@ -284,6 +277,6 @@ export default function StaffNewDesignRequestModal({
         onCancel={() => setIsConfirmOpen(false)}
         onConfirm={runSubmit}
       />
-    </div>
+    </>
   );
 }

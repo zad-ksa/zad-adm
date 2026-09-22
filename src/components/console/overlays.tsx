@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { MouseEvent, ReactNode } from "react";
 import { Ellipsis, TriangleAlert, X } from "lucide-react";
 import { btn, cx } from "./ui";
+import { useModal } from "./Dialog";
 
 // الطبقات العائمة لصفحات الإدارة: اللوحة الجانبية، والتأكيد، والإشعار، وقائمة الصف.
 
@@ -34,13 +35,9 @@ export function Sheet({
   onSubmit?: () => void;
   busy?: boolean;
 }) {
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape" && !busy) onClose();
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [busy, onClose]);
+  // سلوك النافذة نفسه: Escape، وحبس التركيز، وإعادته إلى من فتحها.
+  const panelRef = useRef<HTMLFormElement>(null);
+  useModal({ open: true, onClose, busy, panelRef });
 
   return (
     <div className="fixed inset-0 z-50" role="dialog" aria-modal="true" aria-label={title}>
@@ -49,6 +46,8 @@ export function Sheet({
         onClick={() => !busy && onClose()}
       />
       <form
+        ref={panelRef}
+        tabIndex={-1}
         onSubmit={(e) => {
           e.preventDefault();
           onSubmit?.();

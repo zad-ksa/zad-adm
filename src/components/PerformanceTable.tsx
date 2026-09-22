@@ -5,6 +5,8 @@ import { notify } from "@/components/console/toastBus";
 import Select from "@/components/console/Select";
 import { savePerformanceMetric } from "@/app/actions/performance";
 import { useRouter } from "next/navigation";
+import { Dialog } from "@/components/console/Dialog";
+import { btn } from "@/components/console/ui";
 
 type Indicator = {
   id: string;
@@ -920,21 +922,36 @@ export default function PerformanceTable({
 
       {/* Custom Modal for editing Axis Prefix */}
       {editingAxis && (
-        <div className="fixed inset-0 bg-slate-900/40 dark:bg-slate-900/80 backdrop-blur-sm flex items-center justify-center z-50 transition-all duration-300 p-4" dir="rtl">
-          <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 max-w-md w-full overflow-hidden shadow-xl transform scale-100 transition-all duration-300">
-            {/* Modal Header */}
-            <div className="bg-slate-50 dark:bg-slate-900/50 px-6 py-5 border-b border-slate-100 dark:border-slate-700 flex items-center justify-between transition-colors">
-              <div>
-                <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100 tracking-tight transition-colors">تعديل رمز المحور</h3>
-                <p className="text-slate-500 dark:text-slate-400 text-xs mt-1 font-medium transition-colors">{editingAxis.name}</p>
-              </div>
-              <div className="w-10 h-10 bg-primary/10 dark:bg-primary/20 rounded-xl flex items-center justify-center text-primary text-xl transition-colors">
-                ✏️
-              </div>
-            </div>
- 
-            {/* Modal Body */}
-            <div className="p-6 md:p-8 space-y-5 text-right transition-colors">
+        <Dialog
+title="تعديل رمز المحور"
+description={editingAxis.name}
+onClose={() => setEditingAxis(null)}
+closeOnBackdrop={false}
+footer={<>
+<button type="button"
+                onClick={() => setEditingAxis(null)}
+                className={btn.secondary}
+              >
+                إلغاء
+              </button>
+<button type="button"
+                onClick={() => {
+                  const trimmed = modalInput.trim();
+                  if (trimmed) {
+                    updateAxisPrefix(editingAxis.id, trimmed);
+                  }
+                  setEditingAxis(null);
+                }}
+                className={btn.primary}
+              >
+                حفظ التعديلات
+              </button>
+</>}
+>
+<div>
+{/* Modal Header */}
+{/* Modal Body */}
+<div className="space-y-5 text-right">
               <div>
                 <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2 transition-colors">الرمز أو البادئة الجديدة للمحور:</label>
                 <input
@@ -963,30 +980,9 @@ export default function PerformanceTable({
                 </p>
               </div>
             </div>
- 
-            {/* Modal Footer */}
-            <div className="bg-slate-50 dark:bg-slate-900/50 px-6 py-5 flex flex-row-reverse gap-3 border-t border-slate-100 dark:border-slate-700 transition-colors">
-              <button
-                onClick={() => {
-                  const trimmed = modalInput.trim();
-                  if (trimmed) {
-                    updateAxisPrefix(editingAxis.id, trimmed);
-                  }
-                  setEditingAxis(null);
-                }}
-                className="bg-primary hover:bg-primary/90 text-white font-bold px-6 py-2.5 rounded-xl text-sm transition-all shadow-sm cursor-pointer flex-1"
-              >
-                حفظ التعديلات
-              </button>
-              <button
-                onClick={() => setEditingAxis(null)}
-                className="bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 font-bold px-6 py-2.5 rounded-xl text-sm border border-slate-200 dark:border-slate-600 transition-all cursor-pointer flex-1 shadow-sm"
-              >
-                إلغاء
-              </button>
-            </div>
-          </div>
-        </div>
+{/* Modal Footer */}
+</div>
+</Dialog>
       )}
     </div>
   );

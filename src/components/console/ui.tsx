@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import Link from "next/link";
 import { Check, Info, Minus, TriangleAlert } from "lucide-react";
 
 // عناصر لوحات الإدارة المشتركة (الموظفون، الصلاحيات). الأحجام بالبكسل صراحةً:
@@ -79,6 +80,9 @@ const BADGE = {
   brand: "border-primary/20 bg-primary/[0.06] text-primary dark:border-teal-400/20 dark:bg-teal-400/10 dark:text-teal-300",
   gold: "border-secondary/25 bg-secondary/[0.08] text-[rgb(161_98_7)] dark:border-amber-400/20 dark:bg-amber-400/10 dark:text-amber-300",
   warn: "border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-500/20 dark:bg-amber-500/10 dark:text-amber-300",
+  // حالتان لا زينة: عاجلٌ/متأخّر، ومنجز.
+  danger: "border-red-200 bg-red-50 text-red-700 dark:border-red-500/20 dark:bg-red-500/10 dark:text-red-300",
+  good: "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-500/20 dark:bg-emerald-500/10 dark:text-emerald-300",
 } as const;
 
 export function Badge({ tone = "neutral", children }: { tone?: keyof typeof BADGE; children: ReactNode }) {
@@ -436,7 +440,7 @@ export function NavCard({
   tone?: keyof typeof METRIC_TONE;
 }) {
   return (
-    <a
+    <Link
       href={href}
       className={cx(
         "group flex flex-col gap-3 rounded-xl border border-slate-200 bg-white p-5 transition-colors",
@@ -455,7 +459,7 @@ export function NavCard({
           ←
         </span>
       </span>
-    </a>
+    </Link>
   );
 }
 

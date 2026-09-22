@@ -1,24 +1,21 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { PageHeader } from "@/components/console/layout";
+import { StatStrip, PageHeader } from "@/components/console/layout";
 import { charityCrumbs } from "@/lib/crumbs";
 import {
-  Coins,
-  Wallet,
-  TrendingUp,
   CheckCircle2,
   AlertCircle,
   CircleDollarSign,
   Calendar,
   Layers,
-  HandCoins,
   History,
   MessageSquare,
   Check,
   X
 } from "lucide-react";
 import { toggleInstallmentPaid } from "@/app/actions/contracts";
+import { ConfirmDialog } from "@/components/console/ConfirmDialog";
 
 interface FinancialLog {
   id: string;
@@ -158,72 +155,20 @@ export default function FinanceClient({
           />
 
       <div className="space-y-5">
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-          <div className="bg-white dark:bg-slate-800 rounded-xl p-4 border border-slate-100 dark:border-slate-700 shadow-sm flex items-center gap-3 hover:shadow-md transition-all relative overflow-hidden group">
-            <div className="absolute top-0 right-0 w-1.5 h-full bg-indigo-500 group-hover:w-2.5 transition-all"></div>
-            <div className="w-8 h-8 bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 rounded-lg flex items-center justify-center shrink-0 shadow-inner">
-              <TrendingUp className="w-4 h-4" />
-            </div>
-            <div>
-              <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 mb-0.5">الإيراد السنوي</p>
-              <h3 className="text-base font-black text-slate-800 dark:text-slate-100">
-                {currentFinance.annualRevenue ? currentFinance.annualRevenue.toLocaleString('en-US') : "0"} <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500">ريال</span>
-              </h3>
-            </div>
-          </div>
-
-          <div className="bg-white dark:bg-slate-800 rounded-xl p-4 border border-slate-100 dark:border-slate-700 shadow-sm flex items-center gap-3 hover:shadow-md transition-all relative overflow-hidden group">
-            <div className="absolute top-0 right-0 w-1.5 h-full bg-blue-500 group-hover:w-2.5 transition-all"></div>
-            <div className="w-8 h-8 bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 rounded-lg flex items-center justify-center shrink-0 shadow-inner">
-              <Coins className="w-4 h-4" />
-            </div>
-            <div>
-              <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 mb-0.5">قيمة العقد</p>
-              <h3 className="text-base font-black text-slate-800 dark:text-slate-100">
-                {currentFinance.contractValue.toLocaleString('en-US')} <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500">ريال</span>
-              </h3>
-            </div>
-          </div>
-
-          <div className="bg-white dark:bg-slate-800 rounded-xl p-4 border border-slate-100 dark:border-slate-700 shadow-sm flex items-center gap-3 hover:shadow-md transition-all relative overflow-hidden group">
-            <div className="absolute top-0 right-0 w-1.5 h-full bg-emerald-500 group-hover:w-2.5 transition-all"></div>
-            <div className="w-8 h-8 bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 rounded-lg flex items-center justify-center shrink-0 shadow-inner">
-              <HandCoins className="w-4 h-4" />
-            </div>
-            <div>
-              <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 mb-0.5">إجمالي المنح</p>
-              <h3 className="text-base font-black text-slate-800 dark:text-slate-100">
-                {currentFinance.grants.toLocaleString('en-US')} <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500">ريال</span>
-              </h3>
-            </div>
-          </div>
-
-          <div className="bg-white dark:bg-slate-800 rounded-xl p-4 border border-slate-100 dark:border-slate-700 shadow-sm flex items-center gap-3 hover:shadow-md transition-all relative overflow-hidden group">
-            <div className="absolute top-0 right-0 w-1.5 h-full bg-purple-500 group-hover:w-2.5 transition-all"></div>
-            <div className="w-8 h-8 bg-purple-50 dark:bg-purple-500/10 text-purple-600 dark:text-purple-400 rounded-lg flex items-center justify-center shrink-0 shadow-inner">
-              <Wallet className="w-4 h-4" />
-            </div>
-            <div>
-              <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 mb-0.5">المبلغ المدفوع</p>
-              <h3 className="text-base font-black text-slate-800 dark:text-slate-100">
-                {currentFinance.paidAmount.toLocaleString('en-US')} <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500">ريال</span>
-              </h3>
-            </div>
-          </div>
-
-          <div className="bg-white dark:bg-slate-800 rounded-xl p-4 border border-slate-100 dark:border-slate-700 shadow-sm flex items-center gap-3 hover:shadow-md transition-all relative overflow-hidden group">
-            <div className="absolute top-0 right-0 w-1.5 h-full bg-amber-500 group-hover:w-2.5 transition-all"></div>
-            <div className="w-8 h-8 bg-amber-50 dark:bg-amber-500/10 text-amber-600 dark:text-amber-400 rounded-lg flex items-center justify-center shrink-0 shadow-inner">
-              <TrendingUp className="w-4 h-4" />
-            </div>
-            <div>
-              <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 mb-0.5">المبلغ المتبقي</p>
-              <h3 className="text-base font-black text-slate-800 dark:text-slate-100">
-                {remainingAmount.toLocaleString('en-US')} <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500">ريال</span>
-              </h3>
-            </div>
-          </div>
-        </div>
+        <StatStrip
+          items={[
+            { label: "الإيراد السنوي", value: (currentFinance.annualRevenue || 0).toLocaleString("en-US"), unit: "ريال" },
+            { label: "قيمة العقد", value: currentFinance.contractValue.toLocaleString("en-US"), unit: "ريال" },
+            { label: "إجمالي المنح", value: currentFinance.grants.toLocaleString("en-US"), unit: "ريال" },
+            { label: "المبلغ المدفوع", value: currentFinance.paidAmount.toLocaleString("en-US"), unit: "ريال", dot: "active" },
+            {
+              label: "المبلغ المتبقي",
+              value: remainingAmount.toLocaleString("en-US"),
+              unit: "ريال",
+              dot: remainingAmount > 0 ? "warn" : undefined,
+            },
+          ]}
+        />
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 items-start">
           {/* Installments Card */}
@@ -309,46 +254,19 @@ export default function FinanceClient({
       </div>
 
       {installmentModal.isOpen && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-fade-in">
-          <div className="bg-white dark:bg-slate-800 rounded-3xl w-full max-w-sm overflow-hidden shadow-2xl border border-slate-100 dark:border-slate-700 text-center">
-            <div className="p-8">
-              <div className={`w-20 h-20 mx-auto rounded-full flex items-center justify-center mb-6 shadow-inner border ${installmentModal.isPaid ? 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-500 border-emerald-100 dark:border-emerald-500/20' : 'bg-amber-50 dark:bg-amber-500/10 text-amber-500 border-amber-100 dark:border-amber-500/20'}`}>
-                {installmentModal.isPaid ? <Check className="w-10 h-10" strokeWidth={3} /> : <X className="w-10 h-10" strokeWidth={3} />}
-              </div>
-              <h3 className="text-xl font-black text-slate-800 dark:text-slate-100 mb-2">
-                {installmentModal.isPaid ? 'تأكيد سداد القسط' : 'إلغاء سداد القسط'}
-              </h3>
-              <p className="text-sm font-bold text-slate-500 dark:text-slate-400 leading-relaxed mb-2">
-                {installmentModal.isPaid
-                  ? 'هل أنت متأكد من تسجيل هذا القسط كمدفوع؟'
-                  : 'هل أنت متأكد من إلغاء سداد هذا القسط؟'}
-              </p>
-              <p className="text-[11px] font-bold text-slate-400 dark:text-slate-500 bg-slate-50 dark:bg-slate-900/50 p-2 rounded-lg inline-block">
-                {installmentModal.isPaid
-                  ? 'سيتم إضافة المبلغ إلى السجل المالي وتحديث إجمالي المدفوعات.'
-                  : 'سيتم خصم المبلغ من السجل المالي وتحديث إجمالي المدفوعات.'}
-              </p>
-            </div>
-            <div className="bg-slate-50 dark:bg-slate-900/50 p-4 flex gap-3 border-t border-slate-100 dark:border-slate-700">
-              <button
-                onClick={() => setInstallmentModal({ isOpen: false, id: null, isPaid: false })}
-                className="flex-1 py-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 font-bold rounded-xl hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
-                disabled={isPending}
-              >
-                تراجع
-              </button>
-              <button
-                onClick={confirmToggleInstallment}
-                disabled={isPending}
-                className={`flex-1 py-3 text-white font-bold rounded-xl transition-colors shadow-lg disabled:opacity-50 ${
-                  installmentModal.isPaid ? 'bg-emerald-500 hover:bg-emerald-600 shadow-emerald-500/30' : 'bg-amber-500 hover:bg-amber-600 shadow-amber-500/30'
-                }`}
-              >
-                {isPending ? 'جاري التنفيذ...' : 'نعم، تأكيد'}
-              </button>
-            </div>
-          </div>
-        </div>
+        <ConfirmDialog
+          title={installmentModal.isPaid ? "تأكيد سداد القسط" : "إلغاء سداد القسط"}
+          message={
+            installmentModal.isPaid
+              ? "سيُسجَّل القسط مدفوعاً، ويُضاف المبلغ إلى السجل المالي وإجمالي المدفوعات."
+              : "سيُلغى سداد القسط، ويُخصم المبلغ من السجل المالي وإجمالي المدفوعات."
+          }
+          confirmLabel={installmentModal.isPaid ? "نعم، تأكيد السداد" : "نعم، إلغاء السداد"}
+          tone={installmentModal.isPaid ? "primary" : "danger"}
+          isPending={isPending}
+          onConfirm={confirmToggleInstallment}
+          onCancel={() => setInstallmentModal({ isOpen: false, id: null, isPaid: false })}
+        />
       )}
     </div>
   );

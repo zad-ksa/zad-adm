@@ -1,8 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { Info, X, CheckCircle2, Circle, Clock } from "lucide-react";
+import { Info, CheckCircle2, Circle, Clock } from "lucide-react";
 import { createPortal } from "react-dom";
+import { Dialog } from "@/components/console/Dialog";
 
 type Step = {
   id: string;
@@ -77,36 +78,15 @@ export default function CurrentServicesCards({ services }: { services: Service[]
     }
 
     return (
-      <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4 sm:p-6 bg-slate-900/40 dark:bg-black/60 backdrop-blur-md animate-in fade-in duration-300">
-        <div className="bg-white dark:bg-[#0A0A0A] w-full max-w-5xl max-h-[90vh] rounded-3xl shadow-2xl dark:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05),_0_0_40px_rgba(0,0,0,0.5)] flex flex-col overflow-hidden border border-slate-200 dark:border-slate-800 animate-in zoom-in-95 duration-400">
-          
-          {/* Header */}
-          <div className="flex items-center justify-between p-6 border-b border-slate-100 dark:border-slate-800/80 bg-white/50 dark:bg-[#0A0A0A]/50">
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 bg-slate-100 dark:bg-[#111111] border border-slate-200 dark:border-slate-800 rounded-xl flex items-center justify-center text-slate-700 dark:text-slate-300 shadow-sm dark:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)]">
-                <Info className="w-5 h-5" />
-              </div>
-              <div>
-                <h2 className="font-semibold text-slate-900 dark:text-slate-50 tracking-tight" style={{ fontSize: 'clamp(1.125rem, 2.5vw, 1.5rem)' }}>
-                  {selectedService.name}
-                </h2>
-                <p className="text-[12px] font-medium text-slate-500 dark:text-slate-400 mt-1 uppercase tracking-widest">
-                  الدليل الشامل للمراحل
-                </p>
-              </div>
-            </div>
-            <button
-              onClick={() => setSelectedService(null)}
-              className="w-10 h-10 rounded-full bg-slate-50 dark:bg-[#111111] border border-slate-200 dark:border-slate-800 flex items-center justify-center text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800/80 hover:text-slate-900 dark:hover:text-slate-100 transition-all duration-300"
-            >
-              <X className="w-5 h-5" />
-            </button>
-          </div>
-
-          {/* Body */}
-          <div className="flex-1 overflow-y-auto p-6 bg-slate-50/50 dark:bg-transparent scroll-smooth">
-            
-            {sequentialStages.length > 0 && (
+      <Dialog
+size="2xl"
+title={<>{selectedService.name}</>}
+description="الدليل الشامل للمراحل"
+onClose={() => setSelectedService(null)}
+closeOnBackdrop={false}
+>
+<div className="bg-slate-50/50 dark:bg-transparent scroll-smooth">
+{sequentialStages.length > 0 && (
               <div className="mb-8">
                 <h3 className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-4 px-1">
                   المسار الزمني (Bento Timeline)
@@ -215,8 +195,7 @@ export default function CurrentServicesCards({ services }: { services: Service[]
                 </div>
               </div>
             )}
-
-            {continuousStages.length > 0 && (
+{continuousStages.length > 0 && (
               <div className="pt-6 border-t border-slate-200 dark:border-slate-800">
                 <h3 className="text-[11px] font-semibold text-emerald-600 dark:text-emerald-500 uppercase tracking-widest mb-4 px-1 flex items-center gap-2">
                   <span className="relative flex h-2 w-2 shrink-0">
@@ -249,9 +228,8 @@ export default function CurrentServicesCards({ services }: { services: Service[]
                 </div>
               </div>
             )}
-          </div>
-        </div>
-      </div>
+</div>
+</Dialog>
     );
   })();
 

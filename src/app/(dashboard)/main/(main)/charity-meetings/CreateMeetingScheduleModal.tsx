@@ -4,6 +4,8 @@ import { useState } from "react";
 import { X, Calendar, Clock, Loader2, Trash2, Wand2 } from "lucide-react";
 import { createMeetingSchedule } from "@/app/actions/meeting-schedules";
 import { formatClock12, WEEKDAY_LABELS } from "@/lib/attendanceTime";
+import { Dialog } from "@/components/console/Dialog";
+import { btn } from "@/components/console/ui";
 
 // Reads the weekday straight off the Y-M-D numbers via Date.UTC, so the name
 // always matches the printed "YYYY-MM-DD" regardless of the browser's own
@@ -139,23 +141,32 @@ export default function CreateMeetingScheduleModal({
   };
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6" dir="rtl">
-      <div className="absolute inset-0 bg-slate-900/40 dark:bg-slate-950/60 backdrop-blur-sm transition-opacity" onClick={onClose} />
-      
-      <div className="relative bg-white dark:bg-slate-900 w-full max-w-xl rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden flex flex-col max-h-[90vh] animate-in zoom-in-95 duration-300">
-        <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full blur-3xl pointer-events-none" />
-        
-        <div className="flex items-center justify-between p-5 border-b border-slate-100 dark:border-slate-800 relative z-10 shrink-0">
-          <h2 className="text-lg font-bold text-slate-900 dark:text-white">إنشاء جدول اجتماعات</h2>
-          <button 
+    <Dialog
+size="lg"
+title="إنشاء جدول اجتماعات"
+onClose={onClose}
+busy={isSubmitting}
+footer={<>
+<button 
+            type="button"
             onClick={onClose}
-            className="p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors"
+            disabled={isSubmitting}
+            className={btn.secondary}
           >
-            <X className="w-5 h-5" />
+            إلغاء
           </button>
-        </div>
-
-        <div className="flex-1 overflow-y-auto custom-scrollbar p-6 relative z-10">
+<button 
+            type="submit" 
+            form="create-schedule-form"
+            disabled={isSubmitting || !hasGenerated}
+            className={btn.primary}
+          >
+            {isSubmitting ? <Loader2 className="w-5 h-5 animate-spin" /> : "حفظ وإنشاء الجدول"}
+          </button>
+</>}
+>
+<div>
+<div>
           <form id="create-schedule-form" onSubmit={handleSubmit} className="space-y-8">
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -312,27 +323,7 @@ export default function CreateMeetingScheduleModal({
             )}
           </form>
         </div>
-
-        <div className="p-5 border-t border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50 relative z-10 shrink-0 flex gap-3">
-          <button 
-            type="submit" 
-            form="create-schedule-form"
-            disabled={isSubmitting || !hasGenerated}
-            className="flex-1 bg-primary text-white py-3 rounded-xl font-bold hover:bg-primary/90 hover:-translate-y-0.5 transition-all shadow-sm active:translate-y-0 disabled:opacity-70 disabled:hover:translate-y-0 flex items-center justify-center gap-2"
-          >
-            {isSubmitting ? <Loader2 className="w-5 h-5 animate-spin" /> : "حفظ وإنشاء الجدول"}
-          </button>
-          <button 
-            type="button"
-            onClick={onClose}
-            disabled={isSubmitting}
-            className="flex-1 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 py-3 rounded-xl font-bold hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors disabled:opacity-70"
-          >
-            إلغاء
-          </button>
-        </div>
-
-      </div>
-    </div>
+</div>
+</Dialog>
   );
 }

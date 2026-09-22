@@ -9,6 +9,9 @@ import {
   CHARITY_PERMISSION_GROUPS,
   ALL_CHARITY_PERMISSION_IDS,
 } from "@/lib/charityPermissions";
+import { Dialog } from "@/components/console/Dialog";
+import { btn } from "@/components/console/ui";
+import { ConfirmDialog } from "@/components/console/ConfirmDialog";
 
 const titles = [
   { value: "CHAIRMAN", label: "رئيس مجلس إدارة" },
@@ -121,22 +124,29 @@ export default function CharityAccountsClient({ charities, accounts: initialAcco
       </div>
 
       {showModal && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-slate-950/60 backdrop-blur-sm" onClick={() => setShowModal(false)} />
-          <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-white/10 shadow-2xl w-full max-w-lg overflow-hidden relative z-10 flex flex-col max-h-[90vh]">
-            <div className="px-6 py-5 border-b border-slate-200 dark:border-white/5 flex justify-between items-center bg-white dark:bg-slate-900">
-              <h3 className="text-lg font-bold text-primary">إضافة حساب جمعية</h3>
-            </div>
-            
-            <form onSubmit={handleAddAccount} className="p-6 overflow-y-auto space-y-5">
-              {errorMsg && (
+        <Dialog
+title="إضافة حساب جمعية"
+onClose={() => setShowModal(false)}
+onSubmit={handleAddAccount}
+footer={
+<>
+<button type="button" onClick={() => setShowModal(false)} disabled={isPending} className={btn.secondary}>
+                  إلغاء
+                </button>
+<button type="submit" disabled={isPending || form.charityIds.length === 0} className={btn.primary}>
+                  {isPending ? "جاري الحفظ..." : "حفظ الحساب"}
+                </button>
+</>
+}
+>
+<div className="space-y-4">
+{errorMsg && (
                 <div className="bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 p-3 rounded-xl flex items-start gap-2 font-bold text-sm">
                   <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
                   <span>{errorMsg}</span>
                 </div>
               )}
-
-              <div className="space-y-4">
+<div className="space-y-4">
                 
                 <div>
                   <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1.5">اسم الممثل</label>
@@ -318,18 +328,8 @@ export default function CharityAccountsClient({ charities, accounts: initialAcco
                 </div>
 
               </div>
-
-              <div className="flex gap-3 pt-4">
-                <button type="submit" disabled={isPending || form.charityIds.length === 0} className="flex-1 bg-primary text-white py-3 rounded-xl font-bold shadow hover:bg-primary/90 transition-colors disabled:opacity-50">
-                  {isPending ? "جاري الحفظ..." : "حفظ الحساب"}
-                </button>
-                <button type="button" onClick={() => setShowModal(false)} disabled={isPending} className="flex-1 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 py-3 rounded-xl font-bold hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors">
-                  إلغاء
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
+</div>
+</Dialog>
       )}
 
       <div className="bg-white dark:bg-black rounded-3xl border border-slate-200 dark:border-white/10 shadow-sm overflow-hidden mb-20">
@@ -384,42 +384,14 @@ export default function CharityAccountsClient({ charities, accounts: initialAcco
 
       {/* Modern Delete Confirmation Modal */}
       {accountToDelete && (
-        <div className="fixed inset-0 z-[110] flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-slate-950/60 backdrop-blur-md" onClick={() => !isPending && setAccountToDelete(null)} />
-          <div className="bg-white dark:bg-slate-900 rounded-3xl border border-red-100 dark:border-red-900/30 shadow-[0_0_40px_rgba(239,68,68,0.1)] dark:shadow-[0_0_40px_rgba(239,68,68,0.15)] w-full max-w-md overflow-hidden relative z-10 flex flex-col p-8 text-center animate-fade-in-up">
-            
-            {/* Background Glow */}
-            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[200%] h-32 bg-red-500/10 dark:bg-red-500/5 blur-3xl pointer-events-none"></div>
-
-            <div className="w-16 h-16 bg-red-50 dark:bg-red-500/10 border border-red-100 dark:border-red-500/20 rounded-2xl flex items-center justify-center mx-auto mb-6 relative">
-              <Trash2 className="w-8 h-8 text-red-500 dark:text-red-400" />
-              <div className="absolute inset-0 bg-red-500/20 rounded-2xl animate-ping opacity-20 pointer-events-none"></div>
-            </div>
-
-            <h3 className="text-[clamp(1.25rem,2vw,1.5rem)] font-black text-slate-800 dark:text-slate-100 mb-2">تأكيد حذف الحساب</h3>
-            <p className="text-[clamp(0.875rem,1.5vw,1rem)] text-slate-500 dark:text-slate-400 mb-8 leading-relaxed">
-              هل أنت متأكد من رغبتك في حذف حساب <span className="font-bold text-slate-700 dark:text-slate-200">{accountToDelete.name}</span> بشكل نهائي؟ هذا الإجراء لا يمكن التراجع عنه.
-            </p>
-
-            <div className="flex gap-4">
-              <button 
-                onClick={confirmDelete}
-                disabled={isPending}
-                className="flex-1 bg-red-500 hover:bg-red-600 text-white py-3.5 rounded-xl font-bold shadow-lg shadow-red-500/20 hover:shadow-red-500/30 transition-all disabled:opacity-50 relative overflow-hidden group"
-              >
-                <div className="absolute inset-0 w-full h-full bg-white/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"></div>
-                {isPending ? "جاري الحذف..." : "نعم، احذف الحساب"}
-              </button>
-              <button 
-                onClick={() => setAccountToDelete(null)}
-                disabled={isPending}
-                className="flex-1 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 py-3.5 rounded-xl font-bold transition-all disabled:opacity-50"
-              >
-                إلغاء التراجع
-              </button>
-            </div>
-          </div>
-        </div>
+        <ConfirmDialog
+          title={`حذف حساب «${accountToDelete.name}»؟`}
+          message="يُحذف الحساب نهائياً، ولا يمكن التراجع عن هذا الإجراء."
+          confirmLabel="نعم، احذف الحساب"
+          isPending={isPending}
+          onConfirm={confirmDelete}
+          onCancel={() => setAccountToDelete(null)}
+        />
       )}
 
       {/* Floating Action Button for Adding Account */}

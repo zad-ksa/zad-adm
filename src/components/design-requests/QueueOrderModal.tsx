@@ -18,8 +18,10 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { AlertTriangle, ArrowDown, ArrowUp, GripVertical, Hammer, Loader2, X } from "lucide-react";
+import { AlertTriangle, ArrowDown, ArrowUp, GripVertical, Hammer, Loader2 } from "lucide-react";
 import { reorderCharityQueue } from "@/app/actions/designRequests";
+import { Dialog } from "@/components/console/Dialog";
+import { btn } from "@/components/console/ui";
 
 /**
  * Arranging one entity's execution queue — used by Zad staff and by the
@@ -159,31 +161,38 @@ export default function QueueOrderModal({
   };
 
   return (
-    <div className="design-requests-ui fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-slate-950/60 backdrop-blur-sm">
-      <div
-        dir="rtl"
-        className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-[var(--dr-shadow-card)] w-full max-w-xl max-h-[88vh] flex flex-col"
-      >
-        <header className="flex items-start justify-between gap-4 p-5 border-b border-slate-100 dark:border-slate-800">
-          <div className="min-w-0">
-            <h2 className="text-[15px] font-black text-slate-900 dark:text-slate-100">
-              ترتيب تنفيذ التصاميم
-            </h2>
-            <p className="mt-0.5 text-[12px] text-slate-500 dark:text-slate-400 break-words">
-              {charityName}
-            </p>
-          </div>
-          <button
+    <Dialog
+size="lg"
+scopeClassName="design-requests-ui"
+title="ترتيب تنفيذ التصاميم"
+description={<>{charityName}</>}
+onClose={onClose}
+closeOnBackdrop={false}
+footer={
+<>
+<button
             type="button"
             onClick={onClose}
-            aria-label="إغلاق"
-            className="shrink-0 p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+            disabled={isSubmitting}
+            className={btn.secondary}
           >
-            <X className="w-4 h-4" />
+            {canReorder ? "إلغاء" : "إغلاق"}
           </button>
-        </header>
-
-        <div className="p-5 overflow-y-auto space-y-4">
+          {canReorder && (
+          <button
+            type="button"
+            onClick={handleSave}
+            disabled={isSubmitting || order.length === 0}
+            className={btn.primary}
+          >
+            {isSubmitting && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+            حفظ الترتيب
+          </button>
+          )}
+</>
+}
+>
+<div className="space-y-4">
           <p className="text-[12px] leading-relaxed text-slate-600 dark:text-slate-400 bg-slate-50 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800 rounded-xl p-3">
             {canReorder
               ? "رتّب الطلبات بالسحب. كل طلب يبدأ حين ينتهي الذي قبله، فتتغيّر مواعيد البدء والتسليم تبعاً للترتيب فور الحفظ."
@@ -297,29 +306,6 @@ export default function QueueOrderModal({
             </div>
           )}
         </div>
-
-        <footer className="flex items-center justify-end gap-2 p-5 border-t border-slate-100 dark:border-slate-800">
-          <button
-            type="button"
-            onClick={onClose}
-            disabled={isSubmitting}
-            className="h-9 px-4 rounded-xl text-[12px] font-bold text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors disabled:opacity-50"
-          >
-            {canReorder ? "إلغاء" : "إغلاق"}
-          </button>
-          {canReorder && (
-          <button
-            type="button"
-            onClick={handleSave}
-            disabled={isSubmitting || order.length === 0}
-            className="h-9 px-5 rounded-xl text-[12px] font-bold text-white bg-gradient-to-b from-[#17857c] via-primary to-[#0c645d] shadow-[var(--dr-shadow-cta)] hover:shadow-[var(--dr-shadow-cta-hover)] active:translate-y-px transition-all disabled:opacity-60 flex items-center gap-2"
-          >
-            {isSubmitting && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
-            حفظ الترتيب
-          </button>
-          )}
-        </footer>
-      </div>
-    </div>
+</Dialog>
   );
 }

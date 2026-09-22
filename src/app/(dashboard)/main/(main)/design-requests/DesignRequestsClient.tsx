@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState, useTransition } from "react";
-import { PageHeader } from "@/components/console/layout";
+import { StatStrip, PageHeader } from "@/components/console/layout";
 import { notify } from "@/components/console/toastBus";
 import Select from "@/components/console/Select";
 import { useRouter } from "next/navigation";
@@ -31,6 +31,8 @@ import { RevisionNotesList } from "@/components/design-requests/RevisionNotesLis
 import ReturnRevisionModal from "@/components/design-requests/ReturnRevisionModal";
 import QueueOrderModal, { type QueueRow } from "@/components/design-requests/QueueOrderModal";
 import DesignGanttModal, { type GanttItem } from "./DesignGanttModal";
+import { Dialog } from "@/components/console/Dialog";
+import { btn } from "@/components/console/ui";
 
 const DESIGN_MAX = maxBytesFor("design_request");
 const DESIGN_MAX_LABEL = maxLabelFor("design_request");
@@ -336,22 +338,13 @@ export default function DesignRequestsClient({
       />
 
       <div className="grid grid-cols-1 gap-4">
-        <div className="flex items-center gap-3 flex-wrap">
-          <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-50 dark:bg-[#111] border border-slate-100 dark:border-slate-800/80">
-            <span className="w-2 h-2 rounded-full bg-primary dark:bg-teal-400"></span>
-            <span className="text-slate-600 dark:text-slate-300 font-bold" style={{ fontSize: "var(--dr-fs-meta)" }}>{pendingCount} قيد التنفيذ</span>
-          </div>
-          {overdueCount > 0 && (
-            <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-rose-50 dark:bg-rose-500/10 border border-rose-100 dark:border-rose-500/20">
-              <span className="w-2 h-2 rounded-full bg-rose-500 animate-pulse"></span>
-              <span className="text-rose-600 dark:text-rose-400 font-bold" style={{ fontSize: "var(--dr-fs-meta)" }}>{overdueCount} متأخر</span>
-            </div>
-          )}
-          <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-50 dark:bg-[#111] border border-slate-100 dark:border-slate-800/80">
-            <span className="w-2 h-2 rounded-full bg-slate-400 dark:bg-slate-500"></span>
-            <span className="text-slate-600 dark:text-slate-300 font-bold" style={{ fontSize: "var(--dr-fs-meta)" }}>{completedCount} منجز</span>
-          </div>
-        </div>
+        <StatStrip
+          items={[
+            { label: "قيد التنفيذ", value: pendingCount, dot: "warn" },
+            { label: "متأخر", value: overdueCount, dot: overdueCount > 0 ? "danger" : "muted" },
+            { label: "منجز", value: completedCount, dot: "active" },
+          ]}
+        />
 
         {/* Bento Box 3: Filters & Tabs */}
         <div className="md:col-span-3 bg-white dark:bg-[#0A0A0A] border border-slate-200 dark:border-slate-800 rounded-2xl p-3 shadow-sm flex items-center justify-between gap-3 flex-wrap">
@@ -805,23 +798,47 @@ export default function DesignRequestsClient({
       )}
 
       {confirmingId !== null && (
-        <div className="design-requests-ui fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm">
-          <div
-            dir="rtl"
-            className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-[var(--dr-shadow-card)] w-full max-w-sm p-6 text-center"
-          >
-            <div className="mx-auto w-12 h-12 rounded-full bg-primary/10 dark:bg-primary/15 flex items-center justify-center mb-4">
-              <AlertTriangle className="w-6 h-6 text-primary dark:text-teal-300" />
-            </div>
-            <h3 className="font-bold text-slate-900 dark:text-slate-100 mb-2" style={{ fontSize: "var(--dr-fs-title)" }}>
-              إنهاء طلب التصميم
-            </h3>
-            <p className="text-slate-500 dark:text-slate-400 mb-4" style={{ fontSize: "var(--dr-fs-body)" }}>
-              سيتم وضع الطلب كمُنجز، وحذف ملفات الجمعية المرفقة مع الطلب من التخزين. أما
-              الملفات النهائية التي ترفعها هنا فتبقى وتظهر للجمعية.
-            </p>
-
-            <div className="mb-6 text-right">
+        <Dialog
+size="sm"
+scopeClassName="design-requests-ui"
+icon={<AlertTriangle className="size-4" />}
+title="إنهاء طلب التصميم"
+description="سيتم وضع الطلب كمُنجز، وحذف ملفات الجمعية المرفقة مع الطلب من التخزين. أما الملفات النهائية التي ترفعها هنا فتبقى وتظهر للجمعية."
+onClose={() => {
+  setConfirmingId(null);
+  setDeliverables([]);
+  setCompletionNote("");
+  setDeliverableError(null);
+}}
+busy={isCompleting}
+closeOnBackdrop={false}
+footer={<>
+<button type="button"
+                onClick={() => {
+                  setConfirmingId(null);
+                  setDeliverables([]);
+                  setCompletionNote("");
+                  setDeliverableError(null);
+                }}
+                disabled={isCompleting}
+                className={btn.secondary}
+                style={{ fontSize: "var(--dr-fs-meta)" }}
+              >
+                إلغاء
+              </button>
+              <button type="button"
+                onClick={handleComplete}
+                disabled={isCompleting}
+                className={btn.primary}
+                style={{ fontSize: "var(--dr-fs-meta)" }}
+              >
+                {isCompleting && <Loader2 className="w-4 h-4 animate-spin" />}
+                إنهاء الطلب
+              </button>
+</>}
+>
+<div>
+<div className="text-right">
               <UploadProgress progress={uploadProgress} />
 
               {deliverableError && (
@@ -899,32 +916,8 @@ export default function DesignRequestsClient({
                 style={{ fontSize: "var(--dr-fs-meta)" }}
               />
             </div>
-            <div className="flex items-center gap-3">
-              <button
-                onClick={() => {
-                  setConfirmingId(null);
-                  setDeliverables([]);
-                  setCompletionNote("");
-                  setDeliverableError(null);
-                }}
-                disabled={isCompleting}
-                className="flex-1 h-10 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 font-bold transition-colors disabled:opacity-50"
-                style={{ fontSize: "var(--dr-fs-meta)" }}
-              >
-                إلغاء
-              </button>
-              <button
-                onClick={handleComplete}
-                disabled={isCompleting}
-                className="flex-1 h-10 flex items-center justify-center gap-2 rounded-xl text-white bg-gradient-to-b from-[#17857c] via-primary to-[#0c645d] shadow-[var(--dr-shadow-cta)] font-bold transition-all disabled:opacity-60"
-                style={{ fontSize: "var(--dr-fs-meta)" }}
-              >
-                {isCompleting && <Loader2 className="w-4 h-4 animate-spin" />}
-                إنهاء الطلب
-              </button>
-            </div>
-          </div>
-        </div>
+</div>
+</Dialog>
       )}
 
       {ganttNow !== null && (
@@ -977,41 +970,14 @@ export default function DesignRequestsClient({
       />
 
       {deletingId !== null && (
-        <div className="design-requests-ui fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm">
-          <div
-            dir="rtl"
-            className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-[var(--dr-shadow-card)] w-full max-w-sm p-6 text-center"
-          >
-            <div className="mx-auto w-12 h-12 rounded-full bg-rose-500/10 flex items-center justify-center mb-4">
-              <AlertTriangle className="w-6 h-6 text-rose-500" />
-            </div>
-            <h3 className="font-bold text-slate-900 dark:text-slate-100 mb-2" style={{ fontSize: "var(--dr-fs-title)" }}>
-              حذف الطلب
-            </h3>
-            <p className="text-slate-500 dark:text-slate-400 mb-6" style={{ fontSize: "var(--dr-fs-body)" }}>
-              سيُحذف الطلب وكل ملفاته نهائياً — مرفقات الجمعية والملفات النهائية معاً — من التخزين ومن السجل. لا يمكن التراجع.
-            </p>
-            <div className="flex items-center gap-3">
-              <button
-                onClick={() => setDeletingId(null)}
-                disabled={isDeleting}
-                className="flex-1 h-10 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 font-bold transition-colors disabled:opacity-50"
-                style={{ fontSize: "var(--dr-fs-meta)" }}
-              >
-                إلغاء
-              </button>
-              <button
-                onClick={handleDelete}
-                disabled={isDeleting}
-                className="flex-1 h-10 flex items-center justify-center gap-2 rounded-xl text-white bg-rose-600 hover:bg-rose-700 shadow-sm font-bold transition-all disabled:opacity-60"
-                style={{ fontSize: "var(--dr-fs-meta)" }}
-              >
-                {isDeleting && <Loader2 className="w-4 h-4 animate-spin" />}
-                تأكيد الحذف
-              </button>
-            </div>
-          </div>
-        </div>
+        <ConfirmDialog
+          title="حذف الطلب"
+          message="سيُحذف الطلب وكل ملفاته نهائياً — مرفقات الجمعية والملفات النهائية معاً — من التخزين ومن السجل. لا يمكن التراجع."
+          confirmLabel="تأكيد الحذف"
+          isPending={isDeleting}
+          onConfirm={handleDelete}
+          onCancel={() => setDeletingId(null)}
+        />
       )}
     </div>
   );

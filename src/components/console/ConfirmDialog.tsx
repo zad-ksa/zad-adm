@@ -1,6 +1,8 @@
 "use client";
 
+import { useRef } from "react";
 import { AlertTriangle, HelpCircle } from "lucide-react";
+import { Portal, useModal } from "./Dialog";
 import { Spinner, btn, cx } from "./ui";
 
 /**
@@ -16,6 +18,9 @@ import { Spinner, btn, cx } from "./ui";
  *
  * ولا يُغلق بالنقر خارجه أثناء التنفيذ: إغلاقٌ في منتصف عمليةٍ جارية يترك
  * المستخدم لا يدري أتمّت أم أُلغيت.
+ *
+ * وسلوكه سلوك `Dialog` نفسه: Escape يلغي، والتركيز محبوسٌ فيه ويبدأ على
+ * «إلغاء» لا على الفعل الخطِر — Enter عابرٌ لا يحذف شيئاً.
  */
 export function ConfirmDialog({
   isOpen = true,
@@ -41,18 +46,25 @@ export function ConfirmDialog({
   onConfirm: () => void;
   onCancel: () => void;
 }) {
+  const panelRef = useRef<HTMLDivElement>(null);
+  const cancelRef = useRef<HTMLButtonElement>(null);
+  useModal({ open: isOpen, onClose: onCancel, busy: isPending, panelRef, initialFocusRef: cancelRef });
+
   if (!isOpen) return null;
 
   const isDanger = tone === "danger";
 
   if (variant === "console") {
     return (
+      <Portal>
       <div className="fixed inset-0 z-[100] flex items-center justify-center p-4" dir="rtl">
         <div
           className="absolute inset-0 bg-slate-950/40 backdrop-blur-[2px] motion-safe:animate-[zad-fade-in_150ms_ease-out]"
           onClick={() => !isPending && onCancel()}
         />
         <div
+          ref={panelRef}
+          tabIndex={-1}
           role="alertdialog"
           aria-modal="true"
           aria-label={title}
@@ -63,7 +75,7 @@ export function ConfirmDialog({
             {message && <p className="text-[13.5px] leading-6 text-slate-500 dark:text-slate-400">{message}</p>}
           </div>
           <div className="flex justify-end gap-2 border-t border-slate-100 bg-slate-50/70 px-5 py-3 dark:border-slate-800 dark:bg-slate-950/40">
-            <button type="button" onClick={onCancel} disabled={isPending} className={btn.secondary}>
+            <button ref={cancelRef} type="button" onClick={onCancel} disabled={isPending} className={btn.secondary}>
               إلغاء
             </button>
             <button
@@ -78,10 +90,12 @@ export function ConfirmDialog({
           </div>
         </div>
       </div>
+      </Portal>
     );
   }
 
   return (
+    <Portal>
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
       <div
         className="absolute inset-0 bg-slate-950/50 backdrop-blur-sm transition-opacity"
@@ -89,6 +103,8 @@ export function ConfirmDialog({
       />
 
       <div
+        ref={panelRef}
+        tabIndex={-1}
         role="alertdialog"
         aria-modal="true"
         aria-label={title}
@@ -113,6 +129,7 @@ export function ConfirmDialog({
 
         <div className="flex w-full items-center gap-3">
           <button
+            ref={cancelRef}
             type="button"
             onClick={onCancel}
             disabled={isPending}
@@ -136,6 +153,7 @@ export function ConfirmDialog({
         </div>
       </div>
     </div>
+    </Portal>
   );
 }
 

@@ -5,6 +5,8 @@ import { confirmAction } from "@/components/console/confirmBus";
 import Select from "@/components/console/Select";
 import { Plus, Link as LinkIcon, FileText, Scale, Cpu, Eye, EyeOff, Trash2, Building } from "lucide-react";
 import { addRegulation, deleteRegulation, toggleRegulationVisibility } from "@/app/actions/governance";
+import { Dialog } from "@/components/console/Dialog";
+import { btn } from "@/components/console/ui";
 
 type CharityRegulationVisibility = {
   id: string;
@@ -220,15 +222,32 @@ export default function GovernanceRegulationsManager({
 
       {/* Add Modal */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="bg-white dark:bg-slate-800 rounded-2xl w-full max-w-md shadow-2xl overflow-hidden" onClick={e => e.stopPropagation()}>
-            <div className="p-6 border-b border-slate-100 dark:border-slate-700">
-              <h3 className="text-xl font-bold text-slate-800 dark:text-slate-100">إضافة خدمة جديدة للمنصة</h3>
-              <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">ستكون هذه الخدمة متاحة لجميع الجمعيات بشكل افتراضي.</p>
-            </div>
-
-            <form onSubmit={handleAddRegulation} className="p-6 space-y-4">
-              <div>
+        <Dialog
+title="إضافة خدمة جديدة للمنصة"
+description="ستكون هذه الخدمة متاحة لجميع الجمعيات بشكل افتراضي."
+onClose={() => setIsModalOpen(false)}
+busy={isSubmitting}
+onSubmit={handleAddRegulation}
+closeOnBackdrop={false}
+footer={<>
+<button
+                  type="button"
+                  onClick={() => setIsModalOpen(false)}
+                  className={btn.secondary}
+                >
+                  إلغاء
+                </button>
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className={btn.primary}
+                >
+                  {isSubmitting ? "جاري الحفظ..." : "حفظ الخدمة"}
+                </button>
+</>}
+>
+<div className="space-y-4">
+<div>
                 <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
                   عنوان الخدمة
                 </label>
@@ -241,8 +260,7 @@ export default function GovernanceRegulationsManager({
                   placeholder="مثال: تنظيم التبرعات"
                 />
               </div>
-
-              <div>
+<div>
                 <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
                   الوصف (اختياري)
                 </label>
@@ -254,8 +272,7 @@ export default function GovernanceRegulationsManager({
                   rows={3}
                 ></textarea>
               </div>
-
-              <div>
+<div>
                 <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
                   القسم
                 </label>
@@ -272,8 +289,7 @@ export default function GovernanceRegulationsManager({
                   className="w-full [&>button]:w-full [&>button]:justify-between"
                 />
               </div>
-
-              <div>
+<div>
                 <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
                   الرابط (المركز الوطني)
                 </label>
@@ -286,26 +302,8 @@ export default function GovernanceRegulationsManager({
                   placeholder="https://ncnp.gov.sa/..."
                 />
               </div>
-
-              <div className="flex gap-3 pt-4">
-                <button
-                  type="button"
-                  onClick={() => setIsModalOpen(false)}
-                  className="flex-1 px-4 py-2 bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-xl hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors font-medium"
-                >
-                  إلغاء
-                </button>
-                <button
-                  type="submit"
-                  disabled={isSubmitting}
-                  className="flex-1 px-4 py-2 bg-emerald-500 text-white rounded-xl hover:bg-emerald-600 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {isSubmitting ? "جاري الحفظ..." : "حفظ الخدمة"}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
+</div>
+</Dialog>
       )}
     </div>
   );

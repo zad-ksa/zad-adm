@@ -1,12 +1,14 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { PageHeader } from "@/components/console/layout";
+import { StatStrip, PageHeader } from "@/components/console/layout";
 import { charityCrumbs } from "@/lib/crumbs";
 import { confirmAction } from "@/components/console/confirmBus";
 import Select from "@/components/console/Select";
 import { FileText, Plus, Trash2, CheckCircle2, AlertCircle, TrendingUp, Check, X, Calendar, Edit, HandCoins } from "lucide-react";
 import { addGrantApplication, updateGrantApplicationStatus, deleteGrantApplication } from "@/app/actions/charity";
+import { Dialog } from "@/components/console/Dialog";
+import { btn } from "@/components/console/ui";
 
 interface GrantApplication {
   id: string;
@@ -240,32 +242,15 @@ export default function GrantsClient({
             icon={<FileText className="w-6 h-6" />}
             title="المنح"
             description="متابعة دقيقة لطلبات المنح ومراحل الاعتماد والإغلاق"
-            actions={
-          <div className="flex gap-3 flex-wrap">
-            <div className="bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-400 px-4 py-2 rounded-xl flex items-center gap-2 border border-amber-100 dark:border-amber-500/20 shadow-sm">
-              <div className="bg-amber-100 dark:bg-amber-500/20 p-1 rounded-md shrink-0"><FileText className="w-3.5 h-3.5" /></div>
-              <div className="flex flex-col">
-                <span className="text-[10px] font-bold opacity-80">المنح المرفوعة (قيد المعالجة)</span>
-                <span className="text-sm font-black">{pendingGrants.length}</span>
-              </div>
-            </div>
-            <div className="bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 px-4 py-2 rounded-xl flex items-center gap-2 border border-emerald-100 dark:border-emerald-500/20 shadow-sm">
-              <div className="bg-emerald-100 dark:bg-emerald-500/20 p-1 rounded-md shrink-0"><CheckCircle2 className="w-3.5 h-3.5" /></div>
-              <div className="flex flex-col">
-                <span className="text-[10px] font-bold opacity-80">المنح المقبولة (النشطة)</span>
-                <span className="text-sm font-black">{approvedGrants.length}</span>
-              </div>
-            </div>
-            <div className="bg-slate-50 dark:bg-slate-700 text-slate-700 dark:text-slate-300 px-4 py-2 rounded-xl flex items-center gap-2 border border-slate-200 dark:border-slate-600 shadow-sm">
-              <div className="bg-slate-200 dark:bg-slate-600 p-1 rounded-md shrink-0"><Check className="w-3.5 h-3.5" /></div>
-              <div className="flex flex-col">
-                <span className="text-[10px] font-bold opacity-80">المنح المغلقة</span>
-                <span className="text-sm font-black">{closedGrants.length}</span>
-              </div>
-            </div>
-          </div>
-            }
           />
+
+      <StatStrip
+        items={[
+          { label: "المنح المرفوعة (قيد المعالجة)", value: pendingGrants.length, dot: "warn" },
+          { label: "المنح المقبولة (النشطة)", value: approvedGrants.length, dot: "active" },
+          { label: "المنح المغلقة", value: closedGrants.length, dot: "muted" },
+        ]}
+      />
 
       <div className="flex justify-between items-center bg-white dark:bg-slate-800 p-2 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700 overflow-x-auto">
         <div className="flex gap-1">
@@ -444,121 +429,92 @@ export default function GrantsClient({
 
       {/* Approval Modal */}
       {grantApprovalModal.isOpen && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in">
-          <div className="bg-white dark:bg-slate-800 rounded-3xl w-full max-w-lg overflow-hidden shadow-2xl border border-slate-100 dark:border-slate-700 flex flex-col max-h-[90vh]">
-            <div className="p-6 md:p-8 overflow-y-auto custom-scrollbar">
-              <div className="flex justify-between items-start mb-6">
-                <div className="w-14 h-14 bg-emerald-50 dark:bg-emerald-500/10 text-emerald-500 rounded-2xl flex items-center justify-center shadow-inner border border-emerald-100 dark:border-emerald-500/20">
-                  <CheckCircle2 className="w-7 h-7" />
-                </div>
-                <button onClick={() => { setGrantApprovalModal({ isOpen: false, grantId: null }); }} className="p-2 bg-slate-50 dark:bg-slate-700 text-slate-400 dark:text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 rounded-xl">
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
-
-              <h3 className="text-xl font-black text-slate-800 dark:text-slate-100 mb-2">تأكيد قبول واعتماد المنحة</h3>
-              <p className="text-xs font-bold text-slate-500 dark:text-slate-400 mb-6 leading-relaxed">
-                الرجاء استكمال البيانات التالية للمنحة لتنتقل إلى قسم المنح المقبولة بشكل سليم. (المبلغ هو الحقل الإلزامي الوحيد)
-              </p>
-
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-xs font-black text-slate-700 dark:text-slate-200 mb-1">المبلغ المعتمد النهائي (ريال) *</label>
-                  <input
-                    type="number" min="1" required autoFocus
-                    value={approvalForm.amount}
-                    onChange={(e) => setApprovalForm({...approvalForm, amount: e.target.value})}
-                    className="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-base outline-none focus:ring-2 focus:ring-emerald-500 font-black text-emerald-700 dark:text-emerald-400"
-                    placeholder="المبلغ"
-                  />
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-xs font-black text-slate-700 dark:text-slate-200 mb-1">التحصيل (المبلغ المتحصل عليه)</label>
-                    <input
-                      type="number" min="0"
-                      value={approvalForm.collectedAmount}
-                      onChange={(e) => setApprovalForm({...approvalForm, collectedAmount: e.target.value})}
-                      className="w-full bg-white dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-emerald-500 font-bold dark:text-slate-100"
-                      placeholder="اختياري"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-black text-slate-700 dark:text-slate-200 mb-1">عدد المستفيدين</label>
-                    <input
-                      type="number" min="0"
-                      value={approvalForm.beneficiariesCount}
-                      onChange={(e) => setApprovalForm({...approvalForm, beneficiariesCount: e.target.value})}
-                      className="w-full bg-white dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-emerald-500 font-bold dark:text-slate-100"
-                      placeholder="اختياري"
-                    />
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div className="bg-slate-50 dark:bg-slate-900/50 p-4 flex gap-3 border-t border-slate-100 dark:border-slate-700 shrink-0">
-              <button
-                onClick={() => { setGrantApprovalModal({ isOpen: false, grantId: null }); }}
-                className="flex-1 py-3.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 font-bold rounded-xl hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
-                disabled={isPending}
-              >
+        <Dialog
+          icon={<CheckCircle2 className="size-4" />}
+          title="تأكيد قبول واعتماد المنحة"
+          description="استكمل بيانات المنحة لتنتقل إلى المنح المقبولة. المبلغ هو الحقل الإلزامي الوحيد."
+          onClose={() => setGrantApprovalModal({ isOpen: false, grantId: null })}
+          busy={isPending}
+          closeOnBackdrop={false}
+          footer={
+            <>
+              <button type="button" onClick={() => setGrantApprovalModal({ isOpen: false, grantId: null })} disabled={isPending} className={btn.secondary}>
                 إلغاء
               </button>
-              <button
-                onClick={confirmGrantApproval}
-                disabled={isPending || !approvalForm.amount}
-                className="flex-[2] py-3.5 bg-emerald-500 text-white font-bold rounded-xl hover:bg-emerald-600 transition-colors shadow-lg shadow-emerald-500/30 disabled:opacity-50 flex items-center justify-center gap-2"
-              >
-                <CheckCircle2 className="w-5 h-5" />
-                {isPending ? 'جاري الاعتماد...' : 'تأكيد وحفظ'}
+              <button type="button" onClick={confirmGrantApproval} disabled={isPending || !approvalForm.amount} className={btn.primary}>
+                <CheckCircle2 className="size-4" />
+                {isPending ? "جاري الاعتماد..." : "تأكيد وحفظ"}
               </button>
+            </>
+          }
+        >
+          <div className="space-y-4">
+            <div>
+              <label className="block text-xs font-black text-slate-700 dark:text-slate-200 mb-1">المبلغ المعتمد النهائي (ريال) *</label>
+              <input
+                type="number" min="1" required autoFocus
+                value={approvalForm.amount}
+                onChange={(e) => setApprovalForm({...approvalForm, amount: e.target.value})}
+                className="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-base outline-none focus:ring-2 focus:ring-emerald-500 font-black text-emerald-700 dark:text-emerald-400"
+                placeholder="المبلغ"
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-black text-slate-700 dark:text-slate-200 mb-1">التحصيل (المبلغ المتحصل عليه)</label>
+                <input
+                  type="number" min="0"
+                  value={approvalForm.collectedAmount}
+                  onChange={(e) => setApprovalForm({...approvalForm, collectedAmount: e.target.value})}
+                  className="w-full bg-white dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-emerald-500 font-bold dark:text-slate-100"
+                  placeholder="اختياري"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-black text-slate-700 dark:text-slate-200 mb-1">عدد المستفيدين</label>
+                <input
+                  type="number" min="0"
+                  value={approvalForm.beneficiariesCount}
+                  onChange={(e) => setApprovalForm({...approvalForm, beneficiariesCount: e.target.value})}
+                  className="w-full bg-white dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-emerald-500 font-bold dark:text-slate-100"
+                  placeholder="اختياري"
+                />
+              </div>
             </div>
           </div>
-        </div>
+        </Dialog>
       )}
 
       {/* Closure Modal */}
       {closureModal.isOpen && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in">
-          <div className="bg-white dark:bg-slate-800 rounded-3xl w-full max-w-sm overflow-hidden shadow-2xl border border-slate-100 dark:border-slate-700">
-            <div className="p-8 text-center">
-              <div className="w-20 h-20 mx-auto bg-slate-50 dark:bg-slate-700 text-slate-600 dark:text-slate-300 rounded-full flex items-center justify-center mb-6 shadow-inner border border-slate-200 dark:border-slate-600">
-                <Check className="w-10 h-10" strokeWidth={3} />
-              </div>
-              <h3 className="text-xl font-black text-slate-800 dark:text-slate-100 mb-2">إغلاق المشروع</h3>
-              <p className="text-xs font-bold text-slate-500 dark:text-slate-400 leading-relaxed mb-6">
-                سيتم إغلاق المنحة بالكامل ونقلها إلى قسم المنح المغلقة للحفظ والأرشفة. يرجى تحديد تاريخ الإغلاق.
-              </p>
-
-              <div className="text-right">
-                <label className="block text-xs font-black text-slate-700 dark:text-slate-200 mb-1">تاريخ الإغلاق *</label>
-                <input
-                  type="date"
-                  value={closureDate}
-                  onChange={(e) => setClosureDate(e.target.value)}
-                  className="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-base outline-none focus:ring-2 focus:ring-slate-500 font-black text-slate-800 dark:text-slate-100 text-right"
-                />
-              </div>
-            </div>
-            <div className="bg-slate-50 dark:bg-slate-900/50 p-4 flex gap-3 border-t border-slate-100 dark:border-slate-700">
-              <button
-                onClick={() => { setClosureModal({ isOpen: false, grantId: null }); setClosureDate(""); }}
-                className="flex-1 py-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 font-bold rounded-xl hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
-                disabled={isPending}
-              >
+        <Dialog
+          size="sm"
+          icon={<Check className="size-4" />}
+          title="إغلاق المشروع"
+          description="تُغلق المنحة بالكامل وتنتقل إلى المنح المغلقة للحفظ والأرشفة."
+          onClose={() => { setClosureModal({ isOpen: false, grantId: null }); setClosureDate(""); }}
+          busy={isPending}
+          closeOnBackdrop={false}
+          footer={
+            <>
+              <button type="button" onClick={() => { setClosureModal({ isOpen: false, grantId: null }); setClosureDate(""); }} disabled={isPending} className={btn.secondary}>
                 إلغاء
               </button>
-              <button
-                onClick={confirmClosure}
-                disabled={isPending || !closureDate}
-                className="flex-1 py-3 bg-slate-800 text-white font-bold rounded-xl hover:bg-slate-700 transition-colors shadow-lg disabled:opacity-50"
-              >
-                {isPending ? 'جاري الإغلاق...' : 'تأكيد الإغلاق'}
+              <button type="button" onClick={confirmClosure} disabled={isPending || !closureDate} className={btn.primary}>
+                {isPending ? "جاري الإغلاق..." : "تأكيد الإغلاق"}
               </button>
-            </div>
-          </div>
-        </div>
+            </>
+          }
+        >
+          <label className="block text-xs font-black text-slate-700 dark:text-slate-200 mb-1">تاريخ الإغلاق *</label>
+          <input
+            type="date"
+            value={closureDate}
+            onChange={(e) => setClosureDate(e.target.value)}
+            className="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-base outline-none focus:ring-2 focus:ring-slate-500 font-black text-slate-800 dark:text-slate-100 text-right"
+          />
+        </Dialog>
       )}
     </div>
   );

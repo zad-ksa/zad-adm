@@ -1,7 +1,8 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import { CalendarRange, Table2, X } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { CalendarRange, Table2 } from "lucide-react";
+import { Dialog } from "@/components/console/Dialog";
 
 /**
  * Every scheduled design on one timeline, a row per charity.
@@ -53,6 +54,48 @@ const fmtFull = (ms: number) =>
   new Intl.DateTimeFormat("ar-SA", { dateStyle: "medium", timeZone: "Asia/Riyadh" })
     .format(new Date(ms));
 
+/**
+ * Where the tooltip sits: centred over the bar it describes, read once from the
+ * bar's box when the pointer arrives — not from the pointer, so it holds still
+ * while the mouse travels along the bar.
+ *
+ * Physical `left`, not `inset-inline-start`: the box comes from
+ * getBoundingClientRect, which measures from the left edge. Feeding that to a
+ * logical property in an RTL page mirrored it — a bar on the right got its
+ * tooltip on the left.
+ *
+ * Near a screen edge the tooltip slides inward to stay whole, and its pointer
+ * shifts the other way so it still lands on the bar. With no room above (a bar
+ * in the first rows), it opens below instead.
+ */
+const TOOLTIP_HALF = 130; // half of max-w-[260px]
+const TOOLTIP_GAP = 8;
+const TOOLTIP_ROOM = 96; // roughly the tooltip's height plus its gap
+
+type Anchor = {
+  item: GanttItem;
+  center: number;
+  top: number;
+  bottom: number;
+  below: boolean;
+  arrowShift: number;
+};
+
+function anchorTo(item: GanttItem, bar: HTMLElement): Anchor {
+  const r = bar.getBoundingClientRect();
+  const barCenter = r.left + r.width / 2;
+  const margin = TOOLTIP_HALF + 8;
+  const center = Math.min(Math.max(barCenter, margin), window.innerWidth - margin);
+  return {
+    item,
+    center,
+    top: r.top,
+    bottom: r.bottom,
+    below: r.top < TOOLTIP_ROOM,
+    arrowShift: barCenter - center,
+  };
+}
+
 export default function DesignGanttModal({
   items,
   now,
@@ -71,7 +114,20 @@ export default function DesignGanttModal({
 }) {
   const [showDelivered, setShowDelivered] = useState(false);
   const [asTable, setAsTable] = useState(false);
-  const [hovered, setHovered] = useState<{ item: GanttItem; x: number; y: number } | null>(null);
+  const [hovered, setHovered] = useState<Anchor | null>(null);
+
+  // The tooltip is pinned to where the bar was; once the chart scrolls, that
+  // place is wrong. Hide it rather than leave it floating over another bar.
+  useEffect(() => {
+    if (!hovered) return;
+    const hide = () => setHovered(null);
+    window.addEventListener("scroll", hide, true);
+    window.addEventListener("resize", hide);
+    return () => {
+      window.removeEventListener("scroll", hide, true);
+      window.removeEventListener("resize", hide);
+    };
+  }, [hovered]);
 
   const visible = useMemo(
     () => (showDelivered ? items : items.filter((i) => laneOf(i) !== "DELIVERED")),
@@ -118,15 +174,19 @@ export default function DesignGanttModal({
   const nowPct = scale ? ((now - scale.min) / scale.span) * 100 : null;
 
   return (
-    <div className="design-requests-ui fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-slate-950/60 backdrop-blur-sm">
-      <div
-        dir="rtl"
-        className="dr-gantt bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-[var(--dr-shadow-card)] w-full max-w-5xl max-h-[90vh] flex flex-col"
-      >
-        {/* The palette lives on the root as tokens so light/dark swap in one
+    <Dialog
+size="2xl"
+flush
+scopeClassName="design-requests-ui dr-gantt"
+title="المخطط الزمني للتصاميم"
+description="كل جمعية وأمامها تصاميمها من بدء التنفيذ إلى التسليم"
+onClose={onClose}
+>
+<div>
+{/* The palette lives on the root as tokens so light/dark swap in one
             place, and both scopes are declared: the media query covers the OS
             setting, the data-theme scope covers the in-app toggle. */}
-        <style>{`
+<style>{`
           .dr-gantt {
             --g-surface: #ffffff;
             --g-grid: #e8e8e5;
@@ -172,28 +232,8 @@ export default function DesignGanttModal({
             outline: none;
           }
         `}</style>
-
-        <header className="flex items-start justify-between gap-4 p-5 border-b border-slate-100 dark:border-slate-800 shrink-0">
-          <div className="min-w-0">
-            <h2 className="text-[15px] font-black text-slate-900 dark:text-slate-100">
-              المخطط الزمني للتصاميم
-            </h2>
-            <p className="mt-0.5 text-[12px] text-slate-500 dark:text-slate-400">
-              كل جمعية وأمامها تصاميمها من بدء التنفيذ إلى التسليم
-            </p>
-          </div>
-          <button
-            type="button"
-            onClick={onClose}
-            aria-label="إغلاق"
-            className="shrink-0 p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-          >
-            <X className="w-4 h-4" />
-          </button>
-        </header>
-
-        {/* Filters and the view switch, one row above the chart. */}
-        <div className="flex items-center justify-between gap-3 flex-wrap px-5 py-3 border-b border-slate-100 dark:border-slate-800 shrink-0">
+{/* Filters and the view switch, one row above the chart. */}
+<div className="flex items-center justify-between gap-3 flex-wrap px-5 py-3 border-b border-slate-100 dark:border-slate-800 shrink-0">
           <div className="flex items-center gap-4 flex-wrap">
             {LANES.map((lane) => (
               <span key={lane.key} className="flex items-center gap-1.5 text-[11px] text-slate-600 dark:text-slate-300">
@@ -226,8 +266,7 @@ export default function DesignGanttModal({
             </button>
           </div>
         </div>
-
-        <div className="flex-1 overflow-auto p-5">
+<div className="flex-1 overflow-auto p-5">
           {rows.length === 0 || !scale ? (
             <p className="py-16 text-center text-[12px] text-slate-400 dark:text-slate-500">
               لا توجد تصاميم مجدولة لعرضها.
@@ -336,15 +375,9 @@ export default function DesignGanttModal({
                               background: `var(--g-${lane.toLowerCase().replace("_", "-")})`,
                             }}
                             aria-label={`${item.title} — من ${fmtFull(item.startMs)} إلى ${fmtFull(item.endMs)}`}
-                            onMouseEnter={(e) =>
-                              setHovered({ item, x: e.clientX, y: e.clientY })
-                            }
-                            onMouseMove={(e) => setHovered({ item, x: e.clientX, y: e.clientY })}
+                            onMouseEnter={(e) => setHovered(anchorTo(item, e.currentTarget))}
                             onMouseLeave={() => setHovered(null)}
-                            onFocus={(e) => {
-                              const r = e.currentTarget.getBoundingClientRect();
-                              setHovered({ item, x: r.left + r.width / 2, y: r.top });
-                            }}
+                            onFocus={(e) => setHovered(anchorTo(item, e.currentTarget))}
                             onBlur={() => setHovered(null)}
                           />
                         );
@@ -356,16 +389,26 @@ export default function DesignGanttModal({
             </div>
           )}
         </div>
-
-        {/* Tooltip: the design's name, which is what the pointer is asking for. */}
-        {hovered && (
+{/* Tooltip: the design's name, anchored to the bar itself — centred on it, with a
+    pointer back to it, and still while the mouse moves along the bar. */}
+{hovered && (
           <div
-            className="fixed z-[60] pointer-events-none rounded-lg px-3 py-2 shadow-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 max-w-[260px]"
+            role="tooltip"
+            className="fixed z-[60] pointer-events-none"
             style={{
-              insetInlineStart: Math.min(hovered.x + 12, window.innerWidth - 280),
-              top: Math.max(hovered.y - 64, 8),
+              left: hovered.center,
+              top: hovered.below ? hovered.bottom + TOOLTIP_GAP : hovered.top - TOOLTIP_GAP,
+              transform: hovered.below ? "translateX(-50%)" : "translate(-50%, -100%)",
             }}
           >
+            <div className="relative w-max max-w-[260px] rounded-lg border border-slate-200 bg-white px-3 py-2 shadow-lg motion-safe:animate-[zad-fade-in_120ms_ease-out] dark:border-slate-700 dark:bg-slate-900">
+              <span
+                aria-hidden
+                className={`absolute size-2.5 rotate-45 border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900 ${
+                  hovered.below ? "-top-[6px] border-l border-t" : "-bottom-[6px] border-b border-r"
+                }`}
+                style={{ left: `calc(50% + ${hovered.arrowShift}px - 5px)` }}
+              />
             <p className="text-[12px] font-black text-slate-900 dark:text-slate-100 break-words leading-snug">
               {hovered.item.title}
             </p>
@@ -379,9 +422,10 @@ export default function DesignGanttModal({
               />
               {LANES.find((l) => l.key === laneOf(hovered.item))?.label}
             </p>
+            </div>
           </div>
         )}
-      </div>
-    </div>
+</div>
+</Dialog>
   );
 }

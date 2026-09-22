@@ -1,8 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { X, Loader2, AlertTriangle, Plus, Check, EyeOff, Eye, Palette } from "lucide-react";
+import { Loader2, AlertTriangle, Plus, Check, EyeOff, Eye } from "lucide-react";
 import { saveDesignType, setDesignTypeActive } from "@/app/actions/designRequests";
+import { Dialog } from "@/components/console/Dialog";
 
 export type DesignTypeRow = {
   id: string;
@@ -78,28 +79,14 @@ export default function DesignTypesModal({
     "h-10 px-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none";
 
   return (
-    <div className="design-requests-ui fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-slate-950/60 backdrop-blur-sm">
-      <div
-        dir="rtl"
-        className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-[var(--dr-shadow-card)] w-full max-w-xl max-h-[90vh] flex flex-col overflow-hidden"
-      >
-        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 dark:border-slate-800 shrink-0">
-          <h2
-            className="flex items-center gap-2 font-bold text-slate-900 dark:text-slate-100"
-            style={{ fontSize: "var(--dr-fs-title)" }}
-          >
-            <Palette className="w-4 h-4 text-primary dark:text-teal-400" />
-            أنواع التصاميم ومدد التنفيذ
-          </h2>
-          <button
-            onClick={onClose}
-            className="w-8 h-8 flex items-center justify-center text-slate-400 dark:text-slate-500 hover:bg-primary/[0.08] hover:text-primary dark:hover:text-teal-300 rounded-full transition-colors"
-          >
-            <X className="w-4 h-4" />
-          </button>
-        </div>
-
-        <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4">
+    <Dialog
+size="lg"
+scopeClassName="design-requests-ui"
+title="أنواع التصاميم ومدد التنفيذ"
+onClose={onClose}
+closeOnBackdrop={false}
+>
+<div className="space-y-4">
           <p
             className="rounded-xl bg-primary/5 dark:bg-primary/10 text-primary dark:text-teal-300 px-4 py-3"
             style={{ fontSize: "var(--dr-fs-meta)" }}
@@ -283,7 +270,6 @@ export default function DesignTypesModal({
             </ul>
           )}
         </div>
-      </div>
-    </div>
+</Dialog>
   );
 }

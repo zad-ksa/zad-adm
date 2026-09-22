@@ -1,8 +1,10 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { PageHeader } from "@/components/console/layout";
-import { Building2, Plus, Edit2, Trash2, Globe, Calendar, FileText, Loader2, X, AlertTriangle, ShieldCheck } from "lucide-react";
+import { btn, cx, MONO } from "@/components/console/ui";
+import { Dialog } from "@/components/console/Dialog";
+import { EmptyState, PageHeader } from "@/components/console/layout";
+import { Building2, Plus, Edit2, Trash2, Globe, Calendar, FileText, Loader2, AlertTriangle, ShieldCheck } from "lucide-react";
 import { addCharity, updateCharity, deleteCharity } from "@/app/actions/charity";
 import Image from "next/image";
 
@@ -111,146 +113,150 @@ export default function ManageCharitiesClient({ initialCharities }: { initialCha
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-200 pb-16 font-sans selection:bg-primary/20 selection:text-primary dark:selection:bg-primary/20 dark:selection:text-primary" dir="rtl">
-      <div className="px-6 pt-8">
-        <div className="max-w-7xl mx-auto">
-          <PageHeader
-            crumbs={[{ label: "لوحة التحكم", href: "/main/admin" }, { label: "إدارة الجمعيات المتعاقدة" }]}
-            icon={<Building2 className="w-6 h-6" />}
-            title="إدارة الجمعيات المتعاقدة"
-            description="منصة التحكم المركزية لإضافة وتعديل وحذف ملفات الجمعيات في زاد."
+    <div className="space-y-6 pb-16" dir="rtl">
+      <PageHeader
+        crumbs={[{ label: "لوحة التحكم", href: "/main/admin" }, { label: "إدارة الجمعيات المتعاقدة" }]}
+        icon={<Building2 className="w-6 h-6" />}
+        title="إدارة الجمعيات المتعاقدة"
+        description={`${charities.length} جمعية — أضف ملفات الجمعيات وعدّلها واحذفها.`}
+        actions={
+          <button type="button" onClick={openAddModal} className={btn.primary}>
+            <Plus className="size-4" />
+            إضافة جمعية جديدة
+          </button>
+        }
+      />
+
+      {charities.length === 0 ? (
+        <div className="rounded-lg border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900">
+          <EmptyState
+            icon={<Building2 className="size-5" />}
+            title="لا توجد جمعيات بعد"
+            description="أضف أول جمعية متعاقدة لتظهر هنا وفي تبويب الجمعيات."
           />
         </div>
-      </div>
-
-      {/* Main Bento Grid */}
-      <div className="max-w-7xl mx-auto px-6 pt-6">
-        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4 auto-rows-[minmax(140px,auto)]">
-          
-          {/* Add Charity Block (Prominent) */}
-          <button 
-            onClick={openAddModal}
-            className="col-span-1 md:col-span-2 row-span-1 md:row-span-2 group relative overflow-hidden bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-3xl p-6 hover:border-primary/40 transition-all duration-500 ease-out flex flex-col items-center justify-center text-center cursor-pointer shadow-[0_0_0_rgba(255,255,255,0)] dark:hover:shadow-[0_0_30px_rgba(var(--primary),0.1)] hover:shadow-[0_0_30px_rgba(var(--primary),0.05)]"
-          >
-            <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-            <div className="w-12 h-12 bg-primary/5 border border-primary/20 rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 group-hover:bg-primary/10 transition-all duration-500">
-              <Plus className="w-6 h-6 text-primary" />
-            </div>
-            <h2 className="text-lg font-bold text-primary tracking-tight mb-1">إضافة جمعية جديدة</h2>
-            <p className="text-xs text-slate-500 dark:text-slate-400 max-w-xs">قم بتسجيل جمعية جديدة في النظام وإعداد المساحة المخصصة لها.</p>
-          </button>
-
-          {/* Stats Block */}
-          <div className="col-span-1 md:col-span-1 lg:col-span-2 row-span-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-3xl p-6 flex flex-col justify-center relative overflow-hidden">
-            <div className="absolute -left-12 -top-12 w-40 h-40 bg-primary/10 blur-3xl rounded-full pointer-events-none"></div>
-            <p className="text-xs font-bold text-slate-500 dark:text-slate-400 tracking-wider uppercase mb-1">إجمالي الجمعيات</p>
-            <p className="text-[clamp(2.5rem,4vw,3.5rem)] font-black text-primary leading-none tracking-tighter">
-              {charities.length}
-            </p>
-          </div>
-
-          {/* Dynamic Charity Blocks */}
+      ) : (
+        <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {charities.map((charity) => (
-            <div key={charity.id} className="col-span-1 bg-white dark:bg-black border border-slate-200 dark:border-white/10 hover:border-primary/30 rounded-3xl p-5 flex flex-col relative group transition-all duration-300 hover:shadow-[0_4px_20px_rgba(0,0,0,0.05)] dark:hover:shadow-[0_0_15px_rgba(255,255,255,0.03)] hover:-translate-y-0.5">
-              <div className="flex-1">
-                <div className="flex items-start justify-between mb-3">
-                  <div className="w-8 h-8 bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-white/10 rounded-lg flex items-center justify-center overflow-hidden relative shrink-0">
-                    {charity.logoUrl ? (
-                      <Image 
-                        src={charity.logoUrl} 
-                        alt={charity.name} 
-                        fill 
-                        className="object-contain p-1"
-                        unoptimized
-                      />
-                    ) : (
-                      <Building2 className="w-4 h-4 text-primary opacity-80" />
-                    )}
-                  </div>
-                  <div className="flex gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <button onClick={() => openEditModal(charity)} className="p-1 text-primary hover:text-primary/80 bg-primary/10 hover:bg-primary/20 rounded-md transition-colors">
-                      <Edit2 className="w-3.5 h-3.5" />
-                    </button>
-                    <button onClick={() => openDeleteModal(charity)} className="p-1 text-red-500 dark:text-red-400 hover:text-red-600 dark:hover:text-red-300 bg-red-50 dark:bg-red-500/10 hover:bg-red-100 dark:hover:bg-red-500/20 rounded-md transition-colors">
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
-                </div>
-                <h3 className="text-base font-bold text-primary tracking-tight mb-2 line-clamp-2 leading-tight">
-                  {charity.name}
-                </h3>
-                <div className="space-y-1.5 text-[11px] font-medium text-slate-500 dark:text-slate-500">
-                  {charity.domain && (
-                    <div className="flex items-center gap-1.5">
-                      <Globe className="w-3 h-3 text-primary/60" />
-                      <span className="truncate" dir="ltr">{charity.domain}</span>
-                    </div>
+            <li
+              key={charity.id}
+              className="flex flex-col gap-3 rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900"
+            >
+              <div className="flex items-start justify-between gap-2">
+                <span className="relative grid size-9 shrink-0 place-items-center overflow-hidden rounded-lg border border-slate-200 bg-slate-50 dark:border-slate-700 dark:bg-slate-800">
+                  {charity.logoUrl ? (
+                    <Image src={charity.logoUrl} alt="" fill className="object-contain p-1" unoptimized />
+                  ) : (
+                    <Building2 className="size-4 text-slate-400" />
                   )}
-                  {charity.licenseNumber && (
-                    <div className="flex items-center gap-1.5">
-                      <FileText className="w-3 h-3 text-primary/60" />
-                      <span>ترخيص: {charity.licenseNumber}</span>
-                    </div>
-                  )}
-                  {charity.establishmentDate && (
-                    <div className="flex items-center gap-1.5">
-                      <Calendar className="w-3 h-3 text-primary/60" />
-                      <span>تأسيس: {charity.establishmentDate}</span>
-                    </div>
-                  )}
+                </span>
+                {/* ظاهرةٌ دائماً: كانت تظهر عند مرور الفأرة وحده، فلا تصلها
+                    لمسةٌ على الجوال ولا لوحة مفاتيح. */}
+                <div className="flex items-center gap-1">
+                  <button
+                    type="button"
+                    onClick={() => openEditModal(charity)}
+                    aria-label={`تعديل ${charity.name}`}
+                    title="تعديل"
+                    className={btn.ghost}
+                  >
+                    <Edit2 className="size-4" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => openDeleteModal(charity)}
+                    aria-label={`حذف ${charity.name}`}
+                    title="حذف"
+                    className={cx(btn.ghost, "hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-500/10 dark:hover:text-red-400")}
+                  >
+                    <Trash2 className="size-4" />
+                  </button>
                 </div>
               </div>
-            </div>
-          ))}
 
-        </div>
-      </div>
+              <h3 className="line-clamp-2 text-[15px] font-semibold leading-6 text-slate-900 dark:text-slate-100">
+                {charity.name}
+              </h3>
+
+              <dl className="space-y-1 text-[12.5px] text-slate-500 dark:text-slate-400">
+                {charity.domain && (
+                  <div className="flex items-center gap-1.5">
+                    <Globe className="size-3.5 shrink-0" />
+                    <dd className="truncate" dir="ltr">{charity.domain}</dd>
+                  </div>
+                )}
+                {charity.licenseNumber && (
+                  <div className="flex items-center gap-1.5">
+                    <FileText className="size-3.5 shrink-0" />
+                    <dd>ترخيص: <span className={MONO}>{charity.licenseNumber}</span></dd>
+                  </div>
+                )}
+                {charity.establishmentDate && (
+                  <div className="flex items-center gap-1.5">
+                    <Calendar className="size-3.5 shrink-0" />
+                    <dd>تأسيس: {charity.establishmentDate}</dd>
+                  </div>
+                )}
+              </dl>
+            </li>
+          ))}
+        </ul>
+      )}
 
       {/* Minimalistic Vercel-Style Modal */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
-          <div className="absolute inset-0 bg-slate-900/40 dark:bg-black/60 backdrop-blur-sm" onClick={closeModal}></div>
-          <div className="relative bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 shadow-2xl dark:shadow-[0_0_60px_rgba(0,0,0,0.5)] rounded-3xl w-full max-w-lg p-8 animate-in fade-in zoom-in-95 duration-200">
-            
-            <button onClick={closeModal} disabled={isPending} className="absolute top-6 left-6 text-slate-400 hover:text-slate-700 dark:text-slate-500 dark:hover:text-white transition-colors disabled:opacity-50">
-              <X className="w-5 h-5" />
-            </button>
-
-            {modalMode === "DELETE" ? (
-              <form onSubmit={handleSubmit}>
-                <div className="w-12 h-12 bg-red-50 dark:bg-red-500/10 border border-red-100 dark:border-red-500/20 rounded-2xl flex items-center justify-center mb-6">
-                  <AlertTriangle className="w-6 h-6 text-red-500" />
-                </div>
-                <h2 className="text-xl font-bold text-slate-900 dark:text-white tracking-tight mb-2">حذف الجمعية</h2>
-                <p className="text-slate-500 dark:text-slate-400 text-sm leading-relaxed mb-6">
+        modalMode === "DELETE" ? (
+        <Dialog
+          role="alertdialog"
+          size="sm"
+          icon={<AlertTriangle className="size-4" />}
+          title="حذف الجمعية"
+          onClose={closeModal}
+          busy={isPending}
+          onSubmit={handleSubmit}
+          footer={
+            <>
+              <button type="button" onClick={closeModal} disabled={isPending} className={btn.secondary}>
+                إلغاء
+              </button>
+              <button type="submit" disabled={isPending} className={btn.danger}>
+                {isPending ? <Loader2 className="size-4 animate-spin" /> : "تأكيد الحذف"}
+              </button>
+            </>
+          }
+        >
+          <div className="space-y-4">
+            <p className="text-slate-500 dark:text-slate-400 text-sm leading-relaxed">
                   هل أنت متأكد من رغبتك في حذف <strong className="text-slate-900 dark:text-white">{selectedCharity?.name}</strong>؟ هذا الإجراء لا يمكن التراجع عنه. قد تفشل العملية إذا كانت الجمعية مرتبطة ببيانات مالية أو مشاريع قائمة.
                 </p>
-                
-                {error && <div className="mb-6 p-4 rounded-xl bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/20 text-red-600 dark:text-red-400 text-sm font-bold flex items-center gap-2"><AlertTriangle className="w-4 h-4"/>{error}</div>}
-                {success && <div className="mb-6 p-4 rounded-xl bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-sm font-bold flex items-center gap-2"><ShieldCheck className="w-4 h-4"/>{success}</div>}
-
-                <div className="flex gap-4">
-                  <button type="submit" disabled={isPending} className="flex-1 bg-red-500 hover:bg-red-600 text-white py-3 rounded-xl font-bold text-sm transition-colors flex items-center justify-center disabled:opacity-50">
-                    {isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : "تأكيد الحذف"}
-                  </button>
-                  <button type="button" onClick={closeModal} disabled={isPending} className="flex-1 bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 text-slate-700 dark:text-white py-3 rounded-xl font-bold text-sm transition-colors border border-slate-200 dark:border-white/10 disabled:opacity-50">
-                    إلغاء
-                  </button>
-                </div>
-              </form>
-            ) : (
-              <form onSubmit={handleSubmit} className="space-y-6">
-                <div>
-                  <h2 className="text-xl font-bold text-primary tracking-tight mb-1">
-                    {modalMode === "ADD" ? "إضافة جمعية جديدة" : "تعديل بيانات الجمعية"}
-                  </h2>
-                  <p className="text-slate-500 dark:text-slate-400 text-sm">أدخل البيانات الأساسية للجمعية أدناه.</p>
-                </div>
-
-                {error && <div className="p-4 rounded-xl bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/20 text-red-600 dark:text-red-400 text-sm font-bold flex items-center gap-2"><AlertTriangle className="w-4 h-4"/>{error}</div>}
-                {success && <div className="p-4 rounded-xl bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-sm font-bold flex items-center gap-2"><ShieldCheck className="w-4 h-4"/>{success}</div>}
-
-                <div className="space-y-4">
+            {error && <div className="p-4 rounded-xl bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/20 text-red-600 dark:text-red-400 text-sm font-bold flex items-center gap-2"><AlertTriangle className="w-4 h-4"/>{error}</div>}
+            {success && <div className="p-4 rounded-xl bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-sm font-bold flex items-center gap-2"><ShieldCheck className="w-4 h-4"/>{success}</div>}
+          </div>
+        </Dialog>
+      ) : (
+        <Dialog
+          title={modalMode === "ADD" ? "إضافة جمعية جديدة" : "تعديل بيانات الجمعية"}
+          description="أدخل البيانات الأساسية للجمعية أدناه."
+          onClose={closeModal}
+          busy={isPending}
+          onSubmit={handleSubmit}
+          closeOnBackdrop={false}
+          footer={
+            <>
+              <button type="button" onClick={closeModal} disabled={isPending} className={btn.secondary}>
+                إلغاء
+              </button>
+              <button type="submit" disabled={isPending} className={btn.primary}>
+                {isPending && <Loader2 className="size-4 animate-spin" />}
+                {modalMode === "ADD" ? "إضافة وتسجيل" : "حفظ التعديلات"}
+              </button>
+            </>
+          }
+        >
+          <div className="space-y-4">
+            {error && <div className="p-4 rounded-xl bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/20 text-red-600 dark:text-red-400 text-sm font-bold flex items-center gap-2"><AlertTriangle className="w-4 h-4"/>{error}</div>}
+            {success && <div className="p-4 rounded-xl bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-sm font-bold flex items-center gap-2"><ShieldCheck className="w-4 h-4"/>{success}</div>}
+            <div className="space-y-4">
                   <div>
                     <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-2">اسم الجمعية *</label>
                     <input
@@ -301,17 +307,9 @@ export default function ManageCharitiesClient({ initialCharities }: { initialCha
                     />
                   </div>
                 </div>
-
-                <div className="pt-2">
-                  <button type="submit" disabled={isPending} className="w-full bg-primary hover:bg-primary/90 text-white py-3 rounded-xl font-bold text-sm transition-colors flex items-center justify-center gap-2 disabled:opacity-50 shadow-md shadow-primary/20">
-                    {isPending && <Loader2 className="w-4 h-4 animate-spin" />}
-                    {modalMode === "ADD" ? "إضافة وتسجيل" : "حفظ التعديلات"}
-                  </button>
-                </div>
-              </form>
-            )}
           </div>
-        </div>
+        </Dialog>
+      )
       )}
     </div>
   );

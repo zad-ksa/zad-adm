@@ -4,6 +4,7 @@ import { useState } from "react";
 import { formatDurationArabic } from "@/lib/dateUtils";
 import { Activity, Check, Plus, ArrowRight, ArrowLeft, Trash2, Settings, Eye, EyeOff, X, Calendar, Edit2, Infinity } from "lucide-react";
 import StageStepsPanel from "@/components/StageStepsPanel";
+import { Dialog } from "@/components/console/Dialog";
 
 // Types
 export type StageStep = {
@@ -492,19 +493,12 @@ export default function InteractiveTimelineEditor({
 
       {/* Settings Modal */}
       {selectedStageId && selectedStage && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-xl w-full max-w-md overflow-hidden" onClick={e => e.stopPropagation()}>
-            <div className="p-6 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center">
-              <h3 className="text-xl font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
-                <Settings className="w-5 h-5 text-primary" />
-                إعدادات: {selectedStage.name}
-              </h3>
-              <button onClick={() => setSelectedStageId(null)} className="text-slate-400 hover:text-slate-600 bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 rounded-full p-1 transition-colors">
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-            
-            <div className="p-6 space-y-6">
+        <Dialog
+title={<>إعدادات:  {selectedStage.name}</>}
+onClose={() => setSelectedStageId(null)}
+closeOnBackdrop={false}
+>
+<div className="space-y-6">
               <div>
                 <label className="block text-xs font-bold text-slate-500 mb-1">تغيير الاسم</label>
                 <input 
@@ -585,8 +579,7 @@ export default function InteractiveTimelineEditor({
                 <Trash2 className="w-5 h-5" /> حذف المرحلة
               </button>
             </div>
-          </div>
-        </div>
+</Dialog>
       )}
     </div>
   );

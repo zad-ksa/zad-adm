@@ -1,8 +1,10 @@
 "use client";
 
 import React, { useState, useTransition } from "react";
-import { X, Plus, Trash2, Calendar, DollarSign, CheckCircle2, Loader2, Layers, Edit2, Save } from "lucide-react";
+import { Plus, Trash2, Calendar, DollarSign, CheckCircle2, Loader2, Layers, Edit2, Save } from "lucide-react";
+import { ConfirmDialog } from "@/components/console/ConfirmDialog";
 import { addInstallment, updateInstallment, deleteInstallment, toggleInstallmentPaid, batchAddInstallments } from "@/app/actions/contracts";
+import { Dialog } from "@/components/console/Dialog";
 
 type Installment = {
   id: string;
@@ -144,64 +146,21 @@ export default function ManageInstallmentsModal({ charityId, charityName, totalV
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={onClose} />
-      
-      {/* Custom Delete Confirmation Modal */}
-      {deleteConfirmId && (
-        <div className="absolute inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm">
-          <div className="bg-white dark:bg-slate-900 rounded-2xl w-full max-w-sm shadow-2xl p-6 border border-slate-100 dark:border-slate-800 animate-in fade-in zoom-in duration-200">
-            <div className="w-12 h-12 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center mx-auto mb-4">
-              <Trash2 className="w-6 h-6 text-red-500" />
-            </div>
-            <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100 text-center mb-2">تأكيد الحذف</h3>
-            <p className="text-sm text-slate-500 dark:text-slate-400 text-center mb-6">
-              هل أنت متأكد من حذف هذا القسط بشكل نهائي؟ لا يمكن التراجع عن هذا الإجراء.
-            </p>
-            <div className="flex gap-3">
-              <button 
-                onClick={() => setDeleteConfirmId(null)}
-                disabled={isPending}
-                className="flex-1 py-2 rounded-lg font-bold text-sm bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700 transition-colors"
-              >
-                إلغاء
-              </button>
-              <button 
-                onClick={executeDelete}
-                disabled={isPending}
-                className="flex-1 py-2 rounded-lg font-bold text-sm bg-red-500 text-white hover:bg-red-600 transition-colors flex items-center justify-center gap-2"
-              >
-                {isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
-                نعم، احذف القسط
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-      
-      <div className="bg-white dark:bg-slate-900 rounded-2xl w-full max-w-2xl relative z-10 shadow-2xl flex flex-col max-h-[90vh]">
-        <div className="p-5 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center shrink-0">
-          <div>
-            <h2 className="text-lg font-bold text-slate-800 dark:text-slate-100">إدارة الأقساط</h2>
-            <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">{charityName}</p>
-          </div>
-          <button 
-            onClick={onClose}
-            className="w-8 h-8 flex items-center justify-center rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-          >
-            <X className="w-5 h-5" />
-          </button>
-        </div>
-
-        <div className="p-5 overflow-y-auto flex-1">
-          {error && (
+    <>
+<Dialog
+size="lg"
+title="إدارة الأقساط"
+description={<>{charityName}</>}
+onClose={onClose}
+>
+<div>
+{error && (
             <div className="mb-4 p-3 bg-red-50 text-red-600 border border-red-100 rounded-xl text-sm font-bold">
               {error}
             </div>
           )}
-
-          {/* Tabs */}
-          <div className="flex bg-slate-100 dark:bg-slate-800/50 p-1 rounded-xl mb-6">
+{/* Tabs */}
+<div className="flex bg-slate-100 dark:bg-slate-800/50 p-1 rounded-xl mb-6">
             <button
               onClick={() => setActiveTab('single')}
               className={`flex-1 flex items-center justify-center gap-2 py-2 text-sm font-bold rounded-lg transition-colors ${activeTab === 'single' ? 'bg-white dark:bg-slate-700 text-primary shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
@@ -217,9 +176,8 @@ export default function ManageInstallmentsModal({ charityId, charityName, totalV
               تقسيم تلقائي للأقساط
             </button>
           </div>
-
-          {/* Add Forms */}
-          {activeTab === 'single' ? (
+{/* Add Forms */}
+{activeTab === 'single' ? (
             <div className="bg-slate-50 dark:bg-slate-800/30 p-4 rounded-xl border border-slate-200 dark:border-slate-700 mb-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
                 <div>
@@ -313,9 +271,8 @@ export default function ManageInstallmentsModal({ charityId, charityName, totalV
               </button>
             </div>
           )}
-
-          {/* List Current Installments */}
-          <div>
+{/* List Current Installments */}
+<div>
             <h3 className="text-sm font-bold text-slate-700 dark:text-slate-300 mb-3">الأقساط المجدولة ({installments.length})</h3>
             <div className="space-y-3">
               {installments.length === 0 ? (
@@ -416,8 +373,18 @@ export default function ManageInstallmentsModal({ charityId, charityName, totalV
               )}
             </div>
           </div>
-        </div>
-      </div>
-    </div>
+</div>
+</Dialog>
+{/* Custom Delete Confirmation Modal */}
+<ConfirmDialog
+        isOpen={!!deleteConfirmId}
+        title="حذف هذا القسط؟"
+        message="يُحذف القسط نهائياً، ولا يمكن التراجع عن هذا الإجراء."
+        confirmLabel="نعم، احذف القسط"
+        isPending={isPending}
+        onConfirm={executeDelete}
+        onCancel={() => setDeleteConfirmId(null)}
+      />
+</>
   );
 }

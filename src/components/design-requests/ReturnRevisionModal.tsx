@@ -1,9 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { X, Loader2, Undo2, Lock, MessageSquare, AlertTriangle } from "lucide-react";
+import { Loader2, Undo2, Lock, MessageSquare, AlertTriangle } from "lucide-react";
 import { returnRevisionToCharity } from "@/app/actions/designRequests";
 import { RevisionNotesList } from "./RevisionNotesList";
+import { Dialog } from "@/components/console/Dialog";
+import { btn } from "@/components/console/ui";
 
 /**
  * Zad's reply when the answer to the charity's notes is not a new delivery.
@@ -72,25 +74,41 @@ export default function ReturnRevisionModal({
   ];
 
   return (
-    <div className="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm" dir="rtl">
-      <div className="w-full max-w-lg max-h-[90vh] flex flex-col bg-white dark:bg-[#0A0A0A] rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800">
-        <div className="flex items-center justify-between gap-3 px-6 py-4 border-b border-slate-100 dark:border-slate-800 shrink-0">
-          <div className="min-w-0">
-            <h3 className="font-black text-slate-900 dark:text-slate-100 truncate">
-              الردّ على ملاحظات الجمعية
-            </h3>
-            <p className="text-[12px] text-slate-400 truncate mt-0.5">{title}</p>
-          </div>
-          <button
+    <Dialog
+title="الردّ على ملاحظات الجمعية"
+description={<>{title}</>}
+onClose={onClose}
+busy={busy}
+closeOnBackdrop={false}
+footer={
+<>
+<button type="button"
             onClick={onClose}
             disabled={busy}
-            className="shrink-0 w-8 h-8 flex items-center justify-center text-slate-400 hover:bg-primary/[0.08] hover:text-primary rounded-full transition-colors"
+            className={btn.secondary}
           >
-            <X className="w-4 h-4" />
+            إلغاء
           </button>
-        </div>
-
-        <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4">
+          <button
+            onClick={submit}
+            disabled={busy || notes.trim().length < 5}
+            className={`h-11 px-6 flex items-center gap-2 text-white rounded-xl text-[13px] font-bold transition-all disabled:opacity-50 active:translate-y-px ${
+              close ? "bg-rose-600 hover:bg-rose-700" : "bg-amber-600 hover:bg-amber-700"
+            }`}
+          >
+            {busy ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : close ? (
+              <Lock className="w-4 h-4" />
+            ) : (
+              <Undo2 className="w-4 h-4" />
+            )}
+            {close ? "إغلاق الطلب" : "إعادة للجمعية"}
+          </button>
+</>
+}
+>
+<div className="flex-1 overflow-y-auto px-6 py-4 space-y-4">
           {charityNotes && (
             <div className="rounded-xl bg-amber-500/[0.08] p-3">
               <p className="text-[11px] font-black text-amber-700 dark:text-amber-400 mb-2">
@@ -158,33 +176,6 @@ export default function ReturnRevisionModal({
             </p>
           )}
         </div>
-
-        <div className="flex items-center justify-end gap-2 px-6 py-4 border-t border-slate-100 dark:border-slate-800 shrink-0">
-          <button
-            onClick={onClose}
-            disabled={busy}
-            className="h-11 px-4 rounded-xl text-[13px] font-bold text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors disabled:opacity-50"
-          >
-            إلغاء
-          </button>
-          <button
-            onClick={submit}
-            disabled={busy || notes.trim().length < 5}
-            className={`h-11 px-6 flex items-center gap-2 text-white rounded-xl text-[13px] font-bold transition-all disabled:opacity-50 active:translate-y-px ${
-              close ? "bg-rose-600 hover:bg-rose-700" : "bg-amber-600 hover:bg-amber-700"
-            }`}
-          >
-            {busy ? (
-              <Loader2 className="w-4 h-4 animate-spin" />
-            ) : close ? (
-              <Lock className="w-4 h-4" />
-            ) : (
-              <Undo2 className="w-4 h-4" />
-            )}
-            {close ? "إغلاق الطلب" : "إعادة للجمعية"}
-          </button>
-        </div>
-      </div>
-    </div>
+</Dialog>
   );
 }

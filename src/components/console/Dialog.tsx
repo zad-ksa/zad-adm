@@ -139,6 +139,7 @@ export function Dialog({
   initialFocusRef,
   bodyClassName,
   closeOnBackdrop = true,
+  scopeClassName,
 }: {
   /** يُترك فارغاً حين يتحكّم المُنادي بالعرض بشرطٍ خارجي. */
   open?: boolean;
@@ -160,6 +161,11 @@ export function Dialog({
   bodyClassName?: string;
   /** نافذةٌ فيها إدخالٌ طويل: نقرةٌ طائشة خارجها لا تمحو ما كُتب. */
   closeOnBackdrop?: boolean;
+  /**
+   * صنف نطاقٍ يحمل متغيّرات CSS (`design-requests-ui`، `mail-ui`): النافذة تُرسم
+   * في جذر الصفحة خارج غلاف شاشتها، فبدونه تضيع مقاسات الخطّ المعرَّفة عليه.
+   */
+  scopeClassName?: string;
 }) {
   const panelRef = useRef<HTMLElement>(null);
   const titleId = useId();
@@ -229,7 +235,7 @@ export function Dialog({
 
   return (
     <Portal>
-      <div className="fixed inset-0 z-[100] flex items-center justify-center p-4" dir="rtl">
+      <div className={cx("fixed inset-0 z-[100] flex items-center justify-center p-4", scopeClassName)} dir="rtl">
         <div
           aria-hidden
           className="absolute inset-0 bg-slate-950/50 backdrop-blur-[2px] motion-safe:animate-[zad-fade-in_150ms_ease-out]"

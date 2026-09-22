@@ -1,13 +1,15 @@
 "use client";
 
 import { useState } from "react";
-import { X, Paperclip, Loader2, AlertTriangle, Trash2, Send, Plus } from "lucide-react";
+import { Paperclip, Loader2, AlertTriangle, Trash2, Send, Plus } from "lucide-react";
 import { requestDesignRevision } from "@/app/actions/designRequests";
 import { uploadDesignRequestFiles } from "./uploadDesignRequestFiles";
 import { ACCEPT_ATTRIBUTE, maxBytesFor, maxLabelFor } from "@/lib/uploadPurposes";
 import { ConfirmDialog } from "@/components/console/ConfirmDialog";
 import UploadProgress from "@/components/ui/UploadProgress";
 import type { UploadProgress as Progress } from "@/lib/clientUpload";
+import { Dialog } from "@/components/console/Dialog";
+import { btn } from "@/components/console/ui";
 
 const MAX_BYTES = maxBytesFor("design_request");
 const MAX_LABEL = maxLabelFor("design_request");
@@ -94,38 +96,45 @@ export default function RequestRevisionModal({
   };
 
   return (
-    <div className="design-requests-ui fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-6 bg-slate-950/60 backdrop-blur-sm">
-      <div
-        dir="rtl"
-        className="bg-white dark:bg-[#0A0A0A] rounded-t-2xl sm:rounded-2xl border border-slate-200 dark:border-slate-800 shadow-[var(--dr-shadow-card)] w-full sm:max-w-lg max-h-[92dvh] flex flex-col overflow-hidden"
-      >
-        <div className="flex items-center justify-between gap-3 px-6 py-4 border-b border-slate-100 dark:border-slate-800 shrink-0">
-          <h2
-            className="font-bold text-slate-900 dark:text-slate-100 truncate"
-            style={{ fontSize: "var(--dr-fs-title)" }}
-          >
-            ملاحظات على: {title}
-          </h2>
-          <button
+    <>
+<Dialog
+scopeClassName="design-requests-ui"
+title={<>ملاحظات على:  {title}</>}
+onClose={onClose}
+closeOnBackdrop={false}
+onSubmit={handleSubmit}
+footer={
+<>
+<button type="submit"
             onClick={onClose}
-            className="shrink-0 w-8 h-8 flex items-center justify-center text-slate-400 hover:bg-primary/[0.08] hover:text-primary dark:hover:text-teal-300 rounded-full transition-colors"
+            disabled={isSubmitting}
+            className={btn.secondary}
+            
           >
-            <X className="w-4 h-4" />
+            إلغاء
           </button>
-        </div>
-
-        <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto px-6 py-4 space-y-4">
-          <p
+          <button type="button"
+            
+            disabled={isSubmitting}
+            className={btn.primary}
+            
+          >
+            {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+            إرسال الملاحظات
+          </button>
+</>
+}
+>
+<div className="space-y-4">
+<p
             className="rounded-xl bg-slate-100 dark:bg-slate-800/60 text-slate-600 dark:text-slate-300 font-bold px-4 py-3 leading-relaxed"
             style={{ fontSize: "var(--dr-fs-meta)" }}
           >
             يمكنكم طلب حتى ثلاث تعديلات كحد أقصى، يجب أن تكون محددة وواضحة لنتمكن من
             تنفيذها.
           </p>
-
-          <UploadProgress progress={uploadProgress} />
-
-          {error && (
+<UploadProgress progress={uploadProgress} />
+{error && (
             <div
               className="flex items-start gap-2 px-4 py-3 rounded-xl bg-rose-500/[0.08] text-rose-600 dark:text-rose-400 font-bold"
               style={{ fontSize: "var(--dr-fs-meta)" }}
@@ -134,8 +143,7 @@ export default function RequestRevisionModal({
               <span>{error}</span>
             </div>
           )}
-
-          <div className="space-y-3">
+<div className="space-y-3">
             {["الملاحظة الأولى", "الملاحظة الثانية", "الملاحظة الثالثة"].slice(0, noteFields.length).map((label, i) => (
               <div key={i}>
                 <div className="flex items-center justify-between mb-2">
@@ -190,8 +198,7 @@ export default function RequestRevisionModal({
               </button>
             )}
           </div>
-
-          {attachments.length > 0 && (
+{attachments.length > 0 && (
             <div>
               <label
                 className="block font-bold text-slate-500 dark:text-slate-400 mb-2"
@@ -242,8 +249,7 @@ export default function RequestRevisionModal({
               </div>
             </div>
           )}
-
-          <div>
+<div>
             {fileError && (
               <div
                 className="flex items-start gap-2 mb-2 px-3 py-2 rounded-lg bg-rose-500/[0.08] text-rose-600 dark:text-rose-400 font-bold"
@@ -304,30 +310,9 @@ export default function RequestRevisionModal({
               </div>
             )}
           </div>
-        </form>
-
-        <div className="flex items-center justify-end gap-2 px-6 py-4 border-t border-slate-100 dark:border-slate-800 shrink-0">
-          <button
-            onClick={onClose}
-            disabled={isSubmitting}
-            className="h-11 px-4 rounded-xl font-bold text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors disabled:opacity-50"
-            style={{ fontSize: "var(--dr-fs-meta)" }}
-          >
-            إلغاء
-          </button>
-          <button
-            onClick={handleSubmit}
-            disabled={isSubmitting}
-            className="h-11 px-6 flex items-center gap-2 text-white bg-amber-600 hover:bg-amber-700 active:translate-y-px rounded-xl font-bold transition-all disabled:opacity-50"
-            style={{ fontSize: "var(--dr-fs-meta)" }}
-          >
-            {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
-            إرسال الملاحظات
-          </button>
-        </div>
-      </div>
-
-      <ConfirmDialog
+</div>
+</Dialog>
+<ConfirmDialog
         isOpen={isConfirmOpen}
         title="إرسال الملاحظات"
         message="سيعود الطلب إلى فريق زاد للتعديل خلال 24 ساعة، وبعد تسليمه يُعتمد نهائياً. التعديل متاح مرة واحدة فقط — هل تريد المتابعة؟"
@@ -337,6 +322,6 @@ export default function RequestRevisionModal({
         onCancel={() => setIsConfirmOpen(false)}
         onConfirm={runSubmit}
       />
-    </div>
+</>
   );
 }

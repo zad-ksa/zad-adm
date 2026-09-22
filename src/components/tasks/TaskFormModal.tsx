@@ -2,8 +2,9 @@
 
 import { useState, useEffect } from "react";
 import Select from "@/components/console/Select";
-import { X, Plus, UserPlus, FolderPlus, Camera, UploadCloud, FileImage, ClipboardPaste } from "lucide-react";
+import { Plus, UserPlus, FolderPlus, Camera, UploadCloud, FileImage, ClipboardPaste } from "lucide-react";
 import { Employee, Charity } from "@/types";
+import { Dialog } from "@/components/console/Dialog";
 
 interface TaskFormModalProps {
   isOpen: boolean;
@@ -82,31 +83,12 @@ export default function TaskFormModal({
   };
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-      <div 
-        className="absolute inset-0 bg-slate-950/65 backdrop-blur-md transition-opacity duration-300"
-        onClick={onClose}
-      />
-      <div className="bg-white dark:bg-slate-800 rounded-3xl border border-slate-100 dark:border-slate-700/50 dark:border-slate-800/80 shadow-2xl w-full max-w-lg overflow-hidden relative z-10 transform transition-all duration-300 scale-100 p-5 space-y-4" dir="rtl">
-        <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-700/50 dark:border-slate-800/80 pb-4">
-          <div>
-            <h3 className="text-base font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
-              <span className="w-2 h-5 bg-primary rounded-full"></span>
-              إضافة مهمة جديدة
-            </h3>
-            <p className="text-xs text-slate-500 dark:text-slate-400 font-medium mt-1.5">
-              قم بإنشاء مهمة جديدة وحدد الجهة المرتبطة بها لإضافتها لقائمة المهام الجارية.
-            </p>
-          </div>
-          <button
-            onClick={onClose}
-            className="p-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:bg-slate-700 text-slate-500 dark:text-slate-400 rounded-full transition-colors cursor-pointer"
-          >
-            <X className="w-5 h-5" />
-          </button>
-        </div>
-        
-        <form onSubmit={handleSubmit} className="space-y-3">
+    <Dialog
+title="إضافة مهمة جديدة"
+description="قم بإنشاء مهمة جديدة وحدد الجهة المرتبطة بها لإضافتها لقائمة المهام الجارية."
+onClose={onClose}
+>
+<form onSubmit={handleSubmit} className="space-y-3">
           <div>
             <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-2">عنوان المهمة</label>
             <textarea
@@ -251,7 +233,6 @@ export default function TaskFormModal({
             </button>
           </div>
         </form>
-      </div>
-    </div>
+</Dialog>
   );
 }

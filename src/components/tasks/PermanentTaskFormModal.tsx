@@ -2,8 +2,9 @@
 
 import { useState, useEffect } from "react";
 import Select from "@/components/console/Select";
-import { X, CheckSquare, AlignLeft, Repeat, User } from "lucide-react";
+import { CheckSquare, AlignLeft, Repeat, User } from "lucide-react";
 import { Employee } from "@/types";
+import { Dialog } from "@/components/console/Dialog";
 
 interface PermanentTaskFormModalProps {
   isOpen: boolean;
@@ -53,20 +54,12 @@ export default function PermanentTaskFormModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-slate-950/60 backdrop-blur-sm" onClick={!isPending ? onClose : undefined} />
-      <div className="bg-white dark:bg-slate-800 rounded-3xl border border-slate-100 dark:border-slate-700 w-full max-w-lg overflow-hidden relative z-10 shadow-2xl p-6" dir="rtl">
-        <div className="flex items-center justify-between mb-6 border-b border-slate-100 dark:border-slate-700/50 pb-4">
-          <h2 className="text-lg font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
-            <CheckSquare className="w-5 h-5 text-primary" />
-            {initialData ? "تعديل المهمة الوظيفية" : "إضافة مهمة وظيفية"}
-          </h2>
-          <button onClick={onClose} disabled={isPending} className="p-2 text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-xl transition-colors cursor-pointer">
-            <X className="w-5 h-5" />
-          </button>
-        </div>
-
-        <form onSubmit={handleSubmit} className="space-y-4">
+    <Dialog
+title={<>{initialData ? "تعديل المهمة الوظيفية" : "إضافة مهمة وظيفية"}</>}
+onClose={onClose}
+busy={isPending}
+>
+<form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-2">اسم المهمة</label>
             <div className="relative">
@@ -148,7 +141,6 @@ export default function PermanentTaskFormModal({
             </button>
           </div>
         </form>
-      </div>
-    </div>
+</Dialog>
   );
 }

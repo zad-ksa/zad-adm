@@ -2,10 +2,11 @@
 
 import { useState, useTransition, useCallback, useEffect } from "react";
 import Select from "@/components/console/Select";
-import { X, Sparkles, FolderPlus, Folder, Calendar, UploadCloud, FileImage, Camera, Plus, Trash2, Loader2, ClipboardPaste } from "lucide-react";
+import { Sparkles, FolderPlus, Folder, Calendar, UploadCloud, FileImage, Camera, Plus, Trash2, Loader2, ClipboardPaste } from "lucide-react";
 import { Charity } from "@/types";
 import { addCategory, deleteCategory } from "@/app/actions/categories";
 import { useImagePaste } from "@/hooks/useImagePaste";
+import { Dialog } from "@/components/console/Dialog";
 
 interface AchievementFormModalProps {
   isOpen: boolean;
@@ -100,31 +101,12 @@ export default function AchievementFormModal({
   };
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-      <div
-        className="absolute inset-0 bg-slate-950/65 backdrop-blur-md transition-opacity duration-300"
-        onClick={onClose}
-      />
-      <div className="bg-white dark:bg-slate-800 rounded-3xl border border-slate-100 dark:border-slate-700/50 shadow-2xl w-full max-w-md overflow-hidden relative z-10 transform transition-all duration-300 scale-100 p-5 space-y-4" dir="rtl">
-        <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-700/50 pb-3">
-          <div>
-            <h3 className="text-base font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
-              <Sparkles className="w-4 h-4 text-emerald-500" />
-              تسجيل إنجاز مباشر
-            </h3>
-            <p className="text-xs text-slate-500 dark:text-slate-400 font-medium mt-1.5">
-              سجل منجزاً عملياً مباشراً ليظهر فوراً في ملفك المهني.
-            </p>
-          </div>
-          <button
-            onClick={onClose}
-            className="p-2 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-500 dark:text-slate-400 rounded-full transition-colors cursor-pointer"
-          >
-            <X className="w-5 h-5" />
-          </button>
-        </div>
-
-        <form onSubmit={handleSubmit} className="space-y-3">
+    <Dialog
+title="تسجيل إنجاز مباشر"
+description="سجل منجزاً عملياً مباشراً ليظهر فوراً في ملفك المهني."
+onClose={onClose}
+>
+<form onSubmit={handleSubmit} className="space-y-3">
           <div>
             <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-2">وصف الإنجاز</label>
             <input
@@ -329,7 +311,6 @@ export default function AchievementFormModal({
             </button>
           </div>
         </form>
-      </div>
-    </div>
+</Dialog>
   );
 }

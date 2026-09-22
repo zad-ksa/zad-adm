@@ -1,10 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { AlertTriangle, Loader2, X } from "lucide-react";
+import { AlertTriangle, Loader2 } from "lucide-react";
 import { getDesignRequestLog } from "@/app/actions/designRequests";
 import LinkifiedText from "@/components/ui/LinkifiedText";
 import { DESIGN_EVENT_LABEL, type DesignEventKind } from "@/lib/designEventLabels";
+import { Dialog } from "@/components/console/Dialog";
 
 /**
  * Everything that has happened to one design request, oldest first.
@@ -98,31 +99,14 @@ export default function DesignRequestLogModal({
     }).format(new Date(value));
 
   return (
-    <div className="design-requests-ui fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-slate-950/60 backdrop-blur-sm">
-      <div
-        dir="rtl"
-        className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-[var(--dr-shadow-card)] w-full max-w-lg max-h-[85vh] flex flex-col"
-      >
-        <header className="flex items-start justify-between gap-4 p-5 border-b border-slate-100 dark:border-slate-800">
-          <div className="min-w-0">
-            <h2 className="text-[15px] font-black text-slate-900 dark:text-slate-100">سجل الطلب</h2>
-            {title && (
-              <p className="mt-0.5 text-[12px] text-slate-500 dark:text-slate-400 break-words">
-                {title}
-              </p>
-            )}
-          </div>
-          <button
-            type="button"
-            onClick={onClose}
-            aria-label="إغلاق"
-            className="shrink-0 p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-          >
-            <X className="w-4 h-4" />
-          </button>
-        </header>
-
-        <div className="p-5 overflow-y-auto">
+    <Dialog
+scopeClassName="design-requests-ui"
+title="سجل الطلب"
+description={<>{title}</>}
+onClose={onClose}
+closeOnBackdrop={false}
+>
+<div className="p-5 overflow-y-auto">
           {error ? (
             <div className="flex items-start gap-2 rounded-xl bg-rose-500/[0.07] text-rose-600 dark:text-rose-400 p-3 text-[12px] font-bold">
               <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
@@ -163,7 +147,6 @@ export default function DesignRequestLogModal({
             </ol>
           )}
         </div>
-      </div>
-    </div>
+</Dialog>
   );
 }

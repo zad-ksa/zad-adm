@@ -66,6 +66,8 @@ import dynamic from "next/dynamic";
 
 import { uploadFile } from "@/lib/clientUpload";
 import { copyToClipboard } from "@/lib/clipboard";
+import { Dialog } from "@/components/console/Dialog";
+import { btn } from "@/components/console/ui";
 
 const TaskFormModal = dynamic(() => import("@/components/tasks/TaskFormModal"), { ssr: false });
 const AchievementFormModal = dynamic(() => import("@/components/tasks/AchievementFormModal"), { ssr: false });
@@ -1439,41 +1441,28 @@ ${combinedAchievements.length > 0 ? `
       {/* المهام الوظيفية — نافذة تُفتح من الزر البارز في رأس الصفحة، بدل عمود
           دائم كان يشارك الشاشة مع المهام الحالية ويشتّت النظر عنها. */}
       {openSidePanel === "permanent" && (filteredPermanentTasks.length > 0 || isDirectorOrAdmin) && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-          <div
-            className="absolute inset-0 bg-slate-950/65 backdrop-blur-md transition-opacity duration-300"
-            onClick={() => setOpenSidePanel(null)}
-          />
-          <div className="bg-white dark:bg-slate-800 rounded-3xl border border-slate-100 dark:border-slate-700/50 shadow-2xl w-full max-w-lg overflow-hidden relative z-10 max-h-[85vh] flex flex-col" dir="rtl">
-            <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100 dark:border-slate-700/40 shrink-0">
-              <h3 className="font-bold text-slate-800 dark:text-slate-100 text-sm flex items-center gap-1.5">
-                <Repeat className="w-4 h-4 text-indigo-500 dark:text-indigo-400" />
-                المهام الوظيفية
-                <span className="text-[10px] font-bold text-slate-400 bg-slate-100 dark:bg-slate-700 px-1.5 py-0.5 rounded-full">{filteredPermanentTasks.length}</span>
-              </h3>
-              <div className="flex items-center gap-2 shrink-0">
-                {isDirectorOrAdmin && (
-                  <button
-                    onClick={() => {
-                      setEditingPermanentTask(null);
-                      setShowPermanentTaskForm(true);
-                    }}
-                    className="text-[10px] font-bold bg-indigo-50 text-indigo-600 hover:bg-indigo-100 dark:bg-indigo-900/30 dark:text-indigo-400 dark:hover:bg-indigo-900/50 px-2 py-1 rounded-md flex items-center gap-1 transition-colors cursor-pointer"
-                  >
-                    <Plus className="w-3 h-3" />
-                    إضافة مهمة وظيفية
-                  </button>
-                )}
-                <button
-                  onClick={() => setOpenSidePanel(null)}
-                  className="p-1.5 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-500 dark:text-slate-400 rounded-full transition-colors cursor-pointer"
-                >
-                  <X className="w-4 h-4" />
-                </button>
-              </div>
-            </div>
-
-            <div className="divide-y divide-slate-100 dark:divide-slate-700/20 overflow-y-auto flex-1">
+        <Dialog
+icon={<Repeat className="size-4" />}
+title={<>المهام الوظيفية
+                 <span className="text-[10px] font-bold text-slate-400 bg-slate-100 dark:bg-slate-700 px-1.5 py-0.5 rounded-full">{filteredPermanentTasks.length}</span></>}
+onClose={() => setOpenSidePanel(null)}
+headerAction={
+  isDirectorOrAdmin ? (
+    <button
+      type="button"
+      onClick={() => {
+        setEditingPermanentTask(null);
+        setShowPermanentTaskForm(true);
+      }}
+      className={btn.ghost}
+    >
+      <Plus className="size-4" />
+      إضافة مهمة وظيفية
+    </button>
+  ) : undefined
+}
+>
+<div className="divide-y divide-slate-100 dark:divide-slate-700/20 overflow-y-auto flex-1">
               {filteredPermanentTasks.map((t) => (
                 <div key={t.id} className="px-3 py-2.5 flex items-start gap-2 group hover:bg-slate-100/60 dark:hover:bg-slate-700/20 transition-colors relative">
                   <Repeat className="w-3.5 h-3.5 text-indigo-400 dark:text-indigo-500 shrink-0 mt-0.5" />
@@ -1541,33 +1530,17 @@ ${combinedAchievements.length > 0 ? `
                 </div>
               )}
             </div>
-          </div>
-        </div>
+</Dialog>
       )}
 
       {/* المنجزات — نافذة تُفتح من الزر البارز في رأس الصفحة، لنفس السبب. */}
       {openSidePanel === "achievements" && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-          <div
-            className="absolute inset-0 bg-slate-950/65 backdrop-blur-md transition-opacity duration-300"
-            onClick={() => setOpenSidePanel(null)}
-          />
-          <div className="bg-white dark:bg-slate-800 rounded-3xl border border-slate-100 dark:border-slate-700/50 shadow-2xl w-full max-w-lg overflow-hidden relative z-10 max-h-[85vh] flex flex-col" dir="rtl">
-            <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100 dark:border-slate-700/40 shrink-0">
-              <h3 className="font-bold text-slate-800 dark:text-slate-100 text-sm flex items-center gap-1.5">
-                <CheckCircle2 className="w-4 h-4 text-emerald-500 dark:text-emerald-400" />
-                المنجزات
-                <span className="text-[10px] font-bold text-slate-400 bg-slate-100 dark:bg-slate-700 px-1.5 py-0.5 rounded-full">{combinedAchievements.length}</span>
-              </h3>
-              <button
-                onClick={() => setOpenSidePanel(null)}
-                className="p-1.5 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-500 dark:text-slate-400 rounded-full transition-colors cursor-pointer shrink-0"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-
-            <div className="divide-y divide-slate-100 dark:divide-slate-700/20 overflow-y-auto flex-1">
+        <Dialog
+title={<>المنجزات
+                 <span className="text-[10px] font-bold text-slate-400 bg-slate-100 dark:bg-slate-700 px-1.5 py-0.5 rounded-full">{combinedAchievements.length}</span></>}
+onClose={() => setOpenSidePanel(null)}
+>
+<div className="divide-y divide-slate-100 dark:divide-slate-700/20 overflow-y-auto flex-1">
             {combinedAchievements.map((item) => {
               const assignedEmp = employees.find((e) => e.id === item.assignedToId);
               const isTask = item.type === "task";
@@ -1647,8 +1620,7 @@ ${combinedAchievements.length > 0 ? `
               </div>
             )}
           </div>
-        </div>
-      </div>
+</Dialog>
       )}
 
       {/* Task Proof Upload Modal */}
@@ -1830,25 +1802,12 @@ ${combinedAchievements.length > 0 ? `
           (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
         );
         return (
-          <div className="fixed inset-0 z-[110] flex items-center justify-center p-4">
-            <div
-              className="absolute inset-0 bg-slate-950/65 backdrop-blur-md transition-opacity duration-300"
-              onClick={() => setDetailTask(null)}
-            />
-            <div className="bg-white dark:bg-slate-800 rounded-3xl border border-slate-100 dark:border-slate-700/50 shadow-2xl w-full max-w-lg overflow-hidden relative z-10 max-h-[85vh] flex flex-col" dir="rtl">
-              <div className="px-5 py-4 border-b border-slate-100 dark:border-slate-700/50 flex items-start justify-between gap-3 shrink-0">
-                <div>
-                  <h3 className="text-base font-bold text-slate-800 dark:text-slate-100 leading-snug">{detailTask.title}</h3>
-                  <p className="text-[11px] text-slate-400 dark:text-slate-500 mt-1">
-                    أضافها {creator?.name || "غير معروف"} · {timeAgoArabic(detailTask.createdAt)}
-                  </p>
-                </div>
-                <button onClick={() => setDetailTask(null)} className="p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors cursor-pointer shrink-0">
-                  <X className="w-4 h-4" />
-                </button>
-              </div>
-
-              <div className="p-5 overflow-y-auto space-y-4">
+          <Dialog
+title={<>{detailTask.title}</>}
+description={<>أضافها  {creator?.name || "غير معروف"} ·  {timeAgoArabic(detailTask.createdAt)}</>}
+onClose={() => setDetailTask(null)}
+>
+<div className="p-5 overflow-y-auto space-y-4">
                 {/* Summary chips */}
                 <div className="flex flex-wrap items-center gap-1.5">
                   {assignee && (
@@ -1908,8 +1867,7 @@ ${combinedAchievements.length > 0 ? `
                   )}
                 </div>
               </div>
-            </div>
-          </div>
+</Dialog>
         );
       })()}
 

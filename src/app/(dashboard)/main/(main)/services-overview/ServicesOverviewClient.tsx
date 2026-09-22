@@ -42,6 +42,8 @@ import {
 } from "@/app/actions/stageSteps";
 import { updateCharityLogo } from "@/app/actions/charity";
 import { updateTimelineDisplayName } from "@/app/actions/settings";
+import { Dialog } from "@/components/console/Dialog";
+import { btn } from "@/components/console/ui";
 
 type Charity = {
   id: string;
@@ -1670,29 +1672,22 @@ export default function ServicesOverviewClient({
       )}
 
       {showComingSoonModal && canEdit && isGenericTab && genericSvcInfo && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={() => setShowComingSoonModal(false)}></div>
-          <div className="relative bg-white dark:bg-slate-800 rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200 border border-slate-200 dark:border-slate-700" dir="rtl">
-            <div className="p-5 border-b border-slate-100 dark:border-slate-700 flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-amber-500/10 text-amber-500 rounded-xl">
-                  <Clock className="w-6 h-6" />
-                </div>
-                <div>
-                  <h2 className="text-lg font-bold text-slate-800 dark:text-slate-100">
-                    تحديد حالة (قريباً) - {genericSvcInfo.name}
-                  </h2>
-                  <p className="text-xs text-slate-500 dark:text-slate-400">
-                    التحكم في ظهور كلمة "قريباً" في بطاقات الجمعيات لهذه الخدمة
-                  </p>
-                </div>
-              </div>
-              <button onClick={() => setShowComingSoonModal(false)} className="p-1.5 text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg">
-                <X className="w-5 h-5" />
+        <Dialog
+title={<>تحديد حالة (قريباً) -  {genericSvcInfo.name}</>}
+description={<>التحكم في ظهور كلمة "قريباً" في بطاقات الجمعيات لهذه الخدمة</>}
+onClose={() => setShowComingSoonModal(false)}
+footer={
+<>
+<button type="button"
+                onClick={() => setShowComingSoonModal(false)}
+                className={btn.secondary}
+              >
+                إغلاق
               </button>
-            </div>
-
-            <div className="p-5 space-y-5 max-h-[70vh] overflow-y-auto">
+</>
+}
+>
+<div className="p-5 space-y-5 max-h-[70vh] overflow-y-auto">
               {/* Option 1: All Charities */}
               <div className="p-4 bg-slate-50 dark:bg-slate-900/50 rounded-xl border border-slate-200/80 dark:border-slate-700 space-y-3">
                 <div className="flex items-center justify-between">
@@ -1762,17 +1757,7 @@ export default function ServicesOverviewClient({
                 </div>
               </div>
             </div>
-
-            <div className="p-4 border-t border-slate-100 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50 flex justify-end">
-              <button
-                onClick={() => setShowComingSoonModal(false)}
-                className="px-4 py-2 text-xs font-bold bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 rounded-lg transition-colors"
-              >
-                إغلاق
-              </button>
-            </div>
-          </div>
-        </div>
+</Dialog>
       )}
 
       {tabs.length === 0 && (
@@ -1877,16 +1862,13 @@ export default function ServicesOverviewClient({
 
       {/* Logo edit modal */}
       {logoEditCharityId && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={() => !isLogoPending && setLogoEditCharityId(null)} />
-          <div className="relative bg-white dark:bg-slate-800 rounded-2xl w-full max-w-sm shadow-2xl border border-slate-200 dark:border-slate-700 animate-in zoom-in-95 duration-200" dir="rtl">
-            <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100 dark:border-slate-700">
-              <h3 className="text-sm font-bold text-slate-800 dark:text-slate-100">تغيير شعار الجمعية</h3>
-              <button onClick={() => setLogoEditCharityId(null)} disabled={isLogoPending} className="p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg">
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-            <div className="p-5 space-y-4">
+        <Dialog
+size="sm"
+title="تغيير شعار الجمعية"
+onClose={() => setLogoEditCharityId(null)}
+busy={isLogoPending}
+>
+<div className="p-5 space-y-4">
               {/* Preview */}
               <div className="flex justify-center">
                 <button
@@ -1949,8 +1931,7 @@ export default function ServicesOverviewClient({
                 </button>
               </div>
             </div>
-          </div>
-        </div>
+</Dialog>
       )}
 
       {/* Backdrop for dropdown */}

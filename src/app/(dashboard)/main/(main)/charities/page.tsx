@@ -337,7 +337,7 @@ export default async function CharitiesDashboard() {
           </div>
 
           {charitiesData.length === 0 && (
-            <div className="bg-white dark:bg-slate-800 rounded-2xl p-16 text-center text-slate-500 dark:text-slate-400 border border-slate-100 dark:border-slate-700 shadow-sm">
+            <div className="bg-white dark:bg-slate-800 rounded-xl p-16 text-center text-slate-500 dark:text-slate-400 border border-slate-100 dark:border-slate-700 shadow-sm">
               <p className="font-medium">لا توجد جمعيات متعاقد معها حالياً.</p>
             </div>
           )}
@@ -361,7 +361,7 @@ export default async function CharitiesDashboard() {
             </Link>
           </div>
 
-          <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 p-4 shadow-sm divide-y divide-slate-100 dark:divide-slate-700">
+          <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-700 p-4 shadow-sm divide-y divide-slate-100 dark:divide-slate-700">
             {newsItems.map((item, idx) => (
               <div key={item.id} className={`group ${idx > 0 ? "pt-3" : ""} ${idx < newsItems.length - 1 ? "pb-3" : ""}`}>
                 <div className="flex flex-wrap items-center gap-2 mb-2">

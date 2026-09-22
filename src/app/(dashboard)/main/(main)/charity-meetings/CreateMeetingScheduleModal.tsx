@@ -178,7 +178,7 @@ footer={<>
                   value={title}
                   onChange={e => setTitle(e.target.value)}
                   placeholder="مثال: اجتماع ربع سنوي"
-                  className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all text-sm font-medium"
+                  className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all text-sm font-medium"
                 />
               </div>
 
@@ -196,13 +196,13 @@ footer={<>
                       setDuration(parseInt(e.target.value));
                       setHasGenerated(false);
                     }}
-                    className="w-full pl-4 pr-10 py-3 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all text-sm font-medium"
+                    className="w-full pl-4 pr-10 py-3 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all text-sm font-medium"
                   />
                 </div>
               </div>
             </div>
 
-            <div className="bg-slate-50 dark:bg-slate-950 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 space-y-4">
+            <div className="bg-slate-50 dark:bg-slate-950 p-5 rounded-xl border border-slate-200 dark:border-slate-800 space-y-4">
               <h3 className="text-sm font-bold text-slate-800 dark:text-slate-200 flex items-center gap-2">
                 <Calendar className="w-4 h-4 text-primary" />
                 تحديد نطاق الأيام والأوقات
@@ -216,7 +216,7 @@ footer={<>
                     required
                     value={startDate}
                     onChange={e => { setStartDate(e.target.value); setHasGenerated(false); }}
-                    className="w-full px-3 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl focus:ring-1 focus:ring-primary outline-none text-sm font-medium"
+                    className="w-full px-3 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg focus:ring-1 focus:ring-primary outline-none text-sm font-medium"
                   />
                 </div>
                 <div className="space-y-1">
@@ -226,7 +226,7 @@ footer={<>
                     required
                     value={endDate}
                     onChange={e => { setEndDate(e.target.value); setHasGenerated(false); }}
-                    className="w-full px-3 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl focus:ring-1 focus:ring-primary outline-none text-sm font-medium"
+                    className="w-full px-3 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg focus:ring-1 focus:ring-primary outline-none text-sm font-medium"
                   />
                 </div>
                 <div className="space-y-1">
@@ -236,7 +236,7 @@ footer={<>
                     required
                     value={startTime}
                     onChange={e => { setStartTime(e.target.value); setHasGenerated(false); }}
-                    className="w-full px-3 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl focus:ring-1 focus:ring-primary outline-none text-sm font-medium font-mono"
+                    className="w-full px-3 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg focus:ring-1 focus:ring-primary outline-none text-sm font-medium font-mono"
                   />
                 </div>
                 <div className="space-y-1">
@@ -246,7 +246,7 @@ footer={<>
                     required
                     value={endTime}
                     onChange={e => { setEndTime(e.target.value); setHasGenerated(false); }}
-                    className="w-full px-3 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl focus:ring-1 focus:ring-primary outline-none text-sm font-medium font-mono"
+                    className="w-full px-3 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg focus:ring-1 focus:ring-primary outline-none text-sm font-medium font-mono"
                   />
                 </div>
               </div>
@@ -254,14 +254,14 @@ footer={<>
               <button
                 type="button"
                 onClick={handleGenerate}
-                className="w-full mt-2 bg-slate-900 dark:bg-white text-white dark:text-slate-900 py-3 rounded-xl font-bold hover:opacity-90 transition-opacity flex items-center justify-center gap-2"
+                className="w-full mt-2 bg-slate-900 dark:bg-white text-white dark:text-slate-900 py-3 rounded-lg font-bold hover:opacity-90 transition-opacity flex items-center justify-center gap-2"
               >
                 <Wand2 className="w-4 h-4" />
                 توليد الأوقات
               </button>
             </div>
 
-            <label className="flex items-start gap-3 bg-slate-50 dark:bg-slate-950 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 cursor-pointer">
+            <label className="flex items-start gap-3 bg-slate-50 dark:bg-slate-950 p-4 rounded-xl border border-slate-200 dark:border-slate-800 cursor-pointer">
               <input
                 type="checkbox"
                 checked={allowAlternativeRequest}

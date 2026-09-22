@@ -157,11 +157,11 @@ export default async function AttendanceSettingsPage() {
             <Link
               key={card.href}
               href={card.href}
-              className="group bg-white dark:bg-slate-900 p-5 rounded-3xl shadow-sm border border-slate-200 dark:border-slate-800 hover:shadow-xl hover:shadow-primary/5 hover:border-primary/20 transition-all overflow-hidden relative"
+              className="group bg-white dark:bg-slate-900 p-5 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800 hover:shadow-xl hover:shadow-primary/5 hover:border-primary/20 transition-all overflow-hidden relative"
             >
               <div className="absolute -left-6 -bottom-6 w-24 h-24 bg-primary/5 rounded-full group-hover:scale-150 transition-transform duration-500 pointer-events-none" />
               <div
-                className={`w-11 h-11 ${card.tile} ${card.tone} rounded-2xl flex items-center justify-center mb-3.5 group-hover:scale-110 group-hover:-rotate-3 transition-transform shadow-inner`}
+                className={`w-11 h-11 ${card.tile} ${card.tone} rounded-xl flex items-center justify-center mb-3.5 group-hover:scale-110 group-hover:-rotate-3 transition-transform shadow-inner`}
               >
                 <card.icon className="w-5 h-5" />
               </div>

@@ -574,7 +574,7 @@ export default function PerformanceTable({
 
           <button
             onClick={() => router.push(`/charity/${encodeURIComponent(charityName)}/strategy/report?year=${year}&quarter=${quarter}`)}
-            className="bg-indigo-50 dark:bg-indigo-900/30 hover:bg-indigo-100 dark:hover:bg-indigo-900/50 text-indigo-700 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800 px-5 py-2.5 rounded-xl font-bold transition-all flex items-center gap-2 cursor-pointer select-none active:scale-[0.98]"
+            className="bg-indigo-50 dark:bg-indigo-900/30 hover:bg-indigo-100 dark:hover:bg-indigo-900/50 text-indigo-700 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800 px-5 py-2.5 rounded-lg font-bold transition-all flex items-center gap-2 cursor-pointer select-none active:scale-[0.98]"
             title="إنشاء تقرير الأداء الاستراتيجي"
           >
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -958,7 +958,7 @@ footer={<>
                   type="text"
                   value={modalInput}
                   onChange={(e) => setModalInput(e.target.value.slice(0, 5))}
-                  className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none text-center font-bold text-xl transition-all shadow-sm"
+                  className="w-full px-4 py-3 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none text-center font-bold text-xl transition-all shadow-sm"
                   placeholder="أدخل الرمز هنا (مثال: س)"
                   autoFocus
                   onKeyDown={(e) => {

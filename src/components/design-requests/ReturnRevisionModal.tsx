@@ -92,7 +92,7 @@ footer={
           <button
             onClick={submit}
             disabled={busy || notes.trim().length < 5}
-            className={`h-11 px-6 flex items-center gap-2 text-white rounded-xl text-[13px] font-bold transition-all disabled:opacity-50 active:translate-y-px ${
+            className={`h-11 px-6 flex items-center gap-2 text-white rounded-lg text-[13px] font-bold transition-all disabled:opacity-50 active:translate-y-px ${
               close ? "bg-rose-600 hover:bg-rose-700" : "bg-amber-600 hover:bg-amber-700"
             }`}
           >
@@ -129,7 +129,7 @@ footer={
               rows={5}
               maxLength={2000}
               placeholder="وضّح ما نُفّذ وما لم يُنفّذ ولماذا..."
-              className="w-full px-3 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 text-[13px] focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none resize-none placeholder:text-slate-400"
+              className="w-full px-3 py-2.5 rounded-lg bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 text-[13px] focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none resize-none placeholder:text-slate-400"
             />
           </div>
 
@@ -141,7 +141,7 @@ footer={
                   key={String(opt.value)}
                   type="button"
                   onClick={() => setClose(opt.value)}
-                  className={`w-full text-right rounded-xl border p-3.5 transition-colors ${
+                  className={`w-full text-right rounded-lg border p-3.5 transition-colors ${
                     on
                       ? opt.value
                         ? "border-rose-400 dark:border-rose-500/60 bg-rose-50 dark:bg-rose-500/10"

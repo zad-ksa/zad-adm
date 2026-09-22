@@ -696,7 +696,7 @@ export default function TemplateLibraryClient() {
   return (
     <div className="space-y-4" dir="rtl">
       {/* Breadcrumb + actions */}
-      <div className="bg-white dark:bg-[#0A0A0A] border border-slate-200 dark:border-slate-800 rounded-2xl p-3 shadow-sm flex items-center justify-between gap-3 flex-wrap">
+      <div className="bg-white dark:bg-[#0A0A0A] border border-slate-200 dark:border-slate-800 rounded-xl p-3 shadow-sm flex items-center justify-between gap-3 flex-wrap">
         <div className="flex items-center gap-1 min-w-0 flex-wrap text-xs font-bold">
           {/* كل درجة في المسار هدف إفلات — وهي الطريقة الوحيدة للنقل إلى
               الأعلى بالسحب، إذ لا يظهر المجلد الأب بين المعروضات. */}
@@ -827,7 +827,7 @@ export default function TemplateLibraryClient() {
               onClick={paste}
               disabled={isPasting}
               title="لصق في هذا المجلد (Ctrl+V)"
-              className="h-9 px-3 rounded-xl bg-primary/10 text-primary dark:text-teal-300 border border-primary/30 hover:bg-primary/15 transition-colors font-bold text-xs flex items-center gap-1.5 disabled:opacity-50"
+              className="h-9 px-3 rounded-lg bg-primary/10 text-primary dark:text-teal-300 border border-primary/30 hover:bg-primary/15 transition-colors font-bold text-xs flex items-center gap-1.5 disabled:opacity-50"
             >
               {isPasting ? <Loader2 className="w-4 h-4 animate-spin" /> : <ClipboardPaste className="w-4 h-4" />}
               لصق {clipboard.ids.length}
@@ -850,7 +850,7 @@ export default function TemplateLibraryClient() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder={currentId ? "بحث في هذا المجلد وما بداخله…" : "بحث في المكتبة كلها…"}
-            className="w-full h-9 ps-9 pe-9 rounded-xl bg-slate-100/70 dark:bg-slate-800/60 border border-transparent focus:bg-white dark:focus:bg-slate-900 focus:border-primary/30 outline-none text-sm transition-all"
+            className="w-full h-9 ps-9 pe-9 rounded-lg bg-slate-100/70 dark:bg-slate-800/60 border border-transparent focus:bg-white dark:focus:bg-slate-900 focus:border-primary/30 outline-none text-sm transition-all"
           />
           {search && (
             <button

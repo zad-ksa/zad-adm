@@ -59,7 +59,7 @@ export default function WorkflowSettingsClient({
       )}
 
       {/* بدون workflow */}
-      <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 p-4">
+      <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-700 p-4">
         <div className="flex items-center justify-between">
           <div>
             <p className="text-sm font-bold text-slate-700 dark:text-slate-200">بدون سلسلة اعتماد</p>
@@ -80,7 +80,7 @@ export default function WorkflowSettingsClient({
 
       {/* قائمة السلاسل */}
       {chains.map(chain => (
-        <div key={chain.id} className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 overflow-hidden">
+        <div key={chain.id} className="bg-white dark:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-700 overflow-hidden">
           {/* رأس السلسلة */}
           <div className="flex items-center gap-3 p-4">
             <button onClick={() => setExpandedChain(expandedChain === chain.id ? null : chain.id)}
@@ -222,7 +222,7 @@ export default function WorkflowSettingsClient({
                     value={addingStep[chain.id]?.label || ""}
                     onChange={e => setAddingStep(prev => ({ ...prev, [chain.id]: { ...prev[chain.id], label: e.target.value } }))}
                     placeholder="تسمية (اختياري)"
-                    className="w-32 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-sm bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-primary/50" />
+                    className="w-32 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-sm bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-primary/50" />
                   <button
                     disabled={!addingStep[chain.id]?.approverId || isPending}
                     onClick={() => run(() => addStep({ chainId: chain.id, approverId: addingStep[chain.id].approverId, label: addingStep[chain.id]?.label }))}
@@ -238,12 +238,12 @@ export default function WorkflowSettingsClient({
       ))}
 
       {/* إنشاء سلسلة جديدة */}
-      <div className="bg-white dark:bg-slate-800 rounded-2xl border border-dashed border-slate-300 dark:border-slate-600 p-4">
+      <div className="bg-white dark:bg-slate-800 rounded-xl border border-dashed border-slate-300 dark:border-slate-600 p-4">
         <p className="text-xs font-bold text-slate-500 dark:text-slate-400 mb-2">إنشاء سلسلة اعتماد جديدة</p>
         <div className="flex gap-2">
           <input value={newChainName} onChange={e => setNewChainName(e.target.value)}
             placeholder="اسم السلسلة... مثال: مسار المشتريات"
-            className="flex-1 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-sm bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-primary/50" />
+            className="flex-1 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-sm bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-primary/50" />
           <button disabled={!newChainName.trim() || isPending}
             onClick={() => run(async () => { await createChain(newChainName); setNewChainName(""); })}
             className={cx(btn.primary, "shrink-0")}>

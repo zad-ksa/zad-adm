@@ -136,7 +136,7 @@ export default function GovernanceManualViewer({
     <div className="space-y-8 animate-in fade-in duration-500 pb-12" dir="rtl">
       {isUpdatingSize && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm">
-          <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-xl flex items-center gap-4">
+          <div className="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-xl flex items-center gap-4">
             <Loader2 className="w-6 h-6 text-primary animate-spin" />
             <p className="font-bold text-slate-700 dark:text-slate-200">جاري التوجيه للمعايير...</p>
           </div>
@@ -144,7 +144,7 @@ export default function GovernanceManualViewer({
       )}
 
       {/* Auto Selection Section */}
-      <div className="bg-white dark:bg-[#111] p-6 md:p-8 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm relative overflow-hidden group">
+      <div className="bg-white dark:bg-[#111] p-6 md:p-8 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm relative overflow-hidden group">
         <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full blur-3xl pointer-events-none" />
         
         <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
@@ -165,7 +165,7 @@ export default function GovernanceManualViewer({
               placeholder="إجمالي الإيرادات السنوية..." 
               value={revenueInput}
               onChange={(e) => setRevenueInput(e.target.value)}
-              className="flex-1 md:w-64 px-4 py-3 bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 rounded-xl focus:ring-2 focus:ring-primary focus:border-primary outline-none text-slate-900 dark:text-white transition-all font-medium placeholder:text-slate-400"
+              className="flex-1 md:w-64 px-4 py-3 bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none text-slate-900 dark:text-white transition-all font-medium placeholder:text-slate-400"
               required
             />
             <button 
@@ -192,7 +192,7 @@ export default function GovernanceManualViewer({
             key={size.id}
             onClick={() => handleSizeSelect(size.id as CharitySize)}
             disabled={isUpdatingSize}
-            className="md:col-span-4 relative rounded-3xl overflow-hidden bg-white dark:bg-[#111] ring-1 ring-slate-200 dark:ring-slate-800/80 shadow-sm hover:shadow-md hover:ring-primary/40 dark:hover:ring-primary/50 transition-all duration-300 p-6 flex flex-col gap-4 group text-right w-full cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
+            className="md:col-span-4 relative rounded-xl overflow-hidden bg-white dark:bg-[#111] ring-1 ring-slate-200 dark:ring-slate-800/80 shadow-sm hover:shadow-md hover:ring-primary/40 dark:hover:ring-primary/50 transition-all duration-300 p-6 flex flex-col gap-4 group text-right w-full cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
           >
             <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
             

@@ -80,7 +80,7 @@ export default function DesignTypePicker({
               onClick={() => onToggle(option.id)}
               aria-pressed={checked}
               style={{ fontSize: "var(--dr-fs-body)" }}
-              className={`flex items-center gap-2 px-3 py-2.5 rounded-xl text-right border transition-colors ${
+              className={`flex items-center gap-2 px-3 py-2.5 rounded-lg text-right border transition-colors ${
                 checked
                   ? "border-primary/40 bg-primary/[0.06] text-primary dark:text-teal-300"
                   : "border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:border-primary/30"

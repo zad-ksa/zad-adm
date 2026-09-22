@@ -197,7 +197,7 @@ export default function NewsFilterClient({
           actions={
         <button
           onClick={() => setShowFilters(v => !v)}
-          className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold border transition-colors ${hasFilters ? "bg-primary/10 text-primary border-primary/30" : "bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:border-slate-300"}`}
+          className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-bold border transition-colors ${hasFilters ? "bg-primary/10 text-primary border-primary/30" : "bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:border-slate-300"}`}
         >
           <Filter className="w-3.5 h-3.5" />
           تصفية
@@ -394,7 +394,7 @@ onClose={() => setShowNewsForm(false)}
                   <button
                     type="button"
                     onClick={() => { setShowAddCat(v => !v); setCatError(null); setNewCatName(""); }}
-                    className="shrink-0 w-9 h-9 flex items-center justify-center rounded-xl bg-amber-50 dark:bg-amber-900/20 text-amber-600 hover:bg-amber-100 dark:hover:bg-amber-900/40 border border-amber-200 dark:border-amber-800/50 transition-colors"
+                    className="shrink-0 w-9 h-9 flex items-center justify-center rounded-lg bg-amber-50 dark:bg-amber-900/20 text-amber-600 hover:bg-amber-100 dark:hover:bg-amber-900/40 border border-amber-200 dark:border-amber-800/50 transition-colors"
                   >
                     <Plus className="w-3.5 h-3.5" />
                   </button>
@@ -438,7 +438,7 @@ onClose={() => setShowNewsForm(false)}
                   value={newsTitle}
                   onChange={e => setNewsTitle(e.target.value)}
                   placeholder="عنوان الخبر أو الإنجاز..."
-                  className="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-xs outline-none focus:ring-2 focus:ring-amber-500/20 text-slate-800 dark:text-slate-100 font-medium"
+                  className="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-xs outline-none focus:ring-2 focus:ring-amber-500/20 text-slate-800 dark:text-slate-100 font-medium"
                 />
               </div>
 
@@ -450,7 +450,7 @@ onClose={() => setShowNewsForm(false)}
                   onChange={e => setNewsDescription(e.target.value)}
                   placeholder="تفاصيل إضافية..."
                   rows={3}
-                  className="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-xs outline-none focus:ring-2 focus:ring-amber-500/20 text-slate-800 dark:text-slate-100 font-medium resize-none"
+                  className="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-xs outline-none focus:ring-2 focus:ring-amber-500/20 text-slate-800 dark:text-slate-100 font-medium resize-none"
                 />
               </div>
 
@@ -461,7 +461,7 @@ onClose={() => setShowNewsForm(false)}
                   type="date"
                   value={newsDate}
                   onChange={e => setNewsDate(e.target.value)}
-                  className="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-xs outline-none focus:ring-2 focus:ring-amber-500/20 text-slate-800 dark:text-slate-100 cursor-pointer"
+                  className="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-xs outline-none focus:ring-2 focus:ring-amber-500/20 text-slate-800 dark:text-slate-100 cursor-pointer"
                 />
               </div>
 
@@ -472,7 +472,7 @@ onClose={() => setShowNewsForm(false)}
                   إلغاء
                 </button>
                 <button type="submit" disabled={isPending || selectedCharityNames.length === 0 || !newsTitle.trim()}
-                  className="px-4 py-2 rounded-xl bg-amber-600 text-white hover:bg-amber-700 font-bold text-xs flex items-center gap-1.5 disabled:opacity-75 disabled:cursor-not-allowed shadow-sm">
+                  className="px-4 py-2 rounded-lg bg-amber-600 text-white hover:bg-amber-700 font-bold text-xs flex items-center gap-1.5 disabled:opacity-75 disabled:cursor-not-allowed shadow-sm">
                   {isPending ? <><Loader2 className="w-3.5 h-3.5 animate-spin" />جاري...</> : "نشر الخبر"}
                 </button>
               </div>

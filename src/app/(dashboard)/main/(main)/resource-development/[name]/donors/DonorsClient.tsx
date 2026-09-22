@@ -70,13 +70,13 @@ export default function DonorsClient({
   return (
     <div className="space-y-8 animate-fade-in" dir="rtl">
       {successMsg && (
-        <div className="fixed bottom-6 left-6 z-50 bg-emerald-500 text-white px-5 py-3 rounded-2xl shadow-xl flex items-center gap-2 animate-fade-in font-bold text-sm animate-bounce">
+        <div className="fixed bottom-6 left-6 z-50 bg-emerald-500 text-white px-5 py-3 rounded-xl shadow-xl flex items-center gap-2 animate-fade-in font-bold text-sm animate-bounce">
           <CheckCircle2 className="w-5 h-5" />
           {successMsg}
         </div>
       )}
       {errorMsg && (
-        <div className="fixed bottom-6 left-6 z-50 bg-red-500 text-white px-5 py-3 rounded-2xl shadow-xl flex items-center gap-2 animate-fade-in font-bold text-sm">
+        <div className="fixed bottom-6 left-6 z-50 bg-red-500 text-white px-5 py-3 rounded-xl shadow-xl flex items-center gap-2 animate-fade-in font-bold text-sm">
           <AlertCircle className="w-5 h-5" />
           {errorMsg}
         </div>
@@ -99,19 +99,19 @@ export default function DonorsClient({
           <form onSubmit={handleAddDonor} className="bg-white dark:bg-slate-800 p-4 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm animate-fade-in grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-3 items-end">
             <div>
               <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-1">اسم الجهة المانحة</label>
-              <input required type="text" value={donorForm.name} onChange={e => setDonorForm({...donorForm, name: e.target.value})} className="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary font-bold dark:text-slate-100" />
+              <input required type="text" value={donorForm.name} onChange={e => setDonorForm({...donorForm, name: e.target.value})} className="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-lg px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary font-bold dark:text-slate-100" />
             </div>
             <div>
               <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-1">اسم المستخدم</label>
-              <input required type="text" value={donorForm.username} onChange={e => setDonorForm({...donorForm, username: e.target.value})} className="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary font-bold dark:text-slate-100" />
+              <input required type="text" value={donorForm.username} onChange={e => setDonorForm({...donorForm, username: e.target.value})} className="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-lg px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary font-bold dark:text-slate-100" />
             </div>
             <div>
               <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-1">كلمة المرور</label>
-              <input required type="text" value={donorForm.password} onChange={e => setDonorForm({...donorForm, password: e.target.value})} className="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary font-bold dark:text-slate-100" />
+              <input required type="text" value={donorForm.password} onChange={e => setDonorForm({...donorForm, password: e.target.value})} className="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-lg px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary font-bold dark:text-slate-100" />
             </div>
             <div>
               <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-1">رابط الموقع (اختياري)</label>
-              <input type="url" value={donorForm.website} onChange={e => setDonorForm({...donorForm, website: e.target.value})} className="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary font-bold dark:text-slate-100" />
+              <input type="url" value={donorForm.website} onChange={e => setDonorForm({...donorForm, website: e.target.value})} className="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-lg px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary font-bold dark:text-slate-100" />
             </div>
             <button type="submit" disabled={isPending} className={cx(btn.primary, "w-full")}>
               حفظ الحساب

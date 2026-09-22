@@ -137,7 +137,7 @@ export default function DesignRequestCard({
       <button
         type="button"
         onClick={() => setRowOpen(true)}
-        className="design-requests-ui group w-full rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0A0A0A] shadow-sm hover:shadow-md dark:shadow-none hover:border-primary/40 dark:hover:border-teal-500/40 transition-all duration-300 text-right cursor-pointer"
+        className="design-requests-ui group w-full rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0A0A0A] shadow-sm hover:shadow-md dark:shadow-none hover:border-primary/40 dark:hover:border-teal-500/40 transition-all duration-300 text-right cursor-pointer"
       >
         {/* صف الجدول — سطح المكتب. كل معلومة في عمودها الثابت، ورأس الجدول في
             DesignRequestsClient يطابقها بالحرف. */}
@@ -227,7 +227,7 @@ export default function DesignRequestCard({
 
   return (
     <div
-      className={`design-requests-ui group flex flex-col rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0A0A0A] shadow-sm hover:shadow-md dark:shadow-none hover:border-primary/40 dark:hover:border-teal-500/40 transition-all duration-300 ${
+      className={`design-requests-ui group flex flex-col rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0A0A0A] shadow-sm hover:shadow-md dark:shadow-none hover:border-primary/40 dark:hover:border-teal-500/40 transition-all duration-300 ${
         isList ? "p-4" : "h-full p-5"
       }`}
     >

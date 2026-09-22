@@ -225,13 +225,13 @@ export default function GrantsClient({
   return (
     <div className="space-y-8 animate-fade-in" dir="rtl">
       {successMsg && (
-        <div className="fixed bottom-6 left-6 z-50 bg-emerald-500 text-white px-5 py-3 rounded-2xl shadow-xl flex items-center gap-2 animate-fade-in font-bold text-sm animate-bounce">
+        <div className="fixed bottom-6 left-6 z-50 bg-emerald-500 text-white px-5 py-3 rounded-xl shadow-xl flex items-center gap-2 animate-fade-in font-bold text-sm animate-bounce">
           <CheckCircle2 className="w-5 h-5" />
           {successMsg}
         </div>
       )}
       {errorMsg && (
-        <div className="fixed bottom-6 left-6 z-50 bg-red-500 text-white px-5 py-3 rounded-2xl shadow-xl flex items-center gap-2 animate-fade-in font-bold text-sm">
+        <div className="fixed bottom-6 left-6 z-50 bg-red-500 text-white px-5 py-3 rounded-xl shadow-xl flex items-center gap-2 animate-fade-in font-bold text-sm">
           <AlertCircle className="w-5 h-5" />
           {errorMsg}
         </div>
@@ -252,18 +252,18 @@ export default function GrantsClient({
         ]}
       />
 
-      <div className="flex justify-between items-center bg-white dark:bg-slate-800 p-2 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700 overflow-x-auto">
+      <div className="flex justify-between items-center bg-white dark:bg-slate-800 p-2 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700 overflow-x-auto">
         <div className="flex gap-1">
-          <button onClick={() => setActiveTab("PENDING")} className={`px-4 py-2 rounded-xl text-sm font-bold whitespace-nowrap transition-all ${activeTab === "PENDING" ? "bg-primary text-white shadow-md" : "text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700"}`}>
+          <button onClick={() => setActiveTab("PENDING")} className={`px-4 py-2 rounded-lg text-sm font-bold whitespace-nowrap transition-all ${activeTab === "PENDING" ? "bg-primary text-white shadow-md" : "text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700"}`}>
             المنح المرفوعة ({pendingGrants.length})
           </button>
-          <button onClick={() => setActiveTab("APPROVED")} className={`px-4 py-2 rounded-xl text-sm font-bold whitespace-nowrap transition-all ${activeTab === "APPROVED" ? "bg-emerald-500 text-white shadow-md shadow-emerald-500/20" : "text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700"}`}>
+          <button onClick={() => setActiveTab("APPROVED")} className={`px-4 py-2 rounded-lg text-sm font-bold whitespace-nowrap transition-all ${activeTab === "APPROVED" ? "bg-emerald-500 text-white shadow-md shadow-emerald-500/20" : "text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700"}`}>
             المنح المقبولة ({approvedGrants.length})
           </button>
-          <button onClick={() => setActiveTab("CLOSED")} className={`px-4 py-2 rounded-xl text-sm font-bold whitespace-nowrap transition-all ${activeTab === "CLOSED" ? "bg-slate-700 text-white shadow-md" : "text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700"}`}>
+          <button onClick={() => setActiveTab("CLOSED")} className={`px-4 py-2 rounded-lg text-sm font-bold whitespace-nowrap transition-all ${activeTab === "CLOSED" ? "bg-slate-700 text-white shadow-md" : "text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700"}`}>
             المنح المغلقة ({closedGrants.length})
           </button>
-          <button onClick={() => setActiveTab("REJECTED")} className={`px-4 py-2 rounded-xl text-sm font-bold whitespace-nowrap transition-all ${activeTab === "REJECTED" ? "bg-red-500 text-white shadow-md shadow-red-500/20" : "text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700"}`}>
+          <button onClick={() => setActiveTab("REJECTED")} className={`px-4 py-2 rounded-lg text-sm font-bold whitespace-nowrap transition-all ${activeTab === "REJECTED" ? "bg-red-500 text-white shadow-md shadow-red-500/20" : "text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700"}`}>
             المنح المرفوضة ({rejectedGrants.length})
           </button>
         </div>
@@ -273,7 +273,7 @@ export default function GrantsClient({
       </div>
 
       {showAddGrant && (
-        <form onSubmit={handleAddGrant} className="bg-white dark:bg-slate-800 p-5 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm animate-fade-in grid grid-cols-1 md:grid-cols-5 gap-4 items-end">
+        <form onSubmit={handleAddGrant} className="bg-white dark:bg-slate-800 p-5 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm animate-fade-in grid grid-cols-1 md:grid-cols-5 gap-4 items-end">
           <div className="md:col-span-1">
             <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-1.5">الجهة المانحة</label>
             {donorAccounts.length > 0 ? (
@@ -286,16 +286,16 @@ export default function GrantsClient({
                 className="w-full [&>button]:w-full [&>button]:justify-between"
               />
             ) : (
-              <input required type="text" placeholder="اكتب اسم الجهة" value={grantForm.entityName} onChange={e => setGrantForm({...grantForm, entityName: e.target.value})} className="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary font-bold dark:text-slate-100" />
+              <input required type="text" placeholder="اكتب اسم الجهة" value={grantForm.entityName} onChange={e => setGrantForm({...grantForm, entityName: e.target.value})} className="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-lg px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary font-bold dark:text-slate-100" />
             )}
           </div>
           <div className="md:col-span-1">
             <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-1.5">اسم المشروع</label>
-            <input required type="text" value={grantForm.initiative} onChange={e => setGrantForm({...grantForm, initiative: e.target.value})} className="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary font-bold dark:text-slate-100" />
+            <input required type="text" value={grantForm.initiative} onChange={e => setGrantForm({...grantForm, initiative: e.target.value})} className="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-lg px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary font-bold dark:text-slate-100" />
           </div>
           <div className="md:col-span-1">
             <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-1.5">التكلفة الإجمالية (ريال)</label>
-            <input required type="number" min="0" value={grantForm.amount} onChange={e => setGrantForm({...grantForm, amount: e.target.value})} className="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary font-bold dark:text-slate-100" />
+            <input required type="number" min="0" value={grantForm.amount} onChange={e => setGrantForm({...grantForm, amount: e.target.value})} className="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-lg px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary font-bold dark:text-slate-100" />
           </div>
           <div className="md:col-span-1">
             <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-1.5">حالة الطلب الأولية</label>
@@ -323,7 +323,7 @@ export default function GrantsClient({
       {/* Grants Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
         {getFilteredGrants().map(grant => (
-          <div key={grant.id} className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm hover:shadow-md transition-shadow flex flex-col relative overflow-hidden group">
+          <div key={grant.id} className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm hover:shadow-md transition-shadow flex flex-col relative overflow-hidden group">
             <div className={`h-1.5 w-full absolute top-0 left-0 ${
               grant.status === 'APPROVED' ? 'bg-emerald-400' :
               grant.status === 'CLOSED' ? 'bg-slate-600' :
@@ -344,7 +344,7 @@ export default function GrantsClient({
                     deleteGrantApplication(grant.id, charityId);
                     setGrantApplications(prev => prev.filter(g => g.id !== grant.id));
                   });
-                }} className="text-slate-300 dark:text-slate-600 hover:text-red-500 bg-slate-50 dark:bg-slate-700 hover:bg-red-50 dark:hover:bg-red-500/10 p-2 rounded-xl transition-colors">
+                }} className="text-slate-300 dark:text-slate-600 hover:text-red-500 bg-slate-50 dark:bg-slate-700 hover:bg-red-50 dark:hover:bg-red-500/10 p-2 rounded-lg transition-colors">
                   <Trash2 className="w-4 h-4" />
                 </button>
               </div>
@@ -403,14 +403,14 @@ export default function GrantsClient({
                     onClick={() => {
                       setClosureModal({ isOpen: true, grantId: grant.id });
                     }}
-                    className="flex-1 bg-slate-800 hover:bg-slate-700 text-white rounded-xl text-xs font-bold flex justify-center items-center gap-1.5 transition-colors shadow-sm"
+                    className="flex-1 bg-slate-800 hover:bg-slate-700 text-white rounded-lg text-xs font-bold flex justify-center items-center gap-1.5 transition-colors shadow-sm"
                   >
                     <CheckCircle2 className="w-3.5 h-3.5" /> إغلاق المشروع
                   </button>
                 )}
 
                 {grant.status === "APPROVED" && (
-                  <button onClick={() => handleStatusChangeRequest(grant.id, "APPROVED")} className="px-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-400 dark:text-slate-500 hover:text-primary hover:border-primary/30 rounded-xl transition-all">
+                  <button onClick={() => handleStatusChangeRequest(grant.id, "APPROVED")} className="px-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-400 dark:text-slate-500 hover:text-primary hover:border-primary/30 rounded-lg transition-all">
                     <Edit className="w-4 h-4" />
                   </button>
                 )}
@@ -420,7 +420,7 @@ export default function GrantsClient({
         ))}
 
         {getFilteredGrants().length === 0 && (
-          <div className="col-span-full py-16 flex flex-col items-center justify-center text-slate-400 dark:text-slate-500 bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 border-dashed">
+          <div className="col-span-full py-16 flex flex-col items-center justify-center text-slate-400 dark:text-slate-500 bg-white dark:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-700 border-dashed">
             <FileText className="w-12 h-12 mb-3 opacity-20" />
             <p className="font-bold">لا توجد منح في هذا القسم</p>
           </div>
@@ -455,7 +455,7 @@ export default function GrantsClient({
                 type="number" min="1" required autoFocus
                 value={approvalForm.amount}
                 onChange={(e) => setApprovalForm({...approvalForm, amount: e.target.value})}
-                className="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-base outline-none focus:ring-2 focus:ring-emerald-500 font-black text-emerald-700 dark:text-emerald-400"
+                className="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-lg px-4 py-3 text-base outline-none focus:ring-2 focus:ring-emerald-500 font-black text-emerald-700 dark:text-emerald-400"
                 placeholder="المبلغ"
               />
             </div>
@@ -467,7 +467,7 @@ export default function GrantsClient({
                   type="number" min="0"
                   value={approvalForm.collectedAmount}
                   onChange={(e) => setApprovalForm({...approvalForm, collectedAmount: e.target.value})}
-                  className="w-full bg-white dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-emerald-500 font-bold dark:text-slate-100"
+                  className="w-full bg-white dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-lg px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-emerald-500 font-bold dark:text-slate-100"
                   placeholder="اختياري"
                 />
               </div>
@@ -477,7 +477,7 @@ export default function GrantsClient({
                   type="number" min="0"
                   value={approvalForm.beneficiariesCount}
                   onChange={(e) => setApprovalForm({...approvalForm, beneficiariesCount: e.target.value})}
-                  className="w-full bg-white dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-emerald-500 font-bold dark:text-slate-100"
+                  className="w-full bg-white dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-lg px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-emerald-500 font-bold dark:text-slate-100"
                   placeholder="اختياري"
                 />
               </div>
@@ -512,7 +512,7 @@ export default function GrantsClient({
             type="date"
             value={closureDate}
             onChange={(e) => setClosureDate(e.target.value)}
-            className="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-base outline-none focus:ring-2 focus:ring-slate-500 font-black text-slate-800 dark:text-slate-100 text-right"
+            className="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-lg px-4 py-3 text-base outline-none focus:ring-2 focus:ring-slate-500 font-black text-slate-800 dark:text-slate-100 text-right"
           />
         </Dialog>
       )}

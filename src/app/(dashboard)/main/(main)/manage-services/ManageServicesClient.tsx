@@ -175,13 +175,13 @@ export default function ManageServicesClient({
     <div className="space-y-6 animate-fade-in" dir="rtl">
       {/* Notifications */}
       {successMsg && (
-        <div className="fixed bottom-6 left-6 z-50 bg-emerald-500 text-white px-5 py-3 rounded-2xl shadow-xl flex items-center gap-2 font-bold text-sm animate-bounce">
+        <div className="fixed bottom-6 left-6 z-50 bg-emerald-500 text-white px-5 py-3 rounded-xl shadow-xl flex items-center gap-2 font-bold text-sm animate-bounce">
           <CheckCircle2 className="w-5 h-5" />
           {successMsg}
         </div>
       )}
       {errorMsg && (
-        <div className="fixed bottom-6 left-6 z-50 bg-red-500 text-white px-5 py-3 rounded-2xl shadow-xl flex items-center gap-2 font-bold text-sm">
+        <div className="fixed bottom-6 left-6 z-50 bg-red-500 text-white px-5 py-3 rounded-xl shadow-xl flex items-center gap-2 font-bold text-sm">
           <AlertCircle className="w-5 h-5" />
           {errorMsg}
         </div>
@@ -204,7 +204,7 @@ export default function ManageServicesClient({
       />
 
       {/* Search */}
-      <div className="bg-white dark:bg-slate-800 p-4 rounded-2xl border border-slate-100 dark:border-slate-700/50 shadow-sm">
+      <div className="bg-white dark:bg-slate-800 p-4 rounded-xl border border-slate-100 dark:border-slate-700/50 shadow-sm">
         <div className="relative">
           <Search className="w-4 h-4 absolute right-4 top-1/2 -translate-y-1/2 text-slate-400" />
           <input 
@@ -212,7 +212,7 @@ export default function ManageServicesClient({
             placeholder="ابحث عن اسم الخدمة..."
             value={search}
             onChange={e => setSearch(e.target.value)}
-            className="w-full pl-4 pr-11 py-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm outline-none focus:ring-2 focus:ring-primary/20 dark:text-slate-200"
+            className="w-full pl-4 pr-11 py-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-sm outline-none focus:ring-2 focus:ring-primary/20 dark:text-slate-200"
           />
         </div>
       </div>
@@ -360,7 +360,7 @@ export default function ManageServicesClient({
         })}
 
         {filteredServices.length === 0 && (
-          <div className="col-span-full bg-white dark:bg-slate-800 rounded-3xl border border-slate-100 dark:border-slate-700/50 p-12 text-center shadow-sm">
+          <div className="col-span-full bg-white dark:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-700/50 p-12 text-center shadow-sm">
             <div className="w-12 h-12 bg-slate-50 dark:bg-slate-900 rounded-xl flex items-center justify-center mx-auto mb-3">
               <Layers className="w-6 h-6 text-slate-400" />
             </div>
@@ -401,7 +401,7 @@ footer={
                   <input
                     type="text" required
                     value={form.name} onChange={e => setForm({...form, name: e.target.value})}
-                    className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all dark:text-white text-sm font-bold"
+                    className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all dark:text-white text-sm font-bold"
                     placeholder="مثال: التدريب الصيفي"
                   />
                 </div>

@@ -156,7 +156,7 @@ footer={
                     value={form.name} 
                     onChange={e => setForm({...form, name: e.target.value})}
                     placeholder="مثال: عبدالله محمد"
-                    className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary font-bold"
+                    className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary font-bold"
                   />
                 </div>
                 
@@ -168,7 +168,7 @@ footer={
                     value={form.phone} 
                     onChange={e => setForm({...form, phone: e.target.value})}
                     placeholder="05XXXXXXXX"
-                    className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary font-bold text-left"
+                    className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary font-bold text-left"
                     dir="ltr"
                   />
                 </div>
@@ -182,7 +182,7 @@ footer={
                     value={form.email}
                     onChange={e => setForm({...form, email: e.target.value})}
                     placeholder="name@example.com"
-                    className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary font-bold text-left"
+                    className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary font-bold text-left"
                     dir="ltr"
                   />
                 </div>
@@ -196,7 +196,7 @@ footer={
                     value={form.password}
                     onChange={e => setForm({...form, password: e.target.value})}
                     placeholder="٨ أحرف على الأقل"
-                    className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary font-bold text-left"
+                    className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary font-bold text-left"
                     dir="ltr"
                   />
                   <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1.5 leading-relaxed">
@@ -364,7 +364,7 @@ footer={
                     <button 
                       onClick={() => setAccountToDelete(account)}
                       disabled={isPending}
-                      className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-xl transition-all opacity-0 group-hover:opacity-100 focus:opacity-100"
+                      className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-lg transition-all opacity-0 group-hover:opacity-100 focus:opacity-100"
                       title="حذف الحساب"
                     >
                       <Trash2 className="w-4 h-4" />

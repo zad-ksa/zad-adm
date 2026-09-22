@@ -185,8 +185,8 @@ export default function ReadinessResultsClient({ responses }: { responses: any[]
           تحليل متوسط الجاهزية للمحاور
         </h3>
 
-        <div className="bg-white dark:bg-slate-800 rounded-2xl p-8 border border-slate-100 dark:border-slate-700 shadow-sm space-y-8 transition-colors">
-          <div className="flex items-center justify-between p-6 bg-slate-50 dark:bg-slate-900/50 rounded-2xl border border-slate-100 dark:border-slate-700 hover:border-primary/20 transition-colors">
+        <div className="bg-white dark:bg-slate-800 rounded-xl p-8 border border-slate-100 dark:border-slate-700 shadow-sm space-y-8 transition-colors">
+          <div className="flex items-center justify-between p-6 bg-slate-50 dark:bg-slate-900/50 rounded-xl border border-slate-100 dark:border-slate-700 hover:border-primary/20 transition-colors">
             <div className="space-y-1">
               <span className="font-bold text-slate-800 dark:text-slate-100 text-base transition-colors">المتوسط العام للجاهزية</span>
               <p className="text-xs text-slate-500 dark:text-slate-400 font-medium transition-colors">بناءً على {participantCount} مشاركات مشمولة</p>
@@ -334,7 +334,7 @@ export default function ReadinessResultsClient({ responses }: { responses: any[]
         
         <div className="space-y-4">
           {/* Green Category */}
-          <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm overflow-hidden transition-colors">
+          <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-700 shadow-sm overflow-hidden transition-colors">
             <div 
               className="p-5 flex justify-between items-center cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-900/50 transition-colors"
               onClick={() => toggleCategory('green')}
@@ -370,7 +370,7 @@ export default function ReadinessResultsClient({ responses }: { responses: any[]
           </div>
 
           {/* Yellow Category */}
-          <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm overflow-hidden transition-colors">
+          <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-700 shadow-sm overflow-hidden transition-colors">
             <div 
               className="p-5 flex justify-between items-center cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-900/50 transition-colors"
               onClick={() => toggleCategory('yellow')}
@@ -406,7 +406,7 @@ export default function ReadinessResultsClient({ responses }: { responses: any[]
           </div>
 
           {/* Red Category */}
-          <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm overflow-hidden transition-colors">
+          <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-700 shadow-sm overflow-hidden transition-colors">
             <div 
               className="p-5 flex justify-between items-center cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-900/50 transition-colors"
               onClick={() => toggleCategory('red')}

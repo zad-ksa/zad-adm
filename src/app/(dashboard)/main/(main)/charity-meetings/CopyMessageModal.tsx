@@ -97,7 +97,7 @@ footer={
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
                 rows={9}
-                className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all text-sm leading-relaxed resize-none"
+                className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all text-sm leading-relaxed resize-none"
               />
             </div>
           )}

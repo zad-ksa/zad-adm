@@ -24,7 +24,7 @@ export default async function StrategyLayout({
         <StrategyTabs charityName={decodedName} isAdmin={isAdmin} isCharityClient={isCharityClient} />
       </div> */}
 
-      <div className="flex-1 bg-white dark:bg-slate-800 rounded-b-3xl rounded-tl-3xl p-6 md:p-8 shadow-sm border border-slate-200 dark:border-slate-700 print:shadow-none print:border-none print:p-0 print:m-0 transition-colors">
+      <div className="flex-1 bg-white dark:bg-slate-800 rounded-b-xl rounded-tl-xl p-6 md:p-8 shadow-sm border border-slate-200 dark:border-slate-700 print:shadow-none print:border-none print:p-0 print:m-0 transition-colors">
         {children}
       </div>
     </div>

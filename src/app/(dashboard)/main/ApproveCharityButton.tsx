@@ -37,7 +37,7 @@ export default function ApproveCharityButton({
     <button
       onClick={handleApprove}
       disabled={isPending}
-      className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 shadow-sm active:scale-[0.98] border cursor-pointer select-none
+      className={`px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 shadow-sm active:scale-[0.98] border cursor-pointer select-none
         ${
           isPending
             ? "bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 border-slate-200 dark:border-slate-700 cursor-not-allowed"

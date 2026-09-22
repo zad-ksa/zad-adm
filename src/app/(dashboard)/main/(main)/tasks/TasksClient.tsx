@@ -1052,7 +1052,7 @@ ${combinedAchievements.length > 0 ? `
       {/* المهام الحالية — بكامل عرض الشاشة الآن */}
       <div className="space-y-4">
 
-        <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700/40 shadow-sm overflow-hidden">
+        <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-700/40 shadow-sm overflow-hidden">
           <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100 dark:border-slate-700/40">
             <h3 className="font-bold text-slate-800 dark:text-slate-100 text-sm flex items-center gap-2">
               <span className="w-2 h-4 bg-amber-400 dark:bg-amber-500 rounded-full"></span>
@@ -1669,13 +1669,13 @@ footer={
                   required
                   value={completionNote}
                   onChange={(e) => setCompletionNote(e.target.value)}
-                  className="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-800 dark:text-slate-200 outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary resize-none"
+                  className="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary resize-none"
                   rows={3}
                   placeholder="اكتب تفاصيل ما تم إنجازه هنا..."
                   disabled={isUploadingProof}
                 />
               </div>
-<div className="border-2 border-dashed border-slate-200 dark:border-slate-700 rounded-2xl p-6 text-center bg-slate-50 dark:bg-slate-900/50 relative hover:border-primary/50 transition-colors">
+<div className="border-2 border-dashed border-slate-200 dark:border-slate-700 rounded-xl p-6 text-center bg-slate-50 dark:bg-slate-900/50 relative hover:border-primary/50 transition-colors">
                 {proofFile ? (
                   <div className="flex flex-col items-center">
                     <FileImage className="w-8 h-8 text-primary mb-3" />
@@ -1884,7 +1884,7 @@ onClose={() => setDetailTask(null)}
                   setShowPermanentTaskForm(true); 
                   setIsFabOpen(false); 
                 }}
-                className="bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:text-indigo-600 dark:hover:text-indigo-400 px-4 py-3 rounded-2xl shadow-xl hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 flex items-center justify-start gap-3 whitespace-nowrap border border-slate-100 dark:border-slate-700 font-bold w-max"
+                className="bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:text-indigo-600 dark:hover:text-indigo-400 px-4 py-3 rounded-lg shadow-xl hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 flex items-center justify-start gap-3 whitespace-nowrap border border-slate-100 dark:border-slate-700 font-bold w-max"
               >
                 <div className="bg-indigo-100 dark:bg-indigo-900/40 p-2 rounded-xl text-indigo-600 dark:text-indigo-400">
                   <Repeat className="w-5 h-5" />
@@ -1895,7 +1895,7 @@ onClose={() => setDetailTask(null)}
 
             <button
               onClick={() => { setShowDirectAchievementForm(true); setIsFabOpen(false); }}
-              className="bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:text-emerald-600 dark:hover:text-emerald-400 px-4 py-3 rounded-2xl shadow-xl hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 flex items-center justify-start gap-3 whitespace-nowrap border border-slate-100 dark:border-slate-700 font-bold w-max"
+              className="bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:text-emerald-600 dark:hover:text-emerald-400 px-4 py-3 rounded-lg shadow-xl hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 flex items-center justify-start gap-3 whitespace-nowrap border border-slate-100 dark:border-slate-700 font-bold w-max"
             >
               <div className="bg-emerald-100 dark:bg-emerald-900/40 p-2 rounded-xl text-emerald-600 dark:text-emerald-400">
                 <Sparkles className="w-5 h-5" />
@@ -1905,7 +1905,7 @@ onClose={() => setDetailTask(null)}
 
             <button
               onClick={() => { setShowTaskForm(true); setIsFabOpen(false); }}
-              className="bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:text-primary dark:hover:text-primary px-4 py-3 rounded-2xl shadow-xl hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 flex items-center justify-start gap-3 whitespace-nowrap border border-slate-100 dark:border-slate-700 font-bold w-max"
+              className="bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:text-primary dark:hover:text-primary px-4 py-3 rounded-lg shadow-xl hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 flex items-center justify-start gap-3 whitespace-nowrap border border-slate-100 dark:border-slate-700 font-bold w-max"
             >
               <div className="bg-primary/10 dark:bg-primary/20 p-2 rounded-xl text-primary">
                 <CheckSquare className="w-5 h-5" />

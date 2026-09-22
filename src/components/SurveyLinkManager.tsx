@@ -88,7 +88,7 @@ export default function SurveyLinkManager({ charityName, surveyType }: { charity
   };
 
   if (loading) {
-    return <div className="animate-pulse bg-slate-100 h-24 rounded-2xl w-full mb-8 border border-slate-200"></div>;
+    return <div className="animate-pulse bg-slate-100 h-24 rounded-xl w-full mb-8 border border-slate-200"></div>;
   }
 
   const title = surveyType === "READINESS" 
@@ -98,7 +98,7 @@ export default function SurveyLinkManager({ charityName, surveyType }: { charity
       : "رابط استبيان الرؤية والرسالة والأثر المخصص للجمعية";
 
   return (
-    <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm mb-8 space-y-4">
+    <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm mb-8 space-y-4">
       <div className="flex flex-col gap-4">
         <div className="flex items-center justify-between">
           <div>
@@ -111,7 +111,7 @@ export default function SurveyLinkManager({ charityName, surveyType }: { charity
           <button
             onClick={handleGenerate}
             disabled={generating}
-            className="bg-blue-50 hover:bg-blue-100 text-blue-700 font-bold py-2 px-4 rounded-xl text-sm transition-colors flex items-center gap-2 whitespace-nowrap"
+            className="bg-blue-50 hover:bg-blue-100 text-blue-700 font-bold py-2 px-4 rounded-lg text-sm transition-colors flex items-center gap-2 whitespace-nowrap"
           >
             {generating ? "جاري..." : "إنشاء رابط جديد"}
             {!generating && (

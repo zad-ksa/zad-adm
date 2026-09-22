@@ -198,7 +198,7 @@ export default function SitesClient({ sites }: { sites: Site[] }) {
       <Feedback error={error} notice={notice} />
 
       {geoError && (
-        <div className="flex items-start gap-2.5 rounded-2xl bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400 px-4 py-3 text-[13px] leading-relaxed">
+        <div className="flex items-start gap-2.5 rounded-xl bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400 px-4 py-3 text-[13px] leading-relaxed">
           <TriangleAlert className="w-4 h-4 shrink-0 mt-0.5" />
           <span>{geoError}</span>
         </div>
@@ -245,7 +245,7 @@ export default function SitesClient({ sites }: { sites: Site[] }) {
 
       {/* ── النموذج ───────────────────────────────────────────────────── */}
       {open && (
-        <div className="rounded-2xl border border-primary/30 dark:border-teal-500/30 bg-primary/[0.03] dark:bg-teal-500/5 p-5 space-y-4">
+        <div className="rounded-xl border border-primary/30 dark:border-teal-500/30 bg-primary/[0.03] dark:bg-teal-500/5 p-5 space-y-4">
           <div className="flex items-center justify-between gap-3">
             <p className="text-[13px] font-black text-slate-900 dark:text-slate-100">
               {form.id ? "تعديل الموقع" : "موقع جديد"}

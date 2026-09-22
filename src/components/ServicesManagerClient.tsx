@@ -167,7 +167,7 @@ footer={
                   value={serviceName}
                   onChange={e => { setServiceName(e.target.value); setServiceError(null); }}
                   aria-invalid={!!serviceError}
-                  className={`w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border rounded-xl focus:ring-2 outline-none transition-all dark:text-white text-sm ${
+                  className={`w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border rounded-lg focus:ring-2 outline-none transition-all dark:text-white text-sm ${
                     serviceError
                       ? "border-red-400 focus:ring-red-200 focus:border-red-400"
                       : "border-slate-200 dark:border-slate-700 focus:ring-primary focus:border-primary"

@@ -299,7 +299,7 @@ export default function SurveysPage() {
       )}
 
       {surveys.length === 0 ? (
-        <div className="bg-white border border-slate-200 rounded-2xl p-12 text-center shadow-sm dark:bg-slate-800 dark:border-slate-700">
+        <div className="bg-white border border-slate-200 rounded-xl p-12 text-center shadow-sm dark:bg-slate-800 dark:border-slate-700">
           <div className="w-16 h-16 bg-primary/10 text-primary rounded-full flex items-center justify-center mx-auto mb-4">
             <Plus className="w-8 h-8" />
           </div>
@@ -307,7 +307,7 @@ export default function SurveysPage() {
           <p className="text-slate-500 mb-6 dark:text-slate-400">قم بإنشاء استبيانك المخصص الأول لتبدأ في جمع الردود.</p>
           <button
             onClick={handleCreate}
-            className="bg-primary/10 text-primary font-bold px-6 py-2.5 rounded-xl hover:bg-primary hover:text-white transition-all"
+            className="bg-primary/10 text-primary font-bold px-6 py-2.5 rounded-lg hover:bg-primary hover:text-white transition-all"
           >
             إنشاء استبيان
           </button>
@@ -315,7 +315,7 @@ export default function SurveysPage() {
       ) : viewMode === "cards" ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {surveys.map((survey) => (
-            <div key={survey.id} className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm hover:shadow-md transition-all relative group flex flex-col h-full dark:bg-slate-800 dark:border-slate-700">
+            <div key={survey.id} className="bg-white border border-slate-200 rounded-xl p-6 shadow-sm hover:shadow-md transition-all relative group flex flex-col h-full dark:bg-slate-800 dark:border-slate-700">
               <div className="flex justify-between items-start mb-4">
                 <h3 className="font-bold text-lg text-slate-800 leading-tight dark:text-slate-100">{survey.title}</h3>
                 <span className={`px-3 py-1 rounded-full text-xs font-bold border ${survey.isActive ? 'bg-emerald-50 text-emerald-600 border-emerald-100 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/20' : 'bg-slate-50 text-slate-500 border-slate-200 dark:bg-slate-900/50 dark:text-slate-400 dark:border-slate-700'}`}>
@@ -404,7 +404,7 @@ export default function SurveysPage() {
           ))}
         </div>
       ) : (
-        <div className="bg-white border border-slate-200 rounded-2xl shadow-sm divide-y divide-slate-100 dark:bg-slate-800 dark:border-slate-700 dark:divide-slate-700">
+        <div className="bg-white border border-slate-200 rounded-xl shadow-sm divide-y divide-slate-100 dark:bg-slate-800 dark:border-slate-700 dark:divide-slate-700">
           {surveys.map((survey) => (
             <div key={survey.id} className="flex flex-col sm:flex-row sm:items-center gap-3 p-4">
               <div className="flex-1 min-w-0">

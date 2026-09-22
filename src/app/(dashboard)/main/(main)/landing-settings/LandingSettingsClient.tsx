@@ -659,7 +659,7 @@ export default function LandingSettingsClient({ initialConfig }: { initialConfig
             <RefreshCw className="w-3.5 h-3.5" /> تحديث
           </button>
         </div>
-        <div className="rounded-2xl border border-slate-200 dark:border-slate-700 overflow-hidden bg-white shadow-sm">
+        <div className="rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden bg-white shadow-sm">
           <iframe
             ref={iframeRef}
             src="/landing-preview"

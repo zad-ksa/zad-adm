@@ -22,10 +22,10 @@ interface HexagonalResponseItem {
 const HexagonalSkeleton = () => (
   <div className="w-full space-y-8 animate-pulse font-sans" dir="rtl">
     {/* Header Info Card Skeleton */}
-    <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 p-8 md:p-10 relative overflow-hidden">
+    <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-700 p-8 md:p-10 relative overflow-hidden">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
         <div className="flex items-center gap-5">
-          <div className="w-16 h-16 bg-slate-100 dark:bg-slate-700 rounded-2xl shrink-0"></div>
+          <div className="w-16 h-16 bg-slate-100 dark:bg-slate-700 rounded-xl shrink-0"></div>
           <div className="space-y-3">
             <div className="h-4 bg-slate-100 dark:bg-slate-700 rounded-md w-28"></div>
             <div className="h-6 bg-slate-200 dark:bg-slate-600 rounded-md w-48 sm:w-64"></div>
@@ -48,7 +48,7 @@ const HexagonalSkeleton = () => (
     {/* Grid of 6 dimensions skeleton */}
     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
       {[1, 2, 3, 4, 5, 6].map((i) => (
-        <div key={i} className="bg-white dark:bg-slate-800 rounded-2xl p-8 border border-slate-100 dark:border-slate-700 space-y-5">
+        <div key={i} className="bg-white dark:bg-slate-800 rounded-xl p-8 border border-slate-100 dark:border-slate-700 space-y-5">
           <div className="flex items-center gap-3 pb-5 border-b border-slate-100 dark:border-slate-700">
             <div className="w-12 h-12 rounded-xl bg-slate-100 dark:bg-slate-700 shrink-0"></div>
             <div className="h-5 bg-slate-200 dark:bg-slate-600 rounded-md w-36"></div>
@@ -131,11 +131,11 @@ export default function HexagonalLayoutClient({
         {/* Charity Profile */}
         <div className={`flex flex-col ${isOpen ? "items-start px-6" : "items-center px-2"} mb-8 pb-6 border-b border-slate-100 dark:border-slate-700 transition-all overflow-hidden`}>
           {logoUrl ? (
-            <div className={`rounded-2xl overflow-hidden border border-slate-150 dark:border-slate-700 bg-white dark:bg-slate-800 flex items-center justify-center mb-3 shrink-0 transition-all ${isOpen ? "w-14 h-14" : "w-10 h-10"}`}>
+            <div className={`rounded-xl overflow-hidden border border-slate-150 dark:border-slate-700 bg-white dark:bg-slate-800 flex items-center justify-center mb-3 shrink-0 transition-all ${isOpen ? "w-14 h-14" : "w-10 h-10"}`}>
               <img src={logoUrl} alt={charityName} className="w-full h-full object-contain p-1" />
             </div>
           ) : (
-            <div className={`bg-primary/5 text-primary rounded-2xl flex items-center justify-center mb-3 shrink-0 transition-all ${isOpen ? "w-14 h-14" : "w-10 h-10"}`}>
+            <div className={`bg-primary/5 text-primary rounded-xl flex items-center justify-center mb-3 shrink-0 transition-all ${isOpen ? "w-14 h-14" : "w-10 h-10"}`}>
               <Building2 className={isOpen ? "w-7 h-7" : "w-5 h-5"} />
             </div>
           )}

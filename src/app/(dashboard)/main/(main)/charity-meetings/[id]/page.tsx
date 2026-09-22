@@ -1,8 +1,9 @@
 import { prisma } from "@/lib/db";
-import { PageHeader } from "@/components/console/layout";
+import { PageHeader, theadRowClass, thClass, tbodyClass, tdClass } from "@/components/console/layout";
 import { notFound } from "next/navigation";
 import { Calendar, Clock, User, MessageSquareText, Phone } from "lucide-react";
 import { formatClock12 } from "@/lib/attendanceTime";
+import { cx } from "@/components/console/ui";
 
 export default async function CharityMeetingBookingsPage({
   params
@@ -85,40 +86,40 @@ export default async function CharityMeetingBookingsPage({
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm text-right">
-              <thead className="bg-slate-50 dark:bg-slate-900/50 text-slate-500 dark:text-slate-400 font-semibold border-b border-slate-100 dark:border-slate-700/50">
-                <tr>
-                  <th className="px-6 py-4">الجمعية</th>
-                  <th className="px-6 py-4">اليوم</th>
-                  <th className="px-6 py-4">التاريخ</th>
-                  <th className="px-6 py-4">الوقت</th>
-                  <th className="px-6 py-4">تاريخ الحجز</th>
+              <thead >
+                <tr className={theadRowClass}>
+                  <th className={thClass}>الجمعية</th>
+                  <th className={thClass}>اليوم</th>
+                  <th className={thClass}>التاريخ</th>
+                  <th className={thClass}>الوقت</th>
+                  <th className={thClass}>تاريخ الحجز</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100 dark:divide-slate-700/50">
+              <tbody className={tbodyClass}>
                 {schedule.bookings.map((booking) => (
                   <tr key={booking.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition-colors">
-                    <td className="px-6 py-4 font-bold text-slate-800 dark:text-slate-200">
+                    <td className={cx(tdClass, "font-bold text-slate-800 dark:text-slate-200")}>
                       <div className="flex items-center gap-2">
                         <User className="w-4 h-4 text-slate-400" />
                         {booking.charityName}
                       </div>
                     </td>
-                    <td className="px-6 py-4 text-slate-600 dark:text-slate-300">
+                    <td className={cx(tdClass, "text-slate-600 dark:text-slate-300")}>
                       {getDayName(booking.date)}
                     </td>
-                    <td className="px-6 py-4">
+                    <td className={tdClass}>
                       <div className="flex items-center gap-2 text-slate-600 dark:text-slate-300">
                         <Calendar className="w-4 h-4 text-slate-400" />
                         <span dir="ltr" className="inline-block">{booking.date}</span>
                       </div>
                     </td>
-                    <td className="px-6 py-4">
+                    <td className={tdClass}>
                       <div className="flex items-center gap-2 text-slate-600 dark:text-slate-300">
                         <Clock className="w-4 h-4 text-slate-400" />
                         <span dir="ltr" className="inline-block font-mono bg-slate-100 dark:bg-slate-900 px-2 py-0.5 rounded">{formatClock12(booking.startTime)}</span>
                       </div>
                     </td>
-                    <td className="px-6 py-4 text-xs text-slate-400 dark:text-slate-500">
+                    <td className={cx(tdClass, "text-xs text-slate-400 dark:text-slate-500")}>
                       {formatDate(booking.createdAt)}
                     </td>
                   </tr>

@@ -5,7 +5,8 @@ import { useRouter } from "next/navigation";
 import { AlertTriangle, ChevronDown, Download, Lock, MoonStar, PenLine, Wifi } from "lucide-react";
 import { ATTENDANCE_STATUS_LABELS } from "@/lib/attendanceTime";
 import { copyToClipboard } from "@/lib/clipboard";
-import { btn } from "@/components/console/ui";
+import { btn, cx } from "@/components/console/ui";
+import { theadRowClass, thClass, tbodyClass, tdClass, tableFrameClass } from "@/components/console/layout";
 
 type Day = {
   workDate: string;
@@ -124,27 +125,27 @@ export default function ReportClient({
         ))}
       </div>
 
-      <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 overflow-hidden">
+      <div className={tableFrameClass}>
         <div className="overflow-x-auto">
           <table className="w-full text-[12px]">
             <thead>
-              <tr className="text-slate-400 dark:text-slate-500 text-right border-b border-slate-100 dark:border-slate-800">
-                <th className="py-2.5 px-4 font-bold">الموظف</th>
-                <th className="py-2.5 px-3 font-bold">المجموعة</th>
-                <th className="py-2.5 px-3 font-bold">حاضر</th>
-                <th className="py-2.5 px-3 font-bold">عن بُعد</th>
-                <th className="py-2.5 px-3 font-bold">غياب</th>
-                <th className="py-2.5 px-3 font-bold w-8"></th>
+              <tr className={theadRowClass}>
+                <th className={thClass}>الموظف</th>
+                <th className={thClass}>المجموعة</th>
+                <th className={thClass}>حاضر</th>
+                <th className={thClass}>عن بُعد</th>
+                <th className={thClass}>غياب</th>
+                <th className={cx(thClass, "w-8")}></th>
               </tr>
             </thead>
-            <tbody>
+            <tbody className={tbodyClass}>
               {rows.map((r) => (
                 <Fragment key={r.employeeId}>
                   <tr
                     onClick={() => setOpenFor(openFor === r.employeeId ? null : r.employeeId)}
-                    className="border-b border-slate-100 dark:border-slate-800/60 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/40"
+                    className="cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/40"
                   >
-                    <td className="py-2.5 px-4 font-bold text-slate-800 dark:text-slate-200">
+                    <td className={cx(tdClass, "font-bold text-slate-800 dark:text-slate-200")}>
                       {r.name}
                       {r.suspicious > 0 && (
                         <span
@@ -155,11 +156,11 @@ export default function ReportClient({
                         </span>
                       )}
                     </td>
-                    <td className="py-2.5 px-3 text-slate-500 dark:text-slate-400">{r.groupName}</td>
-                    <td className="py-2.5 px-3 tabular-nums text-emerald-600 dark:text-emerald-400">{r.present}</td>
-                    <td className="py-2.5 px-3 tabular-nums text-indigo-600 dark:text-indigo-400">{r.remote}</td>
-                    <td className="py-2.5 px-3 tabular-nums text-rose-600 dark:text-rose-400">{r.absent}</td>
-                    <td className="py-2.5 px-3">
+                    <td className={cx(tdClass, "text-slate-500 dark:text-slate-400")}>{r.groupName}</td>
+                    <td className={cx(tdClass, "tabular-nums text-emerald-600 dark:text-emerald-400")}>{r.present}</td>
+                    <td className={cx(tdClass, "tabular-nums text-indigo-600 dark:text-indigo-400")}>{r.remote}</td>
+                    <td className={cx(tdClass, "tabular-nums text-rose-600 dark:text-rose-400")}>{r.absent}</td>
+                    <td className={tdClass}>
                       <ChevronDown
                         className={`w-3.5 h-3.5 text-slate-300 transition-transform ${
                           openFor === r.employeeId ? "rotate-180" : ""
@@ -170,7 +171,7 @@ export default function ReportClient({
 
                   {openFor === r.employeeId && (
                     <tr>
-                      <td colSpan={6} className="bg-slate-50 dark:bg-slate-800/30 px-4 py-3">
+                      <td colSpan={6} className={cx(tdClass, "bg-slate-50 dark:bg-slate-800/30")}>
                         {r.days.length === 0 ? (
                           <p className="text-[12px] text-slate-400">لا أيام مسجّلة هذا الشهر.</p>
                         ) : (

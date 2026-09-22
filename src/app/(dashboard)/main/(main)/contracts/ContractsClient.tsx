@@ -1,10 +1,10 @@
 "use client";
 
 import React, { useState } from "react";
-import { StatStrip, PageHeader } from "@/components/console/layout";
+import { StatStrip, PageHeader, theadRowClass, thClass, tbodyClass, tdClass } from "@/components/console/layout";
 import { FileSignature, Calendar, DollarSign, AlertCircle, CheckCircle2, Users, Settings, Loader2 } from "lucide-react";
 import ManageInstallmentsModal from "./ManageInstallmentsModal";
-import { btn } from "@/components/console/ui";
+import { btn, cx } from "@/components/console/ui";
 
 type Installment = {
   id: string;
@@ -84,28 +84,28 @@ export default function ContractsClient({
           </div>
           <div className="flex-1 overflow-x-auto">
             <table className="w-full text-sm text-right">
-              <thead className="bg-slate-50 dark:bg-slate-800/50 text-slate-500 dark:text-slate-400 text-xs uppercase">
-                <tr>
-                  <th className="px-6 py-4 font-bold">الجمعية</th>
-                  <th className="px-6 py-4 font-bold">القيمة الإجمالية</th>
-                  <th className="px-6 py-4 font-bold">تاريخ الإنشاء</th>
-                  <th className="px-6 py-4 font-bold text-center">الحالة</th>
-                  {canEdit && <th className="px-6 py-4 font-bold text-center">الإجراءات</th>}
+              <thead >
+                <tr className={theadRowClass}>
+                  <th className={thClass}>الجمعية</th>
+                  <th className={thClass}>القيمة الإجمالية</th>
+                  <th className={thClass}>تاريخ الإنشاء</th>
+                  <th className={cx(thClass, "text-center")}>الحالة</th>
+                  {canEdit && <th className={cx(thClass, "text-center")}>الإجراءات</th>}
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+              <tbody className={tbodyClass}>
                 {contractsData.map((contract) => (
                   <tr key={contract.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition-colors">
-                    <td className="px-6 py-4 font-bold text-slate-800 dark:text-slate-100">
+                    <td className={cx(tdClass, "font-bold text-slate-800 dark:text-slate-100")}>
                       {contract.charityName}
                     </td>
-                    <td className="px-6 py-4 text-emerald-600 dark:text-emerald-400 font-bold">
+                    <td className={cx(tdClass, "text-emerald-600 dark:text-emerald-400 font-bold")}>
                       {contract.totalValue.toLocaleString()} ر.س
                     </td>
-                    <td className="px-6 py-4 text-slate-500 dark:text-slate-400">
+                    <td className={cx(tdClass, "text-slate-500 dark:text-slate-400")}>
                       {contract.creationDate}
                     </td>
-                    <td className="px-6 py-4 text-center">
+                    <td className={cx(tdClass, "text-center")}>
                       <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold ${
                         contract.status === "active" 
                           ? "bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400"
@@ -115,7 +115,7 @@ export default function ContractsClient({
                       </span>
                     </td>
                     {canEdit && (
-                      <td className="px-6 py-4 text-center">
+                      <td className={cx(tdClass, "text-center")}>
                         <button 
                           onClick={() => setSelectedCharityId(contract.id)}
                           className={btn.secondary}

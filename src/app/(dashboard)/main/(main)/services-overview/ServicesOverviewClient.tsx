@@ -1582,17 +1582,31 @@ export default function ServicesOverviewClient({
 
       {/* Coming Soon Management Modal */}
       {showAddService && canManageServices && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" dir="rtl">
-          <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={() => setShowAddService(false)}></div>
-          <form
-            onSubmit={handleAddService}
-            className="relative bg-white dark:bg-slate-800 rounded-2xl w-full max-w-md shadow-2xl overflow-hidden border border-slate-200 dark:border-slate-700"
-          >
-            <div className="p-4 border-b border-slate-100 dark:border-slate-700">
-              <h2 className="text-base font-bold text-slate-800 dark:text-slate-100">إضافة خدمة جديدة</h2>
-            </div>
-            <div className="p-4 space-y-4">
-              <div>
+        <Dialog
+title="إضافة خدمة جديدة"
+onClose={() => setShowAddService(false)}
+onSubmit={handleAddService}
+footer={
+<>
+<button
+                type="button"
+                onClick={() => setShowAddService(false)}
+                className={btn.secondary}
+              >
+                إلغاء
+              </button>
+<button
+                type="submit"
+                disabled={isAddingService || !newServiceName.trim()}
+                className={btn.primary}
+              >
+                {isAddingService ? "جاري الحفظ..." : "إضافة"}
+              </button>
+</>
+}
+>
+<div className="space-y-4">
+<div>
                 <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">اسم الخدمة</label>
                 <input
                   autoFocus
@@ -1614,7 +1628,7 @@ export default function ServicesOverviewClient({
                   </p>
                 )}
               </div>
-              <div>
+<div>
                 <div className="flex items-center justify-between mb-2">
                   <label className="text-sm font-bold text-slate-700 dark:text-slate-300">
                     الجمعيات <span className="text-xs font-medium text-slate-400">({newServiceCharityIds.length} من {charities.length})</span>
@@ -1650,25 +1664,8 @@ export default function ServicesOverviewClient({
                   })}
                 </div>
               </div>
-            </div>
-            <div className="flex gap-3 p-4 border-t border-slate-100 dark:border-slate-700">
-              <button
-                type="submit"
-                disabled={isAddingService || !newServiceName.trim()}
-                className="flex-1 bg-primary hover:bg-primary/90 text-white py-2 rounded-xl font-bold transition-colors disabled:opacity-50 text-sm"
-              >
-                {isAddingService ? "جاري الحفظ..." : "إضافة"}
-              </button>
-              <button
-                type="button"
-                onClick={() => setShowAddService(false)}
-                className="flex-1 bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 py-2 rounded-xl font-bold transition-colors text-sm"
-              >
-                إلغاء
-              </button>
-            </div>
-          </form>
-        </div>
+</div>
+</Dialog>
       )}
 
       {showComingSoonModal && canEdit && isGenericTab && genericSvcInfo && (

@@ -4,6 +4,8 @@ import { uploadFile } from "@/lib/clientUpload";
 import { useState, useRef } from "react";
 import { addCharity } from "@/app/actions/charity";
 import { Image as ImageIcon } from "lucide-react";
+import { Dialog } from "@/components/console/Dialog";
+import { btn } from "@/components/console/ui";
 
 export default function AddCharityModal({ onClose, onSuccess }: { onClose: () => void, onSuccess: () => void }) {
   const [loading, setLoading] = useState(false);
@@ -74,16 +76,24 @@ export default function AddCharityModal({ onClose, onSuccess }: { onClose: () =>
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/50 p-4" dir="rtl">
-      <div className="bg-white dark:bg-slate-800 rounded-xl w-full max-w-md border border-slate-200 dark:border-slate-700 overflow-hidden animate-in fade-in zoom-in-95 duration-200 max-h-[90vh] flex flex-col">
-        <div className="p-4 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center shrink-0">
-          <h2 className="text-base font-bold text-slate-800 dark:text-slate-100">إضافة جمعية جديدة</h2>
-          <button onClick={onClose} className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 rounded-lg w-8 h-8 flex items-center justify-center transition-colors cursor-pointer select-none">
-            ✕
+    <Dialog
+      title="إضافة جمعية جديدة"
+      onClose={onClose}
+      busy={loading}
+      onSubmit={handleSubmit}
+      closeOnBackdrop={false}
+      footer={
+        <>
+          <button type="button" onClick={onClose} disabled={loading} className={btn.secondary}>
+            إلغاء
           </button>
-        </div>
-
-        <form onSubmit={handleSubmit} className="p-4 space-y-3 overflow-y-auto flex-1">
+          <button type="submit" disabled={loading} className={btn.primary}>
+            {loading ? "جاري الإضافة..." : "إضافة الجمعية"}
+          </button>
+        </>
+      }
+    >
+        <div className="space-y-3">
           {error && (
             <div className="bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 p-3 rounded-xl text-sm font-semibold border border-red-100 dark:border-red-800/50">
               {error}
@@ -167,24 +177,7 @@ export default function AddCharityModal({ onClose, onSuccess }: { onClose: () =>
             />
           </div>
 
-          <div className="pt-4 flex gap-3 shrink-0">
-            <button
-              type="submit"
-              disabled={loading}
-              className="flex-1 bg-primary hover:bg-primary/95 text-white font-bold py-3 rounded-xl transition-all disabled:opacity-70 disabled:cursor-not-allowed cursor-pointer select-none active:scale-[0.98]"
-            >
-              {loading ? "جاري الإضافة..." : "إضافة الجمعية"}
-            </button>
-            <button
-              type="button"
-              onClick={onClose}
-              className="flex-1 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 font-bold py-3 rounded-xl transition-all cursor-pointer select-none active:scale-[0.98]"
-            >
-              إلغاء
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
+        </div>
+    </Dialog>
   );
 }

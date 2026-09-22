@@ -1625,30 +1625,43 @@ onClose={() => setOpenSidePanel(null)}
 
       {/* Task Proof Upload Modal */}
       {completingTaskId && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-          <div 
-            className="absolute inset-0 bg-slate-950/65 backdrop-blur-md transition-opacity duration-300"
-            onClick={() => {
-              if (!isUploadingProof) {
+        <Dialog
+title="رفع شاهد المهمة"
+description="يمكنك إرفاق شاهد (صورة) كإثبات على إنجاز المهمة لتوثيقه في تقاريرك."
+onClose={() => {
                 setCompletingTaskId(null);
                 setProofFile(null);
                 setProofUploadError(null);
-              }
-            }}
-          />
-          <div className="bg-white dark:bg-slate-800 rounded-3xl border border-slate-100 dark:border-slate-700/50 dark:border-slate-800/80 shadow-2xl w-full max-w-md overflow-hidden relative z-10 transform transition-all duration-300 scale-100 p-5 space-y-4" dir="rtl">
-            <div>
-              <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
-                <UploadCloud className="w-5 h-5 text-primary" />
-                رفع شاهد المهمة
-              </h3>
-              <p className="text-xs text-slate-500 dark:text-slate-400 mt-2 leading-relaxed">
-                يمكنك إرفاق شاهد (صورة) كإثبات على إنجاز المهمة لتوثيقه في تقاريرك.
-              </p>
-            </div>
-
-            <form onSubmit={handleProofSubmit} className="space-y-4">
-              <div>
+              }}
+busy={isUploadingProof}
+onSubmit={handleProofSubmit}
+footer={
+<>
+<button
+                  type="button"
+                  onClick={() => {
+                    setCompletingTaskId(null);
+                    setProofFile(null);
+                    setCompletionNote("");
+                    setProofUploadError(null);
+                  }}
+                  disabled={isUploadingProof}
+                  className={btn.secondary}
+                >
+                  إلغاء
+                </button>
+                <button
+                  type="submit"
+                  disabled={isUploadingProof}
+                  className={btn.primary}
+                >
+                  {isUploadingProof ? "جاري الرفع..." : "رفع وإنجاز"}
+                </button>
+</>
+}
+>
+<div className="space-y-4">
+<div>
                 <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
                   وصف ما تم إنجازه <span className="text-red-500">*</span>
                 </label>
@@ -1662,8 +1675,7 @@ onClose={() => setOpenSidePanel(null)}
                   disabled={isUploadingProof}
                 />
               </div>
-
-              <div className="border-2 border-dashed border-slate-200 dark:border-slate-700 rounded-2xl p-6 text-center bg-slate-50 dark:bg-slate-900/50 relative hover:border-primary/50 transition-colors">
+<div className="border-2 border-dashed border-slate-200 dark:border-slate-700 rounded-2xl p-6 text-center bg-slate-50 dark:bg-slate-900/50 relative hover:border-primary/50 transition-colors">
                 {proofFile ? (
                   <div className="flex flex-col items-center">
                     <FileImage className="w-8 h-8 text-primary mb-3" />
@@ -1715,56 +1727,44 @@ onClose={() => setOpenSidePanel(null)}
                   </div>
                 )}
               </div>
-
-              {proofUploadError && (
+{proofUploadError && (
                 <div className="bg-red-50 dark:bg-red-950/20 text-red-600 dark:text-red-400 p-3 rounded-xl text-xs font-bold flex items-center gap-2 border border-red-100 dark:border-red-900/30">
                   <AlertCircle className="w-4 h-4 shrink-0 text-red-500" />
                   <span>{proofUploadError}</span>
                 </div>
               )}
+</div>
+</Dialog>
+      )}
 
-              <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-100 dark:border-slate-700/50 dark:border-slate-800/80">
-                <button
+      {/* Task Reassignment Dialog/Modal */}
+      {reassigningTaskId && (
+        <Dialog
+title="إعادة إسناد المهمة"
+description="اختر الموظف الجديد الذي ترغب بنقل هذه المهمة إليه:"
+onClose={() => setReassigningTaskId(null)}
+onSubmit={handleReassignTask}
+footer={
+<>
+<button
                   type="button"
-                  onClick={() => {
-                    setCompletingTaskId(null);
-                    setProofFile(null);
-                    setCompletionNote("");
-                    setProofUploadError(null);
-                  }}
-                  disabled={isUploadingProof}
-                  className="px-5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:bg-slate-800/50 dark:hover:bg-slate-700/50 hover:text-slate-700 dark:text-slate-200 font-bold transition-all text-xs cursor-pointer"
+                  onClick={() => setReassigningTaskId(null)}
+                  className={btn.secondary}
                 >
                   إلغاء
                 </button>
                 <button
                   type="submit"
-                  disabled={isUploadingProof}
-                  className="px-6 py-2.5 rounded-xl bg-primary text-white hover:bg-primary/95 font-bold transition-all text-xs flex items-center gap-2 cursor-pointer disabled:opacity-75 disabled:cursor-not-allowed shadow-sm hover:shadow"
+                  disabled={isPending || !reassignToEmployeeId}
+                  className={btn.primary}
                 >
-                  {isUploadingProof ? "جاري الرفع..." : "رفع وإنجاز"}
+                  حفظ ونقل
                 </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* Task Reassignment Dialog/Modal */}
-      {reassigningTaskId && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-          <div 
-            className="absolute inset-0 bg-slate-950/65 backdrop-blur-md transition-opacity duration-300"
-            onClick={() => setReassigningTaskId(null)}
-          />
-          <div className="bg-white dark:bg-slate-800 rounded-3xl border border-slate-100 dark:border-slate-700/50 dark:border-slate-800/80 shadow-2xl w-full max-w-md overflow-hidden relative z-10 transform transition-all duration-300 scale-100 p-5 space-y-4" dir="rtl">
-            <div>
-              <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100">إعادة إسناد المهمة</h3>
-              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">اختر الموظف الجديد الذي ترغب بنقل هذه المهمة إليه:</p>
-            </div>
-
-            <form onSubmit={handleReassignTask} className="space-y-4">
-              <Select
+</>
+}
+>
+<div className="space-y-4">
+<Select
                 variant="soft"
                 value={reassignToEmployeeId}
                 onSelect={setReassignToEmployeeId}
@@ -1772,26 +1772,8 @@ onClose={() => setOpenSidePanel(null)}
                 options={employees.map((emp) => ({ value: emp.id, label: emp.name }))}
                 className="w-full [&>button]:w-full [&>button]:justify-between"
               />
-
-              <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-100 dark:border-slate-700/50 dark:border-slate-800/80">
-                <button
-                  type="button"
-                  onClick={() => setReassigningTaskId(null)}
-                  className="px-5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:bg-slate-800/50 dark:hover:bg-slate-700/50 hover:text-slate-700 dark:text-slate-200 font-bold transition-all text-xs cursor-pointer"
-                >
-                  إلغاء
-                </button>
-                <button
-                  type="submit"
-                  disabled={isPending || !reassignToEmployeeId}
-                  className="px-6 py-2.5 rounded-xl bg-primary text-white hover:bg-primary/95 font-bold transition-all text-xs flex items-center gap-2 cursor-pointer disabled:opacity-75 disabled:cursor-not-allowed shadow-sm hover:shadow"
-                >
-                  حفظ ونقل
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
+</div>
+</Dialog>
       )}
 
       {/* Task Detail Modal */}

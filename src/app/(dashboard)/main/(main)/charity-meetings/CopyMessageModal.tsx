@@ -57,6 +57,13 @@ footer={
 <>
 <button
             type="button"
+            onClick={onClose}
+            className={btn.secondary}
+          >
+            إغلاق
+          </button>
+<button
+            type="button"
             onClick={handleCopy}
             disabled={!message}
             className={btn.primary}
@@ -66,13 +73,6 @@ footer={
             ) : (
               <><Copy className="w-4 h-4" /> نسخ النص</>
             )}
-          </button>
-          <button
-            type="button"
-            onClick={onClose}
-            className={btn.secondary}
-          >
-            إغلاق
           </button>
 </>
 }

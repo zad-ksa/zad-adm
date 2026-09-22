@@ -9,6 +9,8 @@ import {
   CHARITY_PERMISSION_GROUPS,
   ALL_CHARITY_PERMISSION_IDS,
 } from "@/lib/charityPermissions";
+import { Dialog } from "@/components/console/Dialog";
+import { btn } from "@/components/console/ui";
 
 const titles = [
   { value: "CHAIRMAN", label: "رئيس مجلس إدارة" },
@@ -121,22 +123,29 @@ export default function CharityAccountsClient({ charities, accounts: initialAcco
       </div>
 
       {showModal && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-slate-950/60 backdrop-blur-sm" onClick={() => setShowModal(false)} />
-          <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-white/10 shadow-2xl w-full max-w-lg overflow-hidden relative z-10 flex flex-col max-h-[90vh]">
-            <div className="px-6 py-5 border-b border-slate-200 dark:border-white/5 flex justify-between items-center bg-white dark:bg-slate-900">
-              <h3 className="text-lg font-bold text-primary">إضافة حساب جمعية</h3>
-            </div>
-            
-            <form onSubmit={handleAddAccount} className="p-6 overflow-y-auto space-y-5">
-              {errorMsg && (
+        <Dialog
+title="إضافة حساب جمعية"
+onClose={() => setShowModal(false)}
+onSubmit={handleAddAccount}
+footer={
+<>
+<button type="button" onClick={() => setShowModal(false)} disabled={isPending} className={btn.secondary}>
+                  إلغاء
+                </button>
+<button type="submit" disabled={isPending || form.charityIds.length === 0} className={btn.primary}>
+                  {isPending ? "جاري الحفظ..." : "حفظ الحساب"}
+                </button>
+</>
+}
+>
+<div className="space-y-4">
+{errorMsg && (
                 <div className="bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 p-3 rounded-xl flex items-start gap-2 font-bold text-sm">
                   <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
                   <span>{errorMsg}</span>
                 </div>
               )}
-
-              <div className="space-y-4">
+<div className="space-y-4">
                 
                 <div>
                   <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1.5">اسم الممثل</label>
@@ -318,18 +327,8 @@ export default function CharityAccountsClient({ charities, accounts: initialAcco
                 </div>
 
               </div>
-
-              <div className="flex gap-3 pt-4">
-                <button type="submit" disabled={isPending || form.charityIds.length === 0} className="flex-1 bg-primary text-white py-3 rounded-xl font-bold shadow hover:bg-primary/90 transition-colors disabled:opacity-50">
-                  {isPending ? "جاري الحفظ..." : "حفظ الحساب"}
-                </button>
-                <button type="button" onClick={() => setShowModal(false)} disabled={isPending} className="flex-1 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 py-3 rounded-xl font-bold hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors">
-                  إلغاء
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
+</div>
+</Dialog>
       )}
 
       <div className="bg-white dark:bg-black rounded-3xl border border-slate-200 dark:border-white/10 shadow-sm overflow-hidden mb-20">

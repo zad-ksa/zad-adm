@@ -6,6 +6,8 @@ import Select from "@/components/console/Select";
 import { Plus, Layers, AlertTriangle, AlertCircle } from "lucide-react";
 import { createService, unifyCharityStagesAction } from "@/app/actions/services";
 import { useRouter } from "next/navigation";
+import { Dialog } from "@/components/console/Dialog";
+import { btn } from "@/components/console/ui";
 
 type ServiceStage = {
   id: string;
@@ -133,16 +135,31 @@ export default function ServicesManagerClient({
 
       {/* Add Service Modal */}
       {isServiceModalOpen && canAddService && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={() => setIsServiceModalOpen(false)}></div>
-          <div className="relative bg-white dark:bg-slate-800 rounded-2xl w-full max-w-md shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200 border border-slate-200 dark:border-slate-700">
-            <div className="p-4 border-b border-slate-100 dark:border-slate-700">
-              <h2 className="text-base font-bold text-slate-800 dark:text-slate-100">
-                إضافة خدمة جديدة
-              </h2>
-            </div>
-            <form onSubmit={handleServiceSubmit} className="p-4 space-y-3">
-              <div>
+        <Dialog
+title="إضافة خدمة جديدة"
+onClose={() => setIsServiceModalOpen(false)}
+onSubmit={handleServiceSubmit}
+footer={
+<>
+<button
+                  type="button"
+                  onClick={() => setIsServiceModalOpen(false)}
+                  className={btn.secondary}
+                >
+                  إلغاء
+                </button>
+<button
+                  type="submit"
+                  disabled={isPending || !serviceName.trim()}
+                  className={btn.primary}
+                >
+                  {isPending ? "جاري الحفظ..." : "حفظ"}
+                </button>
+</>
+}
+>
+<div className="space-y-4">
+<div>
                 <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">اسم الخدمة</label>
                 <input
                   type="text"
@@ -164,47 +181,39 @@ export default function ServicesManagerClient({
                   </p>
                 )}
               </div>
-              <div className="flex gap-3 pt-4 border-t border-slate-100 dark:border-slate-700">
-                <button
-                  type="submit"
-                  disabled={isPending || !serviceName.trim()}
-                  className="flex-1 bg-primary hover:bg-primary/90 text-white py-2 rounded-xl font-bold transition-colors disabled:opacity-50 text-sm"
-                >
-                  {isPending ? "جاري الحفظ..." : "حفظ"}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setIsServiceModalOpen(false)}
-                  className="flex-1 bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 py-2 rounded-xl font-bold transition-colors text-sm"
-                >
-                  إلغاء
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
+</div>
+</Dialog>
       )}
 
       {/* Unify Stages Modal */}
       {isUnifyModalOpen && canUnify && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={() => setIsUnifyModalOpen(false)}></div>
-          <div className="relative bg-white dark:bg-slate-800 rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200 border border-slate-200 dark:border-slate-700" dir="rtl">
-            <div className="p-4 border-b border-slate-100 dark:border-slate-700 flex items-center gap-3">
-              <div className="p-1.5 bg-amber-50 dark:bg-amber-950/30 text-amber-500 rounded-lg">
-                <AlertTriangle className="w-6 h-6" />
-              </div>
-              <div>
-                <h2 className="text-base font-bold text-slate-800 dark:text-slate-100">
-                  تعميم مراحل الخدمة على الجمعيات الأخرى
-                </h2>
-                <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
-                  نسخ مراحل خدمة من هذه الجمعية وتعميمها على الخدمة نفسها في الجمعيات الأخرى التي لك وصولٌ إليها
-                </p>
-              </div>
-            </div>
-            <form onSubmit={handleUnifySubmit} className="p-4 space-y-4">
-              <div>
+        <Dialog
+title="تعميم مراحل الخدمة على الجمعيات الأخرى"
+description="نسخ مراحل خدمة من هذه الجمعية وتعميمها على الخدمة نفسها في الجمعيات الأخرى التي لك وصولٌ إليها"
+onClose={() => setIsUnifyModalOpen(false)}
+onSubmit={handleUnifySubmit}
+footer={
+<>
+<button
+                  type="button"
+                  onClick={() => setIsUnifyModalOpen(false)}
+                  disabled={isPending}
+                  className={btn.secondary}
+                >
+                  إلغاء
+                </button>
+<button
+                  type="submit"
+                  disabled={isPending || !selectedSource}
+                  className={btn.danger}
+                >
+                  {isPending ? "جاري تعميم المراحل..." : "تأكيد التعميم وتطبيق المراحل"}
+                </button>
+</>
+}
+>
+<div className="space-y-4">
+<div>
                 <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">
                   الخدمة المصدر (التي ستُنسخ مراحلها):
                 </label>
@@ -218,9 +227,8 @@ export default function ServicesManagerClient({
                   className="w-full [&>button]:w-full [&>button]:justify-between"
                 />
               </div>
-
-              {/* Warning box */}
-              <div className="p-4 bg-red-50 dark:bg-red-950/20 border border-red-100 dark:border-red-900/30 rounded-xl flex gap-3">
+{/* Warning box */}
+<div className="p-4 bg-red-50 dark:bg-red-950/20 border border-red-100 dark:border-red-900/30 rounded-xl flex gap-3">
                 <AlertCircle className="w-5 h-5 text-red-500 shrink-0 mt-0.5" />
                 <div className="space-y-1">
                   <h4 className="text-sm font-bold text-red-800 dark:text-red-400">تنبيه هام جداً وإجراء غير قابل للتراجع</h4>
@@ -229,27 +237,8 @@ export default function ServicesManagerClient({
                   </p>
                 </div>
               </div>
-
-              <div className="flex gap-3 pt-4 border-t border-slate-100 dark:border-slate-700">
-                <button
-                  type="submit"
-                  disabled={isPending || !selectedSource}
-                  className="flex-1 bg-red-600 hover:bg-red-700 dark:bg-red-700 dark:hover:bg-red-600 text-white py-2 rounded-xl font-bold transition-colors disabled:opacity-50 flex items-center justify-center gap-2 text-sm"
-                >
-                  {isPending ? "جاري تعميم المراحل..." : "تأكيد التعميم وتطبيق المراحل"}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setIsUnifyModalOpen(false)}
-                  disabled={isPending}
-                  className="flex-1 bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 py-2 rounded-xl font-bold transition-colors disabled:opacity-50 text-sm"
-                >
-                  إلغاء
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
+</div>
+</Dialog>
       )}
     </>
   );

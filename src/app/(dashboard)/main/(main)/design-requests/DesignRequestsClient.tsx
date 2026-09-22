@@ -347,7 +347,7 @@ export default function DesignRequestsClient({
         />
 
         {/* Bento Box 3: Filters & Tabs */}
-        <div className="md:col-span-3 bg-white dark:bg-[#0A0A0A] border border-slate-200 dark:border-slate-800 rounded-xl p-3 shadow-sm flex items-center justify-between gap-3 flex-wrap">
+        <div className="md:col-span-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3 shadow-[0_1px_2px_rgb(15_23_42/0.04)] flex items-center justify-between gap-3 flex-wrap">
           <div className="flex items-center gap-1 bg-slate-50 dark:bg-[#111] border border-slate-100 dark:border-slate-800/80 rounded-xl p-1">
             {(
               [

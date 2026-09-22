@@ -62,7 +62,7 @@ export default function CharityMeetingsClient({
 
       {/* Bento Grid for Schedules */}
       {schedules.length === 0 ? (
-        <div className="bg-white dark:bg-[#111] rounded-xl p-8 border border-slate-200 dark:border-slate-800 text-center flex flex-col items-center justify-center min-h-[250px]">
+        <div className="bg-white dark:bg-slate-900 rounded-xl p-8 border border-slate-200 dark:border-slate-800 text-center flex flex-col items-center justify-center min-h-[250px]">
           <div className="w-12 h-12 bg-slate-50 dark:bg-slate-900 rounded-full flex items-center justify-center mb-4">
             <Calendar className="w-6 h-6 text-slate-400" />
           </div>
@@ -77,7 +77,7 @@ export default function CharityMeetingsClient({
             <div 
               key={schedule.id}
               onClick={() => router.push(`/main/charity-meetings/${schedule.id}`)}
-              className={`cursor-pointer bg-white dark:bg-[#111] rounded-xl p-5 border ${schedule.isActive ? 'border-slate-200 dark:border-slate-800 hover:ring-2 hover:ring-primary/20' : 'border-slate-200/50 dark:border-slate-800/50 opacity-75'} transition-all duration-300 flex flex-col h-full group relative overflow-hidden`}
+              className={`cursor-pointer bg-white dark:bg-slate-900 rounded-xl p-5 border ${schedule.isActive ? 'border-slate-200 dark:border-slate-800 hover:ring-2 hover:ring-primary/20' : 'border-slate-200/50 dark:border-slate-800/50 opacity-75'} transition-all duration-300 flex flex-col h-full group relative overflow-hidden`}
             >
               {schedule.isActive && (
                 <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full blur-3xl pointer-events-none transition-opacity opacity-0 group-hover:opacity-100" />

@@ -185,7 +185,7 @@ export default function ReadinessResultsClient({ responses }: { responses: any[]
           تحليل متوسط الجاهزية للمحاور
         </h3>
 
-        <div className="bg-white dark:bg-slate-800 rounded-xl p-8 border border-slate-100 dark:border-slate-700 shadow-sm space-y-8 transition-colors">
+        <div className="bg-white dark:bg-slate-900 rounded-xl p-8 border border-slate-200 dark:border-slate-800 shadow-[0_1px_2px_rgb(15_23_42/0.04)] space-y-8 transition-colors">
           <div className="flex items-center justify-between p-6 bg-slate-50 dark:bg-slate-900/50 rounded-xl border border-slate-100 dark:border-slate-700 hover:border-primary/20 transition-colors">
             <div className="space-y-1">
               <span className="font-bold text-slate-800 dark:text-slate-100 text-base transition-colors">المتوسط العام للجاهزية</span>
@@ -270,7 +270,7 @@ export default function ReadinessResultsClient({ responses }: { responses: any[]
             return (
               <div 
                 key={res.id} 
-                className={`bg-white dark:bg-slate-800 rounded-xl p-4 border transition-all group ${isExcluded ? 'border-slate-200 dark:border-slate-700 opacity-60 bg-slate-50 dark:bg-slate-900/50' : 'border-slate-100 dark:border-slate-700 hover:border-primary/50 shadow-sm hover:shadow dark:bg-slate-800'}`}
+                className={`bg-white dark:bg-slate-900 rounded-xl p-4 border transition-all group ${isExcluded ? 'border-slate-200 dark:border-slate-700 opacity-60 bg-slate-50 dark:bg-slate-900/50' : 'border-slate-200 dark:border-slate-800 hover:border-primary/30 shadow-[0_1px_2px_rgb(15_23_42/0.04)] dark:bg-slate-900'}`}
               >
                 <div className="flex justify-between items-start mb-3">
                   <label className="flex items-start gap-3 cursor-pointer">
@@ -334,7 +334,7 @@ export default function ReadinessResultsClient({ responses }: { responses: any[]
         
         <div className="space-y-4">
           {/* Green Category */}
-          <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-700 shadow-sm overflow-hidden transition-colors">
+          <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-[0_1px_2px_rgb(15_23_42/0.04)] overflow-hidden transition-colors">
             <div 
               className="p-5 flex justify-between items-center cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-900/50 transition-colors"
               onClick={() => toggleCategory('green')}
@@ -370,7 +370,7 @@ export default function ReadinessResultsClient({ responses }: { responses: any[]
           </div>
 
           {/* Yellow Category */}
-          <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-700 shadow-sm overflow-hidden transition-colors">
+          <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-[0_1px_2px_rgb(15_23_42/0.04)] overflow-hidden transition-colors">
             <div 
               className="p-5 flex justify-between items-center cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-900/50 transition-colors"
               onClick={() => toggleCategory('yellow')}
@@ -406,7 +406,7 @@ export default function ReadinessResultsClient({ responses }: { responses: any[]
           </div>
 
           {/* Red Category */}
-          <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-700 shadow-sm overflow-hidden transition-colors">
+          <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-[0_1px_2px_rgb(15_23_42/0.04)] overflow-hidden transition-colors">
             <div 
               className="p-5 flex justify-between items-center cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-900/50 transition-colors"
               onClick={() => toggleCategory('red')}

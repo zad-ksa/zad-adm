@@ -210,7 +210,7 @@ export default function NewsFilterClient({
 
       {/* Collapsible Filters */}
       {showFilters && (
-        <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-700/50 shadow-sm p-4 mb-4">
+        <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-[0_1px_2px_rgb(15_23_42/0.04)] p-4 mb-4">
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div>
               <label className="block text-[11px] font-bold text-slate-400 dark:text-slate-500 mb-1 flex items-center gap-1">
@@ -274,7 +274,7 @@ export default function NewsFilterClient({
           return (
             <div
               key={item.id}
-              className="bg-white dark:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-700/50 hover:border-slate-200 dark:hover:border-slate-600 hover:shadow-sm transition-all duration-200 px-4 py-3"
+              className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 hover:border-slate-200 dark:hover:border-slate-600 transition-all duration-200 px-4 py-3"
             >
               <div className="flex items-start gap-3">
                 {/* Left column: badges + title + desc */}
@@ -332,7 +332,7 @@ export default function NewsFilterClient({
         })}
 
         {filteredNews.length === 0 && (
-          <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-700/50 p-12 text-center">
+          <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-12 text-center">
             <div className="text-3xl mb-3 opacity-30">📰</div>
             <p className="font-bold text-sm text-slate-600 dark:text-slate-300">لا توجد نتائج مطابقة</p>
             <p className="text-xs text-slate-400 mt-1">جرب تغيير خيارات التصفية.</p>

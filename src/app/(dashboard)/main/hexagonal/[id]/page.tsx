@@ -90,7 +90,7 @@ export default async function HexagonalDetails({ params }: { params: { id: strin
   if (!response) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-900 font-sans transition-colors" dir="rtl">
-        <div className="text-center bg-white dark:bg-slate-800 p-12 rounded-xl border border-slate-100 dark:border-slate-700 shadow-sm max-w-md w-full mx-4 flex flex-col items-center transition-colors">
+        <div className="text-center bg-white dark:bg-slate-900 p-12 rounded-xl border border-slate-200 dark:border-slate-800 shadow-[0_1px_2px_rgb(15_23_42/0.04)] max-w-md w-full mx-4 flex flex-col items-center transition-colors">
           <div className="w-16 h-16 bg-slate-100 dark:bg-slate-700 rounded-full flex items-center justify-center text-slate-400 dark:text-slate-500 mb-6 opacity-80 border border-slate-200 dark:border-slate-600 transition-colors">
             <Search className="w-8 h-8" />
           </div>
@@ -131,7 +131,7 @@ export default async function HexagonalDetails({ params }: { params: { id: strin
       responses={responses}
     >
       {/* Charity Info Card */}
-      <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-700 shadow-sm overflow-hidden mb-10 relative transition-colors">
+      <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-[0_1px_2px_rgb(15_23_42/0.04)] overflow-hidden mb-10 relative transition-colors">
          {/* Decorative background element */}
          <div className="absolute top-0 left-0 w-32 h-32 bg-secondary/5 dark:bg-secondary/10 rounded-full blur-2xl -translate-x-1/2 -translate-y-1/2 pointer-events-none transition-colors"></div>
 
@@ -190,7 +190,7 @@ export default async function HexagonalDetails({ params }: { params: { id: strin
           return (
             <div 
               key={key} 
-              className={`bg-white dark:bg-slate-800 rounded-xl p-8 border ${meta.borderClass} shadow-sm relative overflow-hidden transition-colors`}
+              className={`bg-white dark:bg-slate-900 rounded-xl p-8 border ${meta.borderClass} shadow-sm relative overflow-hidden transition-colors`}
             >
               {/* Subtle colored background decoration */}
               <div className={`absolute -top-10 -right-10 w-32 h-32 rounded-full blur-3xl opacity-50 ${meta.bgClass} pointer-events-none transition-colors`}></div>

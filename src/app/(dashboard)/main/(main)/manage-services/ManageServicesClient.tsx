@@ -204,7 +204,7 @@ export default function ManageServicesClient({
       />
 
       {/* Search */}
-      <div className="bg-white dark:bg-slate-800 p-4 rounded-xl border border-slate-100 dark:border-slate-700/50 shadow-sm">
+      <div className="bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-slate-800 shadow-[0_1px_2px_rgb(15_23_42/0.04)]">
         <div className="relative">
           <Search className="w-4 h-4 absolute right-4 top-1/2 -translate-y-1/2 text-slate-400" />
           <input 
@@ -272,7 +272,7 @@ export default function ManageServicesClient({
           return (
             <div 
               key={svc.name} 
-              className={`group bg-white dark:bg-slate-800/90 rounded-xl border border-slate-100 dark:border-slate-700/50 shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden flex flex-col justify-between ${activeColor.border} hover:-translate-y-0.5`}
+              className={`group bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-[0_1px_2px_rgb(15_23_42/0.04)] transition-all duration-300 overflow-hidden flex flex-col justify-between hover:border-primary/30 ${activeColor.border}`}
             >
               <div className="p-4 flex-1 flex flex-col justify-between">
                 <div>
@@ -360,7 +360,7 @@ export default function ManageServicesClient({
         })}
 
         {filteredServices.length === 0 && (
-          <div className="col-span-full bg-white dark:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-700/50 p-12 text-center shadow-sm">
+          <div className="col-span-full bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-12 text-center shadow-[0_1px_2px_rgb(15_23_42/0.04)]">
             <div className="w-12 h-12 bg-slate-50 dark:bg-slate-900 rounded-xl flex items-center justify-center mx-auto mb-3">
               <Layers className="w-6 h-6 text-slate-400" />
             </div>

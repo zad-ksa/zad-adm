@@ -107,7 +107,7 @@ function CategorySelector({ meetings, onSelect, actions }: { meetings: Meeting[]
             <button
               key={cat.key}
               onClick={() => onSelect(cat.key)}
-              className={`bg-white dark:bg-slate-800 border ${cat.border} rounded-xl p-4 text-right hover:shadow-md transition-all active:scale-95 flex flex-col gap-2`}
+              className={`bg-white dark:bg-slate-900 border ${cat.border} rounded-xl p-4 text-right shadow-[0_1px_2px_rgb(15_23_42/0.04)] transition-colors hover:bg-slate-50/70 dark:hover:bg-slate-800/50 flex flex-col gap-2 outline-none focus-visible:ring-2 focus-visible:ring-primary/40`}
             >
               <span className={`text-2xl font-black tabular-nums ${cat.num}`}>{count}</span>
               <div className="flex items-center justify-between gap-1">
@@ -378,7 +378,7 @@ export default function MeetingsClient({ meetings, charities, employees, session
       />
 
       {/* شريط التصفية */}
-      <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-700 p-3 space-y-2">
+      <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-3 space-y-2">
         {/* بحث */}
         <div className="relative">
           <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400 pointer-events-none" />
@@ -474,12 +474,12 @@ export default function MeetingsClient({ meetings, charities, employees, session
 
       {/* List */}
       {meetings.length === 0 ? (
-        <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-700 p-16 text-center">
+        <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-16 text-center">
           <FileText className="w-12 h-12 text-slate-300 dark:text-slate-600 mx-auto mb-3" />
           <p className="text-slate-400 dark:text-slate-500 text-sm">لا توجد محاضر بعد</p>
         </div>
       ) : filteredMeetings.length === 0 ? (
-        <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-700 p-10 text-center">
+        <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-10 text-center">
           <Search className="w-8 h-8 text-slate-300 dark:text-slate-600 mx-auto mb-2" />
           <p className="text-slate-400 dark:text-slate-500 text-sm">لا توجد محاضر تطابق التصفية الحالية</p>
           <button onClick={resetFilters} className="mt-2 text-xs text-primary hover:underline">مسح التصفية</button>

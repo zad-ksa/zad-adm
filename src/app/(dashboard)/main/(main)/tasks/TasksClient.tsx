@@ -1052,7 +1052,7 @@ ${combinedAchievements.length > 0 ? `
       {/* المهام الحالية — بكامل عرض الشاشة الآن */}
       <div className="space-y-4">
 
-        <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-700/40 shadow-sm overflow-hidden">
+        <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-[0_1px_2px_rgb(15_23_42/0.04)] overflow-hidden">
           <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100 dark:border-slate-700/40">
             <h3 className="font-bold text-slate-800 dark:text-slate-100 text-sm flex items-center gap-2">
               <span className="w-2 h-4 bg-amber-400 dark:bg-amber-500 rounded-full"></span>

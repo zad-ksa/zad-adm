@@ -252,7 +252,7 @@ export default function GrantsClient({
         ]}
       />
 
-      <div className="flex justify-between items-center bg-white dark:bg-slate-800 p-2 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700 overflow-x-auto">
+      <div className="flex justify-between items-center bg-white dark:bg-slate-900 p-2 rounded-xl shadow-[0_1px_2px_rgb(15_23_42/0.04)] border border-slate-200 dark:border-slate-800 overflow-x-auto">
         <div className="flex gap-1">
           <button onClick={() => setActiveTab("PENDING")} className={`px-4 py-2 rounded-lg text-sm font-bold whitespace-nowrap transition-all ${activeTab === "PENDING" ? "bg-primary text-white shadow-md" : "text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700"}`}>
             المنح المرفوعة ({pendingGrants.length})
@@ -273,7 +273,7 @@ export default function GrantsClient({
       </div>
 
       {showAddGrant && (
-        <form onSubmit={handleAddGrant} className="bg-white dark:bg-slate-800 p-5 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm animate-fade-in grid grid-cols-1 md:grid-cols-5 gap-4 items-end">
+        <form onSubmit={handleAddGrant} className="bg-white dark:bg-slate-900 p-5 rounded-xl border border-slate-200 dark:border-slate-800 shadow-[0_1px_2px_rgb(15_23_42/0.04)] animate-fade-in grid grid-cols-1 md:grid-cols-5 gap-4 items-end">
           <div className="md:col-span-1">
             <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-1.5">الجهة المانحة</label>
             {donorAccounts.length > 0 ? (
@@ -323,7 +323,7 @@ export default function GrantsClient({
       {/* Grants Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
         {getFilteredGrants().map(grant => (
-          <div key={grant.id} className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm hover:shadow-md transition-shadow flex flex-col relative overflow-hidden group">
+          <div key={grant.id} className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-[0_1px_2px_rgb(15_23_42/0.04)] transition-shadow flex flex-col relative overflow-hidden group hover:border-primary/30">
             <div className={`h-1.5 w-full absolute top-0 left-0 ${
               grant.status === 'APPROVED' ? 'bg-emerald-400' :
               grant.status === 'CLOSED' ? 'bg-slate-600' :
@@ -420,7 +420,7 @@ export default function GrantsClient({
         ))}
 
         {getFilteredGrants().length === 0 && (
-          <div className="col-span-full py-16 flex flex-col items-center justify-center text-slate-400 dark:text-slate-500 bg-white dark:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-700 border-dashed">
+          <div className="col-span-full py-16 flex flex-col items-center justify-center text-slate-400 dark:text-slate-500 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 border-dashed">
             <FileText className="w-12 h-12 mb-3 opacity-20" />
             <p className="font-bold">لا توجد منح في هذا القسم</p>
           </div>

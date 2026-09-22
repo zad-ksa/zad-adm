@@ -1335,7 +1335,7 @@ export default function ServicesOverviewClient({
       />
 
       {tabs.length > 0 && (
-        <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-700 shadow-sm overflow-hidden">
+        <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-[0_1px_2px_rgb(15_23_42/0.04)] overflow-hidden">
           {/* Tabs */}
           <div className="flex overflow-x-auto border-b border-slate-100 dark:border-slate-700 scrollbar-none">
             {tabs.map(tab => {
@@ -1758,7 +1758,7 @@ footer={
       )}
 
       {tabs.length === 0 && (
-        <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-700 p-12 text-center text-slate-400 dark:text-slate-500">
+        <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-12 text-center text-slate-400 dark:text-slate-500">
           لا توجد خدمات متاحة لحسابك حالياً
         </div>
       )}

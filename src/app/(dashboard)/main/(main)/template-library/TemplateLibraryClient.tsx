@@ -696,7 +696,7 @@ export default function TemplateLibraryClient() {
   return (
     <div className="space-y-4" dir="rtl">
       {/* Breadcrumb + actions */}
-      <div className="bg-white dark:bg-[#0A0A0A] border border-slate-200 dark:border-slate-800 rounded-xl p-3 shadow-sm flex items-center justify-between gap-3 flex-wrap">
+      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3 shadow-[0_1px_2px_rgb(15_23_42/0.04)] flex items-center justify-between gap-3 flex-wrap">
         <div className="flex items-center gap-1 min-w-0 flex-wrap text-xs font-bold">
           {/* كل درجة في المسار هدف إفلات — وهي الطريقة الوحيدة للنقل إلى
               الأعلى بالسحب، إذ لا يظهر المجلد الأب بين المعروضات. */}
@@ -938,7 +938,7 @@ export default function TemplateLibraryClient() {
           )}
 
           {isCreatingFolder && (
-            <div className="flex items-center gap-2 bg-white dark:bg-[#0A0A0A] border border-slate-200 dark:border-slate-800 rounded-xl p-2">
+            <div className="flex items-center gap-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-2">
               <Folder className="w-4 h-4 text-amber-500 shrink-0 ms-1" />
               <input
                 autoFocus

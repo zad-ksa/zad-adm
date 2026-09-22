@@ -362,7 +362,7 @@ export default function EditSurveyPage({ params }: { params: Promise<{ id: strin
         />
       </div>
 
-      <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-sm mb-8 space-y-6 dark:bg-slate-800 dark:border-slate-700">
+      <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-[0_1px_2px_rgb(15_23_42/0.04)] mb-8 space-y-6 dark:bg-slate-900 dark:border-slate-800">
         <div>
           <label className="block text-sm font-bold text-slate-700 mb-2 dark:text-slate-300">عنوان الاستبيان</label>
           <input
@@ -394,7 +394,7 @@ export default function EditSurveyPage({ params }: { params: Promise<{ id: strin
 
         {survey.sections.map((section, sIndex) => (
           <div key={section.id} className="space-y-4">
-            <div className="bg-white border-2 border-slate-200 rounded-xl overflow-hidden shadow-sm dark:bg-slate-800 dark:border-slate-700">
+            <div className="bg-white border-2 border-slate-200 rounded-xl overflow-hidden shadow-[0_1px_2px_rgb(15_23_42/0.04)] dark:bg-slate-900 dark:border-slate-800">
             <div className="bg-slate-50 p-4 border-b border-slate-200 flex items-center gap-4 dark:bg-slate-900/50 dark:border-slate-700">
               <span className="bg-slate-200 text-slate-600 w-8 h-8 rounded-lg flex items-center justify-center font-bold text-sm shrink-0 dark:bg-slate-700 dark:text-slate-300">
                 {sIndex + 1}
@@ -466,7 +466,7 @@ export default function EditSurveyPage({ params }: { params: Promise<{ id: strin
                       />
                     </div>
                     {(question.type === "OPTIONS" || question.type === "MULTI_OPTIONS") && (
-                      <div className="space-y-2 bg-white p-4 rounded-xl border border-slate-200 dark:bg-slate-800 dark:border-slate-700">
+                      <div className="space-y-2 bg-white p-4 rounded-xl border border-slate-200 dark:bg-slate-900 dark:border-slate-800">
                         <div className="text-sm font-bold text-slate-700 dark:text-slate-300">خيارات الإجابة:</div>
                         {(question.options || []).map((opt, oIndex) => (
                           <div key={opt.id} className="flex gap-2 items-center">
@@ -538,7 +538,7 @@ export default function EditSurveyPage({ params }: { params: Promise<{ id: strin
                     </div>
 
                     {question.type === "YES_NO" && (
-                      <div className="space-y-2 bg-white p-4 rounded-xl border border-slate-200 dark:bg-slate-800 dark:border-slate-700">
+                      <div className="space-y-2 bg-white p-4 rounded-xl border border-slate-200 dark:bg-slate-900 dark:border-slate-800">
                         <div className="text-sm font-bold text-slate-700 dark:text-slate-300">أسئلة فرعية (تظهر فقط إذا كانت الإجابة "نعم"):</div>
                         {(question.followUpQuestions || []).map((followUp, fIndex) => (
                           <div key={followUp.id} className="flex gap-2 items-center">
@@ -630,7 +630,7 @@ export default function EditSurveyPage({ params }: { params: Promise<{ id: strin
       ))}
 
         {survey.sections.length === 0 && (
-          <div className="text-center py-12 bg-white border border-slate-200 rounded-xl text-slate-500 flex flex-col items-center gap-4 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-400">
+          <div className="text-center py-12 bg-white border border-slate-200 rounded-xl text-slate-500 flex flex-col items-center gap-4 dark:bg-slate-900 dark:border-slate-800 dark:text-slate-400">
             <span>لا توجد أقسام حالياً.</span>
             <button
               onClick={() => addSection()}

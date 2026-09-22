@@ -266,7 +266,7 @@ export default function SitesClient({ sites }: { sites: Site[] }) {
           />
 
           {/* The one-button path first, typing second. */}
-          <div className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-4">
+          <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4">
             <button
               type="button"
               onClick={locate}
@@ -322,7 +322,7 @@ export default function SitesClient({ sites }: { sites: Site[] }) {
           </div>
 
           {/* Radius */}
-          <div className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-4 space-y-3">
+          <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 space-y-3">
             <div className="flex items-center justify-between gap-3 flex-wrap">
               <p className="text-[12px] font-bold text-slate-700 dark:text-slate-200">
                 نطاق القبول

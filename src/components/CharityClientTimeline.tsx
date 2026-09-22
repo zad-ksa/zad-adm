@@ -16,7 +16,7 @@ export default function CharityClientTimeline({
   const continuousStages = stages?.filter(s => s.isContinuous) || [];
 
   return (
-    <div className={embedded ? "w-full" : "w-full bg-white dark:bg-[#0A0A0A] rounded-xl border border-slate-200 dark:border-slate-800 p-6 shadow-sm dark:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)]"}>
+    <div className={embedded ? "w-full" : "w-full bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-6 shadow-[0_1px_2px_rgb(15_23_42/0.04)]"}>
       {!embedded && <h3 className="font-semibold text-slate-900 dark:text-slate-50 tracking-tight mb-6" style={{ fontSize: 'clamp(1.25rem, 3vw, 1.5rem)' }}>{title}</h3>}
       
       {sequentialStages.length > 0 ? (
@@ -30,7 +30,7 @@ export default function CharityClientTimeline({
               const displayDuration = formatDurationArabic(stage.startDate, stage.endDate) || stage.duration;
               
               return (
-                <div key={stage.id} className={`relative flex-1 bg-white dark:bg-[#0A0A0A] rounded-xl p-5 md:p-6 shadow-sm border transition-all duration-300 hover:shadow-md hover:border-slate-300 dark:hover:border-slate-700 ${
+                <div key={stage.id} className={`relative flex-1 bg-white dark:bg-slate-900 rounded-xl p-5 md:p-6 shadow-[0_1px_2px_rgb(15_23_42/0.04)] border transition-all duration-300 hover:border-slate-300 dark:hover:border-slate-700 ${
                   isComingSoon
                     ? 'border-amber-400 dark:border-amber-700 bg-amber-50/70 dark:bg-amber-950/20 shadow-sm'
                     : isCurrent 

@@ -68,7 +68,7 @@ export default async function DashboardGovernanceStandardsPage({
               {std.practices.map((practice, practiceIdx) => (
                 <div 
                   key={practice.id}
-                  className="bg-white dark:bg-[#111] rounded-xl p-6 ring-1 ring-slate-200 dark:ring-slate-800/80 shadow-sm hover:shadow-md hover:ring-primary/30 dark:hover:ring-primary/40 transition-all duration-300 flex flex-col gap-4"
+                  className="bg-white dark:bg-slate-900 rounded-xl p-6 ring-1 ring-slate-200 dark:ring-slate-800/80 shadow-[0_1px_2px_rgb(15_23_42/0.04)] hover:ring-primary/30 dark:hover:ring-primary/40 transition-all duration-300 flex flex-col gap-4 hover:border-primary/30"
                 >
                   <h3 className="text-base font-bold text-slate-800 dark:text-slate-100 flex items-start gap-2.5">
                     <span className="flex items-center justify-center bg-primary/10 text-primary text-[10px] font-black px-2 py-1 rounded-lg shrink-0 mt-0.5">

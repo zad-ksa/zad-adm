@@ -59,7 +59,7 @@ export default async function VisionMissionDashboardPage({ params }: { params: P
       </div>
 
       {/* Results Client Component */}
-      <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-6 md:p-8 shadow-sm transition-colors">
+      <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-6 md:p-8 shadow-[0_1px_2px_rgb(15_23_42/0.04)] transition-colors">
         <div className="flex items-center gap-3 mb-8 border-b border-slate-100 dark:border-slate-700 pb-4">
           <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center text-primary font-bold">
             <Sparkles className="w-5 h-5" />

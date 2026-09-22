@@ -342,7 +342,7 @@ function RequestCard({
   );
 
   return (
-    <div className={`bg-white dark:bg-slate-800 rounded-xl border-r-4 ${priority.border} border border-slate-100 dark:border-slate-700 transition-shadow hover:shadow-sm ${hasDetails ? "cursor-pointer" : ""}`}
+    <div className={`bg-white dark:bg-slate-900 rounded-xl border-r-4 ${priority.border} border border-slate-200 dark:border-slate-800 shadow-[0_1px_2px_rgb(15_23_42/0.04)] transition-colors ${hasDetails ? "cursor-pointer" : ""}`}
       onClick={hasDetails ? () => setExpanded(v => !v) : undefined}>
 
       {/* صف الجدول — سطح المكتب (lg فأعلى). كل معلومة في عمودها الثابت، بنفس
@@ -828,7 +828,7 @@ export default function RequestsClient({ requests: initial, hasActiveChain, canR
 
       {/* قائمة الطلبات */}
       {filtered.length === 0 ? (
-        <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-700 p-16 text-center">
+        <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-16 text-center">
           <Send className="w-10 h-10 text-slate-300 dark:text-slate-600 mx-auto mb-3" />
           <p className="text-slate-400 dark:text-slate-500 text-sm">
             {anyFilter

@@ -59,7 +59,7 @@ export default function CharityClientStrategyDashboard({
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
         {/* Next Meeting Card */}
-        <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-6 shadow-sm flex flex-col justify-between">
+        <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-6 shadow-[0_1px_2px_rgb(15_23_42/0.04)] flex flex-col justify-between">
           <div>
             <div className="flex items-center gap-3 text-primary mb-4">
               <div className="p-2 bg-primary/10 rounded-lg">
@@ -149,7 +149,7 @@ export default function CharityClientStrategyDashboard({
       <CharityClientTimeline title={"المخطط الزمني"} stages={strategicStages} />
 
       {/* Active Tasks List */}
-      <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-6 shadow-sm">
+      <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-6 shadow-[0_1px_2px_rgb(15_23_42/0.04)]">
         <h3 className="font-bold text-xl text-slate-800 dark:text-slate-100 mb-6 border-b border-slate-100 dark:border-slate-700 pb-4">المهام الجاري العمل عليها من قبل فريق الاستراتيجية</h3>
 
         {activeTasks && activeTasks.length > 0 ? (

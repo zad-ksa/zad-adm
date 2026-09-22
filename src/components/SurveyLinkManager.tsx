@@ -98,7 +98,7 @@ export default function SurveyLinkManager({ charityName, surveyType }: { charity
       : "رابط استبيان الرؤية والرسالة والأثر المخصص للجمعية";
 
   return (
-    <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm mb-8 space-y-4">
+    <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-[0_1px_2px_rgb(15_23_42/0.04)] mb-8 space-y-4">
       <div className="flex flex-col gap-4">
         <div className="flex items-center justify-between">
           <div>

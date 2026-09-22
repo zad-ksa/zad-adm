@@ -304,7 +304,7 @@ export default function SurveyResultsPage({ params }: { params: Promise<{ id: st
       </div>
 
       {responses.length === 0 ? (
-        <div className="bg-white border border-slate-200 rounded-xl p-12 text-center shadow-sm dark:bg-slate-800 dark:border-slate-700">
+        <div className="bg-white border border-slate-200 rounded-xl p-12 text-center shadow-[0_1px_2px_rgb(15_23_42/0.04)] dark:bg-slate-900 dark:border-slate-800">
           <div className="w-16 h-16 bg-slate-100 text-slate-400 rounded-full flex items-center justify-center mx-auto mb-4 dark:bg-slate-700 dark:text-slate-400">
             <FileText className="w-8 h-8" />
           </div>
@@ -340,7 +340,7 @@ export default function SurveyResultsPage({ params }: { params: Promise<{ id: st
               {parsedResponses.map((response, rIdx) => (
                 <div
                   key={response.id}
-                  className="bg-white border border-slate-200 rounded-xl p-6 shadow-sm dark:bg-slate-800 dark:border-slate-700"
+                  className="bg-white border border-slate-200 rounded-xl p-6 shadow-[0_1px_2px_rgb(15_23_42/0.04)] dark:bg-slate-900 dark:border-slate-800"
                 >
                   <div className="flex items-center gap-4 border-b border-slate-100 pb-4 mb-4 dark:border-slate-700">
                     <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center text-primary">
@@ -362,7 +362,7 @@ export default function SurveyResultsPage({ params }: { params: Promise<{ id: st
           {/* ── حسب المشارك: قائمة أسماء + إجابات المختار وحده ─────────────── */}
           {viewMode === "byRespondent" && (
             <div className="grid grid-cols-1 lg:grid-cols-[260px_minmax(0,1fr)] gap-6">
-              <div className="bg-white border border-slate-200 rounded-xl p-2 shadow-sm dark:bg-slate-800 dark:border-slate-700 h-fit lg:sticky lg:top-4 max-h-[80vh] overflow-y-auto">
+              <div className="bg-white border border-slate-200 rounded-xl p-2 shadow-[0_1px_2px_rgb(15_23_42/0.04)] dark:bg-slate-900 dark:border-slate-800 h-fit lg:sticky lg:top-4 max-h-[80vh] overflow-y-auto">
                 <p className="text-[11px] font-bold text-slate-400 dark:text-slate-500 px-2 py-1.5">
                   المشاركون ({parsedResponses.length})
                 </p>
@@ -390,7 +390,7 @@ export default function SurveyResultsPage({ params }: { params: Promise<{ id: st
                 </ul>
               </div>
 
-              <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-sm dark:bg-slate-800 dark:border-slate-700 min-w-0">
+              <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-[0_1px_2px_rgb(15_23_42/0.04)] dark:bg-slate-900 dark:border-slate-800 min-w-0">
                 {selectedRespondent ? (
                   <>
                     <div className="flex items-center gap-4 border-b border-slate-100 pb-4 mb-4 dark:border-slate-700">
@@ -442,7 +442,7 @@ export default function SurveyResultsPage({ params }: { params: Promise<{ id: st
                 return (
                   <div
                     key={`${q.id}-${idx}`}
-                    className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm dark:bg-slate-800 dark:border-slate-700"
+                    className="bg-white border border-slate-200 rounded-xl p-5 shadow-[0_1px_2px_rgb(15_23_42/0.04)] dark:bg-slate-900 dark:border-slate-800"
                   >
                     <div className="flex items-start justify-between gap-3 mb-3">
                       <div className="min-w-0">

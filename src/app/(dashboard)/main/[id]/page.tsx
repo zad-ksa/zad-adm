@@ -21,7 +21,7 @@ export default async function CharityDetails({ params }: { params: { id: string 
   if (!response) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-900 font-sans transition-colors">
-        <div className="text-center bg-white dark:bg-slate-800 p-12 rounded-xl border border-slate-100 dark:border-slate-700 shadow-sm max-w-md w-full mx-4 transition-colors">
+        <div className="text-center bg-white dark:bg-slate-900 p-12 rounded-xl border border-slate-200 dark:border-slate-800 shadow-[0_1px_2px_rgb(15_23_42/0.04)] max-w-md w-full mx-4 transition-colors">
           <div className="text-5xl mb-6 opacity-30">🔍</div>
           <h1 className="text-2xl font-bold text-slate-800 dark:text-slate-100 mb-3 tracking-tight transition-colors">الجمعية غير موجودة</h1>
           <p className="text-slate-500 dark:text-slate-400 font-medium mb-8 transition-colors">عذراً، لم نتمكن من العثور على بيانات الاستبيان المطلوبة.</p>
@@ -72,7 +72,7 @@ export default async function CharityDetails({ params }: { params: { id: string 
         </div>
 
         {/* Charity Info Card */}
-        <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-700 shadow-sm overflow-hidden mb-10 relative transition-colors">
+        <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-[0_1px_2px_rgb(15_23_42/0.04)] overflow-hidden mb-10 relative transition-colors">
            {/* Decorative corner element */}
            <div className="absolute top-0 left-0 w-32 h-32 bg-primary/5 dark:bg-primary/10 rounded-full blur-2xl -translate-x-1/2 -translate-y-1/2 pointer-events-none transition-colors"></div>
            
@@ -150,7 +150,7 @@ export default async function CharityDetails({ params }: { params: { id: string 
         {/* Sections Breakdown */}
         <div className="space-y-6">
           {sectionScores.map((sec, i) => (
-            <div key={i} className="bg-white dark:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-700 shadow-sm overflow-hidden transition-colors">
+            <div key={i} className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-[0_1px_2px_rgb(15_23_42/0.04)] overflow-hidden transition-colors">
               {/* Section Header */}
               <div className="bg-slate-50/80 dark:bg-slate-900/50 px-6 md:px-8 py-5 border-b border-slate-100 dark:border-slate-700 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 transition-colors">
                 <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2 transition-colors">

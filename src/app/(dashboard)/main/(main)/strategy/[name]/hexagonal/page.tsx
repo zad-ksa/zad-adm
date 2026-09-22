@@ -92,7 +92,7 @@ export default async function HexagonalSurveysPage({ params }: { params: Promise
       <SurveyLinkManager charityName={decodedName} surveyType="HEXAGONAL" />
 
       {!hasHexagonal ? (
-        <div className="text-center py-20 text-slate-500 dark:text-slate-400 bg-white dark:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-700 shadow-sm mt-6 transition-colors">
+        <div className="text-center py-20 text-slate-500 dark:text-slate-400 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-[0_1px_2px_rgb(15_23_42/0.04)] mt-6 transition-colors">
           <ClipboardLargeIcon />
           <h3 className="text-xl font-bold text-slate-700 dark:text-slate-300 mb-2 transition-colors">لا توجد بيانات متاحة</h3>
           <p className="font-medium text-slate-500 dark:text-slate-400 transition-colors">لم يقم أي مشارك بتعبئة تقرير التحليل السداسي لهذه الجمعية بعد.</p>
@@ -115,7 +115,7 @@ export default async function HexagonalSurveysPage({ params }: { params: Promise
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Strengths */}
-          <div className="bg-white dark:bg-slate-800 rounded-xl p-4 sm:p-6 border border-slate-100 dark:border-slate-700 shadow-sm transition-colors">
+          <div className="bg-white dark:bg-slate-900 rounded-xl p-4 sm:p-6 border border-slate-200 dark:border-slate-800 shadow-[0_1px_2px_rgb(15_23_42/0.04)] transition-colors">
             <div className="flex items-center gap-3 mb-4 border-b border-slate-100 dark:border-slate-700 pb-3 transition-colors">
               <div className="p-2 bg-emerald-50 dark:bg-emerald-900/30 rounded-lg transition-colors">
                 <Award className="w-6 h-6 text-emerald-600 dark:text-emerald-400" />
@@ -137,7 +137,7 @@ export default async function HexagonalSurveysPage({ params }: { params: Promise
           </div>
 
           {/* Weaknesses */}
-          <div className="bg-white dark:bg-slate-800 rounded-xl p-4 sm:p-6 border border-slate-100 dark:border-slate-700 shadow-sm transition-colors">
+          <div className="bg-white dark:bg-slate-900 rounded-xl p-4 sm:p-6 border border-slate-200 dark:border-slate-800 shadow-[0_1px_2px_rgb(15_23_42/0.04)] transition-colors">
             <div className="flex items-center gap-3 mb-4 border-b border-slate-100 dark:border-slate-700 pb-3 transition-colors">
               <div className="p-2 bg-rose-50 dark:bg-rose-900/30 rounded-lg transition-colors">
                 <AlertTriangle className="w-6 h-6 text-rose-600 dark:text-rose-400" />
@@ -159,7 +159,7 @@ export default async function HexagonalSurveysPage({ params }: { params: Promise
           </div>
 
           {/* Opportunities */}
-          <div className="bg-white dark:bg-slate-800 rounded-xl p-4 sm:p-6 border border-slate-100 dark:border-slate-700 shadow-sm transition-colors">
+          <div className="bg-white dark:bg-slate-900 rounded-xl p-4 sm:p-6 border border-slate-200 dark:border-slate-800 shadow-[0_1px_2px_rgb(15_23_42/0.04)] transition-colors">
             <div className="flex items-center gap-3 mb-4 border-b border-slate-100 dark:border-slate-700 pb-3 transition-colors">
               <div className="p-2 bg-sky-50 dark:bg-sky-900/30 rounded-lg transition-colors">
                 <Sparkles className="w-6 h-6 text-sky-500 dark:text-sky-400" />
@@ -181,7 +181,7 @@ export default async function HexagonalSurveysPage({ params }: { params: Promise
           </div>
 
           {/* Threats */}
-          <div className="bg-white dark:bg-slate-800 rounded-xl p-4 sm:p-6 border border-slate-100 dark:border-slate-700 shadow-sm transition-colors">
+          <div className="bg-white dark:bg-slate-900 rounded-xl p-4 sm:p-6 border border-slate-200 dark:border-slate-800 shadow-[0_1px_2px_rgb(15_23_42/0.04)] transition-colors">
             <div className="flex items-center gap-3 mb-4 border-b border-slate-100 dark:border-slate-700 pb-3 transition-colors">
               <div className="p-2 bg-amber-50 dark:bg-amber-900/30 rounded-lg transition-colors">
                 <ShieldAlert className="w-6 h-6 text-amber-500 dark:text-amber-400" />
@@ -203,7 +203,7 @@ export default async function HexagonalSurveysPage({ params }: { params: Promise
           </div>
 
           {/* Success Factors */}
-          <div className="bg-white dark:bg-slate-800 rounded-xl p-4 sm:p-6 border border-slate-100 dark:border-slate-700 shadow-sm transition-colors">
+          <div className="bg-white dark:bg-slate-900 rounded-xl p-4 sm:p-6 border border-slate-200 dark:border-slate-800 shadow-[0_1px_2px_rgb(15_23_42/0.04)] transition-colors">
             <div className="flex items-center gap-3 mb-4 border-b border-slate-100 dark:border-slate-700 pb-3 transition-colors">
               <div className="p-2 bg-yellow-50 dark:bg-yellow-900/30 rounded-lg transition-colors">
                 <Key className="w-6 h-6 text-yellow-600 dark:text-yellow-400" />
@@ -225,7 +225,7 @@ export default async function HexagonalSurveysPage({ params }: { params: Promise
           </div>
 
           {/* Competitiveness */}
-          <div className="bg-white dark:bg-slate-800 rounded-xl p-4 sm:p-6 border border-slate-100 dark:border-slate-700 shadow-sm transition-colors">
+          <div className="bg-white dark:bg-slate-900 rounded-xl p-4 sm:p-6 border border-slate-200 dark:border-slate-800 shadow-[0_1px_2px_rgb(15_23_42/0.04)] transition-colors">
             <div className="flex items-center gap-3 mb-4 border-b border-slate-100 dark:border-slate-700 pb-3 transition-colors">
               <div className="p-2 bg-violet-50 dark:bg-violet-900/30 rounded-lg transition-colors">
                 <Rocket className="w-6 h-6 text-violet-600 dark:text-violet-400" />
@@ -272,7 +272,7 @@ export default async function HexagonalSurveysPage({ params }: { params: Promise
             return (
               <div
                 key={res.id}
-                className="bg-white dark:bg-slate-800 rounded-xl p-4 sm:p-6 border border-slate-100 dark:border-slate-700 hover:border-secondary/50 dark:hover:border-secondary/50 shadow-sm hover:shadow transition-all flex flex-col justify-between group"
+                className="bg-white dark:bg-slate-900 rounded-xl p-4 sm:p-6 border border-slate-200 dark:border-slate-800 hover:border-secondary/50 dark:hover:border-secondary/50 shadow-[0_1px_2px_rgb(15_23_42/0.04)] transition-all flex flex-col justify-between group"
               >
                 <div>
                   <div className="flex justify-between items-start mb-6 border-b border-slate-50 dark:border-slate-700 pb-4 transition-colors">

@@ -75,7 +75,7 @@ export default function ContractsClient({
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Main Contracts List */}
-        <div className="lg:col-span-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-sm overflow-hidden flex flex-col">
+        <div className="lg:col-span-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-[0_1px_2px_rgb(15_23_42/0.04)] overflow-hidden flex flex-col">
           <div className="p-5 border-b border-slate-100 dark:border-slate-800 shrink-0 flex justify-between items-center">
             <h3 className="text-base font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
               <Users className="w-5 h-5 text-slate-400" />
@@ -133,7 +133,7 @@ export default function ContractsClient({
         </div>
 
         {/* Installments Sidebar */}
-        <div className="lg:col-span-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-sm flex flex-col h-full">
+        <div className="lg:col-span-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-[0_1px_2px_rgb(15_23_42/0.04)] flex flex-col h-full">
           <div className="p-5 border-b border-slate-100 dark:border-slate-800 shrink-0">
             <h3 className="text-base font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
               <Calendar className="w-5 h-5 text-amber-500" />
@@ -147,7 +147,7 @@ export default function ContractsClient({
             {dueThisMonth.length > 0 ? (
               <div className="space-y-4">
                 {dueThisMonth.map((installment, index) => (
-                  <div key={index} className="p-4 rounded-xl border border-amber-100 dark:border-amber-900/30 bg-amber-50/50 dark:bg-amber-900/10 hover:shadow-md transition-shadow">
+                  <div key={index} className="p-4 rounded-xl border border-amber-100 dark:border-amber-900/30 bg-amber-50/50 dark:bg-amber-900/10">
                     <div className="flex justify-between items-start mb-2">
                       <span className="text-sm font-bold text-slate-800 dark:text-slate-200">
                         {installment.charityName}
@@ -177,7 +177,7 @@ export default function ContractsClient({
       </div>
       
       {/* All Installments per contract - Detailed view */}
-      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-sm overflow-hidden">
+      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-[0_1px_2px_rgb(15_23_42/0.04)] overflow-hidden">
         <div className="p-5 border-b border-slate-100 dark:border-slate-800 shrink-0">
           <h3 className="text-base font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
             <DollarSign className="w-5 h-5 text-emerald-500" />

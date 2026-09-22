@@ -172,7 +172,7 @@ export default function FinanceClient({
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 items-start">
           {/* Installments Card */}
-          <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-700 p-4 shadow-sm space-y-4">
+          <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-4 shadow-[0_1px_2px_rgb(15_23_42/0.04)] space-y-4">
             <h3 className="text-sm font-black text-slate-800 dark:text-slate-100 flex items-center gap-2 border-b border-slate-50 dark:border-slate-700/50 pb-3">
               <Layers className="w-4 h-4 text-primary" />
               دفعات العقد (الأقساط)
@@ -216,7 +216,7 @@ export default function FinanceClient({
             </div>
           </div>
 
-          <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-700 p-4 shadow-sm space-y-4">
+          <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-4 shadow-[0_1px_2px_rgb(15_23_42/0.04)] space-y-4">
             <h3 className="text-sm font-black text-slate-800 dark:text-slate-100 flex items-center gap-2 border-b border-slate-50 dark:border-slate-700/50 pb-3">
               <History className="w-4 h-4 text-primary" />
               سجل الحركات المالية
@@ -234,7 +234,7 @@ export default function FinanceClient({
                         </span>
                       </div>
                       {log.notes && (
-                        <p className="text-xs text-slate-500 dark:text-slate-400 font-semibold flex items-center gap-1.5 bg-white dark:bg-slate-800 px-3 py-1.5 rounded-xl border border-slate-100 dark:border-slate-700 w-fit">
+                        <p className="text-xs text-slate-500 dark:text-slate-400 font-semibold flex items-center gap-1.5 bg-white dark:bg-slate-900 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-800 w-fit">
                           <MessageSquare className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500" />
                           <span>{log.notes}</span>
                         </p>

@@ -227,7 +227,7 @@ export default function DesignRequestCard({
 
   return (
     <div
-      className={`design-requests-ui group flex flex-col rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0A0A0A] shadow-sm hover:shadow-md dark:shadow-none hover:border-primary/40 dark:hover:border-teal-500/40 transition-all duration-300 ${
+      className={`design-requests-ui group flex flex-col rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-[0_1px_2px_rgb(15_23_42/0.04)] hover:border-primary/30 dark:hover:border-teal-500/40 transition-all duration-300 ${
         isList ? "p-4" : "h-full p-5"
       }`}
     >

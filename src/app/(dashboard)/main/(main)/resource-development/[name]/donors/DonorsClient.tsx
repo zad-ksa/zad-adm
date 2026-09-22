@@ -96,7 +96,7 @@ export default function DonorsClient({
 
       <div className="space-y-4">
         {showAddDonor && (
-          <form onSubmit={handleAddDonor} className="bg-white dark:bg-slate-800 p-4 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm animate-fade-in grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-3 items-end">
+          <form onSubmit={handleAddDonor} className="bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-slate-800 shadow-[0_1px_2px_rgb(15_23_42/0.04)] animate-fade-in grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-3 items-end">
             <div>
               <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-1">اسم الجهة المانحة</label>
               <input required type="text" value={donorForm.name} onChange={e => setDonorForm({...donorForm, name: e.target.value})} className="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-lg px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary font-bold dark:text-slate-100" />
@@ -123,7 +123,7 @@ export default function DonorsClient({
           {donorAccounts.map(account => {
             const submittedProjectsCount = grantApplications.filter((g: any) => g.entityName === account.donorName).length;
             return (
-            <div key={account.id} className="bg-white dark:bg-slate-800 rounded-xl p-4 border border-slate-200 dark:border-slate-700 shadow-sm hover:shadow-md transition-shadow relative group">
+            <div key={account.id} className="bg-white dark:bg-slate-900 rounded-xl p-4 border border-slate-200 dark:border-slate-800 shadow-[0_1px_2px_rgb(15_23_42/0.04)] transition-shadow relative group hover:border-primary/30">
               <button onClick={async () => {
                 if (await confirmAction({ title: "حذف حساب الجهة المانحة؟", confirmLabel: "حذف" })) startTransition(() => {
                   deleteDonorAccount(account.id, charityId);

@@ -216,7 +216,7 @@ export default function CalendarClient({
           {months.map((spec) => (
             <div
               key={spec.month}
-              className="rounded-xl border border-slate-200 dark:border-slate-800 p-3 bg-white dark:bg-slate-950"
+              className="rounded-xl border border-slate-200 dark:border-slate-800 p-3 bg-white dark:bg-slate-900"
             >
               <button
                 onClick={() => goto(spec.month, "month")}

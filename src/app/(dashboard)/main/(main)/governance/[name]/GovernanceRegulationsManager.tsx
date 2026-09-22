@@ -95,7 +95,7 @@ export default function GovernanceRegulationsManager({
   };
 
   return (
-    <div className="bg-white dark:bg-slate-800 rounded-xl p-8 border border-slate-100 dark:border-slate-700 shadow-sm relative overflow-hidden transition-colors">
+    <div className="bg-white dark:bg-slate-900 rounded-xl p-8 border border-slate-200 dark:border-slate-800 shadow-[0_1px_2px_rgb(15_23_42/0.04)] relative overflow-hidden transition-colors">
       <h3 className="text-xl font-bold text-slate-800 dark:text-slate-100 mb-6 flex items-center gap-2">
         <FileText className="w-6 h-6 text-emerald-500" />
         خدمات المركز الوطني
@@ -116,7 +116,7 @@ export default function GovernanceRegulationsManager({
             return (
               <div
                 key={reg.id}
-                className={`group relative overflow-hidden bg-white dark:bg-slate-800 rounded-xl px-6 pt-8 pb-6 shadow-xl ring-1 ring-slate-900/5 dark:ring-white/10 transition-all duration-500 transform hover:scale-105 hover:shadow-2xl flex flex-col gap-4 ${!isVisible ? "opacity-60 grayscale" : ""
+                className={`group relative overflow-hidden bg-white dark:bg-slate-900 rounded-xl px-6 pt-8 pb-6 shadow-[0_1px_2px_rgb(15_23_42/0.04)] ring-1 ring-slate-900/5 dark:ring-white/10 transition-all duration-500 transform hover:scale-105 flex flex-col gap-4 hover:border-primary/30 ${!isVisible ? "opacity-60 grayscale" : ""
                   }`}
               >
                 {/* Background expanding circle */}

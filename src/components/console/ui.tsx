@@ -436,10 +436,35 @@ export function MetricCard({
 }
 
 /**
- * بطاقة انتقال — مدخلٌ إلى شاشةٍ أخرى، كبطاقات «لوحة التحكم».
+ * سطح البطاقة — واحدٌ لكل لوحة زاد.
  *
- * بلا ميلٍ عند المرور ولا دوائر تتضاعف: الوجهة شاشة إدارةٍ كثيفة، فلا تُبشَّر
- * ببطاقةٍ تسويقية. والحركة الوحيدة سهمٌ ينزلق — إشارةُ اتجاهٍ لا زخرفة.
+ * كان في اللوحة عائلتان: إطارٌ slate-200 بلا ظلّ تقريباً (العُدّة)، وإطارٌ
+ * slate-100 لا يكاد يُرى بظلٍّ shadow-sm يكبر عند المرور (القديم) — وفي الوضع
+ * الداكن ستّ درجاتٍ لخلفية البطاقة، فتتجاور بطاقتان بلونين في الشاشة نفسها.
+ *
+ * `static` لبطاقةٍ تعرض محتوى، و`interactive` لبطاقةٍ تُنقر: يتغيّر إطارها
+ * وخلفيتها عند المرور — لا ترتفع ولا يكبر ظلّها.
+ */
+const cardBase =
+  "rounded-xl border border-slate-200 bg-white shadow-[0_1px_2px_rgb(15_23_42/0.04)] dark:border-slate-800 dark:bg-slate-900";
+export const card = {
+  static: cardBase,
+  interactive: cx(
+    cardBase,
+    "transition-colors hover:border-primary/30 hover:bg-slate-50/70 dark:hover:bg-slate-800/50",
+    "outline-none focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-slate-900"
+  ),
+};
+
+/**
+ * بطاقة انتقال — مدخلٌ إلى شاشةٍ أخرى، كبطاقات «لوحة التحكم» وإعدادات التحضير.
+ *
+ * علامتها دائرةٌ هادئة في زاويتها تتّسع عند المرور، وسهمٌ ينزلق نحو الوجهة.
+ * والدائرة لها وحدها: البطاقة التي تعرض محتوى لا تحملها، فيُعرف من شكل
+ * البطاقة أنها تُنقر. ولا تتحرّك لمن طلب تقليل الحركة.
+ *
+ * `meta` سطرٌ صغير أسفلها (عددٌ أو حال)، و`metaWarn` يلوّنه تنبيهاً حين يطلب
+ * فعلاً — «لا مواقع بعد» مثلاً.
  */
 export function NavCard({
   href,
@@ -447,31 +472,46 @@ export function NavCard({
   description,
   icon,
   tone = "brand",
+  meta,
+  metaWarn = false,
 }: {
   href: string;
   title: string;
   description: string;
   icon?: ReactNode;
   tone?: keyof typeof METRIC_TONE;
+  meta?: ReactNode;
+  metaWarn?: boolean;
 }) {
   return (
-    <Link
-      href={href}
-      className={cx(
-        "group flex flex-col gap-3 rounded-xl border border-slate-200 bg-white p-5 transition-colors",
-        "hover:border-primary/30 hover:bg-slate-50/70 dark:border-slate-800 dark:bg-slate-900 dark:hover:bg-slate-800/50",
-        "outline-none focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-slate-900"
-      )}
-    >
+    <Link href={href} className={cx(card.interactive, "group relative flex flex-col gap-3 overflow-hidden p-5")}>
+      <span
+        aria-hidden
+        className="pointer-events-none absolute -bottom-6 -left-6 size-24 rounded-full bg-primary/5 transition-transform duration-500 motion-safe:group-hover:scale-150 dark:bg-teal-400/5"
+      />
       {icon && (
-        <span className={cx("flex size-10 items-center justify-center rounded-lg", METRIC_TONE[tone])}>{icon}</span>
+        <span className={cx("relative flex size-10 items-center justify-center rounded-lg", METRIC_TONE[tone])}>{icon}</span>
       )}
-      <span className="text-[15px] font-semibold text-slate-900 dark:text-slate-100">{title}</span>
-      <span className="text-[13px] leading-5 text-slate-500 dark:text-slate-400">{description}</span>
-      <span className="mt-auto inline-flex items-center gap-1.5 pt-1 text-[13px] font-medium text-primary dark:text-teal-300">
-        الدخول
-        <span aria-hidden className="transition-transform group-hover:-translate-x-0.5">
-          ←
+      <span className="relative text-[15px] font-semibold text-slate-900 dark:text-slate-100">{title}</span>
+      <span className="relative text-[13px] leading-5 text-slate-500 dark:text-slate-400">{description}</span>
+      <span className="relative mt-auto flex items-center justify-between gap-2 pt-1">
+        {meta ? (
+          <span
+            className={cx(
+              "tabular-nums text-[12.5px] font-medium",
+              metaWarn ? "text-amber-600 dark:text-amber-400" : "text-slate-500 dark:text-slate-400"
+            )}
+          >
+            {meta}
+          </span>
+        ) : (
+          <span />
+        )}
+        <span className="inline-flex items-center gap-1.5 text-[13px] font-medium text-primary dark:text-teal-300">
+          الدخول
+          <span aria-hidden className="transition-transform motion-safe:group-hover:-translate-x-0.5">
+            ←
+          </span>
         </span>
       </span>
     </Link>

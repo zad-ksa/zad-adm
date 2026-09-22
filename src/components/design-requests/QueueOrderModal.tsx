@@ -56,7 +56,7 @@ function SortableRow({ row, index }: { row: QueueRow; index: number }) {
     <li
       ref={setNodeRef}
       style={{ transform: CSS.Transform.toString(transform), transition }}
-      className={`flex items-start gap-3 rounded-xl border bg-white dark:bg-[#0d0d0d] p-3 ${
+      className={`flex items-start gap-3 rounded-xl border bg-white dark:bg-slate-900 p-3 ${
         isDragging
           ? "border-primary/50 shadow-lg opacity-90"
           : "border-slate-200 dark:border-slate-800"
@@ -241,7 +241,7 @@ footer={
                 {order.map((row, i) => (
                   <li
                     key={row.id}
-                    className="flex items-start gap-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0d0d0d] p-3"
+                    className="flex items-start gap-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-3"
                   >
                     <span className="mt-0.5 shrink-0 w-6 h-6 rounded-lg bg-primary/10 text-primary dark:bg-teal-500/15 dark:text-teal-400 grid place-items-center text-[11px] font-black tabular-nums">
                       {i + 1}

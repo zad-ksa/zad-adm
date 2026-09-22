@@ -98,7 +98,7 @@ export default function ProfileClient({
         <PageHeader icon={<UserCircle className="w-6 h-6" />} title="الملف الشخصي" />
       </div>
 
-      <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-700/50 shadow-sm w-full max-w-2xl mx-auto overflow-hidden font-sans mt-8">
+      <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-[0_1px_2px_rgb(15_23_42/0.04)] w-full max-w-2xl mx-auto overflow-hidden font-sans mt-8">
         <div className="px-6 py-5 border-b border-slate-100 dark:border-slate-700/50">
           <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100">المعلومات الشخصية</h3>
           <p className="text-xs text-slate-500 mt-1">يمكنك تحديث بياناتك الشخصية وتغيير كلمة المرور من هنا</p>

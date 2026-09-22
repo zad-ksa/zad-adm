@@ -2,9 +2,9 @@ export const dynamic = "force-dynamic";
 
 import type { Metadata } from "next";
 import { PageHeader } from "@/components/console/layout";
+import { NavCard } from "@/components/console/ui";
 import { redirect } from "next/navigation";
-import Link from "next/link";
-import { ArrowLeft, CalendarDays, Clock, MapPin, PenLine, Users, Wifi } from "lucide-react";
+import { CalendarDays, Clock, MapPin, PenLine, Users, Wifi } from "lucide-react";
 import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { hasPermission } from "@/lib/permissions";
@@ -71,8 +71,6 @@ export default async function AttendanceSettingsPage() {
       title: "مواقع العمل",
       body: "النطاق الجغرافي الذي يُقبل التحضير من داخله.",
       count: siteCount === 0 ? "لا مواقع بعد" : `${siteCount} موقع`,
-      tone: "text-blue-600 dark:text-blue-400",
-      tile: "bg-blue-50 dark:bg-blue-900/20",
       warn: siteCount === 0,
     },
     {
@@ -81,8 +79,6 @@ export default async function AttendanceSettingsPage() {
       title: "مجموعات الدوام",
       body: "أوقات كل مجموعة وأيام عملها، وإسناد الموظفين إليها.",
       count: `${groupCount} مجموعة · ${employeeCount} موظف`,
-      tone: "text-primary",
-      tile: "bg-primary/5 dark:bg-primary/10",
     },
     {
       href: "/main/attendance/settings/calendar",
@@ -90,8 +86,6 @@ export default async function AttendanceSettingsPage() {
       title: "التقويم",
       body: "العطل الرسمية وعطل زاد الخاصة — لا تُحسب غياباً ولا تُخصم.",
       count: holidayCount === 0 ? "التقويم فارغ" : `${holidayCount} مناسبة`,
-      tone: "text-amber-600 dark:text-amber-400",
-      tile: "bg-amber-50 dark:bg-amber-900/20",
     },
     {
       href: "/main/attendance/settings/leaves",
@@ -99,8 +93,6 @@ export default async function AttendanceSettingsPage() {
       title: "الإجازات والأرصدة",
       body: "رصيد كل موظف وما استهلكه، وإذن العمل عن بُعد.",
       count: leaveCount === 0 ? "لا إجازات هذا العام" : `${leaveCount} إجازة`,
-      tone: "text-purple-600 dark:text-purple-400",
-      tile: "bg-purple-50 dark:bg-purple-900/20",
     },
     {
       href: "/main/attendance/settings/records",
@@ -111,8 +103,6 @@ export default async function AttendanceSettingsPage() {
         correctedThisMonth === 0
           ? "لا تعديلات هذا الشهر"
           : `${correctedThisMonth} تعديل هذا الشهر`,
-      tone: "text-slate-600 dark:text-slate-300",
-      tile: "bg-slate-100 dark:bg-slate-800",
     },
     {
       href: "/main/attendance/settings/network",
@@ -125,8 +115,6 @@ export default async function AttendanceSettingsPage() {
           : settings.ipEnforcement === "WARN"
             ? "تنبيه فقط"
             : "منع من خارجها",
-      tone: "text-rose-600 dark:text-rose-400",
-      tile: "bg-rose-50 dark:bg-rose-900/20",
     },
   ];
 
@@ -154,36 +142,15 @@ export default async function AttendanceSettingsPage() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {cards.map((card) => (
-            <Link
+            <NavCard
               key={card.href}
               href={card.href}
-              className="group bg-white dark:bg-slate-900 p-5 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800 hover:shadow-xl hover:shadow-primary/5 hover:border-primary/20 transition-all overflow-hidden relative"
-            >
-              <div className="absolute -left-6 -bottom-6 w-24 h-24 bg-primary/5 rounded-full group-hover:scale-150 transition-transform duration-500 pointer-events-none" />
-              <div
-                className={`w-11 h-11 ${card.tile} ${card.tone} rounded-xl flex items-center justify-center mb-3.5 group-hover:scale-110 group-hover:-rotate-3 transition-transform shadow-inner`}
-              >
-                <card.icon className="w-5 h-5" />
-              </div>
-              <h3 className="text-[15px] font-bold text-slate-800 dark:text-slate-100 mb-1.5">
-                {card.title}
-              </h3>
-              <p className="text-[12px] text-slate-500 dark:text-slate-400 leading-relaxed mb-3">
-                {card.body}
-              </p>
-              <div className="flex items-center justify-between gap-2 relative">
-                <span
-                  className={`text-[11px] font-bold tabular-nums ${
-                    card.warn ? "text-amber-600 dark:text-amber-400" : "text-slate-400 dark:text-slate-500"
-                  }`}
-                >
-                  {card.count}
-                </span>
-                <ArrowLeft
-                  className={`w-4 h-4 ${card.tone} group-hover:-translate-x-1 transition-transform`}
-                />
-              </div>
-            </Link>
+              icon={<card.icon className="size-5" />}
+              title={card.title}
+              description={card.body}
+              meta={card.count}
+              metaWarn={!!card.warn}
+            />
           ))}
         </div>
       </div>

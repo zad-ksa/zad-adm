@@ -160,7 +160,7 @@ export default function VisionMissionResultsClient({ responses }: { responses: R
 
                   <div className="space-y-3">
                     {validCats.map((cat: any, idx: number) => (
-                      <div key={idx} className="p-3 bg-white dark:bg-slate-950 rounded-xl border border-slate-100 dark:border-slate-800/80 space-y-2">
+                      <div key={idx} className="p-3 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 space-y-2">
                         <div className="flex justify-between items-center text-xs">
                           <span className="font-bold text-primary">{cat.name}</span>
                           <span className="text-slate-450 dark:text-slate-500 font-mono text-[10px]">فئة #{idx+1}</span>

@@ -573,7 +573,7 @@ footer={
                       <div className={`w-3 h-3 rounded-full ${group.stage?.isDone ? 'bg-emerald-500' : 'bg-primary'}`} />
                     </div>
                     
-                    <div className="w-full md:w-[calc(50%-2rem)] bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-100 dark:border-slate-700 shadow-sm hover:shadow-md transition-shadow">
+                    <div className="w-full md:w-[calc(50%-2rem)] bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-slate-800 shadow-[0_1px_2px_rgb(15_23_42/0.04)] transition-shadow hover:border-primary/30">
                       <div className="flex items-center justify-between mb-3 border-b border-slate-100 dark:border-slate-800 pb-2">
                          <div className="flex items-center gap-2">
                            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-primary/10 text-primary">مرحلة</span>
@@ -626,7 +626,7 @@ closeOnBackdrop={false}
                     const isEditingThisStage = editingItemId === stg.id && editingItemType === 'stage';
                     
                     return (
-                      <div key={stg.id} className="bg-white dark:bg-slate-800 p-4 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">
+                      <div key={stg.id} className="bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-slate-800 shadow-[0_1px_2px_rgb(15_23_42/0.04)]">
                         {isEditingThisStage ? (
                           <div className="flex items-center gap-2">
                             <input autoFocus type="text" value={editingName} onChange={e => setEditingName(e.target.value)} className="flex-1 border border-slate-300 rounded px-2 py-1 text-sm bg-white" placeholder="اسم المرحلة" />
@@ -752,7 +752,7 @@ closeOnBackdrop={false}
                   })}
                   
                   {isAddingStage ? (
-                    <div className="bg-white dark:bg-slate-800 p-4 rounded-xl border border-slate-200 shadow-sm flex items-center gap-2">
+                    <div className="bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-200 shadow-[0_1px_2px_rgb(15_23_42/0.04)] flex items-center gap-2">
                       <input autoFocus type="text" value={newName} onChange={e => setNewName(e.target.value)} className="flex-1 border border-slate-300 rounded px-2 py-2 text-sm bg-white" placeholder="اسم المرحلة الجديدة" />
                       <button onClick={handleAddStage} className="p-2 bg-primary text-white rounded"><Check className="w-4 h-4"/></button>
                       <button onClick={() => setIsAddingStage(false)} className="p-2 bg-slate-200 text-slate-600 rounded"><X className="w-4 h-4"/></button>
@@ -764,7 +764,7 @@ closeOnBackdrop={false}
               )}
             </div>
 <div className="flex flex-col gap-3 border-t border-slate-100 pt-4 dark:border-slate-700">
-              <div className="bg-white dark:bg-slate-800 p-4 rounded-xl border border-slate-200 dark:border-slate-700">
+              <div className="bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-slate-800">
                 <label className="flex items-center gap-2 font-bold text-slate-700 dark:text-slate-200 cursor-pointer w-fit">
                   <div className="relative flex items-center justify-center">
                     <input 

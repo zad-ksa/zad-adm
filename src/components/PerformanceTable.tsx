@@ -488,7 +488,7 @@ export default function PerformanceTable({
         : ""
       }`}>
       {/* Controls */}
-      <div className="flex flex-col md:flex-row gap-4 justify-between items-center bg-white dark:bg-slate-800 p-4 rounded-xl border border-slate-100 dark:border-slate-700 shadow-sm shrink-0 transition-colors">
+      <div className="flex flex-col md:flex-row gap-4 justify-between items-center bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-slate-800 shadow-[0_1px_2px_rgb(15_23_42/0.04)] shrink-0 transition-colors">
         <div className="flex gap-4">
           <Select
             variant="soft"

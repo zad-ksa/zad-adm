@@ -98,7 +98,7 @@ export default function ProfileClient({
         <PageHeader icon={<UserCircle className="w-6 h-6" />} title="الملف الشخصي" />
       </div>
 
-      <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700/50 shadow-sm w-full max-w-2xl mx-auto overflow-hidden font-sans mt-8">
+      <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-[0_1px_2px_rgb(15_23_42/0.04)] w-full max-w-2xl mx-auto overflow-hidden font-sans mt-8">
         <div className="px-6 py-5 border-b border-slate-100 dark:border-slate-700/50">
           <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100">المعلومات الشخصية</h3>
           <p className="text-xs text-slate-500 mt-1">يمكنك تحديث بياناتك الشخصية وتغيير كلمة المرور من هنا</p>
@@ -122,7 +122,7 @@ export default function ProfileClient({
           {/* Avatar Uploader */}
           <div className="flex flex-col items-center gap-3 py-4">
             <div className="relative group">
-              <div className="w-28 h-28 rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50 flex items-center justify-center relative shadow-inner group-hover:border-primary/40 transition-colors">
+              <div className="w-28 h-28 rounded-xl overflow-hidden border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50 flex items-center justify-center relative shadow-inner group-hover:border-primary/40 transition-colors">
                 {newAvatar ? (
                   <img src={newAvatar} alt="صورة الموظف" className="w-full h-full object-cover" />
                 ) : (
@@ -134,7 +134,7 @@ export default function ProfileClient({
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
                 disabled={isPending}
-                className="absolute -bottom-2 -left-2 bg-primary text-white p-2.5 rounded-xl shadow hover:bg-primary/95 transition-all text-xs font-bold cursor-pointer active:scale-95 disabled:opacity-50 flex items-center justify-center"
+                className="absolute -bottom-2 -left-2 bg-primary text-white p-2.5 rounded-lg shadow hover:bg-primary/95 transition-all text-xs font-bold cursor-pointer active:scale-95 disabled:opacity-50 flex items-center justify-center"
                 title="تغيير الصورة"
               >
                 <Camera className="w-4 h-4" />
@@ -161,7 +161,7 @@ export default function ProfileClient({
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 disabled={isPending}
-                className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all text-slate-800 dark:text-slate-100 font-bold disabled:opacity-60"
+                className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all text-slate-800 dark:text-slate-100 font-bold disabled:opacity-60"
                 placeholder="اسم الموظف"
               />
             </div>
@@ -173,7 +173,7 @@ export default function ProfileClient({
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
                 disabled={isPending}
-                className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all text-slate-800 dark:text-slate-100 font-bold text-left disabled:opacity-60"
+                className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all text-slate-800 dark:text-slate-100 font-bold text-left disabled:opacity-60"
                 placeholder="05XXXXXXXX"
                 dir="ltr"
               />
@@ -189,7 +189,7 @@ export default function ProfileClient({
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   disabled={isPending}
-                  className="w-full px-4 py-2.5 pl-11 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all text-slate-800 dark:text-slate-100 font-bold text-left disabled:opacity-60"
+                  className="w-full px-4 py-2.5 pl-11 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all text-slate-800 dark:text-slate-100 font-bold text-left disabled:opacity-60"
                   placeholder="name@example.com"
                   dir="ltr"
                 />
@@ -210,7 +210,7 @@ export default function ProfileClient({
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   disabled={isPending}
-                  className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all text-slate-800 dark:text-slate-100 font-bold text-left disabled:opacity-60"
+                  className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all text-slate-800 dark:text-slate-100 font-bold text-left disabled:opacity-60"
                   placeholder={hasPassword ? "اتركها فارغة إذا لم ترد التغيير" : "٨ أحرف على الأقل"}
                   dir="ltr"
                 />

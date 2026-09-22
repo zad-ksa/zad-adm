@@ -14,7 +14,7 @@ import { AlertTriangle, Check } from "lucide-react";
  */
 
 export const CARD =
-  "rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5";
+  "rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5";
 export const INPUT =
   "w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 text-[13px] focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none";
 export const BTN =
@@ -60,7 +60,7 @@ export function useSettingsAction() {
 export function Feedback({ error, notice }: { error: string | null; notice: string | null }) {
   if (error) {
     return (
-      <div className="flex items-start gap-2.5 rounded-2xl bg-rose-50 dark:bg-rose-900/20 text-rose-600 dark:text-rose-400 px-4 py-3 text-[13px] font-bold mb-4">
+      <div className="flex items-start gap-2.5 rounded-xl bg-rose-50 dark:bg-rose-900/20 text-rose-600 dark:text-rose-400 px-4 py-3 text-[13px] font-bold mb-4">
         <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
         <span>{error}</span>
       </div>
@@ -68,7 +68,7 @@ export function Feedback({ error, notice }: { error: string | null; notice: stri
   }
   if (notice) {
     return (
-      <div className="flex items-start gap-2.5 rounded-2xl bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400 px-4 py-3 text-[13px] font-bold mb-4">
+      <div className="flex items-start gap-2.5 rounded-xl bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400 px-4 py-3 text-[13px] font-bold mb-4">
         <Check className="w-4 h-4 shrink-0 mt-0.5" />
         <span>{notice}</span>
       </div>

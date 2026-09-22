@@ -342,7 +342,7 @@ function RequestCard({
   );
 
   return (
-    <div className={`bg-white dark:bg-slate-800 rounded-xl border-r-4 ${priority.border} border border-slate-100 dark:border-slate-700 transition-shadow hover:shadow-sm ${hasDetails ? "cursor-pointer" : ""}`}
+    <div className={`bg-white dark:bg-slate-900 rounded-xl border-r-4 ${priority.border} border border-slate-200 dark:border-slate-800 shadow-[0_1px_2px_rgb(15_23_42/0.04)] transition-colors ${hasDetails ? "cursor-pointer" : ""}`}
       onClick={hasDetails ? () => setExpanded(v => !v) : undefined}>
 
       {/* صف الجدول — سطح المكتب (lg فأعلى). كل معلومة في عمودها الثابت، بنفس
@@ -828,7 +828,7 @@ export default function RequestsClient({ requests: initial, hasActiveChain, canR
 
       {/* قائمة الطلبات */}
       {filtered.length === 0 ? (
-        <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 p-16 text-center">
+        <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-16 text-center">
           <Send className="w-10 h-10 text-slate-300 dark:text-slate-600 mx-auto mb-3" />
           <p className="text-slate-400 dark:text-slate-500 text-sm">
             {anyFilter
@@ -931,7 +931,7 @@ headerAction={
                       <li key={employee.id}>
                         <button
                           onClick={() => { setReminderTargetId(employee.id); setReminderCopied(false); }}
-                          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors text-right"
+                          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors text-right"
                         >
                           <span className="w-8 h-8 rounded-full bg-primary/10 dark:bg-primary/20 flex items-center justify-center shrink-0">
                             <User className="w-4 h-4 text-primary dark:text-teal-300" />
@@ -963,11 +963,11 @@ headerAction={
                   value={reminderMessage}
                   rows={8}
                   onFocus={(e) => e.currentTarget.select()}
-                  className="w-full bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2.5 text-xs leading-relaxed text-slate-700 dark:text-slate-200 outline-none resize-none whitespace-pre-wrap"
+                  className="w-full bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2.5 text-xs leading-relaxed text-slate-700 dark:text-slate-200 outline-none resize-none whitespace-pre-wrap"
                 />
                 <button
                   onClick={handleCopyReminder}
-                  className={`w-full h-10 rounded-xl font-bold text-xs flex items-center justify-center gap-2 transition-colors ${
+                  className={`w-full h-10 rounded-lg font-bold text-xs flex items-center justify-center gap-2 transition-colors ${
                     reminderCopied
                       ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-400"
                       : "bg-primary text-white hover:bg-primary/90"

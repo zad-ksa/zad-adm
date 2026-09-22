@@ -147,7 +147,7 @@ export default function VisionMissionResultsClient({ responses }: { responses: R
               if (validCats.length === 0) return null;
 
               return (
-                <div key={res.id} className="bg-slate-50 dark:bg-slate-900/30 rounded-2xl border border-slate-150 dark:border-slate-800 p-5 space-y-4">
+                <div key={res.id} className="bg-slate-50 dark:bg-slate-900/30 rounded-xl border border-slate-150 dark:border-slate-800 p-5 space-y-4">
                   <div className="flex items-center gap-2 border-b border-slate-100 dark:border-slate-800 pb-3">
                     <div className="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-sm">
                       <User className="w-4 h-4" />
@@ -160,7 +160,7 @@ export default function VisionMissionResultsClient({ responses }: { responses: R
 
                   <div className="space-y-3">
                     {validCats.map((cat: any, idx: number) => (
-                      <div key={idx} className="p-3 bg-white dark:bg-slate-950 rounded-xl border border-slate-100 dark:border-slate-800/80 space-y-2">
+                      <div key={idx} className="p-3 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 space-y-2">
                         <div className="flex justify-between items-center text-xs">
                           <span className="font-bold text-primary">{cat.name}</span>
                           <span className="text-slate-450 dark:text-slate-500 font-mono text-[10px]">فئة #{idx+1}</span>
@@ -189,7 +189,7 @@ export default function VisionMissionResultsClient({ responses }: { responses: R
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 border-b border-slate-100 dark:border-slate-700 pb-6">
             
             {/* Ambition levels */}
-            <div className="p-5 bg-amber-500/5 border border-amber-500/10 rounded-2xl space-y-4">
+            <div className="p-5 bg-amber-500/5 border border-amber-500/10 rounded-xl space-y-4">
               <h4 className="font-bold text-amber-600 dark:text-amber-500 text-sm flex items-center gap-2">
                 <Award className="w-4 h-4" /> إحصائيات مستوى الطموح لحجم الأثر
               </h4>
@@ -201,7 +201,7 @@ export default function VisionMissionResultsClient({ responses }: { responses: R
             </div>
 
             {/* Internal environment culture */}
-            <div className="p-5 bg-emerald-500/5 border border-emerald-500/10 rounded-2xl space-y-4">
+            <div className="p-5 bg-emerald-500/5 border border-emerald-500/10 rounded-xl space-y-4">
               <h4 className="font-bold text-emerald-600 dark:text-emerald-500 text-sm flex items-center gap-2">
                 <CheckCircle className="w-4 h-4" /> إحصائيات الشعور المراد لدى العاملين والمتطوعين
               </h4>
@@ -253,7 +253,7 @@ export default function VisionMissionResultsClient({ responses }: { responses: R
                       if (!answer || (typeof answer === "string" && answer.trim() === "")) return null;
 
                       return (
-                        <div key={res.id} className="p-4 bg-slate-50 dark:bg-slate-900/30 rounded-2xl border border-slate-150 dark:border-slate-800 text-xs space-y-2 flex flex-col justify-between">
+                        <div key={res.id} className="p-4 bg-slate-50 dark:bg-slate-900/30 rounded-xl border border-slate-150 dark:border-slate-800 text-xs space-y-2 flex flex-col justify-between">
                           <div className="text-slate-650 dark:text-slate-350 leading-relaxed font-medium">
                             {qGroup.id === "q5" && Array.isArray(answer) ? (
                               <ul className="list-disc list-inside space-y-1">
@@ -286,7 +286,7 @@ export default function VisionMissionResultsClient({ responses }: { responses: R
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 border-b border-slate-100 dark:border-slate-700 pb-6">
             
             {/* Geographical scope */}
-            <div className="p-5 bg-indigo-500/5 border border-indigo-500/10 rounded-2xl space-y-4 md:col-span-2">
+            <div className="p-5 bg-indigo-500/5 border border-indigo-500/10 rounded-xl space-y-4 md:col-span-2">
               <h4 className="font-bold text-indigo-600 dark:text-indigo-400 text-sm flex items-center gap-2">
                 <Target className="w-4 h-4" /> النطاق الجغرافي الذي تخدمه الجمعية
               </h4>
@@ -310,7 +310,7 @@ export default function VisionMissionResultsClient({ responses }: { responses: R
                 if (!wording || wording.trim() === "") return null;
 
                 return (
-                  <div key={res.id} className="p-6 bg-primary/[2%] border border-primary/10 rounded-2xl relative overflow-hidden flex flex-col justify-between">
+                  <div key={res.id} className="p-6 bg-primary/[2%] border border-primary/10 rounded-xl relative overflow-hidden flex flex-col justify-between">
                     <div className="absolute top-0 right-0 w-24 h-24 bg-primary/[2%] rounded-full blur-xl -translate-y-6 translate-x-6 pointer-events-none"></div>
                     <div className="relative z-10">
                       <p className="text-slate-700 dark:text-slate-200 text-sm font-bold leading-relaxed mb-4">
@@ -348,7 +348,7 @@ export default function VisionMissionResultsClient({ responses }: { responses: R
                       if (!answer || answer.trim() === "") return null;
 
                       return (
-                        <div key={res.id} className="p-4 bg-slate-50 dark:bg-slate-900/30 rounded-2xl border border-slate-150 dark:border-slate-800 text-xs space-y-2 flex flex-col justify-between">
+                        <div key={res.id} className="p-4 bg-slate-50 dark:bg-slate-900/30 rounded-xl border border-slate-150 dark:border-slate-800 text-xs space-y-2 flex flex-col justify-between">
                           <div className="text-slate-650 dark:text-slate-350 leading-relaxed font-medium">
                             "{answer}"
                           </div>
@@ -370,7 +370,7 @@ export default function VisionMissionResultsClient({ responses }: { responses: R
       {/* -------------------- TAB 4: RESPONDENTS LIST -------------------- */}
       {activeTab === "respondents" && (
         <div className="space-y-4 animate-in fade-in duration-300">
-          <div className="overflow-x-auto custom-scrollbar border border-slate-150 dark:border-slate-800 rounded-2xl">
+          <div className="overflow-x-auto custom-scrollbar border border-slate-150 dark:border-slate-800 rounded-xl">
             <table className="w-full text-right text-sm">
               <thead >
                 <tr className={theadRowClass}>
@@ -435,7 +435,7 @@ footer={
                 </h4>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   {selectedResponse.answers?.categories?.filter((c: any) => c && c.name && c.name.trim() !== "").map((cat: any, idx: number) => (
-                    <div key={idx} className="p-4 bg-slate-50 dark:bg-slate-900 border border-slate-150 dark:border-slate-800 rounded-2xl space-y-2">
+                    <div key={idx} className="p-4 bg-slate-50 dark:bg-slate-900 border border-slate-150 dark:border-slate-800 rounded-xl space-y-2">
                       <span className="text-xs font-bold text-primary block">{cat.name}</span>
                       <p className="text-xs text-slate-500 dark:text-slate-400"><strong className="text-slate-655 dark:text-slate-300">الوصف:</strong> {cat.description}</p>
                       <p className="text-xs text-slate-500 dark:text-slate-400"><strong className="text-slate-655 dark:text-slate-300">الأثر:</strong> {cat.impact}</p>
@@ -468,7 +468,7 @@ footer={
                         : selectedResponse.answers?.vision?.[q.key];
 
                     return (
-                      <div key={q.key} className="p-3.5 bg-slate-50 dark:bg-slate-900 border border-slate-150 dark:border-slate-800 rounded-2xl text-xs space-y-1">
+                      <div key={q.key} className="p-3.5 bg-slate-50 dark:bg-slate-900 border border-slate-150 dark:border-slate-800 rounded-xl text-xs space-y-1">
                         <strong className="text-slate-450 dark:text-slate-500 font-bold block mb-1">{q.title}</strong>
                         {Array.isArray(ans) ? (
                           <ul className="list-disc list-inside space-y-0.5 text-slate-700 dark:text-slate-300">
@@ -500,7 +500,7 @@ footer={
                     const isWording = q.key === "q7";
 
                     return (
-                      <div key={q.key} className={`p-3.5 bg-slate-50 dark:bg-slate-900 border rounded-2xl text-xs space-y-1 ${isWording ? "md:col-span-2 border-primary/20 bg-primary/[2%]" : "border-slate-150 dark:border-slate-800"}`}>
+                      <div key={q.key} className={`p-3.5 bg-slate-50 dark:bg-slate-900 border rounded-xl text-xs space-y-1 ${isWording ? "md:col-span-2 border-primary/20 bg-primary/[2%]" : "border-slate-150 dark:border-slate-800"}`}>
                         <strong className="text-slate-450 dark:text-slate-500 font-bold block mb-1">{q.title}</strong>
                         <span className={`leading-relaxed font-medium ${isWording ? "text-slate-850 dark:text-slate-100 font-bold text-sm block" : "text-slate-700 dark:text-slate-350"}`}>
                           {isWording ? `« ${ans || "—"} »` : (ans || "—")}

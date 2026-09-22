@@ -128,7 +128,7 @@ export default function RecordsClient({
           value={month}
           dir="ltr"
           onChange={(e) => e.target.value && go(selectedId, e.target.value)}
-          className="h-9 px-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-[12px] text-slate-600 dark:text-slate-300"
+          className="h-9 px-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-[12px] text-slate-600 dark:text-slate-300"
         />
         <span className="text-[11px] text-slate-400 tabular-nums">
           دوام «{schedule.groupName}»{" "}
@@ -142,7 +142,7 @@ export default function RecordsClient({
       </div>
 
       {/* The month */}
-      <div className="rounded-2xl border border-slate-200 dark:border-slate-800 divide-y divide-slate-100 dark:divide-slate-800 overflow-hidden">
+      <div className="rounded-xl border border-slate-200 dark:border-slate-800 divide-y divide-slate-100 dark:divide-slate-800 overflow-hidden">
         {days.map((d) => {
           const r = d.record;
           const isEditing = editing === d.date;
@@ -274,7 +274,7 @@ export default function RecordsClient({
                     </button>
                     {r && (
                       <button
-                        className="h-9 px-3 rounded-xl text-[12px] font-bold text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-900/20 hover:bg-rose-100 dark:hover:bg-rose-900/30 disabled:opacity-50 transition-colors inline-flex items-center gap-1.5"
+                        className="h-9 px-3 rounded-lg text-[12px] font-bold text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-900/20 hover:bg-rose-100 dark:hover:bg-rose-900/30 disabled:opacity-50 transition-colors inline-flex items-center gap-1.5"
                         disabled={busy || form.reason.trim().length < 3}
                         onClick={async () => {
                           const ok = await confirmAction({

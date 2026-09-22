@@ -347,7 +347,7 @@ export default function DesignRequestsClient({
         />
 
         {/* Bento Box 3: Filters & Tabs */}
-        <div className="md:col-span-3 bg-white dark:bg-[#0A0A0A] border border-slate-200 dark:border-slate-800 rounded-2xl p-3 shadow-sm flex items-center justify-between gap-3 flex-wrap">
+        <div className="md:col-span-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3 shadow-[0_1px_2px_rgb(15_23_42/0.04)] flex items-center justify-between gap-3 flex-wrap">
           <div className="flex items-center gap-1 bg-slate-50 dark:bg-[#111] border border-slate-100 dark:border-slate-800/80 rounded-xl p-1">
             {(
               [
@@ -438,7 +438,7 @@ export default function DesignRequestsClient({
             {charityFilter && tab === "PENDING" && (
               <button
                 onClick={() => setIsQueueRescheduleOpen(true)}
-                className="h-10 px-4 rounded-xl bg-amber-50 text-amber-600 dark:bg-amber-400/10 dark:text-amber-400 border border-amber-200/50 dark:border-amber-400/20 hover:bg-amber-100 dark:hover:bg-amber-400/20 transition-colors font-bold"
+                className="h-10 px-4 rounded-lg bg-amber-50 text-amber-600 dark:bg-amber-400/10 dark:text-amber-400 border border-amber-200/50 dark:border-amber-400/20 hover:bg-amber-100 dark:hover:bg-amber-400/20 transition-colors font-bold"
                 style={{ fontSize: "var(--dr-fs-meta)" }}
               >
                 إعادة ترتيب التنفيذ
@@ -515,7 +515,7 @@ export default function DesignRequestsClient({
                     <div className="flex items-center gap-2">
                       <button
                         onClick={() => setConfirmingId(it.request.id)}
-                        className="flex-1 h-9 rounded-xl bg-primary/10 text-primary dark:bg-teal-500/10 dark:text-teal-400 hover:bg-primary hover:text-white dark:hover:bg-teal-500 dark:hover:text-[#0A0A0A] transition-colors font-bold"
+                        className="flex-1 h-9 rounded-lg bg-primary/10 text-primary dark:bg-teal-500/10 dark:text-teal-400 hover:bg-primary hover:text-white dark:hover:bg-teal-500 dark:hover:text-[#0A0A0A] transition-colors font-bold"
                         style={{ fontSize: "var(--dr-fs-meta)" }}
                       >
                         تسليم التعديل (اعتماد نهائي)
@@ -531,7 +531,7 @@ export default function DesignRequestsClient({
                             notes: it.request.revisionNotes ?? null,
                           })
                         }
-                        className="flex-1 h-9 rounded-xl bg-amber-500/10 text-amber-600 dark:bg-amber-500/15 dark:text-amber-400 hover:bg-amber-500 hover:text-white dark:hover:bg-amber-500 dark:hover:text-white transition-colors font-bold"
+                        className="flex-1 h-9 rounded-lg bg-amber-500/10 text-amber-600 dark:bg-amber-500/15 dark:text-amber-400 hover:bg-amber-500 hover:text-white dark:hover:bg-amber-500 dark:hover:text-white transition-colors font-bold"
                         style={{ fontSize: "var(--dr-fs-meta)" }}
                       >
                         ردّ بملاحظات
@@ -589,7 +589,7 @@ export default function DesignRequestsClient({
                   <div className="flex flex-wrap items-center gap-2 w-full mt-2">
                     <button
                       onClick={() => setReviewingId(it.request.id)}
-                      className="flex-1 min-w-[120px] h-9 rounded-xl bg-amber-500 text-white hover:bg-amber-600 transition-colors font-bold"
+                      className="flex-1 min-w-[120px] h-9 rounded-lg bg-amber-500 text-white hover:bg-amber-600 transition-colors font-bold"
                       style={{ fontSize: "var(--dr-fs-meta)" }}
                     >
                       مراجعة الطلب
@@ -625,7 +625,7 @@ export default function DesignRequestsClient({
                       <button
                         onClick={() => handleStart(it.request.id)}
                         disabled={startingId === it.request.id}
-                        className="flex-1 min-w-[92px] h-9 rounded-xl bg-indigo-500/10 text-indigo-600 dark:bg-indigo-500/15 dark:text-indigo-400 hover:bg-indigo-500 hover:text-white dark:hover:bg-indigo-500 dark:hover:text-white transition-colors font-bold disabled:opacity-60 flex items-center justify-center gap-1.5"
+                        className="flex-1 min-w-[92px] h-9 rounded-lg bg-indigo-500/10 text-indigo-600 dark:bg-indigo-500/15 dark:text-indigo-400 hover:bg-indigo-500 hover:text-white dark:hover:bg-indigo-500 dark:hover:text-white transition-colors font-bold disabled:opacity-60 flex items-center justify-center gap-1.5"
                         style={{ fontSize: "var(--dr-fs-meta)" }}
                       >
                         {startingId === it.request.id && <Loader2 className="w-3 h-3 animate-spin" />}
@@ -634,7 +634,7 @@ export default function DesignRequestsClient({
                     ) : null}
                     <button
                       onClick={() => setConfirmingId(it.request.id)}
-                      className="flex-1 min-w-[72px] h-9 rounded-xl bg-primary/10 text-primary dark:bg-teal-500/10 dark:text-teal-400 hover:bg-primary hover:text-white dark:hover:bg-teal-500 dark:hover:text-[#0A0A0A] transition-colors font-bold"
+                      className="flex-1 min-w-[72px] h-9 rounded-lg bg-primary/10 text-primary dark:bg-teal-500/10 dark:text-teal-400 hover:bg-primary hover:text-white dark:hover:bg-teal-500 dark:hover:text-[#0A0A0A] transition-colors font-bold"
                       style={{ fontSize: "var(--dr-fs-meta)" }}
                     >
                       إنهاء
@@ -912,7 +912,7 @@ footer={<>
                 rows={2}
                 maxLength={2000}
                 placeholder="مثال: تم استخدام الألوان المعتمدة في الهوية السابقة..."
-                className="w-full mt-1 px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 text-right focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none resize-none placeholder:text-slate-400 dark:placeholder:text-slate-600"
+                className="w-full mt-1 px-3 py-2 rounded-lg bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 text-right focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none resize-none placeholder:text-slate-400 dark:placeholder:text-slate-600"
                 style={{ fontSize: "var(--dr-fs-meta)" }}
               />
             </div>

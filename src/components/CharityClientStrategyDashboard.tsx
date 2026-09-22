@@ -59,7 +59,7 @@ export default function CharityClientStrategyDashboard({
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
         {/* Next Meeting Card */}
-        <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 p-6 shadow-sm flex flex-col justify-between">
+        <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-6 shadow-[0_1px_2px_rgb(15_23_42/0.04)] flex flex-col justify-between">
           <div>
             <div className="flex items-center gap-3 text-primary mb-4">
               <div className="p-2 bg-primary/10 rounded-lg">
@@ -98,7 +98,7 @@ export default function CharityClientStrategyDashboard({
         <div className="lg:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-4">
           {isPerformanceEditable && (
             <Link href={`/portal/${encodeURIComponent(charityName)}/strategy/performance`}
-              className="bg-gradient-to-br from-indigo-500 to-indigo-600 hover:from-indigo-600 hover:to-indigo-700 text-white rounded-2xl p-6 shadow-md transition-all hover:shadow-lg flex flex-col justify-between group">
+              className="bg-gradient-to-br from-indigo-500 to-indigo-600 hover:from-indigo-600 hover:to-indigo-700 text-white rounded-xl p-6 shadow-md transition-all hover:shadow-lg flex flex-col justify-between group">
               <div className="flex items-center justify-between mb-4">
                 <div className="p-3 bg-white/20 rounded-xl backdrop-blur-sm">
                   <MetricIcon />
@@ -116,7 +116,7 @@ export default function CharityClientStrategyDashboard({
           )}
 
           {!isPerformanceEditable && (
-            <div className="bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-200 dark:border-slate-700 p-6 flex flex-col justify-between">
+            <div className="bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700 p-6 flex flex-col justify-between">
               <div className="flex items-center justify-between mb-4">
                 <div className="p-3 bg-slate-200 dark:bg-slate-700 text-slate-500 dark:text-slate-400 rounded-xl">
                   <MetricIcon />
@@ -130,7 +130,7 @@ export default function CharityClientStrategyDashboard({
             </div>
           )}
 
-          <div className="bg-gradient-to-br from-emerald-500 to-emerald-600 text-white rounded-2xl p-6 shadow-md flex flex-col justify-between">
+          <div className="bg-gradient-to-br from-emerald-500 to-emerald-600 text-white rounded-xl p-6 shadow-md flex flex-col justify-between">
             <div className="flex items-center justify-between mb-4">
               <div className="p-3 bg-white/20 rounded-xl backdrop-blur-sm">
                 <CheckCircleIcon />
@@ -149,7 +149,7 @@ export default function CharityClientStrategyDashboard({
       <CharityClientTimeline title={"المخطط الزمني"} stages={strategicStages} />
 
       {/* Active Tasks List */}
-      <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 p-6 shadow-sm">
+      <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-6 shadow-[0_1px_2px_rgb(15_23_42/0.04)]">
         <h3 className="font-bold text-xl text-slate-800 dark:text-slate-100 mb-6 border-b border-slate-100 dark:border-slate-700 pb-4">المهام الجاري العمل عليها من قبل فريق الاستراتيجية</h3>
 
         {activeTasks && activeTasks.length > 0 ? (

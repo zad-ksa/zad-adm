@@ -80,7 +80,7 @@ export default function FloatingHeader({
           </button>
           
           {isNotificationsOpen && (
-            <div className="absolute top-full left-0 mt-2 w-72 bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700/50 rounded-2xl shadow-xl shadow-black/10 z-[60] overflow-hidden flex flex-col max-h-[350px]" dir="rtl">
+            <div className="absolute top-full left-0 mt-2 w-72 bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700/50 rounded-xl shadow-xl shadow-black/10 z-[60] overflow-hidden flex flex-col max-h-[350px]" dir="rtl">
               <div className="px-4 py-3 border-b border-slate-100 dark:border-slate-700/50 bg-slate-50/50 dark:bg-slate-800/50 flex items-center justify-between shrink-0">
                 <span className="text-sm font-bold text-slate-700 dark:text-slate-200">الإشعارات</span>
                 <div className="flex items-center gap-3">
@@ -165,7 +165,7 @@ export default function FloatingHeader({
           </button>
 
           {isProfileOpen && (
-            <div className="absolute top-full left-0 mt-2 w-48 bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700/50 rounded-2xl shadow-xl shadow-black/10 z-[60] overflow-hidden flex flex-col p-1" dir="rtl">
+            <div className="absolute top-full left-0 mt-2 w-48 bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700/50 rounded-xl shadow-xl shadow-black/10 z-[60] overflow-hidden flex flex-col p-1" dir="rtl">
               <Link
                 href="/main/profile"
                 onClick={() => setIsProfileOpen(false)}
@@ -178,7 +178,7 @@ export default function FloatingHeader({
               <form action={logout}>
                 <button
                   type="submit"
-                  className="w-full flex items-center gap-2 px-3 py-2.5 text-xs text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-600 transition-colors rounded-xl font-bold"
+                  className="w-full flex items-center gap-2 px-3 py-2.5 text-xs text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-600 transition-colors rounded-lg font-bold"
                 >
                   <LogOut className="w-4 h-4 text-red-400" />
                   تسجيل الخروج

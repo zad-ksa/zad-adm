@@ -130,7 +130,7 @@ export default function StaffExtendDesignRequestModal({
               max={60}
               value={extraDays}
               onChange={(e) => setExtraDays(e.target.value)}
-              className="w-full h-11 px-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none tabular-nums"
+              className="w-full h-11 px-3 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none tabular-nums"
               style={{ fontSize: "var(--dr-fs-body)" }}
               dir="ltr"
             />
@@ -157,7 +157,7 @@ export default function StaffExtendDesignRequestModal({
               rows={3}
               maxLength={500}
               placeholder="مثال: طُلبت تعديلات إضافية على التصميم بعد المراجعة"
-              className="w-full px-3 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none resize-none placeholder:text-slate-400 dark:placeholder:text-slate-600"
+              className="w-full px-3 py-2.5 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none resize-none placeholder:text-slate-400 dark:placeholder:text-slate-600"
               style={{ fontSize: "var(--dr-fs-body)" }}
             />
           </div>

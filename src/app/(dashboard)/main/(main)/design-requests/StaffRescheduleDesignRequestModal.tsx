@@ -86,7 +86,7 @@ export default function StaffRescheduleDesignRequestModal({
               type="datetime-local"
               value={startDate}
               onChange={(e) => setStartDate(e.target.value)}
-              className="w-full h-11 px-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none"
+              className="w-full h-11 px-3 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none"
               style={{ fontSize: "var(--dr-fs-body)" }}
             />
           </div>

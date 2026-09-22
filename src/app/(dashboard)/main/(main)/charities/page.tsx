@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/db";
 import { StatStrip, PageHeader } from "@/components/console/layout";
+import { NavCircle } from "@/components/console/ui";
 import type { Metadata } from "next";
 import Link from "next/link";
 import AddCharityButton from "./AddCharityButton";
@@ -242,20 +243,13 @@ export default async function CharitiesDashboard() {
               <Link
                 key={charity.id}
                 href={`/main/services-overview/${encodeURIComponent(charity.name)}`}
-                className="relative overflow-hidden rounded-xl border border-slate-100 dark:border-slate-700 shadow-sm hover:shadow-md hover:-translate-y-1 hover:border-primary/30 dark:hover:border-primary/50 transition-all duration-500 group flex flex-col justify-between"
+                className="group relative flex flex-col justify-between overflow-hidden rounded-xl border border-slate-200 bg-white shadow-[0_1px_2px_rgb(15_23_42/0.04)] transition-colors duration-300 hover:border-primary/30 dark:border-slate-800 dark:bg-slate-900 dark:hover:border-teal-400/30 outline-none focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-slate-900"
               >
-                {/* Background Logo */}
-                {charity.logoUrl && (
-                  <div className="absolute inset-0 z-0 pointer-events-none flex items-center justify-center p-2">
-                    <img
-                      src={charity.logoUrl}
-                      alt=""
-                      className="w-full h-full object-contain opacity-40 dark:opacity-20 scale-110 group-hover:scale-125 group-hover:opacity-75 dark:group-hover:opacity-30 transition-all duration-700 ease-out"
-                    />
-                  </div>
-                )}
-                {/* Overlay */}
-                <div className={`absolute inset-0 z-0 pointer-events-none transition-colors duration-500 ${charity.logoUrl ? "bg-white/80 dark:bg-slate-800/80 backdrop-blur-[2px] group-hover:bg-white/60 dark:group-hover:bg-slate-800/60" : "bg-white dark:bg-slate-800"}`}></div>
+                {/* دائرة بطاقة الانتقال، وفيها شعار الجمعية — بدل الشعار الباهت الذي كان
+                    يملأ البطاقة وطبقته الشفّافة فوقه. */}
+                <NavCircle contentClassName="left-[36px] top-[38px]">
+                  {charity.logoUrl && <img src={charity.logoUrl} alt="" className="size-full object-contain" />}
+                </NavCircle>
 
                 {/* Card Content */}
                 <div className="relative z-10 p-3 sm:p-4 flex flex-col justify-between h-full">
@@ -325,7 +319,7 @@ export default async function CharitiesDashboard() {
                   </div>
 
                   {/* Action Link Footer */}
-                  <div className="mt-3 pt-2 border-t border-slate-200 dark:border-slate-700 flex items-center justify-end text-[10px] font-bold text-primary dark:text-primary opacity-0 group-hover:opacity-100 group-hover:translate-x-[-4px] transition-all duration-300">
+                  <div className="mt-3 pt-2 border-t border-slate-200 dark:border-slate-700 flex items-center justify-start text-[10px] font-bold text-primary dark:text-primary opacity-0 group-hover:opacity-100 group-hover:translate-x-[-4px] transition-all duration-300">
                     <span className="bg-white dark:bg-slate-700 px-2 py-1 rounded-md">عرض الملف</span>
                     <svg className="w-3 h-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
@@ -337,7 +331,7 @@ export default async function CharitiesDashboard() {
           </div>
 
           {charitiesData.length === 0 && (
-            <div className="bg-white dark:bg-slate-800 rounded-2xl p-16 text-center text-slate-500 dark:text-slate-400 border border-slate-100 dark:border-slate-700 shadow-sm">
+            <div className="bg-white dark:bg-slate-900 rounded-xl p-16 text-center text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-800 shadow-[0_1px_2px_rgb(15_23_42/0.04)]">
               <p className="font-medium">لا توجد جمعيات متعاقد معها حالياً.</p>
             </div>
           )}
@@ -361,7 +355,7 @@ export default async function CharitiesDashboard() {
             </Link>
           </div>
 
-          <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 p-4 shadow-sm divide-y divide-slate-100 dark:divide-slate-700">
+          <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-4 shadow-[0_1px_2px_rgb(15_23_42/0.04)] divide-y divide-slate-100 dark:divide-slate-700">
             {newsItems.map((item, idx) => (
               <div key={item.id} className={`group ${idx > 0 ? "pt-3" : ""} ${idx < newsItems.length - 1 ? "pb-3" : ""}`}>
                 <div className="flex flex-wrap items-center gap-2 mb-2">

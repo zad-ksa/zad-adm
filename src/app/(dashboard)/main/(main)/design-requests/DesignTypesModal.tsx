@@ -196,7 +196,7 @@ closeOnBackdrop={false}
                       <button
                         onClick={() => saveEdit(type.id)}
                         disabled={busyId === type.id}
-                        className="h-10 px-3 flex items-center gap-1.5 rounded-xl font-bold text-primary dark:text-teal-300 bg-primary/[0.08] disabled:opacity-50"
+                        className="h-10 px-3 flex items-center gap-1.5 rounded-lg font-bold text-primary dark:text-teal-300 bg-primary/[0.08] disabled:opacity-50"
                         style={{ fontSize: "var(--dr-fs-meta)" }}
                       >
                         {busyId === type.id ? (
@@ -208,7 +208,7 @@ closeOnBackdrop={false}
                       </button>
                       <button
                         onClick={() => setEditingId(null)}
-                        className="h-10 px-3 rounded-xl font-bold text-slate-500 dark:text-slate-400"
+                        className="h-10 px-3 rounded-lg font-bold text-slate-500 dark:text-slate-400"
                         style={{ fontSize: "var(--dr-fs-meta)" }}
                       >
                         إلغاء
@@ -243,7 +243,7 @@ closeOnBackdrop={false}
                           setEditDays(String(type.workingDays));
                           setError(null);
                         }}
-                        className="h-9 px-3 rounded-xl font-bold text-slate-500 dark:text-slate-400 hover:text-primary dark:hover:text-teal-300 hover:bg-primary/[0.06] transition-colors"
+                        className="h-9 px-3 rounded-lg font-bold text-slate-500 dark:text-slate-400 hover:text-primary dark:hover:text-teal-300 hover:bg-primary/[0.06] transition-colors"
                         style={{ fontSize: "var(--dr-fs-meta)" }}
                       >
                         تعديل
@@ -254,7 +254,7 @@ closeOnBackdrop={false}
                         }
                         disabled={busyId === type.id}
                         title={type.isActive ? "إخفاء من نموذج الطلب" : "إعادة تفعيله"}
-                        className="h-9 w-9 flex items-center justify-center rounded-xl text-slate-400 dark:text-slate-500 hover:text-primary dark:hover:text-teal-300 hover:bg-primary/[0.06] transition-colors disabled:opacity-50"
+                        className="h-9 w-9 flex items-center justify-center rounded-lg text-slate-400 dark:text-slate-500 hover:text-primary dark:hover:text-teal-300 hover:bg-primary/[0.06] transition-colors disabled:opacity-50"
                       >
                         {busyId === type.id ? (
                           <Loader2 className="w-4 h-4 animate-spin" />

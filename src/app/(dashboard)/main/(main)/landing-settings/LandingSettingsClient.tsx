@@ -523,7 +523,7 @@ export default function LandingSettingsClient({ initialConfig }: { initialConfig
         </div>
 
         {/* ثيم الواجهة كلها */}
-        <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2.5 flex items-center justify-between gap-3">
+        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2.5 flex items-center justify-between gap-3">
           <div className="flex items-center gap-2 text-xs font-bold text-slate-700 dark:text-slate-200">
             {draft.theme === "dark" ? <Moon className="w-4 h-4" /> : <Sun className="w-4 h-4" />}
             وضع الواجهة كاملةً
@@ -539,7 +539,7 @@ export default function LandingSettingsClient({ initialConfig }: { initialConfig
         </div>
 
         {/* خط الواجهة كلها */}
-        <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2.5 space-y-2">
+        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2.5 space-y-2">
           <div className="flex items-center gap-2 text-xs font-bold text-slate-700 dark:text-slate-200">
             <Type className="w-4 h-4" />
             خط الواجهة كاملةً
@@ -564,7 +564,7 @@ export default function LandingSettingsClient({ initialConfig }: { initialConfig
           return (
             <div
               key={key}
-              className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl overflow-hidden"
+              className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden"
             >
               <div className="flex items-center gap-2 px-3 py-2.5">
                 <button
@@ -659,7 +659,7 @@ export default function LandingSettingsClient({ initialConfig }: { initialConfig
             <RefreshCw className="w-3.5 h-3.5" /> تحديث
           </button>
         </div>
-        <div className="rounded-2xl border border-slate-200 dark:border-slate-700 overflow-hidden bg-white shadow-sm">
+        <div className="rounded-xl border border-slate-200 dark:border-slate-800 overflow-hidden bg-white shadow-[0_1px_2px_rgb(15_23_42/0.04)]">
           <iframe
             ref={iframeRef}
             src="/landing-preview"

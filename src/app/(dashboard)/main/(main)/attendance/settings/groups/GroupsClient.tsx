@@ -130,7 +130,7 @@ export default function GroupsClient({
     e.shiftGroupId ? groups.find((g) => g.id === e.shiftGroupId)?.name : defaultGroup?.name;
 
   const GroupForm = (
-    <div className="rounded-2xl border border-primary/30 dark:border-teal-500/30 bg-primary/[0.03] dark:bg-teal-500/5 p-5 space-y-3">
+    <div className="rounded-xl border border-primary/30 dark:border-teal-500/30 bg-primary/[0.03] dark:bg-teal-500/5 p-5 space-y-3">
       <div className="grid sm:grid-cols-3 gap-2">
         <input
           className={INPUT}
@@ -375,7 +375,7 @@ export default function GroupsClient({
           <div className="relative">
             <Search className="w-3.5 h-3.5 text-slate-400 absolute top-1/2 -translate-y-1/2 right-3" />
             <input
-              className="h-9 w-56 pr-9 pl-3 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-[12px] text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none"
+              className="h-9 w-56 pr-9 pl-3 rounded-lg bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-[12px] text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none"
               placeholder="ابحث باسم الموظف"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
@@ -425,7 +425,7 @@ export default function GroupsClient({
           </div>
         )}
 
-        <div className="rounded-2xl border border-slate-200 dark:border-slate-800 divide-y divide-slate-100 dark:divide-slate-800 overflow-hidden">
+        <div className="rounded-xl border border-slate-200 dark:border-slate-800 divide-y divide-slate-100 dark:divide-slate-800 overflow-hidden">
           {shown.length === 0 && (
             <p className="px-4 py-6 text-center text-[12px] text-slate-400">لا نتائج.</p>
           )}

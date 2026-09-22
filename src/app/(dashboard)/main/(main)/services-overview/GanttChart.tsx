@@ -346,7 +346,7 @@ export default function GanttChart({
         .print-title { display: none; }
       `}} />
       
-      <div className="print-container bg-white dark:bg-slate-900 md:rounded-2xl border border-slate-200 dark:border-slate-700 shadow-2xl w-full h-full md:h-auto md:max-h-[95vh] flex flex-col overflow-hidden">
+      <div className="print-container bg-white dark:bg-slate-900 md:rounded-xl border border-slate-200 dark:border-slate-700 shadow-2xl w-full h-full md:h-auto md:max-h-[95vh] flex flex-col overflow-hidden">
         {/* Header */}
         <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100 dark:border-slate-800 shrink-0 no-print">
           <div>
@@ -373,7 +373,7 @@ export default function GanttChart({
             {canEdit && (
               <button 
                 onClick={() => setIsEditMode(!isEditMode)} 
-                className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all ${isEditMode ? 'bg-amber-500 text-white shadow-lg shadow-amber-500/30' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200'}`}
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-all ${isEditMode ? 'bg-amber-500 text-white shadow-lg shadow-amber-500/30' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200'}`}
               >
                 <Edit className="w-4 h-4" />
                 {isEditMode ? "إغلاق التعديل" : "تعديل الخطة"}
@@ -383,7 +383,7 @@ export default function GanttChart({
               <Printer className="w-4 h-4" />
               طباعة
             </button>
-            <button onClick={onClose} className="p-2 rounded-xl bg-red-50 text-red-500 hover:bg-red-100 transition-colors">
+            <button onClick={onClose} className="p-2 rounded-lg bg-red-50 text-red-500 hover:bg-red-100 transition-colors">
               <X className="w-5 h-5" />
             </button>
           </div>
@@ -573,7 +573,7 @@ footer={
                       <div className={`w-3 h-3 rounded-full ${group.stage?.isDone ? 'bg-emerald-500' : 'bg-primary'}`} />
                     </div>
                     
-                    <div className="w-full md:w-[calc(50%-2rem)] bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm hover:shadow-md transition-shadow">
+                    <div className="w-full md:w-[calc(50%-2rem)] bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-slate-800 shadow-[0_1px_2px_rgb(15_23_42/0.04)] transition-shadow hover:border-primary/30">
                       <div className="flex items-center justify-between mb-3 border-b border-slate-100 dark:border-slate-800 pb-2">
                          <div className="flex items-center gap-2">
                            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-primary/10 text-primary">مرحلة</span>
@@ -626,7 +626,7 @@ closeOnBackdrop={false}
                     const isEditingThisStage = editingItemId === stg.id && editingItemType === 'stage';
                     
                     return (
-                      <div key={stg.id} className="bg-white dark:bg-slate-800 p-4 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm">
+                      <div key={stg.id} className="bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-slate-800 shadow-[0_1px_2px_rgb(15_23_42/0.04)]">
                         {isEditingThisStage ? (
                           <div className="flex items-center gap-2">
                             <input autoFocus type="text" value={editingName} onChange={e => setEditingName(e.target.value)} className="flex-1 border border-slate-300 rounded px-2 py-1 text-sm bg-white" placeholder="اسم المرحلة" />
@@ -752,19 +752,19 @@ closeOnBackdrop={false}
                   })}
                   
                   {isAddingStage ? (
-                    <div className="bg-white dark:bg-slate-800 p-4 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-2">
+                    <div className="bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-200 shadow-[0_1px_2px_rgb(15_23_42/0.04)] flex items-center gap-2">
                       <input autoFocus type="text" value={newName} onChange={e => setNewName(e.target.value)} className="flex-1 border border-slate-300 rounded px-2 py-2 text-sm bg-white" placeholder="اسم المرحلة الجديدة" />
                       <button onClick={handleAddStage} className="p-2 bg-primary text-white rounded"><Check className="w-4 h-4"/></button>
                       <button onClick={() => setIsAddingStage(false)} className="p-2 bg-slate-200 text-slate-600 rounded"><X className="w-4 h-4"/></button>
                     </div>
                   ) : (
-                    <button onClick={() => { setIsAddingStage(true); setNewName(""); }} className="w-full py-3 border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-2xl text-slate-500 font-bold text-sm hover:bg-slate-100 hover:text-primary transition-colors flex items-center justify-center gap-2"><Plus className="w-4 h-4"/> إضافة مرحلة جديدة</button>
+                    <button onClick={() => { setIsAddingStage(true); setNewName(""); }} className="w-full py-3 border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-lg text-slate-500 font-bold text-sm hover:bg-slate-100 hover:text-primary transition-colors flex items-center justify-center gap-2"><Plus className="w-4 h-4"/> إضافة مرحلة جديدة</button>
                   )}
                 </div>
               )}
             </div>
 <div className="flex flex-col gap-3 border-t border-slate-100 pt-4 dark:border-slate-700">
-              <div className="bg-white dark:bg-slate-800 p-4 rounded-xl border border-slate-200 dark:border-slate-700">
+              <div className="bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-slate-800">
                 <label className="flex items-center gap-2 font-bold text-slate-700 dark:text-slate-200 cursor-pointer w-fit">
                   <div className="relative flex items-center justify-center">
                     <input 

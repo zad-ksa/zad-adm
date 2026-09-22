@@ -107,7 +107,7 @@ export default function AddCharityModal({ onClose, onSuccess }: { onClose: () =>
             </label>
 
             <div className="relative group">
-              <div className="w-24 h-24 rounded-2xl overflow-hidden border-2 border-dashed border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 flex items-center justify-center relative shadow-inner group-hover:border-primary/40 transition-colors">
+              <div className="w-24 h-24 rounded-xl overflow-hidden border-2 border-dashed border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 flex items-center justify-center relative shadow-inner group-hover:border-primary/40 transition-colors">
                 {logoPreview ? (
                   <img src={logoPreview} alt="شعار الجمعية" className="w-full h-full object-contain p-1" />
                 ) : (
@@ -142,7 +142,7 @@ export default function AddCharityModal({ onClose, onSuccess }: { onClose: () =>
               type="text"
               name="name"
               required
-              className="w-full border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-900 rounded-xl px-4 py-2.5 outline-none focus:border-primary focus:ring-2 focus:ring-primary/15 transition-all text-slate-800 dark:text-slate-100"
+              className="w-full border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-900 rounded-lg px-4 py-2.5 outline-none focus:border-primary focus:ring-2 focus:ring-primary/15 transition-all text-slate-800 dark:text-slate-100"
               placeholder="مثال: جمعية البر الخيرية"
             />
           </div>
@@ -152,7 +152,7 @@ export default function AddCharityModal({ onClose, onSuccess }: { onClose: () =>
             <input
               type="text"
               name="domain"
-              className="w-full border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-900 rounded-xl px-4 py-2.5 outline-none focus:border-primary focus:ring-2 focus:ring-primary/15 transition-all text-slate-800 dark:text-slate-100"
+              className="w-full border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-900 rounded-lg px-4 py-2.5 outline-none focus:border-primary focus:ring-2 focus:ring-primary/15 transition-all text-slate-800 dark:text-slate-100"
               placeholder="مثال: رعاية الأيتام، التنمية الأسرية"
             />
           </div>
@@ -162,7 +162,7 @@ export default function AddCharityModal({ onClose, onSuccess }: { onClose: () =>
             <input
               type="text"
               name="establishmentDate"
-              className="w-full border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-900 rounded-xl px-4 py-2.5 outline-none focus:border-primary focus:ring-2 focus:ring-primary/15 transition-all text-slate-800 dark:text-slate-100"
+              className="w-full border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-900 rounded-lg px-4 py-2.5 outline-none focus:border-primary focus:ring-2 focus:ring-primary/15 transition-all text-slate-800 dark:text-slate-100"
               placeholder="مثال: 1420 هـ"
             />
           </div>
@@ -172,7 +172,7 @@ export default function AddCharityModal({ onClose, onSuccess }: { onClose: () =>
             <input
               type="text"
               name="licenseNumber"
-              className="w-full border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-900 rounded-xl px-4 py-2.5 outline-none focus:border-primary focus:ring-2 focus:ring-primary/15 transition-all text-slate-800 dark:text-slate-100"
+              className="w-full border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-900 rounded-lg px-4 py-2.5 outline-none focus:border-primary focus:ring-2 focus:ring-primary/15 transition-all text-slate-800 dark:text-slate-100"
               placeholder="مثال: 1234"
             />
           </div>

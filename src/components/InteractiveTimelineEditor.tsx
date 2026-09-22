@@ -151,7 +151,7 @@ export default function InteractiveTimelineEditor({
   };
 
   return (
-    <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-3 shadow-sm overflow-x-auto overflow-y-visible custom-scrollbar">
+    <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-3 shadow-[0_1px_2px_rgb(15_23_42/0.04)] overflow-x-auto overflow-y-visible custom-scrollbar">
       <h3 className="font-bold text-sm text-slate-800 dark:text-slate-100 mb-4 border-b border-slate-100 dark:border-slate-700 pb-2 flex justify-between items-center">
         <span>{title}</span>
         <span className="text-[10px] bg-primary/10 text-primary px-2 py-0.5 rounded-full font-bold flex items-center gap-1">
@@ -574,7 +574,7 @@ closeOnBackdrop={false}
                   onDelete(selectedStage.id);
                   setSelectedStageId(null);
                 }}
-                className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-red-50 hover:bg-red-100 dark:bg-red-900/20 text-red-600 rounded-xl font-bold transition-colors border border-red-100 dark:border-red-900/50"
+                className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-red-50 hover:bg-red-100 dark:bg-red-900/20 text-red-600 rounded-lg font-bold transition-colors border border-red-100 dark:border-red-900/50"
               >
                 <Trash2 className="w-5 h-5" /> حذف المرحلة
               </button>

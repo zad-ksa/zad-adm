@@ -257,7 +257,7 @@ export default function NetworkClient({
                 key={m.id}
                 type="button"
                 onClick={() => setMode(m.id)}
-                className={`text-right rounded-xl border p-3.5 transition-colors ${
+                className={`text-right rounded-lg border p-3.5 transition-colors ${
                   on
                     ? m.ring
                     : "border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800/60"

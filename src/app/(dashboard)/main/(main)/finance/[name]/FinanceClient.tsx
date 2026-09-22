@@ -127,13 +127,13 @@ export default function FinanceClient({
   return (
     <div className="space-y-8 transition-colors animate-fade-in" dir="rtl">
       {successMsg && (
-        <div className="fixed bottom-6 left-6 z-50 bg-emerald-500 text-white px-5 py-3 rounded-2xl shadow-xl flex items-center gap-2 animate-fade-in font-bold text-sm animate-bounce">
+        <div className="fixed bottom-6 left-6 z-50 bg-emerald-500 text-white px-5 py-3 rounded-xl shadow-xl flex items-center gap-2 animate-fade-in font-bold text-sm animate-bounce">
           <CheckCircle2 className="w-5 h-5" />
           {successMsg}
         </div>
       )}
       {errorMsg && (
-        <div className="fixed bottom-6 left-6 z-50 bg-red-500 text-white px-5 py-3 rounded-2xl shadow-xl flex items-center gap-2 animate-fade-in font-bold text-sm">
+        <div className="fixed bottom-6 left-6 z-50 bg-red-500 text-white px-5 py-3 rounded-xl shadow-xl flex items-center gap-2 animate-fade-in font-bold text-sm">
           <AlertCircle className="w-5 h-5" />
           {errorMsg}
         </div>
@@ -172,14 +172,14 @@ export default function FinanceClient({
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 items-start">
           {/* Installments Card */}
-          <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-700 p-4 shadow-sm space-y-4">
+          <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-4 shadow-[0_1px_2px_rgb(15_23_42/0.04)] space-y-4">
             <h3 className="text-sm font-black text-slate-800 dark:text-slate-100 flex items-center gap-2 border-b border-slate-50 dark:border-slate-700/50 pb-3">
               <Layers className="w-4 h-4 text-primary" />
               دفعات العقد (الأقساط)
             </h3>
             <div className="space-y-4">
               {installments.map((installment) => (
-                <div key={installment.id} className={`flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 rounded-2xl border transition-all ${installment.isPaid ? 'bg-emerald-50/50 dark:bg-emerald-500/10 border-emerald-100 dark:border-emerald-500/20' : 'bg-slate-50 dark:bg-slate-900/50 border-slate-100 dark:border-slate-700'}`}>
+                <div key={installment.id} className={`flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 rounded-xl border transition-all ${installment.isPaid ? 'bg-emerald-50/50 dark:bg-emerald-500/10 border-emerald-100 dark:border-emerald-500/20' : 'bg-slate-50 dark:bg-slate-900/50 border-slate-100 dark:border-slate-700'}`}>
                   <div className="flex items-center gap-4">
                     <button
                       disabled={isPending}
@@ -216,7 +216,7 @@ export default function FinanceClient({
             </div>
           </div>
 
-          <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-700 p-4 shadow-sm space-y-4">
+          <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-4 shadow-[0_1px_2px_rgb(15_23_42/0.04)] space-y-4">
             <h3 className="text-sm font-black text-slate-800 dark:text-slate-100 flex items-center gap-2 border-b border-slate-50 dark:border-slate-700/50 pb-3">
               <History className="w-4 h-4 text-primary" />
               سجل الحركات المالية
@@ -225,7 +225,7 @@ export default function FinanceClient({
               {logs.map((log) => (
                 <div key={log.id} className="relative group">
                   <div className="absolute -right-[31px] top-1.5 w-4 h-4 rounded-full border-4 border-white dark:border-slate-800 bg-blue-500 shadow-sm"></div>
-                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 bg-slate-50/50 dark:bg-slate-900/50 p-4 rounded-2xl border border-slate-100 dark:border-slate-700">
+                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 bg-slate-50/50 dark:bg-slate-900/50 p-4 rounded-xl border border-slate-100 dark:border-slate-700">
                     <div className="space-y-2">
                       <div className="flex flex-wrap items-center gap-2">
                         {getLogTypeBadge(log.type)}
@@ -234,7 +234,7 @@ export default function FinanceClient({
                         </span>
                       </div>
                       {log.notes && (
-                        <p className="text-xs text-slate-500 dark:text-slate-400 font-semibold flex items-center gap-1.5 bg-white dark:bg-slate-800 px-3 py-1.5 rounded-xl border border-slate-100 dark:border-slate-700 w-fit">
+                        <p className="text-xs text-slate-500 dark:text-slate-400 font-semibold flex items-center gap-1.5 bg-white dark:bg-slate-900 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-800 w-fit">
                           <MessageSquare className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500" />
                           <span>{log.notes}</span>
                         </p>

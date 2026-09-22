@@ -1335,7 +1335,7 @@ export default function ServicesOverviewClient({
       />
 
       {tabs.length > 0 && (
-        <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm overflow-hidden">
+        <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-[0_1px_2px_rgb(15_23_42/0.04)] overflow-hidden">
           {/* Tabs */}
           <div className="flex overflow-x-auto border-b border-slate-100 dark:border-slate-700 scrollbar-none">
             {tabs.map(tab => {
@@ -1555,7 +1555,7 @@ export default function ServicesOverviewClient({
               يجعلها «قريباً» في جمعياته. وكان isAdmin هنا مدير النظام والمطوّر
               وحدهما، فلم يصلها حاملُ manage_services وإن قبله الخادم. */}
           {canEdit && isGenericTab && genericSvcInfo && (
-            <div className="p-4 border-t border-slate-100 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-900/30 flex items-center justify-between flex-wrap gap-3 rounded-b-2xl">
+            <div className="p-4 border-t border-slate-100 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-900/30 flex items-center justify-between flex-wrap gap-3 rounded-b-xl">
               <div className="flex items-center gap-2.5">
                 <div className={`p-2 rounded-xl ${genericSvcInfo.isComingSoon ? "bg-amber-500/10 text-amber-500" : "bg-slate-200/60 dark:bg-slate-700 text-slate-500"}`}>
                   <Clock className="w-5 h-5" />
@@ -1571,7 +1571,7 @@ export default function ServicesOverviewClient({
               </div>
               <button
                 onClick={() => setShowComingSoonModal(true)}
-                className="px-4 py-2 text-xs font-bold bg-amber-500 hover:bg-amber-600 text-white rounded-xl transition-all flex items-center gap-2 shadow-sm"
+                className="px-4 py-2 text-xs font-bold bg-amber-500 hover:bg-amber-600 text-white rounded-lg transition-all flex items-center gap-2 shadow-sm"
               >
                 <Clock className="w-4 h-4" /> إدارة وضع (قريباً)
               </button>
@@ -1615,7 +1615,7 @@ footer={
                   onChange={e => { setNewServiceName(e.target.value); setAddServiceError(null); }}
                   aria-invalid={!!addServiceError}
                   placeholder="مثال: خدمة الإسناد الإداري..."
-                  className={`w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border rounded-xl focus:ring-2 outline-none transition-all dark:text-white text-sm ${
+                  className={`w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border rounded-lg focus:ring-2 outline-none transition-all dark:text-white text-sm ${
                     addServiceError
                       ? "border-red-400 focus:ring-red-200 focus:border-red-400"
                       : "border-slate-200 dark:border-slate-700 focus:ring-primary focus:border-primary"
@@ -1758,7 +1758,7 @@ footer={
       )}
 
       {tabs.length === 0 && (
-        <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 p-12 text-center text-slate-400 dark:text-slate-500">
+        <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-12 text-center text-slate-400 dark:text-slate-500">
           لا توجد خدمات متاحة لحسابك حالياً
         </div>
       )}
@@ -1865,7 +1865,7 @@ busy={isLogoPending}
                 <button
                   type="button"
                   onClick={() => logoFileRef.current?.click()}
-                  className="relative group w-24 h-24 rounded-2xl border-2 border-dashed border-slate-300 dark:border-slate-600 hover:border-primary dark:hover:border-primary bg-slate-50 dark:bg-slate-900 flex items-center justify-center overflow-hidden transition-colors cursor-pointer"
+                  className="relative group w-24 h-24 rounded-lg border-2 border-dashed border-slate-300 dark:border-slate-600 hover:border-primary dark:hover:border-primary bg-slate-50 dark:bg-slate-900 flex items-center justify-center overflow-hidden transition-colors cursor-pointer"
                 >
                   {logoPreview ? (
                     <>

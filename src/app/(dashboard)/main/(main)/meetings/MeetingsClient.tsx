@@ -7,7 +7,7 @@ import { notify } from "@/components/console/toastBus";
 import Select from "@/components/console/Select";
 import {
   FileText, Plus, X, Lock, Globe, Eye, LayoutTemplate, Printer,
-  Edit2, Trash2, Search, Filter, ArrowRight, Download, Loader2
+  Edit2, Trash2, Search, Filter, Download, Loader2
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { createMeeting, updateMeeting, deleteMeeting, insertAiTasksIfEmpty } from "@/app/actions/meetings";
@@ -15,7 +15,7 @@ import { handlePrint, handlePreview, downloadAllMeetingsZip } from "./utils/meet
 import MeetingCard from "./components/MeetingCard";
 import MeetingFormModal from "./components/MeetingFormModal";
 import { Dialog } from "@/components/console/Dialog";
-import { btn } from "@/components/console/ui";
+import { btn, NavCard } from "@/components/console/ui";
 
 export type MeetingTask = {
   id: string;
@@ -70,19 +70,23 @@ const DEPARTMENTS = [
   { value: "الإسناد الحكومي", label: "الإسناد الحكومي" },
 ];
 
+/**
+ * أقسام المحاضر. كانت لكلٍّ منها ثلاثة ألوانٍ (إطار، ونصّ، ورقم) من اثني عشر
+ * لوناً — ألوانٌ لا تقول شيئاً عن حالة؛ صارت بطاقات انتقالٍ موحّدة.
+ */
 const CATEGORY_CARDS = [
-  { key: "all",                   label: "الكل",                   border: "border-slate-200 dark:border-slate-700",   text: "text-slate-600 dark:text-slate-300",   num: "text-slate-700 dark:text-slate-100" },
-  { key: "زاد",                   label: "إدارة زاد",               border: "border-primary/30",                          text: "text-primary dark:text-primary-foreground/80",     num: "text-primary dark:text-primary-foreground" },
-  { key: "التخطيط الاستراتيجي",   label: "التخطيط الاستراتيجي",    border: "border-indigo-500/30",                        text: "text-indigo-600 dark:text-indigo-400", num: "text-indigo-700 dark:text-indigo-300" },
-  { key: "الحوكمة",               label: "الحوكمة",                 border: "border-violet-500/30",                        text: "text-violet-600 dark:text-violet-400", num: "text-violet-700 dark:text-violet-300" },
-  { key: "تنمية الموارد المالية", label: "تنمية الموارد المالية",   border: "border-emerald-500/30",                       text: "text-emerald-600 dark:text-emerald-400", num: "text-emerald-700 dark:text-emerald-300" },
-  { key: "الإعلامية",             label: "الإعلامية",               border: "border-pink-500/30",                          text: "text-pink-600 dark:text-pink-400",     num: "text-pink-700 dark:text-pink-300" },
-  { key: "التقنية",               label: "التقنية",                 border: "border-cyan-500/30",                          text: "text-cyan-600 dark:text-cyan-400",     num: "text-cyan-700 dark:text-cyan-300" },
-  { key: "المالية",               label: "المالية",                 border: "border-amber-500/30",                         text: "text-amber-600 dark:text-amber-400",   num: "text-amber-700 dark:text-amber-300" },
-  { key: "التسويق",               label: "التسويق",                 border: "border-orange-500/30",                        text: "text-orange-600 dark:text-orange-400", num: "text-orange-700 dark:text-orange-300" },
-  { key: "خدمات المشاريع",        label: "خدمات المشاريع",          border: "border-teal-500/30",                          text: "text-teal-600 dark:text-teal-400",     num: "text-teal-700 dark:text-teal-300" },
-  { key: "الإدارية",              label: "الإدارية",                border: "border-rose-500/30",                          text: "text-rose-600 dark:text-rose-400",     num: "text-rose-700 dark:text-rose-300" },
-  { key: "الإسناد الحكومي",       label: "الإسناد الحكومي",         border: "border-sky-500/30",                           text: "text-sky-600 dark:text-sky-400",       num: "text-sky-700 dark:text-sky-300" },
+  { key: "all", label: "الكل" },
+  { key: "زاد", label: "إدارة زاد" },
+  { key: "التخطيط الاستراتيجي", label: "التخطيط الاستراتيجي" },
+  { key: "الحوكمة", label: "الحوكمة" },
+  { key: "تنمية الموارد المالية", label: "تنمية الموارد المالية" },
+  { key: "الإعلامية", label: "الإعلامية" },
+  { key: "التقنية", label: "التقنية" },
+  { key: "المالية", label: "المالية" },
+  { key: "التسويق", label: "التسويق" },
+  { key: "خدمات المشاريع", label: "خدمات المشاريع" },
+  { key: "الإدارية", label: "الإدارية" },
+  { key: "الإسناد الحكومي", label: "الإسناد الحكومي" },
 ];
 
 function getCategoryCount(meetings: Meeting[], key: string): number {
@@ -100,23 +104,15 @@ function CategorySelector({ meetings, onSelect, actions }: { meetings: Meeting[]
         description="اختر القسم للعرض"
         actions={actions}
       />
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-        {CATEGORY_CARDS.map(cat => {
-          const count = getCategoryCount(meetings, cat.key);
-          return (
-            <button
-              key={cat.key}
-              onClick={() => onSelect(cat.key)}
-              className={`bg-white dark:bg-slate-800 border ${cat.border} rounded-xl p-4 text-right hover:shadow-md transition-all active:scale-95 flex flex-col gap-2`}
-            >
-              <span className={`text-2xl font-black tabular-nums ${cat.num}`}>{count}</span>
-              <div className="flex items-center justify-between gap-1">
-                <span className={`text-xs font-semibold leading-snug ${cat.text}`}>{cat.label}</span>
-                <ArrowRight className={`w-3.5 h-3.5 shrink-0 ${cat.text}`} />
-              </div>
-            </button>
-          );
-        })}
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
+        {CATEGORY_CARDS.map((cat) => (
+          <NavCard
+            key={cat.key}
+            onClick={() => onSelect(cat.key)}
+            title={cat.label}
+            meta={`${getCategoryCount(meetings, cat.key)} محضر`}
+          />
+        ))}
       </div>
     </div>
   );
@@ -378,7 +374,7 @@ export default function MeetingsClient({ meetings, charities, employees, session
       />
 
       {/* شريط التصفية */}
-      <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-700 p-3 space-y-2">
+      <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-3 space-y-2">
         {/* بحث */}
         <div className="relative">
           <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400 pointer-events-none" />
@@ -474,12 +470,12 @@ export default function MeetingsClient({ meetings, charities, employees, session
 
       {/* List */}
       {meetings.length === 0 ? (
-        <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 p-16 text-center">
+        <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-16 text-center">
           <FileText className="w-12 h-12 text-slate-300 dark:text-slate-600 mx-auto mb-3" />
           <p className="text-slate-400 dark:text-slate-500 text-sm">لا توجد محاضر بعد</p>
         </div>
       ) : filteredMeetings.length === 0 ? (
-        <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-700 p-10 text-center">
+        <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-10 text-center">
           <Search className="w-8 h-8 text-slate-300 dark:text-slate-600 mx-auto mb-2" />
           <p className="text-slate-400 dark:text-slate-500 text-sm">لا توجد محاضر تطابق التصفية الحالية</p>
           <button onClick={resetFilters} className="mt-2 text-xs text-primary hover:underline">مسح التصفية</button>

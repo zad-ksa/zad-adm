@@ -264,7 +264,7 @@ export default function ManageCharitiesClient({ initialCharities }: { initialCha
                       value={formData.name}
                       onChange={e => setFormData({...formData, name: e.target.value})}
                       disabled={isPending}
-                      className="w-full bg-slate-50 dark:bg-black/50 border border-slate-200 dark:border-white/10 rounded-xl px-4 py-3 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-primary/50 dark:focus:border-primary/50 focus:bg-white dark:focus:bg-white/5 transition-all"
+                      className="w-full bg-slate-50 dark:bg-black/50 border border-slate-200 dark:border-white/10 rounded-lg px-4 py-3 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-primary/50 dark:focus:border-primary/50 focus:bg-white dark:focus:bg-white/5 transition-all"
                       placeholder="مثال: جمعية البر الخيرية"
                     />
                   </div>
@@ -277,7 +277,7 @@ export default function ManageCharitiesClient({ initialCharities }: { initialCha
                         value={formData.establishmentDate}
                         onChange={e => setFormData({...formData, establishmentDate: e.target.value})}
                         disabled={isPending}
-                        className="w-full bg-slate-50 dark:bg-black/50 border border-slate-200 dark:border-white/10 rounded-xl px-4 py-3 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-primary/50 dark:focus:border-primary/50 focus:bg-white dark:focus:bg-white/5 transition-all"
+                        className="w-full bg-slate-50 dark:bg-black/50 border border-slate-200 dark:border-white/10 rounded-lg px-4 py-3 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-primary/50 dark:focus:border-primary/50 focus:bg-white dark:focus:bg-white/5 transition-all"
                         placeholder="مثال: 1440 هـ"
                       />
                     </div>
@@ -288,7 +288,7 @@ export default function ManageCharitiesClient({ initialCharities }: { initialCha
                         value={formData.licenseNumber}
                         onChange={e => setFormData({...formData, licenseNumber: e.target.value})}
                         disabled={isPending}
-                        className="w-full bg-slate-50 dark:bg-black/50 border border-slate-200 dark:border-white/10 rounded-xl px-4 py-3 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-primary/50 dark:focus:border-primary/50 focus:bg-white dark:focus:bg-white/5 transition-all"
+                        className="w-full bg-slate-50 dark:bg-black/50 border border-slate-200 dark:border-white/10 rounded-lg px-4 py-3 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-primary/50 dark:focus:border-primary/50 focus:bg-white dark:focus:bg-white/5 transition-all"
                         placeholder="رقم ترخيص الموارد"
                       />
                     </div>
@@ -302,7 +302,7 @@ export default function ManageCharitiesClient({ initialCharities }: { initialCha
                       value={formData.domain}
                       onChange={e => setFormData({...formData, domain: e.target.value})}
                       disabled={isPending}
-                      className="w-full text-left bg-slate-50 dark:bg-black/50 border border-slate-200 dark:border-white/10 rounded-xl px-4 py-3 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-primary/50 dark:focus:border-primary/50 focus:bg-white dark:focus:bg-white/5 transition-all"
+                      className="w-full text-left bg-slate-50 dark:bg-black/50 border border-slate-200 dark:border-white/10 rounded-lg px-4 py-3 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-primary/50 dark:focus:border-primary/50 focus:bg-white dark:focus:bg-white/5 transition-all"
                       placeholder="albir.org.sa"
                     />
                   </div>

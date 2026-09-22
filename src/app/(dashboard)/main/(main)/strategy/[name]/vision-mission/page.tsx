@@ -59,7 +59,7 @@ export default async function VisionMissionDashboardPage({ params }: { params: P
       </div>
 
       {/* Results Client Component */}
-      <div className="bg-white dark:bg-slate-800 rounded-3xl border border-slate-200 dark:border-slate-700 p-6 md:p-8 shadow-sm transition-colors">
+      <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-6 md:p-8 shadow-[0_1px_2px_rgb(15_23_42/0.04)] transition-colors">
         <div className="flex items-center gap-3 mb-8 border-b border-slate-100 dark:border-slate-700 pb-4">
           <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center text-primary font-bold">
             <Sparkles className="w-5 h-5" />
@@ -73,7 +73,7 @@ export default async function VisionMissionDashboardPage({ params }: { params: P
         </div>
 
         {responses.length === 0 ? (
-          <div className="text-center py-16 text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-slate-900/30 rounded-2xl border border-dashed border-slate-200 dark:border-slate-800">
+          <div className="text-center py-16 text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-slate-900/30 rounded-xl border border-dashed border-slate-200 dark:border-slate-800">
             <Sparkles className="w-12 h-12 text-slate-350 dark:text-slate-600 mx-auto mb-4 animate-pulse" />
             <p className="font-bold text-lg text-slate-700 dark:text-slate-300">لم يقم أي مشارك بتعبئة الاستبيان بعد</p>
             <p className="text-xs text-slate-400 mt-1 max-w-sm mx-auto">يمكنك مشاركة الرابط أعلاه مع الموظفين وأعضاء مجلس الإدارة لجمع مشاركاتهم وتطلعاتهم.</p>

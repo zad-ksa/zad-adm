@@ -158,7 +158,7 @@ footer={
               onChange={(e) => setTitle(e.target.value)}
               maxLength={200}
               placeholder="مثال: تصميم هوية الحملة الشتوية"
-              className="w-full px-3 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none placeholder:text-slate-400 dark:placeholder:text-slate-600"
+              className="w-full px-3 py-2.5 rounded-lg bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none placeholder:text-slate-400 dark:placeholder:text-slate-600"
               style={{ fontSize: "var(--dr-fs-body)" }}
             />
           </div>
@@ -174,7 +174,7 @@ footer={
               onChange={(e) => setDescription(e.target.value)}
               rows={4}
               placeholder="اشرح ما تحتاج تصميمه بالتفصيل..."
-              className="w-full px-3 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none resize-none placeholder:text-slate-400 dark:placeholder:text-slate-600"
+              className="w-full px-3 py-2.5 rounded-lg bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none resize-none placeholder:text-slate-400 dark:placeholder:text-slate-600"
               style={{ fontSize: "var(--dr-fs-body)" }}
             />
           </div>

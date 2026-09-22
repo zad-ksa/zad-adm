@@ -280,7 +280,7 @@ onClose={onClose}
                 <div className="text-center py-6 text-sm text-slate-500">لا توجد أقساط مسجلة بعد.</div>
               ) : (
                 installments.map((inst, idx) => (
-                  <div key={inst.id} className={`p-4 rounded-xl border ${inst.isPaid ? 'bg-emerald-50/30 border-emerald-100 dark:bg-emerald-900/10 dark:border-emerald-900/30' : 'bg-white border-slate-200 dark:bg-slate-800 dark:border-slate-700'}`}>
+                  <div key={inst.id} className={`p-4 rounded-xl border ${inst.isPaid ? 'bg-emerald-50/30 border-emerald-100 dark:bg-emerald-900/10 dark:border-emerald-900/30' : 'bg-white border-slate-200 dark:bg-slate-900 dark:border-slate-800'}`}>
                     
                     {editingId === inst.id ? (
                       <div className="space-y-3">

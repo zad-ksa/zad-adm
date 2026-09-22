@@ -86,7 +86,7 @@ closeOnBackdrop={false}
                   <div
                     key={idx}
                     id={`service-guide-section-${idx}`}
-                    className="bg-white dark:bg-[#0A0A0A] rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-sm transition-all"
+                    className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-[0_1px_2px_rgb(15_23_42/0.04)] transition-all"
                   >
                     <button
                       onClick={() => handleSectionToggle(section.title, idx)}
@@ -118,7 +118,7 @@ closeOnBackdrop={false}
                         {sequentialStages.length > 0 && (
                           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
                             {sequentialStages.map((stage, stageIdx) => (
-                              <div key={stage.id} className="group relative flex flex-col rounded-2xl border bg-white dark:bg-[#111] border-slate-100 dark:border-slate-800 shadow-sm transition-all duration-300 hover:border-slate-300 dark:hover:border-slate-700 dark:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.02)] overflow-hidden">
+                              <div key={stage.id} className="group relative flex flex-col rounded-xl border bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 shadow-[0_1px_2px_rgb(15_23_42/0.04)] transition-all duration-300 hover:border-slate-300 dark:hover:border-slate-700 overflow-hidden">
                                 
                                 <div className="p-6 flex flex-col h-full z-10">
                                   <div className="flex items-start justify-between gap-3 mb-4">

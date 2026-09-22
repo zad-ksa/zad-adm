@@ -45,6 +45,21 @@ export const btn = {
     focusRing
   ),
   link: "text-[12.5px] font-medium text-primary hover:underline dark:text-teal-300",
+  // زرّ أيقونةٍ مربّع (إغلاق ×، تعديل، حذف في صفّ). كان يُكتب cx(btn.ghost, "size-8 px-0")،
+  // وpx-0 فوق px-2 لا يحسمه ترتيب الأصناف بل ترتيب CSS — فصار نمطاً بذاته.
+  icon: cx(
+    "inline-flex size-8 shrink-0 items-center justify-center rounded-md text-slate-500 transition-colors",
+    "hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-100",
+    "disabled:pointer-events-none disabled:opacity-50",
+    focusRing
+  ),
+  // مثله للحذف: رماديٌّ هادئ، وأحمر عند المرور.
+  iconDanger: cx(
+    "inline-flex size-8 shrink-0 items-center justify-center rounded-md text-slate-500 transition-colors",
+    "hover:bg-red-50 hover:text-red-600 dark:text-slate-400 dark:hover:bg-red-500/10 dark:hover:text-red-400",
+    "disabled:pointer-events-none disabled:opacity-50",
+    focusRing
+  ),
 };
 
 export const field = cx(

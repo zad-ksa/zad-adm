@@ -211,7 +211,7 @@ export function Dialog({
             disabled={busy}
             aria-label="إغلاق"
             data-dialog-close="true"
-            className={cx(btn.ghost, "size-8 px-0")}
+            className={btn.icon}
           >
             <X className="size-4" />
           </button>

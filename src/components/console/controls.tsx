@@ -55,7 +55,7 @@ export function Pagination({
           type="button"
           onClick={() => onChange(page - 1)}
           disabled={page <= 1}
-          className={cx(btn.ghost, "size-8 px-0")}
+          className={btn.icon}
           aria-label="الصفحة السابقة"
         >
           <ChevronRight className="size-4" />
@@ -64,7 +64,7 @@ export function Pagination({
           type="button"
           onClick={() => onChange(page + 1)}
           disabled={page >= totalPages}
-          className={cx(btn.ghost, "size-8 px-0")}
+          className={btn.icon}
           aria-label="الصفحة التالية"
         >
           <ChevronLeft className="size-4" />

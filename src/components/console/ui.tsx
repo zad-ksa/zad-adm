@@ -468,6 +468,7 @@ export const card = {
  */
 export function NavCard({
   href,
+  onClick,
   title,
   description,
   icon,
@@ -475,25 +476,26 @@ export function NavCard({
   meta,
   metaWarn = false,
 }: {
-  href: string;
   title: string;
-  description: string;
+  description?: ReactNode;
   icon?: ReactNode;
   tone?: keyof typeof METRIC_TONE;
   meta?: ReactNode;
   metaWarn?: boolean;
-}) {
-  return (
-    <Link href={href} className={cx(card.interactive, "group relative flex flex-col gap-3 overflow-hidden p-5")}>
-      <span
-        aria-hidden
-        className="pointer-events-none absolute -bottom-6 -left-6 size-24 rounded-full bg-primary/5 transition-transform duration-500 motion-safe:group-hover:scale-150 dark:bg-teal-400/5"
-      />
+} & (
+  | { href: string; onClick?: never }
+  /** بطاقةٌ تختار عرضاً في الصفحة نفسها (قسمٌ من شبكة أقسام) لا تنقل إلى صفحة. */
+  | { onClick: () => void; href?: never }
+)) {
+  const className = cx(card.interactive, "group relative flex w-full flex-col gap-3 overflow-hidden p-5 text-right");
+  const body = (
+    <>
+      <NavCircle />
       {icon && (
         <span className={cx("relative flex size-10 items-center justify-center rounded-lg", METRIC_TONE[tone])}>{icon}</span>
       )}
       <span className="relative text-[15px] font-semibold text-slate-900 dark:text-slate-100">{title}</span>
-      <span className="relative text-[13px] leading-5 text-slate-500 dark:text-slate-400">{description}</span>
+      {description && <span className="relative text-[13px] leading-5 text-slate-500 dark:text-slate-400">{description}</span>}
       <span className="relative mt-auto flex items-center justify-between gap-2 pt-1">
         {meta ? (
           <span
@@ -514,7 +516,46 @@ export function NavCard({
           </span>
         </span>
       </span>
+    </>
+  );
+  return href ? (
+    <Link href={href} className={className}>
+      {body}
     </Link>
+  ) : (
+    <button type="button" onClick={onClick} className={className}>
+      {body}
+    </button>
+  );
+}
+
+/**
+ * دائرة بطاقة الانتقال — تُستعمل وحدها في بطاقةٍ غنيّة المحتوى لا تناسبها
+ * NavCard (بطاقة الجمعية بإحصاءاتها)، على أن يكون أبوها `group relative
+ * overflow-hidden`.
+ *
+ * `children` محتوىً داخلها — شعار الجمعية مثلاً. والدائرة في الزاوية وربعها
+ * وحده ظاهر، فيوضع المحتوى في ذلك الربع لا في مركزها، وإلا قُصّ نصفه.
+ */
+export function NavCircle({
+  children,
+  contentClassName = "left-[42px] top-[30px]",
+}: {
+  children?: ReactNode;
+  /** موضع المحتوى داخل الدائرة — يُنزَل لبطاقةٍ في زاويتها نصّ (بطاقة الجمعية). */
+  contentClassName?: string;
+}) {
+  return (
+    <span
+      aria-hidden
+      className="pointer-events-none absolute -bottom-8 -left-8 size-28 rounded-full bg-primary/5 transition-transform duration-500 motion-safe:group-hover:scale-150 dark:bg-teal-400/5"
+    >
+      {children && (
+        <span className={cx("absolute flex size-9 items-center justify-center overflow-hidden opacity-70 transition-opacity duration-500 group-hover:opacity-100", contentClassName)}>
+          {children}
+        </span>
+      )}
+    </span>
   );
 }
 

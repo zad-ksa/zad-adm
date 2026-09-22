@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import { AlertCircle } from "lucide-react";
+import { btn } from "@/components/console/ui";
 
 export default function RequestsError({
   error,
@@ -27,7 +28,7 @@ export default function RequestsError({
         )}
         <button
           onClick={reset}
-          className="bg-primary text-white px-6 py-2 rounded-xl font-bold hover:bg-primary/90 transition-colors"
+          className={btn.primary}
         >
           إعادة المحاولة
         </button>

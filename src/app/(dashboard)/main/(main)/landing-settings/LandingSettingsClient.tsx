@@ -50,6 +50,7 @@ import {
   type SectionKey,
   type TitledItem,
 } from "@/lib/landing";
+import { btn } from "@/components/console/ui";
 
 // ── مخطط حقول المحتوى لكل فقرة ────────────────────────────────────────────────
 
@@ -506,7 +507,7 @@ export default function LandingSettingsClient({ initialConfig }: { initialConfig
           <button
             onClick={save}
             disabled={isPending || !dirty}
-            className="inline-flex items-center gap-2 px-5 py-2.5 bg-primary hover:bg-primary/90 text-white rounded-xl shadow-md font-bold text-xs transition-all disabled:opacity-50"
+            className={btn.primary}
           >
             {isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
             {dirty ? "حفظ التغييرات" : "محفوظ"}

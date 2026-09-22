@@ -6,7 +6,7 @@ import Select from "@/components/console/Select";
 import { savePerformanceMetric } from "@/app/actions/performance";
 import { useRouter } from "next/navigation";
 import { Dialog } from "@/components/console/Dialog";
-import { btn } from "@/components/console/ui";
+import { btn, cx } from "@/components/console/ui";
 
 type Indicator = {
   id: string;
@@ -552,7 +552,7 @@ export default function PerformanceTable({
 
           <button
             onClick={() => setIsFullScreen(!isFullScreen)}
-            className="bg-slate-50 dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-100 dark:border-slate-700 px-5 py-2.5 rounded-xl font-bold transition-all flex items-center gap-2 cursor-pointer select-none active:scale-[0.98]"
+            className={btn.secondary}
             title={isFullScreen ? "خروج من وضع ملء الشاشة (Esc)" : "تفعيل وضع ملء الشاشة"}
           >
             {isFullScreen ? (
@@ -590,7 +590,7 @@ export default function PerformanceTable({
           <button
             onClick={handleSave}
             disabled={isSaving}
-            className="bg-primary hover:bg-primary/90 text-white px-8 py-2.5 rounded-xl font-bold transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer select-none active:scale-[0.98] shadow-sm flex items-center gap-2"
+            className={btn.primary}
           >
             {isSaving ? (
               <>
@@ -662,7 +662,7 @@ export default function PerformanceTable({
                           <div className="flex flex-col items-center justify-center gap-3">
                             <div className="text-3xl opacity-30">🎯</div>
                             <p>لا توجد أهداف في هذا المحور. أضف هدفاً للبدء.</p>
-                            <button onClick={() => addGoal(axis.id)} className="mt-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:text-primary dark:hover:text-primary hover:border-primary/30 dark:hover:border-primary/30 px-4 py-2 rounded-lg font-bold text-sm shadow-sm transition-all flex items-center gap-2 cursor-pointer">
+                            <button onClick={() => addGoal(axis.id)} className={cx(btn.secondary, "mt-2")}>
                               <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
                               إضافة هدف
                             </button>
@@ -713,7 +713,7 @@ export default function PerformanceTable({
                                 <input type="text" value={goal.name} onChange={e => updateGoal(axis.id, goal.id, "name", e.target.value)} className="w-full bg-transparent hover:bg-white/50 dark:hover:bg-slate-900/50 focus:bg-white dark:focus:bg-slate-900 border border-transparent focus:border-primary/30 rounded-lg outline-none px-3 py-2 transition-all text-slate-800 dark:text-slate-100" />
                               </td>
                               <td colSpan={15} className="p-4 text-slate-400 dark:text-slate-500">
-                                <button onClick={() => addIndicator(axis.id, goal.id)} className="bg-slate-50 dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 px-4 py-2 rounded-lg text-xs font-bold transition-all shadow-sm flex items-center gap-1.5 mx-auto cursor-pointer">
+                                <button onClick={() => addIndicator(axis.id, goal.id)} className={cx(btn.secondary, "mx-auto")}>
                                   <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
                                   إضافة مؤشر
                                 </button>

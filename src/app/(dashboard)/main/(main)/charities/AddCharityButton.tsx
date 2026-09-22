@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Plus } from "lucide-react";
 import AddCharityModal from "@/app/(dashboard)/main/AddCharityModal";
+import { btn } from "@/components/console/ui";
 
 export default function AddCharityButton() {
   const [isOpen, setIsOpen] = useState(false);
@@ -13,7 +14,7 @@ export default function AddCharityButton() {
     <>
       <button
         onClick={() => setIsOpen(true)}
-        className="flex items-center gap-2 bg-primary hover:bg-primary/95 text-white font-bold px-5 py-3 rounded-xl shadow-sm hover:shadow transition-all text-sm cursor-pointer select-none active:scale-[0.98]"
+        className={btn.primary}
       >
         <Plus className="w-5 h-5" />
         <span>إضافة جمعية جديدة</span>

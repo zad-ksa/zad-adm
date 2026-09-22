@@ -15,6 +15,7 @@ import {
 } from "@/app/actions/workflow";
 
 import { useRoleLabels } from "@/components/RoleLabelsProvider";
+import { btn, cx } from "@/components/console/ui";
 
 type Employee = { id: string; name: string; role: string };
 type Step = { id: string; order: number; label: string | null; approver: Employee };
@@ -225,7 +226,7 @@ export default function WorkflowSettingsClient({
                   <button
                     disabled={!addingStep[chain.id]?.approverId || isPending}
                     onClick={() => run(() => addStep({ chainId: chain.id, approverId: addingStep[chain.id].approverId, label: addingStep[chain.id]?.label }))}
-                    className="flex items-center gap-1 bg-primary hover:bg-primary/90 disabled:opacity-50 text-white px-3 py-2 rounded-xl text-xs font-bold transition-colors shrink-0">
+                    className={cx(btn.primary, "shrink-0")}>
                     {isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Plus className="w-3.5 h-3.5" />}
                     إضافة
                   </button>
@@ -245,7 +246,7 @@ export default function WorkflowSettingsClient({
             className="flex-1 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-sm bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-primary/50" />
           <button disabled={!newChainName.trim() || isPending}
             onClick={() => run(async () => { await createChain(newChainName); setNewChainName(""); })}
-            className="flex items-center gap-1.5 bg-primary hover:bg-primary/90 disabled:opacity-50 text-white px-4 py-2 rounded-xl text-sm font-bold transition-colors shrink-0">
+            className={cx(btn.primary, "shrink-0")}>
             {isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
             إنشاء
           </button>

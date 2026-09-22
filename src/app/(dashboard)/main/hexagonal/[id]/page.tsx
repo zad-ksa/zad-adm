@@ -12,6 +12,7 @@ import {
 } from "@/components/Icons";
 import { Search, BarChart3 } from "lucide-react";
 import HexagonalLayoutClient from "./HexagonalLayoutClient";
+import { btn } from "@/components/console/ui";
 
 export const dynamic = "force-dynamic";
 
@@ -95,7 +96,7 @@ export default async function HexagonalDetails({ params }: { params: { id: strin
           </div>
           <h1 className="text-2xl font-bold text-slate-800 dark:text-slate-100 mb-3 tracking-tight transition-colors">التقرير غير موجود</h1>
           <p className="text-slate-500 dark:text-slate-400 font-medium mb-8 transition-colors">عذراً، لم نتمكن من العثور على التقرير المطلوب.</p>
-          <Link href="/main" className="bg-primary text-white font-bold py-3 px-6 rounded-xl hover:bg-primary/90 transition-all inline-block shadow-sm hover:shadow">
+          <Link href="/main" className={btn.primary}>
             العودة للوحة التحكم
           </Link>
         </div>

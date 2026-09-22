@@ -6,6 +6,7 @@ import { useState, useRef, useTransition, useEffect } from "react";
 import { User, Camera, Loader2, AlertCircle, CheckCircle2, Eye, EyeOff, UserCircle, Mail } from "lucide-react";
 import { updateProfile } from "@/app/actions/profile";
 import { useRouter } from "next/navigation";
+import { btn, cx } from "@/components/console/ui";
 
 export default function ProfileClient({
   session,
@@ -228,7 +229,7 @@ export default function ProfileClient({
             <button
               type="submit"
               disabled={isPending}
-              className="py-3 px-8 bg-primary text-white rounded-xl font-bold hover:bg-primary/95 transition-all shadow-md shadow-primary/20 flex items-center justify-center cursor-pointer active:scale-[0.98] disabled:opacity-70 disabled:active:scale-100"
+              className={cx(btn.primary, "justify-center")}
             >
               {isPending ? (
                 <>

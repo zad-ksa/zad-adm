@@ -7,6 +7,7 @@ import { CharitySize } from "@/data/governanceManual";
 import { Building, CheckCircle2, Landmark, TrendingUp, Gem, Loader2, Calculator } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect } from "react";
+import { btn } from "@/components/console/ui";
 
 interface ProgressItem {
   indicatorId: string;
@@ -170,7 +171,7 @@ export default function GovernanceManualViewer({
             <button 
               type="submit" 
               disabled={isUpdatingSize}
-              className="bg-primary text-white px-6 py-3 rounded-xl font-bold hover:bg-primary/90 hover:-translate-y-0.5 transition-all shadow-sm active:translate-y-0 disabled:opacity-50"
+              className={btn.primary}
             >
               استعراض المعايير
             </button>

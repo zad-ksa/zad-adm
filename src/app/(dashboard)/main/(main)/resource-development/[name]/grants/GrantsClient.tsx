@@ -8,7 +8,7 @@ import Select from "@/components/console/Select";
 import { FileText, Plus, Trash2, CheckCircle2, AlertCircle, TrendingUp, Check, X, Calendar, Edit, HandCoins } from "lucide-react";
 import { addGrantApplication, updateGrantApplicationStatus, deleteGrantApplication } from "@/app/actions/charity";
 import { Dialog } from "@/components/console/Dialog";
-import { btn } from "@/components/console/ui";
+import { btn, cx } from "@/components/console/ui";
 
 interface GrantApplication {
   id: string;
@@ -267,7 +267,7 @@ export default function GrantsClient({
             المنح المرفوضة ({rejectedGrants.length})
           </button>
         </div>
-        <button onClick={() => setShowAddGrant(!showAddGrant)} className="bg-primary text-white px-4 py-2 rounded-xl font-bold flex items-center gap-1.5 hover:bg-primary/90 shadow-sm whitespace-nowrap text-xs shrink-0 ml-2">
+        <button onClick={() => setShowAddGrant(!showAddGrant)} className={cx(btn.primary, "whitespace-nowrap shrink-0 ml-2")}>
           <Plus className="w-3.5 h-3.5" /> إضافة منحة جديدة
         </button>
       </div>
@@ -313,7 +313,7 @@ export default function GrantsClient({
             />
           </div>
           <div className="md:col-span-1">
-            <button type="submit" disabled={isPending} className="w-full bg-primary text-white py-2.5 rounded-xl font-bold shadow hover:bg-primary/90 disabled:opacity-50 h-[42px] flex items-center justify-center gap-2">
+            <button type="submit" disabled={isPending} className={cx(btn.primary, "w-full justify-center")}>
               <CheckCircle2 className="w-4 h-4" /> حفظ المنحة
             </button>
           </div>

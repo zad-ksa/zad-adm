@@ -32,7 +32,7 @@ import ReturnRevisionModal from "@/components/design-requests/ReturnRevisionModa
 import QueueOrderModal, { type QueueRow } from "@/components/design-requests/QueueOrderModal";
 import DesignGanttModal, { type GanttItem } from "./DesignGanttModal";
 import { Dialog } from "@/components/console/Dialog";
-import { btn } from "@/components/console/ui";
+import { btn, cx } from "@/components/console/ui";
 
 const DESIGN_MAX = maxBytesFor("design_request");
 const DESIGN_MAX_LABEL = maxLabelFor("design_request");
@@ -329,7 +329,7 @@ export default function DesignRequestsClient({
         actions={
               <button
                 onClick={() => setIsComposeOpen(true)}
-                className="h-10 px-5 flex items-center justify-center gap-2 text-white bg-gradient-to-b from-[#17857c] via-primary to-[#0c645d] shadow-[var(--dr-shadow-cta)] hover:shadow-[var(--dr-shadow-cta-hover)] active:translate-y-px rounded-xl font-bold transition-all"
+                className={cx(btn.primary, "justify-center")}
                 style={{ fontSize: "var(--dr-fs-body)" }}
               >
                 طلب تصميم جديد
@@ -420,7 +420,7 @@ export default function DesignRequestsClient({
             <button
               onClick={() => setGanttNow(Date.now())}
               title="عرض جميع التصاميم على خط زمني، كل جمعية في سطر"
-              className="h-10 px-4 flex items-center gap-2 rounded-xl bg-slate-100 text-slate-600 dark:bg-[#111] dark:text-slate-400 border border-transparent dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 transition-colors font-bold"
+              className={btn.secondary}
               style={{ fontSize: "var(--dr-fs-meta)" }}
             >
               <CalendarRange className="w-4 h-4" />
@@ -429,7 +429,7 @@ export default function DesignRequestsClient({
             <button
               onClick={() => setIsTypesOpen(true)}
               title="تعديل أنواع التصاميم ومدد تنفيذها"
-              className="h-10 px-4 flex items-center gap-2 rounded-xl bg-slate-100 text-slate-600 dark:bg-[#111] dark:text-slate-400 border border-transparent dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 transition-colors font-bold"
+              className={btn.secondary}
               style={{ fontSize: "var(--dr-fs-meta)" }}
             >
               <Palette className="w-4 h-4" />
@@ -597,7 +597,7 @@ export default function DesignRequestsClient({
                     <button
                       onClick={() => setEditingId(it.request.id)}
                       title="تعديل الوصف والمرفقات"
-                      className="flex-1 min-w-[72px] h-9 rounded-xl bg-slate-100 text-slate-600 dark:bg-[#111] dark:text-slate-400 border border-transparent dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 transition-colors font-bold"
+                      className={cx(btn.secondary, "flex-1 min-w-[72px]")}
                       style={{ fontSize: "var(--dr-fs-meta)" }}
                     >
                       تعديل
@@ -648,7 +648,7 @@ export default function DesignRequestsClient({
                           charityName: it.request.charityName || "",
                         })
                       }
-                      className="flex-1 min-w-[72px] h-9 rounded-xl bg-slate-100 text-slate-600 dark:bg-[#111] dark:text-slate-400 border border-transparent dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 transition-colors font-bold"
+                      className={cx(btn.secondary, "flex-1 min-w-[72px]")}
                       style={{ fontSize: "var(--dr-fs-meta)" }}
                     >
                       جدولة
@@ -656,7 +656,7 @@ export default function DesignRequestsClient({
                     <button
                       onClick={() => setEditingId(it.request.id)}
                       title="تعديل الوصف والمرفقات"
-                      className="flex-1 min-w-[72px] h-9 rounded-xl bg-slate-100 text-slate-600 dark:bg-[#111] dark:text-slate-400 border border-transparent dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 transition-colors font-bold"
+                      className={cx(btn.secondary, "flex-1 min-w-[72px]")}
                       style={{ fontSize: "var(--dr-fs-meta)" }}
                     >
                       تعديل
@@ -664,7 +664,7 @@ export default function DesignRequestsClient({
                     <button
                       onClick={() => setExtendingId(it.request.id)}
                       title="إضافة أيام دون تغيير تاريخ البدء"
-                      className="flex-1 min-w-[72px] h-9 rounded-xl bg-slate-100 text-slate-600 dark:bg-[#111] dark:text-slate-400 border border-transparent dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 transition-colors font-bold"
+                      className={cx(btn.secondary, "flex-1 min-w-[72px]")}
                       style={{ fontSize: "var(--dr-fs-meta)" }}
                     >
                       +أيام

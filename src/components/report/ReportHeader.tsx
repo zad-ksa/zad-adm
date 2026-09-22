@@ -1,7 +1,7 @@
 ﻿"use client";
 
 import React from 'react';
-import { Spinner } from "@/components/console/ui";
+import { Spinner, btn } from "@/components/console/ui";
 
 type ReportHeaderProps = {
   charityName: string;
@@ -44,7 +44,7 @@ export default function ReportHeader({ charityName, year, quarter, onSave, isSav
           </button>
         )}
         <button 
-          className="bg-slate-50 dark:bg-slate-900/50 hover:bg-slate-100 dark:hover:bg-slate-900 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 px-5 py-2.5 rounded-xl font-bold transition-all flex items-center gap-2"
+          className={btn.secondary}
         >
           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
             <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
@@ -55,7 +55,7 @@ export default function ReportHeader({ charityName, year, quarter, onSave, isSav
         </button>
         <button 
           onClick={handlePrint}
-          className="bg-primary hover:bg-primary/90 text-white px-5 py-2.5 rounded-xl font-bold transition-all shadow-sm flex items-center gap-2"
+          className={btn.primary}
         >
           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
             <polyline points="6 9 6 2 18 2 18 9"></polyline>

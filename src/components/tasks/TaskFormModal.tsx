@@ -5,6 +5,7 @@ import Select from "@/components/console/Select";
 import { Plus, UserPlus, FolderPlus, Camera, UploadCloud, FileImage, ClipboardPaste } from "lucide-react";
 import { Employee, Charity } from "@/types";
 import { Dialog } from "@/components/console/Dialog";
+import { btn } from "@/components/console/ui";
 
 interface TaskFormModalProps {
   isOpen: boolean;
@@ -219,14 +220,14 @@ onClose={onClose}
             <button
               type="button"
               onClick={onClose}
-              className="px-5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:bg-slate-800/50 dark:hover:bg-slate-700/50 hover:text-slate-700 dark:text-slate-200 font-bold transition-all text-xs cursor-pointer"
+              className={btn.secondary}
             >
               إلغاء
             </button>
             <button
               type="submit"
               disabled={isPending || !title.trim()}
-              className="px-6 py-2.5 rounded-xl bg-primary text-white hover:bg-primary/95 font-bold transition-all text-xs flex items-center gap-2 cursor-pointer disabled:opacity-75 disabled:cursor-not-allowed shadow-sm hover:shadow"
+              className={btn.primary}
             >
               <Plus className="w-4 h-4" />
               حفظ المهمة

@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import { StatStrip, PageHeader } from "@/components/console/layout";
 import { FileSignature, Calendar, DollarSign, AlertCircle, CheckCircle2, Users, Settings, Loader2 } from "lucide-react";
 import ManageInstallmentsModal from "./ManageInstallmentsModal";
+import { btn } from "@/components/console/ui";
 
 type Installment = {
   id: string;
@@ -117,7 +118,7 @@ export default function ContractsClient({
                       <td className="px-6 py-4 text-center">
                         <button 
                           onClick={() => setSelectedCharityId(contract.id)}
-                          className="px-3 py-1.5 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 rounded-lg text-xs font-bold hover:bg-primary/10 hover:text-primary transition-colors inline-flex items-center gap-1"
+                          className={btn.secondary}
                         >
                           <Settings className="w-3.5 h-3.5" />
                           إدارة الأقساط

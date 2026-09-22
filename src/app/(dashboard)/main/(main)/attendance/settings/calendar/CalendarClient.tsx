@@ -7,6 +7,7 @@ import { ChevronLeft, ChevronRight, Plus, Trash2, X } from "lucide-react";
 import { saveHoliday, deleteHoliday } from "@/app/actions/zadCalendar";
 import { WEEKDAY_LABELS } from "@/lib/attendanceTime";
 import { BTN, Feedback, INPUT, useSettingsAction } from "../shared";
+import { btn } from "@/components/console/ui";
 
 type HolidayRow = { id: string; name: string; startDate: string; endDate: string; scope: string };
 type MonthSpec = {
@@ -200,7 +201,7 @@ export default function CalendarClient({
           </div>
           <button
             onClick={() => goto(todayKey.slice(0, 7))}
-            className="h-8 px-3 rounded-lg border border-slate-200 dark:border-slate-800 text-[12px] font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
+            className={btn.secondary}
           >
             اليوم
           </button>

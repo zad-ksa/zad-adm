@@ -26,6 +26,7 @@ import { readPosition } from "@/lib/readPosition";
 // the system would actually let in, which is worse than showing nothing.
 import { ACCURACY_RETRY_THRESHOLD_M, evaluateGeofence, haversineMeters } from "@/lib/geo";
 import { BTN, CARD, Feedback, GHOST, INPUT, useSettingsAction } from "../shared";
+import { btn, cx } from "@/components/console/ui";
 
 type Site = { id: string; name: string; latitude: number; longitude: number; radiusMeters: number };
 
@@ -270,7 +271,7 @@ export default function SitesClient({ sites }: { sites: Site[] }) {
               type="button"
               onClick={locate}
               disabled={locating}
-              className="w-full h-11 rounded-xl bg-primary text-white text-[13px] font-bold hover:bg-primary/90 disabled:opacity-60 transition-colors inline-flex items-center justify-center gap-2"
+              className={cx(btn.primary, "w-full justify-center")}
             >
               {locating ? (
                 <>

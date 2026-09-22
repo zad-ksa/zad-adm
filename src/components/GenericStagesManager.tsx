@@ -11,6 +11,7 @@ import { addServiceStage, updateServiceStage, deleteServiceStage, setCurrentServ
 import { addServiceStageStep, updateServiceStageStep, deleteServiceStageStep } from "@/app/actions/stageSteps";
 import { useServiceAccordion } from "@/components/ServiceAccordionContext";
 import { ConfirmDialog } from "@/components/console/ConfirmDialog";
+import { btn } from "@/components/console/ui";
 
 type StageStep = { id: string; name: string; isDone: boolean; order: number };
 
@@ -285,7 +286,7 @@ export default function GenericStagesManager({
           </div>
           <div className="flex justify-between items-center mt-2">
             <div className="flex gap-2">
-              <button onClick={handleConfigUpdate} className="flex items-center gap-1.5 px-4 py-2 text-white bg-primary hover:bg-primary/90 rounded-lg text-sm font-bold" disabled={isPending}>
+              <button onClick={handleConfigUpdate} className={btn.primary} disabled={isPending}>
                 {isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />} حفظ
               </button>
               <button onClick={() => { setIsEditingConfig(false); setConfigName(service.name); setConfigError(null); }} className="flex items-center gap-1.5 px-4 py-2 text-slate-600 bg-slate-200 hover:bg-slate-300 dark:bg-slate-700 dark:hover:bg-slate-600 dark:text-slate-300 rounded-lg text-sm font-bold" disabled={isPending}>

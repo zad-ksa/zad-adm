@@ -195,7 +195,7 @@ export default function ManageServicesClient({
         actions={
           <button
             onClick={openAdd}
-            className="bg-primary hover:bg-primary/90 text-white px-5 py-2.5 rounded-xl font-bold flex items-center gap-2 shadow-lg shadow-primary/20 transition-all active:scale-95 text-sm"
+            className={btn.primary}
           >
             <Plus className="w-4 h-4" />
             إضافة خدمة جديدة

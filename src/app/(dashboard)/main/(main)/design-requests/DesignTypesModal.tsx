@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Loader2, AlertTriangle, Plus, Check, EyeOff, Eye } from "lucide-react";
 import { saveDesignType, setDesignTypeActive } from "@/app/actions/designRequests";
 import { Dialog } from "@/components/console/Dialog";
+import { btn } from "@/components/console/ui";
 
 export type DesignTypeRow = {
   id: string;
@@ -143,7 +144,7 @@ closeOnBackdrop={false}
             <button
               onClick={addType}
               disabled={!draftName.trim() || busyId === "new"}
-              className="h-10 px-4 flex items-center gap-2 text-white bg-gradient-to-b from-[#17857c] via-primary to-[#0c645d] shadow-[var(--dr-shadow-cta)] rounded-xl font-bold transition-all disabled:opacity-50"
+              className={btn.primary}
               style={{ fontSize: "var(--dr-fs-meta)" }}
             >
               {busyId === "new" ? (

@@ -5,6 +5,7 @@ import { Plus, Trash2, Calendar, DollarSign, CheckCircle2, Loader2, Layers, Edit
 import { ConfirmDialog } from "@/components/console/ConfirmDialog";
 import { addInstallment, updateInstallment, deleteInstallment, toggleInstallmentPaid, batchAddInstallments } from "@/app/actions/contracts";
 import { Dialog } from "@/components/console/Dialog";
+import { btn, cx } from "@/components/console/ui";
 
 type Installment = {
   id: string;
@@ -221,7 +222,7 @@ onClose={onClose}
               <button 
                 onClick={handleAdd}
                 disabled={isPending}
-                className="w-full bg-primary text-white text-sm font-bold py-2 rounded-lg hover:bg-primary/90 transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
+                className={cx(btn.primary, "w-full justify-center")}
               >
                 {isPending && <Loader2 className="w-4 h-4 animate-spin" />}
                 إضافة القسط
@@ -264,7 +265,7 @@ onClose={onClose}
               <button 
                 onClick={handleBatchAdd}
                 disabled={isPending}
-                className="w-full bg-primary text-white text-sm font-bold py-2 rounded-lg hover:bg-primary/90 transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
+                className={cx(btn.primary, "w-full justify-center")}
               >
                 {isPending && <Loader2 className="w-4 h-4 animate-spin" />}
                 توليد الأقساط الآن
@@ -316,8 +317,8 @@ onClose={onClose}
                           </div>
                         </div>
                         <div className="flex justify-end gap-2">
-                          <button onClick={cancelEdit} disabled={isPending} className="px-3 py-1.5 text-xs text-slate-500 hover:bg-slate-100 rounded-md">إلغاء</button>
-                          <button onClick={saveEdit} disabled={isPending} className="px-3 py-1.5 text-xs bg-primary text-white rounded-md flex items-center gap-1 hover:bg-primary/90">
+                          <button onClick={cancelEdit} disabled={isPending} className={btn.ghost}>إلغاء</button>
+                          <button onClick={saveEdit} disabled={isPending} className={btn.primary}>
                             {isPending ? <Loader2 className="w-3 h-3 animate-spin" /> : <Save className="w-3 h-3" />}
                             حفظ
                           </button>

@@ -3,6 +3,7 @@ import Header from "@/components/Header";
 import Link from "next/link";
 import { surveyData, Section, Question } from "@/data/surveyData";
 import type { Metadata } from "next";
+import { btn } from "@/components/console/ui";
 
 export const dynamic = "force-dynamic";
 
@@ -24,7 +25,7 @@ export default async function CharityDetails({ params }: { params: { id: string 
           <div className="text-5xl mb-6 opacity-30">🔍</div>
           <h1 className="text-2xl font-bold text-slate-800 dark:text-slate-100 mb-3 tracking-tight transition-colors">الجمعية غير موجودة</h1>
           <p className="text-slate-500 dark:text-slate-400 font-medium mb-8 transition-colors">عذراً، لم نتمكن من العثور على بيانات الاستبيان المطلوبة.</p>
-          <Link href="/main" className="bg-primary text-white font-bold py-3 px-6 rounded-xl hover:bg-primary/90 transition-all inline-block shadow-sm hover:shadow">
+          <Link href="/main" className={btn.primary}>
             العودة للوحة التحكم
           </Link>
         </div>
@@ -64,7 +65,7 @@ export default async function CharityDetails({ params }: { params: { id: string 
       
       <main className="max-w-5xl mx-auto px-4 py-8">
         <div className="mb-8">
-          <Link href="/main" className="inline-flex items-center text-slate-500 dark:text-slate-400 hover:text-primary dark:hover:text-primary font-bold transition-colors bg-white dark:bg-slate-800 px-4 py-2 rounded-lg shadow-sm border border-slate-100 dark:border-slate-700 text-sm">
+          <Link href="/main" className={btn.secondary}>
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="ml-2 rotate-180"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
             العودة للوحة التحكم
           </Link>

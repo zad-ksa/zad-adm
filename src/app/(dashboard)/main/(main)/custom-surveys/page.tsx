@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { PageHeader } from "@/components/console/layout";
-import { Spinner } from "@/components/console/ui";
+import { Spinner, btn, cx } from "@/components/console/ui";
 import Link from "next/link";
 import { Plus, Edit2, Trash2, Eye, Copy, CheckCircle, Printer, RefreshCw, Files, LayoutGrid, List, AlertTriangle, X } from "lucide-react";
 import CircularLoader from "@/components/CircularLoader";
@@ -259,7 +259,7 @@ export default function SurveysPage() {
           <button
             onClick={handleCreate}
             disabled={isCreating}
-            className="bg-primary text-white px-5 py-2.5 rounded-xl font-bold flex items-center gap-2 hover:bg-primary/90 transition-all shadow-lg shadow-primary/20 disabled:opacity-50"
+            className={btn.primary}
           >
             {isCreating ? (
               <Spinner size={20} tone="onPrimary" />
@@ -349,7 +349,7 @@ export default function SurveysPage() {
               <div className="flex gap-2 mt-auto">
                 <Link
                   href={`/main/custom-surveys/${survey.id}/edit`}
-                  className="flex-1 bg-slate-100 text-slate-700 hover:bg-slate-200 hover:text-slate-900 py-2 rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition-all dark:bg-slate-700 dark:text-slate-300 dark:hover:bg-slate-600 dark:hover:text-slate-100"
+                  className={cx(btn.secondary, "flex-1 justify-center")}
                 >
                   <Edit2 className="w-4 h-4" /> تعديل
                 </Link>

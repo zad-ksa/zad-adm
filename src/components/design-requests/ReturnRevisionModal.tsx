@@ -108,7 +108,7 @@ footer={
 </>
 }
 >
-<div className="flex-1 overflow-y-auto px-6 py-4 space-y-4">
+<div className="space-y-4">
           {charityNotes && (
             <div className="rounded-xl bg-amber-500/[0.08] p-3">
               <p className="text-[11px] font-black text-amber-700 dark:text-amber-400 mb-2">

@@ -15,6 +15,7 @@ import {
   X
 } from "lucide-react";
 import { toggleInstallmentPaid } from "@/app/actions/contracts";
+import { ConfirmDialog } from "@/components/console/ConfirmDialog";
 
 interface FinancialLog {
   id: string;
@@ -253,46 +254,19 @@ export default function FinanceClient({
       </div>
 
       {installmentModal.isOpen && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-fade-in">
-          <div className="bg-white dark:bg-slate-800 rounded-3xl w-full max-w-sm overflow-hidden shadow-2xl border border-slate-100 dark:border-slate-700 text-center">
-            <div className="p-8">
-              <div className={`w-20 h-20 mx-auto rounded-full flex items-center justify-center mb-6 shadow-inner border ${installmentModal.isPaid ? 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-500 border-emerald-100 dark:border-emerald-500/20' : 'bg-amber-50 dark:bg-amber-500/10 text-amber-500 border-amber-100 dark:border-amber-500/20'}`}>
-                {installmentModal.isPaid ? <Check className="w-10 h-10" strokeWidth={3} /> : <X className="w-10 h-10" strokeWidth={3} />}
-              </div>
-              <h3 className="text-xl font-black text-slate-800 dark:text-slate-100 mb-2">
-                {installmentModal.isPaid ? 'تأكيد سداد القسط' : 'إلغاء سداد القسط'}
-              </h3>
-              <p className="text-sm font-bold text-slate-500 dark:text-slate-400 leading-relaxed mb-2">
-                {installmentModal.isPaid
-                  ? 'هل أنت متأكد من تسجيل هذا القسط كمدفوع؟'
-                  : 'هل أنت متأكد من إلغاء سداد هذا القسط؟'}
-              </p>
-              <p className="text-[11px] font-bold text-slate-400 dark:text-slate-500 bg-slate-50 dark:bg-slate-900/50 p-2 rounded-lg inline-block">
-                {installmentModal.isPaid
-                  ? 'سيتم إضافة المبلغ إلى السجل المالي وتحديث إجمالي المدفوعات.'
-                  : 'سيتم خصم المبلغ من السجل المالي وتحديث إجمالي المدفوعات.'}
-              </p>
-            </div>
-            <div className="bg-slate-50 dark:bg-slate-900/50 p-4 flex gap-3 border-t border-slate-100 dark:border-slate-700">
-              <button
-                onClick={() => setInstallmentModal({ isOpen: false, id: null, isPaid: false })}
-                className="flex-1 py-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 font-bold rounded-xl hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
-                disabled={isPending}
-              >
-                تراجع
-              </button>
-              <button
-                onClick={confirmToggleInstallment}
-                disabled={isPending}
-                className={`flex-1 py-3 text-white font-bold rounded-xl transition-colors shadow-lg disabled:opacity-50 ${
-                  installmentModal.isPaid ? 'bg-emerald-500 hover:bg-emerald-600 shadow-emerald-500/30' : 'bg-amber-500 hover:bg-amber-600 shadow-amber-500/30'
-                }`}
-              >
-                {isPending ? 'جاري التنفيذ...' : 'نعم، تأكيد'}
-              </button>
-            </div>
-          </div>
-        </div>
+        <ConfirmDialog
+          title={installmentModal.isPaid ? "تأكيد سداد القسط" : "إلغاء سداد القسط"}
+          message={
+            installmentModal.isPaid
+              ? "سيُسجَّل القسط مدفوعاً، ويُضاف المبلغ إلى السجل المالي وإجمالي المدفوعات."
+              : "سيُلغى سداد القسط، ويُخصم المبلغ من السجل المالي وإجمالي المدفوعات."
+          }
+          confirmLabel={installmentModal.isPaid ? "نعم، تأكيد السداد" : "نعم، إلغاء السداد"}
+          tone={installmentModal.isPaid ? "primary" : "danger"}
+          isPending={isPending}
+          onConfirm={confirmToggleInstallment}
+          onCancel={() => setInstallmentModal({ isOpen: false, id: null, isPaid: false })}
+        />
       )}
     </div>
   );

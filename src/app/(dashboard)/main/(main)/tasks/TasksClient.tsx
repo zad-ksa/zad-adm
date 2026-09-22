@@ -1462,7 +1462,7 @@ headerAction={
   ) : undefined
 }
 >
-<div className="divide-y divide-slate-100 dark:divide-slate-700/20 overflow-y-auto flex-1">
+<div className="divide-y divide-slate-100 dark:divide-slate-700/20">
               {filteredPermanentTasks.map((t) => (
                 <div key={t.id} className="px-3 py-2.5 flex items-start gap-2 group hover:bg-slate-100/60 dark:hover:bg-slate-700/20 transition-colors relative">
                   <Repeat className="w-3.5 h-3.5 text-indigo-400 dark:text-indigo-500 shrink-0 mt-0.5" />
@@ -1540,7 +1540,7 @@ title={<>المنجزات
                  <span className="text-[10px] font-bold text-slate-400 bg-slate-100 dark:bg-slate-700 px-1.5 py-0.5 rounded-full">{combinedAchievements.length}</span></>}
 onClose={() => setOpenSidePanel(null)}
 >
-<div className="divide-y divide-slate-100 dark:divide-slate-700/20 overflow-y-auto flex-1">
+<div className="divide-y divide-slate-100 dark:divide-slate-700/20">
             {combinedAchievements.map((item) => {
               const assignedEmp = employees.find((e) => e.id === item.assignedToId);
               const isTask = item.type === "task";
@@ -1807,7 +1807,7 @@ title={<>{detailTask.title}</>}
 description={<>أضافها  {creator?.name || "غير معروف"} ·  {timeAgoArabic(detailTask.createdAt)}</>}
 onClose={() => setDetailTask(null)}
 >
-<div className="p-5 overflow-y-auto space-y-4">
+<div className="space-y-4">
                 {/* Summary chips */}
                 <div className="flex flex-wrap items-center gap-1.5">
                   {assignee && (

@@ -7,6 +7,8 @@ import { X, Edit, Printer, Check, Plus, Info, Edit2, Trash2 } from "lucide-react
 import { assignGanttDates, toggleGanttItemCompletion, addServiceStage, updateServiceStage, deleteServiceStage, broadcastGanttWeek } from "@/app/actions/services";
 import { addServiceStageStep, updateServiceStageStep, deleteServiceStageStep } from "@/app/actions/stageSteps";
 import { useRouter } from "next/navigation";
+import { Dialog } from "@/components/console/Dialog";
+import { btn } from "@/components/console/ui";
 
 type Step = {
   id: string;
@@ -544,22 +546,19 @@ export default function GanttChart({
 
       {/* View Details Modal */}
       {viewModalData && (
-        <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm" onClick={() => setViewModalData(null)}>
-          <div className="bg-white dark:bg-slate-800 rounded-3xl w-full max-w-md shadow-2xl overflow-hidden flex flex-col max-h-[80vh] animate-in zoom-in-95 duration-200" onClick={e => e.stopPropagation()}>
-            <div className="p-6 border-b border-slate-100 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 relative">
-              <button onClick={() => setViewModalData(null)} className="absolute top-4 left-4 p-2 rounded-full bg-slate-200 dark:bg-slate-700 text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 transition-colors">
-                <X className="w-4 h-4" />
-              </button>
-              <h3 className="text-xl font-black text-slate-800 dark:text-slate-100">
-                إنجازات الأسبوع
-              </h3>
-              <p className="text-xs font-bold text-primary mt-1">{formatDate(viewModalData.weekStart)} - {formatDate(viewModalData.weekEnd)}</p>
-              <div className="mt-3 flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400 font-bold bg-white dark:bg-slate-900 px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 w-fit">
-                جمعية: {viewModalData.charityName}
-              </div>
-            </div>
-            
-            <div className="flex-1 overflow-auto p-6">
+        <Dialog
+title="إنجازات الأسبوع"
+description={<>{viewModalData.charityName} · {formatDate(viewModalData.weekStart)} – {formatDate(viewModalData.weekEnd)}</>}
+onClose={() => setViewModalData(null)}
+footer={
+<>
+<button type="button" onClick={() => setViewModalData(null)} className={btn.secondary}>
+                 إغلاق
+               </button>
+</>
+}
+>
+<div >
               <div className="space-y-6 relative before:absolute before:inset-0 before:mr-3.5 md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-gradient-to-b before:from-transparent before:via-slate-200 dark:before:via-slate-700 before:to-transparent">
                 {Object.entries(viewModalData.items.reduce((acc, item) => {
                   const stageName = item.type === 'stage' ? item.name : item.stageName;
@@ -603,14 +602,7 @@ export default function GanttChart({
                 ))}
               </div>
             </div>
-            
-            <div className="p-4 border-t border-slate-100 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 shrink-0">
-               <button onClick={() => setViewModalData(null)} className="w-full bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-200 py-3 rounded-xl font-bold hover:bg-slate-300 dark:hover:bg-slate-700 transition-colors">
-                 إغلاق
-               </button>
-            </div>
-          </div>
-        </div>
+</Dialog>
       )}
 
       {/* Edit Modal */}

@@ -192,7 +192,7 @@ footer={
 </>
 }
 >
-<div className="p-5 overflow-y-auto space-y-4">
+<div className="space-y-4">
           <p className="text-[12px] leading-relaxed text-slate-600 dark:text-slate-400 bg-slate-50 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800 rounded-xl p-3">
             {canReorder
               ? "رتّب الطلبات بالسحب. كل طلب يبدأ حين ينتهي الذي قبله، فتتغيّر مواعيد البدء والتسليم تبعاً للترتيب فور الحفظ."

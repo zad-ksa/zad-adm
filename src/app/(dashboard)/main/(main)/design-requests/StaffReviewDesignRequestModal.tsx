@@ -131,7 +131,7 @@ footer={
 </>
 }
 >
-<div className="flex-1 overflow-y-auto px-6 py-4 space-y-4">
+<div className="space-y-4">
           <div className="flex items-center gap-1 bg-slate-50 dark:bg-[#111] border border-slate-100 dark:border-slate-800/80 rounded-xl p-1">
             {([
               { key: "approve" as const, label: "اعتماد", Icon: Check },

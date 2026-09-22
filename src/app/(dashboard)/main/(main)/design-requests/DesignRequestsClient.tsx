@@ -968,41 +968,14 @@ export default function DesignRequestsClient({
       />
 
       {deletingId !== null && (
-        <div className="design-requests-ui fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm">
-          <div
-            dir="rtl"
-            className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-[var(--dr-shadow-card)] w-full max-w-sm p-6 text-center"
-          >
-            <div className="mx-auto w-12 h-12 rounded-full bg-rose-500/10 flex items-center justify-center mb-4">
-              <AlertTriangle className="w-6 h-6 text-rose-500" />
-            </div>
-            <h3 className="font-bold text-slate-900 dark:text-slate-100 mb-2" style={{ fontSize: "var(--dr-fs-title)" }}>
-              حذف الطلب
-            </h3>
-            <p className="text-slate-500 dark:text-slate-400 mb-6" style={{ fontSize: "var(--dr-fs-body)" }}>
-              سيُحذف الطلب وكل ملفاته نهائياً — مرفقات الجمعية والملفات النهائية معاً — من التخزين ومن السجل. لا يمكن التراجع.
-            </p>
-            <div className="flex items-center gap-3">
-              <button
-                onClick={() => setDeletingId(null)}
-                disabled={isDeleting}
-                className="flex-1 h-10 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 font-bold transition-colors disabled:opacity-50"
-                style={{ fontSize: "var(--dr-fs-meta)" }}
-              >
-                إلغاء
-              </button>
-              <button
-                onClick={handleDelete}
-                disabled={isDeleting}
-                className="flex-1 h-10 flex items-center justify-center gap-2 rounded-xl text-white bg-rose-600 hover:bg-rose-700 shadow-sm font-bold transition-all disabled:opacity-60"
-                style={{ fontSize: "var(--dr-fs-meta)" }}
-              >
-                {isDeleting && <Loader2 className="w-4 h-4 animate-spin" />}
-                تأكيد الحذف
-              </button>
-            </div>
-          </div>
-        </div>
+        <ConfirmDialog
+          title="حذف الطلب"
+          message="سيُحذف الطلب وكل ملفاته نهائياً — مرفقات الجمعية والملفات النهائية معاً — من التخزين ومن السجل. لا يمكن التراجع."
+          confirmLabel="تأكيد الحذف"
+          isPending={isDeleting}
+          onConfirm={handleDelete}
+          onCancel={() => setDeletingId(null)}
+        />
       )}
     </div>
   );

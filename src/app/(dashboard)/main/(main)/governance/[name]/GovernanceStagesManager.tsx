@@ -10,6 +10,7 @@ import { addGovernanceStage, updateGovernanceStage, deleteGovernanceStage, setCu
 import { addGovernanceStageStep, updateGovernanceStageStep, deleteGovernanceStageStep } from "@/app/actions/stageSteps";
 import { updateTimelineConfig } from "@/app/actions/charity";
 import { useServiceAccordion } from "@/components/ServiceAccordionContext";
+import { ConfirmDialog } from "@/components/console/ConfirmDialog";
 
 type StageStep = { id: string; name: string; isDone: boolean; order: number };
 
@@ -327,35 +328,14 @@ export default function GovernanceStagesManager({
       )}
 
       {stageToDelete && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm">
-          <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-xl w-full max-w-sm overflow-hidden">
-            <div className="p-6 text-center">
-              <div className="w-16 h-16 bg-red-100 dark:bg-red-900/30 text-red-600 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Trash2 className="w-8 h-8" />
-              </div>
-              <h3 className="text-xl font-bold text-slate-800 dark:text-slate-100 mb-2">تأكيد الحذف</h3>
-              <p className="text-sm text-slate-500 dark:text-slate-400 mb-6">
-                هل أنت متأكد من رغبتك في حذف هذه المرحلة؟ لا يمكن التراجع عن هذا الإجراء.
-              </p>
-              <div className="flex gap-3 justify-center">
-                <button 
-                  onClick={handleDeleteConfirm}
-                  disabled={isPending}
-                  className="flex-1 px-4 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-xl font-bold transition-colors flex justify-center items-center gap-2"
-                >
-                  {isPending ? <Loader2 className="w-5 h-5 animate-spin" /> : "نعم، احذفها"}
-                </button>
-                <button 
-                  onClick={() => setStageToDelete(null)}
-                  disabled={isPending}
-                  className="flex-1 px-4 py-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-300 rounded-xl font-bold transition-colors"
-                >
-                  إلغاء
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
+        <ConfirmDialog
+          title="حذف هذه المرحلة؟"
+          message="لا يمكن التراجع عن هذا الإجراء."
+          confirmLabel="نعم، احذفها"
+          isPending={isPending}
+          onConfirm={handleDeleteConfirm}
+          onCancel={() => setStageToDelete(null)}
+        />
       )}
     </div>
   );

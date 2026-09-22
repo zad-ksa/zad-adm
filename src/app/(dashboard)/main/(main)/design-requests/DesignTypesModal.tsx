@@ -86,7 +86,7 @@ title="أنواع التصاميم ومدد التنفيذ"
 onClose={onClose}
 closeOnBackdrop={false}
 >
-<div className="flex-1 overflow-y-auto px-6 py-4 space-y-4">
+<div className="space-y-4">
           <p
             className="rounded-xl bg-primary/5 dark:bg-primary/10 text-primary dark:text-teal-300 px-4 py-3"
             style={{ fontSize: "var(--dr-fs-meta)" }}

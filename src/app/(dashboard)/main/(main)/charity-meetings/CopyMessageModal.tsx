@@ -77,7 +77,7 @@ footer={
 </>
 }
 >
-<div className="flex-1 overflow-y-auto custom-scrollbar p-6 space-y-4">
+<div className="space-y-4">
           <div className="space-y-2">
             <label className="block text-sm font-bold text-slate-700 dark:text-slate-300">الجمعية</label>
             <Select

@@ -102,11 +102,11 @@ export default function DesignRequestLogModal({
     <Dialog
 scopeClassName="design-requests-ui"
 title="سجل الطلب"
-description={<>{title}</>}
+description={title || undefined}
 onClose={onClose}
 closeOnBackdrop={false}
 >
-<div className="p-5 overflow-y-auto">
+<div >
           {error ? (
             <div className="flex items-start gap-2 rounded-xl bg-rose-500/[0.07] text-rose-600 dark:text-rose-400 p-3 text-[12px] font-bold">
               <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />

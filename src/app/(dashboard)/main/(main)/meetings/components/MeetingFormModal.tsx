@@ -7,6 +7,8 @@ import { X, Sparkles, Loader2, Lock, FileClock } from "lucide-react";
 import { checkDateConflict } from "@/app/actions/meetings";
 import { timeAgoArabic } from "@/lib/dateUtils";
 import { Charity, Employee } from "../MeetingsClient";
+import { Dialog } from "@/components/console/Dialog";
+import { btn, cx } from "@/components/console/ui";
 
 // مسودة محضر جديد لم يُحفظ بعد — محلية في متصفح هذا المستخدم فقط (لا خادم، لا
 // جدول جديد). تُحفظ تلقائياً عند إغلاق النافذة (بالزر أو بإغلاق التبويب/تحديث
@@ -227,28 +229,47 @@ export default function MeetingFormModal({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm" dir="rtl">
-      <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-2xl w-full max-w-2xl max-h-[95vh] flex flex-col">
-        <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100 dark:border-slate-800 shrink-0">
-          <div className="flex items-center gap-2">
-            <Sparkles className="w-4 h-4 text-primary" />
-            <h2 className="font-bold text-slate-800 dark:text-slate-100 text-sm">
-              {editingId ? "تعديل المحضر" : "محضر اجتماع جديد"}
-            </h2>
-            {!editingId && (
-              <div className="flex items-center gap-1 mr-2">
-                <div className={`w-6 h-6 rounded-full text-[10px] font-bold flex items-center justify-center ${step === 1 ? "bg-primary text-white" : "bg-primary/10 text-primary"}`}>١</div>
-                <div className="w-4 h-px bg-slate-200 dark:bg-slate-700" />
-                <div className={`w-6 h-6 rounded-full text-[10px] font-bold flex items-center justify-center ${step === 2 ? "bg-primary text-white" : "bg-slate-100 dark:bg-slate-800 text-slate-400"}`}>٢</div>
-              </div>
+    <Dialog
+size="lg"
+icon={<Sparkles className="size-4" />}
+title={editingId ? "تعديل المحضر" : "محضر اجتماع جديد"}
+onClose={onClose}
+closeOnBackdrop={false}
+headerAction={
+  !editingId ? (
+    <div className="me-2 flex items-center gap-1" aria-label={`الخطوة ${step === 1 ? "الأولى" : "الثانية"} من اثنتين`}>
+      <span className={`flex size-6 items-center justify-center rounded-full text-[11px] font-semibold ${step === 1 ? "bg-primary text-white" : "bg-primary/10 text-primary"}`}>١</span>
+      <span aria-hidden className="h-px w-4 bg-slate-200 dark:bg-slate-700" />
+      <span className={`flex size-6 items-center justify-center rounded-full text-[11px] font-semibold ${step === 2 ? "bg-primary text-white" : "bg-slate-100 text-slate-400 dark:bg-slate-800"}`}>٢</span>
+    </div>
+  ) : undefined
+}
+footer={
+<>
+{step === 2 && !editingId && (
+            <button type="button" onClick={() => setStep(1)} className={cx(btn.secondary, "me-auto")}>← العودة للملاحظات</button>
+          )}
+          <div className="flex gap-2">
+            <button type="button" onClick={onClose} className={btn.secondary}>إلغاء</button>
+            {step === 1 && !editingId && (
+              <button type="button" onClick={handleFormat} disabled={aiLoading || !rawNotes.trim()}
+                className={btn.primary}>
+                {aiLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
+                {aiLoading ? "جاري الصياغة..." : "صياغة بالذكاء الاصطناعي"}
+              </button>
+            )}
+            {(step === 2 || editingId) && (
+              <button type="button" onClick={handleSaveClick} disabled={isPending || !formattedContent.trim()}
+                className={btn.primary}>
+                {isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
+                {editingId ? "حفظ التعديلات" : "حفظ المحضر"}
+              </button>
             )}
           </div>
-          <button onClick={onClose} className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400">
-            <X className="w-5 h-5" />
-          </button>
-        </div>
-
-        <div className="flex-1 overflow-auto p-4 space-y-3">
+</>
+}
+>
+<div className="space-y-3">
           {showDraftBanner && (
             <div className="flex items-center gap-2 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800/50 rounded-xl px-3 py-2">
               <FileClock className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0" />
@@ -386,30 +407,6 @@ export default function MeetingFormModal({
             </>
           )}
         </div>
-
-        <div className="px-6 py-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between shrink-0">
-          {step === 2 && !editingId
-            ? <button onClick={() => setStep(1)} className="text-xs text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 transition-colors">← العودة للملاحظات</button>
-            : <div />}
-          <div className="flex gap-2">
-            <button onClick={onClose} className="px-4 py-2 text-xs text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 transition-colors">إلغاء</button>
-            {step === 1 && !editingId && (
-              <button onClick={handleFormat} disabled={aiLoading || !rawNotes.trim()}
-                className="flex items-center gap-2 bg-primary hover:bg-primary/95 disabled:opacity-50 disabled:cursor-not-allowed text-white px-5 py-2 rounded-xl text-xs font-bold transition-colors shadow-sm">
-                {aiLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
-                {aiLoading ? "جاري الصياغة..." : "صياغة بالذكاء الاصطناعي"}
-              </button>
-            )}
-            {(step === 2 || editingId) && (
-              <button onClick={handleSaveClick} disabled={isPending || !formattedContent.trim()}
-                className="flex items-center gap-2 bg-primary hover:bg-primary/95 disabled:opacity-50 disabled:cursor-not-allowed text-white px-5 py-2 rounded-xl text-xs font-bold transition-colors shadow-sm">
-                {isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
-                {editingId ? "حفظ التعديلات" : "حفظ المحضر"}
-              </button>
-            )}
-          </div>
-        </div>
-      </div>
-    </div>
+</Dialog>
   );
 }

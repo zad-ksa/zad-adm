@@ -3,7 +3,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { CalendarRange, Table2 } from "lucide-react";
 import { Dialog } from "@/components/console/Dialog";
-import { btn } from "@/components/console/ui";
+import { btn, cx } from "@/components/console/ui";
+import { theadRowClass, thClass, tbodyClass, tdClass } from "@/components/console/layout";
 
 /**
  * Every scheduled design on one timeline, a row per charity.
@@ -279,23 +280,23 @@ onClose={onClose}
             <div className="overflow-x-auto">
               <table className="w-full text-[12px] border-collapse">
                 <thead>
-                  <tr className="text-slate-500 dark:text-slate-400 text-right">
-                    <th className="py-2 px-3 font-bold border-b border-slate-200 dark:border-slate-800">الجهة</th>
-                    <th className="py-2 px-3 font-bold border-b border-slate-200 dark:border-slate-800">التصميم</th>
-                    <th className="py-2 px-3 font-bold border-b border-slate-200 dark:border-slate-800">بدء التنفيذ</th>
-                    <th className="py-2 px-3 font-bold border-b border-slate-200 dark:border-slate-800">التسليم</th>
-                    <th className="py-2 px-3 font-bold border-b border-slate-200 dark:border-slate-800">الحالة</th>
+                  <tr className={theadRowClass}>
+                    <th className={thClass}>الجهة</th>
+                    <th className={thClass}>التصميم</th>
+                    <th className={thClass}>بدء التنفيذ</th>
+                    <th className={thClass}>التسليم</th>
+                    <th className={thClass}>الحالة</th>
                   </tr>
                 </thead>
-                <tbody>
+                <tbody className={tbodyClass}>
                   {rows.flatMap((row) =>
                     row.items.map((item) => (
                       <tr key={item.id} className="text-slate-700 dark:text-slate-300">
-                        <td className="py-2 px-3 border-b border-slate-100 dark:border-slate-800/60">{row.charityName}</td>
-                        <td className="py-2 px-3 border-b border-slate-100 dark:border-slate-800/60 font-bold">{item.title}</td>
-                        <td className="py-2 px-3 border-b border-slate-100 dark:border-slate-800/60 tabular-nums">{fmtFull(item.startMs)}</td>
-                        <td className="py-2 px-3 border-b border-slate-100 dark:border-slate-800/60 tabular-nums">{fmtFull(item.endMs)}</td>
-                        <td className="py-2 px-3 border-b border-slate-100 dark:border-slate-800/60">
+                        <td className={tdClass}>{row.charityName}</td>
+                        <td className={cx(tdClass, "font-bold")}>{item.title}</td>
+                        <td className={cx(tdClass, "tabular-nums")}>{fmtFull(item.startMs)}</td>
+                        <td className={cx(tdClass, "tabular-nums")}>{fmtFull(item.endMs)}</td>
+                        <td className={tdClass}>
                           <span className="inline-flex items-center gap-1.5">
                             <span
                               className="w-2.5 h-2.5 rounded-[3px] shrink-0"

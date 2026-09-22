@@ -64,7 +64,7 @@ export function Sheet({
           </div>
           <div className="flex shrink-0 items-center gap-1">
             {headerAction}
-            <button type="button" onClick={onClose} disabled={busy} aria-label="إغلاق" className={cx(btn.ghost, "size-8 px-0")}>
+            <button type="button" onClick={onClose} disabled={busy} aria-label="إغلاق" className={btn.icon}>
               <X className="size-4" />
             </button>
           </div>
@@ -154,7 +154,7 @@ export function RowMenuTrigger({
       aria-label={label}
       aria-haspopup="menu"
       aria-expanded={expanded}
-      className={cx(btn.ghost, "size-8 px-0")}
+      className={btn.icon}
     >
       <Ellipsis className="size-4" />
     </button>

@@ -158,7 +158,7 @@ export default function ManageCharitiesClient({ initialCharities }: { initialCha
                     onClick={() => openEditModal(charity)}
                     aria-label={`تعديل ${charity.name}`}
                     title="تعديل"
-                    className={btn.ghost}
+                    className={btn.icon}
                   >
                     <Edit2 className="size-4" />
                   </button>
@@ -167,7 +167,7 @@ export default function ManageCharitiesClient({ initialCharities }: { initialCha
                     onClick={() => openDeleteModal(charity)}
                     aria-label={`حذف ${charity.name}`}
                     title="حذف"
-                    className={cx(btn.ghost, "hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-500/10 dark:hover:text-red-400")}
+                    className={btn.iconDanger}
                   >
                     <Trash2 className="size-4" />
                   </button>

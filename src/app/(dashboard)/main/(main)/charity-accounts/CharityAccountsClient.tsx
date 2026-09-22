@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { PageHeader } from "@/components/console/layout";
+import { PageHeader, theadRowClass, thClass, tbodyClass, tdClass, tableFrameClass } from "@/components/console/layout";
 import Select from "@/components/console/Select";
 import { Plus, Trash2, ShieldAlert, CheckCircle2, AlertCircle, Building2 } from "lucide-react";
 import { addCharityClientAccount, deleteCharityClientAccount } from "@/app/actions/charityAccounts";
@@ -10,7 +10,7 @@ import {
   ALL_CHARITY_PERMISSION_IDS,
 } from "@/lib/charityPermissions";
 import { Dialog } from "@/components/console/Dialog";
-import { btn } from "@/components/console/ui";
+import { btn, cx } from "@/components/console/ui";
 import { ConfirmDialog } from "@/components/console/ConfirmDialog";
 
 const titles = [
@@ -332,35 +332,35 @@ footer={
 </Dialog>
       )}
 
-      <div className="bg-white dark:bg-black rounded-3xl border border-slate-200 dark:border-white/10 shadow-sm overflow-hidden mb-20">
+      <div className={cx(tableFrameClass, "mb-20")}>
         <div className="overflow-x-auto">
           <table className="w-full text-right whitespace-nowrap">
-            <thead className="bg-slate-50 dark:bg-white/5 border-b border-slate-200 dark:border-white/5 text-slate-500 dark:text-slate-400 text-xs font-bold uppercase tracking-wider">
-              <tr>
-                <th className="px-6 py-4">الجمعيات</th>
-                <th className="px-6 py-4">الممثل</th>
-                <th className="px-6 py-4">المسمى الوظيفي</th>
-                <th className="px-6 py-4 text-left" dir="ltr">رقم الجوال</th>
-                <th className="px-6 py-4">تاريخ الإنشاء</th>
-                <th className="px-6 py-4 w-16"></th>
+            <thead >
+              <tr className={theadRowClass}>
+                <th className={thClass}>الجمعيات</th>
+                <th className={thClass}>الممثل</th>
+                <th className={thClass}>المسمى الوظيفي</th>
+                <th className={cx(thClass, "text-left")} dir="ltr">رقم الجوال</th>
+                <th className={thClass}>تاريخ الإنشاء</th>
+                <th className={cx(thClass, "w-16")}></th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-200 dark:divide-white/5">
+            <tbody className={tbodyClass}>
               {accounts.map(account => (
                 <tr key={account.id} className="hover:bg-slate-50 dark:hover:bg-white/5 transition-colors group">
-                  <td className="px-6 py-4 font-bold text-primary whitespace-normal min-w-[200px]">
+                  <td className={cx(tdClass, "font-bold text-primary whitespace-normal min-w-[200px]")}>
                     <div className="flex items-start gap-2">
                       <Building2 className="w-4 h-4 text-primary/60 mt-1 shrink-0" />
                       <span>{account.charityNames?.join("، ") || "غير محدد"}</span>
                     </div>
                   </td>
-                  <td className="px-6 py-4 text-sm font-bold text-slate-800 dark:text-slate-200">{account.name}</td>
-                  <td className="px-6 py-4 text-sm font-bold text-slate-600 dark:text-slate-400">
+                  <td className={cx(tdClass, "text-sm font-bold text-slate-800 dark:text-slate-200")}>{account.name}</td>
+                  <td className={cx(tdClass, "text-sm font-bold text-slate-600 dark:text-slate-400")}>
                     {titles.find(t => t.value === account.title)?.label || account.title}
                   </td>
-                  <td className="px-6 py-4 text-sm font-bold text-slate-600 dark:text-slate-400 text-left" dir="ltr">{account.phone}</td>
-                  <td className="px-6 py-4 text-xs font-bold text-slate-500 dark:text-slate-500">{new Date(account.createdAt).toLocaleDateString("en-GB")}</td>
-                  <td className="px-6 py-4">
+                  <td className={cx(tdClass, "text-sm font-bold text-slate-600 dark:text-slate-400 text-left")} dir="ltr">{account.phone}</td>
+                  <td className={cx(tdClass, "text-xs font-bold text-slate-500 dark:text-slate-500")}>{new Date(account.createdAt).toLocaleDateString("en-GB")}</td>
+                  <td className={tdClass}>
                     <button 
                       onClick={() => setAccountToDelete(account)}
                       disabled={isPending}
@@ -374,7 +374,7 @@ footer={
               ))}
               {accounts.length === 0 && (
                 <tr>
-                  <td colSpan={6} className="px-6 py-16 text-center text-slate-500 dark:text-slate-400 font-medium">لا توجد حسابات جمعيات مسجلة</td>
+                  <td colSpan={6} className={cx(tdClass, "text-center text-slate-500 dark:text-slate-400 font-medium")}>لا توجد حسابات جمعيات مسجلة</td>
                 </tr>
               )}
             </tbody>

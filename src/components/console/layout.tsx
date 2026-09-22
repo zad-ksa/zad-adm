@@ -300,10 +300,16 @@ export function SearchField({
 export const theadRowClass = "border-b border-slate-200 bg-slate-50/70 dark:border-slate-800 dark:bg-slate-900";
 export const tbodyClass = "divide-y divide-slate-100 dark:divide-slate-800";
 export const rowClass = "cursor-pointer transition-colors hover:bg-slate-50/80 dark:hover:bg-slate-800/40";
+/** خلية رأس الجدول وخلية جسمه — لجداول لا تستعمل Th مباشرة. */
+export const thClass = "h-10 whitespace-nowrap px-4 text-[12.5px] font-medium text-slate-500 dark:text-slate-400";
+export const tdClass = "px-4 py-3";
+/** إطار الجدول المستقلّ — ما يرسمه TableShell حول جدوله. */
+export const tableFrameClass =
+  "overflow-hidden rounded-lg border border-slate-200 bg-white shadow-[0_1px_2px_rgb(15_23_42/0.04)] dark:border-slate-800 dark:bg-slate-900";
 
 export function TableShell({ children, empty, footer }: { children: ReactNode; empty?: ReactNode; footer?: ReactNode }) {
   return (
-    <div className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-[0_1px_2px_rgb(15_23_42/0.04)] dark:border-slate-800 dark:bg-slate-900">
+    <div className={tableFrameClass}>
       <div className="overflow-x-auto">
         <table className="w-full text-right">{children}</table>
       </div>
@@ -317,7 +323,7 @@ export function TableShell({ children, empty, footer }: { children: ReactNode; e
 
 export function Th({ children, className }: { children?: ReactNode; className?: string }) {
   return (
-    <th className={cx("h-10 whitespace-nowrap px-4 text-[12.5px] font-medium text-slate-500 dark:text-slate-400", className)}>
+    <th className={cx(thClass, className)}>
       {children}
     </th>
   );

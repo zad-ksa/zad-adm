@@ -3,7 +3,8 @@
 import { useState, useMemo } from "react";
 import { Users, Eye, Target, BookOpen, User, Calendar, MessageSquare, Award, Clock, FileText, CheckCircle } from "lucide-react";
 import { Dialog } from "@/components/console/Dialog";
-import { btn } from "@/components/console/ui";
+import { btn, cx } from "@/components/console/ui";
+import { theadRowClass, thClass, tbodyClass, tdClass } from "@/components/console/layout";
 
 type ResponseItem = {
   id: string;
@@ -371,27 +372,27 @@ export default function VisionMissionResultsClient({ responses }: { responses: R
         <div className="space-y-4 animate-in fade-in duration-300">
           <div className="overflow-x-auto custom-scrollbar border border-slate-150 dark:border-slate-800 rounded-2xl">
             <table className="w-full text-right text-sm">
-              <thead className="bg-slate-50 dark:bg-slate-900 text-slate-500 font-bold text-xs border-b border-slate-150 dark:border-slate-850">
-                <tr>
-                  <th className="px-6 py-4">الاسم</th>
-                  <th className="px-6 py-4">المسمى الوظيفي / الصفة</th>
-                  <th className="px-6 py-4">تاريخ التقديم</th>
-                  <th className="px-6 py-4 text-center">الإجراءات</th>
+              <thead >
+                <tr className={theadRowClass}>
+                  <th className={thClass}>الاسم</th>
+                  <th className={thClass}>المسمى الوظيفي / الصفة</th>
+                  <th className={thClass}>تاريخ التقديم</th>
+                  <th className={cx(thClass, "text-center")}>الإجراءات</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100 dark:divide-slate-800/50 bg-white dark:bg-slate-800/50">
+              <tbody className={tbodyClass}>
                 {responses.map((res) => (
                   <tr key={res.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-900/20">
-                    <td className="px-6 py-4 font-bold text-slate-800 dark:text-slate-200">{res.respondentName}</td>
-                    <td className="px-6 py-4 text-slate-500 dark:text-slate-400 font-medium">{res.respondentTitle}</td>
-                    <td className="px-6 py-4 text-slate-400 text-xs font-mono">
+                    <td className={cx(tdClass, "font-bold text-slate-800 dark:text-slate-200")}>{res.respondentName}</td>
+                    <td className={cx(tdClass, "text-slate-500 dark:text-slate-400 font-medium")}>{res.respondentTitle}</td>
+                    <td className={cx(tdClass, "text-slate-400 text-xs font-mono")}>
                       {new Intl.DateTimeFormat('ar-SA', {
                         day: '2-digit',
                         month: 'short',
                         year: 'numeric'
                       }).format(new Date(res.createdAt))}
                     </td>
-                    <td className="px-6 py-4 text-center">
+                    <td className={cx(tdClass, "text-center")}>
                       <button
                         onClick={() => setSelectedResponse(res)}
                         className="bg-primary/10 text-primary hover:bg-primary hover:text-white font-bold py-1.5 px-3 rounded-lg text-xs transition-colors inline-flex items-center gap-1.5 cursor-pointer"

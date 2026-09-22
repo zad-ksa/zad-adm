@@ -488,7 +488,7 @@ export function EmployeeSheet({
                             onClick={() => setOpenBundle(open ? null : b.id)}
                             aria-expanded={open}
                             aria-label={open ? `إخفاء محتوى ${b.name}` : `اختيار من ${b.name}`}
-                            className={cx(btn.ghost, "size-8 px-0")}
+                            className={btn.icon}
                           >
                             <ChevronDown className={cx("size-4 transition-transform", open && "rotate-180")} />
                           </button>

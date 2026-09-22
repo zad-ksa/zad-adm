@@ -25,7 +25,8 @@ import {
   formatClock12,
   type ScheduleShape,
 } from "@/lib/attendanceTime";
-import { btn } from "@/components/console/ui";
+import { btn, cx } from "@/components/console/ui";
+import { theadRowClass, thClass, tbodyClass, tdClass } from "@/components/console/layout";
 
 type MonthRecord = {
   workDate: string;
@@ -232,21 +233,21 @@ export default function MyAttendanceClient({
           <div className="overflow-x-auto">
             <table className="w-full text-[12px]">
               <thead>
-                <tr className="text-slate-400 dark:text-slate-500 text-right">
-                  <th className="py-2 px-4 font-bold">اليوم</th>
-                  <th className="py-2 px-4 font-bold">الحضور</th>
-                  <th className="py-2 px-4 font-bold">الانصراف</th>
-                  <th className="py-2 px-4 font-bold">الحالة</th>
+                <tr className={theadRowClass}>
+                  <th className={thClass}>اليوم</th>
+                  <th className={thClass}>الحضور</th>
+                  <th className={thClass}>الانصراف</th>
+                  <th className={thClass}>الحالة</th>
                 </tr>
               </thead>
-              <tbody>
+              <tbody className={tbodyClass}>
                 {month.map((r) => (
-                  <tr key={r.workDate} className="border-t border-slate-100 dark:border-slate-800/60">
-                    <td className="py-2 px-4 text-slate-700 dark:text-slate-300">{riyadhDate(r.workDate)}</td>
-                    <td className="py-2 px-4 tabular-nums text-slate-700 dark:text-slate-300">
+                  <tr key={r.workDate} >
+                    <td className={cx(tdClass, "text-slate-700 dark:text-slate-300")}>{riyadhDate(r.workDate)}</td>
+                    <td className={cx(tdClass, "tabular-nums text-slate-700 dark:text-slate-300")}>
                       <bdi>{riyadhTime(r.checkInAt)}</bdi>
                     </td>
-                    <td className="py-2 px-4 tabular-nums text-slate-700 dark:text-slate-300">
+                    <td className={cx(tdClass, "tabular-nums text-slate-700 dark:text-slate-300")}>
                       <bdi>{riyadhTime(r.checkOutAt)}</bdi>
                       {/* The nightly sweep supplied this time; it is an assumption,
                           and saying so is the difference between a record and a
@@ -268,7 +269,7 @@ export default function MyAttendanceClient({
                         </span>
                       )}
                     </td>
-                    <td className="py-2 px-4">
+                    <td className={tdClass}>
                       <span className={`px-2 py-0.5 rounded-md font-bold ${TONE[r.status] ?? ""}`}>
                         {ATTENDANCE_STATUS_LABELS[r.status] ?? r.status}
                       </span>

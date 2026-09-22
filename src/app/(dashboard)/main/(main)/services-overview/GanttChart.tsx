@@ -395,16 +395,16 @@ export default function GanttChart({
 
         {/* Grid */}
         <div className="flex-1 overflow-auto p-2 md:p-6 print:p-0">
-          <div className="min-w-max border border-slate-200 dark:border-slate-700 rounded-xl overflow-hidden print:border-none print:w-full">
+          <div className="min-w-max overflow-hidden rounded-lg border border-slate-200 bg-white shadow-[0_1px_2px_rgb(15_23_42/0.04)] dark:border-slate-800 dark:bg-slate-900 print:w-full print:border-none print:shadow-none">
             <table className="w-full text-right text-sm border-collapse">
               <thead>
-                <tr className="bg-slate-50 dark:bg-slate-800/50">
-                  <th className="p-3 border-b border-l border-slate-200 dark:border-slate-700 w-48 sticky right-0 bg-slate-50 dark:bg-slate-900 z-10 print:static print:bg-white text-slate-700 dark:text-slate-300">
+                <tr className="bg-slate-50 dark:bg-slate-900">
+                  <th className="sticky right-0 z-10 h-10 w-48 border-b border-l border-slate-200 bg-slate-50 px-3 text-[12.5px] font-medium text-slate-500 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-400 print:static print:bg-white">
                     الجمعية
                   </th>
                   {weeks.map((w, i) => (
-                    <th key={i} className={`p-3 border-b border-l border-slate-200 dark:border-slate-700 min-w-[100px] text-center ${w.isCurrent ? 'bg-primary/5 text-primary' : 'text-slate-500 dark:text-slate-400'}`}>
-                      <div className="font-bold text-xs">{w.label}</div>
+                    <th key={i} className={`min-w-[100px] border-b border-l border-slate-200 px-3 py-2 text-center dark:border-slate-800 ${w.isCurrent ? 'bg-primary/5 text-primary dark:text-teal-300' : 'text-slate-500 dark:text-slate-400'}`}>
+                      <div className="text-[12.5px] font-medium">{w.label}</div>
                       <div className="text-[10px] font-normal mt-1 opacity-70">
                         {formatDate(w.start)} - {formatDate(w.end)}
                       </div>
@@ -415,7 +415,7 @@ export default function GanttChart({
               <tbody>
                 {rows.map(row => (
                   <tr key={row.charity.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors">
-                    <td className="p-3 font-bold text-slate-700 dark:text-slate-200 border-b border-l border-slate-200 dark:border-slate-700 sticky right-0 bg-white dark:bg-slate-900 z-10 print:static">
+                    <td className="sticky right-0 z-10 border-b border-l border-slate-200 bg-white px-3 py-2.5 font-medium text-slate-900 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100 print:static">
                       {row.charity.name}
                     </td>
                     {weeks.map((w, i) => {
@@ -451,7 +451,7 @@ export default function GanttChart({
                       return (
                         <td 
                           key={i} 
-                          className={`p-3 border-b border-l border-slate-200 dark:border-slate-700 text-center relative ${w.isCurrent ? 'bg-primary/5' : ''} ${isEditMode || hasItems ? 'cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800' : ''}`}
+                          className={`p-3 border-b border-l border-slate-200 dark:border-slate-800 text-center relative ${w.isCurrent ? 'bg-primary/5' : ''} ${isEditMode || hasItems ? 'cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800' : ''}`}
                           onClick={() => openModal(row, w, overlappingItems)}
                           onMouseEnter={(e) => {
                             if (hasItems && !isEditMode) {

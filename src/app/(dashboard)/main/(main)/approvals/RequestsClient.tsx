@@ -213,7 +213,7 @@ function RequestTimeline({ logs }: { logs: RequestLog[] }) {
   if (logs.length === 0) return null;
   return (
     <div className="mt-2">
-      <p className="text-caption sm:text-caption font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2 flex items-center gap-1">
+      <p className="text-caption font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2 flex items-center gap-1">
         <GitBranch className="w-3 h-3" /> خط سير الطلب
       </p>
       <div className="relative">
@@ -239,8 +239,8 @@ function RequestTimeline({ logs }: { logs: RequestLog[] }) {
                   <div className="flex items-center gap-1.5 flex-wrap">
                     <span className="text-caption font-semibold text-slate-700 dark:text-slate-200">{log.actor.name}</span>
                     <span className={`text-caption sm:text-caption font-semibold ${cfg.color}`}>{cfg.label}</span>
-                    {log.delegatedTo && <span className="text-caption sm:text-caption text-purple-500 font-semibold">→ {log.delegatedTo.name}</span>}
-                    <span className="text-caption sm:text-caption text-slate-400 dark:text-slate-500 mr-auto">{timeAgo(log.createdAt)}</span>
+                    {log.delegatedTo && <span className="text-caption text-purple-500 font-semibold">→ {log.delegatedTo.name}</span>}
+                    <span className="text-caption text-slate-400 dark:text-slate-500 mr-auto">{timeAgo(log.createdAt)}</span>
                   </div>
                   {log.note && (
                     <p className="mt-0.5 text-caption text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-slate-800/60 rounded-lg px-2 py-1">{log.note}</p>
@@ -392,7 +392,7 @@ function RequestCard({
             )}
           </div>
 
-          <div className="flex items-center gap-2 mt-1 flex-wrap text-caption sm:text-caption text-slate-400 dark:text-slate-500">
+          <div className="flex items-center gap-2 mt-1 flex-wrap text-caption text-slate-400 dark:text-slate-500">
             {raisedByNode}
             {hasCurrentHolder && withNode}
             <span className="flex items-center gap-1"><Calendar className="w-3 h-3" />{timeAgo(request.createdAt)}</span>
@@ -435,7 +435,7 @@ function RequestCard({
                     <ExternalLink className="w-3.5 h-3.5 shrink-0" />
                     <span className="truncate">{att.name || "ملف مرفق"}</span>
                   </div>
-                  {att.size && <span className="text-caption sm:text-caption text-primary/70 shrink-0 font-normal">{(att.size / 1024 / 1024).toFixed(2)} MB</span>}
+                  {att.size && <span className="text-caption text-primary/70 shrink-0 font-normal">{(att.size / 1024 / 1024).toFixed(2)} MB</span>}
                 </a>
               ))}
             </div>

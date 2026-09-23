@@ -140,7 +140,7 @@ export default function Header({
         )}
         
         <div className="flex items-center">
-          <span className="bg-primary/5 text-primary px-4 sm:px-5 py-2 rounded-xl text-caption sm:text-caption font-semibold border border-primary/10">
+          <span className="bg-primary/5 text-primary px-4 sm:px-5 py-2 rounded-xl text-caption font-semibold border border-primary/10">
             {title}
           </span>
         </div>

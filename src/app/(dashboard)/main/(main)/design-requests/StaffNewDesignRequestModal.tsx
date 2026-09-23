@@ -119,7 +119,7 @@ export default function StaffNewDesignRequestModal({
 
           {error && (
             <div
-              className="flex items-center gap-2 px-4 py-3 rounded-xl bg-rose-500/[0.08] text-rose-600 dark:text-rose-400 font-bold"
+              className="flex items-center gap-2 px-4 py-3 rounded-xl bg-rose-500/[0.08] text-rose-600 dark:text-rose-400 font-semibold"
               style={{ fontSize: "var(--dr-fs-meta)" }}
             >
               <AlertTriangle className="w-4 h-4 shrink-0" />
@@ -129,7 +129,7 @@ export default function StaffNewDesignRequestModal({
 
           <div>
             <label
-              className="block font-bold text-slate-500 dark:text-slate-400 mb-2"
+              className="block font-semibold text-slate-500 dark:text-slate-400 mb-2"
               style={{ fontSize: "var(--dr-fs-meta)" }}
             >
               الجمعية
@@ -149,7 +149,7 @@ export default function StaffNewDesignRequestModal({
 
           <div>
             <label
-              className="block font-bold text-slate-500 dark:text-slate-400 mb-2"
+              className="block font-semibold text-slate-500 dark:text-slate-400 mb-2"
               style={{ fontSize: "var(--dr-fs-meta)" }}
             >
               عنوان الطلب
@@ -166,7 +166,7 @@ export default function StaffNewDesignRequestModal({
 
           <div>
             <label
-              className="block font-bold text-slate-500 dark:text-slate-400 mb-2"
+              className="block font-semibold text-slate-500 dark:text-slate-400 mb-2"
               style={{ fontSize: "var(--dr-fs-meta)" }}
             >
               تاريخ ووقت بداية الطلب (اختياري - يترك فارغاً لاعتماد الوقت الحالي)
@@ -192,7 +192,7 @@ export default function StaffNewDesignRequestModal({
 
           <div>
             <label
-              className="block font-bold text-slate-500 dark:text-slate-400 mb-2"
+              className="block font-semibold text-slate-500 dark:text-slate-400 mb-2"
               style={{ fontSize: "var(--dr-fs-meta)" }}
             >
               تفاصيل إضافية (اختياري)
@@ -209,7 +209,7 @@ export default function StaffNewDesignRequestModal({
           <div>
             {fileError && (
               <div
-                className="flex items-start gap-2 mb-2 px-3 py-2 rounded-lg bg-rose-500/[0.08] text-rose-600 dark:text-rose-400 font-bold"
+                className="flex items-start gap-2 mb-2 px-3 py-2 rounded-lg bg-rose-500/[0.08] text-rose-600 dark:text-rose-400 font-semibold"
                 style={{ fontSize: "var(--dr-fs-meta)" }}
               >
                 <AlertTriangle className="w-3.5 h-3.5 shrink-0 mt-px" />
@@ -217,12 +217,12 @@ export default function StaffNewDesignRequestModal({
               </div>
             )}
             <label
-              className="block font-bold text-slate-500 dark:text-slate-400 mb-2"
+              className="block font-semibold text-slate-500 dark:text-slate-400 mb-2"
               style={{ fontSize: "var(--dr-fs-meta)" }}
             >
               المرفقات
             </label>
-            <label className="flex items-center justify-center gap-2 h-11 rounded-xl border-2 border-dashed border-slate-200 dark:border-slate-700 hover:border-primary/40 cursor-pointer text-slate-500 dark:text-slate-400 hover:text-primary dark:hover:text-teal-300 transition-colors font-bold" style={{ fontSize: "var(--dr-fs-meta)" }}>
+            <label className="flex items-center justify-center gap-2 h-11 rounded-xl border-2 border-dashed border-slate-200 dark:border-slate-700 hover:border-primary/40 cursor-pointer text-slate-500 dark:text-slate-400 hover:text-primary dark:hover:text-teal-300 transition-colors font-semibold" style={{ fontSize: "var(--dr-fs-meta)" }}>
               <Paperclip className="w-4 h-4" />
               اختر الملفات...
               <input
@@ -248,7 +248,7 @@ export default function StaffNewDesignRequestModal({
                 {files.map((f, i) => (
                   <div
                     key={i}
-                    className="flex items-center gap-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-3 py-1.5 rounded-lg font-bold text-slate-700 dark:text-slate-200"
+                    className="flex items-center gap-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-3 py-1.5 rounded-lg font-semibold text-slate-700 dark:text-slate-200"
                     style={{ fontSize: "var(--dr-fs-meta)" }}
                   >
                     <span className="truncate max-w-[140px]">{f.name}</span>

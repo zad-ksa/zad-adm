@@ -180,7 +180,7 @@ export default function ReadinessResultsClient({ responses }: { responses: any[]
       <div className="print:hidden space-y-8">
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
         <div className="xl:col-span-2 space-y-6">
-        <h3 className="text-lg font-bold text-slate-700 dark:text-slate-200 flex items-center gap-2 transition-colors">
+        <h3 className="text-section font-semibold text-slate-700 dark:text-slate-200 flex items-center gap-2 transition-colors">
           <span className="w-2 h-6 rounded-full bg-primary inline-block"></span>
           تحليل متوسط الجاهزية للمحاور
         </h3>
@@ -188,10 +188,10 @@ export default function ReadinessResultsClient({ responses }: { responses: any[]
         <div className="bg-white dark:bg-slate-900 rounded-xl p-8 border border-slate-200 dark:border-slate-800 shadow-[0_1px_2px_rgb(15_23_42/0.04)] space-y-8 transition-colors">
           <div className="flex items-center justify-between p-6 bg-slate-50 dark:bg-slate-900/50 rounded-xl border border-slate-100 dark:border-slate-700 hover:border-primary/20 transition-colors">
             <div className="space-y-1">
-              <span className="font-bold text-slate-800 dark:text-slate-100 text-base transition-colors">المتوسط العام للجاهزية</span>
-              <p className="text-xs text-slate-500 dark:text-slate-400 font-medium transition-colors">بناءً على {participantCount} مشاركات مشمولة</p>
+              <span className="font-semibold text-slate-800 dark:text-slate-100 text-title transition-colors">المتوسط العام للجاهزية</span>
+              <p className="text-caption text-slate-500 dark:text-slate-400 font-medium transition-colors">بناءً على {participantCount} مشاركات مشمولة</p>
             </div>
-            <div className={`px-5 py-2.5 rounded-xl text-xl font-bold shadow-sm ${getPercentageColorClass(overallAveragePercentage)}`}>
+            <div className={`px-5 py-2.5 rounded-xl text-section font-semibold shadow-sm ${getPercentageColorClass(overallAveragePercentage)}`}>
               {overallAveragePercentage}%
             </div>
           </div>
@@ -200,7 +200,7 @@ export default function ReadinessResultsClient({ responses }: { responses: any[]
             {sectionData.map((sec) => (
               <div key={sec.index} className="space-y-2 group bg-slate-50 dark:bg-slate-900/50 p-4 rounded-xl border border-slate-100 dark:border-slate-700 transition-all hover:border-slate-200 dark:hover:border-slate-600">
                 <div 
-                  className="flex justify-between items-center text-sm font-bold cursor-pointer"
+                  className="flex justify-between items-center text-caption font-semibold cursor-pointer"
                   onClick={() => toggleSection(sec.index)}
                 >
                   <div className="flex items-center gap-2">
@@ -209,7 +209,7 @@ export default function ReadinessResultsClient({ responses }: { responses: any[]
                     </div>
                     <span className="text-slate-700 dark:text-slate-200 group-hover:text-primary transition-colors">{sec.index}. {sec.title}</span>
                   </div>
-                  <span className={`px-2 py-0.5 rounded text-xs font-bold ${getPercentageColorClass(sec.averagePercentage)}`}>
+                  <span className={`px-2 py-0.5 rounded text-caption font-semibold ${getPercentageColorClass(sec.averagePercentage)}`}>
                     {sec.averagePercentage}%
                   </span>
                 </div>
@@ -225,9 +225,9 @@ export default function ReadinessResultsClient({ responses }: { responses: any[]
                   <div className="mt-4 pt-4 border-t border-slate-200 dark:border-slate-700 space-y-4 transition-colors">
                     {sec.questions.map((q, qIdx) => (
                       <div key={q.id} className="space-y-2 bg-white dark:bg-slate-800 p-3 rounded-lg border border-slate-100 dark:border-slate-700 transition-colors">
-                        <div className="flex justify-between items-start text-xs font-medium gap-4">
+                        <div className="flex justify-between items-start text-caption font-medium gap-4">
                           <span className="text-slate-600 dark:text-slate-300 flex-1 leading-relaxed transition-colors">{qIdx + 1}- {q.text}</span>
-                          <span className={`px-2 py-0.5 rounded text-[10px] font-bold shrink-0 ${getPercentageColorClass(q.averagePercentage)}`}>
+                          <span className={`px-2 py-0.5 rounded text-caption font-semibold shrink-0 ${getPercentageColorClass(q.averagePercentage)}`}>
                             {q.averagePercentage}%
                           </span>
                         </div>
@@ -251,16 +251,16 @@ export default function ReadinessResultsClient({ responses }: { responses: any[]
 
       <div className="space-y-6">
         <div className="flex items-center justify-between">
-          <h3 className="text-lg font-bold text-slate-700 dark:text-slate-200 flex items-center gap-2 transition-colors">
+          <h3 className="text-section font-semibold text-slate-700 dark:text-slate-200 flex items-center gap-2 transition-colors">
             <span className="w-2 h-6 rounded-full bg-slate-400 inline-block"></span>
             المشاركون
           </h3>
-          <span className="bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 px-3 py-1 rounded-full text-xs font-bold transition-colors">
+          <span className="bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 px-3 py-1 rounded-full text-caption font-semibold transition-colors">
             {participantCount} من {responses.length} مشمول
           </span>
         </div>
         
-        <p className="text-xs text-slate-500 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 p-3 rounded-xl border border-blue-100 dark:border-blue-800 mb-4 transition-colors">
+        <p className="text-caption text-slate-500 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 p-3 rounded-xl border border-blue-100 dark:border-blue-800 mb-4 transition-colors">
           يمكنك تحديد أو إلغاء تحديد أي مشارك لتحديث الأرقام والنسب المئوية أعلاه فورياً.
         </p>
 
@@ -281,19 +281,19 @@ export default function ReadinessResultsClient({ responses }: { responses: any[]
                       className="mt-1 w-4 h-4 text-primary rounded border-slate-300 dark:border-slate-600 focus:ring-primary cursor-pointer"
                     />
                     <div>
-                      <h4 className={`font-bold text-sm mb-1 transition-colors ${isExcluded ? 'text-slate-500 dark:text-slate-400' : 'text-slate-800 dark:text-slate-100 group-hover:text-primary transition-colors'}`}>
+                      <h4 className={`font-semibold text-caption mb-1 transition-colors ${isExcluded ? 'text-slate-500 dark:text-slate-400' : 'text-slate-800 dark:text-slate-100 group-hover:text-primary transition-colors'}`}>
                         {res.authorizedName}
                       </h4>
-                      <p className="text-[11px] text-slate-500 dark:text-slate-400 font-medium bg-slate-50 dark:bg-slate-900/50 inline-block px-2 py-0.5 rounded transition-colors">{res.authorizedTitle}</p>
+                      <p className="text-caption text-slate-500 dark:text-slate-400 font-medium bg-slate-50 dark:bg-slate-900/50 inline-block px-2 py-0.5 rounded transition-colors">{res.authorizedTitle}</p>
                     </div>
                   </label>
 
-                  <div className={`px-2 py-1 rounded-lg text-xs font-bold shadow-sm ${getPercentageColorClass(res.scorePercentage)}`}>
+                  <div className={`px-2 py-1 rounded-lg text-caption font-semibold shadow-sm ${getPercentageColorClass(res.scorePercentage)}`}>
                     {res.scorePercentage}%
                   </div>
                 </div>
 
-                <div className="text-[11px] font-medium text-slate-400 flex justify-between items-center border-t border-slate-50 dark:border-slate-700 pt-3 transition-colors">
+                <div className="text-caption font-medium text-slate-400 flex justify-between items-center border-t border-slate-50 dark:border-slate-700 pt-3 transition-colors">
                   <span className="flex items-center gap-1">
                     <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
                     {new Date(res.createdAt).toLocaleDateString("ar-SA", {
@@ -304,7 +304,7 @@ export default function ReadinessResultsClient({ responses }: { responses: any[]
                   </span>
                   <Link
                     href={`/main/${res.id}`}
-                    className="text-primary font-bold opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1"
+                    className="text-primary font-semibold opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1"
                   >
                     التفاصيل
                     <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
@@ -327,7 +327,7 @@ export default function ReadinessResultsClient({ responses }: { responses: any[]
       </div>
 
       <div className="space-y-6">
-        <h3 className="text-lg font-bold text-slate-700 dark:text-slate-200 flex items-center gap-2 transition-colors">
+        <h3 className="text-section font-semibold text-slate-700 dark:text-slate-200 flex items-center gap-2 transition-colors">
           <span className="w-2 h-6 rounded-full bg-slate-400 inline-block"></span>
           تصنيف الأسئلة حسب نسبة الجاهزية
         </h3>
@@ -339,10 +339,10 @@ export default function ReadinessResultsClient({ responses }: { responses: any[]
               className="p-5 flex justify-between items-center cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-900/50 transition-colors"
               onClick={() => toggleCategory('green')}
             >
-              <h4 className="font-bold text-[#00b050] flex items-center gap-2">
+              <h4 className="font-semibold text-[#00b050] flex items-center gap-2">
                  <span className="w-2 h-2 rounded-full bg-[#00b050]"></span>
                  نقاط القوة (85% - 100%)
-                 <span className="text-xs bg-[#00b050]/10 px-2 py-0.5 rounded-full mr-2">{categorizedQuestions.green.length} أسئلة</span>
+                 <span className="text-caption bg-[#00b050]/10 px-2 py-0.5 rounded-full mr-2">{categorizedQuestions.green.length} أسئلة</span>
               </h4>
               <div className="text-slate-400">
                 {openCategories.has('green') ? <ChevronUpIcon /> : <ChevronDownIcon />}
@@ -354,15 +354,15 @@ export default function ReadinessResultsClient({ responses }: { responses: any[]
                 <div className="space-y-3 mt-4 max-h-[600px] overflow-y-auto custom-scrollbar pr-2">
                   {categorizedQuestions.green.map((q: any) => (
                     <div key={q.id} className="p-3 bg-[#00b050]/5 dark:bg-[#00b050]/10 rounded-xl border border-[#00b050]/20 transition-colors">
-                       <div className="text-[10px] font-bold text-[#00b050]/80 mb-1">{q.sectionTitle}</div>
-                       <div className="text-sm font-medium text-slate-700 dark:text-slate-200 flex justify-between gap-3 items-start">
+                       <div className="text-caption font-semibold text-[#00b050]/80 mb-1">{q.sectionTitle}</div>
+                       <div className="text-caption font-medium text-slate-700 dark:text-slate-200 flex justify-between gap-3 items-start">
                          <span className="leading-relaxed">{q.text}</span>
-                         <span className="font-bold text-[#00b050] bg-white dark:bg-slate-800 px-2 py-0.5 rounded shadow-sm text-xs">{q.averagePercentage}%</span>
+                         <span className="font-semibold text-[#00b050] bg-white dark:bg-slate-800 px-2 py-0.5 rounded shadow-sm text-caption">{q.averagePercentage}%</span>
                        </div>
                     </div>
                   ))}
                   {categorizedQuestions.green.length === 0 && (
-                    <p className="text-sm text-slate-500 text-center py-4">لا توجد أسئلة في هذا النطاق</p>
+                    <p className="text-caption text-slate-500 text-center py-4">لا توجد أسئلة في هذا النطاق</p>
                   )}
                 </div>
               </div>
@@ -375,10 +375,10 @@ export default function ReadinessResultsClient({ responses }: { responses: any[]
               className="p-5 flex justify-between items-center cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-900/50 transition-colors"
               onClick={() => toggleCategory('yellow')}
             >
-              <h4 className="font-bold text-[#c29300] flex items-center gap-2">
+              <h4 className="font-semibold text-[#c29300] flex items-center gap-2">
                  <span className="w-2 h-2 rounded-full bg-[#ffc000]"></span>
                  نقاط للتحسين (70% - 84%)
-                 <span className="text-xs bg-[#ffc000]/10 px-2 py-0.5 rounded-full mr-2">{categorizedQuestions.yellow.length} أسئلة</span>
+                 <span className="text-caption bg-[#ffc000]/10 px-2 py-0.5 rounded-full mr-2">{categorizedQuestions.yellow.length} أسئلة</span>
               </h4>
               <div className="text-slate-400">
                 {openCategories.has('yellow') ? <ChevronUpIcon /> : <ChevronDownIcon />}
@@ -390,15 +390,15 @@ export default function ReadinessResultsClient({ responses }: { responses: any[]
                 <div className="space-y-3 mt-4 max-h-[600px] overflow-y-auto custom-scrollbar pr-2">
                   {categorizedQuestions.yellow.map((q: any) => (
                     <div key={q.id} className="p-3 bg-[#ffc000]/5 dark:bg-[#ffc000]/10 rounded-xl border border-[#ffc000]/20 transition-colors">
-                       <div className="text-[10px] font-bold text-[#c29300]/80 mb-1">{q.sectionTitle}</div>
-                       <div className="text-sm font-medium text-slate-700 dark:text-slate-200 flex justify-between gap-3 items-start">
+                       <div className="text-caption font-semibold text-[#c29300]/80 mb-1">{q.sectionTitle}</div>
+                       <div className="text-caption font-medium text-slate-700 dark:text-slate-200 flex justify-between gap-3 items-start">
                          <span className="leading-relaxed">{q.text}</span>
-                         <span className="font-bold text-[#c29300] bg-white dark:bg-slate-800 px-2 py-0.5 rounded shadow-sm text-xs">{q.averagePercentage}%</span>
+                         <span className="font-semibold text-[#c29300] bg-white dark:bg-slate-800 px-2 py-0.5 rounded shadow-sm text-caption">{q.averagePercentage}%</span>
                        </div>
                     </div>
                   ))}
                   {categorizedQuestions.yellow.length === 0 && (
-                    <p className="text-sm text-slate-500 text-center py-4">لا توجد أسئلة في هذا النطاق</p>
+                    <p className="text-caption text-slate-500 text-center py-4">لا توجد أسئلة في هذا النطاق</p>
                   )}
                 </div>
               </div>
@@ -411,10 +411,10 @@ export default function ReadinessResultsClient({ responses }: { responses: any[]
               className="p-5 flex justify-between items-center cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-900/50 transition-colors"
               onClick={() => toggleCategory('red')}
             >
-              <h4 className="font-bold text-[#ff0000] flex items-center gap-2">
+              <h4 className="font-semibold text-[#ff0000] flex items-center gap-2">
                  <span className="w-2 h-2 rounded-full bg-[#ff0000]"></span>
                  نقاط الضعف (أقل من 70%)
-                 <span className="text-xs bg-[#ff0000]/10 px-2 py-0.5 rounded-full mr-2">{categorizedQuestions.red.length} أسئلة</span>
+                 <span className="text-caption bg-[#ff0000]/10 px-2 py-0.5 rounded-full mr-2">{categorizedQuestions.red.length} أسئلة</span>
               </h4>
               <div className="text-slate-400">
                 {openCategories.has('red') ? <ChevronUpIcon /> : <ChevronDownIcon />}
@@ -426,15 +426,15 @@ export default function ReadinessResultsClient({ responses }: { responses: any[]
                 <div className="space-y-3 mt-4 max-h-[600px] overflow-y-auto custom-scrollbar pr-2">
                   {categorizedQuestions.red.map((q: any) => (
                     <div key={q.id} className="p-3 bg-[#ff0000]/5 dark:bg-[#ff0000]/10 rounded-xl border border-[#ff0000]/20 transition-colors">
-                       <div className="text-[10px] font-bold text-[#ff0000]/80 mb-1">{q.sectionTitle}</div>
-                       <div className="text-sm font-medium text-slate-700 dark:text-slate-200 flex justify-between gap-3 items-start">
+                       <div className="text-caption font-semibold text-[#ff0000]/80 mb-1">{q.sectionTitle}</div>
+                       <div className="text-caption font-medium text-slate-700 dark:text-slate-200 flex justify-between gap-3 items-start">
                          <span className="leading-relaxed">{q.text}</span>
-                         <span className="font-bold text-[#ff0000] bg-white dark:bg-slate-800 px-2 py-0.5 rounded shadow-sm text-xs">{q.averagePercentage}%</span>
+                         <span className="font-semibold text-[#ff0000] bg-white dark:bg-slate-800 px-2 py-0.5 rounded shadow-sm text-caption">{q.averagePercentage}%</span>
                        </div>
                     </div>
                   ))}
                   {categorizedQuestions.red.length === 0 && (
-                    <p className="text-sm text-slate-500 text-center py-4">لا توجد أسئلة في هذا النطاق</p>
+                    <p className="text-caption text-slate-500 text-center py-4">لا توجد أسئلة في هذا النطاق</p>
                   )}
                 </div>
               </div>

@@ -138,7 +138,7 @@ export default function GovernanceManualViewer({
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm">
           <div className="bg-white dark:bg-slate-900 p-6 rounded-xl shadow-[0_1px_2px_rgb(15_23_42/0.04)] flex items-center gap-4">
             <Loader2 className="w-6 h-6 text-primary animate-spin" />
-            <p className="font-bold text-slate-700 dark:text-slate-200">جاري التوجيه للمعايير...</p>
+            <p className="font-semibold text-slate-700 dark:text-slate-200">جاري التوجيه للمعايير...</p>
           </div>
         </div>
       )}
@@ -151,10 +151,10 @@ export default function GovernanceManualViewer({
           <div className="space-y-2">
             <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 text-primary mb-2">
               <Calculator className="w-4 h-4" />
-              <span className="text-xs font-bold tracking-wide">الخيار الموصى به</span>
+              <span className="text-caption font-semibold tracking-wide">الخيار الموصى به</span>
             </div>
-            <h3 className="text-xl font-bold text-slate-900 dark:text-white">التحديد التلقائي لحجم الجمعية</h3>
-            <p className="text-sm text-slate-500 dark:text-slate-400 max-w-md leading-relaxed">
+            <h3 className="text-section font-semibold text-slate-900 dark:text-white">التحديد التلقائي لحجم الجمعية</h3>
+            <p className="text-caption text-slate-500 dark:text-slate-400 max-w-md leading-relaxed">
               أدخل إيرادات/مصروفات الجمعية السنوية ليقوم النظام بتحديد الفئة المناسبة وعرض الشواهد المتعلقة بها فوراً.
             </p>
           </div>
@@ -181,7 +181,7 @@ export default function GovernanceManualViewer({
 
       <div className="flex items-center gap-4">
         <div className="h-px bg-slate-200 dark:bg-slate-800 flex-1"></div>
-        <span className="text-sm font-semibold text-slate-400 uppercase tracking-widest px-2">أو اختر التصنيف يدوياً</span>
+        <span className="text-caption font-semibold text-slate-400 uppercase tracking-widest px-2">أو اختر التصنيف يدوياً</span>
         <div className="h-px bg-slate-200 dark:bg-slate-800 flex-1"></div>
       </div>
 
@@ -201,8 +201,8 @@ export default function GovernanceManualViewer({
             </div>
 
             <div className="relative z-10">
-              <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-2 group-hover:text-primary transition-colors">{size.title}</h3>
-              <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed min-h-[32px]">
+              <h3 className="text-section font-semibold text-slate-900 dark:text-white mb-2 group-hover:text-primary transition-colors">{size.title}</h3>
+              <p className="text-caption text-slate-500 dark:text-slate-400 leading-relaxed min-h-[32px]">
                 {size.desc}
               </p>
             </div>

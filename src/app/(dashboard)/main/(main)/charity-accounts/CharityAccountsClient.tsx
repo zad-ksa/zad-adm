@@ -96,7 +96,7 @@ export default function CharityAccountsClient({ charities, accounts: initialAcco
   return (
     <div className="space-y-6 animate-fade-in" dir="rtl">
       {successMsg && (
-        <div className="bg-emerald-50 text-emerald-600 p-4 rounded-xl flex items-center font-bold text-sm">
+        <div className="bg-emerald-50 text-emerald-600 p-4 rounded-xl flex items-center font-semibold text-caption">
           <CheckCircle2 className="w-5 h-5 ml-2" />
           {successMsg}
         </div>
@@ -106,7 +106,7 @@ export default function CharityAccountsClient({ charities, accounts: initialAcco
           modal open lands behind it, so the form appears to do nothing — the
           same message is repeated inside the modal instead. */}
       {errorMsg && !showModal && (
-        <div className="bg-red-50 text-red-600 p-4 rounded-xl flex items-center font-bold text-sm">
+        <div className="bg-red-50 text-red-600 p-4 rounded-xl flex items-center font-semibold text-caption">
           <AlertCircle className="w-5 h-5 ml-2" />
           {errorMsg}
         </div>
@@ -141,7 +141,7 @@ footer={
 >
 <div className="space-y-4">
 {errorMsg && (
-                <div className="bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 p-3 rounded-xl flex items-start gap-2 font-bold text-sm">
+                <div className="bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 p-3 rounded-xl flex items-start gap-2 font-semibold text-caption">
                   <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
                   <span>{errorMsg}</span>
                 </div>
@@ -149,32 +149,32 @@ footer={
 <div className="space-y-4">
                 
                 <div>
-                  <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1.5">اسم الممثل</label>
+                  <label className="block text-caption font-semibold text-slate-700 dark:text-slate-300 mb-1.5">اسم الممثل</label>
                   <input 
                     required 
                     type="text" 
                     value={form.name} 
                     onChange={e => setForm({...form, name: e.target.value})}
                     placeholder="مثال: عبدالله محمد"
-                    className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary font-bold"
+                    className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-4 py-2.5 text-caption outline-none focus:ring-2 focus:ring-primary font-semibold"
                   />
                 </div>
                 
                 <div>
-                  <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1.5">رقم الجوال (للدخول)</label>
+                  <label className="block text-caption font-semibold text-slate-700 dark:text-slate-300 mb-1.5">رقم الجوال (للدخول)</label>
                   <input 
                     required 
                     type="tel" 
                     value={form.phone} 
                     onChange={e => setForm({...form, phone: e.target.value})}
                     placeholder="05XXXXXXXX"
-                    className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary font-bold text-left"
+                    className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-4 py-2.5 text-caption outline-none focus:ring-2 focus:ring-primary font-semibold text-left"
                     dir="ltr"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1.5">
+                  <label className="block text-caption font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
                     البريد الإلكتروني <span className="text-slate-400 font-medium">(اختياري)</span>
                   </label>
                   <input
@@ -182,13 +182,13 @@ footer={
                     value={form.email}
                     onChange={e => setForm({...form, email: e.target.value})}
                     placeholder="name@example.com"
-                    className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary font-bold text-left"
+                    className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-4 py-2.5 text-caption outline-none focus:ring-2 focus:ring-primary font-semibold text-left"
                     dir="ltr"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1.5">
+                  <label className="block text-caption font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
                     كلمة المرور <span className="text-slate-400 font-medium">(مع البريد فقط)</span>
                   </label>
                   <input
@@ -196,16 +196,16 @@ footer={
                     value={form.password}
                     onChange={e => setForm({...form, password: e.target.value})}
                     placeholder="٨ أحرف على الأقل"
-                    className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary font-bold text-left"
+                    className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-4 py-2.5 text-caption outline-none focus:ring-2 focus:ring-primary font-semibold text-left"
                     dir="ltr"
                   />
-                  <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1.5 leading-relaxed">
+                  <p className="text-caption text-slate-500 dark:text-slate-400 mt-1.5 leading-relaxed">
                     اتركهما فارغين ليدخل الحساب برقم الجوال ورمز التحقق، ويضبطهما صاحبه لاحقًا بنفسه.
                   </p>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1.5">المسمى الوظيفي</label>
+                  <label className="block text-caption font-semibold text-slate-700 dark:text-slate-300 mb-1.5">المسمى الوظيفي</label>
                   <Select
                     variant="soft"
                     value={form.title}
@@ -217,7 +217,7 @@ footer={
                 </div>
 
                 <div>
-                  <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1.5">الجمعيات المرتبطة (يمكن اختيار أكثر من واحدة)</label>
+                  <label className="block text-caption font-semibold text-slate-700 dark:text-slate-300 mb-1.5">الجمعيات المرتبطة (يمكن اختيار أكثر من واحدة)</label>
                   <div className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl p-3 max-h-48 overflow-y-auto space-y-2">
                     {charities.map(c => (
                       <label key={c.id} className="flex items-center gap-3 p-2 hover:bg-white dark:hover:bg-slate-800 rounded-lg cursor-pointer transition-colors">
@@ -227,12 +227,12 @@ footer={
                           onChange={() => toggleCharity(c.id)}
                           className="w-4 h-4 rounded text-primary focus:ring-primary focus:ring-offset-0 border-slate-300"
                         />
-                        <span className="text-sm font-bold text-slate-700 dark:text-slate-300">{c.name}</span>
+                        <span className="text-caption font-semibold text-slate-700 dark:text-slate-300">{c.name}</span>
                       </label>
                     ))}
                   </div>
                   {form.charityIds.length === 0 && (
-                    <p className="text-xs text-red-500 mt-1 font-bold">يجب اختيار جمعية واحدة على الأقل</p>
+                    <p className="text-caption text-red-500 mt-1 font-semibold">يجب اختيار جمعية واحدة على الأقل</p>
                   )}
                 </div>
 
@@ -245,8 +245,8 @@ footer={
                       className="w-4 h-4 mt-0.5 rounded text-primary focus:ring-primary focus:ring-offset-0 border-slate-300"
                     />
                     <span>
-                      <span className="block text-sm font-bold text-slate-700 dark:text-slate-300">مدير للجمعيات المختارة</span>
-                      <span className="block text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                      <span className="block text-caption font-semibold text-slate-700 dark:text-slate-300">مدير للجمعيات المختارة</span>
+                      <span className="block text-caption text-slate-500 dark:text-slate-400 mt-0.5">
                         يملك كل الصلاحيات داخلها ويستطيع إدارة حساباتها. لكل جمعية مديرها؛ لا بد من مدير واحد على الأقل لكل جمعية.
                       </span>
                     </span>
@@ -258,19 +258,19 @@ footer={
                     drawing checkboxes beside it would suggest the two could
                     disagree. */}
                 <div>
-                  <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">
+                  <label className="block text-caption font-semibold text-slate-700 dark:text-slate-300 mb-2">
                     الصلاحيات داخل الجمعية
                   </label>
 
                   {form.isAdmin ? (
-                    <p className="text-xs text-primary dark:text-teal-400 bg-primary/[0.06] dark:bg-teal-400/[0.06] rounded-xl p-3 leading-relaxed font-bold">
+                    <p className="text-caption text-primary dark:text-teal-400 bg-primary/[0.06] dark:bg-teal-400/[0.06] rounded-xl p-3 leading-relaxed font-semibold">
                       مدير الجمعية يملك جميع الصلاحيات تلقائياً — بما يُضاف منها لاحقاً.
                     </p>
                   ) : (
                     <div className="space-y-3">
                       {CHARITY_PERMISSION_GROUPS.map((group) => (
                         <div key={group.title}>
-                          <p className="text-[11px] font-bold text-slate-400 dark:text-slate-500 mb-1.5">
+                          <p className="text-caption font-semibold text-slate-400 dark:text-slate-500 mb-1.5">
                             {group.title}
                           </p>
                           <div className="grid sm:grid-cols-2 gap-1.5">
@@ -279,7 +279,7 @@ footer={
                               return (
                                 <label
                                   key={permission.id}
-                                  className={`flex items-start gap-2 p-2.5 rounded-xl border cursor-pointer transition-colors text-xs font-bold ${
+                                  className={`flex items-start gap-2 p-2.5 rounded-xl border cursor-pointer transition-colors text-caption font-semibold ${
                                     checked
                                       ? "border-primary/40 bg-primary/[0.06] text-primary dark:text-teal-400"
                                       : "border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:border-slate-300 dark:hover:border-slate-600"
@@ -317,7 +317,7 @@ footer={
                                 : [...ALL_CHARITY_PERMISSION_IDS],
                           })
                         }
-                        className="text-[11px] font-bold text-primary dark:text-teal-400 hover:underline"
+                        className="text-caption font-semibold text-primary dark:text-teal-400 hover:underline"
                       >
                         {form.permissions.length === ALL_CHARITY_PERMISSION_IDS.length
                           ? "إلغاء تحديد الكل"
@@ -348,18 +348,18 @@ footer={
             <tbody className={tbodyClass}>
               {accounts.map(account => (
                 <tr key={account.id} className="hover:bg-slate-50 dark:hover:bg-white/5 transition-colors group">
-                  <td className={cx(tdClass, "font-bold text-primary whitespace-normal min-w-[200px]")}>
+                  <td className={cx(tdClass, "font-semibold text-primary whitespace-normal min-w-[200px]")}>
                     <div className="flex items-start gap-2">
                       <Building2 className="w-4 h-4 text-primary/60 mt-1 shrink-0" />
                       <span>{account.charityNames?.join("، ") || "غير محدد"}</span>
                     </div>
                   </td>
-                  <td className={cx(tdClass, "text-sm font-bold text-slate-800 dark:text-slate-200")}>{account.name}</td>
-                  <td className={cx(tdClass, "text-sm font-bold text-slate-600 dark:text-slate-400")}>
+                  <td className={cx(tdClass, "text-caption font-semibold text-slate-800 dark:text-slate-200")}>{account.name}</td>
+                  <td className={cx(tdClass, "text-caption font-semibold text-slate-600 dark:text-slate-400")}>
                     {titles.find(t => t.value === account.title)?.label || account.title}
                   </td>
-                  <td className={cx(tdClass, "text-sm font-bold text-slate-600 dark:text-slate-400 text-left")} dir="ltr">{account.phone}</td>
-                  <td className={cx(tdClass, "text-xs font-bold text-slate-500 dark:text-slate-500")}>{new Date(account.createdAt).toLocaleDateString("en-GB")}</td>
+                  <td className={cx(tdClass, "text-caption font-semibold text-slate-600 dark:text-slate-400 text-left")} dir="ltr">{account.phone}</td>
+                  <td className={cx(tdClass, "text-caption font-semibold text-slate-500 dark:text-slate-500")}>{new Date(account.createdAt).toLocaleDateString("en-GB")}</td>
                   <td className={tdClass}>
                     <button 
                       onClick={() => setAccountToDelete(account)}
@@ -401,7 +401,7 @@ footer={
         title="إضافة حساب جمعية جديد"
       >
         <Plus className="w-6 h-6" />
-        <span className="max-w-0 overflow-hidden whitespace-nowrap font-bold text-sm group-hover:max-w-xs group-hover:mr-3 transition-all duration-300 ease-out">
+        <span className="max-w-0 overflow-hidden whitespace-nowrap font-semibold text-caption group-hover:max-w-xs group-hover:mr-3 transition-all duration-300 ease-out">
           إضافة حساب جديد
         </span>
       </button>

@@ -158,20 +158,20 @@ export default async function SurveysDashboard() {
         <div className="mb-8 bg-amber-50 dark:bg-amber-900/20 rounded-xl p-6 border border-amber-200">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-amber-100 dark:bg-amber-900/40 rounded-xl flex items-center justify-center text-amber-700 dark:text-amber-400 text-xl font-bold border border-amber-200">
+              <div className="w-10 h-10 bg-amber-100 dark:bg-amber-900/40 rounded-xl flex items-center justify-center text-amber-700 dark:text-amber-400 text-section font-semibold border border-amber-200">
                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                 </svg>
               </div>
               <div>
-                <h2 className="text-lg font-bold text-amber-900">استبيانات معلقة من جمعيات غير مسجلة</h2>
-                <p className="text-xs text-amber-600 mt-0.5">هناك استبيانات مرسلة من جمعيات غير مضافة لقائمة الجمعيات المتعاقد معها. يمكنك تفعيلها لإدراجها تلقائياً.</p>
+                <h2 className="text-section font-semibold text-amber-900">استبيانات معلقة من جمعيات غير مسجلة</h2>
+                <p className="text-caption text-amber-600 mt-0.5">هناك استبيانات مرسلة من جمعيات غير مضافة لقائمة الجمعيات المتعاقد معها. يمكنك تفعيلها لإدراجها تلقائياً.</p>
               </div>
             </div>
           </div>
           <div className={tableFrameClass}>
             <div className="overflow-x-auto">
-              <table className="w-full text-right border-collapse whitespace-nowrap text-xs">
+              <table className="w-full text-right border-collapse whitespace-nowrap text-caption">
                 <thead>
                   <tr className={theadRowClass}>
                     <th className={cx(thClass, "text-right")}>اسم الجمعية المعلقة</th>
@@ -186,23 +186,23 @@ export default async function SurveysDashboard() {
                 <tbody className={tbodyClass}>
                   {pendingCharitiesList.map((pending) => (
                     <tr key={pending.name} className="hover:bg-amber-50 dark:hover:bg-amber-900/10 transition-colors">
-                      <td className={cx(tdClass, "font-bold text-slate-800 dark:text-slate-100 text-sm")}>{pending.name}</td>
-                      <td className={cx(tdClass, "text-center font-bold")}>
+                      <td className={cx(tdClass, "font-semibold text-slate-800 dark:text-slate-100 text-caption")}>{pending.name}</td>
+                      <td className={cx(tdClass, "text-center font-semibold")}>
                         {pending.readinessCount > 0 ? (
                           <span className="inline-block bg-amber-100 dark:bg-amber-900/40 text-amber-800 dark:text-amber-300 px-3 py-1 rounded-full">
                             {pending.readinessCount} استبيان
                           </span>
                         ) : (
-                          <span className="text-slate-400 text-xs">-</span>
+                          <span className="text-slate-400 text-caption">-</span>
                         )}
                       </td>
-                      <td className={cx(tdClass, "text-center font-bold")}>
+                      <td className={cx(tdClass, "text-center font-semibold")}>
                         {pending.hexagonalCount > 0 ? (
                           <span className="inline-block bg-amber-100 dark:bg-amber-900/40 text-amber-800 dark:text-amber-300 px-3 py-1 rounded-full">
                             {pending.hexagonalCount} استبيان
                           </span>
                         ) : (
-                          <span className="text-slate-400 text-xs">-</span>
+                          <span className="text-slate-400 text-caption">-</span>
                         )}
                       </td>
                       <td className={cx(tdClass, "text-slate-600 dark:text-slate-300")}>{pending.establishmentDate || "-"}</td>
@@ -222,7 +222,7 @@ export default async function SurveysDashboard() {
                             licenseNumber={pending.licenseNumber}
                           />
                         ) : (
-                          <span className="text-slate-400 text-xs">-</span>
+                          <span className="text-slate-400 text-caption">-</span>
                         )}
                       </td>
                     </tr>
@@ -251,32 +251,32 @@ export default async function SurveysDashboard() {
             <tbody className={tbodyClass}>
               {charityStats.map((charity) => (
                 <tr key={charity.id} className="hover:bg-slate-50 dark:bg-slate-800/50 dark:hover:bg-slate-700/30 transition-colors group">
-                  <td className={cx(tdClass, "font-bold text-slate-800 dark:text-slate-100 group-hover:text-primary transition-colors")}>
+                  <td className={cx(tdClass, "font-semibold text-slate-800 dark:text-slate-100 group-hover:text-primary transition-colors")}>
                     <Link href={`/charity/${encodeURIComponent(charity.name)}`} className="block">
                       {charity.name}
                     </Link>
                   </td>
-                  <td className={cx(tdClass, "text-center font-bold")}>
+                  <td className={cx(tdClass, "text-center font-semibold")}>
                     {charity.readinessCount > 0 ? (
-                      <span className="inline-block bg-primary/5 text-primary px-4 py-1.5 rounded-lg text-xs font-bold border border-primary/10">
+                      <span className="inline-block bg-primary/5 text-primary px-4 py-1.5 rounded-lg text-caption font-semibold border border-primary/10">
                         {charity.readinessCount}
                       </span>
                     ) : (
-                      <span className="text-slate-300 text-xs">-</span>
+                      <span className="text-slate-300 text-caption">-</span>
                     )}
                   </td>
-                  <td className={cx(tdClass, "text-center font-bold")}>
+                  <td className={cx(tdClass, "text-center font-semibold")}>
                     {charity.hexagonalCount > 0 ? (
-                      <span className="inline-block bg-secondary/10 text-[#c29300] px-4 py-1.5 rounded-lg text-xs font-bold border border-secondary/20">
+                      <span className="inline-block bg-secondary/10 text-[#c29300] px-4 py-1.5 rounded-lg text-caption font-semibold border border-secondary/20">
                         {charity.hexagonalCount}
                       </span>
                     ) : (
-                      <span className="text-slate-300 text-xs">-</span>
+                      <span className="text-slate-300 text-caption">-</span>
                     )}
                   </td>
                   <td className={cx(tdClass, "text-slate-600 dark:text-slate-300 font-medium")}>{charity.establishmentDate || "-"}</td>
                   <td className={cx(tdClass, "text-slate-600 dark:text-slate-300 font-medium")}>{charity.licenseNumber || "-"}</td>
-                  <td className={cx(tdClass, "text-slate-500 dark:text-slate-400 text-sm font-medium")}>
+                  <td className={cx(tdClass, "text-slate-500 dark:text-slate-400 text-caption font-medium")}>
                     {new Date(charity.latestDate).toLocaleDateString("ar-SA", {
                       year: "numeric",
                       month: "short",
@@ -286,7 +286,7 @@ export default async function SurveysDashboard() {
                   <td className={cx(tdClass, "text-center")}>
                     {charity.readinessCount > 0 ? (
                       <div className="flex items-center justify-center">
-                        <div className={`px-5 py-2 rounded-xl text-sm font-bold flex items-center justify-center min-w-[4rem]
+                        <div className={`px-5 py-2 rounded-xl text-caption font-semibold flex items-center justify-center min-w-[4rem]
                           ${
                             charity.averagePercentage >= 85 ? "bg-[#00b050]/10 text-[#00b050]" :
                             charity.averagePercentage >= 70 ? "bg-[#ffc000]/10 text-[#c29300]" :
@@ -297,7 +297,7 @@ export default async function SurveysDashboard() {
                         </div>
                       </div>
                     ) : (
-                      <span className="text-slate-400 text-xs font-medium bg-slate-50 dark:bg-slate-900/50 px-3 py-1.5 rounded-lg">لا يوجد مقياس</span>
+                      <span className="text-slate-400 text-caption font-medium bg-slate-50 dark:bg-slate-900/50 px-3 py-1.5 rounded-lg">لا يوجد مقياس</span>
                     )}
                   </td>
                 </tr>
@@ -310,7 +310,7 @@ export default async function SurveysDashboard() {
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                       </svg>
                     </div>
-                    <h3 className="text-xl font-bold text-slate-700 dark:text-slate-200 mb-2">لا توجد استبيانات</h3>
+                    <h3 className="text-section font-semibold text-slate-700 dark:text-slate-200 mb-2">لا توجد استبيانات</h3>
                     <p className="font-medium text-slate-500 dark:text-slate-400">لم يتم إرسال أي استبيانات حتى الآن.</p>
                   </td>
                 </tr>

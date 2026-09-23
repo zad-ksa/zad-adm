@@ -362,7 +362,7 @@ export default function DesignRequestsClient({
               <button
                 key={key}
                 onClick={() => setTab(key)}
-                className={`h-9 px-4 rounded-lg font-bold transition-all duration-300 flex items-center gap-1.5 ${
+                className={`h-9 px-4 rounded-lg font-semibold transition-all duration-300 flex items-center gap-1.5 ${
                   tab === key
                     ? "bg-white dark:bg-[#222] text-primary dark:text-teal-300 shadow-sm border border-slate-200/50 dark:border-slate-700/50"
                     : "text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300 hover:bg-black/5 dark:hover:bg-white/5"
@@ -376,7 +376,7 @@ export default function DesignRequestsClient({
                     difference. */}
                 {count > 0 && (
                   <span
-                    className={`min-w-[18px] h-[18px] px-1 flex items-center justify-center rounded-full text-[10px] font-black ${
+                    className={`min-w-[18px] h-[18px] px-1 flex items-center justify-center rounded-full text-caption font-semibold ${
                       urgent
                         ? "bg-amber-500 text-white"
                         : "bg-slate-200 text-slate-600 dark:bg-slate-700 dark:text-slate-200"
@@ -438,7 +438,7 @@ export default function DesignRequestsClient({
             {charityFilter && tab === "PENDING" && (
               <button
                 onClick={() => setIsQueueRescheduleOpen(true)}
-                className="h-10 px-4 rounded-lg bg-amber-50 text-amber-600 dark:bg-amber-400/10 dark:text-amber-400 border border-amber-200/50 dark:border-amber-400/20 hover:bg-amber-100 dark:hover:bg-amber-400/20 transition-colors font-bold"
+                className="h-10 px-4 rounded-lg bg-amber-50 text-amber-600 dark:bg-amber-400/10 dark:text-amber-400 border border-amber-200/50 dark:border-amber-400/20 hover:bg-amber-100 dark:hover:bg-amber-400/20 transition-colors font-semibold"
                 style={{ fontSize: "var(--dr-fs-meta)" }}
               >
                 إعادة ترتيب التنفيذ
@@ -468,7 +468,7 @@ export default function DesignRequestsClient({
           <div className="w-16 h-16 bg-slate-50 dark:bg-slate-800/60 rounded-full flex items-center justify-center">
             <Palette className="w-8 h-8 text-slate-300 dark:text-slate-600" />
           </div>
-          <p className="font-bold text-slate-500 dark:text-slate-400" style={{ fontSize: "var(--dr-fs-title)" }}>
+          <p className="font-semibold text-slate-500 dark:text-slate-400" style={{ fontSize: "var(--dr-fs-title)" }}>
             لا توجد طلبات هنا
           </p>
         </div>
@@ -477,7 +477,7 @@ export default function DesignRequestsClient({
           {/* رأس الجدول — سطح المكتب فقط في عرض القائمة، بنفس أعمدة كل صف بالحرف. */}
           {viewMode === "list" && (
             <div
-              className={`hidden lg:grid ${DESIGN_REQUEST_LIST_GRID_COLS} items-center gap-3 px-4 pb-1 text-slate-400 dark:text-slate-500 font-bold uppercase tracking-wider`}
+              className={`hidden lg:grid ${DESIGN_REQUEST_LIST_GRID_COLS} items-center gap-3 px-4 pb-1 text-slate-400 dark:text-slate-500 font-semibold uppercase tracking-wider`}
               style={{ fontSize: "var(--dr-fs-eyebrow)" }}
             >
               <span>الجمعية</span>
@@ -501,7 +501,7 @@ export default function DesignRequestsClient({
                   <div className="w-full mt-2 space-y-2">
                     <div className="px-3 py-2.5 rounded-xl bg-amber-500/[0.08]">
                       <p
-                        className="font-bold text-amber-700 dark:text-amber-400 mb-2"
+                        className="font-semibold text-amber-700 dark:text-amber-400 mb-2"
                         style={{ fontSize: "var(--dr-fs-meta)" }}
                       >
                         ملاحظات الجمعية
@@ -515,7 +515,7 @@ export default function DesignRequestsClient({
                     <div className="flex items-center gap-2">
                       <button
                         onClick={() => setConfirmingId(it.request.id)}
-                        className="flex-1 h-9 rounded-lg bg-primary/10 text-primary dark:bg-teal-500/10 dark:text-teal-400 hover:bg-primary hover:text-white dark:hover:bg-teal-500 dark:hover:text-[#0A0A0A] transition-colors font-bold"
+                        className="flex-1 h-9 rounded-lg bg-primary/10 text-primary dark:bg-teal-500/10 dark:text-teal-400 hover:bg-primary hover:text-white dark:hover:bg-teal-500 dark:hover:text-[#0A0A0A] transition-colors font-semibold"
                         style={{ fontSize: "var(--dr-fs-meta)" }}
                       >
                         تسليم التعديل (اعتماد نهائي)
@@ -531,7 +531,7 @@ export default function DesignRequestsClient({
                             notes: it.request.revisionNotes ?? null,
                           })
                         }
-                        className="flex-1 h-9 rounded-lg bg-amber-500/10 text-amber-600 dark:bg-amber-500/15 dark:text-amber-400 hover:bg-amber-500 hover:text-white dark:hover:bg-amber-500 dark:hover:text-white transition-colors font-bold"
+                        className="flex-1 h-9 rounded-lg bg-amber-500/10 text-amber-600 dark:bg-amber-500/15 dark:text-amber-400 hover:bg-amber-500 hover:text-white dark:hover:bg-amber-500 dark:hover:text-white transition-colors font-semibold"
                         style={{ fontSize: "var(--dr-fs-meta)" }}
                       >
                         ردّ بملاحظات
@@ -555,7 +555,7 @@ export default function DesignRequestsClient({
                     {it.request.completionNote && (
                       <div className="px-3 py-2.5 rounded-xl bg-primary/[0.06] dark:bg-teal-500/10">
                         <p
-                          className="font-bold text-primary dark:text-teal-400 mb-2"
+                          className="font-semibold text-primary dark:text-teal-400 mb-2"
                           style={{ fontSize: "var(--dr-fs-meta)" }}
                         >
                           {it.request.revisionNotes ? "ردّكم على ملاحظات الجمعية" : "ملاحظة التسليم"}
@@ -567,7 +567,7 @@ export default function DesignRequestsClient({
                     {it.request.revisionNotes && (
                       <div className="px-3 py-2.5 rounded-xl bg-amber-500/[0.08]">
                         <p
-                          className="font-bold text-amber-700 dark:text-amber-400 mb-2"
+                          className="font-semibold text-amber-700 dark:text-amber-400 mb-2"
                           style={{ fontSize: "var(--dr-fs-meta)" }}
                         >
                           ملاحظات الجمعية السابقة
@@ -589,7 +589,7 @@ export default function DesignRequestsClient({
                   <div className="flex flex-wrap items-center gap-2 w-full mt-2">
                     <button
                       onClick={() => setReviewingId(it.request.id)}
-                      className="flex-1 min-w-[120px] h-9 rounded-lg bg-amber-500 text-white hover:bg-amber-600 transition-colors font-bold"
+                      className="flex-1 min-w-[120px] h-9 rounded-lg bg-amber-500 text-white hover:bg-amber-600 transition-colors font-semibold"
                       style={{ fontSize: "var(--dr-fs-meta)" }}
                     >
                       مراجعة الطلب
@@ -609,7 +609,7 @@ export default function DesignRequestsClient({
                       className="w-full mt-2 px-3 py-2 rounded-xl bg-rose-500/[0.06] text-rose-600 dark:text-rose-400 leading-relaxed"
                       style={{ fontSize: "var(--dr-fs-meta)" }}
                     >
-                      <span className="font-bold">ملاحظات الإعادة: </span>
+                      <span className="font-semibold">ملاحظات الإعادة: </span>
                       {it.request.rejectionReason}
                     </div>
                   ) : null
@@ -625,7 +625,7 @@ export default function DesignRequestsClient({
                       <button
                         onClick={() => handleStart(it.request.id)}
                         disabled={startingId === it.request.id}
-                        className="flex-1 min-w-[92px] h-9 rounded-lg bg-indigo-500/10 text-indigo-600 dark:bg-indigo-500/15 dark:text-indigo-400 hover:bg-indigo-500 hover:text-white dark:hover:bg-indigo-500 dark:hover:text-white transition-colors font-bold disabled:opacity-60 flex items-center justify-center gap-1.5"
+                        className="flex-1 min-w-[92px] h-9 rounded-lg bg-indigo-500/10 text-indigo-600 dark:bg-indigo-500/15 dark:text-indigo-400 hover:bg-indigo-500 hover:text-white dark:hover:bg-indigo-500 dark:hover:text-white transition-colors font-semibold disabled:opacity-60 flex items-center justify-center gap-1.5"
                         style={{ fontSize: "var(--dr-fs-meta)" }}
                       >
                         {startingId === it.request.id && <Loader2 className="w-3 h-3 animate-spin" />}
@@ -634,7 +634,7 @@ export default function DesignRequestsClient({
                     ) : null}
                     <button
                       onClick={() => setConfirmingId(it.request.id)}
-                      className="flex-1 min-w-[72px] h-9 rounded-lg bg-primary/10 text-primary dark:bg-teal-500/10 dark:text-teal-400 hover:bg-primary hover:text-white dark:hover:bg-teal-500 dark:hover:text-[#0A0A0A] transition-colors font-bold"
+                      className="flex-1 min-w-[72px] h-9 rounded-lg bg-primary/10 text-primary dark:bg-teal-500/10 dark:text-teal-400 hover:bg-primary hover:text-white dark:hover:bg-teal-500 dark:hover:text-[#0A0A0A] transition-colors font-semibold"
                       style={{ fontSize: "var(--dr-fs-meta)" }}
                     >
                       إنهاء
@@ -676,7 +676,7 @@ export default function DesignRequestsClient({
                 canDelete ? (
                   <button
                     onClick={() => setDeletingId(it.request.id)}
-                    className="w-full h-8 mt-2 rounded-lg text-rose-500/80 dark:text-rose-400/70 hover:text-white hover:bg-rose-500 dark:hover:bg-rose-500 dark:hover:text-[#0A0A0A] transition-colors font-bold"
+                    className="w-full h-8 mt-2 rounded-lg text-rose-500/80 dark:text-rose-400/70 hover:text-white hover:bg-rose-500 dark:hover:bg-rose-500 dark:hover:text-[#0A0A0A] transition-colors font-semibold"
                     style={{ fontSize: "var(--dr-fs-eyebrow)" }}
                   >
                     حذف الطلب نهائياً
@@ -843,7 +843,7 @@ footer={<>
 
               {deliverableError && (
                 <div
-                  className="flex items-start gap-2 mb-2 px-3 py-2 rounded-lg bg-rose-500/[0.08] text-rose-600 dark:text-rose-400 font-bold"
+                  className="flex items-start gap-2 mb-2 px-3 py-2 rounded-lg bg-rose-500/[0.08] text-rose-600 dark:text-rose-400 font-semibold"
                   style={{ fontSize: "var(--dr-fs-meta)" }}
                 >
                   <AlertTriangle className="w-3.5 h-3.5 shrink-0 mt-px" />
@@ -851,7 +851,7 @@ footer={<>
                 </div>
               )}
               <label
-                className="flex items-center justify-center gap-2 h-11 rounded-xl border-2 border-dashed border-slate-200 dark:border-slate-700 hover:border-primary/40 cursor-pointer text-slate-500 dark:text-slate-400 hover:text-primary dark:hover:text-teal-300 transition-colors font-bold"
+                className="flex items-center justify-center gap-2 h-11 rounded-xl border-2 border-dashed border-slate-200 dark:border-slate-700 hover:border-primary/40 cursor-pointer text-slate-500 dark:text-slate-400 hover:text-primary dark:hover:text-teal-300 transition-colors font-semibold"
                 style={{ fontSize: "var(--dr-fs-meta)" }}
               >
                 <Paperclip className="w-4 h-4" />
@@ -901,7 +901,7 @@ footer={<>
               )}
 
               <label
-                className="block text-right mt-3 text-slate-500 dark:text-slate-400 font-bold"
+                className="block text-right mt-3 text-slate-500 dark:text-slate-400 font-semibold"
                 style={{ fontSize: "var(--dr-fs-eyebrow)" }}
               >
                 ملاحظة للجمعية (اختياري)

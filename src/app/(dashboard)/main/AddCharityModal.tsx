@@ -95,14 +95,14 @@ export default function AddCharityModal({ onClose, onSuccess }: { onClose: () =>
     >
         <div className="space-y-3">
           {error && (
-            <div className="bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 p-3 rounded-xl text-sm font-semibold border border-red-100 dark:border-red-800/50">
+            <div className="bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 p-3 rounded-xl text-caption font-semibold border border-red-100 dark:border-red-800/50">
               {error}
             </div>
           )}
 
           {/* Logo Uploader */}
           <div className="flex flex-col items-center gap-3 pb-2">
-            <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 w-full text-right">
+            <label className="block text-caption font-semibold text-slate-700 dark:text-slate-300 w-full text-right">
               شعار الجمعية
             </label>
 
@@ -119,7 +119,7 @@ export default function AddCharityModal({ onClose, onSuccess }: { onClose: () =>
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
                 disabled={loading}
-                className="absolute -bottom-1 -left-1 bg-primary text-white px-2 py-1 rounded-lg shadow hover:bg-primary/95 transition-all text-xs font-bold cursor-pointer active:scale-95 disabled:opacity-50"
+                className="absolute -bottom-1 -left-1 bg-primary text-white px-2 py-1 rounded-lg shadow hover:bg-primary/95 transition-all text-caption font-semibold cursor-pointer active:scale-95 disabled:opacity-50"
               >
                 {logoPreview ? "تغيير" : "رفع"}
               </button>
@@ -133,11 +133,11 @@ export default function AddCharityModal({ onClose, onSuccess }: { onClose: () =>
               onChange={handleFileChange}
               disabled={loading}
             />
-            <p className="text-[10px] text-slate-400 dark:text-slate-500 font-medium">الحد الأقصى لحجم الملف: 2 ميجابايت (PNG, JPG, SVG)</p>
+            <p className="text-caption text-slate-400 dark:text-slate-500 font-medium">الحد الأقصى لحجم الملف: 2 ميجابايت (PNG, JPG, SVG)</p>
           </div>
 
           <div className="space-y-1.5">
-            <label className="text-sm font-semibold text-slate-700 dark:text-slate-300">اسم الجمعية *</label>
+            <label className="text-caption font-semibold text-slate-700 dark:text-slate-300">اسم الجمعية *</label>
             <input
               type="text"
               name="name"
@@ -148,7 +148,7 @@ export default function AddCharityModal({ onClose, onSuccess }: { onClose: () =>
           </div>
 
           <div className="space-y-1.5">
-            <label className="text-sm font-semibold text-slate-700 dark:text-slate-300">مجال العمل (اختياري)</label>
+            <label className="text-caption font-semibold text-slate-700 dark:text-slate-300">مجال العمل (اختياري)</label>
             <input
               type="text"
               name="domain"
@@ -158,7 +158,7 @@ export default function AddCharityModal({ onClose, onSuccess }: { onClose: () =>
           </div>
 
           <div className="space-y-1.5">
-            <label className="text-sm font-semibold text-slate-700 dark:text-slate-300">تاريخ التأسيس (اختياري)</label>
+            <label className="text-caption font-semibold text-slate-700 dark:text-slate-300">تاريخ التأسيس (اختياري)</label>
             <input
               type="text"
               name="establishmentDate"
@@ -168,7 +168,7 @@ export default function AddCharityModal({ onClose, onSuccess }: { onClose: () =>
           </div>
 
           <div className="space-y-1.5">
-            <label className="text-sm font-semibold text-slate-700 dark:text-slate-300">رقم التصريح (اختياري)</label>
+            <label className="text-caption font-semibold text-slate-700 dark:text-slate-300">رقم التصريح (اختياري)</label>
             <input
               type="text"
               name="licenseNumber"

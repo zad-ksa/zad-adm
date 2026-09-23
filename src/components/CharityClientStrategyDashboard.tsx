@@ -65,12 +65,12 @@ export default function CharityClientStrategyDashboard({
               <div className="p-2 bg-primary/10 rounded-lg">
                 <CalendarIcon />
               </div>
-              <h3 className="font-bold text-lg text-slate-800 dark:text-slate-100">الاجتماع الاستراتيجي القادم</h3>
+              <h3 className="font-semibold text-section text-slate-800 dark:text-slate-100">الاجتماع الاستراتيجي القادم</h3>
             </div>
 
             {nextMeeting ? (
               <div className="mt-4">
-                <p className="font-bold text-xl text-slate-800 dark:text-slate-100 mb-2">{nextMeeting.title}</p>
+                <p className="font-semibold text-section text-slate-800 dark:text-slate-100 mb-2">{nextMeeting.title}</p>
                 <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400">
                   <ClockIcon />
                   <span>
@@ -103,11 +103,11 @@ export default function CharityClientStrategyDashboard({
                 <div className="p-3 bg-white/20 rounded-xl backdrop-blur-sm">
                   <MetricIcon />
                 </div>
-                <div className="bg-white/20 px-3 py-1 rounded-full text-xs font-bold backdrop-blur-sm">متاح للتعديل</div>
+                <div className="bg-white/20 px-3 py-1 rounded-full text-caption font-semibold backdrop-blur-sm">متاح للتعديل</div>
               </div>
               <div>
-                <h3 className="font-bold text-xl mb-1">مقياس الأداء</h3>
-                <p className="text-indigo-100 text-sm flex items-center justify-between">
+                <h3 className="font-semibold text-section mb-1">مقياس الأداء</h3>
+                <p className="text-indigo-100 text-caption flex items-center justify-between">
                   قم بتحديث بيانات الأداء والمؤشرات
                   <span className="transform group-hover:-translate-x-1 transition-transform">←</span>
                 </p>
@@ -121,11 +121,11 @@ export default function CharityClientStrategyDashboard({
                 <div className="p-3 bg-slate-200 dark:bg-slate-700 text-slate-500 dark:text-slate-400 rounded-xl">
                   <MetricIcon />
                 </div>
-                <div className="bg-slate-200 dark:bg-slate-700 text-slate-500 dark:text-slate-400 px-3 py-1 rounded-full text-xs font-bold">للعرض فقط</div>
+                <div className="bg-slate-200 dark:bg-slate-700 text-slate-500 dark:text-slate-400 px-3 py-1 rounded-full text-caption font-semibold">للعرض فقط</div>
               </div>
               <div>
-                <h3 className="font-bold text-xl mb-1 text-slate-800 dark:text-slate-200">مقياس الأداء</h3>
-                <p className="text-slate-500 dark:text-slate-400 text-sm">التعديل مغلق حالياً من قبل فريق الاستراتيجية</p>
+                <h3 className="font-semibold text-section mb-1 text-slate-800 dark:text-slate-200">مقياس الأداء</h3>
+                <p className="text-slate-500 dark:text-slate-400 text-caption">التعديل مغلق حالياً من قبل فريق الاستراتيجية</p>
               </div>
             </div>
           )}
@@ -135,11 +135,11 @@ export default function CharityClientStrategyDashboard({
               <div className="p-3 bg-white/20 rounded-xl backdrop-blur-sm">
                 <CheckCircleIcon />
               </div>
-              <div className="text-2xl font-black">{activeTasks?.length || 0}</div>
+              <div className="text-stat font-semibold">{activeTasks?.length || 0}</div>
             </div>
             <div>
-              <h3 className="font-bold text-xl mb-1">المهام الجارية</h3>
-              <p className="text-emerald-100 text-sm">لفريق الاستراتيجية</p>
+              <h3 className="font-semibold text-section mb-1">المهام الجارية</h3>
+              <p className="text-emerald-100 text-caption">لفريق الاستراتيجية</p>
             </div>
           </div>
         </div>
@@ -150,7 +150,7 @@ export default function CharityClientStrategyDashboard({
 
       {/* Active Tasks List */}
       <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-6 shadow-[0_1px_2px_rgb(15_23_42/0.04)]">
-        <h3 className="font-bold text-xl text-slate-800 dark:text-slate-100 mb-6 border-b border-slate-100 dark:border-slate-700 pb-4">المهام الجاري العمل عليها من قبل فريق الاستراتيجية</h3>
+        <h3 className="font-semibold text-section text-slate-800 dark:text-slate-100 mb-6 border-b border-slate-100 dark:border-slate-700 pb-4">المهام الجاري العمل عليها من قبل فريق الاستراتيجية</h3>
 
         {activeTasks && activeTasks.length > 0 ? (
           <div className="space-y-4">
@@ -161,8 +161,8 @@ export default function CharityClientStrategyDashboard({
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5"><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></svg>
                   </div>
                   <div>
-                    <h4 className="font-bold text-slate-800 dark:text-slate-200">{task.title}</h4>
-                    <span className="text-xs font-medium text-slate-500 dark:text-slate-400 mt-1 block">قيد التنفيذ</span>
+                    <h4 className="font-semibold text-slate-800 dark:text-slate-200">{task.title}</h4>
+                    <span className="text-caption font-medium text-slate-500 dark:text-slate-400 mt-1 block">قيد التنفيذ</span>
                   </div>
                 </div>
                 {task.assignedTo && (
@@ -174,7 +174,7 @@ export default function CharityClientStrategyDashboard({
                         <UserIcon />
                       )}
                     </div>
-                    <span className="text-sm font-bold text-slate-700 dark:text-slate-300">{task.assignedTo.name}</span>
+                    <span className="text-caption font-semibold text-slate-700 dark:text-slate-300">{task.assignedTo.name}</span>
                   </div>
                 )}
               </div>

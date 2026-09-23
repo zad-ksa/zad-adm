@@ -96,7 +96,7 @@ export default function GovernanceRegulationsManager({
 
   return (
     <div className="bg-white dark:bg-slate-900 rounded-xl p-8 border border-slate-200 dark:border-slate-800 shadow-[0_1px_2px_rgb(15_23_42/0.04)] relative overflow-hidden transition-colors">
-      <h3 className="text-xl font-bold text-slate-800 dark:text-slate-100 mb-6 flex items-center gap-2">
+      <h3 className="text-section font-semibold text-slate-800 dark:text-slate-100 mb-6 flex items-center gap-2">
         <FileText className="w-6 h-6 text-emerald-500" />
         خدمات المركز الوطني
       </h3>
@@ -127,18 +127,18 @@ export default function GovernanceRegulationsManager({
                 <div className="relative z-10 flex items-center gap-4 w-full">
                   {/* Number Circle */}
                   <span
-                    className="shrink-0 grid h-14 w-14 place-items-center rounded-full bg-gradient-to-r from-emerald-500 to-teal-500 transition-all duration-500 transform group-hover:bg-gradient-to-r group-hover:from-emerald-400 group-hover:to-teal-400 text-white font-bold text-xl shadow-md"
+                    className="shrink-0 grid h-14 w-14 place-items-center rounded-full bg-gradient-to-r from-emerald-500 to-teal-500 transition-all duration-500 transform group-hover:bg-gradient-to-r group-hover:from-emerald-400 group-hover:to-teal-400 text-white font-semibold text-section shadow-md"
                   >
                     {index + 1}
                   </span>
 
                   {/* Title */}
                   <div className="flex-1 min-w-0">
-                    <h4 className="font-bold text-slate-800 dark:text-white text-base leading-snug transition-colors duration-500 group-hover:text-emerald-900 dark:group-hover:text-emerald-100" title={reg.title}>
+                    <h4 className="font-semibold text-slate-800 dark:text-white text-title leading-snug transition-colors duration-500 group-hover:text-emerald-900 dark:group-hover:text-emerald-100" title={reg.title}>
                       {reg.title}
                     </h4>
                     <div className="mt-1 flex items-center gap-2">
-                      <span className={`text-[11px] px-2 py-0.5 rounded-full font-medium inline-flex items-center gap-1 transition-colors duration-500
+                      <span className={`text-caption px-2 py-0.5 rounded-full font-medium inline-flex items-center gap-1 transition-colors duration-500
                           ${reg.category === "الإشراف والحوكمة"
                           ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-400 group-hover:bg-emerald-100 dark:group-hover:bg-emerald-800/50 group-hover:text-emerald-900 dark:group-hover:text-emerald-100"
                           : reg.category === "التحول الرقمي"
@@ -157,11 +157,11 @@ export default function GovernanceRegulationsManager({
 
                 <div className="relative z-10 flex-1 mt-2">
                   {reg.description ? (
-                    <p className="text-sm text-slate-600 dark:text-slate-300 line-clamp-2 transition-colors duration-500 group-hover:text-emerald-800 dark:group-hover:text-emerald-200/90 leading-relaxed" title={reg.description}>
+                    <p className="text-caption text-slate-600 dark:text-slate-300 line-clamp-2 transition-colors duration-500 group-hover:text-emerald-800 dark:group-hover:text-emerald-200/90 leading-relaxed" title={reg.description}>
                       {reg.description}
                     </p>
                   ) : (
-                    <p className="text-sm text-slate-400 dark:text-slate-500 italic transition-colors duration-500 group-hover:text-emerald-700 dark:group-hover:text-emerald-300/70">
+                    <p className="text-caption text-slate-400 dark:text-slate-500 italic transition-colors duration-500 group-hover:text-emerald-700 dark:group-hover:text-emerald-300/70">
                       لا يوجد وصف لهذه الخدمة
                     </p>
                   )}
@@ -172,7 +172,7 @@ export default function GovernanceRegulationsManager({
                     href={reg.link}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-sm text-emerald-600 dark:text-emerald-400 font-bold inline-flex items-center gap-2 transition-colors duration-500 group-hover:text-emerald-900 dark:group-hover:text-emerald-100"
+                    className="text-caption text-emerald-600 dark:text-emerald-400 font-semibold inline-flex items-center gap-2 transition-colors duration-500 group-hover:text-emerald-900 dark:group-hover:text-emerald-100"
                   >
                     <span>عرض الخدمة</span>
                     <LinkIcon className="w-4 h-4" />
@@ -248,7 +248,7 @@ footer={<>
 >
 <div className="space-y-4">
 <div>
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                <label className="block text-caption font-medium text-slate-700 dark:text-slate-300 mb-1">
                   عنوان الخدمة
                 </label>
                 <input
@@ -261,7 +261,7 @@ footer={<>
                 />
               </div>
 <div>
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                <label className="block text-caption font-medium text-slate-700 dark:text-slate-300 mb-1">
                   الوصف (اختياري)
                 </label>
                 <textarea
@@ -273,7 +273,7 @@ footer={<>
                 ></textarea>
               </div>
 <div>
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                <label className="block text-caption font-medium text-slate-700 dark:text-slate-300 mb-1">
                   القسم
                 </label>
                 <Select
@@ -290,7 +290,7 @@ footer={<>
                 />
               </div>
 <div>
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                <label className="block text-caption font-medium text-slate-700 dark:text-slate-300 mb-1">
                   الرابط (المركز الوطني)
                 </label>
                 <input

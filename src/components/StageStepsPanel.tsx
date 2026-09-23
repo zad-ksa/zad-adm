@@ -72,7 +72,7 @@ export default function StageStepsPanel({ steps, canEdit, onAdd, onToggle, onRen
 
   return (
     <div className="mt-1.5">
-      <div className="w-full flex items-center gap-1.5 text-[10px] font-bold text-slate-500 dark:text-slate-400">
+      <div className="w-full flex items-center gap-1.5 text-caption font-semibold text-slate-500 dark:text-slate-400">
         <span>الخطوات</span>
         {total > 0 && (
           <>
@@ -108,12 +108,12 @@ export default function StageStepsPanel({ steps, canEdit, onAdd, onToggle, onRen
                   onChange={e => setEditName(e.target.value)}
                   onBlur={() => handleRename(step.id)}
                   onKeyDown={e => { if (e.key === "Enter") handleRename(step.id); if (e.key === "Escape") setEditingId(null); }}
-                  className="flex-1 text-[10px] bg-white dark:bg-slate-800 border border-primary/50 rounded px-1 py-0.5 outline-none"
+                  className="flex-1 text-caption bg-white dark:bg-slate-800 border border-primary/50 rounded px-1 py-0.5 outline-none"
                 />
               ) : (
                 <span
                   onClick={() => { if (canEdit) { setEditingId(step.id); setEditName(step.name); } }}
-                  className={`flex-1 text-[10px] leading-relaxed ${
+                  className={`flex-1 text-caption leading-relaxed ${
                     step.isDone ? "text-slate-400 dark:text-slate-500" : "text-slate-700 dark:text-slate-300"
                   } ${canEdit ? "cursor-text hover:text-primary transition-colors" : ""}`}
                 >
@@ -142,7 +142,7 @@ export default function StageStepsPanel({ steps, canEdit, onAdd, onToggle, onRen
                   onChange={e => setNewName(e.target.value)}
                   onKeyDown={e => { if (e.key === "Enter") handleAdd(); if (e.key === "Escape") { setAdding(false); setNewName(""); } }}
                   placeholder="اسم الخطوة..."
-                  className="flex-1 text-[10px] bg-white dark:bg-slate-800 border border-primary/50 rounded px-1 py-0.5 outline-none"
+                  className="flex-1 text-caption bg-white dark:bg-slate-800 border border-primary/50 rounded px-1 py-0.5 outline-none"
                 />
                 <button onClick={handleAdd} className="text-emerald-600 hover:text-emerald-700"><Check className="w-3 h-3" /></button>
                 <button onClick={() => { setAdding(false); setNewName(""); }} className="text-slate-400 hover:text-slate-600"><X className="w-3 h-3" /></button>
@@ -150,7 +150,7 @@ export default function StageStepsPanel({ steps, canEdit, onAdd, onToggle, onRen
             ) : (
               <button
                 onClick={() => setAdding(true)}
-                className="flex items-center gap-1 text-[10px] text-slate-400 hover:text-primary transition-colors mt-1"
+                className="flex items-center gap-1 text-caption text-slate-400 hover:text-primary transition-colors mt-1"
               >
                 <Plus className="w-3 h-3" /> إضافة خطوة
               </button>

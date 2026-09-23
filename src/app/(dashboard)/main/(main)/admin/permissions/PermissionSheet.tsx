@@ -129,7 +129,7 @@ export function PermissionSheet({
         <section className="space-y-2.5">
           <SectionHeader title="المجموعات التي تمنحها" />
           {viaBundles.length === 0 ? (
-            <p className="text-[13px] text-slate-500">لا تمنحها أي مجموعة.</p>
+            <p className="text-body text-slate-500">لا تمنحها أي مجموعة.</p>
           ) : (
             <div className="flex flex-wrap gap-1.5">
               {viaBundles.map((n) => (
@@ -169,13 +169,13 @@ export function PermissionSheet({
           />
 
           {carriedBy.length > 0 && (
-            <p className="text-[12.5px] text-slate-500">
+            <p className="text-meta text-slate-500">
               وتُمنح كذلك مع: {carriedBy.join("، ")} — علاقةٌ ثابتة في النظام.
             </p>
           )}
 
           {serviceNames.length === 0 ? (
-            <p className="rounded-lg border border-dashed border-slate-300 px-4 py-6 text-center text-[13px] text-slate-500 dark:border-slate-700">
+            <p className="rounded-lg border border-dashed border-slate-300 px-4 py-6 text-center text-body text-slate-500 dark:border-slate-700">
               لا توجد خدمات بعد.
             </p>
           ) : (

@@ -148,8 +148,8 @@ export default async function MainDashboard() {
       {/* نسبة الإنجاز الشاملة */}
       <section className="mb-4 rounded-lg border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900">
         <div className="mb-2 flex items-center justify-between gap-3">
-          <h2 className="text-[14px] font-semibold text-slate-900 dark:text-slate-100">نسبة إنجاز المهام الإجمالية</h2>
-          <span className={`${MONO} text-[14px] font-semibold text-emerald-700 dark:text-emerald-400`}>
+          <h2 className="text-body font-semibold text-slate-900 dark:text-slate-100">نسبة إنجاز المهام الإجمالية</h2>
+          <span className={`${MONO} text-body font-semibold text-emerald-700 dark:text-emerald-400`}>
             {stats.completionPercentage}%
           </span>
         </div>
@@ -163,7 +163,7 @@ export default async function MainDashboard() {
         >
           <div className="h-full rounded-full bg-emerald-500 transition-all duration-1000" style={{ width: `${stats.completionPercentage}%` }} />
         </div>
-        <p className="mt-2 text-[12.5px] text-slate-500 dark:text-slate-400">
+        <p className="mt-2 text-meta text-slate-500 dark:text-slate-400">
           تم إنجاز {stats.completedTasks} مهمة من أصل {stats.totalTasks} مهام مسجلة.
         </p>
       </section>

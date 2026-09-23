@@ -43,8 +43,8 @@ export default function StrategyPermissionToggle({
   return (
     <div className="flex items-center justify-between p-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-[0_1px_2px_rgb(15_23_42/0.04)] mb-6 transition-colors">
       <div>
-        <h4 className="font-bold text-slate-800 dark:text-slate-200">{label}</h4>
-        {description && <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">{description}</p>}
+        <h4 className="font-semibold text-slate-800 dark:text-slate-200">{label}</h4>
+        {description && <p className="text-caption text-slate-500 dark:text-slate-400 mt-1">{description}</p>}
       </div>
       <button
         type="button"

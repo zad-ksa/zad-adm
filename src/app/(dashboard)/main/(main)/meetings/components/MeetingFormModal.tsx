@@ -238,9 +238,9 @@ closeOnBackdrop={false}
 headerAction={
   !editingId ? (
     <div className="me-2 flex items-center gap-1" aria-label={`الخطوة ${step === 1 ? "الأولى" : "الثانية"} من اثنتين`}>
-      <span className={`flex size-6 items-center justify-center rounded-full text-[11px] font-semibold ${step === 1 ? "bg-primary text-white" : "bg-primary/10 text-primary"}`}>١</span>
+      <span className={`flex size-6 items-center justify-center rounded-full text-caption font-semibold ${step === 1 ? "bg-primary text-white" : "bg-primary/10 text-primary"}`}>١</span>
       <span aria-hidden className="h-px w-4 bg-slate-200 dark:bg-slate-700" />
-      <span className={`flex size-6 items-center justify-center rounded-full text-[11px] font-semibold ${step === 2 ? "bg-primary text-white" : "bg-slate-100 text-slate-400 dark:bg-slate-800"}`}>٢</span>
+      <span className={`flex size-6 items-center justify-center rounded-full text-caption font-semibold ${step === 2 ? "bg-primary text-white" : "bg-slate-100 text-slate-400 dark:bg-slate-800"}`}>٢</span>
     </div>
   ) : undefined
 }
@@ -273,13 +273,13 @@ footer={
           {showDraftBanner && (
             <div className="flex items-center gap-2 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800/50 rounded-xl px-3 py-2">
               <FileClock className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0" />
-              <p className="flex-1 text-[11px] font-bold text-amber-700 dark:text-amber-400">
+              <p className="flex-1 text-caption font-semibold text-amber-700 dark:text-amber-400">
                 تم استرجاع مسودة محضر لم تُحفظ{draft?.savedAt ? ` (${timeAgoArabic(new Date(draft.savedAt))})` : ""}
               </p>
               <button
                 type="button"
                 onClick={discardDraft}
-                className="text-[10px] font-bold text-amber-700 dark:text-amber-400 hover:underline shrink-0"
+                className="text-caption font-semibold text-amber-700 dark:text-amber-400 hover:underline shrink-0"
               >
                 تجاهل وابدأ من جديد
               </button>
@@ -290,27 +290,27 @@ footer={
             <>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-xs font-bold text-slate-500 dark:text-slate-400 mb-1 block">عنوان الاجتماع *</label>
+                  <label className="text-caption font-semibold text-slate-500 dark:text-slate-400 mb-1 block">عنوان الاجتماع *</label>
                   <input value={title} onChange={e => setTitle(e.target.value)} placeholder="مثال: اجتماع فريق زاد الأسبوعي"
-                    className="w-full border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-xs bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-primary" />
+                    className="w-full border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-caption bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-primary" />
                 </div>
                 <div>
-                  <label className="text-xs font-bold text-slate-500 dark:text-slate-400 mb-1 block">التاريخ *</label>
+                  <label className="text-caption font-semibold text-slate-500 dark:text-slate-400 mb-1 block">التاريخ *</label>
                   <input type="date" value={date} onChange={e => setDate(e.target.value)} required
-                    className="w-full border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-xs bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-primary" />
+                    className="w-full border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-caption bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-primary" />
                 </div>
                 <div>
-                  <label className="text-xs font-bold text-slate-500 dark:text-slate-400 mb-1 block">المكان</label>
+                  <label className="text-caption font-semibold text-slate-500 dark:text-slate-400 mb-1 block">المكان</label>
                   <input value={location} onChange={e => setLocation(e.target.value)} placeholder="مكتب زاد / أونلاين"
-                    className="w-full border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-xs bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-primary" />
+                    className="w-full border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-caption bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-primary" />
                 </div>
                 <div>
-                  <label className="text-xs font-bold text-slate-500 dark:text-slate-400 mb-1 block">الحضور</label>
+                  <label className="text-caption font-semibold text-slate-500 dark:text-slate-400 mb-1 block">الحضور</label>
                   <input value={attendees} onChange={e => setAttendees(e.target.value)} placeholder="محمد، أحمد، سارة..."
-                    className="w-full border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-xs bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-primary" />
+                    className="w-full border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-caption bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-primary" />
                 </div>
                 <div>
-                  <label className="text-xs font-bold text-slate-500 dark:text-slate-400 mb-1 block">نوع / سياق الاجتماع</label>
+                  <label className="text-caption font-semibold text-slate-500 dark:text-slate-400 mb-1 block">نوع / سياق الاجتماع</label>
                   <Select
                     variant="soft"
                     value={meetingContext}
@@ -325,7 +325,7 @@ footer={
                   />
                 </div>
                 <div>
-                  <label className="text-xs font-bold text-slate-500 dark:text-slate-400 mb-1 block">الجمعية (اختياري)</label>
+                  <label className="text-caption font-semibold text-slate-500 dark:text-slate-400 mb-1 block">الجمعية (اختياري)</label>
                   <Select
                     variant="soft"
                     value={charityId}
@@ -340,42 +340,42 @@ footer={
                 </div>
               </div>
               <div>
-                <label className="text-xs font-bold text-slate-500 dark:text-slate-400 mb-1 block">
+                <label className="text-caption font-semibold text-slate-500 dark:text-slate-400 mb-1 block">
                   ملاحظات الاجتماع الخام *
                   <span className="font-normal text-slate-400 mr-1">— اكتب بحرية وبالعامية</span>
                 </label>
                 <textarea value={rawNotes} onChange={e => setRawNotes(e.target.value)} rows={8}
                   placeholder="اكتب ملاحظاتك هنا بأي طريقة... مثلاً: ناقشنا موضوع الميزانية وقرر المدير زيادتها، واحمد راح يتابع مع الجمعية..."
-                  className="w-full border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-xs bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-primary resize-none" />
+                  className="w-full border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-caption bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-primary resize-none" />
               </div>
-              {aiError && <p className="text-xs text-red-500 font-bold">{aiError}</p>}
+              {aiError && <p className="text-caption text-red-500 font-semibold">{aiError}</p>}
 
               {editingId && (
                 <div className="space-y-2 border-t border-slate-100 dark:border-slate-700 pt-3">
                   <div className="flex items-center gap-2 flex-wrap">
                     <Sparkles className="w-3.5 h-3.5 text-primary shrink-0" />
-                    <span className="text-xs font-bold text-slate-600 dark:text-slate-300">المحضر المنسق</span>
+                    <span className="text-caption font-semibold text-slate-600 dark:text-slate-300">المحضر المنسق</span>
                     <button
                       onClick={handleFormat}
                       disabled={aiLoading || !rawNotes.trim()}
-                      className="flex items-center gap-1.5 text-[10px] font-bold text-primary hover:text-primary/90 border border-primary/20 hover:bg-primary/5 px-2.5 py-1 rounded-lg transition-colors disabled:opacity-40 mr-auto"
+                      className="flex items-center gap-1.5 text-caption font-semibold text-primary hover:text-primary/90 border border-primary/20 hover:bg-primary/5 px-2.5 py-1 rounded-lg transition-colors disabled:opacity-40 mr-auto"
                     >
                       {aiLoading ? <Loader2 className="w-3 h-3 animate-spin" /> : <Sparkles className="w-3 h-3" />}
                       إعادة الصياغة
                     </button>
                   </div>
                   <textarea value={formattedContent} onChange={e => setFormattedContent(e.target.value)} rows={10}
-                    className="w-full border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-xs bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-primary resize-none leading-relaxed" dir="rtl" />
+                    className="w-full border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-caption bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-primary resize-none leading-relaxed" dir="rtl" />
                   {isTier1 && (
                     <label className="flex items-center gap-2 cursor-pointer select-none">
                       <input type="checkbox" checked={isPrivate} onChange={e => setIsPrivate(e.target.checked)} className="w-4 h-4 rounded accent-amber-500" />
                       <Lock className="w-3.5 h-3.5 text-amber-500" />
-                      <span className="text-xs font-bold text-slate-600 dark:text-slate-300">خاص بالإدارة التنفيذية فقط</span>
+                      <span className="text-caption font-semibold text-slate-600 dark:text-slate-300">خاص بالإدارة التنفيذية فقط</span>
                     </label>
                   )}
                 </div>
               )}
-              {error && <p className="text-xs text-red-500 font-bold">{error}</p>}
+              {error && <p className="text-caption text-red-500 font-semibold">{error}</p>}
             </>
           )}
 
@@ -383,27 +383,27 @@ footer={
             <>
               <div className="flex items-center gap-2 mb-1 flex-wrap">
                 <Sparkles className="w-4 h-4 text-primary shrink-0" />
-                <span className="text-xs font-bold text-slate-600 dark:text-slate-300">المحضر المنسق — يمكنك التعديل مباشرة</span>
+                <span className="text-caption font-semibold text-slate-600 dark:text-slate-300">المحضر المنسق — يمكنك التعديل مباشرة</span>
                 <button
                   onClick={handleFormat}
                   disabled={aiLoading || !rawNotes.trim()}
-                  className="flex items-center gap-1.5 text-[10px] font-bold text-primary hover:text-primary/90 border border-primary/20 hover:bg-primary/5 px-2.5 py-1 rounded-lg transition-colors disabled:opacity-40 mr-auto"
+                  className="flex items-center gap-1.5 text-caption font-semibold text-primary hover:text-primary/90 border border-primary/20 hover:bg-primary/5 px-2.5 py-1 rounded-lg transition-colors disabled:opacity-40 mr-auto"
                 >
                   {aiLoading ? <Loader2 className="w-3 h-3 animate-spin" /> : <Sparkles className="w-3 h-3" />}
                   إعادة الصياغة
                 </button>
               </div>
               <textarea value={formattedContent} onChange={e => setFormattedContent(e.target.value)} rows={15}
-                className="w-full border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-xs bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-primary resize-none leading-relaxed" dir="rtl" />
-              {aiError && <p className="text-xs text-amber-600 dark:text-amber-400 font-bold">{aiError}</p>}
+                className="w-full border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-caption bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-primary resize-none leading-relaxed" dir="rtl" />
+              {aiError && <p className="text-caption text-amber-600 dark:text-amber-400 font-semibold">{aiError}</p>}
               {isTier1 && (
                 <label className="flex items-center gap-2 cursor-pointer select-none">
                   <input type="checkbox" checked={isPrivate} onChange={e => setIsPrivate(e.target.checked)} className="w-4 h-4 rounded accent-amber-500" />
                   <Lock className="w-3.5 h-3.5 text-amber-500" />
-                  <span className="text-xs font-bold text-slate-600 dark:text-slate-300">خاص بالإدارة التنفيذية فقط</span>
+                  <span className="text-caption font-semibold text-slate-600 dark:text-slate-300">خاص بالإدارة التنفيذية فقط</span>
                 </label>
               )}
-              {error && <p className="text-xs text-red-500 font-bold">{error}</p>}
+              {error && <p className="text-caption text-red-500 font-semibold">{error}</p>}
             </>
           )}
         </div>

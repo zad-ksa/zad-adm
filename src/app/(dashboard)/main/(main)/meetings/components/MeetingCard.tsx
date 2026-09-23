@@ -43,19 +43,19 @@ export default function MeetingCard({
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-1 flex-wrap">
-            <span className="text-[10px] font-mono bg-slate-100 dark:bg-slate-700 text-slate-400 dark:text-slate-500 px-1.5 py-px rounded shrink-0">
+            <span className="text-caption font-mono bg-slate-100 dark:bg-slate-700 text-slate-400 dark:text-slate-500 px-1.5 py-px rounded shrink-0">
               {`ZAD_M_${String(meetingNumber).padStart(3, "0")}`}
             </span>
-            <span className="text-xs font-bold text-slate-800 dark:text-slate-100 truncate">{meeting.title}</span>
-            {meeting.isPrivate && <span className="text-[10px] bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 px-1 py-px rounded-full font-bold">خاص</span>}
+            <span className="text-caption font-semibold text-slate-800 dark:text-slate-100 truncate">{meeting.title}</span>
+            {meeting.isPrivate && <span className="text-caption bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 px-1 py-px rounded-full font-semibold">خاص</span>}
             {meeting.meetingContext && (
-              <span className="text-[10px] bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400 px-1 py-px rounded-full">
+              <span className="text-caption bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400 px-1 py-px rounded-full">
                 {departments.find(d => d.value === meeting.meetingContext)?.label ?? meeting.meetingContext}
               </span>
             )}
-            {meeting.charity && <span className="text-[10px] bg-primary/10 dark:bg-primary/20 text-primary dark:text-primary-foreground px-1 py-px rounded-full">{meeting.charity.name}</span>}
+            {meeting.charity && <span className="text-caption bg-primary/10 dark:bg-primary/20 text-primary dark:text-primary-foreground px-1 py-px rounded-full">{meeting.charity.name}</span>}
           </div>
-          <div className="text-[10px] text-slate-400 dark:text-slate-500 flex items-center gap-1.5">
+          <div className="text-caption text-slate-400 dark:text-slate-500 flex items-center gap-1.5">
             <span>{formatDate(meeting.date)}</span>
             {meeting.location && <span>· {meeting.location}</span>}
             <span>· {meeting.createdBy.name}</span>

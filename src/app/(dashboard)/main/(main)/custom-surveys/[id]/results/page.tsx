@@ -212,7 +212,7 @@ export default function SurveyResultsPage({ params }: { params: Promise<{ id: st
               key={section.id}
               className="bg-slate-50 rounded-xl p-5 border border-slate-100 dark:bg-slate-900/50 dark:border-slate-700"
             >
-              <h4 className="font-bold text-slate-700 mb-4 pb-2 border-b border-slate-200 dark:text-slate-300 dark:border-slate-700">
+              <h4 className="font-semibold text-slate-700 mb-4 pb-2 border-b border-slate-200 dark:text-slate-300 dark:border-slate-700">
                 {sIdx + 1}. {section.title}
               </h4>
               <div className="space-y-4">
@@ -223,16 +223,16 @@ export default function SurveyResultsPage({ params }: { params: Promise<{ id: st
 
                   return (
                     <div key={question.id} className="flex flex-col gap-1">
-                      <span className="text-sm font-bold text-slate-600 dark:text-slate-400">
+                      <span className="text-caption font-semibold text-slate-600 dark:text-slate-400">
                         {qIdx + 1}- {question.text}
                       </span>
                       {answer && (
-                        <p className="text-slate-800 bg-white border border-slate-200 px-4 py-2 rounded-lg text-sm dark:text-slate-100 dark:bg-slate-800 dark:border-slate-700">
+                        <p className="text-slate-800 bg-white border border-slate-200 px-4 py-2 rounded-lg text-caption dark:text-slate-100 dark:bg-slate-800 dark:border-slate-700">
                           {resolveAnswerText(question, answer)}
                         </p>
                       )}
                       {question.type === "FILE" && attachmentUrls.length === 0 && (
-                        <p className="text-slate-500 text-sm italic dark:text-slate-400 mt-1">لم يتم إرفاق ملف</p>
+                        <p className="text-slate-500 text-caption italic dark:text-slate-400 mt-1">لم يتم إرفاق ملف</p>
                       )}
                       {attachmentUrls.length > 0 && (
                         <div className="mt-2 flex flex-wrap gap-2">
@@ -242,7 +242,7 @@ export default function SurveyResultsPage({ params }: { params: Promise<{ id: st
                               href={url}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="inline-flex items-center gap-2 bg-primary/10 text-primary hover:bg-primary hover:text-white px-4 py-2 rounded-lg text-sm font-bold transition-colors dark:bg-primary/20"
+                              className="inline-flex items-center gap-2 bg-primary/10 text-primary hover:bg-primary hover:text-white px-4 py-2 rounded-lg text-caption font-semibold transition-colors dark:bg-primary/20"
                             >
                               <Download className="w-4 h-4" />
                               {question.type === "FILE" ? "تحميل المرفق" : "مرفق إضافي للسؤال"}{" "}
@@ -261,10 +261,10 @@ export default function SurveyResultsPage({ params }: { params: Promise<{ id: st
                               if (!followUpAnswer) return null;
                               return (
                                 <div key={followUp.id} className="flex flex-col gap-1">
-                                  <span className="text-xs font-bold text-slate-500 dark:text-slate-400">
+                                  <span className="text-caption font-semibold text-slate-500 dark:text-slate-400">
                                     {followUp.text}
                                   </span>
-                                  <p className="text-slate-800 bg-white border border-slate-200 px-3 py-1.5 rounded-lg text-sm dark:text-slate-100 dark:bg-slate-800 dark:border-slate-700">
+                                  <p className="text-slate-800 bg-white border border-slate-200 px-3 py-1.5 rounded-lg text-caption dark:text-slate-100 dark:bg-slate-800 dark:border-slate-700">
                                     {followUpAnswer}
                                   </p>
                                 </div>
@@ -308,7 +308,7 @@ export default function SurveyResultsPage({ params }: { params: Promise<{ id: st
           <div className="w-16 h-16 bg-slate-100 text-slate-400 rounded-full flex items-center justify-center mx-auto mb-4 dark:bg-slate-700 dark:text-slate-400">
             <FileText className="w-8 h-8" />
           </div>
-          <h3 className="text-xl font-bold text-slate-800 mb-2 dark:text-slate-100">لا توجد ردود بعد</h3>
+          <h3 className="text-section font-semibold text-slate-800 mb-2 dark:text-slate-100">لا توجد ردود بعد</h3>
           <p className="text-slate-500 dark:text-slate-400">
             قم بنسخ رابط الاستبيان وإرساله للجمعيات للبدء في تلقي الردود.
           </p>
@@ -322,7 +322,7 @@ export default function SurveyResultsPage({ params }: { params: Promise<{ id: st
                 key={key}
                 onClick={() => changeViewMode(key)}
                 aria-pressed={viewMode === key}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-caption font-semibold transition-all ${
                   viewMode === key
                     ? "bg-white text-primary shadow-sm dark:bg-slate-700"
                     : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-200"
@@ -347,8 +347,8 @@ export default function SurveyResultsPage({ params }: { params: Promise<{ id: st
                       <User className="w-6 h-6" />
                     </div>
                     <div>
-                      <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100">{respondentLabel(response, rIdx)}</h3>
-                      <p className="text-sm text-slate-500 dark:text-slate-400">
+                      <h3 className="text-section font-semibold text-slate-800 dark:text-slate-100">{respondentLabel(response, rIdx)}</h3>
+                      <p className="text-caption text-slate-500 dark:text-slate-400">
                         تاريخ المشاركة: {fmtDate(response.createdAt)}
                       </p>
                     </div>
@@ -363,7 +363,7 @@ export default function SurveyResultsPage({ params }: { params: Promise<{ id: st
           {viewMode === "byRespondent" && (
             <div className="grid grid-cols-1 lg:grid-cols-[260px_minmax(0,1fr)] gap-6">
               <div className="bg-white border border-slate-200 rounded-xl p-2 shadow-[0_1px_2px_rgb(15_23_42/0.04)] dark:bg-slate-900 dark:border-slate-800 h-fit lg:sticky lg:top-4 max-h-[80vh] overflow-y-auto">
-                <p className="text-[11px] font-bold text-slate-400 dark:text-slate-500 px-2 py-1.5">
+                <p className="text-caption font-semibold text-slate-400 dark:text-slate-500 px-2 py-1.5">
                   المشاركون ({parsedResponses.length})
                 </p>
                 <ul className="space-y-1">
@@ -379,8 +379,8 @@ export default function SurveyResultsPage({ params }: { params: Promise<{ id: st
                               : "hover:bg-slate-50 dark:hover:bg-slate-700/50 text-slate-700 dark:text-slate-300"
                           }`}
                         >
-                          <span className="block text-xs font-bold truncate">{respondentLabel(r, i)}</span>
-                          <span className="block text-[10px] text-slate-400 dark:text-slate-500 truncate">
+                          <span className="block text-caption font-semibold truncate">{respondentLabel(r, i)}</span>
+                          <span className="block text-caption text-slate-400 dark:text-slate-500 truncate">
                             {fmtDate(r.createdAt)}
                           </span>
                         </button>
@@ -398,10 +398,10 @@ export default function SurveyResultsPage({ params }: { params: Promise<{ id: st
                         <User className="w-6 h-6" />
                       </div>
                       <div className="min-w-0">
-                        <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100 truncate">
+                        <h3 className="text-section font-semibold text-slate-800 dark:text-slate-100 truncate">
                           {respondentLabel(selectedRespondent, respondentIndex(selectedRespondent.id))}
                         </h3>
-                        <p className="text-sm text-slate-500 dark:text-slate-400">
+                        <p className="text-caption text-slate-500 dark:text-slate-400">
                           تاريخ المشاركة: {fmtDate(selectedRespondent.createdAt)}
                         </p>
                       </div>
@@ -409,7 +409,7 @@ export default function SurveyResultsPage({ params }: { params: Promise<{ id: st
                     {renderRespondentAnswers(selectedRespondent)}
                   </>
                 ) : (
-                  <p className="text-slate-400 text-sm text-center py-10">اختر مشاركاً من القائمة</p>
+                  <p className="text-slate-400 text-caption text-center py-10">اختر مشاركاً من القائمة</p>
                 )}
               </div>
             </div>
@@ -446,26 +446,26 @@ export default function SurveyResultsPage({ params }: { params: Promise<{ id: st
                   >
                     <div className="flex items-start justify-between gap-3 mb-3">
                       <div className="min-w-0">
-                        <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500">
+                        <p className="text-caption font-semibold text-slate-400 dark:text-slate-500">
                           {sectionIdx + 1}. {sectionTitle}
                           {isFollowUp && " — سؤال تابع"}
                         </p>
-                        <h4 className="text-sm font-bold text-slate-800 dark:text-slate-100 mt-0.5">{q.text}</h4>
+                        <h4 className="text-caption font-semibold text-slate-800 dark:text-slate-100 mt-0.5">{q.text}</h4>
                       </div>
-                      <span className="shrink-0 text-[10px] font-bold text-slate-400 bg-slate-100 dark:bg-slate-700 dark:text-slate-300 px-2 py-0.5 rounded-full">
+                      <span className="shrink-0 text-caption font-semibold text-slate-400 bg-slate-100 dark:bg-slate-700 dark:text-slate-300 px-2 py-0.5 rounded-full">
                         {rawAnswers.length} إجابة
                       </span>
                     </div>
 
                     {rawAnswers.length === 0 ? (
-                      <p className="text-xs text-slate-400 dark:text-slate-500">لا توجد إجابات على هذا السؤال.</p>
+                      <p className="text-caption text-slate-400 dark:text-slate-500">لا توجد إجابات على هذا السؤال.</p>
                     ) : isChoice ? (
                       <div className="space-y-2">
                         {tallyRows.map(([label, count]) => {
                           const pct = Math.round((count / rawAnswers.length) * 100);
                           return (
                             <div key={label} className="flex items-center gap-3">
-                              <span className="w-40 shrink-0 text-xs font-bold text-slate-600 dark:text-slate-300 truncate" title={label}>
+                              <span className="w-40 shrink-0 text-caption font-semibold text-slate-600 dark:text-slate-300 truncate" title={label}>
                                 {label}
                               </span>
                               <div className="flex-1 h-6 bg-slate-100 dark:bg-slate-900/60 rounded-lg overflow-hidden">
@@ -474,7 +474,7 @@ export default function SurveyResultsPage({ params }: { params: Promise<{ id: st
                                   style={{ width: `${Math.max(4, (count / maxCount) * 100)}%` }}
                                 />
                               </div>
-                              <span className="w-16 shrink-0 text-left text-xs font-bold text-slate-500 dark:text-slate-400 tabular-nums">
+                              <span className="w-16 shrink-0 text-left text-caption font-semibold text-slate-500 dark:text-slate-400 tabular-nums">
                                 {count} ({pct}%)
                               </span>
                             </div>
@@ -486,9 +486,9 @@ export default function SurveyResultsPage({ params }: { params: Promise<{ id: st
                         {rawAnswers.map(({ name, raw }, i) => (
                           <li
                             key={i}
-                            className="text-sm text-slate-700 dark:text-slate-200 bg-slate-50 dark:bg-slate-900/50 border border-slate-100 dark:border-slate-700 rounded-lg px-3 py-2"
+                            className="text-caption text-slate-700 dark:text-slate-200 bg-slate-50 dark:bg-slate-900/50 border border-slate-100 dark:border-slate-700 rounded-lg px-3 py-2"
                           >
-                            <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 block mb-0.5">
+                            <span className="text-caption font-semibold text-slate-400 dark:text-slate-500 block mb-0.5">
                               {name}
                             </span>
                             {resolveAnswerText(q, raw)}
@@ -505,17 +505,17 @@ export default function SurveyResultsPage({ params }: { params: Promise<{ id: st
           {/* ── جدول: صف لكل مشارك، عمود لكل سؤال ─────────────────────────── */}
           {viewMode === "table" && (
             <div className="overflow-x-auto rounded-lg border border-slate-200 bg-white shadow-[0_1px_2px_rgb(15_23_42/0.04)] dark:border-slate-800 dark:bg-slate-900">
-              <table className="w-full border-collapse text-xs">
+              <table className="w-full border-collapse text-caption">
                 <thead>
                   <tr className={theadRowClass}>
-                    <th className="text-[12.5px] font-medium text-slate-500 dark:text-slate-400 sticky right-0 z-10 h-10 min-w-[160px] whitespace-nowrap border-l border-slate-200 bg-slate-50 px-3 text-right dark:border-slate-800 dark:bg-slate-900">
+                    <th className="text-meta font-medium text-slate-500 dark:text-slate-400 sticky right-0 z-10 h-10 min-w-[160px] whitespace-nowrap border-l border-slate-200 bg-slate-50 px-3 text-right dark:border-slate-800 dark:bg-slate-900">
                       المشارك
                     </th>
                     {flatQuestions.map(({ q, isFollowUp }, idx) => (
                       <th
                         key={`${q.id}-${idx}`}
                         title={q.text}
-                        className="text-[12.5px] font-medium text-slate-500 dark:text-slate-400 min-w-[180px] max-w-[240px] px-3 py-2.5 text-right"
+                        className="text-meta font-medium text-slate-500 dark:text-slate-400 min-w-[180px] max-w-[240px] px-3 py-2.5 text-right"
                       >
                         <span className="line-clamp-2">
                           {isFollowUp && "↳ "}
@@ -531,11 +531,11 @@ export default function SurveyResultsPage({ params }: { params: Promise<{ id: st
                       key={r.id}
                       className={rIdx % 2 ? "bg-slate-50/60 dark:bg-slate-800/30" : ""}
                     >
-                      <td className={cx("sticky right-0 z-10 min-w-[160px] border-l border-slate-200 px-3 py-2 align-top font-bold text-slate-700 dark:border-slate-800 dark:text-slate-200", rIdx % 2 ? "bg-slate-50 dark:bg-slate-900" : "bg-white dark:bg-slate-900")}>
+                      <td className={cx("sticky right-0 z-10 min-w-[160px] border-l border-slate-200 px-3 py-2 align-top font-semibold text-slate-700 dark:border-slate-800 dark:text-slate-200", rIdx % 2 ? "bg-slate-50 dark:bg-slate-900" : "bg-white dark:bg-slate-900")}>
                         <span className="block truncate max-w-[150px]" title={respondentLabel(r, rIdx)}>
                           {respondentLabel(r, rIdx)}
                         </span>
-                        <span className="block text-[10px] font-normal text-slate-400 dark:text-slate-500">
+                        <span className="block text-caption font-normal text-slate-400 dark:text-slate-500">
                           {fmtDate(r.createdAt)}
                         </span>
                       </td>

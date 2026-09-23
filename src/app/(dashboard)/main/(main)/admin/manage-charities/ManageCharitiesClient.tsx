@@ -174,11 +174,11 @@ export default function ManageCharitiesClient({ initialCharities }: { initialCha
                 </div>
               </div>
 
-              <h3 className="line-clamp-2 text-[15px] font-semibold leading-6 text-slate-900 dark:text-slate-100">
+              <h3 className="line-clamp-2 text-title font-semibold leading-6 text-slate-900 dark:text-slate-100">
                 {charity.name}
               </h3>
 
-              <dl className="space-y-1 text-[12.5px] text-slate-500 dark:text-slate-400">
+              <dl className="space-y-1 text-meta text-slate-500 dark:text-slate-400">
                 {charity.domain && (
                   <div className="flex items-center gap-1.5">
                     <Globe className="size-3.5 shrink-0" />
@@ -226,11 +226,11 @@ export default function ManageCharitiesClient({ initialCharities }: { initialCha
           }
         >
           <div className="space-y-4">
-            <p className="text-slate-500 dark:text-slate-400 text-sm leading-relaxed">
+            <p className="text-slate-500 dark:text-slate-400 text-caption leading-relaxed">
                   هل أنت متأكد من رغبتك في حذف <strong className="text-slate-900 dark:text-white">{selectedCharity?.name}</strong>؟ هذا الإجراء لا يمكن التراجع عنه. قد تفشل العملية إذا كانت الجمعية مرتبطة ببيانات مالية أو مشاريع قائمة.
                 </p>
-            {error && <div className="p-4 rounded-xl bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/20 text-red-600 dark:text-red-400 text-sm font-bold flex items-center gap-2"><AlertTriangle className="w-4 h-4"/>{error}</div>}
-            {success && <div className="p-4 rounded-xl bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-sm font-bold flex items-center gap-2"><ShieldCheck className="w-4 h-4"/>{success}</div>}
+            {error && <div className="p-4 rounded-xl bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/20 text-red-600 dark:text-red-400 text-caption font-semibold flex items-center gap-2"><AlertTriangle className="w-4 h-4"/>{error}</div>}
+            {success && <div className="p-4 rounded-xl bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-caption font-semibold flex items-center gap-2"><ShieldCheck className="w-4 h-4"/>{success}</div>}
           </div>
         </Dialog>
       ) : (
@@ -254,55 +254,55 @@ export default function ManageCharitiesClient({ initialCharities }: { initialCha
           }
         >
           <div className="space-y-4">
-            {error && <div className="p-4 rounded-xl bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/20 text-red-600 dark:text-red-400 text-sm font-bold flex items-center gap-2"><AlertTriangle className="w-4 h-4"/>{error}</div>}
-            {success && <div className="p-4 rounded-xl bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-sm font-bold flex items-center gap-2"><ShieldCheck className="w-4 h-4"/>{success}</div>}
+            {error && <div className="p-4 rounded-xl bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/20 text-red-600 dark:text-red-400 text-caption font-semibold flex items-center gap-2"><AlertTriangle className="w-4 h-4"/>{error}</div>}
+            {success && <div className="p-4 rounded-xl bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-caption font-semibold flex items-center gap-2"><ShieldCheck className="w-4 h-4"/>{success}</div>}
             <div className="space-y-4">
                   <div>
-                    <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-2">اسم الجمعية *</label>
+                    <label className="block text-caption font-semibold text-slate-500 dark:text-slate-400 mb-2">اسم الجمعية *</label>
                     <input
                       type="text"
                       value={formData.name}
                       onChange={e => setFormData({...formData, name: e.target.value})}
                       disabled={isPending}
-                      className="w-full bg-slate-50 dark:bg-black/50 border border-slate-200 dark:border-white/10 rounded-lg px-4 py-3 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-primary/50 dark:focus:border-primary/50 focus:bg-white dark:focus:bg-white/5 transition-all"
+                      className="w-full bg-slate-50 dark:bg-black/50 border border-slate-200 dark:border-white/10 rounded-lg px-4 py-3 text-caption text-slate-900 dark:text-white focus:outline-none focus:border-primary/50 dark:focus:border-primary/50 focus:bg-white dark:focus:bg-white/5 transition-all"
                       placeholder="مثال: جمعية البر الخيرية"
                     />
                   </div>
 
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-2">تاريخ التأسيس</label>
+                      <label className="block text-caption font-semibold text-slate-500 dark:text-slate-400 mb-2">تاريخ التأسيس</label>
                       <input
                         type="text"
                         value={formData.establishmentDate}
                         onChange={e => setFormData({...formData, establishmentDate: e.target.value})}
                         disabled={isPending}
-                        className="w-full bg-slate-50 dark:bg-black/50 border border-slate-200 dark:border-white/10 rounded-lg px-4 py-3 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-primary/50 dark:focus:border-primary/50 focus:bg-white dark:focus:bg-white/5 transition-all"
+                        className="w-full bg-slate-50 dark:bg-black/50 border border-slate-200 dark:border-white/10 rounded-lg px-4 py-3 text-caption text-slate-900 dark:text-white focus:outline-none focus:border-primary/50 dark:focus:border-primary/50 focus:bg-white dark:focus:bg-white/5 transition-all"
                         placeholder="مثال: 1440 هـ"
                       />
                     </div>
                     <div>
-                      <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-2">رقم الترخيص</label>
+                      <label className="block text-caption font-semibold text-slate-500 dark:text-slate-400 mb-2">رقم الترخيص</label>
                       <input
                         type="text"
                         value={formData.licenseNumber}
                         onChange={e => setFormData({...formData, licenseNumber: e.target.value})}
                         disabled={isPending}
-                        className="w-full bg-slate-50 dark:bg-black/50 border border-slate-200 dark:border-white/10 rounded-lg px-4 py-3 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-primary/50 dark:focus:border-primary/50 focus:bg-white dark:focus:bg-white/5 transition-all"
+                        className="w-full bg-slate-50 dark:bg-black/50 border border-slate-200 dark:border-white/10 rounded-lg px-4 py-3 text-caption text-slate-900 dark:text-white focus:outline-none focus:border-primary/50 dark:focus:border-primary/50 focus:bg-white dark:focus:bg-white/5 transition-all"
                         placeholder="رقم ترخيص الموارد"
                       />
                     </div>
                   </div>
 
                   <div>
-                    <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-2">النطاق (Domain)</label>
+                    <label className="block text-caption font-semibold text-slate-500 dark:text-slate-400 mb-2">النطاق (Domain)</label>
                     <input
                       type="text"
                       dir="ltr"
                       value={formData.domain}
                       onChange={e => setFormData({...formData, domain: e.target.value})}
                       disabled={isPending}
-                      className="w-full text-left bg-slate-50 dark:bg-black/50 border border-slate-200 dark:border-white/10 rounded-lg px-4 py-3 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-primary/50 dark:focus:border-primary/50 focus:bg-white dark:focus:bg-white/5 transition-all"
+                      className="w-full text-left bg-slate-50 dark:bg-black/50 border border-slate-200 dark:border-white/10 rounded-lg px-4 py-3 text-caption text-slate-900 dark:text-white focus:outline-none focus:border-primary/50 dark:focus:border-primary/50 focus:bg-white dark:focus:bg-white/5 transition-all"
                       placeholder="albir.org.sa"
                     />
                   </div>

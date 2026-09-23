@@ -153,7 +153,7 @@ export default function CalendarClient({
     : 0;
 
   const TOGGLE =
-    "h-8 px-3 rounded-lg text-[12px] font-bold transition-colors border";
+    "h-8 px-3 rounded-lg text-meta font-semibold transition-colors border";
   const toggleOn = "bg-primary text-white border-primary";
   const toggleOff =
     "border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800";

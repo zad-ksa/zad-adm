@@ -26,7 +26,7 @@ export default function CopyTextButton({ texts }: CopyTextButtonProps) {
     <button
       onClick={handleCopy}
       type="button"
-      className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700/50 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition-all shadow-sm shrink-0"
+      className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-caption font-medium border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700/50 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition-all shadow-sm shrink-0"
       title="نسخ جميع المشاركات"
     >
       {copied ? (
@@ -34,7 +34,7 @@ export default function CopyTextButton({ texts }: CopyTextButtonProps) {
           <svg className="w-3.5 h-3.5 text-emerald-500 animate-bounce" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
           </svg>
-          <span className="text-emerald-600 dark:text-emerald-400 font-bold">تم النسخ!</span>
+          <span className="text-emerald-600 dark:text-emerald-400 font-semibold">تم النسخ!</span>
         </>
       ) : (
         <>

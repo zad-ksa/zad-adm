@@ -144,7 +144,7 @@ export default function DesignRequestCard({
         <div className={`hidden lg:grid ${DESIGN_REQUEST_LIST_GRID_COLS} items-center gap-3 px-4 py-2.5`}>
           <span
             title={request.charityName}
-            className="min-w-0 truncate flex items-center gap-1 text-primary dark:text-teal-300 font-bold"
+            className="min-w-0 truncate flex items-center gap-1 text-primary dark:text-teal-300 font-semibold"
             style={{ fontSize: "var(--dr-fs-eyebrow)" }}
           >
             {request.charityName && <Building2 className="w-3 h-3 shrink-0" />}
@@ -153,7 +153,7 @@ export default function DesignRequestCard({
 
           <span
             title={request.title}
-            className="min-w-0 truncate font-bold text-slate-900 dark:text-slate-100"
+            className="min-w-0 truncate font-semibold text-slate-900 dark:text-slate-100"
             style={{ fontSize: "var(--dr-fs-title)" }}
           >
             {request.title}
@@ -194,7 +194,7 @@ export default function DesignRequestCard({
           {chevron}
           {request.charityName && (
             <span
-              className="hidden sm:flex items-center gap-1 text-primary dark:text-teal-300 font-bold shrink-0"
+              className="hidden sm:flex items-center gap-1 text-primary dark:text-teal-300 font-semibold shrink-0"
               style={{ fontSize: "var(--dr-fs-eyebrow)" }}
             >
               <Building2 className="w-3 h-3" />
@@ -202,7 +202,7 @@ export default function DesignRequestCard({
             </span>
           )}
           <span
-            className="flex-1 min-w-0 truncate font-bold text-slate-900 dark:text-slate-100"
+            className="flex-1 min-w-0 truncate font-semibold text-slate-900 dark:text-slate-100"
             style={{ fontSize: "var(--dr-fs-title)" }}
           >
             {request.title}
@@ -235,7 +235,7 @@ export default function DesignRequestCard({
         <button
           type="button"
           onClick={() => setRowOpen(false)}
-          className="flex items-center gap-1.5 mb-2 text-slate-400 hover:text-primary dark:text-slate-500 dark:hover:text-teal-400 font-bold transition-colors cursor-pointer"
+          className="flex items-center gap-1.5 mb-2 text-slate-400 hover:text-primary dark:text-slate-500 dark:hover:text-teal-400 font-semibold transition-colors cursor-pointer"
           style={{ fontSize: "var(--dr-fs-eyebrow)" }}
         >
           <ChevronDown className="w-3.5 h-3.5" />
@@ -246,7 +246,7 @@ export default function DesignRequestCard({
         <div className="min-w-0 flex-1 space-y-1">
           {request.charityName && (
             <div
-              className="flex items-center gap-1.5 text-primary dark:text-teal-300 font-bold"
+              className="flex items-center gap-1.5 text-primary dark:text-teal-300 font-semibold"
               style={{ fontSize: "var(--dr-fs-eyebrow)" }}
             >
               <Building2 className="w-3 h-3" />
@@ -259,7 +259,7 @@ export default function DesignRequestCard({
               its row to match, so the cards beside it stay aligned. */}
           <div className="flex items-start gap-2">
             <h3
-              className="font-bold text-slate-900 dark:text-slate-100 break-words leading-snug min-w-0 flex-1"
+              className="font-semibold text-slate-900 dark:text-slate-100 break-words leading-snug min-w-0 flex-1"
               style={{ fontSize: "var(--dr-fs-title)", textWrap: "balance" }}
             >
               {request.title}
@@ -295,7 +295,7 @@ export default function DesignRequestCard({
                 <button
                   type="button"
                   onClick={() => setExpanded((v) => !v)}
-                  className="mt-1 font-bold text-primary dark:text-teal-300 hover:underline"
+                  className="mt-1 font-semibold text-primary dark:text-teal-300 hover:underline"
                   style={{ fontSize: "var(--dr-fs-eyebrow)" }}
                 >
                   {expanded ? "عرض أقل" : "عرض المزيد"}
@@ -327,7 +327,7 @@ export default function DesignRequestCard({
       {request.extensions && request.extensions.length > 0 && (
         <div className="mt-3 rounded-xl bg-amber-500/[0.07] px-3 py-2.5 space-y-2">
           <p
-            className="flex items-center gap-1.5 font-bold text-amber-700 dark:text-amber-400"
+            className="flex items-center gap-1.5 font-semibold text-amber-700 dark:text-amber-400"
             style={{ fontSize: "var(--dr-fs-eyebrow)" }}
           >
             <CalendarPlus className="w-3 h-3 shrink-0" />
@@ -336,7 +336,7 @@ export default function DesignRequestCard({
           {request.extensions.map((ext) => (
             <div key={ext.id} className="flex items-start gap-2">
               <span
-                className="shrink-0 px-1.5 py-0.5 rounded bg-amber-500/15 text-amber-700 dark:text-amber-400 font-bold tabular-nums"
+                className="shrink-0 px-1.5 py-0.5 rounded bg-amber-500/15 text-amber-700 dark:text-amber-400 font-semibold tabular-nums"
                 style={{ fontSize: "var(--dr-fs-eyebrow)" }}
               >
                 +{ext.days}
@@ -360,7 +360,7 @@ export default function DesignRequestCard({
         >
           <span className="flex items-center gap-2">
             <Calendar className="w-4 h-4 text-slate-400 dark:text-slate-500 shrink-0" />
-            <span>الرفع:</span> <span className="font-bold text-slate-700 dark:text-slate-200">{request.submittedAt}</span>
+            <span>الرفع:</span> <span className="font-semibold text-slate-700 dark:text-slate-200">{request.submittedAt}</span>
           </span>
 
           {/* When the work is due to START.
@@ -374,7 +374,7 @@ export default function DesignRequestCard({
             <span className="flex items-center gap-2">
               <CalendarClock className="w-4 h-4 text-slate-400 dark:text-slate-500 shrink-0" />
               <span>بدء التنفيذ:</span>{" "}
-              <span className="font-bold text-slate-700 dark:text-slate-200">
+              <span className="font-semibold text-slate-700 dark:text-slate-200">
                 {request.scheduledStartDate}
               </span>
             </span>
@@ -383,7 +383,7 @@ export default function DesignRequestCard({
             <span className="flex items-center gap-2">
               <CalendarCheck className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
               <span className="text-emerald-700 dark:text-emerald-400">تاريخ الإنجاز:</span>{" "}
-              <span className="font-bold text-slate-900 dark:text-slate-100">
+              <span className="font-semibold text-slate-900 dark:text-slate-100">
                 {request.completedAt ?? "—"}
               </span>
               {request.wasReviewed && (
@@ -396,7 +396,7 @@ export default function DesignRequestCard({
             <span className="flex items-center gap-2">
               <CalendarCheck className="w-4 h-4 text-rose-500 shrink-0" />
               <span className="text-rose-600 dark:text-rose-400">تاريخ الإعادة:</span>{" "}
-              <span className="font-bold text-slate-900 dark:text-slate-100">
+              <span className="font-semibold text-slate-900 dark:text-slate-100">
                 {request.rejectedAt ?? "—"}
               </span>
             </span>
@@ -404,7 +404,7 @@ export default function DesignRequestCard({
             <span className="flex items-center gap-2">
               <CalendarCheck className="w-4 h-4 text-primary dark:text-teal-400 shrink-0" />
               <span className="text-primary dark:text-teal-400">وقت التسليم:</span>{" "}
-              <span className="font-bold text-slate-900 dark:text-slate-100">{request.expectedCompletionDate}</span>
+              <span className="font-semibold text-slate-900 dark:text-slate-100">{request.expectedCompletionDate}</span>
               {typeof request.totalWorkingDays === "number" && (
                 <span className="text-slate-400 dark:text-slate-500 tabular-nums">
                   ({request.totalWorkingDays} يوم عمل
@@ -426,7 +426,7 @@ export default function DesignRequestCard({
               <span className="flex items-start gap-2">
                 <AlertTriangle className="w-4 h-4 text-rose-500 shrink-0 mt-0.5" />
                 <span className="leading-relaxed">
-                  <span className="text-rose-600 dark:text-rose-400 font-bold">
+                  <span className="text-rose-600 dark:text-rose-400 font-semibold">
                     أُغلق الطلب بملاحظات فريق زاد:{" "}
                   </span>
                   <LinkifiedText text={request.completionNote} className="whitespace-pre-line" />
@@ -436,7 +436,7 @@ export default function DesignRequestCard({
               <span className="flex items-start gap-2">
                 <FileCheck2 className="w-4 h-4 text-slate-400 shrink-0 mt-0.5" />
                 <span className="leading-relaxed">
-                  <span className="text-slate-600 dark:text-slate-300 font-bold">ملاحظة التسليم: </span>
+                  <span className="text-slate-600 dark:text-slate-300 font-semibold">ملاحظة التسليم: </span>
                   <LinkifiedText text={request.completionNote} className="whitespace-pre-line" />
                 </span>
               </span>
@@ -449,7 +449,7 @@ export default function DesignRequestCard({
             <span className="flex items-center gap-2">
               <ListOrdered className="w-4 h-4 text-slate-400 shrink-0" />
               <span className="text-slate-500 dark:text-slate-400">الترتيب في التنفيذ:</span>{" "}
-              <span className="font-bold text-slate-900 dark:text-slate-100 tabular-nums">
+              <span className="font-semibold text-slate-900 dark:text-slate-100 tabular-nums">
                 {request.queuePosition}
                 {request.queueTotal ? ` من ${request.queueTotal}` : ""}
               </span>
@@ -468,7 +468,7 @@ export default function DesignRequestCard({
             className="mt-3 px-3 py-2.5 rounded-xl bg-indigo-500/[0.07] text-indigo-700 dark:text-indigo-300 leading-relaxed"
             style={{ fontSize: "var(--dr-fs-meta)" }}
           >
-            <span className="inline-flex items-center gap-1.5 font-bold">
+            <span className="inline-flex items-center gap-1.5 font-semibold">
               <Hammer className="w-3.5 h-3.5 shrink-0" />
               جاري العمل على الطلب
             </span>
@@ -491,7 +491,7 @@ export default function DesignRequestCard({
                 style={{ fontSize: "var(--dr-fs-meta)" }}
               >
                 <Paperclip className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500 shrink-0" />
-                <span className="font-bold text-slate-700 dark:text-slate-300 truncate max-w-[140px]">
+                <span className="font-semibold text-slate-700 dark:text-slate-300 truncate max-w-[140px]">
                   {att.fileName}
                 </span>
               </a>
@@ -505,7 +505,7 @@ export default function DesignRequestCard({
         {request.deliverables && request.deliverables.length > 0 && (
           <div className="pt-4 border-t border-slate-100 dark:border-slate-800/60 space-y-2">
             <p
-              className="flex items-center gap-1.5 font-bold text-primary dark:text-teal-300"
+              className="flex items-center gap-1.5 font-semibold text-primary dark:text-teal-300"
               style={{ fontSize: "var(--dr-fs-eyebrow)" }}
             >
               <FileCheck2 className="w-3.5 h-3.5 shrink-0" />
@@ -522,7 +522,7 @@ export default function DesignRequestCard({
                   style={{ fontSize: "var(--dr-fs-meta)" }}
                 >
                   <Download className="w-3.5 h-3.5 text-primary dark:text-teal-300 shrink-0" />
-                  <span className="font-bold text-primary dark:text-teal-300 truncate max-w-[140px]">
+                  <span className="font-semibold text-primary dark:text-teal-300 truncate max-w-[140px]">
                     {att.fileName}
                   </span>
                 </a>

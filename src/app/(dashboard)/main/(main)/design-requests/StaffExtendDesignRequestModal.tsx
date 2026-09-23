@@ -90,7 +90,7 @@ export default function StaffExtendDesignRequestModal({
 
           {error && (
             <div
-              className="flex items-center gap-2 px-4 py-3 rounded-xl bg-rose-500/[0.08] text-rose-600 dark:text-rose-400 font-bold"
+              className="flex items-center gap-2 px-4 py-3 rounded-xl bg-rose-500/[0.08] text-rose-600 dark:text-rose-400 font-semibold"
               style={{ fontSize: "var(--dr-fs-meta)" }}
             >
               <AlertTriangle className="w-4 h-4 shrink-0" />
@@ -103,7 +103,7 @@ export default function StaffExtendDesignRequestModal({
             style={{ fontSize: "var(--dr-fs-meta)" }}
           >
             <span className="text-slate-500 dark:text-slate-400">المدة الحالية</span>
-            <span className="font-bold text-slate-800 dark:text-slate-100 tabular-nums">
+            <span className="font-semibold text-slate-800 dark:text-slate-100 tabular-nums">
               {currentDays} يوم عمل
             </span>
           </div>
@@ -112,14 +112,14 @@ export default function StaffExtendDesignRequestModal({
             style={{ fontSize: "var(--dr-fs-meta)" }}
           >
             <span className="text-slate-500 dark:text-slate-400">وقت التسليم الحالي</span>
-            <span className="font-bold text-slate-800 dark:text-slate-100">
+            <span className="font-semibold text-slate-800 dark:text-slate-100">
               {expectedCompletionDate}
             </span>
           </div>
 
           <div>
             <label
-              className="block font-bold text-slate-500 dark:text-slate-400 mb-2"
+              className="block font-semibold text-slate-500 dark:text-slate-400 mb-2"
               style={{ fontSize: "var(--dr-fs-meta)" }}
             >
               أيام العمل المضافة
@@ -146,7 +146,7 @@ export default function StaffExtendDesignRequestModal({
 
           <div>
             <label
-              className="block font-bold text-slate-500 dark:text-slate-400 mb-2"
+              className="block font-semibold text-slate-500 dark:text-slate-400 mb-2"
               style={{ fontSize: "var(--dr-fs-meta)" }}
             >
               سبب التمديد <span className="text-rose-500">*</span>

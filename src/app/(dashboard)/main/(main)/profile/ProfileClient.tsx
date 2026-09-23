@@ -100,20 +100,20 @@ export default function ProfileClient({
 
       <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-[0_1px_2px_rgb(15_23_42/0.04)] w-full max-w-2xl mx-auto overflow-hidden font-sans mt-8">
         <div className="px-6 py-5 border-b border-slate-100 dark:border-slate-700/50">
-          <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100">المعلومات الشخصية</h3>
-          <p className="text-xs text-slate-500 mt-1">يمكنك تحديث بياناتك الشخصية وتغيير كلمة المرور من هنا</p>
+          <h3 className="text-section font-semibold text-slate-800 dark:text-slate-100">المعلومات الشخصية</h3>
+          <p className="text-caption text-slate-500 mt-1">يمكنك تحديث بياناتك الشخصية وتغيير كلمة المرور من هنا</p>
         </div>
 
         <form onSubmit={handleSaveProfile} className="p-6 space-y-6">
           {modalError && (
-            <div className="bg-red-50 dark:bg-red-900/20 border border-red-100 dark:border-red-800/50 p-4 rounded-xl flex items-start text-sm text-red-700 dark:text-red-400 font-bold">
+            <div className="bg-red-50 dark:bg-red-900/20 border border-red-100 dark:border-red-800/50 p-4 rounded-xl flex items-start text-caption text-red-700 dark:text-red-400 font-semibold">
               <AlertCircle className="w-5 h-5 ml-2 text-red-500 shrink-0 mt-0.5" />
               <span>{modalError}</span>
             </div>
           )}
 
           {modalSuccess && (
-            <div className="bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-100 dark:border-emerald-800/50 p-4 rounded-xl flex items-start text-sm text-emerald-800 dark:text-emerald-300 font-bold">
+            <div className="bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-100 dark:border-emerald-800/50 p-4 rounded-xl flex items-start text-caption text-emerald-800 dark:text-emerald-300 font-semibold">
               <CheckCircle2 className="w-5 h-5 ml-2 text-emerald-500 shrink-0 mt-0.5" />
               <span>{modalSuccess}</span>
             </div>
@@ -134,7 +134,7 @@ export default function ProfileClient({
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
                 disabled={isPending}
-                className="absolute -bottom-2 -left-2 bg-primary text-white p-2.5 rounded-lg shadow hover:bg-primary/95 transition-all text-xs font-bold cursor-pointer active:scale-95 disabled:opacity-50 flex items-center justify-center"
+                className="absolute -bottom-2 -left-2 bg-primary text-white p-2.5 rounded-lg shadow hover:bg-primary/95 transition-all text-caption font-semibold cursor-pointer active:scale-95 disabled:opacity-50 flex items-center justify-center"
                 title="تغيير الصورة"
               >
                 <Camera className="w-4 h-4" />
@@ -147,7 +147,7 @@ export default function ProfileClient({
                 className="hidden"
               />
             </div>
-            <span className="text-xs text-slate-500 font-bold mt-1">الحد الأقصى لحجم الصورة 1 ميجابايت</span>
+            <span className="text-caption text-slate-500 font-semibold mt-1">الحد الأقصى لحجم الصورة 1 ميجابايت</span>
           </div>
 
           <hr className="border-slate-100 dark:border-slate-700/50" />
@@ -155,32 +155,32 @@ export default function ProfileClient({
           {/* Inputs */}
           <div className="space-y-4 max-w-md mx-auto">
             <div className="space-y-2">
-              <label className="text-sm font-bold text-slate-700 dark:text-slate-300 block">الاسم</label>
+              <label className="text-caption font-semibold text-slate-700 dark:text-slate-300 block">الاسم</label>
               <input
                 type="text"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 disabled={isPending}
-                className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all text-slate-800 dark:text-slate-100 font-bold disabled:opacity-60"
+                className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all text-slate-800 dark:text-slate-100 font-semibold disabled:opacity-60"
                 placeholder="اسم الموظف"
               />
             </div>
             
             <div className="space-y-2">
-              <label className="text-sm font-bold text-slate-700 dark:text-slate-300 block">رقم الجوال</label>
+              <label className="text-caption font-semibold text-slate-700 dark:text-slate-300 block">رقم الجوال</label>
               <input
                 type="tel"
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
                 disabled={isPending}
-                className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all text-slate-800 dark:text-slate-100 font-bold text-left disabled:opacity-60"
+                className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all text-slate-800 dark:text-slate-100 font-semibold text-left disabled:opacity-60"
                 placeholder="05XXXXXXXX"
                 dir="ltr"
               />
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm font-bold text-slate-700 dark:text-slate-300 block">
+              <label className="text-caption font-semibold text-slate-700 dark:text-slate-300 block">
                 البريد الإلكتروني
               </label>
               <div className="relative">
@@ -189,19 +189,19 @@ export default function ProfileClient({
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   disabled={isPending}
-                  className="w-full px-4 py-2.5 pl-11 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all text-slate-800 dark:text-slate-100 font-bold text-left disabled:opacity-60"
+                  className="w-full px-4 py-2.5 pl-11 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all text-slate-800 dark:text-slate-100 font-semibold text-left disabled:opacity-60"
                   placeholder="name@example.com"
                   dir="ltr"
                 />
                 <Mail className="absolute inset-y-0 left-0 ml-3 my-auto w-5 h-5 text-slate-400" />
               </div>
-              <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+              <p className="text-caption text-slate-500 dark:text-slate-400 leading-relaxed">
                 يستعمل للدخول بكلمة المرور. وتركه فارغًا يبقيك على الدخول برقم الجوال ورمز التحقق.
               </p>
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm font-bold text-slate-700 dark:text-slate-300 block">
+              <label className="text-caption font-semibold text-slate-700 dark:text-slate-300 block">
                 {hasPassword ? "كلمة مرور جديدة (اختياري)" : "كلمة المرور"}
               </label>
               <div className="relative">
@@ -210,7 +210,7 @@ export default function ProfileClient({
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   disabled={isPending}
-                  className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all text-slate-800 dark:text-slate-100 font-bold text-left disabled:opacity-60"
+                  className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all text-slate-800 dark:text-slate-100 font-semibold text-left disabled:opacity-60"
                   placeholder={hasPassword ? "اتركها فارغة إذا لم ترد التغيير" : "٨ أحرف على الأقل"}
                   dir="ltr"
                 />

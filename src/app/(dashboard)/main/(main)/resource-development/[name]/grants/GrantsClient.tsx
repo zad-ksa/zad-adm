@@ -225,13 +225,13 @@ export default function GrantsClient({
   return (
     <div className="space-y-8 animate-fade-in" dir="rtl">
       {successMsg && (
-        <div className="fixed bottom-6 left-6 z-50 bg-emerald-500 text-white px-5 py-3 rounded-xl shadow-xl flex items-center gap-2 animate-fade-in font-bold text-sm animate-bounce">
+        <div className="fixed bottom-6 left-6 z-50 bg-emerald-500 text-white px-5 py-3 rounded-xl shadow-xl flex items-center gap-2 animate-fade-in font-semibold text-caption animate-bounce">
           <CheckCircle2 className="w-5 h-5" />
           {successMsg}
         </div>
       )}
       {errorMsg && (
-        <div className="fixed bottom-6 left-6 z-50 bg-red-500 text-white px-5 py-3 rounded-xl shadow-xl flex items-center gap-2 animate-fade-in font-bold text-sm">
+        <div className="fixed bottom-6 left-6 z-50 bg-red-500 text-white px-5 py-3 rounded-xl shadow-xl flex items-center gap-2 animate-fade-in font-semibold text-caption">
           <AlertCircle className="w-5 h-5" />
           {errorMsg}
         </div>
@@ -254,16 +254,16 @@ export default function GrantsClient({
 
       <div className="flex justify-between items-center bg-white dark:bg-slate-900 p-2 rounded-xl shadow-[0_1px_2px_rgb(15_23_42/0.04)] border border-slate-200 dark:border-slate-800 overflow-x-auto">
         <div className="flex gap-1">
-          <button onClick={() => setActiveTab("PENDING")} className={`px-4 py-2 rounded-lg text-sm font-bold whitespace-nowrap transition-all ${activeTab === "PENDING" ? "bg-primary text-white shadow-md" : "text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700"}`}>
+          <button onClick={() => setActiveTab("PENDING")} className={`px-4 py-2 rounded-lg text-caption font-semibold whitespace-nowrap transition-all ${activeTab === "PENDING" ? "bg-primary text-white shadow-md" : "text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700"}`}>
             المنح المرفوعة ({pendingGrants.length})
           </button>
-          <button onClick={() => setActiveTab("APPROVED")} className={`px-4 py-2 rounded-lg text-sm font-bold whitespace-nowrap transition-all ${activeTab === "APPROVED" ? "bg-emerald-500 text-white shadow-md shadow-emerald-500/20" : "text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700"}`}>
+          <button onClick={() => setActiveTab("APPROVED")} className={`px-4 py-2 rounded-lg text-caption font-semibold whitespace-nowrap transition-all ${activeTab === "APPROVED" ? "bg-emerald-500 text-white shadow-md shadow-emerald-500/20" : "text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700"}`}>
             المنح المقبولة ({approvedGrants.length})
           </button>
-          <button onClick={() => setActiveTab("CLOSED")} className={`px-4 py-2 rounded-lg text-sm font-bold whitespace-nowrap transition-all ${activeTab === "CLOSED" ? "bg-slate-700 text-white shadow-md" : "text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700"}`}>
+          <button onClick={() => setActiveTab("CLOSED")} className={`px-4 py-2 rounded-lg text-caption font-semibold whitespace-nowrap transition-all ${activeTab === "CLOSED" ? "bg-slate-700 text-white shadow-md" : "text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700"}`}>
             المنح المغلقة ({closedGrants.length})
           </button>
-          <button onClick={() => setActiveTab("REJECTED")} className={`px-4 py-2 rounded-lg text-sm font-bold whitespace-nowrap transition-all ${activeTab === "REJECTED" ? "bg-red-500 text-white shadow-md shadow-red-500/20" : "text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700"}`}>
+          <button onClick={() => setActiveTab("REJECTED")} className={`px-4 py-2 rounded-lg text-caption font-semibold whitespace-nowrap transition-all ${activeTab === "REJECTED" ? "bg-red-500 text-white shadow-md shadow-red-500/20" : "text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700"}`}>
             المنح المرفوضة ({rejectedGrants.length})
           </button>
         </div>
@@ -275,7 +275,7 @@ export default function GrantsClient({
       {showAddGrant && (
         <form onSubmit={handleAddGrant} className="bg-white dark:bg-slate-900 p-5 rounded-xl border border-slate-200 dark:border-slate-800 shadow-[0_1px_2px_rgb(15_23_42/0.04)] animate-fade-in grid grid-cols-1 md:grid-cols-5 gap-4 items-end">
           <div className="md:col-span-1">
-            <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-1.5">الجهة المانحة</label>
+            <label className="block text-caption font-semibold text-slate-500 dark:text-slate-400 mb-1.5">الجهة المانحة</label>
             {donorAccounts.length > 0 ? (
               <Select
                 variant="soft"
@@ -286,19 +286,19 @@ export default function GrantsClient({
                 className="w-full [&>button]:w-full [&>button]:justify-between"
               />
             ) : (
-              <input required type="text" placeholder="اكتب اسم الجهة" value={grantForm.entityName} onChange={e => setGrantForm({...grantForm, entityName: e.target.value})} className="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-lg px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary font-bold dark:text-slate-100" />
+              <input required type="text" placeholder="اكتب اسم الجهة" value={grantForm.entityName} onChange={e => setGrantForm({...grantForm, entityName: e.target.value})} className="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-lg px-4 py-2.5 text-caption outline-none focus:ring-2 focus:ring-primary font-semibold dark:text-slate-100" />
             )}
           </div>
           <div className="md:col-span-1">
-            <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-1.5">اسم المشروع</label>
-            <input required type="text" value={grantForm.initiative} onChange={e => setGrantForm({...grantForm, initiative: e.target.value})} className="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-lg px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary font-bold dark:text-slate-100" />
+            <label className="block text-caption font-semibold text-slate-500 dark:text-slate-400 mb-1.5">اسم المشروع</label>
+            <input required type="text" value={grantForm.initiative} onChange={e => setGrantForm({...grantForm, initiative: e.target.value})} className="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-lg px-4 py-2.5 text-caption outline-none focus:ring-2 focus:ring-primary font-semibold dark:text-slate-100" />
           </div>
           <div className="md:col-span-1">
-            <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-1.5">التكلفة الإجمالية (ريال)</label>
-            <input required type="number" min="0" value={grantForm.amount} onChange={e => setGrantForm({...grantForm, amount: e.target.value})} className="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-lg px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary font-bold dark:text-slate-100" />
+            <label className="block text-caption font-semibold text-slate-500 dark:text-slate-400 mb-1.5">التكلفة الإجمالية (ريال)</label>
+            <input required type="number" min="0" value={grantForm.amount} onChange={e => setGrantForm({...grantForm, amount: e.target.value})} className="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-lg px-4 py-2.5 text-caption outline-none focus:ring-2 focus:ring-primary font-semibold dark:text-slate-100" />
           </div>
           <div className="md:col-span-1">
-            <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-1.5">حالة الطلب الأولية</label>
+            <label className="block text-caption font-semibold text-slate-500 dark:text-slate-400 mb-1.5">حالة الطلب الأولية</label>
             <Select
               variant="soft"
               value={grantForm.status}
@@ -333,8 +333,8 @@ export default function GrantsClient({
             <div className="p-5 flex-1 space-y-4">
               <div className="flex justify-between items-start gap-2">
                 <div>
-                  <h3 className="font-black text-slate-800 dark:text-slate-100 text-lg leading-tight mb-1">{grant.initiativeName}</h3>
-                  <p className="text-xs font-bold text-primary flex items-center gap-1.5 bg-primary/5 px-2 py-1 rounded-lg w-fit">
+                  <h3 className="font-semibold text-slate-800 dark:text-slate-100 text-section leading-tight mb-1">{grant.initiativeName}</h3>
+                  <p className="text-caption font-semibold text-primary flex items-center gap-1.5 bg-primary/5 px-2 py-1 rounded-lg w-fit">
                     <HandCoins className="w-3.5 h-3.5" />
                     {grant.entityName || "جهة غير محددة"}
                   </p>
@@ -351,27 +351,27 @@ export default function GrantsClient({
 
               <div className="bg-slate-50/50 dark:bg-slate-900/50 rounded-xl p-3 border border-slate-100 dark:border-slate-700 grid grid-cols-2 gap-3">
                 <div>
-                  <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 mb-0.5">المبلغ المطلوب / الإجمالي</p>
-                  <p className="text-sm font-black text-slate-700 dark:text-slate-200">{grant.requestedAmount.toLocaleString('en-US')} <span className="text-[10px]">ريال</span></p>
+                  <p className="text-caption font-semibold text-slate-400 dark:text-slate-500 mb-0.5">المبلغ المطلوب / الإجمالي</p>
+                  <p className="text-caption font-semibold text-slate-700 dark:text-slate-200">{grant.requestedAmount.toLocaleString('en-US')} <span className="text-caption">ريال</span></p>
                 </div>
                 {grant.collectedAmount != null && (
                   <div>
-                    <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 mb-0.5">التحصيل</p>
-                    <p className="text-sm font-black text-emerald-600 dark:text-emerald-400">{grant.collectedAmount.toLocaleString('en-US')} <span className="text-[10px]">ريال</span></p>
+                    <p className="text-caption font-semibold text-slate-400 dark:text-slate-500 mb-0.5">التحصيل</p>
+                    <p className="text-caption font-semibold text-emerald-600 dark:text-emerald-400">{grant.collectedAmount.toLocaleString('en-US')} <span className="text-caption">ريال</span></p>
                   </div>
                 )}
                 {grant.beneficiariesCount != null && (
                   <div>
-                    <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 mb-0.5">عدد المستفيدين</p>
-                    <p className="text-sm font-black text-slate-700 dark:text-slate-200">{grant.beneficiariesCount.toLocaleString('en-US')}</p>
+                    <p className="text-caption font-semibold text-slate-400 dark:text-slate-500 mb-0.5">عدد المستفيدين</p>
+                    <p className="text-caption font-semibold text-slate-700 dark:text-slate-200">{grant.beneficiariesCount.toLocaleString('en-US')}</p>
                   </div>
                 )}
               </div>
 
               {grant.closureDate && (
                 <div className="bg-slate-100 dark:bg-slate-700 p-3 rounded-xl border border-slate-200 dark:border-slate-600 flex justify-between items-center">
-                  <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400">تاريخ الإغلاق:</span>
-                  <span className="text-xs font-black text-slate-800 dark:text-slate-100">{new Date(grant.closureDate).toLocaleDateString('ar-SA')}</span>
+                  <span className="text-caption font-semibold text-slate-500 dark:text-slate-400">تاريخ الإغلاق:</span>
+                  <span className="text-caption font-semibold text-slate-800 dark:text-slate-100">{new Date(grant.closureDate).toLocaleDateString('ar-SA')}</span>
                 </div>
               )}
             </div>
@@ -403,7 +403,7 @@ export default function GrantsClient({
                     onClick={() => {
                       setClosureModal({ isOpen: true, grantId: grant.id });
                     }}
-                    className="flex-1 bg-slate-800 hover:bg-slate-700 text-white rounded-lg text-xs font-bold flex justify-center items-center gap-1.5 transition-colors shadow-sm"
+                    className="flex-1 bg-slate-800 hover:bg-slate-700 text-white rounded-lg text-caption font-semibold flex justify-center items-center gap-1.5 transition-colors shadow-sm"
                   >
                     <CheckCircle2 className="w-3.5 h-3.5" /> إغلاق المشروع
                   </button>
@@ -422,7 +422,7 @@ export default function GrantsClient({
         {getFilteredGrants().length === 0 && (
           <div className="col-span-full py-16 flex flex-col items-center justify-center text-slate-400 dark:text-slate-500 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 border-dashed">
             <FileText className="w-12 h-12 mb-3 opacity-20" />
-            <p className="font-bold">لا توجد منح في هذا القسم</p>
+            <p className="font-semibold">لا توجد منح في هذا القسم</p>
           </div>
         )}
       </div>
@@ -450,34 +450,34 @@ export default function GrantsClient({
         >
           <div className="space-y-4">
             <div>
-              <label className="block text-xs font-black text-slate-700 dark:text-slate-200 mb-1">المبلغ المعتمد النهائي (ريال) *</label>
+              <label className="block text-caption font-semibold text-slate-700 dark:text-slate-200 mb-1">المبلغ المعتمد النهائي (ريال) *</label>
               <input
                 type="number" min="1" required autoFocus
                 value={approvalForm.amount}
                 onChange={(e) => setApprovalForm({...approvalForm, amount: e.target.value})}
-                className="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-lg px-4 py-3 text-base outline-none focus:ring-2 focus:ring-emerald-500 font-black text-emerald-700 dark:text-emerald-400"
+                className="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-lg px-4 py-3 text-title outline-none focus:ring-2 focus:ring-emerald-500 font-semibold text-emerald-700 dark:text-emerald-400"
                 placeholder="المبلغ"
               />
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-black text-slate-700 dark:text-slate-200 mb-1">التحصيل (المبلغ المتحصل عليه)</label>
+                <label className="block text-caption font-semibold text-slate-700 dark:text-slate-200 mb-1">التحصيل (المبلغ المتحصل عليه)</label>
                 <input
                   type="number" min="0"
                   value={approvalForm.collectedAmount}
                   onChange={(e) => setApprovalForm({...approvalForm, collectedAmount: e.target.value})}
-                  className="w-full bg-white dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-lg px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-emerald-500 font-bold dark:text-slate-100"
+                  className="w-full bg-white dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-lg px-4 py-3 text-caption outline-none focus:ring-2 focus:ring-emerald-500 font-semibold dark:text-slate-100"
                   placeholder="اختياري"
                 />
               </div>
               <div>
-                <label className="block text-xs font-black text-slate-700 dark:text-slate-200 mb-1">عدد المستفيدين</label>
+                <label className="block text-caption font-semibold text-slate-700 dark:text-slate-200 mb-1">عدد المستفيدين</label>
                 <input
                   type="number" min="0"
                   value={approvalForm.beneficiariesCount}
                   onChange={(e) => setApprovalForm({...approvalForm, beneficiariesCount: e.target.value})}
-                  className="w-full bg-white dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-lg px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-emerald-500 font-bold dark:text-slate-100"
+                  className="w-full bg-white dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-lg px-4 py-3 text-caption outline-none focus:ring-2 focus:ring-emerald-500 font-semibold dark:text-slate-100"
                   placeholder="اختياري"
                 />
               </div>
@@ -507,12 +507,12 @@ export default function GrantsClient({
             </>
           }
         >
-          <label className="block text-xs font-black text-slate-700 dark:text-slate-200 mb-1">تاريخ الإغلاق *</label>
+          <label className="block text-caption font-semibold text-slate-700 dark:text-slate-200 mb-1">تاريخ الإغلاق *</label>
           <input
             type="date"
             value={closureDate}
             onChange={(e) => setClosureDate(e.target.value)}
-            className="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-lg px-4 py-3 text-base outline-none focus:ring-2 focus:ring-slate-500 font-black text-slate-800 dark:text-slate-100 text-right"
+            className="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-lg px-4 py-3 text-title outline-none focus:ring-2 focus:ring-slate-500 font-semibold text-slate-800 dark:text-slate-100 text-right"
           />
         </Dialog>
       )}

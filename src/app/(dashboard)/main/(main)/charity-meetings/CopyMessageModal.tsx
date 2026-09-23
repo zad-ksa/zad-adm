@@ -79,7 +79,7 @@ footer={
 >
 <div className="space-y-4">
           <div className="space-y-2">
-            <label className="block text-sm font-bold text-slate-700 dark:text-slate-300">الجمعية</label>
+            <label className="block text-caption font-semibold text-slate-700 dark:text-slate-300">الجمعية</label>
             <Select
               variant="soft"
               value={charityId}
@@ -92,12 +92,12 @@ footer={
 
           {message && (
             <div className="space-y-2 animate-in fade-in duration-300">
-              <label className="block text-sm font-bold text-slate-700 dark:text-slate-300">نص الرسالة (قابل للتعديل)</label>
+              <label className="block text-caption font-semibold text-slate-700 dark:text-slate-300">نص الرسالة (قابل للتعديل)</label>
               <textarea
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
                 rows={9}
-                className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all text-sm leading-relaxed resize-none"
+                className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all text-caption leading-relaxed resize-none"
               />
             </div>
           )}

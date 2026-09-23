@@ -64,7 +64,7 @@ export default function CopyDeliveryNotice({
       onClick={handleCopy}
       title="نسخ نص إشعار التسليم لإرساله للجمعية"
       aria-live="polite"
-      className={`w-full h-9 rounded-lg font-bold transition-colors flex items-center justify-center gap-1.5 ${
+      className={`w-full h-9 rounded-lg font-semibold transition-colors flex items-center justify-center gap-1.5 ${
         state === "copied"
           ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
           : state === "failed"

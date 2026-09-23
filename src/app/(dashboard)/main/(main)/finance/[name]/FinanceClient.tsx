@@ -116,24 +116,24 @@ export default function FinanceClient({
 
   const getLogTypeBadge = (type: string) => {
     switch (type) {
-      case "CONTRACT_UPDATE": return <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-blue-50 dark:bg-blue-500/10 text-blue-700 dark:text-blue-400 rounded-lg text-xs font-black border border-blue-100 dark:border-blue-500/20">تحديث العقد</span>;
-      case "PAID_UPDATE": return <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-purple-50 dark:bg-purple-500/10 text-purple-700 dark:text-purple-400 rounded-lg text-xs font-black border border-purple-100 dark:border-purple-500/20">تحديث المدفوع</span>;
-      case "ADD_GRANT": return <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 rounded-lg text-xs font-black border border-emerald-100 dark:border-emerald-500/20">إضافة منحة</span>;
-      case "DISBURSEMENT": return <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-400 rounded-lg text-xs font-black border border-amber-100 dark:border-amber-500/20">صرف مالي</span>;
-      default: return <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-slate-50 dark:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-lg text-xs font-black border border-slate-100 dark:border-slate-600">عملية مالية</span>;
+      case "CONTRACT_UPDATE": return <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-blue-50 dark:bg-blue-500/10 text-blue-700 dark:text-blue-400 rounded-lg text-caption font-semibold border border-blue-100 dark:border-blue-500/20">تحديث العقد</span>;
+      case "PAID_UPDATE": return <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-purple-50 dark:bg-purple-500/10 text-purple-700 dark:text-purple-400 rounded-lg text-caption font-semibold border border-purple-100 dark:border-purple-500/20">تحديث المدفوع</span>;
+      case "ADD_GRANT": return <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 rounded-lg text-caption font-semibold border border-emerald-100 dark:border-emerald-500/20">إضافة منحة</span>;
+      case "DISBURSEMENT": return <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-400 rounded-lg text-caption font-semibold border border-amber-100 dark:border-amber-500/20">صرف مالي</span>;
+      default: return <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-slate-50 dark:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-lg text-caption font-semibold border border-slate-100 dark:border-slate-600">عملية مالية</span>;
     }
   };
 
   return (
     <div className="space-y-8 transition-colors animate-fade-in" dir="rtl">
       {successMsg && (
-        <div className="fixed bottom-6 left-6 z-50 bg-emerald-500 text-white px-5 py-3 rounded-xl shadow-xl flex items-center gap-2 animate-fade-in font-bold text-sm animate-bounce">
+        <div className="fixed bottom-6 left-6 z-50 bg-emerald-500 text-white px-5 py-3 rounded-xl shadow-xl flex items-center gap-2 animate-fade-in font-semibold text-caption animate-bounce">
           <CheckCircle2 className="w-5 h-5" />
           {successMsg}
         </div>
       )}
       {errorMsg && (
-        <div className="fixed bottom-6 left-6 z-50 bg-red-500 text-white px-5 py-3 rounded-xl shadow-xl flex items-center gap-2 animate-fade-in font-bold text-sm">
+        <div className="fixed bottom-6 left-6 z-50 bg-red-500 text-white px-5 py-3 rounded-xl shadow-xl flex items-center gap-2 animate-fade-in font-semibold text-caption">
           <AlertCircle className="w-5 h-5" />
           {errorMsg}
         </div>
@@ -173,7 +173,7 @@ export default function FinanceClient({
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 items-start">
           {/* Installments Card */}
           <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-4 shadow-[0_1px_2px_rgb(15_23_42/0.04)] space-y-4">
-            <h3 className="text-sm font-black text-slate-800 dark:text-slate-100 flex items-center gap-2 border-b border-slate-50 dark:border-slate-700/50 pb-3">
+            <h3 className="text-caption font-semibold text-slate-800 dark:text-slate-100 flex items-center gap-2 border-b border-slate-50 dark:border-slate-700/50 pb-3">
               <Layers className="w-4 h-4 text-primary" />
               دفعات العقد (الأقساط)
             </h3>
@@ -189,11 +189,11 @@ export default function FinanceClient({
                       <Check className="w-5 h-5" strokeWidth={3} />
                     </button>
                     <div>
-                      <h4 className="font-black text-slate-800 dark:text-slate-100 text-lg">
-                        {installment.amount.toLocaleString('en-US')} <span className="text-sm font-bold text-slate-400 dark:text-slate-500">ريال</span>
+                      <h4 className="font-semibold text-slate-800 dark:text-slate-100 text-section">
+                        {installment.amount.toLocaleString('en-US')} <span className="text-caption font-semibold text-slate-400 dark:text-slate-500">ريال</span>
                       </h4>
                       {installment.dueDate && (
-                        <p className="text-xs font-bold text-slate-500 dark:text-slate-400 flex items-center gap-1.5 mt-1">
+                        <p className="text-caption font-semibold text-slate-500 dark:text-slate-400 flex items-center gap-1.5 mt-1">
                           <Calendar className="w-3.5 h-3.5" />
                           تاريخ الاستحقاق: {new Date(installment.dueDate).toLocaleDateString("ar-SA")}
                         </p>
@@ -201,7 +201,7 @@ export default function FinanceClient({
                     </div>
                   </div>
                   <div>
-                    <span className={`inline-flex px-3 py-1.5 rounded-lg text-xs font-black ${installment.isPaid ? 'bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400' : 'bg-amber-100 dark:bg-amber-500/20 text-amber-700 dark:text-amber-400'}`}>
+                    <span className={`inline-flex px-3 py-1.5 rounded-lg text-caption font-semibold ${installment.isPaid ? 'bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400' : 'bg-amber-100 dark:bg-amber-500/20 text-amber-700 dark:text-amber-400'}`}>
                       {installment.isPaid ? 'تم الدفع' : 'غير مدفوع'}
                     </span>
                   </div>
@@ -210,14 +210,14 @@ export default function FinanceClient({
               {installments.length === 0 && (
                 <div className="text-center py-6 text-slate-400 dark:text-slate-500">
                   <Layers className="w-10 h-10 mx-auto mb-2 opacity-20" />
-                  <p className="font-bold text-sm">لا توجد دفعات مسجلة حالياً</p>
+                  <p className="font-semibold text-caption">لا توجد دفعات مسجلة حالياً</p>
                 </div>
               )}
             </div>
           </div>
 
           <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-4 shadow-[0_1px_2px_rgb(15_23_42/0.04)] space-y-4">
-            <h3 className="text-sm font-black text-slate-800 dark:text-slate-100 flex items-center gap-2 border-b border-slate-50 dark:border-slate-700/50 pb-3">
+            <h3 className="text-caption font-semibold text-slate-800 dark:text-slate-100 flex items-center gap-2 border-b border-slate-50 dark:border-slate-700/50 pb-3">
               <History className="w-4 h-4 text-primary" />
               سجل الحركات المالية
             </h3>
@@ -229,25 +229,25 @@ export default function FinanceClient({
                     <div className="space-y-2">
                       <div className="flex flex-wrap items-center gap-2">
                         {getLogTypeBadge(log.type)}
-                        <span className="text-base font-black text-slate-800 dark:text-slate-100">
+                        <span className="text-title font-semibold text-slate-800 dark:text-slate-100">
                           {log.amount.toLocaleString('en-US')} ريال
                         </span>
                       </div>
                       {log.notes && (
-                        <p className="text-xs text-slate-500 dark:text-slate-400 font-semibold flex items-center gap-1.5 bg-white dark:bg-slate-900 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-800 w-fit">
+                        <p className="text-caption text-slate-500 dark:text-slate-400 font-semibold flex items-center gap-1.5 bg-white dark:bg-slate-900 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-800 w-fit">
                           <MessageSquare className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500" />
                           <span>{log.notes}</span>
                         </p>
                       )}
                     </div>
-                    <div className="flex items-center gap-1.5 text-xs text-slate-400 dark:text-slate-500 font-bold shrink-0">
+                    <div className="flex items-center gap-1.5 text-caption text-slate-400 dark:text-slate-500 font-semibold shrink-0">
                       <Calendar className="w-4 h-4" />
                       <span>{new Date(log.createdAt).toLocaleDateString("ar-SA")}</span>
                     </div>
                   </div>
                 </div>
               ))}
-              {logs.length === 0 && <p className="text-sm font-bold text-slate-400 dark:text-slate-500">لا يوجد سجل حركات</p>}
+              {logs.length === 0 && <p className="text-caption font-semibold text-slate-400 dark:text-slate-500">لا يوجد سجل حركات</p>}
             </div>
           </div>
         </div>

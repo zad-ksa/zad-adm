@@ -210,7 +210,7 @@ export default function DashboardLayoutClient({ children, session, unreadRequest
             >
               <Menu className="w-6 h-6" />
             </button>
-            <span className="font-bold text-slate-800 dark:text-slate-100 text-lg">لوحة التحكم</span>
+            <span className="font-semibold text-slate-800 dark:text-slate-100 text-section">لوحة التحكم</span>
           </div>
           <FloatingHeader 
             session={session} 

@@ -19,7 +19,7 @@ import PrivacyPolicyModal from "@/components/PrivacyPolicyModal";
 // --- Sub Tab Link Component ---
 function SubTabLink({ href, label, isActive, onClick }: { href: string, label: string, isActive: boolean, onClick?: () => void }) {
   return (
-    <Link href={href} onClick={onClick} className={`flex items-center px-1.5 py-1.5 rounded-lg text-[11px] font-bold transition-all ${isActive ? "bg-primary/10 text-primary" : "text-slate-500 hover:bg-slate-100 hover:text-slate-800 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-200"}`}>
+    <Link href={href} onClick={onClick} className={`flex items-center px-1.5 py-1.5 rounded-lg text-caption font-semibold transition-all ${isActive ? "bg-primary/10 text-primary" : "text-slate-500 hover:bg-slate-100 hover:text-slate-800 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-200"}`}>
       <div className="w-1.5 h-1.5 rounded-full ml-1.5 shrink-0 bg-current opacity-50" />
       <span className="truncate">{label}</span>
     </Link>
@@ -33,7 +33,7 @@ function NavItem({ item, isActive, onClick }: { item: any, isActive: boolean, on
       <Link
         href={item.href}
         onClick={onClick}
-        className={`flex items-center justify-start px-2.5 py-2 rounded-lg text-[11px] font-bold transition-all group relative ${
+        className={`flex items-center justify-start px-2.5 py-2 rounded-lg text-caption font-semibold transition-all group relative ${
           isActive
             ? "bg-primary text-white shadow-sm shadow-primary/20"
             : "text-slate-500 dark:text-slate-400 hover:bg-primary/5 dark:hover:bg-primary/10 hover:text-primary dark:hover:text-primary"
@@ -42,7 +42,7 @@ function NavItem({ item, isActive, onClick }: { item: any, isActive: boolean, on
         <div className="relative shrink-0">
           <item.icon className={`w-4 h-4 ml-2.5 transition-all ${isActive ? "text-white" : "text-slate-400 group-hover:text-primary"}`} />
           {item.badge > 0 && (
-            <span className="absolute -top-1.5 -right-1.5 min-w-[14px] h-3.5 flex items-center justify-center bg-red-500 text-white text-[9px] font-black rounded-full px-0.5 leading-none">
+            <span className="absolute -top-1.5 -right-1.5 min-w-[14px] h-3.5 flex items-center justify-center bg-red-500 text-white text-caption font-semibold rounded-full px-0.5 leading-none">
               {item.badge > 99 ? "99+" : item.badge}
             </span>
           )}
@@ -50,7 +50,7 @@ function NavItem({ item, isActive, onClick }: { item: any, isActive: boolean, on
         <span className="flex-1 flex items-center justify-between whitespace-nowrap">
           {item.label}
           {item.badge > 0 && (
-            <span className="mr-1 min-w-[18px] h-4 flex items-center justify-center bg-red-500 text-white text-[10px] font-black rounded-full px-1">
+            <span className="mr-1 min-w-[18px] h-4 flex items-center justify-center bg-red-500 text-white text-caption font-semibold rounded-full px-1">
               {item.badge > 99 ? "99+" : item.badge}
             </span>
           )}
@@ -253,7 +253,7 @@ export default function EmployeeSidebar({
                     onClick={() => toggleGroup(title)}
                     className="flex items-center justify-between w-full px-2 mb-2 group cursor-pointer outline-none"
                   >
-                    <span className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider group-hover:text-primary transition-colors">{title}</span>
+                    <span className="block text-caption font-semibold text-slate-400 uppercase tracking-wider group-hover:text-primary transition-colors">{title}</span>
                     <ChevronRight className={`w-3.5 h-3.5 text-slate-400 group-hover:text-primary transition-transform duration-200 ${isCollapsed ? 'rotate-180' : 'rotate-90'}`} />
                   </button>
                 )}
@@ -292,7 +292,7 @@ export default function EmployeeSidebar({
                     onClick={toggleServices}
                     className="flex items-center justify-between w-full px-2 mb-2 group cursor-pointer outline-none"
                   >
-                    <span className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider group-hover:text-primary transition-colors">الخدمات</span>
+                    <span className="block text-caption font-semibold text-slate-400 uppercase tracking-wider group-hover:text-primary transition-colors">الخدمات</span>
                     <ChevronRight className={`w-3.5 h-3.5 text-slate-400 group-hover:text-primary transition-transform duration-200 ${isServicesCollapsed ? 'rotate-180' : 'rotate-90'}`} />
                   </button>
                 )}
@@ -301,7 +301,7 @@ export default function EmployeeSidebar({
                     <Link
                       href="/main/services-overview"
                       onClick={() => handleLinkClick("/main/services-overview")}
-                      className={`flex items-center w-full px-2.5 py-1.5 rounded-lg text-[11px] font-bold transition-all group mt-1 ${activePath === "/main/services-overview" ? "bg-primary/10 text-primary" : "text-slate-500 hover:bg-primary/5 hover:text-primary"}`}
+                      className={`flex items-center w-full px-2.5 py-1.5 rounded-lg text-caption font-semibold transition-all group mt-1 ${activePath === "/main/services-overview" ? "bg-primary/10 text-primary" : "text-slate-500 hover:bg-primary/5 hover:text-primary"}`}
                     >
                       <LayoutGrid className="w-3.5 h-3.5 ml-2" />
                       <span>الكل</span>
@@ -312,7 +312,7 @@ export default function EmployeeSidebar({
                     <Link
                       href="/main/template-library"
                       onClick={() => handleLinkClick("/main/template-library")}
-                      className={`flex items-center w-full px-2.5 py-1.5 rounded-lg text-[11px] font-bold transition-all group mt-1 ${activePath === "/main/template-library" ? "bg-primary/10 text-primary" : "text-slate-500 hover:bg-primary/5 hover:text-primary"}`}
+                      className={`flex items-center w-full px-2.5 py-1.5 rounded-lg text-caption font-semibold transition-all group mt-1 ${activePath === "/main/template-library" ? "bg-primary/10 text-primary" : "text-slate-500 hover:bg-primary/5 hover:text-primary"}`}
                     >
                       <FolderTree className="w-3.5 h-3.5 ml-2" />
                       <span>مكتبة النماذج</span>
@@ -323,7 +323,7 @@ export default function EmployeeSidebar({
                     <div key={svc.id} className="relative mt-1">
                       <button 
                         onClick={() => { setExpandedCharity(null); setExpandedService(prev => prev === svc.id ? null : svc.id); }}
-                        className={`flex items-center justify-between w-full px-2.5 py-1.5 rounded-lg text-[11px] font-bold transition-all group ${expandedService === svc.id ? "bg-primary/5 text-primary" : "text-slate-500 hover:bg-primary/5 hover:text-primary"}`}
+                        className={`flex items-center justify-between w-full px-2.5 py-1.5 rounded-lg text-caption font-semibold transition-all group ${expandedService === svc.id ? "bg-primary/5 text-primary" : "text-slate-500 hover:bg-primary/5 hover:text-primary"}`}
                       >
                         <div className="flex items-center">
                           <svc.icon className="w-3.5 h-3.5 ml-2" />
@@ -349,7 +349,7 @@ export default function EmployeeSidebar({
                                 <div key={charity.id}>
                                   <button
                                     onClick={toggleCharity}
-                                    className={`flex items-center justify-between w-full px-1.5 py-1.5 rounded-lg text-[11px] font-bold transition-all ${isCharityExpanded ? "text-primary bg-primary/5" : "text-slate-500 hover:text-primary hover:bg-slate-50 dark:hover:bg-slate-800"}`}
+                                    className={`flex items-center justify-between w-full px-1.5 py-1.5 rounded-lg text-caption font-semibold transition-all ${isCharityExpanded ? "text-primary bg-primary/5" : "text-slate-500 hover:text-primary hover:bg-slate-50 dark:hover:bg-slate-800"}`}
                                   >
                                     <span className="truncate text-right">{charity.name}</span>
                                     <ChevronDown className={`w-2.5 h-2.5 transition-transform shrink-0 ${isCharityExpanded ? 'rotate-180' : ''}`} />
@@ -411,7 +411,7 @@ export default function EmployeeSidebar({
         <button
           onClick={() => setIsPrivacyModalOpen(true)}
           title={!isExpanded ? "سياسة الخصوصية" : undefined}
-          className={`w-full flex items-center ${isExpanded ? "justify-start px-2.5" : "justify-center"} py-1.5 rounded-lg text-[11px] font-medium text-slate-400 dark:text-slate-500 hover:text-primary dark:hover:text-primary hover:bg-primary/5 dark:hover:bg-primary/10 transition-all`}
+          className={`w-full flex items-center ${isExpanded ? "justify-start px-2.5" : "justify-center"} py-1.5 rounded-lg text-caption font-medium text-slate-400 dark:text-slate-500 hover:text-primary dark:hover:text-primary hover:bg-primary/5 dark:hover:bg-primary/10 transition-all`}
         >
           <ShieldCheck className={`w-3.5 h-3.5 shrink-0 ${isExpanded ? "ml-2" : ""}`} />
           {isExpanded && <span>سياسة الخصوصية</span>}

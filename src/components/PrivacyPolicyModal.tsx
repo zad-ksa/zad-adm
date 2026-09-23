@@ -18,7 +18,7 @@ export default function PrivacyPolicyModal({ isOpen, onClose }: PrivacyPolicyMod
       icon: <Shield className="w-5 h-5 text-emerald-500" />,
       title: "1. مقدمة",
       content: (
-        <p className="text-slate-600 dark:text-slate-300 leading-relaxed text-sm">
+        <p className="text-slate-600 dark:text-slate-300 leading-relaxed text-caption">
           تلتزم شركة زاد للخدمات التنموية بحماية خصوصية بياناتكم الشخصية وفقاً لنظام حماية البيانات الشخصية الصادر بالمرسوم الملكي رقم (م/19). توضح هذه السياسة كيفية جمع واستخدام وحماية بيانات أعضاء وموظفي شركة زاد التنموية.
         </p>
       )
@@ -29,8 +29,8 @@ export default function PrivacyPolicyModal({ isOpen, onClose }: PrivacyPolicyMod
       title: "2. نطاق السياسة",
       content: (
         <div>
-          <p className="text-slate-600 dark:text-slate-300 mb-2 text-sm">تنطبق هذه السياسة على لوحة التحكم الداخلية وتشمل:</p>
-          <ul className="list-disc list-inside text-slate-600 dark:text-slate-300 space-y-1 text-sm">
+          <p className="text-slate-600 dark:text-slate-300 mb-2 text-caption">تنطبق هذه السياسة على لوحة التحكم الداخلية وتشمل:</p>
+          <ul className="list-disc list-inside text-slate-600 dark:text-slate-300 space-y-1 text-caption">
             <li>إدارة الجمعيات، الاستبيانات، المهام، الطلبات</li>
             <li>إدارة المخططات الزمنية والاجتماعات ومحاضرها</li>
             <li>لوحة التحكم الإدارية وحسابات المانحين</li>
@@ -43,13 +43,13 @@ export default function PrivacyPolicyModal({ isOpen, onClose }: PrivacyPolicyMod
       icon: <Database className="w-5 h-5 text-indigo-500" />,
       title: "3. البيانات التي نجمعها",
       content: (
-        <div className="space-y-4 text-sm">
+        <div className="space-y-4 text-caption">
           <div>
-            <h4 className="font-bold text-slate-800 dark:text-slate-200 mb-1">بيانات التسجيل:</h4>
+            <h4 className="font-semibold text-slate-800 dark:text-slate-200 mb-1">بيانات التسجيل:</h4>
             <p className="text-slate-600 dark:text-slate-300">الاسم، رقم الجوال للمصادقة، المسمى الوظيفي والصلاحيات.</p>
           </div>
           <div>
-            <h4 className="font-bold text-slate-800 dark:text-slate-200 mb-1">بيانات التشغيل والجمعيات:</h4>
+            <h4 className="font-semibold text-slate-800 dark:text-slate-200 mb-1">بيانات التشغيل والجمعيات:</h4>
             <p className="text-slate-600 dark:text-slate-300">البيانات المالية والتشغيلية للجمعيات التي تديرها، محاضر الاجتماعات، المهام، والملفات المرفوعة.</p>
           </div>
         </div>
@@ -60,7 +60,7 @@ export default function PrivacyPolicyModal({ isOpen, onClose }: PrivacyPolicyMod
       icon: <FileText className="w-5 h-5 text-teal-500" />,
       title: "4. أغراض معالجة البيانات",
       content: (
-        <ul className="list-disc list-inside text-slate-600 dark:text-slate-300 space-y-1 text-sm">
+        <ul className="list-disc list-inside text-slate-600 dark:text-slate-300 space-y-1 text-caption">
           <li>تأمين الوصول للوحة التحكم</li>
           <li>إدارة الجمعيات المتعاقدة وتقديم الاستشارات</li>
           <li>تنظيم الاجتماعات ومتابعة المهام</li>
@@ -72,7 +72,7 @@ export default function PrivacyPolicyModal({ isOpen, onClose }: PrivacyPolicyMod
       icon: <Globe className="w-5 h-5 text-rose-500" />,
       title: "5. مشاركة البيانات مع أطراف ثالثة",
       content: (
-        <p className="text-slate-600 dark:text-slate-300 text-sm">
+        <p className="text-slate-600 dark:text-slate-300 text-caption">
           نشارك بياناتكم مع جهات موثوقة فقط (مثل Authentica لرسائل OTP، و Cloudinary للملفات، و Supabase لقواعد البيانات).
         </p>
       )
@@ -82,7 +82,7 @@ export default function PrivacyPolicyModal({ isOpen, onClose }: PrivacyPolicyMod
       icon: <UserCheck className="w-5 h-5 text-amber-500" />,
       title: "6. حقوق أصحاب البيانات",
       content: (
-        <p className="text-slate-600 dark:text-slate-300 text-sm">
+        <p className="text-slate-600 dark:text-slate-300 text-caption">
           يحق لكم الاطلاع، التصحيح، الحذف، تقييد المعالجة، ونقل البيانات وفقاً للنظام.
         </p>
       )
@@ -92,7 +92,7 @@ export default function PrivacyPolicyModal({ isOpen, onClose }: PrivacyPolicyMod
       icon: <Lock className="w-5 h-5 text-slate-700 dark:text-slate-300" />,
       title: "7. حماية البيانات",
       content: (
-        <ul className="list-disc list-inside text-slate-600 dark:text-slate-300 space-y-1 text-sm">
+        <ul className="list-disc list-inside text-slate-600 dark:text-slate-300 space-y-1 text-caption">
           <li>المصادقة عبر OTP</li>
           <li>تشفير جلسات المستخدم بـ JWT</li>
           <li>نظام صلاحيات متعدد المستويات (RBAC)</li>
@@ -104,7 +104,7 @@ export default function PrivacyPolicyModal({ isOpen, onClose }: PrivacyPolicyMod
       icon: <Mail className="w-5 h-5 text-primary" />,
       title: "8. التواصل",
       content: (
-        <p className="text-slate-600 dark:text-slate-300 text-sm">
+        <p className="text-slate-600 dark:text-slate-300 text-caption">
           للاستفسارات، يرجى مراسلة مسؤول حماية البيانات عبر: zad.adm.ksa@gmail.com
         </p>
       )
@@ -136,7 +136,7 @@ footer={
                   <div className="p-2 bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-100 dark:border-slate-700">
                     {policy.icon}
                   </div>
-                  <h3 className="font-bold text-slate-800 dark:text-slate-200 text-sm">{policy.title}</h3>
+                  <h3 className="font-semibold text-slate-800 dark:text-slate-200 text-caption">{policy.title}</h3>
                 </div>
                 {policy.content}
               </div>

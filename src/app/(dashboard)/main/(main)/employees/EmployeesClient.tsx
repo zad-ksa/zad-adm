@@ -261,15 +261,15 @@ export function EmployeesClient({
                           if (editable) setSheet({ mode: "edit", employee: emp });
                         }}
                         disabled={!editable}
-                        className="block max-w-[16rem] truncate text-right text-[14px] font-medium text-slate-900 outline-none hover:underline focus-visible:underline disabled:no-underline dark:text-slate-100"
+                        className="block max-w-[16rem] truncate text-right text-body font-medium text-slate-900 outline-none hover:underline focus-visible:underline disabled:no-underline dark:text-slate-100"
                       >
                         {emp.name}
-                        {emp.id === sessionId && <span className="ms-1.5 text-[12px] font-normal text-slate-400">(أنت)</span>}
+                        {emp.id === sessionId && <span className="ms-1.5 text-meta font-normal text-slate-400">(أنت)</span>}
                       </button>
-                      <span className={cx(MONO, "block text-[12.5px] text-slate-500 dark:text-slate-400")} dir="ltr">
+                      <span className={cx(MONO, "block text-meta text-slate-500 dark:text-slate-400")} dir="ltr">
                         {emp.phone}
                       </span>
-                      <span className="block text-[12px] text-slate-500 sm:hidden">{role?.displayName ?? emp.role}</span>
+                      <span className="block text-meta text-slate-500 sm:hidden">{role?.displayName ?? emp.role}</span>
                     </div>
                   </div>
                 </td>
@@ -278,11 +278,11 @@ export function EmployeesClient({
                 </td>
                 <td className="hidden px-4 py-3 md:table-cell">
                   {admin ? (
-                    <span className="text-[13px] text-slate-600 dark:text-slate-300">وصول كامل</span>
+                    <span className="text-body text-slate-600 dark:text-slate-300">وصول كامل</span>
                   ) : nothing ? (
                     <Badge tone="warn">بلا صلاحيات</Badge>
                   ) : (
-                    <span className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[13px] text-slate-600 dark:text-slate-300">
+                    <span className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-body text-slate-600 dark:text-slate-300">
                       <Count n={emp.permissions.length} unit="صلاحية" />
                       {bundleCount > 0 && (
                         <>
@@ -301,11 +301,11 @@ export function EmployeesClient({
                 </td>
                 <td className="hidden px-4 py-3 lg:table-cell">
                   {admin ? (
-                    <span className="text-[13px] text-slate-600 dark:text-slate-300">الكل</span>
+                    <span className="text-body text-slate-600 dark:text-slate-300">الكل</span>
                   ) : emp.charityIds.length === 0 ? (
-                    <span className="text-[13px] text-amber-600 dark:text-amber-400">لا شيء</span>
+                    <span className="text-body text-amber-600 dark:text-amber-400">لا شيء</span>
                   ) : (
-                    <span className={cx(MONO, "text-[13px] text-slate-600 dark:text-slate-300")}>
+                    <span className={cx(MONO, "text-body text-slate-600 dark:text-slate-300")}>
                       {emp.charityIds.length}
                       <span className="text-slate-400"> / {allCharities.length}</span>
                     </span>
@@ -313,21 +313,21 @@ export function EmployeesClient({
                 </td>
                 <td className="hidden px-4 py-3 xl:table-cell">
                   {emp.email ? (
-                    <span className="flex items-center gap-1.5 text-[13px] text-slate-600 dark:text-slate-300" title={emp.email}>
+                    <span className="flex items-center gap-1.5 text-body text-slate-600 dark:text-slate-300" title={emp.email}>
                       <Mail className="size-3.5 shrink-0 text-slate-400" />
                       <span className="max-w-[12rem] truncate" dir="ltr">
                         {emp.email}
                       </span>
                     </span>
                   ) : (
-                    <span className="flex items-center gap-1.5 text-[13px] text-slate-500">
+                    <span className="flex items-center gap-1.5 text-body text-slate-500">
                       <Smartphone className="size-3.5 shrink-0 text-slate-400" />
                       رمز الجوال
                     </span>
                   )}
                 </td>
                 <td className="px-4 py-3">
-                  <span className="inline-flex items-center gap-2 text-[13px]">
+                  <span className="inline-flex items-center gap-2 text-body">
                     <span
                       aria-hidden
                       className={cx(

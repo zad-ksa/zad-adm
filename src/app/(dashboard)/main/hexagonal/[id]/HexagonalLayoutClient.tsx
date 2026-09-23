@@ -142,10 +142,10 @@ export default function HexagonalLayoutClient({
 
           {isOpen && (
             <div className="overflow-hidden whitespace-nowrap fade-in w-full">
-              <h2 className="text-base font-bold text-slate-800 dark:text-slate-100 truncate mb-1" title={charityName}>
+              <h2 className="text-title font-semibold text-slate-800 dark:text-slate-100 truncate mb-1" title={charityName}>
                 {charityName}
               </h2>
-              <div className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-secondary/10 border border-secondary/20 rounded-full text-[10px] text-secondary font-bold">
+              <div className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-secondary/10 border border-secondary/20 rounded-full text-caption text-secondary font-semibold">
                 التحليل السداسي
               </div>
             </div>
@@ -155,7 +155,7 @@ export default function HexagonalLayoutClient({
         {/* Navigation - Hexagonal Survey Responses */}
         <div className="flex-1 px-3 space-y-1.5">
           {isOpen && (
-            <div className="px-3 mb-3 text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
+            <div className="px-3 mb-3 text-caption font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
               تقارير التحليل السداسي
             </div>
           )}
@@ -179,7 +179,7 @@ export default function HexagonalLayoutClient({
                   }
                 }}
                 title={!isOpen ? `${item.authorizedTitle} (${formattedDate})` : undefined}
-                className={`flex items-center ${isOpen ? "justify-start px-3" : "justify-center"} py-2.5 rounded-xl font-bold transition-all group relative overflow-hidden ${
+                className={`flex items-center ${isOpen ? "justify-start px-3" : "justify-center"} py-2.5 rounded-xl font-semibold transition-all group relative overflow-hidden ${
                   isActive
                     ? "bg-primary text-white shadow-md shadow-primary/20"
                     : "text-slate-500 dark:text-slate-400 hover:bg-primary/5 hover:text-primary"
@@ -190,8 +190,8 @@ export default function HexagonalLayoutClient({
 
                 {isOpen && (
                   <div className="flex flex-col text-right overflow-hidden min-w-0">
-                    <span className="text-sm truncate font-bold leading-tight">{item.authorizedTitle}</span>
-                    <span className={`text-[10px] ${isActive ? "text-white/80" : "text-slate-400 dark:text-slate-500 group-hover:text-primary/70"} font-medium mt-0.5`}>
+                    <span className="text-caption truncate font-semibold leading-tight">{item.authorizedTitle}</span>
+                    <span className={`text-caption ${isActive ? "text-white/80" : "text-slate-400 dark:text-slate-500 group-hover:text-primary/70"} font-medium mt-0.5`}>
                       {formattedDate}
                     </span>
                   </div>
@@ -207,10 +207,10 @@ export default function HexagonalLayoutClient({
             href={`/charity/${encodeURIComponent(charityName)}`}
             onClick={() => setIsNavigating(true)}
             title={!isOpen ? "العودة لملف الجمعية" : undefined}
-            className={`flex items-center ${isOpen ? "justify-start px-3" : "justify-center"} w-full py-3 text-slate-500 dark:text-slate-400 hover:bg-primary/5 hover:text-primary rounded-xl font-bold transition-all group`}
+            className={`flex items-center ${isOpen ? "justify-start px-3" : "justify-center"} w-full py-3 text-slate-500 dark:text-slate-400 hover:bg-primary/5 hover:text-primary rounded-xl font-semibold transition-all group`}
           >
             <ArrowLeft className={`w-5 h-5 shrink-0 transition-all ${isOpen ? "ml-3" : "ml-0"} text-slate-400 dark:text-slate-500 group-hover:text-primary`} />
-            {isOpen && <span className="whitespace-nowrap text-sm">العودة لملف الجمعية</span>}
+            {isOpen && <span className="whitespace-nowrap text-caption">العودة لملف الجمعية</span>}
           </Link>
         </div>
       </div>
@@ -245,7 +245,7 @@ export default function HexagonalLayoutClient({
             >
               <Menu className="w-6 h-6" />
             </button>
-            <span className="font-bold text-slate-800 dark:text-slate-100 text-lg truncate max-w-[200px]" title={charityName}>
+            <span className="font-semibold text-slate-800 dark:text-slate-100 text-section truncate max-w-[200px]" title={charityName}>
               {charityName}
             </span>
           </div>

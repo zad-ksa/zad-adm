@@ -473,7 +473,7 @@ function InlineTimeline({
 
     return (
       <div className="mt-2">
-        {total === 0 && <p className="text-xs text-slate-400 italic py-2">لا توجد مراحل مسجلة</p>}
+        {total === 0 && <p className="text-caption text-slate-400 italic py-2">لا توجد مراحل مسجلة</p>}
 
         {total > 0 && (
           <div
@@ -486,15 +486,15 @@ function InlineTimeline({
                 {continuousStages.map(stage => {
                   const active = stage.isActive !== false;
                   return (
-                  <div key={stage.id} className={`flex items-start gap-2.5 p-2 rounded-lg text-xs border ${active ? "bg-amber-50/60 dark:bg-amber-900/10 border-amber-100 dark:border-amber-800/30" : "bg-slate-50 dark:bg-slate-800/30 border-slate-200 dark:border-slate-700/50 opacity-50"}`}>
-                    <div className="w-5 h-5 rounded-md flex items-center justify-center shrink-0 mt-0.5 bg-amber-400 dark:bg-amber-600 text-white text-[11px] font-bold">∞</div>
+                  <div key={stage.id} className={`flex items-start gap-2.5 p-2 rounded-lg text-caption border ${active ? "bg-amber-50/60 dark:bg-amber-900/10 border-amber-100 dark:border-amber-800/30" : "bg-slate-50 dark:bg-slate-800/30 border-slate-200 dark:border-slate-700/50 opacity-50"}`}>
+                    <div className="w-5 h-5 rounded-md flex items-center justify-center shrink-0 mt-0.5 bg-amber-400 dark:bg-amber-600 text-white text-caption font-semibold">∞</div>
                     <div className="flex-1 min-w-0">
                       <div className={`font-semibold leading-tight flex items-center gap-1.5 flex-wrap ${active ? "text-amber-800 dark:text-amber-300" : "text-slate-500"}`}>
                         {stage.name}
-                        <span className="text-[9px] text-amber-600 dark:text-amber-400 font-medium opacity-70">دائمة</span>
-                        {stage.isComingSoon && <span className="text-[9px] bg-purple-500 text-white px-1.5 py-0.5 rounded-full font-bold">قريباً</span>}
+                        <span className="text-caption text-amber-600 dark:text-amber-400 font-medium opacity-70">دائمة</span>
+                        {stage.isComingSoon && <span className="text-caption bg-purple-500 text-white px-1.5 py-0.5 rounded-full font-semibold">قريباً</span>}
                       </div>
-                      {stage.description && <p className="text-amber-700/70 dark:text-amber-400/60 mt-0.5 text-[11px]">{stage.description}</p>}
+                      {stage.description && <p className="text-amber-700/70 dark:text-amber-400/60 mt-0.5 text-caption">{stage.description}</p>}
                       {(stage.startDate || stage.endDate) && (
                         <div className="flex items-center gap-1 mt-0.5 text-amber-600/60 dark:text-amber-500/50">
                           <Calendar className="w-3 h-3 shrink-0" />
@@ -510,7 +510,7 @@ function InlineTimeline({
                         });
                       }}
                       disabled={isPending}
-                      className={`shrink-0 text-[9px] font-bold px-1.5 py-0.5 rounded transition-colors ${active ? "bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 hover:bg-amber-200" : "bg-slate-100 dark:bg-slate-700 text-slate-500 hover:bg-slate-200"}`}
+                      className={`shrink-0 text-caption font-semibold px-1.5 py-0.5 rounded transition-colors ${active ? "bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 hover:bg-amber-200" : "bg-slate-100 dark:bg-slate-700 text-slate-500 hover:bg-slate-200"}`}
                     >
                       {active ? "تعطيل" : "تفعيل"}
                     </button>
@@ -526,8 +526,8 @@ function InlineTimeline({
               const isCompleted = lastCurrentIdx !== -1 && idx < lastCurrentIdx;
               const isCurrent = stage.isCurrent;
               return (
-                <div key={stage.id} className={`flex items-start gap-2.5 p-2 rounded-lg text-xs group ${isCurrent ? "bg-primary/8 dark:bg-primary/15" : "hover:bg-slate-50 dark:hover:bg-slate-700/30"}`}>
-                  <div className={`w-5 h-5 rounded-full flex items-center justify-center shrink-0 text-[10px] font-bold mt-0.5 border ${
+                <div key={stage.id} className={`flex items-start gap-2.5 p-2 rounded-lg text-caption group ${isCurrent ? "bg-primary/8 dark:bg-primary/15" : "hover:bg-slate-50 dark:hover:bg-slate-700/30"}`}>
+                  <div className={`w-5 h-5 rounded-full flex items-center justify-center shrink-0 text-caption font-semibold mt-0.5 border ${
                     isCurrent ? "border-primary bg-primary text-white" :
                     isCompleted ? "border-emerald-500 bg-emerald-500 text-white" :
                     "border-slate-300 dark:border-slate-600 text-slate-400"
@@ -537,10 +537,10 @@ function InlineTimeline({
                   <div className="flex-1 min-w-0 overflow-hidden">
                     <div className={`font-semibold leading-tight ${isCurrent ? "text-primary" : isCompleted ? "text-slate-500 dark:text-slate-400" : "text-slate-700 dark:text-slate-300"}`}>
                       {stage.name}
-                      {isCurrent && <span className="mr-1.5 text-[10px] bg-primary text-white px-1.5 py-0.5 rounded-full font-bold">حالية</span>}
-                      {stage.isComingSoon && <span className="mr-1.5 text-[10px] bg-purple-500 text-white px-1.5 py-0.5 rounded-full font-bold">قريباً</span>}
+                      {isCurrent && <span className="mr-1.5 text-caption bg-primary text-white px-1.5 py-0.5 rounded-full font-semibold">حالية</span>}
+                      {stage.isComingSoon && <span className="mr-1.5 text-caption bg-purple-500 text-white px-1.5 py-0.5 rounded-full font-semibold">قريباً</span>}
                     </div>
-                    {stage.description && <p className="text-slate-500 dark:text-slate-400 mt-0.5 text-[11px] break-words">{stage.description}</p>}
+                    {stage.description && <p className="text-slate-500 dark:text-slate-400 mt-0.5 text-caption break-words">{stage.description}</p>}
                     {(stage.startDate || stage.endDate) && (
                       <div className="flex items-center gap-1 mt-0.5 text-slate-400 dark:text-slate-500">
                         <Calendar className="w-3 h-3 shrink-0" />
@@ -587,7 +587,7 @@ function InlineTimeline({
             {regularStages.length > MAX_VISIBLE && (
               <button
                 onClick={() => setShowAllStages(v => !v)}
-                className="w-full text-center text-[11px] font-bold text-primary/70 hover:text-primary py-1 hover:bg-primary/5 rounded-lg transition-colors"
+                className="w-full text-center text-caption font-semibold text-primary/70 hover:text-primary py-1 hover:bg-primary/5 rounded-lg transition-colors"
               >
                 {showAllStages ? `إخفاء (${regularStages.length - MAX_VISIBLE} مرحلة)` : `عرض الكل (${regularStages.length} مرحلة)`}
               </button>
@@ -599,7 +599,7 @@ function InlineTimeline({
           <div className="flex gap-1.5 mt-2">
             <button
               onClick={() => setIsEditing(true)}
-              className="flex-1 flex items-center justify-center gap-1.5 py-1.5 text-[11px] font-bold text-slate-400 dark:text-slate-500 hover:text-primary dark:hover:text-primary hover:bg-primary/5 rounded-lg transition-colors border border-dashed border-slate-200 dark:border-slate-700"
+              className="flex-1 flex items-center justify-center gap-1.5 py-1.5 text-caption font-semibold text-slate-400 dark:text-slate-500 hover:text-primary dark:hover:text-primary hover:bg-primary/5 rounded-lg transition-colors border border-dashed border-slate-200 dark:border-slate-700"
             >
               <Edit2 className="w-3 h-3" /> تعديل المراحل
             </button>
@@ -607,7 +607,7 @@ function InlineTimeline({
               <button
                 type="button"
                 onClick={onUnifyClick}
-                className="flex-1 flex items-center justify-center gap-1.5 py-1.5 text-[11px] font-bold text-slate-400 dark:text-slate-500 hover:text-amber-500 dark:hover:text-amber-500 hover:bg-amber-500/5 rounded-lg transition-colors border border-dashed border-slate-200 dark:border-slate-700"
+                className="flex-1 flex items-center justify-center gap-1.5 py-1.5 text-caption font-semibold text-slate-400 dark:text-slate-500 hover:text-amber-500 dark:hover:text-amber-500 hover:bg-amber-500/5 rounded-lg transition-colors border border-dashed border-slate-200 dark:border-slate-700"
               >
                 <Layers className="w-3.5 h-3.5 text-amber-500" /> توحيد المراحل
               </button>
@@ -629,9 +629,9 @@ function InlineTimeline({
           {editingId === stage.id ? (
             <div className="space-y-2">
               <input value={editName} onChange={e => setEditName(e.target.value)} placeholder="اسم المرحلة" autoFocus
-                className="w-full text-xs bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 rounded-lg px-3 py-1.5 outline-none focus:ring-2 focus:ring-primary/30 text-slate-800 dark:text-slate-100" />
+                className="w-full text-caption bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 rounded-lg px-3 py-1.5 outline-none focus:ring-2 focus:ring-primary/30 text-slate-800 dark:text-slate-100" />
               <input value={editDesc} onChange={e => setEditDesc(e.target.value)} placeholder="وصف (اختياري)"
-                className="w-full text-xs bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 rounded-lg px-3 py-1.5 outline-none focus:ring-2 focus:ring-primary/30 text-slate-800 dark:text-slate-100" />
+                className="w-full text-caption bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 rounded-lg px-3 py-1.5 outline-none focus:ring-2 focus:ring-primary/30 text-slate-800 dark:text-slate-100" />
               {/* خيار الأيام أو التواريخ */}
               <div className="rounded-lg bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-600 p-2 space-y-2">
                 <div className="flex items-center gap-2">
@@ -642,14 +642,14 @@ function InlineTimeline({
                       if (e.target.value) { setEditStart(""); setEditEnd(""); }
                     }}
                     placeholder="عدد الأيام"
-                    className="w-24 text-xs bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-lg px-2 py-1.5 outline-none focus:ring-2 focus:ring-primary/30"
+                    className="w-24 text-caption bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-lg px-2 py-1.5 outline-none focus:ring-2 focus:ring-primary/30"
                   />
-                  <label className="flex items-center gap-1.5 cursor-pointer text-xs text-slate-600 dark:text-slate-300">
+                  <label className="flex items-center gap-1.5 cursor-pointer text-caption text-slate-600 dark:text-slate-300">
                     <input type="checkbox" checked={editWorkDaysOnly} onChange={e => setEditWorkDaysOnly(e.target.checked)} className="w-3 h-3 accent-primary" />
                     أيام عمل فقط
                   </label>
                   {editDays && (
-                    <span className="text-[10px] text-primary font-medium">
+                    <span className="text-caption text-primary font-medium">
                       {(() => {
                         const idx = sorted.findIndex(s => s.id === editingId);
                         const prevEnd = idx > 0 ? sorted[idx - 1].endDate : null;
@@ -659,19 +659,19 @@ function InlineTimeline({
                     </span>
                   )}
                 </div>
-                <div className="text-[10px] text-slate-400 text-center">— أو حدد التواريخ يدوياً —</div>
+                <div className="text-caption text-slate-400 text-center">— أو حدد التواريخ يدوياً —</div>
                 <div className="flex gap-2">
                   <input type="date" value={editStart} onChange={e => { setEditStart(e.target.value); setEditDays(""); }}
-                    className="flex-1 text-xs bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 rounded-lg px-2 py-1.5 outline-none [color-scheme:light] dark:[color-scheme:dark]" />
+                    className="flex-1 text-caption bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 rounded-lg px-2 py-1.5 outline-none [color-scheme:light] dark:[color-scheme:dark]" />
                   <input type="date" value={editEnd} onChange={e => { setEditEnd(e.target.value); setEditDays(""); }}
-                    className="flex-1 text-xs bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 rounded-lg px-2 py-1.5 outline-none [color-scheme:light] dark:[color-scheme:dark]" />
+                    className="flex-1 text-caption bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 rounded-lg px-2 py-1.5 outline-none [color-scheme:light] dark:[color-scheme:dark]" />
                 </div>
               </div>
-              <label className="flex items-center gap-2 cursor-pointer text-xs text-slate-600 dark:text-slate-300">
+              <label className="flex items-center gap-2 cursor-pointer text-caption text-slate-600 dark:text-slate-300">
                 <input type="checkbox" checked={editIsContinuous} onChange={e => setEditIsContinuous(e.target.checked)} className="w-3.5 h-3.5 accent-amber-500" />
                 <span>مرحلة دائمة (تعمل بالتوازي مع المراحل الأخرى)</span>
               </label>
-              <label className="flex items-center gap-2 cursor-pointer text-xs text-slate-600 dark:text-slate-300">
+              <label className="flex items-center gap-2 cursor-pointer text-caption text-slate-600 dark:text-slate-300">
                 <input type="checkbox" checked={editIsComingSoon} onChange={e => setEditIsComingSoon(e.target.checked)} className="w-3.5 h-3.5 accent-purple-500" />
                 <span>المرحلة قريباً (Coming Soon)</span>
               </label>
@@ -693,7 +693,7 @@ function InlineTimeline({
                   className="p-0.5 text-slate-300 hover:text-slate-600 disabled:opacity-20"><ArrowDown className="w-3 h-3" /></button>
               </div>
               {/* Badge */}
-              <div className={`w-5 h-5 rounded-md flex items-center justify-center text-[10px] font-bold shrink-0 border ${
+              <div className={`w-5 h-5 rounded-md flex items-center justify-center text-caption font-semibold shrink-0 border ${
                 isContinuousSection
                   ? "border-amber-400 bg-amber-400 text-white"
                   : stage.isCurrent
@@ -702,18 +702,18 @@ function InlineTimeline({
               }`}>{isContinuousSection ? "∞" : idx + 1}</div>
               {/* Name */}
               <div className="flex-1 min-w-0">
-                <div className={`text-xs font-semibold truncate flex items-center gap-1 ${isContinuousSection ? "text-amber-700 dark:text-amber-300" : stage.isCurrent ? "text-primary" : "text-slate-700 dark:text-slate-300"}`}>
+                <div className={`text-caption font-semibold truncate flex items-center gap-1 ${isContinuousSection ? "text-amber-700 dark:text-amber-300" : stage.isCurrent ? "text-primary" : "text-slate-700 dark:text-slate-300"}`}>
                   {stage.name}
-                  {stage.isComingSoon && <span className="text-[9px] bg-purple-500 text-white px-1.5 py-0.5 rounded-full font-bold">قريباً</span>}
+                  {stage.isComingSoon && <span className="text-caption bg-purple-500 text-white px-1.5 py-0.5 rounded-full font-semibold">قريباً</span>}
                 </div>
                 {(stage.startDate || stage.endDate) && (
-                  <div className="text-[10px] text-slate-400" dir="ltr">{fmtDate(stage.startDate)}{stage.startDate && stage.endDate ? "—" : ""}{fmtDate(stage.endDate)}</div>
+                  <div className="text-caption text-slate-400" dir="ltr">{fmtDate(stage.startDate)}{stage.startDate && stage.endDate ? "—" : ""}{fmtDate(stage.endDate)}</div>
                 )}
               </div>
               {/* Actions */}
               <div className="flex items-center gap-1 shrink-0">
                 <button onClick={() => handleToggleCurrent(stage.id)} disabled={isPending}
-                  className={`text-[10px] px-1.5 py-0.5 border rounded transition-colors ${
+                  className={`text-caption px-1.5 py-0.5 border rounded transition-colors ${
                     isContinuousSection
                       ? stage.isCurrent
                         ? "bg-emerald-50 dark:bg-emerald-900/20 border-emerald-300 text-emerald-600 hover:bg-red-50 hover:border-red-300 hover:text-red-500"
@@ -742,9 +742,9 @@ function InlineTimeline({
   return (
     <div className="mt-2 space-y-2">
       <div className="flex items-center justify-between mb-1">
-        <span className="text-xs font-bold text-slate-600 dark:text-slate-300">تعديل المراحل</span>
+        <span className="text-caption font-semibold text-slate-600 dark:text-slate-300">تعديل المراحل</span>
         <button onClick={() => { setIsEditing(false); setEditingId(null); setIsAdding(false); }}
-          className="text-xs text-slate-400 hover:text-slate-600 flex items-center gap-1 px-2 py-1 rounded hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors">
+          className="text-caption text-slate-400 hover:text-slate-600 flex items-center gap-1 px-2 py-1 rounded hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors">
           <X className="w-3 h-3" /> إغلاق
         </button>
       </div>
@@ -752,7 +752,7 @@ function InlineTimeline({
       {/* المراحل المرقمة */}
       {editRegular.length > 0 && (
         <div className="space-y-1.5">
-          <div className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wide px-1">المراحل المرحلية</div>
+          <div className="text-caption font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wide px-1">المراحل المرحلية</div>
           {editRegular.map((stage, idx) => renderEditItem(stage, idx, false))}
         </div>
       )}
@@ -760,7 +760,7 @@ function InlineTimeline({
       {/* المراحل الدائمة — قسم مستقل */}
       {editContinuous.length > 0 && (
         <div className="space-y-1.5 pt-2 border-t border-dashed border-amber-200 dark:border-amber-800/40">
-          <div className="text-[10px] font-bold text-amber-500 dark:text-amber-400 uppercase tracking-wide px-1">المهام الدائمة والمستمرة</div>
+          <div className="text-caption font-semibold text-amber-500 dark:text-amber-400 uppercase tracking-wide px-1">المهام الدائمة والمستمرة</div>
           {editContinuous.map((stage, idx) => renderEditItem(stage, idx, true))}
         </div>
       )}
@@ -769,9 +769,9 @@ function InlineTimeline({
       {isAdding ? (
         <div className="rounded-lg border-2 border-primary border-dashed p-2 space-y-2">
           <input value={newName} onChange={e => setNewName(e.target.value)} placeholder="اسم المرحلة الجديدة" autoFocus
-            className="w-full text-xs bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 rounded-lg px-3 py-1.5 outline-none focus:ring-2 focus:ring-primary/30 text-slate-800 dark:text-slate-100" />
+            className="w-full text-caption bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 rounded-lg px-3 py-1.5 outline-none focus:ring-2 focus:ring-primary/30 text-slate-800 dark:text-slate-100" />
           <input value={newDesc} onChange={e => setNewDesc(e.target.value)} placeholder="وصف (اختياري)"
-            className="w-full text-xs bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 rounded-lg px-3 py-1.5 outline-none focus:ring-2 focus:ring-primary/30 text-slate-800 dark:text-slate-100" />
+            className="w-full text-caption bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 rounded-lg px-3 py-1.5 outline-none focus:ring-2 focus:ring-primary/30 text-slate-800 dark:text-slate-100" />
           {/* خيار الأيام أو التواريخ */}
           <div className="rounded-lg bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-600 p-2 space-y-2">
             <div className="flex items-center gap-2">
@@ -779,14 +779,14 @@ function InlineTimeline({
                 type="number" min="1" value={newDays}
                 onChange={e => { setNewDays(e.target.value); if (e.target.value) { setNewStart(""); setNewEnd(""); } }}
                 placeholder="عدد الأيام"
-                className="w-24 text-xs bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-lg px-2 py-1.5 outline-none focus:ring-2 focus:ring-primary/30"
+                className="w-24 text-caption bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-lg px-2 py-1.5 outline-none focus:ring-2 focus:ring-primary/30"
               />
-              <label className="flex items-center gap-1.5 cursor-pointer text-xs text-slate-600 dark:text-slate-300">
+              <label className="flex items-center gap-1.5 cursor-pointer text-caption text-slate-600 dark:text-slate-300">
                 <input type="checkbox" checked={newWorkDaysOnly} onChange={e => setNewWorkDaysOnly(e.target.checked)} className="w-3 h-3 accent-primary" />
                 أيام عمل فقط
               </label>
               {newDays && (
-                <span className="text-[10px] text-primary font-medium">
+                <span className="text-caption text-primary font-medium">
                   {(() => {
                     const regularSorted = sorted.filter(s => !s.isContinuous);
                     const prevEnd = regularSorted.length > 0 ? regularSorted[regularSorted.length - 1].endDate : null;
@@ -796,15 +796,15 @@ function InlineTimeline({
                 </span>
               )}
             </div>
-            <div className="text-[10px] text-slate-400 text-center">— أو حدد التواريخ يدوياً —</div>
+            <div className="text-caption text-slate-400 text-center">— أو حدد التواريخ يدوياً —</div>
             <div className="flex gap-2">
               <input type="date" value={newStart} onChange={e => { setNewStart(e.target.value); setNewDays(""); }}
-                className="flex-1 text-xs bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 rounded-lg px-2 py-1.5 outline-none [color-scheme:light] dark:[color-scheme:dark]" />
+                className="flex-1 text-caption bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 rounded-lg px-2 py-1.5 outline-none [color-scheme:light] dark:[color-scheme:dark]" />
               <input type="date" value={newEnd} onChange={e => { setNewEnd(e.target.value); setNewDays(""); }}
-                className="flex-1 text-xs bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 rounded-lg px-2 py-1.5 outline-none [color-scheme:light] dark:[color-scheme:dark]" />
+                className="flex-1 text-caption bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 rounded-lg px-2 py-1.5 outline-none [color-scheme:light] dark:[color-scheme:dark]" />
             </div>
           </div>
-          <label className="flex items-center gap-2 cursor-pointer text-xs text-slate-600 dark:text-slate-300">
+          <label className="flex items-center gap-2 cursor-pointer text-caption text-slate-600 dark:text-slate-300">
             <input type="checkbox" checked={newIsContinuous} onChange={e => setNewIsContinuous(e.target.checked)} className="w-3.5 h-3.5 accent-amber-500" />
             <span>مرحلة دائمة (تعمل بالتوازي مع المراحل الأخرى)</span>
           </label>
@@ -818,7 +818,7 @@ function InlineTimeline({
         </div>
       ) : (
         <button onClick={() => setIsAdding(true)}
-          className="w-full flex items-center justify-center gap-1.5 py-1.5 text-xs font-bold text-primary hover:bg-primary/5 rounded-lg border border-dashed border-primary/30 transition-colors">
+          className="w-full flex items-center justify-center gap-1.5 py-1.5 text-caption font-semibold text-primary hover:bg-primary/5 rounded-lg border border-dashed border-primary/30 transition-colors">
           <Plus className="w-3 h-3" /> إضافة مرحلة
         </button>
       )}
@@ -865,7 +865,7 @@ function CharityCard({
                 <img src={charityLogoUrl} alt={charity.name} className="w-full h-full object-contain p-0.5" />
               </div>
             ) : (
-              <div className={`w-7 h-7 rounded-lg bg-primary/10 text-primary flex items-center justify-center text-xs font-bold border border-primary/20 ${canEdit ? "cursor-pointer" : ""}`}>
+              <div className={`w-7 h-7 rounded-lg bg-primary/10 text-primary flex items-center justify-center text-caption font-semibold border border-primary/20 ${canEdit ? "cursor-pointer" : ""}`}>
                 {charity.name.charAt(0)}
               </div>
             )}
@@ -876,15 +876,15 @@ function CharityCard({
             )}
           </div>
           <div className={`w-2 h-2 rounded-full shrink-0 ${deptColor}`} />
-          <span className="font-bold text-sm text-slate-800 dark:text-slate-200 truncate">{charity.name}</span>
-          {currentStage && <span className="text-xs text-slate-500 dark:text-slate-400 truncate hidden sm:inline">— {currentStage.name}</span>}
+          <span className="font-semibold text-caption text-slate-800 dark:text-slate-200 truncate">{charity.name}</span>
+          {currentStage && <span className="text-caption text-slate-500 dark:text-slate-400 truncate hidden sm:inline">— {currentStage.name}</span>}
         </div>
         <div className="flex items-center gap-3 shrink-0">
           <div className="flex items-center gap-1.5">
             <div className="w-20 h-1.5 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
               <div className="h-full bg-primary rounded-full transition-all" style={{ width: `${pct}%` }} />
             </div>
-            <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 w-7">{pct}%</span>
+            <span className="text-caption font-semibold text-slate-500 dark:text-slate-400 w-7">{pct}%</span>
           </div>
           {open ? <ChevronDown className="w-4 h-4 text-slate-400" /> : <ChevronRight className="w-4 h-4 text-slate-400" />}
         </div>
@@ -1361,7 +1361,7 @@ export default function ServicesOverviewClient({
                           if (e.key === "Enter") handleSaveServiceName(svcId!, svcInfo?.dept ?? null, displayName);
                           if (e.key === "Escape") setEditingServiceId(null);
                         }}
-                        className="text-xs font-bold border border-primary/40 rounded px-2 py-1 outline-none focus:ring-1 focus:ring-primary/30 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 w-28"
+                        className="text-caption font-semibold border border-primary/40 rounded px-2 py-1 outline-none focus:ring-1 focus:ring-primary/30 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 w-28"
                       />
                       <button onClick={() => handleSaveServiceName(svcId!, svcInfo?.dept ?? null, displayName)} disabled={isServiceNamePending}
                         className="p-1 text-primary hover:bg-primary/10 rounded">
@@ -1381,7 +1381,7 @@ export default function ServicesOverviewClient({
                           if (e.key === "Enter") handleSaveBuiltinName(tab.key);
                           if (e.key === "Escape") setEditingBuiltinTab(null);
                         }}
-                        className="text-xs font-bold border border-primary/40 rounded px-2 py-1 outline-none focus:ring-1 focus:ring-primary/30 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 w-28"
+                        className="text-caption font-semibold border border-primary/40 rounded px-2 py-1 outline-none focus:ring-1 focus:ring-primary/30 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 w-28"
                       />
                       <button onClick={() => handleSaveBuiltinName(tab.key)} disabled={isBuiltinNamePending}
                         className="p-1 text-primary hover:bg-primary/10 rounded">
@@ -1394,7 +1394,7 @@ export default function ServicesOverviewClient({
                   ) : (
                     <>
                       <button onClick={() => { setActiveTab(tab.key); setExtraCharityIds([]); }}
-                        className={`px-4 py-3 text-sm font-bold whitespace-nowrap transition-colors border-b-2 -mb-px ${
+                        className={`px-4 py-3 text-caption font-semibold whitespace-nowrap transition-colors border-b-2 -mb-px ${
                           activeTab === tab.key ? "border-primary text-primary bg-primary/5" : "border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200"
                         }`}>
                         {displayName}
@@ -1435,7 +1435,7 @@ export default function ServicesOverviewClient({
           </div>
 
           {serviceNameError && (
-            <div className="px-4 py-2 text-xs font-bold text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-950/20 border-b border-red-100 dark:border-red-900/30 flex items-center gap-1.5">
+            <div className="px-4 py-2 text-caption font-semibold text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-950/20 border-b border-red-100 dark:border-red-900/30 flex items-center gap-1.5">
               <AlertCircle className="w-3.5 h-3.5 shrink-0" />
               {serviceNameError}
               <button onClick={() => setServiceNameError(null)} className="mr-auto p-0.5 text-red-400 hover:text-red-600" aria-label="إغلاق">
@@ -1446,7 +1446,7 @@ export default function ServicesOverviewClient({
 
           {/* Stats bar */}
           <div className="flex items-center justify-between gap-3 px-4 py-2.5 border-b border-slate-100 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-900/30">
-            <div className="flex items-center gap-3 text-xs">
+            <div className="flex items-center gap-3 text-caption">
               <span className="text-slate-500 dark:text-slate-400">الجمعيات: <strong className="text-slate-800 dark:text-slate-200">{totalCharities}</strong></span>
               <span className="text-slate-500 dark:text-slate-400">نشطة: <strong className="text-emerald-600 dark:text-emerald-400">{doneCharities}</strong></span>
             </div>
@@ -1468,7 +1468,7 @@ export default function ServicesOverviewClient({
                             setExtraCharityIds(prev => prev.includes(c.id) ? prev.filter(id => id !== c.id) : [...prev, c.id]);
                             setShowAddCharity(false);
                           }}
-                          className="w-full text-right px-3 py-2 text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-primary/5 hover:text-primary transition-colors"
+                          className="w-full text-right px-3 py-2 text-caption font-semibold text-slate-700 dark:text-slate-200 hover:bg-primary/5 hover:text-primary transition-colors"
                         >
                           {c.name}
                         </button>
@@ -1494,7 +1494,7 @@ export default function ServicesOverviewClient({
             {charitiesWithData.length === 0 && extraCharities.length === 0 ? (
               <div className="text-center py-10 text-slate-400 dark:text-slate-500">
                 <Briefcase className="w-9 h-9 mx-auto mb-2 opacity-40" />
-                <p className="text-sm">لا توجد جمعيات لديها بيانات في هذا القسم</p>
+                <p className="text-caption">لا توجد جمعيات لديها بيانات في هذا القسم</p>
               </div>
             ) : (
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
@@ -1561,17 +1561,17 @@ export default function ServicesOverviewClient({
                   <Clock className="w-5 h-5" />
                 </div>
                 <div>
-                  <h4 className="font-bold text-sm text-slate-800 dark:text-slate-200">
+                  <h4 className="font-semibold text-caption text-slate-800 dark:text-slate-200">
                     حالة الخدمة (قريباً): {genericSvcInfo.isComingSoon ? <span className="text-amber-600 dark:text-amber-400">مُفعلة شمولياً (قريباً)</span> : <span className="text-slate-500">محددة / غير مُفعلة</span>}
                   </h4>
-                  <p className="text-xs text-slate-500 dark:text-slate-400">
+                  <p className="text-caption text-slate-500 dark:text-slate-400">
                     يمكنك تحديد وتعميم هذه الخدمة كـ "قريباً" لجميع الجمعيات أو تخصيصها لجمعيات محددة فقط.
                   </p>
                 </div>
               </div>
               <button
                 onClick={() => setShowComingSoonModal(true)}
-                className="px-4 py-2 text-xs font-bold bg-amber-500 hover:bg-amber-600 text-white rounded-lg transition-all flex items-center gap-2 shadow-sm"
+                className="px-4 py-2 text-caption font-semibold bg-amber-500 hover:bg-amber-600 text-white rounded-lg transition-all flex items-center gap-2 shadow-sm"
               >
                 <Clock className="w-4 h-4" /> إدارة وضع (قريباً)
               </button>
@@ -1607,7 +1607,7 @@ footer={
 >
 <div className="space-y-4">
 <div>
-                <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">اسم الخدمة</label>
+                <label className="block text-caption font-semibold text-slate-700 dark:text-slate-300 mb-2">اسم الخدمة</label>
                 <input
                   autoFocus
                   type="text"
@@ -1615,14 +1615,14 @@ footer={
                   onChange={e => { setNewServiceName(e.target.value); setAddServiceError(null); }}
                   aria-invalid={!!addServiceError}
                   placeholder="مثال: خدمة الإسناد الإداري..."
-                  className={`w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border rounded-lg focus:ring-2 outline-none transition-all dark:text-white text-sm ${
+                  className={`w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border rounded-lg focus:ring-2 outline-none transition-all dark:text-white text-caption ${
                     addServiceError
                       ? "border-red-400 focus:ring-red-200 focus:border-red-400"
                       : "border-slate-200 dark:border-slate-700 focus:ring-primary focus:border-primary"
                   }`}
                 />
                 {addServiceError && (
-                  <p className="mt-2 text-xs font-bold text-red-600 dark:text-red-400 flex items-center gap-1.5">
+                  <p className="mt-2 text-caption font-semibold text-red-600 dark:text-red-400 flex items-center gap-1.5">
                     <AlertCircle className="w-3.5 h-3.5 shrink-0" />
                     {addServiceError}
                   </p>
@@ -1630,13 +1630,13 @@ footer={
               </div>
 <div>
                 <div className="flex items-center justify-between mb-2">
-                  <label className="text-sm font-bold text-slate-700 dark:text-slate-300">
-                    الجمعيات <span className="text-xs font-medium text-slate-400">({newServiceCharityIds.length} من {charities.length})</span>
+                  <label className="text-caption font-semibold text-slate-700 dark:text-slate-300">
+                    الجمعيات <span className="text-caption font-medium text-slate-400">({newServiceCharityIds.length} من {charities.length})</span>
                   </label>
                   <button
                     type="button"
                     onClick={() => setNewServiceCharityIds(newServiceCharityIds.length === charities.length ? [] : charities.map(c => c.id))}
-                    className="text-[11px] font-bold text-primary hover:text-primary/80"
+                    className="text-caption font-semibold text-primary hover:text-primary/80"
                   >
                     {newServiceCharityIds.length === charities.length ? "إلغاء الكل" : "تحديد الكل"}
                   </button>
@@ -1649,7 +1649,7 @@ footer={
                         key={c.id}
                         type="button"
                         onClick={() => setNewServiceCharityIds(prev => on ? prev.filter(x => x !== c.id) : [...prev, c.id])}
-                        className={`w-full flex items-center gap-3 px-3 py-2 text-right text-xs font-bold transition-colors ${
+                        className={`w-full flex items-center gap-3 px-3 py-2 text-right text-caption font-semibold transition-colors ${
                           on ? "bg-primary/5 dark:bg-primary/10 text-primary" : "text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700/40"
                         }`}
                       >
@@ -1688,17 +1688,17 @@ footer={
               {/* Option 1: All Charities */}
               <div className="p-4 bg-slate-50 dark:bg-slate-900/50 rounded-xl border border-slate-200/80 dark:border-slate-700 space-y-3">
                 <div className="flex items-center justify-between">
-                  <span className="font-bold text-sm text-slate-800 dark:text-slate-200">{isAdmin ? "التحكم الشامل (لكل الجمعيات)" : "التحكم الشامل (لجمعياتك)"}</span>
-                  <span className="text-xs px-2 py-0.5 bg-amber-500/10 text-amber-600 dark:text-amber-400 font-bold rounded-md">{isAdmin ? "كل الجمعيات" : "جمعياتك"}</span>
+                  <span className="font-semibold text-caption text-slate-800 dark:text-slate-200">{isAdmin ? "التحكم الشامل (لكل الجمعيات)" : "التحكم الشامل (لجمعياتك)"}</span>
+                  <span className="text-caption px-2 py-0.5 bg-amber-500/10 text-amber-600 dark:text-amber-400 font-semibold rounded-md">{isAdmin ? "كل الجمعيات" : "جمعياتك"}</span>
                 </div>
-                <p className="text-xs text-slate-500 dark:text-slate-400">
+                <p className="text-caption text-slate-500 dark:text-slate-400">
                   تطبيق أو إلغاء حالة "قريباً" على كافة الجمعيات التي تحتوي على هذه الخدمة بضغطة واحدة.
                 </p>
                 <div className="flex gap-2 pt-1">
                   <button
                     disabled={isServiceNamePending}
                     onClick={() => handleToggleComingSoonAll(genericSvcInfo.name, genericSvcInfo.dept, true)}
-                    className="flex-1 py-2 px-3 text-xs font-bold bg-amber-500 hover:bg-amber-600 text-white rounded-lg transition-colors flex items-center justify-center gap-1.5"
+                    className="flex-1 py-2 px-3 text-caption font-semibold bg-amber-500 hover:bg-amber-600 text-white rounded-lg transition-colors flex items-center justify-center gap-1.5"
                   >
                     {isServiceNamePending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Clock className="w-3.5 h-3.5" />}
                     {isAdmin ? "تفعيل لجميع الجمعيات" : "تفعيل لجمعياتك"}
@@ -1706,7 +1706,7 @@ footer={
                   <button
                     disabled={isServiceNamePending}
                     onClick={() => handleToggleComingSoonAll(genericSvcInfo.name, genericSvcInfo.dept, false)}
-                    className="flex-1 py-2 px-3 text-xs font-bold bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 rounded-lg transition-colors flex items-center justify-center gap-1.5"
+                    className="flex-1 py-2 px-3 text-caption font-semibold bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 rounded-lg transition-colors flex items-center justify-center gap-1.5"
                   >
                     {isServiceNamePending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <X className="w-3.5 h-3.5" />}
                     {isAdmin ? "إلغاء من جميع الجمعيات" : "إلغاء من جمعياتك"}
@@ -1717,8 +1717,8 @@ footer={
               {/* Option 2: Specific Charity List */}
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
-                  <span className="font-bold text-sm text-slate-800 dark:text-slate-200">تخصيص لجمعية محددة</span>
-                  <span className="text-xs text-slate-400 font-medium">العدد: {charitiesWithData.length}</span>
+                  <span className="font-semibold text-caption text-slate-800 dark:text-slate-200">تخصيص لجمعية محددة</span>
+                  <span className="text-caption text-slate-400 font-medium">العدد: {charitiesWithData.length}</span>
                 </div>
                 <div className="divide-y divide-slate-100 dark:divide-slate-700/60 border border-slate-200 dark:border-slate-700 rounded-xl overflow-hidden">
                   {charitiesWithData.map(charity => {
@@ -1730,16 +1730,16 @@ footer={
                     return (
                       <div key={charity.id} className="p-3 flex items-center justify-between bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-750 transition-colors">
                         <div className="flex items-center gap-2.5">
-                          <div className="w-7 h-7 rounded-lg bg-primary/10 text-primary flex items-center justify-center text-xs font-bold">
+                          <div className="w-7 h-7 rounded-lg bg-primary/10 text-primary flex items-center justify-center text-caption font-semibold">
                             {charity.name.charAt(0)}
                           </div>
-                          <span className="font-bold text-xs text-slate-700 dark:text-slate-200">{charity.name}</span>
+                          <span className="font-semibold text-caption text-slate-700 dark:text-slate-200">{charity.name}</span>
                         </div>
 
                         <button
                           disabled={isServiceNamePending}
                           onClick={() => handleToggleComingSoonSingle(targetSvc.id, !isComing)}
-                          className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-colors flex items-center gap-1.5 ${
+                          className={`px-3 py-1.5 text-caption font-semibold rounded-lg transition-colors flex items-center gap-1.5 ${
                             isComing
                               ? "bg-amber-500/15 text-amber-600 dark:text-amber-400 hover:bg-amber-500/25 border border-amber-500/30"
                               : "bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-600"
@@ -1771,7 +1771,7 @@ title={<>تعميم مراحل {unifyCharity.departmentLabel}</>}
 description={
   <>
     {unifyCharity.sourceTimelineType === "CUSTOM" && !unifyCharity.sourceServiceId && (
-      <span className="mb-1 block font-bold text-red-600 dark:text-red-400">
+      <span className="mb-1 block font-semibold text-red-600 dark:text-red-400">
         هذه الجمعية ليس لديها خدمة "{unifyCharity.departmentLabel}" بعد — لا يمكن التعميم منها
       </span>
     )}
@@ -1809,11 +1809,11 @@ footer={<>
                 return (
                   <div>
                     <div className="flex items-center justify-between mb-2">
-                      <span className="text-sm font-bold text-slate-700 dark:text-slate-200">الجمعيات المستهدفة</span>
+                      <span className="text-caption font-semibold text-slate-700 dark:text-slate-200">الجمعيات المستهدفة</span>
                       <button
                         type="button"
                         onClick={() => setUnifyTargetIds(allSelected ? [] : otherCharities.map(c => c.id))}
-                        className="text-xs font-bold text-primary hover:underline"
+                        className="text-caption font-semibold text-primary hover:underline"
                       >
                         {allSelected ? "إلغاء تحديد الكل" : "تحديد الكل"}
                       </button>
@@ -1829,13 +1829,13 @@ footer={<>
                               onChange={() => setUnifyTargetIds(prev => checked ? prev.filter(id => id !== c.id) : [...prev, c.id])}
                               className="w-4 h-4 rounded accent-primary"
                             />
-                            <span className="text-sm text-slate-700 dark:text-slate-200">{c.name}</span>
+                            <span className="text-caption text-slate-700 dark:text-slate-200">{c.name}</span>
                           </label>
                         );
                       })}
                     </div>
                     {unifyTargetIds.length === 0 && (
-                      <p className="text-xs text-amber-600 dark:text-amber-400 mt-1.5 font-bold">حدد جمعية واحدة على الأقل</p>
+                      <p className="text-caption text-amber-600 dark:text-amber-400 mt-1.5 font-semibold">حدد جمعية واحدة على الأقل</p>
                     )}
                   </div>
                 );
@@ -1843,7 +1843,7 @@ footer={<>
 {/* Warning box */}
 <div className="p-4 bg-red-50 dark:bg-red-950/20 border border-red-100 dark:border-red-900/30 rounded-xl flex gap-3">
                 <AlertCircle className="w-5 h-5 text-red-500 shrink-0 mt-0.5" />
-                <p className="text-xs text-red-700/90 dark:text-red-300/80 leading-relaxed">
+                <p className="text-caption text-red-700/90 dark:text-red-300/80 leading-relaxed">
                   سيتم <strong>حذف المراحل الحالية</strong> للجمعيات المحددة واستبدالها بمراحل جمعية <strong>{unifyCharity.name}</strong>. هذا الإجراء غير قابل للتراجع.
                 </p>
               </div>
@@ -1877,7 +1877,7 @@ busy={isLogoPending}
                   ) : (
                     <div className="text-center text-slate-400 dark:text-slate-500">
                       <Plus className="w-6 h-6 mx-auto mb-1" />
-                      <span className="text-[10px] font-bold">اختر صورة</span>
+                      <span className="text-caption font-semibold">اختر صورة</span>
                     </div>
                   )}
                 </button>
@@ -1891,12 +1891,12 @@ busy={isLogoPending}
                 onChange={handleLogoFileChange}
               />
 
-              <p className="text-center text-[11px] text-slate-400 dark:text-slate-500">
+              <p className="text-center text-caption text-slate-400 dark:text-slate-500">
                 PNG أو JPG أو SVG — الحد الأقصى 2 ميجابايت
               </p>
 
               {logoError && (
-                <p className="text-xs text-red-600 dark:text-red-400 font-bold text-center">{logoError}</p>
+                <p className="text-caption text-red-600 dark:text-red-400 font-semibold text-center">{logoError}</p>
               )}
 
               <div className="flex gap-2 pt-1">
@@ -1912,7 +1912,7 @@ busy={isLogoPending}
                   <button
                     onClick={() => { setLogoPreview(null); setLogoFile(null); }}
                     disabled={isLogoPending}
-                    className="px-3 py-2 text-xs font-bold text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors disabled:opacity-50"
+                    className="px-3 py-2 text-caption font-semibold text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors disabled:opacity-50"
                   >
                     حذف
                   </button>
@@ -1969,20 +1969,20 @@ footer={
 <div className="space-y-2">
               {/* تحديد الكل / إلغاء الكل */}
               <div className="flex items-center justify-between mb-3 pb-2 border-b border-slate-100 dark:border-slate-800">
-                <span className="text-xs text-slate-500 dark:text-slate-400">
+                <span className="text-caption text-slate-500 dark:text-slate-400">
                   {printSelected.size} من {charities.length} جمعية محددة
                 </span>
                 <div className="flex gap-2">
                   <button
                     onClick={() => setPrintSelected(new Set(charities.map(c => c.id)))}
-                    className="text-[11px] font-bold text-primary hover:text-primary/80"
+                    className="text-caption font-semibold text-primary hover:text-primary/80"
                   >
                     تحديد الكل
                   </button>
                   <span className="text-slate-300">|</span>
                   <button
                     onClick={() => setPrintSelected(new Set())}
-                    className="text-[11px] font-bold text-slate-400 hover:text-slate-600"
+                    className="text-caption font-semibold text-slate-400 hover:text-slate-600"
                   >
                     إلغاء الكل
                   </button>
@@ -2002,7 +2002,7 @@ footer={
                     }}
                     className="w-4 h-4 rounded accent-primary"
                   />
-                  <span className="text-sm font-semibold text-slate-700 dark:text-slate-200">{c.name}</span>
+                  <span className="text-caption font-semibold text-slate-700 dark:text-slate-200">{c.name}</span>
                 </label>
               ))}
             </div>

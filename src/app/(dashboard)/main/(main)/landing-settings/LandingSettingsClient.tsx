@@ -122,11 +122,11 @@ const BG_TYPES: { value: BackgroundType; label: string }[] = [
 // ── مكوّنات إدخال مساعدة ──────────────────────────────────────────────────────
 
 function FieldLabel({ children }: { children: ReactNode }) {
-  return <label className="block text-[11px] font-bold text-slate-500 dark:text-slate-400 mb-1.5">{children}</label>;
+  return <label className="block text-caption font-semibold text-slate-500 dark:text-slate-400 mb-1.5">{children}</label>;
 }
 
 const inputCls =
-  "w-full px-3 py-2 border border-slate-200 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-primary/40 text-xs bg-white dark:bg-slate-900 outline-none";
+  "w-full px-3 py-2 border border-slate-200 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-primary/40 text-caption bg-white dark:bg-slate-900 outline-none";
 
 function TextInput({ value, onChange }: { value: string; onChange: (v: string) => void }) {
   return <input type="text" value={value} onChange={(e) => onChange(e.target.value)} className={inputCls} />;
@@ -173,7 +173,7 @@ function ColorInput({
         <button
           type="button"
           onClick={onClear}
-          className="shrink-0 text-[10px] font-bold text-slate-400 hover:text-primary px-1"
+          className="shrink-0 text-caption font-semibold text-slate-400 hover:text-primary px-1"
         >
           مسح
         </button>
@@ -208,7 +208,7 @@ function RangeInput({
         onChange={(e) => onChange(parseFloat(e.target.value))}
         className="flex-1 accent-primary"
       />
-      <span className="text-[11px] font-bold text-slate-500 tabular-nums w-12 text-left">
+      <span className="text-caption font-semibold text-slate-500 tabular-nums w-12 text-left">
         {format ? format(value) : value}
       </span>
     </div>
@@ -231,7 +231,7 @@ function SegButtons<T extends string>({
           key={o.value}
           type="button"
           onClick={() => onChange(o.value)}
-          className={`px-2.5 py-1.5 rounded-lg text-[11px] font-bold border transition-colors ${
+          className={`px-2.5 py-1.5 rounded-lg text-caption font-semibold border transition-colors ${
             value === o.value
               ? "border-primary bg-primary/10 text-primary"
               : "border-slate-200 dark:border-slate-700 text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800"
@@ -317,7 +317,7 @@ function StringListEditor({
       <button
         type="button"
         onClick={() => onChange([...items, ""])}
-        className="inline-flex items-center gap-1 text-[11px] font-bold text-primary hover:text-primary/80"
+        className="inline-flex items-center gap-1 text-caption font-semibold text-primary hover:text-primary/80"
       >
         <Plus className="w-3.5 h-3.5" /> إضافة {itemLabel}
       </button>
@@ -361,7 +361,7 @@ function LinkListEditor({ items, onChange }: { items: LinkItem[]; onChange: (v: 
       <button
         type="button"
         onClick={() => onChange([...items, { label: "", href: "#" }])}
-        className="inline-flex items-center gap-1 text-[11px] font-bold text-primary hover:text-primary/80"
+        className="inline-flex items-center gap-1 text-caption font-semibold text-primary hover:text-primary/80"
       >
         <Plus className="w-3.5 h-3.5" /> إضافة رابط
       </button>
@@ -382,7 +382,7 @@ function TitledListEditor({ items, onChange }: { items: TitledItem[]; onChange: 
               value={it.title}
               placeholder="العنوان"
               onChange={(e) => set(i, { title: e.target.value })}
-              className={`${inputCls} font-bold`}
+              className={`${inputCls} font-semibold`}
             />
             <textarea
               value={it.description}
@@ -404,7 +404,7 @@ function TitledListEditor({ items, onChange }: { items: TitledItem[]; onChange: 
       <button
         type="button"
         onClick={() => onChange([...items, { title: "", description: "" }])}
-        className="inline-flex items-center gap-1 text-[11px] font-bold text-primary hover:text-primary/80"
+        className="inline-flex items-center gap-1 text-caption font-semibold text-primary hover:text-primary/80"
       >
         <Plus className="w-3.5 h-3.5" /> إضافة عنصر
       </button>
@@ -516,7 +516,7 @@ export default function LandingSettingsClient({ initialConfig }: { initialConfig
             href="/"
             target="_blank"
             rel="noreferrer"
-            className="inline-flex items-center gap-1.5 px-3 py-2.5 text-xs font-bold text-slate-500 hover:text-primary rounded-xl border border-slate-200 dark:border-slate-700"
+            className="inline-flex items-center gap-1.5 px-3 py-2.5 text-caption font-semibold text-slate-500 hover:text-primary rounded-xl border border-slate-200 dark:border-slate-700"
           >
             <ExternalLink className="w-4 h-4" /> فتح الموقع
           </a>
@@ -524,7 +524,7 @@ export default function LandingSettingsClient({ initialConfig }: { initialConfig
 
         {/* ثيم الواجهة كلها */}
         <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2.5 flex items-center justify-between gap-3">
-          <div className="flex items-center gap-2 text-xs font-bold text-slate-700 dark:text-slate-200">
+          <div className="flex items-center gap-2 text-caption font-semibold text-slate-700 dark:text-slate-200">
             {draft.theme === "dark" ? <Moon className="w-4 h-4" /> : <Sun className="w-4 h-4" />}
             وضع الواجهة كاملةً
           </div>
@@ -540,7 +540,7 @@ export default function LandingSettingsClient({ initialConfig }: { initialConfig
 
         {/* خط الواجهة كلها */}
         <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2.5 space-y-2">
-          <div className="flex items-center gap-2 text-xs font-bold text-slate-700 dark:text-slate-200">
+          <div className="flex items-center gap-2 text-caption font-semibold text-slate-700 dark:text-slate-200">
             <Type className="w-4 h-4" />
             خط الواجهة كاملةً
           </div>
@@ -549,11 +549,11 @@ export default function LandingSettingsClient({ initialConfig }: { initialConfig
             value={draft.fontFamily}
             onChange={(v) => update((d) => void (d.fontFamily = v))}
           />
-          <p className="text-[11px] text-slate-400">{LANDING_FONT_HINTS[draft.fontFamily]}</p>
+          <p className="text-caption text-slate-400">{LANDING_FONT_HINTS[draft.fontFamily]}</p>
         </div>
 
         {error && (
-          <div className="bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 p-3 rounded-xl text-xs font-bold border border-red-200 dark:border-red-800">
+          <div className="bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 p-3 rounded-xl text-caption font-semibold border border-red-200 dark:border-red-800">
             {error}
           </div>
         )}
@@ -573,9 +573,9 @@ export default function LandingSettingsClient({ initialConfig }: { initialConfig
                   className="flex-1 flex items-center gap-2 text-right"
                 >
                   <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform ${isOpen ? "rotate-180" : ""}`} />
-                  <span className="text-xs font-bold text-slate-800 dark:text-slate-100">{SECTION_LABELS[key]}</span>
+                  <span className="text-caption font-semibold text-slate-800 dark:text-slate-100">{SECTION_LABELS[key]}</span>
                   {!section.enabled && (
-                    <span className="text-[10px] font-bold text-amber-600 bg-amber-50 dark:bg-amber-900/20 px-1.5 py-0.5 rounded">
+                    <span className="text-caption font-semibold text-amber-600 bg-amber-50 dark:bg-amber-900/20 px-1.5 py-0.5 rounded">
                       مخفية
                     </span>
                   )}
@@ -604,7 +604,7 @@ export default function LandingSettingsClient({ initialConfig }: { initialConfig
                 <div className="px-3 pb-4 pt-1 space-y-5 border-t border-slate-100 dark:border-slate-700">
                   {/* المحتوى */}
                   <div className="space-y-3">
-                    <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-wider pt-2">النصوص</h4>
+                    <h4 className="text-caption font-semibold text-slate-400 uppercase tracking-wider pt-2">النصوص</h4>
                     {CONTENT_FIELDS[key].map((f) => {
                       const val = (section.content[f.name] ?? DEFAULT_CONTENT[key][f.name]) as unknown;
                       const setVal = (v: unknown) => update((d) => void (d.sections[key].content[f.name] = v));
@@ -648,13 +648,13 @@ export default function LandingSettingsClient({ initialConfig }: { initialConfig
       {/* عمود المعاينة */}
       <div className="xl:sticky xl:top-4 h-fit">
         <div className="flex items-center justify-between mb-2">
-          <span className="text-[11px] font-bold text-slate-400">معاينة حية</span>
+          <span className="text-caption font-semibold text-slate-400">معاينة حية</span>
           <button
             type="button"
             onClick={() => {
               if (iframeRef.current) iframeRef.current.src = iframeRef.current.src;
             }}
-            className="inline-flex items-center gap-1 text-[11px] font-bold text-slate-400 hover:text-primary"
+            className="inline-flex items-center gap-1 text-caption font-semibold text-slate-400 hover:text-primary"
           >
             <RefreshCw className="w-3.5 h-3.5" /> تحديث
           </button>
@@ -700,7 +700,7 @@ function BackgroundControls({
 
   return (
     <div className="space-y-3">
-      <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-wider pt-2">الخلفية</h4>
+      <h4 className="text-caption font-semibold text-slate-400 uppercase tracking-wider pt-2">الخلفية</h4>
 
       <SegButtons options={BG_TYPES} value={bg.type} onChange={(v) => setBg((b) => void (b.type = v))} />
 
@@ -739,7 +739,7 @@ function BackgroundControls({
 
       {bg.type === "image" && (
         <div className="space-y-2">
-          <label className="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-dashed border-slate-300 dark:border-slate-600 text-xs font-bold text-slate-500 hover:border-primary hover:text-primary cursor-pointer">
+          <label className="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-dashed border-slate-300 dark:border-slate-600 text-caption font-semibold text-slate-500 hover:border-primary hover:text-primary cursor-pointer">
             <Upload className="w-4 h-4" />
             {bg.image ? "تغيير الصورة" : "رفع صورة"}
             <input
@@ -867,7 +867,7 @@ function TextControls({
 
   return (
     <div className="space-y-3">
-      <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-wider pt-2">النص</h4>
+      <h4 className="text-caption font-semibold text-slate-400 uppercase tracking-wider pt-2">النص</h4>
       <div className="grid grid-cols-2 gap-2">
         <div>
           <FieldLabel>لون العناوين</FieldLabel>

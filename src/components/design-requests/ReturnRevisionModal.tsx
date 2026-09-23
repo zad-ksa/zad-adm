@@ -92,7 +92,7 @@ footer={
           <button
             onClick={submit}
             disabled={busy || notes.trim().length < 5}
-            className={`h-11 px-6 flex items-center gap-2 text-white rounded-lg text-[13px] font-bold transition-all disabled:opacity-50 active:translate-y-px ${
+            className={`h-11 px-6 flex items-center gap-2 text-white rounded-lg text-body font-semibold transition-all disabled:opacity-50 active:translate-y-px ${
               close ? "bg-rose-600 hover:bg-rose-700" : "bg-amber-600 hover:bg-amber-700"
             }`}
           >
@@ -111,7 +111,7 @@ footer={
 <div className="space-y-4">
           {charityNotes && (
             <div className="rounded-xl bg-amber-500/[0.08] p-3">
-              <p className="text-[11px] font-black text-amber-700 dark:text-amber-400 mb-2">
+              <p className="text-caption font-semibold text-amber-700 dark:text-amber-400 mb-2">
                 ما طلبته الجمعية
               </p>
               <RevisionNotesList notes={charityNotes} />
@@ -119,7 +119,7 @@ footer={
           )}
 
           <div>
-            <label className="block text-[12px] font-bold text-slate-500 dark:text-slate-400 mb-2">
+            <label className="block text-meta font-semibold text-slate-500 dark:text-slate-400 mb-2">
               ردّك
               <span className="font-normal text-slate-400 mr-1">— تقرؤه الجمعية</span>
             </label>
@@ -129,7 +129,7 @@ footer={
               rows={5}
               maxLength={2000}
               placeholder="وضّح ما نُفّذ وما لم يُنفّذ ولماذا..."
-              className="w-full px-3 py-2.5 rounded-lg bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 text-[13px] focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none resize-none placeholder:text-slate-400"
+              className="w-full px-3 py-2.5 rounded-lg bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 text-body focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none resize-none placeholder:text-slate-400"
             />
           </div>
 
@@ -150,7 +150,7 @@ footer={
                   }`}
                 >
                   <p
-                    className={`text-[13px] font-black flex items-center gap-1.5 ${
+                    className={`text-body font-semibold flex items-center gap-1.5 ${
                       on
                         ? opt.value
                           ? "text-rose-600 dark:text-rose-400"
@@ -161,7 +161,7 @@ footer={
                     <opt.Icon className="w-4 h-4" />
                     {opt.label}
                   </p>
-                  <p className="mt-1 text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">
+                  <p className="mt-1 text-caption text-slate-500 dark:text-slate-400 leading-relaxed">
                     {opt.body}
                   </p>
                 </button>
@@ -170,7 +170,7 @@ footer={
           </div>
 
           {error && (
-            <p className="flex items-start gap-2 text-[12px] font-bold text-rose-600 dark:text-rose-400">
+            <p className="flex items-start gap-2 text-meta font-semibold text-rose-600 dark:text-rose-400">
               <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
               {error}
             </p>

@@ -27,7 +27,7 @@ export default function UploadProgress({
   if (done) {
     return (
       <div
-        className="flex items-center gap-2 px-3 py-2 rounded-lg bg-emerald-500/[0.08] text-emerald-700 dark:text-emerald-400 font-bold"
+        className="flex items-center gap-2 px-3 py-2 rounded-lg bg-emerald-500/[0.08] text-emerald-700 dark:text-emerald-400 font-semibold"
         style={{ fontSize: "var(--dr-fs-meta, 0.75rem)" }}
       >
         <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
@@ -44,7 +44,7 @@ export default function UploadProgress({
       className="px-3 py-2 rounded-lg bg-primary/[0.06] dark:bg-primary/10"
       style={{ fontSize: "var(--dr-fs-meta, 0.75rem)" }}
     >
-      <div className="flex items-center gap-2 text-primary dark:text-teal-300 font-bold mb-1.5">
+      <div className="flex items-center gap-2 text-primary dark:text-teal-300 font-semibold mb-1.5">
         <Loader2 className="w-3.5 h-3.5 animate-spin shrink-0" />
         <span className="flex-1 truncate">
           {p.total > 1 ? `جارٍ رفع ${p.index} من ${p.total}: ${p.fileName}` : `جارٍ رفع ${p.fileName}`}

@@ -49,7 +49,7 @@ export default function DesignTypePicker({
   if (options.length === 0) {
     return (
       <p
-        className="rounded-xl bg-amber-500/[0.08] text-amber-700 dark:text-amber-400 px-4 py-3 font-bold"
+        className="rounded-xl bg-amber-500/[0.08] text-amber-700 dark:text-amber-400 px-4 py-3 font-semibold"
         style={{ fontSize: "var(--dr-fs-meta)" }}
       >
         لم تُضَف أنواع التصاميم بعد، ولا يمكن رفع طلب قبل تحديد نوعه. يرجى التواصل مع فريق
@@ -61,7 +61,7 @@ export default function DesignTypePicker({
   return (
     <div>
       <label
-        className="block font-bold text-slate-500 dark:text-slate-400 mb-2"
+        className="block font-semibold text-slate-500 dark:text-slate-400 mb-2"
         style={{ fontSize: "var(--dr-fs-meta)" }}
       >
         نوع التصميم <span className="text-rose-500">*</span>
@@ -116,7 +116,7 @@ export default function DesignTypePicker({
         </p>
       ) : (
         <p
-          className="mt-2 rounded-xl bg-primary/5 dark:bg-primary/10 text-primary dark:text-teal-300 px-4 py-3 font-bold"
+          className="mt-2 rounded-xl bg-primary/5 dark:bg-primary/10 text-primary dark:text-teal-300 px-4 py-3 font-semibold"
           style={{ fontSize: "var(--dr-fs-meta)" }}
         >
           مدة التنفيذ: {totalDays} {totalDays === 1 ? "يوم عمل" : "أيام عمل"} (الأحد – الخميس)

@@ -108,7 +108,7 @@ closeOnBackdrop={false}
 >
 <div >
           {error ? (
-            <div className="flex items-start gap-2 rounded-xl bg-rose-500/[0.07] text-rose-600 dark:text-rose-400 p-3 text-[12px] font-bold">
+            <div className="flex items-start gap-2 rounded-xl bg-rose-500/[0.07] text-rose-600 dark:text-rose-400 p-3 text-meta font-semibold">
               <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
               <span>{error}</span>
             </div>
@@ -117,7 +117,7 @@ closeOnBackdrop={false}
               <Loader2 className="w-5 h-5 animate-spin" />
             </div>
           ) : events.length === 0 ? (
-            <p className="py-10 text-center text-[12px] text-slate-400 dark:text-slate-500">
+            <p className="py-10 text-center text-meta text-slate-400 dark:text-slate-500">
               لا توجد أحداث مسجّلة لهذا الطلب.
             </p>
           ) : (
@@ -129,15 +129,15 @@ closeOnBackdrop={false}
                       TONE[e.kind] ?? "bg-slate-400"
                     }`}
                   />
-                  <p className="text-[13px] font-bold text-slate-900 dark:text-slate-100">
+                  <p className="text-body font-semibold text-slate-900 dark:text-slate-100">
                     {DESIGN_EVENT_LABEL[e.kind] ?? e.kind}
                   </p>
                   {e.note && (
-                    <p className="mt-0.5 text-[12px] text-slate-600 dark:text-slate-400 leading-relaxed break-words whitespace-pre-line">
+                    <p className="mt-0.5 text-meta text-slate-600 dark:text-slate-400 leading-relaxed break-words whitespace-pre-line">
                       <LinkifiedText text={e.note} />
                     </p>
                   )}
-                  <p className="mt-1 text-[11px] text-slate-400 dark:text-slate-500">
+                  <p className="mt-1 text-caption text-slate-400 dark:text-slate-500">
                     {when(e.createdAt)}
                     {e.actorName ? ` · بواسطة ${e.actorName}` : ""}
                     {e.actorType && ACTOR_LABEL[e.actorType] ? ` (${ACTOR_LABEL[e.actorType]})` : ""}

@@ -53,7 +53,7 @@ export default function WorkflowSettingsClient({
       />
 
       {error && (
-        <div className="flex items-center gap-2 text-sm text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl px-4 py-2.5">
+        <div className="flex items-center gap-2 text-caption text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl px-4 py-2.5">
           <AlertCircle className="w-4 h-4 shrink-0" />{error}
         </div>
       )}
@@ -62,16 +62,16 @@ export default function WorkflowSettingsClient({
       <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-4">
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-sm font-bold text-slate-700 dark:text-slate-200">بدون سلسلة اعتماد</p>
-            <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">الطلبات تصل لجميع الإدارة التنفيذية مباشرة</p>
+            <p className="text-caption font-semibold text-slate-700 dark:text-slate-200">بدون سلسلة اعتماد</p>
+            <p className="text-caption text-slate-500 dark:text-slate-400 mt-0.5">الطلبات تصل لجميع الإدارة التنفيذية مباشرة</p>
           </div>
           {!chains.some(c => c.isActive) ? (
-            <span className="flex items-center gap-1 text-xs font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/20 px-3 py-1.5 rounded-full border border-emerald-200 dark:border-emerald-800">
+            <span className="flex items-center gap-1 text-caption font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/20 px-3 py-1.5 rounded-full border border-emerald-200 dark:border-emerald-800">
               <Check className="w-3 h-3" /> مفعّل
             </span>
           ) : (
             <button onClick={() => run(() => clearActiveChain())} disabled={isPending}
-              className="flex items-center gap-1.5 text-xs font-bold text-slate-500 hover:text-slate-700 dark:hover:text-slate-200 border border-slate-200 dark:border-slate-700 px-3 py-1.5 rounded-full hover:border-slate-300 dark:hover:border-slate-600 transition-colors">
+              className="flex items-center gap-1.5 text-caption font-semibold text-slate-500 hover:text-slate-700 dark:hover:text-slate-200 border border-slate-200 dark:border-slate-700 px-3 py-1.5 rounded-full hover:border-slate-300 dark:hover:border-slate-600 transition-colors">
               <PowerOff className="w-3 h-3" /> تفعيل هذا
             </button>
           )}
@@ -94,12 +94,12 @@ export default function WorkflowSettingsClient({
                     value={editingName[chain.id]}
                     onChange={e => setEditingName(prev => ({ ...prev, [chain.id]: e.target.value }))}
                     onClick={e => e.stopPropagation()}
-                    className="text-sm font-bold bg-transparent border-b border-primary/50 outline-none text-slate-800 dark:text-slate-100 w-48"
+                    className="text-caption font-semibold bg-transparent border-b border-primary/50 outline-none text-slate-800 dark:text-slate-100 w-48"
                   />
                 ) : (
-                  <p className="text-sm font-bold text-slate-800 dark:text-slate-100 truncate">{chain.name}</p>
+                  <p className="text-caption font-semibold text-slate-800 dark:text-slate-100 truncate">{chain.name}</p>
                 )}
-                <p className="text-xs text-slate-500 dark:text-slate-400">{chain.steps.length} مستوى</p>
+                <p className="text-caption text-slate-500 dark:text-slate-400">{chain.steps.length} مستوى</p>
               </div>
             </button>
 
@@ -125,12 +125,12 @@ export default function WorkflowSettingsClient({
 
               {/* تفعيل */}
               {chain.isActive ? (
-                <span className="flex items-center gap-1 text-[10px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/20 px-2 py-1 rounded-full border border-emerald-200 dark:border-emerald-800">
+                <span className="flex items-center gap-1 text-caption font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/20 px-2 py-1 rounded-full border border-emerald-200 dark:border-emerald-800">
                   <Check className="w-3 h-3" /> مفعّل
                 </span>
               ) : (
                 <button onClick={() => run(() => setActiveChain(chain.id))} disabled={isPending}
-                  className="flex items-center gap-1 text-[10px] font-bold text-slate-500 hover:text-primary border border-slate-200 dark:border-slate-700 px-2 py-1 rounded-full hover:border-primary/50 transition-colors">
+                  className="flex items-center gap-1 text-caption font-semibold text-slate-500 hover:text-primary border border-slate-200 dark:border-slate-700 px-2 py-1 rounded-full hover:border-primary/50 transition-colors">
                   <Power className="w-3 h-3" /> تفعيل
                 </button>
               )}
@@ -163,13 +163,13 @@ export default function WorkflowSettingsClient({
                       <div key={step.id} className="flex items-center gap-3">
                         {/* رقم المستوى */}
                         <div className="w-9 h-9 rounded-xl bg-primary/10 dark:bg-primary/20 border-2 border-primary/20 dark:border-primary/30 flex items-center justify-center shrink-0 z-10">
-                          <span className="text-xs font-black text-primary">{step.order}</span>
+                          <span className="text-caption font-semibold text-primary">{step.order}</span>
                         </div>
                         {/* بيانات الشخص */}
                         <div className="flex-1 bg-slate-50 dark:bg-slate-700/50 rounded-xl px-3 py-2 flex items-center gap-2">
                           <div className="flex-1 min-w-0">
-                            <p className="text-sm font-bold text-slate-800 dark:text-slate-100 truncate">{step.approver.name}</p>
-                            <p className="text-[10px] text-slate-500 dark:text-slate-400">
+                            <p className="text-caption font-semibold text-slate-800 dark:text-slate-100 truncate">{step.approver.name}</p>
+                            <p className="text-caption text-slate-500 dark:text-slate-400">
                               {roleLabels[step.approver.role] || step.approver.role}
                               {step.label && <span className="text-primary/70"> · {step.label}</span>}
                             </p>
@@ -202,12 +202,12 @@ export default function WorkflowSettingsClient({
               )}
 
               {chain.steps.length === 0 && (
-                <p className="text-xs text-slate-400 dark:text-slate-500 text-center py-4">لا توجد خطوات — أضف المستوى الأول</p>
+                <p className="text-caption text-slate-400 dark:text-slate-500 text-center py-4">لا توجد خطوات — أضف المستوى الأول</p>
               )}
 
               {/* إضافة خطوة */}
               <div className="bg-primary/5 dark:bg-primary/10 rounded-xl p-3 border border-primary/10 dark:border-primary/20">
-                <p className="text-xs font-bold text-primary mb-2 flex items-center gap-1">
+                <p className="text-caption font-semibold text-primary mb-2 flex items-center gap-1">
                   <Plus className="w-3.5 h-3.5" /> إضافة مستوى جديد
                 </p>
                 <div className="flex gap-2">
@@ -222,7 +222,7 @@ export default function WorkflowSettingsClient({
                     value={addingStep[chain.id]?.label || ""}
                     onChange={e => setAddingStep(prev => ({ ...prev, [chain.id]: { ...prev[chain.id], label: e.target.value } }))}
                     placeholder="تسمية (اختياري)"
-                    className="w-32 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-sm bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-primary/50" />
+                    className="w-32 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-caption bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-primary/50" />
                   <button
                     disabled={!addingStep[chain.id]?.approverId || isPending}
                     onClick={() => run(() => addStep({ chainId: chain.id, approverId: addingStep[chain.id].approverId, label: addingStep[chain.id]?.label }))}
@@ -239,11 +239,11 @@ export default function WorkflowSettingsClient({
 
       {/* إنشاء سلسلة جديدة */}
       <div className="bg-white dark:bg-slate-900 rounded-xl border border-dashed border-slate-300 dark:border-slate-800 p-4">
-        <p className="text-xs font-bold text-slate-500 dark:text-slate-400 mb-2">إنشاء سلسلة اعتماد جديدة</p>
+        <p className="text-caption font-semibold text-slate-500 dark:text-slate-400 mb-2">إنشاء سلسلة اعتماد جديدة</p>
         <div className="flex gap-2">
           <input value={newChainName} onChange={e => setNewChainName(e.target.value)}
             placeholder="اسم السلسلة... مثال: مسار المشتريات"
-            className="flex-1 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-sm bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-primary/50" />
+            className="flex-1 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-caption bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-primary/50" />
           <button disabled={!newChainName.trim() || isPending}
             onClick={() => run(async () => { await createChain(newChainName); setNewChainName(""); })}
             className={cx(btn.primary, "shrink-0")}>

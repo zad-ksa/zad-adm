@@ -156,7 +156,7 @@ onClose={onClose}
 >
 <div>
 {error && (
-            <div className="mb-4 p-3 bg-red-50 text-red-600 border border-red-100 rounded-xl text-sm font-bold">
+            <div className="mb-4 p-3 bg-red-50 text-red-600 border border-red-100 rounded-xl text-caption font-semibold">
               {error}
             </div>
           )}
@@ -164,14 +164,14 @@ onClose={onClose}
 <div className="flex bg-slate-100 dark:bg-slate-800/50 p-1 rounded-xl mb-6">
             <button
               onClick={() => setActiveTab('single')}
-              className={`flex-1 flex items-center justify-center gap-2 py-2 text-sm font-bold rounded-lg transition-colors ${activeTab === 'single' ? 'bg-white dark:bg-slate-700 text-primary shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+              className={`flex-1 flex items-center justify-center gap-2 py-2 text-caption font-semibold rounded-lg transition-colors ${activeTab === 'single' ? 'bg-white dark:bg-slate-700 text-primary shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
             >
               <Plus className="w-4 h-4" />
               إضافة قسط فردي
             </button>
             <button
               onClick={() => setActiveTab('batch')}
-              className={`flex-1 flex items-center justify-center gap-2 py-2 text-sm font-bold rounded-lg transition-colors ${activeTab === 'batch' ? 'bg-white dark:bg-slate-700 text-primary shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+              className={`flex-1 flex items-center justify-center gap-2 py-2 text-caption font-semibold rounded-lg transition-colors ${activeTab === 'batch' ? 'bg-white dark:bg-slate-700 text-primary shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
             >
               <Layers className="w-4 h-4" />
               تقسيم تلقائي للأقساط
@@ -182,20 +182,20 @@ onClose={onClose}
             <div className="bg-slate-50 dark:bg-slate-800/30 p-4 rounded-xl border border-slate-200 dark:border-slate-700 mb-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
                 <div>
-                  <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-1">المبلغ (ر.س)</label>
+                  <label className="block text-caption font-semibold text-slate-500 dark:text-slate-400 mb-1">المبلغ (ر.س)</label>
                   <div className="relative">
                     <input 
                       type="number"
                       value={newAmount}
                       onChange={(e) => setNewAmount(e.target.value)}
-                      className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-sm outline-none focus:border-primary pr-9"
+                      className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-caption outline-none focus:border-primary pr-9"
                       placeholder="مثال: 50000"
                     />
                     <DollarSign className="w-4 h-4 text-slate-400 absolute top-1/2 -translate-y-1/2 right-3" />
                   </div>
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-1 flex items-center justify-between">
+                  <label className="block text-caption font-semibold text-slate-500 dark:text-slate-400 mb-1 flex items-center justify-between">
                     <span>تاريخ الاستحقاق</span>
                     <label className="flex items-center gap-1.5 cursor-pointer">
                       <input 
@@ -204,7 +204,7 @@ onClose={onClose}
                         onChange={(e) => setIsLinkedToFirstGrant(e.target.checked)}
                         className="w-3 h-3 text-primary border-slate-300 rounded focus:ring-primary"
                       />
-                      <span className="text-[10px] text-primary font-bold">ربط بأول منحة</span>
+                      <span className="text-caption text-primary font-semibold">ربط بأول منحة</span>
                     </label>
                   </label>
                   <div className="relative">
@@ -213,7 +213,7 @@ onClose={onClose}
                       value={newDate}
                       onChange={(e) => setNewDate(e.target.value)}
                       disabled={isLinkedToFirstGrant}
-                      className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-sm outline-none focus:border-primary pr-9 disabled:opacity-50 disabled:bg-slate-100 dark:disabled:bg-slate-800"
+                      className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-caption outline-none focus:border-primary pr-9 disabled:opacity-50 disabled:bg-slate-100 dark:disabled:bg-slate-800"
                     />
                     <Calendar className="w-4 h-4 text-slate-400 absolute top-1/2 -translate-y-1/2 right-3" />
                   </div>
@@ -232,33 +232,33 @@ onClose={onClose}
             <div className="bg-slate-50 dark:bg-slate-800/30 p-4 rounded-xl border border-slate-200 dark:border-slate-700 mb-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
                 <div>
-                  <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-1">إجمالي المبلغ المراد تقسيمه (ر.س)</label>
+                  <label className="block text-caption font-semibold text-slate-500 dark:text-slate-400 mb-1">إجمالي المبلغ المراد تقسيمه (ر.س)</label>
                   <div className="relative">
                     <input 
                       type="number"
                       value={batchTotalAmount}
                       onChange={(e) => setBatchTotalAmount(e.target.value)}
-                      className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-sm outline-none focus:border-primary pr-9"
+                      className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-caption outline-none focus:border-primary pr-9"
                       placeholder="مثال: 100000"
                     />
                     <DollarSign className="w-4 h-4 text-slate-400 absolute top-1/2 -translate-y-1/2 right-3" />
                   </div>
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-1">عدد الأقساط</label>
+                  <label className="block text-caption font-semibold text-slate-500 dark:text-slate-400 mb-1">عدد الأقساط</label>
                   <div className="relative">
                     <input 
                       type="number"
                       value={batchCount}
                       onChange={(e) => setBatchCount(e.target.value)}
-                      className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-sm outline-none focus:border-primary pr-9"
+                      className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-caption outline-none focus:border-primary pr-9"
                       placeholder="مثال: 4"
                     />
                     <Layers className="w-4 h-4 text-slate-400 absolute top-1/2 -translate-y-1/2 right-3" />
                   </div>
                 </div>
               </div>
-              <div className="bg-amber-50 dark:bg-amber-900/10 border border-amber-100 dark:border-amber-900/30 rounded-lg p-3 text-xs text-amber-600 dark:text-amber-500 mb-3 flex items-center gap-2">
+              <div className="bg-amber-50 dark:bg-amber-900/10 border border-amber-100 dark:border-amber-900/30 rounded-lg p-3 text-caption text-amber-600 dark:text-amber-500 mb-3 flex items-center gap-2">
                 <CheckCircle2 className="w-4 h-4 shrink-0" />
                 سيتم تقسيم المبلغ بالتساوي وإنشاء الأقساط كـ "بانتظار المنحة الأولى". يمكنك تعديل تواريخها لاحقاً.
               </div>
@@ -274,10 +274,10 @@ onClose={onClose}
           )}
 {/* List Current Installments */}
 <div>
-            <h3 className="text-sm font-bold text-slate-700 dark:text-slate-300 mb-3">الأقساط المجدولة ({installments.length})</h3>
+            <h3 className="text-caption font-semibold text-slate-700 dark:text-slate-300 mb-3">الأقساط المجدولة ({installments.length})</h3>
             <div className="space-y-3">
               {installments.length === 0 ? (
-                <div className="text-center py-6 text-sm text-slate-500">لا توجد أقساط مسجلة بعد.</div>
+                <div className="text-center py-6 text-caption text-slate-500">لا توجد أقساط مسجلة بعد.</div>
               ) : (
                 installments.map((inst, idx) => (
                   <div key={inst.id} className={`p-4 rounded-xl border ${inst.isPaid ? 'bg-emerald-50/30 border-emerald-100 dark:bg-emerald-900/10 dark:border-emerald-900/30' : 'bg-white border-slate-200 dark:bg-slate-900 dark:border-slate-800'}`}>
@@ -286,17 +286,17 @@ onClose={onClose}
                       <div className="space-y-3">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                           <div>
-                            <label className="block text-xs text-slate-500 mb-1">تعديل المبلغ</label>
+                            <label className="block text-caption text-slate-500 mb-1">تعديل المبلغ</label>
                             <input 
                               type="number" 
                               value={editAmount}
                               onChange={(e) => setEditAmount(e.target.value)}
-                              className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-2 py-1.5 text-sm outline-none focus:border-primary"
+                              className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-2 py-1.5 text-caption outline-none focus:border-primary"
                             />
                           </div>
                           <div>
                             <div className="flex items-center justify-between mb-1">
-                              <label className="block text-xs text-slate-500">تعديل التاريخ</label>
+                              <label className="block text-caption text-slate-500">تعديل التاريخ</label>
                               <label className="flex items-center gap-1 cursor-pointer">
                                 <input 
                                   type="checkbox" 
@@ -304,7 +304,7 @@ onClose={onClose}
                                   onChange={(e) => setEditIsLinked(e.target.checked)}
                                   className="w-3 h-3 text-primary border-slate-300 rounded focus:ring-primary"
                                 />
-                                <span className="text-[10px] text-primary font-bold">ربط بالمنحة</span>
+                                <span className="text-caption text-primary font-semibold">ربط بالمنحة</span>
                               </label>
                             </div>
                             <input 
@@ -312,7 +312,7 @@ onClose={onClose}
                               value={editDate}
                               onChange={(e) => setEditDate(e.target.value)}
                               disabled={editIsLinked}
-                              className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-2 py-1.5 text-sm outline-none focus:border-primary disabled:opacity-50"
+                              className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-2 py-1.5 text-caption outline-none focus:border-primary disabled:opacity-50"
                             />
                           </div>
                         </div>
@@ -327,14 +327,14 @@ onClose={onClose}
                     ) : (
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-4">
-                          <div className="flex flex-col items-center justify-center w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-700 text-slate-500 font-bold text-xs">
+                          <div className="flex flex-col items-center justify-center w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-700 text-slate-500 font-semibold text-caption">
                             {idx + 1}
                           </div>
                           <div>
-                            <div className="font-bold text-slate-800 dark:text-slate-200">{inst.amount.toLocaleString()} ر.س</div>
-                            <div className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                            <div className="font-semibold text-slate-800 dark:text-slate-200">{inst.amount.toLocaleString()} ر.س</div>
+                            <div className="text-caption text-slate-500 dark:text-slate-400 mt-0.5">
                               {inst.isLinkedToFirstGrant && !inst.dueDate 
-                                ? <span className="text-amber-500 font-bold">بانتظار المنحة الأولى</span>
+                                ? <span className="text-amber-500 font-semibold">بانتظار المنحة الأولى</span>
                                 : inst.dueDate ? new Date(inst.dueDate).toLocaleDateString('en-CA') : ""}
                             </div>
                           </div>
@@ -353,7 +353,7 @@ onClose={onClose}
                           <button
                             onClick={() => handleTogglePaid(inst.id, inst.isPaid)}
                             disabled={isPending}
-                            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-colors flex items-center gap-1.5 ${inst.isPaid ? 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200 dark:bg-emerald-900/40 dark:text-emerald-400' : 'bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-700 dark:text-slate-300'}`}
+                            className={`px-3 py-1.5 rounded-lg text-caption font-semibold transition-colors flex items-center gap-1.5 ${inst.isPaid ? 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200 dark:bg-emerald-900/40 dark:text-emerald-400' : 'bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-700 dark:text-slate-300'}`}
                           >
                             {inst.isPaid ? <CheckCircle2 className="w-3.5 h-3.5" /> : <div className="w-3.5 h-3.5 border-2 border-current rounded-full" />}
                             {inst.isPaid ? 'تم السداد' : 'تسجيل سداد'}

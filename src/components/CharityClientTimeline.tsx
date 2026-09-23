@@ -54,15 +54,15 @@ export default function CharityClientTimeline({
                         isCurrent ? 'bg-primary border-primary text-white scale-105' : 
                         'bg-white dark:bg-[#111] border-slate-200 dark:border-slate-800 text-slate-400'
                       }`}>
-                        {isPast ? <CheckCircle2 className="w-4 h-4" /> : <span className="text-xs font-bold">{idx + 1}</span>}
+                        {isPast ? <CheckCircle2 className="w-4 h-4" /> : <span className="text-caption font-semibold">{idx + 1}</span>}
                       </div>
                       
                       {isComingSoon ? (
-                        <span className="text-[10px] font-bold px-2 py-1 rounded-md bg-amber-500 text-white shadow-sm shrink-0">
+                        <span className="text-caption font-semibold px-2 py-1 rounded-md bg-amber-500 text-white shadow-sm shrink-0">
                           قريباً
                         </span>
                       ) : isCurrent ? (
-                        <span className="text-[10px] font-bold px-2 py-1 rounded-md bg-primary text-white shadow-sm shrink-0">
+                        <span className="text-caption font-semibold px-2 py-1 rounded-md bg-primary text-white shadow-sm shrink-0">
                           الحالية
                         </span>
                       ) : null}
@@ -75,14 +75,14 @@ export default function CharityClientTimeline({
                     </h4>
                     
                     {stage.description && (
-                      <p className="text-[13px] font-medium text-slate-500 dark:text-slate-400 leading-relaxed mb-4 flex-1">
+                      <p className="text-body font-medium text-slate-500 dark:text-slate-400 leading-relaxed mb-4 flex-1">
                         {stage.description}
                       </p>
                     )}
                     
                     {displayDuration && (
                       <div className="mt-auto pt-4 border-t border-slate-100 dark:border-slate-800/80">
-                        <span className="inline-block text-[11px] font-medium text-slate-500 dark:text-slate-400 uppercase tracking-widest">
+                        <span className="inline-block text-caption font-medium text-slate-500 dark:text-slate-400 uppercase tracking-widest">
                           المدة: {displayDuration}
                         </span>
                       </div>
@@ -94,14 +94,14 @@ export default function CharityClientTimeline({
           </div>
         </div>
       ) : (
-        <div className="text-center py-8 text-slate-500 dark:text-slate-400 font-medium text-sm">
+        <div className="text-center py-8 text-slate-500 dark:text-slate-400 font-medium text-caption">
           لا توجد مراحل متسلسلة حالياً
         </div>
       )}
 
       {continuousStages.length > 0 && (
         <div className="pt-6 border-t border-slate-200 dark:border-slate-800/80">
-          <h3 className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-4 px-1">
+          <h3 className="text-caption font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-4 px-1">
             الأنشطة الدائمة (Continuous)
           </h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -127,14 +127,14 @@ export default function CharityClientTimeline({
                   </div>
                   
                   {stage.description && (
-                    <p className="text-[13px] font-medium text-slate-500 dark:text-slate-400 leading-relaxed mb-4 flex-1">
+                    <p className="text-body font-medium text-slate-500 dark:text-slate-400 leading-relaxed mb-4 flex-1">
                       {stage.description}
                     </p>
                   )}
                   
                   {displayDuration && (
                     <div className="mt-auto pt-4 border-t border-slate-100 dark:border-slate-800/80">
-                      <span className="inline-block text-[11px] font-medium text-slate-500 dark:text-slate-400 uppercase tracking-widest">
+                      <span className="inline-block text-caption font-medium text-slate-500 dark:text-slate-400 uppercase tracking-widest">
                         المدة: {displayDuration}
                       </span>
                     </div>

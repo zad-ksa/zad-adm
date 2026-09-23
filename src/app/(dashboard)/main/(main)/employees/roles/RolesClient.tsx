@@ -191,8 +191,8 @@ export default function RolesClient({
                     </IconTile>
                   </span>
                   <div className="min-w-0">
-                    <p className="truncate text-[14px] font-medium text-slate-900 dark:text-slate-100">{r.displayName}</p>
-                    <p className={cx(MONO, "truncate text-[12px] text-slate-400")} dir="ltr">
+                    <p className="truncate text-body font-medium text-slate-900 dark:text-slate-100">{r.displayName}</p>
+                    <p className={cx(MONO, "truncate text-meta text-slate-400")} dir="ltr">
                       {r.key}
                     </p>
                   </div>
@@ -203,16 +203,16 @@ export default function RolesClient({
               </td>
               <td className="hidden px-4 py-3 md:table-cell">
                 {r.members.length === 0 ? (
-                  <span className="text-[13px] text-slate-400">لا أحد</span>
+                  <span className="text-body text-slate-400">لا أحد</span>
                 ) : (
                   <AvatarStack names={r.members} />
                 )}
               </td>
               <td className="hidden px-4 py-3 lg:table-cell">
                 {isAdminRole(r) ? (
-                  <span className="text-[13px] text-slate-400">لا حاجة</span>
+                  <span className="text-body text-slate-400">لا حاجة</span>
                 ) : r.bundleIds.length === 0 ? (
-                  <span className="text-[13px] text-slate-400">—</span>
+                  <span className="text-body text-slate-400">—</span>
                 ) : (
                   <span className="flex flex-wrap gap-1">
                     {r.bundleIds.slice(0, 2).map((id) => (
@@ -228,7 +228,7 @@ export default function RolesClient({
                 {isAdminRole(r) ? (
                   <Badge tone="brand">وصول كامل</Badge>
                 ) : (
-                  <span className="text-[13px] text-slate-600 dark:text-slate-300">
+                  <span className="text-body text-slate-600 dark:text-slate-300">
                     <Count n={r.permissions.length} unit="صلاحية" />
                   </span>
                 )}

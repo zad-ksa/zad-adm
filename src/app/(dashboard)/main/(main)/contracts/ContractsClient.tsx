@@ -77,13 +77,13 @@ export default function ContractsClient({
         {/* Main Contracts List */}
         <div className="lg:col-span-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-[0_1px_2px_rgb(15_23_42/0.04)] overflow-hidden flex flex-col">
           <div className="p-5 border-b border-slate-100 dark:border-slate-800 shrink-0 flex justify-between items-center">
-            <h3 className="text-base font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
+            <h3 className="text-title font-semibold text-slate-800 dark:text-slate-100 flex items-center gap-2">
               <Users className="w-5 h-5 text-slate-400" />
               قائمة العقود مع الجمعيات
             </h3>
           </div>
           <div className="flex-1 overflow-x-auto">
-            <table className="w-full text-sm text-right">
+            <table className="w-full text-caption text-right">
               <thead >
                 <tr className={theadRowClass}>
                   <th className={thClass}>الجمعية</th>
@@ -96,17 +96,17 @@ export default function ContractsClient({
               <tbody className={tbodyClass}>
                 {contractsData.map((contract) => (
                   <tr key={contract.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition-colors">
-                    <td className={cx(tdClass, "font-bold text-slate-800 dark:text-slate-100")}>
+                    <td className={cx(tdClass, "font-semibold text-slate-800 dark:text-slate-100")}>
                       {contract.charityName}
                     </td>
-                    <td className={cx(tdClass, "text-emerald-600 dark:text-emerald-400 font-bold")}>
+                    <td className={cx(tdClass, "text-emerald-600 dark:text-emerald-400 font-semibold")}>
                       {contract.totalValue.toLocaleString()} ر.س
                     </td>
                     <td className={cx(tdClass, "text-slate-500 dark:text-slate-400")}>
                       {contract.creationDate}
                     </td>
                     <td className={cx(tdClass, "text-center")}>
-                      <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold ${
+                      <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-caption font-semibold ${
                         contract.status === "active" 
                           ? "bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400"
                           : "bg-emerald-50 text-emerald-600 dark:bg-emerald-900/20 dark:text-emerald-400"
@@ -135,10 +135,10 @@ export default function ContractsClient({
         {/* Installments Sidebar */}
         <div className="lg:col-span-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-[0_1px_2px_rgb(15_23_42/0.04)] flex flex-col h-full">
           <div className="p-5 border-b border-slate-100 dark:border-slate-800 shrink-0">
-            <h3 className="text-base font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
+            <h3 className="text-title font-semibold text-slate-800 dark:text-slate-100 flex items-center gap-2">
               <Calendar className="w-5 h-5 text-amber-500" />
               أقساط هذا الشهر ({currentMonth}/{currentYear})
-              <span className="bg-amber-100 text-amber-600 dark:bg-amber-900/30 dark:text-amber-400 py-0.5 px-2 rounded-full text-xs font-bold mr-auto">
+              <span className="bg-amber-100 text-amber-600 dark:bg-amber-900/30 dark:text-amber-400 py-0.5 px-2 rounded-full text-caption font-semibold mr-auto">
                 {dueThisMonth.length} أقساط
               </span>
             </h3>
@@ -149,18 +149,18 @@ export default function ContractsClient({
                 {dueThisMonth.map((installment, index) => (
                   <div key={index} className="p-4 rounded-xl border border-amber-100 dark:border-amber-900/30 bg-amber-50/50 dark:bg-amber-900/10">
                     <div className="flex justify-between items-start mb-2">
-                      <span className="text-sm font-bold text-slate-800 dark:text-slate-200">
+                      <span className="text-caption font-semibold text-slate-800 dark:text-slate-200">
                         {installment.charityName}
                       </span>
                     </div>
                     <div className="flex items-center justify-between mt-3">
                       <div className="flex flex-col">
-                        <span className="text-[10px] text-slate-400 font-bold uppercase">قيمة القسط</span>
-                        <span className="text-base font-bold text-red-500">{installment.amount.toLocaleString()} ر.س</span>
+                        <span className="text-caption text-slate-400 font-semibold uppercase">قيمة القسط</span>
+                        <span className="text-title font-semibold text-red-500">{installment.amount.toLocaleString()} ر.س</span>
                       </div>
                       <div className="flex flex-col text-left">
-                        <span className="text-[10px] text-slate-400 font-bold uppercase">تاريخ الاستحقاق</span>
-                        <span className="text-sm font-bold text-slate-600 dark:text-slate-300">{installment.dueDate ? new Date(installment.dueDate).toLocaleDateString('en-CA') : ""}</span>
+                        <span className="text-caption text-slate-400 font-semibold uppercase">تاريخ الاستحقاق</span>
+                        <span className="text-caption font-semibold text-slate-600 dark:text-slate-300">{installment.dueDate ? new Date(installment.dueDate).toLocaleDateString('en-CA') : ""}</span>
                       </div>
                     </div>
                   </div>
@@ -169,7 +169,7 @@ export default function ContractsClient({
             ) : (
               <div className="flex flex-col items-center justify-center h-full py-12 text-slate-400 text-center">
                 <CheckCircle2 className="w-12 h-12 text-slate-200 dark:text-slate-700 mb-3" />
-                <p className="text-sm font-medium">لا توجد أقساط مستحقة لهذا الشهر</p>
+                <p className="text-caption font-medium">لا توجد أقساط مستحقة لهذا الشهر</p>
               </div>
             )}
           </div>
@@ -179,7 +179,7 @@ export default function ContractsClient({
       {/* All Installments per contract - Detailed view */}
       <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-[0_1px_2px_rgb(15_23_42/0.04)] overflow-hidden">
         <div className="p-5 border-b border-slate-100 dark:border-slate-800 shrink-0">
-          <h3 className="text-base font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
+          <h3 className="text-title font-semibold text-slate-800 dark:text-slate-100 flex items-center gap-2">
             <DollarSign className="w-5 h-5 text-emerald-500" />
             تفاصيل الأقساط الدورية لكل عقد
           </h3>
@@ -188,11 +188,11 @@ export default function ContractsClient({
           {contractsData.map(contract => (
              <div key={contract.id} className="border border-slate-200 dark:border-slate-700 rounded-xl p-4 bg-slate-50 dark:bg-slate-800/20">
                <div className="flex justify-between items-center mb-4 border-b border-slate-200 dark:border-slate-700 pb-3">
-                 <h4 className="font-bold text-slate-800 dark:text-slate-200">{contract.charityName}</h4>
+                 <h4 className="font-semibold text-slate-800 dark:text-slate-200">{contract.charityName}</h4>
                  {canEdit && (
                    <button 
                       onClick={() => setSelectedCharityId(contract.id)}
-                      className="text-xs font-bold text-primary bg-primary/10 hover:bg-primary/20 px-2 py-1 rounded-md transition-colors"
+                      className="text-caption font-semibold text-primary bg-primary/10 hover:bg-primary/20 px-2 py-1 rounded-md transition-colors"
                     >
                       تعديل
                     </button>
@@ -200,17 +200,17 @@ export default function ContractsClient({
                </div>
                <div className="space-y-3">
                  {contract.installments.length === 0 && (
-                    <span className="text-xs text-slate-500">لا توجد أقساط</span>
+                    <span className="text-caption text-slate-500">لا توجد أقساط</span>
                  )}
                  {contract.installments.map((inst, idx) => (
-                   <div key={idx} className="flex justify-between items-center text-sm">
+                   <div key={idx} className="flex justify-between items-center text-caption">
                      <span className="text-slate-500 dark:text-slate-400 tabular-nums">
                         {inst.isLinkedToFirstGrant && !inst.dueDate 
-                          ? <span className="text-amber-500 font-bold text-[10px]">بانتظار المنحة الأولى</span>
+                          ? <span className="text-amber-500 font-semibold text-caption">بانتظار المنحة الأولى</span>
                           : inst.dueDate ? new Date(inst.dueDate).toLocaleDateString('en-CA') : ""}
                      </span>
                      <div className="flex items-center gap-3">
-                       <span className="font-bold text-slate-700 dark:text-slate-300">{inst.amount.toLocaleString()}</span>
+                       <span className="font-semibold text-slate-700 dark:text-slate-300">{inst.amount.toLocaleString()}</span>
                        {inst.isPaid ? (
                          <CheckCircle2 className="w-4 h-4 text-emerald-500" />
                        ) : (

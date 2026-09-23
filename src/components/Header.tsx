@@ -127,7 +127,7 @@ export default function Header({
               <Link 
                 key={idx} 
                 href={item.href}
-                className={`px-4 py-2 rounded-xl text-sm font-bold transition-all ${
+                className={`px-4 py-2 rounded-xl text-caption font-semibold transition-all ${
                   item.active 
                     ? "bg-primary text-white shadow-md shadow-primary/20" 
                     : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
@@ -140,7 +140,7 @@ export default function Header({
         )}
         
         <div className="flex items-center">
-          <span className="bg-primary/5 text-primary px-4 sm:px-5 py-2 rounded-xl text-xs sm:text-sm font-bold border border-primary/10">
+          <span className="bg-primary/5 text-primary px-4 sm:px-5 py-2 rounded-xl text-caption sm:text-caption font-semibold border border-primary/10">
             {title}
           </span>
         </div>
@@ -154,7 +154,7 @@ export default function Header({
               <Link 
                 key={idx} 
                 href={item.href}
-                className={`flex-1 text-center py-2.5 px-4 rounded-xl text-xs font-bold transition-all whitespace-nowrap active:scale-[0.98] ${
+                className={`flex-1 text-center py-2.5 px-4 rounded-xl text-caption font-semibold transition-all whitespace-nowrap active:scale-[0.98] ${
                   item.active 
                     ? "bg-primary text-white shadow-md shadow-primary/20" 
                     : "text-slate-600 hover:bg-slate-50 hover:text-slate-900 border border-slate-100 bg-slate-50/50"

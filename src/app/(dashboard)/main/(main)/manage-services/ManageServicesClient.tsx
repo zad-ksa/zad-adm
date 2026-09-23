@@ -175,13 +175,13 @@ export default function ManageServicesClient({
     <div className="space-y-6 animate-fade-in" dir="rtl">
       {/* Notifications */}
       {successMsg && (
-        <div className="fixed bottom-6 left-6 z-50 bg-emerald-500 text-white px-5 py-3 rounded-xl shadow-xl flex items-center gap-2 font-bold text-sm animate-bounce">
+        <div className="fixed bottom-6 left-6 z-50 bg-emerald-500 text-white px-5 py-3 rounded-xl shadow-xl flex items-center gap-2 font-semibold text-caption animate-bounce">
           <CheckCircle2 className="w-5 h-5" />
           {successMsg}
         </div>
       )}
       {errorMsg && (
-        <div className="fixed bottom-6 left-6 z-50 bg-red-500 text-white px-5 py-3 rounded-xl shadow-xl flex items-center gap-2 font-bold text-sm">
+        <div className="fixed bottom-6 left-6 z-50 bg-red-500 text-white px-5 py-3 rounded-xl shadow-xl flex items-center gap-2 font-semibold text-caption">
           <AlertCircle className="w-5 h-5" />
           {errorMsg}
         </div>
@@ -212,7 +212,7 @@ export default function ManageServicesClient({
             placeholder="ابحث عن اسم الخدمة..."
             value={search}
             onChange={e => setSearch(e.target.value)}
-            className="w-full pl-4 pr-11 py-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-sm outline-none focus:ring-2 focus:ring-primary/20 dark:text-slate-200"
+            className="w-full pl-4 pr-11 py-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-caption outline-none focus:ring-2 focus:ring-primary/20 dark:text-slate-200"
           />
         </div>
       </div>
@@ -278,7 +278,7 @@ export default function ManageServicesClient({
                 <div>
                   {/* Category Pill & Actions */}
                   <div className="flex items-center justify-between gap-2 mb-2.5">
-                    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-extrabold ${activeColor.bg} ${activeColor.text}`}>
+                    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-caption font-semibold ${activeColor.bg} ${activeColor.text}`}>
                       <span className={`w-1 h-1 rounded-full ${activeColor.dot}`} />
                       {(accessMap[svc.name]?.length ?? 0) === 0
                         ? "مفتوحة للجميع"
@@ -306,7 +306,7 @@ export default function ManageServicesClient({
                   </div>
 
                   {/* Title */}
-                  <h3 className="text-xs font-black text-slate-800 dark:text-slate-100 mb-3 group-hover:text-primary transition-colors line-clamp-2 leading-relaxed">
+                  <h3 className="text-caption font-semibold text-slate-800 dark:text-slate-100 mb-3 group-hover:text-primary transition-colors line-clamp-2 leading-relaxed">
                     {svc.name}
                   </h3>
                 </div>
@@ -315,11 +315,11 @@ export default function ManageServicesClient({
                 <div className="pt-2 border-t border-slate-100/60 dark:border-slate-700/20 flex items-center justify-between">
                   <button
                     onClick={() => setExpandedName(isExpanded ? null : svc.name)}
-                    className="flex items-center gap-1.5 text-[10px] font-bold text-slate-500 dark:text-slate-400 hover:text-primary dark:hover:text-primary transition-all group/btn"
+                    className="flex items-center gap-1.5 text-caption font-semibold text-slate-500 dark:text-slate-400 hover:text-primary dark:hover:text-primary transition-all group/btn"
                   >
                     <Building2 className="w-3.5 h-3.5 text-slate-400 group-hover/btn:text-primary transition-colors" />
                     <span>متاح لـ</span>
-                    <span className="bg-slate-100 dark:bg-slate-700/60 px-1.5 py-0.5 rounded-md text-slate-700 dark:text-slate-200 font-extrabold group-hover/btn:bg-primary group-hover/btn:text-white transition-all">
+                    <span className="bg-slate-100 dark:bg-slate-700/60 px-1.5 py-0.5 rounded-md text-slate-700 dark:text-slate-200 font-semibold group-hover/btn:bg-primary group-hover/btn:text-white transition-all">
                       {svc.charityCount}
                     </span>
                     <span>جمعية</span>
@@ -337,12 +337,12 @@ export default function ManageServicesClient({
                 <div className="px-4 pb-4 pt-2.5 bg-slate-50/50 dark:bg-slate-800/30 border-t border-slate-100/60 dark:border-slate-700/20 animate-fade-in-up">
                   {svc.charities.length > 0 ? (
                     <>
-                      <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 mb-1.5">الجمعيات المتاح لها هذه الخدمة:</p>
+                      <p className="text-caption font-semibold text-slate-400 dark:text-slate-500 mb-1.5">الجمعيات المتاح لها هذه الخدمة:</p>
                       <div className="flex flex-wrap gap-1">
                         {svc.charities.map(c => (
                           <span 
                             key={c.id} 
-                            className="inline-flex items-center gap-1 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-100 dark:border-slate-700/50 px-2 py-0.5 rounded text-[10px] font-medium hover:border-primary/20 hover:text-primary dark:hover:text-primary transition-all"
+                            className="inline-flex items-center gap-1 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-100 dark:border-slate-700/50 px-2 py-0.5 rounded text-caption font-medium hover:border-primary/20 hover:text-primary dark:hover:text-primary transition-all"
                           >
                             <span className="w-1 h-1 rounded-full bg-emerald-500" />
                             {c.name}
@@ -351,7 +351,7 @@ export default function ManageServicesClient({
                       </div>
                     </>
                   ) : (
-                    <p className="text-[10px] text-slate-400 italic">لا توجد جمعيات مرتبطة بهذه الخدمة حالياً</p>
+                    <p className="text-caption text-slate-400 italic">لا توجد جمعيات مرتبطة بهذه الخدمة حالياً</p>
                   )}
                 </div>
               )}
@@ -364,7 +364,7 @@ export default function ManageServicesClient({
             <div className="w-12 h-12 bg-slate-50 dark:bg-slate-900 rounded-xl flex items-center justify-center mx-auto mb-3">
               <Layers className="w-6 h-6 text-slate-400" />
             </div>
-            <p className="text-slate-400 font-extrabold text-xs">لا توجد خدمات {search ? "مطابقة للبحث" : "مسجلة حالياً"}</p>
+            <p className="text-slate-400 font-semibold text-caption">لا توجد خدمات {search ? "مطابقة للبحث" : "مسجلة حالياً"}</p>
           </div>
         )}
       </div>
@@ -397,11 +397,11 @@ footer={
 <div className="space-y-4">
 <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">اسم الخدمة *</label>
+                  <label className="block text-caption font-semibold text-slate-700 dark:text-slate-300 mb-2">اسم الخدمة *</label>
                   <input
                     type="text" required
                     value={form.name} onChange={e => setForm({...form, name: e.target.value})}
-                    className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all dark:text-white text-sm font-bold"
+                    className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all dark:text-white text-caption font-semibold"
                     placeholder="مثال: التدريب الصيفي"
                   />
                 </div>
@@ -412,12 +412,12 @@ footer={
                     كلها فلم تمنح أحداً شيئاً يوماً. مكانه الآن منحٌ صريح. */}
                 {modalState.mode === "edit" && (
                   <div>
-                    <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">
+                    <label className="block text-caption font-semibold text-slate-700 dark:text-slate-300 mb-2">
                       الموظفون الذين يصلون إلى هذه الخدمة
                     </label>
                     <div className="max-h-48 overflow-y-auto rounded-xl border border-slate-200 dark:border-slate-700 divide-y divide-slate-100 dark:divide-slate-700/60">
                       {employees.length === 0 && (
-                        <p className="px-3 py-3 text-xs text-slate-400">لا موظفون نشطون.</p>
+                        <p className="px-3 py-3 text-caption text-slate-400">لا موظفون نشطون.</p>
                       )}
                       {employees.map(emp => {
                         const on = grantedIds.includes(emp.id);
@@ -431,12 +431,12 @@ footer={
                             <span className={`w-4 h-4 rounded border flex items-center justify-center shrink-0 ${on ? "bg-primary border-primary text-white" : "border-slate-300 dark:border-slate-600"}`}>
                               {on && <Check className="w-3 h-3" />}
                             </span>
-                            <span className="text-xs font-bold text-slate-700 dark:text-slate-200">{emp.name}</span>
+                            <span className="text-caption font-semibold text-slate-700 dark:text-slate-200">{emp.name}</span>
                           </button>
                         );
                       })}
                     </div>
-                    <p className="mt-2 text-[11px] text-slate-400 leading-relaxed">
+                    <p className="mt-2 text-caption text-slate-400 leading-relaxed">
                       {grantedIds.length === 0
                         ? "لم يُحدَّد أحد — الخدمة ظاهرة لكل من يملك «عرض الخدمات»، في حدود جمعياته المُسندة."
                         : `مقصورة على ${grantedIds.length} موظفاً، كلٌّ في حدود جمعياته المُسندة.`}
@@ -448,11 +448,11 @@ footer={
                 {modalState.mode === "add" && (
                   <div>
                     <div className="flex items-center justify-between mb-2">
-                      <label className="text-sm font-bold text-slate-700 dark:text-slate-300">اختر الجمعيات *</label>
+                      <label className="text-caption font-semibold text-slate-700 dark:text-slate-300">اختر الجمعيات *</label>
                       <button
                         type="button"
                         onClick={toggleAll}
-                        className="text-xs font-bold text-primary hover:text-primary/80 transition-colors"
+                        className="text-caption font-semibold text-primary hover:text-primary/80 transition-colors"
                       >
                         {selectedCharityIds.length === charities.length ? "إلغاء تحديد الكل" : "تحديد الكل"}
                       </button>
@@ -487,19 +487,19 @@ footer={
                                 />
                                 <div className="flex items-center gap-2 min-w-0">
                                   <Building2 className="w-4 h-4 text-slate-400 shrink-0" />
-                                  <span className="text-sm font-bold text-slate-700 dark:text-slate-200 truncate">{c.name}</span>
+                                  <span className="text-caption font-semibold text-slate-700 dark:text-slate-200 truncate">{c.name}</span>
                                 </div>
                               </label>
                             );
                           })}
                         </div>
                         {/* Selection count */}
-                        <div className="px-4 py-2 bg-slate-50 dark:bg-slate-900 border-t border-slate-200 dark:border-slate-700 text-xs font-bold text-slate-500">
+                        <div className="px-4 py-2 bg-slate-50 dark:bg-slate-900 border-t border-slate-200 dark:border-slate-700 text-caption font-semibold text-slate-500">
                           تم تحديد {selectedCharityIds.length} من {charities.length} جمعية
                         </div>
                       </div>
                     ) : (
-                      <p className="text-sm text-slate-400 italic p-3 bg-slate-50 dark:bg-slate-900 rounded-xl">
+                      <p className="text-caption text-slate-400 italic p-3 bg-slate-50 dark:bg-slate-900 rounded-xl">
                         لا توجد جمعيات مسجلة في النظام
                       </p>
                     )}
@@ -507,7 +507,7 @@ footer={
                 )}
 
                 {modalState.mode === "edit" && (
-                  <p className="text-[11px] font-bold text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800/40 rounded-xl px-3 py-2">
+                  <p className="text-caption font-semibold text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800/40 rounded-xl px-3 py-2">
                     ⚠️ سيتم تطبيق التعديل على جميع الجمعيات المرتبطة بهذه الخدمة تلقائياً.
                   </p>
                 )}

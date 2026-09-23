@@ -1465,7 +1465,7 @@ headerAction={
 <div className="divide-y divide-slate-100 dark:divide-slate-700/20">
               {filteredPermanentTasks.map((t) => (
                 <div key={t.id} className="px-3 py-2.5 flex items-start gap-2 group hover:bg-slate-100/60 dark:hover:bg-slate-700/20 transition-colors relative">
-                  <Repeat className="w-3.5 h-3.5 text-indigo-400 dark:text-indigo-500 shrink-0 mt-0.5" />
+                  <Repeat className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500 shrink-0 mt-0.5" />
 
                   <div className="flex-1 min-w-0">
                     <p className="text-caption font-medium text-slate-600 dark:text-slate-300 leading-snug break-words">{t.title}</p>

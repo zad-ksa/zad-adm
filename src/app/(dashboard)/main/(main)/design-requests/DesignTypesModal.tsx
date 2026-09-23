@@ -254,7 +254,7 @@ closeOnBackdrop={false}
                         }
                         disabled={busyId === type.id}
                         title={type.isActive ? "إخفاء من نموذج الطلب" : "إعادة تفعيله"}
-                        className="h-9 w-9 flex items-center justify-center rounded-lg text-slate-400 dark:text-slate-500 hover:text-primary dark:hover:text-teal-300 hover:bg-primary/[0.06] transition-colors disabled:opacity-50"
+                        className="h-8 w-8 flex items-center justify-center rounded-lg text-slate-400 dark:text-slate-500 hover:text-primary dark:hover:text-teal-300 hover:bg-primary/[0.06] transition-colors disabled:opacity-50"
                       >
                         {busyId === type.id ? (
                           <Loader2 className="w-4 h-4 animate-spin" />

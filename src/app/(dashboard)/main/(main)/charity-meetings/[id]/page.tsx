@@ -67,7 +67,7 @@ export default async function CharityMeetingBookingsPage({
       <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-[0_1px_2px_rgb(15_23_42/0.04)] overflow-hidden">
         <div className="p-6 border-b border-slate-100 dark:border-slate-700/50 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
+            <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
               <Calendar className="w-5 h-5" />
             </div>
             <div>
@@ -134,7 +134,7 @@ export default async function CharityMeetingBookingsPage({
       {schedule.allowAlternativeRequest && (
         <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-[0_1px_2px_rgb(15_23_42/0.04)] overflow-hidden">
           <div className="p-6 border-b border-slate-100 dark:border-slate-700/50 flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-amber-50 dark:bg-amber-950/30 flex items-center justify-center text-amber-500">
+            <div className="w-10 h-10 rounded-lg bg-amber-50 dark:bg-amber-950/30 flex items-center justify-center text-amber-500">
               <MessageSquareText className="w-5 h-5" />
             </div>
             <div>

@@ -394,7 +394,7 @@ onClose={() => setShowNewsForm(false)}
                   <button
                     type="button"
                     onClick={() => { setShowAddCat(v => !v); setCatError(null); setNewCatName(""); }}
-                    className="shrink-0 w-9 h-9 flex items-center justify-center rounded-lg bg-amber-50 dark:bg-amber-900/20 text-amber-600 hover:bg-amber-100 dark:hover:bg-amber-900/40 border border-amber-200 dark:border-amber-800/50 transition-colors"
+                    className="shrink-0 w-8 h-8 flex items-center justify-center rounded-lg bg-amber-50 dark:bg-amber-900/20 text-amber-600 hover:bg-amber-100 dark:hover:bg-amber-900/40 border border-amber-200 dark:border-amber-800/50 transition-colors"
                   >
                     <Plus className="w-3.5 h-3.5" />
                   </button>

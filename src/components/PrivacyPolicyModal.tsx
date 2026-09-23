@@ -15,7 +15,7 @@ export default function PrivacyPolicyModal({ isOpen, onClose }: PrivacyPolicyMod
   const policies = [
     {
       id: "intro",
-      icon: <Shield className="w-5 h-5 text-emerald-500" />,
+      icon: <Shield className="w-5 h-5 text-primary dark:text-teal-300" />,
       title: "1. مقدمة",
       content: (
         <p className="text-slate-600 dark:text-slate-300 leading-relaxed text-caption">
@@ -40,7 +40,7 @@ export default function PrivacyPolicyModal({ isOpen, onClose }: PrivacyPolicyMod
     },
     {
       id: "data-collected",
-      icon: <Database className="w-5 h-5 text-indigo-500" />,
+      icon: <Database className="w-5 h-5 text-primary dark:text-teal-300" />,
       title: "3. البيانات التي نجمعها",
       content: (
         <div className="space-y-4 text-caption">
@@ -57,7 +57,7 @@ export default function PrivacyPolicyModal({ isOpen, onClose }: PrivacyPolicyMod
     },
     {
       id: "processing",
-      icon: <FileText className="w-5 h-5 text-teal-500" />,
+      icon: <FileText className="w-5 h-5 text-primary dark:text-teal-300" />,
       title: "4. أغراض معالجة البيانات",
       content: (
         <ul className="list-disc list-inside text-slate-600 dark:text-slate-300 space-y-1 text-caption">
@@ -69,7 +69,7 @@ export default function PrivacyPolicyModal({ isOpen, onClose }: PrivacyPolicyMod
     },
     {
       id: "sharing",
-      icon: <Globe className="w-5 h-5 text-rose-500" />,
+      icon: <Globe className="w-5 h-5 text-primary dark:text-teal-300" />,
       title: "5. مشاركة البيانات مع أطراف ثالثة",
       content: (
         <p className="text-slate-600 dark:text-slate-300 text-caption">
@@ -79,7 +79,7 @@ export default function PrivacyPolicyModal({ isOpen, onClose }: PrivacyPolicyMod
     },
     {
       id: "rights",
-      icon: <UserCheck className="w-5 h-5 text-amber-500" />,
+      icon: <UserCheck className="w-5 h-5 text-primary dark:text-teal-300" />,
       title: "6. حقوق أصحاب البيانات",
       content: (
         <p className="text-slate-600 dark:text-slate-300 text-caption">
@@ -89,7 +89,7 @@ export default function PrivacyPolicyModal({ isOpen, onClose }: PrivacyPolicyMod
     },
     {
       id: "security",
-      icon: <Lock className="w-5 h-5 text-slate-700 dark:text-slate-300" />,
+      icon: <Lock className="w-5 h-5 text-primary dark:text-teal-300" />,
       title: "7. حماية البيانات",
       content: (
         <ul className="list-disc list-inside text-slate-600 dark:text-slate-300 space-y-1 text-caption">

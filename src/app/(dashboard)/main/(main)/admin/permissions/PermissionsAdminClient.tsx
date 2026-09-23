@@ -318,7 +318,7 @@ export default function PermissionsAdminClient({
                 <tr key={b.id} onClick={() => setEditor({ bundle: b })} className={rowClass}>
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-3">
-                      <span className="grid size-8 shrink-0 place-items-center rounded-md border border-slate-200 bg-slate-50 text-slate-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400">
+                      <span className="grid size-8 shrink-0 place-items-center rounded-lg border border-slate-200 bg-slate-50 text-slate-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400">
                         <Layers className="size-4" />
                       </span>
                       <div className="min-w-0">
@@ -671,7 +671,7 @@ export default function PermissionsAdminClient({
                 <tr key={s.name} onClick={() => setDetail({ kind: "service", name: s.name })} className={rowClass}>
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-3">
-                      <span className="grid size-8 shrink-0 place-items-center rounded-md border border-slate-200 bg-slate-50 text-slate-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400">
+                      <span className="grid size-8 shrink-0 place-items-center rounded-lg border border-slate-200 bg-slate-50 text-slate-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400">
                         <Briefcase className="size-4" />
                       </span>
                       <span className="text-body font-medium text-slate-900 dark:text-slate-100">{s.name}</span>

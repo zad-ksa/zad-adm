@@ -63,7 +63,7 @@ export default async function CharityPerformancePage({ params, searchParams }: {
       )}
 
       <h2 className="text-section font-semibold text-slate-800 dark:text-slate-100 mb-6 flex items-center gap-3 transition-colors mt-8">
-        <div className="w-10 h-10 bg-primary/10 dark:bg-primary/20 rounded-xl flex items-center justify-center text-primary font-semibold transition-colors">
+        <div className="w-10 h-10 bg-primary/10 dark:bg-primary/20 rounded-lg flex items-center justify-center text-primary font-semibold transition-colors">
           <MetricIcon />
         </div>
         إدارة مقياس الأداء

@@ -208,9 +208,9 @@ footer={
                 {locked.map((row) => (
                   <li
                     key={row.id}
-                    className="flex items-start gap-3 rounded-xl border border-indigo-200/70 dark:border-indigo-500/25 bg-indigo-500/[0.05] p-3"
+                    className="flex items-start gap-3 rounded-xl border border-primary/20 dark:border-teal-400/25 bg-primary/[0.05] p-3"
                   >
-                    <Hammer className="w-4 h-4 mt-0.5 shrink-0 text-indigo-500" />
+                    <Hammer className="w-4 h-4 mt-0.5 shrink-0 text-primary dark:text-teal-300" />
                     <div className="min-w-0 flex-1">
                       <p className="text-body font-semibold text-slate-900 dark:text-slate-100 break-words leading-snug">
                         {row.title}

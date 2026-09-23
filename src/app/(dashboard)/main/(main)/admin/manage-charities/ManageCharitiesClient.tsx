@@ -143,7 +143,7 @@ export default function ManageCharitiesClient({ initialCharities }: { initialCha
               className="flex flex-col gap-3 rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900"
             >
               <div className="flex items-start justify-between gap-2">
-                <span className="relative grid size-9 shrink-0 place-items-center overflow-hidden rounded-lg border border-slate-200 bg-slate-50 dark:border-slate-700 dark:bg-slate-800">
+                <span className="relative grid size-8 shrink-0 place-items-center overflow-hidden rounded-lg border border-slate-200 bg-slate-50 dark:border-slate-700 dark:bg-slate-800">
                   {charity.logoUrl ? (
                     <Image src={charity.logoUrl} alt="" fill className="object-contain p-1" unoptimized />
                   ) : (

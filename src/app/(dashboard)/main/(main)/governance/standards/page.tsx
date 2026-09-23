@@ -48,7 +48,7 @@ export default async function GeneralGovernanceStandardsPage({
             
             {/* Standard Header */}
             <div className="flex items-start gap-4">
-              <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0 border border-primary/20">
+              <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0 border border-primary/20">
                 <span className="text-primary font-semibold">{stdIdx + 1}</span>
               </div>
               <div className="pt-1">

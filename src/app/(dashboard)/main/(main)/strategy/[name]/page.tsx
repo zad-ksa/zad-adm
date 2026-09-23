@@ -109,7 +109,7 @@ export default async function StrategySurveysPage({ params }: { params: Promise<
       {/* Section 1: Readiness Survey Results */}
       <div>
         <div className="flex items-center gap-3 mb-8 border-b border-slate-200 dark:border-slate-700 pb-4 print:hidden">
-          <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center text-primary font-semibold">
+          <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center text-primary font-semibold">
             <ChartLineIcon />
           </div>
           <h2 className="text-section font-semibold text-slate-800 dark:text-slate-100 tracking-tight">

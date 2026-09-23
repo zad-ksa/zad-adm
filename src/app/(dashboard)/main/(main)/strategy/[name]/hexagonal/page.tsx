@@ -102,7 +102,7 @@ export default async function HexagonalSurveysPage({ params }: { params: Promise
           {/* Section 1: Aggregated Results */}
       <div>
         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 mb-6 sm:mb-8 border-b border-slate-200 dark:border-slate-700 pb-4 transition-colors">
-          <div className="w-12 h-12 bg-secondary/10 dark:bg-secondary/20 rounded-xl flex items-center justify-center text-secondary font-semibold shrink-0 transition-colors">
+          <div className="w-10 h-10 bg-secondary/10 dark:bg-secondary/20 rounded-lg flex items-center justify-center text-secondary font-semibold shrink-0 transition-colors">
             <HexagonIcon />
           </div>
           <div>
@@ -162,7 +162,7 @@ export default async function HexagonalSurveysPage({ params }: { params: Promise
           <div className="bg-white dark:bg-slate-900 rounded-xl p-4 sm:p-6 border border-slate-200 dark:border-slate-800 shadow-[0_1px_2px_rgb(15_23_42/0.04)] transition-colors">
             <div className="flex items-center gap-3 mb-4 border-b border-slate-100 dark:border-slate-700 pb-3 transition-colors">
               <div className="p-2 bg-sky-50 dark:bg-sky-900/30 rounded-lg transition-colors">
-                <Sparkles className="w-6 h-6 text-sky-500 dark:text-sky-400" />
+                <Sparkles className="w-6 h-6 text-primary dark:text-teal-300" />
               </div>
               <h3 className="font-semibold text-slate-800 dark:text-slate-100 transition-colors">الفرص</h3>
               <div className="mr-auto flex items-center gap-2">
@@ -206,7 +206,7 @@ export default async function HexagonalSurveysPage({ params }: { params: Promise
           <div className="bg-white dark:bg-slate-900 rounded-xl p-4 sm:p-6 border border-slate-200 dark:border-slate-800 shadow-[0_1px_2px_rgb(15_23_42/0.04)] transition-colors">
             <div className="flex items-center gap-3 mb-4 border-b border-slate-100 dark:border-slate-700 pb-3 transition-colors">
               <div className="p-2 bg-yellow-50 dark:bg-yellow-900/30 rounded-lg transition-colors">
-                <Key className="w-6 h-6 text-yellow-600 dark:text-yellow-400" />
+                <Key className="w-6 h-6 text-primary dark:text-teal-300" />
               </div>
               <h3 className="font-semibold text-slate-800 dark:text-slate-100 transition-colors">مقومات النجاح</h3>
               <div className="mr-auto flex items-center gap-2">
@@ -228,7 +228,7 @@ export default async function HexagonalSurveysPage({ params }: { params: Promise
           <div className="bg-white dark:bg-slate-900 rounded-xl p-4 sm:p-6 border border-slate-200 dark:border-slate-800 shadow-[0_1px_2px_rgb(15_23_42/0.04)] transition-colors">
             <div className="flex items-center gap-3 mb-4 border-b border-slate-100 dark:border-slate-700 pb-3 transition-colors">
               <div className="p-2 bg-violet-50 dark:bg-violet-900/30 rounded-lg transition-colors">
-                <Rocket className="w-6 h-6 text-violet-600 dark:text-violet-400" />
+                <Rocket className="w-6 h-6 text-primary dark:text-teal-300" />
               </div>
               <h3 className="font-semibold text-slate-800 dark:text-slate-100 transition-colors">الميزة التنافسية</h3>
               <div className="mr-auto flex items-center gap-2">
@@ -251,7 +251,7 @@ export default async function HexagonalSurveysPage({ params }: { params: Promise
       {/* Section 2: Individual Participants */}
       <div className="pt-8 transition-colors">
         <div className="flex items-center gap-3 mb-6 sm:mb-8 border-b border-slate-200 dark:border-slate-700 pb-4 transition-colors">
-          <div className="w-10 h-10 bg-secondary/10 dark:bg-secondary/20 rounded-xl flex items-center justify-center text-secondary font-semibold shrink-0 transition-colors">
+          <div className="w-10 h-10 bg-secondary/10 dark:bg-secondary/20 rounded-lg flex items-center justify-center text-secondary font-semibold shrink-0 transition-colors">
             <ClipboardIcon />
           </div>
           <h2 className="text-section font-semibold text-slate-800 dark:text-slate-100 tracking-tight transition-colors">
@@ -297,7 +297,7 @@ export default async function HexagonalSurveysPage({ params }: { params: Promise
                       <span className="font-semibold text-slate-700 dark:text-slate-300 text-center">{weaknessesCount} <span className="text-caption text-slate-400 dark:text-slate-500 font-normal block sm:inline">ضعف</span></span>
                     </div>
                     <div className="flex flex-col gap-1.5 items-center bg-white dark:bg-slate-800 p-2.5 rounded-lg border border-slate-100 dark:border-slate-700 shadow-sm transition-colors">
-                      <Sparkles className="w-5 h-5 text-sky-500 dark:text-sky-400 shrink-0" />
+                      <Sparkles className="w-5 h-5 text-primary dark:text-teal-300 shrink-0" />
                       <span className="font-semibold text-slate-700 dark:text-slate-300 text-center">{oppCount} <span className="text-caption text-slate-400 dark:text-slate-500 font-normal block sm:inline">فرص</span></span>
                     </div>
                     <div className="flex flex-col gap-1.5 items-center bg-white dark:bg-slate-800 p-2.5 rounded-lg border border-slate-100 dark:border-slate-700 shadow-sm transition-colors">
@@ -305,11 +305,11 @@ export default async function HexagonalSurveysPage({ params }: { params: Promise
                       <span className="font-semibold text-slate-700 dark:text-slate-300 text-center">{threatCount} <span className="text-caption text-slate-400 dark:text-slate-500 font-normal block sm:inline">مخاطر</span></span>
                     </div>
                     <div className="flex flex-col gap-1.5 items-center bg-white dark:bg-slate-800 p-2.5 rounded-lg border border-slate-100 dark:border-slate-700 shadow-sm transition-colors">
-                      <Key className="w-5 h-5 text-yellow-600 dark:text-yellow-400 shrink-0" />
+                      <Key className="w-5 h-5 text-primary dark:text-teal-300 shrink-0" />
                       <span className="font-semibold text-slate-700 dark:text-slate-300 text-center">{successCount} <span className="text-caption text-slate-400 dark:text-slate-500 font-normal block sm:inline">نجاح</span></span>
                     </div>
                     <div className="flex flex-col gap-1.5 items-center bg-white dark:bg-slate-800 p-2.5 rounded-lg border border-slate-100 dark:border-slate-700 shadow-sm transition-colors">
-                      <Rocket className="w-5 h-5 text-violet-600 dark:text-violet-400 shrink-0" />
+                      <Rocket className="w-5 h-5 text-primary dark:text-teal-300 shrink-0" />
                       <span className="font-semibold text-slate-700 dark:text-slate-300 text-center">{compCount} <span className="text-caption text-slate-400 dark:text-slate-500 font-normal block sm:inline">تميز</span></span>
                     </div>
                   </div>

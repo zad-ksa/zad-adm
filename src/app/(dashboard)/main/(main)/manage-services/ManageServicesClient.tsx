@@ -361,7 +361,7 @@ export default function ManageServicesClient({
 
         {filteredServices.length === 0 && (
           <div className="col-span-full bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-12 text-center shadow-[0_1px_2px_rgb(15_23_42/0.04)]">
-            <div className="w-12 h-12 bg-slate-50 dark:bg-slate-900 rounded-xl flex items-center justify-center mx-auto mb-3">
+            <div className="w-10 h-10 bg-slate-50 dark:bg-slate-900 rounded-lg flex items-center justify-center mx-auto mb-3">
               <Layers className="w-6 h-6 text-slate-400" />
             </div>
             <p className="text-slate-400 font-semibold text-caption">لا توجد خدمات {search ? "مطابقة للبحث" : "مسجلة حالياً"}</p>

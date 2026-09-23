@@ -141,7 +141,7 @@ export default async function CharityDetails({ params }: { params: { id: string 
         </div>
 
         <div className="flex items-center gap-3 mb-8 pb-4 border-b border-slate-200 dark:border-slate-700 transition-colors">
-          <div className="w-10 h-10 bg-primary/10 dark:bg-primary/20 rounded-xl flex items-center justify-center text-primary text-section font-semibold transition-colors">
+          <div className="w-10 h-10 bg-primary/10 dark:bg-primary/20 rounded-lg flex items-center justify-center text-primary text-section font-semibold transition-colors">
             📝
           </div>
           <h2 className="text-section font-semibold text-slate-800 dark:text-slate-100 tracking-tight transition-colors">تفاصيل إجابات المحاور</h2>

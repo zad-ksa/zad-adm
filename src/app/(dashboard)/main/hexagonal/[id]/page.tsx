@@ -176,7 +176,7 @@ export default async function HexagonalDetails({ params }: { params: { id: strin
       </div>
 
       <div className="flex items-center gap-3 mb-8 pb-4 border-b border-slate-200 dark:border-slate-700 transition-colors">
-        <div className="w-10 h-10 bg-secondary/10 dark:bg-secondary/20 rounded-xl flex items-center justify-center text-secondary border border-secondary/20 dark:border-secondary/30 shadow-inner transition-colors">
+        <div className="w-10 h-10 bg-secondary/10 dark:bg-secondary/20 rounded-lg flex items-center justify-center text-secondary border border-secondary/20 dark:border-secondary/30 shadow-inner transition-colors">
           <BarChart3 className="w-5 h-5" />
         </div>
         <h2 className="text-section font-semibold text-slate-800 dark:text-slate-100 tracking-tight transition-colors">تفاصيل أبعاد التحليل السداسي</h2>

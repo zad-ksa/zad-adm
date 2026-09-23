@@ -162,7 +162,7 @@ export default function WorkflowSettingsClient({
                     {chain.steps.map((step, idx) => (
                       <div key={step.id} className="flex items-center gap-3">
                         {/* رقم المستوى */}
-                        <div className="w-9 h-9 rounded-xl bg-primary/10 dark:bg-primary/20 border-2 border-primary/20 dark:border-primary/30 flex items-center justify-center shrink-0 z-10">
+                        <div className="w-8 h-8 rounded-lg bg-primary/10 dark:bg-primary/20 border-2 border-primary/20 dark:border-primary/30 flex items-center justify-center shrink-0 z-10">
                           <span className="text-caption font-semibold text-primary">{step.order}</span>
                         </div>
                         {/* بيانات الشخص */}

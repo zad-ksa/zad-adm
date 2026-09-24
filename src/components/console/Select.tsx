@@ -249,20 +249,20 @@ export default function Select({
                   }}
                   onKeyDown={onKeyDown}
                   placeholder="بحث…"
-                  className="flex-1 bg-transparent border-none outline-none text-[13px] text-slate-700 dark:text-slate-200 placeholder:text-slate-400"
+                  className="flex-1 bg-transparent border-none outline-none text-body text-slate-700 dark:text-slate-200 placeholder:text-slate-400"
                 />
               </div>
             )}
 
             <div className="flex-1 overflow-y-auto py-1">
               {shown.length === 0 ? (
-                <p className="px-3 py-2 text-[13px] text-slate-400 dark:text-slate-500">لا نتيجة</p>
+                <p className="px-3 py-2 text-body text-slate-400 dark:text-slate-500">لا نتيجة</p>
               ) : (
                 shown.map((option, index) =>
                   option.disabled ? (
                     <p
                       key={option.value}
-                      className="px-3 pb-1 pt-2 text-[11px] font-semibold text-slate-400 dark:text-slate-500"
+                      className="px-3 pb-1 pt-2 text-caption font-semibold text-slate-400 dark:text-slate-500"
                     >
                       {option.label}
                     </p>
@@ -285,7 +285,7 @@ export default function Select({
                       setIsOpen(false);
                       triggerRef.current?.focus();
                     }}
-                    className={`w-full px-3 py-2 flex items-center gap-2 text-right text-[13px] transition-colors ${
+                    className={`w-full px-3 py-2 flex items-center gap-2 text-right text-body transition-colors ${
                       index === clampedActive
                         ? "bg-primary/[0.07] dark:bg-primary/[0.15] text-primary dark:text-teal-300"
                         : "text-slate-700 dark:text-slate-200"
@@ -298,7 +298,7 @@ export default function Select({
                     />
                     <span className="flex-1 truncate">{option.label}</span>
                     {option.hint && (
-                      <span className="text-[11px] text-slate-400 dark:text-slate-500 shrink-0">
+                      <span className="text-caption text-slate-400 dark:text-slate-500 shrink-0">
                         {option.hint}
                       </span>
                     )}
@@ -330,7 +330,7 @@ export default function Select({
         aria-expanded={isOpen}
         aria-controls={isOpen ? listId : undefined}
         onKeyDown={onKeyDown}
-        className={`h-9 px-3 inline-flex items-center gap-2 ${radius.trigger} border bg-white dark:bg-slate-900 text-[13px] font-medium transition-colors ${
+        className={`h-9 px-3 inline-flex items-center gap-2 ${radius.trigger} border bg-white dark:bg-slate-900 text-body font-medium transition-colors ${
           isEmpty || disabled
             ? "border-slate-200 dark:border-slate-800 text-slate-400 dark:text-slate-600 cursor-not-allowed"
             : isOpen

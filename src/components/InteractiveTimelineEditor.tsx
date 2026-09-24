@@ -152,9 +152,9 @@ export default function InteractiveTimelineEditor({
 
   return (
     <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-3 shadow-[0_1px_2px_rgb(15_23_42/0.04)] overflow-x-auto overflow-y-visible custom-scrollbar">
-      <h3 className="font-bold text-sm text-slate-800 dark:text-slate-100 mb-4 border-b border-slate-100 dark:border-slate-700 pb-2 flex justify-between items-center">
+      <h3 className="font-semibold text-caption text-slate-800 dark:text-slate-100 mb-4 border-b border-slate-100 dark:border-slate-700 pb-2 flex justify-between items-center">
         <span>{title}</span>
-        <span className="text-[10px] bg-primary/10 text-primary px-2 py-0.5 rounded-full font-bold flex items-center gap-1">
+        <span className="text-caption bg-primary/10 text-primary px-2 py-0.5 rounded-full font-semibold flex items-center gap-1">
           <Edit2 className="w-2.5 h-2.5" /> وضع التعديل المباشر
         </span>
       </h3>
@@ -205,7 +205,7 @@ export default function InteractiveTimelineEditor({
                     setSelectedStageId(stage.id);
                     setModalEditName(stage.name);
                   }}
-                  className={`w-9 h-9 rounded-full border-2 flex items-center justify-center font-bold text-sm bg-white dark:bg-slate-800 shrink-0 transition-all duration-300 relative z-10 cursor-pointer hover:scale-110 hover:shadow-md
+                  className={`w-9 h-9 rounded-full border-2 flex items-center justify-center font-semibold text-caption bg-white dark:bg-slate-800 shrink-0 transition-all duration-300 relative z-10 cursor-pointer hover:scale-110 hover:shadow-md
                   ${isPast ? 'border-emerald-500 text-emerald-500' :
                     isCurrent ? 'border-primary text-primary scale-110 shadow-lg shadow-primary/20' :
                     'border-slate-200 dark:border-slate-600 text-slate-400 dark:text-slate-500'}`}
@@ -221,7 +221,7 @@ export default function InteractiveTimelineEditor({
                   {editingField?.id === stage.id && editingField.field === 'name' ? (
                     <input
                       autoFocus
-                      className="w-full text-center text-sm font-bold bg-white dark:bg-slate-800 border-2 border-primary/50 rounded-md px-1 py-0.5 outline-none"
+                      className="w-full text-center text-caption font-semibold bg-white dark:bg-slate-800 border-2 border-primary/50 rounded-md px-1 py-0.5 outline-none"
                       value={editName}
                       onChange={e => setEditName(e.target.value)}
                       onBlur={() => handleSaveInline(stage)}
@@ -230,7 +230,7 @@ export default function InteractiveTimelineEditor({
                   ) : (
                     <h4
                       onClick={() => handleStartInlineEdit(stage, 'name')}
-                      className={`font-bold text-center cursor-text hover:text-primary transition-colors ${isCurrent ? 'text-primary' : 'text-slate-700 dark:text-slate-300'} w-full leading-snug`}
+                      className={`font-semibold text-center cursor-text hover:text-primary transition-colors ${isCurrent ? 'text-primary' : 'text-slate-700 dark:text-slate-300'} w-full leading-snug`}
                       style={{ fontSize: stage.name.length > 24 ? '10px' : stage.name.length > 16 ? '11px' : stage.name.length > 10 ? '12px' : '13px' }}
                       title={stage.name}
                     >
@@ -242,7 +242,7 @@ export default function InteractiveTimelineEditor({
                   {editingField?.id === stage.id && editingField.field === 'description' ? (
                     <textarea 
                       autoFocus
-                      className="w-full mt-2 text-xs text-center bg-white dark:bg-slate-800 border-2 border-primary/50 rounded-md px-1 py-0.5 outline-none resize-none"
+                      className="w-full mt-2 text-caption text-center bg-white dark:bg-slate-800 border-2 border-primary/50 rounded-md px-1 py-0.5 outline-none resize-none"
                       value={editDesc}
                       onChange={e => setEditDesc(e.target.value)}
                       onBlur={() => handleSaveInline(stage)}
@@ -252,7 +252,7 @@ export default function InteractiveTimelineEditor({
                   ) : (
                     <p 
                       onClick={() => handleStartInlineEdit(stage, 'description')}
-                      className="text-xs text-slate-500 dark:text-slate-400 mt-1.5 leading-relaxed text-center line-clamp-3 cursor-text hover:text-primary transition-colors min-h-[1.5rem] w-full border border-transparent hover:border-slate-200 dark:hover:border-slate-600 rounded p-0.5"
+                      className="text-caption text-slate-500 dark:text-slate-400 mt-1.5 leading-relaxed text-center line-clamp-3 cursor-text hover:text-primary transition-colors min-h-[1.5rem] w-full border border-transparent hover:border-slate-200 dark:hover:border-slate-600 rounded p-0.5"
                       title="انقر لتعديل الوصف"
                     >
                       {stage.description || <span className="opacity-50 italic">إضافة وصف...</span>}
@@ -262,14 +262,14 @@ export default function InteractiveTimelineEditor({
                   {/* Dates / Duration */}
                   {editingField?.id === stage.id && editingField.field === 'dates' ? (
                     <div className="flex flex-col gap-1 mt-2 w-full">
-                      <input type="date" className="text-[10px] p-1 border rounded w-full dark:bg-slate-800 dark:border-slate-600 [color-scheme:light] dark:[color-scheme:dark]" value={editStart} onChange={e => setEditStart(e.target.value)} />
-                      <input type="date" className="text-[10px] p-1 border rounded w-full dark:bg-slate-800 dark:border-slate-600 [color-scheme:light] dark:[color-scheme:dark]" value={editEnd} onChange={e => setEditEnd(e.target.value)} />
-                      <button onClick={() => handleSaveInline(stage)} className="text-[10px] bg-primary text-white py-1 rounded">حفظ التواريخ</button>
+                      <input type="date" className="text-caption p-1 border rounded w-full dark:bg-slate-800 dark:border-slate-600 [color-scheme:light] dark:[color-scheme:dark]" value={editStart} onChange={e => setEditStart(e.target.value)} />
+                      <input type="date" className="text-caption p-1 border rounded w-full dark:bg-slate-800 dark:border-slate-600 [color-scheme:light] dark:[color-scheme:dark]" value={editEnd} onChange={e => setEditEnd(e.target.value)} />
+                      <button onClick={() => handleSaveInline(stage)} className="text-caption bg-primary text-white py-1 rounded">حفظ التواريخ</button>
                     </div>
                   ) : (
                     <div 
                       onClick={() => handleStartInlineEdit(stage, 'dates')}
-                      className="inline-flex items-center gap-1 bg-slate-100 dark:bg-slate-800/80 text-slate-600 dark:text-slate-300 text-[10px] px-2 py-1 rounded-md mt-2 font-medium border border-slate-200 dark:border-slate-700/50 cursor-pointer hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors w-full justify-center"
+                      className="inline-flex items-center gap-1 bg-slate-100 dark:bg-slate-800/80 text-slate-600 dark:text-slate-300 text-caption px-2 py-1 rounded-md mt-2 font-medium border border-slate-200 dark:border-slate-700/50 cursor-pointer hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors w-full justify-center"
                       title="انقر لتعديل التواريخ"
                     >
                       <Calendar className="w-3 h-3" />
@@ -277,7 +277,7 @@ export default function InteractiveTimelineEditor({
                     </div>
                   )}
 
-                  {isCurrent && <span className="block mt-2 text-[10px] font-bold bg-primary text-white px-3 py-0.5 rounded-full">المرحلة الحالية</span>}
+                  {isCurrent && <span className="block mt-2 text-caption font-semibold bg-primary text-white px-3 py-0.5 rounded-full">المرحلة الحالية</span>}
 
                   {stepCallbacks && (
                     <StageStepsPanel
@@ -300,7 +300,7 @@ export default function InteractiveTimelineEditor({
               <div className="flex flex-col items-center w-full p-2 rounded-lg border border-primary/50 border-dashed bg-primary/5 mt-6">
                 <input
                   autoFocus
-                  className="w-full text-center text-xs font-bold bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 rounded px-2 py-1 outline-none mb-1.5"
+                  className="w-full text-center text-caption font-semibold bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 rounded px-2 py-1 outline-none mb-1.5"
                   placeholder="اسم المرحلة..."
                   value={newName}
                   onChange={e => setNewName(e.target.value)}
@@ -321,7 +321,7 @@ export default function InteractiveTimelineEditor({
                 >
                   <Plus className="w-4 h-4" />
                 </button>
-                <div className="text-xs text-slate-400 font-medium">إضافة مرحلة</div>
+                <div className="text-caption text-slate-400 font-medium">إضافة مرحلة</div>
               </>
             )}
           </div>
@@ -331,12 +331,12 @@ export default function InteractiveTimelineEditor({
 
       {/* Continuous Stages Row */}
       <div className="mt-4 pt-3 border-t border-slate-100 dark:border-slate-700">
-        <h4 className="text-xs font-bold text-slate-500 dark:text-slate-400 mb-2 flex items-center gap-1.5">
+        <h4 className="text-caption font-semibold text-slate-500 dark:text-slate-400 mb-2 flex items-center gap-1.5">
           <Infinity className="w-3 h-3" /> المراحل الدائمة
           <button
             onClick={() => setIsAddingContinuous(true)}
             disabled={isPending}
-            className="mr-auto text-[10px] bg-amber-500/10 text-amber-600 dark:text-amber-500 hover:bg-amber-500/20 px-2 py-0.5 rounded flex items-center gap-1 transition-colors font-bold"
+            className="mr-auto text-caption bg-amber-500/10 text-amber-600 dark:text-amber-500 hover:bg-amber-500/20 px-2 py-0.5 rounded flex items-center gap-1 transition-colors font-semibold"
           >
             <Plus className="w-2.5 h-2.5" /> إضافة
           </button>
@@ -375,7 +375,7 @@ export default function InteractiveTimelineEditor({
                       setSelectedStageId(stage.id);
                       setModalEditName(stage.name);
                     }}
-                    className={`w-9 h-9 rounded-full border-2 flex items-center justify-center font-bold text-sm bg-white dark:bg-slate-800 shrink-0 transition-all duration-300 relative z-10 cursor-pointer hover:scale-110 hover:shadow-md
+                    className={`w-9 h-9 rounded-full border-2 flex items-center justify-center font-semibold text-caption bg-white dark:bg-slate-800 shrink-0 transition-all duration-300 relative z-10 cursor-pointer hover:scale-110 hover:shadow-md
                     ${isCurrent ? 'border-amber-500 text-amber-500 scale-110 shadow-lg shadow-amber-500/20' :
                       'border-amber-200 dark:border-amber-700 text-amber-500 dark:text-amber-500'}`}
                     title="انقر لخيارات المرحلة"
@@ -390,7 +390,7 @@ export default function InteractiveTimelineEditor({
                     {editingField?.id === stage.id && editingField.field === 'name' ? (
                       <input 
                         autoFocus
-                        className="w-full text-center text-sm font-bold bg-white dark:bg-slate-800 border-2 border-amber-500/50 rounded-md px-1 py-0.5 outline-none"
+                        className="w-full text-center text-caption font-semibold bg-white dark:bg-slate-800 border-2 border-amber-500/50 rounded-md px-1 py-0.5 outline-none"
                         value={editName}
                         onChange={e => setEditName(e.target.value)}
                         onBlur={() => handleSaveInline(stage)}
@@ -399,7 +399,7 @@ export default function InteractiveTimelineEditor({
                     ) : (
                       <h4
                         onClick={() => handleStartInlineEdit(stage, 'name')}
-                        className={`font-bold text-center cursor-text hover:text-amber-500 transition-colors leading-snug w-full ${isCurrent ? 'text-amber-600 dark:text-amber-500' : 'text-slate-700 dark:text-slate-300'}`}
+                        className={`font-semibold text-center cursor-text hover:text-amber-500 transition-colors leading-snug w-full ${isCurrent ? 'text-amber-600 dark:text-amber-500' : 'text-slate-700 dark:text-slate-300'}`}
                         style={{ fontSize: stage.name.length > 40 ? '9px' : stage.name.length > 25 ? '10px' : stage.name.length > 15 ? '11px' : '13px' }}
                         title="انقر للتعديل"
                       >
@@ -411,7 +411,7 @@ export default function InteractiveTimelineEditor({
                     {editingField?.id === stage.id && editingField.field === 'description' ? (
                       <textarea 
                         autoFocus
-                        className="w-full mt-2 text-xs text-center bg-white dark:bg-slate-800 border-2 border-amber-500/50 rounded-md px-1 py-0.5 outline-none resize-none"
+                        className="w-full mt-2 text-caption text-center bg-white dark:bg-slate-800 border-2 border-amber-500/50 rounded-md px-1 py-0.5 outline-none resize-none"
                         value={editDesc}
                         onChange={e => setEditDesc(e.target.value)}
                         onBlur={() => handleSaveInline(stage)}
@@ -421,7 +421,7 @@ export default function InteractiveTimelineEditor({
                     ) : (
                       <p 
                         onClick={() => handleStartInlineEdit(stage, 'description')}
-                        className="text-xs text-slate-500 dark:text-slate-400 mt-1.5 leading-relaxed text-center line-clamp-3 cursor-text hover:text-amber-500 transition-colors min-h-[1.5rem] w-full border border-transparent hover:border-slate-200 dark:hover:border-slate-600 rounded p-0.5"
+                        className="text-caption text-slate-500 dark:text-slate-400 mt-1.5 leading-relaxed text-center line-clamp-3 cursor-text hover:text-amber-500 transition-colors min-h-[1.5rem] w-full border border-transparent hover:border-slate-200 dark:hover:border-slate-600 rounded p-0.5"
                         title="انقر لتعديل الوصف"
                       >
                         {stage.description || <span className="opacity-50 italic">إضافة وصف...</span>}
@@ -431,13 +431,13 @@ export default function InteractiveTimelineEditor({
                     {/* Duration */}
                     {editingField?.id === stage.id && editingField.field === 'duration' ? (
                       <div className="flex flex-col gap-1 mt-2 w-full">
-                        <input type="text" className="text-xs p-1.5 border rounded w-full dark:bg-slate-800 dark:border-slate-600 text-center text-slate-800 dark:text-slate-100" placeholder="مثال: مستمر طوال العام" value={editDuration} onChange={e => setEditDuration(e.target.value)} onKeyDown={e => e.key === 'Enter' && handleSaveInline(stage)} />
-                        <button onClick={() => handleSaveInline(stage)} className="text-[10px] bg-amber-500 text-white py-1 rounded">حفظ المدة</button>
+                        <input type="text" className="text-caption p-1.5 border rounded w-full dark:bg-slate-800 dark:border-slate-600 text-center text-slate-800 dark:text-slate-100" placeholder="مثال: مستمر طوال العام" value={editDuration} onChange={e => setEditDuration(e.target.value)} onKeyDown={e => e.key === 'Enter' && handleSaveInline(stage)} />
+                        <button onClick={() => handleSaveInline(stage)} className="text-caption bg-amber-500 text-white py-1 rounded">حفظ المدة</button>
                       </div>
                     ) : (
                       <div 
                         onClick={() => handleStartInlineEdit(stage, 'duration')}
-                        className="inline-flex items-center gap-1 bg-slate-100 dark:bg-slate-800/80 text-slate-600 dark:text-slate-300 text-[10px] px-2 py-1 rounded-md mt-2 font-medium border border-slate-200 dark:border-slate-700/50 cursor-pointer hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors w-full justify-center"
+                        className="inline-flex items-center gap-1 bg-slate-100 dark:bg-slate-800/80 text-slate-600 dark:text-slate-300 text-caption px-2 py-1 rounded-md mt-2 font-medium border border-slate-200 dark:border-slate-700/50 cursor-pointer hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors w-full justify-center"
                         title="انقر لتعديل المدة"
                       >
                         <Calendar className="w-3 h-3" />
@@ -445,7 +445,7 @@ export default function InteractiveTimelineEditor({
                       </div>
                     )}
 
-                    {isCurrent && <span className="block mt-2 text-[10px] font-bold bg-amber-500 text-white px-3 py-0.5 rounded-full">النشاط الحالي</span>}
+                    {isCurrent && <span className="block mt-2 text-caption font-semibold bg-amber-500 text-white px-3 py-0.5 rounded-full">النشاط الحالي</span>}
 
                     {stepCallbacks && (
                       <StageStepsPanel
@@ -468,7 +468,7 @@ export default function InteractiveTimelineEditor({
                 <div className="flex flex-col items-center w-full p-3 rounded-xl border-2 border-amber-500/50 border-dashed bg-amber-500/5 mt-10">
                   <input 
                     autoFocus
-                    className="w-full text-center text-sm font-bold bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 rounded-md px-2 py-1 outline-none mb-2 focus:border-amber-500 focus:ring-1 focus:ring-amber-500"
+                    className="w-full text-center text-caption font-semibold bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 rounded-md px-2 py-1 outline-none mb-2 focus:border-amber-500 focus:ring-1 focus:ring-amber-500"
                     placeholder="اسم النشاط المستمر..."
                     value={newContinuousName}
                     onChange={e => setNewContinuousName(e.target.value)}
@@ -484,7 +484,7 @@ export default function InteractiveTimelineEditor({
             
             {continuousStages.length === 0 && !isAddingContinuous && (
               <div className="flex items-center justify-center w-full py-4">
-                <p className="text-xs text-slate-400">لا توجد أنشطة مستمرة.</p>
+                <p className="text-caption text-slate-400">لا توجد أنشطة مستمرة.</p>
               </div>
             )}
           </div>
@@ -500,9 +500,9 @@ closeOnBackdrop={false}
 >
 <div className="space-y-6">
               <div>
-                <label className="block text-xs font-bold text-slate-500 mb-1">تغيير الاسم</label>
+                <label className="block text-caption font-semibold text-slate-500 mb-1">تغيير الاسم</label>
                 <input 
-                  className="w-full border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-100 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary/50 outline-none"
+                  className="w-full border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-100 rounded-lg px-3 py-2 text-caption focus:ring-2 focus:ring-primary/50 outline-none"
                   value={modalEditName}
                   onChange={e => setModalEditName(e.target.value)}
                   onBlur={() => {
@@ -525,7 +525,7 @@ closeOnBackdrop={false}
                   className={`flex flex-col items-center justify-center gap-2 p-3 rounded-xl border transition-colors ${selectedStage.isActive ? 'bg-emerald-50 dark:bg-emerald-900/20 border-emerald-200 text-emerald-700 dark:text-emerald-400' : 'bg-slate-50 border-slate-200 text-slate-500'}`}
                 >
                   {selectedStage.isActive ? <Eye className="w-6 h-6" /> : <EyeOff className="w-6 h-6" />}
-                  <span className="text-sm font-bold">{selectedStage.isActive ? 'المرحلة مفعلة' : 'المرحلة معطلة'}</span>
+                  <span className="text-caption font-semibold">{selectedStage.isActive ? 'المرحلة مفعلة' : 'المرحلة معطلة'}</span>
                 </button>
 
                 {!selectedStage.isContinuous && (
@@ -538,7 +538,7 @@ closeOnBackdrop={false}
                     className={`flex flex-col items-center justify-center gap-2 p-3 rounded-xl border transition-colors ${selectedStage.isCurrent ? 'bg-primary/10 border-primary/30 text-primary opacity-50 cursor-not-allowed' : 'bg-slate-50 hover:bg-slate-100 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300'}`}
                   >
                     <CheckCircleIcon />
-                    <span className="text-sm font-bold">تعيين كحالية</span>
+                    <span className="text-caption font-semibold">تعيين كحالية</span>
                   </button>
                 )}
               </div>
@@ -551,7 +551,7 @@ closeOnBackdrop={false}
                   onChange={e => onUpdate(selectedStage.id, { isContinuous: e.target.checked })}
                   className="w-5 h-5 rounded border-amber-300 text-amber-600 focus:ring-amber-500"
                 />
-                <label htmlFor="modal-continuous" className="text-sm font-medium text-amber-800 dark:text-amber-500 cursor-pointer">
+                <label htmlFor="modal-continuous" className="text-caption font-medium text-amber-800 dark:text-amber-500 cursor-pointer">
                   تحويل إلى نشاط مستمر (لا يعتمد على التسلسل)
                 </label>
               </div>
@@ -564,7 +564,7 @@ closeOnBackdrop={false}
                   onChange={e => onUpdate(selectedStage.id, { isComingSoon: e.target.checked })}
                   className="w-5 h-5 rounded border-orange-300 text-orange-600 focus:ring-orange-500 cursor-pointer"
                 />
-                <label htmlFor="modal-coming-soon" className="text-sm font-bold text-orange-700 dark:text-orange-400 cursor-pointer">
+                <label htmlFor="modal-coming-soon" className="text-caption font-semibold text-orange-700 dark:text-orange-400 cursor-pointer">
                   تعيين هذه المرحلة كـ "قريباً" (تظهر باللون البرتقالي للجمعية)
                 </label>
               </div>
@@ -574,7 +574,7 @@ closeOnBackdrop={false}
                   onDelete(selectedStage.id);
                   setSelectedStageId(null);
                 }}
-                className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-red-50 hover:bg-red-100 dark:bg-red-900/20 text-red-600 rounded-lg font-bold transition-colors border border-red-100 dark:border-red-900/50"
+                className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-red-50 hover:bg-red-100 dark:bg-red-900/20 text-red-600 rounded-lg font-semibold transition-colors border border-red-100 dark:border-red-900/50"
               >
                 <Trash2 className="w-5 h-5" /> حذف المرحلة
               </button>

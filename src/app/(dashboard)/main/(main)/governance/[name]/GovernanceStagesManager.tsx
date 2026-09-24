@@ -202,7 +202,7 @@ export default function GovernanceStagesManager({
           <div className="p-0.5 text-slate-400 hover:text-slate-600 transition-colors">
             {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
           </div>
-          <h3 className="text-sm font-bold text-slate-800 dark:text-slate-100 flex items-center gap-1.5">
+          <h3 className="text-caption font-semibold text-slate-800 dark:text-slate-100 flex items-center gap-1.5">
             <Sparkles className="w-4 h-4 text-primary" />
             خدمة: {timelineName}
           </h3>
@@ -218,7 +218,7 @@ export default function GovernanceStagesManager({
         </div>
         <button
           onClick={(e) => { e.stopPropagation(); setIsAdding(true); expandPanel(); }}
-          className="flex items-center justify-center gap-1.5 bg-primary/10 hover:bg-primary/20 text-primary px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors"
+          className="flex items-center justify-center gap-1.5 bg-primary/10 hover:bg-primary/20 text-primary px-3 py-1.5 rounded-lg text-caption font-semibold transition-colors"
           disabled={isPending}
         >
           <Plus className="w-3.5 h-3.5" />
@@ -229,19 +229,19 @@ export default function GovernanceStagesManager({
         <div className="flex flex-col">
           {isEditingConfig && (
             <div className="p-3 border-b border-slate-100 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/30">
-              <h4 className="font-bold text-xs mb-3 text-slate-700 dark:text-slate-300">إعدادات المخطط الزمني</h4>
+              <h4 className="font-semibold text-caption mb-3 text-slate-700 dark:text-slate-300">إعدادات المخطط الزمني</h4>
               <div className="flex flex-col sm:flex-row gap-4 mb-4">
                 <div className="flex-1">
-                  <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-1">اسم المخطط</label>
+                  <label className="block text-caption font-semibold text-slate-500 dark:text-slate-400 mb-1">اسم المخطط</label>
               <input 
                 type="text" 
                 value={configName} 
                 onChange={e => setConfigName(e.target.value)} 
-                className="w-full border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-emerald-500/50 outline-none"
+                className="w-full border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 rounded-lg px-3 py-2 text-caption focus:ring-2 focus:ring-emerald-500/50 outline-none"
               />
             </div>
             <div className="flex-1">
-              <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-1">القسم التابع له</label>
+              <label className="block text-caption font-semibold text-slate-500 dark:text-slate-400 mb-1">القسم التابع له</label>
               <Select
                 variant="soft"
                 value={configDept}
@@ -260,10 +260,10 @@ export default function GovernanceStagesManager({
             </div>
           </div>
           <div className="flex gap-2">
-            <button onClick={handleConfigUpdate} className="flex items-center gap-1.5 px-4 py-2 text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg text-sm font-bold" disabled={isPending}>
+            <button onClick={handleConfigUpdate} className="flex items-center gap-1.5 px-4 py-2 text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg text-caption font-semibold" disabled={isPending}>
               {isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />} حفظ الإعدادات
             </button>
-            <button onClick={() => setIsEditingConfig(false)} className="flex items-center gap-1.5 px-4 py-2 text-slate-600 bg-slate-200 hover:bg-slate-300 dark:bg-slate-700 dark:hover:bg-slate-600 dark:text-slate-300 rounded-lg text-sm font-bold" disabled={isPending}>
+            <button onClick={() => setIsEditingConfig(false)} className="flex items-center gap-1.5 px-4 py-2 text-slate-600 bg-slate-200 hover:bg-slate-300 dark:bg-slate-700 dark:hover:bg-slate-600 dark:text-slate-300 rounded-lg text-caption font-semibold" disabled={isPending}>
               إلغاء
             </button>
           </div>

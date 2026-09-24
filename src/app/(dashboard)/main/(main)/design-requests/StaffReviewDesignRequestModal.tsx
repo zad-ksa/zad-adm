@@ -143,7 +143,7 @@ footer={
                   setMode(key);
                   setError(null);
                 }}
-                className={`flex-1 h-9 rounded-lg font-bold flex items-center justify-center gap-1.5 transition-all ${
+                className={`flex-1 h-9 rounded-lg font-semibold flex items-center justify-center gap-1.5 transition-all ${
                   mode === key
                     ? key === "approve"
                       ? "bg-white dark:bg-[#222] text-primary dark:text-teal-300 shadow-sm border border-slate-200/50 dark:border-slate-700/50"
@@ -160,7 +160,7 @@ footer={
 
           {error && (
             <div
-              className="flex items-start gap-2 px-4 py-3 rounded-xl bg-rose-500/[0.08] text-rose-600 dark:text-rose-400 font-bold"
+              className="flex items-start gap-2 px-4 py-3 rounded-xl bg-rose-500/[0.08] text-rose-600 dark:text-rose-400 font-semibold"
               style={{ fontSize: "var(--dr-fs-meta)" }}
             >
               <AlertTriangle className="w-4 h-4 shrink-0 mt-px" />
@@ -172,7 +172,7 @@ footer={
             <>
               <div>
                 <label
-                  className="block font-bold text-slate-500 dark:text-slate-400 mb-2"
+                  className="block font-semibold text-slate-500 dark:text-slate-400 mb-2"
                   style={{ fontSize: "var(--dr-fs-meta)" }}
                 >
                   عدد أيام العمل
@@ -202,7 +202,7 @@ footer={
           ) : (
             <div>
               <label
-                className="block font-bold text-slate-500 dark:text-slate-400 mb-2"
+                className="block font-semibold text-slate-500 dark:text-slate-400 mb-2"
                 style={{ fontSize: "var(--dr-fs-meta)" }}
               >
                 ملاحظات الإعادة

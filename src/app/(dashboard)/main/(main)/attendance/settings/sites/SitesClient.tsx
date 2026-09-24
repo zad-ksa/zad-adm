@@ -83,15 +83,15 @@ function ScaleView({ radius, accuracy }: { radius: number; accuracy: number | nu
         <circle cx="70" cy="70" r="3" className="fill-primary" />
       </svg>
 
-      <div className="text-[11px] space-y-1.5 min-w-0">
+      <div className="text-caption space-y-1.5 min-w-0">
         <p className="flex items-center gap-1.5 text-slate-600 dark:text-slate-300">
           <span className="w-2.5 h-2.5 rounded-full bg-primary/30 border border-primary" />
-          النطاق المقبول · <span className="tabular-nums font-bold">{metres(radius)}</span>
+          النطاق المقبول · <span className="tabular-nums font-semibold">{metres(radius)}</span>
         </p>
         {accuracy !== null && (
           <p className="flex items-center gap-1.5 text-slate-500 dark:text-slate-400">
             <span className="w-2.5 h-2.5 rounded-full border border-dashed border-slate-400" />
-            دقة القراءة · <span className="tabular-nums font-bold">±{metres(accuracy)}</span>
+            دقة القراءة · <span className="tabular-nums font-semibold">±{metres(accuracy)}</span>
           </p>
         )}
         {tight && (
@@ -198,17 +198,17 @@ export default function SitesClient({ sites }: { sites: Site[] }) {
       <Feedback error={error} notice={notice} />
 
       {geoError && (
-        <div className="flex items-start gap-2.5 rounded-xl bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400 px-4 py-3 text-[13px] leading-relaxed">
+        <div className="flex items-start gap-2.5 rounded-xl bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400 px-4 py-3 text-body leading-relaxed">
           <TriangleAlert className="w-4 h-4 shrink-0 mt-0.5" />
           <span>{geoError}</span>
         </div>
       )}
 
       <div className="flex items-center justify-between gap-3 flex-wrap">
-        <h3 className="text-[13px] font-black text-slate-900 dark:text-slate-100 flex items-center gap-2">
+        <h3 className="text-body font-semibold text-slate-900 dark:text-slate-100 flex items-center gap-2">
           <MapPin className="w-4 h-4 text-slate-400" />
           المواقع المعتمدة
-          <span className="text-slate-400 font-bold tabular-nums">{sites.length}</span>
+          <span className="text-slate-400 font-semibold tabular-nums">{sites.length}</span>
         </h3>
         <div className="flex items-center gap-2">
           {sites.length > 0 && (
@@ -230,11 +230,11 @@ export default function SitesClient({ sites }: { sites: Site[] }) {
       </div>
 
       {here && (
-        <p className="text-[11px] text-slate-400 dark:text-slate-500 leading-relaxed">
+        <p className="text-caption text-slate-400 dark:text-slate-500 leading-relaxed">
           قراءة من موقعك الحالي بدقة ±{metres(here.accuracy)} — المسافات أدناه محسوبة منها للفحص
           فقط، والتحضير الفعلي يُقاس على الخادم بالقاعدة نفسها.
           {here.accuracy > ACCURACY_RETRY_THRESHOLD_M && (
-            <span className="text-amber-600 dark:text-amber-400 font-bold">
+            <span className="text-amber-600 dark:text-amber-400 font-semibold">
               {" "}
               الدقة أضعف من حدّ القبول (±{ACCURACY_RETRY_THRESHOLD_M} م)، وتحضير بهذه القراءة كان
               سيُطلب إعادته.
@@ -247,7 +247,7 @@ export default function SitesClient({ sites }: { sites: Site[] }) {
       {open && (
         <div className="rounded-xl border border-primary/30 dark:border-teal-500/30 bg-primary/[0.03] dark:bg-teal-500/5 p-5 space-y-4">
           <div className="flex items-center justify-between gap-3">
-            <p className="text-[13px] font-black text-slate-900 dark:text-slate-100">
+            <p className="text-body font-semibold text-slate-900 dark:text-slate-100">
               {form.id ? "تعديل الموقع" : "موقع جديد"}
             </p>
             <button
@@ -283,19 +283,19 @@ export default function SitesClient({ sites }: { sites: Site[] }) {
                 </>
               )}
             </button>
-            <p className="mt-2 text-[11px] text-slate-400 dark:text-slate-500 leading-relaxed">
+            <p className="mt-2 text-caption text-slate-400 dark:text-slate-500 leading-relaxed">
               قف عند مدخل المقر واضغط الزر. القراءة من داخل مبنى خرساني تكون أضعف دقة — إن ظهرت
               الدقة ضعيفة فأعدها من الخارج.
             </p>
 
             {fixAccuracy !== null && (
-              <p className={`mt-2 text-[12px] font-bold ${accuracyTone(fixAccuracy).cls}`}>
+              <p className={`mt-2 text-meta font-semibold ${accuracyTone(fixAccuracy).cls}`}>
                 {accuracyTone(fixAccuracy).label} · ±{metres(fixAccuracy)}
               </p>
             )}
 
             <div className="grid sm:grid-cols-2 gap-2 mt-3">
-              <label className="text-[11px] text-slate-500 dark:text-slate-400">
+              <label className="text-caption text-slate-500 dark:text-slate-400">
                 خط العرض
                 <input
                   className={`${INPUT} mt-1`}
@@ -305,7 +305,7 @@ export default function SitesClient({ sites }: { sites: Site[] }) {
                   onChange={(e) => setForm({ ...form, latitude: e.target.value })}
                 />
               </label>
-              <label className="text-[11px] text-slate-500 dark:text-slate-400">
+              <label className="text-caption text-slate-500 dark:text-slate-400">
                 خط الطول
                 <input
                   className={`${INPUT} mt-1`}
@@ -316,7 +316,7 @@ export default function SitesClient({ sites }: { sites: Site[] }) {
                 />
               </label>
             </div>
-            <p className="mt-2 text-[11px] text-slate-400 dark:text-slate-500">
+            <p className="mt-2 text-caption text-slate-400 dark:text-slate-500">
               أو انسخهما من خرائط جوجل: انقر على الموقع بزر يمين واختر الرقمين.
             </p>
           </div>
@@ -324,10 +324,10 @@ export default function SitesClient({ sites }: { sites: Site[] }) {
           {/* Radius */}
           <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 space-y-3">
             <div className="flex items-center justify-between gap-3 flex-wrap">
-              <p className="text-[12px] font-bold text-slate-700 dark:text-slate-200">
+              <p className="text-meta font-semibold text-slate-700 dark:text-slate-200">
                 نطاق القبول
               </p>
-              <span className="text-[13px] font-black text-primary tabular-nums">
+              <span className="text-body font-semibold text-primary tabular-nums">
                 {metres(radius)}
               </span>
             </div>
@@ -338,7 +338,7 @@ export default function SitesClient({ sites }: { sites: Site[] }) {
                   key={p.m}
                   type="button"
                   onClick={() => setForm({ ...form, radiusMeters: String(p.m) })}
-                  className={`px-2.5 py-1.5 rounded-lg text-[11px] font-bold transition-colors ${
+                  className={`px-2.5 py-1.5 rounded-lg text-caption font-semibold transition-colors ${
                     radius === p.m
                       ? "bg-primary text-white"
                       : "bg-slate-50 dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700"
@@ -378,10 +378,10 @@ export default function SitesClient({ sites }: { sites: Site[] }) {
       {sites.length === 0 ? (
         <div className={`${CARD} text-center py-10`}>
           <MapPin className="w-8 h-8 text-slate-300 dark:text-slate-600 mx-auto" />
-          <p className="mt-3 text-[13px] font-bold text-slate-700 dark:text-slate-200">
+          <p className="mt-3 text-body font-semibold text-slate-700 dark:text-slate-200">
             لا مواقع بعد
           </p>
-          <p className="mt-1 text-[12px] text-slate-500 dark:text-slate-400 leading-relaxed max-w-sm mx-auto">
+          <p className="mt-1 text-meta text-slate-500 dark:text-slate-400 leading-relaxed max-w-sm mx-auto">
             بدون موقع واحد على الأقل لا يستطيع أحد تسجيل حضوره إلا من سُمح له بالعمل عن بُعد.
           </p>
         </div>
@@ -401,11 +401,11 @@ export default function SitesClient({ sites }: { sites: Site[] }) {
               <div key={s.id} className={`${CARD} group/site`}>
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
-                    <p className="text-[14px] font-black text-slate-900 dark:text-slate-100 truncate">
+                    <p className="text-body font-semibold text-slate-900 dark:text-slate-100 truncate">
                       {s.name}
                     </p>
                     <p
-                      className="mt-1 text-[11px] text-slate-400 dark:text-slate-500 tabular-nums"
+                      className="mt-1 text-caption text-slate-400 dark:text-slate-500 tabular-nums"
                       dir="ltr"
                     >
                       {coord(s.latitude)}, {coord(s.longitude)}
@@ -414,7 +414,7 @@ export default function SitesClient({ sites }: { sites: Site[] }) {
 
                   <div className="flex items-center gap-1 shrink-0 opacity-0 group-hover/site:opacity-100 focus-within:opacity-100 transition-opacity">
                     <button
-                      className="h-7 w-7 rounded-lg text-slate-400 hover:text-primary hover:bg-primary/10 transition-colors inline-flex items-center justify-center"
+                      className={btn.icon}
                       title="تعديل"
                       disabled={busy}
                       onClick={() => startEdit(s)}
@@ -422,7 +422,7 @@ export default function SitesClient({ sites }: { sites: Site[] }) {
                       <Pencil className="w-3.5 h-3.5" />
                     </button>
                     <button
-                      className="h-7 w-7 rounded-lg text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-900/20 transition-colors inline-flex items-center justify-center"
+                      className={btn.iconDanger}
                       title="تعطيل الموقع"
                       disabled={busy}
                       onClick={async () => {
@@ -440,13 +440,13 @@ export default function SitesClient({ sites }: { sites: Site[] }) {
                 </div>
 
                 <div className="mt-3 flex items-center gap-2 flex-wrap">
-                  <span className="inline-flex items-center gap-1.5 text-[11px] font-bold px-2 py-1 rounded-lg bg-primary/10 text-primary dark:bg-teal-500/15 dark:text-teal-300 tabular-nums">
+                  <span className="inline-flex items-center gap-1.5 text-caption font-semibold px-2 py-1 rounded-lg bg-primary/10 text-primary dark:bg-teal-500/15 dark:text-teal-300 tabular-nums">
                     <Radar className="w-3 h-3" /> نطاق {metres(s.radiusMeters)}
                   </span>
 
                   {distance !== null && (
                     <span
-                      className={`inline-flex items-center gap-1.5 text-[11px] font-bold px-2 py-1 rounded-lg tabular-nums ${
+                      className={`inline-flex items-center gap-1.5 text-caption font-semibold px-2 py-1 rounded-lg tabular-nums ${
                         inside
                           ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300"
                           : "bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400"

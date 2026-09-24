@@ -35,7 +35,7 @@ export default function AttendanceTabs({
           <Link
             key={tab.href}
             href={tab.href}
-            className={`shrink-0 h-9 px-4 rounded-xl text-[12px] font-bold inline-flex items-center gap-1.5 transition-colors ${
+            className={`shrink-0 h-9 px-4 rounded-xl text-meta font-semibold inline-flex items-center gap-1.5 transition-colors ${
               active
                 ? "bg-primary text-white"
                 : "bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"

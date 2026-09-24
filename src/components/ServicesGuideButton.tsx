@@ -95,7 +95,7 @@ closeOnBackdrop={false}
                       }`}
                     >
                       <div className="flex items-center gap-4">
-                        <div className={`w-8 h-8 rounded-lg flex items-center justify-center font-bold text-sm shrink-0 border ${
+                        <div className={`w-8 h-8 rounded-lg flex items-center justify-center font-semibold text-caption shrink-0 border ${
                           isExpanded 
                             ? 'bg-slate-900 text-white border-slate-900 dark:bg-white dark:text-black dark:border-white' 
                             : 'bg-white dark:bg-[#111] border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300'
@@ -123,7 +123,7 @@ closeOnBackdrop={false}
                                 <div className="p-6 flex flex-col h-full z-10">
                                   <div className="flex items-start justify-between gap-3 mb-4">
                                     <div className="w-8 h-8 rounded-full border bg-slate-50 dark:bg-[#1A1A1A] border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 flex items-center justify-center shrink-0">
-                                      <span className="text-xs font-bold">{stageIdx + 1}</span>
+                                      <span className="text-caption font-semibold">{stageIdx + 1}</span>
                                     </div>
                                   </div>
                                   
@@ -132,7 +132,7 @@ closeOnBackdrop={false}
                                   </h4>
                                   
                                   {stage.description && (
-                                    <p className="text-[13px] font-medium text-slate-500 dark:text-slate-400 leading-relaxed mb-6 flex-1">
+                                    <p className="text-body font-medium text-slate-500 dark:text-slate-400 leading-relaxed mb-6 flex-1">
                                       {stage.description}
                                     </p>
                                   )}
@@ -140,7 +140,7 @@ closeOnBackdrop={false}
                                   {/* Steps inside Bento Card */}
                                   {stage.steps && stage.steps.length > 0 && (
                                     <div className="mt-auto pt-4 border-t border-slate-100 dark:border-slate-800/80">
-                                      <h5 className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest mb-3">
+                                      <h5 className="text-caption font-semibold text-slate-400 uppercase tracking-widest mb-3">
                                         خطوات المرحلة
                                       </h5>
                                       <ul className="space-y-2.5">
@@ -151,7 +151,7 @@ closeOnBackdrop={false}
                                               <div className="w-4 h-4 rounded-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center shrink-0 mt-0.5">
                                                 <div className="w-1.5 h-1.5 rounded-full bg-slate-300 dark:bg-slate-500" />
                                               </div>
-                                              <span className="text-[13px] font-medium text-slate-600 dark:text-slate-300 leading-snug">
+                                              <span className="text-body font-medium text-slate-600 dark:text-slate-300 leading-snug">
                                                 {step.name}
                                               </span>
                                             </li>
@@ -167,7 +167,7 @@ closeOnBackdrop={false}
                         
                         {continuousStages.length > 0 && (
                           <div className="pt-6 mt-6 border-t border-slate-200 dark:border-slate-800">
-                            <h3 className="text-[11px] font-semibold text-emerald-600 dark:text-emerald-500 uppercase tracking-widest mb-4 px-1 flex items-center gap-2">
+                            <h3 className="text-caption font-semibold text-emerald-600 dark:text-emerald-500 uppercase tracking-widest mb-4 px-1 flex items-center gap-2">
                               <span className="relative flex h-2 w-2 shrink-0">
                                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-500 opacity-75"></span>
                                 <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
@@ -190,7 +190,7 @@ closeOnBackdrop={false}
                                       <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500"></span>
                                     </span>
                                   )}
-                                  <span className={`text-[11px] font-bold ${stage.isActive ? 'text-emerald-700 dark:text-emerald-400' : 'text-slate-600 dark:text-slate-400'}`}>
+                                  <span className={`text-caption font-semibold ${stage.isActive ? 'text-emerald-700 dark:text-emerald-400' : 'text-slate-600 dark:text-slate-400'}`}>
                                     {stage.name}
                                   </span>
                                 </div>
@@ -213,7 +213,7 @@ closeOnBackdrop={false}
     <>
       <button
         onClick={handleOpen}
-        className="flex items-center gap-2 px-4 py-2 text-sm font-semibold bg-white dark:bg-[#111] hover:bg-slate-50 dark:hover:bg-[#1A1A1A] text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-800 rounded-lg transition-all shadow-sm dark:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)]"
+        className="flex items-center gap-2 px-4 py-2 text-caption font-semibold bg-white dark:bg-[#111] hover:bg-slate-50 dark:hover:bg-[#1A1A1A] text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-800 rounded-lg transition-all shadow-sm dark:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)]"
       >
         <BookOpen className="w-4 h-4" />
         دليل الخدمات

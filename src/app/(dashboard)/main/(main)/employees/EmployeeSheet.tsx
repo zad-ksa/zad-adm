@@ -433,8 +433,8 @@ export function EmployeeSheet({
               {bundles.length === 0 ? (
                 <div className="rounded-lg border border-dashed border-slate-300 px-4 py-8 text-center dark:border-slate-700">
                   <Layers className="mx-auto size-5 text-slate-400" />
-                  <p className="mt-2 text-[13.5px] font-medium">لا توجد مجموعات بعد</p>
-                  <p className="mt-1 text-[12.5px] text-slate-500">
+                  <p className="mt-2 text-body font-medium">لا توجد مجموعات بعد</p>
+                  <p className="mt-1 text-meta text-slate-500">
                     {canManagePermissions
                       ? "أنشئ مجموعات من صفحة إدارة الصلاحيات لتظهر هنا."
                       : "تُنشأ المجموعات من صفحة إدارة الصلاحيات."}
@@ -471,16 +471,16 @@ export function EmployeeSheet({
                             <CheckMark state={full ? "on" : picked > 0 ? "mixed" : "off"} locked={viaRole} />
                             <span className="min-w-0">
                               <span className="flex items-center gap-2">
-                                <span className="truncate text-[13.5px] font-medium text-slate-900 dark:text-slate-100">{b.name}</span>
+                                <span className="truncate text-body font-medium text-slate-900 dark:text-slate-100">{b.name}</span>
                                 {viaRole && <Badge tone="gold">من المسمى</Badge>}
                                 {!viaRole && direct && <Badge tone="brand">كاملة</Badge>}
                               </span>
-                              <span className="block truncate text-[12.5px] text-slate-500 dark:text-slate-400">
+                              <span className="block truncate text-meta text-slate-500 dark:text-slate-400">
                                 {b.description || `${b.permissions.length} صلاحية · ${b.services.length} خدمة`}
                               </span>
                             </span>
                           </button>
-                          <span className={cx(MONO, "shrink-0 text-[12px] text-slate-500")}>
+                          <span className={cx(MONO, "shrink-0 text-meta text-slate-500")}>
                             {full ? total : picked}/{total}
                           </span>
                           <button
@@ -496,7 +496,7 @@ export function EmployeeSheet({
 
                         {open && (
                           <div className="space-y-3 border-t border-slate-100 bg-slate-50/60 px-3 py-3 dark:border-slate-800 dark:bg-slate-950/30">
-                            <p className="flex items-start gap-1.5 px-2 text-[12px] leading-5 text-slate-500 dark:text-slate-400">
+                            <p className="flex items-start gap-1.5 px-2 text-meta leading-5 text-slate-500 dark:text-slate-400">
                               <Info className="mt-0.5 size-3.5 shrink-0" />
                               {viaRole
                                 ? `مرتبطة بالمسمى «${currentRole?.displayName ?? role}»، وتُدار من صفحة المسميات.`
@@ -506,7 +506,7 @@ export function EmployeeSheet({
                             </p>
                             {b.permissions.length > 0 && (
                               <div>
-                                <p className="px-2 pb-1 text-[11.5px] font-medium text-slate-400">الصلاحيات</p>
+                                <p className="px-2 pb-1 text-caption font-medium text-slate-400">الصلاحيات</p>
                                 <div className="grid sm:grid-cols-2">
                                   {b.permissions.map((p) => (
                                     <OptionRow
@@ -522,7 +522,7 @@ export function EmployeeSheet({
                             )}
                             {b.services.length > 0 && (
                               <div>
-                                <p className="px-2 pb-1 text-[11.5px] font-medium text-slate-400">الخدمات</p>
+                                <p className="px-2 pb-1 text-caption font-medium text-slate-400">الخدمات</p>
                                 <div className="grid sm:grid-cols-2">
                                   {b.services.map((s) => (
                                     <OptionRow
@@ -536,7 +536,7 @@ export function EmployeeSheet({
                                 </div>
                               </div>
                             )}
-                            {total === 0 && <p className="px-2 text-[12.5px] text-slate-500">المجموعة فارغة.</p>}
+                            {total === 0 && <p className="px-2 text-meta text-slate-500">المجموعة فارغة.</p>}
                           </div>
                         )}
                       </div>
@@ -553,18 +553,18 @@ export function EmployeeSheet({
               />
               <SearchField value={permQuery} onChange={setPermQuery} placeholder="ابحث في الصلاحيات" label="بحث في الصلاحيات" />
 
-              {groups.length === 0 && <p className="py-6 text-center text-[13px] text-slate-500">لا صلاحية تطابق «{q}»</p>}
+              {groups.length === 0 && <p className="py-6 text-center text-body text-slate-500">لا صلاحية تطابق «{q}»</p>}
 
               {groups.map((g) => {
                 const sel = groupSelection(g.items);
                 return (
                   <div key={g.title} className="overflow-hidden rounded-lg border border-slate-200 dark:border-slate-800">
                     <div className="flex items-center justify-between gap-3 border-b border-slate-100 bg-slate-50/70 px-3 py-2 dark:border-slate-800 dark:bg-slate-950/30">
-                      <span className="text-[12.5px] font-medium text-slate-700 dark:text-slate-300">{g.title}</span>
+                      <span className="text-meta font-medium text-slate-700 dark:text-slate-300">{g.title}</span>
                       {sel.free.length > 0 ? (
                         <SelectAll count={sel.onCount} total={g.items.length} allOn={sel.allOn} onClick={sel.toggleAll} />
                       ) : (
-                        <span className={cx(MONO, "text-[12px] text-slate-500")}>
+                        <span className={cx(MONO, "text-meta text-slate-500")}>
                           {sel.onCount}/{g.items.length}
                         </span>
                       )}
@@ -630,7 +630,7 @@ export function EmployeeSheet({
                 }
               />
               {allServiceNames.length === 0 ? (
-                <p className="rounded-lg border border-dashed border-slate-300 px-4 py-6 text-center text-[13px] text-slate-500 dark:border-slate-700">
+                <p className="rounded-lg border border-dashed border-slate-300 px-4 py-6 text-center text-body text-slate-500 dark:border-slate-700">
                   لا توجد خدمات بعد.
                 </p>
               ) : (

@@ -58,8 +58,8 @@ export function Sheet({
           <div className="flex min-w-0 items-center gap-3">
             {leading}
             <div className="min-w-0">
-              <h2 className="truncate text-[17px] font-semibold tracking-tight">{title}</h2>
-              {subtitle && <p className="truncate text-[13px] text-slate-500 dark:text-slate-400">{subtitle}</p>}
+              <h2 className="truncate text-section font-semibold tracking-tight">{title}</h2>
+              {subtitle && <p className="truncate text-body text-slate-500 dark:text-slate-400">{subtitle}</p>}
             </div>
           </div>
           <div className="flex shrink-0 items-center gap-1">
@@ -84,14 +84,14 @@ export function Sheet({
 /** يسار التذييل: الخطأ إن وُجد، وإلا ملخّص ما سيُحفظ. */
 export function FooterStatus({ error, children }: { error: string | null; children: ReactNode }) {
   return error ? (
-    <p role="alert" className="flex min-w-0 items-center gap-1.5 text-[13px] font-medium text-red-600 dark:text-red-400">
+    <p role="alert" className="flex min-w-0 items-center gap-1.5 text-body font-medium text-red-600 dark:text-red-400">
       <TriangleAlert className="size-4 shrink-0" />
       <span className="truncate" title={error}>
         {error}
       </span>
     </p>
   ) : (
-    <p className="min-w-0 truncate text-[12.5px] text-slate-500 dark:text-slate-400">{children}</p>
+    <p className="min-w-0 truncate text-meta text-slate-500 dark:text-slate-400">{children}</p>
   );
 }
 
@@ -195,7 +195,7 @@ export function MenuItem({
       onClick={onClick}
       disabled={disabled}
       className={cx(
-        "flex h-8 w-full items-center gap-2.5 rounded-md px-2 text-right text-[13px] transition-colors outline-none",
+        "flex h-8 w-full items-center gap-2.5 rounded-md px-2 text-right text-body transition-colors outline-none",
         "disabled:pointer-events-none disabled:opacity-40",
         tone === "danger"
           ? "text-red-600 hover:bg-red-50 focus-visible:bg-red-50 dark:text-red-400 dark:hover:bg-red-500/10"

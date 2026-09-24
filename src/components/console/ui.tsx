@@ -104,7 +104,7 @@ export function Badge({ tone = "neutral", children }: { tone?: keyof typeof BADG
   return (
     <span
       className={cx(
-        "inline-flex h-5 items-center gap-1 whitespace-nowrap rounded-full border px-2 text-[11.5px] font-medium",
+        "inline-flex h-5 items-center gap-1 whitespace-nowrap rounded-full border px-2 text-caption font-medium",
         BADGE[tone]
       )}
     >
@@ -153,7 +153,7 @@ export function AvatarStack({ names, max = 4 }: { names: string[]; max?: number 
           </span>
         ))}
       </span>
-      <span className={cx(MONO, "text-[12.5px] text-slate-500 dark:text-slate-400")}>{names.length}</span>
+      <span className={cx(MONO, "text-meta text-slate-500 dark:text-slate-400")}>{names.length}</span>
     </span>
   );
 }
@@ -178,8 +178,8 @@ export function SectionHeader({
   return (
     <div className="flex items-start justify-between gap-4">
       <div className="min-w-0 space-y-0.5">
-        <h3 className="text-[14px] font-semibold text-slate-900 dark:text-slate-100">{title}</h3>
-        {description && <p className="text-[12.5px] leading-5 text-slate-500 dark:text-slate-400">{description}</p>}
+        <h3 className="text-body font-semibold text-slate-900 dark:text-slate-100">{title}</h3>
+        {description && <p className="text-meta leading-5 text-slate-500 dark:text-slate-400">{description}</p>}
       </div>
       {action && <div className="shrink-0 pt-0.5">{action}</div>}
     </div>
@@ -189,11 +189,11 @@ export function SectionHeader({
 export function Field({ id, label, hint, children }: { id: string; label: string; hint?: string; children: ReactNode }) {
   return (
     <div className="space-y-1.5">
-      <label htmlFor={id} className="block text-[13px] font-medium text-slate-700 dark:text-slate-300">
+      <label htmlFor={id} className="block text-body font-medium text-slate-700 dark:text-slate-300">
         {label}
       </label>
       {children}
-      {hint && <p className="text-[12px] text-slate-500">{hint}</p>}
+      {hint && <p className="text-meta text-slate-500">{hint}</p>}
     </div>
   );
 }
@@ -229,13 +229,13 @@ export function OptionRow({
       <span className="min-w-0">
         <span
           className={cx(
-            "block text-[13px] leading-5",
+            "block text-body leading-5",
             checked ? "text-slate-900 dark:text-slate-100" : "text-slate-600 dark:text-slate-400"
           )}
         >
           {label}
         </span>
-        {note && <span className="block text-[11.5px] leading-4 text-slate-500">{note}</span>}
+        {note && <span className="block text-caption leading-4 text-slate-500">{note}</span>}
       </span>
     </button>
   );
@@ -244,10 +244,10 @@ export function OptionRow({
 export function SelectAll({ count, total, allOn, onClick }: { count: number; total: number; allOn: boolean; onClick: () => void }) {
   return (
     <span className="flex items-center gap-3">
-      <span className={cx(MONO, "text-[12px] text-slate-500")}>
+      <span className={cx(MONO, "text-meta text-slate-500")}>
         {count}/{total}
       </span>
-      <button type="button" onClick={onClick} className="text-[12px] font-medium text-primary hover:underline dark:text-teal-300">
+      <button type="button" onClick={onClick} className="text-meta font-medium text-primary hover:underline dark:text-teal-300">
         {allOn ? "إلغاء الكل" : "تحديد الكل"}
       </button>
     </span>
@@ -258,7 +258,7 @@ export function Note({ tone, children }: { tone: "brand" | "warn"; children: Rea
   return (
     <p
       className={cx(
-        "flex items-start gap-2 rounded-md border px-3 py-2.5 text-[12.5px] leading-5",
+        "flex items-start gap-2 rounded-md border px-3 py-2.5 text-meta leading-5",
         tone === "brand"
           ? "border-primary/15 bg-primary/[0.04] text-slate-700 dark:border-teal-400/15 dark:bg-teal-400/5 dark:text-slate-300"
           : "border-amber-200 bg-amber-50 text-amber-800 dark:border-amber-500/20 dark:bg-amber-500/10 dark:text-amber-300"
@@ -293,10 +293,10 @@ export function NameList({
       <SectionHeader
         title={title}
         description={description}
-        action={action ?? <span className={cx(MONO, "text-[12px] text-slate-500")}>{names.length}</span>}
+        action={action ?? <span className={cx(MONO, "text-meta text-slate-500")}>{names.length}</span>}
       />
       {names.length === 0 ? (
-        <p className="rounded-lg border border-dashed border-slate-300 px-4 py-5 text-center text-[13px] text-slate-500 dark:border-slate-700">
+        <p className="rounded-lg border border-dashed border-slate-300 px-4 py-5 text-center text-body text-slate-500 dark:border-slate-700">
           {empty}
         </p>
       ) : (
@@ -304,7 +304,7 @@ export function NameList({
           {names.map((n, i) => (
             <li key={`${n}-${i}`} className="flex items-center gap-2.5 rounded-md px-2 py-1.5">
               <Avatar name={n} size="sm" />
-              <span className="truncate text-[13px]">{n}</span>
+              <span className="truncate text-body">{n}</span>
             </li>
           ))}
         </ul>
@@ -425,11 +425,11 @@ export function MetricCard({
         </span>
       )}
       <div className="min-w-0">
-        <p className="truncate text-[13px] text-slate-500 dark:text-slate-400">{label}</p>
-        <p className={cx(MONO, "text-[20px] font-semibold leading-tight text-slate-900 dark:text-slate-100")}>
+        <p className="truncate text-body text-slate-500 dark:text-slate-400">{label}</p>
+        <p className={cx(MONO, "text-section font-semibold leading-tight text-slate-900 dark:text-slate-100")}>
           {value}
         </p>
-        {hint && <p className="mt-0.5 truncate text-[12px] text-slate-400 dark:text-slate-500">{hint}</p>}
+        {hint && <p className="mt-0.5 truncate text-meta text-slate-400 dark:text-slate-500">{hint}</p>}
       </div>
     </div>
   );
@@ -494,13 +494,13 @@ export function NavCard({
       {icon && (
         <span className={cx("relative flex size-10 items-center justify-center rounded-lg", METRIC_TONE[tone])}>{icon}</span>
       )}
-      <span className="relative text-[15px] font-semibold text-slate-900 dark:text-slate-100">{title}</span>
-      {description && <span className="relative text-[13px] leading-5 text-slate-500 dark:text-slate-400">{description}</span>}
+      <span className="relative text-title font-semibold text-slate-900 dark:text-slate-100">{title}</span>
+      {description && <span className="relative text-body leading-5 text-slate-500 dark:text-slate-400">{description}</span>}
       <span className="relative mt-auto flex items-center justify-between gap-2 pt-1">
         {meta ? (
           <span
             className={cx(
-              "tabular-nums text-[12.5px] font-medium",
+              "tabular-nums text-meta font-medium",
               metaWarn ? "text-amber-600 dark:text-amber-400" : "text-slate-500 dark:text-slate-400"
             )}
           >
@@ -509,7 +509,7 @@ export function NavCard({
         ) : (
           <span />
         )}
-        <span className="inline-flex items-center gap-1.5 text-[13px] font-medium text-primary dark:text-teal-300">
+        <span className="inline-flex items-center gap-1.5 text-body font-medium text-primary dark:text-teal-300">
           الدخول
           <span aria-hidden className="transition-transform motion-safe:group-hover:-translate-x-0.5">
             ←
@@ -586,14 +586,14 @@ export function RecordCard({
       )}
     >
       <div className="flex items-start justify-between gap-2">
-        <div className="min-w-0 text-[14px] font-semibold text-slate-900 dark:text-slate-100">{title}</div>
+        <div className="min-w-0 text-body font-semibold text-slate-900 dark:text-slate-100">{title}</div>
         {actions}
       </div>
       <dl className="mt-2 space-y-1">
         {fields.map((f) => (
           <div key={f.label} className="flex items-baseline justify-between gap-3">
-            <dt className="shrink-0 text-[12px] text-slate-400 dark:text-slate-500">{f.label}</dt>
-            <dd className="min-w-0 truncate text-[13px] text-slate-700 dark:text-slate-200">{f.value}</dd>
+            <dt className="shrink-0 text-meta text-slate-400 dark:text-slate-500">{f.label}</dt>
+            <dd className="min-w-0 truncate text-body text-slate-700 dark:text-slate-200">{f.value}</dd>
           </div>
         ))}
       </dl>

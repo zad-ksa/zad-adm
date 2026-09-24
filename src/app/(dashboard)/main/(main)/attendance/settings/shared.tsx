@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { AlertTriangle, Check } from "lucide-react";
+import { btn, card, cx, field } from "@/components/console/ui";
 
 /**
  * The pieces every settings screen needs.
@@ -13,14 +14,14 @@ import { AlertTriangle, Check } from "lucide-react";
  * the page it just changed.
  */
 
-export const CARD =
-  "rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5";
-export const INPUT =
-  "w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 text-[13px] focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none";
-export const BTN =
-  "h-9 px-4 rounded-xl text-[12px] font-bold text-white bg-primary hover:bg-primary/90 disabled:opacity-50 transition-colors inline-flex items-center gap-1.5";
-export const GHOST =
-  "h-9 px-3 rounded-xl text-[12px] font-bold text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors inline-flex items-center gap-1.5";
+// نسخة التحضير من البطاقة والحقل والزرّين — صارت تشير إلى العُدّة، فتتوحّد كل
+// استعمالاتها في شاشات الإعدادات دون لمس مواضعها.
+export const CARD = cx(card.static, "p-5");
+export const INPUT = field;
+/** للحقل الذي يأخذ عرض محتواه — بدل `${INPUT} w-auto` الذي يُعارض w-full في field. */
+export const INPUT_AUTO = field.replace(/\bw-full\b/, "w-auto");
+export const BTN = btn.primary;
+export const GHOST = btn.secondary;
 
 export const day = (iso: string) =>
   new Intl.DateTimeFormat("ar-SA-u-ca-gregory", { day: "numeric", month: "short", timeZone: "Asia/Riyadh" })
@@ -60,7 +61,7 @@ export function useSettingsAction() {
 export function Feedback({ error, notice }: { error: string | null; notice: string | null }) {
   if (error) {
     return (
-      <div className="flex items-start gap-2.5 rounded-xl bg-rose-50 dark:bg-rose-900/20 text-rose-600 dark:text-rose-400 px-4 py-3 text-[13px] font-bold mb-4">
+      <div className="flex items-start gap-2.5 rounded-xl bg-rose-50 dark:bg-rose-900/20 text-rose-600 dark:text-rose-400 px-4 py-3 text-body font-semibold mb-4">
         <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
         <span>{error}</span>
       </div>
@@ -68,7 +69,7 @@ export function Feedback({ error, notice }: { error: string | null; notice: stri
   }
   if (notice) {
     return (
-      <div className="flex items-start gap-2.5 rounded-xl bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400 px-4 py-3 text-[13px] font-bold mb-4">
+      <div className="flex items-start gap-2.5 rounded-xl bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400 px-4 py-3 text-body font-semibold mb-4">
         <Check className="w-4 h-4 shrink-0 mt-0.5" />
         <span>{notice}</span>
       </div>

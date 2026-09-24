@@ -115,7 +115,7 @@ export default function ServicesManagerClient({
           <button
             onClick={() => setIsUnifyModalOpen(true)}
             disabled={isPending}
-            className="flex items-center gap-2 bg-white hover:bg-slate-50 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 px-3.5 py-1.5 rounded-lg text-sm font-semibold transition-colors shadow-sm disabled:opacity-50"
+            className="flex items-center gap-2 bg-white hover:bg-slate-50 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 px-3.5 py-1.5 rounded-lg text-caption font-semibold transition-colors shadow-sm disabled:opacity-50"
           >
             <Layers className="w-4 h-4 text-amber-500" />
             تعميم مراحل خدمة على الجمعيات
@@ -125,7 +125,7 @@ export default function ServicesManagerClient({
           <button
             onClick={openAddService}
             disabled={isPending}
-            className="flex items-center gap-2 bg-slate-800 hover:bg-slate-700 dark:bg-slate-700 dark:hover:bg-slate-600 text-white px-3.5 py-1.5 rounded-lg text-sm font-semibold transition-colors shadow-sm disabled:opacity-50"
+            className="flex items-center gap-2 bg-slate-800 hover:bg-slate-700 dark:bg-slate-700 dark:hover:bg-slate-600 text-white px-3.5 py-1.5 rounded-lg text-caption font-semibold transition-colors shadow-sm disabled:opacity-50"
           >
             <Plus className="w-4 h-4" />
             إضافة خدمة جديدة
@@ -160,14 +160,14 @@ footer={
 >
 <div className="space-y-4">
 <div>
-                <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">اسم الخدمة</label>
+                <label className="block text-caption font-semibold text-slate-700 dark:text-slate-300 mb-2">اسم الخدمة</label>
                 <input
                   type="text"
                   required
                   value={serviceName}
                   onChange={e => { setServiceName(e.target.value); setServiceError(null); }}
                   aria-invalid={!!serviceError}
-                  className={`w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border rounded-lg focus:ring-2 outline-none transition-all dark:text-white text-sm ${
+                  className={`w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border rounded-lg focus:ring-2 outline-none transition-all dark:text-white text-caption ${
                     serviceError
                       ? "border-red-400 focus:ring-red-200 focus:border-red-400"
                       : "border-slate-200 dark:border-slate-700 focus:ring-primary focus:border-primary"
@@ -175,7 +175,7 @@ footer={
                   placeholder="مثال: خدمة الإسناد الإداري..."
                 />
                 {serviceError && (
-                  <p className="mt-2 text-xs font-bold text-red-600 dark:text-red-400 flex items-center gap-1.5">
+                  <p className="mt-2 text-caption font-semibold text-red-600 dark:text-red-400 flex items-center gap-1.5">
                     <AlertCircle className="w-3.5 h-3.5 shrink-0" />
                     {serviceError}
                   </p>
@@ -214,7 +214,7 @@ footer={
 >
 <div className="space-y-4">
 <div>
-                <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">
+                <label className="block text-caption font-semibold text-slate-700 dark:text-slate-300 mb-2">
                   الخدمة المصدر (التي ستُنسخ مراحلها):
                 </label>
                 <Select
@@ -231,8 +231,8 @@ footer={
 <div className="p-4 bg-red-50 dark:bg-red-950/20 border border-red-100 dark:border-red-900/30 rounded-xl flex gap-3">
                 <AlertCircle className="w-5 h-5 text-red-500 shrink-0 mt-0.5" />
                 <div className="space-y-1">
-                  <h4 className="text-sm font-bold text-red-800 dark:text-red-400">تنبيه هام جداً وإجراء غير قابل للتراجع</h4>
-                  <p className="text-xs text-red-700/90 dark:text-red-300/80 leading-relaxed">
+                  <h4 className="text-caption font-semibold text-red-800 dark:text-red-400">تنبيه هام جداً وإجراء غير قابل للتراجع</h4>
+                  <p className="text-caption text-red-700/90 dark:text-red-300/80 leading-relaxed">
                     عند إتمام هذه العملية، سيتم <strong>حذف كافة المراحل الحالية للخدمة المختارة</strong> في الجمعيات الأخرى التي لك وصولٌ إليها نهائياً، وسيتم <strong>إنشاء نسخ متطابقة</strong> من مراحل هذه الخدمة لتلك الجمعيات.
                   </p>
                 </div>

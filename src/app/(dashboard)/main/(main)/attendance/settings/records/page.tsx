@@ -64,7 +64,7 @@ export default async function RecordsPage({
           "manage_zad_attendance"
         )}
       >
-        <p className="text-[13px] text-slate-500 dark:text-slate-400">لا يوجد موظفون نشطون.</p>
+        <p className="text-body text-slate-500 dark:text-slate-400">لا يوجد موظفون نشطون.</p>
       </SettingsShell>
     );
   }

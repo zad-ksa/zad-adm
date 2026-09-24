@@ -72,15 +72,15 @@ function SortableRow({ row, index }: { row: QueueRow; index: number }) {
         <GripVertical className="w-4 h-4" />
       </button>
 
-      <span className="mt-0.5 shrink-0 w-6 h-6 rounded-lg bg-primary/10 text-primary dark:bg-teal-500/15 dark:text-teal-400 grid place-items-center text-[11px] font-black tabular-nums">
+      <span className="mt-0.5 shrink-0 w-6 h-6 rounded-lg bg-primary/10 text-primary dark:bg-teal-500/15 dark:text-teal-400 grid place-items-center text-caption font-semibold tabular-nums">
         {index + 1}
       </span>
 
       <div className="min-w-0 flex-1">
-        <p className="text-[13px] font-bold text-slate-900 dark:text-slate-100 break-words leading-snug">
+        <p className="text-body font-semibold text-slate-900 dark:text-slate-100 break-words leading-snug">
           {row.title}
         </p>
-        <p className="mt-0.5 text-[11px] text-slate-500 dark:text-slate-400 tabular-nums">
+        <p className="mt-0.5 text-caption text-slate-500 dark:text-slate-400 tabular-nums">
           {row.scheduledStartDate} ← {row.expectedCompletionDate}
           {typeof row.totalWorkingDays === "number" ? ` · ${row.totalWorkingDays} يوم عمل` : ""}
         </p>
@@ -193,7 +193,7 @@ footer={
 }
 >
 <div className="space-y-4">
-          <p className="text-[12px] leading-relaxed text-slate-600 dark:text-slate-400 bg-slate-50 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800 rounded-xl p-3">
+          <p className="text-meta leading-relaxed text-slate-600 dark:text-slate-400 bg-slate-50 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800 rounded-xl p-3">
             {canReorder
               ? "رتّب الطلبات بالسحب. كل طلب يبدأ حين ينتهي الذي قبله، فتتغيّر مواعيد البدء والتسليم تبعاً للترتيب فور الحفظ."
               : "مواعيد البدء والتسليم كما هي مجدولة الآن. ويظهر الترتيب قابلاً للتغيير حين يكون في الطابور أكثر من طلب."}
@@ -201,21 +201,21 @@ footer={
 
           {locked.length > 0 && (
             <div className="space-y-2">
-              <h3 className="text-[11px] font-black text-indigo-600 dark:text-indigo-400">
+              <h3 className="text-caption font-semibold text-indigo-600 dark:text-indigo-400">
                 جارٍ العمل عليها — لا تتحرك
               </h3>
               <ul className="space-y-2">
                 {locked.map((row) => (
                   <li
                     key={row.id}
-                    className="flex items-start gap-3 rounded-xl border border-indigo-200/70 dark:border-indigo-500/25 bg-indigo-500/[0.05] p-3"
+                    className="flex items-start gap-3 rounded-xl border border-primary/20 dark:border-teal-400/25 bg-primary/[0.05] p-3"
                   >
-                    <Hammer className="w-4 h-4 mt-0.5 shrink-0 text-indigo-500" />
+                    <Hammer className="w-4 h-4 mt-0.5 shrink-0 text-primary dark:text-teal-300" />
                     <div className="min-w-0 flex-1">
-                      <p className="text-[13px] font-bold text-slate-900 dark:text-slate-100 break-words leading-snug">
+                      <p className="text-body font-semibold text-slate-900 dark:text-slate-100 break-words leading-snug">
                         {row.title}
                       </p>
-                      <p className="mt-0.5 text-[11px] text-indigo-600/80 dark:text-indigo-300/80">
+                      <p className="mt-0.5 text-caption text-indigo-600/80 dark:text-indigo-300/80">
                         جارٍ العمل عليه · التسليم {row.expectedCompletionDate}
                       </p>
                     </div>
@@ -226,12 +226,12 @@ footer={
           )}
 
           <div className="space-y-2">
-            <h3 className="text-[11px] font-black text-slate-500 dark:text-slate-400">
+            <h3 className="text-caption font-semibold text-slate-500 dark:text-slate-400">
               في الطابور ({order.length})
             </h3>
 
             {order.length === 0 ? (
-              <p className="text-[12px] text-slate-400 dark:text-slate-500 py-6 text-center">
+              <p className="text-meta text-slate-400 dark:text-slate-500 py-6 text-center">
                 لا توجد طلبات لم تبدأ بعد لهذه الجهة.
               </p>
             ) : !canReorder ? (
@@ -243,14 +243,14 @@ footer={
                     key={row.id}
                     className="flex items-start gap-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-3"
                   >
-                    <span className="mt-0.5 shrink-0 w-6 h-6 rounded-lg bg-primary/10 text-primary dark:bg-teal-500/15 dark:text-teal-400 grid place-items-center text-[11px] font-black tabular-nums">
+                    <span className="mt-0.5 shrink-0 w-6 h-6 rounded-lg bg-primary/10 text-primary dark:bg-teal-500/15 dark:text-teal-400 grid place-items-center text-caption font-semibold tabular-nums">
                       {i + 1}
                     </span>
                     <div className="min-w-0 flex-1">
-                      <p className="text-[13px] font-bold text-slate-900 dark:text-slate-100 break-words leading-snug">
+                      <p className="text-body font-semibold text-slate-900 dark:text-slate-100 break-words leading-snug">
                         {row.title}
                       </p>
-                      <p className="mt-0.5 text-[11px] text-slate-500 dark:text-slate-400 tabular-nums">
+                      <p className="mt-0.5 text-caption text-slate-500 dark:text-slate-400 tabular-nums">
                         {row.scheduledStartDate} ← {row.expectedCompletionDate}
                         {typeof row.totalWorkingDays === "number"
                           ? ` · ${row.totalWorkingDays} يوم عمل`
@@ -300,7 +300,7 @@ footer={
           </div>
 
           {error && (
-            <div className="flex items-start gap-2 rounded-xl bg-rose-500/[0.07] text-rose-600 dark:text-rose-400 p-3 text-[12px] font-bold">
+            <div className="flex items-start gap-2 rounded-xl bg-rose-500/[0.07] text-rose-600 dark:text-rose-400 p-3 text-meta font-semibold">
               <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
               <span>{error}</span>
             </div>

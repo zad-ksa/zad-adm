@@ -67,7 +67,7 @@ export default function StaffRescheduleDesignRequestModal({
         <div className="space-y-4">
           {error && (
             <div
-              className="flex items-center gap-2 px-4 py-3 rounded-xl bg-rose-500/[0.08] text-rose-600 dark:text-rose-400 font-bold"
+              className="flex items-center gap-2 px-4 py-3 rounded-xl bg-rose-500/[0.08] text-rose-600 dark:text-rose-400 font-semibold"
               style={{ fontSize: "var(--dr-fs-meta)" }}
             >
               <AlertTriangle className="w-4 h-4 shrink-0" />
@@ -77,7 +77,7 @@ export default function StaffRescheduleDesignRequestModal({
 
           <div>
             <label
-              className="block font-bold text-slate-500 dark:text-slate-400 mb-2"
+              className="block font-semibold text-slate-500 dark:text-slate-400 mb-2"
               style={{ fontSize: "var(--dr-fs-meta)" }}
             >
               تاريخ ووقت البدء الجديد

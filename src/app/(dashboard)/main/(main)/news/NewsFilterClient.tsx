@@ -179,12 +179,12 @@ export default function NewsFilterClient({
     <main className="flex-1 min-w-0 py-4 relative" dir="rtl">
       {/* Notifications */}
       {successMsg && (
-        <div className="fixed bottom-5 left-5 z-50 bg-emerald-500 text-white px-4 py-2.5 rounded-xl shadow-lg flex items-center gap-2 font-bold text-sm">
+        <div className="fixed bottom-5 left-5 z-50 bg-emerald-500 text-white px-4 py-2.5 rounded-xl shadow-lg flex items-center gap-2 font-semibold text-caption">
           <CheckCircle2 className="w-4 h-4" />{successMsg}
         </div>
       )}
       {errorMsg && (
-        <div className="fixed bottom-5 left-5 z-50 bg-red-500 text-white px-4 py-2.5 rounded-xl shadow-lg flex items-center gap-2 font-bold text-sm">
+        <div className="fixed bottom-5 left-5 z-50 bg-red-500 text-white px-4 py-2.5 rounded-xl shadow-lg flex items-center gap-2 font-semibold text-caption">
           <AlertCircle className="w-4 h-4" />{errorMsg}
         </div>
       )}
@@ -197,7 +197,7 @@ export default function NewsFilterClient({
           actions={
         <button
           onClick={() => setShowFilters(v => !v)}
-          className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-bold border transition-colors ${hasFilters ? "bg-primary/10 text-primary border-primary/30" : "bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:border-slate-300"}`}
+          className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-caption font-semibold border transition-colors ${hasFilters ? "bg-primary/10 text-primary border-primary/30" : "bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:border-slate-300"}`}
         >
           <Filter className="w-3.5 h-3.5" />
           تصفية
@@ -213,7 +213,7 @@ export default function NewsFilterClient({
         <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-[0_1px_2px_rgb(15_23_42/0.04)] p-4 mb-4">
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div>
-              <label className="block text-[11px] font-bold text-slate-400 dark:text-slate-500 mb-1 flex items-center gap-1">
+              <label className="block text-caption font-semibold text-slate-400 dark:text-slate-500 mb-1 flex items-center gap-1">
                 <Building2 className="w-3 h-3" />الجمعية
               </label>
               <Select
@@ -230,7 +230,7 @@ export default function NewsFilterClient({
               />
             </div>
             <div>
-              <label className="block text-[11px] font-bold text-slate-400 dark:text-slate-500 mb-1 flex items-center gap-1">
+              <label className="block text-caption font-semibold text-slate-400 dark:text-slate-500 mb-1 flex items-center gap-1">
                 <Folder className="w-3 h-3" />القسم
               </label>
               <Select
@@ -245,19 +245,19 @@ export default function NewsFilterClient({
               />
             </div>
             <div>
-              <label className="block text-[11px] font-bold text-slate-400 dark:text-slate-500 mb-1 flex items-center gap-1">
+              <label className="block text-caption font-semibold text-slate-400 dark:text-slate-500 mb-1 flex items-center gap-1">
                 <Calendar className="w-3 h-3" />منذ تاريخ
               </label>
               <input
                 type="date"
                 value={selectedDate}
                 onChange={e => setSelectedDate(e.target.value)}
-                className="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-xs outline-none focus:ring-2 focus:ring-primary/20 text-slate-800 dark:text-slate-100 font-bold cursor-pointer"
+                className="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-caption outline-none focus:ring-2 focus:ring-primary/20 text-slate-800 dark:text-slate-100 font-semibold cursor-pointer"
               />
             </div>
           </div>
           {hasFilters && (
-            <button onClick={resetFilters} className="mt-3 text-[11px] font-bold text-red-500 hover:text-red-600 flex items-center gap-1">
+            <button onClick={resetFilters} className="mt-3 text-caption font-semibold text-red-500 hover:text-red-600 flex items-center gap-1">
               <RotateCcw className="w-3 h-3" />إعادة ضبط الفلاتر
             </button>
           )}
@@ -282,26 +282,26 @@ export default function NewsFilterClient({
                   {/* Badges row */}
                   <div className="flex flex-wrap items-center gap-1.5 mb-1.5">
                     {itemCharitiesList.map(cName => (
-                      <span key={cName} className="text-[10px] font-bold text-primary bg-primary/8 px-2 py-0.5 rounded-md">
+                      <span key={cName} className="text-caption font-semibold text-primary bg-primary/8 px-2 py-0.5 rounded-md">
                         {cName}
                       </span>
                     ))}
-                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md ${catColor(item.category)}`}>
+                    <span className={`text-caption font-semibold px-2 py-0.5 rounded-md ${catColor(item.category)}`}>
                       {item.category}
                     </span>
                   </div>
                   {/* Title */}
-                  <p className="text-sm font-bold text-slate-800 dark:text-slate-100 leading-snug">
+                  <p className="text-caption font-semibold text-slate-800 dark:text-slate-100 leading-snug">
                     {item.title}
                   </p>
                   {/* Description */}
                   {item.description && (
-                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 leading-relaxed line-clamp-2">
+                    <p className="text-caption text-slate-500 dark:text-slate-400 mt-1 leading-relaxed line-clamp-2">
                       {item.description}
                     </p>
                   )}
                   {/* Footer row */}
-                  <div className="flex items-center gap-3 mt-2 text-[11px] text-slate-400 dark:text-slate-500">
+                  <div className="flex items-center gap-3 mt-2 text-caption text-slate-400 dark:text-slate-500">
                     <span className="flex items-center gap-1">
                       <Calendar className="w-3 h-3" />{item.date}
                     </span>
@@ -309,7 +309,7 @@ export default function NewsFilterClient({
                       <Link
                         key={cName}
                         href={`/charity/${encodeURIComponent(cName)}`}
-                        className="text-primary hover:text-primary/70 font-bold transition-colors"
+                        className="text-primary hover:text-primary/70 font-semibold transition-colors"
                       >
                         {validCharities.length > 1 ? cName : "صفحة الجمعية ←"}
                       </Link>
@@ -334,8 +334,8 @@ export default function NewsFilterClient({
         {filteredNews.length === 0 && (
           <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-12 text-center">
             <div className="text-3xl mb-3 opacity-30">📰</div>
-            <p className="font-bold text-sm text-slate-600 dark:text-slate-300">لا توجد نتائج مطابقة</p>
-            <p className="text-xs text-slate-400 mt-1">جرب تغيير خيارات التصفية.</p>
+            <p className="font-semibold text-caption text-slate-600 dark:text-slate-300">لا توجد نتائج مطابقة</p>
+            <p className="text-caption text-slate-400 mt-1">جرب تغيير خيارات التصفية.</p>
           </div>
         )}
       </div>
@@ -360,12 +360,12 @@ onClose={() => setShowNewsForm(false)}
 <form onSubmit={handleCreateNews} className="space-y-4">
               {/* Charities */}
               <div>
-                <label className="block text-[11px] font-bold text-slate-500 dark:text-slate-400 mb-1.5">الجمعيات المعنية</label>
+                <label className="block text-caption font-semibold text-slate-500 dark:text-slate-400 mb-1.5">الجمعيات المعنية</label>
                 <div className="border border-slate-200 dark:border-slate-700 rounded-xl p-2.5 bg-slate-50 dark:bg-slate-900/50 max-h-36 overflow-y-auto space-y-1">
                   {["إدارة زاد", "عدة جمعيات", ...charities.map(ch => ch.name)].map(name => {
                     const isChecked = selectedCharityNames.includes(name);
                     return (
-                      <label key={name} className="flex items-center gap-2 text-xs font-bold text-slate-700 dark:text-slate-200 cursor-pointer py-0.5">
+                      <label key={name} className="flex items-center gap-2 text-caption font-semibold text-slate-700 dark:text-slate-200 cursor-pointer py-0.5">
                         <input
                           type="checkbox"
                           checked={isChecked}
@@ -381,7 +381,7 @@ onClose={() => setShowNewsForm(false)}
 
               {/* Category */}
               <div>
-                <label className="block text-[11px] font-bold text-slate-500 dark:text-slate-400 mb-1.5">القسم المعني</label>
+                <label className="block text-caption font-semibold text-slate-500 dark:text-slate-400 mb-1.5">القسم المعني</label>
                 <div className="flex gap-2">
                   <Select
                     variant="soft"
@@ -394,7 +394,7 @@ onClose={() => setShowNewsForm(false)}
                   <button
                     type="button"
                     onClick={() => { setShowAddCat(v => !v); setCatError(null); setNewCatName(""); }}
-                    className="shrink-0 w-9 h-9 flex items-center justify-center rounded-lg bg-amber-50 dark:bg-amber-900/20 text-amber-600 hover:bg-amber-100 dark:hover:bg-amber-900/40 border border-amber-200 dark:border-amber-800/50 transition-colors"
+                    className="shrink-0 w-8 h-8 flex items-center justify-center rounded-lg bg-amber-50 dark:bg-amber-900/20 text-amber-600 hover:bg-amber-100 dark:hover:bg-amber-900/40 border border-amber-200 dark:border-amber-800/50 transition-colors"
                   >
                     <Plus className="w-3.5 h-3.5" />
                   </button>
@@ -408,19 +408,19 @@ onClose={() => setShowNewsForm(false)}
                         onChange={e => setNewCatName(e.target.value)}
                         onKeyDown={e => e.key === "Enter" && (e.preventDefault(), handleAddCategory())}
                         placeholder="اسم القسم..."
-                        className="flex-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-1.5 text-xs outline-none focus:ring-2 focus:ring-amber-500/30 text-slate-800 dark:text-slate-100"
+                        className="flex-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-1.5 text-caption outline-none focus:ring-2 focus:ring-amber-500/30 text-slate-800 dark:text-slate-100"
                         autoFocus
                       />
                       <button type="button" onClick={handleAddCategory} disabled={isPending || !newCatName.trim()}
-                        className="px-2.5 py-1.5 bg-amber-600 text-white rounded-lg text-xs font-bold disabled:opacity-60">
+                        className="px-2.5 py-1.5 bg-amber-600 text-white rounded-lg text-caption font-semibold disabled:opacity-60">
                         {isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : "إضافة"}
                       </button>
                     </div>
-                    {catError && <p className="text-[11px] text-red-500 font-medium">{catError}</p>}
+                    {catError && <p className="text-caption text-red-500 font-medium">{catError}</p>}
                     <div className="flex flex-wrap gap-1 pt-1.5 border-t border-amber-200/60 dark:border-amber-800/40">
                       {categories.map(cat => (
                         <button key={cat} type="button" onClick={() => handleDeleteCategory(cat)} disabled={isPending}
-                          className="flex items-center gap-0.5 px-2 py-0.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded text-[11px] text-slate-500 dark:text-slate-400 hover:text-red-500 hover:border-red-200 transition-colors">
+                          className="flex items-center gap-0.5 px-2 py-0.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded text-caption text-slate-500 dark:text-slate-400 hover:text-red-500 hover:border-red-200 transition-colors">
                           {cat}<Trash2 className="w-2.5 h-2.5 opacity-50" />
                         </button>
                       ))}
@@ -431,37 +431,37 @@ onClose={() => setShowNewsForm(false)}
 
               {/* Title */}
               <div>
-                <label className="block text-[11px] font-bold text-slate-500 dark:text-slate-400 mb-1.5">العنوان</label>
+                <label className="block text-caption font-semibold text-slate-500 dark:text-slate-400 mb-1.5">العنوان</label>
                 <input
                   type="text"
                   required
                   value={newsTitle}
                   onChange={e => setNewsTitle(e.target.value)}
                   placeholder="عنوان الخبر أو الإنجاز..."
-                  className="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-xs outline-none focus:ring-2 focus:ring-amber-500/20 text-slate-800 dark:text-slate-100 font-medium"
+                  className="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-caption outline-none focus:ring-2 focus:ring-amber-500/20 text-slate-800 dark:text-slate-100 font-medium"
                 />
               </div>
 
               {/* Description */}
               <div>
-                <label className="block text-[11px] font-bold text-slate-500 dark:text-slate-400 mb-1.5">الوصف (اختياري)</label>
+                <label className="block text-caption font-semibold text-slate-500 dark:text-slate-400 mb-1.5">الوصف (اختياري)</label>
                 <textarea
                   value={newsDescription}
                   onChange={e => setNewsDescription(e.target.value)}
                   placeholder="تفاصيل إضافية..."
                   rows={3}
-                  className="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-xs outline-none focus:ring-2 focus:ring-amber-500/20 text-slate-800 dark:text-slate-100 font-medium resize-none"
+                  className="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-caption outline-none focus:ring-2 focus:ring-amber-500/20 text-slate-800 dark:text-slate-100 font-medium resize-none"
                 />
               </div>
 
               {/* Date */}
               <div>
-                <label className="block text-[11px] font-bold text-slate-500 dark:text-slate-400 mb-1.5">تاريخ الخبر (اختياري)</label>
+                <label className="block text-caption font-semibold text-slate-500 dark:text-slate-400 mb-1.5">تاريخ الخبر (اختياري)</label>
                 <input
                   type="date"
                   value={newsDate}
                   onChange={e => setNewsDate(e.target.value)}
-                  className="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-xs outline-none focus:ring-2 focus:ring-amber-500/20 text-slate-800 dark:text-slate-100 cursor-pointer"
+                  className="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-caption outline-none focus:ring-2 focus:ring-amber-500/20 text-slate-800 dark:text-slate-100 cursor-pointer"
                 />
               </div>
 
@@ -472,7 +472,7 @@ onClose={() => setShowNewsForm(false)}
                   إلغاء
                 </button>
                 <button type="submit" disabled={isPending || selectedCharityNames.length === 0 || !newsTitle.trim()}
-                  className="px-4 py-2 rounded-lg bg-amber-600 text-white hover:bg-amber-700 font-bold text-xs flex items-center gap-1.5 disabled:opacity-75 disabled:cursor-not-allowed shadow-sm">
+                  className="px-4 py-2 rounded-lg bg-amber-600 text-white hover:bg-amber-700 font-semibold text-caption flex items-center gap-1.5 disabled:opacity-75 disabled:cursor-not-allowed shadow-sm">
                   {isPending ? <><Loader2 className="w-3.5 h-3.5 animate-spin" />جاري...</> : "نشر الخبر"}
                 </button>
               </div>

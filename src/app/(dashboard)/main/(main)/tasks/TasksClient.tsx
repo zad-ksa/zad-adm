@@ -936,13 +936,13 @@ ${combinedAchievements.length > 0 ? `
     <main className="flex-1 min-w-0 py-5 relative" dir="rtl">
       {/* Notifications */}
       {successMsg && (
-        <div className="fixed bottom-5 left-5 z-[150] bg-emerald-500 dark:bg-emerald-600 text-white px-4 py-2.5 rounded-xl shadow-lg flex items-center gap-2 font-bold text-xs">
+        <div className="fixed bottom-5 left-5 z-[150] bg-emerald-500 dark:bg-emerald-600 text-white px-4 py-2.5 rounded-xl shadow-lg flex items-center gap-2 font-semibold text-caption">
           <CheckCircle2 className="w-4 h-4" />
           {successMsg}
         </div>
       )}
       {errorMsg && (
-        <div className="fixed bottom-5 left-5 z-[150] bg-red-500 dark:bg-red-600 text-white px-4 py-2.5 rounded-xl shadow-lg flex items-center gap-2 font-bold text-xs">
+        <div className="fixed bottom-5 left-5 z-[150] bg-red-500 dark:bg-red-600 text-white px-4 py-2.5 rounded-xl shadow-lg flex items-center gap-2 font-semibold text-caption">
           <AlertCircle className="w-4 h-4" />
           {errorMsg}
         </div>
@@ -990,7 +990,7 @@ ${combinedAchievements.length > 0 ? `
             onClick={handleCopyTasks}
             title="نسخ مهام الموظف كرسالة نصية"
             aria-live="polite"
-            className={`flex items-center gap-1.5 px-3 py-1.5 border rounded-lg transition-all font-bold text-xs ${
+            className={`flex items-center gap-1.5 px-3 py-1.5 border rounded-lg transition-all font-semibold text-caption ${
               copyState === "copied"
                 ? "bg-emerald-50 dark:bg-emerald-900/20 border-emerald-200 dark:border-emerald-800/50 text-emerald-600 dark:text-emerald-400"
                 : copyState === "failed"
@@ -1019,12 +1019,12 @@ ${combinedAchievements.length > 0 ? `
             <button
               onClick={() => setOpenSidePanel("permanent")}
               title="المهام الوظيفية"
-              className="relative flex items-center gap-1.5 bg-indigo-50 dark:bg-indigo-900/20 px-3 py-1.5 border border-indigo-200 dark:border-indigo-800/50 rounded-lg text-indigo-600 dark:text-indigo-400 hover:bg-indigo-100 dark:hover:bg-indigo-900/40 transition-all font-bold text-xs"
+              className="relative flex items-center gap-1.5 bg-indigo-50 dark:bg-indigo-900/20 px-3 py-1.5 border border-indigo-200 dark:border-indigo-800/50 rounded-lg text-indigo-600 dark:text-indigo-400 hover:bg-indigo-100 dark:hover:bg-indigo-900/40 transition-all font-semibold text-caption"
             >
               <Repeat className="w-3.5 h-3.5" />
               المهام الوظيفية
               {filteredPermanentTasks.length > 0 && (
-                <span className="min-w-[16px] h-4 px-1 rounded-full bg-indigo-600 text-white text-[9px] font-black flex items-center justify-center">
+                <span className="min-w-[16px] h-4 px-1 rounded-full bg-indigo-600 text-white text-caption font-semibold flex items-center justify-center">
                   {filteredPermanentTasks.length}
                 </span>
               )}
@@ -1034,12 +1034,12 @@ ${combinedAchievements.length > 0 ? `
           <button
             onClick={() => setOpenSidePanel("achievements")}
             title="المنجزات"
-            className="relative flex items-center gap-1.5 bg-emerald-50 dark:bg-emerald-900/20 px-3 py-1.5 border border-emerald-200 dark:border-emerald-800/50 rounded-lg text-emerald-600 dark:text-emerald-400 hover:bg-emerald-100 dark:hover:bg-emerald-900/40 transition-all font-bold text-xs"
+            className="relative flex items-center gap-1.5 bg-emerald-50 dark:bg-emerald-900/20 px-3 py-1.5 border border-emerald-200 dark:border-emerald-800/50 rounded-lg text-emerald-600 dark:text-emerald-400 hover:bg-emerald-100 dark:hover:bg-emerald-900/40 transition-all font-semibold text-caption"
           >
             <CheckCircle2 className="w-3.5 h-3.5" />
             المنجزات
             {combinedAchievements.length > 0 && (
-              <span className="min-w-[16px] h-4 px-1 rounded-full bg-emerald-600 text-white text-[9px] font-black flex items-center justify-center">
+              <span className="min-w-[16px] h-4 px-1 rounded-full bg-emerald-600 text-white text-caption font-semibold flex items-center justify-center">
                 {combinedAchievements.length}
               </span>
             )}
@@ -1054,10 +1054,10 @@ ${combinedAchievements.length > 0 ? `
 
         <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-[0_1px_2px_rgb(15_23_42/0.04)] overflow-hidden">
           <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100 dark:border-slate-700/40">
-            <h3 className="font-bold text-slate-800 dark:text-slate-100 text-sm flex items-center gap-2">
+            <h3 className="font-semibold text-slate-800 dark:text-slate-100 text-caption flex items-center gap-2">
               <span className="w-2 h-4 bg-amber-400 dark:bg-amber-500 rounded-full"></span>
               المهام الحالية
-              <span className="text-[10px] font-bold text-slate-400 bg-slate-100 dark:bg-slate-700 px-1.5 py-0.5 rounded-full">{filteredActiveTasks.length}</span>
+              <span className="text-caption font-semibold text-slate-400 bg-slate-100 dark:bg-slate-700 px-1.5 py-0.5 rounded-full">{filteredActiveTasks.length}</span>
             </h3>
             <Select
               value={tasksSortBy}
@@ -1071,7 +1071,7 @@ ${combinedAchievements.length > 0 ? `
           </div>
 
           {/* رأس الجدول — سطح المكتب فقط، بنفس أعمدة كل صف بالحرف. */}
-          <div className={`hidden lg:grid ${TASKS_TABLE_GRID_COLS} items-center gap-3 px-4 pt-2 pb-1.5 text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider border-b border-slate-100 dark:border-slate-700/40`}>
+          <div className={`hidden lg:grid ${TASKS_TABLE_GRID_COLS} items-center gap-3 px-4 pt-2 pb-1.5 text-caption font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider border-b border-slate-100 dark:border-slate-700/40`}>
             <span />
             <span>العنوان</span>
             <span>الأولوية</span>
@@ -1110,7 +1110,7 @@ ${combinedAchievements.length > 0 ? `
                             type="text"
                             value={editingTaskTitle}
                             onChange={(e) => setEditingTaskTitle(e.target.value)}
-                            className="flex-1 min-w-0 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded px-2 py-0.5 text-xs outline-none focus:ring-2 focus:ring-primary/20 text-slate-800 dark:text-slate-100 font-bold"
+                            className="flex-1 min-w-0 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded px-2 py-0.5 text-caption outline-none focus:ring-2 focus:ring-primary/20 text-slate-800 dark:text-slate-100 font-semibold"
                             onKeyDown={(e) => {
                               if (e.key === "Enter") handleUpdateTaskTitle(task.id);
                               if (e.key === "Escape") setEditingTaskId(null);
@@ -1124,7 +1124,7 @@ ${combinedAchievements.length > 0 ? `
                         <p
                           onClick={() => setDetailTask(task)}
                           title={task.title}
-                          className="text-sm font-semibold text-slate-800 dark:text-slate-100 leading-snug cursor-pointer hover:text-primary transition-colors lg:truncate"
+                          className="text-caption font-semibold text-slate-800 dark:text-slate-100 leading-snug cursor-pointer hover:text-primary transition-colors lg:truncate"
                         >
                           {task.title}
                         </p>
@@ -1138,7 +1138,7 @@ ${combinedAchievements.length > 0 ? `
                           type="button"
                           onClick={() => canEdit && setEditingPriorityTaskId(editingPriorityTaskId === task.id ? null : task.id)}
                           disabled={!canEdit}
-                          className={`inline-flex items-center gap-1 text-[9px] font-bold px-1.5 py-0.5 rounded transition-colors ${
+                          className={`inline-flex items-center gap-1 text-caption font-semibold px-1.5 py-0.5 rounded transition-colors ${
                             task.priority === 1 ? 'bg-red-50 text-red-600 hover:bg-red-100 dark:bg-red-900/20 dark:text-red-400' :
                             task.priority === 2 ? 'bg-amber-50 text-amber-600 hover:bg-amber-100 dark:bg-amber-900/20 dark:text-amber-400' :
                             'bg-slate-100 text-slate-500 hover:bg-slate-200 dark:bg-slate-700/50 dark:text-slate-400'
@@ -1149,9 +1149,9 @@ ${combinedAchievements.length > 0 ? `
                         </button>
                         {editingPriorityTaskId === task.id && (
                           <div className="absolute top-full mt-1 right-0 bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-lg shadow-lg p-1.5 flex flex-col gap-0.5 z-50 w-28">
-                            <button onClick={() => handleUpdateTaskPriority(task.id, 1)} className="text-[10px] font-bold px-2 py-1 rounded hover:bg-slate-50 dark:hover:bg-slate-700 text-right text-red-600 flex items-center gap-1.5 cursor-pointer"><span className="w-1.5 h-1.5 rounded-full bg-red-500"></span>عالية</button>
-                            <button onClick={() => handleUpdateTaskPriority(task.id, 2)} className="text-[10px] font-bold px-2 py-1 rounded hover:bg-slate-50 dark:hover:bg-slate-700 text-right text-amber-600 flex items-center gap-1.5 cursor-pointer"><span className="w-1.5 h-1.5 rounded-full bg-amber-500"></span>متوسطة</button>
-                            <button onClick={() => handleUpdateTaskPriority(task.id, 3)} className="text-[10px] font-bold px-2 py-1 rounded hover:bg-slate-50 dark:hover:bg-slate-700 text-right text-slate-500 flex items-center gap-1.5 cursor-pointer"><span className="w-1.5 h-1.5 rounded-full bg-slate-400"></span>منخفضة</button>
+                            <button onClick={() => handleUpdateTaskPriority(task.id, 1)} className="text-caption font-semibold px-2 py-1 rounded hover:bg-slate-50 dark:hover:bg-slate-700 text-right text-red-600 flex items-center gap-1.5 cursor-pointer"><span className="w-1.5 h-1.5 rounded-full bg-red-500"></span>عالية</button>
+                            <button onClick={() => handleUpdateTaskPriority(task.id, 2)} className="text-caption font-semibold px-2 py-1 rounded hover:bg-slate-50 dark:hover:bg-slate-700 text-right text-amber-600 flex items-center gap-1.5 cursor-pointer"><span className="w-1.5 h-1.5 rounded-full bg-amber-500"></span>متوسطة</button>
+                            <button onClick={() => handleUpdateTaskPriority(task.id, 3)} className="text-caption font-semibold px-2 py-1 rounded hover:bg-slate-50 dark:hover:bg-slate-700 text-right text-slate-500 flex items-center gap-1.5 cursor-pointer"><span className="w-1.5 h-1.5 rounded-full bg-slate-400"></span>منخفضة</button>
                           </div>
                         )}
                       </div>
@@ -1163,7 +1163,7 @@ ${combinedAchievements.length > 0 ? `
                           type="button"
                           onClick={() => isDirectorOrAdmin && setEditingCharityTaskId(editingCharityTaskId === task.id ? null : task.id)}
                           disabled={!isDirectorOrAdmin}
-                          className={`inline-flex items-center gap-1 text-[9px] font-bold px-1.5 py-0.5 rounded transition-colors ${
+                          className={`inline-flex items-center gap-1 text-caption font-semibold px-1.5 py-0.5 rounded transition-colors ${
                             task.isInternal ? 'text-slate-400 bg-slate-100 dark:bg-slate-700/50' : 'text-primary bg-primary/5 hover:bg-primary/10'
                           }`}
                         >
@@ -1172,9 +1172,9 @@ ${combinedAchievements.length > 0 ? `
                         </button>
                         {editingCharityTaskId === task.id && (
                           <div className="absolute top-full mt-1 right-0 bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-lg shadow-lg p-1.5 flex flex-col gap-0.5 z-50 w-44 max-h-44 overflow-y-auto">
-                            <button onClick={() => handleUpdateTaskCharity(task.id, "internal")} className="text-[10px] font-bold px-2 py-1 rounded hover:bg-slate-50 dark:hover:bg-slate-700 text-right text-slate-600 dark:text-slate-300 flex items-center gap-1.5 cursor-pointer"><Briefcase className="w-3 h-3" />داخلية</button>
+                            <button onClick={() => handleUpdateTaskCharity(task.id, "internal")} className="text-caption font-semibold px-2 py-1 rounded hover:bg-slate-50 dark:hover:bg-slate-700 text-right text-slate-600 dark:text-slate-300 flex items-center gap-1.5 cursor-pointer"><Briefcase className="w-3 h-3" />داخلية</button>
                             {charities.map(c => (
-                              <button key={c.id} onClick={() => handleUpdateTaskCharity(task.id, c.id)} className="text-[10px] font-bold px-2 py-1 rounded hover:bg-slate-50 dark:hover:bg-slate-700 text-right text-primary flex items-center gap-1.5 cursor-pointer"><Building2 className="w-3 h-3" />{c.name}</button>
+                              <button key={c.id} onClick={() => handleUpdateTaskCharity(task.id, c.id)} className="text-caption font-semibold px-2 py-1 rounded hover:bg-slate-50 dark:hover:bg-slate-700 text-right text-primary flex items-center gap-1.5 cursor-pointer"><Building2 className="w-3 h-3" />{c.name}</button>
                             ))}
                           </div>
                         )}
@@ -1186,7 +1186,7 @@ ${combinedAchievements.length > 0 ? `
                         <button
                           type="button"
                           onClick={() => setEditingAssigneeTaskId(editingAssigneeTaskId === task.id ? null : task.id)}
-                          className="inline-flex items-center gap-1 text-[9px] font-bold text-indigo-500 dark:text-indigo-400 bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-900/20 px-1.5 py-0.5 rounded cursor-pointer transition-colors"
+                          className="inline-flex items-center gap-1 text-caption font-semibold text-indigo-500 dark:text-indigo-400 bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-900/20 px-1.5 py-0.5 rounded cursor-pointer transition-colors"
                         >
                           <User className="w-2.5 h-2.5" />
                           {assignedEmp.name}
@@ -1194,7 +1194,7 @@ ${combinedAchievements.length > 0 ? `
                         {editingAssigneeTaskId === task.id && (
                           <div className="absolute top-full mt-1 right-0 bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-lg shadow-lg p-1.5 flex flex-col gap-0.5 z-50 w-44 max-h-44 overflow-y-auto">
                             {employees.map(e => (
-                              <button key={e.id} onClick={() => handleUpdateTaskAssigneeInline(task.id, e.id)} className="text-[10px] font-bold px-2 py-1 rounded hover:bg-slate-50 dark:hover:bg-slate-700 text-right text-indigo-600 dark:text-indigo-300 flex items-center gap-1.5 cursor-pointer"><User className="w-3 h-3" />{e.name}</button>
+                              <button key={e.id} onClick={() => handleUpdateTaskAssigneeInline(task.id, e.id)} className="text-caption font-semibold px-2 py-1 rounded hover:bg-slate-50 dark:hover:bg-slate-700 text-right text-indigo-600 dark:text-indigo-300 flex items-center gap-1.5 cursor-pointer"><User className="w-3 h-3" />{e.name}</button>
                             ))}
                           </div>
                         )}
@@ -1206,12 +1206,12 @@ ${combinedAchievements.length > 0 ? `
                       <button
                         type="button"
                         onClick={() => handleUpdateTaskStatus(task.id, task.status === "IN_PROGRESS" ? "NOT_STARTED" : "IN_PROGRESS")}
-                        className={`px-2 py-1 rounded text-[10px] font-bold transition-colors cursor-pointer ${task.status === "IN_PROGRESS" ? "text-amber-600 bg-amber-100 hover:bg-amber-200 dark:bg-amber-900/40 dark:text-amber-400" : "text-slate-500 bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:text-slate-300"}`}
+                        className={`px-2 py-1 rounded text-caption font-semibold transition-colors cursor-pointer ${task.status === "IN_PROGRESS" ? "text-amber-600 bg-amber-100 hover:bg-amber-200 dark:bg-amber-900/40 dark:text-amber-400" : "text-slate-500 bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:text-slate-300"}`}
                       >
                         {task.status === "IN_PROGRESS" ? "جاري" : "ابدأ"}
                       </button>
                     ) : (
-                      <span className="text-[10px] text-slate-300 dark:text-slate-600">
+                      <span className="text-caption text-slate-300 dark:text-slate-600">
                         {task.status === "IN_PROGRESS" ? "جاري" : "—"}
                       </span>
                     );
@@ -1222,7 +1222,7 @@ ${combinedAchievements.length > 0 ? `
                         {task.meetingTaskId && (
                           <span
                             title="مهمة صادرة من محضر اجتماع"
-                            className="inline-flex items-center gap-1 text-[9px] font-bold px-1.5 py-0.5 rounded bg-orange-50 text-orange-600 dark:bg-orange-500/15 dark:text-orange-400"
+                            className="inline-flex items-center gap-1 text-caption font-semibold px-1.5 py-0.5 rounded bg-orange-50 text-orange-600 dark:bg-orange-500/15 dark:text-orange-400"
                           >
                             <FileTextIcon className="w-2.5 h-2.5" />
                             من المحضر
@@ -1235,7 +1235,7 @@ ${combinedAchievements.length > 0 ? `
                             rel="noopener noreferrer"
                             title="عرض مرفق المهمة"
                             onClick={(e) => e.stopPropagation()}
-                            className="inline-flex items-center gap-1 text-[9px] font-bold px-1.5 py-0.5 rounded bg-sky-50 text-sky-600 hover:bg-sky-100 dark:bg-sky-500/15 dark:text-sky-400 transition-colors"
+                            className="inline-flex items-center gap-1 text-caption font-semibold px-1.5 py-0.5 rounded bg-sky-50 text-sky-600 hover:bg-sky-100 dark:bg-sky-500/15 dark:text-sky-400 transition-colors"
                           >
                             <Paperclip className="w-2.5 h-2.5" />
                             مرفق
@@ -1245,7 +1245,7 @@ ${combinedAchievements.length > 0 ? `
                           <button
                             type="button"
                             onClick={(e) => { e.stopPropagation(); setExpandedTaskId(expandedTaskId === task.id ? null : task.id); }}
-                            className="inline-flex items-center gap-1 text-[9px] font-bold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 hover:bg-blue-100 dark:hover:bg-blue-900/40 px-1.5 py-0.5 rounded transition-colors cursor-pointer"
+                            className="inline-flex items-center gap-1 text-caption font-semibold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 hover:bg-blue-100 dark:hover:bg-blue-900/40 px-1.5 py-0.5 rounded transition-colors cursor-pointer"
                           >
                             <MessageSquarePlus className="w-2.5 h-2.5" />
                             {updates.length} تحديث
@@ -1279,9 +1279,9 @@ ${combinedAchievements.length > 0 ? `
                           {priorityNode}
                           {statusNode}
                           {charityNode}
-                          {assigneeNode || <span className="text-[10px] text-slate-300 dark:text-slate-600">—</span>}
+                          {assigneeNode || <span className="text-caption text-slate-300 dark:text-slate-600">—</span>}
 
-                          <div className="text-[10px] text-slate-400 dark:text-slate-500 leading-tight">
+                          <div className="text-caption text-slate-400 dark:text-slate-500 leading-tight">
                             <div>{timeAgoArabic(task.createdAt)}</div>
                             {task.updatedAt && <div className="opacity-70">تحديث {timeAgoArabic(task.updatedAt)}</div>}
                           </div>
@@ -1327,12 +1327,12 @@ ${combinedAchievements.length > 0 ? `
                               {charityNode}
                               {assigneeNode}
                               {indicatorsNode}
-                              <span className="text-[9px] text-slate-400 dark:text-slate-500 flex items-center gap-0.5 mr-auto" title="تاريخ الإضافة">
+                              <span className="text-caption text-slate-400 dark:text-slate-500 flex items-center gap-0.5 mr-auto" title="تاريخ الإضافة">
                                 <Calendar className="w-2.5 h-2.5" />
                                 أضيفت {timeAgoArabic(task.createdAt)}
                               </span>
                               {task.updatedAt && (
-                                <span className="text-[9px] text-slate-400 dark:text-slate-500 flex items-center gap-0.5" title="آخر تحديث">
+                                <span className="text-caption text-slate-400 dark:text-slate-500 flex items-center gap-0.5" title="آخر تحديث">
                                   <History className="w-2.5 h-2.5" />
                                   آخر تحديث {timeAgoArabic(task.updatedAt)}
                                 </span>
@@ -1386,8 +1386,8 @@ ${combinedAchievements.length > 0 ? `
                               <div key={u.id} className="flex items-start gap-2 group/update">
                                 <span className="w-1 h-1 rounded-full bg-slate-400 mt-1.5 shrink-0"></span>
                                 <div className="flex-1 min-w-0">
-                                  <p className="text-[10px] text-slate-700 dark:text-slate-300 leading-relaxed">{u.content}</p>
-                                  <p className="text-[9px] text-slate-400 mt-0.5">
+                                  <p className="text-caption text-slate-700 dark:text-slate-300 leading-relaxed">{u.content}</p>
+                                  <p className="text-caption text-slate-400 mt-0.5">
                                     {author?.name || "—"} · {new Date(u.createdAt).toLocaleDateString("ar-SA")}
                                   </p>
                                 </div>
@@ -1411,7 +1411,7 @@ ${combinedAchievements.length > 0 ? `
                             value={newUpdateText[task.id] || ""}
                             onChange={(e) => setNewUpdateText(prev => ({ ...prev, [task.id]: e.target.value }))}
                             onKeyDown={(e) => { if (e.key === "Enter") handleAddUpdate(task.id); }}
-                            className="flex-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 rounded-lg px-2.5 py-1.5 text-xs outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/30 text-slate-700 dark:text-slate-200 placeholder:text-slate-400"
+                            className="flex-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 rounded-lg px-2.5 py-1.5 text-caption outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/30 text-slate-700 dark:text-slate-200 placeholder:text-slate-400"
                           />
                           <button
                             onClick={() => handleAddUpdate(task.id)}
@@ -1430,7 +1430,7 @@ ${combinedAchievements.length > 0 ? `
 
             {filteredActiveTasks.length === 0 && (
               <div className="text-center py-12 text-slate-400">
-                <p className="text-xs font-medium">لا توجد مهام حالية.</p>
+                <p className="text-caption font-medium">لا توجد مهام حالية.</p>
               </div>
             )}
           </div>
@@ -1444,7 +1444,7 @@ ${combinedAchievements.length > 0 ? `
         <Dialog
 icon={<Repeat className="size-4" />}
 title={<>المهام الوظيفية
-                 <span className="text-[10px] font-bold text-slate-400 bg-slate-100 dark:bg-slate-700 px-1.5 py-0.5 rounded-full">{filteredPermanentTasks.length}</span></>}
+                 <span className="text-caption font-semibold text-slate-400 bg-slate-100 dark:bg-slate-700 px-1.5 py-0.5 rounded-full">{filteredPermanentTasks.length}</span></>}
 onClose={() => setOpenSidePanel(null)}
 headerAction={
   isDirectorOrAdmin ? (
@@ -1465,22 +1465,22 @@ headerAction={
 <div className="divide-y divide-slate-100 dark:divide-slate-700/20">
               {filteredPermanentTasks.map((t) => (
                 <div key={t.id} className="px-3 py-2.5 flex items-start gap-2 group hover:bg-slate-100/60 dark:hover:bg-slate-700/20 transition-colors relative">
-                  <Repeat className="w-3.5 h-3.5 text-indigo-400 dark:text-indigo-500 shrink-0 mt-0.5" />
+                  <Repeat className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500 shrink-0 mt-0.5" />
 
                   <div className="flex-1 min-w-0">
-                    <p className="text-xs font-medium text-slate-600 dark:text-slate-300 leading-snug break-words">{t.title}</p>
+                    <p className="text-caption font-medium text-slate-600 dark:text-slate-300 leading-snug break-words">{t.title}</p>
                     {t.description && (
-                      <p className="text-[10px] text-slate-400 mt-1 line-clamp-2">{t.description}</p>
+                      <p className="text-caption text-slate-400 mt-1 line-clamp-2">{t.description}</p>
                     )}
                     <div className="flex flex-wrap items-center gap-1 mt-1">
-                      <span className="text-[9px] text-indigo-500/70 dark:text-indigo-400 font-medium">{t.recurrenceRate}</span>
+                      <span className="text-caption text-indigo-500/70 dark:text-indigo-400 font-medium">{t.recurrenceRate}</span>
                       
                       {isDirectorOrAdmin && t.assignedTo && (
                         <div className="relative inline-dropdown-container mr-1">
                           <button
                             type="button"
                             onClick={() => setEditingAssigneePermanentTaskId(editingAssigneePermanentTaskId === t.id ? null : t.id)}
-                            className="text-[9px] font-bold text-slate-500 hover:text-indigo-600 dark:text-slate-400 dark:hover:text-indigo-400 flex items-center gap-0.5 cursor-pointer transition-colors"
+                            className="text-caption font-semibold text-slate-500 hover:text-indigo-600 dark:text-slate-400 dark:hover:text-indigo-400 flex items-center gap-0.5 cursor-pointer transition-colors"
                           >
                             <User className="w-2.5 h-2.5" />
                             {t.assignedTo.name}
@@ -1488,7 +1488,7 @@ headerAction={
                           {editingAssigneePermanentTaskId === t.id && (
                             <div className="absolute top-full mt-1 right-0 bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-lg shadow-lg p-1.5 flex flex-col gap-0.5 z-50 w-36 max-h-44 overflow-y-auto">
                               {employees.map(e => (
-                                <button key={e.id} onClick={() => handleUpdatePermanentTaskAssigneeInline(t.id, e.id)} className="text-[10px] font-bold px-2 py-1 rounded hover:bg-slate-50 dark:hover:bg-slate-700 text-right text-indigo-600 dark:text-indigo-300 flex items-center gap-1.5 cursor-pointer">
+                                <button key={e.id} onClick={() => handleUpdatePermanentTaskAssigneeInline(t.id, e.id)} className="text-caption font-semibold px-2 py-1 rounded hover:bg-slate-50 dark:hover:bg-slate-700 text-right text-indigo-600 dark:text-indigo-300 flex items-center gap-1.5 cursor-pointer">
                                   <User className="w-3 h-3" />{e.name}
                                 </button>
                               ))}
@@ -1526,7 +1526,7 @@ headerAction={
               ))}
               {filteredPermanentTasks.length === 0 && (
                 <div className="text-center py-10 text-slate-400">
-                  <p className="text-[10px] font-medium">لا توجد مهام وظيفية.</p>
+                  <p className="text-caption font-medium">لا توجد مهام وظيفية.</p>
                 </div>
               )}
             </div>
@@ -1537,7 +1537,7 @@ headerAction={
       {openSidePanel === "achievements" && (
         <Dialog
 title={<>المنجزات
-                 <span className="text-[10px] font-bold text-slate-400 bg-slate-100 dark:bg-slate-700 px-1.5 py-0.5 rounded-full">{combinedAchievements.length}</span></>}
+                 <span className="text-caption font-semibold text-slate-400 bg-slate-100 dark:bg-slate-700 px-1.5 py-0.5 rounded-full">{combinedAchievements.length}</span></>}
 onClose={() => setOpenSidePanel(null)}
 >
 <div className="divide-y divide-slate-100 dark:divide-slate-700/20">
@@ -1555,23 +1555,23 @@ onClose={() => setOpenSidePanel(null)}
                     <p
                       onClick={() => item.task && setDetailTask(item.task)}
                       title={item.task ? "عرض تفاصيل المهمة" : undefined}
-                      className={`text-xs font-medium text-slate-600 dark:text-slate-300 leading-snug break-words ${item.task ? "cursor-pointer hover:text-primary transition-colors" : ""}`}
+                      className={`text-caption font-medium text-slate-600 dark:text-slate-300 leading-snug break-words ${item.task ? "cursor-pointer hover:text-primary transition-colors" : ""}`}
                     >
                       {item.title}
                     </p>
                     {item.completionNote && (
-                      <p className="text-[10px] text-slate-400 dark:text-slate-500 leading-relaxed mt-0.5 whitespace-pre-wrap">
+                      <p className="text-caption text-slate-400 dark:text-slate-500 leading-relaxed mt-0.5 whitespace-pre-wrap">
                         {item.completionNote}
                       </p>
                     )}
                     <div className="flex flex-wrap items-center gap-1 mt-0.5">
                       {item.charityName && (
-                        <span className="text-[9px] text-primary/70 dark:text-teal-500 font-medium">{item.charityName}</span>
+                        <span className="text-caption text-primary/70 dark:text-teal-500 font-medium">{item.charityName}</span>
                       )}
                       {isDirectorOrAdmin && assignedEmp && (
-                        <span className="text-[9px] text-slate-400 font-medium">{assignedEmp.name}</span>
+                        <span className="text-caption text-slate-400 font-medium">{assignedEmp.name}</span>
                       )}
-                      <span className="text-[9px] text-slate-400 mr-auto flex items-center gap-0.5">
+                      <span className="text-caption text-slate-400 mr-auto flex items-center gap-0.5">
                         <Calendar className="w-2.5 h-2.5" />
                         {timeAgoArabic(item.date)}
                       </span>
@@ -1601,7 +1601,7 @@ onClose={() => setOpenSidePanel(null)}
 
             {combinedAchievements.length === 0 && !isLoadingScope && (
               <div className="text-center py-10 text-slate-400">
-                <p className="text-[10px] font-medium">لا توجد منجزات.</p>
+                <p className="text-caption font-medium">لا توجد منجزات.</p>
               </div>
             )}
 
@@ -1662,14 +1662,14 @@ footer={
 >
 <div className="space-y-4">
 <div>
-                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
+                <label className="block text-caption font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
                   وصف ما تم إنجازه <span className="text-red-500">*</span>
                 </label>
                 <textarea
                   required
                   value={completionNote}
                   onChange={(e) => setCompletionNote(e.target.value)}
-                  className="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-xs text-slate-800 dark:text-slate-200 outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary resize-none"
+                  className="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-caption text-slate-800 dark:text-slate-200 outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary resize-none"
                   rows={3}
                   placeholder="اكتب تفاصيل ما تم إنجازه هنا..."
                   disabled={isUploadingProof}
@@ -1679,11 +1679,11 @@ footer={
                 {proofFile ? (
                   <div className="flex flex-col items-center">
                     <FileImage className="w-8 h-8 text-primary mb-3" />
-                    <p className="text-sm font-bold text-slate-800 dark:text-slate-100">{proofFile.name}</p>
+                    <p className="text-caption font-semibold text-slate-800 dark:text-slate-100">{proofFile.name}</p>
                     <button 
                       type="button" 
                       onClick={() => setProofFile(null)} 
-                      className="text-xs text-red-500 hover:text-red-600 mt-2 font-bold cursor-pointer"
+                      className="text-caption text-red-500 hover:text-red-600 mt-2 font-semibold cursor-pointer"
                     >
                       إلغاء وتغيير الملف
                     </button>
@@ -1692,11 +1692,11 @@ footer={
                   <div className="space-y-4">
                     <FileImage className="w-8 h-8 mx-auto text-slate-400" />
                     <div>
-                      <p className="text-sm font-bold text-slate-600 dark:text-slate-300">ارفع شاهد الإنجاز</p>
-                      <p className="text-xs text-slate-400 mt-1">PNG, JPG حتى 5MB</p>
+                      <p className="text-caption font-semibold text-slate-600 dark:text-slate-300">ارفع شاهد الإنجاز</p>
+                      <p className="text-caption text-slate-400 mt-1">PNG, JPG حتى 5MB</p>
                     </div>
                     <div className="flex flex-col sm:flex-row gap-2 justify-center pt-2">
-                      <label className="flex items-center justify-center gap-1.5 px-4 py-2.5 bg-primary text-white text-xs font-bold rounded-xl cursor-pointer hover:bg-primary/95 transition-all shadow-sm">
+                      <label className="flex items-center justify-center gap-1.5 px-4 py-2.5 bg-primary text-white text-caption font-semibold rounded-xl cursor-pointer hover:bg-primary/95 transition-all shadow-sm">
                         <Camera className="w-4 h-4" />
                         التقاط صورة بالكاميرا
                         <input
@@ -1708,7 +1708,7 @@ footer={
                           disabled={isUploadingProof}
                         />
                       </label>
-                      <label className="flex items-center justify-center gap-1.5 px-4 py-2.5 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 text-xs font-bold rounded-xl cursor-pointer hover:bg-slate-200 dark:hover:bg-slate-700 transition-all border border-slate-200 dark:border-slate-700">
+                      <label className="flex items-center justify-center gap-1.5 px-4 py-2.5 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 text-caption font-semibold rounded-xl cursor-pointer hover:bg-slate-200 dark:hover:bg-slate-700 transition-all border border-slate-200 dark:border-slate-700">
                         <UploadCloud className="w-4 h-4" />
                         اختر صورة من المعرض
                         <input
@@ -1720,15 +1720,15 @@ footer={
                         />
                       </label>
                     </div>
-                    <p className="text-[10px] text-slate-400 dark:text-slate-500 font-medium flex items-center justify-center gap-1 mt-1">
+                    <p className="text-caption text-slate-400 dark:text-slate-500 font-medium flex items-center justify-center gap-1 mt-1">
                       <span>أو الصق صورة منسوخة</span>
-                      <kbd className="px-1 py-0.5 bg-slate-100 dark:bg-slate-700 rounded text-[9px] font-mono border border-slate-200 dark:border-slate-600">Ctrl+V</kbd>
+                      <kbd className="px-1 py-0.5 bg-slate-100 dark:bg-slate-700 rounded text-caption font-mono border border-slate-200 dark:border-slate-600">Ctrl+V</kbd>
                     </p>
                   </div>
                 )}
               </div>
 {proofUploadError && (
-                <div className="bg-red-50 dark:bg-red-950/20 text-red-600 dark:text-red-400 p-3 rounded-xl text-xs font-bold flex items-center gap-2 border border-red-100 dark:border-red-900/30">
+                <div className="bg-red-50 dark:bg-red-950/20 text-red-600 dark:text-red-400 p-3 rounded-xl text-caption font-semibold flex items-center gap-2 border border-red-100 dark:border-red-900/30">
                   <AlertCircle className="w-4 h-4 shrink-0 text-red-500" />
                   <span>{proofUploadError}</span>
                 </div>
@@ -1793,16 +1793,16 @@ onClose={() => setDetailTask(null)}
                 {/* Summary chips */}
                 <div className="flex flex-wrap items-center gap-1.5">
                   {assignee && (
-                    <span className="inline-flex items-center gap-1 text-[10px] font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/20 px-2 py-1 rounded-lg">
+                    <span className="inline-flex items-center gap-1 text-caption font-semibold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/20 px-2 py-1 rounded-lg">
                       <User className="w-3 h-3" /> مسندة حاليًا إلى {assignee.name}
                     </span>
                   )}
-                  <span className="inline-flex items-center gap-1 text-[10px] font-bold text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-700/50 px-2 py-1 rounded-lg">
+                  <span className="inline-flex items-center gap-1 text-caption font-semibold text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-700/50 px-2 py-1 rounded-lg">
                     {detailTask.isInternal ? <Briefcase className="w-3 h-3" /> : <Building2 className="w-3 h-3" />}
                     {detailTask.isInternal ? "داخلية" : (detailTask.charityName || "متعاقدة")}
                   </span>
                   {detailTask.isCompleted && (
-                    <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/20 px-2 py-1 rounded-lg">
+                    <span className="inline-flex items-center gap-1 text-caption font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/20 px-2 py-1 rounded-lg">
                       <CheckCircle2 className="w-3 h-3" /> منجزة {timeAgoArabic(detailTask.completedAt)}
                     </span>
                   )}
@@ -1811,10 +1811,10 @@ onClose={() => setDetailTask(null)}
                 {/* Completion note */}
                 {detailTask.isCompleted && detailTask.completionNote && (
                   <div className="bg-emerald-50/60 dark:bg-emerald-900/10 border border-emerald-100 dark:border-emerald-800/30 rounded-xl p-3">
-                    <p className="text-[10px] font-bold text-emerald-700 dark:text-emerald-400 mb-1">وصف الإنجاز</p>
-                    <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed whitespace-pre-wrap">{detailTask.completionNote}</p>
+                    <p className="text-caption font-semibold text-emerald-700 dark:text-emerald-400 mb-1">وصف الإنجاز</p>
+                    <p className="text-caption text-slate-600 dark:text-slate-300 leading-relaxed whitespace-pre-wrap">{detailTask.completionNote}</p>
                     {detailTask.proofUrl && (
-                      <a href={detailTask.proofUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-600 dark:text-emerald-400 hover:underline mt-2">
+                      <a href={detailTask.proofUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-caption font-semibold text-emerald-600 dark:text-emerald-400 hover:underline mt-2">
                         <LinkIcon className="w-3 h-3" /> عرض الشاهد
                       </a>
                     )}
@@ -1823,7 +1823,7 @@ onClose={() => setDetailTask(null)}
 
                 {/* Timeline: updates + move history */}
                 <div>
-                  <p className="text-[11px] font-bold text-slate-500 dark:text-slate-400 mb-2 flex items-center gap-1.5">
+                  <p className="text-caption font-semibold text-slate-500 dark:text-slate-400 mb-2 flex items-center gap-1.5">
                     <History className="w-3.5 h-3.5" /> مسار المهمة والتحديثات
                   </p>
                   {detailUpdates.length > 0 ? (
@@ -1834,10 +1834,10 @@ onClose={() => setDetailTask(null)}
                         return (
                           <div key={u.id} className="relative">
                             <span className={`absolute top-1 -right-[15px] w-2 h-2 rounded-full ${isMove ? "bg-indigo-400" : "bg-primary/60"}`} />
-                            <p className={`text-xs leading-relaxed ${isMove ? "text-indigo-600 dark:text-indigo-400 font-bold" : "text-slate-700 dark:text-slate-300"}`}>
+                            <p className={`text-caption leading-relaxed ${isMove ? "text-indigo-600 dark:text-indigo-400 font-semibold" : "text-slate-700 dark:text-slate-300"}`}>
                               {u.content}
                             </p>
-                            <p className="text-[9px] text-slate-400 dark:text-slate-500 mt-0.5">
+                            <p className="text-caption text-slate-400 dark:text-slate-500 mt-0.5">
                               {author?.name || "—"} · {timeAgoArabic(u.createdAt)}
                             </p>
                           </div>
@@ -1845,7 +1845,7 @@ onClose={() => setDetailTask(null)}
                       })}
                     </div>
                   ) : (
-                    <p className="text-[11px] text-slate-400 dark:text-slate-500">لا توجد تحديثات أو تحويلات مسجلة على هذه المهمة بعد.</p>
+                    <p className="text-caption text-slate-400 dark:text-slate-500">لا توجد تحديثات أو تحويلات مسجلة على هذه المهمة بعد.</p>
                   )}
                 </div>
               </div>
@@ -1861,7 +1861,7 @@ onClose={() => setDetailTask(null)}
             <div className="w-28 h-28 rounded-full bg-emerald-500 shadow-2xl shadow-emerald-500/40 flex items-center justify-center">
               <Check className="w-16 h-16 text-white" strokeWidth={3} />
             </div>
-            <span className="flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400 font-black text-sm bg-white dark:bg-slate-800 px-4 py-1.5 rounded-full shadow-lg">
+            <span className="flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400 font-semibold text-caption bg-white dark:bg-slate-800 px-4 py-1.5 rounded-full shadow-lg">
               <PartyPopper className="w-4 h-4" /> تم تسجيل الإنجاز!
             </span>
           </div>
@@ -1884,7 +1884,7 @@ onClose={() => setDetailTask(null)}
                   setShowPermanentTaskForm(true); 
                   setIsFabOpen(false); 
                 }}
-                className="bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:text-indigo-600 dark:hover:text-indigo-400 px-4 py-3 rounded-lg shadow-xl hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 flex items-center justify-start gap-3 whitespace-nowrap border border-slate-100 dark:border-slate-700 font-bold w-max"
+                className="bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:text-indigo-600 dark:hover:text-indigo-400 px-4 py-3 rounded-lg shadow-xl hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 flex items-center justify-start gap-3 whitespace-nowrap border border-slate-100 dark:border-slate-700 font-semibold w-max"
               >
                 <div className="bg-indigo-100 dark:bg-indigo-900/40 p-2 rounded-xl text-indigo-600 dark:text-indigo-400">
                   <Repeat className="w-5 h-5" />
@@ -1895,7 +1895,7 @@ onClose={() => setDetailTask(null)}
 
             <button
               onClick={() => { setShowDirectAchievementForm(true); setIsFabOpen(false); }}
-              className="bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:text-emerald-600 dark:hover:text-emerald-400 px-4 py-3 rounded-lg shadow-xl hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 flex items-center justify-start gap-3 whitespace-nowrap border border-slate-100 dark:border-slate-700 font-bold w-max"
+              className="bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:text-emerald-600 dark:hover:text-emerald-400 px-4 py-3 rounded-lg shadow-xl hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 flex items-center justify-start gap-3 whitespace-nowrap border border-slate-100 dark:border-slate-700 font-semibold w-max"
             >
               <div className="bg-emerald-100 dark:bg-emerald-900/40 p-2 rounded-xl text-emerald-600 dark:text-emerald-400">
                 <Sparkles className="w-5 h-5" />
@@ -1905,7 +1905,7 @@ onClose={() => setDetailTask(null)}
 
             <button
               onClick={() => { setShowTaskForm(true); setIsFabOpen(false); }}
-              className="bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:text-primary dark:hover:text-primary px-4 py-3 rounded-lg shadow-xl hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 flex items-center justify-start gap-3 whitespace-nowrap border border-slate-100 dark:border-slate-700 font-bold w-max"
+              className="bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:text-primary dark:hover:text-primary px-4 py-3 rounded-lg shadow-xl hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 flex items-center justify-start gap-3 whitespace-nowrap border border-slate-100 dark:border-slate-700 font-semibold w-max"
             >
               <div className="bg-primary/10 dark:bg-primary/20 p-2 rounded-xl text-primary">
                 <CheckSquare className="w-5 h-5" />

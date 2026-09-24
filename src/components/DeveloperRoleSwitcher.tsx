@@ -38,7 +38,7 @@ export default function DeveloperRoleSwitcher({ currentEmployeeId, hideCharityCl
         {isOpen && (
           <div className="absolute bottom-full mb-4 right-0 w-72 max-h-96 overflow-y-auto custom-scrollbar bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-2xl p-2 animate-in fade-in slide-in-from-bottom-2">
             <div className="sticky top-0 bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm z-10 px-3 py-2 border-b border-slate-100 dark:border-slate-700/50 mb-2">
-              <h4 className="text-xs font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
+              <h4 className="text-caption font-semibold text-slate-800 dark:text-slate-100 flex items-center gap-2">
                 <Settings className="w-4 h-4 text-primary" />
                 خيارات المطور (منظور حساب الموظف)
               </h4>
@@ -53,7 +53,7 @@ export default function DeveloperRoleSwitcher({ currentEmployeeId, hideCharityCl
                 <button
                   disabled={isPending}
                   onClick={() => handleOverride("DEVELOPER_RESET")}
-                  className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-semibold transition-colors ${
+                  className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-caption font-semibold transition-colors ${
                     !currentEmployeeId
                       ? "bg-primary/10 text-primary"
                       : "text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700"
@@ -73,15 +73,15 @@ export default function DeveloperRoleSwitcher({ currentEmployeeId, hideCharityCl
                     key={emp.id}
                     disabled={isPending}
                     onClick={() => handleOverride(emp.id)}
-                    className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs transition-colors ${
+                    className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-caption transition-colors ${
                       currentEmployeeId === emp.id
-                        ? "bg-primary/10 text-primary font-bold"
+                        ? "bg-primary/10 text-primary font-semibold"
                         : "text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700"
                     }`}
                   >
                     <div className="flex flex-col items-start gap-0.5">
                       <span className="font-semibold">{emp.name}</span>
-                      <span className="text-[10px] opacity-70">{roleLabels[emp.role] || emp.role}</span>
+                      <span className="text-caption opacity-70">{roleLabels[emp.role] || emp.role}</span>
                     </div>
                     {currentEmployeeId === emp.id && <Check className="w-3.5 h-3.5" />}
                   </button>

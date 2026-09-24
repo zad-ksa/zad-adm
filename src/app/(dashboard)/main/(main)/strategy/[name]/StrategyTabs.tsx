@@ -91,7 +91,7 @@ export default function StrategyTabs({ charityName, isAdmin = false, isCharityCl
           <Link
             key={idx}
             href={tab.href}
-            className={`px-6 py-3 font-bold text-sm rounded-t-xl transition-all relative flex items-center gap-2 cursor-pointer select-none ${
+            className={`px-6 py-3 font-semibold text-caption rounded-t-xl transition-all relative flex items-center gap-2 cursor-pointer select-none ${
               isActive
                 ? "bg-white dark:bg-slate-800 text-primary border-t border-x border-slate-200 dark:border-slate-700 -mb-[1px] shadow-sm"
                 : "text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-slate-100/60 dark:hover:bg-slate-800/50"

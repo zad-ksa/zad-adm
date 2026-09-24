@@ -98,7 +98,7 @@ closeOnBackdrop={false}
 
           {error && (
             <div
-              className="flex items-center gap-2 px-4 py-3 rounded-xl bg-rose-500/[0.08] text-rose-600 dark:text-rose-400 font-bold"
+              className="flex items-center gap-2 px-4 py-3 rounded-xl bg-rose-500/[0.08] text-rose-600 dark:text-rose-400 font-semibold"
               style={{ fontSize: "var(--dr-fs-meta)" }}
             >
               <AlertTriangle className="w-4 h-4 shrink-0" />
@@ -110,7 +110,7 @@ closeOnBackdrop={false}
           <div className="flex flex-wrap items-end gap-2 p-3 rounded-xl border border-dashed border-slate-200 dark:border-slate-700">
             <div className="flex-1 min-w-[150px]">
               <label
-                className="block font-bold text-slate-500 dark:text-slate-400 mb-1"
+                className="block font-semibold text-slate-500 dark:text-slate-400 mb-1"
                 style={{ fontSize: "var(--dr-fs-eyebrow)" }}
               >
                 اسم النوع
@@ -125,7 +125,7 @@ closeOnBackdrop={false}
             </div>
             <div className="w-24">
               <label
-                className="block font-bold text-slate-500 dark:text-slate-400 mb-1"
+                className="block font-semibold text-slate-500 dark:text-slate-400 mb-1"
                 style={{ fontSize: "var(--dr-fs-eyebrow)" }}
               >
                 أيام العمل
@@ -196,7 +196,7 @@ closeOnBackdrop={false}
                       <button
                         onClick={() => saveEdit(type.id)}
                         disabled={busyId === type.id}
-                        className="h-10 px-3 flex items-center gap-1.5 rounded-lg font-bold text-primary dark:text-teal-300 bg-primary/[0.08] disabled:opacity-50"
+                        className="h-10 px-3 flex items-center gap-1.5 rounded-lg font-semibold text-primary dark:text-teal-300 bg-primary/[0.08] disabled:opacity-50"
                         style={{ fontSize: "var(--dr-fs-meta)" }}
                       >
                         {busyId === type.id ? (
@@ -208,7 +208,7 @@ closeOnBackdrop={false}
                       </button>
                       <button
                         onClick={() => setEditingId(null)}
-                        className="h-10 px-3 rounded-lg font-bold text-slate-500 dark:text-slate-400"
+                        className="h-10 px-3 rounded-lg font-semibold text-slate-500 dark:text-slate-400"
                         style={{ fontSize: "var(--dr-fs-meta)" }}
                       >
                         إلغاء
@@ -217,7 +217,7 @@ closeOnBackdrop={false}
                   ) : (
                     <>
                       <span
-                        className="flex-1 min-w-[140px] font-bold text-slate-800 dark:text-slate-100"
+                        className="flex-1 min-w-[140px] font-semibold text-slate-800 dark:text-slate-100"
                         style={{ fontSize: "var(--dr-fs-body)" }}
                       >
                         {type.name}
@@ -243,7 +243,7 @@ closeOnBackdrop={false}
                           setEditDays(String(type.workingDays));
                           setError(null);
                         }}
-                        className="h-9 px-3 rounded-lg font-bold text-slate-500 dark:text-slate-400 hover:text-primary dark:hover:text-teal-300 hover:bg-primary/[0.06] transition-colors"
+                        className="h-9 px-3 rounded-lg font-semibold text-slate-500 dark:text-slate-400 hover:text-primary dark:hover:text-teal-300 hover:bg-primary/[0.06] transition-colors"
                         style={{ fontSize: "var(--dr-fs-meta)" }}
                       >
                         تعديل
@@ -254,7 +254,7 @@ closeOnBackdrop={false}
                         }
                         disabled={busyId === type.id}
                         title={type.isActive ? "إخفاء من نموذج الطلب" : "إعادة تفعيله"}
-                        className="h-9 w-9 flex items-center justify-center rounded-lg text-slate-400 dark:text-slate-500 hover:text-primary dark:hover:text-teal-300 hover:bg-primary/[0.06] transition-colors disabled:opacity-50"
+                        className="h-8 w-8 flex items-center justify-center rounded-lg text-slate-400 dark:text-slate-500 hover:text-primary dark:hover:text-teal-300 hover:bg-primary/[0.06] transition-colors disabled:opacity-50"
                       >
                         {busyId === type.id ? (
                           <Loader2 className="w-4 h-4 animate-spin" />

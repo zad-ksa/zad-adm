@@ -226,7 +226,7 @@ export function BundleSheet({
                 }
               />
               {linkedRoles.length === 0 ? (
-                <p className="text-[13px] text-slate-500">غير مرتبطة بأي مسمى.</p>
+                <p className="text-body text-slate-500">غير مرتبطة بأي مسمى.</p>
               ) : (
                 <div className="flex flex-wrap gap-1.5">
                   {linkedRoles.map((r) => (
@@ -243,8 +243,8 @@ export function BundleSheet({
                 <SectionHeader title="منطقة الخطر" />
                 <div className="flex flex-col gap-3 rounded-lg border border-red-200 px-4 py-3 sm:flex-row sm:items-center sm:justify-between dark:border-red-500/25">
                   <div className="space-y-0.5">
-                    <p className="text-[13.5px] font-medium">حذف المجموعة</p>
-                    <p className="text-[12.5px] text-slate-500">
+                    <p className="text-body font-medium">حذف المجموعة</p>
+                    <p className="text-meta text-slate-500">
                       تُسحب عن حامليها ومسمياتها. ما مُنح للموظفين مباشرةً لا يُمسّ.
                     </p>
                   </div>
@@ -261,7 +261,7 @@ export function BundleSheet({
         {tab === "permissions" && (
           <div className="space-y-4">
             <SearchField value={permQuery} onChange={setPermQuery} placeholder="ابحث في الصلاحيات" label="بحث في الصلاحيات" />
-            {groups.length === 0 && <p className="py-6 text-center text-[13px] text-slate-500">لا صلاحية تطابق «{q}»</p>}
+            {groups.length === 0 && <p className="py-6 text-center text-body text-slate-500">لا صلاحية تطابق «{q}»</p>}
             {groups.map((g) => {
               const free = g.items.filter((p) => permissions.includes(p.id) || !impliedBy(p.id)).map((p) => p.id);
               const allOn = free.length > 0 && free.every((id) => permissions.includes(id));
@@ -269,7 +269,7 @@ export function BundleSheet({
               return (
                 <div key={g.title} className="overflow-hidden rounded-lg border border-slate-200 dark:border-slate-800">
                   <div className="flex items-center justify-between gap-3 border-b border-slate-100 bg-slate-50/70 px-3 py-2 dark:border-slate-800 dark:bg-slate-950/30">
-                    <span className="text-[12.5px] font-medium text-slate-700 dark:text-slate-300">{g.title}</span>
+                    <span className="text-meta font-medium text-slate-700 dark:text-slate-300">{g.title}</span>
                     <SelectAll
                       count={onCount}
                       total={g.items.length}
@@ -320,7 +320,7 @@ export function BundleSheet({
               }
             />
             {serviceNames.length === 0 ? (
-              <p className="rounded-lg border border-dashed border-slate-300 px-4 py-6 text-center text-[13px] text-slate-500 dark:border-slate-700">
+              <p className="rounded-lg border border-dashed border-slate-300 px-4 py-6 text-center text-body text-slate-500 dark:border-slate-700">
                 لا توجد خدمات بعد.
               </p>
             ) : (
@@ -351,7 +351,7 @@ export function BundleSheet({
             />
             <SearchField value={holderQuery} onChange={setHolderQuery} placeholder="ابحث بالاسم أو المسمى" label="بحث في الموظفين" />
             {shownHolders.length === 0 ? (
-              <p className="py-4 text-center text-[13px] text-slate-500">لا موظف يطابق «{hq}»</p>
+              <p className="py-4 text-center text-body text-slate-500">لا موظف يطابق «{hq}»</p>
             ) : (
               <div className="grid gap-x-2 rounded-lg border border-slate-200 p-1.5 sm:grid-cols-2 dark:border-slate-800">
                 {shownHolders.map((e) => (

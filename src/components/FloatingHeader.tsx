@@ -82,10 +82,10 @@ export default function FloatingHeader({
           {isNotificationsOpen && (
             <div className="absolute top-full left-0 mt-2 w-72 bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700/50 rounded-xl shadow-xl shadow-black/10 z-[60] overflow-hidden flex flex-col max-h-[350px]" dir="rtl">
               <div className="px-4 py-3 border-b border-slate-100 dark:border-slate-700/50 bg-slate-50/50 dark:bg-slate-800/50 flex items-center justify-between shrink-0">
-                <span className="text-sm font-bold text-slate-700 dark:text-slate-200">الإشعارات</span>
+                <span className="text-caption font-semibold text-slate-700 dark:text-slate-200">الإشعارات</span>
                 <div className="flex items-center gap-3">
                   {localCount > 0 && (
-                    <span className="text-xs bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400 px-2 py-0.5 rounded-full font-bold">{localCount}</span>
+                    <span className="text-caption bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400 px-2 py-0.5 rounded-full font-semibold">{localCount}</span>
                   )}
                   {localNotifs.length > 0 && (
                     <button
@@ -95,7 +95,7 @@ export default function FloatingHeader({
                         setLocalCount(0);
                         await deleteAllNotifications();
                       }}
-                      className="text-[11px] font-bold text-red-500 hover:text-red-600 hover:underline"
+                      className="text-caption font-semibold text-red-500 hover:text-red-600 hover:underline"
                     >
                       مسح الكل
                     </button>
@@ -104,7 +104,7 @@ export default function FloatingHeader({
               </div>
               <div className="overflow-y-auto custom-scrollbar flex-1 p-2">
                 {localNotifs.length === 0 ? (
-                  <div className="px-4 py-6 text-center text-xs text-slate-400 font-medium">لا توجد إشعارات حالياً</div>
+                  <div className="px-4 py-6 text-center text-caption text-slate-400 font-medium">لا توجد إشعارات حالياً</div>
                 ) : (
                   localNotifs.map((notif: any) => (
                     <div 
@@ -117,10 +117,10 @@ export default function FloatingHeader({
                         }
                         setIsNotificationsOpen(false);
                       }}
-                      className={`px-3 py-2.5 text-xs rounded-xl mb-1 cursor-pointer transition-all ${!notif.isRead ? 'bg-primary/5 hover:bg-primary/10 border border-primary/10' : 'hover:bg-slate-50 dark:hover:bg-slate-700/50 border border-transparent'}`}
+                      className={`px-3 py-2.5 text-caption rounded-xl mb-1 cursor-pointer transition-all ${!notif.isRead ? 'bg-primary/5 hover:bg-primary/10 border border-primary/10' : 'hover:bg-slate-50 dark:hover:bg-slate-700/50 border border-transparent'}`}
                     >
-                      <div className={`font-bold ${!notif.isRead ? 'text-primary' : 'text-slate-600 dark:text-slate-300'}`}>{notif.title}</div>
-                      {notif.message && <div className="text-[10px] text-slate-500 mt-1 line-clamp-2 leading-relaxed">{notif.message}</div>}
+                      <div className={`font-semibold ${!notif.isRead ? 'text-primary' : 'text-slate-600 dark:text-slate-300'}`}>{notif.title}</div>
+                      {notif.message && <div className="text-caption text-slate-500 mt-1 line-clamp-2 leading-relaxed">{notif.message}</div>}
                     </div>
                   ))
                 )}
@@ -152,8 +152,8 @@ export default function FloatingHeader({
                header next to the hamburger, where a name and a role label
                would push the whole row out of the screen. */}
             <div className="hidden lg:flex flex-col items-end rtl:items-start mr-1 max-w-[160px]">
-              <span className="text-xs font-bold text-slate-800 dark:text-slate-100 truncate w-full text-left rtl:text-right">{userState?.name}</span>
-              <span className="text-[9px] text-slate-500 dark:text-slate-400">{roleLabels[userState?.role] || "موظف"}</span>
+              <span className="text-caption font-semibold text-slate-800 dark:text-slate-100 truncate w-full text-left rtl:text-right">{userState?.name}</span>
+              <span className="text-caption text-slate-500 dark:text-slate-400">{roleLabels[userState?.role] || "موظف"}</span>
             </div>
             <div className="relative overflow-hidden bg-primary/10 text-primary border border-primary/20 rounded-full flex items-center justify-center transition-all duration-300 w-9 h-9 group-hover:ring-2 group-hover:ring-primary/40">
               {userState?.avatarUrl ? (
@@ -169,7 +169,7 @@ export default function FloatingHeader({
               <Link
                 href="/main/profile"
                 onClick={() => setIsProfileOpen(false)}
-                className="flex items-center gap-2 px-3 py-2.5 text-xs text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700/50 hover:text-primary transition-colors rounded-xl font-bold"
+                className="flex items-center gap-2 px-3 py-2.5 text-caption text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700/50 hover:text-primary transition-colors rounded-xl font-semibold"
               >
                 <User className="w-4 h-4 text-slate-400" />
                 الملف الشخصي
@@ -178,7 +178,7 @@ export default function FloatingHeader({
               <form action={logout}>
                 <button
                   type="submit"
-                  className="w-full flex items-center gap-2 px-3 py-2.5 text-xs text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-600 transition-colors rounded-lg font-bold"
+                  className="w-full flex items-center gap-2 px-3 py-2.5 text-caption text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-600 transition-colors rounded-lg font-semibold"
                 >
                   <LogOut className="w-4 h-4 text-red-400" />
                   تسجيل الخروج

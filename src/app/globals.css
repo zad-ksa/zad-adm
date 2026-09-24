@@ -9,6 +9,27 @@
   --text-xs: 0.6875rem;
   --text-sm: 0.6875rem;
   --font-sans: var(--font-inter), var(--font-cairo), sans-serif;
+
+  /* سُلّم الخطّ المُعلَن — text-caption … text-stat.
+     كان text-xs وtext-sm كلاهما ١١ بكسل (أعلاه)، فكتب كل قسمٍ مقاساته بالبكسل
+     بيده: ٤٧٠ مقاساً من ٩ إلى ٣٠ بكسل. هذه سبعة أسماءٍ بأدوارها بدلها.
+     بالبكسل لا rem كسائر العُدّة: الجذر يصغر إلى ١٤ بكسل على الجوال، والبكسل
+     لا يصغر معه — فيبقى السُّلّم واحداً في كل شاشة. وارتفاع السطر مع كل مقاس،
+     ويغلبه leading-* إن كُتب صراحةً. */
+  --text-caption: 11px;
+  --text-caption--line-height: 1.5;
+  --text-meta: 12.5px;
+  --text-meta--line-height: 1.55;
+  --text-body: 13px;
+  --text-body--line-height: 1.65;
+  --text-title: 15px;
+  --text-title--line-height: 1.45;
+  --text-section: 18px;
+  --text-section--line-height: 1.35;
+  --text-page: 26px;
+  --text-page--line-height: 1.2;
+  --text-stat: 28px;
+  --text-stat--line-height: 1;
 }
 
 :root {

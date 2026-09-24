@@ -49,7 +49,7 @@ function CopyTextButton({ text, title }: { text: string; title: string }) {
           setTimeout(() => setCopied(false), 2000);
         }
       }}
-      className={`shrink-0 h-7 px-2 rounded-lg text-[11px] font-bold inline-flex items-center gap-1 transition-colors ${
+      className={`shrink-0 h-7 px-2 rounded-lg text-caption font-semibold inline-flex items-center gap-1 transition-colors ${
         copied
           ? "text-emerald-600 dark:text-emerald-400 bg-emerald-500/10"
           : "text-slate-400 hover:text-primary hover:bg-primary/10 dark:hover:text-teal-400"
@@ -213,7 +213,7 @@ function RequestTimeline({ logs }: { logs: RequestLog[] }) {
   if (logs.length === 0) return null;
   return (
     <div className="mt-2">
-      <p className="text-[11px] sm:text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2 flex items-center gap-1">
+      <p className="text-caption font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2 flex items-center gap-1">
         <GitBranch className="w-3 h-3" /> خط سير الطلب
       </p>
       <div className="relative">
@@ -237,13 +237,13 @@ function RequestTimeline({ logs }: { logs: RequestLog[] }) {
                 </div>
                 <div className="flex-1 min-w-0 pb-1">
                   <div className="flex items-center gap-1.5 flex-wrap">
-                    <span className="text-xs font-bold text-slate-700 dark:text-slate-200">{log.actor.name}</span>
-                    <span className={`text-[11px] sm:text-[10px] font-bold ${cfg.color}`}>{cfg.label}</span>
-                    {log.delegatedTo && <span className="text-[11px] sm:text-[10px] text-purple-500 font-bold">→ {log.delegatedTo.name}</span>}
-                    <span className="text-[11px] sm:text-[10px] text-slate-400 dark:text-slate-500 mr-auto">{timeAgo(log.createdAt)}</span>
+                    <span className="text-caption font-semibold text-slate-700 dark:text-slate-200">{log.actor.name}</span>
+                    <span className={`text-caption sm:text-caption font-semibold ${cfg.color}`}>{cfg.label}</span>
+                    {log.delegatedTo && <span className="text-caption text-purple-500 font-semibold">→ {log.delegatedTo.name}</span>}
+                    <span className="text-caption text-slate-400 dark:text-slate-500 mr-auto">{timeAgo(log.createdAt)}</span>
                   </div>
                   {log.note && (
-                    <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-slate-800/60 rounded-lg px-2 py-1">{log.note}</p>
+                    <p className="mt-0.5 text-caption text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-slate-800/60 rounded-lg px-2 py-1">{log.note}</p>
                   )}
                 </div>
               </div>
@@ -307,11 +307,11 @@ function RequestCard({
     (request.status === "PENDING" && !!request.currentReviewer);
   const withNode =
     request.status === "DELEGATED" && request.delegatedTo ? (
-      <span className="flex items-center gap-1 min-w-0 text-purple-500 dark:text-purple-400 font-bold">
+      <span className="flex items-center gap-1 min-w-0 text-purple-500 dark:text-purple-400 font-semibold">
         <UserCheck className="w-3 h-3 shrink-0" /> <span title={request.delegatedTo.name} className="truncate">{request.delegatedTo.name}</span>
       </span>
     ) : request.status === "PENDING" && request.currentReviewer ? (
-      <span className="flex items-center gap-1 min-w-0 text-primary font-bold">
+      <span className="flex items-center gap-1 min-w-0 text-primary font-semibold">
         <ChevronRight className="w-3 h-3 shrink-0" /> <span title={request.currentReviewer.name} className="truncate">{request.currentReviewer.name}</span>
       </span>
     ) : (
@@ -322,13 +322,13 @@ function RequestCard({
     <div className="flex items-center gap-1 shrink-0" onClick={e => e.stopPropagation()}>
       {isCurrentReviewer && (
         <button onClick={() => onReview(request)}
-          className="flex items-center gap-1 text-xs font-bold bg-primary hover:bg-primary/90 text-white px-2.5 py-1.5 rounded-lg transition-colors">
+          className="flex items-center gap-1 text-caption font-semibold bg-primary hover:bg-primary/90 text-white px-2.5 py-1.5 rounded-lg transition-colors">
           <ShieldCheck className="w-3 h-3" /> مراجعة
         </button>
       )}
       {request.status === "RETURNED" && isOwner && (
         <button onClick={() => onResubmit(request)}
-          className="flex items-center gap-1 text-xs font-bold bg-amber-500 hover:bg-amber-600 text-white px-2.5 py-1.5 rounded-lg transition-colors">
+          className="flex items-center gap-1 text-caption font-semibold bg-amber-500 hover:bg-amber-600 text-white px-2.5 py-1.5 rounded-lg transition-colors">
           <RefreshCw className="w-3 h-3" /> تعديل وإعادة إرسال
         </button>
       )}
@@ -348,20 +348,20 @@ function RequestCard({
       {/* صف الجدول — سطح المكتب (lg فأعلى). كل معلومة في عمودها الثابت، بنفس
           توزيع رأس الجدول أعلى القائمة، فلا شيء يزدحم فوق شيء آخر. */}
       <div className={`hidden lg:grid ${TABLE_GRID_COLS} items-center gap-3 px-3 py-2.5`}>
-        <span title={request.title} className="min-w-0 truncate text-sm font-bold text-slate-800 dark:text-slate-100">{request.title}</span>
-        <span className={`inline-flex w-fit text-[10px] font-bold px-2 py-0.5 rounded-full ${priority.bg} ${priority.color}`}>
+        <span title={request.title} className="min-w-0 truncate text-caption font-semibold text-slate-800 dark:text-slate-100">{request.title}</span>
+        <span className={`inline-flex w-fit text-caption font-semibold px-2 py-0.5 rounded-full ${priority.bg} ${priority.color}`}>
           {priority.label}
         </span>
-        <span className={`inline-flex w-fit items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full ${status.bg} ${status.color}`}>
+        <span className={`inline-flex w-fit items-center gap-1 text-caption font-semibold px-2 py-0.5 rounded-full ${status.bg} ${status.color}`}>
           <StatusIcon className="w-3 h-3" />{status.label}
         </span>
         {catInfo ? (
-          <span title={catInfo.label} className={`inline-flex w-fit max-w-full truncate text-[10px] font-bold px-2 py-0.5 rounded-full border ${catInfo.bg} ${catInfo.color} ${catInfo.border}`}>
+          <span title={catInfo.label} className={`inline-flex w-fit max-w-full truncate text-caption font-semibold px-2 py-0.5 rounded-full border ${catInfo.bg} ${catInfo.color} ${catInfo.border}`}>
             {catInfo.label}
           </span>
         ) : <span className="text-slate-300 dark:text-slate-600">—</span>}
-        <div className="min-w-0 text-[11px]">{raisedByNode}</div>
-        <div className="min-w-0 text-[11px] leading-tight space-y-0.5">
+        <div className="min-w-0 text-caption">{raisedByNode}</div>
+        <div className="min-w-0 text-caption leading-tight space-y-0.5">
           {withNode}
           {request.chain && (
             <span className="flex items-center gap-1 text-indigo-400 truncate">
@@ -369,7 +369,7 @@ function RequestCard({
             </span>
           )}
         </div>
-        <span className="text-[11px] text-slate-400 dark:text-slate-500 tabular-nums">{timeAgo(request.createdAt)}</span>
+        <span className="text-caption text-slate-400 dark:text-slate-500 tabular-nums">{timeAgo(request.createdAt)}</span>
         {actionsNode}
       </div>
 
@@ -378,21 +378,21 @@ function RequestCard({
       <div className="lg:hidden flex items-start gap-3 p-3">
         <div className="flex-1 min-w-0">
           <div className="flex items-start gap-2 flex-wrap">
-            <span className="text-sm font-bold text-slate-800 dark:text-slate-100 leading-snug">{request.title}</span>
-            <span className={`shrink-0 flex items-center gap-1 text-[11px] sm:text-[10px] font-bold px-2 py-0.5 rounded-full ${status.bg} ${status.color}`}>
+            <span className="text-caption font-semibold text-slate-800 dark:text-slate-100 leading-snug">{request.title}</span>
+            <span className={`shrink-0 flex items-center gap-1 text-caption sm:text-caption font-semibold px-2 py-0.5 rounded-full ${status.bg} ${status.color}`}>
               <StatusIcon className="w-3 h-3" />{status.label}
             </span>
-            <span className={`shrink-0 text-[11px] sm:text-[10px] font-bold px-2 py-0.5 rounded-full ${priority.bg} ${priority.color}`}>
+            <span className={`shrink-0 text-caption sm:text-caption font-semibold px-2 py-0.5 rounded-full ${priority.bg} ${priority.color}`}>
               {priority.label}
             </span>
             {catInfo && (
-              <span className={`shrink-0 text-[11px] sm:text-[10px] font-bold px-2 py-0.5 rounded-full border ${catInfo.bg} ${catInfo.color} ${catInfo.border}`}>
+              <span className={`shrink-0 text-caption sm:text-caption font-semibold px-2 py-0.5 rounded-full border ${catInfo.bg} ${catInfo.color} ${catInfo.border}`}>
                 {catInfo.label}
               </span>
             )}
           </div>
 
-          <div className="flex items-center gap-2 mt-1 flex-wrap text-[11px] sm:text-[10px] text-slate-400 dark:text-slate-500">
+          <div className="flex items-center gap-2 mt-1 flex-wrap text-caption text-slate-400 dark:text-slate-500">
             {raisedByNode}
             {hasCurrentHolder && withNode}
             <span className="flex items-center gap-1"><Calendar className="w-3 h-3" />{timeAgo(request.createdAt)}</span>
@@ -412,17 +412,17 @@ function RequestCard({
           {request.body && (
             <div className="bg-slate-50 dark:bg-slate-800/50 rounded-xl p-3">
               <div className="flex items-center justify-between gap-2 mb-1">
-                <p className="text-xs font-bold text-slate-500 dark:text-slate-400 flex items-center gap-1">
+                <p className="text-caption font-semibold text-slate-500 dark:text-slate-400 flex items-center gap-1">
                   <FileText className="w-3 h-3" /> نص الطلب
                 </p>
                 <CopyTextButton text={request.body} title="نسخ نص الطلب" />
               </div>
-              <p className="text-sm text-slate-700 dark:text-slate-200 leading-relaxed whitespace-pre-wrap">{request.body}</p>
+              <p className="text-caption text-slate-700 dark:text-slate-200 leading-relaxed whitespace-pre-wrap">{request.body}</p>
             </div>
           )}
           {request.fileUrl && (
             <a href={request.fileUrl} target="_blank" rel="noopener noreferrer"
-              className="flex items-center gap-2 text-xs font-bold text-primary hover:underline bg-primary/10 rounded-xl px-3 py-2">
+              className="flex items-center gap-2 text-caption font-semibold text-primary hover:underline bg-primary/10 rounded-xl px-3 py-2">
               <ExternalLink className="w-3.5 h-3.5 shrink-0" /> فتح الملف المرفق
             </a>
           )}
@@ -430,12 +430,12 @@ function RequestCard({
             <div className="space-y-1.5">
               {attachments.map((att: any, i: number) => (
                 <a key={i} href={att.url} target="_blank" rel="noopener noreferrer"
-                  className="flex items-center justify-between text-xs font-bold text-primary hover:underline bg-primary/5 hover:bg-primary/10 rounded-xl px-3 py-2 transition-colors border border-primary/10">
+                  className="flex items-center justify-between text-caption font-semibold text-primary hover:underline bg-primary/5 hover:bg-primary/10 rounded-xl px-3 py-2 transition-colors border border-primary/10">
                   <div className="flex items-center gap-2 overflow-hidden">
                     <ExternalLink className="w-3.5 h-3.5 shrink-0" />
                     <span className="truncate">{att.name || "ملف مرفق"}</span>
                   </div>
-                  {att.size && <span className="text-[11px] sm:text-[10px] text-primary/70 shrink-0 font-normal">{(att.size / 1024 / 1024).toFixed(2)} MB</span>}
+                  {att.size && <span className="text-caption text-primary/70 shrink-0 font-normal">{(att.size / 1024 / 1024).toFixed(2)} MB</span>}
                 </a>
               ))}
             </div>
@@ -446,7 +446,7 @@ function RequestCard({
               request.status === "RETURNED"  ? "bg-amber-50 dark:bg-amber-900/20" :
               request.status === "DELEGATED" ? "bg-purple-50 dark:bg-purple-900/20" :
               "bg-red-50 dark:bg-red-900/20"}`}>
-              <p className={`text-xs font-bold mb-1 flex items-center gap-1 ${
+              <p className={`text-caption font-semibold mb-1 flex items-center gap-1 ${
                 request.status === "APPROVED"  ? "text-emerald-700 dark:text-emerald-400" :
                 request.status === "RETURNED"  ? "text-amber-700 dark:text-amber-400" :
                 request.status === "DELEGATED" ? "text-purple-700 dark:text-purple-400" :
@@ -456,7 +456,7 @@ function RequestCard({
                  request.status === "RETURNED"  ? "ملاحظات الإرجاع" :
                  request.status === "DELEGATED" ? "ملاحظات التحويل" : "سبب الرفض"}
               </p>
-              <p className="text-sm text-slate-700 dark:text-slate-200 leading-relaxed">{request.reviewNote}</p>
+              <p className="text-caption text-slate-700 dark:text-slate-200 leading-relaxed">{request.reviewNote}</p>
             </div>
           )}
           <RequestTimeline logs={request.logs} />
@@ -693,7 +693,7 @@ export default function RequestsClient({ requests: initial, hasActiveChain, canR
           >
             <BellRing className="w-4 h-4" />
             {pendingByReviewer.length > 0 && (
-              <span className="absolute -top-0.5 -left-0.5 min-w-[15px] h-[15px] px-0.5 rounded-full bg-amber-500 text-white text-[9px] font-black flex items-center justify-center">
+              <span className="absolute -top-0.5 -left-0.5 min-w-[15px] h-[15px] px-0.5 rounded-full bg-amber-500 text-white text-caption font-semibold flex items-center justify-center">
                 {pendingByReviewer.length}
               </span>
             )}
@@ -717,7 +717,7 @@ export default function RequestsClient({ requests: initial, hasActiveChain, canR
               key={l.key}
               onClick={() => setTab(l.key)}
               aria-pressed={active}
-              className={`shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-colors ${
+              className={`shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-caption font-semibold transition-colors ${
                 active
                   ? "bg-white dark:bg-slate-900 text-primary shadow-sm"
                   : "text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"
@@ -727,7 +727,7 @@ export default function RequestsClient({ requests: initial, hasActiveChain, canR
               {l.label}
               {l.count > 0 && (
                 <span
-                  className={`px-1.5 rounded-full text-[10px] ${
+                  className={`px-1.5 rounded-full text-caption ${
                     active ? "bg-primary/10 text-primary" : "bg-slate-200 dark:bg-slate-700"
                   }`}
                 >
@@ -747,7 +747,7 @@ export default function RequestsClient({ requests: initial, hasActiveChain, canR
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="ابحث بالعنوان أو النص أو اسم مقدّم الطلب أو المراجِع…"
-            className="w-full h-9 pe-9 ps-8 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs text-slate-700 dark:text-slate-200 placeholder:text-slate-400 outline-none focus:border-primary"
+            className="w-full h-9 pe-9 ps-8 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-caption text-slate-700 dark:text-slate-200 placeholder:text-slate-400 outline-none focus:border-primary"
           />
           {search && (
             <button
@@ -821,7 +821,7 @@ export default function RequestsClient({ requests: initial, hasActiveChain, canR
           </button>
         )}
 
-        <span className="text-[11px] text-slate-400 dark:text-slate-500 ms-auto tabular-nums">
+        <span className="text-caption text-slate-400 dark:text-slate-500 ms-auto tabular-nums">
           {filtered.length} من {lane.length}
         </span>
       </div>
@@ -830,7 +830,7 @@ export default function RequestsClient({ requests: initial, hasActiveChain, canR
       {filtered.length === 0 ? (
         <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-16 text-center">
           <Send className="w-10 h-10 text-slate-300 dark:text-slate-600 mx-auto mb-3" />
-          <p className="text-slate-400 dark:text-slate-500 text-sm">
+          <p className="text-slate-400 dark:text-slate-500 text-caption">
             {anyFilter
               ? "لا توجد طلبات مطابقة للبحث أو التصفية"
               : tab === "AWAITING"
@@ -842,11 +842,11 @@ export default function RequestsClient({ requests: initial, hasActiveChain, canR
                     : "لم ترفع أي طلب بعد"}
           </p>
           {anyFilter ? (
-            <button onClick={clearFilters} className="mt-3 text-xs text-primary hover:underline font-bold">
+            <button onClick={clearFilters} className="mt-3 text-caption text-primary hover:underline font-semibold">
               مسح البحث والتصفية
             </button>
           ) : tab === "MINE" ? (
-            <button onClick={() => setShowForm(true)} className="mt-3 text-xs text-primary hover:underline font-bold">
+            <button onClick={() => setShowForm(true)} className="mt-3 text-caption text-primary hover:underline font-semibold">
               ارفع طلبك الأول
             </button>
           ) : null}
@@ -856,7 +856,7 @@ export default function RequestsClient({ requests: initial, hasActiveChain, canR
         // phone the last card is the one you just scrolled to.
         <div className="space-y-2 pb-24 lg:pb-0">
           {/* رأس الجدول — لسطح المكتب فقط، بنفس أعمدة كل صف بالحرف. */}
-          <div className={`hidden lg:grid ${TABLE_GRID_COLS} items-center gap-3 px-3 pb-1 text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider`}>
+          <div className={`hidden lg:grid ${TABLE_GRID_COLS} items-center gap-3 px-3 pb-1 text-caption font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider`}>
             <span>العنوان</span>
             <span>الأولوية</span>
             <span>الحالة</span>
@@ -879,10 +879,10 @@ export default function RequestsClient({ requests: initial, hasActiveChain, canR
       {/* Floating Action Button */}
       <button 
         onClick={() => setShowForm(true)}
-        className="fixed bottom-6 left-6 lg:bottom-8 lg:left-8 z-40 flex items-center gap-2 bg-primary hover:bg-primary/90 text-white px-5 py-3.5 rounded-full shadow-lg shadow-primary/30 transition-all hover:-translate-y-1 hover:shadow-xl hover:shadow-primary/40 font-bold safe-bottom"
+        className="fixed bottom-6 left-6 lg:bottom-8 lg:left-8 z-40 flex items-center gap-2 bg-primary hover:bg-primary/90 text-white px-5 py-3.5 rounded-full shadow-lg shadow-primary/30 transition-all hover:-translate-y-1 hover:shadow-xl hover:shadow-primary/40 font-semibold safe-bottom"
       >
         <Plus className="w-5 h-5" />
-        <span className="text-sm">طلب جديد</span>
+        <span className="text-caption">طلب جديد</span>
       </button>
 
       {showForm && (
@@ -922,7 +922,7 @@ headerAction={
 {!reminderTarget ? (
               <div className="overflow-y-auto p-2">
                 {pendingByReviewer.length === 0 ? (
-                  <p className="text-xs text-slate-400 dark:text-slate-500 text-center py-10">
+                  <p className="text-caption text-slate-400 dark:text-slate-500 text-center py-10">
                     لا يوجد أحد لديه طلبات معلّقة بانتظار قراره حالياً.
                   </p>
                 ) : (
@@ -937,12 +937,12 @@ headerAction={
                             <User className="w-4 h-4 text-primary dark:text-teal-300" />
                           </span>
                           <span className="flex-1 min-w-0">
-                            <span className="block text-xs font-bold text-slate-800 dark:text-slate-100 truncate">{employee.name}</span>
-                            <span className="block text-[10px] text-slate-400 dark:text-slate-500 truncate">
+                            <span className="block text-caption font-semibold text-slate-800 dark:text-slate-100 truncate">{employee.name}</span>
+                            <span className="block text-caption text-slate-400 dark:text-slate-500 truncate">
                               {roleLabels[employee.role] || employee.role}
                             </span>
                           </span>
-                          <span className="shrink-0 min-w-[20px] h-5 px-1.5 rounded-full bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-400 text-[10px] font-black flex items-center justify-center">
+                          <span className="shrink-0 min-w-[20px] h-5 px-1.5 rounded-full bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-400 text-caption font-semibold flex items-center justify-center">
                             {count}
                           </span>
                           <ChevronRight className="w-4 h-4 text-slate-300 dark:text-slate-600 rotate-180 shrink-0" />
@@ -954,8 +954,8 @@ headerAction={
               </div>
             ) : (
               <div className="p-4 space-y-3 overflow-y-auto">
-                <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
-                  <span className="font-bold text-slate-700 dark:text-slate-200">{reminderTarget.employee.name}</span>
+                <div className="flex items-center gap-2 text-caption text-slate-500 dark:text-slate-400">
+                  <span className="font-semibold text-slate-700 dark:text-slate-200">{reminderTarget.employee.name}</span>
                   <span>— {pendingRequestsPhrase(reminderTarget.count)} معلّقة</span>
                 </div>
                 <textarea
@@ -963,11 +963,11 @@ headerAction={
                   value={reminderMessage}
                   rows={8}
                   onFocus={(e) => e.currentTarget.select()}
-                  className="w-full bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2.5 text-xs leading-relaxed text-slate-700 dark:text-slate-200 outline-none resize-none whitespace-pre-wrap"
+                  className="w-full bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2.5 text-caption leading-relaxed text-slate-700 dark:text-slate-200 outline-none resize-none whitespace-pre-wrap"
                 />
                 <button
                   onClick={handleCopyReminder}
-                  className={`w-full h-10 rounded-lg font-bold text-xs flex items-center justify-center gap-2 transition-colors ${
+                  className={`w-full h-10 rounded-lg font-semibold text-caption flex items-center justify-center gap-2 transition-colors ${
                     reminderCopied
                       ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-400"
                       : "bg-primary text-white hover:bg-primary/90"

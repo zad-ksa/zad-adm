@@ -12,7 +12,7 @@ export default async function CommunicationPage() {
   const { charities, success } = await getCommunicationData();
 
   if (!success || !charities) {
-    return <div className="p-8 text-center text-red-500 font-bold">فشل في جلب البيانات</div>;
+    return <div className="p-8 text-center text-red-500 font-semibold">فشل في جلب البيانات</div>;
   }
 
   return <CommunicationClient charities={charities} />;

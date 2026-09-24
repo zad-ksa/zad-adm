@@ -233,7 +233,7 @@ export default async function CharitiesDashboard() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
         {/* Charities Column - 2/3 width */}
         <div className="lg:col-span-2 space-y-4">
-          <h2 className="text-base font-bold text-slate-800 dark:text-slate-100 mb-3 flex items-center gap-2">
+          <h2 className="text-title font-semibold text-slate-800 dark:text-slate-100 mb-3 flex items-center gap-2">
             <span className="w-2 h-5 bg-primary rounded-full"></span>
             الجمعيات المتعاقد معها
           </h2>
@@ -261,15 +261,15 @@ export default async function CharitiesDashboard() {
                           <img src={charity.logoUrl} alt={charity.name} className="w-full h-full object-contain p-1 drop-shadow-sm" />
                         </div>
                       ) : (
-                        <div className="w-10 h-10 bg-primary/10 dark:bg-primary/20 rounded-lg flex items-center justify-center text-primary font-bold text-lg border border-primary/20 dark:border-primary/30 shrink-0 shadow-inner group-hover:scale-105 transition-transform duration-300">
+                        <div className="w-10 h-10 bg-primary/10 dark:bg-primary/20 rounded-lg flex items-center justify-center text-primary font-semibold text-section border border-primary/20 dark:border-primary/30 shrink-0 shadow-inner group-hover:scale-105 transition-transform duration-300">
                           {charity.name.charAt(0)}
                         </div>
                       )}
                       <div className="overflow-hidden">
-                        <h3 className="text-sm font-bold text-slate-800 dark:text-slate-100 group-hover:text-primary dark:group-hover:text-primary transition-colors duration-300 truncate" title={charity.name}>
+                        <h3 className="text-caption font-semibold text-slate-800 dark:text-slate-100 group-hover:text-primary dark:group-hover:text-primary transition-colors duration-300 truncate" title={charity.name}>
                           {charity.name}
                         </h3>
-                        <p className="text-[10px] text-slate-500 dark:text-slate-400 font-medium mt-0.5 truncate drop-shadow-sm">
+                        <p className="text-caption text-slate-500 dark:text-slate-400 font-medium mt-0.5 truncate drop-shadow-sm">
                           {charity.domain || "تنمية مجتمعية"}
                         </p>
                       </div>
@@ -278,40 +278,31 @@ export default async function CharitiesDashboard() {
                     {/* Details List */}
                     <div className="space-y-2">
                       {/* Stats 1: المنح */}
-                      <div className="flex items-center justify-between text-[11px] sm:text-xs">
-                        <span className="text-slate-600 dark:text-slate-300 font-bold flex items-center gap-1.5 drop-shadow-sm">
-                          <svg className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                          </svg>
+                      <div className="flex items-center justify-between text-caption">
+                        <span className="text-slate-600 dark:text-slate-300 font-semibold">
                           المنح:
                         </span>
-                        <span className="font-bold text-emerald-800 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-900/30 backdrop-blur-md px-2 py-0.5 rounded-md text-[10px] shrink-0 border border-emerald-500/20 dark:border-emerald-500/30 shadow-sm">
+                        <span className="font-semibold text-slate-700 dark:text-slate-200 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-2 py-0.5 rounded-md text-caption shrink-0">
                           {charity.grants.toLocaleString()} ريال
                         </span>
                       </div>
 
                       {/* Stats 2: البرامج */}
-                      <div className="flex items-center justify-between text-[11px] sm:text-xs">
-                        <span className="text-slate-600 dark:text-slate-300 font-bold flex items-center gap-1.5 drop-shadow-sm">
-                          <svg className="w-3.5 h-3.5 text-violet-600 dark:text-violet-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2H6a2 2 0 01-2-2v-4zM14 16a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2h-2a2 2 0 01-2-2v-4z" />
-                          </svg>
+                      <div className="flex items-center justify-between text-caption">
+                        <span className="text-slate-600 dark:text-slate-300 font-semibold">
                           البرامج:
                         </span>
-                        <span className="font-bold text-violet-800 dark:text-violet-300 bg-violet-500/10 dark:bg-violet-900/30 backdrop-blur-md px-2 py-0.5 rounded-md text-[10px] shrink-0 border border-violet-500/20 dark:border-violet-500/30 shadow-sm">
+                        <span className="font-semibold text-slate-700 dark:text-slate-200 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-2 py-0.5 rounded-md text-caption shrink-0">
                           {charity.programs} برامج
                         </span>
                       </div>
 
                       {/* Stats 3: المستفيدين */}
-                      <div className="flex items-center justify-between text-[11px] sm:text-xs">
-                        <span className="text-slate-600 dark:text-slate-300 font-bold flex items-center gap-1.5 drop-shadow-sm">
-                          <svg className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                          </svg>
+                      <div className="flex items-center justify-between text-caption">
+                        <span className="text-slate-600 dark:text-slate-300 font-semibold">
                           المستفيدين:
                         </span>
-                        <span className="font-bold text-indigo-800 dark:text-indigo-300 bg-indigo-500/10 dark:bg-indigo-900/30 backdrop-blur-md px-2 py-0.5 rounded-md text-[10px] shrink-0 border border-indigo-500/20 dark:border-indigo-500/30 shadow-sm">
+                        <span className="font-semibold text-slate-700 dark:text-slate-200 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-2 py-0.5 rounded-md text-caption shrink-0">
                           {charity.beneficiaries.toLocaleString()} مستفيد
                         </span>
                       </div>
@@ -319,11 +310,11 @@ export default async function CharitiesDashboard() {
                   </div>
 
                   {/* Action Link Footer */}
-                  <div className="mt-3 pt-2 border-t border-slate-200 dark:border-slate-700 flex items-center justify-start text-[10px] font-bold text-primary dark:text-primary opacity-0 group-hover:opacity-100 group-hover:translate-x-[-4px] transition-all duration-300">
-                    <span className="bg-white dark:bg-slate-700 px-2 py-1 rounded-md">عرض الملف</span>
-                    <svg className="w-3 h-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-                    </svg>
+                  <div className="mt-3 pt-2 border-t border-slate-200 dark:border-slate-700 flex items-center justify-start text-caption font-semibold text-primary dark:text-primary opacity-0 group-hover:opacity-100 group-hover:translate-x-[-4px] transition-all duration-300">
+                    <span>عرض الملف</span>
+                    <span aria-hidden className="transition-transform motion-safe:group-hover:-translate-x-0.5">
+                      ←
+                    </span>
                   </div>
                 </div>
               </Link>
@@ -340,13 +331,13 @@ export default async function CharitiesDashboard() {
         {/* News Column - 1/3 width */}
         <div className="space-y-6">
           <div className="flex items-center justify-between">
-            <h2 className="text-base font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
+            <h2 className="text-title font-semibold text-slate-800 dark:text-slate-100 flex items-center gap-2">
               <span className="w-2 h-5 bg-amber-400 dark:bg-amber-500 rounded-full"></span>
               آخر الأخبار والإنجازات
             </h2>
             <Link
               href="/main/news"
-              className="text-xs font-bold text-primary dark:text-primary bg-primary/5 dark:bg-primary/10 hover:bg-primary/10 dark:hover:bg-primary/20 px-3 py-1.5 rounded-lg transition-all duration-300 flex items-center gap-1 shrink-0"
+              className="text-caption font-semibold text-primary dark:text-primary bg-primary/5 dark:bg-primary/10 hover:bg-primary/10 dark:hover:bg-primary/20 px-3 py-1.5 rounded-lg transition-all duration-300 flex items-center gap-1 shrink-0"
             >
               عرض الكل
               <svg className="w-3.5 h-3.5 transition-transform duration-300 transform hover:-translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
@@ -360,11 +351,11 @@ export default async function CharitiesDashboard() {
               <div key={item.id} className={`group ${idx > 0 ? "pt-3" : ""} ${idx < newsItems.length - 1 ? "pb-3" : ""}`}>
                 <div className="flex flex-wrap items-center gap-2 mb-2">
                   {item.charityName.split(",").map((cName) => (
-                    <span key={cName} className="inline-block text-[10px] font-bold text-primary dark:text-primary bg-primary/5 dark:bg-primary/10 px-2 py-0.5 rounded-md">
+                    <span key={cName} className="inline-block text-caption font-semibold text-primary dark:text-primary bg-primary/5 dark:bg-primary/10 px-2 py-0.5 rounded-md">
                       {cName.trim()}
                     </span>
                   ))}
-                  <span className={`inline-block text-[10px] font-bold px-2 py-0.5 rounded-md ${item.category === "الاستراتيجية" ? "text-violet-700 dark:text-violet-400 bg-violet-50 dark:bg-violet-900/20" :
+                  <span className={`inline-block text-caption font-semibold px-2 py-0.5 rounded-md ${item.category === "الاستراتيجية" ? "text-violet-700 dark:text-violet-400 bg-violet-50 dark:bg-violet-900/20" :
                     item.category === "التقنية" ? "text-blue-700 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20" :
                       item.category === "تنمية الموارد" ? "text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/20" :
                         item.category === "تكليف" ? "text-rose-700 dark:text-rose-400 bg-rose-50 dark:bg-rose-900/20" :
@@ -374,13 +365,13 @@ export default async function CharitiesDashboard() {
                     {item.category}
                   </span>
                 </div>
-                <h4 className="font-bold text-slate-800 dark:text-slate-100 text-xs sm:text-sm mb-1.5 group-hover:text-primary dark:group-hover:text-primary transition-colors duration-300">
+                <h4 className="font-semibold text-slate-800 dark:text-slate-100 text-caption mb-1.5 group-hover:text-primary dark:group-hover:text-primary transition-colors duration-300">
                   {item.title}
                 </h4>
-                <p className="text-xs text-slate-500 dark:text-slate-400 font-medium leading-relaxed mb-3">
+                <p className="text-caption text-slate-500 dark:text-slate-400 font-medium leading-relaxed mb-3">
                   {item.description}
                 </p>
-                <div className="flex items-center gap-1.5 text-[10px] text-slate-400 dark:text-slate-500 font-bold">
+                <div className="flex items-center gap-1.5 text-caption text-slate-400 dark:text-slate-500 font-semibold">
                   <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                   </svg>
@@ -391,7 +382,7 @@ export default async function CharitiesDashboard() {
 
             {newsItems.length === 0 && (
               <div className="text-center py-16 text-slate-400 dark:text-slate-500">
-                <p className="text-xs font-semibold">لا توجد أخبار أو إنجازات حالياً.</p>
+                <p className="text-caption font-semibold">لا توجد أخبار أو إنجازات حالياً.</p>
               </div>
             )}
           </div>

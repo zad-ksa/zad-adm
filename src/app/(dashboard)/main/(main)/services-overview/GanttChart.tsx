@@ -350,8 +350,8 @@ export default function GanttChart({
         {/* Header */}
         <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100 dark:border-slate-800 shrink-0 no-print">
           <div>
-            <h2 className="text-xl font-black text-slate-800 dark:text-slate-100">مخطط غانت — {activeLabel}</h2>
-            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+            <h2 className="text-section font-semibold text-slate-800 dark:text-slate-100">مخطط غانت — {activeLabel}</h2>
+            <p className="text-caption text-slate-500 dark:text-slate-400 mt-1">
               يتم العرض بنظام الأسابيع. انقر على التعديل لإضافة نقاط إلى أي أسبوع.
             </p>
           </div>
@@ -359,13 +359,13 @@ export default function GanttChart({
             <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 p-1 rounded-xl ml-2">
               <button 
                 onClick={() => setDisplayMode('dots')} 
-                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${displayMode === 'dots' ? 'bg-white dark:bg-slate-700 text-primary shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}
+                className={`px-3 py-1.5 rounded-lg text-caption font-semibold transition-all ${displayMode === 'dots' ? 'bg-white dark:bg-slate-700 text-primary shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}
               >
                 النقاط
               </button>
               <button 
                 onClick={() => setDisplayMode('text')} 
-                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${displayMode === 'text' ? 'bg-white dark:bg-slate-700 text-primary shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}
+                className={`px-3 py-1.5 rounded-lg text-caption font-semibold transition-all ${displayMode === 'text' ? 'bg-white dark:bg-slate-700 text-primary shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}
               >
                 النص
               </button>
@@ -373,7 +373,7 @@ export default function GanttChart({
             {canEdit && (
               <button 
                 onClick={() => setIsEditMode(!isEditMode)} 
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-all ${isEditMode ? 'bg-amber-500 text-white shadow-lg shadow-amber-500/30' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200'}`}
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-caption font-semibold transition-all ${isEditMode ? 'bg-amber-500 text-white shadow-lg shadow-amber-500/30' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200'}`}
               >
                 <Edit className="w-4 h-4" />
                 {isEditMode ? "إغلاق التعديل" : "تعديل الخطة"}
@@ -389,23 +389,23 @@ export default function GanttChart({
           </div>
         </div>
         
-        <div className="print-title px-5 py-4 font-black text-2xl text-center border-b">
+        <div className="print-title px-5 py-4 font-semibold text-page text-center border-b">
           مخطط تنفيذ {activeLabel}
         </div>
 
         {/* Grid */}
         <div className="flex-1 overflow-auto p-2 md:p-6 print:p-0">
           <div className="min-w-max overflow-hidden rounded-lg border border-slate-200 bg-white shadow-[0_1px_2px_rgb(15_23_42/0.04)] dark:border-slate-800 dark:bg-slate-900 print:w-full print:border-none print:shadow-none">
-            <table className="w-full text-right text-sm border-collapse">
+            <table className="w-full text-right text-caption border-collapse">
               <thead>
                 <tr className="bg-slate-50 dark:bg-slate-900">
-                  <th className="sticky right-0 z-10 h-10 w-48 border-b border-l border-slate-200 bg-slate-50 px-3 text-[12.5px] font-medium text-slate-500 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-400 print:static print:bg-white">
+                  <th className="sticky right-0 z-10 h-10 w-48 border-b border-l border-slate-200 bg-slate-50 px-3 text-meta font-medium text-slate-500 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-400 print:static print:bg-white">
                     الجمعية
                   </th>
                   {weeks.map((w, i) => (
                     <th key={i} className={`min-w-[100px] border-b border-l border-slate-200 px-3 py-2 text-center dark:border-slate-800 ${w.isCurrent ? 'bg-primary/5 text-primary dark:text-teal-300' : 'text-slate-500 dark:text-slate-400'}`}>
-                      <div className="text-[12.5px] font-medium">{w.label}</div>
-                      <div className="text-[10px] font-normal mt-1 opacity-70">
+                      <div className="text-meta font-medium">{w.label}</div>
+                      <div className="text-caption font-normal mt-1 opacity-70">
                         {formatDate(w.start)} - {formatDate(w.end)}
                       </div>
                     </th>
@@ -469,7 +469,7 @@ export default function GanttChart({
                         >
                           <div className={`${displayMode === 'dots' ? 'flex' : 'hidden'} print:hidden justify-center items-center h-full min-h-[30px]`}>
                             {hasItems ? (
-                              <div className={`w-5 h-5 rounded-full shadow-sm flex items-center justify-center text-[10px] text-white font-bold transition-all transform hover:scale-110 ${allDone ? 'bg-emerald-500' : dotColorClass}`}>
+                              <div className={`w-5 h-5 rounded-full shadow-sm flex items-center justify-center text-caption text-white font-semibold transition-all transform hover:scale-110 ${allDone ? 'bg-emerald-500' : dotColorClass}`}>
                                 {allDone && <Check className="w-3 h-3" />}
                               </div>
                             ) : (
@@ -477,7 +477,7 @@ export default function GanttChart({
                             )}
                           </div>
                           
-                          <div className={`${displayMode === 'text' ? 'block' : 'hidden'} print:!block text-[9px] text-right`}>
+                          <div className={`${displayMode === 'text' ? 'block' : 'hidden'} print:!block text-caption text-right`}>
                             {overlappingItems.map((item, idx) => (
                               <div key={idx} className="mb-1 pb-1 border-b border-slate-100 last:border-0 flex items-center gap-1">
                                 <div className={`w-1.5 h-1.5 rounded-full shrink-0 ${item.isDone ? 'bg-emerald-500' : 'bg-slate-300'}`} />
@@ -502,7 +502,7 @@ export default function GanttChart({
           className={`fixed z-[100] bg-white dark:bg-slate-800 rounded-xl shadow-2xl border border-slate-100 dark:border-slate-700 p-4 w-64 pointer-events-none transform -translate-x-1/2 animate-in fade-in zoom-in-95 duration-200 flex flex-col ${hoverData.position === 'top' ? '-translate-y-full mt-[-10px]' : 'mt-[10px]'}`}
           style={{ left: hoverData.x, top: hoverData.y }}
         >
-          <h4 className="font-bold text-slate-800 dark:text-slate-100 mb-2 border-b border-slate-100 dark:border-slate-700 pb-2 flex items-center gap-2 shrink-0">
+          <h4 className="font-semibold text-slate-800 dark:text-slate-100 mb-2 border-b border-slate-100 dark:border-slate-700 pb-2 flex items-center gap-2 shrink-0">
             <Info className="w-4 h-4 text-primary" />
             محتوى النقطة
           </h4>
@@ -515,14 +515,14 @@ export default function GanttChart({
               return acc;
             }, {} as Record<string, { stage: any, steps: any[] }>)).slice(0, 3).map(([stageName, group]: [string, any], idx) => (
               <div key={idx} className="bg-slate-50 dark:bg-slate-900/50 rounded-lg p-2 border border-slate-100 dark:border-slate-700">
-                <div className="flex items-center gap-2 font-bold text-slate-800 dark:text-slate-200 text-xs mb-1">
+                <div className="flex items-center gap-2 font-semibold text-slate-800 dark:text-slate-200 text-caption mb-1">
                   <div className={`w-2 h-2 rounded-full shrink-0 ${group.stage?.isDone ? 'bg-emerald-500' : 'bg-primary'}`} />
                   {stageName}
                 </div>
                 {group.steps.length > 0 && (
                   <div className="pl-4 border-r-2 border-slate-200 dark:border-slate-600 mr-1 mt-1.5 space-y-1.5 pr-2">
                     {group.steps.map((stp: any, sIdx: number) => (
-                      <div key={sIdx} className="flex items-center gap-1.5 text-[10px] text-slate-600 dark:text-slate-400">
+                      <div key={sIdx} className="flex items-center gap-1.5 text-caption text-slate-600 dark:text-slate-400">
                         <div className={`w-1.5 h-1.5 rounded-full shrink-0 ${stp.isDone ? 'bg-emerald-500' : 'bg-amber-400'}`} />
                         {stp.name}
                       </div>
@@ -536,7 +536,7 @@ export default function GanttChart({
               if (!acc[stageName]) acc[stageName] = true;
               return acc;
             }, {} as Record<string, boolean>)).length > 3 && (
-              <div className="mt-2 text-center text-[10px] font-bold text-primary bg-primary/5 rounded-lg py-2 border border-primary/10">
+              <div className="mt-2 text-center text-caption font-semibold text-primary bg-primary/5 rounded-lg py-2 border border-primary/10">
                 انقر لعرض التفاصيل الكاملة ...
               </div>
             )}
@@ -576,17 +576,17 @@ footer={
                     <div className="w-full md:w-[calc(50%-2rem)] bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-slate-800 shadow-[0_1px_2px_rgb(15_23_42/0.04)] transition-shadow hover:border-primary/30">
                       <div className="flex items-center justify-between mb-3 border-b border-slate-100 dark:border-slate-800 pb-2">
                          <div className="flex items-center gap-2">
-                           <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-primary/10 text-primary">مرحلة</span>
-                           <h4 className="font-bold text-slate-800 dark:text-slate-100 text-sm leading-tight">{stageName}</h4>
+                           <span className="text-caption font-semibold px-2 py-0.5 rounded-full bg-primary/10 text-primary">مرحلة</span>
+                           <h4 className="font-semibold text-slate-800 dark:text-slate-100 text-caption leading-tight">{stageName}</h4>
                          </div>
-                         {group.stage?.isDone && <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 flex items-center gap-1">مكتملة <Check className="w-3 h-3"/></span>}
+                         {group.stage?.isDone && <span className="text-caption font-semibold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 flex items-center gap-1">مكتملة <Check className="w-3 h-3"/></span>}
                       </div>
                       
                       {group.steps.length > 0 ? (
                         <div className="space-y-2.5">
                           {group.steps.map((stp: any, sIdx: number) => (
                             <div key={sIdx} className="flex items-center justify-between bg-slate-50 dark:bg-slate-800/50 p-2 rounded-lg border border-slate-100 dark:border-slate-700">
-                              <div className="flex items-center gap-2 text-xs font-bold text-slate-700 dark:text-slate-300">
+                              <div className="flex items-center gap-2 text-caption font-semibold text-slate-700 dark:text-slate-300">
                                 <div className={`w-1.5 h-1.5 rounded-full ${stp.isDone ? 'bg-emerald-500' : 'bg-amber-400'}`} />
                                 {stp.name}
                               </div>
@@ -595,7 +595,7 @@ footer={
                           ))}
                         </div>
                       ) : (
-                        <p className="text-xs text-slate-400">لا توجد خطوات مخصصة لهذه المرحلة في هذا الأسبوع.</p>
+                        <p className="text-caption text-slate-400">لا توجد خطوات مخصصة لهذه المرحلة في هذا الأسبوع.</p>
                       )}
                     </div>
                   </div>
@@ -629,7 +629,7 @@ closeOnBackdrop={false}
                       <div key={stg.id} className="bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-slate-800 shadow-[0_1px_2px_rgb(15_23_42/0.04)]">
                         {isEditingThisStage ? (
                           <div className="flex items-center gap-2">
-                            <input autoFocus type="text" value={editingName} onChange={e => setEditingName(e.target.value)} className="flex-1 border border-slate-300 rounded px-2 py-1 text-sm bg-white" placeholder="اسم المرحلة" />
+                            <input autoFocus type="text" value={editingName} onChange={e => setEditingName(e.target.value)} className="flex-1 border border-slate-300 rounded px-2 py-1 text-caption bg-white" placeholder="اسم المرحلة" />
                             <button onClick={() => handleEditItem(stg.id, 'stage')} className="p-1 bg-emerald-500 text-white rounded"><Check className="w-4 h-4"/></button>
                             <button onClick={() => setEditingItemId(null)} className="p-1 bg-slate-200 text-slate-600 rounded"><X className="w-4 h-4"/></button>
                           </div>
@@ -662,10 +662,10 @@ closeOnBackdrop={false}
                                 <Check className="w-3.5 h-3.5 text-white absolute pointer-events-none opacity-0 peer-checked:opacity-100 transition-opacity" />
                               </div>
                               <div>
-                                <div className="font-bold text-slate-800 dark:text-slate-200 text-sm">{stg.name} (مرحلة كاملة)</div>
+                                <div className="font-semibold text-slate-800 dark:text-slate-200 text-caption">{stg.name} (مرحلة كاملة)</div>
                                 <div className="flex items-center gap-2 mt-2">
                                    <input type="checkbox" checked={!!stg.isDone} onChange={(e) => toggleItemCompletion('stage', stg.id, e)} className="cursor-pointer" />
-                                   <span className="text-[10px] text-slate-500">تم إنجاز المرحلة</span>
+                                   <span className="text-caption text-slate-500">تم إنجاز المرحلة</span>
                                 </div>
                               </div>
                             </label>
@@ -685,7 +685,7 @@ closeOnBackdrop={false}
                               <div key={stp.id}>
                                 {isEditingThisStep ? (
                                   <div className="flex items-center gap-2 mr-8">
-                                    <input autoFocus type="text" value={editingName} onChange={e => setEditingName(e.target.value)} className="flex-1 border border-slate-300 rounded px-2 py-1 text-xs bg-white" placeholder="اسم الخطوة" />
+                                    <input autoFocus type="text" value={editingName} onChange={e => setEditingName(e.target.value)} className="flex-1 border border-slate-300 rounded px-2 py-1 text-caption bg-white" placeholder="اسم الخطوة" />
                                     <button onClick={() => handleEditItem(stp.id, 'step')} className="p-1 bg-emerald-500 text-white rounded"><Check className="w-3 h-3"/></button>
                                     <button onClick={() => setEditingItemId(null)} className="p-1 bg-slate-200 text-slate-600 rounded"><X className="w-3 h-3"/></button>
                                   </div>
@@ -720,10 +720,10 @@ closeOnBackdrop={false}
                                         <Check className="w-3 h-3 text-white absolute pointer-events-none opacity-0 peer-checked:opacity-100 transition-opacity" />
                                       </div>
                                       <div>
-                                        <div className="font-bold text-slate-700 dark:text-slate-300 text-xs">{stp.name}</div>
+                                        <div className="font-semibold text-slate-700 dark:text-slate-300 text-caption">{stp.name}</div>
                                         <div className="flex items-center gap-2 mt-1.5">
                                           <input type="checkbox" checked={!!stp.isDone} onChange={(e) => toggleItemCompletion('step', stp.id, e)} className="cursor-pointer" />
-                                          <span className="text-[10px] text-slate-500">تم إنجاز الخطوة</span>
+                                          <span className="text-caption text-slate-500">تم إنجاز الخطوة</span>
                                         </div>
                                       </div>
                                     </label>
@@ -739,12 +739,12 @@ closeOnBackdrop={false}
                           
                           {addingToStageId === stg.id ? (
                             <div className="flex items-center gap-2 mr-8 mt-2">
-                              <input autoFocus type="text" value={newName} onChange={e => setNewName(e.target.value)} className="flex-1 border border-slate-300 rounded px-2 py-1 text-xs bg-white" placeholder="اسم الخطوة الجديدة" />
+                              <input autoFocus type="text" value={newName} onChange={e => setNewName(e.target.value)} className="flex-1 border border-slate-300 rounded px-2 py-1 text-caption bg-white" placeholder="اسم الخطوة الجديدة" />
                               <button onClick={() => handleAddStep(stg.id)} className="p-1 bg-amber-500 text-white rounded"><Check className="w-3 h-3"/></button>
                               <button onClick={() => setAddingToStageId(null)} className="p-1 bg-slate-200 text-slate-600 rounded"><X className="w-3 h-3"/></button>
                             </div>
                           ) : (
-                            <button onClick={() => { setAddingToStageId(stg.id); setNewName(""); }} className="text-[10px] text-slate-400 hover:text-amber-500 flex items-center gap-1 mr-8 mt-2 font-bold"><Plus className="w-3 h-3"/> إضافة خطوة</button>
+                            <button onClick={() => { setAddingToStageId(stg.id); setNewName(""); }} className="text-caption text-slate-400 hover:text-amber-500 flex items-center gap-1 mr-8 mt-2 font-semibold"><Plus className="w-3 h-3"/> إضافة خطوة</button>
                           )}
                         </div>
                       </div>
@@ -753,19 +753,19 @@ closeOnBackdrop={false}
                   
                   {isAddingStage ? (
                     <div className="bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-200 shadow-[0_1px_2px_rgb(15_23_42/0.04)] flex items-center gap-2">
-                      <input autoFocus type="text" value={newName} onChange={e => setNewName(e.target.value)} className="flex-1 border border-slate-300 rounded px-2 py-2 text-sm bg-white" placeholder="اسم المرحلة الجديدة" />
+                      <input autoFocus type="text" value={newName} onChange={e => setNewName(e.target.value)} className="flex-1 border border-slate-300 rounded px-2 py-2 text-caption bg-white" placeholder="اسم المرحلة الجديدة" />
                       <button onClick={handleAddStage} className="p-2 bg-primary text-white rounded"><Check className="w-4 h-4"/></button>
                       <button onClick={() => setIsAddingStage(false)} className="p-2 bg-slate-200 text-slate-600 rounded"><X className="w-4 h-4"/></button>
                     </div>
                   ) : (
-                    <button onClick={() => { setIsAddingStage(true); setNewName(""); }} className="w-full py-3 border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-lg text-slate-500 font-bold text-sm hover:bg-slate-100 hover:text-primary transition-colors flex items-center justify-center gap-2"><Plus className="w-4 h-4"/> إضافة مرحلة جديدة</button>
+                    <button onClick={() => { setIsAddingStage(true); setNewName(""); }} className="w-full py-3 border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-lg text-slate-500 font-semibold text-caption hover:bg-slate-100 hover:text-primary transition-colors flex items-center justify-center gap-2"><Plus className="w-4 h-4"/> إضافة مرحلة جديدة</button>
                   )}
                 </div>
               )}
             </div>
 <div className="flex flex-col gap-3 border-t border-slate-100 pt-4 dark:border-slate-700">
               <div className="bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-slate-800">
-                <label className="flex items-center gap-2 font-bold text-slate-700 dark:text-slate-200 cursor-pointer w-fit">
+                <label className="flex items-center gap-2 font-semibold text-slate-700 dark:text-slate-200 cursor-pointer w-fit">
                   <div className="relative flex items-center justify-center">
                     <input 
                       type="checkbox" 
@@ -781,7 +781,7 @@ closeOnBackdrop={false}
                 {unifyTargetIds.length > 0 && (
                   <div className="mt-4 grid grid-cols-2 sm:grid-cols-3 gap-3 pt-3 border-t border-slate-100 dark:border-slate-700 max-h-32 overflow-y-auto pr-2">
                     {charities.filter(c => c.id !== modalState.charityId).map(c => (
-                      <label key={c.id} className="flex items-center gap-2 text-xs font-bold text-slate-600 dark:text-slate-400 cursor-pointer hover:text-primary transition-colors">
+                      <label key={c.id} className="flex items-center gap-2 text-caption font-semibold text-slate-600 dark:text-slate-400 cursor-pointer hover:text-primary transition-colors">
                         <input 
                           type="checkbox" 
                           checked={unifyTargetIds.includes(c.id)} 

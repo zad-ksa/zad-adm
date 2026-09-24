@@ -130,7 +130,7 @@ export default function StrategicReportClient({ charityName, year, quarter, init
         <ReportDimensionsChart axes={axes} quarter={quarter} reportData={reportData} setReportData={setReportData} />
         
         <div className="mt-8">
-          <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-100 mb-6 print:text-xl transition-colors">تفاصيل الأداء الاستراتيجي</h2>
+          <h2 className="text-section font-semibold text-slate-800 dark:text-slate-100 mb-6 transition-colors">تفاصيل الأداء الاستراتيجي</h2>
           {axes.map(axis => (
             <ReportDataTable key={axis.id} axis={axis} quarter={quarter} reportData={reportData} setReportData={setReportData} />
           ))}

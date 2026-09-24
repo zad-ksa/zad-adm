@@ -102,16 +102,16 @@ export default function SurveyLinkManager({ charityName, surveyType }: { charity
       <div className="flex flex-col gap-4">
         <div className="flex items-center justify-between">
           <div>
-            <h3 className="font-bold text-slate-800 flex items-center gap-2">
+            <h3 className="font-semibold text-slate-800 flex items-center gap-2">
               <span className="w-2 h-6 rounded-full bg-blue-500 inline-block"></span>
               {title}
             </h3>
-            <p className="text-xs text-slate-500 mt-1">قم بإنشاء رابط مخصص وإرساله للموظفين. عند فتحهم للرابط سيتم تعبئة اسم الجمعية تلقائياً ولا يمكنهم تغييره.</p>
+            <p className="text-caption text-slate-500 mt-1">قم بإنشاء رابط مخصص وإرساله للموظفين. عند فتحهم للرابط سيتم تعبئة اسم الجمعية تلقائياً ولا يمكنهم تغييره.</p>
           </div>
           <button
             onClick={handleGenerate}
             disabled={generating}
-            className="bg-blue-50 hover:bg-blue-100 text-blue-700 font-bold py-2 px-4 rounded-lg text-sm transition-colors flex items-center gap-2 whitespace-nowrap"
+            className="bg-blue-50 hover:bg-blue-100 text-blue-700 font-semibold py-2 px-4 rounded-lg text-caption transition-colors flex items-center gap-2 whitespace-nowrap"
           >
             {generating ? "جاري..." : "إنشاء رابط جديد"}
             {!generating && (
@@ -123,33 +123,33 @@ export default function SurveyLinkManager({ charityName, surveyType }: { charity
         {surveyType === "VISION_MISSION" && (
           <div className="bg-slate-50 p-4 rounded-xl border border-slate-100 flex flex-col gap-4">
             <div>
-              <label className="block text-sm font-bold text-slate-700 mb-1">تخصيص سؤال الرؤية (اختياري)</label>
+              <label className="block text-caption font-semibold text-slate-700 mb-1">تخصيص سؤال الرؤية (اختياري)</label>
               <textarea
                 value={customVisionQ4}
                 onChange={(e) => setCustomVisionQ4(e.target.value)}
                 rows={2}
-                className="w-full px-4 py-2 rounded-lg border border-slate-200 text-sm focus:outline-none focus:border-blue-500 resize-none"
+                className="w-full px-4 py-2 rounded-lg border border-slate-200 text-caption focus:outline-none focus:border-blue-500 resize-none"
               />
             </div>
             <div>
-              <label className="block text-sm font-bold text-slate-700 mb-1">تخصيص السؤال الأول في الرسالة (السؤال الرابع) (اختياري)</label>
+              <label className="block text-caption font-semibold text-slate-700 mb-1">تخصيص السؤال الأول في الرسالة (السؤال الرابع) (اختياري)</label>
               <textarea
                 value={customMissionQ4}
                 onChange={(e) => setCustomMissionQ4(e.target.value)}
                 rows={2}
-                className="w-full px-4 py-2 rounded-lg border border-slate-200 text-sm focus:outline-none focus:border-blue-500 resize-none"
+                className="w-full px-4 py-2 rounded-lg border border-slate-200 text-caption focus:outline-none focus:border-blue-500 resize-none"
               />
             </div>
             <div>
-              <label className="block text-sm font-bold text-slate-700 mb-1">تخصيص السؤال الثاني في الرسالة (السؤال الخامس) (اختياري)</label>
+              <label className="block text-caption font-semibold text-slate-700 mb-1">تخصيص السؤال الثاني في الرسالة (السؤال الخامس) (اختياري)</label>
               <textarea
                 value={customMissionQ5}
                 onChange={(e) => setCustomMissionQ5(e.target.value)}
                 rows={2}
-                className="w-full px-4 py-2 rounded-lg border border-slate-200 text-sm focus:outline-none focus:border-blue-500 resize-none"
+                className="w-full px-4 py-2 rounded-lg border border-slate-200 text-caption focus:outline-none focus:border-blue-500 resize-none"
               />
             </div>
-            <p className="text-xs text-slate-500">يمكنك تعديل هذه الأسئلة يدوياً لتتناسب مع مجال عمل الجمعية قبل إنشاء الرابط.</p>
+            <p className="text-caption text-slate-500">يمكنك تعديل هذه الأسئلة يدوياً لتتناسب مع مجال عمل الجمعية قبل إنشاء الرابط.</p>
           </div>
         )}
       </div>
@@ -159,10 +159,10 @@ export default function SurveyLinkManager({ charityName, surveyType }: { charity
           <div className="flex items-center gap-3">
             <div className={`w-3 h-3 rounded-full ${activeLink.isActive ? "bg-emerald-500" : "bg-rose-500"}`}></div>
             <div>
-              <p className={`font-bold text-sm ${activeLink.isActive ? "text-emerald-800" : "text-rose-800"}`}>
+              <p className={`font-semibold text-caption ${activeLink.isActive ? "text-emerald-800" : "text-rose-800"}`}>
                 الرابط الحالي {activeLink.isActive ? "مفعل (يمكن للجميع استخدامه)" : "مغلق (لا يمكن استخدامه)"}
               </p>
-              <p className={`text-xs ${activeLink.isActive ? "text-emerald-600/70" : "text-rose-600/70"}`}>
+              <p className={`text-caption ${activeLink.isActive ? "text-emerald-600/70" : "text-rose-600/70"}`}>
                 معرف الرابط: <span className="font-mono bg-white/50 px-1 rounded">{activeLink.id.split('-')[0]}...</span>
               </p>
             </div>
@@ -172,7 +172,7 @@ export default function SurveyLinkManager({ charityName, surveyType }: { charity
             <button
               onClick={handleToggleActive}
               disabled={generating}
-              className={`px-4 py-2 rounded-lg text-xs font-bold transition-colors ${
+              className={`px-4 py-2 rounded-lg text-caption font-semibold transition-colors ${
                 activeLink.isActive 
                   ? "bg-rose-100 text-rose-700 hover:bg-rose-200" 
                   : "bg-emerald-100 text-emerald-700 hover:bg-emerald-200"
@@ -183,14 +183,14 @@ export default function SurveyLinkManager({ charityName, surveyType }: { charity
             <button
               onClick={handleGenerate}
               disabled={generating}
-              className="bg-blue-100 text-blue-700 hover:bg-blue-200 px-4 py-2 rounded-lg text-xs font-bold transition-colors flex items-center gap-2"
+              className="bg-blue-100 text-blue-700 hover:bg-blue-200 px-4 py-2 rounded-lg text-caption font-semibold transition-colors flex items-center gap-2"
             >
               {generating ? "جاري التوليد..." : "توليد رابط جديد"}
             </button>
             {activeLink.isActive && (
               <button
                 onClick={handleCopy}
-                className="bg-white border border-emerald-200 text-emerald-700 hover:bg-emerald-50 px-4 py-2 rounded-lg text-xs font-bold transition-colors flex items-center gap-2"
+                className="bg-white border border-emerald-200 text-emerald-700 hover:bg-emerald-50 px-4 py-2 rounded-lg text-caption font-semibold transition-colors flex items-center gap-2"
               >
                 {copied ? "تم النسخ!" : "نسخ الرابط"}
                 <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { btn } from "@/components/console/ui";
 import { confirmAction } from "@/components/console/confirmBus";
 import Select from "@/components/console/Select";
 import {
@@ -138,7 +139,7 @@ export default function GroupsClient({
           value={form.name}
           onChange={(e) => setForm({ ...form, name: e.target.value })}
         />
-        <label className="flex items-center gap-2 text-[12px] text-slate-500 dark:text-slate-400">
+        <label className="flex items-center gap-2 text-meta text-slate-500 dark:text-slate-400">
           من
           <input
             className={INPUT}
@@ -148,7 +149,7 @@ export default function GroupsClient({
             onChange={(e) => setForm({ ...form, startTime: e.target.value })}
           />
         </label>
-        <label className="flex items-center gap-2 text-[12px] text-slate-500 dark:text-slate-400">
+        <label className="flex items-center gap-2 text-meta text-slate-500 dark:text-slate-400">
           إلى
           <input
             className={INPUT}
@@ -175,7 +176,7 @@ export default function GroupsClient({
                     : [...form.workDays, i].sort(),
                 })
               }
-              className={`px-3 py-1.5 rounded-lg text-[11px] font-bold transition-colors ${
+              className={`px-3 py-1.5 rounded-lg text-caption font-semibold transition-colors ${
                 on
                   ? "bg-primary text-white"
                   : "bg-white dark:bg-slate-900 text-slate-400 border border-slate-200 dark:border-slate-700"
@@ -205,10 +206,10 @@ export default function GroupsClient({
       {/* ── المجموعات ─────────────────────────────────────────────────── */}
       <section className="space-y-3">
         <div className="flex items-center justify-between gap-3">
-          <h3 className="text-[13px] font-black text-slate-900 dark:text-slate-100 flex items-center gap-2">
+          <h3 className="text-body font-semibold text-slate-900 dark:text-slate-100 flex items-center gap-2">
             <Clock className="w-4 h-4 text-slate-400" />
             المجموعات
-            <span className="text-slate-400 font-bold tabular-nums">{groups.length}</span>
+            <span className="text-slate-400 font-semibold tabular-nums">{groups.length}</span>
           </h3>
           {!creating && !editingId && (
             <button
@@ -238,15 +239,15 @@ export default function GroupsClient({
               <div key={g.id} className={`${CARD} group/card`}>
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
-                    <p className="text-[14px] font-black text-slate-900 dark:text-slate-100 flex items-center gap-2 flex-wrap">
+                    <p className="text-body font-semibold text-slate-900 dark:text-slate-100 flex items-center gap-2 flex-wrap">
                       {g.name}
                       {g.isDefault && (
-                        <span className="inline-flex items-center gap-1 text-[10px] font-bold text-primary dark:text-teal-400 bg-primary/10 dark:bg-teal-500/15 px-1.5 py-0.5 rounded">
+                        <span className="inline-flex items-center gap-1 text-caption font-semibold text-primary dark:text-teal-400 bg-primary/10 dark:bg-teal-500/15 px-1.5 py-0.5 rounded">
                           <Star className="w-2.5 h-2.5" /> افتراضية
                         </span>
                       )}
                     </p>
-                    <p className="mt-0.5 text-[12px] text-slate-500 dark:text-slate-400 tabular-nums" dir="ltr">
+                    <p className="mt-0.5 text-meta text-slate-500 dark:text-slate-400 tabular-nums" dir="ltr">
                       {formatClock12(g.startTime)} – {formatClock12(g.endTime)}
                       <span className="text-slate-400"> · {hours} ساعات</span>
                     </p>
@@ -254,7 +255,7 @@ export default function GroupsClient({
 
                   <div className="flex items-center gap-1 shrink-0 opacity-0 group-hover/card:opacity-100 focus-within:opacity-100 transition-opacity">
                     <button
-                      className="h-7 w-7 rounded-lg text-slate-400 hover:text-primary hover:bg-primary/10 transition-colors inline-flex items-center justify-center"
+                      className={btn.icon}
                       title="تعديل"
                       disabled={busy}
                       onClick={() => startEdit(g)}
@@ -264,7 +265,7 @@ export default function GroupsClient({
                     {!g.isDefault && (
                       <>
                         <button
-                          className="h-7 w-7 rounded-lg text-slate-400 hover:text-primary hover:bg-primary/10 transition-colors inline-flex items-center justify-center"
+                          className={btn.icon}
                           title="اجعلها الافتراضية"
                           disabled={busy}
                           onClick={async () => {
@@ -280,7 +281,7 @@ export default function GroupsClient({
                           <Star className="w-3.5 h-3.5" />
                         </button>
                         <button
-                          className="h-7 w-7 rounded-lg text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-900/20 transition-colors inline-flex items-center justify-center"
+                          className={btn.iconDanger}
                           title="حذف — ينتقل أفرادها إلى الافتراضية"
                           disabled={busy}
                           onClick={() => run(() => deleteShiftGroup(g.id), "حُذفت المجموعة")}
@@ -304,7 +305,7 @@ export default function GroupsClient({
                       }}
                     />
                   </div>
-                  <div className="flex justify-between mt-1 text-[9px] text-slate-300 dark:text-slate-600 tabular-nums" dir="ltr">
+                  <div className="flex justify-between mt-1 text-caption text-slate-300 dark:text-slate-600 tabular-nums" dir="ltr">
                     <span>24</span>
                     <span>18</span>
                     <span>12</span>
@@ -321,7 +322,7 @@ export default function GroupsClient({
                       <span
                         key={i}
                         title={WEEKDAY_LABELS[i]}
-                        className={`w-6 h-6 rounded-lg inline-flex items-center justify-center text-[10px] font-bold ${
+                        className={`w-6 h-6 rounded-lg inline-flex items-center justify-center text-caption font-semibold ${
                           on
                             ? "bg-primary/10 text-primary dark:bg-teal-500/15 dark:text-teal-300"
                             : "bg-slate-50 text-slate-300 dark:bg-slate-800/50 dark:text-slate-600"
@@ -331,7 +332,7 @@ export default function GroupsClient({
                       </span>
                     );
                   })}
-                  <span className="mr-auto text-[11px] text-slate-400 tabular-nums">
+                  <span className="mr-auto text-caption text-slate-400 tabular-nums">
                     {g.workDays.length} أيام عمل
                   </span>
                 </div>
@@ -343,18 +344,18 @@ export default function GroupsClient({
                       <span
                         key={m.id}
                         title={m.name}
-                        className="w-7 h-7 rounded-full bg-slate-100 dark:bg-slate-800 border-2 border-white dark:border-slate-900 text-[10px] font-bold text-slate-500 dark:text-slate-300 inline-flex items-center justify-center"
+                        className="w-7 h-7 rounded-full bg-slate-100 dark:bg-slate-800 border-2 border-white dark:border-slate-900 text-caption font-semibold text-slate-500 dark:text-slate-300 inline-flex items-center justify-center"
                       >
                         {initials(m.name)}
                       </span>
                     ))}
                     {members.length > 5 && (
-                      <span className="w-7 h-7 rounded-full bg-slate-50 dark:bg-slate-800/60 border-2 border-white dark:border-slate-900 text-[10px] font-bold text-slate-400 inline-flex items-center justify-center tabular-nums">
+                      <span className="w-7 h-7 rounded-full bg-slate-50 dark:bg-slate-800/60 border-2 border-white dark:border-slate-900 text-caption font-semibold text-slate-400 inline-flex items-center justify-center tabular-nums">
                         +{members.length - 5}
                       </span>
                     )}
                   </div>
-                  <span className="text-[12px] text-slate-500 dark:text-slate-400 tabular-nums">
+                  <span className="text-meta text-slate-500 dark:text-slate-400 tabular-nums">
                     {members.length === 0 ? "لا أحد" : `${members.length} موظف`}
                   </span>
                 </div>
@@ -367,15 +368,15 @@ export default function GroupsClient({
       {/* ── الإسناد ───────────────────────────────────────────────────── */}
       <section className="space-y-3">
         <div className="flex items-center justify-between gap-3 flex-wrap">
-          <h3 className="text-[13px] font-black text-slate-900 dark:text-slate-100 flex items-center gap-2">
+          <h3 className="text-body font-semibold text-slate-900 dark:text-slate-100 flex items-center gap-2">
             <Users className="w-4 h-4 text-slate-400" />
             إسناد الموظفين
-            <span className="text-slate-400 font-bold tabular-nums">{employees.length}</span>
+            <span className="text-slate-400 font-semibold tabular-nums">{employees.length}</span>
           </h3>
           <div className="relative">
             <Search className="w-3.5 h-3.5 text-slate-400 absolute top-1/2 -translate-y-1/2 right-3" />
             <input
-              className="h-9 w-56 pr-9 pl-3 rounded-lg bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-[12px] text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none"
+              className="h-9 w-56 pr-9 pl-3 rounded-lg bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-meta text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none"
               placeholder="ابحث باسم الموظف"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
@@ -387,7 +388,7 @@ export default function GroupsClient({
             screen finally using it as one. */}
         {picked.size > 0 && (
           <div className="rounded-xl border border-primary/30 dark:border-teal-500/30 bg-primary/[0.03] dark:bg-teal-500/5 px-4 py-3 flex items-center gap-3 flex-wrap">
-            <span className="text-[12px] font-bold text-slate-700 dark:text-slate-200 tabular-nums">
+            <span className="text-meta font-semibold text-slate-700 dark:text-slate-200 tabular-nums">
               {picked.size} محدَّد
             </span>
             <Select
@@ -417,7 +418,7 @@ export default function GroupsClient({
               إسناد
             </button>
             <button
-              className="text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition-colors inline-flex items-center gap-1 text-[11px] font-bold mr-auto"
+              className="text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition-colors inline-flex items-center gap-1 text-caption font-semibold mr-auto"
               onClick={() => setPicked(new Set())}
             >
               <X className="w-3.5 h-3.5" /> إلغاء التحديد
@@ -427,7 +428,7 @@ export default function GroupsClient({
 
         <div className="rounded-xl border border-slate-200 dark:border-slate-800 divide-y divide-slate-100 dark:divide-slate-800 overflow-hidden">
           {shown.length === 0 && (
-            <p className="px-4 py-6 text-center text-[12px] text-slate-400">لا نتائج.</p>
+            <p className="px-4 py-6 text-center text-meta text-slate-400">لا نتائج.</p>
           )}
           {shown.map((e) => (
             <div
@@ -441,15 +442,15 @@ export default function GroupsClient({
                 onChange={() => toggle(e.id)}
                 aria-label={`تحديد ${e.name}`}
               />
-              <span className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 text-[11px] font-bold text-slate-500 dark:text-slate-300 inline-flex items-center justify-center shrink-0">
+              <span className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 text-caption font-semibold text-slate-500 dark:text-slate-300 inline-flex items-center justify-center shrink-0">
                 {initials(e.name)}
               </span>
-              <span className="text-[13px] font-bold text-slate-800 dark:text-slate-200 min-w-0 truncate">
+              <span className="text-body font-semibold text-slate-800 dark:text-slate-200 min-w-0 truncate">
                 {e.name}
               </span>
               <span className="mr-auto flex items-center gap-2 shrink-0">
                 {!e.shiftGroupId && (
-                  <span className="hidden sm:inline text-[10px] text-slate-400">
+                  <span className="hidden sm:inline text-caption text-slate-400">
                     يتبع {groupNameFor(e)}
                   </span>
                 )}

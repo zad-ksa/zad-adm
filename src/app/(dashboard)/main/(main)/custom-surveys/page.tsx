@@ -276,7 +276,7 @@ export default function SurveysPage() {
       {notice && (
         <div
           role={notice.tone === "error" ? "alert" : "status"}
-          className={`mb-6 flex items-start gap-2.5 rounded-xl border px-4 py-3 text-sm font-bold ${
+          className={`mb-6 flex items-start gap-2.5 rounded-xl border px-4 py-3 text-caption font-semibold ${
             notice.tone === "error"
               ? "border-red-200 bg-red-50 text-red-700 dark:border-red-900/40 dark:bg-red-900/20 dark:text-red-300"
               : "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-900/40 dark:bg-emerald-900/20 dark:text-emerald-300"
@@ -303,11 +303,11 @@ export default function SurveysPage() {
           <div className="w-16 h-16 bg-primary/10 text-primary rounded-full flex items-center justify-center mx-auto mb-4">
             <Plus className="w-8 h-8" />
           </div>
-          <h3 className="text-xl font-bold text-slate-800 mb-2 dark:text-slate-100">لا توجد استبيانات حالياً</h3>
+          <h3 className="text-section font-semibold text-slate-800 mb-2 dark:text-slate-100">لا توجد استبيانات حالياً</h3>
           <p className="text-slate-500 mb-6 dark:text-slate-400">قم بإنشاء استبيانك المخصص الأول لتبدأ في جمع الردود.</p>
           <button
             onClick={handleCreate}
-            className="bg-primary/10 text-primary font-bold px-6 py-2.5 rounded-lg hover:bg-primary hover:text-white transition-all"
+            className="bg-primary/10 text-primary font-semibold px-6 py-2.5 rounded-lg hover:bg-primary hover:text-white transition-all"
           >
             إنشاء استبيان
           </button>
@@ -317,25 +317,25 @@ export default function SurveysPage() {
           {surveys.map((survey) => (
             <div key={survey.id} className="bg-white border border-slate-200 rounded-xl p-6 shadow-[0_1px_2px_rgb(15_23_42/0.04)] transition-all relative group flex flex-col h-full dark:bg-slate-900 dark:border-slate-800 hover:border-primary/30">
               <div className="flex justify-between items-start mb-4">
-                <h3 className="font-bold text-lg text-slate-800 leading-tight dark:text-slate-100">{survey.title}</h3>
-                <span className={`px-3 py-1 rounded-full text-xs font-bold border ${survey.isActive ? 'bg-emerald-50 text-emerald-600 border-emerald-100 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/20' : 'bg-slate-50 text-slate-500 border-slate-200 dark:bg-slate-900/50 dark:text-slate-400 dark:border-slate-700'}`}>
+                <h3 className="font-semibold text-section text-slate-800 leading-tight dark:text-slate-100">{survey.title}</h3>
+                <span className={`px-3 py-1 rounded-full text-caption font-semibold border ${survey.isActive ? 'bg-emerald-50 text-emerald-600 border-emerald-100 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/20' : 'bg-slate-50 text-slate-500 border-slate-200 dark:bg-slate-900/50 dark:text-slate-400 dark:border-slate-700'}`}>
                   {survey.isActive ? 'فعّال' : 'غير فعّال'}
                 </span>
               </div>
 
-              <div className="text-sm text-slate-500 mb-6 flex-1 dark:text-slate-400">
+              <div className="text-caption text-slate-500 mb-6 flex-1 dark:text-slate-400">
                 تاريخ الإنشاء: {new Date(survey.createdAt).toLocaleDateString('ar-SA')}
               </div>
 
               <div className="flex items-center gap-3 mb-6 bg-slate-50 p-3 rounded-xl border border-slate-100 dark:bg-slate-900/50 dark:border-slate-700">
                 <div className="text-center flex-1 border-l border-slate-200 dark:border-slate-700">
-                  <span className="block text-2xl font-black text-primary">{survey._count.responses}</span>
-                  <span className="text-xs text-slate-500 font-medium dark:text-slate-400">ردود</span>
+                  <span className="block text-stat font-semibold text-primary">{survey._count.responses}</span>
+                  <span className="text-caption text-slate-500 font-medium dark:text-slate-400">ردود</span>
                 </div>
                 <div className="flex-1 flex justify-center">
                   <button
                     onClick={() => handleToggleActive(survey.id, survey.isActive)}
-                    className={`text-xs font-bold px-4 py-2 rounded-lg transition-all ${
+                    className={`text-caption font-semibold px-4 py-2 rounded-lg transition-all ${
                       survey.isActive
                         ? "bg-amber-100 text-amber-700 hover:bg-amber-200 dark:bg-amber-500/10 dark:text-amber-400 dark:hover:bg-amber-500/20"
                         : "bg-emerald-100 text-emerald-700 hover:bg-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400 dark:hover:bg-emerald-500/20"
@@ -355,7 +355,7 @@ export default function SurveysPage() {
                 </Link>
                 <Link
                   href={`/main/custom-surveys/${survey.id}/results`}
-                  className="flex-1 bg-primary/10 text-primary hover:bg-primary hover:text-white py-2 rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition-all"
+                  className="flex-1 bg-primary/10 text-primary hover:bg-primary hover:text-white py-2 rounded-xl text-caption font-semibold flex items-center justify-center gap-2 transition-all"
                 >
                   <Eye className="w-4 h-4" /> النتائج
                 </Link>
@@ -409,25 +409,25 @@ export default function SurveysPage() {
             <div key={survey.id} className="flex flex-col sm:flex-row sm:items-center gap-3 p-4">
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">
-                  <h3 className="font-bold text-sm text-slate-800 dark:text-slate-100 truncate">{survey.title}</h3>
-                  <span className={`shrink-0 px-2 py-0.5 rounded-full text-[10px] font-bold border ${survey.isActive ? 'bg-emerald-50 text-emerald-600 border-emerald-100 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/20' : 'bg-slate-50 text-slate-500 border-slate-200 dark:bg-slate-900/50 dark:text-slate-400 dark:border-slate-700'}`}>
+                  <h3 className="font-semibold text-caption text-slate-800 dark:text-slate-100 truncate">{survey.title}</h3>
+                  <span className={`shrink-0 px-2 py-0.5 rounded-full text-caption font-semibold border ${survey.isActive ? 'bg-emerald-50 text-emerald-600 border-emerald-100 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/20' : 'bg-slate-50 text-slate-500 border-slate-200 dark:bg-slate-900/50 dark:text-slate-400 dark:border-slate-700'}`}>
                     {survey.isActive ? 'فعّال' : 'غير فعّال'}
                   </span>
                 </div>
-                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                <p className="text-caption text-slate-500 dark:text-slate-400 mt-0.5">
                   تاريخ الإنشاء: {new Date(survey.createdAt).toLocaleDateString('ar-SA')}
                 </p>
               </div>
 
               <div className="flex items-center gap-4 shrink-0">
                 <div className="text-center px-2">
-                  <span className="block text-base font-black text-primary leading-none">{survey._count.responses}</span>
-                  <span className="text-[10px] text-slate-500 dark:text-slate-400">ردود</span>
+                  <span className="block text-title font-semibold text-primary leading-none">{survey._count.responses}</span>
+                  <span className="text-caption text-slate-500 dark:text-slate-400">ردود</span>
                 </div>
 
                 <button
                   onClick={() => handleToggleActive(survey.id, survey.isActive)}
-                  className={`text-xs font-bold px-3 py-1.5 rounded-lg transition-all whitespace-nowrap ${
+                  className={`text-caption font-semibold px-3 py-1.5 rounded-lg transition-all whitespace-nowrap ${
                     survey.isActive
                       ? "bg-amber-100 text-amber-700 hover:bg-amber-200 dark:bg-amber-500/10 dark:text-amber-400 dark:hover:bg-amber-500/20"
                       : "bg-emerald-100 text-emerald-700 hover:bg-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400 dark:hover:bg-emerald-500/20"

@@ -20,7 +20,7 @@ import {
   LEAVE_TYPE_LABELS,
   formatClock12,
 } from "@/lib/attendanceTime";
-import { BTN, Feedback, GHOST, INPUT, useSettingsAction } from "../shared";
+import { BTN, Feedback, GHOST, INPUT, INPUT_AUTO, useSettingsAction } from "../shared";
 
 type DayRecord = {
   status: string;
@@ -128,9 +128,9 @@ export default function RecordsClient({
           value={month}
           dir="ltr"
           onChange={(e) => e.target.value && go(selectedId, e.target.value)}
-          className="h-9 px-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-[12px] text-slate-600 dark:text-slate-300"
+          className="h-9 px-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-meta text-slate-600 dark:text-slate-300"
         />
-        <span className="text-[11px] text-slate-400 tabular-nums">
+        <span className="text-caption text-slate-400 tabular-nums">
           دوام «{schedule.groupName}»{" "}
           <span dir="ltr">
             {formatClock12(schedule.startTime)} – {formatClock12(schedule.endTime)}
@@ -155,16 +155,16 @@ export default function RecordsClient({
                 }`}
               >
                 <span
-                  className={`w-24 shrink-0 text-[12px] tabular-nums ${
+                  className={`w-24 shrink-0 text-meta tabular-nums ${
                     d.isWorkDay
-                      ? "font-bold text-slate-700 dark:text-slate-200"
+                      ? "font-semibold text-slate-700 dark:text-slate-200"
                       : "text-slate-400 dark:text-slate-500"
                   }`}
                 >
                   {dayLabel(d.date)}
                 </span>
 
-                <span className="flex-1 min-w-0 flex items-center gap-2 flex-wrap text-[12px]">
+                <span className="flex-1 min-w-0 flex items-center gap-2 flex-wrap text-meta">
                   {r ? (
                     <>
                       <span className="tabular-nums text-slate-600 dark:text-slate-300" dir="ltr">
@@ -190,7 +190,7 @@ export default function RecordsClient({
                       )}
                       {r.manualAt && (
                         <span
-                          className="inline-flex items-center gap-1 text-[10px] font-bold px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400"
+                          className="inline-flex items-center gap-1 text-caption font-semibold px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400"
                           title={r.manualReason ?? undefined}
                         >
                           <PenLine className="w-2.5 h-2.5" />
@@ -215,7 +215,7 @@ export default function RecordsClient({
 
                 {!d.isFuture && (
                   <button
-                    className="shrink-0 h-7 px-2.5 rounded-lg text-[11px] font-bold text-slate-500 dark:text-slate-400 hover:text-primary hover:bg-primary/10 transition-colors inline-flex items-center gap-1"
+                    className="shrink-0 h-7 px-2.5 rounded-lg text-caption font-semibold text-slate-500 dark:text-slate-400 hover:text-primary hover:bg-primary/10 transition-colors inline-flex items-center gap-1"
                     disabled={busy}
                     onClick={() => (isEditing ? setEditing(null) : open(d))}
                   >
@@ -235,20 +235,20 @@ export default function RecordsClient({
               {isEditing && (
                 <div className="px-4 pb-4 pt-1 bg-primary/[0.03] dark:bg-teal-500/5 border-t border-primary/20 dark:border-teal-500/20">
                   <div className="grid sm:grid-cols-[auto_auto_1fr] gap-2 items-center">
-                    <label className="flex items-center gap-2 text-[12px] text-slate-500 dark:text-slate-400">
+                    <label className="flex items-center gap-2 text-meta text-slate-500 dark:text-slate-400">
                       حضور
                       <input
-                        className={`${INPUT} w-auto`}
+                        className={INPUT_AUTO}
                         type="time"
                         dir="ltr"
                         value={form.checkIn}
                         onChange={(e) => setForm({ ...form, checkIn: e.target.value })}
                       />
                     </label>
-                    <label className="flex items-center gap-2 text-[12px] text-slate-500 dark:text-slate-400">
+                    <label className="flex items-center gap-2 text-meta text-slate-500 dark:text-slate-400">
                       انصراف
                       <input
-                        className={`${INPUT} w-auto`}
+                        className={INPUT_AUTO}
                         type="time"
                         dir="ltr"
                         value={form.checkOut}
@@ -274,7 +274,7 @@ export default function RecordsClient({
                     </button>
                     {r && (
                       <button
-                        className="h-9 px-3 rounded-lg text-[12px] font-bold text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-900/20 hover:bg-rose-100 dark:hover:bg-rose-900/30 disabled:opacity-50 transition-colors inline-flex items-center gap-1.5"
+                        className="h-9 px-3 rounded-lg text-meta font-semibold text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-900/20 hover:bg-rose-100 dark:hover:bg-rose-900/30 disabled:opacity-50 transition-colors inline-flex items-center gap-1.5"
                         disabled={busy || form.reason.trim().length < 3}
                         onClick={async () => {
                           const ok = await confirmAction({
@@ -292,11 +292,11 @@ export default function RecordsClient({
                       إلغاء
                     </button>
                     {form.reason.trim().length < 3 && (
-                      <span className="text-[11px] text-slate-400">السبب مطلوب (٣ أحرف فأكثر)</span>
+                      <span className="text-caption text-slate-400">السبب مطلوب (٣ أحرف فأكثر)</span>
                     )}
                   </div>
 
-                  <p className="mt-2 text-[11px] text-slate-400 dark:text-slate-500 leading-relaxed">
+                  <p className="mt-2 text-caption text-slate-400 dark:text-slate-500 leading-relaxed">
                     الحالة تُحسب من الأوقات بدوام «{schedule.groupName}» تماماً كتسجيل حقيقي، ولا
                     تُكتب إحداثيات — السجل يُوسم بأنه أُدخل يدوياً باسمك.
                   </p>

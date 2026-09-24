@@ -25,10 +25,10 @@ export default function CircularLoader() {
 
       {/* Loading message */}
       <div className="mt-8 flex flex-col items-center gap-2">
-        <p className="text-slate-600 font-bold text-base tracking-wide animate-pulse">
+        <p className="text-slate-600 font-semibold text-title tracking-wide animate-pulse">
           جاري التحميل...
         </p>
-        <p className="text-slate-400 font-medium text-xs">
+        <p className="text-slate-400 font-medium text-caption">
           يرجى الانتظار لحظات
         </p>
       </div>

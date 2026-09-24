@@ -119,7 +119,7 @@ export default function MyAttendanceClient({
   return (
     <div className="space-y-5" dir="rtl">
       {!isOpen && (
-        <div className="flex items-start gap-2.5 rounded-xl bg-slate-100 dark:bg-slate-800/60 text-slate-600 dark:text-slate-300 px-4 py-3 text-[13px] leading-relaxed">
+        <div className="flex items-start gap-2.5 rounded-xl bg-slate-100 dark:bg-slate-800/60 text-slate-600 dark:text-slate-300 px-4 py-3 text-body leading-relaxed">
           <Lock className="w-4 h-4 shrink-0 mt-0.5" />
           <span>
             نظام التحضير غير مفعّل بعد. لا يُسجَّل حضور ولا غياب حتى تفعّله إدارة الموارد البشرية.
@@ -128,21 +128,21 @@ export default function MyAttendanceClient({
       )}
 
       {isOpen && !hasSites && !remoteAllowed && (
-        <div className="flex items-start gap-2.5 rounded-xl bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-400 px-4 py-3 text-[13px]">
+        <div className="flex items-start gap-2.5 rounded-xl bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-400 px-4 py-3 text-body">
           <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
           <span>لم يُحدَّد موقع عمل بعد. راجع إدارة الموارد البشرية.</span>
         </div>
       )}
 
       {error && (
-        <div className="flex items-start gap-2.5 rounded-xl bg-rose-50 dark:bg-rose-900/20 text-rose-600 dark:text-rose-400 px-4 py-3 text-[13px] font-bold">
+        <div className="flex items-start gap-2.5 rounded-xl bg-rose-50 dark:bg-rose-900/20 text-rose-600 dark:text-rose-400 px-4 py-3 text-body font-semibold">
           <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
           <span>{error}</span>
         </div>
       )}
 
       {notice && !error && (
-        <div className="flex items-start gap-2.5 rounded-xl bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400 px-4 py-3 text-[13px] font-bold">
+        <div className="flex items-start gap-2.5 rounded-xl bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400 px-4 py-3 text-body font-semibold">
           <Check className="w-4 h-4 shrink-0 mt-0.5" />
           <span>{notice}</span>
         </div>
@@ -152,17 +152,17 @@ export default function MyAttendanceClient({
       <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5">
         <div className="flex items-start justify-between gap-4 flex-wrap">
           <div>
-            <p className="text-[11px] font-bold text-slate-400 dark:text-slate-500">اليوم</p>
-            <p className="mt-1 text-[15px] font-black text-slate-900 dark:text-slate-100">
+            <p className="text-caption font-semibold text-slate-400 dark:text-slate-500">اليوم</p>
+            <p className="mt-1 text-title font-semibold text-slate-900 dark:text-slate-100">
               {today?.checkInAt ? <bdi>{riyadhTime(today.checkInAt)}</bdi> : "لم تسجّل حضورك بعد"}
               {today?.checkOutAt && (
-                <span className="text-slate-400 dark:text-slate-500 font-bold">
+                <span className="text-slate-400 dark:text-slate-500 font-semibold">
                   {" ← "}
                   <bdi>{riyadhTime(today.checkOutAt)}</bdi>
                 </span>
               )}
             </p>
-            <p className="mt-1.5 flex items-center gap-2 flex-wrap text-[12px] text-slate-500 dark:text-slate-400">
+            <p className="mt-1.5 flex items-center gap-2 flex-wrap text-meta text-slate-500 dark:text-slate-400">
               <span className="inline-flex items-center gap-1">
                 <Clock className="w-3.5 h-3.5" />
                 {schedule.groupName} ·{" "}
@@ -177,13 +177,13 @@ export default function MyAttendanceClient({
                 </span>
               )}
               {today?.isRemote && (
-                <span className="inline-flex items-center gap-1 text-indigo-600 dark:text-indigo-400 font-bold">
+                <span className="inline-flex items-center gap-1 text-indigo-600 dark:text-indigo-400 font-semibold">
                   <Wifi className="w-3.5 h-3.5" />
                   عن بُعد
                 </span>
               )}
               {today?.status && (
-                <span className={`px-2 py-0.5 rounded-md font-bold ${TONE[today.status] ?? ""}`}>
+                <span className={`px-2 py-0.5 rounded-md font-semibold ${TONE[today.status] ?? ""}`}>
                   {ATTENDANCE_STATUS_LABELS[today.status] ?? today.status}
                 </span>
               )}
@@ -212,7 +212,7 @@ export default function MyAttendanceClient({
           </div>
         </div>
 
-        <p className="mt-3 text-[11px] text-slate-400 dark:text-slate-500">
+        <p className="mt-3 text-caption text-slate-400 dark:text-slate-500">
           أيام العمل: {schedule.workDays.map((d) => WEEKDAY_LABELS[d]).join("، ")}
           {remoteAllowed && " · مسموح لك بالتحضير عن بُعد"}
         </p>
@@ -220,18 +220,18 @@ export default function MyAttendanceClient({
 
       {/* سجل الشهر */}
       <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 overflow-hidden">
-        <p className="px-5 py-3 text-[11px] font-bold text-slate-400 dark:text-slate-500 border-b border-slate-100 dark:border-slate-800">
+        <p className="px-5 py-3 text-caption font-semibold text-slate-400 dark:text-slate-500 border-b border-slate-100 dark:border-slate-800">
           سجل هذا الشهر
         </p>
 
         {month.length === 0 ? (
-          <p className="px-5 py-10 text-center text-[12px] text-slate-400 dark:text-slate-500">
+          <p className="px-5 py-10 text-center text-meta text-slate-400 dark:text-slate-500">
             <CalendarOff className="w-5 h-5 mx-auto mb-2 opacity-60" />
             لا توجد أيام مسجّلة بعد.
           </p>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full text-[12px]">
+            <table className="w-full text-meta">
               <thead>
                 <tr className={theadRowClass}>
                   <th className={thClass}>اليوم</th>
@@ -253,7 +253,7 @@ export default function MyAttendanceClient({
                           and saying so is the difference between a record and a
                           claim about when somebody left. */}
                       {r.autoClosedAt && (
-                        <span className="mr-1.5 text-[10px] text-amber-600 dark:text-amber-400 font-bold">
+                        <span className="mr-1.5 text-caption text-amber-600 dark:text-amber-400 font-semibold">
                           <MoonStar className="w-3 h-3 inline" /> أُغلق تلقائياً
                         </span>
                       )}
@@ -262,7 +262,7 @@ export default function MyAttendanceClient({
                           rewrite of what happened. */}
                       {r.manualAt && (
                         <span
-                          className="mr-1.5 text-[10px] text-slate-500 dark:text-slate-400 font-bold"
+                          className="mr-1.5 text-caption text-slate-500 dark:text-slate-400 font-semibold"
                           title={r.manualReason ?? undefined}
                         >
                           <PenLine className="w-3 h-3 inline" /> أُدخل يدوياً
@@ -270,11 +270,11 @@ export default function MyAttendanceClient({
                       )}
                     </td>
                     <td className={tdClass}>
-                      <span className={`px-2 py-0.5 rounded-md font-bold ${TONE[r.status] ?? ""}`}>
+                      <span className={`px-2 py-0.5 rounded-md font-semibold ${TONE[r.status] ?? ""}`}>
                         {ATTENDANCE_STATUS_LABELS[r.status] ?? r.status}
                       </span>
                       {r.isRemote && (
-                        <span className="mr-1.5 text-[10px] text-indigo-600 dark:text-indigo-400 font-bold">
+                        <span className="mr-1.5 text-caption text-indigo-600 dark:text-indigo-400 font-semibold">
                           عن بُعد
                         </span>
                       )}
@@ -289,11 +289,11 @@ export default function MyAttendanceClient({
 
       {myLeaves.length > 0 && (
         <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5">
-          <p className="text-[11px] font-bold text-slate-400 dark:text-slate-500 mb-3">إجازاتي هذا العام</p>
+          <p className="text-caption font-semibold text-slate-400 dark:text-slate-500 mb-3">إجازاتي هذا العام</p>
           <ul className="space-y-1.5">
             {myLeaves.map((e, i) => (
-              <li key={i} className="text-[12px] text-slate-600 dark:text-slate-300 flex items-center gap-2">
-                <span className="font-bold">{LEAVE_TYPE_LABELS[e.type] ?? e.type}</span>
+              <li key={i} className="text-meta text-slate-600 dark:text-slate-300 flex items-center gap-2">
+                <span className="font-semibold">{LEAVE_TYPE_LABELS[e.type] ?? e.type}</span>
                 <span className="text-slate-400 tabular-nums">
                   {riyadhDate(e.startDate)} ← {riyadhDate(e.endDate)}
                 </span>

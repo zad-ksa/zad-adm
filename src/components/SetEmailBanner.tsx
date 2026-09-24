@@ -69,7 +69,7 @@ export default function SetEmailBanner({ href }: { href: string }) {
     >
       <Mail className="w-4 h-4 shrink-0" />
 
-      <p className="text-[13px] font-bold leading-relaxed min-w-0">
+      <p className="text-body font-semibold leading-relaxed min-w-0">
         لم تحدّث بريدك الإلكتروني بعد.{" "}
         <span className="font-medium opacity-90">
           أضِفه مع كلمة مرور لتتمكن من الدخول بهما بدل رمز التحقق.
@@ -78,7 +78,7 @@ export default function SetEmailBanner({ href }: { href: string }) {
 
       <Link
         href={href}
-        className="mr-auto shrink-0 px-3 py-1.5 rounded-lg text-[12px] font-bold
+        className="mr-auto shrink-0 px-3 py-1.5 rounded-lg text-meta font-semibold
                    bg-amber-600 text-white hover:bg-amber-700 transition-colors
                    dark:bg-amber-500 dark:hover:bg-amber-400 dark:text-amber-950"
       >

@@ -35,7 +35,7 @@ export function Pagination({
 
   return (
     <div className="flex items-center justify-between gap-3 px-1 py-2">
-      <p className="text-[13px] text-slate-500 dark:text-slate-400">
+      <p className="text-body text-slate-500 dark:text-slate-400">
         {from != null && to != null && total != null ? (
           <>
             <span className={MONO}>

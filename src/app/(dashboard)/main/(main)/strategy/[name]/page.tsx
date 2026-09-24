@@ -109,10 +109,10 @@ export default async function StrategySurveysPage({ params }: { params: Promise<
       {/* Section 1: Readiness Survey Results */}
       <div>
         <div className="flex items-center gap-3 mb-8 border-b border-slate-200 dark:border-slate-700 pb-4 print:hidden">
-          <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center text-primary font-bold">
+          <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center text-primary font-semibold">
             <ChartLineIcon />
           </div>
-          <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-100 tracking-tight">
+          <h2 className="text-section font-semibold text-slate-800 dark:text-slate-100 tracking-tight">
             نتائج استبيان الجاهزية للتخطيط الاستراتيجي
           </h2>
         </div>
@@ -122,7 +122,7 @@ export default async function StrategySurveysPage({ params }: { params: Promise<
         ) : (
           <div className="bg-white dark:bg-slate-900 rounded-xl p-12 text-center text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-800 shadow-[0_1px_2px_rgb(15_23_42/0.04)] transition-colors">
             <FileEditIcon />
-            <p className="font-bold mt-4">لم يقم أي مشارك بتعبئة استبيان الجاهزية للتخطيط الاستراتيجي لهذه الجمعية بعد.</p>
+            <p className="font-semibold mt-4">لم يقم أي مشارك بتعبئة استبيان الجاهزية للتخطيط الاستراتيجي لهذه الجمعية بعد.</p>
           </div>
         )}
       </div>

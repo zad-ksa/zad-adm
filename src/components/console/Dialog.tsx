@@ -193,11 +193,11 @@ export function Dialog({
             </span>
           )}
           <div className="min-w-0 space-y-0.5">
-            <h2 id={titleId} className="text-[16px] font-semibold leading-6">
+            <h2 id={titleId} className="text-title font-semibold leading-6">
               {title}
             </h2>
             {description && (
-              <p id={descId} className="text-[13px] leading-5 text-slate-500 dark:text-slate-400">
+              <p id={descId} className="text-body leading-5 text-slate-500 dark:text-slate-400">
                 {description}
               </p>
             )}

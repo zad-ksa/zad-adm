@@ -138,7 +138,7 @@ footer={
 <UploadProgress progress={uploadProgress} />
 {error && (
             <div
-              className="flex items-center gap-2 px-4 py-3 rounded-xl bg-rose-500/[0.08] text-rose-600 dark:text-rose-400 font-bold"
+              className="flex items-center gap-2 px-4 py-3 rounded-xl bg-rose-500/[0.08] text-rose-600 dark:text-rose-400 font-semibold"
               style={{ fontSize: "var(--dr-fs-meta)" }}
             >
               <AlertTriangle className="w-4 h-4 shrink-0" />
@@ -147,7 +147,7 @@ footer={
           )}
 <div>
             <label
-              className="block font-bold text-slate-500 dark:text-slate-400 mb-2"
+              className="block font-semibold text-slate-500 dark:text-slate-400 mb-2"
               style={{ fontSize: "var(--dr-fs-meta)" }}
             >
               اسم الطلب
@@ -164,7 +164,7 @@ footer={
           </div>
 <div>
             <label
-              className="block font-bold text-slate-500 dark:text-slate-400 mb-2"
+              className="block font-semibold text-slate-500 dark:text-slate-400 mb-2"
               style={{ fontSize: "var(--dr-fs-meta)" }}
             >
               تفاصيل الطلب
@@ -180,7 +180,7 @@ footer={
           </div>
 <div>
             <label
-              className="block font-bold text-slate-500 dark:text-slate-400 mb-2"
+              className="block font-semibold text-slate-500 dark:text-slate-400 mb-2"
               style={{ fontSize: "var(--dr-fs-meta)" }}
             >
               المرفقات الحالية
@@ -212,7 +212,7 @@ footer={
                         href={att.fileUrl}
                         target="_blank"
                         rel="noreferrer"
-                        className={`flex-1 truncate font-bold ${
+                        className={`flex-1 truncate font-semibold ${
                           isRemoved
                             ? "line-through text-rose-500 dark:text-rose-400"
                             : "text-slate-700 dark:text-slate-300 hover:text-primary"
@@ -227,7 +227,7 @@ footer={
                             isRemoved ? prev.filter((id) => id !== att.id) : [...prev, att.id]
                           )
                         }
-                        className={`shrink-0 font-bold ${
+                        className={`shrink-0 font-semibold ${
                           isRemoved
                             ? "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
                             : "text-slate-400 hover:text-rose-500"
@@ -245,7 +245,7 @@ footer={
 <div>
             {fileError && (
               <div
-                className="flex items-start gap-2 mb-2 px-3 py-2 rounded-lg bg-rose-500/[0.08] text-rose-600 dark:text-rose-400 font-bold"
+                className="flex items-start gap-2 mb-2 px-3 py-2 rounded-lg bg-rose-500/[0.08] text-rose-600 dark:text-rose-400 font-semibold"
                 style={{ fontSize: "var(--dr-fs-meta)" }}
               >
                 <AlertTriangle className="w-3.5 h-3.5 shrink-0 mt-px" />
@@ -253,7 +253,7 @@ footer={
               </div>
             )}
             <label
-              className="block font-bold text-slate-500 dark:text-slate-400 mb-2"
+              className="block font-semibold text-slate-500 dark:text-slate-400 mb-2"
               style={{ fontSize: "var(--dr-fs-meta)" }}
             >
               إضافة مرفقات
@@ -262,7 +262,7 @@ footer={
               </span>
             </label>
             <label
-              className="flex items-center justify-center gap-2 h-11 rounded-xl border-2 border-dashed border-slate-200 dark:border-slate-700 hover:border-primary/40 cursor-pointer text-slate-500 dark:text-slate-400 hover:text-primary dark:hover:text-teal-300 transition-colors font-bold"
+              className="flex items-center justify-center gap-2 h-11 rounded-xl border-2 border-dashed border-slate-200 dark:border-slate-700 hover:border-primary/40 cursor-pointer text-slate-500 dark:text-slate-400 hover:text-primary dark:hover:text-teal-300 transition-colors font-semibold"
               style={{ fontSize: "var(--dr-fs-meta)" }}
             >
               <Paperclip className="w-4 h-4" />

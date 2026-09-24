@@ -691,13 +691,13 @@ export default function TemplateLibraryClient() {
   // التحديد تحلّ محلّ أزرار الإنشاء في الشريط نفسه: لو اختلف الارتفاع لقفز
   // الشريط والقائمةُ تحته عند كل تحديد.
   const TOOL_BTN =
-    "h-9 px-3 rounded-xl bg-slate-100 dark:bg-[#111] text-slate-600 dark:text-slate-300 border border-transparent dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 transition-colors font-bold text-xs flex items-center gap-1.5";
+    "h-9 px-3 rounded-xl bg-slate-100 dark:bg-[#111] text-slate-600 dark:text-slate-300 border border-transparent dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 transition-colors font-semibold text-caption flex items-center gap-1.5";
 
   return (
     <div className="space-y-4" dir="rtl">
       {/* Breadcrumb + actions */}
       <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3 shadow-[0_1px_2px_rgb(15_23_42/0.04)] flex items-center justify-between gap-3 flex-wrap">
-        <div className="flex items-center gap-1 min-w-0 flex-wrap text-xs font-bold">
+        <div className="flex items-center gap-1 min-w-0 flex-wrap text-caption font-semibold">
           {/* كل درجة في المسار هدف إفلات — وهي الطريقة الوحيدة للنقل إلى
               الأعلى بالسحب، إذ لا يظهر المجلد الأب بين المعروضات. */}
           <button
@@ -747,7 +747,7 @@ export default function TemplateLibraryClient() {
             <>
               <span
                 title="اسحب المحدَّد إلى مجلد أو إلى درجة في المسار — أو انقله من «نقل إلى»"
-                className="h-9 px-2.5 rounded-xl bg-primary/10 border border-primary/25 text-primary dark:text-teal-300 text-xs font-bold flex items-center gap-1.5"
+                className="h-9 px-2.5 rounded-xl bg-primary/10 border border-primary/25 text-primary dark:text-teal-300 text-caption font-semibold flex items-center gap-1.5"
               >
                 {isMoving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" />}
                 {isMoving ? "جارٍ النقل…" : `${selected.size} محدَّد`}
@@ -763,7 +763,7 @@ export default function TemplateLibraryClient() {
                 <span className="hidden sm:inline">قص</span>
               </button>
 
-              <label className="flex items-center gap-1.5 text-xs font-bold text-slate-500">
+              <label className="flex items-center gap-1.5 text-caption font-semibold text-slate-500">
                 <FolderInput className="w-4 h-4" />
                 <Select
                   disabled={isMoving}
@@ -827,11 +827,11 @@ export default function TemplateLibraryClient() {
               onClick={paste}
               disabled={isPasting}
               title="لصق في هذا المجلد (Ctrl+V)"
-              className="h-9 px-3 rounded-lg bg-primary/10 text-primary dark:text-teal-300 border border-primary/30 hover:bg-primary/15 transition-colors font-bold text-xs flex items-center gap-1.5 disabled:opacity-50"
+              className="h-9 px-3 rounded-lg bg-primary/10 text-primary dark:text-teal-300 border border-primary/30 hover:bg-primary/15 transition-colors font-semibold text-caption flex items-center gap-1.5 disabled:opacity-50"
             >
               {isPasting ? <Loader2 className="w-4 h-4 animate-spin" /> : <ClipboardPaste className="w-4 h-4" />}
               لصق {clipboard.ids.length}
-              <span className="text-[10px] font-medium opacity-70">
+              <span className="text-caption font-medium opacity-70">
                 {clipboard.mode === "cut" ? "مقصوص" : "منسوخ"}
               </span>
             </button>
@@ -840,7 +840,7 @@ export default function TemplateLibraryClient() {
       </div>
 
       {uploadStatus && (
-        <p className="text-xs font-bold text-primary dark:text-teal-300 animate-pulse px-1">{uploadStatus}</p>
+        <p className="text-caption font-semibold text-primary dark:text-teal-300 animate-pulse px-1">{uploadStatus}</p>
       )}
 
       <div className="flex items-center gap-2 flex-wrap">
@@ -850,7 +850,7 @@ export default function TemplateLibraryClient() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder={currentId ? "بحث في هذا المجلد وما بداخله…" : "بحث في المكتبة كلها…"}
-            className="w-full h-9 ps-9 pe-9 rounded-lg bg-slate-100/70 dark:bg-slate-800/60 border border-transparent focus:bg-white dark:focus:bg-slate-900 focus:border-primary/30 outline-none text-sm transition-all"
+            className="w-full h-9 ps-9 pe-9 rounded-lg bg-slate-100/70 dark:bg-slate-800/60 border border-transparent focus:bg-white dark:focus:bg-slate-900 focus:border-primary/30 outline-none text-caption transition-all"
           />
           {search && (
             <button
@@ -873,7 +873,7 @@ export default function TemplateLibraryClient() {
               key={key}
               onClick={() => chooseSort(key)}
               title={sort === key ? (sortAsc ? "تصاعدي — اضغط للعكس" : "تنازلي — اضغط للعكس") : `ترتيب حسب ${label}`}
-              className={`h-7 px-2.5 rounded-lg text-xs font-bold flex items-center gap-1 transition-colors ${
+              className={`h-7 px-2.5 rounded-lg text-caption font-semibold flex items-center gap-1 transition-colors ${
                 sort === key
                   ? "bg-white dark:bg-slate-700 text-primary dark:text-teal-300 shadow-sm"
                   : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
@@ -923,7 +923,7 @@ export default function TemplateLibraryClient() {
       >
         <div data-surface="" className="space-y-4">
           {isSearchMode && (
-            <p className="text-xs font-bold text-slate-500 dark:text-slate-400 px-1">
+            <p className="text-caption font-semibold text-slate-500 dark:text-slate-400 px-1">
               {isSearching
                 ? "جارٍ البحث…"
                 : `${sorted.length} نتيجة ${currentId ? "في هذا المجلد وما بداخله" : "في المكتبة"}`}
@@ -931,7 +931,7 @@ export default function TemplateLibraryClient() {
           )}
 
           {error && (
-            <div className="flex items-start gap-2 px-4 py-3 rounded-xl bg-rose-500/[0.08] text-rose-600 dark:text-rose-400 font-bold text-xs">
+            <div className="flex items-start gap-2 px-4 py-3 rounded-xl bg-rose-500/[0.08] text-rose-600 dark:text-rose-400 font-semibold text-caption">
               <AlertTriangle className="w-4 h-4 shrink-0 mt-px" />
               <span>{error}</span>
             </div>
@@ -949,7 +949,7 @@ export default function TemplateLibraryClient() {
                   if (e.key === "Escape") { setIsCreatingFolder(false); setNewFolderName(""); }
                 }}
                 placeholder="اسم المجلد"
-                className="flex-1 h-9 px-3 rounded-lg bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-sm outline-none focus:border-primary"
+                className="flex-1 h-9 px-3 rounded-lg bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-caption outline-none focus:border-primary"
               />
               <button onClick={handleCreateFolder} className={btn.primary}>
                 إنشاء
@@ -970,7 +970,7 @@ export default function TemplateLibraryClient() {
           ) : sorted.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-16 gap-3 text-slate-400 dark:text-slate-600">
               <Folder className="w-12 h-12 text-slate-300 dark:text-slate-700" />
-              <p className="font-bold text-sm">
+              <p className="font-semibold text-caption">
                 {isSearchMode
                   ? `لا نتائج لـ«${search.trim()}»`
                   : currentId === null
@@ -1079,7 +1079,7 @@ export default function TemplateLibraryClient() {
                             if (e.key === "Escape") setRenamingId(null);
                           }}
                           onBlur={() => handleRename(row.id)}
-                          className="w-full h-8 px-2 rounded-lg bg-slate-50 dark:bg-slate-900 border border-primary text-sm outline-none"
+                          className="w-full h-8 px-2 rounded-lg bg-slate-50 dark:bg-slate-900 border border-primary text-caption outline-none"
                         />
                       ) : (
                         <button
@@ -1090,13 +1090,13 @@ export default function TemplateLibraryClient() {
                           onKeyDown={(e) => {
                             if (e.key === "Enter") { e.preventDefault(); openRow(row); }
                           }}
-                          className="block w-full text-right truncate text-sm font-bold text-slate-800 dark:text-slate-100 hover:text-primary"
+                          className="block w-full text-right truncate text-caption font-semibold text-slate-800 dark:text-slate-100 hover:text-primary"
                           title={row.kind === "FOLDER" ? `${row.name} — نقرتان للدخول` : `${row.name} — نقرتان للفتح`}
                         >
                           {row.name}
                         </button>
                       )}
-                      <p className="text-[10px] text-slate-400 truncate mt-0.5">
+                      <p className="text-caption text-slate-400 truncate mt-0.5">
                         {row.kind === "FOLDER"
                           ? `${row.childCount} عنصر`
                           : row.fileSize
@@ -1167,7 +1167,7 @@ export default function TemplateLibraryClient() {
           البطاقة المسحوبة وحدها، فلا يُعرف من تحديدٍ نصفه خارج الشاشة كم
           عنصراً يحمل المؤشّر فعلاً. */}
       {dragCount > 0 && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 pointer-events-none flex items-center gap-2 px-4 py-2 rounded-full bg-slate-900/90 dark:bg-slate-100/90 text-white dark:text-slate-900 text-xs font-bold shadow-lg">
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 pointer-events-none flex items-center gap-2 px-4 py-2 rounded-full bg-slate-900/90 dark:bg-slate-100/90 text-white dark:text-slate-900 text-caption font-semibold shadow-lg">
           <CornerUpLeft className="w-3.5 h-3.5" />
           نقل {dragCount} عنصر — أفلِتها على مجلد أو على المسار أعلاه
         </div>

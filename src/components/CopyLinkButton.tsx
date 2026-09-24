@@ -25,7 +25,7 @@ export default function CopyLinkButton({
   return (
     <button
       onClick={handleCopy}
-      className={`flex items-center gap-2 px-4 py-2 rounded-lg font-bold transition-all text-sm ${
+      className={`flex items-center gap-2 px-4 py-2 rounded-lg font-semibold transition-all text-caption ${
         path === "/hexagonal" 
           ? "bg-secondary/10 hover:bg-secondary/20 text-secondary"
           : "bg-primary/10 hover:bg-primary/20 text-primary"

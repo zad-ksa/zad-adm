@@ -238,7 +238,7 @@ export default function GenericStagesManager({
           <div className="p-0.5 text-slate-400 hover:text-slate-600 transition-colors">
             {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
           </div>
-          <h3 className="text-sm font-bold text-slate-800 dark:text-slate-100 flex items-center gap-1.5">
+          <h3 className="text-caption font-semibold text-slate-800 dark:text-slate-100 flex items-center gap-1.5">
             <Sparkles className="w-4 h-4 text-primary" />
             خدمة: {configName}
           </h3>
@@ -254,7 +254,7 @@ export default function GenericStagesManager({
         </div>
         <button
           onClick={(e) => { e.stopPropagation(); setIsAdding(true); expandPanel(); }}
-          className="flex items-center justify-center gap-1.5 bg-primary/10 hover:bg-primary/20 text-primary px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors"
+          className="flex items-center justify-center gap-1.5 bg-primary/10 hover:bg-primary/20 text-primary px-3 py-1.5 rounded-lg text-caption font-semibold transition-colors"
           disabled={isPending}
         >
           <Plus className="w-3.5 h-3.5" />
@@ -266,22 +266,22 @@ export default function GenericStagesManager({
         <div className="flex flex-col">
           {isEditingConfig && canManageService && (
         <div className="p-3 border-b border-slate-100 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/30">
-          <h4 className="font-bold text-xs mb-3 text-slate-700 dark:text-slate-300">إعدادات الخدمة</h4>
+          <h4 className="font-semibold text-caption mb-3 text-slate-700 dark:text-slate-300">إعدادات الخدمة</h4>
           <div className="mb-4">
-            <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-1">اسم الخدمة</label>
+            <label className="block text-caption font-semibold text-slate-500 dark:text-slate-400 mb-1">اسم الخدمة</label>
             <input
               type="text"
               value={configName}
               onChange={e => { setConfigName(e.target.value); setConfigError(null); }}
               aria-invalid={!!configError}
-              className={`w-full border bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 rounded-lg px-3 py-2 text-sm focus:ring-2 outline-none ${
+              className={`w-full border bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 rounded-lg px-3 py-2 text-caption focus:ring-2 outline-none ${
                 configError ? "border-red-400 focus:ring-red-200" : "border-slate-200 dark:border-slate-600 focus:ring-primary/50"
               }`}
             />
             {configError ? (
-              <p className="mt-1.5 text-xs font-bold text-red-600 dark:text-red-400">{configError}</p>
+              <p className="mt-1.5 text-caption font-semibold text-red-600 dark:text-red-400">{configError}</p>
             ) : (
-              <p className="mt-1.5 text-[11px] text-slate-400">تعديل الاسم يسري على الخدمة في كل الجمعيات.</p>
+              <p className="mt-1.5 text-caption text-slate-400">تعديل الاسم يسري على الخدمة في كل الجمعيات.</p>
             )}
           </div>
           <div className="flex justify-between items-center mt-2">
@@ -289,11 +289,11 @@ export default function GenericStagesManager({
               <button onClick={handleConfigUpdate} className={btn.primary} disabled={isPending}>
                 {isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />} حفظ
               </button>
-              <button onClick={() => { setIsEditingConfig(false); setConfigName(service.name); setConfigError(null); }} className="flex items-center gap-1.5 px-4 py-2 text-slate-600 bg-slate-200 hover:bg-slate-300 dark:bg-slate-700 dark:hover:bg-slate-600 dark:text-slate-300 rounded-lg text-sm font-bold" disabled={isPending}>
+              <button onClick={() => { setIsEditingConfig(false); setConfigName(service.name); setConfigError(null); }} className="flex items-center gap-1.5 px-4 py-2 text-slate-600 bg-slate-200 hover:bg-slate-300 dark:bg-slate-700 dark:hover:bg-slate-600 dark:text-slate-300 rounded-lg text-caption font-semibold" disabled={isPending}>
                 إلغاء
               </button>
             </div>
-            <button onClick={handleDeleteService} className="flex items-center gap-1.5 px-4 py-2 text-red-600 bg-red-100 hover:bg-red-200 dark:bg-red-900/30 dark:hover:bg-red-900/50 dark:text-red-400 rounded-lg text-sm font-bold transition-colors" disabled={isPending}>
+            <button onClick={handleDeleteService} className="flex items-center gap-1.5 px-4 py-2 text-red-600 bg-red-100 hover:bg-red-200 dark:bg-red-900/30 dark:hover:bg-red-900/50 dark:text-red-400 rounded-lg text-caption font-semibold transition-colors" disabled={isPending}>
               <Trash2 className="w-4 h-4" /> حذف من هذه الجمعية
             </button>
           </div>

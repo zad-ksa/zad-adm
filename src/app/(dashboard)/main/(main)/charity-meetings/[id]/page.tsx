@@ -67,12 +67,12 @@ export default async function CharityMeetingBookingsPage({
       <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-[0_1px_2px_rgb(15_23_42/0.04)] overflow-hidden">
         <div className="p-6 border-b border-slate-100 dark:border-slate-700/50 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
+            <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
               <Calendar className="w-5 h-5" />
             </div>
             <div>
-              <h2 className="font-bold text-slate-800 dark:text-slate-100 text-lg">المواعيد المحجوزة</h2>
-              <p className="text-xs text-slate-500 dark:text-slate-400">إجمالي الحجوزات: {schedule.bookings.length}</p>
+              <h2 className="font-semibold text-slate-800 dark:text-slate-100 text-section">المواعيد المحجوزة</h2>
+              <p className="text-caption text-slate-500 dark:text-slate-400">إجمالي الحجوزات: {schedule.bookings.length}</p>
             </div>
           </div>
         </div>
@@ -80,12 +80,12 @@ export default async function CharityMeetingBookingsPage({
         {schedule.bookings.length === 0 ? (
           <div className="p-12 text-center text-slate-500 dark:text-slate-400">
             <Calendar className="w-12 h-12 mx-auto mb-3 opacity-20" />
-            <p className="font-medium text-lg">لا توجد مواعيد محجوزة حتى الآن</p>
-            <p className="text-sm mt-1">عندما تقوم إحدى الجمعيات بحجز موعد سيظهر هنا.</p>
+            <p className="font-medium text-section">لا توجد مواعيد محجوزة حتى الآن</p>
+            <p className="text-caption mt-1">عندما تقوم إحدى الجمعيات بحجز موعد سيظهر هنا.</p>
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full text-sm text-right">
+            <table className="w-full text-caption text-right">
               <thead >
                 <tr className={theadRowClass}>
                   <th className={thClass}>الجمعية</th>
@@ -98,7 +98,7 @@ export default async function CharityMeetingBookingsPage({
               <tbody className={tbodyClass}>
                 {schedule.bookings.map((booking) => (
                   <tr key={booking.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition-colors">
-                    <td className={cx(tdClass, "font-bold text-slate-800 dark:text-slate-200")}>
+                    <td className={cx(tdClass, "font-semibold text-slate-800 dark:text-slate-200")}>
                       <div className="flex items-center gap-2">
                         <User className="w-4 h-4 text-slate-400" />
                         {booking.charityName}
@@ -119,7 +119,7 @@ export default async function CharityMeetingBookingsPage({
                         <span dir="ltr" className="inline-block font-mono bg-slate-100 dark:bg-slate-900 px-2 py-0.5 rounded">{formatClock12(booking.startTime)}</span>
                       </div>
                     </td>
-                    <td className={cx(tdClass, "text-xs text-slate-400 dark:text-slate-500")}>
+                    <td className={cx(tdClass, "text-caption text-slate-400 dark:text-slate-500")}>
                       {formatDate(booking.createdAt)}
                     </td>
                   </tr>
@@ -134,12 +134,12 @@ export default async function CharityMeetingBookingsPage({
       {schedule.allowAlternativeRequest && (
         <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-[0_1px_2px_rgb(15_23_42/0.04)] overflow-hidden">
           <div className="p-6 border-b border-slate-100 dark:border-slate-700/50 flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-amber-50 dark:bg-amber-950/30 flex items-center justify-center text-amber-500">
+            <div className="w-10 h-10 rounded-lg bg-amber-50 dark:bg-amber-950/30 flex items-center justify-center text-amber-500">
               <MessageSquareText className="w-5 h-5" />
             </div>
             <div>
-              <h2 className="font-bold text-slate-800 dark:text-slate-100 text-lg">طلبات مواعيد بديلة</h2>
-              <p className="text-xs text-slate-500 dark:text-slate-400">
+              <h2 className="font-semibold text-slate-800 dark:text-slate-100 text-section">طلبات مواعيد بديلة</h2>
+              <p className="text-caption text-slate-500 dark:text-slate-400">
                 جمعيات لم يناسبها أي من الأوقات المتاحة — إجمالي الطلبات: {schedule.alternativeRequests.length}
               </p>
             </div>
@@ -148,26 +148,26 @@ export default async function CharityMeetingBookingsPage({
           {schedule.alternativeRequests.length === 0 ? (
             <div className="p-12 text-center text-slate-500 dark:text-slate-400">
               <MessageSquareText className="w-12 h-12 mx-auto mb-3 opacity-20" />
-              <p className="font-medium text-lg">لا توجد طلبات مواعيد بديلة حتى الآن</p>
+              <p className="font-medium text-section">لا توجد طلبات مواعيد بديلة حتى الآن</p>
             </div>
           ) : (
             <div className="divide-y divide-slate-100 dark:divide-slate-700/50">
               {schedule.alternativeRequests.map((req) => (
                 <div key={req.id} className="p-6 flex flex-col sm:flex-row sm:items-start gap-4">
                   <div className="sm:w-56 shrink-0 space-y-1.5">
-                    <div className="flex items-center gap-2 font-bold text-slate-800 dark:text-slate-200">
+                    <div className="flex items-center gap-2 font-semibold text-slate-800 dark:text-slate-200">
                       <User className="w-4 h-4 text-slate-400" />
                       {req.charityName}
                     </div>
                     {req.contactPhone && (
-                      <div dir="ltr" className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400 justify-end sm:justify-start">
+                      <div dir="ltr" className="flex items-center gap-2 text-caption text-slate-500 dark:text-slate-400 justify-end sm:justify-start">
                         <Phone className="w-3.5 h-3.5" />
                         {req.contactPhone}
                       </div>
                     )}
-                    <p className="text-xs text-slate-400 dark:text-slate-500">{formatDate(req.createdAt)}</p>
+                    <p className="text-caption text-slate-400 dark:text-slate-500">{formatDate(req.createdAt)}</p>
                   </div>
-                  <p className="flex-1 text-sm text-slate-600 dark:text-slate-300 leading-relaxed bg-slate-50 dark:bg-slate-900/50 rounded-xl p-3">
+                  <p className="flex-1 text-caption text-slate-600 dark:text-slate-300 leading-relaxed bg-slate-50 dark:bg-slate-900/50 rounded-xl p-3">
                     {req.message}
                   </p>
                 </div>

@@ -166,7 +166,7 @@ export default function MeetingSummaryPanel({
       <div className="flex items-center gap-2 pt-1 px-1">
         <button
           onClick={handleOpen}
-          className="flex items-center gap-1.5 text-[11px] font-bold text-slate-400 hover:text-primary transition-colors"
+          className="flex items-center gap-1.5 text-caption font-semibold text-slate-400 hover:text-primary transition-colors"
         >
           {open ? <ChevronDown className="w-3.5 h-3.5" /> : <ChevronRight className="w-3.5 h-3.5" />}
           <span>الملخص والمهام</span>
@@ -188,13 +188,13 @@ export default function MeetingSummaryPanel({
                 <div className="w-14 h-1.5 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
                   <div className="h-full bg-emerald-500 rounded-full transition-all" style={{ width: `${pct}%` }} />
                 </div>
-                <span className="text-[10px] text-slate-500 font-bold">{pct}%</span>
+                <span className="text-caption text-slate-500 font-semibold">{pct}%</span>
               </div>
-              <span className="text-[10px] text-slate-400">{done}/{total}</span>
+              <span className="text-caption text-slate-400">{done}/{total}</span>
             </>
           )}
           {unassigned > 0 && !open && (
-            <span className="flex items-center gap-0.5 text-[10px] bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400 px-1.5 py-0.5 rounded-full font-bold">
+            <span className="flex items-center gap-0.5 text-caption bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400 px-1.5 py-0.5 rounded-full font-semibold">
               <AlertCircle className="w-3 h-3" /> {unassigned} غير مكلفة
             </span>
           )}
@@ -204,18 +204,18 @@ export default function MeetingSummaryPanel({
       {open && (
         <div className="mt-2 space-y-3 pb-1">
           {loading && (
-            <div className="flex items-center gap-2 text-xs text-slate-400 py-2">
+            <div className="flex items-center gap-2 text-caption text-slate-400 py-2">
               <Loader2 className="w-3.5 h-3.5 animate-spin" />
               <span>جاري تحليل المحضر بالذكاء الاصطناعي...</span>
             </div>
           )}
 
           {extractError && !loading && (
-            <div className="flex items-center justify-between gap-2 text-[11px] bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-900/40 rounded-xl px-3 py-2">
-              <span className="flex items-center gap-1.5 font-bold">
+            <div className="flex items-center justify-between gap-2 text-caption bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-900/40 rounded-xl px-3 py-2">
+              <span className="flex items-center gap-1.5 font-semibold">
                 <AlertCircle className="w-3.5 h-3.5 shrink-0" /> {extractError}
               </span>
-              <button onClick={() => loadSummary(true)} className="font-bold underline shrink-0">
+              <button onClick={() => loadSummary(true)} className="font-semibold underline shrink-0">
                 إعادة المحاولة
               </button>
             </div>
@@ -223,34 +223,34 @@ export default function MeetingSummaryPanel({
 
           {summary && (
             <div className="bg-primary/5 dark:bg-primary/10 border border-primary/10 dark:border-primary/20 rounded-xl p-3">
-              <div className="flex items-center gap-1.5 mb-1.5 text-[11px] font-bold text-primary dark:text-primary-foreground/80">
+              <div className="flex items-center gap-1.5 mb-1.5 text-caption font-semibold text-primary dark:text-primary-foreground/80">
                 <BookOpen className="w-3.5 h-3.5" /> الملخص التنفيذي
               </div>
-              <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">{summary}</p>
+              <p className="text-caption text-slate-600 dark:text-slate-300 leading-relaxed">{summary}</p>
             </div>
           )}
 
           {!editing ? (
             <div className="space-y-1.5">
               <div className="flex items-center justify-between">
-                <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 flex items-center gap-1">
+                <span className="text-caption font-semibold text-slate-500 dark:text-slate-400 flex items-center gap-1">
                   <ClipboardList className="w-3.5 h-3.5" /> المهام والتوصيات
                 </span>
                 {isTier1 && (
-                  <button onClick={openEdit} className="text-[10px] font-bold text-primary hover:underline flex items-center gap-1">
+                  <button onClick={openEdit} className="text-caption font-semibold text-primary hover:underline flex items-center gap-1">
                     <Edit2 className="w-3 h-3" /> تعديل التكليفات
                   </button>
                 )}
               </div>
 
               {localTasks.length === 0 ? (
-                <p className="text-[11px] text-slate-400 italic py-1">
+                <p className="text-caption text-slate-400 italic py-1">
                   {extracted ? "لا توجد مهام مسجلة" : "اضغط لتحليل المحضر"}
                 </p>
               ) : (
                 <div className="space-y-1">
                   {localTasks.map(task => (
-                    <div key={task.id} className={`flex items-start gap-2 p-2 rounded-lg text-xs border ${task.isDone ? "bg-emerald-50/40 dark:bg-emerald-900/10 border-emerald-100 dark:border-emerald-800/20" : task.assignedToId ? "bg-white dark:bg-slate-800/50 border-slate-100 dark:border-slate-700" : "bg-amber-50/50 dark:bg-amber-900/10 border-amber-100 dark:border-amber-800/20"}`}>
+                    <div key={task.id} className={`flex items-start gap-2 p-2 rounded-lg text-caption border ${task.isDone ? "bg-emerald-50/40 dark:bg-emerald-900/10 border-emerald-100 dark:border-emerald-800/20" : task.assignedToId ? "bg-white dark:bg-slate-800/50 border-slate-100 dark:border-slate-700" : "bg-amber-50/50 dark:bg-amber-900/10 border-amber-100 dark:border-amber-800/20"}`}>
                       <button
                         onClick={() => isTier1 && handleToggle(task)}
                         className={`mt-0.5 w-4 h-4 rounded border shrink-0 flex items-center justify-center transition-colors ${task.isDone ? "bg-emerald-500 border-emerald-500 text-white" : "border-slate-300 dark:border-slate-600"} ${isTier1 ? "cursor-pointer" : "cursor-default"}`}
@@ -261,16 +261,16 @@ export default function MeetingSummaryPanel({
                         <p className={`font-semibold leading-snug ${task.isDone ? "line-through text-slate-400" : "text-slate-700 dark:text-slate-200"}`}>{task.title}</p>
                         <div className="flex items-center gap-2 mt-0.5 flex-wrap">
                           {task.assignedTo ? (
-                            <span className="flex items-center gap-1 text-[10px] text-primary font-bold">
+                            <span className="flex items-center gap-1 text-caption text-primary font-semibold">
                               <User className="w-3 h-3" /> {task.assignedTo.name}
                             </span>
                           ) : (
-                            <span className="text-[10px] text-amber-600 dark:text-amber-400 font-bold flex items-center gap-1">
+                            <span className="text-caption text-amber-600 dark:text-amber-400 font-semibold flex items-center gap-1">
                               <AlertCircle className="w-3 h-3" /> غير مكلف
                             </span>
                           )}
                           {task.dueDays && (
-                            <span className="flex items-center gap-1 text-[10px] text-slate-400">
+                            <span className="flex items-center gap-1 text-caption text-slate-400">
                               <Clock className="w-3 h-3" /> {task.dueDays} يوم
                             </span>
                           )}
@@ -284,10 +284,10 @@ export default function MeetingSummaryPanel({
           ) : (
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <span className="text-[11px] font-bold text-slate-600 dark:text-slate-300 flex items-center gap-1">
+                <span className="text-caption font-semibold text-slate-600 dark:text-slate-300 flex items-center gap-1">
                   <UserPlus className="w-3.5 h-3.5 text-primary" /> تعديل التكليفات
                 </span>
-                <button onClick={() => setEditing(false)} className="text-[10px] text-slate-400 hover:text-slate-600">إلغاء</button>
+                <button onClick={() => setEditing(false)} className="text-caption text-slate-400 hover:text-slate-600">إلغاء</button>
               </div>
 
               <div className="space-y-2 max-h-72 overflow-y-auto">
@@ -298,7 +298,7 @@ export default function MeetingSummaryPanel({
                         value={t.title}
                         onChange={e => updateEditTask(i, "title", e.target.value)}
                         placeholder="عنوان المهمة"
-                        className="w-full text-xs border border-slate-200 dark:border-slate-600 rounded-lg px-2 py-1.5 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-primary/50"
+                        className="w-full text-caption border border-slate-200 dark:border-slate-600 rounded-lg px-2 py-1.5 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-primary/50"
                       />
                       <div className="flex gap-1.5">
                         <Select
@@ -321,11 +321,11 @@ export default function MeetingSummaryPanel({
                           value={t.dueDays || ""}
                           onChange={e => updateEditTask(i, "dueDays", e.target.value ? parseInt(e.target.value) : null)}
                           placeholder="أيام"
-                          className="w-20 text-xs border border-slate-200 dark:border-slate-600 rounded-lg px-2 py-1.5 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-primary/50"
+                          className="w-20 text-caption border border-slate-200 dark:border-slate-600 rounded-lg px-2 py-1.5 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-primary/50"
                           title="عدد أيام الإنجاز"
                         />
                       </div>
-                      <label className="flex items-center gap-1.5 text-[10px] text-slate-500 cursor-pointer">
+                      <label className="flex items-center gap-1.5 text-caption text-slate-500 cursor-pointer">
                         <input type="checkbox" checked={t.isDone} onChange={e => updateEditTask(i, "isDone", e.target.checked)} className="accent-emerald-500" />
                         مكتملة
                       </label>
@@ -337,7 +337,7 @@ export default function MeetingSummaryPanel({
                 ))}
               </div>
 
-              <button onClick={addEditRow} className="flex items-center gap-1 text-xs text-primary hover:text-primary/80 font-bold">
+              <button onClick={addEditRow} className="flex items-center gap-1 text-caption text-primary hover:text-primary/80 font-semibold">
                 <Plus className="w-3.5 h-3.5" /> إضافة مهمة
               </button>
 

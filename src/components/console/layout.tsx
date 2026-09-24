@@ -42,7 +42,7 @@ export function PageHeader({
     <header className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
       <div className="min-w-0 space-y-1.5">
         {crumbs && crumbs.length > 0 && (
-          <nav aria-label="مسار التنقل" className="flex items-center gap-1.5 text-[13px] text-slate-500 dark:text-slate-400">
+          <nav aria-label="مسار التنقل" className="flex items-center gap-1.5 text-body text-slate-500 dark:text-slate-400">
             {crumbs.map((c, i) => (
               <span key={c.label} className="flex items-center gap-1.5">
                 {i > 0 && (
@@ -65,7 +65,7 @@ export function PageHeader({
             ))}
           </nav>
         )}
-        <h1 className="flex items-center gap-2.5 text-[26px] font-semibold leading-tight tracking-tight">
+        <h1 className="flex items-center gap-2.5 text-page font-semibold leading-tight tracking-tight">
           {icon && (
             <span aria-hidden className="shrink-0 text-primary dark:text-teal-300">
               {icon}
@@ -73,7 +73,7 @@ export function PageHeader({
           )}
           <span className="min-w-0">{title}</span>
         </h1>
-        {description && <p className="max-w-2xl text-[14px] leading-6 text-slate-500 dark:text-slate-400">{description}</p>}
+        {description && <p className="max-w-2xl text-body leading-6 text-slate-500 dark:text-slate-400">{description}</p>}
       </div>
       {actions && <div className="flex flex-wrap items-center gap-2">{actions}</div>}
     </header>
@@ -130,17 +130,17 @@ export function StatStrip({ items, label = "ملخص" }: { items: Stat[]; label?
       {items.map((s) => {
         const body = (
           <>
-            <span className="flex items-center gap-2 text-[13px] text-slate-500 dark:text-slate-400">
+            <span className="flex items-center gap-2 text-body text-slate-500 dark:text-slate-400">
               {s.dot && <span className={cx("size-1.5 shrink-0 rounded-full", STAT_DOT[s.dot])} />}
               {s.label}
             </span>
             <span className="mt-1 flex items-baseline gap-1.5">
-              <span className={cx(MONO, "text-[28px] font-semibold leading-none tracking-tight text-slate-900 dark:text-slate-100")}>
+              <span className={cx(MONO, "text-stat font-semibold leading-none tracking-tight text-slate-900 dark:text-slate-100")}>
                 {s.value}
               </span>
-              {s.unit && <span className="text-[13px] text-slate-500 dark:text-slate-400">{s.unit}</span>}
+              {s.unit && <span className="text-body text-slate-500 dark:text-slate-400">{s.unit}</span>}
             </span>
-            {s.hint && <span className="mt-2 block text-[12px] text-slate-500">{s.hint}</span>}
+            {s.hint && <span className="mt-2 block text-meta text-slate-500">{s.hint}</span>}
           </>
         );
         if (s.href) {
@@ -205,7 +205,7 @@ export function Tabs<T extends string>({
             aria-selected={on}
             onClick={() => onChange(t.id)}
             className={cx(
-              "-mb-px flex h-10 shrink-0 items-center gap-2 whitespace-nowrap border-b-2 text-[13px] font-medium transition-colors outline-none",
+              "-mb-px flex h-10 shrink-0 items-center gap-2 whitespace-nowrap border-b-2 text-body font-medium transition-colors outline-none",
               on
                 ? "border-primary text-slate-900 dark:border-teal-400 dark:text-slate-100"
                 : "border-transparent text-slate-500 hover:text-slate-900 focus-visible:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100"
@@ -216,7 +216,7 @@ export function Tabs<T extends string>({
               <span
                 className={cx(
                   MONO,
-                  "rounded-full px-1.5 text-[11px] leading-[18px]",
+                  "rounded-full px-1.5 text-caption leading-[18px]",
                   on
                     ? "bg-primary/10 text-primary dark:bg-teal-400/10 dark:text-teal-300"
                     : "bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400"
@@ -256,7 +256,7 @@ export function Segmented<T extends string>({
           onClick={() => onChange(o.id)}
           aria-pressed={value === o.id}
           className={cx(
-            "h-full whitespace-nowrap rounded-[5px] px-3 text-[13px] font-medium transition-colors outline-none focus-visible:ring-2 focus-visible:ring-primary/40",
+            "h-full whitespace-nowrap rounded-[5px] px-3 text-body font-medium transition-colors outline-none focus-visible:ring-2 focus-visible:ring-primary/40",
             value === o.id
               ? "bg-slate-100 text-slate-900 dark:bg-slate-800 dark:text-slate-100"
               : "text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100"
@@ -315,7 +315,7 @@ export function TableShell({ children, empty, footer }: { children: ReactNode; e
       </div>
       {empty}
       {footer && (
-        <div className="border-t border-slate-100 px-4 py-2.5 text-[12.5px] text-slate-500 dark:border-slate-800">{footer}</div>
+        <div className="border-t border-slate-100 px-4 py-2.5 text-meta text-slate-500 dark:border-slate-800">{footer}</div>
       )}
     </div>
   );
@@ -345,8 +345,8 @@ export function EmptyState({
       <span className="grid size-10 place-items-center rounded-full border border-slate-200 bg-slate-50 text-slate-400 dark:border-slate-800 dark:bg-slate-800/50">
         {icon}
       </span>
-      <p className="mt-3 text-[14px] font-medium text-slate-900 dark:text-slate-100">{title}</p>
-      {description && <p className="mt-1 max-w-md text-[13px] leading-6 text-slate-500">{description}</p>}
+      <p className="mt-3 text-body font-medium text-slate-900 dark:text-slate-100">{title}</p>
+      {description && <p className="mt-1 max-w-md text-body leading-6 text-slate-500">{description}</p>}
       {action && <div className="mt-4">{action}</div>}
     </div>
   );

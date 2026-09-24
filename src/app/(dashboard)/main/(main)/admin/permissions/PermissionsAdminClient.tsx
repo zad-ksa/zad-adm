@@ -318,19 +318,19 @@ export default function PermissionsAdminClient({
                 <tr key={b.id} onClick={() => setEditor({ bundle: b })} className={rowClass}>
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-3">
-                      <span className="grid size-8 shrink-0 place-items-center rounded-md border border-slate-200 bg-slate-50 text-slate-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400">
+                      <span className="grid size-8 shrink-0 place-items-center rounded-lg border border-slate-200 bg-slate-50 text-slate-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400">
                         <Layers className="size-4" />
                       </span>
                       <div className="min-w-0">
-                        <p className="truncate text-[14px] font-medium text-slate-900 dark:text-slate-100">{b.name}</p>
-                        <p className="max-w-[22rem] truncate text-[12.5px] text-slate-500 dark:text-slate-400">
+                        <p className="truncate text-body font-medium text-slate-900 dark:text-slate-100">{b.name}</p>
+                        <p className="max-w-[22rem] truncate text-meta text-slate-500 dark:text-slate-400">
                           {b.description || "بلا وصف"}
                         </p>
                       </div>
                     </div>
                   </td>
                   <td className="hidden px-4 py-3 md:table-cell">
-                    <span className="flex flex-wrap items-center gap-x-2 text-[13px] text-slate-600 dark:text-slate-300">
+                    <span className="flex flex-wrap items-center gap-x-2 text-body text-slate-600 dark:text-slate-300">
                       <Count n={b.permissions.length} unit="صلاحية" />
                       {b.services.length > 0 && (
                         <>
@@ -342,14 +342,14 @@ export default function PermissionsAdminClient({
                   </td>
                   <td className="hidden px-4 py-3 sm:table-cell">
                     {b.employeeIds.length === 0 ? (
-                      <span className="text-[13px] text-slate-400">لا أحد</span>
+                      <span className="text-body text-slate-400">لا أحد</span>
                     ) : (
                       <AvatarStack names={b.employeeIds.map((id) => nameOf.get(id) ?? "؟")} />
                     )}
                   </td>
                   <td className="hidden px-4 py-3 lg:table-cell">
                     {b.roleIds.length === 0 ? (
-                      <span className="text-[13px] text-slate-400">—</span>
+                      <span className="text-body text-slate-400">—</span>
                     ) : (
                       <span className="flex flex-wrap gap-1">
                         {b.roleIds.map((id) => (
@@ -433,8 +433,8 @@ export default function PermissionsAdminClient({
                       <div className="flex items-center gap-3">
                         <Avatar name={e.name} />
                         <div className="min-w-0">
-                          <p className="truncate text-[14px] font-medium text-slate-900 dark:text-slate-100">{e.name}</p>
-                          <p className="truncate text-[12.5px] text-slate-500 dark:text-slate-400">{e.roleLabel}</p>
+                          <p className="truncate text-body font-medium text-slate-900 dark:text-slate-100">{e.name}</p>
+                          <p className="truncate text-meta text-slate-500 dark:text-slate-400">{e.roleLabel}</p>
                         </div>
                       </div>
                     </td>
@@ -444,7 +444,7 @@ export default function PermissionsAdminClient({
                       ) : e.effectiveCount === 0 ? (
                         <Badge tone="warn">بلا صلاحيات</Badge>
                       ) : (
-                        <span className="text-[13px] text-slate-600 dark:text-slate-300">
+                        <span className="text-body text-slate-600 dark:text-slate-300">
                           <Count n={e.effectiveCount} unit="صلاحية" />
                           <span className="text-slate-400"> · {e.directCount} مباشرة</span>
                         </span>
@@ -452,7 +452,7 @@ export default function PermissionsAdminClient({
                     </td>
                     <td className="hidden px-4 py-3 md:table-cell">
                       {all.length === 0 ? (
-                        <span className="text-[13px] text-slate-400">—</span>
+                        <span className="text-body text-slate-400">—</span>
                       ) : (
                         <span className="flex flex-wrap gap-1">
                           {all.slice(0, 3).map((x) => (
@@ -466,9 +466,9 @@ export default function PermissionsAdminClient({
                     </td>
                     <td className="hidden px-4 py-3 lg:table-cell">
                       {e.isAdmin ? (
-                        <span className="text-[13px] text-slate-600 dark:text-slate-300">الكل</span>
+                        <span className="text-body text-slate-600 dark:text-slate-300">الكل</span>
                       ) : (
-                        <span className={cx(MONO, "text-[13px] text-slate-600 dark:text-slate-300")}>{e.serviceCount}</span>
+                        <span className={cx(MONO, "text-body text-slate-600 dark:text-slate-300")}>{e.serviceCount}</span>
                       )}
                     </td>
                     <td className="px-4 py-3 text-left">
@@ -491,7 +491,7 @@ export default function PermissionsAdminClient({
               })}
             </tbody>
           </TableShell>
-          <p className="flex items-center gap-3 text-[12.5px] text-slate-500">
+          <p className="flex items-center gap-3 text-meta text-slate-500">
             <Badge tone="brand">مباشرة</Badge>
             <Badge tone="gold">عبر المسمى</Badge>
             <span>الصلاحيات الفعّالة كما تحسبها الجلسة: المباشرة والمجموعات وما يُمنح تلقائياً.</span>
@@ -542,7 +542,7 @@ export default function PermissionsAdminClient({
             {charityRows.length > 0 && (
               <tbody className={tbodyClass}>
                 <tr className="bg-slate-50/60 dark:bg-slate-950/30">
-                  <td colSpan={4} className="px-4 py-2 text-[12px] font-medium text-slate-500 dark:text-slate-400">
+                  <td colSpan={4} className="px-4 py-2 text-meta font-medium text-slate-500 dark:text-slate-400">
                     تبويبات بوابة الجمعيات <span className={cx(MONO, "text-slate-400")}>{charityRows.length}</span>
                   </td>
                 </tr>
@@ -552,11 +552,11 @@ export default function PermissionsAdminClient({
                   return (
                     <tr key={p.id} onClick={() => setDetail({ kind: "permission", id: p.id })} className={rowClass}>
                       <td className="px-4 py-3">
-                        <p className="flex items-center gap-2 text-[13.5px] font-medium text-slate-900 dark:text-slate-100">
+                        <p className="flex items-center gap-2 text-body font-medium text-slate-900 dark:text-slate-100">
                           {p.label}
                           <Badge tone="gold">بوابة الجمعيات</Badge>
                         </p>
-                        <p className={cx(MONO, "text-[12px] text-slate-400")} dir="ltr">
+                        <p className={cx(MONO, "text-meta text-slate-400")} dir="ltr">
                           {p.id}
                         </p>
                       </td>
@@ -564,7 +564,7 @@ export default function PermissionsAdminClient({
                         {who.length === 0 ? (
                           <Badge tone="warn">لا أحد</Badge>
                         ) : (
-                          <span className={cx(MONO, "text-[13px] text-slate-600 dark:text-slate-300")}>{who.length}</span>
+                          <span className={cx(MONO, "text-body text-slate-600 dark:text-slate-300")}>{who.length}</span>
                         )}
                       </td>
                       <td className="hidden px-4 py-3 md:table-cell">
@@ -580,7 +580,7 @@ export default function PermissionsAdminClient({
                           </span>
                         )}
                       </td>
-                      <td className="hidden px-4 py-3 text-[13px] text-slate-500 lg:table-cell">—</td>
+                      <td className="hidden px-4 py-3 text-body text-slate-500 lg:table-cell">—</td>
                     </tr>
                   );
                 })}
@@ -590,7 +590,7 @@ export default function PermissionsAdminClient({
             {catalogGroups.map((g) => (
               <tbody key={g.title} className={tbodyClass}>
                 <tr className="bg-slate-50/60 dark:bg-slate-950/30">
-                  <td colSpan={4} className="px-4 py-2 text-[12px] font-medium text-slate-500 dark:text-slate-400">
+                  <td colSpan={4} className="px-4 py-2 text-meta font-medium text-slate-500 dark:text-slate-400">
                     {g.title} <span className={cx(MONO, "text-slate-400")}>{g.items.length}</span>
                   </td>
                 </tr>
@@ -601,11 +601,11 @@ export default function PermissionsAdminClient({
                   return (
                     <tr key={p.id} onClick={() => setDetail({ kind: "permission", id: p.id })} className={rowClass}>
                       <td className="px-4 py-3">
-                        <p className="flex items-center gap-2 text-[13.5px] font-medium text-slate-900 dark:text-slate-100">
+                        <p className="flex items-center gap-2 text-body font-medium text-slate-900 dark:text-slate-100">
                           {p.label}
                           {SERVICE_LINKED_PERMISSION_IDS.includes(p.id) && <Badge tone="brand">بالخدمة</Badge>}
                         </p>
-                        <p className={cx(MONO, "text-[12px] text-slate-400")} dir="ltr">
+                        <p className={cx(MONO, "text-meta text-slate-400")} dir="ltr">
                           {p.id}
                         </p>
                       </td>
@@ -614,7 +614,7 @@ export default function PermissionsAdminClient({
                       </td>
                       <td className="hidden px-4 py-3 md:table-cell">
                         {via.length === 0 ? (
-                          <span className="text-[13px] text-slate-400">—</span>
+                          <span className="text-body text-slate-400">—</span>
                         ) : (
                           <span className="flex flex-wrap gap-1">
                             {via.slice(0, 2).map((n) => (
@@ -626,7 +626,7 @@ export default function PermissionsAdminClient({
                           </span>
                         )}
                       </td>
-                      <td className="hidden px-4 py-3 text-[13px] text-slate-500 lg:table-cell">
+                      <td className="hidden px-4 py-3 text-body text-slate-500 lg:table-cell">
                         {carries.length ? carries.map(labelOf).join("، ") : "—"}
                       </td>
                     </tr>
@@ -671,22 +671,22 @@ export default function PermissionsAdminClient({
                 <tr key={s.name} onClick={() => setDetail({ kind: "service", name: s.name })} className={rowClass}>
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-3">
-                      <span className="grid size-8 shrink-0 place-items-center rounded-md border border-slate-200 bg-slate-50 text-slate-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400">
+                      <span className="grid size-8 shrink-0 place-items-center rounded-lg border border-slate-200 bg-slate-50 text-slate-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400">
                         <Briefcase className="size-4" />
                       </span>
-                      <span className="text-[14px] font-medium text-slate-900 dark:text-slate-100">{s.name}</span>
+                      <span className="text-body font-medium text-slate-900 dark:text-slate-100">{s.name}</span>
                     </div>
                   </td>
                   <td className="hidden px-4 py-3 sm:table-cell">
                     {s.holders.length === 0 ? (
-                      <span className="text-[13px] text-slate-400">لا أحد</span>
+                      <span className="text-body text-slate-400">لا أحد</span>
                     ) : (
                       <AvatarStack names={s.holders} />
                     )}
                   </td>
                   <td className="hidden px-4 py-3 md:table-cell">
                     {s.bundles.length === 0 ? (
-                      <span className="text-[13px] text-slate-400">—</span>
+                      <span className="text-body text-slate-400">—</span>
                     ) : (
                       <span className="flex flex-wrap gap-1">
                         {s.bundles.map((n) => (
@@ -855,7 +855,7 @@ function ChipList({
     <section className="space-y-2.5">
       <SectionHeader title={title} />
       {items.length === 0 ? (
-        <p className="text-[13px] text-slate-500">{empty}</p>
+        <p className="text-body text-slate-500">{empty}</p>
       ) : (
         <div className="flex flex-wrap gap-1.5">
           {items.map((item) => (

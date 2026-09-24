@@ -238,7 +238,7 @@ onClose={onClose}
 <div className="flex items-center justify-between gap-3 flex-wrap px-5 py-3 border-b border-slate-100 dark:border-slate-800 shrink-0">
           <div className="flex items-center gap-4 flex-wrap">
             {LANES.map((lane) => (
-              <span key={lane.key} className="flex items-center gap-1.5 text-[11px] text-slate-600 dark:text-slate-300">
+              <span key={lane.key} className="flex items-center gap-1.5 text-caption text-slate-600 dark:text-slate-300">
                 <span
                   className="w-3 h-3 rounded-[3px] shrink-0"
                   style={{ background: `var(--g-${lane.key.toLowerCase().replace("_", "-")})` }}
@@ -249,7 +249,7 @@ onClose={onClose}
           </div>
 
           <div className="flex items-center gap-2">
-            <label className="flex items-center gap-1.5 text-[11px] font-bold text-slate-500 dark:text-slate-400 cursor-pointer">
+            <label className="flex items-center gap-1.5 text-caption font-semibold text-slate-500 dark:text-slate-400 cursor-pointer">
               <input
                 type="checkbox"
                 checked={showDelivered}
@@ -270,7 +270,7 @@ onClose={onClose}
         </div>
 <div className="flex-1 overflow-auto p-5">
           {rows.length === 0 || !scale ? (
-            <p className="py-16 text-center text-[12px] text-slate-400 dark:text-slate-500">
+            <p className="py-16 text-center text-meta text-slate-400 dark:text-slate-500">
               لا توجد تصاميم مجدولة لعرضها.
             </p>
           ) : asTable ? (
@@ -278,7 +278,7 @@ onClose={onClose}
             // palette check requires, and the way these values stay reachable
             // without a pointer.
             <div className="overflow-x-auto">
-              <table className="w-full text-[12px] border-collapse">
+              <table className="w-full text-meta border-collapse">
                 <thead>
                   <tr className={theadRowClass}>
                     <th className={thClass}>الجهة</th>
@@ -293,7 +293,7 @@ onClose={onClose}
                     row.items.map((item) => (
                       <tr key={item.id} className="text-slate-700 dark:text-slate-300">
                         <td className={tdClass}>{row.charityName}</td>
-                        <td className={cx(tdClass, "font-bold")}>{item.title}</td>
+                        <td className={cx(tdClass, "font-semibold")}>{item.title}</td>
                         <td className={cx(tdClass, "tabular-nums")}>{fmtFull(item.startMs)}</td>
                         <td className={cx(tdClass, "tabular-nums")}>{fmtFull(item.endMs)}</td>
                         <td className={tdClass}>
@@ -320,7 +320,7 @@ onClose={onClose}
                   {ticks.map((t) => (
                     <span
                       key={t.ms}
-                      className="absolute top-0 -translate-x-1/2 rtl:translate-x-1/2 text-[10px] text-slate-400 dark:text-slate-500 tabular-nums whitespace-nowrap"
+                      className="absolute top-0 -translate-x-1/2 rtl:translate-x-1/2 text-caption text-slate-400 dark:text-slate-500 tabular-nums whitespace-nowrap"
                       style={{ insetInlineStart: `${t.pct}%` }}
                     >
                       {fmtDate(t.ms)}
@@ -334,7 +334,7 @@ onClose={onClose}
                   <div key={row.charityName} className="flex items-stretch gap-3">
                     <div className="w-36 shrink-0 flex items-center">
                       <span
-                        className="text-[12px] font-bold text-slate-700 dark:text-slate-200 truncate"
+                        className="text-meta font-semibold text-slate-700 dark:text-slate-200 truncate"
                         title={row.charityName}
                       >
                         {row.charityName}
@@ -411,13 +411,13 @@ onClose={onClose}
                 }`}
                 style={{ left: `calc(50% + ${hovered.arrowShift}px - 5px)` }}
               />
-            <p className="text-[12px] font-black text-slate-900 dark:text-slate-100 break-words leading-snug">
+            <p className="text-meta font-semibold text-slate-900 dark:text-slate-100 break-words leading-snug">
               {hovered.item.title}
             </p>
-            <p className="mt-1 text-[11px] text-slate-500 dark:text-slate-400 tabular-nums">
+            <p className="mt-1 text-caption text-slate-500 dark:text-slate-400 tabular-nums">
               {fmtFull(hovered.item.startMs)} ← {fmtFull(hovered.item.endMs)}
             </p>
-            <p className="mt-0.5 flex items-center gap-1.5 text-[11px] text-slate-500 dark:text-slate-400">
+            <p className="mt-0.5 flex items-center gap-1.5 text-caption text-slate-500 dark:text-slate-400">
               <span
                 className="w-2.5 h-2.5 rounded-[3px] shrink-0"
                 style={{ background: `var(--g-${laneOf(hovered.item).toLowerCase().replace("_", "-")})` }}

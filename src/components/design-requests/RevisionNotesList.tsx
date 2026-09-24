@@ -56,7 +56,7 @@ export function RevisionNotesList({
   // second one that was never written.
   if (items.length === 1) {
     return (
-      <p className="text-[13px] leading-relaxed text-slate-700 dark:text-slate-200 whitespace-pre-wrap">
+      <p className="text-body leading-relaxed text-slate-700 dark:text-slate-200 whitespace-pre-wrap">
         <LinkifiedText text={items[0]} />
       </p>
     );
@@ -71,15 +71,15 @@ export function RevisionNotesList({
         >
           <span className="flex items-center gap-2 mb-1">
             <span
-              className={`shrink-0 w-5 h-5 rounded-md text-[11px] font-black inline-flex items-center justify-center tabular-nums ${chip}`}
+              className={`shrink-0 w-5 h-5 rounded-md text-caption font-semibold inline-flex items-center justify-center tabular-nums ${chip}`}
             >
               {i + 1}
             </span>
-            <span className={`text-[11px] font-black ${accent}`}>
+            <span className={`text-caption font-semibold ${accent}`}>
               الملاحظة {ORDINALS[i] ?? i + 1}
             </span>
           </span>
-          <p className="text-[13px] leading-relaxed text-slate-700 dark:text-slate-200 whitespace-pre-wrap pr-7">
+          <p className="text-body leading-relaxed text-slate-700 dark:text-slate-200 whitespace-pre-wrap pr-7">
             <LinkifiedText text={note} />
           </p>
         </li>

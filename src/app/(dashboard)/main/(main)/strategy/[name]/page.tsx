@@ -8,7 +8,6 @@ import ReadinessResultsClient from "./ReadinessResultsClient";
 import SurveyLinkManager from "@/components/SurveyLinkManager";
 import type { Metadata } from "next";
 import { Award, AlertTriangle, Sparkles, ShieldAlert, Key, Rocket } from "@/components/Icons";
-import { ensureStagesForCharity, getCharityDashboardData } from "@/app/actions/strategy";
 import { getSession } from "@/lib/auth";
 import CharityClientStrategyDashboard from "@/components/CharityClientStrategyDashboard";
 import StrategyPermissionToggle from "@/components/StrategyPermissionToggle";
@@ -76,18 +75,6 @@ export default async function StrategySurveysPage({ params }: { params: Promise<
     "manage_strategy"
   );
   const hasReadiness = responses.length > 0;
-
-  // ensureStagesForCharity seeds rows this page does not read, so it runs
-  // alongside the query that follows rather than in front of it.
-  const [, visionMissionResponses] = charity
-    ? await Promise.all([
-        ensureStagesForCharity(charity.id),
-        prisma.visionMissionResponse.findMany({
-          where: { charityId: charity.id },
-          orderBy: { createdAt: "desc" },
-        }),
-      ])
-    : [null, []];
 
   // --- DEFAULT VIEW (Admin, Strategy, etc.) ---
   return (

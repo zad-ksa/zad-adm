@@ -8,7 +8,6 @@ import { ConfirmDialog } from "@/components/console/ConfirmDialog";
 import UploadProgress from "@/components/ui/UploadProgress";
 import type { UploadProgress as Progress } from "@/lib/clientUpload";
 import { ACCEPT_ATTRIBUTE, maxBytesFor, maxLabelFor } from "@/lib/uploadPurposes";
-import { attachmentHref } from "@/lib/attachmentDownload";
 import { Dialog } from "@/components/console/Dialog";
 import { btn } from "@/components/console/ui";
 
@@ -210,7 +209,7 @@ footer={
                     >
                       <Paperclip className="w-3.5 h-3.5 text-slate-400 shrink-0" />
                       <a
-                        href={attachmentHref(att.fileUrl, att.fileName)}
+                        href={att.fileUrl}
                         target="_blank"
                         rel="noreferrer"
                         className={`flex-1 truncate font-semibold ${

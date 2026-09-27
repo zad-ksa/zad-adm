@@ -19,7 +19,6 @@ import { ConfirmDialog } from "@/components/console/ConfirmDialog";
 import { moveToTrash } from "@/app/actions/mail";
 import Image from "next/image";
 import { formatMailDate, htmlToPlainText, splitQuotedHtml } from "../mailUtils";
-import { attachmentHref } from "@/lib/attachmentDownload";
 
 interface MailViewClientProps {
   session: any;
@@ -437,7 +436,7 @@ function ThreadMessageCard({
             {message.attachments.map((att: any) => (
               <a
                 key={att.id}
-                href={attachmentHref(att.fileUrl, att.fileName)}
+                href={att.fileUrl}
                 target="_blank"
                 rel="noreferrer"
                 className="flex items-center gap-3 p-3 border border-slate-200 dark:border-slate-700 rounded-xl hover:bg-primary/[0.04] hover:border-primary/30 transition-colors group bg-white dark:bg-slate-900"

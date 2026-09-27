@@ -17,7 +17,6 @@ import {
   type TemplateNodeRow,
   type TemplateSearchRow,
 } from "@/app/actions/templateLibrary";
-import { attachmentHref } from "@/lib/attachmentDownload";
 
 /**
  * The templates library, as a charity sees it: browse and download, nothing else.
@@ -234,7 +233,7 @@ export default function TemplateLibraryReaderClient({
                   </span>
                   {node.fileUrl && (
                     <a
-                      href={attachmentHref(node.fileUrl, node.name)}
+                      href={node.fileUrl}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="shrink-0 h-9 px-3 rounded-xl bg-primary/10 text-primary dark:bg-teal-500/10 dark:text-teal-400 hover:bg-primary hover:text-white dark:hover:bg-teal-500 dark:hover:text-[#0A0A0A] transition-colors text-[12px] font-bold inline-flex items-center gap-1.5"

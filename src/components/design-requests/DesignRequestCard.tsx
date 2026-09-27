@@ -20,6 +20,7 @@ import { useState, type ReactNode } from "react";
 import type { DesignRequestProgress } from "@/lib/designRequestProgress";
 import DesignRequestCountdownBadge from "./DesignRequestCountdownBadge";
 import LinkifiedText from "@/components/ui/LinkifiedText";
+import { attachmentHref } from "@/lib/attachmentDownload";
 
 /**
  * أعمدة صف عرض القائمة على سطح المكتب — تُصدَّر لأن رأس الجدول (في
@@ -484,7 +485,7 @@ export default function DesignRequestCard({
             {request.attachments.map((att) => (
               <a
                 key={att.id}
-                href={att.fileUrl}
+                href={attachmentHref(att.fileUrl, att.fileName)}
                 target="_blank"
                 rel="noreferrer"
                 className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-[#111] hover:border-primary/30 hover:bg-primary/[0.04] dark:hover:bg-primary/10 transition-colors"
@@ -515,7 +516,7 @@ export default function DesignRequestCard({
               {request.deliverables.map((att) => (
                 <a
                   key={att.id}
-                  href={att.fileUrl}
+                  href={attachmentHref(att.fileUrl, att.fileName)}
                   target="_blank"
                   rel="noreferrer"
                   className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-primary/30 bg-primary/[0.05] dark:bg-primary/10 hover:bg-primary/[0.1] transition-colors"

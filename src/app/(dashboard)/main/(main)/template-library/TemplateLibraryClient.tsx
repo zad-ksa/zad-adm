@@ -42,6 +42,7 @@ import {
   type TemplateSearchRow,
 } from "@/app/actions/templateLibrary";
 import { uploadFiles } from "@/lib/clientUpload";
+import { attachmentHref } from "@/lib/attachmentDownload";
 import { ACCEPT_ATTRIBUTE, formatBytes, maxBytesFor, maxLabelFor } from "@/lib/uploadPurposes";
 import { ConfirmDialog } from "@/components/console/ConfirmDialog";
 import { Toast } from "@/components/console/Toast";
@@ -374,7 +375,7 @@ export default function TemplateLibraryClient() {
       setCurrentId(row.id);
       return;
     }
-    if (row.fileUrl) window.open(row.fileUrl, "_blank", "noopener,noreferrer");
+    if (row.fileUrl) window.open(attachmentHref(row.fileUrl, row.name), "_blank", "noopener,noreferrer");
   };
 
   // الاختصارات مربوطةٌ بمفاتيح نصّية لا بالمجموعات نفسها: المجموعة جديدة في
@@ -1118,7 +1119,7 @@ export default function TemplateLibraryClient() {
                     <div className="flex items-center gap-1 shrink-0" onDoubleClick={(e) => e.stopPropagation()}>
                       {row.kind === "FILE" && row.fileUrl && (
                         <a
-                          href={row.fileUrl}
+                          href={attachmentHref(row.fileUrl, row.name)}
                           target="_blank"
                           rel="noreferrer"
                           title="فتح"

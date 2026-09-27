@@ -17,6 +17,7 @@ import {
   getVisibleRequestsAndMarkRead,
 } from "@/app/actions/approvals";
 import { copyToClipboard } from "@/lib/clipboard";
+import { attachmentHref } from "@/lib/attachmentDownload";
 import { useRoleLabels } from "@/components/RoleLabelsProvider";
 import { DECIDED_ACTION_NAMES } from "@/lib/requestDecisions";
 import { useRouter } from "next/navigation";
@@ -429,7 +430,7 @@ function RequestCard({
           {Array.isArray(attachments) && attachments.length > 0 && (
             <div className="space-y-1.5">
               {attachments.map((att: any, i: number) => (
-                <a key={i} href={att.url} target="_blank" rel="noopener noreferrer"
+                <a key={i} href={attachmentHref(att.url, att.name)} target="_blank" rel="noopener noreferrer"
                   className="flex items-center justify-between text-caption font-semibold text-primary hover:underline bg-primary/5 hover:bg-primary/10 rounded-xl px-3 py-2 transition-colors border border-primary/10">
                   <div className="flex items-center gap-2 overflow-hidden">
                     <ExternalLink className="w-3.5 h-3.5 shrink-0" />

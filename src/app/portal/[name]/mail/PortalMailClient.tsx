@@ -27,6 +27,7 @@ import {
 import { htmlToPlainText } from "@/app/(dashboard)/main/(main)/mail/mailUtils";
 import { ConfirmDialog } from "@/components/console/ConfirmDialog";
 import { notifyMailUnreadChanged } from "@/lib/mailBadge";
+import { attachmentHref } from "@/lib/attachmentDownload";
 import PortalComposeModal, { type ReplyTarget, type ResendTarget } from "./PortalComposeModal";
 import {
   PortalApprovalsPanel,
@@ -321,7 +322,7 @@ export default function PortalMailClient({
               {openMail.attachments.map((att) => (
                 <a
                   key={att.id}
-                  href={att.fileUrl}
+                  href={attachmentHref(att.fileUrl, att.fileName)}
                   target="_blank"
                   rel="noreferrer"
                   className="flex items-center gap-3 p-3 border border-slate-200 dark:border-slate-700 rounded-xl hover:bg-primary/[0.04] hover:border-primary/30 transition-colors bg-white dark:bg-slate-900"

@@ -1,17 +1,11 @@
-import { unstable_cache } from "next/cache";
 import { requireCharitySection } from "@/lib/sectionGuard";
 import { hasPermission } from "@/lib/permissions";
 import { prisma } from "@/lib/db";
-import Link from "next/link";
-import { surveyData } from "@/data/surveyData";
 import ReadinessResultsClient from "./ReadinessResultsClient";
 import SurveyLinkManager from "@/components/SurveyLinkManager";
 import type { Metadata } from "next";
-import { Award, AlertTriangle, Sparkles, ShieldAlert, Key, Rocket } from "@/components/Icons";
 import { getSession } from "@/lib/auth";
-import CharityClientStrategyDashboard from "@/components/CharityClientStrategyDashboard";
 import StrategyPermissionToggle from "@/components/StrategyPermissionToggle";
-import VisionMissionResultsClient from "./vision-mission/VisionMissionResultsClient";
 
 const getCachedResponses = async (charityName: string) => {
     const charityResponses = await prisma.surveyResponse.findMany({

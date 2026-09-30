@@ -109,18 +109,15 @@ closeOnBackdrop={false}
 onSubmit={handleSubmit}
 footer={
 <>
-<button type="submit"
+<button type="button"
             onClick={onClose}
             className={btn.secondary}
-            
           >
             إلغاء
           </button>
-          <button type="button"
-            
+          <button type="submit"
             disabled={isSubmitting || !hasChanges || totalAfter > 10}
             className={btn.primary}
-            
           >
             {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
             حفظ التعديل

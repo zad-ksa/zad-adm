@@ -45,16 +45,17 @@ export async function ensureStagesForCharity(charityId: string) {
   if (!session) throw new Error("UNAUTHORIZED");
   await assertCharityAccess(session.id, session.role, charityId);
 
-  const service = await getStrategyService(charityId);
-  const existingStages = await prisma.serviceStage.findMany({ where: { serviceId: service.id } });
-  if (existingStages.length > 0) return;
-
+  // المراحل الافتراضية أولاً: ما لم يكن ثَمّ مراحلُ تُنسخ، لا تُنشأ خدمةٌ
+  // تبقى فارغة أبداً — وهي التي كانت تظهر خطةً بلا محتوى في صفحة الخدمات.
   const defaults = await prisma.defaultStage.findMany({
     where: { timelineType: "STRATEGY" },
     orderBy: { order: "asc" },
   });
-
   if (defaults.length === 0) return;
+
+  const service = await getStrategyService(charityId);
+  const existingStages = await prisma.serviceStage.findMany({ where: { serviceId: service.id } });
+  if (existingStages.length > 0) return;
 
   await prisma.serviceStage.createMany({
     data: defaults.map((s, idx) => ({

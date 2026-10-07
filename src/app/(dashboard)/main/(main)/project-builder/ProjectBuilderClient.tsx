@@ -176,6 +176,8 @@ function CreateTab({
   const [beneficiariesCount, setBeneficiariesCount] = useState("");
   const [programDuration, setProgramDuration] = useState("");
   const [targetCategory, setTargetCategory] = useState("");
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
   const [preferences, setPreferences] = useState<Record<string, boolean>>({});
   const [budget, setBudget] = useState({ include: true, total: "", reserve: false });
   const [directives, setDirectives] = useState<string[]>([]);
@@ -233,6 +235,8 @@ function CreateTab({
           beneficiariesCount: beneficiariesCount.trim(),
           programDuration: programDuration.trim(),
           targetCategory: targetCategory.trim(),
+          startDate,
+          endDate,
           preferences: Object.keys(preferences).filter((k) => preferences[k]),
           budget,
           directives,
@@ -316,7 +320,7 @@ function CreateTab({
       )}
 
       <div className="grid gap-4 sm:grid-cols-2">
-        <Field id="pb-name" label="اسم المبادرة / البرنامج" hint="اختياري — اتركه فارغاً ليبتكر الذكاء الاصطناعي اسماً إبداعياً بنفسه">
+        <Field id="pb-name" label="اسم المبادرة / البرنامج (اختياري)" hint="اتركه فارغاً ليبتكر الذكاء الاصطناعي اسماً إبداعياً بنفسه">
           <input
             id="pb-name"
             value={programName}
@@ -338,7 +342,7 @@ function CreateTab({
       </Field>
 
       <div className="grid gap-4 sm:grid-cols-3">
-        <Field id="pb-beneficiaries" label="عدد المستفيدين" hint="اختياري">
+        <Field id="pb-beneficiaries" label="عدد المستفيدين (اختياري)">
           <input
             id="pb-beneficiaries"
             value={beneficiariesCount}
@@ -347,7 +351,7 @@ function CreateTab({
             className={field}
           />
         </Field>
-        <Field id="pb-duration" label="مدة البرنامج" hint="اختياري">
+        <Field id="pb-duration" label="مدة البرنامج (اختياري)">
           <input
             id="pb-duration"
             value={programDuration}
@@ -356,12 +360,34 @@ function CreateTab({
             className={field}
           />
         </Field>
-        <Field id="pb-target" label="الفئة المستهدفة" hint="اختياري">
+        <Field id="pb-target" label="الفئة المستهدفة (اختياري)">
           <input
             id="pb-target"
             value={targetCategory}
             onChange={(e) => setTargetCategory(e.target.value)}
             placeholder="مثال: الشباب 18–30"
+            className={field}
+          />
+        </Field>
+      </div>
+
+      <div className="grid gap-4 sm:grid-cols-2">
+        <Field id="pb-start-date" label="تاريخ البداية (اختياري)">
+          <input
+            id="pb-start-date"
+            type="date"
+            value={startDate}
+            onChange={(e) => setStartDate(e.target.value)}
+            className={field}
+          />
+        </Field>
+        <Field id="pb-end-date" label="تاريخ النهاية (اختياري)">
+          <input
+            id="pb-end-date"
+            type="date"
+            value={endDate}
+            onChange={(e) => setEndDate(e.target.value)}
+            min={startDate || undefined}
             className={field}
           />
         </Field>

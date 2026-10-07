@@ -48,6 +48,10 @@ export type ProjectBuilderValues = {
   programDuration?: string;
   /** اختياري: الفئة المستهدفة. */
   targetCategory?: string;
+  /** اختياري: تاريخ بداية التنفيذ (YYYY-MM-DD). */
+  startDate?: string;
+  /** اختياري: تاريخ نهاية التنفيذ (YYYY-MM-DD). */
+  endDate?: string;
 };
 
 export type ProjectBuilderBudget = { include: boolean; total: string; reserve: boolean };
@@ -62,7 +66,7 @@ export const PROJECT_BUILDER_PROMPT_TOKENS: { token: string; hint: string }[] = 
   { token: "{{city}}", hint: "منطقتها أو مدينتها (من ملفّها الثابت)" },
   { token: "{{programName}}", hint: "اسم المبادرة — اختياري؛ إن تركه الموظف فارغاً يُستبدَل بتوجيه للذكاء الاصطناعي بابتكار اسم بنفسه" },
   { token: "{{programIdea}}", hint: "فكرة المبادرة التي يكتبها الموظف" },
-  { token: "{{additionalInfo}}", hint: "عدد المستفيدين ومدة البرنامج والفئة المستهدفة — ما أدخله الموظف منها فقط، اختيارية" },
+  { token: "{{additionalInfo}}", hint: "عدد المستفيدين، مدة البرنامج، الفئة المستهدفة، وتاريخ البداية/النهاية — ما أدخله الموظف منها فقط، كلها اختيارية" },
   { token: "{{preferences}}", hint: "تفضيلات المحتوى التي فعّلها الموظف، مُجمَّعة" },
   { token: "{{budgetInstructions}}", hint: "تعليمات مبلغ الميزانية والاحتياطي، أو أمر حذف بند الميزانية" },
   { token: "{{directives}}", hint: "التوجيهات الخاصة التي أضافها الموظف، مُرقّمة" },
@@ -100,6 +104,11 @@ export function buildProjectPrompt(
   if (values.beneficiariesCount?.trim()) extras.push(`عدد المستفيدين المستهدف: ${values.beneficiariesCount.trim()}`);
   if (values.programDuration?.trim()) extras.push(`مدة البرنامج: ${values.programDuration.trim()}`);
   if (values.targetCategory?.trim()) extras.push(`الفئة المستهدفة: ${values.targetCategory.trim()}`);
+  const start = values.startDate?.trim();
+  const end = values.endDate?.trim();
+  if (start && end) extras.push(`فترة التنفيذ: من ${start} إلى ${end}`);
+  else if (start) extras.push(`تاريخ البدء: ${start}`);
+  else if (end) extras.push(`تاريخ الانتهاء: ${end}`);
   const additionalInfo = extras.length
     ? "معلومات إضافية:\n" + extras.map((e) => "• " + e).join("\n")
     : "لا توجد معلومات إضافية — استنتج ما يلزم من فكرة المبادرة.";

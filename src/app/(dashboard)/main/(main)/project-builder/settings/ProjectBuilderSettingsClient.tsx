@@ -479,7 +479,7 @@ function CharityProfileDialog({
         <Field id="cp-mission" label="الرسالة">
           <textarea id="cp-mission" value={form.mission} onChange={set("mission")} rows={2} className={`${textareaField} resize-y`} />
         </Field>
-        <Field id="cp-goals" label="الأهداف الاستراتيجية" hint="اختياري">
+        <Field id="cp-goals" label="الأهداف الاستراتيجية (اختياري)">
           <textarea id="cp-goals" value={form.strategicGoals} onChange={set("strategicGoals")} rows={2} className={`${textareaField} resize-y`} />
         </Field>
         <div className="grid gap-4 sm:grid-cols-2">

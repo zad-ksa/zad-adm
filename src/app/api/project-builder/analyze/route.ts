@@ -2,11 +2,12 @@ import Anthropic from "@anthropic-ai/sdk";
 import { NextRequest, NextResponse } from "next/server";
 import { requirePermission, authErrorResponse } from "@/lib/guards";
 import { prisma } from "@/lib/db";
-import { normalizeProjectBuilderOptions } from "@/lib/projectBuilder";
 
 /**
- * يقارن نصاً ملصوقاً (لا ملفاً مرفوعاً) بمحاور الوثيقة المعيارية — المحفوظة
- * في GlobalSetting، لا ثابتة في الكود.
+ * يقارن نصاً ملصوقاً (لا ملفاً مرفوعاً) بالهيكل المعياري — المُستخرَج من
+ * البرومبت العام الحالي نفسه، لا من قائمة محاور منفصلة محفوظة في مكان آخر.
+ * الهيكل "مُتحكَّم به في البرومبت" أصلاً، فلا داعي لنسخة ثانية منه قد تختلف
+ * عنه بعد أول تعديل على أحدهما.
  *
  * التحليل عبر لصق نصّ لا رفع ملف عمداً: استخراج ملف PDF/Word/PowerPoint في
  * المتصفح ثم إرسال محتواه كاملاً للذكاء الاصطناعي كان يستهلك نقاطاً أكثر بكثير
@@ -33,24 +34,25 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "النص طويل جداً (الحد 20,000 حرف). الصق أهمّ أجزاء الوثيقة." }, { status: 400 });
     }
 
-    const optionsRecord = await prisma.globalSetting.findUnique({ where: { key: "PROJECT_BUILDER_OPTIONS" } });
-    const { sections } = normalizeProjectBuilderOptions(optionsRecord?.value);
-    if (sections.length === 0) {
+    const promptVersion = await prisma.projectBuilderPromptVersion.findFirst({ orderBy: { createdAt: "desc" } });
+    if (!promptVersion) {
       return NextResponse.json(
-        { error: "لم تُعدّ قائمة محاور الوثيقة المعيارية بعد. تواصل مع من يملك صلاحية التحكم بالأداة." },
+        { error: "لم يُضَف برومبت معتمد للأداة بعد. تواصل مع من يملك صلاحية التحكم بالأداة." },
         { status: 409 }
       );
     }
 
     const analysisPrompt =
       "أنت مستشار متخصص في تصميم المبادرات للجمعيات الخيرية.\n\n" +
-      "حلّل النص المرفق وقارنه بالهيكل المعياري التالي:\n" +
-      sections.map((s, i) => `${i + 1}. ${s}`).join("\n") +
-      '\n\nأرجع النتيجة بصيغة JSON فقط بدون أي نص أو شرح أو علامات markdown، بالشكل التالي بالضبط:\n' +
+      "فيما يلي قالب التوجيهات المعتمد لإعداد وثيقة مبادرة في هذه المنظمة — استخرج منه الهيكل المعياري " +
+      "(العناصر المرقّمة لوثيقة المبادرة) واستعمله مرجعاً للمقارنة. تجاهل أي رموز {{...}} فيه، فهي أماكن " +
+      "تُملأ ببيانات كل وثيقة ولا علاقة لها بالهيكل:\n\n---\n" +
+      promptVersion.template +
+      '\n---\n\nحلّل النص المرفق وقارنه بذلك الهيكل. أرجع النتيجة بصيغة JSON فقط بدون أي نص أو شرح أو علامات markdown، بالشكل التالي بالضبط:\n' +
       '{"matching":[{"section":"اسم المحور","summary":"ملخص مختصر لما هو موجود في النص"}],"extra":[{"item":"عنوان العنصر الزائد","detail":"وصف مختصر لمحتواه"}],"missing":[{"section":"اسم المحور المفقود","suggestion":"اقتراح مختصر لما يمكن إضافته"}]}\n\n' +
-      "• matching = المحاور الموجودة ومتوافقة\n" +
-      "• extra = محتوى غير موجود في المحاور المعيارية أعلاه\n" +
-      "• missing = محاور مفقودة\n" +
+      "• matching = المحاور الموجودة ومتوافقة مع الهيكل\n" +
+      "• extra = محتوى غير موجود في الهيكل المعياري\n" +
+      "• missing = محاور مفقودة من الهيكل المعياري\n" +
       "• أرجع JSON فقط";
 
     if (!process.env.ANTHROPIC_API_KEY) {
@@ -76,7 +78,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "تعذّر فهم نتيجة التحليل. حاول مرة أخرى." }, { status: 502 });
     }
 
-    return NextResponse.json({ result: parsed, sections });
+    return NextResponse.json({ result: parsed });
   } catch (err: any) {
     console.error("Project builder analyze error:", err);
     return NextResponse.json(

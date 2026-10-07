@@ -1,31 +1,31 @@
 // أنواع أداة "منشئ وثائق المبادرات" — مشترك بين العميل والخادم، فلا يستورد
 // هذا الملف أي شيء خادمي (prisma وغيره).
 //
-// لا بيانات هنا: لا برومبت افتراضي، ولا قائمة قيود محتوى، ولا قائمة محاور
-// معيارية. كل ذلك يُقرأ من قاعدة البيانات وحدها (GlobalSetting للقيود
-// والمحاور، وProjectBuilderPromptVersion للبرومبت بتاريخه الكامل) — فتعديله
-// لا يحتاج نشر كودٍ جديد، ولا يبقى في الكود نصّ لا يراه حامل صلاحية التحكم
-// الذي يُفترض أن يملك التحكم الوحيد فيه.
+// لا بيانات هنا: لا برومبت افتراضي، ولا قائمة تفضيلات محتوى. كل ذلك يُقرأ من
+// قاعدة البيانات وحدها (GlobalSetting لتفضيلات المحتوى، وProjectBuilderPromptVersion
+// للبرومبت بتاريخه الكامل) — فتعديله لا يحتاج نشر كودٍ جديد، ولا يبقى في
+// الكود نصّ لا يراه حامل صلاحية التحكم الذي يُفترض أن يملك التحكم الوحيد فيه.
+//
+// لا قائمة محاور معيارية منفصلة أيضاً: الهيكل المعياري (العناصر المرقّمة)
+// موجودٌ أصلاً داخل البرومبت العام نفسه، فميزة التحليل تقرأ البرومبت الحالي
+// مباشرةً كمرجع بدل الاحتفاظ بنسخة ثانية منه قد تختلف عنه.
 
-export type ProjectBuilderExclusion = { key: string; label: string; promptText: string };
+/** تفضيل محتوى — يمكن أن يكون قيداً ("لا تذكر...") أو إضافة ("أضف..."). */
+export type ProjectBuilderPreference = { key: string; label: string; promptText: string };
 
-/** قائمة القيود ومحاور الوثيقة المعيارية — محفوظتان معاً في GlobalSetting. */
 export type ProjectBuilderOptions = {
-  exclusions: ProjectBuilderExclusion[];
-  /** محاور الوثيقة المعيارية — تُستعمل في مقارنة النصّ الملصوق عند التحليل. */
-  sections: string[];
+  preferences: ProjectBuilderPreference[];
 };
 
 export function normalizeProjectBuilderOptions(raw: unknown): ProjectBuilderOptions {
   const r = (raw && typeof raw === "object" ? raw : {}) as Partial<ProjectBuilderOptions>;
-  const exclusions = Array.isArray(r.exclusions)
-    ? r.exclusions.filter(
-        (e): e is ProjectBuilderExclusion =>
-          !!e && typeof e.key === "string" && typeof e.label === "string" && typeof e.promptText === "string"
+  const preferences = Array.isArray(r.preferences)
+    ? r.preferences.filter(
+        (p): p is ProjectBuilderPreference =>
+          !!p && typeof p.key === "string" && typeof p.label === "string" && typeof p.promptText === "string"
       )
     : [];
-  const sections = Array.isArray(r.sections) ? r.sections.filter((s): s is string => typeof s === "string" && !!s.trim()) : [];
-  return { exclusions, sections };
+  return { preferences };
 }
 
 /** معلومات الجمعية الثابتة — تُعبّأ من ProjectBuilderCharityProfile في القاعدة. */
@@ -56,7 +56,7 @@ export const PROJECT_BUILDER_PROMPT_TOKENS: { token: string; hint: string }[] = 
   { token: "{{city}}", hint: "منطقتها أو مدينتها (من ملفّها الثابت)" },
   { token: "{{programName}}", hint: "اسم المبادرة الذي يكتبه الموظف" },
   { token: "{{programIdea}}", hint: "فكرة المبادرة التي يكتبها الموظف" },
-  { token: "{{exclusions}}", hint: "قيود المحتوى التي فعّلها الموظف، مُجمَّعة" },
+  { token: "{{preferences}}", hint: "تفضيلات المحتوى التي فعّلها الموظف، مُجمَّعة" },
   { token: "{{budgetInstructions}}", hint: "تعليمات مبلغ الميزانية والاحتياطي، أو أمر حذف بند الميزانية" },
   { token: "{{directives}}", hint: "التوجيهات الخاصة التي أضافها الموظف، مُرقّمة" },
 ];
@@ -66,13 +66,13 @@ export function buildProjectPrompt(
   template: string,
   charity: ProjectBuilderCharityInfo,
   values: ProjectBuilderValues,
-  activeExclusions: ProjectBuilderExclusion[],
+  activePreferences: ProjectBuilderPreference[],
   budget: ProjectBuilderBudget,
   directives: string[]
 ): string {
-  const exclusions = activeExclusions.length
-    ? "قيود المحتوى (التزم بها بدقة):\n" + activeExclusions.map((e) => "• " + e.promptText).join("\n")
-    : "لا قيود إضافية على المحتوى.";
+  const preferences = activePreferences.length
+    ? "تفضيلات المحتوى (التزم بها بدقة):\n" + activePreferences.map((p) => "• " + p.promptText).join("\n")
+    : "لا تفضيلات إضافية للمحتوى.";
 
   const budgetParts: string[] = [];
   let budgetInstructions: string;
@@ -98,7 +98,7 @@ export function buildProjectPrompt(
     city: charity.city || "—",
     programName: values.programName,
     programIdea: values.programIdea,
-    exclusions,
+    preferences,
     budgetInstructions,
     directives: directivesBlock,
   };

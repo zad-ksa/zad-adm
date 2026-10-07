@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Save, History, Eye, RotateCcw, Pencil, Trash2, CheckCircle2, Circle, Loader2, Plus, X } from "lucide-react";
+import { Save, History, Eye, RotateCcw, Pencil, Trash2, CheckCircle2, Circle, Loader2, Plus } from "lucide-react";
 import { Dialog } from "@/components/console/Dialog";
 import { btn, field, Field, Note, Badge, SectionHeader } from "@/components/console/ui";
 import { notify } from "@/components/console/toastBus";
@@ -14,7 +14,7 @@ import {
   upsertProjectBuilderCharityProfile,
   deleteProjectBuilderCharityProfile,
 } from "@/app/actions/projectBuilder";
-import { PROJECT_BUILDER_PROMPT_TOKENS, type ProjectBuilderExclusion, type ProjectBuilderOptions } from "@/lib/projectBuilder";
+import { PROJECT_BUILDER_PROMPT_TOKENS, type ProjectBuilderPreference, type ProjectBuilderOptions } from "@/lib/projectBuilder";
 
 // انظر الملاحظة في ProjectBuilderClient.tsx: h-9 الثابت في `field` لا يصلح
 // لمربع نص متعدد الأسطر، واستبداله صراحةً أضمن من الاعتماد على ترتيب الأصناف.
@@ -227,118 +227,191 @@ function PromptEditor({ initialVersions }: { initialVersions: PromptVersionSumma
 }
 
 // ── قيود المحتوى ومحاور الوثيقة المعيارية ───────────────────────────────────
-function OptionsEditor({ initialOptions }: { initialOptions: ProjectBuilderOptions }) {
-  const [exclusions, setExclusions] = useState<ProjectBuilderExclusion[]>(initialOptions.exclusions);
-  const [sections, setSections] = useState<string[]>(initialOptions.sections);
-  const [newExclusion, setNewExclusion] = useState({ label: "", promptText: "" });
-  const [newSection, setNewSection] = useState("");
+/** حذفٌ لا يتم إلا بكتابة كلمة "حذف" يدوياً — لفعلٍ لا تراجع عنه يؤثر على كل مستعملي الأداة فوراً. */
+function TypeDeleteConfirm({
+  title,
+  message,
+  onConfirm,
+  onClose,
+}: {
+  title: string;
+  message?: string;
+  onConfirm: () => void;
+  onClose: () => void;
+}) {
+  const [value, setValue] = useState("");
+  const ok = value.trim() === "حذف";
+  return (
+    <Dialog
+      open
+      onClose={onClose}
+      title={title}
+      description={message}
+      size="sm"
+      footer={
+        <>
+          <button type="button" onClick={onClose} className={btn.secondary}>
+            إلغاء
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              onConfirm();
+              onClose();
+            }}
+            disabled={!ok}
+            className={btn.danger}
+          >
+            <Trash2 className="size-4" /> حذف نهائياً
+          </button>
+        </>
+      }
+    >
+      <Field id="type-delete" label='اكتب كلمة "حذف" للتأكيد'>
+        <input id="type-delete" value={value} onChange={(e) => setValue(e.target.value)} dir="rtl" autoFocus className={field} />
+      </Field>
+    </Dialog>
+  );
+}
+
+// ── تفضيلات المحتوى ───────────────────────────────────────────────────────────
+function PreferencesEditor({ initialPreferences }: { initialPreferences: ProjectBuilderPreference[] }) {
+  const [preferences, setPreferences] = useState<ProjectBuilderPreference[]>(initialPreferences);
+  const [form, setForm] = useState({ label: "", promptText: "" });
+  const [editingKey, setEditingKey] = useState<string | null>(null);
+  const [editForm, setEditForm] = useState({ label: "", promptText: "" });
+  const [deleting, setDeleting] = useState<ProjectBuilderPreference | null>(null);
   const [saving, setSaving] = useState(false);
 
-  const addExclusion = () => {
-    if (!newExclusion.label.trim() || !newExclusion.promptText.trim()) return;
-    setExclusions((prev) => [
-      ...prev,
-      { key: `ex_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`, label: newExclusion.label.trim(), promptText: newExclusion.promptText.trim() },
-    ]);
-    setNewExclusion({ label: "", promptText: "" });
-  };
-
-  const addSection = () => {
-    if (!newSection.trim()) return;
-    setSections((prev) => [...prev, newSection.trim()]);
-    setNewSection("");
-  };
-
-  const handleSave = async () => {
+  const persist = async (next: ProjectBuilderPreference[], successMsg: string) => {
     setSaving(true);
-    const res = await updateProjectBuilderOptions({ exclusions, sections });
+    const res = await updateProjectBuilderOptions({ preferences: next });
     setSaving(false);
-    if (res.success) notify("ok", "حُفظت القيود والمحاور.");
-    else notify("error", res.error || "تعذّر الحفظ");
+    if (res.success) {
+      setPreferences(next);
+      notify("ok", successMsg);
+    } else {
+      notify("error", res.error || "تعذّر الحفظ");
+    }
+  };
+
+  const addPreference = () => {
+    if (!form.label.trim() || !form.promptText.trim()) return;
+    const next = [
+      ...preferences,
+      { key: `pref_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`, label: form.label.trim(), promptText: form.promptText.trim() },
+    ];
+    setForm({ label: "", promptText: "" });
+    persist(next, "أُضيف التفضيل.");
+  };
+
+  const startEdit = (p: ProjectBuilderPreference) => {
+    setEditingKey(p.key);
+    setEditForm({ label: p.label, promptText: p.promptText });
+  };
+
+  const saveEdit = () => {
+    if (!editForm.label.trim() || !editForm.promptText.trim()) return;
+    const next = preferences.map((p) =>
+      p.key === editingKey ? { ...p, label: editForm.label.trim(), promptText: editForm.promptText.trim() } : p
+    );
+    setEditingKey(null);
+    persist(next, "حُدِّث التفضيل.");
+  };
+
+  const confirmDelete = () => {
+    if (!deleting) return;
+    persist(preferences.filter((p) => p.key !== deleting.key), "حُذف التفضيل.");
   };
 
   return (
-    <section className="space-y-5 rounded-xl border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900">
+    <section className="space-y-4 rounded-xl border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900">
       <SectionHeader
-        title="قيود المحتوى ومحاور الوثيقة المعيارية"
-        description="قيود المحتوى تظهر كخيارات اختيارية عند إنشاء كل وثيقة. محاور الوثيقة المعيارية تُستعمل في مقارنة أي نصّ يُلصق للتحليل."
+        title="تفضيلات المحتوى"
+        description="تظهر كخيارات اختيارية عند إنشاء كل وثيقة — يمكن أن تكون قيداً («لا تذكر…») أو إضافة («أضف…») بحسب نصّها."
+        action={<span className="text-caption text-slate-500">{preferences.length}</span>}
       />
 
-      <div>
-        <p className="mb-2 text-body font-medium text-slate-700 dark:text-slate-300">قيود المحتوى ({exclusions.length})</p>
-        {exclusions.length > 0 && (
-          <ul className="mb-3 space-y-1.5">
-            {exclusions.map((ex) => (
-              <li key={ex.key} className="flex items-start gap-2 rounded-md border border-slate-100 px-3 py-2 dark:border-slate-800">
-                <div className="min-w-0 flex-1">
-                  <p className="text-body font-medium text-slate-800 dark:text-slate-200">{ex.label}</p>
-                  <p className="text-caption text-slate-500">{ex.promptText}</p>
+      {preferences.length > 0 && (
+        <ul className="space-y-1.5">
+          {preferences.map((p) =>
+            editingKey === p.key ? (
+              <li key={p.key} className="space-y-2 rounded-md border border-primary/30 bg-primary/[0.03] p-3 dark:border-teal-500/30 dark:bg-teal-500/5">
+                <input
+                  value={editForm.label}
+                  onChange={(e) => setEditForm((f) => ({ ...f, label: e.target.value }))}
+                  placeholder="العنوان"
+                  className={field}
+                />
+                <input
+                  value={editForm.promptText}
+                  onChange={(e) => setEditForm((f) => ({ ...f, promptText: e.target.value }))}
+                  placeholder="النص الذي يُرسَل للذكاء الاصطناعي عند تفعيله"
+                  className={field}
+                />
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={saveEdit}
+                    disabled={!editForm.label.trim() || !editForm.promptText.trim() || saving}
+                    className={btn.primary}
+                  >
+                    {saving ? <Loader2 className="size-4 animate-spin" /> : <Save className="size-4" />} حفظ
+                  </button>
+                  <button type="button" onClick={() => setEditingKey(null)} className={btn.secondary}>
+                    إلغاء
+                  </button>
                 </div>
-                <button type="button" onClick={() => setExclusions((prev) => prev.filter((e) => e.key !== ex.key))} className={btn.iconDanger} title="حذف">
+              </li>
+            ) : (
+              <li key={p.key} className="flex items-start gap-2 rounded-md border border-slate-100 px-3 py-2 dark:border-slate-800">
+                <div className="min-w-0 flex-1">
+                  <p className="text-body font-medium text-slate-800 dark:text-slate-200">{p.label}</p>
+                  <p className="text-caption text-slate-500">{p.promptText}</p>
+                </div>
+                <button type="button" onClick={() => startEdit(p)} className={btn.icon} title="تعديل">
+                  <Pencil className="size-4" />
+                </button>
+                <button type="button" onClick={() => setDeleting(p)} className={btn.iconDanger} title="حذف">
                   <Trash2 className="size-4" />
                 </button>
               </li>
-            ))}
-          </ul>
-        )}
-        <div className="grid gap-2 rounded-lg border border-dashed border-slate-300 p-3 dark:border-slate-700 sm:grid-cols-[1fr_1.4fr_auto]">
-          <input
-            value={newExclusion.label}
-            onChange={(e) => setNewExclusion((p) => ({ ...p, label: e.target.value }))}
-            placeholder="مثال: عدم ذكر دورات تدريبية"
-            className={field}
-          />
-          <input
-            value={newExclusion.promptText}
-            onChange={(e) => setNewExclusion((p) => ({ ...p, promptText: e.target.value }))}
-            placeholder="النص الذي يُرسَل للذكاء الاصطناعي عند تفعيله"
-            className={field}
-          />
-          <button type="button" onClick={addExclusion} disabled={!newExclusion.label.trim() || !newExclusion.promptText.trim()} className={btn.secondary}>
-            <Plus className="size-4" /> إضافة
-          </button>
-        </div>
+            )
+          )}
+        </ul>
+      )}
+
+      <div className="grid gap-2 rounded-lg border border-dashed border-slate-300 p-3 dark:border-slate-700 sm:grid-cols-[1fr_1.4fr_auto]">
+        <input
+          value={form.label}
+          onChange={(e) => setForm((p) => ({ ...p, label: e.target.value }))}
+          placeholder="مثال: التركيز على الفئات النسائية"
+          className={field}
+        />
+        <input
+          value={form.promptText}
+          onChange={(e) => setForm((p) => ({ ...p, promptText: e.target.value }))}
+          placeholder="النص الذي يُرسَل للذكاء الاصطناعي عند تفعيله"
+          className={field}
+        />
+        <button
+          type="button"
+          onClick={addPreference}
+          disabled={!form.label.trim() || !form.promptText.trim() || saving}
+          className={btn.secondary}
+        >
+          {saving ? <Loader2 className="size-4 animate-spin" /> : <Plus className="size-4" />} إضافة
+        </button>
       </div>
 
-      <div className="border-t border-slate-200 pt-4 dark:border-slate-800">
-        <p className="mb-2 text-body font-medium text-slate-700 dark:text-slate-300">محاور الوثيقة المعيارية ({sections.length})</p>
-        {sections.length > 0 && (
-          <ol className="mb-3 space-y-1.5">
-            {sections.map((s, i) => (
-              <li key={i} className="flex items-center gap-2 rounded-md border border-slate-100 px-3 py-1.5 dark:border-slate-800">
-                <span className="flex size-5 shrink-0 items-center justify-center rounded-full bg-slate-100 text-[10px] font-bold text-slate-500 dark:bg-slate-800 dark:text-slate-400">
-                  {i + 1}
-                </span>
-                <span className="flex-1 text-body text-slate-700 dark:text-slate-300">{s}</span>
-                <button type="button" onClick={() => setSections((prev) => prev.filter((_, idx) => idx !== i))} className={btn.icon} title="حذف">
-                  <X className="size-3.5" />
-                </button>
-              </li>
-            ))}
-          </ol>
-        )}
-        <div className="flex gap-2">
-          <input
-            value={newSection}
-            onChange={(e) => setNewSection(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") {
-                e.preventDefault();
-                addSection();
-              }
-            }}
-            placeholder="مثال: خطة الاستدامة"
-            className={`${field} flex-1`}
-          />
-          <button type="button" onClick={addSection} disabled={!newSection.trim()} className={btn.secondary}>
-            <Plus className="size-4" /> إضافة
-          </button>
-        </div>
-      </div>
-
-      <button type="button" onClick={handleSave} disabled={saving} className={btn.primary}>
-        {saving ? <Loader2 className="size-4 animate-spin" /> : <Save className="size-4" />} حفظ
-      </button>
+      {deleting && (
+        <TypeDeleteConfirm
+          title={`حذف "${deleting.label}"؟`}
+          message='هذا التفضيل سيختفي فوراً من نموذج الإنشاء لكل مستعملي الأداة. اكتب كلمة "حذف" يدوياً لتأكيد الحذف.'
+          onConfirm={confirmDelete}
+          onClose={() => setDeleting(null)}
+        />
+      )}
     </section>
   );
 }
@@ -452,7 +525,7 @@ export default function ProjectBuilderSettingsClient({
   return (
     <div className="space-y-6">
       <PromptEditor initialVersions={initialVersions} />
-      <OptionsEditor initialOptions={initialOptions} />
+      <PreferencesEditor initialPreferences={initialOptions.preferences} />
 
       <section className="space-y-3 rounded-xl border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900">
         <SectionHeader

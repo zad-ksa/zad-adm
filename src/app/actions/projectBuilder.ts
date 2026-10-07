@@ -9,21 +9,23 @@ import { normalizeProjectBuilderOptions, type ProjectBuilderOptions } from "@/li
 
 const OPTIONS_KEY = "PROJECT_BUILDER_OPTIONS";
 
-// ── قيود المحتوى ومحاور الوثيقة المعيارية ───────────────────────────────────
+// ── تفضيلات المحتوى ───────────────────────────────────────────────────────────
+// لا قائمة محاور معيارية منفصلة: الهيكل المعياري موجودٌ داخل البرومبت العام
+// نفسه، وميزة التحليل تقرأه من هناك مباشرة (انظر مسار /api/project-builder/analyze).
 
-/** لمستعملي الأداة: قيود المحتوى فقط، لرسم مربّعات الاختيار عند الإنشاء. */
-export async function getProjectBuilderExclusions() {
+/** لمستعملي الأداة: تفضيلات المحتوى فقط، لرسم مربّعات الاختيار عند الإنشاء. */
+export async function getProjectBuilderPreferences() {
   await requirePermission("use_project_builder");
   try {
     const record = await prisma.globalSetting.findUnique({ where: { key: OPTIONS_KEY } });
     const options = normalizeProjectBuilderOptions(record?.value);
-    return { success: true as const, exclusions: options.exclusions };
+    return { success: true as const, preferences: options.preferences };
   } catch (error: any) {
-    return { success: false as const, error: error.message, exclusions: [] };
+    return { success: false as const, error: error.message, preferences: [] };
   }
 }
 
-/** للمتحكم: القيود والمحاور معاً، لمحرّر الإعدادات. */
+/** للمتحكم: نفس التفضيلات، لمحرّر الإعدادات. */
 export async function getProjectBuilderOptions(): Promise<ProjectBuilderOptions> {
   await requirePermission("manage_project_builder");
   try {
@@ -32,7 +34,7 @@ export async function getProjectBuilderOptions(): Promise<ProjectBuilderOptions>
   } catch (error) {
     console.error("Error fetching project builder options:", error);
   }
-  return { exclusions: [], sections: [] };
+  return { preferences: [] };
 }
 
 export async function updateProjectBuilderOptions(options: ProjectBuilderOptions) {

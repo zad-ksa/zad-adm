@@ -2,9 +2,8 @@ import Anthropic from "@anthropic-ai/sdk";
 import { NextRequest, NextResponse } from "next/server";
 import { requirePermission, authErrorResponse } from "@/lib/guards";
 import { prisma } from "@/lib/db";
-import { normalizeProjectBuilderOptions } from "@/lib/projectBuilder";
 
-/** يعيد بناء النص الملصوق (بعد التحليل) وفق محاور الوثيقة المعيارية، بما اختاره المستخدم من إزالة/إضافة/توجيهات. */
+/** يعيد بناء النص الملصوق (بعد التحليل) وفق الهيكل المعياري المُستخرَج من البرومبت العام الحالي، بما اختاره المستخدم من إزالة/إضافة/توجيهات. */
 export async function POST(req: NextRequest) {
   try {
     await requirePermission("use_project_builder");
@@ -26,11 +25,10 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "النص طويل جداً (الحد 20,000 حرف)." }, { status: 400 });
     }
 
-    const optionsRecord = await prisma.globalSetting.findUnique({ where: { key: "PROJECT_BUILDER_OPTIONS" } });
-    const { sections } = normalizeProjectBuilderOptions(optionsRecord?.value);
-    if (sections.length === 0) {
+    const promptVersion = await prisma.projectBuilderPromptVersion.findFirst({ orderBy: { createdAt: "desc" } });
+    if (!promptVersion) {
       return NextResponse.json(
-        { error: "لم تُعدّ قائمة محاور الوثيقة المعيارية بعد. تواصل مع من يملك صلاحية التحكم بالأداة." },
+        { error: "لم يُضَف برومبت معتمد للأداة بعد. تواصل مع من يملك صلاحية التحكم بالأداة." },
         { status: 409 }
       );
     }
@@ -42,9 +40,11 @@ export async function POST(req: NextRequest) {
       : [];
 
     let inst =
-      "بناءً على النص المرفق، أعد كتابته كوثيقة مبادرة متكاملة وفق الهيكل المعياري التالي:\n" +
-      sections.map((s, i) => `${i + 1}. ${s}`).join("\n") +
-      "\n\n";
+      "فيما يلي قالب التوجيهات المعتمد لإعداد وثيقة مبادرة في هذه المنظمة — استخرج منه الهيكل المعياري " +
+      "(العناصر المرقّمة) وأعد كتابة النص المرفق كوثيقة مبادرة متكاملة وفقه. تجاهل أي رموز {{...}} في القالب، " +
+      "فهي أماكن تُملأ ببيانات كل وثيقة ولا علاقة لها بالهيكل:\n\n---\n" +
+      promptVersion.template +
+      "\n---\n\n";
     if (removals.length) inst += "أزل المحتوى التالي:\n" + removals.map((r) => "• " + r).join("\n") + "\n\n";
     if (additions.length) inst += "أضف المحاور التالية:\n" + additions.map((a) => "• " + a).join("\n") + "\n\n";
     if (directives.length)

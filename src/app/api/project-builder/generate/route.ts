@@ -8,11 +8,11 @@ import { normalizeProjectBuilderOptions, buildProjectPrompt, type ProjectBuilder
  * يصوغ وثيقة مبادرة جديدة بالذكاء الاصطناعي.
  *
  * لا شيء هنا ثابتٌ في الكود: البرومبت هو أحدث إصدار في
- * ProjectBuilderPromptVersion، وقيود المحتوى من GlobalSetting، ومعلومات
+ * ProjectBuilderPromptVersion، وتفضيلات المحتوى من GlobalSetting، ومعلومات
  * الجمعية من ProjectBuilderCharityProfile — كلها تُقرأ بمعرّف الجمعية من
  * قاعدة البيانات، لا مما يرسله المتصفح. فمن يملك "use_project_builder" فقط لا
  * يرى البرومبت ولا يستطيع التأثير فيه إطلاقاً — ما يرسله هو اسم المبادرة
- * وفكرتها والقيود المفعّلة والميزانية والتوجيهات، وهذه وحدها.
+ * وفكرتها والتفضيلات المفعّلة والميزانية والتوجيهات، وهذه وحدها.
  */
 export async function POST(req: NextRequest) {
   try {
@@ -29,7 +29,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "طلب غير صالح" }, { status: 400 });
     }
 
-    const { charityId, programName, programIdea, exclusions, budget, directives } = body;
+    const { charityId, programName, programIdea, preferences, budget, directives } = body;
     if (!charityId?.trim()) return NextResponse.json({ error: "اختر الجمعية" }, { status: 400 });
     if (!programName?.trim()) return NextResponse.json({ error: "اسم المبادرة مطلوب" }, { status: 400 });
     if (!programIdea?.trim()) return NextResponse.json({ error: "فكرة المبادرة مطلوبة" }, { status: 400 });
@@ -55,9 +55,9 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const { exclusions: availableExclusions } = normalizeProjectBuilderOptions(optionsRecord?.value);
-    const safeExclusionKeys: string[] = Array.isArray(exclusions) ? exclusions.filter((x) => typeof x === "string") : [];
-    const activeExclusions = availableExclusions.filter((e) => safeExclusionKeys.includes(e.key));
+    const { preferences: availablePreferences } = normalizeProjectBuilderOptions(optionsRecord?.value);
+    const safePreferenceKeys: string[] = Array.isArray(preferences) ? preferences.filter((x) => typeof x === "string") : [];
+    const activePreferences = availablePreferences.filter((p) => safePreferenceKeys.includes(p.key));
 
     const safeBudget: ProjectBuilderBudget = {
       include: budget?.include !== false,
@@ -79,7 +79,7 @@ export async function POST(req: NextRequest) {
         city: profile.city || "",
       },
       { programName: programName.trim(), programIdea: programIdea.trim() },
-      activeExclusions,
+      activePreferences,
       safeBudget,
       safeDirectives
     );

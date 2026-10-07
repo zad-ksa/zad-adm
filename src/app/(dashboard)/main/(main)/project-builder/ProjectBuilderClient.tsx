@@ -24,9 +24,9 @@ import { notify } from "@/components/console/toastBus";
 import {
   getProjectBuilderCharities,
   getProjectBuilderCharityProfile,
-  getProjectBuilderExclusions,
+  getProjectBuilderPreferences,
 } from "@/app/actions/projectBuilder";
-import type { ProjectBuilderExclusion } from "@/lib/projectBuilder";
+import type { ProjectBuilderPreference } from "@/lib/projectBuilder";
 import { exportProjectDocx } from "@/lib/exportProjectDocx";
 
 // `field` يثبّت ارتفاع سطر واحد (h-9) — لا يصلح لمربع نص متعدد الأسطر، وتركيب
@@ -129,11 +129,11 @@ function DirectivesEditor({ directives, setDirectives }: { directives: string[];
 // ── إنشاء جديد ────────────────────────────────────────────────────────────────
 function CreateTab({
   charities,
-  exclusionOptions,
+  preferenceOptions,
   onPreview,
 }: {
   charities: CharityOption[];
-  exclusionOptions: ProjectBuilderExclusion[];
+  preferenceOptions: ProjectBuilderPreference[];
   onPreview: (content: string, fileName: string, history: HistoryMsg[]) => void;
 }) {
   const [charityId, setCharityId] = useState("");
@@ -141,7 +141,7 @@ function CreateTab({
   const [profileState, setProfileState] = useState<"idle" | "loading" | "ready" | "missing" | "error">("idle");
   const [programName, setProgramName] = useState("");
   const [programIdea, setProgramIdea] = useState("");
-  const [exclusions, setExclusions] = useState<Record<string, boolean>>({});
+  const [preferences, setPreferences] = useState<Record<string, boolean>>({});
   const [budget, setBudget] = useState({ include: true, total: "", reserve: false });
   const [directives, setDirectives] = useState<string[]>([]);
   const [submitting, setSubmitting] = useState(false);
@@ -175,7 +175,7 @@ function CreateTab({
   }, [charityId]);
 
   const charityOptions = charities.map((c) => ({ value: c.id, label: c.name }));
-  const activeExclusions = Object.keys(exclusions).filter((k) => exclusions[k]).length;
+  const activePreferenceCount = Object.keys(preferences).filter((k) => preferences[k]).length;
   const ready = charityId && profileState === "ready" && programName.trim() && programIdea.trim();
 
   const handleSubmit = async () => {
@@ -189,7 +189,7 @@ function CreateTab({
           charityId,
           programName: programName.trim(),
           programIdea: programIdea.trim(),
-          exclusions: Object.keys(exclusions).filter((k) => exclusions[k]),
+          preferences: Object.keys(preferences).filter((k) => preferences[k]),
           budget,
           directives,
         }),
@@ -274,19 +274,19 @@ function CreateTab({
         />
       </Field>
 
-      {exclusionOptions.length > 0 && (
+      {preferenceOptions.length > 0 && (
         <details className="group rounded-xl border border-slate-200 dark:border-slate-800">
           <summary className="flex cursor-pointer list-none items-center justify-between px-4 py-3 text-body font-medium text-slate-700 dark:text-slate-300">
-            <span>قيود المحتوى{activeExclusions > 0 ? ` (${activeExclusions})` : ""}</span>
+            <span>تفضيلات المحتوى{activePreferenceCount > 0 ? ` (${activePreferenceCount})` : ""}</span>
             <ArrowRight className="size-4 text-slate-400 transition-transform group-open:-rotate-90" />
           </summary>
           <div className="space-y-1 border-t border-slate-200 px-2 py-2 dark:border-slate-800">
-            {exclusionOptions.map((ex) => (
+            {preferenceOptions.map((ex) => (
               <OptionRow
                 key={ex.key}
                 label={ex.label}
-                checked={!!exclusions[ex.key]}
-                onToggle={() => setExclusions((p) => ({ ...p, [ex.key]: !p[ex.key] }))}
+                checked={!!preferences[ex.key]}
+                onToggle={() => setPreferences((p) => ({ ...p, [ex.key]: !p[ex.key] }))}
               />
             ))}
           </div>
@@ -632,15 +632,15 @@ export default function ProjectBuilderClient() {
   const [history, setHistory] = useState<HistoryMsg[]>([]);
   const [charities, setCharities] = useState<CharityOption[]>([]);
   const [charitiesError, setCharitiesError] = useState("");
-  const [exclusionOptions, setExclusionOptions] = useState<ProjectBuilderExclusion[]>([]);
+  const [preferenceOptions, setPreferenceOptions] = useState<ProjectBuilderPreference[]>([]);
 
   useEffect(() => {
     getProjectBuilderCharities().then((res) => {
       if (res.success) setCharities(res.charities);
       else setCharitiesError(res.error || "تعذّر تحميل قائمة الجمعيات");
     });
-    getProjectBuilderExclusions().then((res) => {
-      if (res.success) setExclusionOptions(res.exclusions);
+    getProjectBuilderPreferences().then((res) => {
+      if (res.success) setPreferenceOptions(res.preferences);
     });
   }, []);
 
@@ -681,7 +681,7 @@ export default function ProjectBuilderClient() {
             {charitiesError && <Note tone="warn">{charitiesError}</Note>}
 
             {tab === "create" ? (
-              <CreateTab charities={charities} exclusionOptions={exclusionOptions} onPreview={openPreview} />
+              <CreateTab charities={charities} preferenceOptions={preferenceOptions} onPreview={openPreview} />
             ) : (
               <AnalyzeTab onDone={openPreview} />
             )}

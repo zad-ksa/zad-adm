@@ -153,6 +153,10 @@ function CreateTab({
   const [charityId, setCharityId] = useState("");
   const [profile, setProfile] = useState<CharityProfile>(null);
   const [profileState, setProfileState] = useState<"idle" | "loading" | "ready" | "missing" | "error">("idle");
+  // المنطقة/المدينة وحدها قابلة لتعديلٍ لمرّة واحدة هنا — لهذه الوثيقة فقط، لا
+  // للقيمة المحفوظة في ملفّ الجمعية الثابت. مفيدٌ حين تتبع مبادرة بعينها مدينة
+  // غير المنطقة العامة المسجَّلة للجمعية (جمعية مقرّها مكة، ومبادرتها في جدة مثلاً).
+  const [cityOverride, setCityOverride] = useState("");
   const [programName, setProgramName] = useState("");
   const [programIdea, setProgramIdea] = useState("");
   const [preferences, setPreferences] = useState<Record<string, boolean>>({});
@@ -181,6 +185,7 @@ function CreateTab({
         return;
       }
       setProfile(res.profile);
+      setCityOverride(res.profile.city || "");
       setProfileState("ready");
     });
     return () => {
@@ -203,6 +208,9 @@ function CreateTab({
           charityId,
           programName: programName.trim(),
           programIdea: programIdea.trim(),
+          // فارغ = استعمل القيمة المحفوظة في ملفّ الجمعية؛ غير فارغ = تجاوزها
+          // لهذه الوثيقة فقط، بلا أي تعديل على الملفّ نفسه.
+          cityOverride: cityOverride.trim(),
           preferences: Object.keys(preferences).filter((k) => preferences[k]),
           budget,
           directives,
@@ -253,15 +261,30 @@ function CreateTab({
             ["الرسالة", profile.mission],
             ["الأهداف الاستراتيجية", profile.strategicGoals],
             ["مجال العمل", profile.field],
-            ["المنطقة / المدينة", profile.city],
           ].map(([label, value]) => (
             <div key={label as string} className="space-y-0.5">
               <p className="text-caption font-semibold text-slate-400">{label}</p>
               <p className="text-body text-slate-700 dark:text-slate-300">{value || "—"}</p>
             </div>
           ))}
+
+          <div className="space-y-1">
+            <label htmlFor="pb-city" className="block text-caption font-semibold text-slate-400">
+              المنطقة / المدينة
+            </label>
+            <input
+              id="pb-city"
+              value={cityOverride}
+              onChange={(e) => setCityOverride(e.target.value)}
+              placeholder="مثال: جدة"
+              className={`${field} h-8 text-body`}
+            />
+          </div>
+
           <p className="sm:col-span-2 flex items-center gap-1.5 text-caption text-slate-400">
-            <Info className="size-3.5 shrink-0" /> معلومات ثابتة لهذه الجمعية، لا تُعدَّل من هنا.
+            <Info className="size-3.5 shrink-0" />
+            كل الحقول أعلاه ثابتة للجمعية ولا تُعدَّل من هنا، إلا المنطقة/المدينة — تغييرها هنا لهذه الوثيقة
+            فقط، والقيمة المحفوظة للجمعية ({profile.city || "غير محدَّدة"}) تبقى كما هي لاحقاً.
           </p>
         </div>
       )}

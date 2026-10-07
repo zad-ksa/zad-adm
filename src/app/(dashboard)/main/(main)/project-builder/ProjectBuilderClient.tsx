@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   Sparkles,
   Search,
@@ -19,15 +19,24 @@ import {
   Users,
   FileWarning,
   LifeBuoy,
+  FolderClock,
+  Save,
+  Trash2,
 } from "lucide-react";
 import Select from "@/components/console/Select";
 import { Dialog } from "@/components/console/Dialog";
 import { btn, field, Field, Note, OptionRow, Spinner } from "@/components/console/ui";
 import { notify } from "@/components/console/toastBus";
+import { confirmAction } from "@/components/console/confirmBus";
 import {
   getProjectBuilderCharities,
   getProjectBuilderCharityProfile,
   getProjectBuilderPreferences,
+  listMyProjectBuilderDocuments,
+  getProjectBuilderDocument,
+  saveProjectBuilderDocument,
+  updateProjectBuilderDocument,
+  deleteProjectBuilderDocument,
 } from "@/app/actions/projectBuilder";
 import type { ProjectBuilderPreference } from "@/lib/projectBuilder";
 import { exportProjectDocx } from "@/lib/exportProjectDocx";
@@ -51,6 +60,11 @@ type AnalysisResult = {
   extra?: { item: string; detail: string }[];
   missing?: { section: string; suggestion: string }[];
 };
+/** الجمعية المرتبطة بالوثيقة الظاهرة في المعاينة — معروفة من "إنشاء جديد"، ومن سجلّ الموظف، لا من "تحليل نصّ". */
+type DocCharity = { id: string; name: string };
+type SavedDocSummary = { id: string; title: string; updatedAt: string | Date; charity: DocCharity };
+
+const fmtDate = (d: string | Date) => new Intl.DateTimeFormat("ar-SA", { dateStyle: "medium" }).format(new Date(d));
 
 // ── تنبيه ثابت يظهر قبل كل استعمال ──────────────────────────────────────────
 const DISCLAIMER_POINTS = [
@@ -148,7 +162,7 @@ function CreateTab({
 }: {
   charities: CharityOption[];
   preferenceOptions: ProjectBuilderPreference[];
-  onPreview: (content: string, fileName: string, history: HistoryMsg[]) => void;
+  onPreview: (content: string, fileName: string, history: HistoryMsg[], charity: DocCharity | null) => void;
 }) {
   const [charityId, setCharityId] = useState("");
   const [profile, setProfile] = useState<CharityProfile>(null);
@@ -224,7 +238,8 @@ function CreateTab({
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data?.error || "تعذّر توليد الوثيقة");
-      onPreview(data.content, programName.trim(), data.history || []);
+      const selectedCharity = charities.find((c) => c.id === charityId) || null;
+      onPreview(data.content, programName.trim(), data.history || [], selectedCharity);
     } catch (e: any) {
       setError(e.message || "حدث خطأ غير متوقع");
     } finally {
@@ -428,7 +443,11 @@ function CreateTab({
 }
 
 // ── تحليل نصّ ملصوق ──────────────────────────────────────────────────────────
-function AnalyzeTab({ onDone }: { onDone: (content: string, fileName: string, history: HistoryMsg[]) => void }) {
+function AnalyzeTab({
+  onDone,
+}: {
+  onDone: (content: string, fileName: string, history: HistoryMsg[], charity: DocCharity | null) => void;
+}) {
   const [text, setText] = useState("");
   const [analyzing, setAnalyzing] = useState(false);
   const [result, setResult] = useState<AnalysisResult | null>(null);
@@ -473,7 +492,7 @@ function AnalyzeTab({ onDone }: { onDone: (content: string, fileName: string, hi
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data?.error || "تعذّرت إعادة البناء");
-      onDone(data.content, "وثيقة معاد بناؤها", data.history || []);
+      onDone(data.content, "وثيقة معاد بناؤها", data.history || [], null);
     } catch (e: any) {
       setError(e.message || "حدث خطأ أثناء إعادة البناء");
     } finally {
@@ -614,22 +633,100 @@ function AnalyzeTab({ onDone }: { onDone: (content: string, fileName: string, hi
 }
 
 // ── معاينة الوثيقة الناتجة ───────────────────────────────────────────────────
+// ── نافذة حفظ/تحديث الوثيقة في سجلّ الموظف ───────────────────────────────────
+function SaveDocumentDialog({
+  mode,
+  charities,
+  defaultCharityId,
+  defaultTitle,
+  onClose,
+  onSave,
+}: {
+  mode: "create" | "update";
+  charities: CharityOption[];
+  defaultCharityId: string;
+  defaultTitle: string;
+  onClose: () => void;
+  onSave: (charityId: string, title: string) => Promise<void>;
+}) {
+  const [charityId, setCharityId] = useState(defaultCharityId);
+  const [title, setTitle] = useState(defaultTitle);
+  const [saving, setSaving] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!charityId || !title.trim()) return;
+    setSaving(true);
+    await onSave(charityId, title.trim());
+    setSaving(false);
+  };
+
+  const charityOptions = charities.map((c) => ({ value: c.id, label: c.name }));
+
+  return (
+    <Dialog
+      open
+      onClose={onClose}
+      title={mode === "create" ? "حفظ في سجلّي" : "تحديث السجلّ"}
+      description="سجلّك الخاص — لا يراه أحدٌ غيرك، ويندرج تحت اسم الجمعية التي تختارها."
+      size="sm"
+      busy={saving}
+      onSubmit={handleSubmit}
+      footer={
+        <>
+          <button type="button" onClick={onClose} disabled={saving} className={btn.secondary}>
+            إلغاء
+          </button>
+          <button type="submit" disabled={saving || !charityId || !title.trim()} className={btn.primary}>
+            {saving ? <Loader2 className="size-4 animate-spin" /> : <Save className="size-4" />} حفظ
+          </button>
+        </>
+      }
+    >
+      <div className="space-y-4">
+        <Field id="sd-charity" label="الجمعية">
+          <Select
+            options={charityOptions}
+            value={charityId || undefined}
+            onSelect={setCharityId}
+            placeholder="اختر الجمعية…"
+            emptyLabel="لا توجد جمعيات"
+            className="w-full"
+          />
+        </Field>
+        <Field id="sd-title" label="عنوان الوثيقة">
+          <input id="sd-title" value={title} onChange={(e) => setTitle(e.target.value)} className={field} />
+        </Field>
+      </div>
+    </Dialog>
+  );
+}
+
 function PreviewPane({
   content,
   fileName,
   history,
+  charities,
+  docCharity,
+  savedDocId,
   onBack,
   onRevised,
+  onSaved,
 }: {
   content: string;
   fileName: string;
   history: HistoryMsg[];
+  charities: CharityOption[];
+  docCharity: DocCharity | null;
+  savedDocId: string | null;
   onBack: () => void;
   onRevised: (content: string, history: HistoryMsg[]) => void;
+  onSaved: (doc: { id: string; title: string; charity: DocCharity }) => void;
 }) {
   const [editReq, setEditReq] = useState("");
   const [revising, setRevising] = useState(false);
   const [exporting, setExporting] = useState(false);
+  const [saveDialogOpen, setSaveDialogOpen] = useState(false);
 
   const handleRevise = async () => {
     if (!editReq.trim()) return;
@@ -662,16 +759,51 @@ function PreviewPane({
     }
   };
 
+  const handleSave = async (charityId: string, title: string) => {
+    const res = savedDocId
+      ? await updateProjectBuilderDocument(savedDocId, { title, content, history })
+      : await saveProjectBuilderDocument({ charityId, title, content, history });
+    if (res.success && res.document) {
+      notify("ok", savedDocId ? "حُدِّث السجلّ." : "حُفظت الوثيقة في سجلّك.");
+      onSaved({ id: res.document.id, title: res.document.title, charity: res.document.charity });
+      setSaveDialogOpen(false);
+    } else {
+      notify("error", res.error || "تعذّر الحفظ");
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!savedDocId) return;
+    if (!(await confirmAction({ title: "حذف هذه الوثيقة من سجلّك؟", tone: "danger" }))) return;
+    const res = await deleteProjectBuilderDocument(savedDocId);
+    if (res.success) {
+      notify("ok", "حُذفت من سجلّك.");
+      onBack();
+    } else {
+      notify("error", res.error || "تعذّر الحذف");
+    }
+  };
+
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center gap-2">
         <button type="button" onClick={onBack} className={btn.secondary}>
           <ArrowRight className="size-4" /> رجوع
         </button>
-        <button type="button" onClick={handleExport} disabled={exporting} className={`${btn.primary} ms-auto`}>
-          {exporting ? <Loader2 className="size-4 animate-spin" /> : <FileDown className="size-4" />}
-          حوّلها وورد
-        </button>
+        <div className="ms-auto flex items-center gap-2">
+          <button type="button" onClick={() => setSaveDialogOpen(true)} className={btn.secondary}>
+            <Save className="size-4" /> {savedDocId ? "تحديث السجلّ" : "حفظ في سجلّي"}
+          </button>
+          {savedDocId && (
+            <button type="button" onClick={handleDelete} className={btn.iconDanger} title="حذف من سجلّي">
+              <Trash2 className="size-4" />
+            </button>
+          )}
+          <button type="button" onClick={handleExport} disabled={exporting} className={btn.primary}>
+            {exporting ? <Loader2 className="size-4 animate-spin" /> : <FileDown className="size-4" />}
+            حوّلها وورد
+          </button>
+        </div>
       </div>
 
       <div className="max-h-[520px] overflow-y-auto rounded-xl border border-slate-200 bg-slate-50 p-5 text-body leading-7 whitespace-pre-wrap dark:border-slate-800 dark:bg-slate-950">
@@ -690,6 +822,122 @@ function PreviewPane({
           {revising ? <Loader2 className="size-4 animate-spin" /> : <RefreshCw className="size-4" />} تعديل
         </button>
       </div>
+
+      {saveDialogOpen && (
+        <SaveDocumentDialog
+          mode={savedDocId ? "update" : "create"}
+          charities={charities}
+          defaultCharityId={docCharity?.id || ""}
+          defaultTitle={fileName}
+          onClose={() => setSaveDialogOpen(false)}
+          onSave={handleSave}
+        />
+      )}
+    </div>
+  );
+}
+
+// ── سجلّي: الوثائق المحفوظة، مجمَّعة باسم الجمعية ومطوية افتراضياً حتى لا تزدحم ──
+function HistoryTab({
+  onOpen,
+}: {
+  onOpen: (doc: { id: string; title: string; content: string; history: HistoryMsg[]; charity: DocCharity }) => void;
+}) {
+  const [docs, setDocs] = useState<SavedDocSummary[] | null>(null);
+  const [error, setError] = useState("");
+  const [openingId, setOpeningId] = useState<string | null>(null);
+
+  useEffect(() => {
+    listMyProjectBuilderDocuments().then((res) => {
+      if (res.success) setDocs(res.documents);
+      else setError(res.error || "تعذّر تحميل سجلّك");
+    });
+  }, []);
+
+  const grouped = useMemo(() => {
+    const map = new Map<string, { charity: DocCharity; docs: SavedDocSummary[] }>();
+    for (const d of docs || []) {
+      const g = map.get(d.charity.id) || { charity: d.charity, docs: [] as SavedDocSummary[] };
+      g.docs.push(d);
+      map.set(d.charity.id, g);
+    }
+    return [...map.values()].sort((a, b) => a.charity.name.localeCompare(b.charity.name, "ar"));
+  }, [docs]);
+
+  const handleOpen = async (d: SavedDocSummary) => {
+    setOpeningId(d.id);
+    const res = await getProjectBuilderDocument(d.id);
+    setOpeningId(null);
+    if (!res.success || !res.document) {
+      notify("error", res.error || "تعذّر فتح الوثيقة");
+      return;
+    }
+    onOpen({
+      id: res.document.id,
+      title: res.document.title,
+      content: res.document.content,
+      history: Array.isArray(res.document.history) ? (res.document.history as HistoryMsg[]) : [],
+      charity: res.document.charity,
+    });
+  };
+
+  const handleDelete = async (d: SavedDocSummary) => {
+    if (!(await confirmAction({ title: `حذف "${d.title}"؟`, tone: "danger" }))) return;
+    const res = await deleteProjectBuilderDocument(d.id);
+    if (res.success) {
+      setDocs((prev) => (prev || []).filter((x) => x.id !== d.id));
+      notify("ok", "حُذفت الوثيقة.");
+    } else {
+      notify("error", res.error || "تعذّر الحذف");
+    }
+  };
+
+  if (docs === null) {
+    return (
+      <div className="flex items-center gap-2 text-body text-slate-500">
+        <Spinner size={14} /> يُحمَّل سجلّك…
+      </div>
+    );
+  }
+
+  if (error) return <Note tone="warn">{error}</Note>;
+
+  if (grouped.length === 0) {
+    return (
+      <p className="rounded-lg border border-dashed border-slate-300 px-4 py-8 text-center text-body text-slate-500 dark:border-slate-700">
+        لم تحفظ أي وثيقة بعد. بعد إنشاء وثيقة، اضغط «حفظ في سجلّي» من صفحة المعاينة.
+      </p>
+    );
+  }
+
+  return (
+    <div className="space-y-2">
+      {grouped.map(({ charity, docs: charityDocs }) => (
+        <details key={charity.id} className="group rounded-xl border border-slate-200 dark:border-slate-800">
+          <summary className="flex cursor-pointer list-none items-center justify-between px-4 py-3 text-body font-medium text-slate-700 dark:text-slate-300">
+            <span>
+              {charity.name} <span className="text-caption text-slate-400">({charityDocs.length})</span>
+            </span>
+            <ArrowRight className="size-4 text-slate-400 transition-transform group-open:-rotate-90" />
+          </summary>
+          <ul className="divide-y divide-slate-100 border-t border-slate-200 dark:divide-slate-800 dark:border-slate-800">
+            {charityDocs.map((d) => (
+              <li key={d.id} className="flex items-center gap-2 px-4 py-2.5">
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-body font-medium text-slate-800 dark:text-slate-200">{d.title}</p>
+                  <p className="text-caption text-slate-400">{fmtDate(d.updatedAt)}</p>
+                </div>
+                <button type="button" onClick={() => handleOpen(d)} disabled={openingId === d.id} className={btn.icon} title="فتح">
+                  {openingId === d.id ? <Loader2 className="size-4 animate-spin" /> : <Eye className="size-4" />}
+                </button>
+                <button type="button" onClick={() => handleDelete(d)} className={btn.iconDanger} title="حذف">
+                  <Trash2 className="size-4" />
+                </button>
+              </li>
+            ))}
+          </ul>
+        </details>
+      ))}
     </div>
   );
 }
@@ -698,11 +946,15 @@ function PreviewPane({
 export default function ProjectBuilderClient() {
   // "كل مرة قبل بدأ الاستعمال": بلا تخزين محلي، فيظهر من جديد عند كل زيارة.
   const [disclaimerOpen, setDisclaimerOpen] = useState(true);
-  const [tab, setTab] = useState<"create" | "analyze">("create");
+  const [tab, setTab] = useState<"create" | "analyze" | "history">("create");
   const [view, setView] = useState<"form" | "preview">("form");
   const [content, setContent] = useState("");
   const [fileName, setFileName] = useState("");
   const [history, setHistory] = useState<HistoryMsg[]>([]);
+  // الجمعية ومعرّف السجلّ المحفوظ (إن وُجد) للوثيقة الظاهرة حالياً في المعاينة
+  // — يحدّدان هل زرّ الحفظ "حفظ جديد" أم "تحديث"، ويُعبّآن مسبقاً في نافذة الحفظ.
+  const [docCharity, setDocCharity] = useState<DocCharity | null>(null);
+  const [savedDocId, setSavedDocId] = useState<string | null>(null);
   const [charities, setCharities] = useState<CharityOption[]>([]);
   const [charitiesError, setCharitiesError] = useState("");
   const [preferenceOptions, setPreferenceOptions] = useState<ProjectBuilderPreference[]>([]);
@@ -717,10 +969,23 @@ export default function ProjectBuilderClient() {
     });
   }, []);
 
-  const openPreview = (c: string, name: string, h: HistoryMsg[]) => {
+  // وثيقة جديدة طُوِّلدت للتوّ — لم تُحفظ بعد، مهما كانت جمعيتها معروفة.
+  const openPreview = (c: string, name: string, h: HistoryMsg[], charity: DocCharity | null) => {
     setContent(c);
     setFileName(name);
     setHistory(h);
+    setDocCharity(charity);
+    setSavedDocId(null);
+    setView("preview");
+  };
+
+  // فتح وثيقة محفوظة سلفاً من "سجلّي" — تعديلاتها تُحدِّث السجلّ القائم لا تُنشئ جديداً.
+  const openSavedDocument = (doc: { id: string; title: string; content: string; history: HistoryMsg[]; charity: DocCharity }) => {
+    setContent(doc.content);
+    setFileName(doc.title);
+    setHistory(doc.history);
+    setDocCharity(doc.charity);
+    setSavedDocId(doc.id);
     setView("preview");
   };
 
@@ -735,6 +1000,7 @@ export default function ProjectBuilderClient() {
               {([
                 { id: "create" as const, label: "إنشاء جديد", icon: Sparkles },
                 { id: "analyze" as const, label: "تحليل نصّ ملصوق", icon: Search },
+                { id: "history" as const, label: "سجلّي", icon: FolderClock },
               ]).map((t) => (
                 <button
                   key={t.id}
@@ -751,12 +1017,14 @@ export default function ProjectBuilderClient() {
               ))}
             </div>
 
-            {charitiesError && <Note tone="warn">{charitiesError}</Note>}
+            {tab !== "history" && charitiesError && <Note tone="warn">{charitiesError}</Note>}
 
             {tab === "create" ? (
               <CreateTab charities={charities} preferenceOptions={preferenceOptions} onPreview={openPreview} />
-            ) : (
+            ) : tab === "analyze" ? (
               <AnalyzeTab onDone={openPreview} />
+            ) : (
+              <HistoryTab onOpen={openSavedDocument} />
             )}
           </>
         )}
@@ -766,10 +1034,18 @@ export default function ProjectBuilderClient() {
             content={content}
             fileName={fileName}
             history={history}
+            charities={charities}
+            docCharity={docCharity}
+            savedDocId={savedDocId}
             onBack={() => setView("form")}
             onRevised={(c, h) => {
               setContent(c);
               setHistory(h);
+            }}
+            onSaved={(doc) => {
+              setSavedDocId(doc.id);
+              setFileName(doc.title);
+              setDocCharity(doc.charity);
             }}
           />
         )}

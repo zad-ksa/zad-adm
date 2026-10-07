@@ -284,3 +284,127 @@ export async function deleteProjectBuilderCharityProfile(charityId: string) {
     return { success: false, error: error.message };
   }
 }
+
+// ── سجلّ الموظف من الوثائق المحفوظة ───────────────────────────────────────────
+// خاص بصاحبه وحده — لا يراه ولا يعدّله أحدٌ غيره، ولو كان يملك صلاحية التحكم.
+// الحفظ بإرادة الموظف (زرٌّ في المعاينة)، لا تلقائياً مع كل توليد، فلا يمتلئ
+// السجلّ بمسوّدات لم تُعتمد.
+
+export async function listMyProjectBuilderDocuments() {
+  const session = await requirePermission("use_project_builder");
+  try {
+    const documents = await prisma.projectBuilderDocument.findMany({
+      where: { employeeId: session.id },
+      select: {
+        id: true,
+        title: true,
+        createdAt: true,
+        updatedAt: true,
+        charity: { select: { id: true, name: true } },
+      },
+      orderBy: [{ charity: { name: "asc" } }, { updatedAt: "desc" }],
+    });
+    return { success: true as const, documents };
+  } catch (error: any) {
+    return { success: false as const, error: error.message, documents: [] };
+  }
+}
+
+export async function getProjectBuilderDocument(id: string) {
+  const session = await requirePermission("use_project_builder");
+  try {
+    const doc = await prisma.projectBuilderDocument.findUnique({
+      where: { id },
+      include: { charity: { select: { id: true, name: true } } },
+    });
+    // doc.employeeId لا doc.charityId: ملكية السجلّ لمن حفظه، بصرف النظر عن
+    // الجمعية التي يخصّها — سجلّ شخصي لا سجلّ جمعية.
+    if (!doc || doc.employeeId !== session.id) return { success: false as const, error: "الوثيقة غير موجودة" };
+    return { success: true as const, document: doc };
+  } catch (error: any) {
+    return { success: false as const, error: error.message };
+  }
+}
+
+export async function saveProjectBuilderDocument(data: {
+  charityId: string;
+  title: string;
+  content: string;
+  history?: unknown;
+}) {
+  let session;
+  try {
+    session = await requirePermission("use_project_builder");
+  } catch {
+    return { success: false, error: "غير مصرح" };
+  }
+
+  const title = data.title.trim();
+  if (!title) return { success: false, error: "عنوان الوثيقة مطلوب" };
+  if (!data.content.trim()) return { success: false, error: "لا يوجد محتوى لحفظه" };
+
+  try {
+    const doc = await prisma.projectBuilderDocument.create({
+      data: {
+        employeeId: session.id,
+        charityId: data.charityId,
+        title,
+        content: data.content,
+        history: data.history as Prisma.InputJsonValue | undefined,
+      },
+      include: { charity: { select: { id: true, name: true } } },
+    });
+    return { success: true, document: doc };
+  } catch (error: any) {
+    return { success: false, error: error.message };
+  }
+}
+
+export async function updateProjectBuilderDocument(
+  id: string,
+  data: { title: string; content: string; history?: unknown }
+) {
+  let session;
+  try {
+    session = await requirePermission("use_project_builder");
+  } catch {
+    return { success: false, error: "غير مصرح" };
+  }
+
+  const title = data.title.trim();
+  if (!title) return { success: false, error: "عنوان الوثيقة مطلوب" };
+  if (!data.content.trim()) return { success: false, error: "لا يوجد محتوى لحفظه" };
+
+  try {
+    const existing = await prisma.projectBuilderDocument.findUnique({ where: { id }, select: { employeeId: true } });
+    if (!existing || existing.employeeId !== session.id) return { success: false, error: "الوثيقة غير موجودة" };
+
+    const doc = await prisma.projectBuilderDocument.update({
+      where: { id },
+      data: { title, content: data.content, history: data.history as Prisma.InputJsonValue | undefined },
+      include: { charity: { select: { id: true, name: true } } },
+    });
+    return { success: true, document: doc };
+  } catch (error: any) {
+    return { success: false, error: error.message };
+  }
+}
+
+export async function deleteProjectBuilderDocument(id: string) {
+  let session;
+  try {
+    session = await requirePermission("use_project_builder");
+  } catch {
+    return { success: false, error: "غير مصرح" };
+  }
+
+  try {
+    const existing = await prisma.projectBuilderDocument.findUnique({ where: { id }, select: { employeeId: true } });
+    if (!existing || existing.employeeId !== session.id) return { success: false, error: "الوثيقة غير موجودة" };
+
+    await prisma.projectBuilderDocument.delete({ where: { id } });
+    return { success: true };
+  } catch (error: any) {
+    return { success: false, error: error.message };
+  }
+}

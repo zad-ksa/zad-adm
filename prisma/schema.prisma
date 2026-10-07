@@ -101,7 +101,8 @@ model Charity {
   allowedIpRanges String[]          @default([])
   ipEnforcement   IpEnforcementMode @default(OFF)
 
-  projectBuilderProfile ProjectBuilderCharityProfile?
+  projectBuilderProfile   ProjectBuilderCharityProfile?
+  projectBuilderDocuments ProjectBuilderDocument[]
 }
 
 /// معلومات الجمعية الثابتة لمنشئ وثائق المبادرات — رؤيتها، رسالتها، مجالها
@@ -134,6 +135,26 @@ model ProjectBuilderPromptVersion {
   note          String?
 
   @@index([createdAt])
+}
+
+/// وثيقة مبادرة محفوظة من موظف — سجلّه الخاص وحده، لا سجلّ مشترك. يحفظها بإرادته
+/// (ليس كل مولَّد تلقائياً، فلا يمتلئ السجلّ بمسوّدات لم تُعتمد)، ويملك تعديلها
+/// أو حذفها لاحقاً. history محادثة التوليد — تتيح استئناف التعديل بالذكاء
+/// الاصطناعي عند إعادة فتحها، لا إعادة بناء البرومبت من الصفر.
+model ProjectBuilderDocument {
+  id         String   @id @default(uuid())
+  employeeId String
+  employee   Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  charityId  String
+  charity    Charity  @relation(fields: [charityId], references: [id], onDelete: Cascade)
+  title      String
+  content    String
+  history    Json?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([employeeId])
+  @@index([charityId])
 }
 
 // ── حسابات وبوابة الجمعيات ──────────────────────────────────────────────────────────
@@ -495,6 +516,7 @@ model Employee {
   reviewedDesignRequests  DesignRequest[]       @relation("ReviewedDesignRequests")
   templateNodes           TemplateNode[]        @relation("TemplateNodes")
   mailApprovals     MailApprover[]
+  projectBuilderDocuments ProjectBuilderDocument[]
 }
 
 /// من يرى أي خدمة في «عرض الخدمات».

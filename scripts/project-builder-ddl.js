@@ -61,6 +61,59 @@ const STATEMENTS = [
     `CREATE INDEX IF NOT EXISTS "ProjectBuilderPromptVersion_createdAt_idx"
        ON "ProjectBuilderPromptVersion"("createdAt")`,
   ],
+  [
+    "جدول ProjectBuilderDocument",
+    `CREATE TABLE IF NOT EXISTS "ProjectBuilderDocument" (
+       "id"         TEXT PRIMARY KEY,
+       "employeeId" TEXT NOT NULL,
+       "charityId"  TEXT NOT NULL,
+       "title"      TEXT NOT NULL,
+       "content"    TEXT NOT NULL,
+       "history"    JSONB,
+       "createdAt"  TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+       "updatedAt"  TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP
+     )`,
+  ],
+  [
+    "مفتاح أجنبي إلى Employee (حذف الموظف يحذف سجلّه)",
+    `DO $$
+     BEGIN
+       IF NOT EXISTS (
+         SELECT 1 FROM pg_constraint
+         WHERE conname = 'ProjectBuilderDocument_employeeId_fkey'
+       ) THEN
+         ALTER TABLE "ProjectBuilderDocument"
+           ADD CONSTRAINT "ProjectBuilderDocument_employeeId_fkey"
+           FOREIGN KEY ("employeeId") REFERENCES "Employee"("id")
+           ON DELETE CASCADE ON UPDATE CASCADE;
+       END IF;
+     END $$`,
+  ],
+  [
+    "مفتاح أجنبي إلى Charity (حذف الجمعية يحذف الوثائق المحفوظة لها)",
+    `DO $$
+     BEGIN
+       IF NOT EXISTS (
+         SELECT 1 FROM pg_constraint
+         WHERE conname = 'ProjectBuilderDocument_charityId_fkey'
+       ) THEN
+         ALTER TABLE "ProjectBuilderDocument"
+           ADD CONSTRAINT "ProjectBuilderDocument_charityId_fkey"
+           FOREIGN KEY ("charityId") REFERENCES "Charity"("id")
+           ON DELETE CASCADE ON UPDATE CASCADE;
+       END IF;
+     END $$`,
+  ],
+  [
+    "فهرس employeeId على ProjectBuilderDocument",
+    `CREATE INDEX IF NOT EXISTS "ProjectBuilderDocument_employeeId_idx"
+       ON "ProjectBuilderDocument"("employeeId")`,
+  ],
+  [
+    "فهرس charityId على ProjectBuilderDocument",
+    `CREATE INDEX IF NOT EXISTS "ProjectBuilderDocument_charityId_idx"
+       ON "ProjectBuilderDocument"("charityId")`,
+  ],
 ];
 
 async function state() {
@@ -72,7 +125,11 @@ async function state() {
     `SELECT 1 FROM information_schema.tables
       WHERE table_schema = 'public' AND table_name = 'ProjectBuilderPromptVersion'`
   );
-  return { table: table.rowCount > 0, versions: versions.rowCount > 0 };
+  const documents = await pool.query(
+    `SELECT 1 FROM information_schema.tables
+      WHERE table_schema = 'public' AND table_name = 'ProjectBuilderDocument'`
+  );
+  return { table: table.rowCount > 0, versions: versions.rowCount > 0, documents: documents.rowCount > 0 };
 }
 
 (async () => {
@@ -80,6 +137,7 @@ async function state() {
   console.log("قبل:");
   console.log("  ProjectBuilderCharityProfile: " + (before.table ? "موجود" : "مفقود"));
   console.log("  ProjectBuilderPromptVersion: " + (before.versions ? "موجود" : "مفقود"));
+  console.log("  ProjectBuilderDocument: " + (before.documents ? "موجود" : "مفقود"));
 
   if (!APPLY) {
     console.log("\nمعاينة فقط. الجمل التي ستُنفَّذ:");
@@ -98,6 +156,7 @@ async function state() {
   console.log("\nبعد:");
   console.log("  ProjectBuilderCharityProfile: " + (after.table ? "موجود" : "مفقود"));
   console.log("  ProjectBuilderPromptVersion: " + (after.versions ? "موجود" : "مفقود"));
+  console.log("  ProjectBuilderDocument: " + (after.documents ? "موجود" : "مفقود"));
 
   await pool.end();
 })().catch(async (e) => {

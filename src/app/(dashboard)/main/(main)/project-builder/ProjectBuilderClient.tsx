@@ -16,6 +16,9 @@ import {
   XCircle,
   Info,
   ShieldAlert,
+  Users,
+  FileWarning,
+  LifeBuoy,
 } from "lucide-react";
 import Select from "@/components/console/Select";
 import { Dialog } from "@/components/console/Dialog";
@@ -50,17 +53,28 @@ type AnalysisResult = {
 };
 
 // ── تنبيه ثابت يظهر قبل كل استعمال ──────────────────────────────────────────
+const DISCLAIMER_POINTS = [
+  { icon: Users, text: "استعمال هذه الأداة مقتصر على أعضاء فريق زاد فقط." },
+  {
+    icon: FileWarning,
+    text: "ما تنتجه الأداة مسودة أولى بمساعدة الذكاء الاصطناعي، ولا تغني عن مراجعة النص وتدقيقه والتأكد من صحة كل معلومة فيه قبل اعتماده أو إرساله.",
+  },
+  { icon: LifeBuoy, text: "إن واجهت ما يحتاج تعديلاً أو تصحيحاً أو إضافة في الأداة، تواصل مع فريق مبرمجي زاد." },
+];
+
 function DisclaimerDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
   return (
     <Dialog open={open} onClose={onClose} title="قبل أن تبدأ" icon={<ShieldAlert className="size-4.5" />} size="md">
-      <div className="space-y-3 text-body leading-6 text-slate-700 dark:text-slate-300">
-        <p>استعمال هذه الأداة مقتصر على أعضاء فريق زاد فقط.</p>
-        <p>
-          ما تنتجه الأداة مسودة أولى بمساعدة الذكاء الاصطناعي، ولا تغني عن مراجعة النص وتدقيقه والتأكد من صحة
-          كل معلومة فيه قبل اعتماده أو إرساله.
-        </p>
-        <p>إن واجهت ما يحتاج تعديلاً أو تصحيحاً أو إضافة في الأداة، تواصل مع فريق مبرمجي زاد.</p>
-      </div>
+      <ul className="space-y-4">
+        {DISCLAIMER_POINTS.map(({ icon: Icon, text }, i) => (
+          <li key={i} className="flex items-start gap-3">
+            <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary dark:bg-teal-400/10 dark:text-teal-300">
+              <Icon className="size-4" />
+            </span>
+            <p className="pt-1.5 text-body leading-6 text-slate-700 dark:text-slate-300">{text}</p>
+          </li>
+        ))}
+      </ul>
       <button type="button" onClick={onClose} className={`${btn.primary} mt-5 w-full`}>
         فهمت، متابعة
       </button>

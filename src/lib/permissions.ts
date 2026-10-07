@@ -69,6 +69,16 @@ export const PERMISSION_GROUPS = [
       // والتعميد نفسه لا يحتاجها — المعمِّد يُعيَّن بالاسم لا بالصلاحية.
       { id: "manage_mail_settings", label: "إعدادات البريد الداخلي" },
       { id: "manage_permissions", label: "إدارة الصلاحيات ومجموعاتها" },
+      // أداة داخلية لصياغة وثائق مبادرات الجمعيات بالذكاء الاصطناعي — لا تظهر
+      // إلا لحاملها. manage_project_builder صلاحية مستقلة أعلى: التحكم في
+      // البرومبت العام وفي بيانات الجمعيات الثابتة (الرؤية/الرسالة/المجال)،
+      // تُمنح use_project_builder تلقائياً عبر IMPLIES فلا تُحمل الأداة بلا
+      // الوصول إليها.
+      { id: "use_project_builder", label: "استخدام منشئ وثائق المبادرات" },
+      {
+        id: "manage_project_builder",
+        label: "التحكم في منشئ وثائق المبادرات (الأوامر وبيانات الجمعيات)",
+      },
     ],
   },
   {
@@ -180,6 +190,7 @@ export const IMPLIES: Record<string, string[]> = {
   // A destructive action implies the ordinary one it destroys from.
   delete_employees: ["manage_employees"],
   delete_design_requests: ["manage_design_requests"],
+  manage_project_builder: ["use_project_builder"],
 };
 
 /** Everything a stored array actually grants, once implications are applied. */

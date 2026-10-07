@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import { Metadata } from "next";
 import { PageHeader } from "@/components/console/layout";
 import { getMeetingSchedules } from "@/app/actions/meeting-schedules";

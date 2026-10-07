@@ -100,6 +100,25 @@ model Charity {
   // the two signals. See IpEnforcementMode for what a mismatch does.
   allowedIpRanges String[]          @default([])
   ipEnforcement   IpEnforcementMode @default(OFF)
+
+  projectBuilderProfile ProjectBuilderCharityProfile?
+}
+
+/// معلومات الجمعية الثابتة لمنشئ وثائق المبادرات — رؤيتها، رسالتها، مجالها
+/// ومدينتها. يُعبّئها مرّةً من يحمل صلاحية "manage_project_builder" فتُملأ
+/// تلقائياً عند اختيار الجمعية في الأداة، ولا يعدّلها أحدٌ غيره لاحقاً — هذا هو
+/// القصد: نصّ موحّد لكل وثيقة تُولَّد لهذه الجمعية، لا صياغة جديدة من كل موظف.
+model ProjectBuilderCharityProfile {
+  id             String   @id @default(uuid())
+  charityId      String   @unique
+  charity        Charity  @relation(fields: [charityId], references: [id], onDelete: Cascade)
+  vision         String?
+  mission        String?
+  strategicGoals String?
+  field          String?
+  city           String?
+  updatedAt      DateTime @updatedAt
+  updatedById    String?
 }
 
 // ── حسابات وبوابة الجمعيات ──────────────────────────────────────────────────────────

@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, useTransition } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { User, ShieldAlert, Users, X, LogOut, LayoutDashboard, Building2, ClipboardList, ChevronRight, Edit, Eye, EyeOff, Camera, Loader2, AlertCircle, CheckCircle2, Newspaper, CheckSquare, Moon, Sun, LayoutGrid, FileText, Settings2, FileSignature, MessageSquare, Send, GitBranch, Bell, ShieldCheck, FolderTree, Clock } from "lucide-react";
+import { User, ShieldAlert, Users, X, LogOut, LayoutDashboard, Building2, ClipboardList, ChevronRight, Edit, Eye, EyeOff, Camera, Loader2, AlertCircle, CheckCircle2, Newspaper, CheckSquare, Moon, Sun, LayoutGrid, FileText, Settings2, FileSignature, MessageSquare, Send, GitBranch, Bell, ShieldCheck, FolderTree, Clock, Sparkles } from "lucide-react";
 import { useTheme } from "next-themes";
 import { logout } from "@/app/actions/auth";
 import { updateProfile } from "@/app/actions/profile";
@@ -181,6 +181,9 @@ export default function EmployeeSidebar({
   }
   if (can("manage_meetings")) {
     navItems.push({ label: "محاضر الاجتماعات", href: "/main/meetings", icon: FileText });
+  }
+  if (can("use_project_builder")) {
+    navItems.push({ label: "منشئ وثائق المبادرات", href: "/main/project-builder", icon: Sparkles });
   }
   // لكل موظف بلا استثناء: مهامه هو. والوسم يتبدّل لمن يرى مهام الجميع.
   {
@@ -398,7 +401,7 @@ export default function EmployeeSidebar({
               {isExpanded && <div className="h-px bg-slate-100 dark:bg-slate-800 mx-2" />}
               {renderGroup("الجمعيات", ["الجمعيات", "العقود", "الاستبيانات", "التواصل", "الاجتماعات", "طلبات التصاميم"])}
               {isExpanded && <div className="h-px bg-slate-100 dark:bg-slate-800 mx-2" />}
-              {renderGroup("زاد", ["التحضير", "البريد الداخلي", "الاعتمادات", "الأخبار والإنجازات", "محاضر الاجتماعات", "المهام والمنجزات", "مهامي"])}
+              {renderGroup("زاد", ["التحضير", "البريد الداخلي", "الاعتمادات", "الأخبار والإنجازات", "محاضر الاجتماعات", "منشئ وثائق المبادرات", "المهام والمنجزات", "مهامي"])}
               {isExpanded && <div className="h-px bg-slate-100 dark:bg-slate-800 mx-2" />}
               {renderGroup("لوحة التحكم", ["لوحة التحكم", "سلاسل الاعتماد"])}
             </>

@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { getSession } from "@/lib/auth";
 import { hasPermission } from "@/lib/permissions";
 import { PageHeader } from "@/components/console/layout";
+import { Note } from "@/components/console/ui";
 import { getProjectBuilderConfig, listProjectBuilderCharityProfiles } from "@/app/actions/projectBuilder";
 import ProjectBuilderSettingsClient from "./ProjectBuilderSettingsClient";
 
@@ -29,6 +30,14 @@ export default async function ProjectBuilderSettingsPage() {
         title="إعدادات منشئ وثائق المبادرات"
         description="البرومبت العام الذي تُصاغ به كل وثيقة، والمعلومات الثابتة لكل جمعية — لا يراهما ولا يعدّلهما إلا من يحمل هذه الصلاحية."
       />
+      {!profiles.success && (
+        <Note tone="warn">
+          تعذّر تحميل قائمة الجمعيات: {profiles.error || "خطأ غير معروف"}. غالباً يعني هذا أن جدول بيانات
+          الجمعيات الثابتة لم يُنشأ بعد في قاعدة البيانات — شغّل{" "}
+          <code className="font-mono">node scripts/project-builder-ddl.js --apply</code> ثم أعد تحميل الصفحة.
+        </Note>
+      )}
+
       <ProjectBuilderSettingsClient
         initialConfig={config}
         initialCharities={profiles.success ? profiles.charities : []}

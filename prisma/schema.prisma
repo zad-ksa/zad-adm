@@ -121,6 +121,21 @@ model ProjectBuilderCharityProfile {
   updatedById    String?
 }
 
+/// سجل إصدارات البرومبت العام لمنشئ وثائق المبادرات — بلا تحديث فوق صفّ قائم.
+/// كل حفظ يُضيف صفّاً جديداً، فيبقى كل إصدار سابق قابلاً للاستعراض أو
+/// الاستعادة، ومن حفظه ومتى. "الحالي" هو الأحدث بـcreatedAt.
+model ProjectBuilderPromptVersion {
+  id            String   @id @default(uuid())
+  template      String
+  createdAt     DateTime @default(now())
+  createdById   String?
+  createdByName String?
+  /// ملاحظة اختيارية — تُعبَّأ تلقائياً عند "استعادة إصدار" لتوثيق السبب.
+  note          String?
+
+  @@index([createdAt])
+}
+
 // ── حسابات وبوابة الجمعيات ──────────────────────────────────────────────────────────
 
 enum CharityUserTitle {

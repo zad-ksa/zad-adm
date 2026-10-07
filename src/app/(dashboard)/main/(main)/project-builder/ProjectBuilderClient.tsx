@@ -21,8 +21,12 @@ import Select from "@/components/console/Select";
 import { Dialog } from "@/components/console/Dialog";
 import { btn, field, Field, Note, OptionRow, Spinner } from "@/components/console/ui";
 import { notify } from "@/components/console/toastBus";
-import { getProjectBuilderCharities, getProjectBuilderCharityProfile } from "@/app/actions/projectBuilder";
-import { PROJECT_BUILDER_EXCLUSIONS } from "@/lib/projectBuilder";
+import {
+  getProjectBuilderCharities,
+  getProjectBuilderCharityProfile,
+  getProjectBuilderExclusions,
+} from "@/app/actions/projectBuilder";
+import type { ProjectBuilderExclusion } from "@/lib/projectBuilder";
 import { exportProjectDocx } from "@/lib/exportProjectDocx";
 
 // `field` يثبّت ارتفاع سطر واحد (h-9) — لا يصلح لمربع نص متعدد الأسطر، وتركيب
@@ -125,9 +129,11 @@ function DirectivesEditor({ directives, setDirectives }: { directives: string[];
 // ── إنشاء جديد ────────────────────────────────────────────────────────────────
 function CreateTab({
   charities,
+  exclusionOptions,
   onPreview,
 }: {
   charities: CharityOption[];
+  exclusionOptions: ProjectBuilderExclusion[];
   onPreview: (content: string, fileName: string, history: HistoryMsg[]) => void;
 }) {
   const [charityId, setCharityId] = useState("");
@@ -268,22 +274,24 @@ function CreateTab({
         />
       </Field>
 
-      <details className="group rounded-xl border border-slate-200 dark:border-slate-800">
-        <summary className="flex cursor-pointer list-none items-center justify-between px-4 py-3 text-body font-medium text-slate-700 dark:text-slate-300">
-          <span>قيود المحتوى{activeExclusions > 0 ? ` (${activeExclusions})` : ""}</span>
-          <ArrowRight className="size-4 text-slate-400 transition-transform group-open:-rotate-90" />
-        </summary>
-        <div className="space-y-1 border-t border-slate-200 px-2 py-2 dark:border-slate-800">
-          {PROJECT_BUILDER_EXCLUSIONS.map((ex) => (
-            <OptionRow
-              key={ex.key}
-              label={ex.label}
-              checked={!!exclusions[ex.key]}
-              onToggle={() => setExclusions((p) => ({ ...p, [ex.key]: !p[ex.key] }))}
-            />
-          ))}
-        </div>
-      </details>
+      {exclusionOptions.length > 0 && (
+        <details className="group rounded-xl border border-slate-200 dark:border-slate-800">
+          <summary className="flex cursor-pointer list-none items-center justify-between px-4 py-3 text-body font-medium text-slate-700 dark:text-slate-300">
+            <span>قيود المحتوى{activeExclusions > 0 ? ` (${activeExclusions})` : ""}</span>
+            <ArrowRight className="size-4 text-slate-400 transition-transform group-open:-rotate-90" />
+          </summary>
+          <div className="space-y-1 border-t border-slate-200 px-2 py-2 dark:border-slate-800">
+            {exclusionOptions.map((ex) => (
+              <OptionRow
+                key={ex.key}
+                label={ex.label}
+                checked={!!exclusions[ex.key]}
+                onToggle={() => setExclusions((p) => ({ ...p, [ex.key]: !p[ex.key] }))}
+              />
+            ))}
+          </div>
+        </details>
+      )}
 
       <details className="group rounded-xl border border-slate-200 dark:border-slate-800" open>
         <summary className="flex cursor-pointer list-none items-center justify-between px-4 py-3 text-body font-medium text-slate-700 dark:text-slate-300">
@@ -624,11 +632,15 @@ export default function ProjectBuilderClient() {
   const [history, setHistory] = useState<HistoryMsg[]>([]);
   const [charities, setCharities] = useState<CharityOption[]>([]);
   const [charitiesError, setCharitiesError] = useState("");
+  const [exclusionOptions, setExclusionOptions] = useState<ProjectBuilderExclusion[]>([]);
 
   useEffect(() => {
     getProjectBuilderCharities().then((res) => {
       if (res.success) setCharities(res.charities);
       else setCharitiesError(res.error || "تعذّر تحميل قائمة الجمعيات");
+    });
+    getProjectBuilderExclusions().then((res) => {
+      if (res.success) setExclusionOptions(res.exclusions);
     });
   }, []);
 
@@ -669,7 +681,7 @@ export default function ProjectBuilderClient() {
             {charitiesError && <Note tone="warn">{charitiesError}</Note>}
 
             {tab === "create" ? (
-              <CreateTab charities={charities} onPreview={openPreview} />
+              <CreateTab charities={charities} exclusionOptions={exclusionOptions} onPreview={openPreview} />
             ) : (
               <AnalyzeTab onDone={openPreview} />
             )}

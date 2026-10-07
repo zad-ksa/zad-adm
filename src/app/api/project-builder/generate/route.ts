@@ -2,21 +2,17 @@ import Anthropic from "@anthropic-ai/sdk";
 import { NextRequest, NextResponse } from "next/server";
 import { requirePermission, authErrorResponse } from "@/lib/guards";
 import { prisma } from "@/lib/db";
-import {
-  DEFAULT_PROJECT_BUILDER_SYSTEM_PROMPT,
-  normalizeProjectBuilderConfig,
-  buildProjectPrompt,
-  type ProjectBuilderBudget,
-} from "@/lib/projectBuilder";
+import { normalizeProjectBuilderOptions, buildProjectPrompt, type ProjectBuilderBudget } from "@/lib/projectBuilder";
 
 /**
  * يصوغ وثيقة مبادرة جديدة بالذكاء الاصطناعي.
  *
- * البرومبت العام يُبنى هنا بالكامل على الخادم — من القالب المحفوظ في
- * GlobalSetting ومعلومات الجمعية الثابتة المقروءة من قاعدة البيانات
- * بمعرّفها، لا مما يرسله المتصفح. فمن يملك "use_project_builder" فقط لا يرى
- * القالب ولا يستطيع التأثير فيه إطلاقاً — ما يرسله هو اسم المبادرة وفكرتها
- * والقيود والميزانية والتوجيهات، وهذه وحدها.
+ * لا شيء هنا ثابتٌ في الكود: البرومبت هو أحدث إصدار في
+ * ProjectBuilderPromptVersion، وقيود المحتوى من GlobalSetting، ومعلومات
+ * الجمعية من ProjectBuilderCharityProfile — كلها تُقرأ بمعرّف الجمعية من
+ * قاعدة البيانات، لا مما يرسله المتصفح. فمن يملك "use_project_builder" فقط لا
+ * يرى البرومبت ولا يستطيع التأثير فيه إطلاقاً — ما يرسله هو اسم المبادرة
+ * وفكرتها والقيود المفعّلة والميزانية والتوجيهات، وهذه وحدها.
  */
 export async function POST(req: NextRequest) {
   try {
@@ -38,10 +34,11 @@ export async function POST(req: NextRequest) {
     if (!programName?.trim()) return NextResponse.json({ error: "اسم المبادرة مطلوب" }, { status: 400 });
     if (!programIdea?.trim()) return NextResponse.json({ error: "فكرة المبادرة مطلوبة" }, { status: 400 });
 
-    const [charity, profile, configRecord] = await Promise.all([
+    const [charity, profile, optionsRecord, promptVersion] = await Promise.all([
       prisma.charity.findUnique({ where: { id: charityId }, select: { name: true } }),
       prisma.projectBuilderCharityProfile.findUnique({ where: { charityId } }),
-      prisma.globalSetting.findUnique({ where: { key: "PROJECT_BUILDER_CONFIG" } }),
+      prisma.globalSetting.findUnique({ where: { key: "PROJECT_BUILDER_OPTIONS" } }),
+      prisma.projectBuilderPromptVersion.findFirst({ orderBy: { createdAt: "desc" } }),
     ]);
 
     if (!charity) return NextResponse.json({ error: "الجمعية غير موجودة" }, { status: 404 });
@@ -51,23 +48,28 @@ export async function POST(req: NextRequest) {
         { status: 409 }
       );
     }
+    if (!promptVersion) {
+      return NextResponse.json(
+        { error: "لم يُضَف برومبت معتمد للأداة بعد. تواصل مع من يملك صلاحية التحكم بالأداة." },
+        { status: 409 }
+      );
+    }
 
-    const template = configRecord?.value
-      ? normalizeProjectBuilderConfig(configRecord.value).systemPromptTemplate
-      : DEFAULT_PROJECT_BUILDER_SYSTEM_PROMPT;
+    const { exclusions: availableExclusions } = normalizeProjectBuilderOptions(optionsRecord?.value);
+    const safeExclusionKeys: string[] = Array.isArray(exclusions) ? exclusions.filter((x) => typeof x === "string") : [];
+    const activeExclusions = availableExclusions.filter((e) => safeExclusionKeys.includes(e.key));
 
     const safeBudget: ProjectBuilderBudget = {
       include: budget?.include !== false,
       total: typeof budget?.total === "string" ? budget.total : "",
       reserve: !!budget?.reserve,
     };
-    const safeExclusions: string[] = Array.isArray(exclusions) ? exclusions.filter((x) => typeof x === "string") : [];
     const safeDirectives: string[] = Array.isArray(directives)
       ? directives.filter((x) => typeof x === "string" && x.trim()).slice(0, 20)
       : [];
 
     const prompt = buildProjectPrompt(
-      template,
+      promptVersion.template,
       {
         charityName: charity.name,
         vision: profile.vision || "",
@@ -77,7 +79,7 @@ export async function POST(req: NextRequest) {
         city: profile.city || "",
       },
       { programName: programName.trim(), programIdea: programIdea.trim() },
-      safeExclusions,
+      activeExclusions,
       safeBudget,
       safeDirectives
     );

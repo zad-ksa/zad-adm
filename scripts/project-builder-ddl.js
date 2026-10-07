@@ -45,6 +45,22 @@ const STATEMENTS = [
        END IF;
      END $$`,
   ],
+  [
+    "جدول ProjectBuilderPromptVersion",
+    `CREATE TABLE IF NOT EXISTS "ProjectBuilderPromptVersion" (
+       "id"            TEXT PRIMARY KEY,
+       "template"      TEXT NOT NULL,
+       "createdAt"     TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+       "createdById"   TEXT,
+       "createdByName" TEXT,
+       "note"          TEXT
+     )`,
+  ],
+  [
+    "فهرس createdAt على ProjectBuilderPromptVersion",
+    `CREATE INDEX IF NOT EXISTS "ProjectBuilderPromptVersion_createdAt_idx"
+       ON "ProjectBuilderPromptVersion"("createdAt")`,
+  ],
 ];
 
 async function state() {
@@ -52,13 +68,18 @@ async function state() {
     `SELECT 1 FROM information_schema.tables
       WHERE table_schema = 'public' AND table_name = 'ProjectBuilderCharityProfile'`
   );
-  return { table: table.rowCount > 0 };
+  const versions = await pool.query(
+    `SELECT 1 FROM information_schema.tables
+      WHERE table_schema = 'public' AND table_name = 'ProjectBuilderPromptVersion'`
+  );
+  return { table: table.rowCount > 0, versions: versions.rowCount > 0 };
 }
 
 (async () => {
   const before = await state();
   console.log("قبل:");
   console.log("  ProjectBuilderCharityProfile: " + (before.table ? "موجود" : "مفقود"));
+  console.log("  ProjectBuilderPromptVersion: " + (before.versions ? "موجود" : "مفقود"));
 
   if (!APPLY) {
     console.log("\nمعاينة فقط. الجمل التي ستُنفَّذ:");
@@ -76,6 +97,7 @@ async function state() {
   const after = await state();
   console.log("\nبعد:");
   console.log("  ProjectBuilderCharityProfile: " + (after.table ? "موجود" : "مفقود"));
+  console.log("  ProjectBuilderPromptVersion: " + (after.versions ? "موجود" : "مفقود"));
 
   await pool.end();
 })().catch(async (e) => {

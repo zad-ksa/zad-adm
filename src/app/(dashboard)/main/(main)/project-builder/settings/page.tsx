@@ -5,7 +5,11 @@ import { getSession } from "@/lib/auth";
 import { hasPermission } from "@/lib/permissions";
 import { PageHeader } from "@/components/console/layout";
 import { Note } from "@/components/console/ui";
-import { getProjectBuilderConfig, listProjectBuilderCharityProfiles } from "@/app/actions/projectBuilder";
+import {
+  listProjectBuilderPromptVersions,
+  getProjectBuilderOptions,
+  listProjectBuilderCharityProfiles,
+} from "@/app/actions/projectBuilder";
 import ProjectBuilderSettingsClient from "./ProjectBuilderSettingsClient";
 
 export const metadata = { title: "إعدادات منشئ وثائق المبادرات | زاد التنموية" };
@@ -18,8 +22,9 @@ export default async function ProjectBuilderSettingsPage() {
   const canManage = hasPermission(session.role, session.permissions || [], "manage_project_builder");
   if (!canManage) redirect("/main/project-builder");
 
-  const [config, profiles] = await Promise.all([
-    getProjectBuilderConfig(),
+  const [versions, options, profiles] = await Promise.all([
+    listProjectBuilderPromptVersions(),
+    getProjectBuilderOptions(),
     listProjectBuilderCharityProfiles(),
   ]);
 
@@ -28,18 +33,21 @@ export default async function ProjectBuilderSettingsPage() {
       <PageHeader
         crumbs={[{ label: "منشئ وثائق المبادرات", href: "/main/project-builder" }, { label: "الإعدادات" }]}
         title="إعدادات منشئ وثائق المبادرات"
-        description="البرومبت العام الذي تُصاغ به كل وثيقة، والمعلومات الثابتة لكل جمعية — لا يراهما ولا يعدّلهما إلا من يحمل هذه الصلاحية."
+        description="البرومبت العام الذي تُصاغ به كل وثيقة، بتاريخ تعديلاته كاملاً، وقيود المحتوى ومحاور الوثيقة المعيارية، والمعلومات الثابتة لكل جمعية — كلها في قاعدة البيانات، ولا يراها ولا يعدّلها إلا من يحمل هذه الصلاحية."
       />
+
+      {!versions.success && <Note tone="warn">تعذّر تحميل سجل البرومبت: {versions.error}</Note>}
       {!profiles.success && (
         <Note tone="warn">
-          تعذّر تحميل قائمة الجمعيات: {profiles.error || "خطأ غير معروف"}. غالباً يعني هذا أن جدول بيانات
-          الجمعيات الثابتة لم يُنشأ بعد في قاعدة البيانات — شغّل{" "}
-          <code className="font-mono">node scripts/project-builder-ddl.js --apply</code> ثم أعد تحميل الصفحة.
+          تعذّر تحميل قائمة الجمعيات: {profiles.error}. غالباً يعني هذا أن جداول الأداة لم تُنشأ بعد في قاعدة
+          البيانات — شغّل <code className="font-mono">node scripts/project-builder-ddl.js --apply</code> ثم أعد
+          تحميل الصفحة.
         </Note>
       )}
 
       <ProjectBuilderSettingsClient
-        initialConfig={config}
+        initialVersions={versions.success ? versions.versions : []}
+        initialOptions={options}
         initialCharities={profiles.success ? profiles.charities : []}
       />
     </div>

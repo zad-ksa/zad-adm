@@ -42,6 +42,12 @@ export type ProjectBuilderCharityInfo = {
 export type ProjectBuilderValues = {
   programName: string;
   programIdea: string;
+  /** اختياري: عدد المستفيدين المستهدف. */
+  beneficiariesCount?: string;
+  /** اختياري: مدة البرنامج. */
+  programDuration?: string;
+  /** اختياري: الفئة المستهدفة. */
+  targetCategory?: string;
 };
 
 export type ProjectBuilderBudget = { include: boolean; total: string; reserve: boolean };
@@ -56,6 +62,7 @@ export const PROJECT_BUILDER_PROMPT_TOKENS: { token: string; hint: string }[] = 
   { token: "{{city}}", hint: "منطقتها أو مدينتها (من ملفّها الثابت)" },
   { token: "{{programName}}", hint: "اسم المبادرة الذي يكتبه الموظف" },
   { token: "{{programIdea}}", hint: "فكرة المبادرة التي يكتبها الموظف" },
+  { token: "{{additionalInfo}}", hint: "عدد المستفيدين ومدة البرنامج والفئة المستهدفة — ما أدخله الموظف منها فقط، اختيارية" },
   { token: "{{preferences}}", hint: "تفضيلات المحتوى التي فعّلها الموظف، مُجمَّعة" },
   { token: "{{budgetInstructions}}", hint: "تعليمات مبلغ الميزانية والاحتياطي، أو أمر حذف بند الميزانية" },
   { token: "{{directives}}", hint: "التوجيهات الخاصة التي أضافها الموظف، مُرقّمة" },
@@ -89,6 +96,14 @@ export function buildProjectPrompt(
       directives.map((d, i) => `${i + 1}. ${d}`).join("\n")
     : "لا توجد توجيهات خاصة.";
 
+  const extras: string[] = [];
+  if (values.beneficiariesCount?.trim()) extras.push(`عدد المستفيدين المستهدف: ${values.beneficiariesCount.trim()}`);
+  if (values.programDuration?.trim()) extras.push(`مدة البرنامج: ${values.programDuration.trim()}`);
+  if (values.targetCategory?.trim()) extras.push(`الفئة المستهدفة: ${values.targetCategory.trim()}`);
+  const additionalInfo = extras.length
+    ? "معلومات إضافية:\n" + extras.map((e) => "• " + e).join("\n")
+    : "لا توجد معلومات إضافية — استنتج ما يلزم من فكرة المبادرة.";
+
   const tokens: Record<string, string> = {
     assocName: charity.charityName || "—",
     vision: charity.vision || "—",
@@ -98,6 +113,7 @@ export function buildProjectPrompt(
     city: charity.city || "—",
     programName: values.programName,
     programIdea: values.programIdea,
+    additionalInfo,
     preferences,
     budgetInstructions,
     directives: directivesBlock,

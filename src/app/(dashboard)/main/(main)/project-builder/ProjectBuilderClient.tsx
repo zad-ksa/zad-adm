@@ -159,6 +159,9 @@ function CreateTab({
   const [cityOverride, setCityOverride] = useState("");
   const [programName, setProgramName] = useState("");
   const [programIdea, setProgramIdea] = useState("");
+  const [beneficiariesCount, setBeneficiariesCount] = useState("");
+  const [programDuration, setProgramDuration] = useState("");
+  const [targetCategory, setTargetCategory] = useState("");
   const [preferences, setPreferences] = useState<Record<string, boolean>>({});
   const [budget, setBudget] = useState({ include: true, total: "", reserve: false });
   const [directives, setDirectives] = useState<string[]>([]);
@@ -211,6 +214,9 @@ function CreateTab({
           // فارغ = استعمل القيمة المحفوظة في ملفّ الجمعية؛ غير فارغ = تجاوزها
           // لهذه الوثيقة فقط، بلا أي تعديل على الملفّ نفسه.
           cityOverride: cityOverride.trim(),
+          beneficiariesCount: beneficiariesCount.trim(),
+          programDuration: programDuration.trim(),
+          targetCategory: targetCategory.trim(),
           preferences: Object.keys(preferences).filter((k) => preferences[k]),
           budget,
           directives,
@@ -310,6 +316,36 @@ function CreateTab({
           className={`${textareaField} resize-y`}
         />
       </Field>
+
+      <div className="grid gap-4 sm:grid-cols-3">
+        <Field id="pb-beneficiaries" label="عدد المستفيدين" hint="اختياري">
+          <input
+            id="pb-beneficiaries"
+            value={beneficiariesCount}
+            onChange={(e) => setBeneficiariesCount(e.target.value)}
+            placeholder="مثال: 500"
+            className={field}
+          />
+        </Field>
+        <Field id="pb-duration" label="مدة البرنامج" hint="اختياري">
+          <input
+            id="pb-duration"
+            value={programDuration}
+            onChange={(e) => setProgramDuration(e.target.value)}
+            placeholder="مثال: 6 أشهر"
+            className={field}
+          />
+        </Field>
+        <Field id="pb-target" label="الفئة المستهدفة" hint="اختياري">
+          <input
+            id="pb-target"
+            value={targetCategory}
+            onChange={(e) => setTargetCategory(e.target.value)}
+            placeholder="مثال: الشباب 18–30"
+            className={field}
+          />
+        </Field>
+      </div>
 
       {preferenceOptions.length > 0 && (
         <details className="group rounded-xl border border-slate-200 dark:border-slate-800">

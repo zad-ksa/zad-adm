@@ -29,7 +29,18 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "طلب غير صالح" }, { status: 400 });
     }
 
-    const { charityId, programName, programIdea, cityOverride, preferences, budget, directives } = body;
+    const {
+      charityId,
+      programName,
+      programIdea,
+      cityOverride,
+      beneficiariesCount,
+      programDuration,
+      targetCategory,
+      preferences,
+      budget,
+      directives,
+    } = body;
     if (!charityId?.trim()) return NextResponse.json({ error: "اختر الجمعية" }, { status: 400 });
     if (!programName?.trim()) return NextResponse.json({ error: "اسم المبادرة مطلوب" }, { status: 400 });
     if (!programIdea?.trim()) return NextResponse.json({ error: "فكرة المبادرة مطلوبة" }, { status: 400 });
@@ -79,7 +90,13 @@ export async function POST(req: NextRequest) {
         // تجاوزٌ لمرّة واحدة لهذه الوثيقة وحدها — لا يُكتب إلى ملفّ الجمعية.
         city: (typeof cityOverride === "string" && cityOverride.trim()) || profile.city || "",
       },
-      { programName: programName.trim(), programIdea: programIdea.trim() },
+      {
+        programName: programName.trim(),
+        programIdea: programIdea.trim(),
+        beneficiariesCount: typeof beneficiariesCount === "string" ? beneficiariesCount : "",
+        programDuration: typeof programDuration === "string" ? programDuration : "",
+        targetCategory: typeof targetCategory === "string" ? targetCategory : "",
+      },
       activePreferences,
       safeBudget,
       safeDirectives

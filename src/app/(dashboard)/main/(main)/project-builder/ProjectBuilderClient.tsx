@@ -999,7 +999,7 @@ export default function ProjectBuilderClient() {
             <div className="mb-5 inline-flex gap-0.5 overflow-hidden rounded-lg border border-slate-200 p-0.5 dark:border-slate-800">
               {([
                 { id: "create" as const, label: "إنشاء جديد", icon: Sparkles },
-                { id: "analyze" as const, label: "تحليل نصّ ملصوق", icon: Search },
+                { id: "analyze" as const, label: "تحليل نص وثيقة", icon: Search },
                 { id: "history" as const, label: "سجلّي", icon: FolderClock },
               ]).map((t) => (
                 <button

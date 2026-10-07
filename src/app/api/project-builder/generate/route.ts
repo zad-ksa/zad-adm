@@ -42,8 +42,9 @@ export async function POST(req: NextRequest) {
       directives,
     } = body;
     if (!charityId?.trim()) return NextResponse.json({ error: "اختر الجمعية" }, { status: 400 });
-    if (!programName?.trim()) return NextResponse.json({ error: "اسم المبادرة مطلوب" }, { status: 400 });
     if (!programIdea?.trim()) return NextResponse.json({ error: "فكرة المبادرة مطلوبة" }, { status: 400 });
+    // اسم المبادرة اختياري عمداً: إن تُرك فارغاً يبتكر الذكاء الاصطناعي اسماً
+    // بنفسه وفق البرومبت؛ وإن حُدِّد فهو ما يُعتمَد حرفياً (انظر buildProjectPrompt).
 
     const [charity, profile, optionsRecord, promptVersion] = await Promise.all([
       prisma.charity.findUnique({ where: { id: charityId }, select: { name: true } }),
@@ -91,7 +92,7 @@ export async function POST(req: NextRequest) {
         city: (typeof cityOverride === "string" && cityOverride.trim()) || profile.city || "",
       },
       {
-        programName: programName.trim(),
+        programName: typeof programName === "string" ? programName.trim() : "",
         programIdea: programIdea.trim(),
         beneficiariesCount: typeof beneficiariesCount === "string" ? beneficiariesCount : "",
         programDuration: typeof programDuration === "string" ? programDuration : "",
@@ -109,7 +110,10 @@ export async function POST(req: NextRequest) {
     const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
     const message = await client.messages.create({
       model: "claude-haiku-4-5-20251001",
-      max_tokens: 8000,
+      // وثيقة مبادرة كاملة بأربعة عشر عنصراً مفصّلاً (جداول، مصفوفات، ميزانية) تتجاوز
+      // غالباً 8000 رمزاً بالعربية فتُقطَع قبل آخر عنصر (الميزانية) بصمت — هذا السقف
+      // لا يكلّف شيئاً إضافياً ما لم يُستعمَل فعلاً، فرفعه آمن.
+      max_tokens: 16000,
       messages: [{ role: "user", content: prompt }],
     });
 

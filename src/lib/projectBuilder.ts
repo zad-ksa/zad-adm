@@ -60,7 +60,7 @@ export const PROJECT_BUILDER_PROMPT_TOKENS: { token: string; hint: string }[] = 
   { token: "{{strategicGoals}}", hint: "أهدافها الاستراتيجية (من ملفّها الثابت)" },
   { token: "{{field}}", hint: "مجال عملها (من ملفّها الثابت)" },
   { token: "{{city}}", hint: "منطقتها أو مدينتها (من ملفّها الثابت)" },
-  { token: "{{programName}}", hint: "اسم المبادرة الذي يكتبه الموظف" },
+  { token: "{{programName}}", hint: "اسم المبادرة — اختياري؛ إن تركه الموظف فارغاً يُستبدَل بتوجيه للذكاء الاصطناعي بابتكار اسم بنفسه" },
   { token: "{{programIdea}}", hint: "فكرة المبادرة التي يكتبها الموظف" },
   { token: "{{additionalInfo}}", hint: "عدد المستفيدين ومدة البرنامج والفئة المستهدفة — ما أدخله الموظف منها فقط، اختيارية" },
   { token: "{{preferences}}", hint: "تفضيلات المحتوى التي فعّلها الموظف، مُجمَّعة" },
@@ -111,7 +111,10 @@ export function buildProjectPrompt(
     strategicGoals: charity.strategicGoals || "—",
     field: charity.field || "—",
     city: charity.city || "—",
-    programName: values.programName,
+    // اختياري: إن حدَّده الموظف يُعتمَد حرفياً ويطغى على ما قد يقترحه البرومبت؛
+    // وإن تركه فارغاً فهذا التوجيه الصريح هو ما يحلّ محلّه، فيبتكر الذكاء
+    // الاصطناعي اسماً بنفسه كما يصف العنصر الأول من البرومبت أصلاً.
+    programName: values.programName.trim() || "(غير محدَّد — اقترح اسماً إبداعياً مناسباً للمبادرة بنفسك)",
     programIdea: values.programIdea,
     additionalInfo,
     preferences,

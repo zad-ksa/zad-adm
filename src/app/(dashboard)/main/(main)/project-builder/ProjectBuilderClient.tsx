@@ -162,7 +162,7 @@ function CreateTab({
 }: {
   charities: CharityOption[];
   preferenceOptions: ProjectBuilderPreference[];
-  onPreview: (content: string, fileName: string, history: HistoryMsg[], charity: DocCharity | null) => void;
+  onPreview: (content: string, fileName: string, history: HistoryMsg[], charity: DocCharity | null, truncated: boolean) => void;
 }) {
   const [charityId, setCharityId] = useState("");
   const [profile, setProfile] = useState<CharityProfile>(null);
@@ -212,7 +212,9 @@ function CreateTab({
 
   const charityOptions = charities.map((c) => ({ value: c.id, label: c.name }));
   const activePreferenceCount = Object.keys(preferences).filter((k) => preferences[k]).length;
-  const ready = charityId && profileState === "ready" && programName.trim() && programIdea.trim();
+  // اسم المبادرة اختياري عمداً: إن تُرك فارغاً يبتكر الذكاء الاصطناعي اسماً
+  // بنفسه؛ وإن حُدِّد فهو ما يُعتمَد حرفياً ويطغى على اقتراح البرومبت.
+  const ready = charityId && profileState === "ready" && programIdea.trim();
 
   const handleSubmit = async () => {
     setError("");
@@ -239,7 +241,10 @@ function CreateTab({
       const data = await res.json();
       if (!res.ok) throw new Error(data?.error || "تعذّر توليد الوثيقة");
       const selectedCharity = charities.find((c) => c.id === charityId) || null;
-      onPreview(data.content, programName.trim(), data.history || [], selectedCharity);
+      // لا اسم محدَّد؟ عنوانٌ مؤقّت من فكرة المبادرة بدل عنوانٍ فارغ — قابل
+      // للتعديل لاحقاً من نافذة "حفظ في سجلّي" على أي حال.
+      const title = programName.trim() || programIdea.trim().slice(0, 40) || "وثيقة مبادرة";
+      onPreview(data.content, title, data.history || [], selectedCharity, !!data.truncated);
     } catch (e: any) {
       setError(e.message || "حدث خطأ غير متوقع");
     } finally {
@@ -311,7 +316,7 @@ function CreateTab({
       )}
 
       <div className="grid gap-4 sm:grid-cols-2">
-        <Field id="pb-name" label="اسم المبادرة / البرنامج">
+        <Field id="pb-name" label="اسم المبادرة / البرنامج" hint="اختياري — اتركه فارغاً ليبتكر الذكاء الاصطناعي اسماً إبداعياً بنفسه">
           <input
             id="pb-name"
             value={programName}
@@ -446,7 +451,7 @@ function CreateTab({
 function AnalyzeTab({
   onDone,
 }: {
-  onDone: (content: string, fileName: string, history: HistoryMsg[], charity: DocCharity | null) => void;
+  onDone: (content: string, fileName: string, history: HistoryMsg[], charity: DocCharity | null, truncated: boolean) => void;
 }) {
   const [text, setText] = useState("");
   const [analyzing, setAnalyzing] = useState(false);
@@ -492,7 +497,7 @@ function AnalyzeTab({
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data?.error || "تعذّرت إعادة البناء");
-      onDone(data.content, "وثيقة معاد بناؤها", data.history || [], null);
+      onDone(data.content, "وثيقة معاد بناؤها", data.history || [], null, !!data.truncated);
     } catch (e: any) {
       setError(e.message || "حدث خطأ أثناء إعادة البناء");
     } finally {
@@ -706,6 +711,7 @@ function PreviewPane({
   content,
   fileName,
   history,
+  truncated,
   charities,
   docCharity,
   savedDocId,
@@ -716,11 +722,13 @@ function PreviewPane({
   content: string;
   fileName: string;
   history: HistoryMsg[];
+  /** توقّف الذكاء الاصطناعي قبل إكمال الوثيقة (بلغ الحدّ الأقصى للنصّ) — غالباً يعني عنصراً أخيراً ناقصاً كالميزانية. */
+  truncated: boolean;
   charities: CharityOption[];
   docCharity: DocCharity | null;
   savedDocId: string | null;
   onBack: () => void;
-  onRevised: (content: string, history: HistoryMsg[]) => void;
+  onRevised: (content: string, history: HistoryMsg[], truncated: boolean) => void;
   onSaved: (doc: { id: string; title: string; charity: DocCharity }) => void;
 }) {
   const [editReq, setEditReq] = useState("");
@@ -739,7 +747,7 @@ function PreviewPane({
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data?.error || "تعذّر التعديل");
-      onRevised(data.content, data.history || history);
+      onRevised(data.content, data.history || history, !!data.truncated);
       setEditReq("");
     } catch (e: any) {
       notify("error", e.message || "حدث خطأ أثناء التعديل");
@@ -805,6 +813,14 @@ function PreviewPane({
           </button>
         </div>
       </div>
+
+      {truncated && (
+        <Note tone="warn">
+          توقّف الذكاء الاصطناعي قبل إكمال الوثيقة (بلغ الحدّ الأقصى للنصّ) — راجع نهايتها، فقد يكون آخر عنصر فيها
+          (كالميزانية) ناقصاً أو غائباً. اكتب في مربّع التعديل أسفله مثلاً «أكمل الوثيقة من حيث توقّفتَ، ابدأ من العنصر
+          الأخير الناقص» لإتمامها.
+        </Note>
+      )}
 
       <div className="max-h-[520px] overflow-y-auto rounded-xl border border-slate-200 bg-slate-50 p-5 text-body leading-7 whitespace-pre-wrap dark:border-slate-800 dark:bg-slate-950">
         {content}
@@ -955,6 +971,7 @@ export default function ProjectBuilderClient() {
   // — يحدّدان هل زرّ الحفظ "حفظ جديد" أم "تحديث"، ويُعبّآن مسبقاً في نافذة الحفظ.
   const [docCharity, setDocCharity] = useState<DocCharity | null>(null);
   const [savedDocId, setSavedDocId] = useState<string | null>(null);
+  const [truncated, setTruncated] = useState(false);
   const [charities, setCharities] = useState<CharityOption[]>([]);
   const [charitiesError, setCharitiesError] = useState("");
   const [preferenceOptions, setPreferenceOptions] = useState<ProjectBuilderPreference[]>([]);
@@ -970,12 +987,13 @@ export default function ProjectBuilderClient() {
   }, []);
 
   // وثيقة جديدة طُوِّلدت للتوّ — لم تُحفظ بعد، مهما كانت جمعيتها معروفة.
-  const openPreview = (c: string, name: string, h: HistoryMsg[], charity: DocCharity | null) => {
+  const openPreview = (c: string, name: string, h: HistoryMsg[], charity: DocCharity | null, wasTruncated: boolean) => {
     setContent(c);
     setFileName(name);
     setHistory(h);
     setDocCharity(charity);
     setSavedDocId(null);
+    setTruncated(wasTruncated);
     setView("preview");
   };
 
@@ -986,6 +1004,7 @@ export default function ProjectBuilderClient() {
     setHistory(doc.history);
     setDocCharity(doc.charity);
     setSavedDocId(doc.id);
+    setTruncated(false);
     setView("preview");
   };
 
@@ -1034,13 +1053,15 @@ export default function ProjectBuilderClient() {
             content={content}
             fileName={fileName}
             history={history}
+            truncated={truncated}
             charities={charities}
             docCharity={docCharity}
             savedDocId={savedDocId}
             onBack={() => setView("form")}
-            onRevised={(c, h) => {
+            onRevised={(c, h, wasTruncated) => {
               setContent(c);
               setHistory(h);
+              setTruncated(wasTruncated);
             }}
             onSaved={(doc) => {
               setSavedDocId(doc.id);

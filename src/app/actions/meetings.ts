@@ -57,6 +57,35 @@ async function requireMeetingEditAccess(meetingId: string) {
   return { session: session!, meeting };
 }
 
+/**
+ * مثل requireMeetingEditAccess، مع استثناء واحد: من يملك view_all_tasks يتحكم
+ * بمهام أي محضر — لا محاضره هو فقط — لأن هذا بالضبط معنى تلك الصلاحية
+ * ("عرض وإدارة جميع مهام الموظفين"). الحماية من محاضر الإدارة التنفيذية تبقى:
+ * متابعة المهام لا تعني الاطّلاع على محتوى محضرٍ تنفيذي حسّاس.
+ *
+ * تُستعمل في أفعال المهمة المفردة وحدها (تبديل، تعديل، حذف) — لا في تعديل
+ * محتوى المحضر نفسه أو حذفه، فذلك يبقى بقاعدة الملكية الأصلية حصراً.
+ */
+async function requireTaskControlAccess(meetingId: string) {
+  const session = await getSession();
+  if (!canManageMeetings(session)) throw new Error("غير مصرح");
+
+  const meeting = await prisma.meeting.findUnique({
+    where: { id: meetingId },
+    include: { createdBy: { select: { role: true, permissions: true } } },
+  });
+  if (!meeting) throw new Error("غير موجود");
+
+  const userIsTier1 = isTier1(session!.role, session!.permissions || []);
+  const creatorIsTier1 = isTier1(meeting.createdBy.role, meeting.createdBy.permissions || []);
+  if (creatorIsTier1 && !userIsTier1) throw new Error("لا يمكنك تعديل محاضر الإدارة التنفيذية");
+
+  const canViewAllTasks = hasPermission(session!.role, session!.permissions || [], "view_all_tasks");
+  if (meeting.createdById !== session!.id && !userIsTier1 && !canViewAllTasks) throw new Error("غير مصرح");
+
+  return { session: session!, meeting };
+}
+
 export async function getMeetings() {
   const session = await getSession();
   if (!canManageMeetings(session)) throw new Error("غير مصرح");
@@ -231,6 +260,7 @@ export async function upsertMeetingTasks(
             createdById: session.id,
             isInternal: true,
             status: t.isDone ? "COMPLETED" : "NOT_STARTED",
+            isCompleted: t.isDone ?? false,
             priority: 2,
             charityId: meeting?.charityId || null,
           },
@@ -238,6 +268,7 @@ export async function upsertMeetingTasks(
             title: t.title,
             assignedToId: t.assignedToId,
             status: t.isDone ? "COMPLETED" : "NOT_STARTED",
+            isCompleted: t.isDone ?? false,
           }
         });
         
@@ -273,6 +304,7 @@ export async function upsertMeetingTasks(
             createdById: session.id,
             isInternal: true,
             status: t.isDone ? "COMPLETED" : "NOT_STARTED",
+            isCompleted: t.isDone ?? false,
             priority: 2,
             charityId: meeting?.charityId || null,
           }
@@ -340,13 +372,94 @@ export async function toggleMeetingTask(taskId: string, isDone: boolean) {
     select: { meetingId: true },
   });
   if (!task) throw new Error("غير موجود");
-  await requireMeetingEditAccess(task.meetingId);
+  await requireTaskControlAccess(task.meetingId);
   await prisma.meetingTask.update({ where: { id: taskId }, data: { isDone } });
-  
+
+  // isCompleted هو حقل الإنجاز الحقيقي الذي تقرأه قائمة "المهام" — status وحده
+  // كان يُحدَّث هنا بينما isCompleted يبقى false، فتظهر المهمة منجزة في
+  // المحضر وغير منجزة في قائمة مهامها الفعلية.
   await prisma.task.updateMany({
     where: { meetingTaskId: taskId },
-    data: { status: isDone ? "COMPLETED" : "NOT_STARTED" }
+    data: { status: isDone ? "COMPLETED" : "NOT_STARTED", isCompleted: isDone, completedAt: isDone ? new Date() : null },
   });
+
+  revalidatePath("/main/meetings");
+  revalidatePath("/main/tasks");
+  return { success: true };
+}
+
+/**
+ * تعديل حقول مهمة محضر واحدة — العنوان أو المكلَّف أو مهلة الأيام — بلا حاجة
+ * لإرسال كل مهام المحضر كما تفعل upsertMeetingTasks (تلك مبنية لمحرّر مهام
+ * محضر واحد مفتوح أمامك؛ هذه لتعديل مهمة من محاضر مختلفة دفعة واحدة، كما في
+ * لوحة "المهام المعلّقة من المحاضر السابقة").
+ */
+export async function updateMeetingTaskFields(
+  taskId: string,
+  data: { title?: string; assignedToId?: string | null; dueDays?: number | null }
+) {
+  const existing = await prisma.meetingTask.findUnique({
+    where: { id: taskId },
+    select: { meetingId: true, assignedToId: true, title: true, isDone: true },
+  });
+  if (!existing) throw new Error("غير موجود");
+  const { session, meeting } = await requireTaskControlAccess(existing.meetingId);
+
+  const updated = await prisma.meetingTask.update({
+    where: { id: taskId },
+    data: {
+      ...(data.title !== undefined ? { title: data.title } : {}),
+      ...(data.assignedToId !== undefined ? { assignedToId: data.assignedToId || null } : {}),
+      ...(data.dueDays !== undefined ? { dueDays: data.dueDays ?? null } : {}),
+    },
+    include: { assignedTo: { select: { id: true, name: true } } },
+  });
+
+  if (updated.assignedToId) {
+    await prisma.task.upsert({
+      where: { meetingTaskId: taskId },
+      create: {
+        meetingTaskId: taskId,
+        title: updated.title,
+        assignedToId: updated.assignedToId,
+        createdById: session.id,
+        isInternal: true,
+        status: updated.isDone ? "COMPLETED" : "NOT_STARTED",
+        isCompleted: updated.isDone,
+        priority: 2,
+        charityId: meeting.charityId || null,
+      },
+      update: {
+        title: updated.title,
+        assignedToId: updated.assignedToId,
+      },
+    });
+
+    if (data.assignedToId !== undefined && existing.assignedToId !== updated.assignedToId && updated.assignedToId !== session.id) {
+      await createAppNotification(
+        updated.assignedToId,
+        "مهمة محضر جديدة",
+        `تم تكليفك بمهمة من المحضر: ${updated.title}`,
+        "/main/tasks"
+      );
+    }
+  } else {
+    // أُزيل التكليف بالكامل — لا مكلَّف يملك مهمة بلا صاحب.
+    await prisma.task.deleteMany({ where: { meetingTaskId: taskId } });
+  }
+
+  revalidatePath("/main/meetings");
+  revalidatePath("/main/tasks");
+  return { success: true, task: updated };
+}
+
+/** حذف مهمة محضر — المهمة المرتبطة في نظام المهام تُحذف معها تلقائياً (onDelete: Cascade). */
+export async function deleteMeetingTask(taskId: string) {
+  const existing = await prisma.meetingTask.findUnique({ where: { id: taskId }, select: { meetingId: true } });
+  if (!existing) throw new Error("غير موجود");
+  await requireTaskControlAccess(existing.meetingId);
+
+  await prisma.meetingTask.delete({ where: { id: taskId } });
 
   revalidatePath("/main/meetings");
   revalidatePath("/main/tasks");

@@ -14,6 +14,7 @@ import { createMeeting, updateMeeting, deleteMeeting, insertAiTasksIfEmpty } fro
 import { handlePrint, handlePreview, downloadAllMeetingsZip } from "./utils/meetingPrint";
 import MeetingCard from "./components/MeetingCard";
 import MeetingFormModal from "./components/MeetingFormModal";
+import PendingMeetingTasksPanel from "./components/PendingMeetingTasksPanel";
 import { Dialog } from "@/components/console/Dialog";
 import { btn, NavCard } from "@/components/console/ui";
 
@@ -55,6 +56,8 @@ type Props = {
   sessionId: string;
   sessionRole: string;
   isTier1: boolean;
+  /** يملك "عرض وإدارة جميع مهام الموظفين" — يرى لوحة توصيات المحاضر السابقة غير المنجزة في كل مجموعة. */
+  canViewAllTasks: boolean;
 };
 
 const DEPARTMENTS = [
@@ -118,7 +121,7 @@ function CategorySelector({ meetings, onSelect, actions }: { meetings: Meeting[]
   );
 }
 
-export default function MeetingsClient({ meetings, charities, employees, sessionId, sessionRole, isTier1 }: Props) {
+export default function MeetingsClient({ meetings, charities, employees, sessionId, sessionRole, isTier1, canViewAllTasks }: Props) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
 
@@ -137,6 +140,15 @@ export default function MeetingsClient({ meetings, charities, employees, session
   const [filterCharityId, setFilterCharityId] = useState(""); 
   const [filterPrivacy, setFilterPrivacy] = useState<"" | "private" | "public">("");
   const [filterPeriod, setFilterPeriod] = useState<"" | "today" | "week" | "month" | "quarter" | "year">("");
+
+  // مهام المحضر المعلّقة: على مستوى المجموعة كلها (التصنيف وحده)، بمعزل عن
+  // تصفيات البحث والجمعية والخصوصية والفترة — تلك تصفّي قائمة المحاضر
+  // المعروضة، لا نطاق "التوصيات غير المنجزة" التي يُفترض أن تغطّي المجموعة كاملة.
+  const categoryMeetings = meetings.filter(m => {
+    if (!selectedCategory || selectedCategory === "all") return true;
+    if (selectedCategory === "زاد") return m.meetingContext === "إدارة زاد";
+    return m.meetingContext === selectedCategory;
+  });
 
   const filteredMeetings = meetings.filter(m => {
     if (selectedCategory && selectedCategory !== "all") {
@@ -372,6 +384,15 @@ export default function MeetingsClient({ meetings, charities, employees, session
         title={categoryTitle}
         description={`${meetings.length} محضر`}
       />
+
+      {canViewAllTasks && (
+        <PendingMeetingTasksPanel
+          meetings={categoryMeetings}
+          meetingNumberMap={meetingNumberMap}
+          employees={employees}
+          onOpenMeeting={setViewingMeeting}
+        />
+      )}
 
       {/* شريط التصفية */}
       <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-3 space-y-2">

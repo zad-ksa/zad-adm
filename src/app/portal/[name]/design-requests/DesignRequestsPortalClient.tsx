@@ -39,18 +39,22 @@ type Item = {
   progress: DesignRequestProgress;
 };
 
+type UrgentQuota = { available: true } | { available: false; nextEligibleAt: string };
+
 export default function DesignRequestsPortalClient({
   charityId,
   charityName,
   initialItems,
   canCreate,
   designTypes,
+  urgentQuota,
 }: {
   charityId: string;
   charityName: string;
   initialItems: Item[];
   canCreate: boolean;
   designTypes: DesignTypeOption[];
+  urgentQuota: UrgentQuota;
 }) {
   const router = useRouter();
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -439,6 +443,7 @@ export default function DesignRequestsPortalClient({
         <NewDesignRequestForm
           charityId={charityId}
           designTypes={designTypes}
+          urgentQuota={urgentQuota}
           onClose={() => setIsFormOpen(false)}
           onSuccess={(message) => {
             setIsFormOpen(false);

@@ -7,6 +7,7 @@ import { formatCivilDate } from "@/lib/businessDays";
 import { getDesignRequestProgress } from "@/lib/designRequestProgress";
 import DesignRequestsPortalClient from "./DesignRequestsPortalClient";
 import { requirePortalPermission } from "@/lib/portalAccess";
+import { getUrgentDesignQuotaStatus } from "@/app/actions/designRequests";
 
 export const dynamic = "force-dynamic";
 
@@ -39,6 +40,8 @@ export default async function DesignRequestsPortalPage({ params }: { params: Pro
     orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
     select: { id: true, name: true, workingDays: true },
   });
+
+  const urgentQuota = await getUrgentDesignQuotaStatus(charity.id);
 
   const requests = await prisma.designRequest.findMany({
     where: { charityId: charity.id },
@@ -83,6 +86,8 @@ export default async function DesignRequestsPortalPage({ params }: { params: Pro
             ? "اليوم"
             : formatCivilDate(r.expectedCompletionDate),
         status: r.status,
+        isUrgent: r.isUrgent,
+        urgentReason: r.urgentReason,
         rejectionReason: r.rejectionReason,
         revisionNotes: r.revisionNotes,
         autoApproved: r.autoApproved,
@@ -159,6 +164,7 @@ export default async function DesignRequestsPortalPage({ params }: { params: Pro
         // reading a capability rather than assuming one.
         canCreate={can("view_design_requests")}
         designTypes={designTypes}
+        urgentQuota={urgentQuota}
       />
     </div>
   );

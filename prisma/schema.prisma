@@ -1330,6 +1330,18 @@ model DesignRequest {
   /// سبب الرفض كما كتبه الموظف. تراه الجمعية في تبويب «المرفوضة».
   rejectionReason String?   @db.Text
 
+  // ── الطلب العاجل ────────────────────────────────────────────────────────
+  // يوم إلى يومين عمل من لحظة الاعتماد — بمعزل عن طابور الطلبات العادية
+  // تماماً: لا computeSchedule (تكديس خلف آخر موعد في طابور الجمعية) ولا
+  // باقي أيام الأنواع المختارة. انظر URGENT_DESIGN_WORKING_DAYS وما حوله في
+  // designRequests.ts. الحدّ (طلبان كل 7 أيام عمل) يُحسب من تواريخ الطلب لا
+  // من حقلٍ هنا — checkUrgentDesignQuota.
+  /// عاجل أم لا. مثبَّت عند الإنشاء ولا يتغيّر بعده.
+  isUrgent     Boolean @default(false)
+  /// سبب اختيار الاستعجال كما كتبته الجمعية — إلزامي حين isUrgent، وتراه
+  /// زاد عند المراجعة.
+  urgentReason String? @db.Text
+
   // مصدر الطلب: أحد الحقلين فقط يكون مُعبّأً
   charityUserId       String?
   charityUser         CharityUser? @relation("SubmittedDesignRequests", fields: [charityUserId], references: [id], onDelete: SetNull)

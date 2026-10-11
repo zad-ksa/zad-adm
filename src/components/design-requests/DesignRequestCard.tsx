@@ -15,6 +15,7 @@ import {
   History,
   ChevronDown,
   AlertTriangle,
+  Zap,
 } from "lucide-react";
 import { useState, type ReactNode } from "react";
 import type { DesignRequestProgress } from "@/lib/designRequestProgress";
@@ -67,6 +68,10 @@ export type DesignRequestCardData = {
    */
   wasReviewed?: boolean;
   status?: string;
+  /** يوم إلى يومين عمل من الاعتماد، بمعزل عن الطابور — انظر urgentReason. */
+  isUrgent?: boolean;
+  /** سبب الاستعجال كما كتبته الجمعية. */
+  urgentReason?: string | null;
   /** Staff view only. */
   charityName?: string;
   /** Chosen design types, for display. */
@@ -80,6 +85,18 @@ export type DesignRequestCardData = {
   /** Finished files from Zad, attached on delivery. Kept after completion. */
   deliverables?: { id: string; fileUrl: string; fileName: string; fileSize: number | null }[];
 };
+
+function UrgentBadge({ className = "" }: { className?: string }) {
+  return (
+    <span
+      className={`inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full bg-orange-500/10 text-orange-600 dark:text-orange-400 font-bold shrink-0 ${className}`}
+      style={{ fontSize: "var(--dr-fs-eyebrow)" }}
+      title="طلب عاجل — يوم إلى يومين عمل من الاعتماد"
+    >
+      <Zap className="w-3 h-3" /> عاجل
+    </span>
+  );
+}
 
 export default function DesignRequestCard({
   request,
@@ -151,12 +168,15 @@ export default function DesignRequestCard({
             {request.charityName || "—"}
           </span>
 
-          <span
-            title={request.title}
-            className="min-w-0 truncate font-semibold text-slate-900 dark:text-slate-100"
-            style={{ fontSize: "var(--dr-fs-title)" }}
-          >
-            {request.title}
+          <span className="min-w-0 flex items-center gap-1">
+            {request.isUrgent && <UrgentBadge />}
+            <span
+              title={request.title}
+              className="min-w-0 truncate font-semibold text-slate-900 dark:text-slate-100"
+              style={{ fontSize: "var(--dr-fs-title)" }}
+            >
+              {request.title}
+            </span>
           </span>
 
           <span
@@ -201,11 +221,14 @@ export default function DesignRequestCard({
               {request.charityName}
             </span>
           )}
-          <span
-            className="flex-1 min-w-0 truncate font-semibold text-slate-900 dark:text-slate-100"
-            style={{ fontSize: "var(--dr-fs-title)" }}
-          >
-            {request.title}
+          <span className="flex-1 min-w-0 flex items-center gap-1">
+            {request.isUrgent && <UrgentBadge />}
+            <span
+              className="min-w-0 truncate font-semibold text-slate-900 dark:text-slate-100"
+              style={{ fontSize: "var(--dr-fs-title)" }}
+            >
+              {request.title}
+            </span>
           </span>
           {/* الأيام المتبقية مع المرفقات معاً على الطرف الآخر من العنوان، لا
               مزدحمة مع الجمعية والعنوان على نفس الجانب. */}
@@ -258,6 +281,7 @@ export default function DesignRequestCard({
               looking identical. The card grows instead — the grid stretches
               its row to match, so the cards beside it stay aligned. */}
           <div className="flex items-start gap-2">
+            {request.isUrgent && <UrgentBadge className="mt-0.5" />}
             <h3
               className="font-semibold text-slate-900 dark:text-slate-100 break-words leading-snug min-w-0 flex-1"
               style={{ fontSize: "var(--dr-fs-title)", textWrap: "balance" }}
@@ -321,6 +345,24 @@ export default function DesignRequestCard({
               {t.name}
             </span>
           ))}
+        </div>
+      )}
+
+      {request.isUrgent && request.urgentReason && (
+        <div className="mt-3 rounded-xl bg-orange-500/[0.07] px-3 py-2.5 space-y-1">
+          <p
+            className="flex items-center gap-1.5 font-semibold text-orange-600 dark:text-orange-400"
+            style={{ fontSize: "var(--dr-fs-eyebrow)" }}
+          >
+            <Zap className="w-3 h-3 shrink-0" />
+            سبب الاستعجال
+          </p>
+          <p
+            className="text-slate-600 dark:text-slate-300 whitespace-pre-line"
+            style={{ fontSize: "var(--dr-fs-eyebrow)" }}
+          >
+            {request.urgentReason}
+          </p>
         </div>
       )}
 

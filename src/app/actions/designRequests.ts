@@ -24,6 +24,7 @@ import {
   addDesignBusinessDays,
   formatCivilDate,
 } from "@/lib/businessDays";
+import { addWorkingMinutes, WORK_DAY_MINUTES } from "@/lib/workingHours";
 
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
@@ -32,6 +33,55 @@ cloudinary.config({
 });
 
 const REQUEST_DURATION_DAYS = 3;
+
+// ── الطلب العاجل ──────────────────────────────────────────────────────────────
+// يوم إلى يومين عمل، من لحظة الاعتماد — بمعزل عن طابور الطلبات العادية
+// وعن أيام الأنواع المختارة. راجع التعليق على DesignRequest.isUrgent في
+// schema.prisma.
+/** المدة الموعودة — السقف الآمن من "يوم إلى يومين"؛ المراجع يملك خفضها إلى يوم عبر workingDaysOverride كما في أي طلب آخر. */
+const URGENT_DESIGN_WORKING_DAYS = 2;
+/** الحدّ: طلبان عاجلان كل نافذة. */
+const URGENT_QUOTA_LIMIT = 2;
+/** طول النافذة بأيام العمل. */
+const URGENT_QUOTA_WINDOW_BUSINESS_DAYS = 7;
+
+/** جدولة طلب عاجل: مباشرةً من لحظة الاعتماد (أو الإنشاء كتقدير)، بدقائق العمل الفعلية — لا طابور، لا تكديس خلف طلب عاجل آخر. */
+function computeUrgentSchedule(from: Date, workingDays: number) {
+  return {
+    scheduledStartDate: from,
+    expectedCompletionDate: addWorkingMinutes(from, Math.max(1, workingDays) * WORK_DAY_MINUTES),
+  };
+}
+
+/**
+ * هل يملك هذا الطلب العاجل حصّة؟ النافذة سائلة (rolling) لا ثابتة: كل طلب
+ * عاجل غير مرفوض "نشط" لمدة 7 أيام عمل من تاريخ تقديمه هو بالذات — لا من أول
+ * طلبٍ في تاريخ الجمعية. فإن قُدِّم الأول اليوم والثاني بعد 6 أيام عمل، يُحسب
+ * الاثنان نشطَين معاً حتى ينتهي السابع من تاريخ الأول، لحظتها يسقط الأول من
+ * العدّ ويتوفّر مكانٌ من جديد — تماماً كما وُصفت الميزة.
+ *
+ * المرفوض لا يُحتسب: رفض زاد للطلب لا يكلّف الجمعية حصّتها.
+ */
+async function checkUrgentDesignQuota(
+  tx: Prisma.TransactionClient,
+  charityId: string
+): Promise<{ ok: true } | { ok: false; nextEligibleAt: Date }> {
+  const recent = await tx.designRequest.findMany({
+    where: { charityId, isUrgent: true, status: { not: "REJECTED" } },
+    select: { submittedAt: true },
+    orderBy: { submittedAt: "asc" },
+  });
+
+  const now = toCivilDate(new Date());
+  const active = recent
+    .map((r) => ({ submittedAt: r.submittedAt, expiresAt: addBusinessDays(toCivilDate(r.submittedAt), URGENT_QUOTA_WINDOW_BUSINESS_DAYS) }))
+    .filter((r) => r.expiresAt > now);
+
+  if (active.length < URGENT_QUOTA_LIMIT) return { ok: true };
+
+  // الأقدم نشاطاً هو من يحدّد متى يتوفّر مكانٌ جديد — وليس أحدث طلب.
+  return { ok: false, nextEligibleAt: active[0].expiresAt };
+}
 
 /** The signed-in person, in the shape the request log stores. */
 function staffActor(session: { id: string; name: string }): DesignEventActor {
@@ -55,6 +105,9 @@ export type CreateDesignRequestInput = {
   startDate?: Date;
   /** Design types chosen for this request; their days are summed. */
   typeIds?: string[];
+  /** يوم إلى يومين عمل من الاعتماد، بمعزل عن الطابور. يتطلّب urgentReason. */
+  isUrgent?: boolean;
+  urgentReason?: string;
 };
 
 // ── guards ──────────────────────────────────────────────────────────────────
@@ -180,7 +233,11 @@ async function createDesignRequest(params: {
   startDate?: Date;
   typeIds?: string[];
   status: "PENDING" | "UNDER_REVIEW";
+  isUrgent?: boolean;
+  urgentReason?: string;
 }) {
+  const isUrgent = !!params.isUrgent;
+
   return prisma.$transaction(
     async (tx) => {
       const submittedAt = params.startDate || new Date();
@@ -188,13 +245,25 @@ async function createDesignRequest(params: {
       // is not counted by computeSchedule, so it holds no place in the queue,
       // and approveDesignRequest recomputes them against the queue as it stands
       // at that moment.
-      const { ids: typeIds, workingDays } = await resolveTypes(tx, params.typeIds);
-      const { scheduledStartDate, expectedCompletionDate } = await computeSchedule(
-        tx,
-        params.charityId,
-        submittedAt,
-        workingDays
-      );
+      const { ids: typeIds, workingDays: typeWorkingDays } = await resolveTypes(tx, params.typeIds);
+
+      // عاجل: فحص الحصّة داخل نفس المعاملة (لا سباقاً بين فحصٍ وكتابة)، ومدّته
+      // ثابتة بمعزل عمّا تقتضيه الأنواع المختارة — تلك للتصنيف هنا، لا للحساب.
+      if (isUrgent) {
+        if (!params.charityId) throw new Error("الطلب العاجل متاح لطلبات الجمعيات فقط");
+        const quota = await checkUrgentDesignQuota(tx, params.charityId);
+        if (!quota.ok) {
+          throw new Error(
+            `بلغت الجمعية الحدّ المتاح من الطلبات العاجلة (${URGENT_QUOTA_LIMIT} كل ${URGENT_QUOTA_WINDOW_BUSINESS_DAYS} أيام عمل). ` +
+              `يتوفّر طلبٌ جديد بتاريخ ${formatCivilDate(quota.nextEligibleAt)}.`
+          );
+        }
+      }
+
+      const workingDays = isUrgent ? URGENT_DESIGN_WORKING_DAYS : typeWorkingDays;
+      const { scheduledStartDate, expectedCompletionDate } = isUrgent
+        ? computeUrgentSchedule(submittedAt, workingDays)
+        : await computeSchedule(tx, params.charityId, submittedAt, workingDays);
 
       return tx.designRequest.create({
         data: {
@@ -206,6 +275,8 @@ async function createDesignRequest(params: {
           scheduledStartDate,
           expectedCompletionDate,
           baseWorkingDays: workingDays,
+          isUrgent,
+          urgentReason: isUrgent ? params.urgentReason?.trim() || null : null,
           types: typeIds.length
             ? { connect: typeIds.map((typeId: string) => ({ id: typeId })) }
             : undefined,
@@ -248,6 +319,9 @@ export async function createDesignRequestFromPortal(input: CreateDesignRequestIn
 
     if (!input.title?.trim()) return { error: "يرجى إدخال عنوان الطلب" };
     if (input.attachments.length > 10) return { error: "الحد الأقصى 10 مرفقات لكل طلب" };
+    if (input.isUrgent && (input.urgentReason?.trim().length ?? 0) < 5) {
+      return { error: "يرجى كتابة سبب الاستعجال (٥ أحرف على الأقل)" };
+    }
 
     const charity = await prisma.charity.findUnique({ where: { id: charityId }, select: { name: true } });
     if (!charity) return { error: "الجمعية غير موجودة" };
@@ -262,6 +336,8 @@ export async function createDesignRequestFromPortal(input: CreateDesignRequestIn
       // Charity submissions wait for a member of staff to confirm the timeline
       // (or reject with a reason) before they enter the queue.
       status: "UNDER_REVIEW",
+      isUrgent: input.isUrgent,
+      urgentReason: input.urgentReason,
     });
 
     await notifyDesignStaff(charity.name, input.title.trim());
@@ -270,7 +346,7 @@ export async function createDesignRequestFromPortal(input: CreateDesignRequestIn
       requestId: created.id,
       kind: "CREATED",
       actor: { type: "CHARITY_USER", id: session.id, name: session.name },
-      note: "بانتظار اعتماد زاد للجدولة",
+      note: input.isUrgent ? "طلب عاجل — بانتظار اعتماد زاد" : "بانتظار اعتماد زاد للجدولة",
     });
 
     revalidatePath("/main/design-requests");
@@ -367,19 +443,18 @@ export async function approveDesignRequest(id: string, workingDaysOverride?: num
       async (tx) => {
         const request = await tx.designRequest.findUnique({
           where: { id },
-          select: { id: true, status: true, charityId: true, submittedAt: true, baseWorkingDays: true },
+          select: { id: true, status: true, charityId: true, submittedAt: true, baseWorkingDays: true, isUrgent: true },
         });
         if (!request) return { error: "الطلب غير موجود" };
         if (request.status !== "UNDER_REVIEW") return { error: "هذا الطلب ليس قيد المراجعة" };
 
         const workingDays = workingDaysOverride ?? request.baseWorkingDays;
 
-        const { scheduledStartDate, expectedCompletionDate } = await computeSchedule(
-          tx,
-          request.charityId,
-          new Date(),
-          workingDays
-        );
+        // عاجل: من لحظة الاعتماد بدقائق العمل الفعلية، بمعزل عن طابور الجمعية —
+        // لا computeSchedule هنا إطلاقاً، فلا يتكدّس خلف طلبٍ عادي ولا عاجلٍ آخر.
+        const { scheduledStartDate, expectedCompletionDate } = request.isUrgent
+          ? computeUrgentSchedule(new Date(), workingDays)
+          : await computeSchedule(tx, request.charityId, new Date(), workingDays);
 
         await tx.designRequest.update({
           where: { id },
@@ -493,7 +568,7 @@ export async function resubmitDesignRequest(input: {
   try {
     const existing = await prisma.designRequest.findUnique({
       where: { id: input.requestId },
-      select: { id: true, charityId: true, status: true, charity: { select: { name: true } } },
+      select: { id: true, charityId: true, status: true, isUrgent: true, charity: { select: { name: true } } },
     });
     if (!existing) return { error: "الطلب غير موجود" };
 
@@ -515,7 +590,20 @@ export async function resubmitDesignRequest(input: {
 
     await prisma.$transaction(
       async (tx) => {
-        const { ids: typeIds, workingDays } = await resolveTypes(tx, input.typeIds);
+        const { ids: typeIds, workingDays: typeWorkingDays } = await resolveTypes(tx, input.typeIds);
+
+        // عاجل بالفعل (لم يتغيّر هذا عبر إعادة الرفع): يعيد المطالبة بحصّته —
+        // رفض زاد السابق لم يكن محسوباً، فيُعاد فحصها هنا من جديد.
+        if (existing.isUrgent) {
+          const quota = await checkUrgentDesignQuota(tx, existing.charityId!);
+          if (!quota.ok) {
+            throw new Error(
+              `بلغت الجمعية الحدّ المتاح من الطلبات العاجلة (${URGENT_QUOTA_LIMIT} كل ${URGENT_QUOTA_WINDOW_BUSINESS_DAYS} أيام عمل). ` +
+                `يتوفّر طلبٌ جديد بتاريخ ${formatCivilDate(quota.nextEligibleAt)}.`
+            );
+          }
+        }
+        const workingDays = existing.isUrgent ? URGENT_DESIGN_WORKING_DAYS : typeWorkingDays;
 
         if (input.removeAttachmentIds?.length) {
           await tx.designRequestAttachment.deleteMany({
@@ -1006,6 +1094,15 @@ export async function getDesignRequestsForCharity(charityId: string) {
     include: { attachments: true },
     orderBy: { submittedAt: "desc" },
   });
+}
+
+/** حالة حصّة الطلب العاجل — لعرضها في نموذج الإنشاء قبل المحاولة. */
+export async function getUrgentDesignQuotaStatus(charityId: string) {
+  await requireCharityMemberPermission(charityId, "view_design_requests");
+  const quota = await checkUrgentDesignQuota(prisma, charityId);
+  return quota.ok
+    ? { available: true as const }
+    : { available: false as const, nextEligibleAt: quota.nextEligibleAt.toISOString() };
 }
 
 export async function rescheduleDesignRequest(id: string, newStartDate: Date) {

@@ -74,8 +74,6 @@ export default async function DesignRequestsPage() {
         charityId: r.charity?.id ?? "",
         charityName: r.charity?.name ?? ZAD_COMPANY_LABEL,
         status: r.status,
-        isUrgent: r.isUrgent,
-        urgentReason: r.urgentReason,
         rejectionReason: r.rejectionReason,
         revisionNotes: r.revisionNotes,
         autoApproved: r.autoApproved,

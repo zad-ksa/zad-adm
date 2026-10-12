@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Loader2, AlertTriangle, Check, Undo2, Zap } from "lucide-react";
+import { Loader2, AlertTriangle, Check, Undo2 } from "lucide-react";
 import { approveDesignRequest, rejectDesignRequest } from "@/app/actions/designRequests";
 import { ConfirmDialog } from "@/components/console/ConfirmDialog";
 import { Dialog } from "@/components/console/Dialog";
@@ -24,8 +24,6 @@ export default function StaffReviewDesignRequestModal({
   title,
   charityName,
   suggestedDays,
-  isUrgent,
-  urgentReason,
   onClose,
   onDone,
 }: {
@@ -34,8 +32,6 @@ export default function StaffReviewDesignRequestModal({
   charityName: string;
   /** Total implied by the chosen design types. */
   suggestedDays: number;
-  isUrgent?: boolean;
-  urgentReason?: string | null;
   onClose: () => void;
   onDone: (message: string) => void;
 }) {
@@ -162,26 +158,6 @@ footer={
             ))}
           </div>
 
-          {isUrgent && (
-            <div className="rounded-xl bg-orange-500/[0.08] px-4 py-3 space-y-1.5">
-              <p
-                className="flex items-center gap-1.5 font-bold text-orange-600 dark:text-orange-400"
-                style={{ fontSize: "var(--dr-fs-meta)" }}
-              >
-                <Zap className="w-4 h-4 shrink-0" />
-                طلب عاجل
-              </p>
-              {urgentReason && (
-                <p
-                  className="text-slate-600 dark:text-slate-300 whitespace-pre-line"
-                  style={{ fontSize: "var(--dr-fs-meta)" }}
-                >
-                  {urgentReason}
-                </p>
-              )}
-            </div>
-          )}
-
           {error && (
             <div
               className="flex items-start gap-2 px-4 py-3 rounded-xl bg-rose-500/[0.08] text-rose-600 dark:text-rose-400 font-semibold"
@@ -219,9 +195,8 @@ footer={
                 className="rounded-xl bg-slate-100 dark:bg-slate-800/60 text-slate-500 dark:text-slate-400 px-4 py-3 leading-relaxed"
                 style={{ fontSize: "var(--dr-fs-meta)" }}
               >
-                {isUrgent
-                  ? "طلب عاجل: لا يدخل طابور الطلبات العادية. عند الاعتماد يُحسب الموعد من لحظة الاعتماد مباشرة، ضمن ساعات العمل المحدَّدة فقط."
-                  : "الموعد الظاهر للجمعية الآن تقديري — الطلب لا يحجز دوره قبل الاعتماد. عند الاعتماد يُحسب الموعد على ترتيب التنفيذ كما هو الآن ويصبح مؤكداً."}
+                الموعد الظاهر للجمعية الآن تقديري — الطلب لا يحجز دوره قبل الاعتماد.
+                عند الاعتماد يُحسب الموعد على ترتيب التنفيذ كما هو الآن ويصبح مؤكداً.
               </p>
             </>
           ) : (

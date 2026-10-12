@@ -718,8 +718,6 @@ export default function DesignRequestsClient({
             title={item.request.title}
             charityName={item.request.charityName ?? ""}
             suggestedDays={item.request.totalWorkingDays ?? 3}
-            isUrgent={!!item.request.isUrgent}
-            urgentReason={item.request.urgentReason ?? null}
             onClose={() => setReviewingId(null)}
             onDone={(message) => {
               setReviewingId(null);

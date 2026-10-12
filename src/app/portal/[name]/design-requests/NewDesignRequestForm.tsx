@@ -1,9 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { X, Paperclip, Send, Loader2, AlertTriangle, Info, Trash2, Zap } from "lucide-react";
+import { X, Paperclip, Send, Loader2, AlertTriangle, Info, Trash2 } from "lucide-react";
 import { createDesignRequestFromPortal, resubmitDesignRequest } from "@/app/actions/designRequests";
-import { formatCivilDate } from "@/lib/businessDays";
 import { ConfirmDialog } from "@/components/console/ConfirmDialog";
 import UploadProgress from "@/components/ui/UploadProgress";
 import type { UploadProgress as Progress } from "@/lib/clientUpload";
@@ -31,7 +30,6 @@ export default function NewDesignRequestForm({
   charityId,
   designTypes,
   resubmit,
-  urgentQuota,
   onClose,
   onSuccess,
 }: {
@@ -39,8 +37,6 @@ export default function NewDesignRequestForm({
   designTypes: DesignTypeOption[];
   /** When present the form edits and resubmits that request instead of creating one. */
   resubmit?: ResubmitTarget;
-  /** Absent on the resubmit form — urgency is fixed at creation and never toggled here. */
-  urgentQuota?: { available: true } | { available: false; nextEligibleAt: string };
   onClose: () => void;
   onSuccess: (message: string) => void;
 }) {
@@ -48,8 +44,6 @@ export default function NewDesignRequestForm({
 
   const [title, setTitle] = useState(resubmit?.title ?? "");
   const [description, setDescription] = useState(resubmit?.description ?? "");
-  const [isUrgent, setIsUrgent] = useState(false);
-  const [urgentReason, setUrgentReason] = useState("");
   const [files, setFiles] = useState<File[]>([]);
   // Attachments already stored on the rejected request. Removal is staged and
   // only applied on submit, so cancelling really cancels.
@@ -79,9 +73,6 @@ export default function NewDesignRequestForm({
     if (typeIds.length === 0) return setError("يرجى اختيار نوع التصميم");
     if (keptAttachments.length + files.length > 10) {
       return setFileError("الحد الأقصى 10 مرفقات لكل طلب");
-    }
-    if (isUrgent && urgentReason.trim().length < 5) {
-      return setError("يرجى كتابة سبب الاستعجال (٥ أحرف على الأقل)");
     }
 
     setIsConfirmOpen(true);
@@ -114,8 +105,6 @@ export default function NewDesignRequestForm({
             description,
             attachments,
             typeIds,
-            isUrgent,
-            urgentReason: isUrgent ? urgentReason : undefined,
           });
 
       if (res.error) {
@@ -125,9 +114,7 @@ export default function NewDesignRequestForm({
       onSuccess(
         isResubmit
           ? "تم إعادة رفع الطلب، وهو الآن قيد المراجعة"
-          : isUrgent
-            ? "تم إرسال الطلب العاجل، وسيتم مراجعته خلال 24 ساعة"
-            : "تم إرسال الطلب، وسيتم مراجعته خلال 24 ساعة"
+          : "تم إرسال الطلب، وسيتم مراجعته خلال 24 ساعة"
       );
     } catch (err: any) {
       setError(err.message || "حدث خطأ أثناء إرسال الطلب");
@@ -220,59 +207,6 @@ export default function NewDesignRequestForm({
               )
             }
           />
-
-          {!isResubmit && urgentQuota && (
-            <div className="rounded-xl border border-slate-200 dark:border-slate-800 overflow-hidden">
-              <label
-                className={`flex items-start gap-3 px-4 py-3 cursor-pointer ${
-                  urgentQuota.available ? "" : "opacity-60 cursor-not-allowed"
-                }`}
-              >
-                <input
-                  type="checkbox"
-                  checked={isUrgent}
-                  disabled={!urgentQuota.available}
-                  onChange={(e) => setIsUrgent(e.target.checked)}
-                  className="mt-1 w-4 h-4 accent-orange-500"
-                />
-                <span className="flex-1">
-                  <span
-                    className="flex items-center gap-1.5 font-bold text-orange-600 dark:text-orange-400"
-                    style={{ fontSize: "var(--dr-fs-body)" }}
-                  >
-                    <Zap className="w-4 h-4" />
-                    طلب عاجل (يوم إلى يومين عمل)
-                  </span>
-                  <span
-                    className="block text-slate-500 dark:text-slate-400 mt-0.5"
-                    style={{ fontSize: "var(--dr-fs-meta)" }}
-                  >
-                    {urgentQuota.available
-                      ? "يتوفّر طلبان عاجلان كل 7 أيام عمل. الموعد يبدأ حسابه بعد اعتماد زاد للطلب."
-                      : `بلغتم الحدّ المتاح من الطلبات العاجلة. يتوفّر طلب جديد بتاريخ ${formatCivilDate(urgentQuota.nextEligibleAt)}.`}
-                  </span>
-                </span>
-              </label>
-              {isUrgent && (
-                <div className="px-4 pb-3">
-                  <label
-                    className="block font-bold text-slate-500 dark:text-slate-400 mb-2"
-                    style={{ fontSize: "var(--dr-fs-meta)" }}
-                  >
-                    سبب الاستعجال
-                  </label>
-                  <textarea
-                    value={urgentReason}
-                    onChange={(e) => setUrgentReason(e.target.value)}
-                    rows={2}
-                    placeholder="اشرح سبب حاجتكم لتصميم عاجل..."
-                    className="w-full px-3 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 outline-none resize-none placeholder:text-slate-400 dark:placeholder:text-slate-600"
-                    style={{ fontSize: "var(--dr-fs-body)" }}
-                  />
-                </div>
-              )}
-            </div>
-          )}
 
           <div>
             <label

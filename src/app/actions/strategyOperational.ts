@@ -7,6 +7,7 @@ import { getSession } from "@/lib/auth";
 import { hasPermission } from "@/lib/permissions";
 import { assertCharityAccess } from "@/lib/access";
 import { weeksBetween } from "@/lib/initiativeProgress";
+import { PHASES, PRIORITIES } from "@/lib/strategyOptions";
 
 /**
  * أفعال الخطة التشغيلية: الخطة، والمبادرات، وربطها بالأهداف والمؤشرات.
@@ -17,7 +18,6 @@ import { weeksBetween } from "@/lib/initiativeProgress";
 
 type Result = { error?: string };
 
-export const PRIORITIES = ["عالية", "متوسطة", "منخفضة"] as const;
 
 async function requireAccess(charityId: string) {
   const session = await getSession();
@@ -265,7 +265,6 @@ export async function setInitiativePriority(id: string, priority: string | null)
 // وحالتُها ومصروفُها وشاراتُ انضباطها. وأرقام أسابيعها نسبيّةٌ إلى بداية
 // الخطة — رقمُ أسبوعٍ بلا تاريخ بدايةٍ لا معنى له.
 
-export const PHASES = ["الإعداد", "التنفيذ", "الإغلاق"] as const;
 
 async function charityOfStep(stepId: string) {
   const row = await prisma.initiativeStep.findUnique({

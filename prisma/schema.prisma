@@ -82,9 +82,9 @@ model Charity {
   donorAccounts          DonorAccount[]
   grantApplications      GrantApplication[]
   charityUsers           CharityUserCharity[]
-  mails                  InternalMail[]               @relation("CharityMails")
+  mails                  InternalMail[]                @relation("CharityMails")
   /// تعميد الصادر من هذه الجمعية: لكل جمعية أن تُفعّله أو تُرسل بلا تعميد.
-  mailRequiresApproval   Boolean                      @default(false)
+  mailRequiresApproval   Boolean                       @default(false)
   mailApprovers          CharityMailApprover[]
   designRequests         DesignRequest[]
 
@@ -103,6 +103,17 @@ model Charity {
 
   projectBuilderProfile   ProjectBuilderCharityProfile?
   projectBuilderDocuments ProjectBuilderDocument[]
+
+  // التخطيط الاستراتيجي — docs/خطة-نظام-التخطيط-الاستراتيجي.md
+  /// حالة الخطة الاستراتيجية: اختيارٌ يدويٌّ من StrategyStatusOption، لا محسوبة.
+  /// نصُّ الحالة لا مفتاحها، كي لا يختفي تاريخُ جمعيةٍ إذا حُذف خيارٌ من القائمة.
+  strategyStatus          String?
+  strategyStatusUpdatedAt DateTime?
+  /// مفاتيح إظهارٍ لبوّابة الجمعية — مُهيَّأة لا مستعملة بعد.
+  isObjectivesVisible     Boolean               @default(false)
+  isOperationalVisible    Boolean               @default(false)
+  strategyPerspectives    StrategyPerspective[]
+  operationalPlans        OperationalPlan[]
 }
 
 /// معلومات الجمعية الثابتة لمنشئ وثائق المبادرات — رؤيتها، رسالتها، مجالها
@@ -183,10 +194,10 @@ model CharityUser {
   updatedAt   DateTime         @updatedAt
 
   charities         CharityUserCharity[]
-  sentMails         InternalMail[]       @relation("CharitySentMails")
-  receivedMails     MailRecipient[]      @relation("CharityReceivedMails")
+  sentMails         InternalMail[]        @relation("CharitySentMails")
+  receivedMails     MailRecipient[]       @relation("CharityReceivedMails")
   mailApprovals     CharityMailApprover[]
-  designRequests    DesignRequest[]      @relation("SubmittedDesignRequests")
+  designRequests    DesignRequest[]       @relation("SubmittedDesignRequests")
   attendanceRecords AttendanceRecord[]
   leaves            EmployeeLeave[]
 }
@@ -484,38 +495,38 @@ model Employee {
 
   zadAttendance           ZadAttendanceRecord[]
   zadLeaves               ZadEmployeeLeave[]
-  createdAt               DateTime              @default(now())
-  updatedAt               DateTime              @updatedAt
-  assignedTasks           Task[]                @relation("AssignedTasks")
-  createdTasks            Task[]                @relation("CreatedTasks")
-  assignedPermanentTasks  PermanentTask[]       @relation("AssignedPermanentTasks")
-  createdPermanentTasks   PermanentTask[]       @relation("CreatedPermanentTasks")
-  employeeAchievements    Achievement[]         @relation("EmployeeAchievements")
-  createdAchievements     Achievement[]         @relation("CreatedAchievements")
-  assignedCharities       EmployeeCharity[]     @relation("AssignedCharities")
+  createdAt               DateTime                 @default(now())
+  updatedAt               DateTime                 @updatedAt
+  assignedTasks           Task[]                   @relation("AssignedTasks")
+  createdTasks            Task[]                   @relation("CreatedTasks")
+  assignedPermanentTasks  PermanentTask[]          @relation("AssignedPermanentTasks")
+  createdPermanentTasks   PermanentTask[]          @relation("CreatedPermanentTasks")
+  employeeAchievements    Achievement[]            @relation("EmployeeAchievements")
+  createdAchievements     Achievement[]            @relation("CreatedAchievements")
+  assignedCharities       EmployeeCharity[]        @relation("AssignedCharities")
   serviceAccess           EmployeeServiceAccess[]
   bundles                 EmployeeBundle[]
   appNotifications        AppNotification[]
-  createdMeetings         Meeting[]             @relation("MeetingCreator")
-  meetingTasksAssigned    MeetingTask[]         @relation("MeetingTaskAssignee")
+  createdMeetings         Meeting[]                @relation("MeetingCreator")
+  meetingTasksAssigned    MeetingTask[]            @relation("MeetingTaskAssignee")
   navSetting              EmployeeNavSetting?
-  createdRequests         Request[]             @relation("CreatedRequests")
-  reviewedRequests        Request[]             @relation("ReviewedRequests")
-  requestNotifications    RequestNotification[] @relation("RequestNotifications")
-  workflowSteps           WorkflowStep[]        @relation("WorkflowStepApprover")
-  requestLogs             RequestLog[]          @relation("LogActor")
-  delegatedLogs           RequestLog[]          @relation("LogDelegatee")
-  currentlyReviewing      Request[]             @relation("CurrentReviewer")
-  delegatedRequests       Request[]             @relation("DelegatedTo")
-  createdMeetingSchedules MeetingSchedule[]     @relation("CreatedMeetingSchedules")
-  sentMails               InternalMail[]        @relation("SentMails")
-  receivedMails           MailRecipient[]       @relation("ReceivedMails")
-  createdDesignRequests   DesignRequest[]       @relation("CreatedDesignRequests")
-  completedDesignRequests DesignRequest[]       @relation("CompletedDesignRequests")
-  startedDesignRequests   DesignRequest[]       @relation("StartedDesignRequests")
-  reviewedDesignRequests  DesignRequest[]       @relation("ReviewedDesignRequests")
-  templateNodes           TemplateNode[]        @relation("TemplateNodes")
-  mailApprovals     MailApprover[]
+  createdRequests         Request[]                @relation("CreatedRequests")
+  reviewedRequests        Request[]                @relation("ReviewedRequests")
+  requestNotifications    RequestNotification[]    @relation("RequestNotifications")
+  workflowSteps           WorkflowStep[]           @relation("WorkflowStepApprover")
+  requestLogs             RequestLog[]             @relation("LogActor")
+  delegatedLogs           RequestLog[]             @relation("LogDelegatee")
+  currentlyReviewing      Request[]                @relation("CurrentReviewer")
+  delegatedRequests       Request[]                @relation("DelegatedTo")
+  createdMeetingSchedules MeetingSchedule[]        @relation("CreatedMeetingSchedules")
+  sentMails               InternalMail[]           @relation("SentMails")
+  receivedMails           MailRecipient[]          @relation("ReceivedMails")
+  createdDesignRequests   DesignRequest[]          @relation("CreatedDesignRequests")
+  completedDesignRequests DesignRequest[]          @relation("CompletedDesignRequests")
+  startedDesignRequests   DesignRequest[]          @relation("StartedDesignRequests")
+  reviewedDesignRequests  DesignRequest[]          @relation("ReviewedDesignRequests")
+  templateNodes           TemplateNode[]           @relation("TemplateNodes")
+  mailApprovals           MailApprover[]
   projectBuilderDocuments ProjectBuilderDocument[]
 }
 
@@ -529,18 +540,18 @@ model Employee {
 /// نفس اصطلاح getAssignedCharityIds الذي يُرجع null بمعنى بلا تقييد، وهو ما
 /// يجعل إضافة هذا الجدول لا تكسر أحداً: التقييد يبدأ عند أول منحة.
 model EmployeeServiceAccess {
-  id          String   @id @default(uuid())
-  employeeId  String
-  employee    Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  id         String   @id @default(uuid())
+  employeeId String
+  employee   Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
 
   serviceName String
 
   /// null = هذه الخدمة في كل جمعيات الموظف المُسندة، وهي الحالة الشائعة.
   /// وقيمة = هذه الخدمة في هذه الجمعية وحدها — لمن أراد نطاقاً أضيق من إسناده.
-  charityId   String?
-  charity     Charity? @relation(fields: [charityId], references: [id], onDelete: Cascade)
+  charityId String?
+  charity   Charity? @relation(fields: [charityId], references: [id], onDelete: Cascade)
 
-  grantedAt   DateTime @default(now())
+  grantedAt DateTime @default(now())
 
   @@unique([employeeId, serviceName, charityId])
   @@index([employeeId])
@@ -1059,9 +1070,9 @@ model MeetingAlternativeRequest {
 }
 
 model InternalMail {
-  id       String   @id @default(uuid())
+  id       String    @id @default(uuid())
   subject  String
-  body     String   @db.Text
+  body     String    @db.Text
   /// المرسِل موظف زاد. يصير فارغاً حين يكون المرسِل عضو جمعية.
   senderId String?
   sender   Employee? @relation("SentMails", fields: [senderId], references: [id], onDelete: Cascade)
@@ -1086,14 +1097,14 @@ model InternalMail {
 
   /// التعميد: "NONE" بلا تعميد · "PENDING" بانتظار · "APPROVED" معتمد ·
   /// "RETURNED" أُرجع لصاحبه. والبريد المنتظر لا مستلمين له بعد.
-  approvalState String @default("NONE")
+  approvalState           String    @default("NONE")
   /// المعمِّد — موظف زاد أو عضو جمعية. بلا علاقةٍ مُصرَّحة: أثرٌ للتدقيق لا
   /// يُستعلم عنه من الجهة الأخرى.
   approvedById            String?
   approvedByCharityUserId String?
   approvedAt              DateTime?
   /// ملاحظة المعمِّد حين يُرجع البريد إلى مسودات صاحبه.
-  returnNote String?
+  returnNote              String?
 
   // للربط بسلسلة الردود
   parentId String? // الرسالة الأصلية (في حال الرد)
@@ -1104,10 +1115,10 @@ model InternalMail {
   isDeletedBySender Boolean @default(false) // حذف من "المرسل"
 
   // المسودات — تُحفظ قبل الإرسال الفعلي ولا تملك MailRecipient بعد
-  isDraft     Boolean  @default(false)
-  draftToIds  String[] @default([])
-  draftCcIds  String[] @default([])
-  draftBccIds String[] @default([])
+  isDraft             Boolean  @default(false)
+  draftToIds          String[] @default([])
+  draftCcIds          String[] @default([])
+  draftBccIds         String[] @default([])
   /// مستلمو المسودة من غير موظفي زاد: أعضاء جمعيات، أو جمعياتٌ بكاملها.
   draftCharityUserIds String[] @default([])
   draftCharityIds     String[] @default([])
@@ -1134,7 +1145,7 @@ model MailRecipient {
   charityUserId String?
   charityUser   CharityUser? @relation("CharityReceivedMails", fields: [charityUserId], references: [id], onDelete: Cascade)
   /// جمعية المستلم حين يكون عضو جمعية — نطاق الصندوق.
-  charityId String?
+  charityId     String?
 
   type      String  @default("TO") // "TO" | "CC" | "BCC"
   isRead    Boolean @default(false)
@@ -1876,4 +1887,235 @@ model CharityMailApprover {
 
   @@id([charityUserId, charityId])
   @@index([charityId])
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+//  التخطيط الاستراتيجي — الخطة في docs/خطة-نظام-التخطيط-الاستراتيجي.md
+//
+//  الهيكل: الجمعية ← المحور (البعد) ← الهدف ← المؤشر ← نتيجةٌ لكل (سنة، فترة).
+//  وإلى جانبه: خطةٌ تشغيلية ← مبادرة ← خطوة تنفيذ.
+//
+//  وقاعدتان حكمتا التصميم:
+//
+//  ١) الربط بـcharityId لا بالاسم. الجداول الثلاثة القديمة (SurveyResponse،
+//     HexagonalResponse، PerformanceMetric) تربط بالاسم نصاً، وبياناتها متخالفة
+//     فعلاً: ردود الرؤية باسم «جمعية المعاقد التعليمية» وردود الجاهزية باسم
+//     «المعاقد التعليمية»، و«جمعية ضماد الإسعافية » بمسافةٍ زائدة إلى جانب
+//     «ضماد الإسعافية». فأيُّ جمعٍ على الاسم يفوته جزءٌ من البيانات.
+//
+//  ٢) ما يُحسب لا يُخزَّن. فلا عمود لحالة المبادرة ولا للأيام المتبقية ولا
+//     للانحراف ولا لنِسب الإنجاز ولا لأداء الهدف والمحور والجمعية — تُشتقّ كلها
+//     في العرض من دالّتين خالصتين. وفي ملف Excel المصدر صفوفٌ تحمل «متعثرة»
+//     منسوخةً ساكنة، وهذا ما أردنا اجتنابه.
+// ════════════════════════════════════════════════════════════════════════════
+
+/// حالات الخطة الاستراتيجية التي يُختار منها في صفحة الجمعية. قائمةٌ تُدار من
+/// الواجهة لا ثوابتَ في الكود: إضافةُ حالةٍ أو تغييرُ اسمها بيانات، لا نشرة.
+model StrategyStatusOption {
+  id        String   @id @default(uuid())
+  name      String   @unique
+  /// نبرة الشارة: muted | warn | good | danger — من نبرات Badge القائمة، فلا لونَ جديد.
+  tone      String   @default("muted")
+  order     Int      @default(0)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([order])
+}
+
+/// المحور الاستراتيجي — يسمّيه ملف الجمعية «البعد»، ويسمّيه جدول مقياس الأداء
+/// «المحور». الحقل واحد، والتسمية تختلف في الصفحتين عن قصد.
+model StrategyPerspective {
+  id        String   @id @default(uuid())
+  charityId String
+  charity   Charity  @relation(fields: [charityId], references: [id], onDelete: Cascade)
+  name      String
+  /// بادئة رموز الأهداف: س ص م ل ت.
+  prefix    String
+  order     Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  objectives StrategyObjective[]
+
+  @@unique([charityId, prefix])
+  @@index([charityId, order])
+}
+
+model StrategyObjective {
+  id            String              @id @default(uuid())
+  perspectiveId String
+  perspective   StrategyPerspective @relation(fields: [perspectiveId], references: [id], onDelete: Cascade)
+  /// رمز الهدف كما في الوثيقة: «س 1».
+  code          String
+  name          String
+  /// شرح الهدف — الفقرة الكاملة في دليل الأهداف.
+  description   String?
+  order         Int                 @default(0)
+  createdAt     DateTime            @default(now())
+  updatedAt     DateTime            @updatedAt
+
+  indicators  StrategyIndicator[]
+  initiatives Initiative[]
+
+  @@unique([perspectiveId, code])
+  @@index([perspectiveId, order])
+}
+
+model StrategyIndicator {
+  id           String            @id @default(uuid())
+  objectiveId  String
+  objective    StrategyObjective @relation(fields: [objectiveId], references: [id], onDelete: Cascade)
+  /// رمز المؤشر كما في الوثيقة: «س 1 - 1».
+  code         String
+  name         String
+  description  String?
+  /// وحدة القياس: مبادرة، مستفيدة، نسبة، ريال، تقرير، منصة...
+  unit         String?
+  formula      String?
+  /// دورية القياس: ربع سنوي | نصف سنوي | سنوي.
+  frequency    String?
+  /// اتجاه التحسن المطلوب: UP للزيادة، DOWN للنقص.
+  polarity     String            @default("UP")
+  /// التراكمية، وهي مصدر قاعدة حساب المحقق السنوي لا وحدةُ القياس:
+  ///   false («غير تراكمي») ← يبدأ المؤشر من الصفر كل ربع، فالسنوي مجموع الأرباع.
+  ///   true  («تراكمي») ← القيمة مستوًى قائم يحتوي آخرُ قياسٍ له ما قبله،
+  ///                      فالسنوي آخر ربعٍ له متحقق. وجمعُها يُخرج ٣٤٠٪.
+  /// وهذا نصّ تعليمات ورقة «متابعة الأداء» في ملف الجمعية.
+  cumulative   Boolean           @default(false)
+  /// مالك المؤشر — العمود القائم في جدول مقياس الأداء.
+  owner        String?
+  execOwner    String?
+  measureOwner String?
+  /// خط الأساس: قيمة المؤشر قبل تنفيذ الخطة.
+  baseline     Decimal?          @db.Decimal(18, 4)
+  order        Int               @default(0)
+  createdAt    DateTime          @default(now())
+  updatedAt    DateTime          @updatedAt
+
+  results     IndicatorResult[]
+  initiatives InitiativeIndicator[]
+
+  @@unique([objectiveId, code])
+  @@index([objectiveId, order])
+}
+
+/// صفٌّ لكل (مؤشر، سنة، فترة). الفترة YEAR أو Q1..Q4 — أربعة أرباع لا اثنان،
+/// والسنة حقلٌ لا ثابت: ملف ٢٠٢٦ ثبّت سنته وربعيه فصار مرتبطاً بهما.
+model IndicatorResult {
+  id          String            @id @default(uuid())
+  indicatorId String
+  indicator   StrategyIndicator @relation(fields: [indicatorId], references: [id], onDelete: Cascade)
+  year        Int
+  /// YEAR | Q1 | Q2 | Q3 | Q4
+  period      String
+  target      Decimal?          @db.Decimal(18, 4)
+  actual      Decimal?          @db.Decimal(18, 4)
+  /// ACTIVE | POSTPONED (يُستثنى من المتوسطات) | NO_DATA (يُحتسب صفراً).
+  state       String            @default("ACTIVE")
+  /// للفترة YEAR وحدها: متحققٌ أُدخل يدوياً فيتجاوز الحساب التراكمي، وتظهر
+  /// معه علامةُ تجاوزٍ في الجدول كي لا يتغيّر رقمٌ أدخله الموظف بلا علمه.
+  isOverride  Boolean           @default(false)
+  note        String?
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+
+  @@unique([indicatorId, year, period])
+  @@index([year, period])
+}
+
+/// فترة الخطة التشغيلية. منها وحدها يُشتقّ محور أسابيع مخطط جانت وأعمدة
+/// الأشهر: رقمُ أسبوعٍ بلا تاريخِ بدايةٍ لا معنى له.
+model OperationalPlan {
+  id        String   @id @default(uuid())
+  charityId String
+  charity   Charity  @relation(fields: [charityId], references: [id], onDelete: Cascade)
+  /// «أغسطس 2026 — ديسمبر 2026»
+  label     String
+  startDate DateTime
+  endDate   DateTime
+  weekCount Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  initiatives Initiative[]
+
+  @@unique([charityId, label])
+  @@index([charityId])
+}
+
+model Initiative {
+  id            String             @id @default(uuid())
+  planId        String
+  plan          OperationalPlan    @relation(fields: [planId], references: [id], onDelete: Cascade)
+  /// رقم المبادرة في الكشاف (العمود «م»)، وهو مفتاح مسار صفحتها.
+  number        Int
+  name          String
+  description   String?
+  objectiveId   String?
+  objective     StrategyObjective? @relation(fields: [objectiveId], references: [id], onDelete: SetNull)
+  /// نصُّ المدة كما في الوثيقة: «18 أسبوعاً».
+  durationText  String?
+  managerName   String?
+  owningDept    String?
+  /// عالية | متوسطة | منخفضة — إدخالٌ يدوي، وهو العمود الوحيد في الكشاف
+  /// الذي لا يُسحب من صفحة المبادرة.
+  priority      String?
+  startDate     DateTime?
+  endDate       DateTime?
+  budget        Decimal?           @db.Decimal(18, 2)
+  /// توزيع الموازنة على أشهر الخطة: { "2026-08": 0, "2026-09": 18150, ... }
+  /// مفاتيحه أشهرٌ لا أسماء، فلا يرتبط بفترةِ خطةٍ بعينها.
+  monthlyBudget Json?
+  createdAt     DateTime           @default(now())
+  updatedAt     DateTime           @updatedAt
+
+  steps      InitiativeStep[]
+  indicators InitiativeIndicator[]
+
+  @@unique([planId, number])
+  @@index([planId])
+  @@index([objectiveId])
+}
+
+/// المبادرة ترتبط بعدّة مؤشرات — الوثيقة تذكرها بالجمع. ويفتح هذا سؤالاً
+/// نافعاً لاحقاً: ما المبادرات التي تخدم المؤشر المتعثّر؟
+model InitiativeIndicator {
+  initiativeId String
+  indicatorId  String
+  initiative   Initiative        @relation(fields: [initiativeId], references: [id], onDelete: Cascade)
+  indicator    StrategyIndicator @relation(fields: [indicatorId], references: [id], onDelete: Cascade)
+
+  @@id([initiativeId, indicatorId])
+  @@index([indicatorId])
+}
+
+model InitiativeStep {
+  id              String     @id @default(uuid())
+  initiativeId    String
+  initiative      Initiative @relation(fields: [initiativeId], references: [id], onDelete: Cascade)
+  /// العمود «ت» في جدول الخطوات.
+  order           Int
+  /// الإعداد | التنفيذ | الإغلاق
+  phase           String?
+  title           String
+  /// شاهد التنفيذ: الوثيقة التي تُثبت إنجاز الخطوة.
+  evidence        String?
+  owner           String?
+  cost            Decimal?   @db.Decimal(18, 2)
+  actualCost      Decimal?   @db.Decimal(18, 2)
+  /// أرقام أسابيع نسبيّة إلى OperationalPlan.startDate، تبدأ من ١.
+  planStartWeek   Int?
+  planWeeks       Int?
+  actualStartWeek Int?
+  actualWeeks     Int?
+  /// نسبة إنجاز الخطوة ٠-١٠٠. وهي المُدخل الوحيد، ومنها تُحسب نسبة المبادرة.
+  progress        Int        @default(0)
+  /// توزيع تكلفة الخطوة على الأشهر، بمفاتيح monthlyBudget نفسها.
+  monthlyCost     Json?
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+
+  @@index([initiativeId, order])
 }

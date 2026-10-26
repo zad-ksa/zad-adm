@@ -172,6 +172,303 @@ export async function reactivateStatusOption(id: string): Promise<Result> {
   }
 }
 
+
+// ── دليل الأهداف والمؤشرات ──────────────────────────────────────────────────
+// الهيكل ثلاث طبقات: المحور (البعد) ← الهدف ← المؤشر. وكلُّ فعلٍ هنا يتحقّق من
+// أن الجمعية صاحبة الصف مُسندةٌ إلى الموظف — فالوصول يُتحقَّق من الصف لا من
+// المسار الذي جاء منه الطلب.
+
+/** الأبعاد الخمسة لبطاقة الأداء المتوازن برموزها المعتمدة في وثائق الجمعيات. */
+export const DEFAULT_PERSPECTIVES = [
+  { name: "المستفيدون", prefix: "س" },
+  { name: "أصحاب المصلحة", prefix: "ص" },
+  { name: "البعد المالي", prefix: "م" },
+  { name: "العمليات الداخلية", prefix: "ل" },
+  { name: "التعلم والنمو", prefix: "ت" },
+] as const;
+
+const POLARITIES = ["UP", "DOWN"];
+
+async function charityOfPerspective(perspectiveId: string) {
+  const row = await prisma.strategyPerspective.findUnique({
+    where: { id: perspectiveId },
+    select: { charityId: true },
+  });
+  if (!row) throw new Error("بعدٌ غير موجود");
+  return row.charityId;
+}
+
+async function charityOfObjective(objectiveId: string) {
+  const row = await prisma.strategyObjective.findUnique({
+    where: { id: objectiveId },
+    select: { perspective: { select: { charityId: true } } },
+  });
+  if (!row) throw new Error("هدفٌ غير موجود");
+  return row.perspective.charityId;
+}
+
+async function charityOfIndicator(indicatorId: string) {
+  const row = await prisma.strategyIndicator.findUnique({
+    where: { id: indicatorId },
+    select: { objective: { select: { perspective: { select: { charityId: true } } } } },
+  });
+  if (!row) throw new Error("مؤشرٌ غير موجود");
+  return row.objective.perspective.charityId;
+}
+
+/** يُبطل الصفحة بعد كل كتابة: الجداول تُقرأ في الرسم، فلا بدّ من إعادته. */
+async function revalidateGuide(charityId: string) {
+  const charity = await prisma.charity.findUnique({ where: { id: charityId }, select: { name: true } });
+  if (charity) revalidatePath(`/main/strategy/${encodeURIComponent(charity.name)}`, "layout");
+}
+
+/**
+ * إنشاء الأبعاد الخمسة دفعةً واحدة — لجمعيةٍ يبدأ دليلها فارغاً.
+ *
+ * ولا يُكرّر ما وُجد: يُطابق بالبادئة، فتشغيلُه مرّتين لا يُنشئ عشرة أبعاد.
+ */
+export async function bootstrapPerspectives(charityId: string): Promise<Result & { created?: number }> {
+  try {
+    await requireStrategyAccess(charityId);
+
+    const existing = await prisma.strategyPerspective.findMany({
+      where: { charityId },
+      select: { prefix: true },
+    });
+    const have = new Set(existing.map((p) => p.prefix));
+    const missing = DEFAULT_PERSPECTIVES.filter((p) => !have.has(p.prefix));
+    if (missing.length === 0) return { created: 0 };
+
+    await prisma.strategyPerspective.createMany({
+      data: missing.map((p) => ({
+        charityId,
+        name: p.name,
+        prefix: p.prefix,
+        order: DEFAULT_PERSPECTIVES.findIndex((d) => d.prefix === p.prefix) + 1,
+      })),
+    });
+
+    await revalidateGuide(charityId);
+    return { created: missing.length };
+  } catch (e) {
+    return { error: message(e) };
+  }
+}
+
+export async function savePerspective(input: {
+  id?: string;
+  charityId: string;
+  name: string;
+  prefix: string;
+}): Promise<Result> {
+  try {
+    await requireStrategyAccess(input.charityId);
+
+    const name = input.name.trim();
+    const prefix = input.prefix.trim();
+    if (!name) return { error: "اسم البعد مطلوب" };
+    if (!prefix) return { error: "رمز البعد مطلوب" };
+    if (prefix.length > 4) return { error: "الرمز حرفٌ أو حرفان" };
+
+    const clash = await prisma.strategyPerspective.findFirst({
+      where: { charityId: input.charityId, prefix, ...(input.id ? { NOT: { id: input.id } } : {}) },
+      select: { id: true },
+    });
+    if (clash) return { error: "يوجد بعدٌ بهذا الرمز" };
+
+    if (input.id) {
+      await prisma.strategyPerspective.update({ where: { id: input.id }, data: { name, prefix } });
+    } else {
+      const last = await prisma.strategyPerspective.findFirst({
+        where: { charityId: input.charityId },
+        orderBy: { order: "desc" },
+        select: { order: true },
+      });
+      await prisma.strategyPerspective.create({
+        data: { charityId: input.charityId, name, prefix, order: (last?.order ?? 0) + 1 },
+      });
+    }
+
+    await revalidateGuide(input.charityId);
+    return {};
+  } catch (e) {
+    return { error: message(e) };
+  }
+}
+
+/**
+ * حذف بعدٍ يحذف أهدافه ومؤشراتها ونتائجها (Cascade في المخطّط). ولذلك يُعاد
+ * عددُ ما سيُحذف قبل التنفيذ ليُعرض في حوار التأكيد — حذفٌ صامتٌ لثلاثين مؤشراً
+ * ليس تأكيداً.
+ */
+export async function countPerspectiveChildren(perspectiveId: string) {
+  const [objectives, indicators] = await Promise.all([
+    prisma.strategyObjective.count({ where: { perspectiveId } }),
+    prisma.strategyIndicator.count({ where: { objective: { perspectiveId } } }),
+  ]);
+  return { objectives, indicators };
+}
+
+export async function deletePerspective(id: string): Promise<Result> {
+  try {
+    const charityId = await charityOfPerspective(id);
+    await requireStrategyAccess(charityId);
+    await prisma.strategyPerspective.delete({ where: { id } });
+    await revalidateGuide(charityId);
+    return {};
+  } catch (e) {
+    return { error: message(e) };
+  }
+}
+
+export async function saveObjective(input: {
+  id?: string;
+  perspectiveId: string;
+  code: string;
+  name: string;
+  description?: string;
+}): Promise<Result> {
+  try {
+    const charityId = await charityOfPerspective(input.perspectiveId);
+    await requireStrategyAccess(charityId);
+
+    const code = input.code.trim();
+    const name = input.name.trim();
+    if (!code) return { error: "رمز الهدف مطلوب" };
+    if (!name) return { error: "نصّ الهدف مطلوب" };
+
+    const clash = await prisma.strategyObjective.findFirst({
+      where: { perspectiveId: input.perspectiveId, code, ...(input.id ? { NOT: { id: input.id } } : {}) },
+      select: { id: true },
+    });
+    if (clash) return { error: "يوجد هدفٌ بهذا الرمز في البعد نفسه" };
+
+    const data = { code, name, description: input.description?.trim() || null };
+
+    if (input.id) {
+      await prisma.strategyObjective.update({ where: { id: input.id }, data });
+    } else {
+      const last = await prisma.strategyObjective.findFirst({
+        where: { perspectiveId: input.perspectiveId },
+        orderBy: { order: "desc" },
+        select: { order: true },
+      });
+      await prisma.strategyObjective.create({
+        data: { ...data, perspectiveId: input.perspectiveId, order: (last?.order ?? 0) + 1 },
+      });
+    }
+
+    await revalidateGuide(charityId);
+    return {};
+  } catch (e) {
+    return { error: message(e) };
+  }
+}
+
+export async function deleteObjective(id: string): Promise<Result> {
+  try {
+    const charityId = await charityOfObjective(id);
+    await requireStrategyAccess(charityId);
+    await prisma.strategyObjective.delete({ where: { id } });
+    await revalidateGuide(charityId);
+    return {};
+  } catch (e) {
+    return { error: message(e) };
+  }
+}
+
+export type IndicatorInput = {
+  id?: string;
+  objectiveId: string;
+  code: string;
+  name: string;
+  description?: string;
+  unit?: string;
+  formula?: string;
+  frequency?: string;
+  polarity?: string;
+  cumulative?: boolean;
+  owner?: string;
+  execOwner?: string;
+  measureOwner?: string;
+  baseline?: string;
+};
+
+export async function saveIndicator(input: IndicatorInput): Promise<Result> {
+  try {
+    const charityId = await charityOfObjective(input.objectiveId);
+    await requireStrategyAccess(charityId);
+
+    const code = input.code.trim();
+    const name = input.name.trim();
+    if (!code) return { error: "رمز المؤشر مطلوب" };
+    if (!name) return { error: "نصّ المؤشر مطلوب" };
+    const polarity = input.polarity && POLARITIES.includes(input.polarity) ? input.polarity : "UP";
+
+    const baseline = parseDecimal(input.baseline);
+    if (baseline === "invalid") return { error: "خط الأساس يجب أن يكون رقماً" };
+
+    const clash = await prisma.strategyIndicator.findFirst({
+      where: { objectiveId: input.objectiveId, code, ...(input.id ? { NOT: { id: input.id } } : {}) },
+      select: { id: true },
+    });
+    if (clash) return { error: "يوجد مؤشرٌ بهذا الرمز في الهدف نفسه" };
+
+    const data = {
+      code,
+      name,
+      description: input.description?.trim() || null,
+      unit: input.unit?.trim() || null,
+      formula: input.formula?.trim() || null,
+      frequency: input.frequency?.trim() || null,
+      polarity,
+      cumulative: input.cumulative ?? false,
+      owner: input.owner?.trim() || null,
+      execOwner: input.execOwner?.trim() || null,
+      measureOwner: input.measureOwner?.trim() || null,
+      baseline,
+    };
+
+    if (input.id) {
+      await prisma.strategyIndicator.update({ where: { id: input.id }, data });
+    } else {
+      const last = await prisma.strategyIndicator.findFirst({
+        where: { objectiveId: input.objectiveId },
+        orderBy: { order: "desc" },
+        select: { order: true },
+      });
+      await prisma.strategyIndicator.create({
+        data: { ...data, objectiveId: input.objectiveId, order: (last?.order ?? 0) + 1 },
+      });
+    }
+
+    await revalidateGuide(charityId);
+    return {};
+  } catch (e) {
+    return { error: message(e) };
+  }
+}
+
+export async function deleteIndicator(id: string): Promise<Result> {
+  try {
+    const charityId = await charityOfIndicator(id);
+    await requireStrategyAccess(charityId);
+    await prisma.strategyIndicator.delete({ where: { id } });
+    await revalidateGuide(charityId);
+    return {};
+  } catch (e) {
+    return { error: message(e) };
+  }
+}
+
+/** فراغٌ يعني «غير محدَّد» لا صفراً: صفرُ خطِّ أساسٍ قولٌ، والفراغ سكوت. */
+function parseDecimal(value: string | undefined): number | null | "invalid" {
+  const raw = value?.trim();
+  if (!raw) return null;
+  const n = Number(raw);
+  return Number.isFinite(n) ? n : "invalid";
+}
+
 const TONES = ["muted", "warn", "good", "danger"];
 
 function message(e: unknown) {

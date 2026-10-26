@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
-import { HardHat } from "lucide-react";
+import { prisma } from "@/lib/db";
+import { getSession } from "@/lib/auth";
+import { hasPermission } from "@/lib/permissions";
 import { requireCharitySection } from "@/lib/sectionGuard";
-import { EmptyState } from "@/components/console/layout";
+import GuideClient, { type GuidePerspective } from "./GuideClient";
 
 export const dynamic = "force-dynamic";
 
@@ -11,20 +13,92 @@ export async function generateMetadata({ params }: { params: Promise<{ name: str
 }
 
 /**
- * دليل الأهداف والمؤشرات — تُبنى في المرحلة الرابعة من docs/خطة-نظام-التخطيط-الاستراتيجي.md
+ * دليل الأهداف والمؤشرات — الوثيقة المعتمدة للجمعية.
  *
- * وهي صفحةٌ صريحةٌ لا رابطٌ مكسور: المربّع الذي يقود إليها موجودٌ من المرحلة
- * الثالثة، فالأولى أن يصل إلى بيانٍ لا إلى صفحة ٤٠٤.
+ * الشجرة كلّها في استعلامٍ واحد: `relationJoins` مُفعَّلة في المخطّط، فالعلاقات
+ * المتداخلة تصير LATERAL JOIN واحداً لا رحلةً لكل طبقة — والقاعدة في سيدني،
+ * فالرحلة الواحدة تكلّف مئات المللي.
  */
-export default async function Page({ params }: { params: Promise<{ name: string }> }) {
+export default async function GuidePage({ params }: { params: Promise<{ name: string }> }) {
   const { name } = await params;
-  await requireCharitySection("manage_strategy", decodeURIComponent(name));
+  const decodedName = decodeURIComponent(name);
 
-  return (
-    <EmptyState
-      icon={<HardHat className="size-6" />}
-      title="هذه الصفحة قيد الإنشاء"
-      description="دليل الأبعاد والأهداف والمؤشرات بأعمدته الأربعة عشر، مع قاموس المصطلحات."
-    />
-  );
+  await requireCharitySection("manage_strategy", decodedName);
+
+  const [session, charity] = await Promise.all([
+    getSession(),
+    prisma.charity.findUnique({ where: { name: decodedName }, select: { id: true } }),
+  ]);
+
+  const canEdit = hasPermission(session?.role || "", session?.permissions || [], "manage_strategy");
+
+  const perspectives = charity
+    ? await prisma.strategyPerspective.findMany({
+        where: { charityId: charity.id },
+        orderBy: { order: "asc" },
+        select: {
+          id: true,
+          name: true,
+          prefix: true,
+          objectives: {
+            orderBy: { order: "asc" },
+            select: {
+              id: true,
+              code: true,
+              name: true,
+              description: true,
+              indicators: {
+                orderBy: { order: "asc" },
+                select: {
+                  id: true,
+                  code: true,
+                  name: true,
+                  description: true,
+                  unit: true,
+                  formula: true,
+                  frequency: true,
+                  polarity: true,
+                  cumulative: true,
+                  owner: true,
+                  execOwner: true,
+                  measureOwner: true,
+                  baseline: true,
+                },
+              },
+            },
+          },
+        },
+      })
+    : [];
+
+  // `Decimal` لا يعبر إلى مكوّن العميل، فيُحوَّل نصاً هنا — والنصّ يحفظ المنازل
+  // كما أُدخلت بلا تقريبٍ عابر.
+  const data: GuidePerspective[] = perspectives.map((p) => ({
+    id: p.id,
+    name: p.name,
+    prefix: p.prefix,
+    objectives: p.objectives.map((o) => ({
+      id: o.id,
+      code: o.code,
+      name: o.name,
+      description: o.description,
+      indicators: o.indicators.map((i) => ({
+        id: i.id,
+        code: i.code,
+        name: i.name,
+        description: i.description,
+        unit: i.unit,
+        formula: i.formula,
+        frequency: i.frequency,
+        polarity: i.polarity,
+        cumulative: i.cumulative,
+        owner: i.owner,
+        execOwner: i.execOwner,
+        measureOwner: i.measureOwner,
+        baseline: i.baseline === null ? null : String(i.baseline),
+      })),
+    })),
+  }));
+
+  return <GuideClient charityId={charity?.id ?? null} perspectives={data} canEdit={canEdit} />;
 }

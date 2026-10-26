@@ -11,11 +11,46 @@ import {
   scheduleAdherence,
   scheduleFlags,
   weekStartDate,
+  weeksBetween,
+  planMonths,
   type StepInput,
 } from "./initiativeProgress.ts";
 
 const step = (progress: number, extra: Partial<StepInput> = {}): StepInput => ({ progress, ...extra });
 const d = (iso: string) => new Date(iso + "T00:00:00Z");
+
+// ── أشهر الخطة وأسابيعها ──────────────────────────────────────────────────
+
+test("أشهر الخطة من تاريخيها — خطة المعاقد خمسة أشهر", () => {
+  const months = planMonths(d("2026-08-03"), d("2026-12-31"));
+  assert.deepEqual(
+    months.map((m) => m.key),
+    ["2026-08", "2026-09", "2026-10", "2026-11", "2026-12"]
+  );
+  assert.equal(months[0].label, "أغسطس");
+  assert.equal(months[4].label, "ديسمبر");
+});
+
+test("شهرٌ واحدٌ حين تبدأ الخطة وتنتهي فيه", () => {
+  assert.equal(planMonths(d("2026-08-03"), d("2026-08-20")).length, 1);
+});
+
+test("خطةٌ تعبُر سنةً: المفتاح تاريخٌ لا اسم، فلا يجتمع أغسطسان في عمود", () => {
+  const keys = planMonths(d("2026-11-01"), d("2027-02-01")).map((m) => m.key);
+  assert.deepEqual(keys, ["2026-11", "2026-12", "2027-01", "2027-02"]);
+});
+
+test("نهايةٌ قبل البداية لا تُعلّق الحلقة", () => {
+  assert.deepEqual(planMonths(d("2026-12-01"), d("2026-08-01")), []);
+});
+
+test("عدد الأسابيع محسوبٌ من التاريخين", () => {
+  assert.equal(weeksBetween(d("2026-08-03"), d("2026-08-09")), 1);
+  assert.equal(weeksBetween(d("2026-08-03"), d("2026-08-10")), 2);
+  assert.equal(weeksBetween(d("2026-08-03"), d("2026-12-31")), 22);
+  // يومٌ واحد أسبوعٌ واحد لا صفر.
+  assert.equal(weeksBetween(d("2026-08-03"), d("2026-08-03")), 1);
+});
 
 // ── نسبة الإنجاز ──────────────────────────────────────────────────────────
 

@@ -127,6 +127,7 @@ export default function PerformanceTable({
         indicators: (goal.indicators || []).map(ind => ({
           ...ind,
           postponed: ind.postponed || false,
+          owner: ind.owner ?? "",
           baseline: ind.baseline === undefined ? null : ind.baseline,
           cumulative: ind.cumulative === true,
           annualOverride: ind.annualOverride === true,
@@ -898,7 +899,7 @@ export default function PerformanceTable({
                                 })()}
                               </td>
                               <td className="border-l border-slate-200 dark:border-slate-800 p-2 transition-colors">
-                                <input type="text" value={ind.owner} disabled={ind.postponed} onChange={e => updateIndicator(axis.id, goal.id, ind.id, "owner", e.target.value)} placeholder={ind.postponed ? "مؤجل" : "اسم المالك"} className="w-full text-center bg-transparent hover:bg-white dark:hover:bg-slate-900 focus:bg-white dark:focus:bg-slate-900 border border-transparent hover:border-slate-200 dark:hover:border-slate-600 focus:border-primary/30 outline-none p-2 rounded-lg text-caption font-semibold disabled:text-slate-400 disabled:hover:bg-transparent disabled:hover:border-transparent transition-all text-slate-800 dark:text-slate-100" />
+                                <input type="text" value={ind.owner ?? ""} disabled={ind.postponed} onChange={e => updateIndicator(axis.id, goal.id, ind.id, "owner", e.target.value)} placeholder={ind.postponed ? "مؤجل" : "اسم المالك"} className="w-full text-center bg-transparent hover:bg-white dark:hover:bg-slate-900 focus:bg-white dark:focus:bg-slate-900 border border-transparent hover:border-slate-200 dark:hover:border-slate-600 focus:border-primary/30 outline-none p-2 rounded-lg text-caption font-semibold disabled:text-slate-400 disabled:hover:bg-transparent disabled:hover:border-transparent transition-all text-slate-800 dark:text-slate-100" />
                               </td>
 
                               {/* Annual Metrics */}

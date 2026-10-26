@@ -315,7 +315,8 @@ export async function getTracking(charityId: string, year: number): Promise<Trac
           id: i.id,
           code: i.code,
           name: i.name,
-          owner: i.owner,
+          // حقلٌ مُتحكَّمٌ به في الجدول: الفراغ نصٌّ فارغ لا null.
+          owner: i.owner ?? "",
           baseline: text(i.baseline),
           cumulative: i.cumulative,
           annualTarget: text(yearRow?.target),

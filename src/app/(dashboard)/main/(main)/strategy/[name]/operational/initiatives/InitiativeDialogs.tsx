@@ -6,7 +6,8 @@ import { Dialog } from "@/components/console/Dialog";
 import Select from "@/components/console/Select";
 import { FooterStatus } from "@/components/console/overlays";
 import { Badge, Spinner, btn, cx, field } from "@/components/console/ui";
-import { PRIORITIES, saveInitiative, savePlan } from "@/app/actions/strategyOperational";
+import { saveInitiative, savePlan } from "@/app/actions/strategyOperational";
+import { PRIORITIES } from "@/lib/strategyOptions";
 import { weeksBetween, type PlanMonth } from "@/lib/initiativeProgress";
 import type { InitiativeRow, ObjectiveOption, PlanOption } from "./InitiativesClient";
 

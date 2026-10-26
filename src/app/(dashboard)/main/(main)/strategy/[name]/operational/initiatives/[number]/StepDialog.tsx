@@ -6,7 +6,8 @@ import { Dialog } from "@/components/console/Dialog";
 import Select from "@/components/console/Select";
 import { FooterStatus } from "@/components/console/overlays";
 import { Spinner, btn, cx, field } from "@/components/console/ui";
-import { PHASES, saveStep } from "@/app/actions/strategyOperational";
+import { saveStep } from "@/app/actions/strategyOperational";
+import { PHASES } from "@/lib/strategyOptions";
 import type { PlanMonth } from "@/lib/initiativeProgress";
 import type { StepRow } from "./InitiativePlanClient";
 

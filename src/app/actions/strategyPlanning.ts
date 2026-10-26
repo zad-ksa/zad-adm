@@ -6,6 +6,7 @@ import { getSession } from "@/lib/auth";
 import { hasPermission } from "@/lib/permissions";
 import { assertCharityAccess } from "@/lib/access";
 import { logAudit } from "@/lib/auditLog";
+import { DEFAULT_PERSPECTIVES } from "@/lib/strategyOptions";
 
 /**
  * أفعال نظام التخطيط الاستراتيجي — الخطة في docs/خطة-نظام-التخطيط-الاستراتيجي.md
@@ -177,15 +178,6 @@ export async function reactivateStatusOption(id: string): Promise<Result> {
 // الهيكل ثلاث طبقات: المحور (البعد) ← الهدف ← المؤشر. وكلُّ فعلٍ هنا يتحقّق من
 // أن الجمعية صاحبة الصف مُسندةٌ إلى الموظف — فالوصول يُتحقَّق من الصف لا من
 // المسار الذي جاء منه الطلب.
-
-/** الأبعاد الخمسة لبطاقة الأداء المتوازن برموزها المعتمدة في وثائق الجمعيات. */
-export const DEFAULT_PERSPECTIVES = [
-  { name: "المستفيدون", prefix: "س" },
-  { name: "أصحاب المصلحة", prefix: "ص" },
-  { name: "البعد المالي", prefix: "م" },
-  { name: "العمليات الداخلية", prefix: "ل" },
-  { name: "التعلم والنمو", prefix: "ت" },
-] as const;
 
 const POLARITIES = ["UP", "DOWN"];
 

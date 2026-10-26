@@ -1,7 +1,6 @@
 import { ReactNode } from "react";
 import StrategyHeader from "./StrategyHeader";
-import StrategyTabs from "./StrategyTabs";
-import { getSession } from "@/lib/auth";
+import StrategySurface from "./StrategySurface";
 
 export default async function StrategyLayout({
   children,
@@ -12,21 +11,14 @@ export default async function StrategyLayout({
 }) {
   const { name } = await params;
   const decodedName = decodeURIComponent(name);
-  const session = await getSession();
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex h-full flex-col">
       <div className="mb-6 print:hidden">
         <StrategyHeader charityName={decodedName} />
       </div>
 
-      {/* <div className="print:hidden">
-        <StrategyTabs charityName={decodedName} isAdmin={isAdmin} isCharityClient={isCharityClient} />
-      </div> */}
-
-      <div className="flex-1 bg-white dark:bg-slate-800 rounded-b-xl rounded-tl-xl p-6 md:p-8 shadow-sm border border-slate-200 dark:border-slate-700 print:shadow-none print:border-none print:p-0 print:m-0 transition-colors">
-        {children}
-      </div>
+      <StrategySurface>{children}</StrategySurface>
     </div>
   );
 }

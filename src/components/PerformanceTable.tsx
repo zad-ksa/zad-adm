@@ -4,6 +4,7 @@ import { useState, useTransition, useEffect, Fragment } from "react";
 import { notify } from "@/components/console/toastBus";
 import Select from "@/components/console/Select";
 import { saveTracking } from "@/app/actions/strategyTracking";
+import { FULLSCREEN_SHELL } from "@/components/console/TableViewControls";
 import { useRouter } from "next/navigation";
 import { Dialog } from "@/components/console/Dialog";
 import { btn, cx } from "@/components/console/ui";
@@ -84,6 +85,14 @@ export default function PerformanceTable({
   const [isPending, startTransition] = useTransition();
   const [isSaving, setIsSaving] = useState(false);
   const [isFullScreen, setIsFullScreen] = useState(false);
+  /**
+   * المحور المعروض — فلترةُ عرضٍ لا حساب.
+   *
+   * النِّسب كلّها (أداء الهدف والمحور والجمعية) تُحسب من `axes` كاملةً، فإخفاءُ
+   * محورٍ لا يرفع أداء الجمعية ولا يخفضه. ولو فُلترت المصفوفة نفسها لتغيّر
+   * المقام وصار الرقم يتبع ما يُنظر إليه.
+   */
+  const [axisFilter, setAxisFilter] = useState<string>("all");
   const [zoomLevel, setZoomLevel] = useState<number>(100);
 
   // Exit fullscreen on Escape key press
@@ -531,10 +540,10 @@ export default function PerformanceTable({
   const totalPerf = calcCharityPerf();
 
   return (
-    <div className={`space-y-6 transition-all duration-300 ${isFullScreen
-        ? "fixed inset-0 z-[9999] bg-slate-50 dark:bg-slate-900 p-6 sm:p-8 flex flex-col w-screen h-screen overflow-hidden transition-colors"
-        : ""
-      }`}>
+    // غلاف ملء الشاشة من العدّة: طبقته ٩٠ — فوق هيكل الموقع (٥٠) ومخطط جانت
+    // (٨٠)، وتحت النوافذ (١٠٠) والتنبيه (١١٠) وقائمة Select (١٢٠). وكانت هنا
+    // ٩٩٩٩، فكانت قائمتا السنة والربع تُرسمان في بوّابةٍ تحتها فلا تظهران.
+    <div className={`space-y-6 transition-all duration-300 ${isFullScreen ? FULLSCREEN_SHELL : ""}`}>
       {/* Controls */}
       <div className="flex flex-col md:flex-row gap-4 justify-between items-center bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-slate-800 shadow-[0_1px_2px_rgb(15_23_42/0.04)] shrink-0 transition-colors">
         <div className="flex gap-4">
@@ -557,6 +566,35 @@ export default function PerformanceTable({
               { value: "Q4", label: "الربع الرابع" },
             ]}
           />
+        </div>
+
+        <div className="flex flex-wrap items-center gap-1.5">
+          <button
+            type="button"
+            onClick={() => setAxisFilter("all")}
+            className={`h-8 rounded-lg border px-2.5 text-caption font-semibold transition-colors outline-none focus-visible:ring-2 focus-visible:ring-primary/40 ${
+              axisFilter === "all"
+                ? "border-primary/30 bg-primary/[0.08] text-primary dark:border-teal-400/30 dark:bg-teal-400/10 dark:text-teal-300"
+                : "border-slate-200 text-slate-600 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
+            }`}
+          >
+            كل الأبعاد
+          </button>
+          {axes.map((axis) => (
+            <button
+              key={axis.id}
+              type="button"
+              onClick={() => setAxisFilter(axis.id)}
+              title={`عرض بعد ${axis.name} وحده — النِّسب لا تتغيّر`}
+              className={`h-8 rounded-lg border px-2.5 text-caption font-semibold transition-colors outline-none focus-visible:ring-2 focus-visible:ring-primary/40 ${
+                axisFilter === axis.id
+                  ? "border-primary/30 bg-primary/[0.08] text-primary dark:border-teal-400/30 dark:bg-teal-400/10 dark:text-teal-300"
+                  : "border-slate-200 text-slate-600 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
+              }`}
+            >
+              {axis.name}
+            </button>
+          ))}
         </div>
 
         <div className="flex flex-wrap items-center gap-3">
@@ -689,7 +727,8 @@ export default function PerformanceTable({
           <tbody>
             {(() => {
               let globalGoalIndex = 0;
-              return axes.map((axis, axisIndex) => {
+              const shown = axisFilter === "all" ? axes : axes.filter((a) => a.id === axisFilter);
+              return shown.map((axis, axisIndex) => {
                 const axisRowSpan = Math.max(1, axis.goals.reduce((acc, g) => acc + Math.max(1, g.indicators.length), 0));
                 const aPerf = calcAxisPerf(axis);
                 const aPrefix = axis.prefix || getAxisDefaultPrefix(axis.id);

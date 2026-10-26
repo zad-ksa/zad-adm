@@ -33,9 +33,9 @@ export const STATUS_LABEL: Record<InitiativeStatus, string> = {
   AT_RISK: "متعثرة",
 };
 
-/** نبرة الشارة لكل حالة — من نبرات `Badge` القائمة، فلا لونَ جديد. */
-export const STATUS_TONE: Record<InitiativeStatus, "good" | "warn" | "danger" | "muted"> = {
-  NOT_STARTED: "muted",
+/** نبرة الشارة لكل حالة — بأسماء نبرات `Badge` نفسها، فلا لونَ جديد. */
+export const STATUS_TONE: Record<InitiativeStatus, "good" | "warn" | "danger" | "neutral"> = {
+  NOT_STARTED: "neutral",
   RUNNING: "warn",
   DONE: "good",
   AT_RISK: "danger",
@@ -215,4 +215,62 @@ export function currentPlanWeek(planStart: Date, today: Date, weekCount: number)
 /** تاريخُ بداية أسبوعٍ نسبيٍّ إلى بداية الخطة — لمحور مخطّط جانت. */
 export function weekStartDate(planStart: Date, week: number): Date {
   return new Date(startOfDay(planStart) + (week - 1) * 7 * DAY);
+}
+
+const MONTH_NAMES = [
+  "يناير",
+  "فبراير",
+  "مارس",
+  "أبريل",
+  "مايو",
+  "يونيو",
+  "يوليو",
+  "أغسطس",
+  "سبتمبر",
+  "أكتوبر",
+  "نوفمبر",
+  "ديسمبر",
+];
+
+export type PlanMonth = {
+  /** مفتاحُ الشهر في `monthlyBudget`: «2026-08». */
+  key: string;
+  label: string;
+  year: number;
+};
+
+/**
+ * أشهر الخطة من تاريخيها — بها تُبنى أعمدةُ توزيع الموازنة.
+ *
+ * ومفتاحُ الشهر تاريخٌ لا اسم: «2026-08» لا «أغسطس». فخطةٌ تمتدّ على سنتين
+ * فيها أغسطسان، واسمٌ وحده يجمعهما في عمودٍ واحد.
+ */
+export function planMonths(startDate: Date, endDate: Date): PlanMonth[] {
+  const months: PlanMonth[] = [];
+  let year = startDate.getUTCFullYear();
+  let month = startDate.getUTCMonth();
+  const lastYear = endDate.getUTCFullYear();
+  const lastMonth = endDate.getUTCMonth();
+
+  // حدٌّ أعلى يمنع حلقةً لا تنتهي لو جاء تاريخُ نهايةٍ قبل بدايته.
+  while (months.length < 120 && (year < lastYear || (year === lastYear && month <= lastMonth))) {
+    months.push({
+      key: `${year}-${String(month + 1).padStart(2, "0")}`,
+      label: MONTH_NAMES[month],
+      year,
+    });
+    month++;
+    if (month > 11) {
+      month = 0;
+      year++;
+    }
+  }
+
+  return months;
+}
+
+/** عددُ أسابيع فترةٍ ما، بحدٍّ أدنى أسبوعٌ واحد. */
+export function weeksBetween(startDate: Date, endDate: Date): number {
+  const days = Math.round((startOfDay(endDate) - startOfDay(startDate)) / DAY) + 1;
+  return Math.max(1, Math.ceil(days / 7));
 }

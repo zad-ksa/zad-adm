@@ -259,6 +259,204 @@ export async function setInitiativePriority(id: string, priority: string | null)
   }
 }
 
+
+// ── خطوات المبادرة ──────────────────────────────────────────────────────────
+// الخطوة هي المُدخل الوحيد في الخطة التشغيلية: منها تُحسب نسبةُ إنجاز المبادرة
+// وحالتُها ومصروفُها وشاراتُ انضباطها. وأرقام أسابيعها نسبيّةٌ إلى بداية
+// الخطة — رقمُ أسبوعٍ بلا تاريخ بدايةٍ لا معنى له.
+
+export const PHASES = ["الإعداد", "التنفيذ", "الإغلاق"] as const;
+
+async function charityOfStep(stepId: string) {
+  const row = await prisma.initiativeStep.findUnique({
+    where: { id: stepId },
+    select: { initiative: { select: { plan: { select: { charityId: true } } } } },
+  });
+  if (!row) throw new Error("خطوةٌ غير موجودة");
+  return row.initiative.plan.charityId;
+}
+
+function parseWeek(value: string | undefined, weekCount: number): number | null | "invalid" {
+  const raw = value?.trim();
+  if (!raw) return null;
+  const n = Number(raw);
+  if (!Number.isInteger(n) || n < 1 || n > weekCount) return "invalid";
+  return n;
+}
+
+function parseSpan(value: string | undefined, weekCount: number): number | null | "invalid" {
+  const raw = value?.trim();
+  if (!raw) return null;
+  const n = Number(raw);
+  if (!Number.isInteger(n) || n < 1 || n > weekCount) return "invalid";
+  return n;
+}
+
+export type StepInputPayload = {
+  id?: string;
+  initiativeId: string;
+  phase?: string;
+  title: string;
+  evidence?: string;
+  owner?: string;
+  cost?: string;
+  actualCost?: string;
+  planStartWeek?: string;
+  planWeeks?: string;
+  actualStartWeek?: string;
+  actualWeeks?: string;
+  progress?: string;
+  monthlyCost?: Record<string, string>;
+};
+
+export async function saveStep(input: StepInputPayload): Promise<Result> {
+  try {
+    const initiative = await prisma.initiative.findUnique({
+      where: { id: input.initiativeId },
+      select: { plan: { select: { charityId: true, weekCount: true } } },
+    });
+    if (!initiative) return { error: "مبادرةٌ غير موجودة" };
+    await requireAccess(initiative.plan.charityId);
+    const weekCount = initiative.plan.weekCount;
+
+    const title = input.title.trim();
+    if (!title) return { error: "نصّ الخطوة مطلوب" };
+
+    const cost = parseDecimal(input.cost);
+    if (cost === "invalid") return { error: "التكلفة يجب أن تكون رقماً" };
+    const actualCost = parseDecimal(input.actualCost);
+    if (actualCost === "invalid") return { error: "التكلفة الفعلية يجب أن تكون رقماً" };
+
+    const planStartWeek = parseWeek(input.planStartWeek, weekCount);
+    if (planStartWeek === "invalid") return { error: `أسبوع البداية بين ١ و${weekCount}` };
+    const planWeeks = parseSpan(input.planWeeks, weekCount);
+    if (planWeeks === "invalid") return { error: `مدة الخطة بين ١ و${weekCount}` };
+    const actualStartWeek = parseWeek(input.actualStartWeek, weekCount);
+    if (actualStartWeek === "invalid") return { error: `أسبوع البداية الفعلي بين ١ و${weekCount}` };
+    const actualWeeks = parseSpan(input.actualWeeks, weekCount);
+    if (actualWeeks === "invalid") return { error: `مدة التنفيذ بين ١ و${weekCount}` };
+
+    const progressRaw = input.progress?.trim();
+    let progress = 0;
+    if (progressRaw) {
+      const n = Number(progressRaw.endsWith("%") ? progressRaw.slice(0, -1) : progressRaw);
+      if (!Number.isFinite(n) || n < 0 || n > 100) return { error: "نسبة الإنجاز بين ٠ و١٠٠" };
+      progress = Math.round(n);
+    }
+
+    let monthlyCost: Record<string, number> | null = null;
+    if (input.monthlyCost) {
+      const entries: Array<[string, number]> = [];
+      for (const [key, raw] of Object.entries(input.monthlyCost)) {
+        const value = parseDecimal(raw);
+        if (value === "invalid") return { error: `قيمةٌ غير رقمية في شهر ${key}` };
+        if (value !== null) entries.push([key, value]);
+      }
+      monthlyCost = entries.length > 0 ? Object.fromEntries(entries) : null;
+    }
+
+    const phase = input.phase && (PHASES as readonly string[]).includes(input.phase) ? input.phase : null;
+
+    const data = {
+      phase,
+      title,
+      evidence: input.evidence?.trim() || null,
+      owner: input.owner?.trim() || null,
+      cost,
+      actualCost,
+      planStartWeek,
+      planWeeks,
+      actualStartWeek,
+      actualWeeks,
+      progress,
+      monthlyCost: monthlyCost ?? Prisma.DbNull,
+    };
+
+    if (input.id) {
+      await prisma.initiativeStep.update({ where: { id: input.id }, data });
+    } else {
+      const last = await prisma.initiativeStep.findFirst({
+        where: { initiativeId: input.initiativeId },
+        orderBy: { order: "desc" },
+        select: { order: true },
+      });
+      await prisma.initiativeStep.create({
+        data: { ...data, initiativeId: input.initiativeId, order: (last?.order ?? 0) + 1 },
+      });
+    }
+
+    await revalidateOperational(initiative.plan.charityId);
+    return {};
+  } catch (e) {
+    return { error: message(e) };
+  }
+}
+
+export async function deleteStep(id: string): Promise<Result> {
+  try {
+    const charityId = await charityOfStep(id);
+    await requireAccess(charityId);
+    await prisma.initiativeStep.delete({ where: { id } });
+    await revalidateOperational(charityId);
+    return {};
+  } catch (e) {
+    return { error: message(e) };
+  }
+}
+
+/** نسبةُ إنجاز خطوةٍ وحدها — إدخالٌ سريعٌ من الجدول بلا فتح النافذة. */
+export async function setStepProgress(id: string, progress: number): Promise<Result> {
+  try {
+    const charityId = await charityOfStep(id);
+    await requireAccess(charityId);
+    if (!Number.isFinite(progress) || progress < 0 || progress > 100) return { error: "نسبة الإنجاز بين ٠ و١٠٠" };
+    await prisma.initiativeStep.update({ where: { id }, data: { progress: Math.round(progress) } });
+    await revalidateOperational(charityId);
+    return {};
+  } catch (e) {
+    return { error: message(e) };
+  }
+}
+
+/**
+ * نقلُ خطوةٍ خطوةً واحدة أعلى أو أسفل.
+ *
+ * ويُبادَل الترتيبان في معاملةٍ واحدة: ترتيبٌ فريدٌ لا يُحرسه المخطّط، لكن
+ * كتابتين منفصلتين تتركان صفّين بترتيبٍ واحد لو فشلت الثانية.
+ */
+export async function moveStep(id: string, direction: "up" | "down"): Promise<Result> {
+  try {
+    const charityId = await charityOfStep(id);
+    await requireAccess(charityId);
+
+    const step = await prisma.initiativeStep.findUnique({
+      where: { id },
+      select: { id: true, order: true, initiativeId: true },
+    });
+    if (!step) return { error: "خطوةٌ غير موجودة" };
+
+    const neighbour = await prisma.initiativeStep.findFirst({
+      where: {
+        initiativeId: step.initiativeId,
+        order: direction === "up" ? { lt: step.order } : { gt: step.order },
+      },
+      orderBy: { order: direction === "up" ? "desc" : "asc" },
+      select: { id: true, order: true },
+    });
+    if (!neighbour) return {};
+
+    await prisma.$transaction([
+      prisma.initiativeStep.update({ where: { id: step.id }, data: { order: neighbour.order } }),
+      prisma.initiativeStep.update({ where: { id: neighbour.id }, data: { order: step.order } }),
+    ]);
+
+    await revalidateOperational(charityId);
+    return {};
+  } catch (e) {
+    return { error: message(e) };
+  }
+}
+
 function message(e: unknown) {
   const raw = e instanceof Error ? e.message : "تعذّر إتمام العملية";
   if (raw === "UNAUTHORIZED") return "الجلسة منتهية — أعد الدخول";

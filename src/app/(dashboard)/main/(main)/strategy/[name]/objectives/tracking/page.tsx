@@ -1,83 +1,91 @@
-import { getPerformanceMetric } from "@/app/actions/performance";
-import { requireCharitySection } from "@/lib/sectionGuard";
-import { hasPermission } from "@/lib/permissions";
-import PerformanceTable from "@/components/PerformanceTable";
 import type { Metadata } from "next";
+import { LineChart } from "lucide-react";
 import { prisma } from "@/lib/db";
 import { getSession } from "@/lib/auth";
+import { hasPermission } from "@/lib/permissions";
+import { requireCharitySection } from "@/lib/sectionGuard";
+import { EmptyState } from "@/components/console/layout";
+import PerformanceTable from "@/components/PerformanceTable";
 import StrategyPermissionToggle from "@/components/StrategyPermissionToggle";
-import Link from "next/link";
+import { getTracking } from "@/app/actions/strategyTracking";
 
 export const dynamic = "force-dynamic";
 
 export async function generateMetadata({ params }: { params: Promise<{ name: string }> }): Promise<Metadata> {
   const { name } = await params;
-  const decodedName = decodeURIComponent(name);
-  return {
-    title: `${decodedName} - مقياس الأداء | زاد التنموية`,
-  };
+  return { title: `${decodeURIComponent(name)} - متابعة الأداء | زاد التنموية` };
 }
 
-const MetricIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5 text-primary">
-    <path d="M3 3v18h18" />
-    <path d="M18.7 8l-5.1 5.2-2.8-2.7L7 14.3" />
-  </svg>
-);
-
-export default async function CharityPerformancePage({ params, searchParams }: { params: Promise<{ name: string }>, searchParams: Promise<{ year?: string, quarter?: string }> }) {
+/**
+ * متابعة الأداء — وهي مقياس الأداء نفسه بعد نقل مصدره.
+ *
+ * كانت شجرة المؤشرات كلّها حقلَ JSON واحداً في `PerformanceMetric` لكل (اسم
+ * جمعية، سنة): لا يُستعلم عن مؤشرٍ بعينه، ولا يُربط بمبادرة، والجمعية مربوطةٌ
+ * بالاسم نصاً. وصارت صفوفاً في الجداول العلائقية، يشترك فيها الدليل وهذه
+ * الصفحة — فما يُعرَّف في الدليل تُدخَل نتائجه هنا، ولا نسختان من الحقيقة.
+ *
+ * والجدول نفسه لم يتغيّر شكلُه: المحور ← الهدف ← المؤشر، ومحدِّدا السنة والربع،
+ * والشاشة الكاملة، وأداء الهدف والمحور والجمعية.
+ */
+export default async function TrackingPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ name: string }>;
+  searchParams: Promise<{ year?: string; quarter?: string }>;
+}) {
   const { name } = await params;
   const decodedName = decodeURIComponent(name);
 
   await requireCharitySection("manage_strategy", decodedName);
-  
-  const searchParamsObj = await searchParams;
-  const year = searchParamsObj?.year ? parseInt(searchParamsObj.year) : new Date().getFullYear();
-  const quarter = searchParamsObj?.quarter || "Q1";
 
-  const session = await getSession();
-  const canManageStrategy = hasPermission(
-    session?.role || "",
-    session?.permissions || [],
-    "manage_strategy"
-  );
+  const query = await searchParams;
+  const parsedYear = query?.year ? parseInt(query.year, 10) : NaN;
+  const year = Number.isFinite(parsedYear) ? parsedYear : new Date().getFullYear();
+  const quarter = ["Q1", "Q2", "Q3", "Q4"].includes(query?.quarter || "") ? query.quarter! : "Q1";
 
-  const charity = await prisma.charity.findUnique({
-    where: { name: decodedName },
-  });
+  const [session, charity] = await Promise.all([
+    getSession(),
+    prisma.charity.findUnique({ where: { name: decodedName }, select: { id: true, isPerformanceEditable: true } }),
+  ]);
 
+  const canManageStrategy = hasPermission(session?.role || "", session?.permissions || [], "manage_strategy");
 
-  const metric = await getPerformanceMetric(decodedName, year);
+  if (!charity) {
+    return (
+      <EmptyState
+        icon={<LineChart className="size-6" />}
+        title="لا صفَّ لهذه الجمعية بعد"
+        description="يُنشأ صفُّ الجمعية عند أول استبيانٍ تُعبّئه، ثم تُتابَع مؤشراتها."
+      />
+    );
+  }
+
+  const axes = await getTracking(charity.id, year);
 
   return (
     <div className="transition-colors">
-      
-      {canManageStrategy && charity && (
+      {canManageStrategy && (
         <StrategyPermissionToggle
           charityName={decodedName}
           type="performance"
           initialState={charity.isPerformanceEditable}
-          label="إتاحة التعديل على مقياس الأداء للجمعية"
-          description="تفعيل هذا الخيار سيسمح لموظفي الجمعية بتعديل وتحديث مؤشرات مقياس الأداء بأنفسهم."
+          label="إتاحة التعديل على متابعة الأداء للجمعية"
+          description="تفعيل هذا الخيار سيسمح لموظفي الجمعية بتعديل وتحديث مؤشرات الأداء بأنفسهم."
         />
       )}
 
-      <h2 className="text-section font-semibold text-slate-800 dark:text-slate-100 mb-6 flex items-center gap-3 transition-colors mt-8">
-        <div className="w-10 h-10 bg-primary/10 dark:bg-primary/20 rounded-lg flex items-center justify-center text-primary font-semibold transition-colors">
-          <MetricIcon />
-        </div>
-        إدارة مقياس الأداء
-      </h2>
-      <p className="text-slate-500 dark:text-slate-400 mb-8 transition-colors">
-        إدارة وتحديث مؤشرات الأداء والأهداف للربع {quarter} من عام {year}.
+      <p className="mt-8 mb-6 text-body text-slate-500 dark:text-slate-400">
+        مستهدفات الربع {quarter} من عام {year} ومتحققها. والمحقق السنوي محسوبٌ من الأرباع وفق تراكمية كل مؤشر.
       </p>
-      
-      <PerformanceTable 
+
+      <PerformanceTable
         key={`${decodedName}-${year}`}
-        charityName={decodedName} 
-        year={year} 
+        charityId={charity.id}
+        charityName={decodedName}
+        year={year}
         quarter={quarter}
-        initialData={metric?.data as any || null} 
+        initialData={axes.length > 0 ? axes : null}
       />
     </div>
   );

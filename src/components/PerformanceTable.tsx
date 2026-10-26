@@ -3,7 +3,7 @@
 import { useState, useTransition, useEffect, Fragment } from "react";
 import { notify } from "@/components/console/toastBus";
 import Select from "@/components/console/Select";
-import { savePerformanceMetric } from "@/app/actions/performance";
+import { saveTracking } from "@/app/actions/strategyTracking";
 import { useRouter } from "next/navigation";
 import { Dialog } from "@/components/console/Dialog";
 import { btn, cx } from "@/components/console/ui";
@@ -21,6 +21,16 @@ type Indicator = {
   q3Target: string | number; q3Achieved: string | number | null;
   q4Target: string | number; q4Achieved: string | number | null;
   postponed?: boolean;
+  /** خط الأساس: قيمة المؤشر قبل الخطة. فراغٌ يعني «لم تُقَس». */
+  baseline?: string | number | null;
+  /**
+   * التراكمية — تحكم حساب المحقق السنوي:
+   *   false: يبدأ من الصفر كل ربع، فالسنوي مجموع الأرباع.
+   *   true:  مستوًى قائم، فالسنوي آخر ربعٍ له متحقق.
+   */
+  cumulative?: boolean;
+  /** متحققٌ سنويٌّ أُدخل يدوياً فيتجاوز الحساب. */
+  annualOverride?: boolean;
 };
 
 type Goal = {
@@ -57,11 +67,14 @@ const DEFAULT_AXES: Axis[] = [
 ];
 
 export default function PerformanceTable({
+  charityId,
   charityName,
   year,
   quarter,
   initialData
 }: {
+  /** مفتاح الجمعية — الحفظ يربط به لا بالاسم. */
+  charityId: string;
   charityName: string;
   year: number;
   quarter: string;
@@ -105,6 +118,9 @@ export default function PerformanceTable({
         indicators: (goal.indicators || []).map(ind => ({
           ...ind,
           postponed: ind.postponed || false,
+          baseline: ind.baseline === undefined ? null : ind.baseline,
+          cumulative: ind.cumulative === true,
+          annualOverride: ind.annualOverride === true,
           annualTarget: ind.annualTarget !== undefined && ind.annualTarget !== null ? ind.annualTarget : "",
           q1Achieved: ind.q1Achieved === undefined ? null : ind.q1Achieved,
           q2Achieved: ind.q2Achieved === undefined ? null : ind.q2Achieved,
@@ -138,7 +154,7 @@ export default function PerformanceTable({
   // Update URL params
   const handlePeriodChange = (newYear: number, newQuarter: string) => {
     startTransition(() => {
-      router.push(`/charity/${encodeURIComponent(charityName)}/strategy/performance?year=${newYear}&quarter=${newQuarter}`);
+      router.push(`/main/strategy/${encodeURIComponent(charityName)}/objectives/tracking?year=${newYear}&quarter=${newQuarter}`);
     });
   };
 
@@ -275,8 +291,15 @@ export default function PerformanceTable({
     return val !== null && val !== undefined && String(val).trim().includes("%");
   };
 
+  /** وللمستهدف القاعدةُ نفسها: مستهدفُ مؤشرٍ تراكميٍّ ليس مجموع أرباعه. */
   const getAnnualTargetValue = (ind: Indicator) => {
     const values = [ind.q1Target, ind.q2Target, ind.q3Target, ind.q4Target];
+    if (ind.cumulative) {
+      for (let i = values.length - 1; i >= 0; i--) {
+        if (hasData(values[i])) return values[i];
+      }
+      return 0;
+    }
     const isPercentage = values.some(isPercentageValue);
     
     const parsedValues = values.map(parseValueToNumber);
@@ -293,15 +316,36 @@ export default function PerformanceTable({
     }
   };
 
+  /**
+   * المحقق السنوي محسوبٌ من الأرباع لا مُدخَلاً، وقاعدتُه التراكمية:
+   *
+   * - غير تراكمي (عدد، ريال، تقرير…): مجموع متحقق الأرباع. يبدأ من الصفر كل ربع.
+   * - تراكمي (نسبة، درجة): آخر ربعٍ له متحقق، بحثاً من الرابع إلى الأول. فالنسبة
+   *   مستوًى قائم يحتوي آخرُ قياسٍ له ما قبله.
+   *
+   * وكان الحسابُ جمعاً في الحالين، فمؤشرٌ نسبته ٩٠٪ في أربعة أرباع يُظهر ٣٦٠٪.
+   * وهذا نصّ تعليمات ورقة «متابعة الأداء» في وثائق الجمعيات.
+   *
+   * ويتقدّم عليهما متحققٌ أُدخل يدوياً (annualOverride).
+   */
   const getAnnualAchievedValue = (ind: Indicator) => {
+    if (ind.annualOverride && hasData(ind.annualAchieved)) return ind.annualAchieved;
+
     const values = [ind.q1Achieved, ind.q2Achieved, ind.q3Achieved, ind.q4Achieved];
-    const isPercentage = values.some(isPercentageValue);
-    
+    const isPercentage = values.some(isPercentageValue) || ind.cumulative === true;
+
     const parsedValues = values.map(parseValueToNumber);
     const activeCount = values.filter(v => v !== null && v !== undefined && String(v).trim() !== "").length;
-    
+
     if (activeCount === 0) return null;
-    
+
+    if (ind.cumulative) {
+      for (let i = values.length - 1; i >= 0; i--) {
+        if (hasData(values[i])) return values[i];
+      }
+      return null;
+    }
+
     if (isPercentage) {
       const sum = parsedValues.reduce((acc, curr) => acc + curr, 0);
       const roundedSum = Math.round(sum * 10) / 10;
@@ -451,23 +495,27 @@ export default function PerformanceTable({
           ...axis,
           prefix: aPrefix,
           goals: axis.goals.map((goal, goalIndex) => {
-            const gCode = `${aPrefix}-${goalIndex + 1}`;
+            // رمزُ الدليل يبقى كما هو؛ والمشتقُّ من الموضع لصفٍّ جديدٍ وحده.
+            // وكان الحفظ يدهس الرموز كلّها فيصير «س 1» إلى «س-1».
+            const gCode = String(goal.code || "").trim() || `${aPrefix} ${goalIndex + 1}`;
             return {
               ...goal,
               code: gCode,
               indicators: goal.indicators.map((ind, iIdx) => ({
                 ...ind,
-                code: `${gCode}-${iIdx + 1}`,
+                code: String(ind.code || "").trim() || `${gCode} - ${iIdx + 1}`,
                 status: getIndicatorStatus(ind),
                 annualTarget: ind.annualTarget !== undefined && ind.annualTarget !== null && String(ind.annualTarget).trim() !== "" ? ind.annualTarget : getAnnualTargetValue(ind),
-                annualAchieved: getAnnualAchievedValue(ind) ?? 0
+                // المحقق السنوي محسوبٌ عند العرض، فلا يُثبَّت في الحفظ إلا
+                // حين يكون تجاوزاً يدوياً صريحاً.
+                annualAchieved: ind.annualOverride ? ind.annualAchieved : null,
               }))
             };
           })
         };
       });
 
-      const res = await savePerformanceMetric(charityName, year, updatedAxes);
+      const res = await saveTracking({ charityId, year, axes: updatedAxes });
       if (res.success) {
         notify("ok", "تم الحفظ بنجاح");
       } else {
@@ -573,7 +621,7 @@ export default function PerformanceTable({
           </button>
 
           <button
-            onClick={() => router.push(`/charity/${encodeURIComponent(charityName)}/strategy/report?year=${year}&quarter=${quarter}`)}
+            onClick={() => router.push(`/main/strategy/${encodeURIComponent(charityName)}/report?year=${year}&quarter=${quarter}`)}
             className="bg-indigo-50 dark:bg-indigo-900/30 hover:bg-indigo-100 dark:hover:bg-indigo-900/50 text-indigo-700 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800 px-5 py-2.5 rounded-lg font-semibold transition-all flex items-center gap-2 cursor-pointer select-none active:scale-[0.98]"
             title="إنشاء تقرير الأداء الاستراتيجي"
           >
@@ -622,6 +670,7 @@ export default function PerformanceTable({
               <th className="h-10 px-3 border-l border-slate-200 dark:border-slate-800 min-w-[200px]">الهدف</th>
               <th className="h-10 px-3 border-l border-slate-200 dark:border-slate-800 w-[80px]">رمز المؤشر</th>
               <th className="h-10 px-3 border-l border-slate-200 dark:border-slate-800 min-w-[300px]">المؤشر</th>
+              <th className="h-10 px-3 border-l border-slate-200 dark:border-slate-800 w-[90px]">خط الأساس</th>
               <th className="h-10 px-3 border-l border-slate-200 dark:border-slate-800 min-w-[120px]">حالة المؤشر</th>
               <th className="h-10 px-3 border-l border-slate-200 dark:border-slate-800 min-w-[120px]">مالك المؤشر</th>
               <th className="h-10 px-3 border-l border-slate-200 dark:border-slate-800 min-w-[80px] text-primary">المستهدف السنوي</th>
@@ -658,7 +707,7 @@ export default function PerformanceTable({
                             </button>
                           </div>
                         </td>
-                        <td colSpan={17} className="p-8 text-slate-400 dark:text-slate-500 bg-slate-50/30 dark:bg-slate-900/30 transition-colors">
+                        <td colSpan={18} className="p-8 text-slate-400 dark:text-slate-500 bg-slate-50/30 dark:bg-slate-900/30 transition-colors">
                           <div className="flex flex-col items-center justify-center gap-3">
                             <div className="text-3xl opacity-30">🎯</div>
                             <p>لا توجد أهداف في هذا المحور. أضف هدفاً للبدء.</p>
@@ -674,7 +723,7 @@ export default function PerformanceTable({
                     {axis.goals.map((goal, goalIndex) => {
                       const goalRowSpan = Math.max(1, goal.indicators.length);
                       const gPerf = calcGoalPerf(goal);
-                      const goalCode = `${aPrefix}-${goalIndex + 1}`;
+                      const goalCode = String(goal.code || "").trim() || `${aPrefix} ${goalIndex + 1}`;
                       const currentGoalIndex = globalGoalIndex++;
                       const isOddGoal = currentGoalIndex % 2 !== 0;
 
@@ -712,7 +761,7 @@ export default function PerformanceTable({
                               <td className={`border-l border-slate-200 dark:border-slate-800 p-2 font-semibold text-slate-700 dark:text-slate-200 text-right transition-colors`}>
                                 <input type="text" value={goal.name} onChange={e => updateGoal(axis.id, goal.id, "name", e.target.value)} className="w-full bg-transparent hover:bg-white/50 dark:hover:bg-slate-900/50 focus:bg-white dark:focus:bg-slate-900 border border-transparent focus:border-primary/30 rounded-lg outline-none px-3 py-2 transition-all text-slate-800 dark:text-slate-100" />
                               </td>
-                              <td colSpan={15} className="p-4 text-slate-400 dark:text-slate-500">
+                              <td colSpan={16} className="p-4 text-slate-400 dark:text-slate-500">
                                 <button onClick={() => addIndicator(axis.id, goal.id)} className={cx(btn.secondary, "mx-auto")}>
                                   <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
                                   إضافة مؤشر
@@ -784,10 +833,21 @@ export default function PerformanceTable({
                               )}
 
                               <td className="border-l border-slate-200 dark:border-slate-800 p-2 font-semibold text-slate-500 dark:text-slate-400 w-[80px] text-body transition-colors">
-                                {goalCode}-{indIndex + 1}
+                                {String(ind.code || "").trim() || `${goalCode} - ${indIndex + 1}`}
                               </td>
                               <td className="border-l border-slate-200 dark:border-slate-800 p-2 text-right whitespace-normal min-w-[250px] transition-colors">
                                 <textarea value={ind.name} disabled={ind.postponed} onChange={e => updateIndicator(axis.id, goal.id, ind.id, "name", e.target.value)} className="w-full h-full min-h-[44px] bg-transparent hover:bg-white dark:hover:bg-slate-900 focus:bg-white dark:focus:bg-slate-900 border border-transparent hover:border-slate-200 dark:hover:border-slate-600 focus:border-primary/30 outline-none p-2 resize-none rounded-lg disabled:text-slate-400 disabled:hover:bg-transparent disabled:hover:border-transparent transition-all font-medium text-body text-slate-800 dark:text-slate-100" />
+                              </td>
+                              <td className="border-l border-slate-200 dark:border-slate-800 p-2 transition-colors">
+                                <input
+                                  type="text"
+                                  value={ind.baseline ?? ""}
+                                  disabled={ind.postponed}
+                                  onChange={e => updateIndicator(axis.id, goal.id, ind.id, "baseline", e.target.value === "" ? null : e.target.value)}
+                                  placeholder="—"
+                                  title="قيمة المؤشر قبل الخطة. يُترك فارغاً إن لم تُقَس."
+                                  className="w-16 text-center bg-transparent hover:bg-white dark:hover:bg-slate-900 focus:bg-white dark:focus:bg-slate-900 border border-transparent hover:border-slate-200 dark:hover:border-slate-600 focus:border-primary/30 outline-none rounded-md py-1 px-1 text-caption tabular-nums disabled:text-slate-400 disabled:hover:bg-transparent disabled:hover:border-transparent transition-all text-slate-800 dark:text-slate-100"
+                                />
                               </td>
                               <td className="border-l border-slate-200 dark:border-slate-800 p-2 align-middle transition-colors">
                                 {(() => {
@@ -813,8 +873,20 @@ export default function PerformanceTable({
                                   className="w-16 text-center bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 border border-slate-200 dark:border-slate-600 focus:border-primary dark:focus:border-primary outline-none rounded-md py-1 px-1 text-caption disabled:bg-transparent disabled:border-transparent disabled:text-slate-500 shadow-sm disabled:shadow-none transition-all font-semibold" 
                                 />
                               </td>
-                              <td className="border-l border-slate-200 dark:border-slate-800 p-2 font-semibold text-slate-700 dark:text-slate-200 bg-primary/5 dark:bg-primary/10 transition-colors">
+                              <td
+                                className="border-l border-slate-200 dark:border-slate-800 p-2 font-semibold text-slate-700 dark:text-slate-200 bg-primary/5 dark:bg-primary/10 transition-colors"
+                                title={
+                                  ind.annualOverride
+                                    ? "قيمةٌ أُدخلت يدوياً، فلا تتغيّر بتغيّر الأرباع"
+                                    : ind.cumulative
+                                      ? "تراكمي: آخر ربعٍ له متحقق"
+                                      : "غير تراكمي: مجموع متحقق الأرباع"
+                                }
+                              >
                                 {annualAchieved ?? "-"}
+                                {ind.annualOverride && (
+                                  <span className="mr-1 text-caption font-medium text-amber-600 dark:text-amber-400">يدوي</span>
+                                )}
                               </td>
                               <td className="border-l border-slate-200 dark:border-slate-800 p-2 font-semibold text-slate-700 dark:text-slate-200 bg-primary/5 dark:bg-primary/10 transition-colors">
                                 {ind.postponed ? "مؤجل" : `${annualPerf}%`}

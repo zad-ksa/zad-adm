@@ -1,7 +1,10 @@
 import type { Metadata } from "next";
-import { HardHat } from "lucide-react";
+import { CalendarRange } from "lucide-react";
+import { prisma } from "@/lib/db";
 import { requireCharitySection } from "@/lib/sectionGuard";
 import { EmptyState } from "@/components/console/layout";
+import { planMonths } from "@/lib/initiativeProgress";
+import OperationalDashboard, { type DashboardInitiative, type DashboardPlan } from "./OperationalDashboard";
 
 export const dynamic = "force-dynamic";
 
@@ -11,20 +14,101 @@ export async function generateMetadata({ params }: { params: Promise<{ name: str
 }
 
 /**
- * لوحة معلومات المبادرات — تُبنى في المرحلة التاسعة من docs/خطة-نظام-التخطيط-الاستراتيجي.md
+ * لوحة معلومات المبادرات التشغيلية.
  *
- * وهي صفحةٌ صريحةٌ لا رابطٌ مكسور: المربّع الذي يقود إليها موجودٌ من المرحلة
- * الثالثة، فالأولى أن يصل إلى بيانٍ لا إلى صفحة ٤٠٤.
+ * ولا رقم فيها مخزَّن: كلّها من `initiativeProgress` — الدالّات نفسها التي
+ * يحسب بها الكشافُ وصفحةُ المبادرة، فلا يختلف رقمٌ بين ثلاث صفحات.
  */
-export default async function Page({ params }: { params: Promise<{ name: string }> }) {
+export default async function OperationalDashboardPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ name: string }>;
+  searchParams: Promise<{ plan?: string }>;
+}) {
   const { name } = await params;
-  await requireCharitySection("manage_strategy", decodeURIComponent(name));
+  const decodedName = decodeURIComponent(name);
+
+  await requireCharitySection("manage_strategy", decodedName);
+
+  const charity = await prisma.charity.findUnique({ where: { name: decodedName }, select: { id: true } });
+
+  if (!charity) {
+    return (
+      <EmptyState
+        icon={<CalendarRange className="size-6" />}
+        title="لا صفَّ لهذه الجمعية بعد"
+        description="يُنشأ صفُّ الجمعية عند أول استبيانٍ تُعبّئه."
+      />
+    );
+  }
+
+  const plans = await prisma.operationalPlan.findMany({
+    where: { charityId: charity.id },
+    orderBy: { startDate: "desc" },
+    select: { id: true, label: true, startDate: true, endDate: true, weekCount: true },
+  });
+
+  if (plans.length === 0) {
+    return (
+      <EmptyState
+        icon={<CalendarRange className="size-6" />}
+        title="لا خطة تشغيلية لهذه الجمعية بعد"
+        description="تُعرَّف الخطة ومبادراتها في كشاف المبادرات، ثم تظهر أرقامها هنا."
+      />
+    );
+  }
+
+  const query = await searchParams;
+  const selected = plans.find((p) => p.id === query?.plan) ?? plans[0];
+
+  const initiatives = await prisma.initiative.findMany({
+    where: { planId: selected.id },
+    orderBy: { number: "asc" },
+    select: {
+      id: true,
+      number: true,
+      name: true,
+      owningDept: true,
+      priority: true,
+      startDate: true,
+      endDate: true,
+      budget: true,
+      steps: { select: { progress: true, cost: true, actualCost: true } },
+    },
+  });
+
+  const rows: DashboardInitiative[] = initiatives.map((i) => ({
+    id: i.id,
+    number: i.number,
+    name: i.name,
+    owningDept: i.owningDept,
+    priority: i.priority,
+    startDate: i.startDate ? i.startDate.toISOString().slice(0, 10) : null,
+    endDate: i.endDate ? i.endDate.toISOString().slice(0, 10) : null,
+    budget: i.budget === null ? null : Number(i.budget),
+    steps: i.steps.map((s) => ({
+      progress: s.progress,
+      cost: s.cost === null ? null : Number(s.cost),
+      actualCost: s.actualCost === null ? null : Number(s.actualCost),
+    })),
+  }));
+
+  const planOptions: DashboardPlan[] = plans.map((p) => ({
+    id: p.id,
+    label: p.label,
+    startDate: p.startDate.toISOString().slice(0, 10),
+    endDate: p.endDate.toISOString().slice(0, 10),
+    weekCount: p.weekCount,
+    monthCount: planMonths(p.startDate, p.endDate).length,
+  }));
 
   return (
-    <EmptyState
-      icon={<HardHat className="size-6" />}
-      title="هذه الصفحة قيد الإنشاء"
-      description="حالات المبادرات، ومؤشرات الإدارات، ونسب الإنجاز والصرف."
+    <OperationalDashboard
+      charityName={decodedName}
+      plans={planOptions}
+      selectedPlanId={selected.id}
+      initiatives={rows}
     />
   );
 }

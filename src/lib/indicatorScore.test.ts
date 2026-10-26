@@ -53,9 +53,22 @@ test("بلا مستهدفٍ لا نسبة — لا صفراً يُنزل الم�
   assert.equal(periodPercent(r(null, 5)), null);
 });
 
-test("مستهدفٌ صفر: لا شيء مطلوب فالإنجاز تام", () => {
-  assert.equal(periodPercent(r(0, 0)), 100);
-  assert.equal(periodPercent(r(0, 3)), 100);
+test("مستهدفٌ صفر = لم يُحدَّد، فلا نسبة له", () => {
+  // الجدول يُهيّئ كل مستهدفٍ جديدٍ بصفر، فالصفر «لم يُدخَل» لا «المطلوب صفر».
+  assert.equal(periodPercent(r(0, 0)), null);
+  assert.equal(periodPercent(r(0, 3)), null);
+  assert.equal(grade(periodPercent(r(0, 0))), "NO_DATA");
+});
+
+test("ربعٌ فارغٌ تماماً لا يُحتسب ممتازاً", () => {
+  // أرباع مسارات الشبابية الثاني والثالث والرابع: مستهدفاتها كلّها صفر
+  // ومتحققها لا شيء. وكانت تظهر «أداء ممتاز» لأن الصفر أُرجع له ١٠٠٪.
+  const quarters = [r(0, null), r(0, null), r(0, null)];
+  assert.deepEqual(
+    quarters.map((q) => periodPercent(q)),
+    [null, null, null]
+  );
+  assert.equal(averagePercent(quarters.map((q) => periodPercent(q))), null);
 });
 
 test("متحققٌ ناقص مع مستهدفٍ قائم يُحتسب صفراً", () => {

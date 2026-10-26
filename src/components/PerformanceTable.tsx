@@ -160,6 +160,9 @@ export default function PerformanceTable({
   // Helper to generate IDs
   const generateId = () => Math.random().toString(36).substring(2, 9);
 
+  /** ما يُعرض حين لا نتيجة: مستهدفٌ لم يُحدَّد. */
+  const dashText = "—";
+
   // Update URL params
   const handlePeriodChange = (newYear: number, newQuarter: string) => {
     startTransition(() => {
@@ -432,49 +435,45 @@ export default function PerformanceTable({
     return axesWithIndicators.length > 0 && axesWithIndicators.every(a => isAxisPostponed(a));
   };
 
-  const calcPercentage = (achieved: any, target: any) => {
-    if (!hasData(achieved) || !hasData(target)) return 0;
-    const parsedAchieved = parseValueToNumber(achieved);
+  /**
+   * نسبة فترةٍ على مستهدفها، بحدٍّ أقصى ١٠٠٪. و`null` تعني «لا نتيجة».
+   *
+   * ومستهدفٌ صفرٌ أو غائب = مستهدفٌ لم يُحدَّد: الجدول يُهيّئ كل مستهدفٍ جديد
+   * بصفر، فأغلب الأصفار «لم يُدخَل» لا «المطلوب صفر». وكان الحساب يُرجع لها
+   * ١٠٠٪، فكان ربعٌ فارغٌ تماماً يظهر «أداء ممتاز» — وهو ما كُشف في لوحة
+   * المعلومات. فصارت تُستثنى من المتوسطات وتُعرض «—».
+   *
+   * ومتحققٌ غائبٌ مع مستهدفٍ قائم صفرٌ لا فراغ: المطلوب معلومٌ ولم يُنجَز.
+   */
+  const calcPercentage = (achieved: any, target: any): number | null => {
+    if (!hasData(target)) return null;
     const parsedTarget = parseValueToNumber(target);
-    
-    if (parsedTarget === 0) {
-      return parsedAchieved >= 0 ? 100 : 0;
-    }
+    if (parsedTarget === 0) return null;
+
+    const parsedAchieved = hasData(achieved) ? parseValueToNumber(achieved) : 0;
     const val = (parsedAchieved / parsedTarget) * 100;
-    return Math.min(Math.round(val * 10) / 10, 100); // Max 100%
+    return Math.min(Math.round(val * 10) / 10, 100);
   };
 
-  const calcIndicatorPerf = (ind: Indicator) => {
-    if (ind.postponed) return 0;
+  /** متوسطٌ يُستثني ما لا نتيجة له، ولا يَعدّه في المقام. */
+  const average = (values: Array<number | null>): number | null => {
+    const counted = values.filter((v): v is number => v !== null);
+    if (counted.length === 0) return null;
+    return Math.round((counted.reduce((a, b) => a + b, 0) / counted.length) * 10) / 10;
+  };
+
+  const calcIndicatorPerf = (ind: Indicator): number | null => {
+    if (ind.postponed) return null;
     return calcPercentage(getQuarterAchieved(ind), getQuarterTarget(ind));
   };
 
-  const calcGoalPerf = (goal: Goal) => {
-    if (isGoalPostponed(goal)) return 0;
-    const activeIndicators = goal.indicators.filter(ind => !ind.postponed);
-    if (activeIndicators.length === 0) return 0;
-    const total = activeIndicators.reduce((acc, ind) => acc + calcIndicatorPerf(ind), 0);
-    return Math.round((total / activeIndicators.length) * 10) / 10;
-  };
+  const calcGoalPerf = (goal: Goal) => average(goal.indicators.map(calcIndicatorPerf));
 
-  const calcAxisPerf = (axis: Axis) => {
-    if (isAxisPostponed(axis)) return 0;
-    const activeGoals = axis.goals.filter(g => g.indicators.length > 0 && !isGoalPostponed(g));
-    if (activeGoals.length === 0) return 0;
-    const total = activeGoals.reduce((acc, goal) => acc + calcGoalPerf(goal), 0);
-    return Math.round((total / activeGoals.length) * 10) / 10;
-  };
+  const calcAxisPerf = (axis: Axis) =>
+    average(axis.goals.flatMap(g => g.indicators.map(calcIndicatorPerf)));
 
-  const calcCharityPerf = () => {
-    const allAxes = axes.filter(a => a.goals.some(g => g.indicators.length > 0));
-    if (allAxes.length === 0) return 0;
-    const activeAxes = allAxes.filter(a => !isAxisPostponed(a));
-    if (activeAxes.length === 0) return 0;
-    const total = activeAxes.reduce((acc, axis) => {
-      return acc + calcAxisPerf(axis);
-    }, 0);
-    return Math.round((total / activeAxes.length) * 10) / 10;
-  };
+  const calcCharityPerf = () =>
+    average(axes.flatMap(a => a.goals.flatMap(g => g.indicators.map(calcIndicatorPerf))));
 
   // Color logic
   const getPerfColor = (val: number, hasDataValue = true, isPostponed = false) => {
@@ -603,9 +602,9 @@ export default function PerformanceTable({
             <span className={`px-2.5 py-1 rounded-lg font-semibold text-caption border ${
               isCharityPostponed()
                 ? getPerfColor(0, true, true)
-                : getPerfColor(totalPerf)
+                : getPerfColor(totalPerf ?? 0, totalPerf !== null)
             } border-transparent transition-colors`}>
-              {isCharityPostponed() ? "مؤجل" : `${totalPerf}%`}
+              {isCharityPostponed() ? "مؤجل" : totalPerf === null ? dashText : `${totalPerf}%`}
             </span>
           </div>
 
@@ -817,7 +816,7 @@ export default function PerformanceTable({
                           const annualAchieved = getAnnualAchievedValue(ind);
                           const annualPerf = calcPercentage(annualAchieved, annualTarget);
                           const indPerf = calcIndicatorPerf(ind);
-                          const classification = getClassification(indPerf, hasData(getQuarterAchieved(ind)), ind.postponed);
+                          const classification = getClassification(indPerf ?? 0, indPerf !== null, ind.postponed);
 
                           const targetField = `${quarter.toLowerCase()}Target` as keyof Indicator;
                           const achievedField = `${quarter.toLowerCase()}Achieved` as keyof Indicator;
@@ -928,7 +927,7 @@ export default function PerformanceTable({
                                 )}
                               </td>
                               <td className="border-l border-slate-200 dark:border-slate-800 p-2 font-semibold text-slate-700 dark:text-slate-200 bg-primary/5 dark:bg-primary/10 transition-colors">
-                                {ind.postponed ? "مؤجل" : `${annualPerf}%`}
+                                {ind.postponed ? "مؤجل" : annualPerf === null ? dashText : `${annualPerf}%`}
                               </td>
 
                               {/* Quarter Metrics & Classification */}
@@ -943,8 +942,8 @@ export default function PerformanceTable({
                               </td>
 
                               {/* Performances */}
-                              <td className={`border-l border-slate-200 dark:border-slate-800 p-3 font-semibold text-caption text-center transition-colors ${getPerfColor(indPerf, hasData(getQuarterAchieved(ind)), ind.postponed)}`}>
-                                {ind.postponed ? "مؤجل" : `${indPerf}%`}
+                              <td className={`border-l border-slate-200 dark:border-slate-800 p-3 font-semibold text-caption text-center transition-colors ${getPerfColor(indPerf ?? 0, indPerf !== null, ind.postponed)}`}>
+                                {ind.postponed ? "مؤجل" : indPerf === null ? dashText : `${indPerf}%`}
                               </td>
 
                               {isFirstInd && (
@@ -952,11 +951,11 @@ export default function PerformanceTable({
                                   className={`border-l border-slate-200 dark:border-slate-800 p-3 font-semibold text-caption text-center transition-colors ${
                                     isGoalPostponed(goal)
                                       ? getPerfColor(0, true, true)
-                                      : getPerfColor(gPerf)
+                                      : getPerfColor(gPerf ?? 0, gPerf !== null)
                                   }`}
                                   rowSpan={goalRowSpan}
                                 >
-                                  {isGoalPostponed(goal) ? "مؤجل" : `${gPerf}%`}
+                                  {isGoalPostponed(goal) ? "مؤجل" : gPerf === null ? dashText : `${gPerf}%`}
                                 </td>
                               )}
 
@@ -965,11 +964,11 @@ export default function PerformanceTable({
                                   className={`border-l border-slate-200 dark:border-slate-800 p-3 font-semibold text-caption text-center transition-colors ${
                                     isAxisPostponed(axis)
                                       ? getPerfColor(0, true, true)
-                                      : getPerfColor(aPerf)
+                                      : getPerfColor(aPerf ?? 0, aPerf !== null)
                                   }`}
                                   rowSpan={axisRowSpan}
                                 >
-                                  {isAxisPostponed(axis) ? "مؤجل" : `${aPerf}%`}
+                                  {isAxisPostponed(axis) ? "مؤجل" : aPerf === null ? dashText : `${aPerf}%`}
                                 </td>
                               )}
 
@@ -978,11 +977,11 @@ export default function PerformanceTable({
                                   className={`border-l border-slate-200 dark:border-slate-800 p-3 font-semibold text-section text-center transition-colors ${
                                     isCharityPostponed()
                                       ? getPerfColor(0, true, true)
-                                      : getPerfColor(totalPerf)
+                                      : getPerfColor(totalPerf ?? 0, totalPerf !== null)
                                   }`}
                                   rowSpan={axes.reduce((acc, a) => acc + Math.max(1, a.goals.reduce((gacc, g) => gacc + Math.max(1, g.indicators.length), 0)), 0)}
                                 >
-                                  {isCharityPostponed() ? "مؤجل" : `${totalPerf}%`}
+                                  {isCharityPostponed() ? "مؤجل" : totalPerf === null ? dashText : `${totalPerf}%`}
                                 </td>
                               )}
 

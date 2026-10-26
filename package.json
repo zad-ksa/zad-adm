@@ -8,7 +8,9 @@
     "start": "next start",
     "lint": "eslint",
     "postinstall": "prisma generate",
-    "grant:charity-admins": "node scripts/grant-charity-admin-permissions.js"
+    "grant:charity-admins": "node scripts/grant-charity-admin-permissions.js",
+    "test:lib": "node --test --experimental-strip-types src/lib/*.test.ts",
+    "seed:strategy-statuses": "node -r dotenv/config scripts/seed-strategy-statuses.js"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.106.0",

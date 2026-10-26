@@ -16,6 +16,9 @@
 # next.js
 /.next/
 /.next-verify/
+# وأي مجلد بناءٍ آخر عبر NEXT_BUILD_DIR: ما لا يُستثنى هنا يفحصه Tailwind
+# فيقرأ حزمه الثنائية ويُولّد منها أصنافاً مشوّهة تُسقط ترجمة CSS.
+/.next-*/
 /out/
 
 # production

@@ -154,12 +154,12 @@ export const GRADE_LABEL: Record<Grade, string> = {
 };
 
 /** نبرة الشارة لكل درجة — من نبرات `Badge` القائمة، فلا لونَ جديد. */
-export const GRADE_TONE: Record<Grade, "good" | "warn" | "danger" | "muted"> = {
+export const GRADE_TONE: Record<Grade, "good" | "warn" | "danger" | "neutral"> = {
   EXCELLENT: "good",
   GOOD: "warn",
   WEAK: "danger",
-  NO_DATA: "muted",
-  POSTPONED: "muted",
+  NO_DATA: "neutral",
+  POSTPONED: "neutral",
 };
 
 /**

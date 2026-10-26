@@ -1,111 +1,141 @@
-import { requireCharitySection } from "@/lib/sectionGuard";
-import { hasPermission } from "@/lib/permissions";
-import { prisma } from "@/lib/db";
-import ReadinessResultsClient from "./ReadinessResultsClient";
-import SurveyLinkManager from "@/components/SurveyLinkManager";
 import type { Metadata } from "next";
+import { ClipboardList, Compass, Target, CalendarRange } from "lucide-react";
+import { prisma } from "@/lib/db";
 import { getSession } from "@/lib/auth";
-import StrategyPermissionToggle from "@/components/StrategyPermissionToggle";
-
-const getCachedResponses = async (charityName: string) => {
-    const charityResponses = await prisma.surveyResponse.findMany({
-      where: { charityName: { equals: charityName, mode: "insensitive" } },
-      orderBy: { createdAt: "desc" },
-    });
-    return charityResponses;
-  };
+import { hasPermission } from "@/lib/permissions";
+import { requireCharitySection } from "@/lib/sectionGuard";
+import { StatStrip } from "@/components/console/layout";
+import { NavCard } from "@/components/console/ui";
+import { getStrategySummary, currentPlanYear } from "@/lib/strategySummary";
+import StrategyStatusField from "./StrategyStatusField";
 
 export const dynamic = "force-dynamic";
 
 export async function generateMetadata({ params }: { params: Promise<{ name: string }> }): Promise<Metadata> {
   const { name } = await params;
-  const decodedName = decodeURIComponent(name);
-  return {
-    title: `${decodedName} - الاستراتيجية | زاد التنموية`,
-  };
+  return { title: `${decodeURIComponent(name)} - الاستراتيجية | زاد التنموية` };
 }
 
-// Custom SVG Icons
-const ChartBarIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-12 h-12 text-slate-300 dark:text-slate-600 mx-auto mb-4">
-    <line x1="18" y1="20" x2="18" y2="10" />
-    <line x1="12" y1="20" x2="12" y2="4" />
-    <line x1="6" y1="20" x2="6" y2="14" />
-  </svg>
-);
-
-const ChartLineIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5 text-primary">
-    <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
-  </svg>
-);
-
-const FileEditIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-12 h-12 text-slate-300 dark:text-slate-600 mx-auto mb-4">
-    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-    <path d="M18.5 2.5a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4z" />
-  </svg>
-);
-
-export default async function StrategySurveysPage({ params }: { params: Promise<{ name: string }> }) {
+/**
+ * صفحة الاستراتيجية الجامعة.
+ *
+ * كان الدخول إلى استراتيجية جمعيةٍ يمرّ بقائمتين منسدلتين متداخلتين في الشريط
+ * الجانبي (الخدمة ← الجمعية ← الصفحة)، فلا يرى الموظف حالة الجمعية ولا ترتيب
+ * أطوار التخطيط، بل قائمة روابط. وهنا: حالةٌ واحدة، وأرقامٌ تقول ما أُنجز،
+ * وأربعة مربّعاتٍ بترتيب العمل الاستراتيجي — تحليلٌ، فتوجّه، فأهدافٌ ومؤشرات،
+ * فخطةٌ تشغيلية.
+ */
+export default async function StrategyHubPage({ params }: { params: Promise<{ name: string }> }) {
   const { name } = await params;
   const decodedName = decodeURIComponent(name);
 
   await requireCharitySection("manage_strategy", decodedName);
 
-  // Three round trips to ap-southeast-2 that were waiting on each other for no
-  // reason: none of the three reads the result of the other two.
-  const [session, responses, charity] = await Promise.all([
+  const [session, charity, statusOptions] = await Promise.all([
     getSession(),
-    getCachedResponses(decodedName),
-    prisma.charity.findUnique({ where: { name: decodedName } }),
+    prisma.charity.findUnique({
+      where: { name: decodedName },
+      select: { id: true, strategyStatus: true, strategyStatusUpdatedAt: true },
+    }),
+    prisma.strategyStatusOption.findMany({ orderBy: { order: "asc" } }),
   ]);
 
-  // كان بالدور STRATEGY وحده، فكان مفتاحاً لا تكافئه أي صلاحية: تمنح
-  // manage_strategy فلا يظهر، وتغيّر الدور فيظهر. صار بالصلاحية.
-  const canManageStrategy = hasPermission(
-    session?.role || "",
-    session?.permissions || [],
-    "manage_strategy"
-  );
-  const hasReadiness = responses.length > 0;
+  const canEdit = hasPermission(session?.role || "", session?.permissions || [], "manage_strategy");
+  const year = currentPlanYear();
+  const summary = charity ? await getStrategySummary(charity.id, decodedName, year) : null;
 
-  // --- DEFAULT VIEW (Admin, Strategy, etc.) ---
+  const base = `/main/strategy/${encodeURIComponent(decodedName)}`;
+  const analysisCount = (summary?.readinessResponses ?? 0) + (summary?.hexagonalResponses ?? 0);
+
   return (
-    <div className="space-y-12">
-      <div className="print:hidden">
-        <SurveyLinkManager charityName={decodedName} surveyType="READINESS" />
-      </div>
-
-      {canManageStrategy && charity && (
-        <StrategyPermissionToggle
-          charityName={decodedName}
-          type="readiness"
-          initialState={charity.isReadinessVisible}
-          label="إظهار نتيجة مقياس الجاهزية للجمعية"
-          description="تفعيل هذا الخيار سيسمح لموظفي الجمعية بالاطلاع على نتائج مقياس الجاهزية في لوحة التحكم الخاصة بهم."
-        />
+    <div className="space-y-6">
+      {charity && (
+        <section className="rounded-xl border border-slate-200 bg-white p-4 shadow-[0_1px_2px_rgb(15_23_42/0.04)] dark:border-slate-800 dark:bg-slate-900">
+          <StrategyStatusField
+            charityId={charity.id}
+            current={charity.strategyStatus}
+            updatedAt={
+              charity.strategyStatusUpdatedAt
+                ? charity.strategyStatusUpdatedAt.toLocaleDateString("ar-SA", {
+                    year: "numeric",
+                    month: "long",
+                    day: "numeric",
+                  })
+                : null
+            }
+            options={statusOptions.map((o) => ({ id: o.id, name: o.name, tone: o.tone, isActive: o.isActive }))}
+            canEdit={canEdit}
+          />
+        </section>
       )}
 
-      {/* Section 1: Readiness Survey Results */}
-      <div>
-        <div className="flex items-center gap-3 mb-8 border-b border-slate-200 dark:border-slate-700 pb-4 print:hidden">
-          <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center text-primary font-semibold">
-            <ChartLineIcon />
-          </div>
-          <h2 className="text-section font-semibold text-slate-800 dark:text-slate-100 tracking-tight">
-            نتائج استبيان الجاهزية للتخطيط الاستراتيجي
-          </h2>
-        </div>
+      <StatStrip
+        label={`ملخّص الخطة ${year}`}
+        items={[
+          { label: "الأهداف الاستراتيجية", value: summary?.objectives ?? 0 },
+          { label: "مؤشرات الأداء", value: summary?.indicators ?? 0 },
+          { label: "المبادرات التشغيلية", value: summary?.initiatives ?? 0 },
+          {
+            label: "اكتمال إدخال النتائج",
+            value: summary?.entryCompletion ?? 0,
+            unit: "%",
+            dot:
+              summary?.entryCompletion === null || summary?.entryCompletion === undefined
+                ? "muted"
+                : summary.entryCompletion >= 90
+                  ? "active"
+                  : summary.entryCompletion >= 40
+                    ? "warn"
+                    : "danger",
+          },
+        ]}
+      />
 
-        {hasReadiness ? (
-          <ReadinessResultsClient responses={responses} />
-        ) : (
-          <div className="bg-white dark:bg-slate-900 rounded-xl p-12 text-center text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-800 shadow-[0_1px_2px_rgb(15_23_42/0.04)] transition-colors">
-            <FileEditIcon />
-            <p className="font-semibold mt-4">لم يقم أي مشارك بتعبئة استبيان الجاهزية للتخطيط الاستراتيجي لهذه الجمعية بعد.</p>
-          </div>
-        )}
+      <div className="grid gap-4 sm:grid-cols-2">
+        <NavCard
+          href={`${base}/analysis`}
+          icon={<ClipboardList className="size-5" />}
+          title="التحليل الاستراتيجي"
+          description="استبيان الجاهزية للتخطيط، والتحليل السداسي لبيئة الجمعية."
+          meta={analysisCount > 0 ? `${analysisCount} رداً` : "لا ردود بعد"}
+          metaWarn={analysisCount === 0}
+        />
+        <NavCard
+          href={`${base}/direction`}
+          icon={<Compass className="size-5" />}
+          title="بناء التوجه الاستراتيجي"
+          description="استبيان الرؤية والرسالة والأثر، وما استُخلص منه."
+          meta={
+            summary && summary.visionMissionResponses > 0
+              ? `${summary.visionMissionResponses} رداً`
+              : "لا ردود بعد"
+          }
+          metaWarn={!summary || summary.visionMissionResponses === 0}
+        />
+        <NavCard
+          href={`${base}/objectives`}
+          icon={<Target className="size-5" />}
+          title="دليل الأهداف والمؤشرات"
+          description="الدليل المعتمد، ومتابعة الأداء، ولوحة المعلومات."
+          meta={
+            summary && summary.indicators > 0
+              ? `${summary.objectives} هدفاً · ${summary.indicators} مؤشراً`
+              : "لم يُبنَ الدليل بعد"
+          }
+          metaWarn={!summary || summary.indicators === 0}
+        />
+        <NavCard
+          href={`${base}/operational`}
+          icon={<CalendarRange className="size-5" />}
+          title="الخطة التشغيلية"
+          description="كشاف المبادرات، وخطة كل مبادرة ومخطّطها الزمني."
+          meta={
+            summary && summary.initiatives > 0
+              ? `${summary.initiatives} مبادرة`
+              : "لا خطة تشغيلية بعد"
+          }
+          metaWarn={!summary || summary.initiatives === 0}
+        />
       </div>
     </div>
   );

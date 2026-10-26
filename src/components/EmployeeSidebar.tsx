@@ -344,10 +344,27 @@ export default function EmployeeSidebar({
                             </>
                           ) : (
                             charities.map(charity => {
+                              // الاستراتيجية: الجمعية رابطٌ واحدٌ إلى صفحتها
+                              // الجامعة. كانت طيّاً ثالثاً يسرد صفحاتها، فصار
+                              // سردُها مربّعاتٍ في الصفحة نفسها.
+                              const strategyHref = `/main/strategy/${encodeURIComponent(charity.name)}`;
+                              const isStrategy = svc.id === "strategy";
+                              if (isStrategy) {
+                                return (
+                                  <SubTabLink
+                                    key={charity.id}
+                                    href={strategyHref}
+                                    label={charity.name}
+                                    isActive={activePath.startsWith(`/main/strategy/${charity.name}`)}
+                                    onClick={() => handleLinkClick(strategyHref)}
+                                  />
+                                );
+                              }
+
                               const charityKey = `${svc.id}-${charity.name}`;
                               const isCharityExpanded = expandedCharity === charityKey;
                               const toggleCharity = () => setExpandedCharity(prev => prev === charityKey ? null : charityKey);
-                              
+
                               return (
                                 <div key={charity.id}>
                                   <button
@@ -357,17 +374,9 @@ export default function EmployeeSidebar({
                                     <span className="truncate text-right">{charity.name}</span>
                                     <ChevronDown className={`w-2.5 h-2.5 transition-transform shrink-0 ${isCharityExpanded ? 'rotate-180' : ''}`} />
                                   </button>
-                                
+
                                 <div className={`overflow-hidden transition-all duration-300 ease-in-out ${isCharityExpanded ? 'max-h-[500px] opacity-100 mt-1 mb-2' : 'max-h-0 opacity-0'}`}>
                                   <div className="mr-2 space-y-0.5 border-r-2 border-slate-100 dark:border-slate-800 pr-1.5">
-                                    {svc.id === "strategy" && (
-                                      <>
-                                        <SubTabLink href={`/main/strategy/${encodeURIComponent(charity.name)}`} label="استبيان الجاهزية" isActive={activePath === `/main/strategy/${charity.name}`} onClick={() => handleLinkClick(`/main/strategy/${charity.name}`)} />
-                                        <SubTabLink href={`/main/strategy/${encodeURIComponent(charity.name)}/vision-mission`} label="استبيان الرؤية" isActive={activePath === `/main/strategy/${charity.name}/vision-mission`} onClick={() => handleLinkClick(`/main/strategy/${charity.name}/vision-mission`)} />
-                                        <SubTabLink href={`/main/strategy/${encodeURIComponent(charity.name)}/hexagonal`} label="التحليل السداسي" isActive={activePath === `/main/strategy/${charity.name}/hexagonal`} onClick={() => handleLinkClick(`/main/strategy/${charity.name}/hexagonal`)} />
-                                        <SubTabLink href={`/main/strategy/${encodeURIComponent(charity.name)}/performance`} label="مقياس الأداء" isActive={activePath === `/main/strategy/${charity.name}/performance`} onClick={() => handleLinkClick(`/main/strategy/${charity.name}/performance`)} />
-                                      </>
-                                    )}
                                     {svc.id === "resource-development" && (
                                       <>
                                         <SubTabLink href={`/main/resource-development/${encodeURIComponent(charity.name)}/donors`} label="الجهات المانحة" isActive={activePath === `/main/resource-development/${charity.name}/donors`} onClick={() => handleLinkClick(`/main/resource-development/${charity.name}/donors`)} />

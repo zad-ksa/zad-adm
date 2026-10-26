@@ -1,0 +1,3973 @@
+{
+  "charity": "المعاقد التعليمية",
+  "plan": {
+    "label": "أغسطس 2026 — ديسمبر 2026",
+    "startDate": "2026-08-03",
+    "endDate": "2026-12-31"
+  },
+  "initiatives": [
+    {
+      "number": 1,
+      "name": "عدة",
+      "description": "برنامج علمي منهجي متدرج وفق منهج أهل السنة والجماعة، يهدف إلى تأهيل طالبات علم متخصصات في الفقه وأصوله، عبر مرحلتين متتاليتين: سنة أولى عامة تأسيسية ثم سنة ثانية تخصصية (فقهي أو أصولي) تختارها الطالبة بعد إتمام السنة الأولى. يُقدّم البرنامج — بعد أن كان يُقدّم عن بعد لسنوات — بصيغته الحضورية للمرة الأولى، في مقر الجمعية بحي الملك فهد بالرياض.",
+      "objectiveLabel": "(س2) تأصيل وتمكين طلاب العلم معرفياً ومهارياً",
+      "indicatorLabels": "(س2-1) عدد المبادرات المنفذة في تأصيل وتمكين طلاب العلم معرفياً ومهارياً وفق الاحتياج",
+      "durationText": "18 أسبوعاً",
+      "managerName": "مديرة المشاريع",
+      "owningDept": "إدارة المشاريع",
+      "priority": null,
+      "startDate": "2026-08-29",
+      "endDate": "2026-12-31",
+      "budget": 80000,
+      "monthlyBudget": {
+        "2026-09": 18150,
+        "2026-10": 20050,
+        "2026-11": 22750,
+        "2026-12": 19050
+      },
+      "steps": [
+        {
+          "order": 1,
+          "phase": "الإعداد",
+          "title": "إعداد وثيقة نطاق المبادرة: الهدف، المستهدفات الرقمية، الفئة المستفيدة، المخرجات، وما هو خارج النطاق",
+          "evidence": "وثيقة نطاق معتمدة",
+          "owner": "مديرة المشاريع",
+          "cost": 1800,
+          "actualCost": 0,
+          "planStartWeek": 5,
+          "planWeeks": 1,
+          "actualStartWeek": null,
+          "actualWeeks": null,
+          "progress": 0,
+          "monthlyCost": {
+            "2026-09": 1800
+          }
+        },
+        {
+          "order": 2,
+          "phase": "الإعداد",
+          "title": "تشكيل فريق عمل المبادرة وتحديد دور كل عضو ومسؤولياته وصلاحياته كتابياً",
+          "evidence": "محضر تشكيل الفريق",
+          "owner": "مديرة المشاريع",
+          "cost": 1800,
+          "actualCost": 0,
+          "planStartWeek": 5,
+          "planWeeks": 1,
+          "actualStartWeek": null,
+          "actualWeeks": null,
+          "progress": 0,
+          "monthlyCost": {
+            "2026-09": 1800
+          }
+        },
+        {
+          "order": 3,
+          "phase": "الإعداد",
+          "title": "عقد اجتماع انطلاق المبادرة ومراجعة الخطة الزمنية والموازنة وقنوات التواصل",
+          "evidence": "محضر اجتماع الانطلاق",
+          "owner": "مديرة المشاريع",
+          "cost": 1800,
+          "actualCost": 0,
+          "planStartWeek": 6,
+          "planWeeks": 1,
+          "actualStartWeek": null,
+          "actualWeeks": null,
+          "progress": 0,
+          "monthlyCost": {
+            "2026-09": 1800
+          }
+        },
+        {
+          "order": 4,
+          "phase": "الإعداد",
+          "title": "حصر مخاطر المبادرة (تمويل، وقت، شركاء، إقبال) وتحديد خطة استجابة لكل خطر",
+          "evidence": "سجل المخاطر والاستجابة",
+          "owner": "مديرة المشاريع",
+          "cost": 1800,
+          "actualCost": 0,
+          "planStartWeek": 7,
+          "planWeeks": 1,
+          "actualStartWeek": null,
+          "actualWeeks": null,
+          "progress": 0,
+          "monthlyCost": {
+            "2026-09": 1800
+          }
+        },
+        {
+          "order": 5,
+          "phase": "الإعداد",
+          "title": "تحليل احتياج الفئة المستهدفة (طالبات العلم المتخصصات في الفقه وأصوله) وتحديد المخرجات التعليمية المطلوبة",
+          "evidence": "تقرير تحليل الاحتياج",
+          "owner": "مديرة المشاريع",
+          "cost": 3650,
+          "actualCost": 0,
+          "planStartWeek": 7,
+          "planWeeks": 1,
+          "actualStartWeek": null,
+          "actualWeeks": null,
+          "progress": 0,
+          "monthlyCost": {
+            "2026-09": 3650
+          }
+        },
+        {
+          "order": 6,
+          "phase": "الإعداد",
+          "title": "تصميم المسار العلمي للمبادرة ووحداته ومعايير اجتيازه وأدوات تقويمه",
+          "evidence": "الخطة العلمية معتمدة",
+          "owner": "مديرة المشاريع",
+          "cost": 3650,
+          "actualCost": 0,
+          "planStartWeek": 8,
+          "planWeeks": 1,
+          "actualStartWeek": null,
+          "actualWeeks": null,
+          "progress": 0,
+          "monthlyCost": {
+            "2026-09": 3650
+          }
+        },
+        {
+          "order": 7,
+          "phase": "الإعداد",
+          "title": "إعداد المحتوى والحقائب والمواد التعليمية المطلوبة للتنفيذ",
+          "evidence": "المحتوى والحقائب جاهزة",
+          "owner": "مديرة المشاريع",
+          "cost": 3650,
+          "actualCost": 0,
+          "planStartWeek": 9,
+          "planWeeks": 1,
+          "actualStartWeek": null,
+          "actualWeeks": null,
+          "progress": 0,
+          "monthlyCost": {
+            "2026-09": 3650
+          }
+        },
+        {
+          "order": 8,
+          "phase": "الإعداد",
+          "title": "ترشيح المدربات والمشرفات فق معايير معتمدة وإتمام التعاقد معهم",
+          "evidence": "عقود المدربات والمشرفات",
+          "owner": "مديرة المشاريع",
+          "cost": 3650,
+          "actualCost": 0,
+          "planStartWeek": 10,
+          "planWeeks": 1,
+          "actualStartWeek": null,
+          "actualWeeks": null,
+          "progress": 0,
+          "monthlyCost": {
+            "2026-10": 3650
+          }
+        },
+        {
+          "order": 9,
+          "phase": "الإعداد",
+          "title": "تحديد مقر التنفيذ والتجهيزات والجدول الزمني وخطة التشغيل اليومية",
+          "evidence": "خطة تشغيل معتمدة",
+          "owner": "مديرة المشاريع",
+          "cost": 3650,
+          "actualCost": 0,
+          "planStartWeek": 11,
+          "planWeeks": 1,
+          "actualStartWeek": null,
+          "actualWeeks": null,
+          "progress": 0,
+          "monthlyCost": {
+            "2026-10": 3650
+          }
+        },
+        {
+          "order": 10,
+          "phase": "الإعداد",
+          "title": "إعداد خطة التسويق وفتح باب التسجيل وفرز المتقدمات وفق معايير القبول",
+          "evidence": "كشف المقبولات",
+          "owner": "مديرة المشاريع",
+          "cost": 3650,
+          "actualCost": 0,
+          "planStartWeek": 11,
+          "planWeeks": 2,
+          "actualStartWeek": null,
+          "actualWeeks": null,
+          "progress": 0,
+          "monthlyCost": {
+            "2026-10": 3650
+          }
+        },
+        {
+          "order": 11,
+          "phase": "التنفيذ",
+          "title": "إطلاق «عدة» وتنفيذ لقاءاته ووحداته وفق الجدول الزمني المعتمد",
+          "evidence": "كشوف الحضور وشواهد التنفيذ",
+          "owner": "مديرة المشاريع",
+          "cost": 9100,
+          "actualCost": 0,
+          "planStartWeek": 13,
+          "planWeeks": 1,
+          "actualStartWeek": null,
+          "actualWeeks": null,
+          "progress": 0,
+          "monthlyCost": {
+            "2026-10": 9100
+          }
+        },
+        {
+          "order": 12,
+          "phase": "التنفيذ",
+          "title": "المتابعة الدورية للتنفيذ ورصد الانضباط ومعالجة ملاحظات المستفيدات والمدربات",
+          "evidence": "تقارير المتابعة الدورية",
+          "owner": "مديرة المشاريع",
+          "cost": 9100,
+          "actualCost": 0,
+          "planStartWeek": 14,
+          "planWeeks": 2,
+          "actualStartWeek": null,
+          "actualWeeks": null,
+          "progress": 0,
+          "monthlyCost": {
+            "2026-11": 9100
+          }
+        },
+        {
+          "order": 13,
+          "phase": "التنفيذ",
+          "title": "تنفيذ التقويم القبلي والبعدي لقياس الأثر التعليمي على المستفيدات",
+          "evidence": "نتائج التقويم القبلي والبعدي",
+          "owner": "مديرة المشاريع",
+          "cost": 9100,
+          "actualCost": 0,
+          "planStartWeek": 16,
+          "planWeeks": 1,
+          "actualStartWeek": null,
+          "actualWeeks": null,
+          "progress": 0,
+          "monthlyCost": {
+            "2026-11": 9100
+          }
+        },
+        {
+          "order": 14,
+          "phase": "التنفيذ",
+          "title": "قياس رضا المستفيدات عن المبادرة عبر استبانة معتمدة",
+          "evidence": "تقرير قياس الرضا",
+          "owner": "مديرة المشاريع",
+          "cost": 9100,
+          "actualCost": 0,
+          "planStartWeek": 17,
+          "planWeeks": 2,
+          "actualStartWeek": null,
+          "actualWeeks": null,
+          "progress": 0,
+          "monthlyCost": {
+            "2026-11": 4550,
+            "2026-12": 4550
+          }
+        },
+        {
+          "order": 15,
+          "phase": "التنفيذ",
+          "title": "اعتماد النتائج وتسليم الشهادات والمخرجات وتوثيق تحقق مستهدفات المبادرة",
+          "evidence": "كشف تسليم الشهادات",
+          "owner": "مديرة المشاريع",
+          "cost": 9100,
+          "actualCost": 0,
+          "planStartWeek": 19,
+          "planWeeks": 2,
+          "actualStartWeek": null,
+          "actualWeeks": null,
+          "progress": 0,
+          "monthlyCost": {
+            "2026-12": 9100
+          }
+        },
+        {
+          "order": 16,
+          "phase": "الإغلاق",
+          "title": "تجميع شواهد التنفيذ (محاضر، كشوف، صور، تقارير) وأرشفتها في ملف المبادرة",
+          "evidence": "ملف شواهد مكتمل",
+          "owner": "مديرة المشاريع",
+          "cost": 1800,
+          "actualCost": 0,
+          "planStartWeek": 20,
+          "planWeeks": 1,
+          "actualStartWeek": null,
+          "actualWeeks": null,
+          "progress": 0,
+          "monthlyCost": {
+            "2026-12": 1800
+          }
+        },
+        {
+          "order": 17,
+          "phase": "الإغلاق",
+          "title": "إعداد التقرير الختامي: نسب الإنجاز، الأثر المتحقق، الانحرافات وأسبابها، الدروس المستفادة",
+          "evidence": "التقرير الختامي",
+          "owner": "مديرة المشاريع",
+          "cost": 1800,
+          "actualCost": 0,
+          "planStartWeek": 21,
+          "planWeeks": 1,
+          "actualStartWeek": null,
+          "actualWeeks": null,
+          "progress": 0,
+          "monthlyCost": {
+            "2026-12": 1800
+          }
+        },
+        {
+          "order": 18,
+          "phase": "الإغلاق",
+          "title": "عرض التقرير على الإدارة التنفيذية واعتماده وتوثيق توصيات النسخة القادمة",
+          "evidence": "محضر اعتماد وتوصيات",
+          "owner": "مديرة المشاريع",
+          "cost": 1800,
+          "actualCost": 0,
+          "planStartWeek": 22,
+          "planWeeks": 1,
+          "actualStartWeek": null,
+          "actualWeeks": null,
+          "progress": 0,
+          "monthlyCost": {
+            "2026-12": 1800
+          }
+        }
+      ],
+      "headerRow": 12
+    },
+    {
+      "number": 2,
+      "name": "هدى",
+      "description": "مشروع هدى يسعى إلى تمكين طالبات المرحلة الثانوية وينفذ بالشراكة مع خمس مدارس ثانوية ويهدف إلى تقديم برنامج معرفي يعزز الوعي المعرفي لدى الطالبات عبر منهجية تجمع بين التأصيل العلمي والتطبيق العملي من خلال بيئة تعليمية تفاعلية تعتمد التقنيات الحديثة بهدف تحويل المعرفة إلى سلوكيات حياتية ومبادرات مجتمعية ملموسة تسهم في تمثل الطالبات للمعارف الشرعية.",
+      "objectiveLabel": "(س2) تأصيل وتمكين طلاب العلم معرفياً ومهارياً",
+      "indicatorLabels": "(س2-1) عدد المبادرات المنفذة في تأصيل وتمكين طلاب العلم معرفياً ومهارياً وفق الاحتياج",
+      "durationText": "18 أسبوعاً",
+      "managerName": "مديرة المشاريع",
+      "owningDept": "إدارة المشاريع",
+      "priority": null,
+      "startDate": "2026-08-29",
+      "endDate": "2026-12-31",
+      "budget": 70000,
+      "monthlyBudget": {
+        "2026-09": 16000,
+        "2026-10": 17400,
+        "2026-11": 19875,
+        "2026-12": 16725
+      },
+      "steps": [
+        {
+          "order": 1,
+          "phase": "الإعداد",
+          "title": "إعداد وثيقة نطاق المبادرة: الهدف، المستهدفات الرقمية، الفئة المستفيدة، المخرجات، وما هو خارج النطاق",
+          "evidence": "وثيقة نطاق معتمدة",
+          "owner": "مديرة المشروع",
+          "cost": 1600,
+          "actualCost": 0,
+          "planStartWeek": 5,
+          "planWeeks": 1,
+          "actualStartWeek": null,
+          "actualWeeks": null,
+          "progress": 0,
+          "monthlyCost": {
+            "2026-09": 1600
+          }
+        },
+        {
+          "order": 2,
+          "phase": "الإعداد",
+          "title": "تشكيل فريق عمل المبادرة وتحديد دور كل عضو ومسؤولياته وصلاحياته كتابياً",
+          "evidence": "محضر تشكيل الفريق",
+          "owner": "مديرة المشروع",
+          "cost": 1600,
+          "actualCost": 0,
+          "planStartWeek": 5,
+          "planWeeks": 1,
+          "actualStartWeek": null,
+          "actualWeeks": null,
+          "progress": 0,
+          "monthlyCost": {
+            "2026-09": 1600
+          }
+        },
+        {
+          "order": 3,
+          "phase": "الإعداد",
+          "title": "عقد اجتماع انطلاق المبادرة ومراجعة الخطة الزمنية والموازنة وقنوات التواصل",
+          "evidence": "محضر اجتماع الانطلاق",
+          "owner": "مديرة المشروع",
+          "cost": 1600,
+          "actualCost": 0,
+          "planStartWeek": 6,
+          "planWeeks": 1,
+          "actualStartWeek": null,
+          "actualWeeks": null,
+          "progress": 0,
+          "monthlyCost": {
+            "2026-09": 1600
+          }
+        },
+        {
+          "order": 4,
+          "phase": "الإعداد",
+          "title": "حصر مخاطر المبادرة (تمويل، وقت، شركاء، إقبال) وتحديد خطة استجابة لكل خطر",
+          "evidence": "سجل المخاطر والاستجابة",
+          "owner": "مديرة المشروع",
+          "cost": 1600,
+          "actualCost": 0,
+          "planStartWeek": 7,
+          "planWeeks": 1,
+          "actualStartWeek": null,
+          "actualWeeks": null,
+          "progress": 0,
+          "monthlyCost": {
+            "2026-09": 1600
+          }
+        },
+        {
+          "order": 5,
+          "phase": "الإعداد",
+          "title": "تحليل احتياج الفئة المستهدفة (طالبات المرحلة الثانوية) وتحديد المخرجات التعليمية المطلوبة",
+          "evidence": "تقرير تحليل الاحتياج",
+          "owner": "مديرة المشروع",
+          "cost": 3200,
+          "actualCost": 0,
+          "planStartWeek": 7,
+          "planWeeks": 1,
+          "actualStartWeek": null,
+          "actualWeeks": null,
+          "progress": 0,
+          "monthlyCost": {
+            "2026-09": 3200
+          }
+        },
+        {
+          "order": 6,
+          "phase": "الإعداد",
+          "title": "تصميم المسار العلمي للمبادرة ووحداته ومعايير اجتيازه وأدوات تقويمه",
+          "evidence": "الخطة العلمية معتمدة",
+          "owner": "مديرة المشروع",
+          "cost": 3200,
+          "actualCost": 0,
+          "planStartWeek": 8,
+          "planWeeks": 1,
+          "actualStartWeek": null,
+          "actualWeeks": null,
+          "progress": 0,
+          "monthlyCost": {
+            "2026-09": 3200
+          }
+        },
+        {
+          "order": 7,
+          "phase": "الإعداد",
+          "title": "إعداد المحتوى والحقائب والمواد التعليمية المطلوبة للتنفيذ",
+          "evidence": "المحتوى والحقائب جاهزة",
+          "owner": "مديرة المشروع",
+          "cost": 3200,
+          "actualCost": 0,
+          "planStartWeek": 9,
+          "planWeeks": 1,
+          "actualStartWeek": null,
+          "actualWeeks": null,
+          "progress": 0,
+          "monthlyCost": {
+            "2026-09": 3200
+          }
+        },
+        {
+          "order": 8,
+          "phase": "الإعداد",
+          "title": "ترشيح المدربات والمشرفات وفق معايير معتمدة وإتمام التعاقد معهم",
+          "evidence": "عقود المدربات والمشرفات",
+          "owner": "مديرة المشروع",
+          "cost": 3200,
+          "actualCost": 0,
+          "planStartWeek": 10,
+          "planWeeks": 1,
+          "actualStartWeek": null,
+          "actualWeeks": null,
+          "progress": 0,
+          "monthlyCost": {
+            "2026-10": 3200
+          }
+        },
+        {
+          "order": 9,
+          "phase": "الإعداد",
+          "title": "تحديد مقر التنفيذ والتجهيزات والجدول الزمني وخطة التشغيل اليومية",
+          "evidence": "خطة تشغيل معتمدة",
+          "owner": "مديرة المشروع",
+          "cost": 3200,
+          "actualCost": 0,
+          "planStartWeek": 11,
+          "planWeeks": 1,
+          "actualStartWeek": null,
+          "actualWeeks": null,
+          "progress": 0,
+          "monthlyCost": {
+            "2026-10": 3200
+          }
+        },
+        {
+          "order": 10,
+          "phase": "الإعداد",
+          "title": "إعداد خطة التسويق وفتح باب التسجيل وفرز المتقدمات لاستيفاء العدد المستهدف (خمس مدارس ثانوية شريكة)",
+          "evidence": "كشف المقبولات",
+          "owner": "مديرة المشروع",
+          "cost": 3200,
+          "actualCost": 0,
+          "planStartWeek": 11,
+          "planWeeks": 2,
+          "actualStartWeek": null,
+          "actualWeeks": null,
+          "progress": 0,
+          "monthlyCost": {
+            "2026-10": 3200
+          }
+        },
+        {
+          "order": 11,
+          "phase": "التنفيذ",
+          "title": "إطلاق «هدى» وتنفيذ لقاءاته ووحداته وفق الجدول الزمني المعتمد",
+          "evidence": "كشوف الحضور وشواهد التنفيذ",
+          "owner": "مديرة المشروع",
+          "cost": 7800,
+          "actualCost": 0,
+          "planStartWeek": 13,
+          "planWeeks": 1,
+          "actualStartWeek": null,
+          "actualWeeks": null,
+          "progress": 0,
+          "monthlyCost": {
+            "2026-10": 7800
+          }
+        },
+        {
+          "order": 12,
+          "phase": "التنفيذ",
+          "title": "المتابعة الدورية للتنفيذ ورصد الانضباط ومعالجة ملاحظات المستفيدات والمدربات",
+          "evidence": "تقارير المتابعة الدورية",
+          "owner": "مديرة المشروع",
+          "cost": 7950,
+          "actualCost": 0,
+          "planStartWeek": 14,
+          "planWeeks": 2,
+          "actualStartWeek": null,
+          "actualWeeks": null,
+          "progress": 0,
+          "monthlyCost": {
+            "2026-11": 7950
+          }
+        },
+        {
+          "order": 13,
+          "phase": "التنفيذ",
+          "title": "تنفيذ التقويم القبلي والبعدي لقياس الأثر التعليمي على المستفيدات",
+          "evidence": "نتائج التقويم القبلي والبعدي",
+          "owner": "مديرة المشروع",
+          "cost": 7950,
+          "actualCost": 0,
+          "planStartWeek": 16,
+          "planWeeks": 1,
+          "actualStartWeek": null,
+          "actualWeeks": null,
+          "progress": 0,
+          "monthlyCost": {
+            "2026-11": 7950
+          }
+        },
+        {
+          "order": 14,
+          "phase": "التنفيذ",
+          "title": "قياس رضا المستفيدات عن المبادرة عبر استبانة معتمدة",
+          "evidence": "تقرير قياس الرضا",
+          "owner": "مديرة المشروع",
+          "cost": 7950,
+          "actualCost": 0,
+          "planStartWeek": 17,
+          "planWeeks": 2,
+          "actualStartWeek": null,
+          "actualWeeks": null,
+          "progress": 0,
+          "monthlyCost": {
+            "2026-11": 3975,
+            "2026-12": 3975
+          }
+        },
+        {
+          "order": 15,
+          "phase": "التنفيذ",
+          "title": "اعتماد النتائج وتسليم الشهادات والمخرجات وتوثيق تحقق مستهدفات المبادرة",
+          "evidence": "كشف تسليم الشهادات",
+          "owner": "مديرة المشروع",
+          "cost": 7950,
+          "actualCost": 0,
+          "planStartWeek": 19,
+          "planWeeks": 2,
+          "actualStartWeek": null,
+          "actualWeeks": null,
+          "progress": 0,
+          "monthlyCost": {
+            "2026-12": 7950
+          }
+        },
+        {
+          "order": 16,
+          "phase": "الإغلاق",
+          "title": "تجميع شواهد التنفيذ (محاضر، كشوف، صور، تقارير) وأرشفتها في ملف المبادرة",
+          "evidence": "ملف شواهد مكتمل",
+          "owner": "مديرة المشروع",
+          "cost": 1600,
+          "actualCost": 0,
+          "planStartWeek": 20,
+          "planWeeks": 1,
+          "actualStartWeek": null,
+          "actualWeeks": null,
+          "progress": 0,
+          "monthlyCost": {
+            "2026-12": 1600
+          }
+        },
+        {
+          "order": 17,
+          "phase": "الإغلاق",
+          "title": "إعداد التقرير الختامي: نسب الإنجاز، الأثر المتحقق، الانحرافات وأسبابها، الدروس المستفادة",
+          "evidence": "التقرير الختامي",
+          "owner": "مديرة المشروع",
+          "cost": 1600,
+          "actualCost": 0,
+          "planStartWeek": 21,
+          "planWeeks": 1,
+          "actualStartWeek": null,
+          "actualWeeks": null,
+          "progress": 0,
+          "monthlyCost": {
+            "2026-12": 1600
+          }
+        },
+        {
+          "order": 18,
+          "phase": "الإغلاق",
+          "title": "عرض التقرير على الإدارة التنفيذية واعتماده وتوثيق توصيات النسخة القادمة",
+          "evidence": "محضر اعتماد وتوصيات",
+          "owner": "مديرة المشروع",
+          "cost": 1600,
+          "actualCost": 0,
+          "planStartWeek": 22,
+          "planWeeks": 1,
+          "actualStartWeek": null,
+          "actualWeeks": null,
+          "progress": 0,
+          "monthlyCost": {
+            "2026-12": 1600
+          }
+        }
+      ],
+      "headerRow": 12
+    },
+    {
+      "number": 3,
+      "name": "التقوية",
+      "description": "دروس تقوية لطلاب التعليم",
+      "objectiveLabel": "(س4) نشر وتعزيز ثقافة التعلم في المجتمع",
+      "indicatorLabels": "(س4-1) عدد المبادرات التعليمية والتوعوية المقدمة لعموم المجتمع",
+      "durationText": "15 أسبوعاً",
+      "managerName": "شركة زاد التنموية",
+      "owningDept": "شركة زاد التنموية",
+      "priority": null,
+      "startDate": "2026-09-19",
+      "endDate": "2026-12-31",
+      "budget": 35000,
+      "monthlyBudget": {
+        "2026-09": 8000,
+        "2026-10": 8600,
+        "2026-11": 10000,
+        "2026-12": 8400
+      },
+      "steps": [
+        {
+          "order": 1,
+          "phase": "الإعداد",
+          "title": "إعداد وثيقة نطاق المبادرة: الهدف، المستهدفات الرقمية، الفئة المستفيدة، المخرجات، وما هو خارج النطاق",
+          "evidence": "وثيقة نطاق معتمدة",
+          "owner": "مديرة المشروع",
+          "cost": 800,
+          "actualCost": 0,
+          "planStartWeek": 8,
+          "planWeeks": 1,
+          "actualStartWeek": null,
+          "actualWeeks": null,
+          "progress": 0,
+          "monthlyCost": {
+            "2026-09": 800
+          }
+        },
+        {
+          "order": 2,
+          "phase": "الإعداد",
+          "title": "تشكيل فريق عمل المبادرة وتحديد دور كل عضو ومسؤولياته وصلاحياته كتابياً",
+          "evidence": "محضر تشكيل الفريق",
+          "owner": "مديرة المشروع",
+          "cost": 800,
+          "actualCost": 0,
+          "planStartWeek": 8,
+          "planWeeks": 1,
+          "actualStartWeek": null,
+          "actualWeeks": null,
+          "progress": 0,
+          "monthlyCost": {
+            "2026-09": 800
+          }
+        },
+        {
+          "order": 3,
+          "phase": "الإعداد",
+          "title": "عقد اجتماع انطلاق المبادرة ومراجعة الخطة الزمنية والموازنة وقنوات التواصل",
+          "evidence": "محضر اجتماع الانطلاق",
+          "owner": "مديرة المشروع",
+          "cost": 800,
+          "actualCost": 0,
+          "planStartWeek": 8,
+          "planWeeks": 1,
+          "actualStartWeek": null,
+          "actualWeeks": null,
+          "progress": 0,
+          "monthlyCost": {
+            "2026-09": 800
+          }
+        },
+        {
+          "order": 4,
+          "phase": "الإعداد",
+          "title": "حصر مخاطر المبادرة (تمويل، وقت، شركاء، إقبال) وتحديد خطة استجابة لكل خطر",
+          "evidence": "سجل المخاطر والاستجابة",
+          "owner": "مديرة المشروع",
+          "cost": 800,
+          "actualCost": 0,
+          "planStartWeek": 8,
+          "planWeeks": 1,
+          "actualStartWeek": null,
+          "actualWeeks": null,
+          "progress": 0,
+          "monthlyCost": {
+            "2026-09": 800
+          }
+        },
+        {
+          "order": 5,
+          "phase": "الإعداد",
+          "title": "تحليل احتياج الفئة المستهدفة (طلاب التعليم) وتحديد المخرجات التعليمية المطلوبة",
+          "evidence": "تقرير تحليل الاحتياج",
+          "owner": "مديرة المشروع",
+          "cost": 1600,
+          "actualCost": 0,
+          "planStartWeek": 8,
+          "planWeeks": 1,
+          "actualStartWeek": null,
+          "actualWeeks": null,
+          "progress": 0,
+          "monthlyCost": {
+            "2026-09": 1600
+          }
+        },
+        {
+          "order": 6,
+          "phase": "الإعداد",
+          "title": "تصميم المسار العلمي للمبادرة ووحداته ومعايير اجتيازه وأدوات تقويمه",
+          "evidence": "الخطة العلمية معتمدة",
+          "owner": "مديرة المشروع",
+          "cost": 1600,
+          "actualCost": 0,
+          "planStartWeek": 8,
+          "planWeeks": 1,
+          "actualStartWeek": null,
+          "actualWeeks": null,
+          "progress": 0,
+          "monthlyCost": {
+            "2026-09": 1600
+          }
+        },
+        {
+          "order": 7,
+          "phase": "الإعداد",
+          "title": "إعداد المحتوى والحقائب والمواد التعليمية المطلوبة للتنفيذ",
+          "evidence": "المحتوى والحقائب جاهزة",
+          "owner": "مديرة المشروع",
+          "cost": 1600,
+          "actualCost": 0,
+          "planStartWeek": 9,
+          "planWeeks": 1,
+          "actualStartWeek": null,
+          "actualWeeks": null,
+          "progress": 0,
+          "monthlyCost": {
+            "2026-09": 1600
+          }
+        },
+        {
+          "order": 8,
+          "phase": "الإعداد",
+          "title": "ترشيح المدربات والمشرفات وفق معايير معتمدة وإتمام التعاقد معهم",
+          "evidence": "عقود المدربات والمشرفات",
+          "owner": "مديرة المشروع",
+          "cost": 1600,
+          "actualCost": 0,
+          "planStartWeek": 10,
+          "planWeeks": 1,
+          "actualStartWeek": null,
+          "actualWeeks": null,
+          "progress": 0,
+          "monthlyCost": {
+            "2026-10": 1600
+          }
+        },
+        {
+          "order": 9,
+          "phase": "الإعداد",
+          "title": "تحديد مقر التنفيذ والتجهيزات والجدول الزمني وخطة التشغيل اليومية",
+          "evidence": "خطة تشغيل معتمدة",
+          "owner": "مديرة المشروع",
+          "cost": 1600,
+          "actualCost": 0,
+          "planStartWeek": 11,
+          "planWeeks": 1,
+          "actualStartWeek": null,
+          "actualWeeks": null,
+          "progress": 0,
+          "monthlyCost": {
+            "2026-10": 1600
+          }
+        },
+        {
+          "order": 10,
+          "phase": "الإعداد",
+          "title": "إعداد خطة التسويق وفتح باب التسجيل وفرز المتقدمات وفق معايير القبول",
+          "evidence": "كشف المقبولات",
+          "owner": "مديرة المشروع",
+          "cost": 1600,
+          "actualCost": 0,
+          "planStartWeek": 11,
+          "planWeeks": 2,
+          "actualStartWeek": null,
+          "actualWeeks": null,
+          "progress": 0,
+          "monthlyCost": {
+            "2026-10": 1600
+          }
+        },
+        {
+          "order": 11,
+          "phase": "التنفيذ",
+          "title": "إطلاق «التقوية» وتنفيذ لقاءاته ووحداته وفق الجدول الزمني المعتمد",
+          "evidence": "كشوف الحضور وشواهد التنفيذ",
+          "owner": "مديرة المشروع",
+          "cost": 3800,
+          "actualCost": 0,
+          "planStartWeek": 13,
+          "planWeeks": 1,
+          "actualStartWeek": null,
+          "actualWeeks": null,
+          "progress": 0,
+          "monthlyCost": {
+            "2026-10": 3800
+          }
+        },
+        {
+          "order": 12,
+          "phase": "التنفيذ",
+          "title": "المتابعة الدورية للتنفيذ ورصد الانضباط ومعالجة ملاحظات المستفيدات والمدربات",
+          "evidence": "تقارير المتابعة الدورية",
+          "owner": "مديرة المشروع",
+          "cost": 4000,
+          "actualCost": 0,
+          "planStartWeek": 14,
+          "planWeeks": 2,
+          "actualStartWeek": null,
+          "actualWeeks": null,
+          "progress": 0,
+          "monthlyCost": {
+            "2026-11": 4000
+          }
+        },
+        {
+          "order": 13,
+          "phase": "التنفيذ",
+          "title": "تنفيذ التقويم القبلي والبعدي لقياس الأثر التعليمي على المستفيدات",
+          "evidence": "نتائج التقويم القبلي والبعدي",
+          "owner": "مديرة المشروع",
+          "cost": 4000,
+          "actualCost": 0,
+          "planStartWeek": 16,
+          "planWeeks": 1,
+          "actualStartWeek": null,
+          "actualWeeks": null,
+          "progress": 0,
+          "monthlyCost": {
+            "2026-11": 4000
+          }
+        },
+        {
+          "order": 14,
+          "phase": "التنفيذ",
+          "title": "قياس رضا المستفيدات عن المبادرة عبر استبانة معتمدة",
+          "evidence": "تقرير قياس الرضا",
+          "owner": "مديرة المشروع",
+          "cost": 4000,
+          "actualCost": 0,
+          "planStartWeek": 17,
+          "planWeeks": 2,
+          "actualStartWeek": null,
+          "actualWeeks": null,
+          "progress": 0,
+          "monthlyCost": {
+            "2026-11": 2000,
+            "2026-12": 2000
+          }
+        },
+        {
+          "order": 15,
+          "phase": "التنفيذ",
+          "title": "اعتماد النتائج وتسليم الشهادات والمخرجات وتوثيق تحقق مستهدفات المبادرة",
+          "evidence": "كشف تسليم الشهادات",
+          "owner": "مديرة المشروع",
+          "cost": 4000,
+          "actualCost": 0,
+          "planStartWeek": 19,
+          "planWeeks": 2,
+          "actualStartWeek": null,
+          "actualWeeks": null,
+          "progress": 0,
+          "monthlyCost": {
+            "2026-12": 4000
+          }
+        },
+        {
+          "order": 16,
+          "phase": "الإغلاق",
+          "title": "تجميع شواهد التنفيذ (محاضر، كشوف، صور، تقارير) وأرشفتها في ملف المبادرة",
+          "evidence": "ملف شواهد مكتمل",
+          "owner": "مديرة المشروع",
+          "cost": 800,
+          "actualCost": 0,
+          "planStartWeek": 20,
+          "planWeeks": 1,
+          "actualStartWeek": null,
+          "actualWeeks": null,
+          "progress": 0,
+          "monthlyCost": {
+            "2026-12": 800
+          }
+        },
+        {
+          "order": 17,
+          "phase": "الإغلاق",
+          "title": "إعداد التقرير الختامي: نسب الإنجاز، الأثر المتحقق، الانحرافات وأسبابها، الدروس المستفادة",
+          "evidence": "التقرير الختامي",
+          "owner": "مديرة المشروع",
+          "cost": 800,
+          "actualCost": 0,
+          "planStartWeek": 21,
+          "planWeeks": 1,
+          "actualStartWeek": null,
+          "actualWeeks": null,
+          "progress": 0,
+          "monthlyCost": {
+            "2026-12": 800
+          }
+        },
+        {
+          "order": 18,
+          "phase": "الإغلاق",
+          "title": "عرض التقرير على الإدارة التنفيذية واعتماده وتوثيق توصيات النسخة القادمة",
+          "evidence": "محضر اعتماد وتوصيات",
+          "owner": "مديرة المشروع",
+          "cost": 800,
+          "actualCost": 0,
+          "planStartWeek": 22,
+          "planWeeks": 1,
+          "actualStartWeek": null,
+          "actualWeeks": null,
+          "progress": 0,
+          "monthlyCost": {
+            "2026-12": 800
+          }
+        }
+      ],
+      "headerRow": 12
+    },
+    {
+      "number": 4,
+      "name": "الزيارات الدورية",
+      "description": "تنفيذ لقاءات وزيارات دورية مع أصحاب المصلحة لتوثيق العلاقة والاستماع لتطلعاتهم وبناء شراكات مستدامة.",
+      "objectiveLabel": "(ص1) بناء صورة ذهنية إيجابية وسمعة مؤسسية متميزة",
+      "indicatorLabels": "(ص1-1) نسبة رضا أصحاب المصلحة (ص1-2) عدد اللقاءات والاجتماعات والزيارات المنفذة مع أصحاب المصلحة",
+      "durationText": "11 أسبوعاً",
+      "managerName": "مديرة الاتصال المؤسسي",
+      "owningDept": "إدارة الاتصال المؤسسي",
+      "priority": null,
+      "startDate": "2026-09-19",
+      "endDate": "2026-12-04",
+      "budget": 7050,
+      "monthlyBudget": {
+        "2026-09": 450,
+        "2026-10": 2200,
+        "2026-11": 3300,
+        "2026-12": 1100
+      },
+      "steps": [
+        {
+          "order": 1,
+          "phase": "الإعداد",
+          "title": "حصر أصحاب المصلحة وتصنيفهم وفق مصفوفة الأهمية والتأثير",
+          "evidence": "سجل أصحاب المصلحة مصنَّف",
+          "owner": "مديرة المشروع",
+          "cost": 450,
+          "actualCost": 0,
+          "planStartWeek": 8,
+          "planWeeks": 1,
+          "actualStartWeek": null,
+          "actualWeeks": null,
+          "progress": 0,
+          "monthlyCost": {
+            "2026-09": 450
+          }
+        },
+        {
+          "order": 2,
+          "phase": "الإعداد",
+          "title": "إعداد الملف التعريفي للجمعية ومواد العرض المستخدمة في الزيارات",
+          "evidence": "الملف التعريفي ومواد العرض",
+          "owner": "مديرة المشروع",
+          "cost": 450,
+          "actualCost": 0,
+          "planStartWeek": 10,
+          "planWeeks": 2,
+          "actualStartWeek": null,
+          "actualWeeks": null,
+          "progress": 0,
+          "monthlyCost": {
+            "2026-10": 450
+          }
+        },
+        {
+          "order": 3,
+          "phase": "الإعداد",
+          "title": "تصميم نموذج محضر الزيارة وسجل التوصيات وآلية متابعة تنفيذها",
+          "evidence": "النماذج والسجلات معتمدة",
+          "owner": "مديرة المشروع",
+          "cost": 450,
+          "actualCost": 0,
+          "planStartWeek": 11,
+          "planWeeks": 2,
+          "actualStartWeek": null,
+          "actualWeeks": null,
+          "progress": 0,
+          "monthlyCost": {
+            "2026-10": 450
+          }
+        },
+        {
+          "order": 4,
+          "phase": "التنفيذ",
+          "title": "التنسيق المسبق مع الجهات وتحديد المواعيد وتأكيد الحضور",
+          "evidence": "سجل المواعيد المؤكدة",
+          "owner": "مديرة المشروع",
+          "cost": 1300,
+          "actualCost": 0,
+          "planStartWeek": 13,
+          "planWeeks": 1,
+          "actualStartWeek": null,
+          "actualWeeks": null,
+          "progress": 0,
+          "monthlyCost": {
+            "2026-10": 1300
+          }
+        },
+        {
+          "order": 5,
+          "phase": "التنفيذ",
+          "title": "تنفيذ الزيارات واللقاءات الدورية مع أصحاب المصلحة وفق الجدول المعتمد",
+          "evidence": "زيارات منفّذة",
+          "owner": "مديرة المشروع",
+          "cost": 1100,
+          "actualCost": 0,
+          "planStartWeek": 14,
+          "planWeeks": 2,
+          "actualStartWeek": null,
+          "actualWeeks": null,
+          "progress": 0,
+          "monthlyCost": {
+            "2026-11": 1100
+          }
+        },
+        {
+          "order": 6,
+          "phase": "التنفيذ",
+          "title": "تدوين محضر لكل زيارة يتضمن ما نوقش والتوصيات والمسؤول عن كل توصية",
+          "evidence": "محاضر لقاءات",
+          "owner": "مديرة المشروع",
+          "cost": 1100,
+          "actualCost": 0,
+          "planStartWeek": 16,
+          "planWeeks": 1,
+          "actualStartWeek": null,
+          "actualWeeks": null,
+          "progress": 0,
+          "monthlyCost": {
+            "2026-11": 1100
+          }
+        },
+        {
+          "order": 7,
+          "phase": "التنفيذ",
+          "title": "رفع التوصيات إلى سجل موحّد ومتابعة تنفيذها مع الإدارات المعنية",
+          "evidence": "سجل التوصيات ومتابعتها",
+          "owner": "مديرة المشروع",
+          "cost": 1100,
+          "actualCost": 0,
+          "planStartWeek": 16,
+          "planWeeks": 2,
+          "actualStartWeek": null,
+          "actualWeeks": null,
+          "progress": 0,
+          "monthlyCost": {
+            "2026-11": 1100
+          }
+        },
+        {
+          "order": 8,
+          "phase": "التنفيذ",
+          "title": "قياس رضا أصحاب المصلحة بعد الزيارات عبر استبانة مختصرة",
+          "evidence": "تقرير قياس الرضا",
+          "owner": "مديرة المشروع",
+          "cost": 1100,
+          "actualCost": 0,
+          "planStartWeek": 18,
+          "planWeeks": 1,
+          "actualStartWeek": null,
+          "actualWeeks": null,
+          "progress": 0,
+          "monthlyCost": {
+            "2026-12": 1100
+          }
+        }
+      ],
+      "headerRow": 12
+    },
+    {
+      "number": 5,
+      "name": "قياس الرضا",
+      "description": "قياس مستوى رضا أصحاب المصلحة دوريًا عن علاقتهم بالجمعية وخدماتها بما يدعم تطوير الأداء.",
+      "objectiveLabel": "(ص1) بناء صورة ذهنية إيجابية وسمعة مؤسسية متميزة",
+      "indicatorLabels": "(ص1-1) نسبة رضا أصحاب المصلحة",
+      "durationText": "11 أسبوعاً",
+      "managerName": "مديرة الجودة والتميز",
+      "owningDept": "إدارة الجودة والتميز",
+      "priority": null,
+      "startDate": "2026-09-19",
+      "endDate": "2026-12-04",
+      "budget": 3700,
+      "monthlyBudget": {
+        "2026-09": 500,
+        "2026-10": 1400,
+        "2026-11": 1500,
+        "2026-12": 300
+      },
+      "steps": [
+        {
+          "order": 1,
+          "phase": "الإعداد",
+          "title": "تحديد شرائح أصحاب المصلحة المشمولة بالقياس ودوريته",
+          "evidence": "خطة القياس معتمدة",
+          "owner": "مديرة المشروع",
+          "cost": 250,
+          "actualCost": 0,
+          "planStartWeek": 8,
+          "planWeeks": 1,
+          "actualStartWeek": null,
+          "actualWeeks": null,
+          "progress": 0,
+          "monthlyCost": {
+            "2026-09": 250
+          }
+        },
+        {
+          "order": 2,
+          "phase": "الإعداد",
+          "title": "تصميم أداة قياس الرضا وبنودها ومقياس التقييم المعتمد",
+          "evidence": "أداة قياس معتمدة",
+          "owner": "مديرة المشروع",
+          "cost": 250,
+          "actualCost": 0,
+          "planStartWeek": 8,
+          "planWeeks": 2,
+          "actualStartWeek": null,
+          "actualWeeks": null,
+          "progress": 0,
+          "monthlyCost": {
+            "2026-09": 250
+          }
+        },
+        {
+          "order": 3,
+          "phase": "الإعداد",
+          "title": "تحكيم الأداة مع مختصين واعتمادها",
+          "evidence": "إفادة تحكيم الأداة",
+          "owner": "مديرة المشروع",
+          "cost": 250,
+          "actualCost": 0,
+          "planStartWeek": 10,
+          "planWeeks": 2,
+          "actualStartWeek": null,
+          "actualWeeks": null,
+          "progress": 0,
+          "monthlyCost": {
+            "2026-10": 250
+          }
+        },
+        {
+          "order": 4,
+          "phase": "الإعداد",
+          "title": "تحديد قنوات التوزيع وآلية جمع البيانات وضوابط الخصوصية",
+          "evidence": "آلية الجمع معتمدة",
+          "owner": "مديرة المشروع",
+          "cost": 250,
+          "actualCost": 0,
+          "planStartWeek": 11,
+          "planWeeks": 2,
+          "actualStartWeek": null,
+          "actualWeeks": null,
+          "progress": 0,
+          "monthlyCost": {
+            "2026-10": 250
+          }
+        },
+        {
+          "order": 5,
+          "phase": "التنفيذ",
+          "title": "إطلاق القياس وتوزيع الأداة على الشرائح المستهدفة",
+          "evidence": "روابط وسجلات التوزيع",
+          "owner": "مديرة المشروع",
+          "cost": 900,
+          "actualCost": 0,
+          "planStartWeek": 13,
+          "planWeeks": 1,
+          "actualStartWeek": null,
+          "actualWeeks": null,
+          "progress": 0,
+          "monthlyCost": {
+            "2026-10": 900
+          }
+        },
+        {
+          "order": 6,
+          "phase": "التنفيذ",
+          "title": "متابعة نسب الاستجابة وتحفيز المشاركة لبلوغ عينة ممثلة",
+          "evidence": "تقرير نسب الاستجابة",
+          "owner": "مديرة المشروع",
+          "cost": 600,
+          "actualCost": 0,
+          "planStartWeek": 14,
+          "planWeeks": 2,
+          "actualStartWeek": null,
+          "actualWeeks": null,
+          "progress": 0,
+          "monthlyCost": {
+            "2026-11": 600
+          }
+        },
+        {
+          "order": 7,
+          "phase": "التنفيذ",
+          "title": "تفريغ البيانات وتحليل النتائج واستخراج مؤشر الرضا",
+          "evidence": "مؤشر رضا محتسب",
+          "owner": "مديرة المشروع",
+          "cost": 600,
+          "actualCost": 0,
+          "planStartWeek": 16,
+          "planWeeks": 1,
+          "actualStartWeek": null,
+          "actualWeeks": null,
+          "progress": 0,
+          "monthlyCost": {
+            "2026-11": 600
+          }
+        },
+        {
+          "order": 8,
+          "phase": "التنفيذ",
+          "title": "إعداد تقرير النتائج متضمناً نقاط القوة وفرص التحسين",
+          "evidence": "تقرير نتائج",
+          "owner": "مديرة المشروع",
+          "cost": 600,
+          "actualCost": 0,
+          "planStartWeek": 17,
+          "planWeeks": 2,
+          "actualStartWeek": null,
+          "actualWeeks": null,
+          "progress": 0,
+          "monthlyCost": {
+            "2026-11": 300,
+            "2026-12": 300
+          }
+        }
+      ],
+      "headerRow": 12
+    },
+    {
+      "number": 6,
+      "name": "التقارير الدورية",
+      "description": "إعداد وإصدار تقارير دورية شفافة لأصحاب المصلحة توضّح إنجازات الجمعية وأثرها ومصارف الدعم.",
+      "objectiveLabel": "(ص1) بناء صورة ذهنية إيجابية وسمعة مؤسسية متميزة",
+      "indicatorLabels": "(ص1-3) عدد التقارير الدورية الصادرة لأصحاب المصلحة",
+      "durationText": "13 أسبوعاً",
+      "managerName": "مديرة الاتصال المؤسسي",
+      "owningDept": "إدارة الاتصال المؤسسي",
+      "priority": null,
+      "startDate": "2026-09-19",
+      "endDate": "2026-12-18",
+      "budget": 2950,
+      "monthlyBudget": {
+        "2026-09": 375,
+        "2026-10": 625,
+        "2026-11": 1300,
+        "2026-12": 650
+      },
+      "steps": [
+        {
+          "order": 1,
+          "phase": "الإعداد",
+          "title": "تحديد محتوى التقرير الدوري ومؤشراته وجمهوره ودوريته",
+          "evidence": "مصفوفة محتوى التقرير",
+          "owner": "مديرة المشروع",
+          "cost": 250,
+          "actualCost": 0,
+          "planStartWeek": 8,
+          "planWeeks": 1,
+          "actualStartWeek": null,
+          "actualWeeks": null,
+          "progress": 0,
+          "monthlyCost": {
+            "2026-09": 250
+          }
+        },
+        {
+          "order": 2,
+          "phase": "الإعداد",
+          "title": "تصميم قالب موحّد للتقرير متسق مع الهوية البصرية للجمعية",
+          "evidence": "قوالب موحّدة",
+          "owner": "مديرة المشروع",
+          "cost": 250,
+          "actualCost": 0,
+          "planStartWeek": 9,
+          "planWeeks": 2,
+          "actualStartWeek": null,
+          "actualWeeks": null,
+          "progress": 0,
+          "monthlyCost": {
+            "2026-09": 125,
+            "2026-10": 125
+          }
+        },
+        {
+          "order": 3,
+          "phase": "التنفيذ",
+          "title": "تجميع بيانات الفترة من الإدارات وفق المصفوفة المعتمدة",
+          "evidence": "ملف البيانات المجمّعة",
+          "owner": "مديرة المشروع",
+          "cost": 500,
+          "actualCost": 0,
+          "planStartWeek": 13,
+          "planWeeks": 1,
+          "actualStartWeek": null,
+          "actualWeeks": null,
+          "progress": 0,
+          "monthlyCost": {
+            "2026-10": 500
+          }
+        },
+        {
+          "order": 4,
+          "phase": "التنفيذ",
+          "title": "إعداد التقرير الدوري وتدقيق أرقامه ومحتواه",
+          "evidence": "مسودة التقرير مدققة",
+          "owner": "مديرة المشروع",
+          "cost": 650,
+          "actualCost": 0,
+          "planStartWeek": 14,
+          "planWeeks": 2,
+          "actualStartWeek": null,
+          "actualWeeks": null,
+          "progress": 0,
+          "monthlyCost": {
+            "2026-11": 650
+          }
+        },
+        {
+          "order": 5,
+          "phase": "التنفيذ",
+          "title": "اعتماد التقرير وإصداره ونشره عبر القنوات المعتمدة",
+          "evidence": "تقارير دورية صادرة",
+          "owner": "مديرة المشروع",
+          "cost": 650,
+          "actualCost": 0,
+          "planStartWeek": 16,
+          "planWeeks": 1,
+          "actualStartWeek": null,
+          "actualWeeks": null,
+          "progress": 0,
+          "monthlyCost": {
+            "2026-11": 650
+          }
+        },
+        {
+          "order": 6,
+          "phase": "التنفيذ",
+          "title": "أرشفة التقارير في مكتبة موحّدة تتيح الرجوع وتعزز الشفافية",
+          "evidence": "أرشيف التقارير",
+          "owner": "مديرة المشروع",
+          "cost": 650,
+          "actualCost": 0,
+          "planStartWeek": 19,
+          "planWeeks": 2,
+          "actualStartWeek": null,
+          "actualWeeks": null,
+          "progress": 0,
+          "monthlyCost": {
+            "2026-12": 650
+          }
+        }
+      ],
+      "headerRow": 12
+    },
+    {
+      "number": 7,
+      "name": "حسابات التواصل",
+      "description": "تأسيس وتفعيل حسابات التواصل الاجتماعي للتعريف بخدمات الجمعية والتفاعل مع الجمهور ورفع المشاهدات.",
+      "objectiveLabel": "(ص1) بناء صورة ذهنية إيجابية وسمعة مؤسسية متميزة",
+      "indicatorLabels": "(ص1-5) عدد المنصات الإعلامية المفعلة للجمعية (ص1-6) إجمالي عدد المشاهدات لمنصات الجمعية المفعلة",
+      "durationText": "9 أسابيع",
+      "managerName": "مديرة الاتصال المؤسسي",
+      "owningDept": "إدارة الاتصال المؤسسي",
+      "priority": null,
+      "startDate": "2026-10-03",
+      "endDate": "2026-12-04",
+      "budget": 10200,
+      "monthlyBudget": {
+        "2026-10": 3500,
+        "2026-11": 5250,
+        "2026-12": 1450
+      },
+      "steps": [
+        {
+          "order": 1,
+          "phase": "الإعداد",
+          "title": "إعداد خطة المحتوى والتقويم النشري لفترة الخطة",
+          "evidence": "خطة محتوى معتمدة",
+          "owner": "مديرة المشروع",
+          "cost": 750,
+          "actualCost": 0,
+          "planStartWeek": 10,
+          "planWeeks": 2,
+          "actualStartWeek": null,
+          "actualWeeks": null,
+          "progress": 0,
+          "monthlyCost": {
+            "2026-10": 750
+          }
+        },
+        {
+          "order": 2,
+          "phase": "الإعداد",
+          "title": "إعداد دليل النشر وضوابط التفاعل والرد وزمن الاستجابة",
+          "evidence": "دليل الهوية والتفاعل",
+          "owner": "مديرة المشروع",
+          "cost": 750,
+          "actualCost": 0,
+          "planStartWeek": 11,
+          "planWeeks": 2,
+          "actualStartWeek": null,
+          "actualWeeks": null,
+          "progress": 0,
+          "monthlyCost": {
+            "2026-10": 750
+          }
+        },
+        {
+          "order": 3,
+          "phase": "التنفيذ",
+          "title": "إنتاج المواد البصرية والمرئية وفق التقويم المعتمد للنشر",
+          "evidence": "مكتبة المواد المنتجة",
+          "owner": "مديرة المشروع",
+          "cost": 2000,
+          "actualCost": 0,
+          "planStartWeek": 13,
+          "planWeeks": 1,
+          "actualStartWeek": null,
+          "actualWeeks": null,
+          "progress": 0,
+          "monthlyCost": {
+            "2026-10": 2000
+          }
+        },
+        {
+          "order": 4,
+          "phase": "التنفيذ",
+          "title": "النشر الدوري وفق التقويم المعتمد ومتابعة انتظامه",
+          "evidence": "سجل النشر",
+          "owner": "مديرة المشروع",
+          "cost": 1900,
+          "actualCost": 0,
+          "planStartWeek": 14,
+          "planWeeks": 2,
+          "actualStartWeek": null,
+          "actualWeeks": null,
+          "progress": 0,
+          "monthlyCost": {
+            "2026-11": 1900
+          }
+        },
+        {
+          "order": 5,
+          "phase": "التنفيذ",
+          "title": "إدارة التفاعل والرد على الاستفسارات ضمن زمن الاستجابة المحدد",
+          "evidence": "سجل الاستفسارات والردود",
+          "owner": "مديرة المشروع",
+          "cost": 1900,
+          "actualCost": 0,
+          "planStartWeek": 16,
+          "planWeeks": 1,
+          "actualStartWeek": null,
+          "actualWeeks": null,
+          "progress": 0,
+          "monthlyCost": {
+            "2026-11": 1900
+          }
+        },
+        {
+          "order": 6,
+          "phase": "التنفيذ",
+          "title": "رصد المشاهدات والوصول والتفاعل شهرياً لكل منصة",
+          "evidence": "تقارير الأداء الشهرية",
+          "owner": "مديرة المشروع",
+          "cost": 1900,
+          "actualCost": 0,
+          "planStartWeek": 17,
+          "planWeeks": 2,
+          "actualStartWeek": null,
+          "actualWeeks": null,
+          "progress": 0,
+          "monthlyCost": {
+            "2026-11": 950,
+            "2026-12": 950
+          }
+        },
+        {
+          "order": 7,
+          "phase": "التنفيذ",
+          "title": "تحديث بيانات الموقع الإلكتروني شهريًا",
+          "evidence": "تقارير الأداء الشهرية",
+          "owner": "مديرة المشروع",
+          "cost": 1000,
+          "actualCost": 0,
+          "planStartWeek": 17,
+          "planWeeks": 2,
+          "actualStartWeek": null,
+          "actualWeeks": null,
+          "progress": 0,
+          "monthlyCost": {
+            "2026-11": 500,
+            "2026-12": 500
+          }
+        }
+      ],
+      "headerRow": 12
+    },
+    {
+      "number": 8,
+      "name": "مانح",
+      "description": "التسويق للجهات المانحة وبرامج المسؤولية المجتمعية لتنمية موارد الجمعية وتنويع مصادر دخلها.",
+      "objectiveLabel": "(م1) تحقيق الاستقرار المالي من خلال تنويع مصادر الدخل",
+      "indicatorLabels": "(م1-3) عدد مصادر الدخل المفعلة (م1-4) عدد المشاريع الممنوحة (م1-6) عدد المانحين الذين تمت زيارتهم",
+      "durationText": "15 أسبوعاً",
+      "managerName": "شركة زاد التنموية",
+      "owningDept": "إدارة تنمية الموارد المالية",
+      "priority": null,
+      "startDate": "2026-09-19",
+      "endDate": "2026-12-31",
+      "budget": 25000,
+      "monthlyBudget": {
+        "2026-09": 4800,
+        "2026-10": 6200,
+        "2026-11": 7625,
+        "2026-12": 6375
+      },
+      "steps": [
+        {
+          "order": 1,
+          "phase": "الإعداد",
+          "title": "إعداد وثيقة نطاق المبادرة: الهدف، المستهدفات الرقمية، الفئة المستفيدة، المخرجات، وما هو خارج النطاق",
+          "evidence": "وثيقة نطاق معتمدة",
+          "owner": "مديرة المشروع",
+          "cost": 600,
+          "actualCost": 0,
+          "planStartWeek": 8,
+          "planWeeks": 1,
+          "actualStartWeek": null,
+          "actualWeeks": null,
+          "progress": 0,
+          "monthlyCost": {
+            "2026-09": 600
+          }
+        },
+        {
+          "order": 2,
+          "phase": "الإعداد",
+          "title": "تشكيل فريق عمل المبادرة وتحديد دور كل عضو ومسؤولياته وصلاحياته كتابياً",
+          "evidence": "محضر تشكيل الفريق",
+          "owner": "مديرة المشروع",
+          "cost": 600,
+          "actualCost": 0,
+          "planStartWeek": 8,
+          "planWeeks": 1,
+          "actualStartWeek": null,
+          "actualWeeks": null,
+          "progress": 0,
+          "monthlyCost": {
+            "2026-09": 600
+          }
+        },
+        {
+          "order": 3,
+          "phase": "الإعداد",
+          "title": "عقد اجتماع انطلاق المبادرة ومراجعة الخطة الزمنية والموازنة وقنوات التواصل",
+          "evidence": "محضر اجتماع الانطلاق",
+          "owner": "مديرة المشروع",
+          "cost": 600,
+          "actualCost": 0,
+          "planStartWeek": 8,
+          "planWeeks": 1,
+          "actualStartWeek": null,
+          "actualWeeks": null,
+          "progress": 0,
+          "monthlyCost": {
+            "2026-09": 600
+          }
+        },
+        {
+          "order": 4,
+          "phase": "الإعداد",
+          "title": "حصر الجهات المانحة وبرامج المسؤولية المجتمعية المستهدفة",
+          "evidence": "قاعدة بيانات الجهات المانحة",
+          "owner": "مديرة المشروع",
+          "cost": 1200,
+          "actualCost": 0,
+          "planStartWeek": 8,
+          "planWeeks": 1,
+          "actualStartWeek": null,
+          "actualWeeks": null,
+          "progress": 0,
+          "monthlyCost": {
+            "2026-09": 1200
+          }
+        },
+        {
+          "order": 5,
+          "phase": "الإعداد",
+          "title": "تصنيف الجهات وفق أولوية الاستهداف ومجالات دعمها وشروطها",
+          "evidence": "مصفوفة الاستهداف",
+          "owner": "مديرة المشروع",
+          "cost": 1200,
+          "actualCost": 0,
+          "planStartWeek": 8,
+          "planWeeks": 1,
+          "actualStartWeek": null,
+          "actualWeeks": null,
+          "progress": 0,
+          "monthlyCost": {
+            "2026-09": 1200
+          }
+        },
+        {
+          "order": 6,
+          "phase": "الإعداد",
+          "title": "حصر مشاريع الجمعية القابلة للمنح وإعداد ملف لكل مشروع",
+          "evidence": "ملفات المشاريع",
+          "owner": "مديرة المشروع",
+          "cost": 1200,
+          "actualCost": 0,
+          "planStartWeek": 9,
+          "planWeeks": 2,
+          "actualStartWeek": null,
+          "actualWeeks": null,
+          "progress": 0,
+          "monthlyCost": {
+            "2026-09": 600,
+            "2026-10": 600
+          }
+        },
+        {
+          "order": 7,
+          "phase": "الإعداد",
+          "title": "إعداد العروض والملفات التسويقية بما يتوافق مع متطلبات كل جهة",
+          "evidence": "ملفات تسويقية",
+          "owner": "مديرة المشروع",
+          "cost": 1200,
+          "actualCost": 0,
+          "planStartWeek": 11,
+          "planWeeks": 1,
+          "actualStartWeek": null,
+          "actualWeeks": null,
+          "progress": 0,
+          "monthlyCost": {
+            "2026-10": 1200
+          }
+        },
+        {
+          "order": 8,
+          "phase": "الإعداد",
+          "title": "اعتماد رسائل التواصل ونماذج الطلبات والمرفقات النظامية",
+          "evidence": "حزمة التواصل معتمدة",
+          "owner": "مديرة المشروع",
+          "cost": 1200,
+          "actualCost": 0,
+          "planStartWeek": 11,
+          "planWeeks": 2,
+          "actualStartWeek": null,
+          "actualWeeks": null,
+          "progress": 0,
+          "monthlyCost": {
+            "2026-10": 1200
+          }
+        },
+        {
+          "order": 9,
+          "phase": "التنفيذ",
+          "title": "التواصل مع الجهات المانحة ورفع طلبات الدعم والعروض",
+          "evidence": "سجل الطلبات المرفوعة",
+          "owner": "مديرة المشروع",
+          "cost": 3200,
+          "actualCost": 0,
+          "planStartWeek": 13,
+          "planWeeks": 1,
+          "actualStartWeek": null,
+          "actualWeeks": null,
+          "progress": 0,
+          "monthlyCost": {
+            "2026-10": 3200
+          }
+        },
+        {
+          "order": 10,
+          "phase": "التنفيذ",
+          "title": "تنفيذ زيارات ولقاءات مع المانحين ومتابعة طلبات الدعم",
+          "evidence": "محاضر زيارات المانحين",
+          "owner": "مديرة المشروع",
+          "cost": 3050,
+          "actualCost": 0,
+          "planStartWeek": 14,
+          "planWeeks": 2,
+          "actualStartWeek": null,
+          "actualWeeks": null,
+          "progress": 0,
+          "monthlyCost": {
+            "2026-11": 3050
+          }
+        },
+        {
+          "order": 11,
+          "phase": "التنفيذ",
+          "title": "التفاوض وصياغة وتوقيع اتفاقيات الدعم والمنح",
+          "evidence": "شراكات تمويلية موقّعة",
+          "owner": "مديرة المشروع",
+          "cost": 3050,
+          "actualCost": 0,
+          "planStartWeek": 16,
+          "planWeeks": 1,
+          "actualStartWeek": null,
+          "actualWeeks": null,
+          "progress": 0,
+          "monthlyCost": {
+            "2026-11": 3050
+          }
+        },
+        {
+          "order": 12,
+          "phase": "التنفيذ",
+          "title": "متابعة صرف المنح وإعداد التقارير المطلوبة للمانحين وتسليمها",
+          "evidence": "تقارير المنح المسلّمة",
+          "owner": "مديرة المشروع",
+          "cost": 3050,
+          "actualCost": 0,
+          "planStartWeek": 17,
+          "planWeeks": 2,
+          "actualStartWeek": null,
+          "actualWeeks": null,
+          "progress": 0,
+          "monthlyCost": {
+            "2026-11": 1525,
+            "2026-12": 1525
+          }
+        },
+        {
+          "order": 13,
+          "phase": "التنفيذ",
+          "title": "تحديث سجل فرص الدعم ومصادر الدخل المفعّلة",
+          "evidence": "فرص دعم موثّقة",
+          "owner": "مديرة المشروع",
+          "cost": 3050,
+          "actualCost": 0,
+          "planStartWeek": 19,
+          "planWeeks": 2,
+          "actualStartWeek": null,
+          "actualWeeks": null,
+          "progress": 0,
+          "monthlyCost": {
+            "2026-12": 3050
+          }
+        },
+        {
+          "order": 14,
+          "phase": "الإغلاق",
+          "title": "تجميع شواهد التنفيذ (محاضر، كشوف، صور، تقارير) وأرشفتها في ملف المبادرة",
+          "evidence": "ملف شواهد مكتمل",
+          "owner": "مديرة المشروع",
+          "cost": 600,
+          "actualCost": 0,
+          "planStartWeek": 20,
+          "planWeeks": 1,
+          "actualStartWeek": null,
+          "actualWeeks": null,
+          "progress": 0,
+          "monthlyCost": {
+            "2026-12": 600
+          }
+        },
+        {
+          "order": 15,
+          "phase": "الإغلاق",
+          "title": "إعداد التقرير الختامي: نسب الإنجاز، الأثر المتحقق، الانحرافات وأسبابها، الدروس المستفادة",
+          "evidence": "التقرير الختامي",
+          "owner": "مديرة المشروع",
+          "cost": 600,
+          "actualCost": 0,
+          "planStartWeek": 21,
+          "planWeeks": 1,
+          "actualStartWeek": null,
+          "actualWeeks": null,
+          "progress": 0,
+          "monthlyCost": {
+            "2026-12": 600
+          }
+        },
+        {
+          "order": 16,
+          "phase": "الإغلاق",
+          "title": "عرض التقرير على الإدارة التنفيذية واعتماده وتوثيق توصيات النسخة القادمة",
+          "evidence": "محضر اعتماد وتوصيات",
+          "owner": "مديرة المشروع",
+          "cost": 600,
+          "actualCost": 0,
+          "planStartWeek": 22,
+          "planWeeks": 1,
+          "actualStartWeek": null,
+          "actualWeeks": null,
+          "progress": 0,
+          "monthlyCost": {
+            "2026-12": 600
+          }
+        }
+      ],
+      "headerRow": 12
+    },
+    {
+      "number": 9,
+      "name": "منصات",
+      "description": "التسويق عبر منصة إحسان وصندوق دعم الجمعيات لزيادة الإيرادات وتوسيع قاعدة الداعمين.",
+      "objectiveLabel": "(م1) تحقيق الاستقرار المالي من خلال تنويع مصادر الدخل",
+      "indicatorLabels": "(م1-1) إجمالي الإيرادات المتحققة (م1-2) نسبة تغطية الإيرادات للمصاريف التشغيلية للجمعية (م1-3) عدد مصادر الدخل المفعلة",
+      "durationText": "15 أسبوعاً",
+      "managerName": "شركة زاد التنموية",
+      "owningDept": "إدارة تنمية الموارد المالية",
+      "priority": null,
+      "startDate": "2026-09-19",
+      "endDate": "2026-12-31",
+      "budget": 15000,
+      "monthlyBudget": {
+        "2026-09": 2700,
+        "2026-10": 3500,
+        "2026-11": 4750,
+        "2026-12": 4050
+      },
+      "steps": [
+        {
+          "order": 1,
+          "phase": "الإعداد",
+          "title": "إعداد وثيقة نطاق المبادرة: الهدف، المستهدفات الرقمية، الفئة المستفيدة، المخرجات، وما هو خارج النطاق",
+          "evidence": "وثيقة نطاق معتمدة",
+          "owner": "مديرة المشروع",
+          "cost": 400,
+          "actualCost": 0,
+          "planStartWeek": 8,
+          "planWeeks": 1,
+          "actualStartWeek": null,
+          "actualWeeks": null,
+          "progress": 0,
+          "monthlyCost": {
+            "2026-09": 400
+          }
+        },
+        {
+          "order": 2,
+          "phase": "الإعداد",
+          "title": "تشكيل فريق عمل المبادرة وتحديد دور كل عضو ومسؤولياته وصلاحياته كتابياً",
+          "evidence": "محضر تشكيل الفريق",
+          "owner": "مديرة المشروع",
+          "cost": 400,
+          "actualCost": 0,
+          "planStartWeek": 8,
+          "planWeeks": 1,
+          "actualStartWeek": null,
+          "actualWeeks": null,
+          "progress": 0,
+          "monthlyCost": {
+            "2026-09": 400
+          }
+        },
+        {
+          "order": 3,
+          "phase": "الإعداد",
+          "title": "عقد اجتماع انطلاق المبادرة ومراجعة الخطة الزمنية والموازنة وقنوات التواصل",
+          "evidence": "محضر اجتماع الانطلاق",
+          "owner": "مديرة المشروع",
+          "cost": 400,
+          "actualCost": 0,
+          "planStartWeek": 8,
+          "planWeeks": 1,
+          "actualStartWeek": null,
+          "actualWeeks": null,
+          "progress": 0,
+          "monthlyCost": {
+            "2026-09": 400
+          }
+        },
+        {
+          "order": 4,
+          "phase": "الإعداد",
+          "title": "حصر المنصات المستهدفة ومتطلبات التسجيل والنشر فيها",
+          "evidence": "قائمة المنصات ومتطلباتها",
+          "owner": "مديرة المشروع",
+          "cost": 750,
+          "actualCost": 0,
+          "planStartWeek": 8,
+          "planWeeks": 1,
+          "actualStartWeek": null,
+          "actualWeeks": null,
+          "progress": 0,
+          "monthlyCost": {
+            "2026-09": 750
+          }
+        },
+        {
+          "order": 5,
+          "phase": "الإعداد",
+          "title": "استيفاء الشروط النظامية وفتح وتفعيل حسابات الجمعية في المنصات",
+          "evidence": "حسابات مفعّلة",
+          "owner": "مديرة المشروع",
+          "cost": 750,
+          "actualCost": 0,
+          "planStartWeek": 8,
+          "planWeeks": 2,
+          "actualStartWeek": null,
+          "actualWeeks": null,
+          "progress": 0,
+          "monthlyCost": {
+            "2026-09": 750
+          }
+        },
+        {
+          "order": 6,
+          "phase": "الإعداد",
+          "title": "تجهيز المشاريع القابلة للنشر وصياغة أوصافها وموازناتها",
+          "evidence": "ملفات المشاريع جاهزة",
+          "owner": "مديرة المشروع",
+          "cost": 750,
+          "actualCost": 0,
+          "planStartWeek": 10,
+          "planWeeks": 2,
+          "actualStartWeek": null,
+          "actualWeeks": null,
+          "progress": 0,
+          "monthlyCost": {
+            "2026-10": 750
+          }
+        },
+        {
+          "order": 7,
+          "phase": "الإعداد",
+          "title": "إعداد المواد البصرية والمرئية الداعمة لكل مشروع",
+          "evidence": "مواد المشاريع",
+          "owner": "مديرة المشروع",
+          "cost": 750,
+          "actualCost": 0,
+          "planStartWeek": 11,
+          "planWeeks": 2,
+          "actualStartWeek": null,
+          "actualWeeks": null,
+          "progress": 0,
+          "monthlyCost": {
+            "2026-10": 750
+          }
+        },
+        {
+          "order": 8,
+          "phase": "التنفيذ",
+          "title": "رفع المشاريع على المنصات ومتابعة اعتمادها ونشرها",
+          "evidence": "مشاريع منشورة",
+          "owner": "مديرة المشروع",
+          "cost": 2000,
+          "actualCost": 0,
+          "planStartWeek": 13,
+          "planWeeks": 1,
+          "actualStartWeek": null,
+          "actualWeeks": null,
+          "progress": 0,
+          "monthlyCost": {
+            "2026-10": 2000
+          }
+        },
+        {
+          "order": 9,
+          "phase": "التنفيذ",
+          "title": "التسويق للمشاريع المنشورة عبر قنوات الجمعية وشركائها",
+          "evidence": "شواهد حملات التسويق",
+          "owner": "مديرة المشروع",
+          "cost": 1900,
+          "actualCost": 0,
+          "planStartWeek": 14,
+          "planWeeks": 2,
+          "actualStartWeek": null,
+          "actualWeeks": null,
+          "progress": 0,
+          "monthlyCost": {
+            "2026-11": 1900
+          }
+        },
+        {
+          "order": 10,
+          "phase": "التنفيذ",
+          "title": "متابعة التحصيل الدوري وتحديث حالة المشاريع على المنصات",
+          "evidence": "تقارير التحصيل",
+          "owner": "مديرة المشروع",
+          "cost": 1900,
+          "actualCost": 0,
+          "planStartWeek": 16,
+          "planWeeks": 1,
+          "actualStartWeek": null,
+          "actualWeeks": null,
+          "progress": 0,
+          "monthlyCost": {
+            "2026-11": 1900
+          }
+        },
+        {
+          "order": 11,
+          "phase": "التنفيذ",
+          "title": "إعداد تقارير الإنجاز المطلوبة من المنصات وتسليمها في مواعيدها",
+          "evidence": "تقارير الإنجاز",
+          "owner": "مديرة المشروع",
+          "cost": 1900,
+          "actualCost": 0,
+          "planStartWeek": 17,
+          "planWeeks": 2,
+          "actualStartWeek": null,
+          "actualWeeks": null,
+          "progress": 0,
+          "monthlyCost": {
+            "2026-11": 950,
+            "2026-12": 950
+          }
+        },
+        {
+          "order": 12,
+          "phase": "التنفيذ",
+          "title": "رصد الإيرادات المتحققة ونسبة تغطيتها للمصاريف التشغيلية",
+          "evidence": "تقرير حصيلة",
+          "owner": "مديرة المشروع",
+          "cost": 1900,
+          "actualCost": 0,
+          "planStartWeek": 19,
+          "planWeeks": 2,
+          "actualStartWeek": null,
+          "actualWeeks": null,
+          "progress": 0,
+          "monthlyCost": {
+            "2026-12": 1900
+          }
+        },
+        {
+          "order": 13,
+          "phase": "الإغلاق",
+          "title": "تجميع شواهد التنفيذ (محاضر، كشوف، صور، تقارير) وأرشفتها في ملف المبادرة",
+          "evidence": "ملف شواهد مكتمل",
+          "owner": "مديرة المشروع",
+          "cost": 400,
+          "actualCost": 0,
+          "planStartWeek": 20,
+          "planWeeks": 1,
+          "actualStartWeek": null,
+          "actualWeeks": null,
+          "progress": 0,
+          "monthlyCost": {
+            "2026-12": 400
+          }
+        },
+        {
+          "order": 14,
+          "phase": "الإغلاق",
+          "title": "إعداد التقرير الختامي: نسب الإنجاز، الأثر المتحقق، الانحرافات وأسبابها، الدروس المستفادة",
+          "evidence": "التقرير الختامي",
+          "owner": "مديرة المشروع",
+          "cost": 400,
+          "actualCost": 0,
+          "planStartWeek": 21,
+          "planWeeks": 1,
+          "actualStartWeek": null,
+          "actualWeeks": null,
+          "progress": 0,
+          "monthlyCost": {
+            "2026-12": 400
+          }
+        },
+        {
+          "order": 15,
+          "phase": "الإغلاق",
+          "title": "عرض التقرير على الإدارة التنفيذية واعتماده وتوثيق توصيات النسخة القادمة",
+          "evidence": "محضر اعتماد وتوصيات",
+          "owner": "مديرة المشروع",
+          "cost": 400,
+          "actualCost": 0,
+          "planStartWeek": 22,
+          "planWeeks": 1,
+          "actualStartWeek": null,
+          "actualWeeks": null,
+          "progress": 0,
+          "monthlyCost": {
+            "2026-12": 400
+          }
+        }
+      ],
+      "headerRow": 12
+    },
+    {
+      "number": 10,
+      "name": "تطوير الملفات",
+      "description": "تطوير ملفات تسويقية نوعية للجمعية تُبرز مشاريعها وأثرها التعليمي لجذب الدعم والتمويل.",
+      "objectiveLabel": "(م1) تحقيق الاستقرار المالي من خلال تنويع مصادر الدخل",
+      "indicatorLabels": "(م1-5) عدد الملفات التسويقية النوعية",
+      "durationText": "9 أسابيع",
+      "managerName": "شركة زاد التنموية",
+      "owningDept": "إدارة الاتصال المؤسسي",
+      "priority": null,
+      "startDate": "2026-09-19",
+      "endDate": "2026-11-20",
+      "budget": 15000,
+      "monthlyBudget": {
+        "2026-09": 3825,
+        "2026-10": 8075,
+        "2026-11": 3100
+      },
+      "steps": [
+        {
+          "order": 1,
+          "phase": "الإعداد",
+          "title": "إعداد وثيقة نطاق المبادرة: الهدف، المستهدفات الرقمية، الفئة المستفيدة، المخرجات، وما هو خارج النطاق",
+          "evidence": "وثيقة نطاق معتمدة",
+          "owner": "مديرة المشروع",
+          "cost": 400,
+          "actualCost": 0,
+          "planStartWeek": 8,
+          "planWeeks": 1,
+          "actualStartWeek": null,
+          "actualWeeks": null,
+          "progress": 0,
+          "monthlyCost": {
+            "2026-09": 400
+          }
+        },
+        {
+          "order": 2,
+          "phase": "الإعداد",
+          "title": "تشكيل فريق عمل المبادرة وتحديد دور كل عضو ومسؤولياته وصلاحياته كتابياً",
+          "evidence": "محضر تشكيل الفريق",
+          "owner": "مديرة المشروع",
+          "cost": 400,
+          "actualCost": 0,
+          "planStartWeek": 8,
+          "planWeeks": 1,
+          "actualStartWeek": null,
+          "actualWeeks": null,
+          "progress": 0,
+          "monthlyCost": {
+            "2026-09": 400
+          }
+        },
+        {
+          "order": 3,
+          "phase": "الإعداد",
+          "title": "عقد اجتماع انطلاق المبادرة ومراجعة الخطة الزمنية والموازنة وقنوات التواصل",
+          "evidence": "محضر اجتماع الانطلاق",
+          "owner": "مديرة المشروع",
+          "cost": 400,
+          "actualCost": 0,
+          "planStartWeek": 8,
+          "planWeeks": 1,
+          "actualStartWeek": null,
+          "actualWeeks": null,
+          "progress": 0,
+          "monthlyCost": {
+            "2026-09": 400
+          }
+        },
+        {
+          "order": 4,
+          "phase": "الإعداد",
+          "title": "حصر الملفات التسويقية المطلوبة وتحديد أولوياتها",
+          "evidence": "قائمة الملفات المستهدفة",
+          "owner": "مديرة المشروع",
+          "cost": 750,
+          "actualCost": 0,
+          "planStartWeek": 8,
+          "planWeeks": 1,
+          "actualStartWeek": null,
+          "actualWeeks": null,
+          "progress": 0,
+          "monthlyCost": {
+            "2026-09": 750
+          }
+        },
+        {
+          "order": 5,
+          "phase": "الإعداد",
+          "title": "جمع المحتوى والبيانات والأرقام وشواهد الأثر لكل مشروع",
+          "evidence": "ملف المحتوى المجمّع",
+          "owner": "مديرة المشروع",
+          "cost": 750,
+          "actualCost": 0,
+          "planStartWeek": 8,
+          "planWeeks": 2,
+          "actualStartWeek": null,
+          "actualWeeks": null,
+          "progress": 0,
+          "monthlyCost": {
+            "2026-09": 750
+          }
+        },
+        {
+          "order": 6,
+          "phase": "الإعداد",
+          "title": "صياغة المحتوى التسويقي وتحريره وفق رسالة موحّدة",
+          "evidence": "مسودات المحتوى",
+          "owner": "مديرة المشروع",
+          "cost": 750,
+          "actualCost": 0,
+          "planStartWeek": 8,
+          "planWeeks": 2,
+          "actualStartWeek": null,
+          "actualWeeks": null,
+          "progress": 0,
+          "monthlyCost": {
+            "2026-09": 750
+          }
+        },
+        {
+          "order": 7,
+          "phase": "الإعداد",
+          "title": "اعتماد الهوية البصرية والقوالب الموحّدة للملفات",
+          "evidence": "هوية وقوالب موحّدة",
+          "owner": "مديرة المشروع",
+          "cost": 750,
+          "actualCost": 0,
+          "planStartWeek": 9,
+          "planWeeks": 2,
+          "actualStartWeek": null,
+          "actualWeeks": null,
+          "progress": 0,
+          "monthlyCost": {
+            "2026-09": 375,
+            "2026-10": 375
+          }
+        },
+        {
+          "order": 8,
+          "phase": "التنفيذ",
+          "title": "تصميم الملفات التسويقية والعروض التعريفية",
+          "evidence": "ملفات تسويقية مصممة",
+          "owner": "مديرة المشروع",
+          "cost": 2000,
+          "actualCost": 0,
+          "planStartWeek": 10,
+          "planWeeks": 1,
+          "actualStartWeek": null,
+          "actualWeeks": null,
+          "progress": 0,
+          "monthlyCost": {
+            "2026-10": 2000
+          }
+        },
+        {
+          "order": 9,
+          "phase": "التنفيذ",
+          "title": "مراجعة الملفات لغوياً وبصرياً وتدقيق بياناتها وأرقامها",
+          "evidence": "نسخ مراجعة",
+          "owner": "مديرة المشروع",
+          "cost": 1900,
+          "actualCost": 0,
+          "planStartWeek": 11,
+          "planWeeks": 1,
+          "actualStartWeek": null,
+          "actualWeeks": null,
+          "progress": 0,
+          "monthlyCost": {
+            "2026-10": 1900
+          }
+        },
+        {
+          "order": 10,
+          "phase": "التنفيذ",
+          "title": "اعتماد الملفات من الإدارة التنفيذية",
+          "evidence": "محضر اعتماد الملفات",
+          "owner": "مديرة المشروع",
+          "cost": 1900,
+          "actualCost": 0,
+          "planStartWeek": 12,
+          "planWeeks": 1,
+          "actualStartWeek": null,
+          "actualWeeks": null,
+          "progress": 0,
+          "monthlyCost": {
+            "2026-10": 1900
+          }
+        },
+        {
+          "order": 11,
+          "phase": "التنفيذ",
+          "title": "إخراج الملفات بصيغ متعددة وأرشفتها في مكتبة موحّدة",
+          "evidence": "مكتبة الملفات",
+          "owner": "مديرة المشروع",
+          "cost": 1900,
+          "actualCost": 0,
+          "planStartWeek": 13,
+          "planWeeks": 1,
+          "actualStartWeek": null,
+          "actualWeeks": null,
+          "progress": 0,
+          "monthlyCost": {
+            "2026-10": 1900
+          }
+        },
+        {
+          "order": 12,
+          "phase": "التنفيذ",
+          "title": "تزويد الإدارة المعنية بالملفات وتدريبها على استخدامها في التسويق",
+          "evidence": "عروض تعريفية ومحضر التزويد",
+          "owner": "مديرة المشروع",
+          "cost": 1900,
+          "actualCost": 0,
+          "planStartWeek": 14,
+          "planWeeks": 1,
+          "actualStartWeek": null,
+          "actualWeeks": null,
+          "progress": 0,
+          "monthlyCost": {
+            "2026-11": 1900
+          }
+        },
+        {
+          "order": 13,
+          "phase": "الإغلاق",
+          "title": "تجميع شواهد التنفيذ (محاضر، كشوف، صور، تقارير) وأرشفتها في ملف المبادرة",
+          "evidence": "ملف شواهد مكتمل",
+          "owner": "مديرة المشروع",
+          "cost": 400,
+          "actualCost": 0,
+          "planStartWeek": 15,
+          "planWeeks": 1,
+          "actualStartWeek": null,
+          "actualWeeks": null,
+          "progress": 0,
+          "monthlyCost": {
+            "2026-11": 400
+          }
+        },
+        {
+          "order": 14,
+          "phase": "الإغلاق",
+          "title": "إعداد التقرير الختامي: نسب الإنجاز، الأثر المتحقق، الانحرافات وأسبابها، الدروس المستفادة",
+          "evidence": "التقرير الختامي",
+          "owner": "مديرة المشروع",
+          "cost": 400,
+          "actualCost": 0,
+          "planStartWeek": 15,
+          "planWeeks": 1,
+          "actualStartWeek": null,
+          "actualWeeks": null,
+          "progress": 0,
+          "monthlyCost": {
+            "2026-11": 400
+          }
+        },
+        {
+          "order": 15,
+          "phase": "الإغلاق",
+          "title": "عرض التقرير على الإدارة التنفيذية واعتماده وتوثيق توصيات النسخة القادمة",
+          "evidence": "محضر اعتماد وتوصيات",
+          "owner": "مديرة المشروع",
+          "cost": 400,
+          "actualCost": 0,
+          "planStartWeek": 16,
+          "planWeeks": 1,
+          "actualStartWeek": null,
+          "actualWeeks": null,
+          "progress": 0,
+          "monthlyCost": {
+            "2026-11": 400
+          }
+        }
+      ],
+      "headerRow": 12
+    },
+    {
+      "number": 11,
+      "name": "توازن",
+      "description": "وضع سياسات الصرف وضبط وترشيد المصروفات وتفعيل معايير السلامة المالية وتقليل نسبة المصروفات التشغيلية.",
+      "objectiveLabel": "(م2) ترسيخ معايير السلامة المالية وكفاءة الإنفاق والامتثال المالي",
+      "indicatorLabels": "(م2-1) نسبة مطابقة معايير السلامة المالية",
+      "durationText": "13 أسبوعاً",
+      "managerName": "شركة زاد التنموية",
+      "owningDept": "إدارة الموارد المالية",
+      "priority": null,
+      "startDate": "2026-09-19",
+      "endDate": "2026-12-18",
+      "budget": 15000,
+      "monthlyBudget": {
+        "2026-09": 3075,
+        "2026-10": 4075,
+        "2026-11": 5700,
+        "2026-12": 2150
+      },
+      "steps": [
+        {
+          "order": 1,
+          "phase": "الإعداد",
+          "title": "إعداد وثيقة نطاق المبادرة: الهدف، المستهدفات الرقمية، الفئة المستفيدة، المخرجات، وما هو خارج النطاق",
+          "evidence": "وثيقة نطاق معتمدة",
+          "owner": "مديرة المشروع",
+          "cost": 400,
+          "actualCost": 0,
+          "planStartWeek": 8,
+          "planWeeks": 1,
+          "actualStartWeek": null,
+          "actualWeeks": null,
+          "progress": 0,
+          "monthlyCost": {
+            "2026-09": 400
+          }
+        },
+        {
+          "order": 2,
+          "phase": "الإعداد",
+          "title": "تشكيل فريق عمل المبادرة وتحديد دور كل عضو ومسؤولياته وصلاحياته كتابياً",
+          "evidence": "محضر تشكيل الفريق",
+          "owner": "مديرة المشروع",
+          "cost": 400,
+          "actualCost": 0,
+          "planStartWeek": 8,
+          "planWeeks": 1,
+          "actualStartWeek": null,
+          "actualWeeks": null,
+          "progress": 0,
+          "monthlyCost": {
+            "2026-09": 400
+          }
+        },
+        {
+          "order": 3,
+          "phase": "الإعداد",
+          "title": "عقد اجتماع انطلاق المبادرة ومراجعة الخطة الزمنية والموازنة وقنوات التواصل",
+          "evidence": "محضر اجتماع الانطلاق",
+          "owner": "مديرة المشروع",
+          "cost": 400,
+          "actualCost": 0,
+          "planStartWeek": 8,
+          "planWeeks": 1,
+          "actualStartWeek": null,
+          "actualWeeks": null,
+          "progress": 0,
+          "monthlyCost": {
+            "2026-09": 400
+          }
+        },
+        {
+          "order": 4,
+          "phase": "الإعداد",
+          "title": "مراجعة المصروفات الحالية وتحليل بنودها وتصنيفها",
+          "evidence": "تقرير تحليل المصروفات",
+          "owner": "مديرة المشروع",
+          "cost": 750,
+          "actualCost": 0,
+          "planStartWeek": 8,
+          "planWeeks": 1,
+          "actualStartWeek": null,
+          "actualWeeks": null,
+          "progress": 0,
+          "monthlyCost": {
+            "2026-09": 750
+          }
+        },
+        {
+          "order": 5,
+          "phase": "الإعداد",
+          "title": "تحديد فرص الترشيد وأوجه الهدر في الإنفاق التشغيلي",
+          "evidence": "مصفوفة فرص الترشيد",
+          "owner": "مديرة المشروع",
+          "cost": 750,
+          "actualCost": 0,
+          "planStartWeek": 8,
+          "planWeeks": 2,
+          "actualStartWeek": null,
+          "actualWeeks": null,
+          "progress": 0,
+          "monthlyCost": {
+            "2026-09": 750
+          }
+        },
+        {
+          "order": 6,
+          "phase": "الإعداد",
+          "title": "مراجعة معايير السلامة المالية وتحديد فجوات المطابقة",
+          "evidence": "تقرير فجوات المطابقة",
+          "owner": "مديرة المشروع",
+          "cost": 750,
+          "actualCost": 0,
+          "planStartWeek": 9,
+          "planWeeks": 2,
+          "actualStartWeek": null,
+          "actualWeeks": null,
+          "progress": 0,
+          "monthlyCost": {
+            "2026-09": 375,
+            "2026-10": 375
+          }
+        },
+        {
+          "order": 7,
+          "phase": "الإعداد",
+          "title": "إعداد مسودة سياسة الصرف وضوابط الترشيد والصلاحيات المالية",
+          "evidence": "مسودة سياسة الصرف",
+          "owner": "مديرة المشروع",
+          "cost": 750,
+          "actualCost": 0,
+          "planStartWeek": 11,
+          "planWeeks": 1,
+          "actualStartWeek": null,
+          "actualWeeks": null,
+          "progress": 0,
+          "monthlyCost": {
+            "2026-10": 750
+          }
+        },
+        {
+          "order": 8,
+          "phase": "التنفيذ",
+          "title": "مراجعة السياسة مع الإدارة المالية والمراجع ومعالجة الملاحظات",
+          "evidence": "سياسة مراجَعة",
+          "owner": "مديرة المشروع",
+          "cost": 2000,
+          "actualCost": 0,
+          "planStartWeek": 12,
+          "planWeeks": 1,
+          "actualStartWeek": null,
+          "actualWeeks": null,
+          "progress": 0,
+          "monthlyCost": {
+            "2026-10": 2000
+          }
+        },
+        {
+          "order": 9,
+          "phase": "التنفيذ",
+          "title": "اعتماد سياسة الصرف والضوابط من مجلس الإدارة",
+          "evidence": "سياسة صرف معتمدة",
+          "owner": "مديرة المشروع",
+          "cost": 1900,
+          "actualCost": 0,
+          "planStartWeek": 13,
+          "planWeeks": 2,
+          "actualStartWeek": null,
+          "actualWeeks": null,
+          "progress": 0,
+          "monthlyCost": {
+            "2026-10": 950,
+            "2026-11": 950
+          }
+        },
+        {
+          "order": 10,
+          "phase": "التنفيذ",
+          "title": "تعميم السياسة وتدريب المعنيات على تطبيقها",
+          "evidence": "محضر التعميم والتدريب",
+          "owner": "مديرة المشروع",
+          "cost": 1900,
+          "actualCost": 0,
+          "planStartWeek": 14,
+          "planWeeks": 2,
+          "actualStartWeek": null,
+          "actualWeeks": null,
+          "progress": 0,
+          "monthlyCost": {
+            "2026-11": 1900
+          }
+        },
+        {
+          "order": 11,
+          "phase": "التنفيذ",
+          "title": "تطبيق ضوابط الترشيد ومتابعة الالتزام بها دورياً",
+          "evidence": "ضوابط ترشيد مطبّقة",
+          "owner": "مديرة المشروع",
+          "cost": 1900,
+          "actualCost": 0,
+          "planStartWeek": 16,
+          "planWeeks": 1,
+          "actualStartWeek": null,
+          "actualWeeks": null,
+          "progress": 0,
+          "monthlyCost": {
+            "2026-11": 1900
+          }
+        },
+        {
+          "order": 12,
+          "phase": "التنفيذ",
+          "title": "قياس نسبة المصروفات التشغيلية ونسبة مطابقة معايير السلامة المالية",
+          "evidence": "تقرير كفاءة الإنفاق",
+          "owner": "مديرة المشروع",
+          "cost": 1900,
+          "actualCost": 0,
+          "planStartWeek": 17,
+          "planWeeks": 2,
+          "actualStartWeek": null,
+          "actualWeeks": null,
+          "progress": 0,
+          "monthlyCost": {
+            "2026-11": 950,
+            "2026-12": 950
+          }
+        },
+        {
+          "order": 13,
+          "phase": "الإغلاق",
+          "title": "تجميع شواهد التنفيذ (محاضر، كشوف، صور، تقارير) وأرشفتها في ملف المبادرة",
+          "evidence": "ملف شواهد مكتمل",
+          "owner": "مديرة المشروع",
+          "cost": 400,
+          "actualCost": 0,
+          "planStartWeek": 19,
+          "planWeeks": 1,
+          "actualStartWeek": null,
+          "actualWeeks": null,
+          "progress": 0,
+          "monthlyCost": {
+            "2026-12": 400
+          }
+        },
+        {
+          "order": 14,
+          "phase": "الإغلاق",
+          "title": "إعداد التقرير الختامي: نسب الإنجاز، الأثر المتحقق، الانحرافات وأسبابها، الدروس المستفادة",
+          "evidence": "التقرير الختامي",
+          "owner": "مديرة المشروع",
+          "cost": 400,
+          "actualCost": 0,
+          "planStartWeek": 19,
+          "planWeeks": 1,
+          "actualStartWeek": null,
+          "actualWeeks": null,
+          "progress": 0,
+          "monthlyCost": {
+            "2026-12": 400
+          }
+        },
+        {
+          "order": 15,
+          "phase": "الإغلاق",
+          "title": "عرض التقرير على الإدارة التنفيذية واعتماده وتوثيق توصيات النسخة القادمة",
+          "evidence": "محضر اعتماد وتوصيات",
+          "owner": "مديرة المشروع",
+          "cost": 400,
+          "actualCost": 0,
+          "planStartWeek": 20,
+          "planWeeks": 1,
+          "actualStartWeek": null,
+          "actualWeeks": null,
+          "progress": 0,
+          "monthlyCost": {
+            "2026-12": 400
+          }
+        }
+      ],
+      "headerRow": 12
+    },
+    {
+      "number": 12,
+      "name": "أثر",
+      "description": "بناء أدوات لقياس رضا المستفيدين وأثر البرامج والمنتجات التعليمية بعد تنفيذها بما يوجّه تطويرها المستمر.",
+      "objectiveLabel": "(ل1) ابتكار وصناعة مبادرات ومنتجات علمية وفق الاحتياج",
+      "indicatorLabels": "(ل1-3) نسبة رضا المستفيدين عن البرامج والمنتجات التي تم ابتكارها وتنفيذها",
+      "durationText": "9 أسابيع",
+      "managerName": "مديرة الجودة والتميز",
+      "owningDept": "إدارة الجودة والتميز",
+      "priority": null,
+      "startDate": "2026-09-19",
+      "endDate": "2026-11-20",
+      "budget": 8800,
+      "monthlyBudget": {
+        "2026-09": 1875,
+        "2026-10": 3125,
+        "2026-11": 3800
+      },
+      "steps": [
+        {
+          "order": 1,
+          "phase": "الإعداد",
+          "title": "تحديد مؤشرات الأثر لكل برنامج ومنتج تعليمي",
+          "evidence": "مصفوفة مؤشرات الأثر",
+          "owner": "مديرة المشروع",
+          "cost": 750,
+          "actualCost": 0,
+          "planStartWeek": 8,
+          "planWeeks": 1,
+          "actualStartWeek": null,
+          "actualWeeks": null,
+          "progress": 0,
+          "monthlyCost": {
+            "2026-09": 750
+          }
+        },
+        {
+          "order": 2,
+          "phase": "الإعداد",
+          "title": "تصميم أدوات القياس (قبلي وبعدي، رضا، أثر ممتد)",
+          "evidence": "أدوات قياس",
+          "owner": "مديرة المشروع",
+          "cost": 750,
+          "actualCost": 0,
+          "planStartWeek": 8,
+          "planWeeks": 2,
+          "actualStartWeek": null,
+          "actualWeeks": null,
+          "progress": 0,
+          "monthlyCost": {
+            "2026-09": 750
+          }
+        },
+        {
+          "order": 3,
+          "phase": "الإعداد",
+          "title": "تحكيم الأدوات ومراجعة صدقها وثباتها",
+          "evidence": "محضر تحكيم الأدوات",
+          "owner": "مديرة المشروع",
+          "cost": 750,
+          "actualCost": 0,
+          "planStartWeek": 9,
+          "planWeeks": 2,
+          "actualStartWeek": null,
+          "actualWeeks": null,
+          "progress": 0,
+          "monthlyCost": {
+            "2026-09": 375,
+            "2026-10": 375
+          }
+        },
+        {
+          "order": 4,
+          "phase": "الإعداد",
+          "title": "إعداد دليل تطبيق القياس وآلية جمع البيانات وحفظها",
+          "evidence": "دليل التطبيق",
+          "owner": "مديرة المشروع",
+          "cost": 750,
+          "actualCost": 0,
+          "planStartWeek": 11,
+          "planWeeks": 1,
+          "actualStartWeek": null,
+          "actualWeeks": null,
+          "progress": 0,
+          "monthlyCost": {
+            "2026-10": 750
+          }
+        },
+        {
+          "order": 5,
+          "phase": "التنفيذ",
+          "title": "تطبيق الأدوات على المستفيدين من البرامج والمنتجات المنفذة",
+          "evidence": "سجلات التطبيق",
+          "owner": "مديرة المشروع",
+          "cost": 2000,
+          "actualCost": 0,
+          "planStartWeek": 12,
+          "planWeeks": 1,
+          "actualStartWeek": null,
+          "actualWeeks": null,
+          "progress": 0,
+          "monthlyCost": {
+            "2026-10": 2000
+          }
+        },
+        {
+          "order": 6,
+          "phase": "التنفيذ",
+          "title": "تحليل النتائج واستخراج مؤشرات الأثر ونسبة رضا المستفيدين",
+          "evidence": "مؤشرات أثر محتسبة",
+          "owner": "مديرة المشروع",
+          "cost": 1900,
+          "actualCost": 0,
+          "planStartWeek": 14,
+          "planWeeks": 2,
+          "actualStartWeek": null,
+          "actualWeeks": null,
+          "progress": 0,
+          "monthlyCost": {
+            "2026-11": 1900
+          }
+        },
+        {
+          "order": 7,
+          "phase": "التنفيذ",
+          "title": "إعداد تقرير التحليل متضمناً التوصيات التطويرية",
+          "evidence": "تقرير تحليل",
+          "owner": "مديرة المشروع",
+          "cost": 1900,
+          "actualCost": 0,
+          "planStartWeek": 16,
+          "planWeeks": 1,
+          "actualStartWeek": null,
+          "actualWeeks": null,
+          "progress": 0,
+          "monthlyCost": {
+            "2026-11": 1900
+          }
+        }
+      ],
+      "headerRow": 11
+    },
+    {
+      "number": 13,
+      "name": "معيار المعاقد للبيئات التعليمية",
+      "description": "اعتماد وتطبيق معايير جودة واضحة للبيئات التعليمية وقياس مدى الالتزام بها لضمان تميّز التجربة واستدامتها.",
+      "objectiveLabel": "(ل2) صناعة بيئات تعليمية نوعية",
+      "indicatorLabels": "(ل2-3) نسبة رضا المستفيدين عن البيئات التعليمية (ل2-4) نسبة الالتزام بمعايير البيئة التعليمية",
+      "durationText": "9 أسابيع",
+      "managerName": "مديرة الجودة والتميز",
+      "owningDept": "إدارة الجودة والتميز",
+      "priority": null,
+      "startDate": "2026-09-19",
+      "endDate": "2026-11-20",
+      "budget": 10700,
+      "monthlyBudget": {
+        "2026-09": 1875,
+        "2026-10": 4075,
+        "2026-11": 4750
+      },
+      "steps": [
+        {
+          "order": 1,
+          "phase": "الإعداد",
+          "title": "مسح الممارسات والمعايير المرجعية للبيئات التعليمية",
+          "evidence": "تقرير المسح المرجعي",
+          "owner": "مديرة المشروع",
+          "cost": 750,
+          "actualCost": 0,
+          "planStartWeek": 8,
+          "planWeeks": 1,
+          "actualStartWeek": null,
+          "actualWeeks": null,
+          "progress": 0,
+          "monthlyCost": {
+            "2026-09": 750
+          }
+        },
+        {
+          "order": 2,
+          "phase": "الإعداد",
+          "title": "صياغة معايير الجودة ومؤشرات قياس الالتزام بها",
+          "evidence": "مسودة المعايير",
+          "owner": "مديرة المشروع",
+          "cost": 750,
+          "actualCost": 0,
+          "planStartWeek": 8,
+          "planWeeks": 2,
+          "actualStartWeek": null,
+          "actualWeeks": null,
+          "progress": 0,
+          "monthlyCost": {
+            "2026-09": 750
+          }
+        },
+        {
+          "order": 3,
+          "phase": "الإعداد",
+          "title": "تحكيم المعايير مع مختصين ومعالجة الملاحظات",
+          "evidence": "محضر التحكيم",
+          "owner": "مديرة المشروع",
+          "cost": 750,
+          "actualCost": 0,
+          "planStartWeek": 9,
+          "planWeeks": 2,
+          "actualStartWeek": null,
+          "actualWeeks": null,
+          "progress": 0,
+          "monthlyCost": {
+            "2026-09": 375,
+            "2026-10": 375
+          }
+        },
+        {
+          "order": 4,
+          "phase": "الإعداد",
+          "title": "اعتماد المعايير من الإدارة التنفيذية",
+          "evidence": "معايير جودة معتمدة",
+          "owner": "مديرة المشروع",
+          "cost": 750,
+          "actualCost": 0,
+          "planStartWeek": 11,
+          "planWeeks": 1,
+          "actualStartWeek": null,
+          "actualWeeks": null,
+          "progress": 0,
+          "monthlyCost": {
+            "2026-10": 750
+          }
+        },
+        {
+          "order": 5,
+          "phase": "التنفيذ",
+          "title": "إعداد دليل تطبيق المعايير وأدوات التقييم الذاتي",
+          "evidence": "دليل تطبيق",
+          "owner": "مديرة المشروع",
+          "cost": 2000,
+          "actualCost": 0,
+          "planStartWeek": 12,
+          "planWeeks": 1,
+          "actualStartWeek": null,
+          "actualWeeks": null,
+          "progress": 0,
+          "monthlyCost": {
+            "2026-10": 2000
+          }
+        },
+        {
+          "order": 6,
+          "phase": "التنفيذ",
+          "title": "تدريب المشرفات على المعايير وآلية التقييم",
+          "evidence": "اتفاقية المتدربات والمتطوعات",
+          "owner": "مديرة المشروع",
+          "cost": 1900,
+          "actualCost": 0,
+          "planStartWeek": 13,
+          "planWeeks": 2,
+          "actualStartWeek": null,
+          "actualWeeks": null,
+          "progress": 0,
+          "monthlyCost": {
+            "2026-10": 950,
+            "2026-11": 950
+          }
+        },
+        {
+          "order": 7,
+          "phase": "التنفيذ",
+          "title": "تطبيق المعايير على البيئات القائمة وتقييم مدى الالتزام بها",
+          "evidence": "آلية تقييم مطبّقة",
+          "owner": "مديرة المشروع",
+          "cost": 1900,
+          "actualCost": 0,
+          "planStartWeek": 14,
+          "planWeeks": 2,
+          "actualStartWeek": null,
+          "actualWeeks": null,
+          "progress": 0,
+          "monthlyCost": {
+            "2026-11": 1900
+          }
+        },
+        {
+          "order": 8,
+          "phase": "التنفيذ",
+          "title": "رصد نسبة الالتزام بالمعايير وإعداد خطط معالجة الفجوات",
+          "evidence": "تقرير الالتزام",
+          "owner": "مديرة المشروع",
+          "cost": 1900,
+          "actualCost": 0,
+          "planStartWeek": 16,
+          "planWeeks": 1,
+          "actualStartWeek": null,
+          "actualWeeks": null,
+          "progress": 0,
+          "monthlyCost": {
+            "2026-11": 1900
+          }
+        }
+      ],
+      "headerRow": 12
+    },
+    {
+      "number": 14,
+      "name": "شراكة",
+      "description": "دراسة احتياج الجمعية من الشراكات ثم عقدها وتفعيلها وقياس رضاها لبناء شراكات استراتيجية فاعلة.",
+      "objectiveLabel": "(ل3) بناء وتفعيل شراكات استراتيجية فاعلة",
+      "indicatorLabels": "(ل3-1) عدد الشراكات الاستراتيجية الفاعلة (ل3-2) عدد تقارير الشراكة الصادرة للشركاء (ل3-3) نسبة رضا الشركاء عن الجمعية",
+      "durationText": "13 أسبوعاً",
+      "managerName": "مديرة الشراكات",
+      "owningDept": "إدارة الشراكات",
+      "priority": null,
+      "startDate": "2026-09-19",
+      "endDate": "2026-12-18",
+      "budget": 19800,
+      "monthlyBudget": {
+        "2026-09": 2600,
+        "2026-10": 4400,
+        "2026-11": 8000,
+        "2026-12": 4800
+      },
+      "steps": [
+        {
+          "order": 1,
+          "phase": "الإعداد",
+          "title": "دراسة احتياج الجمعية من الشراكات وتحديد مجالاتها ذات الأولوية",
+          "evidence": "خطة شراكات",
+          "owner": "مديرة المشروع",
+          "cost": 1300,
+          "actualCost": 0,
+          "planStartWeek": 8,
+          "planWeeks": 1,
+          "actualStartWeek": null,
+          "actualWeeks": null,
+          "progress": 0,
+          "monthlyCost": {
+            "2026-09": 1300
+          }
+        },
+        {
+          "order": 2,
+          "phase": "الإعداد",
+          "title": "حصر الشركاء المحتملين وتصنيفهم وفق القيمة المضافة",
+          "evidence": "شركاء محتملون",
+          "owner": "مديرة المشروع",
+          "cost": 1300,
+          "actualCost": 0,
+          "planStartWeek": 8,
+          "planWeeks": 2,
+          "actualStartWeek": null,
+          "actualWeeks": null,
+          "progress": 0,
+          "monthlyCost": {
+            "2026-09": 1300
+          }
+        },
+        {
+          "order": 3,
+          "phase": "الإعداد",
+          "title": "إعداد العرض التعريفي للشراكة ونماذج الاتفاقيات ومذكرات التفاهم",
+          "evidence": "حزمة الشراكة",
+          "owner": "مديرة المشروع",
+          "cost": 1300,
+          "actualCost": 0,
+          "planStartWeek": 10,
+          "planWeeks": 2,
+          "actualStartWeek": null,
+          "actualWeeks": null,
+          "progress": 0,
+          "monthlyCost": {
+            "2026-10": 1300
+          }
+        },
+        {
+          "order": 4,
+          "phase": "التنفيذ",
+          "title": "التواصل مع الشركاء المستهدفين وعقد اللقاءات التمهيدية",
+          "evidence": "محاضر اللقاءات",
+          "owner": "مديرة المشروع",
+          "cost": 3100,
+          "actualCost": 0,
+          "planStartWeek": 13,
+          "planWeeks": 1,
+          "actualStartWeek": null,
+          "actualWeeks": null,
+          "progress": 0,
+          "monthlyCost": {
+            "2026-10": 3100
+          }
+        },
+        {
+          "order": 5,
+          "phase": "التنفيذ",
+          "title": "التفاوض وصياغة مذكرات التفاهم واتفاقيات الشراكة",
+          "evidence": "مذكرات تفاهم",
+          "owner": "مديرة المشروع",
+          "cost": 3200,
+          "actualCost": 0,
+          "planStartWeek": 14,
+          "planWeeks": 2,
+          "actualStartWeek": null,
+          "actualWeeks": null,
+          "progress": 0,
+          "monthlyCost": {
+            "2026-11": 3200
+          }
+        },
+        {
+          "order": 6,
+          "phase": "التنفيذ",
+          "title": "توقيع الاتفاقيات وإعداد خطة عمل مشتركة لكل شراكة",
+          "evidence": "اتفاقيات موقّعة وخطط مشتركة",
+          "owner": "مديرة المشروع",
+          "cost": 3200,
+          "actualCost": 0,
+          "planStartWeek": 16,
+          "planWeeks": 1,
+          "actualStartWeek": null,
+          "actualWeeks": null,
+          "progress": 0,
+          "monthlyCost": {
+            "2026-11": 3200
+          }
+        },
+        {
+          "order": 7,
+          "phase": "التنفيذ",
+          "title": "تفعيل الشراكات ومتابعة تنفيذ خطط العمل دورياً",
+          "evidence": "تقارير متابعة الشراكات",
+          "owner": "مديرة المشروع",
+          "cost": 3200,
+          "actualCost": 0,
+          "planStartWeek": 17,
+          "planWeeks": 2,
+          "actualStartWeek": null,
+          "actualWeeks": null,
+          "progress": 0,
+          "monthlyCost": {
+            "2026-11": 1600,
+            "2026-12": 1600
+          }
+        },
+        {
+          "order": 8,
+          "phase": "التنفيذ",
+          "title": "إصدار تقارير الشراكة للشركاء وقياس رضاهم عن الجمعية",
+          "evidence": "تقارير الشراكة وتقرير الرضا",
+          "owner": "مديرة المشروع",
+          "cost": 3200,
+          "actualCost": 0,
+          "planStartWeek": 19,
+          "planWeeks": 2,
+          "actualStartWeek": null,
+          "actualWeeks": null,
+          "progress": 0,
+          "monthlyCost": {
+            "2026-12": 3200
+          }
+        }
+      ],
+      "headerRow": 11
+    },
+    {
+      "number": 15,
+      "name": "كوادر",
+      "description": "تصميم واعتماد الهيكل التنظيمي للجمعية بما يحقق وضوح المهام والمسؤوليات ويدعم كفاءة العمل.",
+      "objectiveLabel": "(ت1) بناء رأس مال بشري متميز",
+      "indicatorLabels": "(ت1-1) نسبة شغل الوظائف الأساسية وفق الهيكل الوظيفي المعتمد",
+      "durationText": "7 أسابيع",
+      "managerName": "مديرة الموارد البشرية",
+      "owningDept": "إدارة الموارد البشرية",
+      "priority": null,
+      "startDate": "2026-09-19",
+      "endDate": "2026-11-06",
+      "budget": 7000,
+      "monthlyBudget": {
+        "2026-09": 1000,
+        "2026-10": 4800,
+        "2026-11": 1200
+      },
+      "steps": [
+        {
+          "order": 1,
+          "phase": "الإعداد",
+          "title": "تصميم الهيكل التنظيمي المقترح ومسارات التبعية",
+          "evidence": "مسودة الهيكل",
+          "owner": "مديرة المشروع",
+          "cost": 500,
+          "actualCost": 0,
+          "planStartWeek": 8,
+          "planWeeks": 1,
+          "actualStartWeek": 8,
+          "actualWeeks": 1,
+          "progress": 100,
+          "monthlyCost": {
+            "2026-09": 500
+          }
+        },
+        {
+          "order": 2,
+          "phase": "الإعداد",
+          "title": "إعداد بطاقة وصف وظيفي لكل وظيفة أساسية (المهام، المؤهلات، المؤشرات)",
+          "evidence": "بطاقات الوصف الوظيفي",
+          "owner": "مديرة المشروع",
+          "cost": 500,
+          "actualCost": 0,
+          "planStartWeek": 9,
+          "planWeeks": 1,
+          "actualStartWeek": null,
+          "actualWeeks": null,
+          "progress": 0,
+          "monthlyCost": {
+            "2026-09": 500
+          }
+        },
+        {
+          "order": 3,
+          "phase": "التنفيذ",
+          "title": "عرض الهيكل والوصف الوظيفي على الإدارة التنفيذية وتعديلهما",
+          "evidence": "الهيكل المراجَع",
+          "owner": "مديرة المشروع",
+          "cost": 1200,
+          "actualCost": 0,
+          "planStartWeek": 10,
+          "planWeeks": 1,
+          "actualStartWeek": null,
+          "actualWeeks": null,
+          "progress": 0,
+          "monthlyCost": {
+            "2026-10": 1200
+          }
+        },
+        {
+          "order": 4,
+          "phase": "التنفيذ",
+          "title": "رفع الهيكل لمجلس الإدارة مع مذكرة تبرير واعتماده رسمياً",
+          "evidence": "هيكل تنظيمي معتمد",
+          "owner": "مديرة المشروع",
+          "cost": 1200,
+          "actualCost": 0,
+          "planStartWeek": 11,
+          "planWeeks": 1,
+          "actualStartWeek": null,
+          "actualWeeks": null,
+          "progress": 0,
+          "monthlyCost": {
+            "2026-10": 1200
+          }
+        },
+        {
+          "order": 5,
+          "phase": "التنفيذ",
+          "title": "تعميم الهيكل والوصف الوظيفي على العاملين",
+          "evidence": "محضر التعميم",
+          "owner": "مديرة المشروع",
+          "cost": 1200,
+          "actualCost": 0,
+          "planStartWeek": 12,
+          "planWeeks": 1,
+          "actualStartWeek": null,
+          "actualWeeks": null,
+          "progress": 0,
+          "monthlyCost": {
+            "2026-10": 1200
+          }
+        },
+        {
+          "order": 6,
+          "phase": "التنفيذ",
+          "title": "تطبيق الهيكل تدريجياً وإسناد المهام وفق البطاقات الوظيفية",
+          "evidence": "قرارات الإسناد",
+          "owner": "مديرة المشروع",
+          "cost": 1200,
+          "actualCost": 0,
+          "planStartWeek": 13,
+          "planWeeks": 1,
+          "actualStartWeek": null,
+          "actualWeeks": null,
+          "progress": 0,
+          "monthlyCost": {
+            "2026-10": 1200
+          }
+        },
+        {
+          "order": 7,
+          "phase": "التنفيذ",
+          "title": "رصد نسبة شغل الوظائف الأساسية وفق الهيكل المعتمد",
+          "evidence": "تقرير نسبة الشغل",
+          "owner": "مديرة المشروع",
+          "cost": 1200,
+          "actualCost": 0,
+          "planStartWeek": 14,
+          "planWeeks": 1,
+          "actualStartWeek": null,
+          "actualWeeks": null,
+          "progress": 0,
+          "monthlyCost": {
+            "2026-11": 1200
+          }
+        }
+      ],
+      "headerRow": 11
+    },
+    {
+      "number": 16,
+      "name": "استقطاب الكفاءات",
+      "description": "استقطاب وتوظيف الكفاءات المتخصصة لشغل الوظائف الأساسية ورفع كفاءة رأس المال البشري في الجمعية.",
+      "objectiveLabel": "(ت1) بناء رأس مال بشري متميز",
+      "indicatorLabels": "(ت1-1) نسبة شغل الوظائف الأساسية وفق الهيكل الوظيفي المعتمد",
+      "durationText": "11 أسبوعاً",
+      "managerName": "مديرة الموارد البشرية",
+      "owningDept": "إدارة الموارد البشرية",
+      "priority": null,
+      "startDate": "2026-09-19",
+      "endDate": "2026-12-04",
+      "budget": 19800,
+      "monthlyBudget": {
+        "2026-09": 1950,
+        "2026-10": 6650,
+        "2026-11": 9600,
+        "2026-12": 1600
+      },
+      "steps": [
+        {
+          "order": 1,
+          "phase": "الإعداد",
+          "title": "إعداد الإعلانات الوظيفية ومعايير الفرز والمفاضلة",
+          "evidence": "إعلانات ومعايير معتمدة",
+          "owner": "مديرة المشروع",
+          "cost": 1300,
+          "actualCost": 0,
+          "planStartWeek": 8,
+          "planWeeks": 2,
+          "actualStartWeek": 8,
+          "actualWeeks": 1,
+          "progress": 50,
+          "monthlyCost": {
+            "2026-09": 1300
+          }
+        },
+        {
+          "order": 2,
+          "phase": "الإعداد",
+          "title": "تحديد قنوات الاستقطاب وبناء قاعدة المرشحين المتخصصين",
+          "evidence": "قاعدة المرشحين",
+          "owner": "مديرة المشروع",
+          "cost": 1300,
+          "actualCost": 0,
+          "planStartWeek": 9,
+          "planWeeks": 2,
+          "actualStartWeek": null,
+          "actualWeeks": null,
+          "progress": 0,
+          "monthlyCost": {
+            "2026-09": 650,
+            "2026-10": 650
+          }
+        },
+        {
+          "order": 3,
+          "phase": "الإعداد",
+          "title": "إعداد إجراءات التوظيف ونماذج المقابلات والاختبارات",
+          "evidence": "إجراءات توظيف",
+          "owner": "مديرة المشروع",
+          "cost": 1300,
+          "actualCost": 0,
+          "planStartWeek": 11,
+          "planWeeks": 1,
+          "actualStartWeek": null,
+          "actualWeeks": null,
+          "progress": 0,
+          "monthlyCost": {
+            "2026-10": 1300
+          }
+        },
+        {
+          "order": 4,
+          "phase": "التنفيذ",
+          "title": "نشر الإعلانات واستقبال الطلبات وفرزها وفق المعايير",
+          "evidence": "كشف المتقدمين المفروزين",
+          "owner": "مديرة المشروع",
+          "cost": 3100,
+          "actualCost": 0,
+          "planStartWeek": 12,
+          "planWeeks": 1,
+          "actualStartWeek": null,
+          "actualWeeks": null,
+          "progress": 0,
+          "monthlyCost": {
+            "2026-10": 3100
+          }
+        },
+        {
+          "order": 5,
+          "phase": "التنفيذ",
+          "title": "إجراء المقابلات والاختبارات وتقييم المرشحين",
+          "evidence": "تقارير تقييم المرشحين",
+          "owner": "مديرة المشروع",
+          "cost": 3200,
+          "actualCost": 0,
+          "planStartWeek": 13,
+          "planWeeks": 2,
+          "actualStartWeek": null,
+          "actualWeeks": null,
+          "progress": 0,
+          "monthlyCost": {
+            "2026-10": 1600,
+            "2026-11": 1600
+          }
+        },
+        {
+          "order": 6,
+          "phase": "التنفيذ",
+          "title": "إصدار العروض الوظيفية وإتمام إجراءات التعاقد",
+          "evidence": "كفاءات معيّنة",
+          "owner": "مديرة المشروع",
+          "cost": 3200,
+          "actualCost": 0,
+          "planStartWeek": 14,
+          "planWeeks": 2,
+          "actualStartWeek": null,
+          "actualWeeks": null,
+          "progress": 0,
+          "monthlyCost": {
+            "2026-11": 3200
+          }
+        },
+        {
+          "order": 7,
+          "phase": "التنفيذ",
+          "title": "تهيئة الموظفين الجدد وتعريفهم بالجمعية ومهامهم ومؤشراتهم",
+          "evidence": "دليل التهيئة",
+          "owner": "مديرة المشروع",
+          "cost": 3200,
+          "actualCost": 0,
+          "planStartWeek": 16,
+          "planWeeks": 1,
+          "actualStartWeek": null,
+          "actualWeeks": null,
+          "progress": 0,
+          "monthlyCost": {
+            "2026-11": 3200
+          }
+        },
+        {
+          "order": 8,
+          "phase": "التنفيذ",
+          "title": "تحديث سجل الموارد البشرية ورصد اكتمال الفريق",
+          "evidence": "فريق مكتمل وسجل محدّث",
+          "owner": "مديرة المشروع",
+          "cost": 3200,
+          "actualCost": 0,
+          "planStartWeek": 17,
+          "planWeeks": 2,
+          "actualStartWeek": null,
+          "actualWeeks": null,
+          "progress": 0,
+          "monthlyCost": {
+            "2026-11": 1600,
+            "2026-12": 1600
+          }
+        }
+      ],
+      "headerRow": 11
+    },
+    {
+      "number": 17,
+      "name": "الفرص التطوعية",
+      "description": "توفير فرص تطوعية نوعية على منصة العمل التطوعي واستقطاب المتطوعين المتخصصين وإدارتهم وتكريمهم.",
+      "objectiveLabel": "(ت1) بناء رأس مال بشري متميز",
+      "indicatorLabels": "(ت1-3) عدد الفرص التطوعية على منصة العمل التطوعي (ت1-4) نسبة رضا العاملين والمتطوعين عن الجمعية",
+      "durationText": "12 أسبوعاً",
+      "managerName": "مديرة التطوع",
+      "owningDept": "إدارة التطوع",
+      "priority": null,
+      "startDate": "2026-09-26",
+      "endDate": "2026-12-18",
+      "budget": 10700,
+      "monthlyBudget": {
+        "2026-09": 1125,
+        "2026-10": 3875,
+        "2026-11": 2850,
+        "2026-12": 2850
+      },
+      "steps": [
+        {
+          "order": 1,
+          "phase": "الإعداد",
+          "title": "تحديد احتياج الإدارات من الفرص التطوعية ومجالاتها",
+          "evidence": "مصفوفة الاحتياج التطوعي",
+          "owner": "مديرة المشروع",
+          "cost": 750,
+          "actualCost": 0,
+          "planStartWeek": 9,
+          "planWeeks": 1,
+          "actualStartWeek": null,
+          "actualWeeks": null,
+          "progress": 0,
+          "monthlyCost": {
+            "2026-09": 750
+          }
+        },
+        {
+          "order": 2,
+          "phase": "الإعداد",
+          "title": "تصميم الفرص التطوعية ووصفها ومتطلباتها وساعاتها",
+          "evidence": "فرص تطوعية مصممة",
+          "owner": "مديرة المشروع",
+          "cost": 750,
+          "actualCost": 0,
+          "planStartWeek": 9,
+          "planWeeks": 2,
+          "actualStartWeek": null,
+          "actualWeeks": null,
+          "progress": 0,
+          "monthlyCost": {
+            "2026-09": 375,
+            "2026-10": 375
+          }
+        },
+        {
+          "order": 3,
+          "phase": "الإعداد",
+          "title": "تسجيل الجمعية وفرصها على منصة العمل التطوعي",
+          "evidence": "فرص منشورة على المنصة",
+          "owner": "مديرة المشروع",
+          "cost": 750,
+          "actualCost": 0,
+          "planStartWeek": 10,
+          "planWeeks": 2,
+          "actualStartWeek": null,
+          "actualWeeks": null,
+          "progress": 0,
+          "monthlyCost": {
+            "2026-10": 750
+          }
+        },
+        {
+          "order": 4,
+          "phase": "الإعداد",
+          "title": "إعداد لائحة التطوع وإجراءات القبول والمتابعة والتكريم",
+          "evidence": "لائحة التطوع معتمدة",
+          "owner": "مديرة المشروع",
+          "cost": 750,
+          "actualCost": 0,
+          "planStartWeek": 11,
+          "planWeeks": 2,
+          "actualStartWeek": null,
+          "actualWeeks": null,
+          "progress": 0,
+          "monthlyCost": {
+            "2026-10": 750
+          }
+        },
+        {
+          "order": 5,
+          "phase": "التنفيذ",
+          "title": "نشر الفرص واستقبال طلبات المتطوعين وفرزها",
+          "evidence": "سجل المتقدمين",
+          "owner": "مديرة المشروع",
+          "cost": 2000,
+          "actualCost": 0,
+          "planStartWeek": 13,
+          "planWeeks": 1,
+          "actualStartWeek": null,
+          "actualWeeks": null,
+          "progress": 0,
+          "monthlyCost": {
+            "2026-10": 2000
+          }
+        },
+        {
+          "order": 6,
+          "phase": "التنفيذ",
+          "title": "قبول المتطوعين وتأهيلهم وتوقيع اتفاقيات التطوع",
+          "evidence": "متطوعون مؤهلون",
+          "owner": "مديرة المشروع",
+          "cost": 1900,
+          "actualCost": 0,
+          "planStartWeek": 14,
+          "planWeeks": 2,
+          "actualStartWeek": null,
+          "actualWeeks": null,
+          "progress": 0,
+          "monthlyCost": {
+            "2026-11": 1900
+          }
+        },
+        {
+          "order": 7,
+          "phase": "التنفيذ",
+          "title": "توثيق ساعات التطوع على المنصة وإصدار شهادات المتطوعين",
+          "evidence": "ساعات تطوع موثّقة",
+          "owner": "مديرة المشروع",
+          "cost": 1900,
+          "actualCost": 0,
+          "planStartWeek": 17,
+          "planWeeks": 2,
+          "actualStartWeek": null,
+          "actualWeeks": null,
+          "progress": 0,
+          "monthlyCost": {
+            "2026-11": 950,
+            "2026-12": 950
+          }
+        },
+        {
+          "order": 8,
+          "phase": "التنفيذ",
+          "title": "قياس رضا المتطوعات وتكريم المتميزين منهم",
+          "evidence": "تقرير الرضا ومحضر التكريم",
+          "owner": "مديرة المشروع",
+          "cost": 1900,
+          "actualCost": 0,
+          "planStartWeek": 19,
+          "planWeeks": 2,
+          "actualStartWeek": null,
+          "actualWeeks": null,
+          "progress": 0,
+          "monthlyCost": {
+            "2026-12": 1900
+          }
+        }
+      ],
+      "headerRow": 12
+    },
+    {
+      "number": 18,
+      "name": "تطوير فريق العمل",
+      "description": "تنفيذ برامج تدريبية وتطويرية للعاملين وقياس رضاهم لرفع الأداء والاحتفاظ بالكفاءات.",
+      "objectiveLabel": "(ت1) بناء رأس مال بشري متميز",
+      "indicatorLabels": "(ت1-2) عدد البرامج التطويرية المنفذة للعاملين (ت1-4) نسبة رضا العاملين والمتطوعين عن الجمعية",
+      "durationText": "8 أسابيع",
+      "managerName": "مديرة الموارد البشرية",
+      "owningDept": "إدارة الموارد البشرية",
+      "priority": null,
+      "startDate": "2026-09-19",
+      "endDate": "2026-11-13",
+      "budget": 7600,
+      "monthlyBudget": {
+        "2026-09": 1300,
+        "2026-10": 3100,
+        "2026-11": 3200
+      },
+      "steps": [
+        {
+          "order": 1,
+          "phase": "الإعداد",
+          "title": "بناء خطة التدريب وتحديد البرامج التطويرية وأولوياتها",
+          "evidence": "خطة تدريب معتمدة",
+          "owner": "مديرة المشروع",
+          "cost": 1300,
+          "actualCost": 0,
+          "planStartWeek": 8,
+          "planWeeks": 2,
+          "actualStartWeek": null,
+          "actualWeeks": null,
+          "progress": 0,
+          "monthlyCost": {
+            "2026-09": 1300
+          }
+        },
+        {
+          "order": 2,
+          "phase": "التنفيذ",
+          "title": "تنفيذ البرامج التطويرية للعاملين وفق الخطة والجدول",
+          "evidence": "موظفون مدرَّبون",
+          "owner": "مديرة المشروع",
+          "cost": 3100,
+          "actualCost": 0,
+          "planStartWeek": 13,
+          "planWeeks": 1,
+          "actualStartWeek": null,
+          "actualWeeks": null,
+          "progress": 0,
+          "monthlyCost": {
+            "2026-10": 3100
+          }
+        },
+        {
+          "order": 3,
+          "phase": "التنفيذ",
+          "title": "رصد الحضور والمشاركة وتوثيق شواهد التنفيذ",
+          "evidence": "كشوف الحضور والشواهد",
+          "owner": "مديرة المشروع",
+          "cost": 3200,
+          "actualCost": 0,
+          "planStartWeek": 14,
+          "planWeeks": 2,
+          "actualStartWeek": null,
+          "actualWeeks": null,
+          "progress": 0,
+          "monthlyCost": {
+            "2026-11": 3200
+          }
+        }
+      ],
+      "headerRow": 11
+    },
+    {
+      "number": 19,
+      "name": "أرشفة الملفات",
+      "description": "أرشفة وتنظيم ملفات ووثائق الجمعية إلكترونيًا لضمان حفظها وسهولة الوصول إليها.",
+      "objectiveLabel": "(ت2) بناء بيئة عمل مؤسسية وتقنية",
+      "indicatorLabels": "(ت2-5) نسبة توثيق وأتمتة إجراءات ونماذج العمل",
+      "durationText": "8 أسابيع",
+      "managerName": "مديرة التحول الرقمي",
+      "owningDept": "إدارة التحول الرقمي",
+      "priority": null,
+      "startDate": "2026-09-19",
+      "endDate": "2026-11-13",
+      "budget": 8800,
+      "monthlyBudget": {
+        "2026-09": 1875,
+        "2026-10": 4075,
+        "2026-11": 2850
+      },
+      "steps": [
+        {
+          "order": 1,
+          "phase": "الإعداد",
+          "title": "حصر ملفات ووثائق الجمعية وتحديد مصادرها وأحجامها",
+          "evidence": "سجل الحصر",
+          "owner": "مديرة المشروع",
+          "cost": 750,
+          "actualCost": 0,
+          "planStartWeek": 8,
+          "planWeeks": 1,
+          "actualStartWeek": 8,
+          "actualWeeks": 1,
+          "progress": 100,
+          "monthlyCost": {
+            "2026-09": 750
+          }
+        },
+        {
+          "order": 2,
+          "phase": "الإعداد",
+          "title": "بناء شجرة التصنيف ونظام الترميز والفهرسة والترقيم",
+          "evidence": "نظام فهرسة معتمد",
+          "owner": "مديرة المشروع",
+          "cost": 750,
+          "actualCost": 0,
+          "planStartWeek": 8,
+          "planWeeks": 2,
+          "actualStartWeek": null,
+          "actualWeeks": null,
+          "progress": 0,
+          "monthlyCost": {
+            "2026-09": 750
+          }
+        },
+        {
+          "order": 3,
+          "phase": "الإعداد",
+          "title": "إعداد سياسة الحفظ والاحتفاظ والإتلاف وصلاحيات الوصول",
+          "evidence": "سياسة الأرشفة معتمدة",
+          "owner": "مديرة المشروع",
+          "cost": 750,
+          "actualCost": 0,
+          "planStartWeek": 9,
+          "planWeeks": 2,
+          "actualStartWeek": null,
+          "actualWeeks": null,
+          "progress": 0,
+          "monthlyCost": {
+            "2026-09": 375,
+            "2026-10": 375
+          }
+        },
+        {
+          "order": 4,
+          "phase": "الإعداد",
+          "title": "تجهيز منصة الأرشفة الرقمية ومساحات التخزين والنسخ الاحتياطي",
+          "evidence": "المنصة جاهزة",
+          "owner": "مديرة المشروع",
+          "cost": 750,
+          "actualCost": 0,
+          "planStartWeek": 11,
+          "planWeeks": 1,
+          "actualStartWeek": null,
+          "actualWeeks": null,
+          "progress": 0,
+          "monthlyCost": {
+            "2026-10": 750
+          }
+        },
+        {
+          "order": 5,
+          "phase": "التنفيذ",
+          "title": "مسح الوثائق الورقية وتحويلها رقمياً بجودة معتمدة",
+          "evidence": "وثائق ممسوحة",
+          "owner": "مديرة المشروع",
+          "cost": 2000,
+          "actualCost": 0,
+          "planStartWeek": 12,
+          "planWeeks": 1,
+          "actualStartWeek": null,
+          "actualWeeks": null,
+          "progress": 0,
+          "monthlyCost": {
+            "2026-10": 2000
+          }
+        },
+        {
+          "order": 6,
+          "phase": "التنفيذ",
+          "title": "رفع الوثائق وفهرستها وفق شجرة التصنيف المعتمدة",
+          "evidence": "أرشيف رقمي",
+          "owner": "مديرة المشروع",
+          "cost": 1900,
+          "actualCost": 0,
+          "planStartWeek": 13,
+          "planWeeks": 2,
+          "actualStartWeek": null,
+          "actualWeeks": null,
+          "progress": 0,
+          "monthlyCost": {
+            "2026-10": 950,
+            "2026-11": 950
+          }
+        },
+        {
+          "order": 7,
+          "phase": "التنفيذ",
+          "title": "ضبط صلاحيات الوصول وتفعيل النسخ الاحتياطي الدوري",
+          "evidence": "إعدادات الصلاحيات والنسخ",
+          "owner": "مديرة المشروع",
+          "cost": 1900,
+          "actualCost": 0,
+          "planStartWeek": 14,
+          "planWeeks": 2,
+          "actualStartWeek": null,
+          "actualWeeks": null,
+          "progress": 0,
+          "monthlyCost": {
+            "2026-11": 1900
+          }
+        }
+      ],
+      "headerRow": 12
+    },
+    {
+      "number": 20,
+      "name": "أتمتة العمليات",
+      "description": "أتمتة إجراءات ونماذج العمل في الجمعية لرفع الكفاءة التشغيلية وتقليل الاعتماد على الإجراءات اليدوية.",
+      "objectiveLabel": "(ت2) بناء بيئة عمل مؤسسية وتقنية",
+      "indicatorLabels": "(ت2-3) نسبة اكتمال وتفعيل الأنظمة التقنية الداخلية (ت2-5) نسبة توثيق وأتمتة إجراءات ونماذج العمل",
+      "durationText": "13 أسبوعاً",
+      "managerName": "مديرة التحول الرقمي",
+      "owningDept": "إدارة التحول الرقمي",
+      "priority": null,
+      "startDate": "2026-09-19",
+      "endDate": "2026-12-18",
+      "budget": 12100,
+      "monthlyBudget": {
+        "2026-09": 1300,
+        "2026-10": 4400,
+        "2026-11": 3200,
+        "2026-12": 3200
+      },
+      "steps": [
+        {
+          "order": 1,
+          "phase": "الإعداد",
+          "title": "حصر إجراءات ونماذج العمل في الجمعية وتوثيقها",
+          "evidence": "سجل الإجراءات",
+          "owner": "مديرة المشروع",
+          "cost": 1300,
+          "actualCost": 0,
+          "planStartWeek": 8,
+          "planWeeks": 1,
+          "actualStartWeek": null,
+          "actualWeeks": null,
+          "progress": 0,
+          "monthlyCost": {
+            "2026-09": 1300
+          }
+        },
+        {
+          "order": 2,
+          "phase": "الإعداد",
+          "title": "تصميم النماذج الإلكترونية ومسارات الاعتماد والصلاحيات",
+          "evidence": "تصاميم النماذج والمسارات",
+          "owner": "مديرة المشروع",
+          "cost": 1300,
+          "actualCost": 0,
+          "planStartWeek": 11,
+          "planWeeks": 2,
+          "actualStartWeek": null,
+          "actualWeeks": null,
+          "progress": 0,
+          "monthlyCost": {
+            "2026-10": 1300
+          }
+        },
+        {
+          "order": 3,
+          "phase": "التنفيذ",
+          "title": "بناء النماذج الإلكترونية ومسارات سير العمل",
+          "evidence": "نماذج إلكترونية",
+          "owner": "مديرة المشروع",
+          "cost": 3100,
+          "actualCost": 0,
+          "planStartWeek": 13,
+          "planWeeks": 1,
+          "actualStartWeek": null,
+          "actualWeeks": null,
+          "progress": 0,
+          "monthlyCost": {
+            "2026-10": 3100
+          }
+        },
+        {
+          "order": 4,
+          "phase": "التنفيذ",
+          "title": "إطلاق الإجراءات المؤتمتة وتدريب المستخدمين عليها",
+          "evidence": "إجراءات مؤتمتة",
+          "owner": "مديرة المشروع",
+          "cost": 3200,
+          "actualCost": 0,
+          "planStartWeek": 16,
+          "planWeeks": 1,
+          "actualStartWeek": null,
+          "actualWeeks": null,
+          "progress": 0,
+          "monthlyCost": {
+            "2026-11": 3200
+          }
+        },
+        {
+          "order": 5,
+          "phase": "التنفيذ",
+          "title": "رصد نسبة توثيق وأتمتة إجراءات ونماذج العمل",
+          "evidence": "تقرير نسبة الأتمتة",
+          "owner": "مديرة المشروع",
+          "cost": 3200,
+          "actualCost": 0,
+          "planStartWeek": 19,
+          "planWeeks": 2,
+          "actualStartWeek": null,
+          "actualWeeks": null,
+          "progress": 0,
+          "monthlyCost": {
+            "2026-12": 3200
+          }
+        }
+      ],
+      "headerRow": 12
+    }
+  ]
+}

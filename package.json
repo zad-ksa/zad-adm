@@ -10,7 +10,9 @@
     "postinstall": "prisma generate",
     "grant:charity-admins": "node scripts/grant-charity-admin-permissions.js",
     "test:lib": "node --test --experimental-strip-types src/lib/*.test.ts",
-    "seed:strategy-statuses": "node -r dotenv/config scripts/seed-strategy-statuses.js"
+    "seed:strategy-statuses": "node -r dotenv/config scripts/seed-strategy-statuses.js",
+    "strategy:extract": "node scripts/extract-strategy-xlsx.js",
+    "strategy:seed": "node -r dotenv/config scripts/seed-strategy.js"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.106.0",

@@ -70,11 +70,21 @@ export function periodPercent(result: PeriodResult, polarity: Polarity = "UP"): 
   if (result.state === "POSTPONED") return null;
   if (!hasValue(result.target)) return null;
 
-  const actual = result.state === "NO_DATA" || !hasValue(result.actual) ? 0 : result.actual;
+  /**
+   * مستهدفٌ صفر = مستهدفٌ لم يُحدَّد، فلا نسبة له.
+   *
+   * جدول مقياس الأداء يُهيّئ كل مستهدفٍ جديدٍ بصفر، فأغلب الأصفار في البيانات
+   * «لم يُدخَل» لا «المطلوب صفر». وكان الحساب يُرجع لها ١٠٠٪، فظهرت أرباعٌ
+   * فارغةٌ تماماً (مستهدفاتها كلّها صفر ومتحققها لا شيء) بدرجة «أداء ممتاز».
+   * وملف Excel يُرجع لها صفراً، وهو الطرف الآخر: مؤشرٌ بلا مستهدفٍ يُوسَم
+   * «ضعيف الأداء» ويُنزل متوسط الجمعية.
+   *
+   * والصواب أنها لا تُحتسب: `null` تعني «لا نتيجة»، فتُستثنى من المتوسطات
+   * وتُصنَّف «لا توجد بيانات».
+   */
+  if (result.target === 0) return null;
 
-  // مستهدفٌ صفر: لا شيء مطلوب، فكلّ ما تحقّق كافٍ. (وهذا سلوك الجدول القائم؛
-  // وملف Excel يُظهرها صفراً، فأربعون مؤشراً فيه «ضعيف» لأن مستهدفاتها أصفار.)
-  if (result.target === 0) return actual >= 0 ? 100 : 0;
+  const actual = result.state === "NO_DATA" || !hasValue(result.actual) ? 0 : result.actual;
 
   // في مؤشرات النقص يكون التحسن نزولاً، فالنسبة مقلوبة.
   const ratio = polarity === "DOWN" ? safeDown(result.target, actual) : (actual / result.target) * 100;

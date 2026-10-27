@@ -17,6 +17,9 @@ import { amounts, formatAmount, serialLabel } from "@/lib/financialRequest";
 import type { FinancialDetail } from "@/lib/financialRequestRow";
 
 const FinancialRequestForm = dynamic(() => import("@/components/financial/FinancialRequestForm"), { ssr: false });
+// نافذةُ البتّ القائمة نفسُها: الأفعالُ الستّة والسلسلةُ والسجلُّ محرّكٌ
+// واحد، ولا يُكتب ثانٍ يُصان مرّتين.
+const ReviewModal = dynamic(() => import("@/components/approvals/ReviewModal"), { ssr: false });
 
 // ── الأنواع ──────────────────────────────────────────────────────────────────
 type Status = "PENDING" | "RETURNED" | "APPROVED" | "REJECTED" | "DELEGATED";
@@ -108,6 +111,15 @@ function readAttachments(value: unknown): Attachment[] {
 
 function safeParse(value: string): unknown {
   try { return JSON.parse(value); } catch { return null; }
+}
+
+/** آخرُ قرارٍ أُرفق به ملف — النموذجُ المختوم في الغالب. */
+function latestStamped(logs: RequestLog[]): { log: RequestLog; items: Attachment[] } | null {
+  for (let i = logs.length - 1; i >= 0; i -= 1) {
+    const items = readAttachments(logs[i].attachments);
+    if (items.length) return { log: logs[i], items };
+  }
+  return null;
 }
 
 function AttachmentList({ items, label }: { items: Attachment[]; label: string }) {
@@ -230,10 +242,11 @@ function BankBlock({ detail }: { detail: FinancialDetail }) {
 
 // ── بطاقة الطلب ──────────────────────────────────────────────────────────────
 function RequestCard({
-  request, sessionId, onResubmit, onDelete,
+  request, sessionId, onReview, onResubmit, onDelete,
 }: {
   request: FinancialRequestRow;
   sessionId: string;
+  onReview: (r: FinancialRequestRow) => void;
   onResubmit: (r: FinancialRequestRow) => void;
   onDelete: (id: string) => void;
 }) {
@@ -246,6 +259,7 @@ function RequestCard({
   const isHolder = request.status === "PENDING" && request.currentReviewerId === sessionId;
   const canDelete = (isOwner && ["PENDING", "RETURNED"].includes(request.status)) || isHolder;
   const ownAttachments = readAttachments(request.attachments);
+  const stamped = latestStamped(request.logs);
 
   return (
     <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 overflow-hidden">
@@ -298,6 +312,15 @@ function RequestCard({
 
           <AttachmentList items={ownAttachments} label="مرفقات الطلب" />
 
+          {stamped && (
+            <div className="rounded-xl border border-primary/30 bg-primary/5 dark:bg-primary/10 px-3 py-2">
+              <AttachmentList
+                items={stamped.items}
+                label={`النموذج الموقَّع — ${stamped.log.actor.name}`}
+              />
+            </div>
+          )}
+
           {request.reviewNote && (
             <div className="rounded-xl border border-amber-200 dark:border-amber-900 bg-amber-50 dark:bg-amber-900/20 px-3 py-2">
               <p className="text-caption font-semibold text-amber-700 dark:text-amber-400 mb-0.5">ملاحظة المراجع</p>
@@ -308,6 +331,11 @@ function RequestCard({
           <RequestTimeline logs={request.logs} />
 
           <div className="flex items-center gap-2 flex-wrap pt-1">
+            {isHolder && (
+              <button type="button" onClick={() => onReview(request)} className={btn.primary}>
+                <ShieldCheck className="w-4 h-4" /> مراجعة واتخاذ قرار
+              </button>
+            )}
             {isOwner && request.status === "RETURNED" && (
               <button type="button" onClick={() => onResubmit(request)} className={btn.primary}>
                 <RefreshCw className="w-4 h-4" /> تعديل وإعادة الإرسال
@@ -327,11 +355,12 @@ function RequestCard({
 
 // ── الصفحة ───────────────────────────────────────────────────────────────────
 export default function FinancialRequestsClient({
-  requests: initial, types, vatRate, hasActiveChain, canReviewAll, sessionId,
+  requests: initial, types, vatRate, hasActiveChain, canReviewAll, sessionId, allEmployees,
 }: Props) {
   const [requests, setRequests] = useState<FinancialRequestRow[]>(initial);
   const [showForm, setShowForm] = useState(false);
   const [resubmitReq, setResubmitReq] = useState<FinancialRequestRow | null>(null);
+  const [reviewingReq, setReviewingReq] = useState<FinancialRequestRow | null>(null);
   const [search, setSearch] = useState("");
   const [busy, setBusy] = useState(false);
   const [tab, setTab] = useState<"AWAITING" | "MINE" | "ALL">(() =>
@@ -466,9 +495,18 @@ export default function FinancialRequestsClient({
         <div className="space-y-2.5">
           {filtered.map((r) => (
             <RequestCard key={r.id} request={r} sessionId={sessionId}
-              onResubmit={setResubmitReq} onDelete={handleDelete} />
+              onReview={setReviewingReq} onResubmit={setResubmitReq} onDelete={handleDelete} />
           ))}
         </div>
+      )}
+
+      {reviewingReq && (
+        <ReviewModal
+          request={reviewingReq}
+          allEmployees={allEmployees}
+          onClose={() => setReviewingReq(null)}
+          onDone={refresh}
+        />
       )}
 
       {(showForm || resubmitReq) && (

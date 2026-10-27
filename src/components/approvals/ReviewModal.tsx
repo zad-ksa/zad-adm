@@ -2,8 +2,15 @@
 
 import { useState, useTransition } from "react";
 import Select from "@/components/console/Select";
-import { X, ShieldCheck, ArrowUp, ArrowDown, Check, CornerUpLeft, UserCheck, AlertCircle, Loader2 } from "lucide-react";
+import { X, ShieldCheck, ArrowUp, ArrowDown, Check, CornerUpLeft, UserCheck, AlertCircle, Loader2, FileText, Trash2, Stamp } from "lucide-react";
 import { reviewRequest } from "@/app/actions/approvals";
+import { uploadFiles } from "@/lib/clientUpload";
+import { ACCEPT_ATTRIBUTE, maxBytesFor, maxLabelFor } from "@/lib/uploadPurposes";
+
+const MAX_BYTES = maxBytesFor("approval_attachment");
+const MAX_LABEL = maxLabelFor("approval_attachment");
+
+type DecisionAttachment = { name: string; url: string; publicId?: string; size?: number };
 
 type ReviewAction = "APPROVED_FINAL" | "FORWARDED" | "FORWARDED_DOWN" | "REJECTED" | "RETURNED" | "DELEGATED";
 
@@ -37,6 +44,43 @@ export default function ReviewModal({
   const [delegatedToId, setDelegatedToId] = useState("");
   const [error, setError] = useState("");
   const [isPending, startTransition] = useTransition();
+  // مرفقُ القرار: المعتمِد يُصدِّر النموذج على الكليشة، ويختمه ويوقّعه، ثم
+  // يرفعه مع قراره. ومُقترَحٌ لا مشترط — اعتمادٌ بلا ختمٍ ورقيٍّ يبقى ممكناً.
+  const [attachments, setAttachments] = useState<DecisionAttachment[]>([]);
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadStatus, setUploadStatus] = useState("");
+
+  async function handleUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const files = Array.from(e.target.files || []);
+    if (!files.length) return;
+
+    const tooBig = files.filter((f) => f.size > MAX_BYTES);
+    if (tooBig.length) {
+      setError(`تجاوز الحد (${MAX_LABEL}): ${tooBig.map((f) => f.name).join("، ")}`);
+      return;
+    }
+
+    setIsUploading(true);
+    setError("");
+    try {
+      const uploaded = await uploadFiles(files, "approval_attachment", (p) =>
+        setUploadStatus(
+          p.total > 1
+            ? `جارٍ رفع ${p.index} من ${p.total}: ${p.fileName}${p.percent !== null ? ` — ${p.percent}%` : ""}`
+            : `جارٍ الرفع${p.percent !== null ? ` — ${p.percent}%` : ""}`
+        )
+      );
+      setAttachments((prev) => [
+        ...prev,
+        ...uploaded.map((u) => ({ name: u.name, url: u.url, publicId: u.publicId, size: u.size })),
+      ]);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "فشل رفع الملف");
+    } finally {
+      setIsUploading(false);
+      setUploadStatus("");
+    }
+  }
 
   // الإجراءات المتاحة — كل اتجاه يظهر فقط إذا كان فيه أحد
   const actions: { value: ReviewAction; label: string; icon: any; color: string; desc: string }[] = [
@@ -80,7 +124,7 @@ export default function ReviewModal({
     setError("");
     startTransition(async () => {
       try {
-        await reviewRequest({ requestId: request.id, action, note, delegatedToId: delegatedToId || undefined });
+        await reviewRequest({ requestId: request.id, action, note, delegatedToId: delegatedToId || undefined, attachments });
         onDone(); onClose();
       } catch (e: any) { setError(e.message); }
     });
@@ -112,7 +156,7 @@ closeOnBackdrop={false}
 footer={
 <>
 <button type="button" onClick={onClose} className={btn.secondary}>إلغاء</button>
-          <button onClick={handleSubmit} disabled={isPending || !action}
+          <button onClick={handleSubmit} disabled={isPending || isUploading || !action}
             title={action ? undefined : "اختر الإجراء أولاً"}
             className={`flex items-center gap-2 disabled:opacity-60 text-white px-5 py-2 rounded-xl text-sm font-bold transition-colors ${
               selectedAction ? btnMap[selectedAction.color] ?? "bg-primary hover:bg-primary/90" : "bg-slate-400 dark:bg-slate-600"
@@ -166,6 +210,31 @@ footer={
             <textarea value={note} onChange={e => setNote(e.target.value)} rows={3}
               placeholder={noteRequired ? "اذكر السبب أو التعديلات المطلوبة..." : "يمكنك إضافة ملاحظة..."}
               className="w-full border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-sm bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-primary resize-none" />
+          </div>
+
+          <div>
+            <label className="text-xs font-bold text-slate-500 dark:text-slate-400 mb-1.5 flex items-center gap-1">
+              <Stamp className="w-3.5 h-3.5" /> النموذج الموقَّع أو مرفقٌ للقرار
+              <span className="font-normal text-slate-400">(اختياري — بحد أقصى {MAX_LABEL} للملف)</span>
+            </label>
+            <div className="space-y-2">
+              <input type="file" multiple accept={ACCEPT_ATTRIBUTE} onChange={handleUpload}
+                disabled={isUploading || isPending}
+                className="w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-bold file:bg-primary/10 file:text-primary hover:file:bg-primary/20 transition-colors cursor-pointer" />
+              {isUploading && <p className="text-xs text-primary animate-pulse">{uploadStatus || "جاري الرفع..."}</p>}
+              {attachments.map((att, i) => (
+                <div key={`${att.url}-${i}`} className="flex items-center justify-between bg-slate-50 dark:bg-slate-800/50 px-3 py-2 rounded-lg border border-slate-100 dark:border-slate-700">
+                  <div className="flex items-center gap-2 overflow-hidden">
+                    <FileText className="w-4 h-4 text-primary shrink-0" />
+                    <span className="text-xs font-medium truncate" title={att.name}>{att.name}</span>
+                  </div>
+                  <button type="button" onClick={() => setAttachments((prev) => prev.filter((_, idx) => idx !== i))}
+                    className="text-red-500 hover:text-red-700 p-1">
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              ))}
+            </div>
           </div>
 
           {error && <p className="text-xs text-red-500 flex items-center gap-1"><AlertCircle className="w-3.5 h-3.5" />{error}</p>}

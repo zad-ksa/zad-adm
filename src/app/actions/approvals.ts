@@ -102,6 +102,13 @@ export async function reviewRequest(data: {
   action: "APPROVED_FINAL" | "FORWARDED" | "FORWARDED_DOWN" | "REJECTED" | "RETURNED" | "DELEGATED";
   note?: string;
   delegatedToId?: string; // مطلوب عند DELEGATED
+  /**
+   * مرفقاتُ القرار نفسه — النموذجُ المختوم الموقَّع في الغالب.
+   *
+   * وتُعلَّق بالسجلّ لا بالطلب: الوثيقةُ المختومة أثرُ قرارٍ بعينه، ولو
+   * عُلّقت بالطلب لما عُرف صاحبُ الختم من بين معتمِديه.
+   */
+  attachments?: unknown[];
 }) {
   const session = await requireSession();
 
@@ -137,8 +144,15 @@ export async function reviewRequest(data: {
       action: data.action,
       note: data.note?.trim() || null,
       delegatedToId: data.delegatedToId ?? null,
+      attachments: data.attachments?.length
+        ? (data.attachments as Prisma.InputJsonValue)
+        : Prisma.DbNull,
     },
   });
+
+  // الإشعارُ والإنعاشُ إلى صفحة نوعِه: رابطٌ إلى /main/approvals في طلبٍ
+  // ماليٍّ يأخذ قارئَه إلى صفحةٍ لا يظهر فيها الطلب أصلاً.
+  const page = request.kind === "FINANCIAL" ? "/main/financial-requests" : "/main/approvals";
 
   if (data.action === "FORWARDED") {
     // ابحث عن الخطوة التالية
@@ -161,7 +175,7 @@ export async function reviewRequest(data: {
         nextStep.approverId,
         "طلب للمراجعة",
         `تم تحويل طلب لمراجعتك: ${request.title}`,
-        "/main/approvals"
+        page
       );
     } else {
       // Unreachable from the UI, which stops offering "forward up" at the top
@@ -196,7 +210,7 @@ export async function reviewRequest(data: {
       prevStep.approverId,
       "طلب للمراجعة",
       `تم تمرير طلب لمراجعتك: ${request.title}`,
-      "/main/approvals"
+      page
     );
   }
 
@@ -221,7 +235,7 @@ export async function reviewRequest(data: {
       request.createdById,
       "قبول طلب الاعتماد",
       `تم اعتماد طلبك بشكل نهائي: ${request.title}`,
-      "/main/approvals"
+      page
     );
   } else if (data.action === "REJECTED") {
     await prisma.request.update({
@@ -270,7 +284,7 @@ export async function reviewRequest(data: {
     }
   }
 
-  revalidatePath("/main/approvals");
+  revalidatePath(page);
 }
 
 // ── إعادة إرسال طلب مرجع ─────────────────────────────────────────────────────

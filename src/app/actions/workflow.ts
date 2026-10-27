@@ -4,6 +4,7 @@ import { prisma } from "@/lib/db";
 import { getSession } from "@/lib/auth";
 import { hasPermission } from "@/lib/permissions";
 import { revalidatePath } from "next/cache";
+import { chainPurposeOf, type ChainPurpose } from "@/lib/requestQuery";
 
 async function requireAdmin() {
   const session = await getSession();
@@ -15,10 +16,10 @@ async function requireAdmin() {
 }
 
 // ── إنشاء سلسلة جديدة ────────────────────────────────────────────────────────
-export async function createChain(name: string) {
+export async function createChain(name: string, purpose: ChainPurpose = "GENERAL") {
   await requireAdmin();
   const chain = await prisma.workflowChain.create({
-    data: { name: name.trim(), isActive: false },
+    data: { name: name.trim(), purpose: chainPurposeOf(purpose), isActive: false },
   });
   revalidatePath("/main/workflow-settings");
   return chain;
@@ -34,18 +35,35 @@ export async function deleteChain(chainId: string) {
 // ── تفعيل سلسلة كالافتراضية (وإلغاء تفعيل الباقي) ───────────────────────────
 export async function setActiveChain(chainId: string) {
   await requireAdmin();
-  await prisma.workflowChain.updateMany({ data: { isActive: false } });
-  await prisma.workflowChain.update({
+
+  // الإطفاءُ محصورٌ بغرض السلسلة نفسها.
+  //
+  // فحين كان `updateMany` بلا شرطٍ كان تفعيلُ مسارٍ مالي يُطفئ المسار العام،
+  // فتتوقّف الطلبات كلّها عن إيجاد مُراجعٍ أوّل. ولكل غرضٍ سلسلةٌ نشطةٌ واحدة.
+  const chain = await prisma.workflowChain.findUnique({
     where: { id: chainId },
-    data: { isActive: true },
+    select: { purpose: true },
   });
+  if (!chain) throw new Error("السلسلة غير موجودة");
+
+  await prisma.$transaction([
+    prisma.workflowChain.updateMany({
+      where: { purpose: chain.purpose },
+      data: { isActive: false },
+    }),
+    prisma.workflowChain.update({ where: { id: chainId }, data: { isActive: true } }),
+  ]);
+
   revalidatePath("/main/workflow-settings");
 }
 
 // ── إلغاء تفعيل جميع السلاسل (بدون workflow) ─────────────────────────────────
-export async function clearActiveChain() {
+export async function clearActiveChain(purpose: ChainPurpose = "GENERAL") {
   await requireAdmin();
-  await prisma.workflowChain.updateMany({ data: { isActive: false } });
+  await prisma.workflowChain.updateMany({
+    where: { purpose: chainPurposeOf(purpose) },
+    data: { isActive: false },
+  });
   revalidatePath("/main/workflow-settings");
 }
 

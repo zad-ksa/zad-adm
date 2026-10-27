@@ -9,8 +9,9 @@ import { notify } from "@/components/console/toastBus";
 import type { LucideIcon } from "lucide-react";
 import {
   ArrowRight, CheckCircle2, Clock, CornerUpLeft, Eye, FileText, GitBranch, Landmark,
-  Loader2, Plus, RefreshCw, Receipt, Send, ShieldCheck, Trash2, UserCheck, X,
+  Loader2, Plus, RefreshCw, Receipt, Send, Settings2, ShieldCheck, Trash2, UserCheck, X,
 } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { deleteRequest } from "@/app/actions/approvals";
 import { getFinancialRequestsAndMarkRead } from "@/app/actions/financialRequests";
 import { amounts, formatAmount, serialLabel } from "@/lib/financialRequest";
@@ -20,6 +21,7 @@ const FinancialRequestForm = dynamic(() => import("@/components/financial/Financ
 // نافذةُ البتّ القائمة نفسُها: الأفعالُ الستّة والسلسلةُ والسجلُّ محرّكٌ
 // واحد، ولا يُكتب ثانٍ يُصان مرّتين.
 const ReviewModal = dynamic(() => import("@/components/approvals/ReviewModal"), { ssr: false });
+const FinancialSettingsSheet = dynamic(() => import("@/components/financial/FinancialSettingsSheet"), { ssr: false });
 
 // ── الأنواع ──────────────────────────────────────────────────────────────────
 type Status = "PENDING" | "RETURNED" | "APPROVED" | "REJECTED" | "DELEGATED";
@@ -355,12 +357,14 @@ function RequestCard({
 
 // ── الصفحة ───────────────────────────────────────────────────────────────────
 export default function FinancialRequestsClient({
-  requests: initial, types, vatRate, hasActiveChain, canReviewAll, sessionId, allEmployees,
+  requests: initial, types, vatRate, hasActiveChain, canReviewAll, canManageSettings, sessionId, allEmployees,
 }: Props) {
+  const router = useRouter();
   const [requests, setRequests] = useState<FinancialRequestRow[]>(initial);
   const [showForm, setShowForm] = useState(false);
   const [resubmitReq, setResubmitReq] = useState<FinancialRequestRow | null>(null);
   const [reviewingReq, setReviewingReq] = useState<FinancialRequestRow | null>(null);
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const [search, setSearch] = useState("");
   const [busy, setBusy] = useState(false);
   const [tab, setTab] = useState<"AWAITING" | "MINE" | "ALL">(() =>
@@ -443,11 +447,19 @@ export default function FinancialRequestsClient({
             : `${mine.length} من طلباتك`
         }
         actions={
+          <div className="flex items-center gap-2">
+          {canManageSettings && (
+            <button type="button" onClick={() => setSettingsOpen(true)} className={btn.secondary}
+              title="إعدادات الطلبات المالية">
+              <Settings2 className="w-4 h-4" /> الإعدادات
+            </button>
+          )}
           <button type="button" onClick={() => setShowForm(true)} disabled={!hasActiveChain}
             title={hasActiveChain ? undefined : "لا توجد سلسلة اعتماد مالية نشطة حالياً، راجع مسؤول النظام"}
             className={btn.primary}>
             <Plus className="w-4 h-4" /> طلب مالي جديد
           </button>
+          </div>
         }
       />
 
@@ -498,6 +510,16 @@ export default function FinancialRequestsClient({
               onReview={setReviewingReq} onResubmit={setResubmitReq} onDelete={handleDelete} />
           ))}
         </div>
+      )}
+
+      {settingsOpen && (
+        <FinancialSettingsSheet
+          vatRate={vatRate}
+          onClose={() => setSettingsOpen(false)}
+          // النسبةُ والأنواعُ تُقرآن في الخادم عند الرسم، فإنعاشُ المسار هو
+          // ما يُنزلهما إلى النموذج — لا حالةٌ محليّةٌ تُحدَّث على التخمين.
+          onSaved={() => router.refresh()}
+        />
       )}
 
       {reviewingReq && (

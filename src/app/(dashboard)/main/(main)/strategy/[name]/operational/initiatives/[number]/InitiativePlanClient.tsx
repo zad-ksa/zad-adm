@@ -2,7 +2,7 @@
 
 import { useMemo, useState, useTransition } from "react";
 import Link from "next/link";
-import { ArrowDown, ArrowUp, GanttChartSquare, Pencil, Plus, Trash2 } from "lucide-react";
+import { ArrowDown, ArrowUp, FileText, GanttChartSquare, Pencil, Plus, Trash2 } from "lucide-react";
 import { StatStrip } from "@/components/console/layout";
 import { Badge, Spinner, btn, cx } from "@/components/console/ui";
 import { ConfirmDialog } from "@/components/console/ConfirmDialog";
@@ -25,6 +25,7 @@ import {
 } from "@/lib/initiativeProgress";
 import { deleteStep, moveStep } from "@/app/actions/strategyOperational";
 import { StepDialog } from "./StepDialog";
+import { MarketingFileDialog } from "../MarketingFileDialog";
 
 export type StepRow = {
   id: string;
@@ -55,6 +56,10 @@ export type InitiativeDetail = {
   startDate: string | null;
   endDate: string | null;
   budget: string | null;
+  /** الملف التسويقي: «LINK» أو «FILE»، وعنوانٌ واحدٌ يُفتح في الحالين. */
+  marketingKind: string | null;
+  marketingUrl: string | null;
+  marketingFileName: string | null;
   objective: { code: string; name: string } | null;
   indicators: { id: string; code: string; name: string }[];
   plan: {
@@ -93,6 +98,8 @@ export default function InitiativePlanClient({
   const view = useTableView();
   const [editing, setEditing] = useState<{ step?: StepRow } | null>(null);
   const [removing, setRemoving] = useState<StepRow | null>(null);
+  const [marketing, setMarketing] = useState(false);
+  const marketingUrl = initiative.marketingUrl;
   const [busy, startBusy] = useTransition();
 
   const today = useMemo(() => new Date(), []);
@@ -149,9 +156,54 @@ export default function InitiativePlanClient({
                 </p>
               )}
             </div>
-            <Link href={`${base}/initiatives`} className={btn.secondary}>
-              الكشاف
-            </Link>
+            <div className="flex shrink-0 items-center gap-2">
+              {/* الملف التسويقي: أول نقرةٍ تُعبّئ، وما بعدها يفتح. فالزرّ
+                  واحدٌ ولا يحتاج المستخدم أن يعرف أيَّ الحالتين هو فيها. */}
+              {marketingUrl ? (
+                <a
+                  href={marketingUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={btn.success}
+                  title={
+                    initiative.marketingKind === "FILE"
+                      ? initiative.marketingFileName || "الملف التسويقي المرفوع"
+                      : marketingUrl
+                  }
+                  onContextMenu={(e) => {
+                    // نقرةٌ يمنى على الزرّ تفتح التعديل بدل قائمة المتصفّح،
+                    // فتعديل الرابط لا يحتاج الذهاب إلى نافذة المبادرة.
+                    if (!canEdit) return;
+                    e.preventDefault();
+                    setMarketing(true);
+                  }}
+                >
+                  <FileText className="size-4" />
+                  الملف التسويقي
+                </a>
+              ) : canEdit ? (
+                <button type="button" onClick={() => setMarketing(true)} className={btn.success}>
+                  <FileText className="size-4" />
+                  الملف التسويقي
+                </button>
+              ) : null}
+
+              {canEdit && marketingUrl && (
+                <button
+                  type="button"
+                  onClick={() => setMarketing(true)}
+                  aria-label="تعديل الملف التسويقي"
+                  title="تعديل الملف التسويقي"
+                  className={btn.icon}
+                >
+                  <Pencil className="size-4" />
+                </button>
+              )}
+
+              <Link href={`${base}/initiatives`} className={btn.secondary}>
+                الكشاف
+              </Link>
+            </div>
           </div>
 
           <dl className="mt-4 grid gap-3 text-body sm:grid-cols-2 lg:grid-cols-4">
@@ -285,6 +337,18 @@ export default function InitiativePlanClient({
         onRemove={setRemoving}
         onMove={(id, direction) => run(() => moveStep(id, direction))}
       />
+
+      {marketing && (
+        <MarketingFileDialog
+          initiativeId={initiative.id}
+          current={{
+            kind: initiative.marketingKind,
+            url: initiative.marketingUrl,
+            fileName: initiative.marketingFileName,
+          }}
+          onClose={() => setMarketing(false)}
+        />
+      )}
 
       {editing && (
         <StepDialog

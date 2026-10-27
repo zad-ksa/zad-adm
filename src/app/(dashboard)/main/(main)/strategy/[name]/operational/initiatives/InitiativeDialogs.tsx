@@ -148,10 +148,17 @@ export function InitiativeDialog({
     budget: initiative?.budget ?? "",
   });
   const [indicatorIds, setIndicatorIds] = useState<string[]>(initiative?.indicators.map((i) => i.id) ?? []);
+  // الملف التسويقي: رابطٌ يُكتب هنا، أو ملفٌ يُرفع من زرّ المبادرة في صفحتها.
+  // ورفعُ ملفٍ وسطَ نموذجٍ طويل يُخاطر بضياع ما كُتب لو فشل، فاكتُفي بالرابط.
+  const [marketingUrl, setMarketingUrl] = useState(
+    initiative?.marketingKind === "LINK" ? (initiative.marketingUrl ?? "") : ""
+  );
   const [monthly, setMonthly] = useState<Record<string, string>>(() =>
     Object.fromEntries(months.map((m) => [m.key, String(initiative?.monthlyBudget?.[m.key] ?? "")]))
   );
   const { error, busy, submit } = useSave(onClose);
+  // «لم يُمسّ» يختلف عن «أُفرِغ»: الأول لا يُرسل شيئاً، والثاني يُزيل.
+  const [marketingTouched, setMarketingTouched] = useState(false);
 
   const set = <K extends keyof typeof form>(key: K, value: (typeof form)[K]) =>
     setForm((f) => ({ ...f, [key]: value }));
@@ -186,6 +193,13 @@ export function InitiativeDialog({
             objectiveId: form.objectiveId || null,
             indicatorIds,
             monthlyBudget: monthly,
+            // ملفٌ مرفوعٌ قائم لا يُمسّ من هنا: حقلُ الرابط فارغٌ في حالته،
+            // ولو أُرسل «إزالة» لحُذف الملف بلا طلب.
+            marketing: marketingTouched
+              ? marketingUrl.trim()
+                ? { kind: "LINK" as const, url: marketingUrl }
+                : { kind: "NONE" as const }
+              : undefined,
           })
         )
       }
@@ -311,6 +325,27 @@ export function InitiativeDialog({
             />
           </Labeled>
         </div>
+
+        <Labeled
+          label="رابط الملف التسويقي"
+          hint={
+            initiative?.marketingKind === "FILE"
+              ? `مرفوعٌ حالياً: ${initiative.marketingFileName || "ملف"} — يُستبدل من زرّ «الملف التسويقي» في صفحة المبادرة.`
+              : "أو ارفع ملفاً من زرّ «الملف التسويقي» في صفحة المبادرة."
+          }
+        >
+          <input
+            value={marketingUrl}
+            onChange={(e) => {
+              setMarketingUrl(e.target.value);
+              setMarketingTouched(true);
+            }}
+            dir="ltr"
+            placeholder="https://…"
+            disabled={initiative?.marketingKind === "FILE"}
+            className={cx(field, "text-start")}
+          />
+        </Labeled>
 
         {months.length > 0 && (
           <div>

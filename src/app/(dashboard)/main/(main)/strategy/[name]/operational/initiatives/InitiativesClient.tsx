@@ -54,6 +54,10 @@ export type InitiativeRow = {
   endDate: string | null;
   budget: string | null;
   monthlyBudget: Record<string, number> | null;
+  /** الملف التسويقي — يُعدَّل من نافذة المبادرة أو من زرّها في صفحتها. */
+  marketingKind: string | null;
+  marketingUrl: string | null;
+  marketingFileName: string | null;
   objective: { id: string; code: string; name: string } | null;
   indicators: { id: string; code: string; name: string }[];
   steps: { progress: number; cost: number | null; actualCost: number | null }[];

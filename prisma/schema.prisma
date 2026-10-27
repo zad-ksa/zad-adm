@@ -2079,8 +2079,21 @@ model Initiative {
   /// توزيع الموازنة على أشهر الخطة: { "2026-08": 0, "2026-09": 18150, ... }
   /// مفاتيحه أشهرٌ لا أسماء، فلا يرتبط بفترةِ خطةٍ بعينها.
   monthlyBudget Json?
-  createdAt     DateTime           @default(now())
-  updatedAt     DateTime           @updatedAt
+
+  /// الملف التسويقي للمبادرة: رابطٌ خارجي أو ملفٌ مرفوع إلى Cloudinary.
+  ///
+  /// الحالتان تنتهيان إلى رابطٍ يُفتح، فالعنوان واحد (`marketingUrl`) و`kind`
+  /// يقول أصلَه: «LINK» لا يُحذف من Cloudinary، و«FILE» يُحذف أصلُه عند
+  /// استبداله فلا تبقى ملفاتٌ يتيمةٌ تُحتسب في الحصة.
+  marketingKind         String?
+  marketingUrl          String?
+  marketingFileName     String?
+  /// يلزمان لحذف الأصل من Cloudinary: destroy يحتاج نوع المورد نفسه، وإلا
+  /// افترض «image» ولم يفعل شيئاً مع الملفات الخام.
+  marketingPublicId     String?
+  marketingResourceType String?
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
 
   steps      InitiativeStep[]
   indicators InitiativeIndicator[]

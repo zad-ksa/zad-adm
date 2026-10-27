@@ -137,6 +137,8 @@ export type InitiativeInput = {
   budget?: string;
   /** توزيع الموازنة على أشهر الخطة: { "2026-08": 18150 } */
   monthlyBudget?: Record<string, string>;
+  /** الملف التسويقي — يُمرَّر من نافذة التعديل، و`undefined` تعني «لا تمسّه». */
+  marketing?: MarketingInput;
 };
 
 export async function saveInitiative(input: InitiativeInput): Promise<Result> {
@@ -218,6 +220,12 @@ export async function saveInitiative(input: InitiativeInput): Promise<Result> {
       initiativeId = created.id;
     }
 
+    // الملف التسويقي يُحفظ بنفس الفعل الذي يحفظه الزرّ، فلا منطقَ مكرّر.
+    if (input.marketing) {
+      const res = await setInitiativeMarketing(initiativeId, input.marketing);
+      if (res.error) return res;
+    }
+
     // الربط يُستبدل لا يُضاف إليه: الصفحة تُرسل القائمة كاملةً.
     await prisma.initiativeIndicator.deleteMany({ where: { initiativeId } });
     if (indicatorIds.length > 0) {
@@ -259,6 +267,108 @@ export async function setInitiativePriority(id: string, priority: string | null)
   }
 }
 
+
+
+// ── الملف التسويقي للمبادرة ─────────────────────────────────────────────────
+
+export type MarketingInput =
+  | { kind: "LINK"; url: string }
+  | { kind: "FILE"; url: string; publicId: string; resourceType: string; fileName: string }
+  | { kind: "NONE" };
+
+/**
+ * رابطٌ صالحٌ للفتح: http أو https وحدهما.
+ *
+ * و`javascript:` و`data:` مرفوضان: الزرّ يُفتح بـ`window.open`، فرابطٌ من هذين
+ * ينفّذ ما فيه في سياق الصفحة.
+ */
+function safeHttpUrl(raw: string): string | null {
+  const value = raw.trim();
+  if (!value) return null;
+  const withScheme = /^[a-z][a-z0-9+.-]*:/i.test(value) ? value : `https://${value}`;
+  let parsed: URL;
+  try {
+    parsed = new URL(withScheme);
+  } catch {
+    return null;
+  }
+  if (parsed.protocol !== "http:" && parsed.protocol !== "https:") return null;
+  return parsed.toString();
+}
+
+/** يحذف أصلاً من Cloudinary بأفضل جهد: فشلُ الحذف لا يمنع الاستبدال. */
+async function destroyAsset(publicId: string | null, resourceType: string | null) {
+  if (!publicId) return;
+  try {
+    const { v2: cloudinary } = await import("cloudinary");
+    await cloudinary.uploader.destroy(publicId, { resource_type: resourceType || "raw" });
+  } catch (err) {
+    console.error("تعذّر حذف الملف التسويقي من Cloudinary", publicId, err);
+  }
+}
+
+/**
+ * يحفظ الملف التسويقي: رابطاً أو ملفاً مرفوعاً، أو يُزيله.
+ *
+ * والأصلُ القديم يُحذف من Cloudinary حين يُستبدل أو يُزال — فلا تبقى ملفاتٌ
+ * يتيمةٌ تُحتسب في الحصة ولا يصل إليها أحد. ولا يُحذف إن كان الجديد هو نفسه.
+ */
+export async function setInitiativeMarketing(
+  initiativeId: string,
+  input: MarketingInput
+): Promise<Result> {
+  try {
+    const charityId = await charityOfInitiative(initiativeId);
+    await requireAccess(charityId);
+
+    const current = await prisma.initiative.findUnique({
+      where: { id: initiativeId },
+      select: { marketingPublicId: true, marketingResourceType: true },
+    });
+
+    let data: Prisma.InitiativeUpdateInput;
+
+    if (input.kind === "NONE") {
+      data = {
+        marketingKind: null,
+        marketingUrl: null,
+        marketingFileName: null,
+        marketingPublicId: null,
+        marketingResourceType: null,
+      };
+    } else if (input.kind === "LINK") {
+      const url = safeHttpUrl(input.url);
+      if (!url) return { error: "رابطٌ غير صالح — يبدأ بـhttp أو https" };
+      data = {
+        marketingKind: "LINK",
+        marketingUrl: url,
+        marketingFileName: null,
+        marketingPublicId: null,
+        marketingResourceType: null,
+      };
+    } else {
+      if (!input.url || !input.publicId) return { error: "لم يكتمل رفع الملف" };
+      data = {
+        marketingKind: "FILE",
+        marketingUrl: input.url,
+        marketingFileName: input.fileName || null,
+        marketingPublicId: input.publicId,
+        marketingResourceType: input.resourceType || "raw",
+      };
+    }
+
+    await prisma.initiative.update({ where: { id: initiativeId }, data });
+
+    // يُحذف القديم بعد نجاح الكتابة لا قبلها: لو فشلت الكتابة بقي الأصل مرجوعاً إليه.
+    const replaced = input.kind !== "FILE" || input.publicId !== current?.marketingPublicId;
+    if (replaced) await destroyAsset(current?.marketingPublicId ?? null, current?.marketingResourceType ?? null);
+
+    await revalidateOperational(charityId);
+    return {};
+  } catch (e) {
+    return { error: message(e) };
+  }
+}
 
 // ── خطوات المبادرة ──────────────────────────────────────────────────────────
 // الخطوة هي المُدخل الوحيد في الخطة التشغيلية: منها تُحسب نسبةُ إنجاز المبادرة

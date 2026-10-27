@@ -1,11 +1,13 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import {
+  AMOUNT_MAX,
   amounts,
   formatAmount,
   isPlausibleIban,
   isValidVatRate,
   normaliseIban,
+  parseAmount,
   serialLabel,
   taxAmount,
   totalWithTax,
@@ -132,4 +134,24 @@ test("نسبةٌ مقبولة بين صفر ومئة", () => {
   assert.equal(isValidVatRate(101), false);
   assert.equal(isValidVatRate("خمسة"), false);
   assert.equal(isValidVatRate(null), false);
+});
+
+// ── قراءة المبلغ ──────────────────────────────────────────────────────────
+
+test("المبلغ يُقرأ بفاصلته ويُقرَّب لهللتين", () => {
+  assert.equal(parseAmount("12,500.509"), 12500.51);
+  assert.equal(parseAmount(" 80000 "), 80000);
+});
+
+test("مبلغٌ لا يصلح يردّ null لا صفراً", () => {
+  assert.equal(parseAmount("0"), null);
+  assert.equal(parseAmount(-5), null);
+  assert.equal(parseAmount(""), null);
+  assert.equal(parseAmount("كثير"), null);
+  assert.equal(parseAmount(null), null);
+});
+
+test("فوق سعة العمود يُرفض", () => {
+  assert.equal(parseAmount(AMOUNT_MAX), AMOUNT_MAX);
+  assert.equal(parseAmount(AMOUNT_MAX + 1), null);
 });

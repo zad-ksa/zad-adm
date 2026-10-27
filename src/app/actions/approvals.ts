@@ -349,7 +349,10 @@ export async function deleteRequest(requestId: string) {
   }
 
   await prisma.request.delete({ where: { id: requestId } });
+  // الصفحتان كلتاهما: الفعلُ مشتركٌ بين النوعين، والمسار الذي لا يخصّ الطلب
+  // المحذوف لا يضرّه إنعاشُه.
   revalidatePath("/main/approvals");
+  revalidatePath("/main/financial-requests");
 }
 
 // ── جلب الطلبات (للـ polling في المكون) ──────────────────────────────────────
@@ -385,8 +388,9 @@ export async function getVisibleRequestsAndMarkRead() {
       }),
       include: REQUEST_INCLUDE,
     }),
+    // العامة وحدها: قراءةُ هذه الصفحة لا تُطفئ شارةَ الطلبات المالية.
     prisma.requestNotification.updateMany({
-      where: { employeeId: session.id, isRead: false },
+      where: { employeeId: session.id, isRead: false, request: { kind: "GENERAL" } },
       data: { isRead: true },
     }),
   ]);
@@ -394,21 +398,23 @@ export async function getVisibleRequestsAndMarkRead() {
 }
 
 // ── إشعارات ──────────────────────────────────────────────────────────────────
-export async function markNotificationsRead() {
-  const session = await requireSession();
 
-  // للسبب نفسه: الصفوف المُحدَّثة مرتبطة بمعرّف هذا الموظف وحده، وعدّادها
-  // يُحسب بلا فحص صلاحية أصلاً.
-  await prisma.requestNotification.updateMany({
-    where: { employeeId: session.id, isRead: false },
-    data: { isRead: true },
-  });
-  revalidatePath("/main/approvals");
-}
-
-export async function getUnreadNotificationsCount() {
+/**
+ * شارتا العدد: الاعتمادات العامة والطلبات المالية، كلٌّ بعددها.
+ *
+ * وفي استعلامٍ واحد: عددُ إشعارات موظفٍ غير المقروءة صغير، فقراءةُ نوعِ كل
+ * إشعارٍ وعدُّها هنا أرخص من ذهابين إلى قاعدةٍ في ap-southeast-2. وكان
+ * عدّاداً واحداً بلا شرطِ نوع، فيعلو رقمُ «الاعتمادات» بطلبٍ ماليٍّ لا يظهر
+ * فيها — شارةٌ تعدّ ما لا تُرِي.
+ */
+export async function getUnreadRequestCounts() {
   const session = await requireSession();
-  return prisma.requestNotification.count({
+  const rows = await prisma.requestNotification.findMany({
     where: { employeeId: session.id, isRead: false },
+    select: { request: { select: { kind: true } } },
   });
+  return {
+    general: rows.filter((r) => r.request.kind !== "FINANCIAL").length,
+    financial: rows.filter((r) => r.request.kind === "FINANCIAL").length,
+  };
 }

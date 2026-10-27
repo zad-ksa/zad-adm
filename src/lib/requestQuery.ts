@@ -71,6 +71,33 @@ export const RELATION_JOIN = { relationLoadStrategy: "join" } as const;
  */
 export type RequestKind = "GENERAL" | "FINANCIAL";
 
+/**
+ * غرضُ سلسلة الاعتماد — سلسلةٌ نشطةٌ لكل غرضٍ لا واحدةٌ للنظام كلّه.
+ *
+ * فمسارُ الطلبات العامة ومسارُ الطلبات المالية مستقلّان: تفعيلُ أحدهما لا
+ * يُطفئ الآخر. والغرضان هما نوعا الطلب نفسُهما، فالطلبُ المالي يسلك المسار
+ * المالي والعامُّ العامَّ بلا جدولٍ ثالثٍ يربط بينهما.
+ */
+export type ChainPurpose = RequestKind;
+
+export const CHAIN_PURPOSES = [
+  {
+    value: "GENERAL",
+    label: "المسار العام",
+    description: "الطلبات المرفوعة من صفحة الاعتمادات",
+  },
+  {
+    value: "FINANCIAL",
+    label: "مسار الطلبات المالية",
+    description: "طلبات الصرف والشراء والعُهد المرفوعة من صفحة الطلبات المالية",
+  },
+] as const satisfies readonly { value: ChainPurpose; label: string; description: string }[];
+
+/** الغرضُ إن كان معروفاً، وإلا العام — حمايةٌ من قيمةٍ غريبةٍ في الصفّ. */
+export function chainPurposeOf(value: string): ChainPurpose {
+  return CHAIN_PURPOSES.some((p) => p.value === value) ? (value as ChainPurpose) : "GENERAL";
+}
+
 export function visibleRequestFilter(
   employeeId: string,
   { kind, canReviewAll = false }: { kind: RequestKind; canReviewAll?: boolean }

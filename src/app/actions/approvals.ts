@@ -46,7 +46,7 @@ export async function createRequest(data: {
 
   // هل يوجد workflow نشط؟
   const chain = await prisma.workflowChain.findFirst({
-    where: { isActive: true },
+    where: { isActive: true, purpose: "GENERAL" },
     include: { steps: { orderBy: { order: "asc" } } },
   });
 

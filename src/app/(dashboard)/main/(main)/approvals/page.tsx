@@ -54,7 +54,7 @@ export default async function RequestsPage() {
     // لا طلب بلا سلسلة: الخادم يرفض الرفع، والواجهة تقول السبب بدل أن تُفشل
     // الإرسال بعد تعبئة النموذج.
     prisma.workflowChain.findFirst({
-      where: { isActive: true },
+      where: { isActive: true, purpose: "GENERAL" },
       select: { steps: { select: { id: true }, take: 1 } },
     }),
   ]);

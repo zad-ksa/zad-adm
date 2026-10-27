@@ -2,7 +2,7 @@
 
 import { usePathname } from "next/navigation";
 import { PageHeader } from "@/components/console/layout";
-import { charityCrumbs } from "@/lib/crumbs";
+import { entityCrumbs } from "@/lib/crumbs";
 import type { Crumb } from "@/components/console/layout";
 
 /**
@@ -94,7 +94,13 @@ const SECTIONS: Record<string, Section> = {
   },
 };
 
-export default function StrategyHeader({ charityName }: { charityName: string }) {
+export default function StrategyHeader({
+  charityName,
+  isInternal = false,
+}: {
+  charityName: string;
+  isInternal?: boolean;
+}) {
   const pathname = usePathname();
   const base = `/main/strategy/${encodeURIComponent(charityName)}`;
   // الرابط قد يصل مُرمَّزاً أو لا — نقارن ما بعد اسم الجمعية فقط.
@@ -115,7 +121,12 @@ export default function StrategyHeader({ charityName }: { charityName: string })
 
   return (
     <PageHeader
-      crumbs={charityCrumbs(charityName, ...trail)}
+      crumbs={entityCrumbs(
+        charityName,
+        // في الصفحة الجامعة لا رابط من الاسم إليها: هي المفتوحة.
+        { isInternal, sectionHref: key === "" ? undefined : base },
+        ...trail
+      )}
       title={section.title}
       description={section.description}
     />

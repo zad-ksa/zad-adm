@@ -1,4 +1,5 @@
 import { getSession } from "@/lib/auth";
+import { EXTERNAL_CHARITIES, externalOnly } from "@/lib/charityScope";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
 import TasksClient from "./TasksClient";
@@ -41,6 +42,7 @@ export default async function TasksPage() {
     // row cost 9 kB for 9 charities, mostly description and address text that
     // nothing here renders.
     prisma.charity.findMany({
+      where: EXTERNAL_CHARITIES,
       select: { id: true, name: true, logoUrl: true },
       orderBy: { name: "asc" },
     }),

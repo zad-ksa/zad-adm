@@ -1,4 +1,5 @@
 import { getMeetings } from "@/app/actions/meetings";
+import { EXTERNAL_CHARITIES, externalOnly } from "@/lib/charityScope";
 import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { redirect } from "next/navigation";
@@ -17,7 +18,7 @@ export default async function MeetingsPage() {
 
   const [meetings, charities, employees] = await Promise.all([
     getMeetings(),
-    prisma.charity.findMany({ select: { id: true, name: true }, orderBy: { name: "asc" } }),
+    prisma.charity.findMany({ where: EXTERNAL_CHARITIES, select: { id: true, name: true }, orderBy: { name: "asc" } }),
     isTier1 || canViewAllTasks
       ? prisma.employee.findMany({
         where: { isActive: true },

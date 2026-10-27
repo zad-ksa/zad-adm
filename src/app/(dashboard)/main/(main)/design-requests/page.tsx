@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/db";
+import { EXTERNAL_CHARITIES, externalOnly } from "@/lib/charityScope";
 import { getSession } from "@/lib/auth";
 import { ZAD_COMPANY_LABEL } from "@/lib/designRequestProgress";
 import { redirect } from "next/navigation";
@@ -28,7 +29,7 @@ export default async function DesignRequestsPage() {
   }
 
   const [charities, requests, designTypes] = await Promise.all([
-    prisma.charity.findMany({ select: { id: true, name: true }, orderBy: { name: "asc" } }),
+    prisma.charity.findMany({ where: EXTERNAL_CHARITIES, select: { id: true, name: true }, orderBy: { name: "asc" } }),
     prisma.designRequest.findMany({
       include: {
         charity: { select: { id: true, name: true } },

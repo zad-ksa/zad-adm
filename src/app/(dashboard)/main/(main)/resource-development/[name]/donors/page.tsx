@@ -47,6 +47,7 @@ export default async function DonorsPage({ params }: { params: Promise<{ name: s
     <DonorsClient
       charityId={charity.id}
       charityName={charity.name}
+      isInternal={charity.isInternal}
       initialDonorAccounts={donorAccounts}
       grantApplications={charity.grantApplications}
     />

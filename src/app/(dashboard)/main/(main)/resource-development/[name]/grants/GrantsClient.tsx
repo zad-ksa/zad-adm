@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { StatStrip, PageHeader } from "@/components/console/layout";
-import { charityCrumbs } from "@/lib/crumbs";
+import { entityCrumbs } from "@/lib/crumbs";
 import { confirmAction } from "@/components/console/confirmBus";
 import Select from "@/components/console/Select";
 import { FileText, Plus, Trash2, CheckCircle2, AlertCircle, TrendingUp, Check, X, Calendar, Edit, HandCoins } from "lucide-react";
@@ -32,11 +32,14 @@ interface DonorAccount {
 export default function GrantsClient({
   charityId,
   charityName,
+  isInternal = false,
   initialGrantApplications,
   donorAccounts,
 }: {
   charityId: string;
   charityName: string;
+  /** كيانٌ داخلي: مسار تنقّله لا يبدأ بـ«الجمعيات». */
+  isInternal?: boolean;
   initialGrantApplications: any[];
   donorAccounts: any[];
 }) {
@@ -238,7 +241,7 @@ export default function GrantsClient({
       )}
 
           <PageHeader
-            crumbs={charityCrumbs(charityName, { label: "المنح" })}
+            crumbs={entityCrumbs(charityName, { isInternal }, { label: "المنح" })}
             icon={<FileText className="w-6 h-6" />}
             title="المنح"
             description="متابعة دقيقة لطلبات المنح ومراحل الاعتماد والإغلاق"

@@ -585,7 +585,7 @@ export function EmployeeSheet({
             <section className="space-y-3">
               <SectionHeader
                 title="الجمعيات المسندة"
-                description="يعمل الموظف على هذه الجمعيات وحدها في صفحات المنصة."
+                description="يعمل الموظف على هذه الجمعيات وحدها في صفحات المنصة. و«شركة زاد» تُسنَد مثلها."
                 action={
                   allCharities.length > 0 ? (
                     <SelectAll
@@ -602,6 +602,7 @@ export function EmployeeSheet({
                   <OptionRow
                     key={c.id}
                     label={c.name}
+                    note={c.isInternal ? "كيانٌ داخلي — الاستراتيجية وتنمية الموارد فقط" : undefined}
                     checked={charityIds.includes(c.id)}
                     onToggle={() => setCharityIds(toggleIn(charityIds, c.id))}
                   />

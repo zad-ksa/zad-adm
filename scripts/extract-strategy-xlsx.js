@@ -9,7 +9,6 @@ const { loadFile } = require("./lib/xlsx-reader.js");
 const DEST = path.join(__dirname, "..", "prisma", "seed-data");
 const SRC = path.join(__dirname, "..", "docs");
 
-const QUARTERS = ["Q1", "Q2", "Q3", "Q4"];
 
 /** تاريخ Excel رقمٌ تسلسلي: ٤٦٢٦٣ = ٢٢ سبتمبر ٢٠٢٦. */
 function excelDate(serial) {
@@ -232,8 +231,23 @@ function extractOperational(file) {
 
 // ── التنفيذ ─────────────────────────────────────────────────────────────────
 
-const guide = extractGuide(path.join(SRC, "دليل الأهداف والمؤشرات - المعاقد التعليمية.xlsx"));
-const operational = extractOperational(path.join(SRC, "الخطة_التشغيلية_لجمعية_المعاقد_التعليمية_2026م.xlsx"));
+/**
+ * ملفّا Excel مصدرٌ لا يُلزَم في المستودع (بياناتُ جمعيةٍ خاصّة)، وناتجُهما
+ * JSON هو المُلزَم. فإن غابا تُقال العلّة صريحةً لا تتبّعاً خاماً.
+ */
+function source(fileName) {
+  const full = path.join(SRC, fileName);
+  if (!fs.existsSync(full)) {
+    console.error(`لا يوجد: docs/${fileName}`);
+    console.error("وهذا السكربت تحويلٌ يُشغَّل مرّةً عند تغيّر الملفين. والناتج المُلزَم في");
+    console.error("prisma/seed-data، ويُدخله: npm run strategy:seed -- --write");
+    process.exit(1);
+  }
+  return full;
+}
+
+const guide = extractGuide(source("دليل الأهداف والمؤشرات - المعاقد التعليمية.xlsx"));
+const operational = extractOperational(source("الخطة_التشغيلية_لجمعية_المعاقد_التعليمية_2026م.xlsx"));
 
 fs.mkdirSync(DEST, { recursive: true });
 fs.writeFileSync(

@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { PageHeader } from "@/components/console/layout";
-import { charityCrumbs } from "@/lib/crumbs";
+import { entityCrumbs } from "@/lib/crumbs";
 import { confirmAction } from "@/components/console/confirmBus";
 import { Building2, Plus, Trash2, ExternalLink, Copy, CheckCircle2, AlertCircle } from "lucide-react";
 import { addDonorAccount, deleteDonorAccount } from "@/app/actions/charity";
@@ -19,11 +19,14 @@ interface DonorAccount {
 export default function DonorsClient({
   charityId,
   charityName,
+  isInternal = false,
   initialDonorAccounts,
   grantApplications,
 }: {
   charityId: string;
   charityName: string;
+  /** كيانٌ داخلي: مسار تنقّله لا يبدأ بـ«الجمعيات». */
+  isInternal?: boolean;
   initialDonorAccounts: any[];
   grantApplications: any[];
 }) {
@@ -83,7 +86,7 @@ export default function DonorsClient({
       )}
 
           <PageHeader
-            crumbs={charityCrumbs(charityName, { label: "الجهات المانحة" })}
+            crumbs={entityCrumbs(charityName, { isInternal }, { label: "الجهات المانحة" })}
             icon={<Building2 className="w-6 h-6" />}
             title="الجهات المانحة"
             description="إدارة بيانات الدخول للجهات المانحة"

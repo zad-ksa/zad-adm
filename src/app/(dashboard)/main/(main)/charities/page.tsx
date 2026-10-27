@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/db";
+import { EXTERNAL_CHARITIES, externalOnly } from "@/lib/charityScope";
 import { StatStrip, PageHeader } from "@/components/console/layout";
 import { NavCircle } from "@/components/console/ui";
 import type { Metadata } from "next";
@@ -20,7 +21,7 @@ const getCachedDashboardData = async (assignedIds: string[] | null) => {
     allApprovedGrants
   ] = await Promise.all([
     prisma.charity.findMany({
-      where: charityFilter,
+      where: externalOnly(charityFilter),
       select: { id: true, name: true, createdAt: true, domain: true, grants: true, logoUrl: true },
       orderBy: { createdAt: "desc" }
     }),

@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/db";
+import { EXTERNAL_CHARITIES, externalOnly } from "@/lib/charityScope";
 import { getSession } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import ContractsClient from "./ContractsClient";
@@ -18,7 +19,7 @@ export default async function ContractsPage() {
   const assignedIds = await getAssignedCharityIds(session.id, session.role, session.permissions);
 
   const charities = await prisma.charity.findMany({
-    where: assignedIds === null ? undefined : { id: { in: assignedIds } },
+    where: externalOnly(assignedIds === null ? undefined : { id: { in: assignedIds } }),
     orderBy: { createdAt: "desc" },
     include: {
       contractInstallments: {

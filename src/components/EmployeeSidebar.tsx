@@ -4,7 +4,7 @@ import { useState, useEffect, useRef, useTransition } from "react";
 import { showsInternal } from "@/lib/charityScope";
 import Link from "next/link";
 import Image from "next/image";
-import { User, ShieldAlert, Users, X, LogOut, LayoutDashboard, Building2, ClipboardList, ChevronRight, Edit, Eye, EyeOff, Camera, Loader2, AlertCircle, CheckCircle2, Newspaper, CheckSquare, Moon, Sun, LayoutGrid, FileText, Settings2, FileSignature, MessageSquare, Send, GitBranch, Bell, ShieldCheck, FolderTree, Clock, Sparkles } from "lucide-react";
+import { User, ShieldAlert, Users, X, LogOut, LayoutDashboard, Building2, ClipboardList, ChevronRight, Edit, Eye, EyeOff, Camera, Loader2, AlertCircle, CheckCircle2, Newspaper, CheckSquare, Moon, Sun, LayoutGrid, FileText, Settings2, FileSignature, MessageSquare, Send, GitBranch, Bell, ShieldCheck, FolderTree, Clock, Sparkles, Receipt } from "lucide-react";
 import { useTheme } from "next-themes";
 import { logout } from "@/app/actions/auth";
 import { updateProfile } from "@/app/actions/profile";
@@ -66,12 +66,14 @@ export default function EmployeeSidebar({
   isOpen,
   setIsOpen,
   unreadRequests = 0,
+  unreadFinancial = 0,
   unreadMails = 0,
 }: {
   session: any;
   isOpen: boolean;
   setIsOpen: (v: boolean) => void;
   unreadRequests?: number;
+  unreadFinancial?: number;
   unreadMails?: number;
 }) {
   const roleLabels = useRoleLabels();
@@ -109,7 +111,7 @@ export default function EmployeeSidebar({
 
     if (path === "/main") newGroup = "";
     else if (path.startsWith("/main/charities") || path.startsWith("/main/contracts") || path.startsWith("/main/custom-surveys") || path.startsWith("/main/communication") || path.startsWith("/main/charity-meetings") || path.startsWith("/main/design-requests")) newGroup = "الجمعيات";
-    else if (path.startsWith("/main/approvals") || path.startsWith("/main/news") || path.startsWith("/main/meetings") || path.startsWith("/main/tasks") || path.startsWith("/main/mail") || path.startsWith("/main/attendance")) newGroup = "زاد";
+    else if (path.startsWith("/main/approvals") || path.startsWith("/main/financial-requests") || path.startsWith("/main/news") || path.startsWith("/main/meetings") || path.startsWith("/main/tasks") || path.startsWith("/main/mail") || path.startsWith("/main/attendance")) newGroup = "زاد";
     else if (path.startsWith("/main/admin") || path.startsWith("/main/workflow-settings") || path.startsWith("/main/landing-settings")) newGroup = "لوحة التحكم";
     else if (path.startsWith("/main/services-overview") || path.startsWith("/main/template-library") || path.startsWith("/main/strategy") || path.startsWith("/main/governance") || path.startsWith("/main/finance") || path.startsWith("/main/resource-development") || path.startsWith("/main/programs")) {
       newGroup = "الخدمات";
@@ -196,6 +198,9 @@ export default function EmployeeSidebar({
   navItems.push({ label: "التحضير", href: "/main/attendance", icon: Clock });
   navItems.push({ label: "البريد الداخلي", href: "/main/mail", icon: Mail, badge: unreadMails });
   navItems.push({ label: "الاعتمادات", href: "/main/approvals", icon: Send, badge: unreadRequests });
+  // لكل موظف: الرفعُ لا يحتاج صلاحية، والسلسلةُ تقرّر من يبتّ. والصلاحيتان
+  // المالِيّتان تُوسِّعان ما يُرى وتفتحان الإعدادات داخل الصفحة.
+  navItems.push({ label: "الطلبات المالية", href: "/main/financial-requests", icon: Receipt, badge: unreadFinancial });
   // Kept in step with the gate on /main/admin itself: a tab that leads to a
   // redirect is worse than no tab, and a permission whose only entry point is
   // behind a tab it does not reveal is worse still.
@@ -416,7 +421,7 @@ export default function EmployeeSidebar({
               {isExpanded && <div className="h-px bg-slate-100 dark:bg-slate-800 mx-2" />}
               {renderGroup("الجمعيات", ["الجمعيات", "العقود", "الاستبيانات", "التواصل", "الاجتماعات", "طلبات التصاميم"])}
               {isExpanded && <div className="h-px bg-slate-100 dark:bg-slate-800 mx-2" />}
-              {renderGroup("زاد", ["التحضير", "البريد الداخلي", "الاعتمادات", "الأخبار والإنجازات", "محاضر الاجتماعات", "منشئ وثائق المبادرات", "المهام والمنجزات", "مهامي"])}
+              {renderGroup("زاد", ["التحضير", "البريد الداخلي", "الاعتمادات", "الطلبات المالية", "الأخبار والإنجازات", "محاضر الاجتماعات", "منشئ وثائق المبادرات", "المهام والمنجزات", "مهامي"])}
               {isExpanded && <div className="h-px bg-slate-100 dark:bg-slate-800 mx-2" />}
               {renderGroup("لوحة التحكم", ["لوحة التحكم", "سلاسل الاعتماد"])}
             </>

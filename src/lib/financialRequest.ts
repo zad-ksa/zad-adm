@@ -125,3 +125,19 @@ export function isValidVatRate(value: unknown): boolean {
   const n = toNumber(value);
   return n !== null && n >= 0 && n <= 100;
 }
+
+/** أقصى مبلغٍ يقبله العمود `Decimal(14,2)`. */
+export const AMOUNT_MAX = 999_999_999_999.99;
+
+/**
+ * قراءةُ المبلغ كما كُتب: فاصلةُ الآلاف مقبولة، والناتجُ مقرَّبٌ لهللتين.
+ *
+ * و`null` إن لم يصلح — صفراً كان أو سالباً أو فوق سعة العمود. وردُّ `null`
+ * لا رقمٍ افتراضيٍّ مقصود: المبلغُ لبُّ الطلب، فخطؤه يُوقِف الرفع ولا يُصحَّح
+ * بالتخمين.
+ */
+export function parseAmount(input: unknown): number | null {
+  const n = toNumber(input);
+  if (n === null || !(n > 0) || n > AMOUNT_MAX) return null;
+  return round2(n);
+}

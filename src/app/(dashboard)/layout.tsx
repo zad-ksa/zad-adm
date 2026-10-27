@@ -22,9 +22,16 @@ export default async function DashboardRootLayout({ children }: { children: Reac
   // For employees, we wrap the dashboard with DashboardLayoutClient here.
   // This ensures the layout is shared and doesn't unmount when navigating between /main and /charity/[name].
   // إشعارات الاعتمادات لكل موظف: لا تصله إلا عن طلبٍ يخصّه أو عنده.
-  const unreadRequests = await prisma.requestNotification.count({
-    where: { employeeId: session.id, isRead: false },
-  });
+  // مفرَّقان: شارةٌ لـ«الاعتمادات» وشارةٌ لـ«الطلبات المالية»، فلا تعدّ
+  // إحداهما ما تُظهره الأخرى.
+  const [unreadRequests, unreadFinancial] = await Promise.all([
+    prisma.requestNotification.count({
+      where: { employeeId: session.id, isRead: false, request: { kind: "GENERAL" } },
+    }),
+    prisma.requestNotification.count({
+      where: { employeeId: session.id, isRead: false, request: { kind: "FINANCIAL" } },
+    }),
+  ]);
 
   const unreadMails = await prisma.mailRecipient.count({
     where: { employeeId: session.id, isRead: false, isDeleted: false },
@@ -43,7 +50,7 @@ export default async function DashboardRootLayout({ children }: { children: Reac
 
   return (
     <RoleLabelsProvider labels={roleLabels}>
-      <DashboardLayoutClient session={session} unreadRequests={unreadRequests} unreadMails={unreadMails}>
+      <DashboardLayoutClient session={session} unreadRequests={unreadRequests} unreadFinancial={unreadFinancial} unreadMails={unreadMails}>
         {needsEmail && (
           <div className="mb-4">
             <SetEmailBanner href="/main/profile" />

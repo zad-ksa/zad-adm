@@ -4,7 +4,7 @@ import { usePathname } from "next/navigation";
 import EmployeeSidebar from "@/components/EmployeeSidebar";
 import { useState, useEffect, useRef } from "react";
 import { Menu } from "lucide-react";
-import { getUnreadNotificationsCount } from "@/app/actions/approvals";
+import { getUnreadRequestCounts } from "@/app/actions/approvals";
 import { getUnreadNotifications } from "@/app/actions/notifications";
 import { getUnreadCount as getUnreadMailCount } from "@/app/actions/mail";
 import { MAIL_UNREAD_EVENT } from "@/lib/mailBadge";
@@ -13,12 +13,13 @@ import FloatingHeader from "@/components/FloatingHeader";
 
 import DeveloperRoleSwitcher from "@/components/DeveloperRoleSwitcher";
 
-export default function DashboardLayoutClient({ children, session, unreadRequests: initial = 0, unreadMails: initialMails = 0 }: { children: React.ReactNode, session: any, unreadRequests?: number, unreadMails?: number }) {
+export default function DashboardLayoutClient({ children, session, unreadRequests: initial = 0, unreadFinancial: initialFinancial = 0, unreadMails: initialMails = 0 }: { children: React.ReactNode, session: any, unreadRequests?: number, unreadFinancial?: number, unreadMails?: number }) {
   const pathname = usePathname();
   // Mobile drawer only — the desktop rail is pinned open and no longer reads
   // this. It starts closed, which is also what a phone should show on load.
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [unreadRequests, setUnreadRequests] = useState(initial);
+  const [unreadFinancial, setUnreadFinancial] = useState(initialFinancial);
   const [unreadMails, setUnreadMails] = useState(initialMails);
 
   /**
@@ -91,8 +92,11 @@ export default function DashboardLayoutClient({ children, session, unreadRequest
     async function poll() {
       if (document.hidden) return;
       try {
-        const count = await getUnreadNotificationsCount();
-        if (active) setUnreadRequests(count);
+        const counts = await getUnreadRequestCounts();
+        if (active) {
+          setUnreadRequests(counts.general);
+          setUnreadFinancial(counts.financial);
+        }
 
         // Same 60s tick as the approvals badge: cheap, and it keeps the mail
         // count honest even if a message is read in another tab.
@@ -182,6 +186,7 @@ export default function DashboardLayoutClient({ children, session, unreadRequest
         isOpen={isSidebarOpen}
         setIsOpen={setIsSidebarOpen}
         unreadRequests={unreadRequests}
+        unreadFinancial={unreadFinancial}
         unreadMails={unreadMails}
       />
       

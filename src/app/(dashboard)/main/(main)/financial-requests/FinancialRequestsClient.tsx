@@ -9,12 +9,14 @@ import { notify } from "@/components/console/toastBus";
 import type { LucideIcon } from "lucide-react";
 import {
   ArrowRight, CheckCircle2, Clock, CornerUpLeft, Eye, FileText, GitBranch, Landmark,
-  Loader2, Plus, RefreshCw, Receipt, Send, Settings2, ShieldCheck, Trash2, UserCheck, X,
+  Loader2, Plus, Printer, RefreshCw, Receipt, Send, Settings2, ShieldCheck,
+  Trash2, UserCheck, X,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { deleteRequest } from "@/app/actions/approvals";
 import { getFinancialRequestsAndMarkRead } from "@/app/actions/financialRequests";
 import { amounts, formatAmount, serialLabel } from "@/lib/financialRequest";
+import { previewFinancialRequest, printFinancialRequest, type FinancialDocInput } from "@/lib/financialDoc";
 import type { FinancialDetail } from "@/lib/financialRequestRow";
 
 const FinancialRequestForm = dynamic(() => import("@/components/financial/FinancialRequestForm"), { ssr: false });
@@ -242,6 +244,37 @@ function BankBlock({ detail }: { detail: FinancialDetail }) {
   );
 }
 
+/**
+ * مُدخَلُ وثيقة الكليشة من صفّ الطلب.
+ *
+ * ويُبنى من الصفّ المعروض لا من استعلامٍ ثانٍ: الوثيقةُ تقول ما تقوله البطاقة
+ * بعينه، فلا يختلف المطبوعُ عن المقروء.
+ */
+function docInputOf(request: FinancialRequestRow, detail: FinancialDetail): FinancialDocInput {
+  return {
+    serial: detail.serial,
+    typeLabel: detail.typeLabel,
+    title: request.title,
+    body: request.body,
+    createdByName: request.createdBy?.name ?? "—",
+    createdAt: request.createdAt,
+    statusLabel: STATUS_CONFIG[request.status].label,
+    amount: detail.amount,
+    isTaxable: detail.isTaxable,
+    taxRate: detail.taxRate,
+    bankName: detail.bankName,
+    iban: detail.iban,
+    accountNumber: detail.accountNumber,
+    trail: request.logs.map((log) => ({
+      actor: log.actor.name,
+      action: ACTION_CONFIG[log.action].label,
+      note: log.note,
+      at: log.createdAt,
+      attachmentCount: readAttachments(log.attachments).length,
+    })),
+  };
+}
+
 // ── بطاقة الطلب ──────────────────────────────────────────────────────────────
 function RequestCard({
   request, sessionId, onReview, onResubmit, onDelete,
@@ -337,6 +370,18 @@ function RequestCard({
               <button type="button" onClick={() => onReview(request)} className={btn.primary}>
                 <ShieldCheck className="w-4 h-4" /> مراجعة واتخاذ قرار
               </button>
+            )}
+            {detail && (
+              <>
+                <button type="button" onClick={() => printFinancialRequest(docInputOf(request, detail))}
+                  className={btn.secondary}>
+                  <Printer className="w-4 h-4" /> تصدير على الكليشة
+                </button>
+                <button type="button" onClick={() => previewFinancialRequest(docInputOf(request, detail))}
+                  className={btn.ghost}>
+                  <Eye className="w-4 h-4" /> معاينة
+                </button>
+              </>
             )}
             {isOwner && request.status === "RETURNED" && (
               <button type="button" onClick={() => onResubmit(request)} className={btn.primary}>

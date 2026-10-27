@@ -44,19 +44,6 @@ export const btn = {
     "disabled:pointer-events-none disabled:opacity-50",
     focusRing
   ),
-  /**
-   * فعلٌ إيجابيٌّ ثانٍ يجب أن يُفرَّق عن الأساسي.
-   *
-   * والأخضر هنا ليس زينةً بل تفريق: الأساسي بلون الهوية (الفيروزي) وهو
-   * قريبٌ منه، فزرٌّ ثانٍ بجواره يحتاج لوناً يُميّزه. ولا يُستعمل لحالةٍ —
-   * الحالات شاراتٌ لا أزرار.
-   */
-  success: cx(
-    "inline-flex h-9 shrink-0 items-center justify-center gap-2 rounded-md bg-emerald-600 px-3.5 text-[13px] font-medium text-white",
-    "shadow-[inset_0_1px_0_rgb(255_255_255/0.14),0_1px_2px_rgb(5_150_105/0.3)] transition-colors hover:bg-emerald-700",
-    "disabled:pointer-events-none disabled:opacity-50",
-    focusRing
-  ),
   link: "text-[12.5px] font-medium text-primary hover:underline dark:text-teal-300",
   // زرّ أيقونةٍ مربّع (إغلاق ×، تعديل، حذف في صفّ). كان يُكتب cx(btn.ghost, "size-8 px-0")،
   // وpx-0 فوق px-2 لا يحسمه ترتيب الأصناف بل ترتيب CSS — فصار نمطاً بذاته.

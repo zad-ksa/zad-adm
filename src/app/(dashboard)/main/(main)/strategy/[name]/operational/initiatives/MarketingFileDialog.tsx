@@ -127,7 +127,7 @@ export function MarketingFileDialog({
             <button type="button" onClick={onClose} disabled={working} className={btn.secondary}>
               إلغاء
             </button>
-            <button type="submit" disabled={working} className={btn.success}>
+            <button type="submit" disabled={working} className={btn.primary}>
               {working && <Spinner size={16} tone="onPrimary" />}
               حفظ
             </button>
@@ -174,8 +174,8 @@ export function MarketingFileDialog({
             <label
               className={cx(
                 "flex h-11 cursor-pointer items-center justify-center gap-2 rounded-xl border-2 border-dashed px-4 text-body font-medium transition-colors",
-                "border-slate-200 text-slate-500 hover:border-emerald-500/40 hover:text-emerald-700",
-                "dark:border-slate-700 dark:text-slate-400 dark:hover:text-emerald-300"
+                "border-slate-200 text-slate-500 hover:border-primary/40 hover:text-primary",
+                "dark:border-slate-700 dark:text-slate-400 dark:hover:text-teal-300"
               )}
             >
               <Upload className="size-4" />
@@ -219,7 +219,7 @@ function ModeTab({
       className={cx(
         "inline-flex h-9 flex-1 items-center justify-center gap-2 rounded-lg border text-body font-medium transition-colors outline-none focus-visible:ring-2 focus-visible:ring-primary/40",
         active
-          ? "border-emerald-500/30 bg-emerald-500/[0.08] text-emerald-700 dark:border-emerald-400/30 dark:bg-emerald-400/10 dark:text-emerald-300"
+          ? "border-primary/30 bg-primary/[0.08] text-primary dark:border-teal-400/30 dark:bg-teal-400/10 dark:text-teal-300"
           : "border-slate-200 text-slate-600 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
       )}
     >

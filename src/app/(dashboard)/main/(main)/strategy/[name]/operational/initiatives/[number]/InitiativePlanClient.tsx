@@ -164,7 +164,7 @@ export default function InitiativePlanClient({
                   href={marketingUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className={btn.success}
+                  className={btn.primary}
                   title={
                     initiative.marketingKind === "FILE"
                       ? initiative.marketingFileName || "الملف التسويقي المرفوع"
@@ -182,7 +182,7 @@ export default function InitiativePlanClient({
                   الملف التسويقي
                 </a>
               ) : canEdit ? (
-                <button type="button" onClick={() => setMarketing(true)} className={btn.success}>
+                <button type="button" onClick={() => setMarketing(true)} className={btn.primary}>
                   <FileText className="size-4" />
                   الملف التسويقي
                 </button>

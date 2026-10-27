@@ -38,7 +38,8 @@ export default async function RequestsPage() {
   const [requests, allEmployees, , activeChain] = await Promise.all([
     prisma.request.findMany({
       ...RELATION_JOIN,
-      where: visibleRequestFilter(session.id, { canReviewAll }),
+      // الاعتمادات العامة وحدها: الطلبات المالية لها صفحتها.
+      where: visibleRequestFilter(session.id, { kind: "GENERAL", canReviewAll }),
       include: REQUEST_INCLUDE,
     }),
     prisma.employee.findMany({

@@ -69,15 +69,25 @@ export const RELATION_JOIN = { relationLoadStrategy: "join" } as const;
  * it reads everything; the per-request action gates are untouched, so they
  * still cannot approve anything that was not routed to them.
  */
+export type RequestKind = "GENERAL" | "FINANCIAL";
+
 export function visibleRequestFilter(
   employeeId: string,
-  { canReviewAll = false }: { canReviewAll?: boolean }
+  { kind, canReviewAll = false }: { kind: RequestKind; canReviewAll?: boolean }
 ): Prisma.RequestWhereInput {
-  // An empty filter is every row — which is exactly what this permission
-  // means, and cheaper than an OR that would match them all anyway.
-  if (canReviewAll) return {};
+  // النوع إلزاميٌّ بلا قيمةٍ افتراضية.
+  //
+  // الطلبات المالية والعامة في جدولٍ واحد — محرّكُ الاعتماد مشترك — وصفحتاهما
+  // منفصلتان. فنسيانُ الشرط يُظهر طلباً مالياً في صفحة الاعتمادات أو العكس.
+  // وبجعله وسيطاً مطلوباً صار النسيانُ خطأَ ترجمةٍ لا عيباً يُكتشف بالعين.
+  const ofKind = { kind } satisfies Prisma.RequestWhereInput;
+
+  // An empty filter is every row of this kind — which is exactly what this
+  // permission means, and cheaper than an OR that would match them all anyway.
+  if (canReviewAll) return ofKind;
 
   return {
+    ...ofKind,
     OR: [
       { createdById: employeeId },
       { status: "PENDING", currentReviewerId: employeeId },

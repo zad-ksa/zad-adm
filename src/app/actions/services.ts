@@ -1,6 +1,7 @@
 "use server";
 
 import { prisma } from "@/lib/db";
+import { EXTERNAL_CHARITIES, externalOnly } from "@/lib/charityScope";
 import type { Prisma } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import { getSession } from "@/lib/auth";
@@ -35,8 +36,8 @@ export async function createServiceTemplate(name: string, department: string | n
   });
 
   const targetCharities = charityIds && charityIds.length > 0
-    ? await prisma.charity.findMany({ where: { id: { in: charityIds } }, select: { id: true } })
-    : await prisma.charity.findMany({ select: { id: true } });
+    ? await prisma.charity.findMany({ where: externalOnly({ id: { in: charityIds } }), select: { id: true } })
+    : await prisma.charity.findMany({ where: EXTERNAL_CHARITIES, select: { id: true } });
 
   if (targetCharities.length > 0) {
     const servicesToCreate = targetCharities.map(c => ({

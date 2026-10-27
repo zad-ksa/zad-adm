@@ -1,6 +1,7 @@
 "use server";
 
 import { prisma } from "@/lib/db";
+import { EXTERNAL_CHARITIES, externalOnly } from "@/lib/charityScope";
 import { getSession } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
 import { sanitizeMailHtml } from "@/lib/sanitizeMail";
@@ -798,7 +799,8 @@ export async function getCharityMailOptions() {
 
   const assigned = await getAssignedCharityIds(user.id, user.role, user.permissions);
   const charities = await prisma.charity.findMany({
-    where: assigned === null ? undefined : { id: { in: assigned } },
+    // زاد لا تُرسل بريداً إلى نفسها: الكيان الداخلي ليس مستقبِلاً.
+    where: externalOnly(assigned === null ? undefined : { id: { in: assigned } }),
     select: { id: true, name: true },
     orderBy: { name: "asc" },
   });
@@ -894,7 +896,7 @@ export async function sendMailToCharities(data: {
   }
 
   const charities = await prisma.charity.findMany({
-    where: { id: { in: charityIds } },
+    where: externalOnly({ id: { in: charityIds } }),
     select: { id: true, name: true },
     orderBy: { name: "asc" },
   });

@@ -1,4 +1,5 @@
 import { getSession } from "@/lib/auth";
+import { EXTERNAL_CHARITIES, externalOnly } from "@/lib/charityScope";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
 import CharityAccountsClient from "./CharityAccountsClient";
@@ -21,6 +22,7 @@ export default async function CharityAccountsPage() {
 
   // Fetch all charities to populate the select dropdown
   const charities = await prisma.charity.findMany({
+    where: EXTERNAL_CHARITIES,
     select: { id: true, name: true }
   });
 

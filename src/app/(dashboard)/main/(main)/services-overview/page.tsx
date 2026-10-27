@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/db";
+import { EXTERNAL_CHARITIES, externalOnly } from "@/lib/charityScope";
 import { getSession } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { Metadata } from "next";
@@ -51,7 +52,7 @@ export default async function ServicesOverviewPage() {
   // them either way. All that actually differed was whether to run the query.
   const [charities, services] = await Promise.all([
     prisma.charity.findMany({
-      where: charityFilter,
+      where: externalOnly(charityFilter),
       orderBy: { name: "asc" },
       select: {
         id: true,

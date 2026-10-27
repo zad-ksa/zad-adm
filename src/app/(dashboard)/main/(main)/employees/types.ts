@@ -36,7 +36,8 @@ export type BundleOption = {
   services: string[];
 };
 
-export type CharityOption = { id: string; name: string };
+/** `isInternal` لـ«شركة زاد»: تُسنَد كالجمعيات وتُميَّز في القائمة. */
+export type CharityOption = { id: string; name: string; isInternal?: boolean };
 
 /** ما يرسله نموذج الإضافة والتعديل. undefined في bundleIds أو serviceNames = لا تمسّها. */
 export type EmployeeInput = {

@@ -1,6 +1,7 @@
 export const dynamic = "force-dynamic";
 
 import { Metadata } from "next";
+import { EXTERNAL_CHARITIES, externalOnly } from "@/lib/charityScope";
 import { PageHeader } from "@/components/console/layout";
 import { getMeetingSchedules } from "@/app/actions/meeting-schedules";
 import { prisma } from "@/lib/db";
@@ -13,7 +14,7 @@ export const metadata: Metadata = {
 export default async function CharityMeetingsPage() {
   const [{ data: schedules }, charities] = await Promise.all([
     getMeetingSchedules(),
-    prisma.charity.findMany({ select: { id: true, name: true }, orderBy: { name: "asc" } }),
+    prisma.charity.findMany({ where: EXTERNAL_CHARITIES, select: { id: true, name: true }, orderBy: { name: "asc" } }),
   ]);
 
   return (

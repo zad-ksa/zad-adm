@@ -1,6 +1,7 @@
 "use server";
 
 import { prisma } from "@/lib/db";
+import { EXTERNAL_CHARITIES, externalOnly } from "@/lib/charityScope";
 import { revalidatePath } from "next/cache";
 import { requirePermission } from "@/lib/guards";
 
@@ -16,6 +17,7 @@ export async function getCommunicationData() {
 
   try {
     const charities = await prisma.charity.findMany({
+      where: EXTERNAL_CHARITIES,
       include: {
         services: {
           orderBy: { createdAt: 'asc' }

@@ -1,4 +1,5 @@
 import { unstable_cache } from "next/cache";
+import { EXTERNAL_CHARITIES, externalOnly } from "@/lib/charityScope";
 import { PageHeader, theadRowClass, thClass, tbodyClass, tdClass, tableFrameClass } from "@/components/console/layout";
 import { prisma } from "@/lib/db";
 import Link from "next/link";
@@ -15,6 +16,7 @@ import { cx } from "@/components/console/ui";
 const getCachedSurveysData = async () => {
     const [charities, responses, hexagonalResponses] = await Promise.all([
       prisma.charity.findMany({ 
+        where: EXTERNAL_CHARITIES,
         select: { id: true, name: true, createdAt: true, establishmentDate: true, licenseNumber: true },
         orderBy: { createdAt: "desc" } 
       }),

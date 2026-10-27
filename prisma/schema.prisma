@@ -104,6 +104,17 @@ model Charity {
   projectBuilderProfile   ProjectBuilderCharityProfile?
   projectBuilderDocuments ProjectBuilderDocument[]
 
+  /// كيانٌ داخليٌّ لا جمعيةً متعاقدة — «شركة زاد» نفسها.
+  ///
+  /// زاد تحتاج ما تحتاجه الجمعية في الاستراتيجية وتنمية الموارد: أهدافاً
+  /// ومؤشرات ومبادراتٍ ومنحاً. وكلّها مربوطةٌ بـcharityId إلزامياً، فصفٌّ
+  /// حقيقيٌّ يُشغّلها بلا تعديل — بخلاف charityId=null في DesignRequest،
+  /// الذي يكسر القيود الفريدة (NULL ≠ NULL في Postgres) ويُنسى شرطُه.
+  ///
+  /// وثمنُه أن يُستثنى من قوائم الجمعيات التي لا يخصّها: العقود وحسابات
+  /// البوّابة والمحاضر والاستبيانات وغيرها. فالاستثناء في موضعٍ واحد:
+  /// EXTERNAL_CHARITIES في src/lib/charityScope.ts.
+  isInternal              Boolean               @default(false)
   // التخطيط الاستراتيجي — docs/خطة-نظام-التخطيط-الاستراتيجي.md
   /// حالة الخطة الاستراتيجية: اختيارٌ يدويٌّ من StrategyStatusOption، لا محسوبة.
   /// نصُّ الحالة لا مفتاحها، كي لا يختفي تاريخُ جمعيةٍ إذا حُذف خيارٌ من القائمة.

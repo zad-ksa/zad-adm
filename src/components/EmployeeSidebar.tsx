@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, useTransition } from "react";
+import { showsInternal } from "@/lib/charityScope";
 import Link from "next/link";
 import Image from "next/image";
 import { User, ShieldAlert, Users, X, LogOut, LayoutDashboard, Building2, ClipboardList, ChevronRight, Edit, Eye, EyeOff, Camera, Loader2, AlertCircle, CheckCircle2, Newspaper, CheckSquare, Moon, Sun, LayoutGrid, FileText, Settings2, FileSignature, MessageSquare, Send, GitBranch, Bell, ShieldCheck, FolderTree, Clock, Sparkles } from "lucide-react";
@@ -343,7 +344,12 @@ export default function EmployeeSidebar({
                               <SubTabLink href={`/main/governance?tab=services`} label="خدمات المركز" isActive={activePath === `/main/governance` && currentTab === 'services'} onClick={() => handleLinkClick(`/main/governance?tab=services`)} />
                             </>
                           ) : (
-                            charities.map(charity => {
+                            // الكيان الداخلي («شركة زاد») يظهر تحت الاستراتيجية
+                            // وتنمية الموارد وحدهما. ومصدر القائمة لا يستثنيه عن
+                            // قصد، فالتصفية هنا حيث يُعرف القسم.
+                            charities
+                              .filter(charity => !charity.isInternal || showsInternal(svc.id))
+                              .map(charity => {
                               // الاستراتيجية: الجمعية رابطٌ واحدٌ إلى صفحتها
                               // الجامعة. كانت طيّاً ثالثاً يسرد صفحاتها، فصار
                               // سردُها مربّعاتٍ في الصفحة نفسها.

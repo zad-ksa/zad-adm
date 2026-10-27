@@ -40,7 +40,9 @@ export default async function EmployeesPage() {
         bundles: { select: { bundleId: true } },
       },
     }),
-    prisma.charity.findMany({ select: { id: true, name: true }, orderBy: { name: "asc" } }),
+    // بلا استثناءِ الكيان الداخلي عن قصد: إسنادُ «شركة زاد» إلى صاحب الخدمة
+    // يمرّ من هنا، ولولاه لما رآها غيرُ developer_mode.
+    prisma.charity.findMany({ select: { id: true, name: true, isInternal: true }, orderBy: [{ isInternal: "asc" }, { name: "asc" }] }),
     prisma.roleDefinition.findMany({
       orderBy: { createdAt: "asc" },
       select: {

@@ -1,5 +1,6 @@
 "use server";
 import { unstable_cache } from "next/cache";
+import { EXTERNAL_CHARITIES, externalOnly } from "@/lib/charityScope";
 
 import { prisma } from "@/lib/db";
 import { revalidatePath } from "next/cache";
@@ -21,6 +22,9 @@ export const getSidebarCharities = async () => {
     // وحدها ترى كل الجمعيات، والبقية جمعياتهم المسنَدة. كانت manage_charities هنا
     // تعرض الجمعيات كلها تحت أقسام «الخدمات» — «وصولٌ لجميع الجمعيات» خفيّ بعد
     // حذف view_all_charities، ولا شأن لإدارة بيانات الجمعيات به.
+    // بلا استثناءِ الكيان الداخلي هنا عن قصد: «شركة زاد» تظهر في الشريط
+    // الجانبي تحت الاستراتيجية وتنمية الموارد، والشريط هو من يُخفيها عن بقية
+    // الخدمات (showsInternal في charityScope).
     if (session.permissions?.includes("developer_mode")) {
       return await prisma.charity.findMany({
         orderBy: { createdAt: "desc" },
@@ -46,6 +50,7 @@ export const getSidebarCharities = async () => {
 export const getCharities = async () => {
     try {
       const charities = await prisma.charity.findMany({
+        where: EXTERNAL_CHARITIES,
         orderBy: { createdAt: "desc" },
       });
       return charities;

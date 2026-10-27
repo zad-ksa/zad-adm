@@ -1,6 +1,7 @@
 "use server";
 
 import { Prisma } from "@prisma/client";
+import { EXTERNAL_CHARITIES, externalOnly } from "@/lib/charityScope";
 import { prisma } from "@/lib/db";
 import { revalidatePath } from "next/cache";
 import { requirePermission } from "@/lib/guards";
@@ -190,6 +191,7 @@ export async function getProjectBuilderCharities() {
   await requirePermission("use_project_builder");
   try {
     const charities = await prisma.charity.findMany({
+      where: EXTERNAL_CHARITIES,
       select: { id: true, name: true },
       orderBy: { name: "asc" },
     });
@@ -215,6 +217,7 @@ export async function listProjectBuilderCharityProfiles() {
   await requirePermission("manage_project_builder");
   try {
     const charities = await prisma.charity.findMany({
+      where: EXTERNAL_CHARITIES,
       select: { id: true, name: true, projectBuilderProfile: true },
       orderBy: { name: "asc" },
     });

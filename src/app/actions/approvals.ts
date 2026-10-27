@@ -374,7 +374,9 @@ export async function getVisibleRequestsAndMarkRead() {
   const [requests] = await Promise.all([
     prisma.request.findMany({
       ...RELATION_JOIN,
+      // الاعتمادات العامة وحدها: الطلبات المالية لها صفحتها واستطلاعها.
       where: visibleRequestFilter(session.id, {
+        kind: "GENERAL",
         canReviewAll: hasPermission(
           session.role,
           session.permissions || [],

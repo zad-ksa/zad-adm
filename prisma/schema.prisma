@@ -887,11 +887,18 @@ enum RequestAction {
 model WorkflowChain {
   id        String         @id @default(uuid())
   name      String
+  /// GENERAL | FINANCIAL — غرضُ السلسلة.
+  ///
+  /// وسلسلةٌ نشطةٌ واحدةٌ لكل غرض لا للموقع كلّه: setActiveChain كانت تُلغي
+  /// تفعيل الكلّ ثم تُفعّل واحدة، فلم يكن للموقع إلا مسارٌ واحد.
+  purpose   String         @default("GENERAL")
   isActive  Boolean        @default(false)
   steps     WorkflowStep[]
   requests  Request[]
   createdAt DateTime       @default(now())
   updatedAt DateTime       @updatedAt
+
+  @@index([purpose, isActive])
 }
 
 // مستوى واحد في السلسلة — يرتبط بشخص محدد
@@ -920,6 +927,12 @@ model RequestLog {
   note          String?       @db.Text
   delegatedToId String?
   delegatedTo   Employee?     @relation("LogDelegatee", fields: [delegatedToId], references: [id], onDelete: SetNull)
+  /// مرفقاتُ القرار نفسه، بشكل Request.attachments.
+  ///
+  /// والحاجة إليها من الطلب المالي: المعتمِد يُصدِّر النموذج على الكليشة
+  /// ويختمه ويوقّعه ثم يرفعه مع اعتماده. فالوثيقة المختومة أثرُ قرارٍ بعينه
+  /// لا أثرُ الطلب — ولو عُلّقت بالطلب لما عُرف صاحبُ الختم من معتمِديه.
+  attachments   Json?
   createdAt     DateTime      @default(now())
 
   @@index([requestId])
@@ -930,6 +943,15 @@ model RequestLog {
 model Request {
   id                String                @id @default(uuid())
   title             String
+  /// GENERAL | FINANCIAL — مُميِّزُ نوع الطلب لا تصنيفه.
+  ///
+  /// والمظروف مشترك: السلسلة والسجلّ والإشعار والتفويض تعمل للنوعين، فلا
+  /// يُكتب محرّكُ اعتمادٍ ثانٍ يُصان مرّتين. والفصل في كل ما يُرى: صفحةٌ
+  /// وصلاحيةٌ وسلسلةٌ وإعداداتٌ وتصديرٌ خاصّ بالمالي.
+  ///
+  /// وشرطُ النوع إلزاميٌّ في visibleRequestFilter، فنسيانُه خطأُ ترجمةٍ لا
+  /// طلبٌ يظهر في غير مكانه.
+  kind              String                @default("GENERAL")
   category          String? // التصنيف: "زاد"، "الحوكمة"، إلخ
   body              String?               @db.Text
   fileUrl           String?
@@ -958,9 +980,13 @@ model Request {
   notifications     RequestNotification[]
   logs              RequestLog[]
 
+  financial FinancialRequest?
+
   @@index([createdById])
   @@index([status])
   @@index([currentReviewerId])
+  /// يخدم قائمتي الصفحتين: كلٌّ تطلب نوعها وحالته.
+  @@index([kind, status])
   /// يخدم شرط الرؤية { status: DELEGATED, delegatedToId } — كان مسحاً كاملاً
   /// للجدول في كل تحميل وكل استطلاع.
   @@index([delegatedToId])
@@ -2142,4 +2168,66 @@ model InitiativeStep {
   updatedAt       DateTime   @updatedAt
 
   @@index([initiativeId, order])
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+//  الطلبات المالية — الخطة في docs/خطة-الطلبات-المالية.md
+//
+//  الطلب المالي صفُّ Request بنوع FINANCIAL، وتفاصيلُه المالية هنا. فيَرِث
+//  السلسلةَ والسجلَّ والإشعارَ والتفويضَ كما هي، ولا يُكتب محرّكُ اعتمادٍ ثانٍ.
+// ════════════════════════════════════════════════════════════════════════════
+
+/// تفاصيل الطلب المالي — واحدٌ لكل طلب.
+///
+/// وفي جدولٍ مستقلٍّ لا أعمدةً على Request: تسعةُ حقولٍ تخصّ نوعاً واحداً من
+/// الطلبات، فإضافتها هناك تُلزم كلَّ طلبٍ عامٍّ بحملها فارغة. والعلاقة
+/// واحدٌ-لواحد فالقراءة ضمّةٌ واحدة.
+model FinancialRequest {
+  id        String  @id @default(uuid())
+  requestId String  @unique
+  request   Request @relation(fields: [requestId], references: [id], onDelete: Cascade)
+
+  typeId    String?
+  type      FinancialRequestType? @relation(fields: [typeId], references: [id], onDelete: SetNull)
+  /// اسم النوع وقت الرفع، مثبَّتاً في الصفّ.
+  ///
+  /// والطلب المالي وثيقةٌ تُصدَّر وتُعتمد وتُختم، فتغييرُ مسمّى النوع في
+  /// الإعدادات لا يجوز أن يُعيد كتابة ما اعتُمد. وهذا يخالف حالات الخطة
+  /// الاستراتيجية (حيث يتبع التغييرُ حامليها) — لأن تلك حالةٌ راهنة وهذا سِجلّ.
+  typeLabel String
+
+  amount    Decimal  @db.Decimal(14, 2)
+  isTaxable Boolean  @default(false)
+  /// نسبة الضريبة وقت الرفع، مثبَّتةً كذلك. والمبلغُ الضريبي والإجمالي محسوبان
+  /// لا مخزَّنين — من المبلغ والنسبة، بدالّةٍ واحدةٍ مختبَرة.
+  taxRate   Decimal? @db.Decimal(5, 2)
+
+  /// الحساب البنكي — كلُّه اختياري، ورقمُ الحساب اختياريٌّ حتى لو ذُكر البنك.
+  bankName      String?
+  iban          String?
+  accountNumber String?
+
+  /// رقمُ الوثيقة: يُعرض ZAD_FR_007 في الـPDF وفي القائمة.
+  serial Int @unique @default(autoincrement())
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([typeId])
+}
+
+/// أنواع الطلب المالي — بياناتٌ تُدار من إعدادات الصفحة لا ثوابتَ في الكود.
+///
+/// والحذفُ تعطيلٌ إن كان النوع مستعملاً: اسمٌ في وثيقةٍ معتمَدة لا يختفي.
+model FinancialRequestType {
+  id       String  @id @default(uuid())
+  name     String  @unique
+  order    Int     @default(0)
+  isActive Boolean @default(true)
+
+  requests  FinancialRequest[]
+  createdAt DateTime           @default(now())
+  updatedAt DateTime           @updatedAt
+
+  @@index([order])
 }

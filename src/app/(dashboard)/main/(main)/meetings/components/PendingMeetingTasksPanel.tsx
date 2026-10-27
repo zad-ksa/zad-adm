@@ -7,6 +7,7 @@ import { notify } from "@/components/console/toastBus";
 import Select from "@/components/console/Select";
 import {
   ChevronDown, ChevronRight, AlertCircle, User, Clock, Edit2, Trash2, Save, ListChecks, FileText,
+  ArrowDownUp, UserX,
 } from "lucide-react";
 import { toggleMeetingTask, updateMeetingTaskFields, deleteMeetingTask } from "@/app/actions/meetings";
 import { useRoleLabels } from "@/components/RoleLabelsProvider";
@@ -14,6 +15,43 @@ import { Meeting, MeetingTask, Employee } from "../MeetingsClient";
 import { btn, cx } from "@/components/console/ui";
 
 type FlatTask = MeetingTask & { meetingId: string; meetingTitle: string; meetingDate: string | Date };
+
+type SortKey = "date-asc" | "date-desc" | "assignee" | "title";
+
+/**
+ * وجهتا «الاسم»: اسمُ المكلَّف وعنوانُ المهمة.
+ *
+ * وكلتاهما معروضة لأن الطلب قال «الاسم» ولم يُعيِّن أيَّهما، والقائمة تحمل
+ * الاثنين — فعرضُهما أصدق من ترجيحِ أحدهما بالتخمين.
+ */
+const SORTS: { value: SortKey; label: string }[] = [
+  { value: "date-asc", label: "التاريخ — الأقدم أولاً" },
+  { value: "date-desc", label: "التاريخ — الأحدث أولاً" },
+  { value: "assignee", label: "اسم المكلَّف" },
+  { value: "title", label: "عنوان المهمة" },
+];
+
+const byDate = (a: FlatTask, b: FlatTask) =>
+  new Date(a.meetingDate).getTime() - new Date(b.meetingDate).getTime();
+
+const ar = (a: string, b: string) => a.localeCompare(b, "ar");
+
+function sortTasks(rows: FlatTask[], key: SortKey): FlatTask[] {
+  const sorted = [...rows];
+  if (key === "date-desc") return sorted.sort((a, b) => byDate(b, a));
+  if (key === "title") return sorted.sort((a, b) => ar(a.title, b.title) || byDate(a, b));
+  if (key === "assignee") {
+    // غيرُ المكلَّفة في الذيل: لا اسمَ لها تُرتَّب به، وصدرُ القائمة لأسماءٍ
+    // حقيقية. ومن أراد رؤيتها وحدها فله مُرشِّحُها.
+    return sorted.sort((a, b) => {
+      const an = a.assignedTo?.name ?? "";
+      const bn = b.assignedTo?.name ?? "";
+      if (!an !== !bn) return an ? -1 : 1;
+      return ar(an, bn) || byDate(a, b);
+    });
+  }
+  return sorted.sort(byDate);
+}
 
 /**
  * كل مهام المحاضر غير المنجزة في المجموعة المختارة، دفعة واحدة — بدل فتح كل
@@ -44,6 +82,9 @@ export default function PendingMeetingTasksPanel({
   });
   const [savingId, setSavingId] = useState<string | null>(null);
   const [busyId, setBusyId] = useState<string | null>(null);
+  // الافتراضُ كما كان: الأقدمُ أولاً — أطولُ ما بقي معلَّقاً يستحقّ الصدارة.
+  const [sort, setSort] = useState<SortKey>("date-asc");
+  const [onlyUnassigned, setOnlyUnassigned] = useState(false);
 
   const pending: FlatTask[] = useMemo(() => {
     const rows: FlatTask[] = [];
@@ -53,8 +94,15 @@ export default function PendingMeetingTasksPanel({
         rows.push({ ...t, meetingId: m.id, meetingTitle: m.title, meetingDate: m.date });
       }
     }
-    return rows.sort((a, b) => new Date(a.meetingDate).getTime() - new Date(b.meetingDate).getTime());
+    return rows;
   }, [meetings]);
+
+  // الفرزُ والترشيحُ بعد الجمع: العددُ في الرأس يبقى عدَّ المعلَّق كلِّه،
+  // فلا يُخفي المُرشِّحُ ما لم يُنجَز.
+  const visible = useMemo(
+    () => sortTasks(onlyUnassigned ? pending.filter((t) => !t.assignedToId) : pending, sort),
+    [pending, sort, onlyUnassigned]
+  );
 
   if (pending.length === 0) return null; // لا لوحة فارغة — لا شيء معلّق يستحق المساحة
 
@@ -141,8 +189,48 @@ export default function PendingMeetingTasksPanel({
       </button>
 
       {open && (
+        <div className="flex flex-wrap items-center gap-2 border-t border-amber-100 dark:border-amber-900/30 px-3 py-2">
+          <span className="flex items-center gap-1 text-caption font-semibold text-slate-400">
+            <ArrowDownUp className="w-3.5 h-3.5" /> الفرز
+          </span>
+          <Select
+            variant="soft"
+            value={sort}
+            onSelect={(v) => setSort(v as SortKey)}
+            placeholder="الفرز"
+            options={SORTS}
+            className="w-56 [&>button]:w-full [&>button]:justify-between"
+          />
+          {/* يبقى ظاهراً ما دام مفعَّلاً ولو كُلِّفت الأخيرة، وإلا بقي
+              الترشيحُ قائماً بلا زرٍّ يُلغيه. */}
+          {(onlyUnassigned || unassigned > 0) && (
+            <button
+              type="button"
+              onClick={() => setOnlyUnassigned((v) => !v)}
+              aria-pressed={onlyUnassigned}
+              className={cx(
+                "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-caption font-semibold transition-colors",
+                onlyUnassigned
+                  ? "border-amber-400 bg-amber-100 text-amber-800 dark:border-amber-700 dark:bg-amber-900/30 dark:text-amber-300"
+                  : "border-slate-200 text-slate-500 hover:border-amber-400 hover:text-amber-700 dark:border-slate-700 dark:text-slate-400"
+              )}
+            >
+              <UserX className="w-3 h-3" /> غير المكلَّفة فقط
+              <span className="tabular-nums">{unassigned}</span>
+            </button>
+          )}
+          <span className="mr-auto text-caption text-slate-400 tabular-nums">
+            {visible.length} من {pending.length}
+          </span>
+        </div>
+      )}
+
+      {open && (
         <div className="p-2 space-y-1.5 max-h-[420px] overflow-y-auto">
-          {pending.map((task) => (
+          {visible.length === 0 && (
+            <p className="py-6 text-center text-caption text-slate-400">لا توصياتٍ تطابق الترشيح</p>
+          )}
+          {visible.map((task) => (
             <div
               key={task.id}
               className={cx(

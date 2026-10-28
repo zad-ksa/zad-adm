@@ -47,6 +47,9 @@ const TONE: Record<DesignEventKind, string> = {
   // Closed with notes: rose, because the request ended without the change.
   REVISION_RETURNED: "bg-amber-500",
   CLOSED_WITH_NOTES: "bg-rose-500",
+  // الأرشفةُ خروجٌ من الدور لا إنجازٌ ولا رفض: رماديّةٌ كالرفع والتعديل.
+  ARCHIVED: "bg-slate-400",
+  UNARCHIVED: "bg-primary",
 };
 
 const ACTOR_LABEL: Record<string, string> = {

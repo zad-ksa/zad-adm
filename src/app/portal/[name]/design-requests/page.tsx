@@ -56,7 +56,7 @@ export default async function DesignRequestsPortalPage({ params }: { params: Pro
   // queued rows by start date reproduces the sequence without storing it
   // twice and letting the two copies drift apart.
   const queued = requests
-    .filter((r) => r.status === "PENDING")
+    .filter((r) => r.status === "PENDING" && !r.archivedAt)
     .sort((a, b) => a.scheduledStartDate.getTime() - b.scheduledStartDate.getTime());
   const queueOrder = new Map(queued.map((r, i) => [r.id, i + 1]));
 
@@ -90,6 +90,8 @@ export default async function DesignRequestsPortalPage({ params }: { params: Pro
         closedWithNotes: r.closedWithNotes,
         startedAt: r.startedAt ? formatCivilDate(r.startedAt) : null,
         startedByName: r.startedBy?.name ?? null,
+        archivedAt: r.archivedAt ? formatCivilDate(r.archivedAt) : null,
+        archivedByName: r.archivedByName,
         queuePosition: queueOrder.get(r.id) ?? null,
         queueTotal: queued.length || null,
         // deliveredAt is only ever set by the review cycle, so its absence

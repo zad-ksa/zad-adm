@@ -36,7 +36,7 @@ export default async function DesignRequestsPage() {
     }),
     prisma.designRequest.findMany({
       include: {
-        charity: { select: { id: true, name: true } },
+        charity: { select: { id: true, name: true, isInternal: true } },
         startedBy: { select: { name: true } },
         attachments: true,
         types: { select: { id: true, name: true } },
@@ -77,6 +77,11 @@ export default async function DesignRequestsPage() {
         expectedCompletionDate: formatCivilDateTime(r.expectedCompletionDate),
         charityId: r.charity.id,
         charityName: r.charity.name,
+        // طلباتُ «شركة زاد» تُؤرشف ولو بدأ المصمم فيها، وغيرُها لا — فالواجهة
+        // تحتاج العلامة لتعرف أيَّ زرٍّ تُظهر.
+        isInternalCharity: r.charity.isInternal,
+        archivedAt: r.archivedAt ? formatCivilDateTime(r.archivedAt) : null,
+        archivedByName: r.archivedByName,
         status: r.status,
         rejectionReason: r.rejectionReason,
         revisionNotes: r.revisionNotes,

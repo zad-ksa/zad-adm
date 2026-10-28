@@ -5,12 +5,18 @@ import { StatStrip, PageHeader } from "@/components/console/layout";
 import { notify } from "@/components/console/toastBus";
 import Select from "@/components/console/Select";
 import { useRouter } from "next/navigation";
-import { Palette, Filter, AlertTriangle, Loader2, Paperclip, LayoutGrid, List, CalendarRange } from "lucide-react";
+import { Palette, Filter, AlertTriangle, Loader2, Paperclip, LayoutGrid, List, CalendarRange, Archive, ArchiveRestore } from "lucide-react";
 import DesignRequestCard, {
   DESIGN_REQUEST_LIST_GRID_COLS,
   type DesignRequestCardData,
 } from "@/components/design-requests/DesignRequestCard";
-import { markDesignRequestComplete, deleteDesignRequest, startDesignRequest } from "@/app/actions/designRequests";
+import {
+  markDesignRequestComplete,
+  deleteDesignRequest,
+  startDesignRequest,
+  archiveDesignRequest,
+  unarchiveDesignRequest,
+} from "@/app/actions/designRequests";
 import type { DesignRequestProgress } from "@/lib/designRequestProgress";
 import StaffNewDesignRequestModal from "./StaffNewDesignRequestModal";
 import StaffRescheduleDesignRequestModal from "./StaffRescheduleDesignRequestModal";
@@ -57,6 +63,11 @@ type RequestItem = DesignRequestCardData & {
   revisionNotes?: string | null;
   /** Settled by the deadline rather than by the charity. */
   autoApproved?: boolean;
+  /** متى أُرشِف، مصوغاً في الخادم — و`null` يعني أنه في القوائم. */
+  archivedAt: string | null;
+  archivedByName: string | null;
+  /** «شركة زاد»: طلباتُها تُؤرشف ولو بدأ المصمم فيها. */
+  isInternalCharity: boolean;
 };
 type Item = {
   request: RequestItem;
@@ -88,7 +99,11 @@ export default function DesignRequestsClient({
   const router = useRouter();
   const [, startTransition] = useTransition();
   const [charityFilter, setCharityFilter] = useState("");
-  const [tab, setTab] = useState<DesignStatus>("PENDING");
+  // الأرشيفُ تبويبٌ لا حالة: الصفُّ يحفظ حالته وهو مؤرشف، فلا يُسأل عنها
+  // تبويبان في وقتٍ واحد.
+  const [tab, setTab] = useState<DesignStatus | "ARCHIVED">("PENDING");
+  const [archiveFor, setArchiveFor] = useState<{ id: string; mode: "archive" | "unarchive" } | null>(null);
+  const [isArchiving, setIsArchiving] = useState(false);
   const [reviewingId, setReviewingId] = useState<string | null>(null);
   const [isComposeOpen, setIsComposeOpen] = useState(false);
   const [confirmingId, setConfirmingId] = useState<string | null>(null);
@@ -148,7 +163,9 @@ export default function DesignRequestsClient({
   const filtered = useMemo(() => {
     const rows = initialItems.filter((it) => {
       if (charityFilter && it.request.charityId !== charityFilter) return false;
-      return it.request.status === tab;
+      // المؤرشفُ لا يظهر في تبويبات الحالة، والأرشيفُ لا يُرتَّب بحالة.
+      if (tab === "ARCHIVED") return !!it.request.archivedAt;
+      return !it.request.archivedAt && it.request.status === tab;
     });
 
     // Soonest delivery on top — which also floats anything already past its
@@ -171,12 +188,40 @@ export default function DesignRequestsClient({
     return rows;
   }, [initialItems, charityFilter, tab]);
 
-  const reviewCount = initialItems.filter((it) => it.request.status === "UNDER_REVIEW").length;
-  const revisionCount = initialItems.filter((it) => it.request.status === "REVISION_REQUESTED").length;
-  const awaitingCharityCount = initialItems.filter((it) => it.request.status === "AWAITING_REVIEW").length;
-  const pendingCount = initialItems.filter((it) => it.request.status === "PENDING").length;
-  const completedCount = initialItems.filter((it) => it.request.status === "COMPLETED").length;
-  const overdueCount = initialItems.filter((it) => it.request.status === "PENDING" && it.progress.isOverdue).length;
+  // العدّاداتُ كلُّها على غير المؤرشف: الشارةُ تعدّ ما يُرى، وما خرج من الدور
+  // لا يُحتسب متأخّراً ولا قيد تنفيذ.
+  const live = useMemo(() => initialItems.filter((it) => !it.request.archivedAt), [initialItems]);
+  const reviewCount = live.filter((it) => it.request.status === "UNDER_REVIEW").length;
+  const revisionCount = live.filter((it) => it.request.status === "REVISION_REQUESTED").length;
+  const awaitingCharityCount = live.filter((it) => it.request.status === "AWAITING_REVIEW").length;
+  const pendingCount = live.filter((it) => it.request.status === "PENDING").length;
+  const completedCount = live.filter((it) => it.request.status === "COMPLETED").length;
+  const overdueCount = live.filter((it) => it.request.status === "PENDING" && it.progress.isOverdue).length;
+
+  /**
+   * نقلٌ إلى الأرشيف أو إخراجٌ منه.
+   *
+   * وإنعاشُ المسار بعده لا تحديثُ حالةٍ محليّة: الإخراجُ يُعيد حساب الموعد
+   * في الخادم، فالصفحةُ تقرؤه من هناك لا تُخمّنه.
+   */
+  const runArchive = () => {
+    if (!archiveFor) return;
+    const { id, mode } = archiveFor;
+    setIsArchiving(true);
+    startTransition(async () => {
+      const res = mode === "archive"
+        ? await archiveDesignRequest(id)
+        : await unarchiveDesignRequest(id);
+      setIsArchiving(false);
+      setArchiveFor(null);
+      if ("error" in res && res.error) {
+        notify("error", res.error);
+        return;
+      }
+      notify("ok", mode === "archive" ? "نُقل الطلب إلى الأرشيف." : "أُخرج الطلب من الأرشيف وعاد إلى الدور.");
+      router.refresh();
+    });
+  };
 
   /**
    * Picking a request up. Beyond the badge, this is what closes the charity's
@@ -202,7 +247,7 @@ export default function DesignRequestsClient({
    */
   const queueRowsFor = (charityId: string): QueueRow[] =>
     initialItems
-      .filter((it) => it.request.status === "PENDING" && it.request.charityId === charityId)
+      .filter((it) => it.request.status === "PENDING" && !it.request.archivedAt && it.request.charityId === charityId)
       .sort((a, b) => a.expectedCompletionAt - b.expectedCompletionAt)
       .map((it) => ({
         id: it.request.id,
@@ -225,10 +270,12 @@ export default function DesignRequestsClient({
   const ganttItems: GanttItem[] = useMemo(
     () =>
       initialItems
-        .filter((it) =>
-          ["PENDING", "REVISION_REQUESTED", "AWAITING_REVIEW", "COMPLETED"].includes(
-            it.request.status
-          )
+        .filter(
+          (it) =>
+            !it.request.archivedAt &&
+            ["PENDING", "REVISION_REQUESTED", "AWAITING_REVIEW", "COMPLETED"].includes(
+              it.request.status
+            )
         )
         .map((it) => ({
           id: it.request.id,
@@ -360,6 +407,7 @@ export default function DesignRequestsClient({
                 { key: "AWAITING_REVIEW" as const, label: "بانتظار الجمعية", count: awaitingCharityCount, urgent: false },
                 { key: "COMPLETED" as const, label: "الطلبات المنجزة", count: 0, urgent: false },
                 { key: "REJECTED" as const, label: "المُعادة للتعديل", count: 0, urgent: false },
+                { key: "ARCHIVED" as const, label: "الأرشيف", count: 0, urgent: false },
               ]
             ).map(({ key, label, count, urgent }) => (
               <button
@@ -500,7 +548,16 @@ export default function DesignRequestsClient({
               variant={viewMode === "list" ? "list" : "card"}
               onOpenLog={() => setLogRequestId(it.request.id)}
               actions={
-                it.request.status === "REVISION_REQUESTED" ? (
+                it.request.archivedAt ? (
+                  <div
+                    className="w-full mt-2 px-3 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800/60 text-slate-500 dark:text-slate-400 leading-relaxed"
+                    style={{ fontSize: "var(--dr-fs-meta)" }}
+                  >
+                    في الأرشيف منذ {it.request.archivedAt}
+                    {it.request.archivedByName ? " — " + it.request.archivedByName : ""}. وهو خارج الدور
+                    حتى يُخرَج منه، فيعود بموعدٍ جديد.
+                  </div>
+                ) : it.request.status === "REVISION_REQUESTED" ? (
                   <div className="w-full mt-2 space-y-2">
                     <div className="px-3 py-2.5 rounded-xl bg-amber-500/[0.08]">
                       <p
@@ -676,15 +733,40 @@ export default function DesignRequestsClient({
                 ) : undefined
               }
               footer={
-                canDelete ? (
-                  <button
-                    onClick={() => setDeletingId(it.request.id)}
-                    className="w-full h-8 mt-2 rounded-lg text-rose-500/80 dark:text-rose-400/70 hover:text-white hover:bg-rose-500 dark:hover:bg-rose-500 dark:hover:text-[#0A0A0A] transition-colors font-semibold"
-                    style={{ fontSize: "var(--dr-fs-eyebrow)" }}
-                  >
-                    حذف الطلب نهائياً
-                  </button>
-                ) : undefined
+                <div className="w-full space-y-1.5">
+                  {it.request.archivedAt ? (
+                    <button
+                      onClick={() => setArchiveFor({ id: it.request.id, mode: "unarchive" })}
+                      className="w-full h-8 mt-2 rounded-lg flex items-center justify-center gap-1.5 bg-primary/10 text-primary dark:bg-teal-500/10 dark:text-teal-400 hover:bg-primary hover:text-white dark:hover:bg-teal-500 dark:hover:text-[#0A0A0A] transition-colors font-semibold"
+                      style={{ fontSize: "var(--dr-fs-eyebrow)" }}
+                    >
+                      <ArchiveRestore className="w-3 h-3" />
+                      إخراج من الأرشيف
+                    </button>
+                  ) : (
+                    // طلباتُ «شركة زاد» تُؤرشف ولو بدأ المصمم فيها — وغيرُها
+                    // لا، فالعملُ الجاري لا يُسحب من تحت صاحبه.
+                    (!it.request.startedAt || it.request.isInternalCharity) && (
+                      <button
+                        onClick={() => setArchiveFor({ id: it.request.id, mode: "archive" })}
+                        className="w-full h-8 mt-2 rounded-lg flex items-center justify-center gap-1.5 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors font-semibold"
+                        style={{ fontSize: "var(--dr-fs-eyebrow)" }}
+                      >
+                        <Archive className="w-3 h-3" />
+                        نقل إلى الأرشيف
+                      </button>
+                    )
+                  )}
+                  {canDelete && (
+                    <button
+                      onClick={() => setDeletingId(it.request.id)}
+                      className="w-full h-8 rounded-lg text-rose-500/80 dark:text-rose-400/70 hover:text-white hover:bg-rose-500 dark:hover:bg-rose-500 dark:hover:text-[#0A0A0A] transition-colors font-semibold"
+                      style={{ fontSize: "var(--dr-fs-eyebrow)" }}
+                    >
+                      حذف الطلب نهائياً
+                    </button>
+                  )}
+                </div>
               }
             />
           ))}
@@ -730,6 +812,21 @@ export default function DesignRequestsClient({
           />
         );
       })()}
+
+      <ConfirmDialog
+        isOpen={archiveFor !== null}
+        title={archiveFor?.mode === "archive" ? "نقل الطلب إلى الأرشيف؟" : "إخراج الطلب من الأرشيف؟"}
+        message={
+          archiveFor?.mode === "archive"
+            ? "يخرج الطلب من الدور ومن القوائم، ويبقى في تبويب الأرشيف بلا حذف. ومواعيدُ ما بعده لا تتقدّم تلقائياً — استخدم «إعادة ترتيب التنفيذ» إن أردت سحبها."
+            : "يعود الطلب إلى الدور كطلبٍ جديد: موعدُه يُحسب الآن على ذيل الطابور، وإن كان قد بُدئ فيه فيُعدّ غير مبدوء."
+        }
+        confirmLabel={archiveFor?.mode === "archive" ? "أرشفة" : "إعادة للدور"}
+        tone="primary"
+        isPending={isArchiving}
+        onCancel={() => setArchiveFor(null)}
+        onConfirm={runArchive}
+      />
 
       <ConfirmDialog
         isOpen={isCompleteConfirmOpen}

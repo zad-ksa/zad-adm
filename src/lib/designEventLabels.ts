@@ -25,7 +25,9 @@ export type DesignEventKind =
   | "AUTO_APPROVED"
   | "COMPLETED"
   | "REVISION_RETURNED"
-  | "CLOSED_WITH_NOTES";
+  | "CLOSED_WITH_NOTES"
+  | "ARCHIVED"
+  | "UNARCHIVED";
 
 /** Arabic label per event, used by both dashboards. */
 export const DESIGN_EVENT_LABEL: Record<DesignEventKind, string> = {
@@ -45,4 +47,6 @@ export const DESIGN_EVENT_LABEL: Record<DesignEventKind, string> = {
   COMPLETED: "أُغلق نهائياً",
   REVISION_RETURNED: "أعاد فريق زاد الطلب بملاحظات",
   CLOSED_WITH_NOTES: "أُغلق الطلب بملاحظات فريق زاد",
+  ARCHIVED: "نُقل إلى الأرشيف",
+  UNARCHIVED: "أُخرج من الأرشيف وعاد إلى الدور",
 };

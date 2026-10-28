@@ -131,7 +131,9 @@ async function computeSchedule(
   workingDays: number
 ) {
   const agg = await tx.designRequest.aggregate({
-    where: { charityId, status: "PENDING" },
+    // المؤرشفُ لا يحجز مكاناً: الأرشفةُ خروجٌ من الدور، وبقاؤه في الحساب
+    // يجعل طلباً لا أحدَ ينتظره يُؤخّر ما بعده.
+    where: { charityId, status: "PENDING", archivedAt: null },
     _max: { expectedCompletionDate: true },
   });
   const tail = agg._max.expectedCompletionDate as Date | null;
@@ -732,7 +734,9 @@ export async function finalizeExpiredDeliveries() {
   const earliest = new Date(now.getTime() - REVIEW_WINDOW_WORK_MINUTES * 60_000);
 
   const candidates = await prisma.designRequest.findMany({
-    where: { status: "AWAITING_REVIEW", deliveredAt: { lt: earliest } },
+    // والمؤرشفُ خارج الدورة: اعتمادٌ تلقائيٌّ يحذف مرفقات طلبٍ نُحّي عن
+    // قصدٍ أثرٌ لا أحدَ طلبه.
+    where: { status: "AWAITING_REVIEW", deliveredAt: { lt: earliest }, archivedAt: null },
     select: { id: true, deliveredAt: true, charity: { select: { name: true } } },
   });
 
@@ -1072,7 +1076,7 @@ export async function rescheduleCharityQueue(charityId: string) {
       async (tx) => {
         // Ordered by the schedule itself, because the schedule IS the order.
         const requests = await tx.designRequest.findMany({
-          where: { charityId, status: "PENDING" },
+          where: { charityId, status: "PENDING", archivedAt: null },
           orderBy: { scheduledStartDate: "asc" },
           select: {
             id: true,
@@ -1221,6 +1225,180 @@ export async function startDesignRequest(id: string) {
   }
 }
 
+// ── الأرشيف ─────────────────────────────────────────────────────────────────
+
+/**
+ * من يُؤرشف هذا الطلب: موظفُ زاد، أو الجمعيةُ صاحبتُه.
+ *
+ * ونفسُ نمط «أحدُ الطرفين» في تعديل الطلب: البوّابتان تُرمَيان عند الفشل،
+ * فالمحاولةُ ثم السقوطُ أصدقُ من سؤالٍ منطقيٍّ يُعاد بناؤه هنا. والكيانُ
+ * الداخلي بلا حساباتٍ أصلاً، فطلباتُه للموظفين وحدهم.
+ */
+async function archiveActor(request: {
+  charityId: string;
+  charity: { isInternal: boolean };
+}): Promise<{ actor: DesignEventActor; isStaff: boolean }> {
+  try {
+    const session = await requireDesignStaff();
+    return { actor: staffActor(session), isStaff: true };
+  } catch (staffErr) {
+    if (request.charity.isInternal) throw staffErr;
+    const session = await requireCharityMemberPermission(
+      request.charityId,
+      "view_design_requests"
+    );
+    return {
+      actor: { type: "CHARITY_USER", id: session.id, name: session.name },
+      isStaff: false,
+    };
+  }
+}
+
+const ARCHIVE_SELECT = {
+  id: true,
+  status: true,
+  startedAt: true,
+  archivedAt: true,
+  charityId: true,
+  submittedAt: true,
+  baseWorkingDays: true,
+  addedDays: true,
+  charity: { select: { name: true, isInternal: true } },
+} as const;
+
+/**
+ * نقلُ الطلب إلى الأرشيف — خروجٌ من الدور بلا حذف.
+ *
+ * **والشرطُ واحد**: ما بدأ المصممُ العمل عليه لا يُؤرشف — إلا طلبات «شركة
+ * زاد» نفسها، فهي صاحبةُ العمل وصاحبةُ القرار فيه، ولموظفها أن يُنزلها من
+ * القائمة في أي وقت. وهذا هو الفرقُ الوحيد بين الجهتين.
+ *
+ * ولا تُعاد جدولةُ ما بقي في الدور تلقائياً: النظامُ لا يُعيد الجدولة من
+ * نفسه في أي موضع — فراغُ المؤرشف يبقى حتى يضغط الموظف «إعادة ترتيب
+ * التنفيذ»، فيختار متى تُسحب المواعيد إلى الأمام.
+ */
+export async function archiveDesignRequest(id: string) {
+  try {
+    const request = await prisma.designRequest.findUnique({
+      where: { id },
+      select: ARCHIVE_SELECT,
+    });
+    if (!request) return { error: "الطلب غير موجود" };
+    if (request.archivedAt) return { error: "الطلب في الأرشيف بالفعل" };
+
+    const { actor, isStaff } = await archiveActor(request);
+
+    if (request.startedAt && !(isStaff && request.charity.isInternal)) {
+      return {
+        error: "بدأ المصمم العمل على هذا الطلب، فلا يُؤرشف — تواصل مع فريق زاد",
+      };
+    }
+
+    await prisma.designRequest.update({
+      where: { id },
+      data: {
+        archivedAt: new Date(),
+        archivedByType: actor.type,
+        archivedById: actor.id,
+        archivedByName: actor.name,
+      },
+    });
+
+    await logDesignEvent({
+      requestId: id,
+      kind: "ARCHIVED",
+      actor,
+      note: request.startedAt ? "أُرشِف وقد كان قيد التنفيذ" : null,
+    });
+
+    revalidatePath("/main/design-requests");
+    revalidateCharityPortal(request.charity.name);
+    return { success: true };
+  } catch (error) {
+    console.error("Error archiving design request:", error);
+    return { error: error instanceof Error ? error.message : "تعذّرت الأرشفة" };
+  }
+}
+
+/**
+ * إخراجُ الطلب من الأرشيف — وعودتُه إلى الدور **كطلبٍ جديد**.
+ *
+ * فالطلبُ المعتمَد (`PENDING`) يأخذ موعداً يُحسب لحظتَها على ذيل الطابور،
+ * ويُمحى عنه بدءُ المصمم إن كان قد بدأ: مكانُه القديم شُغل وهو في الأرشيف،
+ * وإعادتُه إليه تُزاحم ما وُعد به غيرُه. ومدّتُه تُحسب بأيامها كلِّها —
+ * الأصلُ وما مُدِّد — فلا يُقصَّر ما سبق إقراره.
+ *
+ * وما كان في غير الدور يعود كما كان: المنجَزُ منجَز، والمعادُ معاد، والذي
+ * لم يُعتمد بعد يبقى في انتظار الاعتماد — والأرشفةُ لم تُغيّر حالته أصلاً.
+ */
+export async function unarchiveDesignRequest(id: string) {
+  try {
+    const request = await prisma.designRequest.findUnique({
+      where: { id },
+      select: ARCHIVE_SELECT,
+    });
+    if (!request) return { error: "الطلب غير موجود" };
+    if (!request.archivedAt) return { error: "الطلب ليس في الأرشيف" };
+
+    const { actor } = await archiveActor(request);
+
+    const requeued = request.status === "PENDING" || request.status === "UNDER_REVIEW";
+
+    await prisma.$transaction(
+      async (tx) => {
+        const clearArchive = {
+          archivedAt: null,
+          archivedByType: null,
+          archivedById: null,
+          archivedByName: null,
+        };
+
+        if (!requeued) {
+          await tx.designRequest.update({ where: { id }, data: clearArchive });
+          return;
+        }
+
+        const submittedAt = new Date();
+        const { scheduledStartDate, expectedCompletionDate } = await computeSchedule(
+          tx,
+          request.charityId,
+          submittedAt,
+          request.baseWorkingDays + request.addedDays
+        );
+
+        await tx.designRequest.update({
+          where: { id },
+          data: {
+            ...clearArchive,
+            submittedAt,
+            scheduledStartDate,
+            expectedCompletionDate,
+            // عودةٌ إلى الدور تعني أنه لم يُبدأ: من بدأه تركه حين أُرشِف،
+            // والسجلُّ يحفظ أنه كان قد بدأ.
+            startedAt: null,
+            startedById: null,
+          },
+        });
+      },
+      { timeout: 20000 }
+    );
+
+    await logDesignEvent({
+      requestId: id,
+      kind: "UNARCHIVED",
+      actor,
+      note: requeued ? "عاد إلى الدور بموعدٍ جديد على ذيل الطابور" : null,
+    });
+
+    revalidatePath("/main/design-requests");
+    revalidateCharityPortal(request.charity.name);
+    return { success: true };
+  } catch (error) {
+    console.error("Error unarchiving design request:", error);
+    return { error: error instanceof Error ? error.message : "تعذّر إخراج الطلب من الأرشيف" };
+  }
+}
+
 /**
  * The queue for one charity, in the order staff just arranged it.
  *
@@ -1281,7 +1459,7 @@ export async function reorderCharityQueue(input: {
     return await prisma.$transaction(
       async (tx) => {
         const pending = await tx.designRequest.findMany({
-          where: { charityId: input.charityId, status: "PENDING" },
+          where: { charityId: input.charityId, status: "PENDING", archivedAt: null },
           orderBy: { scheduledStartDate: "asc" },
           select: {
             id: true,

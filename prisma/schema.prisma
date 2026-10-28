@@ -1388,6 +1388,21 @@ model DesignRequest {
   createdByEmployeeId String?
   createdByEmployee   Employee?    @relation("CreatedDesignRequests", fields: [createdByEmployeeId], references: [id], onDelete: SetNull)
 
+  // ── الأرشيف ─────────────────────────────────────────────────────────────
+  /// متى أُرشِف — وهي علامةٌ مستقلّةٌ عن الحالة لا حالةٌ سابعة.
+  ///
+  /// فالحالةُ تقود دورة العمل كلَّها: الموعدَ والتسليمَ ومراجعةَ الجمعية.
+  /// وجعلُ الأرشيف حالةً يُنسي الطلبَ ما كان عليه ويُلزمنا حقلاً ثانياً
+  /// نُعيده منه. فالمؤرشفُ يُخرَج من القوائم ومن حساب الطابور، وحالتُه كما
+  /// هي — وإلغاءُ الأرشفة يُعيده إلى ما كان، وإن كان `PENDING` دخل الدور
+  /// من جديد بموعدٍ يُحسب لحظتَها.
+  archivedAt     DateTime?
+  /// من أرشفه — منسوخاً لا مرتبطاً، كفاعل `DesignRequestEvent`: قد يكون
+  /// موظفاً أو مستخدمَ جمعية، والحسابُ قد يُحذف أو يُعاد تسميته.
+  archivedByType AuditActorType?
+  archivedById   String?
+  archivedByName String?
+
   attachments DesignRequestAttachment[]
   extensions  DesignRequestExtension[]
   events      DesignRequestEvent[]
@@ -1398,6 +1413,8 @@ model DesignRequest {
   @@index([charityId, status])
   @@index([status])
   @@index([scheduledStartDate])
+  /// قوائمُ الصفحتين كلُّها «جهةٌ + أرشيف».
+  @@index([charityId, archivedAt])
 }
 
 /// سبب كل تمديد على حدة — لا حقل واحد يُكتب فوقه.
@@ -1465,6 +1482,8 @@ enum DesignEventKind {
   COMPLETED // إغلاق نهائي
   REVISION_RETURNED // أعاد زاد الطلب للجمعية بملاحظات والطلب ما زال مفتوحاً
   CLOSED_WITH_NOTES // أغلقه زاد بملاحظاته دون تنفيذ التعديلات
+  ARCHIVED // نُقل إلى الأرشيف وخرج من الدور
+  UNARCHIVED // أُخرج من الأرشيف وعاد إلى الدور بموعدٍ جديد
 }
 
 enum DesignAttachmentKind {

@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Plus, Info, Palette, ListOrdered, Trash2 } from "lucide-react";
+import { Plus, Info, Palette, ListOrdered, Trash2, Archive, ArchiveRestore } from "lucide-react";
 import DesignRequestCard, { type DesignRequestCardData } from "@/components/design-requests/DesignRequestCard";
 import EditDesignRequestModal from "@/components/design-requests/EditDesignRequestModal";
 import DesignRequestLogModal from "@/components/design-requests/DesignRequestLogModal";
@@ -12,7 +12,12 @@ import { Toast } from "@/components/console/Toast";
 import { ConfirmDialog } from "@/components/console/ConfirmDialog";
 import RequestRevisionModal from "@/components/design-requests/RequestRevisionModal";
 import { RevisionNotesList } from "@/components/design-requests/RevisionNotesList";
-import { approveDeliveryByCharity, deleteDesignRequest } from "@/app/actions/designRequests";
+import {
+  approveDeliveryByCharity,
+  deleteDesignRequest,
+  archiveDesignRequest,
+  unarchiveDesignRequest,
+} from "@/app/actions/designRequests";
 import NewDesignRequestForm from "./NewDesignRequestForm";
 import type { DesignTypeOption } from "@/components/design-requests/DesignTypePicker";
 
@@ -33,6 +38,9 @@ type Item = {
     revisionNotes?: string | null;
     /** Settled by the deadline rather than by this charity. */
     autoApproved?: boolean;
+    /** متى أُرشِف، مصوغاً في الخادم — و`null` يعني أنه في القوائم. */
+    archivedAt: string | null;
+    archivedByName: string | null;
   };
   /** Raw due date in ms, for ordering — "١٥ سبتمبر" does not sort. */
   expectedCompletionAt: number;
@@ -57,8 +65,18 @@ export default function DesignRequestsPortalClient({
   const [editingId, setEditingId] = useState<string | null>(null);
   const [logRequestId, setLogRequestId] = useState<string | null>(null);
   const [isQueueOpen, setIsQueueOpen] = useState(false);
-  type PortalTab = "AWAITING_REVIEW" | "UNDER_REVIEW" | "PENDING" | "REVISION_REQUESTED" | "COMPLETED" | "REJECTED";
+  type PortalTab =
+    | "AWAITING_REVIEW"
+    | "UNDER_REVIEW"
+    | "PENDING"
+    | "REVISION_REQUESTED"
+    | "COMPLETED"
+    | "REJECTED"
+    // الأرشيفُ تبويبٌ لا حالة: الصفُّ يحفظ حالته وهو مؤرشف.
+    | "ARCHIVED";
   const [tab, setTab] = useState<PortalTab>("PENDING");
+  const [archiveFor, setArchiveFor] = useState<{ id: string; mode: "archive" | "unarchive" } | null>(null);
+  const [isArchiving, setIsArchiving] = useState(false);
   const [resubmitId, setResubmitId] = useState<string | null>(null);
   const [toast, setToast] = useState<string | null>(null);
   const [revisionFor, setRevisionFor] = useState<string | null>(null);
@@ -67,14 +85,43 @@ export default function DesignRequestsPortalClient({
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
-  const reviewCount = initialItems.filter((it) => it.request.status === "UNDER_REVIEW").length;
-  const awaitingYouCount = initialItems.filter((it) => it.request.status === "AWAITING_REVIEW").length;
-  const revisionCount = initialItems.filter((it) => it.request.status === "REVISION_REQUESTED").length;
-  const rejectedCount = initialItems.filter((it) => it.request.status === "REJECTED").length;
-  const pendingCount = initialItems.filter((it) => it.request.status === "PENDING").length;
-  const completedCount = initialItems.filter((it) => it.request.status === "COMPLETED").length;
+  // العدّاداتُ على غير المؤرشف: الشارةُ تعدّ ما يُرى.
+  const live = useMemo(() => initialItems.filter((it) => !it.request.archivedAt), [initialItems]);
+  const reviewCount = live.filter((it) => it.request.status === "UNDER_REVIEW").length;
+  const awaitingYouCount = live.filter((it) => it.request.status === "AWAITING_REVIEW").length;
+  const revisionCount = live.filter((it) => it.request.status === "REVISION_REQUESTED").length;
+  const rejectedCount = live.filter((it) => it.request.status === "REJECTED").length;
+  const pendingCount = live.filter((it) => it.request.status === "PENDING").length;
+  const completedCount = live.filter((it) => it.request.status === "COMPLETED").length;
+
+  /**
+   * أرشفةُ طلبٍ أو إخراجُه — والخادمُ هو من يفحص الشرط.
+   *
+   * فالجمعيةُ تُؤرشف ما لم يبدأ به المصمم، والزرُّ لا يظهر لغيره — لكنّ
+   * إخفاءَ زرٍّ ليس تصريحاً، فالشرطُ مُعادٌ في الفعل نفسه.
+   */
+  const runArchive = () => {
+    if (!archiveFor) return;
+    const { id, mode } = archiveFor;
+    setIsArchiving(true);
+    void (async () => {
+      const res = mode === "archive" ? await archiveDesignRequest(id) : await unarchiveDesignRequest(id);
+      setIsArchiving(false);
+      setArchiveFor(null);
+      if ("error" in res && res.error) {
+        setToast(res.error);
+        return;
+      }
+      setToast(mode === "archive" ? "نُقل الطلب إلى الأرشيف." : "أُخرج الطلب من الأرشيف وعاد إلى الدور.");
+      router.refresh();
+    })();
+  };
+
   const filtered = useMemo(() => {
-    const rows = initialItems.filter((it) => it.request.status === tab);
+    const rows =
+      tab === "ARCHIVED"
+        ? initialItems.filter((it) => !!it.request.archivedAt)
+        : initialItems.filter((it) => !it.request.archivedAt && it.request.status === tab);
 
     // Started first, then whatever is due soonest. What is under way is what
     // someone is working on today, so it belongs at the top whatever its date;
@@ -97,7 +144,7 @@ export default function DesignRequestsPortalClient({
   const queueRows: QueueRow[] = useMemo(
     () =>
       initialItems
-        .filter((it) => it.request.status === "PENDING")
+        .filter((it) => it.request.status === "PENDING" && !it.request.archivedAt)
         .sort((a, b) => a.expectedCompletionAt - b.expectedCompletionAt)
         .map((it) => ({
           id: it.request.id,
@@ -195,6 +242,7 @@ export default function DesignRequestsPortalClient({
                 { key: "UNDER_REVIEW" as const, label: "قيد المراجعة", count: reviewCount },
                 { key: "COMPLETED" as const, label: "الطلبات المنجزة", count: 0 },
                 { key: "REJECTED" as const, label: "المُعادة للتعديل", count: rejectedCount },
+                { key: "ARCHIVED" as const, label: "الأرشيف", count: 0 },
               ]
             ).map(({ key: t, label, count }) => (
               <button
@@ -368,7 +416,27 @@ export default function DesignRequestsPortalClient({
                 // request has none left to edit — and neither has one a designer
                 // has already started, where the card itself explains why and
                 // names who to call instead.
-                canCreate && it.request.status === "PENDING" && !it.request.startedAt ? (
+                it.request.archivedAt ? (
+                  <div className="w-full mt-2 space-y-2">
+                    <div
+                      className="px-3 py-2.5 rounded-xl bg-slate-100 dark:bg-[#111] text-slate-500 dark:text-slate-400 leading-relaxed"
+                      style={{ fontSize: "var(--dr-fs-meta)" }}
+                    >
+                      في الأرشيف منذ {it.request.archivedAt}. وهو خارج الدور حتى تُخرجه، فيعود بموعدٍ جديد
+                      على ذيل الطابور.
+                    </div>
+                    {canCreate && (
+                      <button
+                        onClick={() => setArchiveFor({ id: it.request.id, mode: "unarchive" })}
+                        className="w-full h-9 flex items-center justify-center gap-1.5 rounded-xl bg-primary/10 text-primary dark:bg-teal-500/10 dark:text-teal-300 hover:bg-primary hover:text-white dark:hover:bg-teal-500 dark:hover:text-[#0A0A0A] transition-colors font-bold"
+                        style={{ fontSize: "var(--dr-fs-meta)" }}
+                      >
+                        <ArchiveRestore className="w-3.5 h-3.5" />
+                        إعادته إلى الدور
+                      </button>
+                    )}
+                  </div>
+                ) : canCreate && it.request.status === "PENDING" && !it.request.startedAt ? (
                   <div className="flex flex-wrap items-center gap-2 w-full mt-2">
                     <button
                       onClick={() => setEditingId(it.request.id)}
@@ -389,6 +457,16 @@ export default function DesignRequestsPortalClient({
                       <ListOrdered className="w-3.5 h-3.5" />
                       إعادة الترتيب
                     </button>
+                    {/* ما لم يبدأ به المصمم للجمعية أن تُنزله من الدور: طلبٌ
+                        لم يُعد له حاجةٌ لا يُشغل دوراً ولا يُحذف. */}
+                    <button
+                      onClick={() => setArchiveFor({ id: it.request.id, mode: "archive" })}
+                      className="flex-1 min-w-[96px] h-9 flex items-center justify-center gap-1.5 rounded-xl bg-slate-100 text-slate-600 dark:bg-[#111] dark:text-slate-400 border border-transparent dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 transition-colors font-bold"
+                      style={{ fontSize: "var(--dr-fs-meta)" }}
+                    >
+                      <Archive className="w-3.5 h-3.5" />
+                      أرشفة
+                    </button>
                   </div>
                 ) : undefined
               }
@@ -396,6 +474,21 @@ export default function DesignRequestsPortalClient({
           ))}
         </div>
       )}
+
+      <ConfirmDialog
+        isOpen={archiveFor !== null}
+        title={archiveFor?.mode === "archive" ? "نقل الطلب إلى الأرشيف؟" : "إعادة الطلب إلى الدور؟"}
+        message={
+          archiveFor?.mode === "archive"
+            ? "يخرج الطلب من الدور ويبقى في تبويب الأرشيف بلا حذف، ويمكنك إعادته متى شئت."
+            : "يعود الطلب إلى الدور كطلبٍ جديد: موعدُه يُحسب الآن على ذيل الطابور، لا موعدَه القديم."
+        }
+        confirmLabel={archiveFor?.mode === "archive" ? "أرشفة" : "إعادة للدور"}
+        tone="primary"
+        isPending={isArchiving}
+        onCancel={() => setArchiveFor(null)}
+        onConfirm={runArchive}
+      />
 
       {isQueueOpen && (
         <QueueOrderModal

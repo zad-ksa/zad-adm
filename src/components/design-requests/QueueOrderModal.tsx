@@ -97,7 +97,7 @@ export default function QueueOrderModal({
   onSuccess,
 }: {
   /** null is the Zad company queue, which has no charity row. */
-  charityId: string | null;
+  charityId: string;
   charityName: string;
   /** Every PENDING request for this entity, started ones included. */
   rows: QueueRow[];

@@ -47,6 +47,9 @@ type DesignStatus =
 
 type RequestItem = DesignRequestCardData & {
   charityId: string;
+  // لازمٌ هنا وإن كان اختيارياً في البطاقة: صفوفُ الموظفين تحمل اسم الجهة
+  // دائماً، وبوّابةُ الجمعية هي التي تُسقطه — فلا تحتاج أن تُخبر نفسها باسمها.
+  charityName: string;
   status: DesignStatus;
   /** Set only on rejected rows — shown so staff can see what was told to the charity. */
   rejectionReason?: string | null;
@@ -113,7 +116,7 @@ export default function DesignRequestsClient({
   const [reschedulingId, setReschedulingId] = useState<string | null>(null);
   const [logRequestId, setLogRequestId] = useState<string | null>(null);
   const [startingId, setStartingId] = useState<string | null>(null);
-  const [queueFor, setQueueFor] = useState<{ charityId: string | null; charityName: string } | null>(null);
+  const [queueFor, setQueueFor] = useState<{ charityId: string; charityName: string } | null>(null);
   const [isQueueRescheduleOpen, setIsQueueRescheduleOpen] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [extendingId, setExtendingId] = useState<string | null>(null);
@@ -230,7 +233,7 @@ export default function DesignRequestsClient({
         .map((it) => ({
           id: it.request.id,
           title: it.request.title,
-          charityName: it.request.charityName || "",
+          charityName: it.request.charityName,
           status: it.request.status,
           startedAt: it.request.startedAt ?? null,
           startMs: it.scheduledStartAt,
@@ -581,7 +584,7 @@ export default function DesignRequestsClient({
                         working-day clause in it matching what the deadline job
                         actually does. */}
                     <CopyDeliveryNotice
-                      charityName={it.request.charityName || ""}
+                      charityName={it.request.charityName}
                       requestTitle={it.request.title}
                     />
                   </div>
@@ -644,8 +647,8 @@ export default function DesignRequestsClient({
                     <button
                       onClick={() =>
                         setQueueFor({
-                          charityId: it.request.charityId || null,
-                          charityName: it.request.charityName || "",
+                          charityId: it.request.charityId,
+                          charityName: it.request.charityName,
                         })
                       }
                       className={cx(btn.secondary, "flex-1 min-w-[72px]")}
@@ -716,7 +719,7 @@ export default function DesignRequestsClient({
           <StaffReviewDesignRequestModal
             requestId={reviewingId}
             title={item.request.title}
-            charityName={item.request.charityName ?? ""}
+            charityName={item.request.charityName}
             suggestedDays={item.request.totalWorkingDays ?? 3}
             onClose={() => setReviewingId(null)}
             onDone={(message) => {
@@ -936,7 +939,7 @@ footer={<>
         <QueueOrderModal
           charityId={queueFor.charityId}
           charityName={queueFor.charityName}
-          rows={queueRowsFor(queueFor.charityId || "")}
+          rows={queueRowsFor(queueFor.charityId)}
           onClose={() => setQueueFor(null)}
           onSuccess={() => {
             setQueueFor(null);

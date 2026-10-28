@@ -5,7 +5,7 @@ import type { Prisma } from "@prisma/client";
  *
  * «شركة زاد» صفٌّ في جدول `Charity` بعلامة `isInternal`، لأن ما تحتاجه من
  * استراتيجيةٍ ومبادراتٍ ومنحٍ مربوطٌ كلّه بـ`charityId` إلزامياً — فصفٌّ حقيقيٌّ
- * يُشغّله بلا تعديل. والبديل (`charityId = null` كما في طلبات التصاميم) يكسر
+ * يُشغّله بلا تعديل. والبديل (`charityId = null`، وكان في طلبات التصاميم حتى نُقلت) يكسر
  * القيود الفريدة، لأن `NULL ≠ NULL` في Postgres فيمرّ بُعدان برمزٍ واحد.
  *
  * وثمن ذلك أن الصفّ يظهر في كل قائمة جمعياتٍ ما لم يُستثنَ. فالاستثناء هنا في
@@ -36,6 +36,9 @@ export function externalOnly(where?: Prisma.CharityWhereInput): Prisma.CharityWh
  *   وبقية الخدمات تُخفيه (انظر `INTERNAL_SERVICES`).
  * - **إسناد الجمعيات للموظفين** في إدارة الموظفين: لولاه لما أمكن إسناد زاد
  *   إلى صاحب الخدمة، ولما رآها أحدٌ غير `developer_mode`.
+ * - **طلبات التصاميم** في صفحة الموظفين: طلبُ تصميمٍ لزاد نفسها كان يُميَّز
+ *   بغياب الجمعية (`charityId = null`)، فنُقل إلى الكيان — ولا بدّ من اختياره
+ *   في نموذج الرفع وفي مُرشِّح الجهة. وبوّابةُ الجمعية لا تراه: لا حساباتٍ له.
  * - **صفحات القسم نفسها** (`/main/strategy/[name]`، `/main/resource-development/[name]`)
  *   فهي تُستعلم بالاسم لا بقائمة.
  */
@@ -43,6 +46,7 @@ export const INTERNAL_VISIBLE_IN = [
   "sidebar:strategy",
   "sidebar:resource-development",
   "employees:charity-assignment",
+  "design-requests:entity-picker",
   "section-pages",
 ] as const;
 

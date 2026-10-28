@@ -8,7 +8,6 @@ import { getSession } from "@/lib/auth";
 import { hasPermission, isAdmin } from "@/lib/permissions";
 import { getAssignedCharityIds } from "@/lib/access";
 import { requirePermission } from "@/lib/guards";
-import { encryptSecret } from "@/lib/encryption";
 import { logAudit } from "@/lib/auditLog";
 import { writeFile, mkdir } from "fs/promises";
 import { join } from "path";
@@ -332,79 +331,22 @@ async function requireResourceDevelopment(charityId: string) {
   return session;
 }
 
-export async function addDonorAccount(charityId: string, donorName: string, username: string, password: string, website?: string) {
-  try {
-    const session = await requireResourceDevelopment(charityId);
-    if (!session) return { success: false, message: "غير مصرح" };
+// حسابا الجهات المانحة (addDonorAccount/deleteDonorAccount) انتقلا إلى
+// `src/app/actions/donorOrgs.ts`: الحسابُ صار يُشير إلى صفِّ الجهة لا إلى
+// اسمها نصّاً، وموضعُه صفحةُ الجهة لا صفحةُ الجمعية.
 
-    const account = await prisma.donorAccount.create({
-      data: {
-        charityId,
-        donorName,
-        username,
-        password: encryptSecret(password),
-        website: website || null,
-      }
-    });
-
-    await logAudit({
-      actorType: "EMPLOYEE",
-      actorId: session.id,
-      actorName: session.name,
-      action: "CREATE",
-      targetType: "DonorAccount",
-      targetId: account.id,
-      metadata: { donorName, charityId },
-    });
-
-    const charity = await prisma.charity.findUnique({ where: { id: charityId } });
-    if (charity) revalidatePath(`/portal/${encodeURIComponent(charity.name)}/finance`);
-
-    // Return the plaintext password (not the encrypted DB value) so the client's
-    // optimistic UI update shows the real credential the user just typed.
-    return { success: true, account: { ...account, password } };
-  } catch (error: any) {
-    console.error("Error adding donor account:", error);
-    return { success: false, message: "حدث خطأ أثناء إضافة حساب الجهة المانحة" };
-  }
-}
-
-export async function deleteDonorAccount(accountId: string, charityId: string) {
-  try {
-    const session = await requireResourceDevelopment(charityId);
-    if (!session) return { success: false, message: "غير مصرح" };
-
-    const target = await prisma.donorAccount.findUnique({ where: { id: accountId }, select: { donorName: true } });
-
-    await prisma.donorAccount.delete({
-      where: { id: accountId }
-    });
-
-    await logAudit({
-      actorType: "EMPLOYEE",
-      actorId: session.id,
-      actorName: session.name,
-      action: "DELETE",
-      targetType: "DonorAccount",
-      targetId: accountId,
-      metadata: { donorName: target?.donorName, charityId },
-    });
-
-    const charity = await prisma.charity.findUnique({ where: { id: charityId } });
-    if (charity) revalidatePath(`/portal/${encodeURIComponent(charity.name)}/finance`);
-
-    return { success: true };
-  } catch (error: any) {
-    console.error("Error deleting donor account:", error);
-    return { success: false, message: "حدث خطأ أثناء الحذف" };
-  }
-}
-
+/**
+ * رفعُ منحةٍ — والجهةُ تُختار من صفوف `DonorOrg` لا تُكتب نصّاً.
+ *
+ * وكان النموذجُ يأخذ اسماً حرّاً، فدخلت القاعدةَ هجاءاتٌ شتّى للجهة الواحدة.
+ * و`entityName` يبقى مكتوباً في الصفّ — اسمُ الجهة وقت الرفع، سِجلّاً لا
+ * مرجعاً.
+ */
 export async function addGrantApplication(
-  charityId: string, 
-  initiativeName: string, 
-  requestedAmount: number, 
-  entityName: string,
+  charityId: string,
+  initiativeName: string,
+  requestedAmount: number,
+  donorOrgId: string,
   status: string = "PENDING"
 ) {
   try {
@@ -413,19 +355,26 @@ export async function addGrantApplication(
 
     if (requestedAmount <= 0) return { success: false, message: "المبلغ غير صالح" };
 
+    const donorOrg = await prisma.donorOrg.findUnique({ where: { id: donorOrgId }, select: { name: true } });
+    if (!donorOrg) return { success: false, message: "الجهة المانحة غير موجودة" };
+
     const grant = await prisma.grantApplication.create({
       data: {
         charityId,
         initiativeName,
         requestedAmount,
-        entityName,
+        donorOrgId,
+        entityName: donorOrg.name,
         status,
       }
     });
 
     const charity = await prisma.charity.findUnique({ where: { id: charityId } });
     if (charity) revalidatePath(`/portal/${encodeURIComponent(charity.name)}/resource-development/grants`);
-    
+    // وصفحةُ الجهة تعرض منحَها وأعدادَها، فتُنعَش معها.
+    revalidatePath("/main/donors");
+    revalidatePath(`/main/donors/${donorOrgId}`);
+
     return { success: true, grant };
   } catch (error: any) {
     console.error("Error adding grant application:", error);

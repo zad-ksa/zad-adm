@@ -560,6 +560,75 @@ export function NavCircle({
 }
 
 /**
+ * بطاقةٌ غنيّةٌ تُنقر — اسمٌ وشارةُ حالةٍ ونصٌّ وأرقامٌ وذيلُ أزرار.
+ *
+ * و`NavCard` لا تحمل شارةً ولا أرقاماً، و`RecordCard` تعرض ولا تُنقر ولا دائرةَ
+ * لها. وبطاقةُ الجمعية في «الجمعيات» هي هذا الشكلُ مكتوباً بيده، فهذه ثانيتُها —
+ * ومن ثمَّ موضعُها العُدّة.
+ *
+ * **والرابطُ طبقةٌ مُطلقةٌ لا غلافٌ للبطاقة كلِّها**: ذيلُها يحمل رابطاً وزرّاً،
+ * ورابطٌ داخل رابطٍ لا يصحّ، وزرٌّ داخل رابطٍ يسرق نقرتَه. فالطبقةُ تحت
+ * المحتوى، والمحتوى `pointer-events-none` فتنفذ نقرتُه إليها، والذيلُ وحده
+ * يستردّ نقراته.
+ */
+export function EntityCard({
+  href,
+  onClick,
+  title,
+  subtitle,
+  badge,
+  media,
+  body,
+  stats,
+  footer,
+}: {
+  title: string;
+  subtitle?: ReactNode;
+  badge?: ReactNode;
+  /** محتوى دائرة الزاوية — شعارٌ أو حرفٌ أو أيقونة. */
+  media?: ReactNode;
+  /** نصٌّ حرٌّ تحت العنوان (وصفٌ أو مجالاتُ عمل). */
+  body?: ReactNode;
+  stats?: { label: string; value: ReactNode }[];
+  footer?: ReactNode;
+} & ({ href: string; onClick?: never } | { onClick: () => void; href?: never })) {
+  const overlay = cx("absolute inset-0 z-0 rounded-xl", focusRing);
+  return (
+    <div className={cx(card.interactive, "group relative flex flex-col gap-3 overflow-hidden p-4")}>
+      <NavCircle>{media}</NavCircle>
+
+      {href ? (
+        <Link href={href} aria-label={title} className={overlay} />
+      ) : (
+        <button type="button" onClick={onClick} aria-label={title} className={overlay} />
+      )}
+
+      <div className="pointer-events-none relative z-10 flex flex-col gap-2">
+        <div className="flex items-start justify-between gap-2">
+          <span className="min-w-0 text-title font-semibold leading-6 text-slate-900 dark:text-slate-100">{title}</span>
+          {badge && <span className="shrink-0">{badge}</span>}
+        </div>
+        {subtitle && <span className="text-meta text-slate-500 dark:text-slate-400">{subtitle}</span>}
+        {body && <span className="text-body leading-5 text-slate-500 dark:text-slate-400">{body}</span>}
+
+        {stats && stats.length > 0 && (
+          <dl className="mt-0.5 flex flex-wrap gap-x-5 gap-y-1">
+            {stats.map((s) => (
+              <div key={s.label} className="flex items-baseline gap-1.5">
+                <dt className="text-meta text-slate-400 dark:text-slate-500">{s.label}</dt>
+                <dd className={cx(MONO, "text-body font-semibold text-slate-800 dark:text-slate-100")}>{s.value}</dd>
+              </div>
+            ))}
+          </dl>
+        )}
+      </div>
+
+      {footer && <div className="pointer-events-auto relative z-10 mt-auto flex items-center gap-2 pt-1">{footer}</div>}
+    </div>
+  );
+}
+
+/**
  * صفٌّ مكدّس للهاتف — بديل صفّ الجدول تحت `sm`.
  *
  * جدول العُدّة يُمرَّر أفقياً على الشاشة الصغيرة، والتمرير الأفقي يُخفي أعمدةً لا

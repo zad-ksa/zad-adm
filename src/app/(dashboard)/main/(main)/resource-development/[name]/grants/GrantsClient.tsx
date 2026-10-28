@@ -24,9 +24,10 @@ interface GrantApplication {
   createdAt: Date | string;
 }
 
-interface DonorAccount {
+/** الجهةُ المانحة صفٌّ يُختار، لا اسمٌ يُكتب. */
+interface DonorOrgOption {
   id: string;
-  donorName: string;
+  name: string;
 }
 
 export default function GrantsClient({
@@ -34,18 +35,18 @@ export default function GrantsClient({
   charityName,
   isInternal = false,
   initialGrantApplications,
-  donorAccounts,
+  donorOrgs,
 }: {
   charityId: string;
   charityName: string;
   /** كيانٌ داخلي: مسار تنقّله لا يبدأ بـ«الجمعيات». */
   isInternal?: boolean;
   initialGrantApplications: any[];
-  donorAccounts: any[];
+  donorOrgs: DonorOrgOption[];
 }) {
   const [grantApplications, setGrantApplications] = useState<GrantApplication[]>(initialGrantApplications || []);
   const [showAddGrant, setShowAddGrant] = useState(false);
-  const [grantForm, setGrantForm] = useState({ initiative: "", amount: "", entityName: "", status: "PENDING" });
+  const [grantForm, setGrantForm] = useState({ initiative: "", amount: "", donorOrgId: "", status: "PENDING" });
   const [activeTab, setActiveTab] = useState<"PENDING" | "APPROVED" | "CLOSED" | "REJECTED">("PENDING");
 
   const [grantApprovalModal, setGrantApprovalModal] = useState<{ isOpen: boolean; grantId: string | null }>({ isOpen: false, grantId: null });
@@ -79,16 +80,16 @@ export default function GrantsClient({
 
     // كان المتصفّح يمنع الإرسال بـrequired على القائمة الأصلية. والقائمة الجديدة
     // زرٌّ لا حقلٌ في النموذج، فالتحقق ينتقل إلى هنا صريحاً.
-    if (!grantForm.entityName.trim()) {
+    if (!grantForm.donorOrgId) {
       showNotification("error", "اختر الجهة المانحة");
       return;
     }
 
     startTransition(async () => {
-      const res = await addGrantApplication(charityId, grantForm.initiative, Number(grantForm.amount), grantForm.entityName, grantForm.status);
+      const res = await addGrantApplication(charityId, grantForm.initiative, Number(grantForm.amount), grantForm.donorOrgId, grantForm.status);
       if (res.success && res.grant) {
         setGrantApplications((prev) => [res.grant as unknown as GrantApplication, ...prev]);
-        setGrantForm({ initiative: "", amount: "", entityName: "", status: "PENDING" });
+        setGrantForm({ initiative: "", amount: "", donorOrgId: "", status: "PENDING" });
         setShowAddGrant(false);
         showNotification("success", "تم إضافة المنحة بنجاح");
 
@@ -279,18 +280,18 @@ export default function GrantsClient({
         <form onSubmit={handleAddGrant} className="bg-white dark:bg-slate-900 p-5 rounded-xl border border-slate-200 dark:border-slate-800 shadow-[0_1px_2px_rgb(15_23_42/0.04)] animate-fade-in grid grid-cols-1 md:grid-cols-5 gap-4 items-end">
           <div className="md:col-span-1">
             <label className="block text-caption font-semibold text-slate-500 dark:text-slate-400 mb-1.5">الجهة المانحة</label>
-            {donorAccounts.length > 0 ? (
-              <Select
-                variant="soft"
-                value={grantForm.entityName}
-                onSelect={(v) => setGrantForm({ ...grantForm, entityName: v })}
-                placeholder="اختر الجهة…"
-                options={donorAccounts.map(d => ({ value: d.donorName, label: d.donorName }))}
-                className="w-full [&>button]:w-full [&>button]:justify-between"
-              />
-            ) : (
-              <input required type="text" placeholder="اكتب اسم الجهة" value={grantForm.entityName} onChange={e => setGrantForm({...grantForm, entityName: e.target.value})} className="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-lg px-4 py-2.5 text-caption outline-none focus:ring-2 focus:ring-primary font-semibold dark:text-slate-100" />
-            )}
+            {/* القائمةُ كلُّ الجهات المسجَّلة لا حساباتُ هذه الجمعية: تُرفع منحةٌ
+                لجهةٍ لم يُسجَّل حسابُها بعد. وكان البديلُ حقلَ نصٍّ حرٍّ أدخل
+                القاعدةَ هجاءاتٍ شتّى للجهة الواحدة، فلم يبقَ. */}
+            <Select
+              variant="soft"
+              value={grantForm.donorOrgId}
+              onSelect={(v) => setGrantForm({ ...grantForm, donorOrgId: v })}
+              placeholder="اختر الجهة…"
+              emptyLabel="لا جهاتٍ مسجَّلة"
+              options={donorOrgs.map((d) => ({ value: d.id, label: d.name }))}
+              className="w-full [&>button]:w-full [&>button]:justify-between"
+            />
           </div>
           <div className="md:col-span-1">
             <label className="block text-caption font-semibold text-slate-500 dark:text-slate-400 mb-1.5">اسم المشروع</label>

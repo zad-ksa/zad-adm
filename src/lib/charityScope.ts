@@ -32,8 +32,13 @@ export function externalOnly(where?: Prisma.CharityWhereInput): Prisma.CharityWh
 /**
  * المواضع التي يظهر فيها الكيان الداخلي عن قصد:
  *
- * - **الشريط الجانبي** تحت «الاستراتيجية» و«تنمية الموارد المالية» وحدهما.
- *   وبقية الخدمات تُخفيه (انظر `INTERNAL_SERVICES`).
+ * - **الشريط الجانبي** تحت «الاستراتيجية» وحدها — وبقية الخدمات تُخفيه (انظر
+ *   `INTERNAL_SERVICES`). و«تنمية الموارد المالية» لم تبقَ فيها قائمةُ جمعياتٍ
+ *   أصلاً: تبويباتُها ثلاثةٌ مستويةٌ للجهات المانحة.
+ * - **الجهات المانحة** (`/main/donors`): جدولُ الحسابات ومُرشِّحُ الجمعيات
+ *   والمنحُ وأعدادُها لا تُصفّى بـ`EXTERNAL_CHARITIES` بل بالإسناد
+ *   (`requireDonorViewer`) — فزادُ جمعيةٌ كغيرها هناك، تظهر لمن أُسنِدت إليه،
+ *   وتدخل النطاقَ المفتوح كما تدخله الجمعيات.
  * - **إسناد الجمعيات للموظفين** في إدارة الموظفين: لولاه لما أمكن إسناد زاد
  *   إلى صاحب الخدمة، ولما رآها أحدٌ غير `developer_mode`.
  * - **طلبات التصاميم** في صفحة الموظفين: طلبُ تصميمٍ لزاد نفسها كان يُميَّز
@@ -44,14 +49,14 @@ export function externalOnly(where?: Prisma.CharityWhereInput): Prisma.CharityWh
  */
 export const INTERNAL_VISIBLE_IN = [
   "sidebar:strategy",
-  "sidebar:resource-development",
   "employees:charity-assignment",
   "design-requests:entity-picker",
+  "donors:accounts-and-grants",
   "section-pages",
 ] as const;
 
 /** الخدمات التي يظهر الكيان الداخلي تحتها في الشريط الجانبي. */
-export const INTERNAL_SERVICES = ["strategy", "resource-development"] as const;
+export const INTERNAL_SERVICES = ["strategy"] as const;
 
 export function showsInternal(serviceId: string) {
   return (INTERNAL_SERVICES as readonly string[]).includes(serviceId);

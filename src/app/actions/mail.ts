@@ -9,7 +9,7 @@ import { getEmployeeServiceNames, listServiceNames } from "@/app/actions/service
 import { getAssignedCharityIds } from "@/lib/access";
 import { getNoApproverMessage, resolveApprovalRoute } from "@/app/actions/mailApproval";
 import { isDelivered, serviceConversationRecipients } from "@/lib/serviceTeams";
-import { CHARITY_MAIL_ENABLED } from "@/lib/featureFlags";
+import { CHARITY_MAIL_ENABLED, isCharityMailOpen } from "@/lib/featureFlags";
 
 async function getAuthenticatedUser() {
   const session = await getSession();
@@ -798,12 +798,15 @@ export async function getCharityMailOptions() {
   const services = granted ?? (await listServiceNames());
 
   const assigned = await getAssignedCharityIds(user.id, user.role, user.permissions);
-  const charities = await prisma.charity.findMany({
+  const all = await prisma.charity.findMany({
     // زاد لا تُرسل بريداً إلى نفسها: الكيان الداخلي ليس مستقبِلاً.
     where: externalOnly(assigned === null ? undefined : { id: { in: assigned } }),
     select: { id: true, name: true },
     orderBy: { name: "asc" },
   });
+  // والمفتوحُ لها البريد وحدها تُعرض: جمعيةٌ لم تُفتح بعدُ لا تُقترح ثم يُرفض
+  // الإرسالُ إليها بعد الكتابة.
+  const charities = all.filter((c) => isCharityMailOpen(c.name));
 
   type CharityOption = { id: string; name: string; counts: Record<string, number> };
 
@@ -901,6 +904,13 @@ export async function sendMailToCharities(data: {
     orderBy: { name: "asc" },
   });
   if (charities.length !== charityIds.length) throw new Error("إحدى الجمعيات غير موجودة");
+
+  // المُنتقي يُرشد والحارس يمنع: جمعيةٌ لم يُفتح لها البريد بعدُ لا يُرسل إليها
+  // ولو جاء معرّفها في النداء.
+  const closed = charities.filter((c) => !isCharityMailOpen(c.name));
+  if (closed.length > 0) {
+    throw new Error(`البريد غير مفتوحٍ بعدُ في: ${closed.map((c) => c.name).join("، ")}`);
+  }
 
   // مستلمو كل جمعية: مفوَّضوها بالخدمة، ومعهم في «نسخة» زملاء المرسِل في زاد
   // الحاملون لها — فالمحادثة للفريقين لا لشخصين. تُحسب قبل الإنشاء لتُرفض
@@ -1018,10 +1028,13 @@ export async function replyToCharityMail(data: {
       senderId: true,
       charityId: true,
       serviceName: true,
+      charity: { select: { name: true } },
       recipients: { select: { employeeId: true } },
     },
   });
   if (!parent?.charityId || !parent.serviceName) throw new Error("غير مصرح");
+  // وإن أُغلق البريد عن جمعيةٍ بعد محادثةٍ جرت، لم يُكمَل فيها الردّ.
+  if (!parent.charity || !isCharityMailOpen(parent.charity.name)) throw new Error("غير مصرح");
 
   // من كتب الرسالة أو وصلته — ولا يكفي معرّفها وحده.
   const isParty =

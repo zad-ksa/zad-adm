@@ -3,7 +3,7 @@ export const dynamic = "force-dynamic";
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { resolveCharityPortal } from "@/lib/portalAccess";
-import { CHARITY_MAIL_ENABLED } from "@/lib/featureFlags";
+import { isCharityMailOpen } from "@/lib/featureFlags";
 import {
   getPortalInbox,
   getPortalMailOptions,
@@ -30,9 +30,9 @@ export async function generateMetadata({ params }: { params: Promise<{ name: str
 export default async function PortalMailPage({ params }: { params: Promise<{ name: string }> }) {
   const { name } = await params;
 
-  // مُقفَل: التبويب يقول «قريباً»، ومن كتب العنوان يعود من حيث أتى. والحجب
-  // هنا لا في الشريط وحده — إخفاء رابطٍ لا يمنع كتابته.
-  if (!CHARITY_MAIL_ENABLED) redirect(`/portal/${encodeURIComponent(name)}`);
+  // مُقفَل لهذه الجمعية: التبويب يقول «قريباً»، ومن كتب العنوان يعود من حيث
+  // أتى. والحجب هنا لا في الشريط وحده — إخفاء رابطٍ لا يمنع كتابته.
+  if (!isCharityMailOpen(decodeURIComponent(name))) redirect(`/portal/${encodeURIComponent(name)}`);
 
   const { charity, permissions, isAdmin } = await resolveCharityPortal(name);
 

@@ -9,6 +9,7 @@ import {
   StatStrip,
   TableShell,
   Th,
+  tableFrameClass,
   tbodyClass,
   tdClass,
   theadRowClass,
@@ -200,19 +201,13 @@ export default function DonorDetail({
         </div>
 
         {charities.length === 0 ? (
-          <TableShell>
-            <tbody>
-              <tr>
-                <td>
-                  <EmptyState
-                    icon={<KeyRound className="size-4" />}
-                    title="لا جمعياتٍ مسنَدةً إليك"
-                    description="تُسنَد الجمعياتُ من إدارة الموظفين، ثم تظهر صفوفُها هنا."
-                  />
-                </td>
-              </tr>
-            </tbody>
-          </TableShell>
+          <div className={tableFrameClass}>
+            <EmptyState
+              icon={<KeyRound className="size-4" />}
+              title="لا جمعياتٍ مسنَدةً إليك"
+              description="تُسنَد الجمعياتُ من إدارة الموظفين، ثم تظهر صفوفُها هنا."
+            />
+          </div>
         ) : (
           <TableShell>
             <thead>

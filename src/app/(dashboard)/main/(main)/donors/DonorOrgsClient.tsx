@@ -3,7 +3,20 @@
 import { useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Building2, ExternalLink, Pencil, Plus, Search, Trash2 } from "lucide-react";
-import { EmptyState, PageHeader, SearchField, Segmented, StatStrip, TableShell, Th, rowClass, tbodyClass, tdClass, theadRowClass } from "@/components/console/layout";
+import {
+  EmptyState,
+  PageHeader,
+  SearchField,
+  Segmented,
+  StatStrip,
+  TableShell,
+  Th,
+  rowClass,
+  tableFrameClass,
+  tbodyClass,
+  tdClass,
+  theadRowClass,
+} from "@/components/console/layout";
 import { Badge, EntityCard, MONO, btn, cx } from "@/components/console/ui";
 import Select from "@/components/console/Select";
 import { notify } from "@/components/console/toastBus";
@@ -209,19 +222,13 @@ export default function DonorOrgsClient({
       )}
 
       {rows.length === 0 ? (
-        <TableShell>
-          <tbody>
-            <tr>
-              <td>
-                <EmptyState
-                  icon={<Search className="size-4" />}
-                  title="لا جهةَ تُطابق"
-                  description="غيّر البحث أو المُرشِّحات."
-                />
-              </td>
-            </tr>
-          </tbody>
-        </TableShell>
+        <div className={tableFrameClass}>
+          <EmptyState
+            icon={<Search className="size-4" />}
+            title="لا جهةَ تُطابق"
+            description="غيّر البحث أو المُرشِّحات."
+          />
+        </div>
       ) : view === "cards" ? (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
           {rows.map((r) => (

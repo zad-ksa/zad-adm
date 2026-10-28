@@ -333,17 +333,64 @@ model FinancialLog {
   createdAt DateTime @default(now())
 }
 
-model DonorAccount {
-  id        String   @id @default(uuid())
-  charityId String
-  charity   Charity  @relation(fields: [charityId], references: [id], onDelete: Cascade)
-  donorName String
-  username  String
-  password  String
-  website   String?
+/// الجهةُ المانحة كيانٌ واحدٌ للموقع كلِّه، لا نصٌّ مُعادٌ في كل جمعية.
+///
+/// كان اسمُها نصّاً حرّاً في `DonorAccount.donorName` و`GrantApplication.entityName`،
+/// فصار في القاعدة «بنك الجزيرة» و«بنك الجزيرة␣» بُعدين برمزين، و«منصة إحسان»
+/// و«منصة احسان» جهتين في الجدول وواحدةً في الواقع. وسؤالٌ كـ«كم جمعيةً رفعت
+/// لهذه الجهة» لا يُحسب على نصٍّ يُكتب كلَّ مرّةٍ بهجاءٍ آخر.
+///
+/// وهي ليست `Charity`: لا حسابَ دخولٍ لها ولا خدماتٍ تُشترى، وإنما جهةٌ تُرفع
+/// إليها المنح.
+model DonorOrg {
+  id   String  @id @default(uuid())
+  name String  @unique
+  /// رابطُ بوّابة الجهة.
+  url  String?
+  /// مجالاتُ الدعم: نصٌّ واحدٌ كما كُتب في ملف الجهات، لا وسومٌ مُعدّة —
+  /// فالمصدرُ جملٌ لا قوائم، وتقطيعُها وسوماً تخمينٌ يَضيع فيه المعنى.
+  fields String?
+
+  /// FOUNDATION | EHSAN | CHARITY_FUND — تبويبٌ لكل نوع.
+  ///
+  /// حقلٌ لا ثلاثةُ جداول: الثلاثةُ ثلاثُ واجهاتٍ لشيءٍ واحد (جهةٌ لها رابطٌ
+  /// وحساباتٌ ومنحٌ مرفوعة)، والمنحةُ تُشير إلى جهةٍ واحدةٍ أيّاً كان نوعُها.
+  kind String @default("FOUNDATION")
+
+  /// OPEN | CLOSED — حالةُ الرفع، صريحةٌ يضبطها الموظف.
+  ///
+  /// ولا تُشتقّ من التاريخين: جهةٌ تُفتح بلا تاريخٍ معلن، وأخرى تُغلق قبل
+  /// موعدها. والتاريخانِ بيانٌ معلن، وإن خالفا الحالةَ قيل ذلك سطراً هادئاً
+  /// (`intakeDateNote`) ولم تُقلب الشارة.
+  intakeStatus String    @default("CLOSED")
+  opensAt      DateTime?
+  closesAt     DateTime?
+  notes        String?
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  accounts DonorAccount[]
+  grants   GrantApplication[]
+
+  @@index([kind, name])
+}
+
+model DonorAccount {
+  id         String   @id @default(uuid())
+  charityId  String
+  charity    Charity  @relation(fields: [charityId], references: [id], onDelete: Cascade)
+  donorOrgId String
+  /// `Restrict` لا `Cascade`: حذفُ جهةٍ لا يَجرُف حساباتِ عشرِ جمعياتٍ
+  /// وكلماتَ مرورها معها.
+  donorOrg   DonorOrg @relation(fields: [donorOrgId], references: [id], onDelete: Restrict)
+  username   String
+  password   String
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  /// حسابٌ واحدٌ لكل جمعيةٍ عند كل جهة — فجدولُ الحسابات صفٌّ لكل جمعية.
+  @@unique([donorOrgId, charityId])
   @@index([charityId])
 }
 
@@ -351,6 +398,13 @@ model GrantApplication {
   id                 String    @id @default(uuid())
   charityId          String
   charity            Charity   @relation(fields: [charityId], references: [id], onDelete: Cascade)
+  donorOrgId         String?
+  donorOrg           DonorOrg? @relation(fields: [donorOrgId], references: [id], onDelete: Restrict)
+  /// اسمُ الجهة وقت الرفع، مثبَّتاً في الصفّ.
+  ///
+  /// لا يُحذف وإن صارت الجهةُ صفّاً: المنحةُ وثيقةٌ رُفعت في تاريخٍ معلوم،
+  /// وإعادةُ تسمية الجهة لاحقاً لا يجوز أن تُعيد كتابة ما رُفع. وهو نفسُ ما
+  /// فُعل في `FinancialRequest.typeLabel`.
   entityName         String    @default("غير محدد")
   initiativeName     String
   requestedAmount    Float
@@ -364,6 +418,8 @@ model GrantApplication {
   updatedAt          DateTime  @updatedAt
 
   @@index([charityId])
+  /// صفحةُ الجهة تسأل: منحُ هذه الجهة من جمعياتٍ بعينها.
+  @@index([donorOrgId, charityId])
 }
 
 model Program {

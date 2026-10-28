@@ -13,11 +13,13 @@
 | الملف | العناصر |
 |---|---|
 | `ui.tsx` | `btn` · `field` · `Badge` · `Avatar` · `AvatarStack` · `CheckMark` · `IconTile` · `SectionHeader` · `Field` · `OptionRow` · `SelectAll` · `Note` · `NameList` · `Count` · `Dot` · `MONO` · `cx` |
-| | **الجديد:** `Spinner` · `Skeleton` · `SkeletonRows` · `MetricCard` · `NavCard` · `RecordCard` |
+| | **الجديد:** `Spinner` · `Skeleton` · `SkeletonRows` · `MetricCard` · `NavCard` · `NavCircle` · `RecordCard` · `EntityCard` |
 | `layout.tsx` | `PageHeader` · `StatStrip` · `Tabs` · `Segmented` · `SearchField` · `TableShell` · `Th` · `EmptyState` |
 | `overlays.tsx` | `Sheet` · `ConfirmDialog` · `useToast`/`Toast` · `RowMenu` · `MenuItem` · `FooterStatus` |
 | `controls.tsx` | `Pagination` |
 | `Select.tsx` | `Select` — قائمة منسدلة بصيغتين |
+| `MultiSelect.tsx` | `MultiSelect` — اختيارٌ متعدِّد بمنطق `Select` نفسه، صفوفُه `OptionRow` ورأسُه `SelectAll` |
+| `Copy.tsx` | `CopyButton` · `SecretValue` — زرُّ النسخ الواحد، وقيمةٌ مُغطّاةٌ تُكشف وتُنسخ |
 | `fonts.ts` | `consoleFontClass` — Geist للأرقام واللاتيني، Cairo للعربي |
 
 ## قواعد
@@ -73,4 +75,13 @@
 **انتظار:** `SkeletonRows` داخل الجدول، و`Spinner` للأزرار والأفعال القصيرة.
 
 **قائمة منسدلة:** `<Select variant="console" … />` في اللوحة، و`variant="soft"` في
-البريد والبوابة حيث الزوايا أوسع.
+البريد والبوابة حيث الزوايا أوسع. و`MultiSelect` حين يُختار أكثرُ من واحد —
+وقائمةٌ فارغةٌ فيه تعني «الكلّ» لا «لا شيء»، فالمُرشِّح الفارغ لا يحجب.
+
+**نسخٌ وسِرّ:** `<CopyButton value={…} />` أيقونةً في خلايا الجداول، وبـ`label`
+زرّاً بنصّه. و`<SecretValue value={…} />` لكلمة مرورٍ تُكشف باختيارٍ لا بالعرض.
+ولا يُكتب `navigator.clipboard` في صفحة.
+
+**بطاقةُ كيانٍ تُنقر:** `<EntityCard href title badge body stats footer />` —
+لاسمٍ وحالةٍ وأرقامٍ وذيلِ أزرار. و`NavCard` لبطاقةِ انتقالٍ بلا أرقام،
+و`RecordCard` لعرضٍ لا يُنقر.

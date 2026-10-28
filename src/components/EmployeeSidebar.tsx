@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, useTransition } from "react";
 import { showsInternal } from "@/lib/charityScope";
+import { DONOR_KINDS } from "@/lib/donorOrg";
 import Link from "next/link";
 import Image from "next/image";
 import { User, ShieldAlert, Users, X, LogOut, LayoutDashboard, Building2, ClipboardList, ChevronRight, Edit, Eye, EyeOff, Camera, Loader2, AlertCircle, CheckCircle2, Newspaper, CheckSquare, Moon, Sun, LayoutGrid, FileText, Settings2, FileSignature, MessageSquare, Send, GitBranch, Bell, ShieldCheck, FolderTree, Clock, Sparkles, Receipt, Rss } from "lucide-react";
@@ -351,6 +352,22 @@ export default function EmployeeSidebar({
                               <SubTabLink href={`/main/governance?tab=manual`} label="دليل الحوكمة" isActive={activePath === `/main/governance` && (!currentTab || currentTab === 'manual')} onClick={() => handleLinkClick(`/main/governance?tab=manual`)} />
                               <SubTabLink href={`/main/governance?tab=services`} label="خدمات المركز" isActive={activePath === `/main/governance` && currentTab === 'services'} onClick={() => handleLinkClick(`/main/governance?tab=services`)} />
                             </>
+                          ) : svc.id === "resource-development" ? (
+                            // تنمية الموارد كالحوكمة: تبويباتٌ مستويةٌ لا قائمةُ
+                            // جمعيات. فالجهةُ المانحة صارت كياناً للموقع كلِّه،
+                            // وصفحتُها تجمع حسابات الجمعيات ومنحَها — فطيٌّ
+                            // بجمعيةٍ ثم تبويبانِ لكلٍّ لم يبقَ له معنى.
+                            <>
+                              {DONOR_KINDS.map((kind) => (
+                                <SubTabLink
+                                  key={kind.value}
+                                  href={kind.href}
+                                  label={kind.label}
+                                  isActive={activePath === kind.href || activePath.startsWith(`${kind.href}/`)}
+                                  onClick={() => handleLinkClick(kind.href)}
+                                />
+                              ))}
+                            </>
                           ) : (
                             // الكيان الداخلي («شركة زاد») يظهر تحت الاستراتيجية
                             // وتنمية الموارد وحدهما. ومصدر القائمة لا يستثنيه عن
@@ -391,12 +408,6 @@ export default function EmployeeSidebar({
 
                                 <div className={`overflow-hidden transition-all duration-300 ease-in-out ${isCharityExpanded ? 'max-h-[500px] opacity-100 mt-1 mb-2' : 'max-h-0 opacity-0'}`}>
                                   <div className="mr-2 space-y-0.5 border-r-2 border-slate-100 dark:border-slate-800 pr-1.5">
-                                    {svc.id === "resource-development" && (
-                                      <>
-                                        <SubTabLink href={`/main/resource-development/${encodeURIComponent(charity.name)}/donors`} label="الجهات المانحة" isActive={activePath === `/main/resource-development/${charity.name}/donors`} onClick={() => handleLinkClick(`/main/resource-development/${charity.name}/donors`)} />
-                                        <SubTabLink href={`/main/resource-development/${encodeURIComponent(charity.name)}/grants`} label="المنح" isActive={activePath === `/main/resource-development/${charity.name}/grants`} onClick={() => handleLinkClick(`/main/resource-development/${charity.name}/grants`)} />
-                                      </>
-                                    )}
                                     {svc.id === "finance" && (
                                       <>
                                         <SubTabLink href={`/main/finance/${encodeURIComponent(charity.name)}`} label="الوضع المالي" isActive={activePath === `/main/finance/${charity.name}`} onClick={() => handleLinkClick(`/main/finance/${charity.name}`)} />

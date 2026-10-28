@@ -26,9 +26,6 @@ export default async function GrantsPage({ params }: { params: Promise<{ name: s
       grantApplications: {
         orderBy: { createdAt: "desc" }
       },
-      donorAccounts: {
-        orderBy: { createdAt: "desc" }
-      }
     }
   });
 
@@ -36,13 +33,20 @@ export default async function GrantsPage({ params }: { params: Promise<{ name: s
     notFound();
   }
 
+  // الجهاتُ كلُّها: المنحةُ تُرفع لجهةٍ من الصفوف المسجَّلة، لا من حسابات هذه
+  // الجمعية — فقد تُرفع لجهةٍ لم يُسجَّل حسابُها بعد.
+  const donorOrgs = await prisma.donorOrg.findMany({
+    select: { id: true, name: true },
+    orderBy: { name: "asc" },
+  });
+
   return (
     <GrantsClient
       charityId={charity.id}
       charityName={charity.name}
       isInternal={charity.isInternal}
       initialGrantApplications={charity.grantApplications}
-      donorAccounts={charity.donorAccounts}
+      donorOrgs={donorOrgs}
     />
   );
 }

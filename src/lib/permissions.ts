@@ -49,6 +49,9 @@ export const PERMISSION_GROUPS = [
       { id: "delete_employees", label: "حذف الموظفين" },
       { id: "view_all_tasks", label: "عرض وإدارة جميع مهام الموظفين" },
       { id: "manage_news", label: "الأخبار والإنجازات" },
+      // صفحةٌ محجوزةٌ بصلاحيتها وهي بعد فارغة: حُجزت من يومها لا يوم تمتلئ،
+      // فلا يُفتح بابٌ ثم يُغلَق بعد أن دخل منه أحد.
+      { id: "view_latest_updates", label: "آخر المستجدات" },
       { id: "manage_surveys", label: "الاستبيانات المخصصة" },
       { id: "manage_meetings", label: "محاضر الاجتماعات" },
       { id: "manage_communication", label: "إدارة التواصل" },

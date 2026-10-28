@@ -1,7 +1,5 @@
 import { prisma } from "@/lib/db";
-import { EXTERNAL_CHARITIES, externalOnly } from "@/lib/charityScope";
 import { getSession } from "@/lib/auth";
-import { ZAD_COMPANY_LABEL } from "@/lib/designRequestProgress";
 import { redirect } from "next/navigation";
 import { hasPermission } from "@/lib/permissions";
 import { formatCivilDateTime } from "@/lib/businessDays";
@@ -29,7 +27,13 @@ export default async function DesignRequestsPage() {
   }
 
   const [charities, requests, designTypes] = await Promise.all([
-    prisma.charity.findMany({ where: EXTERNAL_CHARITIES, select: { id: true, name: true }, orderBy: { name: "asc" } }),
+    // الجهاتُ هنا تضمّ الكيان الداخلي عن قصد — انظر `INTERNAL_VISIBLE_IN`:
+    // طلبُ تصميمٍ لزاد نفسها صار صفّاً بجهةٍ كغيره، فلا بدّ من اختيارها في
+    // النموذج وفي المُرشِّح. وهي أوّلُ القائمة لأنها أكثرُ أصحابها طلباً.
+    prisma.charity.findMany({
+      select: { id: true, name: true },
+      orderBy: [{ isInternal: "desc" }, { name: "asc" }],
+    }),
     prisma.designRequest.findMany({
       include: {
         charity: { select: { id: true, name: true } },
@@ -71,9 +75,8 @@ export default async function DesignRequestsPage() {
         submittedAt: formatCivilDateTime(r.submittedAt),
         scheduledStartDate: formatCivilDateTime(r.scheduledStartDate),
         expectedCompletionDate: formatCivilDateTime(r.expectedCompletionDate),
-        // null means the request belongs to Zad itself, not to a charity.
-        charityId: r.charity?.id ?? "",
-        charityName: r.charity?.name ?? ZAD_COMPANY_LABEL,
+        charityId: r.charity.id,
+        charityName: r.charity.name,
         status: r.status,
         rejectionReason: r.rejectionReason,
         revisionNotes: r.revisionNotes,

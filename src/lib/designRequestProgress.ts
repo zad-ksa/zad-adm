@@ -8,16 +8,6 @@ import { addWorkingMinutes, workingMinutesBetween, WORK_DAY_MINUTES } from "./wo
  */
 
 /**
- * What a request with no charity is called wherever a name is shown.
- *
- * Lives here, not beside the actions that use it: a "use server" file may only
- * export async functions, and a plain const in one breaks the whole module —
- * with an error naming some unrelated export, which is a genuinely misleading
- * way to find out.
- */
-export const ZAD_COMPANY_LABEL = "شركة زاد";
-
-/**
  * مهلة الردّ على تسليم — للجمعية أن تعتمد أو تُبدي ملاحظاتها، ولزاد أن تردّ
  * على الملاحظات. وهي **يوم عمل واحد** في الحالتين.
  *

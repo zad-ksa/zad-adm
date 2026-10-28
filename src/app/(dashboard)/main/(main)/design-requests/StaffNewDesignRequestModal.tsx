@@ -30,7 +30,6 @@ export default function StaffNewDesignRequestModal({
   onSuccess: (message: string) => void;
 }) {
   const [charityId, setCharityId] = useState("");
-  const ZAD = "__zad__";
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [startDate, setStartDate] = useState("");
@@ -72,8 +71,7 @@ export default function StaffNewDesignRequestModal({
       }
       const parsedStartDate = startDate ? new Date(startDate) : undefined;
       const res = await createDesignRequestByStaff({
-        // null tells the server this is a Zad-company request, not a charity one.
-        charityId: charityId === ZAD ? null : charityId,
+        charityId,
         title,
         description,
         attachments,
@@ -140,7 +138,6 @@ export default function StaffNewDesignRequestModal({
               onSelect={setCharityId}
               placeholder="اختر الجهة…"
               options={[
-                { value: ZAD, label: "— شركة زاد —" },
                 ...charities.map((c) => ({ value: c.id, label: c.name })),
               ]}
               className="w-full [&>button]:w-full [&>button]:h-11 [&>button]:justify-between"

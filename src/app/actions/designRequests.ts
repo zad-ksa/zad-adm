@@ -12,7 +12,6 @@ import { logDesignEvent, logDesignEvents, SYSTEM_ACTOR } from "@/lib/designReque
 import type { DesignEventActor } from "@/lib/designRequestLog";
 import {
   REVIEW_WINDOW_WORK_MINUTES,
-  ZAD_COMPANY_LABEL,
   reviewDeadline,
 } from "@/lib/designRequestProgress";
 import { v2 as cloudinary } from "cloudinary";
@@ -47,8 +46,8 @@ export type DesignRequestAttachmentInput = {
 };
 
 export type CreateDesignRequestInput = {
-  /** null = the request belongs to Zad itself rather than a charity. */
-  charityId: string | null;
+  /** جهةُ الطلب: جمعيةٌ متعاقدة أو «شركة زاد» — وكلتاهما صفٌّ في الجدول. */
+  charityId: string;
   title: string;
   description?: string;
   attachments: DesignRequestAttachmentInput[];
@@ -127,7 +126,7 @@ async function requireCharityMemberPermission(charityId: string, permission: str
 
 async function computeSchedule(
   tx: any,
-  charityId: string | null,
+  charityId: string,
   submittedAt: Date,
   workingDays: number
 ) {
@@ -171,7 +170,7 @@ async function resolveTypes(tx: Prisma.TransactionClient, typeIds: string[] | un
 }
 
 async function createDesignRequest(params: {
-  charityId: string | null;
+  charityId: string;
   title: string;
   description?: string;
   attachments: DesignRequestAttachmentInput[];
@@ -287,15 +286,15 @@ export async function createDesignRequestByStaff(input: CreateDesignRequestInput
     const session = await requireDesignStaff();
 
     if (!input.title?.trim()) return { error: "يرجى إدخال عنوان الطلب" };
-    // Only checked for undefined: null is a real choice here (Zad company),
-    // and a falsy test would reject exactly the option this adds.
-    if (input.charityId === undefined) return { error: "يرجى اختيار الجهة" };
+    if (!input.charityId) return { error: "يرجى اختيار الجهة" };
 
-    // No lookup for a Zad-company request — there is nothing to look up.
-    const charity = input.charityId
-      ? await prisma.charity.findUnique({ where: { id: input.charityId }, select: { name: true } })
-      : null;
-    if (input.charityId && !charity) return { error: "الجمعية غير موجودة" };
+    // «شركة زاد» صفٌّ في الجدول كغيرها، فلا فرعَ ثانياً للبحث: كان الغيابُ
+    // يعني زاد، فكان كلُّ قارئٍ يحتاج شرطاً يتذكّره.
+    const charity = await prisma.charity.findUnique({
+      where: { id: input.charityId },
+      select: { name: true },
+    });
+    if (!charity) return { error: "الجهة غير موجودة" };
 
     const created = await createDesignRequest({
       charityId: input.charityId,
@@ -497,7 +496,6 @@ export async function resubmitDesignRequest(input: {
     });
     if (!existing) return { error: "الطلب غير موجود" };
 
-    if (!existing.charityId) return { error: "هذا الطلب لا يتبع جمعية" };
     const session = await requireCharityMemberPermission(existing.charityId, "view_design_requests");
 
     // Only a rejected request can be resubmitted. Without this, the same button
@@ -547,7 +545,7 @@ export async function resubmitDesignRequest(input: {
       { isolationLevel: "Serializable" }
     );
 
-    await notifyDesignStaff(existing.charity?.name ?? ZAD_COMPANY_LABEL, input.title.trim());
+    await notifyDesignStaff(existing.charity.name, input.title.trim());
 
     await logDesignEvent({
       requestId: input.requestId,
@@ -612,8 +610,6 @@ export async function approveDeliveryByCharity(id: string) {
       select: { id: true, charityId: true, status: true, charity: { select: { name: true } } },
     });
     if (!request) return { error: "الطلب غير موجود" };
-    if (!request.charityId) return { error: "هذا الطلب لا يتبع جمعية" };
-
     const session = await requireCharityMemberPermission(request.charityId, "view_design_requests");
 
     if (request.status !== "AWAITING_REVIEW") return { error: "هذا الطلب ليس بانتظار مراجعتك" };
@@ -662,8 +658,6 @@ export async function requestDesignRevision(input: {
       select: { id: true, charityId: true, status: true, charity: { select: { name: true } } },
     });
     if (!request) return { error: "الطلب غير موجود" };
-    if (!request.charityId) return { error: "هذا الطلب لا يتبع جمعية" };
-
     const session = await requireCharityMemberPermission(request.charityId, "view_design_requests");
 
     if (request.status !== "AWAITING_REVIEW") return { error: "لا يمكن طلب التعديل على هذا الطلب" };
@@ -960,7 +954,7 @@ export async function deleteDesignRequest(id: string) {
     // Read first, because who may delete this depends on what it is.
     const request = await prisma.designRequest.findUnique({
       where: { id },
-      include: { attachments: true, charity: { select: { name: true } } },
+      include: { attachments: true, charity: { select: { name: true, isInternal: true } } },
     });
     if (!request) return { error: "الطلب غير موجود" };
 
@@ -976,7 +970,9 @@ export async function deleteDesignRequest(id: string) {
       if (request.status !== "UNDER_REVIEW" || request.startedAt) {
         return { error: "لا يمكن حذف الطلب بعد اعتماده — يرجى التواصل مع المسؤول من شركة زاد" };
       }
-      if (!request.charityId) throw new Error("هذا الطلب لا يتبع جمعية");
+      // الكيانُ الداخلي بلا بوّابةٍ ولا حسابات، فما كان له فهو للموظفين
+      // وحدهم — وكان هذا يُقال بغياب الجمعية، فصار يُقال بعلامتها.
+      if (request.charity.isInternal) throw new Error("طلبات شركة زاد يديرها فريق زاد");
       await requireCharityMemberPermission(request.charityId, "view_design_requests");
     }
 
@@ -1062,14 +1058,15 @@ export async function rescheduleDesignRequest(id: string, newStartDate: Date) {
  *     actually happened; re-deriving it would be rewriting history, so the
  *     queue re-chains around it instead.
  */
-export async function rescheduleCharityQueue(charityId: string | null) {
+export async function rescheduleCharityQueue(charityId: string) {
   try {
     const session = await requireDesignStaff();
 
-    const charity = charityId
-      ? await prisma.charity.findUnique({ where: { id: charityId }, select: { name: true } })
-      : null;
-    if (charityId && !charity) return { error: "الجمعية غير موجودة" };
+    const charity = await prisma.charity.findUnique({
+      where: { id: charityId },
+      select: { name: true },
+    });
+    if (!charity) return { error: "الجهة غير موجودة" };
 
     return await prisma.$transaction(
       async (tx) => {
@@ -1243,20 +1240,22 @@ export async function startDesignRequest(id: string) {
  * never disturb work in progress. It can only change what comes next, and only
  * within that charity's own designs.
  *
- * The Zad company queue (charityId null) has no charity to own it, so it stays
- * with staff.
+ * وطابورُ «شركة زاد» يبقى للموظفين: لا مستخدمي بوّابةٍ له أصلاً، والعلامة
+ * `isInternal` هي ما يقوله الكود صريحاً بعد أن كان يقوله غيابُ الجمعية.
  */
 export async function reorderCharityQueue(input: {
-  /** null for the Zad company queue, which has no charity row. */
-  charityId: string | null;
+  /** جهةُ الطابور: جمعيةٌ أو «شركة زاد». */
+  charityId: string;
   /** Ids of the not-yet-started requests, in their new order. */
   orderedIds: string[];
 }) {
   try {
-    const charity = input.charityId
-      ? await prisma.charity.findUnique({ where: { id: input.charityId }, select: { name: true } })
-      : null;
-    if (input.charityId && !charity) return { error: "الجمعية غير موجودة" };
+    if (!input.charityId) return { error: "يرجى اختيار الجهة" };
+    const charity = await prisma.charity.findUnique({
+      where: { id: input.charityId },
+      select: { name: true, isInternal: true },
+    });
+    if (!charity) return { error: "الجهة غير موجودة" };
 
     // Staff first, then the owning charity. Scoped to input.charityId rather
     // than to whatever charity the caller claims, so membership in one charity
@@ -1266,7 +1265,8 @@ export async function reorderCharityQueue(input: {
       const session = await requireDesignStaff();
       actor = staffActor(session);
     } catch (staffErr) {
-      if (!input.charityId) throw staffErr;
+      // الكيانُ الداخلي بلا بوّابةٍ ولا حسابات، فطابورُه للموظفين وحدهم.
+      if (charity.isInternal) throw staffErr;
       const session = await requireCharityMemberPermission(
         input.charityId,
         "view_design_requests"
@@ -1393,14 +1393,14 @@ export async function reorderCharityQueue(input: {
 export async function getDesignRequestLog(requestId: string) {
   const request = await prisma.designRequest.findUnique({
     where: { id: requestId },
-    select: { id: true, charityId: true, title: true },
+    select: { id: true, charityId: true, title: true, charity: { select: { isInternal: true } } },
   });
   if (!request) return { error: "الطلب غير موجود" as const };
 
   try {
     await requireDesignStaff();
   } catch {
-    if (!request.charityId) return { error: "غير مصرح" as const };
+    if (request.charity.isInternal) return { error: "غير مصرح" as const };
     await requireCharityMemberPermission(request.charityId, "view_design_requests");
   }
 
@@ -1656,7 +1656,7 @@ export async function updateDesignRequestDetails(input: {
         status: true,
         charityId: true,
         startedAt: true,
-        charity: { select: { name: true } },
+        charity: { select: { name: true, isInternal: true } },
         attachments: { where: { kind: "BRIEF" }, select: { id: true, publicId: true, resourceType: true } },
       },
     });
@@ -1678,7 +1678,7 @@ export async function updateDesignRequestDetails(input: {
       const session = await requireDesignStaff();
       actor = { type: "EMPLOYEE", id: session.id, name: session.name };
     } catch {
-      if (!request.charityId) throw new Error("هذا الطلب لا يتبع جمعية");
+      if (request.charity.isInternal) throw new Error("طلبات شركة زاد يديرها فريق زاد");
       const session = await requireCharityMemberPermission(
         request.charityId,
         "view_design_requests"

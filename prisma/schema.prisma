@@ -1295,13 +1295,17 @@ model DesignType {
 
 model DesignRequest {
   id          String              @id @default(uuid())
-  /// null تعني أن الطلب لشركة زاد نفسها لا لجمعية.
+  /// جهةُ الطلب — جمعيةٌ متعاقدة أو «شركة زاد» نفسها.
   ///
-  /// اخترنا الغياب على سجل جمعية وهمي باسم «شركة زاد»، لأن السجل الوهمي يظهر
-  /// في كل قائمة جمعيات في الموقع — الحوكمة والاستراتيجية والعقود والموارد
-  /// البشرية — ويحتاج استثناءً في كل واحدة منها.
-  charityId   String?
-  charity     Charity?            @relation(fields: [charityId], references: [id], onDelete: Cascade)
+  /// وكان الغياب (NULL) هو ما يعني «لزاد»، تفادياً لصفٍّ يظهر في كل قائمة
+  /// جمعيات. ثم صارت زاد صفّاً حقيقياً بعلامة `isInternal` من أجل
+  /// الاستراتيجية وتنمية الموارد — وهما يلزمان `charityId` — والاستثناءُ
+  /// مجموعٌ في موضعٍ واحد: `EXTERNAL_CHARITIES` في `src/lib/charityScope.ts`.
+  ///
+  /// فنُقلت الطلبات إليه وصار العمود إلزامياً: معنىً ثانٍ للغياب يُنسى عند
+  /// أوّل استعلام، ولا قيدَ فريداً يحرسه إذ `NULL ≠ NULL` في Postgres.
+  charityId   String
+  charity     Charity             @relation(fields: [charityId], references: [id], onDelete: Cascade)
   title       String
   description String?             @db.Text
   status      DesignRequestStatus @default(PENDING)

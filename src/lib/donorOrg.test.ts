@@ -1,8 +1,10 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import {
+  cleanCredential,
   cleanDonorName,
   donorKindOf,
+  looksLikeNote,
   grantStatusLabel,
   intakeDateNote,
   intakeStatusOf,
@@ -30,6 +32,29 @@ test("جهتان مختلفتان لا تتساويان بالتسوية", () =>
 
 test("التسويةُ للمطابقة، والعرضُ يحفظ الهجاء", () => {
   assert.equal(cleanDonorName("  مؤسسة  غيث "), "مؤسسة غيث");
+});
+
+// ── بياناتُ الدخول ─────────────────────────────────────────────────────────
+
+test("علاماتُ التنصيص تُحذف — وهي في الخلايا نصّاً لا عرضاً", () => {
+  assert.equal(cleanCredential('"info@atharq.org"'), "info@atharq.org");
+  assert.equal(cleanCredential('"@Athar5594"'), "@Athar5594");
+});
+
+test("كلُّ المسافات تُحذف، ومنها ما لا يُرى", () => {
+  assert.equal(cleanCredential("  110112009366 "), "110112009366");
+  assert.equal(cleanCredential("Aa@10 20‏30"), "Aa@102030");
+});
+
+test("رمزُ كلمة المرور لا يُمسّ", () => {
+  assert.equal(cleanCredential("Alraafa#2000#"), "Alraafa#2000#");
+  assert.equal(cleanCredential("Zz102030**"), "Zz102030**");
+});
+
+test("الخليّةُ العربيةُ ملاحظةٌ لا اسمَ دخول", () => {
+  assert.equal(looksLikeNote("جاري الارسال"), true);
+  assert.equal(looksLikeNote("almaaqd@gmail.com"), false);
+  assert.equal(looksLikeNote("060111010027"), false);
 });
 
 // ── النوعُ والحالة ─────────────────────────────────────────────────────────

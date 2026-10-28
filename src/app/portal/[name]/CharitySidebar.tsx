@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { CHARITY_ATTENDANCE_ENABLED, CHARITY_MAIL_ENABLED } from "@/lib/featureFlags";
+import { CHARITY_ATTENDANCE_ENABLED, isCharityMailOpen } from "@/lib/featureFlags";
 import { FolderOpen,
   Building2,
   ChevronRight,
@@ -208,9 +208,9 @@ export default function CharitySidebar({
     { id: "templates", label: "مكتبة النماذج", href: `/portal/${encodeURIComponent(charityName)}/templates`, exact: true, icon: FolderOpen, show: true },
     // بلا صلاحية كذلك: لكل عضوٍ صندوق بريد يصله سواء فُتح التبويب أو لم يُفتح،
     // وإخفاؤه لا يمنع وصول البريد بل يمنع قراءته.
-    // البريد مبنيٌّ ومُقفَل بعلَم CHARITY_MAIL_ENABLED: يظهر «قريباً» بلا رابط،
-    // وصفحته تردّ من يكتب عنوانها. ويعود تبويباً عاملاً بقلب العلَم وحده.
-    CHARITY_MAIL_ENABLED
+    // البريد يُفتح بالاسم جمعيةً جمعية (CHARITY_MAIL_CHARITIES): حيث لم يُفتح
+    // يظهر «قريباً» بلا رابط، وصفحته تردّ من يكتب عنوانها.
+    isCharityMailOpen(charityName)
       ? { id: "mail", label: "البريد", href: `/portal/${encodeURIComponent(charityName)}/mail`, exact: true, icon: Mail, show: true, badge: unreadMail }
       : { id: "mail", label: "البريد", href: "#", comingSoon: true, icon: Mail, show: true },
     // No permission gates these two: they lead nowhere yet. Adding a checkbox

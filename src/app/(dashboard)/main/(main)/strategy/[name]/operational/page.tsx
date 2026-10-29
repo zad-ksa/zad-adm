@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { ListChecks, Gauge } from "lucide-react";
+import { ListChecks, Gauge, ClipboardList } from "lucide-react";
 import { requireCharitySection } from "@/lib/sectionGuard";
 import { NavCard } from "@/components/console/ui";
 
@@ -29,6 +29,12 @@ export default async function Page({ params }: { params: Promise<{ name: string 
         icon={<Gauge className="size-5" />}
         title="لوحة المعلومات"
         description="حالات المبادرات ومؤشرات الإدارات ونسب الصرف."
+      />
+      <NavCard
+        href={`${base}/operational/survey`}
+        icon={<ClipboardList className="size-5" />}
+        title="استبانة تنفيذ الخطة"
+        description="رابطٌ خاصٌّ بالجمعية يُرسل لمنفّذي الخطة، وإجاباتُهم."
       />
     </div>
   );

@@ -14,6 +14,7 @@
     "strategy:extract": "node scripts/extract-strategy-xlsx.js",
     "strategy:seed": "node -r dotenv/config scripts/seed-strategy.js",
     "plans:extract": "node scripts/extract-operational-plans.js",
+    "guides:extract": "node scripts/extract-guides-xlsx.js",
     "donors:extract": "node --experimental-strip-types scripts/extract-donors-xlsx.mjs",
     "donors:seed": "node -r dotenv/config --experimental-strip-types scripts/seed-donor-orgs.mjs",
     "donors:accounts": "node -r dotenv/config --experimental-strip-types scripts/import-donor-accounts.mjs"

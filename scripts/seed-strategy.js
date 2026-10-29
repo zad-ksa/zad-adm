@@ -67,10 +67,28 @@ const normaliseName = (value) =>
     .replace(/العاملين/g, "العاملات")
     .replace(/المتطوعين/g, "المتطوعات")
     .replace(/\s+/g, " ")
-    .trim();
+    .trim()
+    // نقطةٌ في آخر اسم المؤشر في الدليل وليست في الكشاف — فرقٌ لا معنى له
+    // يُسقط المطابقةَ بالاسم ويردّها إلى الرمز.
+    .replace(/[.،؛:]+$/, "");
 
 const report = { created: {}, updated: {}, warnings: [] };
 const bump = (bag, key) => (bag[key] = (bag[key] || 0) + 1);
+
+/** يُنادى من مخرجين: بعد الخطة، وبعد الدليل وحده حين لا خطة. */
+function printReport() {
+  console.log("المُدخَل:");
+  for (const [key, value] of Object.entries(report.created)) console.log(`  ${key}: ${value}`);
+  if (Object.keys(report.updated).length) {
+    console.log("المُحدَّث (كان موجوداً):");
+    for (const [key, value] of Object.entries(report.updated)) console.log(`  ${key}: ${value}`);
+  }
+  if (report.warnings.length) {
+    console.log("\nملاحظات:");
+    for (const w of [...new Set(report.warnings)]) console.log("  • " + w);
+  }
+  if (!WRITE) console.log("\nلم يُكتب شيء. أعد التشغيل بـ--write للتنفيذ.");
+}
 
 async function main() {
   const connectionString = process.env.DIRECT_URL || process.env.DATABASE_URL;
@@ -79,8 +97,11 @@ async function main() {
 
   try {
     const guide = JSON.parse(fs.readFileSync(path.join(DATA, GUIDE_FILE), "utf8"));
-    const operational = JSON.parse(fs.readFileSync(path.join(DATA, PLAN_FILE), "utf8"));
-    if (guide.charity !== operational.charity) {
+    // `--plan=none`: جمعيةٌ سُلّم دليلُها ولم تُسلَّم خطتُها التشغيلية بعد —
+    // كرواق المسجد. ودليلٌ بلا خطةٍ يُدخَل كما هو، فالأهدافُ والمؤشرات تُقرأ
+    // وتُتابَع قبل أن تُرفع مبادرةٌ واحدة.
+    const operational = PLAN_FILE === "none" ? null : JSON.parse(fs.readFileSync(path.join(DATA, PLAN_FILE), "utf8"));
+    if (operational && guide.charity !== operational.charity) {
       throw new Error(`الملفّان لجمعيتين: «${guide.charity}» و«${operational.charity}»`);
     }
 
@@ -236,6 +257,11 @@ async function main() {
     }
 
     // ── الخطة التشغيلية ─────────────────────────────────────────────────────
+    if (!operational) {
+      printReport();
+      return;
+    }
+
     const planData = {
       label: operational.plan.label,
       startDate: new Date(`${operational.plan.startDate}T00:00:00Z`),
@@ -392,17 +418,7 @@ async function main() {
     }
 
     // ── التقرير ─────────────────────────────────────────────────────────────
-    console.log("المُدخَل:");
-    for (const [key, value] of Object.entries(report.created)) console.log(`  ${key}: ${value}`);
-    if (Object.keys(report.updated).length) {
-      console.log("المُحدَّث (كان موجوداً):");
-      for (const [key, value] of Object.entries(report.updated)) console.log(`  ${key}: ${value}`);
-    }
-    if (report.warnings.length) {
-      console.log("\nملاحظات:");
-      for (const w of [...new Set(report.warnings)]) console.log("  • " + w);
-    }
-    if (!WRITE) console.log("\nلم يُكتب شيء. أعد التشغيل بـ--write للتنفيذ.");
+    printReport();
   } finally {
     await prisma.$disconnect();
   }

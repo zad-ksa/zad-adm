@@ -95,10 +95,24 @@ function build(files) {
     relMap[m[1]] = m[2];
   }
 
-  const sheets = [...(text("xl/workbook.xml") || "").matchAll(/<sheet name="([^"]*)"[^>]*r:id="([^"]+)"/g)].map((m) => {
-    const target = relMap[m[2]] || "";
-    return { name: unesc(m[1]), path: target.startsWith("/") ? target.slice(1) : "xl/" + target };
-  });
+  /**
+   * سماتُ `<sheet>` لا ترتيبَ لها.
+   *
+   * فـExcel يكتب `<sheet name="…" sheetId="2" r:id="rId5"/>`، وملفٌ مصدَّرٌ من
+   * Google Sheets يكتب `<sheet state="visible" name="…" …/>` — فتعبيرٌ يَلزم
+   * `name` أولَ السمات يُرجع صفرَ أوراقٍ من ملفٍ سليم، ويقرأ الجدولُ فارغاً بلا
+   * خطأ. فتُقرأ الوسمُ كاملاً ثم تُنتزع سماتُه أيّاً كان ترتيبها.
+   */
+  const sheets = [...(text("xl/workbook.xml") || "").matchAll(/<sheet\s([^>]*?)\/?>/g)]
+    .map((m) => {
+      const at = m[1];
+      const name = (at.match(/\bname="([^"]*)"/) || [])[1];
+      const rid = (at.match(/\br:id="([^"]+)"/) || [])[1];
+      if (name === undefined || !rid) return null;
+      const target = relMap[rid] || "";
+      return { name: unesc(name), path: target.startsWith("/") ? target.slice(1) : "xl/" + target };
+    })
+    .filter(Boolean);
 
   const sheet = (name) => {
     const sh = sheets.find((s) => s.name === name);

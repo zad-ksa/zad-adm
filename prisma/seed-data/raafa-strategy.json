@@ -1,7 +1,6 @@
 {
   "charity": "الرأفة الإنسانية",
   "year": 2026,
-  "skeleton": true,
   "perspectives": [
     {
       "name": "المستفيدون",
@@ -10,161 +9,331 @@
         {
           "code": "س 1",
           "name": "تحسين جودة حياة المستفيدين من خلال تقديم برامج وخدمات إنسانية وفق الاحتياج",
-          "description": null,
+          "description": "تحسين جودة حياة المستفيدين وخاصة الفئات الأشد احتياجاً من خلال تقديم برامج وخدمات إنسانية مبنية على دراسات الاحتياج، وقياس رضاهم عنها.",
           "indicators": [
             {
               "code": "س 1 - 1",
               "name": "عدد البرامج والخدمات المقدمة لسد احتياج المستفيدين",
-              "description": null,
-              "unit": null,
-              "formula": null,
-              "frequency": null,
-              "polarity": null,
-              "cumulative": null,
-              "execOwner": null,
-              "measureOwner": null,
-              "baseline": null,
-              "results": null
+              "description": "يقيس هذا المؤشر إجمالي عدد البرامج والخدمات الإنسانية التي قدّمتها الجمعية لسد احتياج المستفيدين خلال فترة القياس.",
+              "unit": "برنامج وخدمة",
+              "formula": "حساب إجمالي عدد البرامج والخدمات المقدمة",
+              "frequency": "ربع سنوي",
+              "polarity": "UP",
+              "cumulative": false,
+              "execOwner": "إدارة المشاريع",
+              "measureOwner": "شركة زاد",
+              "baseline": 6,
+              "results": {
+                "annualTarget": 24,
+                "yearState": "ACTIVE",
+                "quarters": {
+                  "Q1": null,
+                  "Q2": null,
+                  "Q3": {
+                    "target": 12,
+                    "actual": 12,
+                    "state": "ACTIVE"
+                  },
+                  "Q4": {
+                    "target": 6,
+                    "actual": 0,
+                    "state": "ACTIVE"
+                  }
+                }
+              }
             },
             {
               "code": "س 1 - 2",
               "name": "عدد المستفيدين من الفئات الأشد احتياجاً",
-              "description": null,
-              "unit": null,
-              "formula": null,
-              "frequency": null,
-              "polarity": null,
-              "cumulative": null,
-              "execOwner": null,
-              "measureOwner": null,
-              "baseline": null,
-              "results": null
+              "description": "يقيس هذا المؤشر إجمالي عدد المستفيدين من الفئات الأشد احتياجاً الذين قدّمت لهم الجمعية برامجها وخدماتها.",
+              "unit": "مستفيد",
+              "formula": "حساب إجمالي عدد المستفيدين من الفئات الأشد احتياجاً",
+              "frequency": "ربع سنوي",
+              "polarity": "UP",
+              "cumulative": false,
+              "execOwner": "إدارة المشاريع",
+              "measureOwner": "شركة زاد",
+              "baseline": 300,
+              "results": {
+                "annualTarget": 600,
+                "yearState": "ACTIVE",
+                "quarters": {
+                  "Q1": null,
+                  "Q2": null,
+                  "Q3": {
+                    "target": 1000,
+                    "actual": 3215,
+                    "state": "ACTIVE"
+                  },
+                  "Q4": {
+                    "target": 600,
+                    "actual": 0,
+                    "state": "ACTIVE"
+                  }
+                }
+              }
             },
             {
               "code": "س 1 - 3",
               "name": "نسبة رضا المستفيدين عن البرامج والخدمات المقدمة لهم",
-              "description": null,
-              "unit": null,
-              "formula": null,
-              "frequency": null,
-              "polarity": null,
-              "cumulative": null,
-              "execOwner": null,
-              "measureOwner": null,
-              "baseline": null,
-              "results": null
+              "description": "يقيس هذا المؤشر متوسط نسبة رضا المستفيدين عن البرامج والخدمات المقدمة لهم وفق أداة قياس معتمدة.",
+              "unit": "نسبة",
+              "formula": "حساب متوسط نسبة رضا المستفيدين وفق أداة القياس المعتمدة",
+              "frequency": "ربع سنوي",
+              "polarity": "UP",
+              "cumulative": true,
+              "execOwner": "إدارة المشاريع",
+              "measureOwner": "شركة زاد",
+              "baseline": 100,
+              "results": {
+                "annualTarget": 100,
+                "yearState": "ACTIVE",
+                "quarters": {
+                  "Q1": null,
+                  "Q2": null,
+                  "Q3": {
+                    "target": 100,
+                    "actual": 100,
+                    "state": "ACTIVE"
+                  },
+                  "Q4": {
+                    "target": 100,
+                    "actual": 0,
+                    "state": "ACTIVE"
+                  }
+                }
+              }
             }
           ]
         },
         {
           "code": "س 2",
           "name": "تأهيل الشباب والفتيات من أسر المستفيدين لسوق العمل عبر برامج تدريب وتأهيل فعالة",
-          "description": null,
+          "description": "تأهيل الشباب والفتيات من أسر المستفيدين لسوق العمل من خلال برامج تدريب وتأهيل فعالة، ومتابعة أثرها في حصول الخريجين على فرص عمل.",
           "indicators": [
             {
               "code": "س 2 - 1",
               "name": "عدد برامج التأهيل والتدريب المقدمة",
-              "description": null,
-              "unit": null,
-              "formula": null,
-              "frequency": null,
-              "polarity": null,
-              "cumulative": null,
-              "execOwner": null,
-              "measureOwner": null,
-              "baseline": null,
-              "results": null
+              "description": "يقيس هذا المؤشر إجمالي عدد برامج التأهيل والتدريب التي قدّمتها الجمعية للشباب والفتيات من أسر المستفيدين.",
+              "unit": "برنامج",
+              "formula": "حساب إجمالي عدد برامج التأهيل والتدريب المقدمة",
+              "frequency": "ربع سنوي",
+              "polarity": "UP",
+              "cumulative": false,
+              "execOwner": "إدارة المشاريع",
+              "measureOwner": "شركة زاد",
+              "baseline": 0,
+              "results": {
+                "annualTarget": 0,
+                "yearState": "ACTIVE",
+                "quarters": {
+                  "Q1": null,
+                  "Q2": null,
+                  "Q3": {
+                    "target": 0,
+                    "actual": 0,
+                    "state": "ACTIVE"
+                  },
+                  "Q4": {
+                    "target": 2,
+                    "actual": 0,
+                    "state": "ACTIVE"
+                  }
+                }
+              }
             },
             {
               "code": "س 2 - 2",
               "name": "عدد المستفيدين من برامج التأهيل والتدريب المقدمة",
-              "description": null,
-              "unit": null,
-              "formula": null,
-              "frequency": null,
-              "polarity": null,
-              "cumulative": null,
-              "execOwner": null,
-              "measureOwner": null,
-              "baseline": null,
-              "results": null
+              "description": "يقيس هذا المؤشر إجمالي عدد المستفيدين من برامج التأهيل والتدريب التي قدّمتها الجمعية.",
+              "unit": "مستفيد",
+              "formula": "حساب إجمالي عدد المستفيدين من برامج التأهيل والتدريب",
+              "frequency": "ربع سنوي",
+              "polarity": "UP",
+              "cumulative": false,
+              "execOwner": "إدارة المشاريع",
+              "measureOwner": "شركة زاد",
+              "baseline": 0,
+              "results": {
+                "annualTarget": 0,
+                "yearState": "ACTIVE",
+                "quarters": {
+                  "Q1": null,
+                  "Q2": null,
+                  "Q3": {
+                    "target": 0,
+                    "actual": 0,
+                    "state": "ACTIVE"
+                  },
+                  "Q4": {
+                    "target": 50,
+                    "actual": 0,
+                    "state": "ACTIVE"
+                  }
+                }
+              }
             },
             {
               "code": "س 2 - 3",
               "name": "نسبة رضا المستفيدين عن برامج التأهيل والتدريب المقدمة لهم",
-              "description": null,
-              "unit": null,
-              "formula": null,
-              "frequency": null,
-              "polarity": null,
-              "cumulative": null,
-              "execOwner": null,
-              "measureOwner": null,
-              "baseline": null,
-              "results": null
+              "description": "يقيس هذا المؤشر متوسط نسبة رضا المستفيدين عن برامج التأهيل والتدريب المقدمة لهم وفق أداة قياس معتمدة.",
+              "unit": "نسبة",
+              "formula": "حساب متوسط نسبة رضا المستفيدين وفق أداة القياس المعتمدة",
+              "frequency": "ربع سنوي",
+              "polarity": "UP",
+              "cumulative": true,
+              "execOwner": "إدارة المشاريع",
+              "measureOwner": "شركة زاد",
+              "baseline": 0,
+              "results": {
+                "annualTarget": 0,
+                "yearState": "ACTIVE",
+                "quarters": {
+                  "Q1": null,
+                  "Q2": null,
+                  "Q3": {
+                    "target": 0,
+                    "actual": 0,
+                    "state": "ACTIVE"
+                  },
+                  "Q4": {
+                    "target": 100,
+                    "actual": 0,
+                    "state": "ACTIVE"
+                  }
+                }
+              }
             },
             {
               "code": "س 2 - 4",
               "name": "نسبة الخريجين الحاصلين على فرص عمل خلال 6 أشهر من اجتياز البرامج",
-              "description": null,
-              "unit": null,
-              "formula": null,
-              "frequency": null,
-              "polarity": null,
-              "cumulative": null,
-              "execOwner": null,
-              "measureOwner": null,
-              "baseline": null,
-              "results": null
+              "description": "يقيس هذا المؤشر نسبة خريجي برامج التأهيل والتدريب الذين حصلوا على فرص عمل خلال ستة أشهر من اجتيازهم للبرامج.",
+              "unit": "نسبة",
+              "formula": "(عدد الخريجين الحاصلين على فرص عمل خلال 6 أشهر ÷ إجمالي عدد الخريجين) × 100",
+              "frequency": "نصف سنوي",
+              "polarity": "UP",
+              "cumulative": true,
+              "execOwner": "إدارة المشاريع",
+              "measureOwner": "شركة زاد",
+              "baseline": 0,
+              "results": {
+                "annualTarget": 0,
+                "yearState": "ACTIVE",
+                "quarters": {
+                  "Q1": null,
+                  "Q2": null,
+                  "Q3": {
+                    "target": 0,
+                    "actual": 0,
+                    "state": "ACTIVE"
+                  },
+                  "Q4": {
+                    "target": 0,
+                    "actual": 0,
+                    "state": "ACTIVE"
+                  }
+                }
+              }
             }
           ]
         },
         {
           "code": "س 3",
-          "name": "المساهمة في تمكين الأسر الأشد حاجة من الحصول على مصادر دخل مستدامة لسد احتياجهم",
-          "description": null,
+          "name": "المساهمة في تمكين الأسر الأشد حاجة من الحصول على مصادر دخل مستدامة",
+          "description": "المساهمة في تمكين الأسر الأشد حاجة اقتصادياً من خلال إيجاد مصادر دخل مستدامة وتأسيس المشاريع الأسرية، وقياس رضاهم عن برامج التمكين.",
           "indicators": [
             {
               "code": "س 3 - 1",
               "name": "عدد الأسر التي ساهمت الجمعية في إيجاد مصادر دخل مستدامة لهم",
-              "description": null,
-              "unit": null,
-              "formula": null,
-              "frequency": null,
-              "polarity": null,
-              "cumulative": null,
-              "execOwner": null,
-              "measureOwner": null,
-              "baseline": null,
-              "results": null
+              "description": "يقيس هذا المؤشر إجمالي عدد الأسر التي ساهمت الجمعية في إيجاد مصادر دخل مستدامة لها خلال فترة القياس.",
+              "unit": "أسرة",
+              "formula": "حساب إجمالي عدد الأسر التي تم إيجاد مصادر دخل مستدامة لها",
+              "frequency": "ربع سنوي",
+              "polarity": "UP",
+              "cumulative": false,
+              "execOwner": "إدارة المشاريع",
+              "measureOwner": "شركة زاد",
+              "baseline": 0,
+              "results": {
+                "annualTarget": 0,
+                "yearState": "ACTIVE",
+                "quarters": {
+                  "Q1": null,
+                  "Q2": null,
+                  "Q3": {
+                    "target": 0,
+                    "actual": 0,
+                    "state": "ACTIVE"
+                  },
+                  "Q4": {
+                    "target": 0,
+                    "actual": 0,
+                    "state": "ACTIVE"
+                  }
+                }
+              }
             },
             {
               "code": "س 3 - 2",
               "name": "عدد مشاريع الأسر التي ساهمت الجمعية في تأسيسها",
-              "description": null,
-              "unit": null,
-              "formula": null,
-              "frequency": null,
-              "polarity": null,
-              "cumulative": null,
-              "execOwner": null,
-              "measureOwner": null,
-              "baseline": null,
-              "results": null
+              "description": "يقيس هذا المؤشر إجمالي عدد المشاريع الأسرية التي ساهمت الجمعية في تأسيسها لتمكين الأسر اقتصادياً.",
+              "unit": "مشروع",
+              "formula": "حساب إجمالي عدد مشاريع الأسر المؤسسة",
+              "frequency": "ربع سنوي",
+              "polarity": "UP",
+              "cumulative": false,
+              "execOwner": "إدارة المشاريع",
+              "measureOwner": "شركة زاد",
+              "baseline": 0,
+              "results": {
+                "annualTarget": 0,
+                "yearState": "ACTIVE",
+                "quarters": {
+                  "Q1": null,
+                  "Q2": null,
+                  "Q3": {
+                    "target": 0,
+                    "actual": 0,
+                    "state": "ACTIVE"
+                  },
+                  "Q4": {
+                    "target": 1,
+                    "actual": 0,
+                    "state": "ACTIVE"
+                  }
+                }
+              }
             },
             {
               "code": "س 3 - 3",
               "name": "نسبة رضا الأسر المستفيدة من برامج التمكين المقدمة لهم",
-              "description": null,
-              "unit": null,
-              "formula": null,
-              "frequency": null,
-              "polarity": null,
-              "cumulative": null,
-              "execOwner": null,
-              "measureOwner": null,
-              "baseline": null,
-              "results": null
+              "description": "يقيس هذا المؤشر متوسط نسبة رضا الأسر المستفيدة عن برامج التمكين المقدمة لها وفق أداة قياس معتمدة.",
+              "unit": "نسبة",
+              "formula": "حساب متوسط نسبة رضا الأسر المستفيدة وفق أداة القياس المعتمدة",
+              "frequency": "ربع سنوي",
+              "polarity": "UP",
+              "cumulative": true,
+              "execOwner": "إدارة المشاريع",
+              "measureOwner": "شركة زاد",
+              "baseline": 0,
+              "results": {
+                "annualTarget": 0,
+                "yearState": "ACTIVE",
+                "quarters": {
+                  "Q1": null,
+                  "Q2": null,
+                  "Q3": {
+                    "target": 0,
+                    "actual": 0,
+                    "state": "ACTIVE"
+                  },
+                  "Q4": {
+                    "target": 100,
+                    "actual": 0,
+                    "state": "ACTIVE"
+                  }
+                }
+              }
             }
           ]
         }
@@ -177,91 +346,193 @@
         {
           "code": "ص 1",
           "name": "بناء صورة ذهنية متميزة عن الجمعية",
-          "description": null,
+          "description": "بناء صورة ذهنية متميزة وسمعة مؤسسية راسخة عن الجمعية لدى المجتمع وأصحاب المصلحة من خلال المنصات الإعلامية والتواصل المؤسسي المنتظم.",
           "indicators": [
             {
               "code": "ص 1 - 1",
               "name": "نسبة رضا أصحاب المصلحة",
-              "description": null,
-              "unit": null,
-              "formula": null,
-              "frequency": null,
-              "polarity": null,
-              "cumulative": null,
-              "execOwner": null,
-              "measureOwner": null,
-              "baseline": null,
-              "results": null
+              "description": "يقيس هذا المؤشر نسبة رضا أصحاب المصلحة من جهات إشرافية ومانحين وشركاء عن أداء الجمعية وتواصلها معهم.",
+              "unit": "نسبة",
+              "formula": "حساب نسبة رضا كل فئة من أصحاب المصلحة ثم حساب المتوسط العام",
+              "frequency": "ربع سنوي",
+              "polarity": "UP",
+              "cumulative": true,
+              "execOwner": "إدارة الاتصال المؤسسي",
+              "measureOwner": "شركة زاد",
+              "baseline": 100,
+              "results": {
+                "annualTarget": 100,
+                "yearState": "ACTIVE",
+                "quarters": {
+                  "Q1": null,
+                  "Q2": null,
+                  "Q3": {
+                    "target": 100,
+                    "actual": 100,
+                    "state": "ACTIVE"
+                  },
+                  "Q4": {
+                    "target": 100,
+                    "actual": 0,
+                    "state": "ACTIVE"
+                  }
+                }
+              }
             },
             {
               "code": "ص 1 - 2",
               "name": "درجة مؤشّر السمعة المؤسسية للجمعية",
-              "description": null,
-              "unit": null,
-              "formula": null,
-              "frequency": null,
-              "polarity": null,
-              "cumulative": null,
-              "execOwner": null,
-              "measureOwner": null,
-              "baseline": null,
-              "results": null
+              "description": "يقيس هذا المؤشر درجة السمعة المؤسسية للجمعية لدى المجتمع وأصحاب المصلحة وفق أداة قياس معتمدة.",
+              "unit": "درجة",
+              "formula": "حساب متوسط درجات محاور استبانة السمعة المؤسسية",
+              "frequency": "ربع سنوي",
+              "polarity": "UP",
+              "cumulative": true,
+              "execOwner": "إدارة الاتصال المؤسسي",
+              "measureOwner": "شركة زاد",
+              "baseline": 0,
+              "results": {
+                "annualTarget": 0,
+                "yearState": "ACTIVE",
+                "quarters": {
+                  "Q1": null,
+                  "Q2": null,
+                  "Q3": {
+                    "target": 0,
+                    "actual": 0,
+                    "state": "ACTIVE"
+                  },
+                  "Q4": {
+                    "target": 100,
+                    "actual": 0,
+                    "state": "ACTIVE"
+                  }
+                }
+              }
             },
             {
               "code": "ص 1 - 3",
               "name": "عدد المنصات الإعلامية المفعلة للجمعية",
-              "description": null,
-              "unit": null,
-              "formula": null,
-              "frequency": null,
-              "polarity": null,
-              "cumulative": null,
-              "execOwner": null,
-              "measureOwner": null,
-              "baseline": null,
-              "results": null
+              "description": "يقيس هذا المؤشر عدد المنصات الإعلامية الرسمية المفعلة للجمعية التي يتم النشر فيها بشكل دوري.",
+              "unit": "منصة",
+              "formula": "حساب إجمالي عدد المنصات الإعلامية المفعلة",
+              "frequency": "سنوي",
+              "polarity": "UP",
+              "cumulative": false,
+              "execOwner": "إدارة الاتصال المؤسسي",
+              "measureOwner": "شركة زاد",
+              "baseline": 5,
+              "results": {
+                "annualTarget": 5,
+                "yearState": "ACTIVE",
+                "quarters": {
+                  "Q1": null,
+                  "Q2": null,
+                  "Q3": {
+                    "target": 5,
+                    "actual": 5,
+                    "state": "ACTIVE"
+                  },
+                  "Q4": {
+                    "target": 5,
+                    "actual": 0,
+                    "state": "ACTIVE"
+                  }
+                }
+              }
             },
             {
               "code": "ص 1 - 4",
               "name": "عدد الزيارات واللقاءات المتبادلة مع أصحاب المصلحة",
-              "description": null,
-              "unit": null,
-              "formula": null,
-              "frequency": null,
-              "polarity": null,
-              "cumulative": null,
-              "execOwner": null,
-              "measureOwner": null,
-              "baseline": null,
-              "results": null
+              "description": "يقيس هذا المؤشر عدد الزيارات واللقاءات المتبادلة التي تم تنفيذها مع أصحاب المصلحة لتوثيق العلاقة معهم.",
+              "unit": "زيارة ولقاء",
+              "formula": "حساب إجمالي عدد الزيارات واللقاءات المتبادلة",
+              "frequency": "نصف سنوي",
+              "polarity": "UP",
+              "cumulative": false,
+              "execOwner": "إدارة الاتصال المؤسسي",
+              "measureOwner": "شركة زاد",
+              "baseline": 6,
+              "results": {
+                "annualTarget": 6,
+                "yearState": "ACTIVE",
+                "quarters": {
+                  "Q1": null,
+                  "Q2": null,
+                  "Q3": {
+                    "target": 16,
+                    "actual": 16,
+                    "state": "ACTIVE"
+                  },
+                  "Q4": {
+                    "target": 6,
+                    "actual": 0,
+                    "state": "ACTIVE"
+                  }
+                }
+              }
             },
             {
               "code": "ص 1 - 5",
               "name": "عدد التقارير الدورية الصادرة لأصحاب المصلحة",
-              "description": null,
-              "unit": null,
-              "formula": null,
-              "frequency": null,
-              "polarity": null,
-              "cumulative": null,
-              "execOwner": null,
-              "measureOwner": null,
-              "baseline": null,
-              "results": null
+              "description": "يقيس هذا المؤشر عدد التقارير الدورية الصادرة من الجمعية والموجهة لأصحاب المصلحة لإطلاعهم على أعمالها وإنجازاتها.",
+              "unit": "تقرير",
+              "formula": "حساب إجمالي عدد التقارير الدورية الصادرة",
+              "frequency": "ربع سنوي",
+              "polarity": "UP",
+              "cumulative": false,
+              "execOwner": "إدارة الاتصال المؤسسي",
+              "measureOwner": "شركة زاد",
+              "baseline": 6,
+              "results": {
+                "annualTarget": 6,
+                "yearState": "ACTIVE",
+                "quarters": {
+                  "Q1": null,
+                  "Q2": null,
+                  "Q3": {
+                    "target": 16,
+                    "actual": 16,
+                    "state": "ACTIVE"
+                  },
+                  "Q4": {
+                    "target": 6,
+                    "actual": 0,
+                    "state": "ACTIVE"
+                  }
+                }
+              }
             },
             {
               "code": "ص 1 - 6",
               "name": "إجمالي المشاهدات المتحققة لمنصات الجمعية المفعلة",
-              "description": null,
-              "unit": null,
-              "formula": null,
-              "frequency": null,
-              "polarity": null,
-              "cumulative": null,
-              "execOwner": null,
-              "measureOwner": null,
-              "baseline": null,
-              "results": null
+              "description": "يقيس هذا المؤشر إجمالي عدد المشاهدات المتحققة لمحتوى الجمعية عبر منصاتها الإعلامية المفعلة.",
+              "unit": "مشاهدة",
+              "formula": "حساب مجموع المشاهدات في جميع المنصات المفعلة",
+              "frequency": "ربع سنوي",
+              "polarity": "UP",
+              "cumulative": false,
+              "execOwner": "إدارة الاتصال المؤسسي",
+              "measureOwner": "شركة زاد",
+              "baseline": 500,
+              "results": {
+                "annualTarget": 1000,
+                "yearState": "ACTIVE",
+                "quarters": {
+                  "Q1": null,
+                  "Q2": null,
+                  "Q3": {
+                    "target": 1100,
+                    "actual": 1100,
+                    "state": "ACTIVE"
+                  },
+                  "Q4": {
+                    "target": 1300,
+                    "actual": 0,
+                    "state": "ACTIVE"
+                  }
+                }
+              }
             }
           ]
         }
@@ -274,70 +545,138 @@
         {
           "code": "م 1",
           "name": "تحقيق الاستقرار المالي من خلال تنويع مصادر الدخل",
-          "description": null,
+          "description": "تنمية الموارد المالية للجمعية وتنويع مصادر الدخل المستدامة بما يضمن الاستقرار المالي وتغطية المصاريف التشغيلية وتمويل البرامج والمبادرات.",
           "indicators": [
             {
               "code": "م 1 - 1",
               "name": "إجمالي الإيرادات المتحققة",
-              "description": null,
-              "unit": null,
-              "formula": null,
-              "frequency": null,
-              "polarity": null,
-              "cumulative": null,
-              "execOwner": null,
-              "measureOwner": null,
-              "baseline": null,
-              "results": null
+              "description": "يقيس هذا المؤشر إجمالي الإيرادات المالية المتحققة للجمعية من جميع مصادر الدخل خلال الفترة.",
+              "unit": "ريال",
+              "formula": "حساب مجموع الإيرادات المتحققة من جميع المصادر",
+              "frequency": "ربع سنوي",
+              "polarity": "UP",
+              "cumulative": false,
+              "execOwner": "شركة زاد",
+              "measureOwner": "شركة زاد",
+              "baseline": 100,
+              "results": {
+                "annualTarget": 100,
+                "yearState": "ACTIVE",
+                "quarters": {
+                  "Q1": null,
+                  "Q2": null,
+                  "Q3": {
+                    "target": 0,
+                    "actual": 0,
+                    "state": "ACTIVE"
+                  },
+                  "Q4": {
+                    "target": 0,
+                    "actual": 0,
+                    "state": "ACTIVE"
+                  }
+                }
+              }
             },
             {
               "code": "م 1 - 2",
               "name": "نسبة تغطية الإيرادات للمصاريف التشغيلية للجمعية",
-              "description": null,
-              "unit": null,
-              "formula": null,
-              "frequency": null,
-              "polarity": null,
-              "cumulative": null,
-              "execOwner": null,
-              "measureOwner": null,
-              "baseline": null,
-              "results": null
+              "description": "يقيس هذا المؤشر مدى تغطية الإيرادات المتحققة للمصاريف التشغيلية للجمعية بما يعكس الاستقرار المالي.",
+              "unit": "نسبة",
+              "formula": "(إجمالي الإيرادات المتحققة ÷ إجمالي المصاريف التشغيلية) × 100",
+              "frequency": "ربع سنوي",
+              "polarity": "UP",
+              "cumulative": true,
+              "execOwner": "شركة زاد",
+              "measureOwner": "شركة زاد",
+              "baseline": 100,
+              "results": {
+                "annualTarget": 100,
+                "yearState": "ACTIVE",
+                "quarters": {
+                  "Q1": null,
+                  "Q2": null,
+                  "Q3": {
+                    "target": 0,
+                    "actual": 0,
+                    "state": "ACTIVE"
+                  },
+                  "Q4": {
+                    "target": 0,
+                    "actual": 0,
+                    "state": "ACTIVE"
+                  }
+                }
+              }
             }
           ]
         },
         {
           "code": "م 2",
           "name": "ترسيخ السلامة المالية وكفاءة الإنفاق والامتثال المالي المستمر",
-          "description": null,
+          "description": "الالتزام بمعايير السلامة المالية والحوكمة الرشيدة ورفع كفاءة الإنفاق وترشيد المصروفات التشغيلية بما يعزز الثقة والاستدامة المالية للجمعية.",
           "indicators": [
             {
               "code": "م 2 - 1",
               "name": "نسبة تحقق معايير السلامة المالية",
-              "description": null,
-              "unit": null,
-              "formula": null,
-              "frequency": null,
-              "polarity": null,
-              "cumulative": null,
-              "execOwner": null,
-              "measureOwner": null,
-              "baseline": null,
-              "results": null
+              "description": "يقيس هذا المؤشر مدى تحقق متطلبات معيار السلامة المالية المعتمد من الجهات ذات العلاقة لدى الجمعية.",
+              "unit": "نسبة",
+              "formula": "(عدد المتطلبات المحققة ÷ إجمالي متطلبات معيار السلامة المالية) × 100",
+              "frequency": "ربع سنوي",
+              "polarity": "UP",
+              "cumulative": true,
+              "execOwner": "شركة زاد",
+              "measureOwner": "شركة زاد",
+              "baseline": 100,
+              "results": {
+                "annualTarget": 100,
+                "yearState": "ACTIVE",
+                "quarters": {
+                  "Q1": null,
+                  "Q2": null,
+                  "Q3": {
+                    "target": 0,
+                    "actual": 0,
+                    "state": "ACTIVE"
+                  },
+                  "Q4": {
+                    "target": 100,
+                    "actual": 0,
+                    "state": "ACTIVE"
+                  }
+                }
+              }
             },
             {
               "code": "م 2 - 2",
               "name": "نسبة المصروفات التشغيلية إلى إجمالي المصروفات",
-              "description": null,
-              "unit": null,
-              "formula": null,
-              "frequency": null,
-              "polarity": null,
-              "cumulative": null,
-              "execOwner": null,
-              "measureOwner": null,
-              "baseline": null,
-              "results": null
+              "description": "يقيس هذا المؤشر نسبة المصروفات التشغيلية إلى إجمالي مصروفات الجمعية بما يعكس كفاءة الإنفاق.",
+              "unit": "نسبة",
+              "formula": "(إجمالي المصروفات التشغيلية ÷ إجمالي المصروفات) × 100",
+              "frequency": "ربع سنوي",
+              "polarity": "DOWN",
+              "cumulative": true,
+              "execOwner": "شركة زاد",
+              "measureOwner": "شركة زاد",
+              "baseline": 100,
+              "results": {
+                "annualTarget": 100,
+                "yearState": "ACTIVE",
+                "quarters": {
+                  "Q1": null,
+                  "Q2": null,
+                  "Q3": {
+                    "target": 0,
+                    "actual": 0,
+                    "state": "ACTIVE"
+                  },
+                  "Q4": {
+                    "target": 0,
+                    "actual": 0,
+                    "state": "ACTIVE"
+                  }
+                }
+              }
             }
           ]
         }
@@ -350,238 +689,493 @@
         {
           "code": "ل 1",
           "name": "ابتكار وتنفيذ مبادرات نوعية لتمكين المستفيدين",
-          "description": null,
+          "description": "ابتكار وتنفيذ مبادرات ومشاريع نوعية موجّهة لتمكين المستفيدين، وتوسيع قاعدة المستفيدين منها.",
           "indicators": [
             {
               "code": "ل 1 - 1",
               "name": "عدد المشاريع المبتكرة والمنفذة لتمكين المستفيدين",
-              "description": null,
-              "unit": null,
-              "formula": null,
-              "frequency": null,
-              "polarity": null,
-              "cumulative": null,
-              "execOwner": null,
-              "measureOwner": null,
-              "baseline": null,
-              "results": null
+              "description": "يقيس هذا المؤشر إجمالي عدد المشاريع النوعية المبتكرة والمنفذة لتمكين المستفيدين خلال فترة القياس.",
+              "unit": "مشروع",
+              "formula": "حساب إجمالي عدد المشاريع المبتكرة والمنفذة",
+              "frequency": "ربع سنوي",
+              "polarity": "UP",
+              "cumulative": false,
+              "execOwner": "إدارة المشاريع",
+              "measureOwner": "شركة زاد",
+              "baseline": 3,
+              "results": {
+                "annualTarget": 3,
+                "yearState": "ACTIVE",
+                "quarters": {
+                  "Q1": null,
+                  "Q2": null,
+                  "Q3": {
+                    "target": 1,
+                    "actual": 1,
+                    "state": "ACTIVE"
+                  },
+                  "Q4": {
+                    "target": 1,
+                    "actual": 0,
+                    "state": "ACTIVE"
+                  }
+                }
+              }
             },
             {
               "code": "ل 1 - 2",
               "name": "عدد المستفيدين من المشاريع المبتكرة والمنفذة لتمكينهم",
-              "description": null,
-              "unit": null,
-              "formula": null,
-              "frequency": null,
-              "polarity": null,
-              "cumulative": null,
-              "execOwner": null,
-              "measureOwner": null,
-              "baseline": null,
-              "results": null
+              "description": "يقيس هذا المؤشر إجمالي عدد المستفيدين من المشاريع النوعية المبتكرة والمنفذة لتمكينهم.",
+              "unit": "مستفيد",
+              "formula": "حساب إجمالي عدد المستفيدين من المشاريع المبتكرة والمنفذة",
+              "frequency": "ربع سنوي",
+              "polarity": "UP",
+              "cumulative": false,
+              "execOwner": "إدارة المشاريع",
+              "measureOwner": "شركة زاد",
+              "baseline": 24,
+              "results": {
+                "annualTarget": 24,
+                "yearState": "ACTIVE",
+                "quarters": {
+                  "Q1": null,
+                  "Q2": null,
+                  "Q3": {
+                    "target": 24,
+                    "actual": 24,
+                    "state": "ACTIVE"
+                  },
+                  "Q4": {
+                    "target": 20,
+                    "actual": 0,
+                    "state": "ACTIVE"
+                  }
+                }
+              }
             }
           ]
         },
         {
           "code": "ل 2",
           "name": "بناء منظومة التسويق وتنمية الموارد المالية",
-          "description": null,
+          "description": "بناء منظومة تسويق مؤسسية متكاملة لتنمية الموارد المالية عبر الملفات التسويقية والمتجر الإلكتروني وحملات التسويق وتنويع مصادر الدخل واستقطاب المانحين.",
           "indicators": [
             {
               "code": "ل 2 - 1",
               "name": "عدد المشاريع التي صممت لها ملفات تسويقية",
-              "description": null,
-              "unit": null,
-              "formula": null,
-              "frequency": null,
-              "polarity": null,
-              "cumulative": null,
-              "execOwner": null,
-              "measureOwner": null,
-              "baseline": null,
-              "results": null
+              "description": "يقيس هذا المؤشر إجمالي عدد المشاريع التي أُعدّت لها ملفات تسويقية نوعية لعرضها على المانحين والداعمين.",
+              "unit": "مشروع",
+              "formula": "حساب إجمالي عدد المشاريع التي صممت لها ملفات تسويقية",
+              "frequency": "ربع سنوي",
+              "polarity": "UP",
+              "cumulative": false,
+              "execOwner": "شركة زاد",
+              "measureOwner": "شركة زاد",
+              "baseline": 3,
+              "results": {
+                "annualTarget": 3,
+                "yearState": "ACTIVE",
+                "quarters": {
+                  "Q1": null,
+                  "Q2": null,
+                  "Q3": {
+                    "target": 3,
+                    "actual": 3,
+                    "state": "ACTIVE"
+                  },
+                  "Q4": {
+                    "target": 0,
+                    "actual": 0,
+                    "state": "ACTIVE"
+                  }
+                }
+              }
             },
             {
               "code": "ل 2 - 2",
               "name": "إجمالي الإيرادات المتحققة من خلال المتجر الإلكتروني للجمعية",
-              "description": null,
-              "unit": null,
-              "formula": null,
-              "frequency": null,
-              "polarity": null,
-              "cumulative": null,
-              "execOwner": null,
-              "measureOwner": null,
-              "baseline": null,
-              "results": null
+              "description": "يقيس هذا المؤشر إجمالي الإيرادات المالية المتحققة عبر المتجر الإلكتروني للجمعية خلال الفترة.",
+              "unit": "ريال",
+              "formula": "حساب مجموع الإيرادات المتحققة عبر المتجر الإلكتروني",
+              "frequency": "ربع سنوي",
+              "polarity": "UP",
+              "cumulative": false,
+              "execOwner": "شركة زاد",
+              "measureOwner": "شركة زاد",
+              "baseline": 0,
+              "results": {
+                "annualTarget": 0,
+                "yearState": "ACTIVE",
+                "quarters": {
+                  "Q1": null,
+                  "Q2": null,
+                  "Q3": {
+                    "target": 0,
+                    "actual": 0,
+                    "state": "ACTIVE"
+                  },
+                  "Q4": {
+                    "target": 0,
+                    "actual": 0,
+                    "state": "ACTIVE"
+                  }
+                }
+              }
             },
             {
               "code": "ل 2 - 3",
               "name": "عدد مصادر الدخل المفعلة",
-              "description": null,
-              "unit": null,
-              "formula": null,
-              "frequency": null,
-              "polarity": null,
-              "cumulative": null,
-              "execOwner": null,
-              "measureOwner": null,
-              "baseline": null,
-              "results": null
+              "description": "يقيس هذا المؤشر عدد مصادر الدخل المتنوعة التي تم تفعيلها لتنمية الموارد المالية للجمعية.",
+              "unit": "مصدر دخل",
+              "formula": "حساب إجمالي عدد مصادر الدخل المفعلة",
+              "frequency": "ربع سنوي",
+              "polarity": "UP",
+              "cumulative": false,
+              "execOwner": "شركة زاد",
+              "measureOwner": "شركة زاد",
+              "baseline": 0,
+              "results": {
+                "annualTarget": 0,
+                "yearState": "ACTIVE",
+                "quarters": {
+                  "Q1": null,
+                  "Q2": null,
+                  "Q3": {
+                    "target": 0,
+                    "actual": 0,
+                    "state": "ACTIVE"
+                  },
+                  "Q4": {
+                    "target": 0,
+                    "actual": 0,
+                    "state": "ACTIVE"
+                  }
+                }
+              }
             },
             {
               "code": "ل 2 - 4",
               "name": "عدد المانحين الذين تبرعوا للجمعية",
-              "description": null,
-              "unit": null,
-              "formula": null,
-              "frequency": null,
-              "polarity": null,
-              "cumulative": null,
-              "execOwner": null,
-              "measureOwner": null,
-              "baseline": null,
-              "results": null
+              "description": "يقيس هذا المؤشر إجمالي عدد المانحين والداعمين الذين تبرعوا للجمعية خلال فترة القياس.",
+              "unit": "مانح",
+              "formula": "حساب إجمالي عدد المانحين الذين تبرعوا",
+              "frequency": "ربع سنوي",
+              "polarity": "UP",
+              "cumulative": false,
+              "execOwner": "شركة زاد",
+              "measureOwner": "شركة زاد",
+              "baseline": 6,
+              "results": {
+                "annualTarget": 6,
+                "yearState": "ACTIVE",
+                "quarters": {
+                  "Q1": null,
+                  "Q2": null,
+                  "Q3": {
+                    "target": 16,
+                    "actual": 16,
+                    "state": "ACTIVE"
+                  },
+                  "Q4": {
+                    "target": 6,
+                    "actual": 0,
+                    "state": "ACTIVE"
+                  }
+                }
+              }
             },
             {
               "code": "ل 2 - 5",
               "name": "عدد حملات التسويق الإلكتروني المنفذة",
-              "description": null,
-              "unit": null,
-              "formula": null,
-              "frequency": null,
-              "polarity": null,
-              "cumulative": null,
-              "execOwner": null,
-              "measureOwner": null,
-              "baseline": null,
-              "results": null
+              "description": "يقيس هذا المؤشر إجمالي عدد حملات التسويق الإلكتروني التي نفّذتها الجمعية لتنمية مواردها.",
+              "unit": "حملة",
+              "formula": "حساب إجمالي عدد حملات التسويق الإلكتروني المنفذة",
+              "frequency": "ربع سنوي",
+              "polarity": "UP",
+              "cumulative": false,
+              "execOwner": "شركة زاد",
+              "measureOwner": "شركة زاد",
+              "baseline": 2,
+              "results": {
+                "annualTarget": 4,
+                "yearState": "ACTIVE",
+                "quarters": {
+                  "Q1": null,
+                  "Q2": null,
+                  "Q3": {
+                    "target": 4,
+                    "actual": 4,
+                    "state": "ACTIVE"
+                  },
+                  "Q4": {
+                    "target": 6,
+                    "actual": 0,
+                    "state": "ACTIVE"
+                  }
+                }
+              }
             },
             {
               "code": "ل 2 - 6",
               "name": "عدد المشاريع الممنوحة",
-              "description": null,
-              "unit": null,
-              "formula": null,
-              "frequency": null,
-              "polarity": null,
-              "cumulative": null,
-              "execOwner": null,
-              "measureOwner": null,
-              "baseline": null,
-              "results": null
+              "description": "يقيس هذا المؤشر عدد المشاريع التي حصلت عليها الجمعية من الجهات المانحة والداعمة.",
+              "unit": "مشروع",
+              "formula": "حساب إجمالي عدد المشاريع الممنوحة",
+              "frequency": "ربع سنوي",
+              "polarity": "UP",
+              "cumulative": false,
+              "execOwner": "شركة زاد",
+              "measureOwner": "شركة زاد",
+              "baseline": 6,
+              "results": {
+                "annualTarget": 6,
+                "yearState": "ACTIVE",
+                "quarters": {
+                  "Q1": null,
+                  "Q2": null,
+                  "Q3": {
+                    "target": 10,
+                    "actual": 10,
+                    "state": "ACTIVE"
+                  },
+                  "Q4": {
+                    "target": 6,
+                    "actual": 0,
+                    "state": "ACTIVE"
+                  }
+                }
+              }
             },
             {
               "code": "ل 2 - 7",
               "name": "عدد المانحين الذين تمت زيارتهم",
-              "description": null,
-              "unit": null,
-              "formula": null,
-              "frequency": null,
-              "polarity": null,
-              "cumulative": null,
-              "execOwner": null,
-              "measureOwner": null,
-              "baseline": null,
-              "results": null
+              "description": "يقيس هذا المؤشر عدد المانحين والداعمين الذين تمت زيارتهم لعرض مشاريع الجمعية وتنمية مواردها.",
+              "unit": "مانح",
+              "formula": "حساب إجمالي عدد المانحين الذين تمت زيارتهم",
+              "frequency": "ربع سنوي",
+              "polarity": "UP",
+              "cumulative": false,
+              "execOwner": "شركة زاد",
+              "measureOwner": "شركة زاد",
+              "baseline": 6,
+              "results": {
+                "annualTarget": 6,
+                "yearState": "ACTIVE",
+                "quarters": {
+                  "Q1": null,
+                  "Q2": null,
+                  "Q3": {
+                    "target": 16,
+                    "actual": 16,
+                    "state": "ACTIVE"
+                  },
+                  "Q4": {
+                    "target": 6,
+                    "actual": 0,
+                    "state": "ACTIVE"
+                  }
+                }
+              }
             }
           ]
         },
         {
           "code": "ل 3",
           "name": "تطوير أدوات البحث الاجتماعي وتقديم الخدمات وإدارة المستفيدين",
-          "description": null,
+          "description": "تطوير أدوات البحث الاجتماعي وأتمتة عمليات تقديم الخدمات وإدارة ملفات المستفيدين رقمياً بما يرفع كفاءة الخدمة ويحقق رضا المستفيدين عن القنوات الإلكترونية.",
           "indicators": [
             {
               "code": "ل 3 - 1",
               "name": "نسبة أتمتة عمليات وأنظمة تقديم الخدمات وإدارة المستفيدين",
-              "description": null,
-              "unit": null,
-              "formula": null,
-              "frequency": null,
-              "polarity": null,
-              "cumulative": null,
-              "execOwner": null,
-              "measureOwner": null,
-              "baseline": null,
-              "results": null
+              "description": "يقيس هذا المؤشر نسبة عمليات وأنظمة تقديم الخدمات وإدارة المستفيدين التي تمت أتمتتها من إجمالي العمليات المعتمدة.",
+              "unit": "نسبة",
+              "formula": "(عدد العمليات والأنظمة المؤتمتة ÷ إجمالي العمليات والأنظمة المستهدفة) × 100",
+              "frequency": "ربع سنوي",
+              "polarity": "UP",
+              "cumulative": true,
+              "execOwner": "إدارة المشاريع",
+              "measureOwner": "شركة زاد",
+              "baseline": 100,
+              "results": {
+                "annualTarget": 100,
+                "yearState": "ACTIVE",
+                "quarters": {
+                  "Q1": null,
+                  "Q2": null,
+                  "Q3": {
+                    "target": 100,
+                    "actual": 100,
+                    "state": "ACTIVE"
+                  },
+                  "Q4": {
+                    "target": 100,
+                    "actual": 0,
+                    "state": "ACTIVE"
+                  }
+                }
+              }
             },
             {
               "code": "ل 3 - 2",
               "name": "نسبة اكتمال وتدقيق ملفات المستفيدين الرقمية",
-              "description": null,
-              "unit": null,
-              "formula": null,
-              "frequency": null,
-              "polarity": null,
-              "cumulative": null,
-              "execOwner": null,
-              "measureOwner": null,
-              "baseline": null,
-              "results": null
+              "description": "يقيس هذا المؤشر نسبة ملفات المستفيدين الرقمية المكتملة والمدققة من إجمالي ملفات المستفيدين.",
+              "unit": "نسبة",
+              "formula": "(عدد الملفات الرقمية المكتملة والمدققة ÷ إجمالي ملفات المستفيدين) × 100",
+              "frequency": "ربع سنوي",
+              "polarity": "UP",
+              "cumulative": true,
+              "execOwner": "إدارة المشاريع",
+              "measureOwner": "شركة زاد",
+              "baseline": 100,
+              "results": {
+                "annualTarget": 100,
+                "yearState": "ACTIVE",
+                "quarters": {
+                  "Q1": null,
+                  "Q2": null,
+                  "Q3": {
+                    "target": 100,
+                    "actual": 100,
+                    "state": "ACTIVE"
+                  },
+                  "Q4": {
+                    "target": 100,
+                    "actual": 0,
+                    "state": "ACTIVE"
+                  }
+                }
+              }
             },
             {
               "code": "ل 3 - 3",
               "name": "معدل رضا المستفيدين عن الخدمات الإلكترونية المقدمة لهم",
-              "description": null,
-              "unit": null,
-              "formula": null,
-              "frequency": null,
-              "polarity": null,
-              "cumulative": null,
-              "execOwner": null,
-              "measureOwner": null,
-              "baseline": null,
-              "results": null
+              "description": "يقيس هذا المؤشر متوسط نسبة رضا المستفيدين عن الخدمات الإلكترونية المقدمة لهم وفق أداة قياس معتمدة.",
+              "unit": "نسبة",
+              "formula": "حساب متوسط نسبة رضا المستفيدين عن الخدمات الإلكترونية",
+              "frequency": "ربع سنوي",
+              "polarity": "UP",
+              "cumulative": true,
+              "execOwner": "إدارة المشاريع",
+              "measureOwner": "شركة زاد",
+              "baseline": 100,
+              "results": {
+                "annualTarget": 100,
+                "yearState": "ACTIVE",
+                "quarters": {
+                  "Q1": null,
+                  "Q2": null,
+                  "Q3": {
+                    "target": 75,
+                    "actual": 75,
+                    "state": "ACTIVE"
+                  },
+                  "Q4": {
+                    "target": 100,
+                    "actual": 0,
+                    "state": "ACTIVE"
+                  }
+                }
+              }
             }
           ]
         },
         {
           "code": "ل 4",
           "name": "توسيع قاعدة الشراكات الاستراتيجية وتنويع قنوات الدعم المؤسسي",
-          "description": null,
+          "description": "توسيع قاعدة الشراكات الاستراتيجية الفاعلة وتنويع قنوات الدعم المؤسسي، مع متابعة أثر الشراكات عبر التقارير الدورية وقياس رضا الشركاء.",
           "indicators": [
             {
               "code": "ل 4 - 1",
               "name": "عدد الشراكات الاستراتيجية الفاعلة",
-              "description": null,
-              "unit": null,
-              "formula": null,
-              "frequency": null,
-              "polarity": null,
-              "cumulative": null,
-              "execOwner": null,
-              "measureOwner": null,
-              "baseline": null,
-              "results": null
+              "description": "يقيس هذا المؤشر إجمالي عدد الشراكات الاستراتيجية الفاعلة التي أبرمتها الجمعية وفعّلتها مع الجهات ذات العلاقة.",
+              "unit": "شراكة",
+              "formula": "حساب إجمالي عدد الشراكات الاستراتيجية الفاعلة",
+              "frequency": "ربع سنوي",
+              "polarity": "UP",
+              "cumulative": false,
+              "execOwner": "إدارة الاتصال المؤسسي",
+              "measureOwner": "شركة زاد",
+              "baseline": 10,
+              "results": {
+                "annualTarget": 10,
+                "yearState": "ACTIVE",
+                "quarters": {
+                  "Q1": null,
+                  "Q2": null,
+                  "Q3": {
+                    "target": 10,
+                    "actual": 10,
+                    "state": "ACTIVE"
+                  },
+                  "Q4": {
+                    "target": 6,
+                    "actual": 0,
+                    "state": "ACTIVE"
+                  }
+                }
+              }
             },
             {
               "code": "ل 4 - 2",
               "name": "عدد التقارير الصادرة للشركاء",
-              "description": null,
-              "unit": null,
-              "formula": null,
-              "frequency": null,
-              "polarity": null,
-              "cumulative": null,
-              "execOwner": null,
-              "measureOwner": null,
-              "baseline": null,
-              "results": null
+              "description": "يقيس هذا المؤشر إجمالي عدد التقارير الدورية الصادرة من الجمعية والموجّهة للشركاء خلال الفترة.",
+              "unit": "تقرير",
+              "formula": "حساب إجمالي عدد التقارير الصادرة للشركاء",
+              "frequency": "ربع سنوي",
+              "polarity": "UP",
+              "cumulative": false,
+              "execOwner": "إدارة الاتصال المؤسسي",
+              "measureOwner": "شركة زاد",
+              "baseline": 6,
+              "results": {
+                "annualTarget": 6,
+                "yearState": "ACTIVE",
+                "quarters": {
+                  "Q1": null,
+                  "Q2": null,
+                  "Q3": {
+                    "target": 16,
+                    "actual": 16,
+                    "state": "ACTIVE"
+                  },
+                  "Q4": {
+                    "target": 6,
+                    "actual": 0,
+                    "state": "ACTIVE"
+                  }
+                }
+              }
             },
             {
               "code": "ل 4 - 3",
               "name": "نسبة رضا الشركاء",
-              "description": null,
-              "unit": null,
-              "formula": null,
-              "frequency": null,
-              "polarity": null,
-              "cumulative": null,
-              "execOwner": null,
-              "measureOwner": null,
-              "baseline": null,
-              "results": null
+              "description": "يقيس هذا المؤشر متوسط نسبة رضا الشركاء عن الجمعية وعن مستوى الشراكة والتعاون معهم وفق أداة قياس معتمدة.",
+              "unit": "نسبة",
+              "formula": "حساب نسبة رضا كل شريك ثم حساب المتوسط لجميع الشركاء",
+              "frequency": "ربع سنوي",
+              "polarity": "UP",
+              "cumulative": true,
+              "execOwner": "إدارة الاتصال المؤسسي",
+              "measureOwner": "شركة زاد",
+              "baseline": 100,
+              "results": {
+                "annualTarget": 100,
+                "yearState": "ACTIVE",
+                "quarters": {
+                  "Q1": null,
+                  "Q2": null,
+                  "Q3": {
+                    "target": 100,
+                    "actual": 100,
+                    "state": "ACTIVE"
+                  },
+                  "Q4": {
+                    "target": 100,
+                    "actual": 0,
+                    "state": "ACTIVE"
+                  }
+                }
+              }
             }
           ]
         }
@@ -594,154 +1188,369 @@
         {
           "code": "ت 1",
           "name": "استكمال البناء التنظيمي ورأس المال البشري",
-          "description": null,
+          "description": "استكمال البناء التنظيمي للجمعية وشغل الوظائف الأساسية وفق الهيكل المعتمد، وتطوير قدرات فريق العمل عبر البرامج التطويرية.",
           "indicators": [
             {
               "code": "ت 1 - 1",
               "name": "نسبة شغل الوظائف الأساسية وفق الهيكل الوظيفي المعتمد",
-              "description": null,
-              "unit": null,
-              "formula": null,
-              "frequency": null,
-              "polarity": null,
-              "cumulative": null,
-              "execOwner": null,
-              "measureOwner": null,
-              "baseline": null,
-              "results": null
+              "description": "يقيس هذا المؤشر نسبة الوظائف الأساسية المشغولة وفق الهيكل الوظيفي المعتمد للجمعية.",
+              "unit": "نسبة",
+              "formula": "(عدد الوظائف الأساسية المشغولة ÷ إجمالي الوظائف الأساسية في الهيكل المعتمد) × 100",
+              "frequency": "ربع سنوي",
+              "polarity": "UP",
+              "cumulative": true,
+              "execOwner": "الإدارة التنفيذية",
+              "measureOwner": "شركة زاد",
+              "baseline": 50,
+              "results": {
+                "annualTarget": 100,
+                "yearState": "ACTIVE",
+                "quarters": {
+                  "Q1": null,
+                  "Q2": null,
+                  "Q3": {
+                    "target": 50,
+                    "actual": 50,
+                    "state": "ACTIVE"
+                  },
+                  "Q4": {
+                    "target": 70,
+                    "actual": 0,
+                    "state": "ACTIVE"
+                  }
+                }
+              }
             },
             {
               "code": "ت 1 - 2",
               "name": "عدد البرامج التطويرية المنفذة لفريق العمل",
-              "description": null,
-              "unit": null,
-              "formula": null,
-              "frequency": null,
-              "polarity": null,
-              "cumulative": null,
-              "execOwner": null,
-              "measureOwner": null,
-              "baseline": null,
-              "results": null
+              "description": "يقيس هذا المؤشر عدد البرامج التطويرية والتدريبية التي تم تنفيذها لرفع قدرات فريق العمل في الجمعية.",
+              "unit": "برنامج تطويري",
+              "formula": "حساب إجمالي عدد البرامج التطويرية المنفذة",
+              "frequency": "ربع سنوي",
+              "polarity": "UP",
+              "cumulative": false,
+              "execOwner": "الإدارة التنفيذية",
+              "measureOwner": "شركة زاد",
+              "baseline": 10,
+              "results": {
+                "annualTarget": 10,
+                "yearState": "ACTIVE",
+                "quarters": {
+                  "Q1": null,
+                  "Q2": null,
+                  "Q3": {
+                    "target": 10,
+                    "actual": 10,
+                    "state": "ACTIVE"
+                  },
+                  "Q4": {
+                    "target": 6,
+                    "actual": 0,
+                    "state": "ACTIVE"
+                  }
+                }
+              }
             }
           ]
         },
         {
           "code": "ت 2",
           "name": "استثمار وتفعيل المتطوعين",
-          "description": null,
+          "description": "الاستثمار الأمثل للطاقات التطوعية عبر إعلان الفرص التطوعية وتفعيل مشاركة المتطوعين بما يسهم في خفض هيكل المصاريف ويحقق رضاهم.",
           "indicators": [
             {
               "code": "ت 2 - 1",
               "name": "عدد الفرص التطوعية على منصة العمل التطوعي",
-              "description": null,
-              "unit": null,
-              "formula": null,
-              "frequency": null,
-              "polarity": null,
-              "cumulative": null,
-              "execOwner": null,
-              "measureOwner": null,
-              "baseline": null,
-              "results": null
+              "description": "يقيس هذا المؤشر عدد الفرص التطوعية التي تم طرحها من الجمعية على منصة العمل التطوعي.",
+              "unit": "فرصة",
+              "formula": "حساب إجمالي عدد الفرص التطوعية المطروحة على المنصة",
+              "frequency": "ربع سنوي",
+              "polarity": "UP",
+              "cumulative": false,
+              "execOwner": "الإدارة التنفيذية",
+              "measureOwner": "شركة زاد",
+              "baseline": 2,
+              "results": {
+                "annualTarget": 2,
+                "yearState": "ACTIVE",
+                "quarters": {
+                  "Q1": null,
+                  "Q2": null,
+                  "Q3": {
+                    "target": 2,
+                    "actual": 2,
+                    "state": "ACTIVE"
+                  },
+                  "Q4": {
+                    "target": 2,
+                    "actual": 0,
+                    "state": "ACTIVE"
+                  }
+                }
+              }
             },
             {
               "code": "ت 2 - 2",
               "name": "نسبة مساهمة المتطوعين في خفض هيكل المصاريف",
-              "description": null,
-              "unit": null,
-              "formula": null,
-              "frequency": null,
-              "polarity": null,
-              "cumulative": null,
-              "execOwner": null,
-              "measureOwner": null,
-              "baseline": null,
-              "results": null
+              "description": "يقيس هذا المؤشر نسبة القيمة المالية المقدّرة لساعات التطوع إلى إجمالي مصاريف الجمعية بما يعكس أثر التطوع في خفض التكاليف.",
+              "unit": "نسبة",
+              "formula": "(القيمة المالية المقدّرة لساعات التطوع ÷ إجمالي المصاريف) × 100",
+              "frequency": "ربع سنوي",
+              "polarity": "UP",
+              "cumulative": true,
+              "execOwner": "الإدارة التنفيذية",
+              "measureOwner": "شركة زاد",
+              "baseline": 100,
+              "results": {
+                "annualTarget": 100,
+                "yearState": "ACTIVE",
+                "quarters": {
+                  "Q1": null,
+                  "Q2": null,
+                  "Q3": {
+                    "target": 100,
+                    "actual": 100,
+                    "state": "ACTIVE"
+                  },
+                  "Q4": {
+                    "target": 100,
+                    "actual": 0,
+                    "state": "ACTIVE"
+                  }
+                }
+              }
+            },
+            {
+              "code": "ت 2 - 3",
+              "name": "نسبة رضا المتطوعين",
+              "description": "يقيس هذا المؤشر متوسط نسبة رضا المتطوعين عن تجربتهم التطوعية مع الجمعية وفق أداة قياس معتمدة.",
+              "unit": "نسبة",
+              "formula": "حساب متوسط نسبة رضا المتطوعين وفق أداة القياس المعتمدة",
+              "frequency": "ربع سنوي",
+              "polarity": "UP",
+              "cumulative": true,
+              "execOwner": "الإدارة التنفيذية",
+              "measureOwner": "شركة زاد",
+              "baseline": 100,
+              "results": {
+                "annualTarget": 100,
+                "yearState": "ACTIVE",
+                "quarters": {
+                  "Q1": null,
+                  "Q2": null,
+                  "Q3": {
+                    "target": 100,
+                    "actual": 100,
+                    "state": "ACTIVE"
+                  },
+                  "Q4": {
+                    "target": 100,
+                    "actual": 0,
+                    "state": "ACTIVE"
+                  }
+                }
+              }
             }
           ]
         },
         {
           "code": "ت 3",
           "name": "بناء بيئة عمل مؤسسية وتقنية جاذبة",
-          "description": null,
+          "description": "تطوير بيئة عمل مؤسسية وتقنية جاذبة من خلال الامتثال لمتطلبات الجهات الإشرافية واستكمال اللوائح والسياسات والأنظمة التقنية وتجهيز المقر والمرافق وأتمتة الإجراءات.",
           "indicators": [
+            {
+              "code": "ت 3 - 1",
+              "name": "مستوى الامتثال لمتطلبات الجهات الإشرافية",
+              "description": "يقيس هذا المؤشر مستوى امتثال الجمعية لمتطلبات الجهات الإشرافية والتنظيمية ذات العلاقة.",
+              "unit": "نسبة",
+              "formula": "(عدد المتطلبات المحققة ÷ إجمالي متطلبات الجهات الإشرافية) × 100",
+              "frequency": "ربع سنوي",
+              "polarity": "UP",
+              "cumulative": true,
+              "execOwner": "الإدارة التنفيذية",
+              "measureOwner": "شركة زاد",
+              "baseline": 100,
+              "results": {
+                "annualTarget": 100,
+                "yearState": "ACTIVE",
+                "quarters": {
+                  "Q1": null,
+                  "Q2": null,
+                  "Q3": {
+                    "target": 100,
+                    "actual": 100,
+                    "state": "ACTIVE"
+                  },
+                  "Q4": {
+                    "target": 100,
+                    "actual": 0,
+                    "state": "ACTIVE"
+                  }
+                }
+              }
+            },
             {
               "code": "ت 3 - 2",
               "name": "نسبة اكتمال وتفعيل اللوائح والسياسات والأدلة الداخلية",
-              "description": null,
-              "unit": null,
-              "formula": null,
-              "frequency": null,
-              "polarity": null,
-              "cumulative": null,
-              "execOwner": null,
-              "measureOwner": null,
-              "baseline": null,
-              "results": null
+              "description": "يقيس هذا المؤشر نسبة اللوائح والسياسات والأدلة الداخلية المكتملة والمفعلة من إجمالي المستهدف اعتماده في الجمعية.",
+              "unit": "نسبة",
+              "formula": "(عدد اللوائح والسياسات المكتملة والمفعلة ÷ إجمالي اللوائح والسياسات المستهدفة) × 100",
+              "frequency": "ربع سنوي",
+              "polarity": "UP",
+              "cumulative": true,
+              "execOwner": "الإدارة التنفيذية",
+              "measureOwner": "شركة زاد",
+              "baseline": 50,
+              "results": {
+                "annualTarget": 100,
+                "yearState": "ACTIVE",
+                "quarters": {
+                  "Q1": null,
+                  "Q2": null,
+                  "Q3": {
+                    "target": 50,
+                    "actual": 50,
+                    "state": "ACTIVE"
+                  },
+                  "Q4": {
+                    "target": 70,
+                    "actual": 0,
+                    "state": "ACTIVE"
+                  }
+                }
+              }
             },
             {
               "code": "ت 3 - 3",
               "name": "نسبة اكتمال وتفعيل الأنظمة التقنية الداخلية",
-              "description": null,
-              "unit": null,
-              "formula": null,
-              "frequency": null,
-              "polarity": null,
-              "cumulative": null,
-              "execOwner": null,
-              "measureOwner": null,
-              "baseline": null,
-              "results": null
+              "description": "يقيس هذا المؤشر نسبة الأنظمة التقنية الداخلية المكتملة والمفعلة من إجمالي الأنظمة المستهدفة في الجمعية.",
+              "unit": "نسبة",
+              "formula": "(عدد الأنظمة التقنية المكتملة والمفعلة ÷ إجمالي الأنظمة المستهدفة) × 100",
+              "frequency": "ربع سنوي",
+              "polarity": "UP",
+              "cumulative": true,
+              "execOwner": "الإدارة التنفيذية",
+              "measureOwner": "شركة زاد",
+              "baseline": 50,
+              "results": {
+                "annualTarget": 100,
+                "yearState": "ACTIVE",
+                "quarters": {
+                  "Q1": null,
+                  "Q2": null,
+                  "Q3": {
+                    "target": 50,
+                    "actual": 50,
+                    "state": "ACTIVE"
+                  },
+                  "Q4": {
+                    "target": 70,
+                    "actual": 0,
+                    "state": "ACTIVE"
+                  }
+                }
+              }
             },
             {
               "code": "ت 3 - 4",
               "name": "نسبة جاهزية المقر والمرافق لتقديم الخدمات",
-              "description": null,
-              "unit": null,
-              "formula": null,
-              "frequency": null,
-              "polarity": null,
-              "cumulative": null,
-              "execOwner": null,
-              "measureOwner": null,
-              "baseline": null,
-              "results": null
+              "description": "يقيس هذا المؤشر نسبة جاهزية مقر الجمعية ومرافقها لتقديم الخدمات للمستفيدين وفق المتطلبات المعتمدة.",
+              "unit": "نسبة",
+              "formula": "(عدد متطلبات الجاهزية المحققة ÷ إجمالي متطلبات الجاهزية) × 100",
+              "frequency": "ربع سنوي",
+              "polarity": "UP",
+              "cumulative": true,
+              "execOwner": "الإدارة التنفيذية",
+              "measureOwner": "شركة زاد",
+              "baseline": 0,
+              "results": {
+                "annualTarget": 0,
+                "yearState": "ACTIVE",
+                "quarters": {
+                  "Q1": null,
+                  "Q2": null,
+                  "Q3": {
+                    "target": 0,
+                    "actual": 0,
+                    "state": "ACTIVE"
+                  },
+                  "Q4": {
+                    "target": 10,
+                    "actual": 0,
+                    "state": "ACTIVE"
+                  }
+                }
+              }
             },
             {
               "code": "ت 3 - 5",
               "name": "نسبة توثيق وأتمتة إجراءات العمل",
-              "description": null,
-              "unit": null,
-              "formula": null,
-              "frequency": null,
-              "polarity": null,
-              "cumulative": null,
-              "execOwner": null,
-              "measureOwner": null,
-              "baseline": null,
-              "results": null
+              "description": "يقيس هذا المؤشر نسبة إجراءات العمل التي تم توثيقها وأتمتتها من إجمالي الإجراءات المعتمدة في الجمعية.",
+              "unit": "نسبة",
+              "formula": "(عدد الإجراءات الموثقة والمؤتمتة ÷ إجمالي الإجراءات) × 100",
+              "frequency": "ربع سنوي",
+              "polarity": "UP",
+              "cumulative": true,
+              "execOwner": "الإدارة التنفيذية",
+              "measureOwner": "شركة زاد",
+              "baseline": 50,
+              "results": {
+                "annualTarget": 50,
+                "yearState": "ACTIVE",
+                "quarters": {
+                  "Q1": null,
+                  "Q2": null,
+                  "Q3": {
+                    "target": 50,
+                    "actual": 50,
+                    "state": "ACTIVE"
+                  },
+                  "Q4": {
+                    "target": 55,
+                    "actual": 0,
+                    "state": "ACTIVE"
+                  }
+                }
+              }
             }
           ]
         },
         {
           "code": "ت 4",
           "name": "تعزيز القيم المؤسسية",
-          "description": null,
+          "description": "غرس القيم المؤسسية للجمعية وترسيخها لدى العاملين والمتطوعين وتحويلها إلى سلوكيات وممارسات يومية تعزز الثقافة المؤسسية.",
           "indicators": [
             {
               "code": "ت 4 - 1",
               "name": "نسبة الالتزام بالقيم المؤسسية",
-              "description": null,
-              "unit": null,
-              "formula": null,
-              "frequency": null,
-              "polarity": null,
-              "cumulative": null,
-              "execOwner": null,
-              "measureOwner": null,
-              "baseline": null,
-              "results": null
+              "description": "يقيس هذا المؤشر مدى التزام العاملين والمتطوعين بالقيم المؤسسية للجمعية وتحويلها إلى سلوكيات وممارسات.",
+              "unit": "نسبة",
+              "formula": "حساب متوسط درجات تقييم الالتزام بالقيم المؤسسية",
+              "frequency": "نصف سنوي",
+              "polarity": "UP",
+              "cumulative": true,
+              "execOwner": "الإدارة التنفيذية",
+              "measureOwner": "شركة زاد",
+              "baseline": 50,
+              "results": {
+                "annualTarget": 50,
+                "yearState": "ACTIVE",
+                "quarters": {
+                  "Q1": null,
+                  "Q2": null,
+                  "Q3": {
+                    "target": 50,
+                    "actual": 50,
+                    "state": "ACTIVE"
+                  },
+                  "Q4": {
+                    "target": 55,
+                    "actual": 0,
+                    "state": "ACTIVE"
+                  }
+                }
+              }
             }
           ]
         }

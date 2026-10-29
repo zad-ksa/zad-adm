@@ -3,6 +3,10 @@
  *
  *   node -r dotenv/config scripts/seed-strategy.js           # تجريبي: يطبع ولا يكتب
  *   node -r dotenv/config scripts/seed-strategy.js --write   # ينفّذ
+ *   node -r dotenv/config scripts/seed-strategy.js --guide=raafa-strategy.json --plan=raafa-operational.json
+ *
+ * والملفّان وسيطان لا ثابتان: ستُّ جمعياتٍ لها خططٌ بالقالب نفسه، فنسخُ
+ * السكربت لكلٍّ منها يعني ستّ نسخٍ من منطق المطابقة تتفرّق عند أول تصحيح.
  *
  * وهو قابلٌ للإعادة: يُطابق بالرموز والأرقام فيُحدّث ولا يُكرّر. وتشغيلُه
  * مرّتين لا يُنشئ ثلاثةً وثمانين هدفاً.
@@ -18,6 +22,13 @@ const { PrismaPg } = require("@prisma/adapter-pg");
 
 const WRITE = process.argv.includes("--write");
 const DATA = path.join(__dirname, "..", "prisma", "seed-data");
+
+const argOf = (name, fallback) => {
+  const hit = process.argv.find((a) => a.startsWith(`--${name}=`));
+  return hit ? hit.slice(name.length + 3) : fallback;
+};
+const GUIDE_FILE = argOf("guide", "maaqid-strategy.json");
+const PLAN_FILE = argOf("plan", "maaqid-operational.json");
 
 /**
  * الرموز تُكتب بصيغتين: الدليل «س 2 - 1» والكشاف «(س2-1)». فالمطابقة بعد
@@ -41,6 +52,10 @@ const normalise = (code) =>
  */
 const normaliseName = (value) =>
   String(value || "")
+    // \u0641\u0627\u0635\u0644\u064F \u0627\u0644\u0645\u0624\u0634\u0631\u0627\u062A \u0641\u064A \u062E\u0627\u0646\u0629 \u0627\u0644\u0643\u0634\u0627\u0641 \u00AB\u25CF\u00BB\u060C \u0648\u0627\u0644\u062A\u0639\u0628\u064A\u0631\u064F \u0627\u0644\u0630\u064A \u064A\u0642\u062A\u0637\u0639 \u0627\u0644\u0623\u0633\u0645\u0627\u0621 \u064A\u0623\u062E\u0630 \u0645\u0627
+    // \u0628\u0639\u062F \u0627\u0644\u0627\u0633\u0645 \u062D\u062A\u0649 \u0627\u0644\u0642\u0648\u0633 \u0627\u0644\u062A\u0627\u0644\u064A \u0641\u064A\u0644\u062A\u0635\u0642 \u0627\u0644\u0641\u0627\u0635\u0644\u064F \u0628\u0622\u062E\u0631\u0647. \u0648\u0644\u0648\u0644\u0627 \u0625\u0633\u0642\u0627\u0637\u064F\u0647 \u0644\u0633\u0642\u0637\u062A
+    // \u0627\u0644\u0645\u0637\u0627\u0628\u0642\u0629\u064F \u0628\u0627\u0644\u0627\u0633\u0645 \u0641\u064A \u0633\u062A\u0651\u064A\u0646 \u0645\u0648\u0636\u0639\u0627\u064B \u0648\u0627\u0631\u062A\u062F\u0651\u062A \u0625\u0644\u0649 \u0627\u0644\u0631\u0645\u0632 \u0628\u0644\u0627 \u062D\u0627\u062C\u0629.
+    .replace(/[\u25CF\u2022\u25AA\u00B7]/g, " ")
     .replace(/[\u064B-\u0652]/g, "")
     .replace(/[أإآ]/g, "ا")
     .replace(/ى/g, "ي")
@@ -63,13 +78,32 @@ async function main() {
   const prisma = new PrismaClient({ adapter: new PrismaPg({ connectionString }) });
 
   try {
-    const guide = JSON.parse(fs.readFileSync(path.join(DATA, "maaqid-strategy.json"), "utf8"));
-    const operational = JSON.parse(fs.readFileSync(path.join(DATA, "maaqid-operational.json"), "utf8"));
+    const guide = JSON.parse(fs.readFileSync(path.join(DATA, GUIDE_FILE), "utf8"));
+    const operational = JSON.parse(fs.readFileSync(path.join(DATA, PLAN_FILE), "utf8"));
+    if (guide.charity !== operational.charity) {
+      throw new Error(`الملفّان لجمعيتين: «${guide.charity}» و«${operational.charity}»`);
+    }
+
+    /**
+     * مصدرٌ ناقصٌ لا يمسح ما كتبه مصدرٌ أوفى.
+     *
+     * فهيكلُ الدليل المستخرَج من الخطة التشغيلية يحمل الرمزَ والاسم وحدهما
+     * («skeleton: true»، وما سواهما فارغ. ولو كُتبت تلك الأصفارُ لمسح
+     * تشغيلٌ ثانٍ للهيكل وحداتَ القياس والمستهدفات التي أدخلها دليلٌ كامل
+     * بعده. فالحقولُ الفارغة تُحذف من المكتوب، وتبقى للقاعدة قيمتُها.
+     */
+    const partial = (data) =>
+      guide.skeleton
+        ? Object.fromEntries(Object.entries(data).filter(([, v]) => v !== null && v !== undefined))
+        : data;
 
     const charity = await prisma.charity.findUnique({ where: { name: guide.charity }, select: { id: true } });
     if (!charity) throw new Error(`لا جمعية باسم «${guide.charity}»`);
 
-    console.log(`${WRITE ? "تنفيذ" : "تجريبي (بلا كتابة)"} — الجمعية: ${guide.charity}، السنة ${guide.year}\n`);
+    console.log(
+      `${WRITE ? "تنفيذ" : "تجريبي (بلا كتابة)"} — الجمعية: ${guide.charity}، السنة ${guide.year}` +
+        `${guide.skeleton ? " · دليلٌ هيكليٌّ (رمزٌ واسمٌ فقط)" : ""}\n`
+    );
 
     const indicatorIdByCode = new Map();
     const indicatorIdByName = new Map();
@@ -111,7 +145,7 @@ async function main() {
             where: { perspectiveId_code: { perspectiveId, code: o.code } },
             select: { id: true },
           });
-          const data = { name: o.name, description: o.description, order: oIndex + 1 };
+          const data = partial({ name: o.name, description: o.description, order: oIndex + 1 });
           objectiveId = existing
             ? (await prisma.strategyObjective.update({ where: { id: existing.id }, data, select: { id: true } })).id
             : (
@@ -128,7 +162,7 @@ async function main() {
         objectiveIdByName.set(normaliseName(o.name), objectiveId);
 
         for (const [iIndex, ind] of o.indicators.entries()) {
-          const data = {
+          const data = partial({
             name: ind.name,
             description: ind.description,
             unit: ind.unit,
@@ -140,7 +174,7 @@ async function main() {
             measureOwner: ind.measureOwner,
             baseline: ind.baseline,
             order: iIndex + 1,
-          };
+          });
 
           let indicatorId = null;
           if (WRITE) {

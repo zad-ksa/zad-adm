@@ -1,0 +1,751 @@
+{
+  "charity": "الرأفة الإنسانية",
+  "year": 2026,
+  "skeleton": true,
+  "perspectives": [
+    {
+      "name": "المستفيدون",
+      "prefix": "س",
+      "objectives": [
+        {
+          "code": "س 1",
+          "name": "تحسين جودة حياة المستفيدين من خلال تقديم برامج وخدمات إنسانية وفق الاحتياج",
+          "description": null,
+          "indicators": [
+            {
+              "code": "س 1 - 1",
+              "name": "عدد البرامج والخدمات المقدمة لسد احتياج المستفيدين",
+              "description": null,
+              "unit": null,
+              "formula": null,
+              "frequency": null,
+              "polarity": null,
+              "cumulative": null,
+              "execOwner": null,
+              "measureOwner": null,
+              "baseline": null,
+              "results": null
+            },
+            {
+              "code": "س 1 - 2",
+              "name": "عدد المستفيدين من الفئات الأشد احتياجاً",
+              "description": null,
+              "unit": null,
+              "formula": null,
+              "frequency": null,
+              "polarity": null,
+              "cumulative": null,
+              "execOwner": null,
+              "measureOwner": null,
+              "baseline": null,
+              "results": null
+            },
+            {
+              "code": "س 1 - 3",
+              "name": "نسبة رضا المستفيدين عن البرامج والخدمات المقدمة لهم",
+              "description": null,
+              "unit": null,
+              "formula": null,
+              "frequency": null,
+              "polarity": null,
+              "cumulative": null,
+              "execOwner": null,
+              "measureOwner": null,
+              "baseline": null,
+              "results": null
+            }
+          ]
+        },
+        {
+          "code": "س 2",
+          "name": "تأهيل الشباب والفتيات من أسر المستفيدين لسوق العمل عبر برامج تدريب وتأهيل فعالة",
+          "description": null,
+          "indicators": [
+            {
+              "code": "س 2 - 1",
+              "name": "عدد برامج التأهيل والتدريب المقدمة",
+              "description": null,
+              "unit": null,
+              "formula": null,
+              "frequency": null,
+              "polarity": null,
+              "cumulative": null,
+              "execOwner": null,
+              "measureOwner": null,
+              "baseline": null,
+              "results": null
+            },
+            {
+              "code": "س 2 - 2",
+              "name": "عدد المستفيدين من برامج التأهيل والتدريب المقدمة",
+              "description": null,
+              "unit": null,
+              "formula": null,
+              "frequency": null,
+              "polarity": null,
+              "cumulative": null,
+              "execOwner": null,
+              "measureOwner": null,
+              "baseline": null,
+              "results": null
+            },
+            {
+              "code": "س 2 - 3",
+              "name": "نسبة رضا المستفيدين عن برامج التأهيل والتدريب المقدمة لهم",
+              "description": null,
+              "unit": null,
+              "formula": null,
+              "frequency": null,
+              "polarity": null,
+              "cumulative": null,
+              "execOwner": null,
+              "measureOwner": null,
+              "baseline": null,
+              "results": null
+            },
+            {
+              "code": "س 2 - 4",
+              "name": "نسبة الخريجين الحاصلين على فرص عمل خلال 6 أشهر من اجتياز البرامج",
+              "description": null,
+              "unit": null,
+              "formula": null,
+              "frequency": null,
+              "polarity": null,
+              "cumulative": null,
+              "execOwner": null,
+              "measureOwner": null,
+              "baseline": null,
+              "results": null
+            }
+          ]
+        },
+        {
+          "code": "س 3",
+          "name": "المساهمة في تمكين الأسر الأشد حاجة من الحصول على مصادر دخل مستدامة لسد احتياجهم",
+          "description": null,
+          "indicators": [
+            {
+              "code": "س 3 - 1",
+              "name": "عدد الأسر التي ساهمت الجمعية في إيجاد مصادر دخل مستدامة لهم",
+              "description": null,
+              "unit": null,
+              "formula": null,
+              "frequency": null,
+              "polarity": null,
+              "cumulative": null,
+              "execOwner": null,
+              "measureOwner": null,
+              "baseline": null,
+              "results": null
+            },
+            {
+              "code": "س 3 - 2",
+              "name": "عدد مشاريع الأسر التي ساهمت الجمعية في تأسيسها",
+              "description": null,
+              "unit": null,
+              "formula": null,
+              "frequency": null,
+              "polarity": null,
+              "cumulative": null,
+              "execOwner": null,
+              "measureOwner": null,
+              "baseline": null,
+              "results": null
+            },
+            {
+              "code": "س 3 - 3",
+              "name": "نسبة رضا الأسر المستفيدة من برامج التمكين المقدمة لهم",
+              "description": null,
+              "unit": null,
+              "formula": null,
+              "frequency": null,
+              "polarity": null,
+              "cumulative": null,
+              "execOwner": null,
+              "measureOwner": null,
+              "baseline": null,
+              "results": null
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "أصحاب المصلحة",
+      "prefix": "ص",
+      "objectives": [
+        {
+          "code": "ص 1",
+          "name": "بناء صورة ذهنية متميزة عن الجمعية",
+          "description": null,
+          "indicators": [
+            {
+              "code": "ص 1 - 1",
+              "name": "نسبة رضا أصحاب المصلحة",
+              "description": null,
+              "unit": null,
+              "formula": null,
+              "frequency": null,
+              "polarity": null,
+              "cumulative": null,
+              "execOwner": null,
+              "measureOwner": null,
+              "baseline": null,
+              "results": null
+            },
+            {
+              "code": "ص 1 - 2",
+              "name": "درجة مؤشّر السمعة المؤسسية للجمعية",
+              "description": null,
+              "unit": null,
+              "formula": null,
+              "frequency": null,
+              "polarity": null,
+              "cumulative": null,
+              "execOwner": null,
+              "measureOwner": null,
+              "baseline": null,
+              "results": null
+            },
+            {
+              "code": "ص 1 - 3",
+              "name": "عدد المنصات الإعلامية المفعلة للجمعية",
+              "description": null,
+              "unit": null,
+              "formula": null,
+              "frequency": null,
+              "polarity": null,
+              "cumulative": null,
+              "execOwner": null,
+              "measureOwner": null,
+              "baseline": null,
+              "results": null
+            },
+            {
+              "code": "ص 1 - 4",
+              "name": "عدد الزيارات واللقاءات المتبادلة مع أصحاب المصلحة",
+              "description": null,
+              "unit": null,
+              "formula": null,
+              "frequency": null,
+              "polarity": null,
+              "cumulative": null,
+              "execOwner": null,
+              "measureOwner": null,
+              "baseline": null,
+              "results": null
+            },
+            {
+              "code": "ص 1 - 5",
+              "name": "عدد التقارير الدورية الصادرة لأصحاب المصلحة",
+              "description": null,
+              "unit": null,
+              "formula": null,
+              "frequency": null,
+              "polarity": null,
+              "cumulative": null,
+              "execOwner": null,
+              "measureOwner": null,
+              "baseline": null,
+              "results": null
+            },
+            {
+              "code": "ص 1 - 6",
+              "name": "إجمالي المشاهدات المتحققة لمنصات الجمعية المفعلة",
+              "description": null,
+              "unit": null,
+              "formula": null,
+              "frequency": null,
+              "polarity": null,
+              "cumulative": null,
+              "execOwner": null,
+              "measureOwner": null,
+              "baseline": null,
+              "results": null
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "البعد المالي",
+      "prefix": "م",
+      "objectives": [
+        {
+          "code": "م 1",
+          "name": "تحقيق الاستقرار المالي من خلال تنويع مصادر الدخل",
+          "description": null,
+          "indicators": [
+            {
+              "code": "م 1 - 1",
+              "name": "إجمالي الإيرادات المتحققة",
+              "description": null,
+              "unit": null,
+              "formula": null,
+              "frequency": null,
+              "polarity": null,
+              "cumulative": null,
+              "execOwner": null,
+              "measureOwner": null,
+              "baseline": null,
+              "results": null
+            },
+            {
+              "code": "م 1 - 2",
+              "name": "نسبة تغطية الإيرادات للمصاريف التشغيلية للجمعية",
+              "description": null,
+              "unit": null,
+              "formula": null,
+              "frequency": null,
+              "polarity": null,
+              "cumulative": null,
+              "execOwner": null,
+              "measureOwner": null,
+              "baseline": null,
+              "results": null
+            }
+          ]
+        },
+        {
+          "code": "م 2",
+          "name": "ترسيخ السلامة المالية وكفاءة الإنفاق والامتثال المالي المستمر",
+          "description": null,
+          "indicators": [
+            {
+              "code": "م 2 - 1",
+              "name": "نسبة تحقق معايير السلامة المالية",
+              "description": null,
+              "unit": null,
+              "formula": null,
+              "frequency": null,
+              "polarity": null,
+              "cumulative": null,
+              "execOwner": null,
+              "measureOwner": null,
+              "baseline": null,
+              "results": null
+            },
+            {
+              "code": "م 2 - 2",
+              "name": "نسبة المصروفات التشغيلية إلى إجمالي المصروفات",
+              "description": null,
+              "unit": null,
+              "formula": null,
+              "frequency": null,
+              "polarity": null,
+              "cumulative": null,
+              "execOwner": null,
+              "measureOwner": null,
+              "baseline": null,
+              "results": null
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "العمليات الداخلية",
+      "prefix": "ل",
+      "objectives": [
+        {
+          "code": "ل 1",
+          "name": "ابتكار وتنفيذ مبادرات نوعية لتمكين المستفيدين",
+          "description": null,
+          "indicators": [
+            {
+              "code": "ل 1 - 1",
+              "name": "عدد المشاريع المبتكرة والمنفذة لتمكين المستفيدين",
+              "description": null,
+              "unit": null,
+              "formula": null,
+              "frequency": null,
+              "polarity": null,
+              "cumulative": null,
+              "execOwner": null,
+              "measureOwner": null,
+              "baseline": null,
+              "results": null
+            },
+            {
+              "code": "ل 1 - 2",
+              "name": "عدد المستفيدين من المشاريع المبتكرة والمنفذة لتمكينهم",
+              "description": null,
+              "unit": null,
+              "formula": null,
+              "frequency": null,
+              "polarity": null,
+              "cumulative": null,
+              "execOwner": null,
+              "measureOwner": null,
+              "baseline": null,
+              "results": null
+            }
+          ]
+        },
+        {
+          "code": "ل 2",
+          "name": "بناء منظومة التسويق وتنمية الموارد المالية",
+          "description": null,
+          "indicators": [
+            {
+              "code": "ل 2 - 1",
+              "name": "عدد المشاريع التي صممت لها ملفات تسويقية",
+              "description": null,
+              "unit": null,
+              "formula": null,
+              "frequency": null,
+              "polarity": null,
+              "cumulative": null,
+              "execOwner": null,
+              "measureOwner": null,
+              "baseline": null,
+              "results": null
+            },
+            {
+              "code": "ل 2 - 2",
+              "name": "إجمالي الإيرادات المتحققة من خلال المتجر الإلكتروني للجمعية",
+              "description": null,
+              "unit": null,
+              "formula": null,
+              "frequency": null,
+              "polarity": null,
+              "cumulative": null,
+              "execOwner": null,
+              "measureOwner": null,
+              "baseline": null,
+              "results": null
+            },
+            {
+              "code": "ل 2 - 3",
+              "name": "عدد مصادر الدخل المفعلة",
+              "description": null,
+              "unit": null,
+              "formula": null,
+              "frequency": null,
+              "polarity": null,
+              "cumulative": null,
+              "execOwner": null,
+              "measureOwner": null,
+              "baseline": null,
+              "results": null
+            },
+            {
+              "code": "ل 2 - 4",
+              "name": "عدد المانحين الذين تبرعوا للجمعية",
+              "description": null,
+              "unit": null,
+              "formula": null,
+              "frequency": null,
+              "polarity": null,
+              "cumulative": null,
+              "execOwner": null,
+              "measureOwner": null,
+              "baseline": null,
+              "results": null
+            },
+            {
+              "code": "ل 2 - 5",
+              "name": "عدد حملات التسويق الإلكتروني المنفذة",
+              "description": null,
+              "unit": null,
+              "formula": null,
+              "frequency": null,
+              "polarity": null,
+              "cumulative": null,
+              "execOwner": null,
+              "measureOwner": null,
+              "baseline": null,
+              "results": null
+            },
+            {
+              "code": "ل 2 - 6",
+              "name": "عدد المشاريع الممنوحة",
+              "description": null,
+              "unit": null,
+              "formula": null,
+              "frequency": null,
+              "polarity": null,
+              "cumulative": null,
+              "execOwner": null,
+              "measureOwner": null,
+              "baseline": null,
+              "results": null
+            },
+            {
+              "code": "ل 2 - 7",
+              "name": "عدد المانحين الذين تمت زيارتهم",
+              "description": null,
+              "unit": null,
+              "formula": null,
+              "frequency": null,
+              "polarity": null,
+              "cumulative": null,
+              "execOwner": null,
+              "measureOwner": null,
+              "baseline": null,
+              "results": null
+            }
+          ]
+        },
+        {
+          "code": "ل 3",
+          "name": "تطوير أدوات البحث الاجتماعي وتقديم الخدمات وإدارة المستفيدين",
+          "description": null,
+          "indicators": [
+            {
+              "code": "ل 3 - 1",
+              "name": "نسبة أتمتة عمليات وأنظمة تقديم الخدمات وإدارة المستفيدين",
+              "description": null,
+              "unit": null,
+              "formula": null,
+              "frequency": null,
+              "polarity": null,
+              "cumulative": null,
+              "execOwner": null,
+              "measureOwner": null,
+              "baseline": null,
+              "results": null
+            },
+            {
+              "code": "ل 3 - 2",
+              "name": "نسبة اكتمال وتدقيق ملفات المستفيدين الرقمية",
+              "description": null,
+              "unit": null,
+              "formula": null,
+              "frequency": null,
+              "polarity": null,
+              "cumulative": null,
+              "execOwner": null,
+              "measureOwner": null,
+              "baseline": null,
+              "results": null
+            },
+            {
+              "code": "ل 3 - 3",
+              "name": "معدل رضا المستفيدين عن الخدمات الإلكترونية المقدمة لهم",
+              "description": null,
+              "unit": null,
+              "formula": null,
+              "frequency": null,
+              "polarity": null,
+              "cumulative": null,
+              "execOwner": null,
+              "measureOwner": null,
+              "baseline": null,
+              "results": null
+            }
+          ]
+        },
+        {
+          "code": "ل 4",
+          "name": "توسيع قاعدة الشراكات الاستراتيجية وتنويع قنوات الدعم المؤسسي",
+          "description": null,
+          "indicators": [
+            {
+              "code": "ل 4 - 1",
+              "name": "عدد الشراكات الاستراتيجية الفاعلة",
+              "description": null,
+              "unit": null,
+              "formula": null,
+              "frequency": null,
+              "polarity": null,
+              "cumulative": null,
+              "execOwner": null,
+              "measureOwner": null,
+              "baseline": null,
+              "results": null
+            },
+            {
+              "code": "ل 4 - 2",
+              "name": "عدد التقارير الصادرة للشركاء",
+              "description": null,
+              "unit": null,
+              "formula": null,
+              "frequency": null,
+              "polarity": null,
+              "cumulative": null,
+              "execOwner": null,
+              "measureOwner": null,
+              "baseline": null,
+              "results": null
+            },
+            {
+              "code": "ل 4 - 3",
+              "name": "نسبة رضا الشركاء",
+              "description": null,
+              "unit": null,
+              "formula": null,
+              "frequency": null,
+              "polarity": null,
+              "cumulative": null,
+              "execOwner": null,
+              "measureOwner": null,
+              "baseline": null,
+              "results": null
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "التعلم والنمو",
+      "prefix": "ت",
+      "objectives": [
+        {
+          "code": "ت 1",
+          "name": "استكمال البناء التنظيمي ورأس المال البشري",
+          "description": null,
+          "indicators": [
+            {
+              "code": "ت 1 - 1",
+              "name": "نسبة شغل الوظائف الأساسية وفق الهيكل الوظيفي المعتمد",
+              "description": null,
+              "unit": null,
+              "formula": null,
+              "frequency": null,
+              "polarity": null,
+              "cumulative": null,
+              "execOwner": null,
+              "measureOwner": null,
+              "baseline": null,
+              "results": null
+            },
+            {
+              "code": "ت 1 - 2",
+              "name": "عدد البرامج التطويرية المنفذة لفريق العمل",
+              "description": null,
+              "unit": null,
+              "formula": null,
+              "frequency": null,
+              "polarity": null,
+              "cumulative": null,
+              "execOwner": null,
+              "measureOwner": null,
+              "baseline": null,
+              "results": null
+            }
+          ]
+        },
+        {
+          "code": "ت 2",
+          "name": "استثمار وتفعيل المتطوعين",
+          "description": null,
+          "indicators": [
+            {
+              "code": "ت 2 - 1",
+              "name": "عدد الفرص التطوعية على منصة العمل التطوعي",
+              "description": null,
+              "unit": null,
+              "formula": null,
+              "frequency": null,
+              "polarity": null,
+              "cumulative": null,
+              "execOwner": null,
+              "measureOwner": null,
+              "baseline": null,
+              "results": null
+            },
+            {
+              "code": "ت 2 - 2",
+              "name": "نسبة مساهمة المتطوعين في خفض هيكل المصاريف",
+              "description": null,
+              "unit": null,
+              "formula": null,
+              "frequency": null,
+              "polarity": null,
+              "cumulative": null,
+              "execOwner": null,
+              "measureOwner": null,
+              "baseline": null,
+              "results": null
+            }
+          ]
+        },
+        {
+          "code": "ت 3",
+          "name": "بناء بيئة عمل مؤسسية وتقنية جاذبة",
+          "description": null,
+          "indicators": [
+            {
+              "code": "ت 3 - 2",
+              "name": "نسبة اكتمال وتفعيل اللوائح والسياسات والأدلة الداخلية",
+              "description": null,
+              "unit": null,
+              "formula": null,
+              "frequency": null,
+              "polarity": null,
+              "cumulative": null,
+              "execOwner": null,
+              "measureOwner": null,
+              "baseline": null,
+              "results": null
+            },
+            {
+              "code": "ت 3 - 3",
+              "name": "نسبة اكتمال وتفعيل الأنظمة التقنية الداخلية",
+              "description": null,
+              "unit": null,
+              "formula": null,
+              "frequency": null,
+              "polarity": null,
+              "cumulative": null,
+              "execOwner": null,
+              "measureOwner": null,
+              "baseline": null,
+              "results": null
+            },
+            {
+              "code": "ت 3 - 4",
+              "name": "نسبة جاهزية المقر والمرافق لتقديم الخدمات",
+              "description": null,
+              "unit": null,
+              "formula": null,
+              "frequency": null,
+              "polarity": null,
+              "cumulative": null,
+              "execOwner": null,
+              "measureOwner": null,
+              "baseline": null,
+              "results": null
+            },
+            {
+              "code": "ت 3 - 5",
+              "name": "نسبة توثيق وأتمتة إجراءات العمل",
+              "description": null,
+              "unit": null,
+              "formula": null,
+              "frequency": null,
+              "polarity": null,
+              "cumulative": null,
+              "execOwner": null,
+              "measureOwner": null,
+              "baseline": null,
+              "results": null
+            }
+          ]
+        },
+        {
+          "code": "ت 4",
+          "name": "تعزيز القيم المؤسسية",
+          "description": null,
+          "indicators": [
+            {
+              "code": "ت 4 - 1",
+              "name": "نسبة الالتزام بالقيم المؤسسية",
+              "description": null,
+              "unit": null,
+              "formula": null,
+              "frequency": null,
+              "polarity": null,
+              "cumulative": null,
+              "execOwner": null,
+              "measureOwner": null,
+              "baseline": null,
+              "results": null
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

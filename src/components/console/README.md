@@ -20,6 +20,8 @@
 | `Select.tsx` | `Select` — قائمة منسدلة بصيغتين |
 | `MultiSelect.tsx` | `MultiSelect` — اختيارٌ متعدِّد بمنطق `Select` نفسه، صفوفُه `OptionRow` ورأسُه `SelectAll` |
 | `Copy.tsx` | `CopyButton` · `SecretValue` — زرُّ النسخ الواحد، وقيمةٌ مُغطّاةٌ تُكشف وتُنسخ |
+| `StarRating.tsx` | `StarRating` — تقييمٌ من ١ إلى ٥، مجموعةُ اختيارٍ لا صفُّ أيقونات |
+| `StepTrail.tsx` | `StepTrail` — مسارُ أقسامٍ لنموذجٍ على صفحات |
 | `fonts.ts` | `consoleFontClass` — Geist للأرقام واللاتيني، Cairo للعربي |
 
 ## قواعد
@@ -81,6 +83,14 @@
 **نسخٌ وسِرّ:** `<CopyButton value={…} />` أيقونةً في خلايا الجداول، وبـ`label`
 زرّاً بنصّه. و`<SecretValue value={…} />` لكلمة مرورٍ تُكشف باختيارٍ لا بالعرض.
 ولا يُكتب `navigator.clipboard` في صفحة.
+
+**تقييمٌ بالنجوم:** `<StarRating value onChange label labels />` — ومجموعةُ اختيارٍ
+لا صفُّ أيقونات: تُدرَك بلوحة المفاتيح وتُقرأ بقارئ الشاشة. واللونُ الذهبيُّ فيها
+قيمةٌ لا زينة.
+
+**نموذجٌ على صفحات:** `<StepTrail steps current onJump />` — و`Tabs` لا تصلح له:
+التبويباتُ تنقل إلى أيٍّ في أي وقت، وأقسامُ النموذج مرتَّبةٌ يُشترط في اللاحق ما
+قبله. ويُصعَد إلى رأس الصفحة عند كل انتقال.
 
 **بطاقةُ كيانٍ تُنقر:** `<EntityCard href title badge body stats footer />` —
 لاسمٍ وحالةٍ وأرقامٍ وذيلِ أزرار. و`NavCard` لبطاقةِ انتقالٍ بلا أرقام،

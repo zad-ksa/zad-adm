@@ -125,6 +125,7 @@ model Charity {
   isOperationalVisible    Boolean               @default(false)
   strategyPerspectives    StrategyPerspective[]
   operationalPlans        OperationalPlan[]
+  planSurvey              PlanSurvey?
 }
 
 /// معلومات الجمعية الثابتة لمنشئ وثائق المبادرات — رؤيتها، رسالتها، مجالها
@@ -2309,4 +2310,81 @@ model FinancialRequestType {
   updatedAt DateTime           @updatedAt
 
   @@index([order])
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+//  استبانة قياس تنفيذ الخطة التشغيلية
+// ════════════════════════════════════════════════════════════════════════════
+
+/// استبانةُ جمعيةٍ واحدة، ورابطُها الخاصّ.
+///
+/// صفٌّ لكل جمعية (`charityId` فريد) لا صفٌّ لكل إرسال: الرابطُ يُنشر مرّةً
+/// على إدارات الجمعية فيُجيب عليه عشرةٌ، فالصفُّ هو الرابطُ وحالتُه، والأجوبةُ
+/// صفوفٌ تحته.
+///
+/// ونصُّ الاستبانة ليس هنا: هو في `src/lib/planSurvey.ts` — واحدٌ لكل
+/// الجمعيات، يُراجَع بنسخةٍ من المستودع لا بتعديلِ صفّ.
+model PlanSurvey {
+  id        String  @id @default(uuid())
+  charityId String  @unique
+  charity   Charity @relation(fields: [charityId], references: [id], onDelete: Cascade)
+
+  /// رمزُ الرابط العامّ — لا معرّفَ الصفّ: الرابطُ يُرسل إلى من هم خارج
+  /// الموقع، ومعرّفٌ يُخمَّن أو يُستدلّ منه على غيره ليس رمزاً.
+  token  String  @unique
+  /// مُغلقٌ يعني أن الرابط يردّ بشاشةِ «غير متاح» ولا يُحذف ما جُمع.
+  isOpen Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  responses PlanSurveyResponse[]
+}
+
+/// إجابةُ مستجيبٍ واحد.
+///
+/// والأقسامُ ذاتُ البنية الحرّة (الجدولان والتقييمات) تُخزَّن `Json`: جدولُ
+/// المهام صفوفٌ يختارها المستجيب من خطوات الخطة، وجعلُه جدولاً في القاعدة
+/// يعني صفَّ ربطٍ لكل خانةٍ في استبانةٍ تُقرأ مرّةً واحدة.
+model PlanSurveyResponse {
+  id       String     @id @default(uuid())
+  surveyId String
+  survey   PlanSurvey @relation(fields: [surveyId], references: [id], onDelete: Cascade)
+
+  /// القسم الثاني.
+  department String
+  role       String
+  /// مبادراتٌ من الخطة — معرّفاتُها، فإعادةُ تسميةِ مبادرةٍ لا تُفقد الربط.
+  initiativeIds    String[]
+  /// ومبادراتٌ من خارج الخطة — أسماءٌ كما كُتبت، وهي مميَّزةٌ في العرض.
+  extraInitiatives String[]
+
+  /// التقييماتُ كلُّها: `{ "1": 5, "16": 3 }` — المفتاحُ رقمُ العبارة في
+  /// `planSurvey.ts`. فتغييرُ نصِّ عبارةٍ لا يُفقد جوابها.
+  ratings Json
+
+  /// القسم الرابع: صفوفُ المهام المكلَّف بها.
+  tasks Json
+  /// وصفُ سير التنفيذ مقارنةً بالخطة.
+  pace  String
+
+  /// القسم الخامس.
+  causes     String[]
+  causeOther String?
+  /// أبرزُ ثلاثةِ أسبابٍ مرتَّبةً — والترتيبُ معنى، فمصفوفةٌ لا مجموعة.
+  topCauses  String[]
+  /// تفاصيلُ المتعثرات: صفوفُ (الموضوع، الوصف، السبب، الحل، الموعد المقترح).
+  blockers   Json
+
+  /// القسم السادس.
+  outlook String
+
+  /// القسم السابع.
+  achievements String?
+  neededAction String?
+  suggestions  String?
+
+  submittedAt DateTime @default(now())
+
+  @@index([surveyId, submittedAt])
 }

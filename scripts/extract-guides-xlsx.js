@@ -54,6 +54,7 @@ const GUIDES = [
   { charity: "ضماد الإسعافية", match: "ضماد", out: "damad" },
   { charity: "مكين التعليمية", match: "مكين", out: "makeen" },
   { charity: "رواق المسجد", match: "رواق", out: "rawaq" },
+  { charity: "أثر القيم", match: "أثر القيم", out: "athar" },
   { charity: "المعاقد التعليمية", match: "المعاقد", out: "maaqid", fix: maaqidFix },
 ];
 
@@ -69,7 +70,7 @@ for (const g of GUIDES) {
     continue;
   }
 
-  const perspectives = extractGuide(path.join(SRC, file), { fix: g.fix });
+  const { perspectives, warnings } = extractGuide(path.join(SRC, file), { fix: g.fix });
   fs.writeFileSync(
     path.join(DEST, `${g.out}-strategy.json`),
     JSON.stringify({ charity: g.charity, year: YEAR, perspectives }, null, 2)
@@ -91,6 +92,7 @@ for (const g of GUIDES) {
   const orphan = indicators.filter((i) => !i.results);
   if (orphan.length) console.log(`  بلا صفٍّ في المتابعة: ${orphan.map((i) => i.code).join("، ")}`);
   for (const c of corrections) console.log(`  تصحيحٌ مُقَرّ ${c.code}: ${c.corrections.join(" · ")}`);
+  for (const w of warnings) console.log(`  • ${w}`);
 }
 
 console.log(`\nكُتب إلى prisma/seed-data/`);

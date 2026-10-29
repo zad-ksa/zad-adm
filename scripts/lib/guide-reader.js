@@ -56,8 +56,12 @@ function extractGuide(file, { fix } = {}) {
   }
 
   const perspectives = [];
+  const byCode = new Map();
+  const warnings = [];
   let perspective = null;
-  let objective = null;
+
+  /** «س 3 - 1» ← «س 3» — عائلةُ رمز المؤشر هي هدفُه. */
+  const familyOf = (code) => String(code || "").replace(/\s*-\s*\d+\s*$/, "").trim();
 
   for (let i = 3; i < rows.length; i++) {
     const r = rows[i];
@@ -70,18 +74,37 @@ function extractGuide(file, { fix } = {}) {
     if (perspectiveName) {
       perspective = { name: perspectiveName, prefix: null, objectives: [] };
       perspectives.push(perspective);
-      objective = null;
     }
+    if (!perspective) continue;
 
-    const objectiveCode = txt(r[1]);
-    if (objectiveCode) {
-      objective = { code: objectiveCode, name: txt(r[2]), description: txt(r[3]), indicators: [] };
+    /**
+     * الهدفُ يُعرَف **بعائلة رمز مؤشره** لا بموضع صفّه.
+     *
+     * فملفُ أثر القيم يضع اسمَ الهدف «س 3» في الصفّ الذي قبل رمزه: صفٌّ فيه
+     * الاسمُ بلا رمزٍ ومعه «س 3 - 1»، وصفٌّ بعده فيه الرمزُ بلا اسم. والقراءةُ
+     * بالموضع تُنسب «س 3 - 1» إلى «س 2» وتُنشئ «س 3» بلا اسم — خطأٌ صامتٌ في
+     * شجرة الأهداف. والعائلةُ تقول الصوابَ في الحالين، وتُطابق الموضعَ في
+     * الملفات السليمة.
+     */
+    const written = txt(r[1]);
+    const family = familyOf(indicatorCode);
+    const objectiveCode = family || written;
+    if (written && family && written !== family) {
+      warnings.push(`الصفّ ${i + 1}: رمزُ الهدف «${written}» وعائلةُ مؤشره «${family}»`);
+    }
+    if (!objectiveCode) continue;
+
+    let objective = byCode.get(objectiveCode);
+    if (!objective) {
+      objective = { code: objectiveCode, name: null, description: null, indicators: [] };
+      byCode.set(objectiveCode, objective);
       perspective.objectives.push(objective);
       // بادئةُ البعد من رمز أول أهدافه: «س 1» ← «س».
       if (!perspective.prefix) perspective.prefix = objectiveCode.split(/\s+/)[0];
     }
-
-    if (!objective) continue;
+    // الاسمُ والشرحُ من أيِّ صفٍّ في العائلة يحملهما — أولُ ما يُوجد يثبت.
+    if (!objective.name) objective.name = txt(r[2]);
+    if (!objective.description) objective.description = txt(r[3]);
 
     const indicator = {
       code: indicatorCode,
@@ -115,7 +138,12 @@ function extractGuide(file, { fix } = {}) {
     });
   }
 
-  return perspectives;
+  // هدفٌ بلا اسمٍ في الملف كلِّه: يُقال ولا يُسكت عنه، فاسمُه رمزُه مؤقّتاً.
+  for (const o of byCode.values()) {
+    if (!o.name) warnings.push(`الهدف «${o.code}» بلا اسمٍ في الملف — وُضع رمزُه مكانَه`);
+  }
+
+  return { perspectives, warnings };
 }
 
 module.exports = { extractGuide, stateOf, txt, num };

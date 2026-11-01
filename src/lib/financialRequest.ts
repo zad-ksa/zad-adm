@@ -26,6 +26,26 @@ export const OTHER_TYPE_NAME = "أخرى";
 /** مفتاح نسبة الضريبة في الإعدادات العامة. */
 export const VAT_RATE_SETTING_KEY = "financial_vat_rate";
 
+/**
+ * اسما المُوقِّعين في أسفل المطالبة المالية.
+ *
+ * بياناتٌ لا كود: المديرُ والمحاسبُ يتغيّران، واسمٌ مكتوبٌ في الكليشة يحتاج
+ * نشرةً جديدةً كلَّما تغيّر صاحبُه. ويُخزَّنان في `GlobalSetting` كنسبة
+ * الضريبة — إعدادٌ واحدٌ للموقع لا حقلٌ في كل طلب.
+ *
+ * **ولا يُثبَّتان في الطلب عند رفعه** — بخلاف `typeLabel` ونسبة الضريبة: هذان
+ * سجلٌّ لما اعتُمد، وأمّا المُوقِّعان فمن يُوقِّع **اليوم** على ورقةٍ تُطبع
+ * اليوم. فطلبٌ قديمٌ يُعاد طبعُه يحمل توقيعَ من هو في المنصب حين طُبع.
+ */
+export const FINANCE_MANAGER_KEY = "financial_manager_name";
+export const FINANCE_ACCOUNTANT_KEY = "financial_accountant_name";
+
+/** اسمٌ يُكتب في الكليشة: مسافاتٌ مسوّاةٌ وحدٌّ لطوله. */
+export function cleanSignatory(value: unknown): string | null {
+  const s = String(value ?? "").replace(/\s+/g, " ").trim();
+  return s ? s.slice(0, 80) : null;
+}
+
 /** النسبة الافتراضية حين لا يكون في الإعدادات شيء. */
 export const DEFAULT_VAT_RATE = 15;
 

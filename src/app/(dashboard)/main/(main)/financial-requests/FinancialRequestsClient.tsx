@@ -68,6 +68,9 @@ type Props = {
   requests: FinancialRequestRow[];
   types: { id: string; name: string }[];
   vatRate: number;
+  /** اسما المُوقِّعين في الكليشة — من إعدادات المطالبة المالية. */
+  managerName: string | null;
+  accountantName: string | null;
   hasActiveChain: boolean;
   canReviewAll: boolean;
   canManageSettings: boolean;
@@ -250,7 +253,11 @@ function BankBlock({ detail }: { detail: FinancialDetail }) {
  * ويُبنى من الصفّ المعروض لا من استعلامٍ ثانٍ: الوثيقةُ تقول ما تقوله البطاقة
  * بعينه، فلا يختلف المطبوعُ عن المقروء.
  */
-function docInputOf(request: FinancialRequestRow, detail: FinancialDetail): FinancialDocInput {
+function docInputOf(
+  request: FinancialRequestRow,
+  detail: FinancialDetail,
+  signatories: { managerName: string | null; accountantName: string | null }
+): FinancialDocInput {
   return {
     serial: detail.serial,
     typeLabel: detail.typeLabel,
@@ -265,22 +272,19 @@ function docInputOf(request: FinancialRequestRow, detail: FinancialDetail): Fina
     bankName: detail.bankName,
     iban: detail.iban,
     accountNumber: detail.accountNumber,
-    trail: request.logs.map((log) => ({
-      actor: log.actor.name,
-      action: ACTION_CONFIG[log.action].label,
-      note: log.note,
-      at: log.createdAt,
-      attachmentCount: readAttachments(log.attachments).length,
-    })),
+    managerName: signatories.managerName,
+    accountantName: signatories.accountantName,
   };
 }
 
 // ── بطاقة الطلب ──────────────────────────────────────────────────────────────
 function RequestCard({
-  request, sessionId, onReview, onResubmit, onDelete,
+  request, sessionId, signatories, onReview, onResubmit, onDelete,
 }: {
   request: FinancialRequestRow;
   sessionId: string;
+  /** اسما المُوقِّعين — تمرُّ من الصفحة إلى الكليشة بلا قراءةٍ ثانية. */
+  signatories: { managerName: string | null; accountantName: string | null };
   onReview: (r: FinancialRequestRow) => void;
   onResubmit: (r: FinancialRequestRow) => void;
   onDelete: (id: string) => void;
@@ -373,11 +377,11 @@ function RequestCard({
             )}
             {detail && (
               <>
-                <button type="button" onClick={() => printFinancialRequest(docInputOf(request, detail))}
+                <button type="button" onClick={() => printFinancialRequest(docInputOf(request, detail, signatories))}
                   className={btn.secondary}>
                   <Printer className="w-4 h-4" /> تصدير على الكليشة
                 </button>
-                <button type="button" onClick={() => previewFinancialRequest(docInputOf(request, detail))}
+                <button type="button" onClick={() => previewFinancialRequest(docInputOf(request, detail, signatories))}
                   className={btn.ghost}>
                   <Eye className="w-4 h-4" /> معاينة
                 </button>
@@ -402,7 +406,7 @@ function RequestCard({
 
 // ── الصفحة ───────────────────────────────────────────────────────────────────
 export default function FinancialRequestsClient({
-  requests: initial, types, vatRate, hasActiveChain, canReviewAll, canManageSettings, sessionId, allEmployees,
+  requests: initial, types, vatRate, managerName, accountantName, hasActiveChain, canReviewAll, canManageSettings, sessionId, allEmployees,
 }: Props) {
   const router = useRouter();
   const [requests, setRequests] = useState<FinancialRequestRow[]>(initial);
@@ -551,7 +555,7 @@ export default function FinancialRequestsClient({
       ) : (
         <div className="space-y-2.5">
           {filtered.map((r) => (
-            <RequestCard key={r.id} request={r} sessionId={sessionId}
+            <RequestCard key={r.id} request={r} sessionId={sessionId} signatories={{ managerName, accountantName }}
               onReview={setReviewingReq} onResubmit={setResubmitReq} onDelete={handleDelete} />
           ))}
         </div>

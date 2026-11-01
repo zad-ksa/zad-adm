@@ -32,11 +32,15 @@ export default function DonorSheet({
   const [name, setName] = useState(row?.name ?? "");
   const [url, setUrl] = useState(row?.url ?? "");
   const [fields, setFields] = useState(row?.fields ?? "");
-  const [status, setStatus] = useState<IntakeStatus>(row?.intakeStatus ?? "CLOSED");
+  // المخزَّنُ لا الفعليّ: اللوحةُ تُحرّر ما في الصفّ، والفعليُّ محسوبٌ عرضاً.
+  const [status, setStatus] = useState<IntakeStatus>(row?.storedStatus ?? "CLOSED");
   const [opensAt, setOpensAt] = useState(row?.opensAtInput ?? "");
   const [closesAt, setClosesAt] = useState(row?.closesAtInput ?? "");
   const [notes, setNotes] = useState(row?.notes ?? "");
   const [busy, setBusy] = useState(false);
+
+  /** لها موعدٌ مسجَّل؟ فحالتُها محسوبةٌ، والمفتاحُ اليدويُّ لا معنى له. */
+  const dated = Boolean(opensAt || closesAt);
 
   const save = () => {
     setBusy(true);
@@ -116,6 +120,7 @@ export default function DonorSheet({
               onSelect={(v) => setStatus(v === "OPEN" ? "OPEN" : "CLOSED")}
               placeholder="اختر الحالة"
               options={INTAKE_STATUSES.map((s) => ({ value: s.value, label: s.label }))}
+              disabled={dated}
               className="w-full [&>button]:w-full [&>button]:justify-between"
             />
           </div>
@@ -130,8 +135,9 @@ export default function DonorSheet({
         </div>
 
         <p className="text-meta leading-5 text-slate-500 dark:text-slate-400">
-          الحالةُ هي ما يُعتمد عليه في الواجهة، والتاريخانِ بيانٌ معلن — فجهةٌ تُفتح بلا تاريخٍ، وأخرى
-          تُغلق قبل موعدها. وإن خالفا الحالةَ قيل ذلك سطراً هادئاً ولم تُقلب الشارة.
+          {dated
+            ? "ما دام للجهة تاريخٌ مسجَّل فحالتُها تُحسب منه لحظةَ العرض — تُفتح في يوم الفتح وتُغلق بعد يوم الإغلاق، بلا ضبطٍ منك. وامحُ التاريخين إن أردتَ ضبطها يدوياً."
+            : "بلا تاريخين تبقى الحالةُ كما تضبطها. وبمجرّد أن تُسجّل تاريخاً تصير محسوبةً منه تلقائياً."}
         </p>
 
         <label className="block space-y-1.5">

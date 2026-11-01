@@ -82,30 +82,57 @@ export function looksLikeNote(value: string): boolean {
   return /[؀-ۿ]/.test(value);
 }
 
+/** مصدرُ الحالة: محسوبةٌ من التاريخين، أو مضبوطةٌ بيد الموظف. */
+export type IntakeMode = "AUTO" | "MANUAL";
+
+export type Intake = {
+  status: IntakeStatus;
+  mode: IntakeMode;
+  /** سطرٌ يقول كيف عُرفت الحالة — فشارةٌ بلا سببٍ تُسأل عنها. */
+  reason: string;
+};
+
+/** يومُ تاريخٍ بلا ساعةٍ: `2026-12-15`. فالمقارنةُ بالأيام لا باللحظات. */
+const dayOf = (d: Date) => d.toISOString().slice(0, 10);
+
 /**
- * سطرٌ يُقال حين تُخالف التواريخُ الحالةَ المعلنة.
+ * حالةُ الرفع الفعلية — **تُحسب من التاريخين إن وُجدا**.
  *
- * والحالةُ هي الحقيقة — يضبطها الموظف — والتاريخان بيانٌ معلن: جهةٌ تُفتح بلا
- * تاريخٍ، وأخرى تُغلق قبل موعدها. فلا تُقلب الشارةُ بالتاريخ، ويُقال التناقضُ
- * سطراً هادئاً ليراجعه من يعلم.
+ * كانت الحالةُ صريحةً يضبطها الموظف والتاريخان بياناً معلناً، فصار على من
+ * يعلم أن يقلب المفتاح في موعده. وجهةٌ تُغلق في يومٍ معلومٍ لا تحتاج من يُغلقها
+ * يدوياً: التاريخُ يقولها.
+ *
+ * **ولا تُخزَّن المحسوبةُ ولا تحتاج مهمةً دورية**: الصفحةُ تُبنى عند كل طلب،
+ * فالحسابُ يقع لحظةَ القراءة ويكون صحيحاً دائماً. ومهمّةٌ دوريةٌ تكتب الحالةَ
+ * في الصفّ تجعلها صحيحةً وقت التشغيل وخاطئةً بين تشغيلين.
+ *
+ * والتاريخُ **شاملٌ لطرفيه**: جهةٌ تُغلق في ١٥ ديسمبر مفتوحةٌ ذلك اليومَ كلَّه،
+ * فالمقارنةُ بالأيام لا بالساعات — وإلا أُغلقت في منتصف ليلته.
+ *
+ * وبلا تاريخين تبقى الحالةُ يدويّةً كما كانت: ليس لكل جهةٍ موعدٌ معلن.
  */
-export function intakeDateNote(
-  status: IntakeStatus,
+export function effectiveIntake(
+  stored: string,
   opensAt: Date | null,
   closesAt: Date | null,
   now: Date
-): string | null {
-  const t = now.getTime();
-  if (status === "OPEN" && closesAt && closesAt.getTime() < t) {
-    return "الحالة مفتوحة وتاريخُ الإغلاق المعلن قد مضى";
+): Intake {
+  if (!opensAt && !closesAt) {
+    const status = intakeStatusOf(stored);
+    return { status, mode: "MANUAL", reason: status === "OPEN" ? "مفتوحٌ بضبطٍ يدوي" : "مغلقٌ بضبطٍ يدوي" };
   }
-  if (status === "OPEN" && opensAt && opensAt.getTime() > t) {
-    return "الحالة مفتوحة وتاريخُ الفتح المعلن لم يحضر بعد";
-  }
-  if (status === "CLOSED" && opensAt && opensAt.getTime() <= t && (!closesAt || closesAt.getTime() >= t)) {
-    return "الحالة مغلقة وموعدُ الرفع المعلن قائم";
-  }
-  return null;
+
+  const today = dayOf(now);
+  const from = opensAt ? dayOf(opensAt) : null;
+  const to = closesAt ? dayOf(closesAt) : null;
+
+  if (from && today < from) return { status: "CLOSED", mode: "AUTO", reason: `يُفتح في ${from}` };
+  if (to && today > to) return { status: "CLOSED", mode: "AUTO", reason: `أُغلق في ${to}` };
+  return {
+    status: "OPEN",
+    mode: "AUTO",
+    reason: to ? `مفتوحٌ حتى ${to}` : `مفتوحٌ من ${from}`,
+  };
 }
 
 /** حالاتُ المنحة كما خُزّنت نصّاً في `GrantApplication.status`. */

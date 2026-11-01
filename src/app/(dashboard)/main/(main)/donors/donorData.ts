@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/db";
 import { decryptSecret } from "@/lib/encryption";
-import { intakeDateNote, intakeStatusOf, type DonorKind, type IntakeStatus } from "@/lib/donorOrg";
+import { effectiveIntake, type DonorKind, type IntakeMode, type IntakeStatus } from "@/lib/donorOrg";
 import type { DonorViewer } from "@/lib/donorScope";
 
 /**
@@ -17,15 +17,20 @@ export type DonorRow = {
   url: string | null;
   fields: string | null;
   notes: string | null;
+  /** الحالةُ الفعلية — محسوبةٌ من التاريخين إن وُجدا. */
   intakeStatus: IntakeStatus;
+  intakeMode: IntakeMode;
+  /** كيف عُرفت الحالة: «مفتوحٌ حتى …» أو «مغلقٌ بضبطٍ يدوي». */
+  intakeReason: string;
+  /** المخزَّنُ في الصفّ — يُعرض في لوحة التعديل لا في البطاقة. */
+  storedStatus: IntakeStatus;
   /** مصوغان للعرض. */
   opensAt: string | null;
   closesAt: string | null;
   /** `yyyy-mm-dd` لحقل التاريخ في نموذج التعديل. */
   opensAtInput: string | null;
   closesAtInput: string | null;
-  /** سطرٌ يُقال حين تُخالف التواريخُ الحالةَ المعلنة. */
-  dateNote: string | null;
+
   /** جمعياتُ الرائي التي لها حسابٌ عند هذه الجهة. */
   accountCharityIds: string[];
 };
@@ -59,19 +64,21 @@ function toRow(
   },
   now: Date
 ): DonorRow {
-  const status = intakeStatusOf(org.intakeStatus);
+  const intake = effectiveIntake(org.intakeStatus, org.opensAt, org.closesAt, now);
   return {
     id: org.id,
     name: org.name,
     url: org.url,
     fields: org.fields,
     notes: org.notes,
-    intakeStatus: status,
+    intakeStatus: intake.status,
+    intakeMode: intake.mode,
+    intakeReason: intake.reason,
+    storedStatus: org.intakeStatus === "OPEN" ? "OPEN" : "CLOSED",
     opensAt: org.opensAt ? formatDonorDate(org.opensAt) : null,
     closesAt: org.closesAt ? formatDonorDate(org.closesAt) : null,
     opensAtInput: inputDate(org.opensAt),
     closesAtInput: inputDate(org.closesAt),
-    dateNote: intakeDateNote(status, org.opensAt, org.closesAt, now),
     accountCharityIds: org.accounts.map((a) => a.charityId),
   };
 }

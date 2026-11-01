@@ -2,7 +2,7 @@
 
 import { useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { Building2, ExternalLink, FileText, KeyRound, Pencil, Plus, Trash2, TriangleAlert } from "lucide-react";
+import { Building2, CalendarClock, ExternalLink, FileText, KeyRound, Pencil, Plus, Trash2 } from "lucide-react";
 import {
   EmptyState,
   PageHeader,
@@ -170,6 +170,7 @@ export default function DonorDetail({
           {
             label: "حالة الرفع",
             value: org.intakeStatus === "OPEN" ? "مفتوح" : "مغلق",
+            hint: org.intakeReason,
             dot: org.intakeStatus === "OPEN" ? "active" : "muted",
           },
           { label: "يُفتح", value: org.opensAt ?? "—" },
@@ -179,10 +180,10 @@ export default function DonorDetail({
         ]}
       />
 
-      {org.dateNote && (
-        <p className="flex items-center gap-2 text-body text-amber-700 dark:text-amber-300">
-          <TriangleAlert className="size-4 shrink-0" />
-          {org.dateNote} — راجعها إن شئت.
+      {org.intakeMode === "AUTO" && (
+        <p className="flex items-center gap-2 text-body text-slate-500 dark:text-slate-400">
+          <CalendarClock className="size-4 shrink-0" />
+          الحالةُ محسوبةٌ من التاريخين: {org.intakeReason}. ولا تُضبط يدوياً ما دام لها موعدٌ مسجَّل.
         </p>
       )}
 

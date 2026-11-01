@@ -92,8 +92,24 @@ export type Intake = {
   reason: string;
 };
 
-/** يومُ تاريخٍ بلا ساعةٍ: `2026-12-15`. فالمقارنةُ بالأيام لا باللحظات. */
+/**
+ * يومُ تاريخٍ بلا ساعة: `2026-12-15`.
+ *
+ * والتواريخُ المخزَّنة تواريخُ يومٍ محفوظةٌ عند منتصف ليل UTC، فيومُها يُقرأ
+ * بـUTC كما كُتب.
+ */
 const dayOf = (d: Date) => d.toISOString().slice(0, 10);
+
+/**
+ * «اليوم» بتوقيت الرياض لا بـUTC.
+ *
+ * فالفارقُ ثلاثُ ساعات: جهةٌ تُغلق في ١٢ نوفمبر تبقى — بحساب UTC — مفتوحةً
+ * إلى الثالثة فجراً من ١٣ بتوقيت المستعمل. واليومُ يُقلب عند منتصف ليله هو،
+ * لا عند منتصف ليلٍ في غرينتش.
+ */
+const RIYADH = "Asia/Riyadh";
+const todayIn = (now: Date, zone: string) =>
+  new Intl.DateTimeFormat("en-CA", { timeZone: zone, year: "numeric", month: "2-digit", day: "2-digit" }).format(now);
 
 /**
  * حالةُ الرفع الفعلية — **تُحسب من التاريخين إن وُجدا**.
@@ -115,14 +131,15 @@ export function effectiveIntake(
   stored: string,
   opensAt: Date | null,
   closesAt: Date | null,
-  now: Date
+  now: Date,
+  zone: string = RIYADH
 ): Intake {
   if (!opensAt && !closesAt) {
     const status = intakeStatusOf(stored);
     return { status, mode: "MANUAL", reason: status === "OPEN" ? "مفتوحٌ بضبطٍ يدوي" : "مغلقٌ بضبطٍ يدوي" };
   }
 
-  const today = dayOf(now);
+  const today = todayIn(now, zone);
   const from = opensAt ? dayOf(opensAt) : null;
   const to = closesAt ? dayOf(closesAt) : null;
 

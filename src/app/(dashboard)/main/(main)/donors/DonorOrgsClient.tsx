@@ -238,11 +238,9 @@ export default function DonorOrgsClient({
               title={r.org.name}
               badge={<Badge tone={r.org.intakeStatus === "OPEN" ? "good" : "neutral"}>{r.org.intakeStatus === "OPEN" ? "مفتوح" : "مغلق"}</Badge>}
               media={<Building2 className="size-4 text-primary/60 dark:text-teal-300/60" />}
-              subtitle={
-                r.org.opensAt || r.org.closesAt
-                  ? `يُفتح ${r.org.opensAt ?? "—"} · يُغلق ${r.org.closesAt ?? "—"}`
-                  : "لا موعدَ معلن"
-              }
+              // للمؤقَّتةِ يُقال السببُ لا التاريخان: الشارةُ تقول «مغلق»
+              // والسببُ يقول «يُفتح في …» — وهو ما يُراد معرفته.
+              subtitle={r.org.intakeMode === "AUTO" ? r.org.intakeReason : "لا موعدَ معلن"}
               body={r.org.fields ? <span className="line-clamp-2">{r.org.fields}</span> : <span className="text-slate-400">لا مجالاتَ مسجَّلة</span>}
               stats={
                 picked

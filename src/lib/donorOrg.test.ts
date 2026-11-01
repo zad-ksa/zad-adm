@@ -6,7 +6,7 @@ import {
   donorKindOf,
   looksLikeNote,
   grantStatusLabel,
-  intakeDateNote,
+  effectiveIntake,
   intakeStatusOf,
   normalizeDonorName,
 } from "./donorOrg.ts";
@@ -72,32 +72,48 @@ test("حالةٌ مجهولةٌ ترتدّ إلى مغلق — فالأصلُ أ
 // ── التواريخُ والحالة ──────────────────────────────────────────────────────
 
 const d = (iso: string) => new Date(iso);
-const now = d("2026-06-15T00:00:00Z");
+const now = d("2026-06-15T09:00:00Z");
 
-test("مفتوحٌ وتاريخُ الإغلاق مضى → سطرُ تنبيه", () => {
-  assert.equal(
-    intakeDateNote("OPEN", d("2026-01-01T00:00:00Z"), d("2026-03-01T00:00:00Z"), now),
-    "الحالة مفتوحة وتاريخُ الإغلاق المعلن قد مضى"
-  );
+test("بلا تاريخين تبقى الحالةُ يدويّة", () => {
+  assert.deepEqual(effectiveIntake("OPEN", null, null, now), {
+    status: "OPEN",
+    mode: "MANUAL",
+    reason: "مفتوحٌ بضبطٍ يدوي",
+  });
+  assert.equal(effectiveIntake("CLOSED", null, null, now).status, "CLOSED");
 });
 
-test("مغلقٌ والموعدُ المعلن قائم → سطرُ تنبيه", () => {
-  assert.equal(
-    intakeDateNote("CLOSED", d("2026-06-01T00:00:00Z"), d("2026-07-01T00:00:00Z"), now),
-    "الحالة مغلقة وموعدُ الرفع المعلن قائم"
-  );
+test("داخلَ النافذة مفتوحٌ تلقائياً ولو كان المخزَّن مغلقاً", () => {
+  const r = effectiveIntake("CLOSED", d("2026-06-01"), d("2026-07-01"), now);
+  assert.equal(r.status, "OPEN");
+  assert.equal(r.mode, "AUTO");
+  assert.equal(r.reason, "مفتوحٌ حتى 2026-07-01");
 });
 
-test("مفتوحٌ بلا تاريخين → لا تناقض", () => {
-  assert.equal(intakeDateNote("OPEN", null, null, now), null);
+test("قبل الفتح مغلقٌ ولو كان المخزَّن مفتوحاً", () => {
+  const r = effectiveIntake("OPEN", d("2026-09-01"), null, now);
+  assert.equal(r.status, "CLOSED");
+  assert.equal(r.reason, "يُفتح في 2026-09-01");
 });
 
-test("مغلقٌ وموعدُه لم يحضر → لا تناقض", () => {
-  assert.equal(intakeDateNote("CLOSED", d("2026-09-01T00:00:00Z"), null, now), null);
+test("بعد الإغلاق مغلق", () => {
+  const r = effectiveIntake("OPEN", null, d("2026-03-01"), now);
+  assert.equal(r.status, "CLOSED");
+  assert.equal(r.reason, "أُغلق في 2026-03-01");
 });
 
-test("مفتوحٌ داخل موعده → لا تناقض", () => {
-  assert.equal(intakeDateNote("OPEN", d("2026-06-01T00:00:00Z"), d("2026-07-01T00:00:00Z"), now), null);
+test("يومُ الإغلاق مفتوحٌ كلُّه — لا يُغلق في منتصف ليلته", () => {
+  assert.equal(effectiveIntake("CLOSED", null, d("2026-06-15"), now).status, "OPEN");
+  assert.equal(effectiveIntake("CLOSED", null, d("2026-06-15"), d("2026-06-15T23:59:00Z")).status, "OPEN");
+  assert.equal(effectiveIntake("CLOSED", null, d("2026-06-14"), now).status, "CLOSED");
+});
+
+test("يومُ الفتح مفتوحٌ من أوّله", () => {
+  assert.equal(effectiveIntake("CLOSED", d("2026-06-15"), null, d("2026-06-15T00:10:00Z")).status, "OPEN");
+});
+
+test("بتاريخِ فتحٍ وحده: السببُ يقول منذ متى", () => {
+  assert.equal(effectiveIntake("CLOSED", d("2026-01-01"), null, now).reason, "مفتوحٌ من 2026-01-01");
 });
 
 // ── حالاتُ المنحة ──────────────────────────────────────────────────────────

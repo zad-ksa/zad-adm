@@ -7,6 +7,7 @@ import {
   looksLikeNote,
   grantStatusLabel,
   effectiveIntake,
+  intakeFromInputs,
   intakeStatusOf,
   normalizeDonorName,
 } from "./donorOrg.ts";
@@ -141,4 +142,20 @@ test("يومُ الفتح يبدأ بمنتصف ليل الرياض", () => {
   // ١ ديسمبر الواحدة صباحاً بالرياض = ٣٠ نوفمبر العاشرة مساءً بـUTC.
   const at1amRiyadh = new Date("2026-11-30T22:00:00Z");
   assert.equal(effectiveIntake("CLOSED", d("2026-12-01"), null, at1amRiyadh).status, "OPEN");
+});
+
+// ── الحالةُ من حقلَي النموذج ───────────────────────────────────────────────
+
+test("الحالةُ تُحسب من نصّ الحقلين كما تُحسب من التاريخين", () => {
+  const at = new Date("2026-11-01T07:00:00Z");
+  assert.equal(intakeFromInputs("CLOSED", "", "2026-11-19", at).status, "OPEN");
+  assert.equal(intakeFromInputs("CLOSED", "2026-12-01", "", at).status, "CLOSED");
+  assert.equal(intakeFromInputs("OPEN", "", "", at).mode, "MANUAL");
+});
+
+test("حقلٌ نصفُ مكتوبٍ لا يُقلب الحالة", () => {
+  const at = new Date("2026-11-01T07:00:00Z");
+  // المتصفّحُ يُرسل قيمةً ناقصةً أثناء الكتابة، فلا تُقرأ تاريخاً.
+  assert.equal(intakeFromInputs("CLOSED", "", "2026-11", at).mode, "MANUAL");
+  assert.equal(intakeFromInputs("CLOSED", "", "غير تاريخ", at).mode, "MANUAL");
 });

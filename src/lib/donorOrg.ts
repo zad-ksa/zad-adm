@@ -152,6 +152,28 @@ export function effectiveIntake(
   };
 }
 
+/**
+ * الحالةُ الفعلية من حقلَي تاريخٍ نصّيين (`yyyy-mm-dd`).
+ *
+ * تُنادى في المتصفّح وهو يكتب: لوحةُ التعديل تعرض «مفتوح» لحظةَ اختيار التاريخ
+ * لا بعد الحفظ وإعادة القراءة — فمن اختار تاريخاً ورأى الحالةَ لم تتغيّر حسب
+ * أن شيئاً لم يعمل، وهو إنما كان ينظر إلى حقلٍ يعرض المخزَّن.
+ */
+export function intakeFromInputs(
+  stored: string,
+  opensAtInput: string,
+  closesAtInput: string,
+  now: Date,
+  zone?: string
+): Intake {
+  const parse = (v: string) => {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(v)) return null;
+    const d = new Date(`${v}T00:00:00Z`);
+    return Number.isNaN(d.getTime()) ? null : d;
+  };
+  return effectiveIntake(stored, parse(opensAtInput), parse(closesAtInput), now, zone);
+}
+
 /** حالاتُ المنحة كما خُزّنت نصّاً في `GrantApplication.status`. */
 export const GRANT_STATUSES = [
   { value: "PENDING", label: "قيد الدراسة" },

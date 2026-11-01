@@ -1,11 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { MONO, btn, cx, field } from "@/components/console/ui";
+import { Badge, MONO, btn, cx, field } from "@/components/console/ui";
 import { Sheet } from "@/components/console/overlays";
 import Select from "@/components/console/Select";
 import { notify } from "@/components/console/toastBus";
-import { INTAKE_STATUSES, type IntakeStatus } from "@/lib/donorOrg";
+import { INTAKE_STATUSES, intakeFromInputs, type IntakeStatus } from "@/lib/donorOrg";
 import { createDonorOrg, updateDonorOrg } from "@/app/actions/donorOrgs";
 import type { DonorRow } from "./donorData";
 
@@ -41,6 +41,15 @@ export default function DonorSheet({
 
   /** لها موعدٌ مسجَّل؟ فحالتُها محسوبةٌ، والمفتاحُ اليدويُّ لا معنى له. */
   const dated = Boolean(opensAt || closesAt);
+
+  /**
+   * الحالةُ كما ستكون — تُحسب في المتصفّح لحظةَ اختيار التاريخ.
+   *
+   * وكان الحقلُ يعرض المخزَّنَ معطَّلاً، فمن اختار تاريخاً رأى «مغلق» بعدَه
+   * فحسب أن الحسابَ التلقائي لم يعمل — وهو إنما كان ينظر إلى حقلٍ يعرض ما في
+   * الصفّ لا ما سيصير إليه.
+   */
+  const live = intakeFromInputs(status, opensAt, closesAt, new Date());
 
   const save = () => {
     setBusy(true);
@@ -115,14 +124,22 @@ export default function DonorSheet({
         <div className="grid gap-4 sm:grid-cols-3">
           <div className="space-y-1.5">
             <span className="block text-body font-medium text-slate-700 dark:text-slate-300">حالة الرفع</span>
-            <Select
-              value={status}
-              onSelect={(v) => setStatus(v === "OPEN" ? "OPEN" : "CLOSED")}
-              placeholder="اختر الحالة"
-              options={INTAKE_STATUSES.map((s) => ({ value: s.value, label: s.label }))}
-              disabled={dated}
-              className="w-full [&>button]:w-full [&>button]:justify-between"
-            />
+            {dated ? (
+              <div className="flex h-9 items-center gap-2 rounded-md border border-slate-200 bg-slate-50 px-3 dark:border-slate-800 dark:bg-slate-950/40">
+                <Badge tone={live.status === "OPEN" ? "good" : "neutral"}>
+                  {live.status === "OPEN" ? "مفتوح" : "مغلق"}
+                </Badge>
+                <span className="truncate text-meta text-slate-500">تلقائيّاً</span>
+              </div>
+            ) : (
+              <Select
+                value={status}
+                onSelect={(v) => setStatus(v === "OPEN" ? "OPEN" : "CLOSED")}
+                placeholder="اختر الحالة"
+                options={INTAKE_STATUSES.map((s) => ({ value: s.value, label: s.label }))}
+                className="w-full [&>button]:w-full [&>button]:justify-between"
+              />
+            )}
           </div>
           <label className="block space-y-1.5">
             <span className="block text-body font-medium text-slate-700 dark:text-slate-300">تاريخ الفتح</span>
@@ -136,7 +153,7 @@ export default function DonorSheet({
 
         <p className="text-meta leading-5 text-slate-500 dark:text-slate-400">
           {dated
-            ? "ما دام للجهة تاريخٌ مسجَّل فحالتُها تُحسب منه لحظةَ العرض — تُفتح في يوم الفتح وتُغلق بعد يوم الإغلاق، بلا ضبطٍ منك. وامحُ التاريخين إن أردتَ ضبطها يدوياً."
+            ? `الحالةُ الآن: ${live.status === "OPEN" ? "مفتوح" : "مغلق"} — ${live.reason}. تُحسب من التاريخ لحظةَ العرض بلا ضبطٍ منك، وامحُ التاريخين إن أردتَ ضبطها يدوياً.`
             : "بلا تاريخين تبقى الحالةُ كما تضبطها. وبمجرّد أن تُسجّل تاريخاً تصير محسوبةً منه تلقائياً."}
         </p>
 

@@ -104,7 +104,9 @@ test("بعد الإغلاق مغلق", () => {
 
 test("يومُ الإغلاق مفتوحٌ كلُّه — لا يُغلق في منتصف ليلته", () => {
   assert.equal(effectiveIntake("CLOSED", null, d("2026-06-15"), now).status, "OPEN");
-  assert.equal(effectiveIntake("CLOSED", null, d("2026-06-15"), d("2026-06-15T23:59:00Z")).status, "OPEN");
+  // الحادية عشرة مساءً بالرياض من يوم الإغلاق — لا الحادية عشرة بـUTC، فتلك
+  // صباحُ اليوم الذي بعده هناك.
+  assert.equal(effectiveIntake("CLOSED", null, d("2026-06-15"), d("2026-06-15T20:00:00Z")).status, "OPEN");
   assert.equal(effectiveIntake("CLOSED", null, d("2026-06-14"), now).status, "CLOSED");
 });
 
@@ -121,4 +123,22 @@ test("بتاريخِ فتحٍ وحده: السببُ يقول منذ متى", ()
 test("حالةُ المنحة تُعرَّب، والمجهولُ يُعرض كما هو", () => {
   assert.equal(grantStatusLabel("APPROVED"), "مقبولة");
   assert.equal(grantStatusLabel("ODD"), "ODD");
+});
+
+// ── حدُّ اليوم بتوقيت الرياض ────────────────────────────────────────────────
+
+test("اليومُ يُقلب عند منتصف ليل الرياض لا غرينتش", () => {
+  // ١٣ نوفمبر الثانية فجراً بالرياض = ١٢ نوفمبر الحادية عشرة مساءً بـUTC.
+  // والجهةُ تُغلق في ١٢، فالصبحُ الذي بعده مغلقٌ ولو كان UTC لا يزال في ١٢.
+  const at2amRiyadh = new Date("2026-11-12T23:00:00Z");
+  assert.equal(effectiveIntake("CLOSED", null, d("2026-11-12"), at2amRiyadh).status, "CLOSED");
+  // وفي الحادية عشرة مساءً بالرياض من ١٢ نوفمبر: مفتوحٌ بعد.
+  const at11pmRiyadh = new Date("2026-11-12T20:00:00Z");
+  assert.equal(effectiveIntake("CLOSED", null, d("2026-11-12"), at11pmRiyadh).status, "OPEN");
+});
+
+test("يومُ الفتح يبدأ بمنتصف ليل الرياض", () => {
+  // ١ ديسمبر الواحدة صباحاً بالرياض = ٣٠ نوفمبر العاشرة مساءً بـUTC.
+  const at1amRiyadh = new Date("2026-11-30T22:00:00Z");
+  assert.equal(effectiveIntake("CLOSED", d("2026-12-01"), null, at1amRiyadh).status, "OPEN");
 });

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useTransition } from "react";
-import { ArrowDown, ArrowUp, ListPlus, Percent, Pencil, Plus, RotateCcw, Trash2 } from "lucide-react";
+import { ArrowDown, ArrowUp, ListPlus, Percent, Pencil, Plus, RotateCcw, Signature, Trash2 } from "lucide-react";
 import { Dialog } from "@/components/console/Dialog";
 import { ConfirmDialog } from "@/components/console/ConfirmDialog";
 import { notify } from "@/components/console/toastBus";
@@ -14,6 +14,8 @@ import {
   reactivateFinancialType,
   removeFinancialType,
   renameFinancialType,
+  readSignatories,
+  setSignatories,
   setVatRate,
 } from "@/app/actions/financialSettings";
 
@@ -41,7 +43,32 @@ export default function FinancialSettingsSheet({
   const [removing, setRemoving] = useState<TypeRow | null>(null);
   const [busy, startBusy] = useTransition();
 
+  /**
+   * اسما المُوقِّعين — يُقرآن عند الفتح لا يُمرَّران خاصّيّةً.
+   *
+   * فالصفحةُ تُمرِّرهما إلى الكليشة، وتمريرُهما إلى اللوحة أيضاً يجعل للقيمة
+   * مصدرين يفترقان إن حُفظت ولم تُنعَش الصفحة.
+   */
+  const [manager, setManager] = useState<string | null>(null);
+  const [accountant, setAccountant] = useState<string | null>(null);
+  const [savedSign, setSavedSign] = useState<{ m: string; a: string } | null>(null);
+
+  const reloadSign = () => {
+    void readSignatories()
+      .then((s) => {
+        setManager(s.managerName);
+        setAccountant(s.accountantName);
+        setSavedSign({ m: s.managerName, a: s.accountantName });
+      })
+      .catch(() => {
+        setManager("");
+        setAccountant("");
+        setSavedSign({ m: "", a: "" });
+      });
+  };
+
   const reload = () => {
+    reloadSign();
     void listFinancialTypes()
       .then(setTypes)
       .catch((e) => notify("error", e instanceof Error ? e.message : "تعذّر قراءة الأنواع"));
@@ -108,6 +135,58 @@ export default function FinancialSettingsSheet({
                 تُطبَّق على ما يُرفع بعد الحفظ. والطلباتُ القائمة تحمل نسبتها وقت رفعها، فلا يتغيّر فيها شيء.
               </p>
               {!rateValid && <p className="w-full text-caption text-red-500">النسبة بين صفر ومئة</p>}
+            </div>
+          </section>
+
+          {/* المُوقِّعان على الكليشة */}
+          <section className="space-y-2">
+            <h3 className="text-caption font-semibold text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
+              <Signature className="size-3.5" /> المُوقِّعان على المطالبة
+            </h3>
+            <div className="space-y-2 rounded-xl border border-slate-200 p-3 dark:border-slate-700">
+              <div className="grid gap-2 sm:grid-cols-2">
+                <label className="block">
+                  <span className="mb-1 block text-caption text-slate-500 dark:text-slate-400">اسم المدير العام</span>
+                  <input
+                    value={manager ?? ""}
+                    onChange={(e) => setManager(e.target.value)}
+                    disabled={manager === null}
+                    placeholder="يُترك فارغاً فيُوقَّع بالقلم"
+                    className={field}
+                  />
+                </label>
+                <label className="block">
+                  <span className="mb-1 block text-caption text-slate-500 dark:text-slate-400">اسم المحاسب</span>
+                  <input
+                    value={accountant ?? ""}
+                    onChange={(e) => setAccountant(e.target.value)}
+                    disabled={accountant === null}
+                    placeholder="يُترك فارغاً فيُوقَّع بالقلم"
+                    className={field}
+                  />
+                </label>
+              </div>
+              <div className="flex flex-wrap items-center gap-2">
+                <button
+                  type="button"
+                  disabled={
+                    busy ||
+                    manager === null ||
+                    accountant === null ||
+                    (savedSign?.m === (manager ?? "").trim() && savedSign?.a === (accountant ?? "").trim())
+                  }
+                  // و`run` يُنعش القراءةَ والصفحةَ بعد النجاح، فلا إنعاشَ ثانٍ.
+                  onClick={() => run(() => setSignatories(manager ?? "", accountant ?? ""))}
+                  className={btn.primary}
+                >
+                  {busy ? <Spinner size={16} tone="onPrimary" /> : <Signature className="size-4" />}
+                  حفظ الاسمين
+                </button>
+                <p className="w-full text-caption text-slate-500 dark:text-slate-400">
+                  يُكتبان أسفل المطالبة فوق سطرَي التوقيع. ولا يُثبَّتان في الطلب: مطالبةٌ قديمةٌ تُعاد طباعتُها
+                  تحمل اسمَ من هو في المنصب اليوم.
+                </p>
+              </div>
             </div>
           </section>
 

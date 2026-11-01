@@ -12,7 +12,13 @@ import { prisma } from "@/lib/db";
 import { getSession } from "@/lib/auth";
 import { hasPermission } from "@/lib/permissions";
 import { revalidatePath } from "next/cache";
-import { VAT_RATE_SETTING_KEY, isValidVatRate } from "@/lib/financialRequest";
+import {
+  FINANCE_ACCOUNTANT_KEY,
+  FINANCE_MANAGER_KEY,
+  VAT_RATE_SETTING_KEY,
+  cleanSignatory,
+  isValidVatRate,
+} from "@/lib/financialRequest";
 
 const PAGE = "/main/financial-requests";
 
@@ -70,6 +76,50 @@ export async function setVatRate(value: string | number): Promise<Result> {
       create: { key: VAT_RATE_SETTING_KEY, value: rate },
       update: { value: rate },
     });
+    revalidatePath(PAGE);
+    return {};
+  } catch (e) {
+    return { error: message(e) };
+  }
+}
+
+// ── المُوقِّعان ──────────────────────────────────────────────────────────────
+
+/** اسما المُوقِّعين كما هما الآن — تقرؤهما اللوحةُ عند فتحها. */
+export async function readSignatories() {
+  await requireSettings();
+  const rows = await prisma.globalSetting.findMany({
+    where: { key: { in: [FINANCE_MANAGER_KEY, FINANCE_ACCOUNTANT_KEY] } },
+    select: { key: true, value: true },
+  });
+  const of = (key: string) => cleanSignatory(rows.find((r) => r.key === key)?.value) ?? "";
+  return { managerName: of(FINANCE_MANAGER_KEY), accountantName: of(FINANCE_ACCOUNTANT_KEY) };
+}
+
+/**
+ * ضبطُ اسمَي المُوقِّعين على الكليشة.
+ *
+ * واسمٌ فارغٌ يُحذف إعدادُه ولا يُخزَّن فراغاً: سطرُ التوقيع يبقى بلا اسمٍ
+ * فيُكتب بالقلم، وهو أصدقُ من اسمٍ قديمٍ لمن تركَ منصبه.
+ */
+export async function setSignatories(managerName: string, accountantName: string): Promise<Result> {
+  try {
+    await requireSettings();
+    const pairs = [
+      { key: FINANCE_MANAGER_KEY, value: cleanSignatory(managerName) },
+      { key: FINANCE_ACCOUNTANT_KEY, value: cleanSignatory(accountantName) },
+    ];
+    await prisma.$transaction(
+      pairs.map((p) =>
+        p.value === null
+          ? prisma.globalSetting.deleteMany({ where: { key: p.key } })
+          : prisma.globalSetting.upsert({
+              where: { key: p.key },
+              create: { key: p.key, value: p.value },
+              update: { value: p.value },
+            })
+      )
+    );
     revalidatePath(PAGE);
     return {};
   } catch (e) {

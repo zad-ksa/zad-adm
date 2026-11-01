@@ -12,15 +12,6 @@ import { notify } from "@/components/console/toastBus";
 import { LETTERHEAD_CSS } from "./letterhead";
 import { amounts, formatAmount, serialLabel } from "./financialRequest";
 
-export type DocTrailStep = {
-  actor: string;
-  action: string;
-  note: string | null;
-  at: string | Date;
-  /** عددُ ما أُرفق بالقرار — يُذكر ولا يُطبع الملفّ نفسه. */
-  attachmentCount?: number;
-};
-
 export type FinancialDocInput = {
   serial: number;
   typeLabel: string;
@@ -35,7 +26,14 @@ export type FinancialDocInput = {
   bankName: string | null;
   iban: string | null;
   accountNumber: string | null;
-  trail: DocTrailStep[];
+  /**
+   * اسما المُوقِّعين من إعدادات المطالبة المالية.
+   *
+   * ومسارُ الاعتماد لا يُطبع: المطالبةُ ورقةٌ تُرفع إلى من يصرف، وسجلُّ من
+   * اعتمد ومتى موضعُه الشاشةُ لا الورقة — وهو محفوظٌ في سجلّ الطلب كما هو.
+   */
+  managerName: string | null;
+  accountantName: string | null;
 };
 
 const FINANCIAL_DOC_CSS = `
@@ -49,10 +47,12 @@ const FINANCIAL_DOC_CSS = `
   .doc-table td.num { direction: ltr; text-align: center; font-variant-numeric: tabular-nums; }
   .doc-body p { margin: 2px 0; font-size: 10pt; line-height: 1.55; }
   .doc-total td { font-weight: 700; }
-  .sign-area { position: absolute; right: 17mm; left: 17mm; bottom: 60mm; z-index: 2; display: flex; gap: 14mm; justify-content: center; }
-  .sign-box { width: 55mm; }
-  .sign-box .cap { text-align: center; font-size: 9.5pt; font-weight: 700; color: #0f766e; margin-bottom: 2mm; }
-  .sign-box .frame { height: 22mm; border: 1px solid #99c2bd; border-radius: 2mm; }
+  .sign-area { position: absolute; right: 17mm; left: 17mm; bottom: 58mm; z-index: 2; display: flex; gap: 18mm; justify-content: space-around; }
+  .sign-box { width: 62mm; text-align: center; }
+  .sign-box .role { font-size: 10pt; font-weight: 700; color: #0f766e; }
+  .sign-box .who { font-size: 10pt; font-weight: 600; color: #1a1a1a; margin-top: 1mm; min-height: 5mm; }
+  .sign-box .rule { margin-top: 12mm; border-top: 1px solid #1a1a1a; }
+  .sign-box .hint { font-size: 8.5pt; color: #666; margin-top: 1mm; }
 `;
 
 const esc = (value: unknown): string =>
@@ -114,28 +114,28 @@ function buildBody(input: FinancialDocInput): string {
       .join("")}</table>`);
   }
 
-  if (input.trail.length) {
-    blocks.push(`<div class="doc-section">مسار الاعتماد</div>`);
-    const rows = input.trail
-      .map((step) => {
-        const note = step.note?.trim() ? esc(step.note) : "—";
-        const stamped = step.attachmentCount ? ` (${step.attachmentCount} مرفق)` : "";
-        return `<tr><td>${esc(step.actor)}</td><td>${esc(step.action)}${stamped}</td><td class="num">${esc(formatDate(step.at))}</td><td>${note}</td></tr>`;
-      })
-      .join("");
-    blocks.push(`<table class="doc-table">
-      <tr><th>الاسم</th><th>الإجراء</th><th>التاريخ</th><th>الملاحظة</th></tr>
-      ${rows}
-    </table>`);
-  }
-
   return blocks.join("\n");
 }
 
-/** كتلةُ الختم والتوقيع: مربّعان مفرّغان، لا يُطبع فيهما شيء. */
-const SIGN_HTML = `<div class="sign-area">
-  <div class="sign-box"><div class="cap">الختم</div><div class="frame"></div></div>
-  <div class="sign-box"><div class="cap">التوقيع</div><div class="frame"></div></div>
+/**
+ * كتلةُ التوقيعين في أسفل آخر صفحة.
+ *
+ * صفَّان لا مربّعان: المنصبُ ثم اسمُ صاحبه ثم سطرٌ يُوقَّع عليه. والمربّعُ
+ * المفرّغ يُوقَّع فيه أيُّ أحد، والاسمُ المكتوبُ يقول من يُوقِّع.
+ *
+ * والاسمُ إن لم يُضبط في الإعدادات تُرك موضعُه فارغاً ولم يُكتب «—»: الورقةُ
+ * تُطبع وتُوقَّع بالقلم، فسطرٌ فارغٌ يُملأ، و«—» شَينٌ مطبوع.
+ */
+const signBlock = (role: string, who: string | null) => `<div class="sign-box">
+  <div class="role">${esc(role)}</div>
+  <div class="who">${who ? esc(who) : "&nbsp;"}</div>
+  <div class="rule"></div>
+  <div class="hint">التوقيع</div>
+</div>`;
+
+const signHtml = (input: FinancialDocInput) => `<div class="sign-area">
+  ${signBlock("المدير العام", input.managerName)}
+  ${signBlock("المحاسب", input.accountantName)}
 </div>`;
 
 /**
@@ -148,7 +148,7 @@ const SIGN_HTML = `<div class="sign-area">
 export function buildFinancialDoc(input: FinancialDocInput, forPrint: boolean): string {
   const body = buildBody(input);
   const safeBody = JSON.stringify(body).replace(/<\/(script)/gi, "<\\/$1");
-  const safeSign = JSON.stringify(SIGN_HTML).replace(/<\/(script)/gi, "<\\/$1");
+  const safeSign = JSON.stringify(signHtml(input)).replace(/<\/(script)/gi, "<\\/$1");
   const letterheadUrl = `${window.location.origin}/assets/letterhead.png`;
 
   return `<!DOCTYPE html>

@@ -1,0 +1,20 @@
+name = "zad-files"
+main = "index.mjs"
+compatibility_date = "2026-11-01"
+
+# نطاقٌ مخصَّصٌ لا سجلُّ CNAME: Wrangler يُنشئ سجلَّ DNS بنفسه ويربطه
+# بالعامل. ومن أنشأ قبلَه CNAME إلى باك بليز فليحذفه، وقاعدةُ التحويل التي
+# تُزيل `/file/<bucket>` لم تبق لها حاجةٌ أيضاً — العاملُ هو من يُركّب المسار.
+[[routes]]
+pattern = "files.zad-co.sa"
+custom_domain = true
+
+# غيرُ سرّيّة: لا تُفتح بها قفلٌ وحدَها، ووجودُها هنا يجعل النشرةَ مراجعةً.
+[vars]
+B2_ENDPOINT = "https://s3.eu-central-003.backblazeb2.com"
+B2_REGION = "eu-central-003"
+B2_BUCKET = "zad-site"
+
+# والسرّان يُوضعان بالأمر لا في ملفّ:
+#   npx wrangler secret put B2_KEY_ID
+#   npx wrangler secret put B2_APP_KEY

@@ -9,18 +9,42 @@ const isDev = process.env.NODE_ENV !== "production";
 // shipping (risk: a wrong strict CSP can silently break hydration site-wide).
 // This baseline still blocks framing, external script/object injection, and
 // restricts network/asset origins to what the app actually uses.
+// مضيفا التخزين الجديد، يُقرآن من البيئة لا يُكتبان في الكود.
+//
+// ومضيفان لا واحد: القراءةُ من النطاق الخاصِّ أمام Cloudflare (وهو ما يُحفظ
+// في القاعدة)، والرفعُ إلى نقطةِ نهاية S3 — فالرابطُ المُوقَّع يشمل المضيفَ
+// ولا يصحّ على غيره. ومن نسي أحدَهما في السياسة انحجب عنه كلُّ ملفٍّ أو
+// انقطع كلُّ رفعٍ عند المتصفِّح بلا شيءٍ في سجلّ الشبكة إلّا «blocked».
+//
+// وCloudinary باقيةٌ هنا ما بقي فيها ملفٌّ واحد: المزوّدان يتعايشان حتى
+// يُرحَّل آخرُ ملفٍّ ويُتحقَّق منه، ثمّ يُحذف سطرُها من هنا.
+const originOf = (value?: string) => {
+  try {
+    return value?.trim() ? new URL(value).origin : null;
+  } catch {
+    return null;
+  }
+};
+const STORAGE_READ_ORIGIN = originOf(process.env.STORAGE_PUBLIC_BASE);
+const STORAGE_WRITE_ORIGIN = originOf(process.env.B2_ENDPOINT);
+const withOrigins = (base: string, ...origins: (string | null)[]) =>
+  [base, ...origins.filter(Boolean)].join(" ");
 const cspParts = (frameAncestors: string) => [
   "default-src 'self'",
   `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""}`,
   "style-src 'self' 'unsafe-inline'",
-  "img-src 'self' data: blob: https://res.cloudinary.com",
+  withOrigins("img-src 'self' data: blob: https://res.cloudinary.com", STORAGE_READ_ORIGIN),
   "font-src 'self' data:",
   // api.cloudinary.com is the UPLOAD host and is a different origin from the
   // res.cloudinary.com that serves files back. Design-request attachments go
   // straight from the browser to Cloudinary — the serverless request body limit
   // makes anything larger than a few MB impossible through our own API — and
   // without this entry the browser blocks that upload before it leaves.
-  "connect-src 'self' https://res.cloudinary.com https://api.cloudinary.com",
+  withOrigins(
+    "connect-src 'self' https://res.cloudinary.com https://api.cloudinary.com",
+    STORAGE_READ_ORIGIN,
+    STORAGE_WRITE_ORIGIN
+  ),
   frameAncestors,
   "base-uri 'self'",
   "form-action 'self'",
@@ -83,6 +107,9 @@ const nextConfig: NextConfig = {
     },
   },
   images: {
+    // ومن أضاف مضيفاً هنا فليُضفه في img-src أيضاً: هذه تُجيز لمُحسِّن الصور
+    // أن يجلبها، وتلك تُجيز للمتصفِّح أن يعرضها. ونقصُ أيٍّ منهما يكسر الصورةَ
+    // بعطبٍ مختلف — 400 من /_next/image هنا، وحجبٌ صامتٌ هناك.
     remotePatterns: [
       {
         protocol: "https",
@@ -90,6 +117,16 @@ const nextConfig: NextConfig = {
         port: "",
         pathname: "/**",
       },
+      ...(STORAGE_READ_ORIGIN
+        ? [
+            {
+              protocol: "https" as const,
+              hostname: new URL(STORAGE_READ_ORIGIN).hostname,
+              port: "",
+              pathname: "/**",
+            },
+          ]
+        : []),
     ],
   },
   // المسار القديم /main/knowledge-tree صار /main/template-library. من حفظ

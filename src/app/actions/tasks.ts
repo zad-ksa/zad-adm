@@ -1,17 +1,12 @@
 "use server";
 
 import { prisma } from "@/lib/db";
+import { deleteStoredFile } from "@/lib/storageDelete";
 import { getSession } from "@/lib/auth";
 import { hasPermission, isAdmin } from "@/lib/permissions";
 import { revalidatePath } from "next/cache";
 import { createAppNotification } from "./notifications";
-import { v2 as cloudinary } from "cloudinary";
 
-cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET,
-});
 // Helper to verify user session and roles
 async function getAuthenticatedUser() {
   const session = await getSession();
@@ -188,13 +183,10 @@ export async function deleteTaskAction(taskId: string) {
       return { error: "غير مصرح لك بحذف هذه المهمة" };
     }
 
-    if (task.proofPublicId) {
-      try {
-        await cloudinary.uploader.destroy(task.proofPublicId);
-      } catch (err) {
-        console.error("Failed to delete image from Cloudinary", err);
-      }
-    }
+    await deleteStoredFile(
+      { url: task.proofUrl, cloudinaryPublicId: task.proofPublicId },
+      "إثبات مهمة"
+    );
 
     await prisma.task.delete({
       where: { id: taskId },
@@ -289,12 +281,11 @@ export async function toggleTaskCompletionAction(
       return { error: "إتمام المهام خاص بالموظف الذي أسندت إليه المهمة أو مدير النظام فقط" };
     }
 
-    if (!isCompleted && task.proofPublicId) {
-      try {
-        await cloudinary.uploader.destroy(task.proofPublicId);
-      } catch (e) {
-        console.error("Failed to delete proof from Cloudinary during undo", e);
-      }
+    if (!isCompleted) {
+      await deleteStoredFile(
+        { url: task.proofUrl, cloudinaryPublicId: task.proofPublicId },
+        "إثبات مهمة"
+      );
     }
 
     await prisma.task.update({
@@ -405,13 +396,10 @@ export async function deleteAchievementAction(achievementId: string) {
       return { error: "غير مصرح لك بحذف هذا المنجز" };
     }
 
-    if (achievement.proofPublicId) {
-      try {
-        await cloudinary.uploader.destroy(achievement.proofPublicId);
-      } catch (err) {
-        console.error("Failed to delete image from Cloudinary", err);
-      }
-    }
+    await deleteStoredFile(
+      { url: achievement.proofUrl, cloudinaryPublicId: achievement.proofPublicId },
+      "إثبات منجز"
+    );
 
     await prisma.achievement.delete({
       where: { id: achievementId },

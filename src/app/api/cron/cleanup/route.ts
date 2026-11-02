@@ -1,13 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
+import { deleteStoredFile } from "@/lib/storageDelete";
 import { Prisma } from "@prisma/client";
-import { v2 as cloudinary } from "cloudinary";
-
-cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET,
-});
 
 export async function GET(request: Request) {
   try {
@@ -54,8 +48,11 @@ export async function GET(request: Request) {
     for (const task of oldTasks) {
       try {
         if (task.proofPublicId) {
-          // 1. Delete from Cloudinary
-          await cloudinary.uploader.destroy(task.proofPublicId);
+          // ١. يُحذف من حيث يسكن — والرابطُ هو ما يقول أيّهما.
+          await deleteStoredFile(
+            { url: task.proofUrl, cloudinaryPublicId: task.proofPublicId },
+            "إثبات مهمة"
+          );
 
           // 2. Remove the proof references from the database
           await prisma.task.update({
@@ -103,8 +100,8 @@ export async function GET(request: Request) {
 
         let hasDeleted = false;
         for (const att of attachments) {
-          if (att.publicId) {
-            await cloudinary.uploader.destroy(att.publicId);
+          if (att.publicId || att.url) {
+            await deleteStoredFile({ url: att.url, cloudinaryPublicId: att.publicId }, "مرفق طلب");
             hasDeleted = true;
           }
         }

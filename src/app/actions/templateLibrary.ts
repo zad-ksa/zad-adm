@@ -1,17 +1,11 @@
 "use server";
 
 import { prisma } from "@/lib/db";
+import { deleteStoredFile } from "@/lib/storageDelete";
 import { getSession } from "@/lib/auth";
 import { hasPermission } from "@/lib/permissions";
 import { revalidatePath } from "next/cache";
-import { v2 as cloudinary } from "cloudinary";
 import { randomUUID } from "crypto";
-
-cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET,
-});
 
 /**
  * One permission gates the whole tree: seeing it, and changing it.
@@ -345,7 +339,7 @@ export async function deleteTemplateNode(id: string) {
 
     const node = await prisma.templateNode.findUnique({
       where: { id },
-      select: { id: true, kind: true, publicId: true, resourceType: true },
+      select: { id: true, kind: true, fileUrl: true, publicId: true, resourceType: true },
     });
     if (!node) return { error: "العنصر غير موجود" };
 
@@ -365,11 +359,10 @@ export async function deleteTemplateNode(id: string) {
         where: { publicId: f.publicId, id: { notIn: doomedIds } },
       });
       if (others > 0) continue;
-      try {
-        await cloudinary.uploader.destroy(f.publicId, { resource_type: f.resourceType || "raw" });
-      } catch (err) {
-        console.error("Failed to delete template file from Cloudinary", f.publicId, err);
-      }
+      await deleteStoredFile(
+        { url: f.fileUrl, cloudinaryPublicId: f.publicId, resourceType: f.resourceType },
+        "ملف مكتبة"
+      );
     }
 
     await prisma.templateNode.delete({ where: { id } });
@@ -390,20 +383,25 @@ export async function deleteTemplateNode(id: string) {
  * question cannot be asked without knowing exactly which rows are going.
  */
 async function collectDescendants(rootId: string) {
-  const files: { publicId: string | null; resourceType: string | null }[] = [];
+  const files: {
+    fileUrl: string | null;
+    publicId: string | null;
+    resourceType: string | null;
+  }[] = [];
   const ids: string[] = [];
   let frontier = [rootId];
 
   for (let depth = 0; frontier.length && depth < 50; depth++) {
     const children = await prisma.templateNode.findMany({
       where: { parentId: { in: frontier } },
-      select: { id: true, kind: true, publicId: true, resourceType: true },
+      select: { id: true, kind: true, fileUrl: true, publicId: true, resourceType: true },
     });
     if (!children.length) break;
 
     for (const c of children) {
       ids.push(c.id);
-      if (c.kind === "FILE") files.push({ publicId: c.publicId, resourceType: c.resourceType });
+      if (c.kind === "FILE")
+        files.push({ fileUrl: c.fileUrl, publicId: c.publicId, resourceType: c.resourceType });
     }
     frontier = children.filter((c) => c.kind === "FOLDER").map((c) => c.id);
   }

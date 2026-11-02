@@ -1,6 +1,7 @@
 "use server";
 
 import { prisma } from "@/lib/db";
+import { deleteStoredFile } from "@/lib/storageDelete";
 import { Prisma } from "@prisma/client";
 import { hasCharityPermission } from "@/lib/charityPermissions";
 import { getSession } from "@/lib/auth";
@@ -14,7 +15,6 @@ import {
   REVIEW_WINDOW_WORK_MINUTES,
   reviewDeadline,
 } from "@/lib/designRequestProgress";
-import { v2 as cloudinary } from "cloudinary";
 import {
   toCivilDate,
   nextBusinessDay,
@@ -23,12 +23,6 @@ import {
   addDesignBusinessDays,
   formatCivilDate,
 } from "@/lib/businessDays";
-
-cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET,
-});
 
 const REQUEST_DURATION_DAYS = 3;
 
@@ -578,17 +572,18 @@ export async function resubmitDesignRequest(input: {
 async function purgeBriefAttachments(requestId: string) {
   const briefs = await prisma.designRequestAttachment.findMany({
     where: { requestId, kind: "BRIEF" },
-    select: { id: true, publicId: true, resourceType: true },
+    // والرابطُ يُنتقى لأنّ المزوّدَ يُعرف منه لا من المُعرِّف: صفٌّ رُحِّل
+    // ملفُّه يحمل publicId من Cloudinary وملفُّه في باك بليز.
+    select: { id: true, fileUrl: true, publicId: true, resourceType: true },
   });
 
   // Best effort per file: one asset that refuses to delete must not leave the
   // request stuck half-finalised.
   for (const att of briefs) {
-    try {
-      await cloudinary.uploader.destroy(att.publicId, { resource_type: att.resourceType || "raw" });
-    } catch (err) {
-      console.error("Failed to delete design-request attachment from Cloudinary", att.publicId, err);
-    }
+    await deleteStoredFile(
+      { url: att.fileUrl, cloudinaryPublicId: att.publicId, resourceType: att.resourceType },
+      "مرفق طلب تصميم"
+    );
   }
 
   await prisma.designRequestAttachment.deleteMany({ where: { requestId, kind: "BRIEF" } });
@@ -674,14 +669,13 @@ export async function requestDesignRevision(input: {
       // no longer part of the brief.
       const gone = await prisma.designRequestAttachment.findMany({
         where: { requestId: input.requestId, kind: "BRIEF", id: { in: remove } },
-        select: { publicId: true, resourceType: true },
+        select: { fileUrl: true, publicId: true, resourceType: true },
       });
       for (const att of gone) {
-        try {
-          await cloudinary.uploader.destroy(att.publicId, { resource_type: att.resourceType || "raw" });
-        } catch (err) {
-          console.error("Failed to delete design-request attachment from Cloudinary", att.publicId, err);
-        }
+        await deleteStoredFile(
+          { url: att.fileUrl, cloudinaryPublicId: att.publicId, resourceType: att.resourceType },
+          "مرفق طلب تصميم"
+        );
       }
       await prisma.designRequestAttachment.deleteMany({
         where: { requestId: input.requestId, kind: "BRIEF", id: { in: remove } },
@@ -981,11 +975,10 @@ export async function deleteDesignRequest(id: string) {
     }
 
     for (const att of request.attachments) {
-      try {
-        await cloudinary.uploader.destroy(att.publicId, { resource_type: att.resourceType || "raw" });
-      } catch (err) {
-        console.error("Failed to delete design-request attachment from Cloudinary", att.publicId, err);
-      }
+      await deleteStoredFile(
+        { url: att.fileUrl, cloudinaryPublicId: att.publicId, resourceType: att.resourceType },
+        "مرفق طلب تصميم"
+      );
     }
 
     await prisma.designRequest.delete({ where: { id } });
@@ -1835,7 +1828,10 @@ export async function updateDesignRequestDetails(input: {
         charityId: true,
         startedAt: true,
         charity: { select: { name: true, isInternal: true } },
-        attachments: { where: { kind: "BRIEF" }, select: { id: true, publicId: true, resourceType: true } },
+        attachments: {
+          where: { kind: "BRIEF" },
+          select: { id: true, fileUrl: true, publicId: true, resourceType: true },
+        },
       },
     });
     if (!request) return { error: "الطلب غير موجود" };
@@ -1889,13 +1885,10 @@ export async function updateDesignRequestDetails(input: {
     // edit, but a row deleted without its file would orphan the file forever
     // with nothing left pointing at it.
     for (const att of removable) {
-      try {
-        await cloudinary.uploader.destroy(att.publicId, {
-          resource_type: att.resourceType || "raw",
-        });
-      } catch (err) {
-        console.error("Failed to delete design-request attachment from Cloudinary", att.publicId, err);
-      }
+      await deleteStoredFile(
+        { url: att.fileUrl, cloudinaryPublicId: att.publicId, resourceType: att.resourceType },
+        "مرفق طلب تصميم"
+      );
     }
 
     const description =

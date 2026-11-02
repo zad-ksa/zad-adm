@@ -143,3 +143,62 @@ export function keyFromPublicUrl(url: string, publicBase: string): string | null
   const key = path.slice(prefix.length).replace(/^\/+/, "");
   return key || null;
 }
+
+/** الملفُّ كما تعرفه قاعدةُ البيانات في أيِّ موضع. */
+export type StoredFileRef = {
+  /** العمودُ الذي يحمل الرابط — أصدقُ ما يُعرف منه المزوّد. */
+  url?: string | null;
+  /** `publicId` المخزَّن حيث يوجد؛ سبعةُ جداولَ تحفظه وأربعةٌ لا. */
+  cloudinaryPublicId?: string | null;
+  resourceType?: string | null;
+};
+
+export type DeletePlan =
+  | { provider: "b2"; key: string }
+  | { provider: "cloudinary"; publicId: string; resourceType: string }
+  | { provider: null; reason: string };
+
+/**
+ * من أين يُحذف هذا الملفّ — قرارٌ خالصٌ يُختبر بلا شبكة.
+ *
+ * وهو أخطرُ قرارٍ في التعايش: من حذف الصفَّ دون أن يسأل عن المزوّد، حذف من
+ * Cloudinary ملفّاً يسكن باك بليز — فتمضي العمليّةُ «بنجاح» ويبقى الملفُّ
+ * أبداً، ولا شكوى تُسمع ولا حصّةٌ تُسترجع.
+ *
+ * والرتبةُ مقصودة:
+ *   ١ الرابطُ أوّلاً — فالمضيفُ يقطع بالمزوّد.
+ *   ٢ فإن لم يكن رابطٌ وكان `publicId`، فهو Cloudinary: هذا سلوكُ الموقع قبل
+ *     النقل، وكلُّ ما رُفع قبله فيها. فالمواضعُ التي تنتقي `publicId` وحدَه
+ *     تبقى على ما كانت، وإضافةُ عمود الرابط إليها تحسينٌ لا شرط.
+ *   ٣ فإن لم يكن هذا ولا ذاك، لا يُحذف شيءٌ ويُقال السبب.
+ */
+export function deletePlanFor(ref: StoredFileRef, publicBase: string | null): DeletePlan {
+  const url = ref.url?.trim();
+  if (url) {
+    const provider = providerOf(url, publicBase);
+    if (provider === "b2") {
+      const key = keyFromPublicUrl(url, publicBase as string);
+      return key ? { provider: "b2", key } : { provider: null, reason: "رابطُ باك بليز بلا مفتاح" };
+    }
+    if (provider === "cloudinary") {
+      const ref2 = cloudinaryRefFromUrl(url);
+      const publicId = ref.cloudinaryPublicId?.trim() || ref2?.publicId;
+      if (!publicId) return { provider: null, reason: "رابطُ Cloudinary بلا مُعرِّف" };
+      return {
+        provider: "cloudinary",
+        publicId,
+        resourceType: ref.resourceType?.trim() || ref2?.resourceType || "raw",
+      };
+    }
+    // رابطٌ خارجيٌّ لُصق بيد: لا يُحذف، ولا يُعدّ خطأً.
+    if (!ref.cloudinaryPublicId?.trim()) {
+      return { provider: null, reason: "رابطٌ لا يخصّ مزوّدَينا" };
+    }
+  }
+
+  const publicId = ref.cloudinaryPublicId?.trim();
+  if (publicId) {
+    return { provider: "cloudinary", publicId, resourceType: ref.resourceType?.trim() || "raw" };
+  }
+  return { provider: null, reason: "لا رابطَ ولا مُعرِّف" };
+}

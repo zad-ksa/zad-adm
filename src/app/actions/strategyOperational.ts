@@ -2,6 +2,7 @@
 
 import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/db";
+import { deleteStoredFile } from "@/lib/storageDelete";
 import { revalidatePath } from "next/cache";
 import { getSession } from "@/lib/auth";
 import { hasPermission } from "@/lib/permissions";
@@ -296,15 +297,19 @@ function safeHttpUrl(raw: string): string | null {
   return parsed.toString();
 }
 
-/** يحذف أصلاً من Cloudinary بأفضل جهد: فشلُ الحذف لا يمنع الاستبدال. */
-async function destroyAsset(publicId: string | null, resourceType: string | null) {
-  if (!publicId) return;
-  try {
-    const { v2: cloudinary } = await import("cloudinary");
-    await cloudinary.uploader.destroy(publicId, { resource_type: resourceType || "raw" });
-  } catch (err) {
-    console.error("تعذّر حذف الملف التسويقي من Cloudinary", publicId, err);
-  }
+/**
+ * يحذف الأصلَ من حيث يسكن بأفضل جهد: فشلُ الحذف لا يمنع الاستبدال.
+ *
+ * والرابطُ يُمرَّر لا المُعرِّفُ وحدَه: المزوّدان متعايشان، والمُعرِّفُ لا
+ * يقول من أيِّهما هو.
+ */
+async function destroyAsset(
+  url: string | null,
+  publicId: string | null,
+  resourceType: string | null
+) {
+  if (!url && !publicId) return;
+  await deleteStoredFile({ url, cloudinaryPublicId: publicId, resourceType }, "ملف تسويقي");
 }
 
 /**
@@ -323,7 +328,7 @@ export async function setInitiativeMarketing(
 
     const current = await prisma.initiative.findUnique({
       where: { id: initiativeId },
-      select: { marketingPublicId: true, marketingResourceType: true },
+      select: { marketingUrl: true, marketingPublicId: true, marketingResourceType: true },
     });
 
     let data: Prisma.InitiativeUpdateInput;
@@ -361,7 +366,12 @@ export async function setInitiativeMarketing(
 
     // يُحذف القديم بعد نجاح الكتابة لا قبلها: لو فشلت الكتابة بقي الأصل مرجوعاً إليه.
     const replaced = input.kind !== "FILE" || input.publicId !== current?.marketingPublicId;
-    if (replaced) await destroyAsset(current?.marketingPublicId ?? null, current?.marketingResourceType ?? null);
+    if (replaced)
+      await destroyAsset(
+        current?.marketingUrl ?? null,
+        current?.marketingPublicId ?? null,
+        current?.marketingResourceType ?? null
+      );
 
     await revalidateOperational(charityId);
     return {};

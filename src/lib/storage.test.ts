@@ -2,6 +2,7 @@ import { strict as assert } from "node:assert";
 import { test } from "node:test";
 import {
   cloudinaryRefFromUrl,
+  deletePlanFor,
   extensionOf,
   keyFromPublicUrl,
   providerOf,
@@ -137,4 +138,83 @@ test("الامتداد", () => {
   assert.equal(extensionOf("c.tar.gz"), "gz");
   assert.equal(extensionOf("noext"), "");
   assert.equal(extensionOf(".hidden"), "");
+});
+
+// ───────── موزِّعُ الحذف ─────────
+
+const CL = "https://res.cloudinary.com/dfwyhvzea/image/upload/v1790766174/zad_design_requests/2_1790766173512.png";
+
+test("رابطُ باك بليز يُحذف من باك بليز", () => {
+  assert.deepEqual(deletePlanFor({ url: `${BASE}/zad_avatars/a_9f3.png` }, BASE), {
+    provider: "b2",
+    key: "zad_avatars/a_9f3.png",
+  });
+});
+
+test("رابطُ باك بليز يتقدّم على publicId مخزَّنٍ قديم", () => {
+  // هذا لبُّ الموزِّع: صفٌّ رُحِّل ملفُّه وبقي فيه `publicId` من Cloudinary.
+  // فإن قُدِّم المُعرِّفُ على الرابط، حُذف من Cloudinary ملفٌّ ليس فيها.
+  assert.deepEqual(
+    deletePlanFor(
+      { url: `${BASE}/zad_design_requests/x.png`, cloudinaryPublicId: "zad_design_requests/x" },
+      BASE
+    ),
+    { provider: "b2", key: "zad_design_requests/x.png" }
+  );
+});
+
+test("رابطُ Cloudinary يُحذف منها بمُعرِّفه المخزَّن", () => {
+  assert.deepEqual(
+    deletePlanFor({ url: CL, cloudinaryPublicId: "zad_design_requests/2_1790766173512", resourceType: "image" }, BASE),
+    { provider: "cloudinary", publicId: "zad_design_requests/2_1790766173512", resourceType: "image" }
+  );
+});
+
+test("رابطُ Cloudinary بلا مُعرِّفٍ مخزَّن: يُشتقّ من الرابط", () => {
+  // الأعمدةُ الأربعةُ التي تحفظ الرابطَ وحدَه — البريدُ والشعارُ والصورةُ
+  // والاستبانات — تُحذف بهذا، ولم تكن تُحذف قبله.
+  assert.deepEqual(deletePlanFor({ url: CL }, BASE), {
+    provider: "cloudinary",
+    publicId: "zad_design_requests/2_1790766173512",
+    resourceType: "image",
+  });
+});
+
+test("مُعرِّفٌ بلا رابط: Cloudinary كما كان الموقعُ قبل النقل", () => {
+  assert.deepEqual(deletePlanFor({ cloudinaryPublicId: "tasks_proofs/2026/09/x" }, BASE), {
+    provider: "cloudinary",
+    publicId: "tasks_proofs/2026/09/x",
+    resourceType: "raw",
+  });
+  assert.deepEqual(
+    deletePlanFor({ cloudinaryPublicId: "a/b", resourceType: "image" }, BASE),
+    { provider: "cloudinary", publicId: "a/b", resourceType: "image" }
+  );
+});
+
+test("رابطٌ خارجيٌّ لا يُحذف ولا يُعدّ خطأً", () => {
+  const plan = deletePlanFor({ url: "https://drive.google.com/file/d/xyz" }, BASE);
+  assert.equal(plan.provider, null);
+});
+
+test("لا رابطَ ولا مُعرِّف: لا شيءَ يُحذف", () => {
+  assert.deepEqual(deletePlanFor({}, BASE), { provider: null, reason: "لا رابطَ ولا مُعرِّف" });
+  assert.deepEqual(deletePlanFor({ url: "   ", cloudinaryPublicId: "" }, BASE), {
+    provider: null,
+    reason: "لا رابطَ ولا مُعرِّف",
+  });
+});
+
+test("بلا عنوانٍ عامٍّ مضبوط: رابطُ باك بليز لا يُحذف من Cloudinary", () => {
+  // وهذا ما يحمي من نشرةٍ نُسي فيها STORAGE_PUBLIC_BASE: لا يُحذف شيءٌ
+  // بالخطأ، إنّما يُتخطّى ويُسجَّل.
+  const plan = deletePlanFor({ url: "https://f003.backblazeb2.com/file/zad-site/a.png" }, null);
+  assert.equal(plan.provider, null);
+});
+
+test("رابطٌ خارجيٌّ مع مُعرِّفٍ مخزَّن: يُحذف بالمُعرِّف", () => {
+  assert.deepEqual(
+    deletePlanFor({ url: "https://elsewhere.com/a.png", cloudinaryPublicId: "f/g", resourceType: "raw" }, BASE),
+    { provider: "cloudinary", publicId: "f/g", resourceType: "raw" }
+  );
 });

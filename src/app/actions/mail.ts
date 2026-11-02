@@ -5,7 +5,7 @@ import { EXTERNAL_CHARITIES, externalOnly } from "@/lib/charityScope";
 import { getSession } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
 import { sanitizeMailHtml } from "@/lib/sanitizeMail";
-import { getEmployeeServiceNames, listServiceNames } from "@/app/actions/serviceAccess";
+import { getEmployeeServiceNames } from "@/app/actions/serviceAccess";
 import { getAssignedCharityIds } from "@/lib/access";
 import { getNoApproverMessage, resolveApprovalRoute } from "@/app/actions/mailApproval";
 import { isDelivered, serviceConversationRecipients } from "@/lib/serviceTeams";
@@ -792,10 +792,17 @@ export async function getCharityMailOptions() {
   const user = await getAuthenticatedUser();
   if (user.userType === "CHARITY_USER") throw new Error("غير مصرح");
 
-  // null من getEmployeeServiceNames تعني «بلا تقييد» لا «بلا خدمة» — وهو العُرف
-  // نفسه في كل منح الخدمات، فيُترجَم هنا إلى جميع الخدمات.
+  // **الخدماتُ المسنَدةُ وحدَها، ولا رجوعَ إلى الجميع.**
+  //
+  // وخالفنا هنا عُرفَ «null تعني بلا تقييد» المتَّبعَ في سائر منح الخدمات،
+  // عن قصد: الخدمةُ في هذا البريد ليست إذناً بالاطّلاع، إنّما هي **هويّةُ
+  // المرسِل عند الجمعية** — تُكتب في رأس الرسالة وتُحدّد من يستلمها فيها.
+  // فمن لم يُسنَد إلى خدمةٍ لا يُراسل باسمها، ولو كان مديراً.
+  //
+  // وأثرُه أنّ موظفاً بلا منحٍ لا يُرسل إلى الجمعيات حتى يُمنح — وهو ما
+  // تقوله الواجهةُ صراحةً: «لم تُمنح أي خدمة… راجع مسؤول النظام».
   const granted = await getEmployeeServiceNames(user.id);
-  const services = granted ?? (await listServiceNames());
+  const services = granted ?? [];
 
   const assigned = await getAssignedCharityIds(user.id, user.role, user.permissions);
   const all = await prisma.charity.findMany({
@@ -883,8 +890,10 @@ export async function sendMailToCharities(data: {
   if (!data.serviceName) throw new Error("اختر الخدمة التي يتبع لها البريد");
 
   // الخدمة هي هوية البريد عند الجمعية، فمن لا خدمة له لا اسم له عندها.
+  // ولا رجوعَ إلى جميع الخدمات: المُنتقي يُرشد والحارسُ يمنع، فلو جاء اسمُ
+  // خدمةٍ في النداء لم تُسنَد إليه رُدّ هنا ولو تخطّى الواجهة.
   const granted = await getEmployeeServiceNames(user.id);
-  const services = granted ?? (await listServiceNames());
+  const services = granted ?? [];
   if (services.length === 0) {
     throw new Error("لا يمكنك مراسلة الجمعيات قبل أن تُمنح خدمة");
   }

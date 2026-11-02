@@ -46,7 +46,7 @@ export default function LinkClosedScreen({ onBackToHome }: LinkClosedScreenProps
         {/* Buttons / Actions */}
         <div className="flex flex-col sm:flex-row gap-3 justify-center items-center">
           <button
-            onClick={() => window.location.href = "https://zad.org.sa"}
+            onClick={() => window.location.href = "https://zad-co.sa"}
             className="w-full sm:w-auto px-6 py-3.5 rounded-xl font-bold text-white bg-gradient-to-r from-rose-600 to-rose-500 hover:from-rose-500 hover:to-rose-600 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-rose-500/20 transition-all flex items-center justify-center gap-2 cursor-pointer text-sm"
           >
             <span>زيارة موقع زاد التنموية</span>

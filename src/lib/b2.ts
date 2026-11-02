@@ -13,8 +13,8 @@
  */
 
 import { randomBytes } from "node:crypto";
-import { presignS3Url } from "@/lib/sigv4";
-import { publicUrlOf, storageKeyOf } from "@/lib/storage";
+import { presignS3Url } from "./sigv4.ts";
+import { publicUrlOf, storageKeyOf } from "./storage.ts";
 
 export type B2Config = {
   /** مضيفُ نقطةِ نهاية S3، بلا بروتوكول. */
@@ -152,7 +152,13 @@ export async function deleteFromB2(key: string): Promise<boolean> {
   return res.ok || res.status === 404;
 }
 
-/** هل الملفُّ موجودٌ فعلاً — يُسأل قبل استبدال رابطٍ في القاعدة. */
+/**
+ * هل الملفُّ موجودٌ فعلاً — يُسأل قبل استبدال رابطٍ في القاعدة.
+ *
+ * ويُردّ `false` للـ٤٠٣ كما للـ٤٠٤: مفتاحُ التطبيق بلا صلاحيّة `listFiles`،
+ * فباك بليز — كـS3 — تردّ ٤٠٣ على المفقود كي لا تُفصح عن وجوده. فالغايةُ
+ * محقَّقةٌ في الحالين: ليس هناك ملفٌّ نتأكّد منه.
+ */
 export async function b2ObjectExists(key: string): Promise<boolean> {
   const config = requireB2Config();
   const url = presignS3Url({

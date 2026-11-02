@@ -17,7 +17,9 @@
     "guides:extract": "node scripts/extract-guides-xlsx.js",
     "donors:extract": "node --experimental-strip-types scripts/extract-donors-xlsx.mjs",
     "donors:seed": "node -r dotenv/config --experimental-strip-types scripts/seed-donor-orgs.mjs",
-    "donors:accounts": "node -r dotenv/config --experimental-strip-types scripts/import-donor-accounts.mjs"
+    "donors:accounts": "node -r dotenv/config --experimental-strip-types scripts/import-donor-accounts.mjs",
+    "check:b2": "node -r dotenv/config --experimental-strip-types scripts/check-b2.mjs",
+    "files:migrate": "node -r dotenv/config --experimental-strip-types scripts/migrate-files-to-b2.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.106.0",

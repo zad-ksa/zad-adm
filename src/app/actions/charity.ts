@@ -3,6 +3,7 @@ import { unstable_cache } from "next/cache";
 import { EXTERNAL_CHARITIES, externalOnly } from "@/lib/charityScope";
 
 import { prisma } from "@/lib/db";
+import { syncCharityAdminServicesQuietly } from "@/lib/charityAdminServices";
 import { revalidatePath } from "next/cache";
 import { getSession } from "@/lib/auth";
 import { hasPermission, isAdmin } from "@/lib/permissions";
@@ -97,6 +98,8 @@ export async function addCharity(data: { name: string; establishmentDate?: strin
         templateId: t.id
       }));
       await prisma.service.createMany({ data: servicesToCreate });
+      // ومديرُها — إن أُنشئ معها — يُفوَّض بها كلِّها.
+      await syncCharityAdminServicesQuietly(charity.id);
     }
 
     revalidatePath("/main");

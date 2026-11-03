@@ -15,7 +15,7 @@
  */
 
 import { randomBytes } from "node:crypto";
-import { b2Config, b2ObjectExists, deleteFromB2, missingB2Keys, presignUpload } from "../src/lib/b2.ts";
+import { b2Config, b2HeadStatus, b2ObjectExists, deleteFromB2, missingB2Keys, presignUpload } from "../src/lib/b2.ts";
 import { keyFromPublicUrl, providerOf } from "../src/lib/storage.ts";
 
 const pass = (m) => console.log(`  ✓ ${m}`);
@@ -43,14 +43,23 @@ const body = `zad storage check ${new Date().toISOString()}`;
 
 console.log("\nالفحص:");
 
-// ٢ — ردُّ المستودع على مفتاحٍ مفقود، إخباراً لا حكماً.
+// ٢ — التوقيعُ مقبولٌ، ويُعرف من **ردِّ مفتاحٍ مفقود**: ٤٠٤ لا ٤٠٣.
 //
-//     و٤٠٣ هنا صحيحةٌ كـ٤٠٤: المفتاحُ لا يحمل `listFiles`، وباك بليز — كـS3 —
-//     تردّ ٤٠٣ على المفقود حينئذٍ كي لا تُفصح عن وجوده. فلا يُحكم على
-//     التوقيع من هنا، إنّما من الرفع والحذف بعدَه.
+//     و٤٠٣ هنا ليست «مفقوداً مستوراً» بل **توقيعاً مرفوضاً**: مفتاحٌ خاطئ،
+//     أو إقليمٌ خاطئ، أو ساعةُ جهازٍ منحرفةٌ — وأمازون تردّ بها قبل أن
+//     تنظر في وجود الملفّ. فتُفحص قبل الرفع كي يُقال السببُ باسمه، لا
+//     يُستنتج من سقوطِ ما بعدَه.
+//
+//     وكان هذا السطرُ إخباراً يقبل ٤٠٣ و٤٠٤ معاً، بتعليلٍ أنّ المفتاحَ بلا
+//     `listFiles`. والمفتاحُ يحمله، وإنّما كان الفحصُ نفسُه يُرسل `HEAD`
+//     إلى رابطٍ مُوقَّعٍ لـ`PUT` — والطريقةُ داخلَ التوقيع. فلم يكن يفحص
+//     شيئاً: ٤٠٣ في كلِّ حال، سليمةً كانت السلسلةُ أو معطوبة.
 const target = presignUpload(key, 300);
-const missing = await fetch(presignUpload(`${key}.missing`, 60).uploadUrl, { method: "HEAD" });
-console.log(`  · ردُّ المفقود: ${missing.status} (٤٠٣ أو ٤٠٤، وكلاهما سليم)`);
+const missingStatus = await b2HeadStatus(`${key}.missing`);
+if (missingStatus === 404) pass("التوقيعُ مقبول (المفقودُ يردُّ ٤٠٤)");
+else if (missingStatus === 403)
+  fail("٤٠٣ — التوقيعُ مرفوض: راجع B2_KEY_ID وB2_APP_KEY وB2_REGION وساعةَ الجهاز");
+else fail(`ردُّ المفقود ${missingStatus} — غيرُ متوقَّع`);
 // ٣ — الرفع
 const put = await fetch(target.uploadUrl, {
   method: "PUT",

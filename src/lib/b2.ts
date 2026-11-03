@@ -176,13 +176,20 @@ export async function deleteFromB2(key: string): Promise<boolean> {
 }
 
 /**
- * هل الملفُّ موجودٌ فعلاً — يُسأل قبل استبدال رابطٍ في القاعدة.
+ * حالةُ `HEAD` على مفتاح — ويُفرَّق بها **المفقودُ عن المرفوض**.
  *
- * ويُردّ `false` للـ٤٠٣ كما للـ٤٠٤: مفتاحُ التطبيق بلا صلاحيّة `listFiles`،
- * فباك بليز — كـS3 — تردّ ٤٠٣ على المفقود كي لا تُفصح عن وجوده. فالغايةُ
- * محقَّقةٌ في الحالين: ليس هناك ملفٌّ نتأكّد منه.
+ * و٤٠٤ تعني أنّ الملفَّ غيرُ موجود، أمّا ٤٠٣ فتعني أنّ **التوقيعَ نفسَه
+ * مرفوض** — مفتاحٌ خاطئ، أو إقليمٌ خاطئ، أو ساعةُ جهازٍ منحرفةٌ عن
+ * الحقيقة بأكثرَ من دقائق. وهما عطبان لا يُجمعان في جوابٍ واحد: الأوّلُ
+ * حالةٌ عاديّةٌ تُسأل عنها، والثاني يُسقط كلَّ رفعٍ وحذفٍ في الموقع.
+ *
+ * > وكان هنا تعليلٌ خاطئٌ يقول إنّ ٤٠٣ جوابُ المفقود لأنّ المفتاحَ بلا
+ * > `listFiles`. والمفتاحُ يحمل `listFiles` فعلاً، و`HEAD` مُوقَّعاً
+ * > صحيحاً على مفقودٍ يردُّ ٤٠٤. وإنّما جاءت ٤٠٣ من فحصٍ كان يُرسل `HEAD`
+ * > إلى رابطٍ مُوقَّعٍ لـ`PUT`: **الطريقةُ داخلَ التوقيع**، فتضارُبُها
+ * > يُبطله.
  */
-export async function b2ObjectExists(key: string): Promise<boolean> {
+export async function b2HeadStatus(key: string): Promise<number> {
   const config = requireB2Config();
   const url = presignS3Url({
     method: "HEAD",
@@ -195,5 +202,11 @@ export async function b2ObjectExists(key: string): Promise<boolean> {
     now: new Date(),
   });
   const res = await fetch(url, { method: "HEAD" });
-  return res.ok;
+  return res.status;
+}
+
+/** هل الملفُّ موجودٌ فعلاً — يُسأل قبل استبدال رابطٍ في القاعدة. */
+export async function b2ObjectExists(key: string): Promise<boolean> {
+  const status = await b2HeadStatus(key);
+  return status >= 200 && status < 300;
 }

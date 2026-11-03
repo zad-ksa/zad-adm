@@ -1,0 +1,131 @@
+/**
+ * قاعدةُ CORS على مستودع باك بليز — قراءةً وضبطاً.
+ *
+ * ولمَ سكربتٌ لا واجهةُ الموقع: واجهةُ باك بليز تُقدِّم خيارين جاهزين
+ * («شارِك مع كلِّ الأصول» أو «مع أصولٍ مُعيَّنة»)، وهما يضبطان عمليّاتِ
+ * **التنزيل** — ونحن نحتاج `s3_put`، أي الكتابةَ من المتصفِّح. فمن اختار
+ * الجاهزَ ظنَّ أنّه فعل المطلوب، وبقي الرفعُ يسقط. ثمّ هي قاعدةٌ تُراجَع
+ * وتُزاد (أصلُ معاينةٍ جديد)، فموضعُها العدّةُ لا الذاكرة.
+ *
+ * ويُستعمل **واجهةُ باك بليز الأصليّة لا S3**: ضبطُ CORS في S3 موردٌ فرعيٌّ
+ * (`?cors`)، و`presignS3Url` عندنا تُرمِّز المسارَ كلَّه فيصير `?cors` جزءاً من
+ * اسم المفتاح. والواجهةُ الأصليّةُ طلبُ JSON برمزٍ من `b2_authorize_account`،
+ * فلا توقيعَ فيها أصلاً.
+ *
+ * **وهو يُبدِّل القواعدَ كلَّها لا يُضيف إليها**: هكذا تعمل الواجهة. فيُطبع
+ * القائمُ قبل الجديد، ولا يُكتب شيءٌ بلا `--apply`.
+ *
+ *   npm run b2:cors                          # قراءةٌ وعرضُ ما سيُكتب
+ *   npm run b2:cors -- --apply               # الكتابة
+ *   npm run b2:cors -- --origin=https://x.sa --origin=https://y.sa --apply
+ */
+
+const APPLY = process.argv.includes("--apply");
+
+// الأصولُ التي يُجاز الرفعُ منها. ولا `*` بحال: الرابطُ المُوقَّع يُجيز
+// الكتابةَ على مفتاحٍ بعينه، لكنّ `*` تجعل أيَّ صفحةٍ في الإنترنت تستطيع
+// استعمالَ تذكرةٍ سُرِّبت من متصفِّح مستخدمٍ مُسجَّل.
+const DEFAULT_ORIGINS = ["https://zad-adm.vercel.app", "http://localhost:3000"];
+const argOrigins = process.argv
+  .filter((a) => a.startsWith("--origin="))
+  .map((a) => a.slice("--origin=".length).replace(/\/+$/, ""))
+  .filter(Boolean);
+const origins = argOrigins.length ? argOrigins : DEFAULT_ORIGINS;
+
+const RULES = [
+  {
+    corsRuleName: "zadBrowserUpload",
+    allowedOrigins: origins,
+    // `s3_put` وحدَها: الرفعُ من المتصفِّح. والقراءةُ تمرّ من بوّابة كلاود فلير
+    // وهي خادمٌ لا متصفِّح، فلا CORS عليها — ومن أضاف `s3_get` هنا وسّع الإجازةَ
+    // بلا أن يحتاجها.
+    allowedOperations: ["s3_put"],
+    // `content-type` يُرسل مع الـ`PUT` فلا بدّ من إجازته، و`*` تُغني عن تتبُّعِ
+    // ما يُضيفه المتصفِّحُ من ترويسات.
+    allowedHeaders: ["*"],
+    exposeHeaders: ["etag"],
+    maxAgeSeconds: 3600,
+  },
+];
+
+const need = ["B2_KEY_ID", "B2_APP_KEY", "B2_BUCKET"].filter((k) => !process.env[k]?.trim());
+if (need.length) {
+  console.log("الإعدادُ ناقص:", need.join("، "));
+  process.exit(1);
+}
+
+const bucketName = process.env.B2_BUCKET.trim();
+const basic = Buffer.from(`${process.env.B2_KEY_ID.trim()}:${process.env.B2_APP_KEY.trim()}`).toString("base64");
+
+const authRes = await fetch("https://api.backblazeb2.com/b2api/v3/b2_authorize_account", {
+  headers: { Authorization: `Basic ${basic}` },
+});
+const authBody = await authRes.json();
+if (!authRes.ok) {
+  console.log(`تعذّر التوثيق (${authRes.status}): ${authBody.message ?? ""}`);
+  process.exit(1);
+}
+const { apiUrl } = authBody.apiInfo.storageApi;
+const token = authBody.authorizationToken;
+const accountId = authBody.accountId;
+const capabilities = authBody.apiInfo.storageApi.capabilities ?? [];
+
+const call = async (name, body) => {
+  const res = await fetch(`${apiUrl}/b2api/v3/${name}`, {
+    method: "POST",
+    headers: { Authorization: token, "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  const json = await res.json();
+  if (!res.ok) throw new Error(`${name} ${res.status}: ${json.message ?? JSON.stringify(json)}`);
+  return json;
+};
+
+const { buckets } = await call("b2_list_buckets", { accountId, bucketName });
+const bucket = buckets?.[0];
+if (!bucket) {
+  console.log(`لا مستودعَ بهذا الاسم: ${bucketName}`);
+  process.exit(1);
+}
+
+console.log(`المستودع: ${bucket.bucketName} (${bucket.bucketType})`);
+console.log("\nالقائمُ الآن:");
+console.log(bucket.corsRules?.length ? JSON.stringify(bucket.corsRules, null, 2) : "  (لا قاعدةَ — وكلُّ رفعٍ من المتصفِّح يسقط)");
+
+console.log("\nالذي سيُكتب:");
+console.log(JSON.stringify(RULES, null, 2));
+
+if (!capabilities.includes("writeBuckets")) {
+  console.log(
+    "\nوالمفتاحُ بلا `writeBuckets`، فلا يستطيع الضبط. أنشئ مفتاحاً يحمله،" +
+      " أو اضبطها من واجهة باك بليز."
+  );
+  process.exit(1);
+}
+
+if (!APPLY) {
+  console.log("\nقراءةٌ بلا كتابة — أضف --apply للتنفيذ.");
+  process.exit(0);
+}
+
+// `bucketType` لا يُمرَّر: الواجهةُ تُبقيه على ما هو، والمستودعُ خاصٌّ بقصدٍ
+// فلا يُلمس من هنا بحال.
+await call("b2_update_bucket", { accountId, bucketId: bucket.bucketId, corsRules: RULES });
+
+// يُقرأ من باك بليز بعد الكتابة لا يُستنتج من نجاح الطلب.
+const after = (await call("b2_list_buckets", { accountId, bucketName })).buckets?.[0];
+const written = after?.corsRules ?? [];
+console.log("\nالتحقُّق — ما تقوله باك بليز الآن:");
+console.log(JSON.stringify(written, null, 2));
+
+const rule = written.find((r) => r.corsRuleName === RULES[0].corsRuleName);
+const ok =
+  rule &&
+  rule.allowedOperations?.includes("s3_put") &&
+  origins.every((o) => rule.allowedOrigins?.includes(o));
+if (ok) {
+  console.log("\n✓ القاعدةُ مكتوبة. وأعد `npm run check:b2` فيُجرِّب الطلبَ التمهيديَّ عليها.");
+} else {
+  console.log("\n✗ القاعدةُ لم تُكتب كما أُرسلت — راجع الطبعةَ أعلاه.");
+  process.exitCode = 1;
+}

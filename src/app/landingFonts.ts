@@ -3,11 +3,11 @@ import {
   Tajawal,
   Almarai,
   IBM_Plex_Sans_Arabic,
-  Readex_Pro,
   El_Messiri,
   Reem_Kufi,
   Changa,
 } from "next/font/google";
+import localFont from "next/font/local";
 import type { LandingFontKey } from "@/lib/landing";
 
 /**
@@ -51,9 +51,13 @@ const ibm = IBM_Plex_Sans_Arabic({
   preload: false,
 });
 
-const readex = Readex_Pro({
-  subsets: ["arabic"],
-  weight: ["400", "500", "700"],
+// ‏Readex Pro من ملفٍّ في المستودع لا من Google: بناءُ Vercel صار يفشل عليه
+// وحدَه ("next/font/google queries have exactly one entry") بينما ينجح محلياً،
+// فالرابطُ الذي يُعطاه هناك لا يقرؤه Turbopack. والملفُّ متغيّرُ الوزن، يغطّي
+// 400 و500 و700 في ملفٍّ واحد. الرخصة OFL في fonts/ReadexPro-OFL.txt.
+const readex = localFont({
+  src: "./fonts/ReadexPro-Variable.ttf",
+  weight: "400 700",
   variable: "--font-landing-readex",
   display: "swap",
   preload: false,

@@ -1,90 +1,89 @@
-import {
-  Cairo,
-  Tajawal,
-  Almarai,
-  IBM_Plex_Sans_Arabic,
-  El_Messiri,
-  Reem_Kufi,
-  Changa,
-} from "next/font/google";
 import localFont from "next/font/local";
 import type { LandingFontKey } from "@/lib/landing";
 
 /**
  * خطوط الواجهة الرئيسية — عربية احترافية/إبداعية، مستضافة ذاتياً عبر next/font
- * (تُبنى وقت البناء وتُخدَم من /_next/static، فتتوافق مع `font-src 'self'` في CSP
- * دون أي طلب إلى fonts.gstatic.com).
+ * (تُخدَم من /_next/static، فتتوافق مع `font-src 'self'` في CSP).
+ *
+ * من ملفّاتٍ في src/app/fonts لا من Google: بناءُ Vercel صار يفشل على خطوط
+ * next/font/google واحداً بعد واحد — انظر siteFonts.ts. والمتغيّرُ الوزن ملفٌّ
+ * واحد، والثابتُ ملفٌّ لكل وزن.
  *
  * `preload: false` مقصود: لا يُحمَّل مسبقاً إلا ما يستخدمه الزائر فعلاً — المتصفح
  * ينزّل ملف الخط المختار فقط عند أول استخدام، لا الثمانية.
  */
 
-const cairo = Cairo({
-  subsets: ["arabic"],
-  weight: ["400", "600", "700"],
+const cairo = localFont({
+  display: "swap",
+  preload: false,
+  src: "./fonts/Cairo-Variable.woff2",
+  weight: "200 1000",
   variable: "--font-landing-cairo",
-  display: "swap",
-  preload: false,
 });
 
-const tajawal = Tajawal({
-  subsets: ["arabic"],
-  weight: ["400", "500", "700"],
+const tajawal = localFont({
+  display: "swap",
+  preload: false,
+  src: [
+    { path: "./fonts/Tajawal-400.woff2", weight: "400", style: "normal" },
+    { path: "./fonts/Tajawal-500.woff2", weight: "500", style: "normal" },
+    { path: "./fonts/Tajawal-700.woff2", weight: "700", style: "normal" },
+  ],
   variable: "--font-landing-tajawal",
-  display: "swap",
-  preload: false,
 });
 
-const almarai = Almarai({
-  subsets: ["arabic"],
-  weight: ["400", "700", "800"],
+const almarai = localFont({
+  display: "swap",
+  preload: false,
+  src: [
+    { path: "./fonts/Almarai-400.woff2", weight: "400", style: "normal" },
+    { path: "./fonts/Almarai-700.woff2", weight: "700", style: "normal" },
+    { path: "./fonts/Almarai-800.woff2", weight: "800", style: "normal" },
+  ],
   variable: "--font-landing-almarai",
-  display: "swap",
-  preload: false,
 });
 
-const ibm = IBM_Plex_Sans_Arabic({
-  subsets: ["arabic"],
-  weight: ["400", "500", "700"],
+const ibm = localFont({
+  display: "swap",
+  preload: false,
+  src: [
+    { path: "./fonts/IBMPlexSansArabic-400.woff2", weight: "400", style: "normal" },
+    { path: "./fonts/IBMPlexSansArabic-500.woff2", weight: "500", style: "normal" },
+    { path: "./fonts/IBMPlexSansArabic-700.woff2", weight: "700", style: "normal" },
+  ],
   variable: "--font-landing-ibm",
-  display: "swap",
-  preload: false,
 });
 
-// ‏Readex Pro من ملفٍّ في المستودع لا من Google: بناءُ Vercel صار يفشل عليه
-// وحدَه ("next/font/google queries have exactly one entry") بينما ينجح محلياً،
-// فالرابطُ الذي يُعطاه هناك لا يقرؤه Turbopack. والملفُّ متغيّرُ الوزن، يغطّي
-// 400 و500 و700 في ملفٍّ واحد. الرخصة OFL في fonts/ReadexPro-OFL.txt.
 const readex = localFont({
-  src: "./fonts/ReadexPro-Variable.ttf",
-  weight: "400 700",
+  display: "swap",
+  preload: false,
+  src: "./fonts/ReadexPro-Variable.woff2",
+  weight: "160 700",
   variable: "--font-landing-readex",
-  display: "swap",
-  preload: false,
 });
 
-const messiri = El_Messiri({
-  subsets: ["arabic"],
-  weight: ["400", "600", "700"],
+const messiri = localFont({
+  display: "swap",
+  preload: false,
+  src: "./fonts/ElMessiri-Variable.woff2",
+  weight: "400 700",
   variable: "--font-landing-messiri",
-  display: "swap",
-  preload: false,
 });
 
-const reem = Reem_Kufi({
-  subsets: ["arabic"],
-  weight: ["400", "500", "700"],
+const reem = localFont({
+  display: "swap",
+  preload: false,
+  src: "./fonts/ReemKufi-Variable.woff2",
+  weight: "400 700",
   variable: "--font-landing-reem",
-  display: "swap",
-  preload: false,
 });
 
-const changa = Changa({
-  subsets: ["arabic"],
-  weight: ["400", "600", "700"],
-  variable: "--font-landing-changa",
+const changa = localFont({
   display: "swap",
   preload: false,
+  src: "./fonts/Changa-Variable.woff2",
+  weight: "200 800",
+  variable: "--font-landing-changa",
 });
 
 /** يُوضع على غلاف LandingView ليُتيح كل متغيّرات `--font-landing-*`. */

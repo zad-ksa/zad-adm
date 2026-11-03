@@ -4,6 +4,7 @@ import { prisma } from "@/lib/db";
 import { EXTERNAL_CHARITIES, externalOnly } from "@/lib/charityScope";
 import type { Prisma } from "@prisma/client";
 import { revalidatePath } from "next/cache";
+import { syncCharityAdminServicesQuietly } from "@/lib/charityAdminServices";
 import { getSession } from "@/lib/auth";
 import { assertCharityAccess, getAssignedCharityIds } from "@/lib/access";
 import { hasPermission, isAdmin } from "@/lib/permissions";
@@ -48,6 +49,9 @@ export async function createServiceTemplate(name: string, department: string | n
     }));
     await prisma.service.createMany({ data: servicesToCreate });
   }
+  // ومديرُ كلِّ جمعيةٍ يُفوَّض بالجديد: مجموعةُ الخدمات تغيّرت من جهة زاد،
+  // ولم يلمس أحدٌ حسابَه في شاشة الموظفين.
+  await syncCharityAdminServicesQuietly();
   revalidatePath('/main/manage-services');
   return template;
 }
@@ -81,6 +85,7 @@ export async function deleteServiceTemplate(id: string) {
   }
 
   await prisma.service.deleteMany({ where: { templateId: id } });
+  await syncCharityAdminServicesQuietly();
   const template = await prisma.serviceTemplate.delete({ where: { id } });
   
   revalidatePath('/main/manage-services');
@@ -192,7 +197,8 @@ export async function addServiceToCharities(name: string, department: string | n
   }));
 
   await prisma.service.createMany({ data: servicesToCreate });
-  
+  await syncCharityAdminServicesQuietly();
+
   revalidatePath('/main/manage-services');
   return { success: true, count: charityIds.length };
 }
@@ -211,17 +217,56 @@ export async function renameServiceGlobally(oldName: string, newName: string, ne
   // في «إدارة الخدمات»، ويسري منح إحداهما على الأخرى.
   if (await serviceNameTaken(cleanName, oldName)) return { error: DUPLICATE_SERVICE_NAME };
 
-  const result = await prisma.service.updateMany({
-    where: { name: oldName },
-    data: { name: cleanName, department: newDepartment }
-  });
 
-  // الربط بالصلاحيات مفتاحه الاسم، فيتبع التسمية — وإلا صار ربطاً إلى خدمةٍ
-  // لا وجود لها، فتسقط الصلاحية عن حامليها بلا أثرٍ ظاهر.
-  await prisma.permissionServiceLink.updateMany({
-    where: { serviceName: oldName },
-    data: { serviceName: cleanName },
-  });
+  // **اسمُ الخدمة مفتاحٌ بالعُرف في خمسة جداول**، فالتسميةُ تحمله إليها كلِّها.
+  //
+  // وكان يُحمَل إلى `PermissionServiceLink` وحدَه، فتبقى الأربعةُ الأخرى على
+  // اسمٍ زائل: منحُ موظفي زاد، وتفويضُ أعضاء الجمعيات، والمعمِّدون، وخدمةُ
+  // كلِّ بريدٍ ماضٍ. وأثرُه أنّ تسميةَ خدمةٍ كانت **تُسقط تفويضَها عن حامليه
+  // بلا أثرٍ ظاهر**: لا خطأَ يُرفع، ولا صفَّ يُحذف، إنّما يُشير إلى اسمٍ
+  // لا وجود له فلا يُطابق شيئاً.
+  //
+  // ويُحذف قبل التحديث ما يحمل الاسمَ الجديدَ لصاحبِ الاسم القديم نفسِه:
+  // المفاتيحُ مركَّبةٌ على (الصاحب، الاسم)، فصاحبٌ يحمل الاثنين يُسقط
+  // التحديثَ كلَّه بتضاربِ مفتاح. و`IS NOT DISTINCT FROM` لأنّ charityId
+  // يقبل العدم، و`=` مع العدم لا يُطابق شيئاً.
+  // والخدمةُ نفسُها داخل المعاملة لا قبلها: لو سقط ما بعدها، رُحِّل الاسمُ
+  // ولم تتبعه تفويضاتُه — وهو عينُ العطب الذي نُصلحه.
+  const [result] = await prisma.$transaction([
+    prisma.service.updateMany({
+      where: { name: oldName },
+      data: { name: cleanName, department: newDepartment },
+    }),
+    prisma.permissionServiceLink.updateMany({
+      where: { serviceName: oldName },
+      data: { serviceName: cleanName },
+    }),
+
+    prisma.$executeRaw`DELETE FROM "CharityMemberService" a WHERE a."serviceName" = ${cleanName} AND EXISTS (SELECT 1 FROM "CharityMemberService" b WHERE b."membershipId" = a."membershipId" AND b."serviceName" = ${oldName})`,
+    prisma.charityMemberService.updateMany({
+      where: { serviceName: oldName },
+      data: { serviceName: cleanName },
+    }),
+
+    prisma.$executeRaw`DELETE FROM "EmployeeServiceAccess" a WHERE a."serviceName" = ${cleanName} AND EXISTS (SELECT 1 FROM "EmployeeServiceAccess" b WHERE b."employeeId" = a."employeeId" AND b."charityId" IS NOT DISTINCT FROM a."charityId" AND b."serviceName" = ${oldName})`,
+    prisma.employeeServiceAccess.updateMany({
+      where: { serviceName: oldName },
+      data: { serviceName: cleanName },
+    }),
+
+    prisma.$executeRaw`DELETE FROM "MailApprover" a WHERE a."serviceName" = ${cleanName} AND EXISTS (SELECT 1 FROM "MailApprover" b WHERE b."employeeId" = a."employeeId" AND b."serviceName" = ${oldName})`,
+    prisma.mailApprover.updateMany({
+      where: { serviceName: oldName },
+      data: { serviceName: cleanName },
+    }),
+
+    // والبريدُ الماضي يتبع الاسمَ ولا يُحذف: المحادثةُ قائمةٌ وردودُها
+    // تُحسب مستلميها من الاسم، فلو بقي الاسمُ القديم لم يصل ردٌّ أحداً.
+    prisma.internalMail.updateMany({
+      where: { serviceName: oldName },
+      data: { serviceName: cleanName },
+    }),
+  ]);
 
   revalidatePath('/main/manage-services');
   return { success: true, updatedCount: result.count };
@@ -235,9 +280,19 @@ export async function deleteServiceGlobally(name: string) {
     throw new Error("UNAUTHORIZED");
   }
 
-  const result = await prisma.service.deleteMany({ where: { name } });
-  // ولا يبقى ربطٌ لصلاحيةٍ بخدمةٍ محذوفة.
-  await prisma.permissionServiceLink.deleteMany({ where: { serviceName: name } });
+  // ولا يبقى صفٌّ يُشير إلى خدمةٍ زالت: الربطُ بالصلاحيات، وتفويضُ أعضاء
+  // الجمعيات، ومنحُ موظفي زاد، والمعمِّدون. وكان يُنظَّف الأوّلُ وحدَه،
+  // فتبقى الثلاثةُ صفوفاً ميتةً تظهر في شاشات المنح ولا تُطابق خدمة.
+  //
+  // والبريدُ الماضي لا يُمَسّ: مراسلةٌ جرت لا تُحذف لأنّ خدمتَها أُلغيت،
+  // ومستلموها محفوظون في صفوفهم فتبقى مقروءةً كما كانت.
+  const [result] = await prisma.$transaction([
+    prisma.service.deleteMany({ where: { name } }),
+    prisma.permissionServiceLink.deleteMany({ where: { serviceName: name } }),
+    prisma.charityMemberService.deleteMany({ where: { serviceName: name } }),
+    prisma.employeeServiceAccess.deleteMany({ where: { serviceName: name } }),
+    prisma.mailApprover.deleteMany({ where: { serviceName: name } }),
+  ]);
 
   revalidatePath('/main/manage-services');
   return { success: true, deletedCount: result.count };
@@ -339,6 +394,7 @@ export async function createService(charityId: string, name: string, department:
     },
     include: { charity: true }
   });
+  await syncCharityAdminServicesQuietly(charityId);
   
   revalidatePath(`/portal/${encodeURIComponent(service.charity.name)}/services`);
   if (service.department) {
@@ -401,6 +457,7 @@ export async function deleteService(id: string) {
     where: { id },
     include: { charity: true }
   });
+  await syncCharityAdminServicesQuietly(service.charityId);
   
   revalidatePath(`/portal/${encodeURIComponent(service.charity.name)}/services`);
   revalidatePath(`/portal/${encodeURIComponent(service.charity.name)}/strategy`);
@@ -901,6 +958,7 @@ export async function unifyCharityStagesAction(sourceCharityId: string, timeline
           charityId: targetCharity.id,
         }
       });
+      await syncCharityAdminServicesQuietly(targetCharity.id);
     }
 
     await prisma.serviceStage.deleteMany({ where: { serviceId: targetSvc.id } });

@@ -266,6 +266,13 @@ export async function renameServiceGlobally(oldName: string, newName: string, ne
       where: { serviceName: oldName },
       data: { serviceName: cleanName },
     }),
+
+    // وسجلُّ «آخر المستجدات» كذلك: خليّتُه بالاسم، فلو بقي القديمُ خلت الخانةُ
+    // تحت الاسم الجديد وضاع سجلّها.
+    prisma.latestUpdate.updateMany({
+      where: { serviceName: oldName },
+      data: { serviceName: cleanName },
+    }),
   ]);
 
   revalidatePath('/main/manage-services');

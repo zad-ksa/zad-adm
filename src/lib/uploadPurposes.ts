@@ -14,12 +14,22 @@
 export const MB = 1024 * 1024;
 
 /**
- * A signed Cloudinary upload ticket.
+ * تذكرةُ رفعٍ قصيرةُ العمر، **تحمل مزوّدَها في متنها**.
  *
- * Shared so the public survey path can mint one without importing from a
- * "use server" module that also carries session-bound helpers.
+ * وهذا الوسمُ هو ما يُجيز التعايش: الخادمُ يُقرِّر المزوِّدَ في موضعٍ واحدٍ
+ * (`uploadProvider`)، والمتصفِّحُ لا يُقرِّر شيئاً — يقرأ `provider` ويرفع
+ * بما يُناسبه. فالتحوُّلُ متغيّرُ بيئةٍ لا نشرةُ كود، والرجوعُ عنه مثلُه.
+ *
+ * واتّحادٌ مُميَّزٌ لا حقولٌ اختياريّةٌ على نوعٍ واحد: TypeScript يُلزم
+ * المتصفِّحَ بفرزِ الفرعين قبل أن يقرأ حقلاً، فلا يُقرأ `signature` من تذكرة
+ * باك بليز ولا `uploadUrl` من تذكرة Cloudinary — وهو خطأٌ لا يظهر إلّا عند
+ * الرفع لو كُتبت الحقولُ اختياريّةً.
+ *
+ * وهي مشتركةٌ هنا لا في ملفِّ الأفعال كي يُصدّرها مسارُ الاستبيان العامّ
+ * بلا أن يستورد من وحدةٍ "use server" تحمل مُعِيناتٍ مربوطةً بالجلسة.
  */
-export type UploadTicket = {
+export type CloudinaryUploadTicket = {
+  provider: "cloudinary";
   cloudName: string;
   apiKey: string;
   timestamp: number;
@@ -28,6 +38,25 @@ export type UploadTicket = {
   publicId: string;
   resourceType: "auto" | "raw";
 };
+
+export type B2UploadTicket = {
+  provider: "b2";
+  /** رابطٌ مُوقَّعٌ يُرفع عليه بـ`PUT`، وينتهي عمرُه. */
+  uploadUrl: string;
+  /** الرابطُ الذي يُحفظ في القاعدة بعد نجاح الرفع. */
+  publicUrl: string;
+  key: string;
+  /**
+   * نوعُ المحتوى الذي **يجب** أن يُرسله المتصفِّحُ مع الـ`PUT`.
+   *
+   * فباك بليز تحفظ النوعَ المُرسلَ وتُعيده حرفاً، ولا يُصلح بعد الرفع إلّا
+   * بنسخِ الكائن. ويُشتقُّ هنا من الامتداد لا من `File.type`: ذاك فارغٌ
+   * لكثيرٍ مما نقبله، ومن جهة العميل أصلاً.
+   */
+  contentType: string;
+};
+
+export type UploadTicket = CloudinaryUploadTicket | B2UploadTicket;
 
 /**
  * 100MB per file.

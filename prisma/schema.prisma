@@ -126,6 +126,7 @@ model Charity {
   strategyPerspectives    StrategyPerspective[]
   operationalPlans        OperationalPlan[]
   planSurvey              PlanSurvey?
+  latestUpdates           LatestUpdate[]
 }
 
 /// معلومات الجمعية الثابتة لمنشئ وثائق المبادرات — رؤيتها، رسالتها، مجالها
@@ -2389,4 +2390,32 @@ model PlanSurveyResponse {
   submittedAt DateTime @default(now())
 
   @@index([surveyId, submittedAt])
+}
+
+/// «آخر المستجدات»: ما استجدّ في خدمةٍ عند جمعية — خليةٌ في جدول الجمعيات × الخدمات.
+///
+/// الخدمة بالاسم لا بمعرّف صفّها، كما في EmployeeServiceAccess: الخدمة في الواجهة
+/// اسمٌ يجمع صفوفاً لكل جمعية، ومعرّفات الصفوف تتبدّل عند التوحيد.
+///
+/// تاريخان لا تاريخ: `createdAt` يوم الإدخال ولا يُحرَّر، و`eventDate` يوم الحدث
+/// نفسه، افتراضيّه اليوم ويُعدَّل — فخبرٌ يُدوَّن متأخّراً لا يبدو أحدث مما هو.
+/// والأحدث في الخلية بتاريخ الحدث، وعليه يُحسب «منذ» ولونه.
+model LatestUpdate {
+  id          String   @id @default(uuid())
+  charityId   String
+  charity     Charity  @relation(fields: [charityId], references: [id], onDelete: Cascade)
+  serviceName String
+  content     String
+
+  /// يوم الحدث بتقويم الرياض (منتصف ليل UTC يمثّل اليوم المدني).
+  eventDate DateTime @db.Date
+
+  createdById   String?
+  createdByName String?
+  createdAt     DateTime @default(now())
+  updatedById   String?
+  updatedByName String?
+  updatedAt     DateTime @updatedAt
+
+  @@index([charityId, serviceName, eventDate])
 }

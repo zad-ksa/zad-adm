@@ -3,6 +3,8 @@
 import { v2 as cloudinary } from "cloudinary";
 import { getSession } from "@/lib/auth";
 import { logAudit } from "@/lib/auditLog";
+import { newStorageKey, presignUpload, uploadProvider } from "@/lib/b2";
+import { contentTypeFor } from "@/lib/mime";
 import {
   UPLOAD_PURPOSES,
   ALLOWED_EXTENSIONS,
@@ -11,6 +13,7 @@ import {
   IMAGE_ONLY_PURPOSES,
   maxLabelFor,
   type UploadPurpose,
+  type UploadTicket,
 } from "@/lib/uploadPurposes";
 
 cloudinary.config({
@@ -23,19 +26,9 @@ const ALLOWED = new Set<string>(ALLOWED_EXTENSIONS);
 const MEDIA = new Set<string>(MEDIA_EXTENSIONS);
 const IMAGES = new Set<string>(IMAGE_EXTENSIONS);
 
-export type UploadTicket = {
-  cloudName: string;
-  apiKey: string;
-  timestamp: number;
-  signature: string;
-  folder: string;
-  publicId: string;
-  resourceType: "auto" | "raw";
-};
-
 /**
- * Mints a short-lived Cloudinary signature so the browser uploads straight to
- * Cloudinary, without the bytes passing through this app.
+ * Mints a short-lived upload ticket so the browser uploads straight to the
+ * storage provider, without the bytes passing through this app.
  *
  * Why this replaced /api/upload: that route takes the file as a request body,
  * and a serverless function's request body is capped by the platform at a few
@@ -48,10 +41,17 @@ export type UploadTicket = {
  * What we give up by not seeing the bytes: the extension allowlist applies to
  * the *declared* filename, and the size is the one the client reports. Both
  * bound honest mistakes rather than a determined signed-in user; the backstop
- * for that is the Cloudinary account's own limits. What we keep is the part
- * that matters — the signature is minted only for a signed-in user, commits the
- * folder and public_id, and Cloudinary refuses any upload whose parameters do
- * not match what was signed. The client picks a purpose, never a folder.
+ * for that is the storage account's own limits. What we keep is the part that
+ * matters — the ticket is minted only for a signed-in user and commits the
+ * exact destination, which the provider then refuses to let the client change.
+ * The client picks a purpose, never a folder.
+ *
+ * ---
+ *
+ * **والتذكرةُ تحمل مزوّدَها.** والتحقُّقُ كلُّه — الجلسةُ والحجمُ والامتدادُ
+ * والصورةُ حيث تُشترط — يسبق الفرعَ ولا يُكرَّر فيه: شرطٌ يُكتب مرّتين يُعدَّل
+ * مرّةً، فينفتح أحدُ المساريْن على ما أُغلق في الآخر. والذي يفترق بعده أمران
+ * لا ثالثَ لهما: كيف يُسمّى الملفُّ عند المزوّد، وبأيِّ شيءٍ يُجاز رفعُه.
  */
 export async function createUploadTicket(
   purpose: UploadPurpose,
@@ -79,6 +79,41 @@ export async function createUploadTicket(
     return { error: "يجب اختيار صورة" };
   }
 
+  const provider = uploadProvider();
+
+  // يُسجَّل قبل الفرع وفيه اسمُ المزوّد: السجلُّ هو ما يُراجع حين يُسأل «أين
+  // ذهب هذا الملفّ؟» بعد التحوُّل، ويوم التحوُّلِ نفسِه يُقرأ منه الانتقال.
+  await logAudit({
+    actorType: session.userType === "CHARITY_USER" ? "CHARITY_USER" : "EMPLOYEE",
+    actorId: session.id,
+    actorName: session.name,
+    action: "FILE_UPLOAD",
+    metadata: { fileName: original, size: fileSize, folder: config.folder, purpose, provider },
+  });
+
+  if (provider === "b2") {
+    // المفتاحُ يُولَّد في الخادم ويُوقَّع في متنه، فلا يختاره المتصفِّحُ ولا
+    // يُبدِّله: الرابطُ المُوقَّع يُجيز الكتابةَ على هذا المفتاح وحدَه.
+    const key = newStorageKey(config.folder, original);
+    try {
+      const target = presignUpload(key);
+      return {
+        ticket: {
+          provider: "b2",
+          uploadUrl: target.uploadUrl,
+          publicUrl: target.publicUrl,
+          key: target.key,
+          contentType: contentTypeFor(key),
+        },
+      };
+    } catch (error) {
+      // `requireB2Config` تُخطئ بعبارةٍ تُسمّي ما نقص، فتُعرض كما هي: هذا خطأُ
+      // إعدادٍ يقرؤه مَن ضبط البيئة، لا خطأُ مستخدمٍ يُخفى عنه.
+      console.error("تعذّر تجهيز رفعِ باك بليز", error);
+      return { error: error instanceof Error ? error.message : "تعذّر تجهيز الرفع" };
+    }
+  }
+
   const isMedia = MEDIA.has(ext);
   const resourceType: "auto" | "raw" = isMedia ? "auto" : "raw";
 
@@ -101,16 +136,9 @@ export async function createUploadTicket(
     process.env.CLOUDINARY_API_SECRET as string
   );
 
-  await logAudit({
-    actorType: session.userType === "CHARITY_USER" ? "CHARITY_USER" : "EMPLOYEE",
-    actorId: session.id,
-    actorName: session.name,
-    action: "FILE_UPLOAD",
-    metadata: { fileName: original, size: fileSize, folder: config.folder, purpose },
-  });
-
   return {
     ticket: {
+      provider: "cloudinary",
       cloudName: process.env.CLOUDINARY_CLOUD_NAME as string,
       apiKey: process.env.CLOUDINARY_API_KEY as string,
       timestamp,

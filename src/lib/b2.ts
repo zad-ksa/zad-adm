@@ -14,7 +14,7 @@
 
 import { randomBytes } from "node:crypto";
 import { presignS3Url } from "./sigv4.ts";
-import { publicUrlOf, storageKeyOf } from "./storage.ts";
+import { publicUrlOf, storageKeyOf, type StorageProvider } from "./storage.ts";
 
 export type B2Config = {
   /** مضيفُ نقطةِ نهاية S3، بلا بروتوكول. */
@@ -75,6 +75,29 @@ export function missingB2Keys(): string[] {
     ["STORAGE_PUBLIC_BASE", process.env.STORAGE_PUBLIC_BASE],
   ];
   return needed.filter(([, v]) => !v?.trim()).map(([k]) => k);
+}
+
+/**
+ * إلى أيِّ مزوّدٍ تُرفع الملفّاتُ **الجديدة**.
+ *
+ * ومفتاحٌ صريحٌ (`STORAGE_UPLOAD_PROVIDER=b2`) لا استنباطٌ من اكتمال الإعداد،
+ * وهذا الفرقُ هو ما يمنع كسرَ الموقع: مفاتيحُ باك بليز موضوعةٌ في البيئة
+ * منذ أن جُرِّبت السلسلة، والبوّابةُ التي تُقرأ منها الملفّاتُ قد لا تكون
+ * نُشرت بعد. فلو كان الاستنباطُ هو الحكم، لانتقل الرفعُ من تلقائه إلى
+ * مستودعٍ **لا يُقرأ منه**: الرفعُ ينجح، والصفُّ يُحفظ، والملفُّ لا يظهر.
+ *
+ * فالتحوُّلُ قرارٌ يُتَّخذ بعد أن يقول `npm run check:b2` إنّ السلسلةَ سليمة،
+ * والرجوعُ عنه إزالةُ متغيّرٍ واحد. وما رُفع إلى أحدهما يبقى مقروءاً من
+ * أيٍّ منهما: المزوّدُ يُعرف من الرابط المحفوظ، لا من هذا المفتاح.
+ */
+export function uploadProvider(): StorageProvider {
+  if (process.env.STORAGE_UPLOAD_PROVIDER?.trim().toLowerCase() !== "b2") return "cloudinary";
+  if (b2Config()) return "b2";
+  // طُلبت باك بليز ونقص إعدادُها: يُرجع إلى Cloudinary كي لا يتعطّل الرفع،
+  // **ويُقال في السجلّ ما نقص بالاسم** — وإلّا بقي أحدُهم يُبدّل متغيّراً
+  // ويرى الملفّاتَ تذهب حيث لم يُردها بلا سببٍ ظاهر.
+  console.error("STORAGE_UPLOAD_PROVIDER=b2 ونقص الإعداد:", missingB2Keys().join("، "));
+  return "cloudinary";
 }
 
 export function requireB2Config(): B2Config {

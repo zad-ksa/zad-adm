@@ -1,6 +1,9 @@
 import { NextResponse } from "next/server";
 import { v2 as cloudinary } from "cloudinary";
 import { getSession } from "@/lib/auth";
+import { newStorageKey, presignUpload, uploadProvider } from "@/lib/b2";
+import { contentTypeFor } from "@/lib/mime";
+import type { UploadTicket } from "@/lib/uploadPurposes";
 
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
@@ -10,11 +13,34 @@ cloudinary.config({
 
 const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024; // 10MB
 
-// Images only: the upload below applies Cloudinary image transformations
-// (quality/fetch_format auto) that are meaningless for other types, and both
-// call sites in TasksClient.tsx use accept="image/*".
+// Images only: both call sites in TasksClient.tsx use accept="image/*", and a
+// proof of a completed task is a photo or a screenshot.
+//
+// وتُقبل heic وheif هنا ولا تُقبلان في بقيّة المواضع: الشاهدُ يُرفع من الجوّال
+// غالباً، وكاميرا آيفون تُخرج heic افتراضاً. ولو أُحيلت هذه القائمةُ إلى
+// `ALLOWED_EXTENSIONS` المشتركة لسقط أكثرُ الشواهد، أو لقُبلت heic للصور
+// الرمزيّةِ والشعاراتِ — وهي لا تُعرض في أكثر المتصفِّحات.
 const ALLOWED_EXTENSIONS = new Set(["jpg", "jpeg", "png", "gif", "webp", "heic", "heif"]);
 
+/**
+ * يُصدر تذكرةَ رفعٍ لشاهدِ مهمّة — ولا يستقبل البايتات.
+ *
+ * وكان يستقبلها: `formData()` ثمّ `upload_stream` إلى Cloudinary. وفيه العيبُ
+ * نفسُه الذي أُخرج منه `/api/upload` — جسمُ الطلب في دالّةٍ عديمةِ الخادم
+ * تحجزه المنصّةُ عند أربعةٍ ونصفٍ من الميجابايت تقريباً، **فتُرفض الصورةُ قبل
+ * أن يُنفَّذ سطرٌ من هذا الملفّ**. فحدُّ العشرةِ المكتوبُ أدناه لم يكن يُفحَص
+ * أصلاً في الملفّات التي تتجاوز ذلك، ورأى المستخدمُ «فشل رفع الشاهد» بلا سبب.
+ * وصورةُ جوّالٍ حديثٍ تتجاوز الأربعةَ ونصفَ بلا كلفة.
+ *
+ * فالآن تمرّ البايتاتُ من المتصفِّح إلى المزوّد مباشرةً، وحدُّ العشرةِ يُفحَص
+ * على الحجم المُعلَن قبل أن تُصدر التذكرة، فيُرفض الكبيرُ **فوراً** وبعبارةٍ
+ * تقول الحدَّ بالرقم.
+ *
+ * وما فُقد في الطريق: `quality: "auto"` و`fetch_format: "auto"` اللتان كانت
+ * Cloudinary تضغط بهما الصورةَ عند الرفع. ورفعٌ مباشرٌ بتوقيعٍ لا يحمل
+ * تحويلاً، والمزوّدُ الذي نمضي إليه لا يُحوِّل أصلاً. والثمنُ مقبول: شاهدٌ
+ * بحجمه الأصليِّ تحتَ عشرةِ ميجابايت، مقابل شاهدٍ يُرفض قبل أن يُرى.
+ */
 export async function POST(request: Request) {
   try {
     // Any authenticated employee may attach a proof to their own task, so this
@@ -24,58 +50,75 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "غير مصرح" }, { status: 401 });
     }
 
-    const formData = await request.formData();
-    const file = formData.get("file") as File;
+    const body = await request.json().catch(() => null);
+    const fileName = typeof body?.fileName === "string" ? body.fileName : "";
+    const fileSize = Number(body?.fileSize);
 
-    if (!file) {
+    if (!fileName) {
       return NextResponse.json({ error: "No file provided" }, { status: 400 });
     }
 
-    if (file.size > MAX_FILE_SIZE_BYTES) {
+    if (!Number.isFinite(fileSize) || fileSize <= 0) {
+      return NextResponse.json({ error: "ملف غير صالح" }, { status: 400 });
+    }
+
+    if (fileSize > MAX_FILE_SIZE_BYTES) {
       return NextResponse.json(
         { error: "حجم الملف يتجاوز الحد الأقصى المسموح (10 ميجابايت)" },
         { status: 413 }
       );
     }
 
-    const originalName = file.name || "";
-    const lastDotIndex = originalName.lastIndexOf(".");
-    const ext = lastDotIndex !== -1 ? originalName.substring(lastDotIndex + 1).toLowerCase() : "";
+    const lastDotIndex = fileName.lastIndexOf(".");
+    const ext = lastDotIndex !== -1 ? fileName.substring(lastDotIndex + 1).toLowerCase() : "";
+    const nameWithoutExt = lastDotIndex !== -1 ? fileName.substring(0, lastDotIndex) : fileName;
 
     if (!ext || !ALLOWED_EXTENSIONS.has(ext)) {
       return NextResponse.json({ error: "نوع الملف غير مدعوم، يُقبل رفع الصور فقط" }, { status: 415 });
     }
 
-    const arrayBuffer = await file.arrayBuffer();
-    const buffer = Buffer.from(arrayBuffer);
-
-    // Create a dynamic folder based on current year/month
+    // Folder by year/month, as before: the shape of the stored keys is what
+    // makes a year of proofs browsable in the provider's own console.
     const date = new Date();
     const year = date.getFullYear();
     const month = String(date.getMonth() + 1).padStart(2, "0");
     const folderPath = `tasks_proofs/${year}/${month}`;
 
-    const result: any = await new Promise((resolve, reject) => {
-      cloudinary.uploader.upload_stream(
-        {
-          folder: folderPath,
-          resource_type: "image",
-          quality: "auto", // Automatically compress the image
-          fetch_format: "auto", // Serve best format (webp/avif)
-        },
-        (error, result) => {
-          if (error) reject(error);
-          else resolve(result);
-        }
-      ).end(buffer);
-    });
+    if (uploadProvider() === "b2") {
+      const key = newStorageKey(folderPath, fileName);
+      const target = presignUpload(key);
+      const ticket: UploadTicket = {
+        provider: "b2",
+        uploadUrl: target.uploadUrl,
+        publicUrl: target.publicUrl,
+        key: target.key,
+        contentType: contentTypeFor(key),
+      };
+      return NextResponse.json({ ticket });
+    }
 
-    return NextResponse.json({
-      url: result.secure_url,
-      public_id: result.public_id
-    });
+    const publicId = nameWithoutExt.replace(/[^a-zA-Z0-9_-]/g, "_") + "_" + Date.now();
+    const timestamp = Math.round(Date.now() / 1000);
+    const signature = cloudinary.utils.api_sign_request(
+      { folder: folderPath, public_id: publicId, timestamp },
+      process.env.CLOUDINARY_API_SECRET as string
+    );
+
+    const ticket: UploadTicket = {
+      provider: "cloudinary",
+      cloudName: process.env.CLOUDINARY_CLOUD_NAME as string,
+      apiKey: process.env.CLOUDINARY_API_KEY as string,
+      timestamp,
+      signature,
+      folder: folderPath,
+      publicId,
+      // "auto" لا "image": المسارُ المُوقَّع يُرفع عليه بـ`auto` فتستنبط
+      // Cloudinary النوعَ من البايتات، والقائمةُ أعلاه تحصره في الصور أصلاً.
+      resourceType: "auto",
+    };
+    return NextResponse.json({ ticket });
   } catch (error) {
-    console.error("Upload error:", error);
-    return NextResponse.json({ error: "Upload failed" }, { status: 500 });
+    console.error("Upload ticket error:", error);
+    return NextResponse.json({ error: "تعذّر تجهيز الرفع" }, { status: 500 });
   }
 }

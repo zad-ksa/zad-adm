@@ -3,6 +3,8 @@
 import { v2 as cloudinary } from "cloudinary";
 import { prisma } from "@/lib/db";
 import { checkRateLimit } from "@/lib/rateLimit";
+import { newStorageKey, presignUpload, uploadProvider } from "@/lib/b2";
+import { contentTypeFor } from "@/lib/mime";
 import {
   ALLOWED_EXTENSIONS,
   MEDIA_EXTENSIONS,
@@ -33,7 +35,7 @@ const SURVEY_FOLDER = "zad_survey_uploads";
 const SURVEY_UPLOAD_LIMIT = { count: 30, windowMs: 10 * 60 * 1000 };
 
 /**
- * Issues a Cloudinary upload ticket for someone answering a public survey.
+ * Issues an upload ticket for someone answering a public survey.
  *
  * Custom surveys are answered by people with no account — that is the whole
  * point of them — but every upload path in the app requires a session. So
@@ -46,6 +48,13 @@ const SURVEY_UPLOAD_LIMIT = { count: 30, windowMs: 10 * 60 * 1000 };
  * submit answers — so it grants nothing new. What keeps it from being an open
  * file host is everything around it: a small size cap, the shared extension
  * allowlist, a fixed folder, and a rate limit keyed to the survey.
+ *
+ * ---
+ *
+ * **وهذا هو المسارُ الوحيدُ الذي يرفع عليه مجهولٌ**، فنوعُ المحتوى هنا ليس
+ * تفصيلَ عرض: مَن أمكنه أن يُخدَم html من نطاقنا، صارت له صفحةٌ على اسمنا.
+ * ولذلك يُشتقُّ النوعُ في الخادم من الامتداد، والبوّابةُ تُعيد فرضَه عند
+ * القراءة — وفي `mime.ts` اختبارٌ يمنع دخولَ نوعٍ يُنفَّذ في متصفِّح أصلاً.
  */
 export async function createSurveyUploadTicket(
   surveyId: string,
@@ -85,6 +94,20 @@ export async function createSurveyUploadTicket(
 
     if (!ext || !ALLOWED.has(ext)) return { error: "نوع الملف غير مدعوم" };
 
+    if (uploadProvider() === "b2") {
+      const key = newStorageKey(SURVEY_FOLDER, original);
+      const target = presignUpload(key);
+      return {
+        ticket: {
+          provider: "b2",
+          uploadUrl: target.uploadUrl,
+          publicUrl: target.publicUrl,
+          key: target.key,
+          contentType: contentTypeFor(key),
+        },
+      };
+    }
+
     const isMedia = MEDIA.has(ext);
     const resourceType: "auto" | "raw" = isMedia ? "auto" : "raw";
 
@@ -101,6 +124,7 @@ export async function createSurveyUploadTicket(
 
     return {
       ticket: {
+        provider: "cloudinary",
         cloudName: process.env.CLOUDINARY_CLOUD_NAME as string,
         apiKey: process.env.CLOUDINARY_API_KEY as string,
         timestamp,

@@ -5,6 +5,7 @@ import { notify } from "@/components/console/toastBus";
 import { Spinner } from "@/components/console/ui";
 import { useRouter } from "next/navigation";
 import { createSurveyUploadTicket } from "@/app/actions/surveyUpload";
+import { uploadWithTicket } from "@/lib/clientUpload";
 import { UploadCloud, CheckCircle2, AlertCircle, X, Paperclip } from "lucide-react";
 import ProgressBar from "@/components/ProgressBar";
 import DatePicker from "react-multi-date-picker";
@@ -177,7 +178,7 @@ export default function CustomSurveyPage({ params }: { params: Promise<{ id: str
     try {
       const uploadedUrls: string[] = [];
       for (const file of files) {
-        // Straight to Cloudinary with a ticket the survey itself authorises.
+        // تذكرةٌ يُجيزها الاستبيانُ نفسُه لا الجلسة.
         //
         // This used to POST to /api/upload, which demands a session — so a
         // respondent, who by design has no account, was told «غير مصرح».
@@ -192,25 +193,14 @@ export default function CustomSurveyPage({ params }: { params: Promise<{ id: str
           throw new Error(error || `تعذّر رفع ${file.name}`);
         }
 
-        const form = new FormData();
-        form.append("file", file);
-        form.append("api_key", ticket.apiKey);
-        form.append("timestamp", String(ticket.timestamp));
-        form.append("signature", ticket.signature);
-        form.append("folder", ticket.folder);
-        form.append("public_id", ticket.publicId);
-
-        const res = await fetch(
-          `https://api.cloudinary.com/v1_1/${ticket.cloudName}/${ticket.resourceType}/upload`,
-          { method: "POST", body: form }
-        );
-        const data = await res.json().catch(() => null);
-        if (!res.ok || !data?.secure_url) {
-          // Cloudinary's own reason, so «too large» and «wrong type» do not
-          // arrive as the same shrug.
-          throw new Error(data?.error?.message || `تعذّر رفع ${file.name}`);
-        }
-        uploadedUrls.push(data.secure_url);
+        // والرفعُ من `clientUpload` لا بيدِ الصفحة. وكان هنا `POST` بنموذجٍ
+        // مكتوبٍ حرفاً، فبقي وحيداً على Cloudinary بينما تحوّل الموقعُ كلُّه:
+        // صفحةٌ تعرف أسماءَ حقولِ مزوّدٍ بعينه لا تتحوّل معه. والآن تقرأ
+        // الوحدةُ المشتركةُ وسمَ التذكرة فترفع بما يُناسبه، ومنها تأتي
+        // رسالةُ المزوّد كما هي — فلا يعود «حجمٌ كبير» و«نوعٌ غيرُ مدعوم»
+        // هَزَّ كتفٍ واحداً.
+        const uploaded = await uploadWithTicket(file, ticket);
+        uploadedUrls.push(uploaded.url);
       }
       if (uploadedUrls.length > 0) {
         setAttachments(prev => ({ ...prev, [questionId]: [...(prev[questionId] || []), ...uploadedUrls] }));

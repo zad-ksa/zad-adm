@@ -64,7 +64,7 @@ import { useImagePaste } from "@/hooks/useImagePaste";
 import { timeAgoArabic } from "@/lib/dateUtils";
 import dynamic from "next/dynamic";
 
-import { uploadFile } from "@/lib/clientUpload";
+import { uploadFile, uploadTaskProof } from "@/lib/clientUpload";
 import { copyToClipboard } from "@/lib/clipboard";
 import { Dialog } from "@/components/console/Dialog";
 import { btn } from "@/components/console/ui";
@@ -655,22 +655,14 @@ ${combinedAchievements.length > 0 ? `
 
       // Upload proof if provided
       if (data.proofFile) {
-        const formData = new FormData();
-        formData.append("file", data.proofFile);
-
-        const uploadRes = await fetch("/api/tasks/upload-proof", {
-          method: "POST",
-          body: formData,
-        });
-
-        if (!uploadRes.ok) {
-          const errorData = await uploadRes.json().catch(() => ({}));
-          throw new Error(errorData.error || "فشل رفع الشاهد");
-        }
-
-        const uploadData = await uploadRes.json();
-        uploadedUrl = uploadData.url;
-        uploadedPublicId = uploadData.public_id;
+        // البايتاتُ من المتصفِّح إلى المزوّد مباشرةً. وكان النموذجُ يُرسل
+        // إلى مسارنا فتحجزه المنصّةُ عند أربعةٍ ونصفٍ من الميجابايت قبل أن
+        // يُنفَّذ سطرٌ منه — وصورةُ جوّالٍ حديثٍ تتجاوزها — فيرى المستخدمُ
+        // "فشل رفع الشاهد" بلا سبب. والآن يُرسل الاسمُ والحجمُ وتعود
+        // تذكرةٌ، فالكبيرُ يُرفض فوراً بعبارةٍ تقول الحدَّ.
+        const uploaded = await uploadTaskProof(data.proofFile);
+        uploadedUrl = uploaded.url;
+        uploadedPublicId = uploaded.publicId || null;
       }
 
       startTransition(async () => {
@@ -738,22 +730,11 @@ ${combinedAchievements.length > 0 ? `
       let finalPublicId: string | undefined = undefined;
 
       if (proofFile) {
-        const formData = new FormData();
-        formData.append("file", proofFile);
-
-        const uploadRes = await fetch("/api/tasks/upload-proof", {
-          method: "POST",
-          body: formData,
-        });
-
-        if (!uploadRes.ok) {
-          const errorData = await uploadRes.json().catch(() => ({}));
-          throw new Error(errorData.error || "فشل رفع الشاهد");
-        }
-
-        const { url, public_id } = await uploadRes.json();
-        finalUrl = url;
-        finalPublicId = public_id;
+        const uploaded = await uploadTaskProof(proofFile);
+        finalUrl = uploaded.url;
+        // فارغٌ لباك بليز عن قصد: المفتاحُ يُشتقُّ من الرابط، ولا يُحفظ
+        // مفتاحُ مزوّدٍ في عمودٍ يحمل اسمَ الآخر.
+        finalPublicId = uploaded.publicId || undefined;
       }
 
       startTransition(async () => {

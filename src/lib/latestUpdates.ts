@@ -11,8 +11,8 @@ import { isBusinessDay } from "./businessDays.ts";
 
 export type CivilRange = { startDate: Date; endDate: Date };
 
-/** درجة تقادم آخر حدثٍ في الخلية. `fresh` = لم يمضِ يوما عملٍ بعد، فلا لون. */
-export type Staleness = "fresh" | "green" | "yellow" | "red";
+/** درجة تقادم آخر حدثٍ في الخانة. كل خانةٍ فيها مستجدٌّ ملوّنة. */
+export type Staleness = "green" | "yellow" | "red";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -41,12 +41,14 @@ export function workingDaysBetween(from: Date, to: Date, holidays: CivilRange[] 
   return count;
 }
 
-/** يومان أخضر، وأربعة أصفر، وستة أحمر — بأيام العمل. */
+/**
+ * أخضر من يوم الحدث حتى ثلاثة أيام عمل، وأصفر في الرابع والخامس، وأحمر من
+ * السادس — بأيام العمل. ويوم الحدث نفسه أخضر: هو داخل اليومين لا قبلهما.
+ */
 export function stalenessOf(workingDays: number): Staleness {
   if (workingDays >= 6) return "red";
   if (workingDays >= 4) return "yellow";
-  if (workingDays >= 2) return "green";
-  return "fresh";
+  return "green";
 }
 
 /** «منذ …» بصيغة العدد العربية. */

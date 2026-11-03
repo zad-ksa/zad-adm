@@ -60,7 +60,6 @@ const key = (charityId: string, columnId: string) => `${charityId}::${columnId}`
 
 /** اللون دلالة: كم مضى على آخر حدثٍ في الخانة بلا جديدٍ بعده. */
 const STALENESS_CLASS: Record<Staleness, string> = {
-  fresh: "text-slate-500 dark:text-slate-400",
   green: "bg-emerald-100 text-emerald-800 dark:bg-emerald-400/15 dark:text-emerald-300",
   yellow: "bg-amber-100 text-amber-800 dark:bg-amber-400/15 dark:text-amber-300",
   red: "bg-red-100 text-red-700 dark:bg-red-500/15 dark:text-red-300",
@@ -492,8 +491,8 @@ function Cell({
 
 function Legend() {
   const items: [Staleness, string][] = [
-    ["green", "يوما عمل"],
-    ["yellow", "4 أيام عمل"],
+    ["green", "حتى 3 أيام عمل"],
+    ["yellow", "4 و5 أيام عمل"],
     ["red", "6 أيام عمل فأكثر"],
   ];
   return (

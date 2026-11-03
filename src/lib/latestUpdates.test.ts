@@ -23,9 +23,9 @@ test("holidays are not working days", () => {
   assert.equal(workingDaysBetween(d("2026-11-01"), d("2026-11-05"), holidays), 2);
 });
 
-test("staleness thresholds: 2 green, 4 yellow, 6 red", () => {
-  assert.equal(stalenessOf(0), "fresh");
-  assert.equal(stalenessOf(1), "fresh");
+test("staleness: green from the event day, 4 yellow, 6 red", () => {
+  assert.equal(stalenessOf(0), "green");
+  assert.equal(stalenessOf(1), "green");
   assert.equal(stalenessOf(2), "green");
   assert.equal(stalenessOf(3), "green");
   assert.equal(stalenessOf(4), "yellow");

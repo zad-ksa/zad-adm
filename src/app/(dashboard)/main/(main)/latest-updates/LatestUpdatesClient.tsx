@@ -228,7 +228,7 @@ export default function LatestUpdatesClient({
                   ? "يظهر الجدول بالخدمات الممنوحة لك."
                   : canManage
                     ? "أضف أول خدمةٍ فرعية من الزر أعلاه."
-                    : "تظهر هنا حين تُضاف خدماتٌ فرعية."
+                    : "إضافة الخدمات الفرعية لمن يملك صلاحية «آخر المستجدات (التحرير)» — تُمنح من صفحة الصلاحيات."
             }
           />
         </div>
@@ -288,7 +288,6 @@ export default function LatestUpdatesClient({
           target={viewing}
           today={today}
           canAdd={canAdd}
-          canManage={canManage}
           onAdd={() => {
             setAdding(viewing);
             setViewing(null);
@@ -591,7 +590,6 @@ function HistoryDialog({
   target: ref,
   today,
   canAdd,
-  canManage,
   onAdd,
   onClose,
 }: {
@@ -599,7 +597,6 @@ function HistoryDialog({
   target: CellRef;
   today: string;
   canAdd: boolean;
-  canManage: boolean;
   onAdd: () => void;
   onClose: () => void;
 }) {
@@ -691,7 +688,7 @@ function HistoryDialog({
                   </span>
                   {entry.createdByName && <span>بواسطة {entry.createdByName}</span>}
                   {entry.edited && <span>(عُدِّل{entry.updatedByName ? ` بواسطة ${entry.updatedByName}` : ""})</span>}
-                  {canManage && (
+                  {entry.canEdit && (
                     <span className="ms-auto flex items-center gap-1">
                       <button type="button" onClick={() => setEditingId(entry.id)} className={btn.icon} aria-label="تعديل">
                         <Pencil className="size-4" />

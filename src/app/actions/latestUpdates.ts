@@ -33,6 +33,8 @@ export type LatestUpdateEntry = {
   edited: boolean;
   /** اسم الخدمة الفرعية إن كان الحدث عليها. */
   subColumnName: string | null;
+  /** يعدّله ويحذفه هذا الشخص: صاحبُ التحرير، أو صاحبُ الإضافة فيما أضافه. */
+  canEdit: boolean;
 };
 
 type Result<T = undefined> = { success: true; data?: T } | { success: false; error: string };
@@ -90,10 +92,12 @@ const ENTRY_SELECT = {
   createdByName: true,
   updatedByName: true,
   updatedById: true,
+  createdById: true,
   subColumn: { select: { name: true } },
 } as const;
 
-function toEntry(row: {
+function toEntry(
+  row: {
   id: string;
   content: string;
   eventDate: Date;
@@ -101,8 +105,11 @@ function toEntry(row: {
   createdByName: string | null;
   updatedByName: string | null;
   updatedById: string | null;
+  createdById: string | null;
   subColumn: { name: string } | null;
-}): LatestUpdateEntry {
+  },
+  canEdit: boolean
+): LatestUpdateEntry {
   return {
     id: row.id,
     content: row.content,
@@ -112,7 +119,21 @@ function toEntry(row: {
     updatedByName: row.updatedByName,
     edited: row.updatedById !== null,
     subColumnName: row.subColumn?.name ?? null,
+    canEdit,
   };
+}
+
+/**
+ * من يعدّل المستجد ويحذفه: صاحبُ التحرير في كل ما يراه، وصاحبُ الإضافة فيما
+ * أضافه هو — فالإضافة تشمل تصحيحَ صاحبها ما كتب، لا ما كتبه غيره.
+ */
+function mayEdit(
+  scope: { canAdd: boolean; canManage: boolean },
+  sessionId: string | undefined,
+  createdById: string | null
+) {
+  if (scope.canManage) return true;
+  return scope.canAdd && !!sessionId && createdById === sessionId;
 }
 
 /**
@@ -126,7 +147,7 @@ export async function getCellHistory(
   columnKey: string,
   subColumnId?: string
 ): Promise<Result<LatestUpdateEntry[]>> {
-  const { scope } = await context();
+  const { session, scope } = await context();
   if (!seesCell(scope, charityId, columnKey)) return fail("غير مصرح");
 
   const rows = await prisma.latestUpdate.findMany({
@@ -134,7 +155,10 @@ export async function getCellHistory(
     orderBy: [{ eventDate: "desc" }, { createdAt: "desc" }],
     select: ENTRY_SELECT,
   });
-  return { success: true, data: rows.map(toEntry) };
+  return {
+    success: true,
+    data: rows.map((r) => toEntry(r, mayEdit(scope, session?.id, r.createdById))),
+  };
 }
 
 export async function addLatestUpdate(input: {
@@ -177,16 +201,22 @@ export async function addLatestUpdate(input: {
   }
 }
 
-/** للتحرير وحده، وفي خانةٍ يراها. تاريخ الإضافة لا يُمسّ: هو يوم الإدخال. */
+/**
+ * لصاحب التحرير، أو لصاحب الإضافة فيما أضافه — وفي خانةٍ يراها في الحالين.
+ * تاريخ الإضافة لا يُمسّ: هو يوم الإدخال.
+ */
 async function editableEntry(id: string) {
   const { session, scope } = await context();
-  if (!session || !scope.canManage) return { ok: false, error: "التعديل والحذف لصاحب صلاحية التحرير" } as const;
+  if (!session || !scope.canAdd) return { ok: false, error: "غير مصرح" } as const;
   const row = await prisma.latestUpdate.findUnique({
     where: { id },
-    select: { charityId: true, serviceName: true },
+    select: { charityId: true, serviceName: true, createdById: true },
   });
   if (!row) return { ok: false, error: "المستجد غير موجود — ربما حُذف" } as const;
   if (!seesCell(scope, row.charityId, row.serviceName)) return { ok: false, error: "غير مصرح" } as const;
+  if (!mayEdit(scope, session.id, row.createdById)) {
+    return { ok: false, error: "تعدّل وتحذف ما أضفتَه أنت فقط" } as const;
+  }
   return { ok: true, session } as const;
 }
 

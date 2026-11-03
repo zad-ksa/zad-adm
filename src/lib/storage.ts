@@ -202,3 +202,22 @@ export function deletePlanFor(ref: StoredFileRef, publicBase: string | null): De
   }
   return { provider: null, reason: "لا رابطَ ولا مُعرِّف" };
 }
+
+/**
+ * كلُّ نصٍّ في شجرةٍ من JSON، أيّاً كان شكلُها.
+ *
+ * وأربعةُ أعمدةٍ تحفظ الروابطَ داخلَ JSON لا نصّاً مسطَّحاً، وأشكالُها مختلفة:
+ * مصفوفةُ كائناتٍ في `Request`، وكائنُ مصفوفاتٍ في الاستبانات المخصّصة،
+ * وتعشيشٌ عميقٌ في إعداد الواجهة. فالمشيُ العامُّ أصدقُ من قارئٍ يعرف الشكلَ
+ * سلفاً: ذاك يُخطئ شكلاً منها حتماً، ويُخطئه **بصمت** — يقرأ صفراً من الروابط
+ * فيُحسب العمودُ خالياً وهو مملوء.
+ *
+ * وتُجمع النصوصُ كلُّها لا ما يُشبه الروابطَ: التنقيحُ شأنُ من يستدعي، و`providerOf`
+ * تردُّ `null` لما ليس رابطاً فتُسقطه هي.
+ */
+export function collectStrings(value: unknown, out: string[] = []): string[] {
+  if (typeof value === "string") out.push(value);
+  else if (Array.isArray(value)) for (const v of value) collectStrings(v, out);
+  else if (value && typeof value === "object") for (const v of Object.values(value)) collectStrings(v, out);
+  return out;
+}

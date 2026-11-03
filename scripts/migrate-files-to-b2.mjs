@@ -14,9 +14,11 @@
  *   node -r dotenv/config --experimental-strip-types scripts/migrate-files-to-b2.mjs --apply
  */
 
-import { writeFileSync } from "node:fs";
+import { mkdirSync, writeFileSync } from "node:fs";
+import { dirname } from "node:path";
 import { Client } from "pg";
-import { cloudinaryRefFromUrl, extensionOf, providerOf } from "../src/lib/storage.ts";
+import { cloudinaryRefFromUrl, collectStrings, extensionOf, providerOf } from "../src/lib/storage.ts";
+import { FILE_SOURCES } from "../src/lib/fileSources.ts";
 import { b2ObjectExists, presignUpload, requireB2Config } from "../src/lib/b2.ts";
 
 const APPLY = process.argv.includes("--apply");
@@ -24,41 +26,13 @@ const LIMIT = Number(process.argv.find((a) => a.startsWith("--limit="))?.split("
 const MANIFEST = "scripts/out/b2-manifest.json";
 const CONCURRENCY = 4;
 
-/**
- * من أين تُجمع الروابط.
- *
- * `json: true` يعني أنّ العمود يحمل شجرةً تُمشى مشياً عامّاً: الأشكالُ ثلاثةٌ
- * مختلفة — مصفوفةُ كائناتٍ في `Request`، وكائنُ مصفوفاتٍ في الاستبانات
- * المخصّصة، وتعشيشٌ عميقٌ في إعداد الواجهة — فمعرفةُ الشكل سلفاً تُخطئ واحداً
- * منها حتماً.
- */
-const SOURCES = [
-  { table: "Request", id: "id", column: "attachments", json: true },
-  { table: "CustomSurveyResponse", id: "id", column: "attachments", json: true },
-  { table: "GlobalSetting", id: "key", column: "value", json: true },
-  { table: "DesignRequestAttachment", id: "id", column: "fileUrl" },
-  { table: "KnowledgeNode", id: "id", column: "fileUrl" },
-  { table: "MailAttachment", id: "id", column: "fileUrl" },
-  { table: "Task", id: "id", column: "proofUrl" },
-  { table: "Task", id: "id", column: "attachmentUrl" },
-  { table: "Achievement", id: "id", column: "proofUrl" },
-  { table: "GovernanceProgress", id: "id", column: "proofUrl" },
-  { table: "Initiative", id: "id", column: "marketingUrl" },
-  { table: "Charity", id: "id", column: "logoUrl" },
-  { table: "Employee", id: "id", column: "avatarUrl" },
-];
-
-/** كلُّ نصٍّ في الشجرة — بلا معرفةٍ بشكلها. */
-function collectStrings(value, out = []) {
-  if (typeof value === "string") out.push(value);
-  else if (Array.isArray(value)) for (const v of value) collectStrings(v, out);
-  else if (value && typeof value === "object") for (const v of Object.values(value)) collectStrings(v, out);
-  return out;
-}
+// القائمةُ والمَشّاءُ في `src/lib` — ويُشاركهما `files:where`. ونسخةٌ هنا
+// ونسخةٌ هناك تفترقان، فيُحصي أحدُهما عموداً لا ينسخه الآخر: ذاك يُطمئن
+// كذباً، و`fileSources.test.ts` يحرس القائمةَ من السقوط والتكرار.
 
 async function gatherUrls(client) {
   const urls = new Map(); // url -> [{table, column, id}]
-  for (const src of SOURCES) {
+  for (const src of FILE_SOURCES) {
     let rows;
     try {
       rows = (
@@ -174,6 +148,14 @@ async function run() {
   const queue = [...list];
   await Promise.all(Array.from({ length: CONCURRENCY }, () => worker(queue)));
 
+  // المجلَّدُ يُنشأ قبل الكتابة، ولا يُفترض وجودُه.
+  //
+  // وكان يُفترض، فيسقط السكربتُ بـENOENT عند **آخر سطر** — بعد أن نسخ
+  // الملفّاتَ كلَّها. والبيانُ هو السِّجلُّ الوحيدُ الذي يُقابل الرابطَ القديمَ
+  // بالجديد، فسقوطُه يُلغي ثمرةَ النسخ كلِّها: تُصعَّد ٥٣٩ ملفّاً ولا يُعرف
+  // أيٌّ منها يقابل أيّاً. وظهر في التجربة لأنّها تكتب البيانَ كذلك — ولو لم
+  // تكتبه، لظهر أوّلَ مرّةٍ في النسخة الحقيقيّة وحدَها.
+  mkdirSync(dirname(MANIFEST), { recursive: true });
   writeFileSync(MANIFEST, JSON.stringify({ at: new Date().toISOString(), apply: APPLY, manifest, failures }, null, 2));
   console.log(`\nنُسخ: ${Object.keys(manifest).length}`);
   if (APPLY) console.log(`الحجم: ${(bytes / 1024 / 1024).toFixed(1)} ميقابايت`);

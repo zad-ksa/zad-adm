@@ -89,17 +89,27 @@ async function checkCharityServices(
   return { names: wanted };
 }
 
+/**
+ * خدماتُ زاد المقدَّمةُ لهذه الجمعية — قائمةُ التفويض في شاشة الموظفين.
+ *
+ * وهي بعينها ما يُفوَّض به مديرُ نظام الجمعية تلقائيّاً، فلا تُكرَّر
+ * الاستعلامةُ ولا يفترق المعروضُ عن المُطبَّق.
+ */
+async function charityServiceNames(charityId: string): Promise<string[]> {
+  const rows = await prisma.service.findMany({
+    where: { charityId },
+    select: { name: true },
+    distinct: ["name"],
+    orderBy: { name: "asc" },
+  });
+  return rows.map((r) => r.name).filter((n) => n.trim() !== "");
+}
+
 /** خدمات زاد المقدَّمة لهذه الجمعية — قائمة التفويض في شاشة الموظفين. */
 export async function listCharityServices(charityId: string) {
   try {
     await requireCharityPermission(charityId, "manage_charity_users");
-    const rows = await prisma.service.findMany({
-      where: { charityId },
-      select: { name: true },
-      distinct: ["name"],
-      orderBy: { name: "asc" },
-    });
-    return { success: true as const, data: rows.map((r) => r.name).filter((n) => n.trim() !== "") };
+    return { success: true as const, data: await charityServiceNames(charityId) };
   } catch (error) {
     return refuse(error, "تعذّر تحميل خدمات الجمعية");
   }
@@ -286,7 +296,14 @@ export async function createCharityStaff(
 
     const checkedServices = await checkCharityServices(charityId, data.services || []);
     if ("error" in checkedServices) return fail(checkedServices.error);
-    const services = checkedServices.names;
+    // مديرُ نظام الجمعية يُفوَّض بخدماتها كلِّها، أيّاً كان ما وصل من الشاشة.
+    //
+    // و`isAdmin` لا يمنح خدمةً ضمناً: `charityServiceTeam` تقرأ صفوفَ التفويض
+    // حرفاً، فمديرٌ بلا صفوفٍ لا يستلم بريد خدمةٍ واحدة — وهو من يُفترض أن
+    // يصل إليه كلُّ شيءٍ في جمعيته. فيُفرض هنا لا يُترك لمن يملأ النموذج.
+    const services = grant.isAdmin
+      ? await charityServiceNames(charityId)
+      : checkedServices.names;
 
     const existing = await prisma.charityUser.findFirst({
       where: { phone: { in: saudiPhoneVariants(canonical) } },
@@ -460,6 +477,12 @@ export async function updateCharityStaff(
       if ("error" in checked) return fail(checked.error);
       services = checked.names;
     }
+    // ومن رُفع إلى الإدارة — أو كان مديراً فعُدِّل شيءٌ آخرُ من حسابه —
+    // يُفوَّض بخدمات الجمعية كلِّها. و`null` هنا تعني «لا تُغيَّر»، فالفرضُ
+    // يتقدّم عليها: ترقيةٌ بلا إرسال قائمةِ خدماتٍ كانت تترك المديرَ الجديد
+    // بلا تفويضٍ أصلاً. وأثرُه أنّ أيَّ تعديلٍ لحساب مديرٍ يُصلح انحرافاً
+    // سابقاً بلا أن يُطلب.
+    if (grant.isAdmin) services = await charityServiceNames(charityId);
 
     // تبويبات البوابة المخزّنة تبقى كما هي حتى يُربط التبويب بخدمةٍ عند زاد،
     // فلا ينقطع وصولٌ قائم في منتصف الطريق.

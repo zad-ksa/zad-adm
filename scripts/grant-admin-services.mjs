@@ -1,17 +1,20 @@
 /**
- * تفويضُ مديري أنظمة الجمعيات بكلِّ الخدمات في جمعياتهم.
+ * تفويضُ مديري أنظمة الجمعيات بخدمات **جمعيتهم** كلِّها.
  *
  * و`isAdmin` على العضويّة لا يمنح خدمةً ضمناً: `charityServiceTeam` تقرأ صفوف
  * `CharityMemberService` حرفاً، فمديرٌ بلا صفوفٍ لا يستلم بريد خدمةٍ واحدة.
- * وهذا السكربت يُنشئ الصفوفَ الناقصة.
  *
- * **ولا يحذف شيئاً**: يُضيف الناقصَ وحدَه، فتشغيلُه مرّتين كتشغيلِه مرّة.
- * والتفويضُ الزائدُ عن المديرين لا يُلمَس.
+ * **والخدماتُ لكلِّ جمعيةٍ خدماتُها** (`Service.charityId`): ثمانيُ جمعياتٍ
+ * فيها تسع، والتجريبيّةُ فيها ثلاث. فتفويضُ الأسماء التسعة لمن جمعيتُه ثلاثٌ
+ * يجعله «مفوَّضاً» بخدمةٍ لا تُقدَّم له، ويُجيز لزاد أن تُرسل إليه فيها.
+ *
+ * ولهذا يُنقّي السكربت كذلك — **من صفوف المديرين وحدَهم**، ولخدماتٍ ليست في
+ * جمعيتهم فقط. وتفويضُ من ليس مديراً لا يُلمَس بحال، كيفما كان.
  *
  * ووصلةٌ واحدةٌ عبر `DIRECT_URL`: الموزِّعُ في وضع الجلسة، فكلُّ وصلةٍ تُحتجز.
  *
- *   node -r dotenv/config --experimental-strip-types scripts/grant-admin-services.mjs
- *   node -r dotenv/config --experimental-strip-types scripts/grant-admin-services.mjs --apply
+ *   npm run grant:admin-services
+ *   npm run grant:admin-services -- --apply
  */
 
 import { PrismaClient } from "@prisma/client";
@@ -28,28 +31,27 @@ const pool = new Pool({
 const prisma = new PrismaClient({ adapter: new PrismaPg(pool) });
 
 async function run() {
-  const services = (
-    await prisma.service.findMany({ select: { name: true }, distinct: ["name"], orderBy: { name: "asc" } })
-  )
-    .map((r) => r.name)
-    .filter((n) => n.trim() !== "");
-
-  if (services.length === 0) {
-    console.log("لا خدماتَ مسجَّلةٌ في الموقع — لا شيءَ يُفوَّض.");
-    return;
+  // خدماتُ كلِّ جمعيةٍ باستعلامٍ واحد، لا استعلامٍ لكلِّ مدير.
+  const serviceRows = await prisma.service.findMany({
+    where: { name: { not: "" } },
+    select: { charityId: true, name: true },
+  });
+  const byCharity = new Map();
+  for (const row of serviceRows) {
+    if (!row.name.trim()) continue;
+    if (!byCharity.has(row.charityId)) byCharity.set(row.charityId, new Set());
+    byCharity.get(row.charityId).add(row.name);
   }
-  console.log(`الخدمات (${services.length}): ${services.join("، ")}\n`);
 
-  // النشطةُ وحدَها: عضويّةٌ أُوقفت لا تستلم بريداً، فتفويضُها ضجيجٌ في الجدول.
   const admins = await prisma.charityUserCharity.findMany({
     where: { isAdmin: true, isActive: true },
     select: {
       id: true,
+      charityId: true,
       charity: { select: { name: true, isInternal: true } },
       user: { select: { name: true, isActive: true } },
       services: { select: { serviceName: true } },
     },
-    orderBy: { charityId: "asc" },
   });
 
   if (admins.length === 0) {
@@ -57,61 +59,88 @@ async function run() {
     return;
   }
 
-  const rows = [];
-  let already = 0;
-  const skippedInactiveAccounts = [];
+  const toAdd = [];
+  const toDrop = [];
+  const skipped = [];
+  const lines = [];
 
   for (const link of admins) {
-    // حسابٌ موقوفٌ على مستوى الحساب كلِّه لا يُفوَّض: لا يدخل أصلاً.
     if (!link.user.isActive) {
-      skippedInactiveAccounts.push(`${link.user.name} (${link.charity.name})`);
+      skipped.push(`${link.user.name} (${link.charity.name})`);
       continue;
     }
+    const want = byCharity.get(link.charityId) ?? new Set();
     const held = new Set(link.services.map((s) => s.serviceName));
-    const missing = services.filter((name) => !held.has(name));
-    already += held.size;
-    for (const serviceName of missing) rows.push({ membershipId: link.id, serviceName });
+    const missing = [...want].filter((name) => !held.has(name)).sort();
+    const extra = [...held].filter((name) => !want.has(name)).sort();
+
+    for (const serviceName of missing) toAdd.push({ membershipId: link.id, serviceName });
+    for (const serviceName of extra) toDrop.push({ membershipId: link.id, serviceName });
+
     const mark = link.charity.isInternal ? " [داخلي]" : "";
-    console.log(
-      `  ${link.charity.name}${mark} — ${link.user.name}: عنده ${held.size}، يُضاف ${missing.length}`
+    lines.push(
+      `  ${link.charity.name}${mark} — ${link.user.name}: ` +
+        `خدماتُ الجمعية ${want.size}، عنده ${held.size}` +
+        (missing.length ? `، يُضاف ${missing.length}` : "") +
+        (extra.length ? `، يُنقّى ${extra.length} (${extra.join("، ")})` : "")
     );
   }
 
-  if (skippedInactiveAccounts.length) {
-    console.log(`\nتُخطّي حساباتٍ موقوفة: ${skippedInactiveAccounts.join("، ")}`);
-  }
+  lines.sort();
+  for (const line of lines) console.log(line);
+  if (skipped.length) console.log(`\nتُخطّي حساباتٍ موقوفة: ${skipped.join("، ")}`);
 
-  console.log(`\nمديرون نشطون: ${admins.length - skippedInactiveAccounts.length}`);
-  console.log(`تفويضاتٌ قائمة: ${already}`);
-  console.log(`تفويضاتٌ تُضاف: ${rows.length}`);
+  console.log(`\nمديرون نشطون: ${admins.length - skipped.length}`);
+  console.log(`تفويضاتٌ تُضاف: ${toAdd.length}`);
+  console.log(`تفويضاتٌ تُنقّى: ${toDrop.length}`);
 
   if (!APPLY) {
     console.log("\nتجربةٌ بلا كتابة — أضف --apply للتنفيذ.");
     return;
   }
-  if (rows.length === 0) {
-    console.log("\nلا شيءَ يُضاف.");
+  if (toAdd.length === 0 && toDrop.length === 0) {
+    console.log("\nلا شيءَ يُغيَّر.");
     return;
   }
 
-  // skipDuplicates حرزٌ ثانٍ: المفتاحُ الأوّليُّ (membershipId, serviceName) يمنع
-  // التكرار أصلاً، لكنّ تشغيلين متوازيين يسقط أحدهما بلا هذا.
-  const result = await prisma.charityMemberService.createMany({ data: rows, skipDuplicates: true });
-  console.log(`\nأُضيف ${result.count} تفويضاً.`);
+  await prisma.$transaction(async (tx) => {
+    if (toDrop.length) {
+      // صفٌّ صفّاً بمفتاحه المركَّب: شرطٌ عامٌّ على الاسم قد يطال تفويضَ من
+      // ليس مديراً في جمعيةٍ أخرى تُقدِّم الخدمةَ فعلاً.
+      for (const row of toDrop) {
+        await tx.charityMemberService.deleteMany({
+          where: { membershipId: row.membershipId, serviceName: row.serviceName },
+        });
+      }
+    }
+    if (toAdd.length) {
+      await tx.charityMemberService.createMany({ data: toAdd, skipDuplicates: true });
+    }
+  });
+  console.log(`\nأُضيف ${toAdd.length} وتُنقِّي ${toDrop.length}.`);
 
-  // يُقرأ من القاعدة بعد الكتابة لا يُستنتج: العدُّ من الصفوف المُرسلة يقول ما
-  // أردناه، والقراءةُ تقول ما صار.
-  const verify = await prisma.charityUserCharity.findMany({
+  // يُقرأ من القاعدة بعد الكتابة لا يُستنتج من عدد الصفوف المُرسلة.
+  const after = await prisma.charityUserCharity.findMany({
     where: { isAdmin: true, isActive: true, user: { isActive: true } },
-    select: { charity: { select: { name: true } }, user: { select: { name: true } }, _count: { select: { services: true } } },
+    select: {
+      charityId: true,
+      charity: { select: { name: true } },
+      user: { select: { name: true } },
+      services: { select: { serviceName: true } },
+    },
   });
   console.log("\nالتحقُّق:");
   let short = 0;
-  for (const link of verify) {
-    const ok = link._count.services >= services.length;
-    if (!ok) short++;
-    console.log(`  ${ok ? "✓" : "✗"} ${link.charity.name} — ${link.user.name}: ${link._count.services}/${services.length}`);
+  const report = [];
+  for (const link of after) {
+    const want = byCharity.get(link.charityId) ?? new Set();
+    const held = new Set(link.services.map((s) => s.serviceName));
+    const exact = held.size === want.size && [...want].every((n) => held.has(n));
+    if (!exact) short++;
+    report.push(`  ${exact ? "✓" : "✗"} ${link.charity.name} — ${link.user.name}: ${held.size}/${want.size}`);
   }
+  report.sort();
+  for (const line of report) console.log(line);
   if (short) process.exitCode = 1;
 }
 

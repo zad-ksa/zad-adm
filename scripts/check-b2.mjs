@@ -67,8 +67,26 @@ else fail("رُفع ولم يُوجد");
 // ٥ — يُقرأ من النطاق العامّ بلا توقيع: المستودعُ عامٌّ، والـCNAME وقاعدةُ
 //     التحويل تعملان. وهذه أكثرُ خطوةٍ تنكسر، وعطبُها لا يظهر إلّا هنا.
 console.log(`  … ${target.publicUrl}`);
-const read = await fetch(target.publicUrl, { headers: { "cache-control": "no-cache" } });
-if (read.ok) {
+// و`fetch` ترفع هنا ولا تردُّ حالةً حين يكون العطبُ في الشبكة لا في
+// الخادم. ولو تُركت ترفع، سقط السكربتُ بأثرِ مكدَّسٍ خامٍّ **وبقي ملفُّ
+// الفحص في المستودع**: الحذفُ في آخره، وما سقط لا يبلغ آخره.
+let read = null;
+try {
+  read = await fetch(target.publicUrl, { headers: { "cache-control": "no-cache" } });
+} catch (error) {
+  const cause = error?.cause?.code ?? error?.code ?? "";
+  const host = new URL(config.publicBase).host;
+  fail(
+    cause === "ENOTFOUND"
+      ? `${host} لا يُحلُّ أصلاً — انشر البوّابة، وcustom_domain يُنشئ سجلَّ DNS بنفسه`
+      : `تعذّر الوصولُ إلى ${host}: ${cause || error?.message}`
+  );
+}
+
+if (!read) {
+  // قيل السببُ آنفاً، ويُمضى إلى ما بعده: بقيّةُ الخطوات لا تمرّ من هذا
+  // المضيف، وحذفُ ملفِّ الفحص في آخرها.
+} else if (read.ok) {
   const text = await read.text();
   if (text === body) pass(`النطاقُ العامُّ يقرؤه (${read.status})`);
   else fail(`قُرئ محتوىً مختلف: ${text.slice(0, 80)}`);

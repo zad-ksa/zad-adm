@@ -1,20 +1,26 @@
 import { prisma } from "@/lib/db";
+import { EXTERNAL_CHARITIES } from "@/lib/charityScope";
 import { getAssignedCharityIds } from "@/lib/access";
-import { hasPermission } from "@/lib/permissions";
+import { hasPermission, isAdmin } from "@/lib/permissions";
 
 /**
- * من يرى «آخر المستجدات»، ومن يضيف فيها وأين.
+ * نطاق «آخر المستجدات»: ما يراه الشخص من الجدول، وأين يضيف، وأين يحرّر.
  *
  * ثلاث درجات:
- * - view_latest_updates: التبويب والجدول، ولا شيء غيره.
- * - add_latest_updates: الإضافة في خلايا خدماته وحدها، وفي جمعياته المسنَدة.
- * - manage_latest_updates: الإضافة في كل خلية، والتعديل والحذف.
+ * - view_latest_updates: التبويب والجدول.
+ * - add_latest_updates: الإضافة في الخانات التي يراها.
+ * - manage_latest_updates: الإضافة والتعديل والحذف فيها، وإدارة الأعمدة الخاصة
+ *   والخدمات الفرعية.
  *
- * ونطاق الإضافة من منح الخدمات نفسه (EmployeeServiceAccess ومجموعات الموظف
- * ومسمّاه)، لا من قائمةٍ ثانية تُحفظ هنا فتتنازع معه. و«بلا منح = بلا تقييد»
- * قاعدة عرضٍ لا تنطبق: من لم يُمنح خدمةً لا يضيف في شيء.
+ * **ولا يرى أحدٌ إلا ما ارتبط به**: جمعياته المسنَدة، وخدماته الممنوحة (منحاً
+ * مباشراً أو بمجموعته أو بمجموعة مسمّاه). و«بلا منح = بلا تقييد» قاعدةُ عرضٍ في
+ * «عرض الخدمات» لا تنطبق هنا: من لم يُمنح خدمةً لا يرى عموداً منها. ويُستثنى
+ * ADMIN وdeveloper_mode — يريان الكل.
  *
- * ليس ملف "use server": تستدعيه الصفحة والأفعال المحروسة، ولو صُدّر من ملف
+ * والأعمدة الخاصة (LatestUpdateColumn) ليست خدماتٍ تُمنح: تظهر لكل من يرى
+ * الجدول، في جمعياته.
+ *
+ * ليس ملف "use server": تستدعيه الصفحتان والأفعال المحروسة، ولو صُدّر من ملف
  * أفعال لصار مدخلاً HTTP بلا حارس.
  */
 
@@ -25,69 +31,138 @@ export type LatestUpdatesSession = {
   userType?: string;
 };
 
-export type LatestUpdatesAccess = {
-  canView: boolean;
-  canManage: boolean;
-  /** null = كل خلية قائمة. وإلا مفاتيح cellKey التي يضيف فيها. */
-  addable: Set<string> | null;
+export type LatestColumn = {
+  /** مفتاح العمود في LatestUpdate.serviceName. */
+  key: string;
+  name: string;
+  custom: boolean;
 };
 
-export function cellKey(charityId: string, serviceName: string) {
-  return `${charityId}::${serviceName}`;
+export type LatestUpdatesScope = {
+  canView: boolean;
+  canAdd: boolean;
+  canManage: boolean;
+  charities: { id: string; name: string }[];
+  /** الخدمات الأصلية أولاً بالأبجدية، ثم الأعمدة الخاصة بترتيبها. */
+  columns: LatestColumn[];
+  /** الخانات التي يراها: cellKey(charityId, columnKey). */
+  cells: Set<string>;
+};
+
+export const CUSTOM_PREFIX = "custom:";
+
+export function customKey(id: string) {
+  return `${CUSTOM_PREFIX}${id}`;
 }
 
-export async function getLatestUpdatesAccess(session: LatestUpdatesSession | null): Promise<LatestUpdatesAccess> {
-  const none: LatestUpdatesAccess = { canView: false, canManage: false, addable: new Set() };
-  if (!session?.id || session.userType === "CHARITY_USER") return none;
+export function customIdOf(key: string): string | null {
+  return key.startsWith(CUSTOM_PREFIX) ? key.slice(CUSTOM_PREFIX.length) : null;
+}
+
+export function cellKey(charityId: string, columnKey: string) {
+  return `${charityId}::${columnKey}`;
+}
+
+const EMPTY: LatestUpdatesScope = {
+  canView: false,
+  canAdd: false,
+  canManage: false,
+  charities: [],
+  columns: [],
+  cells: new Set(),
+};
+
+export async function getLatestUpdatesScope(session: LatestUpdatesSession | null): Promise<LatestUpdatesScope> {
+  if (!session?.id || session.userType === "CHARITY_USER") return EMPTY;
 
   const perms = session.permissions || [];
   const canView = hasPermission(session.role, perms, "view_latest_updates");
-  if (!canView) return none;
+  if (!canView) return EMPTY;
+  const canManage = hasPermission(session.role, perms, "manage_latest_updates");
+  const canAdd = canManage || hasPermission(session.role, perms, "add_latest_updates");
+  const everything = isAdmin(session.role) || perms.includes("developer_mode");
 
-  if (hasPermission(session.role, perms, "manage_latest_updates")) {
-    return { canView, canManage: true, addable: null };
-  }
-  if (!hasPermission(session.role, perms, "add_latest_updates")) {
-    return { canView, canManage: false, addable: new Set() };
-  }
-
-  const [assigned, direct, bundles] = await Promise.all([
-    getAssignedCharityIds(session.id, session.role, perms),
-    prisma.employeeServiceAccess.findMany({
-      where: { employeeId: session.id },
-      select: { serviceName: true, charityId: true },
+  const [assigned, services, customs, direct, bundles] = await Promise.all([
+    everything ? Promise.resolve(null) : getAssignedCharityIds(session.id, session.role, perms),
+    prisma.service.findMany({
+      where: { charity: EXTERNAL_CHARITIES },
+      select: { name: true, charityId: true },
     }),
-    prisma.permissionBundle.findMany({
-      where: {
-        services: { isEmpty: false },
-        OR: [
-          { employees: { some: { employeeId: session.id } } },
-          { roles: { some: { role: { key: session.role } } } },
-        ],
-      },
-      select: { services: true },
+    prisma.latestUpdateColumn.findMany({
+      orderBy: [{ position: "asc" }, { createdAt: "asc" }],
+      select: { id: true, name: true },
     }),
+    everything
+      ? Promise.resolve([])
+      : prisma.employeeServiceAccess.findMany({
+          where: { employeeId: session.id },
+          select: { serviceName: true, charityId: true },
+        }),
+    everything
+      ? Promise.resolve([])
+      : prisma.permissionBundle.findMany({
+          where: {
+            services: { isEmpty: false },
+            OR: [
+              { employees: { some: { employeeId: session.id } } },
+              { roles: { some: { role: { key: session.role } } } },
+            ],
+          },
+          select: { services: true },
+        }),
   ]);
 
-  // null = developer_mode، ويمرّ بالتحرير قبل هنا. فالقائمة هنا قائمةٌ دائماً،
-  // والاحتياط لا يضرّ: بلا قائمة لا جمعيات.
-  const charityIds = assigned ?? [];
-  const addable = new Set<string>();
+  const charities = await prisma.charity.findMany({
+    where: assigned === null ? EXTERNAL_CHARITIES : { ...EXTERNAL_CHARITIES, id: { in: assigned } },
+    orderBy: { name: "asc" },
+    select: { id: true, name: true },
+  });
+  const charityIds = new Set(charities.map((c) => c.id));
 
-  // المنح المباشر قد يُقصَر على جمعيةٍ بعينها، فلا يتّسع إلى جمعياته كلها.
+  // أين تسري كل خدمةٍ ممنوحة: null = في جمعياته كلها. والمنح المباشر قد
+  // يُقصَر على جمعيةٍ بعينها فلا يتّسع إلى غيرها.
+  const grantedIn = new Map<string, Set<string> | null>();
+  const grantEverywhere = (name: string) => grantedIn.set(name, null);
+  for (const name of new Set(bundles.flatMap((b) => b.services))) grantEverywhere(name);
   for (const g of direct) {
-    const targets = g.charityId ? charityIds.filter((id) => id === g.charityId) : charityIds;
-    for (const id of targets) addable.add(cellKey(id, g.serviceName));
+    if (!g.charityId) grantEverywhere(g.serviceName);
+    else if (grantedIn.get(g.serviceName) !== null) {
+      const set = grantedIn.get(g.serviceName) ?? new Set<string>();
+      set.add(g.charityId);
+      grantedIn.set(g.serviceName, set);
+    }
   }
-  for (const name of new Set(bundles.flatMap((b) => b.services))) {
-    for (const id of charityIds) addable.add(cellKey(id, name));
+  const covers = (name: string, charityId: string) => {
+    if (everything) return true;
+    if (!grantedIn.has(name)) return false;
+    const only = grantedIn.get(name);
+    return only === null || only === undefined || only.has(charityId);
+  };
+
+  const cells = new Set<string>();
+  const realNames = new Set<string>();
+  for (const s of services) {
+    if (!s.name.trim() || !charityIds.has(s.charityId) || !covers(s.name, s.charityId)) continue;
+    cells.add(cellKey(s.charityId, s.name));
+    realNames.add(s.name);
   }
 
-  return { canView, canManage: false, addable };
+  const columns: LatestColumn[] = [...realNames]
+    .sort((a, b) => a.localeCompare(b, "ar"))
+    .map((name) => ({ key: name, name, custom: false }));
+  for (const c of customs) {
+    const key = customKey(c.id);
+    columns.push({ key, name: c.name, custom: true });
+    for (const id of charityIds) cells.add(cellKey(id, key));
+  }
+
+  return { canView, canAdd, canManage, charities, columns, cells };
 }
 
-export function canAddIn(access: LatestUpdatesAccess, charityId: string, serviceName: string): boolean {
-  if (!access.canView) return false;
-  if (access.addable === null) return true;
-  return access.addable.has(cellKey(charityId, serviceName));
+export function seesCell(scope: LatestUpdatesScope, charityId: string, columnKey: string) {
+  return scope.canView && scope.cells.has(cellKey(charityId, columnKey));
+}
+
+export function seesColumn(scope: LatestUpdatesScope, columnKey: string) {
+  return scope.canView && scope.columns.some((c) => c.key === columnKey);
 }

@@ -1,17 +1,25 @@
 "use client";
 
-import { useEffect, useState, useTransition } from "react";
+import { useEffect, useState, useSyncExternalStore, useTransition, type ReactNode } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { History, Pencil, Plus, Rss, Trash2 } from "lucide-react";
+import { ArrowLeftRight, ChevronLeft, History, Pencil, Plus, Rss, Trash2 } from "lucide-react";
 import { Dialog } from "@/components/console/Dialog";
 import { EmptyState } from "@/components/console/layout";
 import { btn, cx, field, Field, MONO, Spinner } from "@/components/console/ui";
 import { confirmAction } from "@/components/console/confirmBus";
+import { promptAction } from "@/components/console/promptBus";
 import { notify } from "@/components/console/toastBus";
 import {
+  addCustomColumn,
   addLatestUpdate,
+  addSubColumn,
+  deleteCustomColumn,
   deleteLatestUpdate,
+  deleteSubColumn,
   getCellHistory,
+  renameCustomColumn,
+  renameSubColumn,
   updateLatestUpdate,
   type LatestUpdateEntry,
 } from "@/app/actions/latestUpdates";
@@ -24,14 +32,33 @@ export type LatestCell = {
   since: string;
   staleness: Staleness;
   count: number;
+  /** في الجدول العام: اسم الخدمة الفرعية إن كان آخر حدثٍ عليها. */
+  subColumnName: string | null;
+};
+
+export type GridColumn = {
+  /** في الجدول العام: مفتاح العمود. وفي الفرعي: معرّف الخدمة الفرعية. */
+  id: string;
+  name: string;
+  /** يُعدَّل ويُحذف: عمودٌ خاصّ أو خدمةٌ فرعية — لا خدمةٌ أصلية أبداً. */
+  editable: boolean;
+  /** الضغط على العنوان يفتح الجدول الفرعي (في الجدول العام وحده). */
+  href?: string;
 };
 
 type Charity = { id: string; name: string };
-type CellRef = { charity: Charity; serviceName: string };
 
-const key = (charityId: string, serviceName: string) => `${charityId}::${serviceName}`;
+/**
+ * `main`: الجدول العام، أعمدته الخدمات والأعمدة الخاصة.
+ * `sub`: جدول خدمةٍ واحدة، أعمدته خدماتها الفرعية، وأحداثه تُحفظ على العمود الأب.
+ */
+export type GridMode = { kind: "main" } | { kind: "sub"; parentKey: string; parentName: string };
 
-/** اللون دلالة: كم مضى على آخر حدثٍ في الخلية بلا جديدٍ بعده. */
+type CellRef = { charity: Charity; column: GridColumn };
+
+const key = (charityId: string, columnId: string) => `${charityId}::${columnId}`;
+
+/** اللون دلالة: كم مضى على آخر حدثٍ في الخانة بلا جديدٍ بعده. */
 const STALENESS_CLASS: Record<Staleness, string> = {
   fresh: "text-slate-500 dark:text-slate-400",
   green: "bg-emerald-100 text-emerald-800 dark:bg-emerald-400/15 dark:text-emerald-300",
@@ -61,97 +88,206 @@ function formatInstant(iso: string) {
   }).format(new Date(iso));
 }
 
+/** أين يُحفظ حدث خانة: العمود الأب، ومعه الخدمة الفرعية في الجدول الفرعي. */
+function target(mode: GridMode, column: GridColumn) {
+  return mode.kind === "main"
+    ? { columnKey: column.id, subColumnId: undefined }
+    : { columnKey: mode.parentKey, subColumnId: column.id };
+}
+
+// ── اتجاه العرض ───────────────────────────────────────────────────────────
+// يُحفظ في المتصفح لكل جدول: من قلبه مرةً يجده مقلوباً حين يعود.
+
+const transposeListeners = new Set<() => void>();
+
+function useTransposed(storageKey: string): [boolean, () => void] {
+  const value = useSyncExternalStore(
+    (cb) => {
+      transposeListeners.add(cb);
+      return () => transposeListeners.delete(cb);
+    },
+    () => localStorage.getItem(storageKey) === "1",
+    () => false
+  );
+  const toggle = () => {
+    localStorage.setItem(storageKey, value ? "0" : "1");
+    for (const cb of transposeListeners) cb();
+  };
+  return [value, toggle];
+}
+
 export default function LatestUpdatesClient({
+  mode,
   charities,
-  serviceNames,
-  existing,
-  addable,
+  columns,
+  visible,
   latest,
+  canAdd,
   canManage,
   today,
 }: {
+  mode: GridMode;
   charities: Charity[];
-  serviceNames: string[];
-  existing: string[];
-  addable: string[];
+  columns: GridColumn[];
+  /** الخانات القائمة: key(charityId, column.id). وما سواها «غير مفعّلة». */
+  visible: string[];
   latest: Record<string, LatestCell>;
+  canAdd: boolean;
   canManage: boolean;
   today: string;
 }) {
-  const existingSet = new Set(existing);
-  const addableSet = new Set(addable);
+  const router = useRouter();
+  const visibleSet = new Set(visible);
+  const [transposed, toggleTransposed] = useTransposed(
+    mode.kind === "main" ? "latest-updates:transposed" : "latest-updates:sub-transposed"
+  );
   const [adding, setAdding] = useState<CellRef | null>(null);
   const [viewing, setViewing] = useState<CellRef | null>(null);
+  const [pending, startTransition] = useTransition();
 
-  if (charities.length === 0 || serviceNames.length === 0) {
+  const columnNoun = mode.kind === "main" ? "عمود" : "خدمة فرعية";
+
+  const run = (action: () => Promise<{ success: boolean; error?: string }>, ok: string) =>
+    startTransition(async () => {
+      const res = await action();
+      if (!res.success) {
+        notify("error", res.error || "تعذّر الحفظ");
+        return;
+      }
+      notify("ok", ok);
+      router.refresh();
+    });
+
+  const addColumn = async () => {
+    const name = await promptAction({
+      title: mode.kind === "main" ? "إضافة عمود" : `إضافة خدمة فرعية تحت «${mode.parentName}»`,
+      message:
+        mode.kind === "main"
+          ? "عمودٌ خاصٌّ بهذا الجدول: لا يظهر في «إدارة الخدمات» ولا في أي مكانٍ آخر من الموقع."
+          : undefined,
+      label: "الاسم",
+      confirmLabel: "إضافة",
+    });
+    if (!name?.trim()) return;
+    run(() => (mode.kind === "main" ? addCustomColumn(name) : addSubColumn(mode.parentKey, name)), `أُضيفت «${name.trim()}»`);
+  };
+
+  const renameColumn = async (column: GridColumn) => {
+    const name = await promptAction({ title: `تعديل اسم ${columnNoun}`, label: "الاسم", defaultValue: column.name, confirmLabel: "حفظ" });
+    if (!name?.trim() || name.trim() === column.name) return;
+    run(() => (mode.kind === "main" ? renameCustomColumn(column.id, name) : renameSubColumn(column.id, name)), "عُدِّل الاسم");
+  };
+
+  const deleteColumn = async (column: GridColumn) => {
+    const ok = await confirmAction({
+      title: `حذف «${column.name}»؟`,
+      message:
+        mode.kind === "main"
+          ? "يُحذف العمود ومستجداته كلها وخدماته الفرعية نهائياً."
+          : "تُحذف الخدمة الفرعية ومستجداتها نهائياً، وتختفي من الجدول العام.",
+      confirmLabel: "حذف",
+      tone: "danger",
+    });
+    if (!ok) return;
+    run(() => (mode.kind === "main" ? deleteCustomColumn(column.id) : deleteSubColumn(column.id)), "حُذف");
+  };
+
+  const toolbar = (
+    <div className="flex flex-wrap items-center gap-2">
+      {canManage && (
+        <button type="button" onClick={addColumn} disabled={pending} className={btn.primary}>
+          {pending ? <Spinner /> : <Plus className="size-4" />}
+          {mode.kind === "main" ? "إضافة عمود" : "إضافة خدمة فرعية"}
+        </button>
+      )}
+      <button type="button" onClick={toggleTransposed} className={btn.secondary} aria-pressed={transposed}>
+        <ArrowLeftRight className="size-4" />
+        {transposed ? "الجمعيات صفوفاً" : "الجمعيات أعمدةً"}
+      </button>
+    </div>
+  );
+
+  if (charities.length === 0 || columns.length === 0) {
     return (
-      <div className="rounded-xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900">
-        <EmptyState icon={<Rss className="w-5 h-5" />} title="لا جمعيات أو خدمات بعد" description="يظهر الجدول حين تُضاف الجمعيات وخدماتها." />
+      <div className="space-y-3">
+        {toolbar}
+        <div className="rounded-xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900">
+          <EmptyState
+            icon={<Rss className="w-5 h-5" />}
+            title={
+              charities.length === 0
+                ? "لا جمعيات مسنَدة إليك"
+                : mode.kind === "main"
+                  ? "لا خدمات مرتبطة بك"
+                  : "لا خدمات فرعية بعد"
+            }
+            description={
+              charities.length === 0
+                ? "يظهر الجدول بالجمعيات المسنَدة إليك."
+                : mode.kind === "main"
+                  ? "يظهر الجدول بالخدمات الممنوحة لك."
+                  : canManage
+                    ? "أضف أول خدمةٍ فرعية من الزر أعلاه."
+                    : "تظهر هنا حين تُضاف خدماتٌ فرعية."
+            }
+          />
+        </div>
       </div>
     );
   }
 
+  const columnHeader = (column: GridColumn) => (
+    <ColumnHeader column={column} canManage={canManage} busy={pending} onRename={renameColumn} onDelete={deleteColumn} />
+  );
+  const charityHeader = (c: Charity) => c.name;
+  const cellFor = (c: Charity, column: GridColumn) => {
+    const k = key(c.id, column.id);
+    return (
+      <Cell
+        exists={visibleSet.has(k)}
+        canAdd={canAdd}
+        cell={latest[k]}
+        label={`${c.name} — ${column.name}`}
+        onAdd={() => setAdding({ charity: c, column })}
+        onOpen={() => setViewing({ charity: c, column })}
+      />
+    );
+  };
+
   return (
-    <>
-      {/* التثبيت كما في Excel: الصفّ الأول والعمود الأول (الأيمن) يبقيان مع التمرير. */}
-      <div className="relative max-h-[calc(100dvh-12rem)] overflow-auto rounded-xl border border-slate-200 bg-white shadow-[0_1px_2px_rgb(15_23_42/0.04)] dark:border-slate-800 dark:bg-slate-900">
-        <table className="border-separate border-spacing-0 text-[13px]">
-          <thead>
-            <tr>
-              <th
-                scope="col"
-                className="sticky start-0 top-0 z-30 min-w-44 border-b border-e border-slate-200 bg-slate-100 px-4 py-3 text-start text-[12.5px] font-semibold text-slate-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300"
-              >
-                الجمعية
-              </th>
-              {serviceNames.map((s) => (
-                <th
-                  key={s}
-                  scope="col"
-                  className="sticky top-0 z-20 w-64 min-w-64 max-w-64 border-b border-e border-slate-200 bg-slate-50 px-4 py-3 text-start text-[12.5px] font-semibold text-slate-700 last:border-e-0 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"
-                >
-                  {s}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {charities.map((c) => (
-              <tr key={c.id}>
-                <th
-                  scope="row"
-                  className="sticky start-0 z-10 border-b border-e border-slate-200 bg-slate-50 px-4 py-3 text-start align-top font-semibold text-slate-800 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
-                >
-                  {c.name}
-                </th>
-                {serviceNames.map((s) => {
-                  const k = key(c.id, s);
-                  return (
-                    <Cell
-                      key={s}
-                      exists={existingSet.has(k)}
-                      canAdd={addableSet.has(k)}
-                      cell={latest[k]}
-                      label={`${c.name} — ${s}`}
-                      onAdd={() => setAdding({ charity: c, serviceName: s })}
-                      onOpen={() => setViewing({ charity: c, serviceName: s })}
-                    />
-                  );
-                })}
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+    <div className="space-y-3">
+      {toolbar}
+      {transposed ? (
+        <Grid
+          corner={mode.kind === "main" ? "الخدمة" : "الخدمة الفرعية"}
+          top={charities}
+          side={columns}
+          topHeader={charityHeader}
+          sideHeader={columnHeader}
+          cell={(column, c) => cellFor(c, column)}
+          id={(x) => x.id}
+        />
+      ) : (
+        <Grid
+          corner="الجمعية"
+          top={columns}
+          side={charities}
+          topHeader={columnHeader}
+          sideHeader={charityHeader}
+          cell={(c, column) => cellFor(c, column)}
+          id={(x) => x.id}
+        />
+      )}
 
       <Legend />
 
-      {adding && <AddDialog target={adding} today={today} onClose={() => setAdding(null)} />}
+      {adding && <AddDialog mode={mode} target={adding} today={today} onClose={() => setAdding(null)} />}
       {viewing && (
         <HistoryDialog
+          mode={mode}
           target={viewing}
           today={today}
-          canAdd={addableSet.has(key(viewing.charity.id, viewing.serviceName))}
+          canAdd={canAdd}
           canManage={canManage}
           onAdd={() => {
             setAdding(viewing);
@@ -160,7 +296,116 @@ export default function LatestUpdatesClient({
           onClose={() => setViewing(null)}
         />
       )}
-    </>
+    </div>
+  );
+}
+
+/**
+ * الجدول بتثبيت Excel: الصفّ الأول والعمود الأول (الأيمن) يبقيان مع التمرير.
+ * واحدٌ للاتجاهين — القلب يبادل ما في الأعلى بما على الجانب، لا جدولٌ ثانٍ.
+ */
+function Grid<T, S>({
+  corner,
+  top,
+  side,
+  topHeader,
+  sideHeader,
+  cell,
+  id,
+}: {
+  corner: string;
+  top: T[];
+  side: S[];
+  topHeader: (t: T) => ReactNode;
+  sideHeader: (s: S) => ReactNode;
+  cell: (s: S, t: T) => ReactNode;
+  id: (x: T | S) => string;
+}) {
+  return (
+    <div className="relative max-h-[calc(100dvh-14rem)] overflow-auto rounded-xl border border-slate-200 bg-white shadow-[0_1px_2px_rgb(15_23_42/0.04)] dark:border-slate-800 dark:bg-slate-900">
+      <table className="border-separate border-spacing-0 text-[13px]">
+        <thead>
+          <tr>
+            <th
+              scope="col"
+              className="sticky start-0 top-0 z-30 min-w-44 border-b border-e border-slate-200 bg-slate-100 px-4 py-3 text-start text-[12.5px] font-semibold text-slate-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300"
+            >
+              {corner}
+            </th>
+            {top.map((t) => (
+              <th
+                key={id(t)}
+                scope="col"
+                className="sticky top-0 z-20 w-64 min-w-64 max-w-64 border-b border-e border-slate-200 bg-slate-50 px-4 py-3 text-start align-top text-[12.5px] font-semibold text-slate-700 last:border-e-0 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"
+              >
+                {topHeader(t)}
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {side.map((s) => (
+            <tr key={id(s)}>
+              <th
+                scope="row"
+                className="sticky start-0 z-10 min-w-44 max-w-56 border-b border-e border-slate-200 bg-slate-50 px-4 py-3 text-start align-top font-semibold text-slate-800 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
+              >
+                {sideHeader(s)}
+              </th>
+              {top.map((t) => (
+                <td
+                  key={id(t)}
+                  className="group relative w-64 min-w-64 max-w-64 border-b border-e border-slate-100 p-0 align-top last:border-e-0 dark:border-slate-800"
+                >
+                  {cell(s, t)}
+                </td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+function ColumnHeader({
+  column,
+  canManage,
+  busy,
+  onRename,
+  onDelete,
+}: {
+  column: GridColumn;
+  canManage: boolean;
+  busy: boolean;
+  onRename: (c: GridColumn) => void;
+  onDelete: (c: GridColumn) => void;
+}) {
+  return (
+    <div className="flex items-start gap-1">
+      {column.href ? (
+        <Link
+          href={column.href}
+          title="فتح الخدمات الفرعية"
+          className="inline-flex min-w-0 flex-1 items-center gap-1 rounded hover:text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 dark:hover:text-teal-300"
+        >
+          <span className="break-words">{column.name}</span>
+          <ChevronLeft className="size-3.5 shrink-0 opacity-60" />
+        </Link>
+      ) : (
+        <span className="min-w-0 flex-1 break-words">{column.name}</span>
+      )}
+      {column.editable && canManage && (
+        <span className="-my-1 flex shrink-0">
+          <button type="button" disabled={busy} onClick={() => onRename(column)} className={cx(btn.icon, "size-7")} aria-label={`تعديل اسم ${column.name}`}>
+            <Pencil className="size-3.5" />
+          </button>
+          <button type="button" disabled={busy} onClick={() => onDelete(column)} className={cx(btn.iconDanger, "size-7")} aria-label={`حذف ${column.name}`}>
+            <Trash2 className="size-3.5" />
+          </button>
+        </span>
+      )}
+    </div>
   );
 }
 
@@ -181,14 +426,14 @@ function Cell({
 }) {
   if (!exists) {
     return (
-      <td className="w-64 min-w-64 max-w-64 border-b border-e border-slate-100 bg-slate-50/60 px-4 py-3 align-top text-[12px] text-slate-400 last:border-e-0 dark:border-slate-800 dark:bg-slate-950/40 dark:text-slate-600">
+      <div className="h-full bg-slate-50/60 px-4 py-3 text-[12px] text-slate-400 dark:bg-slate-950/40 dark:text-slate-600">
         الخدمة غير مفعّلة
-      </td>
+      </div>
     );
   }
 
   return (
-    <td className="group relative w-64 min-w-64 max-w-64 border-b border-e border-slate-100 px-4 py-3 align-top last:border-e-0 dark:border-slate-800">
+    <div className="px-4 py-3">
       {cell ? (
         <div
           role="button"
@@ -203,7 +448,12 @@ function Cell({
           aria-label={`سجلّ ${label}`}
           className="-m-1.5 cursor-pointer rounded-lg p-1.5 outline-none transition-colors hover:bg-slate-50 focus-visible:ring-2 focus-visible:ring-primary/40 dark:hover:bg-slate-800/50"
         >
-          {/* النصّ كاملاً يُقرأ في مكانه؛ وما زاد عن ارتفاع الخلية يُمرَّر داخلها. */}
+          {cell.subColumnName && (
+            <span className="mb-1 inline-block rounded bg-primary/10 px-1.5 py-0.5 text-[11.5px] font-medium text-primary dark:bg-teal-400/10 dark:text-teal-300">
+              {cell.subColumnName}
+            </span>
+          )}
+          {/* النصّ كاملاً يُقرأ في مكانه؛ وما زاد عن ارتفاع الخانة يُمرَّر داخلها. */}
           <p className="max-h-44 overflow-y-auto whitespace-pre-wrap break-words pe-6 leading-6 text-slate-800 dark:text-slate-200">
             {cell.content}
           </p>
@@ -237,7 +487,7 @@ function Cell({
           <Plus className="size-4" />
         </button>
       )}
-    </td>
+    </div>
   );
 }
 
@@ -259,17 +509,18 @@ function Legend() {
   );
 }
 
-function AddDialog({ target, today, onClose }: { target: CellRef; today: string; onClose: () => void }) {
+function AddDialog({ mode, target: ref, today, onClose }: { mode: GridMode; target: CellRef; today: string; onClose: () => void }) {
   const router = useRouter();
   const [content, setContent] = useState("");
   const [eventDate, setEventDate] = useState(today);
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
+  const where = mode.kind === "main" ? ref.column.name : `${mode.parentName} ‹ ${ref.column.name}`;
 
   return (
     <Dialog
       title="إضافة مستجد"
-      description={`${target.charity.name} — ${target.serviceName}`}
+      description={`${ref.charity.name} — ${where}`}
       icon={<Plus className="size-4" />}
       onClose={onClose}
       busy={pending}
@@ -278,12 +529,7 @@ function AddDialog({ target, today, onClose }: { target: CellRef; today: string;
         e.preventDefault();
         setError(null);
         startTransition(async () => {
-          const res = await addLatestUpdate({
-            charityId: target.charity.id,
-            serviceName: target.serviceName,
-            content,
-            eventDate,
-          });
+          const res = await addLatestUpdate({ charityId: ref.charity.id, ...target(mode, ref.column), content, eventDate });
           if (!res.success) {
             setError(res.error);
             return;
@@ -316,7 +562,7 @@ function AddDialog({ target, today, onClose }: { target: CellRef; today: string;
             value={content}
             onChange={(e) => setContent(e.target.value)}
             className={cx(field, "h-auto resize-y py-2 leading-6")}
-            placeholder="ما آخر ما استجدّ في هذه الخدمة لهذه الجمعية؟"
+            placeholder="ما آخر ما استجدّ هنا؟"
           />
         </Field>
         <div className="grid gap-4 sm:grid-cols-2">
@@ -341,13 +587,15 @@ function AddDialog({ target, today, onClose }: { target: CellRef; today: string;
 }
 
 function HistoryDialog({
-  target,
+  mode,
+  target: ref,
   today,
   canAdd,
   canManage,
   onAdd,
   onClose,
 }: {
+  mode: GridMode;
   target: CellRef;
   today: string;
   canAdd: boolean;
@@ -360,10 +608,12 @@ function HistoryDialog({
   const [error, setError] = useState<string | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [version, setVersion] = useState(0);
+  const { columnKey, subColumnId } = target(mode, ref.column);
+  const where = mode.kind === "main" ? ref.column.name : `${mode.parentName} ‹ ${ref.column.name}`;
 
   useEffect(() => {
     let cancelled = false;
-    getCellHistory(target.charity.id, target.serviceName).then((res) => {
+    getCellHistory(ref.charity.id, columnKey, subColumnId).then((res) => {
       if (cancelled) return;
       if (res.success) setEntries(res.data ?? []);
       else setError(res.error);
@@ -371,7 +621,7 @@ function HistoryDialog({
     return () => {
       cancelled = true;
     };
-  }, [target.charity.id, target.serviceName, version]);
+  }, [ref.charity.id, columnKey, subColumnId, version]);
 
   const reload = () => {
     setVersion((v) => v + 1);
@@ -381,7 +631,7 @@ function HistoryDialog({
   return (
     <Dialog
       title="سجلّ المستجدات"
-      description={`${target.charity.name} — ${target.serviceName}`}
+      description={`${ref.charity.name} — ${where}`}
       icon={<History className="size-4" />}
       size="lg"
       onClose={onClose}
@@ -401,7 +651,7 @@ function HistoryDialog({
           <Spinner />
         </div>
       ) : entries.length === 0 ? (
-        <p className="py-8 text-center text-[13px] text-slate-500">لا مستجدات في هذه الخلية.</p>
+        <p className="py-8 text-center text-[13px] text-slate-500">لا مستجدات في هذه الخانة.</p>
       ) : (
         <ol className="space-y-3">
           {entries.map((entry, i) =>
@@ -426,6 +676,11 @@ function HistoryDialog({
                     : "border-slate-200 dark:border-slate-800"
                 )}
               >
+                {mode.kind === "main" && entry.subColumnName && (
+                  <span className="mb-1.5 inline-block rounded bg-primary/10 px-1.5 py-0.5 text-[11.5px] font-medium text-primary dark:bg-teal-400/10 dark:text-teal-300">
+                    {entry.subColumnName}
+                  </span>
+                )}
                 <p className="whitespace-pre-wrap break-words text-[13px] leading-6 text-slate-800 dark:text-slate-200">{entry.content}</p>
                 <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-[12px] text-slate-500 dark:text-slate-400">
                   <span>

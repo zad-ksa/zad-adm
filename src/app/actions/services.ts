@@ -273,6 +273,11 @@ export async function renameServiceGlobally(oldName: string, newName: string, ne
       where: { serviceName: oldName },
       data: { serviceName: cleanName },
     }),
+    // وخدماتُه الفرعية هناك معلّقةٌ بالاسم أيضاً.
+    prisma.latestUpdateSubColumn.updateMany({
+      where: { parentKey: oldName },
+      data: { parentKey: cleanName },
+    }),
   ]);
 
   revalidatePath('/main/manage-services');

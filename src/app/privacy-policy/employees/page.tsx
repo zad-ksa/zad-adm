@@ -4,10 +4,8 @@ import { useTheme } from "next-themes";
 import Link from "next/link";
 import { ArrowRight, Shield, Lock, FileText, Database, Globe, Eye, UserCheck, Bell, Mail, Sun, Moon, Users, Briefcase } from "lucide-react";
 import ZadLogo from "@/components/ZadLogo";
-import { Cairo } from "next/font/google";
+import { cairo } from "@/app/siteFonts";
 import { useEffect, useState } from "react";
-
-const cairo = Cairo({ subsets: ["arabic"], weight: ["400", "600", "700", "900"] });
 
 export default function EmployeePrivacyPolicyPage() {
   const { theme, setTheme } = useTheme();

@@ -49,9 +49,13 @@ export const PERMISSION_GROUPS = [
       { id: "delete_employees", label: "حذف الموظفين" },
       { id: "view_all_tasks", label: "عرض وإدارة جميع مهام الموظفين" },
       { id: "manage_news", label: "الأخبار والإنجازات" },
-      // صفحةٌ محجوزةٌ بصلاحيتها وهي بعد فارغة: حُجزت من يومها لا يوم تمتلئ،
-      // فلا يُفتح بابٌ ثم يُغلَق بعد أن دخل منه أحد.
-      { id: "view_latest_updates", label: "آخر المستجدات" },
+      // آخر المستجدات: ثلاث درجات، وكلها في جمعيات حاملها وخدماته وحدها.
+      // الاطّلاع يُظهر التبويب والجدول، والإضافة تشمل تعديلَ ما أضافه حاملها
+      // وحذفَه، والتحرير يعدّل ويحذف ما أضافه غيره ويدير الأعمدة والخدمات
+      // الفرعية. والمُعرّف الأول بقي لأنه محفوظٌ في مصفوفات حامليه.
+      { id: "view_latest_updates", label: "آخر المستجدات (الاطّلاع)" },
+      { id: "add_latest_updates", label: "آخر المستجدات (الإضافة، وتعديل ما أضافه وحذفه)" },
+      { id: "manage_latest_updates", label: "آخر المستجدات (التحرير الكامل والأعمدة والخدمات الفرعية)" },
       { id: "manage_surveys", label: "الاستبيانات المخصصة" },
       { id: "manage_meetings", label: "محاضر الاجتماعات" },
       { id: "manage_communication", label: "إدارة التواصل" },
@@ -199,6 +203,9 @@ export const IMPLIES: Record<string, string[]> = {
   delete_employees: ["manage_employees"],
   delete_design_requests: ["manage_design_requests"],
   manage_project_builder: ["use_project_builder"],
+  // لا إضافة ولا تحرير في جدولٍ لا يراه صاحبه.
+  add_latest_updates: ["view_latest_updates"],
+  manage_latest_updates: ["view_latest_updates", "add_latest_updates"],
 };
 
 /** Everything a stored array actually grants, once implications are applied. */

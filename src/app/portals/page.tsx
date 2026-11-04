@@ -5,10 +5,8 @@ import Link from "next/link";
 import { Building2, Users, Sun, Moon, ArrowRight, ShieldCheck } from "lucide-react";
 import ZadLogo from "@/components/ZadLogo";
 import IosInstallHint from "@/components/IosInstallHint";
-import { Cairo } from "next/font/google";
+import { cairo } from "@/app/siteFonts";
 import { useEffect, useSyncExternalStore } from "react";
-
-const cairo = Cairo({ subsets: ["arabic"], weight: ["700", "900"] });
 
 // "Has this rendered in the browser yet?" — read as a store rather than set from
 // an effect, which keeps the server and client markup identical without tripping

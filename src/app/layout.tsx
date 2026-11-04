@@ -1,24 +1,11 @@
 import type { Metadata, Viewport } from "next";
 import ToastHost from "@/components/console/ToastHost";
 import DialogHost from "@/components/console/DialogHost";
-import { Inter, Cairo } from "next/font/google";
+import { inter, cairo } from "@/app/siteFonts";
 import { Analytics } from "@vercel/analytics/next";
 
 import { ThemeProvider } from "@/components/ThemeProvider";
 import "./globals.css";
-
-const inter = Inter({ 
-  subsets: ["latin"], 
-  variable: "--font-inter",
-  display: "swap" 
-});
-
-const cairo = Cairo({ 
-  subsets: ["arabic"], 
-  weight: ["300", "400", "500", "600", "700", "800", "900"],
-  variable: "--font-cairo",
-  display: "swap" 
-});
 
 /**
  * `themeColor` paints the phone's status bar in the brand teal instead of the

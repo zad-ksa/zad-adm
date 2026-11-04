@@ -126,6 +126,7 @@ model Charity {
   strategyPerspectives    StrategyPerspective[]
   operationalPlans        OperationalPlan[]
   planSurvey              PlanSurvey?
+  latestUpdates           LatestUpdate[]
 }
 
 /// معلومات الجمعية الثابتة لمنشئ وثائق المبادرات — رؤيتها، رسالتها، مجالها
@@ -2389,4 +2390,65 @@ model PlanSurveyResponse {
   submittedAt DateTime @default(now())
 
   @@index([surveyId, submittedAt])
+}
+
+/// «آخر المستجدات»: ما استجدّ في خدمةٍ عند جمعية — خليةٌ في جدول الجمعيات × الخدمات.
+///
+/// الخدمة بالاسم لا بمعرّف صفّها، كما في EmployeeServiceAccess: الخدمة في الواجهة
+/// اسمٌ يجمع صفوفاً لكل جمعية، ومعرّفات الصفوف تتبدّل عند التوحيد.
+///
+/// تاريخان لا تاريخ: `createdAt` يوم الإدخال ولا يُحرَّر، و`eventDate` يوم الحدث
+/// نفسه، افتراضيّه اليوم ويُعدَّل — فخبرٌ يُدوَّن متأخّراً لا يبدو أحدث مما هو.
+/// والأحدث في الخلية بتاريخ الحدث، وعليه يُحسب «منذ» ولونه.
+model LatestUpdate {
+  id          String   @id @default(uuid())
+  charityId   String
+  charity     Charity  @relation(fields: [charityId], references: [id], onDelete: Cascade)
+  /// مفتاح العمود: اسم الخدمة للخدمات الأصلية، و"custom:<id>" لأعمدة
+  /// LatestUpdateColumn — فالعمود الخاص يُعاد تسميته ولا يتغيّر مفتاحه.
+  serviceName String
+  /// خدمةٌ فرعية تحت العمود، أو null لحدثٍ على العمود نفسه. وحدث الفرع يظهر
+  /// في خانة العمود في الجدول العام أيضاً.
+  subColumnId String?
+  subColumn   LatestUpdateSubColumn? @relation(fields: [subColumnId], references: [id], onDelete: Cascade)
+  content     String
+
+  /// يوم الحدث بتقويم الرياض (منتصف ليل UTC يمثّل اليوم المدني).
+  eventDate DateTime @db.Date
+
+  createdById   String?
+  createdByName String?
+  createdAt     DateTime @default(now())
+  updatedById   String?
+  updatedByName String?
+  updatedAt     DateTime @updatedAt
+
+  @@index([charityId, serviceName, eventDate])
+  @@index([subColumnId])
+}
+
+/// عمودٌ خاصٌّ بجدول «آخر المستجدات»: خدمةٌ لا وجود لها خارجه — لا في
+/// «إدارة الخدمات» ولا في المنح ولا في البريد. يراه كل من يرى الجدول في
+/// جمعياته، ويُعدَّل ويُحذف بخلاف الخدمات الأصلية.
+model LatestUpdateColumn {
+  id        String   @id @default(uuid())
+  name      String   @unique
+  position  Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+/// خدمةٌ فرعية تحت عمودٍ في «آخر المستجدات» — أعمدة الجدول الفرعي.
+/// `parentKey` مفتاح العمود الأب بصيغة LatestUpdate.serviceName نفسها.
+model LatestUpdateSubColumn {
+  id        String         @id @default(uuid())
+  parentKey String
+  name      String
+  position  Int            @default(0)
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+  updates   LatestUpdate[]
+
+  @@unique([parentKey, name])
+  @@index([parentKey])
 }

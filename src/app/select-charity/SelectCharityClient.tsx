@@ -5,9 +5,7 @@ import { useTheme } from "next-themes";
 import { selectCharitySession } from "@/app/actions/authCharity";
 import { Building2, ArrowLeft, Loader2, Sun, Moon } from "lucide-react";
 import ZadLogo from "@/components/ZadLogo";
-import { Cairo } from "next/font/google";
-
-const cairo = Cairo({ subsets: ["arabic"], weight: ["700", "900"] });
+import { cairo } from "@/app/siteFonts";
 
 type CharityOption = {
   id: string;

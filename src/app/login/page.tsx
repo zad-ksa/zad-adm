@@ -7,9 +7,7 @@ import { AlertCircle, Lock, Loader2, Phone, ArrowLeft, ShieldCheck, Sun, Moon, H
 import ZadLogo from "@/components/ZadLogo";
 import { useLoginMethod } from "@/lib/useLoginMethod";
 import Link from "next/link";
-import { Cairo } from "next/font/google";
-
-const cairo = Cairo({ subsets: ["arabic"], weight: ["700", "900"] });
+import { cairo } from "@/app/siteFonts";
 
 export default function EmployeeLoginPage() {
   const [step, setStep] = useState<1 | 2>(1);

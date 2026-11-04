@@ -5,6 +5,7 @@ import { prisma } from "@/lib/db";
 import { getSession } from "@/lib/auth";
 import { hasPermission } from "@/lib/permissions";
 import { getAssignedCharityIds } from "@/lib/access";
+import { SECTION_SERVICES, charityHasService } from "@/lib/charityServices";
 import { encryptSecret } from "@/lib/encryption";
 import { logAudit } from "@/lib/auditLog";
 import { cleanDonorName, donorKindOf, intakeStatusOf, normalizeDonorName } from "@/lib/donorOrg";
@@ -34,6 +35,8 @@ async function requireCharityInScope(charityId: string) {
   if (!session) return null;
   const assigned = await getAssignedCharityIds(session.id, session.role, session.permissions);
   if (assigned !== null && !assigned.includes(charityId)) return null;
+  // ولا حسابَ لجمعيةٍ لا تشملها خدمةُ تنمية الموارد، كما لا تظهر في صفحاتها.
+  if (!(await charityHasService(charityId, SECTION_SERVICES.manage_resource_development))) return null;
   return session;
 }
 

@@ -1,6 +1,7 @@
 "use server";
 import { unstable_cache } from "next/cache";
 import { EXTERNAL_CHARITIES, externalOnly } from "@/lib/charityScope";
+import { SECTION_SERVICES, charityHasService, serviceRowsWhere } from "@/lib/charityServices";
 
 import { prisma } from "@/lib/db";
 import { syncCharityAdminServicesQuietly } from "@/lib/charityAdminServices";
@@ -12,8 +13,6 @@ import { requirePermission } from "@/lib/guards";
 import { logAudit } from "@/lib/auditLog";
 import { writeFile, mkdir } from "fs/promises";
 import { join } from "path";
-
-const STRATEGY_SERVICE_NAME = "التخطيط الاستراتيجي";
 
 export const getSidebarCharities = async () => {
   try {
@@ -28,11 +27,10 @@ export const getSidebarCharities = async () => {
     // الجانبي تحت الاستراتيجية وتنمية الموارد، والشريط هو من يُخفيها عن بقية
     // الخدمات (showsInternal في charityScope).
     //
-    // hasStrategyService: هل للجمعية خدمة «التخطيط الاستراتيجي»؟ فالشريط لا
-    // يسردها تحت «الاستراتيجية» إلا إن كانت لها، كما تُحكم بها صفحة «الكل».
-    // واسم الخدمة مفتاحها بالعُرف، والقسم STRATEGY لما أنشأه getStrategyService.
+    // hasStrategyService: هل تشمل الجمعيةَ خدمةُ «التخطيط الاستراتيجي»؟ فالشريط
+    // لا يسردها تحت «الاستراتيجية» إلا إن شملتها (charityServices).
     const strategyServices = {
-      where: { OR: [{ name: STRATEGY_SERVICE_NAME }, { department: "STRATEGY" }] },
+      where: serviceRowsWhere(SECTION_SERVICES.manage_strategy),
       select: { id: true },
       take: 1,
     };
@@ -346,6 +344,8 @@ async function requireResourceDevelopment(charityId: string) {
 
   const assigned = await getAssignedCharityIds(session.id, session.role, session.permissions);
   if (assigned !== null && !assigned.includes(charityId)) return null;
+  // ولا منحةَ لجمعيةٍ لا تشملها خدمةُ تنمية الموارد (charityServices).
+  if (!(await charityHasService(charityId, SECTION_SERVICES.manage_resource_development))) return null;
 
   return session;
 }

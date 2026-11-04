@@ -3,6 +3,7 @@ import { requireCharitySection } from "@/lib/sectionGuard";
 import type { Metadata } from "next";
 import StrategicStagesManager from "../StrategicStagesManager";
 import { ensureStagesForCharity } from "@/app/actions/strategy";
+import { SECTION_SERVICES, serviceRowsWhere } from "@/lib/charityServices";
 
 export const dynamic = "force-dynamic";
 
@@ -27,7 +28,7 @@ export default async function StrategicStagesPage({ params }: { params: Promise<
   let stages: any[] = [];
   if (charity) {
     await ensureStagesForCharity(charity.id);
-    const svc = await prisma.service.findFirst({ where: { charityId: charity.id, department: "STRATEGY" } });
+    const svc = await prisma.service.findFirst({ where: { charityId: charity.id, ...serviceRowsWhere(SECTION_SERVICES.manage_strategy) } });
     if (svc) {
       stages = await prisma.serviceStage.findMany({
         where: { serviceId: svc.id },

@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/db";
 import { requireSection } from "@/lib/sectionGuard";
 import { getAssignedCharityIds } from "@/lib/access";
+import { SECTION_SERVICES, charitiesWithServiceWhere } from "@/lib/charityServices";
 
 /**
  * نطاقُ صفحات الجهات المانحة: ما يُحسب وما يُعرض لكلِّ موظف.
@@ -33,8 +34,13 @@ export async function requireDonorViewer(): Promise<DonorViewer> {
   const session = await requireSection("manage_resource_development");
   const assigned = await getAssignedCharityIds(session.id, session.role, session.permissions);
 
+  // والجمعيةُ لا تدخل النطاقَ إلا إن شملتها خدمةُ تنمية الموارد: لا اسمُها في
+  // المُرشِّح، ولا حساباتُها، ولا منحُها، ولا تُحسب في الأرقام (charityServices).
   const charities = await prisma.charity.findMany({
-    where: assigned === null ? undefined : { id: { in: assigned } },
+    where: {
+      ...(assigned === null ? {} : { id: { in: assigned } }),
+      ...charitiesWithServiceWhere(SECTION_SERVICES.manage_resource_development),
+    },
     select: { id: true, name: true, isInternal: true },
     orderBy: { name: "asc" },
   });

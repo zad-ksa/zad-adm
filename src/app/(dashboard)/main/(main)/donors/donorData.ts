@@ -142,6 +142,66 @@ export type DonorGrantRow = {
   createdAtMs: number;
 };
 
+/** صفُّ جدول المنح الجامع — فيه الجهةُ والجمعيةُ معاً. */
+export type GrantOverviewRow = DonorGrantRow & {
+  donorOrgId: string | null;
+  /** اسمُ الجهة الآن إن كانت لها صفٌّ، وإلّا `entityName` المثبَّتُ في الصفّ. */
+  donorName: string;
+  /** صفٌّ لا جهةَ له: `entityName` وحدَه — فلا يُفتح له تعديلٌ يلزمه معرِّف. */
+  donorMissing: boolean;
+};
+
+/**
+ * كلُّ المنح في نطاق الرائي — لجدول «المنح» الجامع.
+ *
+ * واستعلامٌ واحدٌ لا استعلامٌ لكل جهة: الجدولُ يُفرز ويُبحث في المتصفّح، فلا
+ * فائدةَ من تقطيعه على الخادم. والعددُ مئاتٌ لا ملايين (٢٧ اليوم)، وهو مقصورٌ
+ * على جمعيات الرائي أصلاً.
+ *
+ * **ولا تُستثنى منحةٌ بلا جهة**: `donorOrgId` قابلٌ للعدم في المخطَّط، وصفوفٌ
+ * رُفعت قبل أن تصير الجهةُ كياناً تحمل اسمَها في `entityName` وحدَه. فحجبُها
+ * يُنقص المجموعَ ولا يُفسِّر لماذا — وهي تُعرض ويُقال إنّها بلا جهةٍ مرتبطة.
+ */
+export async function loadGrantsOverview(viewer: DonorViewer) {
+  if (viewer.charityIds.length === 0) return { grants: [] as GrantOverviewRow[], donors: [] as { id: string; name: string }[] };
+
+  const [rows, donors] = await Promise.all([
+    prisma.grantApplication.findMany({
+      where: { charityId: { in: viewer.charityIds } },
+      select: {
+        id: true,
+        charityId: true,
+        initiativeName: true,
+        requestedAmount: true,
+        status: true,
+        createdAt: true,
+        donorOrgId: true,
+        entityName: true,
+        charity: { select: { name: true } },
+        donorOrg: { select: { name: true } },
+      },
+      orderBy: { createdAt: "desc" },
+    }),
+    prisma.donorOrg.findMany({ select: { id: true, name: true }, orderBy: { name: "asc" } }),
+  ]);
+
+  const grants: GrantOverviewRow[] = rows.map((g) => ({
+    id: g.id,
+    charityId: g.charityId,
+    charityName: g.charity.name,
+    initiativeName: g.initiativeName,
+    requestedAmount: g.requestedAmount,
+    status: g.status,
+    createdAt: formatDonorDate(g.createdAt),
+    createdAtMs: g.createdAt.getTime(),
+    donorOrgId: g.donorOrgId,
+    donorName: g.donorOrg?.name ?? g.entityName,
+    donorMissing: !g.donorOrgId,
+  }));
+
+  return { grants, donors };
+}
+
 /**
  * جهةُ تبويبٍ مفرد — «منصة إحسان» و«صندوق دعم الجمعيات».
  *

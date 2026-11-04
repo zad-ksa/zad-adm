@@ -393,6 +393,9 @@ export default function EmployeeSidebar({
                             // قصد، فالتصفية هنا حيث يُعرف القسم.
                             charities
                               .filter(charity => !charity.isInternal || showsInternal(svc.id))
+                              // الاستراتيجية لمن له خدمتها وحده. والكيان الداخلي
+                              // يبقى، فظهوره هنا مقصود ولا خدمة له (charityScope).
+                              .filter(charity => svc.id !== "strategy" || charity.isInternal || charity.hasStrategyService)
                               .map(charity => {
                               // الاستراتيجية: الجمعية رابطٌ واحدٌ إلى صفحتها
                               // الجامعة. كانت طيّاً ثالثاً يسرد صفحاتها، فصار

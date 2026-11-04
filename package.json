@@ -18,6 +18,7 @@
     "donors:extract": "node --experimental-strip-types scripts/extract-donors-xlsx.mjs",
     "donors:seed": "node -r dotenv/config --experimental-strip-types scripts/seed-donor-orgs.mjs",
     "donors:accounts": "node -r dotenv/config --experimental-strip-types scripts/import-donor-accounts.mjs",
+    "donors:book": "node -r dotenv/config --experimental-strip-types scripts/import-charity-donor-book.mjs",
     "check:b2": "node -r dotenv/config --experimental-strip-types scripts/check-b2.mjs",
     "check:gateway": "node -r dotenv/config --experimental-strip-types scripts/check-gateway.mjs",
     "b2:cors": "node -r dotenv/config scripts/b2-cors.mjs",

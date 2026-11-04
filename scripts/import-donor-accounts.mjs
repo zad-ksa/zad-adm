@@ -29,25 +29,15 @@ import { PrismaClient } from "@prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { encryptSecret } from "../src/lib/encryption.ts";
 import { cleanCredential, cleanDonorName, looksLikeNote, normalizeDonorName } from "../src/lib/donorOrg.ts";
+// الهجاءاتُ في وحدةٍ مشتركة: قائمةٌ في هذا السكربت وحدَه تعني أنّ
+// `donors:book` يُنشئ الجهةَ المدموجةَ من جديد — وقد وقع.
+import { applyDonorAliases } from "../src/lib/donorAliases.ts";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const APPLY = process.argv.includes("--apply");
 
 const CHARITY_BOOK = join(root, "docs", "حسابات الجهات المانحة.xlsx");
 const ZAD_BOOK = join(root, "docs", "حسابات زاد - الملف النهائي.xlsx");
-
-/**
- * هجاءاتٌ لجهةٍ واحدةٍ لا تُدركها التسويةُ الحرفية.
- *
- * و«العجيمي»/«العجمي» حرفٌ واحدٌ يفصل بينهما، والصدرُ والعجزُ واحدٌ
- * («مؤسسة عبد العزيز ومحمد … وعائلتهم الخيرية») — فهما جهةٌ واحدة. وإنشاءُ
- * صفٍّ ثانٍ لها يُعيد الداءَ الذي عولج: جهةٌ واحدةٌ بسطرين وأرقامٌ مقسومةٌ
- * بينهما.
- */
-const ALIASES = [
-  { from: "مؤسسة عبدالعزيز وسعد الموسى", to: "مؤسسة سعد وعبدالعزيز الموسى" },
-  { from: "مؤسسة عبد العزيز ومحمد العجيمي وعائلتهم الخيرية", to: "مؤسسة عبد العزيز ومحمد العجمي وعائلتهم الخيرية" },
-];
 
 const unesc = (s) =>
   s.replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&quot;/g, '"').replace(/&apos;/g, "'").replace(/&#10;/g, " ").replace(/&amp;/g, "&");
@@ -124,10 +114,7 @@ try {
   const charities = await prisma.charity.findMany({ select: { id: true, name: true } });
   const orgs = await prisma.donorOrg.findMany({ select: { id: true, name: true } });
   const orgByNorm = new Map(orgs.map((o) => [normalizeDonorName(o.name), o]));
-  for (const a of ALIASES) {
-    const t = orgByNorm.get(normalizeDonorName(a.to));
-    if (t) orgByNorm.set(normalizeDonorName(a.from), t);
-  }
+  applyDonorAliases(orgByNorm);
 
   /** «حسابات الرأفة» ← صفُّ «الرأفة الإنسانية». */
   function charityFor(sheetName) {

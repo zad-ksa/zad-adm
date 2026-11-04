@@ -877,9 +877,28 @@ export async function toggleCurrentServiceStage(stageId: string, isCurrent: bool
   revalidatePath(`/portal/${encodeURIComponent(stage.service.charity.name)}/services`);
 }
 
-export async function unifyCharityStagesAction(sourceCharityId: string, timelineType: string, sourceServiceId?: string, targetCharityIds?: string[]) {
+// رفضٌ مقصود في التعميم: نصّه موجَّهٌ للمستخدم فيُعاد إليه كما هو.
+class UnifyRefusal extends Error {}
+
+// يُعاد الخطأ قيمةً لا يُرمى: نسخة الإنتاج من Next.js تُخفي نصّ أي خطأ يُرمى
+// من دالة خادم، فلا يرى المستخدم إلا «An error occurred in the Server
+// Components render». أما ما لم نقصده (قاعدة البيانات مثلاً) فيُسجَّل كاملاً
+// في سجلّ الخادم ويُعرض للمستخدم بعبارة عامة.
+export async function unifyCharityStagesAction(
+  sourceCharityId: string, timelineType: string, sourceServiceId?: string, targetCharityIds?: string[],
+): Promise<{ success: true } | { success: false; error: string }> {
+  try {
+    return await unifyCharityStages(sourceCharityId, timelineType, sourceServiceId, targetCharityIds);
+  } catch (error) {
+    if (error instanceof UnifyRefusal) return { success: false, error: error.message };
+    console.error("unifyCharityStagesAction", { sourceCharityId, timelineType, sourceServiceId, targetCharityIds }, error);
+    return { success: false, error: "تعذّر إكمال التعميم بسبب خطأ في الخادم. قد تكون بعض الجمعيات عُمِّمت عليها المراحل وبعضها لم يُعمَّم، فراجعها ثم أعد المحاولة." };
+  }
+}
+
+async function unifyCharityStages(sourceCharityId: string, timelineType: string, sourceServiceId?: string, targetCharityIds?: string[]): Promise<{ success: true }> {
   const session = await getSession();
-  if (!session) throw new Error("غير مصرح");
+  if (!session) throw new UnifyRefusal("غير مصرح");
 
   // تعميم مراحل خدمةٍ يتبع منحها، كتعديل مراحلها و«قريباً»: من مُنح الخدمة
   // يعمّمها، ومن لم يُمنحها لا يعمّمها. والحصر في الجمعيات المسنَدة يليه أدناه
@@ -891,7 +910,7 @@ export async function unifyCharityStagesAction(sourceCharityId: string, timeline
     const source = await prisma.service.findUnique({ where: { id: sourceServiceId }, select: { name: true } });
     const granted = await getEmployeeServiceNames(session.id);
     if (!source || !granted?.includes(source.name)) {
-      throw new Error("لا يمكنك تعميم مراحل خدمةٍ لم تُمنح لك");
+      throw new UnifyRefusal("لا يمكنك تعميم مراحل خدمةٍ لم تُمنح لك");
     }
   }
 
@@ -903,11 +922,11 @@ export async function unifyCharityStagesAction(sourceCharityId: string, timeline
     });
     const allowedIds = new Set(assigned.map(r => r.charityId));
 
-    if (!allowedIds.has(sourceCharityId)) throw new Error("لا يمكنك التعميم من جمعية غير مرتبطة بك");
+    if (!allowedIds.has(sourceCharityId)) throw new UnifyRefusal("لا يمكنك التعميم من جمعية غير مرتبطة بك");
 
     if (targetCharityIds && targetCharityIds.length > 0) {
       const forbidden = targetCharityIds.filter(id => !allowedIds.has(id));
-      if (forbidden.length > 0) throw new Error("لا يمكنك التعميم على جمعيات غير مرتبطة بك");
+      if (forbidden.length > 0) throw new UnifyRefusal("لا يمكنك التعميم على جمعيات غير مرتبطة بك");
     } else {
       targetCharityIds = [...allowedIds].filter(id => id !== sourceCharityId);
     }
@@ -927,11 +946,11 @@ export async function unifyCharityStagesAction(sourceCharityId: string, timeline
     const svc = await prisma.service.findFirst({
       where: { charityId: sourceCharityId, department: timelineType }
     });
-    if (!svc) throw new Error("لم يتم العثور على مسار لهذه الجمعية");
+    if (!svc) throw new UnifyRefusal("لم يتم العثور على مسار لهذه الجمعية");
     resolvedSourceServiceId = svc.id;
   }
 
-  if (!resolvedSourceServiceId) throw new Error("لم يتم تحديد الخدمة المصدر");
+  if (!resolvedSourceServiceId) throw new UnifyRefusal("لم يتم تحديد الخدمة المصدر");
 
   const stages = await prisma.serviceStage.findMany({
     where: { serviceId: resolvedSourceServiceId }, orderBy: { order: "asc" },
@@ -940,7 +959,7 @@ export async function unifyCharityStagesAction(sourceCharityId: string, timeline
   sourceStages = stages.map(s => ({ name: s.name, description: s.description, startDate: s.startDate, endDate: s.endDate, duration: s.duration, order: s.order, isCurrent: s.isCurrent, isContinuous: s.isContinuous, isActive: s.isActive, steps: s.steps.map(p => ({ name: p.name, isDone: p.isDone, order: p.order })) }));
 
   if (sourceStages.length === 0) {
-    throw new Error("لا توجد مراحل في المخطط الزمني المختار لنسخها");
+    throw new UnifyRefusal("لا توجد مراحل في المخطط الزمني المختار لنسخها");
   }
 
   const otherCharities = await prisma.charity.findMany({
@@ -950,7 +969,7 @@ export async function unifyCharityStagesAction(sourceCharityId: string, timeline
   if (otherCharities.length === 0) return { success: true };
 
   const sourceService = await prisma.service.findUnique({ where: { id: resolvedSourceServiceId } });
-  if (!sourceService) throw new Error("الخدمة المصدر غير موجودة");
+  if (!sourceService) throw new UnifyRefusal("الخدمة المصدر غير موجودة");
 
   for (const targetCharity of otherCharities) {
     let targetSvc = await prisma.service.findFirst({ 

@@ -4,6 +4,8 @@ import CharityLayoutClient from "./CharityLayoutClient";
 import { prisma } from "@/lib/db";
 import { getSession } from "@/lib/auth";
 import SetEmailBanner from "@/components/SetEmailBanner";
+import { effectiveCharityPermissions } from "@/lib/charityPermissions";
+import { portalPermissionLinks } from "@/lib/portalAccess";
 
 export default async function CharityLayout({
   children,
@@ -36,7 +38,12 @@ export default async function CharityLayout({
       // Deactivated memberships are excluded here rather than filtered in the
       // UI, so a deactivated employee neither sees the charity in the switcher
       // nor passes the ownership gate below.
-      charities: { where: { isActive: true }, include: { charity: true } },
+      // وتفويضُ الخدمات معها: منه تُشتقّ تبويباتُ البوابة، فبلا قراءته
+      // يُحسب الشريطُ من المصفوفة المخزّنة وحدَها فيُخفي ما يُسمح به.
+      charities: {
+        where: { isActive: true },
+        include: { charity: true, services: { select: { serviceName: true } } },
+      },
     },
   });
 
@@ -64,6 +71,19 @@ export default async function CharityLayout({
   // the user is browsing a different one of their charities.
   const membership = user?.charities.find((c) => c.charityId === charity.id);
 
+  // **الشريطُ يُعرض من الصلاحيات الفعليّة لا المخزّنة.**
+  //
+  // فتبويباتُ البوابة تُنال بتفويض الخدمة لا بمُنتقٍ، والحفظُ يُسقطها من
+  // المصفوفة المخزّنة عن قصد. فكان الموظَّفُ الجديد يُفوَّض بخدمات جمعيته
+  // ويبقى شريطُه فارغاً، بينما الصفحاتُ تقبله لو كتب رابطَها — والقدماءُ
+  // يحملون القيمَ القديمةَ في مصفوفتهم فيرون، فيُحسب العطبُ في المنح وهو
+  // في العرض. والقاعدةُ الآن واحدةٌ يقرؤها هذا والصفحاتُ معاً.
+  const effectivePermissions = effectiveCharityPermissions(
+    (membership?.permissions as string[] | undefined) ?? [],
+    membership?.services.map((s) => s.serviceName) ?? [],
+    await portalPermissionLinks()
+  );
+
   // Same reminder as the Zad dashboard, pointing at the portal's own screen.
   const needsEmail = !user?.email;
 
@@ -87,7 +107,7 @@ export default async function CharityLayout({
       availableCharities={availableCharities}
       isDeveloper={session.isDeveloper}
       currentEmployeeId={session.originalId ? session.id : undefined}
-      permissions={membership?.permissions ?? []}
+      permissions={effectivePermissions}
       title={session.title}
       isAdmin={membership?.isAdmin ?? false}
       unreadMail={unreadMail}

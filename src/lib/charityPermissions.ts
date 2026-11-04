@@ -31,7 +31,9 @@ export function hasCharityPermission(
   return (permissions || []).includes(required);
 }
 
-import { CHARITY_ATTENDANCE_ENABLED } from "@/lib/featureFlags";
+// نسبيٌّ لا بـ`@/`: هذا الملفُّ خالصٌ ويُختبر بـ`node --test`، وNode لا يعرف
+// اختصاراتَ المسارات. وTurbopack يقبل النسبيَّ، وقد أثبته بناءٌ كامل.
+import { CHARITY_ATTENDANCE_ENABLED } from "./featureFlags.ts";
 
 export type CharityPermissionDef = { id: string; label: string };
 export type CharityPermissionGroup = { title: string; permissions: CharityPermissionDef[] };
@@ -182,4 +184,54 @@ export function grantableCharityPermissions(
   if (isCharityAdmin(actorIsAdmin)) return [...GRANTABLE_CHARITY_PERMISSION_IDS];
   const held = new Set(actorPermissions || []);
   return GRANTABLE_CHARITY_PERMISSION_IDS.filter((p) => held.has(p));
+}
+
+/**
+ * الصلاحياتُ **الفعليّة** لعضو جمعية: المخزّنةُ، وتبويباتُ البوابة بعد تطبيق
+ * قاعدة الربط بالخدمات.
+ *
+ * وهي موضعُ القاعدة الوحيد. وكانت مكتوبةً مرّتين: `portalAccess` تحسبها
+ * بالربط والتفويض، و`CharitySidebar` تقرأ المصفوفةَ المخزّنةَ وحدَها
+ * (`isAdmin || permissions.includes(p)`). فافترق ما يُعرض عمّا يُسمح، في
+ * الاتّجاهين كليهما:
+ *
+ *   - **الموظَّفُ الجديد لا يرى شيئاً.** فالحفظُ يُسقط تبويباتَ البوابة من
+ *     المصفوفة المخزّنة عن قصد — صارت تُنال بتفويض الخدمة لا بمُنتقٍ — فيُفوَّض
+ *     بتسع خدماتٍ ويبقى الشريطُ فارغاً، بينما الصفحاتُ تقبله لو كتب رابطَها.
+ *     وهذا ما ظهر: الموظَّفون القدماء يحملون القيمَ القديمةَ في مصفوفتهم فيرون،
+ *     والجديدُ لا يحملها فلا يرى — فيُحسب العطبُ في المنح وهو في العرض.
+ *   - **والقديمُ يرى ما لا يُفتح.** عضوٌ يحمل `view_governance` مخزّنةً ولا
+ *     خدمةَ مفوَّضةً، يظهر له التبويبُ ثمّ يُرَدُّ إلى «لا صلاحية».
+ *
+ * والقاعدةُ: تبويبٌ مربوطٌ بخدمةٍ يُنال بتفويضها وحدَه، وتبويبٌ لم يُربط بعد
+ * يبقى على المخزّن — فيُفعّل الربطُ تدريجيّاً بلا انقطاع. وما ليس تبويباً يمرّ
+ * كما هو.
+ *
+ * ولا تنظر في `isAdmin`: مديرُ الجمعية يمرّ قبلها في موضع الفحص، فجمعُها معه
+ * هنا يُخفي من الذي أجاز.
+ */
+export function effectiveCharityPermissions(
+  permissions: string[] | null | undefined,
+  services: string[] | null | undefined,
+  links: readonly { permissionId: string; serviceName: string }[],
+  tabIds: readonly string[] = SERVICE_LINKED_CHARITY_PERMISSION_IDS
+): string[] {
+  const stored = new Set(permissions || []);
+  const delegated = new Set(services || []);
+
+  const needed = new Map<string, string[]>();
+  for (const link of links) {
+    if (!tabIds.includes(link.permissionId)) continue;
+    const list = needed.get(link.permissionId) ?? [];
+    list.push(link.serviceName);
+    needed.set(link.permissionId, list);
+  }
+
+  const out = [...stored].filter((id) => !tabIds.includes(id));
+  for (const tab of tabIds) {
+    const names = needed.get(tab);
+    const allowed = names?.length ? names.some((name) => delegated.has(name)) : stored.has(tab);
+    if (allowed) out.push(tab);
+  }
+  return [...new Set(out)];
 }

@@ -32,6 +32,11 @@
  * **وجهةٌ تكرّرت في الورقة بحسابين لا يُخمَّن لها واحد**: الحسابُ واحدٌ لكل
  * جمعيةٍ عند كل جهة (`@@unique([donorOrgId, charityId])`)، فأحدُهما يَطمِس
  * الآخر بترتيب الصفوف لا بقصد. فتُعرض الصفوفُ وتُترك، ويُسجَّل الباقي.
+ *
+ * ويُرجَّح أحدُها برقم صفّه: `--pick=13`. ولمَ علمٌ لا كتابةٌ يدويّةٌ لصفٍّ واحد؟
+ * لأنّ الترجيحَ **قرارُ صاحبِ البيان** لا استنتاجَ أداة، ويُعاد الدفترُ غداً
+ * فيُعاد السؤالُ — والعلمُ يحفظ الجوابَ في الأمر المكتوب، والكتابةُ اليدويّةُ
+ * صفٌّ في القاعدة لا يُعرف من أين جاء.
  */
 import { execFileSync } from "node:child_process";
 import { mkdtempSync, readFileSync, rmSync } from "node:fs";
@@ -42,6 +47,7 @@ import { PrismaClient } from "@prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { encryptSecret } from "../src/lib/encryption.ts";
 import { cleanCredential, cleanDonorName, looksLikeNote, normalizeDonorName } from "../src/lib/donorOrg.ts";
+import { applyDonorAliases } from "../src/lib/donorAliases.ts";
 
 const APPLY = process.argv.includes("--apply");
 const arg = (name) => {
@@ -51,9 +57,16 @@ const arg = (name) => {
 
 const FILE = arg("file");
 const CHARITY = arg("charity");
+/** أرقامُ صفوفٍ تُرجَّح عند تكرار الجهة. `--pick=13 --pick=41` */
+const PICKS = new Set(
+  process.argv
+    .filter((a) => a.startsWith("--pick="))
+    .map((a) => Number(a.slice("--pick=".length)))
+    .filter((n) => Number.isInteger(n) && n > 0)
+);
 if (!FILE || !CHARITY) {
   console.log(
-    'الاستعمال:\n  npm run donors:book -- --file="docs/‹الدفتر›.xlsx" --charity="‹اسم الجمعية›" [--apply]'
+    'الاستعمال:\n  npm run donors:book -- --file="docs/‹الدفتر›.xlsx" --charity="‹اسم الجمعية›" [--pick=‹صفّ›] [--apply]'
   );
   process.exit(1);
 }
@@ -210,6 +223,10 @@ try {
   // ── الجهاتُ القائمة ───────────────────────────────────────────────────────
   const orgs = await prisma.donorOrg.findMany({ select: { id: true, name: true, url: true, fields: true } });
   const orgByNorm = new Map(orgs.map((o) => [normalizeDonorName(o.name), o]));
+  // الهجاءاتُ قبل أيِّ مطابقة: دفترٌ يذكر جهةً مدموجةً بهجائها القديم لا
+  // يُطابق صفَّها، فتُنشأ ثانياً — ويعود الداءُ الذي عولج بالدمج.
+  const aliased = applyDonorAliases(orgByNorm);
+  if (aliased) say(`هجاءاتٌ مُطبَّقة: ${aliased}`);
 
   const existingAccounts = new Set(
     (await prisma.donorAccount.findMany({ where: { charityId: charity.id }, select: { donorOrgId: true } })).map(
@@ -219,14 +236,12 @@ try {
 
   // ── القراءة ───────────────────────────────────────────────────────────────
   const read = [];
-  const seen = new Map(); // اسمٌ مسوّىً → أرقامُ صفوفه، لكشف التكرار
   for (const row of rows) {
     if (row.n <= headerRow) continue;
     const name = cleanDonorName(String(row.cell[cols.donor] ?? ""));
     if (!name) continue;
 
     const norm = normalizeDonorName(name);
-    seen.set(norm, [...(seen.get(norm) ?? []), row.n]);
 
     const rawUser = cleanCredential(String(row.cell[cols.user] ?? ""));
     const rawPass = cleanCredential(String(row.cell[cols.pass] ?? ""));
@@ -251,7 +266,43 @@ try {
     read.push({ n: row.n, name, norm, url, fields, username, password, why, org: orgByNorm.get(norm) ?? null });
   }
 
-  const duplicated = new Set([...seen].filter(([, ns]) => ns.length > 1).map(([norm]) => norm));
+  /**
+   * التنازعُ يُقاس **بالصفِّ الذي سيُكتب لا بالاسم المكتوب**.
+   *
+   * فالقيدُ الفريدُ على `(donorOrgId, charityId)`، واسمان مختلفان في الورقة قد
+   * يُفضيان إلى جهةٍ واحدةٍ بهجاءٍ من `applyDonorAliases` — وقد وقع: «ريادة
+   * وأثر/ سليمان الراجحي» و«مؤسسة سليمان الراجحي الخيرية» سطران في الدفتر
+   * وصفٌّ واحدٌ في القاعدة. فكشفُ التكرار بالاسم لا يراهما، ويمرّان فيَطمِس
+   * الثاني الأوّلَ **بترتيب الصفوف** — ولو اختلفت كلمتاهما لضاعت الصحيحةُ بلا
+   * أن يُعلم.
+   *
+   * ولا يتنازع إلّا صفٌّ له حسابٌ يُسجَّل: صفٌّ بلا بيانِ دخولٍ لا يَشغل الصفَّ.
+   */
+  const targetOf = (r) => (r.org ? `org:${r.org.id}` : `new:${r.norm}`);
+  const byTarget = new Map();
+  for (const r of read) {
+    if (r.why) continue;
+    const k = targetOf(r);
+    byTarget.set(k, [...(byTarget.get(k) ?? []), r]);
+  }
+  const contested = new Map([...byTarget].filter(([, rs]) => rs.length > 1));
+
+  // اسمان مختلفان لجهةٍ واحدةٍ: خبرٌ يُقال، فهو يعني أنّ الدفترَ يحمل هجاءين.
+  for (const rs of contested.values()) {
+    const names = [...new Set(rs.map((r) => r.name))];
+    if (names.length > 1) {
+      say(`• اسمان لجهةٍ واحدةٍ في القاعدة: ${names.map((n, i) => `«${n}» (صفّ ${rs[i].n})`).join(" و")}`);
+    }
+  }
+
+  // ترجيحٌ لا يُطابق صفّاً متنازَعاً لا يفعل شيئاً — ولو سُكت عنه حسبَ صاحبُه
+  // أنّه حسم التكرار، وهو لم يُحسم. فيُقال صريحاً.
+  const contestedRows = new Set([...contested.values()].flat().map((r) => r.n));
+  for (const n of PICKS) {
+    if (!contestedRows.has(n)) {
+      say(`⚠ --pick=${n}: ليس صفَّ جهةٍ متنازَعةٍ في هذه الورقة — لا أثرَ له.`);
+    }
+  }
 
   // ── الخطّة ────────────────────────────────────────────────────────────────
   const newOrgs = new Map(); // norm → {name, url, fields}
@@ -278,7 +329,30 @@ try {
       skipped.push({ n: r.n, name: r.name, why: r.why });
       continue;
     }
-    if (duplicated.has(r.norm)) {
+    const rivals = contested.get(targetOf(r));
+    if (rivals) {
+      // صفٌّ رُجِّح: يُسجَّل المُرجَّحُ وتُترك أخواتُه **معلَناً أنّها تُركت
+      // لذلك**، لا بسكوتٍ يُشبه الإغفال.
+      const picked = [...PICKS].filter((n) => rivals.some((x) => x.n === n));
+      if (picked.length === 1) {
+        if (r.n === picked[0]) accounts.push(r);
+        else skipped.push({ n: r.n, name: r.name, why: `رُجِّح صفُّ ${picked[0]} لهذه الجهة` });
+        continue;
+      }
+      if (picked.length > 1) {
+        say(`⚠ رُجِّح أكثرُ من صفٍّ لجهةٍ واحدة (${picked.join("، ")}) — لا يُسجَّل منها شيء.`);
+        conflicts.push(r);
+        continue;
+      }
+      // **بيانٌ واحدٌ مكتوبٌ مرّتين ليس تنازعاً**: يُسجَّل أوّلُ صفٍّ ويُقال عن
+      // الباقي أنّه تكرارٌ بالبيان نفسه. وأمّا اختلافُ الدخول فلا يُحسم هنا:
+      // الصحيحُ واحدٌ والسكربتُ لا يعرفه.
+      const same = rivals.every((x) => x.username === rivals[0].username && x.password === rivals[0].password);
+      if (same) {
+        if (r.n === rivals[0].n) accounts.push(r);
+        else skipped.push({ n: r.n, name: r.name, why: `تكرارٌ ببيانِ صفّ ${rivals[0].n} نفسِه` });
+        continue;
+      }
       conflicts.push(r);
       continue;
     }
@@ -310,9 +384,11 @@ try {
 
   if (conflicts.length) {
     say();
-    say(`⚠ جهةٌ تكرّرت بحسابين — تُركت كلُّها، فالحسابُ واحدٌ لكل جمعيةٍ عند كل جهة:`);
-    for (const c of conflicts) say(`  ! صفّ ${c.n} · ${c.name} · ${c.username} / ${c.password}`);
-    say("    اختر صفّاً وامسح الآخرَ من الملفّ، أو سجِّله من صفحة الجهة.");
+    // ولا تُطبع كلماتُ المرور — كما في `merge-donor-orgs.mjs`: يُعرَّف الصفُّ
+    // برقمه واسم مستخدمه، ومن أراد القيمةَ قرأها من الملفّ.
+    say(`⚠ صفوفٌ تتنازع حساباً واحداً — تُركت كلُّها، فالحسابُ واحدٌ لكل جمعيةٍ عند كل جهة:`);
+    for (const c of conflicts) say(`  ! صفّ ${c.n} · ${c.name} · ${c.username}`);
+    say(`    رجِّح صفّاً: ${conflicts.map((c) => `--pick=${c.n}`).join(" أو ")}`);
   }
 
   if (skipped.length) {

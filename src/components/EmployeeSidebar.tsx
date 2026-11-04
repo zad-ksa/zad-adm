@@ -259,6 +259,18 @@ export default function EmployeeSidebar({
 
             const isCollapsed = title ? expandedGroup !== title : false;
 
+            // مجموعُ شارات المجموعة، يظهر على رأسها **حين تُطوى**.
+            //
+            // فالمطويَّةُ تُخفي بنودَها بـ`max-h-0 opacity-0`، فتُخفي معها كلَّ
+            // شارةٍ فيها: بريدٌ غيرُ مقروءٍ أو اعتمادٌ منتظرٌ داخل مجموعةٍ مغلقةٍ
+            // لا أثرَ له في الشريط كلِّه. والأكورديون يُبقي واحدةً مفتوحةً فقط،
+            // فأكثرُ المجموعات مطويّةٌ في كلِّ لحظة — ومن لم يكن في «زاد» لم يعلم
+            // أنّ بريداً وصله حتى يفتحها بيده.
+            //
+            // ويُجمع العددُ ولا يُكتفى بنقطة: «٣» تُخبر أنّ هناك ثلاثةً تنتظر،
+            // والنقطةُ تُخبر أنّ هناك شيئاً — والفرقُ بينهما قرارُ مَن يفتح.
+            const groupBadge = items.reduce((sum, item) => sum + (item.badge ?? 0), 0);
+
             return (
               <div className="mb-2">
                 {isExpanded && title && (
@@ -266,7 +278,14 @@ export default function EmployeeSidebar({
                     onClick={() => toggleGroup(title)}
                     className="flex items-center justify-between w-full px-2 mb-2 group cursor-pointer outline-none"
                   >
-                    <span className="block text-caption font-semibold text-slate-400 uppercase tracking-wider group-hover:text-primary transition-colors">{title}</span>
+                    <span className="flex items-center gap-1.5 min-w-0">
+                      <span className="block text-caption font-semibold text-slate-400 uppercase tracking-wider group-hover:text-primary transition-colors">{title}</span>
+                      {isCollapsed && groupBadge > 0 && (
+                        <span className="min-w-[18px] h-4 flex items-center justify-center bg-red-500 text-white text-caption font-semibold rounded-full px-1 leading-none">
+                          {groupBadge > 99 ? "99+" : groupBadge}
+                        </span>
+                      )}
+                    </span>
                     <ChevronRight className={`w-3.5 h-3.5 text-slate-400 group-hover:text-primary transition-transform duration-200 ${isCollapsed ? 'rotate-180' : 'rotate-90'}`} />
                   </button>
                 )}

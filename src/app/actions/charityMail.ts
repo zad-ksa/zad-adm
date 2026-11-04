@@ -6,6 +6,7 @@ import { sanitizeMailHtml } from "@/lib/sanitizeMail";
 import { requireCharityMembership } from "@/lib/guards";
 import { hasCharityPermission } from "@/lib/charityPermissions";
 import { isDelivered, serviceConversationRecipients } from "@/lib/serviceTeams";
+import { notifyMailDelivered } from "@/lib/mailNotify";
 import { isCharityMailOpen } from "@/lib/featureFlags";
 
 type AttachmentInput = { fileUrl: string; fileName: string; fileSize?: number | null };
@@ -390,6 +391,22 @@ export async function sendPortalMail(
     });
   }
 
+  // **وهذا هو المسارُ الذي شُكي منه**: الجمعيةُ تُرسل من بوّابتها فيصل
+  // البريدُ إلى فريق الخدمة في زاد، ولم يكن يُعلم به أحد — فتبقى الرسالةُ
+  // تنتظر حتى يفتح أحدُهم البريدَ من تلقائه. واسمُ الجمعية في النصِّ مع اسم
+  // الكاتب: موظَّفُ زادٍ يعرف الجمعياتَ ولا يعرف كلَّ أعضائها بالاسم.
+  //
+  // والمنتظرُ لا يُشعَر به أحدٌ من زاد: تعميدُه عند الجمعية، ولا صفوفَ
+  // استلامٍ له حتى تعتمده — فيُشعَر عند الاعتماد في `approvePortalMail`.
+  if (!needsApproval) {
+    await notifyMailDelivered({
+      mailId: mail.id,
+      subject: data.subject,
+      senderName: `${ctx.session.name} (${ctx.charity.name})`,
+      recipients: recipientsData,
+    });
+  }
+
   revalidatePath(`/portal/${encodeURIComponent(ctx.charity.name)}/mail`);
   return { id: mail.id, pending: needsApproval };
 }
@@ -595,6 +612,15 @@ export async function approvePortalMail(
       draftCharityUserIds: [],
       recipients: { create: recipientsData },
     },
+  });
+
+  // هنا تُخلق صفوفُ الاستلام لأوّل مرّة، فهنا يُعلم موظَّفو زاد — إن كانت
+  // الرسالةُ إلى خدمةٍ لا إلى أعضاءٍ في الجمعية.
+  await notifyMailDelivered({
+    mailId: mail.id,
+    subject: edits?.subject?.trim() ? edits.subject.trim() : mail.subject,
+    senderName: ctx.charity.name,
+    recipients: recipientsData,
   });
 
   revalidatePath(`/portal/${encodeURIComponent(ctx.charity.name)}/mail`);

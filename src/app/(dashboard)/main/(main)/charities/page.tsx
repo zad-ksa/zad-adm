@@ -5,6 +5,7 @@ import { NavCircle } from "@/components/console/ui";
 import type { Metadata } from "next";
 import Link from "next/link";
 import AddCharityButton from "./AddCharityButton";
+import CharityServicesButton from "./CharityServicesButton";
 import { getSession } from "@/lib/auth";
 import { getAssignedCharityIds } from "@/lib/access";
 import { hasPermission } from "@/lib/permissions";
@@ -22,7 +23,11 @@ const getCachedDashboardData = async (assignedIds: string[] | null) => {
   ] = await Promise.all([
     prisma.charity.findMany({
       where: externalOnly(charityFilter),
-      select: { id: true, name: true, createdAt: true, domain: true, grants: true, logoUrl: true },
+      select: {
+        id: true, name: true, createdAt: true, domain: true, grants: true, logoUrl: true,
+        // الخدمات المفعّلة للجمعية: صفوفها في Service.
+        services: { select: { name: true }, orderBy: { name: "asc" } },
+      },
       orderBy: { createdAt: "desc" }
     }),
     prisma.surveyResponse.findMany({ select: { id: true, charityName: true } }),
@@ -122,6 +127,11 @@ export default async function CharitiesDashboard() {
   const assignedIds = session ? await getAssignedCharityIds(session.id, session.role, session.permissions) : [];
   // الصفحة تُفتح بـview_charities (عرض فقط)، والإضافة لـmanage_charities — والخادم يفرضها.
   const canManageCharities = !!session && hasPermission(session.role, session.permissions || [], "manage_charities");
+  // إسناد الخدمات للجمعية من أفعال «إدارة الخدمات»، فصلاحيته صلاحيتها.
+  const canManageServices = !!session && hasPermission(session.role, session.permissions || [], "manage_services");
+  const allServiceNames = canManageServices
+    ? (await prisma.service.findMany({ distinct: ["name"], select: { name: true }, orderBy: { name: "asc" } })).map(s => s.name)
+    : [];
 
   const {
     charities,
@@ -241,10 +251,10 @@ export default async function CharitiesDashboard() {
 
           <div className="grid grid-cols-2 xl:grid-cols-3 gap-3 sm:gap-4">
             {charitiesData.map((charity) => (
+              <div key={charity.id} className="relative">
               <Link
-                key={charity.id}
                 href={`/main/services-overview/${encodeURIComponent(charity.name)}`}
-                className="group relative flex flex-col justify-between overflow-hidden rounded-xl border border-slate-200 bg-white shadow-[0_1px_2px_rgb(15_23_42/0.04)] transition-colors duration-300 hover:border-primary/30 dark:border-slate-800 dark:bg-slate-900 dark:hover:border-teal-400/30 outline-none focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-slate-900"
+                className="group relative flex h-full flex-col justify-between overflow-hidden rounded-xl border border-slate-200 bg-white shadow-[0_1px_2px_rgb(15_23_42/0.04)] transition-colors duration-300 hover:border-primary/30 dark:border-slate-800 dark:bg-slate-900 dark:hover:border-teal-400/30 outline-none focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-slate-900"
               >
                 {/* دائرة بطاقة الانتقال، وفيها شعار الجمعية — بدل الشعار الباهت الذي كان
                     يملأ البطاقة وطبقته الشفّافة فوقه. */}
@@ -307,6 +317,16 @@ export default async function CharitiesDashboard() {
                           {charity.beneficiaries.toLocaleString()} مستفيد
                         </span>
                       </div>
+
+                      {/* Stats 4: الخدمات المفعّلة */}
+                      <div className="flex items-center justify-between text-caption" title={charity.services.map(s => s.name).join("، ")}>
+                        <span className="text-slate-600 dark:text-slate-300 font-semibold">
+                          الخدمات:
+                        </span>
+                        <span className="font-semibold text-slate-700 dark:text-slate-200 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-2 py-0.5 rounded-md text-caption shrink-0">
+                          {charity.services.length} خدمة
+                        </span>
+                      </div>
                     </div>
                   </div>
 
@@ -319,6 +339,18 @@ export default async function CharitiesDashboard() {
                   </div>
                 </div>
               </Link>
+              {/* خارج الرابط: زرٌّ داخل رابطٍ يفتح الرابط مع النافذة. */}
+              {canManageServices && (
+                <div className="absolute bottom-2 left-2 z-20">
+                  <CharityServicesButton
+                    charityId={charity.id}
+                    charityName={charity.name}
+                    enabled={charity.services.map(s => s.name)}
+                    allServices={allServiceNames}
+                  />
+                </div>
+              )}
+              </div>
             ))}
           </div>
 

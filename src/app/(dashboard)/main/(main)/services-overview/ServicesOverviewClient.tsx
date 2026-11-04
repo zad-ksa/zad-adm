@@ -41,9 +41,10 @@ import {
   addServiceStageStep, updateServiceStageStep, deleteServiceStageStep,
 } from "@/app/actions/stageSteps";
 import { updateCharityLogo } from "@/app/actions/charity";
+import { addCharityToService } from "@/app/actions/charityServices";
 import { updateTimelineDisplayName } from "@/app/actions/settings";
 import { Dialog } from "@/components/console/Dialog";
-import { btn, cx } from "@/components/console/ui";
+import { Badge, btn, cx } from "@/components/console/ui";
 
 type Charity = {
   id: string;
@@ -880,12 +881,17 @@ function CharityCard({
           {currentStage && <span className="text-caption text-slate-500 dark:text-slate-400 truncate hidden sm:inline">— {currentStage.name}</span>}
         </div>
         <div className="flex items-center gap-3 shrink-0">
+          {/* خطةٌ أُسندت ولم تُكتب: لا مراحل لها فلا نسبة، بل تنبيهٌ بأنها تنتظر. */}
+          {stages.length === 0 ? (
+            <Badge tone="warn"><AlertCircle className="w-3 h-3" /> خطة غير مكتوبة</Badge>
+          ) : (
           <div className="flex items-center gap-1.5">
             <div className="w-20 h-1.5 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
               <div className="h-full bg-primary rounded-full transition-all" style={{ width: `${pct}%` }} />
             </div>
             <span className="text-caption font-semibold text-slate-500 dark:text-slate-400 w-7">{pct}%</span>
           </div>
+          )}
           {open ? <ChevronDown className="w-4 h-4 text-slate-400" /> : <ChevronRight className="w-4 h-4 text-slate-400" />}
         </div>
       </button>
@@ -1287,6 +1293,7 @@ export default function ServicesOverviewClient({
 
   // Extra charities picker (جمعيات غير موجودة في القائمة الحالية)
   const [showAddCharity, setShowAddCharity] = useState(false);
+  const [isAssignPending, startAssignTransition] = useTransition();
   const [showGantt, setShowGantt] = useState(false);
 
   const charitiesWithData = useMemo(() => {
@@ -1295,6 +1302,18 @@ export default function ServicesOverviewClient({
     }
     return charities.filter(c => allServices.some(svc => svc.name === genericSvcInfo?.name && svc.charityId === c.id));
   }, [activeTab, charities, stagesData, allServices, isGenericTab, genericSvcInfo]);
+
+  // الخطط غير المكتوبة: خدمةٌ أُسندت لجمعيةٍ (من «إدارة الجمعيات» أو «إدارة
+  // الخدمات») فأُنشئت خطتها فارغة، ولم يكتب أحدٌ مراحلها بعد. لكل خدمةٍ جمعياتها.
+  const visibleCharityIds = new Set(charities.map(c => c.id));
+  const unwrittenByService = new Map<string, string[]>();
+  for (const svc of allServices) {
+    if (svc.stages.length > 0 || !visibleCharityIds.has(svc.charityId)) continue;
+    const name = charities.find(c => c.id === svc.charityId)?.name;
+    if (!name) continue;
+    unwrittenByService.set(svc.name, [...(unwrittenByService.get(svc.name) ?? []), name]);
+  }
+  const unwrittenTotal = [...unwrittenByService.values()].reduce((n, list) => n + list.length, 0);
 
   // Charities that have NO data in this tab yet
   const charitiesWithoutData = useMemo(() => {
@@ -1339,6 +1358,33 @@ export default function ServicesOverviewClient({
         title="عرض الخدمات عبر الجمعيات"
         description="اختر قسماً لمشاهدة حالته في جميع الجمعيات دفعة واحدة"
       />
+
+      {unwrittenTotal > 0 && (
+        <div className="rounded-xl border border-amber-200 dark:border-amber-500/20 bg-amber-50 dark:bg-amber-500/10 px-4 py-3 text-caption text-amber-800 dark:text-amber-200">
+          <p className="font-semibold flex items-center gap-1.5">
+            <AlertCircle className="w-4 h-4 shrink-0" />
+            {unwrittenTotal === 1 ? "هناك جمعية لها خطة غير مكتوبة" : `هناك ${unwrittenTotal} خطط غير مكتوبة`}
+            {" "}— أُسندت الخدمة للجمعية ولم تُكتب مراحلها بعد.
+          </p>
+          <ul className="mt-2 space-y-1">
+            {[...unwrittenByService.entries()].map(([svcName, names]) => {
+              const tab = tabs.find(t => t.label === svcName);
+              return (
+                <li key={svcName} className="flex flex-wrap items-center gap-1">
+                  <button
+                    type="button"
+                    onClick={() => { if (tab) { setActiveTab(tab.key); setExtraCharityIds([]); } }}
+                    className="font-semibold underline underline-offset-2 hover:text-amber-950 dark:hover:text-amber-50"
+                  >
+                    {svcName}
+                  </button>
+                  <span>: {names.join("، ")}</span>
+                </li>
+              );
+            })}
+          </ul>
+        </div>
+      )}
 
       {tabs.length > 0 && (
         <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-[0_1px_2px_rgb(15_23_42/0.04)] overflow-hidden">
@@ -1404,6 +1450,14 @@ export default function ServicesOverviewClient({
                           activeTab === tab.key ? "border-primary text-primary bg-primary/5" : "border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200"
                         }`}>
                         {displayName}
+                        {isSvc && (unwrittenByService.get(tab.label)?.length ?? 0) > 0 && (
+                          <span
+                            className="mr-1.5 inline-flex min-w-4 h-4 px-1 items-center justify-center rounded-full bg-amber-100 dark:bg-amber-500/20 text-amber-700 dark:text-amber-300 text-[10px] font-semibold"
+                            title="خطط غير مكتوبة في هذه الخدمة"
+                          >
+                            {unwrittenByService.get(tab.label)!.length}
+                          </span>
+                        )}
                       </button>
                       {canManageServices && isSvc && (
                         <button
@@ -1457,13 +1511,17 @@ export default function ServicesOverviewClient({
               <span className="text-slate-500 dark:text-slate-400">نشطة: <strong className="text-emerald-600 dark:text-emerald-400">{doneCharities}</strong></span>
             </div>
             <div className="flex items-center gap-2">
-              {canEdit && charitiesWithoutData.length > 0 && (
+              {/* الخطة لا تُفتح إلا بإسناد الخدمة للجمعية: يُنشئ خطتها فارغة
+                  فتظهر هنا «غير مكتوبة» حتى تُكتب. وكان يُظهر بطاقةً بلا صفّ خدمة
+                  لا يُحفظ فيها شيء. */}
+              {isGenericTab && canManageServices && genericSvcInfo && charitiesWithoutData.length > 0 && (
                 <div className="relative">
                   <button
                     onClick={() => setShowAddCharity(v => !v)}
+                    disabled={isAssignPending}
                     className={btn.secondary}
                   >
-                    <Plus className="w-3.5 h-3.5" /> فتح خطة جمعية
+                    {isAssignPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Plus className="w-3.5 h-3.5" />} إسناد الخدمة لجمعية
                   </button>
                   {showAddCharity && (
                     <div className="absolute left-0 top-full mt-1 z-30 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl shadow-xl min-w-[180px] py-1 max-h-60 overflow-y-auto">
@@ -1471,8 +1529,13 @@ export default function ServicesOverviewClient({
                         <button
                           key={c.id}
                           onClick={() => {
-                            setExtraCharityIds(prev => prev.includes(c.id) ? prev.filter(id => id !== c.id) : [...prev, c.id]);
                             setShowAddCharity(false);
+                            startAssignTransition(async () => {
+                              const res = await addCharityToService(genericSvcInfo.name, c.id);
+                              if (!res.success) { notify("error", res.error); return; }
+                              notify("ok", `أُسندت «${genericSvcInfo.name}» لـ${c.name}، وأُنشئت لها خطة فارغة`);
+                              router.refresh();
+                            });
                           }}
                           className="w-full text-right px-3 py-2 text-caption font-semibold text-slate-700 dark:text-slate-200 hover:bg-primary/5 hover:text-primary transition-colors"
                         >
@@ -1807,9 +1870,14 @@ footer={<>
 <div className="space-y-5">
 {/* Target charities selector */}
 {(() => {
+                // التعميم على من أُسندت إليه الخدمة وحده: لا يُسندها لغيره.
+                const unifySvcName = unifyCharity.sourceServiceId
+                  ? allServices.find(s => s.id === unifyCharity.sourceServiceId)?.name
+                  : undefined;
                 const otherCharities = charities.filter(c =>
                   c.id !== unifyCharity.id &&
-                  (allowedCharityIds === null || allowedCharityIds.includes(c.id))
+                  (allowedCharityIds === null || allowedCharityIds.includes(c.id)) &&
+                  (!unifySvcName || allServices.some(s => s.name === unifySvcName && s.charityId === c.id))
                 );
                 const allSelected = unifyTargetIds.length === otherCharities.length;
                 return (

@@ -5,24 +5,17 @@ import { revalidatePath } from "next/cache";
 import { getSession } from "@/lib/auth";
 import { assertCharityAccess } from "@/lib/access";
 import { syncServiceProgress } from "./services";
+import { SECTION_SERVICES, serviceRowsWhere } from "@/lib/charityServices";
 
+// خطة الاستراتيجية هي صفُّ خدمة «التخطيط الاستراتيجي» في الجمعية. كان يُبحث
+// عنه بالقسم STRATEGY وحده، وصفوف الخدمة اليوم بلا قسم، فكان يُنشئ صفاً ثانياً
+// — أي يُسند الخدمة للجمعية من تلقاء نفسه. والإسناد من «إدارة الخدمات» و«إدارة
+// الجمعيات» وحدهما (charityServices).
 async function getStrategyService(charityId: string) {
-  let service = await prisma.service.findFirst({
-    where: { charityId, department: "STRATEGY" }
+  const service = await prisma.service.findFirst({
+    where: { charityId, ...serviceRowsWhere(SECTION_SERVICES.manage_strategy) },
   });
-  if (!service) {
-    const charity = await prisma.charity.findUnique({ where: { id: charityId } });
-    const timelineName = charity?.strategyTimelineName || "التخطيط الاستراتيجي";
-    service = await prisma.service.create({
-      data: {
-        name: timelineName,
-        department: "STRATEGY",
-        charityId,
-        responsibleName: charity?.strategyResponsibleName,
-        responsiblePhone: charity?.strategyResponsiblePhone
-      }
-    });
-  }
+  if (!service) throw new Error("الجمعية لا تشملها خدمة التخطيط الاستراتيجي");
   return service;
 }
 
@@ -53,7 +46,11 @@ export async function ensureStagesForCharity(charityId: string) {
   });
   if (defaults.length === 0) return;
 
-  const service = await getStrategyService(charityId);
+  // بلا خدمةٍ لا خطةَ تُملأ: الكيان الداخلي تُفتح صفحاته ولا خدمة له.
+  const service = await prisma.service.findFirst({
+    where: { charityId, ...serviceRowsWhere(SECTION_SERVICES.manage_strategy) },
+  });
+  if (!service) return;
   const existingStages = await prisma.serviceStage.findMany({ where: { serviceId: service.id } });
   if (existingStages.length > 0) return;
 
@@ -274,7 +271,7 @@ export async function getCharityDashboardData(charityName: string) {
     where: { name: charityName },
     include: {
       services: {
-        where: { department: "STRATEGY" },
+        where: serviceRowsWhere(SECTION_SERVICES.manage_strategy),
         include: {
           stages: {
             orderBy: { order: 'asc' }

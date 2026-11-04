@@ -1,6 +1,7 @@
 "use server";
 import { unstable_cache } from "next/cache";
 import { EXTERNAL_CHARITIES, externalOnly } from "@/lib/charityScope";
+import { SECTION_SERVICES, charityHasService, serviceRowsWhere } from "@/lib/charityServices";
 
 import { prisma } from "@/lib/db";
 import { syncCharityAdminServicesQuietly } from "@/lib/charityAdminServices";
@@ -25,20 +26,33 @@ export const getSidebarCharities = async () => {
     // بلا استثناءِ الكيان الداخلي هنا عن قصد: «شركة زاد» تظهر في الشريط
     // الجانبي تحت الاستراتيجية وتنمية الموارد، والشريط هو من يُخفيها عن بقية
     // الخدمات (showsInternal في charityScope).
+    //
+    // hasStrategyService: هل تشمل الجمعيةَ خدمةُ «التخطيط الاستراتيجي»؟ فالشريط
+    // لا يسردها تحت «الاستراتيجية» إلا إن شملتها (charityServices).
+    const strategyServices = {
+      where: serviceRowsWhere(SECTION_SERVICES.manage_strategy),
+      select: { id: true },
+      take: 1,
+    };
+    const withFlag = <T extends { services: unknown[] }>({ services, ...charity }: T) =>
+      ({ ...charity, hasStrategyService: services.length > 0 });
+
     if (session.permissions?.includes("developer_mode")) {
-      return await prisma.charity.findMany({
+      const all = await prisma.charity.findMany({
         orderBy: { createdAt: "desc" },
+        include: { services: strategyServices },
       });
+      return all.map(withFlag);
     }
 
     // Otherwise return only assigned charities
     const assigned = await prisma.employeeCharity.findMany({
       where: { employeeId: session.id },
-      include: { charity: true },
+      include: { charity: { include: { services: strategyServices } } },
       orderBy: { charity: { createdAt: "desc" } }
     });
 
-    return assigned.map(a => a.charity);
+    return assigned.map(a => withFlag(a.charity));
   } catch (error) {
     console.error("Error fetching sidebar charities:", error);
     return [];
@@ -330,6 +344,8 @@ async function requireResourceDevelopment(charityId: string) {
 
   const assigned = await getAssignedCharityIds(session.id, session.role, session.permissions);
   if (assigned !== null && !assigned.includes(charityId)) return null;
+  // ولا منحةَ لجمعيةٍ لا تشملها خدمةُ تنمية الموارد (charityServices).
+  if (!(await charityHasService(charityId, SECTION_SERVICES.manage_resource_development))) return null;
 
   return session;
 }

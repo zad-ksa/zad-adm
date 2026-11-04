@@ -3,6 +3,7 @@ import { prisma } from "@/lib/db";
 import { getSession } from "@/lib/auth";
 import { hasPermission } from "@/lib/permissions";
 import { getAssignedCharityIds } from "@/lib/access";
+import { charityHasService, sectionService } from "@/lib/charityServices";
 
 /**
  * بوابة أقسام الجمعية: الاستراتيجية والحوكمة والمالية وتنمية الموارد.
@@ -33,6 +34,13 @@ export async function requireCharitySection(permission: string, charityName: str
 
   const assigned = await getAssignedCharityIds(session.id, session.role, session.permissions);
   if (assigned !== null && !assigned.includes(charity.id)) {
+    redirect("/main");
+  }
+
+  // ولا يُفتح قسمٌ لجمعيةٍ لا تشملها خدمته، ولو للمدير ولمن مُنح الخدمة: لا
+  // عمل له فيها (charityServices).
+  const service = sectionService(permission);
+  if (service && !(await charityHasService(charity.id, service))) {
     redirect("/main");
   }
   return session;

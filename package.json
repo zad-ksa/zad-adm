@@ -23,6 +23,7 @@
     "b2:cors": "node -r dotenv/config scripts/b2-cors.mjs",
     "b2:cors:apply": "node -r dotenv/config scripts/b2-cors.mjs --apply",
     "files:migrate": "node -r dotenv/config --experimental-strip-types scripts/migrate-files-to-b2.mjs",
+    "files:rewrite": "node -r dotenv/config --experimental-strip-types scripts/rewrite-urls.mjs",
     "files:where": "node -r dotenv/config --experimental-strip-types scripts/files-where.mjs",
     "grant:admin-services": "node -r dotenv/config --experimental-strip-types scripts/grant-admin-services.mjs"
   },

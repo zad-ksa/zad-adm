@@ -1,6 +1,6 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
-import { Search } from "lucide-react";
+import { ArrowDown, ArrowUp, ChevronsUpDown, Search } from "lucide-react";
 import { MONO, cx, field } from "./ui";
 
 // هيكل صفحات الإدارة: الترويسة، والأرقام، والتبويبات، والجداول، والحالات الفارغة.
@@ -325,6 +325,74 @@ export function Th({ children, className }: { children?: ReactNode; className?: 
   return (
     <th className={cx(thClass, className)}>
       {children}
+    </th>
+  );
+}
+
+/** اتّجاهُ الفرز. */
+export type SortDir = "asc" | "desc";
+
+/**
+ * خليّةُ رأسٍ تُفرَز بالنقر — صاعدةً ثمّ نازلة.
+ *
+ * ولمَ في العدّة لا في الصفحة: الفرزُ كان يُكتب في كل جدولٍ قائمةَ خياراتٍ في
+ * `Select` («الأحدث أولاً»، «الأكبر مبلغاً»، …) — سطرٌ لكل عمودٍ في كل
+ * اتّجاه، فجدولٌ بستّة أعمدةٍ يحتاج اثني عشر خياراً تُكتب يداً وتُنسى واحدةٌ
+ * منها. والرأسُ نفسُه هو مكانُ الفرز الذي يبحث عنه القارئ أصلاً.
+ *
+ * **والسهمُ يقول الاتّجاهَ الحاضرَ لا المُقبِل**: سهمٌ صاعدٌ معناه «مفروزٌ
+ * صاعداً»، وهو ما يفهمه من يرى الجدولَ أوّلَ مرّة. ومن جعله يقول ما سيحدث عند
+ * النقر عكَس المعنى على كل من لم يَنقر.
+ *
+ * و`aria-sort` على الخليّة لا على الزرّ: قارئُ الشاشة يُعلن حالَ العمود وهو
+ * يمرّ على رأسه، لا حالَ زرٍّ داخله.
+ */
+export function SortTh<T extends string>({
+  id,
+  active,
+  dir,
+  onSort,
+  children,
+  className,
+}: {
+  /** معرِّفُ العمود — يُقارن بـ`active`. */
+  id: T;
+  /** العمودُ المفروزُ به الآن. */
+  active: T;
+  dir: SortDir;
+  /** تُنادى بالعمود والاتّجاه الجديدين. */
+  onSort: (id: T, dir: SortDir) => void;
+  children?: ReactNode;
+  className?: string;
+}) {
+  const on = active === id;
+  // نقرةٌ على عمودٍ آخر تبدأ صاعدةً، ونقرةٌ على المفروز به تقلب اتّجاهَه.
+  const next: SortDir = on && dir === "asc" ? "desc" : on ? "asc" : "asc";
+  const Arrow = on ? (dir === "asc" ? ArrowUp : ArrowDown) : ChevronsUpDown;
+
+  return (
+    <th
+      className={cx(thClass, className)}
+      aria-sort={on ? (dir === "asc" ? "ascending" : "descending") : "none"}
+    >
+      <button
+        type="button"
+        onClick={() => onSort(id, next)}
+        className={cx(
+          "group -mx-1 flex items-center gap-1.5 rounded-sm px-1 outline-none transition-colors",
+          "focus-visible:ring-2 focus-visible:ring-primary/40",
+          on ? "text-slate-900 dark:text-slate-100" : "hover:text-slate-700 dark:hover:text-slate-200"
+        )}
+      >
+        {children}
+        <Arrow
+          aria-hidden
+          className={cx(
+            "size-3.5 shrink-0 transition-opacity",
+            on ? "text-primary dark:text-teal-300" : "opacity-0 group-hover:opacity-60 group-focus-visible:opacity-60"
+          )}
+        />
+      </button>
     </th>
   );
 }

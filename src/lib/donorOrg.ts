@@ -15,6 +15,16 @@ export const DONOR_KINDS = [
   { value: "CHARITY_FUND", label: "صندوق دعم الجمعيات", href: "/main/charity-fund" },
 ] as const satisfies readonly { value: DonorKind; label: string; href: string }[];
 
+/**
+ * مسارُ جدول المنح الجامع — تبويبٌ رابعٌ تحت «تنمية الموارد المالية».
+ *
+ * وهو ثابتٌ هنا مع `DONOR_KINDS` لا نصٌّ في الشريط: الشريطُ يبني الرابطَ،
+ * وأفعالُ المنح تُنعش هذا المسارَ بعد كل كتابة، والشريطُ يَعرف منه أيَّ خدمةٍ
+ * يفتح. فمسارٌ مكتوبٌ في ثلاثة مواضعَ يختلف عند أوّل نقلٍ له، فيبقى تبويبٌ
+ * يُشير إلى صفحةٍ ليست هناك أو جدولٌ لا يُنعَش.
+ */
+export const GRANTS_HREF = "/main/grants";
+
 export function donorKindOf(value: string): DonorKind {
   return DONOR_KINDS.some((k) => k.value === value) ? (value as DonorKind) : "FOUNDATION";
 }

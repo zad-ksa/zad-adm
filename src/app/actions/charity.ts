@@ -11,6 +11,7 @@ import { hasPermission, isAdmin } from "@/lib/permissions";
 import { getAssignedCharityIds } from "@/lib/access";
 import { requirePermission } from "@/lib/guards";
 import { logAudit } from "@/lib/auditLog";
+import { DONOR_KINDS, GRANTS_HREF } from "@/lib/donorOrg";
 import { writeFile, mkdir } from "fs/promises";
 import { join } from "path";
 
@@ -355,6 +356,27 @@ async function requireResourceDevelopment(charityId: string) {
 // اسمها نصّاً، وموضعُه صفحةُ الجهة لا صفحةُ الجمعية.
 
 /**
+ * إنعاشُ كلِّ ما يعرض منحةً — صفحةَ الجمعية وصفحاتِ الجهة والجدولَ الجامع.
+ *
+ * وموضعٌ واحدٌ لأنّ قائمةَ العروض تطول: كان كلُّ فعلٍ يُنعش ما تذكّره كاتبُه،
+ * فتحديثُ الحالة لا يُنعش صفحةَ الجهة والحذفُ لا يُنعش شيئاً منها — فيُحدَّث
+ * الصفُّ ويبقى المعروضُ على حاله، فيُظنّ أنّ الفعلَ لم يعمل فيُعاد.
+ *
+ * و`donorOrgIds` تأخذ القديمةَ والجديدةَ معاً: منحةٌ نُقلت من جهةٍ إلى أخرى
+ * تغيَّر جدولا الجهتين كلتيهما.
+ */
+async function revalidateGrantViews(charityId: string, donorOrgIds: (string | null | undefined)[]) {
+  const charity = await prisma.charity.findUnique({ where: { id: charityId }, select: { name: true } });
+  if (charity) {
+    revalidatePath(`/portal/${encodeURIComponent(charity.name)}/resource-development/grants`);
+    revalidatePath(`/portal/${encodeURIComponent(charity.name)}/finance`);
+  }
+  revalidatePath(GRANTS_HREF);
+  for (const kind of DONOR_KINDS) revalidatePath(kind.href);
+  for (const id of new Set(donorOrgIds.filter(Boolean))) revalidatePath(`/main/donors/${id}`);
+}
+
+/**
  * رفعُ منحةٍ — والجهةُ تُختار من صفوف `DonorOrg` لا تُكتب نصّاً.
  *
  * وكان النموذجُ يأخذ اسماً حرّاً، فدخلت القاعدةَ هجاءاتٌ شتّى للجهة الواحدة.
@@ -388,16 +410,82 @@ export async function addGrantApplication(
       }
     });
 
-    const charity = await prisma.charity.findUnique({ where: { id: charityId } });
-    if (charity) revalidatePath(`/portal/${encodeURIComponent(charity.name)}/resource-development/grants`);
     // وصفحةُ الجهة تعرض منحَها وأعدادَها، فتُنعَش معها.
-    revalidatePath("/main/donors");
-    revalidatePath(`/main/donors/${donorOrgId}`);
+    await revalidateGrantViews(charityId, [donorOrgId]);
 
     return { success: true, grant };
   } catch (error: any) {
     console.error("Error adding grant application:", error);
     return { success: false, message: "حدث خطأ أثناء رفع المنحة" };
+  }
+}
+
+/**
+ * تعديلُ بيانات منحةٍ مرفوعة — المشروعُ والمبلغُ والجهة. **ولا الحالة**.
+ *
+ * فالحالةُ لها `updateGrantApplicationStatus` وحدَها، وفيها ما ليس تغييرَ
+ * حقل: سجلٌّ ماليٌّ عند الاعتماد، وجدولةُ أقساطِ العقد «المرتبطة بأول منحة».
+ * فلو قَبِلت هذه الدالّةُ حالةً صار للاعتماد طريقان — أحدُهما يُسجِّل في
+ * المالية والآخرُ لا، والنتيجةُ تختلف بحسب الشاشة التي اعتُمد منها.
+ *
+ * والجمعيةُ لا تُعدَّل: نقلُ منحةٍ من جمعيةٍ إلى أخرى ليس تصحيحَ إدخال — فيه
+ * سجلٌّ ماليٌّ لجمعيةٍ وأقساطٌ جُدولت لها. فالخطأُ في الجمعية يُصحَّح بالحذف
+ * والرفع من جديد، وهما فعلان ظاهران لا تعديلٌ صامت.
+ */
+export async function updateGrantApplication(
+  grantId: string,
+  input: { initiativeName: string; requestedAmount: number; donorOrgId: string }
+) {
+  try {
+    const grant = await prisma.grantApplication.findUnique({
+      where: { id: grantId },
+      select: { charityId: true, donorOrgId: true },
+    });
+    if (!grant) return { success: false, message: "المنحة غير موجودة" };
+
+    // الحارسُ على جمعيةِ المنحة نفسِها: المعرِّفُ وحدَه يأتي من المتصفّح،
+    // والجمعيةُ تُقرأ من الصفّ — فلا يُمرَّر معرِّفُ جمعيةٍ مسنَدةٍ لتعديل
+    // منحةِ جمعيةٍ ليست كذلك.
+    const session = await requireResourceDevelopment(grant.charityId);
+    if (!session) return { success: false, message: "غير مصرح" };
+
+    const initiativeName = input.initiativeName.trim();
+    if (!initiativeName) return { success: false, message: "اسم المشروع مطلوب" };
+    if (!Number.isFinite(input.requestedAmount) || input.requestedAmount <= 0) {
+      return { success: false, message: "المبلغ غير صالح" };
+    }
+
+    const donorOrg = await prisma.donorOrg.findUnique({
+      where: { id: input.donorOrgId },
+      select: { name: true },
+    });
+    if (!donorOrg) return { success: false, message: "الجهة المانحة غير موجودة" };
+
+    const data: {
+      initiativeName: string;
+      requestedAmount: number;
+      donorOrgId: string;
+      entityName?: string;
+    } = {
+      initiativeName,
+      requestedAmount: input.requestedAmount,
+      donorOrgId: input.donorOrgId,
+    };
+    // تغييرُ الجهة يتبعه `entityName`، وليس هذا نقضاً لكونه سِجلّاً: السِجلُّ
+    // يُحفظ من **إعادة تسمية** الجهة — فالمنحةُ رُفعت إلى «س» واسمُها اليومَ
+    // «ص»، والوثيقةُ تقول «س». أمّا هذا فتصحيحُ «رُفعت إلى غير هذه الجهة»،
+    // فإبقاءُ الاسم القديم يُخلِّف صفّاً يُشير إلى جهةٍ ويُسمّي أخرى.
+    if (input.donorOrgId !== grant.donorOrgId) data.entityName = donorOrg.name;
+
+    const updated = await prisma.grantApplication.update({ where: { id: grantId }, data });
+    await revalidateGrantViews(grant.charityId, [grant.donorOrgId, input.donorOrgId]);
+
+    return { success: true, grant: updated };
+  } catch (error) {
+    // `unknown` لا `any`: الملفُّ كلُّه على `any` وهي أخطاءُ eslint قائمة،
+    // فلا يُزاد عليها واحدٌ بحجّة الاتّساق.
+    console.error("Error updating grant application:", error);
+    return { success: false, message: "حدث خطأ أثناء تعديل المنحة" };
   }
 }
 
@@ -439,13 +527,18 @@ export async function updateGrantApplicationStatus(
     );
 
     const isNewApproval = status === "APPROVED" && grant.status !== "APPROVED";
-    if (isNewApproval && approvedAmount && approvedAmount > 0) {
+    // **بلا مبلغٍ مُعتمدٍ يُسجَّل المطلوب.** وكان الشرطُ يُسقط السجلَّ الماليَّ
+    // كلَّه حين لا يُمرَّر مبلغ: فاعتمادٌ من شاشةٍ لا تسأل عنه يمضي «بنجاح»
+    // ولا يظهر في المالية أثرٌ له. والنموذجُ الذي يسأل يُعبِّئ المطلوبَ سلفاً،
+    // فهذا جوابُه الافتراضيُّ نفسُه لا تخمينٌ جديد.
+    const loggedAmount = approvedAmount && approvedAmount > 0 ? approvedAmount : grant.requestedAmount;
+    if (isNewApproval && loggedAmount > 0) {
       queries.push(
         prisma.financialLog.create({
           data: {
             charityId,
             type: "ADD_GRANT",
-            amount: approvedAmount,
+            amount: loggedAmount,
             notes: `اعتماد منحة مشروع: ${grant.initiativeName}`
           }
         })
@@ -481,9 +574,8 @@ export async function updateGrantApplicationStatus(
       }
     }
 
-    revalidatePath(`/portal/${encodeURIComponent(charity.name)}/resource-development/grants`);
-    revalidatePath(`/portal/${encodeURIComponent(charity.name)}/finance`);
-    
+    await revalidateGrantViews(charityId, [grant.donorOrgId]);
+
     return { success: true, grant: { ...grant, ...updateData, status } };
   } catch (error: any) {
     console.error("Error updating grant status:", error);
@@ -496,13 +588,13 @@ export async function deleteGrantApplication(grantId: string, charityId: string)
     const session = await requireResourceDevelopment(charityId);
     if (!session) return { success: false, message: "غير مصرح" };
 
-    await prisma.grantApplication.delete({
-      where: { id: grantId }
+    const removed = await prisma.grantApplication.delete({
+      where: { id: grantId },
+      select: { donorOrgId: true },
     });
 
-    const charity = await prisma.charity.findUnique({ where: { id: charityId } });
-    if (charity) revalidatePath(`/portal/${encodeURIComponent(charity.name)}/finance`);
-    
+    await revalidateGrantViews(charityId, [removed.donorOrgId]);
+
     return { success: true };
   } catch (error: any) {
     console.error("Error deleting grant application:", error);

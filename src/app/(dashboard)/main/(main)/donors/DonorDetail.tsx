@@ -23,7 +23,9 @@ import { notify } from "@/components/console/toastBus";
 import { confirmAction } from "@/components/console/confirmBus";
 import { GRANT_STATUSES, grantStatusLabel } from "@/lib/donorOrg";
 import { deleteDonorAccountRow, saveDonorAccount } from "@/app/actions/donorOrgs";
-import { addGrantApplication } from "@/app/actions/charity";
+import { updateGrantApplicationStatus } from "@/app/actions/charity";
+import GrantSheet, { type EditableGrant } from "@/components/grants/GrantSheet";
+import GrantStatusDialog, { type StatusTarget } from "@/components/grants/GrantStatusDialog";
 import DonorSheet from "./DonorSheet";
 import type { DonorAccountRow, DonorGrantRow, DonorRow } from "./donorData";
 
@@ -73,6 +75,8 @@ export default function DonorDetail({
   const [editingOrg, setEditingOrg] = useState(false);
   const [accountFor, setAccountFor] = useState<{ charity: Charity; row: DonorAccountRow | null } | null>(null);
   const [addingGrant, setAddingGrant] = useState(false);
+  const [editingGrant, setEditingGrant] = useState<EditableGrant | null>(null);
+  const [statusFor, setStatusFor] = useState<{ grant: StatusTarget; next: "APPROVED" | "CLOSED" } | null>(null);
 
   const [pickedCharities, setPickedCharities] = useState<string[]>([]);
   const [status, setStatus] = useState<string>(ALL);
@@ -108,6 +112,40 @@ export default function DonorDetail({
   const sumRequested = shownGrants.reduce((sum, g) => sum + g.requestedAmount, 0);
   const distinctCharities = new Set(shownGrants.map((g) => g.charityId)).size;
   const scopedCharityCount = new Set(grants.map((g) => g.charityId)).size;
+
+  /**
+   * تحويلُ حالة منحة — والمقبولةُ والمغلقةُ تسألان أوّلاً.
+   *
+   * فالاعتمادُ يكتب سجلّاً ماليّاً بالمبلغ المعتمد ويُجدوِل أقساطَ العقد،
+   * والإغلاقُ يلزمه تاريخُه. وهما في `GrantStatusDialog` المشترك نفسِه الذي
+   * يستعمله جدولُ المنح — فلا يختلف الاعتمادُ بحسب الصفحة التي جرى منها.
+   */
+  const changeGrantStatus = (g: DonorGrantRow, to: string) => {
+    if (to === g.status) return;
+    if (to === "APPROVED" || to === "CLOSED") {
+      setStatusFor({
+        grant: {
+          id: g.id,
+          charityId: g.charityId,
+          charityName: g.charityName,
+          initiativeName: g.initiativeName,
+          requestedAmount: g.requestedAmount,
+          status: g.status,
+        },
+        next: to,
+      });
+      return;
+    }
+    void (async () => {
+      const res = await updateGrantApplicationStatus(g.id, g.charityId, to);
+      if (!res.success) {
+        notify("error", res.message || "تعذّر تحديث الحالة");
+        return;
+      }
+      notify("ok", `صارت الحالةُ «${grantStatusLabel(to)}».`);
+      startTransition(() => router.refresh());
+    })();
+  };
 
   const removeAccount = (row: DonorAccountRow, charityName: string) => {
     void (async () => {
@@ -353,6 +391,7 @@ export default function DonorDetail({
               <Th>المبلغ المطلوب</Th>
               <Th>الحالة</Th>
               <Th>تاريخ الرفع</Th>
+              <Th className="w-px" />
             </tr>
           </thead>
           <tbody className={tbodyClass}>
@@ -371,6 +410,35 @@ export default function DonorDetail({
                   </Badge>
                 </td>
                 <td className={cx(tdClass, MONO, "text-slate-500")}>{g.createdAt}</td>
+                <td className={tdClass}>
+                  <span className="flex items-center justify-end gap-1">
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setEditingGrant({
+                          id: g.id,
+                          charityId: g.charityId,
+                          charityName: g.charityName,
+                          donorOrgId: org.id,
+                          initiativeName: g.initiativeName,
+                          requestedAmount: g.requestedAmount,
+                        })
+                      }
+                      aria-label={`تعديل منحة ${g.initiativeName}`}
+                      className={btn.icon}
+                    >
+                      <Pencil className="size-3.5" />
+                    </button>
+                    <Select
+                      onSelect={(to) => changeGrantStatus(g, to)}
+                      placeholder="الحالة"
+                      options={GRANT_STATUSES.filter((s) => s.value !== g.status).map((s) => ({
+                        value: s.value,
+                        label: s.label,
+                      }))}
+                    />
+                  </span>
+                </td>
               </tr>
             ))}
           </tbody>
@@ -390,14 +458,30 @@ export default function DonorDetail({
         />
       )}
 
-      {addingGrant && (
+      {(addingGrant || editingGrant) && (
         <GrantSheet
-          donorOrgId={org.id}
-          donorName={org.name}
+          grant={editingGrant ?? undefined}
+          donor={{ id: org.id, name: org.name }}
           charities={charities}
-          onClose={() => setAddingGrant(false)}
+          onClose={() => {
+            setAddingGrant(false);
+            setEditingGrant(null);
+          }}
           onSaved={() => {
             setAddingGrant(false);
+            setEditingGrant(null);
+            startTransition(() => router.refresh());
+          }}
+        />
+      )}
+
+      {statusFor && (
+        <GrantStatusDialog
+          grant={statusFor.grant}
+          next={statusFor.next}
+          onClose={() => setStatusFor(null)}
+          onSaved={() => {
+            setStatusFor(null);
             startTransition(() => router.refresh());
           }}
         />
@@ -417,153 +501,6 @@ export default function DonorDetail({
         />
       )}
     </div>
-  );
-}
-
-/**
- * رفعُ منحةٍ لهذه الجهة.
- *
- * وهي صورةُ نموذجِ صفحةِ منح الجمعية مقلوبةً: هناك الجمعيةُ مثبَّتةٌ والجهةُ
- * تُختار، وهنا الجهةُ مثبَّتةٌ والجمعيةُ تُختار. والفعلُ واحدٌ
- * (`addGrantApplication`) — فلا منطقَ ثانٍ يُكتب للرفع فيُخالف الأوّلَ بعد
- * تعديلٍ في أحدهما، وهو يَكتب `entityName` سِجلّاً ويُنعش الصفحتين كلتيهما.
- *
- * **والقائمةُ هي `charities` نفسُها بلا تصفيةٍ زائدة**، وذلك صحيحٌ لا تهاون:
- * حارسُ الفعل (`requireResourceDevelopment`) يشترط ثلاثةً — صلاحيةَ القسم،
- * وإسنادَ الجمعية، وشمولَها بخدمة تنمية الموارد — وهي الشروطُ الثلاثةُ بعينها
- * التي بُنيت بها `requireDonorViewer.charities`. فما يُعرض هنا يُقبل هناك،
- * وما سقط من أحدهما سقط من الآخر.
- *
- * ولا «مغلقة» في الحالات: الإغلاقُ يلزمه تاريخُه، وموضعُه صفحةُ منح الجمعية
- * حيث دورةُ حياة المنحة كلُّها — ونصفُ تلك الدورة هنا يُغري بإتمامها هنا.
- */
-function GrantSheet({
-  donorOrgId,
-  donorName,
-  charities,
-  onClose,
-  onSaved,
-}: {
-  donorOrgId: string;
-  donorName: string;
-  charities: Charity[];
-  onClose: () => void;
-  onSaved: () => void;
-}) {
-  // جمعيةٌ واحدةٌ مسنَدة: تُختار سلفاً — فاختيارُ الوحيد نقرةٌ بلا قرار.
-  const [charityId, setCharityId] = useState(charities.length === 1 ? charities[0].id : "");
-  const [initiative, setInitiative] = useState("");
-  const [amount, setAmount] = useState("");
-  const [status, setStatus] = useState("PENDING");
-  const [busy, setBusy] = useState(false);
-
-  const save = () => {
-    // `Select` زرٌّ لا حقلٌ في النموذج، فـ`required` لا يمسّه — والتحققُ هنا
-    // صريحاً وإلّا مضى الإرسالُ بلا جمعية.
-    if (!charityId) {
-      notify("error", "اختر الجمعية");
-      return;
-    }
-    const value = Number(amount);
-    if (!Number.isFinite(value) || value <= 0) {
-      notify("error", "المبلغ غير صالح");
-      return;
-    }
-
-    setBusy(true);
-    void (async () => {
-      const res = await addGrantApplication(charityId, initiative.trim(), value, donorOrgId, status);
-      setBusy(false);
-      if (!res.success) {
-        notify("error", res.message || "تعذّر رفع المنحة");
-        return;
-      }
-      notify("ok", "رُفعت المنحة.");
-      onSaved();
-    })();
-  };
-
-  return (
-    <Sheet
-      title="إضافة منحة"
-      subtitle={`إلى ${donorName}`}
-      onClose={onClose}
-      onSubmit={save}
-      busy={busy}
-      footer={
-        <>
-          <button type="submit" disabled={busy} className={btn.primary}>
-            رفع المنحة
-          </button>
-          <button type="button" onClick={onClose} disabled={busy} className={btn.ghost}>
-            إلغاء
-          </button>
-        </>
-      }
-    >
-      <div className="space-y-5">
-        <label className="block space-y-1.5">
-          <span className="block text-body font-medium text-slate-700 dark:text-slate-300">الجمعية</span>
-          <Select
-            value={charityId}
-            onSelect={setCharityId}
-            placeholder="اختر الجمعية…"
-            emptyLabel="لا جمعياتٍ مسنَدةً إليك"
-            options={charities.map((c) => ({
-              value: c.id,
-              label: c.name,
-              hint: c.isInternal ? "كيانٌ داخلي" : undefined,
-            }))}
-            className="w-full [&>button]:w-full [&>button]:justify-between"
-          />
-        </label>
-
-        <label className="block space-y-1.5">
-          <span className="block text-body font-medium text-slate-700 dark:text-slate-300">اسم المشروع</span>
-          <input
-            value={initiative}
-            onChange={(e) => setInitiative(e.target.value)}
-            required
-            className={field}
-          />
-        </label>
-
-        <label className="block space-y-1.5">
-          <span className="block text-body font-medium text-slate-700 dark:text-slate-300">
-            التكلفة الإجمالية (ريال)
-          </span>
-          <input
-            value={amount}
-            onChange={(e) => setAmount(e.target.value)}
-            required
-            type="number"
-            min="1"
-            step="1"
-            dir="ltr"
-            className={cx(field, MONO)}
-          />
-        </label>
-
-        <label className="block space-y-1.5">
-          <span className="block text-body font-medium text-slate-700 dark:text-slate-300">حالة الطلب الأولية</span>
-          <Select
-            value={status}
-            onSelect={setStatus}
-            placeholder="حالة المنحة"
-            options={GRANT_STATUSES.filter((s) => s.value !== "CLOSED").map((s) => ({
-              value: s.value,
-              label: s.label,
-            }))}
-            className="w-full [&>button]:w-full [&>button]:justify-between"
-          />
-        </label>
-
-        <p className="text-meta leading-5 text-slate-500 dark:text-slate-400">
-          تُسجَّل المنحةُ باسم هذه الجهة، وتظهر هنا وفي صفحة منح الجمعية. والإغلاقُ وتفاصيلُ
-          الاعتماد (المستفيدون والمبلغُ المحصَّل) تُدار من صفحة منح الجمعية.
-        </p>
-      </div>
-    </Sheet>
   );
 }
 

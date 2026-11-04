@@ -39,16 +39,19 @@ const argOrigins = process.argv
   .map((a) => a.slice("--origin=".length).replace(/\/+$/, ""))
   .filter(Boolean);
 
-// **و`--origin` تُضيف ولا تُبدِل.**
+// **ولا تُسقَط أصولٌ بحال: الاتّحادُ من ثلاثة.**
 //
-// فالواجهةُ تُبدِّل القواعدَ كلَّها لا تُضيف إليها، فمن أراد إجازةَ أصلٍ جديدٍ
-// وكتب `--origin=` واحداً، أسقط الإنتاجَ والتطويرَ معاً من حيث لا يدري:
-// يُصلح رفعَ نشرةٍ عارضةٍ ويكسِر رفعَ الموقع. والأصلان الافتراضيّان مطلوبان
-// دائماً، فيُضمَّان أبداً — ومن أراد إسقاطَ أحدهما حقّاً فموضعُه هذا الملفُّ،
-// بتعديلٍ يُقرأ في المراجعة لا بعلمٍ يُكتب في سطر الأوامر.
-const origins = [...new Set([...DEFAULT_ORIGINS, ...argOrigins])];
+// فالواجهةُ تُبدِّل القواعدَ كلَّها لا تُضيف إليها، ومن ثَمّ كان كلُّ تشغيلٍ
+// يُسقط ما ليس في هذا الملفّ. فمن أجاز نطاقَه الخاصَّ بـ`--origin` مرّةً، ثمّ
+// شغّل `b2:cors:apply` بعدها لأيِّ سبب، **أسقط نطاقَه من حيث لا يدري** —
+// والرفعُ يسقط ولا يُعرف لماذا، إذ القاعدةُ «موجودةٌ» ويُظنُّ أنّها سليمة.
+//
+// فتُقرأ الأصولُ القائمةُ من باك بليز ويُضمُّ إليها الافتراضيّان وما وصل من
+// السطر. و`--prune` لمن أراد الاقتصارَ عليهما فعلاً، فيكون إسقاطُ الأصلِ
+// قصداً مكتوباً لا أثراً جانبيّاً.
+const PRUNE = process.argv.includes("--prune");
 
-const RULES = [
+const rulesFor = (origins) => [
   {
     corsRuleName: "zadBrowserUpload",
     allowedOrigins: origins,
@@ -108,8 +111,22 @@ console.log(`المستودع: ${bucket.bucketName} (${bucket.bucketType})`);
 console.log("\nالقائمُ الآن:");
 console.log(bucket.corsRules?.length ? JSON.stringify(bucket.corsRules, null, 2) : "  (لا قاعدةَ — وكلُّ رفعٍ من المتصفِّح يسقط)");
 
+// الأصولُ القائمةُ في باك بليز — من قاعدتنا ومن أيِّ قاعدةٍ أخرى عليها.
+const existing = PRUNE ? [] : (bucket.corsRules ?? []).flatMap((r) => r.allowedOrigins ?? []);
+// و`*` لا تُنقل إن وجدت: من أجازها يدوياً يوماً لا يُثبَّت له ذلك هنا.
+const origins = [...new Set([...existing, ...DEFAULT_ORIGINS, ...argOrigins])].filter(
+  (o) => o !== "*"
+);
+const RULES = rulesFor(origins);
+
+const added = origins.filter((o) => !existing.includes(o));
+const dropped = existing.filter((o) => !origins.includes(o));
+
 console.log("\nالذي سيُكتب:");
 console.log(JSON.stringify(RULES, null, 2));
+if (added.length) console.log(`\nيُضاف: ${added.join("، ")}`);
+if (dropped.length) console.log(`يُسقَط: ${dropped.join("، ")}`);
+if (!added.length && !dropped.length) console.log("\nولا فرقَ عمّا هو قائم.");
 
 if (!capabilities.includes("writeBuckets")) {
   console.log(
@@ -120,7 +137,17 @@ if (!capabilities.includes("writeBuckets")) {
 }
 
 if (!APPLY) {
-  console.log("\nقراءةٌ بلا كتابة. وللكتابة: npm run b2:cors:apply");
+  // **يُطبع الأمرُ بأصوله لا اسمُه مجرّداً.**
+  //
+  // فكان يُطبع `npm run b2:cors:apply` دائماً، ومن شغّله بـ`--origin` ثمّ اتّبع
+  // النصيحةَ حرفاً، كتب القاعدةَ **بلا أصله** — فيرى قاعدةً مكتوبةً ويحسب أنّه
+  // أجاز نطاقَه، والرفعُ يسقط ولا يُعرف لماذا. وقد وقع هذا فعلاً.
+  const cmd = argOrigins.length
+    ? `npm run b2:cors -- ${argOrigins.map((o) => `--origin=${o}`).join(" ")}${PRUNE ? " --prune" : ""} --apply`
+    : PRUNE
+      ? "npm run b2:cors -- --prune --apply"
+      : "npm run b2:cors:apply";
+  console.log(`\nقراءةٌ بلا كتابة. وللكتابة:\n  ${cmd}`);
   process.exit(0);
 }
 

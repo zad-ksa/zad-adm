@@ -33,7 +33,18 @@ const APPLY = process.argv.includes("--apply");
 // الأصولُ التي يُجاز الرفعُ منها. ولا `*` بحال: الرابطُ المُوقَّع يُجيز
 // الكتابةَ على مفتاحٍ بعينه، لكنّ `*` تجعل أيَّ صفحةٍ في الإنترنت تستطيع
 // استعمالَ تذكرةٍ سُرِّبت من متصفِّح مستخدمٍ مُسجَّل.
-const DEFAULT_ORIGINS = ["https://zad-adm.vercel.app", "http://localhost:3000"];
+//
+// و`www` والجذرُ **أصلان مختلفان عند المتصفِّح**، فيُذكران كلاهما. والموقعُ
+// اليوم يردُّ ٣٠٨ من `zad-co.sa` إلى `www.zad-co.sa`، فالأصلُ العاملُ هو
+// `www` — لكنّ الجذرَ يبقى مذكوراً كي لا يسقط الرفعُ لو أُلغي التحويلُ يوماً
+// أو عُكس. ومن أجاز الجذرَ وحدَه رأى رفضاً لا يُفهم: النطاقُ «مُجاز» في عينه
+// والمتصفِّحُ يقول غيرَ ذلك.
+const DEFAULT_ORIGINS = [
+  "https://www.zad-co.sa",
+  "https://zad-co.sa",
+  "https://zad-adm.vercel.app",
+  "http://localhost:3000",
+];
 const argOrigins = process.argv
   .filter((a) => a.startsWith("--origin="))
   .map((a) => a.slice("--origin=".length).replace(/\/+$/, ""))

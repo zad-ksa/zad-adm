@@ -57,6 +57,12 @@ export type ProjectBuilderValues = {
 export type ProjectBuilderBudget = { include: boolean; total: string; reserve: boolean };
 
 /** رموز البرومبت وشرحها — تُعرض لصاحب صلاحية التحكم عند تعديل القالب. */
+/**
+ * أطول نصٍّ يُلصق في «تحليل نص وثيقة». الحدّ لضبط تكلفة الذكاء الاصطناعي، وكان
+ * ٢٠٬٠٠٠ مكرّراً في ثلاثة مواضع فرفض وثائقَ عاديةً تزيد عليه قليلاً.
+ */
+export const MAX_PASTED_DOCUMENT_CHARS = 30000;
+
 export const PROJECT_BUILDER_PROMPT_TOKENS: { token: string; hint: string }[] = [
   { token: "{{assocName}}", hint: "اسم الجمعية المختارة" },
   { token: "{{vision}}", hint: "رؤية الجمعية (من ملفّها الثابت)" },

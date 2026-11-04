@@ -2,6 +2,7 @@ import Anthropic from "@anthropic-ai/sdk";
 import { NextRequest, NextResponse } from "next/server";
 import { requirePermission, authErrorResponse } from "@/lib/guards";
 import { prisma } from "@/lib/db";
+import { MAX_PASTED_DOCUMENT_CHARS } from "@/lib/projectBuilder";
 
 /** يعيد بناء النص الملصوق (بعد التحليل) وفق الهيكل المعياري المُستخرَج من البرومبت العام الحالي، بما اختاره المستخدم من إزالة/إضافة/توجيهات. */
 export async function POST(req: NextRequest) {
@@ -21,8 +22,11 @@ export async function POST(req: NextRequest) {
 
     const text = typeof body?.text === "string" ? body.text.trim() : "";
     if (!text) return NextResponse.json({ error: "لا يوجد نص لإعادة بنائه" }, { status: 400 });
-    if (text.length > 20000) {
-      return NextResponse.json({ error: "النص طويل جداً (الحد 20,000 حرف)." }, { status: 400 });
+    if (text.length > MAX_PASTED_DOCUMENT_CHARS) {
+      return NextResponse.json(
+        { error: `النص طويل جداً (الحد ${MAX_PASTED_DOCUMENT_CHARS.toLocaleString("en")} حرف).` },
+        { status: 400 }
+      );
     }
 
     const promptVersion = await prisma.projectBuilderPromptVersion.findFirst({ orderBy: { createdAt: "desc" } });

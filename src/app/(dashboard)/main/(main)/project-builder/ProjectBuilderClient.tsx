@@ -38,7 +38,7 @@ import {
   updateProjectBuilderDocument,
   deleteProjectBuilderDocument,
 } from "@/app/actions/projectBuilder";
-import type { ProjectBuilderPreference } from "@/lib/projectBuilder";
+import { MAX_PASTED_DOCUMENT_CHARS, type ProjectBuilderPreference } from "@/lib/projectBuilder";
 import { exportProjectDocx } from "@/lib/exportProjectDocx";
 
 // `field` يثبّت ارتفاع سطر واحد (h-9) — لا يصلح لمربع نص متعدد الأسطر، وتركيب
@@ -534,6 +534,7 @@ function AnalyzeTab({
   const tr = Object.values(removeExtra).filter(Boolean).length;
   const ta = Object.values(addMissing).filter(Boolean).length;
   const hasActions = tr > 0 || ta > 0 || directives.length > 0;
+  const tooLong = text.trim().length > MAX_PASTED_DOCUMENT_CHARS;
 
   return (
     <div className="space-y-5">
@@ -542,7 +543,7 @@ function AnalyzeTab({
           <Field
             id="pb-paste"
             label="نصّ الوثيقة"
-            hint={`الصق النص المراد تحليله ومقارنته بالهيكل المعياري (حتى 20,000 حرف) — ${text.length.toLocaleString("ar")} حرف الآن.`}
+            hint={`الصق النص المراد تحليله ومقارنته بالهيكل المعياري (حتى ${MAX_PASTED_DOCUMENT_CHARS.toLocaleString("ar")} حرف) — ${text.length.toLocaleString("ar")} حرف الآن.`}
           >
             <textarea
               id="pb-paste"
@@ -553,11 +554,16 @@ function AnalyzeTab({
               className={`${textareaField} resize-y`}
             />
           </Field>
+          {tooLong && (
+            <Note tone="warn">
+              النص أطول من الحد بـ {(text.trim().length - MAX_PASTED_DOCUMENT_CHARS).toLocaleString("ar")} حرف. احذف الزائد ثم حلّله.
+            </Note>
+          )}
           {error && <Note tone="warn">{error}</Note>}
           <button
             type="button"
             onClick={handleAnalyze}
-            disabled={!text.trim() || analyzing}
+            disabled={!text.trim() || tooLong || analyzing}
             className={`${btn.primary} w-full`}
           >
             {analyzing ? (

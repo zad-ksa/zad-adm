@@ -972,7 +972,7 @@ async function unifyCharityStages(sourceCharityId: string, timelineType: string,
   if (!sourceService) throw new UnifyRefusal("الخدمة المصدر غير موجودة");
 
   for (const targetCharity of otherCharities) {
-    let targetSvc = await prisma.service.findFirst({ 
+    const targetSvc = await prisma.service.findFirst({
       where: { 
         charityId: targetCharity.id, 
         ...(["STRATEGY", "GOVERNANCE", "FINANCE"].includes(timelineType) 
@@ -981,16 +981,9 @@ async function unifyCharityStages(sourceCharityId: string, timelineType: string,
       } 
     });
 
-    if (!targetSvc) {
-      targetSvc = await prisma.service.create({
-        data: {
-          name: sourceService.name,
-          department: sourceService.department,
-          charityId: targetCharity.id,
-        }
-      });
-      await syncCharityAdminServicesQuietly(targetCharity.id);
-    }
+    // جمعيةٌ لم تُسنَد إليها الخدمة تُتخطّى: التعميم ينسخ المراحل ولا يُسند.
+    // وكان يُنشئ الخدمة فيها، فتُسنَد لكل جمعيةٍ بلا قصد (charityServices).
+    if (!targetSvc) continue;
 
     await prisma.serviceStage.deleteMany({ where: { serviceId: targetSvc.id } });
 
@@ -1110,24 +1103,17 @@ export async function broadcastGanttWeek(
   const selectedSourceSteps = await prisma.serviceStageStep.findMany({ where: { id: { in: selectedStepIds } }, include: { stage: true } });
 
   for (const targetId of targetCharityIds) {
-    let targetSvc = await prisma.service.findFirst({ 
-      where: { 
-        charityId: targetId, 
-        ...(["STRATEGY", "GOVERNANCE", "FINANCE"].includes(timelineType) 
-             ? { department: timelineType } 
+    const targetSvc = await prisma.service.findFirst({
+      where: {
+        charityId: targetId,
+        ...(["STRATEGY", "GOVERNANCE", "FINANCE"].includes(timelineType)
+             ? { department: timelineType }
              : { name: sourceService.name })
-      } 
+      }
     });
 
-    if (!targetSvc) {
-      targetSvc = await prisma.service.create({
-        data: {
-          name: sourceService.name,
-          department: sourceService.department,
-          charityId: targetId,
-        }
-      });
-    }
+    // كالتعميم: من لم تُسنَد إليه الخدمة يُتخطّى، ولا تُنشأ له.
+    if (!targetSvc) continue;
 
     await prisma.serviceStage.updateMany({
       where: { serviceId: targetSvc.id, startDate: weekStart, endDate: weekEnd },

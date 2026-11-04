@@ -84,6 +84,31 @@ export async function setCharityServices(charityId: string, serviceNames: string
   return { success: true, added: toAdd.length, removed: toRemove.length };
 }
 
+/** إسناد خدمةٍ لجمعيةٍ واحدة — زرّ «إسناد الخدمة لجمعية» في «الخدمات ← الكل». */
+export async function addCharityToService(serviceName: string, charityId: string): Promise<Result> {
+  const session = await requireServiceManager();
+  if (!session) return { success: false, error: "غير مصرح لك بإسناد الخدمات" };
+
+  const assigned = await getAssignedCharityIds(session.id, session.role, session.permissions);
+  if (assigned !== null && !assigned.includes(charityId)) {
+    return { success: false, error: "لا يمكنك إسناد الخدمة لجمعية غير مرتبطة بك" };
+  }
+
+  const known = await siteServices();
+  if (!known.has(serviceName)) return { success: false, error: "الخدمة غير موجودة في الموقع" };
+
+  const charity = await prisma.charity.findUnique({ where: { id: charityId }, select: { name: true } });
+  if (!charity) return { success: false, error: "الجمعية غير موجودة" };
+
+  const exists = await prisma.service.findFirst({ where: { name: serviceName, charityId }, select: { id: true } });
+  if (exists) return { success: true, added: 0, removed: 0 };
+
+  await prisma.service.create({ data: { name: serviceName, department: known.get(serviceName) ?? null, charityId } });
+  await syncCharityAdminServicesQuietly(charityId);
+  revalidateServicePages([charity.name]);
+  return { success: true, added: 1, removed: 0 };
+}
+
 /** جمعيات خدمةٍ واحدة: تُضاف الخطط الفارغة لمن اختير، وتُحذف خطط من أُلغي. */
 export async function setServiceCharities(serviceName: string, charityIds: string[]): Promise<Result> {
   const session = await requireServiceManager();

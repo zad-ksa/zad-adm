@@ -6,6 +6,7 @@ import { confirmAction } from "@/components/console/confirmBus";
 import { Plus, Edit, Trash2, Layers, Search, CheckCircle2, AlertCircle, Building2, ChevronDown, ChevronUp, Check } from "lucide-react";
 import { addServiceToCharities, renameServiceGlobally, deleteServiceGlobally } from "@/app/actions/services";
 import { setServiceEmployees } from "@/app/actions/serviceAccess";
+import { setServiceCharities } from "@/app/actions/charityServices";
 import { useRouter } from "next/navigation";
 import { Dialog } from "@/components/console/Dialog";
 import { btn } from "@/components/console/ui";
@@ -44,7 +45,12 @@ export default function ManageServicesClient({
   const [selectedCharityIds, setSelectedCharityIds] = useState<string[]>([]);
   // من يصل إلى الخدمة المفتوحة للتعديل. فارغة = مفتوحة للجميع.
   const [grantedIds, setGrantedIds] = useState<string[]>([]);
-  
+  // جمعيات الخدمة عند فتح التعديل — لمعرفة ما يُلغى إسناده فيُحذّر منه.
+  const [originalCharityIds, setOriginalCharityIds] = useState<string[]>([]);
+  const removedCharities = modalState.mode === "edit"
+    ? charities.filter(c => originalCharityIds.includes(c.id) && !selectedCharityIds.includes(c.id))
+    : [];
+
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
 
@@ -69,12 +75,17 @@ export default function ManageServicesClient({
   const openEdit = (svc: ServiceGroup) => {
     setForm({ name: svc.name, department: svc.department || "" });
     setGrantedIds(accessMap[svc.name] ?? []);
+    // الجمعيات المسنَدة الآن: يُضاف إليها ويُلغى منها هنا.
+    const ids = svc.charities.map(c => c.id);
+    setSelectedCharityIds(ids);
+    setOriginalCharityIds(ids);
     setModalState({ isOpen: true, mode: "edit", originalName: svc.name });
   };
 
   const closeModal = () => {
     setModalState({ isOpen: false, mode: "add", originalName: null });
     setSelectedCharityIds([]);
+    setOriginalCharityIds([]);
     setGrantedIds([]);
   };
 
@@ -92,8 +103,12 @@ export default function ManageServicesClient({
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    // إلغاء الإسناد يحذف خطة الجمعية في الخدمة، فلا يمرّ بلا تأكيد.
+    if (removedCharities.length > 0 && !(await confirmAction({
+      title: `سيُلغى إسناد الخدمة عن ${removedCharities.length} جمعية (${removedCharities.map(c => c.name).join("، ")})، وتُحذف خططها فيها ومراحلها نهائياً. هل أنت متأكد؟`,
+    }))) return;
     startTransition(async () => {
       // الاسم مقصوصاً، كما يحفظه الخادم — وإلا بحث منح الخدمة عن اسمٍ بفراغٍ
       // لا وجود له.
@@ -113,12 +128,22 @@ export default function ManageServicesClient({
             showNotification("error", granted.error);
             return;
           }
-          setServices(prev => prev.map(s => 
-            s.name === modalState.originalName 
-              ? { ...s, name, department: form.department || null } 
+          // والجمعيات: لكل جمعيةٍ أُضيفت خطةٌ فارغة، ولكل ملغاةٍ تُحذف خطتها.
+          const assigned = await setServiceCharities(name, selectedCharityIds);
+          if (!assigned.success) {
+            showNotification("error", assigned.error);
+            router.refresh();
+            return;
+          }
+          const nextCharities = charities.filter(c => selectedCharityIds.includes(c.id));
+          setServices(prev => prev.map(s =>
+            s.name === modalState.originalName
+              ? { ...s, name, department: form.department || null, charities: nextCharities, charityCount: nextCharities.length }
               : s
           ));
-          showNotification("success", "تم تعديل الخدمة عند جميع الجمعيات بنجاح");
+          showNotification("success", assigned.added > 0
+            ? `تم حفظ الخدمة، وأُنشئت خطة فارغة لـ ${assigned.added} جمعية`
+            : "تم تعديل الخدمة بنجاح");
         } else {
           // إضافة خدمة جديدة
           if (selectedCharityIds.length === 0) {
@@ -386,7 +411,7 @@ footer={
                 </button>
 <button 
                   type="submit" 
-                  disabled={isPending || !form.name.trim() || (modalState.mode === "add" && selectedCharityIds.length === 0)} 
+                  disabled={isPending || !form.name.trim() || selectedCharityIds.length === 0}
                   className={btn.primary}
                 >
                   {isPending ? "جاري الحفظ..." : modalState.mode === "edit" ? "حفظ التعديلات" : "إضافة الخدمة"}
@@ -444,11 +469,15 @@ footer={
                   </div>
                 )}
 
-                {/* Charity Selection — only for new services */}
-                {modalState.mode === "add" && (
+                {/* الجمعيات المسنَدة إليها الخدمة — عند الإضافة وعند التعديل. والخدمة
+                    لا وجود لها إلا بصفوفها في الجمعيات، فلا تُترك بلا جمعية: حذفها
+                    من زرّ الحذف. */}
+                {(
                   <div>
                     <div className="flex items-center justify-between mb-2">
-                      <label className="text-caption font-semibold text-slate-700 dark:text-slate-300">اختر الجمعيات *</label>
+                      <label className="text-caption font-semibold text-slate-700 dark:text-slate-300">
+                        {modalState.mode === "edit" ? "الجمعيات المسنَدة إليها الخدمة *" : "اختر الجمعيات *"}
+                      </label>
                       <button
                         type="button"
                         onClick={toggleAll}
@@ -501,6 +530,14 @@ footer={
                     ) : (
                       <p className="text-caption text-slate-400 italic p-3 bg-slate-50 dark:bg-slate-900 rounded-xl">
                         لا توجد جمعيات مسجلة في النظام
+                      </p>
+                    )}
+                    <p className="mt-2 text-caption text-slate-400 leading-relaxed">
+                      كل جمعية تُضاف تُنشأ لها خطة فارغة في «الخدمات ← الكل»، يكتبها الموظف.
+                    </p>
+                    {removedCharities.length > 0 && (
+                      <p className="mt-2 text-caption font-semibold text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900/40 rounded-xl px-3 py-2">
+                        سيُلغى الإسناد عن: {removedCharities.map(c => c.name).join("، ")} — وتُحذف خططها في هذه الخدمة نهائياً.
                       </p>
                     )}
                   </div>

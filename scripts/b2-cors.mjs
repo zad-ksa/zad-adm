@@ -38,7 +38,15 @@ const argOrigins = process.argv
   .filter((a) => a.startsWith("--origin="))
   .map((a) => a.slice("--origin=".length).replace(/\/+$/, ""))
   .filter(Boolean);
-const origins = argOrigins.length ? argOrigins : DEFAULT_ORIGINS;
+
+// **و`--origin` تُضيف ولا تُبدِل.**
+//
+// فالواجهةُ تُبدِّل القواعدَ كلَّها لا تُضيف إليها، فمن أراد إجازةَ أصلٍ جديدٍ
+// وكتب `--origin=` واحداً، أسقط الإنتاجَ والتطويرَ معاً من حيث لا يدري:
+// يُصلح رفعَ نشرةٍ عارضةٍ ويكسِر رفعَ الموقع. والأصلان الافتراضيّان مطلوبان
+// دائماً، فيُضمَّان أبداً — ومن أراد إسقاطَ أحدهما حقّاً فموضعُه هذا الملفُّ،
+// بتعديلٍ يُقرأ في المراجعة لا بعلمٍ يُكتب في سطر الأوامر.
+const origins = [...new Set([...DEFAULT_ORIGINS, ...argOrigins])];
 
 const RULES = [
   {

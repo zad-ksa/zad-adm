@@ -96,7 +96,12 @@ export default function ServicesManagerClient({
 
     startTransition(async () => {
       try {
-        await unifyCharityStagesAction(charityId, sourceTimelineType, sourceServiceId);
+        const res = await unifyCharityStagesAction(charityId, sourceTimelineType, sourceServiceId);
+        if (!res.success) {
+          notify("error", res.error);
+          router.refresh();
+          return;
+        }
         setIsUnifyModalOpen(false);
         router.refresh();
       } catch (error: any) {

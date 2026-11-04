@@ -1209,7 +1209,13 @@ export default function ServicesOverviewClient({
     if (!unifyCharity) return;
     startUnifyTransition(async () => {
       try {
-        await unifyCharityStagesAction(unifyCharity.id, unifyCharity.sourceTimelineType, unifyCharity.sourceServiceId, unifyTargetIds.length ? unifyTargetIds : undefined);
+        const res = await unifyCharityStagesAction(unifyCharity.id, unifyCharity.sourceTimelineType, unifyCharity.sourceServiceId, unifyTargetIds.length ? unifyTargetIds : undefined);
+        if (!res.success) {
+          notify("error", res.error);
+          // قد يكون التعميم تمّ على بعض الجمعيات قبل الخطأ، فتُحدَّث الصفحة لتُريه.
+          router.refresh();
+          return;
+        }
         setUnifyCharity(null);
         setUnifyTargetIds([]);
         router.refresh();

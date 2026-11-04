@@ -3,8 +3,22 @@ import { prisma } from "@/lib/db";
 import { AuthError, requireCharityMembership } from "@/lib/guards";
 import {
   SERVICE_LINKED_CHARITY_PERMISSION_IDS,
-  hasCharityPermission,
+  effectiveCharityPermissions,
 } from "@/lib/charityPermissions";
+
+/**
+ * ربطُ تبويبات البوابة بالخدمات، كما يُحرَّر عند زاد.
+ *
+ * ومُصدَّرةٌ لأنّ تخطيطَ البوابة يحتاجها كما تحتاجها هذه الدالّة: الشريطُ
+ * الجانبيُّ يُقرِّر ما يَعرض، وهذه تُقرِّر ما يُفتَح، فإن لم يقرآ الربطَ نفسَه
+ * افترق المعروضُ عن المسموح.
+ */
+export async function portalPermissionLinks() {
+  return prisma.permissionServiceLink.findMany({
+    where: { permissionId: { in: SERVICE_LINKED_CHARITY_PERMISSION_IDS } },
+    select: { permissionId: true, serviceName: true },
+  });
+}
 
 /**
  * Resolves the charity named in a /portal/[name] URL together with the visitor's
@@ -42,34 +56,24 @@ export async function resolveCharityPortal(nameParam: string) {
     throw error;
   }
 
-  // ربط التبويبات بالخدمات يُحرَّر عند زاد. وما لم يُربط تبويبٌ بخدمة، يبقى على
-  // صلاحيته المخزّنة كما كان — فالربط يُفعّل تدريجياً بلا انقطاع.
-  const links = await prisma.permissionServiceLink.findMany({
-    where: { permissionId: { in: SERVICE_LINKED_CHARITY_PERMISSION_IDS } },
-    select: { permissionId: true, serviceName: true },
-  });
-  const linkedServices = new Map<string, string[]>();
-  for (const link of links) {
-    const list = linkedServices.get(link.permissionId) ?? [];
-    list.push(link.serviceName);
-    linkedServices.set(link.permissionId, list);
-  }
-  const delegated = new Set(services);
+  // القاعدةُ في `effectiveCharityPermissions` وحدَها: تبويبٌ مربوطٌ بخدمةٍ
+  // يُنال بتفويضها، وتبويبٌ لم يُربط بعد يبقى على المخزّن. وكانت مكتوبةً هنا
+  // ومكتوبةً في الشريط الجانبيّ، فافترق المعروضُ عن المسموح.
+  const links = await portalPermissionLinks();
+  const effective = effectiveCharityPermissions(permissions, services, links);
 
   const can = (permission: string) => {
     // مدير الجمعية مرتبطٌ بكل خدماتها، فلا تفويض عليه.
     if (isAdmin) return true;
-    const needed = linkedServices.get(permission);
-    if (!needed || needed.length === 0) {
-      return hasCharityPermission(isAdmin, permissions, permission);
-    }
-    return needed.some((name) => delegated.has(name));
+    return effective.includes(permission);
   };
 
   return {
     charity,
     session,
     permissions,
+    /** المخزّنةُ بعد تطبيق قاعدة الربط — وهي ما يُمرَّر إلى الشريط. */
+    effective,
     isAdmin,
     services,
     can,

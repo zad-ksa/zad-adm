@@ -2,6 +2,7 @@
 
 import { prisma } from "@/lib/db";
 import { revalidatePath } from "next/cache";
+import { notifyMailDecision, notifyMailDelivered } from "@/lib/mailNotify";
 import { sanitizeMailHtml } from "@/lib/sanitizeMail";
 import { requireEmployee, requirePermission } from "@/lib/guards";
 import { getAssignedCharityIds } from "@/lib/access";
@@ -253,6 +254,27 @@ export async function approveMail(mailId: string, edits?: { subject?: string; bo
     },
   });
 
+  // المستلمون يُعلمون الآن — فصفوفُهم لم تكن موجودةً قبل هذه اللحظة —
+  // وصاحبُ الرسالة يُعلم بالقرار. وكان يكتب بريدَه ثمّ لا يعرف أاعتُمد أم
+  // لا إلّا بفتح «ما ينتظر التعميد» من تلقائه.
+  await notifyMailDelivered({
+    mailId: mail.id,
+    subject: edits?.subject?.trim() ? edits.subject.trim() : mail.subject,
+    senderName: user.name,
+    recipients,
+    excludeEmployeeId: mail.senderId as string,
+  });
+  if (mail.senderId) {
+    await notifyMailDecision({
+      mailId: mail.id,
+      subject: mail.subject,
+      authorEmployeeId: mail.senderId,
+      approverName: user.name,
+      state: "APPROVED",
+      delivered: recipients.length,
+    });
+  }
+
   revalidatePath("/main/mail");
   return { success: true, delivered: recipients.length };
 }
@@ -281,6 +303,17 @@ export async function returnMail(mailId: string, note: string) {
       draftCharityIds: [mail.charityId as string],
     },
   });
+
+  if (mail.senderId) {
+    await notifyMailDecision({
+      mailId: mail.id,
+      subject: mail.subject,
+      authorEmployeeId: mail.senderId,
+      approverName: user.name,
+      state: "RETURNED",
+      note: trimmed,
+    });
+  }
 
   revalidatePath("/main/mail");
   return { success: true };

@@ -9,6 +9,7 @@ import { getEmployeeServiceNames } from "@/app/actions/serviceAccess";
 import { getAssignedCharityIds } from "@/lib/access";
 import { getNoApproverMessage, resolveApprovalRoute } from "@/app/actions/mailApproval";
 import { isDelivered, serviceConversationRecipients } from "@/lib/serviceTeams";
+import { notifyMailDelivered, notifyMailPendingApproval } from "@/lib/mailNotify";
 import { CHARITY_MAIL_ENABLED, isCharityMailOpen } from "@/lib/featureFlags";
 
 async function getAuthenticatedUser() {
@@ -136,6 +137,14 @@ export async function sendMail(data: {
     // creating them again here would double every attachment on the sent mail.
     await syncAttachments(mail.id, data.attachments ?? []);
 
+    await notifyMailDelivered({
+      mailId: mail.id,
+      subject: data.subject,
+      senderName: user.name,
+      recipients: recipientsData,
+      excludeEmployeeId: user.id,
+    });
+
     revalidatePath("/main/mail");
     return mail;
   }
@@ -155,6 +164,14 @@ export async function sendMail(data: {
           }
         : undefined,
     },
+  });
+
+  await notifyMailDelivered({
+    mailId: mail.id,
+    subject: data.subject,
+    senderName: user.name,
+    recipients: recipientsData,
+    excludeEmployeeId: user.id,
   });
 
   revalidatePath("/main/mail");
@@ -1002,6 +1019,32 @@ export async function sendMailToCharities(data: {
     return ids;
   });
 
+  // رسالةٌ لكلِّ جمعية، فالإشعارُ لكلِّ واحدةٍ بمستلميها. والمنتظرُ يُعلم به
+  // معمِّدوه لا مستلموه: لا صفوفَ استلامٍ له بعد، ولا يُقرأ قبل أن يُعتمد.
+  for (let i = 0; i < charities.length; i++) {
+    const charity = charities[i];
+    const mailId = mailIds[i];
+    if (!mailId) continue;
+    if (needsApproval) {
+      await notifyMailPendingApproval({
+        mailId,
+        subject: data.subject,
+        serviceName: data.serviceName,
+        charityId: charity.id,
+        senderName: user.name,
+        excludeEmployeeId: user.id,
+      });
+    } else {
+      await notifyMailDelivered({
+        mailId,
+        subject: data.subject,
+        senderName: user.name,
+        recipients: byCharity.get(charity.id) ?? [],
+        excludeEmployeeId: user.id,
+      });
+    }
+  }
+
   revalidatePath("/main/mail");
   return { count: mailIds.length, mailIds, pending: needsApproval };
 }
@@ -1103,6 +1146,25 @@ export async function replyToCharityMail(data: {
 
     return created;
   });
+
+  if (needsApproval) {
+    await notifyMailPendingApproval({
+      mailId: mail.id,
+      subject: data.subject,
+      serviceName: parent.serviceName,
+      charityId: parent.charityId,
+      senderName: user.name,
+      excludeEmployeeId: user.id,
+    });
+  } else {
+    await notifyMailDelivered({
+      mailId: mail.id,
+      subject: data.subject,
+      senderName: user.name,
+      recipients,
+      excludeEmployeeId: user.id,
+    });
+  }
 
   revalidatePath("/main/mail");
   return { ...mail, pending: needsApproval };

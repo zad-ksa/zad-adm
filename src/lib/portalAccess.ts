@@ -1,10 +1,7 @@
 import { notFound, redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
-import { AuthError, requireCharityMembership } from "@/lib/guards";
-import {
-  SERVICE_LINKED_CHARITY_PERMISSION_IDS,
-  effectiveCharityPermissions,
-} from "@/lib/charityPermissions";
+import { AuthError, charityPermissionLinks, requireCharityMembership } from "@/lib/guards";
+import { effectiveCharityPermissions } from "@/lib/charityPermissions";
 
 /**
  * ربطُ تبويبات البوابة بالخدمات، كما يُحرَّر عند زاد.
@@ -12,13 +9,12 @@ import {
  * ومُصدَّرةٌ لأنّ تخطيطَ البوابة يحتاجها كما تحتاجها هذه الدالّة: الشريطُ
  * الجانبيُّ يُقرِّر ما يَعرض، وهذه تُقرِّر ما يُفتَح، فإن لم يقرآ الربطَ نفسَه
  * افترق المعروضُ عن المسموح.
+ *
+ * ومصدرُها الآن `guards.ts`: الأفعالُ تحتاجها أيضاً — وهذا الملفُّ يستورد
+ * `guards`، فلو بقي الاستعلامُ هنا لدار الاستيراد. ويبقى الاسمُ مُصدَّراً من
+ * هنا لمن كان يستورده.
  */
-export async function portalPermissionLinks() {
-  return prisma.permissionServiceLink.findMany({
-    where: { permissionId: { in: SERVICE_LINKED_CHARITY_PERMISSION_IDS } },
-    select: { permissionId: true, serviceName: true },
-  });
-}
+export { charityPermissionLinks as portalPermissionLinks } from "@/lib/guards";
 
 /**
  * Resolves the charity named in a /portal/[name] URL together with the visitor's
@@ -59,7 +55,7 @@ export async function resolveCharityPortal(nameParam: string) {
   // القاعدةُ في `effectiveCharityPermissions` وحدَها: تبويبٌ مربوطٌ بخدمةٍ
   // يُنال بتفويضها، وتبويبٌ لم يُربط بعد يبقى على المخزّن. وكانت مكتوبةً هنا
   // ومكتوبةً في الشريط الجانبيّ، فافترق المعروضُ عن المسموح.
-  const links = await portalPermissionLinks();
+  const links = await charityPermissionLinks();
   const effective = effectiveCharityPermissions(permissions, services, links);
 
   const can = (permission: string) => {

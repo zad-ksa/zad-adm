@@ -3,6 +3,7 @@
 import { prisma } from "@/lib/db";
 import { deleteStoredFile } from "@/lib/storageDelete";
 import { Prisma } from "@prisma/client";
+import { AuthError, requireCharityEffective } from "@/lib/guards";
 import { hasCharityPermission } from "@/lib/charityPermissions";
 import { getSession } from "@/lib/auth";
 import { hasPermission, isAdmin } from "@/lib/permissions";
@@ -83,36 +84,34 @@ async function requireDesignStaff() {
   return session;
 }
 
-// Ownership check the rest of the portal is missing (session.userType alone
-// isn't enough — session.charityId must match the charity being accessed).
-async function requireCharityMember(charityId: string) {
-  const session = await getSession();
-  if (!session || session.userType !== "CHARITY_USER") {
-    throw new Error("غير مصرح");
-  }
-  if (session.charityId !== charityId) {
-    throw new Error("غير مصرح لك بالوصول لهذه الجمعية");
-  }
-  const membership = await prisma.charityUserCharity.findUnique({
-    where: { charityUserId_charityId: { charityUserId: session.id, charityId } },
-  });
-  if (!membership || !membership.isActive) {
-    throw new Error("غير مصرح لك بالوصول لهذه الجمعية");
-  }
-  return {
-    session,
-    permissions: membership.permissions as string[],
-    isAdmin: membership.isAdmin,
-  };
-}
-
-/** A charity member holding a specific permission in THIS charity. */
+/**
+ * عضويّةُ جمعيةٍ — من الحارس المشترك لا بقراءةٍ خاصّةٍ بهذا الملفّ.
+ *
+ * وكانت مكتوبةً هنا، وفيها عيبان أوقفا عضواً مفوَّضاً عن رفع طلبِ تصميم:
+ *
+ *   ١ **قرأت المصفوفةَ المخزّنةَ وحدَها.** و`view_design_requests` تبويبٌ
+ *     مربوطٌ بخدمة «الإعلامية»، ولا يُخزَّن في المصفوفة أصلاً — `validateGrant`
+ *     يُسقطه عند كل حفظ. فالصفحةُ تُفتح له لأنّها تحسب الفعليّةَ
+ *     (`effectiveCharityPermissions`)، ثمّ يُرَدّ عند الإرسال: «غير مصرح لك
+ *     بإجراء هذه العملية». وهو أسوأُ من منعٍ صريح — نموذجٌ يُملأ ثمّ يُرمى.
+ *   ٢ **اشترطت `session.charityId === charityId`.** والحسابُ قد يخدم جمعياتٍ
+ *     عدّة، و`session.charityId` هي المختارةُ لحظةَ الدخول لا حدُّ سلطته —
+ *     وجدولُ الربط هو المرجع، وبه تُفتح الصفحةُ لكل جمعيةٍ هو فيها. فكان
+ *     يَفتح التبويبَ في الثانية ويرفض الفعلَ فيها.
+ *
+ * وتبقى الأخطاءُ `Error` لا `AuthError`: مُنادوها يقرأون `error.message`.
+ */
 async function requireCharityMemberPermission(charityId: string, permission: string) {
-  const { session, permissions, isAdmin } = await requireCharityMember(charityId);
-  if (!hasCharityPermission(isAdmin, permissions, permission)) {
-    throw new Error("غير مصرح لك بإجراء هذه العملية");
+  try {
+    const { session, effective, isAdmin } = await requireCharityEffective(charityId);
+    if (!hasCharityPermission(isAdmin, effective, permission)) {
+      throw new Error("غير مصرح لك بإجراء هذه العملية");
+    }
+    return session;
+  } catch (error) {
+    if (error instanceof AuthError) throw new Error("غير مصرح لك بالوصول لهذه الجمعية");
+    throw error;
   }
-  return session;
 }
 
 // ── scheduling ──────────────────────────────────────────────────────────────

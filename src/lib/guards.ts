@@ -1,7 +1,11 @@
 import { NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
 import { hasPermission } from "@/lib/permissions";
-import { hasCharityPermission } from "@/lib/charityPermissions";
+import {
+  SERVICE_LINKED_CHARITY_PERMISSION_IDS,
+  effectiveCharityPermissions,
+  hasCharityPermission,
+} from "@/lib/charityPermissions";
 import { prisma } from "@/lib/db";
 
 // Shared authorization guards for API routes and server actions.
@@ -138,12 +142,47 @@ export async function requireCharityMembership(charityId: string) {
  * Call this inside every server action and every RSC page, not only in the
  * sidebar: hiding a nav item is cosmetic, the URL stays typeable.
  */
+/**
+ * ربطُ تبويبات البوّابة بالخدمات، كما يُحرَّر عند زاد.
+ *
+ * وموضعُها هنا لا في `portalAccess`: الصفحاتُ تقرؤها من هناك، والأفعالُ
+ * تحتاجها من هنا — و`portalAccess` يستورد هذا الملفَّ، فلو كانت هناك لدار
+ * الاستيراد. وتُصدَّر منه كما كانت ليبقى مُنادوها على حالهم.
+ */
+export async function charityPermissionLinks() {
+  return prisma.permissionServiceLink.findMany({
+    where: { permissionId: { in: SERVICE_LINKED_CHARITY_PERMISSION_IDS } },
+    select: { permissionId: true, serviceName: true },
+  });
+}
+
+/**
+ * عضويّةٌ مع **الصلاحيّةِ الفعليّة** — المخزّنةُ بعد تطبيق قاعدة الربط.
+ *
+ * وهي الموضعُ الذي كان ناقصاً: `requireCharityMembership` تُرجع `services`
+ * ولا تستعملها، فتبويبٌ مربوطٌ بخدمةٍ يُفتح للعضو المفوَّض — لأنّ الصفحةَ
+ * تحسبه بـ`effectiveCharityPermissions` — ثمّ يرفضه الفعلُ، لأنّه يقرأ
+ * المصفوفةَ المخزّنةَ وحدَها، وهي **لا تحمل** تبويبات الخدمات أصلاً
+ * (`validateGrant` يُسقطها عند كل حفظ). فالنتيجةُ أسوأُ من منعٍ صريح: نموذجٌ
+ * يُملأ ثمّ يُرَدّ.
+ */
+export async function requireCharityEffective(charityId: string) {
+  const membership = await requireCharityMembership(charityId);
+  const links = await charityPermissionLinks();
+  return {
+    ...membership,
+    effective: effectiveCharityPermissions(membership.permissions, membership.services, links),
+  };
+}
+
 export async function requireCharityPermission(charityId: string, permission: string) {
-  const { session, permissions, isAdmin } = await requireCharityMembership(charityId);
-  if (!hasCharityPermission(isAdmin, permissions, permission)) {
+  const { session, permissions, effective, isAdmin } = await requireCharityEffective(charityId);
+  if (!hasCharityPermission(isAdmin, effective, permission)) {
     throw new AuthError(UNAUTHORIZED_MESSAGE, 403);
   }
-  return { session, permissions, isAdmin };
+  // و`permissions` تبقى المخزّنةَ كما كانت لمن يعرضها أو يحفظها: الفعليّةُ
+  // للسؤال «هل يجوز؟»، والمخزّنةُ هي ما يُكتب في الصفّ.
+  return { session, permissions, effective, isAdmin };
 }
 
 /** Converts a guard failure into a JSON response for API route handlers. */

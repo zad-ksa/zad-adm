@@ -8,6 +8,7 @@ import { Dialog } from "@/components/console/Dialog";
 import Select from "@/components/console/Select";
 import { btn, field, Field, Note, OptionRow, SectionHeader } from "@/components/console/ui";
 import { AFTER_SLOT_ACTIONS, describeMeetingRules, parseMeetingRules, type AfterSlotAction } from "@/lib/meetingSlots";
+import DateField, { TimeField } from "@/components/console/DateField";
 
 /** وحداتُ الإغلاق المسبق — تُخزَّن دقائقَ، وتُدخَل بالوحدة التي يفكّر بها الموظف. */
 const CUTOFF_UNITS: { value: string; label: string; minutes: number }[] = [
@@ -241,43 +242,19 @@ footer={<>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-1">
                   <label className="text-caption font-semibold text-slate-500 uppercase">من تاريخ</label>
-                  <input 
-                    type="date" 
-                    required
-                    value={startDate}
-                    onChange={e => { setStartDate(e.target.value); setHasGenerated(false); }}
-                    className="w-full px-3 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg focus:ring-1 focus:ring-primary outline-none text-caption font-medium"
-                  />
+                  <DateField value={startDate} onChange={(v) => { setStartDate(v); setHasGenerated(false); }} required withWeekday={false} />
                 </div>
                 <div className="space-y-1">
                   <label className="text-caption font-semibold text-slate-500 uppercase">إلى تاريخ</label>
-                  <input 
-                    type="date" 
-                    required
-                    value={endDate}
-                    onChange={e => { setEndDate(e.target.value); setHasGenerated(false); }}
-                    className="w-full px-3 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg focus:ring-1 focus:ring-primary outline-none text-caption font-medium"
-                  />
+                  <DateField value={endDate} onChange={(v) => { setEndDate(v); setHasGenerated(false); }} required withWeekday={false} min={startDate || undefined} />
                 </div>
                 <div className="space-y-1">
                   <label className="text-caption font-semibold text-slate-500 uppercase">وقت البدء (يومياً)</label>
-                  <input 
-                    type="time" 
-                    required
-                    value={startTime}
-                    onChange={e => { setStartTime(e.target.value); setHasGenerated(false); }}
-                    className="w-full px-3 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg focus:ring-1 focus:ring-primary outline-none text-caption font-medium font-mono"
-                  />
+                  <TimeField value={startTime} onChange={(v) => { setStartTime(v); setHasGenerated(false); }} required />
                 </div>
                 <div className="space-y-1">
                   <label className="text-caption font-semibold text-slate-500 uppercase">وقت الانتهاء (يومياً)</label>
-                  <input 
-                    type="time" 
-                    required
-                    value={endTime}
-                    onChange={e => { setEndTime(e.target.value); setHasGenerated(false); }}
-                    className="w-full px-3 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg focus:ring-1 focus:ring-primary outline-none text-caption font-medium font-mono"
-                  />
+                  <TimeField value={endTime} onChange={(v) => { setEndTime(v); setHasGenerated(false); }} required />
                 </div>
               </div>
 

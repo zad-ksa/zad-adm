@@ -1,11 +1,12 @@
 "use client";
 
 import React, { useState, useTransition } from "react";
-import { Plus, Trash2, Calendar, DollarSign, CheckCircle2, Loader2, Layers, Edit2, Save } from "lucide-react";
+import { Plus, Trash2, DollarSign, CheckCircle2, Loader2, Layers, Edit2, Save } from "lucide-react";
 import { ConfirmDialog } from "@/components/console/ConfirmDialog";
 import { addInstallment, updateInstallment, deleteInstallment, toggleInstallmentPaid, batchAddInstallments } from "@/app/actions/contracts";
 import { Dialog } from "@/components/console/Dialog";
 import { btn, cx } from "@/components/console/ui";
+import DateField from "@/components/console/DateField";
 
 type Installment = {
   id: string;
@@ -207,16 +208,9 @@ onClose={onClose}
                       <span className="text-caption text-primary font-semibold">ربط بأول منحة</span>
                     </label>
                   </label>
-                  <div className="relative">
-                    <input 
-                      type="date"
-                      value={newDate}
-                      onChange={(e) => setNewDate(e.target.value)}
-                      disabled={isLinkedToFirstGrant}
-                      className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-caption outline-none focus:border-primary pr-9 disabled:opacity-50 disabled:bg-slate-100 dark:disabled:bg-slate-800"
-                    />
-                    <Calendar className="w-4 h-4 text-slate-400 absolute top-1/2 -translate-y-1/2 right-3" />
-                  </div>
+                  {/* الأيقونةُ صارت داخل الحقل من العدّة، فأيقونةٌ مُطلَقةٌ
+                      فوقه تُكرِّرها وتقع على نصّه. */}
+                  <DateField value={newDate} onChange={setNewDate} disabled={isLinkedToFirstGrant} withWeekday={false} />
                 </div>
               </div>
               <button 
@@ -307,13 +301,7 @@ onClose={onClose}
                                 <span className="text-caption text-primary font-semibold">ربط بالمنحة</span>
                               </label>
                             </div>
-                            <input 
-                              type="date"
-                              value={editDate}
-                              onChange={(e) => setEditDate(e.target.value)}
-                              disabled={editIsLinked}
-                              className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-2 py-1.5 text-caption outline-none focus:border-primary disabled:opacity-50"
-                            />
+                            <DateField value={editDate} onChange={setEditDate} disabled={editIsLinked} withWeekday={false} />
                           </div>
                         </div>
                         <div className="flex justify-end gap-2">

@@ -8,6 +8,7 @@ import { addCategory, deleteCategory } from "@/app/actions/categories";
 import { useImagePaste } from "@/hooks/useImagePaste";
 import { Dialog } from "@/components/console/Dialog";
 import { btn } from "@/components/console/ui";
+import DateField from "@/components/console/DateField";
 
 interface AchievementFormModalProps {
   isOpen: boolean;
@@ -219,12 +220,7 @@ onClose={onClose}
               <Calendar className="w-3.5 h-3.5 text-slate-400" />
               تاريخ الإنجاز (اختياري)
             </label>
-            <input
-              type="date"
-              value={date}
-              onChange={(e) => setDate(e.target.value)}
-              className="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-sm outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500/30 text-slate-800 dark:text-slate-100 transition-all font-medium cursor-pointer"
-            />
+            <DateField value={date} onChange={setDate} />
             <p className="text-[10px] text-slate-400 mt-1.5 font-bold">في حال تركه فارغاً، سيتم اعتماد تاريخ اليوم كافتراضي.</p>
           </div>
 

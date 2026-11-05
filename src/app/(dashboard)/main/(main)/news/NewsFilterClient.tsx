@@ -22,6 +22,7 @@ import { createNewsAction, deleteNewsAction } from "@/app/actions/tasks";
 import { addCategory, deleteCategory } from "@/app/actions/categories";
 import { Dialog } from "@/components/console/Dialog";
 import { btn } from "@/components/console/ui";
+import DateField from "@/components/console/DateField";
 
 interface NewsItem {
   id: string;
@@ -248,12 +249,7 @@ export default function NewsFilterClient({
               <label className="block text-caption font-semibold text-slate-400 dark:text-slate-500 mb-1 flex items-center gap-1">
                 <Calendar className="w-3 h-3" />منذ تاريخ
               </label>
-              <input
-                type="date"
-                value={selectedDate}
-                onChange={e => setSelectedDate(e.target.value)}
-                className="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-caption outline-none focus:ring-2 focus:ring-primary/20 text-slate-800 dark:text-slate-100 font-semibold cursor-pointer"
-              />
+              <DateField value={selectedDate} onChange={setSelectedDate} withWeekday={false} />
             </div>
           </div>
           {hasFilters && (
@@ -457,12 +453,7 @@ onClose={() => setShowNewsForm(false)}
               {/* Date */}
               <div>
                 <label className="block text-caption font-semibold text-slate-500 dark:text-slate-400 mb-1.5">تاريخ الخبر (اختياري)</label>
-                <input
-                  type="date"
-                  value={newsDate}
-                  onChange={e => setNewsDate(e.target.value)}
-                  className="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-caption outline-none focus:ring-2 focus:ring-amber-500/20 text-slate-800 dark:text-slate-100 cursor-pointer"
-                />
+                <DateField value={newsDate} onChange={setNewsDate} withWeekday={false} />
               </div>
 
               {/* Actions */}

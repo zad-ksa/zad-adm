@@ -24,6 +24,7 @@ import {
   type LatestUpdateEntry,
 } from "@/app/actions/latestUpdates";
 import type { Staleness } from "@/lib/latestUpdates";
+import DateField from "@/components/console/DateField";
 
 export type LatestCell = {
   content: string;
@@ -565,18 +566,10 @@ function AddDialog({ mode, target: ref, today, onClose }: { mode: GridMode; targ
         </Field>
         <div className="grid gap-4 sm:grid-cols-2">
           <Field id="lu-event" label="تاريخ الحدث" hint="افتراضيّه اليوم، ويُعدَّل إن وقع الحدث قبله.">
-            <input
-              id="lu-event"
-              type="date"
-              required
-              max={today}
-              value={eventDate}
-              onChange={(e) => setEventDate(e.target.value)}
-              className={cx(field, MONO)}
-            />
+            <DateField id="lu-event" value={eventDate} onChange={setEventDate} max={today} required />
           </Field>
           <Field id="lu-created" label="تاريخ الإضافة" hint="يُسجَّل تلقائياً ولا يُعدَّل.">
-            <input id="lu-created" type="date" value={today} disabled readOnly className={cx(field, MONO)} />
+            <DateField id="lu-created" value={today} onChange={() => {}} disabled />
           </Field>
         </div>
       </div>
@@ -756,13 +749,7 @@ function EditEntry({
       <div className="flex flex-wrap items-end gap-3">
         <label className="space-y-1 text-[12px] text-slate-600 dark:text-slate-400">
           <span className="block">تاريخ الحدث</span>
-          <input
-            type="date"
-            max={today}
-            value={eventDate}
-            onChange={(e) => setEventDate(e.target.value)}
-            className={cx(field, MONO, "w-44")}
-          />
+          <DateField value={eventDate} onChange={setEventDate} max={today} className="w-56" />
         </label>
         <span className="pb-2 text-[12px] text-slate-500">
           تاريخ الإضافة: <span className={MONO}>{formatInstant(entry.createdAt)}</span>

@@ -8,6 +8,7 @@ import { notify } from "@/components/console/toastBus";
 import { INTAKE_STATUSES, intakeFromInputs, type IntakeStatus } from "@/lib/donorOrg";
 import { createDonorOrg, updateDonorOrg } from "@/app/actions/donorOrgs";
 import type { DonorRow } from "./donorData";
+import DateField from "@/components/console/DateField";
 
 /**
  * لوحةُ إضافة جهةٍ وتعديلها.
@@ -143,11 +144,11 @@ export default function DonorSheet({
           </div>
           <label className="block space-y-1.5">
             <span className="block text-body font-medium text-slate-700 dark:text-slate-300">تاريخ الفتح</span>
-            <input value={opensAt} onChange={(e) => setOpensAt(e.target.value)} type="date" className={field} />
+            <DateField value={opensAt} onChange={setOpensAt} />
           </label>
           <label className="block space-y-1.5">
             <span className="block text-body font-medium text-slate-700 dark:text-slate-300">تاريخ الإغلاق</span>
-            <input value={closesAt} onChange={(e) => setClosesAt(e.target.value)} type="date" className={field} />
+            <DateField value={closesAt} onChange={setClosesAt} />
           </label>
         </div>
 

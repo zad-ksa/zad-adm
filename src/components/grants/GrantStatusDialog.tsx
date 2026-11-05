@@ -6,6 +6,7 @@ import { MONO, btn, cx, field } from "@/components/console/ui";
 import { notify } from "@/components/console/toastBus";
 import { grantStatusLabel } from "@/lib/donorOrg";
 import { updateGrantApplicationStatus } from "@/app/actions/charity";
+import DateField from "@/components/console/DateField";
 
 export type StatusTarget = {
   id: string;
@@ -183,14 +184,7 @@ export default function GrantStatusDialog({
         ) : (
           <label className="block space-y-1.5">
             <span className="block text-body font-medium text-slate-700 dark:text-slate-300">تاريخ الإغلاق</span>
-            <input
-              value={date}
-              onChange={(e) => setDate(e.target.value)}
-              required
-              type="date"
-              dir="ltr"
-              className={cx(field, MONO)}
-            />
+            <DateField value={date} onChange={setDate} required />
             <span className="block text-meta text-slate-500 dark:text-slate-400">
               الحالةُ الآن: {grantStatusLabel(grant.status)}.
             </span>

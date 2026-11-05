@@ -10,6 +10,7 @@ import { saveInitiative, savePlan } from "@/app/actions/strategyOperational";
 import { PRIORITIES } from "@/lib/strategyOptions";
 import { weeksBetween, type PlanMonth } from "@/lib/initiativeProgress";
 import type { InitiativeRow, ObjectiveOption, PlanOption } from "./InitiativesClient";
+import DateField from "@/components/console/DateField";
 
 function Labeled({ label, hint, children }: { label: string; hint?: string; children: React.ReactNode }) {
   return (
@@ -99,10 +100,10 @@ export function PlanDialog({
         </Labeled>
         <div className="grid gap-4 sm:grid-cols-2">
           <Labeled label="تاريخ البداية">
-            <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} className={field} />
+            <DateField value={startDate} onChange={setStartDate} />
           </Labeled>
           <Labeled label="تاريخ النهاية">
-            <input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} className={field} />
+            <DateField value={endDate} onChange={setEndDate} min={startDate || undefined} />
           </Labeled>
         </div>
         <p className="rounded-xl bg-primary/5 px-4 py-3 text-meta text-primary dark:bg-primary/10 dark:text-teal-300">
@@ -310,10 +311,10 @@ export function InitiativeDialog({
 
         <div className="grid gap-4 sm:grid-cols-3">
           <Labeled label="تاريخ البداية">
-            <input type="date" value={form.startDate} onChange={(e) => set("startDate", e.target.value)} className={field} />
+            <DateField value={form.startDate} onChange={(v) => set("startDate", v)} />
           </Labeled>
           <Labeled label="تاريخ النهاية">
-            <input type="date" value={form.endDate} onChange={(e) => set("endDate", e.target.value)} className={field} />
+            <DateField value={form.endDate} onChange={(v) => set("endDate", v)} min={form.startDate || undefined} />
           </Labeled>
           <Labeled label="الموازنة المعتمدة">
             <input

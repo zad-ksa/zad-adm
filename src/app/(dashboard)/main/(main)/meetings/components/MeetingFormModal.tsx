@@ -9,6 +9,7 @@ import { timeAgoArabic } from "@/lib/dateUtils";
 import { Charity, Employee } from "../MeetingsClient";
 import { Dialog } from "@/components/console/Dialog";
 import { btn, cx } from "@/components/console/ui";
+import DateField from "@/components/console/DateField";
 
 // مسودة محضر جديد لم يُحفظ بعد — محلية في متصفح هذا المستخدم فقط (لا خادم، لا
 // جدول جديد). تُحفظ تلقائياً عند إغلاق النافذة (بالزر أو بإغلاق التبويب/تحديث
@@ -296,8 +297,7 @@ footer={
                 </div>
                 <div>
                   <label className="text-caption font-semibold text-slate-500 dark:text-slate-400 mb-1 block">التاريخ *</label>
-                  <input type="date" value={date} onChange={e => setDate(e.target.value)} required
-                    className="w-full border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-caption bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-primary" />
+                  <DateField value={date} onChange={setDate} required />
                 </div>
                 <div>
                   <label className="text-caption font-semibold text-slate-500 dark:text-slate-400 mb-1 block">المكان</label>

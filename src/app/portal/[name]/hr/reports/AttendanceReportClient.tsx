@@ -28,6 +28,7 @@ import {
   ghostClass,
   inputClass,
 } from "../ui";
+import DateField from "@/components/console/DateField";
 
 type SummaryRow = {
   id: string;
@@ -643,14 +644,10 @@ export default function AttendanceReportClient({
             )}
 
             <Field label="التاريخ">
-              <input
-                type="date"
+              <DateField
                 value={draft.workDate}
                 disabled={draft.locked}
-                onChange={(e) => setDraft({ ...draft, workDate: e.target.value })}
-                className={inputClass}
-                style={fs.body}
-                dir="ltr"
+                onChange={(v) => setDraft({ ...draft, workDate: v })}
               />
             </Field>
 

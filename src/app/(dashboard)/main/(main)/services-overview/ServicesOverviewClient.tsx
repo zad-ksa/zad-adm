@@ -45,6 +45,7 @@ import { addCharityToService } from "@/app/actions/charityServices";
 import { updateTimelineDisplayName } from "@/app/actions/settings";
 import { Dialog } from "@/components/console/Dialog";
 import { Badge, btn, cx } from "@/components/console/ui";
+import DateField from "@/components/console/DateField";
 
 type Charity = {
   id: string;
@@ -662,10 +663,8 @@ function InlineTimeline({
                 </div>
                 <div className="text-caption text-slate-400 text-center">— أو حدد التواريخ يدوياً —</div>
                 <div className="flex gap-2">
-                  <input type="date" value={editStart} onChange={e => { setEditStart(e.target.value); setEditDays(""); }}
-                    className="flex-1 text-caption bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 rounded-lg px-2 py-1.5 outline-none [color-scheme:light] dark:[color-scheme:dark]" />
-                  <input type="date" value={editEnd} onChange={e => { setEditEnd(e.target.value); setEditDays(""); }}
-                    className="flex-1 text-caption bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 rounded-lg px-2 py-1.5 outline-none [color-scheme:light] dark:[color-scheme:dark]" />
+                  <DateField value={editStart} onChange={(v) => { setEditStart(v); setEditDays(""); }} withWeekday={false} className="flex-1" />
+                  <DateField value={editEnd} onChange={(v) => { setEditEnd(v); setEditDays(""); }} withWeekday={false} min={editStart || undefined} className="flex-1" />
                 </div>
               </div>
               <label className="flex items-center gap-2 cursor-pointer text-caption text-slate-600 dark:text-slate-300">
@@ -799,10 +798,8 @@ function InlineTimeline({
             </div>
             <div className="text-caption text-slate-400 text-center">— أو حدد التواريخ يدوياً —</div>
             <div className="flex gap-2">
-              <input type="date" value={newStart} onChange={e => { setNewStart(e.target.value); setNewDays(""); }}
-                className="flex-1 text-caption bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 rounded-lg px-2 py-1.5 outline-none [color-scheme:light] dark:[color-scheme:dark]" />
-              <input type="date" value={newEnd} onChange={e => { setNewEnd(e.target.value); setNewDays(""); }}
-                className="flex-1 text-caption bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 rounded-lg px-2 py-1.5 outline-none [color-scheme:light] dark:[color-scheme:dark]" />
+              <DateField value={newStart} onChange={(v) => { setNewStart(v); setNewDays(""); }} withWeekday={false} className="flex-1" />
+              <DateField value={newEnd} onChange={(v) => { setNewEnd(v); setNewDays(""); }} withWeekday={false} min={newStart || undefined} className="flex-1" />
             </div>
           </div>
           <label className="flex items-center gap-2 cursor-pointer text-caption text-slate-600 dark:text-slate-300">

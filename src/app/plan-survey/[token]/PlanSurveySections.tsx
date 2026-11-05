@@ -22,6 +22,7 @@ import {
   type RatingGroup,
   type RatingStatement,
 } from "@/lib/planSurvey";
+import DateField from "@/components/console/DateField";
 
 export type StepView = { id: string; order: number; phase: string | null; title: string; plannedEnd: string | null };
 export type InitiativeView = { id: string; number: number; name: string; steps: StepView[] };
@@ -394,11 +395,11 @@ export function TasksSection({
                     />
                   </td>
                   <td className={tdClass}>
-                    <input
-                      type="date"
+                    <DateField
                       value={form.taskRows[step.id]?.expectedEnd ?? ""}
-                      onChange={(e) => setCell(step.id, "expectedEnd", e.target.value)}
-                      className={cx(field, "w-[140px]")}
+                      onChange={(v) => setCell(step.id, "expectedEnd", v)}
+                      withWeekday={false}
+                      className="w-[150px]"
                     />
                   </td>
                 </tr>
@@ -577,11 +578,10 @@ export function BlockersSection({
 
                 <label className="block">
                   <span className="mb-1.5 block text-meta text-slate-500">الموعد المقترح للإنجاز</span>
-                  <input
-                    type="date"
+                  <DateField
                     value={b.proposedEnd}
-                    onChange={(e) => setBlocker(index, "proposedEnd", e.target.value)}
-                    className={cx(field, "w-[170px]")}
+                    onChange={(v) => setBlocker(index, "proposedEnd", v)}
+                    className="w-[200px]"
                   />
                 </label>
               </div>

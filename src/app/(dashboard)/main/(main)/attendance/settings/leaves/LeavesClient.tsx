@@ -21,7 +21,8 @@ import {
   setRemoteWorkAllowed,
 } from "@/app/actions/zadCalendar";
 import { LEAVE_TYPE_LABELS } from "@/lib/attendanceTime";
-import { BTN, CARD, Feedback, GHOST, INPUT, useSettingsAction } from "../shared";
+import { BTN, CARD, Feedback, GHOST, useSettingsAction } from "../shared";
+import DateField from "@/components/console/DateField";
 
 type Employee = {
   id: string;
@@ -344,28 +345,22 @@ export default function LeavesClient({
               options={Object.entries(LEAVE_TYPE_LABELS).map(([k, v]) => ({ value: k, label: v }))}
               className="[&>button]:w-full [&>button]:justify-between"
             />
-            <input
-              className={INPUT}
-              type="date"
-              dir="ltr"
+            <DateField
               value={draft.startDate}
-              onChange={(e) =>
+              onChange={(v) =>
                 setDraft({
                   ...draft,
-                  startDate: e.target.value,
+                  startDate: v,
                   // A one-day leave is the common case; typing the same date
                   // twice is friction nobody asked for.
-                  endDate: draft.endDate && draft.endDate >= e.target.value ? draft.endDate : e.target.value,
+                  endDate: draft.endDate && draft.endDate >= v ? draft.endDate : v,
                 })
               }
             />
-            <input
-              className={INPUT}
-              type="date"
-              dir="ltr"
-              min={draft.startDate || undefined}
+            <DateField
               value={draft.endDate}
-              onChange={(e) => setDraft({ ...draft, endDate: e.target.value })}
+              onChange={(v) => setDraft({ ...draft, endDate: v })}
+              min={draft.startDate || undefined}
             />
           </div>
 

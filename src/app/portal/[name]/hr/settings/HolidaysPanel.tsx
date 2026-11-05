@@ -5,6 +5,7 @@ import { confirmAction } from "@/components/console/confirmBus";
 import { CalendarOff, Loader2, Plus, Trash2, X } from "lucide-react";
 import { saveCharityHoliday, deleteCharityHoliday } from "@/app/actions/attendance";
 import { Chip, Field, HrCard, SectionHead, ctaClass, fs, ghostClass, inputClass } from "../ui";
+import DateField from "@/components/console/DateField";
 
 export type Holiday = {
   id: string;
@@ -140,24 +141,10 @@ export default function HolidaysPanel({
           </Field>
           <div className="grid grid-cols-2 gap-3">
             <Field label="من">
-              <input
-                type="date"
-                value={form.startDate}
-                onChange={(e) => setForm({ ...form, startDate: e.target.value })}
-                className={inputClass}
-                style={fs.body}
-                dir="ltr"
-              />
+              <DateField value={form.startDate} onChange={(v) => setForm({ ...form, startDate: v })} />
             </Field>
             <Field label="إلى" hint="اتركه فارغاً ليوم واحد">
-              <input
-                type="date"
-                value={form.endDate}
-                onChange={(e) => setForm({ ...form, endDate: e.target.value })}
-                className={inputClass}
-                style={fs.body}
-                dir="ltr"
-              />
+              <DateField value={form.endDate} onChange={(v) => setForm({ ...form, endDate: v })} min={form.startDate || undefined} />
             </Field>
           </div>
           <button

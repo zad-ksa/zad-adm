@@ -9,6 +9,7 @@ import { FileText, Plus, Trash2, CheckCircle2, AlertCircle, TrendingUp, Check, X
 import { addGrantApplication, updateGrantApplicationStatus, deleteGrantApplication } from "@/app/actions/charity";
 import { Dialog } from "@/components/console/Dialog";
 import { btn, cx } from "@/components/console/ui";
+import DateField from "@/components/console/DateField";
 
 interface GrantApplication {
   id: string;
@@ -512,12 +513,7 @@ export default function GrantsClient({
           }
         >
           <label className="block text-caption font-semibold text-slate-700 dark:text-slate-200 mb-1">تاريخ الإغلاق *</label>
-          <input
-            type="date"
-            value={closureDate}
-            onChange={(e) => setClosureDate(e.target.value)}
-            className="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-lg px-4 py-3 text-title outline-none focus:ring-2 focus:ring-slate-500 font-semibold text-slate-800 dark:text-slate-100 text-right"
-          />
+          <DateField value={closureDate} onChange={setClosureDate} />
         </Dialog>
       )}
     </div>

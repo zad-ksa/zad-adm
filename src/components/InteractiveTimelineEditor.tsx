@@ -5,6 +5,7 @@ import { formatDurationArabic } from "@/lib/dateUtils";
 import { Activity, Check, Plus, ArrowRight, ArrowLeft, Trash2, Settings, Eye, EyeOff, X, Calendar, Edit2, Infinity } from "lucide-react";
 import StageStepsPanel from "@/components/StageStepsPanel";
 import { Dialog } from "@/components/console/Dialog";
+import DateField from "@/components/console/DateField";
 
 // Types
 export type StageStep = {
@@ -262,8 +263,8 @@ export default function InteractiveTimelineEditor({
                   {/* Dates / Duration */}
                   {editingField?.id === stage.id && editingField.field === 'dates' ? (
                     <div className="flex flex-col gap-1 mt-2 w-full">
-                      <input type="date" className="text-caption p-1 border rounded w-full dark:bg-slate-800 dark:border-slate-600 [color-scheme:light] dark:[color-scheme:dark]" value={editStart} onChange={e => setEditStart(e.target.value)} />
-                      <input type="date" className="text-caption p-1 border rounded w-full dark:bg-slate-800 dark:border-slate-600 [color-scheme:light] dark:[color-scheme:dark]" value={editEnd} onChange={e => setEditEnd(e.target.value)} />
+                      <DateField value={editStart} onChange={setEditStart} withWeekday={false} />
+                      <DateField value={editEnd} onChange={setEditEnd} withWeekday={false} min={editStart || undefined} />
                       <button onClick={() => handleSaveInline(stage)} className="text-caption bg-primary text-white py-1 rounded">حفظ التواريخ</button>
                     </div>
                   ) : (

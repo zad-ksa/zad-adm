@@ -42,8 +42,8 @@ export default async function BookMeetingPage({ params }: { params: Promise<{ sl
               </svg>
             </div>
             <div>
-              <h1 className="font-bold text-slate-900 dark:text-white text-lg leading-tight">بوابة المواعيد</h1>
-              <p className="text-xs text-slate-500 dark:text-slate-400">منصة زاد التنموية</p>
+              <h1 className="text-section font-bold leading-tight text-slate-900 dark:text-white">بوابة المواعيد</h1>
+              <p className="text-caption text-slate-500 dark:text-slate-400">منصة زاد التنموية</p>
             </div>
           </div>
         </div>
@@ -57,7 +57,7 @@ export default async function BookMeetingPage({ params }: { params: Promise<{ sl
       </main>
 
       {/* Footer */}
-      <footer className="py-6 text-center text-sm text-slate-500 dark:text-slate-400 shrink-0">
+      <footer className="shrink-0 py-6 text-center text-meta text-slate-500 dark:text-slate-400">
         <p>© {new Date().getFullYear()} منصة زاد التنموية. جميع الحقوق محفوظة.</p>
       </footer>
     </div>

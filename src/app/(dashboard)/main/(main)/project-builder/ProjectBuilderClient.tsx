@@ -40,6 +40,7 @@ import {
 } from "@/app/actions/projectBuilder";
 import { MAX_PASTED_DOCUMENT_CHARS, type ProjectBuilderPreference } from "@/lib/projectBuilder";
 import { exportProjectDocx } from "@/lib/exportProjectDocx";
+import DateField from "@/components/console/DateField";
 
 // `field` يثبّت ارتفاع سطر واحد (h-9) — لا يصلح لمربع نص متعدد الأسطر، وتركيب
 // صنف h-auto بعده لا يضمن الغلبة لأن ترتيب أصناف Tailwind في الورقة المولَّدة
@@ -373,23 +374,10 @@ function CreateTab({
 
       <div className="grid gap-4 sm:grid-cols-2">
         <Field id="pb-start-date" label="تاريخ البداية (اختياري)">
-          <input
-            id="pb-start-date"
-            type="date"
-            value={startDate}
-            onChange={(e) => setStartDate(e.target.value)}
-            className={field}
-          />
+          <DateField id="pb-start-date" value={startDate} onChange={setStartDate} />
         </Field>
         <Field id="pb-end-date" label="تاريخ النهاية (اختياري)">
-          <input
-            id="pb-end-date"
-            type="date"
-            value={endDate}
-            onChange={(e) => setEndDate(e.target.value)}
-            min={startDate || undefined}
-            className={field}
-          />
+          <DateField id="pb-end-date" value={endDate} onChange={setEndDate} min={startDate || undefined} />
         </Field>
       </div>
 

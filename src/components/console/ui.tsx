@@ -121,8 +121,39 @@ const AVATAR_TONES = [
 
 const AVATAR_SIZE = { sm: "size-6 text-[10px]", md: "size-8 text-[12px]", lg: "size-10 text-[14px]" } as const;
 
-/** أول حرفين من الاسم، ولونٌ ثابت لكل اسم من ألوان الهوية. */
-export function Avatar({ name, size = "md" }: { name: string; size?: keyof typeof AVATAR_SIZE }) {
+/**
+ * أول حرفين من الاسم، ولونٌ ثابت لكل اسم من ألوان الهوية.
+ *
+ * و`src` لمن له صورةٌ مرفوعة: تُعرض الصورةُ ويبقى الحرفان خلفها بديلاً. وكان
+ * البريدُ يرسم هذا بيده (`Image` في دائرةٍ مكتوبة) فاختلف مقاسُه ولونُه عن كل
+ * صورةٍ أخرى في اللوحة — والصورةُ والحرفان شيءٌ واحدٌ بوجهين لا عنصران.
+ */
+export function Avatar({
+  name,
+  size = "md",
+  src,
+}: {
+  name: string;
+  size?: keyof typeof AVATAR_SIZE;
+  src?: string | null;
+}) {
+  if (src) {
+    return (
+      <span
+        className={cx(
+          "inline-flex shrink-0 overflow-hidden rounded-full ring-1 ring-inset ring-slate-900/10 dark:ring-white/10",
+          AVATAR_SIZE[size]
+        )}
+      >
+        {/* `img` لا `next/image`: المصدرُ رابطُ بوّابةِ الملفّات، ومقاسُ
+            الدائرةِ معلومٌ من `size` — فلا يُحتاج تحسينُ المقاسات، ولا
+            يُضاف المضيفُ إلى `next.config.ts` لكل مزوّدٍ جديد. */}
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src={src} alt={name} className="size-full object-cover" loading="lazy" />
+      </span>
+    );
+  }
+
   const words = name.trim().split(/\s+/).filter(Boolean);
   // فاصلٌ غير واصل بين الحرفين، وإلا اتّصلا فقُرئا كلمة.
   const initials = [words[0]?.[0], words[1]?.[0]].filter(Boolean).join("‌");
@@ -157,6 +188,40 @@ export function AvatarStack({ names, max = 4 }: { names: string[]; max?: number 
     </span>
   );
 }
+
+/**
+ * صفُّ قائمةٍ كثيفةٍ تُمسح بالعين — رسائلُ بريدٍ وما شابهها.
+ *
+ * ولمَ في العدّة: البريدُ كتب هذه الحالاتَ بثلاثة ظلالٍ خاصّةٍ به
+ * (`--mail-shadow-row-sel` وأخواتها) وبإطارٍ ذهبيٍّ للمحدَّد، فصار صفُّ
+ * الرسالةِ لا يُشبه صفّاً آخرَ في الموقع. وهي حالاتٌ تتكرّر في كل قائمةٍ
+ * تُحدَّد عناصرُها، فموضعُها هنا.
+ *
+ * **والمحدَّدُ يُميَّز بالحياد، والجديدُ باللون.** فاللونُ في هوية اللوحة دلالةُ
+ * حالةٍ لا زينة — و«غيرُ مقروء» حالةٌ تستحقّ الهويةَ على حرف الصفّ، وأمّا
+ * «محدَّدٌ» فقرارُ قارئٍ لحظيٌّ لا حالُ بيان: يكفيه مربّعُ الاختيار ومسحةٌ
+ * رماديّة. وكان المحدَّدُ ذهبيّاً، فبدا أخطرَ من غير المقروء وهو أدنى منه
+ * شأناً.
+ */
+export function listRow({ selected = false, unread = false }: { selected?: boolean; unread?: boolean } = {}) {
+  return cx(
+    "group relative flex w-full items-start gap-2 border-s-2 px-3 py-2 text-right transition-colors sm:items-center",
+    selected
+      ? "border-s-slate-300 bg-slate-100/80 dark:border-s-slate-600 dark:bg-slate-800/60"
+      : unread
+        ? "border-s-primary bg-white hover:bg-slate-50/80 dark:border-s-teal-400 dark:bg-slate-900 dark:hover:bg-slate-800/40"
+        : "border-s-transparent bg-transparent hover:bg-slate-50/80 dark:hover:bg-slate-800/40"
+  );
+}
+
+/**
+ * شريطُ أفعالٍ فوق قائمة — ارتفاعٌ واحدٌ وحدٌّ واحدٌ في كل شاشة.
+ *
+ * كان البريدُ يرسمه بتدرّجٍ لونيٍّ (`bg-gradient-to-b from-white to-slate-50`)
+ * لا نظيرَ له في اللوحة.
+ */
+export const toolbarClass =
+  "flex h-12 shrink-0 items-center gap-2 border-b border-slate-200 bg-white px-2 sm:px-3 dark:border-slate-800 dark:bg-slate-900";
 
 export function IconTile({ children }: { children: ReactNode }) {
   return (
@@ -254,16 +319,18 @@ export function SelectAll({ count, total, allOn, onClick }: { count: number; tot
   );
 }
 
-export function Note({ tone, children }: { tone: "brand" | "warn"; children: ReactNode }) {
+const NOTE = {
+  brand: "border-primary/15 bg-primary/[0.04] text-slate-700 dark:border-teal-400/15 dark:bg-teal-400/5 dark:text-slate-300",
+  warn: "border-amber-200 bg-amber-50 text-amber-800 dark:border-amber-500/20 dark:bg-amber-500/10 dark:text-amber-300",
+  // `danger` لفعلٍ **فشل**، لا لتحذيرٍ قبله: «تعذّر الحذف» ليس «انتبه».
+  // وكانت الشاشاتُ تكتب لهذا صندوقاً أحمرَ بيدها لأنّ العدّةَ لا تحمله،
+  // فاختلف مقاسُه ولونُه من شاشةٍ إلى شاشة.
+  danger: "border-red-200 bg-red-50 text-red-700 dark:border-red-500/20 dark:bg-red-500/10 dark:text-red-300",
+} as const;
+
+export function Note({ tone, children }: { tone: keyof typeof NOTE; children: ReactNode }) {
   return (
-    <p
-      className={cx(
-        "flex items-start gap-2 rounded-md border px-3 py-2.5 text-meta leading-5",
-        tone === "brand"
-          ? "border-primary/15 bg-primary/[0.04] text-slate-700 dark:border-teal-400/15 dark:bg-teal-400/5 dark:text-slate-300"
-          : "border-amber-200 bg-amber-50 text-amber-800 dark:border-amber-500/20 dark:bg-amber-500/10 dark:text-amber-300"
-      )}
-    >
+    <p className={cx("flex items-start gap-2 rounded-md border px-3 py-2.5 text-meta leading-5", NOTE[tone])}>
       {tone === "brand" ? (
         <Info className="mt-0.5 size-3.5 shrink-0 text-primary dark:text-teal-300" />
       ) : (

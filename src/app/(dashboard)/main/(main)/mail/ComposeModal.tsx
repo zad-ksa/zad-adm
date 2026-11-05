@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Select from "@/components/console/Select";
+import { btn } from "@/components/console/ui";
 import dynamic from "next/dynamic";
 import { X, Paperclip, Send, Loader2, AlertTriangle, Minus, Maximize2, Trash2, Check, RotateCw, Users, Building2, Undo2, ShieldCheck } from "lucide-react";
 import {
@@ -567,7 +568,7 @@ export default function ComposeModal({ isOpen, onClose, employees, onSuccess, re
         return emp ? (
           <div
             key={id}
-            className="h-6 px-2 bg-primary/[0.08] text-primary dark:bg-primary/15 dark:text-teal-300 rounded-full flex items-center gap-1 text-[length:var(--mail-fs-meta)] font-medium"
+            className="h-6 px-2 bg-primary/[0.08] text-primary dark:bg-primary/15 dark:text-teal-300 rounded-full flex items-center gap-1 text-caption font-medium"
           >
             {emp.name}
             <button type="button" onClick={() => setIds(selectedIds.filter((i) => i !== id))} className="text-primary/60 dark:text-teal-300/70 hover:text-primary dark:hover:text-teal-300">
@@ -593,12 +594,12 @@ export default function ComposeModal({ isOpen, onClose, employees, onSuccess, re
 
   if (isMinimized) {
     return (
-      <div className="mail-ui fixed bottom-4 end-4 z-50 w-72">
+      <div className="fixed bottom-4 end-4 z-50 w-72">
         <button
           onClick={() => setIsMinimized(false)}
-          className="w-full h-12 px-4 flex items-center gap-3 bg-white dark:bg-slate-900 border border-slate-200/70 dark:border-slate-800 rounded-t-xl shadow-[var(--mail-shadow-modal)] text-right"
+          className="w-full h-12 px-4 flex items-center gap-3 bg-white dark:bg-slate-900 border border-slate-200/70 dark:border-slate-800 rounded-t-xl shadow-[0_24px_64px_-24px_rgb(15_23_42/0.25)] text-right"
         >
-          <span className="flex-1 truncate text-[length:var(--mail-fs-nav)] font-medium text-slate-700 dark:text-slate-200">
+          <span className="flex-1 truncate text-body font-medium text-slate-700 dark:text-slate-200">
             {subject || "رسالة جديدة"}
           </span>
           <span
@@ -627,20 +628,20 @@ export default function ComposeModal({ isOpen, onClose, employees, onSuccess, re
   }
 
   return (
-    <div className="mail-ui fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-6 bg-slate-950/60 backdrop-blur-sm">
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-6 bg-slate-950/60 backdrop-blur-sm">
       <div
         dir="rtl"
-        className="bg-white dark:bg-slate-900 rounded-t-2xl sm:rounded-2xl border border-slate-200/70 dark:border-slate-800 shadow-[var(--mail-shadow-modal)] w-full sm:max-w-3xl h-[92dvh] sm:h-[680px] sm:max-h-[90vh] flex flex-col overflow-hidden"
+        className="bg-white dark:bg-slate-900 rounded-t-xl sm:rounded-xl border border-slate-200/70 dark:border-slate-800 shadow-[0_24px_64px_-24px_rgb(15_23_42/0.25)] w-full sm:max-w-3xl h-[92dvh] sm:h-[680px] sm:max-h-[90vh] flex flex-col overflow-hidden"
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 bg-gradient-to-b from-white to-slate-50 dark:from-slate-900 dark:to-slate-950 border-b border-slate-200/70 dark:border-slate-800 shrink-0">
-          <h2 className="text-[length:var(--mail-fs-subject)] font-semibold text-slate-900 dark:text-slate-100">{title}</h2>
+        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200/70 dark:border-slate-800 shrink-0">
+          <h2 className="text-body font-semibold text-slate-900 dark:text-slate-100">{title}</h2>
           <div className="flex items-center gap-1">
             <button
               type="button"
               onClick={handleDiscard}
               title="حذف المسودة"
-              className="w-8 h-8 flex items-center justify-center text-slate-400 dark:text-slate-500 hover:bg-rose-500/[0.10] hover:text-rose-500 rounded-full transition-colors"
+              className={btn.iconDanger}
             >
               <Trash2 className="w-4 h-4" />
             </button>
@@ -648,7 +649,7 @@ export default function ComposeModal({ isOpen, onClose, employees, onSuccess, re
               type="button"
               onClick={handleMinimize}
               title="تصغير"
-              className="w-8 h-8 flex items-center justify-center text-slate-400 dark:text-slate-500 hover:bg-primary/[0.08] hover:text-primary dark:hover:text-teal-300 rounded-full transition-colors"
+              className={btn.icon}
             >
               <Minus className="w-4 h-4" />
             </button>
@@ -656,7 +657,7 @@ export default function ComposeModal({ isOpen, onClose, employees, onSuccess, re
               type="button"
               onClick={handleClose}
               title="إغلاق (تُحفظ كمسودة)"
-              className="w-8 h-8 flex items-center justify-center text-slate-400 dark:text-slate-500 hover:bg-primary/[0.08] hover:text-primary dark:hover:text-teal-300 rounded-full transition-colors"
+              className={btn.icon}
             >
               <X className="w-4 h-4" />
             </button>
@@ -664,7 +665,7 @@ export default function ComposeModal({ isOpen, onClose, employees, onSuccess, re
         </div>
 
         {errorMessage && (
-          <div className="mx-6 mt-4 flex items-center gap-2 px-4 py-3 rounded-xl bg-rose-500/[0.08] text-rose-600 dark:text-rose-400 text-[length:var(--mail-fs-nav)] font-medium shrink-0">
+          <div className="mx-6 mt-4 flex items-center gap-2 px-4 py-3 rounded-xl bg-rose-500/[0.08] text-rose-600 dark:text-rose-400 text-body font-medium shrink-0">
             <AlertTriangle className="w-4 h-4 shrink-0" />
             {errorMessage}
           </div>
@@ -673,7 +674,7 @@ export default function ComposeModal({ isOpen, onClose, employees, onSuccess, re
         {/* رسالةٌ أُرجعت من معمِّدها: سببُ الإرجاع يُقرأ هنا لا في مكانٍ آخر،
             فهو أول ما يحتاجه من يفتح المسودة. */}
         {draft?.returnNote && (
-          <div className="mx-6 mt-4 flex items-start gap-2 px-4 py-3 rounded-xl bg-amber-500/[0.10] text-amber-800 dark:text-amber-300 text-[length:var(--mail-fs-nav)] font-medium shrink-0">
+          <div className="mx-6 mt-4 flex items-start gap-2 px-4 py-3 rounded-xl bg-amber-500/[0.10] text-amber-800 dark:text-amber-300 text-body font-medium shrink-0">
             <Undo2 className="w-4 h-4 shrink-0 mt-0.5" />
             <span>
               أُرجعت هذه الرسالة إليك: {draft.returnNote}
@@ -687,11 +688,11 @@ export default function ComposeModal({ isOpen, onClose, employees, onSuccess, re
             {/* ردٌّ إلى جمعية: الطرف مُثبَّت، يُعرض ولا يُختار */}
             {charityReply && (
               <div className="py-2 sm:py-3 flex items-center gap-2 sm:gap-4">
-                <div className="w-16 text-[length:var(--mail-fs-nav)] font-medium text-slate-500 dark:text-slate-400">إلى</div>
-                <span className="h-7 px-3 inline-flex items-center rounded-full bg-primary/[0.08] text-primary dark:bg-primary/15 dark:text-teal-300 text-[length:var(--mail-fs-meta)] font-medium">
+                <div className="w-16 text-body font-medium text-slate-500 dark:text-slate-400">إلى</div>
+                <span className="h-7 px-3 inline-flex items-center rounded-full bg-primary/[0.08] text-primary dark:bg-primary/15 dark:text-teal-300 text-caption font-medium">
                   {charityReply.charityName} — مفوَّضو «{charityReply.serviceName}»
                 </span>
-                <span className="text-[length:var(--mail-fs-meta)] text-slate-400 dark:text-slate-500">
+                <span className="text-caption text-slate-400 dark:text-slate-500">
                   ويصل زملاءك في الخدمة نسخةً
                 </span>
               </div>
@@ -702,7 +703,7 @@ export default function ComposeModal({ isOpen, onClose, employees, onSuccess, re
                 يخرج البريد باسمها. */}
             {canAddressCharities && !charityReply && (
               <div className="py-2 sm:py-3 flex items-center gap-2 sm:gap-4">
-                <div className="w-16 text-[length:var(--mail-fs-nav)] font-medium text-slate-500 dark:text-slate-400">الجهة</div>
+                <div className="w-16 text-body font-medium text-slate-500 dark:text-slate-400">الجهة</div>
                 <div className="flex items-center p-0.5 gap-0.5 rounded-xl bg-slate-100 dark:bg-slate-800/60">
                   {([
                     { key: "EMPLOYEES" as const, label: "موظفو زاد", Icon: Users },
@@ -712,7 +713,7 @@ export default function ComposeModal({ isOpen, onClose, employees, onSuccess, re
                       key={key}
                       type="button"
                       onClick={() => setAudience(key)}
-                      className={`flex items-center gap-1.5 h-8 px-3 rounded-[10px] text-[length:var(--mail-fs-meta)] font-medium transition-colors ${
+                      className={`flex items-center gap-1.5 h-8 px-3 rounded-[10px] text-caption font-medium transition-colors ${
                         audience === key
                           ? "bg-white dark:bg-slate-900 text-primary dark:text-teal-300 shadow-sm"
                           : "text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"
@@ -729,22 +730,22 @@ export default function ComposeModal({ isOpen, onClose, employees, onSuccess, re
             {/* الخدمة — هوية البريد عند الجمعية: «زاد | خدمة كذا» */}
             {toCharities && (
               <div className="py-2 sm:py-3 flex items-start gap-2 sm:gap-4">
-                <div className="w-16 pt-1 text-[length:var(--mail-fs-nav)] font-medium text-slate-500 dark:text-slate-400">الخدمة</div>
+                <div className="w-16 pt-1 text-body font-medium text-slate-500 dark:text-slate-400">الخدمة</div>
                 <div className="flex-1 flex items-center min-h-10">
                   {!charityOptions && !optionsFailed ? (
-                    <span className="flex items-center gap-2 text-[length:var(--mail-fs-nav)] text-slate-400 dark:text-slate-500">
+                    <span className="flex items-center gap-2 text-body text-slate-400 dark:text-slate-500">
                       <Loader2 className="w-3.5 h-3.5 animate-spin" />
                       جارٍ جلب خدماتك وجمعياتك…
                     </span>
                   ) : optionsFailed ? (
-                    <span className="text-[length:var(--mail-fs-nav)] text-rose-600 dark:text-rose-400">تعذّر جلب الخدمات — أغلق النافذة وأعد المحاولة</span>
+                    <span className="text-body text-rose-600 dark:text-rose-400">تعذّر جلب الخدمات — أغلق النافذة وأعد المحاولة</span>
                   ) : availableServices.length === 0 ? (
-                    <span className="text-[length:var(--mail-fs-nav)] text-rose-600 dark:text-rose-400">
+                    <span className="text-body text-rose-600 dark:text-rose-400">
                       لم تُمنح أي خدمة، فلا يمكنك مراسلة الجمعيات — راجع مسؤول النظام
                     </span>
                   ) : availableServices.length === 1 ? (
                     // خدمةٌ واحدة: تُعرض مثبَّتة، فلا قائمةَ بخيارٍ واحد.
-                    <span className="h-7 px-3 inline-flex items-center rounded-full bg-primary/[0.08] text-primary dark:bg-primary/15 dark:text-teal-300 text-[length:var(--mail-fs-meta)] font-medium">
+                    <span className="h-7 px-3 inline-flex items-center rounded-full bg-primary/[0.08] text-primary dark:bg-primary/15 dark:text-teal-300 text-caption font-medium">
                       زاد | {availableServices[0]}
                     </span>
                   ) : (
@@ -764,7 +765,7 @@ export default function ComposeModal({ isOpen, onClose, employees, onSuccess, re
             {/* الجمعيات — المسنَدة إليك وحدها، ومع كل واحدة عدد من سيستلم */}
             {toCharities && (
               <div className="py-2 sm:py-3 flex items-start gap-2 sm:gap-4">
-                <div className="w-16 pt-1 text-[length:var(--mail-fs-nav)] font-medium text-slate-500 dark:text-slate-400">الجمعيات</div>
+                <div className="w-16 pt-1 text-body font-medium text-slate-500 dark:text-slate-400">الجمعيات</div>
                 <div className="flex-1 flex flex-col gap-1.5 min-h-10 justify-center">
                   <div className="flex flex-wrap gap-2 items-center w-full">
                     {selectedCharities.map((c) => {
@@ -772,7 +773,7 @@ export default function ComposeModal({ isOpen, onClose, employees, onSuccess, re
                       return (
                         <div
                           key={c.id}
-                          className={`h-6 px-2 rounded-full flex items-center gap-1 text-[length:var(--mail-fs-meta)] font-medium ${
+                          className={`h-6 px-2 rounded-full flex items-center gap-1 text-caption font-medium ${
                             serviceName && n === 0
                               ? "bg-rose-500/[0.10] text-rose-600 dark:text-rose-400"
                               : "bg-primary/[0.08] text-primary dark:bg-primary/15 dark:text-teal-300"
@@ -809,7 +810,7 @@ export default function ComposeModal({ isOpen, onClose, employees, onSuccess, re
                   {charityIds.length > 1 && (
                     // يُقال صراحةً: فلا يظنّ المرسِل أنه بعث رسالةً واحدة يرى
                     // مستلموها بعضهم، ولا يُفاجأ بصفوفٍ عدّة في «المُرسَل».
-                    <p className="text-[length:var(--mail-fs-meta)] text-slate-400 dark:text-slate-500">
+                    <p className="text-caption text-slate-400 dark:text-slate-500">
                       تُرسَل رسالةٌ مستقلة لكل جمعية — فلا ترى جمعيةٌ مستلمي الأخرى.
                     </p>
                   )}
@@ -820,19 +821,19 @@ export default function ComposeModal({ isOpen, onClose, employees, onSuccess, re
             {/* TO field */}
             {!toCharities && !charityReply && (
             <div className="py-2 sm:py-3 flex items-start gap-2 sm:gap-4">
-              <div className="w-16 pt-1 text-[length:var(--mail-fs-nav)] font-medium text-slate-500 dark:text-slate-400">إلى</div>
+              <div className="w-16 pt-1 text-body font-medium text-slate-500 dark:text-slate-400">إلى</div>
               <div className="flex-1 flex flex-col">
                 <div className="flex items-center justify-between min-h-10">
                   {renderEmployeeSelect(toIds, setToIds, "المستلمون...")}
 
                   <div className="flex gap-2 ms-2">
                     {!showCc && (
-                      <button type="button" onClick={() => setShowCc(true)} className="text-[length:var(--mail-fs-meta)] font-medium text-slate-500 dark:text-slate-400 hover:text-primary dark:hover:text-teal-300 px-2">
+                      <button type="button" onClick={() => setShowCc(true)} className="text-caption font-medium text-slate-500 dark:text-slate-400 hover:text-primary dark:hover:text-teal-300 px-2">
                         نسخة (Cc)
                       </button>
                     )}
                     {!showBcc && (
-                      <button type="button" onClick={() => setShowBcc(true)} className="text-[length:var(--mail-fs-meta)] font-medium text-slate-500 dark:text-slate-400 hover:text-primary dark:hover:text-teal-300 px-2">
+                      <button type="button" onClick={() => setShowBcc(true)} className="text-caption font-medium text-slate-500 dark:text-slate-400 hover:text-primary dark:hover:text-teal-300 px-2">
                         نسخة مخفية (Bcc)
                       </button>
                     )}
@@ -845,7 +846,7 @@ export default function ComposeModal({ isOpen, onClose, employees, onSuccess, re
             {/* CC field */}
             {!toCharities && !charityReply && showCc && (
               <div className="py-2 sm:py-3 flex items-start gap-2 sm:gap-4">
-                <div className="w-16 pt-1 text-[length:var(--mail-fs-nav)] font-medium text-slate-500 dark:text-slate-400">نسخة</div>
+                <div className="w-16 pt-1 text-body font-medium text-slate-500 dark:text-slate-400">نسخة</div>
                 <div className="flex-1 flex items-center min-h-10">{renderEmployeeSelect(ccIds, setCcIds, "نسخة إلى...")}</div>
               </div>
             )}
@@ -853,20 +854,20 @@ export default function ComposeModal({ isOpen, onClose, employees, onSuccess, re
             {/* BCC field */}
             {!toCharities && !charityReply && showBcc && (
               <div className="py-2 sm:py-3 flex items-start gap-2 sm:gap-4">
-                <div className="w-16 pt-1 text-[length:var(--mail-fs-nav)] font-medium text-slate-500 dark:text-slate-400">نسخة مخفية</div>
+                <div className="w-16 pt-1 text-body font-medium text-slate-500 dark:text-slate-400">نسخة مخفية</div>
                 <div className="flex-1 flex items-center min-h-10">{renderEmployeeSelect(bccIds, setBccIds, "نسخة مخفية إلى...")}</div>
               </div>
             )}
 
             {/* Subject field */}
             <div className="py-2 sm:py-3 flex items-center gap-2 sm:gap-4">
-              <div className="w-16 text-[length:var(--mail-fs-nav)] font-medium text-slate-500 dark:text-slate-400">الموضوع</div>
+              <div className="w-16 text-body font-medium text-slate-500 dark:text-slate-400">الموضوع</div>
               <input
                 type="text"
                 value={subject}
                 onChange={(e) => setSubject(e.target.value)}
                 placeholder="موضوع الرسالة"
-                className="flex-1 bg-transparent border-none focus:ring-0 outline-none text-[length:var(--mail-fs-subject-input)] font-semibold text-slate-900 dark:text-slate-100 py-2 placeholder:text-slate-300 dark:placeholder:text-slate-600"
+                className="flex-1 bg-transparent border-none focus:ring-0 outline-none text-body font-semibold text-slate-900 dark:text-slate-100 py-2 placeholder:text-slate-300 dark:placeholder:text-slate-600"
               />
             </div>
           </div>
@@ -880,7 +881,7 @@ export default function ComposeModal({ isOpen, onClose, employees, onSuccess, re
               {attachments.map((att) => (
                 <div
                   key={att.key}
-                  className={`flex items-center gap-2 bg-white dark:bg-slate-900 border px-3 py-1.5 rounded-xl text-[length:var(--mail-fs-meta)] font-medium ${
+                  className={`flex items-center gap-2 bg-white dark:bg-slate-900 border px-3 py-1.5 rounded-xl text-caption font-medium ${
                     att.status === "error"
                       ? "border-rose-300 dark:border-rose-900/60 text-rose-600 dark:text-rose-400"
                       : "border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200"
@@ -921,12 +922,12 @@ export default function ComposeModal({ isOpen, onClose, employees, onSuccess, re
         </div>
 
         {/* Footer actions */}
-        <div className="flex items-center justify-between px-6 py-4 bg-gradient-to-b from-white to-slate-50 dark:from-slate-900 dark:to-slate-950 border-t border-slate-200/70 dark:border-slate-800 shrink-0">
+        <div className="flex items-center justify-between px-6 py-4 border-t border-slate-200/70 dark:border-slate-800 shrink-0">
           <div className="flex items-center gap-2">
             <button
               type="button"
               onClick={() => fileInputRef.current?.click()}
-              className="w-9 h-9 flex items-center justify-center text-slate-500 dark:text-slate-400 hover:bg-primary/[0.08] hover:text-primary dark:hover:text-teal-300 rounded-full transition-colors"
+              className={btn.icon}
               title="إرفاق ملف — أو الصق صورة/ملف مباشرة بـ Ctrl+V"
             >
               <Paperclip className="w-4 h-4" />
@@ -936,21 +937,21 @@ export default function ComposeModal({ isOpen, onClose, employees, onSuccess, re
             {/* Closing this window saves silently; without a marker there was no
                 way to tell whether it was safe to close. */}
             {serviceLacksApprover && (
-              <span className="flex items-center gap-1.5 text-[length:var(--mail-fs-meta)] text-rose-600 dark:text-rose-400">
+              <span className="flex items-center gap-1.5 text-caption text-rose-600 dark:text-rose-400">
                 <AlertTriangle className="w-3.5 h-3.5" />
                 لا معمِّد لخدمة «{serviceName}» — لا يُرسل
               </span>
             )}
 
             {willAwaitApproval && (
-              <span className="flex items-center gap-1.5 text-[length:var(--mail-fs-meta)] text-amber-700 dark:text-amber-400">
+              <span className="flex items-center gap-1.5 text-caption text-amber-700 dark:text-amber-400">
                 <ShieldCheck className="w-3.5 h-3.5" />
                 تقف عند معمِّد «{serviceName}» قبل أن تصل الجمعية
               </span>
             )}
 
             {saveState !== "idle" && (
-              <span className="flex items-center gap-1.5 text-[length:var(--mail-fs-meta)] text-slate-400 dark:text-slate-500">
+              <span className="flex items-center gap-1.5 text-caption text-slate-400 dark:text-slate-500">
                 {saveState === "saving" ? (
                   <>
                     <Loader2 className="w-3 h-3 animate-spin" />
@@ -978,7 +979,7 @@ export default function ComposeModal({ isOpen, onClose, employees, onSuccess, re
                   ? charityIds.length === 0 || !serviceName || serviceLacksApprover
                   : toIds.length + ccIds.length + bccIds.length === 0)
             }
-            className="flex items-center gap-2 h-11 px-6 text-white bg-gradient-to-b from-[#17857c] via-primary to-[#0c645d] shadow-[var(--mail-shadow-cta)] hover:shadow-[var(--mail-shadow-cta-hover)] active:translate-y-px rounded-xl font-semibold text-[length:var(--mail-fs-nav)] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+            className={btn.primary}
           >
             {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
             {willAwaitApproval ? "إرسال للتعميد" : "إرسال"}

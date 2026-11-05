@@ -269,6 +269,75 @@ export function Segmented<T extends string>({
   );
 }
 
+/**
+ * عمودُ تنقّلٍ داخلَ شاشة — مجلّداتُ البريد وما يُشبهها.
+ *
+ * وهو ليس `Tabs`: التبويباتُ صفٌّ أفقيٌّ لثلاثةٍ أو أربعة، وهذا عمودٌ لستّةٍ
+ * وأكثرَ لكلٍّ أيقونةٌ وعدّادٌ — ولا يصلح أحدُهما مكانَ الآخر. وكان البريدُ
+ * يرسمه بتدرّجٍ لونيٍّ من ثلاث محطّاتٍ وزاوية `rounded-e-full` لا نظيرَ لهما
+ * في اللوحة.
+ *
+ * `Rail` الغلافُ، و`RailItem` العنصر — فالقائمةُ تبقى عند مُنادٍ واحدٍ يعرف
+ * أيُّها مُفعَّل.
+ */
+export function Rail({ children, label = "تنقّل" }: { children: ReactNode; label?: string }) {
+  return (
+    <nav
+      aria-label={label}
+      className="hidden w-52 shrink-0 flex-col gap-0.5 border-s border-slate-200 bg-slate-50/60 p-2 lg:flex dark:border-slate-800 dark:bg-slate-950/40"
+    >
+      {children}
+    </nav>
+  );
+}
+
+export function RailItem({
+  label,
+  icon,
+  active = false,
+  badge,
+  onClick,
+}: {
+  label: string;
+  icon?: ReactNode;
+  active?: boolean;
+  /** صفرٌ أو عدمٌ: لا شارة. فشارةٌ تقول «٠» تستدعي نظراً لا داعيَ له. */
+  badge?: number;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-current={active ? "page" : undefined}
+      className={cx(
+        "flex h-9 w-full items-center gap-2.5 rounded-md px-2.5 text-[13px] transition-colors",
+        // ولا `crumbLinkClass` هنا: فيه `hover:text-slate-900` يُنازع لونَ
+        // المُفعَّل عند المرور عليه — فيُحسمان بترتيب CSS لا بترتيب الأصناف،
+        // فيتحوّل المُفعَّلُ رماديّاً تحت المؤشّر.
+        "outline-none focus-visible:ring-2 focus-visible:ring-primary/40",
+        active
+          ? "bg-primary/[0.08] font-semibold text-primary dark:bg-teal-400/10 dark:text-teal-300"
+          : "font-medium text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-100"
+      )}
+    >
+      {icon}
+      <span className="truncate">{label}</span>
+      {badge ? (
+        <span
+          className={cx(
+            MONO,
+            "ms-auto inline-flex h-5 min-w-5 items-center justify-center rounded-full px-1.5 text-[11px] font-semibold",
+            active ? "bg-primary text-white dark:bg-teal-400 dark:text-slate-900" : "bg-slate-200 text-slate-700 dark:bg-slate-700 dark:text-slate-200"
+          )}
+        >
+          {badge > 99 ? "99+" : badge}
+        </span>
+      ) : null}
+    </button>
+  );
+}
+
 export function SearchField({
   value,
   onChange,

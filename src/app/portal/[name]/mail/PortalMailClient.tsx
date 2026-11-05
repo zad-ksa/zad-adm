@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { btn } from "@/components/console/ui";
 import {
   Mail,
   Send,
@@ -223,7 +224,7 @@ export default function PortalMailClient({
       : sent.map((mail) => ({ key: mail.id, mail, isUnread: false, party: sentParty(mail) }));
 
   return (
-    <div className="mail-ui space-y-4" dir="rtl">
+    <div className="space-y-4" dir="rtl">
       <div className="flex items-center justify-between gap-3 flex-wrap">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl bg-primary/10 dark:bg-primary/20 flex items-center justify-center">
@@ -240,7 +241,7 @@ export default function PortalMailClient({
         <button
           type="button"
           onClick={() => setIsComposeOpen(true)}
-          className="flex items-center gap-2 h-10 px-4 rounded-xl bg-primary text-white text-sm font-semibold hover:bg-primary/90 transition-colors"
+          className={btn.primary}
         >
           <Plus className="w-4 h-4" />
           رسالة جديدة
@@ -255,7 +256,7 @@ export default function PortalMailClient({
       )}
 
       {openMail ? (
-        <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-4 sm:p-6 space-y-4">
+        <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-4 sm:p-6 space-y-4">
           <div className="flex items-center justify-between gap-2 flex-wrap">
             <button
               type="button"
@@ -280,7 +281,7 @@ export default function PortalMailClient({
                   <button
                     type="button"
                     onClick={() => setDeleteTarget(openMail)}
-                    className="w-9 h-9 flex items-center justify-center rounded-lg text-rose-600 dark:text-rose-400 hover:bg-rose-500/[0.10] transition-colors"
+                    className={btn.iconDanger}
                     title="نقل إلى المهملات"
                   >
                     <Trash2 className="w-4 h-4" />
@@ -369,7 +370,7 @@ export default function PortalMailClient({
           )}
         </div>
       ) : (
-        <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden">
+        <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 overflow-hidden">
           <div className="flex items-center justify-between gap-3 px-3 sm:px-4 py-3 border-b border-slate-100 dark:border-slate-800 flex-wrap">
             <div className="flex items-center p-0.5 gap-0.5 rounded-xl bg-slate-100 dark:bg-slate-800/60">
               {([

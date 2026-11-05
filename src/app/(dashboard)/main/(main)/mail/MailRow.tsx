@@ -1,8 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import Image from "next/image";
-import { CheckSquare, Square, Star, Paperclip, User } from "lucide-react";
+import { Paperclip, Star } from "lucide-react";
+import { Avatar, CheckMark, MONO, cx, listRow } from "@/components/console/ui";
 import type { MailListItem } from "./mailUtils";
 import { formatMailDate } from "./mailUtils";
 
@@ -10,13 +10,29 @@ interface MailRowProps {
   item: MailListItem;
   isSelected: boolean;
   showStar: boolean;
-  onToggleSelect: (rowId: string) => void;
+  /** `shiftKey` يُمرَّر كما هو: المدى يُحسب عند المُنادي حيث القائمةُ معلومة. */
+  onToggleSelect: (rowId: string, shiftKey: boolean) => void;
   onToggleStar: (mailId: string) => void;
   onOpen: (mailId: string, isUnread: boolean) => void;
   /** Drafts aren't real single-mail pages yet — clicking one reopens the compose modal instead of navigating. */
   asButton?: boolean;
 }
 
+/** حلقةُ تركيزٍ داخليّةٌ: الصفُّ ممتدٌّ بعرض القائمة، فحلقةٌ خارجيّةٌ تُقصّ. */
+const focusRow = "outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary/40";
+
+/**
+ * صفُّ رسالةٍ في القائمة — بعدّة اللوحة لا بتصميمٍ خاصٍّ بالبريد.
+ *
+ * وكان له ظلالٌ ثلاثةٌ وإطارٌ ذهبيٌّ وسُلّمُ خطٍّ مستقلٌّ (`--mail-fs-*`) لا
+ * نظيرَ لها في الموقع، فصار صفُّ الرسالةِ لا يُشبه صفّاً آخرَ فيه. والحالاتُ
+ * الآن من `listRow`، والمقاساتُ من سُلّم الخطّ المُعلَن، والصورةُ من `Avatar`،
+ * ومربّعُ الاختيار من `CheckMark`.
+ *
+ * **وشكلان لمكوّنٍ واحد**: سطرٌ كثيفٌ واحدٌ على سطح المكتب، وكومةٌ على الهاتف —
+ * فخمسةُ أعمدةٍ في ٣٦٠ بكسل تُعطي كلَّ عمودٍ كلمتين ثم تقصّ، فلا يقول الصفُّ
+ * شيئاً.
+ */
 export default function MailRow({
   item,
   isSelected,
@@ -28,33 +44,32 @@ export default function MailRow({
 }: MailRowProps) {
   const { isUnread } = item;
 
-  // Two shapes, one component.
-  //
-  // Desktop keeps Gmail's single dense line. On a phone that line had five
-  // columns competing for ~360px, so the sender, the subject and the snippet
-  // each got a couple of words before truncating — the row told you nothing.
-  // Mobile stacks instead: sender + date, then subject, then snippet.
-  const rowClassName = `group flex sm:grid sm:grid-cols-[1.75rem_1.75rem_minmax(6rem,8.5rem)_minmax(0,1fr)_auto] items-start sm:items-center gap-2 min-h-10 px-3 py-2 sm:py-1.5 border-s-4 transition-all relative w-full text-right ${
-    isSelected
-      ? "bg-secondary/[0.08] dark:bg-secondary/[0.14] shadow-[var(--mail-shadow-row-sel)] border-transparent"
-      : isUnread
-        ? "border-s-primary bg-white dark:bg-slate-900 shadow-[var(--mail-shadow-unread)] hover:bg-primary/[0.04] dark:hover:bg-primary/[0.08]"
-        : "border-transparent bg-slate-50/70 dark:bg-slate-800/30 hover:bg-primary/[0.04] dark:hover:bg-primary/[0.07] hover:shadow-[var(--mail-shadow-row-hover)] hover:z-10"
-  }`;
+  const rowClassName = cx(
+    listRow({ selected: isSelected, unread: isUnread }),
+    "min-h-10 sm:grid sm:grid-cols-[1.75rem_1.75rem_minmax(6rem,8.5rem)_minmax(0,1fr)_auto] sm:py-1.5",
+    focusRow
+  );
 
   const checkbox = (
     <span
       role="checkbox"
       aria-checked={isSelected}
+      aria-label={`تحديد رسالة ${item.subject}`}
       tabIndex={0}
       onClick={(e) => {
         e.preventDefault();
         e.stopPropagation();
-        onToggleSelect(item.rowId);
+        onToggleSelect(item.rowId, e.shiftKey);
       }}
-      className="hidden sm:flex w-7 h-7 items-center justify-center rounded-lg text-slate-400 dark:text-slate-500 hover:text-primary dark:hover:text-teal-300 cursor-pointer shrink-0"
+      onKeyDown={(e) => {
+        if (e.key !== " " && e.key !== "Enter") return;
+        e.preventDefault();
+        e.stopPropagation();
+        onToggleSelect(item.rowId, e.shiftKey);
+      }}
+      className="hidden size-7 shrink-0 cursor-pointer items-center justify-center rounded-md text-slate-400 transition-colors hover:bg-slate-100 sm:flex dark:text-slate-500 dark:hover:bg-slate-800"
     >
-      {isSelected ? <CheckSquare className="w-4 h-4 text-primary dark:text-teal-300" /> : <Square className="w-4 h-4" />}
+      <CheckMark state={isSelected ? "on" : "off"} />
     </span>
   );
 
@@ -66,36 +81,29 @@ export default function MailRow({
         e.stopPropagation();
         onToggleStar(item.mailId);
       }}
-      className="hidden sm:flex w-7 h-7 items-center justify-center rounded-lg shrink-0"
+      className="hidden size-7 shrink-0 items-center justify-center rounded-md transition-colors hover:bg-slate-100 sm:flex dark:hover:bg-slate-800"
       title={item.isStarred ? "إزالة النجمة" : "تمييز بنجمة"}
+      aria-label={item.isStarred ? "إزالة النجمة" : "تمييز بنجمة"}
     >
       <Star
-        className={`w-4 h-4 transition-colors ${
+        className={cx(
+          "size-4 transition-colors",
           item.isStarred
-            ? "fill-secondary text-secondary dark:fill-amber-400 dark:text-amber-400 drop-shadow-[var(--mail-glow-star)]"
-            : "text-slate-300 dark:text-slate-600 hover:text-secondary/70 dark:hover:text-amber-400/70"
-        }`}
+            ? "fill-secondary text-secondary dark:fill-amber-400 dark:text-amber-400"
+            : "text-slate-300 hover:text-secondary/70 dark:text-slate-600 dark:hover:text-amber-400/70"
+        )}
       />
     </button>
   ) : (
     <span className="hidden sm:block" />
   );
 
-  const avatar = (
-    <div className="w-6 h-6 rounded-full bg-primary/10 dark:bg-primary/20 flex items-center justify-center shrink-0 overflow-hidden">
-      {item.avatarUrl ? (
-        <Image src={item.avatarUrl} alt={item.displayName} width={24} height={24} className="object-cover w-full h-full" />
-      ) : (
-        <User className="w-3 h-3 text-primary dark:text-teal-300" />
-      )}
-    </div>
-  );
-
   const senderName = (
     <span
-      className={`truncate text-[length:var(--mail-fs-sender)] ${
-        isUnread ? "font-bold text-slate-900 dark:text-white" : "font-medium text-slate-700 dark:text-slate-300"
-      }`}
+      className={cx(
+        "truncate text-body",
+        isUnread ? "font-semibold text-slate-900 dark:text-white" : "font-medium text-slate-700 dark:text-slate-300"
+      )}
       title={item.displayNameTitle}
     >
       {item.displayName}
@@ -104,9 +112,11 @@ export default function MailRow({
 
   const date = (
     <span
-      className={`whitespace-nowrap text-[length:var(--mail-fs-meta)] ${
-        isUnread ? "font-bold text-primary dark:text-teal-300" : "font-medium text-slate-400 dark:text-slate-500"
-      }`}
+      className={cx(
+        MONO,
+        "whitespace-nowrap text-caption",
+        isUnread ? "font-semibold text-primary dark:text-teal-300" : "text-slate-400 dark:text-slate-500"
+      )}
     >
       {formatMailDate(item.createdAt)}
     </span>
@@ -114,57 +124,55 @@ export default function MailRow({
 
   const subject = (
     <span
-      className={`text-[length:var(--mail-fs-subject)] ${
-        isUnread ? "font-bold text-slate-900 dark:text-white" : "font-medium text-slate-700 dark:text-slate-300"
-      }`}
+      className={cx(
+        "text-body",
+        isUnread ? "font-semibold text-slate-900 dark:text-white" : "font-medium text-slate-700 dark:text-slate-300"
+      )}
     >
       {item.subject}
     </span>
   );
+
+  /** نقطةُ «غيرُ مقروء» — حالةٌ تستحقّ لونَ الهوية. */
+  const unreadDot = isUnread ? (
+    <span aria-label="غير مقروءة" className="size-1.5 shrink-0 rounded-full bg-primary dark:bg-teal-400" />
+  ) : null;
 
   const content = (
     <>
       {checkbox}
       {star}
 
-      {/* Mobile: one stacked block. The avatar keeps the sender line anchored,
-          and the date sits opposite it where the eye already looks for it. */}
-      <div className="sm:hidden min-w-0 flex-1 flex flex-col gap-0.5">
-        <div className="flex items-center gap-2 min-w-0">
-          {avatar}
+      {/* الهاتف: كومةٌ واحدة. الصورةُ تُثبِّت سطرَ المرسِل، والتاريخُ مقابلَه
+          حيث تنظر العينُ إليه أصلاً. */}
+      <div className="flex min-w-0 flex-1 flex-col gap-0.5 sm:hidden">
+        <div className="flex min-w-0 items-center gap-2">
+          <Avatar name={item.displayName} src={item.avatarUrl} size="sm" />
           <span className="min-w-0 flex-1 truncate">{senderName}</span>
-          {item.hasAttachments && <Paperclip className="w-3.5 h-3.5 text-slate-400 shrink-0" />}
-          {isUnread && (
-            <span className="w-1.5 h-1.5 rounded-full bg-primary dark:bg-teal-400 shrink-0" />
-          )}
+          {item.hasAttachments && <Paperclip className="size-3.5 shrink-0 text-slate-400" />}
+          {unreadDot}
           {date}
         </div>
         {item.toLabel && (
-          <span
-            className="truncate text-[length:var(--mail-fs-meta)] text-slate-400 dark:text-slate-500"
-            title={`إلى: ${item.toLabel}`}
-          >
+          <span className="truncate text-caption text-slate-400 dark:text-slate-500" title={`إلى: ${item.toLabel}`}>
             إلى: {item.toLabel}
           </span>
         )}
         <span className="truncate">{subject}</span>
-        <span className="truncate text-[length:var(--mail-fs-snippet)] text-slate-400 dark:text-slate-500">
-          {item.snippet}
-        </span>
+        <span className="truncate text-meta text-slate-400 dark:text-slate-500">{item.snippet}</span>
       </div>
 
-      {/* Desktop: the original dense single line — plus a second, smaller line
-          naming the visible (TO) recipient when it differs from "you", so a
-          Bcc'd reader sees "from X — to Y" instead of a bare sender that reads
-          as if the message were addressed to them. */}
-      <div className="hidden sm:flex min-w-0 flex-col justify-center gap-0.5">
-        <div className="flex items-center gap-2 min-w-0">
-          {avatar}
+      {/* سطحُ المكتب: السطرُ الكثيفُ الواحد — ومعه سطرٌ أصغرُ يُسمّي المستلمَ
+          الظاهر (TO) حين لا يكون «أنت»، فمن وصلته نسخةٌ مخفيّةٌ يرى «من س —
+          إلى ص» لا مرسِلاً مجرّداً يُقرأ كأنّ الرسالةَ إليه. */}
+      <div className="hidden min-w-0 flex-col justify-center gap-0.5 sm:flex">
+        <div className="flex min-w-0 items-center gap-2">
+          <Avatar name={item.displayName} src={item.avatarUrl} size="sm" />
           {senderName}
         </div>
         {item.toLabel && (
           <span
-            className="truncate text-[length:var(--mail-fs-meta)] text-slate-400 dark:text-slate-500 ps-8"
+            className="truncate ps-8 text-caption text-slate-400 dark:text-slate-500"
             title={`إلى: ${item.toLabel}`}
           >
             إلى: {item.toLabel}
@@ -172,19 +180,15 @@ export default function MailRow({
         )}
       </div>
 
-      <div className="hidden sm:flex min-w-0 items-center gap-2">
-        <span className="shrink-0 truncate max-w-[52%]">{subject}</span>
+      <div className="hidden min-w-0 items-center gap-2 sm:flex">
+        <span className="max-w-[52%] shrink-0 truncate">{subject}</span>
         <span className="text-slate-300 dark:text-slate-600">—</span>
-        <span className="truncate text-[length:var(--mail-fs-snippet)] text-slate-400 dark:text-slate-500">
-          {item.snippet}
-        </span>
+        <span className="truncate text-meta text-slate-400 dark:text-slate-500">{item.snippet}</span>
       </div>
 
-      <div className="hidden sm:flex items-center gap-2.5 shrink-0">
-        {item.hasAttachments && <Paperclip className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500" />}
-        {isUnread && (
-          <span className="w-1.5 h-1.5 rounded-full bg-primary dark:bg-teal-400 shadow-[0_0_0_3px_rgb(15_118_110_/_0.15)]" />
-        )}
+      <div className="hidden shrink-0 items-center gap-2.5 sm:flex">
+        {item.hasAttachments && <Paperclip className="size-3.5 text-slate-400 dark:text-slate-500" />}
+        {unreadDot}
         {date}
       </div>
     </>
@@ -204,3 +208,4 @@ export default function MailRow({
     </li>
   );
 }
+

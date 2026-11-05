@@ -8,14 +8,10 @@ import {
   Star,
   Trash2,
   PenSquare,
-  Search,
-  CheckSquare,
-  Square,
+  MailOpen,
   RefreshCw,
   Mail as MailIcon,
   Trash,
-  ChevronRight,
-  ChevronLeft,
   FileText,
   ShieldCheck,
   Settings2,
@@ -27,16 +23,20 @@ import {
   getTrashMails,
   getDrafts,
   markAsRead,
+  markManyAsRead,
   toggleStar,
   moveToTrash,
   restoreFromTrash,
   deletePermanently,
   deleteDraft,
 } from "@/app/actions/mail";
+import { EmptyState, Rail, RailItem, SearchField } from "@/components/console/layout";
+import { CheckMark, Skeleton, btn, cx, toolbarClass } from "@/components/console/ui";
+import { Pagination } from "@/components/console/controls";
 import { notifyMailUnreadChanged } from "@/lib/mailBadge";
+import { toggleWithRange } from "@/lib/rangeSelect";
 import ComposeModal from "./ComposeModal";
 import { ConfirmDialog } from "@/components/console/ConfirmDialog";
-import CircularLoader from "@/components/CircularLoader";
 import MailRow from "./MailRow";
 import { normalizeMailListItem } from "./mailUtils";
 import MailApprovalsPanel from "./MailApprovalsPanel";
@@ -296,15 +296,70 @@ export default function MailClient({
     }
   };
 
-  const handleToggleSelect = (rowId: string) => {
-    setSelectedMails((prev) => (prev.includes(rowId) ? prev.filter((id) => id !== rowId) : [...prev, rowId]));
+  /**
+   * مرساةُ المدى: آخرُ صفٍّ نُقر عليه بلا Shift.
+   *
+   * ولا تُمحى عند تغيّر القائمة: `indexOf` يردُّ −١ لمعرِّفٍ ليس في الصفحة
+   * المعروضة، فيسقط المدى إلى نقرةٍ عاديّة — وهو الصوابُ بلا حرسٍ إضافيّ.
+   */
+  const rangeAnchor = useRef<string | null>(null);
+
+  /**
+   * التحديدُ بالنقر، وبـShift يُحدَّد كلُّ ما بين المرساة والمنقور.
+   *
+   * والحسابُ في `toggleWithRange` — خالصٌ مُختبَرٌ: مدىً محسوبٌ بالمقلوب
+   * يُحدِّد صفوفاً غير التي أُشير إليها، ومن ضغط «نقل للمهملات» بعده نقل غيرَ
+   * ما رأى. ولا يُكتشف في تجربةٍ عابرة، إذ تُحدَّد صفوفٌ فيبدو أنّ الأمر عمل.
+   *
+   * والترتيبُ المُمرَّرُ ترتيبُ `mails` المعروض: المدى ما بين الصفّين **على
+   * الشاشة**، وهو ما تراه العينُ حين تُمسك Shift.
+   */
+  const handleToggleSelect = (rowId: string, shiftKey = false) => {
+    const next = toggleWithRange(
+      mails.map((m) => m.id),
+      selectedMails,
+      rowId,
+      rangeAnchor.current,
+      shiftKey
+    );
+    setSelectedMails(next.selected);
+    rangeAnchor.current = next.anchor;
   };
 
+  const allSelected = mails.length > 0 && selectedMails.length === mails.length;
+
   const handleSelectAll = () => {
-    if (selectedMails.length === mails.length) {
+    rangeAnchor.current = null;
+    setSelectedMails(allSelected ? [] : mails.map((m) => m.id));
+  };
+
+  /**
+   * تحديدُ المحدَّد مقروءاً.
+   *
+   * ويُحدَّث المعروضُ فوراً قبل انتظار الخادم: الفعلُ لا يُخطئ في عامّة الحال
+   * (شرطُه `isRead: false` وحدَه)، وانتظارُ جولةٍ إلى سنغافورة ليزول ثِقَلُ
+   * الخطِّ يجعل الزرَّ يبدو معطَّلاً. ثمّ تُجلب القائمةُ لتوافق القاعدة.
+   */
+  const handleMarkRead = async () => {
+    const mailIds = selectedMails.map(resolveMailId).filter(Boolean) as string[];
+    if (mailIds.length === 0) return;
+
+    setMails((prev) =>
+      prev.map((m) => (selectedMails.includes(m.id) && m.isRead === false ? { ...m, isRead: true } : m))
+    );
+    setIsBulkPending(true);
+    try {
+      await markManyAsRead(mailIds);
+      // شارةُ الشريط تُرسمها طبقةٌ لا تُعاد عند هذا الفعل، فتُخبَر ولا تُترك
+      // لتكتشف — وإلّا قالت «٣ غير مقروءة» وقائمةٌ لا تُظهر واحدة.
+      notifyMailUnreadChanged();
       setSelectedMails([]);
-    } else {
-      setSelectedMails(mails.map((m) => m.id));
+      await fetchMails({ quiet: true });
+    } catch (error) {
+      console.error("Error marking mails as read:", error);
+      await fetchMails();
+    } finally {
+      setIsBulkPending(false);
     }
   };
 
@@ -332,187 +387,155 @@ export default function MailClient({
     runBulkAction(restoreFromTrash);
   };
 
-  const rangeStart = total === 0 ? 0 : (page - 1) * 20 + 1;
-  const rangeEnd = Math.min(page * 20, total);
+  const unreadFolder = currentTab !== "sent" && currentTab !== "drafts";
 
   return (
-    <div className="mail-ui flex h-[calc(100dvh-6rem)] sm:h-[calc(100dvh-7rem)] lg:h-[calc(100dvh-7.5rem)] bg-white dark:bg-slate-900 rounded-xl sm:rounded-2xl border border-slate-200/70 dark:border-slate-800 shadow-[var(--mail-shadow-card)] overflow-hidden">
-      {/* Folder rail */}
-      <div className="hidden lg:flex w-52 border-s border-slate-200/70 dark:border-slate-800 bg-gradient-to-b from-slate-50 via-white to-teal-50/60 dark:from-slate-900 dark:via-slate-950 dark:to-slate-950 flex-col shrink-0">
-        <div className="p-2.5 flex">
-          <button
-            onClick={() => setIsComposeOpen(true)}
-            className="h-12 flex items-center justify-center gap-2 text-white bg-gradient-to-b from-[#17857c] via-primary to-[#0c645d] shadow-[var(--mail-shadow-cta)] hover:shadow-[var(--mail-shadow-cta-hover)] active:translate-y-px px-4 rounded-2xl font-semibold text-[length:var(--mail-fs-nav)] transition-all"
-          >
-            <PenSquare className="w-4 h-4" />
-            رسالة جديدة
-          </button>
-        </div>
-
-        <nav className="flex-1 px-2 space-y-1 overflow-y-auto">
-          {FOLDERS.map(({ key, label, Icon, accent, badge }) => {
-            const isActive = currentTab === key;
-            return (
-              <button
-                key={key}
-                onClick={() => handleTabChange(key)}
-                className={`w-full h-8 flex items-center gap-2.5 px-2.5 rounded-e-full text-[length:var(--mail-fs-nav)] transition-colors ${
-                  isActive
-                    ? "font-semibold bg-primary/10 dark:bg-primary/15 text-primary dark:text-teal-300 shadow-[inset_0_0_0_1px_rgb(15_118_110_/_0.18)]"
-                    : "font-medium text-slate-600 dark:text-slate-400 hover:bg-primary/5 dark:hover:bg-primary/10 hover:text-primary dark:hover:text-teal-300"
-                }`}
-              >
-                <Icon
-                  className={`w-4 h-4 ${
-                    isActive ? (accent === "secondary" ? "text-secondary dark:text-amber-400" : "text-primary dark:text-teal-300") : ""
-                  }`}
-                />
-                {label}
-                {badge ? (
-                  <span className="ms-auto h-5 min-w-5 px-1.5 inline-flex items-center justify-center rounded-full bg-primary text-white text-[10px] font-bold">
-                    {badge}
-                  </span>
-                ) : null}
-              </button>
-            );
-          })}
-        </nav>
-      </div>
+    <div className="flex h-[calc(100dvh-6rem)] overflow-hidden rounded-xl border border-slate-200 bg-white sm:h-[calc(100dvh-7rem)] lg:h-[calc(100dvh-7.5rem)] dark:border-slate-800 dark:bg-slate-900">
+      <Rail label="مجلدات البريد">
+        <button type="button" onClick={() => setIsComposeOpen(true)} className={cx(btn.primary, "mb-2 w-full")}>
+          <PenSquare className="size-4" />
+          رسالة جديدة
+        </button>
+        {FOLDERS.map(({ key, label, Icon, accent, badge }) => (
+          <RailItem
+            key={key}
+            label={label}
+            active={currentTab === key}
+            badge={badge}
+            onClick={() => handleTabChange(key)}
+            icon={
+              <Icon
+                className={cx(
+                  "size-4 shrink-0",
+                  accent === "secondary" && currentTab !== key && "text-secondary dark:text-amber-400"
+                )}
+              />
+            }
+          />
+        ))}
+      </Rail>
 
       {/* Main content */}
-      <div className="flex-1 flex flex-col min-w-0">
-        {/* Toolbar — بحثٌ وترقيمٌ وأفعالٌ جماعية، لا معنى لها في شاشتَي
-            التعميد والإعدادات. */}
+      <div className="flex min-w-0 flex-1 flex-col">
+        {/* Toolbar — بحثٌ وأفعالٌ جماعية، لا معنى لها في شاشتَي التعميد
+            والإعدادات. */}
         {!isPanelTab && (
-        <div className="h-12 bg-gradient-to-b from-white to-slate-50 dark:from-slate-900 dark:to-slate-950 border-b border-slate-200/70 dark:border-slate-800 flex items-center justify-between px-2 sm:px-4 gap-2 sm:gap-4 shrink-0">
-          <div className="flex items-center gap-1 shrink-0">
-            {/* Compose lives in the rail on desktop; on mobile the rail is gone,
-                so it takes the first slot in the toolbar. */}
+          <div className={toolbarClass}>
+            {/* الإنشاءُ في العمود على سطح المكتب؛ وعلى الهاتف لا عمودَ، فيأخذ
+                أوّلَ موضعٍ في الشريط. */}
             <button
+              type="button"
               onClick={() => setIsComposeOpen(true)}
-              className="lg:hidden w-9 h-9 flex items-center justify-center rounded-lg text-white bg-gradient-to-b from-[#17857c] via-primary to-[#0c645d] shadow-[var(--mail-shadow-cta)] active:translate-y-px transition-all"
+              className={cx(btn.primary, "size-9 px-0 lg:hidden")}
               title="رسالة جديدة"
+              aria-label="رسالة جديدة"
             >
-              <PenSquare className="w-4 h-4" />
+              <PenSquare className="size-4" />
             </button>
+
             <button
+              type="button"
               onClick={handleSelectAll}
-              className="hidden sm:flex w-8 h-8 items-center justify-center rounded-lg text-slate-400 dark:text-slate-500 hover:bg-primary/[0.08] hover:text-primary dark:hover:text-teal-300 transition-colors"
-              title="تحديد الكل"
+              className={cx(btn.icon, "hidden sm:inline-flex")}
+              title={allSelected ? "إلغاء تحديد الكل" : "تحديد الكل"}
+              aria-label={allSelected ? "إلغاء تحديد الكل" : "تحديد الكل"}
             >
-              {selectedMails.length > 0 && selectedMails.length === mails.length ? (
-                <CheckSquare className="w-4 h-4 text-primary dark:text-teal-300" />
-              ) : (
-                <Square className="w-4 h-4" />
-              )}
+              <CheckMark state={allSelected ? "on" : selectedMails.length > 0 ? "mixed" : "off"} />
             </button>
+
             <button
+              type="button"
               onClick={() => fetchMails()}
-              className="w-8 h-8 flex items-center justify-center rounded-lg text-slate-400 dark:text-slate-500 hover:bg-primary/[0.08] hover:text-primary dark:hover:text-teal-300 transition-colors"
+              className={btn.icon}
               title="تحديث"
+              aria-label="تحديث"
             >
-              <RefreshCw className={`w-4 h-4 ${isLoading ? "animate-spin text-primary dark:text-teal-300" : ""}`} />
+              <RefreshCw className={cx("size-4", isLoading && "animate-spin text-primary dark:text-teal-300")} />
             </button>
 
             {selectedMails.length > 0 && (
-              <div className="flex items-center gap-1 ms-2 ps-3 border-s border-slate-200 dark:border-slate-700">
-                {currentTab !== "trash" && currentTab !== "drafts" && (
+              <div className="flex items-center gap-1 border-s border-slate-200 ps-2 dark:border-slate-700">
+                <span className="hidden whitespace-nowrap text-caption text-slate-500 sm:inline dark:text-slate-400">
+                  {selectedMails.length} محدَّدة
+                </span>
+
+                {/* تحديدٌ كمقروء: في المجلّدات التي للرسالة فيها حالُ قراءةٍ
+                    أصلاً. و«المرسَل» و«المسودات» ليست منها. */}
+                {unreadFolder && (
                   <button
-                    onClick={() => setConfirmAction("trash")}
-                    className="h-8 px-3 rounded-lg text-rose-600 dark:text-rose-400 bg-rose-500/[0.08] hover:bg-rose-500/[0.14] shadow-[var(--mail-shadow-danger)] flex items-center gap-1.5 text-[length:var(--mail-fs-meta)] font-semibold transition-colors"
+                    type="button"
+                    onClick={handleMarkRead}
+                    disabled={isBulkPending}
+                    className={btn.secondary}
                   >
-                    <Trash2 className="w-3.5 h-3.5" />
+                    <MailOpen className="size-3.5" />
+                    تحديد كمقروء
+                  </button>
+                )}
+
+                {/* النقلُ إلى المهملات فعلٌ يُرجَع عنه، فزرٌّ محايد. والحذفُ
+                    النهائيُّ لا رجعةَ فيه، فهو وحدَه الأحمر. */}
+                {currentTab !== "trash" && currentTab !== "drafts" && (
+                  <button type="button" onClick={() => setConfirmAction("trash")} className={btn.secondary}>
+                    <Trash2 className="size-3.5" />
                     نقل للمهملات
                   </button>
                 )}
                 {currentTab === "drafts" && (
-                  <button
-                    onClick={() => setConfirmAction("delete")}
-                    className="h-8 px-3 rounded-lg text-rose-600 dark:text-rose-400 bg-rose-500/[0.08] hover:bg-rose-500/[0.14] shadow-[var(--mail-shadow-danger)] flex items-center gap-1.5 text-[length:var(--mail-fs-meta)] font-semibold transition-colors"
-                  >
-                    <Trash className="w-3.5 h-3.5" />
+                  <button type="button" onClick={() => setConfirmAction("delete")} className={btn.danger}>
+                    <Trash className="size-3.5" />
                     حذف المسودات
                   </button>
                 )}
                 {currentTab === "trash" && (
                   <>
-                    <button
-                      onClick={handleBulkRestore}
-                      className="h-8 px-3 rounded-lg text-slate-600 dark:text-slate-300 bg-slate-100/70 dark:bg-slate-800/60 hover:bg-slate-200/70 dark:hover:bg-slate-700/60 flex items-center gap-1.5 text-[length:var(--mail-fs-meta)] font-semibold transition-colors"
-                    >
-                      <RefreshCw className="w-3.5 h-3.5" />
+                    <button type="button" onClick={handleBulkRestore} className={btn.secondary}>
+                      <RefreshCw className="size-3.5" />
                       استرجاع
                     </button>
-                    <button
-                      onClick={() => setConfirmAction("delete")}
-                      className="h-8 px-3 rounded-lg text-rose-600 dark:text-rose-400 bg-rose-500/[0.08] hover:bg-rose-500/[0.14] shadow-[var(--mail-shadow-danger)] flex items-center gap-1.5 text-[length:var(--mail-fs-meta)] font-semibold transition-colors"
-                    >
-                      <Trash className="w-3.5 h-3.5" />
+                    <button type="button" onClick={() => setConfirmAction("delete")} className={btn.danger}>
+                      <Trash className="size-3.5" />
                       حذف نهائي
                     </button>
                   </>
                 )}
               </div>
             )}
-          </div>
 
-          <div className="flex-1 flex justify-center px-2">
-            <div className="relative w-full max-w-md">
-              <input
-                type="text"
-                placeholder="البحث في البريد..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full h-9 bg-slate-100/70 dark:bg-slate-800/60 border border-transparent rounded-full pe-10 ps-4 text-[length:var(--mail-fs-nav)] text-slate-700 dark:text-slate-200 focus:bg-white dark:focus:bg-slate-900 focus:border-primary/30 focus:shadow-[var(--mail-ring-focus)] outline-none transition-all"
-              />
-              <Search className="w-4 h-4 text-slate-400 dark:text-slate-500 absolute end-3 top-1/2 -translate-y-1/2" />
-            </div>
+            <SearchField
+              value={searchQuery}
+              onChange={setSearchQuery}
+              label="البحث في البريد"
+              placeholder="البحث في البريد…"
+              className="ms-auto w-full max-w-xs"
+            />
           </div>
-
-          <div className="flex items-center gap-2 shrink-0">
-            {total > 0 && (
-              <span className="hidden sm:inline text-[length:var(--mail-fs-meta)] font-medium text-slate-400 dark:text-slate-500 whitespace-nowrap">
-                {rangeStart}–{rangeEnd} من {total}
-              </span>
-            )}
-            <button
-              onClick={() => setPage((p) => Math.max(1, p - 1))}
-              disabled={page <= 1}
-              className="w-8 h-8 flex items-center justify-center rounded-lg text-slate-400 dark:text-slate-500 hover:bg-primary/[0.08] hover:text-primary dark:hover:text-teal-300 disabled:opacity-30 disabled:hover:bg-transparent transition-colors"
-            >
-              <ChevronRight className="w-4 h-4" />
-            </button>
-            <button
-              onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-              disabled={page >= totalPages}
-              className="w-8 h-8 flex items-center justify-center rounded-lg text-slate-400 dark:text-slate-500 hover:bg-primary/[0.08] hover:text-primary dark:hover:text-teal-300 disabled:opacity-30 disabled:hover:bg-transparent transition-colors"
-            >
-              <ChevronLeft className="w-4 h-4" />
-            </button>
-          </div>
-        </div>
         )}
 
         {/* Folders on mobile: a scrolling strip, since the rail is hidden.
             Horizontal scroll rather than wrap so it stays one row tall. */}
-        <div className="lg:hidden flex items-center gap-1.5 px-2 py-1.5 border-b border-slate-200/70 dark:border-slate-800 overflow-x-auto no-scrollbar">
+        <div className="no-scrollbar flex items-center gap-1.5 overflow-x-auto border-b border-slate-200 px-2 py-1.5 lg:hidden dark:border-slate-800">
           {FOLDERS.map(({ key, label, Icon, accent }) => {
             const isActive = currentTab === key;
             return (
               <button
                 key={key}
+                type="button"
                 onClick={() => handleTabChange(key)}
                 aria-pressed={isActive}
-                className={`shrink-0 h-8 px-3 flex items-center gap-1.5 rounded-full text-[length:var(--mail-fs-nav)] font-semibold transition-colors ${
+                className={cx(
+                  "flex h-8 shrink-0 items-center gap-1.5 rounded-md px-3 text-meta font-medium transition-colors",
+                  "outline-none focus-visible:ring-2 focus-visible:ring-primary/40",
                   isActive
-                    ? "bg-primary text-white"
-                    : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300"
-                }`}
+                    ? "bg-primary/[0.08] font-semibold text-primary dark:bg-teal-400/10 dark:text-teal-300"
+                    : "text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800"
+                )}
               >
                 <Icon
-                  className={`w-3.5 h-3.5 ${
-                    !isActive && accent === "secondary" ? "text-secondary dark:text-amber-400" : ""
-                  }`}
+                  className={cx(
+                    "size-3.5",
+                    !isActive && accent === "secondary" && "text-secondary dark:text-amber-400"
+                  )}
                 />
                 {label}
               </button>
@@ -521,38 +544,63 @@ export default function MailClient({
         </div>
 
         {isPanelTab ? (
-          currentTab === "approvals" ? <MailApprovalsPanel /> : <MailSettingsPanel />
-        ) : (
-        /* Mail list */
-        <div className="flex-1 overflow-y-auto">
-          {isLoading ? (
-            <CircularLoader />
-          ) : mails.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-full text-slate-400 dark:text-slate-600 gap-4">
-              <div className="w-20 h-20 bg-slate-50 dark:bg-slate-800/60 rounded-full flex items-center justify-center">
-                <MailIcon className="w-10 h-10 text-slate-300 dark:text-slate-600" />
-              </div>
-              <p className="text-[length:var(--mail-fs-subject)] font-medium text-slate-500 dark:text-slate-400">
-                {appliedSearch ? `لا نتائج للبحث عن «${appliedSearch}»` : "لا توجد رسائل هنا"}
-              </p>
-            </div>
+          currentTab === "approvals" ? (
+            <MailApprovalsPanel />
           ) : (
-            <ul role="list" className="divide-y divide-slate-100 dark:divide-slate-800/70">
-              {mails.map((item) => (
-                <MailRow
-                  key={item.id}
-                  item={normalizeMailListItem(item, currentTab, employeesById)}
-                  isSelected={selectedMails.includes(item.id)}
-                  showStar={currentTab !== "sent" && currentTab !== "trash" && currentTab !== "drafts"}
-                  asButton={currentTab === "drafts"}
-                  onToggleSelect={handleToggleSelect}
-                  onToggleStar={handleToggleStar}
-                  onOpen={currentTab === "drafts" ? handleOpenDraft : handleOpenMail}
+            <MailSettingsPanel />
+          )
+        ) : (
+          <>
+            {/* Mail list */}
+            <div className="flex-1 overflow-y-auto">
+              {isLoading ? (
+                <ul role="list" className="divide-y divide-slate-100 dark:divide-slate-800">
+                  {Array.from({ length: 8 }).map((_, i) => (
+                    <li key={i} className="flex items-center gap-3 px-3 py-3">
+                      <Skeleton className="size-6 rounded-full" />
+                      <Skeleton className="h-3.5 w-32" />
+                      <Skeleton className="h-3.5 flex-1" />
+                      <Skeleton className="h-3.5 w-12" />
+                    </li>
+                  ))}
+                </ul>
+              ) : mails.length === 0 ? (
+                <EmptyState
+                  icon={<MailIcon className="size-4" />}
+                  title={appliedSearch ? `لا نتائج للبحث عن «${appliedSearch}»` : "لا توجد رسائل هنا"}
+                  description={appliedSearch ? "جرِّب كلمةً أقلَّ تحديداً، أو امسح البحث." : undefined}
                 />
-              ))}
-            </ul>
-          )}
-        </div>
+              ) : (
+                <ul role="list" className="divide-y divide-slate-100 dark:divide-slate-800">
+                  {mails.map((item) => (
+                    <MailRow
+                      key={item.id}
+                      item={normalizeMailListItem(item, currentTab, employeesById)}
+                      isSelected={selectedMails.includes(item.id)}
+                      showStar={currentTab !== "sent" && currentTab !== "trash" && currentTab !== "drafts"}
+                      asButton={currentTab === "drafts"}
+                      onToggleSelect={handleToggleSelect}
+                      onToggleStar={handleToggleStar}
+                      onOpen={currentTab === "drafts" ? handleOpenDraft : handleOpenMail}
+                    />
+                  ))}
+                </ul>
+              )}
+            </div>
+
+            {/* الترقيمُ من العدّة: المدى ثمّ الزرّان، وهو يختفي من نفسه حين
+                تكون صفحةً واحدة. */}
+            <div className="shrink-0 border-t border-slate-200 px-2 dark:border-slate-800">
+              <Pagination
+                page={page}
+                totalPages={totalPages}
+                total={total}
+                pageSize={20}
+                onChange={setPage}
+                unit="رسالة"
+              />
+            </div>
+          </>
         )}
       </div>
 

@@ -80,11 +80,11 @@ export default function MailSettingsPanel() {
   return (
     <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-5">
       <header className="space-y-1">
-        <h2 className="text-[length:var(--mail-fs-subject)] font-semibold text-slate-900 dark:text-slate-100 flex items-center gap-2">
+        <h2 className="text-body font-semibold text-slate-900 dark:text-slate-100 flex items-center gap-2">
           <ShieldCheck className="w-4 h-4 text-primary dark:text-teal-300" />
           معمِّدو البريد الصادر إلى الجمعيات
         </h2>
-        <p className="text-[length:var(--mail-fs-nav)] text-slate-500 dark:text-slate-400 leading-relaxed">
+        <p className="text-body text-slate-500 dark:text-slate-400 leading-relaxed">
           بريد الخدمة يخرج باسمها، فمن يُعيَّن هنا يقرؤه قبل أن يصل الجمعية: يعتمده، أو
           يعدّله ثم يعتمده، أو يُرجعه إلى مسودات صاحبه بملاحظة.
           <br />
@@ -95,7 +95,7 @@ export default function MailSettingsPanel() {
       </header>
 
       {error && (
-        <div className="flex items-center gap-2 px-4 py-3 rounded-xl bg-rose-500/[0.08] text-rose-600 dark:text-rose-400 text-[length:var(--mail-fs-nav)] font-medium">
+        <div className="flex items-center gap-2 px-4 py-3 rounded-xl bg-rose-500/[0.08] text-rose-600 dark:text-rose-400 text-body font-medium">
           <AlertTriangle className="w-4 h-4 shrink-0" />
           {error}
         </div>
@@ -109,10 +109,10 @@ export default function MailSettingsPanel() {
           return (
             <div key={name} className="p-4 flex flex-col sm:flex-row sm:items-start gap-3 bg-white dark:bg-slate-900">
               <div className="sm:w-56 shrink-0">
-                <div className="font-semibold text-slate-800 dark:text-slate-200 text-[length:var(--mail-fs-nav)]">
+                <div className="font-semibold text-slate-800 dark:text-slate-200 text-body">
                   {name}
                 </div>
-                <div className="text-[length:var(--mail-fs-meta)] text-slate-400 dark:text-slate-500 mt-0.5 flex items-center gap-1.5">
+                <div className="text-caption text-slate-400 dark:text-slate-500 mt-0.5 flex items-center gap-1.5">
                   {savingService === name && <LoaderCircle className="w-3 h-3 animate-spin" />}
                   {savedService === name && <Check className="w-3 h-3 text-primary" />}
                   {ids.length === 0 ? "بلا تعميد" : `${ids.length} معمِّداً`}
@@ -125,7 +125,7 @@ export default function MailSettingsPanel() {
                   return (
                     <span
                       key={id}
-                      className="h-7 px-2.5 rounded-full bg-primary/[0.08] text-primary dark:bg-primary/15 dark:text-teal-300 flex items-center gap-1.5 text-[length:var(--mail-fs-meta)] font-medium"
+                      className="h-7 px-2.5 rounded-full bg-primary/[0.08] text-primary dark:bg-primary/15 dark:text-teal-300 flex items-center gap-1.5 text-caption font-medium"
                     >
                       {person?.name ?? id}
                       <button

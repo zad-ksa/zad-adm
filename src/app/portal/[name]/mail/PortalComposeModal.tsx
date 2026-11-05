@@ -2,6 +2,7 @@
 
 import { useRef, useState } from "react";
 import Select from "@/components/console/Select";
+import { btn } from "@/components/console/ui";
 import dynamic from "next/dynamic";
 import {
   X,
@@ -203,10 +204,10 @@ export default function PortalComposeModal({
   };
 
   return (
-    <div className="mail-ui fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-6 bg-slate-950/60 backdrop-blur-sm">
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-6 bg-slate-950/60 backdrop-blur-sm">
       <div
         dir="rtl"
-        className="bg-white dark:bg-slate-900 rounded-t-2xl sm:rounded-2xl border border-slate-200/70 dark:border-slate-800 shadow-2xl w-full sm:max-w-3xl h-[92dvh] sm:h-[640px] sm:max-h-[90vh] flex flex-col overflow-hidden"
+        className="bg-white dark:bg-slate-900 rounded-t-xl sm:rounded-xl border border-slate-200/70 dark:border-slate-800 shadow-2xl w-full sm:max-w-3xl h-[92dvh] sm:h-[640px] sm:max-h-[90vh] flex flex-col overflow-hidden"
       >
         <div className="flex items-center justify-between px-5 py-4 border-b border-slate-200/70 dark:border-slate-800 shrink-0">
           <h2 className="text-base font-semibold text-slate-900 dark:text-slate-100">
@@ -429,7 +430,7 @@ export default function PortalComposeModal({
               failedCount > 0 ||
               (kind === "COLLEAGUES" ? toIds.length === 0 : !serviceName)
             }
-            className="flex items-center gap-2 h-11 px-6 text-white bg-primary hover:bg-primary/90 rounded-xl font-semibold text-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className={btn.primary}
           >
             {isSubmitting ? <LoaderCircle className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
             {willAwaitApproval ? "إرسال للتعميد" : "إرسال"}

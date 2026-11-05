@@ -662,6 +662,32 @@ export async function markAsRead(mailId: string) {
   revalidatePath("/main/mail");
 }
 
+/**
+ * تحديدُ عدّةِ رسائلَ مقروءةً — طلبٌ واحدٌ لا طلبٌ لكلِّ رسالة.
+ *
+ * فالقاعدةُ في سنغافورة، ومناداةُ `markAsRead` في حلقةٍ على عشرين رسالةً
+ * عشرون ذهاباً وعودة — ثانيتان أو ثلاث يُنتظر فيها الزرُّ وقد انتهى العمل.
+ * و`updateMany` بشرطٍ واحدٍ يُنجزها دفعةً.
+ *
+ * **والشرطُ على `employeeId` لا على الرسائل وحدَها**: المعرِّفاتُ تأتي من
+ * المتصفّح، فبغيره يُحدِّد المرءُ قراءةَ رسائلِ غيره بتمريرِ معرِّفاتٍ ليست له.
+ * ولا يُطلب عددُ ما تغيَّر فعلاً: من حدَّد مقروءاً ما هو مقروءٌ أصلاً لم
+ * يُخطئ، فلا يُقال له شيء.
+ */
+export async function markManyAsRead(mailIds: string[]) {
+  const user = await getAuthenticatedUser();
+  const ids = [...new Set(mailIds.filter((id) => typeof id === "string" && id))];
+  if (ids.length === 0) return { updated: 0 };
+
+  const { count } = await prisma.mailRecipient.updateMany({
+    where: { mailId: { in: ids }, employeeId: user.id, isRead: false },
+    data: { isRead: true },
+  });
+
+  revalidatePath("/main/mail");
+  return { updated: count };
+}
+
 export async function toggleStar(mailId: string) {
   const user = await getAuthenticatedUser();
 

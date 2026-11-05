@@ -163,7 +163,7 @@ export function Dialog({
   /** نافذةٌ فيها إدخالٌ طويل: نقرةٌ طائشة خارجها لا تمحو ما كُتب. */
   closeOnBackdrop?: boolean;
   /**
-   * صنف نطاقٍ يحمل متغيّرات CSS (`design-requests-ui`، `mail-ui`): النافذة تُرسم
+   * صنف نطاقٍ يحمل متغيّرات CSS (`design-requests-ui` مثلاً): النافذة تُرسم
    * في جذر الصفحة خارج غلاف شاشتها، فبدونه تضيع مقاسات الخطّ المعرَّفة عليه.
    */
   scopeClassName?: string;

@@ -13,8 +13,8 @@
 | الملف | العناصر |
 |---|---|
 | `ui.tsx` | `btn` · `field` · `Badge` · `Avatar` · `AvatarStack` · `CheckMark` · `IconTile` · `SectionHeader` · `Field` · `OptionRow` · `SelectAll` · `Note` · `NameList` · `Count` · `Dot` · `MONO` · `cx` |
-| | **الجديد:** `Spinner` · `Skeleton` · `SkeletonRows` · `MetricCard` · `NavCard` · `NavCircle` · `RecordCard` · `EntityCard` |
-| `layout.tsx` | `PageHeader` · `StatStrip` · `Tabs` · `Segmented` · `SearchField` · `TableShell` · `Th` · `EmptyState` |
+| | **الجديد:** `Spinner` · `Skeleton` · `SkeletonRows` · `MetricCard` · `NavCard` · `NavCircle` · `RecordCard` · `EntityCard` · `listRow` · `toolbarClass` |
+| `layout.tsx` | `PageHeader` · `StatStrip` · `Tabs` · `Segmented` · `SearchField` · `TableShell` · `Th` · `SortTh` · `Rail` · `RailItem` · `EmptyState` |
 | `overlays.tsx` | `Sheet` · `ConfirmDialog` · `useToast`/`Toast` · `RowMenu` · `MenuItem` · `FooterStatus` |
 | `controls.tsx` | `Pagination` |
 | `Select.tsx` | `Select` — قائمة منسدلة بصيغتين |
@@ -91,6 +91,22 @@
 **نموذجٌ على صفحات:** `<StepTrail steps current onJump />` — و`Tabs` لا تصلح له:
 التبويباتُ تنقل إلى أيٍّ في أي وقت، وأقسامُ النموذج مرتَّبةٌ يُشترط في اللاحق ما
 قبله. ويُصعَد إلى رأس الصفحة عند كل انتقال.
+
+**فرزٌ من رأس الجدول:** `<SortTh id="date" active={column} dir={dir} onSort={…}>تاريخ الرفع</SortTh>` —
+والسهمُ يقول الاتّجاهَ **الحاضر** لا المُقبِل، و`aria-sort` على الخليّة. وكان الفرزُ
+يُكتب قائمةَ خياراتٍ في `Select`: سطرٌ لكل عمودٍ في كل اتّجاه، فجدولٌ بستّة أعمدةٍ
+يحتاج اثني عشر خياراً تُكتب يداً وتُنسى واحدة.
+
+**شاشةٌ بعمودِ تنقّلٍ داخليّ:** `<Rail>` ثم `<RailItem label icon active badge onClick />`
+لمجلّداتٍ كمجلّدات البريد. وليست `Tabs`: تلك صفٌّ أفقيٌّ لثلاثةٍ أو أربعة، وهذه عمودٌ
+لستّةٍ وأكثرَ لكلٍّ أيقونةٌ وعدّاد. و`toolbarClass` لشريط الأفعال فوق القائمة.
+
+**قائمةٌ كثيفةٌ تُحدَّد عناصرُها:** `listRow({ selected, unread })` — والمحدَّدُ يُميَّز
+بالحياد (مربّعُ اختيارٍ ومسحةٌ رماديّة) والجديدُ باللون على حرف الصفّ: اللونُ حالةُ
+بيانٍ، و«محدَّدٌ» قرارُ قارئٍ لحظيٌّ لا حال.
+
+**صورةُ شخصٍ:** `<Avatar name src size />` — `src` للصورة المرفوعة والحرفان بديلُها،
+فلا تُرسم دائرةٌ بـ`Image` في كل شاشة.
 
 **بطاقةُ كيانٍ تُنقر:** `<EntityCard href title badge body stats footer />` —
 لاسمٍ وحالةٍ وأرقامٍ وذيلِ أزرار. و`NavCard` لبطاقةِ انتقالٍ بلا أرقام،

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { btn, field } from "@/components/console/ui";
 import {
   AlertTriangle,
   Building2,
@@ -141,20 +142,20 @@ export default function MailApprovalsPanel() {
   return (
     <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-6">
       {error && (
-        <div className="flex items-center gap-2 px-4 py-3 rounded-xl bg-rose-500/[0.08] text-rose-600 dark:text-rose-400 text-[length:var(--mail-fs-nav)] font-medium">
+        <div className="flex items-center gap-2 px-4 py-3 rounded-xl bg-rose-500/[0.08] text-rose-600 dark:text-rose-400 text-body font-medium">
           <AlertTriangle className="w-4 h-4 shrink-0" />
           {error}
         </div>
       )}
       {notice && (
-        <div className="flex items-center gap-2 px-4 py-3 rounded-xl bg-primary/[0.08] text-primary dark:text-teal-300 text-[length:var(--mail-fs-nav)] font-medium">
+        <div className="flex items-center gap-2 px-4 py-3 rounded-xl bg-primary/[0.08] text-primary dark:text-teal-300 text-body font-medium">
           <CircleCheck className="w-4 h-4 shrink-0" />
           {notice}
         </div>
       )}
 
       <section className="space-y-3">
-        <h2 className="text-[length:var(--mail-fs-subject)] font-semibold text-slate-900 dark:text-slate-100">
+        <h2 className="text-body font-semibold text-slate-900 dark:text-slate-100">
           بانتظار تعميدك
           {toApprove.length > 0 && (
             <span className="ms-2 h-5 min-w-5 px-1.5 inline-flex items-center justify-center rounded-full bg-primary text-white text-[10px] font-bold align-middle">
@@ -164,7 +165,7 @@ export default function MailApprovalsPanel() {
         </h2>
 
         {toApprove.length === 0 ? (
-          <p className="text-[length:var(--mail-fs-nav)] text-slate-500 dark:text-slate-400">
+          <p className="text-body text-slate-500 dark:text-slate-400">
             لا شيء ينتظرك. وما لا تكون معمِّداً لخدمته لا يظهر هنا.
           </p>
         ) : (
@@ -178,7 +179,7 @@ export default function MailApprovalsPanel() {
               >
                 <header className="flex items-start justify-between gap-3 flex-wrap">
                   <div className="min-w-0">
-                    <div className="flex items-center gap-2 flex-wrap text-[length:var(--mail-fs-meta)] text-slate-500 dark:text-slate-400">
+                    <div className="flex items-center gap-2 flex-wrap text-caption text-slate-500 dark:text-slate-400">
                       <span className="h-6 px-2 inline-flex items-center gap-1 rounded-full bg-primary/[0.08] text-primary dark:bg-primary/15 dark:text-teal-300 font-medium">
                         <Building2 className="w-3 h-3" />
                         {mail.charity?.name}
@@ -208,7 +209,7 @@ export default function MailApprovalsPanel() {
                         setDraftSubject(mail.subject);
                         setDraftBody(mail.body);
                       }}
-                      className="h-8 px-3 rounded-lg text-slate-600 dark:text-slate-300 bg-slate-100/70 dark:bg-slate-800/60 hover:bg-slate-200/70 dark:hover:bg-slate-700/60 flex items-center gap-1.5 text-[length:var(--mail-fs-meta)] font-semibold transition-colors"
+                      className={btn.secondary}
                     >
                       <Pencil className="w-3.5 h-3.5" />
                       {isEditing ? "إلغاء التعديل" : "تعديل"}
@@ -219,7 +220,7 @@ export default function MailApprovalsPanel() {
                         setReturningId(returningId === mail.id ? null : mail.id);
                         setReturnNote("");
                       }}
-                      className="h-8 px-3 rounded-lg text-amber-700 dark:text-amber-400 bg-amber-500/[0.10] hover:bg-amber-500/[0.18] flex items-center gap-1.5 text-[length:var(--mail-fs-meta)] font-semibold transition-colors"
+                      className={btn.secondary}
                     >
                       <Undo2 className="w-3.5 h-3.5" />
                       إرجاع
@@ -228,7 +229,7 @@ export default function MailApprovalsPanel() {
                       type="button"
                       onClick={() => handleApprove(mail)}
                       disabled={isBusy}
-                      className="h-8 px-3 rounded-lg text-white bg-primary hover:bg-primary/90 flex items-center gap-1.5 text-[length:var(--mail-fs-meta)] font-semibold transition-colors disabled:opacity-50"
+                      className={btn.primary}
                     >
                       {isBusy ? <LoaderCircle className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" />}
                       اعتماد وإرسال
@@ -242,43 +243,43 @@ export default function MailApprovalsPanel() {
                       value={draftSubject}
                       onChange={(e) => setDraftSubject(e.target.value)}
                       placeholder="موضوع الرسالة"
-                      className="w-full h-10 px-3 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-[length:var(--mail-fs-nav)] font-semibold text-slate-900 dark:text-slate-100 outline-none focus:border-primary"
+                      className="w-full h-10 px-3 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-body font-semibold text-slate-900 dark:text-slate-100 outline-none focus:border-primary"
                     />
                     <div className="rounded-lg border border-slate-200 dark:border-slate-700 overflow-hidden flex flex-col">
                       <MailRichTextEditor value={draftBody} onChange={setDraftBody} />
                     </div>
-                    <p className="text-[length:var(--mail-fs-meta)] text-slate-400 dark:text-slate-500">
+                    <p className="text-caption text-slate-400 dark:text-slate-500">
                       التعديل يُحفظ مع الاعتماد — الرسالة تخرج كما تراها الآن.
                     </p>
                   </div>
                 ) : (
-                  <p className="text-[length:var(--mail-fs-nav)] text-slate-600 dark:text-slate-300 line-clamp-3">
+                  <p className="text-body text-slate-600 dark:text-slate-300 line-clamp-3">
                     {htmlToPlainText(mail.body)}
                   </p>
                 )}
 
                 {mail.attachments.length > 0 && (
-                  <p className="text-[length:var(--mail-fs-meta)] text-slate-400 dark:text-slate-500">
+                  <p className="text-caption text-slate-400 dark:text-slate-500">
                     {mail.attachments.length} مرفقاً: {mail.attachments.map((a) => a.fileName).join("، ")}
                   </p>
                 )}
 
                 {returningId === mail.id && (
                   <div className="rounded-lg border border-amber-300/60 dark:border-amber-900/50 bg-amber-500/[0.06] p-3 space-y-2">
-                    <label className="block text-[length:var(--mail-fs-meta)] font-semibold text-amber-800 dark:text-amber-300">
+                    <label className="block text-caption font-semibold text-amber-800 dark:text-amber-300">
                       سبب الإرجاع — يقرأه صاحب الرسالة مع مسودته
                     </label>
                     <textarea
                       value={returnNote}
                       onChange={(e) => setReturnNote(e.target.value)}
                       rows={2}
-                      className="w-full px-3 py-2 rounded-lg border border-amber-300/60 dark:border-amber-900/50 bg-white dark:bg-slate-900 text-[length:var(--mail-fs-nav)] text-slate-800 dark:text-slate-200 outline-none focus:border-amber-500"
+                      className={field}
                     />
                     <button
                       type="button"
                       onClick={() => handleReturn(mail)}
                       disabled={isBusy || !returnNote.trim()}
-                      className="h-8 px-3 rounded-lg text-white bg-amber-600 hover:bg-amber-700 flex items-center gap-1.5 text-[length:var(--mail-fs-meta)] font-semibold transition-colors disabled:opacity-50"
+                      className={btn.secondary}
                     >
                       {isBusy ? <LoaderCircle className="w-3.5 h-3.5 animate-spin" /> : <Undo2 className="w-3.5 h-3.5" />}
                       إرجاع إلى المسودات
@@ -292,12 +293,12 @@ export default function MailApprovalsPanel() {
       </section>
 
       <section className="space-y-3">
-        <h2 className="text-[length:var(--mail-fs-subject)] font-semibold text-slate-900 dark:text-slate-100">
+        <h2 className="text-body font-semibold text-slate-900 dark:text-slate-100">
           بريدك الموقوف على التعميد
         </h2>
 
         {mine.length === 0 ? (
-          <p className="text-[length:var(--mail-fs-nav)] text-slate-500 dark:text-slate-400">
+          <p className="text-body text-slate-500 dark:text-slate-400">
             لا رسائل لك تنتظر تعميد أحد.
           </p>
         ) : (
@@ -306,7 +307,7 @@ export default function MailApprovalsPanel() {
               key={mail.id}
               className="rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-800/30 p-4"
             >
-              <div className="flex items-center gap-2 flex-wrap text-[length:var(--mail-fs-meta)] text-slate-500 dark:text-slate-400">
+              <div className="flex items-center gap-2 flex-wrap text-caption text-slate-500 dark:text-slate-400">
                 <Clock className="w-3.5 h-3.5" />
                 <span>بانتظار تعميد «{mail.serviceName}»</span>
                 <span>·</span>
@@ -317,7 +318,7 @@ export default function MailApprovalsPanel() {
               <h3 className="mt-1 font-semibold text-slate-900 dark:text-slate-100">
                 {mail.subject || "(بدون موضوع)"}
               </h3>
-              <p className="mt-1 text-[length:var(--mail-fs-nav)] text-slate-600 dark:text-slate-300 line-clamp-2">
+              <p className="mt-1 text-body text-slate-600 dark:text-slate-300 line-clamp-2">
                 {htmlToPlainText(mail.body)}
               </p>
             </article>

@@ -4,20 +4,18 @@ import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   ArrowRight,
+  ChevronDown,
+  Download,
+  Forward,
+  Paperclip,
   Reply,
   ReplyAll,
-  Forward,
   Trash2,
-  Paperclip,
-  Download,
-  User,
-  ChevronDown,
-  AlertTriangle,
 } from "lucide-react";
 import ComposeModal from "../ComposeModal";
 import { ConfirmDialog } from "@/components/console/ConfirmDialog";
+import { Avatar, Badge, MONO, Note, btn, cx, toolbarClass } from "@/components/console/ui";
 import { moveToTrash } from "@/app/actions/mail";
-import Image from "next/image";
 import { formatMailDate, htmlToPlainText, splitQuotedHtml } from "../mailUtils";
 
 interface MailViewClientProps {
@@ -55,6 +53,12 @@ type ThreadMessage = {
   serviceName?: string | null;
 };
 
+/**
+ * شاشةُ قراءةِ رسالةٍ ومحادثتها — بعدّة اللوحة.
+ *
+ * وكانت تُرسم بتدرّجٍ لونيٍّ في شريطها، وأزرارٍ بزوايا `rounded-xl` وخلفيّةٍ
+ * شفّافةٍ من لون الهوية، وسُلّمِ خطٍّ خاصٍّ بالبريد — فبدت من مشروعٍ آخر.
+ */
 export default function MailViewClient({ session, mail, employees }: MailViewClientProps) {
   const router = useRouter();
   const [replyTarget, setReplyTarget] = useState<{ message: ThreadMessage; all: boolean } | null>(null);
@@ -115,46 +119,39 @@ export default function MailViewClient({ session, mail, employees }: MailViewCli
     }
   };
 
+  const allExpanded = expanded.size >= messages.length;
+
   return (
-    <div className="mail-ui flex h-[calc(100dvh-6rem)] sm:h-[calc(100dvh-7rem)] lg:h-[calc(100dvh-7.5rem)] bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/70 dark:border-slate-800 shadow-[var(--mail-shadow-card)] overflow-hidden flex-col">
-      {/* Header / Toolbar */}
-      <div className="h-12 bg-gradient-to-b from-white to-slate-50 dark:from-slate-900 dark:to-slate-950 border-b border-slate-200/70 dark:border-slate-800 flex items-center justify-between px-2 sm:px-6 gap-2 shrink-0">
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => router.back()}
-            className="h-9 px-3 flex items-center gap-2 text-slate-500 dark:text-slate-400 hover:text-primary dark:hover:text-teal-300 hover:bg-primary/[0.08] rounded-full transition-colors"
-          >
-            <ArrowRight className="w-4 h-4" />
-            <span className="text-[length:var(--mail-fs-nav)] font-medium">العودة</span>
-          </button>
-          {messages.length > 1 && (
-            <>
-              <span className="h-6 px-2 rounded-full bg-primary/10 dark:bg-primary/15 text-primary dark:text-teal-300 text-[length:var(--mail-fs-meta)] font-semibold flex items-center">
-                {messages.length} رسائل
-              </span>
-              <button
-                onClick={() => (expanded.size >= messages.length ? collapseAll() : expandAll())}
-                className="text-[length:var(--mail-fs-meta)] font-medium text-slate-500 dark:text-slate-400 hover:text-primary dark:hover:text-teal-300 px-2"
-              >
-                {expanded.size >= messages.length ? "طي الكل" : "توسيع الكل"}
-              </button>
-            </>
-          )}
-        </div>
+    <div className="flex h-[calc(100dvh-6rem)] flex-col overflow-hidden rounded-xl border border-slate-200 bg-white sm:h-[calc(100dvh-7rem)] lg:h-[calc(100dvh-7.5rem)] dark:border-slate-800 dark:bg-slate-900">
+      <div className={toolbarClass}>
+        <button type="button" onClick={() => router.back()} className={btn.ghost}>
+          <ArrowRight className="size-4" />
+          العودة
+        </button>
+
+        {messages.length > 1 && (
+          <>
+            <Badge tone="brand">{messages.length} رسائل</Badge>
+            <button type="button" onClick={() => (allExpanded ? collapseAll() : expandAll())} className={btn.ghost}>
+              {allExpanded ? "طي الكل" : "توسيع الكل"}
+            </button>
+          </>
+        )}
 
         <button
+          type="button"
           onClick={() => setIsConfirmDeleteOpen(true)}
-          className="w-9 h-9 flex items-center justify-center rounded-lg text-rose-600 dark:text-rose-400 hover:bg-rose-500/[0.10] transition-colors"
+          className={cx(btn.iconDanger, "ms-auto")}
           title="نقل إلى المهملات"
+          aria-label="نقل إلى المهملات"
         >
-          <Trash2 className="w-4 h-4" />
+          <Trash2 className="size-4" />
         </button>
       </div>
 
       {errorMessage && (
-        <div className="mx-4 sm:mx-6 mt-4 flex items-center gap-2 px-4 py-3 rounded-xl bg-rose-500/[0.08] text-rose-600 dark:text-rose-400 text-[length:var(--mail-fs-nav)] font-medium shrink-0">
-          <AlertTriangle className="w-4 h-4 shrink-0" />
-          {errorMessage}
+        <div className="mx-3 mt-3 shrink-0 sm:mx-6">
+          <Note tone="danger">{errorMessage}</Note>
         </div>
       )}
 
@@ -162,8 +159,8 @@ export default function MailViewClient({ session, mail, employees }: MailViewCli
       {/* The body is the point of this screen — p-8 around it on a laptop was
           two inches of nothing on each side. */}
       <div className="flex-1 overflow-y-auto p-3 sm:p-6">
-        <div className="max-w-4xl mx-auto space-y-4">
-          <h1 className="text-[length:var(--mail-fs-h1)] tracking-[var(--mail-tracking-h1)] font-semibold text-slate-900 dark:text-slate-100">
+        <div className="mx-auto max-w-4xl space-y-4">
+          <h1 className="text-section font-semibold tracking-tight text-slate-900 dark:text-slate-100">
             {mail.subject || "(بدون موضوع)"}
           </h1>
 
@@ -294,54 +291,43 @@ function ThreadMessageCard({
   if (!isExpanded) {
     return (
       <button
+        type="button"
         onClick={onToggle}
-        className="w-full h-12 px-4 flex items-center gap-3 rounded-xl border border-slate-200/70 dark:border-slate-800 bg-white dark:bg-slate-900 hover:bg-primary/[0.03] hover:shadow-[var(--mail-shadow-row-hover)] transition-all text-right"
+        className={cx(
+          "flex h-12 w-full items-center gap-3 rounded-lg border border-slate-200 bg-white px-4 text-right transition-colors",
+          "hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:hover:bg-slate-800/40",
+          "outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+        )}
       >
-        <div className="w-6 h-6 rounded-full bg-primary/10 dark:bg-primary/20 flex items-center justify-center shrink-0 overflow-hidden">
-          {message.sender?.avatarUrl ? (
-            <Image src={message.sender.avatarUrl} alt={message.sender.name} width={24} height={24} className="object-cover w-full h-full" />
-          ) : (
-            <User className="w-3 h-3 text-primary dark:text-teal-300" />
-          )}
-        </div>
-        <span className="font-semibold text-[length:var(--mail-fs-sender)] text-slate-800 dark:text-slate-200 shrink-0">
-          {senderLabel}
-        </span>
-        <span className="truncate text-[length:var(--mail-fs-snippet)] text-slate-400 dark:text-slate-500">
+        <Avatar name={senderLabel} src={message.sender?.avatarUrl} size="sm" />
+        <span className="shrink-0 text-body font-semibold text-slate-800 dark:text-slate-200">{senderLabel}</span>
+        <span className="truncate text-meta text-slate-400 dark:text-slate-500">
           {htmlToPlainText(mainBody).slice(0, 140)}
         </span>
         <span className="flex-1" />
-        {message.attachments?.length > 0 && <Paperclip className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500 shrink-0" />}
-        <span className="text-[length:var(--mail-fs-meta)] text-slate-400 dark:text-slate-500 shrink-0">
+        {message.attachments?.length > 0 && (
+          <Paperclip className="size-3.5 shrink-0 text-slate-400 dark:text-slate-500" />
+        )}
+        <span className={cx(MONO, "shrink-0 text-caption text-slate-400 dark:text-slate-500")}>
           {formatMailDate(message.createdAt)}
         </span>
-        <ChevronDown className="w-4 h-4 text-slate-300 dark:text-slate-600 shrink-0" />
+        <ChevronDown className="size-4 shrink-0 text-slate-300 dark:text-slate-600" />
       </button>
     );
   }
 
   return (
-    <div className="rounded-xl border border-primary/15 dark:border-primary/25 bg-white dark:bg-slate-900 shadow-[var(--mail-shadow-card)] p-3 sm:p-5">
-      <div className="flex items-start justify-between flex-wrap gap-4">
-        <button onClick={onToggle} className="flex items-center gap-4 text-right">
-          <div className="w-10 h-10 rounded-full bg-primary/10 dark:bg-primary/20 flex items-center justify-center shrink-0 overflow-hidden">
-            {message.sender?.avatarUrl ? (
-              <Image src={message.sender.avatarUrl} alt={message.sender.name} width={40} height={40} className="object-cover w-full h-full" />
-            ) : (
-              <User className="w-5 h-5 text-primary dark:text-teal-300" />
-            )}
-          </div>
+    <div className="rounded-xl border border-slate-200 bg-white p-3 sm:p-5 dark:border-slate-800 dark:bg-slate-900">
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <button type="button" onClick={onToggle} className="flex items-center gap-4 text-right">
+          <Avatar name={senderLabel} src={message.sender?.avatarUrl} size="lg" />
           <div>
-            <div className="font-semibold text-slate-900 dark:text-slate-100 text-[length:var(--mail-fs-sender)] flex items-center gap-2 flex-wrap">
+            <div className="flex flex-wrap items-center gap-2 text-body font-semibold text-slate-900 dark:text-slate-100">
               {senderLabel}
               {/* البريد بين زاد والجمعيات يخرج باسم خدمةٍ لا باسم كاتبه، فتُذكر الخدمة صراحةً. */}
-              {message.serviceName && (
-                <span className="h-6 px-2 inline-flex items-center rounded-full bg-primary/[0.08] text-primary dark:bg-primary/15 dark:text-teal-300 text-[length:var(--mail-fs-meta)] font-medium">
-                  زاد | {message.serviceName}
-                </span>
-              )}
+              {message.serviceName && <Badge tone="brand">زاد | {message.serviceName}</Badge>}
             </div>
-            <div className="text-[length:var(--mail-fs-meta)] text-slate-500 dark:text-slate-400 flex items-center gap-2 flex-wrap mt-1">
+            <div className="mt-1 flex flex-wrap items-center gap-2 text-caption text-slate-500 dark:text-slate-400">
               <span>إلى:</span>
               <span className="text-slate-600 dark:text-slate-300">
                 {message.charity && message.recipients?.some((r) => r.charityUserId)
@@ -373,32 +359,28 @@ function ThreadMessageCard({
           </div>
         </button>
 
-        <div className="flex items-center gap-2 shrink-0">
-          <button
-            onClick={onReply}
-            className="h-9 px-4 rounded-xl bg-primary/10 text-primary dark:bg-primary/15 dark:text-teal-300 hover:bg-primary hover:text-white dark:hover:bg-primary transition-colors flex items-center gap-2 font-semibold text-[length:var(--mail-fs-meta)]"
-          >
-            <Reply className="w-3.5 h-3.5" />
+        <div className="flex shrink-0 items-center gap-2">
+          {/* «ردّ» هو الفعلُ المقصودُ من هذه الشاشة، فهو وحدَه الأوّلُ. */}
+          <button type="button" onClick={onReply} className={btn.primary}>
+            <Reply className="size-3.5" />
             رد
           </button>
           {canReplyAll && (
             <button
+              type="button"
               onClick={onReplyAll}
               title={`رد على الكل (${otherPeople.length + 1})`}
-              className="h-9 px-4 rounded-xl bg-primary/10 text-primary dark:bg-primary/15 dark:text-teal-300 hover:bg-primary hover:text-white dark:hover:bg-primary transition-colors flex items-center gap-2 font-semibold text-[length:var(--mail-fs-meta)]"
+              className={btn.secondary}
             >
-              <ReplyAll className="w-3.5 h-3.5" />
+              <ReplyAll className="size-3.5" />
               رد على الكل
             </button>
           )}
-          <button
-            onClick={onForward}
-            className="h-9 px-4 rounded-xl bg-slate-100/70 text-slate-600 dark:bg-slate-800/60 dark:text-slate-300 hover:bg-slate-200/70 dark:hover:bg-slate-700/60 transition-colors flex items-center gap-2 font-semibold text-[length:var(--mail-fs-meta)]"
-          >
-            <Forward className="w-3.5 h-3.5" />
+          <button type="button" onClick={onForward} className={btn.secondary}>
+            <Forward className="size-3.5" />
             إعادة توجيه
           </button>
-          <span className="text-[length:var(--mail-fs-meta)] text-slate-400 dark:text-slate-500 whitespace-nowrap">
+          <span className={cx(MONO, "whitespace-nowrap text-caption text-slate-400 dark:text-slate-500")}>
             {new Intl.DateTimeFormat("ar-SA", { year: "numeric", month: "long", day: "numeric", hour: "2-digit", minute: "2-digit" }).format(
               new Date(message.createdAt)
             )}
@@ -413,23 +395,24 @@ function ThreadMessageCard({
       {quotedBody && (
         <div className="mt-2">
           <button
+            type="button"
             onClick={() => setShowQuoted((v) => !v)}
             aria-expanded={showQuoted}
             title={showQuoted ? "إخفاء النص المقتبس" : "إظهار النص المقتبس"}
-            className="h-6 px-2 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:bg-primary/[0.08] hover:text-primary dark:hover:text-teal-300 transition-colors leading-none tracking-widest"
+            className={cx(btn.ghost, "h-6 tracking-widest")}
           >
             •••
           </button>
           {showQuoted && (
-            <div className="mail-prose text-slate-800 dark:text-slate-200 mt-2" dangerouslySetInnerHTML={{ __html: quotedBody }} />
+            <div className="mail-prose mt-2 text-slate-800 dark:text-slate-200" dangerouslySetInnerHTML={{ __html: quotedBody }} />
           )}
         </div>
       )}
 
       {message.attachments && message.attachments.length > 0 && (
         <div className="mt-6">
-          <h3 className="text-[length:var(--mail-fs-meta)] font-medium text-slate-600 dark:text-slate-300 mb-3 flex items-center gap-2">
-            <Paperclip className="w-3.5 h-3.5" />
+          <h3 className="mb-3 flex items-center gap-2 text-meta font-medium text-slate-600 dark:text-slate-300">
+            <Paperclip className="size-3.5" />
             المرفقات ({message.attachments.length})
           </h3>
           <div className="flex flex-wrap gap-3">
@@ -439,19 +422,25 @@ function ThreadMessageCard({
                 href={att.fileUrl}
                 target="_blank"
                 rel="noreferrer"
-                className="flex items-center gap-3 p-3 border border-slate-200 dark:border-slate-700 rounded-xl hover:bg-primary/[0.04] hover:border-primary/30 transition-colors group bg-white dark:bg-slate-900"
+                className={cx(
+                  "group flex items-center gap-3 rounded-lg border border-slate-200 bg-white p-3 transition-colors",
+                  "hover:border-primary/30 hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:hover:bg-slate-800/40",
+                  "outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+                )}
               >
-                <div className="w-10 h-10 bg-primary/5 dark:bg-primary/10 rounded-lg flex items-center justify-center group-hover:bg-primary/10 transition-colors">
-                  <Download className="w-4 h-4 text-primary dark:text-teal-300" />
-                </div>
-                <div>
-                  <div className="text-[length:var(--mail-fs-nav)] font-medium text-slate-900 dark:text-slate-100 truncate max-w-[200px]">{att.fileName}</div>
+                <span className="grid size-10 shrink-0 place-items-center rounded-lg bg-slate-50 text-slate-500 transition-colors group-hover:text-primary dark:bg-slate-800 dark:text-slate-400 dark:group-hover:text-teal-300">
+                  <Download className="size-4" />
+                </span>
+                <span className="block">
+                  <span className="block max-w-[200px] truncate text-body font-medium text-slate-900 dark:text-slate-100">
+                    {att.fileName}
+                  </span>
                   {att.fileSize && (
-                    <div className="text-[length:var(--mail-fs-meta)] text-slate-500 dark:text-slate-400 mt-0.5">
+                    <span className={cx(MONO, "mt-0.5 block text-caption text-slate-500 dark:text-slate-400")}>
                       {(att.fileSize / 1024 / 1024).toFixed(2)} MB
-                    </div>
+                    </span>
                   )}
-                </div>
+                </span>
               </a>
             ))}
           </div>

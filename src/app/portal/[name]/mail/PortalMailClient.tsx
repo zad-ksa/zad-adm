@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { btn } from "@/components/console/ui";
+import { btn, cx, listRow } from "@/components/console/ui";
 import {
   Mail,
   Send,
@@ -472,9 +472,13 @@ export default function PortalMailClient({
                   <button
                     type="button"
                     onClick={() => openOne(mail.id)}
-                    className={`w-full text-right flex items-start sm:items-center gap-3 px-3 sm:px-4 py-3 transition-colors hover:bg-primary/[0.04] ${
-                      isUnread ? "bg-white dark:bg-slate-900" : "bg-slate-50/50 dark:bg-slate-800/20"
-                    }`}
+                    className={cx(
+                      // الحالاتُ من `listRow` كما في بريد زاد: الأبيضُ لغير
+                      // المقروء والرماديُّ الباهتُ للمقروء — فلا تختلف شاشتان
+                      // لشيءٍ واحد.
+                      listRow({ unread: isUnread }),
+                      "gap-3 px-3 py-3 sm:px-4"
+                    )}
                   >
                     <span
                       className={`w-2 h-2 rounded-full shrink-0 mt-1.5 sm:mt-0 ${
@@ -482,19 +486,23 @@ export default function PortalMailClient({
                       }`}
                     />
                     <span
-                      className={`w-32 sm:w-40 shrink-0 truncate text-sm ${
+                      className={cx(
+                        "w-32 shrink-0 truncate text-body sm:w-40",
                         isUnread
                           ? "font-bold text-slate-900 dark:text-white"
-                          : "font-medium text-slate-700 dark:text-slate-300"
-                      }`}
+                          : "font-normal text-slate-700 dark:text-slate-300"
+                      )}
                     >
                       {party}
                     </span>
                     <span className="flex-1 min-w-0 flex items-baseline gap-2">
                       <span
-                        className={`truncate text-sm ${
-                          isUnread ? "font-semibold text-slate-900 dark:text-white" : "text-slate-700 dark:text-slate-300"
-                        }`}
+                        className={cx(
+                          "truncate text-body",
+                          isUnread
+                            ? "font-bold text-slate-900 dark:text-white"
+                            : "font-normal text-slate-700 dark:text-slate-300"
+                        )}
                       >
                         {mail.subject || "(بدون موضوع)"}
                       </span>

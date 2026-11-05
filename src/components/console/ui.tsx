@@ -209,8 +209,16 @@ export function listRow({ selected = false, unread = false }: { selected?: boole
     selected
       ? "border-s-slate-300 bg-slate-100/80 dark:border-s-slate-600 dark:bg-slate-800/60"
       : unread
-        ? "border-s-primary bg-white hover:bg-slate-50/80 dark:border-s-teal-400 dark:bg-slate-900 dark:hover:bg-slate-800/40"
-        : "border-s-transparent bg-transparent hover:bg-slate-50/80 dark:hover:bg-slate-800/40"
+        // الجديدُ أبيضُ ناصع: هو الصفُّ الذي يُقصَد، فيَبرز بأفتح أرضيّةٍ في
+        // الشاشة لا بزخرفةٍ عليه.
+        ? "border-s-primary bg-white hover:bg-slate-50 dark:border-s-teal-400 dark:bg-slate-900 dark:hover:bg-slate-800/40"
+        // **والمقروءُ أرضيّتُه رماديّةٌ باهتة، لا شفّافة.**
+        //
+        // وكانت شفّافةً فأخذت بياضَ الحاوية، فاستوى المقروءُ وغيرُه في اللون
+        // ولم يُفرَّق بينهما إلّا بثِقَل الخطّ وحرفِ الصفّ — وهو فرقٌ لا يُمسح
+        // بالعين على قائمةٍ طويلة. والمقصودُ أن يتراجع المقروءُ خطوةً إلى
+        // الخلف، فيصير البياضُ وحدَه علامةَ ما لم يُقرأ.
+        : "border-s-transparent bg-slate-50/70 hover:bg-slate-100/70 dark:bg-slate-800/30 dark:hover:bg-slate-800/50"
   );
 }
 

@@ -98,11 +98,14 @@ export default function MailRow({
     <span className="hidden sm:block" />
   );
 
+  // المرسِلُ كالعنوان: عريضٌ في غير المقروءة، عاديٌّ في المقروءة. فثِقَلُ
+  // الخطِّ كلُّه في الصفّ يقول شيئاً واحداً — «هذه لم تُقرأ» — فإن بقي أحدُهما
+  // ثقيلاً بدا الصفُّ نصفَ مقروء.
   const senderName = (
     <span
       className={cx(
         "truncate text-body",
-        isUnread ? "font-semibold text-slate-900 dark:text-white" : "font-medium text-slate-700 dark:text-slate-300"
+        isUnread ? "font-bold text-slate-900 dark:text-white" : "font-normal text-slate-700 dark:text-slate-300"
       )}
       title={item.displayNameTitle}
     >
@@ -122,11 +125,13 @@ export default function MailRow({
     </span>
   );
 
+  // عنوانُ غيرِ المقروءة عريضٌ (bold)، والمقروءةُ بوزنٍ عاديّ — لا متوسّطٍ:
+  // المتوسّطُ قريبٌ من العريض فلا يُفرَّق بينهما في سطرٍ واحد.
   const subject = (
     <span
       className={cx(
         "text-body",
-        isUnread ? "font-semibold text-slate-900 dark:text-white" : "font-medium text-slate-700 dark:text-slate-300"
+        isUnread ? "font-bold text-slate-900 dark:text-white" : "font-normal text-slate-700 dark:text-slate-300"
       )}
     >
       {item.subject}

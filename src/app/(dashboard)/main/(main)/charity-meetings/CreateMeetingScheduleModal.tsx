@@ -1,11 +1,20 @@
 "use client";
 
 import { useState } from "react";
-import { X, Calendar, Clock, Loader2, Trash2, Wand2 } from "lucide-react";
+import { X, Calendar, Clock, Loader2, Wand2 } from "lucide-react";
 import { createMeetingSchedule } from "@/app/actions/meeting-schedules";
 import { formatClock12, WEEKDAY_LABELS } from "@/lib/attendanceTime";
 import { Dialog } from "@/components/console/Dialog";
-import { btn } from "@/components/console/ui";
+import Select from "@/components/console/Select";
+import { btn, field, Field, Note, OptionRow, SectionHeader } from "@/components/console/ui";
+import { AFTER_SLOT_ACTIONS, describeMeetingRules, parseMeetingRules, type AfterSlotAction } from "@/lib/meetingSlots";
+
+/** وحداتُ الإغلاق المسبق — تُخزَّن دقائقَ، وتُدخَل بالوحدة التي يفكّر بها الموظف. */
+const CUTOFF_UNITS: { value: string; label: string; minutes: number }[] = [
+  { value: "MINUTES", label: "دقيقة", minutes: 1 },
+  { value: "HOURS", label: "ساعة", minutes: 60 },
+  { value: "DAYS", label: "يوم", minutes: 24 * 60 },
+];
 
 // Reads the weekday straight off the Y-M-D numbers via Date.UTC, so the name
 // always matches the printed "YYYY-MM-DD" regardless of the browser's own
@@ -61,6 +70,26 @@ export default function CreateMeetingScheduleModal({
   const [generatedDays, setGeneratedDays] = useState<{ date: string; slots: string[] }[]>([]);
   const [hasGenerated, setHasGenerated] = useState(false);
   const [allowAlternativeRequest, setAllowAlternativeRequest] = useState(false);
+
+  // ── إغلاقُ الحجز ──────────────────────────────────────────────────────────
+  const [cutoffValue, setCutoffValue] = useState(0);
+  const [cutoffUnit, setCutoffUnit] = useState("HOURS");
+  const [cutoffDayStart, setCutoffDayStart] = useState(false);
+  const [blockSlotBefore, setBlockSlotBefore] = useState(false);
+  const [afterSlotAction, setAfterSlotAction] = useState<AfterSlotAction>("NONE");
+  const [afterSlotDelayMinutes, setAfterSlotDelayMinutes] = useState(15);
+
+  const unitMinutes = CUTOFF_UNITS.find((u) => u.value === cutoffUnit)?.minutes ?? 60;
+  const rulesInput = {
+    bookingCutoffMinutes: Math.max(0, cutoffValue) * unitMinutes,
+    bookingCutoffDayStart: cutoffDayStart,
+    blockSlotBefore,
+    afterSlotAction,
+    afterSlotDelayMinutes,
+  };
+  // المعاينةُ تُحسب بنفس المُطهِّر الذي يحكم به الخادم، فما يُقرأ هنا هو ما
+  // سيُحفظ — لا وصفٌ مكتوبٌ بيدٍ يسهو عن قيدٍ في الخادم.
+  const rulePreview = describeMeetingRules(parseMeetingRules({ duration, ...rulesInput }));
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
@@ -130,6 +159,7 @@ export default function CreateMeetingScheduleModal({
       slug,
       availableDays: finalDays, // Save the slots directly
       allowAlternativeRequest,
+      rules: rulesInput,
     });
 
     if (res.error) {
@@ -259,6 +289,92 @@ footer={<>
                 <Wand2 className="w-4 h-4" />
                 توليد الأوقات
               </button>
+            </div>
+
+            {/* إغلاقُ الحجز: مهلةٌ قبل الموعد، وما يحلّ بجاره حين يُحجز.
+
+                وهما في موضعٍ واحدٍ لأنّهما سؤالٌ واحد — «حتى متى يبقى هذا
+                الموعد معروضاً» — جوابُه مرّةً وقتٌ ومرّةً جارٌ محجوز. */}
+            <div className="space-y-4 rounded-xl border border-slate-200 bg-slate-50 p-5 dark:border-slate-800 dark:bg-slate-950">
+              <SectionHeader
+                title="إغلاق الحجز"
+                description="متى يتوقف عرضُ الموعد على صفحة الحجز — ويُطبَّق على الخادم أيضاً، فلا يُحجز موعدٌ أُغلق."
+              />
+
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <Field
+                  id="cutoff-value"
+                  label="يُغلق قبل الموعد بـ"
+                  hint="صفرٌ يعني يبقى مفتوحاً حتى وقت الموعد."
+                >
+                  <div className="flex items-center gap-2">
+                    <input
+                      id="cutoff-value"
+                      type="number"
+                      min={0}
+                      value={cutoffValue}
+                      onChange={(e) => setCutoffValue(Math.max(0, parseInt(e.target.value) || 0))}
+                      className={field}
+                    />
+                    <div className="w-28 shrink-0">
+                      <Select
+                        options={CUTOFF_UNITS.map((u) => ({ value: u.value, label: u.label }))}
+                        value={cutoffUnit}
+                        onSelect={setCutoffUnit}
+                        placeholder="الوحدة"
+                      />
+                    </div>
+                  </div>
+                </Field>
+
+                <Field
+                  id="after-slot-action"
+                  label="الموعد الذي بعد المحجوز"
+                  hint={afterSlotAction === "DELAY" ? "التأجيل لا يتجاوز مدة الاجتماع." : undefined}
+                >
+                  <div className="flex items-center gap-2">
+                    <Select
+                      options={AFTER_SLOT_ACTIONS.map((a) => ({ value: a.value, label: a.label }))}
+                      value={afterSlotAction}
+                      onSelect={(v) => setAfterSlotAction(v as AfterSlotAction)}
+                      placeholder="اختر"
+                    />
+                    {afterSlotAction === "DELAY" && (
+                      <div className="flex w-32 shrink-0 items-center gap-1.5">
+                        <input
+                          type="number"
+                          min={1}
+                          max={duration}
+                          value={afterSlotDelayMinutes}
+                          onChange={(e) => setAfterSlotDelayMinutes(Math.max(1, parseInt(e.target.value) || 1))}
+                          className={field}
+                        />
+                        <span className="text-meta text-slate-500">دقيقة</span>
+                      </div>
+                    )}
+                  </div>
+                </Field>
+              </div>
+
+              <div className="space-y-1">
+                <OptionRow
+                  label="لا يُحجز موعدٌ في يومه"
+                  note="من دخل عليه اليومُ أُغلق حجزُه، مهما بقي من وقت."
+                  checked={cutoffDayStart}
+                  onToggle={() => setCutoffDayStart((v) => !v)}
+                />
+                <OptionRow
+                  label="إغلاق الموعد الذي قبل المحجوز"
+                  note="فاصلٌ قبل الاجتماع، فلا يلتصق به موعدٌ آخر."
+                  checked={blockSlotBefore}
+                  onToggle={() => setBlockSlotBefore((v) => !v)}
+                />
+              </div>
+
+              <Note tone="brand">
+                <span className="font-semibold">ما سيُطبَّق: </span>
+                {rulePreview.join("، ")}.
+              </Note>
             </div>
 
             <label className="flex items-start gap-3 bg-slate-50 dark:bg-slate-950 p-4 rounded-xl border border-slate-200 dark:border-slate-800 cursor-pointer">

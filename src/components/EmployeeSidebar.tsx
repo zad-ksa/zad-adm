@@ -69,6 +69,7 @@ export default function EmployeeSidebar({
   unreadRequests = 0,
   unreadFinancial = 0,
   unreadMails = 0,
+  unseenBookings = 0,
 }: {
   session: any;
   isOpen: boolean;
@@ -76,6 +77,8 @@ export default function EmployeeSidebar({
   unreadRequests?: number;
   unreadFinancial?: number;
   unreadMails?: number;
+  /** حجوزاتُ مواعيدَ لم يرَها صاحبُ جدولها — شارةُ «الاجتماعات». */
+  unseenBookings?: number;
 }) {
   const roleLabels = useRoleLabels();
   const pathname = usePathname();
@@ -186,7 +189,7 @@ export default function EmployeeSidebar({
   }
   if (can("manage_communication")) {
     navItems.push({ label: "التواصل", href: "/main/communication", icon: MessageSquare });
-    navItems.push({ label: "الاجتماعات", href: "/main/charity-meetings", icon: Users });
+    navItems.push({ label: "الاجتماعات", href: "/main/charity-meetings", icon: Users, badge: unseenBookings });
   }
   if (can("manage_design_requests")) {
     navItems.push({ label: "طلبات التصاميم", href: "/main/design-requests", icon: Palette });

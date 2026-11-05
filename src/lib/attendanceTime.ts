@@ -12,7 +12,7 @@
 
 const RIYADH_OFFSET_MS = 3 * 60 * 60 * 1000;
 
-import { toCivilDate } from "./businessDays";
+import { toCivilDate } from "./businessDays.ts";
 
 export { toCivilDate };
 

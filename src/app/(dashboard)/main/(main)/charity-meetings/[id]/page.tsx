@@ -1,9 +1,14 @@
 import { prisma } from "@/lib/db";
 import { PageHeader, theadRowClass, thClass, tbodyClass, tdClass } from "@/components/console/layout";
 import { notFound } from "next/navigation";
-import { Calendar, Clock, User, MessageSquareText, Phone } from "lucide-react";
+import { Calendar, Clock, User, MessageSquareText, Phone, Lock } from "lucide-react";
 import { formatClock12 } from "@/lib/attendanceTime";
-import { cx } from "@/components/console/ui";
+import { Badge, cx } from "@/components/console/ui";
+import { describeMeetingRules, parseMeetingRules } from "@/lib/meetingSlots";
+import MarkBookingsSeen from "../MarkBookingsSeen";
+
+/** تُقرأ عند كل فتح: الحجوزاتُ تأتي من خارج الموقع بلا علمٍ منّا. */
+export const dynamic = "force-dynamic";
 
 export default async function CharityMeetingBookingsPage({
   params
@@ -31,6 +36,10 @@ export default async function CharityMeetingBookingsPage({
     notFound();
   }
 
+  const rules = parseMeetingRules(schedule);
+  const ruleLines = describeMeetingRules(rules);
+  const unseenCount = schedule.bookings.filter((b) => b.seenAt === null).length;
+
   // Helper to format date and get the day name
   const getDayName = (dateStr: string) => {
     try {
@@ -51,6 +60,9 @@ export default async function CharityMeetingBookingsPage({
 
   return (
     <div className="space-y-6" dir="rtl">
+      {/* فتحُ الصفحة هو رؤيةُ الحجوزات، فتنزل الشارةُ عن التبويب. */}
+      <MarkBookingsSeen scheduleId={schedule.id} unseenCount={unseenCount} />
+
       {/* Header */}
       <div className="flex items-center gap-4 mb-6">
         <PageHeader
@@ -61,6 +73,25 @@ export default async function CharityMeetingBookingsPage({
           title={schedule.title}
           description="جدول المواعيد المحجوزة"
         />
+      </div>
+
+      {/* قاعدةُ الإغلاق كما تُطبَّق — تُقرأ هنا لأنّها تُسأل هنا: «لِمَ لم
+          تستطع جمعيةٌ الحجزَ؟» سؤالٌ يُجاب عنه في صفحة الجدول لا في نموذج
+          إنشائه الذي أُغلق منذ أسبوع. */}
+      <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-[0_1px_2px_rgb(15_23_42/0.04)] dark:border-slate-800 dark:bg-slate-900">
+        <div className="flex items-start gap-3">
+          <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400">
+            <Lock className="size-5" />
+          </div>
+          <div className="min-w-0 space-y-1">
+            <h2 className="text-section font-semibold text-slate-800 dark:text-slate-100">قواعد الحجز</h2>
+            <ul className="space-y-0.5 text-caption text-slate-500 dark:text-slate-400">
+              {ruleLines.map((line) => (
+                <li key={line}>{line}</li>
+              ))}
+            </ul>
+          </div>
+        </div>
       </div>
 
       {/* Bookings Table */}
@@ -102,6 +133,10 @@ export default async function CharityMeetingBookingsPage({
                       <div className="flex items-center gap-2">
                         <User className="w-4 h-4 text-slate-400" />
                         {booking.charityName}
+                        {/* «جديد» للحجز الذي لم يُرَ قبل هذه الفتحة — الختمُ
+                            يقع بعد الرسم، فما يظهر الآن هو ما كان جديداً
+                            لحظةَ الدخول. */}
+                        {booking.seenAt === null && <Badge tone="brand">جديد</Badge>}
                       </div>
                     </td>
                     <td className={cx(tdClass, "text-slate-600 dark:text-slate-300")}>

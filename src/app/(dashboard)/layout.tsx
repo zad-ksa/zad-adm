@@ -37,6 +37,13 @@ export default async function DashboardRootLayout({ children }: { children: Reac
     where: { employeeId: session.id, isRead: false, isDeleted: false },
   });
 
+  // حجوزاتُ المواعيد: الجمعيةُ تحجز من صفحةٍ عامّةٍ بلا حسابٍ ولا بريد، فلولا
+  // شارةٌ على التبويب لبقي الموعدُ مجهولاً حتى يفتح صاحبُ الجدول صفحتَه من
+  // تلقائه. وهي لصاحب الجدول وحدَه — من أنشأه هو من يَعِد الجمعيةَ بالحضور.
+  const unseenBookings = await prisma.meetingBooking.count({
+    where: { seenAt: null, schedule: { createdById: session.id } },
+  });
+
   const roleLabels = await getRoleLabels();
 
   // Email login is optional, so this is a reminder rather than a gate. Read
@@ -50,7 +57,7 @@ export default async function DashboardRootLayout({ children }: { children: Reac
 
   return (
     <RoleLabelsProvider labels={roleLabels}>
-      <DashboardLayoutClient session={session} unreadRequests={unreadRequests} unreadFinancial={unreadFinancial} unreadMails={unreadMails}>
+      <DashboardLayoutClient session={session} unreadRequests={unreadRequests} unreadFinancial={unreadFinancial} unreadMails={unreadMails} unseenBookings={unseenBookings}>
         {needsEmail && (
           <div className="mb-4">
             <SetEmailBanner href="/main/profile" />

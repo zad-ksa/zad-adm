@@ -1128,6 +1128,25 @@ model MeetingSchedule {
   // يظهر للجمعية على صفحة الحجز العامة خيار "لا يناسبني أي من هذه الأوقات"
   // فقط حين يفعّله منشئ الجدول لهذا الجدول تحديداً.
   allowAlternativeRequest Boolean                     @default(false)
+
+  // ── قواعدُ الإغلاق ─────────────────────────────────────────────────────
+  // الحكمُ بها في `src/lib/meetingSlots.ts` وحدَه: صفحةُ الحجز تُظهر، والخادم
+  // يقبل أو يردّ، من دالّةٍ واحدة. والصفرُ والـfalse هما سلوكُ الجداول التي
+  // أُنشئت قبل هذه الأعمدة — فلا يتغيّر عليها شيء.
+
+  /// يُغلق الحجز قبل الموعد بهذه الدقائق. صفرٌ: يبقى مفتوحاً حتى بدايته.
+  bookingCutoffMinutes  Int     @default(0)
+  /// ويُغلق مع بداية يوم الموعد: من دخل عليه اليومُ لا يحجز فيه.
+  bookingCutoffDayStart Boolean @default(false)
+  /// حين يُحجز موعد: يُغلق الملاصقُ الذي قبله مباشرة.
+  blockSlotBefore       Boolean @default(false)
+  /// وما يحلّ بالملاصق الذي بعده: NONE | BLOCK | DELAY.
+  ///
+  /// نصٌّ لا تعداد: ثلاثُ قيمٍ لا تستحقّ نوعاً في Postgres يُعاد بناؤه كلّما
+  /// زِيدت قيمة، و`parseMeetingRules` يحرسها فما لا يُفهم يصير NONE.
+  afterSlotAction       String  @default("NONE")
+  /// دقائقُ تأجيل الملاصقِ بعده — لا تتجاوز مدّة الاجتماع.
+  afterSlotDelayMinutes Int     @default(0)
   createdById             String
   createdBy               Employee                    @relation("CreatedMeetingSchedules", fields: [createdById], references: [id], onDelete: Cascade)
   bookings                MeetingBooking[]
@@ -1147,8 +1166,16 @@ model MeetingBooking {
   startTime   String
   createdAt   DateTime        @default(now())
 
+  /// متى رآه صاحبُ الجدول.
+  ///
+  /// والشارةُ تعدّ ما لم يُرَ لا ما حُجز اليوم: الحجزُ يأتي من خارج الموقع بلا
+  /// حسابٍ ولا إشعارٍ يُقرأ، فلو عُدّ بالتاريخ لبقي الرقمُ يعلو على من رآه
+  /// كلَّه، أو سقط عن حجزٍ لم يفتحه أحد.
+  seenAt      DateTime?
+
   @@unique([scheduleId, date, startTime])
   @@index([scheduleId])
+  @@index([seenAt])
 }
 
 // طلب تواصل من جمعية تعذّرت عليها كل الأوقات المتاحة في الجدول — لا يحجز

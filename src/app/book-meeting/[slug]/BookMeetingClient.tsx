@@ -1,9 +1,17 @@
 "use client";
 
-import { useState } from "react";
-import { Calendar, Clock, CheckCircle2, ChevronRight, Loader2, MessageSquareText } from "lucide-react";
+import { useMemo, useState } from "react";
+import { Calendar, Clock, CheckCircle2, ChevronRight, Loader2, MessageSquareText, Info } from "lucide-react";
 import { bookMeetingSlot, submitAlternativeRequest } from "@/app/actions/meeting-schedules";
 import { formatClock12 } from "@/lib/attendanceTime";
+import {
+  dayOfferedSlots,
+  describeMeetingRules,
+  parseAvailableDays,
+  parseMeetingRules,
+  slotStateLabel,
+  type OfferedSlot,
+} from "@/lib/meetingSlots";
 
 function formatDateWithDayName(dateString: string) {
   const date = new Date(dateString);
@@ -16,7 +24,7 @@ function formatDateWithDayName(dateString: string) {
   }).format(date);
 }
 
-export default function BookMeetingClient({ schedule }: { schedule: any }) {
+export default function BookMeetingClient({ schedule, nowMs }: { schedule: any; nowMs: number }) {
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [selectedSlot, setSelectedSlot] = useState<string | null>(null);
   const [charityName, setCharityName] = useState("");
@@ -32,30 +40,39 @@ export default function BookMeetingClient({ schedule }: { schedule: any }) {
   const [altSuccess, setAltSuccess] = useState(false);
   const [altError, setAltError] = useState("");
 
-  const bookings = schedule.bookings || [];
-  
-  const isSlotPassed = (dateStr: string, timeStr: string) => {
-    const now = new Date();
-    const [hours, minutes] = timeStr.split(':').map(Number);
-    const slotDate = new Date(dateStr);
-    slotDate.setHours(hours, minutes, 0, 0);
-    return slotDate.getTime() <= now.getTime();
-  };
+  /** الحجوزاتُ القائمة — ما يُقرأ منها هنا هو اليومُ والوقتُ وحدَهما. */
+  const bookings: { date: string; startTime: string }[] = schedule.bookings ?? [];
 
-  const availableDaysConfig = schedule.availableDays || [];
-  
-  const availableDays = availableDaysConfig.filter((day: any) => {
-    const dayDate = new Date(day.date);
-    dayDate.setHours(0, 0, 0, 0);
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    
-    if (dayDate.getTime() < today.getTime()) return false;
-    
-    const allSlots = day.slots || [];
-    const hasFutureSlot = allSlots.some((time: string) => !isSlotPassed(day.date, time));
-    return hasFutureSlot;
-  });
+  /**
+   * حالةُ كل موعدٍ في كل يوم — من `lib/meetingSlots` لا من حسابٍ هنا.
+   *
+   * وهي الدالّةُ التي يحكم بها الخادمُ عند الإرسال، فما يُعرض مُقفَلاً هو
+   * المردود، وما يُعرض مؤجَّلاً هو المقبول بوقته الجديد. وكان الحسابُ ها هنا
+   * وحدَه: «مضى» بساعة المتصفّح، ولا إغلاقَ مسبقاً ولا جاراً يُقفل جاره.
+   */
+  const rules = useMemo(() => parseMeetingRules(schedule), [schedule]);
+  const ruleLines = useMemo(() => describeMeetingRules(rules), [rules]);
+
+  const days = useMemo(() => {
+    const now = new Date(nowMs);
+    return parseAvailableDays(schedule.availableDays)
+      .map((day) => ({
+        date: day.date,
+        slots: dayOfferedSlots(
+          day.slots,
+          rules,
+          bookings.filter((b) => b.date === day.date).map((b) => b.startTime),
+          now,
+          day.date
+        ),
+      }))
+      // يومٌ انقضى حجزُ كلِّ مواعيده لا يُعرض: لا قرارَ فيه لمن يقرأه. أمّا
+      // المحجوزُ والمُقفَلُ لجاره فيبقيان ظاهرين في يومهما — فغيابُهما يُقرأ
+      // كأنّ الجدولَ لم يُعرضهما أصلاً.
+      .filter((day) => day.slots.some((slot) => slot.state !== "CLOSED"));
+  }, [schedule.availableDays, bookings, rules, nowMs]);
+
+  const availableDays = days;
 
   const handleBooking = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -101,18 +118,8 @@ export default function BookMeetingClient({ schedule }: { schedule: any }) {
     }
   };
 
-  const getDaySlots = (date: string) => {
-    const dayConfig = availableDays.find((d: any) => d.date === date);
-    if (!dayConfig) return [];
-    
-    const allSlots = dayConfig.slots || [];
-    
-    return allSlots.map((time: string) => {
-      const isBooked = bookings.some((b: any) => b.date === date && b.startTime === time);
-      const isPassed = isSlotPassed(date, time);
-      return { time, isBooked, isPassed };
-    });
-  };
+  const getDaySlots = (date: string): OfferedSlot[] =>
+    availableDays.find((d) => d.date === date)?.slots ?? [];
 
   if (success) {
     return (
@@ -158,6 +165,15 @@ export default function BookMeetingClient({ schedule }: { schedule: any }) {
             <Clock className="w-3.5 h-3.5" />
             <span>مدة الاجتماع: {schedule.duration} دقيقة</span>
           </div>
+
+          {/* القاعدةُ تُقال قبل الاختيار لا بعد الردّ: من علم أنّ الحجز يُغلق
+              قبل الموعد بساعة لا يأتي بعدها فيُردّ. */}
+          {(rules.cutoffMinutes > 0 || rules.cutoffDayStart) && (
+            <p className="mt-3 flex items-start gap-1.5 text-[12px] text-amber-700 dark:text-amber-400 font-medium">
+              <Info className="w-3.5 h-3.5 shrink-0 mt-px" />
+              <span>{ruleLines.slice(0, 2).join("، ")}.</span>
+            </p>
+          )}
         </div>
       </div>
 
@@ -207,23 +223,38 @@ export default function BookMeetingClient({ schedule }: { schedule: any }) {
                   {getDaySlots(selectedDate).length === 0 ? (
                     <p className="col-span-full text-xs text-slate-400">لا يوجد أوقات متاحة في هذا اليوم.</p>
                   ) : (
-                    getDaySlots(selectedDate).map(({ time, isBooked, isPassed }: { time: string, isBooked: boolean, isPassed?: boolean }) => (
-                      <button
-                        key={time}
-                        disabled={isBooked || isPassed}
-                        onClick={() => setSelectedSlot(time)}
-                        dir="ltr"
-                        className={`py-2 rounded-xl text-sm font-bold font-mono transition-all border ${
-                          isBooked || isPassed
-                            ? "bg-slate-100 dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-400 opacity-60 cursor-not-allowed line-through decoration-slate-300 dark:decoration-slate-600"
-                            : selectedSlot === time
-                              ? "bg-primary text-white border-primary shadow-md shadow-primary/20 scale-105"
-                              : "bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-primary hover:border-primary/40 hover:bg-primary/5"
-                        }`}
-                      >
-                        {formatClock12(time)}
-                      </button>
-                    ))
+                    getDaySlots(selectedDate).map((slot) => {
+                      const blockedLabel = slotStateLabel(slot.state);
+                      const taken = blockedLabel !== null;
+                      return (
+                        <button
+                          key={slot.time}
+                          disabled={taken}
+                          onClick={() => setSelectedSlot(slot.offerTime)}
+                          // سببُ المنع يُقال، فالموعدُ المشطوبُ بلا سبب يُقرأ
+                          // كأنّ الصفحةَ معطوبة.
+                          title={blockedLabel ?? undefined}
+                          className={`flex flex-col items-center gap-0.5 py-2 rounded-xl text-sm font-bold transition-all border ${
+                            taken
+                              ? "bg-slate-100 dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-400 opacity-60 cursor-not-allowed"
+                              : selectedSlot === slot.offerTime
+                                ? "bg-primary text-white border-primary shadow-md shadow-primary/20 scale-105"
+                                : "bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-primary hover:border-primary/40 hover:bg-primary/5"
+                          }`}
+                        >
+                          <span dir="ltr" className={`font-mono ${taken ? "line-through decoration-slate-300 dark:decoration-slate-600" : ""}`}>
+                            {formatClock12(slot.offerTime)}
+                          </span>
+                          {taken ? (
+                            <span className="text-[10px] font-semibold">{blockedLabel}</span>
+                          ) : slot.delayMinutes > 0 ? (
+                            // الوقتُ المعروضُ ليس المكتوبَ في الجدول، فيُقال
+                            // لئلّا يحضر أحدٌ على الوقت الذي كان.
+                            <span className="text-[10px] font-semibold opacity-70">أُجِّل {slot.delayMinutes} د</span>
+                          ) : null}
+                        </button>
+                      );
+                    })
                   )}
                 </div>
               </div>

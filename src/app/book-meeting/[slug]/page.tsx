@@ -3,6 +3,12 @@ import { getMeetingScheduleBySlug } from "@/app/actions/meeting-schedules";
 import BookMeetingClient from "./BookMeetingClient";
 import { notFound } from "next/navigation";
 
+/**
+ * تُبنى عند كل طلب: الأوقاتُ المعروضة تتوقف على اللحظة — مهلةُ الإغلاق تُقفل
+ * ما قرب موعده — فصفحةٌ محفوظةٌ تَعرض وقتاً أُغلق، ويُردّ حاجزُه عند الإرسال.
+ */
+export const dynamic = "force-dynamic";
+
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
   const { data: schedule } = await getMeetingScheduleBySlug(slug);
@@ -45,7 +51,9 @@ export default async function BookMeetingPage({ params }: { params: Promise<{ sl
 
       {/* Main Content */}
       <main className="flex-1 max-w-4xl w-full mx-auto p-4 sm:p-6 lg:p-8">
-        <BookMeetingClient schedule={schedule} />
+        {/* اللحظةُ تُختم هنا لا في المتصفّح: ساعةُ الزائر قد تتقدّم أو تتأخّر،
+            والخادمُ هو من يقبل الحجزَ أو يردّه — فالشاشةُ ترسم بساعته. */}
+        <BookMeetingClient schedule={schedule} nowMs={Date.now()} />
       </main>
 
       {/* Footer */}

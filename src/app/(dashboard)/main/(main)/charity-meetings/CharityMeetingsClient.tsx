@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { confirmAction } from "@/components/console/confirmBus";
-import { Plus, Calendar, Clock, Copy, CheckCircle2, Trash2, Power, ExternalLink, MessageSquareText } from "lucide-react";
+import { Plus, Calendar, CalendarCheck, Clock, Copy, CheckCircle2, Trash2, Power, ExternalLink, MessageSquareText } from "lucide-react";
 import { createMeetingSchedule, toggleMeetingScheduleActive, deleteMeetingSchedule } from "@/app/actions/meeting-schedules";
 import CreateMeetingScheduleModal from "./CreateMeetingScheduleModal";
 import CopyMessageModal from "./CopyMessageModal";
@@ -73,8 +73,15 @@ export default function CharityMeetingsClient({
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {schedules.map(schedule => (
-            <div 
+          {schedules.map(schedule => {
+            // ما لم يُرَ من حجوزات هذا الجدول — يُحسب مرّةً هنا لا مرّتين في
+            // الوسم: مرّةً ليُسأل «هل ثَمّ جديد» ومرّةً ليُعدّ.
+            const unseenCount = (schedule.bookings ?? []).filter(
+              (b: { seenAt: string | Date | null }) => b.seenAt === null
+            ).length;
+
+            return (
+            <div
               key={schedule.id}
               onClick={() => router.push(`/main/charity-meetings/${schedule.id}`)}
               className={`cursor-pointer bg-white dark:bg-slate-900 rounded-xl p-5 border ${schedule.isActive ? 'border-slate-200 dark:border-slate-800 hover:ring-2 hover:ring-primary/20' : 'border-slate-200/50 dark:border-slate-800/50 opacity-75'} transition-all duration-300 flex flex-col h-full group relative overflow-hidden`}
@@ -128,6 +135,15 @@ export default function CharityMeetingsClient({
                   </p>
                 </div>
               </div>
+
+              {/* والشارةُ على التبويب تقول «ثَمّ جديد» ولا تقول أين — وهذا
+                  السطرُ يقول أين. */}
+              {unseenCount > 0 && (
+                <div className="flex items-center gap-2 text-caption font-semibold text-primary bg-primary/[0.06] border border-primary/20 rounded-xl px-3 py-2 mb-4 relative z-10 dark:text-teal-300 dark:bg-teal-400/10 dark:border-teal-400/20">
+                  <CalendarCheck className="w-3.5 h-3.5 shrink-0" />
+                  <span>{unseenCount} حجز جديد لم تُطّلع عليه</span>
+                </div>
+              )}
 
               {schedule.alternativeRequests && schedule.alternativeRequests.length > 0 && (
                 <div className="flex items-center gap-2 text-caption font-semibold text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/30 border border-amber-100 dark:border-amber-900/40 rounded-xl px-3 py-2 mb-4 relative z-10">
@@ -189,7 +205,8 @@ export default function CharityMeetingsClient({
                 </div>
               )}
             </div>
-          ))}
+            );
+          })}
         </div>
       )}
 

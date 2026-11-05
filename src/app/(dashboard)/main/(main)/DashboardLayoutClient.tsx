@@ -6,6 +6,7 @@ import { useState, useEffect, useRef } from "react";
 import { Menu } from "lucide-react";
 import { getUnreadRequestCounts } from "@/app/actions/approvals";
 import { getUnreadNotifications } from "@/app/actions/notifications";
+import { getUnseenBookingCount } from "@/app/actions/meeting-schedules";
 import { getUnreadCount as getUnreadMailCount } from "@/app/actions/mail";
 import { MAIL_UNREAD_EVENT } from "@/lib/mailBadge";
 import { getCurrentPermissions } from "@/app/actions/sessionSync";
@@ -13,7 +14,7 @@ import FloatingHeader from "@/components/FloatingHeader";
 
 import DeveloperRoleSwitcher from "@/components/DeveloperRoleSwitcher";
 
-export default function DashboardLayoutClient({ children, session, unreadRequests: initial = 0, unreadFinancial: initialFinancial = 0, unreadMails: initialMails = 0 }: { children: React.ReactNode, session: any, unreadRequests?: number, unreadFinancial?: number, unreadMails?: number }) {
+export default function DashboardLayoutClient({ children, session, unreadRequests: initial = 0, unreadFinancial: initialFinancial = 0, unreadMails: initialMails = 0, unseenBookings: initialBookings = 0 }: { children: React.ReactNode, session: any, unreadRequests?: number, unreadFinancial?: number, unreadMails?: number, unseenBookings?: number }) {
   const pathname = usePathname();
   // Mobile drawer only — the desktop rail is pinned open and no longer reads
   // this. It starts closed, which is also what a phone should show on load.
@@ -21,6 +22,7 @@ export default function DashboardLayoutClient({ children, session, unreadRequest
   const [unreadRequests, setUnreadRequests] = useState(initial);
   const [unreadFinancial, setUnreadFinancial] = useState(initialFinancial);
   const [unreadMails, setUnreadMails] = useState(initialMails);
+  const [unseenBookings, setUnseenBookings] = useState(initialBookings);
 
   /**
    * The live role and permissions, replacing the layout's frozen copy.
@@ -68,6 +70,17 @@ export default function DashboardLayoutClient({ children, session, unreadRequest
     };
 
     void refresh();
+    // وشارةُ الاجتماعات معها: الحجزُ يأتي من صفحةٍ عامّةٍ خارج الموقع، فلا حدثَ
+    // في هذا المتصفّح يُطلقه — ولا يُقرأ كالبريد كي يُنقص العدّ. فيُسأل عنه مع
+    // كلّ تنقّل، وما يُنقصه هو فتحُ صفحةِ الجدول.
+    void (async () => {
+      try {
+        const bookings = await getUnseenBookingCount();
+        if (alive) setUnseenBookings(bookings);
+      } catch {
+        // شارةٌ قديمةٌ أصدقُ من شارةٍ مُفرَّغة.
+      }
+    })();
     // Permissions too: a change made while you were on another screen shows
     // up on your next click rather than on your next login.
     void (async () => {
@@ -102,6 +115,9 @@ export default function DashboardLayoutClient({ children, session, unreadRequest
         // count honest even if a message is read in another tab.
         const mailCount = await getUnreadMailCount();
         if (active) setUnreadMails(mailCount);
+
+        const bookings = await getUnseenBookingCount();
+        if (active) setUnseenBookings(bookings);
 
         const access = await getCurrentPermissions();
         if (active && access) setLiveAccess(access);
@@ -188,6 +204,7 @@ export default function DashboardLayoutClient({ children, session, unreadRequest
         unreadRequests={unreadRequests}
         unreadFinancial={unreadFinancial}
         unreadMails={unreadMails}
+        unseenBookings={unseenBookings}
       />
       
       <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden relative print:overflow-visible print:h-auto print:block">

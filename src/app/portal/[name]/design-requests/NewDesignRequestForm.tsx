@@ -114,7 +114,7 @@ export default function NewDesignRequestForm({
       onSuccess(
         isResubmit
           ? "تم إعادة رفع الطلب، وهو الآن قيد المراجعة"
-          : "تم إرسال الطلب، وسيتم مراجعته خلال 24 ساعة"
+          : "تم إرسال الطلب، وسيتم مراجعته خلال يوم عمل"
       );
     } catch (err: any) {
       setError(err.message || "حدث خطأ أثناء إرسال الطلب");
@@ -152,7 +152,7 @@ export default function NewDesignRequestForm({
           >
             <Info className="w-4 h-4 shrink-0 mt-px" />
             <span>
-              <span className="font-bold">سيتم مراجعة الطلب خلال 24 ساعة.</span>{" "}
+              <span className="font-bold">سيتم مراجعة الطلب خلال يوم عمل.</span>{" "}
               بعد الاعتماد يُثبَّت موعد التسليم ويأخذ الطلب دوره، وإن احتاج تعديلاً ستجد ملاحظات فريق زاد في تبويب «المُعادة للتعديل».
             </span>
           </div>
@@ -359,7 +359,7 @@ export default function NewDesignRequestForm({
         message={
           isResubmit
             ? "سيعود الطلب إلى قائمة المراجعة لدى فريق زاد، وتُحذف الملاحظات السابقة. هل تريد المتابعة؟"
-            : "سيُرسل الطلب إلى فريق زاد للمراجعة خلال 24 ساعة. هل تريد المتابعة؟"
+            : "سيُرسل الطلب إلى فريق زاد للمراجعة خلال يوم عمل. هل تريد المتابعة؟"
         }
         confirmLabel={isResubmit ? "إعادة الرفع" : "إرسال الطلب"}
         tone="primary"

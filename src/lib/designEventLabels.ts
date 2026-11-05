@@ -43,7 +43,7 @@ export const DESIGN_EVENT_LABEL: Record<DesignEventKind, string> = {
   DELIVERED: "سُلّم بانتظار ردّ الجمعية",
   REVISION_REQUESTED: "أعادته الجمعية بملاحظات",
   CHARITY_APPROVED: "اعتمدته الجمعية",
-  AUTO_APPROVED: "اعتُمد تلقائياً بعد ٢٤ ساعة",
+  AUTO_APPROVED: "اعتُمد تلقائياً بعد مضيّ يوم عمل بلا ردّ",
   COMPLETED: "أُغلق نهائياً",
   REVISION_RETURNED: "أعاد فريق زاد الطلب بملاحظات",
   CLOSED_WITH_NOTES: "أُغلق الطلب بملاحظات فريق زاد",

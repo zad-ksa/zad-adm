@@ -385,7 +385,7 @@ export default function DesignRequestsPortalClient({
                       className="px-3 py-2.5 rounded-xl bg-amber-500/[0.08] text-amber-700 dark:text-amber-400 leading-relaxed"
                       style={{ fontSize: "var(--dr-fs-meta)" }}
                     >
-                      قيد المراجعة — سيتم الرد خلال 24 ساعة. الموعد الظاهر تقديري حتى الاعتماد.
+                      قيد المراجعة — سيتم الرد خلال يوم عمل. الموعد الظاهر تقديري حتى الاعتماد.
                     </div>
                     {/* Editable while it waits: nothing has been scheduled or
                         started, so the brief is still entirely yours. */}

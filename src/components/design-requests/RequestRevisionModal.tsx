@@ -86,7 +86,7 @@ export default function RequestRevisionModal({
         addAttachments: uploaded,
       });
       if (res.error) return setError(res.error);
-      onSuccess("تم إرسال الملاحظات، وأمام زاد 24 ساعة للتعديل");
+      onSuccess("تم إرسال الملاحظات، وأمام زاد يوم عمل للتعديل");
     } catch (err) {
       setError(err instanceof Error ? err.message : "حدث خطأ أثناء إرسال الملاحظات");
     } finally {
@@ -312,7 +312,7 @@ footer={
 <ConfirmDialog
         isOpen={isConfirmOpen}
         title="إرسال الملاحظات"
-        message="سيعود الطلب إلى فريق زاد للتعديل خلال 24 ساعة، وبعد تسليمه يُعتمد نهائياً. التعديل متاح مرة واحدة فقط — هل تريد المتابعة؟"
+        message="سيعود الطلب إلى فريق زاد للتعديل خلال يوم عمل، وبعد تسليمه يُعتمد نهائياً. التعديل متاح مرة واحدة فقط — هل تريد المتابعة؟"
         confirmLabel="إرسال الملاحظات"
         tone="primary"
         isPending={isSubmitting}

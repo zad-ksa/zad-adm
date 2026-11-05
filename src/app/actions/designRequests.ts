@@ -926,7 +926,7 @@ export async function markDesignRequestComplete(
       note:
         (isRevisionDelivery
           ? "تسليم التعديل — اعتماد نهائي"
-          : "بانتظار ردّ الجمعية خلال ٢٤ ساعة") + (trimmedNote ? ` — ${trimmedNote}` : ""),
+          : "بانتظار ردّ الجمعية خلال يوم عمل") + (trimmedNote ? ` — ${trimmedNote}` : ""),
     });
 
     revalidatePath("/main/design-requests");

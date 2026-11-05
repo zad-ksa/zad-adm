@@ -1,7 +1,8 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import {
   ArrowRight,
   ChevronDown,
@@ -15,7 +16,8 @@ import {
 import ComposeModal from "../ComposeModal";
 import { ConfirmDialog } from "@/components/console/ConfirmDialog";
 import { Avatar, Badge, MONO, Note, btn, cx, toolbarClass } from "@/components/console/ui";
-import { moveToTrash } from "@/app/actions/mail";
+import { markManyAsRead, moveToTrash } from "@/app/actions/mail";
+import { notifyMailUnreadChanged } from "@/lib/mailBadge";
 import { formatMailDate, htmlToPlainText, splitQuotedHtml } from "../mailUtils";
 
 interface MailViewClientProps {
@@ -31,6 +33,8 @@ type RecipientRow = {
   /** الطرف الآخر قد يكون عضو جمعية، فأحد الحقلين مملوء والآخر فارغ. */
   charityUserId?: string | null;
   charityUser?: { name: string } | null;
+  /** حالُ القراءة لصاحب الصفّ — منها يُعرف ما يُحدَّد مقروءاً عند الفتح. */
+  isRead?: boolean;
 };
 
 /** اسم المستلم أياً كانت جهته. بلا هذا كان صفّ عضو الجمعية يُقرأ كـ undefined.name. */
@@ -121,13 +125,53 @@ export default function MailViewClient({ session, mail, employees }: MailViewCli
 
   const allExpanded = expanded.size >= messages.length;
 
+  /**
+   * فتحُ الرسالة من رابطٍ مباشرٍ يُحدِّدها مقروءةً.
+   *
+   * وكان التحديدُ في قائمة البريد وحدَها (`handleOpenMail` عند النقر على
+   * الصفّ)، فمن وصل من **إشعارٍ** — أو من رابطٍ نُسخ، أو حدَّث الصفحة — قرأ
+   * الرسالةَ وبقيت عندَه غيرَ مقروءة، والشارةُ تعدُّها. فالفتحُ هو القراءة
+   * أيّاً كان البابُ الذي دخل منه.
+   *
+   * **والمحدَّدُ ما ظهر متنُه**: المفتوحةُ والأخيرةُ وحدَهما تُفتحان موسَّعتين
+   * (`expanded` أعلاه)، وما بقي من السلسلة مطويٌّ لم يُقرأ — فلا يُحدَّد.
+   * ولو حُدِّدت السلسلةُ كلُّها لعُدَّت رسائلُ لم تُفتح مقروءة.
+   *
+   * ويُحسب غيرُ المقروء من البيان الحاضر، فلا يُرسَل طلبٌ إن لم يكن ثَمّ ما
+   * يُحدَّث — وفتحُ رسالةٍ مقروءةٍ هو الحالُ الأغلب.
+   */
+  const marked = useRef(false);
+  useEffect(() => {
+    if (marked.current) return;
+    marked.current = true;
+
+    const mine = (m: ThreadMessage) =>
+      (m.recipients || []).some((r) => r.employeeId === session?.id && r.isRead === false);
+    const ids = messages.filter((m) => expanded.has(m.id) && mine(m)).map((m) => m.id);
+    if (ids.length === 0) return;
+
+    markManyAsRead(ids)
+      // شارةُ الشريط ترسمها طبقةٌ لا تُعاد عند التنقّل، فتُخبَر ولا تُترك
+      // لتكتشف — وإلّا قالت «غيرُ مقروءة» ورسالةٌ مفتوحةٌ أمام القارئ.
+      .then(notifyMailUnreadChanged)
+      .catch((error) => console.error("Error marking mail as read:", error));
+    // مرّةً واحدةً عند الفتح: `marked` يَحرُسها، و`expanded` تتغيّر بالطيّ
+    // والتوسيع بعدها ولا يُعاد التحديد لذلك.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   return (
     <div className="flex h-[calc(100dvh-6rem)] flex-col overflow-hidden rounded-xl border border-slate-200 bg-white sm:h-[calc(100dvh-7rem)] lg:h-[calc(100dvh-7.5rem)] dark:border-slate-800 dark:bg-slate-900">
       <div className={toolbarClass}>
-        <button type="button" onClick={() => router.back()} className={btn.ghost}>
+        {/* رابطٌ إلى البريد لا `router.back()`.
+            فـ`back` يرجع إلى ما قبلَها في السِجلّ أيّاً كان — ومن فتح الرسالةَ
+            من إشعارٍ وهو في الرئيسية رجع إلى الرئيسية، لا إلى البريد. وهذه
+            صفحةُ رسالةٍ أبوها صندوقُ البريد، فالعودةُ إليه مهما كان البابُ
+            الذي دخل منه. */}
+        <Link href="/main/mail" className={btn.ghost}>
           <ArrowRight className="size-4" />
-          العودة
-        </button>
+          العودة إلى البريد
+        </Link>
 
         {messages.length > 1 && (
           <>

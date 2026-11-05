@@ -653,6 +653,9 @@ export async function markAsRead(mailId: string) {
     where: {
       mailId,
       employeeId: user.id,
+      // ولا يُلمَّس صفٌّ مقروءٌ أصلاً: فتحُ رسالةٍ مقروءةٍ هو الحالُ الأغلب،
+      // وكتابةٌ بلا تغييرٍ تُربك أيَّ تتبُّعٍ للتغيير وتُثقل القاعدة بلا سبب.
+      isRead: false,
     },
     data: {
       isRead: true,

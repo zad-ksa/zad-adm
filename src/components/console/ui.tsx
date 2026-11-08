@@ -271,18 +271,26 @@ export function Field({ id, label, hint, children }: { id: string; label: string
   );
 }
 
-/** صفّ اختيار: مربّع ونصّ وسطر مصدر اختياري. */
+/**
+ * صفّ اختيار: مربّع ونصّ وسطر مصدر اختياري.
+ *
+ * و`count` رقمٌ **بجوار** الاسم لا سطرٌ تحته: في المُرشِّحات يقول كم صفّاً
+ * يُعطيه هذا الخيار، فيُقرأ مع الاسم في نظرةٍ واحدة. وصفرٌ يُكتب صفراً ولا
+ * يُحذف — «جهةٌ بلا منح» خبرٌ كـ«جهةٌ لها ثلاث».
+ */
 export function OptionRow({
   label,
   checked,
   locked = false,
   note,
+  count,
   onToggle,
 }: {
   label: string;
   checked: boolean;
   locked?: boolean;
   note?: string;
+  count?: number;
   onToggle: () => void;
 }) {
   return (
@@ -299,7 +307,7 @@ export function OptionRow({
       <span className="mt-0.5">
         <CheckMark state={checked ? "on" : "off"} locked={locked} />
       </span>
-      <span className="min-w-0">
+      <span className="min-w-0 flex-1">
         <span
           className={cx(
             "block text-body leading-5",
@@ -310,6 +318,18 @@ export function OptionRow({
         </span>
         {note && <span className="block text-caption leading-4 text-slate-500">{note}</span>}
       </span>
+      {typeof count === "number" && (
+        <span
+          className={cx(
+            MONO,
+            "mt-0.5 shrink-0 text-meta",
+            // الصفرُ يخفت: الرقمُ الذي يعني «لا شيء هنا» لا يزاحم الذي يعني «ثلاثة».
+            count > 0 ? "text-slate-500 dark:text-slate-400" : "text-slate-300 dark:text-slate-600"
+          )}
+        >
+          {count}
+        </span>
+      )}
     </button>
   );
 }

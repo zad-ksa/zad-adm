@@ -131,6 +131,41 @@ export default function GrantsOverviewClient({
     return list;
   }, [grants, query, pickedCharities, pickedDonors, status, column, dir]);
 
+  /**
+   * خياراتُ مُرشِّح الجهات: الاسمُ ومعه عددُ منحه، والمرفوعُ فيها أوّلاً.
+   *
+   * **ويُحسب العددُ على بقيّة المُرشِّحات لا على مُرشِّح الجهات نفسِه.** فمن
+   * قصَر العرضَ على جمعيةٍ رأى الجهاتَ التي رفعت إليها **هذه** الجمعيةُ في
+   * الأعلى بأعدادها، وهو سؤالُه حين قصَرَه. ولو حُسب على المُرشِّح نفسِه لصار
+   * اختيارُ جهةٍ يُصفِّر أعدادَ ما عداها، فتهبط كلُّها إلى الأسفل وتُفقد
+   * القائمةُ معناها عند أوّل نقرة.
+   *
+   * والصفرُ يبقى معروضاً: جهةٌ بلا منحٍ خبرٌ كجهةٍ لها ثلاث، وحذفُها من
+   * القائمة يمنع رفعَ أوّلِ منحةٍ إليها.
+   */
+  const donorOptions = useMemo(() => {
+    const needle = normalizeDonorName(query);
+    const counts = new Map<string, number>();
+
+    for (const g of grants) {
+      if (g.donorOrgId === null) continue;
+      if (pickedCharities.length > 0 && !pickedCharities.includes(g.charityId)) continue;
+      if (status !== ALL && g.status !== status) continue;
+      if (
+        needle !== "" &&
+        ![g.charityName, g.donorName, g.initiativeName].some((t) => normalizeDonorName(t).includes(needle))
+      )
+        continue;
+      counts.set(g.donorOrgId, (counts.get(g.donorOrgId) ?? 0) + 1);
+    }
+
+    return donors
+      .map((d) => ({ value: d.id, label: d.name, count: counts.get(d.id) ?? 0 }))
+      // الأكثرُ منحاً أوّلاً، ثمّ بالاسم — والبحثُ في اللوحة يكفي من أراد اسماً
+      // بعينه، فالترتيبُ هنا للقراءة لا للعثور.
+      .sort((a, b) => b.count - a.count || a.label.localeCompare(b.label, "ar"));
+  }, [donors, grants, pickedCharities, status, query]);
+
   const onSort = (id: Column, next: SortDir) => {
     setColumn(id);
     setDir(next);
@@ -216,7 +251,7 @@ export default function GrantsOverviewClient({
           countNoun="جهات"
           values={pickedDonors}
           onChange={setPickedDonors}
-          options={donors.map((d) => ({ value: d.id, label: d.name }))}
+          options={donorOptions}
         />
         <Select
           value={status}

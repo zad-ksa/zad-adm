@@ -8,6 +8,8 @@ export type SelectOption = {
   value: string;
   label: string;
   hint?: string;
+  /** رقمٌ بجوار الاسم — كم صفّاً يُعطيه هذا الخيار في مُرشِّح. */
+  count?: number;
   /** عنوانُ مجموعةٍ لا خيار: يُعرض ولا يُختار ولا تقف عليه الأسهم. */
   disabled?: boolean;
 };
@@ -300,6 +302,17 @@ export default function Select({
                     {option.hint && (
                       <span className="text-caption text-slate-400 dark:text-slate-500 shrink-0">
                         {option.hint}
+                      </span>
+                    )}
+                    {typeof option.count === "number" && (
+                      <span
+                        className={`shrink-0 font-mono text-meta ${
+                          option.count > 0
+                            ? "text-slate-500 dark:text-slate-400"
+                            : "text-slate-300 dark:text-slate-600"
+                        }`}
+                      >
+                        {option.count}
                       </span>
                     )}
                   </button>

@@ -239,6 +239,7 @@ export default function MultiSelect({
                       key={option.value}
                       label={option.label}
                       note={option.hint}
+                      count={option.count}
                       checked={values.includes(option.value)}
                       onToggle={() => toggle(option.value)}
                     />

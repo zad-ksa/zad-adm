@@ -3,19 +3,18 @@
 import { useState } from "react";
 import { ListTree, Loader2, Pencil } from "lucide-react";
 import Select, { type SelectVariant } from "@/components/console/Select";
-import { MONO, btn, cx, field } from "@/components/console/ui";
+import { btn, cx, field } from "@/components/console/ui";
 import { notify } from "@/components/console/toastBus";
 import { listPlanInitiatives } from "@/app/actions/charity";
 
-/** مبادرةُ خطةٍ كما يُعيدها `listPlanInitiatives`. */
-type PlanInitiative = {
-  id: string;
-  number: number;
-  name: string;
-  objectiveCode: string | null;
-  perspective: string;
-  planLabel: string;
-};
+/**
+ * مبادرةُ خطةٍ كما يُعيدها `listPlanInitiatives` — الاسمُ ومُعرِّفُه.
+ *
+ * ولا هدفَ ولا منظورَ ولا رقمَ كشّافٍ: المقروءُ هنا اسمُ المشروع الذي
+ * سيُحمَل في المنحة، وما حوله رمزٌ تنظيميٌّ لا يُقرأ في هذا الموضع. والاسمُ
+ * وحدَه يُميِّز — لا اسمَ مبادرةٍ يتكرّر في جمعيةٍ واحدة.
+ */
+type PlanInitiative = { id: string; name: string };
 
 /**
  * حقلُ اسمِ مشروعِ المنحة: يُكتب باليد، أو يُجلب من الخطة التشغيلية.
@@ -109,15 +108,9 @@ export default function InitiativeNameField({
       </div>
 
       {picked ? (
-        <>
-          <p className="rounded-lg border border-primary/20 bg-primary/[0.06] px-3 py-2.5 text-body text-slate-800 dark:border-teal-400/20 dark:bg-teal-400/10 dark:text-slate-100">
-            {picked.name}
-          </p>
-          <p className="text-meta text-slate-500 dark:text-slate-400">
-            مبادرةٌ رقم <span className={MONO}>{picked.number}</span> في «{picked.planLabel}» — {picked.perspective}
-            {picked.objectiveCode ? ` · هدف ${picked.objectiveCode}` : ""}
-          </p>
-        </>
+        <p className="rounded-lg border border-primary/20 bg-primary/[0.06] px-3 py-2.5 text-body text-slate-800 dark:border-teal-400/20 dark:bg-teal-400/10 dark:text-slate-100">
+          {picked.name}
+        </p>
       ) : picking && plan ? (
         <>
           <Select
@@ -131,12 +124,7 @@ export default function InitiativeNameField({
               setPicking(false);
             }}
             placeholder="اختر المبادرة…"
-            options={plan.map((i) => ({
-              value: i.id,
-              label: i.name,
-              hint: `${i.perspective}${i.objectiveCode ? ` · ${i.objectiveCode}` : ""}`,
-              count: i.number,
-            }))}
+            options={plan.map((i) => ({ value: i.id, label: i.name }))}
             className="w-full [&>button]:w-full [&>button]:justify-between"
           />
           <button type="button" onClick={writeByHand} className={cx(btn.ghost, "text-meta")}>

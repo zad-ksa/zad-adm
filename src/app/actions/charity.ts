@@ -12,7 +12,7 @@ import { getAssignedCharityIds } from "@/lib/access";
 import { requirePermission } from "@/lib/guards";
 import { logAudit } from "@/lib/auditLog";
 import { DONOR_KINDS, GRANTS_HREF } from "@/lib/donorOrg";
-import { GRANT_PERSPECTIVE_PREFIXES, perspectiveLabel } from "@/lib/planPerspectives";
+import { GRANT_PERSPECTIVE_PREFIXES } from "@/lib/planPerspectives";
 import { writeFile, mkdir } from "fs/promises";
 import { join } from "path";
 
@@ -406,29 +406,15 @@ export async function listPlanInitiatives(charityId: string) {
         plan: { charityId },
         objective: { perspective: { prefix: { in: [...GRANT_PERSPECTIVE_PREFIXES] } } },
       },
-      select: {
-        id: true,
-        number: true,
-        name: true,
-        objective: { select: { code: true, perspective: { select: { name: true, prefix: true } } } },
-        plan: { select: { label: true } },
-      },
+      // الاسمُ ومُعرِّفُه وحدَهما: هو كلُّ ما يُعرض وكلُّ ما يُحمَل في المنحة.
+      // والهدفُ والمنظورُ ورقمُ الكشّاف تُرشِّح وتُرتِّب هنا ولا تُنقَل.
+      select: { id: true, name: true },
       // الخطةُ الأحدثُ أوّلاً ثمّ رقمُ المبادرة في كشّافها: الترتيبُ الذي
       // تُقرأ به الخطةُ نفسُها، فلا يُبحث عن مبادرةٍ في قائمةٍ مرتَّبةٍ بغيره.
       orderBy: [{ plan: { startDate: "desc" } }, { number: "asc" }],
     });
 
-    return {
-      success: true,
-      initiatives: rows.map((r) => ({
-        id: r.id,
-        number: r.number,
-        name: r.name,
-        objectiveCode: r.objective?.code ?? null,
-        perspective: perspectiveLabel(r.objective?.perspective.prefix, r.objective?.perspective.name),
-        planLabel: r.plan.label,
-      })),
-    };
+    return { success: true, initiatives: rows };
   } catch (error) {
     console.error("Error listing plan initiatives:", error);
     return { success: false, message: "تعذّر جلب مبادرات الخطة", initiatives: [] };

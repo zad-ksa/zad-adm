@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { GRANT_PERSPECTIVE_PREFIXES, isGrantPerspective, perspectiveLabel } from "./planPerspectives.ts";
+import { GRANT_PERSPECTIVE_PREFIXES, isGrantPerspective } from "./planPerspectives.ts";
 
 test("المنظوران اثنان: المستفيدون والعمليات الداخلية", () => {
   assert.deepEqual([...GRANT_PERSPECTIVE_PREFIXES], ["س", "ل"]);
@@ -17,11 +17,9 @@ test("وما عداهما يُستثنى — التعلّمُ والنموُّ �
   assert.equal(isGrantPerspective(undefined), false);
 });
 
-test("الاسمُ المحفوظُ أوّلاً، فالهجاءان كلاهما يُعرض كما كُتب", () => {
-  assert.equal(perspectiveLabel("س", "المستفيدون"), "المستفيدون");
-  assert.equal(perspectiveLabel("س", "المستفيدين"), "المستفيدين");
-  // ولا يُعرض فراغٌ حيث يُنتظر اسم.
-  assert.equal(perspectiveLabel("س", "   "), "المستفيدون");
-  assert.equal(perspectiveLabel("ل", null), "العمليات الداخلية");
-  assert.equal(perspectiveLabel("ك", null), "منظور غير معروف");
+test("والهجاءان كلاهما يمرّ: المطابقةُ بالبادئة لا بالاسم", () => {
+  // «المستفيدون» في سبع جمعيات و«المستفيدين» في واحدة — وبادئتُهما `س`.
+  for (const name of ["المستفيدون", "المستفيدين"]) {
+    assert.equal(isGrantPerspective("س"), true, name);
+  }
 });

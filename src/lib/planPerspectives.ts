@@ -17,24 +17,6 @@ export const GRANT_PERSPECTIVE_PREFIXES = ["س", "ل"] as const;
 
 export type GrantPerspectivePrefix = (typeof GRANT_PERSPECTIVE_PREFIXES)[number];
 
-/** اسمٌ احتياطيٌّ حين يأتي الصفُّ بلا اسمِ منظور. */
-const FALLBACK_LABEL: Record<string, string> = {
-  س: "المستفيدون",
-  ل: "العمليات الداخلية",
-};
-
 export function isGrantPerspective(prefix: string | null | undefined): boolean {
   return !!prefix && (GRANT_PERSPECTIVE_PREFIXES as readonly string[]).includes(prefix);
-}
-
-/**
- * اسمُ المنظور للعرض — المحفوظُ في القاعدة أوّلاً.
- *
- * فما كتبته الجمعيةُ لنفسها هو ما تعرفه، والاحتياطيُّ لئلّا يُعرض فراغٌ حيث
- * يُنتظر اسم.
- */
-export function perspectiveLabel(prefix: string | null | undefined, storedName?: string | null): string {
-  const name = storedName?.trim();
-  if (name) return name;
-  return (prefix && FALLBACK_LABEL[prefix]) || "منظور غير معروف";
 }

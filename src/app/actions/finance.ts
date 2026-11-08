@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { getSession } from "@/lib/auth";
 import { assertCharityAccess } from "@/lib/access";
 import { syncServiceProgress } from "./services";
+import { syncCharityAdminServicesQuietly } from "@/lib/charityAdminServices";
 
 async function getFinanceService(charityId: string) {
   let service = await prisma.service.findFirst({
@@ -22,6 +23,11 @@ async function getFinanceService(charityId: string) {
         responsiblePhone: charity?.financeResponsiblePhone
       }
     });
+    // خدمةٌ وُلدت هنا كخدمةٍ وُلدت من شاشة الخدمات: مديرُ الجمعية يُفوَّض بها.
+    // وكان هذا المسارُ وحدَه (وأخوه في الحوكمة) يُنشئ خدمةً بلا مواءمة، فتبقى
+    // خدمةٌ في الجمعية لا مفوَّضَ بها — فلا يستلم بريدَها أحد، ويُقال للمرسِل
+    // «لا مستلم» وهو لا يعلم لماذا.
+    await syncCharityAdminServicesQuietly(charityId);
   }
   return service;
 }

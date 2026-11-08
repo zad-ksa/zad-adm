@@ -6,6 +6,7 @@ import { getSession } from "@/lib/auth";
 import { assertCharityAccess } from "@/lib/access";
 import { requirePermission } from "@/lib/guards";
 import { syncServiceProgress } from "./services";
+import { syncCharityAdminServicesQuietly } from "@/lib/charityAdminServices";
 
 async function getGovernanceService(charityId: string) {
   let service = await prisma.service.findFirst({
@@ -23,6 +24,9 @@ async function getGovernanceService(charityId: string) {
         responsiblePhone: charity?.governanceResponsiblePhone
       }
     });
+    // كما في `finance.ts`: خدمةٌ تُنشأ هنا يُفوَّض بها مديرُ الجمعية، وإلّا
+    // بقيت خدمةً بلا مفوَّضٍ لا يستلم بريدَها أحد.
+    await syncCharityAdminServicesQuietly(charityId);
   }
   return service;
 }

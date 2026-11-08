@@ -116,8 +116,6 @@ export function buildLetterheadDoc(m: Meeting, forPrint: boolean, meetingNum?: n
   var tmp = document.createElement('div');
   tmp.innerHTML = ${safeBody};
   var nodes = Array.from(tmp.childNodes);
-  var PAGE_H = 1123, TOP_OFFSET = 189, BOT_OFFSET = 208;
-  var USABLE = PAGE_H - TOP_OFFSET - BOT_OFFSET;
   var root = document.getElementById('root');
 
   function newPage() {
@@ -142,34 +140,30 @@ export function buildLetterheadDoc(m: Meeting, forPrint: boolean, meetingNum?: n
   }
 
   function runLayout() {
-  var probe = document.createElement('div');
-  probe.style.cssText = 'position:absolute;visibility:hidden;top:-9999px;right:0;width:176mm;font-family:Cairo,Segoe UI,Tahoma,sans-serif;font-size:10.5pt;line-height:1.55;direction:rtl;';
-  document.body.appendChild(probe);
-
+  // التوزيع يُقاس في الصفحة نفسها، لا يُقدَّر خارجها.
+  //
+  // كانت الارتفاعات تُجمع من offsetHeight في عنصرٍ مخفيّ، وoffsetHeight لا يشمل
+  // الهوامش: كل عنوانٍ وفقرةٍ وجدولٍ يُنقص الحساب عن الواقع، فيتراكم الفرق حتى
+  // يوضع الصف خارج المنطقة ويقصّه overflow:hidden بلا إنذار. وقيس ذلك في متصفح
+  // حقيقي: تجاوز ٩٠ بكسلاً في محضرٍ متوسط. فالآن يوضع العنصر في مكانه، ويُسأل
+  // المتصفح أين انتهى، فلا يبقى حسابٌ يخطئ.
   var currentArea = newPage();
-  var usedHeight = 0;
 
-  function getHeight(el) {
-    probe.appendChild(el);
-    var h = el.offsetHeight || 20;
-    probe.removeChild(el);
-    return h;
+  // فسحةٌ لفروق تقريب الطباعة عن الشاشة، ولهامش آخر عنصر في الصفحة.
+  var SAFE_GAP = 6;
+
+  function fits(el) {
+    return el.getBoundingClientRect().bottom <= currentArea.getBoundingClientRect().bottom - SAFE_GAP;
   }
 
-  function place(el, h) {
-    currentArea.appendChild(el);
-    usedHeight += h;
+  // عنصرٌ أطول من صفحةٍ كاملة لا موضع له يُقسم عنده. فيُترك ظاهراً ولو لامس
+  // تذييل الكليشة: نصٌّ فوق التذييل يُرى ويُصلَح، ونصٌّ مقصوصٌ يضيع بلا أثر.
+  function keepOversized(el) {
+    if (!fits(el)) currentArea.style.overflow = 'visible';
   }
 
-  // Splits a table across pages, row by row, repeating the header on each.
-  //
-  // Without this a table is one indivisible node: it is measured whole, moved
-  // whole to a fresh page when it does not fit, and then CLIPPED by the
-  // content-area overflow:hidden. Nothing warns — the rows past the page edge
-  // simply vanish, which is how a meeting with twenty tasks printed twelve.
-  //
-  // The header clone stays inside the same tbody rather than moving to a thead,
-  // so the tr:nth-child striping keeps landing on the same rows it did before.
+  // يوضع الجدول في الصفحة صفّاً صفّاً، ويتكرر رأسه في كل صفحة. ويبقى الرأس
+  // داخل tbody نفسه ليستمر تلوين الصفوف بالتناوب كما هو.
   function appendTable(table) {
     var all = Array.prototype.slice.call(table.rows);
     if (all.length < 2) { appendAtomic(table); return; }
@@ -183,37 +177,34 @@ export function buildLetterheadDoc(m: Meeting, forPrint: boolean, meetingNum?: n
       var tbody = document.createElement("tbody");
       chunk.appendChild(tbody);
       tbody.appendChild(header.cloneNode(true));
+      currentArea.appendChild(chunk);
 
       var placed = 0;
-      var avail = USABLE - usedHeight;
-
       while (i < bodyRows.length) {
-        tbody.appendChild(bodyRows[i].cloneNode(true));
-        var h = getHeight(chunk);
+        var row = bodyRows[i].cloneNode(true);
+        tbody.appendChild(row);
+        if (fits(chunk)) { placed++; i++; continue; }
 
-        if (h <= avail) { placed++; i++; continue; }
-
-        // Does not fit. Keep it anyway if the page is empty and this is the
-        // first row — a single row taller than a whole page cannot be split,
-        // and dropping it would be the very bug this function exists to fix.
-        if (placed === 0 && usedHeight === 0) { placed++; i++; }
-        else { tbody.removeChild(tbody.lastChild); }
+        if (placed === 0 && currentArea.firstChild === chunk) {
+          // صفٌّ أطول من صفحةٍ فارغة: لا يُسقط، فإسقاطه هو ما نمنعه هنا.
+          keepOversized(chunk);
+          placed++; i++;
+        } else {
+          tbody.removeChild(row);
+        }
         break;
       }
 
       if (placed === 0) {
-        // Not even the header plus one row fits in what is left of this page.
-        currentArea = newPage(); usedHeight = 0;
+        currentArea.removeChild(chunk);
+        currentArea = newPage();
         continue;
       }
-
-      place(chunk, getHeight(chunk));
-      if (i < bodyRows.length) { currentArea = newPage(); usedHeight = 0; }
+      if (i < bodyRows.length) currentArea = newPage();
     }
   }
 
-  // Same treatment for lists, which overflow the same way once a section of
-  // recommendations runs long.
+  // والقوائم مثل الجداول: تُقسم عند البند لا تُقصّ.
   function appendList(list) {
     var items = Array.prototype.slice.call(list.children);
     if (items.length < 2) { appendAtomic(list); return; }
@@ -221,31 +212,42 @@ export function buildLetterheadDoc(m: Meeting, forPrint: boolean, meetingNum?: n
     var i = 0;
     while (i < items.length) {
       var chunk = document.createElement(list.tagName);
-      var placed = 0;
-      var avail = USABLE - usedHeight;
+      currentArea.appendChild(chunk);
 
+      var placed = 0;
       while (i < items.length) {
-        chunk.appendChild(items[i].cloneNode(true));
-        if (getHeight(chunk) <= avail) { placed++; i++; continue; }
-        if (placed === 0 && usedHeight === 0) { placed++; i++; }
-        else { chunk.removeChild(chunk.lastChild); }
+        var item = items[i].cloneNode(true);
+        chunk.appendChild(item);
+        if (fits(chunk)) { placed++; i++; continue; }
+
+        if (placed === 0 && currentArea.firstChild === chunk) {
+          keepOversized(chunk);
+          placed++; i++;
+        } else {
+          chunk.removeChild(item);
+        }
         break;
       }
 
-      if (placed === 0) { currentArea = newPage(); usedHeight = 0; continue; }
-
-      place(chunk, getHeight(chunk));
-      if (i < items.length) { currentArea = newPage(); usedHeight = 0; }
+      if (placed === 0) {
+        currentArea.removeChild(chunk);
+        currentArea = newPage();
+        continue;
+      }
+      if (i < items.length) currentArea = newPage();
     }
   }
 
-  // Anything with no natural seam to cut along: moved whole to the next page.
+  // ما لا موضع يُقسم عنده يُنقل كاملاً إلى الصفحة التالية.
   function appendAtomic(el) {
-    var h = getHeight(el);
-    if (usedHeight + h > USABLE && usedHeight > 0) {
-      currentArea = newPage(); usedHeight = 0;
+    currentArea.appendChild(el);
+    if (fits(el)) return;
+    if (currentArea.firstChild !== el) {
+      currentArea.removeChild(el);
+      currentArea = newPage();
+      currentArea.appendChild(el);
     }
-    place(el, h);
+    keepOversized(el);
   }
 
   function appendToPage(el) {
@@ -267,8 +269,6 @@ export function buildLetterheadDoc(m: Meeting, forPrint: boolean, meetingNum?: n
     }
   });
 
-  document.body.removeChild(probe);
-
   if (shouldPrint) {
     setTimeout(function() { window.print(); }, 300);
   }
@@ -276,7 +276,7 @@ export function buildLetterheadDoc(m: Meeting, forPrint: boolean, meetingNum?: n
 
   // Cairo loads via @import, and nothing on the page asks for it until this
   // script runs — #root starts empty, so the browser has not even begun
-  // fetching it yet. Measuring against the probe immediately measures with
+  // fetching it yet. Measuring immediately measures with
   // the fallback font (Segoe UI/Tahoma), which wraps Arabic text at
   // different widths than Cairo. Page breaks get decided on those wrong
   // heights, then the real Cairo text reflows taller or shorter inside the

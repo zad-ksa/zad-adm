@@ -5,6 +5,7 @@ import { Calendar, Loader2, AlertTriangle } from "lucide-react";
 import { Dialog } from "@/components/console/Dialog";
 import { btn } from "@/components/console/ui";
 import { rescheduleDesignRequest } from "@/app/actions/designRequests";
+import DateTimeField from "@/components/console/DateTimeField";
 
 export default function StaffRescheduleDesignRequestModal({
   requestId,
@@ -82,13 +83,7 @@ export default function StaffRescheduleDesignRequestModal({
             >
               تاريخ ووقت البدء الجديد
             </label>
-            <input
-              type="datetime-local"
-              value={startDate}
-              onChange={(e) => setStartDate(e.target.value)}
-              className="w-full h-11 px-3 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none"
-              style={{ fontSize: "var(--dr-fs-body)" }}
-            />
+            <DateTimeField value={startDate} onChange={setStartDate} />
           </div>
         </div>
     </Dialog>

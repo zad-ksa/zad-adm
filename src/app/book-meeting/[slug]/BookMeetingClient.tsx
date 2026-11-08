@@ -5,7 +5,8 @@ import { Calendar, Clock, CheckCircle2, ChevronRight, Loader2, MessageSquareText
 import { bookMeetingSlot, submitAlternativeRequest } from "@/app/actions/meeting-schedules";
 import { formatClock12, WEEKDAY_LABELS } from "@/lib/attendanceTime";
 import { formatDateWithWeekday, toISODate } from "@/lib/calendarGrid";
-import DateField, { TimeField } from "@/components/console/DateField";
+import DateField from "@/components/console/DateField";
+import TimeField from "@/components/console/TimeField";
 import { btn, cx, field } from "@/components/console/ui";
 import {
   dayOfferedSlots,
@@ -254,7 +255,7 @@ export default function BookMeetingClient({ schedule, nowMs }: { schedule: any; 
                 <label htmlFor="alt-time" className="mb-1.5 block text-caption font-semibold uppercase tracking-widest text-slate-500">
                   الساعة المقترحة
                 </label>
-                <TimeField id="alt-time" value={altTime} onChange={setAltTime} required step={900} />
+                <TimeField id="alt-time" value={altTime} onChange={setAltTime} required step={15} />
               </div>
             </div>
 

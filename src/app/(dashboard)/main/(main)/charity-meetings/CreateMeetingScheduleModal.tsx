@@ -8,7 +8,8 @@ import { Dialog } from "@/components/console/Dialog";
 import Select from "@/components/console/Select";
 import { btn, field, Field, Note, OptionRow, SectionHeader } from "@/components/console/ui";
 import { AFTER_SLOT_ACTIONS, describeMeetingRules, parseMeetingRules, type AfterSlotAction } from "@/lib/meetingSlots";
-import DateField, { TimeField } from "@/components/console/DateField";
+import DateField from "@/components/console/DateField";
+import TimeField from "@/components/console/TimeField";
 
 /** وحداتُ الإغلاق المسبق — تُخزَّن دقائقَ، وتُدخَل بالوحدة التي يفكّر بها الموظف. */
 const CUTOFF_UNITS: { value: string; label: string; minutes: number }[] = [

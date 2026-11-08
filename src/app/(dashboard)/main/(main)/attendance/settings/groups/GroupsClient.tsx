@@ -23,6 +23,7 @@ import {
 } from "@/app/actions/zadAttendance";
 import { WEEKDAY_LABELS, formatClock12 } from "@/lib/attendanceTime";
 import { BTN, CARD, Feedback, GHOST, INPUT, useSettingsAction } from "../shared";
+import TimeField from "@/components/console/TimeField";
 
 type Group = {
   id: string;
@@ -141,23 +142,11 @@ export default function GroupsClient({
         />
         <label className="flex items-center gap-2 text-meta text-slate-500 dark:text-slate-400">
           من
-          <input
-            className={INPUT}
-            type="time"
-            dir="ltr"
-            value={form.startTime}
-            onChange={(e) => setForm({ ...form, startTime: e.target.value })}
-          />
+          <TimeField value={form.startTime} onChange={(v) => setForm({ ...form, startTime: v })} step={15} />
         </label>
         <label className="flex items-center gap-2 text-meta text-slate-500 dark:text-slate-400">
           إلى
-          <input
-            className={INPUT}
-            type="time"
-            dir="ltr"
-            value={form.endTime}
-            onChange={(e) => setForm({ ...form, endTime: e.target.value })}
-          />
+          <TimeField value={form.endTime} onChange={(v) => setForm({ ...form, endTime: v })} step={15} />
         </label>
       </div>
 

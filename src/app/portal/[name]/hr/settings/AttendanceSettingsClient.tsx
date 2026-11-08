@@ -37,6 +37,7 @@ import {
   ghostClass,
   inputClass,
 } from "../ui";
+import TimeField from "@/components/console/TimeField";
 
 type Site = {
   id: string;
@@ -493,24 +494,10 @@ export default function AttendanceSettingsClient({
 
             <div className="grid grid-cols-2 gap-4">
               <Field label="بداية الدوام">
-                <input
-                  type="time"
-                  value={schedule.startTime}
-                  onChange={(e) => setSchedule({ ...schedule, startTime: e.target.value })}
-                  className={`${inputClass} tabular-nums`}
-                  style={fs.body}
-                  dir="ltr"
-                />
+                <TimeField value={schedule.startTime} onChange={(v) => setSchedule({ ...schedule, startTime: v })} step={15} />
               </Field>
               <Field label="نهاية الدوام">
-                <input
-                  type="time"
-                  value={schedule.endTime}
-                  onChange={(e) => setSchedule({ ...schedule, endTime: e.target.value })}
-                  className={`${inputClass} tabular-nums`}
-                  style={fs.body}
-                  dir="ltr"
-                />
+                <TimeField value={schedule.endTime} onChange={(v) => setSchedule({ ...schedule, endTime: v })} step={15} />
               </Field>
               <Field label="مهلة التأخير (د)">
                 <input

@@ -29,6 +29,7 @@ import {
   inputClass,
 } from "../ui";
 import DateField from "@/components/console/DateField";
+import TimeField from "@/components/console/TimeField";
 
 type SummaryRow = {
   id: string;
@@ -653,24 +654,10 @@ export default function AttendanceReportClient({
 
             <div className="grid grid-cols-2 gap-4">
               <Field label="وقت الحضور">
-                <input
-                  type="time"
-                  value={draft.checkInAt}
-                  onChange={(e) => setDraft({ ...draft, checkInAt: e.target.value })}
-                  className={inputClass}
-                  style={fs.body}
-                  dir="ltr"
-                />
+                <TimeField value={draft.checkInAt} onChange={(v) => setDraft({ ...draft, checkInAt: v })} />
               </Field>
               <Field label="وقت الانصراف">
-                <input
-                  type="time"
-                  value={draft.checkOutAt}
-                  onChange={(e) => setDraft({ ...draft, checkOutAt: e.target.value })}
-                  className={inputClass}
-                  style={fs.body}
-                  dir="ltr"
-                />
+                <TimeField value={draft.checkOutAt} onChange={(v) => setDraft({ ...draft, checkOutAt: v })} />
               </Field>
             </div>
 

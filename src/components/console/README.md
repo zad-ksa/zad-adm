@@ -18,7 +18,9 @@
 | `overlays.tsx` | `Sheet` · `ConfirmDialog` · `useToast`/`Toast` · `RowMenu` · `MenuItem` · `FooterStatus` |
 | `controls.tsx` | `Pagination` |
 | `Select.tsx` | `Select` — قائمة منسدلة بصيغتين |
-| `DateField.tsx` | `DateField` — تقويمُ اختيارِ تاريخٍ بهوية الموقع · `TimeField` |
+| `DateField.tsx` | `DateField` — تقويمُ اختيارِ تاريخٍ بهوية الموقع |
+| `TimeField.tsx` | `TimeField` — ساعةٌ ودقيقةٌ وص/م في ثلاثة أعمدة |
+| `DateTimeField.tsx` | `DateTimeField` — الحقلان معاً بقيمةٍ واحدة |
 | `MultiSelect.tsx` | `MultiSelect` — اختيارٌ متعدِّد بمنطق `Select` نفسه، صفوفُه `OptionRow` ورأسُه `SelectAll` |
 | `Copy.tsx` | `CopyButton` · `SecretValue` — زرُّ النسخ الواحد، وقيمةٌ مُغطّاةٌ تُكشف وتُنسخ |
 | `StarRating.tsx` | `StarRating` — تقييمٌ من ١ إلى ٥، مجموعةُ اختيارٍ لا صفُّ أيقونات |
@@ -118,9 +120,18 @@
 نصُّ `YYYY-MM-DD` و`onChange` يُعطي نصّاً. و`withWeekday={false}` حيث يضيق
 الموضع. وحسابُ الشبكة في `lib/calendarGrid.ts` مُختبَراً.
 
-**وقتٌ يُختار:** `<TimeField value onChange step />` — `input[type=time]` موضوعاً في
-حقل العدّة. وهو أصليٌّ عن قصد: عجلةُ الوقت في الجوّال أسرعُ من أيّ قائمة، ولا
-خلافَ تقويمٍ في الساعة.
+**وقتٌ يُختار:** `<TimeField value onChange step min max />` — **ولا `input[type=time]`
+في صفحة**. ذاك يُرسَم بواجهة النظام كأخيه، وصيغةُ ١٢/٢٤ ساعةً فيه تتبع **لغةَ
+النظام** لا لغةَ الموقع: فموظّفٌ يُدخل «٥:٠٠ م» وآخرُ على الجهاز نفسِه يرى
+«17:00» في الحقل الواحد. وهذا ثلاثةُ أعمدة — الساعةُ باثنتي عشرة مرتَّبةً كوجه
+الساعة، والدقيقةُ بخطوةٍ تُطلَب (`step` **بالدقائق** لا بالثواني كالحقل
+الأصليّ)، و«ص/م» — والمختارُ يُجلب إلى العين عند الفتح. والقيمةُ تبقى «HH:MM»
+بأربعٍ وعشرين ساعة، فما يُحفظ في القاعدة لم يتغيّر. ومنطقُه في
+`lib/timeOptions.ts` مُختبَراً.
+
+**تاريخٌ ووقتٌ معاً:** `<DateTimeField value onChange step minDate maxDate />` بقيمةٍ
+على صيغة `datetime-local` (`YYYY-MM-DDTHH:MM`) — حقلان لا حقلٌ واحد، وقيمةٌ
+فارغةٌ ما لم يكتمل الشقّان: «2026-11-09T» ليست لحظةً ولا تُقرأ في الخادم.
 
 **صورةُ شخصٍ:** `<Avatar name src size />` — `src` للصورة المرفوعة والحرفان بديلُها،
 فلا تُرسم دائرةٌ بـ`Image` في كل شاشة.

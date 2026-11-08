@@ -20,7 +20,8 @@ import {
   LEAVE_TYPE_LABELS,
   formatClock12,
 } from "@/lib/attendanceTime";
-import { BTN, Feedback, GHOST, INPUT, INPUT_AUTO, useSettingsAction } from "../shared";
+import { BTN, Feedback, GHOST, INPUT, useSettingsAction } from "../shared";
+import TimeField from "@/components/console/TimeField";
 
 type DayRecord = {
   status: string;
@@ -237,23 +238,11 @@ export default function RecordsClient({
                   <div className="grid sm:grid-cols-[auto_auto_1fr] gap-2 items-center">
                     <label className="flex items-center gap-2 text-meta text-slate-500 dark:text-slate-400">
                       حضور
-                      <input
-                        className={INPUT_AUTO}
-                        type="time"
-                        dir="ltr"
-                        value={form.checkIn}
-                        onChange={(e) => setForm({ ...form, checkIn: e.target.value })}
-                      />
+                      <TimeField value={form.checkIn} onChange={(v) => setForm({ ...form, checkIn: v })} className="w-36" />
                     </label>
                     <label className="flex items-center gap-2 text-meta text-slate-500 dark:text-slate-400">
                       انصراف
-                      <input
-                        className={INPUT_AUTO}
-                        type="time"
-                        dir="ltr"
-                        value={form.checkOut}
-                        onChange={(e) => setForm({ ...form, checkOut: e.target.value })}
-                      />
+                      <TimeField value={form.checkOut} onChange={(v) => setForm({ ...form, checkOut: v })} className="w-36" />
                     </label>
                     <input
                       className={INPUT}

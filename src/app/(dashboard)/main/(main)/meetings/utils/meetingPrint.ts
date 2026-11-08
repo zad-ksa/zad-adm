@@ -1,4 +1,9 @@
 import { Meeting, MeetingTask } from "../MeetingsClient";
+import { meetingAssigneeName } from "./meetingAssignee";
+
+// الاسم اليدوي نصٌّ حرّ يدخل HTML المحضر، فلا يُدرج كما كُتب.
+const ESCAPES: Record<string, string> = { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" };
+const escapeHtml = (text: string) => text.replace(/[&<>"]/g, (c) => ESCAPES[c]);
 import { notify } from "@/components/console/toastBus";
 import { LETTERHEAD_CSS } from "@/lib/letterhead";
 
@@ -70,7 +75,7 @@ export function mdToHtml(md: string): string {
 function injectTasksIntoHtml(html: string, tasks: MeetingTask[]): string {
   if (tasks.length === 0) return html;
   const rows = tasks.map(t => {
-    const assignee = t.assignedTo?.name || "—";
+    const assignee = escapeHtml(meetingAssigneeName(t) || "—");
     const status = t.isDone ? "✓ مكتملة" : "قيد التنفيذ";
     const due = t.dueDays ? `${t.dueDays} يوم` : "—";
     return `<tr><td>${t.title}</td><td>${assignee}</td><td>${due}</td><td style="color:${t.isDone ? "#10b981" : "#f59e0b"}">${status}</td></tr>`;

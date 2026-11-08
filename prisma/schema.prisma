@@ -315,6 +315,9 @@ model MeetingTask {
   title        String
   assignedToId String?
   assignedTo   Employee? @relation("MeetingTaskAssignee", fields: [assignedToId], references: [id], onDelete: SetNull)
+  /// مكلَّفٌ من خارج الموظفين يُكتب اسمُه يدوياً: نصٌّ في هذا الصفّ وحده، لا
+  /// حساب له ولا مهمة في «مهامي» ولا إشعار. ولا يجتمع مع assignedToId.
+  assignedToName String?
   dueDays      Int?
   dueDate      DateTime?
   isDone       Boolean   @default(false)

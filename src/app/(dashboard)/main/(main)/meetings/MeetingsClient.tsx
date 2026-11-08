@@ -23,6 +23,7 @@ export type MeetingTask = {
   title: string;
   assignedToId: string | null;
   assignedTo: { id: string; name: string } | null;
+  assignedToName: string | null;
   dueDays: number | null;
   isDone: boolean;
 };

@@ -3,7 +3,6 @@
 import { useState, useTransition } from "react";
 import { confirmAction } from "@/components/console/confirmBus";
 import { notify } from "@/components/console/toastBus";
-import Select from "@/components/console/Select";
 import {
   ChevronDown, ChevronRight, RefreshCw, AlertCircle, Loader2, BookOpen,
   ClipboardList, Edit2, Check, X, User, Clock, UserPlus, Plus
@@ -14,6 +13,8 @@ import {
 } from "@/app/actions/meetings";
 import { useRoleLabels } from "@/components/RoleLabelsProvider";
 import { Meeting, MeetingTask, Employee } from "../MeetingsClient";
+import MeetingAssigneePicker, { type AssigneeValue } from "./MeetingAssigneePicker";
+import { meetingAssigneeName } from "../utils/meetingAssignee";
 import { btn, cx } from "@/components/console/ui";
 
 type Props = {
@@ -41,7 +42,7 @@ export default function MeetingSummaryPanel({
   const [extracted, setExtracted] = useState(alreadyExtracted);
   const [extractError, setExtractError] = useState("");
 
-  const unassigned = localTasks.filter(t => !t.assignedToId).length;
+  const unassigned = localTasks.filter(t => !meetingAssigneeName(t)).length;
   const done = localTasks.filter(t => t.isDone).length;
   const total = localTasks.length;
   const pct = total > 0 ? Math.round((done / total) * 100) : 0;
@@ -118,6 +119,10 @@ export default function MeetingSummaryPanel({
     setEditTasks(prev => prev.map((t, idx) => idx === i ? { ...t, [field]: val } : t));
   }
 
+  function setEditAssignee(i: number, next: AssigneeValue) {
+    setEditTasks(prev => prev.map((t, idx) => idx === i ? { ...t, ...next } : t));
+  }
+
   async function saveEdit() {
     setSaving(true);
     try {
@@ -125,6 +130,7 @@ export default function MeetingSummaryPanel({
         id: t.id.startsWith("tmp_") ? undefined : t.id,
         title: t.title,
         assignedToId: t.assignedToId || null,
+        assignedToName: t.assignedToName,
         dueDays: t.dueDays || null,
         isDone: t.isDone,
       }));
@@ -132,6 +138,7 @@ export default function MeetingSummaryPanel({
       
       const updated = editTasks.map(t => ({
         ...t,
+        assignedToName: t.assignedToName?.trim() || null,
         assignedTo: t.assignedToId
           ? (employees.find(e => e.id === t.assignedToId) ? { id: t.assignedToId, name: employees.find(e => e.id === t.assignedToId)!.name } : null)
           : null,
@@ -143,7 +150,7 @@ export default function MeetingSummaryPanel({
   }
 
   function addEditRow() {
-    setEditTasks(prev => [...prev, { id: `tmp_${Date.now()}`, title: "", assignedToId: null, assignedTo: null, dueDays: null, isDone: false }]);
+    setEditTasks(prev => [...prev, { id: `tmp_${Date.now()}`, title: "", assignedToId: null, assignedTo: null, assignedToName: null, dueDays: null, isDone: false }]);
   }
 
   async function handleToggle(task: MeetingTask) {
@@ -250,7 +257,7 @@ export default function MeetingSummaryPanel({
               ) : (
                 <div className="space-y-1">
                   {localTasks.map(task => (
-                    <div key={task.id} className={`flex items-start gap-2 p-2 rounded-lg text-caption border ${task.isDone ? "bg-emerald-50/40 dark:bg-emerald-900/10 border-emerald-100 dark:border-emerald-800/20" : task.assignedToId ? "bg-white dark:bg-slate-800/50 border-slate-100 dark:border-slate-700" : "bg-amber-50/50 dark:bg-amber-900/10 border-amber-100 dark:border-amber-800/20"}`}>
+                    <div key={task.id} className={`flex items-start gap-2 p-2 rounded-lg text-caption border ${task.isDone ? "bg-emerald-50/40 dark:bg-emerald-900/10 border-emerald-100 dark:border-emerald-800/20" : meetingAssigneeName(task) ? "bg-white dark:bg-slate-800/50 border-slate-100 dark:border-slate-700" : "bg-amber-50/50 dark:bg-amber-900/10 border-amber-100 dark:border-amber-800/20"}`}>
                       <button
                         onClick={() => isTier1 && handleToggle(task)}
                         className={`mt-0.5 w-4 h-4 rounded border shrink-0 flex items-center justify-center transition-colors ${task.isDone ? "bg-emerald-500 border-emerald-500 text-white" : "border-slate-300 dark:border-slate-600"} ${isTier1 ? "cursor-pointer" : "cursor-default"}`}
@@ -260,9 +267,9 @@ export default function MeetingSummaryPanel({
                       <div className="flex-1 min-w-0">
                         <p className={`font-semibold leading-snug ${task.isDone ? "line-through text-slate-400" : "text-slate-700 dark:text-slate-200"}`}>{task.title}</p>
                         <div className="flex items-center gap-2 mt-0.5 flex-wrap">
-                          {task.assignedTo ? (
+                          {meetingAssigneeName(task) ? (
                             <span className="flex items-center gap-1 text-caption text-primary font-semibold">
-                              <User className="w-3 h-3" /> {task.assignedTo.name}
+                              <User className="w-3 h-3" /> {meetingAssigneeName(task)}
                             </span>
                           ) : (
                             <span className="text-caption text-amber-600 dark:text-amber-400 font-semibold flex items-center gap-1">
@@ -301,20 +308,11 @@ export default function MeetingSummaryPanel({
                         className="w-full text-caption border border-slate-200 dark:border-slate-600 rounded-lg px-2 py-1.5 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-primary/50"
                       />
                       <div className="flex gap-1.5">
-                        <Select
-                          variant="soft"
-                          value={t.assignedToId || ""}
-                          onSelect={(v) => updateEditTask(i, "assignedToId", v || null)}
-                          placeholder="— المكلف —"
-                          options={[
-                            { value: "", label: "— بلا مكلَّف —" },
-                            ...employees.map(e => ({
-                              value: e.id,
-                              label: e.name,
-                              hint: roleLabels[e.role] || e.role,
-                            })),
-                          ]}
-                          className="flex-1 [&>button]:w-full [&>button]:justify-between"
+                        <MeetingAssigneePicker
+                          value={{ assignedToId: t.assignedToId, assignedToName: t.assignedToName }}
+                          onChange={(next) => setEditAssignee(i, next)}
+                          employees={employees}
+                          roleLabels={roleLabels}
                         />
                         <input
                           type="number" min="1" max="365"

@@ -331,6 +331,7 @@ function ThreadMessageCard({
       : message.senderCharityUser.name
     : message.sender?.name || "غير معروف";
   const [showQuoted, setShowQuoted] = useState(false);
+  const [showCc, setShowCc] = useState(false);
 
   if (!isExpanded) {
     return (
@@ -383,8 +384,19 @@ function ThreadMessageCard({
               {ccRecipients.length > 0 && (
                 <>
                   <span className="mx-1">|</span>
-                  <span>نسخة:</span>
-                  <span className="text-slate-600 dark:text-slate-300">{ccRecipients.map(partyName).join("، ")}</span>
+                  <button
+                    type="button"
+                    onClick={() => setShowCc((v) => !v)}
+                    aria-expanded={showCc}
+                    title={showCc ? "إخفاء أسماء النسخة" : "إظهار أسماء النسخة"}
+                    className="inline-flex items-center gap-0.5 rounded hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 dark:hover:text-teal-300"
+                  >
+                    نسخة ({ccRecipients.length})
+                    <ChevronDown className={`w-3.5 h-3.5 transition-transform ${showCc ? "rotate-180" : ""}`} />
+                  </button>
+                  {showCc && (
+                    <span className="text-slate-600 dark:text-slate-300">{ccRecipients.map(partyName).join("، ")}</span>
+                  )}
                 </>
               )}
               {/* Only ever the sender: a recipient's copy contains their own

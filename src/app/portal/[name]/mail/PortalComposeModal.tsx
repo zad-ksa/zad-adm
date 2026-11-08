@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import { sendPortalMail } from "@/app/actions/charityMail";
 import { uploadFile } from "@/lib/clientUpload";
+import { FileDropOverlay, useFileDrop } from "@/components/FileDrop";
 import { maxBytesFor, maxLabelFor } from "@/lib/uploadPurposes";
 
 const MailRichTextEditor = dynamic(
@@ -157,6 +158,8 @@ export default function PortalComposeModal({
     }
   };
 
+  const draggingFile = useFileDrop(addFiles);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMessage(null);
@@ -207,8 +210,9 @@ export default function PortalComposeModal({
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-6 bg-slate-950/60 backdrop-blur-sm">
       <div
         dir="rtl"
-        className="bg-white dark:bg-slate-900 rounded-t-xl sm:rounded-xl border border-slate-200/70 dark:border-slate-800 shadow-2xl w-full sm:max-w-3xl h-[92dvh] sm:h-[640px] sm:max-h-[90vh] flex flex-col overflow-hidden"
+        className="relative bg-white dark:bg-slate-900 rounded-t-xl sm:rounded-xl border border-slate-200/70 dark:border-slate-800 shadow-2xl w-full sm:max-w-3xl h-[92dvh] sm:h-[640px] sm:max-h-[90vh] flex flex-col overflow-hidden"
       >
+        <FileDropOverlay visible={draggingFile} />
         <div className="flex items-center justify-between px-5 py-4 border-b border-slate-200/70 dark:border-slate-800 shrink-0">
           <h2 className="text-base font-semibold text-slate-900 dark:text-slate-100">
             {isReply ? "الرد على رسالة" : resendTarget ? "تعديل رسالةٍ أُرجعت" : "رسالة جديدة"}
@@ -407,7 +411,7 @@ export default function PortalComposeModal({
             type="button"
             onClick={() => fileInputRef.current?.click()}
             className="w-9 h-9 flex items-center justify-center text-slate-500 dark:text-slate-400 hover:bg-primary/[0.08] hover:text-primary rounded-full transition-colors"
-            title="إرفاق ملف"
+            title="إرفاق ملف — أو اسحبه وأفلته هنا"
           >
             <Paperclip className="w-4 h-4" />
           </button>

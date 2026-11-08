@@ -7,6 +7,7 @@ import { MONO, btn, cx, field } from "@/components/console/ui";
 import { notify } from "@/components/console/toastBus";
 import { GRANT_STATUSES } from "@/lib/donorOrg";
 import { addGrantApplication, updateGrantApplication } from "@/app/actions/charity";
+import InitiativeNameField from "./InitiativeNameField";
 
 export type GrantCharity = { id: string; name: string; isInternal?: boolean };
 export type GrantDonor = { id: string; name: string };
@@ -64,6 +65,18 @@ export default function GrantSheet({
   const [status, setStatus] = useState("PENDING");
   const [busy, setBusy] = useState(false);
 
+  /**
+   * تبديلُ الجمعية يُفرِّغ اسمَ المشروع، ويُعاد بناءُ حقله من جديد
+   * (`key={charityId}` أدناه) فتُنسى المبادرةُ المختارةُ وقائمتُها.
+   *
+   * فالمبادراتُ خطةُ جمعيةٍ بعينها: لو بقيت مختارةً بعد التبديل لرُفعت منحةٌ
+   * لجمعيةٍ باسم مبادرةٍ من خطة غيرها — وهو خطأٌ لا يُرى في الجدول بعد الرفع.
+   */
+  const chooseCharity = (id: string) => {
+    if (id === charityId) return;
+    setCharityId(id);
+    setInitiative("");
+  };
   const save = () => {
     // `Select` زرٌّ لا حقلٌ في النموذج، فـ`required` لا يمسّه — والتحقّقُ هنا
     // صريحاً وإلّا مضى الإرسالُ بلا جمعيةٍ أو بلا جهة.
@@ -73,6 +86,12 @@ export default function GrantSheet({
     }
     if (!donorOrgId) {
       notify("error", "اختر الجهة المانحة");
+      return;
+    }
+    // ولا يُتَّكل على `required` في الحقل: حين تُفتح قائمةُ المبادرات يغيب
+    // الحقلُ عن النموذج، فيغيب حكمُه معه ويمضي الإرسالُ باسمٍ فارغ.
+    if (initiative.trim() === "") {
+      notify("error", "اكتب اسم المشروع أو اجلب مبادرةً من الخطة");
       return;
     }
     const value = Number(amount);
@@ -131,7 +150,7 @@ export default function GrantSheet({
           ) : (
             <Select
               value={charityId}
-              onSelect={setCharityId}
+              onSelect={chooseCharity}
               placeholder="اختر الجمعية…"
               emptyLabel="لا جمعياتٍ مسنَدةً إليك"
               options={charities.map((c) => ({
@@ -162,10 +181,15 @@ export default function GrantSheet({
           )}
         </label>
 
-        <label className="block space-y-1.5">
-          <span className="block text-body font-medium text-slate-700 dark:text-slate-300">اسم المشروع</span>
-          <input value={initiative} onChange={(e) => setInitiative(e.target.value)} required className={field} />
-        </label>
+        {/* اسمُ المشروع — حقلٌ واحدٌ مشتركٌ مع نموذج صفحةِ منح الجمعية:
+            يُكتب باليد أو يُجلب من الخطة التشغيلية. و`key` هو الجمعية، فتبديلُها
+            يُنشئ الحقلَ من جديدٍ بلا مبادرةٍ من خطةٍ أخرى. */}
+        <InitiativeNameField
+          key={charityId}
+          charityId={charityId}
+          value={initiative}
+          onChange={setInitiative}
+        />
 
         <label className="block space-y-1.5">
           <span className="block text-body font-medium text-slate-700 dark:text-slate-300">

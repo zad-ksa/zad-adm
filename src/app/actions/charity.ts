@@ -12,6 +12,7 @@ import { getAssignedCharityIds } from "@/lib/access";
 import { requirePermission } from "@/lib/guards";
 import { logAudit } from "@/lib/auditLog";
 import { DONOR_KINDS, GRANTS_HREF } from "@/lib/donorOrg";
+import { GRANT_PERSPECTIVE_PREFIXES, perspectiveLabel } from "@/lib/planPerspectives";
 import { writeFile, mkdir } from "fs/promises";
 import { join } from "path";
 
@@ -383,6 +384,57 @@ async function revalidateGrantViews(charityId: string, donorOrgIds: (string | nu
  * و`entityName` يبقى مكتوباً في الصفّ — اسمُ الجهة وقت الرفع، سِجلّاً لا
  * مرجعاً.
  */
+/**
+ * مبادراتُ الخطة التشغيلية التي يُرفع لها منح — للجمعية الواحدة.
+ *
+ * وتُجلب عند الطلب لا مع الصفحة: الجمعيةُ تُختار في لوحة الرفع، وجمعياتُ
+ * الموظّف قد تكون اثنتي عشرة وكلُّ خطةٍ أربعين مبادرة — فتحميلُها كلَّها مع
+ * الجدول نقلُ ما لا يُقرأ في الأغلب.
+ *
+ * وبحارس المنح نفسِه: من يرفع منحةً لهذه الجمعية يقرأ أسماءَ مبادراتها.
+ *
+ * والمنظوران «المستفيدون» و«العمليات الداخلية» وحدَهما — انظر
+ * `lib/planPerspectives.ts` لِمَ بالبادئة لا بالاسم.
+ */
+export async function listPlanInitiatives(charityId: string) {
+  try {
+    const session = await requireResourceDevelopment(charityId);
+    if (!session) return { success: false, message: "غير مصرح", initiatives: [] };
+
+    const rows = await prisma.initiative.findMany({
+      where: {
+        plan: { charityId },
+        objective: { perspective: { prefix: { in: [...GRANT_PERSPECTIVE_PREFIXES] } } },
+      },
+      select: {
+        id: true,
+        number: true,
+        name: true,
+        objective: { select: { code: true, perspective: { select: { name: true, prefix: true } } } },
+        plan: { select: { label: true } },
+      },
+      // الخطةُ الأحدثُ أوّلاً ثمّ رقمُ المبادرة في كشّافها: الترتيبُ الذي
+      // تُقرأ به الخطةُ نفسُها، فلا يُبحث عن مبادرةٍ في قائمةٍ مرتَّبةٍ بغيره.
+      orderBy: [{ plan: { startDate: "desc" } }, { number: "asc" }],
+    });
+
+    return {
+      success: true,
+      initiatives: rows.map((r) => ({
+        id: r.id,
+        number: r.number,
+        name: r.name,
+        objectiveCode: r.objective?.code ?? null,
+        perspective: perspectiveLabel(r.objective?.perspective.prefix, r.objective?.perspective.name),
+        planLabel: r.plan.label,
+      })),
+    };
+  } catch (error) {
+    console.error("Error listing plan initiatives:", error);
+    return { success: false, message: "تعذّر جلب مبادرات الخطة", initiatives: [] };
+  }
+}
+
 export async function addGrantApplication(
   charityId: string,
   initiativeName: string,

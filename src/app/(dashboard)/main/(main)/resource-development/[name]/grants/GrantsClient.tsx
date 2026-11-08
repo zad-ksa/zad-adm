@@ -10,6 +10,7 @@ import { addGrantApplication, updateGrantApplicationStatus, deleteGrantApplicati
 import { Dialog } from "@/components/console/Dialog";
 import { btn, cx } from "@/components/console/ui";
 import DateField from "@/components/console/DateField";
+import InitiativeNameField from "@/components/grants/InitiativeNameField";
 
 interface GrantApplication {
   id: string;
@@ -83,6 +84,12 @@ export default function GrantsClient({
     // زرٌّ لا حقلٌ في النموذج، فالتحقق ينتقل إلى هنا صريحاً.
     if (!grantForm.donorOrgId) {
       showNotification("error", "اختر الجهة المانحة");
+      return;
+    }
+    // وحقلُ الاسم يغيب عن النموذج حين تُفتح قائمةُ مبادرات الخطة، فيغيب حكمُ
+    // `required` معه — فالتحقّقُ هنا صريحاً كتحقّقِ الجهة.
+    if (grantForm.initiative.trim() === "") {
+      showNotification("error", "اكتب اسم المشروع أو اجلب مبادرةً من الخطة");
       return;
     }
 
@@ -294,9 +301,16 @@ export default function GrantsClient({
               className="w-full [&>button]:w-full [&>button]:justify-between"
             />
           </div>
+          {/* الحقلُ نفسُه الذي في لوحة الرفع: يُكتب باليد أو يُجلب من الخطة
+              التشغيلية. وكان نصّاً حرّاً هنا وحدَه، فمن رفع من هذه الصفحة كتب
+              اسمَ المبادرة من ذاكرته ومن رفع من الجدول جلبه من الخطة. */}
           <div className="md:col-span-1">
-            <label className="block text-caption font-semibold text-slate-500 dark:text-slate-400 mb-1.5">اسم المشروع</label>
-            <input required type="text" value={grantForm.initiative} onChange={e => setGrantForm({...grantForm, initiative: e.target.value})} className="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-lg px-4 py-2.5 text-caption outline-none focus:ring-2 focus:ring-primary font-semibold dark:text-slate-100" />
+            <InitiativeNameField
+              charityId={charityId}
+              value={grantForm.initiative}
+              onChange={(name) => setGrantForm({ ...grantForm, initiative: name })}
+              variant="soft"
+            />
           </div>
           <div className="md:col-span-1">
             <label className="block text-caption font-semibold text-slate-500 dark:text-slate-400 mb-1.5">التكلفة الإجمالية (ريال)</label>

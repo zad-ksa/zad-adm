@@ -11,7 +11,25 @@ interface Question {
   text: string;
   type: string;
   isRequired: boolean;
-  options?: { id: string; text: string }[];
+  /**
+   * لسؤال «نعم/لا» تحمل هذه الخانةُ أسئلتَه التابعةَ وجوابَها الشارط، لا
+   * قائمةَ خيارات — انظر صفحةَ التحرير.
+   */
+  options?: { id: string; text: string }[] | { followUpQuestions?: { id: string; text: string; isRequired?: boolean }[]; followUpOn?: "yes" | "no" };
+}
+
+/** خياراتُ سؤالِ اختيار — والخانةُ نفسُها تحمل غيرَها في «نعم/لا». */
+function choiceOptions(question: Question) {
+  return Array.isArray(question.options) ? question.options : [];
+}
+
+/** أسئلةُ «نعم/لا» التابعةُ وجوابُها الشارط، إن وُجدت. */
+function followUps(question: Question) {
+  const bag = question.options;
+  if (question.type !== "YES_NO" || !bag || Array.isArray(bag)) return null;
+  const list = bag.followUpQuestions ?? [];
+  if (list.length === 0) return null;
+  return { list, on: bag.followUpOn === "no" ? "لا" : "نعم" };
 }
 
 interface Section {
@@ -145,21 +163,43 @@ export default function PrintSurveyPage({ params }: { params: Promise<{ id: stri
                       )}
 
                       {question.type === "YES_NO" && (
-                        <div className="flex items-center gap-10 pt-1">
-                          <div className="flex items-center gap-2">
-                            <div className="w-4 h-4 rounded-full border border-slate-400 print:border-black"></div>
-                            <span className="font-bold text-slate-700 text-sm">نعم</span>
+                        <>
+                          <div className="flex items-center gap-10 pt-1">
+                            <div className="flex items-center gap-2">
+                              <div className="w-4 h-4 rounded-full border border-slate-400 print:border-black"></div>
+                              <span className="font-bold text-slate-700 text-sm">نعم</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <div className="w-4 h-4 rounded-full border border-slate-400 print:border-black"></div>
+                              <span className="font-bold text-slate-700 text-sm">لا</span>
+                            </div>
                           </div>
-                          <div className="flex items-center gap-2">
-                            <div className="w-4 h-4 rounded-full border border-slate-400 print:border-black"></div>
-                            <span className="font-bold text-slate-700 text-sm">لا</span>
-                          </div>
-                        </div>
+
+                          {/* والأسئلةُ التابعةُ تُطبَع ومعها شرطُها: ورقةٌ تُملأ
+                              باليد لا تُخفي سؤالاً، فيُقال متى يُجاب عنه. */}
+                          {(() => {
+                            const branch = followUps(question);
+                            if (!branch) return null;
+                            return (
+                              <div className="mt-3 border-r-2 border-slate-300 pr-3 space-y-3">
+                                {branch.list.map((followUp) => (
+                                  <div key={followUp.id}>
+                                    <p className="text-sm font-bold text-slate-700">
+                                      إذا كانت الإجابة «{branch.on}»: {followUp.text}
+                                      {followUp.isRequired && <span className="text-red-500 mr-1">*</span>}
+                                    </p>
+                                    <div className="border-b border-dotted border-slate-400 w-full h-6 mt-2"></div>
+                                  </div>
+                                ))}
+                              </div>
+                            );
+                          })()}
+                        </>
                       )}
 
                       {(question.type === "OPTIONS" || question.type === "MULTI_OPTIONS") && (
                         <div className="grid grid-cols-2 sm:grid-cols-3 gap-y-2 gap-x-4 pt-1">
-                          {(question.options || []).map((opt) => (
+                          {choiceOptions(question).map((opt) => (
                             <div key={opt.id} className="flex items-start gap-2">
                               {question.type === "OPTIONS" ? (
                                 <div className="w-4 h-4 rounded-full border border-slate-400 print:border-black mt-0.5 shrink-0"></div>

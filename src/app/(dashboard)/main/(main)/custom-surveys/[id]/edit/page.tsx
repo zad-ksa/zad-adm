@@ -22,7 +22,14 @@ interface Question {
   allowAttachment: boolean;
   requireAttachmentIfYes?: boolean;
   options?: { id: string; text: string }[];
-  followUpQuestions?: FollowUpQuestion[]; // Shown only if this YES_NO question is answered "نعم"
+  followUpQuestions?: FollowUpQuestion[];
+  /**
+   * جوابُ «نعم/لا» الذي تظهر عنده الأسئلةُ التابعة — افتراضُه «نعم».
+   *
+   * وكان «نعم» دائماً بلا خيار، فسؤالٌ مثل «هل جاءت الخدمةُ كما توقّعتم؟» لا
+   * يُمكن أن يُستفسر فيه عن سبب «لا» — وهو الجوابُ الذي يُسأل عن سببه.
+   */
+  followUpOn?: "yes" | "no";
 }
 
 // Wire format quirk: for YES_NO questions we repurpose the unused `options`
@@ -31,7 +38,12 @@ interface Question {
 function questionsFromApi(questions: any[]): Question[] {
   return questions.map((q) => {
     if (q.type === "YES_NO" && q.options && !Array.isArray(q.options)) {
-      return { ...q, options: undefined, followUpQuestions: q.options.followUpQuestions || [] };
+      return {
+        ...q,
+        options: undefined,
+        followUpQuestions: q.options.followUpQuestions || [],
+        followUpOn: q.options.followUpOn === "no" ? "no" : "yes",
+      };
     }
     return q;
   });
@@ -40,8 +52,14 @@ function questionsFromApi(questions: any[]): Question[] {
 function questionsForApi(questions: Question[]): any[] {
   return questions.map((q) => {
     if (q.type === "YES_NO") {
-      const { followUpQuestions, ...rest } = q;
-      return { ...rest, options: followUpQuestions && followUpQuestions.length > 0 ? { followUpQuestions } : null };
+      const { followUpQuestions, followUpOn, ...rest } = q;
+      return {
+        ...rest,
+        options:
+          followUpQuestions && followUpQuestions.length > 0
+            ? { followUpQuestions, followUpOn: followUpOn === "no" ? "no" : "yes" }
+            : null,
+      };
     }
     return q;
   });
@@ -539,7 +557,29 @@ export default function EditSurveyPage({ params }: { params: Promise<{ id: strin
 
                     {question.type === "YES_NO" && (
                       <div className="space-y-2 bg-white p-4 rounded-xl border border-slate-200 dark:bg-slate-900 dark:border-slate-800">
-                        <div className="text-caption font-semibold text-slate-700 dark:text-slate-300">أسئلة فرعية (تظهر فقط إذا كانت الإجابة "نعم"):</div>
+                        <div className="flex flex-wrap items-center justify-between gap-2">
+                          <div className="text-caption font-semibold text-slate-700 dark:text-slate-300">
+                            أسئلة فرعية، تظهر إذا كانت الإجابة:
+                          </div>
+                          {/* الجوابُ الذي يُستفسر عنده. و«لا» هو المطلوبُ في
+                              أسئلة التوقّع: «هل جاءت كما توقّعتم؟ — لا، لماذا؟» */}
+                          <div className="flex items-center gap-1 rounded-lg bg-slate-100 p-0.5 dark:bg-slate-800">
+                            {(["yes", "no"] as const).map((value) => (
+                              <button
+                                key={value}
+                                type="button"
+                                onClick={() => updateQuestion(sIndex, qIndex, { followUpOn: value })}
+                                className={`rounded-md px-3 py-1 text-caption font-semibold transition-colors ${
+                                  (question.followUpOn ?? "yes") === value
+                                    ? "bg-white text-primary shadow-sm dark:bg-slate-900 dark:text-teal-300"
+                                    : "text-slate-500 hover:text-slate-700 dark:text-slate-400"
+                                }`}
+                              >
+                                {value === "yes" ? "نعم" : "لا"}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
                         {(question.followUpQuestions || []).map((followUp, fIndex) => (
                           <div key={followUp.id} className="flex gap-2 items-center">
                             <input

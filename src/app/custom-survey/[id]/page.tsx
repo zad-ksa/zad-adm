@@ -45,6 +45,8 @@ interface Question {
   requireAttachmentIfYes?: boolean;
   options?: { id: string; text: string }[];
   followUpQuestions?: FollowUpQuestion[];
+  /** الجوابُ الذي تظهر عنده الأسئلةُ التابعة — افتراضُه «نعم». */
+  followUpOn?: "yes" | "no";
 }
 
 interface Section {
@@ -160,7 +162,8 @@ export default function CustomSurveyPage({ params }: { params: Promise<{ id: str
     if (q.type === "YES_NO" && q.requireAttachmentIfYes && answers[q.id] === "yes" && !(attachments[q.id]?.length)) {
       return false; // Requires attachment if "yes"
     }
-    if (q.type === "YES_NO" && answers[q.id] === "yes" && q.followUpQuestions?.length) {
+    // التابعةُ تُلزم عند جوابها هي: سؤالٌ يُستفسر عند «لا» لا يُحبس من أجاب «نعم».
+    if (q.type === "YES_NO" && answers[q.id] === (q.followUpOn ?? "yes") && q.followUpQuestions?.length) {
       const allFollowUpsAnswered = q.followUpQuestions.every(f => !f.isRequired || !!answers[f.id]);
       if (!allFollowUpsAnswered) return false;
     }
@@ -377,7 +380,7 @@ export default function CustomSurveyPage({ params }: { params: Promise<{ id: str
                               </label>
                             </div>
 
-                            {answers[question.id] === 'yes' && question.followUpQuestions && question.followUpQuestions.length > 0 && (
+                            {answers[question.id] === (question.followUpOn ?? 'yes') && question.followUpQuestions && question.followUpQuestions.length > 0 && (
                               <div className="mt-4 space-y-3 border-r-4 border-primary/20 pr-4">
                                 {question.followUpQuestions.map(followUp => (
                                   <div key={followUp.id}>

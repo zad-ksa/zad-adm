@@ -3,6 +3,18 @@
 import { useState, useEffect, useRef, use } from "react";
 import { notify } from "@/components/console/toastBus";
 import { Spinner } from "@/components/console/ui";
+import { MatrixField } from "@/components/console/MatrixField";
+import {
+  isAnswered,
+  matrixCellCount,
+  matrixCellKey,
+  matrixFilledCount,
+  matrixPartialRows,
+  otherTextKey,
+  questionsFromApi,
+  selectedOptionIds,
+  type SurveyQuestion,
+} from "@/lib/surveyQuestions";
 import { useRouter } from "next/navigation";
 import { createSurveyUploadTicket } from "@/app/actions/surveyUpload";
 import { uploadWithTicket } from "@/lib/clientUpload";
@@ -30,39 +42,49 @@ custom_arabic_ar.months = [
 ];
 
 
-interface FollowUpQuestion {
-  id: string;
-  text: string;
-  isRequired: boolean;
-}
-
-interface Question {
-  id: string;
-  text: string;
-  type: string;
-  isRequired: boolean;
-  allowAttachment: boolean;
-  requireAttachmentIfYes?: boolean;
-  options?: { id: string; text: string }[];
-  followUpQuestions?: FollowUpQuestion[];
-  /** الجوابُ الذي تظهر عنده الأسئلةُ التابعة — افتراضُه «نعم». */
-  followUpOn?: "yes" | "no";
-}
-
 interface Section {
   id: string;
   title: string;
-  questions: Question[];
+  questions: SurveyQuestion[];
 }
 
-// See edit page for why YES_NO questions store follow-ups inside `options`.
-function questionsFromApi(questions: any[]): Question[] {
-  return questions.map((q) => {
-    if (q.type === "YES_NO" && q.options && !Array.isArray(q.options)) {
-      return { ...q, options: undefined, followUpQuestions: q.options.followUpQuestions || [] };
-    }
-    return q;
-  });
+/**
+ * مربّعُ نصِّ خيارٍ — «أخرى: ....».
+ *
+ * ولا يظهر إلّا إذا اختير خيارُه، ويُلزم إذا كان السؤالُ إجبارياً: «أخرى»
+ * وحدَها ليست جواباً، فمن اختارها ولم يكتب لم يُجب.
+ */
+function OtherText({
+  question,
+  option,
+  shown,
+  answers,
+  setAnswers,
+}: {
+  question: SurveyQuestion;
+  option: { id: string; text: string; allowText?: boolean };
+  shown: boolean;
+  answers: Record<string, string>;
+  setAnswers: React.Dispatch<React.SetStateAction<Record<string, string>>>;
+}) {
+  if (!option.allowText || !shown) return null;
+  const key = otherTextKey(question.id, option.id);
+  return (
+    <div className="mt-2 ps-8">
+      <input
+        type="text"
+        value={answers[key] || ""}
+        onChange={(e) => setAnswers((prev) => ({ ...prev, [key]: e.target.value }))}
+        placeholder={`اكتب ${option.text}...`}
+        aria-label={`${option.text} — ${question.text}`}
+        autoFocus
+        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 outline-none focus:border-primary/50 focus:bg-white transition-all text-sm"
+      />
+      {question.isRequired && !(answers[key] || "").trim() && (
+        <p className="mt-1 text-xs font-bold text-amber-700">اكتبْ ما اخترتَ، فالخيارُ وحدَه لا يكفي.</p>
+      )}
+    </div>
+  );
 }
 
 interface Survey {
@@ -167,8 +189,10 @@ export default function CustomSurveyPage({ params }: { params: Promise<{ id: str
       const allFollowUpsAnswered = q.followUpQuestions.every(f => !f.isRequired || !!answers[f.id]);
       if (!allFollowUpsAnswered) return false;
     }
+    if (q.type === "MATRIX" && matrixPartialRows(q, answers).length > 0) return false;
     if (!q.isRequired) return true;
-    return !!answers[q.id] || !!(attachments[q.id]?.length);
+    // و«أخرى» المختارةُ بلا نصٍّ ليست إجابةً — `isAnswered` يعرف ذلك.
+    return isAnswered(q, answers) || !!(attachments[q.id]?.length);
   });
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, questionId: string) => {
@@ -325,47 +349,94 @@ export default function CustomSurveyPage({ params }: { params: Promise<{ id: str
                         {question.type === "OPTIONS" ? (
                           <div className="space-y-3">
                             {(question.options || []).map(opt => (
-                              <label key={opt.id} className="flex items-center gap-3 cursor-pointer p-3 border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors">
-                                <input
-                                  type="radio"
-                                  name={question.id}
-                                  value={opt.id}
-                                  checked={answers[question.id] === opt.id}
-                                  onChange={() => setAnswers(prev => ({ ...prev, [question.id]: opt.id }))}
-                                  className="w-5 h-5 text-primary focus:ring-primary/20 cursor-pointer"
+                              <div key={opt.id}>
+                                <label className="flex items-center gap-3 cursor-pointer p-3 border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors">
+                                  <input
+                                    type="radio"
+                                    name={question.id}
+                                    value={opt.id}
+                                    checked={answers[question.id] === opt.id}
+                                    onChange={() => setAnswers(prev => ({ ...prev, [question.id]: opt.id }))}
+                                    className="w-5 h-5 text-primary focus:ring-primary/20 cursor-pointer"
+                                  />
+                                  <span className="text-slate-700 font-medium">{opt.text}</span>
+                                </label>
+                                <OtherText
+                                  question={question}
+                                  option={opt}
+                                  shown={answers[question.id] === opt.id}
+                                  answers={answers}
+                                  setAnswers={setAnswers}
                                 />
-                                <span className="text-slate-700 font-medium">{opt.text}</span>
-                              </label>
+                              </div>
                             ))}
                           </div>
                         ) : question.type === "MULTI_OPTIONS" ? (
                           <div className="space-y-3">
                             {(question.options || []).map(opt => {
-                              const currentSelected = answers[question.id] ? answers[question.id].split(",") : [];
+                              const currentSelected = selectedOptionIds(question, answers[question.id]);
                               const isChecked = currentSelected.includes(opt.id);
                               const handleToggle = () => {
-                                let newSelected;
-                                if (isChecked) {
-                                  newSelected = currentSelected.filter(id => id !== opt.id);
-                                } else {
-                                  newSelected = [...currentSelected, opt.id];
-                                }
+                                const newSelected = isChecked
+                                  ? currentSelected.filter(id => id !== opt.id)
+                                  : [...currentSelected, opt.id];
                                 setAnswers(prev => ({ ...prev, [question.id]: newSelected.join(",") }));
                               };
                               return (
-                                <label key={opt.id} className="flex items-center gap-3 cursor-pointer p-3 border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors">
-                                  <input
-                                    type="checkbox"
-                                    name={question.id}
-                                    value={opt.id}
-                                    checked={isChecked}
-                                    onChange={handleToggle}
-                                    className="w-5 h-5 rounded text-primary focus:ring-primary/20 cursor-pointer"
+                                <div key={opt.id}>
+                                  <label className="flex items-center gap-3 cursor-pointer p-3 border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors">
+                                    <input
+                                      type="checkbox"
+                                      name={question.id}
+                                      value={opt.id}
+                                      checked={isChecked}
+                                      onChange={handleToggle}
+                                      className="w-5 h-5 rounded text-primary focus:ring-primary/20 cursor-pointer"
+                                    />
+                                    <span className="text-slate-700 font-medium">{opt.text}</span>
+                                  </label>
+                                  <OtherText
+                                    question={question}
+                                    option={opt}
+                                    shown={isChecked}
+                                    answers={answers}
+                                    setAnswers={setAnswers}
                                   />
-                                  <span className="text-slate-700 font-medium">{opt.text}</span>
-                                </label>
+                                </div>
                               );
                             })}
+                          </div>
+                        ) : question.type === "MATRIX" ? (
+                          <div className="space-y-3">
+                            <MatrixField
+                              label="الخدمة"
+                              hint={`ضعْ درجةً من ١ إلى ${question.matrix?.max ?? 5} في كل خليّة — واترك صفَّ الخدمة فارغاً إن لم تستفيدوا منها.`}
+                              rows={question.matrix?.rows ?? []}
+                              columns={question.matrix?.columns ?? []}
+                              max={question.matrix?.max ?? 5}
+                              labels={question.matrix?.labels}
+                              value={answers}
+                              cellKey={(rowId, columnId) => matrixCellKey(question.id, rowId, columnId)}
+                              onChange={(key, score) =>
+                                setAnswers(prev => {
+                                  const next = { ...prev };
+                                  if (score === null) delete next[key];
+                                  else next[key] = score;
+                                  return next;
+                                })
+                              }
+                            />
+                            <div className="flex flex-wrap items-center justify-between gap-2 text-sm">
+                              <span className="text-slate-500 font-medium">
+                                المُقيَّم: {matrixFilledCount(question, answers)} من {matrixCellCount(question)} خليّة
+                              </span>
+                              {matrixPartialRows(question, answers).length > 0 && (
+                                <span className="text-amber-700 bg-amber-50 border border-amber-200 rounded-xl px-3 py-1.5 font-bold">
+                                  أكملوا تقييمَ: {matrixPartialRows(question, answers).map(r => r.text).join("، ")} — إمّا كلُّ
+                                  المعايير أو لا شيء.
+                                </span>
+                              )}
+                            </div>
                           </div>
                         ) : question.type === "YES_NO" ? (
                           <div>

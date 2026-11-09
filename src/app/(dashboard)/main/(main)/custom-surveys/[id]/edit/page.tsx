@@ -7,63 +7,20 @@ import { useRouter } from "next/navigation";
 import { Plus, Trash2, Save, ArrowUp, ArrowDown, Settings, Loader2, AlertCircle, CheckCircle, Printer } from "lucide-react";
 import Link from "next/link";
 import { btn } from "@/components/console/ui";
+import {
+  DEFAULT_MATRIX_SCALE,
+  questionsForApi,
+  questionsFromApi,
+  type FollowUpQuestion as SurveyFollowUpQuestion,
+  type MatrixHeading,
+  type SurveyQuestion,
+} from "@/lib/surveyQuestions";
 
-interface FollowUpQuestion {
-  id: string;
-  text: string;
-  isRequired: boolean;
-}
-
-interface Question {
-  id: string;
-  text: string;
-  type: string;
-  isRequired: boolean;
-  allowAttachment: boolean;
-  requireAttachmentIfYes?: boolean;
-  options?: { id: string; text: string }[];
-  followUpQuestions?: FollowUpQuestion[];
-  /**
-   * جوابُ «نعم/لا» الذي تظهر عنده الأسئلةُ التابعة — افتراضُه «نعم».
-   *
-   * وكان «نعم» دائماً بلا خيار، فسؤالٌ مثل «هل جاءت الخدمةُ كما توقّعتم؟» لا
-   * يُمكن أن يُستفسر فيه عن سبب «لا» — وهو الجوابُ الذي يُسأل عن سببه.
-   */
-  followUpOn?: "yes" | "no";
-}
-
-// Wire format quirk: for YES_NO questions we repurpose the unused `options`
-// JSON column to store { followUpQuestions } instead of a choice list, so no
-// database schema change is needed to support follow-up questions.
-function questionsFromApi(questions: any[]): Question[] {
-  return questions.map((q) => {
-    if (q.type === "YES_NO" && q.options && !Array.isArray(q.options)) {
-      return {
-        ...q,
-        options: undefined,
-        followUpQuestions: q.options.followUpQuestions || [],
-        followUpOn: q.options.followUpOn === "no" ? "no" : "yes",
-      };
-    }
-    return q;
-  });
-}
-
-function questionsForApi(questions: Question[]): any[] {
-  return questions.map((q) => {
-    if (q.type === "YES_NO") {
-      const { followUpQuestions, followUpOn, ...rest } = q;
-      return {
-        ...rest,
-        options:
-          followUpQuestions && followUpQuestions.length > 0
-            ? { followUpQuestions, followUpOn: followUpOn === "no" ? "no" : "yes" }
-            : null,
-      };
-    }
-    return q;
-  });
-}
+// صيغةُ السلك وترجمتُها في `lib/surveyQuestions.ts`: خانةُ `options` تحمل
+// للأسئلة «نعم/لا» أسئلتَها التابعةَ، وللمصفوفة صفوفَها وأعمدتَها — فلا
+// هِجرةَ قاعدةٍ لنوعٍ جديد. وكانت الترجمةُ مكتوبةً في كل صفحةٍ على حدة.
+type Question = SurveyQuestion;
+type FollowUpQuestion = SurveyFollowUpQuestion;
 
 interface Section {
   id: string;
@@ -91,6 +48,92 @@ function InsertDivider({ onInsert, label }: { onInsert: () => void; label: strin
       >
         <Plus className="w-3.5 h-3.5" />
       </button>
+    </div>
+  );
+}
+
+/**
+ * محرِّرُ مصفوفة التقييم: صفوفُها (ما يُقيَّم) وأعمدتُها (ما يُقيَّم به) وسلّمُها.
+ *
+ * وسؤالٌ واحدٌ يُغني عن ٤٥ سؤالاً في جدولِ تسع خدماتٍ بخمسة معايير — فلا
+ * تُكتب الخدمةُ في نصّ كل سؤال، ولا تُنسى واحدةٌ عند التعديل.
+ */
+function MatrixEditor({
+  question,
+  onChange,
+}: {
+  question: SurveyQuestion;
+  onChange: (updates: Partial<SurveyQuestion>) => void;
+}) {
+  const matrix = question.matrix ?? { rows: [], columns: [], max: DEFAULT_MATRIX_SCALE };
+  const patch = (updates: Partial<typeof matrix>) => onChange({ matrix: { ...matrix, ...updates } });
+
+  const list = (kind: "rows" | "columns") => {
+    const items = matrix[kind];
+    const title = kind === "rows" ? "الصفوف (ما يُقيَّم)" : "الأعمدة (المعايير)";
+    const placeholder = kind === "rows" ? "اسم الخدمة..." : "اسم المعيار...";
+    const set = (next: MatrixHeading[]) => patch({ [kind]: next } as Partial<typeof matrix>);
+
+    return (
+      <div className="flex-1 min-w-[220px] space-y-2">
+        <div className="text-caption font-semibold text-slate-700 dark:text-slate-300">
+          {title} — {items.length}
+        </div>
+        {items.map((item, index) => (
+          <div key={item.id} className="flex gap-2 items-center">
+            <span className="text-caption text-slate-400 w-4 shrink-0 dark:text-slate-500">{index + 1}</span>
+            <input
+              type="text"
+              value={item.text}
+              onChange={(e) => set(items.map((it, i) => (i === index ? { ...it, text: e.target.value } : it)))}
+              placeholder={placeholder}
+              className="flex-1 bg-slate-50 border border-slate-200 rounded-md px-2 py-1 text-caption outline-none focus:border-primary/50 dark:bg-slate-900/50 dark:border-slate-700 dark:text-slate-100"
+            />
+            <button
+              onClick={() => set(items.filter((_, i) => i !== index))}
+              className="text-red-500 hover:text-red-600 p-1 dark:text-red-400 dark:hover:text-red-300"
+              title="حذف"
+            >
+              <Trash2 className="w-4 h-4" />
+            </button>
+          </div>
+        ))}
+        <button
+          onClick={() => set([...items, { id: `m${Math.random().toString(36).slice(2, 10)}`, text: "" }])}
+          className="text-primary hover:text-primary/80 text-caption font-semibold flex items-center gap-1 mt-1"
+        >
+          <Plus className="w-4 h-4" /> {kind === "rows" ? "إضافة صف" : "إضافة عمود"}
+        </button>
+      </div>
+    );
+  };
+
+  return (
+    <div className="space-y-4 bg-white p-4 rounded-xl border border-slate-200 dark:bg-slate-900 dark:border-slate-800">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="text-caption font-semibold text-slate-700 dark:text-slate-300">
+          جدولُ تقييم: {matrix.rows.length} × {matrix.columns.length} = {matrix.rows.length * matrix.columns.length} خليّة
+        </div>
+        <label className="flex items-center gap-2">
+          <span className="text-caption font-semibold text-slate-500 dark:text-slate-400">أعلى درجة</span>
+          <Select
+            variant="soft"
+            value={String(matrix.max)}
+            placeholder="السلّم"
+            onSelect={(v) => patch({ max: Number(v) })}
+            options={[3, 4, 5, 7, 10].map((n) => ({ value: String(n), label: `من ١ إلى ${n}` }))}
+          />
+        </label>
+      </div>
+      <div className="flex flex-wrap gap-6">
+        {list("rows")}
+        {list("columns")}
+      </div>
+      {/* معرِّفُ الصفِّ والعمودِ هو ما تُحفظ به الإجابة. فحذفُ صفٍّ يُفقد
+          درجاتَه في الردود السابقة، وتغييرُ نصِّه لا يُفقدها. */}
+      <p className="text-caption text-slate-400 dark:text-slate-500">
+        تغييرُ النصِّ لا يُضيع الإجاباتَ السابقة، وحذفُ صفٍّ أو عمودٍ يُضيع درجاتِه في الردود المستلمة.
+      </p>
     </div>
   );
 }
@@ -478,11 +521,18 @@ export default function EditSurveyPage({ params }: { params: Promise<{ id: strin
                           { value: "YES_NO", label: "نعم / لا" },
                           { value: "OPTIONS", label: "خيارات متعددة (خيار واحد)" },
                           { value: "MULTI_OPTIONS", label: "خيارات متعددة (متعدد الاختيار)" },
+                          { value: "MATRIX", label: "مصفوفة تقييم (جدول بدرجات)" },
                           { value: "HIJRI_DATE", label: "تاريخ هجري" },
                           { value: "FILE", label: "رفع ملف" },
                         ]}
                       />
                     </div>
+                    {question.type === "MATRIX" && (
+                      <MatrixEditor
+                        question={question}
+                        onChange={(updates) => updateQuestion(sIndex, qIndex, updates)}
+                      />
+                    )}
                     {(question.type === "OPTIONS" || question.type === "MULTI_OPTIONS") && (
                       <div className="space-y-2 bg-white p-4 rounded-xl border border-slate-200 dark:bg-slate-900 dark:border-slate-800">
                         <div className="text-caption font-semibold text-slate-700 dark:text-slate-300">خيارات الإجابة:</div>
@@ -492,13 +542,31 @@ export default function EditSurveyPage({ params }: { params: Promise<{ id: strin
                               type="text"
                               value={opt.text}
                               onChange={(e) => {
-                                const newOptions = [...(question.options || [])];
-                                newOptions[oIndex].text = e.target.value;
+                                const newOptions = (question.options || []).map((o, i) =>
+                                  i === oIndex ? { ...o, text: e.target.value } : o
+                                );
                                 updateQuestion(sIndex, qIndex, { options: newOptions });
                               }}
                               placeholder="النص..."
                               className="flex-1 bg-slate-50 border border-slate-200 rounded-md px-2 py-1 text-caption outline-none focus:border-primary/50 dark:bg-slate-900/50 dark:border-slate-700 dark:text-slate-100"
                             />
+                            {/* خيارٌ يفتح مربّعَ نصّ — «أخرى: ....» */}
+                            <label className="flex items-center gap-1.5 cursor-pointer shrink-0" title="يظهر مربّعُ نصٍّ إذا اختار هذا الخيار">
+                              <input
+                                type="checkbox"
+                                checked={!!opt.allowText}
+                                onChange={(e) => {
+                                  const newOptions = (question.options || []).map((o, i) =>
+                                    i === oIndex ? { ...o, allowText: e.target.checked } : o
+                                  );
+                                  updateQuestion(sIndex, qIndex, { options: newOptions });
+                                }}
+                                className="w-4 h-4 rounded text-primary focus:ring-primary/20 cursor-pointer"
+                              />
+                              <span className="text-caption font-semibold text-slate-500 dark:text-slate-400 whitespace-nowrap">
+                                يفتح مربّع نص
+                              </span>
+                            </label>
                             <button
                               onClick={() => {
                                 const newOptions = (question.options || []).filter((_, i) => i !== oIndex);

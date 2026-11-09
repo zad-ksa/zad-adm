@@ -12,6 +12,8 @@ import {
 import { toggleMeetingTask, updateMeetingTaskFields, deleteMeetingTask } from "@/app/actions/meetings";
 import { useRoleLabels } from "@/components/RoleLabelsProvider";
 import { Meeting, MeetingTask, Employee } from "../MeetingsClient";
+import MeetingAssigneePicker from "./MeetingAssigneePicker";
+import { meetingAssigneeName } from "../utils/meetingAssignee";
 import { btn, cx } from "@/components/console/ui";
 
 type FlatTask = MeetingTask & { meetingId: string; meetingTitle: string; meetingDate: string | Date };
@@ -44,8 +46,8 @@ function sortTasks(rows: FlatTask[], key: SortKey): FlatTask[] {
     // غيرُ المكلَّفة في الذيل: لا اسمَ لها تُرتَّب به، وصدرُ القائمة لأسماءٍ
     // حقيقية. ومن أراد رؤيتها وحدها فله مُرشِّحُها.
     return sorted.sort((a, b) => {
-      const an = a.assignedTo?.name ?? "";
-      const bn = b.assignedTo?.name ?? "";
+      const an = meetingAssigneeName(a) ?? "";
+      const bn = meetingAssigneeName(b) ?? "";
       if (!an !== !bn) return an ? -1 : 1;
       return ar(an, bn) || byDate(a, b);
     });
@@ -75,9 +77,10 @@ export default function PendingMeetingTasksPanel({
   const roleLabels = useRoleLabels();
   const [open, setOpen] = useState(true);
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [editDraft, setEditDraft] = useState<{ title: string; assignedToId: string; dueDays: string }>({
+  const [editDraft, setEditDraft] = useState<{ title: string; assignedToId: string; assignedToName: string | null; dueDays: string }>({
     title: "",
     assignedToId: "",
+    assignedToName: null,
     dueDays: "",
   });
   const [savingId, setSavingId] = useState<string | null>(null);
@@ -100,13 +103,13 @@ export default function PendingMeetingTasksPanel({
   // الفرزُ والترشيحُ بعد الجمع: العددُ في الرأس يبقى عدَّ المعلَّق كلِّه،
   // فلا يُخفي المُرشِّحُ ما لم يُنجَز.
   const visible = useMemo(
-    () => sortTasks(onlyUnassigned ? pending.filter((t) => !t.assignedToId) : pending, sort),
+    () => sortTasks(onlyUnassigned ? pending.filter((t) => !meetingAssigneeName(t)) : pending, sort),
     [pending, sort, onlyUnassigned]
   );
 
   if (pending.length === 0) return null; // لا لوحة فارغة — لا شيء معلّق يستحق المساحة
 
-  const unassigned = pending.filter((t) => !t.assignedToId).length;
+  const unassigned = pending.filter((t) => !meetingAssigneeName(t)).length;
 
   async function handleToggle(task: FlatTask) {
     setBusyId(task.id);
@@ -126,6 +129,7 @@ export default function PendingMeetingTasksPanel({
     setEditDraft({
       title: task.title,
       assignedToId: task.assignedToId || "",
+      assignedToName: task.assignedToName,
       dueDays: task.dueDays ? String(task.dueDays) : "",
     });
   }
@@ -136,6 +140,7 @@ export default function PendingMeetingTasksPanel({
       await updateMeetingTaskFields(task.id, {
         title: editDraft.title.trim() || task.title,
         assignedToId: editDraft.assignedToId || null,
+        assignedToName: editDraft.assignedToName,
         dueDays: editDraft.dueDays ? parseInt(editDraft.dueDays, 10) : null,
       });
       notify("ok", "حُفظ التعديل.");
@@ -235,7 +240,7 @@ export default function PendingMeetingTasksPanel({
               key={task.id}
               className={cx(
                 "rounded-lg border p-2 text-caption",
-                task.assignedToId
+                meetingAssigneeName(task)
                   ? "bg-white dark:bg-slate-800/50 border-slate-100 dark:border-slate-700"
                   : "bg-amber-50/50 dark:bg-amber-900/10 border-amber-100 dark:border-amber-800/20"
               )}
@@ -249,16 +254,13 @@ export default function PendingMeetingTasksPanel({
                     className="w-full text-caption border border-slate-200 dark:border-slate-600 rounded-lg px-2 py-1.5 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-primary/50"
                   />
                   <div className="flex gap-1.5">
-                    <Select
-                      variant="soft"
-                      value={editDraft.assignedToId}
-                      onSelect={(v) => setEditDraft((d) => ({ ...d, assignedToId: v }))}
-                      placeholder="— المكلف —"
-                      options={[
-                        { value: "", label: "— بلا مكلَّف —" },
-                        ...employees.map((e) => ({ value: e.id, label: e.name, hint: roleLabels[e.role] || e.role })),
-                      ]}
-                      className="flex-1 [&>button]:w-full [&>button]:justify-between"
+                    <MeetingAssigneePicker
+                      value={{ assignedToId: editDraft.assignedToId || null, assignedToName: editDraft.assignedToName }}
+                      onChange={(next) =>
+                        setEditDraft((d) => ({ ...d, assignedToId: next.assignedToId || "", assignedToName: next.assignedToName }))
+                      }
+                      employees={employees}
+                      roleLabels={roleLabels}
                     />
                     <input
                       type="number"
@@ -295,9 +297,9 @@ export default function PendingMeetingTasksPanel({
                   <div className="flex-1 min-w-0">
                     <p className="font-semibold leading-snug text-slate-700 dark:text-slate-200">{task.title}</p>
                     <div className="flex items-center gap-2 mt-0.5 flex-wrap">
-                      {task.assignedTo ? (
+                      {meetingAssigneeName(task) ? (
                         <span className="flex items-center gap-1 text-caption text-primary font-semibold">
-                          <User className="w-3 h-3" /> {task.assignedTo.name}
+                          <User className="w-3 h-3" /> {meetingAssigneeName(task)}
                         </span>
                       ) : (
                         <span className="text-caption text-amber-600 dark:text-amber-400 font-semibold flex items-center gap-1">

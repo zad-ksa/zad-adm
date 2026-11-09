@@ -222,9 +222,25 @@ export async function deleteMeeting(id: string) {
 
 // ── Meeting Tasks ──────────────────────────────────────────────────────────────
 
+/**
+ * الاسم اليدوي للمكلَّف: نصٌّ محفوظٌ في المهمة وحدها. والموظف المختار يُلغيه —
+ * فلا يجتمع في مهمةٍ مكلَّفان.
+ */
+function manualAssigneeName(assignedToId?: string | null, assignedToName?: string | null) {
+  if (assignedToId) return null;
+  return assignedToName?.trim().slice(0, 120) || null;
+}
+
 export async function upsertMeetingTasks(
   meetingId: string,
-  tasks: { id?: string; title: string; assignedToId?: string | null; dueDays?: number | null; isDone?: boolean }[]
+  tasks: {
+    id?: string;
+    title: string;
+    assignedToId?: string | null;
+    assignedToName?: string | null;
+    dueDays?: number | null;
+    isDone?: boolean;
+  }[]
 ) {
   const session = await getSession();
   await requireMeetingEditAccess(meetingId);
@@ -245,6 +261,7 @@ export async function upsertMeetingTasks(
         data: {
           title: t.title,
           assignedToId: t.assignedToId || null,
+          assignedToName: manualAssigneeName(t.assignedToId, t.assignedToName),
           dueDays: t.dueDays ?? null,
           isDone: t.isDone ?? false,
         },
@@ -290,6 +307,7 @@ export async function upsertMeetingTasks(
           meetingId,
           title: t.title,
           assignedToId: t.assignedToId || null,
+          assignedToName: manualAssigneeName(t.assignedToId, t.assignedToName),
           dueDays: t.dueDays ?? null,
           isDone: t.isDone ?? false,
         },
@@ -396,7 +414,7 @@ export async function toggleMeetingTask(taskId: string, isDone: boolean) {
  */
 export async function updateMeetingTaskFields(
   taskId: string,
-  data: { title?: string; assignedToId?: string | null; dueDays?: number | null }
+  data: { title?: string; assignedToId?: string | null; assignedToName?: string | null; dueDays?: number | null }
 ) {
   const existing = await prisma.meetingTask.findUnique({
     where: { id: taskId },
@@ -409,7 +427,12 @@ export async function updateMeetingTaskFields(
     where: { id: taskId },
     data: {
       ...(data.title !== undefined ? { title: data.title } : {}),
-      ...(data.assignedToId !== undefined ? { assignedToId: data.assignedToId || null } : {}),
+      ...(data.assignedToId !== undefined
+        ? {
+            assignedToId: data.assignedToId || null,
+            assignedToName: manualAssigneeName(data.assignedToId, data.assignedToName),
+          }
+        : {}),
       ...(data.dueDays !== undefined ? { dueDays: data.dueDays ?? null } : {}),
     },
     include: { assignedTo: { select: { id: true, name: true } } },

@@ -16,6 +16,7 @@ import {
 import { useRoleLabels } from "@/components/RoleLabelsProvider";
 import { isHtmlBody, htmlToPlainText } from "./mailUtils";
 import { uploadFile } from "@/lib/clientUpload";
+import { FileDropOverlay, useFileDrop } from "@/components/FileDrop";
 import { maxBytesFor, maxLabelFor } from "@/lib/uploadPurposes";
 import { CHARITY_MAIL_ENABLED } from "@/lib/featureFlags";
 
@@ -555,6 +556,9 @@ export default function ComposeModal({ isOpen, onClose, employees, onSuccess, re
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // النافذة المصغَّرة لا تستقبل: لا يرى المستخدم أين يذهب ما أفلته.
+  const draggingFile = useFileDrop(addFiles, !isMinimized);
+
   const removeAttachment = (key: string) => {
     markEdited();
     setAttachments((prev) => prev.filter((a) => a.key !== key));
@@ -631,8 +635,9 @@ export default function ComposeModal({ isOpen, onClose, employees, onSuccess, re
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-6 bg-slate-950/60 backdrop-blur-sm">
       <div
         dir="rtl"
-        className="bg-white dark:bg-slate-900 rounded-t-xl sm:rounded-xl border border-slate-200/70 dark:border-slate-800 shadow-[0_24px_64px_-24px_rgb(15_23_42/0.25)] w-full sm:max-w-3xl h-[92dvh] sm:h-[680px] sm:max-h-[90vh] flex flex-col overflow-hidden"
+        className="relative bg-white dark:bg-slate-900 rounded-t-xl sm:rounded-xl border border-slate-200/70 dark:border-slate-800 shadow-[0_24px_64px_-24px_rgb(15_23_42/0.25)] w-full sm:max-w-3xl h-[92dvh] sm:h-[680px] sm:max-h-[90vh] flex flex-col overflow-hidden"
       >
+        <FileDropOverlay visible={draggingFile} />
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200/70 dark:border-slate-800 shrink-0">
           <h2 className="text-body font-semibold text-slate-900 dark:text-slate-100">{title}</h2>
@@ -928,7 +933,7 @@ export default function ComposeModal({ isOpen, onClose, employees, onSuccess, re
               type="button"
               onClick={() => fileInputRef.current?.click()}
               className={btn.icon}
-              title="إرفاق ملف — أو الصق صورة/ملف مباشرة بـ Ctrl+V"
+              title="إرفاق ملف — أو اسحبه وأفلته هنا، أو الصقه بـ Ctrl+V"
             >
               <Paperclip className="w-4 h-4" />
             </button>

@@ -5,31 +5,20 @@ import { Printer, Loader2, ArrowRight } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import { btn } from "@/components/console/ui";
+import { questionsFromApi, type SurveyQuestion } from "@/lib/surveyQuestions";
 
-interface Question {
-  id: string;
-  text: string;
-  type: string;
-  isRequired: boolean;
-  /**
-   * لسؤال «نعم/لا» تحمل هذه الخانةُ أسئلتَه التابعةَ وجوابَها الشارط، لا
-   * قائمةَ خيارات — انظر صفحةَ التحرير.
-   */
-  options?: { id: string; text: string }[] | { followUpQuestions?: { id: string; text: string; isRequired?: boolean }[]; followUpOn?: "yes" | "no" };
-}
+type Question = SurveyQuestion;
 
-/** خياراتُ سؤالِ اختيار — والخانةُ نفسُها تحمل غيرَها في «نعم/لا». */
+/** خياراتُ سؤالِ اختيار — والخانةُ نفسُها تحمل غيرَها في «نعم/لا» والمصفوفة. */
 function choiceOptions(question: Question) {
-  return Array.isArray(question.options) ? question.options : [];
+  return question.options ?? [];
 }
 
 /** أسئلةُ «نعم/لا» التابعةُ وجوابُها الشارط، إن وُجدت. */
 function followUps(question: Question) {
-  const bag = question.options;
-  if (question.type !== "YES_NO" || !bag || Array.isArray(bag)) return null;
-  const list = bag.followUpQuestions ?? [];
-  if (list.length === 0) return null;
-  return { list, on: bag.followUpOn === "no" ? "لا" : "نعم" };
+  const list = question.followUpQuestions ?? [];
+  if (question.type !== "YES_NO" || list.length === 0) return null;
+  return { list, on: question.followUpOn === "no" ? "لا" : "نعم" };
 }
 
 interface Section {
@@ -59,7 +48,12 @@ export default function PrintSurveyPage({ params }: { params: Promise<{ id: stri
       const res = await fetch(`/api/custom-surveys/${resolvedParams.id}`);
       if (res.ok) {
         const data = await res.json();
-        setSurvey(data);
+        // وكانت الصفحةُ تقرأ الخامَ كما جاء، فالنوعُ الذي تحمل خانتُه كائناً
+        // لا قائمةً (المصفوفةُ و«نعم/لا») لا يُطبَع.
+        setSurvey({
+          ...data,
+          sections: (data.sections || []).map((s: any) => ({ ...s, questions: questionsFromApi(s.questions) })),
+        });
       }
     } catch (err) {
       console.error(err);
@@ -200,15 +194,60 @@ export default function PrintSurveyPage({ params }: { params: Promise<{ id: stri
                       {(question.type === "OPTIONS" || question.type === "MULTI_OPTIONS") && (
                         <div className="grid grid-cols-2 sm:grid-cols-3 gap-y-2 gap-x-4 pt-1">
                           {choiceOptions(question).map((opt) => (
-                            <div key={opt.id} className="flex items-start gap-2">
+                            <div
+                              key={opt.id}
+                              className={opt.allowText ? "col-span-2 sm:col-span-3 flex items-start gap-2" : "flex items-start gap-2"}
+                            >
                               {question.type === "OPTIONS" ? (
                                 <div className="w-4 h-4 rounded-full border border-slate-400 print:border-black mt-0.5 shrink-0"></div>
                               ) : (
                                 <div className="w-4 h-4 rounded border border-slate-400 print:border-black mt-0.5 shrink-0"></div>
                               )}
-                              <span className="font-bold text-slate-700 text-sm leading-tight">{opt.text}</span>
+                              <span className="font-bold text-slate-700 text-sm leading-tight shrink-0">{opt.text}</span>
+                              {/* خيارٌ يفتح نصّاً: سطرٌ يُكتب فيه — وورقةٌ بلا
+                                  سطرٍ تجعل «أخرى» خياراً بلا جواب. */}
+                              {opt.allowText && (
+                                <span className="flex-1 border-b border-dotted border-slate-400 print:border-black translate-y-2" />
+                              )}
                             </div>
                           ))}
+                        </div>
+                      )}
+
+                      {question.type === "MATRIX" && question.matrix && (
+                        <div className="pt-1">
+                          <p className="text-[11px] font-bold text-slate-500 mb-1">
+                            ضعْ درجةً من ١ إلى {question.matrix.max} في كل خليّة، واترك صفَّ الخدمة فارغاً إن لم تستفيدوا منها.
+                          </p>
+                          <table className="w-full border-collapse text-[11px]">
+                            <thead>
+                              <tr>
+                                <th className="border border-slate-400 print:border-black bg-slate-50 print:bg-transparent px-2 py-1 text-right font-bold text-slate-700">
+                                  {/* عنوانُ عمودِ الأسماء يأتي من نصِّ السؤال */}
+                                </th>
+                                {question.matrix.columns.map((column) => (
+                                  <th
+                                    key={column.id}
+                                    className="border border-slate-400 print:border-black bg-slate-50 print:bg-transparent px-1 py-1 text-center font-bold text-slate-700 leading-tight"
+                                  >
+                                    {column.text}
+                                  </th>
+                                ))}
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {question.matrix.rows.map((row) => (
+                                <tr key={row.id}>
+                                  <td className="border border-slate-400 print:border-black px-2 py-1.5 font-bold text-slate-700 leading-tight">
+                                    {row.text}
+                                  </td>
+                                  {question.matrix!.columns.map((column) => (
+                                    <td key={column.id} className="border border-slate-400 print:border-black px-1 py-1.5 w-12"></td>
+                                  ))}
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
                         </div>
                       )}
 

@@ -2,7 +2,14 @@
 
 import { useState, useEffect, use, useMemo } from "react";
 import { PageHeader, theadRowClass, tbodyClass } from "@/components/console/layout";
-import { cx } from "@/components/console/ui";
+import { cx, MONO } from "@/components/console/ui";
+import {
+  answerText as resolveAnswerText,
+  matrixCellKey,
+  matrixFilledCount,
+  questionsFromApi,
+  type SurveyQuestion,
+} from "@/lib/surveyQuestions";
 import {
   Download,
   FileText,
@@ -21,19 +28,7 @@ interface Response {
   createdAt: string;
 }
 
-interface FollowUpQuestion {
-  id: string;
-  text: string;
-  isRequired: boolean;
-}
-
-interface Question {
-  id: string;
-  text: string;
-  type: string;
-  options?: { id: string; text: string }[];
-  followUpQuestions?: FollowUpQuestion[];
-}
+type Question = SurveyQuestion;
 
 interface Section {
   id: string;
@@ -62,37 +57,67 @@ const getParsedJson = (val: any) => {
   return val;
 };
 
-// See edit page for why YES_NO questions store follow-ups inside `options`.
-function questionsFromApi(questions: any[]): Question[] {
-  return questions.map((q) => {
-    if (q.type === "YES_NO" && q.options && !Array.isArray(q.options)) {
-      return { ...q, options: undefined, followUpQuestions: q.options.followUpQuestions || [] };
-    }
-    return q;
-  });
-}
-
 /** رقم عربي مختصر للتاريخ + الوقت. */
 function fmtDate(iso: string) {
   const d = new Date(iso);
   return `${d.toLocaleDateString("ar-SA")} ${d.toLocaleTimeString("ar-SA", { hour: "2-digit", minute: "2-digit" })}`;
 }
 
-/** يحوّل الإجابة الخام إلى نص مقروء حسب نوع السؤال. */
-function resolveAnswerText(question: Pick<Question, "type" | "options">, raw: unknown): string {
-  if (raw === undefined || raw === null || raw === "") return "";
-  const s = String(raw);
-  if (question.type === "OPTIONS") return question.options?.find((o) => o.id === s)?.text || s;
-  if (question.type === "MULTI_OPTIONS")
-    return s
-      .split(",")
-      .map((id) => question.options?.find((o) => o.id === id)?.text || id)
-      .join("، ");
-  if (question.type === "YES_NO") return s === "yes" ? "نعم" : "لا";
-  return s;
-}
-
 const CHOICE_TYPES = new Set(["OPTIONS", "MULTI_OPTIONS", "YES_NO"]);
+
+/** إجابةُ مصفوفةٍ لمشاركٍ واحد — تُقرأ جدولاً كما مُلئت، لا ٤٥ سطراً. */
+function MatrixAnswerTable({ question, answers }: { question: SurveyQuestion; answers: Record<string, any> }) {
+  const matrix = question.matrix;
+  if (!matrix) return null;
+  return (
+    <div className="overflow-x-auto rounded-lg border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-800">
+      <table className="w-full border-collapse text-caption">
+        <thead>
+          <tr className="bg-slate-50 dark:bg-slate-900/50">
+            <th className="min-w-[160px] border-e border-slate-200 px-3 py-2 text-start text-meta font-medium text-slate-500 dark:border-slate-700 dark:text-slate-400">
+              الصف
+            </th>
+            {matrix.columns.map((column) => (
+              <th
+                key={column.id}
+                className="min-w-[80px] border-e border-slate-200 px-2 py-2 text-center text-meta font-medium leading-snug text-slate-500 last:border-e-0 dark:border-slate-700 dark:text-slate-400"
+              >
+                {column.text}
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {matrix.rows.map((row) => {
+            const scores = matrix.columns.map((column) => answers[matrixCellKey(question.id, row.id, column.id)]);
+            // صفٌّ لم يُقيَّم أصلاً لا يُعرض: «لم نستفد من هذه الخدمة» خبرٌ
+            // يُقال مرّةً بغيابه، لا خمسَ شُرَطٍ في صفّ.
+            if (scores.every((score) => !score)) return null;
+            return (
+              <tr key={row.id} className="border-t border-slate-200 dark:border-slate-700">
+                <td className="border-e border-slate-200 px-3 py-1.5 font-semibold text-slate-700 dark:border-slate-700 dark:text-slate-200">
+                  {row.text}
+                </td>
+                {scores.map((score, index) => (
+                  <td
+                    key={matrix.columns[index].id}
+                    className={cx(
+                      "border-e border-slate-200 px-2 py-1.5 text-center last:border-e-0 dark:border-slate-700",
+                      MONO,
+                      score ? "font-semibold text-slate-800 dark:text-slate-100" : "text-slate-300 dark:text-slate-600"
+                    )}
+                  >
+                    {score || "—"}
+                  </td>
+                ))}
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+    </div>
+  );
+}
 
 export default function SurveyResultsPage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = use(params);
@@ -148,16 +173,41 @@ export default function SurveyResultsPage({ params }: { params: Promise<{ id: st
   };
 
   // قائمة مسطّحة مرتّبة بكل الأسئلة القابلة للعرض — بما فيها الأسئلة التابعة
-  // (follow-ups) لأسئلة "نعم/لا" — لعرضَي "حسب السؤال" و"الجدول".
+  // (follow-ups) لأسئلة "نعم/لا"، وخلايا المصفوفة — لعرضَي "حسب السؤال"
+  // و"الجدول". وخليّةُ المصفوفة عمودٌ قائمٌ بنفسه: متوسّطُ «الجودة» لخدمةٍ
+  // بعينها هو ما يُحسب، لا المصفوفةُ جملةً.
+  type FlatEntry = {
+    q: Question;
+    sectionTitle: string;
+    sectionIdx: number;
+    isFollowUp: boolean;
+    isMatrixCell?: boolean;
+  };
   const flatQuestions = useMemo(() => {
-    if (!survey) return [] as { q: Question; sectionTitle: string; sectionIdx: number; isFollowUp: boolean }[];
-    const out: { q: Question; sectionTitle: string; sectionIdx: number; isFollowUp: boolean }[] = [];
+    if (!survey) return [] as FlatEntry[];
+    const out: FlatEntry[] = [];
+    const bare = { isRequired: false, allowAttachment: false };
     survey.sections.forEach((section, sIdx) => {
       section.questions.forEach((q) => {
+        if (q.type === "MATRIX") {
+          const matrix = q.matrix;
+          (matrix?.rows ?? []).forEach((row) => {
+            (matrix?.columns ?? []).forEach((column) => {
+              out.push({
+                q: { ...bare, id: matrixCellKey(q.id, row.id, column.id), text: `${row.text} — ${column.text}`, type: "TEXT" },
+                sectionTitle: section.title,
+                sectionIdx: sIdx,
+                isFollowUp: false,
+                isMatrixCell: true,
+              });
+            });
+          });
+          return;
+        }
         out.push({ q, sectionTitle: section.title, sectionIdx: sIdx, isFollowUp: false });
         (q.followUpQuestions || []).forEach((fu) => {
           out.push({
-            q: { id: fu.id, text: fu.text, type: "TEXT" },
+            q: { ...bare, id: fu.id, text: fu.text, type: "TEXT" },
             sectionTitle: section.title,
             sectionIdx: sIdx,
             isFollowUp: true,
@@ -183,8 +233,10 @@ export default function SurveyResultsPage({ params }: { params: Promise<{ id: st
   // المسمّى الظاهر للمشارك: أول إجابة نصية له — ففي أغلب الاستبيانات يكون السؤال
   // الأول هو "اسمك الكريم". ثم اسم الجمعية المحفوظ، ثم رقم تسلسلي.
   const respondentLabel = (response: (typeof parsedResponses)[number], index: number): string => {
-    for (const { q } of flatQuestions) {
-      const t = resolveAnswerText(q, response.answers[q.id]).trim();
+    for (const { q, isMatrixCell } of flatQuestions) {
+      // ودرجةُ خليّةٍ ليست اسماً: «٤» لا تُعرَّف بها جمعية.
+      if (isMatrixCell) continue;
+      const t = resolveAnswerText(q, response.answers[q.id], response.answers).trim();
       if (t) return t;
     }
     return (response.charityName || "").trim() || `مشارك ${index + 1}`;
@@ -202,6 +254,7 @@ export default function SurveyResultsPage({ params }: { params: Promise<{ id: st
       <div className="space-y-6">
         {survey.sections.map((section, sIdx) => {
           const sectionHasAnswers = section.questions.some((q) => {
+            if (q.type === "MATRIX") return matrixFilledCount(q, response.answers) > 0;
             const { answer, attachment } = getValue(q.id);
             return answer !== undefined || attachment !== undefined;
           });
@@ -219,16 +272,22 @@ export default function SurveyResultsPage({ params }: { params: Promise<{ id: st
                 {section.questions.map((question, qIdx) => {
                   const { answer, attachment } = getValue(question.id);
                   const attachmentUrls = Array.isArray(attachment) ? attachment : attachment ? [attachment] : [];
-                  if (question.type !== "FILE" && !answer && attachmentUrls.length === 0) return null;
+                  const matrixFilled = question.type === "MATRIX" ? matrixFilledCount(question, response.answers) : 0;
+                  if (question.type === "MATRIX" && matrixFilled === 0) return null;
+                  if (question.type !== "FILE" && question.type !== "MATRIX" && !answer && attachmentUrls.length === 0)
+                    return null;
 
                   return (
                     <div key={question.id} className="flex flex-col gap-1">
                       <span className="text-caption font-semibold text-slate-600 dark:text-slate-400">
                         {qIdx + 1}- {question.text}
                       </span>
-                      {answer && (
+                      {question.type === "MATRIX" && (
+                        <MatrixAnswerTable question={question} answers={response.answers} />
+                      )}
+                      {answer && question.type !== "MATRIX" && (
                         <p className="text-slate-800 bg-white border border-slate-200 px-4 py-2 rounded-lg text-caption dark:text-slate-100 dark:bg-slate-800 dark:border-slate-700">
-                          {resolveAnswerText(question, answer)}
+                          {resolveAnswerText(question, answer, response.answers)}
                         </p>
                       )}
                       {question.type === "FILE" && attachmentUrls.length === 0 && (
@@ -251,8 +310,11 @@ export default function SurveyResultsPage({ params }: { params: Promise<{ id: st
                           ))}
                         </div>
                       )}
+                      {/* وجوابُ الفرع هو ما اختاره مُعِدُّ الاستبيان، لا «نعم»
+                          دائماً: سؤالٌ يُستفسر عند «لا» كانت إجابةُ «لماذا؟»
+                          فيه تُحفظ ولا تُعرض هنا أبداً. */}
                       {question.type === "YES_NO" &&
-                        answer === "yes" &&
+                        answer === (question.followUpOn ?? "yes") &&
                         question.followUpQuestions &&
                         question.followUpQuestions.length > 0 && (
                           <div className="mt-2 space-y-2 border-r-4 border-primary/20 pr-4">
@@ -543,7 +605,7 @@ export default function SurveyResultsPage({ params }: { params: Promise<{ id: st
                         const raw = r.answers[q.id];
                         const att = r.attachments[q.id];
                         const urls = Array.isArray(att) ? att : att ? [att] : [];
-                        const text = resolveAnswerText(q, raw);
+                        const text = resolveAnswerText(q, raw, r.answers);
                         return (
                           <td
                             key={`${q.id}-${idx}`}

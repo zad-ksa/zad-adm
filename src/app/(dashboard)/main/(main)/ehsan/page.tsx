@@ -47,6 +47,9 @@ export default async function EhsanPage() {
       accounts={detail.accounts}
       grants={detail.grants}
       underDevelopment
+      // الدخولُ إلى المنصّة ليس بحسابٍ لكل جمعيةٍ كجهاتِ المنح، فالجدولُ يَعِد
+      // بما لا يوجد. والمنحُ المرفوعةُ تبقى كما هي.
+      showAccounts={false}
     />
   );
 }

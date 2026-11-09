@@ -32,7 +32,6 @@ import type { DonorAccountRow, DonorGrantRow, DonorRow } from "./donorData";
 type Charity = { id: string; name: string; isInternal: boolean };
 type GrantSort = "date-desc" | "date-asc" | "amount-desc" | "amount-asc" | "charity" | "status";
 
-const ALL = "__ALL__";
 
 const GRANT_SORTS: { value: GrantSort; label: string }[] = [
   { value: "date-desc", label: "الترتيب: الأحدث أولاً" },
@@ -50,8 +49,11 @@ const money = (n: number) => n.toLocaleString("ar-SA-u-nu-latn", { maximumFracti
  *
  * وهي صفحةٌ واحدةٌ لثلاثة تبويبات (الجهات، منصة إحسان، صندوق دعم الجمعيات) لأن
  * الثلاثةَ شيءٌ واحدٌ باختلاف النوع. و`underDevelopment` يَسم التبويبين اللذين
- * لم يُصمَّما بعد، ومع ذلك تُعرض فيهما الحساباتُ والمنح: صفحةٌ فارغةٌ كانت
- * ستحجب حساباتٍ قائمةً عن أصحابها، وحجبُ ما يعمل ليس «تحت التطوير».
+ * لم يُصمَّما بعد.
+ *
+ * و`showAccounts` يُطفئ جدولَ حسابات الدخول — مُطفأٌ في «منصة إحسان» و«صندوق
+ * دعم الجمعيات»: الدخولُ إليهما ليس بحسابٍ لكل جمعيةٍ كجهاتِ المنح، فجدولٌ
+ * بصفوفٍ فارغةٍ لكل جمعيةٍ يَعِد بما لا يوجد. والمنحُ تبقى كما هي.
  *
  * والجمعياتُ المعروضةُ جمعياتُ الرائي المسنَدة وحدها — حساباً كانت أو منحاً.
  */
@@ -62,6 +64,7 @@ export default function DonorDetail({
   accounts,
   grants,
   underDevelopment = false,
+  showAccounts = true,
 }: {
   org: DonorRow;
   kind: string;
@@ -69,6 +72,7 @@ export default function DonorDetail({
   accounts: DonorAccountRow[];
   grants: DonorGrantRow[];
   underDevelopment?: boolean;
+  showAccounts?: boolean;
 }) {
   const router = useRouter();
   const [, startTransition] = useTransition();
@@ -79,16 +83,29 @@ export default function DonorDetail({
   const [statusFor, setStatusFor] = useState<{ grant: StatusTarget; next: "APPROVED" | "CLOSED" } | null>(null);
 
   const [pickedCharities, setPickedCharities] = useState<string[]>([]);
-  const [status, setStatus] = useState<string>(ALL);
+  // حالاتٌ لا حالة: «المقبولة والمغلقة» سؤالٌ واحد، وكان يلزمه نظرتان بمُرشِّحٍ
+  // مفرد. وقائمةٌ فارغةٌ تعني «الكلّ» كمُرشِّح الجمعيات — فلا خيارَ «كل الحالات»
+  // يُزاحم الحالاتِ في القائمة.
+  const [pickedStatuses, setPickedStatuses] = useState<string[]>([]);
   const [sort, setSort] = useState<GrantSort>("date-desc");
 
   const accountOf = useMemo(() => new Map(accounts.map((a) => [a.charityId, a])), [accounts]);
+
+  /** كم منحةً في كل حالة — بعد مُرشِّح الجمعيات وحدَه. */
+  const statusCounts = useMemo(() => {
+    const counts = new Map<string, number>();
+    for (const g of grants) {
+      if (pickedCharities.length > 0 && !pickedCharities.includes(g.charityId)) continue;
+      counts.set(g.status, (counts.get(g.status) ?? 0) + 1);
+    }
+    return counts;
+  }, [grants, pickedCharities]);
 
   const shownGrants = useMemo(() => {
     const dir = (a: string, b: string) => a.localeCompare(b, "ar");
     const list = grants
       .filter((g) => (pickedCharities.length === 0 ? true : pickedCharities.includes(g.charityId)))
-      .filter((g) => (status === ALL ? true : g.status === status));
+      .filter((g) => (pickedStatuses.length === 0 ? true : pickedStatuses.includes(g.status)));
 
     list.sort((a, b) => {
       switch (sort) {
@@ -107,7 +124,7 @@ export default function DonorDetail({
       }
     });
     return list;
-  }, [grants, pickedCharities, status, sort]);
+  }, [grants, pickedCharities, pickedStatuses, sort]);
 
   const sumRequested = shownGrants.reduce((sum, g) => sum + g.requestedAmount, 0);
   const distinctCharities = new Set(shownGrants.map((g) => g.charityId)).size;
@@ -228,6 +245,7 @@ export default function DonorDetail({
       )}
 
       {/* ── حساباتُ الدخول ──────────────────────────────────────────────── */}
+      {showAccounts && (
       <section className="space-y-3">
         <div className="flex items-end justify-between gap-4">
           <div>
@@ -322,6 +340,7 @@ export default function DonorDetail({
           </TableShell>
         )}
       </section>
+      )}
 
       {/* ── المنحُ المرفوعة ─────────────────────────────────────────────── */}
       <section className="space-y-3">
@@ -357,11 +376,20 @@ export default function DonorDetail({
               onChange={setPickedCharities}
               options={charities.map((c) => ({ value: c.id, label: c.name }))}
             />
-            <Select
-              value={status}
-              onSelect={setStatus}
+            <MultiSelect
+              label="الحالات"
               placeholder="كل الحالات"
-              options={[{ value: ALL, label: "كل الحالات" }, ...GRANT_STATUSES.map((s) => ({ value: s.value, label: s.label }))]}
+              allLabel="كل الحالات"
+              countNoun="حالات"
+              values={pickedStatuses}
+              onChange={setPickedStatuses}
+              // العددُ بجوار كل حالة: كم منحةً فيها — بعد مُرشِّح الجمعيات لا
+              // بعد مُرشِّح الحالات نفسِه، وإلّا صفَّرت أوّلُ نقرةٍ ما عداها.
+              options={GRANT_STATUSES.map((s) => ({
+                value: s.value,
+                label: s.label,
+                count: statusCounts.get(s.value) ?? 0,
+              }))}
             />
             <Select
               value={sort}

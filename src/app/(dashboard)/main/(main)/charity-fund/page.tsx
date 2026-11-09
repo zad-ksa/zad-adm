@@ -47,6 +47,8 @@ export default async function CharityFundPage() {
       accounts={detail.accounts}
       grants={detail.grants}
       underDevelopment
+      // كما في «منصة إحسان»: لا حسابَ دخولٍ لكل جمعيةٍ هنا، والمنحُ تبقى.
+      showAccounts={false}
     />
   );
 }

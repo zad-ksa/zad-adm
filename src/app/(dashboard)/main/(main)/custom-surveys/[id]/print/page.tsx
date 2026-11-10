@@ -32,6 +32,8 @@ interface Survey {
   title: string;
   introText: string;
   sections: Section[];
+  /** يحسبها المسار: `false` لحامل «ما أنشأه وحده» في استبيانِ غيره. */
+  canManage?: boolean;
 }
 
 export default function PrintSurveyPage({ params }: { params: Promise<{ id: string }> }) {
@@ -74,10 +76,12 @@ export default function PrintSurveyPage({ params }: { params: Promise<{ id: stri
     );
   }
 
-  if (!survey) {
+  if (!survey || survey.canManage === false) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50 dark:bg-slate-900 gap-4">
-        <p className="text-xl font-bold text-slate-600 dark:text-slate-400">الاستبيان غير موجود</p>
+        <p className="text-xl font-bold text-slate-600 dark:text-slate-400">
+          {survey ? "هذا الاستبيان ليس من إنشائك" : "الاستبيان غير موجود"}
+        </p>
         <Link href="/main/custom-surveys" className="text-primary hover:underline flex items-center gap-2 font-bold">
           <ArrowRight className="w-4 h-4" /> العودة للقائمة
         </Link>

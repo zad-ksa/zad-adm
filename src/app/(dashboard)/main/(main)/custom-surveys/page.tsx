@@ -14,6 +14,8 @@ interface Survey {
   title: string;
   isActive: boolean;
   createdAt: string;
+  /** مُنشئُه — وnull لما أُنشئ قبل عمود المالك. */
+  createdByName: string | null;
   _count: {
     responses: number;
   };
@@ -31,7 +33,17 @@ type Notice = { tone: "error" | "ok"; text: string } | null;
  */
 async function explainFailure(res: Response, fallback: string) {
   if (res.status === 401) return "انتهت الجلسة — سجّل الدخول من جديد ثم أعد المحاولة";
-  if (res.status === 403) return "ليس لديك صلاحية «الاستبيانات المخصصة»";
+  if (res.status === 403) {
+    // والمنعُ له سببان: لا صلاحيةَ له، أو الاستبيانُ لغيره. والخادمُ يقول
+    // أيُّهما، فلا تُقال له «ليس لديك صلاحية» وهو يحملها.
+    try {
+      const data = await res.json();
+      if (data?.error) return data.error;
+    } catch {
+      /* ردٌّ بلا JSON */
+    }
+    return "ليس لديك صلاحية «الاستبيانات المخصصة»";
+  }
   try {
     const data = await res.json();
     if (data?.error) return `${fallback}: ${data.error}`;
@@ -324,7 +336,10 @@ export default function SurveysPage() {
               </div>
 
               <div className="text-caption text-slate-500 mb-6 flex-1 dark:text-slate-400">
-                تاريخ الإنشاء: {new Date(survey.createdAt).toLocaleDateString('ar-SA')}
+                <span className="block">تاريخ الإنشاء: {new Date(survey.createdAt).toLocaleDateString('ar-SA')}</span>
+                {/* ومُنشئُه: صار للاستبيان مالكٌ تقوم عليه صلاحيةُ «ما أنشأه
+                    وحده»، فمن يرى الجميع يعرف لمن كلُّ استبيان. */}
+                <span className="block mt-0.5">أنشأه: {survey.createdByName || "—"}</span>
               </div>
 
               <div className="flex items-center gap-3 mb-6 bg-slate-50 p-3 rounded-xl border border-slate-100 dark:bg-slate-900/50 dark:border-slate-700">
@@ -415,7 +430,8 @@ export default function SurveysPage() {
                   </span>
                 </div>
                 <p className="text-caption text-slate-500 dark:text-slate-400 mt-0.5">
-                  تاريخ الإنشاء: {new Date(survey.createdAt).toLocaleDateString('ar-SA')}
+                  تاريخ الإنشاء: {new Date(survey.createdAt).toLocaleDateString('ar-SA')} · أنشأه:{" "}
+                  {survey.createdByName || "—"}
                 </p>
               </div>
 

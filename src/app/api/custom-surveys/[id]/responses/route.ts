@@ -1,32 +1,20 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
-import { requirePermission, authErrorResponse } from "@/lib/guards";
+import { authErrorResponse } from "@/lib/guards";
+import { requireOwnedSurvey } from "@/lib/surveyGuard";
 
 export async function GET(request: Request, context: { params: Promise<{ id: string }> }) {
+  const { id } = await context.params;
+  // والردودُ أخطرُ ما في الباب: إجاباتُ الجمعيات. فلا تُقرأ إلا لمالك
+  // الاستبيان. والحارسُ يحلّ المُعرِّفَ أو الرابطَ معاً، فلا حاجةَ إلى حلٍّ ثانٍ.
+  let survey;
   try {
-    await requirePermission("manage_surveys");
+    ({ survey } = await requireOwnedSurvey(id));
   } catch (err) {
     return authErrorResponse(err);
   }
 
   try {
-    const { id } = await context.params;
-
-    // Resolve the real UUID of the survey first (in case parameter is a slug)
-    const survey = await prisma.customSurvey.findFirst({
-      where: {
-        OR: [
-          { id },
-          { slug: id }
-        ]
-      },
-      select: { id: true }
-    });
-
-    if (!survey) {
-      return NextResponse.json({ error: "Survey not found" }, { status: 404 });
-    }
-
     const responses = await prisma.customSurveyResponse.findMany({
       where: { surveyId: survey.id },
       orderBy: { createdAt: 'desc' }

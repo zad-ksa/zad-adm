@@ -6,7 +6,7 @@ import Select from "@/components/console/Select";
 import { useRouter } from "next/navigation";
 import { Plus, Trash2, Save, ArrowUp, ArrowDown, Settings, Loader2, AlertCircle, CheckCircle, Printer } from "lucide-react";
 import Link from "next/link";
-import { btn } from "@/components/console/ui";
+import { btn, cx } from "@/components/console/ui";
 import {
   DEFAULT_MATRIX_SCALE,
   questionsForApi,
@@ -34,6 +34,14 @@ interface Survey {
   introText: string;
   isActive: boolean;
   sections: Section[];
+  /**
+   * هل يملك صاحبُ الجلسة هذا الاستبيان؟ يحسبها المسارُ لا الصفحة.
+   *
+   * والمسارُ عامٌّ بقصد (صفحةُ المستجيب تقرأ منه)، فتغيب الخانةُ عن غير
+   * الموظفين. وهي `false` لحامل «ما أنشأه وحده» إن كان الاستبيانُ لغيره:
+   * الحفظُ محروسٌ في الخادم على كل حال، وهذا كي يُقال له قبل أن يكتب.
+   */
+  canManage?: boolean;
 }
 
 function InsertDivider({ onInsert, label }: { onInsert: () => void; label: string }) {
@@ -338,6 +346,24 @@ export default function EditSurveyPage({ params }: { params: Promise<{ id: strin
 
   if (isLoading) return <div className="p-8 text-center dark:text-slate-300">جاري التحميل...</div>;
   if (!survey) return <div className="p-8 text-center dark:text-slate-300">الاستبيان غير موجود</div>;
+  // يُقال قبل أن يكتب لا بعد أن يحفظ. والحفظُ محروسٌ في الخادم على كل حال،
+  // فهذه رسالةٌ لا حراسة — وبدونها كان المحرِّرُ يُفتح ثم يقول «فشل الحفظ».
+  if (survey.canManage === false) {
+    return (
+      <div className="p-8 max-w-xl mx-auto">
+        <div className="rounded-xl border border-amber-200 bg-amber-50 p-6 text-center dark:border-amber-500/20 dark:bg-amber-500/10">
+          <AlertCircle className="mx-auto mb-3 size-6 text-amber-600 dark:text-amber-400" />
+          <p className="font-semibold text-slate-800 dark:text-slate-100">هذا الاستبيان ليس من إنشائك</p>
+          <p className="mt-1 text-caption text-slate-600 dark:text-slate-300">
+            صلاحيتُك تُرِي ما أنشأتَه أنت. ومن يحمل «جميع الاستبيانات» يُحرّر هذا.
+          </p>
+          <Link href="/main/custom-surveys" className={cx(btn.secondary, "mt-4 inline-flex")}>
+            العودة إلى الاستبيانات
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="p-8 max-w-5xl mx-auto pb-32 dark:bg-slate-900">

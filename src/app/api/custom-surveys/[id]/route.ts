@@ -1,6 +1,9 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
-import { requirePermission, authErrorResponse } from "@/lib/guards";
+import { getSession } from "@/lib/auth";
+import { authErrorResponse } from "@/lib/guards";
+import { getSurveyScope, maySeeSurvey } from "@/lib/surveyAccess";
+import { requireOwnedSurvey } from "@/lib/surveyGuard";
 
 // Deliberately public: the respondent page at /custom-survey/[id] loads the
 // survey structure through this handler before the visitor has any session.
@@ -32,22 +35,34 @@ export async function GET(request: Request, context: { params: Promise<{ id: str
       return NextResponse.json({ error: "Survey not found" }, { status: 404 });
     }
 
-    return NextResponse.json(survey);
-  } catch (error: any) {
+    // مُنشئُ الاستبيان وحكمُ الملكيّة لا يُذاعان على المستجيبين: هذا المسارُ
+    // عامٌّ بقصد، فاسمُ المُنشئ يُحجب عن غير الموظفين. و`canManage` تُغني صفحةَ
+    // التحرير عن مسارٍ ثانٍ تسأل به «هل لي هذا؟».
+    const { createdById, createdByName, ...open } = survey;
+    const scope = getSurveyScope(await getSession());
+    if (!scope.canView) return NextResponse.json(open);
+
+    return NextResponse.json({
+      ...open,
+      createdById,
+      createdByName,
+      canManage: maySeeSurvey(scope, createdById),
+    });
+  } catch (error: unknown) {
     console.error("Error fetching custom survey:", error);
     return NextResponse.json({ error: "Failed to fetch custom survey" }, { status: 500 });
   }
 }
 
 export async function PUT(request: Request, context: { params: Promise<{ id: string }> }) {
+  const { id } = await context.params;
   try {
-    await requirePermission("manage_surveys");
+    await requireOwnedSurvey(id);
   } catch (err) {
     return authErrorResponse(err);
   }
 
   try {
-    const { id } = await context.params;
     const body = await request.json();
     const { title, introText, isActive, sections } = body;
 
@@ -122,14 +137,14 @@ export async function PUT(request: Request, context: { params: Promise<{ id: str
 }
 
 export async function DELETE(request: Request, context: { params: Promise<{ id: string }> }) {
+  const { id } = await context.params;
   try {
-    await requirePermission("manage_surveys");
+    await requireOwnedSurvey(id);
   } catch (err) {
     return authErrorResponse(err);
   }
 
   try {
-    const { id } = await context.params;
     await prisma.customSurvey.delete({
       where: { id }
     });

@@ -841,8 +841,22 @@ model CustomSurvey {
   isActive  Boolean                @default(false)
   sections  CustomSurveySection[]
   responses CustomSurveyResponse[]
-  createdAt DateTime               @default(now())
-  updatedAt DateTime               @updatedAt
+
+  /// مُنشئُ الاستبيان — عليه تقوم صلاحيةُ «ما أنشأه الموظف وحده».
+  ///
+  /// والاسمُ مخزَّنٌ معه بلا علاقةٍ إلى Employee، كما في LatestUpdate:
+  /// الاستبيانُ يبقى بعد ذهاب حساب مُنشئه، وصفٌّ يقول «أنشأه: —» أسوأُ من
+  /// صفٍّ يقول اسماً لم يبقَ له حساب.
+  ///
+  /// وnull للاستبيانات التي أُنشئت قبل هذا العمود: لا مالكَ لها، فلا يراها
+  /// إلا من يرى الجميع.
+  createdById   String?
+  createdByName String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([createdById])
 }
 
 model CustomSurveySection {

@@ -124,6 +124,8 @@ export default function SurveyResultsPage({ params }: { params: Promise<{ id: st
   const [survey, setSurvey] = useState<Survey | null>(null);
   const [responses, setResponses] = useState<Response[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  // ٤٠٣ من مسار الردود: الاستبيانُ لغيره.
+  const [denied, setDenied] = useState(false);
 
   const [viewMode, setViewMode] = useState<ViewMode>("list");
   const [selectedRespondentId, setSelectedRespondentId] = useState<string | null>(null);
@@ -157,6 +159,12 @@ export default function SurveyResultsPage({ params }: { params: Promise<{ id: st
         fetch(`/api/custom-surveys/${resolvedParams.id}/responses`),
       ]);
 
+      // ردُّ الردود هو الفاصل: مسارُ الاستبيان عامٌّ، ومسارُ الردود محروسٌ
+      // بملكيّة الاستبيان. فـ٤٠٣ تعني «ليس من إنشائك» لا «غير موجود».
+      if (responsesRes.status === 403) {
+        setDenied(true);
+        return;
+      }
       if (surveyRes.ok && responsesRes.ok) {
         const surveyData = await surveyRes.json();
         setSurvey({
@@ -219,6 +227,18 @@ export default function SurveyResultsPage({ params }: { params: Promise<{ id: st
   }, [survey]);
 
   if (isLoading) return <div className="p-8 text-center dark:text-slate-300">جاري تحميل النتائج...</div>;
+  if (denied) {
+    return (
+      <div className="p-8 max-w-xl mx-auto">
+        <div className="rounded-xl border border-amber-200 bg-amber-50 p-6 text-center dark:border-amber-500/20 dark:bg-amber-500/10">
+          <p className="font-semibold text-slate-800 dark:text-slate-100">هذا الاستبيان ليس من إنشائك</p>
+          <p className="mt-1 text-caption text-slate-600 dark:text-slate-300">
+            وردودُ الجمعيات لا تُقرأ إلا لمالك الاستبيان.
+          </p>
+        </div>
+      </div>
+    );
+  }
   if (!survey) return <div className="p-8 text-center dark:text-slate-300">الاستبيان غير موجود</div>;
 
   const parsedResponses = responses.map((r) => ({

@@ -56,7 +56,14 @@ export const PERMISSION_GROUPS = [
       { id: "view_latest_updates", label: "آخر المستجدات (الاطّلاع)" },
       { id: "add_latest_updates", label: "آخر المستجدات (الإضافة، وتعديل ما أضافه وحذفه)" },
       { id: "manage_latest_updates", label: "آخر المستجدات (التحرير الكامل والأعمدة والخدمات الفرعية)" },
-      { id: "manage_surveys", label: "الاستبيانات المخصصة" },
+      // الاستبيانات المخصصة بدرجتين. والأولى تُرِي استبيانات الجميع وتُحرّرها،
+      // والثانية ما أنشأه حاملُها وحدَه — يراه ويحرّره ويقرأ ردوده، ولا يرى
+      // غيره. والأولى تحمل الثانيةَ عبر IMPLIES فلا تُمنحان معاً بيد أحد.
+      //
+      // والمُعرّف الأول بقي manage_surveys لأنه قيمةٌ محفوظةٌ في مصفوفات
+      // حامليه وفي جلساتٍ مفتوحةٍ الآن.
+      { id: "manage_surveys", label: "الاستبيانات المخصصة (جميع الاستبيانات)" },
+      { id: "manage_own_surveys", label: "الاستبيانات المخصصة (ما أنشأه الموظف وحده)" },
       { id: "manage_meetings", label: "محاضر الاجتماعات" },
       { id: "manage_communication", label: "إدارة التواصل" },
       { id: "manage_design_requests", label: "طلبات التصاميم" },
@@ -203,6 +210,9 @@ export const IMPLIES: Record<string, string[]> = {
   delete_employees: ["manage_employees"],
   delete_design_requests: ["manage_design_requests"],
   manage_project_builder: ["use_project_builder"],
+  // من رأى استبيانات الجميع رأى استبياناته — فلا تُمنح الدرجتان معاً بيد أحد،
+  // ولا يُفحص في الكود إلا الأدنى حيث يكفي أيُّهما.
+  manage_surveys: ["manage_own_surveys"],
   // لا إضافة ولا تحرير في جدولٍ لا يراه صاحبه.
   add_latest_updates: ["view_latest_updates"],
   manage_latest_updates: ["view_latest_updates", "add_latest_updates"],
@@ -218,7 +228,9 @@ export function effectivePermissions(permissions: string[]): string[] {
 }
 
 // Role display labels
-export { DEFAULT_ROLE_LABELS } from "./constants";
+// امتدادُ `.ts` صريحٌ: اختبارات `lib` تعمل بـnode لا بمُحلِّل Next، وnode لا
+// يُكمل امتداداً محذوفاً. وهذا الملف صار في سلسلة استيراد `surveyAccess`.
+export { DEFAULT_ROLE_LABELS } from "./constants.ts";
 
 /**
  * Check if a user has a specific permission.

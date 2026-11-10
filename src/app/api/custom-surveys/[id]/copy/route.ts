@@ -1,21 +1,23 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
-import { requirePermission, authErrorResponse } from "@/lib/guards";
+import { authErrorResponse } from "@/lib/guards";
+import { requireOwnedSurvey } from "@/lib/surveyGuard";
 
 export async function POST(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params;
+  let session;
   try {
-    await requirePermission("manage_surveys");
+    // ولا يُنسخ إلا ما يملكه: النسخةُ تحمل أسئلةَ أصلها كلَّها، فنسخُ استبيانِ
+    // غيرِه طريقٌ إلى قراءته.
+    ({ session } = await requireOwnedSurvey(id));
   } catch (err) {
     return authErrorResponse(err);
   }
 
   try {
-    const resolvedParams = await params;
-    const { id } = resolvedParams;
-
     // Fetch the original survey with sections and questions
     const originalSurvey = await prisma.customSurvey.findUnique({
       where: { id },
@@ -38,6 +40,9 @@ export async function POST(
         title: `${originalSurvey.title} (نسخة)`,
         introText: originalSurvey.introText,
         isActive: false,
+        // والنسخةُ لمن نسخها لا لمن أنشأ أصلَها: هي استبيانٌ جديدٌ يُحرّره.
+        createdById: session.id,
+        createdByName: session.name ?? null,
         sections: {
           create: originalSurvey.sections.map((section) => ({
             title: section.title,

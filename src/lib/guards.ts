@@ -186,7 +186,15 @@ export async function requireCharityPermission(charityId: string, permission: st
 }
 
 /** Converts a guard failure into a JSON response for API route handlers. */
+/**
+ * ردُّ المنع. ورسالةُ `AuthError` تُنقل كما هي إن كُتبت.
+ *
+ * فكانت تُستبدل كلُّها بـ«غير مصرح»، فحارسٌ يقول «هذا الاستبيان ليس من إنشائك»
+ * يصل صاحبَه ناقصاً — يُقال له «غير مصرح» وهو يحمل الصلاحية فيظنّها سُحبت.
+ * ورسائلُ هذا الصنف مكتوبةٌ للمستخدم عربيّةً بقصد، لا آثارُ أخطاءٍ داخلية.
+ */
 export function authErrorResponse(error: unknown) {
   const status = error instanceof AuthError ? error.status : 401;
-  return NextResponse.json({ error: UNAUTHORIZED_MESSAGE }, { status });
+  const message = error instanceof AuthError ? error.message : UNAUTHORIZED_MESSAGE;
+  return NextResponse.json({ error: message || UNAUTHORIZED_MESSAGE }, { status });
 }

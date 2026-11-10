@@ -184,7 +184,9 @@ export default function EmployeeSidebar({
   if (can("manage_contracts")) {
     navItems.push({ label: "العقود", href: "/main/contracts", icon: FileSignature });
   }
-  if (can("manage_surveys")) {
+  // الأدنى وحدَه يُفحص: حاملُ «جميع الاستبيانات» يحمله عبر IMPLIES، ومن لا
+  // يرى إلا ما أنشأه يحتاج التبويبَ ليُنشئ.
+  if (can("manage_own_surveys")) {
     navItems.push({ label: "الاستبيانات", href: "/main/custom-surveys", icon: ClipboardList });
   }
   if (can("manage_communication")) {

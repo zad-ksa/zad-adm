@@ -5,6 +5,8 @@ import { PageHeader, theadRowClass, tbodyClass } from "@/components/console/layo
 import { cx, MONO } from "@/components/console/ui";
 import {
   answerText as resolveAnswerText,
+  choiceRowKey,
+  isMatrixType,
   matrixCellKey,
   matrixFilledCount,
   questionsFromApi,
@@ -89,7 +91,11 @@ function MatrixAnswerTable({ question, answers }: { question: SurveyQuestion; an
         </thead>
         <tbody>
           {matrix.rows.map((row) => {
-            const scores = matrix.columns.map((column) => answers[matrixCellKey(question.id, row.id, column.id)]);
+            const scores = matrix.columns.map((column) =>
+              question.type === "CHOICE_MATRIX"
+                ? answers[choiceRowKey(question.id, row.id)] === column.id ? "✓" : undefined
+                : answers[matrixCellKey(question.id, row.id, column.id)]
+            );
             // صفٌّ لم يُقيَّم أصلاً لا يُعرض: «لم نستفد من هذه الخدمة» خبرٌ
             // يُقال مرّةً بغيابه، لا خمسَ شُرَطٍ في صفّ.
             if (scores.every((score) => !score)) return null;
@@ -197,6 +203,20 @@ export default function SurveyResultsPage({ params }: { params: Promise<{ id: st
     const bare = { isRequired: false, allowAttachment: false };
     survey.sections.forEach((section, sIdx) => {
       section.questions.forEach((q) => {
+        // كل صفٍّ في جدول الاختيار سؤالُ خيارٍ قائمٌ بنفسه: أعمدتُه خياراتُه،
+        // فتعمل عليه نِسَبُ «حسب السؤال» وعمودُ الجدول كما تعمل على غيره.
+        if (q.type === "CHOICE_MATRIX") {
+          (q.matrix?.rows ?? []).forEach((row) => {
+            out.push({
+              q: { ...bare, id: choiceRowKey(q.id, row.id), text: `${q.text} — ${row.text}`, type: "OPTIONS", options: q.matrix?.columns ?? [] },
+              sectionTitle: section.title,
+              sectionIdx: sIdx,
+              isFollowUp: false,
+              isMatrixCell: true,
+            });
+          });
+          return;
+        }
         if (q.type === "MATRIX") {
           const matrix = q.matrix;
           (matrix?.rows ?? []).forEach((row) => {
@@ -274,7 +294,7 @@ export default function SurveyResultsPage({ params }: { params: Promise<{ id: st
       <div className="space-y-6">
         {survey.sections.map((section, sIdx) => {
           const sectionHasAnswers = section.questions.some((q) => {
-            if (q.type === "MATRIX") return matrixFilledCount(q, response.answers) > 0;
+            if (isMatrixType(q.type)) return matrixFilledCount(q, response.answers) > 0;
             const { answer, attachment } = getValue(q.id);
             return answer !== undefined || attachment !== undefined;
           });
@@ -292,9 +312,9 @@ export default function SurveyResultsPage({ params }: { params: Promise<{ id: st
                 {section.questions.map((question, qIdx) => {
                   const { answer, attachment } = getValue(question.id);
                   const attachmentUrls = Array.isArray(attachment) ? attachment : attachment ? [attachment] : [];
-                  const matrixFilled = question.type === "MATRIX" ? matrixFilledCount(question, response.answers) : 0;
-                  if (question.type === "MATRIX" && matrixFilled === 0) return null;
-                  if (question.type !== "FILE" && question.type !== "MATRIX" && !answer && attachmentUrls.length === 0)
+                  const grid = isMatrixType(question.type);
+                  if (grid && matrixFilledCount(question, response.answers) === 0) return null;
+                  if (question.type !== "FILE" && !grid && !answer && attachmentUrls.length === 0)
                     return null;
 
                   return (
@@ -302,10 +322,10 @@ export default function SurveyResultsPage({ params }: { params: Promise<{ id: st
                       <span className="text-caption font-semibold text-slate-600 dark:text-slate-400">
                         {qIdx + 1}- {question.text}
                       </span>
-                      {question.type === "MATRIX" && (
+                      {grid && (
                         <MatrixAnswerTable question={question} answers={response.answers} />
                       )}
-                      {answer && question.type !== "MATRIX" && (
+                      {answer && !grid && (
                         <p className="text-slate-800 bg-white border border-slate-200 px-4 py-2 rounded-lg text-caption dark:text-slate-100 dark:bg-slate-800 dark:border-slate-700">
                           {resolveAnswerText(question, answer, response.answers)}
                         </p>

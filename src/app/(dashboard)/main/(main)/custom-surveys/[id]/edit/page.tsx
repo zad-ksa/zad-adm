@@ -75,11 +75,16 @@ function MatrixEditor({
 }) {
   const matrix = question.matrix ?? { rows: [], columns: [], max: DEFAULT_MATRIX_SCALE };
   const patch = (updates: Partial<typeof matrix>) => onChange({ matrix: { ...matrix, ...updates } });
+  const scored = question.type === "MATRIX";
 
   const list = (kind: "rows" | "columns") => {
     const items = matrix[kind];
-    const title = kind === "rows" ? "الصفوف (ما يُقيَّم)" : "الأعمدة (المعايير)";
-    const placeholder = kind === "rows" ? "اسم الخدمة..." : "اسم المعيار...";
+    const title = scored
+      ? kind === "rows" ? "الصفوف (ما يُقيَّم)" : "الأعمدة (المعايير)"
+      : kind === "rows" ? "الصفوف (البنود)" : "الأعمدة (الخيارات)";
+    const placeholder = scored
+      ? kind === "rows" ? "اسم الخدمة..." : "اسم المعيار..."
+      : kind === "rows" ? "اسم البند..." : "نص الخيار...";
     const set = (next: MatrixHeading[]) => patch({ [kind]: next } as Partial<typeof matrix>);
 
     return (
@@ -120,9 +125,11 @@ function MatrixEditor({
     <div className="space-y-4 bg-white p-4 rounded-xl border border-slate-200 dark:bg-slate-900 dark:border-slate-800">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="text-caption font-semibold text-slate-700 dark:text-slate-300">
-          جدولُ تقييم: {matrix.rows.length} × {matrix.columns.length} = {matrix.rows.length * matrix.columns.length} خليّة
+          {scored
+            ? `جدولُ تقييم: ${matrix.rows.length} × ${matrix.columns.length} = ${matrix.rows.length * matrix.columns.length} خليّة`
+            : `جدولُ اختيار: ${matrix.rows.length} صف و${matrix.columns.length} خيارات — علامةُ صحٍّ واحدةٌ في كل صف`}
         </div>
-        <label className="flex items-center gap-2">
+        {scored && <label className="flex items-center gap-2">
           <span className="text-caption font-semibold text-slate-500 dark:text-slate-400">أعلى درجة</span>
           <Select
             variant="soft"
@@ -131,7 +138,7 @@ function MatrixEditor({
             onSelect={(v) => patch({ max: Number(v) })}
             options={[3, 4, 5, 7, 10].map((n) => ({ value: String(n), label: `من ١ إلى ${n}` }))}
           />
-        </label>
+        </label>}
       </div>
       <div className="flex flex-wrap gap-6">
         {list("rows")}
@@ -140,7 +147,9 @@ function MatrixEditor({
       {/* معرِّفُ الصفِّ والعمودِ هو ما تُحفظ به الإجابة. فحذفُ صفٍّ يُفقد
           درجاتَه في الردود السابقة، وتغييرُ نصِّه لا يُفقدها. */}
       <p className="text-caption text-slate-400 dark:text-slate-500">
-        تغييرُ النصِّ لا يُضيع الإجاباتَ السابقة، وحذفُ صفٍّ أو عمودٍ يُضيع درجاتِه في الردود المستلمة.
+        {scored
+          ? "تغييرُ النصِّ لا يُضيع الإجاباتَ السابقة، وحذفُ صفٍّ أو عمودٍ يُضيع درجاتِه في الردود المستلمة."
+          : "تغييرُ النصِّ لا يُضيع الإجاباتَ السابقة، وحذفُ صفٍّ أو خيارٍ يُضيع ما اختير فيه في الردود المستلمة."}
       </p>
     </div>
   );
@@ -548,12 +557,13 @@ export default function EditSurveyPage({ params }: { params: Promise<{ id: strin
                           { value: "OPTIONS", label: "خيارات متعددة (خيار واحد)" },
                           { value: "MULTI_OPTIONS", label: "خيارات متعددة (متعدد الاختيار)" },
                           { value: "MATRIX", label: "مصفوفة تقييم (جدول بدرجات)" },
+                          { value: "CHOICE_MATRIX", label: "جدول اختيار (علامة صح واحدة لكل صف)" },
                           { value: "HIJRI_DATE", label: "تاريخ هجري" },
                           { value: "FILE", label: "رفع ملف" },
                         ]}
                       />
                     </div>
-                    {question.type === "MATRIX" && (
+                    {(question.type === "MATRIX" || question.type === "CHOICE_MATRIX") && (
                       <MatrixEditor
                         question={question}
                         onChange={(updates) => updateQuestion(sIndex, qIndex, updates)}

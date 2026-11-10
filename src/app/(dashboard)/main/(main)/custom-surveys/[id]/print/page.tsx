@@ -218,6 +218,37 @@ export default function PrintSurveyPage({ params }: { params: Promise<{ id: stri
                         </div>
                       )}
 
+                      {question.type === "CHOICE_MATRIX" && question.matrix && (
+                        <div className="pt-1">
+                          <p className="text-[11px] font-bold text-slate-500 mb-1">ضعْ علامةَ ✓ في خانةٍ واحدةٍ لكل صف.</p>
+                          <table className="w-full border-collapse text-[11px]">
+                            <thead>
+                              <tr>
+                                <th className="border border-slate-400 print:border-black bg-slate-50 print:bg-transparent px-2 py-1"></th>
+                                {question.matrix.columns.map((column) => (
+                                  <th
+                                    key={column.id}
+                                    className="border border-slate-400 print:border-black bg-slate-50 print:bg-transparent px-1 py-1 text-center font-bold text-slate-700 leading-tight"
+                                  >
+                                    {column.text}
+                                  </th>
+                                ))}
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {question.matrix.rows.map((row) => (
+                                <tr key={row.id}>
+                                  <td className="border border-slate-400 print:border-black px-2 py-1.5 font-bold text-slate-700 leading-tight">{row.text}</td>
+                                  {question.matrix!.columns.map((column) => (
+                                    <td key={column.id} className="border border-slate-400 print:border-black px-1 py-1.5 text-center">☐</td>
+                                  ))}
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      )}
+
                       {question.type === "MATRIX" && question.matrix && (
                         <div className="pt-1">
                           <p className="text-[11px] font-bold text-slate-500 mb-1">

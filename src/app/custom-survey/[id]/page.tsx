@@ -4,7 +4,10 @@ import { useState, useEffect, useRef, use } from "react";
 import { notify } from "@/components/console/toastBus";
 import { Spinner } from "@/components/console/ui";
 import { MatrixField } from "@/components/console/MatrixField";
+import { ChoiceMatrixField } from "@/components/console/ChoiceMatrixField";
 import {
+  choiceMatrixMissingRows,
+  choiceRowKey,
   isAnswered,
   matrixCellCount,
   matrixCellKey,
@@ -405,6 +408,35 @@ export default function CustomSurveyPage({ params }: { params: Promise<{ id: str
                                 </div>
                               );
                             })}
+                          </div>
+                        ) : question.type === "CHOICE_MATRIX" ? (
+                          <div className="space-y-3">
+                            <ChoiceMatrixField
+                              label={question.text}
+                              hint="ضعْ علامةَ صحٍّ على خيارٍ واحدٍ في كل صف."
+                              rows={question.matrix?.rows ?? []}
+                              columns={question.matrix?.columns ?? []}
+                              value={answers}
+                              rowKey={(rowId) => choiceRowKey(question.id, rowId)}
+                              onChange={(key, columnId) =>
+                                setAnswers(prev => {
+                                  const next = { ...prev };
+                                  if (columnId === null) delete next[key];
+                                  else next[key] = columnId;
+                                  return next;
+                                })
+                              }
+                            />
+                            <div className="flex flex-wrap items-center justify-between gap-2 text-sm">
+                              <span className="text-slate-500 font-medium">
+                                تمّ الاختيار في {matrixFilledCount(question, answers)} من {matrixCellCount(question)} صف
+                              </span>
+                              {question.isRequired && matrixFilledCount(question, answers) > 0 && choiceMatrixMissingRows(question, answers).length > 0 && (
+                                <span className="text-amber-700 bg-amber-50 border border-amber-200 rounded-xl px-3 py-1.5 font-bold">
+                                  بقي: {choiceMatrixMissingRows(question, answers).map(r => r.text).join("، ")}
+                                </span>
+                              )}
+                            </div>
                           </div>
                         ) : question.type === "MATRIX" ? (
                           <div className="space-y-3">

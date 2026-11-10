@@ -2,7 +2,10 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import {
   answerText,
+  choiceMatrixMissingRows,
+  choiceRowKey,
   isAnswered,
+  isMatrixType,
   matrixCellCount,
   matrixCellKey,
   matrixFilledCount,
@@ -185,4 +188,64 @@ test("خيارٌ مَحذوفٌ من القائمة يُعرض معرِّفُه 
   // إجابةٌ قديمةٌ لخيارٍ أُزيل: تُقرأ كما هي بدلاً من أن تختفي.
   const question: SurveyQuestion = { ...base, id: "q6", text: "", type: "OPTIONS", options: [] };
   assert.equal(answerText(question, "gone"), "gone");
+});
+
+// ── جدول الاختيار: نوعٌ جديد إلى جانب المصفوفة ──────────────────────────────
+
+const choiceQuestion: SurveyQuestion = {
+  ...base,
+  id: "q-choice",
+  text: "ما حالة كل حساب؟",
+  type: "CHOICE_MATRIX",
+  matrix: {
+    rows: [
+      { id: "x", text: "إكس" },
+      { id: "ig", text: "إنستغرام" },
+    ],
+    columns: [
+      { id: "none", text: "لا يوجد" },
+      { id: "active", text: "نشط" },
+    ],
+    max: 5,
+  },
+};
+
+test("مفتاحُ صفِّ الاختيار لا يُشبه خليّةَ المصفوفة ولا نصَّ «أخرى»", () => {
+  assert.equal(choiceRowKey("q", "r"), "q::@row::r");
+  assert.notEqual(choiceRowKey("q", "@cell"), matrixCellKey("q", "@cell", ""));
+  assert.notEqual(choiceRowKey("q", "o"), otherTextKey("q", "o"));
+});
+
+test("النوعان يحملان صفوفاً وأعمدة، ولا غيرهما", () => {
+  assert.equal(isMatrixType("MATRIX"), true);
+  assert.equal(isMatrixType("CHOICE_MATRIX"), true);
+  assert.equal(isMatrixType("OPTIONS"), false);
+});
+
+test("جدولُ الاختيار يذهب إلى القاعدة ويعود كما كان", () => {
+  const stored = questionForApi(choiceQuestion);
+  assert.deepEqual(stored.options, choiceQuestion.matrix);
+  assert.deepEqual(questionFromApi(stored).matrix, choiceQuestion.matrix);
+});
+
+test("جدولُ الاختيار يعدّ الصفوف لا الخلايا", () => {
+  const answers = { [choiceRowKey("q-choice", "x")]: "active" };
+  assert.equal(matrixCellCount(choiceQuestion), 2);
+  assert.equal(matrixFilledCount(choiceQuestion, answers), 1);
+  assert.deepEqual(choiceMatrixMissingRows(choiceQuestion, answers).map((r) => r.id), ["ig"]);
+});
+
+test("الإجباريُّ لا يكتمل إلّا بكل صفوفه — بخلاف المصفوفة", () => {
+  const one = { [choiceRowKey("q-choice", "x")]: "active" };
+  const both = { ...one, [choiceRowKey("q-choice", "ig")]: "none" };
+  assert.equal(isAnswered(choiceQuestion, {}), false);
+  assert.equal(isAnswered(choiceQuestion, one), false);
+  assert.equal(isAnswered(choiceQuestion, both), true);
+  // والمصفوفةُ باقيةٌ على قاعدتها: يكفيها تقييمٌ واحد.
+  assert.equal(isAnswered(matrixQuestion, { [matrixCellKey("q-matrix", "plan", "fit")]: "4", [matrixCellKey("q-matrix", "plan", "quality")]: "3" }), true);
+});
+
+test("خيارٌ حُذف عمودُه لا يُعدّ إجابة", () => {
+  const stale = { [choiceRowKey("q-choice", "x")]: "deleted", [choiceRowKey("q-choice", "ig")]: "none" };
+  assert.deepEqual(choiceMatrixMissingRows(choiceQuestion, stale).map((r) => r.id), ["x"]);
 });

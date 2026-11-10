@@ -8,7 +8,8 @@
  * |---|---|
  * | `OPTIONS` · `MULTI_OPTIONS` | `[{ id, text, allowText? }]` |
  * | `YES_NO` | `{ followUpQuestions, followUpOn }` — لا قائمةَ خيارات |
- * | `MATRIX` | `{ rows, columns, max, labels? }` |
+ * | `MATRIX` | `{ rows, columns, max, labels? }` — درجةٌ في كل خليّة |
+ * | `CHOICE_MATRIX` | الصيغةُ نفسُها — علامةُ صحٍّ واحدةٌ في كل صف |
  * | غيرها | `null` |
  *
  * وكانت ترجمةُ هذه الصيغة مكتوبةً ثلاثَ مرّات (التحرير، والتعبئة، والنتائج)
@@ -66,10 +67,21 @@ const SEP = "::";
  */
 const CELL_MARK = "@cell";
 const TEXT_MARK = "@text";
+const ROW_MARK = "@row";
+
+/** النوعان اللذان يحملان صفوفاً وأعمدة. */
+export function isMatrixType(type: string): boolean {
+  return type === "MATRIX" || type === "CHOICE_MATRIX";
+}
 
 /** مفتاحُ خليّةٍ في المصفوفة: سؤالٌ وصفٌّ وعمود. */
 export function matrixCellKey(questionId: string, rowId: string, columnId: string): string {
   return `${questionId}${SEP}${CELL_MARK}${SEP}${rowId}${SEP}${columnId}`;
+}
+
+/** مفتاحُ صفٍّ في جدول الاختيار: قيمتُه معرِّفُ العمود المختار. */
+export function choiceRowKey(questionId: string, rowId: string): string {
+  return `${questionId}${SEP}${ROW_MARK}${SEP}${rowId}`;
 }
 
 /** مفتاحُ نصِّ خيارِ «أخرى». */
@@ -135,7 +147,7 @@ export function questionFromApi(raw: QuestionRow): SurveyQuestion {
     };
   }
 
-  if (base.type === "MATRIX") return { ...base, matrix: parseMatrix(raw.options) };
+  if (isMatrixType(base.type)) return { ...base, matrix: parseMatrix(raw.options) };
 
   return { ...base, options: choices(raw.options) };
 }
@@ -158,7 +170,7 @@ export function questionForApi(question: SurveyQuestion): QuestionRow {
     };
   }
 
-  if (question.type === "MATRIX") {
+  if (isMatrixType(question.type)) {
     const spec = matrix ?? { rows: [], columns: [], max: DEFAULT_MATRIX_SCALE };
     return {
       ...rest,
@@ -187,16 +199,28 @@ export function matrixRowKeys(question: SurveyQuestion, rowId: string): string[]
   return (question.matrix?.columns ?? []).map((column) => matrixCellKey(question.id, rowId, column.id));
 }
 
-/** عددُ خلايا المصفوفة كلِّها. */
+/** عددُ خلايا المصفوفة كلِّها — وفي جدول الاختيار عددُ صفوفه. */
 export function matrixCellCount(question: SurveyQuestion): number {
   const matrix = question.matrix;
+  if (question.type === "CHOICE_MATRIX") return matrix?.rows.length ?? 0;
   return matrix ? matrix.rows.length * matrix.columns.length : 0;
 }
 
-/** عددُ الخلايا المُقيَّمة. */
+/** صفوفُ جدول الاختيار التي لم يُختر فيها خيارٌ قائم. */
+export function choiceMatrixMissingRows(question: SurveyQuestion, answers: Answers): MatrixHeading[] {
+  const matrix = question.matrix;
+  if (!matrix) return [];
+  return matrix.rows.filter((row) => {
+    const picked = answers[choiceRowKey(question.id, row.id)];
+    return !matrix.columns.some((column) => column.id === picked);
+  });
+}
+
+/** عددُ الخلايا المُقيَّمة — وفي جدول الاختيار عددُ الصفوف المُجاب عنها. */
 export function matrixFilledCount(question: SurveyQuestion, answers: Answers): number {
   const matrix = question.matrix;
   if (!matrix) return 0;
+  if (question.type === "CHOICE_MATRIX") return matrix.rows.length - choiceMatrixMissingRows(question, answers).length;
   let count = 0;
   for (const row of matrix.rows) {
     for (const key of matrixRowKeys(question, row.id)) {
@@ -277,6 +301,8 @@ export function answerText(question: SurveyQuestion, raw: unknown, answers: Answ
  */
 export function isAnswered(question: SurveyQuestion, answers: Answers): boolean {
   if (question.type === "MATRIX") return matrixFilledCount(question, answers) > 0;
+  // بخلاف المصفوفة: جدولُ الاختيار الإجباريُّ لا يكتمل إلّا بصفوفه كلِّها.
+  if (question.type === "CHOICE_MATRIX") return choiceMatrixMissingRows(question, answers).length === 0;
   if (optionsAwaitingText(question, answers).length > 0) return false;
   return !!answers[question.id];
 }

@@ -88,6 +88,10 @@ export const UPLOAD_PURPOSES = {
   service_file: { folder: "zad_services", maxBytes: CLOUDINARY_MAX_BYTES },
   task_attachment: { folder: "zad_task_attachments", maxBytes: CLOUDINARY_MAX_BYTES },
   initiative_marketing: { folder: "zad_initiative_marketing", maxBytes: CLOUDINARY_MAX_BYTES },
+  // صورةُ منشورٍ في الخطّة الإعلاميّة، وشعارُ منصّةٍ تُضاف. والسقفُ عشرةٌ لا
+  // مئة: هذه صورٌ تُعرض في بطاقةٍ ضيّقة، لا ملفّاتُ تسليمٍ للمصمّمين.
+  media_post: { folder: "zad_media_plan", maxBytes: 10 * MB },
+  platform_logo: { folder: "zad_media_platforms", maxBytes: 2 * MB },
   avatar: { folder: "zad_avatars", maxBytes: 5 * MB },
   charity_logo: { folder: "zad_charity_logos", maxBytes: 5 * MB },
   landing_bg: { folder: "zad_landing", maxBytes: 10 * MB },
@@ -120,7 +124,13 @@ export const MEDIA_EXTENSIONS = ["jpg", "jpeg", "png", "gif", "webp", "mp4", "we
 export const IMAGE_EXTENSIONS = ["jpg", "jpeg", "png", "gif", "webp"] as const;
 
 /** Purposes that must be an image — enforced when the ticket is minted. */
-export const IMAGE_ONLY_PURPOSES: UploadPurpose[] = ["avatar", "charity_logo", "landing_bg"];
+export const IMAGE_ONLY_PURPOSES: UploadPurpose[] = [
+  "avatar",
+  "charity_logo",
+  "landing_bg",
+  "media_post",
+  "platform_logo",
+];
 
 /** Ready for an <input type="file" accept="..."> attribute. */
 export const ACCEPT_ATTRIBUTE = ALLOWED_EXTENSIONS.map((e) => `.${e}`).join(",");

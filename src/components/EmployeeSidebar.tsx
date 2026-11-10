@@ -14,7 +14,7 @@ import ZadLogo from "@/components/ZadLogo";
 import { hasPermission } from "@/lib/permissions";
 import { useRoleLabels } from "@/components/RoleLabelsProvider";
 import { getSidebarCharities } from "@/app/actions/charity";
-import { ChevronDown, Target, Scale, DollarSign, Mail, Palette } from "lucide-react";
+import { ChevronDown, Target, Scale, DollarSign, Mail, Palette, Megaphone } from "lucide-react";
 import dynamic from "next/dynamic";
 import PrivacyPolicyModal from "@/components/PrivacyPolicyModal";
 
@@ -128,7 +128,7 @@ export default function EmployeeSidebar({
       newGroup = "الخدمات";
       newService = "resource-development";
     }
-    else if (path.startsWith("/main/services-overview") || path.startsWith("/main/template-library") || path.startsWith("/main/strategy") || path.startsWith("/main/governance") || path.startsWith("/main/finance") || path.startsWith("/main/resource-development") || path.startsWith("/main/programs")) {
+    else if (path.startsWith("/main/services-overview") || path.startsWith("/main/template-library") || path.startsWith("/main/strategy") || path.startsWith("/main/governance") || path.startsWith("/main/finance") || path.startsWith("/main/resource-development") || path.startsWith("/main/media") || path.startsWith("/main/programs")) {
       newGroup = "الخدمات";
       const parts = path.split('/');
       if (parts.length >= 4) {
@@ -321,6 +321,9 @@ export default function EmployeeSidebar({
               { id: "governance", label: "الحوكمة", icon: Scale, required: "manage_governance" },
               { id: "resource-development", label: "تنمية الموارد المالية", icon: Users, required: "manage_resource_development" },
               { id: "finance", label: "المالية", icon: DollarSign, required: "manage_finance" },
+              // الخطة الإعلامية: تحتها جمعياتُ الموظَّف التي تشملها خدمةُ
+              // «الإعلامية»، كلٌّ رابطٌ واحدٌ إلى تقويمها.
+              { id: "media", label: "الإعلامية", icon: Megaphone, required: "manage_media_plan", serviceName: "الإعلامية" },
             ];
 
             const services = allServices.filter(svc => can(svc.required));
@@ -421,20 +424,26 @@ export default function EmployeeSidebar({
                               // الاستراتيجية لمن له خدمتها وحده. والكيان الداخلي
                               // يبقى، فظهوره هنا مقصود ولا خدمة له (charityScope).
                               .filter(charity => svc.id !== "strategy" || charity.isInternal || charity.hasStrategyService)
+                              // وكذلك كلُّ خدمةٍ سُمّيت في `serviceName`: لا
+                              // تُسرد تحتها إلا جمعيةٌ تشملها الخدمة، فالصفحةُ
+                              // تردّ غيرَها من حارسها (`requireCharitySection`).
+                              .filter(charity => !svc.serviceName || charity.isInternal || (charity.serviceNames || []).includes(svc.serviceName))
                               .map(charity => {
                               // الاستراتيجية: الجمعية رابطٌ واحدٌ إلى صفحتها
                               // الجامعة. كانت طيّاً ثالثاً يسرد صفحاتها، فصار
                               // سردُها مربّعاتٍ في الصفحة نفسها.
-                              const strategyHref = `/main/strategy/${encodeURIComponent(charity.name)}`;
-                              const isStrategy = svc.id === "strategy";
-                              if (isStrategy) {
+                              // الاستراتيجيةُ والإعلاميّةُ: الجمعيةُ رابطٌ واحدٌ
+                              // إلى صفحتها، لا طيّةٌ ثالثةٌ تُفتح على رابطٍ واحد.
+                              const singleSection = svc.id === "strategy" ? "strategy" : svc.id === "media" ? "media" : null;
+                              if (singleSection) {
+                                const href = `/main/${singleSection}/${encodeURIComponent(charity.name)}`;
                                 return (
                                   <SubTabLink
                                     key={charity.id}
-                                    href={strategyHref}
+                                    href={href}
                                     label={charity.name}
-                                    isActive={activePath.startsWith(`/main/strategy/${charity.name}`)}
-                                    onClick={() => handleLinkClick(strategyHref)}
+                                    isActive={activePath.startsWith(`/main/${singleSection}/${charity.name}`)}
+                                    onClick={() => handleLinkClick(href)}
                                   />
                                 );
                               }

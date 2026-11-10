@@ -74,6 +74,9 @@ const PAGE_PERMISSIONS: CharityPermissionDef[] = [
       // memberships are inert and drop on the next save, the same way the old
       // `view_hr` value does.
   { id: "view_design_requests", label: "طلبات التصاميم (عرض ورفع)" },
+  // الخطة الإعلامية: تقويمُ منشورات الجمعية. تُربط بخدمة «الإعلامية» كما رُبطت
+  // بها طلباتُ التصاميم، فيراها من فُوِّض الإعلاميّةَ ومديرُ الجمعية وحدَهما.
+  { id: "view_media_plan", label: "الخطة الإعلامية" },
 ];
 
 // No `view_hr`. Nothing reads it: the HR section is open to every active

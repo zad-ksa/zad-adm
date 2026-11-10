@@ -65,6 +65,10 @@ export const PERMISSION_GROUPS = [
       { id: "manage_surveys", label: "الاستبيانات المخصصة (جميع الاستبيانات)" },
       { id: "manage_own_surveys", label: "الاستبيانات المخصصة (ما أنشأه الموظف وحده)" },
       { id: "manage_meetings", label: "محاضر الاجتماعات" },
+      // الخطة الإعلامية: تقويمُ منشورات الجمعية، يضعه زادٌ وتعتمده الجمعية.
+      // وتُمنح يداً — ولم تُدرج في SERVICE_LINKED_PERMISSION_IDS — وإن كان
+      // ربطُها بخدمة «الإعلامية» من شاشة الصلاحيات يبقى صفّاً واحداً متى أُريد.
+      { id: "manage_media_plan", label: "الخطة الإعلامية" },
       { id: "manage_communication", label: "إدارة التواصل" },
       { id: "manage_design_requests", label: "طلبات التصاميم" },
       { id: "delete_design_requests", label: "حذف طلبات التصاميم نهائياً" },

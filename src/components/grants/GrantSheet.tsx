@@ -1,12 +1,14 @@
 "use client";
 
 import { useState } from "react";
+import { Trash2 } from "lucide-react";
 import { Sheet } from "@/components/console/overlays";
 import Select from "@/components/console/Select";
 import { MONO, btn, cx, field } from "@/components/console/ui";
 import { notify } from "@/components/console/toastBus";
 import { GRANT_STATUSES } from "@/lib/donorOrg";
 import { addGrantApplication, updateGrantApplication } from "@/app/actions/charity";
+import { confirmAndDeleteGrant } from "./deleteGrant";
 import InitiativeNameField from "./InitiativeNameField";
 
 export type GrantCharity = { id: string; name: string; isInternal?: boolean };
@@ -20,6 +22,8 @@ export type EditableGrant = {
   donorOrgId: string | null;
   initiativeName: string;
   requestedAmount: number;
+  /** حالتُها — ليُقال في تأكيد الحذف ما لا يُحذف مع المعتمَدة. */
+  status?: string;
 };
 
 /**
@@ -42,6 +46,7 @@ export default function GrantSheet({
   charities,
   onClose,
   onSaved,
+  onDeleted,
 }: {
   /** بغيرها: رفعُ منحةٍ جديدة. */
   grant?: EditableGrant;
@@ -53,6 +58,11 @@ export default function GrantSheet({
   charities: GrantCharity[];
   onClose: () => void;
   onSaved: () => void;
+  /**
+   * حُذفت المنحةُ من داخل اللوحة. وبغيره لا يُعرض زرُّ الحذف: شاشةٌ لا تعرف
+   * كيف تُحدِّث نفسَها بعد الحذف تُبقي صفّاً محذوفاً معروضاً.
+   */
+  onDeleted?: () => void;
 }) {
   const editing = grant !== undefined;
 
@@ -119,6 +129,17 @@ export default function GrantSheet({
     })();
   };
 
+  /** السؤالُ والفعلُ في `deleteGrant` المشترك، فلا تسأل اللوحةُ غيرَ ما يسأل الجدول. */
+  const remove = () => {
+    if (!grant || !onDeleted) return;
+    setBusy(true);
+    void (async () => {
+      const done = await confirmAndDeleteGrant(grant);
+      setBusy(false);
+      if (done) onDeleted();
+    })();
+  };
+
   const donorList = donor ? [donor] : (donorOptions ?? []);
 
   return (
@@ -136,6 +157,19 @@ export default function GrantSheet({
           <button type="button" onClick={onClose} disabled={busy} className={btn.ghost}>
             إلغاء
           </button>
+          {/* الحذفُ في طرف الذيل لا بجوار «حفظ»: فعلٌ لا رجعةَ فيه لا يُجاور
+              زرَّ الحفظ الذي تذهب إليه اليدُ بلا نظر. */}
+          {editing && onDeleted && (
+            <button
+              type="button"
+              onClick={remove}
+              disabled={busy}
+              className={cx(btn.ghost, "ms-auto text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-500/10")}
+            >
+              <Trash2 className="size-3.5" />
+              حذف المنحة
+            </button>
+          )}
         </>
       }
     >

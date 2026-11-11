@@ -25,6 +25,7 @@ import { GRANT_STATUSES, grantStatusLabel } from "@/lib/donorOrg";
 import { deleteDonorAccountRow, saveDonorAccount } from "@/app/actions/donorOrgs";
 import { updateGrantApplicationStatus } from "@/app/actions/charity";
 import GrantSheet, { type EditableGrant } from "@/components/grants/GrantSheet";
+import { confirmAndDeleteGrant } from "@/components/grants/deleteGrant";
 import GrantStatusDialog, { type StatusTarget } from "@/components/grants/GrantStatusDialog";
 import DonorSheet from "./DonorSheet";
 import type { DonorAccountRow, DonorGrantRow, DonorRow } from "./donorData";
@@ -161,6 +162,13 @@ export default function DonorDetail({
       }
       notify("ok", `صارت الحالةُ «${grantStatusLabel(to)}».`);
       startTransition(() => router.refresh());
+    })();
+  };
+
+  /** الحذفُ في `deleteGrant` المشترك: المنحةُ تُحذف سواءً من أيِّ شاشةٍ كانت. */
+  const removeGrant = (g: DonorGrantRow) => {
+    void (async () => {
+      if (await confirmAndDeleteGrant(g)) startTransition(() => router.refresh());
     })();
   };
 
@@ -450,12 +458,21 @@ export default function DonorDetail({
                           donorOrgId: org.id,
                           initiativeName: g.initiativeName,
                           requestedAmount: g.requestedAmount,
+                          status: g.status,
                         })
                       }
                       aria-label={`تعديل منحة ${g.initiativeName}`}
                       className={btn.icon}
                     >
                       <Pencil className="size-3.5" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => removeGrant(g)}
+                      aria-label={`حذف منحة ${g.initiativeName}`}
+                      className={cx(btn.icon, "text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-500/10")}
+                    >
+                      <Trash2 className="size-3.5" />
                     </button>
                     <Select
                       onSelect={(to) => changeGrantStatus(g, to)}
@@ -497,6 +514,10 @@ export default function DonorDetail({
           }}
           onSaved={() => {
             setAddingGrant(false);
+            setEditingGrant(null);
+            startTransition(() => router.refresh());
+          }}
+          onDeleted={() => {
             setEditingGrant(null);
             startTransition(() => router.refresh());
           }}

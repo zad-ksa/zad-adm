@@ -3,10 +3,10 @@
 import { useState, useTransition } from "react";
 import { StatStrip, PageHeader } from "@/components/console/layout";
 import { entityCrumbs } from "@/lib/crumbs";
-import { confirmAction } from "@/components/console/confirmBus";
 import Select from "@/components/console/Select";
 import { FileText, Plus, Trash2, CheckCircle2, AlertCircle, TrendingUp, Check, X, Calendar, Edit, HandCoins } from "lucide-react";
-import { addGrantApplication, updateGrantApplicationStatus, deleteGrantApplication } from "@/app/actions/charity";
+import { addGrantApplication, updateGrantApplicationStatus } from "@/app/actions/charity";
+import { confirmAndDeleteGrant } from "@/components/grants/deleteGrant";
 import { Dialog } from "@/components/console/Dialog";
 import { btn, cx } from "@/components/console/ui";
 import DateField from "@/components/console/DateField";
@@ -358,12 +358,21 @@ export default function GrantsClient({
                     {grant.entityName || "جهة غير محددة"}
                   </p>
                 </div>
-                <button onClick={async () => {
-                  if (await confirmAction({ title: "حذف هذه المنحة؟", confirmLabel: "حذف" })) startTransition(() => {
-                    deleteGrantApplication(grant.id, charityId);
-                    setGrantApplications(prev => prev.filter(g => g.id !== grant.id));
-                  });
-                }} className="text-slate-300 dark:text-slate-600 hover:text-red-500 bg-slate-50 dark:bg-slate-700 hover:bg-red-50 dark:hover:bg-red-500/10 p-2 rounded-lg transition-colors">
+                {/* الحذفُ في `deleteGrant` المشترك: كان هنا سؤالٌ لا يذكر ما
+                    يبقى من المنحة المعتمَدة، **ولا ينتظر جوابَ الخادم** —
+                    تُزال البطاقةُ ويمضي، فمنحةٌ رُفض حذفُها تختفي من أمام
+                    صاحبها حتى يُحدِّث الصفحة. */}
+                <button onClick={() => {
+                  void (async () => {
+                    const done = await confirmAndDeleteGrant({
+                      id: grant.id,
+                      charityId,
+                      initiativeName: grant.initiativeName,
+                      status: grant.status,
+                    });
+                    if (done) setGrantApplications(prev => prev.filter(g => g.id !== grant.id));
+                  })();
+                }} aria-label={`حذف منحة ${grant.initiativeName}`} className="text-slate-300 dark:text-slate-600 hover:text-red-500 bg-slate-50 dark:bg-slate-700 hover:bg-red-50 dark:hover:bg-red-500/10 p-2 rounded-lg transition-colors">
                   <Trash2 className="w-4 h-4" />
                 </button>
               </div>

@@ -21,12 +21,12 @@ import { Badge, MONO, Spinner, btn, cx } from "@/components/console/ui";
 import Select from "@/components/console/Select";
 import MultiSelect from "@/components/console/MultiSelect";
 import { notify } from "@/components/console/toastBus";
-import { confirmAction } from "@/components/console/confirmBus";
 import { GRANT_STATUSES, grantStatusLabel, normalizeDonorName } from "@/lib/donorOrg";
 import { grantsReportFileName, grantsReportSheet } from "@/lib/grantsReport";
 import { XLSX_MIME, safeFileName, workbookFiles } from "@/lib/xlsx";
-import { deleteGrantApplication, updateGrantApplicationStatus } from "@/app/actions/charity";
+import { updateGrantApplicationStatus } from "@/app/actions/charity";
 import { grantsReportRows } from "@/app/actions/grantsReport";
+import { confirmAndDeleteGrant } from "@/components/grants/deleteGrant";
 import GrantSheet, { type EditableGrant } from "@/components/grants/GrantSheet";
 import GrantStatusDialog, { type StatusTarget } from "@/components/grants/GrantStatusDialog";
 import type { GrantOverviewRow } from "../donors/donorData";
@@ -237,33 +237,10 @@ export default function GrantsOverviewClient({
     })();
   };
 
-  /**
-   * حذفُ منحة. والمعتمَدةُ يُقال عنها ما لا يُحذف معها.
-   *
-   * فاعتمادُ المنحة كتب سجلّاً ماليّاً في جمعيتها — وربّما جدول أقساطَ عقدها —
-   * وحذفُ صفِّ المنحة لا يمسّ ذلك. وحذفٌ يُظنّ أنّه يُرجع كلَّ شيءٍ أسوأُ من
-   * حذفٍ يقول ما يُبقيه.
-   */
+  /** السؤالُ والفعلُ في `deleteGrant` المشترك — الشاشاتُ الأربعُ تحذف سواءً. */
   const removeGrant = (g: GrantOverviewRow) => {
     void (async () => {
-      const approved = g.status === "APPROVED";
-      const ok = await confirmAction({
-        title: `حذف منحة «${g.initiativeName}»؟`,
-        message: approved
-          ? "منحةٌ معتمَدة: حذفُها لا يحذف سجلَّها الماليَّ في الجمعية ولا يُلغي أقساطاً جُدولت به — يُصحَّح ذلك من صفحة المالية."
-          : "لا تُسترجع بعد الحذف.",
-        confirmLabel: "حذف",
-        tone: "danger",
-      });
-      if (!ok) return;
-
-      const res = await deleteGrantApplication(g.id, g.charityId);
-      if (!res.success) {
-        notify("error", res.message || "تعذّر حذف المنحة");
-        return;
-      }
-      notify("ok", "حُذفت المنحة.");
-      refresh();
+      if (await confirmAndDeleteGrant(g)) refresh();
     })();
   };
 
@@ -452,6 +429,7 @@ export default function GrantsOverviewClient({
                         donorOrgId: g.donorOrgId,
                         initiativeName: g.initiativeName,
                         requestedAmount: g.requestedAmount,
+                        status: g.status,
                       })
                     }
                     aria-label={`تعديل منحة ${g.initiativeName}`}
@@ -507,6 +485,10 @@ export default function GrantsOverviewClient({
           charities={charities}
           onClose={() => setEditing(null)}
           onSaved={() => {
+            setEditing(null);
+            refresh();
+          }}
+          onDeleted={() => {
             setEditing(null);
             refresh();
           }}

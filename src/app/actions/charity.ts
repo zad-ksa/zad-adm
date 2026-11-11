@@ -631,9 +631,31 @@ export async function updateGrantApplicationStatus(
   }
 }
 
-export async function deleteGrantApplication(grantId: string, charityId: string) {
+/**
+ * حذفُ منحة.
+ *
+ * **والجمعيةُ تُقرأ من الصفّ لا من المُنادي** — كما في `updateGrantApplication`.
+ * وكان الحارسُ يُوضع على `charityId` القادمِ من المتصفّح وحدَه، فمن أُسنِدت
+ * إليه جمعيةٌ واحدةٌ كان يحذف منحةَ أيِّ جمعيةٍ بأن يُرسل معرِّفَ منحتها
+ * ومعرِّفَ جمعيته هو. والوسيطُ يبقى في التوقيع لأنّ له منادياً، ويُفحص الآن
+ * مطابقتُه لا يُوثق به.
+ *
+ * ولا يُنقض بالحذف سجلٌّ ماليّ: منحةٌ اعتُمدت كتبت `FinancialLog` لجمعيتها،
+ * وحذفُ المنحة لا يحذفه — فالسجلُّ قيدٌ في ماليّة الجمعية يُصحَّح من بابه.
+ * والشاشةُ تقول ذلك قبل أن يُؤكَّد الحذف.
+ */
+export async function deleteGrantApplication(grantId: string, charityId?: string) {
   try {
-    const session = await requireResourceDevelopment(charityId);
+    const grant = await prisma.grantApplication.findUnique({
+      where: { id: grantId },
+      select: { charityId: true, donorOrgId: true },
+    });
+    if (!grant) return { success: false, message: "المنحة غير موجودة" };
+    if (charityId && charityId !== grant.charityId) {
+      return { success: false, message: "المنحة ليست لهذه الجمعية" };
+    }
+
+    const session = await requireResourceDevelopment(grant.charityId);
     if (!session) return { success: false, message: "غير مصرح" };
 
     const removed = await prisma.grantApplication.delete({
@@ -641,7 +663,7 @@ export async function deleteGrantApplication(grantId: string, charityId: string)
       select: { donorOrgId: true },
     });
 
-    await revalidateGrantViews(charityId, [removed.donorOrgId]);
+    await revalidateGrantViews(grant.charityId, [removed.donorOrgId]);
 
     return { success: true };
   } catch (error: any) {

@@ -3,7 +3,7 @@
 import { useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { HandCoins, Pencil } from "lucide-react";
+import { FileSpreadsheet, HandCoins, Pencil, Plus, Trash2 } from "lucide-react";
 import {
   EmptyState,
   PageHeader,
@@ -17,12 +17,16 @@ import {
   theadRowClass,
   type SortDir,
 } from "@/components/console/layout";
-import { Badge, MONO, btn, cx } from "@/components/console/ui";
+import { Badge, MONO, Spinner, btn, cx } from "@/components/console/ui";
 import Select from "@/components/console/Select";
 import MultiSelect from "@/components/console/MultiSelect";
 import { notify } from "@/components/console/toastBus";
+import { confirmAction } from "@/components/console/confirmBus";
 import { GRANT_STATUSES, grantStatusLabel, normalizeDonorName } from "@/lib/donorOrg";
-import { updateGrantApplicationStatus } from "@/app/actions/charity";
+import { grantsReportFileName, grantsReportSheet } from "@/lib/grantsReport";
+import { XLSX_MIME, safeFileName, workbookFiles } from "@/lib/xlsx";
+import { deleteGrantApplication, updateGrantApplicationStatus } from "@/app/actions/charity";
+import { grantsReportRows } from "@/app/actions/grantsReport";
 import GrantSheet, { type EditableGrant } from "@/components/grants/GrantSheet";
 import GrantStatusDialog, { type StatusTarget } from "@/components/grants/GrantStatusDialog";
 import type { GrantOverviewRow } from "../donors/donorData";
@@ -84,6 +88,8 @@ export default function GrantsOverviewClient({
   const [dir, setDir] = useState<SortDir>("desc");
 
   const [editing, setEditing] = useState<EditableGrant | null>(null);
+  const [adding, setAdding] = useState(false);
+  const [exporting, setExporting] = useState(false);
   const [transition, setTransition] = useState<{ grant: StatusTarget; next: "APPROVED" | "CLOSED" } | null>(null);
 
   const refresh = () => startTransition(() => router.refresh());
@@ -176,6 +182,91 @@ export default function GrantsOverviewClient({
   const filtering =
     query !== "" || pickedCharities.length > 0 || pickedDonors.length > 0 || status !== ALL;
 
+  /**
+   * تقريرُ إكسل **لما هو معروضٌ الآن** لا للمنح كلِّها.
+   *
+   * فالصفحةُ تُرشَّح وتُفرز قبل أن يُضغط الزرّ، وهذا هو السؤالُ الذي يُصدَّر
+   * جوابُه: «منحُ هذه الجمعية المعلَّقة» لا «كلُّ ما في القاعدة». والعددُ
+   * مكتوبٌ على الزرّ نفسِه فلا يُفاجأ أحدٌ بملفٍّ فيه غيرُ ما رأى.
+   *
+   * والصفوفُ تُجلب من الخادم بمعرِّفاتها: التقريرُ يحمل أعمدةً لا تُنقَل إلى
+   * الشاشة أصلاً (المحصَّلُ والمستفيدون والأقساطُ وتاريخُ الإغلاق).
+   */
+  const exportExcel = () => {
+    setExporting(true);
+    void (async () => {
+      try {
+        const result = await grantsReportRows(shown.map((g) => g.id));
+        if (result.error || !result.rows) {
+          notify("error", result.error || "تعذّر تجهيز التقرير");
+          return;
+        }
+        if (result.rows.length === 0) {
+          notify("error", "لا منحةَ في الجدول لتُصدَّر");
+          return;
+        }
+
+        // JSZip تُجلب عند الضغط لا عند فتح الصفحة: مئةُ كيلوبايتٍ لا تُحمَّل
+        // على كلِّ من يفتح جدولَ المنح ليقرأه. وهو نفسُ ما تفعله صفحةُ
+        // المحاضر عند تنزيل مجلَّدها.
+        const { default: JSZip } = await import("jszip");
+        const zip = new JSZip();
+        for (const [path, xml] of Object.entries(workbookFiles(grantsReportSheet(result.rows)))) {
+          zip.file(path, xml);
+        }
+        const blob = await zip.generateAsync({ type: "blob", mimeType: XLSX_MIME });
+
+        // اسمُ الجمعية في اسم الملفِّ حين يكون التقريرُ عنها وحدَها — فملفّاتٌ
+        // تُحفظ في مجلَّدٍ واحدٍ تُفرَّق بأسمائها لا بفتحها.
+        const only =
+          pickedCharities.length === 1
+            ? charities.find((c) => c.id === pickedCharities[0])?.name
+            : undefined;
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = safeFileName(grantsReportFileName(new Date(), only));
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(url);
+        notify("ok", `نُزِّل تقريرُ ${result.rows.length} منحة.`);
+      } finally {
+        setExporting(false);
+      }
+    })();
+  };
+
+  /**
+   * حذفُ منحة. والمعتمَدةُ يُقال عنها ما لا يُحذف معها.
+   *
+   * فاعتمادُ المنحة كتب سجلّاً ماليّاً في جمعيتها — وربّما جدول أقساطَ عقدها —
+   * وحذفُ صفِّ المنحة لا يمسّ ذلك. وحذفٌ يُظنّ أنّه يُرجع كلَّ شيءٍ أسوأُ من
+   * حذفٍ يقول ما يُبقيه.
+   */
+  const removeGrant = (g: GrantOverviewRow) => {
+    void (async () => {
+      const approved = g.status === "APPROVED";
+      const ok = await confirmAction({
+        title: `حذف منحة «${g.initiativeName}»؟`,
+        message: approved
+          ? "منحةٌ معتمَدة: حذفُها لا يحذف سجلَّها الماليَّ في الجمعية ولا يُلغي أقساطاً جُدولت به — يُصحَّح ذلك من صفحة المالية."
+          : "لا تُسترجع بعد الحذف.",
+        confirmLabel: "حذف",
+        tone: "danger",
+      });
+      if (!ok) return;
+
+      const res = await deleteGrantApplication(g.id, g.charityId);
+      if (!res.success) {
+        notify("error", res.message || "تعذّر حذف المنحة");
+        return;
+      }
+      notify("ok", "حُذفت المنحة.");
+      refresh();
+    })();
+  };
+
   /** قيد الدراسة ومرفوضة تمضيان مباشرةً؛ المقبولةُ والمغلقةُ تسألان أوّلاً. */
   const changeStatus = (g: GrantOverviewRow, to: string) => {
     if (to === g.status) return;
@@ -214,6 +305,24 @@ export default function GrantsOverviewClient({
           unrestricted
             ? "كلُّ ما رُفع إلى كلِّ الجهات المانحة."
             : "كلُّ ما رفعته جمعياتُك المسنَدة إلى كلِّ الجهات المانحة."
+        }
+        actions={
+          <>
+            <button
+              type="button"
+              onClick={exportExcel}
+              disabled={exporting || shown.length === 0}
+              className={btn.ghost}
+            >
+              {exporting ? <Spinner size={14} /> : <FileSpreadsheet className="size-4" />}
+              تقرير إكسل
+              {shown.length > 0 && <span className="text-slate-400">({shown.length})</span>}
+            </button>
+            <button type="button" onClick={() => setAdding(true)} className={btn.primary}>
+              <Plus className="size-4" />
+              رفع منحة
+            </button>
+          </>
         }
       />
 
@@ -350,6 +459,14 @@ export default function GrantsOverviewClient({
                   >
                     <Pencil className="size-3.5" />
                   </button>
+                  <button
+                    type="button"
+                    onClick={() => removeGrant(g)}
+                    aria-label={`حذف منحة ${g.initiativeName}`}
+                    className={cx(btn.icon, "text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-500/10")}
+                  >
+                    <Trash2 className="size-3.5" />
+                  </button>
                   {/* قائمةٌ بلا قيمة: دعوةٌ ثابتةٌ («الحالة») لا عرضٌ لما هو
                       مختار — فالمختارُ معروضٌ شارةً في عموده، وقائمةٌ تُعيده
                       تُكرِّره وتُغري بتغييرٍ لم يُقصد. والحالةُ الحاضرةُ تُحذف
@@ -368,6 +485,20 @@ export default function GrantsOverviewClient({
           ))}
         </tbody>
       </TableShell>
+
+      {/* لوحةُ الرفع هي لوحةُ التعديل بلا منحة — ولا نموذجَ ثانٍ يُكتب هنا
+          ويفترق عن أخيه بعد أوّل حقلٍ يُضاف في أحدهما. */}
+      {adding && (
+        <GrantSheet
+          donorOptions={donors}
+          charities={charities}
+          onClose={() => setAdding(false)}
+          onSaved={() => {
+            setAdding(false);
+            refresh();
+          }}
+        />
+      )}
 
       {editing && (
         <GrantSheet

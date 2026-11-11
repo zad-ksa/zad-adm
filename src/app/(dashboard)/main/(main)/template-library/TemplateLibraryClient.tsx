@@ -1,7 +1,8 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Select from "@/components/console/Select";
+import { useStoredChoice } from "@/components/console/useStoredChoice";
 import {
   Folder,
   FolderPlus,
@@ -67,51 +68,6 @@ const SORT_KEY = "zad_tl_sort";
  * and one field cannot carry both meanings.
  */
 const ROOT_TARGET = "__root__";
-
-function readStored<T extends string>(key: string, fallback: T, allowed: readonly T[]): T {
-  if (typeof window === "undefined") return fallback;
-  try {
-    const v = window.localStorage.getItem(key) as T | null;
-    return v && allowed.includes(v) ? v : fallback;
-  } catch {
-    // Private windows and blocked site data throw on access, not on read.
-    return fallback;
-  }
-}
-
-/**
- * A preference kept in localStorage.
- *
- * Read through useSyncExternalStore rather than by setting state in an effect:
- * the server has no localStorage, so the stored value has to arrive as a
- * snapshot React knows differs between server and client. Setting it from an
- * effect instead paints the default first and then jumps — which is what the
- * lint rule against setState-in-effect is pointing at.
- */
-function useStoredChoice<T extends string>(
-  key: string,
-  fallback: T,
-  allowed: readonly T[]
-): [T, (v: T) => void] {
-  const [override, setOverride] = useState<T | null>(null);
-
-  const stored = useSyncExternalStore(
-    () => () => {}, // nothing outside this component changes it
-    () => readStored(key, fallback, allowed),
-    () => fallback // server render
-  );
-
-  const set = (v: T) => {
-    setOverride(v);
-    try {
-      window.localStorage.setItem(key, v);
-    } catch {
-      // Storage can be blocked; the choice still applies for this session.
-    }
-  };
-
-  return [override ?? stored, set];
-}
 
 function iconFor(name: string) {
   const ext = name.slice(name.lastIndexOf(".") + 1).toLowerCase();

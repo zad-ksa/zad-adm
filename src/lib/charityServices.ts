@@ -19,6 +19,9 @@ export const SECTION_SERVICES = {
   manage_strategy: "التخطيط الاستراتيجي",
   manage_governance: "الحوكمة",
   manage_resource_development: "التسويق وتنمية الموارد المالية",
+  // الخطة الإعلامية: صفحتُها باسم الجمعية، فلا تُفتح لجمعيةٍ لا تشملها خدمةُ
+  // «الإعلامية» — ولو لحاملِ الصلاحية، كبقيّة الأقسام.
+  manage_media_plan: "الإعلامية",
 } as const;
 
 export type SectionPermission = keyof typeof SECTION_SERVICES;

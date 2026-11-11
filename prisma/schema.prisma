@@ -127,6 +127,7 @@ model Charity {
   operationalPlans        OperationalPlan[]
   planSurvey              PlanSurvey?
   latestUpdates           LatestUpdate[]
+  mediaPosts              MediaPost[]
 }
 
 /// معلومات الجمعية الثابتة لمنشئ وثائق المبادرات — رؤيتها، رسالتها، مجالها
@@ -213,6 +214,7 @@ model CharityUser {
   designRequests    DesignRequest[]       @relation("SubmittedDesignRequests")
   attendanceRecords AttendanceRecord[]
   leaves            EmployeeLeave[]
+  notifications     CharityNotification[]
 }
 
 model CharityUserCharity {
@@ -2495,4 +2497,128 @@ model LatestUpdateSubColumn {
 
   @@unique([parentKey, name])
   @@index([parentKey])
+}
+
+// ── الخطة الإعلامية ──────────────────────────────────────────────────────────
+
+/// منشورٌ في خطّة جمعيةٍ الإعلاميّة: يضعه زاد، وتعتمده الجمعية.
+///
+/// ودورتُه في `src/lib/mediaPlan.ts` خالصةً مُختبَرة، لا متناثرةً في الأفعال:
+/// زادٌ يضع، فإمّا تعتمد الجمعيةُ فيصير نهائيّاً، وإمّا تُعدِّله فينتظر تعميدَ
+/// زاد. والنهائيُّ مقفولٌ على الجمعية ومفتوحٌ لزادٍ وحدَه — وكلُّ فتحةٍ منه
+/// **تُسبَّب** وتعود إلى اعتماد الجمعية، فلا يُنشر باسمها ما لم ترَه.
+model MediaPost {
+  id        String  @id @default(uuid())
+  charityId String
+  charity   Charity @relation(fields: [charityId], references: [id], onDelete: Cascade)
+
+  /// يومُ النشر المزمع — يومٌ مدنيٌّ لا لحظة، كـ`LatestUpdate.eventDate`.
+  /// فاللحظةُ تنزلق إلى جارها بمنطقةٍ زمنيّةٍ لا شأن لها بالخطّة.
+  scheduledOn DateTime @db.Date
+  /// وقتٌ اختياريٌّ «HH:MM» — به تُرتَّب منشوراتُ اليوم الواحد، وبغيابه تُؤخَّر.
+  scheduledAt String?
+
+  content String @db.Text
+  /// مفاتيحُ المنصّات كما في `MediaPlatform.key` — بالمفتاح لا بالمعرّف، كبقيّة
+  /// منوحات الخدمات في النظام: منصّةٌ تُحذف لا تُفرِّغ منشوراً من تاريخه.
+  platforms     String[] @default([])
+  imageUrl      String?
+  imagePublicId String?
+  linkUrl       String?
+
+  /// PENDING_CHARITY | PENDING_ZAD | FINAL — نصٌّ لا `enum`: المخطَّطُ يُطبَّق
+  /// بـSQL خامٍ هنا، فحالةٌ تُزاد غداً سطرُ كودٍ لا `ALTER TYPE` على الإنتاج.
+  status String @default("PENDING_CHARITY")
+
+  /// مُنشئه من زاد، منسوخاً بلا علاقةٍ كما في `LatestUpdate` — المنشورُ يبقى
+  /// بعد ذهاب حساب كاتبه، وإليه يصل إشعارُ تعديل الجمعية.
+  createdById   String?
+  createdByName String?
+
+  /// آخرُ تعميدٍ نهائيّ: متى، وبيد من، ومن أيِّ الجهتين (CHARITY | ZAD).
+  finalizedAt   DateTime?
+  finalizedBy   String?
+  finalizedSide String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  events MediaPostEvent[]
+
+  @@index([charityId, scheduledOn])
+  @@index([status])
+}
+
+/// سجلُّ المنشور: من فعل، وماذا، ولماذا، و**ما كانت قيمُه قبل الفعل**.
+///
+/// واللقطةُ هي جوابُ «أرني ما تغيَّر»: المنشورُ يحمل الحاضرَ، والحدثُ يحمل ما
+/// كان، فالفرقُ يُحسب حقلاً حقلاً ولا يُخزَّن مرّتين. وهي أيضاً ما يُستعاد منه
+/// إذا ردّ زادٌ تعديلَ الجمعية.
+model MediaPostEvent {
+  id     String    @id @default(uuid())
+  postId String
+  post   MediaPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  /// CREATED | APPROVED_BY_CHARITY | EDITED_BY_CHARITY | CERTIFIED_BY_ZAD
+  /// | REJECTED_BY_ZAD | EDITED_BY_ZAD | REOPENED_BY_ZAD
+  kind String
+  /// ZAD | CHARITY — ومعه اسمُ الفاعل منسوخاً، كـ`DesignRequestEvent`:
+  /// الحسابُ يُحذف ويُعاد تسميتُه، وتاريخٌ يُعيد كتابة نفسه ليس تاريخاً.
+  actorSide String
+  actorId   String?
+  actorName String?
+
+  /// السببُ — إلزاميٌّ في تعديل زادٍ لنهائيٍّ وفي ردِّه تعديلَ الجمعية.
+  note String? @db.Text
+
+  /// `{ content, platforms, imageUrl, linkUrl, scheduledOn, scheduledAt }`
+  /// كما كانت قبل هذا الحدث.
+  before Json?
+
+  createdAt DateTime @default(now())
+
+  @@index([postId, createdAt])
+}
+
+/// منصّةُ نشر. المشاهيرُ مبذورون بشعاراتهم مرسومةً في الموقع نفسه
+/// (`iconKey` → رسمٌ في `src/components/media/PlatformMark.tsx`)، والمُضافةُ
+/// بيد زادٍ ترفع شعارَها أو تأخذ حرفَها الأوّلَ في دائرةٍ بلونها.
+model MediaPlatform {
+  id        String  @id @default(uuid())
+  /// المفتاحُ المخزَّنُ في `MediaPost.platforms` — لا يتغيّر بعد الإنشاء.
+  key       String  @unique
+  name      String
+  iconKey   String?
+  logoUrl   String?
+  /// لونُ العلامة «#RRGGBB» — للحرف البديل وللنقطة في التقويم.
+  color     String?
+  sortOrder Int     @default(0)
+  isActive  Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+/// جرسُ عضو الجمعية في البوّابة.
+///
+/// ولم يكن له جرسٌ قطّ: `AppNotification.employeeId` لموظَّفي زاد وحدَهم، فما
+/// كان لعضو الجمعية خبرٌ بشيءٍ إلّا شارةَ البريد. وهذا الجدولُ عامٌّ لا خاصٌّ
+/// بالخطّة الإعلاميّة — البريدُ وطلباتُ التصاميم يُوصلان به بسطرٍ لكلٍّ.
+///
+/// و`charityId` لأنّ الحسابَ قد يكون في أكثر من جمعية: الخبرُ عن جمعيةٍ بعينها،
+/// ولا يُعرض في غيرها.
+model CharityNotification {
+  id            String      @id @default(uuid())
+  charityUserId String
+  charityUser   CharityUser @relation(fields: [charityUserId], references: [id], onDelete: Cascade)
+  charityId     String?
+
+  title   String
+  message String? @db.Text
+  link    String?
+  isRead  Boolean @default(false)
+
+  createdAt DateTime @default(now())
+
+  @@index([charityUserId, isRead])
 }

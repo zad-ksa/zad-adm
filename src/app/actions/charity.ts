@@ -1,7 +1,7 @@
 "use server";
 import { unstable_cache } from "next/cache";
 import { EXTERNAL_CHARITIES, externalOnly } from "@/lib/charityScope";
-import { SECTION_SERVICES, charityHasService, serviceRowsWhere } from "@/lib/charityServices";
+import { SECTION_SERVICES, charityHasService } from "@/lib/charityServices";
 
 import { prisma } from "@/lib/db";
 import { syncCharityAdminServicesQuietly } from "@/lib/charityAdminServices";
@@ -31,13 +31,23 @@ export const getSidebarCharities = async () => {
     //
     // hasStrategyService: هل تشمل الجمعيةَ خدمةُ «التخطيط الاستراتيجي»؟ فالشريط
     // لا يسردها تحت «الاستراتيجية» إلا إن شملتها (charityServices).
+    // وكانت تُجلب صفوفُ الاستراتيجية وحدَها، فلمّا احتاج الشريطُ خدمةً ثانيةً
+    // («الإعلامية») لم يكن له إلا علَمٌ ثالث. فتُجلب أسماءُ خدمات الجمعية كلِّها
+    // — تسعةُ صفوفٍ للجمعية الواحدة — ويبقى علَمُ الاستراتيجية لأنّ لها صفوفاً
+    // قديمةً تُعرف بقسمها (`department: "STRATEGY"`) لا باسمها.
     const strategyServices = {
-      where: serviceRowsWhere(SECTION_SERVICES.manage_strategy),
-      select: { id: true },
-      take: 1,
+      select: { name: true, department: true },
     };
-    const withFlag = <T extends { services: unknown[] }>({ services, ...charity }: T) =>
-      ({ ...charity, hasStrategyService: services.length > 0 });
+    const withFlag = <T extends { services: { name: string; department: string | null }[] }>({
+      services,
+      ...charity
+    }: T) => ({
+      ...charity,
+      serviceNames: [...new Set(services.map((s) => s.name))],
+      hasStrategyService: services.some(
+        (s) => s.name === SECTION_SERVICES.manage_strategy || s.department === "STRATEGY"
+      ),
+    });
 
     if (session.permissions?.includes("developer_mode")) {
       const all = await prisma.charity.findMany({

@@ -5,10 +5,11 @@ import { prisma } from "@/lib/db";
 import { getSession } from "@/lib/auth";
 import { PageHeader } from "@/components/console/layout";
 import { requireCharitySection } from "@/lib/sectionGuard";
-import { findMediaCharity } from "@/lib/mediaPlanAccess";
+import { getMediaScope } from "@/lib/mediaPlanAccess";
 import { toISODate } from "@/lib/calendarGrid";
 import MediaPlanClient from "./MediaPlanClient";
 import CharityAccounts from "./CharityAccounts";
+import CharitySwitcher from "./CharitySwitcher";
 
 export const dynamic = "force-dynamic";
 
@@ -36,7 +37,9 @@ export default async function MediaPlanPage({ params }: { params: Promise<{ name
   if (!session?.id) redirect("/login");
   await requireCharitySection("manage_media_plan", charityName);
 
-  const charity = await findMediaCharity(session, charityName);
+  // النطاقُ مرّةً واحدة: منه الجمعيةُ المطلوبة، ومنه قائمةُ التنقّل بين جمعيات الموظَّف.
+  const scope = await getMediaScope(session);
+  const charity = scope.canManage ? scope.charities.find((c) => c.name === charityName) : undefined;
   if (!charity) redirect("/main");
 
   // شهرُ اليوم: ستّةُ أسابيعَ حوله هي ما ترسمه الشبكة، فيُجلب مداها وحدَه
@@ -82,15 +85,22 @@ export default async function MediaPlanPage({ params }: { params: Promise<{ name
         title="الخطة الإعلامية"
         description={charity.name}
         actions={
-          <CharityAccounts
-            charityId={charity.id}
-            charityName={charity.name}
-            platforms={platforms}
-            initialAccounts={accounts}
-          />
+          <div className="flex flex-wrap items-center gap-2">
+            {scope.charities.length > 1 && (
+              <CharitySwitcher current={charity.name} charities={scope.charities.map((c) => c.name)} />
+            )}
+            <CharityAccounts
+              key={charity.id}
+              charityId={charity.id}
+              charityName={charity.name}
+              platforms={platforms}
+              initialAccounts={accounts}
+            />
+          </div>
         }
       />
       <MediaPlanClient
+        key={charity.id}
         charityId={charity.id}
         charityName={charity.name}
         today={toISODate(new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate())))}

@@ -24,6 +24,8 @@ type MeetingDraft = {
   charityId: string;
   attendees: string;
   rawNotes: string;
+  /** نصُّ القرارات والتوصيات كما كتبه الموظّف — لا يمرّ على الذكاء الاصطناعي. */
+  recommendations: string;
   meetingContext: string;
   isPrivate: boolean;
   formattedContent: string;
@@ -42,8 +44,13 @@ function readMeetingDraft(): MeetingDraft | null {
   }
 }
 
-function hasMeaningfulContent(d: { title: string; rawNotes: string; formattedContent: string }) {
-  return !!(d.title.trim() || d.rawNotes.trim() || d.formattedContent.trim());
+function hasMeaningfulContent(d: {
+  title: string;
+  rawNotes: string;
+  recommendations: string;
+  formattedContent: string;
+}) {
+  return !!(d.title.trim() || d.rawNotes.trim() || d.recommendations.trim() || d.formattedContent.trim());
 }
 
 type Props = {
@@ -93,6 +100,12 @@ export default function MeetingFormModal({
   const [charityId, setCharityId] = useState(initialData?.charityId || draft?.charityId || "");
   const [attendees, setAttendees] = useState(initialData?.attendees || draft?.attendees || "");
   const [rawNotes, setRawNotes] = useState(initialData?.rawNotes || draft?.rawNotes || "");
+  /**
+   * القراراتُ والتوصياتُ بنصِّها. لا تُحفظ في القاعدة حقلاً مستقلّاً: محلُّها
+   * المحضرُ المصوغ، وهو ما يُحفظ ويُطبع ويُستخرج منه المهام. فعند تعديل محضرٍ
+   * محفوظٍ يبدأ الحقلُ فارغاً، ونصُّ القسم قائمٌ في المحضر كما أُدرج.
+   */
+  const [recommendations, setRecommendations] = useState(draft?.recommendations || "");
   const [meetingContext, setMeetingContext] = useState(initialData?.meetingContext || draft?.meetingContext || "");
   const [isPrivate, setIsPrivate] = useState(initialData?.isPrivate || draft?.isPrivate || false);
   const [step, setStep] = useState<1 | 2>(draft?.step || 1);
@@ -104,11 +117,11 @@ export default function MeetingFormModal({
   // مرجع بآخر قيم النموذج، يُحدَّث كل تصيير — لتجنّب قراءة قيم قديمة (stale
   // closure) داخل مستمعي beforeunload/pagehide ودالة تنظيف useEffect أدناه.
   const latestRef = useRef({
-    title, date, location, charityId, attendees, rawNotes, meetingContext, isPrivate, formattedContent, step,
+    title, date, location, charityId, attendees, rawNotes, recommendations, meetingContext, isPrivate, formattedContent, step,
   });
   useEffect(() => {
     latestRef.current = {
-      title, date, location, charityId, attendees, rawNotes, meetingContext, isPrivate, formattedContent, step,
+      title, date, location, charityId, attendees, rawNotes, recommendations, meetingContext, isPrivate, formattedContent, step,
     };
   });
 
@@ -166,6 +179,7 @@ export default function MeetingFormModal({
     setCharityId("");
     setAttendees("");
     setRawNotes("");
+    setRecommendations("");
     setMeetingContext("");
     setIsPrivate(false);
     setFormattedContent("");
@@ -179,7 +193,7 @@ export default function MeetingFormModal({
       const res = await fetch("/api/meetings/format", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ rawNotes, title, date, attendees, location }),
+        body: JSON.stringify({ rawNotes, title, date, attendees, location, recommendations }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "فشل الطلب");
@@ -347,6 +361,24 @@ footer={
                 <textarea value={rawNotes} onChange={e => setRawNotes(e.target.value)} rows={8}
                   placeholder="اكتب ملاحظاتك هنا بأي طريقة... مثلاً: ناقشنا موضوع الميزانية وقرر المدير زيادتها، واحمد راح يتابع مع الجمعية..."
                   className="w-full border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-caption bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-primary resize-none" />
+              </div>
+              {/* القراراتُ والتوصياتُ حقلٌ على حدة: ما يُكتب فيه يُدرج في المحضر
+                  حرفاً بحرف ولا يُرسل إلى النموذج أصلاً — فالتوصيةُ ما التُزم
+                  به، وتُتابَع بلفظها. وإن تُرك فارغاً صاغ النموذجُ القسمَ من
+                  الملاحظات كما كان. */}
+              <div>
+                <label className="text-caption font-semibold text-slate-500 dark:text-slate-400 mb-1 block">
+                  القرارات والتوصيات
+                  <span className="font-normal text-slate-400 mr-1">— تُدرج كما كتبتَها، لا يمسّها الذكاء الاصطناعي</span>
+                </label>
+                <textarea value={recommendations} onChange={e => setRecommendations(e.target.value)} rows={4}
+                  placeholder={"توصيةٌ في كل سطر، بلفظها الذي تريده في المحضر...\nمثال: زيادة ميزانية المشروع ٢٠٪ — يتابعها أحمد قبل الخميس"}
+                  className="w-full border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-caption bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-primary resize-none" dir="rtl" />
+                {recommendations.trim() !== "" && (
+                  <p className="mt-1 text-caption text-slate-400">
+                    سيُكتب هذا النصُّ تحت «ثالثاً: القرارات والتوصيات» كما هو.
+                  </p>
+                )}
               </div>
               {aiError && <p className="text-caption text-red-500 font-semibold">{aiError}</p>}
 

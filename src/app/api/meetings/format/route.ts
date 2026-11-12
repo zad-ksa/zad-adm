@@ -1,8 +1,20 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { NextRequest, NextResponse } from "next/server";
 import { requirePermission, authErrorResponse } from "@/lib/guards";
+import { RECOMMENDATIONS_TOKEN, spliceRecommendations } from "@/lib/meetingMinutes";
 
-const SYSTEM_PROMPT = `أنت مساعد متخصص في تنسيق محاضر اجتماعات شركة زاد للخدمات التنموية.
+/**
+ * نصُّ القرارات والتوصيات — إن كتبه الموظّف في حقله فهو **لا يُرسل إلى
+ * النموذج**: يُطلب منه سطرُ علامةٍ مكانَ القسم، ثم يُدرج النصُّ حرفاً بحرف في
+ * الخادم (`spliceRecommendations`). ولو أُرسل مع الملاحظات وقيل له «لا تُعدّله»
+ * لبقي الأمرُ رجاءً، وهو مُطالَبٌ في السطور نفسِها بالتفصيح وبدمج النقاط.
+ */
+function systemPrompt(verbatim: boolean) {
+  const thirdSection = verbatim
+    ? `[اكتب سطراً واحداً فقط هو: ${RECOMMENDATIONS_TOKEN} — ولا تكتب شيئاً غيره في هذا القسم، فالقراراتُ والتوصياتُ يكتبها الموظّف بنفسه وتُدرج مكانَ هذا السطر كما هي]`
+    : `[القرارات المتخذة كقائمة واضحة — وتُنقل بألفاظها كما وردت في الملاحظات بلا إعادة صياغة]`;
+
+  return `أنت مساعد متخصص في تنسيق محاضر اجتماعات شركة زاد للخدمات التنموية.
 مهمتك: تحويل الملاحظات الخام غير المنظمة إلى محضر اجتماع رسمي باللغة العربية الفصحى.
 
 هيكل المحضر الذي يجب أن تنتجه (بصيغة Markdown) — لا تكتب عنوان "محضر اجتماع" في البداية لأنه يُضاف تلقائياً:
@@ -21,7 +33,7 @@ const SYSTEM_PROMPT = `أنت مساعد متخصص في تنسيق محاضر �
 [نقاط المناقشة منظمة ومرقمة]
 
 ### ثالثاً: القرارات والتوصيات
-[القرارات المتخذة كقائمة واضحة]
+${thirdSection}
 
 ### رابعاً: المهام والإجراءات المطلوبة
 | المهمة | المسؤول | الموعد |
@@ -32,10 +44,15 @@ const SYSTEM_PROMPT = `أنت مساعد متخصص في تنسيق محاضر �
 [ملاحظات الختام]
 
 قواعد مهمة:
-- حوّل العامية إلى فصحى رسمية
+- حوّل العامية إلى فصحى رسمية${verbatim ? " — في كل الأقسام إلا قسم القرارات والتوصيات، فهو ليس من عملك" : " — إلا نصوص القرارات والتوصيات، فتُنقل كما هي"}
 - رتّب النقاط المتفرقة تحت محاورها الصحيحة
 - لا تخترع معلومات غير موجودة في النص
-- إذا لم يُذكر عنصر ما، احذف قسمه أو اكتب "لم يُحدد"`;
+- إذا لم يُذكر عنصر ما، احذف قسمه أو اكتب "لم يُحدد"${
+    verbatim
+      ? `\n- أبقِ عنوان "### ثالثاً: القرارات والتوصيات" في موضعه بالترتيب نفسه، وتحته السطر ${RECOMMENDATIONS_TOKEN} وحده`
+      : ""
+  }`;
+}
 
 export async function POST(req: NextRequest) {
   // Was gated on a hardcoded role list, which meant edits to a role's
@@ -60,10 +77,13 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "طلب غير صالح" }, { status: 400 });
     }
 
-    const { rawNotes, title, date, attendees, location } = body;
+    const { rawNotes, title, date, attendees, location, recommendations } = body;
     if (!rawNotes?.trim()) {
       return NextResponse.json({ error: "الملاحظات فارغة" }, { status: 400 });
     }
+
+    const verbatimText = typeof recommendations === "string" ? recommendations : "";
+    const verbatim = verbatimText.trim() !== "";
 
     if (!process.env.ANTHROPIC_API_KEY) {
       return NextResponse.json({ error: "مفتاح الذكاء الاصطناعي غير مضبوط في الخادم" }, { status: 500 });
@@ -71,6 +91,7 @@ export async function POST(req: NextRequest) {
 
     const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
+    // ولا يدخل نصُّ التوصيات هذه الرسالةَ: ما لا يُرسل لا يُعاد صياغته.
     const userMessage = `
 اسم الاجتماع: ${title || "غير محدد"}
 التاريخ: ${date || "غير محدد"}
@@ -87,15 +108,18 @@ ${rawNotes}
       // was then fed to task extraction — so late tasks were lost twice over.
       max_tokens: 16000,
       messages: [{ role: "user", content: userMessage }],
-      system: SYSTEM_PROMPT,
+      system: systemPrompt(verbatim),
     });
 
     const textBlock = message.content.find((b) => b.type === "text");
-    const formatted = textBlock?.type === "text" ? textBlock.text : "";
+    const modelText = textBlock?.type === "text" ? textBlock.text : "";
 
-    if (!formatted) {
+    if (!modelText) {
       return NextResponse.json({ error: "لم يُنتج الذكاء الاصطناعي أي نص" }, { status: 502 });
     }
+
+    // تُنزع العلامةُ في كلِّ حال — فلا تظهر في محضرٍ يُطبع ولو جاءت بلا نصٍّ معها.
+    const formatted = spliceRecommendations(modelText, verbatimText);
 
     // Surface the cut-off rather than silently handing back a half محضر.
     return NextResponse.json({ formatted, truncated: message.stop_reason === "max_tokens" });

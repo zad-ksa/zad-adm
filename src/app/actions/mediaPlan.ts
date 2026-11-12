@@ -491,3 +491,59 @@ async function mayManageCharityMediaAny(session: { id: string; role: string; per
   const scope = await getMediaScope(session);
   return scope.canManage;
 }
+
+// ── حساباتُ الجمعية في المنصّات ─────────────────────────────────────────────
+
+/** رابطٌ كُتب بلا بروتوكول («x.com/zad») يُكمَّل بـhttps، وما سوى http(s) يُردّ. */
+function normalizeAccountUrl(value: string): string | null {
+  const trimmed = value.trim();
+  if (!trimmed) return null;
+  const withScheme = /^[a-z][a-z0-9+.-]*:/i.test(trimmed) ? trimmed : `https://${trimmed}`;
+  return isSafeLink(withScheme) ? withScheme : null;
+}
+
+/**
+ * حفظُ روابط حسابات الجمعية دفعةً واحدة: `{ مفتاحُ المنصّة: رابط }`، والفارغُ
+ * يحذف رابطَ منصّته.
+ */
+export async function saveCharityMediaAccounts(charityId: string, accounts: Record<string, string>) {
+  const session = await requireMediaSession();
+  if (!session) return { error: "غير مصرح" };
+  if (!(await mayManageCharityMedia(session, charityId))) {
+    return { error: "لا صلاحية لك على الخطة الإعلامية لهذه الجمعية" };
+  }
+
+  const known = new Set((await prisma.mediaPlatform.findMany({ select: { key: true } })).map((p) => p.key));
+  const upserts: { platformKey: string; url: string }[] = [];
+  const removals: string[] = [];
+  for (const [platformKey, raw] of Object.entries(accounts ?? {})) {
+    if (!known.has(platformKey)) continue;
+    if (!String(raw ?? "").trim()) {
+      removals.push(platformKey);
+      continue;
+    }
+    const url = normalizeAccountUrl(String(raw));
+    if (!url) return { error: `رابطٌ غير صالح: ${raw}` };
+    upserts.push({ platformKey, url });
+  }
+
+  await prisma.$transaction([
+    prisma.charityMediaAccount.deleteMany({ where: { charityId, platformKey: { in: removals } } }),
+    ...upserts.map(({ platformKey, url }) =>
+      prisma.charityMediaAccount.upsert({
+        where: { charityId_platformKey: { charityId, platformKey } },
+        create: { charityId, platformKey, url },
+        update: { url },
+      })
+    ),
+  ]);
+
+  const charity = await prisma.charity.findUnique({ where: { id: charityId }, select: { name: true } });
+  if (charity) revalidateCharity(charity.name);
+
+  const saved = await prisma.charityMediaAccount.findMany({
+    where: { charityId },
+    select: { platformKey: true, url: true },
+  });
+  return { success: true, accounts: saved };
+}

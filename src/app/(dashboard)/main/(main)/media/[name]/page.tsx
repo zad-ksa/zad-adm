@@ -8,6 +8,7 @@ import { requireCharitySection } from "@/lib/sectionGuard";
 import { findMediaCharity } from "@/lib/mediaPlanAccess";
 import { toISODate } from "@/lib/calendarGrid";
 import MediaPlanClient from "./MediaPlanClient";
+import CharityAccounts from "./CharityAccounts";
 
 export const dynamic = "force-dynamic";
 
@@ -45,7 +46,7 @@ export default async function MediaPlanPage({ params }: { params: Promise<{ name
   const from = new Date(first.getTime() - (first.getUTCDay() + 7) * 86_400_000);
   const to = new Date(from.getTime() + 55 * 86_400_000);
 
-  const [posts, platforms] = await Promise.all([
+  const [posts, platforms, accounts] = await Promise.all([
     prisma.mediaPost.findMany({
       where: { charityId: charity.id, scheduledOn: { gte: from, lte: to } },
       orderBy: [{ scheduledOn: "asc" }, { scheduledAt: "asc" }],
@@ -68,6 +69,10 @@ export default async function MediaPlanPage({ params }: { params: Promise<{ name
       orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
       select: { id: true, key: true, name: true, iconKey: true, logoUrl: true, color: true, isActive: true },
     }),
+    prisma.charityMediaAccount.findMany({
+      where: { charityId: charity.id },
+      select: { platformKey: true, url: true },
+    }),
   ]);
 
   return (
@@ -76,6 +81,14 @@ export default async function MediaPlanPage({ params }: { params: Promise<{ name
         icon={<Megaphone className="size-5 text-primary" />}
         title="الخطة الإعلامية"
         description={charity.name}
+        actions={
+          <CharityAccounts
+            charityId={charity.id}
+            charityName={charity.name}
+            platforms={platforms}
+            initialAccounts={accounts}
+          />
+        }
       />
       <MediaPlanClient
         charityId={charity.id}

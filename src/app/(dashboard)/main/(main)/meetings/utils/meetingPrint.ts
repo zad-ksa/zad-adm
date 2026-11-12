@@ -1,11 +1,9 @@
 import { Meeting, MeetingTask } from "../MeetingsClient";
 import { meetingAssigneeName } from "./meetingAssignee";
-
-// الاسم اليدوي نصٌّ حرّ يدخل HTML المحضر، فلا يُدرج كما كُتب.
-const ESCAPES: Record<string, string> = { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" };
-const escapeHtml = (text: string) => text.replace(/[&<>"]/g, (c) => ESCAPES[c]);
 import { notify } from "@/components/console/toastBus";
 import { LETTERHEAD_CSS } from "@/lib/letterhead";
+// بناءُ HTML المحضر منطقٌ خالصٌ له اختباراته في العدة — والطباعةُ هنا تستعمله.
+import { escapeHtml, mdToHtml, replaceTasksTable } from "@/lib/meetingMarkdown";
 
 function formatDate(d: string | Date) {
   const dt = new Date(d);
@@ -15,85 +13,31 @@ function formatDate(d: string | Date) {
   return `${year}-${month}-${day}`;
 }
 
-function applyInline(text: string): string {
-  return text
-    .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
-    .replace(/\*(.+?)\*/g, "<em>$1</em>");
-}
 
-export function mdToHtml(md: string): string {
-  const lines = md.split("\n");
-  const out: string[] = [];
-  let inTable = false;
-  let inUl = false;
-
-  for (const raw of lines) {
-    const line = raw.trimEnd();
-
-    if (/^\|(.+)\|$/.test(line)) {
-      const cells = line.split("|").slice(1, -1).map(c => c.trim());
-      if (cells.every(c => /^[-: ]+$/.test(c))) continue;
-      if (!inTable) { out.push("<table>"); inTable = true; }
-      if (inUl) { out.push("</ul>"); inUl = false; }
-      const isHeader = out[out.length - 1] === "<table>";
-      const tag = isHeader ? "th" : "td";
-      out.push(`<tr>${cells.map(c => `<${tag}>${applyInline(c)}</${tag}>`).join("")}</tr>`);
-      continue;
-    } else if (inTable) { out.push("</table>"); inTable = false; }
-
-    if (/^[-•*] (.+)$/.test(line)) {
-      const text = line.replace(/^[-•*] /, "");
-      if (!inUl) { out.push("<ul>"); inUl = true; }
-      out.push(`<li>${applyInline(text)}</li>`);
-      continue;
-    } else if (inUl) { out.push("</ul>"); inUl = false; }
-
-    if (/^# (.+)$/.test(line)) {
-      continue;
-    } else if (/^## (.+)$/.test(line)) {
-      out.push(`<h2 class="sec-title">${applyInline(line.replace(/^## /, ""))}</h2>`);
-    } else if (/^### (.+)$/.test(line)) {
-      out.push(`<h3 class="sub-title">${applyInline(line.replace(/^### /, ""))}</h3>`);
-    } else if (/^#{1,6} (.+)$/.test(line)) {
-      out.push(`<h4 class="sub-title">${applyInline(line.replace(/^#{1,6} /, ""))}</h4>`);
-    } else if (/^---+$/.test(line)) {
-      out.push("<hr>");
-    } else if (line === "") {
-      out.push("<br>");
-    } else if (/صدر هذا المحضر|محضر إلكتروني/.test(line)) {
-      continue;
-    } else {
-      out.push(`<p>${applyInline(line)}</p>`);
-    }
-  }
-
-  if (inTable) out.push("</table>");
-  if (inUl) out.push("</ul>");
-  return out.join("\n");
-}
-
-function injectTasksIntoHtml(html: string, tasks: MeetingTask[]): string {
-  if (tasks.length === 0) return html;
+/**
+ * جدولُ المهام المحفوظةِ — بالمكلَّف والمدّة والحالة، وهي ممّا لا يحمله جدولُ
+ * المحضر المكتوب. فيحلّ محلَّه في موضعه تحت عنوانه، ولا يُذيَّل به المحضرُ بعد
+ * الختام. وبلا مهامٍّ محفوظةٍ يُطبع جدولُ المحضر كما كُتب — كان يُحذف ولا
+ * يُعاد، فيخرج المحضرُ بقسمٍ ناقص.
+ */
+function tasksTableHtml(tasks: MeetingTask[]): string {
   const rows = tasks.map(t => {
     const assignee = escapeHtml(meetingAssigneeName(t) || "—");
     const status = t.isDone ? "✓ مكتملة" : "قيد التنفيذ";
     const due = t.dueDays ? `${t.dueDays} يوم` : "—";
-    return `<tr><td>${t.title}</td><td>${assignee}</td><td>${due}</td><td style="color:${t.isDone ? "#10b981" : "#f59e0b"}">${status}</td></tr>`;
+    return `<tr><td>${escapeHtml(t.title)}</td><td>${assignee}</td><td>${due}</td><td style="color:${t.isDone ? "#10b981" : "#f59e0b"}">${status}</td></tr>`;
   }).join("");
-  const table = `<h3 class="sub-title">المهام والتكليفات</h3><table><tr><th>المهمة</th><th>المكلف</th><th>المدة</th><th>الحالة</th></tr>${rows}</table>`;
-  
-  if (html.includes('footer-note')) {
-    return html.replace(/(<p class="footer-note">)/, table + '\n$1');
-  }
-  return html + '\n' + table;
+  return `<table><tr><th>المهمة</th><th>المكلف</th><th>المدة</th><th>الحالة</th></tr>${rows}</table>`;
 }
 
 
 export function buildLetterheadDoc(m: Meeting, forPrint: boolean, meetingNum?: number): string {
   const rawHtml = mdToHtml(m.formattedContent);
-  const cleanHtml = rawHtml.replace(/<h[23][^>]*>.*?(?:مهام|توصيات|تكليفات).*?<\/h[23]>\s*(<table[\s\S]*?<\/table>)/gi, "").replace(/<table[\s\S]*?<\/table>/gi, "");
+  const cleanHtml = m.meetingTasks.length > 0
+    ? replaceTasksTable(rawHtml, tasksTableHtml(m.meetingTasks), '<h3 class="sub-title">المهام والتكليفات</h3>')
+    : rawHtml;
   const footer = `<p class="footer-note"><em>صدر هذا المحضر عن شركة زاد للخدمات التنموية</em></p><p class="footer-note"><em>محضر إلكتروني عبر موقع زاد</em></p>`;
-  const body = `<div class="meeting-label">محضر اجتماع</div><div class="meeting-title">${m.title}</div>\n` + injectTasksIntoHtml(cleanHtml, m.meetingTasks) + "\n" + footer;
+  const body = `<div class="meeting-label">محضر اجتماع</div><div class="meeting-title">${escapeHtml(m.title)}</div>\n` + cleanHtml + "\n" + footer;
   const dateStr = formatDate(m.date);
   const numStr = meetingNum ? `ZAD_M_${String(meetingNum).padStart(3, "0")}` : "";
   const letterheadUrl = `${window.location.origin}/assets/letterhead.png`;

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState, useTransition } from "react";
-import { StatStrip, PageHeader } from "@/components/console/layout";
+import { StatStrip, PageHeader, SearchField } from "@/components/console/layout";
 import { notify } from "@/components/console/toastBus";
 import Select from "@/components/console/Select";
 import { useRouter } from "next/navigation";
@@ -80,6 +80,44 @@ type Item = {
 
 type ViewMode = "cards" | "list";
 
+const TAB_NAMES: Record<string, string> = {
+  PENDING: "الطلبات الحالية",
+  REVISION_REQUESTED: "قيد التعديل",
+  UNDER_REVIEW: "قيد الانتظار",
+  AWAITING_REVIEW: "بانتظار الجمعية",
+  COMPLETED: "الطلبات المنجزة",
+  REJECTED: "المُعادة للتعديل",
+  ARCHIVED: "الأرشيف",
+};
+
+/**
+ * نصٌّ للمطابقة: بلا تشكيل، والهمزاتُ والتاءُ المربوطة والألفُ المقصورة
+ * موحَّدة — فمن كتب «اعلامية» وجد «الإعلاميّة».
+ */
+function normalizeSearch(text: string) {
+  return text
+    .toLowerCase()
+    .replace(/[\u064B-\u065F\u0670\u0640]/g, "")
+    .replace(/[أإآٱ]/g, "ا")
+    .replace(/ة/g, "ه")
+    .replace(/ى/g, "ي");
+}
+
+/** كل كلمةٍ في البحث حاضرةٌ في الطلب، بأي ترتيب. */
+function matchesSearch(item: Item, words: string[]) {
+  if (words.length === 0) return true;
+  const r = item.request;
+  const hay = normalizeSearch(
+    [r.title, r.description ?? "", r.charityName ?? "", ...(r.types ?? []).map((t) => t.name)].join(" ")
+  );
+  return words.every((w) => hay.includes(w));
+}
+
+/** تبويبُ الطلب: الأرشيفُ أولاً، ثم حالتُه. */
+function tabOf(item: Item) {
+  return item.request.archivedAt ? "ARCHIVED" : item.request.status;
+}
+
 // تفضيل عرض شخصي بحت (بطاقات/قائمة) — يُحفظ محلياً في متصفح كل مستخدم، بلا
 // حقل جديد في قاعدة البيانات. نفس النمط المتّبع في صفحة الاستبيانات المخصصة.
 const VIEW_MODE_STORAGE_KEY = "zad_design_requests_view_mode";
@@ -99,6 +137,8 @@ export default function DesignRequestsClient({
   const router = useRouter();
   const [, startTransition] = useTransition();
   const [charityFilter, setCharityFilter] = useState("");
+  const [query, setQuery] = useState("");
+  const searchWords = useMemo(() => normalizeSearch(query).split(/\s+/).filter(Boolean), [query]);
   // الأرشيفُ تبويبٌ لا حالة: الصفُّ يحفظ حالته وهو مؤرشف، فلا يُسأل عنها
   // تبويبان في وقتٍ واحد.
   const [tab, setTab] = useState<DesignStatus | "ARCHIVED">("PENDING");
@@ -163,6 +203,7 @@ export default function DesignRequestsClient({
   const filtered = useMemo(() => {
     const rows = initialItems.filter((it) => {
       if (charityFilter && it.request.charityId !== charityFilter) return false;
+      if (!matchesSearch(it, searchWords)) return false;
       // المؤرشفُ لا يظهر في تبويبات الحالة، والأرشيفُ لا يُرتَّب بحالة.
       if (tab === "ARCHIVED") return !!it.request.archivedAt;
       return !it.request.archivedAt && it.request.status === tab;
@@ -186,7 +227,23 @@ export default function DesignRequestsClient({
       });
     }
     return rows;
-  }, [initialItems, charityFilter, tab]);
+  }, [initialItems, charityFilter, tab, searchWords]);
+
+  // بحثٌ لم يجد شيئاً في هذا التبويب: أين وجد؟ فمن بحث عن طلبٍ أُنجز وهو في
+  // «الطلبات الحالية» لا يظنّه غير موجود.
+  const elsewhere = useMemo(() => {
+    if (searchWords.length === 0) return [];
+    const counts = new Map<string, number>();
+    for (const it of initialItems) {
+      if (charityFilter && it.request.charityId !== charityFilter) continue;
+      if (!matchesSearch(it, searchWords)) continue;
+      const key = tabOf(it);
+      if (key !== tab) counts.set(key, (counts.get(key) ?? 0) + 1);
+    }
+    return Object.keys(TAB_NAMES)
+      .filter((key) => counts.has(key))
+      .map((key) => ({ key, label: TAB_NAMES[key], count: counts.get(key)! }));
+  }, [initialItems, charityFilter, tab, searchWords]);
 
   // العدّاداتُ كلُّها على غير المؤرشف: الشارةُ تعدّ ما يُرى، وما خرج من الدور
   // لا يُحتسب متأخّراً ولا قيد تنفيذ.
@@ -495,6 +552,13 @@ export default function DesignRequestsClient({
                 إعادة ترتيب التنفيذ
               </button>
             )}
+            <SearchField
+              value={query}
+              onChange={setQuery}
+              placeholder="ابحث بالعنوان أو الوصف أو الجمعية أو النوع..."
+              label="بحث في طلبات التصاميم"
+              className="w-full sm:w-72 [&_input]:h-10"
+            />
             <div className="relative">
               <Filter className="w-4 h-4 text-slate-400 dark:text-slate-500 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
               <Select
@@ -520,8 +584,23 @@ export default function DesignRequestsClient({
             <Palette className="w-8 h-8 text-slate-300 dark:text-slate-600" />
           </div>
           <p className="font-semibold text-slate-500 dark:text-slate-400" style={{ fontSize: "var(--dr-fs-title)" }}>
-            لا توجد طلبات هنا
+            {searchWords.length > 0 ? "لا نتائج في هذا التبويب" : "لا توجد طلبات هنا"}
           </p>
+          {elsewhere.length > 0 && (
+            <div className="flex flex-wrap items-center justify-center gap-2" style={{ fontSize: "var(--dr-fs-meta)" }}>
+              <span className="text-slate-500 dark:text-slate-400">وُجدت في:</span>
+              {elsewhere.map((e) => (
+                <button
+                  key={e.key}
+                  type="button"
+                  onClick={() => setTab(e.key as typeof tab)}
+                  className="h-8 px-3 rounded-lg border border-primary/30 bg-primary/5 font-semibold text-primary hover:bg-primary/10 dark:text-teal-300"
+                >
+                  {e.label} ({e.count})
+                </button>
+              ))}
+            </div>
+          )}
         </div>
       ) : (
         <div className={viewMode === "cards" ? "grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4" : "flex flex-col gap-3"}>

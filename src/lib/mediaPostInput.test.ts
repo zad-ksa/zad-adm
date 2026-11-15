@@ -1,6 +1,13 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { cleanMediaInput, dayValue, snapshotOfRow, type MediaPostFields } from "./mediaPostInput.ts";
+import {
+  MAX_ATTACHMENTS,
+  cleanMediaInput,
+  dayValue,
+  parseAttachments,
+  snapshotOfRow,
+  type MediaPostFields,
+} from "./mediaPostInput.ts";
 
 const GOOD: MediaPostFields = {
   scheduledOn: "2026-11-15",
@@ -71,4 +78,87 @@ test("اللقطةُ تكتب اليومَ نصّاً — فتُقارن بلا 
   });
   assert.equal(snapshot.scheduledOn, "2026-11-15");
   assert.equal(snapshot.scheduledAt, "09:05");
+});
+
+// ── المرفقات والبنود ───────────────────────────────────────────────────────
+
+test("البنود تقتطع، والفارغ منها لا شيء", () => {
+  const clean = data({ ...GOOD, title: "  حملة الشتاء  ", description: "  الوصف #زاد  " });
+  assert.equal(clean.title, "حملة الشتاء");
+  assert.equal(clean.description, "الوصف #زاد");
+  assert.equal(data({ ...GOOD, title: "   ", description: "" }).title, null);
+  assert.equal(data({ ...GOOD, title: "   ", description: "" }).description, null);
+});
+
+test("المرفق يقبل http(s) وحده — المرفوع منه والمكتوب", () => {
+  const ok = data({
+    ...GOOD,
+    attachments: [
+      { id: "1", kind: "LINK", url: " https://zad-co.sa/a " },
+      { id: "2", kind: "FILE", url: "https://cdn.zad/x.pdf", publicId: "x", name: "ملف.pdf" },
+    ],
+  });
+  assert.equal(ok.attachments.length, 2);
+  assert.equal(ok.attachments[0].url, "https://zad-co.sa/a");
+  assert.equal(ok.attachments[1].name, "ملف.pdf");
+
+  const bad = cleanMediaInput({
+    ...GOOD,
+    attachments: [{ id: "1", kind: "LINK", url: "javascript:alert(1)" }],
+  });
+  assert.ok("error" in bad);
+  assert.match(bad.error, /http/);
+});
+
+test("ولا يكرر رابط، ولا يزيد العدد على الحد", () => {
+  const twice = data({
+    ...GOOD,
+    attachments: [
+      { id: "1", kind: "LINK", url: "https://zad-co.sa/a" },
+      { id: "2", kind: "LINK", url: "https://zad-co.sa/a" },
+    ],
+  });
+  assert.equal(twice.attachments.length, 1);
+
+  const many = Array.from({ length: MAX_ATTACHMENTS + 1 }, (_, i) => ({
+    id: String(i),
+    kind: "LINK" as const,
+    url: `https://zad-co.sa/${i}`,
+  }));
+  const over = cleanMediaInput({ ...GOOD, attachments: many });
+  assert.ok("error" in over);
+  assert.match(over.error, new RegExp(String(MAX_ATTACHMENTS)));
+});
+
+test("وقراءة المرفقات من القاعدة تسقط ما لا رابط له", () => {
+  assert.deepEqual(parseAttachments(null), []);
+  assert.deepEqual(parseAttachments("نص"), []);
+  const read = parseAttachments([
+    { id: "1", kind: "FILE", url: "https://cdn.zad/x.pdf", publicId: "x" },
+    { id: "2", kind: "LINK" },
+    { url: "https://zad-co.sa/b" },
+  ]);
+  assert.equal(read.length, 2);
+  assert.equal(read[0].kind, "FILE");
+  // وما لا نوع له يقرأ رابطا: الرابط هو الأصل والملف استثناؤه.
+  assert.equal(read[1].kind, "LINK");
+  assert.equal(read[1].id, "https://zad-co.sa/b");
+});
+
+test("واللقطة تحمل البنود — فالتعديل فيها يظهر في السجل", () => {
+  const snapshot = snapshotOfRow({
+    title: "حملة",
+    content: "متن",
+    description: "وصف #زاد",
+    platforms: ["x"],
+    imageUrl: null,
+    linkUrl: null,
+    attachments: [{ id: "1", kind: "FILE", url: "https://cdn.zad/x.pdf", name: "ملف.pdf" }],
+    scheduledOn: new Date("2026-11-15T00:00:00.000Z"),
+    scheduledAt: null,
+  });
+  assert.equal(snapshot.title, "حملة");
+  assert.equal(snapshot.description, "وصف #زاد");
+  // والمرفق يكتب باسمه لا برابطه الطويل.
+  assert.deepEqual(snapshot.attachments, ["ملف.pdf"]);
 });

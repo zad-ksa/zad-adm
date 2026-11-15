@@ -27,6 +27,11 @@ import { mediaNotice, portalMediaLink } from "@/lib/mediaPlanNotices";
 import { notifyCharityMembers } from "@/lib/notifyInbox";
 import { logAudit } from "@/lib/auditLog";
 import { toISODate } from "@/lib/calendarGrid";
+import {
+  MEDIA_FIELDS_MISSING,
+  hasPostDetailColumns,
+  toMediaPostView,
+} from "@/lib/mediaPostFields";
 
 /**
  * أفعالُ الخطّة الإعلاميّة من جهة زاد.
@@ -49,17 +54,30 @@ async function requireMediaSession() {
   return session;
 }
 
+/**
+ * أعمدةُ البنود شرطٌ في كلِّ فعل: فعلٌ يُقبل ثمّ يُخفق في القاعدة أسوأُ من منعٍ
+ * يقول سببَه. ويُسأل مرّةً واحدةً في عمر العملية.
+ */
+async function missingFields(): Promise<string | null> {
+  return (await hasPostDetailColumns()) ? null : MEDIA_FIELDS_MISSING;
+}
+
 /** المنشورُ ومعه إذنُ الموظَّف فيه — أو رسالةُ منعٍ تُعرض كما هي. */
 async function loadPostForZad(postId: string) {
   const session = await requireMediaSession();
   if (!session) return { error: "غير مصرح" as const };
+  const missing = await missingFields();
+  if (missing) return { error: missing };
 
   const post = await prisma.mediaPost.findUnique({
     where: { id: postId },
     select: {
       id: true,
       charityId: true,
+      title: true,
       content: true,
+      description: true,
+      attachments: true,
       platforms: true,
       imageUrl: true,
       imagePublicId: true,
@@ -108,21 +126,8 @@ async function tellCharity(
   });
 }
 
-/** المنشورُ كما تقرؤه الشاشة — بلا كائنات `Date` ولا حقولٍ لا تُعرض. */
-export type MediaPostView = {
-  id: string;
-  scheduledOn: string;
-  scheduledAt: string | null;
-  content: string;
-  platforms: string[];
-  imageUrl: string | null;
-  imagePublicId: string | null;
-  linkUrl: string | null;
-  status: MediaStatus;
-  createdByName: string | null;
-  finalizedBy: string | null;
-  finalizedSide: string | null;
-};
+/** المنشورُ كما تقرؤه الشاشة — في العدة، فتقرؤه جهةُ الجمعية كذلك. */
+export type { MediaPostView } from "@/lib/mediaPostFields";
 
 export type MediaEventView = {
   id: string;
@@ -134,32 +139,18 @@ export type MediaEventView = {
   before: MediaSnapshot | null;
 };
 
-function toView(post: {
-  id: string;
-  scheduledOn: Date;
-  scheduledAt: string | null;
-  content: string;
-  platforms: string[];
-  imageUrl: string | null;
-  imagePublicId: string | null;
-  linkUrl: string | null;
-  status: string;
-  createdByName: string | null;
-  finalizedBy: string | null;
-  finalizedSide: string | null;
-}): MediaPostView {
-  return { ...post, scheduledOn: toISODate(post.scheduledOn), status: toStatus(post.status) };
-}
-
 const POST_FIELDS = {
   id: true,
   scheduledOn: true,
   scheduledAt: true,
+  title: true,
   content: true,
+  description: true,
   platforms: true,
   imageUrl: true,
   imagePublicId: true,
   linkUrl: true,
+  attachments: true,
   status: true,
   createdByName: true,
   finalizedBy: true,
@@ -175,6 +166,8 @@ const POST_FIELDS = {
 export async function listMediaPosts(charityId: string, fromISO: string, toISO: string) {
   const session = await requireMediaSession();
   if (!session) return { error: "غير مصرح" };
+  const missing = await missingFields();
+  if (missing) return { error: missing };
   if (!(await mayManageCharityMedia(session, charityId))) return { error: "لا صلاحية" };
 
   const from = dayValue(fromISO);
@@ -186,7 +179,7 @@ export async function listMediaPosts(charityId: string, fromISO: string, toISO: 
     orderBy: [{ scheduledOn: "asc" }, { scheduledAt: "asc" }],
     select: POST_FIELDS,
   });
-  return { posts: posts.map(toView) };
+  return { posts: posts.map(toMediaPostView) };
 }
 
 /** المنشورُ وسجلُّه — للوحِ التفاصيل ولعرض ما تغيَّر. */
@@ -213,7 +206,7 @@ export async function getMediaPostDetail(postId: string) {
   if (!post) return { error: "المنشور غير موجود" };
 
   return {
-    post: toView(post),
+    post: toMediaPostView(post),
     events: events.map<MediaEventView>((e) => ({
       id: e.id,
       kind: e.kind,
@@ -229,6 +222,8 @@ export async function getMediaPostDetail(postId: string) {
 export async function createMediaPost(input: MediaPostInput) {
   const session = await requireMediaSession();
   if (!session) return { error: "غير مصرح" };
+  const missing = await missingFields();
+  if (missing) return { error: missing };
   if (!(await mayManageCharityMedia(session, input.charityId))) {
     return { error: "لا صلاحية لك على الخطة الإعلامية لهذه الجمعية" };
   }

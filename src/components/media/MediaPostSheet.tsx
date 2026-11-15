@@ -2,7 +2,7 @@
 
 import { useRef, useState, useTransition } from "react";
 import Image from "next/image";
-import { Check, ImagePlus, Megaphone, X } from "lucide-react";
+import { Check, ImagePlus, Link2, Megaphone, Paperclip, UploadCloud, X } from "lucide-react";
 import { Note, Spinner, btn, cx, field } from "@/components/console/ui";
 import { Sheet, FooterStatus } from "@/components/console/overlays";
 import { notify } from "@/components/console/toastBus";
@@ -12,6 +12,8 @@ import DateField from "@/components/console/DateField";
 import TimeField from "@/components/console/TimeField";
 import { uploadFile } from "@/lib/clientUpload";
 import { ACCEPT_IMAGES } from "@/lib/uploadPurposes";
+import HashtagText from "@/components/console/HashtagText";
+import type { MediaAttachment } from "@/lib/mediaPostInput";
 import type { MediaPlatformView, MediaPost } from "./MediaCalendar";
 
 /**
@@ -29,11 +31,17 @@ import type { MediaPlatformView, MediaPost } from "./MediaCalendar";
 export type MediaPostDraft = {
   scheduledOn: string;
   scheduledAt: string | null;
+  /** عنوان التصميم. */
+  title: string | null;
+  /** نص التصميم — وهو ما يُعتمد. */
   content: string;
+  /** نص المنشور (الوصف) — والهاشتاقات تُكتب ضمنه. */
+  description: string | null;
   platforms: string[];
   imageUrl: string | null;
   imagePublicId: string | null;
   linkUrl: string | null;
+  attachments: MediaAttachment[];
 };
 
 export default function MediaPostSheet({
@@ -65,7 +73,16 @@ export default function MediaPostSheet({
   onClose: () => void;
   onSaved: () => void;
 }) {
+  const [titleText, setTitleText] = useState(post?.title ?? "");
   const [content, setContent] = useState(post?.content ?? "");
+  const [description, setDescription] = useState(post?.description ?? "");
+  const [files, setFiles] = useState<MediaAttachment[]>(() => post?.attachments ?? []);
+  // طريقةُ إضافة المرفق: رابطٌ يُكتب أو ملفٌّ يُرفع — ولا يُعرض الصندوقان معاً،
+  // فمن يرى حقلاً للرابط وحوضاً للرفع لا يعرف أيَّهما المطلوب.
+  const [attachMode, setAttachMode] = useState<"LINK" | "FILE" | null>(null);
+  const [linkDraft, setLinkDraft] = useState("");
+  const [attaching, setAttaching] = useState(false);
+  const attachRef = useRef<HTMLInputElement>(null);
   const [chosen, setChosen] = useState<string[]>(post?.platforms ?? []);
   const [date, setDate] = useState(post?.scheduledOn ?? day);
   const [time, setTime] = useState(post?.scheduledAt ?? "");
@@ -95,6 +112,44 @@ export default function MediaPostSheet({
     }
   };
 
+  /** مرفقٌ جديد — ولا يُكرَّر رابطٌ موجود. */
+  const addFile = (file: MediaAttachment) => {
+    setFiles((current) => (current.some((f) => f.url === file.url) ? current : [...current, file]));
+    setAttachMode(null);
+    setLinkDraft("");
+  };
+
+  const pickAttachment = async (chosen: File | undefined) => {
+    if (!chosen) return;
+    setAttaching(true);
+    setError(null);
+    try {
+      const uploaded = await uploadFile(chosen, "media_post");
+      addFile({
+        id: uploaded.publicId || uploaded.url,
+        kind: "FILE",
+        url: uploaded.url,
+        publicId: uploaded.publicId,
+        name: chosen.name,
+      });
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "تعذر رفع المرفق");
+    } finally {
+      setAttaching(false);
+    }
+  };
+
+  const addLink = () => {
+    const url = linkDraft.trim();
+    if (!url) return;
+    if (!/^https?:\/\//i.test(url)) {
+      setError("رابط المرفق يجب أن يبدأ بـ http أو https");
+      return;
+    }
+    setError(null);
+    addFile({ id: url, kind: "LINK", url, name: null });
+  };
+
   const onSubmit = () => {
     setError(null);
     start(async () => {
@@ -102,11 +157,14 @@ export default function MediaPostSheet({
         {
           scheduledOn: date,
           scheduledAt: time || null,
+          title: titleText.trim() || null,
           content,
+          description: description.trim() || null,
           platforms: chosen,
           imageUrl: image?.url ?? null,
           imagePublicId: image?.publicId ?? null,
           linkUrl: link || null,
+          attachments: files,
         },
         note
       );
@@ -143,15 +201,48 @@ export default function MediaPostSheet({
         {banner}
 
         <label className="block space-y-1.5">
-          <span className="text-meta font-medium text-slate-600 dark:text-slate-300">نص المنشور</span>
+          <span className="text-meta font-medium text-slate-600 dark:text-slate-300">عنوان التصميم</span>
+          <input
+            value={titleText}
+            onChange={(e) => setTitleText(e.target.value)}
+            placeholder="سطر قصير يُعرف به المنشور"
+            className={field}
+          />
+        </label>
+
+        <label className="block space-y-1.5">
+          <span className="text-meta font-medium text-slate-600 dark:text-slate-300">
+            نص التصميم <span className="text-slate-400">(للاعتماد)</span>
+          </span>
           <textarea
             value={content}
             onChange={(e) => setContent(e.target.value)}
-            rows={6}
+            rows={5}
             required
-            placeholder="اكتب نص المنشور كما سينشر…"
-            className={cx(field, "min-h-[8rem] resize-y leading-6")}
+            placeholder="النص الذي يظهر في التصميم…"
+            className={cx(field, "min-h-[7rem] resize-y leading-6")}
           />
+        </label>
+
+        {/* والهاشتاقات ضمن هذا النص لا في حقل لها: هكذا تُنسخ وتُلصق في المنصة،
+            وتُعرض بالأزرق حيث تُقرأ (HashtagText). */}
+        <label className="block space-y-1.5">
+          <span className="text-meta font-medium text-slate-600 dark:text-slate-300">
+            نص المنشور <span className="text-slate-400">(الوصف — والهاشتاقات ضمنه)</span>
+          </span>
+          <textarea
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            rows={5}
+            placeholder="الوصف كما يُنشر، ومعه الهاشتاقات: #زاد #تمكين"
+            className={cx(field, "min-h-[7rem] resize-y leading-6")}
+          />
+          {description.trim() && (
+            <HashtagText
+              text={description}
+              className="block rounded-md border border-slate-200 bg-slate-50 p-2 text-meta leading-6 text-slate-600 dark:border-slate-800 dark:bg-slate-800/40 dark:text-slate-300"
+            />
+          )}
         </label>
 
         <div className="grid gap-3 sm:grid-cols-2">
@@ -232,6 +323,117 @@ export default function MediaPostSheet({
                 اختيار صورة
               </button>
             </>
+          )}
+        </div>
+
+        {/*
+          المرفقات: رابطٌ يُكتب أو ملفٌّ يُرفع عبر منصّة زاد — وتُختار الطريقةُ
+          أوّلاً فيُفتح صندوقُها وحدَه. فحقلٌ للرابط وحوضٌ للرفع معروضان معاً
+          يجعلان المرفقَ سؤالاً: أيُّهما المطلوب؟
+        */}
+        <div className="space-y-2">
+          <span className="block text-meta font-medium text-slate-600 dark:text-slate-300">
+            المرفقات <span className="text-slate-400">(اختياري)</span>
+          </span>
+
+          {files.length > 0 && (
+            <ul className="space-y-1.5">
+              {files.map((file) => (
+                <li
+                  key={file.id}
+                  className="flex items-center gap-2 rounded-md border border-slate-200 px-2.5 py-2 dark:border-slate-800"
+                >
+                  {file.kind === "FILE" ? (
+                    <Paperclip className="size-3.5 shrink-0 text-slate-400" />
+                  ) : (
+                    <Link2 className="size-3.5 shrink-0 text-slate-400" />
+                  )}
+                  <a
+                    href={file.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    dir={file.name ? undefined : "ltr"}
+                    className="min-w-0 flex-1 truncate text-meta text-primary hover:underline"
+                  >
+                    {file.name || file.url}
+                  </a>
+                  <button
+                    type="button"
+                    onClick={() => setFiles((current) => current.filter((f) => f.id !== file.id))}
+                    aria-label={"إزالة " + (file.name || file.url)}
+                    className={cx(btn.ghost, "h-7 px-2")}
+                  >
+                    <X className="size-3.5" />
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+
+          {attachMode === null ? (
+            <div className="flex flex-wrap gap-2">
+              <button type="button" onClick={() => setAttachMode("LINK")} className={cx(btn.ghost, "h-9")}>
+                <Link2 className="size-4" />
+                إضافة رابط
+              </button>
+              <button type="button" onClick={() => setAttachMode("FILE")} className={cx(btn.ghost, "h-9")}>
+                <UploadCloud className="size-4" />
+                رفع ملف
+              </button>
+            </div>
+          ) : attachMode === "LINK" ? (
+            <div className="flex flex-wrap items-center gap-2">
+              <input
+                value={linkDraft}
+                onChange={(e) => setLinkDraft(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    addLink();
+                  }
+                }}
+                type="url"
+                inputMode="url"
+                dir="ltr"
+                autoFocus
+                placeholder="https://"
+                className={cx(field, "min-w-0 flex-1")}
+              />
+              <button type="button" onClick={addLink} className={cx(btn.secondary, "h-9")} disabled={!linkDraft.trim()}>
+                إضافة
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setAttachMode(null);
+                  setLinkDraft("");
+                }}
+                className={cx(btn.ghost, "h-9")}
+              >
+                إلغاء
+              </button>
+            </div>
+          ) : (
+            <div className="flex flex-wrap items-center gap-2">
+              <input
+                ref={attachRef}
+                type="file"
+                className="hidden"
+                onChange={(e) => void pickAttachment(e.target.files?.[0])}
+              />
+              <button
+                type="button"
+                onClick={() => attachRef.current?.click()}
+                className={cx(btn.secondary, "h-9")}
+                disabled={attaching}
+              >
+                {attaching ? <Spinner size={14} /> : <UploadCloud className="size-4" />}
+                اختيار ملف من الجهاز
+              </button>
+              <button type="button" onClick={() => setAttachMode(null)} className={cx(btn.ghost, "h-9")}>
+                إلغاء
+              </button>
+            </div>
           )}
         </div>
 

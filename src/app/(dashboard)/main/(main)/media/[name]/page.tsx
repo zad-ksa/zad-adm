@@ -12,6 +12,8 @@ import CharityAccounts from "./CharityAccounts";
 import CharitySwitcher from "./CharitySwitcher";
 import MediaPlanToggle from "./MediaPlanToggle";
 import { isMediaPlanEnabled } from "@/lib/mediaPlanToggle";
+import { MEDIA_FIELDS_MISSING, hasPostDetailColumns } from "@/lib/mediaPostFields";
+import { Note } from "@/components/console/ui";
 
 export const dynamic = "force-dynamic";
 
@@ -50,6 +52,21 @@ export default async function MediaPlanPage({ params }: { params: Promise<{ name
   const first = new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), 1));
   const from = new Date(first.getTime() - (first.getUTCDay() + 7) * 86_400_000);
   const to = new Date(from.getTime() + 55 * 86_400_000);
+
+  // وأعمدةُ البنود: حتى تُنشأ تقوم الصفحةُ تقول ما يلزم — ولا تسقط باستعلامٍ
+  // يسمّي عموداً لا وجود له.
+  if (!(await hasPostDetailColumns())) {
+    return (
+      <div className="space-y-4" dir="rtl">
+        <PageHeader
+          icon={<Megaphone className="size-5 text-primary" />}
+          title="الخطة الإعلامية"
+          description={charity.name}
+        />
+        <Note tone="warn">{MEDIA_FIELDS_MISSING}</Note>
+      </div>
+    );
+  }
 
   const [posts, platforms, accounts, planEnabled] = await Promise.all([
     prisma.mediaPost.findMany({

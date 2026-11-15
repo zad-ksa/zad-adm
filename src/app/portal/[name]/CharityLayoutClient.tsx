@@ -7,6 +7,8 @@ import { Menu } from "lucide-react";
 import DeveloperRoleSwitcher from "@/components/DeveloperRoleSwitcher";
 import { MAIL_UNREAD_EVENT } from "@/lib/mailBadge";
 import { getPortalUnreadCount } from "@/app/actions/charityMail";
+import PortalNotices from "./PortalNotices";
+import type { CharityNotice } from "@/app/actions/charityNotifications";
 
 export default function CharityLayoutClient({
   children,
@@ -21,6 +23,8 @@ export default function CharityLayoutClient({
   title,
   isAdmin = false,
   unreadMail = 0,
+  mediaWaiting = 0,
+  notices = { notices: [], unread: 0 },
 }: {
   children: React.ReactNode;
   charityName: string;
@@ -34,6 +38,10 @@ export default function CharityLayoutClient({
   title?: string;
   isAdmin?: boolean;
   unreadMail?: number;
+  /** ما ينتظر اعتمادَ الجمعية في الخطّة الإعلاميّة — عدّادُ التبويب. */
+  mediaWaiting?: number;
+  /** إشعاراتُ الحساب، مجلوبةً في الخادم فلا يَرِد الجرسُ فارغاً. */
+  notices?: { notices: CharityNotice[]; unread: number };
 }) {
   const pathname = usePathname();
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
@@ -82,10 +90,17 @@ export default function CharityLayoutClient({
         availableCharities={availableCharities}
         permissions={permissions}
         unreadMail={unread}
+        mediaWaiting={mediaWaiting}
         title={title}
       />
-      
+
       <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden relative">
+        {/* صفُّ الجرس في الحاسوب — صفٌّ خاصٌّ به لا قرصٌ عائمٌ فوق المحتوى:
+            العائمُ يغطّي ما تحته، فيُحجز له فراغٌ ميّتٌ في كل صفحة. */}
+        <div className="hidden lg:flex h-12 shrink-0 items-center justify-end px-5 border-b border-slate-200 dark:border-slate-800/80 bg-white/80 dark:bg-slate-900/60 backdrop-blur-lg z-30">
+          <PortalNotices initial={notices} />
+        </div>
+
         {/* Mobile Header (Sticky & Blur) */}
         <div className="lg:hidden sticky top-0 bg-white dark:bg-slate-800/80 backdrop-blur-lg border-b border-slate-200 dark:border-slate-700/80 h-16 flex items-center justify-between px-4 shrink-0 z-30 shadow-sm">
           <div className="flex items-center gap-3">
@@ -99,6 +114,7 @@ export default function CharityLayoutClient({
               {charityName}
             </span>
           </div>
+          <PortalNotices initial={notices} />
         </div>
         
         {/* Main Content Area */}

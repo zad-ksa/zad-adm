@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import {
   MEDIA_STATUS,
   allowedActions,
+  attentionMark,
   can,
   compareByTime,
   diffSnapshots,
@@ -154,4 +155,13 @@ test("مفتاحُ منصّةٍ جديدةٍ لا يدهس مفتاحاً قائ
 test("وحرفُ البديل أوّلُ حرفٍ لا أوّلُ بايت", () => {
   assert.equal(platformLetter("إنستغرام"), "إ");
   assert.equal(platformLetter("  "), "؟");
+});
+
+test("attentionMark: الوسمُ لمن ينتظره فعلٌ منه وحدَه", () => {
+  assert.equal(attentionMark(MEDIA_STATUS.PENDING_CHARITY, "CHARITY"), "للاعتماد");
+  assert.equal(attentionMark(MEDIA_STATUS.PENDING_CHARITY, "ZAD"), null);
+  assert.equal(attentionMark(MEDIA_STATUS.PENDING_ZAD, "ZAD"), "عُدِّل");
+  assert.equal(attentionMark(MEDIA_STATUS.PENDING_ZAD, "CHARITY"), null);
+  assert.equal(attentionMark(MEDIA_STATUS.FINAL, "ZAD"), null);
+  assert.equal(attentionMark(MEDIA_STATUS.FINAL, "CHARITY"), null);
 });

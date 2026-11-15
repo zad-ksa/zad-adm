@@ -8,8 +8,6 @@ import {
   MEDIA_STATUS,
   can,
   eventKind,
-  isSafeLink,
-  normalizeTime,
   nextStatus,
   platformKeyFrom,
   requiresNote,
@@ -18,6 +16,14 @@ import {
   type MediaSnapshot,
   type MediaStatus,
 } from "@/lib/mediaPlan";
+import {
+  cleanMediaInput as cleanInput,
+  dayValue,
+  snapshotOfRow as snapshotOf,
+  type MediaPostFields,
+} from "@/lib/mediaPostInput";
+import { mediaNotice, portalMediaLink } from "@/lib/mediaPlanNotices";
+import { notifyCharityMembers } from "@/lib/notifyInbox";
 import { toISODate } from "@/lib/calendarGrid";
 
 /**
@@ -33,45 +39,7 @@ import { toISODate } from "@/lib/calendarGrid";
  * للطرفين.
  */
 
-export type MediaPostInput = {
-  charityId: string;
-  /** «YYYY-MM-DD» */
-  scheduledOn: string;
-  /** «HH:MM» أو فراغ — الوقتُ اختياريّ. */
-  scheduledAt?: string | null;
-  content: string;
-  platforms: string[];
-  imageUrl?: string | null;
-  imagePublicId?: string | null;
-  linkUrl?: string | null;
-};
-
-const DAY = /^\d{4}-\d{2}-\d{2}$/;
-
-function dayValue(value: string): Date | null {
-  if (!DAY.test(value)) return null;
-  const day = new Date(`${value}T00:00:00.000Z`);
-  return Number.isNaN(day.getTime()) ? null : day;
-}
-
-/** اللقطةُ كما تُخزَّن في السجلّ وكما تُقارن. */
-function snapshotOf(post: {
-  content: string;
-  platforms: string[];
-  imageUrl: string | null;
-  linkUrl: string | null;
-  scheduledOn: Date;
-  scheduledAt: string | null;
-}): MediaSnapshot {
-  return {
-    content: post.content,
-    platforms: post.platforms,
-    imageUrl: post.imageUrl,
-    linkUrl: post.linkUrl,
-    scheduledOn: toISODate(post.scheduledOn),
-    scheduledAt: post.scheduledAt,
-  };
-}
+export type MediaPostInput = MediaPostFields & { charityId: string };
 
 async function requireMediaSession() {
   const session = await getSession();
@@ -112,31 +80,32 @@ function revalidateCharity(charityName: string) {
   revalidatePath(`/main/media/${encodeURIComponent(charityName)}`);
 }
 
-/** تنقيةُ المُدخَل المشترك بين الإنشاء والتعديل. */
-function cleanInput(input: MediaPostInput) {
-  const content = (input.content ?? "").trim();
-  if (!content) return { error: "نصُّ المنشور مطلوب" as const };
-
-  const day = dayValue(input.scheduledOn);
-  if (!day) return { error: "يوم النشر غير صحيح" as const };
-
-  const platforms = [...new Set((input.platforms ?? []).map((p) => p.trim()).filter(Boolean))];
-  if (platforms.length === 0) return { error: "اختر منصّةً واحدةً على الأقل" as const };
-
-  const link = (input.linkUrl ?? "").trim();
-  if (link && !isSafeLink(link)) return { error: "الرابط يجب أن يبدأ بـ http أو https" as const };
-
-  return {
-    data: {
-      content,
-      platforms,
-      scheduledOn: day,
-      scheduledAt: normalizeTime(input.scheduledAt),
-      linkUrl: link || null,
-      imageUrl: (input.imageUrl ?? "").trim() || null,
-      imagePublicId: (input.imagePublicId ?? "").trim() || null,
-    },
-  };
+/**
+ * إشعارُ الجمعية بما فعله زادٌ — بعد نجاح الفعل لا قبله.
+ *
+ * ويُرسل إلى من يرى التبويبَ في تلك الجمعية وحدَهم (`view_media_plan`)، لا إلى
+ * كلِّ عضوٍ فيها: إشعارٌ ينقُره صاحبُه فيُمنَع أسوأُ من لا إشعار.
+ */
+async function tellCharity(
+  kind: Parameters<typeof mediaNotice>[0],
+  charityId: string,
+  charityName: string,
+  day: Date | string,
+  actorName?: string | null,
+  note?: string | null
+) {
+  const notice = mediaNotice(kind, {
+    charityName,
+    day: typeof day === "string" ? day : toISODate(day),
+    actorName,
+    note,
+  });
+  if (!notice || notice.to !== "CHARITY") return;
+  await notifyCharityMembers(charityId, "view_media_plan", {
+    title: notice.title,
+    message: notice.message,
+    link: portalMediaLink(charityName),
+  });
 }
 
 /** المنشورُ كما تقرؤه الشاشة — بلا كائنات `Date` ولا حقولٍ لا تُعرض. */
@@ -292,6 +261,8 @@ export async function createMediaPost(input: MediaPostInput) {
     select: { id: true },
   });
 
+  await tellCharity("CREATED", input.charityId, charity.name, cleaned.data.scheduledOn, session.name);
+
   revalidateCharity(charity.name);
   return { success: true, id: post.id };
 }
@@ -314,7 +285,9 @@ export async function updateMediaPost(postId: string, input: MediaPostInput, not
     return { error: "اكتب سببَ تعديل منشورٍ معتمَد — يُعرض على الجمعية" };
   }
 
-  const cleaned = cleanInput({ ...input, charityId: post.charityId });
+  // و`charityId` المُرسَلُ مع المُدخَل لا يُقرأ هنا أصلاً: جمعيةُ المنشور صفُّه،
+  // والتعديلُ لا ينقله — فلا سبيل إلى نقلٍ بتغيير حقل.
+  const cleaned = cleanInput(input);
   if ("error" in cleaned) return { error: cleaned.error };
 
   const before = snapshotOf(post);
@@ -344,6 +317,16 @@ export async function updateMediaPost(postId: string, input: MediaPostInput, not
       },
     }),
   ]);
+
+  // عادَ إلى اعتماد الجمعية، فتُنبَّه بما صار إليه — وبسببه إن كان مُسبَّباً.
+  await tellCharity(
+    eventKind("EDIT", status, "ZAD"),
+    post.charityId,
+    post.charity.name,
+    cleaned.data.scheduledOn,
+    session.name,
+    reason
+  );
 
   revalidateCharity(post.charity.name);
   return { success: true };
@@ -424,6 +407,15 @@ async function decide(postId: string, action: Extract<MediaAction, "CERTIFY" | "
       },
     }),
   ]);
+
+  await tellCharity(
+    eventKind(action, status, "ZAD"),
+    post.charityId,
+    post.charity.name,
+    post.scheduledOn,
+    session.name,
+    reason
+  );
 
   revalidateCharity(post.charity.name);
   return { success: true };

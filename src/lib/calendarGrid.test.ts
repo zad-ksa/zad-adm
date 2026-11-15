@@ -12,6 +12,8 @@ import {
   shiftMonth,
   toISODate,
   WEEKDAY_INITIALS,
+  addDaysISO,
+  weekStartISO,
 } from "./calendarGrid.ts";
 
 test("الشبكةُ ستّةُ صفوفٍ × سبعةُ أيامٍ دائماً — فلا يقفز ما تحتها بتغيّر الشهر", () => {
@@ -85,4 +87,20 @@ test("التاريخُ الصالحُ يُعرَف، والشهرُ الذي ل�
   assert.equal(isISODate(""), false);
   assert.equal(isISODate(null), false);
   assert.equal(toISODate(new Date(Date.UTC(2026, 10, 9))), "2026-11-09");
+});
+
+test("addDaysISO: يعبُر الشهرَ والسنةَ بلا انزلاق", () => {
+  assert.equal(addDaysISO("2026-11-12", 7), "2026-11-19");
+  assert.equal(addDaysISO("2026-11-28", 7), "2026-12-05");
+  assert.equal(addDaysISO("2026-12-30", 7), "2027-01-06");
+  assert.equal(addDaysISO("2026-03-01", -1), "2026-02-28");
+  assert.equal(addDaysISO("2024-03-01", -1), "2024-02-29"); // سنةٌ كبيسة
+  assert.equal(addDaysISO("ليس تاريخاً", 1), "ليس تاريخاً");
+});
+
+test("weekStartISO: الأحدُ هو بدءُ الأسبوع", () => {
+  assert.equal(weekStartISO("2026-11-12"), "2026-11-08"); // الخميس → الأحد قبله
+  assert.equal(weekStartISO("2026-11-08"), "2026-11-08"); // الأحدُ نفسُه
+  assert.equal(weekStartISO("2026-11-14"), "2026-11-08"); // السبت → أحدُ أسبوعه
+  assert.equal(weekStartISO("2027-01-01"), "2026-12-27"); // يعبُر السنة
 });

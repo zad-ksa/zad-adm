@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { LogOut, Moon, Sun, User } from "lucide-react";
+import { Building2, LogOut, Moon, Sun, User } from "lucide-react";
 import { useTheme } from "next-themes";
 import { logout } from "@/app/actions/auth";
 import PortalNotices from "./PortalNotices";
@@ -24,17 +24,31 @@ import type { CharityNotice } from "@/app/actions/charityNotifications";
  */
 export default function PortalTopBar({
   charityName,
+  logoUrl,
   accountName,
   accountTitle,
   isOfficial,
+  canSwitchCharity = false,
+  showIdentity = false,
   notices,
   className,
 }: {
   charityName: string;
+  /** شعارُ الجمعية — يُعرض وسطَ الشريط مع اسمها. */
+  logoUrl?: string | null;
   accountName?: string | null;
   accountTitle?: string | null;
   /** حسابُ الجمعية الرسميُّ — يُكتب مسمّاه «حساب الجمعية» لا مسمّىً وظيفيّاً. */
   isOfficial?: boolean;
+  /**
+   * الحسابُ مرتبطٌ بأكثر من جمعية — فيُعرض «تبديل الجمعية» في قائمته.
+   *
+   * ومن له جمعيةٌ واحدةٌ لا يُعرض له: خيارٌ لا يؤدّي إلى شيءٍ يُشغل القائمة
+   * ويُوهم أنّ له جمعياتٍ أخرى.
+   */
+  canSwitchCharity?: boolean;
+  /** يُعرض شعارُ الجمعية واسمُها وسطَ الشريط — في الحاسوب وحدَه. */
+  showIdentity?: boolean;
   notices: { notices: CharityNotice[]; unread: number };
   className?: string;
 }) {
@@ -61,8 +75,8 @@ export default function PortalTopBar({
     };
   }, [open]);
 
-  return (
-    <div className={className ?? "flex items-center gap-2"}>
+  const actions = (
+    <div className="flex items-center gap-2">
       <PortalNotices initial={notices} />
 
       {/* الأيقونتان مرسومتان كلتاهما، وتُظهر إحداهما CSS بحسب المظهر الجاري —
@@ -120,6 +134,21 @@ export default function PortalTopBar({
               <User className="size-4 text-slate-400" />
               الملف الشخصي
             </Link>
+
+            {/* وتبديلُ الجمعية تحت الملف الشخصيّ — ولمن له أكثرُ من جمعيةٍ وحدَه.
+                و`/select-charity` تَسرد جمعياتِه وتكتب الجلسةَ على ما يختار. */}
+            {canSwitchCharity && (
+              <Link
+                href="/select-charity"
+                onClick={() => setOpen(false)}
+                role="menuitem"
+                className="flex items-center gap-2 rounded-lg px-3 py-2.5 text-caption font-semibold text-slate-700 outline-none transition hover:bg-slate-50 hover:text-primary focus-visible:ring-2 focus-visible:ring-primary/40 dark:text-slate-200 dark:hover:bg-slate-700/50"
+              >
+                <Building2 className="size-4 text-slate-400" />
+                تبديل الجمعية
+              </Link>
+            )}
+
             <div className="mx-2 my-1 h-px bg-slate-100 dark:bg-slate-700/50" />
             <form action={logout}>
               <button
@@ -134,6 +163,41 @@ export default function PortalTopBar({
           </div>
         )}
       </div>
+    </div>
+  );
+
+  // هُويّةُ الجمعية وسطَ الشريط: شعارُها واسمُها. وكانت في بطاقةٍ أعلى الشريط
+  // الجانبيّ، وهو موضعُ التبويبات لا موضعُ الهُويّة — فانتقلت إلى وسط الأعلى،
+  // وبقي الجانبيُّ للتنقّل وحدَه.
+  const identity = (
+    <div className="flex min-w-0 items-center gap-2.5">
+      {logoUrl ? (
+        // eslint-disable-next-line /next/no-img-element
+        <img
+          src={logoUrl}
+          alt=""
+          className="size-8 shrink-0 rounded-full bg-white object-contain ring-1 ring-slate-200 dark:bg-black dark:ring-slate-700"
+        />
+      ) : (
+        <span className="grid size-8 shrink-0 place-items-center rounded-full bg-primary/10 text-primary ring-1 ring-primary/20">
+          <Building2 className="size-4" />
+        </span>
+      )}
+      <span className="truncate text-body font-semibold text-slate-800 dark:text-slate-100" title={charityName}>
+        {charityName}
+      </span>
+    </div>
+  );
+
+  // وثلاثةُ أعمدةٍ لا صفٌّ واحد: العمودان الطرفيّان متساويان، فالهُويّةُ في
+  // الوسط حقيقةً لا تقريباً — ولو طال اسمُ الجمعية أو كثُرت الأزرار.
+  if (!showIdentity) return <div className={className ?? "flex items-center gap-2"}>{actions}</div>;
+
+  return (
+    <div className={className ?? "grid w-full grid-cols-[1fr_auto_1fr] items-center gap-2"}>
+      <span aria-hidden />
+      <div className="flex justify-center">{identity}</div>
+      <div className="flex justify-end">{actions}</div>
     </div>
   );
 }

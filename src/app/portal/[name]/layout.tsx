@@ -121,7 +121,6 @@ export default async function CharityLayout({
     <CharityLayoutClient
       charityName={decodedName}
       logoUrl={charity.logoUrl || null}
-      role={session.role}
       userType={session.userType}
       availableCharities={availableCharities}
       isDeveloper={session.isDeveloper}

@@ -14,7 +14,6 @@ export default function CharityLayoutClient({
   children,
   charityName,
   logoUrl,
-  role,
   userType,
   availableCharities = [],
   isDeveloper,
@@ -30,7 +29,6 @@ export default function CharityLayoutClient({
   children: React.ReactNode;
   charityName: string;
   logoUrl: string | null;
-  role?: string;
   userType?: string;
   availableCharities?: { id: string, name: string }[];
   isDeveloper?: boolean;
@@ -96,24 +94,32 @@ export default function CharityLayoutClient({
       */}
       <CharitySidebar
         charityName={charityName}
-        logoUrl={logoUrl} 
-        isOpen={isSidebarOpen} 
+        isOpen={isSidebarOpen}
         setIsOpen={setIsSidebarOpen}
-        role={role}
         userType={userType}
-        availableCharities={availableCharities}
         permissions={permissions}
         isOfficial={isOfficial}
         unreadMail={unread}
         mediaWaiting={mediaWaiting}
-        title={title}
       />
 
       <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden relative">
-        {/* صفُّ الجرس في الحاسوب — صفٌّ خاصٌّ به لا قرصٌ عائمٌ فوق المحتوى:
-            العائمُ يغطّي ما تحته، فيُحجز له فراغٌ ميّتٌ في كل صفحة. */}
-        <div className="hidden lg:flex h-12 shrink-0 items-center justify-end px-5 border-b border-slate-200 dark:border-slate-800/80 bg-white/80 dark:bg-slate-900/60 backdrop-blur-lg z-30">
-          <PortalTopBar charityName={charityName} accountName={accountName} accountTitle={title} isOfficial={isOfficial} notices={notices} />
+        {/* الشريطُ الأعلى في الحاسوب — صفٌّ خاصٌّ به لا قرصٌ عائمٌ فوق المحتوى:
+            العائمُ يغطّي ما تحته، فيُحجز له فراغٌ ميّتٌ في كل صفحة.
+
+            وعلوُّه `h-14` كعلوِّ ترويسة الشريط الجانبيّ — فيستقيم الخطُّ الفاصلُ
+            بينهما سطراً واحداً، كما في لوحة موظفي زاد. */}
+        <div className="hidden lg:flex h-14 shrink-0 items-center px-5 border-b border-slate-200 dark:border-slate-800/80 bg-white/80 dark:bg-slate-900/60 backdrop-blur-lg z-30">
+          <PortalTopBar
+            charityName={charityName}
+            logoUrl={logoUrl}
+            accountName={accountName}
+            accountTitle={title}
+            isOfficial={isOfficial}
+            canSwitchCharity={availableCharities.length > 1}
+            showIdentity
+            notices={notices}
+          />
         </div>
 
         {/* Mobile Header (Sticky & Blur) */}
@@ -129,7 +135,15 @@ export default function CharityLayoutClient({
               {charityName}
             </span>
           </div>
-          <PortalTopBar charityName={charityName} accountName={accountName} accountTitle={title} isOfficial={isOfficial} notices={notices} />
+          <PortalTopBar
+            charityName={charityName}
+            logoUrl={logoUrl}
+            accountName={accountName}
+            accountTitle={title}
+            isOfficial={isOfficial}
+            canSwitchCharity={availableCharities.length > 1}
+            notices={notices}
+          />
         </div>
         
         {/* Main Content Area */}

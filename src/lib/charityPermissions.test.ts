@@ -5,7 +5,9 @@ import {
   CHARITY_SERVICE_PERMISSIONS,
   CHARITY_USER_TITLES,
   GRANTABLE_CHARITY_PERMISSION_IDS,
+  OFFICIAL_ACCOUNT_LABEL,
   RETIRED_CHARITY_PERMISSION_IDS,
+  charityMemberLabel,
   charityPermissionGroups,
   charityPermissionLabel,
   charityPermissionsOfService,
@@ -155,4 +157,16 @@ test("الوسومُ عربيّةٌ، و«مدير النظام» صار «حس�
   for (const id of ALL_CHARITY_PERMISSION_IDS) {
     assert.ok(!/[A-Za-z_]/.test(charityPermissionLabel(id)), id);
   }
+});
+
+test("حسابُ الجمعية يُكتب مسمّاه «حساب الجمعية» ولو كان عمودُه FULL_TIME", () => {
+  assert.equal(charityMemberLabel(true, "FULL_TIME"), OFFICIAL_ACCOUNT_LABEL);
+  assert.equal(charityMemberLabel(true, "SYSTEM_ADMIN"), OFFICIAL_ACCOUNT_LABEL);
+  assert.equal(charityMemberLabel(true, null), OFFICIAL_ACCOUNT_LABEL);
+  // وغيرُه يُكتب مسمّاه كما هو.
+  assert.equal(charityMemberLabel(false, "FULL_TIME"), "موظف بدوام كامل");
+  assert.equal(charityMemberLabel(false, "CEO"), "مدير تنفيذي");
+  assert.equal(charityMemberLabel(false, null), "");
+  // وحسابٌ قديمٌ مسمّاه SYSTEM_ADMIN ولم يُعلَّم رسميّاً: يُقرأ وسمُه القديم.
+  assert.equal(charityMemberLabel(false, "SYSTEM_ADMIN"), OFFICIAL_ACCOUNT_LABEL);
 });

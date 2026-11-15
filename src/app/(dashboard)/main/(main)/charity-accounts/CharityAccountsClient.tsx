@@ -9,7 +9,7 @@ import {
   deleteCharityClientAccount,
   setCharityAccountAccess,
 } from "@/app/actions/charityAccounts";
-import { CHARITY_USER_TITLES, charityTitleLabel } from "@/lib/charityPermissions";
+import { CHARITY_USER_TITLES, charityMemberLabel } from "@/lib/charityPermissions";
 import { Dialog } from "@/components/console/Dialog";
 import { btn, cx } from "@/components/console/ui";
 import { ConfirmDialog } from "@/components/console/ConfirmDialog";
@@ -72,6 +72,14 @@ export default function CharityAccountsClient({
 
   // خدماتُ جمعيةٍ بعينها — تُقرأ من الخادم مع الصفحة، فالمُنتقي يَعرض ما تشمله
   // الجمعيةُ وحدَه.
+  // ومسمّى الحساب: حسابُ الجمعية يُكتب «حساب الجمعية» ولو كان عمودُه
+  // `FULL_TIME` — فهو ليس موظّفاً بدوامٍ كامل.
+  const memberLabelOf = (account: AccountRow) =>
+    charityMemberLabel(
+      (account.memberships ?? []).some((m) => m.isOfficial),
+      account.title
+    ) || "—";
+
   const servicesOf = (charityId: string) =>
     (charities.find((c: CharityRow) => c.id === charityId)?.services as string[] | undefined) ?? [];
 
@@ -319,14 +327,22 @@ footer={
 
                 <div>
                   <label className="block text-caption font-semibold text-slate-700 dark:text-slate-300 mb-1.5">المسمى الوظيفي</label>
-                  <Select
-                    variant="soft"
-                    value={form.title}
-                    onSelect={(v) => setForm({ ...form, title: v })}
-                    placeholder="اختر المسمى"
-                    options={titles.map(t => ({ value: t.value, label: t.label }))}
-                    className="w-full [&>button]:w-full [&>button]:justify-between"
-                  />
+                  {/* ولا مسمّىً وظيفيٌّ لحساب الجمعية: مسمّاه «حساب الجمعية»، وهو
+                      ليس موظّفاً بدوامٍ كامل ولا متطوّعاً. */}
+                  {form.isAdmin ? (
+                    <p className="rounded-xl border border-primary/20 bg-primary/[0.06] px-3 py-2.5 text-caption font-semibold text-primary dark:text-teal-400">
+                      حساب الجمعية
+                    </p>
+                  ) : (
+                    <Select
+                      variant="soft"
+                      value={form.title}
+                      onSelect={(v) => setForm({ ...form, title: v })}
+                      placeholder="اختر المسمى"
+                      options={titles.map(t => ({ value: t.value, label: t.label }))}
+                      className="w-full [&>button]:w-full [&>button]:justify-between"
+                    />
+                  )}
                 </div>
 
                 <div>
@@ -415,7 +431,7 @@ footer={
                   </td>
                   <td className={cx(tdClass, "text-caption font-semibold text-slate-800 dark:text-slate-200")}>{account.name}</td>
                   <td className={cx(tdClass, "text-caption font-semibold text-slate-600 dark:text-slate-400")}>
-                    {account.title ? charityTitleLabel(account.title) : "—"}
+                    {memberLabelOf(account)}
                   </td>
                   <td className={cx(tdClass, "text-caption font-semibold text-slate-600 dark:text-slate-400 text-left")} dir="ltr">{account.phone}</td>
                   <td className={cx(tdClass, "text-caption font-semibold text-slate-500 dark:text-slate-500")}>{new Date(account.createdAt).toLocaleDateString("en-GB")}</td>

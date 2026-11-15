@@ -20,7 +20,7 @@ import {
 import {
   charityPermissionGroups,
   CHARITY_USER_TITLES,
-  charityTitleLabel,
+  charityMemberLabel,
   sanitizeCharityPermissions,
 } from "@/lib/charityPermissions";
 import { normalizeSaudiPhone } from "@/lib/phone";
@@ -237,58 +237,19 @@ function PermissionEditor({
  * it is administrator-only, and the server refuses the same grant in
  * validateGrant regardless of what the client was shown.
  */
-function AdminToggle({
-  checked,
-  onChange,
-}: {
-  checked: boolean;
-  onChange: (next: boolean) => void;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={() => onChange(!checked)}
-      aria-pressed={checked}
-      style={fs.body}
-      className={`flex w-full items-start gap-3 rounded-xl px-4 py-3 text-right
-                  transition-[box-shadow,color,background-color] duration-300 ${
-                    checked
-                      ? "text-primary dark:text-teal-400 bg-primary/[0.06] dark:bg-teal-400/[0.06]"
-                      : "text-slate-600 dark:text-slate-300"
-                  }`}
-    >
-      <span
-        className={`mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded ${
-          checked ? "bg-primary dark:bg-teal-400" : "shadow-[inset_0_0_0_1px_rgb(148_163_184_/_.5)]"
-        }`}
-      >
-        {checked && <Check className="w-2 h-2 text-white" strokeWidth={4} />}
-      </span>
-      <span className="flex flex-col gap-1">
-        <span className="font-semibold flex items-center gap-1.5">
-          <ShieldCheck className="w-3.5 h-3.5" />
-          حساب الجمعية الرسمي
-        </span>
-        <span className="text-slate-400 dark:text-slate-500" style={fs.meta}>
-          يملك كل الصلاحيات داخل هذه الجمعية وحدها — بما يُضاف منها لاحقاً — وهو وحده
-          يمنح الصلاحيات والخدمات. لا يؤثر على أي جمعية أخرى يعمل بها الشخص نفسه.
-        </span>
-      </span>
-    </button>
-  );
-}
+// `AdminToggle` زال: علَمُ «حساب الجمعية» يُعيَّن من شاشة زادٍ وحدَها
+// (`/main/charity-accounts`)، فلا زرَّ له في البوّابة — ولا حتى لحساب الجمعية
+// نفسِه: إعطاؤه لشخصٍ آخر من داخل الجمعية نقلٌ لمفتاح البيت من غير صاحبه.
 
 export default function StaffManagerClient({
   charityId,
   currentUserId,
-  actorIsAdmin,
   grantablePermissions,
   charityServices,
   initialStaff,
 }: {
   charityId: string;
   currentUserId: string;
-  actorIsAdmin: boolean;
   grantablePermissions: string[];
   /** خدمات زاد المقدَّمة لهذه الجمعية — قائمة التفويض. */
   charityServices: string[];
@@ -778,22 +739,13 @@ export default function StaffManagerClient({
             )}
           </div>
 
-          {actorIsAdmin && (
-            <AdminToggle
-              checked={form.isAdmin}
-              onChange={(next) => setForm({ ...form, isAdmin: next })}
-            />
-          )}
-
           {/* الخدماتُ أوّلاً ثمّ صلاحيّاتُها تحتها: الصلاحيّةُ تتبع خدمةً، فترتيبُ
               العكسِ يَعرض ما لا يعمل. */}
-          {!form.isAdmin && (
-            <ServiceEditor
-              services={charityServices}
-              selected={form.services}
-              onToggle={(name) => setForm({ ...form, ...withService(form, name) })}
-            />
-          )}
+          <ServiceEditor
+            services={charityServices}
+            selected={form.services}
+            onToggle={(name) => setForm({ ...form, ...withService(form, name) })}
+          />
 
           <PermissionEditor
             selected={form.permissions}
@@ -835,7 +787,8 @@ export default function StaffManagerClient({
               const isSelf = member.id === currentUserId;
               // Only an administrator may touch another administrator, so a
               // manage_charity_users holder cannot unseat the people above them.
-              const locked = isSelf || (member.isAdmin && !actorIsAdmin);
+              // وحسابُ الجمعية مقفولٌ على الجميع هنا: يُدار من زاد.
+              const locked = isSelf || member.isAdmin;
               return (
                 <li
                   key={member.id}
@@ -870,7 +823,7 @@ export default function StaffManagerClient({
                       <span dir="ltr" className="font-mono tabular-nums">
                         {member.phone}
                       </span>
-                      <span>{charityTitleLabel(member.title)}</span>
+                      <span>{charityMemberLabel(member.isAdmin, member.title)}</span>
                       {!member.isAdmin && (
                         <span>
                           {member.services.length > 0
@@ -906,7 +859,13 @@ export default function StaffManagerClient({
                         setEditError(null);
                       }}
                       disabled={locked || busy || isPending}
-                      title={isSelf ? "لا يمكنك تعديل صلاحياتك بنفسك" : undefined}
+                      title={
+                        isSelf
+                          ? "لا يمكنك تعديل صلاحياتك بنفسك"
+                          : member.isAdmin
+                            ? "حساب الجمعية يُدار من زاد"
+                            : undefined
+                      }
                       className={ghostClass}
                       style={fs.meta}
                     >
@@ -915,6 +874,7 @@ export default function StaffManagerClient({
                     <button
                       onClick={() => toggleActive(member)}
                       disabled={locked || busy || isPending}
+                      title={member.isAdmin ? "حساب الجمعية يُدار من زاد" : undefined}
                       style={fs.meta}
                       className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl font-medium
                                   disabled:opacity-40 disabled:pointer-events-none
@@ -979,40 +939,21 @@ export default function StaffManagerClient({
                 />
               </Field>
 
-              {actorIsAdmin && (
-                <AdminToggle
-                  checked={editDraft.isAdmin}
-                  onChange={(next) => setEditDraft({ ...editDraft, isAdmin: next })}
-                />
-              )}
-
-              {/* An administrator is not offered a list to tick: the flag already
-                  carries every permission, including ones added later, so drawing
-                  checkboxes beside it would imply the two could disagree. */}
-              {editDraft.isAdmin ? (
-                <p
-                  className="rounded-xl px-4 py-3 leading-relaxed font-medium text-primary dark:text-teal-400 bg-primary/[0.06] dark:bg-teal-400/[0.06]"
-                  style={fs.body}
-                >
-                  حساب الجمعية يملك جميع الصلاحيات تلقائياً — بما يُضاف منها لاحقاً — ويُفوَّض بكل خدماتها.
-                </p>
-              ) : (
-                <>
-                  <ServiceEditor
-                    services={charityServices}
-                    selected={editDraft.services}
-                    onToggle={(name) => setEditDraft({ ...editDraft, ...withService(editDraft, name) })}
-                  />
-                  <PermissionEditor
-                    selected={editDraft.permissions}
-                    grantable={grantable}
-                    services={editDraft.services}
-                    onToggle={(id) =>
-                      setEditDraft({ ...editDraft, permissions: toggleIn(editDraft.permissions, id) })
-                    }
-                  />
-                </>
-              )}
+              {/* ولا علَمَ «حساب الجمعية» هنا: يُعيَّن من زادٍ وحدَها، فلا يُنقل من
+                  داخل الجمعية إلى شخصٍ آخر. وصفُّه مقفولٌ في القائمة أصلاً. */}
+              <ServiceEditor
+                services={charityServices}
+                selected={editDraft.services}
+                onToggle={(name) => setEditDraft({ ...editDraft, ...withService(editDraft, name) })}
+              />
+              <PermissionEditor
+                selected={editDraft.permissions}
+                grantable={grantable}
+                services={editDraft.services}
+                onToggle={(id) =>
+                  setEditDraft({ ...editDraft, permissions: toggleIn(editDraft.permissions, id) })
+                }
+              />
 
               {editError && (
                 <Banner tone="danger" icon={AlertTriangle}>

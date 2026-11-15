@@ -107,7 +107,6 @@ export default async function HrStaffPage({ params }: { params: Promise<{ name: 
       <StaffManagerClient
         charityId={charity.id}
         currentUserId={session.id}
-        actorIsAdmin={isOfficial}
         // The grantable set is computed on the SERVER and only used to render
         // the editor. The same rule is enforced again in the action, because a
         // client can send whatever it likes regardless of what it was shown.

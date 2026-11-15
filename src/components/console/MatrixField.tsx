@@ -137,7 +137,60 @@ export function MatrixField({
     <div>
       {hint && <p className="mb-2 text-meta text-slate-500 dark:text-slate-400">{hint}</p>}
 
-      <div className="overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-700">
+      {/*
+        **الهاتف: بطاقةٌ لكلِّ صفّ، لا جدولٌ يُمرَّر.**
+        فجدولٌ بخمسة أعمدةٍ على شاشةٍ عرضُها ٣٦٠ بكسلاً يُمرَّر يميناً ويساراً
+        لكلِّ خليّة، ومن مرّر فقد موضعَه. فالصفُّ هنا عنوانٌ وتحته معاييرُه
+        سطراً سطراً — وعددُ المعايير لا يُغيّر شيئاً، فيُزاد معيارٌ ويبقى
+        المعروضُ مقروءاً.
+      */}
+      <div className="space-y-2 sm:hidden">
+        {rows.map((row) => (
+          <div
+            key={row.id}
+            className="rounded-lg border border-slate-200 bg-white p-2.5 dark:border-slate-700 dark:bg-slate-900"
+          >
+            <p className="mb-2 text-body font-medium leading-snug text-slate-700 dark:text-slate-200">{row.text}</p>
+            <ul className="space-y-1.5">
+              {columns.map((column) => {
+                const key = cellKey(row.id, column.id);
+                const score = value[key];
+                const isOpen = anchor?.key === key;
+                return (
+                  <li key={column.id} className="flex items-center justify-between gap-2">
+                    <span className="min-w-0 flex-1 text-meta leading-snug text-slate-600 dark:text-slate-400">
+                      {column.text}
+                    </span>
+                    <button
+                      type="button"
+                      disabled={disabled}
+                      onClick={(event) => open(event, row.id, column.id)}
+                      onMouseDown={(event) => event.stopPropagation()}
+                      onKeyDown={(event) => onCellKeyDown(event, key)}
+                      aria-haspopup="menu"
+                      aria-expanded={isOpen}
+                      aria-label={`${row.text} — ${column.text}${score ? `: ${scoreText(Number(score))}` : ": لم يُقيَّم"}`}
+                      className={cx(
+                        "grid h-9 w-14 shrink-0 place-items-center rounded-md border text-body font-semibold transition-colors",
+                        "focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:outline-none",
+                        "disabled:pointer-events-none disabled:opacity-50",
+                        score
+                          ? "border-primary/30 bg-primary/10 text-primary dark:border-teal-500/30 dark:bg-teal-500/10 dark:text-teal-300"
+                          : "border-slate-200 bg-white text-slate-300 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-600",
+                        isOpen && "ring-2 ring-primary/40"
+                      )}
+                    >
+                      <span className={score ? MONO : undefined}>{score || "—"}</span>
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
+        ))}
+      </div>
+
+      <div className="hidden overflow-x-auto rounded-xl border border-slate-200 sm:block dark:border-slate-700">
         <table className="w-full border-collapse" aria-label={label}>
           <thead>
             <tr className="bg-slate-50 dark:bg-slate-800/60">

@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, use } from "react";
 import { notify } from "@/components/console/toastBus";
-import { Spinner } from "@/components/console/ui";
+import { Spinner, btn, cx, field } from "@/components/console/ui";
 import { MatrixField } from "@/components/console/MatrixField";
 import { ChoiceMatrixField } from "@/components/console/ChoiceMatrixField";
 import {
@@ -21,7 +21,7 @@ import {
 import { useRouter } from "next/navigation";
 import { createSurveyUploadTicket } from "@/app/actions/surveyUpload";
 import { uploadWithTicket } from "@/lib/clientUpload";
-import { UploadCloud, CheckCircle2, AlertCircle, X, Paperclip } from "lucide-react";
+import { UploadCloud, CheckCircle2, AlertCircle, Check, X, Paperclip } from "lucide-react";
 import ProgressBar from "@/components/ProgressBar";
 import DatePicker from "react-multi-date-picker";
 import arabic from "react-date-object/calendars/arabic";
@@ -81,12 +81,78 @@ function OtherText({
         placeholder={`اكتب ${option.text}...`}
         aria-label={`${option.text} — ${question.text}`}
         autoFocus
-        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 outline-none focus:border-primary/50 focus:bg-white transition-all text-sm"
+        className={field}
       />
       {question.isRequired && !(answers[key] || "").trim() && (
-        <p className="mt-1 text-xs font-bold text-amber-700">اكتبْ ما اخترتَ، فالخيارُ وحدَه لا يكفي.</p>
+        <p className="mt-1 text-caption font-semibold text-amber-700 dark:text-amber-400">اكتبْ ما اخترتَ، فالخيارُ وحدَه لا يكفي.</p>
       )}
     </div>
+  );
+}
+
+/**
+ * صفُّ خيارٍ — دائرةٌ للواحد ومربّعٌ للمتعدّد، بوسمِ العدة.
+ *
+ * والمدخَلُ `sr-only` والعلامةُ مرسومةٌ: مربّعُ المتصفّح الأصليُّ يختلف شكلُه
+ * بين متصفّحٍ وآخرَ ولا يقبل مقاساً، وهو أوّلُ ما يُرى في استبيانٍ كلُّه خيارات.
+ * ويبقى مدخلاً حقيقيّاً — فالأسهمُ وقارئُ الشاشة ولمسُ الوسم تعمل بلا كود.
+ */
+function Choice({
+  name,
+  multi,
+  checked,
+  onPick,
+  children,
+}: {
+  name: string;
+  multi?: boolean;
+  checked: boolean;
+  onPick: () => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <label
+      className={cx(
+        "flex cursor-pointer items-start gap-2.5 rounded-md border p-2.5 transition-colors",
+        checked
+          ? "border-primary/40 bg-primary/[0.06] dark:border-teal-500/40 dark:bg-teal-500/[0.08]"
+          : "border-slate-200 hover:bg-slate-50 dark:border-slate-800 dark:hover:bg-slate-800/50"
+      )}
+    >
+      <input
+        type={multi ? "checkbox" : "radio"}
+        name={name}
+        checked={checked}
+        onChange={onPick}
+        className="peer sr-only"
+      />
+      <span
+        aria-hidden
+        className={cx(
+          "mt-0.5 grid size-[1.125rem] shrink-0 place-items-center border transition-colors",
+          multi ? "rounded" : "rounded-full",
+          "peer-focus-visible:ring-2 peer-focus-visible:ring-primary/40",
+          checked
+            ? "border-primary bg-primary text-white dark:border-teal-500 dark:bg-teal-500"
+            : "border-slate-300 bg-white dark:border-slate-600 dark:bg-slate-900"
+        )}
+      >
+        {checked &&
+          (multi ? (
+            <Check className="size-3" strokeWidth={3} />
+          ) : (
+            <span className="size-2 rounded-full bg-white" />
+          ))}
+      </span>
+      <span
+        className={cx(
+          "min-w-0 text-body leading-6",
+          checked ? "font-medium text-slate-900 dark:text-slate-100" : "text-slate-700 dark:text-slate-300"
+        )}
+      >
+        {children}
+      </span>
+    </label>
   );
 }
 
@@ -158,21 +224,21 @@ export default function CustomSurveyPage({ params }: { params: Promise<{ id: str
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50">
-        <Spinner size={48} />
+      <div className="flex min-h-screen items-center justify-center bg-slate-50 dark:bg-slate-950">
+        <Spinner size={40} />
       </div>
     );
   }
 
   if (!survey || !survey.isActive) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50 p-4">
-        <div className="bg-white border border-slate-200 rounded-2xl p-10 max-w-md w-full text-center shadow-lg">
-          <div className="w-16 h-16 bg-red-100 text-red-500 rounded-full flex items-center justify-center mx-auto mb-4">
-            <AlertCircle className="w-8 h-8" />
+      <div className="flex min-h-screen items-center justify-center bg-slate-50 p-4 dark:bg-slate-950">
+        <div className="w-full max-w-md rounded-xl border border-slate-200 bg-white p-6 text-center shadow-sm sm:p-10 dark:border-slate-800 dark:bg-slate-900">
+          <div className="mx-auto mb-4 grid size-14 place-items-center rounded-full bg-red-100 text-red-500 dark:bg-red-500/15 dark:text-red-300">
+            <AlertCircle className="size-7" />
           </div>
-          <h1 className="text-2xl font-bold text-slate-800 mb-2">عذراً</h1>
-          <p className="text-slate-500">هذا الاستبيان غير متاح حالياً أو تم إيقافه.</p>
+          <h1 className="mb-2 text-section font-semibold text-slate-800 dark:text-slate-100">عذراً</h1>
+          <p className="text-body text-slate-500 dark:text-slate-400">هذا الاستبيان غير متاح حالياً أو تم إيقافه.</p>
         </div>
       </div>
     );
@@ -289,35 +355,38 @@ export default function CustomSurveyPage({ params }: { params: Promise<{ id: str
 
   if (isSuccess) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50 p-4">
-        <div className="bg-white border border-slate-200 rounded-2xl p-10 max-w-md w-full text-center shadow-lg animate-in fade-in zoom-in duration-500">
-          <div className="w-20 h-20 bg-emerald-100 text-emerald-500 rounded-full flex items-center justify-center mx-auto mb-6">
-            <CheckCircle2 className="w-10 h-10" />
+      <div className="flex min-h-screen items-center justify-center bg-slate-50 p-4 dark:bg-slate-950">
+        <div className="w-full max-w-md rounded-xl border border-slate-200 bg-white p-6 text-center shadow-sm animate-in fade-in zoom-in duration-500 sm:p-10 dark:border-slate-800 dark:bg-slate-900">
+          <div className="mx-auto mb-5 grid size-16 place-items-center rounded-full bg-emerald-100 text-emerald-600 dark:bg-emerald-500/15 dark:text-emerald-300">
+            <CheckCircle2 className="size-8" />
           </div>
-          <h1 className="text-2xl font-bold text-slate-800 mb-2">تم الإرسال بنجاح!</h1>
-          <p className="text-slate-500 mb-8">نشكركم على المشاركة في هذا الاستبيان وإتمام المطلوب.</p>
+          <h1 className="mb-2 text-section font-semibold text-slate-800 dark:text-slate-100">تم الإرسال بنجاح</h1>
+          <p className="text-body leading-6 text-slate-500 dark:text-slate-400">نشكركم على المشاركة في هذا الاستبيان وإتمام المطلوب.</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-slate-50">
-      <main className="flex-1 w-full max-w-3xl mx-auto px-4 py-12">
+    // وحشوُ الصفحة يضيق على الهاتف ويتّسع على الحاسوب: `py-12` على شاشةٍ طولُها
+    // ٦٤٠ بكسلاً تُذهب سُدسَها قبل أوّل سؤال.
+    <div className="min-h-screen flex flex-col bg-slate-50 dark:bg-slate-950">
+      <main className="flex-1 w-full max-w-3xl mx-auto px-3 sm:px-4 py-6 sm:py-12">
         {!hasAcceptedWelcome ? (
-          <div className="bg-white border border-slate-200 rounded-2xl p-10 shadow-sm animate-in fade-in duration-500">
-            <div className="w-48 h-48 mx-auto mb-6">
-              <img src="/assets/logos/لوجو زاد-01.svg" alt="زاد التنموية" className="w-full h-full object-contain" />
+          <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm animate-in fade-in duration-500 sm:p-10 dark:border-slate-800 dark:bg-slate-900">
+            <div className="mx-auto mb-6 size-32 sm:size-48">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/assets/logos/لوجو زاد-01.svg" alt="زاد التنموية" className="h-full w-full object-contain" />
             </div>
-            <h1 className="text-2xl font-black text-center text-primary mb-6">{survey.title}</h1>
-            <div className="text-slate-600 leading-relaxed text-center mb-10 text-lg">
+            <h1 className="mb-5 text-center text-page font-bold text-primary dark:text-teal-400">{survey.title}</h1>
+            <div className="mb-8 text-center text-body leading-7 text-slate-600 dark:text-slate-300">
               {survey.introText.split('\n').map((line, i) => (
                 <p key={i} className="mb-2">{line}</p>
               ))}
             </div>
             <button
               onClick={() => setHasAcceptedWelcome(true)}
-              className="w-full bg-primary text-white py-4 rounded-xl font-bold text-lg hover:bg-primary/95 transition-all shadow-lg"
+              className={cx(btn.primary, "h-11 w-full text-body")}
             >
               البدء الآن
             </button>
@@ -326,44 +395,48 @@ export default function CustomSurveyPage({ params }: { params: Promise<{ id: str
           <div className="animate-in fade-in duration-500">
             <ProgressBar current={currentSectionIndex + 1} total={survey.sections.length} />
 
-            <div className="mb-8 mt-6 bg-primary text-white p-6 rounded-2xl shadow-lg">
-              <h2 className="text-xl font-bold mb-2">{currentSection.title}</h2>
-              <p className="text-primary-foreground/80 text-sm">يرجى إتمام جميع الأسئلة المطلوبة</p>
+            <div className="mb-6 mt-5 rounded-xl bg-primary p-4 text-white shadow-sm sm:p-6">
+              <h2 className="mb-1 text-section font-semibold">{currentSection.title}</h2>
+              <p className="text-meta text-white/80">يرجى إتمام جميع الأسئلة المطلوبة</p>
             </div>
 
-            <div className="space-y-6">
+            <div className="space-y-4 sm:space-y-6">
               {currentSection.questions.map((question, index) => (
                 <div
                   key={question.id}
                   ref={index === 0 ? firstQuestionRef : undefined}
-                  className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm scroll-mt-6"
+                  className="scroll-mt-6 rounded-xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6 dark:border-slate-800 dark:bg-slate-900"
                 >
-                  <div className="flex gap-4">
-                    <div className="w-8 h-8 rounded-full bg-slate-100 text-slate-600 flex items-center justify-center font-bold shrink-0">
+                  <div className="flex gap-3 sm:gap-4">
+                    <div className="grid size-7 shrink-0 place-items-center rounded-full bg-slate-100 text-meta font-semibold text-slate-600 sm:size-8 dark:bg-slate-800 dark:text-slate-300">
                       {index + 1}
                     </div>
-                    <div className="flex-1">
-                      <h3 className="text-lg font-bold text-slate-800 mb-1">
+                    {/*
+                      **و`min-w-0` هي حلُّ «الجدولُ يخرج من إطار المربّع»**:
+                      عنصرُ flex عرضُه الأدنى `auto` — أي عرضُ محتواه — فجدولُ
+                      التقييم بمعاييره يدفع هذا العمودَ فيتجاوز البطاقة، ولا
+                      يعمل `overflow-x-auto` الذي في الجدول نفسِه لأنّه لا يجد
+                      حدّاً يُمرِّر داخله. وبها يُقبل الانضغاطُ فيُمرَّر الجدولُ
+                      داخل البطاقة أيّاً كان عددُ البنود.
+                    */}
+                    <div className="min-w-0 flex-1">
+                      <h3 className="mb-1 text-body font-semibold leading-6 text-slate-800 dark:text-slate-100">
                         {question.text}
-                        {question.isRequired && <span className="text-red-500 mr-1">*</span>}
+                        {question.isRequired && <span className="ms-1 text-red-500">*</span>}
                       </h3>
-                      
-                      <div className="mt-4">
+
+                      <div className="mt-3 sm:mt-4">
                         {question.type === "OPTIONS" ? (
-                          <div className="space-y-3">
+                          <div className="space-y-2">
                             {(question.options || []).map(opt => (
                               <div key={opt.id}>
-                                <label className="flex items-center gap-3 cursor-pointer p-3 border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors">
-                                  <input
-                                    type="radio"
-                                    name={question.id}
-                                    value={opt.id}
-                                    checked={answers[question.id] === opt.id}
-                                    onChange={() => setAnswers(prev => ({ ...prev, [question.id]: opt.id }))}
-                                    className="w-5 h-5 text-primary focus:ring-primary/20 cursor-pointer"
-                                  />
-                                  <span className="text-slate-700 font-medium">{opt.text}</span>
-                                </label>
+                                <Choice
+                                  name={question.id}
+                                  checked={answers[question.id] === opt.id}
+                                  onPick={() => setAnswers(prev => ({ ...prev, [question.id]: opt.id }))}
+                                >
+                                  {opt.text}
+                                </Choice>
                                 <OtherText
                                   question={question}
                                   option={opt}
@@ -375,7 +448,7 @@ export default function CustomSurveyPage({ params }: { params: Promise<{ id: str
                             ))}
                           </div>
                         ) : question.type === "MULTI_OPTIONS" ? (
-                          <div className="space-y-3">
+                          <div className="space-y-2">
                             {(question.options || []).map(opt => {
                               const currentSelected = selectedOptionIds(question, answers[question.id]);
                               const isChecked = currentSelected.includes(opt.id);
@@ -387,17 +460,9 @@ export default function CustomSurveyPage({ params }: { params: Promise<{ id: str
                               };
                               return (
                                 <div key={opt.id}>
-                                  <label className="flex items-center gap-3 cursor-pointer p-3 border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors">
-                                    <input
-                                      type="checkbox"
-                                      name={question.id}
-                                      value={opt.id}
-                                      checked={isChecked}
-                                      onChange={handleToggle}
-                                      className="w-5 h-5 rounded text-primary focus:ring-primary/20 cursor-pointer"
-                                    />
-                                    <span className="text-slate-700 font-medium">{opt.text}</span>
-                                  </label>
+                                  <Choice multi name={question.id} checked={isChecked} onPick={handleToggle}>
+                                    {opt.text}
+                                  </Choice>
                                   <OtherText
                                     question={question}
                                     option={opt}
@@ -427,12 +492,12 @@ export default function CustomSurveyPage({ params }: { params: Promise<{ id: str
                                 })
                               }
                             />
-                            <div className="flex flex-wrap items-center justify-between gap-2 text-sm">
-                              <span className="text-slate-500 font-medium">
+                            <div className="flex flex-wrap items-center justify-between gap-2">
+                              <span className="text-meta text-slate-500 dark:text-slate-400">
                                 تمّ الاختيار في {matrixFilledCount(question, answers)} من {matrixCellCount(question)} صف
                               </span>
                               {question.isRequired && matrixFilledCount(question, answers) > 0 && choiceMatrixMissingRows(question, answers).length > 0 && (
-                                <span className="text-amber-700 bg-amber-50 border border-amber-200 rounded-xl px-3 py-1.5 font-bold">
+                                <span className="rounded-md border border-amber-200 bg-amber-50 px-2.5 py-1 text-caption font-semibold text-amber-700 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-300">
                                   بقي: {choiceMatrixMissingRows(question, answers).map(r => r.text).join("، ")}
                                 </span>
                               )}
@@ -458,45 +523,54 @@ export default function CustomSurveyPage({ params }: { params: Promise<{ id: str
                                 })
                               }
                             />
-                            <div className="flex flex-wrap items-center justify-between gap-2 text-sm">
-                              <span className="text-slate-500 font-medium">
+                            <div className="flex flex-wrap items-center justify-between gap-2">
+                              <span className="text-meta text-slate-500 dark:text-slate-400">
                                 المُقيَّم: {matrixFilledCount(question, answers)} من {matrixCellCount(question)} خليّة
                               </span>
                               {matrixPartialRows(question, answers).length > 0 && (
-                                <span className="text-amber-700 bg-amber-50 border border-amber-200 rounded-xl px-3 py-1.5 font-bold">
-                                  أكملوا تقييمَ: {matrixPartialRows(question, answers).map(r => r.text).join("، ")} — إمّا كلُّ
-                                  المعايير أو لا شيء.
+                                <span className="rounded-md border border-amber-200 bg-amber-50 px-2.5 py-1 text-caption font-semibold text-amber-700 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-300">
+                                  أكملوا تقييمَ: {matrixPartialRows(question, answers).map(r => r.text).join("، ")} — إمّا كلُّ المعايير أو لا شيء.
                                 </span>
                               )}
                             </div>
                           </div>
                         ) : question.type === "YES_NO" ? (
                           <div>
-                            <div className="flex gap-4">
-                              <label className={`flex-1 text-center py-3 rounded-xl border-2 cursor-pointer transition-all ${answers[question.id] === 'yes' ? 'border-primary bg-primary/5 text-primary' : 'border-slate-200 text-slate-500 hover:bg-slate-50'}`}>
+                            <div className="flex gap-2">
+                              <label className={cx(
+                                  "flex-1 cursor-pointer rounded-md border py-2.5 text-center text-body font-medium transition-colors",
+                                  answers[question.id] === "yes"
+                                    ? "border-primary bg-primary/[0.06] text-primary dark:border-teal-500 dark:bg-teal-500/10 dark:text-teal-300"
+                                    : "border-slate-200 text-slate-500 hover:bg-slate-50 dark:border-slate-800 dark:hover:bg-slate-800/50"
+                                )}>
                                 <input type="radio" name={question.id} value="yes" className="hidden" onChange={() => setAnswers(prev => ({ ...prev, [question.id]: 'yes' }))} />
-                                <span className="font-bold">نعم</span>
+                                <span>نعم</span>
                               </label>
-                              <label className={`flex-1 text-center py-3 rounded-xl border-2 cursor-pointer transition-all ${answers[question.id] === 'no' ? 'border-primary bg-primary/5 text-primary' : 'border-slate-200 text-slate-500 hover:bg-slate-50'}`}>
+                              <label className={cx(
+                                  "flex-1 cursor-pointer rounded-md border py-2.5 text-center text-body font-medium transition-colors",
+                                  answers[question.id] === "no"
+                                    ? "border-primary bg-primary/[0.06] text-primary dark:border-teal-500 dark:bg-teal-500/10 dark:text-teal-300"
+                                    : "border-slate-200 text-slate-500 hover:bg-slate-50 dark:border-slate-800 dark:hover:bg-slate-800/50"
+                                )}>
                                 <input type="radio" name={question.id} value="no" className="hidden" onChange={() => setAnswers(prev => ({ ...prev, [question.id]: 'no' }))} />
-                                <span className="font-bold">لا</span>
+                                <span>لا</span>
                               </label>
                             </div>
 
                             {answers[question.id] === (question.followUpOn ?? 'yes') && question.followUpQuestions && question.followUpQuestions.length > 0 && (
-                              <div className="mt-4 space-y-3 border-r-4 border-primary/20 pr-4">
+                              <div className="mt-3 space-y-3 border-e-2 border-primary/20 pe-3">
                                 {question.followUpQuestions.map(followUp => (
                                   <div key={followUp.id}>
-                                    <label className="block text-sm font-bold text-slate-600 mb-1.5">
+                                    <label className="mb-1.5 block text-meta font-medium text-slate-600 dark:text-slate-300">
                                       {followUp.text}
-                                      {followUp.isRequired && <span className="text-red-500 mr-1">*</span>}
+                                      {followUp.isRequired && <span className="ms-1 text-red-500">*</span>}
                                     </label>
                                     <textarea
                                       value={answers[followUp.id] || ""}
                                       onChange={(e) => setAnswers(prev => ({ ...prev, [followUp.id]: e.target.value }))}
                                       placeholder="اكتب إجابتك هنا..."
                                       rows={2}
-                                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 outline-none focus:border-primary/50 focus:bg-white transition-all resize-none text-sm"
+                                      className={cx(field, "h-auto resize-y py-2 leading-6")}
                                     />
                                   </div>
                                 ))}
@@ -513,7 +587,9 @@ export default function CustomSurveyPage({ params }: { params: Promise<{ id: str
                               className="teal"
                               calendarPosition="bottom-right"
                               containerClassName="w-full"
-                              inputClass="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 font-medium outline-none focus:border-primary focus:bg-white transition-all text-slate-800"
+                              // ومحدِّدُ التاريخ مكتبةٌ خارجيّةٌ تأخذ صفَّ أصنافٍ نصّاً، فيُمرَّر إليها
+                              // وسمُ الحقل نفسُه الذي في العدة.
+                              inputClass={cx(field, "h-10")}
                               placeholder="اختر التاريخ الهجري..."
                             />
                           </div>
@@ -522,9 +598,9 @@ export default function CustomSurveyPage({ params }: { params: Promise<{ id: str
                             {(attachments[question.id] || []).length > 0 && (
                               <div className="space-y-2">
                                 {(attachments[question.id] || []).map((url, i) => (
-                                  <div key={url} className="flex items-center gap-2 bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-xl px-4 py-2.5">
+                                  <div key={url} className="flex items-center gap-2 rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2 text-emerald-700 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-300">
                                     <Paperclip className="w-4 h-4 shrink-0" />
-                                    <a href={url} target="_blank" rel="noopener noreferrer" className="flex-1 text-sm font-bold truncate hover:underline">
+                                    <a href={url} target="_blank" rel="noopener noreferrer" className="min-w-0 flex-1 truncate text-meta font-medium hover:underline">
                                       مرفق {i + 1}
                                     </a>
                                     <button type="button" onClick={() => handleRemoveAttachment(question.id, url)} className="text-emerald-600 hover:text-red-500 transition-colors shrink-0">
@@ -534,19 +610,19 @@ export default function CustomSurveyPage({ params }: { params: Promise<{ id: str
                                 ))}
                               </div>
                             )}
-                            <label className="flex flex-col items-center justify-center gap-3 border-2 border-dashed rounded-2xl p-8 cursor-pointer transition-all border-slate-300 hover:border-primary/50 hover:bg-primary/5 text-slate-500 hover:text-primary">
+                            <label className="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-lg border border-dashed border-slate-300 p-5 text-slate-500 transition-colors hover:border-primary/50 hover:bg-primary/5 hover:text-primary sm:p-8 dark:border-slate-700">
                               {uploadingFiles[question.id] ? (
-                                <div className="flex flex-col items-center gap-2 text-primary font-bold">
+                                <div className="flex flex-col items-center gap-2 text-meta font-medium text-primary">
                                   <Spinner size={32} />
                                   <span>جاري رفع الملفات...</span>
                                 </div>
                               ) : (
                                 <div className="flex flex-col items-center gap-2">
-                                  <UploadCloud className="w-10 h-10 text-slate-400 animate-bounce duration-1000" />
-                                  <span className="font-bold text-slate-700">
+                                  <UploadCloud className="size-8 text-slate-400" />
+                                  <span className="text-body font-medium text-slate-700 dark:text-slate-200">
                                     {(attachments[question.id] || []).length > 0 ? "انقر هنا لإضافة مرفقات أخرى" : "انقر هنا لرفع الملف المطلوب"}
                                   </span>
-                                  <span className="text-xs text-slate-400">يدعم الصور والمستندات (PDF, Word) - يمكن اختيار أكثر من ملف</span>
+                                  <span className="text-center text-caption text-slate-400">يدعم الصور والمستندات (PDF و Word) — ويمكن اختيار أكثر من ملف</span>
                                   <input type="file" multiple className="hidden" onChange={(e) => handleFileUpload(e, question.id)} />
                                 </div>
                               )}
@@ -558,7 +634,7 @@ export default function CustomSurveyPage({ params }: { params: Promise<{ id: str
                             onChange={(e) => setAnswers(prev => ({ ...prev, [question.id]: e.target.value }))}
                             placeholder="اكتب إجابتك هنا..."
                             rows={3}
-                            className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 outline-none focus:border-primary/50 focus:bg-white transition-all resize-none"
+                            className={cx(field, "h-auto resize-y py-2 leading-6")}
                           />
                         )}
                       </div>
@@ -572,9 +648,9 @@ export default function CustomSurveyPage({ params }: { params: Promise<{ id: str
                           {(attachments[question.id] || []).length > 0 && (
                             <div className="space-y-2">
                               {(attachments[question.id] || []).map((url, i) => (
-                                <div key={url} className="flex items-center gap-2 bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-xl px-4 py-2.5">
+                                <div key={url} className="flex items-center gap-2 rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2 text-emerald-700 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-300">
                                   <Paperclip className="w-4 h-4 shrink-0" />
-                                  <a href={url} target="_blank" rel="noopener noreferrer" className="flex-1 text-sm font-bold truncate hover:underline">
+                                  <a href={url} target="_blank" rel="noopener noreferrer" className="min-w-0 flex-1 truncate text-meta font-medium hover:underline">
                                     مرفق {i + 1}
                                   </a>
                                   <button type="button" onClick={() => handleRemoveAttachment(question.id, url)} className="text-emerald-600 hover:text-red-500 transition-colors shrink-0">
@@ -584,9 +660,9 @@ export default function CustomSurveyPage({ params }: { params: Promise<{ id: str
                               ))}
                             </div>
                           )}
-                          <label className="flex items-center justify-center gap-2 border-2 border-dashed rounded-xl p-6 cursor-pointer transition-colors border-slate-300 hover:border-primary/50 hover:bg-primary/5 text-slate-500 hover:text-primary">
+                          <label className="flex cursor-pointer flex-wrap items-center justify-center gap-2 rounded-lg border border-dashed border-slate-300 p-4 text-meta text-slate-500 transition-colors hover:border-primary/50 hover:bg-primary/5 hover:text-primary dark:border-slate-700">
                             {uploadingFiles[question.id] ? (
-                              <div className="flex items-center gap-2 text-primary font-bold">
+                              <div className="flex items-center gap-2 text-meta font-medium text-primary">
                                 <Spinner size={20} /> جاري الرفع...
                               </div>
                             ) : (
@@ -605,13 +681,20 @@ export default function CustomSurveyPage({ params }: { params: Promise<{ id: str
               ))}
             </div>
 
-            <div className="mt-8 flex justify-between items-center pb-12">
+            {/*
+              التنقّلُ بين المحاور: على الهاتف زرّان بعرض الشاشة و«التالي» أعلاهما
+              (`flex-col-reverse`) — فهو المقصودُ في تسعٍ من عشر، ويكون تحت
+              الإبهام. وعلى الحاسوب صفٌّ: السابقُ يميناً والتاليُ يساراً.
+            */}
+            <div className="mt-6 flex flex-col-reverse gap-2 pb-10 sm:mt-8 sm:flex-row sm:items-center sm:justify-between">
               <button
                 onClick={handlePrev}
                 disabled={currentSectionIndex === 0}
-                className={`px-6 py-3 rounded-xl font-bold transition-colors ${
-                  currentSectionIndex === 0 ? "opacity-0 pointer-events-none" : "bg-white border border-slate-200 text-slate-600 hover:bg-slate-50"
-                }`}
+                className={cx(
+                  btn.secondary,
+                  "h-11 w-full text-body sm:w-auto",
+                  currentSectionIndex === 0 && "hidden sm:inline-flex sm:opacity-0 sm:pointer-events-none"
+                )}
               >
                 المحور السابق
               </button>
@@ -619,11 +702,9 @@ export default function CustomSurveyPage({ params }: { params: Promise<{ id: str
               <button
                 onClick={handleNext}
                 disabled={!allCurrentRequiredAnswered || isSubmitting || Object.values(uploadingFiles).some(Boolean)}
-                className={`px-8 py-3 rounded-xl font-bold text-white transition-colors flex items-center justify-center gap-2 ${
-                  allCurrentRequiredAnswered && !isSubmitting ? "bg-primary hover:bg-primary/95" : "bg-slate-200 text-slate-400 cursor-not-allowed"
-                }`}
+                className={cx(btn.primary, "h-11 w-full text-body sm:w-auto sm:px-6")}
               >
-                {isSubmitting && <Spinner size={20} tone="onPrimary" />}
+                {isSubmitting && <Spinner size={18} tone="onPrimary" />}
                 {isLastSection ? "إنهاء وإرسال" : "المحور التالي"}
               </button>
             </div>

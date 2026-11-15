@@ -2,7 +2,6 @@ import { NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
 import { hasPermission } from "@/lib/permissions";
 import {
-  SERVICE_LINKED_CHARITY_PERMISSION_IDS,
   effectiveCharityPermissions,
   hasCharityPermission,
 } from "@/lib/charityPermissions";
@@ -118,14 +117,15 @@ export async function requireCharityMembership(charityId: string) {
   // charity they serve untouched.
   if (!link || !link.isActive) throw new AuthError(UNAUTHORIZED_MESSAGE, 403);
 
-  // `isAdmin` comes from the link, so administrator standing is scoped to this
-  // charity. Reading it from the account (as the old title check did) made one
-  // charity's promotion apply everywhere the person was a member.
+  // `isAdmin` في القاعدة علامةٌ على شيءٍ واحدٍ بعد اليوم: **حسابُ الجمعية
+  // الرسميُّ** الذي تُنشئه زادٌ عند التعاقد — لا «مديرٌ يرى كلَّ شيء». ويُسمّى
+  // هنا باسمه كي لا يُقرأ على معناه القديم، وهو مقروءٌ من صفِّ العضويّة فيبقى
+  // لكلِّ جمعيةٍ حسابُها.
   return {
     session,
     membershipId: link.id,
     permissions: link.permissions as string[],
-    isAdmin: link.isAdmin,
+    isOfficial: link.isAdmin,
     services: link.services.map((s) => s.serviceName),
   };
 }
@@ -142,47 +142,36 @@ export async function requireCharityMembership(charityId: string) {
  * Call this inside every server action and every RSC page, not only in the
  * sidebar: hiding a nav item is cosmetic, the URL stays typeable.
  */
-/**
- * ربطُ تبويبات البوّابة بالخدمات، كما يُحرَّر عند زاد.
- *
- * وموضعُها هنا لا في `portalAccess`: الصفحاتُ تقرؤها من هناك، والأفعالُ
- * تحتاجها من هنا — و`portalAccess` يستورد هذا الملفَّ، فلو كانت هناك لدار
- * الاستيراد. وتُصدَّر منه كما كانت ليبقى مُنادوها على حالهم.
- */
-export async function charityPermissionLinks() {
-  return prisma.permissionServiceLink.findMany({
-    where: { permissionId: { in: SERVICE_LINKED_CHARITY_PERMISSION_IDS } },
-    select: { permissionId: true, serviceName: true },
-  });
-}
 
 /**
- * عضويّةٌ مع **الصلاحيّةِ الفعليّة** — المخزّنةُ بعد تطبيق قاعدة الربط.
+ * عضويّةٌ مع **الصلاحيّةِ الفعليّة** — وهي الجوابُ الوحيدُ عن «ما يستطيع؟».
  *
- * وهي الموضعُ الذي كان ناقصاً: `requireCharityMembership` تُرجع `services`
- * ولا تستعملها، فتبويبٌ مربوطٌ بخدمةٍ يُفتح للعضو المفوَّض — لأنّ الصفحةَ
- * تحسبه بـ`effectiveCharityPermissions` — ثمّ يرفضه الفعلُ، لأنّه يقرأ
- * المصفوفةَ المخزّنةَ وحدَها، وهي **لا تحمل** تبويبات الخدمات أصلاً
- * (`validateGrant` يُسقطها عند كل حفظ). فالنتيجةُ أسوأُ من منعٍ صريح: نموذجٌ
- * يُملأ ثمّ يُرَدّ.
+ * وتُحسب في `effectiveCharityPermissions`: حسابُ الجمعية يُوسَّع إلى كلِّ
+ * الصلاحيات، وصلاحيّةُ خدمةٍ تخمد ما لم تكن الخدمةُ مفوَّضة. فلا يسأل أحدٌ بعدها
+ * «هل هو الحسابُ الرسميّ؟» — وهذا ما كان مكسوراً: الصفةُ تُفحص في موضعين فتُنسى
+ * في أحدهما.
  */
 export async function requireCharityEffective(charityId: string) {
   const membership = await requireCharityMembership(charityId);
-  const links = await charityPermissionLinks();
   return {
     ...membership,
-    effective: effectiveCharityPermissions(membership.permissions, membership.services, links),
+    effective: effectiveCharityPermissions(
+      membership.permissions,
+      membership.services,
+      membership.isOfficial
+    ),
   };
 }
 
 export async function requireCharityPermission(charityId: string, permission: string) {
-  const { session, permissions, effective, isAdmin } = await requireCharityEffective(charityId);
-  if (!hasCharityPermission(isAdmin, effective, permission)) {
+  const { session, permissions, effective, isOfficial, services } =
+    await requireCharityEffective(charityId);
+  if (!hasCharityPermission(effective, permission)) {
     throw new AuthError(UNAUTHORIZED_MESSAGE, 403);
   }
   // و`permissions` تبقى المخزّنةَ كما كانت لمن يعرضها أو يحفظها: الفعليّةُ
   // للسؤال «هل يجوز؟»، والمخزّنةُ هي ما يُكتب في الصفّ.
-  return { session, permissions, effective, isAdmin };
+  return { session, permissions, effective, isOfficial, services };
 }
 
 /** Converts a guard failure into a JSON response for API route handlers. */

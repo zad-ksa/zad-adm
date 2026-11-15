@@ -63,12 +63,15 @@ export default function PortalMediaClient({
   today,
   initialPosts,
   platforms,
+  canEdit,
 }: {
   charityId: string;
   charityName: string;
   today: string;
   initialPosts: RawMediaPost[];
   platforms: MediaPlatformView[];
+  /** «تحرير الخطة الإعلامية» — وبغيرها اطّلاعٌ محض. */
+  canEdit: boolean;
 }) {
   const [view, chooseView] = useStoredChoice<ViewMode>(VIEW_KEY, "month", VIEW_MODES);
   const [anchor, setAnchor] = useState(today);
@@ -154,7 +157,7 @@ export default function PortalMediaClient({
         />
 
         <div className="flex flex-wrap items-center gap-2">
-          {waiting > 0 && <Badge tone="warn">{waiting} منشورٌ ينتظر اعتمادَكم</Badge>}
+          {canEdit && waiting > 0 && <Badge tone="warn">{waiting} منشورٌ ينتظر اعتمادَكم</Badge>}
           <Segmented
             label="هيئة العرض"
             value={view}
@@ -227,6 +230,7 @@ export default function PortalMediaClient({
 
       {detailId && (
         <PortalDetailSheet
+          canEdit={canEdit}
           postId={detailId}
           platformName={platformName}
           marksOf={marksOf}
@@ -245,6 +249,7 @@ export default function PortalMediaClient({
 // ── لوحُ التفاصيل: المتنُ من العدة، والفعلُ اعتمادٌ أو تعديل ────────────────
 
 function PortalDetailSheet({
+  canEdit,
   postId,
   platformName,
   marksOf,
@@ -252,6 +257,7 @@ function PortalDetailSheet({
   onEdit,
   onChanged,
 }: {
+  canEdit: boolean;
   postId: string;
   platformName: (key: string) => string;
   marksOf: (keys: string[]) => MediaPlatformView[];
@@ -310,7 +316,10 @@ function PortalDetailSheet({
     });
   };
 
-  const mine = post ? can("APPROVE", post.status, "CHARITY") : false;
+  // والفعلُ يلزمه الأمران: جوازُه في حالة المنشور، وصلاحيّةُ التحرير. فمن
+  // يطّلع وحدَه لا يُعرض له زرٌّ يُرَدُّ عنه.
+  const mayApprove = canEdit && !!post && can("APPROVE", post.status, "CHARITY");
+  const mayEdit = canEdit && !!post && can("EDIT", post.status, "CHARITY");
 
   return (
     <Sheet
@@ -324,13 +333,13 @@ function PortalDetailSheet({
           <button type="button" onClick={onClose} className={btn.ghost}>
             إغلاق
           </button>
-          {post && can("EDIT", post.status, "CHARITY") && (
+          {mayEdit && post && (
             <button type="button" onClick={() => onEdit(post)} className={cx(btn.ghost, "h-9")}>
               <Pencil className="size-3.5" />
               تعديل
             </button>
           )}
-          {mine && (
+          {mayApprove && (
             <button type="button" onClick={() => void approve()} className={btn.primary} disabled={pending}>
               {pending ? <Spinner size={14} /> : <Check className="size-4" />}
               اعتماد المنشور
@@ -347,7 +356,9 @@ function PortalDetailSheet({
         <MediaPostDetail post={post} events={events} side="CHARITY" platformName={platformName} marksOf={marksOf}>
           {post.status === MEDIA_STATUS.PENDING_CHARITY && (
             <Note tone="warn">
-              ينتظر اعتمادَكم: اعتمِدوه كما هو، أو عدّلوه فيُرفع تعديلُكم إلى زادٍ ليُعمِّده.
+              {canEdit
+                ? "ينتظر اعتمادَكم: اعتمِدوه كما هو، أو عدّلوه فيُرفع تعديلُكم إلى زادٍ ليُعمِّده."
+                : "ينتظر اعتمادَ الجمعية — والاعتمادُ لمن يحمل «تحرير الخطة الإعلامية»."}
             </Note>
           )}
           {post.status === MEDIA_STATUS.PENDING_ZAD && (

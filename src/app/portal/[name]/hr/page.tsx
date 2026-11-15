@@ -22,7 +22,7 @@ export async function generateMetadata({
 
 export default async function HrStaffPage({ params }: { params: Promise<{ name: string }> }) {
   const { name } = await params;
-  const { charity, session, permissions, isAdmin, can } = await resolveCharityPortal(name);
+  const { charity, session, isOfficial, can } = await resolveCharityPortal(name);
 
   // Someone who can only record their own attendance lands on the check-in
   // screen instead of an empty "not allowed" page — that IS their HR page.
@@ -107,13 +107,13 @@ export default async function HrStaffPage({ params }: { params: Promise<{ name: 
       <StaffManagerClient
         charityId={charity.id}
         currentUserId={session.id}
-        actorIsAdmin={isAdmin}
+        actorIsAdmin={isOfficial}
         // The grantable set is computed on the SERVER and only used to render
         // the editor. The same rule is enforced again in the action, because a
         // client can send whatever it likes regardless of what it was shown.
-        grantablePermissions={grantableCharityPermissions(isAdmin, permissions)}
-        // خدمات زاد المقدَّمة لهذه الجمعية: منها يُفوَّض العضو، ومن التفويض
-        // تُشتقّ تبويبات البوابة المربوطة بخدمات.
+        grantablePermissions={grantableCharityPermissions(isOfficial)}
+        // خدمات زاد المقدَّمة لهذه الجمعية: منها يُفوَّض العضو، وتحت كلِّ خدمةٍ
+        // مختارةٍ تُعرض صلاحيّاتُها.
         charityServices={charityServices}
         initialStaff={staff}
       />

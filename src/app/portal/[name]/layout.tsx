@@ -5,7 +5,6 @@ import { prisma } from "@/lib/db";
 import { getSession } from "@/lib/auth";
 import SetEmailBanner from "@/components/SetEmailBanner";
 import { effectiveCharityPermissions } from "@/lib/charityPermissions";
-import { portalPermissionLinks } from "@/lib/portalAccess";
 import { listCharityNotices } from "@/app/actions/charityNotifications";
 
 export default async function CharityLayout({
@@ -72,17 +71,15 @@ export default async function CharityLayout({
   // the user is browsing a different one of their charities.
   const membership = user?.charities.find((c) => c.charityId === charity.id);
 
-  // **الشريطُ يُعرض من الصلاحيات الفعليّة لا المخزّنة.**
-  //
-  // فتبويباتُ البوابة تُنال بتفويض الخدمة لا بمُنتقٍ، والحفظُ يُسقطها من
-  // المصفوفة المخزّنة عن قصد. فكان الموظَّفُ الجديد يُفوَّض بخدمات جمعيته
-  // ويبقى شريطُه فارغاً، بينما الصفحاتُ تقبله لو كتب رابطَها — والقدماءُ
-  // يحملون القيمَ القديمةَ في مصفوفتهم فيرون، فيُحسب العطبُ في المنح وهو
-  // في العرض. والقاعدةُ الآن واحدةٌ يقرؤها هذا والصفحاتُ معاً.
+  // **الشريطُ يُعرض من الصلاحيات الفعليّة لا المخزّنة** — والقاعدةُ في
+  // `effectiveCharityPermissions` وحدَها: حسابُ الجمعية يُوسَّع إلى كلِّ
+  // الصلاحيات، وصلاحيّةُ خدمةٍ تخمد ما لم تكن الخدمةُ مفوَّضة. وكانت تُحسب هنا
+  // وتُحسب في الشريط بقاعدةٍ أخرى، فافترق المعروضُ عن المسموح في الاتّجاهين.
+  const isOfficial = membership?.isAdmin ?? false;
   const effectivePermissions = effectiveCharityPermissions(
     (membership?.permissions as string[] | undefined) ?? [],
     membership?.services.map((s) => s.serviceName) ?? [],
-    await portalPermissionLinks()
+    isOfficial
   );
 
   // Same reminder as the Zad dashboard, pointing at the portal's own screen.
@@ -100,14 +97,14 @@ export default async function CharityLayout({
   });
 
   // عدّادُ الخطّة الإعلاميّة: ما ينتظر اعتمادَ الجمعية — وهو «التنبيهُ على
-  // التبويب». ولمن يرى التبويبَ وحدَه: لا يُحسب لمن لا يُفتح له.
+  // التبويب». ولمن يعتمد وحدَه: التقويمُ يراه كلُّ عضوٍ اطّلاعاً، فعدٌّ على
+  // تبويبٍ لا يستطيع صاحبُه فعلَ شيءٍ به تنبيهٌ بلا فعل.
   //
   // **ومحروسٌ بـtry**: هذا التخطيطُ يحمل كلَّ صفحةٍ في البوّابة، فاستعلامٌ
   // يُخفق — جدولٌ لم يُنشأ بعد — يُسقط البوّابةَ كلَّها على كلِّ جمعية. فالصفرُ
   // أصدقُ من صفحةِ خطأ، ويُكتب الأثرُ في السجلّ.
-  const seesMedia = (membership?.isAdmin ?? false) || effectivePermissions.includes("view_media_plan");
   let mediaWaiting = 0;
-  if (seesMedia) {
+  if (effectivePermissions.includes("edit_media_plan")) {
     try {
       mediaWaiting = await prisma.mediaPost.count({
         where: { charityId: charity.id, status: "PENDING_CHARITY" },
@@ -132,7 +129,7 @@ export default async function CharityLayout({
       permissions={effectivePermissions}
       title={session.title}
       accountName={session.name}
-      isAdmin={membership?.isAdmin ?? false}
+      isOfficial={isOfficial}
       unreadMail={unreadMail}
       mediaWaiting={mediaWaiting}
       notices={notices}

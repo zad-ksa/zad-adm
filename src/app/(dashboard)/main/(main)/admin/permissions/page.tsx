@@ -11,7 +11,11 @@ import {
   effectivePermissions,
   sanitizePermissions,
 } from "@/lib/permissions";
-import { CHARITY_PAGE_PERMISSIONS } from "@/lib/charityPermissions";
+import {
+  CHARITY_SERVICE_PERMISSIONS,
+  effectiveCharityPermissions,
+  hasCharityPermission,
+} from "@/lib/charityPermissions";
 import { consoleFontClass } from "@/components/console/fonts";
 import PermissionsAdminClient from "./PermissionsAdminClient";
 import { PERMISSIONS_TABS, type PermissionsTab } from "./types";
@@ -166,15 +170,22 @@ export default async function PermissionsAdminPage({
     viaBundles[id] = bundles.filter((b) => b.permissions.includes(id)).map((b) => b.name);
   }
 
-  for (const permission of CHARITY_PAGE_PERMISSIONS) {
-    const needed = linkedServices[permission.id] ?? [];
+  // صلاحيّاتُ جهة الجمعيات: خدمتُها مثبَّتةٌ في الكتالوج لا في جدول الربط،
+  // وحاملوها يُحسبون بالقاعدة نفسِها التي تحكم البوّابة — `effectiveCharityPermissions`
+  // — فلا يُعرض هنا حاملٌ ترفضه الصفحةُ هناك.
+  for (const permission of CHARITY_SERVICE_PERMISSIONS) {
+    if (permission.service) linkedServices[permission.id] = [permission.service];
     holders[permission.id] = memberships
-      .filter((m) => {
-        if (m.isAdmin) return true;
-        if (needed.length === 0) return m.permissions.includes(permission.id);
-        const delegated = new Set(m.services.map((s) => s.serviceName));
-        return needed.some((name) => delegated.has(name));
-      })
+      .filter((m) =>
+        hasCharityPermission(
+          effectiveCharityPermissions(
+            m.permissions as string[],
+            m.services.map((s) => s.serviceName),
+            m.isAdmin
+          ),
+          permission.id
+        )
+      )
       .map((m) => `${m.user.name} — ${m.charity.name}`);
     viaBundles[permission.id] = [];
   }
@@ -189,7 +200,7 @@ export default async function PermissionsAdminPage({
         services={services}
         serviceNames={serviceNames}
         linkedServices={linkedServices}
-        charityPermissions={CHARITY_PAGE_PERMISSIONS}
+        charityPermissions={CHARITY_SERVICE_PERMISSIONS}
         canManageEmployees={hasPermission(session.role, session.permissions || [], "manage_employees")}
         employees={scopes.map(({ employee: e, permissions, services: svc }) => ({
           id: e.id,

@@ -3,29 +3,58 @@
 import { useState, useTransition } from "react";
 import { PageHeader, theadRowClass, thClass, tbodyClass, tdClass, tableFrameClass } from "@/components/console/layout";
 import Select from "@/components/console/Select";
-import { Plus, Trash2, ShieldAlert, CheckCircle2, AlertCircle, Building2 } from "lucide-react";
-import { addCharityClientAccount, deleteCharityClientAccount } from "@/app/actions/charityAccounts";
+import { Plus, Trash2, ShieldAlert, CheckCircle2, AlertCircle, Building2, KeyRound } from "lucide-react";
 import {
-  CHARITY_PERMISSION_GROUPS,
-  ALL_CHARITY_PERMISSION_IDS,
-  CHARITY_USER_TITLES,
-  charityTitleLabel,
-} from "@/lib/charityPermissions";
+  addCharityClientAccount,
+  deleteCharityClientAccount,
+  setCharityAccountAccess,
+} from "@/app/actions/charityAccounts";
+import { CHARITY_USER_TITLES, charityTitleLabel } from "@/lib/charityPermissions";
 import { Dialog } from "@/components/console/Dialog";
 import { btn, cx } from "@/components/console/ui";
 import { ConfirmDialog } from "@/components/console/ConfirmDialog";
+import AccessPicker from "./AccessPicker";
 
 // المسمّياتُ ووسومُها في `lib/charityPermissions` — كانت هنا نسخةٌ ثانيةٌ منها،
 // وفيها «بداوم» مكانَ «بدوام».
 const titles = CHARITY_USER_TITLES.map((t) => ({ value: t.id, label: t.label }));
 
-export default function CharityAccountsClient({ charities, accounts: initialAccounts }: { charities: any[], accounts: any[] }) {
+/** جمعيةٌ ومعها خدماتُها — ومن الخدمات تُشتقّ الصلاحيّاتُ المعروضة. */
+type CharityRow = { id: string; name: string; services: string[] };
+
+/** عضويّةُ حسابٍ في جمعية: وصولُه فيها وحدَها. */
+type Membership = {
+  charityId: string;
+  charityName: string;
+  isOfficial: boolean;
+  isActive: boolean;
+  permissions: string[];
+  services: string[];
+};
+
+type AccountRow = {
+  id: string;
+  name: string;
+  phone: string;
+  title: string;
+  charityNames: string[];
+  memberships: Membership[];
+  createdAt: string;
+};
+
+export default function CharityAccountsClient({
+  charities,
+  accounts: initialAccounts,
+}: {
+  charities: CharityRow[];
+  accounts: AccountRow[];
+}) {
   const [accounts, setAccounts] = useState(initialAccounts);
   const [showModal, setShowModal] = useState(false);
   const [isPending, startTransition] = useTransition();
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
-  const [accountToDelete, setAccountToDelete] = useState<any | null>(null);
+  const [accountToDelete, setAccountToDelete] = useState<AccountRow | null>(null);
 
   const [form, setForm] = useState({
     name: "",
@@ -38,7 +67,93 @@ export default function CharityAccountsClient({ charities, accounts: initialAcco
     charityIds: [] as string[],
     isAdmin: false,
     permissions: [] as string[],
+    services: [] as string[],
   });
+
+  // خدماتُ جمعيةٍ بعينها — تُقرأ من الخادم مع الصفحة، فالمُنتقي يَعرض ما تشمله
+  // الجمعيةُ وحدَه.
+  const servicesOf = (charityId: string) =>
+    (charities.find((c: CharityRow) => c.id === charityId)?.services as string[] | undefined) ?? [];
+
+  /**
+   * لوحُ «الخدمات والصلاحيات» لحسابٍ في جمعيةٍ بعينها.
+   *
+   * ولمَ بجمعيةٍ بعينها: الحسابُ قد يخدم جمعيتين، ولكلٍّ خدماتُها وصلاحيّاتُها
+   * في صفِّ عضويّتها. فلوحٌ يجمعهما يكتب في إحداهما ما قُصد للأخرى.
+   */
+  const [access, setAccess] = useState<{
+    account: AccountRow;
+    charityId: string;
+    isOfficial: boolean;
+    permissions: string[];
+    services: string[];
+  } | null>(null);
+
+  const openAccess = (account: AccountRow) => {
+    const first = (account.memberships ?? [])[0];
+    if (!first) return;
+    setAccess({
+      account,
+      charityId: first.charityId,
+      isOfficial: first.isOfficial,
+      permissions: first.permissions ?? [],
+      services: first.services ?? [],
+    });
+  };
+
+  /** تبديلُ الجمعية داخل اللوح: تُقرأ قيمُ عضويّتها، لا تُنقل قيمُ الأخرى. */
+  const switchAccessCharity = (charityId: string) => {
+    if (!access) return;
+    const row = (access.account.memberships ?? []).find((m: Membership) => m.charityId === charityId);
+    setAccess({
+      account: access.account,
+      charityId,
+      isOfficial: row?.isOfficial ?? false,
+      permissions: row?.permissions ?? [],
+      services: row?.services ?? [],
+    });
+  };
+
+  const saveAccess = () => {
+    if (!access) return;
+    setErrorMsg(null);
+    startTransition(async () => {
+      const res = await setCharityAccountAccess({
+        accountId: access.account.id,
+        charityId: access.charityId,
+        isOfficial: access.isOfficial,
+        permissions: access.permissions,
+        services: access.services,
+      });
+      if (!res.success) {
+        setErrorMsg(res.error || "تعذّر حفظ الصلاحيات");
+        return;
+      }
+      // والمعروضُ يُحدَّث من القيم المرسَلة: الخادمُ قَبِلها كما هي، ومن رفضها
+      // لم يُحفظ شيءٌ أصلاً.
+      setAccounts((prev: AccountRow[]) =>
+        prev.map((a) =>
+          a.id !== access.account.id
+            ? a
+            : {
+                ...a,
+                memberships: (a.memberships ?? []).map((m: Membership) =>
+                  m.charityId !== access.charityId
+                    ? m
+                    : {
+                        ...m,
+                        isOfficial: access.isOfficial,
+                        permissions: access.isOfficial ? [] : access.permissions,
+                        services: access.isOfficial ? servicesOf(access.charityId) : access.services,
+                      }
+                ),
+              }
+        )
+      );
+      setSuccessMsg("حُفظت الخدمات والصلاحيات");
+      setAccess(null);
+    });
+  };
 
 
 
@@ -243,87 +358,33 @@ footer={
                       className="w-4 h-4 mt-0.5 rounded text-primary focus:ring-primary focus:ring-offset-0 border-slate-300"
                     />
                     <span>
-                      <span className="block text-caption font-semibold text-slate-700 dark:text-slate-300">مدير للجمعيات المختارة</span>
+                      <span className="block text-caption font-semibold text-slate-700 dark:text-slate-300">حساب الجمعية الرسمي</span>
                       <span className="block text-caption text-slate-500 dark:text-slate-400 mt-0.5">
-                        يملك كل الصلاحيات داخلها ويستطيع إدارة حساباتها. لكل جمعية مديرها؛ لا بد من مدير واحد على الأقل لكل جمعية.
+                        الحساب الذي تُنشئه زاد للجمعية: يحمل كل الصلاحيات — بما يُضاف منها لاحقاً — وهو وحده يمنح الصلاحيات والخدمات لبقية حسابات الجمعية. ولكل جمعية حسابها.
                       </span>
                     </span>
                   </label>
                 </div>
 
-                {/* What the account may do. An administrator is not shown a list
-                    to tick: the flag already carries every permission, and
-                    drawing checkboxes beside it would suggest the two could
-                    disagree. */}
-                <div>
-                  <label className="block text-caption font-semibold text-slate-700 dark:text-slate-300 mb-2">
-                    الصلاحيات داخل الجمعية
-                  </label>
-
-                  {form.isAdmin ? (
-                    <p className="text-caption text-primary dark:text-teal-400 bg-primary/[0.06] dark:bg-teal-400/[0.06] rounded-xl p-3 leading-relaxed font-semibold">
-                      مدير الجمعية يملك جميع الصلاحيات تلقائياً — بما يُضاف منها لاحقاً.
-                    </p>
-                  ) : (
-                    <div className="space-y-3">
-                      {CHARITY_PERMISSION_GROUPS.map((group) => (
-                        <div key={group.title}>
-                          <p className="text-caption font-semibold text-slate-400 dark:text-slate-500 mb-1.5">
-                            {group.title}
-                          </p>
-                          <div className="grid sm:grid-cols-2 gap-1.5">
-                            {group.permissions.map((permission) => {
-                              const checked = form.permissions.includes(permission.id);
-                              return (
-                                <label
-                                  key={permission.id}
-                                  className={`flex items-start gap-2 p-2.5 rounded-xl border cursor-pointer transition-colors text-caption font-semibold ${
-                                    checked
-                                      ? "border-primary/40 bg-primary/[0.06] text-primary dark:text-teal-400"
-                                      : "border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:border-slate-300 dark:hover:border-slate-600"
-                                  }`}
-                                >
-                                  <input
-                                    type="checkbox"
-                                    checked={checked}
-                                    onChange={() =>
-                                      setForm({
-                                        ...form,
-                                        permissions: checked
-                                          ? form.permissions.filter((x) => x !== permission.id)
-                                          : [...form.permissions, permission.id],
-                                      })
-                                    }
-                                    className="w-3.5 h-3.5 mt-0.5 rounded text-primary focus:ring-primary focus:ring-offset-0 border-slate-300"
-                                  />
-                                  <span>{permission.label}</span>
-                                </label>
-                              );
-                            })}
-                          </div>
-                        </div>
-                      ))}
-
-                      <button
-                        type="button"
-                        onClick={() =>
-                          setForm({
-                            ...form,
-                            permissions:
-                              form.permissions.length === ALL_CHARITY_PERMISSION_IDS.length
-                                ? []
-                                : [...ALL_CHARITY_PERMISSION_IDS],
-                          })
-                        }
-                        className="text-caption font-semibold text-primary dark:text-teal-400 hover:underline"
-                      >
-                        {form.permissions.length === ALL_CHARITY_PERMISSION_IDS.length
-                          ? "إلغاء تحديد الكل"
-                          : "تحديد الكل"}
-                      </button>
-                    </div>
-                  )}
-                </div>
+                {/* ولا مُنتقي صلاحيّاتٍ للحساب الرسميّ: هو يحملها كلَّها محسوبةً،
+                    ومربَّعاتٌ بجانبه تُوهم أنّ الاثنين قد يختلفان. */}
+                {form.isAdmin ? (
+                  <p className="text-caption font-semibold text-primary dark:text-teal-400 bg-primary/[0.06] dark:bg-teal-400/[0.06] rounded-xl p-3 leading-relaxed">
+                    حساب الجمعية يملك جميع الصلاحيات ويُفوَّض بكل خدماتها تلقائياً.
+                  </p>
+                ) : form.charityIds.length !== 1 ? (
+                  <p className="text-caption text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl p-3 leading-relaxed">
+                    اختر جمعية واحدة لتحديد خدماتها وصلاحياتها — فالخدمات تختلف من جمعية إلى أخرى، والصلاحية تتبع خدمتها.
+                  </p>
+                ) : (
+                  <AccessPicker
+                    charityServices={servicesOf(form.charityIds[0])}
+                    services={form.services}
+                    permissions={form.permissions}
+                    onServices={(services) => setForm({ ...form, services })}
+                    onPermissions={(permissions) => setForm({ ...form, permissions })}
+                  />
+                )}
 
               </div>
 </div>
@@ -359,6 +420,17 @@ footer={
                   <td className={cx(tdClass, "text-caption font-semibold text-slate-600 dark:text-slate-400 text-left")} dir="ltr">{account.phone}</td>
                   <td className={cx(tdClass, "text-caption font-semibold text-slate-500 dark:text-slate-500")}>{new Date(account.createdAt).toLocaleDateString("en-GB")}</td>
                   <td className={tdClass}>
+                    <div className="flex items-center gap-1">
+                    {(account.memberships ?? []).length > 0 && (
+                      <button
+                        onClick={() => openAccess(account)}
+                        disabled={isPending}
+                        className="p-2 text-slate-400 hover:text-primary hover:bg-primary/5 rounded-lg transition-all opacity-0 group-hover:opacity-100 focus:opacity-100"
+                        title="الخدمات والصلاحيات"
+                      >
+                        <KeyRound className="w-4 h-4" />
+                      </button>
+                    )}
                     <button 
                       onClick={() => setAccountToDelete(account)}
                       disabled={isPending}
@@ -367,6 +439,7 @@ footer={
                     >
                       <Trash2 className="w-4 h-4" />
                     </button>
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -381,6 +454,76 @@ footer={
       </div>
 
       {/* Modern Delete Confirmation Modal */}
+      {access && (
+        <Dialog
+          open
+          onClose={() => setAccess(null)}
+          title={`الخدمات والصلاحيات — ${access.account.name}`}
+          size="lg"
+          footer={
+            <>
+              <button onClick={saveAccess} disabled={isPending} className={btn.primary}>
+                حفظ
+              </button>
+              <button onClick={() => setAccess(null)} className={btn.secondary}>
+                إلغاء
+              </button>
+            </>
+          }
+        >
+          <div className="space-y-4">
+            {(access.account.memberships ?? []).length > 1 && (
+              <div>
+                <label className="block text-caption font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
+                  الجمعية
+                </label>
+                <Select
+                  value={access.charityId}
+                  onSelect={switchAccessCharity}
+                  placeholder="اختر الجمعية…"
+                  options={(access.account.memberships ?? []).map((m: Membership) => ({
+                    value: m.charityId,
+                    label: m.charityName,
+                  }))}
+                  className="w-full [&>button]:w-full [&>button]:justify-between"
+                />
+              </div>
+            )}
+
+            <label className="flex items-start gap-3 p-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl cursor-pointer">
+              <input
+                type="checkbox"
+                checked={access.isOfficial}
+                onChange={(e) => setAccess({ ...access, isOfficial: e.target.checked })}
+                className="w-4 h-4 mt-0.5 rounded text-primary focus:ring-primary focus:ring-offset-0 border-slate-300"
+              />
+              <span>
+                <span className="block text-caption font-semibold text-slate-700 dark:text-slate-300">
+                  حساب الجمعية الرسمي
+                </span>
+                <span className="block text-caption text-slate-500 dark:text-slate-400 mt-0.5">
+                  يحمل كل الصلاحيات — بما يُضاف منها لاحقاً — ويمنحها لبقية حسابات الجمعية.
+                </span>
+              </span>
+            </label>
+
+            {access.isOfficial ? (
+              <p className="text-caption font-semibold text-primary dark:text-teal-400 bg-primary/[0.06] dark:bg-teal-400/[0.06] rounded-xl p-3 leading-relaxed">
+                حساب الجمعية يملك جميع الصلاحيات ويُفوَّض بكل خدماتها تلقائياً.
+              </p>
+            ) : (
+              <AccessPicker
+                charityServices={servicesOf(access.charityId)}
+                services={access.services}
+                permissions={access.permissions}
+                onServices={(services) => setAccess({ ...access, services })}
+                onPermissions={(permissions) => setAccess({ ...access, permissions })}
+              />
+            )}
+          </div>
+        </Dialog>
+      )}
+
       {accountToDelete && (
         <ConfirmDialog
           title={`حذف حساب «${accountToDelete.name}»؟`}

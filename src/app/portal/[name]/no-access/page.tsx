@@ -4,7 +4,10 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Lock } from "lucide-react";
 import { resolveCharityPortal } from "@/lib/portalAccess";
-import { charityPermissionLabel } from "@/lib/charityPermissions";
+import {
+  charityPermissionLabel,
+  seesCharityServicesTab,
+} from "@/lib/charityPermissions";
 
 export const metadata: Metadata = { title: "لا تملك صلاحية الوصول" };
 
@@ -35,19 +38,22 @@ export default async function NoAccessPage({
   const { need } = await searchParams;
 
   // Membership is still required to see this page at all.
-  const { charity, can } = await resolveCharityPortal(name);
+  const { charity, can, effective, isOfficial } = await resolveCharityPortal(name);
 
   const base = `/portal/${encodeURIComponent(charity.name)}`;
 
   // Somewhere they CAN go, offered by name rather than as a bare "go back".
   const openTabs = [
-    { href: `${base}/services`, label: "الخدمات", allowed: can("view_services") },
+    // «الخدمات» مشتقٌّ: من له صلاحيّةٌ في خدمةٍ ما يراه.
+    { href: `${base}/services`, label: "الخدمات", allowed: seesCharityServicesTab(isOfficial, effective) },
     { href: `${base}/governance`, label: "الحوكمة", allowed: can("view_governance") },
     {
       href: `${base}/design-requests`,
       label: "طلبات التصاميم",
       allowed: can("view_design_requests"),
     },
+    // والخطّةُ الإعلاميّةُ يراها كلُّ عضوٍ اطّلاعاً.
+    { href: `${base}/media`, label: "الخطة الإعلامية", allowed: true },
     { href: `${base}/hr`, label: "الموارد البشرية", allowed: true },
   ].filter((t) => t.allowed);
 

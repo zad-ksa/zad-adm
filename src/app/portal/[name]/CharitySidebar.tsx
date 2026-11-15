@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { CHARITY_ATTENDANCE_ENABLED, isCharityMailOpen } from "@/lib/featureFlags";
+import { hasCharityPermission, seesCharityServicesTab } from "@/lib/charityPermissions";
 import { FolderOpen,
   Building2,
   ChevronDown,
@@ -94,7 +95,7 @@ export default function CharitySidebar({
   availableCharities = [],
   permissions = [],
   title,
-  isAdmin = false,
+  isOfficial = false,
   unreadMail = 0,
   mediaWaiting = 0,
 }: {
@@ -107,7 +108,8 @@ export default function CharitySidebar({
   availableCharities?: { id: string, name: string }[];
   permissions?: string[];
   title?: string;
-  isAdmin?: boolean;
+  /** حسابُ الجمعية الرسميُّ — ويُقرأ هنا للتبويبات المشتقّة وحدَها. */
+  isOfficial?: boolean;
   unreadMail?: number;
   mediaWaiting?: number;
 }) {
@@ -190,20 +192,27 @@ export default function CharitySidebar({
   // Cosmetic only. Hiding a nav item does not protect the route — every page
   // under /portal re-checks the same permission on the server (see lib/portalAccess.ts).
   // A missing permission here just avoids showing a link that would 404.
-  const can = (permission: string) => isAdmin || permissions.includes(permission);
+  //
+  // و`permissions` هي **الفعليّة** (يحسبها التخطيط): حسابُ الجمعية تدخل عنده
+  // كلُّ الصلاحيات، فلا صفةَ تُفحص هنا. وكان يُفحص علَمٌ لا يُمرَّر أصلاً.
+  const can = (permission: string) => hasCharityPermission(permissions, permission);
 
   // Each tab now shows only to someone who may open it. It used to be `show:
   // true` across the board, so every member saw every section and found out
   // which ones were theirs by clicking into a refusal.
   const mainItems = [
-    { id: "services", label: "الخدمات", href: `/portal/${encodeURIComponent(charityName)}/services`, exact: true, icon: Briefcase, show: can("view_services") },
+    // «الخدمات» تبويبٌ مشتقٌّ: يُعرض لمن له صلاحيّةٌ في خدمةٍ ما، وصفحتُه تسرد
+    // خدماتِه وحدَها — لا صلاحيّةَ باسمه تُمنح (`view_services` متقاعدة).
+    { id: "services", label: "الخدمات", href: `/portal/${encodeURIComponent(charityName)}/services`, exact: true, icon: Briefcase, show: seesCharityServicesTab(isOfficial, permissions) },
     { id: "governance", label: "الحوكمة", href: `/portal/${encodeURIComponent(charityName)}/governance`, exact: true, icon: Scale, show: can("view_governance") },
     // Viewing and raising a design request are one permission — see
     // charityPermissions.ts.
     { id: "design-requests", label: "طلبات التصاميم", href: `/portal/${encodeURIComponent(charityName)}/design-requests`, exact: true, icon: Palette, show: can("view_design_requests") },
     // الخطةُ الإعلاميةُ: تُنال بتفويض خدمة «الإعلامية» (انظر PermissionServiceLink)،
     // والعدّادُ ما ينتظر اعتمادَ الجمعية — وهو «التنبيهُ على التبويب».
-    { id: "media", label: "الخطة الإعلامية", href: `/portal/${encodeURIComponent(charityName)}/media`, exact: true, icon: Megaphone, show: can("view_media_plan"), badge: mediaWaiting },
+    // والخطّةُ الإعلاميّةُ يراها كلُّ عضوٍ اطّلاعاً — تقويمُ جمعيتِه. والاعتمادُ
+    // والتعديلُ لمن يحمل «تحرير الخطة الإعلامية»، والعدّادُ له وحدَه.
+    { id: "media", label: "الخطة الإعلامية", href: `/portal/${encodeURIComponent(charityName)}/media`, exact: true, icon: Megaphone, show: true, badge: mediaWaiting },
     // No permission: the library is reference material shared with every
     // charity, and it is read-only on the server whoever opens it.
     { id: "templates", label: "مكتبة النماذج", href: `/portal/${encodeURIComponent(charityName)}/templates`, exact: true, icon: FolderOpen, show: true },

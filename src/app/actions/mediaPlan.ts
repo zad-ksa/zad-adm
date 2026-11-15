@@ -102,7 +102,7 @@ async function tellCharity(
     note,
   });
   if (!notice || notice.to !== "CHARITY") return;
-  await notifyCharityMembers(charityId, "view_media_plan", {
+  await notifyCharityMembers(charityId, "edit_media_plan", {
     title: notice.title,
     message: notice.message,
     link: portalMediaLink(charityName),

@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/db";
-import { AuthError, requireCharityPermission } from "@/lib/guards";
+import { AuthError, requireCharityEffective, requireCharityPermission } from "@/lib/guards";
 import { charityHasService } from "@/lib/charityServices";
 import { MEDIA_SERVICE } from "@/lib/mediaPlanAccess";
 import {
@@ -37,9 +37,14 @@ import type { MediaEventView, MediaPostView } from "@/app/actions/mediaPlan";
 export type PortalMediaInput = MediaPostFields;
 
 /** حارسُ جمعيةٍ بعينها: عضويّةٌ، فصلاحيةُ التبويب، فشمولُ الخدمة للجمعية. */
-async function requirePortalMedia(charityId: string) {
+/** @param needsEdit صلاحيّةُ التحرير — تلزم للاعتماد والتعديل لا للاطّلاع. */
+async function requirePortalMedia(charityId: string, needsEdit: boolean) {
   try {
-    const access = await requireCharityPermission(charityId, "view_media_plan");
+    // الاطّلاعُ عضويّةٌ فقط: تقويمُ جمعيتِهم يراه كلُّ عضوٍ فيها. والاعتمادُ
+    // والتعديلُ بـ«تحرير الخطة الإعلامية».
+    const access = needsEdit
+      ? await requireCharityPermission(charityId, "edit_media_plan")
+      : await requireCharityEffective(charityId);
     // والخدمةُ شرطٌ ثالثٌ كما عند زاد: جمعيةٌ رُفعت عنها «الإعلامية» لا خطّةَ
     // لها تُعتمد، ولو بقيت الصلاحيةُ في صفِّ العضو.
     if (!(await charityHasService(charityId, MEDIA_SERVICE))) {
@@ -63,7 +68,7 @@ async function requirePortalMedia(charityId: string) {
  * والجمعيةُ تُقرأ **من صفِّ المنشور** لا من مُدخَلٍ يرسله المتصفّح: معرّفٌ يُكتب
  * باليد لا يُجيز صاحبَه على منشورِ جمعيةٍ أخرى.
  */
-async function loadPostForCharity(postId: string) {
+async function loadPostForCharity(postId: string, needsEdit: boolean) {
   const post = await prisma.mediaPost.findUnique({
     where: { id: postId },
     select: {
@@ -83,7 +88,7 @@ async function loadPostForCharity(postId: string) {
   });
   if (!post) return { error: "المنشور غير موجود" as const };
 
-  const access = await requirePortalMedia(post.charityId);
+  const access = await requirePortalMedia(post.charityId, needsEdit);
   if ("error" in access) return { error: access.error };
 
   return { session: access.session, post, status: toStatus(post.status) };
@@ -166,7 +171,7 @@ async function tellZad(
 
 /** منشوراتُ مدىً من الأيام — وهو ما تعرضه الشاشةُ لا أكثر. */
 export async function listPortalMediaPosts(charityId: string, fromISO: string, toISO: string) {
-  const access = await requirePortalMedia(charityId);
+  const access = await requirePortalMedia(charityId, false);
   if ("error" in access) return { error: access.error };
 
   const from = dayValue(fromISO);
@@ -183,7 +188,7 @@ export async function listPortalMediaPosts(charityId: string, fromISO: string, t
 
 /** المنشورُ وسجلُّه — وفيه تقرأ الجمعيةُ ما عدّله زادٌ وسببَه. */
 export async function getPortalMediaPostDetail(postId: string) {
-  const loaded = await loadPostForCharity(postId);
+  const loaded = await loadPostForCharity(postId, false);
   if ("error" in loaded) return { error: loaded.error };
 
   const [post, events] = await Promise.all([
@@ -230,7 +235,7 @@ export async function approvePortalMediaPost(postId: string) {
 }
 
 async function decide(postId: string, action: Extract<MediaAction, "APPROVE">) {
-  const loaded = await loadPostForCharity(postId);
+  const loaded = await loadPostForCharity(postId, true);
   if ("error" in loaded) return { error: loaded.error };
   const { session, post, status } = loaded;
 
@@ -281,7 +286,7 @@ async function decide(postId: string, action: Extract<MediaAction, "APPROVE">) {
  * ما يُعمِّده.
  */
 export async function updatePortalMediaPost(postId: string, input: PortalMediaInput) {
-  const loaded = await loadPostForCharity(postId);
+  const loaded = await loadPostForCharity(postId, true);
   if ("error" in loaded) return { error: loaded.error };
   const { session, post, status } = loaded;
 

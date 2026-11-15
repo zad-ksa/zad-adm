@@ -1,53 +1,100 @@
 /**
- * Permission layer for the CHARITY side of the portal (accounts of type
- * CHARITY_USER), the counterpart of `lib/permissions.ts` on the employee side.
+ * طبقةُ صلاحيات جهة الجمعيات (حسابات `CHARITY_USER`) — مقابلُ
+ * `lib/permissions.ts` في جهة زاد.
  *
- * One rule governs the whole layer: **every input comes from the
- * CharityUserCharity link row, never from the CharityUser account.**
+ * وقاعدتان تحكمان الطبقةَ كلَّها:
  *
- * That applies to the administrator flag as much as to the permission array. It
- * used to be `CharityUser.title === "SYSTEM_ADMIN"`, which is stored per
- * account and so made someone an administrator of every charity they belonged
- * to at once — and let either charity grant or revoke that standing on the
- * other's behalf. A person can be an administrator in charity A and an ordinary
- * volunteer in charity B, and each charity decides that for itself.
+ * **١ — كلُّ مُدخَلٍ يُقرأ من صفِّ العضويّة `CharityUserCharity`، لا من الحساب.**
+ * فمن هو حسابُ الجمعية في جمعيةٍ متطوّعٌ في أخرى، وكلُّ جمعيةٍ تقرّر لنفسها.
+ * والمسمّياتُ (مدير تنفيذي، متطوّع…) وسومٌ بلا سلطة، ولا شيءَ هنا يقرؤها.
  *
- * Job titles (CEO, CHAIRMAN, VOLUNTEER, …) are labels with zero authority.
- * Nothing here reads them, and no call site should test one by name —
- * hardcoding a title list is what the August 17 audit flagged.
+ * **٢ — لا شيءَ يُنال بالصفة، بل بالصلاحيّة.**
+ * وكان ثَمّ علَمُ «مدير جمعية» يتجاوز كلَّ فحصٍ فيرى صاحبُه كلَّ شيء. فأُلغي:
+ * الرؤيةُ والفعلُ كلُّها صلاحيّاتٌ تُمنح بأسمائها. ويبقى العلَمُ في القاعدة
+ * (`isAdmin`) علامةً على شيءٍ واحد: **حسابُ الجمعية الرسميُّ** الذي تُنشئه زادٌ
+ * عند التعاقد. وهو وحدَه:
+ *   - يحمل كلَّ الصلاحيات **محسوبةً لا مخزَّنة** — فما يُزاد منها يدخل عنده بلا
+ *     تحرير؛
+ *   - ويمنح الصلاحياتَ والخدماتَ لبقيّة الحسابات.
+ *
+ * **وموضعُ توسيع الصفة واحد**: `effectiveCharityPermissions`. فمن بعدها لا
+ * يسأل أحدٌ «هل هو الحسابُ الرسميّ؟»، بل يسأل المصفوفةَ الفعليّة وحدَها
+ * (`hasCharityPermission`). وهذا ما كان مكسوراً: الصفةُ تُفحص في موضعين،
+ * فتُنسى في أحدهما — ومديرُ جمعيةٍ تقبله الصفحةُ ولا يراه شريطُه.
+ *
+ * **والصلاحيّةُ تتبع خدمةً من خدمات زاد**: تُعرض تحتها في مُنتقي الصلاحيات، ولا
+ * تعمل إلا والخدمةُ مفوَّضةٌ للعضو (`CharityMemberService`). فجمعيةٌ لا تشملها
+ * خدمةٌ لا صلاحيّاتَ لها منها، وعضوٌ لم يُفوَّض بها لا يعمل فيها.
  */
-
-/** True when the link row marks this member an administrator of THIS charity. */
-export function isCharityAdmin(isAdmin?: boolean | null): boolean {
-  return isAdmin === true;
-}
-
-export function hasCharityPermission(
-  isAdmin: boolean | null | undefined,
-  permissions: string[] | null | undefined,
-  required: string
-): boolean {
-  if (isCharityAdmin(isAdmin)) return true;
-  return (permissions || []).includes(required);
-}
 
 // نسبيٌّ لا بـ`@/`: هذا الملفُّ خالصٌ ويُختبر بـ`node --test`، وNode لا يعرف
 // اختصاراتَ المسارات. وTurbopack يقبل النسبيَّ، وقد أثبته بناءٌ كامل.
 import { CHARITY_ATTENDANCE_ENABLED } from "./featureFlags.ts";
 
-export type CharityPermissionDef = { id: string; label: string };
+/**
+ * أسماءُ الخدمات كما في صفوف `Service` — والمصدرُ `SECTION_SERVICES` في
+ * `lib/charityServices.ts`، ولا يُستورد هنا لأنّه يمسّ القاعدة وهذا الملفُّ
+ * خالصٌ يُختبر بـ`node`. و`charityServicesHavePermissions` في الاختبار تحرس
+ * التوافقَ.
+ */
+const SERVICE = {
+  MEDIA: "الإعلامية",
+  GOVERNANCE: "الحوكمة",
+} as const;
+
+export type CharityPermissionDef = {
+  id: string;
+  label: string;
+  /** خدمةُ زادٍ التي تتبعها — وبغيرها صلاحيّةٌ إداريّةٌ لا تتعلّق بخدمة. */
+  service?: string;
+  /** سطرٌ يُعرض تحت الوسم في المُنتقي حيث يلزم البيان. */
+  hint?: string;
+};
+
 export type CharityPermissionGroup = { title: string; permissions: CharityPermissionDef[] };
 
+/**
+ * صلاحيّاتُ الخدمات — تُعرض تحت خدمتها، وتُمنح واحدةً واحدة.
+ *
+ * وبقيّةُ الخدمات التسع لا صلاحيّاتَ لها بعد: صفحاتُها عند زادٍ ولم تُفتح للجمعية
+ * بعد. وحين تُفتح تُضاف هنا تحت خدمتها، فتظهر في المُنتقي بلا تعديلِ شاشة.
+ */
+const SERVICE_PERMISSIONS: CharityPermissionDef[] = [
+  {
+    id: "view_design_requests",
+    label: "طلبات التصاميم — عرضٌ ورفع",
+    service: SERVICE.MEDIA,
+    hint: "يرى طلباتِ الجمعية ويرفع طلباً جديداً",
+  },
+  {
+    id: "edit_media_plan",
+    label: "تحرير الخطة الإعلامية واعتمادها",
+    service: SERVICE.MEDIA,
+    // والخطّةُ تُرى بلا صلاحيّة: تقويمُ جمعيتهم يطّلع عليه كلُّ عضو، وهذه
+    // للاعتماد والتعديل وحدَهما.
+    hint: "يعتمد منشوراتَ زادٍ أو يعدّلها. والاطّلاعُ على التقويم مفتوحٌ لكلِّ عضو",
+  },
+  {
+    id: "view_governance",
+    label: "الحوكمة",
+    service: SERVICE.GOVERNANCE,
+    hint: "يرى أدلّةَ الحوكمة ومعاييرَها",
+  },
+];
+
+/** صلاحيّاتٌ إداريّةٌ لا تتبع خدمة. */
 const MANAGE_PERMISSIONS: CharityPermissionDef[] = [
-  { id: "manage_charity_users", label: "إدارة حسابات موظفي الجمعية" },
-  // تعميد الصادر من الجمعية: تفعيله من عدمه، وتعيين من يعمّد. والتعميد نفسه
-  // لا يحتاجها — المعمِّد يُعيَّن بالاسم كما في جهة زاد.
+  {
+    id: "manage_charity_users",
+    label: "إدارة حسابات موظفي الجمعية",
+    hint: "يُضيف موظّفاً ويُعطّله. ومنحُ الصلاحيات والخدمات لحساب الجمعية وحدَه",
+  },
   { id: "manage_charity_mail", label: "إعدادات البريد الداخلي" },
 ];
 
 /**
  * صلاحيتا التحضير: مخفيّتان ما دام تحضير الجمعيات موقوفاً بعلَم
- * CHARITY_ATTENDANCE_ENABLED. ولم تُتقاعدا — القيم المخزّنة تبقى كما هي،
+ * `CHARITY_ATTENDANCE_ENABLED`. ولم تُتقاعدا — القيمُ المخزّنة تبقى كما هي،
  * وتعودان إلى المُنتقي في اللحظة التي يُشغَّل فيها التحضير.
  */
 const ATTENDANCE_PERMISSIONS: CharityPermissionDef[] = [
@@ -55,90 +102,88 @@ const ATTENDANCE_PERMISSIONS: CharityPermissionDef[] = [
   { id: "view_attendance_reports", label: "عرض تقارير حضور جميع الموظفين" },
 ];
 
-/**
- * تبويبات البوابة: لا تُمنح بيد أحد.
- *
- * يربط زاد كل تبويبٍ بخدمةٍ من صفحة «الصلاحيات»، ثم تفوّض الجمعية عضوها بخدمة،
- * فيرى تبويبها. ومدير الجمعية يمرّ بلا تفويض. وما دام التبويب بلا ربط، يبقى
- * على صلاحيته المخزّنة كما كان — فلا ينقطع شيء قبل أن يُربط.
- */
-const PAGE_PERMISSIONS: CharityPermissionDef[] = [
-  { id: "view_services", label: "الخدمات" },
-  { id: "view_governance", label: "الحوكمة" },
-      // Seeing the design requests and raising one are a single permission.
-      // They were two, and every membership that held either held both — the
-      // split described a distinction nobody was making, while giving whoever
-      // grants permissions two checkboxes to keep in step by hand.
-      //
-      // `create_design_requests` is retired. Values still sitting in older
-      // memberships are inert and drop on the next save, the same way the old
-      // `view_hr` value does.
-  { id: "view_design_requests", label: "طلبات التصاميم (عرض ورفع)" },
-  // الخطة الإعلامية: تقويمُ منشورات الجمعية. تُربط بخدمة «الإعلامية» كما رُبطت
-  // بها طلباتُ التصاميم، فيراها من فُوِّض الإعلاميّةَ ومديرُ الجمعية وحدَهما.
-  { id: "view_media_plan", label: "الخطة الإعلامية" },
-];
+export const CHARITY_SERVICE_PERMISSIONS: CharityPermissionDef[] = SERVICE_PERMISSIONS;
 
-// No `view_hr`. Nothing reads it: the HR section is open to every active
-// member because recording your own attendance is not a privilege, and the
-// screens inside it gate themselves.
-
-/** معرّفات التبويبات التي تُنال بتفويض الخدمة. */
-export const SERVICE_LINKED_CHARITY_PERMISSION_IDS: string[] = PAGE_PERMISSIONS.map((p) => p.id);
-
-/** تبويبات البوابة بوسومها — تُعرض في صفحة الصلاحيات عند زاد لربطها بالخدمات. */
-export const CHARITY_PAGE_PERMISSIONS: CharityPermissionDef[] = PAGE_PERMISSIONS;
-
-/** ما يُعرض في مُنتقي عضو الجمعية: الإدارة وحدها. */
-export const CHARITY_PERMISSION_GROUPS: CharityPermissionGroup[] = [
-  {
-    title: "صلاحيات الإدارة",
-    permissions: [...MANAGE_PERMISSIONS, ...(CHARITY_ATTENDANCE_ENABLED ? ATTENDANCE_PERMISSIONS : [])],
-  },
-];
-
-/** كل المعرّفات المعروفة ومنها المخفيّة اليوم — للتحقق والوسم، لا للعرض. */
+/** كلُّ المعرّفات المعروفة ومنها المخفيّة اليوم — للتحقّق والوسم، لا للعرض. */
 export const ALL_CHARITY_PERMISSIONS: CharityPermissionDef[] = [
+  ...SERVICE_PERMISSIONS,
   ...MANAGE_PERMISSIONS,
   ...ATTENDANCE_PERMISSIONS,
-  ...PAGE_PERMISSIONS,
 ];
 
-export const ALL_CHARITY_PERMISSION_IDS: string[] = ALL_CHARITY_PERMISSIONS.map(
-  (p) => p.id
-);
+export const ALL_CHARITY_PERMISSION_IDS: string[] = ALL_CHARITY_PERMISSIONS.map((p) => p.id);
 
-/** ما يجوز منحه يدوياً: المعروض في المُنتقي وحده. */
-export const GRANTABLE_CHARITY_PERMISSION_IDS: string[] = CHARITY_PERMISSION_GROUPS.flatMap((g) =>
-  g.permissions.map((p) => p.id)
-);
+/** ما يُعرض في المُنتقي ويجوز منحُه — والمخفيُّ بعلَمٍ ليس منه. */
+export const GRANTABLE_CHARITY_PERMISSION_IDS: string[] = [
+  ...SERVICE_PERMISSIONS,
+  ...MANAGE_PERMISSIONS,
+  ...(CHARITY_ATTENDANCE_ENABLED ? ATTENDANCE_PERMISSIONS : []),
+].map((p) => p.id);
+
+/** خدمةُ صلاحيّةٍ، أو لا شيءٍ إن كانت إداريّةً لا تتبع خدمة. */
+export function serviceOfCharityPermission(id: string): string | null {
+  return ALL_CHARITY_PERMISSIONS.find((p) => p.id === id)?.service ?? null;
+}
+
+/** الخدماتُ التي لها صلاحيّاتٌ اليومَ — بترتيب ورودها. */
+export function charityServicesWithPermissions(): string[] {
+  return [...new Set(SERVICE_PERMISSIONS.map((p) => p.service!).filter(Boolean))];
+}
+
+/** صلاحيّاتُ خدمةٍ بعينها. */
+export function charityPermissionsOfService(service: string): CharityPermissionDef[] {
+  return SERVICE_PERMISSIONS.filter((p) => p.service === service);
+}
 
 /**
- * Ids that existed once and no longer do.
+ * مُنتقي الصلاحيات لعضوٍ في جمعيةٍ تشملها هذه الخدمات: مجموعةٌ لكلِّ خدمةٍ لها
+ * صلاحيّات، ثمّ مجموعةُ الإدارة.
  *
- * They are still sitting in stored permission arrays on live memberships, and
- * something has to decide what happens when one of those rows is saved again.
- * Rejecting them as "unknown" was the first answer and it was wrong: it made
- * every existing member unsavable the moment a permission was retired — you
- * could open the editor, change nothing, and be told the data you were handed
- * is invalid.
+ * فالمُنتقي يُبنى من خدمات الجمعية لا من كتالوجٍ ثابت: جمعيةٌ لا تشملها خدمةُ
+ * الحوكمة لا تُعرض فيها صلاحيّةُ الحوكمة — وكان يُعرض كلُّ شيءٍ لكلِّ جمعيةٍ
+ * فيُمنح ما لا يعمل.
+ */
+export function charityPermissionGroups(charityServices: string[] | null | undefined): CharityPermissionGroup[] {
+  const offered = new Set(charityServices ?? []);
+  const groups: CharityPermissionGroup[] = [];
+
+  for (const service of charityServicesWithPermissions()) {
+    if (!offered.has(service)) continue;
+    groups.push({ title: service, permissions: charityPermissionsOfService(service) });
+  }
+
+  const manage = [...MANAGE_PERMISSIONS, ...(CHARITY_ATTENDANCE_ENABLED ? ATTENDANCE_PERMISSIONS : [])];
+  if (manage.length > 0) groups.push({ title: "صلاحيات الإدارة", permissions: manage });
+
+  return groups;
+}
+
+/**
+ * معرّفاتٌ كانت ولم تبقَ.
  *
- * So a retired id is DROPPED silently, while a genuinely unrecognised one is
- * still refused. The difference matters: one is our own history, the other is
- * a client sending something nobody ever defined.
+ * وهي قائمةٌ في مصفوفاتٍ محفوظةٍ على عضويّاتٍ حيّة، فلا بدّ من حكمٍ حين يُحفظ
+ * الصفُّ من جديد. وردُّها «صلاحيةٌ مجهولة» كان أوّلَ الجواب وكان خطأً: يجعل كلَّ
+ * عضوٍ قائمٍ غيرَ قابلٍ للحفظ لحظةَ تقاعُدِ صلاحيّة — تفتح المحرِّرَ ولا تغيّر
+ * شيئاً فيُقال لك إنّ البيانَ الذي سُلِّمتَه غيرُ صالح.
+ *
+ * فالمتقاعدُ **يُسقَط صامتاً**، والمجهولُ حقّاً يُردّ. والفرقُ معتبَر: أحدُهما
+ * تاريخُنا، والآخرُ عميلٌ يُرسل ما لم يُعرَّف أصلاً.
  */
 export const RETIRED_CHARITY_PERMISSION_IDS: string[] = [
-  // Merged into view_design_requests.
+  // دُمجت في `view_design_requests`.
   "create_design_requests",
-  // Never gated anything; see the note in the groups above.
+  // لم تحرس شيئاً: قسمُ الموارد البشريّة مفتوحٌ لكلِّ عضوٍ نشط.
   "view_hr",
+  // تبويبُ «الخدمات» صار مشتقّاً: يُعرض لمن له صلاحيّةٌ في خدمةٍ ما، ويسرد
+  // خدماتِه وحدَها (`visibleCharityServices`). فلا صلاحيّةَ باسمه تُمنح.
+  "view_services",
+  // الخطّةُ الإعلاميّةُ تُرى بلا صلاحيّة، والتحريرُ `edit_media_plan`.
+  "view_media_plan",
 ];
 
-/** Strips retired ids and de-duplicates. Does not judge the rest. */
+/** يُسقط المتقاعدَ ويُوحِّد المكرَّر. ولا يحكم على الباقي. */
 export function sanitizeCharityPermissions(ids: string[] | null | undefined): string[] {
-  return [...new Set(ids || [])].filter(
-    (id) => !RETIRED_CHARITY_PERMISSION_IDS.includes(id)
-  );
+  return [...new Set(ids || [])].filter((id) => !RETIRED_CHARITY_PERMISSION_IDS.includes(id));
 }
 
 export function charityPermissionLabel(id: string): string {
@@ -146,13 +191,95 @@ export function charityPermissionLabel(id: string): string {
 }
 
 /**
- * Job titles a charity may assign. Pure labels — none of them grants anything.
+ * الصلاحيّاتُ **الفعليّة** لعضو جمعية — وهي الجوابُ الوحيدُ عن «ما يستطيع؟».
  *
- * SYSTEM_ADMIN is absent on purpose: administrator standing is now the
- * per-charity `isAdmin` flag on the membership, so offering a title by that
- * name would promise authority the title no longer carries. It remains in the
- * Prisma enum and in the label lookup below because accounts created before the
- * change still hold it.
+ * وثلاثُ قواعدَ فيها:
+ *   ١ **حسابُ الجمعية الرسميُّ يحمل كلَّ شيء**، محسوباً لا مخزَّناً. فما يُزاد
+ *     من صلاحيّاتٍ يدخل عنده بلا تحريرٍ ولا هجرةِ بيان.
+ *   ٢ **وصلاحيّةُ خدمةٍ لا تعمل إلا والخدمةُ مفوَّضةٌ** للعضو: مُنحت ثمّ رُفعت
+ *     الخدمةُ عنه، فهي خاملةٌ حتى تُعاد — ولا تُحذف من صفِّه، فإعادةُ الخدمة
+ *     تُعيدها كما كانت.
+ *   ٣ **والإداريّةُ تمرّ كما هي**: لا تتعلّق بخدمة.
+ */
+export function effectiveCharityPermissions(
+  permissions: string[] | null | undefined,
+  delegatedServices: string[] | null | undefined,
+  isOfficialAccount: boolean | null | undefined
+): string[] {
+  if (isOfficialAccount === true) return [...ALL_CHARITY_PERMISSION_IDS];
+
+  const delegated = new Set(delegatedServices ?? []);
+  return sanitizeCharityPermissions(permissions).filter((id) => {
+    const service = serviceOfCharityPermission(id);
+    if (!service) return true;
+    return delegated.has(service);
+  });
+}
+
+/**
+ * هل يملك هذه الصلاحيّة؟
+ *
+ * و**المصفوفةُ الفعليّةُ وحدَها** هي المقياس: لا علَمَ يُفحص هنا ولا صفةَ
+ * تُستثنى. فمن لا يرى التبويبَ لا يفعل فعلَه، والعكس.
+ */
+export function hasCharityPermission(
+  effective: string[] | null | undefined,
+  required: string
+): boolean {
+  return (effective || []).includes(required);
+}
+
+/**
+ * ما يجوز لهذا الفاعل أن يمنحه.
+ *
+ * **والمنحُ لحساب الجمعية الرسميِّ وحدَه.** وكانت القاعدةُ «تمنح ما تملك»، فمن
+ * يحمل «إدارة حسابات موظفي الجمعية» يمنحها لغيره فيتوالد المانحون، وسحبُها من
+ * واحدٍ لا يكفي. فصار المنحُ من بابٍ واحدٍ يُسأل عنه.
+ */
+export function grantableCharityPermissions(actorIsOfficialAccount: boolean | null | undefined): string[] {
+  return actorIsOfficialAccount === true ? [...GRANTABLE_CHARITY_PERMISSION_IDS] : [];
+}
+
+/**
+ * خدماتُ الجمعية التي تُعرض لهذا العضو في تبويب «الخدمات» — مراحلُها وخططُها.
+ *
+ * والقاعدةُ: خدمةٌ له فيها صلاحيّةٌ **واحدةٌ** على الأقلّ تُعرض بتمامها. فمن
+ * فُوِّض بالإعلاميّة وله فيها طلباتُ التصاميم وحدَها يرى مراحلَ الإعلاميّة
+ * كاملةً — لا يفرّق عدَدُ صلاحيّاته في الخدمة.
+ *
+ * وحسابُ الجمعية يرى خدماتِها كلَّها. وكان التبويبُ يُفتح بتفويض أيِّ خدمةٍ ثمّ
+ * يعرض الخدماتِ التسعَ جميعاً بلا ترشيح.
+ */
+export function visibleCharityServices(params: {
+  isOfficialAccount: boolean | null | undefined;
+  /** الصلاحيّاتُ الفعليّة (مُخرَجُ `effectiveCharityPermissions`). */
+  effective: string[] | null | undefined;
+  /** خدماتُ الجمعية كما في صفوف `Service`. */
+  charityServices: string[] | null | undefined;
+}): string[] {
+  const offered = params.charityServices ?? [];
+  if (params.isOfficialAccount === true) return [...offered];
+
+  const mine = new Set(
+    (params.effective ?? []).map((id) => serviceOfCharityPermission(id)).filter((s): s is string => !!s)
+  );
+  return offered.filter((service) => mine.has(service));
+}
+
+/** هل يُعرض تبويبُ «الخدمات»؟ — بلا حاجةٍ إلى قراءة خدمات الجمعية. */
+export function seesCharityServicesTab(
+  isOfficialAccount: boolean | null | undefined,
+  effective: string[] | null | undefined
+): boolean {
+  if (isOfficialAccount === true) return true;
+  return (effective ?? []).some((id) => !!serviceOfCharityPermission(id));
+}
+
+/**
+ * المسمّياتُ التي تُسنَد — وسومٌ بلا سلطة، لا يقرؤها شيءٌ في الشِّفرة.
+ *
+ * و«حساب الجمعية» ليس منها: هو الحسابُ الذي تُنشئه زادٌ للجمعية، وعلامتُه صفُّ
+ * عضويّتِه لا مسمّاه. ويبقى وسمُه أدناه للحسابات التي أُنشئت قبل ذلك.
  */
 export const CHARITY_USER_TITLES: { id: string; label: string }[] = [
   { id: "CHAIRMAN", label: "رئيس مجلس إدارة" },
@@ -163,7 +290,9 @@ export const CHARITY_USER_TITLES: { id: string; label: string }[] = [
 ];
 
 const LEGACY_TITLE_LABELS: Record<string, string> = {
-  SYSTEM_ADMIN: "مدير النظام (مسمى سابق)",
+  // كان «مدير النظام»، واسمُه الآن ما هو عليه حقّاً: حسابُ الجمعية الرسميُّ
+  // الذي تُنشئه زادٌ عند التعاقد.
+  SYSTEM_ADMIN: "حساب الجمعية",
 };
 
 export function charityTitleLabel(title: string): string {
@@ -172,69 +301,4 @@ export function charityTitleLabel(title: string): string {
     LEGACY_TITLE_LABELS[title] ??
     title
   );
-}
-
-/**
- * The set a given actor is allowed to hand out — the subset rule from §3.4 of
- * the plan. An administrator of this charity may grant anything within it;
- * everyone else may only grant permissions they themselves hold, so nobody can
- * bootstrap authority they were never given.
- */
-export function grantableCharityPermissions(
-  actorIsAdmin: boolean | null | undefined,
-  actorPermissions: string[] | null | undefined
-): string[] {
-  if (isCharityAdmin(actorIsAdmin)) return [...GRANTABLE_CHARITY_PERMISSION_IDS];
-  const held = new Set(actorPermissions || []);
-  return GRANTABLE_CHARITY_PERMISSION_IDS.filter((p) => held.has(p));
-}
-
-/**
- * الصلاحياتُ **الفعليّة** لعضو جمعية: المخزّنةُ، وتبويباتُ البوابة بعد تطبيق
- * قاعدة الربط بالخدمات.
- *
- * وهي موضعُ القاعدة الوحيد. وكانت مكتوبةً مرّتين: `portalAccess` تحسبها
- * بالربط والتفويض، و`CharitySidebar` تقرأ المصفوفةَ المخزّنةَ وحدَها
- * (`isAdmin || permissions.includes(p)`). فافترق ما يُعرض عمّا يُسمح، في
- * الاتّجاهين كليهما:
- *
- *   - **الموظَّفُ الجديد لا يرى شيئاً.** فالحفظُ يُسقط تبويباتَ البوابة من
- *     المصفوفة المخزّنة عن قصد — صارت تُنال بتفويض الخدمة لا بمُنتقٍ — فيُفوَّض
- *     بتسع خدماتٍ ويبقى الشريطُ فارغاً، بينما الصفحاتُ تقبله لو كتب رابطَها.
- *     وهذا ما ظهر: الموظَّفون القدماء يحملون القيمَ القديمةَ في مصفوفتهم فيرون،
- *     والجديدُ لا يحملها فلا يرى — فيُحسب العطبُ في المنح وهو في العرض.
- *   - **والقديمُ يرى ما لا يُفتح.** عضوٌ يحمل `view_governance` مخزّنةً ولا
- *     خدمةَ مفوَّضةً، يظهر له التبويبُ ثمّ يُرَدُّ إلى «لا صلاحية».
- *
- * والقاعدةُ: تبويبٌ مربوطٌ بخدمةٍ يُنال بتفويضها وحدَه، وتبويبٌ لم يُربط بعد
- * يبقى على المخزّن — فيُفعّل الربطُ تدريجيّاً بلا انقطاع. وما ليس تبويباً يمرّ
- * كما هو.
- *
- * ولا تنظر في `isAdmin`: مديرُ الجمعية يمرّ قبلها في موضع الفحص، فجمعُها معه
- * هنا يُخفي من الذي أجاز.
- */
-export function effectiveCharityPermissions(
-  permissions: string[] | null | undefined,
-  services: string[] | null | undefined,
-  links: readonly { permissionId: string; serviceName: string }[],
-  tabIds: readonly string[] = SERVICE_LINKED_CHARITY_PERMISSION_IDS
-): string[] {
-  const stored = new Set(permissions || []);
-  const delegated = new Set(services || []);
-
-  const needed = new Map<string, string[]>();
-  for (const link of links) {
-    if (!tabIds.includes(link.permissionId)) continue;
-    const list = needed.get(link.permissionId) ?? [];
-    list.push(link.serviceName);
-    needed.set(link.permissionId, list);
-  }
-
-  const out = [...stored].filter((id) => !tabIds.includes(id));
-  for (const tab of tabIds) {
-    const names = needed.get(tab);
-    const allowed = names?.length ? names.some((name) => delegated.has(name)) : stored.has(tab);
-    if (allowed) out.push(tab);
-  }
-  return [...new Set(out)];
 }

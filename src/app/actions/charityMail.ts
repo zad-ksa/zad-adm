@@ -4,7 +4,7 @@ import { prisma } from "@/lib/db";
 import { revalidatePath } from "next/cache";
 import { sanitizeMailHtml } from "@/lib/sanitizeMail";
 import { requireCharityMembership } from "@/lib/guards";
-import { hasCharityPermission } from "@/lib/charityPermissions";
+import { effectiveCharityPermissions, hasCharityPermission } from "@/lib/charityPermissions";
 import { isDelivered, serviceConversationRecipients } from "@/lib/serviceTeams";
 import { notifyMailDelivered } from "@/lib/mailNotify";
 import { isCharityMailOpen } from "@/lib/featureFlags";
@@ -47,7 +47,14 @@ async function requirePortalContext(charityName: string) {
       where: { charityId: charity.id, charityUserId: membership.session.id },
     })) > 0;
 
-  return { charity, isApprover, ...membership };
+  // والفعليّةُ تُحسب هنا مرّةً: حسابُ الجمعية يُوسَّع إلى كلِّ الصلاحيات، وصلاحيّةُ
+  // خدمةٍ تخمد ما لم تكن مفوَّضة. فلا يُفحص علَمٌ في الأفعال أدناه.
+  const effective = effectiveCharityPermissions(
+    membership.permissions,
+    membership.services,
+    membership.isOfficial
+  );
+  return { charity, isApprover, effective, ...membership };
 }
 
 /** تصفية نصّية على الرسالة: موضوعها ونصّها والطرف الآخر واسم الخدمة. */
@@ -106,7 +113,7 @@ export async function getPortalMailOptions(charityName: string) {
   });
 
   let services: string[];
-  if (ctx.isAdmin) {
+  if (ctx.isOfficial) {
     const rows = await prisma.service.findMany({
       where: { charityId: ctx.charity.id },
       select: { name: true },
@@ -324,7 +331,7 @@ export async function sendPortalMail(
     if (!name) throw new Error("اختر الخدمة التي تريد مراسلتها");
 
     // الخدمات المفوَّض بها العضو في هذه الجمعية وحدها (القرار ٣).
-    const allowed = ctx.isAdmin
+    const allowed = ctx.isOfficial
       ? (
           await prisma.service.findMany({
             where: { charityId: ctx.charity.id },
@@ -419,7 +426,7 @@ export async function sendPortalMail(
  */
 export async function getCharityMailSettings(charityName: string) {
   const ctx = await requirePortalContext(charityName);
-  if (!hasCharityPermission(ctx.isAdmin, ctx.permissions, "manage_charity_mail")) {
+  if (!hasCharityPermission(ctx.effective, "manage_charity_mail")) {
     throw new Error("غير مصرح");
   }
 
@@ -444,7 +451,7 @@ export async function getCharityMailSettings(charityName: string) {
 
 export async function setCharityMailApproval(charityName: string, enabled: boolean) {
   const ctx = await requirePortalContext(charityName);
-  if (!hasCharityPermission(ctx.isAdmin, ctx.permissions, "manage_charity_mail")) {
+  if (!hasCharityPermission(ctx.effective, "manage_charity_mail")) {
     throw new Error("غير مصرح");
   }
 
@@ -465,7 +472,7 @@ export async function setCharityMailApproval(charityName: string, enabled: boole
 
 export async function setCharityMailApprovers(charityName: string, userIds: string[]) {
   const ctx = await requirePortalContext(charityName);
-  if (!hasCharityPermission(ctx.isAdmin, ctx.permissions, "manage_charity_mail")) {
+  if (!hasCharityPermission(ctx.effective, "manage_charity_mail")) {
     throw new Error("غير مصرح");
   }
 

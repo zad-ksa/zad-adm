@@ -5,7 +5,6 @@ import { CharityUserTitle } from "@prisma/client";
 import { AuthError, requireCharityPermission } from "@/lib/guards";
 import {
   ALL_CHARITY_PERMISSION_IDS,
-  SERVICE_LINKED_CHARITY_PERMISSION_IDS,
   grantableCharityPermissions,
   sanitizeCharityPermissions,
 } from "@/lib/charityPermissions";
@@ -115,40 +114,46 @@ export async function listCharityServices(charityId: string) {
   }
 }
 
+/**
+ * ما يُكتب في الصفّ بعد التحقّق — أو رسالةُ منعٍ تُعرض كما هي.
+ *
+ * **والمنحُ لحساب الجمعية الرسميِّ وحدَه.** وكانت القاعدةُ «تمنح ما تملك»، فمن
+ * يحمل «إدارة حسابات موظفي الجمعية» يمنحها لغيره فيتوالد المانحون، وسحبُها من
+ * واحدٍ لا يكفي. فمن يحملها اليومَ يُضيف موظّفاً ويُعطّله، ولا يمنح صلاحيّةً.
+ *
+ * وصلاحيّاتُ الخدمات تُخزَّن كما تُمنح — ولا تُسقَط كما كانت: خمودُها عند رفع
+ * الخدمة يُحسب في `effectiveCharityPermissions`، فالصفُّ يحفظ ما قرّره مانحُه
+ * وإعادةُ الخدمة تُعيده كما كان.
+ */
 function validateGrant(
-  actorIsAdmin: boolean,
-  actorPermissions: string[],
+  actorIsOfficial: boolean,
   requestedTitle: string,
   requestedPermissions: string[],
-  requestedIsAdmin: boolean
-): { permissions: string[]; isAdmin: boolean } | { error: string } {
+  requestedIsOfficial: boolean
+): { permissions: string[]; isOfficial: boolean } | { error: string } {
   if (!Object.values(CharityUserTitle).includes(requestedTitle as CharityUserTitle)) {
     return { error: "المسمى الوظيفي غير صالح" };
   }
 
-  if (requestedIsAdmin && !actorIsAdmin) {
-    return { error: "لا يمكن تعيين مدير للجمعية إلا من قِبل مدير" };
+  if (requestedIsOfficial && !actorIsOfficial) {
+    return { error: "لا يُعيَّن حسابُ الجمعية إلا من حساب الجمعية" };
   }
 
   // Retired ids arrive here on every save of a membership created before the
   // retirement — the editor seeds its draft from what is stored. They are
   // dropped, not refused; only an id nobody ever defined is an error.
-  // وتبويبات البوابة تُسقَط كذلك: صارت تُنال بتفويض الخدمة، فلا يمنحها مُنتقٍ.
-  // والمخزّن منها لا يُمَسّ — يُعاد إدراجه عند الحفظ حتى يُربط التبويب بخدمته.
-  const cleaned = sanitizeCharityPermissions(requestedPermissions).filter(
-    (p) => !SERVICE_LINKED_CHARITY_PERMISSION_IDS.includes(p)
-  );
+  const cleaned = sanitizeCharityPermissions(requestedPermissions);
 
   const unknown = cleaned.filter((p) => !ALL_CHARITY_PERMISSION_IDS.includes(p));
   if (unknown.length > 0) return { error: "صلاحية غير معروفة" };
 
-  const grantable = new Set(grantableCharityPermissions(actorIsAdmin, actorPermissions));
+  const grantable = new Set(grantableCharityPermissions(actorIsOfficial));
   const notGrantable = cleaned.filter((p) => !grantable.has(p));
   if (notGrantable.length > 0) {
-    return { error: "لا يمكنك منح صلاحية لا تملكها" };
+    return { error: "منحُ الصلاحيات من حساب الجمعية وحدَه" };
   }
 
-  return { permissions: cleaned, isAdmin: requestedIsAdmin };
+  return { permissions: cleaned, isOfficial: requestedIsOfficial };
 }
 
 export async function listCharityStaff(charityId: string) {
@@ -278,7 +283,7 @@ export async function createCharityStaff(
     const {
       session,
       permissions: actorPermissions,
-      isAdmin: actorIsAdmin,
+      isOfficial: actorIsOfficial,
     } = await requireCharityPermission(charityId, "manage_charity_users");
 
     const name = (data.name || "").trim();
@@ -286,8 +291,7 @@ export async function createCharityStaff(
     if (!canonical) return fail("رقم الجوال غير صحيح");
 
     const grant = validateGrant(
-      actorIsAdmin,
-      actorPermissions,
+      actorIsOfficial,
       data.title,
       data.permissions || [],
       data.isAdmin === true
@@ -301,7 +305,7 @@ export async function createCharityStaff(
     // و`isAdmin` لا يمنح خدمةً ضمناً: `charityServiceTeam` تقرأ صفوفَ التفويض
     // حرفاً، فمديرٌ بلا صفوفٍ لا يستلم بريد خدمةٍ واحدة — وهو من يُفترض أن
     // يصل إليه كلُّ شيءٍ في جمعيته. فيُفرض هنا لا يُترك لمن يملأ النموذج.
-    const services = grant.isAdmin
+    const services = grant.isOfficial
       ? await charityServiceNames(charityId)
       : checkedServices.names;
 
@@ -327,14 +331,14 @@ export async function createCharityStaff(
       const link = linkHere
         ? await prisma.charityUserCharity.update({
             where: { id: linkHere.id },
-            data: { isActive: true, permissions: grant.permissions, isAdmin: grant.isAdmin },
+            data: { isActive: true, permissions: grant.permissions, isAdmin: grant.isOfficial },
           })
         : await prisma.charityUserCharity.create({
             data: {
               charityUserId: existing.id,
               charityId,
               permissions: grant.permissions,
-              isAdmin: grant.isAdmin,
+              isAdmin: grant.isOfficial,
             },
           });
 
@@ -386,7 +390,7 @@ export async function createCharityStaff(
         title: data.title as CharityUserTitle,
         isActive: true,
         charities: {
-          create: { charityId, permissions: grant.permissions, isAdmin: grant.isAdmin },
+          create: { charityId, permissions: grant.permissions, isAdmin: grant.isOfficial },
         },
       },
       select: {
@@ -415,7 +419,7 @@ export async function createCharityStaff(
         title: data.title,
         permissions: grant.permissions,
         services,
-        isAdmin: grant.isAdmin,
+        isAdmin: grant.isOfficial,
       },
     });
 
@@ -441,7 +445,7 @@ export async function updateCharityStaff(
     const {
       session,
       permissions: actorPermissions,
-      isAdmin: actorIsAdmin,
+      isOfficial: actorIsOfficial,
     } = await requireCharityPermission(charityId, "manage_charity_users");
 
     if (targetUserId === session.id) {
@@ -458,13 +462,12 @@ export async function updateCharityStaff(
     // otherwise a user with manage_charity_users could strip the charity's
     // administrator and take the charity over. Read from the link, so it is this
     // charity's administrators that are protected, not another charity's.
-    if (link.isAdmin && !actorIsAdmin) {
+    if (link.isAdmin && !actorIsOfficial) {
       return fail("لا يمكن تعديل حساب مدير الجمعية إلا من قِبل مدير");
     }
 
     const grant = validateGrant(
-      actorIsAdmin,
-      actorPermissions,
+      actorIsOfficial,
       data.title,
       data.permissions || [],
       data.isAdmin === true
@@ -482,16 +485,17 @@ export async function updateCharityStaff(
     // يتقدّم عليها: ترقيةٌ بلا إرسال قائمةِ خدماتٍ كانت تترك المديرَ الجديد
     // بلا تفويضٍ أصلاً. وأثرُه أنّ أيَّ تعديلٍ لحساب مديرٍ يُصلح انحرافاً
     // سابقاً بلا أن يُطلب.
-    if (grant.isAdmin) services = await charityServiceNames(charityId);
+    if (grant.isOfficial) services = await charityServiceNames(charityId);
 
-    // تبويبات البوابة المخزّنة تبقى كما هي حتى يُربط التبويب بخدمةٍ عند زاد،
-    // فلا ينقطع وصولٌ قائم في منتصف الطريق.
-    const preserved = link.permissions.filter((p) => SERVICE_LINKED_CHARITY_PERMISSION_IDS.includes(p));
-    const permissions = [...new Set([...grant.permissions, ...preserved])];
+    // ولا شيءَ يُستبقى من الصفِّ القديم: المُنتقي يَعرض كلَّ ما يجوز منحُه —
+    // صلاحيّاتِ الخدمات والإدارةِ معاً — فالمُرسَلُ هو القرارُ كاملاً. وكان
+    // يُستبقى منه تبويباتُ البوّابة لأنّ المُنتقي لم يكن يعرضها، فكان سحبُها
+    // متعذّراً من أيِّ شاشة.
+    const permissions = grant.permissions;
 
     // Removing the last administrator would leave the charity unable to manage
     // its own accounts, recoverable only by Zad staff.
-    if (link.isAdmin && !grant.isAdmin) {
+    if (link.isAdmin && !grant.isOfficial) {
       const remaining = await countOtherActiveAdmins(charityId, targetUserId);
       if (remaining === 0) return fail("لا يمكن إزالة آخر مدير في الجمعية");
     }
@@ -524,7 +528,7 @@ export async function updateCharityStaff(
         : []),
       prisma.charityUserCharity.update({
         where: { id: link.id },
-        data: { permissions, isAdmin: grant.isAdmin },
+        data: { permissions, isAdmin: grant.isOfficial },
       }),
       ...(services === null
         ? []
@@ -547,7 +551,7 @@ export async function updateCharityStaff(
       action: "PERMISSION_CHANGE",
       targetType: "CharityUser",
       targetId: targetUserId,
-      metadata: { charityId, permissions, services, isAdmin: grant.isAdmin },
+      metadata: { charityId, permissions, services, isAdmin: grant.isOfficial },
     });
 
     return { success: true as const };
@@ -567,7 +571,7 @@ export async function setCharityStaffActive(
   isActive: boolean
 ) {
   try {
-    const { session, isAdmin: actorIsAdmin } = await requireCharityPermission(
+    const { session, isOfficial: actorIsOfficial } = await requireCharityPermission(
       charityId,
       "manage_charity_users"
     );
@@ -582,7 +586,7 @@ export async function setCharityStaffActive(
     });
     if (!link) return fail("الموظف غير موجود في هذه الجمعية");
 
-    if (link.isAdmin && !actorIsAdmin) {
+    if (link.isAdmin && !actorIsOfficial) {
       return fail("لا يمكن تعطيل حساب مدير الجمعية إلا من قِبل مدير");
     }
 

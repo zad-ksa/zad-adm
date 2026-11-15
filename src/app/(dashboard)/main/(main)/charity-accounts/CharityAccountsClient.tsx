@@ -8,18 +8,16 @@ import { addCharityClientAccount, deleteCharityClientAccount } from "@/app/actio
 import {
   CHARITY_PERMISSION_GROUPS,
   ALL_CHARITY_PERMISSION_IDS,
+  CHARITY_USER_TITLES,
+  charityTitleLabel,
 } from "@/lib/charityPermissions";
 import { Dialog } from "@/components/console/Dialog";
 import { btn, cx } from "@/components/console/ui";
 import { ConfirmDialog } from "@/components/console/ConfirmDialog";
 
-const titles = [
-  { value: "CHAIRMAN", label: "رئيس مجلس إدارة" },
-  { value: "CEO", label: "مدير تنفيذي" },
-  { value: "FULL_TIME", label: "موظف بدوام كامل" },
-  { value: "PART_TIME", label: "موظف بداوم جزئي" },
-  { value: "VOLUNTEER", label: "متطوع" },
-];
+// المسمّياتُ ووسومُها في `lib/charityPermissions` — كانت هنا نسخةٌ ثانيةٌ منها،
+// وفيها «بداوم» مكانَ «بدوام».
+const titles = CHARITY_USER_TITLES.map((t) => ({ value: t.id, label: t.label }));
 
 export default function CharityAccountsClient({ charities, accounts: initialAccounts }: { charities: any[], accounts: any[] }) {
   const [accounts, setAccounts] = useState(initialAccounts);
@@ -356,7 +354,7 @@ footer={
                   </td>
                   <td className={cx(tdClass, "text-caption font-semibold text-slate-800 dark:text-slate-200")}>{account.name}</td>
                   <td className={cx(tdClass, "text-caption font-semibold text-slate-600 dark:text-slate-400")}>
-                    {titles.find(t => t.value === account.title)?.label || account.title}
+                    {account.title ? charityTitleLabel(account.title) : "—"}
                   </td>
                   <td className={cx(tdClass, "text-caption font-semibold text-slate-600 dark:text-slate-400 text-left")} dir="ltr">{account.phone}</td>
                   <td className={cx(tdClass, "text-caption font-semibold text-slate-500 dark:text-slate-500")}>{new Date(account.createdAt).toLocaleDateString("en-GB")}</td>

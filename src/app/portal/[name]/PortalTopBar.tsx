@@ -6,6 +6,7 @@ import { LogOut, Moon, Sun, User } from "lucide-react";
 import { useTheme } from "next-themes";
 import { logout } from "@/app/actions/auth";
 import PortalNotices from "./PortalNotices";
+import { charityTitleLabel } from "@/lib/charityPermissions";
 import type { CharityNotice } from "@/app/actions/charityNotifications";
 
 /**
@@ -34,6 +35,8 @@ export default function PortalTopBar({
   notices: { notices: CharityNotice[]; unread: number };
   className?: string;
 }) {
+  // المسمّى وسمٌ عربيٌّ لا قيمةَ تعدادٍ: «FULL_TIME» تحت اسم الموظَّف ليست مسمّىً.
+  const titleLabel = accountTitle ? charityTitleLabel(accountTitle) : null;
   const { resolvedTheme, setTheme } = useTheme();
   const [open, setOpen] = useState(false);
   const boxRef = useRef<HTMLDivElement>(null);
@@ -89,8 +92,8 @@ export default function PortalTopBar({
             <span className="w-full truncate text-caption font-semibold text-slate-800 dark:text-slate-100">
               {accountName || "الحساب"}
             </span>
-            {accountTitle && (
-              <span className="w-full truncate text-caption text-slate-500 dark:text-slate-400">{accountTitle}</span>
+            {titleLabel && (
+              <span className="w-full truncate text-caption text-slate-500 dark:text-slate-400">{titleLabel}</span>
             )}
           </span>
           <span className="grid size-9 place-items-center rounded-full border border-primary/20 bg-primary/10 text-primary transition group-hover:ring-2 group-hover:ring-primary/40">

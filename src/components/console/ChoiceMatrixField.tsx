@@ -39,7 +39,67 @@ export function ChoiceMatrixField({
     <div>
       {hint && <p className="mb-2 text-meta text-slate-500 dark:text-slate-400">{hint}</p>}
 
-      <div className="overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-700">
+      {/*
+        **الهاتف: بطاقةٌ لكلِّ بند، وخياراتُه أزراراً تُقرأ بأسمائها.**
+        فعلامةُ الصحِّ في جدولٍ يُمرَّر تلزمها رأسُ عمودٍ يُرى — ورأسُ العمود أوّلُ
+        ما يغيب عند التمرير على الهاتف. فيُكتب اسمُ الخيار في زرِّه، ولا يُحتاج
+        إلى رأس.
+      */}
+      <div className="space-y-2 sm:hidden">
+        {rows.map((row) => {
+          const key = rowKey(row.id);
+          return (
+            <div
+              key={row.id}
+              className="rounded-lg border border-slate-200 bg-white p-2.5 dark:border-slate-700 dark:bg-slate-900"
+            >
+              <p className="mb-2 text-body font-medium leading-snug text-slate-700 dark:text-slate-200">{row.text}</p>
+              <div className="flex flex-wrap gap-1.5">
+                {columns.map((column) => {
+                  const checked = value[key] === column.id;
+                  return (
+                    <label
+                      key={column.id}
+                      className={cx(
+                        "flex cursor-pointer items-center gap-1.5 rounded-md border px-2.5 py-1.5 text-meta transition-colors",
+                        checked
+                          ? "border-primary bg-primary/10 font-semibold text-primary dark:border-teal-500 dark:bg-teal-500/10 dark:text-teal-300"
+                          : "border-slate-200 text-slate-600 dark:border-slate-700 dark:text-slate-300"
+                      )}
+                    >
+                      <input
+                        type="radio"
+                        name={`${key}-mobile`}
+                        value={column.id}
+                        checked={checked}
+                        onChange={() => onChange(key, column.id)}
+                        onClick={() => {
+                          if (checked) onChange(key, null);
+                        }}
+                        aria-label={`${row.text} — ${column.text}`}
+                        className="peer sr-only"
+                      />
+                      <span
+                        aria-hidden
+                        className={cx(
+                          "grid size-4 place-items-center rounded border transition-colors",
+                          "peer-focus-visible:ring-2 peer-focus-visible:ring-primary/40",
+                          checked ? "border-primary bg-primary text-white" : "border-slate-300 dark:border-slate-600"
+                        )}
+                      >
+                        {checked && <Check className="size-3" strokeWidth={3} />}
+                      </span>
+                      {column.text}
+                    </label>
+                  );
+                })}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      <div className="hidden overflow-x-auto rounded-xl border border-slate-200 sm:block dark:border-slate-700">
         <table className="w-full border-collapse" aria-label={label}>
           <thead>
             <tr className="bg-slate-50 dark:bg-slate-800/60">

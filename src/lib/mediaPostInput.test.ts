@@ -39,10 +39,10 @@ test("اليومُ مرسىً في UTC، فلا ينزلق إلى جاره", () 
 
 test("يُردّ ما لا يصحّ، برسالةٍ تُعرض كما هي", () => {
   const cases: [MediaPostFields, RegExp][] = [
-    [{ ...GOOD, content: "   " }, /نصُّ المنشور مطلوب/],
+    [{ ...GOOD, content: "   " }, /نص المنشور مطلوب/],
     [{ ...GOOD, scheduledOn: "غداً" }, /يوم النشر/],
-    [{ ...GOOD, platforms: [] }, /منصّةً واحدةً/],
-    [{ ...GOOD, platforms: ["  ", ""] }, /منصّةً واحدةً/],
+    [{ ...GOOD, platforms: [] }, /منصة واحدة/],
+    [{ ...GOOD, platforms: ["  ", ""] }, /منصة واحدة/],
     [{ ...GOOD, linkUrl: "javascript:alert(1)" }, /http/],
     [{ ...GOOD, linkUrl: "zad-co.sa" }, /http/],
   ];

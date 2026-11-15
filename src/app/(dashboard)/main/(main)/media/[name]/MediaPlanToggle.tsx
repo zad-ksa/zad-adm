@@ -37,7 +37,7 @@ export default function MediaPlanToggle({
       }
       notify(
         "ok",
-        next ? `ظهر التبويبُ لـ${charityName}` : `أُخفي التبويبُ عن ${charityName}`
+        next ? `تم اظهار التبويب لـ${charityName}` : `تم اخفاء التبويب عن ${charityName}`
       );
     });
   };
@@ -47,7 +47,7 @@ export default function MediaPlanToggle({
       checked={enabled}
       onChange={flip}
       busy={pending}
-      label={enabled ? "ظاهرةٌ للجمعية" : "مخفيّةٌ عن الجمعية"}
+      label={enabled ? "ظاهرة للجمعية" : "مخفية عن الجمعية"}
     />
   );
 }

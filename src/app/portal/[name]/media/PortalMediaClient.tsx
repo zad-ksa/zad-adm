@@ -143,7 +143,7 @@ export default function PortalMediaClient({
 
   const empty = {
     title: "لا منشورات في هذا الشهر",
-    description: "ما يضعه زادٌ لجمعيتكم يظهر هنا في يومه، فتعتمدونه أو تُعدِّلونه.",
+    description: "المنشورات التي يضعها زاد تظهر هنا في يوم نشرها.",
   };
 
   return (
@@ -159,12 +159,12 @@ export default function PortalMediaClient({
         <div className="flex flex-wrap items-center gap-2">
           {canEdit && waiting > 0 && <Badge tone="warn">{waiting} منشورٌ ينتظر اعتمادَكم</Badge>}
           <Segmented
-            label="هيئة العرض"
+            label="طريقة العرض"
             value={view}
             onChange={chooseView}
             options={[
               { id: "month", label: "شهر" },
-              { id: "week", label: "أسبوع" },
+              { id: "week", label: "اسبوع" },
               { id: "list", label: "قائمة" },
             ]}
           />
@@ -213,11 +213,11 @@ export default function PortalMediaClient({
           platforms={platforms.filter((p) => p.isActive || editing.platforms.includes(p.key))}
           banner={
             <Note tone="brand">
-              تعديلُكم يُرفع إلى زادٍ ليُعمِّده، ويظهر له ما غيّرتموه حقلاً حقلاً. ولا تعديلَ ثانياً
-              قبل أن يُبَتَّ فيه.
+              التعديل يرفع الى زاد لاعتماده، ويظهر له ما تم تغييره. ولا يمكن تعديله مرة
+              اخرى قبل الرد عليه.
             </Note>
           }
-          savedMessage="رُفع تعديلُكم إلى زاد"
+          savedMessage="تم رفع التعديل الى زاد"
           submit={(draft: MediaPostDraft) => updatePortalMediaPost(editing.id, draft)}
           onClose={() => setEditing(null)}
           onSaved={() => {
@@ -297,8 +297,8 @@ function PortalDetailSheet({
   const approve = async () => {
     if (!post) return;
     const ok = await confirmAction({
-      title: "اعتماد المنشور نهائيّاً؟",
-      message: "بعد الاعتماد لا تستطيعون تعديلَه — ولا يُفتح إلا من زادٍ بسببٍ يُعرض عليكم.",
+      title: "اعتماد المنشور نهائيا؟",
+      message: "بعد الاعتماد لا يمكن تعديله — ولا يفتح الا من زاد بسبب يعرض عليكم.",
       confirmLabel: "اعتماد",
       tone: "primary",
     });
@@ -310,7 +310,7 @@ function PortalDetailSheet({
         setError(result.error);
         return;
       }
-      notify("ok", "اعتُمد المنشور");
+      notify("ok", "تم اعتماد المنشور");
       setLoads((n) => n + 1);
       onChanged();
     });
@@ -357,15 +357,15 @@ function PortalDetailSheet({
           {post.status === MEDIA_STATUS.PENDING_CHARITY && (
             <Note tone="warn">
               {canEdit
-                ? "ينتظر اعتمادَكم: اعتمِدوه كما هو، أو عدّلوه فيُرفع تعديلُكم إلى زادٍ ليُعمِّده."
-                : "ينتظر اعتمادَ الجمعية — والاعتمادُ لمن يحمل «تحرير الخطة الإعلامية»."}
+                ? "بانتظار اعتماد الجمعية: يمكن اعتماده كما هو أو تعديله."
+                : "بانتظار اعتماد الجمعية — والاعتماد لمن يملك صلاحية تحرير الخطة الاعلامية."}
             </Note>
           )}
           {post.status === MEDIA_STATUS.PENDING_ZAD && (
-            <Note tone="brand">تعديلُكم مرفوعٌ إلى زاد، ينتظر تعميدَه. وما غيّرتموه مكتوبٌ في السجلّ أدناه.</Note>
+            <Note tone="brand">التعديل مرفوع الى زاد بانتظار اعتماده، وما تم تغييره مكتوب في السجل ادناه.</Note>
           )}
           {post.status === MEDIA_STATUS.FINAL && (
-            <Note tone="brand">معتمَدٌ نهائيّاً. ولا يُفتح إلا من زادٍ بسببٍ يُعرض عليكم ثمّ يعود لاعتمادكم.</Note>
+            <Note tone="brand">معتمد نهائيا. ولا يفتح الا من زاد بسبب يعرض عليكم، ثم يعود لاعتماد الجمعية.</Note>
           )}
         </MediaPostDetail>
       )}

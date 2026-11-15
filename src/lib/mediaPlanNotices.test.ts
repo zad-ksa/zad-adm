@@ -15,9 +15,9 @@ test("حدثُ زادٍ يُنبَّه به الجمعيةُ، وحدثُ الج
 });
 
 test("العنوانُ يقول ما يُنتظر من قارئه", () => {
-  assert.match(mediaNotice("CREATED", CTX)!.title, /ينتظر اعتمادكم/);
-  assert.match(mediaNotice("EDITED_BY_CHARITY", CTX)!.title, /ينتظر تعميدَك/);
-  assert.match(mediaNotice("REJECTED_BY_ZAD", CTX)!.title, /رُدَّ/);
+  assert.match(mediaNotice("CREATED", CTX)!.title, /بانتظار اعتمادكم/);
+  assert.match(mediaNotice("EDITED_BY_CHARITY", CTX)!.title, /بانتظار اعتمادك/);
+  assert.match(mediaNotice("REJECTED_BY_ZAD", CTX)!.title, /رد تعديلكم/);
 });
 
 test("اليومُ يُكتب باسم يومه، فيُعرف الإشعارُ بلا فتح الصفحة", () => {

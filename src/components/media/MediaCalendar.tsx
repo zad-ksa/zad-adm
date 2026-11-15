@@ -259,7 +259,7 @@ export function WeekView({
                   >
                     <div className="mb-1 flex items-center justify-between gap-1">
                       <span className="text-caption font-semibold text-slate-500">
-                        {post.scheduledAt ? formatTime(post.scheduledAt) : "بلا وقت"}
+                        {post.scheduledAt ? formatTime(post.scheduledAt) : "بدون وقت"}
                       </span>
                       <Mark status={post.status} side={side} />
                     </div>

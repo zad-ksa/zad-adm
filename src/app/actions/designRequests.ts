@@ -12,6 +12,7 @@ import { createAppNotification } from "./notifications";
 import { logAudit } from "@/lib/auditLog";
 import { logDesignEvent, logDesignEvents, SYSTEM_ACTOR } from "@/lib/designRequestLog";
 import type { DesignEventActor } from "@/lib/designRequestLog";
+import { MEDIA_TEAM_LABEL } from "@/lib/mediaPlan";
 import {
   REVIEW_WINDOW_WORK_MINUTES,
   reviewDeadline,
@@ -1567,11 +1568,14 @@ export async function getDesignRequestLog(requestId: string) {
   });
   if (!request) return { error: "الطلب غير موجود" as const };
 
+  // ومن يقرأ: موظَّفُ زادٍ أم الجمعية؟ منه يُعرف ما يُرسَل من أسماء.
+  let forCharity = false;
   try {
     await requireDesignStaff();
   } catch {
     if (request.charity.isInternal) return { error: "غير مصرح" as const };
     await requireCharityMemberPermission(request.charityId, "view_design_requests");
+    forCharity = true;
   }
 
   const events = await prisma.designRequestEvent.findMany({
@@ -1587,7 +1591,24 @@ export async function getDesignRequestLog(requestId: string) {
     },
   });
 
-  return { success: true as const, title: request.title, events };
+  /**
+   * **ولا يُرسَل اسمُ موظَّفِ زادٍ إلى الجمعية**: الخطوةُ عملُ الفريق لا عملُ
+   * فردٍ، والجمعيةُ تتعامل مع زادٍ لا مع أشخاصها. فيُكتب «فريق الإعلامية» مكان
+   * الاسم.
+   *
+   * والحجبُ هنا لا في الشاشة: ما لا يُرسَل لا يُقرأ من أداة المطوّر، ولا يظهر
+   * في شاشةٍ أخرى تنسى الشرط. وأسماءُ أعضاء الجمعية تبقى كما هي — هم زملاءُ
+   * من يقرأ.
+   */
+  const shown = forCharity
+    ? events.map((event) =>
+        event.actorType === "EMPLOYEE"
+          ? { ...event, actorName: MEDIA_TEAM_LABEL }
+          : event
+      )
+    : events;
+
+  return { success: true as const, title: request.title, events: shown };
 }
 
 // ── أنواع التصاميم ──────────────────────────────────────────────────────────

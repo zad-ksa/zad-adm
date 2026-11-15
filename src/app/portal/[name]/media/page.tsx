@@ -50,7 +50,7 @@ export default async function PortalMediaPage({ params }: { params: Promise<{ na
     <PageHeader
       icon={<Megaphone className="size-5 text-primary" />}
       title="الخطة الإعلامية"
-      description={canEdit ? "ما يضعه زادٌ لجمعيتكم — تعتمدونه أو تُعدِّلونه" : "ما يضعه زادٌ لجمعيتكم — اطّلاعاً"}
+      description="خطة النشر الشهرية لجمعيتكم"
     />
   );
 
@@ -61,7 +61,7 @@ export default async function PortalMediaPage({ params }: { params: Promise<{ na
       <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-500" dir="rtl">
         {header}
         <Note tone="warn">
-          لم تُفعَّل الخطّةُ الإعلاميّةُ لجمعيتكم بعد. تُفعَّل من زادٍ حين تصير جاهزةً للعرض.
+          لم تفعل الخطة الاعلامية لجمعيتكم بعد. تفعل من زاد حين تصير جاهزة للعرض.
         </Note>
       </div>
     );
@@ -74,8 +74,8 @@ export default async function PortalMediaPage({ params }: { params: Promise<{ na
       <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-500" dir="rtl">
         {header}
         <Note tone="warn">
-          خدمةُ «{MEDIA_SERVICE}» غير مشمولةٍ لجمعيتكم في زاد، فلا خطّةَ إعلاميّةً تُعرض هنا. راجعوا
-          مسؤولَ حسابكم في زاد.
+          خدمة «{MEDIA_SERVICE}» غير مشمولة لجمعيتكم في زاد، فلا خطة اعلامية تعرض هنا. راجعوا
+          مسؤول حسابكم في زاد.
         </Note>
       </div>
     );

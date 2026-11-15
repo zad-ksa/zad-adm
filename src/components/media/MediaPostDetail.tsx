@@ -102,7 +102,7 @@ export default function MediaPostDetail({
       )}
 
       <div className="flex items-center gap-2">
-        <span className="text-meta text-slate-500">المنصّات:</span>
+        <span className="text-meta text-slate-500">المنصات:</span>
         <PlatformRow platforms={marksOf(post.platforms)} size={18} max={9} />
       </div>
 

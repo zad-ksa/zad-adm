@@ -18,7 +18,7 @@ import {
   X,
 } from "lucide-react";
 import {
-  CHARITY_PERMISSION_GROUPS,
+  charityPermissionGroups,
   CHARITY_USER_TITLES,
   charityTitleLabel,
   sanitizeCharityPermissions,
@@ -97,8 +97,8 @@ const LOOKUP_DEBOUNCE_MS = 400;
 /**
  * الخدمات المفوَّض لها العضو.
  *
- * تبويبات البوابة تُربط بخدمات من صفحة «الصلاحيات» عند زاد، فلا يرى العضو
- * التبويب إلا إن فُوِّض خدمته. ومدير الجمعية مرتبطٌ بها جميعاً بلا اختيار.
+ * وكلُّ صلاحيّةٍ تتبع خدمةً، ولا تعمل إلا والخدمةُ مفوَّضةٌ له — فالخدماتُ تُختار
+ * أوّلاً ثمّ تُعرض صلاحيّاتُها تحتها. وحسابُ الجمعية مفوَّضٌ بها جميعاً بلا اختيار.
  *
  * ومثل PermissionEditor: في نطاق الوحدة لا داخل المكوّن، وإلا فقد الحقل تركيزه
  * مع كل ضغطة مفتاح.
@@ -159,15 +159,29 @@ function ServiceEditor({
 function PermissionEditor({
   selected,
   grantable,
+  services,
   onToggle,
 }: {
   selected: string[];
   grantable: Set<string>;
+  /**
+   * خدماتُ هذا العضو المختارةُ الآن — تحت كلِّ واحدةٍ صلاحيّاتُها.
+   *
+   * فالصلاحيّةُ تتبع خدمةً، ولا تعمل إلا والخدمةُ مفوَّضةٌ له. وعرضُها قبل
+   * اختيار خدمتها منحٌ لما لا يعمل.
+   */
+  services: string[];
   onToggle: (id: string) => void;
 }) {
+  const groups = charityPermissionGroups(services);
   return (
     <div className="space-y-4">
-      {CHARITY_PERMISSION_GROUPS.map((group) => {
+      {groups.length === 0 && (
+        <p className="text-slate-400 dark:text-slate-500" style={fs.body}>
+          اختر خدمةً أعلاه لتظهر صلاحيّاتُها.
+        </p>
+      )}
+      {groups.map((group) => {
         // Only permissions the signed-in manager holds are offered — the subset
         // rule, mirrored server-side in validateGrant.
         const available = group.permissions.filter((p) => grantable.has(p.id));
@@ -253,11 +267,11 @@ function AdminToggle({
       <span className="flex flex-col gap-1">
         <span className="font-semibold flex items-center gap-1.5">
           <ShieldCheck className="w-3.5 h-3.5" />
-          مدير الجمعية
+          حساب الجمعية الرسمي
         </span>
         <span className="text-slate-400 dark:text-slate-500" style={fs.meta}>
-          يملك كل الصلاحيات داخل هذه الجمعية وحدها. لا يؤثر على أي جمعية أخرى
-          يعمل بها الشخص نفسه.
+          يملك كل الصلاحيات داخل هذه الجمعية وحدها — بما يُضاف منها لاحقاً — وهو وحده
+          يمنح الصلاحيات والخدمات. لا يؤثر على أي جمعية أخرى يعمل بها الشخص نفسه.
         </span>
       </span>
     </button>
@@ -405,6 +419,21 @@ export default function StaffManagerClient({
 
   function toggleIn(list: string[], id: string) {
     return list.includes(id) ? list.filter((p) => p !== id) : [...list, id];
+  }
+
+  /**
+   * تبديلُ خدمةٍ — ومعها تُنقّى الصلاحيّاتُ التي لا تبقى لها خدمة.
+   *
+   * فلو بقيت محدَّدةً بعد رفع خدمتها لحُفظت ولا تُرى في المُنتقي: قيمةٌ تَثبُت
+   * في الصفِّ ولا يظهر لها مربَّعٌ يُلغيها. والصلاحيّاتُ الإداريّةُ لا تتبع
+   * خدمةً فتبقى.
+   */
+  function withService(draft: { services: string[]; permissions: string[] }, name: string) {
+    const services = toggleIn(draft.services, name);
+    const allowed = new Set(
+      charityPermissionGroups(services).flatMap((g) => g.permissions.map((p) => p.id))
+    );
+    return { services, permissions: draft.permissions.filter((id) => allowed.has(id)) };
   }
 
   function resetAddForm() {
@@ -756,19 +785,22 @@ export default function StaffManagerClient({
             />
           )}
 
-          <PermissionEditor
-            selected={form.permissions}
-            grantable={grantable}
-            onToggle={(id) => setForm({ ...form, permissions: toggleIn(form.permissions, id) })}
-          />
-
+          {/* الخدماتُ أوّلاً ثمّ صلاحيّاتُها تحتها: الصلاحيّةُ تتبع خدمةً، فترتيبُ
+              العكسِ يَعرض ما لا يعمل. */}
           {!form.isAdmin && (
             <ServiceEditor
               services={charityServices}
               selected={form.services}
-              onToggle={(name) => setForm({ ...form, services: toggleIn(form.services, name) })}
+              onToggle={(name) => setForm({ ...form, ...withService(form, name) })}
             />
           )}
+
+          <PermissionEditor
+            selected={form.permissions}
+            grantable={grantable}
+            services={form.services}
+            onToggle={(id) => setForm({ ...form, permissions: toggleIn(form.permissions, id) })}
+          />
 
           <div className="flex flex-wrap gap-2">
             <button
@@ -824,7 +856,7 @@ export default function StaffManagerClient({
                       {member.isAdmin && (
                         <Chip tone="primary">
                           <ShieldCheck className="w-3 h-3" />
-                          مدير الجمعية
+                          حساب الجمعية
                         </Chip>
                       )}
                       {isSelf && <Chip>أنت</Chip>}
@@ -962,22 +994,21 @@ export default function StaffManagerClient({
                   className="rounded-xl px-4 py-3 leading-relaxed font-medium text-primary dark:text-teal-400 bg-primary/[0.06] dark:bg-teal-400/[0.06]"
                   style={fs.body}
                 >
-                  مدير الجمعية يملك جميع الصلاحيات تلقائياً — بما يُضاف منها لاحقاً.
+                  حساب الجمعية يملك جميع الصلاحيات تلقائياً — بما يُضاف منها لاحقاً — ويُفوَّض بكل خدماتها.
                 </p>
               ) : (
                 <>
-                  <PermissionEditor
-                    selected={editDraft.permissions}
-                    grantable={grantable}
-                    onToggle={(id) =>
-                      setEditDraft({ ...editDraft, permissions: toggleIn(editDraft.permissions, id) })
-                    }
-                  />
                   <ServiceEditor
                     services={charityServices}
                     selected={editDraft.services}
-                    onToggle={(name) =>
-                      setEditDraft({ ...editDraft, services: toggleIn(editDraft.services, name) })
+                    onToggle={(name) => setEditDraft({ ...editDraft, ...withService(editDraft, name) })}
+                  />
+                  <PermissionEditor
+                    selected={editDraft.permissions}
+                    grantable={grantable}
+                    services={editDraft.services}
+                    onToggle={(id) =>
+                      setEditDraft({ ...editDraft, permissions: toggleIn(editDraft.permissions, id) })
                     }
                   />
                 </>

@@ -3,7 +3,6 @@
 import { prisma } from "@/lib/db";
 import { getSession } from "@/lib/auth";
 import { hasPermission, isAdmin, ALL_PERMISSION_IDS, sanitizePermissions } from "@/lib/permissions";
-import { SERVICE_LINKED_CHARITY_PERMISSION_IDS } from "@/lib/charityPermissions";
 import { logAudit } from "@/lib/auditLog";
 import { revalidatePath } from "next/cache";
 
@@ -500,12 +499,10 @@ export async function setPermissionServices(permissionId: string, serviceNames: 
   try {
     const session = await requireBundleAuthority();
 
-    // تبويبات بوابة الجمعيات تُربط من هنا كذلك، وهي في كتالوجٍ آخر — كان
-    // التحقق بكتالوج زاد وحده فيُرفض ربط «الحوكمة» بخدمتها.
-    const known =
-      ALL_PERMISSION_IDS.includes(permissionId) ||
-      SERVICE_LINKED_CHARITY_PERMISSION_IDS.includes(permissionId);
-    if (!known) return fail("صلاحية غير معروفة");
+    // وصلاحيّاتُ جهة الجمعيات لا تُربط من هنا: كلُّ واحدةٍ تتبع خدمتَها
+    // **بتعريفها** في `CHARITY_SERVICE_PERMISSIONS`، لا بصفٍّ يُحرَّر. وكان
+    // الربطُ يُقبل لها، فتبويبٌ يُفتح أو يُغلق على جمعياتٍ بنقرةٍ هنا.
+    if (!ALL_PERMISSION_IDS.includes(permissionId)) return fail("صلاحية غير معروفة");
 
     const svc = await checkServices(serviceNames || []);
     if (!svc.ok) return fail(`خدمة غير موجودة: ${svc.bad}`);

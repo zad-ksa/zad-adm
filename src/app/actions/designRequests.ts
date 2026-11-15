@@ -103,8 +103,8 @@ async function requireDesignStaff() {
  */
 async function requireCharityMemberPermission(charityId: string, permission: string) {
   try {
-    const { session, effective, isAdmin } = await requireCharityEffective(charityId);
-    if (!hasCharityPermission(isAdmin, effective, permission)) {
+    const { session, effective } = await requireCharityEffective(charityId);
+    if (!hasCharityPermission(effective, permission)) {
       throw new Error("غير مصرح لك بإجراء هذه العملية");
     }
     return session;

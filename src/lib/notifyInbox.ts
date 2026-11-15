@@ -1,6 +1,5 @@
 import { prisma } from "@/lib/db";
-import { charityPermissionLinks } from "@/lib/guards";
-import { effectiveCharityPermissions } from "@/lib/charityPermissions";
+import { effectiveCharityPermissions, hasCharityPermission } from "@/lib/charityPermissions";
 
 /**
  * كتابةُ الإشعارات — لموظَّفي زادٍ ولحسابات الجمعيات.
@@ -58,29 +57,28 @@ export async function notifyCharityMembers(
   notice: Notice
 ): Promise<void> {
   try {
-    const [members, links] = await Promise.all([
-      prisma.charityUserCharity.findMany({
-        where: { charityId, isActive: true },
-        select: {
-          charityUserId: true,
-          permissions: true,
-          isAdmin: true,
-          services: { select: { serviceName: true } },
-        },
-      }),
-      charityPermissionLinks(),
-    ]);
+    const members = await prisma.charityUserCharity.findMany({
+      where: { charityId, isActive: true },
+      select: {
+        charityUserId: true,
+        permissions: true,
+        isAdmin: true,
+        services: { select: { serviceName: true } },
+      },
+    });
 
     const recipients = members
-      .filter((m) => {
-        if (m.isAdmin) return true;
-        const effective = effectiveCharityPermissions(
-          (m.permissions as string[]) ?? [],
-          m.services.map((s) => s.serviceName),
-          links
-        );
-        return effective.includes(permission);
-      })
+      .filter((m) =>
+        hasCharityPermission(
+          effectiveCharityPermissions(
+            (m.permissions as string[]) ?? [],
+            m.services.map((s) => s.serviceName),
+            // `isAdmin` في القاعدة = حسابُ الجمعية الرسميّ، وهو يحمل كلَّ شيء.
+            m.isAdmin
+          ),
+          permission
+        )
+      )
       .map((m) => m.charityUserId);
 
     if (recipients.length === 0) return;

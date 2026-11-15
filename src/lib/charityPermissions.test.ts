@@ -1,121 +1,158 @@
-import { strict as assert } from "node:assert";
-import { test } from "node:test";
+import test from "node:test";
+import assert from "node:assert/strict";
 import {
-  SERVICE_LINKED_CHARITY_PERMISSION_IDS,
+  ALL_CHARITY_PERMISSION_IDS,
+  CHARITY_SERVICE_PERMISSIONS,
+  CHARITY_USER_TITLES,
+  GRANTABLE_CHARITY_PERMISSION_IDS,
+  RETIRED_CHARITY_PERMISSION_IDS,
+  charityPermissionGroups,
+  charityPermissionLabel,
+  charityPermissionsOfService,
+  charityServicesWithPermissions,
+  charityTitleLabel,
   effectiveCharityPermissions,
+  grantableCharityPermissions,
   hasCharityPermission,
+  sanitizeCharityPermissions,
+  seesCharityServicesTab,
+  serviceOfCharityPermission,
+  visibleCharityServices,
 } from "./charityPermissions.ts";
 
-/** الربطُ القائمُ اليوم عند زاد، مختصَراً. */
-const LINKS = [
-  { permissionId: "view_services", serviceName: "المالية" },
-  { permissionId: "view_services", serviceName: "الحوكمة" },
-  { permissionId: "view_services", serviceName: "الإعلامية" },
-  { permissionId: "view_governance", serviceName: "الحوكمة" },
-  { permissionId: "view_design_requests", serviceName: "الإعلامية" },
+const MEDIA = "الإعلامية";
+const GOVERNANCE = "الحوكمة";
+
+/** خدماتُ زادٍ التسع كما في `SECTION_SERVICES` وصفوف `Service`. */
+const NINE = [
+  "الإدارية",
+  "الإسناد الحكومي",
+  MEDIA,
+  "التخطيط الاستراتيجي",
+  "التسويق وتنمية الموارد المالية",
+  "التقنية",
+  GOVERNANCE,
+  "المالية",
+  "خدمات المشاريع",
 ];
 
-test("الموظَّفُ الجديد: التبويباتُ تُنال بالتفويض لا بالمصفوفة", () => {
-  // هذه هي الحالةُ التي ظهر فيها العطب: الحفظُ يُسقط تبويباتَ البوابة من
-  // المصفوفة عن قصد، فيبقى معه صلاحيّتا الإدارة وتسعُ خدماتٍ مفوَّضة.
-  const effective = effectiveCharityPermissions(
-    ["manage_charity_users", "manage_charity_mail"],
-    ["المالية", "الحوكمة", "الإعلامية"],
-    LINKS
-  );
-  assert.ok(effective.includes("view_services"));
-  assert.ok(effective.includes("view_governance"));
-  assert.ok(effective.includes("view_design_requests"));
-  // وما ليس تبويباً يمرّ كما هو.
-  assert.ok(effective.includes("manage_charity_users"));
-  assert.ok(effective.includes("manage_charity_mail"));
+test("كلُّ صلاحيّةِ خدمةٍ تتبع خدمةً من خدمات زاد المعروفة", () => {
+  for (const p of CHARITY_SERVICE_PERMISSIONS) {
+    assert.ok(p.service, `${p.id} بلا خدمة`);
+    assert.ok(NINE.includes(p.service!), `${p.id} يتبع خدمةً مجهولة: ${p.service}`);
+  }
+  assert.deepEqual(charityServicesWithPermissions(), [MEDIA, GOVERNANCE]);
 });
 
-/**
- * ما يسأله الحارسُ قبل كلِّ فعل — تركيبُ الدالّتين كما في
- * `requireCharityPermission`.
- *
- * ولزم اختبارُه مُركَّباً لا مفرَّقاً: كلتاهما كانت صحيحةً وحدَها، والعطبُ
- * كان أنّ الحارسَ لم يُركِّبهما — قرأ المخزّنةَ وتجاوز الفعليّة. فعضوٌ مفوَّضٌ
- * بـ«الإعلامية» يَفتح تبويبَ طلبات التصاميم ثمّ يُرَدّ عند الإرسال.
- */
-const guardAllows = (
-  isAdmin: boolean,
-  stored: string[],
-  services: string[],
-  permission: string
-) => hasCharityPermission(isAdmin, effectiveCharityPermissions(stored, services, LINKS), permission);
-
-test("الحارسُ يأذن للمفوَّض برفع طلب تصميم — وهو العطبُ الذي وقع", () => {
-  // عبدالرحمن في الرأفة الإنسانية: مصفوفتُه صلاحيّتا إدارةٍ لا غير، وتفويضُه
-  // ثماني خدماتٍ منها «الإعلامية».
-  assert.ok(
-    guardAllows(
-      false,
-      ["manage_charity_users", "manage_charity_mail"],
-      ["الإعلامية", "الإدارية", "المالية"],
-      "view_design_requests"
-    )
-  );
+test("صلاحيّاتُ الإعلاميّة: طلباتُ التصاميم وتحريرُ الخطة", () => {
+  const ids = charityPermissionsOfService(MEDIA).map((p) => p.id);
+  assert.deepEqual(ids, ["view_design_requests", "edit_media_plan"]);
+  assert.equal(serviceOfCharityPermission("edit_media_plan"), MEDIA);
+  assert.equal(serviceOfCharityPermission("manage_charity_users"), null);
 });
 
-test("ولا يأذن لمن في مصفوفته قيمةٌ قديمةٌ بلا تفويض", () => {
-  // قيمةٌ باقيةٌ من قبل الربط: الصفحةُ تمنعه أصلاً، فكان الفعلُ أوسعَ من
-  // الشاشة. وبعد الإصلاح يتّفقان.
-  assert.equal(guardAllows(false, ["view_design_requests"], [], "view_design_requests"), false);
-});
-
-test("ومديرُ الجمعية يأذن له بلا تفويض", () => {
-  assert.ok(guardAllows(true, [], [], "view_design_requests"));
-});
-
-test("ومصفوفةٌ مليئةٌ بلا تفويضٍ لا تُنيل تبويباً مربوطاً", () => {
-  // الاتّجاهُ الآخرُ من العطب: عضوٌ قديمٌ يحمل القيمَ المخزّنةَ ولا خدمةَ له،
-  // كان الشريطُ يُظهر له التبويبَ ثمّ تردُّه الصفحةُ إلى «لا صلاحية».
-  const effective = effectiveCharityPermissions(
-    ["view_services", "view_governance", "view_design_requests"],
-    [],
-    LINKS
-  );
-  for (const tab of SERVICE_LINKED_CHARITY_PERMISSION_IDS) {
-    assert.equal(effective.includes(tab), false, tab);
+test("حسابُ الجمعية يحمل كلَّ شيءٍ محسوباً — ولو كان صفُّه فارغاً", () => {
+  const effective = effectiveCharityPermissions([], [], true);
+  assert.deepEqual([...effective].sort(), [...ALL_CHARITY_PERMISSION_IDS].sort());
+  // «مهما زدنا»: كلُّ معرّفٍ في الكتالوج داخلٌ عنده، ومنه المخفيُّ بعلَم.
+  for (const id of ALL_CHARITY_PERMISSION_IDS) {
+    assert.ok(hasCharityPermission(effective, id), id);
   }
 });
 
-test("والتفويضُ الجزئيُّ يُنيل تبويبَه وحدَه", () => {
-  const effective = effectiveCharityPermissions([], ["الإعلامية"], LINKS);
-  assert.deepEqual(effective.sort(), ["view_design_requests", "view_services"].sort());
-  // الحوكمةُ لم تُفوَّض، فتبويبُها لا يُنال — ولو كانت الإعلاميّةُ تكفي
-  // لتبويب الخدمات.
-  assert.equal(effective.includes("view_governance"), false);
+test("صلاحيّةُ خدمةٍ لا تعمل إلا والخدمةُ مفوَّضة — ولا تُحذف من صفِّه", () => {
+  const stored = ["view_design_requests", "edit_media_plan", "view_governance", "manage_charity_mail"];
+  const withMedia = effectiveCharityPermissions(stored, [MEDIA], false);
+  assert.deepEqual(withMedia, ["view_design_requests", "edit_media_plan", "manage_charity_mail"]);
+
+  // رُفعت الخدمةُ: خمدت صلاحيّاتُها وبقيت الإداريّة.
+  assert.deepEqual(effectiveCharityPermissions(stored, [], false), ["manage_charity_mail"]);
+  // وأُعيدت: عادت كما كانت، فالصفُّ لم يُمَسّ.
+  assert.deepEqual(effectiveCharityPermissions(stored, [MEDIA, GOVERNANCE], false), stored);
 });
 
-test("وتبويبٌ لم يُربط بعد يبقى على المخزّن", () => {
-  // الربطُ يُفعَّل تدريجيّاً عند زاد، فما لم يُربط لا ينقطع عن حامله.
-  const linksWithoutGovernance = LINKS.filter((l) => l.permissionId !== "view_governance");
-  const effective = effectiveCharityPermissions(
-    ["view_governance"],
-    [],
-    linksWithoutGovernance
+test("لا شيءَ يُنال بالصفة: المصفوفةُ الفعليّةُ وحدَها هي المقياس", () => {
+  const member = effectiveCharityPermissions(["view_design_requests"], [MEDIA], false);
+  assert.ok(hasCharityPermission(member, "view_design_requests"));
+  assert.ok(!hasCharityPermission(member, "edit_media_plan"));
+  assert.ok(!hasCharityPermission(member, "manage_charity_users"));
+});
+
+test("المتقاعدُ يُسقَط: «الخدمات» و«الخطة الإعلامية» صارتا مشتقّتين", () => {
+  for (const id of ["view_services", "view_media_plan", "view_hr", "create_design_requests"]) {
+    assert.ok(RETIRED_CHARITY_PERMISSION_IDS.includes(id), id);
+    assert.ok(!ALL_CHARITY_PERMISSION_IDS.includes(id), `${id} ما زال في الكتالوج`);
+  }
+  assert.deepEqual(
+    sanitizeCharityPermissions(["view_services", "view_media_plan", "view_governance", "view_governance"]),
+    ["view_governance"]
   );
-  assert.ok(effective.includes("view_governance"));
-  // وغيرُه مربوطٌ بلا تفويض، فلا يُنال.
-  assert.equal(effective.includes("view_services"), false);
+  assert.deepEqual(effectiveCharityPermissions(["view_services", "view_media_plan"], NINE, false), []);
 });
 
-test("ولا تُضاعف قيمةٌ ولا تُقحَم خدمةٌ ليست تبويباً", () => {
+test("المنحُ لحساب الجمعية وحدَه", () => {
+  assert.deepEqual(grantableCharityPermissions(true), GRANTABLE_CHARITY_PERMISSION_IDS);
+  assert.deepEqual(grantableCharityPermissions(false), []);
+  assert.deepEqual(grantableCharityPermissions(null), []);
+  // ولا يُمنح متقاعدٌ ولا مجهول.
+  for (const id of GRANTABLE_CHARITY_PERMISSION_IDS) {
+    assert.ok(ALL_CHARITY_PERMISSION_IDS.includes(id), id);
+    assert.ok(!RETIRED_CHARITY_PERMISSION_IDS.includes(id), id);
+  }
+});
+
+test("المُنتقي يُبنى من خدمات الجمعية: ما لا تشمله لا يُعرض", () => {
+  const all = charityPermissionGroups(NINE).map((g) => g.title);
+  assert.deepEqual(all, [MEDIA, GOVERNANCE, "صلاحيات الإدارة"]);
+
+  const mediaOnly = charityPermissionGroups([MEDIA]);
+  assert.deepEqual(mediaOnly.map((g) => g.title), [MEDIA, "صلاحيات الإدارة"]);
+  assert.deepEqual(mediaOnly[0].permissions.map((p) => p.id), ["view_design_requests", "edit_media_plan"]);
+
+  // جمعيةٌ بلا خدمةٍ ذاتِ صلاحيّات: الإدارةُ وحدَها.
+  assert.deepEqual(charityPermissionGroups(["التقنية"]).map((g) => g.title), ["صلاحيات الإدارة"]);
+  assert.deepEqual(charityPermissionGroups([]).map((g) => g.title), ["صلاحيات الإدارة"]);
+});
+
+test("تبويبُ «الخدمات»: خدمةٌ له فيها صلاحيّةٌ واحدةٌ تُعرض بتمامها", () => {
+  const effective = effectiveCharityPermissions(["view_design_requests"], [MEDIA], false);
+  assert.ok(seesCharityServicesTab(false, effective));
+  assert.deepEqual(visibleCharityServices({ isOfficialAccount: false, effective, charityServices: NINE }), [MEDIA]);
+});
+
+test("ومن له صلاحيّاتُ خدمتين يرى الخدمتين — لا التسع", () => {
   const effective = effectiveCharityPermissions(
-    ["manage_charity_users", "manage_charity_users"],
-    ["المالية"],
-    [...LINKS, { permissionId: "manage_finance", serviceName: "المالية" }]
+    ["edit_media_plan", "view_governance"],
+    [MEDIA, GOVERNANCE],
+    false
   );
-  assert.deepEqual([...new Set(effective)], effective);
-  // `manage_finance` مربوطةٌ بخدمةٍ لكنّها ليست من تبويبات البوابة، فلا
-  // تُمنَح بالتفويض — صلاحياتُ زاد لا تُنال من هنا.
-  assert.equal(effective.includes("manage_finance"), false);
+  assert.deepEqual(visibleCharityServices({ isOfficialAccount: false, effective, charityServices: NINE }), [
+    MEDIA,
+    GOVERNANCE,
+  ]);
 });
 
-test("والعدمُ لا يُسقطها", () => {
-  assert.deepEqual(effectiveCharityPermissions(null, null, []), []);
-  assert.deepEqual(effectiveCharityPermissions(undefined, undefined, LINKS), []);
+test("ومن لا صلاحيّةَ خدمةٍ له لا يرى التبويب", () => {
+  const effective = effectiveCharityPermissions(["manage_charity_mail"], NINE, false);
+  assert.ok(!seesCharityServicesTab(false, effective));
+  assert.deepEqual(visibleCharityServices({ isOfficialAccount: false, effective, charityServices: NINE }), []);
+});
+
+test("وحسابُ الجمعية يرى خدماتِ جمعيتِه كلَّها ولا يرى ما ليس فيها", () => {
+  assert.ok(seesCharityServicesTab(true, []));
+  assert.deepEqual(
+    visibleCharityServices({ isOfficialAccount: true, effective: [], charityServices: [MEDIA, "التقنية"] }),
+    [MEDIA, "التقنية"]
+  );
+});
+
+test("الوسومُ عربيّةٌ، و«مدير النظام» صار «حساب الجمعية»", () => {
+  assert.equal(charityTitleLabel("SYSTEM_ADMIN"), "حساب الجمعية");
+  for (const t of CHARITY_USER_TITLES) {
+    assert.equal(charityTitleLabel(t.id), t.label);
+    assert.ok(!/[A-Za-z_]/.test(t.label), t.id);
+  }
+  for (const id of ALL_CHARITY_PERMISSION_IDS) {
+    assert.ok(!/[A-Za-z_]/.test(charityPermissionLabel(id)), id);
+  }
 });

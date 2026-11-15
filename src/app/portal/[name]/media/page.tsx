@@ -5,7 +5,8 @@ import { prisma } from "@/lib/db";
 import { getSession } from "@/lib/auth";
 import { PageHeader } from "@/components/console/layout";
 import { Note } from "@/components/console/ui";
-import { requirePortalPermission } from "@/lib/portalAccess";
+import { resolveCharityPortal } from "@/lib/portalAccess";
+import { hasCharityPermission } from "@/lib/charityPermissions";
 import { charityHasService } from "@/lib/charityServices";
 import { MEDIA_SERVICE } from "@/lib/mediaPlanAccess";
 import { toISODate } from "@/lib/calendarGrid";
@@ -38,13 +39,17 @@ export default async function PortalMediaPage({ params }: { params: Promise<{ na
   const session = await getSession();
   if (!session || session.userType !== "CHARITY_USER") redirect("/");
 
-  const { charity } = await requirePortalPermission(name, "view_media_plan");
+  // والاطّلاعُ بلا صلاحيّة: تقويمُ جمعيتِهم يراه كلُّ عضوٍ فيها. والاعتمادُ
+  // والتعديلُ بـ«تحرير الخطة الإعلامية» — تفحصه الأفعالُ كذلك، فإخفاءُ زرٍّ ليس
+  // حراسة.
+  const { charity, effective } = await resolveCharityPortal(name);
+  const canEdit = hasCharityPermission(effective, "edit_media_plan");
 
   const header = (
     <PageHeader
       icon={<Megaphone className="size-5 text-primary" />}
       title="الخطة الإعلامية"
-      description="ما يضعه زادٌ لجمعيتكم — تعتمدونه أو تُعدِّلونه"
+      description={canEdit ? "ما يضعه زادٌ لجمعيتكم — تعتمدونه أو تُعدِّلونه" : "ما يضعه زادٌ لجمعيتكم — اطّلاعاً"}
     />
   );
 
@@ -105,6 +110,7 @@ export default async function PortalMediaPage({ params }: { params: Promise<{ na
         today={toISODate(new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate())))}
         initialPosts={posts.map((p) => ({ ...p, scheduledOn: toISODate(p.scheduledOn) }))}
         platforms={platforms}
+        canEdit={canEdit}
       />
     </div>
   );

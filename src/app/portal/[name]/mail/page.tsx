@@ -34,7 +34,7 @@ export default async function PortalMailPage({ params }: { params: Promise<{ nam
   // أتى. والحجب هنا لا في الشريط وحده — إخفاء رابطٍ لا يمنع كتابته.
   if (!isCharityMailOpen(decodeURIComponent(name))) redirect(`/portal/${encodeURIComponent(name)}`);
 
-  const { charity, permissions, isAdmin } = await resolveCharityPortal(name);
+  const { charity, effective } = await resolveCharityPortal(name);
 
   const [inbox, sent, options, pending] = await Promise.all([
     getPortalInbox(name, 1, 20, ""),
@@ -54,7 +54,7 @@ export default async function PortalMailPage({ params }: { params: Promise<{ nam
       willAwaitApproval={options.requiresApproval && !options.isApprover}
       showApprovals={pending.isApprover || pending.mine.length > 0}
       pendingCount={pending.toApprove.length}
-      canManageMail={hasCharityPermission(isAdmin, permissions, "manage_charity_mail")}
+      canManageMail={hasCharityPermission(effective, "manage_charity_mail")}
     />
   );
 }

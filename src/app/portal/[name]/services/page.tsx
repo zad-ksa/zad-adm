@@ -6,7 +6,9 @@ import { Briefcase } from "lucide-react";
 import ServicesTimelineViewer from "@/components/ServicesTimelineViewer";
 import ServicesGuideButton from "@/components/ServicesGuideButton";
 import { getTimelineConfigs } from "@/app/actions/settings";
-import { requirePortalPermission } from "@/lib/portalAccess";
+import { resolveCharityPortal } from "@/lib/portalAccess";
+import { seesCharityServicesTab, visibleCharityServices } from "@/lib/charityPermissions";
+import { redirect } from "next/navigation";
 
 export async function generateMetadata({ params }: { params: Promise<{ name: string }> }): Promise<Metadata> {
   const { name } = await params;
@@ -22,7 +24,14 @@ export default async function ServicesPage({ params }: { params: Promise<{ name:
 
   // Membership AND permission, both re-checked here: the layout only proves the
   // visitor belongs to this charity, not that they may see this tab.
-  await requirePortalPermission(name, "view_services");
+  //
+  // والتبويبُ مشتقٌّ لا صلاحيّةً باسمه: يُفتح لمن له صلاحيّةٌ في خدمةٍ ما، ويُسرد
+  // له **ما له فيه صلاحيّةٌ وحدَه**. وكان يُفتح بتفويض أيِّ خدمةٍ ثمّ يعرض خدماتِ
+  // الجمعية التسعَ جميعاً — فيرى مفوَّضُ الإعلاميّةِ مخططاتِ المالية والحوكمة.
+  const access = await resolveCharityPortal(name);
+  if (!seesCharityServicesTab(access.isOfficial, access.effective)) {
+    redirect(`/portal/${encodeURIComponent(access.charity.name)}/no-access`);
+  }
 
   const charity = await prisma.charity.findUnique({
     where: { name: decodedName },
@@ -32,7 +41,7 @@ export default async function ServicesPage({ params }: { params: Promise<{ name:
     return <div>الجمعية غير موجودة</div>;
   }
 
-  const allServices = await prisma.service.findMany({
+  const serviceRows = await prisma.service.findMany({
     where: { charityId: charity.id },
     include: {
       stages: {
@@ -40,8 +49,18 @@ export default async function ServicesPage({ params }: { params: Promise<{ name:
         include: { steps: { orderBy: { order: 'asc' } } }
       }
     },
-    orderBy: { createdAt: 'desc' }
+    orderBy: { createdAt: "desc" }
   });
+
+  // الترشيحُ بالقاعدة نفسِها التي يقرؤها الشريطُ (`visibleCharityServices`).
+  const visible = new Set(
+    visibleCharityServices({
+      isOfficialAccount: access.isOfficial,
+      effective: access.effective,
+      charityServices: serviceRows.map((s) => s.name),
+    })
+  );
+  const allServices = serviceRows.filter((s) => visible.has(s.name));
 
   const strategicService = allServices.find(s => s.department === "STRATEGY");
   const governanceService = allServices.find(s => s.department === "GOVERNANCE");

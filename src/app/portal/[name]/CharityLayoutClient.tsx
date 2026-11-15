@@ -22,7 +22,7 @@ export default function CharityLayoutClient({
   permissions = [],
   title,
   accountName,
-  isAdmin = false,
+  isOfficial = false,
   unreadMail = 0,
   mediaWaiting = 0,
   notices = { notices: [], unread: 0 },
@@ -39,7 +39,8 @@ export default function CharityLayoutClient({
   title?: string;
   /** اسمُ صاحب الحساب — يُعرض في الشريط الأعلى كما في لوحة زاد. */
   accountName?: string | null;
-  isAdmin?: boolean;
+  /** حسابُ الجمعية الرسميُّ — يحمل كلَّ الصلاحيات ويمنحها. */
+  isOfficial?: boolean;
   unreadMail?: number;
   /** ما ينتظر اعتمادَ الجمعية في الخطّة الإعلاميّة — عدّادُ التبويب. */
   mediaWaiting?: number;
@@ -102,7 +103,7 @@ export default function CharityLayoutClient({
         userType={userType}
         availableCharities={availableCharities}
         permissions={permissions}
-        isAdmin={isAdmin}
+        isOfficial={isOfficial}
         unreadMail={unread}
         mediaWaiting={mediaWaiting}
         title={title}

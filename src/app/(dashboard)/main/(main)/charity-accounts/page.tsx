@@ -1,5 +1,5 @@
 import { getSession } from "@/lib/auth";
-import { EXTERNAL_CHARITIES, externalOnly } from "@/lib/charityScope";
+import { EXTERNAL_CHARITIES } from "@/lib/charityScope";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
 import CharityAccountsClient from "./CharityAccountsClient";
@@ -20,18 +20,29 @@ export default async function CharityAccountsPage() {
     redirect("/main");
   }
 
-  // Fetch all charities to populate the select dropdown
-  const charities = await prisma.charity.findMany({
+  // Fetch all charities to populate the select dropdown.
+  //
+  // ومعها خدماتُ كلِّ جمعية: المُنتقي يَعرض خدماتِ الجمعية المختارة ثمّ صلاحيّاتِ
+  // كلِّ خدمةٍ تحتها، فلا يُمنح ما لا تشمله الجمعيةُ ولا ما لا يعمل.
+  const charityRows = await prisma.charity.findMany({
     where: EXTERNAL_CHARITIES,
-    select: { id: true, name: true }
+    select: { id: true, name: true, services: { select: { name: true } } },
   });
+  const charities = charityRows.map((c) => ({
+    id: c.id,
+    name: c.name,
+    services: [...new Set(c.services.map((s) => s.name))].sort((a, b) => a.localeCompare(b, "ar")),
+  }));
 
   // Fetch all charity user accounts
   const accounts = await prisma.charityUser.findMany({
     include: {
       charities: {
-        include: { charity: { select: { name: true, id: true } } }
-      }
+        include: {
+          charity: { select: { name: true, id: true } },
+          services: { select: { serviceName: true } },
+        },
+      },
     },
     orderBy: { createdAt: "desc" }
   });
@@ -45,8 +56,17 @@ export default async function CharityAccountsPage() {
         phone: a.phone,
         title: a.title,
         charityNames: a.charities.map(c => c.charity.name),
+        // عضويّاتُه بتفاصيلها: منها يُفتح لوحُ تعديل الوصول لجمعيةٍ بعينها.
+        memberships: a.charities.map((c) => ({
+          charityId: c.charityId,
+          charityName: c.charity.name,
+          isOfficial: c.isAdmin,
+          isActive: c.isActive,
+          permissions: c.permissions as string[],
+          services: c.services.map((s) => s.serviceName),
+        })),
         createdAt: a.createdAt.toISOString()
-      }))} 
+      }))}
     />
   );
 }

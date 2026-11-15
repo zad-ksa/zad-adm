@@ -1,20 +1,12 @@
 import { notFound, redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
-import { AuthError, charityPermissionLinks, requireCharityMembership } from "@/lib/guards";
-import { effectiveCharityPermissions } from "@/lib/charityPermissions";
+import { AuthError, requireCharityMembership } from "@/lib/guards";
+import { effectiveCharityPermissions, hasCharityPermission } from "@/lib/charityPermissions";
 
-/**
- * ربطُ تبويبات البوابة بالخدمات، كما يُحرَّر عند زاد.
- *
- * ومُصدَّرةٌ لأنّ تخطيطَ البوابة يحتاجها كما تحتاجها هذه الدالّة: الشريطُ
- * الجانبيُّ يُقرِّر ما يَعرض، وهذه تُقرِّر ما يُفتَح، فإن لم يقرآ الربطَ نفسَه
- * افترق المعروضُ عن المسموح.
- *
- * ومصدرُها الآن `guards.ts`: الأفعالُ تحتاجها أيضاً — وهذا الملفُّ يستورد
- * `guards`، فلو بقي الاستعلامُ هنا لدار الاستيراد. ويبقى الاسمُ مُصدَّراً من
- * هنا لمن كان يستورده.
- */
-export { charityPermissionLinks as portalPermissionLinks } from "@/lib/guards";
+// `portalPermissionLinks` زالت: ربطُ تبويبات البوّابة بالخدمات في جدولٍ صار
+// كتالوجاً في الشِّفرة (`CHARITY_SERVICE_PERMISSIONS`) — فالصلاحيّةُ تتبع خدمتَها
+// بتعريفها، لا بصفٍّ يُحرَّر فيُنسى.
+
 
 /**
  * Resolves the charity named in a /portal/[name] URL together with the visitor's
@@ -37,13 +29,13 @@ export async function resolveCharityPortal(nameParam: string) {
 
   let session: any;
   let permissions: string[];
-  let isAdmin: boolean;
+  let isOfficial: boolean;
   let services: string[] = [];
   try {
     const membership = await requireCharityMembership(charity.id);
     session = membership.session;
     permissions = membership.permissions;
-    isAdmin = membership.isAdmin;
+    isOfficial = membership.isOfficial;
     services = membership.services;
   } catch (error) {
     // Non-members get the same answer as a non-existent charity, so the portal
@@ -52,25 +44,23 @@ export async function resolveCharityPortal(nameParam: string) {
     throw error;
   }
 
-  // القاعدةُ في `effectiveCharityPermissions` وحدَها: تبويبٌ مربوطٌ بخدمةٍ
-  // يُنال بتفويضها، وتبويبٌ لم يُربط بعد يبقى على المخزّن. وكانت مكتوبةً هنا
-  // ومكتوبةً في الشريط الجانبيّ، فافترق المعروضُ عن المسموح.
-  const links = await charityPermissionLinks();
-  const effective = effectiveCharityPermissions(permissions, services, links);
+  // القاعدةُ في `effectiveCharityPermissions` وحدَها: حسابُ الجمعية يُوسَّع إلى
+  // كلِّ الصلاحيات، وصلاحيّةُ خدمةٍ تخمد ما لم تكن الخدمةُ مفوَّضة. وكانت مكتوبةً
+  // هنا ومكتوبةً في الشريط الجانبيّ، فافترق المعروضُ عن المسموح.
+  const effective = effectiveCharityPermissions(permissions, services, isOfficial);
 
-  const can = (permission: string) => {
-    // مدير الجمعية مرتبطٌ بكل خدماتها، فلا تفويض عليه.
-    if (isAdmin) return true;
-    return effective.includes(permission);
-  };
+  // ولا صفةَ تُفحص هنا: المصفوفةُ الفعليّةُ وحدَها. فكان العلَمُ يتجاوز الفحصَ
+  // في هذا السطر وينسى في الشريط، فتُقبل الصفحةُ ولا يُعرض رابطُها.
+  const can = (permission: string) => hasCharityPermission(effective, permission);
 
   return {
     charity,
     session,
     permissions,
-    /** المخزّنةُ بعد تطبيق قاعدة الربط — وهي ما يُمرَّر إلى الشريط. */
+    /** الفعليّةُ — وهي ما يُمرَّر إلى الشريط وما تُفحص به الأفعال. */
     effective,
-    isAdmin,
+    /** حسابُ الجمعية الرسميُّ: يمنح الصلاحياتِ، ويحمل كلَّها. */
+    isOfficial,
     services,
     can,
   };

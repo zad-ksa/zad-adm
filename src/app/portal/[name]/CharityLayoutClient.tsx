@@ -24,6 +24,7 @@ export default function CharityLayoutClient({
   isOfficial = false,
   unreadMail = 0,
   mediaWaiting = 0,
+  mediaPlanEnabled = false,
   notices = { notices: [], unread: 0 },
 }: {
   children: React.ReactNode;
@@ -42,6 +43,8 @@ export default function CharityLayoutClient({
   unreadMail?: number;
   /** ما ينتظر اعتمادَ الجمعية في الخطّة الإعلاميّة — عدّادُ التبويب. */
   mediaWaiting?: number;
+  /** فُعِّل تبويبُ الخطّة لهذه الجمعية من صفحة الخطّة عند زاد. */
+  mediaPlanEnabled?: boolean;
   /** إشعاراتُ الحساب، مجلوبةً في الخادم فلا يَرِد الجرسُ فارغاً. */
   notices?: { notices: CharityNotice[]; unread: number };
 }) {
@@ -101,6 +104,7 @@ export default function CharityLayoutClient({
         isOfficial={isOfficial}
         unreadMail={unread}
         mediaWaiting={mediaWaiting}
+        mediaPlanEnabled={mediaPlanEnabled}
       />
 
       <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden relative">

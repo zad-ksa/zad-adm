@@ -6,6 +6,7 @@ import { getSession } from "@/lib/auth";
 import SetEmailBanner from "@/components/SetEmailBanner";
 import { effectiveCharityPermissions } from "@/lib/charityPermissions";
 import { listCharityNotices } from "@/app/actions/charityNotifications";
+import { isMediaPlanEnabled } from "@/lib/mediaPlanToggle";
 
 export default async function CharityLayout({
   children,
@@ -114,6 +115,10 @@ export default async function CharityLayout({
     }
   }
 
+  // وتبويبُ الخطّة الإعلاميّة: مفتاحُه بيد زاد، ويُقرأ في موضعٍ واحدٍ
+  // (`isMediaPlanEnabled`) فيقرؤه الشريطُ والصفحةُ والأفعال.
+  const mediaPlanEnabled = await isMediaPlanEnabled(charity.id);
+
   // وإشعاراتُ الحساب — آمنةٌ في نفسها (انظر `listCharityNotices`).
   const notices = await listCharityNotices();
 
@@ -131,6 +136,7 @@ export default async function CharityLayout({
       isOfficial={isOfficial}
       unreadMail={unreadMail}
       mediaWaiting={mediaWaiting}
+      mediaPlanEnabled={mediaPlanEnabled}
       notices={notices}
     >
       {needsEmail && (

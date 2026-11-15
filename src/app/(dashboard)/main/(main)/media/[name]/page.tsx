@@ -10,6 +10,8 @@ import { toISODate } from "@/lib/calendarGrid";
 import MediaPlanClient from "./MediaPlanClient";
 import CharityAccounts from "./CharityAccounts";
 import CharitySwitcher from "./CharitySwitcher";
+import MediaPlanToggle from "./MediaPlanToggle";
+import { isMediaPlanEnabled } from "@/lib/mediaPlanToggle";
 
 export const dynamic = "force-dynamic";
 
@@ -49,7 +51,7 @@ export default async function MediaPlanPage({ params }: { params: Promise<{ name
   const from = new Date(first.getTime() - (first.getUTCDay() + 7) * 86_400_000);
   const to = new Date(from.getTime() + 55 * 86_400_000);
 
-  const [posts, platforms, accounts] = await Promise.all([
+  const [posts, platforms, accounts, planEnabled] = await Promise.all([
     prisma.mediaPost.findMany({
       where: { charityId: charity.id, scheduledOn: { gte: from, lte: to } },
       orderBy: [{ scheduledOn: "asc" }, { scheduledAt: "asc" }],
@@ -76,6 +78,7 @@ export default async function MediaPlanPage({ params }: { params: Promise<{ name
       where: { charityId: charity.id },
       select: { platformKey: true, url: true },
     }),
+    isMediaPlanEnabled(charity.id),
   ]);
 
   return (
@@ -83,7 +86,19 @@ export default async function MediaPlanPage({ params }: { params: Promise<{ name
       <PageHeader
         icon={<Megaphone className="size-5 text-primary" />}
         title="الخطة الإعلامية"
-        description={charity.name}
+        // والمفتاحُ بجوار اسم الجمعية: من يضع الخطّةَ هو من يعرف متى تصير
+        // جاهزةً لعرضها عليها.
+        description={
+          <span className="flex flex-wrap items-center gap-2">
+            <span>{charity.name}</span>
+            <MediaPlanToggle
+              key={charity.id}
+              charityId={charity.id}
+              charityName={charity.name}
+              initialEnabled={planEnabled}
+            />
+          </span>
+        }
         actions={
           <div className="flex flex-wrap items-center gap-2">
             {scope.charities.length > 1 && (

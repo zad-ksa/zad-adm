@@ -8,6 +8,7 @@ import { Note } from "@/components/console/ui";
 import { resolveCharityPortal } from "@/lib/portalAccess";
 import { hasCharityPermission } from "@/lib/charityPermissions";
 import { charityHasService } from "@/lib/charityServices";
+import { isMediaPlanEnabled } from "@/lib/mediaPlanToggle";
 import { MEDIA_SERVICE } from "@/lib/mediaPlanAccess";
 import { toISODate } from "@/lib/calendarGrid";
 import PortalMediaClient from "./PortalMediaClient";
@@ -52,6 +53,19 @@ export default async function PortalMediaPage({ params }: { params: Promise<{ na
       description={canEdit ? "ما يضعه زادٌ لجمعيتكم — تعتمدونه أو تُعدِّلونه" : "ما يضعه زادٌ لجمعيتكم — اطّلاعاً"}
     />
   );
+
+  // والمفتاحُ أوّلاً: تبويبٌ مُطفأٌ من زادٍ لا يُفتح بكتابة رابطه. ويُقال سببُه
+  // صريحاً — صفحةٌ فارغةٌ تُقرأ عطباً.
+  if (!(await isMediaPlanEnabled(charity.id))) {
+    return (
+      <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-500" dir="rtl">
+        {header}
+        <Note tone="warn">
+          لم تُفعَّل الخطّةُ الإعلاميّةُ لجمعيتكم بعد. تُفعَّل من زادٍ حين تصير جاهزةً للعرض.
+        </Note>
+      </div>
+    );
+  }
 
   // الخدمةُ شرطٌ، ويُقال صريحاً لا يُترك صفحةً فارغة: التبويبُ يُنال بتفويض
   // الخدمة، فإن رُفعت عن الجمعية بقي التفويضُ في صفِّ العضو حتى يُحرَّر.

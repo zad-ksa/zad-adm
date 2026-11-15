@@ -25,6 +25,7 @@ import {
 } from "@/lib/mediaPostInput";
 import { mediaNotice, portalMediaLink } from "@/lib/mediaPlanNotices";
 import { notifyCharityMembers } from "@/lib/notifyInbox";
+import { logAudit } from "@/lib/auditLog";
 import { toISODate } from "@/lib/calendarGrid";
 
 /**
@@ -539,4 +540,48 @@ export async function saveCharityMediaAccounts(charityId: string, accounts: Reco
     select: { platformKey: true, url: true },
   });
   return { success: true, accounts: saved };
+}
+
+/**
+ * إشعالُ تبويب «الخطة الإعلامية» في بوّابة الجمعية أو إطفاؤه.
+ *
+ * **وبيد زادٍ وحدَها**: حارسُه `mayManageCharityMedia` — صلاحيةٌ وإسنادٌ وخدمة —
+ * فالجمعيةُ لا تفتح على نفسها تبويباً، ولا يفتحه موظَّفٌ لجمعيةٍ ليست له.
+ *
+ * ويُكتب في سجلّ التدقيق: فتحُ تبويبٍ لجمعيةٍ أو إغلاقُه قرارٌ يُسأل عنه.
+ */
+export async function setCharityMediaPlanEnabled(charityId: string, enabled: boolean) {
+  const session = await requireMediaSession();
+  if (!session) return { error: "غير مصرح" };
+  if (!(await mayManageCharityMedia(session, charityId))) {
+    return { error: "لا صلاحية لك على الخطة الإعلامية لهذه الجمعية" };
+  }
+
+  const charity = await prisma.charity.findUnique({
+    where: { id: charityId },
+    select: { name: true },
+  });
+  if (!charity) return { error: "الجمعية غير موجودة" };
+
+  try {
+    await prisma.charity.update({ where: { id: charityId }, data: { mediaPlanEnabled: enabled } });
+  } catch (error) {
+    console.error("setCharityMediaPlanEnabled", error);
+    // والسببُ الأغلب: العمودُ لم يُنشأ بعد. ويُقال صريحاً لا «حدث خطأ».
+    return { error: "تعذّر الحفظ — لم يُطبَّق prisma/sql/media-plan-toggle.sql بعد" };
+  }
+
+  await logAudit({
+    actorType: "EMPLOYEE",
+    actorId: session.id,
+    actorName: session.name ?? null,
+    action: "PERMISSION_CHANGE",
+    targetType: "Charity",
+    targetId: charityId,
+    metadata: { charity: charity.name, mediaPlanEnabled: enabled },
+  });
+
+  revalidateCharity(charity.name);
+  revalidatePath(`/portal/${encodeURIComponent(charity.name)}/media`);
+  return { success: true };
 }

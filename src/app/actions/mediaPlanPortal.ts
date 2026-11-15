@@ -5,6 +5,7 @@ import { prisma } from "@/lib/db";
 import { AuthError, requireCharityEffective, requireCharityPermission } from "@/lib/guards";
 import { charityHasService } from "@/lib/charityServices";
 import { MEDIA_SERVICE } from "@/lib/mediaPlanAccess";
+import { isMediaPlanEnabled } from "@/lib/mediaPlanToggle";
 import {
   can,
   eventKind,
@@ -49,6 +50,10 @@ async function requirePortalMedia(charityId: string, needsEdit: boolean) {
     // لها تُعتمد، ولو بقيت الصلاحيةُ في صفِّ العضو.
     if (!(await charityHasService(charityId, MEDIA_SERVICE))) {
       return { error: `خدمة «${MEDIA_SERVICE}» غير مشمولةٍ لهذه الجمعية` as const };
+    }
+    // والمفتاحُ شرطٌ رابع: تبويبٌ أطفأته زادٌ لا تعمل أفعالُه ولو نُوديت مباشرةً.
+    if (!(await isMediaPlanEnabled(charityId))) {
+      return { error: "لم تُفعَّل الخطّةُ الإعلاميّةُ لجمعيتكم" as const };
     }
     const charity = await prisma.charity.findUnique({
       where: { id: charityId },

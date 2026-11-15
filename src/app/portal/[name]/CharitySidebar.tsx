@@ -89,6 +89,7 @@ export default function CharitySidebar({
   isOfficial = false,
   unreadMail = 0,
   mediaWaiting = 0,
+  mediaPlanEnabled = false,
 }: {
   charityName: string;
   isOpen: boolean;
@@ -100,6 +101,8 @@ export default function CharitySidebar({
   isOfficial?: boolean;
   unreadMail?: number;
   mediaWaiting?: number;
+  /** مفتاحُ ظهور تبويب الخطّة — بيد زاد. */
+  mediaPlanEnabled?: boolean;
 }) {
   const pathname = usePathname();
   const [activePath, setActivePath] = useState(decodeURIComponent(pathname));
@@ -148,7 +151,7 @@ export default function CharitySidebar({
     // والعدّادُ ما ينتظر اعتمادَ الجمعية — وهو «التنبيهُ على التبويب».
     // والخطّةُ الإعلاميّةُ يراها كلُّ عضوٍ اطّلاعاً — تقويمُ جمعيتِه. والاعتمادُ
     // والتعديلُ لمن يحمل «تحرير الخطة الإعلامية»، والعدّادُ له وحدَه.
-    { id: "media", label: "الخطة الإعلامية", href: `/portal/${encodeURIComponent(charityName)}/media`, exact: true, icon: Megaphone, show: true, badge: mediaWaiting },
+    { id: "media", label: "الخطة الإعلامية", href: `/portal/${encodeURIComponent(charityName)}/media`, exact: true, icon: Megaphone, show: mediaPlanEnabled, badge: mediaWaiting },
     // No permission: the library is reference material shared with every
     // charity, and it is read-only on the server whoever opens it.
     { id: "templates", label: "مكتبة النماذج", href: `/portal/${encodeURIComponent(charityName)}/templates`, exact: true, icon: FolderOpen, show: true },

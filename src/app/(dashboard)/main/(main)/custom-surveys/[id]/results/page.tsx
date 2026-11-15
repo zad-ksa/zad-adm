@@ -2,6 +2,7 @@
 
 import { useState, useEffect, use, useMemo } from "react";
 import { PageHeader, theadRowClass, tbodyClass } from "@/components/console/layout";
+import FileOpenDownload, { downloadHref } from "@/components/FileOpenDownload";
 import { cx, MONO } from "@/components/console/ui";
 import {
   answerText as resolveAnswerText,
@@ -336,17 +337,12 @@ export default function SurveyResultsPage({ params }: { params: Promise<{ id: st
                       {attachmentUrls.length > 0 && (
                         <div className="mt-2 flex flex-wrap gap-2">
                           {attachmentUrls.map((url, i) => (
-                            <a
+                            <FileOpenDownload
                               key={url}
-                              href={url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="inline-flex items-center gap-2 bg-primary/10 text-primary hover:bg-primary hover:text-white px-4 py-2 rounded-lg text-caption font-semibold transition-colors dark:bg-primary/20"
-                            >
-                              <Download className="w-4 h-4" />
-                              {question.type === "FILE" ? "تحميل المرفق" : "مرفق إضافي للسؤال"}{" "}
-                              {attachmentUrls.length > 1 ? i + 1 : ""}
-                            </a>
+                              url={url}
+                              label={`${question.type === "FILE" ? "المرفق" : "مرفق إضافي"}${attachmentUrls.length > 1 ? ` ${i + 1}` : ""}`}
+                              name={`${response.charityName?.trim() || "مرفق"} - ${question.text}${attachmentUrls.length > 1 ? ` ${i + 1}` : ""}`}
+                            />
                           ))}
                         </div>
                       )}
@@ -655,15 +651,26 @@ export default function SurveyResultsPage({ params }: { params: Promise<{ id: st
                             {urls.length > 0 && (
                               <span className="flex flex-wrap gap-1 mt-1">
                                 {urls.map((u, i) => (
-                                  <a
-                                    key={u}
-                                    href={u}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="inline-flex items-center gap-1 text-primary hover:underline"
-                                  >
-                                    <Download className="w-3 h-3" /> ملف {urls.length > 1 ? i + 1 : ""}
-                                  </a>
+                                  <span key={u} className="inline-flex items-center gap-1.5">
+                                    <a
+                                      href={u}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="text-primary hover:underline"
+                                      title="عرض"
+                                    >
+                                      ملف {urls.length > 1 ? i + 1 : ""}
+                                    </a>
+                                    <a
+                                      href={downloadHref(u, `${r.charityName?.trim() || "مرفق"} - ${q.text}${urls.length > 1 ? ` ${i + 1}` : ""}`)}
+                                      download
+                                      className="text-primary hover:opacity-70"
+                                      title="تنزيل"
+                                      aria-label="تنزيل الملف"
+                                    >
+                                      <Download className="w-3 h-3" />
+                                    </a>
+                                  </span>
                                 ))}
                               </span>
                             )}

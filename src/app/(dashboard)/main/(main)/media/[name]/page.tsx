@@ -5,9 +5,11 @@ import { prisma } from "@/lib/db";
 import { getSession } from "@/lib/auth";
 import { PageHeader } from "@/components/console/layout";
 import { requireCharitySection } from "@/lib/sectionGuard";
-import { findMediaCharity } from "@/lib/mediaPlanAccess";
+import { getMediaScope } from "@/lib/mediaPlanAccess";
 import { toISODate } from "@/lib/calendarGrid";
 import MediaPlanClient from "./MediaPlanClient";
+import CharityAccounts from "./CharityAccounts";
+import CharitySwitcher from "./CharitySwitcher";
 
 export const dynamic = "force-dynamic";
 
@@ -35,7 +37,9 @@ export default async function MediaPlanPage({ params }: { params: Promise<{ name
   if (!session?.id) redirect("/login");
   await requireCharitySection("manage_media_plan", charityName);
 
-  const charity = await findMediaCharity(session, charityName);
+  // النطاقُ مرّةً واحدة: منه الجمعيةُ المطلوبة، ومنه قائمةُ التنقّل بين جمعيات الموظَّف.
+  const scope = await getMediaScope(session);
+  const charity = scope.canManage ? scope.charities.find((c) => c.name === charityName) : undefined;
   if (!charity) redirect("/main");
 
   // شهرُ اليوم: ستّةُ أسابيعَ حوله هي ما ترسمه الشبكة، فيُجلب مداها وحدَه
@@ -45,7 +49,7 @@ export default async function MediaPlanPage({ params }: { params: Promise<{ name
   const from = new Date(first.getTime() - (first.getUTCDay() + 7) * 86_400_000);
   const to = new Date(from.getTime() + 55 * 86_400_000);
 
-  const [posts, platforms] = await Promise.all([
+  const [posts, platforms, accounts] = await Promise.all([
     prisma.mediaPost.findMany({
       where: { charityId: charity.id, scheduledOn: { gte: from, lte: to } },
       orderBy: [{ scheduledOn: "asc" }, { scheduledAt: "asc" }],
@@ -68,6 +72,10 @@ export default async function MediaPlanPage({ params }: { params: Promise<{ name
       orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
       select: { id: true, key: true, name: true, iconKey: true, logoUrl: true, color: true, isActive: true },
     }),
+    prisma.charityMediaAccount.findMany({
+      where: { charityId: charity.id },
+      select: { platformKey: true, url: true },
+    }),
   ]);
 
   return (
@@ -76,8 +84,23 @@ export default async function MediaPlanPage({ params }: { params: Promise<{ name
         icon={<Megaphone className="size-5 text-primary" />}
         title="الخطة الإعلامية"
         description={charity.name}
+        actions={
+          <div className="flex flex-wrap items-center gap-2">
+            {scope.charities.length > 1 && (
+              <CharitySwitcher current={charity.name} charities={scope.charities.map((c) => c.name)} />
+            )}
+            <CharityAccounts
+              key={charity.id}
+              charityId={charity.id}
+              charityName={charity.name}
+              platforms={platforms}
+              initialAccounts={accounts}
+            />
+          </div>
+        }
       />
       <MediaPlanClient
+        key={charity.id}
         charityId={charity.id}
         charityName={charity.name}
         today={toISODate(new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate())))}

@@ -128,6 +128,7 @@ model Charity {
   planSurvey              PlanSurvey?
   latestUpdates           LatestUpdate[]
   mediaPosts              MediaPost[]
+  mediaAccounts           CharityMediaAccount[]
 }
 
 /// معلومات الجمعية الثابتة لمنشئ وثائق المبادرات — رؤيتها، رسالتها، مجالها
@@ -2578,6 +2579,21 @@ model MediaPostEvent {
   createdAt DateTime @default(now())
 
   @@index([postId, createdAt])
+}
+
+/// حسابُ الجمعية في منصّةٍ من منصّات النشر — رابطٌ واحدٌ لكلِّ منصّة.
+/// بمفتاح المنصّة لا بمعرّفها، كـ`MediaPost.platforms`.
+model CharityMediaAccount {
+  id          String  @id @default(uuid())
+  charityId   String
+  charity     Charity @relation(fields: [charityId], references: [id], onDelete: Cascade)
+  platformKey String
+  url         String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([charityId, platformKey])
 }
 
 /// منصّةُ نشر. المشاهيرُ مبذورون بشعاراتهم مرسومةً في الموقع نفسه

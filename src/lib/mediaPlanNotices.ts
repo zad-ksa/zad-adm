@@ -22,12 +22,17 @@ export type MediaNotice = {
   message: string;
 };
 
+/**
+ * ولا اسمَ فاعلٍ في الإشعار.
+ *
+ * فالفعلُ فعلُ الجهة لا فعلُ فردٍ فيها: «أضاف زادٌ منشوراً» لا «أضافه فلان».
+ * وكان الاسمُ يُكتب «بيد فلان» فيقرأ عضوُ الجمعية اسمَ موظَّف زادٍ في جرسه —
+ * وهو ما لا يُعرض لها في سجلٍّ ولا في إشعار.
+ */
 export type NoticeContext = {
   charityName: string;
   /** «YYYY-MM-DD» — يومُ النشر، يُكتب باسم يومه كي يُعرف بلا فتحِ الصفحة. */
   day: string;
-  /** من فعل — موظَّفٌ أو عضوُ جمعية. */
-  actorName?: string | null;
   /** السببُ المكتوب، إن كان الفعلُ مُسبَّباً. */
   note?: string | null;
 };
@@ -68,7 +73,6 @@ export function mediaNotice(kind: MediaEventKind, ctx: NoticeContext): MediaNoti
 
   const parts: string[] = [];
   parts.push(to === "ZAD" ? `${ctx.charityName} — منشور ${dayText(ctx.day)}` : `منشور ${dayText(ctx.day)}`);
-  if (ctx.actorName) parts.push(`بيد ${ctx.actorName}`);
   const note = (ctx.note ?? "").trim();
   if (note) parts.push(`السبب: ${note}`);
 

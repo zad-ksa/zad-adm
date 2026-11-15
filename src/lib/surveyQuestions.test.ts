@@ -4,6 +4,9 @@ import {
   answerText,
   choiceMatrixMissingRows,
   choiceRowKey,
+  extraTextKey,
+  extraTextMissing,
+  extraTextValue,
   isAnswered,
   isMatrixType,
   matrixCellCount,
@@ -12,10 +15,12 @@ import {
   matrixPartialRows,
   optionsAwaitingText,
   otherTextKey,
+  parseExtraText,
   parseMatrix,
   questionForApi,
   questionFromApi,
   selectedOptionIds,
+  supportsExtraText,
   type MatrixSpec,
   type SurveyQuestion,
 } from "./surveyQuestions.ts";
@@ -248,4 +253,88 @@ test("الإجباريُّ لا يكتمل إلّا بكل صفوفه — بخل
 test("خيارٌ حُذف عمودُه لا يُعدّ إجابة", () => {
   const stale = { [choiceRowKey("q-choice", "x")]: "deleted", [choiceRowKey("q-choice", "ig")]: "none" };
   assert.deepEqual(choiceMatrixMissingRows(choiceQuestion, stale).map((r) => r.id), ["x"]);
+});
+
+// ── مربّعُ النصِّ على سؤال الخيارات ────────────────────────────────────────
+
+const withBox: SurveyQuestion = {
+  ...base,
+  id: "q9",
+  text: "أيُّ الخدمات أفادتكم؟",
+  type: "MULTI_OPTIONS",
+  options: [
+    { id: "a", text: "التدريب" },
+    { id: "b", text: "الاستشارة" },
+  ],
+  extraText: { label: "ولماذا؟", required: true },
+};
+
+test("المربّعُ يُخزَّن في خانة الخيارات ويُقرأ منها", () => {
+  const row = questionForApi(withBox);
+  // لا مصفوفةٌ مجرّدة: `{ choices, extra }`.
+  assert.deepEqual(row.options, {
+    choices: withBox.options,
+    extra: { label: "ولماذا؟", required: true },
+  });
+  const back = questionFromApi({ ...row, id: "q9" });
+  assert.deepEqual(back.options, withBox.options);
+  assert.deepEqual(back.extraText, { label: "ولماذا؟", required: true });
+});
+
+test("وسؤالٌ بلا مربّعٍ يبقى مصفوفةً كما كان — فلا تُهاجر الاستبياناتُ القائمة", () => {
+  const plain: SurveyQuestion = { ...withBox, extraText: undefined };
+  assert.deepEqual(questionForApi(plain).options, plain.options);
+  // والقراءةُ تقبل الشكلَ القديم.
+  const legacy = questionFromApi({ id: "q9", text: "س", type: "OPTIONS", options: plain.options });
+  assert.deepEqual(legacy.options, plain.options);
+  assert.equal(legacy.extraText, undefined);
+});
+
+test("وبلا عنوانٍ لا مربّع: الفراغُ لا يُخزَّن ولا يُقرأ", () => {
+  const blank: SurveyQuestion = { ...withBox, extraText: { label: "   ", required: true } };
+  assert.deepEqual(questionForApi(blank).options, blank.options);
+  assert.equal(parseExtraText({ label: "  ", required: true }), undefined);
+  assert.equal(parseExtraText(null), undefined);
+  assert.equal(parseExtraText(["a"]), undefined);
+});
+
+test("ولا مربّعَ إلا على أسئلة الخيارات", () => {
+  assert.ok(supportsExtraText("OPTIONS"));
+  assert.ok(supportsExtraText("MULTI_OPTIONS"));
+  for (const type of ["TEXT", "YES_NO", "MATRIX", "CHOICE_MATRIX", "FILE", "HIJRI_DATE"]) {
+    assert.ok(!supportsExtraText(type), type);
+  }
+  // ولو وُضع على نوعٍ آخر لم يُخزَّن.
+  const onText: SurveyQuestion = { ...withBox, type: "TEXT", extraText: { label: "ولماذا؟", required: true } };
+  assert.notDeepEqual(questionForApi(onText).options, { choices: onText.options, extra: {} });
+});
+
+test("المربّعُ الإجباريُّ شرطٌ في الإجابة، والاختياريُّ لا", () => {
+  const key = extraTextKey("q9");
+  assert.equal(isAnswered(withBox, { q9: "a" }), false);
+  assert.equal(isAnswered(withBox, { q9: "a", [key]: "   " }), false);
+  assert.equal(isAnswered(withBox, { q9: "a", [key]: "لأنها قريبة" }), true);
+  assert.ok(extraTextMissing(withBox, { q9: "a" }));
+
+  const optional: SurveyQuestion = { ...withBox, extraText: { label: "ولماذا؟", required: false } };
+  assert.equal(isAnswered(optional, { q9: "a" }), true);
+  assert.ok(!extraTextMissing(optional, { q9: "a" }));
+});
+
+test("ونصُّ المربّعِ يُقرأ مع الجواب في النتائج", () => {
+  const key = extraTextKey("q9");
+  assert.equal(
+    answerText(withBox, "a,b", { [key]: "لقربها" }),
+    "التدريب، الاستشارة — ولماذا؟: لقربها"
+  );
+  // وبلا اختيارٍ يبقى النصُّ مقروءاً، فلا يضيع ما كُتب.
+  assert.equal(answerText(withBox, "", { [key]: "لقربها" }), "ولماذا؟: لقربها");
+  assert.equal(answerText(withBox, "a", {}), "التدريب");
+  assert.equal(extraTextValue(withBox, { [key]: "  لقربها  " }), "لقربها");
+});
+
+test("ومفتاحُ المربّعِ لا يُشابه مفاتيحَ غيره", () => {
+  assert.notEqual(extraTextKey("q9"), otherTextKey("q9", "a"));
+  assert.notEqual(extraTextKey("q9"), choiceRowKey("q9", "a"));
+  assert.ok(extraTextKey("q9").startsWith("q9"));
 });

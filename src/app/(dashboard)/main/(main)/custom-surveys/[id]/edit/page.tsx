@@ -6,7 +6,8 @@ import Select from "@/components/console/Select";
 import { useRouter } from "next/navigation";
 import { Plus, Trash2, Save, ArrowUp, ArrowDown, Settings, Loader2, AlertCircle, CheckCircle, Printer } from "lucide-react";
 import Link from "next/link";
-import { btn, cx } from "@/components/console/ui";
+import { btn, cx, field } from "@/components/console/ui";
+import Switch from "@/components/console/Switch";
 import {
   DEFAULT_MATRIX_SCALE,
   questionsForApi,
@@ -623,6 +624,54 @@ export default function EditSurveyPage({ params }: { params: Promise<{ id: strin
                         >
                           <Plus className="w-4 h-4" /> إضافة خيار
                         </button>
+
+                        {/*
+                          مربع نص على السؤال نفسه — بعنوانه، اختياري أو إجباري.
+                          وهو غير «يفتح مربع نص» الذي على خيار بعينه: ذاك لا
+                          يظهر إلا إذا اختير خياره ويسأل «ما هو الخيار الآخر؟»،
+                          وهذا يظهر دائما مع السؤال ويسأل عن شيء آخر.
+                        */}
+                        <div className="mt-3 space-y-2 rounded-lg border border-dashed border-slate-200 p-3 dark:border-slate-700">
+                          <Switch
+                            checked={!!question.extraText}
+                            onChange={(next) =>
+                              updateQuestion(sIndex, qIndex, {
+                                extraText: next ? { label: "", required: false } : undefined,
+                              })
+                            }
+                            label="إضافة صندوق نص للسؤال"
+                            hint="يظهر تحت الخيارات مهما كان المختار"
+                          />
+                          {question.extraText && (
+                            <div className="space-y-2 ps-1">
+                              <input
+                                type="text"
+                                value={question.extraText.label}
+                                onChange={(e) =>
+                                  updateQuestion(sIndex, qIndex, {
+                                    extraText: { ...question.extraText!, label: e.target.value },
+                                  })
+                                }
+                                placeholder="عنوان الصندوق — مثال: ولماذا؟"
+                                className={cx(field, "text-caption")}
+                              />
+                              <Switch
+                                checked={question.extraText.required}
+                                onChange={(next) =>
+                                  updateQuestion(sIndex, qIndex, {
+                                    extraText: { ...question.extraText!, required: next },
+                                  })
+                                }
+                                label={question.extraText.required ? "إجباري" : "اختياري"}
+                              />
+                              {!question.extraText.label.trim() && (
+                                <p className="text-caption font-semibold text-amber-700 dark:text-amber-400">
+                                  اكتب عنوان الصندوق — وبدونه لا يظهر للمشارك.
+                                </p>
+                              )}
+                            </div>
+                          )}
+                        </div>
                       </div>
                     )}
                     <div className="flex flex-wrap items-center gap-6">

@@ -39,6 +39,23 @@ export type MatrixSpec = {
 
 export type FollowUpQuestion = { id: string; text: string; isRequired: boolean };
 
+/**
+ * مربّعُ نصٍّ على سؤال الخيارات نفسِه — بعنوانه، إجباريٌّ أو اختياريّ.
+ *
+ * وهو غيرُ نصِّ «أخرى» (`allowText` على خيارٍ بعينه): ذاك لا يظهر إلّا إذا
+ * اختير خيارُه ويقول «ما هو الخيارُ الآخر؟»، وهذا يظهر دائماً مع السؤال ويسأل
+ * عن شيءٍ آخر — «ولماذا؟» أو «اذكر مثالاً».
+ *
+ * ويُخزَّن في خانة `options` نفسِها: تصير `{ choices, extra }` مكان المصفوفة
+ * المجرّدة. والقراءةُ تقبل الشكلين، والكتابةُ تُبقي المصفوفةَ ما لم يكن ثَمّ
+ * مربّع — فالاستبياناتُ القائمةُ لا تُهاجر ولا تُمَسّ.
+ */
+export type ExtraTextSpec = {
+  /** عنوانُ المربّع كما يُعرض فوقه. */
+  label: string;
+  required: boolean;
+};
+
 export type SurveyQuestion = {
   id: string;
   text: string;
@@ -51,6 +68,8 @@ export type SurveyQuestion = {
   /** الجوابُ الذي تظهر عنده الأسئلةُ التابعة — افتراضُه «نعم». */
   followUpOn?: "yes" | "no";
   matrix?: MatrixSpec;
+  /** مربّعُ نصٍّ على السؤال — لأسئلة الخيارات وحدَها. */
+  extraText?: ExtraTextSpec;
 };
 
 export const MATRIX_MIN_SCALE = 2;
@@ -68,6 +87,7 @@ const SEP = "::";
 const CELL_MARK = "@cell";
 const TEXT_MARK = "@text";
 const ROW_MARK = "@row";
+const EXTRA_MARK = "@extra";
 
 /** النوعان اللذان يحملان صفوفاً وأعمدة. */
 export function isMatrixType(type: string): boolean {
@@ -87,6 +107,37 @@ export function choiceRowKey(questionId: string, rowId: string): string {
 /** مفتاحُ نصِّ خيارِ «أخرى». */
 export function otherTextKey(questionId: string, optionId: string): string {
   return `${questionId}${SEP}${TEXT_MARK}${SEP}${optionId}`;
+}
+
+/** مفتاحُ مربّعِ النصِّ الذي على السؤال — واحدٌ للسؤال، فلا معرِّفَ بعده. */
+export function extraTextKey(questionId: string): string {
+  return `${questionId}${SEP}${EXTRA_MARK}`;
+}
+
+/** الأنواعُ التي تقبل مربّعَ نصٍّ على السؤال: أسئلةُ الخيارات. */
+export function supportsExtraText(type: string): boolean {
+  return type === "OPTIONS" || type === "MULTI_OPTIONS";
+}
+
+/** يقرأ وصفَ المربّع من خانة الخيارات — وبلا عنوانٍ لا مربّع. */
+export function parseExtraText(value: unknown): ExtraTextSpec | undefined {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return undefined;
+  const bag = value as Record<string, unknown>;
+  const label = String(bag.label ?? "").trim();
+  if (!label) return undefined;
+  return { label, required: bag.required === true };
+}
+
+/** ما كُتب في مربّع السؤال. */
+export function extraTextValue(question: SurveyQuestion, answers: Answers): string {
+  if (!question.extraText) return "";
+  return (answers[extraTextKey(question.id)] || "").trim();
+}
+
+/** مربّعٌ إجباريٌّ لم يُكتب فيه شيء. */
+export function extraTextMissing(question: SurveyQuestion, answers: Answers): boolean {
+  if (!question.extraText?.required) return false;
+  return extraTextValue(question, answers) === "";
 }
 
 function headings(value: unknown): MatrixHeading[] {
@@ -149,6 +200,21 @@ export function questionFromApi(raw: QuestionRow): SurveyQuestion {
 
   if (isMatrixType(base.type)) return { ...base, matrix: parseMatrix(raw.options) };
 
+  // وخانةُ الخيارات تقبل شكلين: مصفوفةً مجرّدةً كما كانت، أو `{ choices, extra }`
+  // لمن أُضيف إليه مربّعُ نصّ. فلا هجرةَ بيانٍ ولا صفٌّ قديمٌ يُقرأ خطأً.
+  const bag =
+    raw.options && typeof raw.options === "object" && !Array.isArray(raw.options)
+      ? (raw.options as Record<string, unknown>)
+      : null;
+  if (bag) {
+    const extraText = parseExtraText(bag.extra);
+    return {
+      ...base,
+      options: choices(bag.choices),
+      ...(extraText ? { extraText } : {}),
+    };
+  }
+
   return { ...base, options: choices(raw.options) };
 }
 
@@ -158,7 +224,7 @@ export function questionsFromApi(questions: QuestionRow[]): SurveyQuestion[] {
 
 /** ومن السؤال إلى صيغة القاعدة. */
 export function questionForApi(question: SurveyQuestion): QuestionRow {
-  const { options, followUpQuestions, followUpOn, matrix, ...rest } = question;
+  const { options, followUpQuestions, followUpOn, matrix, extraText, ...rest } = question;
 
   if (question.type === "YES_NO") {
     return {
@@ -179,6 +245,19 @@ export function questionForApi(question: SurveyQuestion): QuestionRow {
         columns: spec.columns,
         max: spec.max,
         ...(spec.labels ? { labels: spec.labels } : {}),
+      },
+    };
+  }
+
+  // والمربّعُ يُكتب في الخانة نفسِها، ولا تُغيَّر صيغةُ من لا مربّعَ له: صفٌّ
+  // قديمٌ يُحفظ من المحرِّر يبقى مصفوفةً كما كان.
+  const extra = supportsExtraText(question.type) && extraText?.label.trim() ? extraText : null;
+  if (extra) {
+    return {
+      ...rest,
+      options: {
+        choices: options ?? [],
+        extra: { label: extra.label.trim(), required: extra.required === true },
       },
     };
   }
@@ -266,7 +345,13 @@ export function optionsAwaitingText(question: SurveyQuestion, answers: Answers):
 
 /** نصُّ الإجابة مقروءاً — ومعه ما كُتب في «أخرى». */
 export function answerText(question: SurveyQuestion, raw: unknown, answers: Answers = {}): string {
-  if (raw === undefined || raw === null || raw === "") return "";
+  // ومربّعُ السؤال يُضمّ إلى الجواب حيث يُقرأ: النتائجُ والطباعةُ تقرآن من هنا،
+  // فنصٌّ كتبه المشاركُ ولا يظهر في التقرير نصٌّ ضائع.
+  const extra = extraTextValue(question, answers);
+  const withExtra = (text: string) =>
+    extra ? (text ? `${text} — ${question.extraText!.label}: ${extra}` : `${question.extraText!.label}: ${extra}`) : text;
+
+  if (raw === undefined || raw === null || raw === "") return withExtra("");
   const value = String(raw);
 
   const withTyped = (option: ChoiceOption | undefined, fallback: string) => {
@@ -277,18 +362,17 @@ export function answerText(question: SurveyQuestion, raw: unknown, answers: Answ
   };
 
   if (question.type === "OPTIONS") {
-    return withTyped(
-      question.options?.find((option) => option.id === value),
-      value
-    );
+    return withExtra(withTyped(question.options?.find((option) => option.id === value), value));
   }
 
   if (question.type === "MULTI_OPTIONS") {
-    return value
-      .split(",")
-      .filter(Boolean)
-      .map((id) => withTyped(question.options?.find((option) => option.id === id), id))
-      .join("، ");
+    return withExtra(
+      value
+        .split(",")
+        .filter(Boolean)
+        .map((id) => withTyped(question.options?.find((option) => option.id === id), id))
+        .join("، ")
+    );
   }
 
   if (question.type === "YES_NO") return value === "yes" ? "نعم" : "لا";
@@ -304,5 +388,7 @@ export function isAnswered(question: SurveyQuestion, answers: Answers): boolean 
   // بخلاف المصفوفة: جدولُ الاختيار الإجباريُّ لا يكتمل إلّا بصفوفه كلِّها.
   if (question.type === "CHOICE_MATRIX") return choiceMatrixMissingRows(question, answers).length === 0;
   if (optionsAwaitingText(question, answers).length > 0) return false;
+  // ومربّعٌ إجباريٌّ على السؤال كالخيار: اختيارٌ بلا جوابه ليس جواباً.
+  if (extraTextMissing(question, answers)) return false;
   return !!answers[question.id];
 }

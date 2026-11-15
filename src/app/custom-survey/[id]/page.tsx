@@ -13,6 +13,7 @@ import {
   matrixCellKey,
   matrixFilledCount,
   matrixPartialRows,
+  extraTextKey,
   otherTextKey,
   questionsFromApi,
   selectedOptionIds,
@@ -85,6 +86,47 @@ function OtherText({
       />
       {question.isRequired && !(answers[key] || "").trim() && (
         <p className="mt-1 text-caption font-semibold text-amber-700 dark:text-amber-400">اكتبْ ما اخترتَ، فالخيارُ وحدَه لا يكفي.</p>
+      )}
+    </div>
+  );
+}
+
+/**
+ * مربع النص الذي على السؤال — بعنوانه، إجباريا كان أو اختياريا.
+ *
+ * ويظهر تحت الخيارات مهما كان المختار، بخلاف نص «أخرى» الذي لا يظهر إلا إذا
+ * اختير خياره.
+ */
+function ExtraTextBox({
+  question,
+  answers,
+  setAnswers,
+}: {
+  question: SurveyQuestion;
+  answers: Record<string, string>;
+  setAnswers: React.Dispatch<React.SetStateAction<Record<string, string>>>;
+}) {
+  if (!question.extraText) return null;
+  const key = extraTextKey(question.id);
+  const value = answers[key] || "";
+  return (
+    <div className="mt-3 space-y-1.5">
+      <label className="block text-meta font-medium text-slate-600 dark:text-slate-300">
+        {question.extraText.label}
+        {question.extraText.required && <span className="ms-1 text-red-500">*</span>}
+      </label>
+      <textarea
+        value={value}
+        onChange={(e) => setAnswers((prev) => ({ ...prev, [key]: e.target.value }))}
+        rows={2}
+        aria-label={`${question.extraText.label} — ${question.text}`}
+        placeholder="اكتب هنا..."
+        className={cx(field, "h-auto resize-y py-2 leading-6")}
+      />
+      {question.extraText.required && !value.trim() && (
+        <p className="text-caption font-semibold text-amber-700 dark:text-amber-400">
+          هذا الحقل مطلوب.
+        </p>
       )}
     </div>
   );
@@ -446,6 +488,7 @@ export default function CustomSurveyPage({ params }: { params: Promise<{ id: str
                                 />
                               </div>
                             ))}
+                            <ExtraTextBox question={question} answers={answers} setAnswers={setAnswers} />
                           </div>
                         ) : question.type === "MULTI_OPTIONS" ? (
                           <div className="space-y-2">
@@ -473,6 +516,7 @@ export default function CustomSurveyPage({ params }: { params: Promise<{ id: str
                                 </div>
                               );
                             })}
+                            <ExtraTextBox question={question} answers={answers} setAnswers={setAnswers} />
                           </div>
                         ) : question.type === "CHOICE_MATRIX" ? (
                           <div className="space-y-3">

@@ -218,6 +218,22 @@ export default function PrintSurveyPage({ params }: { params: Promise<{ id: stri
                         </div>
                       )}
 
+                      {/* ومربع نص السؤال: عنوانه وسطران يكتب فيهما — وورقة بلا
+                          سطر تجعل السؤال بلا جواب. */}
+                      {(question.type === "OPTIONS" || question.type === "MULTI_OPTIONS") &&
+                        question.extraText && (
+                          <div className="pt-2">
+                            <p className="text-sm font-bold text-slate-700">
+                              {question.extraText.label}
+                              {question.extraText.required && <span className="ms-1">*</span>}
+                            </p>
+                            <div className="mt-2 space-y-4">
+                              <div className="border-b border-dotted border-slate-400 print:border-black" />
+                              <div className="border-b border-dotted border-slate-400 print:border-black" />
+                            </div>
+                          </div>
+                        )}
+
                       {question.type === "CHOICE_MATRIX" && question.matrix && (
                         <div className="pt-1">
                           <p className="text-[11px] font-bold text-slate-500 mb-1">ضعْ علامةَ ✓ في خانةٍ واحدةٍ لكل صف.</p>

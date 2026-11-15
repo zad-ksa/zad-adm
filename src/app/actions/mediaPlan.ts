@@ -93,13 +93,11 @@ async function tellCharity(
   charityId: string,
   charityName: string,
   day: Date | string,
-  actorName?: string | null,
   note?: string | null
 ) {
   const notice = mediaNotice(kind, {
     charityName,
     day: typeof day === "string" ? day : toISODate(day),
-    actorName,
     note,
   });
   if (!notice || notice.to !== "CHARITY") return;
@@ -263,7 +261,7 @@ export async function createMediaPost(input: MediaPostInput) {
     select: { id: true },
   });
 
-  await tellCharity("CREATED", input.charityId, charity.name, cleaned.data.scheduledOn, session.name);
+  await tellCharity("CREATED", input.charityId, charity.name, cleaned.data.scheduledOn);
 
   revalidateCharity(charity.name);
   return { success: true, id: post.id };
@@ -326,7 +324,6 @@ export async function updateMediaPost(postId: string, input: MediaPostInput, not
     post.charityId,
     post.charity.name,
     cleaned.data.scheduledOn,
-    session.name,
     reason
   );
 
@@ -415,7 +412,6 @@ async function decide(postId: string, action: Extract<MediaAction, "CERTIFY" | "
     post.charityId,
     post.charity.name,
     post.scheduledOn,
-    session.name,
     reason
   );
 

@@ -156,13 +156,11 @@ async function tellZad(
   kind: Parameters<typeof mediaNotice>[0],
   post: { id: string; createdById: string | null; charityId: string; scheduledOn: Date },
   charityName: string,
-  actorName?: string | null,
   note?: string | null
 ) {
   const notice = mediaNotice(kind, {
     charityName,
     day: toISODate(post.scheduledOn),
-    actorName,
     note,
   });
   if (!notice || notice.to !== "ZAD") return;
@@ -290,7 +288,7 @@ async function decide(postId: string, action: Extract<MediaAction, "APPROVE">) {
     }),
   ]);
 
-  await tellZad(kind, post, post.charity.name, session.name);
+  await tellZad(kind, post, post.charity.name);
 
   revalidatePortal(post.charity.name);
   return { success: true };
@@ -350,7 +348,7 @@ export async function updatePortalMediaPost(postId: string, input: PortalMediaIn
     }),
   ]);
 
-  await tellZad(kind, post, post.charity.name, session.name);
+  await tellZad(kind, post, post.charity.name);
 
   revalidatePortal(post.charity.name);
   return { success: true };

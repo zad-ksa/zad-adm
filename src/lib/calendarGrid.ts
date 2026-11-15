@@ -128,3 +128,22 @@ export function formatDateShort(value: string): string {
   if (!day) return value;
   return `${day.getUTCDate()} ${MONTH_NAMES[day.getUTCMonth()]} ${day.getUTCFullYear()}`;
 }
+
+/**
+ * يومٌ بعد يومٍ بعددٍ من الأيام — نصّاً إلى نصّ.
+ *
+ * وبالحساب على مرسى UTC لا بـ`setDate` على تاريخٍ محلّيّ: التوقيتُ الصيفيُّ
+ * يجعل «زائد سبعة» ستّةً وعشرين ساعةً في بلادٍ تُقدِّم ساعتَها، فينزلق الأسبوع.
+ */
+export function addDaysISO(value: string, days: number): string {
+  const day = parseCivilDay(value);
+  if (!day) return value;
+  return toISODate(new Date(day.getTime() + days * 86_400_000));
+}
+
+/** أحدُ الأسبوع الذي فيه هذا اليوم — وبدءُ الأسبوع الأحد كما في الشبكة. */
+export function weekStartISO(value: string): string {
+  const day = parseCivilDay(value);
+  if (!day) return value;
+  return toISODate(new Date(day.getTime() - day.getUTCDay() * 86_400_000));
+}

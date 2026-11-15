@@ -1,0 +1,363 @@
+"use client";
+
+import { useEffect, useMemo, useState, useTransition } from "react";
+import { Check, Megaphone, Pencil } from "lucide-react";
+import { Badge, Note, Spinner, btn, cx } from "@/components/console/ui";
+import { useStoredChoice } from "@/components/console/useStoredChoice";
+import { Segmented } from "@/components/console/layout";
+import { Sheet, FooterStatus } from "@/components/console/overlays";
+import { notify } from "@/components/console/toastBus";
+import { confirmAction } from "@/components/console/confirmBus";
+import {
+  CalendarNav,
+  ListView,
+  MonthView,
+  WeekView,
+  groupByDay,
+  normalizePost,
+  weekLabel,
+  type MediaPlatformView,
+  type MediaPost,
+  type RawMediaPost,
+} from "@/components/media/MediaCalendar";
+import MediaPostSheet, { type MediaPostDraft } from "@/components/media/MediaPostSheet";
+import MediaPostDetail, { type MediaEventRow } from "@/components/media/MediaPostDetail";
+import { WEEKDAY_LABELS } from "@/lib/attendanceTime";
+import {
+  addDaysISO,
+  formatDateWithWeekday,
+  monthGrid,
+  monthLabel,
+  monthOf,
+  shiftMonth,
+  weekStartISO,
+} from "@/lib/calendarGrid";
+import { MEDIA_STATUS, can } from "@/lib/mediaPlan";
+import {
+  approvePortalMediaPost,
+  getPortalMediaPostDetail,
+  listPortalMediaPosts,
+  updatePortalMediaPost,
+} from "@/app/actions/mediaPlanPortal";
+
+/**
+ * الخطّةُ الإعلاميّةُ بعينِ الجمعية — اعتماداً وتعديلاً، لا أكثر.
+ *
+ * والتقويمُ ولوحُ المنشور وسجلُّه كلُّها من العدة (`components/media`)، هي نفسُها
+ * التي يراها موظَّفُ زاد. والفرقُ `side="CHARITY"`: فاللونُ الكهرمانيُّ والوسمُ
+ * هنا لما ينتظر **اعتمادَكم**، وعند زادٍ لما ينتظر تعميدَه.
+ *
+ * وما ليس هنا مقصودٌ غيابُه: لا إنشاءَ منشورٍ (الخطّةُ يضعها زاد)، ولا حذفَ،
+ * ولا إدارةَ منصّات، ولا تعديلَ لمنشورٍ معتمَدٍ أو مرفوعٍ إلى تعميد زاد —
+ * و`allowedActions` في `lib/mediaPlan.ts` هي التي تقول ذلك للشاشة وللحارس معاً.
+ */
+
+type ViewMode = "month" | "week" | "list";
+
+const VIEW_KEY = "portal:media-view";
+const VIEW_MODES = ["month", "week", "list"] as const;
+
+export default function PortalMediaClient({
+  charityId,
+  charityName,
+  today,
+  initialPosts,
+  platforms,
+}: {
+  charityId: string;
+  charityName: string;
+  today: string;
+  initialPosts: RawMediaPost[];
+  platforms: MediaPlatformView[];
+}) {
+  const [view, chooseView] = useStoredChoice<ViewMode>(VIEW_KEY, "month", VIEW_MODES);
+  const [anchor, setAnchor] = useState(today);
+  const [posts, setPosts] = useState<MediaPost[]>(() => initialPosts.map(normalizePost));
+  const [reloads, setReloads] = useState(0);
+
+  const [editing, setEditing] = useState<MediaPost | null>(null);
+  const [detailId, setDetailId] = useState<string | null>(null);
+
+  const month = useMemo(() => monthOf(anchor, today), [anchor, today]);
+  const weeks = useMemo(() => monthGrid(month), [month]);
+
+  const range = useMemo(() => {
+    if (view === "week") {
+      const start = weekStartISO(anchor);
+      return { from: start, to: addDaysISO(start, 6) };
+    }
+    return { from: weeks[0][0].date, to: weeks[5][6].date };
+  }, [view, anchor, weeks]);
+
+  useEffect(() => {
+    let alive = true;
+    void (async () => {
+      const result = await listPortalMediaPosts(charityId, range.from, range.to);
+      if (!alive) return;
+      if ("posts" in result && result.posts) setPosts(result.posts.map(normalizePost));
+    })();
+    return () => {
+      alive = false;
+    };
+  }, [charityId, range.from, range.to, reloads]);
+
+  const reload = () => setReloads((n) => n + 1);
+
+  const platformByKey = useMemo(() => {
+    const map = new Map<string, MediaPlatformView>();
+    for (const p of platforms) map.set(p.key, p);
+    return map;
+  }, [platforms]);
+
+  const marksOf = (keys: string[]) =>
+    keys.map(
+      (key) =>
+        platformByKey.get(key) ?? {
+          id: key,
+          key,
+          name: key,
+          iconKey: null,
+          logoUrl: null,
+          color: null,
+          isActive: false,
+        }
+    );
+
+  const platformName = (key: string) => platformByKey.get(key)?.name ?? key;
+
+  const byDay = useMemo(() => groupByDay(posts), [posts]);
+  const waiting = posts.filter((p) => p.status === MEDIA_STATUS.PENDING_CHARITY).length;
+
+  const step = (direction: number) => {
+    if (view === "week") setAnchor(addDaysISO(weekStartISO(anchor), direction * 7));
+    else {
+      const next = shiftMonth(month, direction);
+      setAnchor(`${next.year}-${String(next.month + 1).padStart(2, "0")}-01`);
+    }
+  };
+
+  const headerLabel = view === "week" ? weekLabel(weekStartISO(anchor)) : monthLabel(month);
+
+  const empty = {
+    title: "لا منشورات في هذا الشهر",
+    description: "ما يضعه زادٌ لجمعيتكم يظهر هنا في يومه، فتعتمدونه أو تُعدِّلونه.",
+  };
+
+  return (
+    <div className="space-y-3">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <CalendarNav
+          label={headerLabel}
+          onPrev={() => step(-1)}
+          onNext={() => step(1)}
+          onToday={() => setAnchor(today)}
+        />
+
+        <div className="flex flex-wrap items-center gap-2">
+          {waiting > 0 && <Badge tone="warn">{waiting} منشورٌ ينتظر اعتمادَكم</Badge>}
+          <Segmented
+            label="هيئة العرض"
+            value={view}
+            onChange={chooseView}
+            options={[
+              { id: "month", label: "شهر" },
+              { id: "week", label: "أسبوع" },
+              { id: "list", label: "قائمة" },
+            ]}
+          />
+        </div>
+      </div>
+
+      {view === "month" && (
+        <MonthView
+          weeks={weeks}
+          today={today}
+          byDay={byDay}
+          marksOf={marksOf}
+          side="CHARITY"
+          onOpen={(post) => setDetailId(post.id)}
+        />
+      )}
+
+      {view === "week" && (
+        <WeekView
+          start={weekStartISO(anchor)}
+          today={today}
+          byDay={byDay}
+          marksOf={marksOf}
+          side="CHARITY"
+          onOpen={(post) => setDetailId(post.id)}
+        />
+      )}
+
+      {view === "list" && (
+        <ListView
+          posts={posts}
+          today={today}
+          marksOf={marksOf}
+          side="CHARITY"
+          onOpen={(post) => setDetailId(post.id)}
+          empty={empty}
+        />
+      )}
+
+      {editing && (
+        <MediaPostSheet
+          title="تعديل المنشور"
+          subtitle={charityName}
+          day={editing.scheduledOn}
+          post={editing}
+          platforms={platforms.filter((p) => p.isActive || editing.platforms.includes(p.key))}
+          banner={
+            <Note tone="brand">
+              تعديلُكم يُرفع إلى زادٍ ليُعمِّده، ويظهر له ما غيّرتموه حقلاً حقلاً. ولا تعديلَ ثانياً
+              قبل أن يُبَتَّ فيه.
+            </Note>
+          }
+          savedMessage="رُفع تعديلُكم إلى زاد"
+          submit={(draft: MediaPostDraft) => updatePortalMediaPost(editing.id, draft)}
+          onClose={() => setEditing(null)}
+          onSaved={() => {
+            setEditing(null);
+            setDetailId(null);
+            reload();
+          }}
+        />
+      )}
+
+      {detailId && (
+        <PortalDetailSheet
+          postId={detailId}
+          platformName={platformName}
+          marksOf={marksOf}
+          onClose={() => setDetailId(null)}
+          onEdit={(post) => {
+            setDetailId(null);
+            setEditing(post);
+          }}
+          onChanged={reload}
+        />
+      )}
+    </div>
+  );
+}
+
+// ── لوحُ التفاصيل: المتنُ من العدة، والفعلُ اعتمادٌ أو تعديل ────────────────
+
+function PortalDetailSheet({
+  postId,
+  platformName,
+  marksOf,
+  onClose,
+  onEdit,
+  onChanged,
+}: {
+  postId: string;
+  platformName: (key: string) => string;
+  marksOf: (keys: string[]) => MediaPlatformView[];
+  onClose: () => void;
+  onEdit: (post: MediaPost) => void;
+  onChanged: () => void;
+}) {
+  const [post, setPost] = useState<MediaPost | null>(null);
+  const [events, setEvents] = useState<MediaEventRow[]>([]);
+  const [error, setError] = useState<string | null>(null);
+  const [pending, start] = useTransition();
+  const [loads, setLoads] = useState(0);
+
+  useEffect(() => {
+    let alive = true;
+    void (async () => {
+      const result = await getPortalMediaPostDetail(postId);
+      if (!alive) return;
+      if ("error" in result && result.error) {
+        setError(result.error);
+        return;
+      }
+      if ("post" in result && result.post) {
+        setPost(normalizePost(result.post));
+        setEvents(result.events ?? []);
+      }
+    })();
+    return () => {
+      alive = false;
+    };
+  }, [postId, loads]);
+
+  /**
+   * الاعتمادُ يُسأل عنه قبل أن يُفعل: لا رجعةَ للجمعية بعده — وهذا شرطُ صاحب
+   * الموقع: «واذا عمد موظف الجمعية المنشور لا يستطيع بعدها التعديل ابدا».
+   */
+  const approve = async () => {
+    if (!post) return;
+    const ok = await confirmAction({
+      title: "اعتماد المنشور نهائيّاً؟",
+      message: "بعد الاعتماد لا تستطيعون تعديلَه — ولا يُفتح إلا من زادٍ بسببٍ يُعرض عليكم.",
+      confirmLabel: "اعتماد",
+      tone: "primary",
+    });
+    if (!ok) return;
+    setError(null);
+    start(async () => {
+      const result = await approvePortalMediaPost(post.id);
+      if (result.error) {
+        setError(result.error);
+        return;
+      }
+      notify("ok", "اعتُمد المنشور");
+      setLoads((n) => n + 1);
+      onChanged();
+    });
+  };
+
+  const mine = post ? can("APPROVE", post.status, "CHARITY") : false;
+
+  return (
+    <Sheet
+      title="المنشور"
+      subtitle={post ? formatDateWithWeekday(post.scheduledOn, WEEKDAY_LABELS) : "…"}
+      leading={<Megaphone className="size-4 text-primary" />}
+      onClose={onClose}
+      busy={pending}
+      footer={
+        <FooterStatus error={error}>
+          <button type="button" onClick={onClose} className={btn.ghost}>
+            إغلاق
+          </button>
+          {post && can("EDIT", post.status, "CHARITY") && (
+            <button type="button" onClick={() => onEdit(post)} className={cx(btn.ghost, "h-9")}>
+              <Pencil className="size-3.5" />
+              تعديل
+            </button>
+          )}
+          {mine && (
+            <button type="button" onClick={() => void approve()} className={btn.primary} disabled={pending}>
+              {pending ? <Spinner size={14} /> : <Check className="size-4" />}
+              اعتماد المنشور
+            </button>
+          )}
+        </FooterStatus>
+      }
+    >
+      {!post ? (
+        <div className="grid place-items-center py-10">
+          <Spinner size={18} />
+        </div>
+      ) : (
+        <MediaPostDetail post={post} events={events} side="CHARITY" platformName={platformName} marksOf={marksOf}>
+          {post.status === MEDIA_STATUS.PENDING_CHARITY && (
+            <Note tone="warn">
+              ينتظر اعتمادَكم: اعتمِدوه كما هو، أو عدّلوه فيُرفع تعديلُكم إلى زادٍ ليُعمِّده.
+            </Note>
+          )}
+          {post.status === MEDIA_STATUS.PENDING_ZAD && (
+            <Note tone="brand">تعديلُكم مرفوعٌ إلى زاد، ينتظر تعميدَه. وما غيّرتموه مكتوبٌ في السجلّ أدناه.</Note>
+          )}
+          {post.status === MEDIA_STATUS.FINAL && (
+            <Note tone="brand">معتمَدٌ نهائيّاً. ولا يُفتح إلا من زادٍ بسببٍ يُعرض عليكم ثمّ يعود لاعتمادكم.</Note>
+          )}
+        </MediaPostDetail>
+      )}
+    </Sheet>
+  );
+}

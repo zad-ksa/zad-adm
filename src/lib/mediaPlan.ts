@@ -67,6 +67,20 @@ export function statusTone(status: MediaStatus, side: Side): MediaTone {
   return waitingOnMe ? "warn" : "neutral";
 }
 
+/**
+ * وسمٌ قصيرٌ على بطاقة المنشور في التقويم لمن ينتظره فعلٌ منه — أو لا وسم.
+ *
+ * وهو «تنبيهُ المنشور» الذي طُلب: الجمعيةُ ترى ما ينتظر اعتمادَها، وزادٌ يرى ما
+ * عُدِّل وينتظر تعميدَه. والوسمُ لجهةٍ واحدةٍ في الحالة الواحدة: منشورٌ ينتظر
+ * الجمعيةَ لا يُوسَم عند زاد، وإلّا صار الوسمُ لوناً على كلِّ بطاقة.
+ */
+export function attentionMark(status: MediaStatus, side: Side): string | null {
+  if (side === "CHARITY") {
+    return status === MEDIA_STATUS.PENDING_CHARITY ? "للاعتماد" : null;
+  }
+  return status === MEDIA_STATUS.PENDING_ZAD ? "عُدِّل" : null;
+}
+
 /** الأفعالُ على المنشور. */
 export type MediaAction =
   /** اعتماد الجمعية لما وضعه زاد. */

@@ -20,7 +20,8 @@ import { FolderOpen,
   ShieldCheck,
   Palette,
   KeyRound,
-  Mail
+  Mail,
+  Megaphone
 } from "lucide-react";
 import ZadLogo from "@/components/ZadLogo";
 import PrivacyPolicyModal from "@/components/PrivacyPolicyModal";
@@ -99,6 +100,7 @@ export default function CharitySidebar({
   title,
   isAdmin = false,
   unreadMail = 0,
+  mediaWaiting = 0,
 }: {
   charityName: string;
   logoUrl: string | null;
@@ -111,6 +113,7 @@ export default function CharitySidebar({
   title?: string;
   isAdmin?: boolean;
   unreadMail?: number;
+  mediaWaiting?: number;
 }) {
   const pathname = usePathname();
   const router = useRouter();
@@ -203,6 +206,9 @@ export default function CharitySidebar({
     // Viewing and raising a design request are one permission — see
     // charityPermissions.ts.
     { id: "design-requests", label: "طلبات التصاميم", href: `/portal/${encodeURIComponent(charityName)}/design-requests`, exact: true, icon: Palette, show: can("view_design_requests") },
+    // الخطةُ الإعلاميةُ: تُنال بتفويض خدمة «الإعلامية» (انظر PermissionServiceLink)،
+    // والعدّادُ ما ينتظر اعتمادَ الجمعية — وهو «التنبيهُ على التبويب».
+    { id: "media", label: "الخطة الإعلامية", href: `/portal/${encodeURIComponent(charityName)}/media`, exact: true, icon: Megaphone, show: can("view_media_plan"), badge: mediaWaiting },
     // No permission: the library is reference material shared with every
     // charity, and it is read-only on the server whoever opens it.
     { id: "templates", label: "مكتبة النماذج", href: `/portal/${encodeURIComponent(charityName)}/templates`, exact: true, icon: FolderOpen, show: true },

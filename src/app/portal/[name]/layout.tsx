@@ -6,6 +6,7 @@ import { getSession } from "@/lib/auth";
 import SetEmailBanner from "@/components/SetEmailBanner";
 import { effectiveCharityPermissions } from "@/lib/charityPermissions";
 import { portalPermissionLinks } from "@/lib/portalAccess";
+import { listCharityNotices } from "@/app/actions/charityNotifications";
 
 export default async function CharityLayout({
   children,
@@ -98,6 +99,27 @@ export default async function CharityLayout({
     },
   });
 
+  // عدّادُ الخطّة الإعلاميّة: ما ينتظر اعتمادَ الجمعية — وهو «التنبيهُ على
+  // التبويب». ولمن يرى التبويبَ وحدَه: لا يُحسب لمن لا يُفتح له.
+  //
+  // **ومحروسٌ بـtry**: هذا التخطيطُ يحمل كلَّ صفحةٍ في البوّابة، فاستعلامٌ
+  // يُخفق — جدولٌ لم يُنشأ بعد — يُسقط البوّابةَ كلَّها على كلِّ جمعية. فالصفرُ
+  // أصدقُ من صفحةِ خطأ، ويُكتب الأثرُ في السجلّ.
+  const seesMedia = (membership?.isAdmin ?? false) || effectivePermissions.includes("view_media_plan");
+  let mediaWaiting = 0;
+  if (seesMedia) {
+    try {
+      mediaWaiting = await prisma.mediaPost.count({
+        where: { charityId: charity.id, status: "PENDING_CHARITY" },
+      });
+    } catch (error) {
+      console.error("portal media badge", error);
+    }
+  }
+
+  // وإشعاراتُ الحساب — آمنةٌ في نفسها (انظر `listCharityNotices`).
+  const notices = await listCharityNotices();
+
   return (
     <CharityLayoutClient
       charityName={decodedName}
@@ -111,6 +133,8 @@ export default async function CharityLayout({
       title={session.title}
       isAdmin={membership?.isAdmin ?? false}
       unreadMail={unreadMail}
+      mediaWaiting={mediaWaiting}
+      notices={notices}
     >
       {needsEmail && (
         <div className="mb-4">

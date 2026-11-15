@@ -34,39 +34,6 @@ function refuse(error: unknown, fallback: string) {
 }
 
 /**
- * Active administrators of this charity, excluding one person.
- *
- * Counted from the link rows, so it reflects who administers THIS charity —
- * the account-wide title it replaces meant a promotion elsewhere could quietly
- * satisfy this check, and a demotion elsewhere could quietly break it.
- * `user.isActive` is still consulted: a Zad-suspended account administers
- * nothing anywhere.
- */
-async function countOtherActiveAdmins(charityId: string, excludeUserId: string) {
-  return prisma.charityUserCharity.count({
-    where: {
-      charityId,
-      isActive: true,
-      isAdmin: true,
-      user: { isActive: true },
-      NOT: { charityUserId: excludeUserId },
-    },
-  });
-}
-
-/**
- * Validates a requested grant against the anti-escalation rules of the plan
- * (§3.4). Returns the cleaned set, or an error string.
- *
- *  - subset rule: nobody hands out authority they do not hold themselves
- *  - administrator standing may only be conferred by an administrator, and only
- *    within the charity the actor administers
- *  - unknown permission ids are rejected rather than silently stored
- *
- * The requested title is validated as a label only. It confers nothing, so no
- * title needs guarding — `isAdmin` is the whole of the authority question now.
- */
-/**
  * خدمات هذه الجمعية بأسمائها. التفويض لا يتجاوزها: خدمةٌ ليست في الجمعية لا
  * تُفوَّض لأحد فيها، وخدمةٌ حُذفت تسقط بحذف صفوفها.
  */
@@ -130,13 +97,17 @@ function validateGrant(
   requestedTitle: string,
   requestedPermissions: string[],
   requestedIsOfficial: boolean
-): { permissions: string[]; isOfficial: boolean } | { error: string } {
+): { permissions: string[] } | { error: string } {
   if (!Object.values(CharityUserTitle).includes(requestedTitle as CharityUserTitle)) {
     return { error: "المسمى الوظيفي غير صالح" };
   }
 
-  if (requestedIsOfficial && !actorIsOfficial) {
-    return { error: "لا يُعيَّن حسابُ الجمعية إلا من حساب الجمعية" };
+  // **ولا يُعيَّن حسابُ الجمعية من البوّابة أصلاً** — ولا من حساب الجمعية نفسِه:
+  // هو الحسابُ الذي تُنشئه زادٌ للجمعية وتتحكّم به، فإعطاؤه لشخصٍ آخر من داخل
+  // الجمعية نقلٌ لمفتاح البيت من غير صاحبه. فالعلَمُ يُكتب من شاشة زادٍ وحدَها
+  // (`setCharityAccountAccess`).
+  if (requestedIsOfficial) {
+    return { error: "حسابُ الجمعية يُعيَّن من زاد" };
   }
 
   // Retired ids arrive here on every save of a membership created before the
@@ -153,7 +124,7 @@ function validateGrant(
     return { error: "منحُ الصلاحيات من حساب الجمعية وحدَه" };
   }
 
-  return { permissions: cleaned, isOfficial: requestedIsOfficial };
+  return { permissions: cleaned };
 }
 
 export async function listCharityStaff(charityId: string) {
@@ -280,11 +251,10 @@ export async function createCharityStaff(
   }
 ) {
   try {
-    const {
-      session,
-      permissions: actorPermissions,
-      isOfficial: actorIsOfficial,
-    } = await requireCharityPermission(charityId, "manage_charity_users");
+    const { session, isOfficial: actorIsOfficial } = await requireCharityPermission(
+      charityId,
+      "manage_charity_users"
+    );
 
     const name = (data.name || "").trim();
     const canonical = normalizeSaudiPhone(data.phone || "");
@@ -300,14 +270,9 @@ export async function createCharityStaff(
 
     const checkedServices = await checkCharityServices(charityId, data.services || []);
     if ("error" in checkedServices) return fail(checkedServices.error);
-    // مديرُ نظام الجمعية يُفوَّض بخدماتها كلِّها، أيّاً كان ما وصل من الشاشة.
-    //
-    // و`isAdmin` لا يمنح خدمةً ضمناً: `charityServiceTeam` تقرأ صفوفَ التفويض
-    // حرفاً، فمديرٌ بلا صفوفٍ لا يستلم بريد خدمةٍ واحدة — وهو من يُفترض أن
-    // يصل إليه كلُّ شيءٍ في جمعيته. فيُفرض هنا لا يُترك لمن يملأ النموذج.
-    const services = grant.isOfficial
-      ? await charityServiceNames(charityId)
-      : checkedServices.names;
+    // والموظَّفُ الذي يُنشأ من البوّابة عضوٌ دائماً: حسابُ الجمعية يُعيَّن من زاد
+    // (`setCharityAccountAccess`)، فلا ترقيةَ من هنا ولا تفويضَ مفروضاً بها.
+    const services = checkedServices.names;
 
     const existing = await prisma.charityUser.findFirst({
       where: { phone: { in: saudiPhoneVariants(canonical) } },
@@ -331,14 +296,14 @@ export async function createCharityStaff(
       const link = linkHere
         ? await prisma.charityUserCharity.update({
             where: { id: linkHere.id },
-            data: { isActive: true, permissions: grant.permissions, isAdmin: grant.isOfficial },
+            data: { isActive: true, permissions: grant.permissions, isAdmin: false },
           })
         : await prisma.charityUserCharity.create({
             data: {
               charityUserId: existing.id,
               charityId,
               permissions: grant.permissions,
-              isAdmin: grant.isOfficial,
+              isAdmin: false,
             },
           });
 
@@ -390,7 +355,7 @@ export async function createCharityStaff(
         title: data.title as CharityUserTitle,
         isActive: true,
         charities: {
-          create: { charityId, permissions: grant.permissions, isAdmin: grant.isOfficial },
+          create: { charityId, permissions: grant.permissions, isAdmin: false },
         },
       },
       select: {
@@ -419,7 +384,7 @@ export async function createCharityStaff(
         title: data.title,
         permissions: grant.permissions,
         services,
-        isAdmin: grant.isOfficial,
+        isAdmin: false,
       },
     });
 
@@ -442,11 +407,10 @@ export async function updateCharityStaff(
   data: { title: string; permissions: string[]; services?: string[]; isAdmin?: boolean }
 ) {
   try {
-    const {
-      session,
-      permissions: actorPermissions,
-      isOfficial: actorIsOfficial,
-    } = await requireCharityPermission(charityId, "manage_charity_users");
+    const { session, isOfficial: actorIsOfficial } = await requireCharityPermission(
+      charityId,
+      "manage_charity_users"
+    );
 
     if (targetUserId === session.id) {
       return fail("لا يمكنك تعديل صلاحيات حسابك الشخصي");
@@ -458,12 +422,11 @@ export async function updateCharityStaff(
     });
     if (!link) return fail("الموظف غير موجود في هذه الجمعية");
 
-    // Demoting an existing administrator is itself an administrator-only act;
-    // otherwise a user with manage_charity_users could strip the charity's
-    // administrator and take the charity over. Read from the link, so it is this
-    // charity's administrators that are protected, not another charity's.
-    if (link.isAdmin && !actorIsOfficial) {
-      return fail("لا يمكن تعديل حساب مدير الجمعية إلا من قِبل مدير");
+    // **وحسابُ الجمعية لا يُعدَّل من البوّابة** — ولا من نفسِه: صلاحيّاتُه محسوبةٌ
+    // لا مخزَّنةٌ، وخدماتُه كلُّ خدمات الجمعية، فلا شيءَ فيه يُحرَّر هنا. وهو
+    // حسابُ زادٍ في الجمعية، فتحريرُه من شاشتها.
+    if (link.isAdmin) {
+      return fail("حسابُ الجمعية يُدار من زاد");
     }
 
     const grant = validateGrant(
@@ -480,25 +443,11 @@ export async function updateCharityStaff(
       if ("error" in checked) return fail(checked.error);
       services = checked.names;
     }
-    // ومن رُفع إلى الإدارة — أو كان مديراً فعُدِّل شيءٌ آخرُ من حسابه —
-    // يُفوَّض بخدمات الجمعية كلِّها. و`null` هنا تعني «لا تُغيَّر»، فالفرضُ
-    // يتقدّم عليها: ترقيةٌ بلا إرسال قائمةِ خدماتٍ كانت تترك المديرَ الجديد
-    // بلا تفويضٍ أصلاً. وأثرُه أنّ أيَّ تعديلٍ لحساب مديرٍ يُصلح انحرافاً
-    // سابقاً بلا أن يُطلب.
-    if (grant.isOfficial) services = await charityServiceNames(charityId);
-
     // ولا شيءَ يُستبقى من الصفِّ القديم: المُنتقي يَعرض كلَّ ما يجوز منحُه —
     // صلاحيّاتِ الخدمات والإدارةِ معاً — فالمُرسَلُ هو القرارُ كاملاً. وكان
     // يُستبقى منه تبويباتُ البوّابة لأنّ المُنتقي لم يكن يعرضها، فكان سحبُها
     // متعذّراً من أيِّ شاشة.
     const permissions = grant.permissions;
-
-    // Removing the last administrator would leave the charity unable to manage
-    // its own accounts, recoverable only by Zad staff.
-    if (link.isAdmin && !grant.isOfficial) {
-      const remaining = await countOtherActiveAdmins(charityId, targetUserId);
-      if (remaining === 0) return fail("لا يمكن إزالة آخر مدير في الجمعية");
-    }
 
     // The job title lives on the account, shared with every other charity this
     // person serves, so one charity must not relabel someone on another
@@ -528,7 +477,7 @@ export async function updateCharityStaff(
         : []),
       prisma.charityUserCharity.update({
         where: { id: link.id },
-        data: { permissions, isAdmin: grant.isOfficial },
+        data: { permissions, isAdmin: false },
       }),
       ...(services === null
         ? []
@@ -551,7 +500,7 @@ export async function updateCharityStaff(
       action: "PERMISSION_CHANGE",
       targetType: "CharityUser",
       targetId: targetUserId,
-      metadata: { charityId, permissions, services, isAdmin: grant.isOfficial },
+      metadata: { charityId, permissions, services, isAdmin: false },
     });
 
     return { success: true as const };
@@ -571,10 +520,7 @@ export async function setCharityStaffActive(
   isActive: boolean
 ) {
   try {
-    const { session, isOfficial: actorIsOfficial } = await requireCharityPermission(
-      charityId,
-      "manage_charity_users"
-    );
+    const { session } = await requireCharityPermission(charityId, "manage_charity_users");
 
     if (targetUserId === session.id) {
       return fail("لا يمكنك تعطيل حسابك الشخصي");
@@ -586,18 +532,10 @@ export async function setCharityStaffActive(
     });
     if (!link) return fail("الموظف غير موجود في هذه الجمعية");
 
-    if (link.isAdmin && !actorIsOfficial) {
-      return fail("لا يمكن تعطيل حساب مدير الجمعية إلا من قِبل مدير");
-    }
-
-    // Refuse to remove the charity's last active administrator — the charity
-    // would be left with nobody able to manage accounts, recoverable only by
-    // Zad staff.
-    if (!isActive && link.isAdmin) {
-      const remainingAdmins = await countOtherActiveAdmins(charityId, targetUserId);
-      if (remainingAdmins === 0) {
-        return fail("لا يمكن تعطيل آخر مدير في الجمعية");
-      }
+    // وحسابُ الجمعية لا يُعطَّل من البوّابة: هو حسابُ زادٍ فيها، وتعطيلُه من
+    // داخلها يقطع البابَ الذي تُصحَّح منه الصلاحيّاتُ كلُّها.
+    if (link.isAdmin) {
+      return fail("حسابُ الجمعية يُدار من زاد");
     }
 
     await prisma.charityUserCharity.update({

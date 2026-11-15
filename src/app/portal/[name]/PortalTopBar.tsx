@@ -6,7 +6,7 @@ import { LogOut, Moon, Sun, User } from "lucide-react";
 import { useTheme } from "next-themes";
 import { logout } from "@/app/actions/auth";
 import PortalNotices from "./PortalNotices";
-import { charityTitleLabel } from "@/lib/charityPermissions";
+import { charityMemberLabel } from "@/lib/charityPermissions";
 import type { CharityNotice } from "@/app/actions/charityNotifications";
 
 /**
@@ -26,17 +26,21 @@ export default function PortalTopBar({
   charityName,
   accountName,
   accountTitle,
+  isOfficial,
   notices,
   className,
 }: {
   charityName: string;
   accountName?: string | null;
   accountTitle?: string | null;
+  /** حسابُ الجمعية الرسميُّ — يُكتب مسمّاه «حساب الجمعية» لا مسمّىً وظيفيّاً. */
+  isOfficial?: boolean;
   notices: { notices: CharityNotice[]; unread: number };
   className?: string;
 }) {
   // المسمّى وسمٌ عربيٌّ لا قيمةَ تعدادٍ: «FULL_TIME» تحت اسم الموظَّف ليست مسمّىً.
-  const titleLabel = accountTitle ? charityTitleLabel(accountTitle) : null;
+  // وحسابُ الجمعية يُكتب باسمه لا بمسمّىً وظيفيٍّ لم يكن له يوماً.
+  const titleLabel = charityMemberLabel(isOfficial, accountTitle) || null;
   const { resolvedTheme, setTheme } = useTheme();
   const [open, setOpen] = useState(false);
   const boxRef = useRef<HTMLDivElement>(null);

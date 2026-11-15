@@ -122,7 +122,9 @@ export async function addCharityClientAccount(data: {
         phone: data.phone.trim(),
         email,
         password: email ? await hashPassword(data.password!.trim()) : null,
-        title: data.title as CharityUserTitle,
+        // وحسابُ الجمعية مسمّاه «حساب الجمعية»: لا يُكتب له مسمّىً وظيفيٌّ لم يكن
+        // له يوماً — وهو العمودُ الذي يُقرأ منه الوسمُ في كلِّ شاشة.
+        title: (data.isAdmin === true ? "SYSTEM_ADMIN" : data.title) as CharityUserTitle,
         isActive: true,
         charities: {
           create: data.charityIds.map(id => ({
@@ -249,7 +251,28 @@ export async function setCharityAccountAccess(input: {
       return { success: false as const, error: `خدمة غير مشمولة للجمعية: ${rejected[0]}` };
     }
 
+    // والمسمّى يتبع الصفة: مَن عُلِّم حسابَ الجمعية يُكتب مسمّاه «حساب الجمعية»،
+    // ومن رُفعت عنه ولم يُكتب له مسمّىً يعود موظّفاً بدوامٍ كامل — فلا يبقى
+    // وسمُ شيءٍ لم يعد هو. ويُمَسُّ العمودُ وهذه عضويّتُه الوحيدةُ فقط: المسمّى
+    // على الحساب، ومشتركٌ مع كلِّ جمعيةٍ يخدمها.
+    const soleMembership =
+      (await prisma.charityUserCharity.count({ where: { charityUserId: input.accountId } })) === 1;
+    const retitle =
+      soleMembership && input.isOfficial !== link.isAdmin
+        ? input.isOfficial
+          ? "SYSTEM_ADMIN"
+          : "FULL_TIME"
+        : null;
+
     await prisma.$transaction([
+      ...(retitle
+        ? [
+            prisma.charityUser.update({
+              where: { id: input.accountId },
+              data: { title: retitle as CharityUserTitle },
+            }),
+          ]
+        : []),
       prisma.charityUserCharity.update({
         where: { id: link.id },
         data: { isAdmin: input.isOfficial, permissions },

@@ -289,10 +289,13 @@ export const CHARITY_USER_TITLES: { id: string; label: string }[] = [
   { id: "VOLUNTEER", label: "متطوع" },
 ];
 
+/** وسمُ حساب الجمعية الرسميِّ — يُكتب مكان المسمّى، لا بجانبه. */
+export const OFFICIAL_ACCOUNT_LABEL = "حساب الجمعية";
+
 const LEGACY_TITLE_LABELS: Record<string, string> = {
   // كان «مدير النظام»، واسمُه الآن ما هو عليه حقّاً: حسابُ الجمعية الرسميُّ
   // الذي تُنشئه زادٌ عند التعاقد.
-  SYSTEM_ADMIN: "حساب الجمعية",
+  SYSTEM_ADMIN: OFFICIAL_ACCOUNT_LABEL,
 };
 
 export function charityTitleLabel(title: string): string {
@@ -301,4 +304,21 @@ export function charityTitleLabel(title: string): string {
     LEGACY_TITLE_LABELS[title] ??
     title
   );
+}
+
+/**
+ * ما يُكتب مسمّىً لعضوٍ في جمعية — وهو ما يُعرض في كلِّ شاشة.
+ *
+ * **وحسابُ الجمعية لا يُكتب له مسمّىً وظيفيّ**: هو ليس موظّفاً بدوامٍ كامل ولا
+ * متطوّعاً، بل حسابُ الجمعية نفسِها الذي تُنشئه زاد. والمسمّى عمودٌ على الحساب
+ * (`CharityUser.title`) قد يحمل قيمةً قديمةً كـ`FULL_TIME` من قبل أن يُعلَّم
+ * رسميّاً، فالقراءةُ منه وحدَه تكتب تحت اسمه «موظف بدوام كامل» وهو حسابُ
+ * الجمعية. فالعضويّةُ تتقدّم على العمود.
+ */
+export function charityMemberLabel(
+  isOfficialAccount: boolean | null | undefined,
+  title: string | null | undefined
+): string {
+  if (isOfficialAccount === true) return OFFICIAL_ACCOUNT_LABEL;
+  return title ? charityTitleLabel(title) : "";
 }

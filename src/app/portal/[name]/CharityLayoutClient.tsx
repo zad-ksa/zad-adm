@@ -83,8 +83,18 @@ export default function CharityLayoutClient({
     <div className="flex h-[100dvh] bg-slate-50 dark:bg-slate-900/50 dark:bg-slate-950 overflow-hidden" dir="rtl">
 
 
-      <CharitySidebar 
-        charityName={charityName} 
+      {/*
+        **و`isAdmin` تُمرَّر**: كانت تُستقبَل هنا ولا تُمرَّر، وللشريط
+        `isAdmin = false` افتراضاً — فمديرُ الجمعية يُحسب عضواً عاديّاً في العرض
+        وحدَه: تبويبٌ تقبله صفحتُه (`resolveCharityPortal` تُجيزه بالإدارة) ولا
+        يراه في شريطه.
+
+        وبقي العطبُ مستوراً لأنّ تبويبات البوّابة كلَّها مربوطةٌ بخدمات، فتظهر
+        للمدير بتفويض خدماته لا بإدارته. وأوّلُ تبويبٍ لم يُربط بعد — «الخطة
+        الإعلامية» — كشفه: لا شيءَ يُخبر الشريطَ أنّ القارئ مدير.
+      */}
+      <CharitySidebar
+        charityName={charityName}
         logoUrl={logoUrl} 
         isOpen={isSidebarOpen} 
         setIsOpen={setIsSidebarOpen}
@@ -92,6 +102,7 @@ export default function CharityLayoutClient({
         userType={userType}
         availableCharities={availableCharities}
         permissions={permissions}
+        isAdmin={isAdmin}
         unreadMail={unread}
         mediaWaiting={mediaWaiting}
         title={title}

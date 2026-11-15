@@ -7,7 +7,7 @@ import { Menu } from "lucide-react";
 import DeveloperRoleSwitcher from "@/components/DeveloperRoleSwitcher";
 import { MAIL_UNREAD_EVENT } from "@/lib/mailBadge";
 import { getPortalUnreadCount } from "@/app/actions/charityMail";
-import PortalNotices from "./PortalNotices";
+import PortalTopBar from "./PortalTopBar";
 import type { CharityNotice } from "@/app/actions/charityNotifications";
 
 export default function CharityLayoutClient({
@@ -21,6 +21,7 @@ export default function CharityLayoutClient({
   currentEmployeeId,
   permissions = [],
   title,
+  accountName,
   isAdmin = false,
   unreadMail = 0,
   mediaWaiting = 0,
@@ -36,6 +37,8 @@ export default function CharityLayoutClient({
   currentEmployeeId?: string;
   permissions?: string[];
   title?: string;
+  /** اسمُ صاحب الحساب — يُعرض في الشريط الأعلى كما في لوحة زاد. */
+  accountName?: string | null;
   isAdmin?: boolean;
   unreadMail?: number;
   /** ما ينتظر اعتمادَ الجمعية في الخطّة الإعلاميّة — عدّادُ التبويب. */
@@ -98,7 +101,7 @@ export default function CharityLayoutClient({
         {/* صفُّ الجرس في الحاسوب — صفٌّ خاصٌّ به لا قرصٌ عائمٌ فوق المحتوى:
             العائمُ يغطّي ما تحته، فيُحجز له فراغٌ ميّتٌ في كل صفحة. */}
         <div className="hidden lg:flex h-12 shrink-0 items-center justify-end px-5 border-b border-slate-200 dark:border-slate-800/80 bg-white/80 dark:bg-slate-900/60 backdrop-blur-lg z-30">
-          <PortalNotices initial={notices} />
+          <PortalTopBar charityName={charityName} accountName={accountName} accountTitle={title} notices={notices} />
         </div>
 
         {/* Mobile Header (Sticky & Blur) */}
@@ -114,7 +117,7 @@ export default function CharityLayoutClient({
               {charityName}
             </span>
           </div>
-          <PortalNotices initial={notices} />
+          <PortalTopBar charityName={charityName} accountName={accountName} accountTitle={title} notices={notices} />
         </div>
         
         {/* Main Content Area */}

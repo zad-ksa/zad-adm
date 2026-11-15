@@ -5,12 +5,9 @@ import { usePathname, useRouter } from "next/navigation";
 import { CHARITY_ATTENDANCE_ENABLED, isCharityMailOpen } from "@/lib/featureFlags";
 import { FolderOpen,
   Building2,
-  ChevronRight,
   ChevronDown,
   X,
   ArrowLeft,
-  Moon,
-  Sun,
   LogOut,
   Briefcase,
   Scale,
@@ -25,7 +22,6 @@ import { FolderOpen,
 } from "lucide-react";
 import ZadLogo from "@/components/ZadLogo";
 import PrivacyPolicyModal from "@/components/PrivacyPolicyModal";
-import { useTheme } from "next-themes";
 import { useState, useEffect, useRef } from "react";
 import { logout } from "@/app/actions/auth";
 
@@ -118,7 +114,6 @@ export default function CharitySidebar({
   const pathname = usePathname();
   const router = useRouter();
   const [activePath, setActivePath] = useState(decodeURIComponent(pathname));
-  const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
   // Keeps the mobile drawer shut on first paint — see the drawer below.
   const drawerOpen = isOpen && mounted;
@@ -241,28 +236,26 @@ export default function CharitySidebar({
 
   const subItems: any[] = [];
 
+  /**
+   * الشريطُ ثابتٌ مفتوحٌ في الحاسوب — لا يُطوى.
+   *
+   * **ولمَ أُلغي الطيّ**: كان زرُّ الطيّ يُضيِّق الشريطَ إلى أيقوناتٍ بلا أسماء،
+   * فتبويباتُ البوّابة تُعرف بأشكالها لا بأسمائها. وشريطُ لوحة زادٍ ثابتُ العرض
+   * (`w-56`) بلا طيّ، فطيُّ هذا وحدَه يجعل للموقع شريطين بسلوكين. والأهمُّ أنّ
+   * الطيَّ لا يُحفظ: يرجع مفتوحاً مع كلِّ صفحةٍ تُحمَّل، فحالةٌ تُغيَّر ولا
+   * تبقى أسوأُ من حالةٍ واحدةٍ لا تُغيَّر.
+   *
+   * و`isOpen` بعدها للدُرج في الجوّال وحدَه — ومحتوى الشريط واحدٌ في الموضعين،
+   * مفتوحاً في كليهما.
+   */
   const sidebarContent = (
-    <div className="bg-white dark:bg-[#0A0A0A] flex flex-col h-full border-l border-slate-200 dark:border-slate-800/80 shadow-sm relative transition-all duration-300">
-
-      {/* Desktop Toggle Button */}
-      <button
-        onClick={() => setIsOpen(!isOpen)}
-        className="hidden lg:flex absolute top-8 -left-3 bg-white dark:bg-[#111] border border-slate-200 dark:border-slate-800 text-slate-400 hover:text-slate-900 dark:hover:text-white hover:border-slate-300 dark:hover:border-slate-700 rounded-md w-6 h-6 items-center justify-center z-50 transition-all shadow-sm dark:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)]"
-      >
-        <ChevronRight className={`w-4 h-4 transition-transform duration-300 ${!isOpen ? "rotate-180" : ""}`} />
-      </button>
+    <div className="bg-white dark:bg-[#0A0A0A] flex flex-col h-full border-l border-slate-200 dark:border-slate-800/80 shadow-sm relative">
 
       {/* Header / Logo */}
-      <div className={`flex items-center ${isOpen ? "justify-start px-5" : "justify-center px-0"} h-16 border-b border-slate-100 dark:border-slate-800 shrink-0 transition-all`}>
-        {isOpen ? (
-          <div className="w-full h-full flex items-center py-2 relative pr-1">
-            <ZadLogo isOpen={true} className="h-7 w-auto" />
-          </div>
-        ) : (
-          <div className="w-9 h-9 flex items-center justify-center">
-            <ZadLogo isOpen={false} className="h-7 w-auto" />
-          </div>
-        )}
+      <div className="flex items-center justify-start px-5 h-16 border-b border-slate-100 dark:border-slate-800 shrink-0">
+        <div className="w-full h-full flex items-center py-2 relative pr-1">
+          <ZadLogo isOpen={true} className="h-7 w-auto" />
+        </div>
       </div>
 
       {/* Mobile Close Button */}
@@ -278,51 +271,35 @@ export default function CharitySidebar({
           onClick={() => setIsDropdownOpen(!isDropdownOpen)}
           aria-expanded={isDropdownOpen}
           aria-haspopup="menu"
-          className={`w-full flex ${isOpen ? "flex-row items-center px-4 gap-3.5" : "flex-col items-center px-2"} py-4 border-b border-slate-100 dark:border-slate-800/80 hover:bg-slate-50 dark:hover:bg-white/5 transition-all overflow-hidden cursor-pointer outline-none group focus-visible:ring-2 focus-visible:ring-primary`}
+          className="w-full flex flex-row items-center px-4 gap-3.5 py-4 border-b border-slate-100 dark:border-slate-800/80 hover:bg-slate-50 dark:hover:bg-white/5 transition-colors overflow-hidden cursor-pointer outline-none group focus-visible:ring-2 focus-visible:ring-primary"
         >
           {logoUrl ? (
-            <div className={`rounded-full overflow-hidden ring-1 ring-slate-200 dark:ring-slate-800 bg-white dark:bg-black flex items-center justify-center shrink-0 transition-all shadow-sm ${isOpen ? "w-12 h-12" : "w-10 h-10"}`}>
+            <div className="rounded-full overflow-hidden ring-1 ring-slate-200 dark:ring-slate-800 bg-white dark:bg-black flex items-center justify-center shrink-0 shadow-sm w-12 h-12">
               <img src={logoUrl} alt={charityName} className="w-full h-full object-contain p-1" />
             </div>
           ) : (
-            <div className={`bg-gradient-to-br from-primary/10 to-primary/5 dark:from-primary/20 dark:to-primary/5 text-primary rounded-full ring-1 ring-primary/20 dark:ring-primary/30 flex items-center justify-center shrink-0 transition-all shadow-sm ${isOpen ? "w-12 h-12" : "w-10 h-10"}`}>
-              <Building2 className={isOpen ? "w-6 h-6" : "w-5 h-5"} />
+            <div className="bg-gradient-to-br from-primary/10 to-primary/5 dark:from-primary/20 dark:to-primary/5 text-primary rounded-full ring-1 ring-primary/20 dark:ring-primary/30 flex items-center justify-center shrink-0 shadow-sm w-12 h-12">
+              <Building2 className="w-6 h-6" />
             </div>
           )}
 
-          {isOpen && (
-            <>
-              <div className="overflow-hidden fade-in flex-1 min-w-0 flex flex-col justify-center gap-1 mt-0.5 text-right">
-                <div className="flex items-start justify-between w-full gap-2">
-                  <h2
-                    className="font-semibold text-primary dark:text-primary tracking-tight truncate leading-snug flex-1 text-[13px] md:text-[14px]"
-                    title={charityName}
-                  >
-                    {charityName}
-                  </h2>
-                  {mounted && (
-                    <div
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setTheme(theme === "dark" ? "light" : "dark");
-                      }}
-                      className="p-1 rounded-md bg-slate-50 border border-slate-200/60 dark:border-slate-700/50 dark:bg-slate-800 text-slate-400 dark:text-slate-400 hover:text-primary dark:hover:text-primary transition-colors cursor-pointer shrink-0 shadow-sm"
-                      title="تبديل الوضع الداكن/الفاتح"
-                    >
-                      {theme === "dark" ? <Sun className="w-3 h-3" /> : <Moon className="w-3 h-3" />}
-                    </div>
-                  )}
-                </div>
-                <div className="flex items-center gap-1.5 opacity-80">
-                  <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                  <span className="text-[10px] font-medium text-slate-500 dark:text-slate-400 tracking-tight leading-none pt-0.5">
-                    ملف الجمعية
-                  </span>
-                </div>
-              </div>
-              <ChevronDown className={`w-4 h-4 shrink-0 text-slate-400 group-hover:text-slate-600 dark:group-hover:text-slate-300 transition-transform duration-200 ${isDropdownOpen ? 'rotate-180' : ''}`} />
-            </>
-          )}
+          <div className="overflow-hidden fade-in flex-1 min-w-0 flex flex-col justify-center gap-1 mt-0.5 text-right">
+            <div className="flex items-start justify-between w-full gap-2">
+              <h2
+                className="font-semibold text-primary dark:text-primary tracking-tight truncate leading-snug flex-1 text-[13px] md:text-[14px]"
+                title={charityName}
+              >
+                {charityName}
+              </h2>
+            </div>
+            <div className="flex items-center gap-1.5 opacity-80">
+              <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+              <span className="text-[10px] font-medium text-slate-500 dark:text-slate-400 tracking-tight leading-none pt-0.5">
+                ملف الجمعية
+              </span>
+            </div>
+          </div>
+          <ChevronDown className={`w-4 h-4 shrink-0 text-slate-400 group-hover:text-slate-600 dark:group-hover:text-slate-300 transition-transform duration-200 ${isDropdownOpen ? "rotate-180" : ""}`} />
         </button>
 
         {/* Dropdown Menu */}
@@ -330,7 +307,7 @@ export default function CharitySidebar({
           <div 
             role="menu"
             onKeyDown={handleKeyDown}
-            className={`absolute top-full mt-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-lg z-50 py-1.5 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200 ${isOpen ? 'right-4 left-4' : 'right-2 w-48'}`}
+            className="absolute top-full mt-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-lg z-50 py-1.5 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200 right-4 left-4"
           >
             {isCharityUser && availableCharities.filter(c => c.name !== charityName).length > 0 && (
               <>
@@ -383,7 +360,7 @@ export default function CharitySidebar({
 
       {/* Navigation */}
       <div className="flex-1 overflow-y-auto custom-scrollbar px-3 py-4 space-y-0.5 flex flex-col relative">
-        {isOpen && mainItems.length > 0 && (
+        {mainItems.length > 0 && (
           <div className="flex items-center justify-between px-2 mb-1.5 mt-1">
             <span className="text-[11px] font-semibold text-slate-400/80 dark:text-slate-500 uppercase tracking-widest">الرئيسية</span>
           </div>
@@ -400,13 +377,13 @@ export default function CharitySidebar({
               key={item.id}
               item={item}
               isActive={isActive}
-              isOpen={isOpen}
+              isOpen={true}
               onClick={() => handleLinkClick(item.href)}
             />
           )
         })}
 
-        {isOpen && subItems.length > 0 && (
+        {subItems.length > 0 && (
           <div className="flex items-center justify-between px-2 mt-5 mb-1.5">
             <span className="text-[11px] font-semibold text-slate-400/80 dark:text-slate-500 uppercase tracking-wider">التبويبات الفرعية</span>
           </div>
@@ -423,7 +400,7 @@ export default function CharitySidebar({
               key={item.id}
               item={item}
               isActive={isActive}
-              isOpen={isOpen}
+              isOpen={true}
               onClick={() => handleLinkClick(item.href)}
             />
           )
@@ -435,21 +412,19 @@ export default function CharitySidebar({
         {/* Privacy Policy Button */}
         <button
           onClick={() => setIsPrivacyModalOpen(true)}
-          title={!isOpen ? "سياسة الخصوصية" : undefined}
-          className={`flex items-center ${isOpen ? "justify-start px-3" : "justify-center"} w-full py-2 text-slate-400 dark:text-slate-500 hover:bg-slate-50 dark:hover:bg-white/5 hover:text-primary dark:hover:text-primary rounded-lg text-[15px] font-medium transition-all group`}
+          className="flex items-center justify-start px-3 w-full py-2 text-slate-400 dark:text-slate-500 hover:bg-slate-50 dark:hover:bg-white/5 hover:text-primary dark:hover:text-primary rounded-lg text-[15px] font-medium transition-all group"
         >
-          <ShieldCheck className={`w-4 h-4 shrink-0 transition-all ${isOpen ? "ml-3" : "ml-0"} text-slate-400 group-hover:text-primary`} />
-          {isOpen && <span className="whitespace-nowrap text-[13px]">سياسة الخصوصية</span>}
+          <ShieldCheck className="w-4 h-4 shrink-0 transition-colors ml-3 text-slate-400 group-hover:text-primary" />
+          <span className="whitespace-nowrap text-[13px]">سياسة الخصوصية</span>
         </button>
 
         {!isCharityUser && (
           <Link
             href="/main"
-            title={!isOpen ? "العودة للوحة التحكم" : undefined}
-            className={`flex items-center ${isOpen ? "justify-start px-3" : "justify-center"} w-full py-2 text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-white/5 hover:text-slate-900 dark:hover:text-slate-200 rounded-lg text-[15px] font-medium transition-all group`}
+            className="flex items-center justify-start px-3 w-full py-2 text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-white/5 hover:text-slate-900 dark:hover:text-slate-200 rounded-lg text-[15px] font-medium transition-all group"
           >
-            <ArrowLeft className={`w-4 h-4 shrink-0 transition-all ${isOpen ? "ml-3" : "ml-0"} text-slate-400 group-hover:text-slate-700 dark:group-hover:text-slate-300`} />
-            {isOpen && <span className="whitespace-nowrap">العودة للوحة التحكم</span>}
+            <ArrowLeft className="w-4 h-4 shrink-0 transition-colors ml-3 text-slate-400 group-hover:text-slate-700 dark:group-hover:text-slate-300" />
+            <span className="whitespace-nowrap">العودة للوحة التحكم</span>
           </Link>
         )}
       </div>
@@ -460,9 +435,8 @@ export default function CharitySidebar({
     <>
       <PrivacyPolicyModal isOpen={isPrivacyModalOpen} onClose={() => setIsPrivacyModalOpen(false)} />
       {/* Desktop Sidebar */}
-      <aside
-        className={`hidden lg:block shrink-0 transition-all duration-300 ease-in-out h-screen z-20 ${isOpen ? "w-64" : "w-16"}`}
-      >
+      {/* الشريطُ ثابتٌ: عرضٌ واحدٌ لا يُطوى، كشريط لوحة زاد. */}
+      <aside className="hidden lg:block shrink-0 h-screen w-64 z-20">
         {sidebarContent}
       </aside>
 

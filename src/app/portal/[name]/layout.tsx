@@ -131,6 +131,7 @@ export default async function CharityLayout({
       currentEmployeeId={session.originalId ? session.id : undefined}
       permissions={effectivePermissions}
       title={session.title}
+      accountName={session.name}
       isAdmin={membership?.isAdmin ?? false}
       unreadMail={unreadMail}
       mediaWaiting={mediaWaiting}

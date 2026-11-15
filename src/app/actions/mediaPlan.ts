@@ -8,6 +8,7 @@ import {
   MEDIA_STATUS,
   can,
   eventKind,
+  isSafeLink,
   nextStatus,
   platformKeyFrom,
   requiresNote,

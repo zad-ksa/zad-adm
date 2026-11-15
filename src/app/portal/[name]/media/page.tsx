@@ -9,6 +9,7 @@ import { resolveCharityPortal } from "@/lib/portalAccess";
 import { hasCharityPermission } from "@/lib/charityPermissions";
 import { charityHasService } from "@/lib/charityServices";
 import { isMediaPlanEnabled } from "@/lib/mediaPlanToggle";
+import { MEDIA_FIELDS_MISSING, hasPostDetailColumns } from "@/lib/mediaPostFields";
 import { MEDIA_SERVICE } from "@/lib/mediaPlanAccess";
 import { toISODate } from "@/lib/calendarGrid";
 import PortalMediaClient from "./PortalMediaClient";
@@ -63,6 +64,15 @@ export default async function PortalMediaPage({ params }: { params: Promise<{ na
         <Note tone="warn">
           لم تفعل الخطة الاعلامية لجمعيتكم بعد. تفعل من زاد حين تصير جاهزة للعرض.
         </Note>
+      </div>
+    );
+  }
+
+  if (!(await hasPostDetailColumns())) {
+    return (
+      <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-500" dir="rtl">
+        {header}
+        <Note tone="warn">{MEDIA_FIELDS_MISSING}</Note>
       </div>
     );
   }

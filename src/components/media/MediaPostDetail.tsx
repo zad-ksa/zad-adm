@@ -1,8 +1,9 @@
 "use client";
 
 import Image from "next/image";
-import { Link2, ListOrdered } from "lucide-react";
+import { Link2, ListOrdered, Paperclip } from "lucide-react";
 import { Badge } from "@/components/console/ui";
+import HashtagText from "@/components/console/HashtagText";
 import { PlatformRow } from "@/components/console/PlatformMark";
 import { formatDateShort } from "@/lib/calendarGrid";
 import {
@@ -80,9 +81,28 @@ export default function MediaPostDetail({
         {post.finalizedBy && <Badge tone="good">اعتمده: {post.finalizedBy}</Badge>}
       </div>
 
-      <p className="whitespace-pre-wrap rounded-lg border border-slate-200 bg-slate-50 p-3 text-meta leading-6 dark:border-slate-800 dark:bg-slate-800/40">
-        {post.content}
-      </p>
+      {post.title && (
+        <h3 className="text-body font-semibold leading-6 text-slate-900 dark:text-slate-100">{post.title}</h3>
+      )}
+
+      <div className="space-y-1">
+        <span className="block text-caption font-medium text-slate-400">نص التصميم</span>
+        <p className="whitespace-pre-wrap rounded-lg border border-slate-200 bg-slate-50 p-3 text-meta leading-6 dark:border-slate-800 dark:bg-slate-800/40">
+          {post.content}
+        </p>
+      </div>
+
+      {post.description && (
+        <div className="space-y-1">
+          <span className="block text-caption font-medium text-slate-400">نص المنشور</span>
+          {/* والهاشتاقاتُ بالأزرق: هو لونُها في منصّات النشر، فتُقرأ هنا كما
+              تُقرأ هناك — ومسؤولُ الإعلام ينسخها بعينه. */}
+          <HashtagText
+            text={post.description}
+            className="block rounded-lg border border-slate-200 bg-slate-50 p-3 text-meta leading-6 text-slate-700 dark:border-slate-800 dark:bg-slate-800/40 dark:text-slate-200"
+          />
+        </div>
+      )}
 
       {post.imageUrl && (
         <Image src={post.imageUrl} alt="" width={640} height={360} className="w-full rounded-lg object-cover" />
@@ -99,6 +119,35 @@ export default function MediaPostDetail({
           <Link2 className="size-3.5" />
           {post.linkUrl}
         </a>
+      )}
+
+      {(post.attachments ?? []).length > 0 && (
+        <div className="space-y-1.5">
+          <span className="block text-caption font-medium text-slate-400">المرفقات</span>
+          <ul className="space-y-1.5">
+            {(post.attachments ?? []).map((file) => (
+              <li
+                key={file.id}
+                className="flex items-center gap-2 rounded-md border border-slate-200 px-2.5 py-2 dark:border-slate-800"
+              >
+                {file.kind === "FILE" ? (
+                  <Paperclip className="size-3.5 shrink-0 text-slate-400" />
+                ) : (
+                  <Link2 className="size-3.5 shrink-0 text-slate-400" />
+                )}
+                <a
+                  href={file.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  dir={file.name ? undefined : "ltr"}
+                  className="min-w-0 flex-1 truncate text-meta text-primary hover:underline"
+                >
+                  {file.name || file.url}
+                </a>
+              </li>
+            ))}
+          </ul>
+        </div>
       )}
 
       <div className="flex items-center gap-2">

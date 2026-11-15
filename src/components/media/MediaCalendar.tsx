@@ -14,6 +14,7 @@ import {
   formatDateWithWeekday,
   type DayCell,
 } from "@/lib/calendarGrid";
+import type { MediaAttachment } from "@/lib/mediaPostInput";
 import {
   attentionMark,
   compareByTime,
@@ -57,7 +58,13 @@ export type RawMediaPost = {
   id: string;
   scheduledOn: string;
   scheduledAt: string | null;
+  /** عنوان التصميم — وبه تُعرف البطاقة، وبغيابه يُقرأ متنُها. */
+  title?: string | null;
   content: string;
+  /** نص المنشور (الوصف) — والهاشتاقات ضمنه. */
+  description?: string | null;
+  /** المرفقات: روابطُ تُكتب وملفاتٌ تُرفع. */
+  attachments?: MediaAttachment[];
   platforms: string[];
   imageUrl: string | null;
   imagePublicId: string | null;
@@ -185,7 +192,7 @@ export function MonthView({
                   >
                     <span className="flex items-center justify-between gap-1">
                       <span className="truncate text-caption font-medium text-slate-700 dark:text-slate-200">
-                        {post.content}
+                        {post.title || post.content}
                       </span>
                       {post.scheduledAt && (
                         <span className="shrink-0 text-caption text-slate-400">{formatTime(post.scheduledAt)}</span>
@@ -263,6 +270,11 @@ export function WeekView({
                       </span>
                       <Mark status={post.status} side={side} />
                     </div>
+                    {post.title && (
+                      <p className="mb-0.5 truncate text-meta font-semibold text-slate-800 dark:text-slate-100">
+                        {post.title}
+                      </p>
+                    )}
                     <p className="line-clamp-3 whitespace-pre-wrap text-meta leading-5 text-slate-700 dark:text-slate-200">
                       {post.content}
                     </p>
@@ -392,6 +404,11 @@ export function ListView({
                       <span className="text-caption text-slate-500">{formatTime(post.scheduledAt)}</span>
                     )}
                   </span>
+                  {post.title && (
+                    <span className="mb-0.5 block truncate text-meta font-semibold text-slate-800 dark:text-slate-100">
+                      {post.title}
+                    </span>
+                  )}
                   <span className="line-clamp-2 block whitespace-pre-wrap text-meta leading-5 text-slate-700 dark:text-slate-200">
                     {post.content}
                   </span>

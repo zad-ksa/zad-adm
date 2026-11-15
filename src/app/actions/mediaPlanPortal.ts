@@ -20,6 +20,11 @@ import { cleanMediaInput, dayValue, snapshotOfRow, type MediaPostFields } from "
 import { mediaNotice, zadMediaLink } from "@/lib/mediaPlanNotices";
 import { notifyEmployees } from "@/lib/notifyInbox";
 import { toISODate } from "@/lib/calendarGrid";
+import {
+  MEDIA_FIELDS_MISSING,
+  hasPostDetailColumns,
+  toMediaPostView,
+} from "@/lib/mediaPostFields";
 import type { MediaEventView, MediaPostView } from "@/app/actions/mediaPlan";
 
 /**
@@ -56,6 +61,8 @@ async function requirePortalMedia(charityId: string, needsEdit: boolean) {
     if (!(await isMediaPlanEnabled(charityId))) {
       return { error: "لم تفعل الخطة الاعلامية لجمعيتكم" as const };
     }
+    // وأعمدةُ البنود شرطٌ خامس: فعلٌ يُقبل ثمّ يُخفق في القاعدة أسوأُ من منع.
+    if (!(await hasPostDetailColumns())) return { error: MEDIA_FIELDS_MISSING };
     const charity = await prisma.charity.findUnique({
       where: { id: charityId },
       select: { name: true },
@@ -80,7 +87,10 @@ async function loadPostForCharity(postId: string, needsEdit: boolean) {
     select: {
       id: true,
       charityId: true,
+      title: true,
       content: true,
+      description: true,
+      attachments: true,
       platforms: true,
       imageUrl: true,
       imagePublicId: true,
@@ -104,35 +114,24 @@ const POST_FIELDS = {
   id: true,
   scheduledOn: true,
   scheduledAt: true,
+  title: true,
   content: true,
+  description: true,
   platforms: true,
   imageUrl: true,
   imagePublicId: true,
   linkUrl: true,
+  attachments: true,
   status: true,
   createdByName: true,
   finalizedBy: true,
   finalizedSide: true,
 } as const;
 
-function toView(post: {
-  id: string;
-  scheduledOn: Date;
-  scheduledAt: string | null;
-  content: string;
-  platforms: string[];
-  imageUrl: string | null;
-  imagePublicId: string | null;
-  linkUrl: string | null;
-  status: string;
-  createdByName: string | null;
-  finalizedBy: string | null;
-  finalizedSide: string | null;
-}): MediaPostView {
+function toView(row: Parameters<typeof toMediaPostView>[0]): MediaPostView {
+  const post = toMediaPostView(row);
   return {
     ...post,
-    scheduledOn: toISODate(post.scheduledOn),
-    status: toStatus(post.status),
     // ولا اسم موظف في المعروض للجمعية: من وضع المنشور هو زاد، ومن عمده من جهتها
     // فريقها. وأسماء أعضاء الجمعية تبقى — اعتماد زميلهم يقرأ باسمه.
     createdByName: post.createdByName ? MEDIA_TEAM_LABEL : null,

@@ -184,10 +184,14 @@ export function eventLabel(kind: string): string {
 
 /** قيمُ المنشور القابلةُ للتغيير — وهي وحدَها ما يُلتقط وما يُقارن. */
 export type MediaSnapshot = {
+  title?: string | null;
   content: string;
+  description?: string | null;
   platforms: string[];
   imageUrl: string | null;
   linkUrl: string | null;
+  /** أسماءُ المرفقات أو روابطُها — تُقارن كمجموعةٍ لا كقائمة. */
+  attachments?: string[];
   /** «YYYY-MM-DD» */
   scheduledOn: string;
   /** «HH:MM» أو لا وقت. */
@@ -195,10 +199,13 @@ export type MediaSnapshot = {
 };
 
 const FIELD_LABELS: Record<keyof MediaSnapshot, string> = {
+  title: "عنوان المنشور",
   content: "نص المنشور",
+  description: "وصف المنشور",
   platforms: "المنصات",
   imageUrl: "الصورة",
   linkUrl: "الرابط",
+  attachments: "المرفقات",
   scheduledOn: "يوم النشر",
   scheduledAt: "وقت النشر",
 };
@@ -212,8 +219,13 @@ export type FieldChange = {
 
 const EMPTY_MARK = "—";
 
+/** الحقولُ التي تُقارن كمجموعةٍ: إعادةُ ترتيبها ليست تعديلاً يُعمَّد. */
+function isSetField(field: keyof MediaSnapshot): boolean {
+  return field === "platforms" || field === "attachments";
+}
+
 function asText(field: keyof MediaSnapshot, value: unknown, platformName?: (key: string) => string): string {
-  if (field === "platforms") {
+  if (isSetField(field)) {
     const list = Array.isArray(value) ? (value as string[]) : [];
     if (list.length === 0) return EMPTY_MARK;
     return list.map((key) => platformName?.(key) ?? key).join("، ");
@@ -237,10 +249,9 @@ export function diffSnapshots(
   for (const field of Object.keys(FIELD_LABELS) as (keyof MediaSnapshot)[]) {
     const a = before[field];
     const b = after[field];
-    const same =
-      field === "platforms"
-        ? samePlatforms(a as string[], b as string[])
-        : (a ?? "") === (b ?? "");
+    const same = isSetField(field)
+      ? samePlatforms(a as string[], b as string[])
+      : (a ?? "") === (b ?? "");
     if (same) continue;
     out.push({
       field,

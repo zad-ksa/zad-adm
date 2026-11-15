@@ -36,10 +36,12 @@ test("السببُ يُنقل في الرسالة، ويُهمَل الفراغ"
   assert.ok(!blank!.message.includes("السبب"));
 });
 
-test("اسمُ الفاعل يُذكر إن عُرف", () => {
-  const named = mediaNotice("APPROVED_BY_CHARITY", { ...CTX, actorName: "سعود" });
-  assert.match(named!.message, /بيد سعود/);
-  assert.ok(!mediaNotice("APPROVED_BY_CHARITY", CTX)!.message.includes("بيد"));
+test("ولا اسمَ فاعلٍ في الإشعار — الفعلُ فعلُ الجهة لا فعلُ فردٍ فيها", () => {
+  for (const kind of ["CREATED", "EDITED_BY_ZAD", "APPROVED_BY_CHARITY", "EDITED_BY_CHARITY"] as const) {
+    const notice = mediaNotice(kind, { ...CTX, note: "سبب" })!;
+    assert.ok(!notice.message.includes("بيد"), notice.message);
+    assert.ok(!notice.message.includes("سعود"), notice.message);
+  }
 });
 
 test("الروابطُ تُرمِّز اسمَ الجمعية", () => {

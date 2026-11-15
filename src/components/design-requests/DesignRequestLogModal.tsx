@@ -5,6 +5,7 @@ import { AlertTriangle, Loader2 } from "lucide-react";
 import { getDesignRequestLog } from "@/app/actions/designRequests";
 import LinkifiedText from "@/components/ui/LinkifiedText";
 import { DESIGN_EVENT_LABEL, type DesignEventKind } from "@/lib/designEventLabels";
+import { MEDIA_TEAM_LABEL } from "@/lib/mediaPlan";
 import { Dialog } from "@/components/console/Dialog";
 
 /**
@@ -143,7 +144,14 @@ closeOnBackdrop={false}
                   <p className="mt-1 text-caption text-slate-400 dark:text-slate-500">
                     {when(e.createdAt)}
                     {e.actorName ? ` · بواسطة ${e.actorName}` : ""}
-                    {e.actorType && ACTOR_LABEL[e.actorType] ? ` (${ACTOR_LABEL[e.actorType]})` : ""}
+                    {/* ولا يُكرَّر الوسمُ إن كان الاسمُ هو الوسمَ نفسَه: الجمعيةُ
+                        تقرأ «فريق الإعلامية» مكان اسم الموظَّف (الخادمُ يحجبه في
+                        `getDesignRequestLog`)، فلا معنى لـ«(فريق زاد)» بعده. */}
+                    {e.actorType &&
+                    ACTOR_LABEL[e.actorType] &&
+                    e.actorName !== MEDIA_TEAM_LABEL
+                      ? ` (${ACTOR_LABEL[e.actorType]})`
+                      : ""}
                   </p>
                 </li>
               ))}

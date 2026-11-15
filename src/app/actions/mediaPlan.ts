@@ -284,7 +284,7 @@ export async function updateMediaPost(postId: string, input: MediaPostInput, not
 
   const reason = (note ?? "").trim();
   if (requiresNote("EDIT", status, "ZAD") && !reason) {
-    return { error: "اكتب سببَ تعديل منشورٍ معتمَد — يُعرض على الجمعية" };
+    return { error: "اكتب سبب تعديل منشور معتمد — يعرض على الجمعية" };
   }
 
   // و`charityId` المُرسَلُ مع المُدخَل لا يُقرأ هنا أصلاً: جمعيةُ المنشور صفُّه،
@@ -349,11 +349,11 @@ async function decide(postId: string, action: Extract<MediaAction, "CERTIFY" | "
   if ("error" in loaded) return { error: loaded.error };
   const { session, post, status } = loaded;
 
-  if (!can(action, status, "ZAD")) return { error: "لا يوجد تعديلٌ ينتظر التعميد" };
+  if (!can(action, status, "ZAD")) return { error: "لا يوجد تعديل بانتظار الاعتماد" };
 
   const reason = (note ?? "").trim();
   if (requiresNote(action, status, "ZAD") && !reason) {
-    return { error: "اكتب سببَ ردِّ التعديل — يُعرض على الجمعية" };
+    return { error: "اكتب سبب رد التعديل — يعرض على الجمعية" };
   }
 
   const after = nextStatus(action, status, "ZAD");
@@ -429,7 +429,7 @@ export async function deleteMediaPost(postId: string) {
   const { post, status } = loaded;
 
   if (!can("DELETE", status, "ZAD")) {
-    return { error: "منشورٌ معتمَدٌ لا يُحذف — عدّله بسببٍ يُعرض على الجمعية" };
+    return { error: "المنشور المعتمد لا يحذف — عدله بسبب يعرض على الجمعية" };
   }
 
   await prisma.mediaPost.delete({ where: { id: post.id } });
@@ -450,10 +450,10 @@ export async function createMediaPlatform(input: { name: string; color?: string 
   if (!scope) return { error: "لا صلاحية لك على الخطة الإعلامية" };
 
   const name = (input.name ?? "").trim();
-  if (!name) return { error: "اسم المنصّة مطلوب" };
+  if (!name) return { error: "اسم المنصة مطلوب" };
 
   const existing = await prisma.mediaPlatform.findMany({ select: { key: true, name: true } });
-  if (existing.some((p) => p.name === name)) return { error: "المنصّة موجودة مسبقاً" };
+  if (existing.some((p) => p.name === name)) return { error: "المنصة موجودة مسبقا" };
 
   const key = platformKeyFrom(name, existing.map((p) => p.key));
   const sortOrder = (await prisma.mediaPlatform.count()) + 1;

@@ -43,13 +43,13 @@ const TO: Record<MediaEventKind, NoticeSide | null> = {
 };
 
 const TITLES: Record<MediaEventKind, string> = {
-  CREATED: "منشورٌ جديد ينتظر اعتمادكم",
-  EDITED_BY_ZAD: "عُدِّل منشورٌ وينتظر اعتمادكم",
-  REOPENED_BY_ZAD: "فُتح منشورٌ معتمَدٌ وينتظر اعتمادكم",
-  REJECTED_BY_ZAD: "رُدَّ تعديلُكم على منشور",
-  CERTIFIED_BY_ZAD: "عُمِّد تعديلُكم — صار المنشورُ نهائيّاً",
-  APPROVED_BY_CHARITY: "اعتمدت الجمعيةُ المنشور",
-  EDITED_BY_CHARITY: "عدّلت الجمعيةُ منشوراً — ينتظر تعميدَك",
+  CREATED: "منشور جديد بانتظار اعتمادكم",
+  EDITED_BY_ZAD: "تم تعديل منشور وهو بانتظار اعتمادكم",
+  REOPENED_BY_ZAD: "تم فتح منشور معتمد وهو بانتظار اعتمادكم",
+  REJECTED_BY_ZAD: "تم رد تعديلكم على منشور",
+  CERTIFIED_BY_ZAD: "تم اعتماد تعديلكم — المنشور نهائي",
+  APPROVED_BY_CHARITY: "اعتمدت الجمعية المنشور",
+  EDITED_BY_CHARITY: "عدلت الجمعية منشورا — بانتظار اعتمادك",
 };
 
 function dayText(day: string): string {

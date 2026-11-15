@@ -1,6 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import {
+  EVENT_LABELS,
   MEDIA_STATUS,
   allowedActions,
   attentionMark,
@@ -76,9 +77,25 @@ test("فتحُ النهائيِّ يُسمّى باسمه في السجلّ، ل
   assert.equal(eventKind("EDIT", MEDIA_STATUS.PENDING_CHARITY, "CHARITY"), "EDITED_BY_CHARITY");
 });
 
-test("الوسمُ يختلف بالجهة: «ينتظر اعتمادكم» للجمعية، «ينتظر الجمعية» لزاد", () => {
-  assert.equal(statusLabel(MEDIA_STATUS.PENDING_CHARITY, "CHARITY"), "ينتظر اعتمادكم");
-  assert.equal(statusLabel(MEDIA_STATUS.PENDING_CHARITY, "ZAD"), "ينتظر اعتماد الجمعية");
+test("الوسمُ يختلف بالجهة: «بانتظار اعتمادكم» للجمعية، و«اعتماد الجمعية» لزاد", () => {
+  assert.equal(statusLabel(MEDIA_STATUS.PENDING_CHARITY, "CHARITY"), "بانتظار اعتمادكم");
+  assert.equal(statusLabel(MEDIA_STATUS.PENDING_CHARITY, "ZAD"), "بانتظار اعتماد الجمعية");
+});
+
+test("ولا تشكيلَ في وسمٍ يقرؤه المستخدم", () => {
+  // التشكيلُ في النصِّ المعروض طلبُ صاحب الموقع: يُكتب كما يكتب الناس.
+  const shown = [
+    statusLabel(MEDIA_STATUS.FINAL, "CHARITY"),
+    statusLabel(MEDIA_STATUS.PENDING_CHARITY, "CHARITY"),
+    statusLabel(MEDIA_STATUS.PENDING_ZAD, "CHARITY"),
+    statusLabel(MEDIA_STATUS.PENDING_ZAD, "ZAD"),
+    attentionMark(MEDIA_STATUS.PENDING_CHARITY, "CHARITY") ?? "",
+    attentionMark(MEDIA_STATUS.PENDING_ZAD, "ZAD") ?? "",
+    ...Object.values(EVENT_LABELS),
+  ];
+  for (const text of shown) {
+    assert.ok(!/[ً-ْ]/.test(text), `فيه تشكيل: ${text}`);
+  }
 });
 
 test("والكهرمانيُّ لمن ينتظره الفعل وحدَه", () => {
@@ -160,7 +177,7 @@ test("وحرفُ البديل أوّلُ حرفٍ لا أوّلُ بايت", () 
 test("attentionMark: الوسمُ لمن ينتظره فعلٌ منه وحدَه", () => {
   assert.equal(attentionMark(MEDIA_STATUS.PENDING_CHARITY, "CHARITY"), "للاعتماد");
   assert.equal(attentionMark(MEDIA_STATUS.PENDING_CHARITY, "ZAD"), null);
-  assert.equal(attentionMark(MEDIA_STATUS.PENDING_ZAD, "ZAD"), "عُدِّل");
+  assert.equal(attentionMark(MEDIA_STATUS.PENDING_ZAD, "ZAD"), "معدل");
   assert.equal(attentionMark(MEDIA_STATUS.PENDING_ZAD, "CHARITY"), null);
   assert.equal(attentionMark(MEDIA_STATUS.FINAL, "ZAD"), null);
   assert.equal(attentionMark(MEDIA_STATUS.FINAL, "CHARITY"), null);

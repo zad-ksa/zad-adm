@@ -47,13 +47,18 @@ export function toStatus(value: unknown): MediaStatus {
 /** الجهةُ الفاعلة: زادٌ أو الجمعية. */
 export type Side = "ZAD" | "CHARITY";
 
-/** وسمُ الحالة لكل جهة: الجمعيةُ تقرأ «ينتظر اعتمادكم»، وزادٌ يقرأ «ينتظر الجمعية». */
+/**
+ * وسم الحالة لكل جهة: الجمعية تقرأ «بانتظار اعتمادكم»، وزاد يقرأ «بانتظار
+ * اعتماد الجمعية».
+ *
+ * وبلا تشكيل: ما يقرؤه المستخدم يكتب كما يكتب الناس.
+ */
 export function statusLabel(status: MediaStatus, side: Side): string {
-  if (status === MEDIA_STATUS.FINAL) return "معتمدٌ نهائيّاً";
+  if (status === MEDIA_STATUS.FINAL) return "معتمد نهائيا";
   if (status === MEDIA_STATUS.PENDING_CHARITY) {
-    return side === "CHARITY" ? "ينتظر اعتمادكم" : "ينتظر اعتماد الجمعية";
+    return side === "CHARITY" ? "بانتظار اعتمادكم" : "بانتظار اعتماد الجمعية";
   }
-  return side === "ZAD" ? "عُدِّل، ينتظر تعميدَك" : "عُدِّل، ينتظر تعميد زاد";
+  return side === "ZAD" ? "تم تعديله، بانتظار اعتمادك" : "تم تعديله، بانتظار اعتماد زاد";
 }
 
 /** اللونُ معنىً لا زينة: كهرمانيٌّ لما ينتظر فعلَ قارئه، وأخضرُ للنهائيّ. */
@@ -78,7 +83,7 @@ export function attentionMark(status: MediaStatus, side: Side): string | null {
   if (side === "CHARITY") {
     return status === MEDIA_STATUS.PENDING_CHARITY ? "للاعتماد" : null;
   }
-  return status === MEDIA_STATUS.PENDING_ZAD ? "عُدِّل" : null;
+  return status === MEDIA_STATUS.PENDING_ZAD ? "معدل" : null;
 }
 
 /** الأفعالُ على المنشور. */
@@ -129,7 +134,7 @@ export function requiresNote(action: MediaAction, status: MediaStatus, side: Sid
 /** الحالةُ بعد الفعل. وتُرمى على فعلٍ غيرِ مُجاز، فلا تُستعمل قبل `can`. */
 export function nextStatus(action: MediaAction, status: MediaStatus, side: Side): MediaStatus {
   if (!can(action, status, side)) {
-    throw new Error("فعلٌ غير مسموحٍ في هذه الحالة");
+    throw new Error("هذا الاجراء غير متاح في الحالة الحالية");
   }
   if (action === "APPROVE" || action === "CERTIFY") return MEDIA_STATUS.FINAL;
   if (action === "REJECT") return MEDIA_STATUS.PENDING_CHARITY;
@@ -164,13 +169,13 @@ export function eventKind(action: MediaAction, status: MediaStatus, side: Side):
 }
 
 export const EVENT_LABELS: Record<MediaEventKind, string> = {
-  CREATED: "وضعه زاد",
+  CREATED: "اضافه زاد",
   APPROVED_BY_CHARITY: "اعتمدته الجمعية",
-  EDITED_BY_CHARITY: "عدّلته الجمعية",
-  CERTIFIED_BY_ZAD: "عمّد زادٌ التعديل",
-  REJECTED_BY_ZAD: "ردّ زادٌ التعديل",
-  EDITED_BY_ZAD: "عدّله زاد",
-  REOPENED_BY_ZAD: "فتحه زادٌ بعد الاعتماد",
+  EDITED_BY_CHARITY: "عدلته الجمعية",
+  CERTIFIED_BY_ZAD: "اعتمد زاد التعديل",
+  REJECTED_BY_ZAD: "رد زاد التعديل",
+  EDITED_BY_ZAD: "عدله زاد",
+  REOPENED_BY_ZAD: "فتحه زاد بعد الاعتماد",
 };
 
 export function eventLabel(kind: string): string {
@@ -190,8 +195,8 @@ export type MediaSnapshot = {
 };
 
 const FIELD_LABELS: Record<keyof MediaSnapshot, string> = {
-  content: "نصّ المنشور",
-  platforms: "المنصّات",
+  content: "نص المنشور",
+  platforms: "المنصات",
   imageUrl: "الصورة",
   linkUrl: "الرابط",
   scheduledOn: "يوم النشر",
@@ -337,3 +342,18 @@ export function platformKeyFrom(name: string, taken: string[] = []): string {
   while (taken.includes(`${base}-${index}`)) index += 1;
   return `${base}-${index}`;
 }
+
+/**
+ * ما يكتب مكان اسم موظف زاد في السجلات التي تراها الجمعية — في طلبات التصاميم
+ * والخطة الإعلامية معا.
+ *
+ * فالخطوة عمل الفريق لا عمل فرد، والجمعية تتعامل مع زاد لا مع أشخاصها.
+ *
+ * وموضع واحد للوسم لأن السجلين يقرأه: نسختان بقيمة واحدة تفترقان عند أول
+ * تغيير، فيقرأ طلب التصميم اسما ويقرأ المنشور اسما آخر للجهة نفسها.
+ *
+ * والحجب في الخادم لا في الشاشة: ما لا يرسل لا يقرأ من أداة المطور، ولا يظهر
+ * في شاشة أخرى تنسى الشرط. وأسماء أعضاء الجمعية تبقى كما هي — هم زملاء من
+ * يقرأ.
+ */
+export const MEDIA_TEAM_LABEL = "فريق الإعلامية";

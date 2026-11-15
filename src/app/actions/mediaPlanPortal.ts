@@ -7,6 +7,7 @@ import { charityHasService } from "@/lib/charityServices";
 import { MEDIA_SERVICE } from "@/lib/mediaPlanAccess";
 import { isMediaPlanEnabled } from "@/lib/mediaPlanToggle";
 import {
+  MEDIA_TEAM_LABEL,
   can,
   eventKind,
   nextStatus,
@@ -49,11 +50,11 @@ async function requirePortalMedia(charityId: string, needsEdit: boolean) {
     // والخدمةُ شرطٌ ثالثٌ كما عند زاد: جمعيةٌ رُفعت عنها «الإعلامية» لا خطّةَ
     // لها تُعتمد، ولو بقيت الصلاحيةُ في صفِّ العضو.
     if (!(await charityHasService(charityId, MEDIA_SERVICE))) {
-      return { error: `خدمة «${MEDIA_SERVICE}» غير مشمولةٍ لهذه الجمعية` as const };
+      return { error: `خدمة «${MEDIA_SERVICE}» غير مشمولة لهذه الجمعية` as const };
     }
     // والمفتاحُ شرطٌ رابع: تبويبٌ أطفأته زادٌ لا تعمل أفعالُه ولو نُوديت مباشرةً.
     if (!(await isMediaPlanEnabled(charityId))) {
-      return { error: "لم تُفعَّل الخطّةُ الإعلاميّةُ لجمعيتكم" as const };
+      return { error: "لم تفعل الخطة الاعلامية لجمعيتكم" as const };
     }
     const charity = await prisma.charity.findUnique({
       where: { id: charityId },
@@ -128,7 +129,16 @@ function toView(post: {
   finalizedBy: string | null;
   finalizedSide: string | null;
 }): MediaPostView {
-  return { ...post, scheduledOn: toISODate(post.scheduledOn), status: toStatus(post.status) };
+  return {
+    ...post,
+    scheduledOn: toISODate(post.scheduledOn),
+    status: toStatus(post.status),
+    // ولا اسم موظف في المعروض للجمعية: من وضع المنشور هو زاد، ومن عمده من جهتها
+    // فريقها. وأسماء أعضاء الجمعية تبقى — اعتماد زميلهم يقرأ باسمه.
+    createdByName: post.createdByName ? MEDIA_TEAM_LABEL : null,
+    finalizedBy:
+      post.finalizedSide === "ZAD" && post.finalizedBy ? MEDIA_TEAM_LABEL : post.finalizedBy,
+  };
 }
 
 function revalidatePortal(charityName: string) {
@@ -181,7 +191,7 @@ export async function listPortalMediaPosts(charityId: string, fromISO: string, t
 
   const from = dayValue(fromISO);
   const to = dayValue(toISO);
-  if (!from || !to) return { error: "مدىً غير صحيح" };
+  if (!from || !to) return { error: "المدة غير صحيحة" };
 
   const posts = await prisma.mediaPost.findMany({
     where: { charityId, scheduledOn: { gte: from, lte: to } },
@@ -220,7 +230,10 @@ export async function getPortalMediaPostDetail(postId: string) {
       id: e.id,
       kind: e.kind,
       actorSide: e.actorSide,
-      actorName: e.actorName,
+      // ولا يرسل اسم موظف زاد إلى الجمعية: الخطوة عمل الفريق لا عمل فرد. وهو
+      // في الخادم لا في الشاشة — ما لا يرسل لا يقرأ من أداة المطور. وأسماء
+      // أعضاء الجمعية تبقى كما هي، فهم زملاء من يقرأ.
+      actorName: e.actorSide === "ZAD" ? MEDIA_TEAM_LABEL : e.actorName,
       note: e.note,
       at: e.createdAt.toISOString(),
       before: (e.before as MediaEventView["before"]) ?? null,
@@ -248,8 +261,8 @@ async function decide(postId: string, action: Extract<MediaAction, "APPROVE">) {
     return {
       error:
         status === "FINAL"
-          ? "المنشور معتمَدٌ نهائيّاً"
-          : "هذا المنشور ينتظر تعميد زاد — لا يُعتمد من هنا",
+          ? "المنشور معتمد نهائيا"
+          : "هذا المنشور بانتظار اعتماد زاد — لا يعتمد من هنا",
     };
   }
 
@@ -299,12 +312,12 @@ export async function updatePortalMediaPost(postId: string, input: PortalMediaIn
     return {
       error:
         status === "FINAL"
-          ? "المنشور معتمَدٌ نهائيّاً — تعديلُه من زادٍ وحدَه"
-          : "تعديلُكم مرفوعٌ إلى زادٍ، ينتظر تعميدَه",
+          ? "المنشور معتمد نهائيا — تعديله من زاد"
+          : "التعديل مرفوع الى زاد بانتظار اعتماده",
     };
   }
   // والجمعيةُ لا تُسبِّب: السببُ على زادٍ حين يحرِم الجمعيةَ ما اعتمدته.
-  if (requiresNote("EDIT", status, "CHARITY")) return { error: "فعلٌ غير مسموحٍ في هذه الحالة" };
+  if (requiresNote("EDIT", status, "CHARITY")) return { error: "هذا الاجراء غير متاح في الحالة الحالية" };
 
   const cleaned = cleanMediaInput(input);
   if ("error" in cleaned) return { error: cleaned.error };

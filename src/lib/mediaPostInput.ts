@@ -45,13 +45,13 @@ export function dayValue(value: string): Date | null {
 
 export function cleanMediaInput(input: MediaPostFields): { error: string } | { data: CleanMediaPost } {
   const content = (input.content ?? "").trim();
-  if (!content) return { error: "نصُّ المنشور مطلوب" };
+  if (!content) return { error: "نص المنشور مطلوب" };
 
   const day = dayValue(input.scheduledOn);
   if (!day) return { error: "يوم النشر غير صحيح" };
 
   const platforms = [...new Set((input.platforms ?? []).map((p) => p.trim()).filter(Boolean))];
-  if (platforms.length === 0) return { error: "اختر منصّةً واحدةً على الأقل" };
+  if (platforms.length === 0) return { error: "اختر منصة واحدة على الاقل" };
 
   const link = (input.linkUrl ?? "").trim();
   if (link && !isSafeLink(link)) return { error: "الرابط يجب أن يبدأ بـ http أو https" };

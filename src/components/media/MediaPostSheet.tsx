@@ -89,7 +89,7 @@ export default function MediaPostSheet({
       const uploaded = await uploadFile(file, "media_post");
       setImage({ url: uploaded.url, publicId: uploaded.publicId });
     } catch (e) {
-      setError(e instanceof Error ? e.message : "تعذّر رفع الصورة");
+      setError(e instanceof Error ? e.message : "تعذر رفع الصورة");
     } finally {
       setUploading(false);
     }
@@ -143,13 +143,13 @@ export default function MediaPostSheet({
         {banner}
 
         <label className="block space-y-1.5">
-          <span className="text-meta font-medium text-slate-600 dark:text-slate-300">نصّ المنشور</span>
+          <span className="text-meta font-medium text-slate-600 dark:text-slate-300">نص المنشور</span>
           <textarea
             value={content}
             onChange={(e) => setContent(e.target.value)}
             rows={6}
             required
-            placeholder="اكتب نصّ المنشور كما يُنشر…"
+            placeholder="اكتب نص المنشور كما سينشر…"
             className={cx(field, "min-h-[8rem] resize-y leading-6")}
           />
         </label>
@@ -163,16 +163,16 @@ export default function MediaPostSheet({
             <span className="block text-meta font-medium text-slate-600 dark:text-slate-300">
               وقت النشر <span className="text-slate-400">(اختياري)</span>
             </span>
-            <TimeField value={time} onChange={setTime} step={5} placeholder="بلا وقت" />
+            <TimeField value={time} onChange={setTime} step={5} placeholder="بدون وقت" />
           </div>
         </div>
 
         <div className="space-y-1.5">
-          <span className="block text-meta font-medium text-slate-600 dark:text-slate-300">المنصّات</span>
+          <span className="block text-meta font-medium text-slate-600 dark:text-slate-300">المنصات</span>
           <MultiSelect
-            label="منصّات النشر"
-            placeholder="اختر المنصّات"
-            countNoun="منصّة"
+            label="منصات النشر"
+            placeholder="اختر المنصات"
+            countNoun="منصة"
             values={chosen}
             onChange={setChosen}
             options={platforms.map((p) => ({ value: p.key, label: p.name }))}

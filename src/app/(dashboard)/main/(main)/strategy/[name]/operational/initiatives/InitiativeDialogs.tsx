@@ -4,6 +4,7 @@ import { useMemo, useState, useTransition } from "react";
 import { CalendarRange, ListChecks } from "lucide-react";
 import { Dialog } from "@/components/console/Dialog";
 import Select from "@/components/console/Select";
+import NameSelect, { type NameGroup } from "@/components/console/NameSelect";
 import { FooterStatus } from "@/components/console/overlays";
 import { Badge, Spinner, btn, cx, field } from "@/components/console/ui";
 import { saveInitiative, savePlan } from "@/app/actions/strategyOperational";
@@ -127,12 +128,15 @@ export function InitiativeDialog({
   planId,
   months,
   objectives,
+  people,
   initiative,
   onClose,
 }: {
   planId: string;
   months: PlanMonth[];
   objectives: ObjectiveOption[];
+  /** أسماءُ فريق زادٍ وفريق الجمعية — لاختيار مدير المبادرة. */
+  people: NameGroup[];
   initiative?: InitiativeRow;
   onClose: () => void;
 }) {
@@ -292,8 +296,14 @@ export function InitiativeDialog({
         </div>
 
         <div className="grid gap-4 sm:grid-cols-3">
+          {/* الاسمُ يُختار من فريقَي زادٍ والجمعية، ويُكتب إن كان من خارجهما. */}
           <Labeled label="مدير المبادرة">
-            <input value={form.managerName} onChange={(e) => set("managerName", e.target.value)} className={field} />
+            <NameSelect
+              value={form.managerName}
+              onChange={(v) => set("managerName", v)}
+              groups={people}
+              placeholder="بلا مدير"
+            />
           </Labeled>
           <Labeled label="الإدارة المالكة">
             <input value={form.owningDept} onChange={(e) => set("owningDept", e.target.value)} className={field} />

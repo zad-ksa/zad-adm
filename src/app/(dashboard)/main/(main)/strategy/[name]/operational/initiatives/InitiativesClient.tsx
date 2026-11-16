@@ -8,6 +8,7 @@ import { EmptyState, SearchField } from "@/components/console/layout";
 import Select from "@/components/console/Select";
 import { Badge, Spinner, btn, cx } from "@/components/console/ui";
 import { ConfirmDialog } from "@/components/console/ConfirmDialog";
+import type { NameGroup } from "@/components/console/NameSelect";
 import { TableViewControls, useTableView } from "@/components/console/TableViewControls";
 import { notify } from "@/components/console/toastBus";
 import {
@@ -92,6 +93,7 @@ export default function InitiativesClient({
   selectedPlanId,
   initiatives,
   objectives,
+  people,
   canEdit,
 }: {
   charityId: string;
@@ -100,6 +102,8 @@ export default function InitiativesClient({
   selectedPlanId: string | null;
   initiatives: InitiativeRow[];
   objectives: ObjectiveOption[];
+  /** أسماءُ فريق زادٍ وفريق الجمعية — تُمرَّر إلى نافذة المبادرة. */
+  people: NameGroup[];
   canEdit: boolean;
 }) {
   const router = useRouter();
@@ -482,6 +486,7 @@ export default function InitiativesClient({
           planId={plan.id}
           months={plan.months}
           objectives={objectives}
+          people={people}
           initiative={editing.initiative}
           onClose={() => setEditing(null)}
         />

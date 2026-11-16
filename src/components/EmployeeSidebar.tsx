@@ -5,7 +5,7 @@ import { showsInternal } from "@/lib/charityScope";
 import { DONOR_KINDS, GRANTS_HREF } from "@/lib/donorOrg";
 import Link from "next/link";
 import Image from "next/image";
-import { User, ShieldAlert, Users, X, LogOut, LayoutDashboard, Building2, ClipboardList, ChevronRight, Edit, Eye, EyeOff, Camera, Loader2, AlertCircle, CheckCircle2, Newspaper, CheckSquare, Moon, Sun, LayoutGrid, FileText, Settings2, FileSignature, MessageSquare, Send, GitBranch, Bell, ShieldCheck, FolderTree, Clock, Sparkles, Receipt, Rss } from "lucide-react";
+import { User, ShieldAlert, Users, X, LogOut, LayoutDashboard, Building2, ClipboardList, ChevronRight, Edit, Eye, EyeOff, Camera, Loader2, AlertCircle, CheckCircle2, Newspaper, CheckSquare, Moon, Sun, LayoutGrid, FileText, Settings2, FileSignature, MessageSquare, Send, GitBranch, Bell, ShieldCheck, FolderTree, Clock, Sparkles, Receipt, Rss, ListChecks } from "lucide-react";
 import { useTheme } from "next-themes";
 import { logout } from "@/app/actions/auth";
 import { updateProfile } from "@/app/actions/profile";
@@ -115,7 +115,7 @@ export default function EmployeeSidebar({
 
     if (path === "/main") newGroup = "";
     else if (path.startsWith("/main/charities") || path.startsWith("/main/contracts") || path.startsWith("/main/custom-surveys") || path.startsWith("/main/communication") || path.startsWith("/main/charity-meetings") || path.startsWith("/main/design-requests")) newGroup = "الجمعيات";
-    else if (path.startsWith("/main/approvals") || path.startsWith("/main/financial-requests") || path.startsWith("/main/latest-updates") || path.startsWith("/main/news") || path.startsWith("/main/meetings") || path.startsWith("/main/tasks") || path.startsWith("/main/mail") || path.startsWith("/main/attendance")) newGroup = "زاد";
+    else if (path.startsWith("/main/approvals") || path.startsWith("/main/financial-requests") || path.startsWith("/main/latest-updates") || path.startsWith("/main/news") || path.startsWith("/main/meetings") || path.startsWith("/main/tasks") || path.startsWith("/main/my-initiatives") || path.startsWith("/main/mail") || path.startsWith("/main/attendance")) newGroup = "زاد";
     else if (path.startsWith("/main/admin") || path.startsWith("/main/workflow-settings") || path.startsWith("/main/landing-settings")) newGroup = "لوحة التحكم";
     // تبويباتُ «تنمية الموارد المالية» مساراتٌ عُلويّةٌ لا تحت
     // `/main/resource-development`، فلم يكن الشرطُ أدناه يراها: من فتح صفحةَ
@@ -208,6 +208,11 @@ export default function EmployeeSidebar({
   if (can("use_project_builder")) {
     navItems.push({ label: "منشئ وثائق المبادرات", href: "/main/project-builder", icon: Sparkles });
   }
+  // ولكل موظف كذلك: المبادراتُ التي كُتب اسمُه مديراً لها في خطط الجمعيات.
+  // ولا صلاحيةَ لها: ما كُلِّفتَ به ليس امتيازاً يُمنح، والصفحةُ لا تعرض لأحدٍ
+  // إلا مبادراتِه.
+  navItems.push({ label: "مبادراتي", href: "/main/my-initiatives", icon: ListChecks });
+
   // لكل موظف بلا استثناء: مهامه هو. والوسم يتبدّل لمن يرى مهام الجميع.
   {
     const isManager = can("view_all_tasks") || perms.includes("developer_mode");
@@ -491,7 +496,7 @@ export default function EmployeeSidebar({
               {isExpanded && <div className="h-px bg-slate-100 dark:bg-slate-800 mx-2" />}
               {renderGroup("الجمعيات", ["الجمعيات", "العقود", "الاستبيانات", "التواصل", "الاجتماعات", "طلبات التصاميم"])}
               {isExpanded && <div className="h-px bg-slate-100 dark:bg-slate-800 mx-2" />}
-              {renderGroup("زاد", ["التحضير", "البريد الداخلي", "الاعتمادات", "الطلبات المالية", "آخر المستجدات", "الأخبار والإنجازات", "محاضر الاجتماعات", "منشئ وثائق المبادرات", "المهام والمنجزات", "مهامي"])}
+              {renderGroup("زاد", ["التحضير", "البريد الداخلي", "الاعتمادات", "الطلبات المالية", "آخر المستجدات", "الأخبار والإنجازات", "محاضر الاجتماعات", "منشئ وثائق المبادرات", "المهام والمنجزات", "مهامي", "مبادراتي"])}
               {isExpanded && <div className="h-px bg-slate-100 dark:bg-slate-800 mx-2" />}
               {renderGroup("لوحة التحكم", ["لوحة التحكم", "سلاسل الاعتماد"])}
             </>

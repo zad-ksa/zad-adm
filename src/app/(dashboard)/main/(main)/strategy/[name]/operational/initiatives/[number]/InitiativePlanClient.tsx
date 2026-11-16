@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useTransition } from "react";
+import { useMemo, useState, useTransition, type ReactNode } from "react";
 import Link from "next/link";
 import { ArrowDown, ArrowUp, FileText, GanttChartSquare, Pencil, Plus, Trash2 } from "lucide-react";
 import { StatStrip } from "@/components/console/layout";
@@ -23,7 +23,9 @@ import {
   STATUS_TONE,
   type PlanMonth,
 } from "@/lib/initiativeProgress";
-import { deleteStep, moveStep } from "@/app/actions/strategyOperational";
+import { deleteStep, moveStep, updateStepField } from "@/app/actions/strategyOperational";
+import EditableCell from "@/components/console/EditableCell";
+import { PHASES } from "@/lib/strategyOptions";
 import { StepDialog } from "./StepDialog";
 import { MarketingFileDialog } from "../MarketingFileDialog";
 
@@ -409,6 +411,48 @@ function Flag({ label, value, hint }: { label: string; value: number; hint: stri
 
 type Bar = { kind: "plan" | "actual"; step: StepRow; from: number; span: number };
 
+/**
+ * خليّةُ الجدول موصولةً بخطوتها: الحقلُ وحدَه يُرسَل، والحارسُ في الفعل.
+ *
+ * ومن لا صلاحيةَ له يقرأ القيمةَ كما كانت — بلا زرٍّ يُنقر ولا حقلٍ يُفتح ثمّ
+ * يُردّ عند الحفظ.
+ */
+function Cell({
+  step,
+  fieldName,
+  label,
+  value,
+  children,
+  canEdit,
+  kind,
+  options,
+  align,
+}: {
+  step: StepRow;
+  fieldName: string;
+  label: string;
+  value: string;
+  children: ReactNode;
+  canEdit: boolean;
+  kind?: "text" | "number" | "select";
+  options?: { value: string; label: string }[];
+  align?: "start" | "center";
+}) {
+  return (
+    <EditableCell
+      value={value}
+      label={`${label} للخطوة ${step.order}`}
+      kind={kind}
+      options={options}
+      align={align}
+      disabled={!canEdit}
+      onSave={(next) => updateStepField(step.id, fieldName, next)}
+    >
+      {children}
+    </EditableCell>
+  );
+}
+
 function StepsTable({
   steps,
   plan,
@@ -535,22 +579,121 @@ function StepsTable({
                   <td className={cx(cell, "font-semibold text-slate-500 tabular-nums dark:text-slate-400")}>
                     {step.order}
                   </td>
-                  <td className={cell}>{step.phase ? <Badge tone="neutral">{step.phase}</Badge> : dash}</td>
-                  <td className={cx(cell, "whitespace-normal text-right leading-5")}>{step.title}</td>
-                  <td className={cx(cell, "whitespace-normal text-right leading-5 text-slate-600 dark:text-slate-400")}>
-                    {step.evidence || dash}
+                  {/* الخلايا تُحرَّر في مكانها: نقرةٌ فكتابةٌ فـEnter. والنافذةُ تبقى
+                      لمن أراد الصفَّ كلَّه ومعه موازنةُ الأشهر. */}
+                  <td className={cx(cell, "p-1")}>
+                    <Cell
+                      step={step}
+                      fieldName="phase"
+                      label="المرحلة"
+                      kind="select"
+                      canEdit={canEdit}
+                      options={PHASES.map((p) => ({ value: p, label: p }))}
+                      value={step.phase ?? ""}
+                    >
+                      {step.phase ? <Badge tone="neutral">{step.phase}</Badge> : dash}
+                    </Cell>
                   </td>
-                  <td className={cx(cell, "whitespace-normal")}>{step.owner || dash}</td>
-                  <td className={cx(cell, "tabular-nums")}>{step.cost ? money(Number(step.cost)) : dash}</td>
-                  <td className={cx(cell, "tabular-nums")}>
-                    {step.actualCost ? money(Number(step.actualCost)) : dash}
+                  <td className={cx(cell, "whitespace-normal p-1 text-right leading-5")}>
+                    <Cell step={step} fieldName="title" label="نص الخطوة" align="start" canEdit={canEdit} value={step.title}>
+                      {step.title}
+                    </Cell>
                   </td>
-                  <td className={cx(cell, "tabular-nums")}>{step.planStartWeek ?? dash}</td>
-                  <td className={cx(cell, "tabular-nums")}>{step.planWeeks ?? dash}</td>
-                  <td className={cx(cell, "tabular-nums")}>{step.actualStartWeek || dash}</td>
-                  <td className={cx(cell, "tabular-nums")}>{step.actualWeeks || dash}</td>
-                  <td className={cx(cell, "bg-primary/5 font-semibold tabular-nums dark:bg-primary/10")}>
-                    {step.progress}%
+                  <td
+                    className={cx(cell, "whitespace-normal p-1 text-right leading-5 text-slate-600 dark:text-slate-400")}
+                  >
+                    <Cell
+                      step={step}
+                      fieldName="evidence"
+                      label="شاهد التنفيذ"
+                      align="start"
+                      canEdit={canEdit}
+                      value={step.evidence ?? ""}
+                    >
+                      {step.evidence || dash}
+                    </Cell>
+                  </td>
+                  <td className={cx(cell, "whitespace-normal p-1")}>
+                    <Cell step={step} fieldName="owner" label="مسؤول التنفيذ" canEdit={canEdit} value={step.owner ?? ""}>
+                      {step.owner || dash}
+                    </Cell>
+                  </td>
+                  <td className={cx(cell, "p-1 tabular-nums")}>
+                    <Cell step={step} fieldName="cost" label="التكلفة" kind="number" canEdit={canEdit} value={step.cost ?? ""}>
+                      {step.cost ? money(Number(step.cost)) : dash}
+                    </Cell>
+                  </td>
+                  <td className={cx(cell, "p-1 tabular-nums")}>
+                    <Cell
+                      step={step}
+                      fieldName="actualCost"
+                      label="التكلفة الفعلية"
+                      kind="number"
+                      canEdit={canEdit}
+                      value={step.actualCost ?? ""}
+                    >
+                      {step.actualCost ? money(Number(step.actualCost)) : dash}
+                    </Cell>
+                  </td>
+                  <td className={cx(cell, "p-1 tabular-nums")}>
+                    <Cell
+                      step={step}
+                      fieldName="planStartWeek"
+                      label="أسبوع البداية"
+                      kind="number"
+                      canEdit={canEdit}
+                      value={step.planStartWeek ? String(step.planStartWeek) : ""}
+                    >
+                      {step.planStartWeek ?? dash}
+                    </Cell>
+                  </td>
+                  <td className={cx(cell, "p-1 tabular-nums")}>
+                    <Cell
+                      step={step}
+                      fieldName="planWeeks"
+                      label="مدة الخطة"
+                      kind="number"
+                      canEdit={canEdit}
+                      value={step.planWeeks ? String(step.planWeeks) : ""}
+                    >
+                      {step.planWeeks ?? dash}
+                    </Cell>
+                  </td>
+                  <td className={cx(cell, "p-1 tabular-nums")}>
+                    <Cell
+                      step={step}
+                      fieldName="actualStartWeek"
+                      label="أسبوع البداية الفعلي"
+                      kind="number"
+                      canEdit={canEdit}
+                      value={step.actualStartWeek ? String(step.actualStartWeek) : ""}
+                    >
+                      {step.actualStartWeek || dash}
+                    </Cell>
+                  </td>
+                  <td className={cx(cell, "p-1 tabular-nums")}>
+                    <Cell
+                      step={step}
+                      fieldName="actualWeeks"
+                      label="مدة التنفيذ"
+                      kind="number"
+                      canEdit={canEdit}
+                      value={step.actualWeeks ? String(step.actualWeeks) : ""}
+                    >
+                      {step.actualWeeks || dash}
+                    </Cell>
+                  </td>
+                  <td className={cx(cell, "bg-primary/5 p-1 font-semibold tabular-nums dark:bg-primary/10")}>
+                    <Cell
+                      step={step}
+                      fieldName="progress"
+                      label="نسبة الإنجاز"
+                      kind="number"
+                      canEdit={canEdit}
+                      value={String(step.progress)}
+                    >
+                      {step.progress}%
+                    </Cell>
                   </td>
                   {canEdit && (
                     <td className="p-1 align-middle">

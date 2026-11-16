@@ -110,6 +110,7 @@ export default function InitiativesClient({
   const view = useTableView();
   const [query, setQuery] = useState("");
   const [deptFilter, setDeptFilter] = useState("all");
+  const [managerFilter, setManagerFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
   const [editing, setEditing] = useState<{ initiative?: InitiativeRow } | null>(null);
   const [planEditing, setPlanEditing] = useState<{ plan?: PlanOption } | null>(null);
@@ -149,16 +150,30 @@ export default function InitiativesClient({
     [initiatives]
   );
 
+  // والمكلَّفون من المعروض نفسِه لا من دليلٍ آخر: مُرشِّحٌ باسمٍ لا مبادرةَ له
+  // يُعطي فراغاً ويُقرأ عطباً.
+  const managers = useMemo(
+    () =>
+      [...new Set(initiatives.map((i) => i.managerName).filter((m): m is string => !!m))].sort((a, b) =>
+        a.localeCompare(b, "ar")
+      ),
+    [initiatives]
+  );
+  const unassigned = useMemo(() => initiatives.some((i) => !i.managerName), [initiatives]);
+
   const shown = useMemo(() => {
     const needle = query.trim().toLowerCase();
     return computed.filter(({ row, status }) => {
       if (deptFilter !== "all" && row.owningDept !== deptFilter) return false;
+      // «بلا مكلَّف» حالةٌ تُسأل عنها كما يُسأل عن اسم: من يملأ الفراغات يحتاجها.
+      if (managerFilter === "none" && row.managerName) return false;
+      if (managerFilter !== "all" && managerFilter !== "none" && row.managerName !== managerFilter) return false;
       if (statusFilter !== "all" && status !== statusFilter) return false;
       if (!needle) return true;
       return [row.name, row.description, row.managerName, row.owningDept, row.objective?.name]
         .some((v) => v && v.toLowerCase().includes(needle));
     });
-  }, [computed, query, deptFilter, statusFilter]);
+  }, [computed, query, deptFilter, managerFilter, statusFilter]);
 
   const run = (fn: () => Promise<{ error?: string }>, done?: () => void) =>
     startBusy(async () => {
@@ -256,6 +271,19 @@ export default function InitiativesClient({
               options={[
                 { value: "all", label: "كل الإدارات" },
                 ...departments.map((d) => ({ value: d, label: d })),
+              ]}
+            />
+          </div>
+          <div className="w-[170px]">
+            <Select
+              variant="soft"
+              value={managerFilter}
+              onSelect={setManagerFilter}
+              placeholder="المكلف"
+              options={[
+                { value: "all", label: "كل المكلفين" },
+                ...(unassigned ? [{ value: "none", label: "بلا مكلف" }] : []),
+                ...managers.map((m) => ({ value: m, label: m })),
               ]}
             />
           </div>

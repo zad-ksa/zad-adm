@@ -269,21 +269,23 @@ test("plannedCost: مجموعُ تكاليف الخطوات", () => {
   assert.equal(plannedCost([]), 0);
 });
 
-test("scheduleCommitment: الالتزامُ بالأسابيع لا بنسبة الإنجاز", () => {
+test("scheduleCommitment: يطابق أسبوعُ البداية والمدّةُ، ولا عبرةَ بالإنجاز", () => {
   const result = scheduleCommitment(
     [
-      // داخل نافذتها تماماً — ملتزمة، ولو كان إنجازها صفراً.
+      // طابقت البدايةَ والمدّة — ملتزمة، ولو كان إنجازها صفراً.
       { progress: 0, planStartWeek: 1, planWeeks: 2, actualStartWeek: 1, actualWeeks: 2 },
       // بدأت متأخّرةً — غير ملتزمة، ولو أُنجزت مئة.
       { progress: 100, planStartWeek: 3, planWeeks: 2, actualStartWeek: 5, actualWeeks: 1 },
-      // تجاوزت نهايتها — غير ملتزمة.
+      // بدأت في وقتها وطالت — غير ملتزمة.
       { progress: 60, planStartWeek: 6, planWeeks: 1, actualStartWeek: 6, actualWeeks: 3 },
-      // انتهت قبل آخر نافذتها — ملتزمة.
-      { progress: 100, planStartWeek: 9, planWeeks: 4, actualStartWeek: 10, actualWeeks: 1 },
+      // بدأت في وقتها وقصرت عن مدّتها — غير ملتزمة كذلك: التقديرُ أخطأ.
+      { progress: 100, planStartWeek: 9, planWeeks: 4, actualStartWeek: 9, actualWeeks: 1 },
+      // ومدّةٌ غيرُ مكتوبةٍ في الطرفين تُقرأ أسبوعاً — فتطابق.
+      { progress: 20, planStartWeek: 14, planWeeks: null, actualStartWeek: 14, actualWeeks: null },
     ],
     20
   );
-  assert.deepEqual(result, { onTime: 2, counted: 4, percent: 50 });
+  assert.deepEqual(result, { onTime: 2, counted: 5, percent: 40 });
 });
 
 test("وما مضى أسبوعُه ولم يبدأ يُحسب عليه، وما لم يحنْ لا يُحسب", () => {

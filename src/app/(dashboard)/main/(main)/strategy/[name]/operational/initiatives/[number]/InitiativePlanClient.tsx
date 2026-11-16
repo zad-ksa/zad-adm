@@ -149,8 +149,8 @@ export default function InitiativePlanClient({
   );
   const remaining = daysRemaining(end, today);
   const currentWeek = currentPlanWeek(planStart, today, initiative.plan.weekCount);
-  // الالتزامُ بالجدول زمنيٌّ محض: أسابيعُ التنفيذ تُقابَل بأسابيع الخطة، ولا
-  // عبرةَ بنسبة الإنجاز — وهي تُقرأ في خانتها.
+  // الالتزامُ بالجدول زمنيٌّ محض: يُطابَق أسبوعُ البداية الفعليُّ بالمجدول،
+  // ومدّةُ التنفيذ بمدّة الخطة — ولا عبرةَ بنسبة الإنجاز، وهي تُقرأ في خانتها.
   const commitment = scheduleCommitment(stepInputs, currentWeek);
   const flags = scheduleFlags(stepInputs, currentWeek);
 
@@ -282,7 +282,7 @@ export default function InitiativePlanClient({
               ) : (
                 <span
                   className="tabular-nums"
-                  title={`${commitment.onTime} من ${commitment.counted} خطوة نفذت داخل اسابيعها المجدولة`}
+                  title={`${commitment.onTime} من ${commitment.counted} خطوة وافق تنفيذها اسبوع بدايتها ومدتها المجدولة`}
                 >
                   {commitment.percent}%{" "}
                   <span className="text-caption text-slate-400 dark:text-slate-500">

@@ -200,8 +200,8 @@ export type MediaSnapshot = {
 
 const FIELD_LABELS: Record<keyof MediaSnapshot, string> = {
   title: "عنوان المنشور",
-  content: "نص المنشور",
-  description: "وصف المنشور",
+  content: "نص التصميم",
+  description: "نص المنشور",
   platforms: "المنصات",
   imageUrl: "الصورة",
   linkUrl: "الرابط",
@@ -215,7 +215,59 @@ export type FieldChange = {
   label: string;
   before: string;
   after: string;
+  /**
+   * للنصوص الطويلة: المقاطعُ المعدَّلة وحدَها، سطراً سطراً — فمن غيّر فقرةً
+   * لا يُعرض عليه النصُّ كلُّه مشطوباً ومكتوباً من جديد.
+   */
+  hunks?: LineHunk[];
 };
+
+/** مقطعٌ تغيّر: أسطرٌ حُذفت وأسطرٌ حلّت محلّها (وقد يخلو أحدُهما). */
+export type LineHunk = { removed: string[]; added: string[] };
+
+/** الحقولُ التي تُقارن سطراً سطراً. */
+const MULTILINE_FIELDS: (keyof MediaSnapshot)[] = ["content", "description"];
+
+/**
+ * فرقُ نصّين بالأسطر (أطولُ تسلسلٍ مشترك)، مقاطعَ لا أسطراً متفرّقة: الأسطرُ
+ * المتجاورةُ المعدَّلةُ مقطعٌ واحد، وما لم يتغيّر لا يُعاد.
+ */
+export function lineHunks(before: string, after: string): LineHunk[] {
+  const a = before.replace(/\r\n/g, "\n").split("\n");
+  const b = after.replace(/\r\n/g, "\n").split("\n");
+  const n = a.length;
+  const m = b.length;
+  // lcs[i][j]: أطولُ مشترَكٍ بين a[i..] وb[j..].
+  const lcs: number[][] = Array.from({ length: n + 1 }, () => new Array<number>(m + 1).fill(0));
+  for (let i = n - 1; i >= 0; i--) {
+    for (let j = m - 1; j >= 0; j--) {
+      lcs[i][j] = a[i] === b[j] ? lcs[i + 1][j + 1] + 1 : Math.max(lcs[i + 1][j], lcs[i][j + 1]);
+    }
+  }
+  const hunks: LineHunk[] = [];
+  let current: LineHunk | null = null;
+  const flush = () => {
+    if (current) hunks.push(current);
+    current = null;
+  };
+  let i = 0;
+  let j = 0;
+  while (i < n || j < m) {
+    if (i < n && j < m && a[i] === b[j]) {
+      flush();
+      i++;
+      j++;
+    } else if (j < m && (i >= n || lcs[i][j + 1] >= lcs[i + 1][j])) {
+      current ??= { removed: [], added: [] };
+      current.added.push(b[j++]);
+    } else {
+      current ??= { removed: [], added: [] };
+      current.removed.push(a[i++]);
+    }
+  }
+  flush();
+  return hunks;
+}
 
 const EMPTY_MARK = "—";
 
@@ -249,6 +301,8 @@ export function diffSnapshots(
   for (const field of Object.keys(FIELD_LABELS) as (keyof MediaSnapshot)[]) {
     const a = before[field];
     const b = after[field];
+    // حقلٌ لم تلتقطه إحدى اللقطتين (سجلٌّ أقدمُ من الحقل) لا يُعدّ محذوفاً.
+    if (a === undefined || b === undefined) continue;
     const same = isSetField(field)
       ? samePlatforms(a as string[], b as string[])
       : (a ?? "") === (b ?? "");
@@ -258,6 +312,7 @@ export function diffSnapshots(
       label: FIELD_LABELS[field],
       before: asText(field, a, platformName),
       after: asText(field, b, platformName),
+      ...(MULTILINE_FIELDS.includes(field) ? { hunks: lineHunks(String(a ?? ""), String(b ?? "")) } : {}),
     });
   }
   return out;

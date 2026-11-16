@@ -8,6 +8,7 @@ import {
   can,
   compareByTime,
   diffSnapshots,
+  lineHunks,
   eventKind,
   formatTime,
   isSafeLink,
@@ -181,4 +182,17 @@ test("attentionMark: الوسمُ لمن ينتظره فعلٌ منه وحدَه
   assert.equal(attentionMark(MEDIA_STATUS.PENDING_ZAD, "CHARITY"), null);
   assert.equal(attentionMark(MEDIA_STATUS.FINAL, "ZAD"), null);
   assert.equal(attentionMark(MEDIA_STATUS.FINAL, "CHARITY"), null);
+});
+
+test("السجلُّ يعرض المقطعَ المعدَّل وحدَه لا النصَّ كلَّه", () => {
+  assert.deepEqual(lineHunks("أ\nب\nج", "أ\nب٢\nج"), [{ removed: ["ب"], added: ["ب٢"] }]);
+  assert.deepEqual(lineHunks("أ\nب", "أ\n\nب"), [{ removed: [], added: [""] }]);
+  assert.deepEqual(lineHunks("نص", "نص"), []);
+});
+
+test("حقلٌ لم يلتقطه سجلٌّ قديم لا يظهر محذوفاً", () => {
+  const old = { ...SNAPSHOT };
+  delete (old as { title?: string | null }).title;
+  const changes = diffSnapshots(old, { ...SNAPSHOT, title: "عنوان" });
+  assert.deepEqual(changes.map((c) => c.field), []);
 });

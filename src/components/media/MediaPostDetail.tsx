@@ -38,8 +38,13 @@ export type MediaEventRow = {
   before: MediaSnapshot | null;
 };
 
+/** لقطةُ المنشور الحاضر — بحقولها كلِّها كما تلتقطها الأفعالُ (`snapshotOfRow`)،
+ * وإلّا قُوبل آخرُ حدثٍ بلقطةٍ ناقصةٍ فظهر ما لم يُلتقط كأنّه حُذف. */
 function snapshotOf(post: MediaPost): MediaSnapshot {
   return {
+    title: post.title ?? null,
+    description: post.description ?? null,
+    attachments: (post.attachments ?? []).map((file) => file.name || file.url),
     content: post.content,
     platforms: post.platforms,
     imageUrl: post.imageUrl,
@@ -170,7 +175,8 @@ export default function MediaPostDetail({
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <span className="text-meta font-medium text-slate-700 dark:text-slate-200">
                     {eventLabel(event.kind)}
-                    {event.actorName ? ` — ${event.actorName}` : ""}
+                    {/* اسمُ موظَّف زادٍ لا يُعرض: الفعلُ فعلُ «زاد»، والطرفُ وحدَه هو ما يُهمّ. */}
+                    {event.actorName && event.actorSide !== "ZAD" ? ` — ${event.actorName}` : ""}
                   </span>
                   <span className="text-caption text-slate-400">{formatDateShort(event.at.slice(0, 10))}</span>
                 </div>
@@ -180,14 +186,18 @@ export default function MediaPostDetail({
                     {changes.map((change) => (
                       <div key={change.field} className="text-caption">
                         <dt className="font-semibold text-slate-500">{change.label}</dt>
-                        <dd className="flex flex-wrap items-center gap-2">
-                          <span className="rounded bg-red-50 px-1.5 py-0.5 text-red-700 line-through dark:bg-red-500/10 dark:text-red-300">
-                            {change.before}
-                          </span>
-                          <span className="rounded bg-emerald-50 px-1.5 py-0.5 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300">
-                            {change.after}
-                          </span>
-                        </dd>
+                        {change.hunks ? (
+                          <dd className="space-y-1.5">
+                            {change.hunks.map((hunk, h) => (
+                              <HunkView key={h} hunk={hunk} />
+                            ))}
+                          </dd>
+                        ) : (
+                          <dd className="flex flex-wrap items-center gap-2">
+                            <span className={REMOVED}>{change.before}</span>
+                            <span className={ADDED}>{change.after}</span>
+                          </dd>
+                        )}
                       </div>
                     ))}
                   </dl>
@@ -197,6 +207,30 @@ export default function MediaPostDetail({
           })}
         </ol>
       </section>
+    </div>
+  );
+}
+
+const REMOVED =
+  "whitespace-pre-wrap rounded bg-red-50 px-1.5 py-0.5 text-red-700 line-through dark:bg-red-500/10 dark:text-red-300";
+const ADDED =
+  "whitespace-pre-wrap rounded bg-emerald-50 px-1.5 py-0.5 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300";
+const NOTE = "rounded bg-slate-100 px-1.5 py-0.5 text-slate-500 dark:bg-slate-800 dark:text-slate-400";
+
+/** مقطعٌ معدَّل: ما حُذف مشطوباً ثمّ ما حلّ محلّه — والأسطرُ الفارغةُ تُسمّى لا تُرسم فراغاً. */
+function HunkView({ hunk }: { hunk: { removed: string[]; added: string[] } }) {
+  const text = (lines: string[]) => lines.filter((line) => line.trim() !== "").join("\n");
+  const blanks = (lines: string[]) => lines.filter((line) => line.trim() === "").length;
+  const removed = text(hunk.removed);
+  const added = text(hunk.added);
+  const blankDelta = blanks(hunk.added) - blanks(hunk.removed);
+  return (
+    <div className="flex flex-col items-start gap-1">
+      {removed && <span className={REMOVED}>{removed}</span>}
+      {added && <span className={ADDED}>{added}</span>}
+      {!removed && !added && blankDelta > 0 && <span className={NOTE}>أُضيف سطرٌ فارغ{blankDelta > 1 ? ` (${blankDelta})` : ""}</span>}
+      {!removed && !added && blankDelta < 0 && <span className={NOTE}>حُذف سطرٌ فارغ{blankDelta < -1 ? ` (${-blankDelta})` : ""}</span>}
+      {!removed && !added && blankDelta === 0 && <span className={NOTE}>تعديلٌ في المسافات</span>}
     </div>
   );
 }

@@ -338,9 +338,10 @@ export type ScheduleCommitment = {
  * وما لم يحنْ وقتُه بعدُ لا يُحسب له ولا عليه: الحكمُ على عملٍ قبل موعده ظلمٌ
  * يُنزل النسبةَ كلَّما أُضيفت خطوةٌ مستقبليّة.
  *
- * والملتزمةُ ما وقع تنفيذُها **داخل** نافذتها: بدأت في أسبوعها أو بعده، وانتهت
- * قبل آخره أو فيه. وهي نقيضُ «الإنجاز غير المنضبط» في `scheduleFlags`، فلا
- * يقول الرقمُ شيئاً وتقول الشارةُ غيرَه.
+ * **والملتزمةُ ما طابق تنفيذُها خطَّتَها**: أسبوعُ البداية الفعليُّ هو المجدول،
+ * ومدّةُ التنفيذ هي مدّةُ الخطة — وهذا شرطُ صاحب الموقع. فالمطابقةُ لا الاحتواء:
+ * خطوةٌ خُطِّط لها أربعةُ أسابيعَ فأُنجزت في أسبوعٍ ليست ملتزمةً بالجدول، بل
+ * جدولُها هو الذي أخطأ تقديرَها — وهو خبرٌ يُراد أن يُقرأ لا أن يُبتلع.
  */
 export function scheduleCommitment(steps: StepInput[], currentWeek: number): ScheduleCommitment {
   let onTime = 0;
@@ -349,6 +350,7 @@ export function scheduleCommitment(steps: StepInput[], currentWeek: number): Sch
   for (const step of steps) {
     const planStart = step.planStartWeek ?? null;
     if (planStart === null || planStart < 1) continue;
+    // آخرُ أسبوعٍ مجدولٍ — به يُعرف ما مضى وقتُه ولم يبدأ.
     const planEnd = planStart + Math.max(step.planWeeks ?? 1, 1) - 1;
 
     const actualStart = step.actualStartWeek && step.actualStartWeek > 0 ? step.actualStartWeek : null;
@@ -360,8 +362,10 @@ export function scheduleCommitment(steps: StepInput[], currentWeek: number): Sch
     }
 
     counted++;
-    const actualEnd = actualStart + Math.max(step.actualWeeks ?? 1, 1) - 1;
-    if (actualStart >= planStart && actualEnd <= planEnd) onTime++;
+    // ومدّةٌ غيرُ مكتوبةٍ تُقرأ أسبوعاً واحداً — كما تُرسم في المخطّط.
+    const actualWeeks = Math.max(step.actualWeeks ?? 1, 1);
+    const planWeeks = Math.max(step.planWeeks ?? 1, 1);
+    if (actualStart === planStart && actualWeeks === planWeeks) onTime++;
   }
 
   return { onTime, counted, percent: counted === 0 ? null : round1((onTime / counted) * 100) };

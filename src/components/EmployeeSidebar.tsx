@@ -84,7 +84,16 @@ export default function EmployeeSidebar({
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const currentTab = searchParams.get("tab");
-  const decodedPathname = pathname ? decodeURIComponent(pathname) : "";
+  // صفحةُ المبادرة تُدخل من بابين: كشّافِ الجمعية، و«مبادراتي». والرابطُ واحدٌ
+  // في الحالين (صفحةٌ ثانيةٌ لنفس المبادرة تعني حارسَين يفترقان)، وعلامةُ
+  // البابِ `from=mine` — فيبقى الشريطُ على التبويب الذي خرج منه صاحبُه، ولا
+  // يقفز إلى «الخدمات» فيفقد موضعَه.
+  const fromMine = searchParams.get("from") === "mine";
+  const decodedPathname = fromMine
+    ? "/main/my-initiatives"
+    : pathname
+      ? decodeURIComponent(pathname)
+      : "";
   
   const [expandedService, setExpandedService] = useState<string | null>(null);
   const [expandedCharity, setExpandedCharity] = useState<string | null>(null);

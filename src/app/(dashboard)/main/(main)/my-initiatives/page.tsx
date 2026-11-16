@@ -100,8 +100,12 @@ export default async function MyInitiativesPage() {
       cost: step.cost === null ? null : Number(step.cost),
       actualCost: step.actualCost === null ? null : Number(step.actualCost),
     })),
+    // ورابطُ صفحة المبادرة هو هو — ويحمل `from=mine` علامةً على البابِ الذي
+    // دُخل منه: فتُكتب ترويستُه «مبادراتي / اسم المبادرة»، ويبقى الشريطُ
+    // الجانبيُّ على «مبادراتي». وصفحةٌ ثانيةٌ لنفس المبادرة كانت تعني حارسَين
+    // واستعلامَين يفترقان عند أوّل تعديل.
     href: openable.has(row.plan.charity.id)
-      ? `/main/strategy/${encodeURIComponent(row.plan.charity.name)}/operational/initiatives/${row.number}`
+      ? `/main/strategy/${encodeURIComponent(row.plan.charity.name)}/operational/initiatives/${row.number}?from=mine`
       : null,
   }));
 

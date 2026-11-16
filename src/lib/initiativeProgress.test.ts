@@ -13,6 +13,10 @@ import {
   weekStartDate,
   weeksBetween,
   planMonths,
+  planSpan,
+  spanDates,
+  weeksLabel,
+  plannedCost,
   type StepInput,
 } from "./initiativeProgress.ts";
 
@@ -231,4 +235,44 @@ test("خطوةٌ على خطتها لا تُوسَم", () => {
 test("خطوةٌ بلا أسبوع بداية لا تُحسب ولا تُسقط الدالّة", () => {
   const flags = scheduleFlags([step(0), step(50, { actualStartWeek: 0 })], 9);
   assert.deepEqual(flags, { plannedWithoutProgress: 0, offPlanSteps: 0, shiftedSteps: 0 });
+});
+
+test("planSpan: من أوّل أسبوع خطةٍ إلى آخر أسبوعٍ تنتهي فيه", () => {
+  const span = planSpan([
+    { progress: 0, planStartWeek: 5, planWeeks: 3 },
+    { progress: 0, planStartWeek: 2, planWeeks: 1 },
+    { progress: 0, planStartWeek: 9, planWeeks: null },
+    { progress: 0, planStartWeek: null, planWeeks: 4 },
+  ]);
+  assert.deepEqual(span, { startWeek: 2, endWeek: 9, weeks: 8 });
+});
+
+test("ولا مدى لخطواتٍ بلا أسابيع — فتبقى الفترةُ على ما كُتبت", () => {
+  assert.equal(planSpan([]), null);
+  assert.equal(planSpan([{ progress: 50 }, { progress: 0, planWeeks: 3 }]), null);
+});
+
+test("وأسابيعُ التنفيذِ لا تمدّ مدى الخطة", () => {
+  const span = planSpan([{ progress: 0, planStartWeek: 1, planWeeks: 2, actualStartWeek: 8, actualWeeks: 5 }]);
+  assert.deepEqual(span, { startWeek: 1, endWeek: 2, weeks: 2 });
+});
+
+test("spanDates: النهايةُ آخرُ يومٍ في أسبوعها", () => {
+  const planStart = new Date(Date.UTC(2026, 0, 4));
+  const { start, end } = spanDates(planStart, { startWeek: 2, endWeek: 3, weeks: 2 });
+  assert.equal(start.toISOString().slice(0, 10), "2026-01-11");
+  assert.equal(end.toISOString().slice(0, 10), "2026-01-24");
+});
+
+test("weeksLabel: صيغةُ العدد في العربية", () => {
+  assert.equal(weeksLabel(1), "أسبوع واحد");
+  assert.equal(weeksLabel(2), "أسبوعان");
+  assert.equal(weeksLabel(7), "7 أسابيع");
+  assert.equal(weeksLabel(18), "18 أسبوعاً");
+  assert.equal(weeksLabel(0), "—");
+});
+
+test("plannedCost: مجموعُ تكاليف الخطوات", () => {
+  assert.equal(plannedCost([{ progress: 0, cost: 1000 }, { progress: 0, cost: null }, { progress: 0, cost: 250 }]), 1250);
+  assert.equal(plannedCost([]), 0);
 });

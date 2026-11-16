@@ -8,7 +8,8 @@ import { getSession } from "@/lib/auth";
 import { hasPermission } from "@/lib/permissions";
 import { assertCharityAccess } from "@/lib/access";
 import { weeksBetween } from "@/lib/initiativeProgress";
-import { PHASES, PRIORITIES } from "@/lib/strategyOptions";
+import { PRIORITIES } from "@/lib/strategyOptions";
+import { isStepField, parseStepField, parseStepFields } from "@/lib/initiativeStepFields";
 
 /**
  * أفعال الخطة التشغيلية: الخطة، والمبادرات، وربطها بالأهداف والمؤشرات.
@@ -395,22 +396,6 @@ async function charityOfStep(stepId: string) {
   return row.initiative.plan.charityId;
 }
 
-function parseWeek(value: string | undefined, weekCount: number): number | null | "invalid" {
-  const raw = value?.trim();
-  if (!raw) return null;
-  const n = Number(raw);
-  if (!Number.isInteger(n) || n < 1 || n > weekCount) return "invalid";
-  return n;
-}
-
-function parseSpan(value: string | undefined, weekCount: number): number | null | "invalid" {
-  const raw = value?.trim();
-  if (!raw) return null;
-  const n = Number(raw);
-  if (!Number.isInteger(n) || n < 1 || n > weekCount) return "invalid";
-  return n;
-}
-
 export type StepInputPayload = {
   id?: string;
   initiativeId: string;
@@ -438,30 +423,24 @@ export async function saveStep(input: StepInputPayload): Promise<Result> {
     await requireAccess(initiative.plan.charityId);
     const weekCount = initiative.plan.weekCount;
 
-    const title = input.title.trim();
-    if (!title) return { error: "نصّ الخطوة مطلوب" };
-
-    const cost = parseDecimal(input.cost);
-    if (cost === "invalid") return { error: "التكلفة يجب أن تكون رقماً" };
-    const actualCost = parseDecimal(input.actualCost);
-    if (actualCost === "invalid") return { error: "التكلفة الفعلية يجب أن تكون رقماً" };
-
-    const planStartWeek = parseWeek(input.planStartWeek, weekCount);
-    if (planStartWeek === "invalid") return { error: `أسبوع البداية بين ١ و${weekCount}` };
-    const planWeeks = parseSpan(input.planWeeks, weekCount);
-    if (planWeeks === "invalid") return { error: `مدة الخطة بين ١ و${weekCount}` };
-    const actualStartWeek = parseWeek(input.actualStartWeek, weekCount);
-    if (actualStartWeek === "invalid") return { error: `أسبوع البداية الفعلي بين ١ و${weekCount}` };
-    const actualWeeks = parseSpan(input.actualWeeks, weekCount);
-    if (actualWeeks === "invalid") return { error: `مدة التنفيذ بين ١ و${weekCount}` };
-
-    const progressRaw = input.progress?.trim();
-    let progress = 0;
-    if (progressRaw) {
-      const n = Number(progressRaw.endsWith("%") ? progressRaw.slice(0, -1) : progressRaw);
-      if (!Number.isFinite(n) || n < 0 || n > 100) return { error: "نسبة الإنجاز بين ٠ و١٠٠" };
-      progress = Math.round(n);
-    }
+    // والفحصُ واحدٌ للبابين: النافذةِ هنا، والخليّةِ في `updateStepField`.
+    const parsed = parseStepFields(
+      {
+        phase: input.phase,
+        title: input.title,
+        evidence: input.evidence,
+        owner: input.owner,
+        cost: input.cost,
+        actualCost: input.actualCost,
+        planStartWeek: input.planStartWeek,
+        planWeeks: input.planWeeks,
+        actualStartWeek: input.actualStartWeek,
+        actualWeeks: input.actualWeeks,
+        progress: input.progress,
+      },
+      weekCount
+    );
+    if ("error" in parsed) return { error: parsed.error };
 
     let monthlyCost: Record<string, number> | null = null;
     if (input.monthlyCost) {
@@ -474,20 +453,19 @@ export async function saveStep(input: StepInputPayload): Promise<Result> {
       monthlyCost = entries.length > 0 ? Object.fromEntries(entries) : null;
     }
 
-    const phase = input.phase && (PHASES as readonly string[]).includes(input.phase) ? input.phase : null;
-
+    const values = parsed.values;
     const data = {
-      phase,
-      title,
-      evidence: input.evidence?.trim() || null,
-      owner: input.owner?.trim() || null,
-      cost,
-      actualCost,
-      planStartWeek,
-      planWeeks,
-      actualStartWeek,
-      actualWeeks,
-      progress,
+      phase: values.phase as string | null,
+      title: values.title as string,
+      evidence: values.evidence as string | null,
+      owner: values.owner as string | null,
+      cost: values.cost as number | null,
+      actualCost: values.actualCost as number | null,
+      planStartWeek: values.planStartWeek as number | null,
+      planWeeks: values.planWeeks as number | null,
+      actualStartWeek: values.actualStartWeek as number | null,
+      actualWeeks: values.actualWeeks as number | null,
+      progress: (values.progress as number | null) ?? 0,
       monthlyCost: monthlyCost ?? Prisma.DbNull,
     };
 
@@ -523,13 +501,35 @@ export async function deleteStep(id: string): Promise<Result> {
   }
 }
 
-/** نسبةُ إنجاز خطوةٍ وحدها — إدخالٌ سريعٌ من الجدول بلا فتح النافذة. */
-export async function setStepProgress(id: string, progress: number): Promise<Result> {
+/**
+ * حقلٌ واحدٌ في خطوةٍ واحدة — تحريرٌ مباشرٌ من الجدول بلا فتح النافذة.
+ *
+ * **ويُرسَل الحقلُ المعدَّلُ وحدَه** لا الصفُّ كلُّه: صفّان يُحرَّران معاً في
+ * شاشتين لا يمحو أحدُهما عملَ الآخر، ولا يُعاد كتابةُ عشرة أعمدةٍ لتغيير رقم.
+ *
+ * واسمُ الحقل يُفحص قبل أن يُكتب (`isStepField`): ما يأتي من الشاشة نصٌّ، ولا
+ * يُبنى منه مفتاحُ عمودٍ في القاعدة بلا سؤال.
+ *
+ * والحارسُ هو حارسُ النافذة نفسُه، والفحصُ فحصُها — فلا يُقبل من بابٍ ما يُردّ
+ * من الآخر.
+ */
+export async function updateStepField(id: string, field: string, value: string): Promise<Result> {
   try {
-    const charityId = await charityOfStep(id);
+    if (!isStepField(field)) return { error: "حقلٌ غير معروف" };
+
+    const row = await prisma.initiativeStep.findUnique({
+      where: { id },
+      select: { initiative: { select: { plan: { select: { charityId: true, weekCount: true } } } } },
+    });
+    if (!row) return { error: "خطوةٌ غير موجودة" };
+
+    const { charityId, weekCount } = row.initiative.plan;
     await requireAccess(charityId);
-    if (!Number.isFinite(progress) || progress < 0 || progress > 100) return { error: "نسبة الإنجاز بين ٠ و١٠٠" };
-    await prisma.initiativeStep.update({ where: { id }, data: { progress: Math.round(progress) } });
+
+    const parsed = parseStepField(field, value, weekCount);
+    if ("error" in parsed) return { error: parsed.error };
+
+    await prisma.initiativeStep.update({ where: { id }, data: { [field]: parsed.value } });
     await revalidateOperational(charityId);
     return {};
   } catch (e) {

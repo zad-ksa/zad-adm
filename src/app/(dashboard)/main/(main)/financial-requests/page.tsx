@@ -12,6 +12,8 @@ import {
   cleanSignatory,
   isValidVatRate,
 } from "@/lib/financialRequest";
+import { FINANCIAL_CATEGORY } from "@/lib/requestCategories";
+import { routeForCategory } from "@/lib/workflowRouting";
 import FinancialRequestsClient from "./FinancialRequestsClient";
 
 /**
@@ -32,7 +34,7 @@ export default async function FinancialRequestsPage() {
 
   // كلُّها معاً: قاعدةُ البيانات في ap-southeast-2، وكلُّ انتظارٍ متسلسلٍ
   // ذهابٌ وعودةٌ كاملة — فتصير الكلفةُ أبطأَها لا مجموعَها.
-  const [requests, types, settings, chain, allEmployees] = await Promise.all([
+  const [requests, types, settings, route, allEmployees] = await Promise.all([
     prisma.request.findMany({
       ...RELATION_JOIN,
       where: visibleRequestFilter(session.id, { kind: "FINANCIAL", canReviewAll }),
@@ -49,11 +51,8 @@ export default async function FinancialRequestsPage() {
       where: { key: { in: [VAT_RATE_SETTING_KEY, FINANCE_MANAGER_KEY, FINANCE_ACCOUNTANT_KEY] } },
       select: { key: true, value: true },
     }),
-    // لا طلبَ بلا سلسلةٍ ماليةٍ نشطة: يُقال ذلك قبل تعبئة النموذج لا بعده.
-    prisma.workflowChain.findFirst({
-      where: { isActive: true, purpose: "FINANCIAL" },
-      select: { steps: { select: { id: true }, take: 1 } },
-    }),
+    // لا طلبَ بلا مسارٍ لخدمة المالية: يُقال ذلك قبل تعبئة النموذج لا بعده.
+    routeForCategory(FINANCIAL_CATEGORY),
     prisma.employee.findMany({
       where: { isActive: true },
       select: { id: true, name: true, role: true },
@@ -71,7 +70,7 @@ export default async function FinancialRequestsPage() {
   const vatRate = isValidVatRate(setting(VAT_RATE_SETTING_KEY)) ? Number(setting(VAT_RATE_SETTING_KEY)) : DEFAULT_VAT_RATE;
   const managerName = cleanSignatory(setting(FINANCE_MANAGER_KEY));
   const accountantName = cleanSignatory(setting(FINANCE_ACCOUNTANT_KEY));
-  const hasActiveChain = (chain?.steps.length ?? 0) > 0;
+  const hasActiveChain = route !== null;
   const rows = serialiseFinancialRows(sortRequests(requests));
 
   return (

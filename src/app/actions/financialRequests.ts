@@ -15,6 +15,8 @@ import { getSession } from "@/lib/auth";
 import { hasPermission } from "@/lib/permissions";
 import { RELATION_JOIN, sortRequests, visibleRequestFilter } from "@/lib/requestQuery";
 import { FINANCIAL_INCLUDE, serialiseFinancialRows } from "@/lib/financialRequestRow";
+import { FINANCIAL_CATEGORY } from "@/lib/requestCategories";
+import { routeForCategory } from "@/lib/workflowRouting";
 import {
   DEFAULT_VAT_RATE,
   OTHER_TYPE_NAME,
@@ -132,17 +134,23 @@ async function readForm(input: FormInput) {
   };
 }
 
-/** أوّلُ خطوةٍ في السلسلة المالية النشطة، أو خطأٌ يقول السبب. */
+/**
+ * أوّلُ خطوةٍ في مسار الطلب المالي، أو خطأٌ يقول السبب.
+ *
+ * **واعتمادُ الطلب المالي تابعٌ لخدمة المالية**: يسلك السلسلةَ المسندةَ
+ * إليها «المالية» — هي نفسُها التي تسلكها طلباتُ الاعتماد العامّة في تلك
+ * الخدمة، فمعتمِدو المال واحدٌ أينما جاء الطلب. وإن لم تُسند فالسلسلةُ
+ * التي تعمل بلا خدمات، كأيِّ خدمةٍ لم تُسند.
+ *
+ * وقبلَها كان للمالي غرضُ سلاسلَ مستقلٌّ (`WorkflowChain.purpose`) يُفعَّل
+ * ويُعطَّل وحدَه — فكان معتمِدو المال يُصانون في مكانين.
+ */
 async function financialFirstStep() {
-  const chain = await prisma.workflowChain.findFirst({
-    where: { isActive: true, purpose: "FINANCIAL" },
-    include: { steps: { orderBy: { order: "asc" } } },
-  });
-  const firstStep = chain?.steps[0] ?? null;
-  if (!chain || !firstStep) {
-    throw new Error("لا توجد سلسلة اعتماد مالية نشطة حالياً، راجع مسؤول النظام");
+  const route = await routeForCategory(FINANCIAL_CATEGORY);
+  if (!route) {
+    throw new Error("لا يوجد مسار اعتماد لخدمة المالية حاليا، راجع مسؤول النظام");
   }
-  return { chainId: chain.id, approverId: firstStep.approverId };
+  return { chainId: route.chainId, approverId: route.approverId };
 }
 
 // ── رفع طلبٍ مالي ────────────────────────────────────────────────────────────
@@ -166,6 +174,8 @@ export async function createFinancialRequest(input: FormInput) {
     const created = await tx.request.create({
       data: {
         kind: "FINANCIAL",
+        // وخدمتُه مكتوبةٌ في صفّه: بها عُرف مسارُه، فتُقرأ منه لا تُستنبط.
+        category: FINANCIAL_CATEGORY,
         title: form.title,
         body: form.body,
         attachments: form.attachments,
@@ -242,6 +252,7 @@ export async function resubmitFinancialRequest(input: FormInput & { requestId: s
     await tx.request.update({
       where: { id: input.requestId },
       data: {
+        category: FINANCIAL_CATEGORY,
         title: form.title,
         body: form.body,
         attachments: form.attachments,
@@ -249,8 +260,8 @@ export async function resubmitFinancialRequest(input: FormInput & { requestId: s
         reviewedById: null,
         reviewNote: null,
         reviewedAt: null,
-        // من أوّل السلسلة، وبسلسلةٍ ماليةٍ نشطةٍ الآن لا بالتي رُفع بها: تلك
-        // قد عُطِّلت أو استُبدلت بين الإرجاع وإعادة الرفع.
+        // من أوّل السلسلة، وبمسار خدمة المالية الآن لا بالسلسلة التي رُفع
+        // بها: تلك قد عُطِّلت أو نُقلت الخدمةُ عنها بين الإرجاع وإعادة الرفع.
         chainId: step.chainId,
         currentStepOrder: 1,
         currentReviewerId: step.approverId,

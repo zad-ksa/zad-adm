@@ -26,13 +26,13 @@ export default async function WorkflowSettingsPage() {
   // لم تُطبَّق. وأوّلُ حفظٍ للأقسام يقول السببَ باسم الملف.
   const chains = await prisma.workflowChain
     .findMany({
-      select: { id: true, name: true, purpose: true, isActive: true, categories: true, steps },
+      select: { id: true, name: true, isActive: true, categories: true, steps },
       orderBy: { createdAt: "asc" },
     })
     .catch(async (error) => {
       console.error("workflow-settings chains", error);
       const rows = await prisma.workflowChain.findMany({
-        select: { id: true, name: true, purpose: true, isActive: true, steps },
+        select: { id: true, name: true, isActive: true, steps },
         orderBy: { createdAt: "asc" },
       });
       return rows.map((c) => ({ ...c, categories: [] as string[] }));

@@ -10,29 +10,31 @@ import {
   Layers,
 } from "lucide-react";
 import {
-  createChain, deleteChain, setActiveChain, clearActiveChain,
+  createChain, deleteChain, setActiveChain, deactivateChain,
   addStep, removeStep, reorderSteps, updateChainName, setChainCategories,
 } from "@/app/actions/workflow";
-import { CHAIN_PURPOSES, type ChainPurpose } from "@/lib/requestQuery";
 import {
+  chainForCategory,
+  defaultChains,
+  FINANCIAL_CATEGORY,
   REQUEST_CATEGORIES,
+  requestCategory,
   unroutedCategories,
 } from "@/lib/requestCategories";
 
 import { useRoleLabels } from "@/components/RoleLabelsProvider";
-import { btn, cx } from "@/components/console/ui";
+import { btn, cx, Note } from "@/components/console/ui";
 
 type Employee = { id: string; name: string; role: string };
 type Step = { id: string; order: number; label: string | null; approver: Employee };
-type Chain = { id: string; name: string; isActive: boolean; purpose: string; categories: string[]; steps: Step[] };
+type Chain = { id: string; name: string; isActive: boolean; categories: string[]; steps: Step[] };
 
 export default function WorkflowSettingsClient({
   chains: initial, employees,
 }: { chains: Chain[]; employees: Employee[] }) {
   const roleLabels = useRoleLabels();
   const [chains] = useState<Chain[]>(initial);
-  // اسمُ السلسلة الجديدة لكل غرضٍ على حدة: الحقلان ظاهران معاً في الصفحة.
-  const [newChainName, setNewChainName] = useState<Record<string, string>>({});
+  const [newChainName, setNewChainName] = useState("");
   const [expandedChain, setExpandedChain] = useState<string | null>(initial[0]?.id ?? null);
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState("");
@@ -54,23 +56,20 @@ export default function WorkflowSettingsClient({
   }
 
   function renderChain(chain: Chain) {
-    // الطلباتُ المالية لا قسمَ لها (نموذجُها بلا حقل)، فالإسنادُ للمسار
-    // العامِّ وحدَه — ولو عُرض هناك لأسند أقساماً لا تصل إليه.
-    const routable = chain.purpose === "GENERAL";
     const picked = draftCategories[chain.id] ?? chain.categories;
     const dirty = picked.length !== chain.categories.length || picked.some((c) => !chain.categories.includes(c));
-    // أيُّ سلسلةٍ تحجز كلَّ قسمٍ من أقسام غيرها — يُقرأ في تلميح الشارة.
+    // أيُّ سلسلةٍ تحجز كلَّ خدمةٍ من خدمات غيرها — يُقرأ في تلميح الشارة.
     const owners: Record<string, string> = {};
     for (const other of chains) {
-      if (other.id === chain.id || other.purpose !== chain.purpose) continue;
+      if (other.id === chain.id) continue;
       for (const c of other.categories) owners[c] = other.name;
     }
     const summary =
       chain.categories.length > 0
-        ? `${chain.categories.length} قسم`
+        ? `${chain.categories.length} خدمة`
         : chain.isActive
-          ? "الاقسام غير المسندة"
-          : "بلا اقسام";
+          ? "الخدمات غير المسندة"
+          : "بلا خدمات";
 
     return (
       <div key={chain.id} className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 overflow-hidden">
@@ -93,8 +92,7 @@ export default function WorkflowSettingsClient({
                 <p className="text-caption font-semibold text-slate-800 dark:text-slate-100 truncate">{chain.name}</p>
               )}
               <p className="text-caption text-slate-500 dark:text-slate-400">
-                {chain.steps.length} مستوى
-                {routable && <> · {summary}</>}
+                {chain.steps.length} مستوى · {summary}
               </p>
             </div>
           </button>
@@ -119,11 +117,18 @@ export default function WorkflowSettingsClient({
               </button>
             )}
 
-            {/* تفعيل */}
+            {/* تفعيل وتعطيل: سلاسلُ تعمل معاً، ولكلٍّ مفتاحُها */}
             {chain.isActive ? (
-              <span className="flex items-center gap-1 text-caption font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/20 px-2 py-1 rounded-full border border-emerald-200 dark:border-emerald-800">
-                <Check className="w-3 h-3" /> مفعّل
-              </span>
+              <>
+                <span className="flex items-center gap-1 text-caption font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/20 px-2 py-1 rounded-full border border-emerald-200 dark:border-emerald-800">
+                  <Check className="w-3 h-3" /> تعمل
+                </span>
+                <button onClick={async () => { if (await confirmAction({ title: `تعطيل ${chain.name}؟`, message: "خدماتها تبقى مسندة اليها، وتمر طلباتها بالسلسلة المفعلة بلا خدمات حتى تعيد تفعيلها.", confirmLabel: "تعطيل" })) run(() => deactivateChain(chain.id)); }}
+                  disabled={isPending} title="تعطيل السلسلة"
+                  className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors">
+                  <PowerOff className="w-3.5 h-3.5" />
+                </button>
+              </>
             ) : (
               <button onClick={() => run(() => setActiveChain(chain.id))} disabled={isPending}
                 className="flex items-center gap-1 text-caption font-semibold text-slate-500 hover:text-primary border border-slate-200 dark:border-slate-700 px-2 py-1 rounded-full hover:border-primary/50 transition-colors">
@@ -201,56 +206,60 @@ export default function WorkflowSettingsClient({
               <p className="text-caption text-slate-400 dark:text-slate-500 text-center py-4">لا توجد خطوات — أضف المستوى الأول</p>
             )}
 
-            {/* أقسام الطلبات التي تمر بهذه السلسلة */}
-            {routable && (
-              <div className="rounded-xl border border-slate-200 dark:border-slate-800 p-3">
-                <div className="flex items-center justify-between gap-2 mb-2">
-                  <p className="text-caption font-semibold text-slate-600 dark:text-slate-300 flex items-center gap-1.5">
-                    <Layers className="w-3.5 h-3.5 text-slate-400" />
-                    اقسام الطلبات التي تمر بهذه السلسلة
-                  </p>
-                  {dirty && (
-                    <button onClick={() => run(() => setChainCategories(chain.id, picked))} disabled={isPending}
-                      className={cx(btn.primary, "shrink-0")}>
-                      {isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
-                      حفظ الاقسام
-                    </button>
-                  )}
-                </div>
-                <div className="flex flex-wrap gap-1.5">
-                  {REQUEST_CATEGORIES.map((cat) => {
-                    const on = picked.includes(cat.key);
-                    const elsewhere = owners[cat.key];
-                    return (
-                      <button key={cat.key} type="button"
-                        onClick={() => setDraftCategories((prev) => ({
-                          ...prev,
-                          [chain.id]: on ? picked.filter((c) => c !== cat.key) : [...picked, cat.key],
-                        }))}
-                        title={!on && elsewhere ? `مسند حاليا الى: ${elsewhere}` : undefined}
-                        className={cx(
-                          "px-2.5 py-1 rounded-full text-caption font-semibold border transition-all",
-                          on
-                            ? `${cat.bg} ${cat.border} ${cat.color} ring-1 ring-current`
-                            : elsewhere
-                              ? "border-dashed border-slate-300 dark:border-slate-600 text-slate-400"
-                              : "border-slate-200 dark:border-slate-700 text-slate-400 hover:border-slate-300 dark:hover:border-slate-600"
-                        )}>
-                        {cat.label}
-                      </button>
-                    );
-                  })}
-                </div>
-                <p className="text-caption text-slate-400 dark:text-slate-500 mt-2 leading-5">
-                  القسم المسند هنا ينزع من بقية السلاسل، فلكل قسم مسار واحد. والمتقطع اطاره مسند الى سلسلة اخرى.
-                  {chain.isActive
-                    ? " وهذه السلسلة مفعلة، فتمر بها كل الاقسام التي لم تسند الى سلسلة."
-                    : picked.length === 0
-                      ? " وهذه السلسلة بلا اقسام ولا تفعيل، فلا يمر بها طلب."
-                      : ""}
+            {/* الخدمات التي تمر بهذه السلسلة */}
+            <div className="rounded-xl border border-slate-200 dark:border-slate-800 p-3">
+              <div className="flex items-center justify-between gap-2 mb-2">
+                <p className="text-caption font-semibold text-slate-600 dark:text-slate-300 flex items-center gap-1.5">
+                  <Layers className="w-3.5 h-3.5 text-slate-400" />
+                  الخدمات التي تمر بهذه السلسلة
                 </p>
+                {dirty && (
+                  <button onClick={() => run(() => setChainCategories(chain.id, picked))} disabled={isPending}
+                    className={cx(btn.primary, "shrink-0")}>
+                    {isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
+                    حفظ الخدمات
+                  </button>
+                )}
               </div>
-            )}
+              <div className="flex flex-wrap gap-1.5">
+                {REQUEST_CATEGORIES.map((cat) => {
+                  const on = picked.includes(cat.key);
+                  const elsewhere = owners[cat.key];
+                  return (
+                    <button key={cat.key} type="button"
+                      onClick={() => setDraftCategories((prev) => ({
+                        ...prev,
+                        [chain.id]: on ? picked.filter((c) => c !== cat.key) : [...picked, cat.key],
+                      }))}
+                      title={
+                        cat.key === FINANCIAL_CATEGORY
+                          ? `${!on && elsewhere ? `مسند حاليا الى: ${elsewhere} — ` : ""}وبها يمر اعتماد الطلبات المالية`
+                          : !on && elsewhere
+                            ? `مسند حاليا الى: ${elsewhere}`
+                            : undefined
+                      }
+                      className={cx(
+                        "px-2.5 py-1 rounded-full text-caption font-semibold border transition-all",
+                        on
+                          ? `${cat.bg} ${cat.border} ${cat.color} ring-1 ring-current`
+                          : elsewhere
+                            ? "border-dashed border-slate-300 dark:border-slate-600 text-slate-400"
+                            : "border-slate-200 dark:border-slate-700 text-slate-400 hover:border-slate-300 dark:hover:border-slate-600"
+                      )}>
+                      {cat.label}
+                    </button>
+                  );
+                })}
+              </div>
+              <p className="text-caption text-slate-400 dark:text-slate-500 mt-2 leading-5">
+                الخدمة المسندة هنا تنزع من بقية السلاسل، فلكل خدمة مسار واحد ولا تشترك سلسلتان في خدمة. والمتقطع اطاره مسند الى سلسلة اخرى.
+                {!chain.isActive
+                  ? " وهذه السلسلة معطلة، فلا يمر بها شيء حتى تفعل."
+                  : chain.categories.length === 0
+                    ? " وهي تعمل بلا خدمات، فتمر بها كل خدمة لم تسند الى سلسلة."
+                    : ""}
+              </p>
+            </div>
 
             {/* إضافة خطوة */}
             <div className="bg-primary/5 dark:bg-primary/10 rounded-xl p-3 border border-primary/10 dark:border-primary/20">
@@ -285,89 +294,79 @@ export default function WorkflowSettingsClient({
     );
   }
 
-  function renderSection(purpose: ChainPurpose, label: string, description: string) {
-    const own = chains.filter(c => c.purpose === purpose);
-    const active = own.find(c => c.isActive);
-    // سلسلةٌ بلا خطواتٍ لا تُمرّر طلباً: الخادم يرفض الرفع، فالتحذير هنا أصدق
-    // من «مفعّل» وحدها.
-    const isUsable = (active?.steps.length ?? 0) > 0;
-    // وفي المسار العامِّ لا يُقاس الصلاحُ بالتفعيل وحدَه: أقسامٌ أُسندت إلى
-    // سلاسلَ تعمل ولو لم تكن مفعَّلة، فالنقصُ هو ما بقي بلا مسار.
-    const unrouted = purpose === "GENERAL"
-      ? unroutedCategories(own.map((c) => ({ categories: c.categories, isActive: c.isActive, stepCount: c.steps.length })))
-      : [];
-    const gap = purpose === "GENERAL" ? !isUsable && unrouted.length > 0 : !isUsable;
-
-    return (
-      <section key={purpose} className="space-y-3">
-        <div className="flex items-baseline justify-between gap-3 border-b border-slate-200 dark:border-slate-800 pb-2">
-          <h2 className="text-body font-semibold text-slate-800 dark:text-slate-100">{label}</h2>
-          <p className="text-caption text-slate-500 dark:text-slate-400 text-left">{description}</p>
-        </div>
-
-        {gap && (
-          <div className="flex items-start gap-2 text-caption text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-900 rounded-xl px-4 py-2.5 leading-5">
-            <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
-            {purpose === "GENERAL"
-              ? `${unrouted.length} من الاقسام بلا مسار — لن ترفع طلباتها حتى تسند الى سلسلة لها مستويات، او تفعل سلسلة تمر بها الاقسام غير المسندة.`
-              : active
-                ? "السلسلة المفعلة بلا مستويات — لن ترفع طلبات حتى يضاف مستوى واحد على الاقل."
-                : "لا سلسلة مفعلة — لن يتمكن الموظفون من رفع الطلبات في هذا المسار."}
-          </div>
-        )}
-
-        {own.map(renderChain)}
-
-        {own.length === 0 && (
-          <p className="text-caption text-slate-400 dark:text-slate-500 text-center py-3">لا سلاسل في هذا المسار بعد</p>
-        )}
-
-        {/* تعطيل المسار */}
-        {active && (
-          <div className="flex items-center justify-between gap-3 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 px-4 py-3">
-            <p className="text-caption text-slate-500 dark:text-slate-400">تعطيل المسار يوقف رفع الطلبات فيه</p>
-            <button onClick={async () => { if (await confirmAction({ title: `تعطيل ${label}؟`, message: "لن تُرفع طلبات في هذا المسار حتى تُفعِّل سلسلةً من جديد.", confirmLabel: "تعطيل" })) run(() => clearActiveChain(purpose)); }}
-              disabled={isPending}
-              className="flex items-center gap-1.5 text-caption font-semibold text-slate-500 hover:text-slate-700 dark:hover:text-slate-200 border border-slate-200 dark:border-slate-700 px-3 py-1.5 rounded-full hover:border-slate-300 dark:hover:border-slate-600 transition-colors shrink-0">
-              <PowerOff className="w-3 h-3" /> تعطيل
-            </button>
-          </div>
-        )}
-
-        {/* إنشاء سلسلة جديدة */}
-        <div className="bg-white dark:bg-slate-900 rounded-xl border border-dashed border-slate-300 dark:border-slate-800 p-4">
-          <p className="text-caption font-semibold text-slate-500 dark:text-slate-400 mb-2">إنشاء سلسلة في {label}</p>
-          <div className="flex gap-2">
-            <input value={newChainName[purpose] || ""} onChange={e => setNewChainName(prev => ({ ...prev, [purpose]: e.target.value }))}
-              placeholder="اسم السلسلة... مثال: مسار المشتريات"
-              className="flex-1 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-caption bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-primary/50" />
-            <button disabled={!newChainName[purpose]?.trim() || isPending}
-              onClick={() => run(async () => { await createChain(newChainName[purpose], purpose); setNewChainName(prev => ({ ...prev, [purpose]: "" })); })}
-              className={cx(btn.primary, "shrink-0")}>
-              {isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
-              إنشاء
-            </button>
-          </div>
-        </div>
-      </section>
-    );
-  }
+  // ما يُقرأ عن البركة كلِّها: ما بقي بلا مسار، ومن هي الافتراضيّة، ومسارُ
+  // الطلب المالي — وهذه ثلاثةُ أخبارٍ لا تُعرف من سلسلةٍ وحدَها.
+  const routable = chains.map((c) => ({
+    id: c.id,
+    name: c.name,
+    categories: c.categories,
+    isActive: c.isActive,
+    stepCount: c.steps.length,
+  }));
+  const defaults = defaultChains(routable);
+  const unrouted = unroutedCategories(routable);
+  const financial = chainForCategory(FINANCIAL_CATEGORY, routable);
 
   return (
-    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500" dir="rtl">
+    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500" dir="rtl">
       <PageHeader
         icon={<GitBranch className="w-6 h-6" />}
         title="سلاسل اعتماد الطلبات"
-        description="اسند الاقسام الى سلاسلها فيعرف كل طلب مساره بلا تفعيل وتعطيل"
+        description="اسند الخدمات الى سلاسلها فيعرف كل طلب مساره، وتعمل السلاسل معا بلا اشتراك"
       />
 
       {error && (
-        <div className="flex items-center gap-2 text-caption text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl px-4 py-2.5">
-          <AlertCircle className="w-4 h-4 shrink-0" />{error}
+        <div className="flex items-start gap-2 text-caption text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl px-4 py-2.5 leading-5">
+          <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />{error}
         </div>
       )}
 
-      {CHAIN_PURPOSES.map(p => renderSection(p.value, p.label, p.description))}
+      {/* الطلبُ المالي تابعٌ لخدمة المالية، فيُقال مسارُه هنا صريحاً */}
+      <Note tone={financial ? "brand" : "warn"}>
+        اعتماد الطلبات المالية يتبع خدمة «المالية»:{" "}
+        {financial
+          ? `يمر الان على «${financial.name}»، وهي ${financial.categories.includes(FINANCIAL_CATEGORY) ? "السلسلة المسندة اليها المالية" : "السلسلة التي تعمل بلا خدمات"}.`
+          : "لا مسار لها الان — اسند «المالية» الى سلسلة لها مستويات، او فعل سلسلة بلا خدمات."}
+      </Note>
+
+      {defaults.length > 1 && (
+        <Note tone="warn">
+          اكثر من سلسلة تعمل بلا خدمات ({defaults.map((c) => c.name).join("، ")}) — الخدمات غير المسندة تمر باقدمها.
+          اسند خدمات الى الزائدة او عطلها، فلكل خدمة مسار واحد.
+        </Note>
+      )}
+
+      {defaults.length === 0 && unrouted.length > 0 && (
+        <Note tone="warn">
+          {unrouted.length} من الخدمات بلا مسار (منها{" "}
+          {unrouted.slice(0, 3).map((c) => requestCategory(c)?.label ?? c).join("، ")}
+          {unrouted.length > 3 ? " وغيرها" : ""}) — لن ترفع طلباتها حتى تسند الى سلسلة تعمل ولها مستويات، او تفعل سلسلة بلا خدمات تمر بها.
+        </Note>
+      )}
+
+      <div className="space-y-3">
+        {chains.map(renderChain)}
+        {chains.length === 0 && (
+          <p className="text-caption text-slate-400 dark:text-slate-500 text-center py-3">لا سلاسل بعد</p>
+        )}
+      </div>
+
+      {/* إنشاء سلسلة جديدة */}
+      <div className="bg-white dark:bg-slate-900 rounded-xl border border-dashed border-slate-300 dark:border-slate-800 p-4">
+        <p className="text-caption font-semibold text-slate-500 dark:text-slate-400 mb-2">إنشاء سلسلة</p>
+        <div className="flex gap-2">
+          <input value={newChainName} onChange={e => setNewChainName(e.target.value)}
+            placeholder="اسم السلسلة... مثال: مسار المشتريات"
+            className="flex-1 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-caption bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-primary/50" />
+          <button disabled={!newChainName.trim() || isPending}
+            onClick={() => run(async () => { await createChain(newChainName); setNewChainName(""); })}
+            className={cx(btn.primary, "shrink-0")}>
+            {isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
+            إنشاء
+          </button>
+        </div>
+        <p className="text-caption text-slate-400 dark:text-slate-500 mt-2">تنشأ معطلة: ابن مستوياتها واسند خدماتها ثم فعلها.</p>
+      </div>
     </div>
   );
 }

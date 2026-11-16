@@ -300,8 +300,8 @@ export default function InitiativesClient({
         )}
       >
         <table style={{ zoom: `${view.zoom}%` }} className="w-full border-collapse text-center text-caption">
-          <thead>
-            <tr className="border-b border-slate-200 bg-slate-50/70 font-semibold text-slate-500 transition-colors dark:border-slate-800 dark:bg-slate-900 dark:text-slate-400">
+          <thead className="sticky top-0 z-[2] shadow-[0_1px_0_rgb(226_232_240)] dark:shadow-[0_1px_0_rgb(30_41_59)]">
+            <tr className="border-b border-slate-200 bg-slate-50 font-semibold text-slate-500 transition-colors dark:border-slate-800 dark:bg-slate-900 dark:text-slate-400">
               <th className={cx(headCell, "w-10")}>م</th>
               <th className={cx(headCell, "min-w-[160px]")}>اسم المبادرة</th>
               <th className={cx(headCell, "min-w-[240px]")}>وصف المبادرة</th>

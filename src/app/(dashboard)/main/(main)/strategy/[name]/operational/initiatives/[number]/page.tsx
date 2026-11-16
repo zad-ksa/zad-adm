@@ -5,7 +5,7 @@ import { getSession } from "@/lib/auth";
 import { hasPermission } from "@/lib/permissions";
 import { requireCharitySection } from "@/lib/sectionGuard";
 import { planMonths } from "@/lib/initiativeProgress";
-import { Crumbs } from "@/components/console/layout";
+import { Crumbs, type Crumb } from "@/components/console/layout";
 import { entityCrumbs } from "@/lib/crumbs";
 import InitiativePlanClient, { type InitiativeDetail, type StepRow } from "./InitiativePlanClient";
 
@@ -28,10 +28,15 @@ export async function generateMetadata({
  */
 export default async function InitiativePage({
   params,
+  searchParams,
 }: {
   params: Promise<{ name: string; number: string }>;
+  /** `from=mine` — دُخلت من «مبادراتي»، فمسارُها وزرُّ رجوعها إليها. */
+  searchParams: Promise<{ from?: string }>;
 }) {
   const { name, number } = await params;
+  const { from } = await searchParams;
+  const fromMine = from === "mine";
   const decodedName = decodeURIComponent(name);
 
   await requireCharitySection("manage_strategy", decodedName);
@@ -140,21 +145,34 @@ export default async function InitiativePage({
   // المبادرة، ولا يعرفه الرابطُ ولا الترويسةُ الجامعة. والعنوانُ لا يُكرَّر
   // فوقه: اسمُ المبادرة مكتوبٌ في بطاقتها أسفلَه.
   const base = `/main/strategy/${encodeURIComponent(decodedName)}`;
-  const crumbs = entityCrumbs(
-    decodedName,
-    { isInternal: entity?.isInternal ?? false, sectionHref: base },
-    { label: "الاستراتيجية", href: base },
-    { label: "الخطة التشغيلية", href: `${base}/operational` },
-    { label: "كشاف المبادرات", href: `${base}/operational/initiatives` },
-    { label: initiative.name }
-  );
+  const crumbs: Crumb[] = fromMine
+    ? // ومن جاء من «مبادراتي» لا يُعاد إلى شجرة الاستراتيجية: مسارُه حلقتان،
+      // أولاهما الصفحةُ التي خرج منها.
+      [{ label: "مبادراتي", href: "/main/my-initiatives" }, { label: initiative.name }]
+    : entityCrumbs(
+        decodedName,
+        { isInternal: entity?.isInternal ?? false, sectionHref: base },
+        { label: "الاستراتيجية", href: base },
+        { label: "الخطة التشغيلية", href: `${base}/operational` },
+        { label: "كشاف المبادرات", href: `${base}/operational/initiatives` },
+        { label: initiative.name }
+      );
 
   return (
     <>
       <div className="mb-4 print:hidden">
         <Crumbs items={crumbs} />
       </div>
-      <InitiativePlanClient charityName={decodedName} initiative={detail} steps={steps} canEdit={canEdit} />
+      <InitiativePlanClient
+        initiative={detail}
+        steps={steps}
+        canEdit={canEdit}
+        back={
+          fromMine
+            ? { href: "/main/my-initiatives", label: "مبادراتي" }
+            : { href: `${base}/operational/initiatives`, label: "الكشاف" }
+        }
+      />
     </>
   );
 }

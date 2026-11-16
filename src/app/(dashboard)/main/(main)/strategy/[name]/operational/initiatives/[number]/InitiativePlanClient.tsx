@@ -85,15 +85,16 @@ const money = (n: number) => n.toLocaleString("en-US", { maximumFractionDigits: 
  * ببعض. والأسابيع مجموعةٌ بالأشهر في صفٍّ أعلى كما في الوثيقة.
  */
 export default function InitiativePlanClient({
-  charityName,
   initiative,
   steps,
   canEdit,
+  back,
 }: {
-  charityName: string;
   initiative: InitiativeDetail;
   steps: StepRow[];
   canEdit: boolean;
+  /** إلى أين يرجع زرُّ الخروج — كشّافُ الجمعية، أو «مبادراتي» لمن جاء منها. */
+  back: { href: string; label: string };
 }) {
   const view = useTableView();
   const [editing, setEditing] = useState<{ step?: StepRow } | null>(null);
@@ -135,8 +136,6 @@ export default function InitiativePlanClient({
       if (res.error) return notify("error", res.error);
       done?.();
     });
-
-  const base = `/main/strategy/${encodeURIComponent(charityName)}/operational`;
 
   return (
     <div className={cx("space-y-5", view.shellClass)}>
@@ -200,8 +199,8 @@ export default function InitiativePlanClient({
                 </button>
               )}
 
-              <Link href={`${base}/initiatives`} className={btn.secondary}>
-                الكشاف
+              <Link href={back.href} className={btn.secondary}>
+                {back.label}
               </Link>
             </div>
           </div>

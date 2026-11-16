@@ -10,6 +10,8 @@ import {
   sortRequests,
   visibleRequestFilter,
 } from "@/lib/requestQuery";
+import { isRequestCategory } from "@/lib/requestCategories";
+import { routeForCategory } from "@/lib/workflowRouting";
 import { createAppNotification } from "./notifications";
 import { revalidatePath } from "next/cache";
 
@@ -31,10 +33,33 @@ async function notify(requestId: string, employeeId: string) {
   });
 }
 
+/**
+ * القسمُ إلزاميٌّ، وبه يُعرف المسار.
+ *
+ * فالسلسلةُ تُسنَد إليها أقسامٌ بعينها (WorkflowChain.categories)، فطلبُ
+ * «الإعلامية» يسلك سلسلتَها وطلبُ «المالية» سلسلتَه بلا تفعيلٍ وتعطيلٍ في
+ * كلِّ مرّة. وقسمٌ لم يُسند يسلك السلسلةَ المفعَّلة.
+ *
+ * **ويُفحص في الخادم لا في النموذج وحدَه**: حقلٌ مطلوبٌ في واجهةٍ ليس
+ * شرطاً، والفعلُ مدخلٌ HTTP يُنادى من غيرها — وطلبٌ بلا قسمٍ طلبٌ بلا مسار.
+ */
+async function requireRoute(raw: string | undefined) {
+  const category = raw?.trim() || "";
+  if (!category) throw new Error("اختر القسم التابع للطلب حتى يعرف النظام مساره");
+  if (!isRequestCategory(category)) throw new Error("قسم غير معروف");
+
+  const route = await routeForCategory(category);
+  if (!route) {
+    throw new Error(`لا يوجد مسار اعتماد لقسم «${category}» حاليا، راجع مسؤول النظام`);
+  }
+  return { category, route };
+}
+
 // ── إنشاء طلب جديد ───────────────────────────────────────────────────────────
 export async function createRequest(data: {
   title: string;
-  category?: string;
+  /** القسمُ التابعُ له — إلزاميٌّ: به يُعرف المسار. */
+  category: string;
   body?: string;
   fileUrl?: string;
   attachments?: any[];
@@ -44,30 +69,25 @@ export async function createRequest(data: {
   // هي التي تقرّر من يبتّ فيه.
   const session = await requireSession();
 
-  // هل يوجد workflow نشط؟
-  const chain = await prisma.workflowChain.findFirst({
-    where: { isActive: true, purpose: "GENERAL" },
-    include: { steps: { orderBy: { order: "asc" } } },
-  });
-
-  // لا طلب بلا سلسلة: كان الطلب حينها يُنشأ بلا مُراجع، ولا ينقذه إلا حامل
-  // «إدارة الاعتمادات». وقد حُذفت تلك الصلاحية، فصار وجود السلسلة شرطاً.
-  const firstStep = chain?.steps[0] ?? null;
-  if (!firstStep) throw new Error("لا توجد سلسلة اعتماد نشطة حالياً، راجع مسؤول النظام");
+  // المسارُ من القسم: لا طلب بلا قسمٍ ولا بلا سلسلةٍ تسلكه.
+  //
+  // وكان الطلبُ قبلَها يُنشأ بلا مُراجعٍ إن لم تكن سلسلةٌ مفعَّلة، ولا ينقذه
+  // إلا حاملُ «إدارة الاعتمادات» — وقد حُذفت تلك الصلاحية.
+  const { category, route } = await requireRoute(data.category);
 
   const request = await prisma.request.create({
     data: {
       title: data.title.trim(),
-      category: data.category?.trim() || null,
+      category,
       body: data.body?.trim() || null,
       fileUrl: data.fileUrl?.trim() || null,
       attachments: data.attachments ?? Prisma.DbNull,
       priority: data.priority,
       status: "PENDING",
       createdById: session.id,
-      chainId: chain?.id ?? null,
+      chainId: route.chainId,
       currentStepOrder: 1,
-      currentReviewerId: firstStep.approverId,
+      currentReviewerId: route.approverId,
     },
   });
 
@@ -82,10 +102,10 @@ export async function createRequest(data: {
   });
 
   // إشعار صاحب الخطوة الأولى.
-  if (firstStep.approverId !== session.id) {
-    await notify(request.id, firstStep.approverId);
+  if (route.approverId !== session.id) {
+    await notify(request.id, route.approverId);
     await createAppNotification(
-      firstStep.approverId,
+      route.approverId,
       "طلب جديد",
       `تم رفع طلب جديد للمراجعة: ${request.title}`,
       "/main/approvals"
@@ -291,7 +311,8 @@ export async function reviewRequest(data: {
 export async function resubmitRequest(data: {
   requestId: string;
   title: string;
-  category?: string;
+  /** القسمُ التابعُ له — إلزاميٌّ: به يُعرف المسار. */
+  category: string;
   body?: string;
   fileUrl?: string;
   attachments?: any[];
@@ -301,20 +322,21 @@ export async function resubmitRequest(data: {
 
   const existing = await prisma.request.findUnique({
     where: { id: data.requestId },
-    include: { chain: { include: { steps: { orderBy: { order: "asc" } } } } },
+    select: { createdById: true, status: true },
   });
   if (!existing || existing.createdById !== session.id) throw new Error("غير مصرح");
   if (existing.status !== "RETURNED") throw new Error("لا يمكن إعادة إرسال هذا الطلب");
 
-  const firstStep = existing.chain?.steps[0] ?? null;
-  // نفس شرط الرفع: لا إعادة إرسال إلى لا أحد.
-  if (!firstStep) throw new Error("لا توجد سلسلة اعتماد نشطة حالياً، راجع مسؤول النظام");
+  // والمسارُ يُحسب من جديدٍ لا يُستنسخ من الطلب المُرجَع: الإرجاعُ قد يكون
+  // سببُه خطأٌ في القسم نفسه، فتصحيحُه ينبغي أن يُغيّر المسار — ولو ثبتت
+  // السلسلةُ الأولى لعاد الطلبُ مصحَّحَ القسمِ إلى معتمِدي قسمٍ ليس قسمَه.
+  const { category, route } = await requireRoute(data.category);
 
   await prisma.request.update({
     where: { id: data.requestId },
     data: {
       title: data.title.trim(),
-      category: data.category?.trim() || null,
+      category,
       body: data.body?.trim() || null,
       fileUrl: data.fileUrl?.trim() || null,
       attachments: data.attachments ?? Prisma.DbNull,
@@ -323,8 +345,9 @@ export async function resubmitRequest(data: {
       reviewedById: null,
       reviewNote: null,
       reviewedAt: null,
+      chainId: route.chainId,
       currentStepOrder: 1,
-      currentReviewerId: firstStep.approverId,
+      currentReviewerId: route.approverId,
     },
   });
 
@@ -338,7 +361,7 @@ export async function resubmitRequest(data: {
   });
 
   // إعادة الإشعار لصاحب الخطوة الأولى.
-  await notify(data.requestId, firstStep.approverId);
+  await notify(data.requestId, route.approverId);
 
   revalidatePath("/main/approvals");
 }

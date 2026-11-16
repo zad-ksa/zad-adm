@@ -5,6 +5,7 @@ import { getSession } from "@/lib/auth";
 import { hasPermission } from "@/lib/permissions";
 import { revalidatePath } from "next/cache";
 import { chainPurposeOf, type ChainPurpose } from "@/lib/requestQuery";
+import { cleanRequestCategories, withoutCategories } from "@/lib/requestCategories";
 
 async function requireAdmin() {
   const session = await getSession();
@@ -65,6 +66,58 @@ export async function clearActiveChain(purpose: ChainPurpose = "GENERAL") {
     data: { isActive: false },
   });
   revalidatePath("/main/workflow-settings");
+}
+
+// ── أقسام الطلبات التي تمر بالسلسلة ─────────────────────────────────────────
+/**
+ * إسنادُ أقسامٍ إلى سلسلة — وبه يُستغنى عن التفعيل والتعطيل في كلِّ طلب.
+ *
+ * **والإسنادُ حصريٌّ في الغرض**: القسمُ الذي يُسند إلى سلسلةٍ يُنزع من
+ * أخواتها، فلا يُقرأ المسارُ من ترتيب الصفوف. ولو جاز لقسمٍ أن يكون في
+ * سلسلتين لصار مسارُ طلبه رهنَ أيِّهما أُنشئت أوّلاً — وهو خبرٌ لا يُقرأ
+ * في الشاشة ولا يُتوقَّع.
+ *
+ * وتُنقّى المفاتيحُ قبل الحفظ (`cleanRequestCategories`): قسمٌ لا يعرفه
+ * النموذجُ لا يُرفع به طلب، فإسنادُه يحجز مساراً لا سالكَ له.
+ */
+export async function setChainCategories(chainId: string, categories: string[]) {
+  await requireAdmin();
+
+  const chain = await prisma.workflowChain.findUnique({
+    where: { id: chainId },
+    select: { purpose: true },
+  });
+  if (!chain) throw new Error("السلسلة غير موجودة");
+
+  const wanted = cleanRequestCategories(categories);
+
+  try {
+    const siblings = await prisma.workflowChain.findMany({
+      where: { purpose: chain.purpose, id: { not: chainId } },
+      select: { id: true, categories: true },
+    });
+
+    await prisma.$transaction([
+      prisma.workflowChain.update({ where: { id: chainId }, data: { categories: wanted } }),
+      ...siblings
+        .filter((s) => s.categories.some((c) => wanted.includes(c)))
+        .map((s) =>
+          prisma.workflowChain.update({
+            where: { id: s.id },
+            data: { categories: withoutCategories(s.categories, wanted) },
+          })
+        ),
+    ]);
+  } catch (error) {
+    // العمودُ قد لا يكون أُنشئ بعد — والسببُ يُقال كما هو لا «فشل الحفظ».
+    console.error("setChainCategories", error);
+    throw new Error(
+      "تعذر حفظ الأقسام — لم يطبق بعد prisma/sql/workflow-chain-categories.sql على قاعدة البيانات"
+    );
+  }
+
+  revalidatePath("/main/workflow-settings");
+  revalidatePath("/main/approvals");
 }
 
 // ── إضافة خطوة لسلسلة ────────────────────────────────────────────────────────

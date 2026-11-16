@@ -8,6 +8,7 @@ import {
   sortRequests,
   visibleRequestFilter,
 } from "@/lib/requestQuery";
+import { categoryRoutes } from "@/lib/workflowRouting";
 import RequestsClient from "./RequestsClient";
 
 export default async function RequestsPage() {
@@ -35,7 +36,7 @@ export default async function RequestsPage() {
   //
   // Marking notifications read is a side effect, not an input: nothing rendered
   // here depends on it, so it has no business delaying the render.
-  const [requests, allEmployees, , activeChain] = await Promise.all([
+  const [requests, allEmployees, , routes] = await Promise.all([
     prisma.request.findMany({
       ...RELATION_JOIN,
       // الاعتمادات العامة وحدها: الطلبات المالية لها صفحتها.
@@ -51,15 +52,11 @@ export default async function RequestsPage() {
       where: { employeeId: session.id, isRead: false },
       data: { isRead: true },
     }),
-    // لا طلب بلا سلسلة: الخادم يرفض الرفع، والواجهة تقول السبب بدل أن تُفشل
-    // الإرسال بعد تعبئة النموذج.
-    prisma.workflowChain.findFirst({
-      where: { isActive: true, purpose: "GENERAL" },
-      select: { steps: { select: { id: true }, take: 1 } },
-    }),
+    // مسارُ كلِّ قسم: القسمُ هو ما يُحدّد السلسلة، فالنموذجُ يُسمّي المسارَ
+    // تحت القسم المختار ويمنع الإرسالَ في قسمٍ لا مسارَ له — بدل أن يُفشل
+    // الإرسالَ بعد تعبئة النموذج كلِّه.
+    categoryRoutes(),
   ]);
-
-  const hasActiveChain = (activeChain?.steps.length ?? 0) > 0;
 
   const sorted = sortRequests(requests);
 
@@ -75,7 +72,7 @@ export default async function RequestsPage() {
   return (
     <RequestsClient
       requests={sorted as any}
-      hasActiveChain={hasActiveChain}
+      routes={routes}
       canReviewAll={canReviewAll}
       sessionId={session.id}
       allEmployees={hasSomethingToReview ? (allEmployees as any) : []}

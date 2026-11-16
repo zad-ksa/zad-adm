@@ -7,22 +7,9 @@ import { X, Send, Link2, FileText, Trash2, AlertCircle, Loader2 } from "lucide-r
 import { createRequest, resubmitRequest } from "@/app/actions/approvals";
 import { Dialog } from "@/components/console/Dialog";
 import { btn } from "@/components/console/ui";
+import { REQUEST_CATEGORIES, type CategoryRoutes } from "@/lib/requestCategories";
 
 type Priority = "LOW" | "MEDIUM" | "HIGH" | "URGENT";
-
-const CATEGORIES = [
-  { key: "زاد",                   label: "إدارة زاد",               color: "text-blue-600 dark:text-blue-400",       bg: "bg-blue-50 dark:bg-blue-900/20",       border: "border-blue-400" },
-  { key: "التخطيط الاستراتيجي",   label: "التخطيط الاستراتيجي",    color: "text-indigo-600 dark:text-indigo-400",   bg: "bg-indigo-50 dark:bg-indigo-900/20",   border: "border-indigo-400" },
-  { key: "الحوكمة",               label: "الحوكمة",                 color: "text-violet-600 dark:text-violet-400",   bg: "bg-violet-50 dark:bg-violet-900/20",   border: "border-violet-400" },
-  { key: "تنمية الموارد المالية", label: "تنمية الموارد المالية",   color: "text-emerald-600 dark:text-emerald-400", bg: "bg-emerald-50 dark:bg-emerald-900/20", border: "border-emerald-400" },
-  { key: "المالية",               label: "المالية",                 color: "text-amber-600 dark:text-amber-400",     bg: "bg-amber-50 dark:bg-amber-900/20",     border: "border-amber-400" },
-  { key: "الإعلامية",             label: "الإعلامية",               color: "text-pink-600 dark:text-pink-400",       bg: "bg-pink-50 dark:bg-pink-900/20",       border: "border-pink-400" },
-  { key: "التقنية",               label: "التقنية",                 color: "text-cyan-600 dark:text-cyan-400",       bg: "bg-cyan-50 dark:bg-cyan-900/20",       border: "border-cyan-400" },
-  { key: "التسويق",               label: "التسويق",                 color: "text-orange-600 dark:text-orange-400",   bg: "bg-orange-50 dark:bg-orange-900/20",   border: "border-orange-400" },
-  { key: "خدمات المشاريع",        label: "خدمات المشاريع",          color: "text-teal-600 dark:text-teal-400",       bg: "bg-teal-50 dark:bg-teal-900/20",       border: "border-teal-400" },
-  { key: "الإدارية",              label: "الإدارية",                color: "text-rose-600 dark:text-rose-400",       bg: "bg-rose-50 dark:bg-rose-900/20",       border: "border-rose-400" },
-  { key: "الإسناد الحكومي",       label: "الإسناد الحكومي",         color: "text-sky-600 dark:text-sky-400",         bg: "bg-sky-50 dark:bg-sky-900/20",         border: "border-sky-400" },
-];
 
 const PRIORITY_CONFIG: Record<Priority, { label: string; color: string; bg: string; border: string; icon: string }> = {
   URGENT: { label: "عاجل",    color: "text-red-600 dark:text-red-400",       bg: "bg-red-50 dark:bg-red-900/20",      border: "border-red-400 dark:border-red-600",    icon: "🚨" },
@@ -38,11 +25,17 @@ const MAX_BYTES = maxBytesFor("approval_attachment");
 const MAX_LABEL = maxLabelFor("approval_attachment");
 
 export default function RequestForm({
-  initial, onClose, onDone, isResubmit, requestId, hasActiveChain = true,
+  initial, onClose, onDone, isResubmit, requestId, routes = {},
 }: {
   initial?: any; onClose: () => void; onDone: () => void;
-  /** بلا سلسلة اعتماد نشطة لا يُرفع طلب: الخادم يرفضه، والزرّ هنا مغلق. */
-  hasActiveChain?: boolean;
+  /**
+   * مسارُ كلِّ قسم — واسمُ سلسلته يُقرأ تحت القسم المختار.
+   *
+   * **والقسمُ هو ما يُحدّد المسار**، فلا يُرسل طلبٌ بلا قسم: الخادمُ
+   * يرفضه، والزرُّ هنا مغلقٌ حتى يُختار قسمٌ له مسار. وقسمٌ بلا مسارٍ
+   * يُقال سببُه قبل التعبئة لا بعد الإرسال.
+   */
+  routes?: CategoryRoutes;
   isResubmit?: boolean; requestId?: string;
 }) {
   const [title, setTitle] = useState(initial?.title || "");
@@ -55,6 +48,10 @@ export default function RequestForm({
   const [isPending, startTransition] = useTransition();
   const [isUploading, setIsUploading] = useState(false);
   const [uploadStatus, setUploadStatus] = useState("");
+
+  // مسارُ القسم المختار — وبلا قسمٍ لا مسارَ يُعرض ولا إرسالَ يُقبل.
+  const route = category ? routes[category] ?? null : null;
+  const hasAnyRoute = Object.keys(routes).length > 0;
 
   async function handleFileUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const files = Array.from(e.target.files || []);
@@ -105,6 +102,9 @@ export default function RequestForm({
 
   function handleSubmit() {
     if (!title.trim()) { setError("العنوان مطلوب"); return; }
+    // القسمُ أوّلاً: به يُعرف المسار، والخادمُ يرفض الطلبَ بلا قسم.
+    if (!category) { setError("اختر القسم التابع للطلب حتى يعرف النظام مساره"); return; }
+    if (!route) { setError("لا يوجد مسار اعتماد لهذا القسم حاليا، راجع مسؤول النظام"); return; }
     setError("");
     startTransition(async () => {
       try {
@@ -126,8 +126,8 @@ closeOnBackdrop={false}
 footer={
 <>
 <button type="button" onClick={onClose} className={btn.secondary}>إلغاء</button>
-          <button type="button" onClick={handleSubmit} disabled={isPending || isUploading || !hasActiveChain}
-            title={hasActiveChain ? undefined : "لا توجد سلسلة اعتماد نشطة حالياً، راجع مسؤول النظام"}
+          <button type="button" onClick={handleSubmit} disabled={isPending || isUploading || !route}
+            title={route ? `يمر على: ${route.chainName}` : "اختر قسما له مسار اعتماد"}
             className={btn.primary}>
             {isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
             {isPending ? "جاري الإرسال..." : "إرسال الطلب"}
@@ -136,10 +136,10 @@ footer={
 }
 >
 <div className="space-y-4">
-          {!hasActiveChain && (
+          {!hasAnyRoute && (
             <p className="flex items-start gap-2 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2.5 text-xs font-bold leading-5 text-amber-800 dark:border-amber-500/20 dark:bg-amber-500/10 dark:text-amber-300">
               <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
-              لا توجد سلسلة اعتماد نشطة حالياً، راجع مسؤول النظام.
+              لا توجد سلسلة اعتماد تمر بها الطلبات حاليا، راجع مسؤول النظام.
             </p>
           )}
           <div>
@@ -149,10 +149,10 @@ footer={
               className="w-full border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-sm bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-primary" />
           </div>
           <div>
-            <label className="text-xs font-bold text-slate-500 dark:text-slate-400 mb-1.5 block">القسم <span className="font-normal text-slate-400">(اختياري)</span></label>
+            <label className="text-xs font-bold text-slate-500 dark:text-slate-400 mb-1.5 block">القسم التابع له الطلب *</label>
             <div className="flex flex-wrap gap-1.5">
-              {CATEGORIES.map(cat => (
-                <button key={cat.key} type="button" onClick={() => setCategory(category === cat.key ? "" : cat.key)}
+              {REQUEST_CATEGORIES.map(cat => (
+                <button key={cat.key} type="button" onClick={() => setCategory(cat.key)}
                   className={`px-2.5 py-1 rounded-full text-[11px] font-bold border transition-all ${
                     category === cat.key
                       ? `${cat.bg} ${cat.border} ${cat.color} ring-1 ring-current`
@@ -162,6 +162,18 @@ footer={
                 </button>
               ))}
             </div>
+            {/* المسارُ يُقرأ قبل الإرسال: القسمُ اختيارٌ له أثر، لا تصنيفٌ للعرض. */}
+            <p className="mt-2 text-[11px] font-bold leading-5">
+              {!category ? (
+                <span className="text-slate-400">اختر القسم ليعرف النظام مسار اعتماد طلبك.</span>
+              ) : route ? (
+                <span className="text-slate-500 dark:text-slate-400">
+                  المسار: <span className="text-primary">{route.chainName}</span>
+                </span>
+              ) : (
+                <span className="text-amber-600 dark:text-amber-400">لا يوجد مسار اعتماد لهذا القسم حاليا، راجع مسؤول النظام.</span>
+              )}
+            </p>
           </div>
           <div>
             <label className="text-xs font-bold text-slate-500 dark:text-slate-400 mb-1.5 block">مستوى الأهمية</label>

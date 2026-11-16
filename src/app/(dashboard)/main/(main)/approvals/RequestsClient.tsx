@@ -23,11 +23,11 @@ import { useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
 import { Dialog } from "@/components/console/Dialog";
 import { btn } from "@/components/console/ui";
+import { REQUEST_CATEGORIES, type CategoryRoutes } from "@/lib/requestCategories";
 
 const RequestForm = dynamic(() => import("@/components/approvals/RequestFormModal"), { ssr: false });
 const ReviewModal = dynamic(() => import("@/components/approvals/ReviewModal"), { ssr: false });
 
-// ── الأقسام ───────────────────────────────────────────────────────────────────
 /**
  * Copies one block of text and says so.
  *
@@ -67,20 +67,6 @@ function CopyTextButton({ text, title }: { text: string; title: string }) {
     </button>
   );
 }
-
-const CATEGORIES = [
-  { key: "زاد",                   label: "إدارة زاد",               color: "text-blue-600 dark:text-blue-400",       bg: "bg-blue-50 dark:bg-blue-900/20",       border: "border-blue-400" },
-  { key: "التخطيط الاستراتيجي",   label: "التخطيط الاستراتيجي",    color: "text-indigo-600 dark:text-indigo-400",   bg: "bg-indigo-50 dark:bg-indigo-900/20",   border: "border-indigo-400" },
-  { key: "الحوكمة",               label: "الحوكمة",                 color: "text-violet-600 dark:text-violet-400",   bg: "bg-violet-50 dark:bg-violet-900/20",   border: "border-violet-400" },
-  { key: "تنمية الموارد المالية", label: "تنمية الموارد المالية",   color: "text-emerald-600 dark:text-emerald-400", bg: "bg-emerald-50 dark:bg-emerald-900/20", border: "border-emerald-400" },
-  { key: "المالية",               label: "المالية",                 color: "text-amber-600 dark:text-amber-400",     bg: "bg-amber-50 dark:bg-amber-900/20",     border: "border-amber-400" },
-  { key: "الإعلامية",             label: "الإعلامية",               color: "text-pink-600 dark:text-pink-400",       bg: "bg-pink-50 dark:bg-pink-900/20",       border: "border-pink-400" },
-  { key: "التقنية",               label: "التقنية",                 color: "text-cyan-600 dark:text-cyan-400",       bg: "bg-cyan-50 dark:bg-cyan-900/20",       border: "border-cyan-400" },
-  { key: "التسويق",               label: "التسويق",                 color: "text-orange-600 dark:text-orange-400",   bg: "bg-orange-50 dark:bg-orange-900/20",   border: "border-orange-400" },
-  { key: "خدمات المشاريع",        label: "خدمات المشاريع",          color: "text-teal-600 dark:text-teal-400",       bg: "bg-teal-50 dark:bg-teal-900/20",       border: "border-teal-400" },
-  { key: "الإدارية",              label: "الإدارية",                color: "text-rose-600 dark:text-rose-400",       bg: "bg-rose-50 dark:bg-rose-900/20",       border: "border-rose-400" },
-  { key: "الإسناد الحكومي",       label: "الإسناد الحكومي",         color: "text-sky-600 dark:text-sky-400",         bg: "bg-sky-50 dark:bg-sky-900/20",         border: "border-sky-400" },
-];
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 type Priority = "LOW" | "MEDIUM" | "HIGH" | "URGENT";
@@ -125,7 +111,7 @@ type Props = {
   requests: Request[];
   /** Only the fallback approver for requests with no chain — not "sees all". */
   /** سلسلة اعتماد نشطة ولها خطوة أولى: شرط رفع أي طلب. */
-  hasActiveChain: boolean;
+  routes: CategoryRoutes;
   /**
    * Holder of review_all_requests: reads every request in the company and
    * where it currently sits, in a lane of its own. Grants no authority over
@@ -279,7 +265,7 @@ function RequestCard({
   // السلسلة تسمّي المُراجع، ولا مسمّى ولا صلاحية تفعل.
   const isCurrentReviewer = request.status === "PENDING" && request.currentReviewerId === sessionId;
 
-  const catInfo = CATEGORIES.find(c => c.key === request.category);
+  const catInfo = REQUEST_CATEGORIES.find(c => c.key === request.category);
   const attachments = typeof request.attachments === 'string' ? JSON.parse(request.attachments) : request.attachments;
   const hasDetails = !!(request.body || request.fileUrl || (Array.isArray(attachments) && attachments.length > 0) || request.reviewNote || request.logs.length > 0);
 
@@ -467,7 +453,7 @@ function RequestCard({
 }
 
 // ── المكون الرئيسي ────────────────────────────────────────────────────────────
-export default function RequestsClient({ requests: initial, hasActiveChain, canReviewAll, sessionId, allEmployees }: Props) {
+export default function RequestsClient({ requests: initial, routes, canReviewAll, sessionId, allEmployees }: Props) {
   const roleLabels = useRoleLabels();
   const [requests, setRequests] = useState<Request[]>(initial);
   const [showForm, setShowForm] = useState(false);
@@ -659,7 +645,7 @@ export default function RequestsClient({ requests: initial, hasActiveChain, canR
   };
 
   // الأقسام الظاهرة في قائمة التصفية = ما يوجد فعلاً في هذا المسار فقط.
-  const laneCategories = CATEGORIES.filter((c) => lane.some((r) => r.category === c.key));
+  const laneCategories = REQUEST_CATEGORIES.filter((c) => lane.some((r) => r.category === c.key));
   const anyFilter =
     filterStatus !== "ALL" ||
     filterPriority !== "ALL" ||
@@ -886,11 +872,11 @@ export default function RequestsClient({ requests: initial, hasActiveChain, canR
       </button>
 
       {showForm && (
-        <RequestForm hasActiveChain={hasActiveChain} onClose={() => setShowForm(false)}
+        <RequestForm routes={routes} onClose={() => setShowForm(false)}
           onDone={() => handleAction(async () => {})} />
       )}
       {resubmitReq && (
-        <RequestForm initial={resubmitReq} requestId={resubmitReq.id} isResubmit hasActiveChain={hasActiveChain}
+        <RequestForm initial={resubmitReq} requestId={resubmitReq.id} isResubmit routes={routes}
           onClose={() => setResubmitReq(null)}
           onDone={() => handleAction(async () => {})} />
       )}

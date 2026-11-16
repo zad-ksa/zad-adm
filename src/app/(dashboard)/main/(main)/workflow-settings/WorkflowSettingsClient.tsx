@@ -7,19 +7,24 @@ import Select from "@/components/console/Select";
 import {
   Plus, Trash2, ArrowUp, ArrowDown, Check, X, GitBranch,
   ChevronDown, ChevronUp, Loader2, AlertCircle, Power, PowerOff, Edit2, Save,
+  Layers,
 } from "lucide-react";
 import {
   createChain, deleteChain, setActiveChain, clearActiveChain,
-  addStep, removeStep, reorderSteps, updateChainName,
+  addStep, removeStep, reorderSteps, updateChainName, setChainCategories,
 } from "@/app/actions/workflow";
 import { CHAIN_PURPOSES, type ChainPurpose } from "@/lib/requestQuery";
+import {
+  REQUEST_CATEGORIES,
+  unroutedCategories,
+} from "@/lib/requestCategories";
 
 import { useRoleLabels } from "@/components/RoleLabelsProvider";
 import { btn, cx } from "@/components/console/ui";
 
 type Employee = { id: string; name: string; role: string };
 type Step = { id: string; order: number; label: string | null; approver: Employee };
-type Chain = { id: string; name: string; isActive: boolean; purpose: string; steps: Step[] };
+type Chain = { id: string; name: string; isActive: boolean; purpose: string; categories: string[]; steps: Step[] };
 
 export default function WorkflowSettingsClient({
   chains: initial, employees,
@@ -35,6 +40,9 @@ export default function WorkflowSettingsClient({
   const [addingStep, setAddingStep] = useState<Record<string, { approverId: string; label: string }>>({});
   // Editing chain name
   const [editingName, setEditingName] = useState<Record<string, string>>({});
+  // مسوَّدةُ الأقسام لكل سلسلة: تُحفظ بزرٍّ لا بكلِّ نقرة — فالحفظُ هنا
+  // يُعيد تحميل الصفحة، واختيارُ ستّة أقسامٍ كان ستّ إعادات تحميل.
+  const [draftCategories, setDraftCategories] = useState<Record<string, string[]>>({});
 
   function refresh() { window.location.reload(); }
 
@@ -46,6 +54,24 @@ export default function WorkflowSettingsClient({
   }
 
   function renderChain(chain: Chain) {
+    // الطلباتُ المالية لا قسمَ لها (نموذجُها بلا حقل)، فالإسنادُ للمسار
+    // العامِّ وحدَه — ولو عُرض هناك لأسند أقساماً لا تصل إليه.
+    const routable = chain.purpose === "GENERAL";
+    const picked = draftCategories[chain.id] ?? chain.categories;
+    const dirty = picked.length !== chain.categories.length || picked.some((c) => !chain.categories.includes(c));
+    // أيُّ سلسلةٍ تحجز كلَّ قسمٍ من أقسام غيرها — يُقرأ في تلميح الشارة.
+    const owners: Record<string, string> = {};
+    for (const other of chains) {
+      if (other.id === chain.id || other.purpose !== chain.purpose) continue;
+      for (const c of other.categories) owners[c] = other.name;
+    }
+    const summary =
+      chain.categories.length > 0
+        ? `${chain.categories.length} قسم`
+        : chain.isActive
+          ? "الاقسام غير المسندة"
+          : "بلا اقسام";
+
     return (
       <div key={chain.id} className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 overflow-hidden">
         {/* رأس السلسلة */}
@@ -66,7 +92,10 @@ export default function WorkflowSettingsClient({
               ) : (
                 <p className="text-caption font-semibold text-slate-800 dark:text-slate-100 truncate">{chain.name}</p>
               )}
-              <p className="text-caption text-slate-500 dark:text-slate-400">{chain.steps.length} مستوى</p>
+              <p className="text-caption text-slate-500 dark:text-slate-400">
+                {chain.steps.length} مستوى
+                {routable && <> · {summary}</>}
+              </p>
             </div>
           </button>
 
@@ -172,6 +201,57 @@ export default function WorkflowSettingsClient({
               <p className="text-caption text-slate-400 dark:text-slate-500 text-center py-4">لا توجد خطوات — أضف المستوى الأول</p>
             )}
 
+            {/* أقسام الطلبات التي تمر بهذه السلسلة */}
+            {routable && (
+              <div className="rounded-xl border border-slate-200 dark:border-slate-800 p-3">
+                <div className="flex items-center justify-between gap-2 mb-2">
+                  <p className="text-caption font-semibold text-slate-600 dark:text-slate-300 flex items-center gap-1.5">
+                    <Layers className="w-3.5 h-3.5 text-slate-400" />
+                    اقسام الطلبات التي تمر بهذه السلسلة
+                  </p>
+                  {dirty && (
+                    <button onClick={() => run(() => setChainCategories(chain.id, picked))} disabled={isPending}
+                      className={cx(btn.primary, "shrink-0")}>
+                      {isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
+                      حفظ الاقسام
+                    </button>
+                  )}
+                </div>
+                <div className="flex flex-wrap gap-1.5">
+                  {REQUEST_CATEGORIES.map((cat) => {
+                    const on = picked.includes(cat.key);
+                    const elsewhere = owners[cat.key];
+                    return (
+                      <button key={cat.key} type="button"
+                        onClick={() => setDraftCategories((prev) => ({
+                          ...prev,
+                          [chain.id]: on ? picked.filter((c) => c !== cat.key) : [...picked, cat.key],
+                        }))}
+                        title={!on && elsewhere ? `مسند حاليا الى: ${elsewhere}` : undefined}
+                        className={cx(
+                          "px-2.5 py-1 rounded-full text-caption font-semibold border transition-all",
+                          on
+                            ? `${cat.bg} ${cat.border} ${cat.color} ring-1 ring-current`
+                            : elsewhere
+                              ? "border-dashed border-slate-300 dark:border-slate-600 text-slate-400"
+                              : "border-slate-200 dark:border-slate-700 text-slate-400 hover:border-slate-300 dark:hover:border-slate-600"
+                        )}>
+                        {cat.label}
+                      </button>
+                    );
+                  })}
+                </div>
+                <p className="text-caption text-slate-400 dark:text-slate-500 mt-2 leading-5">
+                  القسم المسند هنا ينزع من بقية السلاسل، فلكل قسم مسار واحد. والمتقطع اطاره مسند الى سلسلة اخرى.
+                  {chain.isActive
+                    ? " وهذه السلسلة مفعلة، فتمر بها كل الاقسام التي لم تسند الى سلسلة."
+                    : picked.length === 0
+                      ? " وهذه السلسلة بلا اقسام ولا تفعيل، فلا يمر بها طلب."
+                      : ""}
+                </p>
+              </div>
+            )}
+
             {/* إضافة خطوة */}
             <div className="bg-primary/5 dark:bg-primary/10 rounded-xl p-3 border border-primary/10 dark:border-primary/20">
               <p className="text-caption font-semibold text-primary mb-2 flex items-center gap-1">
@@ -211,6 +291,12 @@ export default function WorkflowSettingsClient({
     // سلسلةٌ بلا خطواتٍ لا تُمرّر طلباً: الخادم يرفض الرفع، فالتحذير هنا أصدق
     // من «مفعّل» وحدها.
     const isUsable = (active?.steps.length ?? 0) > 0;
+    // وفي المسار العامِّ لا يُقاس الصلاحُ بالتفعيل وحدَه: أقسامٌ أُسندت إلى
+    // سلاسلَ تعمل ولو لم تكن مفعَّلة، فالنقصُ هو ما بقي بلا مسار.
+    const unrouted = purpose === "GENERAL"
+      ? unroutedCategories(own.map((c) => ({ categories: c.categories, isActive: c.isActive, stepCount: c.steps.length })))
+      : [];
+    const gap = purpose === "GENERAL" ? !isUsable && unrouted.length > 0 : !isUsable;
 
     return (
       <section key={purpose} className="space-y-3">
@@ -219,12 +305,14 @@ export default function WorkflowSettingsClient({
           <p className="text-caption text-slate-500 dark:text-slate-400 text-left">{description}</p>
         </div>
 
-        {!isUsable && (
-          <div className="flex items-center gap-2 text-caption text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-900 rounded-xl px-4 py-2.5">
-            <AlertCircle className="w-4 h-4 shrink-0" />
-            {active
-              ? "السلسلة المفعّلة بلا مستويات — لن تُرفع طلبات حتى يُضاف مستوىً واحد على الأقل."
-              : "لا سلسلة مفعّلة — لن يتمكّن الموظفون من رفع الطلبات في هذا المسار."}
+        {gap && (
+          <div className="flex items-start gap-2 text-caption text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-900 rounded-xl px-4 py-2.5 leading-5">
+            <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+            {purpose === "GENERAL"
+              ? `${unrouted.length} من الاقسام بلا مسار — لن ترفع طلباتها حتى تسند الى سلسلة لها مستويات، او تفعل سلسلة تمر بها الاقسام غير المسندة.`
+              : active
+                ? "السلسلة المفعلة بلا مستويات — لن ترفع طلبات حتى يضاف مستوى واحد على الاقل."
+                : "لا سلسلة مفعلة — لن يتمكن الموظفون من رفع الطلبات في هذا المسار."}
           </div>
         )}
 
@@ -270,7 +358,7 @@ export default function WorkflowSettingsClient({
       <PageHeader
         icon={<GitBranch className="w-6 h-6" />}
         title="سلاسل اعتماد الطلبات"
-        description="لكل مسارٍ سلسلتُه النشطة: تفعيلُ المسار المالي لا يمسّ العام"
+        description="اسند الاقسام الى سلاسلها فيعرف كل طلب مساره بلا تفعيل وتعطيل"
       />
 
       {error && (

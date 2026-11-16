@@ -14,10 +14,10 @@ import { notify } from "@/components/console/toastBus";
 import {
   budgetSummary,
   daysRemaining,
-  expectedPercent,
+  currentPlanWeek,
   initiativePercent,
   initiativeStatus,
-  scheduleAdherence,
+  scheduleCommitment,
   STATUS_LABEL,
   STATUS_TONE,
   type PlanMonth,
@@ -61,7 +61,15 @@ export type InitiativeRow = {
   marketingFileName: string | null;
   objective: { id: string; code: string; name: string } | null;
   indicators: { id: string; code: string; name: string }[];
-  steps: { progress: number; cost: number | null; actualCost: number | null }[];
+  steps: {
+    progress: number;
+    cost: number | null;
+    actualCost: number | null;
+    planStartWeek: number | null;
+    planWeeks: number | null;
+    actualStartWeek: number | null;
+    actualWeeks: number | null;
+  }[];
 };
 
 const cell = "border-l border-slate-200 p-2 align-middle transition-colors dark:border-slate-800";
@@ -120,6 +128,11 @@ export default function InitiativesClient({
 
   const plan = plans.find((p) => p.id === selectedPlanId) ?? null;
   const today = useMemo(() => new Date(), []);
+  // أسبوعُ اليوم من بداية الخطة — به يُعرف ما مضى أسبوعُه ولم يبدأ.
+  const currentWeek = useMemo(
+    () => (plan ? currentPlanWeek(new Date(`${plan.startDate}T00:00:00Z`), today, plan.weekCount) : 0),
+    [plan, today]
+  );
 
   const computed = useMemo(
     () =>
@@ -137,12 +150,12 @@ export default function InitiativesClient({
           percent,
           status,
           remaining: daysRemaining(end, today),
-          adherence: scheduleAdherence(percent, expectedPercent(start, end, today)),
+          adherence: scheduleCommitment(row.steps, currentWeek).percent,
           budget,
           distributed,
         };
       }),
-    [initiatives, today]
+    [initiatives, today, currentWeek]
   );
 
   const departments = useMemo(

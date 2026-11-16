@@ -92,19 +92,6 @@ export function expectedPercent(
 }
 
 /**
- * الالتزام بالجدول: المنجَز على المتوقَّع. مئةٌ أو أكثر يعني على الجدول أو
- * متقدّماً عليه، وأقلّ منها تأخّر.
- */
-export function scheduleAdherence(
-  actual: number | null,
-  expected: number | null
-): number | null {
-  if (actual === null || expected === null) return null;
-  if (expected === 0) return actual > 0 ? 100 : null;
-  return round1((actual / expected) * 100);
-}
-
-/**
  * حالة المبادرة محسوبةً لا مخزَّنة:
  * - منتهية: بلغ الإنجاز مئة.
  * - لم تبدأ: الإنجاز صفر ولم يحلّ موعد البداية.
@@ -326,4 +313,56 @@ export function weeksLabel(weeks: number): string {
 /** مجموعُ تكاليف الخطوات المقدَّرة — وهو موازنةُ المبادرة المشتقّة. */
 export function plannedCost(steps: StepInput[]): number {
   return steps.reduce((acc, step) => acc + num(step.cost), 0);
+}
+
+export type ScheduleCommitment = {
+  /** خطواتٌ نُفِّذت داخل أسابيعها المجدولة. */
+  onTime: number;
+  /** الخطواتُ التي حلّ وقتُ الحكم عليها: بدأت، أو مضى أسبوعُها ولم تبدأ. */
+  counted: number;
+  /** نسبةُ الالتزام، أو `null` إن لم يحن وقتُ الحكم على خطوةٍ بعد. */
+  percent: number | null;
+};
+
+/**
+ * الالتزامُ بالجدول: كم خطوةً نُفِّذت في أسابيعها المجدولة.
+ *
+ * **ولا عبرةَ بنسبة الإنجاز هنا** — وهذا قيدُ صاحب الموقع، وهو الصواب: مبادرةٌ
+ * أُنجزت تسعين في المئة متأخّرةً شهراً ملتزمةٌ بالجدول في معادلةٍ تقيس المنجَزَ
+ * على المتوقَّع، وغيرُ ملتزمةٍ في الواقع. فالمقياسُ هنا زمنيٌّ محض: أسابيعُ
+ * التنفيذ الفعليّة تُقابَل بأسابيع الخطة، لا شيءَ غيرُها.
+ *
+ * ومتى تُحسب الخطوةُ في المقام:
+ *   • بدأت (لها أسبوعُ بدايةٍ فعليّ) — فعملُها يُقاس.
+ *   • أو مضى أسبوعُ نهايتها المجدول ولم تبدأ — وهذه غيرُ ملتزمةٍ بلا جدال.
+ * وما لم يحنْ وقتُه بعدُ لا يُحسب له ولا عليه: الحكمُ على عملٍ قبل موعده ظلمٌ
+ * يُنزل النسبةَ كلَّما أُضيفت خطوةٌ مستقبليّة.
+ *
+ * والملتزمةُ ما وقع تنفيذُها **داخل** نافذتها: بدأت في أسبوعها أو بعده، وانتهت
+ * قبل آخره أو فيه. وهي نقيضُ «الإنجاز غير المنضبط» في `scheduleFlags`، فلا
+ * يقول الرقمُ شيئاً وتقول الشارةُ غيرَه.
+ */
+export function scheduleCommitment(steps: StepInput[], currentWeek: number): ScheduleCommitment {
+  let onTime = 0;
+  let counted = 0;
+
+  for (const step of steps) {
+    const planStart = step.planStartWeek ?? null;
+    if (planStart === null || planStart < 1) continue;
+    const planEnd = planStart + Math.max(step.planWeeks ?? 1, 1) - 1;
+
+    const actualStart = step.actualStartWeek && step.actualStartWeek > 0 ? step.actualStartWeek : null;
+
+    if (actualStart === null) {
+      // لم تبدأ: تُحسب عليها إن مضى أسبوعُها، وتُترك إن لم يحن.
+      if (planEnd < currentWeek) counted++;
+      continue;
+    }
+
+    counted++;
+    const actualEnd = actualStart + Math.max(step.actualWeeks ?? 1, 1) - 1;
+    if (actualStart >= planStart && actualEnd <= planEnd) onTime++;
+  }
+
+  return { onTime, counted, percent: counted === 0 ? null : round1((onTime / counted) * 100) };
 }

@@ -12,6 +12,7 @@ import { isMediaPlanEnabled, readPublishingPlan } from "@/lib/mediaPlanToggle";
 import { MEDIA_FIELDS_MISSING, hasPostDetailColumns } from "@/lib/mediaPostFields";
 import { MEDIA_SERVICE } from "@/lib/mediaPlanAccess";
 import { toISODate } from "@/lib/calendarGrid";
+import { mediaPlanStart } from "@/lib/mediaPlanStart";
 import PortalMediaClient from "./PortalMediaClient";
 
 export const dynamic = "force-dynamic";
@@ -91,12 +92,9 @@ export default async function PortalMediaPage({ params }: { params: Promise<{ na
     );
   }
 
-  // شهرُ اليوم: ستّةُ أسابيعَ حوله هي ما ترسمه الشبكة، فيُجلب مداها وحدَه
-  // ويُعاد الجلبُ من الشاشة عند كل انتقال.
-  const today = new Date();
-  const first = new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), 1));
-  const from = new Date(first.getTime() - (first.getUTCDay() + 7) * 86_400_000);
-  const to = new Date(from.getTime() + 55 * 86_400_000);
+  // الشهرُ الذي يفتح عليه التقويم: شهرُ اليوم إن كان فيه منشور، وإلّا أقربُ
+  // شهرٍ فيه منشورات — ويُجلب مداه وحدَه، ويُعاد الجلبُ من الشاشة عند كل انتقال.
+  const { today, anchor, from, to } = await mediaPlanStart(charity.id);
 
   const [posts, platforms, publishingPlan] = await Promise.all([
     prisma.mediaPost.findMany({
@@ -132,7 +130,8 @@ export default async function PortalMediaPage({ params }: { params: Promise<{ na
       <PortalMediaClient
         charityId={charity.id}
         charityName={charity.name}
-        today={toISODate(new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate())))}
+        today={today}
+        initialAnchor={anchor}
         initialPosts={posts.map((p) => ({ ...p, scheduledOn: toISODate(p.scheduledOn) }))}
         platforms={platforms}
         canEdit={canEdit}

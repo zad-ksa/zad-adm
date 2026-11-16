@@ -7,6 +7,7 @@ import { PageHeader } from "@/components/console/layout";
 import { requireCharitySection } from "@/lib/sectionGuard";
 import { getMediaScope } from "@/lib/mediaPlanAccess";
 import { toISODate } from "@/lib/calendarGrid";
+import { mediaPlanStart } from "@/lib/mediaPlanStart";
 import MediaPlanClient from "./MediaPlanClient";
 import CharityAccounts from "./CharityAccounts";
 import CharitySwitcher from "./CharitySwitcher";
@@ -46,12 +47,9 @@ export default async function MediaPlanPage({ params }: { params: Promise<{ name
   const charity = scope.canManage ? scope.charities.find((c) => c.name === charityName) : undefined;
   if (!charity) redirect("/main");
 
-  // شهرُ اليوم: ستّةُ أسابيعَ حوله هي ما ترسمه الشبكة، فيُجلب مداها وحدَه
-  // ويُعاد الجلبُ من الشاشة عند كل انتقال.
-  const today = new Date();
-  const first = new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), 1));
-  const from = new Date(first.getTime() - (first.getUTCDay() + 7) * 86_400_000);
-  const to = new Date(from.getTime() + 55 * 86_400_000);
+  // الشهرُ الذي يفتح عليه التقويم: شهرُ اليوم إن كان فيه منشور، وإلّا أقربُ
+  // شهرٍ فيه منشورات — ويُجلب مداه وحدَه، ويُعاد الجلبُ من الشاشة عند كل انتقال.
+  const { today, anchor, from, to } = await mediaPlanStart(charity.id);
 
   // وأعمدةُ البنود: حتى تُنشأ تقوم الصفحةُ تقول ما يلزم — ولا تسقط باستعلامٍ
   // يسمّي عموداً لا وجود له.
@@ -136,7 +134,8 @@ export default async function MediaPlanPage({ params }: { params: Promise<{ name
         key={charity.id}
         charityId={charity.id}
         charityName={charity.name}
-        today={toISODate(new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate())))}
+        today={today}
+        initialAnchor={anchor}
         initialPosts={posts.map((p) => ({ ...p, scheduledOn: toISODate(p.scheduledOn) }))}
         platforms={platforms}
         publishingPlan={publishingPlan}

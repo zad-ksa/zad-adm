@@ -9,11 +9,11 @@ import { Badge, cx } from "@/components/console/ui";
 import {
   budgetSummary,
   daysRemaining,
-  expectedPercent,
+  currentPlanWeek,
   groupPercent,
   initiativePercent,
   initiativeStatus,
-  scheduleAdherence,
+  scheduleCommitment,
   STATUS_LABEL,
   STATUS_TONE,
   type InitiativeStatus,
@@ -37,7 +37,15 @@ export type DashboardInitiative = {
   startDate: string | null;
   endDate: string | null;
   budget: number | null;
-  steps: { progress: number; cost: number | null; actualCost: number | null }[];
+  steps: {
+    progress: number;
+    cost: number | null;
+    actualCost: number | null;
+    planStartWeek: number | null;
+    planWeeks: number | null;
+    actualStartWeek: number | null;
+    actualWeeks: number | null;
+  }[];
 };
 
 const STATUS_ORDER: InitiativeStatus[] = ["NOT_STARTED", "RUNNING", "DONE", "AT_RISK"];
@@ -73,6 +81,7 @@ export default function OperationalDashboard({
   const router = useRouter();
   const plan = plans.find((p) => p.id === selectedPlanId)!;
   const today = useMemo(() => new Date(), []);
+  const currentWeek = currentPlanWeek(new Date(`${plan.startDate}T00:00:00Z`), today, plan.weekCount);
 
   const model = useMemo(() => {
     const rows = initiatives.map((row) => {
@@ -86,7 +95,7 @@ export default function OperationalDashboard({
         percent,
         status,
         remaining: daysRemaining(end, today),
-        adherence: scheduleAdherence(percent, expectedPercent(start, end, today)),
+        adherence: scheduleCommitment(row.steps, currentWeek).percent,
         budget,
       };
     });
@@ -126,7 +135,7 @@ export default function OperationalDashboard({
       spentPercent: totals.budget === 0 ? null : Math.round((totals.spent / totals.budget) * 1000) / 10,
       departments,
     };
-  }, [initiatives, today]);
+  }, [initiatives, today, currentWeek]);
 
   return (
     <div className="space-y-6">

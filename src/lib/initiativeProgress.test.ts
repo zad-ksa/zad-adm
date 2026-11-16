@@ -8,7 +8,7 @@ import {
   groupPercent,
   initiativePercent,
   initiativeStatus,
-  scheduleAdherence,
+  scheduleCommitment,
   scheduleFlags,
   weekStartDate,
   weeksBetween,
@@ -110,14 +110,6 @@ test("مدّةٌ صفرية لا تقسم على صفر", () => {
   assert.equal(expectedPercent(d("2026-01-05"), d("2026-01-05"), d("2026-01-01")), 0);
 });
 
-test("الالتزام بالجدول: المنجَز على المتوقَّع", () => {
-  assert.equal(scheduleAdherence(50, 50), 100);
-  assert.equal(scheduleAdherence(25, 50), 50);
-  assert.equal(scheduleAdherence(60, 50), 120);
-  assert.equal(scheduleAdherence(null, 50), null);
-  assert.equal(scheduleAdherence(0, 0), null);
-  assert.equal(scheduleAdherence(10, 0), 100);
-});
 
 // ── الحالة ────────────────────────────────────────────────────────────────
 
@@ -275,4 +267,39 @@ test("weeksLabel: صيغةُ العدد في العربية", () => {
 test("plannedCost: مجموعُ تكاليف الخطوات", () => {
   assert.equal(plannedCost([{ progress: 0, cost: 1000 }, { progress: 0, cost: null }, { progress: 0, cost: 250 }]), 1250);
   assert.equal(plannedCost([]), 0);
+});
+
+test("scheduleCommitment: الالتزامُ بالأسابيع لا بنسبة الإنجاز", () => {
+  const result = scheduleCommitment(
+    [
+      // داخل نافذتها تماماً — ملتزمة، ولو كان إنجازها صفراً.
+      { progress: 0, planStartWeek: 1, planWeeks: 2, actualStartWeek: 1, actualWeeks: 2 },
+      // بدأت متأخّرةً — غير ملتزمة، ولو أُنجزت مئة.
+      { progress: 100, planStartWeek: 3, planWeeks: 2, actualStartWeek: 5, actualWeeks: 1 },
+      // تجاوزت نهايتها — غير ملتزمة.
+      { progress: 60, planStartWeek: 6, planWeeks: 1, actualStartWeek: 6, actualWeeks: 3 },
+      // انتهت قبل آخر نافذتها — ملتزمة.
+      { progress: 100, planStartWeek: 9, planWeeks: 4, actualStartWeek: 10, actualWeeks: 1 },
+    ],
+    20
+  );
+  assert.deepEqual(result, { onTime: 2, counted: 4, percent: 50 });
+});
+
+test("وما مضى أسبوعُه ولم يبدأ يُحسب عليه، وما لم يحنْ لا يُحسب", () => {
+  const steps: StepInput[] = [
+    { progress: 0, planStartWeek: 1, planWeeks: 2 }, // مضت ولم تبدأ
+    { progress: 0, planStartWeek: 18, planWeeks: 2 }, // لم يحن وقتها
+  ];
+  assert.deepEqual(scheduleCommitment(steps, 10), { onTime: 0, counted: 1, percent: 0 });
+  // وقبل أن يمضي شيءٌ: لا حكم.
+  assert.equal(scheduleCommitment(steps, 1).percent, null);
+});
+
+test("وخطوةٌ بلا أسبوعٍ مجدولٍ خارج الحساب", () => {
+  assert.deepEqual(scheduleCommitment([{ progress: 100, actualStartWeek: 3, actualWeeks: 1 }], 9), {
+    onTime: 0,
+    counted: 0,
+    percent: null,
+  });
 });

@@ -87,7 +87,17 @@ export default async function InitiativesPage({
           marketingFileName: true,
           objective: { select: { id: true, code: true, name: true } },
           indicators: { select: { indicator: { select: { id: true, code: true, name: true } } } },
-          steps: { select: { progress: true, cost: true, actualCost: true } },
+          steps: {
+  select: {
+    progress: true,
+    cost: true,
+    actualCost: true,
+    planStartWeek: true,
+    planWeeks: true,
+    actualStartWeek: true,
+    actualWeeks: true,
+  },
+},
         },
       })
     : [];
@@ -137,6 +147,10 @@ export default async function InitiativesPage({
       progress: s.progress,
       cost: s.cost === null ? null : Number(s.cost),
       actualCost: s.actualCost === null ? null : Number(s.actualCost),
+      planStartWeek: s.planStartWeek,
+      planWeeks: s.planWeeks,
+      actualStartWeek: s.actualStartWeek,
+      actualWeeks: s.actualWeeks,
     })),
   }));
 

@@ -13,12 +13,12 @@ import {
   budgetSummary,
   currentPlanWeek,
   daysRemaining,
-  expectedPercent,
+
   initiativePercent,
   initiativeStatus,
   planSpan,
   plannedCost,
-  scheduleAdherence,
+  scheduleCommitment,
   scheduleFlags,
   spanDates,
   weekStartDate,
@@ -148,8 +148,10 @@ export default function InitiativePlanClient({
     steps.length > 0 ? plannedCost(stepInputs) : initiative.budget === null ? null : Number(initiative.budget)
   );
   const remaining = daysRemaining(end, today);
-  const adherence = scheduleAdherence(percent, expectedPercent(start, end, today));
   const currentWeek = currentPlanWeek(planStart, today, initiative.plan.weekCount);
+  // الالتزامُ بالجدول زمنيٌّ محض: أسابيعُ التنفيذ تُقابَل بأسابيع الخطة، ولا
+  // عبرةَ بنسبة الإنجاز — وهي تُقرأ في خانتها.
+  const commitment = scheduleCommitment(stepInputs, currentWeek);
   const flags = scheduleFlags(stepInputs, currentWeek);
 
   const run = (fn: () => Promise<{ error?: string }>, done?: () => void) =>
@@ -275,7 +277,19 @@ export default function InitiativePlanClient({
               )}
             </Field>
             <Field label="الالتزام بالجدول">
-              {adherence === null ? dash : <span className="tabular-nums">{adherence}%</span>}
+              {commitment.percent === null ? (
+                dash
+              ) : (
+                <span
+                  className="tabular-nums"
+                  title={`${commitment.onTime} من ${commitment.counted} خطوة نفذت داخل اسابيعها المجدولة`}
+                >
+                  {commitment.percent}%{" "}
+                  <span className="text-caption text-slate-400 dark:text-slate-500">
+                    ({commitment.onTime}/{commitment.counted})
+                  </span>
+                </span>
+              )}
             </Field>
           </dl>
         </section>

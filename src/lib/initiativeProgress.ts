@@ -274,3 +274,56 @@ export function weeksBetween(startDate: Date, endDate: Date): number {
   const days = Math.round((startOfDay(endDate) - startOfDay(startDate)) / DAY) + 1;
   return Math.max(1, Math.ceil(days / 7));
 }
+
+export type PlanSpan = { startWeek: number; endWeek: number; weeks: number };
+
+/**
+ * مدى المبادرة على مخطّط جانت: من أوّل أسبوعِ خطةٍ لخطواتها إلى آخر أسبوعٍ
+ * تنتهي فيه.
+ *
+ * **ومنه تُشتقّ فترةُ المبادرة ومدّتُها** بدل أن تُكتبا يداً: رقمان يُكتبان في
+ * نافذةٍ ومخطّطٌ يُرسم من أرقامٍ أخرى لا يتفقان بعد أوّل تعديل — ومَن قرأ
+ * «١٨ أسبوعاً» فوق مخطّطٍ يمتدّ اثنين وعشرين لا يعرف أيَّهما يصدّق.
+ *
+ * والمدى من أسابيع **الخطة** لا التنفيذ: ما خرج عنه تنفيذاً تقوله الشاراتُ
+ * الثلاث (`scheduleFlags`)، فلا تُمدَّد الخطةُ لتبتلع تأخّرها.
+ *
+ * وخطوةٌ بأسبوع بدايةٍ بلا مدّة تُحسب أسبوعاً واحداً — كما تُرسم في المخطّط.
+ */
+export function planSpan(steps: StepInput[]): PlanSpan | null {
+  let startWeek: number | null = null;
+  let endWeek: number | null = null;
+
+  for (const step of steps) {
+    const from = step.planStartWeek ?? null;
+    if (from === null || from < 1) continue;
+    const to = from + Math.max(step.planWeeks ?? 1, 1) - 1;
+    if (startWeek === null || from < startWeek) startWeek = from;
+    if (endWeek === null || to > endWeek) endWeek = to;
+  }
+
+  if (startWeek === null || endWeek === null) return null;
+  return { startWeek, endWeek, weeks: endWeek - startWeek + 1 };
+}
+
+/** تاريخا المدى — والنهايةُ آخرُ يومٍ في أسبوعها لا أوّلُه. */
+export function spanDates(planStart: Date, span: PlanSpan): { start: Date; end: Date } {
+  return {
+    start: weekStartDate(planStart, span.startWeek),
+    end: new Date(weekStartDate(planStart, span.endWeek).getTime() + 6 * DAY),
+  };
+}
+
+/** «أسبوعان» و«٣ أسابيع» و«١٨ أسبوعاً» — بصيغة العدد في العربية. */
+export function weeksLabel(weeks: number): string {
+  if (weeks <= 0) return "—";
+  if (weeks === 1) return "أسبوع واحد";
+  if (weeks === 2) return "أسبوعان";
+  if (weeks <= 10) return `${weeks} أسابيع`;
+  return `${weeks} أسبوعاً`;
+}
+
+/** مجموعُ تكاليف الخطوات المقدَّرة — وهو موازنةُ المبادرة المشتقّة. */
+export function plannedCost(steps: StepInput[]): number {
+  return steps.reduce((acc, step) => acc + num(step.cost), 0);
+}

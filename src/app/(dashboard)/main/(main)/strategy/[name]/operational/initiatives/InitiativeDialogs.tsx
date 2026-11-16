@@ -215,7 +215,7 @@ export function InitiativeDialog({
           <Labeled label="اسم المبادرة">
             <input value={form.name} onChange={(e) => set("name", e.target.value)} className={field} />
           </Labeled>
-          <Labeled label="مدة المبادرة" hint="نصّاً كما في الوثيقة">
+          <Labeled label="مدة المبادرة" hint="تحسب من خطوات المبادرة متى جدولت، وما يكتب هنا يبقى حتى تجدول.">
             <input
               value={form.durationText}
               onChange={(e) => set("durationText", e.target.value)}
@@ -320,13 +320,13 @@ export function InitiativeDialog({
         </div>
 
         <div className="grid gap-4 sm:grid-cols-3">
-          <Labeled label="تاريخ البداية">
+          <Labeled label="تاريخ البداية" hint="تحسب من خطوات المبادرة متى جدولت، وما يكتب هنا يبقى حتى تجدول.">
             <DateField value={form.startDate} onChange={(v) => set("startDate", v)} />
           </Labeled>
-          <Labeled label="تاريخ النهاية">
+          <Labeled label="تاريخ النهاية" hint="تحسب من خطوات المبادرة متى جدولت، وما يكتب هنا يبقى حتى تجدول.">
             <DateField value={form.endDate} onChange={(v) => set("endDate", v)} min={form.startDate || undefined} />
           </Labeled>
-          <Labeled label="الموازنة المعتمدة">
+          <Labeled label="الموازنة المعتمدة" hint="مجموع تكاليف الخطوات — يحدث مع تعديلها.">
             <input
               value={form.budget}
               onChange={(e) => set("budget", e.target.value)}

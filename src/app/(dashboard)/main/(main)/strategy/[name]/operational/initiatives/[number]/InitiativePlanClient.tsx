@@ -16,9 +16,13 @@ import {
   expectedPercent,
   initiativePercent,
   initiativeStatus,
+  planSpan,
+  plannedCost,
   scheduleAdherence,
   scheduleFlags,
+  spanDates,
   weekStartDate,
+  weeksLabel,
   STATUS_LABEL,
   STATUS_TONE,
   type PlanMonth,
@@ -123,10 +127,26 @@ export default function InitiativePlanClient({
   );
 
   const percent = initiativePercent(stepInputs);
-  const start = initiative.startDate ? new Date(`${initiative.startDate}T00:00:00Z`) : null;
-  const end = initiative.endDate ? new Date(`${initiative.endDate}T00:00:00Z`) : null;
+
+  // الفترةُ والمدّةُ من مخطّط جانت لا من حقلٍ يُكتب يداً: المخطّطُ هو الخبرُ،
+  // والمكتوبُ فوقه يشيخ بأوّل أسبوعٍ يُعدَّل. ويُحسب هنا كما يُحسب في الخادم
+  // (`syncInitiativeFromSteps`)، فيُرى الأثرُ قبل أن تعود الصفحةُ من الخادم.
+  const span = useMemo(() => planSpan(stepInputs), [stepInputs]);
+  const period = useMemo(() => (span ? spanDates(planStart, span) : null), [span, planStart]);
+  const iso = (date: Date) => date.toISOString().slice(0, 10);
+
+  // وخطواتٌ بلا أسابيعَ لا مدى لها، فيبقى المكتوبُ كما هو حتى تُجدوَل.
+  const start = period ? period.start : initiative.startDate ? new Date(`${initiative.startDate}T00:00:00Z`) : null;
+  const end = period ? period.end : initiative.endDate ? new Date(`${initiative.endDate}T00:00:00Z`) : null;
+  const duration = span ? weeksLabel(span.weeks) : initiative.durationText;
+
   const status = initiativeStatus({ percent, startDate: start, endDate: end, today });
-  const budget = budgetSummary(stepInputs, initiative.budget === null ? null : Number(initiative.budget));
+  // والموازنةُ المعتمدةُ مجموعُ تكاليف الخطوات، والمصروفُ مجموعُ فعليّها — فكلاهما
+  // يتحرّك مع الجدول. ومبادرةٌ بلا خطوةٍ تبقى على ما كُتب لها.
+  const budget = budgetSummary(
+    stepInputs,
+    steps.length > 0 ? plannedCost(stepInputs) : initiative.budget === null ? null : Number(initiative.budget)
+  );
   const remaining = daysRemaining(end, today);
   const adherence = scheduleAdherence(percent, expectedPercent(start, end, today));
   const currentWeek = currentPlanWeek(planStart, today, initiative.plan.weekCount);
@@ -235,11 +255,11 @@ export default function InitiativePlanClient({
             </Field>
             <Field label="مدير المبادرة">{initiative.managerName || dash}</Field>
             <Field label="الإدارة المالكة">{initiative.owningDept || dash}</Field>
-            <Field label="المدة">{initiative.durationText || dash}</Field>
+            <Field label="المدة">{duration || dash}</Field>
             <Field label="الفترة">
-              {initiative.startDate && initiative.endDate ? (
+              {start && end ? (
                 <span className="tabular-nums">
-                  {initiative.startDate} ← {initiative.endDate}
+                  {iso(start)} ← {iso(end)}
                 </span>
               ) : (
                 dash

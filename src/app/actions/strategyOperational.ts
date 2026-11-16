@@ -7,7 +7,7 @@ import { revalidatePath } from "next/cache";
 import { getSession } from "@/lib/auth";
 import { hasPermission } from "@/lib/permissions";
 import { assertCharityAccess } from "@/lib/access";
-import { weeksBetween } from "@/lib/initiativeProgress";
+import { planSpan, plannedCost, spanDates, weeksBetween, weeksLabel } from "@/lib/initiativeProgress";
 import { PRIORITIES } from "@/lib/strategyOptions";
 import { isStepField, parseStepField, parseStepFields } from "@/lib/initiativeStepFields";
 
@@ -387,6 +387,57 @@ export async function setInitiativeMarketing(
 // الخطة — رقمُ أسبوعٍ بلا تاريخ بدايةٍ لا معنى له.
 
 
+/**
+ * تحديثُ ما تشتقّه المبادرةُ من خطواتها: فترتُها ومدّتُها وموازنتُها.
+ *
+ * **ولمَ يُكتب في صفِّها ولا يُحسب عند العرض وحدَه**: هذه الثلاثةُ تُقرأ في
+ * كشّاف المبادرات، وفي لوحة معلوماتها، وفي «مبادراتي» — فلو حُسبت في صفحة
+ * المبادرة وحدَها لقرأ القارئُ رقمين مختلفين لشيءٍ واحدٍ بحسب الصفحة التي فتحها.
+ *
+ * **والفترةُ من مخطّط جانت**: أوّلُ أسبوعِ خطةٍ لخطواتها وآخرُ أسبوعٍ تنتهي فيه،
+ * محسوبةً على بداية الخطة التشغيلية. والمدّةُ عددُ أسابيع ذلك المدى. والموازنةُ
+ * مجموعُ تكاليف الخطوات المقدَّرة.
+ *
+ * **ولا يُمحى ما لا يُشتقّ**: خطواتٌ بلا أسابيعَ لا مدى لها، فتبقى الفترةُ
+ * والمدّةُ كما كُتبتا — والمحوُ هنا يُفقد بياناتِ مبادراتٍ قديمةٍ لم تُجدول
+ * خطواتُها بعد.
+ */
+async function syncInitiativeFromSteps(initiativeId: string) {
+  const initiative = await prisma.initiative.findUnique({
+    where: { id: initiativeId },
+    select: {
+      plan: { select: { startDate: true } },
+      steps: { select: { cost: true, planStartWeek: true, planWeeks: true } },
+    },
+  });
+  if (!initiative) return;
+
+  const steps = initiative.steps.map((step) => ({
+    progress: 0,
+    cost: step.cost === null ? null : Number(step.cost),
+    planStartWeek: step.planStartWeek,
+    planWeeks: step.planWeeks,
+  }));
+
+  const data: Prisma.InitiativeUpdateInput = {};
+
+  const span = planSpan(steps);
+  if (span) {
+    const { start, end } = spanDates(initiative.plan.startDate, span);
+    data.startDate = start;
+    data.endDate = end;
+    data.durationText = weeksLabel(span.weeks);
+  }
+
+  // وموازنةٌ صفرٌ تُكتب: خطواتٌ مُحيت تكاليفُها موازنتُها صفرٌ لا رقمٌ قديم.
+  // أمّا مبادرةٌ لا خطوةَ لها فلا تُمسّ: الصفرُ فيها خبرٌ كاذب.
+  if (steps.length > 0) data.budget = plannedCost(steps);
+
+  if (Object.keys(data).length > 0) {
+    await prisma.initiative.update({ where: { id: initiativeId }, data });
+  }
+}
+
 async function charityOfStep(stepId: string) {
   const row = await prisma.initiativeStep.findUnique({
     where: { id: stepId },
@@ -482,6 +533,7 @@ export async function saveStep(input: StepInputPayload): Promise<Result> {
       });
     }
 
+    await syncInitiativeFromSteps(input.initiativeId);
     await revalidateOperational(initiative.plan.charityId);
     return {};
   } catch (e) {
@@ -493,7 +545,8 @@ export async function deleteStep(id: string): Promise<Result> {
   try {
     const charityId = await charityOfStep(id);
     await requireAccess(charityId);
-    await prisma.initiativeStep.delete({ where: { id } });
+    const removed = await prisma.initiativeStep.delete({ where: { id }, select: { initiativeId: true } });
+    await syncInitiativeFromSteps(removed.initiativeId);
     await revalidateOperational(charityId);
     return {};
   } catch (e) {
@@ -519,7 +572,10 @@ export async function updateStepField(id: string, field: string, value: string):
 
     const row = await prisma.initiativeStep.findUnique({
       where: { id },
-      select: { initiative: { select: { plan: { select: { charityId: true, weekCount: true } } } } },
+      select: {
+        initiativeId: true,
+        initiative: { select: { plan: { select: { charityId: true, weekCount: true } } } },
+      },
     });
     if (!row) return { error: "خطوةٌ غير موجودة" };
 
@@ -530,6 +586,7 @@ export async function updateStepField(id: string, field: string, value: string):
     if ("error" in parsed) return { error: parsed.error };
 
     await prisma.initiativeStep.update({ where: { id }, data: { [field]: parsed.value } });
+    await syncInitiativeFromSteps(row.initiativeId);
     await revalidateOperational(charityId);
     return {};
   } catch (e) {

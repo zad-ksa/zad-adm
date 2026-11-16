@@ -2,7 +2,7 @@
 
 import { useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { Building2, ExternalLink, Pencil, Plus, Search, Trash2 } from "lucide-react";
+import { Building2, ExternalLink, FileText, Pencil, Plus, Search, Trash2 } from "lucide-react";
 import {
   EmptyState,
   PageHeader,
@@ -17,7 +17,10 @@ import {
   tdClass,
   theadRowClass,
 } from "@/components/console/layout";
-import { Badge, EntityCard, MONO, btn, cx } from "@/components/console/ui";
+import { Badge, EntityCard, MONO, Spinner, btn, cx } from "@/components/console/ui";
+import { DOCX_MIME, documentFiles, safeFileName } from "@/lib/docx";
+import { donorAccountsDoc, donorAccountsFileName } from "@/lib/donorAccountsDoc";
+import { donorAccountsForDoc } from "@/app/actions/donorAccountsReport";
 import Select from "@/components/console/Select";
 import { notify } from "@/components/console/toastBus";
 import { confirmAction } from "@/components/console/confirmBus";
@@ -59,6 +62,7 @@ export default function DonorOrgsClient({
   const [, startTransition] = useTransition();
 
   const [view, setView] = useState<View>("cards");
+  const [exporting, setExporting] = useState(false);
   const [query, setQuery] = useState("");
   const [charityId, setCharityId] = useState<string>(ALL);
   const [status, setStatus] = useState<string>(ALL);
@@ -143,6 +147,47 @@ export default function DonorOrgsClient({
     })();
   };
 
+  /**
+   * تنزيل مستند الحسابات.
+   *
+   * و`JSZip` تجلب عند الضغط لا عند فتح الصفحة: مئة كيلوبايت لا تحمل على كل
+   * من يفتح صفحة الجهات ليقراها. وملف وورد مجلد مضغوط فيه XML.
+   */
+  const exportDoc = () => {
+    setExporting(true);
+    void (async () => {
+      try {
+        const result = await donorAccountsForDoc();
+        if ("error" in result) {
+          notify("error", result.error);
+          return;
+        }
+
+        const today = new Date().toISOString().slice(0, 10);
+        const { default: JSZip } = await import("jszip");
+        const zip = new JSZip();
+        for (const [path, xml] of Object.entries(documentFiles(donorAccountsDoc(result.orgs, today)))) {
+          zip.file(path, xml);
+        }
+        const blob = await zip.generateAsync({ type: "blob", mimeType: DOCX_MIME });
+
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = safeFileName(donorAccountsFileName(today));
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(url);
+
+        const accounts = result.orgs.reduce((sum, org) => sum + org.accounts.length, 0);
+        notify("ok", `نزل المستند: ${result.orgs.length} جهة و${accounts} حسابا.`);
+      } finally {
+        setExporting(false);
+      }
+    })();
+  };
+
   return (
     <div className="space-y-6" dir="rtl">
       <PageHeader
@@ -161,6 +206,18 @@ export default function DonorOrgsClient({
                 { id: "table", label: "جدول" },
               ]}
             />
+            {/* مستند وورد: جهة في كل صفحة، وحساباتها تحتها. ونطاق الرائي هو
+                نطاقه — الخادم يقرا حسابات جمعياته المسندة وحدها، ويكتب الاثر. */}
+            <button
+              type="button"
+              onClick={exportDoc}
+              disabled={exporting}
+              className={cx(btn.secondary)}
+              title="مستند وورد بحسابات الجهات — جهة في كل صفحة"
+            >
+              {exporting ? <Spinner size={14} /> : <FileText className="size-4" />}
+              حسابات الجهات (Word)
+            </button>
             <button type="button" onClick={() => setEditing("new")} className={btn.primary}>
               <Plus className="size-4" /> إضافة جهة
             </button>

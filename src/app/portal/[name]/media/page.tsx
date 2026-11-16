@@ -8,7 +8,7 @@ import { Note } from "@/components/console/ui";
 import { resolveCharityPortal } from "@/lib/portalAccess";
 import { hasCharityPermission } from "@/lib/charityPermissions";
 import { charityHasService } from "@/lib/charityServices";
-import { isMediaPlanEnabled } from "@/lib/mediaPlanToggle";
+import { isMediaPlanEnabled, readPublishingPlan } from "@/lib/mediaPlanToggle";
 import { MEDIA_FIELDS_MISSING, hasPostDetailColumns } from "@/lib/mediaPostFields";
 import { MEDIA_SERVICE } from "@/lib/mediaPlanAccess";
 import { toISODate } from "@/lib/calendarGrid";
@@ -98,7 +98,7 @@ export default async function PortalMediaPage({ params }: { params: Promise<{ na
   const from = new Date(first.getTime() - (first.getUTCDay() + 7) * 86_400_000);
   const to = new Date(from.getTime() + 55 * 86_400_000);
 
-  const [posts, platforms] = await Promise.all([
+  const [posts, platforms, publishingPlan] = await Promise.all([
     prisma.mediaPost.findMany({
       where: { charityId: charity.id, scheduledOn: { gte: from, lte: to } },
       orderBy: [{ scheduledOn: "asc" }, { scheduledAt: "asc" }],
@@ -123,6 +123,7 @@ export default async function PortalMediaPage({ params }: { params: Promise<{ na
       orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
       select: { id: true, key: true, name: true, iconKey: true, logoUrl: true, color: true, isActive: true },
     }),
+    readPublishingPlan(charity.id),
   ]);
 
   return (
@@ -135,6 +136,7 @@ export default async function PortalMediaPage({ params }: { params: Promise<{ na
         initialPosts={posts.map((p) => ({ ...p, scheduledOn: toISODate(p.scheduledOn) }))}
         platforms={platforms}
         canEdit={canEdit}
+        publishingPlan={publishingPlan}
       />
     </div>
   );

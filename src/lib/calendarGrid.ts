@@ -130,6 +130,19 @@ export function formatDateShort(value: string): string {
 }
 
 /**
+ * «الأحد ٩ نوفمبر» — اسمُ اليوم ويومُه وشهرُه بلا سنة.
+ *
+ * لصفٍّ ضيّقٍ يُقرأ بلمحة: السنةُ فيه حشوٌ، وشهرُ المعروضِ معلومٌ من ترويسة
+ * الصفحة. وأسماءُ الأيام تُمرَّر كما في أختِها، فلا تُبذَر في وحدةٍ حاسبة.
+ */
+export function formatDayMonth(value: string, weekdayLabels?: readonly string[]): string {
+  const day = parseCivilDay(value);
+  if (!day) return value;
+  const head = weekdayLabels ? `${weekdayLabels[day.getUTCDay()]} ` : "";
+  return `${head}${day.getUTCDate()} ${MONTH_NAMES[day.getUTCMonth()]}`;
+}
+
+/**
  * يومٌ بعد يومٍ بعددٍ من الأيام — نصّاً إلى نصّ.
  *
  * وبالحساب على مرسى UTC لا بـ`setDate` على تاريخٍ محلّيّ: التوقيتُ الصيفيُّ

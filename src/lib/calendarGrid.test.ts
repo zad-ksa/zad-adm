@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import { WEEKDAY_LABELS } from "./attendanceTime.ts";
 import {
   formatDateShort,
+  formatDayMonth,
   formatDateWithWeekday,
   isISODate,
   isOutOfRange,
@@ -103,4 +104,10 @@ test("weekStartISO: الأحدُ هو بدءُ الأسبوع", () => {
   assert.equal(weekStartISO("2026-11-08"), "2026-11-08"); // الأحدُ نفسُه
   assert.equal(weekStartISO("2026-11-14"), "2026-11-08"); // السبت → أحدُ أسبوعه
   assert.equal(weekStartISO("2027-01-01"), "2026-12-27"); // يعبُر السنة
+});
+
+test("formatDayMonth: يومٌ وشهرٌ بلا سنة، واسمُ اليوم إن طُلب", () => {
+  assert.equal(formatDayMonth("2026-11-09"), "9 نوفمبر");
+  assert.equal(formatDayMonth("2026-11-09", WEEKDAY_LABELS), "الإثنين 9 نوفمبر");
+  assert.equal(formatDayMonth("ليس تاريخاً"), "ليس تاريخاً");
 });

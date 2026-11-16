@@ -32,6 +32,7 @@ import {
   type RawMediaPost,
 } from "@/components/media/MediaCalendar";
 import MediaPostSheet, { type MediaPostDraft } from "@/components/media/MediaPostSheet";
+import PublishingPlan from "@/components/media/PublishingPlan";
 import MediaPostDetail, { type MediaEventRow } from "@/components/media/MediaPostDetail";
 import { WEEKDAY_LABELS } from "@/lib/attendanceTime";
 import {
@@ -54,6 +55,7 @@ import {
   getMediaPostDetail,
   listMediaPosts,
   rejectMediaEdit,
+  setCharityPublishingPlan,
   setMediaPlatformActive,
   updateMediaPost,
 } from "@/app/actions/mediaPlan";
@@ -80,12 +82,15 @@ export default function MediaPlanClient({
   today,
   initialPosts,
   platforms: initialPlatforms,
+  publishingPlan,
 }: {
   charityId: string;
   charityName: string;
   today: string;
   initialPosts: RawMediaPost[];
   platforms: MediaPlatformView[];
+  /** خطّةُ النشر المكتوبةُ لهذه الجمعية — يكتبها الموظَّفُ هنا. */
+  publishingPlan: string | null;
 }) {
   // هيئةُ العرض تبقى كما تركها صاحبُها: من يعمل بالأسبوع يفتح على الأسبوع.
   const [view, chooseView] = useStoredChoice<ViewMode>(VIEW_KEY, "month", VIEW_MODES);
@@ -206,6 +211,11 @@ export default function MediaPlanClient({
               { id: "week", label: "أسبوع" },
               { id: "list", label: "قائمة" },
             ]}
+          />
+          <PublishingPlan
+            charityName={charityName}
+            initialPlan={publishingPlan}
+            save={(text) => setCharityPublishingPlan(charityId, text)}
           />
           <button type="button" onClick={() => setManaging(true)} className={cx(btn.ghost, "h-9")}>
             <Settings2 className="size-4" />

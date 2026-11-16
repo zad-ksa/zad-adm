@@ -2,7 +2,15 @@
 
 import { useMemo } from "react";
 import Image from "next/image";
-import { CalendarDays, ChevronLeft, ChevronRight, Link2, Megaphone, Plus } from "lucide-react";
+import {
+  ChevronLeft,
+  ChevronRight,
+  Image as ImageIcon,
+  Link2,
+  Megaphone,
+  Paperclip,
+  Plus,
+} from "lucide-react";
 import { Badge, btn, cx } from "@/components/console/ui";
 import { EmptyState } from "@/components/console/layout";
 import { PlatformRow } from "@/components/console/PlatformMark";
@@ -11,7 +19,7 @@ import {
   WEEKDAY_INITIALS,
   addDaysISO,
   formatDateShort,
-  formatDateWithWeekday,
+  formatDayMonth,
   type DayCell,
 } from "@/lib/calendarGrid";
 import type { MediaAttachment } from "@/lib/mediaPostInput";
@@ -315,6 +323,17 @@ export function WeekView({
   );
 }
 
+/**
+ * القائمة — صفٌّ أفقيٌّ لكلِّ منشور.
+ *
+ * **وطولُها هو علّةُ رسمِها**: الخطّةُ عشراتُ منشوراتٍ في الشهر، وبطاقةٌ لكلِّ
+ * واحدٍ تُنزل آخرَها تحت الشاشة بمرّات. فالصفُّ سطرٌ واحد: يومُه ووقتُه وصورتُه
+ * وعنوانُه ومتنُه ومرفقاتُه ومنصّاتُه وحالتُه في **عرض** الشاشة لا في طولها، وما
+ * ضاق عنه الموضعُ يُقصّ بنقاطٍ ويُقرأ كاملاً في لوح المنشور.
+ *
+ * واليومُ في الصفِّ لا في ترويسةٍ فوق مجموعته: الترويسةُ سطرٌ زائدٌ لكلِّ يوم،
+ * وهي ما كانت تُطيل القائمة.
+ */
 export function ListView({
   posts,
   today,
@@ -333,19 +352,13 @@ export function ListView({
   /** نصُّ الفراغ — يختلف بالطرف: زادٌ يُضيف، والجمعيةُ تنتظر. */
   empty: { title: string; description: string };
 }) {
-  const days = useMemo(() => {
-    const map = new Map<string, MediaPost[]>();
-    for (const post of [...posts].sort(
-      (a, b) => a.scheduledOn.localeCompare(b.scheduledOn) || compareByTime(a, b)
-    )) {
-      const list = map.get(post.scheduledOn) ?? [];
-      list.push(post);
-      map.set(post.scheduledOn, list);
-    }
-    return [...map.entries()];
-  }, [posts]);
+  const rows = useMemo(
+    () =>
+      [...posts].sort((a, b) => a.scheduledOn.localeCompare(b.scheduledOn) || compareByTime(a, b)),
+    [posts]
+  );
 
-  if (days.length === 0) {
+  if (rows.length === 0) {
     return (
       <div className="rounded-xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900">
         <EmptyState
@@ -366,62 +379,90 @@ export function ListView({
   }
 
   return (
-    <div className="space-y-3">
-      {days.map(([day, list]) => (
-        <section
-          key={day}
-          className="rounded-xl border border-slate-200 bg-white p-3 dark:border-slate-800 dark:bg-slate-900"
-        >
-          <h2 className="mb-2 flex items-center gap-2 text-body font-semibold">
-            <CalendarDays className="size-4 text-slate-400" />
-            {formatDateWithWeekday(day, WEEKDAY_LABELS)}
-            {day === today && <Badge tone="brand">اليوم</Badge>}
-          </h2>
-          <div className="space-y-2">
-            {list.map((post) => (
+    <div className="overflow-hidden rounded-xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900">
+      <ul className="divide-y divide-slate-100 dark:divide-slate-800">
+        {rows.map((post) => {
+          const tone = statusTone(post.status, side);
+          const files = post.attachments?.length ?? 0;
+          return (
+            <li key={post.id}>
               <button
-                key={post.id}
                 type="button"
                 onClick={() => onOpen(post)}
                 className={cx(
-                  "flex w-full items-start gap-3 rounded-lg border p-2.5 text-start outline-none transition hover:shadow-sm focus-visible:ring-2 focus-visible:ring-primary/40",
-                  TONE_RING[statusTone(post.status, side)]
+                  "flex w-full flex-wrap items-center gap-x-3 gap-y-1.5 px-3 py-2 text-start outline-none transition hover:bg-slate-50 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary/40 dark:hover:bg-slate-800/40",
+                  tone === "warn" && "bg-amber-50/70 dark:bg-amber-500/10"
                 )}
               >
-                {post.imageUrl && (
+                <span
+                  className={cx(
+                    "w-28 shrink-0 text-caption font-semibold",
+                    post.scheduledOn === today ? "text-primary" : "text-slate-600 dark:text-slate-300"
+                  )}
+                >
+                  {formatDayMonth(post.scheduledOn, WEEKDAY_LABELS)}
+                </span>
+
+                <span className="w-12 shrink-0 text-caption tabular-nums text-slate-500">
+                  {post.scheduledAt ? formatTime(post.scheduledAt) : "—"}
+                </span>
+
+                {post.imageUrl ? (
                   <Image
                     src={post.imageUrl}
                     alt=""
-                    width={96}
-                    height={96}
-                    className="size-16 shrink-0 rounded-md object-cover"
+                    width={72}
+                    height={72}
+                    className="size-9 shrink-0 rounded-md object-cover"
                   />
+                ) : (
+                  <span className="grid size-9 shrink-0 place-items-center rounded-md border border-dashed border-slate-200 text-slate-300 dark:border-slate-700 dark:text-slate-600">
+                    <ImageIcon className="size-4" />
+                  </span>
                 )}
-                <span className="min-w-0 flex-1">
-                  <span className="mb-1 flex flex-wrap items-center gap-2">
-                    <Badge tone={BADGE_TONE[statusTone(post.status, side)]}>{statusLabel(post.status, side)}</Badge>
-                    {post.scheduledAt && (
-                      <span className="text-caption text-slate-500">{formatTime(post.scheduledAt)}</span>
-                    )}
+
+                {/* العنوانُ والمتنُ في سطرٍ واحد: كلاهما يُقصّ، فلا يُزيح أحدُهما الآخر. */}
+                <span className="flex min-w-0 flex-1 basis-40 items-baseline gap-2">
+                  <span className="max-w-full truncate text-meta font-semibold text-slate-800 dark:text-slate-100">
+                    {post.title || post.content}
                   </span>
-                  {post.title && (
-                    <span className="mb-0.5 block truncate text-meta font-semibold text-slate-800 dark:text-slate-100">
-                      {post.title}
-                    </span>
-                  )}
-                  <span className="line-clamp-2 block whitespace-pre-wrap text-meta leading-5 text-slate-700 dark:text-slate-200">
-                    {post.content}
-                  </span>
-                  <span className="mt-1.5 flex items-center gap-3">
-                    <PlatformRow platforms={marksOf(post.platforms)} size={14} />
-                    {post.linkUrl && <Link2 className="size-3.5 text-slate-400" />}
+                  <span className="hidden min-w-0 flex-1 truncate text-caption text-slate-500 lg:block">
+                    {post.title ? post.content : post.description || ""}
                   </span>
                 </span>
+
+                <span className="flex shrink-0 items-center gap-1.5 text-slate-400">
+                  {post.linkUrl && <Link2 className="size-3.5" />}
+                  {files > 0 && (
+                    <span className="flex items-center gap-0.5 text-caption tabular-nums">
+                      <Paperclip className="size-3.5" />
+                      {files}
+                    </span>
+                  )}
+                </span>
+
+                <span className="shrink-0">
+                  <PlatformRow platforms={marksOf(post.platforms)} size={14} max={4} />
+                </span>
+
+                <span className="flex shrink-0 items-center gap-1.5">
+                  <Badge tone={BADGE_TONE[tone]}>{statusLabel(post.status, side)}</Badge>
+                  <Mark status={post.status} side={side} />
+                </span>
               </button>
-            ))}
-          </div>
-        </section>
-      ))}
+            </li>
+          );
+        })}
+      </ul>
+
+      {onAdd && (
+        <div className="border-t border-slate-100 p-2 dark:border-slate-800">
+          <button type="button" onClick={onAdd} className={cx(btn.ghost, "h-8 w-full justify-center")}>
+            <Plus className="size-4" />
+            منشور جديد
+          </button>
+        </div>
+      )}
     </div>
   );
 }

@@ -21,6 +21,7 @@ import {
   type RawMediaPost,
 } from "@/components/media/MediaCalendar";
 import MediaPostSheet, { type MediaPostDraft } from "@/components/media/MediaPostSheet";
+import PublishingPlan from "@/components/media/PublishingPlan";
 import MediaPostDetail, { type MediaEventRow } from "@/components/media/MediaPostDetail";
 import { WEEKDAY_LABELS } from "@/lib/attendanceTime";
 import {
@@ -64,12 +65,15 @@ export default function PortalMediaClient({
   initialPosts,
   platforms,
   canEdit,
+  publishingPlan,
 }: {
   charityId: string;
   charityName: string;
   today: string;
   initialPosts: RawMediaPost[];
   platforms: MediaPlatformView[];
+  /** خطّةُ النشر كما كتبها فريقُ زاد — تُقرأ هنا ولا تُكتب. */
+  publishingPlan: string | null;
   /** «تحرير الخطة الإعلامية» — وبغيرها اطّلاعٌ محض. */
   canEdit: boolean;
 }) {
@@ -158,6 +162,7 @@ export default function PortalMediaClient({
 
         <div className="flex flex-wrap items-center gap-2">
           {canEdit && waiting > 0 && <Badge tone="warn">{waiting} منشورٌ ينتظر اعتمادَكم</Badge>}
+          <PublishingPlan charityName={charityName} initialPlan={publishingPlan} />
           <Segmented
             label="طريقة العرض"
             value={view}

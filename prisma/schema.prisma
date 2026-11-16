@@ -48,6 +48,13 @@ model Charity {
   /// تصير جاهزةً — وهو وحدَه مَن يُشعله، فالجمعيةُ لا تفتح على نفسها تبويباً.
   mediaPlanEnabled Boolean @default(false)
 
+  /// خطّةُ النشر لهذه الجمعية — نصٌّ يكتبه فريقُ زادٍ وتقرؤه الجمعيةُ فوق تقويمها.
+  ///
+  /// وهي غيرُ المنشورات: تلك مواعيدُ ومتونٌ تُعتمد منشوراً منشوراً، وهذه قولُ
+  /// الفريقِ في منهج الشهر — على أيِّ المنصّات، وبأيِّ وتيرةٍ، ولأيِّ غرض. ومحلُّها
+  /// صفُّ الجمعية لا صفُّ المنشور: واحدةٌ لا تتكرّر مع كلِّ يوم.
+  publishingPlan String?
+
   // Timeline Configurations
   strategyTimelineName String? @default("التخطيط الاستراتيجي")
   strategyTimelineDept String? @default("STRATEGY")

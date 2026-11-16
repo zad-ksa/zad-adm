@@ -11,7 +11,7 @@ import MediaPlanClient from "./MediaPlanClient";
 import CharityAccounts from "./CharityAccounts";
 import CharitySwitcher from "./CharitySwitcher";
 import MediaPlanToggle from "./MediaPlanToggle";
-import { isMediaPlanEnabled } from "@/lib/mediaPlanToggle";
+import { isMediaPlanEnabled, readPublishingPlan } from "@/lib/mediaPlanToggle";
 import { MEDIA_FIELDS_MISSING, hasPostDetailColumns } from "@/lib/mediaPostFields";
 import { Note } from "@/components/console/ui";
 
@@ -68,7 +68,7 @@ export default async function MediaPlanPage({ params }: { params: Promise<{ name
     );
   }
 
-  const [posts, platforms, accounts, planEnabled] = await Promise.all([
+  const [posts, platforms, accounts, planEnabled, publishingPlan] = await Promise.all([
     prisma.mediaPost.findMany({
       where: { charityId: charity.id, scheduledOn: { gte: from, lte: to } },
       orderBy: [{ scheduledOn: "asc" }, { scheduledAt: "asc" }],
@@ -96,6 +96,7 @@ export default async function MediaPlanPage({ params }: { params: Promise<{ name
       select: { platformKey: true, url: true },
     }),
     isMediaPlanEnabled(charity.id),
+    readPublishingPlan(charity.id),
   ]);
 
   return (
@@ -138,6 +139,7 @@ export default async function MediaPlanPage({ params }: { params: Promise<{ name
         today={toISODate(new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate())))}
         initialPosts={posts.map((p) => ({ ...p, scheduledOn: toISODate(p.scheduledOn) }))}
         platforms={platforms}
+        publishingPlan={publishingPlan}
       />
     </div>
   );

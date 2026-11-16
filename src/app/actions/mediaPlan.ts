@@ -23,6 +23,7 @@ import {
   snapshotOfRow as snapshotOf,
   type MediaPostFields,
 } from "@/lib/mediaPostInput";
+import { publishingPlanValue } from "@/lib/publishingPlan";
 import { mediaNotice, portalMediaLink } from "@/lib/mediaPlanNotices";
 import { notifyCharityMembers } from "@/lib/notifyInbox";
 import { logAudit } from "@/lib/auditLog";
@@ -575,4 +576,52 @@ export async function setCharityMediaPlanEnabled(charityId: string, enabled: boo
   revalidateCharity(charity.name);
   revalidatePath(`/portal/${encodeURIComponent(charity.name)}/media`);
   return { success: true };
+}
+
+/**
+ * كتابةُ خطّة النشر لجمعية — من زادٍ وحدَها.
+ *
+ * والجمعيةُ تقرؤها ولا تكتبها: هي قولُ الفريقِ في منهج النشر، كما أنّ المنشورَ
+ * يضعه زادٌ وتعتمده الجمعية. فحارسُها حارسُ الصفحة نفسُه
+ * (`mayManageCharityMedia`): الصلاحيةُ والإسنادُ والخدمة.
+ *
+ * ويُكتب في سجلّ التدقيق بطول ما كُتب لا بمتنِه: المتنُ يُقرأ في الصفحة، والسجلُّ
+ * يُجيب «متى تغيّرت ومَن غيّرها».
+ */
+export async function setCharityPublishingPlan(charityId: string, text: string) {
+  const session = await requireMediaSession();
+  if (!session) return { error: "غير مصرح" };
+  if (!(await mayManageCharityMedia(session, charityId))) {
+    return { error: "لا صلاحية لك على الخطة الإعلامية لهذه الجمعية" };
+  }
+
+  const charity = await prisma.charity.findUnique({
+    where: { id: charityId },
+    select: { name: true },
+  });
+  if (!charity) return { error: "الجمعية غير موجودة" };
+
+  const value = publishingPlanValue(text);
+
+  try {
+    await prisma.charity.update({ where: { id: charityId }, data: { publishingPlan: value } });
+  } catch (error) {
+    console.error("setCharityPublishingPlan", error);
+    // والسببُ الأغلب: العمودُ لم يُنشأ بعد. ويُقال صريحاً لا «حدث خطأ».
+    return { error: "تعذر الحفظ — لم يطبق prisma/sql/media-publishing-plan.sql بعد" };
+  }
+
+  await logAudit({
+    actorType: "EMPLOYEE",
+    actorId: session.id,
+    actorName: session.name ?? null,
+    action: "UPDATE",
+    targetType: "Charity",
+    targetId: charityId,
+    metadata: { charity: charity.name, publishingPlan: value ? value.length : 0 },
+  });
+
+  revalidateCharity(charity.name);
+  revalidatePath(`/portal/${encodeURIComponent(charity.name)}/media`);
+  return { success: true, plan: value };
 }

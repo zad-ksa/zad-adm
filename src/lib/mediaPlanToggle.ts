@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/db";
+import { publishingPlanValue } from "@/lib/publishingPlan";
 
 /**
  * هل فُعِّل تبويبُ «الخطة الإعلامية» في بوّابة هذه الجمعية؟
@@ -23,5 +24,29 @@ export async function isMediaPlanEnabled(charityId: string): Promise<boolean> {
     // تُسقط البوّابةَ على كلِّ جمعية.
     console.error("isMediaPlanEnabled", error);
     return true;
+  }
+}
+
+/**
+ * خطّةُ النشر المكتوبةُ لهذه الجمعية — أو `null` إن لم تُكتب بعد.
+ *
+ * وهنا لا في الصفحتين: تقرؤها صفحةُ زادٍ لتُعرض في صندوق الكتابة، وصفحةُ
+ * الجمعية لتُعرض قراءةً — ونصٌّ يُقرأ في موضعين بحارسَين مختلفين يُقرأ من دالّةٍ
+ * واحدة.
+ *
+ * **وتسقط إلى `null` لا إلى عطب**: العمودُ قد لا يكون أُنشئ بعد
+ * (`prisma/sql/media-publishing-plan.sql`)، وخطّةٌ لم تُكتب وخطّةٌ لم يُهاجَر
+ * عمودُها سواءٌ في المعروض — وهو أهونُ من صفحةٍ تسقط كلُّها.
+ */
+export async function readPublishingPlan(charityId: string): Promise<string | null> {
+  try {
+    const row = await prisma.charity.findUnique({
+      where: { id: charityId },
+      select: { publishingPlan: true },
+    });
+    return publishingPlanValue(row?.publishingPlan);
+  } catch (error) {
+    console.error("readPublishingPlan", error);
+    return null;
   }
 }

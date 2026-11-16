@@ -33,7 +33,7 @@ import {
 } from "@/components/media/MediaCalendar";
 import MediaPostSheet, { type MediaPostDraft } from "@/components/media/MediaPostSheet";
 import PublishingPlan from "@/components/media/PublishingPlan";
-import MediaPostDetail, { type MediaEventRow } from "@/components/media/MediaPostDetail";
+import MediaPostDetail, { type MediaPendingBaseView } from "@/components/media/MediaPostDetail";
 import { WEEKDAY_LABELS } from "@/lib/attendanceTime";
 import {
   addDaysISO,
@@ -44,7 +44,7 @@ import {
   shiftMonth,
   weekStartISO,
 } from "@/lib/calendarGrid";
-import { MEDIA_STATUS, can, requiresNote } from "@/lib/mediaPlan";
+import { MEDIA_STATUS, can } from "@/lib/mediaPlan";
 import { uploadFile } from "@/lib/clientUpload";
 import { ACCEPT_IMAGES } from "@/lib/uploadPurposes";
 import {
@@ -286,19 +286,10 @@ export default function MediaPlanClient({
           day={form.day}
           post={form.post}
           platforms={platforms.filter((p) => p.isActive || form.post?.platforms.includes(p.key))}
-          note={
-            form.post && requiresNote("EDIT", form.post.status, "ZAD")
-              ? {
-                  required: true,
-                  label: "سبب التعديل",
-                  hint: "يُعرض على الجمعية مع طلب اعتمادها من جديد",
-                }
-              : undefined
-          }
           banner={
-            form.post && requiresNote("EDIT", form.post.status, "ZAD") ? (
+            form.post?.status === MEDIA_STATUS.FINAL ? (
               <Note tone="warn">
-                هذا المنشور معتمَدٌ من الجمعية. تعديلُه يُعيده إلى اعتمادها ويُعرض عليها سببُك.
+                هذا المنشور معتمد من الطرفين. تعديله يعرض على الجمعية للاعتماد، ويبقى المعتمد ظاهرا لها مشطوبا حتى تقرر.
               </Note>
             ) : undefined
           }
@@ -365,9 +356,8 @@ function ZadDetailSheet({
   onChanged: () => void;
 }) {
   const [post, setPost] = useState<MediaPost | null>(null);
-  const [events, setEvents] = useState<MediaEventRow[]>([]);
+  const [base, setBase] = useState<MediaPendingBaseView | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [reason, setReason] = useState("");
   const [pending, start] = useTransition();
   const [loads, setLoads] = useState(0);
 
@@ -382,7 +372,7 @@ function ZadDetailSheet({
       }
       if ("post" in result && result.post) {
         setPost(normalizePost(result.post));
-        setEvents(result.events ?? []);
+        setBase(result.base ?? null);
       }
     })();
     return () => {
@@ -404,7 +394,9 @@ function ZadDetailSheet({
     });
   };
 
-  const pendingEdit = post?.status === MEDIA_STATUS.PENDING_ZAD;
+  const baseKind = base?.kind ?? null;
+  const may = (action: "EDIT" | "DELETE" | "CERTIFY" | "REJECT") =>
+    !!post && can(action, post.status, "ZAD", baseKind);
 
   return (
     <Sheet
@@ -418,13 +410,13 @@ function ZadDetailSheet({
           <button type="button" onClick={onClose} className={btn.ghost}>
             إغلاق
           </button>
-          {post && can("EDIT", post.status, "ZAD") && (
+          {post && may("EDIT") && (
             <button type="button" onClick={() => onEdit(post)} className={cx(btn.ghost, "h-9")}>
               <Pencil className="size-3.5" />
               تعديل
             </button>
           )}
-          {post && can("DELETE", post.status, "ZAD") && (
+          {post && may("DELETE") && (
             <button
               type="button"
               onClick={() => onDelete(post)}
@@ -435,15 +427,26 @@ function ZadDetailSheet({
               حذف
             </button>
           )}
-          {pendingEdit && (
+          {post && may("REJECT") && (
             <button
               type="button"
-              onClick={() => act(() => certifyMediaPost(post!.id), "عُمِّد التعديل")}
+              onClick={() => act(() => rejectMediaEdit(post.id), "رُدّ التعديل وعاد النص الأصلي")}
+              className={cx(btn.ghost, "h-9")}
+              disabled={pending}
+            >
+              <Undo2 className="size-3.5" />
+              رد للأصل
+            </button>
+          )}
+          {post && may("CERTIFY") && (
+            <button
+              type="button"
+              onClick={() => act(() => certifyMediaPost(post.id), "اعتُمد التعديل")}
               className={btn.primary}
               disabled={pending}
             >
               {pending ? <Spinner size={14} /> : <Check className="size-4" />}
-              تعميد التعديل
+              اعتماد التعديل
             </button>
           )}
         </FooterStatus>
@@ -454,31 +457,7 @@ function ZadDetailSheet({
           <Spinner size={18} />
         </div>
       ) : (
-        <MediaPostDetail post={post} events={events} side="ZAD" platformName={platformName} marksOf={marksOf}>
-          {pendingEdit && (
-            <div className="space-y-2 rounded-lg border border-amber-200 bg-amber-50/60 p-3 dark:border-amber-500/30 dark:bg-amber-500/10">
-              <p className="text-meta font-semibold text-amber-800 dark:text-amber-300">
-                عدّلت الجمعيةُ المنشور — عمِّدْ تعديلَها أو ردَّه بسبب.
-              </p>
-              <textarea
-                value={reason}
-                onChange={(e) => setReason(e.target.value)}
-                rows={2}
-                placeholder="سببُ الردّ (يُعرض على الجمعية)"
-                className={cx(field, "resize-y leading-6")}
-              />
-              <button
-                type="button"
-                onClick={() => act(() => rejectMediaEdit(post.id, reason), "رُدَّ التعديل واستُعيد النصُّ السابق")}
-                className={cx(btn.ghost, "h-9")}
-                disabled={pending}
-              >
-                <Undo2 className="size-3.5" />
-                ردُّ التعديل
-              </button>
-            </div>
-          )}
-        </MediaPostDetail>
+        <MediaPostDetail post={post} base={base} side="ZAD" platformName={platformName} marksOf={marksOf} />
       )}
     </Sheet>
   );

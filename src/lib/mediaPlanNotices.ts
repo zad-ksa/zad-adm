@@ -45,16 +45,18 @@ const TO: Record<MediaEventKind, NoticeSide | null> = {
   CERTIFIED_BY_ZAD: "CHARITY",
   APPROVED_BY_CHARITY: "ZAD",
   EDITED_BY_CHARITY: "ZAD",
+  REJECTED_BY_CHARITY: "ZAD",
 };
 
 const TITLES: Record<MediaEventKind, string> = {
   CREATED: "منشور جديد بانتظار اعتمادكم",
   EDITED_BY_ZAD: "تم تعديل منشور وهو بانتظار اعتمادكم",
-  REOPENED_BY_ZAD: "تم فتح منشور معتمد وهو بانتظار اعتمادكم",
+  REOPENED_BY_ZAD: "عدل زاد منشورا معتمدا وهو بانتظار اعتمادكم",
   REJECTED_BY_ZAD: "تم رد تعديلكم على منشور",
-  CERTIFIED_BY_ZAD: "تم اعتماد تعديلكم — المنشور نهائي",
+  CERTIFIED_BY_ZAD: "اعتمد زاد تعديلكم — المنشور معتمد",
   APPROVED_BY_CHARITY: "اعتمدت الجمعية المنشور",
   EDITED_BY_CHARITY: "عدلت الجمعية منشورا — بانتظار اعتمادك",
+  REJECTED_BY_CHARITY: "ردت الجمعية تعديلك على منشور",
 };
 
 function dayText(day: string): string {

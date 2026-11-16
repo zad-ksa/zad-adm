@@ -191,3 +191,106 @@ export function snapshotOfRow(row: {
     scheduledAt: row.scheduledAt,
   };
 }
+
+// ── أصلُ التعديل المعلَّق ────────────────────────────────────────────────────
+
+/**
+ * أصلُ التعديل المعلَّق كما يُحفظ في `MediaPost.baseline`: حقولُ المنشور كاملةً
+ * — بمرفقاتها ومعرّف صورتها — كي يُردَّ إليها، ونوعُه كي يُعرف ما يعود إليه.
+ */
+export type StoredBaseline = {
+  kind: "FINAL" | "DRAFT";
+  title: string | null;
+  content: string;
+  description: string | null;
+  platforms: string[];
+  scheduledOn: string;
+  scheduledAt: string | null;
+  linkUrl: string | null;
+  imageUrl: string | null;
+  imagePublicId: string | null;
+  attachments: MediaAttachment[];
+};
+
+type PostRow = {
+  title?: string | null;
+  content: string;
+  description?: string | null;
+  platforms: string[];
+  imageUrl: string | null;
+  imagePublicId?: string | null;
+  linkUrl: string | null;
+  attachments?: unknown;
+  scheduledOn: Date;
+  scheduledAt: string | null;
+};
+
+/** التقاطُ المنشور الحاضر أصلاً. */
+export function baselineOfRow(row: PostRow, kind: "FINAL" | "DRAFT"): StoredBaseline {
+  return {
+    kind,
+    title: row.title ?? null,
+    content: row.content,
+    description: row.description ?? null,
+    platforms: row.platforms,
+    scheduledOn: toISODate(row.scheduledOn),
+    scheduledAt: row.scheduledAt,
+    linkUrl: row.linkUrl,
+    imageUrl: row.imageUrl,
+    imagePublicId: row.imagePublicId ?? null,
+    attachments: parseAttachments(row.attachments),
+  };
+}
+
+/** الأصلُ كما يُقرأ من القاعدة، أو لا شيء إن لم يصلح. */
+export function parseBaseline(value: unknown): StoredBaseline | null {
+  if (!value || typeof value !== "object") return null;
+  const bag = value as Record<string, unknown>;
+  if (typeof bag.content !== "string" || typeof bag.scheduledOn !== "string") return null;
+  if (!dayValue(bag.scheduledOn)) return null;
+  const text = (v: unknown) => (typeof v === "string" && v ? v : null);
+  return {
+    kind: bag.kind === "FINAL" ? "FINAL" : "DRAFT",
+    title: text(bag.title),
+    content: bag.content,
+    description: text(bag.description),
+    platforms: Array.isArray(bag.platforms) ? bag.platforms.map(String) : [],
+    scheduledOn: bag.scheduledOn,
+    scheduledAt: text(bag.scheduledAt),
+    linkUrl: text(bag.linkUrl),
+    imageUrl: text(bag.imageUrl),
+    imagePublicId: text(bag.imagePublicId),
+    attachments: parseAttachments(bag.attachments),
+  };
+}
+
+/** حقولُ المنشور التي يُردُّ إليها عند ردِّ التعديل. */
+export function restoreFromBaseline(base: StoredBaseline) {
+  return {
+    title: base.title,
+    content: base.content,
+    description: base.description,
+    platforms: base.platforms,
+    scheduledOn: dayValue(base.scheduledOn)!,
+    scheduledAt: base.scheduledAt,
+    linkUrl: base.linkUrl,
+    imageUrl: base.imageUrl,
+    imagePublicId: base.imagePublicId,
+    attachments: base.attachments,
+  };
+}
+
+/** لقطةُ المقارنة من الأصل — لتُعرض الفروقُ مقابل الحاضر. */
+export function snapshotOfBaseline(base: StoredBaseline): MediaSnapshot {
+  return {
+    title: base.title,
+    content: base.content,
+    description: base.description,
+    platforms: base.platforms,
+    imageUrl: base.imageUrl,
+    linkUrl: base.linkUrl,
+    attachments: base.attachments.map((file) => file.name || file.url),
+    scheduledOn: base.scheduledOn,
+    scheduledAt: base.scheduledAt,
+  };
+}

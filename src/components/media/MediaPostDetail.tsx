@@ -1,15 +1,15 @@
 "use client";
 
 import Image from "next/image";
-import { Link2, ListOrdered, Paperclip } from "lucide-react";
+import { GitCompare, Link2, Paperclip } from "lucide-react";
 import { Badge } from "@/components/console/ui";
 import HashtagText from "@/components/console/HashtagText";
 import { PlatformRow } from "@/components/console/PlatformMark";
-import { formatDateShort } from "@/lib/calendarGrid";
 import {
+  MEDIA_STATUS,
   diffSnapshots,
-  eventLabel,
   formatTime,
+  waitingOn,
   statusLabel,
   statusTone,
   type MediaSnapshot,
@@ -18,28 +18,19 @@ import {
 import { BADGE_TONE, type MarksOf, type MediaPost } from "./MediaCalendar";
 
 /**
- * متنُ لوحِ المنشور وسجلُّه — ما يراه الطرفان سواءً.
+ * متنُ لوحِ المنشور — ما يراه الطرفان سواءً.
  *
- * **والسجلُّ هو «ويظهر التعديلات التي تمت»**: كلُّ حدثٍ يحمل لقطةَ ما كان قبله،
- * فيُقابَل بما بعده — ولقطةُ الحدث الأحدث منه هي «ما بعده»، وآخرُ الأحداث
- * يُقابَل بالمنشور نفسِه. فيُقرأ الفرقُ حقلاً حقلاً بلا حقلٍ ثالثٍ يُخزَّن.
+ * **ولا سجلَّ يُعرض**: يُعرض التعديلُ المعلَّق وحدَه مقابل أصله — ما حُذف
+ * مشطوباً وما حلّ محلّه — ويُمحى باعتماده أو ردِّه. فلا يقرأ أحدٌ إلا ما ينتظر
+ * قراره.
  *
  * وأزرارُ الفعل ليست هنا: لكلِّ طرفٍ أفعالُه وحارسُها، فتُمرَّر في `children`
  * أو في تذييل اللوح الذي يحتضن هذا المتن.
  */
 
-export type MediaEventRow = {
-  id: string;
-  kind: string;
-  actorSide: string;
-  actorName: string | null;
-  note: string | null;
-  at: string;
-  before: MediaSnapshot | null;
-};
+/** أصلُ التعديل المعلَّق: نوعُه ولقطتُه. */
+export type MediaPendingBaseView = { kind: "FINAL" | "DRAFT"; snapshot: MediaSnapshot };
 
-/** لقطةُ المنشور الحاضر — بحقولها كلِّها كما تلتقطها الأفعالُ (`snapshotOfRow`)،
- * وإلّا قُوبل آخرُ حدثٍ بلقطةٍ ناقصةٍ فظهر ما لم يُلتقط كأنّه حُذف. */
 function snapshotOf(post: MediaPost): MediaSnapshot {
   return {
     title: post.title ?? null,
@@ -56,27 +47,27 @@ function snapshotOf(post: MediaPost): MediaSnapshot {
 
 export default function MediaPostDetail({
   post,
-  events,
+  base,
   side,
   platformName,
   marksOf,
   children,
 }: {
   post: MediaPost;
-  events: MediaEventRow[];
+  base: MediaPendingBaseView | null;
   side: Side;
   platformName: (key: string) => string;
   marksOf: MarksOf;
   /** صندوقُ الفعل الخاصُّ بالطرف — يُعرض قبل السجلّ. */
   children?: React.ReactNode;
 }) {
-  const changesOf = (index: number) => {
-    const before = events[index]?.before;
-    if (!before) return [];
-    const after = index === 0 ? snapshotOf(post) : events[index - 1].before;
-    if (!after) return [];
-    return diffSnapshots(before, after, platformName);
-  };
+  // الفروقُ بين الأصل والحاضر — ولا شيءَ في معتمدٍ أو جديدٍ لا أصلَ له.
+  const changes =
+    base && post.status !== MEDIA_STATUS.FINAL
+      ? diffSnapshots(base.snapshot, snapshotOf(post), platformName)
+      : [];
+  const awaited = waitingOn(post.status);
+  const other = side === "ZAD" ? "الجمعية" : "زاد";
 
   return (
     <div className="space-y-4">
@@ -162,51 +153,35 @@ export default function MediaPostDetail({
 
       {children}
 
-      <section className="space-y-2">
-        <h3 className="flex items-center gap-2 text-meta font-semibold text-slate-600 dark:text-slate-300">
-          <ListOrdered className="size-3.5 text-slate-400" />
-          السجلّ
-        </h3>
-        <ol className="space-y-2">
-          {events.map((event, index) => {
-            const changes = changesOf(index);
-            return (
-              <li key={event.id} className="rounded-lg border border-slate-200 p-2.5 dark:border-slate-800">
-                <div className="flex flex-wrap items-center justify-between gap-2">
-                  <span className="text-meta font-medium text-slate-700 dark:text-slate-200">
-                    {eventLabel(event.kind)}
-                    {/* اسمُ موظَّف زادٍ لا يُعرض: الفعلُ فعلُ «زاد»، والطرفُ وحدَه هو ما يُهمّ. */}
-                    {event.actorName && event.actorSide !== "ZAD" ? ` — ${event.actorName}` : ""}
-                  </span>
-                  <span className="text-caption text-slate-400">{formatDateShort(event.at.slice(0, 10))}</span>
-                </div>
-                {event.note && <p className="mt-1 text-caption text-slate-500 dark:text-slate-400">{event.note}</p>}
-                {changes.length > 0 && (
-                  <dl className="mt-2 space-y-1">
-                    {changes.map((change) => (
-                      <div key={change.field} className="text-caption">
-                        <dt className="font-semibold text-slate-500">{change.label}</dt>
-                        {change.hunks ? (
-                          <dd className="space-y-1.5">
-                            {change.hunks.map((hunk, h) => (
-                              <HunkView key={h} hunk={hunk} />
-                            ))}
-                          </dd>
-                        ) : (
-                          <dd className="flex flex-wrap items-center gap-2">
-                            <span className={REMOVED}>{change.before}</span>
-                            <span className={ADDED}>{change.after}</span>
-                          </dd>
-                        )}
-                      </div>
+      {changes.length > 0 && (
+        <section className="space-y-2 rounded-lg border border-amber-200 bg-amber-50/50 p-3 dark:border-amber-500/30 dark:bg-amber-500/10">
+          <h3 className="flex items-center gap-2 text-meta font-semibold text-amber-800 dark:text-amber-300">
+            <GitCompare className="size-3.5" />
+            {awaited === side
+              ? `${side === "ZAD" ? "عدلت الجمعية" : "عدل زاد"} المنشور — المشطوب هو النص قبل التعديل`
+              : `${side === "ZAD" ? "تعديلاتك" : "تعديلاتكم"} بانتظار اعتماد ${other}`}
+          </h3>
+          <dl className="space-y-2">
+            {changes.map((change) => (
+              <div key={change.field} className="text-caption">
+                <dt className="mb-1 font-semibold text-slate-500">{change.label}</dt>
+                {change.hunks ? (
+                  <dd className="space-y-1.5">
+                    {change.hunks.map((hunk, h) => (
+                      <HunkView key={h} hunk={hunk} />
                     ))}
-                  </dl>
+                  </dd>
+                ) : (
+                  <dd className="flex flex-wrap items-center gap-2">
+                    <span className={REMOVED}>{change.before}</span>
+                    <span className={ADDED}>{change.after}</span>
+                  </dd>
                 )}
-              </li>
-            );
-          })}
-        </ol>
-      </section>
+              </div>
+            ))}
+          </dl>
+        </section>
+      )}
     </div>
   );
 }

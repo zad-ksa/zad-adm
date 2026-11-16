@@ -1,16 +1,15 @@
 /**
  * دورةُ المنشور في الخطّة الإعلاميّة — خالصةً، بلا قاعدةٍ ولا شاشة.
  *
- * والدورةُ كما ضبطها صاحبُ الموقع:
+ * والدورةُ كما ضبطها صاحبُ الموقع (تفصيلُها عند `allowedActions`):
  *
- *     زادٌ يضع ──→ [ينتظر الجمعية] ──┬── تعتمد ──────────→ [نهائيّ]
- *                                    └── تعدّل ──→ [ينتظر زاد] ──┬── يعمّد ──→ [نهائيّ]
- *                                                                └── يردّ بسببٍ ──→ [ينتظر الجمعية]
+ *     زادٌ يضع ──→ [ينتظر الجمعية] ──┬── تعتمد ─────────────→ [معتمد]
+ *                                    └── تعدّل ──→ [ينتظر زاد] ──┬── يعتمد ──→ [معتمد]
+ *                                                                └── يردّ ──→ [ينتظر الجمعية]
  *
- *     و[نهائيّ] ──→ يعدّله زادٌ **بسبب** ──→ [ينتظر الجمعية] + تنبيهٌ لها.
+ *     و[معتمد] ──→ يعدّله أيُّ الطرفين ──→ ينتظر الآخر: يعتمد، أو يردّ فيعود معتمداً.
  *
- * فالنهائيُّ مقفولٌ على الجمعية ومفتوحٌ لزادٍ وحدَه، وكلُّ فتحةٍ منه تُسبَّب
- * وتعود إلى اعتماد الجمعية: لا يُنشر باسم الجمعية ما لم ترَه.
+ * ولا سجلَّ يُعرض: يُعرض التعديلُ المعلَّق وحدَه مقابل أصله، ويُمحى باعتماده.
  *
  * **وموضعُ القرار واحدٌ**: `allowedActions` وحدَها تقول من يفعل ماذا ومتى،
  * فتقرؤها الشاشةُ لتعرض، ويقرؤها الحارسُ ليُجيز. وكانت هذه قسمةَ العطب في
@@ -25,7 +24,7 @@ export const MEDIA_STATUS = {
   PENDING_CHARITY: "PENDING_CHARITY",
   /** عدّلته الجمعيةُ، ينتظر تعميد زاد. */
   PENDING_ZAD: "PENDING_ZAD",
-  /** نهائيٌّ: مقفولٌ على الجمعية، ولا يفتحه زادٌ إلا بسبب. */
+  /** معتمدٌ من الطرفين. ويعدّله أيُّهما فينتظر الآخر. */
   FINAL: "FINAL",
 } as const;
 
@@ -48,121 +47,166 @@ export function toStatus(value: unknown): MediaStatus {
 export type Side = "ZAD" | "CHARITY";
 
 /**
- * وسم الحالة لكل جهة: الجمعية تقرأ «بانتظار اعتمادكم»، وزاد يقرأ «بانتظار
+ * وسمُ الحالة لكل جهة: الجمعية تقرأ «بانتظار اعتمادكم»، وزاد يقرأ «بانتظار
  * اعتماد الجمعية».
  *
  * وبلا تشكيل: ما يقرؤه المستخدم يكتب كما يكتب الناس.
  */
 export function statusLabel(status: MediaStatus, side: Side): string {
-  if (status === MEDIA_STATUS.FINAL) return "معتمد نهائيا";
+  if (status === MEDIA_STATUS.FINAL) return "معتمد من الجمعية ومن زاد";
   if (status === MEDIA_STATUS.PENDING_CHARITY) {
     return side === "CHARITY" ? "بانتظار اعتمادكم" : "بانتظار اعتماد الجمعية";
   }
-  return side === "ZAD" ? "تم تعديله، بانتظار اعتمادك" : "تم تعديله، بانتظار اعتماد زاد";
+  return side === "ZAD" ? "عدلته الجمعية، بانتظار اعتمادك" : "بانتظار اعتماد زاد";
 }
 
-/** اللونُ معنىً لا زينة: كهرمانيٌّ لما ينتظر فعلَ قارئه، وأخضرُ للنهائيّ. */
+/** اللونُ معنىً لا زينة: كهرمانيٌّ لما ينتظر فعلَ قارئه، وأخضرُ للمعتمد. */
 export type MediaTone = "neutral" | "warn" | "good";
 
 export function statusTone(status: MediaStatus, side: Side): MediaTone {
   if (status === MEDIA_STATUS.FINAL) return "good";
-  const waitingOnMe =
-    (status === MEDIA_STATUS.PENDING_CHARITY && side === "CHARITY") ||
-    (status === MEDIA_STATUS.PENDING_ZAD && side === "ZAD");
-  return waitingOnMe ? "warn" : "neutral";
+  return waitingOn(status) === side ? "warn" : "neutral";
+}
+
+/** من ينتظره المنشور — أو لا أحد إن كان معتمداً. */
+export function waitingOn(status: MediaStatus): Side | null {
+  if (status === MEDIA_STATUS.PENDING_CHARITY) return "CHARITY";
+  if (status === MEDIA_STATUS.PENDING_ZAD) return "ZAD";
+  return null;
 }
 
 /**
  * وسمٌ قصيرٌ على بطاقة المنشور في التقويم لمن ينتظره فعلٌ منه — أو لا وسم.
- *
- * وهو «تنبيهُ المنشور» الذي طُلب: الجمعيةُ ترى ما ينتظر اعتمادَها، وزادٌ يرى ما
- * عُدِّل وينتظر تعميدَه. والوسمُ لجهةٍ واحدةٍ في الحالة الواحدة: منشورٌ ينتظر
- * الجمعيةَ لا يُوسَم عند زاد، وإلّا صار الوسمُ لوناً على كلِّ بطاقة.
  */
 export function attentionMark(status: MediaStatus, side: Side): string | null {
-  if (side === "CHARITY") {
-    return status === MEDIA_STATUS.PENDING_CHARITY ? "للاعتماد" : null;
-  }
-  return status === MEDIA_STATUS.PENDING_ZAD ? "معدل" : null;
+  if (waitingOn(status) !== side) return null;
+  return side === "CHARITY" ? "للاعتماد" : "معدل";
 }
+
+/**
+ * أصلُ التعديل المعلَّق — النسخةُ التي يُقارَن بها ويُرَدّ إليها:
+ *   `FINAL`  نسخةٌ اعتمدها الطرفان، فالردُّ يُعيده معتمداً.
+ *   `DRAFT`  ما وضعه زادٌ ولم تعتمده الجمعيةُ بعد، فعدّلته — والردُّ يُعيده
+ *            إلى انتظار اعتمادها.
+ *   `null`   لا تعديلَ معلَّق: منشورٌ جديدٌ من زاد، أو معتمد.
+ */
+export type BaseKind = "FINAL" | "DRAFT" | null;
 
 /** الأفعالُ على المنشور. */
 export type MediaAction =
-  /** اعتماد الجمعية لما وضعه زاد. */
+  /** اعتمادُ الجمعية لما ينتظرها. */
   | "APPROVE"
-  /** تعديلٌ على المتن أو المنصّات أو الصورة أو الرابط أو الموعد. */
+  /** تعديلٌ على أيِّ حقلٍ من حقول المنشور. */
   | "EDIT"
-  /** تعميدُ زادٍ لتعديل الجمعية. */
+  /** اعتمادُ زادٍ لما ينتظره. */
   | "CERTIFY"
-  /** ردُّ زادٍ لتعديل الجمعية، واستعادةُ ما كان. */
+  /** ردُّ تعديل الطرف الآخر إلى أصله. */
   | "REJECT"
   | "DELETE";
 
 /**
  * ما يجوز لهذه الجهة في هذه الحالة — ولا جواب غير هذا في الموقع كلِّه.
  *
- * والحذفُ لزادٍ وحدَه، وفي غير النهائيّ: منشورٌ اعتمدته الجمعيةُ ثم اختفى بلا
- * أثرٍ أسوأُ من منشورٍ يُفتح بسببٍ مكتوب.
- */
-export function allowedActions(status: MediaStatus, side: Side): MediaAction[] {
-  if (side === "CHARITY") {
-    // النهائيُّ مقفولٌ عليها، وما ينتظر تعميدَ زادٍ تعديلُها هي — فلا تُعدِّله
-    // مرّةً أخرى حتى يُبتَّ فيه، وإلّا فُرِّق الفرقُ الذي يقرؤه زاد.
-    return status === MEDIA_STATUS.PENDING_CHARITY ? ["APPROVE", "EDIT"] : [];
-  }
-  if (status === MEDIA_STATUS.PENDING_ZAD) return ["CERTIFY", "REJECT", "EDIT", "DELETE"];
-  if (status === MEDIA_STATUS.FINAL) return ["EDIT"];
-  return ["EDIT", "DELETE"];
-}
-
-export function can(action: MediaAction, status: MediaStatus, side: Side): boolean {
-  return allowedActions(status, side).includes(action);
-}
-
-/**
- * متى يلزم السبب؟
+ * والدورةُ كما ضبطها صاحبُ الموقع:
+ *   - زادٌ يضع المنشور، فتعتمده الجمعيةُ أو تعدّله.
+ *   - التعديلُ يعرض على الطرف الآخر مقابل أصله؛ فيعتمده أو يردّه إلى أصله.
+ *     **ولا يعدّل فوق تعديل غيره**: يقبل أو يردّ، ثمّ يعدّل إن شاء.
+ *   - ومن عدّل يعدّل ما شاء قبل أن يُبَتّ في تعديله: كلُّه طلبٌ واحدٌ يقارن
+ *     بالأصل نفسه.
+ *   - والمعتمدُ يعدّله أيُّ الطرفين، فينتظر اعتمادَ الآخر.
  *
- * ردُّ زادٍ لتعديل الجمعية، وفتحُه منشوراً نهائيّاً. وفي الحالتين تُحرَم الجمعيةُ
- * شيئاً اعتمدته أو كتبته، فالسببُ هو ما يجعله قراراً لا تراجعاً صامتاً.
+ * والحذفُ لزادٍ وحدَه، ولما لم يُعتمد قطّ: منشورٌ اعتمده الطرفان لا يختفي.
  */
-export function requiresNote(action: MediaAction, status: MediaStatus, side: Side): boolean {
-  if (side !== "ZAD") return false;
-  if (action === "REJECT") return true;
-  return action === "EDIT" && status === MEDIA_STATUS.FINAL;
+export function allowedActions(status: MediaStatus, side: Side, base: BaseKind = null): MediaAction[] {
+  if (status === MEDIA_STATUS.FINAL) return ["EDIT"];
+
+  const deletable = side === "ZAD" && base !== "FINAL";
+  const reviewer = waitingOn(status) === side;
+
+  if (!reviewer) {
+    // صاحبُ التعديل المعلَّق: يزيد عليه ما شاء.
+    return deletable ? ["EDIT", "DELETE"] : ["EDIT"];
+  }
+
+  const approve: MediaAction = side === "CHARITY" ? "APPROVE" : "CERTIFY";
+  const out: MediaAction[] = [approve];
+  // تعديلٌ معلَّقٌ له أصل: يُقبل أو يُردّ إليه، ولا يُعدَّل فوقه. ومنشورٌ جديدٌ
+  // من زادٍ لا أصلَ له: تعدّله الجمعيةُ إن شاءت.
+  if (base) out.push("REJECT");
+  else out.push("EDIT");
+  if (deletable) out.push("DELETE");
+  return out;
 }
 
-/** الحالةُ بعد الفعل. وتُرمى على فعلٍ غيرِ مُجاز، فلا تُستعمل قبل `can`. */
-export function nextStatus(action: MediaAction, status: MediaStatus, side: Side): MediaStatus {
-  if (!can(action, status, side)) {
+export function can(action: MediaAction, status: MediaStatus, side: Side, base: BaseKind = null): boolean {
+  return allowedActions(status, side, base).includes(action);
+}
+
+/** ما يصير إليه المنشور بعد الفعل: حالتُه وأصلُ تعديله. */
+export type Transition = {
+  status: MediaStatus;
+  /** `keep` يُبقي الأصلَ كما هو، و`capture` يلتقط الحاضرَ أصلاً، و`clear` يمحوه. */
+  base: "keep" | "capture" | "clear";
+  baseKind: BaseKind;
+  /** هل يُنبَّه الطرفُ الآخر؟ — لا لتعديلٍ ثانٍ على طلبٍ قائم. */
+  notify: boolean;
+};
+
+/** الانتقال. ويُرمى على فعلٍ غيرِ مُجاز، فلا يُستعمل قبل `can`. */
+export function transition(action: MediaAction, status: MediaStatus, side: Side, base: BaseKind): Transition {
+  if (!can(action, status, side, base)) {
     throw new Error("هذا الاجراء غير متاح في الحالة الحالية");
   }
-  if (action === "APPROVE" || action === "CERTIFY") return MEDIA_STATUS.FINAL;
-  if (action === "REJECT") return MEDIA_STATUS.PENDING_CHARITY;
-  // التعديل: من الجمعية يرفعه إلى تعميد زاد، ومن زادٍ يُعيده إلى اعتماد الجمعية
-  // أيّاً كانت حالتُه — فما غيّره زادٌ لم ترَه الجمعيةُ بعد.
-  if (action === "EDIT") {
-    return side === "CHARITY" ? MEDIA_STATUS.PENDING_ZAD : MEDIA_STATUS.PENDING_CHARITY;
+  const other: MediaStatus = side === "ZAD" ? MEDIA_STATUS.PENDING_CHARITY : MEDIA_STATUS.PENDING_ZAD;
+
+  if (action === "APPROVE" || action === "CERTIFY") {
+    return { status: MEDIA_STATUS.FINAL, base: "clear", baseKind: null, notify: true };
   }
-  return status;
+  if (action === "REJECT") {
+    // الأصلُ المعتمد يعود معتمداً، وما وضعه زادٌ يعود إلى انتظار الجمعية.
+    return {
+      status: base === "FINAL" ? MEDIA_STATUS.FINAL : MEDIA_STATUS.PENDING_CHARITY,
+      base: "clear",
+      baseKind: null,
+      notify: true,
+    };
+  }
+  if (action === "EDIT") {
+    if (status === MEDIA_STATUS.FINAL) {
+      return { status: other, base: "capture", baseKind: "FINAL", notify: true };
+    }
+    if (waitingOn(status) !== side) {
+      // تعديلٌ آخرُ على طلبه القائم: الأصلُ باقٍ، والطلبُ واحد.
+      return { status, base: "keep", baseKind: base, notify: false };
+    }
+    // الجمعيةُ تعدّل منشوراً جديداً من زاد: ما وضعه زادٌ هو الأصل.
+    return { status: other, base: "capture", baseKind: "DRAFT", notify: true };
+  }
+  return { status, base: "keep", baseKind: base, notify: false };
 }
 
-/** نوعُ الحدث المكتوب في السجلّ. */
+/** الحالةُ بعد الفعل — اختصارٌ لـ`transition`. */
+export function nextStatus(action: MediaAction, status: MediaStatus, side: Side, base: BaseKind = null): MediaStatus {
+  return transition(action, status, side, base).status;
+}
+
+/** نوعُ الحدث المكتوب في السجلّ — وبه يُختار نصُّ الإشعار. */
 export type MediaEventKind =
   | "CREATED"
   | "APPROVED_BY_CHARITY"
   | "EDITED_BY_CHARITY"
   | "CERTIFIED_BY_ZAD"
   | "REJECTED_BY_ZAD"
+  | "REJECTED_BY_CHARITY"
   | "EDITED_BY_ZAD"
   | "REOPENED_BY_ZAD";
 
 export function eventKind(action: MediaAction, status: MediaStatus, side: Side): MediaEventKind {
   if (action === "APPROVE") return "APPROVED_BY_CHARITY";
   if (action === "CERTIFY") return "CERTIFIED_BY_ZAD";
-  if (action === "REJECT") return "REJECTED_BY_ZAD";
+  if (action === "REJECT") return side === "ZAD" ? "REJECTED_BY_ZAD" : "REJECTED_BY_CHARITY";
   if (action === "EDIT") {
     if (side === "CHARITY") return "EDITED_BY_CHARITY";
-    // تعديلُ نهائيٍّ ليس كتعديلِ مسوَّدة: هو فتحٌ لما أُغلق، ويُسمّى باسمه في السجلّ.
     return status === MEDIA_STATUS.FINAL ? "REOPENED_BY_ZAD" : "EDITED_BY_ZAD";
   }
   return "CREATED";
@@ -174,8 +218,9 @@ export const EVENT_LABELS: Record<MediaEventKind, string> = {
   EDITED_BY_CHARITY: "عدلته الجمعية",
   CERTIFIED_BY_ZAD: "اعتمد زاد التعديل",
   REJECTED_BY_ZAD: "رد زاد التعديل",
+  REJECTED_BY_CHARITY: "ردت الجمعية التعديل",
   EDITED_BY_ZAD: "عدله زاد",
-  REOPENED_BY_ZAD: "فتحه زاد بعد الاعتماد",
+  REOPENED_BY_ZAD: "عدله زاد بعد الاعتماد",
 };
 
 export function eventLabel(kind: string): string {

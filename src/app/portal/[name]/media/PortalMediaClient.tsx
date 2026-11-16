@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState, useTransition } from "react";
-import { Check, Megaphone, Pencil } from "lucide-react";
+import { Check, Megaphone, Pencil, Undo2 } from "lucide-react";
 import { Badge, Note, Spinner, btn, cx } from "@/components/console/ui";
 import { useStoredChoice } from "@/components/console/useStoredChoice";
 import { Segmented } from "@/components/console/layout";
@@ -22,7 +22,7 @@ import {
 } from "@/components/media/MediaCalendar";
 import MediaPostSheet, { type MediaPostDraft } from "@/components/media/MediaPostSheet";
 import PublishingPlan from "@/components/media/PublishingPlan";
-import MediaPostDetail, { type MediaEventRow } from "@/components/media/MediaPostDetail";
+import MediaPostDetail, { type MediaPendingBaseView } from "@/components/media/MediaPostDetail";
 import { WEEKDAY_LABELS } from "@/lib/attendanceTime";
 import {
   addDaysISO,
@@ -37,6 +37,7 @@ import { MEDIA_STATUS, can } from "@/lib/mediaPlan";
 import {
   approvePortalMediaPost,
   getPortalMediaPostDetail,
+  rejectPortalMediaEdit,
   listPortalMediaPosts,
   updatePortalMediaPost,
 } from "@/app/actions/mediaPlanPortal";
@@ -49,8 +50,8 @@ import {
  * هنا لما ينتظر **اعتمادَكم**، وعند زادٍ لما ينتظر تعميدَه.
  *
  * وما ليس هنا مقصودٌ غيابُه: لا إنشاءَ منشورٍ (الخطّةُ يضعها زاد)، ولا حذفَ،
- * ولا إدارةَ منصّات، ولا تعديلَ لمنشورٍ معتمَدٍ أو مرفوعٍ إلى تعميد زاد —
- * و`allowedActions` في `lib/mediaPlan.ts` هي التي تقول ذلك للشاشة وللحارس معاً.
+ * ولا إدارةَ منصّات — و`allowedActions` في `lib/mediaPlan.ts` هي التي تقول
+ * ما يجوز للشاشة وللحارس معاً.
  */
 
 type ViewMode = "month" | "week" | "list";
@@ -283,7 +284,7 @@ function PortalDetailSheet({
   onChanged: () => void;
 }) {
   const [post, setPost] = useState<MediaPost | null>(null);
-  const [events, setEvents] = useState<MediaEventRow[]>([]);
+  const [base, setBase] = useState<MediaPendingBaseView | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [pending, start] = useTransition();
   const [loads, setLoads] = useState(0);
@@ -299,7 +300,7 @@ function PortalDetailSheet({
       }
       if ("post" in result && result.post) {
         setPost(normalizePost(result.post));
-        setEvents(result.events ?? []);
+        setBase(result.base ?? null);
       }
     })();
     return () => {
@@ -307,15 +308,12 @@ function PortalDetailSheet({
     };
   }, [postId, loads]);
 
-  /**
-   * الاعتمادُ يُسأل عنه قبل أن يُفعل: لا رجعةَ للجمعية بعده — وهذا شرطُ صاحب
-   * الموقع: «واذا عمد موظف الجمعية المنشور لا يستطيع بعدها التعديل ابدا».
-   */
+  /** الاعتمادُ يُسأل عنه قبل أن يُفعل: به يصير المنشورُ معتمداً من الطرفين. */
   const approve = async () => {
     if (!post) return;
     const ok = await confirmAction({
-      title: "اعتماد المنشور نهائيا؟",
-      message: "بعد الاعتماد لا يمكن تعديله — ولا يفتح الا من زاد بسبب يعرض عليكم.",
+      title: base ? "اعتماد تعديل زاد؟" : "اعتماد المنشور؟",
+      message: "يصير المنشور معتمدا من الجمعية ومن زاد. ويبقى تعديله بعدها ممكنا، فينتظر اعتماد زاد.",
       confirmLabel: "اعتماد",
       tone: "primary",
     });
@@ -335,8 +333,25 @@ function PortalDetailSheet({
 
   // والفعلُ يلزمه الأمران: جوازُه في حالة المنشور، وصلاحيّةُ التحرير. فمن
   // يطّلع وحدَه لا يُعرض له زرٌّ يُرَدُّ عنه.
-  const mayApprove = canEdit && !!post && can("APPROVE", post.status, "CHARITY");
-  const mayEdit = canEdit && !!post && can("EDIT", post.status, "CHARITY");
+  const baseKind = base?.kind ?? null;
+  const mayApprove = canEdit && !!post && can("APPROVE", post.status, "CHARITY", baseKind);
+  const mayEdit = canEdit && !!post && can("EDIT", post.status, "CHARITY", baseKind);
+  const mayReject = canEdit && !!post && can("REJECT", post.status, "CHARITY", baseKind);
+
+  const reject = () => {
+    if (!post) return;
+    setError(null);
+    start(async () => {
+      const result = await rejectPortalMediaEdit(post.id);
+      if (result.error) {
+        setError(result.error);
+        return;
+      }
+      notify("ok", "رُدّ التعديل وعاد النص الأصلي");
+      setLoads((n) => n + 1);
+      onChanged();
+    });
+  };
 
   return (
     <Sheet
@@ -356,10 +371,16 @@ function PortalDetailSheet({
               تعديل
             </button>
           )}
+          {mayReject && (
+            <button type="button" onClick={reject} className={cx(btn.ghost, "h-9")} disabled={pending}>
+              <Undo2 className="size-3.5" />
+              رد للأصل
+            </button>
+          )}
           {mayApprove && (
             <button type="button" onClick={() => void approve()} className={btn.primary} disabled={pending}>
               {pending ? <Spinner size={14} /> : <Check className="size-4" />}
-              اعتماد المنشور
+              {base ? "اعتماد التعديل" : "اعتماد المنشور"}
             </button>
           )}
         </FooterStatus>
@@ -370,19 +391,9 @@ function PortalDetailSheet({
           <Spinner size={18} />
         </div>
       ) : (
-        <MediaPostDetail post={post} events={events} side="CHARITY" platformName={platformName} marksOf={marksOf}>
-          {post.status === MEDIA_STATUS.PENDING_CHARITY && (
-            <Note tone="warn">
-              {canEdit
-                ? "بانتظار اعتماد الجمعية: يمكن اعتماده كما هو أو تعديله."
-                : "بانتظار اعتماد الجمعية — والاعتماد لمن يملك صلاحية تحرير الخطة الاعلامية."}
-            </Note>
-          )}
-          {post.status === MEDIA_STATUS.PENDING_ZAD && (
-            <Note tone="brand">التعديل مرفوع الى زاد بانتظار اعتماده، وما تم تغييره مكتوب في السجل ادناه.</Note>
-          )}
-          {post.status === MEDIA_STATUS.FINAL && (
-            <Note tone="brand">معتمد نهائيا. ولا يفتح الا من زاد بسبب يعرض عليكم، ثم يعود لاعتماد الجمعية.</Note>
+        <MediaPostDetail post={post} base={base} side="CHARITY" platformName={platformName} marksOf={marksOf}>
+          {post.status === MEDIA_STATUS.PENDING_CHARITY && !canEdit && (
+            <Note tone="warn">بانتظار اعتماد الجمعية — والاعتماد لمن يملك صلاحية تحرير الخطة الاعلامية.</Note>
           )}
         </MediaPostDetail>
       )}

@@ -16,7 +16,7 @@ import {
   normalizeTime,
   platformKeyFrom,
   platformLetter,
-  requiresNote,
+  transition,
   samePlatforms,
   statusLabel,
   statusTone,
@@ -37,39 +37,63 @@ test("الجمعيةُ تعتمد أو تعدّل ما ينتظرها، ولا �
   assert.deepEqual(allowedActions(MEDIA_STATUS.PENDING_CHARITY, "CHARITY"), ["APPROVE", "EDIT"]);
 });
 
-test("النهائيُّ مقفولٌ على الجمعية — لا تعديلَ ولا اعتمادَ ثانياً", () => {
-  assert.deepEqual(allowedActions(MEDIA_STATUS.FINAL, "CHARITY"), []);
-  assert.equal(can("EDIT", MEDIA_STATUS.FINAL, "CHARITY"), false);
-});
-
-test("والنهائيُّ مفتوحٌ لزادٍ وحدَه، تعديلاً لا حذفاً", () => {
+test("المعتمدُ يعدّله أيُّ الطرفين، ولا يحذفه زاد", () => {
+  assert.deepEqual(allowedActions(MEDIA_STATUS.FINAL, "CHARITY"), ["EDIT"]);
   assert.deepEqual(allowedActions(MEDIA_STATUS.FINAL, "ZAD"), ["EDIT"]);
   assert.equal(can("DELETE", MEDIA_STATUS.FINAL, "ZAD"), false);
 });
 
-test("اعتمادُ الجمعية وتعميدُ زادٍ كلاهما يُنهي المنشور", () => {
-  assert.equal(nextStatus("APPROVE", MEDIA_STATUS.PENDING_CHARITY, "CHARITY"), MEDIA_STATUS.FINAL);
-  assert.equal(nextStatus("CERTIFY", MEDIA_STATUS.PENDING_ZAD, "ZAD"), MEDIA_STATUS.FINAL);
-});
-
-test("تعديلُ الجمعية يرفعه إلى تعميد زاد، وردُّ زادٍ يُعيده إليها", () => {
-  assert.equal(nextStatus("EDIT", MEDIA_STATUS.PENDING_CHARITY, "CHARITY"), MEDIA_STATUS.PENDING_ZAD);
-  assert.equal(nextStatus("REJECT", MEDIA_STATUS.PENDING_ZAD, "ZAD"), MEDIA_STATUS.PENDING_CHARITY);
-});
-
-test("وتعديلُ زادٍ لنهائيٍّ يُعيده إلى اعتماد الجمعية — لا يُنشر باسمها ما لم ترَه", () => {
+test("تعديلُ المعتمد ينتظر الطرفَ الآخر، والمعتمدُ أصلُه", () => {
+  const byCharity = transition("EDIT", MEDIA_STATUS.FINAL, "CHARITY", null);
+  assert.equal(byCharity.status, MEDIA_STATUS.PENDING_ZAD);
+  assert.equal(byCharity.base, "capture");
+  assert.equal(byCharity.baseKind, "FINAL");
   assert.equal(nextStatus("EDIT", MEDIA_STATUS.FINAL, "ZAD"), MEDIA_STATUS.PENDING_CHARITY);
+});
+
+test("المراجِعُ يعتمد أو يردّ، ولا يعدّل فوق تعديل غيره", () => {
+  assert.deepEqual(allowedActions(MEDIA_STATUS.PENDING_ZAD, "ZAD", "FINAL"), ["CERTIFY", "REJECT"]);
+  assert.deepEqual(allowedActions(MEDIA_STATUS.PENDING_CHARITY, "CHARITY", "FINAL"), ["APPROVE", "REJECT"]);
+  assert.equal(can("EDIT", MEDIA_STATUS.PENDING_ZAD, "ZAD", "DRAFT"), false);
+});
+
+test("ومنشورٌ جديدٌ من زاد: تعتمده الجمعيةُ أو تعدّله", () => {
+  assert.deepEqual(allowedActions(MEDIA_STATUS.PENDING_CHARITY, "CHARITY"), ["APPROVE", "EDIT"]);
+  const edit = transition("EDIT", MEDIA_STATUS.PENDING_CHARITY, "CHARITY", null);
+  assert.equal(edit.status, MEDIA_STATUS.PENDING_ZAD);
+  assert.equal(edit.baseKind, "DRAFT");
+});
+
+test("صاحبُ التعديل يزيد عليه ما شاء — طلبٌ واحدٌ لا يُنبَّه به مرّتين", () => {
+  const again = transition("EDIT", MEDIA_STATUS.PENDING_ZAD, "CHARITY", "FINAL");
+  assert.equal(again.status, MEDIA_STATUS.PENDING_ZAD);
+  assert.equal(again.base, "keep");
+  assert.equal(again.notify, false);
+});
+
+test("الردُّ يعيد الأصل: المعتمدُ معتمداً، وما وضعه زادٌ إلى انتظار الجمعية", () => {
+  assert.equal(nextStatus("REJECT", MEDIA_STATUS.PENDING_ZAD, "ZAD", "FINAL"), MEDIA_STATUS.FINAL);
+  assert.equal(nextStatus("REJECT", MEDIA_STATUS.PENDING_CHARITY, "CHARITY", "FINAL"), MEDIA_STATUS.FINAL);
+  assert.equal(nextStatus("REJECT", MEDIA_STATUS.PENDING_ZAD, "ZAD", "DRAFT"), MEDIA_STATUS.PENDING_CHARITY);
+  assert.equal(can("REJECT", MEDIA_STATUS.PENDING_CHARITY, "CHARITY", null), false);
+});
+
+test("الاعتمادُ من أيِّ الطرفين يجعله معتمداً ويمحو الأصل", () => {
+  const t = transition("CERTIFY", MEDIA_STATUS.PENDING_ZAD, "ZAD", "DRAFT");
+  assert.equal(t.status, MEDIA_STATUS.FINAL);
+  assert.equal(t.base, "clear");
+  assert.equal(nextStatus("APPROVE", MEDIA_STATUS.PENDING_CHARITY, "CHARITY"), MEDIA_STATUS.FINAL);
+});
+
+test("الحذفُ لزادٍ فيما لم يُعتمد قطّ", () => {
+  assert.equal(can("DELETE", MEDIA_STATUS.PENDING_CHARITY, "ZAD"), true);
+  assert.equal(can("DELETE", MEDIA_STATUS.PENDING_ZAD, "ZAD", "DRAFT"), true);
+  assert.equal(can("DELETE", MEDIA_STATUS.PENDING_CHARITY, "ZAD", "FINAL"), false);
+  assert.equal(can("DELETE", MEDIA_STATUS.PENDING_ZAD, "CHARITY", "DRAFT"), false);
 });
 
 test("فعلٌ غيرُ مُجازٍ يُرمى ولا يُعيد حالةً صامتة", () => {
   assert.throws(() => nextStatus("APPROVE", MEDIA_STATUS.FINAL, "CHARITY"));
-});
-
-test("السببُ يلزم في ردِّ التعديل وفي فتح النهائيّ، لا في غيرهما", () => {
-  assert.equal(requiresNote("REJECT", MEDIA_STATUS.PENDING_ZAD, "ZAD"), true);
-  assert.equal(requiresNote("EDIT", MEDIA_STATUS.FINAL, "ZAD"), true);
-  assert.equal(requiresNote("EDIT", MEDIA_STATUS.PENDING_CHARITY, "ZAD"), false);
-  assert.equal(requiresNote("EDIT", MEDIA_STATUS.PENDING_CHARITY, "CHARITY"), false);
 });
 
 test("فتحُ النهائيِّ يُسمّى باسمه في السجلّ، لا «عدّله زاد»", () => {

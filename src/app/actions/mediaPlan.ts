@@ -7,22 +7,20 @@ import { getMediaScope, mayManageCharityMedia } from "@/lib/mediaPlanAccess";
 import {
   MEDIA_STATUS,
   can,
-  eventKind,
   isSafeLink,
-  nextStatus,
   platformKeyFrom,
-  requiresNote,
   toStatus,
   type MediaAction,
   type MediaSnapshot,
-  type MediaStatus,
 } from "@/lib/mediaPlan";
 import {
   cleanMediaInput as cleanInput,
   dayValue,
-  snapshotOfRow as snapshotOf,
+  parseBaseline,
+  snapshotOfBaseline,
   type MediaPostFields,
 } from "@/lib/mediaPostInput";
+import { APPLY_FIELDS, applyMediaAction, baseKindOf } from "@/lib/mediaPostApply";
 import { publishingPlanValue } from "@/lib/publishingPlan";
 import { mediaNotice, portalMediaLink } from "@/lib/mediaPlanNotices";
 import { notifyCharityMembers } from "@/lib/notifyInbox";
@@ -70,26 +68,7 @@ async function loadPostForZad(postId: string) {
   const missing = await missingFields();
   if (missing) return { error: missing };
 
-  const post = await prisma.mediaPost.findUnique({
-    where: { id: postId },
-    select: {
-      id: true,
-      charityId: true,
-      title: true,
-      content: true,
-      description: true,
-      attachments: true,
-      platforms: true,
-      imageUrl: true,
-      imagePublicId: true,
-      linkUrl: true,
-      scheduledOn: true,
-      scheduledAt: true,
-      status: true,
-      createdById: true,
-      charity: { select: { name: true } },
-    },
-  });
+  const post = await prisma.mediaPost.findUnique({ where: { id: postId }, select: APPLY_FIELDS });
   if (!post) return { error: "المنشور غير موجود" as const };
   if (!(await mayManageCharityMedia(session, post.charityId))) {
     return { error: "لا صلاحية لك على الخطة الإعلامية لهذه الجمعية" as const };
@@ -183,40 +162,21 @@ export async function listMediaPosts(charityId: string, fromISO: string, toISO: 
   return { posts: posts.map(toMediaPostView) };
 }
 
-/** المنشورُ وسجلُّه — للوحِ التفاصيل ولعرض ما تغيَّر. */
+/** أصلُ التعديل المعلَّق كما تقرؤه الشاشة: نوعُه ولقطتُه للمقارنة. */
+export type MediaPendingBase = { kind: "FINAL" | "DRAFT"; snapshot: MediaSnapshot };
+
+/** المنشورُ وأصلُ تعديله المعلَّق إن كان — للوح التفاصيل. */
 export async function getMediaPostDetail(postId: string) {
   const loaded = await loadPostForZad(postId);
   if ("error" in loaded) return { error: loaded.error };
 
-  const [post, events] = await Promise.all([
-    prisma.mediaPost.findUnique({ where: { id: postId }, select: POST_FIELDS }),
-    prisma.mediaPostEvent.findMany({
-      where: { postId },
-      orderBy: { createdAt: "desc" },
-      select: {
-        id: true,
-        kind: true,
-        actorSide: true,
-        actorName: true,
-        note: true,
-        before: true,
-        createdAt: true,
-      },
-    }),
-  ]);
+  const post = await prisma.mediaPost.findUnique({ where: { id: postId }, select: POST_FIELDS });
   if (!post) return { error: "المنشور غير موجود" };
 
+  const base = parseBaseline(loaded.post.baseline);
   return {
     post: toMediaPostView(post),
-    events: events.map<MediaEventView>((e) => ({
-      id: e.id,
-      kind: e.kind,
-      actorSide: e.actorSide,
-      actorName: e.actorName,
-      note: e.note,
-      at: e.createdAt.toISOString(),
-      before: (e.before as MediaSnapshot | null) ?? null,
-    })),
+    base: base ? ({ kind: base.kind, snapshot: snapshotOfBaseline(base) } satisfies MediaPendingBase) : null,
   };
 }
 
@@ -264,153 +224,63 @@ export async function createMediaPost(input: MediaPostInput) {
 }
 
 /**
- * تعديلُ زادٍ للمنشور.
- *
- * ويعود المنشورُ بعده إلى اعتماد الجمعية أيّاً كانت حالتُه — فما غيّره زادٌ لم
- * ترَه الجمعيةُ بعد. وتعديلُ **المعتمَد** يلزمه سببٌ يُعرض عليها.
+ * تعديلُ زادٍ للمنشور — ويقرّر `transition` ما يصير إليه: المعتمدُ ينتظر
+ * الجمعية مقابل أصله، والجديدُ يبقى جديداً، وتعديلٌ ثانٍ على طلبٍ قائمٍ يبقى
+ * طلباً واحداً لا يُنبَّه به مرّتين.
  */
 export async function updateMediaPost(postId: string, input: MediaPostInput, note?: string) {
   const loaded = await loadPostForZad(postId);
   if ("error" in loaded) return { error: loaded.error };
-  const { session, post, status } = loaded;
+  const { session, post } = loaded;
 
-  if (!can("EDIT", status, "ZAD")) return { error: "لا يمكن تعديل المنشور في حالته الحالية" };
-
-  const reason = (note ?? "").trim();
-  if (requiresNote("EDIT", status, "ZAD") && !reason) {
-    return { error: "اكتب سبب تعديل منشور معتمد — يعرض على الجمعية" };
-  }
-
-  // و`charityId` المُرسَلُ مع المُدخَل لا يُقرأ هنا أصلاً: جمعيةُ المنشور صفُّه،
-  // والتعديلُ لا ينقله — فلا سبيل إلى نقلٍ بتغيير حقل.
+  // و`charityId` المُرسَلُ مع المُدخَل لا يُقرأ هنا أصلاً: جمعيةُ المنشور صفُّه.
   const cleaned = cleanInput(input);
   if ("error" in cleaned) return { error: cleaned.error };
 
-  const before = snapshotOf(post);
-  const after: MediaStatus = nextStatus("EDIT", status, "ZAD");
+  const result = await applyMediaAction({
+    post,
+    side: "ZAD",
+    action: "EDIT",
+    actor: { id: session.id, name: session.name ?? null },
+    input: cleaned.data,
+    note,
+  });
+  if ("error" in result) return { error: result.error };
 
-  await prisma.$transaction([
-    prisma.mediaPost.update({
-      where: { id: post.id },
-      data: {
-        ...cleaned.data,
-        status: after,
-        // عادَ إلى الانتظار، فتعميدُه السابقُ لم يعد قائماً.
-        finalizedAt: null,
-        finalizedBy: null,
-        finalizedSide: null,
-      },
-    }),
-    prisma.mediaPostEvent.create({
-      data: {
-        postId: post.id,
-        kind: eventKind("EDIT", status, "ZAD"),
-        actorSide: "ZAD",
-        actorId: session.id,
-        actorName: session.name ?? null,
-        note: reason || null,
-        before,
-      },
-    }),
-  ]);
-
-  // عادَ إلى اعتماد الجمعية، فتُنبَّه بما صار إليه — وبسببه إن كان مُسبَّباً.
-  await tellCharity(
-    eventKind("EDIT", status, "ZAD"),
-    post.charityId,
-    post.charity.name,
-    cleaned.data.scheduledOn,
-    reason
-  );
-
+  if (result.notify) {
+    await tellCharity(result.kind, post.charityId, post.charity.name, cleaned.data.scheduledOn, note);
+  }
   revalidateCharity(post.charity.name);
   return { success: true };
 }
 
-/** تعميدُ زادٍ لتعديل الجمعية — وبه يصير المنشورُ نهائيّاً. */
+/** اعتمادُ زادٍ لتعديل الجمعية — وبه يصير المنشورُ معتمداً من الطرفين. */
 export async function certifyMediaPost(postId: string, note?: string) {
   return decide(postId, "CERTIFY", note);
 }
 
-/** ردُّ زادٍ لتعديل الجمعية: يُستعاد ما كان، ويعود المنشورُ إلى اعتمادها. */
-export async function rejectMediaEdit(postId: string, note: string) {
+/** ردُّ تعديل الجمعية إلى أصله. */
+export async function rejectMediaEdit(postId: string, note?: string) {
   return decide(postId, "REJECT", note);
 }
 
 async function decide(postId: string, action: Extract<MediaAction, "CERTIFY" | "REJECT">, note?: string) {
   const loaded = await loadPostForZad(postId);
   if ("error" in loaded) return { error: loaded.error };
-  const { session, post, status } = loaded;
+  const { session, post } = loaded;
 
-  if (!can(action, status, "ZAD")) return { error: "لا يوجد تعديل بانتظار الاعتماد" };
+  const result = await applyMediaAction({
+    post,
+    side: "ZAD",
+    action,
+    actor: { id: session.id, name: session.name ?? null },
+    note,
+  });
+  if ("error" in result) return { error: result.error };
 
-  const reason = (note ?? "").trim();
-  if (requiresNote(action, status, "ZAD") && !reason) {
-    return { error: "اكتب سبب رد التعديل — يعرض على الجمعية" };
+  if (result.notify) {
+    await tellCharity(result.kind, post.charityId, post.charity.name, post.scheduledOn, note);
   }
-
-  const after = nextStatus(action, status, "ZAD");
-  const before = snapshotOf(post);
-
-  // الردُّ يستعيد ما كان قبل تعديل الجمعية: وهو لقطةُ آخر حدثٍ منها.
-  let restore: Partial<MediaSnapshot> | null = null;
-  if (action === "REJECT") {
-    const lastCharityEdit = await prisma.mediaPostEvent.findFirst({
-      where: { postId: post.id, kind: "EDITED_BY_CHARITY" },
-      orderBy: { createdAt: "desc" },
-      select: { before: true },
-    });
-    const snapshot = lastCharityEdit?.before as MediaSnapshot | null;
-    if (snapshot && typeof snapshot === "object") restore = snapshot;
-  }
-
-  await prisma.$transaction([
-    prisma.mediaPost.update({
-      where: { id: post.id },
-      data: {
-        status: after,
-        ...(restore
-          ? {
-              content: restore.content ?? post.content,
-              platforms: restore.platforms ?? post.platforms,
-              imageUrl: restore.imageUrl ?? null,
-              linkUrl: restore.linkUrl ?? null,
-              scheduledAt: restore.scheduledAt ?? null,
-              ...(restore.scheduledOn && dayValue(restore.scheduledOn)
-                ? { scheduledOn: dayValue(restore.scheduledOn)! }
-                : {}),
-            }
-          : {}),
-        ...(after === MEDIA_STATUS.FINAL
-          ? {
-              finalizedAt: new Date(),
-              finalizedBy: session.name ?? null,
-              finalizedSide: "ZAD",
-            }
-          : { finalizedAt: null, finalizedBy: null, finalizedSide: null }),
-      },
-    }),
-    prisma.mediaPostEvent.create({
-      data: {
-        postId: post.id,
-        kind: eventKind(action, status, "ZAD"),
-        actorSide: "ZAD",
-        actorId: session.id,
-        actorName: session.name ?? null,
-        note: reason || null,
-        before,
-      },
-    }),
-  ]);
-
-  await tellCharity(
-    eventKind(action, status, "ZAD"),
-    post.charityId,
-    post.charity.name,
-    post.scheduledOn,
-    reason
-  );
-
   revalidateCharity(post.charity.name);
   return { success: true };
 }
@@ -420,8 +290,8 @@ export async function deleteMediaPost(postId: string) {
   if ("error" in loaded) return { error: loaded.error };
   const { post, status } = loaded;
 
-  if (!can("DELETE", status, "ZAD")) {
-    return { error: "المنشور المعتمد لا يحذف — عدله بسبب يعرض على الجمعية" };
+  if (!can("DELETE", status, "ZAD", baseKindOf(post))) {
+    return { error: "المنشور المعتمد لا يحذف" };
   }
 
   await prisma.mediaPost.delete({ where: { id: post.id } });

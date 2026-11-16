@@ -6,17 +6,9 @@ import { AuthError, requireCharityEffective, requireCharityPermission } from "@/
 import { charityHasService } from "@/lib/charityServices";
 import { MEDIA_SERVICE } from "@/lib/mediaPlanAccess";
 import { isMediaPlanEnabled } from "@/lib/mediaPlanToggle";
-import {
-  MEDIA_TEAM_LABEL,
-  can,
-  eventKind,
-  nextStatus,
-  requiresNote,
-  toStatus,
-  type MediaAction,
-  type MediaStatus,
-} from "@/lib/mediaPlan";
-import { cleanMediaInput, dayValue, snapshotOfRow, type MediaPostFields } from "@/lib/mediaPostInput";
+import { MEDIA_TEAM_LABEL, toStatus, type MediaAction } from "@/lib/mediaPlan";
+import { cleanMediaInput, dayValue, parseBaseline, snapshotOfBaseline, type MediaPostFields } from "@/lib/mediaPostInput";
+import { APPLY_FIELDS, applyMediaAction } from "@/lib/mediaPostApply";
 import { mediaNotice, zadMediaLink } from "@/lib/mediaPlanNotices";
 import { notifyEmployees } from "@/lib/notifyInbox";
 import { toISODate } from "@/lib/calendarGrid";
@@ -25,7 +17,7 @@ import {
   hasPostDetailColumns,
   toMediaPostView,
 } from "@/lib/mediaPostFields";
-import type { MediaEventView, MediaPostView } from "@/app/actions/mediaPlan";
+import type { MediaPendingBase, MediaPostView } from "@/app/actions/mediaPlan";
 
 /**
  * أفعالُ الخطّة الإعلاميّة من جهة الجمعية — في بوّابتها.
@@ -82,26 +74,7 @@ async function requirePortalMedia(charityId: string, needsEdit: boolean) {
  * باليد لا يُجيز صاحبَه على منشورِ جمعيةٍ أخرى.
  */
 async function loadPostForCharity(postId: string, needsEdit: boolean) {
-  const post = await prisma.mediaPost.findUnique({
-    where: { id: postId },
-    select: {
-      id: true,
-      charityId: true,
-      title: true,
-      content: true,
-      description: true,
-      attachments: true,
-      platforms: true,
-      imageUrl: true,
-      imagePublicId: true,
-      linkUrl: true,
-      scheduledOn: true,
-      scheduledAt: true,
-      status: true,
-      createdById: true,
-      charity: { select: { name: true } },
-    },
-  });
+  const post = await prisma.mediaPost.findUnique({ where: { id: postId }, select: APPLY_FIELDS });
   if (!post) return { error: "المنشور غير موجود" as const };
 
   const access = await requirePortalMedia(post.charityId, needsEdit);
@@ -198,157 +171,71 @@ export async function listPortalMediaPosts(charityId: string, fromISO: string, t
   return { posts: posts.map(toView) };
 }
 
-/** المنشورُ وسجلُّه — وفيه تقرأ الجمعيةُ ما عدّله زادٌ وسببَه. */
+/** المنشورُ وأصلُ تعديله المعلَّق إن كان — وفيه تقرأ الجمعيةُ ما عدّله زاد. */
 export async function getPortalMediaPostDetail(postId: string) {
   const loaded = await loadPostForCharity(postId, false);
   if ("error" in loaded) return { error: loaded.error };
 
-  const [post, events] = await Promise.all([
-    prisma.mediaPost.findUnique({ where: { id: postId }, select: POST_FIELDS }),
-    prisma.mediaPostEvent.findMany({
-      where: { postId },
-      orderBy: { createdAt: "desc" },
-      select: {
-        id: true,
-        kind: true,
-        actorSide: true,
-        actorName: true,
-        note: true,
-        before: true,
-        createdAt: true,
-      },
-    }),
-  ]);
+  const post = await prisma.mediaPost.findUnique({ where: { id: postId }, select: POST_FIELDS });
   if (!post) return { error: "المنشور غير موجود" };
 
+  const base = parseBaseline(loaded.post.baseline);
   return {
     post: toView(post),
-    events: events.map<MediaEventView>((e) => ({
-      id: e.id,
-      kind: e.kind,
-      actorSide: e.actorSide,
-      // ولا يرسل اسم موظف زاد إلى الجمعية: الخطوة عمل الفريق لا عمل فرد. وهو
-      // في الخادم لا في الشاشة — ما لا يرسل لا يقرأ من أداة المطور. وأسماء
-      // أعضاء الجمعية تبقى كما هي، فهم زملاء من يقرأ.
-      actorName: e.actorSide === "ZAD" ? MEDIA_TEAM_LABEL : e.actorName,
-      note: e.note,
-      at: e.createdAt.toISOString(),
-      before: (e.before as MediaEventView["before"]) ?? null,
-    })),
+    base: base ? ({ kind: base.kind, snapshot: snapshotOfBaseline(base) } satisfies MediaPendingBase) : null,
   };
 }
 
-/**
- * اعتمادُ الجمعية — وبه يصير المنشورُ نهائيّاً.
- *
- * **ولا رجعةَ لها بعده**: `allowedActions(FINAL, "CHARITY")` فارغة. فمن اعتمد
- * منشوراً فقد أذن بنشره باسم جمعيته، ولا يُفتح بعدها إلا من زادٍ وبسببٍ يُعرض
- * عليها ثمّ يعود إلى اعتمادها.
- */
+/** اعتمادُ الجمعية لما ينتظرها — منشوراً جديداً أو تعديلاً من زاد. */
 export async function approvePortalMediaPost(postId: string) {
   return decide(postId, "APPROVE");
 }
 
-async function decide(postId: string, action: Extract<MediaAction, "APPROVE">) {
+/** ردُّ تعديل زادٍ إلى أصله. */
+export async function rejectPortalMediaEdit(postId: string) {
+  return decide(postId, "REJECT");
+}
+
+async function decide(postId: string, action: Extract<MediaAction, "APPROVE" | "REJECT">) {
   const loaded = await loadPostForCharity(postId, true);
   if ("error" in loaded) return { error: loaded.error };
-  const { session, post, status } = loaded;
+  const { session, post } = loaded;
 
-  if (!can(action, status, "CHARITY")) {
-    return {
-      error:
-        status === "FINAL"
-          ? "المنشور معتمد نهائيا"
-          : "هذا المنشور بانتظار اعتماد زاد — لا يعتمد من هنا",
-    };
-  }
+  const result = await applyMediaAction({
+    post,
+    side: "CHARITY",
+    action,
+    actor: { id: session.id, name: session.name ?? null },
+  });
+  if ("error" in result) return { error: result.error };
 
-  const after: MediaStatus = nextStatus(action, status, "CHARITY");
-  const kind = eventKind(action, status, "CHARITY");
-
-  await prisma.$transaction([
-    prisma.mediaPost.update({
-      where: { id: post.id },
-      data: {
-        status: after,
-        finalizedAt: new Date(),
-        finalizedBy: session.name ?? null,
-        finalizedSide: "CHARITY",
-      },
-    }),
-    prisma.mediaPostEvent.create({
-      data: {
-        postId: post.id,
-        kind,
-        actorSide: "CHARITY",
-        actorId: session.id,
-        actorName: session.name ?? null,
-      },
-    }),
-  ]);
-
-  await tellZad(kind, post, post.charity.name);
-
+  if (result.notify) await tellZad(result.kind, post, post.charity.name);
   revalidatePortal(post.charity.name);
   return { success: true };
 }
 
 /**
- * تعديلُ الجمعية — ويرفع المنشورَ إلى تعميد زاد.
- *
- * ولا تُعدِّل مرّةً ثانيةً قبل أن يُبَتَّ في تعديلها: الفرقُ الذي يقرؤه زادٌ
- * يُقاس إلى آخر لقطةٍ قبل تعديلها، فتعديلان متتابعان يجعلان المعروضَ عليه غيرَ
- * ما يُعمِّده.
+ * تعديلُ الجمعية — ويرفع المنشورَ إلى اعتماد زادٍ مقابل أصله. وتعديلٌ ثانٍ قبل
+ * أن يُبَتَّ في الأوّل يبقى طلباً واحداً.
  */
 export async function updatePortalMediaPost(postId: string, input: PortalMediaInput) {
   const loaded = await loadPostForCharity(postId, true);
   if ("error" in loaded) return { error: loaded.error };
-  const { session, post, status } = loaded;
-
-  if (!can("EDIT", status, "CHARITY")) {
-    return {
-      error:
-        status === "FINAL"
-          ? "المنشور معتمد نهائيا — تعديله من زاد"
-          : "التعديل مرفوع الى زاد بانتظار اعتماده",
-    };
-  }
-  // والجمعيةُ لا تُسبِّب: السببُ على زادٍ حين يحرِم الجمعيةَ ما اعتمدته.
-  if (requiresNote("EDIT", status, "CHARITY")) return { error: "هذا الاجراء غير متاح في الحالة الحالية" };
+  const { session, post } = loaded;
 
   const cleaned = cleanMediaInput(input);
   if ("error" in cleaned) return { error: cleaned.error };
 
-  const before = snapshotOfRow(post);
-  const after: MediaStatus = nextStatus("EDIT", status, "CHARITY");
-  const kind = eventKind("EDIT", status, "CHARITY");
+  const result = await applyMediaAction({
+    post,
+    side: "CHARITY",
+    action: "EDIT",
+    actor: { id: session.id, name: session.name ?? null },
+    input: cleaned.data,
+  });
+  if ("error" in result) return { error: result.error };
 
-  await prisma.$transaction([
-    prisma.mediaPost.update({
-      where: { id: post.id },
-      data: {
-        ...cleaned.data,
-        status: after,
-        // لم يُعتمد بعد: التعميدُ لزادٍ على هذا التعديل.
-        finalizedAt: null,
-        finalizedBy: null,
-        finalizedSide: null,
-      },
-    }),
-    prisma.mediaPostEvent.create({
-      data: {
-        postId: post.id,
-        kind,
-        actorSide: "CHARITY",
-        actorId: session.id,
-        actorName: session.name ?? null,
-        before,
-      },
-    }),
-  ]);
-
-  await tellZad(kind, post, post.charity.name);
-
+  if (result.notify) await tellZad(result.kind, post, post.charity.name);
   revalidatePortal(post.charity.name);
   return { success: true };
 }

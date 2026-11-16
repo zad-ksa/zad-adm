@@ -2583,6 +2583,10 @@ model MediaPost {
   finalizedBy   String?
   finalizedSide String?
 
+  /// أصلُ التعديل المعلَّق (`StoredBaseline` في lib/mediaPostInput.ts): النسخةُ التي
+  /// يُقارَن بها التعديلُ ويُردّ إليها — ولا شيءَ حين لا تعديلَ ينتظر.
+  baseline Json?
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 

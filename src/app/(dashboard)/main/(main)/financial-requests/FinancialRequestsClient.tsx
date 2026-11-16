@@ -504,7 +504,7 @@ export default function FinancialRequestsClient({
             </button>
           )}
           <button type="button" onClick={() => setShowForm(true)} disabled={!hasActiveChain}
-            title={hasActiveChain ? undefined : "لا توجد سلسلة اعتماد مالية نشطة حالياً، راجع مسؤول النظام"}
+            title={hasActiveChain ? undefined : "لا يوجد مسار اعتماد لخدمة المالية حاليا، راجع مسؤول النظام"}
             className={btn.primary}>
             <Plus className="w-4 h-4" /> طلب مالي جديد
           </button>
@@ -515,7 +515,7 @@ export default function FinancialRequestsClient({
       {!hasActiveChain && (
         <p className="flex items-start gap-2 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2.5 text-caption font-semibold leading-5 text-amber-800 dark:border-amber-500/20 dark:bg-amber-500/10 dark:text-amber-300">
           <Clock className="w-4 h-4 shrink-0 mt-0.5" />
-          لا توجد سلسلة اعتماد مالية نشطة حالياً — لن تُرفع طلبات حتى يُفعّلها مسؤول النظام من صفحة سلاسل الاعتماد.
+          اعتماد الطلبات المالية يتبع خدمة المالية، ولا مسار لها الان — لن ترفع طلبات حتى يسندها مسؤول النظام الى سلسلة من صفحة سلاسل الاعتماد.
         </p>
       )}
 

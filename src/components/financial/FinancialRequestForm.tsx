@@ -181,7 +181,7 @@ export default function FinancialRequestForm({
           <button type="button" onClick={onClose} className={btn.secondary}>إلغاء</button>
           <button type="button" onClick={handleSubmit}
             disabled={isPending || isUploading || !hasActiveChain}
-            title={hasActiveChain ? undefined : "لا توجد سلسلة اعتماد مالية نشطة حالياً، راجع مسؤول النظام"}
+            title={hasActiveChain ? undefined : "لا يوجد مسار اعتماد لخدمة المالية حاليا، راجع مسؤول النظام"}
             className={btn.primary}>
             {isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
             {isPending ? "جاري الإرسال..." : "إرسال الطلب"}
@@ -193,7 +193,7 @@ export default function FinancialRequestForm({
         {!hasActiveChain && (
           <p className="flex items-start gap-2 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2.5 text-xs font-bold leading-5 text-amber-800 dark:border-amber-500/20 dark:bg-amber-500/10 dark:text-amber-300">
             <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
-            لا توجد سلسلة اعتماد مالية نشطة حالياً، راجع مسؤول النظام.
+            لا يوجد مسار اعتماد لخدمة المالية حاليا، راجع مسؤول النظام.
           </p>
         )}
 

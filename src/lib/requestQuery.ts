@@ -69,34 +69,16 @@ export const RELATION_JOIN = { relationLoadStrategy: "join" } as const;
  * it reads everything; the per-request action gates are untouched, so they
  * still cannot approve anything that was not routed to them.
  */
-export type RequestKind = "GENERAL" | "FINANCIAL";
-
 /**
- * غرضُ سلسلة الاعتماد — سلسلةٌ نشطةٌ لكل غرضٍ لا واحدةٌ للنظام كلّه.
+ * نوعُ الطلب: يفرّق الصفحتين لا المسارَين.
  *
- * فمسارُ الطلبات العامة ومسارُ الطلبات المالية مستقلّان: تفعيلُ أحدهما لا
- * يُطفئ الآخر. والغرضان هما نوعا الطلب نفسُهما، فالطلبُ المالي يسلك المسار
- * المالي والعامُّ العامَّ بلا جدولٍ ثالثٍ يربط بينهما.
+ * **ولم يبقَ للسلاسل غرض**: كان لكلِّ نوعٍ بركةُ سلاسلَ تُفعَّل وتُعطَّل
+ * وحدَها (`WorkflowChain.purpose`)، ثم صار المسارُ بالخدمة: فالطلبُ المالي
+ * يسلك سلسلةَ «المالية» كما يسلكها طلبُ اعتمادٍ عامٌّ في القسم نفسه، فلا
+ * معتمِدَ مالٍ ثانٍ يُصان في مكانٍ ثانٍ. والعمودُ باقٍ في الصفوف القديمة
+ * ولا يُقرأ.
  */
-export type ChainPurpose = RequestKind;
-
-export const CHAIN_PURPOSES = [
-  {
-    value: "GENERAL",
-    label: "المسار العام",
-    description: "الطلبات المرفوعة من صفحة الاعتمادات",
-  },
-  {
-    value: "FINANCIAL",
-    label: "مسار الطلبات المالية",
-    description: "طلبات الصرف والشراء والعُهد المرفوعة من صفحة الطلبات المالية",
-  },
-] as const satisfies readonly { value: ChainPurpose; label: string; description: string }[];
-
-/** الغرضُ إن كان معروفاً، وإلا العام — حمايةٌ من قيمةٍ غريبةٍ في الصفّ. */
-export function chainPurposeOf(value: string): ChainPurpose {
-  return CHAIN_PURPOSES.some((p) => p.value === value) ? (value as ChainPurpose) : "GENERAL";
-}
+export type RequestKind = "GENERAL" | "FINANCIAL";
 
 export function visibleRequestFilter(
   employeeId: string,

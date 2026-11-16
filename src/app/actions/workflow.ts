@@ -4,8 +4,11 @@ import { prisma } from "@/lib/db";
 import { getSession } from "@/lib/auth";
 import { hasPermission } from "@/lib/permissions";
 import { revalidatePath } from "next/cache";
-import { chainPurposeOf, type ChainPurpose } from "@/lib/requestQuery";
-import { cleanRequestCategories, withoutCategories } from "@/lib/requestCategories";
+import {
+  cleanRequestCategories,
+  defaultChains,
+  withoutCategories,
+} from "@/lib/requestCategories";
 
 async function requireAdmin() {
   const session = await getSession();
@@ -17,10 +20,16 @@ async function requireAdmin() {
 }
 
 // ── إنشاء سلسلة جديدة ────────────────────────────────────────────────────────
-export async function createChain(name: string, purpose: ChainPurpose = "GENERAL") {
+/**
+ * سلسلةٌ جديدةٌ معطَّلة: تُبنى مستوياتُها وتُسند خدماتُها ثم تُفعَّل.
+ *
+ * ولا غرضَ لها: كان لكلِّ نوعِ طلبٍ بركةُ سلاسل، فصارت بركةً واحدةً
+ * والمسارُ بالخدمة. و`purpose` يبقى على قيمته الافتراضية في الصفّ ولا يُقرأ.
+ */
+export async function createChain(name: string) {
   await requireAdmin();
   const chain = await prisma.workflowChain.create({
-    data: { name: name.trim(), purpose: chainPurposeOf(purpose), isActive: false },
+    data: { name: name.trim(), isActive: false },
   });
   revalidatePath("/main/workflow-settings");
   return chain;
@@ -33,69 +42,108 @@ export async function deleteChain(chainId: string) {
   revalidatePath("/main/workflow-settings");
 }
 
-// ── تفعيل سلسلة كالافتراضية (وإلغاء تفعيل الباقي) ───────────────────────────
+// ── تفعيل سلسلة وتعطيلها ────────────────────────────────────────────────────
+/**
+ * سلاسلُ تعمل معاً، ما لم تشترك في خدمة.
+ *
+ * **والتفعيلُ لم يبقَ حصرياً**: كان تفعيلُ سلسلةٍ يُطفئ أخواتَها، فلم يكن
+ * للموقع إلا مسارٌ واحدٌ في كلِّ لحظة. وقد صارت الخدمةُ هي المسار،
+ * والإسنادُ حصريٌّ أصلاً، فلا تضاربَ في تفعيلهما معاً.
+ *
+ * **وإنما يُمنع تعدُّدُ الافتراضيّة**: السلسلةُ المفعَّلةُ بلا خدماتٍ تدّعي
+ * كلَّ ما لم يُسند، فاثنتان منها تجعلان مسارَ الخدمة غير المسندة رهنَ ترتيب
+ * الصفوف. والسببُ يُقال كما هو حتى يُعرف ما يُفعل.
+ */
+async function chainsForDefaultCheck() {
+  // والأقسامُ محروسة: عمودُها قد لا يكون أُنشئ بعد، وحينئذٍ لا يُعرف من
+  // الصفوف إن كانت السلسلةُ بلا خدمات — فتُقرأ كلُّها «بلا خدمات» ويُترك
+  // الفحصُ، إذ لا تعدُّدَ افتراضيّةٍ يُمنع في نظامٍ لا يعرف الخدمات بعد.
+  try {
+    return await prisma.workflowChain.findMany({
+      select: { id: true, name: true, isActive: true, categories: true, steps: { select: { id: true } } },
+    });
+  } catch (error) {
+    console.error("chainsForDefaultCheck", error);
+    return null;
+  }
+}
+
 export async function setActiveChain(chainId: string) {
   await requireAdmin();
 
-  // الإطفاءُ محصورٌ بغرض السلسلة نفسها.
-  //
-  // فحين كان `updateMany` بلا شرطٍ كان تفعيلُ مسارٍ مالي يُطفئ المسار العام،
-  // فتتوقّف الطلبات كلّها عن إيجاد مُراجعٍ أوّل. ولكل غرضٍ سلسلةٌ نشطةٌ واحدة.
-  const chain = await prisma.workflowChain.findUnique({
-    where: { id: chainId },
-    select: { purpose: true },
-  });
-  if (!chain) throw new Error("السلسلة غير موجودة");
+  const rows = await chainsForDefaultCheck();
+  const chain = rows?.find((c) => c.id === chainId);
+  if (rows && !chain) throw new Error("السلسلة غير موجودة");
 
-  await prisma.$transaction([
-    prisma.workflowChain.updateMany({
-      where: { purpose: chain.purpose },
-      data: { isActive: false },
-    }),
-    prisma.workflowChain.update({ where: { id: chainId }, data: { isActive: true } }),
-  ]);
+  if (rows && chain && chain.categories.length === 0) {
+    const others = defaultChains(
+      rows
+        .filter((c) => c.id !== chainId)
+        .map((c) => ({ ...c, stepCount: c.steps.length }))
+    );
+    if (others.length > 0) {
+      throw new Error(
+        `لا تعمل سلسلتان بلا خدمات: «${others[0].name}» تمر بها الخدمات غير المسندة. اسند خدمات لهذه السلسلة، او عطل تلك`
+      );
+    }
+  }
+
+  await prisma.workflowChain.update({ where: { id: chainId }, data: { isActive: true } });
 
   revalidatePath("/main/workflow-settings");
+  revalidatePath("/main/approvals");
+  revalidatePath("/main/financial-requests");
 }
 
-// ── إلغاء تفعيل جميع السلاسل (بدون workflow) ─────────────────────────────────
-export async function clearActiveChain(purpose: ChainPurpose = "GENERAL") {
+/** تعطيلُ سلسلةٍ بعينها: خدماتُها تبقى مسندةً وتسقط إلى الافتراضيّة. */
+export async function deactivateChain(chainId: string) {
   await requireAdmin();
-  await prisma.workflowChain.updateMany({
-    where: { purpose: chainPurposeOf(purpose) },
-    data: { isActive: false },
-  });
+  await prisma.workflowChain.update({ where: { id: chainId }, data: { isActive: false } });
   revalidatePath("/main/workflow-settings");
+  revalidatePath("/main/approvals");
+  revalidatePath("/main/financial-requests");
 }
 
-// ── أقسام الطلبات التي تمر بالسلسلة ─────────────────────────────────────────
+// ── الخدمات التي تمر بالسلسلة ───────────────────────────────────────────────
 /**
- * إسنادُ أقسامٍ إلى سلسلة — وبه يُستغنى عن التفعيل والتعطيل في كلِّ طلب.
+ * إسنادُ خدماتٍ إلى سلسلة — وبه يُستغنى عن التفعيل والتعطيل في كلِّ طلب.
  *
- * **والإسنادُ حصريٌّ في الغرض**: القسمُ الذي يُسند إلى سلسلةٍ يُنزع من
- * أخواتها، فلا يُقرأ المسارُ من ترتيب الصفوف. ولو جاز لقسمٍ أن يكون في
- * سلسلتين لصار مسارُ طلبه رهنَ أيِّهما أُنشئت أوّلاً — وهو خبرٌ لا يُقرأ
- * في الشاشة ولا يُتوقَّع.
+ * **والإسنادُ حصريٌّ في الموقع كلِّه**: الخدمةُ التي تُسند إلى سلسلةٍ تُنزع
+ * من أخواتها، فلا يُقرأ المسارُ من ترتيب الصفوف. ولو جازت خدمةٌ في سلسلتين
+ * لصار مسارُ طلبها رهنَ أيِّهما أُنشئت أوّلاً — وهو خبرٌ لا يُقرأ في الشاشة
+ * ولا يُتوقَّع. وبهذا تعمل السلاسلُ معاً بلا اشتراك.
  *
- * وتُنقّى المفاتيحُ قبل الحفظ (`cleanRequestCategories`): قسمٌ لا يعرفه
- * النموذجُ لا يُرفع به طلب، فإسنادُه يحجز مساراً لا سالكَ له.
+ * **ولا تُترك سلسلةٌ مفعَّلةٌ بلا خدماتٍ إن كانت لغيرها**: ذاك تعدُّدُ
+ * افتراضيّةٍ، وهو ما يمنعه التفعيلُ نفسُه.
+ *
+ * وتُنقّى المفاتيحُ قبل الحفظ (`cleanRequestCategories`): خدمةٌ لا يعرفها
+ * النموذجُ لا يُرفع بها طلب، فإسنادُها يحجز مساراً لا سالكَ له.
  */
 export async function setChainCategories(chainId: string, categories: string[]) {
   await requireAdmin();
-
-  const chain = await prisma.workflowChain.findUnique({
-    where: { id: chainId },
-    select: { purpose: true },
-  });
-  if (!chain) throw new Error("السلسلة غير موجودة");
 
   const wanted = cleanRequestCategories(categories);
 
   try {
     const siblings = await prisma.workflowChain.findMany({
-      where: { purpose: chain.purpose, id: { not: chainId } },
-      select: { id: true, categories: true },
+      where: { id: { not: chainId } },
+      select: { id: true, name: true, isActive: true, categories: true, steps: { select: { id: true } } },
     });
+
+    // وتجريدُ سلسلةٍ عاملةٍ من خدماتها يجعلها افتراضيّةً ثانية.
+    if (wanted.length === 0) {
+      const chain = await prisma.workflowChain.findUnique({
+        where: { id: chainId },
+        select: { isActive: true, steps: { select: { id: true } } },
+      });
+      if (!chain) throw new Error("السلسلة غير موجودة");
+      const others = defaultChains(siblings.map((s) => ({ ...s, stepCount: s.steps.length })));
+      if (chain.isActive && chain.steps.length > 0 && others.length > 0) {
+        throw new Error(
+          `لا تعمل سلسلتان بلا خدمات: «${others[0].name}» تمر بها الخدمات غير المسندة. عطل احداهما قبل تجريد هذه من خدماتها`
+        );
+      }
+    }
 
     await prisma.$transaction([
       prisma.workflowChain.update({ where: { id: chainId }, data: { categories: wanted } }),
@@ -109,15 +157,20 @@ export async function setChainCategories(chainId: string, categories: string[]) 
         ),
     ]);
   } catch (error) {
-    // العمودُ قد لا يكون أُنشئ بعد — والسببُ يُقال كما هو لا «فشل الحفظ».
+    // الرسالةُ المكتوبةُ هنا تُمرَّر كما هي: منعُ تعدُّد الافتراضيّة خبرٌ
+    // يُقرأ، لا عطبٌ يُستر بـ«تعذر الحفظ».
+    if (error instanceof Error && error.message.startsWith("لا تعمل")) throw error;
+    if (error instanceof Error && error.message === "السلسلة غير موجودة") throw error;
+    // والعمودُ قد لا يكون أُنشئ بعد — والسببُ يُقال كما هو.
     console.error("setChainCategories", error);
     throw new Error(
-      "تعذر حفظ الأقسام — لم يطبق بعد prisma/sql/workflow-chain-categories.sql على قاعدة البيانات"
+      "تعذر حفظ الخدمات — لم يطبق بعد prisma/sql/workflow-chain-categories.sql على قاعدة البيانات"
     );
   }
 
   revalidatePath("/main/workflow-settings");
   revalidatePath("/main/approvals");
+  revalidatePath("/main/financial-requests");
 }
 
 // ── إضافة خطوة لسلسلة ────────────────────────────────────────────────────────

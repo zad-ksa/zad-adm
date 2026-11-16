@@ -5,7 +5,6 @@ import {
   type CategoryRoutes,
   type RoutableChain,
 } from "@/lib/requestCategories";
-import type { ChainPurpose } from "@/lib/requestQuery";
 
 /**
  * مسارُ الطلب: أيُّ سلسلةٍ يسلكها طلبُ قسمٍ ما، ومن أوّلُ معتمِديه.
@@ -27,16 +26,18 @@ type LoadedChain = RoutableChain & {
 };
 
 /**
- * سلاسلُ غرضٍ ما بأقسامها وأوّل معتمِديها.
+ * سلاسلُ الموقع كلُّها بخدماتها وأوّل معتمِديها.
  *
- * **وتسقط إلى «بلا أقسام» لا إلى عطب**: عمودُ `categories` قد لا يكون أُنشئ
- * بعد (`prisma/sql/workflow-chain-categories.sql`)، فتعمل الصفحةُ كما كانت
- * تعمل قبله — بالسلسلة المفعَّلة وحدَها — ولا تسقط صفحةُ الاعتمادات كلُّها
- * على هجرةٍ لم تُطبَّق.
+ * **وبركةٌ واحدةٌ بلا غرض**: كان لكلِّ نوعِ طلبٍ سلاسلُه، فصار المسارُ
+ * بالخدمة وحدَها — والطلبُ المالي خدمتُه «المالية».
+ *
+ * **وتسقط إلى «بلا خدمات» لا إلى عطب**: عمودُ `categories` قد لا يكون
+ * أُنشئ بعد (`prisma/sql/workflow-chain-categories.sql`)، فتعمل الصفحةُ
+ * كما كانت تعمل قبله — بالسلسلة المفعَّلة وحدَها — ولا تسقط صفحةُ
+ * الاعتمادات كلُّها على هجرةٍ لم تُطبَّق.
  */
-async function loadChains(purpose: ChainPurpose): Promise<LoadedChain[]> {
+async function loadChains(): Promise<LoadedChain[]> {
   const shape = {
-    where: { purpose },
     orderBy: { createdAt: "asc" as const },
   };
   const steps = { select: { approverId: true }, orderBy: { order: "asc" as const } };
@@ -73,21 +74,20 @@ async function loadChains(purpose: ChainPurpose): Promise<LoadedChain[]> {
 
 export type ChainRoute = { chainId: string; chainName: string; approverId: string };
 
-/** مسارُ قسمٍ بعينه — أو `null` إن لم يكن له سلسلةٌ ولا سلسلةٌ افتراضيّة. */
+/** مسارُ خدمةٍ بعينها — أو `null` إن لم تكن لها سلسلةٌ ولا سلسلةٌ افتراضيّة. */
 export async function routeForCategory(
-  category: string | null | undefined,
-  purpose: ChainPurpose = "GENERAL"
+  category: string | null | undefined
 ): Promise<ChainRoute | null> {
-  const chain = chainForCategory(category, await loadChains(purpose));
+  const chain = chainForCategory(category, await loadChains());
   // `stepCount > 0` شرطُ الاختيار، فأوّلُ معتمِدٍ موجودٌ قطعاً — والفحصُ
   // لإقناع المترجم لا لحالٍ تقع.
   if (!chain?.firstApproverId) return null;
   return { chainId: chain.id, chainName: chain.name, approverId: chain.firstApproverId };
 }
 
-/** مسارُ كلِّ قسمٍ معروف — تقرؤه الصفحةُ لتُسمّي المسارَ تحت القسم المختار. */
-export async function categoryRoutes(purpose: ChainPurpose = "GENERAL"): Promise<CategoryRoutes> {
-  const chains = await loadChains(purpose);
+/** مسارُ كلِّ خدمةٍ معروفة — تقرؤه الصفحةُ لتُسمّي المسارَ تحت الخدمة المختارة. */
+export async function categoryRoutes(): Promise<CategoryRoutes> {
+  const chains = await loadChains();
   const routes: CategoryRoutes = {};
   for (const category of REQUEST_CATEGORIES) {
     const chain = chainForCategory(category.key, chains);

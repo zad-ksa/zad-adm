@@ -94,6 +94,15 @@ const SECTIONS: Record<string, Section> = {
   },
 };
 
+/**
+ * مساراتٌ تكتب ترويستَها بنفسها — فتسكت هذه عنها.
+ *
+ * وصفحةُ المبادرة منها: آخرُ حلقةٍ في مسارها **اسمُ المبادرة**، ولا يعرفه
+ * الرابطُ ولا يعرفه هذا المكوّن — فكانت تُعرض كأنّها صفحةُ «الاستراتيجية»
+ * الجامعة، فيقرأ الداخلُ إليها مسارَ ثلاثِ حلقاتٍ لا موضعَ له فيه.
+ */
+const SELF_HEADED = [/^operational\/initiatives\/[^\/]+$/];
+
 export default function StrategyHeader({
   charityName,
   isInternal = false,
@@ -105,6 +114,8 @@ export default function StrategyHeader({
   const base = `/main/strategy/${encodeURIComponent(charityName)}`;
   // الرابط قد يصل مُرمَّزاً أو لا — نقارن ما بعد اسم الجمعية فقط.
   const tail = decodeURIComponent(pathname).split("/").slice(4).join("/");
+  if (SELF_HEADED.some((pattern) => pattern.test(tail))) return null;
+
   const key = tail in SECTIONS ? tail : "";
   const section = SECTIONS[key];
 
@@ -120,15 +131,17 @@ export default function StrategyHeader({
   if (key !== "") trail.push({ label: section.title });
 
   return (
-    <PageHeader
-      crumbs={entityCrumbs(
-        charityName,
-        // في الصفحة الجامعة لا رابط من الاسم إليها: هي المفتوحة.
-        { isInternal, sectionHref: key === "" ? undefined : base },
-        ...trail
-      )}
-      title={section.title}
-      description={section.description}
-    />
+    <div className="mb-6 print:hidden">
+      <PageHeader
+        crumbs={entityCrumbs(
+          charityName,
+          // في الصفحة الجامعة لا رابط من الاسم إليها: هي المفتوحة.
+          { isInternal, sectionHref: key === "" ? undefined : base },
+          ...trail
+        )}
+        title={section.title}
+        description={section.description}
+      />
+    </div>
   );
 }

@@ -16,6 +16,41 @@ const crumbLinkClass =
   "rounded-sm transition-colors outline-none hover:text-slate-900 focus-visible:ring-2 focus-visible:ring-primary/40 dark:hover:text-slate-100";
 
 /**
+ * مسارُ التنقّل وحدَه.
+ *
+ * وأُخرج من الترويسة ليُستعمل بلا عنوان: صفحةٌ تكتب عنوانَها في متنها — كصفحة
+ * المبادرة، عنوانُها اسمُها في بطاقتها — تحتاج المسارَ ولا تحتاج عنواناً ثانياً
+ * فوقه. ورسمُه واحدٌ في الحالين، فلا يفترق مسارٌ عن مسار.
+ */
+export function Crumbs({ items }: { items: Crumb[] }) {
+  if (items.length === 0) return null;
+  return (
+    <nav aria-label="مسار التنقل" className="flex flex-wrap items-center gap-1.5 text-body text-slate-500 dark:text-slate-400">
+      {items.map((c, i) => (
+        <span key={c.label} className="flex items-center gap-1.5">
+          {i > 0 && (
+            <span aria-hidden className="text-slate-300 dark:text-slate-700">
+              /
+            </span>
+          )}
+          {c.href ? (
+            <Link href={c.href} className={crumbLinkClass}>
+              {c.label}
+            </Link>
+          ) : c.onClick ? (
+            <button type="button" onClick={c.onClick} className={crumbLinkClass}>
+              {c.label}
+            </button>
+          ) : (
+            <span className="text-slate-900 dark:text-slate-100">{c.label}</span>
+          )}
+        </span>
+      ))}
+    </nav>
+  );
+}
+
+/**
  * ترويسة الصفحة — عنوانٌ واحدٌ بمقاسٍ واحد في كل أقسام اللوحة.
  *
  * كان في المشروع سبعة مقاساتٍ لهذا العنصر نفسه (من `text-base` إلى
@@ -41,30 +76,7 @@ export function PageHeader({
   return (
     <header className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
       <div className="min-w-0 space-y-1.5">
-        {crumbs && crumbs.length > 0 && (
-          <nav aria-label="مسار التنقل" className="flex items-center gap-1.5 text-body text-slate-500 dark:text-slate-400">
-            {crumbs.map((c, i) => (
-              <span key={c.label} className="flex items-center gap-1.5">
-                {i > 0 && (
-                  <span aria-hidden className="text-slate-300 dark:text-slate-700">
-                    /
-                  </span>
-                )}
-                {c.href ? (
-                  <Link href={c.href} className={crumbLinkClass}>
-                    {c.label}
-                  </Link>
-                ) : c.onClick ? (
-                  <button type="button" onClick={c.onClick} className={crumbLinkClass}>
-                    {c.label}
-                  </button>
-                ) : (
-                  <span className="text-slate-900 dark:text-slate-100">{c.label}</span>
-                )}
-              </span>
-            ))}
-          </nav>
-        )}
+        {crumbs && crumbs.length > 0 && <Crumbs items={crumbs} />}
         <h1 className="flex items-center gap-2.5 text-page font-semibold leading-tight tracking-tight">
           {icon && (
             <span aria-hidden className="shrink-0 text-primary dark:text-teal-300">

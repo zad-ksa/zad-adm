@@ -5,6 +5,8 @@ import { getSession } from "@/lib/auth";
 import { hasPermission } from "@/lib/permissions";
 import { requireCharitySection } from "@/lib/sectionGuard";
 import { planMonths } from "@/lib/initiativeProgress";
+import { Crumbs } from "@/components/console/layout";
+import { entityCrumbs } from "@/lib/crumbs";
 import InitiativePlanClient, { type InitiativeDetail, type StepRow } from "./InitiativePlanClient";
 
 export const dynamic = "force-dynamic";
@@ -37,8 +39,10 @@ export default async function InitiativePage({
   const parsed = parseInt(number, 10);
   if (!Number.isFinite(parsed)) notFound();
 
-  const [session, initiative] = await Promise.all([
+  const [session, entity, initiative] = await Promise.all([
     getSession(),
+    // والكيانُ الداخليُّ لا يبدأ مسارُه بـ«الجمعيات» — كما في ترويسة القسم.
+    prisma.charity.findUnique({ where: { name: decodedName }, select: { isInternal: true } }),
     prisma.initiative.findFirst({
       where: { number: parsed, plan: { charity: { name: decodedName } } },
       select: {
@@ -132,5 +136,25 @@ export default async function InitiativePage({
     },
   };
 
-  return <InitiativePlanClient charityName={decodedName} initiative={detail} steps={steps} canEdit={canEdit} />;
+  // ومسارُ هذه الصفحة يُكتب هنا لا في ترويسة القسم: آخرُ حلقةٍ فيه اسمُ
+  // المبادرة، ولا يعرفه الرابطُ ولا الترويسةُ الجامعة. والعنوانُ لا يُكرَّر
+  // فوقه: اسمُ المبادرة مكتوبٌ في بطاقتها أسفلَه.
+  const base = `/main/strategy/${encodeURIComponent(decodedName)}`;
+  const crumbs = entityCrumbs(
+    decodedName,
+    { isInternal: entity?.isInternal ?? false, sectionHref: base },
+    { label: "الاستراتيجية", href: base },
+    { label: "الخطة التشغيلية", href: `${base}/operational` },
+    { label: "كشاف المبادرات", href: `${base}/operational/initiatives` },
+    { label: initiative.name }
+  );
+
+  return (
+    <>
+      <div className="mb-4 print:hidden">
+        <Crumbs items={crumbs} />
+      </div>
+      <InitiativePlanClient charityName={decodedName} initiative={detail} steps={steps} canEdit={canEdit} />
+    </>
+  );
 }

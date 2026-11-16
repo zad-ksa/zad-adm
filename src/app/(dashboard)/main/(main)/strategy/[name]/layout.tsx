@@ -22,9 +22,9 @@ export default async function StrategyLayout({
 
   return (
     <div className="flex h-full flex-col">
-      <div className="mb-6 print:hidden">
-        <StrategyHeader charityName={decodedName} isInternal={entity?.isInternal ?? false} />
-      </div>
+      {/* والغلافُ في الترويسة نفسِها: صفحةٌ تكتب ترويستَها بنفسها تُسكِتها،
+          فلا يبقى فراغُ هامشٍ فوق متنها. */}
+      <StrategyHeader charityName={decodedName} isInternal={entity?.isInternal ?? false} />
 
       <StrategySurface>{children}</StrategySurface>
     </div>

@@ -6,6 +6,7 @@ import { hasPermission } from "@/lib/permissions";
 import { requireCharitySection } from "@/lib/sectionGuard";
 import { EmptyState } from "@/components/console/layout";
 import { planMonths } from "@/lib/initiativeProgress";
+import { planPeopleGroups } from "@/lib/planPeople";
 import InitiativesClient, {
   type InitiativeRow,
   type ObjectiveOption,
@@ -139,6 +140,9 @@ export default async function InitiativesPage({
     })),
   }));
 
+  // أسماءُ مدير المبادرة: فريقُ زادٍ وفريقُ هذه الجمعية.
+  const people = await planPeopleGroups(charity.id);
+
   const planOptions: PlanOption[] = plans.map((p) => ({
     id: p.id,
     label: p.label,
@@ -156,6 +160,7 @@ export default async function InitiativesPage({
       selectedPlanId={selected?.id ?? null}
       initiatives={rows}
       objectives={objectives}
+      people={people}
       canEdit={canEdit}
     />
   );

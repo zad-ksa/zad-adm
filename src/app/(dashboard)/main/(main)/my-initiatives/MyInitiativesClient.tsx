@@ -35,8 +35,8 @@ export type MyInitiativeRow = {
   startDate: string | null;
   endDate: string | null;
   steps: { progress: number; cost: number | null; actualCost: number | null }[];
-  /** رابطُ صفحة المبادرة — أو `null` لمن لا يُفتح له بابُها. */
-  href: string | null;
+  /** رابطُ صفحة المبادرة: التكليفُ نفسُه يفتحها، فلا بطاقةَ بلا رابط. */
+  href: string;
 };
 
 const BAR: Record<string, string> = {
@@ -189,16 +189,12 @@ export default function MyInitiativesClient({
                   </div>
 
                   <div className="min-w-0 space-y-1">
-                    {row.href ? (
-                      <Link
-                        href={row.href}
-                        className="block text-body font-semibold text-primary transition-colors outline-none hover:underline focus-visible:ring-2 focus-visible:ring-primary/40 dark:text-teal-300"
-                      >
-                        {row.name}
-                      </Link>
-                    ) : (
-                      <p className="text-body font-semibold text-slate-800 dark:text-slate-100">{row.name}</p>
-                    )}
+                    <Link
+                      href={row.href}
+                      className="block text-body font-semibold text-primary transition-colors outline-none hover:underline focus-visible:ring-2 focus-visible:ring-primary/40 dark:text-teal-300"
+                    >
+                      {row.name}
+                    </Link>
                     {row.objective && (
                       <p className="line-clamp-2 text-caption text-slate-500 dark:text-slate-400">{row.objective}</p>
                     )}

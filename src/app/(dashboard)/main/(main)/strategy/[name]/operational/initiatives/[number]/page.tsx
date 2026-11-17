@@ -1,13 +1,14 @@
 import type { Metadata } from "next";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { getSession } from "@/lib/auth";
-import { hasPermission } from "@/lib/permissions";
-import { requireCharitySection } from "@/lib/sectionGuard";
+import { hasStrategySectionAccess, isAssignedManager } from "@/lib/initiativeAccess";
 import { planMonths } from "@/lib/initiativeProgress";
+import { planPeopleGroups } from "@/lib/planPeople";
 import { Crumbs, type Crumb } from "@/components/console/layout";
 import { entityCrumbs } from "@/lib/crumbs";
 import InitiativePlanClient, { type InitiativeDetail, type StepRow } from "./InitiativePlanClient";
+import type { InitiativeRow, ObjectiveOption } from "../InitiativesClient";
 
 export const dynamic = "force-dynamic";
 
@@ -25,6 +26,12 @@ export async function generateMetadata({
  *
  * ومفتاح المسار رقمُ المبادرة في كشافها لا مُعرِّفها: رابطٌ يُقرأ ويُنسخ
  * ويُفهم. والرقم فريدٌ داخل خطته، فالاستعلام يقيّده بجمعية المسار.
+ *
+ * **وبابُها بابان** (`initiativeAccess`): قسمُ الاستراتيجية في جمعيتها،
+ * أو تكليفُ المبادرة نفسِها — فمن كُتب اسمُه «مدير المبادرة» يفتحها
+ * ويُعدّلها ولو لم يكن من أهل القسم. ولذلك لا يُحرسها
+ * `requireCharitySection`: ذاك حارسٌ يَحجب أو يُحوّل، ولا يعرف إلا باباً
+ * واحداً. والفحصُ بعد الاستعلام لأنّ التكليفَ مكتوبٌ في الصفّ نفسِه.
  */
 export default async function InitiativePage({
   params,
@@ -38,8 +45,6 @@ export default async function InitiativePage({
   const { from } = await searchParams;
   const fromMine = from === "mine";
   const decodedName = decodeURIComponent(name);
-
-  await requireCharitySection("manage_strategy", decodedName);
 
   const parsed = parseInt(number, 10);
   if (!Number.isFinite(parsed)) notFound();
@@ -66,8 +71,8 @@ export default async function InitiativePage({
         marketingKind: true,
         marketingUrl: true,
         marketingFileName: true,
-        plan: { select: { id: true, label: true, startDate: true, endDate: true, weekCount: true } },
-        objective: { select: { code: true, name: true } },
+        plan: { select: { id: true, charityId: true, label: true, startDate: true, endDate: true, weekCount: true } },
+        objective: { select: { id: true, code: true, name: true } },
         indicators: { select: { indicator: { select: { id: true, code: true, name: true } } } },
         steps: {
           orderBy: { order: "asc" },
@@ -94,7 +99,19 @@ export default async function InitiativePage({
 
   if (!initiative) notFound();
 
-  const canEdit = hasPermission(session?.role || "", session?.permissions || [], "manage_strategy");
+  // بابان: أهلُ القسم في جمعيتها، أو المكلَّفُ بها بعينه. ومن لا بابَ له
+  // يُردّ، فلا يُقرأ ملفُّ مبادرةٍ بكتابة رابطها.
+  const sectionAccess = await hasStrategySectionAccess(session, initiative.plan.charityId);
+  const isManager = sectionAccess
+    ? false
+    : await isAssignedManager(session?.id ?? "", initiative.managerName);
+  if (!sectionAccess && !isManager) redirect("/main");
+
+  // وكلا البابين يُعدّل: التكليفُ بلا أداةِ تعديلٍ تكليفٌ ناقص.
+  const canEdit = sectionAccess || isManager;
+  // ومن دخل بتكليفه وحدَه لا يُعرض له مسارُ الاستراتيجية: حلقاتُه أبوابٌ
+  // لا تُفتح له، فمسارُه «مبادراتي» ورجوعُه إليها — ولو جاء بالرابط مباشرةً.
+  const asMine = fromMine || isManager;
   const text = (v: unknown) => (v === null || v === undefined ? null : String(v));
 
   const steps: StepRow[] = initiative.steps.map((s) => ({
@@ -144,8 +161,71 @@ export default async function InitiativePage({
   // ومسارُ هذه الصفحة يُكتب هنا لا في ترويسة القسم: آخرُ حلقةٍ فيه اسمُ
   // المبادرة، ولا يعرفه الرابطُ ولا الترويسةُ الجامعة. والعنوانُ لا يُكرَّر
   // فوقه: اسمُ المبادرة مكتوبٌ في بطاقتها أسفلَه.
+  // زادُ نافذة تعديل البيانات: الأهدافُ والمؤشّراتُ من دليل الجمعية،
+  // والأسماءُ من فريقَي زادٍ والجمعية — وهي استعلاماتٌ لا تُطلب لمن لا
+  // يُعدِّل، فلا تُحمَّل الصفحةُ ما لا يُستعمل.
+  const edit = canEdit
+    ? await (async () => {
+        const [objectiveRows, people] = await Promise.all([
+          prisma.strategyObjective.findMany({
+            where: { perspective: { charityId: initiative.plan.charityId } },
+            orderBy: [{ perspective: { order: "asc" } }, { order: "asc" }],
+            select: {
+              id: true,
+              code: true,
+              name: true,
+              perspective: { select: { name: true } },
+              indicators: { orderBy: { order: "asc" }, select: { id: true, code: true, name: true } },
+            },
+          }),
+          planPeopleGroups(initiative.plan.charityId),
+        ]);
+
+        const objectives: ObjectiveOption[] = objectiveRows.map((o) => ({
+          id: o.id,
+          code: o.code,
+          name: o.name,
+          perspective: o.perspective.name,
+          indicators: o.indicators,
+        }));
+
+        // وصفُّ النافذة يُبنى هنا لا في العميل: هو صفُّ الكشّاف نفسُه
+        // (`InitiativeRow`)، فتُفتح نافذةٌ واحدةٌ من البابين بلا شكلٍ ثانٍ.
+        const row: InitiativeRow = {
+          id: initiative.id,
+          number: initiative.number,
+          name: initiative.name,
+          description: initiative.description,
+          durationText: initiative.durationText,
+          managerName: initiative.managerName,
+          owningDept: initiative.owningDept,
+          priority: initiative.priority,
+          startDate: detail.startDate,
+          endDate: detail.endDate,
+          budget: text(initiative.budget),
+          monthlyBudget: (initiative.monthlyBudget as Record<string, number> | null) ?? null,
+          marketingKind: initiative.marketingKind,
+          marketingUrl: initiative.marketingUrl,
+          marketingFileName: initiative.marketingFileName,
+          objective: initiative.objective,
+          indicators: initiative.indicators.map((x) => x.indicator),
+          steps: initiative.steps.map((s) => ({
+            progress: s.progress,
+            cost: s.cost === null ? null : Number(s.cost),
+            actualCost: s.actualCost === null ? null : Number(s.actualCost),
+            planStartWeek: s.planStartWeek,
+            planWeeks: s.planWeeks,
+            actualStartWeek: s.actualStartWeek,
+            actualWeeks: s.actualWeeks,
+          })),
+        };
+
+        return { objectives, people, row };
+      })()
+    : null;
+
   const base = `/main/strategy/${encodeURIComponent(decodedName)}`;
-  const crumbs: Crumb[] = fromMine
+  const crumbs: Crumb[] = asMine
     ? // ومن جاء من «مبادراتي» لا يُعاد إلى شجرة الاستراتيجية: مسارُه حلقتان،
       // أولاهما الصفحةُ التي خرج منها.
       [{ label: "مبادراتي", href: "/main/my-initiatives" }, { label: initiative.name }]
@@ -167,8 +247,9 @@ export default async function InitiativePage({
         initiative={detail}
         steps={steps}
         canEdit={canEdit}
+        edit={edit}
         back={
-          fromMine
+          asMine
             ? { href: "/main/my-initiatives", label: "مبادراتي" }
             : { href: `${base}/operational/initiatives`, label: "الكشاف" }
         }

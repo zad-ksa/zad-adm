@@ -2,9 +2,6 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { getSession } from "@/lib/auth";
-import { hasPermission } from "@/lib/permissions";
-import { getAssignedCharityIds } from "@/lib/access";
-import { sectionService, serviceRowsWhere } from "@/lib/charityServices";
 import { samePersonName } from "@/lib/personName";
 import MyInitiativesClient, { type MyInitiativeRow } from "./MyInitiativesClient";
 
@@ -20,9 +17,13 @@ export const metadata: Metadata = { title: "مبادراتي | زاد التنم
  * رسمَ الهمزة والتاء المربوطة والمسافات، ولا تُقرِّب اسماً من اسم.
  *
  * **ولا تُحجب بالإسناد**: مبادرةٌ كُتب فيها اسمُك هي عملُك، ولو كانت في جمعيةٍ
- * ليست في إسنادك — وإخفاؤها يُخفي واجباً. وما يُحجب هو **بابُ** صفحة المبادرة:
- * تلك خلف `manage_strategy` والإسنادِ والخدمة كما هي، فلا يُعرض رابطٌ يُردّ
- * صاحبُه عند النقر.
+ * ليست في إسنادك — وإخفاؤها يُخفي واجباً.
+ *
+ * **وما يُعرض هنا يُفتح ويُعدَّل**: التكليفُ نفسُه بابٌ إلى صفحة المبادرة
+ * (`initiativeAccess`)، فلا بطاقةَ بلا رابط. وكانت الروابطُ تُحجب لمن لا
+ * يملك `manage_strategy` أو لم تُسند إليه الجمعية، فكان يُعرض له واجبٌ لا
+ * يستطيع أداءه — والتكليفُ يُعطي أداةَ العمل: مبادرتَه وخطواتِها، لا
+ * الكشّافَ ولا الخطةَ ولا مبادراتِ غيره.
  */
 export default async function MyInitiativesPage() {
   const session = await getSession();
@@ -61,27 +62,6 @@ export default async function MyInitiativesPage() {
 
   const mine = all.filter((row) => samePersonName(row.managerName, myName));
 
-  // أيُّ الجمعيات يُفتح فيها بابُ صفحة المبادرة: الصلاحيةُ ثمّ الإسنادُ ثمّ
-  // الخدمة — وهي فحوصُ `requireCharitySection` نفسُها، تُحسب هنا مرّةً للروابط.
-  const charityIds = [...new Set(mine.map((row) => row.plan.charity.id))];
-  const canStrategy = hasPermission(session.role, session.permissions || [], "manage_strategy");
-  const service = sectionService("manage_strategy");
-
-  let openable = new Set<string>();
-  if (canStrategy && charityIds.length > 0) {
-    const assigned = await getAssignedCharityIds(session.id, session.role, session.permissions);
-    const served = await prisma.charity.findMany({
-      where: {
-        id: { in: charityIds },
-        ...(service ? { services: { some: serviceRowsWhere(service) } } : {}),
-      },
-      select: { id: true },
-    });
-    openable = new Set(
-      served.map((c) => c.id).filter((id) => assigned === null || assigned.includes(id))
-    );
-  }
-
   const day = (value: Date | null) => (value ? value.toISOString().slice(0, 10) : null);
 
   const rows: MyInitiativeRow[] = mine.map((row) => ({
@@ -104,9 +84,7 @@ export default async function MyInitiativesPage() {
     // دُخل منه: فتُكتب ترويستُه «مبادراتي / اسم المبادرة»، ويبقى الشريطُ
     // الجانبيُّ على «مبادراتي». وصفحةٌ ثانيةٌ لنفس المبادرة كانت تعني حارسَين
     // واستعلامَين يفترقان عند أوّل تعديل.
-    href: openable.has(row.plan.charity.id)
-      ? `/main/strategy/${encodeURIComponent(row.plan.charity.name)}/operational/initiatives/${row.number}?from=mine`
-      : null,
+    href: `/main/strategy/${encodeURIComponent(row.plan.charity.name)}/operational/initiatives/${row.number}?from=mine`,
   }));
 
   return <MyInitiativesClient myName={myName} rows={rows} />;

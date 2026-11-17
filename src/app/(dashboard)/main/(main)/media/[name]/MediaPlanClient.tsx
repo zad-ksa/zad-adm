@@ -76,10 +76,18 @@ type ViewMode = "month" | "week" | "list";
 const VIEW_KEY = "zad:media-view";
 const VIEW_MODES = ["month", "week", "list"] as const;
 
+/** أوّلُ يومٍ في الشهر وآخرُه، «YYYY-MM-DD». */
+function monthRange({ year, month }: { year: number; month: number }) {
+  const pad = (n: number) => String(n).padStart(2, "0");
+  const last = new Date(Date.UTC(year, month + 1, 0)).getUTCDate();
+  return { from: `${year}-${pad(month + 1)}-01`, to: `${year}-${pad(month + 1)}-${pad(last)}` };
+}
+
 export default function MediaPlanClient({
   charityId,
   charityName,
   today,
+  initialAnchor,
   initialPosts,
   platforms: initialPlatforms,
   publishingPlan,
@@ -87,6 +95,8 @@ export default function MediaPlanClient({
   charityId: string;
   charityName: string;
   today: string;
+  /** اليومُ الذي يفتح عليه التقويم — شهرٌ فيه منشورات. */
+  initialAnchor?: string;
   initialPosts: RawMediaPost[];
   platforms: MediaPlatformView[];
   /** خطّةُ النشر المكتوبةُ لهذه الجمعية — يكتبها الموظَّفُ هنا. */
@@ -94,7 +104,7 @@ export default function MediaPlanClient({
 }) {
   // هيئةُ العرض تبقى كما تركها صاحبُها: من يعمل بالأسبوع يفتح على الأسبوع.
   const [view, chooseView] = useStoredChoice<ViewMode>(VIEW_KEY, "month", VIEW_MODES);
-  const [anchor, setAnchor] = useState(today);
+  const [anchor, setAnchor] = useState(initialAnchor ?? today);
   const [posts, setPosts] = useState<MediaPost[]>(() => initialPosts.map(normalizePost));
   const [platforms, setPlatforms] = useState<MediaPlatformView[]>(initialPlatforms);
   const [reloads, setReloads] = useState(0);
@@ -114,8 +124,10 @@ export default function MediaPlanClient({
       const start = weekStartISO(anchor);
       return { from: start, to: addDaysISO(start, 6) };
     }
-    return { from: weeks[0][0].date, to: weeks[5][6].date };
-  }, [view, anchor, weeks]);
+    // الشهرُ وحدَه لا شبكتُه: أيّامُ الشهرين المجاورين في أطراف الشبكة تُرسم
+    // باهتةً بلا منشورات، والقائمةُ لا تخلط بشهرها منشوراتِ غيره.
+    return monthRange(month);
+  }, [view, anchor, month]);
 
   useEffect(() => {
     let alive = true;

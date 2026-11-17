@@ -74,6 +74,34 @@ export type InitiativeRow = {
 
 const cell = "border-l border-slate-200 p-2 align-middle transition-colors dark:border-slate-800";
 const headCell = "h-10 border-l border-slate-200 px-3 transition-colors dark:border-slate-800";
+
+/**
+ * العمودان الأوّلان مثبَّتان: رقمُ المبادرة واسمُها.
+ *
+ * فالجدولُ أعرضُ من الشاشة بأشهرِ الموازنة وأعمدةِ الحساب، فمن لفّ يساراً
+ * إلى شهرٍ أو إلى المصروف الفعلي فقد اسمَ الصفّ الذي يقرؤه — فيصير الرقمُ
+ * خبراً بلا صاحب. وهما يبقيان في مكانهما مهما لُفَّ.
+ *
+ * **وإزاحةُ الثاني عرضُ الأوّل** (`w-10` = `2.5rem` = `start-10`): رقمان
+ * يُكتبان في موضعين ولا بدّ أن يتفقا، فلو زاد عرضُ عمود الرقم لظهر من تحته
+ * ما يَلفّ. و`zoom` يُكبّر الاثنين معاً فلا يفترقان.
+ *
+ * **ولهما خلفيّةٌ صريحةٌ غيرُ شفّافة**: الخليّةُ المثبَّتةُ موضوعةٌ، فتُرسم
+ * فوق ما يَلفّ تحتها — وبخلفيّةٍ شفّافةٍ يُقرأ نصُّ عمودين في موضعٍ واحد.
+ * ولذلك تُعاد هنا ألوانُ تخطيط الصفوف ووميضُ المرور (`group-hover`) صريحةً،
+ * صلبةً بلا شفافية — إذ لا تُنقل خلفيّةُ الصفّ إلى خليّةٍ موضوعة.
+ */
+// و`print:static` فكُّ التثبيت عند الطباعة: الورقُ لا يَلفّ، والمثبَّتُ فيه يَركب ما تحته.
+const pinnedNumber = "sticky start-0 z-[1] print:static";
+// وفاصلُ العمود المثبَّت ظلٌّ لا حدّ: حدودُ الجدول مضمومة (`border-collapse`)
+// وحدُّ خليّةٍ مثبَّتةٍ قد لا يُرسم فيها — وهي الحيلةُ نفسُها التي تفصل
+// الترويسةَ الملتصقة.
+const pinnedName =
+  "sticky start-10 z-[1] shadow-[-1px_0_0_rgb(226_232_240)] dark:shadow-[-1px_0_0_rgb(30_41_59)] print:static print:shadow-none";
+const pinnedBg = (odd: boolean) =>
+  odd
+    ? "bg-slate-100 group-hover:bg-slate-200 dark:bg-slate-800 dark:group-hover:bg-slate-700"
+    : "bg-white group-hover:bg-slate-50 dark:bg-slate-800 dark:group-hover:bg-slate-700";
 const dash = <span className="text-slate-300 dark:text-slate-600">—</span>;
 
 const PRIORITY_TONE: Record<string, "danger" | "warn" | "neutral"> = {
@@ -343,8 +371,13 @@ export default function InitiativesClient({
         <table style={{ zoom: `${view.zoom}%` }} className="w-full border-collapse text-center text-caption">
           <thead className="sticky top-0 z-[2] shadow-[0_1px_0_rgb(226_232_240)] dark:shadow-[0_1px_0_rgb(30_41_59)]">
             <tr className="border-b border-slate-200 bg-slate-50 font-semibold text-slate-500 transition-colors dark:border-slate-800 dark:bg-slate-900 dark:text-slate-400">
-              <th className={cx(headCell, "w-10")}>م</th>
-              <th className={cx(headCell, "min-w-[160px]")}>اسم المبادرة</th>
+              {/* `z-[3]` فوق الترويسة الملتصقة (`z-[2]`) وفوق الخلايا المثبَّتة. */}
+              <th className={cx(headCell, "w-10", pinnedNumber, "z-[3] bg-slate-50 dark:bg-slate-900")}>م</th>
+              <th
+                className={cx(headCell, "min-w-[160px]", pinnedName, "z-[3] bg-slate-50 dark:bg-slate-900")}
+              >
+                اسم المبادرة
+              </th>
               <th className={cx(headCell, "min-w-[240px]")}>وصف المبادرة</th>
               <th className={cx(headCell, "min-w-[180px]")}>الهدف المرتبط</th>
               <th className={cx(headCell, "min-w-[180px]")}>المؤشرات المرتبطة</th>
@@ -382,16 +415,23 @@ export default function InitiativesClient({
                 <tr
                   key={row.id}
                   className={cx(
-                    "border-b border-slate-200 transition-colors dark:border-slate-800",
+                    "group border-b border-slate-200 transition-colors dark:border-slate-800",
                     index % 2 === 1
                       ? "bg-slate-100/70 hover:bg-slate-200/50 dark:bg-slate-800/80 dark:hover:bg-slate-700/50"
                       : "bg-white hover:bg-slate-50 dark:bg-slate-800 dark:hover:bg-slate-800/50"
                   )}
                 >
-                  <td className={cx(cell, "font-semibold text-slate-500 tabular-nums dark:text-slate-400")}>
+                  <td
+                    className={cx(
+                      cell,
+                      "font-semibold text-slate-500 tabular-nums dark:text-slate-400",
+                      pinnedNumber,
+                      pinnedBg(index % 2 === 1)
+                    )}
+                  >
                     {row.number}
                   </td>
-                  <td className={cx(cell, "text-right")}>
+                  <td className={cx(cell, "text-right", pinnedName, pinnedBg(index % 2 === 1))}>
                     <Link
                       href={`/main/strategy/${encodeURIComponent(charityName)}/operational/initiatives/${row.number}`}
                       className="font-medium text-primary transition-colors outline-none hover:underline focus-visible:ring-2 focus-visible:ring-primary/40 dark:text-teal-300"

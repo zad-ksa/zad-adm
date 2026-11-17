@@ -7,6 +7,7 @@ import { revalidatePath } from "next/cache";
 import { getSession } from "@/lib/auth";
 import { hasPermission } from "@/lib/permissions";
 import { assertCharityAccess } from "@/lib/access";
+import { initiativeAccess } from "@/lib/initiativeAccess";
 import { planSpan, plannedCost, spanDates, weeksBetween, weeksLabel } from "@/lib/initiativeProgress";
 import { PRIORITIES } from "@/lib/strategyOptions";
 import { isStepField, parseStepField, parseStepFields } from "@/lib/initiativeStepFields";
@@ -27,6 +28,32 @@ async function requireAccess(charityId: string) {
   if (!hasPermission(session.role, session.permissions, "manage_strategy")) throw new Error("FORBIDDEN");
   await assertCharityAccess(session.id, session.role, charityId);
   return session;
+}
+
+/**
+ * حارسُ مبادرةٍ بعينها: قسمُ الاستراتيجية في جمعيتها، أو تكليفُ المبادرة.
+ *
+ * فمن كُتب اسمُه «مدير المبادرة» يُعدّل مبادرتَه وخطواتِها ولو لم يكن من
+ * أهل القسم — انظر `initiativeAccess`. وما سواها لا يُفتح له: الخطةُ
+ * والكشّافُ ومبادراتُ غيره تبقى على `requireAccess`، وكذلك حذفُ المبادرة.
+ *
+ * ولا تُفحص خدمةُ الجمعية هنا: أفعالُ هذا الملف لم تفحصها قطّ، وإنما
+ * تُفحص في بابِ الصفحة — فلا يُشدَّد على من كان يعمل.
+ */
+async function requireInitiativeAccess(initiativeId: string) {
+  const access = await initiativeAccess(initiativeId, { requireService: false });
+  if (!access) throw new Error("FORBIDDEN_INITIATIVE");
+  return access;
+}
+
+/** مبادرةُ الخطوة: الخطواتُ تُعدَّل بإذن مبادرتها. */
+async function initiativeOfStep(stepId: string) {
+  const row = await prisma.initiativeStep.findUnique({
+    where: { id: stepId },
+    select: { initiativeId: true, initiative: { select: { plan: { select: { charityId: true } } } } },
+  });
+  if (!row) throw new Error("خطوةٌ غير موجودة");
+  return { initiativeId: row.initiativeId, charityId: row.initiative.plan.charityId };
 }
 
 async function charityOfPlan(planId: string) {
@@ -146,7 +173,23 @@ export type InitiativeInput = {
 export async function saveInitiative(input: InitiativeInput): Promise<Result> {
   try {
     const charityId = await charityOfPlan(input.planId);
-    await requireAccess(charityId);
+
+    // تعديلُ مبادرةٍ قائمةٍ بالبابين، وإنشاءُ مبادرةٍ جديدةٍ بالقسم وحدَه:
+    // المكلَّفُ يُعدّل عملَه لا يُضيف إلى خطة الجمعية.
+    if (input.id) {
+      const access = await requireInitiativeAccess(input.id);
+      if (access.via === "MANAGER") {
+        // والمكلَّفُ يُعدّلها في خطّتها لا ينقلها: `planId` المُرسَل يُطابَق
+        // بالمحفوظ، وإلا لنُقلت مبادرةٌ إلى خطةِ جمعيةٍ أخرى بتمريرِ مُعرِّف.
+        const stored = await prisma.initiative.findUnique({
+          where: { id: input.id },
+          select: { planId: true },
+        });
+        if (stored?.planId !== input.planId) throw new Error("FORBIDDEN_INITIATIVE");
+      }
+    } else {
+      await requireAccess(charityId);
+    }
 
     const name = input.name.trim();
     if (!name) return { error: "اسم المبادرة مطلوب" };
@@ -259,7 +302,7 @@ export async function deleteInitiative(id: string): Promise<Result> {
 export async function setInitiativePriority(id: string, priority: string | null): Promise<Result> {
   try {
     const charityId = await charityOfInitiative(id);
-    await requireAccess(charityId);
+    await requireInitiativeAccess(id);
     const value = priority && (PRIORITIES as readonly string[]).includes(priority) ? priority : null;
     await prisma.initiative.update({ where: { id }, data: { priority: value } });
     await revalidateOperational(charityId);
@@ -325,7 +368,7 @@ export async function setInitiativeMarketing(
 ): Promise<Result> {
   try {
     const charityId = await charityOfInitiative(initiativeId);
-    await requireAccess(charityId);
+    await requireInitiativeAccess(initiativeId);
 
     const current = await prisma.initiative.findUnique({
       where: { id: initiativeId },
@@ -438,15 +481,6 @@ async function syncInitiativeFromSteps(initiativeId: string) {
   }
 }
 
-async function charityOfStep(stepId: string) {
-  const row = await prisma.initiativeStep.findUnique({
-    where: { id: stepId },
-    select: { initiative: { select: { plan: { select: { charityId: true } } } } },
-  });
-  if (!row) throw new Error("خطوةٌ غير موجودة");
-  return row.initiative.plan.charityId;
-}
-
 export type StepInputPayload = {
   id?: string;
   initiativeId: string;
@@ -471,7 +505,7 @@ export async function saveStep(input: StepInputPayload): Promise<Result> {
       select: { plan: { select: { charityId: true, weekCount: true } } },
     });
     if (!initiative) return { error: "مبادرةٌ غير موجودة" };
-    await requireAccess(initiative.plan.charityId);
+    await requireInitiativeAccess(input.initiativeId);
     const weekCount = initiative.plan.weekCount;
 
     // والفحصُ واحدٌ للبابين: النافذةِ هنا، والخليّةِ في `updateStepField`.
@@ -543,10 +577,11 @@ export async function saveStep(input: StepInputPayload): Promise<Result> {
 
 export async function deleteStep(id: string): Promise<Result> {
   try {
-    const charityId = await charityOfStep(id);
-    await requireAccess(charityId);
-    const removed = await prisma.initiativeStep.delete({ where: { id }, select: { initiativeId: true } });
-    await syncInitiativeFromSteps(removed.initiativeId);
+    // وحذفُ الخطوةِ تعديلٌ في المبادرة لا حذفٌ لها: يُقبل من المكلَّف.
+    const { initiativeId, charityId } = await initiativeOfStep(id);
+    await requireInitiativeAccess(initiativeId);
+    await prisma.initiativeStep.delete({ where: { id } });
+    await syncInitiativeFromSteps(initiativeId);
     await revalidateOperational(charityId);
     return {};
   } catch (e) {
@@ -580,7 +615,7 @@ export async function updateStepField(id: string, field: string, value: string):
     if (!row) return { error: "خطوةٌ غير موجودة" };
 
     const { charityId, weekCount } = row.initiative.plan;
-    await requireAccess(charityId);
+    await requireInitiativeAccess(row.initiativeId);
 
     const parsed = parseStepField(field, value, weekCount);
     if ("error" in parsed) return { error: parsed.error };
@@ -602,8 +637,8 @@ export async function updateStepField(id: string, field: string, value: string):
  */
 export async function moveStep(id: string, direction: "up" | "down"): Promise<Result> {
   try {
-    const charityId = await charityOfStep(id);
-    await requireAccess(charityId);
+    const { initiativeId, charityId } = await initiativeOfStep(id);
+    await requireInitiativeAccess(initiativeId);
 
     const step = await prisma.initiativeStep.findUnique({
       where: { id },
@@ -637,5 +672,6 @@ function message(e: unknown) {
   const raw = e instanceof Error ? e.message : "تعذّر إتمام العملية";
   if (raw === "UNAUTHORIZED") return "الجلسة منتهية — أعد الدخول";
   if (raw === "FORBIDDEN") return "لا تملك صلاحية إدارة الاستراتيجية";
+  if (raw === "FORBIDDEN_INITIATIVE") return "لا تملك صلاحية تعديل هذه المبادرة";
   return raw;
 }

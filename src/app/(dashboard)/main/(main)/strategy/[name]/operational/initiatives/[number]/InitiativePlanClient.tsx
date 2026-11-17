@@ -32,6 +32,9 @@ import EditableCell from "@/components/console/EditableCell";
 import { PHASES } from "@/lib/strategyOptions";
 import { StepDialog } from "./StepDialog";
 import { MarketingFileDialog } from "../MarketingFileDialog";
+import { InitiativeDialog } from "../InitiativeDialogs";
+import type { InitiativeRow, ObjectiveOption } from "../InitiativesClient";
+import type { NameGroup } from "@/components/console/NameSelect";
 
 export type StepRow = {
   id: string;
@@ -66,7 +69,7 @@ export type InitiativeDetail = {
   marketingKind: string | null;
   marketingUrl: string | null;
   marketingFileName: string | null;
-  objective: { code: string; name: string } | null;
+  objective: { id: string; code: string; name: string } | null;
   indicators: { id: string; code: string; name: string }[];
   plan: {
     id: string;
@@ -94,11 +97,21 @@ export default function InitiativePlanClient({
   initiative,
   steps,
   canEdit,
+  edit,
   back,
 }: {
   initiative: InitiativeDetail;
   steps: StepRow[];
   canEdit: boolean;
+  /**
+   * زادُ نافذةِ تعديل بيانات المبادرة — أهدافُ الجمعية وأسماءُ الفريقين
+   * وصفُّ المبادرة كما تقرؤه النافذة.
+   *
+   * **ولمَ في صفحتها لا في الكشّاف وحدَه**: المكلَّفُ بالمبادرة يفتح
+   * صفحتَها من «مبادراتي» ولا يفتح الكشّاف، فنافذةٌ هناك وحدَها تعني
+   * تكليفاً بلا أداةِ تعديل. وهي النافذةُ نفسُها لا نسخةٌ ثانية.
+   */
+  edit: { objectives: ObjectiveOption[]; people: NameGroup[]; row: InitiativeRow } | null;
   /** إلى أين يرجع زرُّ الخروج — كشّافُ الجمعية، أو «مبادراتي» لمن جاء منها. */
   back: { href: string; label: string };
 }) {
@@ -106,6 +119,7 @@ export default function InitiativePlanClient({
   const [editing, setEditing] = useState<{ step?: StepRow } | null>(null);
   const [removing, setRemoving] = useState<StepRow | null>(null);
   const [marketing, setMarketing] = useState(false);
+  const [editingFacts, setEditingFacts] = useState(false);
   const marketingUrl = initiative.marketingUrl;
   const [busy, startBusy] = useTransition();
 
@@ -220,6 +234,18 @@ export default function InitiativePlanClient({
                   className={btn.icon}
                 >
                   <Pencil className="size-4" />
+                </button>
+              )}
+
+              {canEdit && edit && (
+                <button
+                  type="button"
+                  onClick={() => setEditingFacts(true)}
+                  className={btn.secondary}
+                  title="تعديل بيانات المبادرة"
+                >
+                  <Pencil className="size-4" />
+                  تعديل البيانات
                 </button>
               )}
 
@@ -372,6 +398,17 @@ export default function InitiativePlanClient({
         onRemove={setRemoving}
         onMove={(id, direction) => run(() => moveStep(id, direction))}
       />
+
+      {editingFacts && edit && (
+        <InitiativeDialog
+          planId={initiative.plan.id}
+          months={initiative.plan.months}
+          objectives={edit.objectives}
+          people={edit.people}
+          initiative={edit.row}
+          onClose={() => setEditingFacts(false)}
+        />
+      )}
 
       {marketing && (
         <MarketingFileDialog

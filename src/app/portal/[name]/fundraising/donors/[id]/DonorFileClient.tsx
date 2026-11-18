@@ -1,11 +1,10 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Building2, ExternalLink, FileText, KeyRound, Layers, Plus, Trash2 } from "lucide-react";
 import { EmptyState, PageHeader, StatStrip } from "@/components/console/layout";
-import { Badge, MONO, btn, cx, field } from "@/components/console/ui";
+import { Badge, MONO, Note, btn, cx, field } from "@/components/console/ui";
 import { CopyButton, SecretValue } from "@/components/console/Copy";
 import Select from "@/components/console/Select";
 import { notify } from "@/components/console/toastBus";
@@ -92,9 +91,7 @@ export default function DonorFileClient({
                 <ExternalLink className="size-4" /> موقع الجهة
               </a>
             )}
-            <Link href={`${base}/grants`} className={btn.secondary}>
-              المنح المرفوعة
-            </Link>
+
           </>
         }
       />
@@ -113,7 +110,13 @@ export default function DonorFileClient({
             label: donor.intakeStatus === "OPEN" ? "يغلق" : "يفتح",
             value: (donor.intakeStatus === "OPEN" ? donor.closesAt : donor.opensAt) ?? "بلا موعد معلن",
           },
-          { label: "المشاريع المرفوعة", value: donor.grants },
+          {
+            label: "المشاريع المرفوعة",
+            value: donor.grants,
+            // ورقمٌ يُسأل عنه يُفتح: «ماذا رفعنا لهذه الجهة؟» كان عدداً لا
+            // سبيلَ إلى قائمته، وصفحةُ المنح لا تُرشَّح بالجهة.
+            href: donor.grants > 0 ? `${base}/grants?donor=${donor.id}` : undefined,
+          },
           { label: "المشاريع المقترحة", value: proposals },
         ]}
       />
@@ -168,11 +171,22 @@ export default function DonorFileClient({
         </div>
 
         {fields.length === 0 ? (
-          <EmptyState
-            icon={<Layers className="size-4" />}
-            title="لا مجالات مسجلة لهذه الجهة"
-            description="تضاف المجالات من فريق زاد، ثم تظهر هنا لترفع تحتها مشاريعك."
-          />
+          <div className="space-y-3">
+            <EmptyState
+              icon={<Layers className="size-4" />}
+              title="لا مجالات مسجلة لهذه الجهة"
+              description="تضاف المجالات من فريق زاد، ثم تظهر هنا لترفع تحتها مشاريعك."
+            />
+            {/* ونصُّ المجالات القديم يُعرض حتى يُنقل إلى صفوف: أكثرُ الجهات
+                مجالاتُها نصٌّ عند زادٍ لم يُنقل بعد، وإخفاؤه يقول «لا مجالات»
+                وهي مكتوبةٌ هناك. */}
+            {donor.legacyFields && (
+              <Note tone="brand">
+                <span className="font-semibold">مجالات الدعم كما سجلتها زاد:</span>{" "}
+                {donor.legacyFields}
+              </Note>
+            )}
+          </div>
         ) : (
           <div className="space-y-3">
             {fields.map((f) => (
@@ -241,7 +255,11 @@ function FieldCard({
           name: outside ? name : null,
           note,
         }),
-      reset
+      () => {
+        reset();
+        // وقولُ «أُضيف» بعد النجاح: الإغلاقُ وحدَه لا يُفرَّق عن انصرافٍ بلا حفظ.
+        notify("ok", "أضيف المشروع المقترح.");
+      }
     );
 
   return (

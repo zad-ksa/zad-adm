@@ -44,12 +44,18 @@ export default function GrantSheet({
   donor,
   donorOptions,
   charities,
+  prefill,
   onClose,
   onSaved,
   onDeleted,
 }: {
   /** بغيرها: رفعُ منحةٍ جديدة. */
   grant?: EditableGrant;
+  /**
+   * تعبئةٌ أوّليّةٌ عند الرفع — تأتي من مشروعٍ اقترحته جمعيةٌ في مجالٍ عند
+   * الجهة. فالرفعُ من مقترحٍ لا يُعيد كتابةَ ما كُتب.
+   */
+  prefill?: { charityId?: string; initiativeName?: string };
   /** جهةٌ مثبَّتةٌ لا تُختار — صفحةُ الجهة. */
   donor?: GrantDonor;
   /** جهاتٌ تُختار — يلزم أحدُهما: `donor` أو هذه. */
@@ -67,10 +73,10 @@ export default function GrantSheet({
   const editing = grant !== undefined;
 
   const [charityId, setCharityId] = useState(
-    grant?.charityId ?? (charities.length === 1 ? charities[0].id : "")
+    grant?.charityId ?? prefill?.charityId ?? (charities.length === 1 ? charities[0].id : "")
   );
   const [donorOrgId, setDonorOrgId] = useState(donor?.id ?? grant?.donorOrgId ?? "");
-  const [initiative, setInitiative] = useState(grant?.initiativeName ?? "");
+  const [initiative, setInitiative] = useState(grant?.initiativeName ?? prefill?.initiativeName ?? "");
   const [amount, setAmount] = useState(grant ? String(grant.requestedAmount) : "");
   const [status, setStatus] = useState("PENDING");
   const [busy, setBusy] = useState(false);

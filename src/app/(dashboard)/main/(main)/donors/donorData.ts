@@ -119,9 +119,12 @@ export async function loadDonorList(viewer: DonorViewer, kind: DonorKind) {
 /** مشروعٌ اقترحته جمعيةٌ في مجالٍ — يُقرأ في ملف الجهة عند زاد. */
 export type DonorProposalRow = {
   id: string;
+  charityId: string;
   charityName: string;
   name: string;
   note: string | null;
+  /** مقترحٌ · رُفع · مؤجَّل — انظر `PROPOSAL_STATUSES`. */
+  status: string;
   /** من مبادرات خطّتها التشغيلية، أو مكتوبٌ من خارجها. */
   fromPlan: boolean;
   createdAt: string;
@@ -164,8 +167,10 @@ export async function loadDonorFields(
             id: true,
             name: true,
             note: true,
+            status: true,
             initiativeId: true,
             createdAt: true,
+            charityId: true,
             charity: { select: { name: true } },
           },
         },
@@ -178,9 +183,11 @@ export async function loadDonorFields(
       description: f.description,
       proposals: f.proposals.map((p) => ({
         id: p.id,
+        charityId: p.charityId,
         charityName: p.charity.name,
         name: p.name,
         note: p.note,
+        status: p.status,
         fromPlan: p.initiativeId !== null,
         createdAt: formatDonorDate(p.createdAt),
       })),

@@ -1,7 +1,6 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import Link from "next/link";
 import { Coins } from "lucide-react";
 import {
   EmptyState,
@@ -16,7 +15,7 @@ import {
   theadRowClass,
   type SortDir,
 } from "@/components/console/layout";
-import { Badge, MONO, btn, cx } from "@/components/console/ui";
+import { Badge, MONO, cx } from "@/components/console/ui";
 import Select from "@/components/console/Select";
 import { GRANT_STATUSES, grantStatusLabel } from "@/lib/donorOrg";
 import type { PortalGrantRow } from "@/lib/portalFundraising";
@@ -43,12 +42,19 @@ type Column = "donor" | "project" | "amount" | "status" | "date";
 export default function GrantsClient({
   charityName,
   grants,
+  donors,
+  initialDonor,
 }: {
   charityName: string;
   grants: PortalGrantRow[];
+  /** جهاتُ ما رُفع — يُرشَّح بها الجدول. */
+  donors: { id: string; label: string }[];
+  /** جهةٌ تُفتح الصفحةُ مُرشَّحةً بها، قادمةً من ملفِّها. */
+  initialDonor: string | null;
 }) {
   const [query, setQuery] = useState("");
   const [status, setStatus] = useState("all");
+  const [donor, setDonor] = useState(initialDonor ?? "all");
   const [column, setColumn] = useState<Column>("date");
   const [dir, setDir] = useState<SortDir>("desc");
   const onSort = (next: Column, nextDir: SortDir) => {
@@ -64,6 +70,7 @@ export default function GrantsClient({
     const list = grants.filter(
       (g) =>
         (status === "all" || g.status === status) &&
+        (donor === "all" || g.donorOrgId === donor) &&
         (q === "" || g.initiativeName.includes(q) || g.donorName.includes(q))
     );
     list.sort((a, b) => {
@@ -81,7 +88,7 @@ export default function GrantsClient({
       }
     });
     return list;
-  }, [grants, query, status, column, dir]);
+  }, [grants, query, status, donor, column, dir]);
 
   const requested = shown.reduce((sum, g) => sum + g.requestedAmount, 0);
   const approved = shown
@@ -95,11 +102,7 @@ export default function GrantsClient({
         icon={<Coins className="size-6" />}
         title="المنح المرفوعة"
         description="ما رفعته الجمعية إلى الجهات المانحة، وحالة كل طلب."
-        actions={
-          <Link href={base} className={btn.secondary}>
-            الجهات المانحة
-          </Link>
-        }
+
       />
 
       <StatStrip
@@ -122,6 +125,17 @@ export default function GrantsClient({
           placeholder="ابحث باسم المشروع أو الجهة…"
           className="min-w-56 flex-1"
         />
+        {donors.length > 1 && (
+          <Select
+            value={donor}
+            onSelect={setDonor}
+            placeholder="الجهة"
+            options={[
+              { value: "all", label: "كل الجهات" },
+              ...donors.map((d) => ({ value: d.id, label: d.label })),
+            ]}
+          />
+        )}
         <Select
           value={status}
           onSelect={setStatus}

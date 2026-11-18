@@ -4,6 +4,9 @@ import {
   MAX_FIELD_NAME,
   cleanFieldDescription,
   cleanFieldName,
+  proposalStatusLabel,
+  proposalStatusOf,
+  proposalStatusTone,
   sameFieldName,
   splitLegacyFields,
 } from "./donorFields.ts";
@@ -39,4 +42,13 @@ test("sameFieldName: تسويةُ المسافات والحالة، والفار
   assert.equal(sameFieldName("Health", "health"), true);
   assert.equal(sameFieldName("", ""), false);
   assert.equal(sameFieldName("التعليم", "الصحة"), false);
+});
+
+test("حالُ المقترح: ثلاثةٌ، والمجهولُ يُقرأ «مقترح»", () => {
+  assert.equal(proposalStatusOf("SUBMITTED"), "SUBMITTED");
+  assert.equal(proposalStatusOf("نصٌّ غريب"), "PROPOSED");
+  assert.equal(proposalStatusOf(null), "PROPOSED");
+  assert.equal(proposalStatusLabel("DEFERRED"), "مؤجل");
+  assert.equal(proposalStatusTone("SUBMITTED"), "good");
+  assert.equal(proposalStatusTone(undefined), "neutral");
 });

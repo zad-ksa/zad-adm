@@ -55,3 +55,30 @@ export function sameFieldName(a: string, b: string): boolean {
   const key = (v: string) => v.replace(/\s+/g, "").toLowerCase();
   return key(a) === key(b) && key(a) !== "";
 }
+
+/**
+ * مصيرُ المشروع المقترح — ثلاثةُ أحوالٍ لا أكثر.
+ *
+ * **ولمَ ثلاثة**: الجمعيةُ تسأل سؤالاً واحداً عمّا كتبته: أرُفع إلى الجهة أم
+ * لا؟ و«مؤجَّل» هو الجواب الثالث الصادق — لا رُفع ولا طُرح. وما بعد الرفع
+ * (مقبولةٌ أو مرفوضة) خبرُ المنحة لا خبرُ المقترح، ويُقرأ في جدول المنح.
+ */
+export const PROPOSAL_STATUSES = [
+  { value: "PROPOSED", label: "مقترح", tone: "neutral" },
+  { value: "SUBMITTED", label: "رفع للجهة", tone: "good" },
+  { value: "DEFERRED", label: "مؤجل", tone: "warn" },
+] as const;
+
+export type ProposalStatus = (typeof PROPOSAL_STATUSES)[number]["value"];
+
+export function proposalStatusOf(value: string | null | undefined): ProposalStatus {
+  return PROPOSAL_STATUSES.some((s) => s.value === value) ? (value as ProposalStatus) : "PROPOSED";
+}
+
+export function proposalStatusLabel(value: string | null | undefined): string {
+  return PROPOSAL_STATUSES.find((s) => s.value === proposalStatusOf(value))!.label;
+}
+
+export function proposalStatusTone(value: string | null | undefined): "neutral" | "good" | "warn" {
+  return PROPOSAL_STATUSES.find((s) => s.value === proposalStatusOf(value))!.tone;
+}

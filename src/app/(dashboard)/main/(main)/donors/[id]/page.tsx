@@ -26,6 +26,7 @@ export default async function DonorOrgPage({ params }: { params: Promise<{ id: s
       charities={viewer.charities}
       accounts={detail.accounts}
       grants={detail.grants}
+      fields={detail.fields}
     />
   );
 }

@@ -46,6 +46,7 @@ export default async function CharityFundPage() {
       charities={viewer.charities}
       accounts={detail.accounts}
       grants={detail.grants}
+      fields={detail.fields}
       underDevelopment
       // كما في «منصة إحسان»: لا حسابَ دخولٍ لكل جمعيةٍ هنا، والمنحُ تبقى.
       showAccounts={false}

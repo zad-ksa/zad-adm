@@ -46,6 +46,7 @@ export default async function EhsanPage() {
       charities={viewer.charities}
       accounts={detail.accounts}
       grants={detail.grants}
+      fields={detail.fields}
       underDevelopment
       // الدخولُ إلى المنصّة ليس بحسابٍ لكل جمعيةٍ كجهاتِ المنح، فالجدولُ يَعِد
       // بما لا يوجد. والمنحُ المرفوعةُ تبقى كما هي.

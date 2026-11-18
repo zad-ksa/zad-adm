@@ -122,6 +122,33 @@ export async function loadDonorList(viewer: DonorViewer, kind: DonorKind) {
   return { orgs: orgs.map((o) => toRow(o, now)), pairs };
 }
 
+/** مجالُ منحٍ كما يُقرأ في ملف الجهة وفي بوّابة الجمعية. */
+export type DonorFieldRow = {
+  id: string;
+  name: string;
+  description: string | null;
+};
+
+/**
+ * مجالاتُ جهةٍ — أو لا شيءَ إن لم يُطبَّق جدولُها بعد.
+ *
+ * تُقرأ محروسةً كما يُقرأ كلُّ عمودٍ جديد: هجرةٌ لم تُطبَّق لا تُسقط ملفَّ
+ * الجهة كلَّه (`prisma/sql/donor-grant-fields.sql`)، والصفحةُ تعمل كما كانت
+ * بنصِّ المجالات القديم.
+ */
+export async function loadDonorFields(donorOrgId: string): Promise<DonorFieldRow[]> {
+  try {
+    return await prisma.donorField.findMany({
+      where: { donorOrgId },
+      orderBy: [{ order: "asc" }, { createdAt: "asc" }],
+      select: { id: true, name: true, description: true },
+    });
+  } catch (error) {
+    console.error("loadDonorFields", error);
+    return [];
+  }
+}
+
 export type DonorAccountRow = {
   id: string;
   charityId: string;
@@ -263,5 +290,11 @@ export async function loadDonorDetail(viewer: DonorViewer, id: string) {
     createdAtMs: g.createdAt.getTime(),
   }));
 
-  return { row: toRow({ ...org, accounts: org.accounts }, now), kind: org.kind, accounts, grants };
+  return {
+    row: toRow({ ...org, accounts: org.accounts }, now),
+    kind: org.kind,
+    accounts,
+    grants,
+    fields: await loadDonorFields(id),
+  };
 }

@@ -2,7 +2,7 @@ import { getSession } from "@/lib/auth";
 import { PageHeader } from "@/components/console/layout";
 import { NavCard } from "@/components/console/ui";
 import { redirect } from "next/navigation";
-import { ShieldCheck, Building2, Users, ShieldAlert, Layers, LayoutTemplate } from "lucide-react";
+import { ShieldCheck, Building2, Users, ShieldAlert, Layers, LayoutTemplate, BellRing } from "lucide-react";
 import { hasPermission } from "@/lib/permissions";
 
 /**
@@ -47,6 +47,13 @@ const ENTRIES = [
     title: "إدارة الخدمات",
     description: "إدارة المخططات الزمنية والخدمات الإضافية المرتبطة بجميع الجمعيات.",
     icon: Layers,
+  },
+  {
+    permission: "manage_charities",
+    href: "/main/admin/popups",
+    title: "إشعارات البوابة",
+    description: "رسالة تظهر لعضو الجمعية حين يفتح صفحة تختارها في بوابته — لمرة أو في كل زيارة.",
+    icon: BellRing,
   },
   {
     permission: "manage_landing",
